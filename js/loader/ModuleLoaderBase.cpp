@@ -101,10 +101,6 @@ void ModuleLoaderBase::EnsureModuleHooksInitialized() {
                                  HostReleaseTopLevelScript);
 }
 
-static bool ModuleTypeAllowed(ModuleType aModuleType) {
-  return aModuleType != ModuleType::Unknown;
-}
-
 static bool CreateBadModuleTypeError(JSContext* aCx, LoadedScript* aScript,
                                      nsIURI* aURI,
                                      MutableHandle<Value> aErrorOut) {
@@ -219,7 +215,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(JSContext* aCx,
     MOZ_ASSERT(uri, "Failed to resolve module specifier");
 
     ModuleType moduleType = GetModuleRequestType(aCx, aModuleRequest);
-    if (!ModuleTypeAllowed(moduleType)) {
+    if (!loader->IsModuleTypeAllowed(moduleType)) {
       LOG(("ModuleLoaderBase::HostLoadImportedModule uri %s, bad module type",
            uri->GetSpecOrDefault().get()));
       Rooted<Value> error(aCx);
