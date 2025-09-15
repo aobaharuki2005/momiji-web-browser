@@ -2101,6 +2101,18 @@ nsresult nsHttpChannel::InitTransaction() {
     parentAddressSpace = bc->GetCurrentIPAddressSpace();
   }
 
+  // Check if this is a top-level navigation load and grant LNA permissions
+  // to skip local network access verification for navigational loads
+  if (mLoadInfo && StaticPrefs::network_lna_allow_top_level_navigation()) {
+    ExtContentPolicyType contentPolicyType =
+        mLoadInfo->GetExternalContentPolicyType();
+    if (contentPolicyType == ExtContentPolicy::TYPE_DOCUMENT) {
+      // Grant permissions for top-level navigation loads
+      mLNAPermission.mLocalHostPermission = LNAPermission::Granted;
+      mLNAPermission.mLocalNetworkPermission = LNAPermission::Granted;
+    }
+  }
+
   rv = mTransaction->Init(
       mCaps, mConnectionInfo, &mRequestHead, mUploadStream, mReqContentLength,
       LoadUploadStreamHasHeaders(), GetCurrentSerialEventTarget(), callbacks,
