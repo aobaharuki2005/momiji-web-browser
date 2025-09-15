@@ -29,6 +29,7 @@ const nodeConstants = require("resource://devtools/shared/dom-node-constants.js"
 loader.lazyGetter(this, "HighlightersBundle", () => {
   return new Localization(["devtools/shared/highlighters.ftl"], true);
 });
+loader.lazyRequireGetter(this, "flags", "resource://devtools/shared/flags.js");
 
 // Note that the order of items in this array is important because it is used
 // for drawing the BoxModelHighlighter's path elements correctly.
@@ -369,17 +370,24 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     setIgnoreLayoutChanges(true);
 
     if (this._updateBoxModel()) {
+      const isElementOrTextNode =
+        node.nodeType === node.ELEMENT_NODE || node.nodeType === node.TEXT_NODE;
       // Show the infobar only if configured to do so and the node is an element or a text
       // node.
-      if (
-        !this.options.hideInfoBar &&
-        (node.nodeType === node.ELEMENT_NODE ||
-          node.nodeType === node.TEXT_NODE)
-      ) {
-        this._showInfobar();
+      if (isElementOrTextNode) {
+        if (!this.options.hideInfoBar) {
+          this._showInfobar();
+        } else if (flags.testing) {
+          // Even if we don't want to show the info bar, update the infobar data (tag, id,
+          // classes, …) anyway so it's easier to debug/test
+          this._updateInfobarNodeData();
+        } else {
+          this._hideInfobar();
+        }
       } else {
         this._hideInfobar();
       }
+
       this._updateSimpleHighlighters();
       this._showBoxModel();
 
@@ -783,23 +791,9 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       return;
     }
 
-    const { bindingElement: node, pseudo } = getBindingElementAndPseudo(
+    const { bindingElement: node } = getBindingElementAndPseudo(
       this.currentNode
     );
-
-    // Update the tag, id, classes, pseudo-classes and dimensions
-    const displayName = getNodeDisplayName(node);
-
-    const id = node.id ? "#" + node.id : "";
-
-    const classList = (node.classList || []).length
-      ? "." + [...node.classList].join(".")
-      : "";
-
-    let pseudos = this._getPseudoClasses(node).join("");
-    if (pseudo) {
-      pseudos += pseudo;
-    }
 
     // We want to display the original `width` and `height`, instead of the ones affected
     // by any zoom. Since the infobar can be displayed also for text nodes, we can't
@@ -821,10 +815,8 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     const gridLayoutTextType = this._getLayoutTextType("gridtype", gridType);
     const flexLayoutTextType = this._getLayoutTextType("flextype", flexType);
 
-    this.getElement("box-model-infobar-tagname").setTextContent(displayName);
-    this.getElement("box-model-infobar-id").setTextContent(id);
-    this.getElement("box-model-infobar-classes").setTextContent(classList);
-    this.getElement("box-model-infobar-pseudo-classes").setTextContent(pseudos);
+    // Update the tag, id, classes, pseudo-classes
+    this._updateInfobarNodeData();
     this.getElement("box-model-infobar-dimensions").setTextContent(dim);
     this.getElement("box-model-infobar-grid-type").setTextContent(
       gridLayoutTextType
@@ -834,6 +826,35 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     );
 
     this._moveInfobar();
+  }
+
+  _updateInfobarNodeData() {
+    if (!this.currentNode) {
+      return;
+    }
+
+    const { bindingElement: node, pseudo } = getBindingElementAndPseudo(
+      this.currentNode
+    );
+
+    // Update the tag, id, classes, pseudo-classes and dimensions
+    const displayName = getNodeDisplayName(node);
+
+    const id = node.id ? "#" + node.id : "";
+
+    const classList = node.classList?.length
+      ? "." + [...node.classList].join(".")
+      : "";
+
+    let pseudos = this._getPseudoClasses(node).join("");
+    if (pseudo) {
+      pseudos += pseudo;
+    }
+
+    this.getElement("box-model-infobar-tagname").setTextContent(displayName);
+    this.getElement("box-model-infobar-id").setTextContent(id);
+    this.getElement("box-model-infobar-classes").setTextContent(classList);
+    this.getElement("box-model-infobar-pseudo-classes").setTextContent(pseudos);
   }
 
   _getLayoutTextType(layoutTypeKey, { isContainer, isItem }) {
