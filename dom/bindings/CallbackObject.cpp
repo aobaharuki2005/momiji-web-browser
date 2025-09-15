@@ -298,11 +298,9 @@ CallbackObjectBase::CallSetup::CallSetup(CallbackObjectBase* aCallback,
   // with the cx from mAutoEntryScript, avoiding the cost of finding another
   // JSContext. (Rooted<> does not care about requests or compartments.)
   mRootedCallable.emplace(cx, aCallback->CallbackOrNull());
-  mRootedCallableGlobal.emplace(cx, aCallback->CallbackGlobalOrNull());
-
-  mAsyncStack.emplace(cx, aCallback->GetCreationStack());
-  if (*mAsyncStack) {
-    mAsyncStackSetter.emplace(cx, *mAsyncStack, aExecutionReason);
+  JSObject* asyncStack = aCallback->GetCreationStack();
+  if (asyncStack) {
+    mAsyncStackSetter.emplace(cx, asyncStack, aExecutionReason);
   }
 
   // Enter the realm of our callback, so we can actually work with it.
@@ -310,7 +308,7 @@ CallbackObjectBase::CallSetup::CallSetup(CallbackObjectBase* aCallback,
   // Note that if the callback is a wrapper, this will not be the same
   // realm that we ended up in with mAutoEntryScript above, because the
   // entry point is based off of the unwrapped callback (realCallback).
-  mAr.emplace(cx, *mRootedCallableGlobal);
+  mAr.emplace(cx, aCallback->CallbackGlobalOrNull());
 
   // And now we're ready to go.
   mCx = cx;

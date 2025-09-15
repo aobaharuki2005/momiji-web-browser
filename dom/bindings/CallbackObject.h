@@ -282,11 +282,7 @@ class CallbackObjectBase {
     Maybe<AutoIncumbentScript> mAutoIncumbentScript;
 
     Maybe<JS::Rooted<JSObject*>> mRootedCallable;
-    // The global of mRootedCallable.
-    Maybe<JS::Rooted<JSObject*>> mRootedCallableGlobal;
 
-    // Members which are used to set the async stack.
-    Maybe<JS::Rooted<JSObject*>> mAsyncStack;
     Maybe<JS::AutoSetAsyncStackForNewCalls> mAsyncStackSetter;
 
     // Can't construct a JSAutoRealm without a JSContext either.  Also,
