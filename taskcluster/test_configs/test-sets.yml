@@ -527,7 +527,7 @@ macosx1500-64-perftests:
 android14-x86_64-tests:
     - cppunittest
     - crashtest
-    - geckoview-junit
+    # - geckoview-junit # Bug 1973794
     - gtest
     - mochitest-media
     - mochitest-plain
