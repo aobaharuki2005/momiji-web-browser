@@ -206,7 +206,7 @@ class HomeFragment : Fragment() {
                     Snackbar.make(
                         snackBarParentView = binding.dynamicSnackbarContainer,
                         snackbarState = SnackbarState(
-                            message = it.context.getString(R.string.create_collection_tab_saved),
+                            message = it.context.getString(R.string.create_collection_tab_saved_2),
                             duration = SnackbarState.Duration.Preset.Long,
                         ),
                     ).show()
