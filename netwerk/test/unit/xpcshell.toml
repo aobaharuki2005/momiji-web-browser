@@ -351,6 +351,8 @@ skip-if = [
 run-if = ["!socketprocess_networking"] # confirmation state isn't passed cross-process
 skip-if = ["appname == 'thunderbird'"] # bug 1760097
 
+["test_bug1984469.js"]
+
 ["test_cache-control_request.js"]
 
 ["test_cache-entry-id.js"]
