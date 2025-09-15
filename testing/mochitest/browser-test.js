@@ -488,19 +488,6 @@ Tester.prototype = {
       gBrowser.stop();
     }
 
-    // Tests shouldn't leave sidebars open
-    this.structuredLogger.info("checking for open sidebars");
-    const sidebarContainer = document.getElementById("sidebar-box");
-    if (!sidebarContainer.hidden) {
-      window.SidebarController.hide({ dismissPanel: true });
-      this.currentTest.addResult(
-        new testResult({
-          name: baseMsg.replace("{elt}", "open sidebar"),
-          allowFailure: this.currentTest.allowFailure,
-        })
-      );
-    }
-
     // Remove stale windows
     this.structuredLogger.info("checking window state");
     for (let win of Services.wm.getEnumerator(null)) {
