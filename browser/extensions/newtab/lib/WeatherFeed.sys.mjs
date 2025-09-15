@@ -4,10 +4,22 @@
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   PersistentCache: "resource://newtab/lib/PersistentCache.sys.mjs",
+});
+
+ChromeUtils.defineLazyGetter(lazy, "MerinoClient", () => {
+  try {
+    return ChromeUtils.importESModule(
+      "moz-src:///browser/components/urlbar/MerinoClient.sys.mjs"
+    ).MerinoClient;
+  } catch {
+    // Fallback to URI format prior to FF 144.
+    return ChromeUtils.importESModule(
+      "resource:///modules/MerinoClient.sys.mjs"
+    ).MerinoClient;
+  }
 });
 
 import {
