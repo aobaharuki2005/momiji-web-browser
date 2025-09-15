@@ -14344,6 +14344,13 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# When this pref is true, top-level document navigation to local network addresses
+# will bypass LNA permission checks.
+- name: network.lna.allow_top_level_navigation
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # The proxy type. See nsIProtocolProxyService.idl
 #     PROXYCONFIG_DIRECT   = 0
 #     PROXYCONFIG_MANUAL   = 1
