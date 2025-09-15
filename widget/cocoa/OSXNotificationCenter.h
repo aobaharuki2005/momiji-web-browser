@@ -41,6 +41,7 @@ class OSXNotificationCenter : public nsIAlertsService,
   void CloseAlertCocoaString(NSString* aAlertName);
   void OnActivate(NSString* aAlertName,
                   NSUserNotificationActivationType aActivationType,
+                  unsigned long long aAdditionalActionIndex,
                   NSUserNotificationAction* aAdditionalActivationAction);
   void ShowPendingNotification(OSXNotificationInfo* osxni);
 
