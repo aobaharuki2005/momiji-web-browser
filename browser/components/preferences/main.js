@@ -415,6 +415,21 @@ let SETTINGS_CONFIG = {
       },
     ],
   },
+  securityPrivacyStatus: {
+    items: [
+      {
+        id: "privacyCard",
+        control: "security-privacy-card",
+      },
+      {
+        id: "securityWarningsGroup",
+        control: "moz-box-group",
+        controlAttrs: {
+          type: "list",
+        },
+      },
+    ],
+  },
 };
 
 function initSettingGroup(id) {

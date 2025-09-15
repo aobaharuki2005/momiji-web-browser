@@ -185,6 +185,10 @@ export class SettingControl extends MozLitElement {
     this.hidden = !this.setting.visible;
   }
 
+  updated() {
+    this.controlRef?.value?.requestUpdate();
+  }
+
   /**
    * The default properties that controls and options accept.
    */
@@ -197,6 +201,8 @@ export class SettingControl extends MozLitElement {
         : undefined,
       ".iconSrc": config.iconSrc,
       ".supportPage": config.supportPage,
+      ".setting": this.setting,
+      ".control": this,
       "data-subcategory": config.subcategory,
       ...config.controlAttrs,
     };
