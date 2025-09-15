@@ -908,6 +908,22 @@ export class BackupService extends EventTarget {
   }
 
   /**
+   * The user's personal OneDrive folder, or null if none exists.
+   *
+   * @returns {nsIFile|null} The OneDrive folder or null
+   */
+  static get oneDriveFolderPath() {
+    try {
+      let oneDriveDir = Services.dirsvc.get("OneDrPD", Ci.nsIFile);
+      // This check should be redundant -- the OneDrive folder should exist.
+      return oneDriveDir.exists() ? oneDriveDir : null;
+    } catch {
+      // Ignore exceptions.  The OneDrive folder not existing is an exception.
+    }
+    return null;
+  }
+
+  /**
    * Returns a reference to a BackupService singleton. If this is the first time
    * that this getter is accessed, this causes the BackupService singleton to be
    * be instantiated.

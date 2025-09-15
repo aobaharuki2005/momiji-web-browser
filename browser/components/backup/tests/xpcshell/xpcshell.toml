@@ -33,6 +33,9 @@ support-files = [
 
 ["test_BackupService_finalizeSingleFileArchive.js"]
 
+["test_BackupService_onedrive.js"]
+run-if = ["os == 'win'"]
+
 ["test_BackupService_recoverFromSnapshotFolder.js"]
 
 ["test_BackupService_regeneration.js"]
