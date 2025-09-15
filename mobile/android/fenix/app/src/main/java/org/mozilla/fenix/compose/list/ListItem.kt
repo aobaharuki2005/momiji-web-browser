@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -53,7 +54,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.modifier.thenConditional
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.compose.Favicon
@@ -254,7 +254,7 @@ fun FaviconListItem(
             if (showDivider) {
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .padding(vertical = DIVIDER_VERTICAL_PADDING)
                         .fillMaxHeight()
@@ -372,7 +372,7 @@ fun IconListItem(
             if (showDivider) {
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .padding(vertical = DIVIDER_VERTICAL_PADDING)
                         .fillMaxHeight()
@@ -527,7 +527,7 @@ fun SelectableFaviconListItem(
             if (showDivider) {
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .padding(vertical = DIVIDER_VERTICAL_PADDING)
                         .fillMaxHeight()
@@ -647,7 +647,7 @@ fun SelectableIconListItem(
             if (showDivider) {
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .padding(vertical = DIVIDER_VERTICAL_PADDING)
                         .fillMaxHeight()

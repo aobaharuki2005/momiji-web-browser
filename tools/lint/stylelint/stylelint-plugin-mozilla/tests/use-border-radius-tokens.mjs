@@ -177,10 +177,10 @@ testRule({
       description: "8px should be fixed to use --border-radius-medium token.",
     },
     {
-      code: ".a { border-radius: 12px; }",
+      code: ".a { border-radius: 16px; }",
       fixed: ".a { border-radius: var(--border-radius-large); }",
-      message: messages.rejected("12px"),
-      description: "12px should be fixed to use --border-radius-large token.",
+      message: messages.rejected("16px"),
+      description: "16px should be fixed to use --border-radius-large token.",
     },
     {
       code: ".a { border-radius: 4px 8px; }",

@@ -767,7 +767,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API AutoSetAsyncStackForNewCalls {
   // lifetime of the AutoSetAsyncStackForNewCalls object. It is strongly
   // encouraged that asyncCause be a string constant or similar statically
   // allocated string.
-  AutoSetAsyncStackForNewCalls(JSContext* cx, HandleObject stack,
+  AutoSetAsyncStackForNewCalls(JSContext* cx, JSObject* stack,
                                const char* asyncCause,
                                AsyncCallKind kind = AsyncCallKind::IMPLICIT);
   ~AutoSetAsyncStackForNewCalls();

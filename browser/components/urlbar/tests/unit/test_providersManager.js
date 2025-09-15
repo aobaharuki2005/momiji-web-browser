@@ -4,7 +4,8 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  ProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
+  ProvidersManager:
+    "moz-src:///browser/components/urlbar/UrlbarProvidersManager.sys.mjs",
 });
 
 add_task(async function test_providers() {

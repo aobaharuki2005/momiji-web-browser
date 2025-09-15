@@ -386,8 +386,6 @@ class XPCShellRemote(xpcshell.XPCShellTests):
     def __init__(self, options, log):
         xpcshell.XPCShellTests.__init__(self, log)
 
-        options["threadCount"] = min(options["threadCount"] or 4, 4)
-
         self.options = options
         verbose = False
         if options["log_tbpl_level"] == "debug" or options["log_mach_level"] == "debug":

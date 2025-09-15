@@ -430,7 +430,7 @@ class MainMenuTestCompose : TestSetup() {
             openMoreMenu()
         }.clickSaveToCollectionButton {
         }.selectExistingCollection(collectionTitle) {
-            verifySnackBarText("Tab saved!")
+            verifySnackBarText("Tab saved")
         }.goToHomescreen(composeTestRule) {
         }.expandCollection(composeTestRule, collectionTitle) {
             verifyTabSavedInCollection(composeTestRule, firstTestPage.title)

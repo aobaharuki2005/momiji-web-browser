@@ -22,7 +22,7 @@ config = {
         "-memory",
         "3072",
         "-cores",
-        "4",
+        "8",
         "-skin",
         "800x1280",
         "-no-snapstorage",

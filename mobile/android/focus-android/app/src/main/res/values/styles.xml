@@ -3,7 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar.Bridge">
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <!-- This is the default color for activated controls(buttons) -->
         <item name="colorAccent">@color/accentBright</item>
@@ -84,14 +84,15 @@
     </style>
 
     <!-- Setting this via alertDialogStyle in AppTheme results in crashes. You need to
-         explicitly select this via "new AlertDialog.Builder(activity, R.style.DialogStyle)"
+         explicitly select this via "MaterialAlertDialogBuilder(activity, R.style.DialogStyle)"
          We need this style because the accent colour for the MainActivity is purple,
          but we want different accents in the dialog. -->
-    <style name="DialogStyle" parent="Theme.AppCompat.Dialog.Alert">
+    <style name="DialogStyle" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="android:windowTitleStyle">@style/DialogTitleStyle</item>
         <item name="android:textColorPrimary">@color/primaryText</item>
         <item name="dialogPreferredPadding">24dp</item>
         <item name="android:windowBackground">@drawable/dialog_background</item>
+        <item name="android:background">@drawable/dialog_background</item>
 
         <!-- This is the default color for activated controls(buttons) -->
         <item name="android:colorAccent">@color/accentBright</item>
@@ -100,6 +101,12 @@
         <item name="colorControlNormal">@color/accentBright</item>
         <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyle</item>
         <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyle</item>
+        <item name="shapeAppearance">@style/MaterialAlertDialogShapeAppearance</item>
+    </style>
+
+    <style name="MaterialAlertDialogShapeAppearance" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/material_dialog_corner_radius</item>
     </style>
 
     <style name="DialogButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">

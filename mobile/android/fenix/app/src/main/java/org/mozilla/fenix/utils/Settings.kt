@@ -2767,6 +2767,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = { DefaultTabManagementFeatureHelper.enhancementsEnabled },
     )
 
+    var allowScreenshotsInPrivateMode by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_screenshots_in_private_mode_allowed),
+        default = false,
+    )
+
     /**
      * Indicates whether the app should automatically clean up downloaded files.
      */

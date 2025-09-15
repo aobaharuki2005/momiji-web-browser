@@ -34,6 +34,7 @@
 #include "util/GetPidProvider.h"  // getpid()
 #include "util/Poison.h"
 #include "vm/JSONPrinter.h"
+#include "vm/Logging.h"
 #include "vm/Realm.h"
 #include "vm/Time.h"
 
@@ -1390,6 +1391,8 @@ inline bool js::Nursery::isUnderused() const {
 void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   JSRuntime* rt = runtime();
   MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
+
+  JS_LOG(gc, Info, "minor GC for reason %s", ExplainGCReason(reason));
 
   {
     AutoGCSession commitSession(gc, JS::HeapState::Idle);

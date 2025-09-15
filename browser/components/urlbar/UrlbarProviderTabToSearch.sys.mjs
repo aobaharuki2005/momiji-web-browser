@@ -10,21 +10,24 @@
 import {
   UrlbarProvider,
   UrlbarUtils,
-} from "resource:///modules/UrlbarUtils.sys.mjs";
+} from "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ActionsProviderContextualSearch:
-    "resource:///modules/ActionsProviderContextualSearch.sys.mjs",
-  UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.sys.mjs",
+    "moz-src:///browser/components/urlbar/ActionsProviderContextualSearch.sys.mjs",
+  UrlbarView: "moz-src:///browser/components/urlbar/UrlbarView.sys.mjs",
+  UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
+  UrlbarProviderAutofill:
+    "moz-src:///browser/components/urlbar/UrlbarProviderAutofill.sys.mjs",
   UrlbarProviderGlobalActions:
-    "resource:///modules/UrlbarProviderGlobalActions.sys.mjs",
-  UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
-  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
-  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
+    "moz-src:///browser/components/urlbar/UrlbarProviderGlobalActions.sys.mjs",
+  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
+  UrlbarSearchUtils:
+    "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
+  UrlbarTokenizer:
+    "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
 });
 
 const DYNAMIC_RESULT_TYPE = "onboardTabToSearch";

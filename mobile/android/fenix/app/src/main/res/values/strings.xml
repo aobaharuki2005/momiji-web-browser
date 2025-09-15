@@ -1857,7 +1857,9 @@
     <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
     <string name="create_collection_tabs_saved_new_collection_2">Collection saved</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
-    <string name="create_collection_tab_saved">Tab saved!</string>
+    <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">Tab saved!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved_2">Tab saved</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Close</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->

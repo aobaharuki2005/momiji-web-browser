@@ -8,7 +8,8 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
+  UrlbarTokenizer:
+    "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
 });
 
 const RESTRICT_TOKENS = [

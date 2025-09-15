@@ -19,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,7 +39,6 @@ import androidx.core.text.isDigitsOnly
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.button.PrimaryButton
 import mozilla.components.compose.base.textfield.TextField
 import mozilla.components.compose.base.utils.toLocaleString
@@ -174,7 +174,7 @@ private fun TabCounter(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Divider()
+        HorizontalDivider()
 
         Spacer(modifier = Modifier.height(8.dp))
 

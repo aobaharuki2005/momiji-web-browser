@@ -234,8 +234,8 @@ addAccessibleTask(
       content.document.getElementById("namedLink").name = "newName";
     });
 
-    await testCachedRelation(link, RELATION_LINKS_TO, null);
-    await testCachedRelation(link2, RELATION_LINKS_TO, null);
+    await testCachedRelation(link, RELATION_LINKS_TO, []);
+    await testCachedRelation(link2, RELATION_LINKS_TO, []);
 
     await invokeContentTask(browser, [], () => {
       content.document.getElementById("link").href = "#item2";

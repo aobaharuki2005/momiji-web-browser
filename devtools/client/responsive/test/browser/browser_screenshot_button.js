@@ -3,42 +3,47 @@
 
 "use strict";
 
-// Test global screenshot button
+// Test global screenshot button and screenshot size with and without a viewport meta tag.
+// See Bug 1979518.
 
 const TEST_URL = "data:text/html;charset=utf-8,";
+const TEST_URL2 =
+  TEST_URL + "<meta name='viewport' content='width=device-width' />";
 
-addRDMTask(TEST_URL, async function ({ ui }) {
-  const { toolWindow } = ui;
-  const { store, document } = toolWindow;
+for (const URL of [TEST_URL, TEST_URL2]) {
+  addRDMTask(URL, async function ({ ui }) {
+    info(
+      `Test global screenshot button and screenshot size ${URL.includes("viewport") ? "with" : "without"} a viewport meta tag`
+    );
 
-  info("Click the screenshot button");
-  const screenshotButton = document.getElementById("screenshot-button");
-  screenshotButton.click();
+    const { toolWindow } = ui;
+    const { document } = toolWindow;
 
-  const whenScreenshotSucceeded = waitUntilDownload();
+    info("Click the screenshot button");
+    const screenshotButton = document.getElementById("screenshot-button");
+    screenshotButton.click();
 
-  const filePath = await whenScreenshotSucceeded;
-  const image = new Image();
-  image.src = PathUtils.toFileURI(filePath);
+    const whenScreenshotSucceeded = waitUntilDownload();
 
-  await once(image, "load");
+    const filePath = await whenScreenshotSucceeded;
+    const image = new Image();
+    image.src = PathUtils.toFileURI(filePath);
 
-  // We have only one viewport at the moment
-  const viewport = store.getState().viewports[0];
-  const ratio = window.devicePixelRatio;
+    await once(image, "load");
 
-  is(
-    image.width,
-    viewport.width * ratio,
-    "screenshot width has the expected width"
-  );
+    const { width, height, ratio } = await spawnViewportTask(ui, {}, () => {
+      return {
+        width: content.innerWidth,
+        height: content.innerHeight,
+        ratio: content.devicePixelRatio,
+      };
+    });
 
-  is(
-    image.height,
-    viewport.height * ratio,
-    "screenshot width has the expected height"
-  );
+    is(image.width, width * ratio, "screenshot has the expected width");
 
-  await IOUtils.remove(filePath);
-  await resetDownloads();
-});
+    is(image.height, height * ratio, "screenshot has the expected height");
+
+    await IOUtils.remove(filePath);
+    await resetDownloads();
+  });
+}

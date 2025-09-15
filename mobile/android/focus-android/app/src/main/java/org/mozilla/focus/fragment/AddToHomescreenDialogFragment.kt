@@ -18,6 +18,7 @@ import androidx.core.content.edit
 import androidx.core.view.isVisible
 import androidx.fragment.app.DialogFragment
 import androidx.preference.PreferenceManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import mozilla.components.browser.icons.IconRequest
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.focus.GleanMetrics.AddToHomeScreen
@@ -40,7 +41,7 @@ class AddToHomescreenDialogFragment : DialogFragment() {
         val blockingEnabled = requireArguments().getBoolean(BLOCKING_ENABLED)
         val requestDesktop = requireArguments().getBoolean(REQUEST_DESKTOP)
 
-        val builder = AlertDialog.Builder(requireActivity(), R.style.DialogStyle)
+        val builder = MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyle)
         builder.setCancelable(true)
         val inflater = requireActivity().layoutInflater
         val dialogView = inflater.inflate(R.layout.dialog_add_to_homescreen2, null)

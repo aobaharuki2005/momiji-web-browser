@@ -517,8 +517,10 @@ void TaskController::AddTask(already_AddRefed<Task>&& aTask) {
 #endif
 
   LogTask::LogDispatch(task);
-  PROFILER_MARKER("TaskController::AddTask", OTHER, {}, FlowMarker,
-                  Flow::FromPointer(task.get()));
+  PROFILER_MARKER("TaskController::AddTask", OTHER,
+                  {MarkerStack::MaybeCapture(
+                      profiler_feature_active(ProfilerFeature::Flows))},
+                  FlowMarker, Flow::FromPointer(task.get()));
 
   std::pair<std::set<RefPtr<Task>, Task::PriorityCompare>::iterator, bool>
       insertion;

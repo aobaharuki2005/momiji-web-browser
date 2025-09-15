@@ -709,7 +709,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         ) {
             val messageResId = when {
                 isNewCollection -> R.string.create_collection_tabs_saved_new_collection_2
-                tabSize == 1 -> R.string.create_collection_tab_saved
+                tabSize == 1 -> R.string.create_collection_tab_saved_2
                 else -> return // Don't show snackbar for multiple tabs
             }
 

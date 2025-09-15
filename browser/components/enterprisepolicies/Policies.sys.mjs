@@ -28,7 +28,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   ProxyPolicies: "resource:///modules/policies/ProxyPolicies.sys.mjs",
-  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  QuickSuggest: "moz-src:///browser/components/urlbar/QuickSuggest.sys.mjs",
   WebsiteFilter: "resource:///modules/policies/WebsiteFilter.sys.mjs",
 });
 
@@ -1822,6 +1822,51 @@ export var Policies = {
         "capability.policy.localfilelinks_policy.sites",
         param.join(" ")
       );
+    },
+  },
+
+  LocalNetworkAccess: {
+    onBeforeAddons(manager, param) {
+      // Only process if "Enabled" is explicitly specified
+      if ("Enabled" in param) {
+        PoliciesUtils.setDefaultPref(
+          "network.lna.enabled",
+          param.Enabled,
+          param.Locked
+        );
+
+        if (param.Enabled === false) {
+          // If LNA is explicitly disabled, disable other features too
+          PoliciesUtils.setDefaultPref(
+            "network.lna.block_trackers",
+            false,
+            param.Locked
+          );
+          PoliciesUtils.setDefaultPref(
+            "network.lna.blocking",
+            false,
+            param.Locked
+          );
+        } else {
+          // LNA is enabled - handle fine-grained controls
+          // For backward compatibility, default to true if not specified
+          let blockTrackers =
+            "BlockTrackers" in param ? param.BlockTrackers : true;
+          let enablePrompting =
+            "EnablePrompting" in param ? param.EnablePrompting : true;
+
+          PoliciesUtils.setDefaultPref(
+            "network.lna.block_trackers",
+            blockTrackers,
+            param.Locked
+          );
+          PoliciesUtils.setDefaultPref(
+            "network.lna.blocking",
+            enablePrompting,
+            param.Locked
+          );
+        }
+      }
     },
   },
 

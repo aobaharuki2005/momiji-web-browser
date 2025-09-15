@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -30,7 +31,6 @@ import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.storage.sync.TabEntry
-import mozilla.components.compose.base.Divider
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.tabstray.ext.isNormalTab
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
@@ -206,7 +206,7 @@ fun TabsTray(
             )
         }
 
-        Divider()
+        HorizontalDivider()
 
         Box(modifier = Modifier.fillMaxSize()) {
             HorizontalPager(

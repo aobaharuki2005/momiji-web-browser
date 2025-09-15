@@ -11,9 +11,10 @@
 ChromeUtils.defineESModuleGetters(this, {
   AmpMatchingStrategy:
     "moz-src:///toolkit/components/uniffi-bindgen-gecko-js/components/generated/RustSuggest.sys.mjs",
-  AmpSuggestions: "resource:///modules/urlbar/private/AmpSuggestions.sys.mjs",
+  AmpSuggestions:
+    "moz-src:///browser/components/urlbar/private/AmpSuggestions.sys.mjs",
   SuggestBackendRust:
-    "resource:///modules/urlbar/private/SuggestBackendRust.sys.mjs",
+    "moz-src:///browser/components/urlbar/private/SuggestBackendRust.sys.mjs",
   SuggestionProvider:
     "moz-src:///toolkit/components/uniffi-bindgen-gecko-js/components/generated/RustSuggest.sys.mjs",
 });

@@ -73,6 +73,7 @@ assertEq(ins.exports.check(0, 10, 1), 1);
 
 let ab = mem.buffer;
 assertEq(ab.resizable, false);
+assertEq(ab.maxByteLength, 50 << 16);
 
 // Make .buffer resizable, detaching the old one.
 let rab = mem.toResizableBuffer();
@@ -91,7 +92,8 @@ assertEq(ab2.resizable, false);
 assertEq(mem.buffer, ab2);
 assertEq(ab2 !== ab, true);
 assertEq(rab.detached, true);
-assertEq(ab2.maxByteLength, 20 << 16);
+assertEq(ab2.byteLength, 20 << 16);
+assertEq(ab2.maxByteLength, 50 << 16);
 
 assertEq(ins.exports.check(0, 10, 3), 1);
 ins.exports.fill(0, 10, 2);
@@ -133,3 +135,10 @@ assertThrowsInstanceOf(() => rab.resize(rab.byteLength + 10), RangeError);
 
 mem = new WebAssembly.Memory({initial: 20});
 assertThrowsInstanceOf(() => mem.toResizableBuffer(), TypeError);
+
+// Testing the limits of our implementation.
+let big_memory = new WebAssembly.Memory({address: 'i64', initial: 0n, maximum: BigInt(MaxMemory64PagesValidation), shared: false});
+let buffer = big_memory.toResizableBuffer();
+
+// Asserts that buffer.maxByteLength is less than MAX_SAFE_INTEGER.
+assertEq(buffer.maxByteLength <= Number.MAX_SAFE_INTEGER, true);

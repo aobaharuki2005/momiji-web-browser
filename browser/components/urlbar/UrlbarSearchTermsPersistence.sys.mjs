@@ -4,7 +4,7 @@
 
 const lazy = {};
 
-import { UrlbarUtils } from "resource:///modules/UrlbarUtils.sys.mjs";
+import { UrlbarUtils } from "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs";
 
 ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",

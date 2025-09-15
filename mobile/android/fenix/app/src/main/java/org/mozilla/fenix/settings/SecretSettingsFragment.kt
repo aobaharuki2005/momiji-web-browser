@@ -370,6 +370,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             isChecked = context.settings().isIsolatedProcessEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_screenshots_in_private_mode_allowed).apply {
+            isVisible = Config.channel.isNightlyOrDebug
+            isChecked = context.settings().allowScreenshotsInPrivateMode
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
     }
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
