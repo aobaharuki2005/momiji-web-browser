@@ -96,13 +96,19 @@ add_task(async function testSettingGroupTelemetry() {
       let checkbox = doc.getElementById("test-checkbox");
       EventUtils.synthesizeMouseAtCenter(checkbox.inputEl, {}, win);
       EventUtils.synthesizeMouseAtCenter(checkbox.labelEl, {}, win);
+      // Check that clicking the description is not counted as a click.
+      AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
       EventUtils.synthesizeMouseAtCenter(checkbox.descriptionEl, {}, win);
+      AccessibilityUtils.resetEnv();
 
       let button = doc.getElementById("test-button");
       is(button.buttonEl.disabled, true, "button is disabled");
       let radio = doc.getElementById("test-radio-two");
       EventUtils.synthesizeMouseAtCenter(radio.inputEl, {}, win);
+      // Check that clicking the description is not counted as a click.
+      AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
       EventUtils.synthesizeMouseAtCenter(radio.descriptionEl, {}, win);
+      AccessibilityUtils.resetEnv();
 
       // Ensure the button disabled state updated.
       await new Promise(r => win.requestAnimationFrame(r));
