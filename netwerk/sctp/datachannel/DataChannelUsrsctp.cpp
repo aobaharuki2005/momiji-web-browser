@@ -783,7 +783,10 @@ bool DataChannelConnectionUsrsctp::SendBufferedMessages(
 void DataChannelConnectionUsrsctp::OnStreamOpen(uint16_t stream) {
   MOZ_ASSERT(mSTS->IsOnCurrentThread());
 
-  mQueuedData.RemoveElementsBy([stream, this](const auto& dataItem) {
+  nsTArray<UniquePtr<QueuedDataMessage>> temp;
+  std::swap(temp, mQueuedData);
+
+  temp.RemoveElementsBy([stream, this](const auto& dataItem) {
     const bool match = dataItem->mStream == stream;
     if (match) {
       DC_DEBUG(("Delivering queued data for stream %u, length %zu", stream,
@@ -795,6 +798,8 @@ void DataChannelConnectionUsrsctp::OnStreamOpen(uint16_t stream) {
     }
     return match;
   });
+
+  std::swap(temp, mQueuedData);
 }
 
 bool DataChannelConnectionUsrsctp::HasQueuedData(uint16_t aStream) const {
