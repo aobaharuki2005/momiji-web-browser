@@ -5211,7 +5211,29 @@ void ClientWebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
                                             *uvec2::From(width, height),
                                             {format, type},
                                             state.mPixelPackState};
-    (void)DoReadPixels(desc, *range);
+    bool succeeded = DoReadPixels(desc, *range);
+    if (succeeded &&
+        ShouldResistFingerprinting(RFPTarget::WebGLRandomization)) {
+      const auto pii = webgl::PackingInfoInfo::For(desc.pi);
+      // DoReadPixels() requres pii to be Some().
+      MOZ_ASSERT(pii.isSome());
+
+      // With WebGL, the alpha channel is always the last element (if it
+      // exists) in the pixel. With nsRFPService::RandomizeElements, we do
+      // random % (pii->elementsPerPixel - 1) + offset to get the channel
+      // we want to randomize. With the offset being 0, we avoid the last
+      // element, which is the alpha channel.
+      // If WebGL had ARGB or some other format where the alpha channel
+      // was not the last element, we would need to adjust the offset.
+      constexpr uint8_t alphaChannelOffset = 0;
+      bool hasAlphaChannel =
+          format == LOCAL_GL_SRGB_ALPHA || format == LOCAL_GL_RGBA ||
+          format == LOCAL_GL_BGRA || format == LOCAL_GL_LUMINANCE_ALPHA;
+      nsRFPService::RandomizeElements(
+          GetCookieJarSettings(), PrincipalOrNull(), range->data(),
+          range->size_bytes(), pii->elementsPerPixel, pii->bytesPerElement,
+          alphaChannelOffset, hasAlphaChannel);
+    }
   });
 }
 
