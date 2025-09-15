@@ -12,6 +12,7 @@ ChromeUtils.defineESModuleGetters(
     LlamaCppPipeline:
       "chrome://global/content/ml/backends/LlamaCppPipeline.mjs",
     PipelineOptions: "chrome://global/content/ml/EngineProcess.sys.mjs",
+    OpenAIPipeline: "chrome://global/content/ml/backends/OpenAIPipeline.mjs",
   },
   { global: "current" }
 );
@@ -39,6 +40,9 @@ export async function getBackend(consumer, wasm, options) {
       break;
     case "llama.cpp":
       factory = lazy.LlamaCppPipeline.initialize;
+      break;
+    case "openai":
+      factory = lazy.OpenAIPipeline.initialize;
       break;
     default:
       factory = lazy.ONNXPipeline.initialize;

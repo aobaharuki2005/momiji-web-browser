@@ -24,6 +24,10 @@ const { getInferenceProcessInfo } = ChromeUtils.importESModule(
   "chrome://global/content/ml/Utils.sys.mjs"
 );
 
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
+
 const MS_PER_SEC = 1000;
 const IndexedDBCache = TestIndexedDBCache;
 
@@ -728,4 +732,71 @@ async function perfTest({
  */
 function isEqualWithTolerance(A, B, epsilon = 0.000001) {
   return Math.abs(Math.abs(A) - Math.abs(B)) < epsilon;
+}
+
+// Mock OpenAI Chat Completions server for mochitests
+// Serves: http://localhost:11434/v1/chat/completions
+
+function readRequestBody(request) {
+  info("readRequestBody");
+  // Read the POST body as UTF-8 text
+  const stream = request.bodyInputStream;
+  const available = stream.available();
+  return NetUtil.readInputStreamToString(stream, available, {
+    charset: "UTF-8",
+  });
+}
+
+function startMockOpenAI({ echo = "This gets echoed." } = {}) {
+  const server = new HttpServer();
+
+  server.registerPathHandler("/v1/chat/completions", (request, response) => {
+    info("GET /v1/chat/completions");
+
+    let bodyText = "";
+    if (request.method === "POST") {
+      try {
+        bodyText = readRequestBody(request);
+      } catch (_) {}
+    }
+    info("bodyText: " + bodyText);
+
+    const payload = {
+      id: "chatcmpl-mock-1",
+      object: "chat.completion",
+      created: Math.floor(Date.now() / 1000),
+      model: "qwen3:0.6b",
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: "assistant",
+            content: "This is a mock summary for testing end-to-end flow.",
+          },
+          finish_reason: "stop",
+        },
+      ],
+      usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+      echo,
+    };
+
+    info("Sending back payload: " + JSON.stringify(payload));
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.setHeader(
+      "Content-Type",
+      "application/json; charset=utf-8",
+      false
+    );
+    response.setHeader("Access-Control-Allow-Origin", "*", false);
+    response.write(JSON.stringify(payload));
+  });
+
+  // -1 tells it to pick an ephemeral port
+  server.start(-1);
+  const port = server.identity.primaryPort;
+  return { server, port };
+}
+
+function stopMockOpenAI(server) {
+  return new Promise(resolve => server.stop(resolve));
 }

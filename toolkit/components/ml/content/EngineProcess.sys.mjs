@@ -26,6 +26,7 @@ export const BACKENDS = Object.freeze({
   onnxNative: "onnx-native",
   llamaCpp: "llama.cpp",
   bestLlama: "best-llama",
+  openai: "openai",
 });
 
 /**
@@ -568,6 +569,20 @@ export class PipelineOptions {
   backend = null;
 
   /**
+   * The base URL to use for openai API requests.
+   *
+   * @type {?string}
+   */
+  baseURL = null;
+
+  /**
+   * The API key to use for openai API requests.
+   *
+   * @type {?string}
+   */
+  apiKey = null;
+
+  /**
    * Create a PipelineOptions instance.
    *
    * @param {object} options - The options for the pipeline. Must include mandatory fields.
@@ -656,7 +671,7 @@ export class PipelineOptions {
   #validateId(field, value) {
     // Define a regular expression to match the optional organization and required name
     // `organization/` part is optional, and both parts should follow the taskName pattern.
-    const validPattern = /^(?:[a-zA-Z0-9_\-\.]+\/)?[a-zA-Z0-9_\-\.]+$/;
+    const validPattern = /^(?:[a-zA-Z0-9_\-\.\:]+\/)?[a-zA-Z0-9_\-\.\:]+$/;
 
     // Check if the value matches the pattern
     if (!validPattern.test(value)) {
@@ -770,6 +785,8 @@ export class PipelineOptions {
       "numThreadsDecoding",
       "modelFile",
       "backend",
+      "baseURL",
+      "apiKey",
     ];
 
     if (options instanceof PipelineOptions) {
@@ -906,6 +923,8 @@ export class PipelineOptions {
       numThreadsDecoding: this.numThreadsDecoding,
       modelFile: this.modelFile,
       backend: this.backend,
+      baseURL: this.baseURL,
+      apiKey: this.apiKey,
     };
   }
 
