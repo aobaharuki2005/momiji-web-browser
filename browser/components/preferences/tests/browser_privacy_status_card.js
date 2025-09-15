@@ -7,6 +7,18 @@ const FEATURE_PREF = "privacy.ui.status_card";
 const CARD_NAME = "security-privacy-card";
 const ISSUE_CONTROL_ID = "securityWarningsGroup";
 
+// Some things are set dangerously in the test environment.
+// We can supress these errors!
+const RESET_PROBLEMATIC_TEST_DEFAULTS = [
+  ["browser.preferences.config_warning.warningPasswordManager.dismissed", true],
+  ["browser.preferences.config_warning.warningPopupBlocker.dismissed", true],
+  [
+    "browser.preferences.config_warning.warningProxyAutodetection.dismissed",
+    true,
+  ],
+  ["browser.preferences.config_warning.warningTopLevelDataURI.dismissed", true],
+];
+
 function getCardAndCheckHeader(document, expectedHeaderL10n) {
   let elements = document.getElementsByTagName(CARD_NAME);
   Assert.equal(elements.length, 1, "Card present in preferences");
@@ -33,7 +45,7 @@ function assertHappyBullets(card) {
 
 add_task(async function test_section_hidden_when_feature_flag_disabled() {
   await SpecialPowers.pushPrefEnv({
-    set: [[FEATURE_PREF, false]],
+    set: [[FEATURE_PREF, false]].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   await BrowserTestUtils.withNewTab(
@@ -49,7 +61,7 @@ add_task(async function test_section_hidden_when_feature_flag_disabled() {
 
 add_task(async function test_section_default_state() {
   await SpecialPowers.pushPrefEnv({
-    set: [[FEATURE_PREF, true]],
+    set: [[FEATURE_PREF, true]].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   await BrowserTestUtils.withNewTab(
@@ -70,7 +82,7 @@ add_task(async function test_section_default_state() {
 
 add_task(async function test_section_default_state() {
   await SpecialPowers.pushPrefEnv({
-    set: [[FEATURE_PREF, true]],
+    set: [[FEATURE_PREF, true]].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   await BrowserTestUtils.withNewTab(
@@ -94,7 +106,7 @@ add_task(async function test_section_strict_indicator() {
     set: [
       [FEATURE_PREF, true],
       ["browser.contentblocking.category", "strict"],
-    ],
+    ].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   await BrowserTestUtils.withNewTab(
@@ -119,7 +131,7 @@ add_task(async function test_issue_present() {
       [FEATURE_PREF, true],
       ["browser.contentblocking.category", "strict"],
       ["privacy.ui.status_card.testing.show_issue", true],
-    ],
+    ].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   await BrowserTestUtils.withNewTab(
@@ -158,7 +170,7 @@ add_task(async function test_issue_fix() {
     set: [
       [FEATURE_PREF, true],
       ["privacy.ui.status_card.testing.show_issue", true],
-    ],
+    ].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   await BrowserTestUtils.withNewTab(
@@ -202,7 +214,7 @@ add_task(async function test_issue_dismiss() {
     set: [
       [FEATURE_PREF, true],
       ["privacy.ui.status_card.testing.show_issue", true],
-    ],
+    ].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   await BrowserTestUtils.withNewTab(
@@ -246,7 +258,7 @@ add_task(async function test_issue_dismiss() {
 
 add_task(async function test_update_status_indicator() {
   await SpecialPowers.pushPrefEnv({
-    set: [[FEATURE_PREF, true]],
+    set: [[FEATURE_PREF, true]].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   // Define testers for each UI state.
