@@ -239,6 +239,9 @@ class PromptFeature private constructor(
     internal var previousPromptRequest: PromptRequest? = null
     private var lastPromptRequest: PromptRequest? = null
 
+    // boolean that becomes true when the user chooses not to use the strong generated password
+    private var dontUseStrongSuggestedPassword: Boolean = false
+
     constructor(
         activity: Activity,
         store: BrowserStore,
@@ -665,7 +668,7 @@ class PromptFeature private constructor(
             }
 
             is SelectLoginPrompt -> {
-                if (!isLoginAutofillEnabled()) {
+                if (!isLoginAutofillEnabled() || dontUseStrongSuggestedPassword) {
                     return
                 }
 
@@ -725,7 +728,12 @@ class PromptFeature private constructor(
                     it.onDeny()
                 }
 
-                is Dismissible -> it.onDismiss()
+                is Dismissible -> {
+                    if (it is SelectLoginPrompt) {
+                        dontUseStrongSuggestedPassword = true
+                    }
+                    it.onDismiss()
+                }
                 else -> {
                     // no-op
                 }
