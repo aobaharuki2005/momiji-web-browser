@@ -24,7 +24,7 @@ add_task(async function test_turn_on_scheduled_backups_confirm() {
   Services.telemetry.clearEvents();
   Services.fog.testResetFOG();
 
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let settings = browser.contentDocument.querySelector("backup-settings");
 
     await settings.updateComplete;
@@ -91,7 +91,7 @@ add_task(async function test_turn_on_custom_location_filepicker() {
   Services.telemetry.clearEvents();
   Services.fog.testResetFOG();
 
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     const mockCustomParentDir = await IOUtils.createUniqueDirectory(
       PathUtils.tempDir,
       "settings-custom-dir-test"
@@ -238,7 +238,7 @@ add_task(async function test_turn_on_scheduled_backups_encryption() {
   Services.telemetry.clearEvents();
   Services.fog.testResetFOG();
 
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let sandbox = sinon.createSandbox();
     let settings = browser.contentDocument.querySelector("backup-settings");
 
@@ -345,7 +345,7 @@ add_task(async function test_turn_on_scheduled_backups_encryption() {
  * enabling encryption.
  */
 add_task(async function test_turn_on_scheduled_backups_encryption_error() {
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let sandbox = sinon.createSandbox();
     let settings = browser.contentDocument.querySelector("backup-settings");
 

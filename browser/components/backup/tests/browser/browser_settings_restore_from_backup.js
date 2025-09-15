@@ -31,7 +31,7 @@ add_setup(async () => {
  * Tests that the a backup file can be restored from the settings page.
  */
 add_task(async function test_restore_from_backup() {
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let sandbox = sinon.createSandbox();
     let recoverFromBackupArchiveStub = sandbox
       .stub(BackupService.prototype, "recoverFromBackupArchive")
@@ -130,7 +130,7 @@ add_task(async function test_restore_from_backup() {
  * Tests that the dialog stays open while restoring from the settings page.
  */
 add_task(async function test_restore_in_progress() {
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let sandbox = sinon.createSandbox();
     let bs = BackupService.get();
 
@@ -254,7 +254,7 @@ add_task(async function test_restore_in_progress() {
  * Tests the backup autodetect feature for the file picker
  */
 add_task(async function test_finding_a_valid_backup() {
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let sandbox = sinon.createSandbox();
     let bs = BackupService.get();
 

@@ -1,5 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
-   https://creativecommons.org/publicdomain/zero/1.0/ */
+    https://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
@@ -33,7 +33,7 @@ add_setup(async () => {
  * Test creating a new backup using the "Backup now" button
  */
 add_task(async function test_create_new_backup_trigger() {
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let settings = browser.contentDocument.querySelector("backup-settings");
 
     let bs = BackupService.get();
@@ -115,7 +115,7 @@ add_task(async function test_create_backup_trigger_disabled() {
   // the backup background task
   let backupPromise = bs.createBackup();
 
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let settings = browser.contentDocument.querySelector("backup-settings");
     Assert.ok(
       settings.triggerBackupButtonEl.disabled,

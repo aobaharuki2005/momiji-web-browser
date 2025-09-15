@@ -17,11 +17,11 @@ add_setup(async () => {
 });
 
 /**
- * Tests that the section for controlling backup in about:preferences is
+ * Tests that the section for controlling backup in about:preferences#sync is
  * visible, but can also be hidden via a pref.
  */
 add_task(async function test_preferences_visibility() {
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let backupSection =
       browser.contentDocument.querySelector("#dataBackupGroup");
     Assert.ok(backupSection, "Found backup preferences section");
@@ -38,7 +38,7 @@ add_task(async function test_preferences_visibility() {
     set: [["browser.backup.preferences.ui.enabled", false]],
   });
 
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let backupSection =
       browser.contentDocument.querySelector("#dataBackupGroup");
     Assert.ok(backupSection, "Found backup preferences section");
@@ -60,7 +60,7 @@ add_task(async function test_disable_backup_encryption_confirm() {
   Services.telemetry.clearEvents();
   Services.fog.testResetFOG();
 
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let sandbox = sinon.createSandbox();
     let disableEncryptionStub = sandbox
       .stub(BackupService.prototype, "disableEncryption")
@@ -144,7 +144,7 @@ add_task(async function test_disable_backup_encryption_confirm() {
  * Tests that the a backup file can be restored from the settings page.
  */
 add_task(async function test_restore_from_backup() {
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let sandbox = sinon.createSandbox();
     let recoverFromBackupArchiveStub = sandbox
       .stub(BackupService.prototype, "recoverFromBackupArchive")
@@ -255,7 +255,7 @@ add_task(async function test_last_backup_info_and_location() {
     set: [[SCHEDULED_BACKUPS_ENABLED_PREF, true]],
   });
 
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let sandbox = sinon.createSandbox();
     let bs = BackupService.get();
 

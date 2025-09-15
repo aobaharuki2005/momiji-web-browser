@@ -778,13 +778,6 @@ var gMainPane = {
       document.getElementById("dataMigrationGroup").remove();
     }
 
-    if (
-      Services.prefs.getBoolPref("browser.backup.preferences.ui.enabled", false)
-    ) {
-      let backupGroup = document.getElementById("dataBackupGroup");
-      backupGroup.removeAttribute("data-hidden-from-search");
-    }
-
     if (!SelectableProfileService.isEnabled) {
       // Don't want to rely on .hidden for the toplevel groupbox because
       // of the pane hiding/showing code potentially interfering:

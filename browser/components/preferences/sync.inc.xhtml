@@ -245,4 +245,19 @@
     </vbox>
   </vbox>
 </deck>
+<!-- Firefox Backup -->
+<hbox id="backupCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneSync">
+  <html:h1 data-l10n-id="settings-data-backup-header"/>
+</hbox>
+<groupbox id="dataBackupGroup" data-category="paneSync"
+          data-subcategory="backup" hidden="true"
+           data-hidden-from-search="true">
+   <label class="search-header" hidden="true"><html:h2 data-l10n-id="settings-data-backup-header"/></label>
+   <hbox flex="1">
+     <html:backup-settings />
+   </hbox>
+ </groupbox>
 </html:template>
