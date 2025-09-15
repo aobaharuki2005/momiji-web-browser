@@ -558,6 +558,8 @@ class TabGroupPanel extends Panel {
     this.#group.hoverPreviewPanelActive = true;
 
     this.panelElement.openPopup(this.#popupTarget, this.popupOptions);
+
+    Glean.tabgroup.groupInteractions.hover_preview.add();
   }
 
   #updatePanelContents() {

@@ -111,6 +111,9 @@ async function resetState() {
 
   let openPanels = getOpenPanels();
   Assert.ok(!openPanels.length, `sanity check: no panels open`);
+
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
 }
 
 function createFakePanel(win = window) {
@@ -1477,4 +1480,52 @@ add_task(async function testTabAndTabGroupsWorkTogether() {
   BrowserTestUtils.removeTab(tabToLeft);
   BrowserTestUtils.removeTab(tabToRight);
   await removeTabGroup(group);
+});
+
+add_task(async function testTabGroupHoverPreviewTelemetry() {
+  const previewPanel = window.document.getElementById(
+    TAB_GROUP_PREVIEW_PANEL_ID
+  );
+  let tabGroups = [];
+
+  for (let i = 0; i < 5; i++) {
+    const tab = await addTabTo(gBrowser, `data:text/plain,tab${i + 1}`);
+    const tabGroup = gBrowser.addTabGroup([tab], { label: `group${i + 1}` });
+    await TabGroupTestUtils.toggleCollapsed(tabGroup, true);
+    tabGroups.push(tabGroup);
+  }
+
+  Assert.ok(
+    !Glean.tabgroup.groupInteractions.hover_preview.testGetValue(),
+    "hover preview interaction count should start out not set"
+  );
+
+  let interactionCount = 1;
+
+  for (const tabGroup of tabGroups) {
+    await openGroupPreview(tabGroup);
+    await BrowserTestUtils.waitForCondition(
+      () => previewPanel.anchorNode?.parentElement == tabGroup,
+      "panel re-anchored to the next tab group"
+    );
+    await BrowserTestUtils.waitForCondition(
+      () =>
+        Glean.tabgroup.groupInteractions.hover_preview.testGetValue() ==
+        interactionCount,
+      `hover preview interaction count incremented`
+    );
+    Assert.equal(
+      Glean.tabgroup.groupInteractions.hover_preview.testGetValue(),
+      interactionCount,
+      `hover preview interaction count should be ${interactionCount}`
+    );
+    interactionCount++;
+  }
+
+  await Promise.all(
+    tabGroups.map(tabGroup => TabGroupTestUtils.removeTabGroup(tabGroup))
+  );
+
+  TabGroupTestUtils.forgetSavedTabGroups();
+  await resetState();
 });
