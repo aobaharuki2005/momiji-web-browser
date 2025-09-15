@@ -449,7 +449,7 @@
 
     Description for learning more about our privacy notice.
   -->
-  <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Firefox personvernerklæring</string>
+  <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Firefox personvernfråsegn</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">Vi vernar deg gjerne</string>
   <!--
@@ -548,7 +548,7 @@
   <!-- Line two of the terms of service onboarding page. 'Firefox' is intentionally hardcoded. %1$s is replaced by an active link, using onboarding_term_of_service_line_two_link_text as text (“Privacy Notice”). -->
   <string name="onboarding_term_of_service_line_two_2" tools:ignore="BrandUsage">Firefox bryr seg om personvernet ditt. Les meir i %1$sa vår.</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_two. -->
-  <string name="onboarding_term_of_service_line_two_link_text">Personvernerklæring</string>
+  <string name="onboarding_term_of_service_line_two_link_text">Personvernfråsegn</string>
   <!-- Line three of the terms of service onboarding page. 'Firefox' and 'Mozilla' are intentionally hardcoded. %1$s is replaced by an active link using onboarding_term_of_service_line_three_link_text as text (“Manage”). -->
   <string name="onboarding_term_of_service_line_three" tools:ignore="BrandUsage">For å hjelpe til med å forbetre nettlesaren sender Firefox diagnose- og interaksjonsdata til Mozilla. %1$s</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
@@ -3506,7 +3506,7 @@
   -->
   <string name="micro_survey_survey_header_2">Fullfør undersøkinga</string>
   <!-- The privacy notice link -->
-  <string name="micro_survey_privacy_notice_2">Personvernerklæring</string>
+  <string name="micro_survey_privacy_notice_2">Personvernfråsegn</string>
   <!-- The submit button label text -->
   <string name="micro_survey_submit_button_label">Send inn</string>
   <!-- The survey completion header -->

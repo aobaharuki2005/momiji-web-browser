@@ -1707,6 +1707,8 @@
   <string name="webcompat_reporter_send">Mondo</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
   <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Marandu’i oñemondóma</string>
+  <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
+  <string name="webcompat_reporter_success_snackbar_text_2">Marandu’i mondopyre</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Mboty</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
@@ -1884,6 +1886,8 @@
   <string name="bookmark_close_button_content_description">Emboty techaukaha</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">Ndaipóri gueteri techaukaha</string>
+  <!-- Bookmark screen folder description. %s is the count of bookmark folder children -->
+  <string name="bookmarks_folder_description">Marandurendápe techaukaha: %s</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
   <string name="bookmark_empty_list_guest_description">Eñongatu tenda eikundakuévo. Eñepyrũ tembiapo ereko hag̃ua techaukaha umi ambue mba’e’oka ojuehepyrévagui.</string>
   <!-- Text for the button to navigate to sync authentication -->
@@ -2339,6 +2343,16 @@
   <string name="preference_enhanced_tracking_protection_strict">Mbaretépe</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Tapykuehoha iporãvéva ñemo’ã rovake ha apopykuaave, hákatu ikatu heta tenda nomba’poporãi.</string>
+  <!--
+    Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
+
+    Title for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection
+  -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">¿Añetehápe emboguese ko’ã ñemoĩporãha?</string>
+  <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Eipe’a myatyrõha</string>
+  <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_cancel">Emyandy myatyrõha</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Mba’e umi ojokóva tapykuehoha mo’ãha imbaretéva</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
