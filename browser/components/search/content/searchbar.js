@@ -577,8 +577,6 @@
           // If the input field is still focused then a different window has
           // received focus, ignore the next focus event.
           this._ignoreFocus = document.activeElement == this._textbox;
-
-          this.textbox.mController.resetSession();
         },
         true
       );
