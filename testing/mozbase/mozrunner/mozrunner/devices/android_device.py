@@ -170,7 +170,7 @@ AVD_DICT = {
             "-memory",
             "3072",
             "-cores",
-            "4",
+            "8",
             "-prop",
             "ro.test_harness=true",
             "-no-snapstorage",

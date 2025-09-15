@@ -279,7 +279,7 @@ config = {
                 "--manifest=tests/xpcshell.toml",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--log-tbpl-level=%(log_tbpl_level)s",
-                "--threads=4",
+                "--threads=10",
                 "--deviceSerial=%(device_serial)s",
                 "%(xpcshell_extra)s",
             ],
