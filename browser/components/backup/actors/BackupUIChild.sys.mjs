@@ -33,7 +33,7 @@ export class BackupUIChild extends JSWindowActorChild {
       let result = await this.sendQuery("TriggerCreateBackup", event.detail);
 
       if (!result.success) {
-        // TODO: show the error in backup settings (Bug 1985557)
+        event.target.backupErrorCode = result.errorCode;
       }
     } else if (event.type == "BackupUI:EnableScheduledBackups") {
       const target = event.target;

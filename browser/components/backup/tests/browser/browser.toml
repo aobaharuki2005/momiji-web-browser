@@ -22,6 +22,8 @@ skip-if = [
 
 ["browser_settings_enable_backup_encryption.js"]
 
+["browser_settings_errors.js"]
+
 ["browser_settings_restore_from_backup.js"]
 
 ["browser_settings_turn_off_scheduled_backups.js"]

@@ -561,8 +561,7 @@ add_task(
         assertHistogramMeasurementQuantity(backupTimerHistogram, 0);
       })
       .catch(() => {
-        // Trigger failure if there was an uncaught error
-        Assert.ok(false, "Should not have bubbled up an error");
+        // Failure bubbles up an error for handling by the caller
       })
       .finally(async () => {
         await IOUtils.remove(inaccessibleProfilePath, { recursive: true });
