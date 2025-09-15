@@ -700,7 +700,7 @@ abstract class BaseBrowserFragment :
                 window = requireActivity().window,
                 store = store,
                 customTabId = customTabSessionId,
-                isSecure = { it.content.private },
+                isSecure = { it.content.private && !requireContext().settings().allowScreenshotsInPrivateMode },
                 clearFlagOnStop = false,
             ),
             owner = this,
