@@ -885,12 +885,16 @@ mac-signing:
                 - deep: false
                   runtime: true
                   force: true
-                  # These files are signed without entitlements
+                  # In production builds, these files are signed without
+                  # entitlements files, but with hardened runtime enabled. As a
+                  # result, they have the default (more restrictive)
+                  # entitlement settings.
                   globs:
                       - "/Contents/MacOS/crashhelper"
                       - "/Contents/MacOS/crashreporter.app"
                       - "/Contents/MacOS/updater.app/Contents/Frameworks/UpdateSettings.framework"
                       - "/Contents/MacOS/updater.app"
+                      - "/Contents/MacOS/gpu-helper.app"
                       - "/Contents/Library/LaunchServices/org.mozilla.updater"
                       - "/Contents/MacOS/XUL"
                       - "/Contents/MacOS/pingsender"
@@ -936,6 +940,7 @@ mac-signing:
                       - "/Contents/MacOS/crashreporter.app"
                       - "/Contents/MacOS/updater.app/Contents/Frameworks/UpdateSettings.framework"
                       - "/Contents/MacOS/updater.app"
+                      - "/Contents/MacOS/gpu-helper.app"
                       - "/Contents/Library/LaunchServices/org.mozilla.updater"
                       - "/Contents/MacOS/pingsender"
                       - "/Contents/MacOS/nmhproxy"

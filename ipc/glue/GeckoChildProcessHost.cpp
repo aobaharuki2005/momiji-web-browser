@@ -17,6 +17,7 @@
 #  include <mach/mach_traps.h>
 #  include "base/rand_util.h"
 #  include "chrome/common/mach_ipc_mac.h"
+#  include "mozilla/StaticPrefs_layers.h"
 #  include "mozilla/StaticPrefs_media.h"
 #endif
 #ifdef MOZ_WIDGET_COCOA
@@ -526,16 +527,23 @@ mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
   }
 
 #ifdef MOZ_WIDGET_COCOA
-  // The GMP child process runs via the Media Plugin Helper executable
-  // which is a clone of plugin-container allowing for GMP-specific
-  // codesigning entitlements.
+  // To support different child process types having different codesigning
+  // entitlements, different executables are used to run some child process
+  // types.
   nsCString bundleName;
   std::string executableLeafName;
   if (processType == GeckoProcessType_GMPlugin &&
       mozilla::StaticPrefs::media_plugin_helper_process_enabled()) {
+    // Use the media plugin helper executable
     bundleName = MOZ_EME_PROCESS_BUNDLENAME;
     executableLeafName = MOZ_EME_PROCESS_NAME_BRANDED;
+  } else if (processType == GeckoProcessType_GPU &&
+             mozilla::StaticPrefs::layers_gpu_process_executable_enabled()) {
+    // Use the GPU helper executable
+    bundleName = MOZ_GPU_PROCESS_BUNDLENAME;
+    executableLeafName = MOZ_GPU_PROCESS_NAME_BRANDED;
   } else {
+    // the default child process executable
     bundleName = MOZ_CHILD_PROCESS_BUNDLENAME;
     executableLeafName = MOZ_CHILD_PROCESS_NAME;
   }

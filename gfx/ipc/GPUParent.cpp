@@ -211,7 +211,14 @@ bool GPUParent::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
   apz::InitializeGlobalState();
   LayerTreeOwnerTracker::Initialize();
   CompositorBridgeParent::InitializeStatics();
+
+#if defined(XP_MACOSX)
+  // On macOS, we pass the empty string for the process name because
+  // the bundle name (CFBundleName) is the complete name already.
+  mozilla::ipc::SetThisProcessName("");
+#else
   mozilla::ipc::SetThisProcessName("GPU Process");
+#endif
 
   return true;
 }
