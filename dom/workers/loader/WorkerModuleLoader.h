@@ -94,8 +94,10 @@ class WorkerModuleLoader : public JS::loader::ModuleLoaderBase {
 
   bool IsModuleTypeAllowed(JS::ModuleType aModuleType) override {
     // https://html.spec.whatwg.org/#module-type-allowed
-    // If moduleType is "css" and the CSSStyleSheet interface is not exposed in settings's realm, then return false.
-    return aModuleType != JS::ModuleType::Unknown && aModuleType != JS::ModuleType::CSS;
+    // If moduleType is "css" and the CSSStyleSheet interface is not exposed in
+    // settings's realm, then return false.
+    return aModuleType != JS::ModuleType::Unknown &&
+           aModuleType != JS::ModuleType::CSS;
   }
 };
 

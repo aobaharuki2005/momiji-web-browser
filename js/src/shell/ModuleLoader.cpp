@@ -548,8 +548,8 @@ JSObject* ModuleLoader::loadAndParse(JSContext* cx, HandleString pathArg,
       }
       break;
     case JS::ModuleType::CSS:
-      // We don't support CSS modules in the shell because we don't have access to a
-      // CSS parser in standalone shell builds.
+      // We don't support CSS modules in the shell because we don't have access
+      // to a CSS parser in standalone shell builds.
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BAD_MODULE_TYPE);
       return nullptr;

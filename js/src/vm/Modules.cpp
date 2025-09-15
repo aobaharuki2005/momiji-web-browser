@@ -297,7 +297,6 @@ JS_PUBLIC_API JSObject* JS::CompileJsonModule(
 JS_PUBLIC_API JSObject* JS::CreateCssModule(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     const Value& cssValue) {
-
   Rooted<ExportNameVector> exportNames(cx);
   if (!exportNames.append(cx->names().default_)) {
     ReportOutOfMemory(cx);
