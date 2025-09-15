@@ -5,7 +5,6 @@
 package org.mozilla.fenix.components.menu
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.app.Dialog
 import android.app.PendingIntent
 import android.content.Intent
@@ -47,6 +46,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -286,7 +286,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 removePinnedSitesUseCase = components.useCases.topSitesUseCase.removeTopSites,
                                 requestDesktopSiteUseCase = components.useCases.sessionUseCases.requestDesktopSite,
                                 tabsUseCases = components.useCases.tabsUseCases,
-                                alertDialogBuilder = AlertDialog.Builder(context),
+                                materialAlertDialogBuilder = MaterialAlertDialogBuilder(context),
                                 topSitesMaxLimit = components.settings.topSitesMaxLimit,
                                 onDeleteAndQuit = {
                                     deleteAndQuit(

@@ -4,9 +4,9 @@
 
 package org.mozilla.fenix.search
 
-import androidx.appcompat.app.AlertDialog
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -716,7 +716,7 @@ class SearchDialogControllerTest {
 
     @Test
     fun `show camera permissions needed dialog`() {
-        val dialogBuilder: AlertDialog.Builder = mockk(relaxed = true)
+        val dialogBuilder: MaterialAlertDialogBuilder = mockk(relaxed = true)
 
         val spyController = spyk(createController())
         every { spyController.buildDialog() } returns dialogBuilder

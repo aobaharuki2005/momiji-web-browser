@@ -33,6 +33,7 @@ dependencies {
     implementation libs.androidx.core
     implementation libs.androidx.fragment
     implementation libs.kotlinx.coroutines
+    implementation libs.google.material
 }
 
 apply from: '../../../android-lint.gradle'

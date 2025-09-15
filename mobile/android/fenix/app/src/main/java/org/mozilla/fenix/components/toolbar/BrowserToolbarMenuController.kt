@@ -6,9 +6,9 @@ package org.mozilla.fenix.components.toolbar
 
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
@@ -281,7 +281,7 @@ class DefaultBrowserToolbarMenuController(
                         .filter { it is TopSite.Default || it is TopSite.Pinned }.size
 
                     if (numPinnedSites >= settings.topSitesMaxLimit) {
-                        AlertDialog.Builder(fragment.requireContext()).apply {
+                        MaterialAlertDialogBuilder(fragment.requireContext()).apply {
                             setTitle(R.string.shortcut_max_limit_title)
                             setMessage(R.string.shortcut_max_limit_content)
                             setPositiveButton(R.string.top_sites_max_limit_confirmation_button) { dialog, _ ->

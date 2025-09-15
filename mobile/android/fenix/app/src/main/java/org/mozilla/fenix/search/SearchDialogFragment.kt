@@ -30,7 +30,6 @@ import androidx.activity.ComponentDialog
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.VisibleForTesting
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -46,6 +45,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraph
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
@@ -703,7 +703,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 val normalizedUrl = result.toNormalizedUrl()
                 if (!normalizedUrl.toUri().isHttpOrHttps) {
                     activity?.let {
-                        AlertDialog.Builder(it).apply {
+                        MaterialAlertDialogBuilder(it).apply {
                             setMessage(R.string.qr_scanner_dialog_invalid)
                             setPositiveButton(R.string.qr_scanner_dialog_invalid_ok) { dialog: DialogInterface, _ ->
                                 dialog.dismiss()
@@ -713,7 +713,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                     }
                 } else {
                     activity?.let {
-                        AlertDialog.Builder(it).apply {
+                        MaterialAlertDialogBuilder(it).apply {
                             val spannable = resources.getSpanned(
                                 R.string.qr_scanner_confirmation_dialog_message,
                                 getString(R.string.app_name) to StyleSpan(Typeface.BOLD),

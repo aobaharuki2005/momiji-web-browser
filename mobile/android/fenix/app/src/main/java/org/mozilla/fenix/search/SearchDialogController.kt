@@ -9,8 +9,8 @@ import android.content.Intent
 import android.net.Uri
 import android.text.SpannableString
 import androidx.annotation.VisibleForTesting
-import androidx.appcompat.app.AlertDialog
 import androidx.navigation.NavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
@@ -310,9 +310,14 @@ class SearchDialogController(
         }
     }
 
+    /**
+     * Builds and configures a [MaterialAlertDialogBuilder] to display a dialog
+     * informing the user that camera permissions are needed and providing an option
+     * to go to the app settings.
+     */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    fun buildDialog(): AlertDialog.Builder {
-        return AlertDialog.Builder(activity).apply {
+    fun buildDialog(): MaterialAlertDialogBuilder {
+        return MaterialAlertDialogBuilder(activity).apply {
             val spannableText = SpannableString(
                 activity.resources.getString(R.string.camera_permissions_needed_message),
             )

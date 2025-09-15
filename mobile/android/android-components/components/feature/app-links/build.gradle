@@ -36,6 +36,7 @@ dependencies {
     implementation project(':components:ui-widgets')
 
     implementation libs.kotlinx.coroutines
+    implementation libs.google.material
 
     testImplementation project(':components:support-test')
     testImplementation project(':components:support-test-libstate')
