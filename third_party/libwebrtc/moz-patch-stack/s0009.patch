@@ -11,9 +11,9 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a636ecdcb91afb1c5
  modules/video_capture/linux/device_info_v4l2.cc    | 8 +++++++-
  modules/video_capture/linux/video_capture_linux.cc | 9 ++++++++-
  rtc_base/byte_order.h                              | 2 ++
- rtc_base/cpu_info.cc                               | 4 ++--
+ rtc_base/cpu_info.cc                               | 2 +-
  rtc_base/physical_socket_server.cc                 | 7 +++++--
- 6 files changed, 30 insertions(+), 6 deletions(-)
+ 6 files changed, 29 insertions(+), 5 deletions(-)
 
 diff --git a/modules/video_capture/linux/device_info_linux.cc b/modules/video_capture/linux/device_info_linux.cc
 index 4f8b7c059b..56da475bf3 100644
@@ -102,19 +102,10 @@ index 95c8ebc864..9098998a52 100644
  #include <endian.h>
  #else
 diff --git a/rtc_base/cpu_info.cc b/rtc_base/cpu_info.cc
-index 55f26280d5..b8a1040704 100644
+index 53cfc586ca..a35b19042d 100644
 --- a/rtc_base/cpu_info.cc
 +++ b/rtc_base/cpu_info.cc
-@@ -14,7 +14,7 @@
- 
- #if defined(WEBRTC_WIN)
- #include <windows.h>
--#elif defined(WEBRTC_LINUX)
-+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
- #include <unistd.h>
- #elif defined(WEBRTC_MAC)
- #include <sys/sysctl.h>
-@@ -42,7 +42,7 @@ uint32_t DetectNumberOfCores() {
+@@ -65,7 +65,7 @@ uint32_t DetectNumberOfCores() {
    SYSTEM_INFO si;
    GetNativeSystemInfo(&si);
    number_of_cores = static_cast<int>(si.dwNumberOfProcessors);

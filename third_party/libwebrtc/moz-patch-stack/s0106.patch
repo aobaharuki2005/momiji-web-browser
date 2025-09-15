@@ -291,10 +291,10 @@ index 0492dd24e5..be9eac131d 100644
  
  rtc_library("audio") {
 diff --git a/common_audio/BUILD.gn b/common_audio/BUILD.gn
-index 901da25ecb..bb8a56ec06 100644
+index 7c04fd13fe..0d14961968 100644
 --- a/common_audio/BUILD.gn
 +++ b/common_audio/BUILD.gn
-@@ -292,7 +292,7 @@ if (rtc_build_with_neon) {
+@@ -288,7 +288,7 @@ if (rtc_build_with_neon) {
  
      if (target_cpu != "arm64") {
        # Enable compilation for the NEON instruction set.
@@ -303,7 +303,7 @@ index 901da25ecb..bb8a56ec06 100644
        cflags = [ "-mfpu=neon" ]
      }
  
-@@ -315,7 +315,7 @@ if (rtc_build_with_neon) {
+@@ -311,7 +311,7 @@ if (rtc_build_with_neon) {
  
      if (target_cpu != "arm64") {
        # Enable compilation for the NEON instruction set.
@@ -616,7 +616,7 @@ index 704aa2ad87..1147706e87 100644
  
  if (rtc_build_libsrtp) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 3835958e46..0dca916996 100644
+index 1a35e55ddb..27ceb99698 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -9,8 +9,8 @@
@@ -741,7 +741,7 @@ index 8be2817955..8b83c1bac5 100644
            ]
          }
 diff --git a/system_wrappers/BUILD.gn b/system_wrappers/BUILD.gn
-index abbb93f439..6f6bc18200 100644
+index 8222263e1f..913382709e 100644
 --- a/system_wrappers/BUILD.gn
 +++ b/system_wrappers/BUILD.gn
 @@ -7,8 +7,8 @@

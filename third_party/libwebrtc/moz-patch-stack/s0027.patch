@@ -515,10 +515,10 @@ index 906d79598b..2c46bb4641 100644
  #include "api/units/data_rate.h"
  #include "api/video/video_content_type.h"
 diff --git a/common_audio/BUILD.gn b/common_audio/BUILD.gn
-index a2c0edfc54..9b35bbcbde 100644
+index 8de055a50d..0d479b2d54 100644
 --- a/common_audio/BUILD.gn
 +++ b/common_audio/BUILD.gn
-@@ -268,14 +268,10 @@ if (current_cpu == "x86" || current_cpu == "x64") {
+@@ -264,14 +264,10 @@ if (current_cpu == "x86" || current_cpu == "x64") {
        "resampler/sinc_resampler_avx2.cc",
      ]
  
@@ -1025,7 +1025,7 @@ index 058b86bce4..2f7b5b5333 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index f024610358..d973aabead 100644
+index a67b135d35..00171d9f4c 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -325,6 +325,7 @@ rtc_library("sample_counter") {
@@ -1188,7 +1188,7 @@ index f024610358..d973aabead 100644
  
  rtc_library("ssl_adapter") {
    visibility = [ "*" ]
-@@ -2342,7 +2366,7 @@ if (rtc_include_tests) {
+@@ -2345,7 +2369,7 @@ if (rtc_include_tests) {
    }
  }
  
