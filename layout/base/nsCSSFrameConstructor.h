@@ -1132,7 +1132,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
           mIsAllInline(false),
           mIsBlock(false),
           mIsPopup(false),
-          mIsLineParticipant(false),
           mIsRenderedLegend(false) {
       MOZ_COUNT_CTOR(FrameConstructionItem);
     }
@@ -1203,8 +1202,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     // Whether construction from this item will create a popup that needs to
     // go into the global popup items.
     bool mIsPopup : 1;
-    // Whether this item should be treated as a line participant
-    bool mIsLineParticipant : 1;
     // Whether this item is the rendered legend of a <fieldset>
     bool mIsRenderedLegend : 1;
 
