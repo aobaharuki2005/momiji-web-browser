@@ -1737,13 +1737,67 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
                                        uint32_t aWidth, uint32_t aHeight,
                                        uint32_t aSize,
                                        gfx::SurfaceFormat aSurfaceFormat) {
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wunreachable-code"
+#endif
+  if (false) {
+    // For debugging purposes you can dump the image with this code
+    // then convert it with the image-magick command
+    // convert -size WxH -depth 8 rgba:$i $i.png
+    // Depending on surface format, the alpha and color channels might be mixed
+    // up...
+    static int calls = 0;
+    char filename[256];
+    SprintfLiteral(filename, "rendered_image_%dx%d_%d_pre", aWidth, aHeight,
+                   calls);
+    FILE* outputFile = fopen(filename, "wb");  // "wb" for binary write mode
+    fwrite(aData, 1, aSize, outputFile);
+    fclose(outputFile);
+    calls++;
+  }
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif
+
+  constexpr uint8_t bytesPerChannel = 1;
+  constexpr uint8_t bytesPerPixel = 4 * bytesPerChannel;
+
+  uint8_t offset = 0;
+  switch (aSurfaceFormat) {
+    case gfx::SurfaceFormat::B8G8R8A8:
+      offset = 0;
+      break;
+    case gfx::SurfaceFormat::A8R8G8B8:
+      offset = 1;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE(
+          "Unsupported surface format for pixel randomization");
+      return NS_ERROR_INVALID_ARG;
+  }
+  return RandomizeElements(aCookieJarSettings, aPrincipal, aData, aSize,
+                           bytesPerPixel, bytesPerChannel, offset, true);
+}
+
+// static
+nsresult nsRFPService::RandomizeElements(
+    nsICookieJarSettings* aCookieJarSettings, nsIPrincipal* aPrincipal,
+    uint8_t* aData, uint32_t aSizeInBytes, uint8_t aElementsPerGroup,
+    uint8_t aBytesPerElement, uint8_t aElementOffset, bool aSkipLastElement) {
   NS_ENSURE_ARG_POINTER(aData);
+  MOZ_ASSERT(aElementsPerGroup >= 1);
+  MOZ_ASSERT(aBytesPerElement >= 1);
+  MOZ_ASSERT(aElementOffset < aElementsPerGroup);
 
   if (!aCookieJarSettings) {
     return NS_OK;
   }
 
-  if (aSize <= 4) {
+  uint32_t groupSize = aElementsPerGroup * aBytesPerElement;
+  uint32_t groupCount = aSizeInBytes / groupSize;
+
+  if (groupCount <= 1) {
     return NS_OK;
   }
 
@@ -1752,21 +1806,18 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
     return NS_OK;
   }
 
-  // Don't randomize if all pixels are uniform.
-  static constexpr size_t bytesPerPixel = 4;
-  MOZ_ASSERT(aSize == aWidth * aHeight * bytesPerPixel,
-             "Pixels must be tightly-packed");
-  const bool allPixelsMatch = [&]() {
-    auto itr = RangedPtr<const uint8_t>(aData, aSize);
-    const auto itrEnd = itr + aSize;
-    for (; itr != itrEnd; itr += bytesPerPixel) {
-      if (memcmp(itr.get(), aData, bytesPerPixel) != 0) {
+  // Don't randomize if all groups are uniform.
+  const bool allGroupsMatch = [&]() {
+    auto itr = RangedPtr<const uint8_t>(aData, aSizeInBytes);
+    const auto itrEnd = itr + (groupCount * groupSize);
+    for (; itr != itrEnd; itr += groupSize) {
+      if (memcmp(itr.get(), aData, groupSize) != 0) {
         return false;
       }
     }
     return true;
   }();
-  if (allPixelsMatch) {
+  if (allGroupsMatch) {
     return NS_OK;
   }
 
@@ -1774,17 +1825,14 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
       glean::fingerprinting_protection::canvas_noise_calculate_time_2.Start();
 
   nsTArray<uint8_t> canvasKey;
-  nsresult rv = GenerateCanvasKeyFromImageData(aCookieJarSettings, aData, aSize,
-                                               canvasKey);
+  nsresult rv = GenerateCanvasKeyFromImageData(aCookieJarSettings, aData,
+                                               aSizeInBytes, canvasKey);
+
   if (NS_FAILED(rv)) {
     glean::fingerprinting_protection::canvas_noise_calculate_time_2.Cancel(
         std::move(timerId));
     return rv;
   }
-
-  // Calculate the number of pixels based on the given data size. One pixel uses
-  // 4 bytes that contains ARGB information.
-  uint32_t pixelCnt = aSize / 4;
 
   // Generate random values that will decide the RGB channel and the pixel
   // position that we are going to introduce the noises. The channel and
@@ -1814,43 +1862,46 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
   // Ensure at least 20 random changes may occur.
   uint8_t numNoises = std::clamp<uint8_t>(rnd3, 20, 255);
 
-#ifdef __clang__
-#  pragma clang diagnostic push
-#  pragma clang diagnostic ignored "-Wunreachable-code"
-#endif
-  if (false) {
-    // For debugging purposes you can dump the image with this code
-    // then convert it with the image-magick command
-    // convert -size WxH -depth 8 rgba:$i $i.png
-    // Depending on surface format, the alpha and color channels might be mixed
-    // up...
-    static int calls = 0;
-    char filename[256];
-    SprintfLiteral(filename, "rendered_image_%dx%d_%d_pre", aWidth, aHeight,
-                   calls);
-    FILE* outputFile = fopen(filename, "wb");  // "wb" for binary write mode
-    fwrite(aData, 1, aSize, outputFile);
-    fclose(outputFile);
-    calls++;
+  // (This is for pixel randomization)
+  // For canvas 2d randomization, we are always dealing with 4 channels.
+  // For WebGL, we are dealing with 1-4 channels. Thankfully, WebGL always
+  // puts the alpha channel at the end, so we can always use the last
+  // element as the alpha channel (if it exists).
+  // To choose which channel to add a noise, we use the modulo operator
+  // to select the channel. We want to avoid the alpha channel
+  // (if it exists). So, in cases where the number of elements per group
+  // is greater than 1, we subtract 1 from the modulo divisor.
+  // This way, we can avoid the alpha channel by skipping it in the
+  // selection process.
+  // We set aSkipLastElement to false for WebGL formats without the alpha
+  // channel.
+  uint8_t moduloDivisor = aElementsPerGroup;
+  if (moduloDivisor > 1 && aSkipLastElement) {
+    moduloDivisor -= 1;
   }
-#ifdef __clang__
-#  pragma clang diagnostic pop
-#endif
 
   while (numNoises--) {
-    // Choose which RGB channel to add a noise. The pixel data is in either
-    // the BGRA or the ARGB format depending on the endianess. To choose the
-    // color channel we need to add the offset according the endianess.
-    uint32_t channel;
-    if (aSurfaceFormat == gfx::SurfaceFormat::B8G8R8A8) {
-      channel = rng1.next() % 3;
-    } else if (aSurfaceFormat == gfx::SurfaceFormat::A8R8G8B8) {
-      channel = rng1.next() % 3 + 1;
-    } else {
-      return NS_ERROR_INVALID_ARG;
-    }
+    // Choose which element to add a noise.
+    // We could have an element that we want to avoid (for ex. alpha channel),
+    // so we use the offset param to skip the elements we don't want to change.
+    uint8_t element = rng1.next() % moduloDivisor + aElementOffset;
+    MOZ_ASSERT(element < aElementsPerGroup,
+               "Element index should be less than elements per group");
 
-    uint32_t idx = 4 * (rng1.next() % pixelCnt) + channel;
+    // When randomizing elements with aBytesPerElement > 1, we end up
+    // randomizing the first byte of each element.
+    // This if actually desired, as it will correspond to the least significant
+    // bits of the entire element.
+    // For floats for example, the first 8 bits are still under the fraction
+    // part of the float representation. For float 32, we are affecting even
+    // smaller fraction part.
+    // This is what we want, as we want to introduce very small
+    // changes to the elements.
+
+    uint32_t idx =
+        groupSize * (rng1.next() % groupCount) + element * aBytesPerElement;
+    MOZ_ASSERT(idx < aSizeInBytes,
+               "Index should be less than the size of the data");
     uint8_t bit = rng2.next();
 
     // 50% chance to XOR a 0x2 or 0x1 into the existing byte
