@@ -4645,6 +4645,12 @@ who = "Lars Eggert <lars@eggert.org>"
 criteria = "safe-to-run"
 delta = "1.7.0 -> 1.7.2"
 
+[[audits.pollster]]
+who = "Ben Dean-Kawamura <bdk@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.3.0"
+notes = "Tiny crate with only 130 lines of code.  No unsafe code or IO."
+
 [[audits.powerfmt]]
 who = "Alex Franchuk <afranchuk@mozilla.com>"
 criteria = "safe-to-deploy"
