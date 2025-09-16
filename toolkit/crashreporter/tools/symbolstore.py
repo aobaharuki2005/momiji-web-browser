@@ -486,6 +486,7 @@ class Dumper:
         srcsrv=False,
         s3_bucket=None,
         file_mapping=None,
+        include_moz_extra_info=True,
     ):
         # popen likes absolute paths, at least on windows
         self.dump_syms = os.path.abspath(dump_syms)
@@ -502,6 +503,7 @@ class Dumper:
         self.srcsrv = srcsrv
         self.s3_bucket = s3_bucket
         self.file_mapping = file_mapping or {}
+        self.include_moz_extra_info = include_moz_extra_info
         # Add a static mapping for Rust sources. Since Rust 1.30 official Rust builds map
         # source paths to start with "/rustc/<sha>/".
         rust_sha = buildconfig.substs["RUSTC_COMMIT"]
@@ -558,7 +560,8 @@ class Dumper:
             "--inlines",
         ]
 
-        cmdline.extend(self.dump_syms_extra_info())
+        if self.include_moz_extra_info:
+            cmdline.extend(self.dump_syms_extra_info())
         cmdline.append(file)
 
         return cmdline
@@ -964,7 +967,8 @@ class Dumper_Mac(Dumper):
                 ]
             )
 
-            cmdline.extend(self.dump_syms_extra_info())
+            if self.include_moz_extra_info:
+                cmdline.extend(self.dump_syms_extra_info())
             cmdline.extend([dsymbundle, file])
 
             return cmdline
@@ -1128,6 +1132,15 @@ to canonical locations in the source repository. Specify
         + "Useful for processing cross-compiled symbols. If unset, require `OS_ARCH` to be set "
         + "either through build config. or through environment variables.",
     )
+    parser.add_option(
+        "--no-moz-extra-info",
+        action="store_true",
+        dest="no_moz_extra_info",
+        default=True,
+        help="Whether to include Mozilla-specific application build metadata. "
+        + "If unset, require `MOZ_UPDATE_CHANNEL` and `MOZ_APP_VERSION` to be set "
+        + "either through build config. or through environment variables.",
+    )
     (options, args) = parser.parse_args()
 
     # check to see if the pdbstr.exe exists
@@ -1158,6 +1171,7 @@ to canonical locations in the source repository. Specify
         s3_bucket=bucket,
         file_mapping=file_mapping,
         platform=options.platform,
+        include_moz_extra_info=not options.no_moz_extra_info,
     )
 
     dumper.Process(args[2], options.count_ctors)
