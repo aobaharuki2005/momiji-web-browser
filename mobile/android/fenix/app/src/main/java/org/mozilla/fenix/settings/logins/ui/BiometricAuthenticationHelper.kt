@@ -12,9 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.fragment.app.FragmentActivity
 import mozilla.components.lib.state.ext.observeAsState
@@ -29,16 +26,14 @@ internal fun BiometricAuthenticationDialog(store: LoginsStore) {
     val state by store.observeAsState(store.state) { it }
     val context = LocalContext.current
     val activity = context as? FragmentActivity
-    var authorizationStarted by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         if (state.biometricAuthenticationState != BiometricAuthenticationState.Authorized) {
             store.dispatch(BiometricAuthenticationAction.AuthenticationInProgress)
-            authorizationStarted = true
         }
     }
 
-    if (activity != null && authorizationStarted) {
+    if (activity != null && state.biometricAuthenticationState == BiometricAuthenticationState.InProgress) {
         if (DefaultBiometricUtils.canUseBiometricAuthentication(activity = activity)) {
             ShowBiometricAuthenticationDialog(
                 activity = activity,
