@@ -56,7 +56,7 @@ ninja dxcompiler.dll
 
 # Pack the result and upload.
 mkdir $dxc_folder
-mv bin/dxcompiler.dll bin/dxcompiler.pdb $dxc_folder
+cp bin/dxcompiler.dll bin/dxcompiler.pdb $dxc_folder
 
 mkdir -p $UPLOAD_DIR
 tar cavf $UPLOAD_DIR/$artifact $dxc_folder
