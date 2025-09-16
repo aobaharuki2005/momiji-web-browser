@@ -126,7 +126,7 @@ class FlowTextMarker : public BaseMarkerType<FlowTextMarker> {
   static constexpr MS::Location Locations[] = {MS::Location::MarkerChart,
                                                MS::Location::MarkerTable};
   static constexpr const char* TableLabel =
-      "{marker.name} - {marker.data.name}(flow={marker.data.flow})";
+      "{marker.data.name}(flow={marker.data.flow})";
   static constexpr const char* ChartLabel = "{marker.name}";
 
   static constexpr MS::ETWMarkerGroup Group = MS::ETWMarkerGroup::Generic;
@@ -156,7 +156,7 @@ class TerminatingFlowTextMarker
   static constexpr MS::Location Locations[] = {MS::Location::MarkerChart,
                                                MS::Location::MarkerTable};
   static constexpr const char* TableLabel =
-      "{marker.name} - "
+      ""
       "{marker.data.name}(terminatingFlow={marker.data.terminatingFlow})";
   static constexpr const char* ChartLabel = "{marker.name}";
 

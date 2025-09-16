@@ -149,7 +149,7 @@ struct FrameMessageMarker {
                              MS::PayloadFlags::Searchable);
     schema.AddKeyLabelFormat("sync", "Sync", MS::Format::String);
     schema.SetTooltipLabel("FrameMessage - {marker.name}");
-    schema.SetTableLabel("{marker.name} - {marker.data.name}");
+    schema.SetTableLabel("{marker.data.name}");
     return schema;
   }
 };

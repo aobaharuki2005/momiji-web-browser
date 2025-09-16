@@ -101,7 +101,7 @@ struct TaskMarker : BaseMarkerType<TaskMarker> {
                                                MS::Location::MarkerTable};
   static constexpr const char* ChartLabel = "{marker.data.name}";
   static constexpr const char* TableLabel =
-      "{marker.name} - {marker.data.name} - priority: "
+      "{marker.data.name} - priority: "
       "{marker.data.priorityName} ({marker.data.priority})"
       " task: {marker.data.task}";
 
@@ -156,7 +156,7 @@ struct IncompleteTaskMarker : BaseMarkerType<IncompleteTaskMarker> {
                                                MS::Location::MarkerTable};
   static constexpr const char* ChartLabel = "{marker.data.name}";
   static constexpr const char* TableLabel =
-      "{marker.name} - {marker.data.name} - priority: "
+      "{marker.data.name} - priority: "
       "{marker.data.priorityName} ({marker.data.priority})"
       " task: {marker.data.task}";
 

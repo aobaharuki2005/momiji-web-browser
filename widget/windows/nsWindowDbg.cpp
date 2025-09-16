@@ -92,7 +92,7 @@ struct WindowProcMarker {
     schema.SetChartLabel(
         "{marker.data.messageLoop} | {marker.data.name} ({marker.data.uMsg})");
     schema.SetTableLabel(
-        "{marker.name} - {marker.data.messageLoop} - {marker.data.name} "
+        "{marker.data.messageLoop} - {marker.data.name} "
         "({marker.data.uMsg})");
     schema.SetTooltipLabel(
         "{marker.data.messageLoop} - {marker.name} - {marker.data.name}");

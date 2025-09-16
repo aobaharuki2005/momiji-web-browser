@@ -76,8 +76,7 @@ struct ProcessingTimeMarker {
     schema.AddKeyLabelFormat("time", "Recorded Time", MS::Format::Milliseconds);
     schema.AddKeyLabelFormat("tracker", "Tracker Type", MS::Format::String);
     schema.SetTooltipLabel("{marker.name} - {marker.data.label}");
-    schema.SetTableLabel(
-        "{marker.name} - {marker.data.label}: {marker.data.time}");
+    schema.SetTableLabel("{marker.data.label}: {marker.data.time}");
     return schema;
   }
 };
@@ -98,8 +97,7 @@ struct ProcessEnergyMarker {
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
     schema.AddKeyLabelFormat("energy", "Energy (µWh)", MS::Format::Integer);
     schema.SetTooltipLabel("{marker.name} - {marker.data.label}");
-    schema.SetTableLabel(
-        "{marker.name} - {marker.data.label}: {marker.data.energy}µWh");
+    schema.SetTableLabel("{marker.data.label}: {marker.data.energy}µWh");
     return schema;
   }
 };
