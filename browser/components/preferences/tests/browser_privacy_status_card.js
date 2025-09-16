@@ -7,6 +7,57 @@ const FEATURE_PREF = "privacy.ui.status_card";
 const CARD_NAME = "security-privacy-card";
 const ISSUE_CONTROL_ID = "securityWarningsGroup";
 
+// Some things are set dangerously in the test environment.
+// We can supress these errors!
+const RESET_PROBLEMATIC_TEST_DEFAULTS = [
+  [
+    "browser.preferences.config_warning.warningAllowFingerprinters.dismissed",
+    true,
+  ],
+  [
+    "browser.preferences.config_warning.warningThirdPartyCookies.dismissed",
+    true,
+  ],
+  ["browser.preferences.config_warning.warningPasswordManager.dismissed", true],
+  ["browser.preferences.config_warning.warningPopupBlocker.dismissed", true],
+  [
+    "browser.preferences.config_warning.warningExtensionInstall.dismissed",
+    true,
+  ],
+  ["browser.preferences.config_warning.warningSafeBrowsing.dismissed", true],
+  ["browser.preferences.config_warning.warningDoH.dismissed", true],
+  ["browser.preferences.config_warning.warningECH.dismissed", true],
+  ["browser.preferences.config_warning.warningCT.dismissed", true],
+  ["browser.preferences.config_warning.warningCRLite.dismissed", true],
+  [
+    "browser.preferences.config_warning.warningCertificatePinning.dismissed",
+    true,
+  ],
+  ["browser.preferences.config_warning.warningTLSMin.dismissed", true],
+  ["browser.preferences.config_warning.warningTLSMax.dismissed", true],
+  [
+    "browser.preferences.config_warning.warningProxyAutodetection.dismissed",
+    true,
+  ],
+  [
+    "browser.preferences.config_warning.warningContentResourceURI.dismissed",
+    true,
+  ],
+  ["browser.preferences.config_warning.warningWorkerMIME.dismissed", true],
+  ["browser.preferences.config_warning.warningTopLevelDataURI.dismissed", true],
+  [
+    "browser.preferences.config_warning.warningActiveMixedContent.dismissed",
+    true,
+  ],
+  ["browser.preferences.config_warning.warningInnerHTMLltgt.dismissed", true],
+  ["browser.preferences.config_warning.warningFileURIOrigin.dismissed", true],
+  [
+    "browser.preferences.config_warning.warningPrivelegedConstraint.dismissed",
+    true,
+  ],
+  ["browser.preferences.config_warning.warningProcessSandbox.dismissed", true],
+];
+
 function getCardAndCheckHeader(document, expectedHeaderL10n) {
   let elements = document.getElementsByTagName(CARD_NAME);
   Assert.equal(elements.length, 1, "Card present in preferences");
@@ -33,7 +84,7 @@ function assertHappyBullets(card) {
 
 add_task(async function test_section_hidden_when_feature_flag_disabled() {
   await SpecialPowers.pushPrefEnv({
-    set: [[FEATURE_PREF, false]],
+    set: [[FEATURE_PREF, false]].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   await BrowserTestUtils.withNewTab(
@@ -49,7 +100,7 @@ add_task(async function test_section_hidden_when_feature_flag_disabled() {
 
 add_task(async function test_section_default_state() {
   await SpecialPowers.pushPrefEnv({
-    set: [[FEATURE_PREF, true]],
+    set: [[FEATURE_PREF, true]].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   await BrowserTestUtils.withNewTab(
@@ -70,7 +121,7 @@ add_task(async function test_section_default_state() {
 
 add_task(async function test_section_default_state() {
   await SpecialPowers.pushPrefEnv({
-    set: [[FEATURE_PREF, true]],
+    set: [[FEATURE_PREF, true]].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   await BrowserTestUtils.withNewTab(
@@ -94,7 +145,7 @@ add_task(async function test_section_strict_indicator() {
     set: [
       [FEATURE_PREF, true],
       ["browser.contentblocking.category", "strict"],
-    ],
+    ].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   await BrowserTestUtils.withNewTab(
@@ -119,7 +170,7 @@ add_task(async function test_issue_present() {
       [FEATURE_PREF, true],
       ["browser.contentblocking.category", "strict"],
       ["privacy.ui.status_card.testing.show_issue", true],
-    ],
+    ].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   await BrowserTestUtils.withNewTab(
@@ -158,7 +209,7 @@ add_task(async function test_issue_fix() {
     set: [
       [FEATURE_PREF, true],
       ["privacy.ui.status_card.testing.show_issue", true],
-    ],
+    ].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   await BrowserTestUtils.withNewTab(
@@ -202,7 +253,7 @@ add_task(async function test_issue_dismiss() {
     set: [
       [FEATURE_PREF, true],
       ["privacy.ui.status_card.testing.show_issue", true],
-    ],
+    ].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   await BrowserTestUtils.withNewTab(
@@ -246,7 +297,7 @@ add_task(async function test_issue_dismiss() {
 
 add_task(async function test_update_status_indicator() {
   await SpecialPowers.pushPrefEnv({
-    set: [[FEATURE_PREF, true]],
+    set: [[FEATURE_PREF, true]].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
 
   // Define testers for each UI state.
