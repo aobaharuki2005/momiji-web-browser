@@ -15,18 +15,18 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/313582b2ffb3f3f9a
  8 files changed, 14 insertions(+), 37 deletions(-)
 
 diff --git a/common_audio/window_generator.cc b/common_audio/window_generator.cc
-index 7c33d255f0..da5603d9e7 100644
+index 5a6de1aec1..d364eed826 100644
 --- a/common_audio/window_generator.cc
 +++ b/common_audio/window_generator.cc
-@@ -14,7 +14,6 @@
- 
+@@ -13,7 +13,6 @@
  #include <cmath>
  #include <complex>
+ #include <cstddef>
 -#include <numbers>
  
  #include "rtc_base/checks.h"
  
-@@ -42,7 +41,7 @@ void WindowGenerator::Hanning(int length, float* window) {
+@@ -41,7 +40,7 @@ void WindowGenerator::Hanning(int length, float* window) {
    RTC_CHECK(window != nullptr);
    for (int i = 0; i < length; ++i) {
      window[i] =
@@ -35,7 +35,7 @@ index 7c33d255f0..da5603d9e7 100644
    }
  }
  
-@@ -57,7 +56,7 @@ void WindowGenerator::KaiserBesselDerived(float alpha,
+@@ -56,7 +55,7 @@ void WindowGenerator::KaiserBesselDerived(float alpha,
  
    for (size_t i = 0; i <= half; ++i) {
      complex<float> r = (4.0f * i) / length - 1.0f;
