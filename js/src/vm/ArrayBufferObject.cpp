@@ -546,19 +546,6 @@ bool ArrayBufferObject::maxByteLengthGetterImpl(JSContext* cx,
 
   auto* buffer = &args.thisv().toObject().as<ArrayBufferObject>();
 
-  // Special case for wasm with potentially 64-bits memory.
-  // Manually compute the maxByteLength to avoid an overflow on 32-bit machines.
-  if (buffer->isWasm()) {
-    mozilla::Maybe<Pages> sourceMaxPages = buffer->wasmSourceMaxPages();
-    uint64_t sourceMaxBytes = sourceMaxPages->byteLength64();
-
-    MOZ_ASSERT(sourceMaxBytes <=
-               wasm::PageSize * wasm::MaxMemory64PagesValidation);
-    args.rval().setNumber(double(sourceMaxBytes));
-
-    return true;
-  }
-
   // Steps 4-6.
   size_t maxByteLength = buffer->maxByteLength();
   MOZ_ASSERT_IF(buffer->isDetached(), maxByteLength == 0);
