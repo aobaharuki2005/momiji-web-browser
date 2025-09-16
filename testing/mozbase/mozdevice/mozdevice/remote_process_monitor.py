@@ -162,7 +162,7 @@ class RemoteProcessMonitor:
         While waiting, periodically retrieve the process output and print it.
         If the process is still running but no output is received in *timeout*
         seconds, return False; else, once the process exits/goes to background,
-        return True.
+        return whether the test suite has completed.
         """
         self.log_buffer = ""
         self.stdout_len = 0
@@ -222,7 +222,14 @@ class RemoteProcessMonitor:
                 "application timed out after %d seconds with no output"
                 % (self.last_test_seen, int(timeout))
             )
-        return status
+            return status
+        if self.last_test_seen != "Last test finished":
+            self.log.error(
+                "TEST-UNEXPECTED-FAIL | %s | incomplete after application is no longer top"
+                % self.last_test_seen
+            )
+            return False
+        return True
 
     def kill(self):
         """
