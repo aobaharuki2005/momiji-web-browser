@@ -6679,7 +6679,7 @@
       let newTab = this.addWebTab("about:blank", params);
       let newBrowser = this.getBrowserForTab(newTab);
 
-      aTab.container.finishAnimateTabMove();
+      aTab.container.tabDragAndDrop.finishAnimateTabMove();
 
       if (!createLazyBrowser) {
         // Stop the about:blank load.
