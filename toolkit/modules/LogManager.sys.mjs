@@ -133,11 +133,22 @@ class StorageStreamAppender extends Log.Appender {
  * Policies for when to flush, to what file, log rotation etc are up to the consumer
  * (although it does maintain a .sawError property to help the consumer decide
  *  based on its policies)
+ *
+ * @param {Object} fomatter A log message formatter
+ * @param {boolean} overwriteFileOnFlush False to use append mode when opening the file for writing
  */
 class FlushableStorageAppender extends StorageStreamAppender {
-  constructor(formatter) {
+  #overwriteFileOnFlush = true;
+  #lastFlushTime = 0;
+
+  constructor(formatter, { overwriteFileOnFlush = true } = {}) {
     super(formatter);
     this.sawError = false;
+    this.#overwriteFileOnFlush = overwriteFileOnFlush;
+  }
+
+  get lastFlushTime() {
+    return this.#lastFlushTime;
   }
 
   append(message) {
@@ -161,6 +172,7 @@ class FlushableStorageAppender extends StorageStreamAppender {
   async flushToFile(subdirArray, filename, log) {
     let inStream = this.getInputStream();
     this.reset();
+    this.#lastFlushTime = Date.now();
     if (!inStream) {
       log.debug("Failed to flush log to a file - no input stream");
       return;
@@ -178,10 +190,15 @@ class FlushableStorageAppender extends StorageStreamAppender {
   /**
    * Copy an input stream to the named file, doing everything off the main
    * thread.
-   * subDirArray is an array of path components, relative to the profile
-   * directory, where the file will be created.
-   * outputFileName is the filename to create.
-   * Returns a promise that is resolved on completion or rejected with an error.
+   *
+   * If the file already exists and this instance was initialized with overwriteFileOnFlush=false,
+   * the file pointer is set to the end of the file prior to each write, rather than
+   * re-creating it.
+   *
+   * @param {string} subDirArray an array of path components, relative to the profile
+   *                             directory, where the file will be created.
+   * @param {String} outputFileName the filename to write to.
+   * @returns {Promise} A promise that is resolved on completion or rejected with an error.
    */
   async _copyStreamToFile(inputStream, subdirArray, outputFileName, log) {
     let outputDirectory = PathUtils.join(PathUtils.profileDir, ...subdirArray);
@@ -192,9 +209,16 @@ class FlushableStorageAppender extends StorageStreamAppender {
       "@mozilla.org/network/file-output-stream;1"
     ].createInstance(Ci.nsIFileOutputStream);
 
+    let ioFlags = -1;
+    if (!this.#overwriteFileOnFlush) {
+      ioFlags = 0x02; // PR_WRONLY
+      ioFlags |= 0x08; // PR_CREATE_FILE
+      ioFlags |= 0x10; // PR_APPEND
+    }
+
     outputStream.init(
       new lazy.FileUtils.File(fullOutputFileName),
-      -1,
+      ioFlags,
       -1,
       Ci.nsIFileOutputStream.DEFER_OPEN
     );
@@ -228,12 +252,14 @@ export class LogManager {
     logFilePrefix,
     logFileSubDirectoryEntries,
     testTopicPrefix,
+    overwriteFileOnFlush,
   } = {}) {
     this._prefs = Services.prefs.getBranch(prefRoot);
     this._prefsBranch = prefRoot;
 
     this.logFilePrefix = logFilePrefix;
     this._testTopicPrefix = testTopicPrefix;
+    this._overwriteFileOnFlush = overwriteFileOnFlush;
 
     // At this point we don't allow a custom directory for the logs, nor allow
     // it to be outside the profile directory.
@@ -297,7 +323,9 @@ export class LogManager {
     );
 
     // The file appender doesn't get the special singleton behaviour.
-    let fapp = (this._fileAppender = new FlushableStorageAppender(formatter));
+    let fapp = (this._fileAppender = new FlushableStorageAppender(formatter, {
+      overwriteFileOnFlush: this._overwriteFileOnFlush,
+    }));
     // the stream gets a default of Debug as the user must go out of their way
     // to see the stuff spewed to it.
     this._observeStreamPref = setupAppender(
@@ -339,6 +367,16 @@ export class LogManager {
   SUCCESS_LOG_WRITTEN = "success-log-written";
   ERROR_LOG_WRITTEN = "error-log-written";
 
+  getLogFilename(reasonPrefix = "success", timestamp = Date.now()) {
+    // We have reasonPrefix at the start of the filename so all "error"
+    // logs are grouped in about:sync-log.
+    return (
+      [reasonPrefix, this.logFilePrefix, timestamp]
+        .filter(val => !!val)
+        .join("-") + ".txt"
+    );
+  }
+
   /**
    * Possibly generate a log file for all accumulated log messages and refresh
    * the input & output streams.
@@ -375,10 +413,7 @@ export class LogManager {
         return null;
       }
 
-      // We have reasonPrefix at the start of the filename so all "error"
-      // logs are grouped in about:sync-log.
-      let filename =
-        reasonPrefix + "-" + this.logFilePrefix + "-" + Date.now() + ".txt";
+      let filename = this.getLogFilename(reasonPrefix);
       await this._fileAppender.flushToFile(
         this.logFileSubDirectoryEntries,
         filename,
