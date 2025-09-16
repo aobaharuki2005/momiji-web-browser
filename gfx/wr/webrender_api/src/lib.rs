@@ -19,6 +19,8 @@
     clippy::new_without_default,
     clippy::empty_docs,
     clippy::manual_range_contains,
+    unknown_lints,
+    mismatched_lifetime_syntaxes,
 )]
 
 
