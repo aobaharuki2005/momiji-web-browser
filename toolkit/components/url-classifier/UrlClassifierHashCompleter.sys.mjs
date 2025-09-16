@@ -278,6 +278,9 @@ export class HashCompleter {
       // If the table name ends with "-proto", use the V4 request. Otherwise.
       // We use the v2 request.
       if (aTableName.endsWith("-proto")) {
+        if (aTableName.includes("google5")) {
+          return new HashCompleterRequestV5(this, aGethashUrl, true);
+        }
         return new HashCompleterRequestV4(this, aGethashUrl, true);
       }
       return new HashCompleterRequestV2(this, aGethashUrl, true);

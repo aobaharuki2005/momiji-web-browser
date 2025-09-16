@@ -342,10 +342,9 @@ static const struct {
   const char* mLocalListName;
   const char* mServerListName;
 } THREAT_NAME_CONV_TABLE_V5[] = {
-    {"goog-malware-proto", "mw-4b"},
-    {"googpub-phish-proto", "se-4b"},
-    {"goog-unwanted-proto", "uws-4b"},
-    {"goog-harmful-proto", "pha-4b"},
+    {"goog-malware-proto", "mw-4b"},           {"googpub-phish-proto", "se-4b"},
+    {"goog-unwanted-proto", "uws-4b"},         {"goog-harmful-proto", "pha-4b"},
+    {"test-google5-malware-proto", "test-4b"},
 };
 
 NS_IMETHODIMP
