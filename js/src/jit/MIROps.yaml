@@ -3327,6 +3327,16 @@
   alias_set: custom
   generate_lir: true
 
+- name: SuperFunctionAndUnbox
+  operands:
+    callee: Object
+  result_type: Object
+  movable: true
+  guard: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+  generate_lir: true
+
 - name: InitHomeObject
   operands:
     function: Object

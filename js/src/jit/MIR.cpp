@@ -7742,6 +7742,10 @@ AliasSet MSuperFunction::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
 
+AliasSet MSuperFunctionAndUnbox::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
 AliasSet MInitHomeObject::getAliasSet() const {
   return AliasSet::Store(AliasSet::ObjectFields);
 }

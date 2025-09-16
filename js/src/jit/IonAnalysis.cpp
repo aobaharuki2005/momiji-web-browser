@@ -4869,7 +4869,7 @@ bool jit::FoldLoadsWithUnbox(const MIRGenerator* mir, MIRGraph& graph) {
 
       // We're only interested in loads producing a Value.
       if (!ins->isLoadFixedSlot() && !ins->isLoadDynamicSlot() &&
-          !ins->isLoadElement()) {
+          !ins->isLoadElement() && !ins->isSuperFunction()) {
         continue;
       }
       if (ins->type() != MIRType::Value) {
@@ -4915,6 +4915,16 @@ bool jit::FoldLoadsWithUnbox(const MIRGenerator* mir, MIRGraph& graph) {
         continue;
       }
 
+      // If this is a SuperFunction, we only support folding the load when the
+      // unbox is fallible and its type is Object.
+      //
+      // SuperFunction is currently only used for `super()` constructor calls
+      // in classes, which always use fallible unbox to Object.
+      if (load->isSuperFunction() &&
+          !(unbox->type() == MIRType::Object && unbox->fallible())) {
+        continue;
+      }
+
       // Combine the load and unbox into a single MIR instruction.
       if (!graph.alloc().ensureBallast()) {
         return false;
@@ -4954,6 +4964,14 @@ bool jit::FoldLoadsWithUnbox(const MIRGenerator* mir, MIRGraph& graph) {
               !optimizedElements.append(loadIns->elements()->toInstruction())) {
             return false;
           }
+          break;
+        }
+        case MDefinition::Opcode::SuperFunction: {
+          auto* loadIns = load->toSuperFunction();
+          MOZ_ASSERT(unbox->fallible());
+          MOZ_ASSERT(unbox->type() == MIRType::Object);
+          replacement =
+              MSuperFunctionAndUnbox::New(graph.alloc(), loadIns->callee());
           break;
         }
         default:
