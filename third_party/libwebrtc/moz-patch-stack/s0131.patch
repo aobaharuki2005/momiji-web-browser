@@ -19,7 +19,7 @@ Upstream commit: https://webrtc.googlesource.com/src/+/73898ac18b498c3322f71b954
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/modules/audio_processing/logging/apm_data_dumper.cc b/modules/audio_processing/logging/apm_data_dumper.cc
-index 7c81e7898c..11f771b5ef 100644
+index b26d90fbc8..d86d8d8d3b 100644
 --- a/modules/audio_processing/logging/apm_data_dumper.cc
 +++ b/modules/audio_processing/logging/apm_data_dumper.cc
 @@ -10,13 +10,16 @@
