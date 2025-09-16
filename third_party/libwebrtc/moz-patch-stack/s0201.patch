@@ -18,18 +18,18 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9541460d001e1a62a
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index fb3cc94f74..fbe48f67ac 100644
+index c85d0eba7a..8219358e1e 100644
 --- a/modules/desktop_capture/desktop_capturer.h
 +++ b/modules/desktop_capture/desktop_capturer.h
-@@ -26,7 +26,6 @@
+@@ -23,7 +23,6 @@
+ #include "modules/desktop_capture/delegated_source_list_controller.h"
  #include "modules/desktop_capture/desktop_capture_metadata.h"
- #endif  // defined(WEBRTC_USE_GIO)
  #include "modules/desktop_capture/desktop_capture_types.h"
 -#include "modules/desktop_capture/desktop_frame.h"
+ #include "modules/desktop_capture/desktop_geometry.h"
  #include "modules/desktop_capture/shared_memory.h"
  #include "rtc_base/system/rtc_export.h"
- 
-@@ -36,6 +35,7 @@ void RTC_EXPORT LogDesktopCapturerFullscreenDetectorUsage();
+@@ -34,6 +33,7 @@ void RTC_EXPORT LogDesktopCapturerFullscreenDetectorUsage();
  
  class DesktopCaptureOptions;
  class DesktopFrame;

@@ -465,10 +465,10 @@ index 5813f6df9a..db99e227e9 100644
    }
    max_extrapolation_samples_ = 7 * fs_hz / 100;
 diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index bb0742a410..60c04723d6 100644
+index 50d3e9206e..0e32474543 100644
 --- a/modules/desktop_capture/desktop_capturer.h
 +++ b/modules/desktop_capture/desktop_capturer.h
-@@ -82,6 +82,7 @@ class RTC_EXPORT DesktopCapturer {
+@@ -80,6 +80,7 @@ class RTC_EXPORT DesktopCapturer {
    struct Source {
      // The unique id to represent a Source of current DesktopCapturer.
      SourceId id;
@@ -477,10 +477,10 @@ index bb0742a410..60c04723d6 100644
      // Title of the window or screen in UTF-8 encoding, maybe empty. This field
      // should not be used to identify a source.
 diff --git a/modules/desktop_capture/fake_desktop_capturer.cc b/modules/desktop_capture/fake_desktop_capturer.cc
-index f9d9dbd2c4..67149bfcb9 100644
+index a80d9aa1ff..0e77405fa4 100644
 --- a/modules/desktop_capture/fake_desktop_capturer.cc
 +++ b/modules/desktop_capture/fake_desktop_capturer.cc
-@@ -72,8 +72,8 @@ void FakeDesktopCapturer::SetSharedMemoryFactory(
+@@ -76,8 +76,8 @@ void FakeDesktopCapturer::SetSharedMemoryFactory(
  }
  
  bool FakeDesktopCapturer::GetSourceList(DesktopCapturer::SourceList* sources) {
@@ -492,10 +492,10 @@ index f9d9dbd2c4..67149bfcb9 100644
  }
  
 diff --git a/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc b/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc
-index 064b98fa15..37fe7e168c 100644
+index 59047dc03f..3a0cef3b3e 100644
 --- a/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc
 +++ b/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc
-@@ -38,6 +38,7 @@ namespace {
+@@ -39,6 +39,7 @@ namespace {
  // searches up the list of the windows to find the root child that corresponds
  // to `window`.
  Window GetTopLevelWindow(Display* display, Window window) {
@@ -503,7 +503,7 @@ index 064b98fa15..37fe7e168c 100644
    while (true) {
      // If the window is in WithdrawnState then look at all of its children.
      ::Window root, parent;
-@@ -104,7 +105,7 @@ MouseCursorMonitorX11::~MouseCursorMonitorX11() {
+@@ -105,7 +106,7 @@ MouseCursorMonitorX11::~MouseCursorMonitorX11() {
  }
  
  void MouseCursorMonitorX11::Init(Callback* callback, Mode mode) {
@@ -512,7 +512,7 @@ index 064b98fa15..37fe7e168c 100644
    RTC_DCHECK(!callback_);
    RTC_DCHECK(callback);
  
-@@ -116,6 +117,7 @@ void MouseCursorMonitorX11::Init(Callback* callback, Mode mode) {
+@@ -117,6 +118,7 @@ void MouseCursorMonitorX11::Init(Callback* callback, Mode mode) {
  
    if (have_xfixes_) {
      // Register for changes to the cursor shape.
@@ -521,10 +521,10 @@ index 064b98fa15..37fe7e168c 100644
      x_display_->AddEventHandler(xfixes_event_base_ + XFixesCursorNotify, this);
  
 diff --git a/modules/desktop_capture/linux/x11/screen_capturer_x11.cc b/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
-index 0384a0373b..db0826b42b 100644
+index 4f32a27426..d05ec87963 100644
 --- a/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
 +++ b/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
-@@ -302,7 +302,7 @@ bool ScreenCapturerX11::GetSourceList(SourceList* sources) {
+@@ -307,7 +307,7 @@ bool ScreenCapturerX11::GetSourceList(SourceList* sources) {
      char* monitor_title = XGetAtomName(display(), m.name);
  
      // Note name is an X11 Atom used to id the monitor.
@@ -534,10 +534,10 @@ index 0384a0373b..db0826b42b 100644
    }
  
 diff --git a/modules/desktop_capture/linux/x11/window_capturer_x11.cc b/modules/desktop_capture/linux/x11/window_capturer_x11.cc
-index b55f7e8fa9..2b1392ced0 100644
+index 95f453064e..01ef044dd3 100644
 --- a/modules/desktop_capture/linux/x11/window_capturer_x11.cc
 +++ b/modules/desktop_capture/linux/x11/window_capturer_x11.cc
-@@ -57,6 +57,7 @@ bool WindowCapturerX11::GetSourceList(SourceList* sources) {
+@@ -62,6 +62,7 @@ bool WindowCapturerX11::GetSourceList(SourceList* sources) {
    return GetWindowList(&atom_cache_, [this, sources](::Window window) {
      Source w;
      w.id = window;
@@ -545,7 +545,7 @@ index b55f7e8fa9..2b1392ced0 100644
      if (this->GetWindowTitle(window, &w.title)) {
        sources->push_back(w);
      }
-@@ -237,6 +238,14 @@ bool WindowCapturerX11::GetWindowTitle(::Window window, std::string* title) {
+@@ -242,6 +243,14 @@ bool WindowCapturerX11::GetWindowTitle(::Window window, std::string* title) {
    return result;
  }
  
