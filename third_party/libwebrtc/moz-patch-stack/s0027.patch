@@ -473,7 +473,7 @@ index 11b03496be..3cc8835a5e 100644
  if (rtc_include_tests) {
    rtc_source_set("test_feedback_generator_interface") {
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 5c8a23a6b0..88462f0a02 100644
+index cfa6c85e6b..e09cf9ef3b 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -48,7 +48,7 @@ rtc_library("call_interfaces") {
@@ -486,7 +486,7 @@ index 5c8a23a6b0..88462f0a02 100644
      "../api:transport_api",
      "../api/adaptation:resource_adaptation_api",
 diff --git a/call/audio_send_stream.h b/call/audio_send_stream.h
-index d1b3e64ba3..fa465f7d89 100644
+index 2cc5397e31..021a2976dd 100644
 --- a/call/audio_send_stream.h
 +++ b/call/audio_send_stream.h
 @@ -27,7 +27,7 @@
@@ -499,10 +499,10 @@ index d1b3e64ba3..fa465f7d89 100644
  #include "api/units/time_delta.h"
  #include "call/audio_sender.h"
 diff --git a/call/video_send_stream.h b/call/video_send_stream.h
-index 906d79598b..2c46bb4641 100644
+index bfcc15cc88..58d3033431 100644
 --- a/call/video_send_stream.h
 +++ b/call/video_send_stream.h
-@@ -23,7 +23,7 @@
+@@ -24,7 +24,7 @@
  #include "api/crypto/crypto_options.h"
  #include "api/frame_transformer_interface.h"
  #include "api/rtp_parameters.h"
@@ -544,7 +544,7 @@ index 9cb0f770ca..0031392f8a 100644
  #include "rtc_base/memory/aligned_malloc.h"
  
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 7f92e45b4a..aec77b53c7 100644
+index f6359d4fe7..d0f1b66d6f 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -77,7 +77,7 @@ rtc_library("rtc_media_base") {
