@@ -96,7 +96,7 @@ NS_IMETHODIMP DelayedClearElementActivation::Notify(nsITimer*) {
   // If the single tap has been processed and the timer has expired,
   // clear the active element state.
   if (mProcessedSingleTap) {
-    ESM_LOG("DelayedClearElementActivation clearing active content\n");
+    ESM_LOG("DelayedClearElementActivation clearing active content");
     ClearGlobalActiveContent();
   }
   mTimer = nullptr;
@@ -151,7 +151,7 @@ ElementStateManager::~ElementStateManager() = default;
 void ElementStateManager::SetTargetElement(dom::EventTarget* aTarget) {
   if (mTarget) {
     // Multiple fingers on screen (since HandleTouchEnd clears mTarget).
-    ESM_LOG("Multiple fingers on-screen, clearing target element\n");
+    ESM_LOG("Multiple fingers on-screen, clearing target element");
     CancelActiveTask();
     ResetActive();
     ResetTouchBlockState();
@@ -159,15 +159,15 @@ void ElementStateManager::SetTargetElement(dom::EventTarget* aTarget) {
   }
 
   mTarget = dom::Element::FromEventTargetOrNull(aTarget);
-  ESM_LOG("Setting target element to %p\n", mTarget.get());
+  ESM_LOG("Setting target element to %p", mTarget.get());
   TriggerElementActivation();
 }
 
 void ElementStateManager::HandleTouchStart(bool aCanBePanOrZoom) {
-  ESM_LOG("Touch start, aCanBePanOrZoom: %d\n", aCanBePanOrZoom);
+  ESM_LOG("Touch start, aCanBePanOrZoom: %d", aCanBePanOrZoom);
   if (mCanBePanOrZoomSet) {
     // Multiple fingers on screen (since HandleTouchEnd clears mCanBePanSet).
-    ESM_LOG("Multiple fingers on-screen, clearing touch block state\n");
+    ESM_LOG("Multiple fingers on-screen, clearing touch block state");
     CancelActiveTask();
     ResetActive();
     ResetTouchBlockState();
@@ -226,25 +226,25 @@ void ElementStateManager::TriggerElementActivation() {
   }
   ESM_LOG(
       "Got both touch-end event and end touch notiication, clearing pan "
-      "state\n");
+      "state");
   mCanBePanOrZoomSet = false;
 }
 
 void ElementStateManager::ClearActivation() {
-  ESM_LOG("Clearing element activation\n");
+  ESM_LOG("Clearing element activation");
   CancelActiveTask();
   ResetActive();
 }
 
 bool ElementStateManager::HandleTouchEndEvent(apz::SingleTapState aState) {
-  ESM_LOG("Touch end event, state: %hhu\n", static_cast<uint8_t>(aState));
+  ESM_LOG("Touch end event, state: %hhu", static_cast<uint8_t>(aState));
 
   mTouchEndState += TouchEndState::GotTouchEndEvent;
   return MaybeChangeActiveState(aState);
 }
 
 bool ElementStateManager::HandleTouchEnd(apz::SingleTapState aState) {
-  ESM_LOG("Touch end\n");
+  ESM_LOG("Touch end");
 
   mTouchEndState += TouchEndState::GotTouchEndNotification;
   return MaybeChangeActiveState(aState);
@@ -319,7 +319,7 @@ void ElementStateManager::Destroy() {
 }
 
 void ElementStateManager::SetActive(dom::Element* aTarget) {
-  ESM_LOG("Setting active %p\n", aTarget);
+  ESM_LOG("Setting active %p", aTarget);
 
   if (nsPresContext* pc = GetPresContextFor(aTarget)) {
     pc->EventStateManager()->SetContentState(aTarget,
@@ -328,13 +328,13 @@ void ElementStateManager::SetActive(dom::Element* aTarget) {
 }
 
 void ElementStateManager::ResetActive() {
-  ESM_LOG("Resetting active from %p\n", mTarget.get());
+  ESM_LOG("Resetting active from %p", mTarget.get());
 
   // Clear the :active flag from mTarget by setting it on the document root.
   if (mTarget) {
     dom::Element* root = mTarget->OwnerDoc()->GetDocumentElement();
     if (root) {
-      ESM_LOG("Found root %p, making active\n", root);
+      ESM_LOG("Found root %p, making active", root);
       SetActive(root);
     }
   }
@@ -366,7 +366,7 @@ void ElementStateManager::ScheduleSetActiveTask() {
 }
 
 void ElementStateManager::SetActiveTask(const nsCOMPtr<dom::Element>& aTarget) {
-  ESM_LOG("mSetActiveTask %p running\n", mSetActiveTask.get());
+  ESM_LOG("mSetActiveTask %p running", mSetActiveTask.get());
 
   // This gets called from mSetActiveTask's Run() method. The message loop
   // deletes the task right after running it, so we need to null out
@@ -376,13 +376,12 @@ void ElementStateManager::SetActiveTask(const nsCOMPtr<dom::Element>& aTarget) {
 }
 
 void ElementStateManager::CancelActiveTask() {
-  ESM_LOG("Cancelling active task %p\n", mSetActiveTask.get());
+  ESM_LOG("Cancelling active task %p", mSetActiveTask.get());
 
   if (mSetActiveTask) {
     mSetActiveTask->Cancel();
     mSetActiveTask = nullptr;
   }
 }
-
 }  // namespace layers
 }  // namespace mozilla
