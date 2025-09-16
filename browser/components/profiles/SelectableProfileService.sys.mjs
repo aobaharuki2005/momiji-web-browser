@@ -1676,7 +1676,7 @@ export class CommandLineHandler {
       cmdLine.handleFlag(COMMAND_LINE_ACTIVATE, true) &&
       cmdLine.state != Ci.nsICommandLine.STATE_INITIAL_LAUNCH
     ) {
-      let win = Services.wm.getMostRecentWindow(null);
+      let win = Services.wm.getMostRecentBrowserWindow();
       if (win) {
         win.focus();
         cmdLine.preventDefault = true;
