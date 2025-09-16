@@ -9,7 +9,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3e8ac168ee3db089d
  1 file changed, 2 insertions(+)
 
 diff --git a/rtc_base/system_time.cc b/rtc_base/system_time.cc
-index c6a9b7b766..c3513ba222 100644
+index 83a08f64f4..36d95447e0 100644
 --- a/rtc_base/system_time.cc
 +++ b/rtc_base/system_time.cc
 @@ -12,6 +12,8 @@

@@ -9,10 +9,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8fee7e6d9736f8d1d
  1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/rtc_base/ssl_stream_adapter.h b/rtc_base/ssl_stream_adapter.h
-index f8f817337a..d01c37c1ce 100644
+index baa491235e..1177d0ea62 100644
 --- a/rtc_base/ssl_stream_adapter.h
 +++ b/rtc_base/ssl_stream_adapter.h
-@@ -245,11 +245,12 @@ class SSLStreamAdapter : public StreamInterface {
+@@ -244,11 +244,12 @@ class SSLStreamAdapter : public StreamInterface {
    static bool IsAcceptableCipher(int cipher, KeyType key_type);
    static bool IsAcceptableCipher(absl::string_view cipher, KeyType key_type);
  
