@@ -583,10 +583,10 @@ index 2605c54650..53aabb46fe 100644
  
    scoped_refptr<SharedXDisplay> x_display_;
 diff --git a/modules/desktop_capture/win/screen_capture_utils.cc b/modules/desktop_capture/win/screen_capture_utils.cc
-index 8ac8bfcd0c..4f6922f22c 100644
+index 42f8c5718f..82e69f3e50 100644
 --- a/modules/desktop_capture/win/screen_capture_utils.cc
 +++ b/modules/desktop_capture/win/screen_capture_utils.cc
-@@ -52,7 +52,7 @@ bool GetScreenList(DesktopCapturer::SourceList* screens,
+@@ -55,7 +55,7 @@ bool GetScreenList(DesktopCapturer::SourceList* screens,
        continue;
      }
  

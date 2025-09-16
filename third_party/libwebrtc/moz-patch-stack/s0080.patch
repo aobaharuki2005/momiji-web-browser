@@ -11,10 +11,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0aac94794aad2ddb6
  1 file changed, 6 insertions(+)
 
 diff --git a/modules/desktop_capture/win/wgc_capture_session.cc b/modules/desktop_capture/win/wgc_capture_session.cc
-index da9054e0eb..7dfc29bfc0 100644
+index 7ce589bd5b..6dc79ae034 100644
 --- a/modules/desktop_capture/win/wgc_capture_session.cc
 +++ b/modules/desktop_capture/win/wgc_capture_session.cc
-@@ -197,6 +197,11 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
+@@ -201,6 +201,11 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
      }
    }
  
@@ -26,7 +26,7 @@ index da9054e0eb..7dfc29bfc0 100644
    // By default, the WGC capture API adds a yellow border around the captured
    // window or display to indicate that a capture is in progress. The section
    // below is an attempt to remove this yellow border to make the capture
-@@ -208,6 +213,7 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
+@@ -212,6 +217,7 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
            &session3))) {
      session3->put_IsBorderRequired(options.wgc_require_border());
    }
