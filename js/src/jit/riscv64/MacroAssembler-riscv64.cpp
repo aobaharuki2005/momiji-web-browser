@@ -4724,20 +4724,28 @@ void MacroAssemblerRiscv64::ma_push(Register r) {
   sd(r, StackPointer, 0);
 }
 
-// multiplies.  For now, there are only few that we care about.
 void MacroAssemblerRiscv64::ma_mul32TestOverflow(Register rd, Register rj,
                                                  Register rk, Label* overflow) {
   UseScratchRegisterScope temps(this);
-  Register ScratchRegister = temps.Acquire();
-  MulOverflow32(rd, rj, rk, ScratchRegister);
-  ma_b(ScratchRegister, Register(zero), overflow, Assembler::NotEqual);
+  Register scratch = temps.Acquire();
+  MOZ_ASSERT(rd != scratch);
+
+  mul(rd, rj, rk);
+  sext_w(scratch, rd);
+  ma_b(scratch, rd, overflow, Assembler::NotEqual);
 }
 void MacroAssemblerRiscv64::ma_mul32TestOverflow(Register rd, Register rj,
                                                  Imm32 imm, Label* overflow) {
   UseScratchRegisterScope temps(this);
-  Register ScratchRegister = temps.Acquire();
-  MulOverflow32(rd, rj, Operand(imm.value), ScratchRegister);
-  ma_b(ScratchRegister, Register(zero), overflow, Assembler::NotEqual);
+  Register scratch = temps.Acquire();
+  Register scratch2 = temps.Acquire();
+  MOZ_ASSERT(rd != scratch && rj != scratch2);
+
+  ma_li(scratch2, imm);
+
+  mul(rd, rj, scratch2);
+  sext_w(scratch, rd);
+  ma_b(scratch, rd, overflow, Assembler::NotEqual);
 }
 
 void MacroAssemblerRiscv64::ma_mulPtrTestOverflow(Register rd, Register rj,
@@ -4761,34 +4769,6 @@ void MacroAssemblerRiscv64::ma_mulPtrTestOverflow(Register rd, Register rj,
   mulh(scratch, rj, rk);
   srai(scratch2, rd, 63);
   ma_b(scratch, Register(scratch2), overflow, Assembler::NotEqual);
-}
-
-// MulOverflow32 sets overflow register to zero if no overflow occured
-void MacroAssemblerRiscv64::MulOverflow32(Register dst, Register left,
-                                          const Operand& right,
-                                          Register overflow) {
-  UseScratchRegisterScope temps(this);
-  BlockTrampolinePoolScope block_trampoline_pool(this, 11);
-  Register right_reg;
-  Register scratch = temps.Acquire();
-  Register scratch2 = temps.Acquire();
-  if (right.is_imm()) {
-    ma_li(scratch, right.immediate());
-    right_reg = scratch;
-  } else {
-    MOZ_ASSERT(right.is_reg());
-    right_reg = right.rm();
-  }
-
-  MOZ_ASSERT(left != scratch2 && right_reg != scratch2 && dst != scratch2 &&
-             overflow != scratch2);
-  MOZ_ASSERT(overflow != left && overflow != right_reg);
-  sext_w(overflow, left);
-  sext_w(scratch2, right_reg);
-
-  mul(overflow, overflow, scratch2);
-  sext_w(dst, overflow);
-  xor_(overflow, overflow, dst);
 }
 
 int32_t MacroAssemblerRiscv64::GetOffset(int32_t offset, Label* L,
