@@ -153,7 +153,6 @@ import org.mozilla.fenix.components.toolbar.TabCounterInteractions.TabCounterCli
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.TabCounterLongClicked
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.directionsEq
-import org.mozilla.fenix.ext.isLargeWindow
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixGleanTestRule
@@ -526,6 +525,7 @@ class BrowserToolbarMiddlewareTest {
         verify { navController.navigate(BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = false)) }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `WHEN clicking the menu button THEN open the menu`() {
         val middleware = buildMiddleware()
@@ -549,6 +549,7 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `GIVEN browsing in normal mode WHEN clicking the tab counter button THEN open the tabs tray in normal mode`() {
         val browsingModeManager = SimpleBrowsingModeManager(Normal)
@@ -577,6 +578,7 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `GIVEN browsing in private mode WHEN clicking the tab counter button THEN open the tabs tray in private mode`() {
         val navController: NavController = mockk(relaxed = true)
@@ -796,6 +798,7 @@ class BrowserToolbarMiddlewareTest {
         assertNotNull(Events.copyUrlTapped.testGetValue())
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `WHEN choosing to paste from clipboard THEN start a new search with the current clipboard text`() {
         val navController: NavController = mockk(relaxed = true)
@@ -835,6 +838,7 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `WHEN choosing to load URL from clipboard THEN start load the URL from clipboard in a new tab`() {
         val navController: NavController = mockk(relaxed = true)
@@ -1268,55 +1272,12 @@ class BrowserToolbarMiddlewareTest {
         assertNotNull(ReaderMode.closed.testGetValue())
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
-    fun `GIVEN expanded toolbar layout WHEN translation is possible THEN show a translate button`() {
-        every { settings.shouldUseExpandedToolbar } returns true
-        val browserScreenStore = buildBrowserScreenStore()
-        val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
-        val toolbarStore = buildStore(middleware, browsingModeManager = browsingModeManager, navController = navController)
-
-        browserScreenStore.dispatch(
-            PageTranslationStatusUpdated(
-                PageTranslationStatus(
-                    isTranslationPossible = true,
-                    isTranslated = false,
-                    isTranslateProcessing = false,
-                ),
-            ),
-        )
-
-        val translateButton = toolbarStore.state.displayState.pageActionsEnd[0]
-        assertEquals(expectedTranslateButton, translateButton)
-    }
-
-    @Test
-    fun `GIVEN in landscape WHEN translation is possible THEN show a translate button`() {
+    fun `GIVEN on a large window WHEN translation is possible THEN show a translate button`() {
         every { settings.shouldUseExpandedToolbar } returns false
-        every { appStore.state.orientation } returns Landscape
-        val browserScreenStore = buildBrowserScreenStore()
-        val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
-        val toolbarStore = buildStore(middleware, browsingModeManager = browsingModeManager, navController = navController)
-
-        browserScreenStore.dispatch(
-            PageTranslationStatusUpdated(
-                PageTranslationStatus(
-                    isTranslationPossible = true,
-                    isTranslated = false,
-                    isTranslateProcessing = false,
-                ),
-            ),
-        )
-
-        val translateButton = toolbarStore.state.displayState.pageActionsEnd[0]
-        assertEquals(expectedTranslateButton, translateButton)
-    }
-
-    @Test
-    fun `GIVEN on a tablet WHEN translation is possible THEN show a translate button`() {
-        every { settings.shouldUseExpandedToolbar } returns false
-        every { appStore.state.orientation } returns Portrait
-        mockkStatic(Context::isLargeWindow) {
-            every { any<Context>().isLargeWindow() } returns true
+        mockkStatic(Context::isWideWindow) {
+            every { any<Context>().isWideWindow() } returns true
             val browserScreenStore = buildBrowserScreenStore()
             val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
             val toolbarStore = buildStore(middleware, browsingModeManager = browsingModeManager, navController = navController)
@@ -1336,41 +1297,50 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
-    fun `GIVEN the current page is translated WHEN knowing of this state THEN update the translate button to show this`() {
+    fun `GIVEN the current page is translated AND a large window WHEN knowing of this state THEN update the translate button to show this`() {
         every { settings.shouldUseExpandedToolbar } returns true
-        val browserScreenStore = buildBrowserScreenStore()
-        val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
-        val toolbarStore = buildStore(middleware, browsingModeManager = browsingModeManager, navController = navController)
+        mockkStatic(Context::isWideWindow) {
+            every { any<Context>().isWideWindow() } returns true
+            val browserScreenStore = buildBrowserScreenStore()
+            val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
+            val toolbarStore = buildStore(
+                middleware,
+                browsingModeManager = browsingModeManager,
+                navController = navController,
+            )
 
-        browserScreenStore.dispatch(
-            PageTranslationStatusUpdated(
-                PageTranslationStatus(
-                    isTranslationPossible = true,
-                    isTranslated = false,
-                    isTranslateProcessing = false,
+            browserScreenStore.dispatch(
+                PageTranslationStatusUpdated(
+                    PageTranslationStatus(
+                        isTranslationPossible = true,
+                        isTranslated = false,
+                        isTranslateProcessing = false,
+                    ),
                 ),
-            ),
-        )
-        var translateButton = toolbarStore.state.displayState.pageActionsEnd[0]
-        assertEquals(expectedTranslateButton, translateButton)
+            )
+            var translateButton = toolbarStore.state.displayState.pageActionsEnd[0]
+            assertEquals(expectedTranslateButton, translateButton)
 
-        browserScreenStore.dispatch(
-            PageTranslationStatusUpdated(
-                PageTranslationStatus(
-                    isTranslationPossible = true,
-                    isTranslated = true,
-                    isTranslateProcessing = false,
+            browserScreenStore.dispatch(
+                PageTranslationStatusUpdated(
+                    PageTranslationStatus(
+                        isTranslationPossible = true,
+                        isTranslated = true,
+                        isTranslateProcessing = false,
+                    ),
                 ),
-            ),
-        )
-        translateButton = toolbarStore.state.displayState.pageActionsEnd[0]
-        assertEquals(
-            expectedTranslateButton.copy(state = ActionButton.State.ACTIVE),
-            translateButton,
-        )
+            )
+            translateButton = toolbarStore.state.displayState.pageActionsEnd[0]
+            assertEquals(
+                expectedTranslateButton.copy(state = ActionButton.State.ACTIVE),
+                translateButton,
+            )
+        }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `GIVEN translation is possible WHEN tapping on the translate button THEN allow user to choose how to translate`() {
         every { settings.shouldUseExpandedToolbar } returns true
@@ -1381,27 +1351,39 @@ class BrowserToolbarMiddlewareTest {
             every { currentDestination } returns currentNavDestination
         }
 
-        val browserScreenStore = buildBrowserScreenStore()
-        val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
-        val toolbarStore = buildStore(middleware, browsingModeManager = browsingModeManager, navController = navController)
-        browserScreenStore.dispatch(
-            PageTranslationStatusUpdated(
-                PageTranslationStatus(
-                    isTranslationPossible = true,
-                    isTranslated = false,
-                    isTranslateProcessing = false,
+        mockkStatic(Context::isWideWindow) {
+            every { any<Context>().isWideWindow() } returns true
+            val browserScreenStore = buildBrowserScreenStore()
+            val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
+            val toolbarStore = buildStore(
+                middleware,
+                browsingModeManager = browsingModeManager,
+                navController = navController,
+            )
+            browserScreenStore.dispatch(
+                PageTranslationStatusUpdated(
+                    PageTranslationStatus(
+                        isTranslationPossible = true,
+                        isTranslated = false,
+                        isTranslateProcessing = false,
+                    ),
                 ),
-            ),
-        )
+            )
 
-        val translateButton = toolbarStore.state.displayState.pageActionsEnd[0] as ActionButtonRes
-        toolbarStore.dispatch(translateButton.onClick as BrowserToolbarEvent)
+            val translateButton =
+                toolbarStore.state.displayState.pageActionsEnd[0] as ActionButtonRes
+            toolbarStore.dispatch(translateButton.onClick as BrowserToolbarEvent)
 
-        verify { appStore.dispatch(SnackbarDismissed) }
-        verify { navController.navigate(BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment()) }
-        assertEquals("main_flow_toolbar", Translations.action.testGetValue()?.last()?.extra?.get("item"))
+            verify { appStore.dispatch(SnackbarDismissed) }
+            verify { navController.navigate(BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment()) }
+            assertEquals(
+                "main_flow_toolbar",
+                Translations.action.testGetValue()?.last()?.extra?.get("item"),
+            )
+        }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `GIVEN on a small screen with tabstrip is disabled and not using the extended layout THEN don't show a share button as page end action`() {
         every { settings.isTabStripEnabled } returns false
@@ -1420,12 +1402,12 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
-    fun `GIVEN on a large screen with tabstrip is disabled and not using the extended layout THEN show a share button as page end action`() {
+    fun `GIVEN on a large screen with tabstrip is disabled THEN show a share button as page end action`() {
         every { settings.isTabStripEnabled } returns false
-        every { settings.shouldUseExpandedToolbar } returns false
-        mockkStatic(Context::isLargeWindow) {
-            every { any<Context>().isLargeWindow() } returns true
+        mockkStatic(Context::isWideWindow) {
+            every { any<Context>().isWideWindow() } returns true
             val browserScreenStore = buildBrowserScreenStore()
             val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
             val toolbarStore = buildStore(middleware, browsingModeManager = browsingModeManager, navController = navController)
@@ -1435,37 +1417,22 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
-    fun `GIVEN on a large portrait screen with extended layout enabled THEN don't show a share button as page end action`() {
-        every { settings.shouldUseExpandedToolbar } returns true
-        mockkStatic(Context::isLargeWindow) {
-            mockkStatic(Context::isTallWindow) {
-                every { any<Context>().isLargeWindow() } returns true
-                every { any<Context>().isTallWindow() } returns true
-                val browserScreenStore = buildBrowserScreenStore()
-                val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
-                val toolbarStore = buildStore(
-                    middleware,
-                    browsingModeManager = browsingModeManager,
-                    navController = navController,
-                )
+    fun `GIVEN on a large screen with tabstrip is enabled THEN don't show a share button as page end action`() {
+        every { settings.isTabStripEnabled } returns true
+        mockkStatic(Context::isWideWindow) {
+            every { any<Context>().isWideWindow() } returns true
+            val browserScreenStore = buildBrowserScreenStore()
+            val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
+            val toolbarStore = buildStore(
+                middleware,
+                browsingModeManager = browsingModeManager,
+                navController = navController,
+            )
 
-                assertTrue(toolbarStore.state.displayState.pageActionsEnd.isEmpty())
-            }
+            assertTrue(toolbarStore.state.displayState.pageActionsEnd.isEmpty())
         }
-    }
-
-    @Test
-    fun `GIVEN in landscape with tabstrip is disabled and not using the extended layout THEN show a share button as page end action`() {
-        every { appState.orientation } returns Landscape
-        every { settings.isTabStripEnabled } returns false
-        every { settings.shouldUseExpandedToolbar } returns false
-        val browserScreenStore = buildBrowserScreenStore()
-        val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
-        val toolbarStore = buildStore(middleware, browsingModeManager = browsingModeManager, navController = navController)
-
-        val shareButton = toolbarStore.state.displayState.pageActionsEnd[0]
-        assertEquals(expectedShareButton(), shareButton)
     }
 
     @Test
@@ -1547,6 +1514,7 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `GIVEN on a small width with tabstrip is enabled and not using the extended layout THEN don't show a share button as browser end action`() {
         mockkStatic(Context::isTallWindow) {
@@ -1567,12 +1535,13 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `GIVEN on a large screen with tabstrip is enabled and not using the extended layout THEN show a share button as browser end action`() {
         every { settings.isTabStripEnabled } returns true
         every { settings.shouldUseExpandedToolbar } returns false
-        mockkStatic(Context::isLargeWindow) {
-            every { any<Context>().isLargeWindow() } returns true
+        mockkStatic(Context::isWideWindow) {
+            every { any<Context>().isWideWindow() } returns true
             val browserScreenStore = buildBrowserScreenStore()
             val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
             val toolbarStore = buildStore(
@@ -1599,13 +1568,14 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(expectedShareButton(), shareButton)
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `GIVEN on a large portrait screen with tabstrip and extended layout enabled THEN don't show a share button as browser end action`() {
         every { settings.isTabStripEnabled } returns true
         every { settings.shouldUseExpandedToolbar } returns true
-        mockkStatic(Context::isLargeWindow) {
+        mockkStatic(Context::isWideWindow) {
             mockkStatic(Context::isTallWindow) {
-                every { any<Context>().isLargeWindow() } returns true
+                every { any<Context>().isWideWindow() } returns true
                 every { any<Context>().isTallWindow() } returns true
                 val browserScreenStore = buildBrowserScreenStore()
                 val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
@@ -1620,8 +1590,9 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
-    fun `WHEN cycling through portrait and landscape orientations THEN update what end page actions should be shown`() {
+    fun `WHEN cycling through tall window and large window THEN update what end page actions should be shown`() {
         val appStore = AppStore()
         every { settings.isTabStripEnabled } returns false
         every { settings.shouldUseExpandedToolbar } returns false
@@ -1645,8 +1616,8 @@ class BrowserToolbarMiddlewareTest {
             )
         }
 
-        mockkStatic(Context::isTallWindow) {
-            every { any<Context>().isTallWindow() } returns false
+        mockkStatic(Context::isWideWindow) {
+            every { any<Context>().isWideWindow() } returns true
             val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
             val toolbarStore = buildStore(middleware)
             shadowOf(Looper.getMainLooper()).idle()
@@ -1674,10 +1645,11 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `GIVEN device has large window WHEN a website is loaded THEN show navigation buttons`() = runTest {
-        mockkStatic(Context::isLargeWindow) {
-            every { any<Context>().isLargeWindow() } returns true
+        mockkStatic(Context::isWideWindow) {
+            every { any<Context>().isWideWindow() } returns true
             every { settings.shouldUseBottomToolbar } returns false
             val middleware = buildMiddleware()
             val toolbarStore = buildStore(middleware)
@@ -1690,24 +1662,11 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
-    @Test
-    fun `GIVEN expanded toolbar layout and in landscape WHEN a website is loaded THEN show navigation buttons`() = runTest {
-        every { appStore.state.orientation } returns Landscape
-        every { settings.shouldUseExpandedToolbar } returns true
-        val middleware = buildMiddleware()
-        val toolbarStore = buildStore(middleware)
-        mainLooperRule.idle()
-
-        val displayGoBackButton = toolbarStore.state.displayState.browserActionsStart[0]
-        assertEquals(displayGoBackButton, expectedGoBackButton.copy(state = ActionButton.State.DISABLED))
-        val displayGoForwardButton = toolbarStore.state.displayState.browserActionsStart[1]
-        assertEquals(displayGoForwardButton, expectedGoForwardButton.copy(state = ActionButton.State.DISABLED))
-    }
-
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `GIVEN nav buttons on toolbar are shown WHEN device is rotated THEN nav buttons still shown`() = runTest {
-        mockkStatic(Context::isLargeWindow) {
-            every { any<Context>().isLargeWindow() } returns true
+        mockkStatic(Context::isWideWindow) {
+            every { any<Context>().isWideWindow() } returns true
             every { settings.shouldUseBottomToolbar } returns false
             val middleware = buildMiddleware(appStore)
             val toolbarStore = buildStore(middleware)
@@ -1728,10 +1687,11 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `GIVEN the back button is shown WHEN interacted with THEN go back or show history`() = runTest {
-        mockkStatic(Context::isLargeWindow) {
-            every { any<Context>().isLargeWindow() } returns true
+        mockkStatic(Context::isWideWindow) {
+            every { any<Context>().isWideWindow() } returns true
             every { settings.shouldUseBottomToolbar } returns false
             val currentTab = createTab("test.com", private = false)
             val captureMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
@@ -1758,10 +1718,11 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `GIVEN the forward button is shown WHEN interacted with THEN go forward or show history`() = runTest {
-        mockkStatic(Context::isLargeWindow) {
-            every { any<Context>().isLargeWindow() } returns true
+        mockkStatic(Context::isWideWindow) {
+            every { any<Context>().isWideWindow() } returns true
             every { settings.shouldUseBottomToolbar } returns false
             val currentTab = createTab("test.com", private = false)
             val captureMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
@@ -1787,10 +1748,11 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `GIVEN device has large window WHEN a website is loaded THEN show refresh button`() = runTest {
-        mockkStatic(Context::isLargeWindow) {
-            every { any<Context>().isLargeWindow() } returns true
+        mockkStatic(Context::isWideWindow) {
+            every { any<Context>().isWideWindow() } returns true
             val browsingModeManager = SimpleBrowsingModeManager(Private)
             val currentNavDestination: NavDestination = mockk {
                 every { id } returns R.id.browserFragment
@@ -1841,61 +1803,11 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
-    fun `GIVEN expanded toolbar layout and in landscape window WHEN a website is loaded THEN show refresh button`() = runTest {
-        every { appStore.state.orientation } returns Landscape
-        every { settings.shouldUseExpandedToolbar } returns true
-        val browsingModeManager = SimpleBrowsingModeManager(Private)
-        val currentNavDestination: NavDestination = mockk {
-            every { id } returns R.id.browserFragment
-        }
-        val navController: NavController = mockk(relaxed = true) {
-            every { currentDestination } returns currentNavDestination
-        }
-
-        val currentTab = createTab("test.com", private = false)
-        val browserStore = BrowserStore(
-            BrowserState(
-                tabs = listOf(currentTab),
-                selectedTabId = currentTab.id,
-            ),
-        )
-        val reloadUseCases: SessionUseCases.ReloadUrlUseCase = mockk(relaxed = true)
-        val stopUseCases: SessionUseCases.StopLoadingUseCase = mockk(relaxed = true)
-        val sessionUseCases: SessionUseCases = mockk {
-            every { reload } returns reloadUseCases
-            every { stopLoading } returns stopUseCases
-        }
-        val browserScreenStore = buildBrowserScreenStore()
-        val browserUseCases: FenixBrowserUseCases = mockk(relaxed = true)
-        val useCases: UseCases = mockk {
-            every { fenixBrowserUseCases } returns browserUseCases
-        }
-        val middleware = buildMiddleware(
-            appStore, browserScreenStore, browserStore, useCases, sessionUseCases = sessionUseCases,
-        )
-        val toolbarStore = buildStore(
-            middleware, browsingModeManager = browsingModeManager, navController = navController,
-        )
-
-        mainLooperRule.idle()
-        val loadUrlFlagsUsed = mutableListOf<LoadUrlFlags>()
-
-        val pageLoadButton = toolbarStore.state.displayState.browserActionsStart.last() as ActionButtonRes
-        assertEquals(expectedRefreshButton, pageLoadButton)
-        toolbarStore.dispatch(pageLoadButton.onClick as BrowserToolbarEvent)
-        mainLooperRule.idle()
-        verify { reloadUseCases(currentTab.id, capture(loadUrlFlagsUsed)) }
-        assertEquals(LoadUrlFlags.none().value, loadUrlFlagsUsed.first().value)
-        toolbarStore.dispatch(pageLoadButton.onLongClick as BrowserToolbarEvent)
-        mainLooperRule.idle()
-        verify { reloadUseCases(currentTab.id, capture(loadUrlFlagsUsed)) }
-        assertEquals(LoadUrlFlags.BYPASS_CACHE, loadUrlFlagsUsed.last().value)
-    }
-
-    @Test
-    fun `GIVEN a loaded tab WHEN the refresh button is pressed THEN show stop refresh button`() = runTest {
-        mockkStatic(Context::isLargeWindow) {
+    fun `GIVEN device have a large window WHEN a website is loaded THEN show refresh button`() = runTest {
+        mockkStatic(Context::isWideWindow) {
+            every { any<Context>().isWideWindow() } returns true
             val browsingModeManager = SimpleBrowsingModeManager(Private)
             val currentNavDestination: NavDestination = mockk {
                 every { id } returns R.id.browserFragment
@@ -1903,7 +1815,67 @@ class BrowserToolbarMiddlewareTest {
             val navController: NavController = mockk(relaxed = true) {
                 every { currentDestination } returns currentNavDestination
             }
-            every { any<Context>().isLargeWindow() } returns true
+
+            val currentTab = createTab("test.com", private = false)
+            val browserStore = BrowserStore(
+                BrowserState(
+                    tabs = listOf(currentTab),
+                    selectedTabId = currentTab.id,
+                ),
+            )
+            val reloadUseCases: SessionUseCases.ReloadUrlUseCase = mockk(relaxed = true)
+            val stopUseCases: SessionUseCases.StopLoadingUseCase = mockk(relaxed = true)
+            val sessionUseCases: SessionUseCases = mockk {
+                every { reload } returns reloadUseCases
+                every { stopLoading } returns stopUseCases
+            }
+            val browserScreenStore = buildBrowserScreenStore()
+            val browserUseCases: FenixBrowserUseCases = mockk(relaxed = true)
+            val useCases: UseCases = mockk {
+                every { fenixBrowserUseCases } returns browserUseCases
+            }
+            val middleware = buildMiddleware(
+                appStore,
+                browserScreenStore,
+                browserStore,
+                useCases,
+                sessionUseCases = sessionUseCases,
+            )
+            val toolbarStore = buildStore(
+                middleware,
+                browsingModeManager = browsingModeManager,
+                navController = navController,
+            )
+
+            mainLooperRule.idle()
+            val loadUrlFlagsUsed = mutableListOf<LoadUrlFlags>()
+
+            val pageLoadButton =
+                toolbarStore.state.displayState.browserActionsStart.last() as ActionButtonRes
+            assertEquals(expectedRefreshButton, pageLoadButton)
+            toolbarStore.dispatch(pageLoadButton.onClick as BrowserToolbarEvent)
+            mainLooperRule.idle()
+            verify { reloadUseCases(currentTab.id, capture(loadUrlFlagsUsed)) }
+            assertEquals(LoadUrlFlags.none().value, loadUrlFlagsUsed.first().value)
+            toolbarStore.dispatch(pageLoadButton.onLongClick as BrowserToolbarEvent)
+            mainLooperRule.idle()
+            verify { reloadUseCases(currentTab.id, capture(loadUrlFlagsUsed)) }
+            assertEquals(LoadUrlFlags.BYPASS_CACHE, loadUrlFlagsUsed.last().value)
+        }
+    }
+
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
+    @Test
+    fun `GIVEN a loaded tab WHEN the refresh button is pressed THEN show stop refresh button`() = runTest {
+        mockkStatic(Context::isWideWindow) {
+            val browsingModeManager = SimpleBrowsingModeManager(Private)
+            val currentNavDestination: NavDestination = mockk {
+                every { id } returns R.id.browserFragment
+            }
+            val navController: NavController = mockk(relaxed = true) {
+                every { currentDestination } returns currentNavDestination
+            }
+            every { any<Context>().isWideWindow() } returns true
             every { settings.shouldUseBottomToolbar } returns false
             val currentTab = createTab("test.com", private = false)
             val browserStore = BrowserStore(
@@ -2448,6 +2420,7 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(AddBookmarkClicked(Source.AddressBar), result.onClick)
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `WHEN initializing the navigation bar AND should not use simple toolbar THEN add navigation bar actions`() = runTest {
         every { settings.shouldUseExpandedToolbar } returns true

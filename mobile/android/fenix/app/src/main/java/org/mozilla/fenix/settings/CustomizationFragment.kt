@@ -26,6 +26,8 @@ import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.view.addToRadioGroup
 
+private const val TALL_SCREEN_HEIGHT_DP = 480
+
 /**
  * Lets the user customize the UI.
  */
@@ -186,11 +188,15 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         }
     }
 
+    internal fun isTallWindow(): Boolean {
+        return resources.configuration.screenHeightDp > TALL_SCREEN_HEIGHT_DP
+    }
+
     private fun setupToolbarLayout() {
         val settings = requireContext().settings()
         (requirePreference(R.string.pref_key_customization_category_toolbar_layout) as PreferenceCategory).apply {
             isVisible = Config.channel.isNightlyOrDebug &&
-                settings.shouldUseComposableToolbar && settings.toolbarRedesignEnabled
+                settings.shouldUseComposableToolbar && settings.toolbarRedesignEnabled && isTallWindow()
         }
         updateToolbarLayoutIcons()
     }

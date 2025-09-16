@@ -137,6 +137,7 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(expectedMenuButton(), menuButton)
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `WHEN initializing the toolbar AND should use expanded toolbar THEN add browser end actions`() = runTest {
         every { testContext.settings().shouldUseExpandedToolbar } returns true
@@ -151,6 +152,7 @@ class BrowserToolbarMiddlewareTest {
         }
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Test
     fun `WHEN initializing the navigation bar AND should use expanded toolbar THEN add navigation bar actions`() = runTest {
         every { testContext.settings().shouldUseExpandedToolbar } returns true
