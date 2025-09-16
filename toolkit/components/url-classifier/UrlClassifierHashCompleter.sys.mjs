@@ -270,6 +270,8 @@ export class HashCompleter {
     let provider = lazy.gUrlUtil.getProvider(aTableName);
     if (provider == "google4") {
       return new HashCompleterRequestV4(this, aGethashUrl);
+    } else if (provider == "google5") {
+      return new HashCompleterRequestV5(this, aGethashUrl);
     } else if (provider == "mozilla") {
       return new HashCompleterRequestV2(this, aGethashUrl);
     } else if (provider == "test") {
@@ -542,18 +544,22 @@ class HashCompleterRequestBase {
   // This adds a complete hash to any entry in |this._requests| that matches
   // the hash.
   handleItem(aData) {
-    let provider = lazy.gUrlUtil.getProvider(aData.tableName);
-    if (provider != this.provider) {
-      log(
-        "Ignoring table " +
-          aData.tableName +
-          " since it belongs to " +
-          provider +
-          " while the response came from " +
-          this.provider +
-          "."
-      );
-      return;
+    // Only perform provider check if the table name is provided. The table name
+    // can be missing for V5 because the response doesn't contain a table name.
+    if (aData.tableName) {
+      let provider = lazy.gUrlUtil.getProvider(aData.tableName);
+      if (provider != this.provider) {
+        log(
+          "Ignoring table " +
+            aData.tableName +
+            " since it belongs to " +
+            provider +
+            " while the response came from " +
+            this.provider +
+            "."
+        );
+        return;
+      }
     }
 
     for (const request of this.requests) {
@@ -1019,6 +1025,144 @@ class HashCompleterRequestV4 extends HashCompleterRequestBase {
         );
       });
 
+      req.callback.completionV4(
+        req.partialHash,
+        req.tableName,
+        req.response.negCacheDuration,
+        matches
+      );
+
+      req.callback.completionFinished(Cr.NS_OK);
+    };
+
+    this.requests.forEach(req => {
+      completion(req);
+    });
+  }
+}
+
+class HashCompleterRequestV5 extends HashCompleterRequestBase {
+  constructor(aCompleter, aGethashUrl, aIsTesting = false) {
+    super(aCompleter, aGethashUrl);
+
+    this.provider = aIsTesting ? "test" : "google5";
+  }
+
+  beginBuildChannel() {
+    try {
+      this.openChannel();
+      // Notify the RequestBackoff if opening the channel succeeded. At this
+      // point, finishRequest must be called.
+      this.completer.noteRequest(this.gethashUrl);
+    } catch (err) {
+      this.completer.removeFromOngoingRequests(this);
+      this.notifyFailure(err);
+      throw err;
+    }
+  }
+
+  makeChannelURL() {
+    let prefixSet = new Set();
+    this.requests.forEach(r => prefixSet.add(btoa(r.partialHash)));
+    let prefixArray = Array.from(prefixSet).sort();
+
+    log("Build v5 gethash request URL with " + JSON.stringify(prefixArray));
+
+    return (
+      this.gethashUrl +
+      "&" +
+      lazy.gUrlUtil.makeFindFullHashRequestV5(prefixArray)
+    );
+  }
+
+  // In V5, we don't need to do extra setup for the channel. The request uses
+  // the default GET method.
+  setupChannel(_channel) {}
+
+  handleResponse() {
+    if (this.response == "") {
+      return;
+    }
+
+    let callback = {
+      // onCompleteHashFound will be called for each fullhash found in
+      // FullHashResponse.
+      onCompleteHashFound: (
+        aCompleteHash,
+        aTableNames,
+        aPerHashCacheDuration
+      ) => {
+        log(
+          "V5 hashes::search response complete hash found callback: " +
+            aTableNames +
+            ", CacheDuration(" +
+            aPerHashCacheDuration +
+            ")"
+        );
+
+        this.handleItem({
+          completeHash: aCompleteHash,
+          cacheDuration: aPerHashCacheDuration,
+        });
+      },
+
+      // onResponseParsed will be called no matter if there is match in
+      // FullHashResponse, the callback is mainly used to pass negative cache
+      // duration and minimum wait duration.
+      onResponseParsed: (aMinWaitDuration, aNegCacheDuration) => {
+        log(
+          "V5 hashes::search response parsed callback: " +
+            "MinWaitDuration(" +
+            aMinWaitDuration +
+            "), " +
+            "NegativeCacheDuration(" +
+            aNegCacheDuration +
+            ")"
+        );
+
+        let minWaitDuration = aMinWaitDuration;
+
+        if (aMinWaitDuration > MIN_WAIT_DURATION_MAX_VALUE) {
+          log(
+            "WARNING: Minimum wait duration too large, clamping it down " +
+              "to a reasonable value."
+          );
+          minWaitDuration = MIN_WAIT_DURATION_MAX_VALUE;
+        } else if (aMinWaitDuration < 0) {
+          log("WARNING: Minimum wait duration is negative, reset it to 0");
+          minWaitDuration = 0;
+        }
+
+        this.completer.setNextGethashTime(
+          this.gethashUrl,
+          Date.now() + minWaitDuration
+        );
+
+        // A fullhash request may contain more than one prefix, so the negative
+        // cache duration should be set for all the prefixes in the request.
+        this.requests.forEach(request => {
+          request.response.negCacheDuration = aNegCacheDuration;
+        });
+      },
+    };
+
+    lazy.gUrlUtil.parseFindFullHashResponseV5(this.response, callback);
+  }
+
+  notifySuccess() {
+    let completion = req => {
+      let matches = Cc["@mozilla.org/array;1"].createInstance(
+        Ci.nsIMutableArray
+      );
+
+      req.response.matches.forEach(m => {
+        matches.appendElement(
+          new FullHashMatch(m.tableName, m.completeHash, m.cacheDuration)
+        );
+      });
+
+      // We still use the V4 completion method for V5 because V5 uses the same
+      // caching mechanism as V4.
       req.callback.completionV4(
         req.partialHash,
         req.tableName,
