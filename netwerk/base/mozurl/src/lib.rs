@@ -8,7 +8,6 @@
     clippy::missing_panics_doc,
     reason = "OK here"
 )]
-#![allow(mismatched_lifetime_syntaxes)]
 
 extern crate url;
 use url::{quirks, ParseOptions, Position, Url};
