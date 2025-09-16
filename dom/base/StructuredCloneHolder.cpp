@@ -1515,9 +1515,8 @@ StructuredCloneHolder::CustomReadTransferHandler(
 #ifdef MOZ_WEBRTC
   if (aTag == SCTAG_DOM_RTCDATACHANNEL &&
       CloneScope() == StructuredCloneScope::SameProcess) {
-    if (!CheckExposedGlobals(
-            aCx, mGlobal,
-            GlobalNames::Window | GlobalNames::DedicatedWorkerGlobalScope)) {
+    if (!CheckExposedGlobals(aCx, mGlobal,
+                             GlobalNames::DedicatedWorkerGlobalScope)) {
       return false;
     }
     MOZ_ASSERT(aContent);
