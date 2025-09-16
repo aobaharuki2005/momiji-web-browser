@@ -23,6 +23,8 @@ RegExpStack::RegExpStack() : thread_local_(this) {}
 
 RegExpStack::~RegExpStack() { thread_local_.FreeAndInvalidate(); }
 
+#ifndef COMPILING_IRREGEXP_FOR_EXTERNAL_EMBEDDER
+
 // static
 RegExpStack* RegExpStack::New() {
 #ifdef V8_ENABLE_SANDBOX_HARDWARE_SUPPORT
@@ -55,6 +57,8 @@ void RegExpStack::Delete(RegExpStack* instance) {
   delete instance;
 #endif
 }
+
+#endif  // !COMPILING_IRREGEXP_FOR_EXTERNAL_EMBEDDER
 
 char* RegExpStack::ArchiveStack(char* to) {
   if (!thread_local_.owns_memory_) {

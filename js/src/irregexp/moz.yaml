@@ -22,6 +22,7 @@ vendoring:
   skip-vendoring-steps: ['fetch', 'move-contents']
   patches:
     - patches/trace-constiterator-operator-not-equal.patch
+    - patches/public-regexp-destructor.patch
 
   update-actions:
     - action: run-script
