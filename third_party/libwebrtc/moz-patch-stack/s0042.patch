@@ -71,7 +71,7 @@ index 9b9ddb4987..05f7024d62 100644
    std::optional<TimeDelta> AverageRtt() const;
    std::optional<TimeDelta> LastRtt() const;
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index b832176456..985b87edc4 100644
+index 399f0f60ce..552826106e 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 @@ -516,11 +516,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
@@ -106,7 +106,7 @@ index b0218aadc0..20f9397e91 100644
    // A snapshot of the most recent Report Block with additional data of
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index b92eb624c9..053ffedfd0 100644
+index e391771e49..74d77e3e69 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 @@ -527,11 +527,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
@@ -176,7 +176,7 @@ index 31a36a399a..636a41d682 100644
  
  std::optional<RtpRtcpInterface::SenderReportStats>
 diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index d67c89ec1e..d75c303fc4 100644
+index 7864dfb709..3cf94ec4b2 100644
 --- a/video/rtp_video_stream_receiver2.h
 +++ b/video/rtp_video_stream_receiver2.h
 @@ -232,7 +232,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
