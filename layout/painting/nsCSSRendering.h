@@ -750,7 +750,7 @@ struct nsCSSRendering {
  * nsContextBoxBlur
  * Creates an 8-bit alpha channel context for callers to draw in, blurs the
  * contents of that context and applies it as a 1-color mask on a
- * different existing context. Uses gfxAlphaBoxBlur as its back end.
+ * different existing context. Uses gfxGaussianBlur as its back end.
  *
  * You must call Init() first to create a suitable temporary surface to draw
  * on.  You must then draw any desired content onto the given context, then
@@ -765,7 +765,7 @@ class nsContextBoxBlur {
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
 
  public:
-  enum { FORCE_MASK = 0x01, DISABLE_HARDWARE_ACCELERATION_BLUR = 0x02 };
+  enum { FORCE_MASK = 0x01 };
   /**
    * Prepares a gfxContext to draw on. Do not call this twice; if you want
    * to get the gfxContext again use GetContext().
@@ -911,7 +911,7 @@ class nsContextBoxBlur {
                                      mozilla::gfx::IntSize& aOutSpreadRadius,
                                      bool aConstrainSpreadRadius = true);
 
-  gfxAlphaBoxBlur mAlphaBoxBlur;
+  gfxGaussianBlur mGaussianBlur;
   mozilla::UniquePtr<gfxContext> mOwnedContext;
   gfxContext* mContext;  // may be either mOwnedContext or mDestinationContext
   gfxContext* mDestinationCtx;
