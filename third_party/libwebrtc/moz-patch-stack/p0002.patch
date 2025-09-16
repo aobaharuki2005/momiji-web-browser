@@ -1,372 +1,467 @@
 From: Michael Froman <mjfroman@mac.com>
-Date: Tue, 16 Sep 2025 10:17:18 -0500
-Subject: (tmp-cherry-pick) Revert "Support setting a list of CSRCs in
- RtpEncodingParameters" (8d1e058b6d)
+Date: Tue, 16 Sep 2025 10:14:55 -0500
+Subject: (tmp-cherry-pick) Revert "Pipe CSRCs down through the audio and video
+ send streams" (35f6195080)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This reverts commit 612314044e844a37aeb6190c246b9c3a8bccc357.
+This reverts commit bf33699a2d8eeff670bc1150f7e05eec4818c398.
 
-Reason for revert: Part of chain that breaks downstream projects
+Reason for revert: Part of CL chain that breaks downstream projects
 
 Bug: b/410811496
 Original change's description:
-> Support setting a list of CSRCs in RtpEncodingParameters
+> Pipe CSRCs down through the audio and video send streams
 >
-> CSRCs are commonly used to indicate which participants have contributed
-> to media packet. This change makes it possible to specify the CSRCs for
-> both audio and video tracks.
->
-> As demonstrated in the integration test, the CSRCs can be set either
-> when adding a track to a peer connection or via a SetParameters call on
-> an existing track.
->
-> This is the final CL in a chain that also includes
-> https://webrtc-review.googlesource.com/c/src/+/392940 and
-> https://webrtc-review.googlesource.com/c/src/+/392961.
+> This CL is part of a chain. It exposes methods on the audio and video
+> send streams to set the CSRCs on the underlying senders (support for
+> this is added in https://webrtc-review.googlesource.com/c/src/+/392940).
+> These methods are used in
+> https://webrtc-review.googlesource.com/c/src/+/392980.
 >
 > Bug: b/410811496
-> Change-Id: Id0b80d22ef7e31313d43edd92b390546e376f88b
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/392980
-> Reviewed-by: Jonas Oreland <jonaso@webrtc.org>
+> Change-Id: I5e2445c70152724a9837634112e148e71d180ef5
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/392961
 > Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+> Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
 > Commit-Queue: Helmer Nylén <helmern@google.com>
-> Cr-Commit-Position: refs/heads/main@{#44826}
+> Reviewed-by: Jonas Oreland <jonaso@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#44825}
 
 Bug: b/410811496
 No-Presubmit: true
 No-Tree-Checks: true
 No-Try: true
-Change-Id: Ia4ffa8540b78cf223fdf61d7ba9208a72bb8ebd8
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/395004
-Commit-Queue: Philip Eliasson <philipel@webrtc.org>
-Auto-Submit: Helmer Nylén <helmern@google.com>
-Reviewed-by: Philip Eliasson <philipel@webrtc.org>
+Change-Id: I640031b3f42f660968818ad1f04507458b57bbdb
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/395180
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Reviewed-by: Jakob Ivarsson‎ <jakobi@webrtc.org>
 Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#44836}
+Commit-Queue: Helmer Nylén <helmern@google.com>
+Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#44837}
 ---
- api/rtp_parameters.h                  |  11 +--
- api/transport/rtp/BUILD.gn            |   1 -
- api/transport/rtp/DEPS                |   5 --
- api/transport/rtp/rtp_source.h        |   8 --
- media/BUILD.gn                        |   1 -
- media/base/media_engine.cc            |  15 ----
- media/engine/webrtc_video_engine.cc   |  10 ---
- media/engine/webrtc_voice_engine.cc   |   9 +-
- pc/peer_connection_integrationtest.cc | 114 --------------------------
- 9 files changed, 2 insertions(+), 172 deletions(-)
- delete mode 100644 api/transport/rtp/DEPS
+ audio/BUILD.gn                           |  4 ---
+ audio/audio_send_stream.cc               | 34 ++++--------------------
+ audio/audio_send_stream_unittest.cc      | 25 +++--------------
+ call/BUILD.gn                            |  1 -
+ call/audio_send_stream.cc                | 10 +------
+ call/audio_send_stream.h                 |  3 ---
+ call/video_send_stream.h                 |  4 ---
+ media/BUILD.gn                           |  1 -
+ media/engine/fake_webrtc_call.cc         |  4 +--
+ media/engine/fake_webrtc_call.h          |  3 ---
+ video/video_send_stream_impl.cc          |  6 -----
+ video/video_send_stream_impl.h           |  3 ---
+ video/video_send_stream_impl_unittest.cc |  8 ------
+ 13 files changed, 10 insertions(+), 96 deletions(-)
 
-diff --git a/api/rtp_parameters.h b/api/rtp_parameters.h
-index 664493997b..57d77f2fe4 100644
---- a/api/rtp_parameters.h
-+++ b/api/rtp_parameters.h
-@@ -466,14 +466,6 @@ struct RTC_EXPORT RtpEncodingParameters {
-   // unset SSRC acts as a "wildcard" SSRC.
-   std::optional<uint32_t> ssrc;
- 
--  // The list of CSRCs to be included in the RTP header. Defaults to an empty
--  // list. At most 15 CSRCs can be specified, and they must be the same for all
--  // encodings in an RtpParameters struct.
--  //
--  // If this field is set, the list is replaced with the specified values.
--  // Otherwise, it is left unchanged. Specify an empty vector to clear the list.
--  std::optional<std::vector<uint32_t>> csrcs;
--
-   // The relative bitrate priority of this encoding. Currently this is
-   // implemented for the entire rtp sender by using the value of the first
-   // encoding parameter.
-@@ -558,8 +550,7 @@ struct RTC_EXPORT RtpEncodingParameters {
-   std::optional<RtpCodec> codec;
- 
-   bool operator==(const RtpEncodingParameters& o) const {
--    return ssrc == o.ssrc && csrcs == o.csrcs &&
--           bitrate_priority == o.bitrate_priority &&
-+    return ssrc == o.ssrc && bitrate_priority == o.bitrate_priority &&
-            network_priority == o.network_priority &&
-            max_bitrate_bps == o.max_bitrate_bps &&
-            min_bitrate_bps == o.min_bitrate_bps &&
-diff --git a/api/transport/rtp/BUILD.gn b/api/transport/rtp/BUILD.gn
-index 9facb7afa8..9982346e12 100644
---- a/api/transport/rtp/BUILD.gn
-+++ b/api/transport/rtp/BUILD.gn
-@@ -16,7 +16,6 @@ rtc_source_set("rtp_source") {
-     "../../../api/units:time_delta",
-     "../../../api/units:timestamp",
-     "../../../rtc_base:checks",
--    "//third_party/abseil-cpp/absl/strings:str_format",
+diff --git a/audio/BUILD.gn b/audio/BUILD.gn
+index 07ada2d50c..0492dd24e5 100644
+--- a/audio/BUILD.gn
++++ b/audio/BUILD.gn
+@@ -45,11 +45,9 @@ rtc_library("audio") {
+     "../api:frame_transformer_interface",
+     "../api:function_view",
+     "../api:make_ref_counted",
+-    "../api:rtc_error",
+     "../api:rtp_headers",
+     "../api:rtp_packet_info",
+     "../api:rtp_parameters",
+-    "../api:rtp_sender_interface",
+     "../api:scoped_refptr",
+     "../api:sequence_checker",
+     "../api:transport_api",
+@@ -84,7 +82,6 @@ rtc_library("audio") {
+     "../logging:rtc_stream_config",
+     "../media:media_channel",
+     "../media:media_channel_impl",
+-    "../media:media_constants",
+     "../modules/async_audio_processing",
+     "../modules/audio_coding",
+     "../modules/audio_coding:audio_coding_module_typedefs",
+@@ -123,7 +120,6 @@ rtc_library("audio") {
+     "utility:audio_frame_operations",
+     "//third_party/abseil-cpp/absl/functional:any_invocable",
+     "//third_party/abseil-cpp/absl/memory",
+-    "//third_party/abseil-cpp/absl/strings",
+     "//third_party/abseil-cpp/absl/strings:string_view",
    ]
  }
+diff --git a/audio/audio_send_stream.cc b/audio/audio_send_stream.cc
+index a5bca668cb..94991f76e4 100644
+--- a/audio/audio_send_stream.cc
++++ b/audio/audio_send_stream.cc
+@@ -10,54 +10,34 @@
  
-diff --git a/api/transport/rtp/DEPS b/api/transport/rtp/DEPS
-deleted file mode 100644
-index 97daa2bb67..0000000000
---- a/api/transport/rtp/DEPS
-+++ /dev/null
-@@ -1,5 +0,0 @@
--specific_include_rules = {
--  "rtp_source\.h": [
--    "+absl/strings/str_format.h",
--  ],
--}
-diff --git a/api/transport/rtp/rtp_source.h b/api/transport/rtp/rtp_source.h
-index 3f73fdc271..4732044be2 100644
---- a/api/transport/rtp/rtp_source.h
-+++ b/api/transport/rtp/rtp_source.h
-@@ -15,7 +15,6 @@
+ #include "audio/audio_send_stream.h"
  
- #include <optional>
+-#include <cstddef>
+-#include <cstdint>
+ #include <memory>
+-#include <optional>
+ #include <string>
+ #include <utility>
+ #include <vector>
  
--#include "absl/strings/str_format.h"
- #include "api/rtp_headers.h"
- #include "api/units/time_delta.h"
- #include "api/units/timestamp.h"
-@@ -85,13 +84,6 @@ class RtpSource {
-     return extensions_.local_capture_clock_offset;
+-#include "absl/strings/str_cat.h"
+-#include "absl/strings/string_view.h"
+-#include "api/audio/audio_frame.h"
+ #include "api/audio/audio_processing.h"
+ #include "api/audio_codecs/audio_encoder.h"
+ #include "api/audio_codecs/audio_encoder_factory.h"
+ #include "api/audio_codecs/audio_format.h"
+-#include "api/call/bitrate_allocation.h"
+-#include "api/environment/environment.h"
+-#include "api/field_trials_view.h"
++#include "api/call/transport.h"
++#include "api/crypto/frame_encryptor_interface.h"
+ #include "api/function_view.h"
+-#include "api/rtc_error.h"
+ #include "api/rtc_event_log/rtc_event_log.h"
+-#include "api/rtp_parameters.h"
+-#include "api/rtp_sender_interface.h"
+-#include "api/scoped_refptr.h"
+-#include "api/sequence_checker.h"
+-#include "api/units/data_rate.h"
+-#include "api/units/data_size.h"
+-#include "api/units/time_delta.h"
++#include "api/task_queue/task_queue_base.h"
+ #include "audio/audio_state.h"
+ #include "audio/channel_send.h"
+-#include "call/audio_state.h"
+-#include "call/bitrate_allocator.h"
++#include "audio/conversion.h"
++#include "call/rtp_config.h"
+ #include "call/rtp_transport_controller_send_interface.h"
+ #include "common_audio/vad/include/vad.h"
+ #include "logging/rtc_event_log/events/rtc_event_audio_send_stream_config.h"
+ #include "logging/rtc_event_log/rtc_stream_config.h"
+ #include "media/base/media_channel.h"
+-#include "media/base/media_constants.h"
+ #include "modules/audio_coding/codecs/cng/audio_encoder_cng.h"
+ #include "modules/audio_coding/codecs/red/audio_encoder_copy_red.h"
+-#include "modules/rtp_rtcp/include/report_block_data.h"
+-#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+ #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
+ #include "rtc_base/checks.h"
+-#include "rtc_base/experiments/struct_parameters_parser.h"
+ #include "rtc_base/logging.h"
+-#include "rtc_base/race_checker.h"
+-#include "rtc_base/synchronization/mutex.h"
+ #include "rtc_base/trace_event.h"
+ 
+ namespace webrtc {
+@@ -264,10 +244,6 @@ void AudioSendStream::ConfigureStream(
+     rtp_rtcp_module_->SetExtmapAllowMixed(new_config.rtp.extmap_allow_mixed);
    }
  
--  template <typename Sink>
--  friend void AbslStringify(Sink& sink, const RtpSource& source) {
--    absl::Format(&sink, "{ source_type: %s, source_id: %u }",
--                 source.source_type() == RtpSourceType::CSRC ? "CSRC" : "SSRC",
--                 source.source_id());
+-  if (first_time || new_config.rtp.csrcs != old_config.rtp.csrcs) {
+-    channel_send_->SetCsrcs(new_config.rtp.csrcs);
 -  }
 -
-   bool operator==(const RtpSource& o) const {
-     return timestamp_ == o.timestamp() && source_id_ == o.source_id() &&
-            source_type_ == o.source_type() &&
-diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 67130446aa..f2e267b8d2 100644
---- a/media/BUILD.gn
-+++ b/media/BUILD.gn
-@@ -245,7 +245,6 @@ rtc_library("media_engine") {
-     "../api:audio_options_api",
-     "../api:field_trials_view",
-     "../api:rtc_error",
--    "../api:rtp_headers",
-     "../api:rtp_parameters",
-     "../api:rtp_transceiver_direction",
-     "../api:scoped_refptr",
-diff --git a/media/base/media_engine.cc b/media/base/media_engine.cc
-index 47ec3db721..e9d9c6c72a 100644
---- a/media/base/media_engine.cc
-+++ b/media/base/media_engine.cc
-@@ -23,7 +23,6 @@
- #include "api/array_view.h"
- #include "api/field_trials_view.h"
- #include "api/rtc_error.h"
--#include "api/rtp_headers.h"
- #include "api/rtp_parameters.h"
- #include "api/rtp_transceiver_direction.h"
- #include "api/video/video_codec_constants.h"
-@@ -218,20 +217,6 @@ RTCError CheckRtpParametersValues(const RtpParameters& rtp_parameters,
-                              "different encodings.");
-       }
-     }
--
--    if (rtp_parameters.encodings[i].csrcs.has_value() &&
--        rtp_parameters.encodings[i].csrcs.value().size() > kRtpCsrcSize) {
--      LOG_AND_RETURN_ERROR(
--          RTCErrorType::INVALID_RANGE,
--          "Attempted to set more than the maximum allowed number of CSRCs.")
--    }
--
--    if (i > 0 && rtp_parameters.encodings[i - 1].csrcs !=
--                     rtp_parameters.encodings[i].csrcs) {
--      LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_MODIFICATION,
--                           "Attempted to set different CSRCs for different "
--                           "encodings.");
--    }
+   const ExtensionIds old_ids = FindExtensionIds(old_config.rtp.extensions);
+   const ExtensionIds new_ids = FindExtensionIds(new_config.rtp.extensions);
+ 
+diff --git a/audio/audio_send_stream_unittest.cc b/audio/audio_send_stream_unittest.cc
+index be03018ccf..336323e1e5 100644
+--- a/audio/audio_send_stream_unittest.cc
++++ b/audio/audio_send_stream_unittest.cc
+@@ -10,7 +10,6 @@
+ 
+ #include "audio/audio_send_stream.h"
+ 
+-#include <array>
+ #include <cstddef>
+ #include <cstdint>
+ #include <memory>
+@@ -64,7 +63,6 @@ namespace {
+ 
+ using ::testing::_;
+ using ::testing::AnyNumber;
+-using ::testing::ElementsAreArray;
+ using ::testing::Eq;
+ using ::testing::Field;
+ using ::testing::InSequence;
+@@ -79,7 +77,6 @@ static const float kTolerance = 0.0001f;
+ 
+ const uint32_t kSsrc = 1234;
+ const char* kCName = "foo_name";
+-const std::array<uint32_t, 2> kCsrcs = {5678, 9012};
+ const int kAudioLevelId = 2;
+ const int kTransportSequenceNumberId = 4;
+ const int32_t kEchoDelayMedian = 254;
+@@ -190,7 +187,6 @@ struct ConfigHelper {
+     stream_config_.send_codec_spec =
+         AudioSendStream::Config::SendCodecSpec(kIsacPayloadType, kIsacFormat);
+     stream_config_.rtp.ssrc = kSsrc;
+-    stream_config_.rtp.csrcs.assign(kCsrcs.begin(), kCsrcs.end());
+     stream_config_.rtp.c_name = kCName;
+     stream_config_.rtp.extensions.push_back(
+         RtpExtension(RtpExtension::kAudioLevelUri, kAudioLevelId));
+@@ -238,7 +234,6 @@ struct ConfigHelper {
+     EXPECT_CALL(*channel_send_, SetEncoderToPacketizerFrameTransformer(_))
+         .Times(1);
+     EXPECT_CALL(rtp_rtcp_, SetExtmapAllowMixed(false)).Times(1);
+-    EXPECT_CALL(*channel_send_, SetCsrcs(ElementsAreArray(kCsrcs))).Times(1);
+     EXPECT_CALL(*channel_send_,
+                 SetSendAudioLevelIndicationStatus(true, kAudioLevelId))
+         .Times(1);
+@@ -370,7 +365,6 @@ std::unique_ptr<AudioFrame> CreateAudioFrame1kHzSineWave(int16_t audio_level,
+ TEST(AudioSendStreamTest, ConfigToString) {
+   AudioSendStream::Config config(/*send_transport=*/nullptr);
+   config.rtp.ssrc = kSsrc;
+-  config.rtp.csrcs.assign(kCsrcs.begin(), kCsrcs.end());
+   config.rtp.c_name = kCName;
+   config.min_bitrate_bps = 12000;
+   config.max_bitrate_bps = 34000;
+@@ -386,9 +380,9 @@ TEST(AudioSendStreamTest, ConfigToString) {
+       RtpExtension(RtpExtension::kAudioLevelUri, kAudioLevelId));
+   config.rtcp_report_interval_ms = 2500;
+   EXPECT_EQ(
+-      "{rtp: {ssrc: 1234, csrcs: [5678, 9012], extmap-allow-mixed: true, "
+-      "extensions: [{uri: urn:ietf:params:rtp-hdrext:ssrc-audio-level, "
+-      "id: 2}], c_name: foo_name}, rtcp_report_interval_ms: 2500, "
++      "{rtp: {ssrc: 1234, extmap-allow-mixed: true, extensions: [{uri: "
++      "urn:ietf:params:rtp-hdrext:ssrc-audio-level, id: 2}], "
++      "c_name: foo_name}, rtcp_report_interval_ms: 2500, "
+       "send_transport: null, "
+       "min_bitrate_bps: 12000, max_bitrate_bps: 34000, has "
+       "audio_network_adaptor_config: false, has_dscp: true, "
+@@ -427,19 +421,6 @@ TEST(AudioSendStreamTest, SetMuted) {
    }
- 
-   if (has_scale_resolution_down_to &&
-diff --git a/media/engine/webrtc_video_engine.cc b/media/engine/webrtc_video_engine.cc
-index ab04ba0094..3a3d197cc6 100644
---- a/media/engine/webrtc_video_engine.cc
-+++ b/media/engine/webrtc_video_engine.cc
-@@ -2155,9 +2155,6 @@ RTCError WebRtcVideoSendChannel::WebRtcVideoSendStream::SetRtpParameters(
-       new_send_state = true;
-     }
-   }
--  bool new_csrcs =
--      (new_parameters.encodings[0].csrcs.has_value() &&
--       new_parameters.encodings[0].csrcs != rtp_parameters_.encodings[0].csrcs);
- 
-   rtp_parameters_ = new_parameters;
-   // Codecs are currently handled at the WebRtcVideoSendChannel level.
-@@ -2172,9 +2169,6 @@ RTCError WebRtcVideoSendChannel::WebRtcVideoSendStream::SetRtpParameters(
-       stream_->SetSource(source_, GetDegradationPreference());
-     }
-   }
--  if (stream_ && new_csrcs) {
--    stream_->SetCsrcs(rtp_parameters_.encodings[0].csrcs.value());
--  }
-   // Check if a key frame was requested via setParameters.
-   std::vector<std::string> key_frames_requested_by_rid;
-   for (const auto& encoding : rtp_parameters_.encodings) {
-@@ -2677,10 +2671,6 @@ void WebRtcVideoSendChannel::WebRtcVideoSendStream::RecreateWebRtcStream() {
-     stream_ = call_->CreateVideoSendStream(std::move(config),
-                                            parameters_.encoder_config.Copy());
-   }
--  if (!rtp_parameters_.encodings.empty() &&
--      rtp_parameters_.encodings[0].csrcs.has_value()) {
--    stream_->SetCsrcs(rtp_parameters_.encodings[0].csrcs.value());
--  }
- 
-   parameters_.encoder_config.encoder_specific_settings = nullptr;
- 
-diff --git a/media/engine/webrtc_voice_engine.cc b/media/engine/webrtc_voice_engine.cc
-index ed08e9c8e8..2d397c6008 100644
---- a/media/engine/webrtc_voice_engine.cc
-+++ b/media/engine/webrtc_voice_engine.cc
-@@ -1102,23 +1102,16 @@ class WebRtcVoiceSendChannel::WebRtcAudioSendStream : public AudioSource::Sink {
-     double old_priority = rtp_parameters_.encodings[0].bitrate_priority;
-     Priority old_dscp = rtp_parameters_.encodings[0].network_priority;
-     bool old_adaptive_ptime = rtp_parameters_.encodings[0].adaptive_ptime;
--    std::optional<std::vector<uint32_t>> old_csrcs =
--        rtp_parameters_.encodings[0].csrcs;
--
-     rtp_parameters_ = parameters;
-     config_.bitrate_priority = rtp_parameters_.encodings[0].bitrate_priority;
-     config_.has_dscp =
-         (rtp_parameters_.encodings[0].network_priority != Priority::kLow);
--    if (rtp_parameters_.encodings[0].csrcs.has_value()) {
--      config_.rtp.csrcs = rtp_parameters_.encodings[0].csrcs.value();
--    }
- 
-     bool reconfigure_send_stream =
-         (rtp_parameters_.encodings[0].max_bitrate_bps != old_rtp_max_bitrate) ||
-         (rtp_parameters_.encodings[0].bitrate_priority != old_priority) ||
-         (rtp_parameters_.encodings[0].network_priority != old_dscp) ||
--        (rtp_parameters_.encodings[0].adaptive_ptime != old_adaptive_ptime) ||
--        (rtp_parameters_.encodings[0].csrcs != old_csrcs);
-+        (rtp_parameters_.encodings[0].adaptive_ptime != old_adaptive_ptime);
-     if (rtp_parameters_.encodings[0].max_bitrate_bps != old_rtp_max_bitrate) {
-       // Update the bitrate range.
-       if (send_rate) {
-diff --git a/pc/peer_connection_integrationtest.cc b/pc/peer_connection_integrationtest.cc
-index 7ce2609f82..76d0833336 100644
---- a/pc/peer_connection_integrationtest.cc
-+++ b/pc/peer_connection_integrationtest.cc
-@@ -1288,120 +1288,6 @@ TEST_F(PeerConnectionIntegrationTestUnifiedPlan, NoStreamsMsidLineMissing) {
-             callee_receivers[1]->streams()[0]);
  }
  
--// Used by the CSRC tests below.
--MATCHER_P(IsCsrcWithId, csrc, "") {
--  return arg.source_type() == RtpSourceType::CSRC && arg.source_id() == csrc;
+-TEST(AudioSendStreamTest, SetCsrcs) {
+-  for (bool use_null_audio_processing : {false, true}) {
+-    ConfigHelper helper(false, true, use_null_audio_processing);
+-    auto send_stream = helper.CreateAudioSendStream();
+-
+-    std::vector<uint32_t> updated_csrcs = {4, 5, 6};
+-    helper.config().rtp.csrcs = updated_csrcs;
+-    EXPECT_CALL(*helper.channel_send(),
+-                SetCsrcs(ElementsAreArray(updated_csrcs)));
+-    send_stream->Reconfigure(helper.config(), nullptr);
+-  }
 -}
 -
--// Test that CSRCs can be set upon adding tracks and that they are received by
--// the other side.
--TEST_F(PeerConnectionIntegrationTestUnifiedPlan, EndToEndCallForwardsCsrcs) {
--  ASSERT_TRUE(CreatePeerConnectionWrappers());
--  ConnectFakeSignaling();
+ TEST(AudioSendStreamTest, AudioBweCorrectObjectsOnChannelProxy) {
+   for (bool use_null_audio_processing : {false, true}) {
+     ConfigHelper helper(true, true, use_null_audio_processing);
+diff --git a/call/BUILD.gn b/call/BUILD.gn
+index e6744508d2..aa7c506f33 100644
+--- a/call/BUILD.gn
++++ b/call/BUILD.gn
+@@ -79,7 +79,6 @@ rtc_library("call_interfaces") {
+     "../rtc_base/network:sent_packet",
+     "../video/config:encoder_config",
+     "//third_party/abseil-cpp/absl/functional:any_invocable",
+-    "//third_party/abseil-cpp/absl/strings",
+     "//third_party/abseil-cpp/absl/strings:string_view",
+   ]
+ }
+diff --git a/call/audio_send_stream.cc b/call/audio_send_stream.cc
+index e2f3862f54..612d27a60c 100644
+--- a/call/audio_send_stream.cc
++++ b/call/audio_send_stream.cc
+@@ -14,9 +14,9 @@
+ 
+ #include <string>
+ 
+-#include "absl/strings/str_cat.h"
+ #include "api/audio_codecs/audio_format.h"
+ #include "api/call/transport.h"
++#include "rtc_base/string_encode.h"
+ #include "rtc_base/strings/string_builder.h"
+ 
+ namespace webrtc {
+@@ -59,14 +59,6 @@ std::string AudioSendStream::Config::Rtp::ToString() const {
+   if (!mid.empty()) {
+     ss << ", mid: " << mid;
+   }
+-  ss << ", csrcs: [";
+-  for (size_t i = 0; i < csrcs.size(); ++i) {
+-    ss << csrcs[i];
+-    if (i != csrcs.size() - 1) {
+-      ss << ", ";
+-    }
+-  }
+-  ss << ']';
+   ss << ", extmap-allow-mixed: " << (extmap_allow_mixed ? "true" : "false");
+   ss << ", extensions: [";
+   for (size_t i = 0; i < extensions.size(); ++i) {
+diff --git a/call/audio_send_stream.h b/call/audio_send_stream.h
+index 2cc5397e31..d1b3e64ba3 100644
+--- a/call/audio_send_stream.h
++++ b/call/audio_send_stream.h
+@@ -99,9 +99,6 @@ class AudioSendStream : public AudioSender {
+       // included in the list of extensions.
+       std::string mid;
+ 
+-      // The list of CSRCs to be included in the RTP header.
+-      std::vector<uint32_t> csrcs;
 -
--  constexpr uint32_t kAudioCsrc = 1234;
--  constexpr uint32_t kVideoCsrc = 5678;
--  RtpEncodingParameters audio_encoding;
--  RtpEncodingParameters video_encoding;
--  audio_encoding.csrcs = {kAudioCsrc};
--  video_encoding.csrcs = {kVideoCsrc};
--  ASSERT_THAT(caller()->pc()->AddTrack(caller()->CreateLocalAudioTrack(), {},
--                                       {audio_encoding}),
--              IsRtcOk());
--  ASSERT_THAT(caller()->pc()->AddTrack(caller()->CreateLocalVideoTrack(), {},
--                                       {video_encoding}),
--              IsRtcOk());
+       // Corresponds to the SDP attribute extmap-allow-mixed.
+       bool extmap_allow_mixed = false;
+ 
+diff --git a/call/video_send_stream.h b/call/video_send_stream.h
+index bfcc15cc88..906d79598b 100644
+--- a/call/video_send_stream.h
++++ b/call/video_send_stream.h
+@@ -19,7 +19,6 @@
+ #include <vector>
+ 
+ #include "api/adaptation/resource.h"
+-#include "api/array_view.h"
+ #include "api/call/transport.h"
+ #include "api/crypto/crypto_options.h"
+ #include "api/frame_transformer_interface.h"
+@@ -260,9 +259,6 @@ class VideoSendStream {
+   // TODO: webrtc:40644448 - Make this pure virtual.
+   virtual void SetStats(const Stats& stats) { RTC_CHECK_NOTREACHED(); }
+ 
+-  // Sets the list of CSRCs to be included in every packet.
+-  virtual void SetCsrcs(ArrayView<const uint32_t> csrcs) = 0;
 -
--  caller()->CreateAndSetAndSignalOffer();
+   virtual void GenerateKeyFrame(const std::vector<std::string>& rids) = 0;
+ 
+  protected:
+diff --git a/media/BUILD.gn b/media/BUILD.gn
+index f2e267b8d2..f4a761a1c8 100644
+--- a/media/BUILD.gn
++++ b/media/BUILD.gn
+@@ -809,7 +809,6 @@ if (rtc_include_tests) {
+       "../api:audio_options_api",
+       "../api:call_api",
+       "../api:fec_controller_api",
+-      "../api:field_trials_view",
+       "../api:frame_transformer_interface",
+       "../api:make_ref_counted",
+       "../api:rtc_error",
+diff --git a/media/engine/fake_webrtc_call.cc b/media/engine/fake_webrtc_call.cc
+index 64a7dc61f6..523ce610c4 100644
+--- a/media/engine/fake_webrtc_call.cc
++++ b/media/engine/fake_webrtc_call.cc
+@@ -20,7 +20,6 @@
+ #include "absl/algorithm/container.h"
+ #include "absl/strings/string_view.h"
+ #include "api/adaptation/resource.h"
+-#include "api/array_view.h"
+ #include "api/audio_codecs/audio_format.h"
+ #include "api/call/audio_sink.h"
+ #include "api/crypto/frame_decryptor_interface.h"
+@@ -47,6 +46,7 @@
+ #include "call/video_send_stream.h"
+ #include "media/base/media_channel.h"
+ #include "modules/rtp_rtcp/source/rtp_packet_received.h"
++#include "modules/rtp_rtcp/source/rtp_util.h"
+ #include "rtc_base/buffer.h"
+ #include "rtc_base/checks.h"
+ #include "rtc_base/copy_on_write_buffer.h"
+@@ -294,8 +294,6 @@ VideoSendStream::Stats FakeVideoSendStream::GetStats() {
+   return stats_;
+ }
+ 
+-void FakeVideoSendStream::SetCsrcs(ArrayView<const uint32_t> csrcs) {}
 -
--  // Wait for some packets to arrive.
--  ASSERT_THAT(
--      WaitUntil([&] { return SignalingStateStable(); }, ::testing::IsTrue()),
--      IsRtcOk());
--  ASSERT_THAT(WaitUntil(
--                  [&] {
--                    return callee()->audio_frames_received() > 0 &&
--                           callee()->min_video_frames_received_per_track() > 0;
--                  },
--                  ::testing::IsTrue(), {.timeout = kMaxWaitForFrames}),
--              IsRtcOk());
--
--  std::vector<scoped_refptr<RtpReceiverInterface>> audio_receivers =
--      callee()->GetReceiversOfType(webrtc::MediaType::AUDIO);
--  ASSERT_EQ(audio_receivers.size(), 1u);
--  std::vector<scoped_refptr<RtpReceiverInterface>> video_receivers =
--      callee()->GetReceiversOfType(webrtc::MediaType::VIDEO);
--  ASSERT_EQ(video_receivers.size(), 1u);
--
--  EXPECT_THAT(audio_receivers[0]->GetSources(),
--              Contains(IsCsrcWithId(kAudioCsrc)));
--  EXPECT_THAT(video_receivers[0]->GetSources(),
--              Contains(IsCsrcWithId(kVideoCsrc)));
+ void FakeVideoSendStream::ReconfigureVideoEncoder(VideoEncoderConfig config) {
+   ReconfigureVideoEncoder(std::move(config), nullptr);
+ }
+diff --git a/media/engine/fake_webrtc_call.h b/media/engine/fake_webrtc_call.h
+index dd93eaf512..aec1fc1626 100644
+--- a/media/engine/fake_webrtc_call.h
++++ b/media/engine/fake_webrtc_call.h
+@@ -31,13 +31,11 @@
+ 
+ #include "absl/strings/string_view.h"
+ #include "api/adaptation/resource.h"
+-#include "api/array_view.h"
+ #include "api/audio/audio_frame.h"
+ #include "api/audio/audio_mixer.h"
+ #include "api/audio_codecs/audio_format.h"
+ #include "api/crypto/frame_decryptor_interface.h"
+ #include "api/environment/environment.h"
+-#include "api/field_trials_view.h"
+ #include "api/frame_transformer_interface.h"
+ #include "api/media_types.h"
+ #include "api/rtp_headers.h"
+@@ -207,7 +205,6 @@ class FakeVideoSendStream final : public VideoSendStream,
+   int GetLastHeight() const;
+   int64_t GetLastTimestamp() const;
+   void SetStats(const VideoSendStream::Stats& stats);
+-  void SetCsrcs(ArrayView<const uint32_t> csrcs) override;
+   int num_encoder_reconfigurations() const {
+     return num_encoder_reconfigurations_;
+   }
+diff --git a/video/video_send_stream_impl.cc b/video/video_send_stream_impl.cc
+index 40fb3b21a6..c0c8dff453 100644
+--- a/video/video_send_stream_impl.cc
++++ b/video/video_send_stream_impl.cc
+@@ -22,7 +22,6 @@
+ 
+ #include "absl/algorithm/container.h"
+ #include "api/adaptation/resource.h"
+-#include "api/array_view.h"
+ #include "api/call/bitrate_allocation.h"
+ #include "api/crypto/crypto_options.h"
+ #include "api/environment/environment.h"
+@@ -581,11 +580,6 @@ void VideoSendStreamImpl::SetStats(const Stats& stats) {
+   stats_proxy_.SetStats(stats);
+ }
+ 
+-void VideoSendStreamImpl::SetCsrcs(ArrayView<const uint32_t> csrcs) {
+-  RTC_DCHECK_RUN_ON(&thread_checker_);
+-  rtp_video_sender_->SetCsrcs(csrcs);
 -}
 -
--// Test that CSRCs can be updated on active tracks.
--TEST_F(PeerConnectionIntegrationTestUnifiedPlan, EndToEndCallCanUpdateCsrcs) {
--  ASSERT_TRUE(CreatePeerConnectionWrappers());
--  ConnectFakeSignaling();
+ std::optional<float> VideoSendStreamImpl::GetPacingFactorOverride() const {
+   return configured_pacing_factor_;
+ }
+diff --git a/video/video_send_stream_impl.h b/video/video_send_stream_impl.h
+index a8e7858042..646d4e4c53 100644
+--- a/video/video_send_stream_impl.h
++++ b/video/video_send_stream_impl.h
+@@ -21,7 +21,6 @@
+ #include <vector>
+ 
+ #include "api/adaptation/resource.h"
+-#include "api/array_view.h"
+ #include "api/call/bitrate_allocation.h"
+ #include "api/environment/environment.h"
+ #include "api/fec_controller.h"
+@@ -123,8 +122,6 @@ class VideoSendStreamImpl : public webrtc::VideoSendStream,
+   Stats GetStats() override;
+   void SetStats(const Stats& stats) override;
+ 
+-  void SetCsrcs(ArrayView<const uint32_t> csrcs) override;
 -
--  RtpEncodingParameters audio_encoding;
--  RtpEncodingParameters video_encoding;
--  audio_encoding.csrcs = {1234};
--  video_encoding.csrcs = {5678};
--
--  scoped_refptr<RtpSenderInterface> audio_sender =
--      caller()
--          ->pc()
--          ->AddTrack(caller()->CreateLocalAudioTrack(), {}, {audio_encoding})
--          .MoveValue();
--  scoped_refptr<RtpSenderInterface> video_sender =
--      caller()
--          ->pc()
--          ->AddTrack(caller()->CreateLocalVideoTrack(), {}, {video_encoding})
--          .MoveValue();
--
--  caller()->CreateAndSetAndSignalOffer();
--
--  // Wait for some packets to arrive.
--  ASSERT_THAT(
--      WaitUntil([&] { return SignalingStateStable(); }, ::testing::IsTrue()),
--      IsRtcOk());
--  ASSERT_THAT(WaitUntil(
--                  [&] {
--                    return callee()->audio_frames_received() > 0 &&
--                           callee()->min_video_frames_received_per_track() > 0;
--                  },
--                  ::testing::IsTrue(), {.timeout = kMaxWaitForFrames}),
--              IsRtcOk());
--
--  // Update the CSRCs.
--  constexpr uint32_t kUpdatedAudioCsrc = 4321;
--  constexpr uint32_t kUpdatedVideoCsrc = 8765;
--  RtpParameters audio_parameters = audio_sender->GetParameters();
--  RtpParameters video_parameters = video_sender->GetParameters();
--  audio_parameters.encodings[0].csrcs = {kUpdatedAudioCsrc};
--  video_parameters.encodings[0].csrcs = {kUpdatedVideoCsrc};
--  ASSERT_THAT(audio_sender->SetParameters(audio_parameters), IsRtcOk());
--  ASSERT_THAT(video_sender->SetParameters(video_parameters), IsRtcOk());
--
--  std::vector<scoped_refptr<RtpReceiverInterface>> audio_receivers =
--      callee()->GetReceiversOfType(webrtc::MediaType::AUDIO);
--  ASSERT_EQ(audio_receivers.size(), 1u);
--  std::vector<scoped_refptr<RtpReceiverInterface>> video_receivers =
--      callee()->GetReceiversOfType(webrtc::MediaType::VIDEO);
--  ASSERT_EQ(video_receivers.size(), 1u);
--
--  // Ensure that the new CSRCs are used.
--  EXPECT_THAT(WaitUntil([&] { return audio_receivers[0]->GetSources(); },
--                        Contains(IsCsrcWithId(kUpdatedAudioCsrc)),
--                        {.timeout = kMaxWaitForFrames}),
--              IsRtcOk());
--  EXPECT_THAT(WaitUntil([&] { return video_receivers[0]->GetSources(); },
--                        Contains(IsCsrcWithId(kUpdatedVideoCsrc)),
--                        {.timeout = kMaxWaitForFrames}),
--              IsRtcOk());
+   void StopPermanentlyAndGetRtpStates(RtpStateMap* rtp_state_map,
+                                       RtpPayloadStateMap* payload_state_map);
+   void GenerateKeyFrame(const std::vector<std::string>& rids) override;
+diff --git a/video/video_send_stream_impl_unittest.cc b/video/video_send_stream_impl_unittest.cc
+index 2e7c063730..f0023f12b9 100644
+--- a/video/video_send_stream_impl_unittest.cc
++++ b/video/video_send_stream_impl_unittest.cc
+@@ -71,7 +71,6 @@ namespace {
+ using ::testing::_;
+ using ::testing::AllOf;
+ using ::testing::AnyNumber;
+-using ::testing::ElementsAreArray;
+ using ::testing::Eq;
+ using ::testing::Field;
+ using ::testing::Invoke;
+@@ -1004,13 +1003,6 @@ TEST_F(VideoSendStreamImplTest, CallsVideoStreamEncoderOnBitrateUpdate) {
+   vss_impl->Stop();
+ }
+ 
+-TEST_F(VideoSendStreamImplTest, ForwardsCsrcsToRtpVideoSender) {
+-  auto vss_impl = CreateVideoSendStreamImpl(TestVideoEncoderConfig());
+-  std::vector<uint32_t> csrcs = {1, 2, 3};
+-  EXPECT_CALL(rtp_video_sender_, SetCsrcs(ElementsAreArray(csrcs)));
+-  vss_impl->SetCsrcs(csrcs);
 -}
 -
- // Test that if two video tracks are sent (from caller to callee, in this test),
- // they're transmitted correctly end-to-end.
- TEST_P(PeerConnectionIntegrationTest, EndToEndCallWithTwoVideoTracks) {
+ TEST_F(VideoSendStreamImplTest, DisablesPaddingOnPausedEncoder) {
+   int padding_bitrate = 0;
+   auto vss_impl = CreateVideoSendStreamImpl(TestVideoEncoderConfig());
