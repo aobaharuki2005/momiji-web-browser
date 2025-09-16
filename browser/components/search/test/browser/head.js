@@ -15,6 +15,7 @@ ChromeUtils.defineESModuleGetters(this, {
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   UrlbarSearchUtils:
     "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
@@ -114,15 +115,21 @@ async function typeInSearchField(browser, text, fieldName) {
   );
 }
 
-async function searchInSearchbar(inputText, win = window) {
+async function searchInSearchbar(
+  inputText,
+  win = window,
+  popupAlreadyOpen = false
+) {
   await new Promise(r => waitForFocus(r, win));
   let sb = win.document.getElementById("searchbar");
   // Write the search query in the searchbar.
   sb.focus();
   sb.value = inputText;
   sb.textbox.controller.startSearch(inputText);
-  // Wait for the popup to show.
-  await BrowserTestUtils.waitForEvent(sb.textbox.popup, "popupshown");
+  if (!popupAlreadyOpen) {
+    // Wait for the popup to show.
+    await BrowserTestUtils.waitForEvent(sb.textbox.popup, "popupshown");
+  }
   // And then for the search to complete.
   await TestUtils.waitForCondition(
     () =>
