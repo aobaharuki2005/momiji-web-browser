@@ -147,7 +147,13 @@ pub fn start(api: RenderApi) {
     println!("Start debug server on {}", base_url);
 
     thread::spawn(move || {
-        let server = Server::http(address).unwrap();
+        let server = match Server::http(address) {
+            Ok(server) => server,
+            Err(..) => {
+                println!("\tUnable to bind WR debug server (another process may already be listening)");
+                return;
+            }
+        };
 
         for mut request in server.incoming_requests() {
             let url = base_url.join(request.url()).expect("bad url");

@@ -279,7 +279,7 @@ impl Default for WebRenderOptions {
             reject_software_rasterizer: false,
             low_quality_pinch_zoom: false,
             max_shared_surface_size: 2048,
-            enable_debugger: false,
+            enable_debugger: true,
         }
     }
 }
@@ -848,7 +848,12 @@ pub fn create_webrender_instance(
 
     #[cfg(feature = "debugger")]
     if options.enable_debugger {
-        crate::debugger::start(sender.create_api());
+        let api = if namespace_alloc_by_client {
+            sender.create_api_by_client(IdNamespace::DEBUGGER)
+        } else {
+            sender.create_api()
+        };
+        crate::debugger::start(api);
     }
 
     Ok((renderer, sender))

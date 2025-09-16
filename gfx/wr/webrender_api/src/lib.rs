@@ -121,6 +121,10 @@ impl Epoch {
 #[derive(Deserialize, Serialize)]
 pub struct IdNamespace(pub u32);
 
+impl IdNamespace {
+    pub const DEBUGGER: IdNamespace = IdNamespace(!0);
+}
+
 /// A key uniquely identifying a WebRender document.
 ///
 /// Instances can manage one or several documents (using the same render backend thread).
