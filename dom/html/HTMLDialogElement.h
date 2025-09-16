@@ -58,9 +58,14 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
     mReturnValue = aReturnValue;
   }
 
-  nsAString& RequestCloseReturnValue() { return mRequestCloseReturnValue; }
+  void GetRequestCloseReturnValue(Optional<nsAString>& aReturnValue) {
+    if (mRequestCloseReturnValue.isSome()) {
+      aReturnValue = &mRequestCloseReturnValue.ref();
+    }
+  }
+  void ClearRequestCloseReturnValue() { mRequestCloseReturnValue.reset(); }
   void SetRequestCloseReturnValue(const nsAString& aReturnValue) {
-    mRequestCloseReturnValue = aReturnValue;
+    mRequestCloseReturnValue.emplace(aReturnValue);
   }
 
   nsresult BindToTree(BindContext&, nsINode&) override;
@@ -68,7 +73,7 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void Close(
       const mozilla::dom::Optional<nsAString>& aReturnValue);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void RequestClose(
+  MOZ_CAN_RUN_SCRIPT void RequestClose(
       const mozilla::dom::Optional<nsAString>& aReturnValue);
   MOZ_CAN_RUN_SCRIPT void Show(ErrorResult& aError);
   MOZ_CAN_RUN_SCRIPT void ShowModal(ErrorResult& aError);
@@ -93,7 +98,7 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
                                                 Command aCommand,
                                                 ErrorResult& aRv) override;
 
-  nsString mRequestCloseReturnValue;
+  Maybe<nsString> mRequestCloseReturnValue;
   nsString mReturnValue;
 
  protected:
