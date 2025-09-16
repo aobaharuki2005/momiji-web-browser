@@ -9,8 +9,6 @@
 //! ## Usage
 //!
 
-#![allow(mismatched_lifetime_syntaxes)]
-
 mod gamma_lut;
 mod rasterizer;
 mod telemetry;
