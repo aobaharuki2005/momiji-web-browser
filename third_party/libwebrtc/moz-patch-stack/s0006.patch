@@ -30,7 +30,7 @@ index 82c07d777a..955a13f435 100644
    return true;
  }
 diff --git a/modules/desktop_capture/mac/window_list_utils.cc b/modules/desktop_capture/mac/window_list_utils.cc
-index 3aeb8dd02b..f1485cf085 100644
+index 9eba2ac904..224752fbef 100644
 --- a/modules/desktop_capture/mac/window_list_utils.cc
 +++ b/modules/desktop_capture/mac/window_list_utils.cc
 @@ -198,7 +198,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
