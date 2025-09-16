@@ -3925,6 +3925,50 @@ static Maybe<TextAutospace::CharClass> GetPrecedingCharClassFromMappedFlows(
   return Nothing();
 }
 
+// Look for the autospace class of content preceding the given frame.
+static Maybe<TextAutospace::CharClass> GetPrecedingCharClassFromFrameTree(
+    nsIFrame* aFrame) {
+  using CharClass = TextAutospace::CharClass;
+  while (!aFrame->GetPrevSibling() && aFrame->GetParent()->IsInlineFrame()) {
+    // If this is the first child of an inline container, we want to ascend to
+    // the parent and look at what precedes it.
+    aFrame = aFrame->GetParent();
+  }
+  aFrame = aFrame->GetPrevSibling();
+  while (aFrame) {
+    if (aFrame->IsPlaceholderFrame()) {
+      // Skip over out-of-flow placeholders.
+      aFrame = aFrame->GetPrevSibling();
+      continue;
+    }
+    if (aFrame->IsInlineFrame()) {
+      // Descend into inline containers and go backwards through their content.
+      aFrame = aFrame->PrincipalChildList().LastChild();
+      continue;
+    }
+    if (nsTextFrame* f = do_QueryFrame(aFrame)) {
+      // Look for the class of the last character in the textframe.
+      Maybe<CharClass> prevClass = LastNonMarkCharClassInFrame(f);
+      if (prevClass) {
+        if ((*prevClass == CharClass::NonIdeographicLetter ||
+             *prevClass == CharClass::NonIdeographicNumeral) &&
+            (f->StyleVisibility()->mTextOrientation ==
+                 StyleTextOrientation::Upright ||
+             f->Style()->IsTextCombined())) {
+          // If we're in vertical writing mode with forced upright glyph
+          // orientation, these classes are not applicable.
+          return Some(CharClass::Other);
+        }
+        return prevClass;
+      }
+      aFrame = aFrame->GetPrevSibling();
+      continue;
+    }
+    return Nothing();
+  }
+  return Nothing();
+}
+
 void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
                                                        Spacing* aSpacing,
                                                        bool aIgnoreTabs) const {
@@ -4003,6 +4047,11 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
           if (!(mTextRun->GetFlags2() &
                 nsTextFrameUtils::Flags::IsSimpleFlow)) {
             prevClass = GetPrecedingCharClassFromMappedFlows(mFrame, mTextRun);
+          }
+          // If we couldn't get it from an earlier flow covered by the textrun,
+          // we'll have to delve into the frame tree to see what preceded this.
+          if (!prevClass) {
+            prevClass = GetPrecedingCharClassFromFrameTree(mFrame);
           }
         }
       }
