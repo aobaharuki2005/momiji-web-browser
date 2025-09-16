@@ -967,11 +967,11 @@ index de8a81be55..e8367393a3 100644
  }
 +
 diff --git a/modules/utility/BUILD.gn b/modules/utility/BUILD.gn
-index b30cb0c6d4..b59f8b5b2c 100644
+index 167bce9157..89203fbcb4 100644
 --- a/modules/utility/BUILD.gn
 +++ b/modules/utility/BUILD.gn
-@@ -25,5 +25,9 @@ rtc_library("utility") {
-       "../../rtc_base:platform_thread",
+@@ -26,5 +26,9 @@ rtc_library("utility") {
+       "../../rtc_base:platform_thread_types",
        "../../rtc_base/system:arch",
      ]
 +
