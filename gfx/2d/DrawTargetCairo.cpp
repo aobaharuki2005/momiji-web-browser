@@ -989,8 +989,8 @@ void DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface* aSurface,
   if (aShadow.mSigma != 0.0f) {
     MOZ_ASSERT(cairo_surface_get_type(blursurf) == CAIRO_SURFACE_TYPE_IMAGE);
     Rect extents(0, 0, width, height);
-    AlphaBoxBlur blur(extents, cairo_image_surface_get_stride(blursurf),
-                      aShadow.mSigma, aShadow.mSigma);
+    GaussianBlur blur(extents, cairo_image_surface_get_stride(blursurf),
+                      Point(aShadow.mSigma, aShadow.mSigma));
     blur.Blur(cairo_image_surface_get_data(blursurf));
   }
 

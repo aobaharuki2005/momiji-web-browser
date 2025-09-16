@@ -1764,7 +1764,7 @@ void nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
           std::max(clipRectRadii[C_BL].height, clipRectRadii[C_BR].height), 0));
     }
 
-    // When there's a blur radius, gfxAlphaBoxBlur leaves the skiprect area
+    // When there's a blur radius, gfxGaussianBlur leaves the skiprect area
     // unchanged. And by construction the gfxSkipRect is not touched by the
     // rendered shadow (even after blurring), so those pixels must be completely
     // transparent in the shadow, so drawing them changes nothing.
@@ -4701,7 +4701,7 @@ static inline IntSize ComputeBlurRadius(nscoord aBlurRadius,
                                         gfxFloat aScaleY = 1.0) {
   gfxPoint scaledBlurStdDev =
       ComputeBlurStdDev(aBlurRadius, aAppUnitsPerDevPixel, aScaleX, aScaleY);
-  return gfxAlphaBoxBlur::CalculateBlurRadius(scaledBlurStdDev);
+  return gfxGaussianBlur::CalculateBlurRadius(scaledBlurStdDev);
 }
 
 // -----
@@ -4747,16 +4747,13 @@ gfxContext* nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
 
   // Create the temporary surface for blurring
   dirtyRect = transform.TransformBounds(dirtyRect);
-  bool useHardwareAccel = !(aFlags & DISABLE_HARDWARE_ACCELERATION_BLUR);
   if (aSkipRect) {
     gfxRect skipRect = transform.TransformBounds(*aSkipRect);
-    mOwnedContext =
-        mAlphaBoxBlur.Init(aDestinationCtx, rect, spreadRadius, blurRadius,
-                           &dirtyRect, &skipRect, useHardwareAccel);
+    mOwnedContext = mGaussianBlur.Init(aDestinationCtx, rect, spreadRadius,
+                                       blurRadius, &dirtyRect, &skipRect);
   } else {
-    mOwnedContext =
-        mAlphaBoxBlur.Init(aDestinationCtx, rect, spreadRadius, blurRadius,
-                           &dirtyRect, nullptr, useHardwareAccel);
+    mOwnedContext = mGaussianBlur.Init(aDestinationCtx, rect, spreadRadius,
+                                       blurRadius, &dirtyRect, nullptr);
   }
   mContext = mOwnedContext.get();
 
@@ -4779,7 +4776,7 @@ void nsContextBoxBlur::DoPaint() {
     mDestinationCtx->SetMatrix(Matrix());
   }
 
-  mAlphaBoxBlur.Paint(mDestinationCtx);
+  mGaussianBlur.Paint(mDestinationCtx);
 }
 
 gfxContext* nsContextBoxBlur::GetContext() { return mContext; }
@@ -4855,7 +4852,7 @@ void nsContextBoxBlur::BlurRectangle(
     aCornerRadii->Scale(scaleX, scaleY);
   }
 
-  gfxAlphaBoxBlur::BlurRectangle(aDestinationCtx, shadowThebesRect,
+  gfxGaussianBlur::BlurRectangle(aDestinationCtx, shadowThebesRect,
                                  aCornerRadii, blurStdDev, aShadowColor,
                                  dirtyRect, skipRect);
 }
@@ -4951,7 +4948,7 @@ bool nsContextBoxBlur::InsetBoxBlur(
         std::floor(scale.yScale * aInnerClipRectRadii[corner].height);
   }
 
-  mAlphaBoxBlur.BlurInsetBox(aDestinationCtx, transformedDestRect,
+  mGaussianBlur.BlurInsetBox(aDestinationCtx, transformedDestRect,
                              transformedShadowClipRect, blurRadius,
                              aShadowColor,
                              aHasBorderRadius ? &aInnerClipRectRadii : nullptr,

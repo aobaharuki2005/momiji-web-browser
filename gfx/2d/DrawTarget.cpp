@@ -259,7 +259,7 @@ already_AddRefed<SourceSurface> DrawTarget::IntoLuminanceSource(
   return destMaskSurface.forget();
 }
 
-void DrawTarget::Blur(const AlphaBoxBlur& aBlur) {
+void DrawTarget::Blur(const GaussianBlur& aBlur) {
   uint8_t* data;
   IntSize size;
   int32_t stride;
@@ -270,6 +270,7 @@ void DrawTarget::Blur(const AlphaBoxBlur& aBlur) {
   }
 
   // Sanity check that the blur size matches the draw target.
+  MOZ_ASSERT(format == aBlur.GetFormat());
   MOZ_ASSERT(size == aBlur.GetSize());
   MOZ_ASSERT(stride == aBlur.GetStride());
   aBlur.Blur(data);
@@ -298,7 +299,7 @@ bool DrawTarget::Unrotate(IntPoint aRotation) {
 }
 
 int32_t ShadowOptions::BlurRadius() const {
-  return AlphaBoxBlur::CalculateBlurRadius(Point(mSigma, mSigma)).width;
+  return GaussianBlur::CalculateBlurRadius(Point(mSigma, mSigma)).width;
 }
 
 void DrawTarget::DrawShadow(const Path* aPath, const Pattern& aPattern,
