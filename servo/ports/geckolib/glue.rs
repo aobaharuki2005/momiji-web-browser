@@ -1521,7 +1521,7 @@ pub extern "C" fn Servo_Element_GetMaybeOutOfDatePseudoStyle(
 #[cfg(debug_assertions)]
 unsafe fn borrow_assert_main_thread<T>(
     cell: &atomic_refcell::AtomicRefCell<T>,
-) -> atomic_refcell::AtomicRef<T> {
+) -> atomic_refcell::AtomicRef<'_, T> {
     debug_assert!(is_main_thread());
     cell.borrow()
 }
