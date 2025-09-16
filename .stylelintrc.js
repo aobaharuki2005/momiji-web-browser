@@ -271,6 +271,7 @@ module.exports = {
     ],
     "stylelint-plugin-mozilla/no-base-design-tokens": true,
     "stylelint-plugin-mozilla/use-border-radius-tokens": true,
+    "stylelint-plugin-mozilla/use-border-color-tokens": true,
   },
 
   overrides: [
@@ -396,6 +397,7 @@ module.exports = {
       ],
       rules: {
         "stylelint-plugin-mozilla/use-border-radius-tokens": false,
+        "stylelint-plugin-mozilla/use-border-color-tokens": false,
       },
     },
     {
@@ -406,6 +408,7 @@ module.exports = {
       ],
       rules: {
         "stylelint-plugin-mozilla/use-border-radius-tokens": true,
+        "stylelint-plugin-mozilla/use-border-color-tokens": false,
       },
     },
   ],
