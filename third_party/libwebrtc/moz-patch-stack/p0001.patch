@@ -527,10 +527,10 @@ index cd2927d153..0038f3aa24 100644
  }  // namespace test
  }  // namespace webrtc
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 7334d82cf1..e6744508d2 100644
+index 0e553eabe7..aa7c506f33 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
-@@ -402,7 +402,6 @@ rtc_library("video_send_stream_api") {
+@@ -401,7 +401,6 @@ rtc_library("video_send_stream_api") {
    ]
    deps = [
      ":rtp_interfaces",
@@ -604,7 +604,7 @@ index 70c0800f3a..069a2a8b36 100644
        uint32_t ssrc,
        ArrayView<const uint16_t> sequence_numbers) const = 0;
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index f6359d4fe7..f2e267b8d2 100644
+index 7f92e45b4a..f4a761a1c8 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -806,7 +806,6 @@ if (rtc_include_tests) {
@@ -942,10 +942,10 @@ index 53a2b9ae7b..479527e229 100644
    time_controller_.AdvanceTime(TimeDelta::Zero());
    EXPECT_EQ(transport_.packets_sent(), 2);
 diff --git a/video/video_send_stream_impl_unittest.cc b/video/video_send_stream_impl_unittest.cc
-index d4c39ae18c..2e7c063730 100644
+index 00b45f4637..f0023f12b9 100644
 --- a/video/video_send_stream_impl_unittest.cc
 +++ b/video/video_send_stream_impl_unittest.cc
-@@ -125,7 +125,6 @@ class MockRtpVideoSender : public RtpVideoSenderInterface {
+@@ -124,7 +124,6 @@ class MockRtpVideoSender : public RtpVideoSenderInterface {
    MOCK_METHOD(uint32_t, GetPayloadBitrateBps, (), (const, override));
    MOCK_METHOD(uint32_t, GetProtectionBitrateBps, (), (const, override));
    MOCK_METHOD(void, SetEncodingData, (size_t, size_t, size_t), (override));
