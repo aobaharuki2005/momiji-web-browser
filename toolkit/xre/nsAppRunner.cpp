@@ -6319,7 +6319,7 @@ bool XRE_UseNativeEventProcessing() {
 #endif
 
   switch (XRE_GetProcessType()) {
-#if defined(XP_MACOSX) || defined(XP_WIN)
+#if defined(XP_DARWIN) || defined(XP_WIN)
     case GeckoProcessType_RDD:
     case GeckoProcessType_Socket:
       return false;
@@ -6337,7 +6337,7 @@ bool XRE_UseNativeEventProcessing() {
       return false;
 #  endif  // defined(XP_WIN)
     }
-#endif  // defined(XP_MACOSX) || defined(XP_WIN)
+#endif  // defined(XP_DARWIN) || defined(XP_WIN)
     case GeckoProcessType_GMPlugin:
       return mozilla::gmp::GMPProcessChild::UseNativeEventProcessing();
     case GeckoProcessType_Content:
