@@ -7,12 +7,12 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/313582b2ffb3f3f9a
  common_audio/window_generator.cc                    |  5 ++---
  .../aec3/comfort_noise_generator.cc                 |  9 ++-------
  modules/audio_processing/agc/utility.cc             |  4 +---
- modules/audio_processing/ns/fast_math.cc            |  6 ++----
+ modules/audio_processing/ns/fast_math.cc            |  5 ++---
  modules/audio_processing/ns/noise_estimator.cc      |  8 +-------
  modules/audio_processing/three_band_filter_bank.cc  | 13 ++++---------
  .../event_based_exponential_moving_average.cc       |  3 +--
  rtc_base/random.cc                                  |  4 +---
- 8 files changed, 14 insertions(+), 38 deletions(-)
+ 8 files changed, 14 insertions(+), 37 deletions(-)
 
 diff --git a/common_audio/window_generator.cc b/common_audio/window_generator.cc
 index 7c33d255f0..da5603d9e7 100644
@@ -45,18 +45,18 @@ index 7c33d255f0..da5603d9e7 100644
    }
    for (size_t i = length - 1; i >= half; --i) {
 diff --git a/modules/audio_processing/aec3/comfort_noise_generator.cc b/modules/audio_processing/aec3/comfort_noise_generator.cc
-index 17a3b70d36..ed643f4400 100644
+index ce500a57d5..21d6ef9b5c 100644
 --- a/modules/audio_processing/aec3/comfort_noise_generator.cc
 +++ b/modules/audio_processing/aec3/comfort_noise_generator.cc
-@@ -21,7 +21,6 @@
- #include <cmath>
+@@ -16,7 +16,6 @@
+ #include <cstddef>
  #include <cstdint>
- #include <functional>
+ #include <memory>
 -#include <numbers>
  #include <numeric>
+ #include <vector>
  
- #include "common_audio/signal_processing/include/signal_processing_library.h"
-@@ -32,8 +31,6 @@ namespace webrtc {
+@@ -36,8 +35,6 @@ namespace webrtc {
  
  namespace {
  
@@ -65,7 +65,7 @@ index 17a3b70d36..ed643f4400 100644
  // Computes the noise floor value that matches a WGN input of noise_floor_dbfs.
  float GetNoiseFloorFactor(float noise_floor_dbfs) {
    // kdBfsNormalization = 20.f*log10(32768.f).
-@@ -42,16 +39,14 @@ float GetNoiseFloorFactor(float noise_floor_dbfs) {
+@@ -46,16 +43,14 @@ float GetNoiseFloorFactor(float noise_floor_dbfs) {
  }
  
  // Table of sqrt(2) * sin(2*pi*i/32).
@@ -102,19 +102,18 @@ index b8fa3605ea..2a87e5ce74 100644
  static const double kLinear2LoudnessScale = 13.4 / kLog10;
  
 diff --git a/modules/audio_processing/ns/fast_math.cc b/modules/audio_processing/ns/fast_math.cc
-index 7b8fe1f55b..72f6fb2145 100644
+index 7d52252201..d7c7a7b4fa 100644
 --- a/modules/audio_processing/ns/fast_math.cc
 +++ b/modules/audio_processing/ns/fast_math.cc
-@@ -13,8 +13,6 @@
- #include <math.h>
- #include <stdint.h>
- 
+@@ -13,7 +13,6 @@
+ #include <cmath>
+ #include <cstddef>
+ #include <cstdint>
 -#include <numbers>
--
- #include "rtc_base/checks.h"
  
- namespace webrtc {
-@@ -55,7 +53,7 @@ float PowApproximation(float x, float p) {
+ #include "api/array_view.h"
+ #include "rtc_base/checks.h"
+@@ -56,7 +55,7 @@ float PowApproximation(float x, float p) {
  }
  
  float LogApproximation(float x) {
@@ -123,7 +122,7 @@ index 7b8fe1f55b..72f6fb2145 100644
    return FastLog2f(x) * kLogOf2;
  }
  
-@@ -66,7 +64,7 @@ void LogApproximation(ArrayView<const float> x, ArrayView<float> y) {
+@@ -67,7 +66,7 @@ void LogApproximation(ArrayView<const float> x, ArrayView<float> y) {
  }
  
  float ExpApproximation(float x) {
@@ -169,18 +168,18 @@ index 00b647ca35..bf21d38d0b 100644
  }  // namespace
  
 diff --git a/modules/audio_processing/three_band_filter_bank.cc b/modules/audio_processing/three_band_filter_bank.cc
-index 45b44a7762..d69db9bf9a 100644
+index a04852a4c7..291026ca44 100644
 --- a/modules/audio_processing/three_band_filter_bank.cc
 +++ b/modules/audio_processing/three_band_filter_bank.cc
-@@ -33,7 +33,6 @@
- #include "modules/audio_processing/three_band_filter_bank.h"
+@@ -34,7 +34,6 @@
  
+ #include <algorithm>
  #include <array>
 -#include <numbers>
  
+ #include "api/array_view.h"
  #include "rtc_base/checks.h"
- 
-@@ -89,21 +88,17 @@ const float
+@@ -91,21 +90,17 @@ const float
  constexpr int kZeroFilterIndex1 = 3;
  constexpr int kZeroFilterIndex2 = 9;
  

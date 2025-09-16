@@ -816,10 +816,10 @@ index 9bf81c315f..782bd7c99f 100644
      testonly = true
  
 diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
-index 93c3ae4abb..7a4662cf0d 100644
+index a9cb21119a..826734fb2e 100644
 --- a/modules/audio_processing/aec3/BUILD.gn
 +++ b/modules/audio_processing/aec3/BUILD.gn
-@@ -261,14 +261,11 @@ if (current_cpu == "x86" || current_cpu == "x64") {
+@@ -263,14 +263,11 @@ if (current_cpu == "x86" || current_cpu == "x64") {
        "vector_math_avx2.cc",
      ]
  
@@ -840,7 +840,7 @@ index 93c3ae4abb..7a4662cf0d 100644
      deps = [
        ":adaptive_fir_filter",
 diff --git a/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc b/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc
-index 9f720a5abf..75d94dd704 100644
+index f7ba1fda86..121f13e79f 100644
 --- a/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc
 +++ b/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc
 @@ -8,7 +8,7 @@
@@ -850,10 +850,10 @@ index 9f720a5abf..75d94dd704 100644
 -#include <immintrin.h>
 +#include "common_audio/intrin.h"
  
- #include "modules/audio_processing/aec3/adaptive_fir_filter.h"
- #include "rtc_base/checks.h"
+ #include <algorithm>
+ #include <array>
 diff --git a/modules/audio_processing/agc2/rnn_vad/BUILD.gn b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
-index ddec89972d..154ac79205 100644
+index 075e2a8110..1f3a66667a 100644
 --- a/modules/audio_processing/agc2/rnn_vad/BUILD.gn
 +++ b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
 @@ -121,7 +121,7 @@ rtc_source_set("vector_math") {

@@ -455,7 +455,7 @@ index 782bd7c99f..313e5c82de 100644
  
  config("audio_device_warnings_config") {
 diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
-index 1f269294e2..34e13381e0 100644
+index 9292522c6a..b378cdfb60 100644
 --- a/modules/audio_processing/aec3/BUILD.gn
 +++ b/modules/audio_processing/aec3/BUILD.gn
 @@ -124,7 +124,7 @@ rtc_library("aec3") {
@@ -481,10 +481,10 @@ index f01637f2da..d5bdc070be 100644
      }
    }
 diff --git a/modules/audio_processing/agc/BUILD.gn b/modules/audio_processing/agc/BUILD.gn
-index f794b07bcb..a6d5cfb73b 100644
+index de7a61b909..795649ccd9 100644
 --- a/modules/audio_processing/agc/BUILD.gn
 +++ b/modules/audio_processing/agc/BUILD.gn
-@@ -85,7 +85,7 @@ rtc_library("legacy_agc") {
+@@ -86,7 +86,7 @@ rtc_library("legacy_agc") {
    if (rtc_build_with_neon) {
      if (target_cpu != "arm64") {
        # Enable compilation for the NEON instruction set.
@@ -494,10 +494,10 @@ index f794b07bcb..a6d5cfb73b 100644
      }
    }
 diff --git a/modules/audio_processing/agc2/BUILD.gn b/modules/audio_processing/agc2/BUILD.gn
-index 93d5d6c0b9..d1fb75b405 100644
+index 27bd6ff1d3..dabf67d6d4 100644
 --- a/modules/audio_processing/agc2/BUILD.gn
 +++ b/modules/audio_processing/agc2/BUILD.gn
-@@ -255,7 +255,7 @@ rtc_library("vad_wrapper") {
+@@ -259,7 +259,7 @@ rtc_library("vad_wrapper") {
  
    defines = []
    if (rtc_build_with_neon && current_cpu != "arm64") {
@@ -507,7 +507,7 @@ index 93d5d6c0b9..d1fb75b405 100644
    }
  
 diff --git a/modules/audio_processing/agc2/rnn_vad/BUILD.gn b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
-index fd03ebc283..ac1620c8f4 100644
+index 0fb06b2a86..6ce62e7818 100644
 --- a/modules/audio_processing/agc2/rnn_vad/BUILD.gn
 +++ b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
 @@ -19,7 +19,7 @@ rtc_library("rnn_vad") {
