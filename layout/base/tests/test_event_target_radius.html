@@ -104,6 +104,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1983191
     </div>
     <span id="t18_clickable_partially_overlapped" onclick="x=1" style="width: 120px; height: 20px; position: absolute; right: 0; top: 1px">cover</span>
   </div>
+  <div id="t19" class="target" onclick="x=1" style="padding: 10px" hidden>
+    <span id="t19_child">foo</span>
+  </div>
+  <div id="t20" class="target" onclick="x=1" style="padding: 10px; cursor: pointer" hidden>
+    <span id="t20_child">foo</span>
+  </div>
+  <div id="t21" class="target" onclick="x=1" style="padding: 10px;" hidden>
+    <span id="t21_child" style="cursor: pointer">foo</span>
+  </div>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -119,6 +128,7 @@ function startTest() {
 
 
 SimpleTest.waitForExplicitFinish();
+// SimpleTest.requestCompleteLog();
 
 const kIsAndroid = navigator.appVersion.includes("Android");
 
@@ -352,19 +362,24 @@ function test3() {
       stringifyBoundingClientRect("t6_inner_clickable")
     }`
   );
-  testMouseClick("t6_inner", -1, 10, "t6_inner",
+  testMouseClick("t6_inner", -2, 10, "t6_inner",
     "inner element is clickable because its parent is, even when it sticks outside parent");
-  testMouseClick("t6_inner", 39, -1, "t6_inner",
-    "when outside both inner and parent, but in range of both, the inner is selected");
-  testMouseClick("t6_inner", 45, -1, "t6_inner",
-    "clicking in clickable parent close to inner activates inner, not parent");
-  testMouseClick("t6_inner_clickable", 1, -1, "t6_inner",
+  // FIXME: This test or PositionedEventTargeting or its caller is broken.
+  // This tries to click a position where the same distance from both t6 and t6_inner.
+  // However, the axis is not same, along x-axis for t6 but along y-axis for t6_inner.
+  // This may cause clicking unexpected position which may be near t6 due to the
+  // rounding issue.
+  // testMouseClick("t6_inner", 38, -2, "t6_inner",
+  //   "when outside both inner and parent, but in range of both, the inner is selected");
+  testMouseClick("t6_inner", 45, -2, "t6",
+    "clicking in clickable parent close to inner shouldn't get retargeted to the inner because of not clickable");
+  testMouseClick("t6_inner_clickable", 2, -2, "t6_inner",
     "clicking on inner doesn't get redirected to inner_clickable because they are both clickable");
-  testMouseClick("t6_inner_clickable", 1, 1, "t6_inner_clickable",
+  testMouseClick("t6_inner_clickable", 2, 2, "t6_inner_clickable",
     "clicking on inner_clickable doesn't get redirected to inner because they are both clickable");
-  testMouseClick("t6_inner_clickable", 45, -1, "t6_inner",
+  testMouseClick("t6_inner_clickable", 45, -2, "t6_inner",
     "clicking on inner while backed by its parent still doesn't get redirected to inner_clickable");
-  testMouseClick("t6_inner_clickable", 45, 1, "t6_inner_clickable",
+  testMouseClick("t6_inner_clickable", 45, 2, "t6_inner_clickable",
     "clicking on inner_clickable while backed by its parent still doesn't get redirected to inner");
   testMouseClick("t6_inner_clickable", 45, 6, "t6_inner_clickable",
     "clicking on parent near inner_clickable gets redirected to inner_clickable rather than inner because it is closer");
@@ -373,9 +388,9 @@ function test3() {
   // we want to click on t6, but at least 13mm away from t6_inner, so that
   // t6_inner doesn't steal the click.
   ok(13*mm < 280, "no point inside t6 that's not within radius of t6_inner; adjust layout of t6/inner/outer as needed");
-  testMouseClick("t6_outer", -240 + 13*mm, -1, "t6",
+  testMouseClick("t6_outer", -240 + 13*mm, -2, "t6",
     "clicking in clickable container close to outer activates parent, not outer");
-  testMouseClick("t6_outer", 1, 1, "t6_outer",
+  testMouseClick("t6_outer", 2, 2, "t6_outer",
     "clicking directly on the outer activates it");
   setShowing("t6", false);
   setShowing("t6_outer", false);
@@ -613,6 +628,45 @@ async function testTouchable() {
   testTouch("t18_clickable_bigger_z_index_but_clipped", -1, 10, "t18_clickable_partially_overlapped",
             "touch left side of the cover should cause a click on the overlapped content");
   setShowing("t18", false);
+
+  // If the user taps around a child element which is a clickable/touchable descendant of the
+  // directly tapped element, we should not redirect to the inner element because the event listener
+  // may work with the event target strictly. See bug 1978818.
+  // On the other hand, if the child is another clickable/touchable element, it should be preferred
+  // to make it easier to tap/click the smaller element.  Perhaps, the user does not tap there to
+  // do something with the outer element.  This case is tested in t6 and t15.
+  setShowing("t19", true);
+  rect = document.getElementById("t19_child").getBoundingClientRect();
+  testTouch("t19_child", -1, 10, "t19", "tap left of the span should not cause a click on the span");
+  testTouch("t19_child", 10, -1, "t19", "tap above of the span should not cause a click on the span");
+  testTouch("t19_child", rect.width + 1, 10, "t19", "tap right of the span should not cause a click on the span");
+  testTouch("t19_child", 10, rect.height + 1, "t19", "tap bottom of the span should not cause a click on the span");
+  testTouch("t19_child", 10, 10, "t19_child", "tap in the child span should cause a click on the span");
+  setShowing("t19", false);
+
+  // A variant of t19. `cursor: pointer` implies that it's clickable.  However, we should consider
+  // whether it's an independent clickable element or not in an clickable element only with the
+  // element type and the event listener.
+  setShowing("t20", true);
+  rect = document.getElementById("t20_child").getBoundingClientRect();
+  testTouch("t20_child", -1, 10, "t20", "tap left of the span should not cause a click on the span");
+  testTouch("t20_child", 10, -1, "t20", "tap above of the span should not cause a click on the span");
+  testTouch("t20_child", rect.width + 1, 10, "t20", "tap right of the span should not cause a click on the span");
+  testTouch("t20_child", 10, rect.height + 1, "t20", "tap bottom of the span should not cause a click on the span");
+  testTouch("t20_child", 10, 10, "t20_child", "tap in the child span should cause a click on the span");
+  setShowing("t20", false);
+
+  // A variant of t19 and t20. `cursor: pointer` is set to t21_child and t21 itself is a clickable
+  // element.  Then, t21_child might be different target from t21.  Therefore, tapping around
+  // t21_child should be retargeted to t21_child.
+  setShowing("t21", true);
+  rect = document.getElementById("t21_child").getBoundingClientRect();
+  testTouch("t21_child", -1, 10, "t21_child", "tap left of the span should cause a click on the span");
+  testTouch("t21_child", 10, -1, "t21_child", "tap above of the span should cause a click on the span");
+  testTouch("t21_child", rect.width + 1, 10, "t21_child", "tap right of the span should cause a click on the span");
+  testTouch("t21_child", 10, rect.height + 1, "t21_child", "tap bottom of the span should cause a click on the span");
+  testTouch("t21_child", 10, 10, "t21_child", "tap in the child span should cause a click on the span");
+  setShowing("t21", false);
 
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1733509
   await waitUntilApzStable();

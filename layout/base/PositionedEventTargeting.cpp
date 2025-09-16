@@ -268,9 +268,45 @@ static bool IsClickableContent(const nsIContent* aContent,
   return aContent->IsEditable();
 }
 
+static nsIContent* GetMostDistantAncestorWhoseCursorIsPointer(
+    nsIFrame* aFrame, nsINode* aAncestorLimiter = nullptr,
+    nsAtom* aStopAt = nullptr) {
+  nsIFrame* lastCursorPointerFrame = nullptr;
+  for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
+    if (frame->StyleUI()->Cursor().keyword != StyleCursorKind::Pointer) {
+      break;
+    }
+    nsIContent* content = frame->GetContent();
+    if (MOZ_UNLIKELY(!content)) {
+      break;
+    }
+    lastCursorPointerFrame = frame;
+    if (content == aAncestorLimiter ||
+        (aStopAt && content->IsHTMLElement(aStopAt))) {
+      break;
+    }
+  }
+  return lastCursorPointerFrame ? lastCursorPointerFrame->GetContent()
+                                : nullptr;
+}
+
 static nsIContent* GetClickableAncestor(
     nsIFrame* aFrame, nsAtom* aStopAt = nullptr,
     nsAutoString* aLabelTargetId = nullptr) {
+  // Input events propagate up the content tree so we'll follow the content
+  // ancestors to look for elements accepting the click.
+  nsIContent* deepestClickableTarget = nullptr;
+  for (nsIContent* content = aFrame->GetContent(); content;
+       content = content->GetFlattenedTreeParent()) {
+    if (aStopAt && content->IsHTMLElement(aStopAt)) {
+      break;
+    }
+    if (IsClickableContent(content, aLabelTargetId)) {
+      deepestClickableTarget = content;
+      break;
+    }
+  }
+
   // If the frame is `cursor:pointer` or inherits `cursor:pointer` from an
   // ancestor, treat it as clickable. This is a heuristic to deal with pages
   // where the click event listener is on the <body> or <html> element but it
@@ -285,34 +321,28 @@ static nsIContent* GetClickableAncestor(
   // this check to any non-auto cursor. Such a change would also pick up things
   // like contenteditable or input fields, which can then be removed from the
   // loop below, and would have better performance.
-  if (aFrame->StyleUI()->Cursor().keyword == StyleCursorKind::Pointer) {
-    // XXX Shouldn't we set aLabelTargetId if aFrame is for a <label>?
-    return aFrame->GetContent();
-  }
-
-  // Input events propagate up the content tree so we'll follow the content
-  // ancestors to look for elements accepting the click.
-  for (nsIContent* content = aFrame->GetContent(); content;
-       content = content->GetFlattenedTreeParent()) {
-    if (aStopAt && content->IsHTMLElement(aStopAt)) {
-      break;
+  if (nsIContent* const mostDistantCursorPointerContent =
+          GetMostDistantAncestorWhoseCursorIsPointer(
+              aFrame, deepestClickableTarget, aStopAt)) {
+    if (!deepestClickableTarget ||
+        (mostDistantCursorPointerContent != deepestClickableTarget &&
+         mostDistantCursorPointerContent->IsInclusiveFlatTreeDescendantOf(
+             deepestClickableTarget))) {
+      // XXX Shouldn't we set aLabelTargetId if mostDistantCursorPointerContent
+      // is a <label>?
+      if (aLabelTargetId) {
+        aLabelTargetId->Truncate();
+      }
+      return mostDistantCursorPointerContent;
     }
-    if (IsClickableContent(content, aLabelTargetId)) {
-      return content;
-    }
   }
-  return nullptr;
+  return deepestClickableTarget;
 }
 
 static nsIContent* GetTouchableOrClickableAncestor(
     nsIFrame* aFrame, nsAtom* aStopAt = nullptr,
     nsAutoString* aLabelTargetId = nullptr) {
   nsIContent* deepestClickableTarget = nullptr;
-  // See comment in GetClickableAncestor for the detail of referring CSS
-  // `cursor`.
-  if (aFrame->StyleUI()->Cursor().keyword == StyleCursorKind::Pointer) {
-    deepestClickableTarget = aFrame->GetContent();
-  }
   for (nsIContent* content = aFrame->GetContent(); content;
        content = content->GetFlattenedTreeParent()) {
     if (aStopAt && content->IsHTMLElement(aStopAt)) {
@@ -330,6 +360,24 @@ static nsIContent* GetTouchableOrClickableAncestor(
     if (!deepestClickableTarget &&
         IsClickableContent(content, aLabelTargetId)) {
       deepestClickableTarget = content;
+    }
+  }
+
+  // See comment in GetClickableAncestor for the detail of referring CSS
+  // `cursor`.
+  if (nsIContent* const mostDistantCursorPointerContent =
+          GetMostDistantAncestorWhoseCursorIsPointer(
+              aFrame, deepestClickableTarget, aStopAt)) {
+    if (!deepestClickableTarget ||
+        (mostDistantCursorPointerContent != deepestClickableTarget &&
+         mostDistantCursorPointerContent->IsInclusiveFlatTreeDescendantOf(
+             deepestClickableTarget))) {
+      // XXX Shouldn't we set aLabelTargetId if mostDistantCursorPointerContent
+      // is a <label>?
+      if (aLabelTargetId) {
+        aLabelTargetId->Truncate();
+      }
+      return mostDistantCursorPointerContent;
     }
   }
   return deepestClickableTarget;
@@ -520,6 +568,9 @@ static nsIFrame* GetClosest(RelativeTo aRoot,
                             nsIContent* aClickableAncestor,
                             nsTArray<nsIFrame*>& aCandidates) {
   nsIFrame* bestTarget = nullptr;
+  // When we find a bestTarget, it or its ancestor is clickable or touchable.
+  // Then, the element is stored with this.
+  nsIContent* bestTargetHandler = nullptr;
   // Lower is better; distance is in appunits
   double bestDistance = std::numeric_limits<double>::infinity();
   nsRegion exposedRegion(aTargetRect);
@@ -563,6 +614,7 @@ static nsIFrame* GetClosest(RelativeTo aRoot,
       continue;
     }
 
+    nsIContent* handlerContent = nullptr;
     switch (aPrefs.mSearchType) {
       case SearchType::Clickable: {
         nsIContent* clickableContent =
@@ -572,6 +624,8 @@ static nsIFrame* GetClosest(RelativeTo aRoot,
                   FramePrettyPrinter(f).get());
           continue;
         }
+        handlerContent =
+            clickableContent ? clickableContent : aClickableAncestor;
         break;
       }
       case SearchType::Touchable: {
@@ -581,6 +635,7 @@ static nsIFrame* GetClosest(RelativeTo aRoot,
                   FramePrettyPrinter(f).get());
           continue;
         }
+        handlerContent = touchableContent;
         break;
       }
       case SearchType::TouchableOrClickable: {
@@ -591,21 +646,49 @@ static nsIFrame* GetClosest(RelativeTo aRoot,
                   FramePrettyPrinter(f).get());
           continue;
         }
+        handlerContent = touchableOrClickableContent;
         break;
       }
       case SearchType::None:
+        MOZ_ASSERT_UNREACHABLE("Why is it enabled with seaching none?");
         break;
     }
 
-    // If our current closest frame is a descendant of 'f', skip 'f' (prefer
-    // the nested frame).
+    // If our current closest frame is a descendant of 'f', we may be able to
+    // skip 'f' (prefer the nested frame).
     if (bestTarget && nsLayoutUtils::IsProperAncestorFrameCrossDoc(
                           f, bestTarget, aRoot.mFrame)) {
-      PET_LOG("  candidate %s was ancestor for bestTarget %s\n",
-              FramePrettyPrinter(f).get(),
-              FramePrettyPrinter(bestTarget).get());
-      continue;
+      // If the bestTarget is a descendant of `f` but the handler is not in an
+      // independent clickable/touchable element in `f`, e.g., the <span> in the
+      // following case,
+      //
+      // <div onclick="foo()" style="padding: 5px">
+      //   <span>bar</span>
+      // </div>
+      //
+      // We shouldn't redirect to the <span> because when the user directly
+      // clicks/taps the clickable <div>, we should keep targeting the <div>.
+      //
+      // On the other hand, if the bestTarget is a frame in an independent
+      // clickable/touchable element, e.g., in the following case,
+      //
+      // <div onclick="foo()" style="padding: 5px">
+      //   <span onclick="bar()">bar</span>
+      // </div>
+      //
+      // We should retarget the event to the <span> because users may want to
+      // click the smaller target.
+      if (!bestTargetHandler || handlerContent != bestTargetHandler) {
+        PET_LOG(
+            "  candidate %s (handler: %s) was ancestor for bestTarget %s "
+            "(handler: %s)\n",
+            FramePrettyPrinter(f).get(), ToString(*handlerContent).c_str(),
+            FramePrettyPrinter(bestTarget).get(),
+            ToString(RefPtr{bestTargetHandler}).c_str());
+        continue;
+      }
     }
+
     if (!aClickableAncestor && !nsLayoutUtils::IsAncestorFrameCrossDoc(
                                    aRestrictToDescendants, f, aRoot.mFrame)) {
       PET_LOG("  candidate %s was not descendant of restrictroot %s\n",
@@ -635,6 +718,7 @@ static nsIFrame* GetClosest(RelativeTo aRoot,
               FramePrettyPrinter(f).get(), distance);
       bestDistance = distance;
       bestTarget = f;
+      bestTargetHandler = handlerContent;
       if (bestDistance == 0.0) {
         break;
       }
