@@ -28,9 +28,9 @@ class FilterNodeWebgl : public FilterNode {
 
   FilterBackend GetBackendType() override { return FILTER_BACKEND_WEBGL; }
 
-  bool ReserveInputIndex(uint32_t aIndex);
-  bool SetInputAccel(uint32_t aIndex, SourceSurface* aSurface);
-  bool SetInputSoftware(uint32_t aIndex, SourceSurface* aSurface);
+  void ReserveInputIndex(uint32_t aIndex);
+  void SetInputAccel(uint32_t aIndex, SourceSurface* aSurface);
+  void SetInputSoftware(uint32_t aIndex, SourceSurface* aSurface);
   void SetInput(uint32_t aIndex, SourceSurface* aSurface) override;
   void SetInput(uint32_t aIndex, FilterNode* aFilter) override;
   void SetAttribute(uint32_t aIndex, bool) override;

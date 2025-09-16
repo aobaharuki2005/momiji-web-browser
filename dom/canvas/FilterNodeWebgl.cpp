@@ -6,8 +6,6 @@
 
 #include "FilterNodeWebgl.h"
 
-#include <limits>
-
 #include "DrawTargetWebglInternal.h"
 #include "SourceSurfaceWebgl.h"
 #include "mozilla/gfx/Blur.h"
@@ -44,45 +42,32 @@ already_AddRefed<FilterNodeWebgl> FilterNodeWebgl::Create(FilterType aType) {
   return filter.forget();
 }
 
-bool FilterNodeWebgl::ReserveInputIndex(uint32_t aIndex) {
-  size_t inputIndex = aIndex;
-  if (std::numeric_limits<size_t>::max() - inputIndex < 1) {
-    return false;
+void FilterNodeWebgl::ReserveInputIndex(uint32_t aIndex) {
+  if (mInputSurfaces.size() <= aIndex) {
+    mInputSurfaces.resize(aIndex + 1);
   }
-  if (mInputSurfaces.size() <= inputIndex) {
-    mInputSurfaces.resize(inputIndex + 1);
+  if (mInputFilters.size() <= aIndex) {
+    mInputFilters.resize(aIndex + 1);
   }
-  if (mInputFilters.size() <= inputIndex) {
-    mInputFilters.resize(inputIndex + 1);
-  }
-  return true;
 }
 
-bool FilterNodeWebgl::SetInputAccel(uint32_t aIndex, SourceSurface* aSurface) {
-  if (ReserveInputIndex(aIndex)) {
-    mInputSurfaces[aIndex] = aSurface;
-    mInputFilters[aIndex] = nullptr;
-    return true;
-  }
-  return false;
+void FilterNodeWebgl::SetInputAccel(uint32_t aIndex, SourceSurface* aSurface) {
+  ReserveInputIndex(aIndex);
+  mInputSurfaces[aIndex] = aSurface;
+  mInputFilters[aIndex] = nullptr;
 }
 
-bool FilterNodeWebgl::SetInputSoftware(uint32_t aIndex,
+void FilterNodeWebgl::SetInputSoftware(uint32_t aIndex,
                                        SourceSurface* aSurface) {
   if (mSoftwareFilter) {
     mSoftwareFilter->SetInput(aIndex, aSurface);
   }
   mInputMask |= (1 << aIndex);
-  return true;
 }
 
 void FilterNodeWebgl::SetInput(uint32_t aIndex, SourceSurface* aSurface) {
-  int32_t inputIndex = InputIndex(aIndex);
-  if (inputIndex < 0 || !SetInputAccel(inputIndex, aSurface) ||
-      !SetInputSoftware(inputIndex, aSurface)) {
-    gfxDevCrash(LogReason::FilterInputSet) << "Invalid set " << inputIndex;
-    return;
-  }
+  SetInputAccel(aIndex, aSurface);
+  SetInputSoftware(aIndex, aSurface);
 }
 
 void FilterNodeWebgl::SetInput(uint32_t aIndex, FilterNode* aFilter) {
@@ -91,15 +76,10 @@ void FilterNodeWebgl::SetInput(uint32_t aIndex, FilterNode* aFilter) {
     return;
   }
 
-  int32_t inputIndex = InputIndex(aIndex);
-  if (inputIndex < 0 || !ReserveInputIndex(inputIndex)) {
-    gfxDevCrash(LogReason::FilterInputSet) << "Invalid set " << inputIndex;
-    return;
-  }
-
+  ReserveInputIndex(aIndex);
   auto* webglFilter = static_cast<FilterNodeWebgl*>(aFilter);
-  mInputFilters[inputIndex] = webglFilter;
-  mInputSurfaces[inputIndex] = nullptr;
+  mInputFilters[aIndex] = webglFilter;
+  mInputSurfaces[aIndex] = nullptr;
   if (mSoftwareFilter) {
     MOZ_ASSERT(!webglFilter || webglFilter->mSoftwareFilter);
     mSoftwareFilter->SetInput(
