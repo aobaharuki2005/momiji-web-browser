@@ -344,9 +344,6 @@ class Trace {
     bool operator==(const ConstIterator& other) const {
       return trace_ == other.trace_;
     }
-    bool operator!=(const ConstIterator& other) const {
-      return !(*this == other);
-    }
     const Trace* operator*() const { return trace_; }
 
    private:
@@ -574,7 +571,7 @@ class RegExpCompiler {
   // TODO(jgruber): This is super hacky and should be replaced by an abort
   // mechanism or iterative node generation.
   void ToNodeMaybeCheckForStackOverflow() {
-    if ((to_node_overflow_check_ticks_++ % 16 == 0)) {
+    if ((to_node_overflow_check_ticks_++ % 64 == 0)) {
       ToNodeCheckForStackOverflow();
     }
   }
