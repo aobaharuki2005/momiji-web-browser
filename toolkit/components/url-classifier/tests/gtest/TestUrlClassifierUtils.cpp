@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include <mozilla/RefPtr.h>
+#include "mozilla/Base64.h"
 #include "nsEscape.h"
 #include "nsString.h"
 #include "nsUrlClassifierUtils.h"
@@ -280,17 +281,30 @@ TEST(UrlClassifierUtils, MakeUpdateRequestV5)
 TEST(UrlClassifierUtils, makeFindFullHashRequestV5)
 {
   nsTArray<nsCString> hashPrefixes;
-  hashPrefixes.AppendElement("\xAA\xBB\xCC\xDD"_ns);
-  hashPrefixes.AppendElement("\xEE\xFF\x00\x11"_ns);
-  hashPrefixes.AppendElement("\x12\x34\x56\x78"_ns);
-  hashPrefixes.AppendElement("\xDE\xAD\xBE\xEF"_ns);
-  hashPrefixes.AppendElement("\xFE\xED\xFA\xCE"_ns);
+
+  nsAutoCString hashPrefixesEncoded;
+  nsresult rv =
+      mozilla::Base64Encode("\xAA\xBB\xCC\xDD"_ns, hashPrefixesEncoded);
+  EXPECT_EQ(rv, NS_OK);
+  hashPrefixes.AppendElement(hashPrefixesEncoded);
+  rv = mozilla::Base64Encode("\xEE\xFF\x00\x11"_ns, hashPrefixesEncoded);
+  EXPECT_EQ(rv, NS_OK);
+  hashPrefixes.AppendElement(hashPrefixesEncoded);
+  rv = mozilla::Base64Encode("\x12\x34\x56\x78"_ns, hashPrefixesEncoded);
+  EXPECT_EQ(rv, NS_OK);
+  hashPrefixes.AppendElement(hashPrefixesEncoded);
+  rv = mozilla::Base64Encode("\xDE\xAD\xBE\xEF"_ns, hashPrefixesEncoded);
+  EXPECT_EQ(rv, NS_OK);
+  hashPrefixes.AppendElement(hashPrefixesEncoded);
+  rv = mozilla::Base64Encode("\xFE\xED\xFA\xCE"_ns, hashPrefixesEncoded);
+  EXPECT_EQ(rv, NS_OK);
+  hashPrefixes.AppendElement(hashPrefixesEncoded);
 
   nsCOMPtr<nsIUrlClassifierUtils> utils =
       do_GetService("@mozilla.org/url-classifier/utils;1");
 
   nsCString request;
-  nsresult rv = utils->MakeFindFullHashRequestV5(hashPrefixes, request);
+  rv = utils->MakeFindFullHashRequestV5(hashPrefixes, request);
   EXPECT_EQ(rv, NS_OK);
 
   ASSERT_TRUE(request.EqualsLiteral(
