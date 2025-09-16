@@ -814,13 +814,18 @@ nsSocketTransportService::Init() {
   nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
   // Note that the observr notifications are forwarded from parent process to
   // socket process. We have to make sure the topics registered below are also
-  // registered in nsIObserver::Init().
+  // registered in nsIOService::Init().
   if (obsSvc) {
-    obsSvc->AddObserver(this, "last-pb-context-exited", false);
-    obsSvc->AddObserver(this, NS_WIDGET_SLEEP_OBSERVER_TOPIC, true);
-    obsSvc->AddObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC, true);
-    obsSvc->AddObserver(this, "xpcom-shutdown-threads", false);
-    obsSvc->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
+    MOZ_ALWAYS_SUCCEEDS(
+        obsSvc->AddObserver(this, "last-pb-context-exited", false));
+    MOZ_ALWAYS_SUCCEEDS(
+        obsSvc->AddObserver(this, NS_WIDGET_SLEEP_OBSERVER_TOPIC, false));
+    MOZ_ALWAYS_SUCCEEDS(
+        obsSvc->AddObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC, false));
+    MOZ_ALWAYS_SUCCEEDS(
+        obsSvc->AddObserver(this, "xpcom-shutdown-threads", false));
+    MOZ_ALWAYS_SUCCEEDS(
+        obsSvc->AddObserver(this, NS_NETWORK_LINK_TOPIC, false));
   }
 
   // We can now dispatch tasks to the socket thread.
