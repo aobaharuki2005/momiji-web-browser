@@ -992,12 +992,12 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
                         JS::Handle<JS::Value> aValue,
                         mozilla::ErrorResult& aError);
 
-  nsresult GetInnerWidth(double* aWidth) override;
-  nsresult GetInnerHeight(double* aHeight) override;
+  MOZ_CAN_RUN_SCRIPT nsresult GetInnerWidth(double* aWidth) override;
+  MOZ_CAN_RUN_SCRIPT nsresult GetInnerHeight(double* aHeight) override;
 
  public:
-  double GetInnerWidth(mozilla::ErrorResult& aError);
-  double GetInnerHeight(mozilla::ErrorResult& aError);
+  MOZ_CAN_RUN_SCRIPT double GetInnerWidth(mozilla::ErrorResult& aError);
+  MOZ_CAN_RUN_SCRIPT double GetInnerHeight(mozilla::ErrorResult& aError);
   int32_t GetScreenX(mozilla::dom::CallerType aCallerType,
                      mozilla::ErrorResult& aError);
   int32_t GetScreenY(mozilla::dom::CallerType aCallerType,
