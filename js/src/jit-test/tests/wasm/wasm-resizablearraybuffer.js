@@ -133,3 +133,12 @@ assertThrowsInstanceOf(() => rab.resize(rab.byteLength + 10), RangeError);
 
 mem = new WebAssembly.Memory({initial: 20});
 assertThrowsInstanceOf(() => mem.toResizableBuffer(), TypeError);
+
+// Test the JS API with a resizable and shared buffer.
+a = new WebAssembly.Memory({
+    initial: 2,
+    maximum: 4,
+    shared: true
+})
+a.toResizableBuffer();
+setSharedObject(a);
