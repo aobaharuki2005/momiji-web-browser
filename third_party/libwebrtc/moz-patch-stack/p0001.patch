@@ -137,7 +137,7 @@ index 3f73fdc271..4732044be2 100644
      return timestamp_ == o.timestamp() && source_id_ == o.source_id() &&
             source_type_ == o.source_type() &&
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 203a55ba9d..f6359d4fe7 100644
+index 67130446aa..f2e267b8d2 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -245,7 +245,6 @@ rtc_library("media_engine") {

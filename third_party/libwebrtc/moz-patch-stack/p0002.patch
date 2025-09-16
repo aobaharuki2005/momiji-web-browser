@@ -250,7 +250,7 @@ index be03018ccf..336323e1e5 100644
    for (bool use_null_audio_processing : {false, true}) {
      ConfigHelper helper(true, true, use_null_audio_processing);
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 7334d82cf1..0e553eabe7 100644
+index e6744508d2..aa7c506f33 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -79,7 +79,6 @@ rtc_library("call_interfaces") {
@@ -328,10 +328,10 @@ index bfcc15cc88..906d79598b 100644
  
   protected:
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index f6359d4fe7..7f92e45b4a 100644
+index f2e267b8d2..f4a761a1c8 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
-@@ -810,7 +810,6 @@ if (rtc_include_tests) {
+@@ -809,7 +809,6 @@ if (rtc_include_tests) {
        "../api:audio_options_api",
        "../api:call_api",
        "../api:fec_controller_api",
@@ -440,7 +440,7 @@ index a8e7858042..646d4e4c53 100644
                                        RtpPayloadStateMap* payload_state_map);
    void GenerateKeyFrame(const std::vector<std::string>& rids) override;
 diff --git a/video/video_send_stream_impl_unittest.cc b/video/video_send_stream_impl_unittest.cc
-index d4c39ae18c..00b45f4637 100644
+index 2e7c063730..f0023f12b9 100644
 --- a/video/video_send_stream_impl_unittest.cc
 +++ b/video/video_send_stream_impl_unittest.cc
 @@ -71,7 +71,6 @@ namespace {
@@ -451,7 +451,7 @@ index d4c39ae18c..00b45f4637 100644
  using ::testing::Eq;
  using ::testing::Field;
  using ::testing::Invoke;
-@@ -1005,13 +1004,6 @@ TEST_F(VideoSendStreamImplTest, CallsVideoStreamEncoderOnBitrateUpdate) {
+@@ -1004,13 +1003,6 @@ TEST_F(VideoSendStreamImplTest, CallsVideoStreamEncoderOnBitrateUpdate) {
    vss_impl->Stop();
  }
  
