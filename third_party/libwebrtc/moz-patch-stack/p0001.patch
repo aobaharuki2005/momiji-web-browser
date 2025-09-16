@@ -1,0 +1,65 @@
+From: Michael Froman <mjfroman@mac.com>
+Date: Mon, 15 Sep 2025 23:16:15 -0500
+Subject: (tmp-cherry-pick) Revert "Add dcheck for
+ P2PTransportChannel::transport_name()" (f9af201e2d)
+
+This reverts commit a7e1b1bed9215837966c66e0b8a638231e5701cc.
+
+Reason for revert: Breaks webrtc --> Chrome import (https://chromium-review.googlesource.com/c/chromium/src/+/6607918)
+
+Bug: webrtc:406795492, webrtc:8395
+Original change's description:
+> Add dcheck for P2PTransportChannel::transport_name()
+>
+> This RTC_DCHECK is meant to catch programming errors and help enforce
+> that a transport name is always set. The name is in places used together
+> with Candidate::transport_name(). The RTC_DCHECK will help with
+> maintaining consistency moving forward where eventually we'll rely more
+> (or only) on yet another property for essentially the same thing,
+> IceCandidateInterface::sdp_mid() where the mid is required.
+>
+> Bug: webrtc:406795492, webrtc:8395
+> Change-Id: Iadbd414f4fe0c13cb1e560320c533a9b94baaea2
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/394340
+> Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+> Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#44796}
+
+Bug: webrtc:406795492, webrtc:8395
+Change-Id: Icdda74d48a9602241fa81d26bbad02c9e07f5415
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/394541
+Owners-Override: Philip Eliasson <philipel@webrtc.org>
+Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+Commit-Queue: Philip Eliasson <philipel@webrtc.org>
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Cr-Commit-Position: refs/heads/main@{#44804}
+---
+ api/ice_transport_factory.cc      | 2 +-
+ p2p/base/p2p_transport_channel.cc | 1 -
+ 2 files changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/api/ice_transport_factory.cc b/api/ice_transport_factory.cc
+index 8ac27fab88..3cd2deb1a7 100644
+--- a/api/ice_transport_factory.cc
++++ b/api/ice_transport_factory.cc
+@@ -62,7 +62,7 @@ scoped_refptr<IceTransportInterface> CreateIceTransport(
+ 
+ scoped_refptr<IceTransportInterface> CreateIceTransport(IceTransportInit init) {
+   return make_ref_counted<IceTransportWithTransportChannel>(
+-      P2PTransportChannel::Create("standalone", ICE_CANDIDATE_COMPONENT_RTP,
++      P2PTransportChannel::Create("", ICE_CANDIDATE_COMPONENT_RTP,
+                                   std::move(init)));
+ }
+ 
+diff --git a/p2p/base/p2p_transport_channel.cc b/p2p/base/p2p_transport_channel.cc
+index 94de76fb5d..ad69f37445 100644
+--- a/p2p/base/p2p_transport_channel.cc
++++ b/p2p/base/p2p_transport_channel.cc
+@@ -196,7 +196,6 @@ P2PTransportChannel::P2PTransportChannel(
+       field_trials_(field_trials) {
+   TRACE_EVENT0("webrtc", "P2PTransportChannel::P2PTransportChannel");
+   RTC_DCHECK(allocator_ != nullptr);
+-  RTC_DCHECK(!transport_name_.empty());
+   // Validate IceConfig even for mostly built-in constant default values in case
+   // we change them.
+   RTC_DCHECK(config_.IsValid().ok());
