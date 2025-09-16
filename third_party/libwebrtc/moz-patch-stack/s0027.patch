@@ -684,7 +684,7 @@ index f4a761a1c8..1186832625 100644
  
  rtc_library("rtc_audio_video") {
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index b1f026372a..3eefc07cd9 100644
+index 1a74631f17..810af57631 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
 @@ -67,9 +67,6 @@ namespace webrtc {
@@ -698,7 +698,7 @@ index b1f026372a..3eefc07cd9 100644
  class VideoMediaReceiveChannelInterface;
  class VoiceMediaSendChannelInterface;
 diff --git a/media/base/media_channel_impl.cc b/media/base/media_channel_impl.cc
-index b88007703c..a33efe7f8d 100644
+index 6d4d4a2363..316408a9b3 100644
 --- a/media/base/media_channel_impl.cc
 +++ b/media/base/media_channel_impl.cc
 @@ -35,15 +35,6 @@
