@@ -5,7 +5,6 @@
 package org.mozilla.fenix.tabstray.ui.tabitems
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -335,7 +334,6 @@ private fun Thumbnail(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(FirefoxTheme.colors.layer2)
             .semantics(mergeDescendants = true) {
                 testTag = TabsTrayTestTag.TAB_ITEM_THUMBNAIL
             },
