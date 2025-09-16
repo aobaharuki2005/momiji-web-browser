@@ -70,13 +70,10 @@ Function getNormalizedPath
   Exch $0
 FunctionEnd
 
-; This function expects the Windows build number as a parameter from the stack.
-; It Returns the appropriate uninstall registry key on the stack.
-Function getUninstallKey
-  Exch $3 ; Equivalent to: Push $3, Exch, Pop $3
+; This function takes no arguments and returns the name of the legacy uninstall
+; key stored on the stack.
+Function getLegacyUninstallKey
   Push $0
-  Push $1
-  Push $2
 
   ; $0 is used as the return value for this function. It is initially set to
   ; the Uninstall key, which has been standard for decades.
@@ -86,6 +83,54 @@ Function getUninstallKey
     StrCpy $0 "$0 ESR"
   ${EndIf}
   StrCpy $0 "$0 (${ARCH} ${AB_CD})"
+
+  Exch $0
+FunctionEnd
+
+; This function returns the uninstallation key used for installing applications
+; in their default directory on the stack.
+Function getModernUninstallKey
+  Push "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal}"
+FunctionEnd
+
+; This function checks for a registry key under HKEY_LOCAL_MACHINE with a
+; matching installation directory to $INSTDIR or an empty string if no matching
+; installation is found.
+Function findUninstallKey
+  Push $0
+  Push $1
+  Push $2
+
+  ${GetLongPath} "$INSTDIR" $2
+
+  Call getLegacyUninstallKey
+  Pop $0
+  ReadRegStr $1 "HKLM" $0 "InstallLocation"
+  ${If} $1 != $2
+    Call getModernUninstallKey
+    Pop $0
+    ReadRegStr $1 "HKLM" $0 "InstallLocation"
+    ${If} $1 != $2
+      StrCpy $0 ""
+    ${EndIf}
+  ${EndIf}
+
+  StrCpy $0 ""
+  Pop $2
+  Pop $1
+  Exch $0
+FunctionEnd
+
+; This function expects the Windows build number as a parameter from the stack.
+; It Returns the appropriate uninstall registry key on the stack.
+Function getUninstallKey
+  Exch $3 ; Equivalent to: Push $3, Exch, Pop $3
+  Push $0
+  Push $1
+  Push $2
+
+  Call getLegacyUninstallKey
+  Pop $0
 
   ${If} $3 >= ${buildNumWin10}
   ${AndIf} $3 < ${buildNumWin11}
@@ -104,7 +149,8 @@ Function getUninstallKey
     ${IfNot} ${Errors}
     ${AndIf} "$1" == "$2"
       ; The default path and target path matched.
-      StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal}"
+      Call getModernUninstallKey
+      Pop $0
       DetailPrint "Default installation detected."
     ${EndIf}
   ${EndIf}

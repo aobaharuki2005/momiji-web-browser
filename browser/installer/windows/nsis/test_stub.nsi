@@ -257,16 +257,29 @@ FunctionEnd
 
 Function TestUninstallRegKey
     Call CommonOnInit
+    Push $R0 ; We will locally use $R0, ensuring that we can restore it later.
 
-    Push $R0
-    Push $INSTDIR ; back up the original contents for later
+    Call findUninstallKey
+    Pop $R0
+    !insertmacro AssertEqual R0 ""
+
+    Call getModernUninstallKey
+    Pop $R0
+    !insertmacro AssertEqual R0 \
+        "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal}"
+
+    Call getLegacyUninstallKey
+    Pop $R0
+    !insertmacro AssertEqual R0 \
+        "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} ${AppVersion} (${ARCH} ${AB_CD})"
 
     ; Ensure that the getDefaultInstallDir function does not modify the
     ; contents of $1.
+    Push $INSTDIR ; back up the original contents for later
     Push $1
     Call getDefaultInstallDir
-    Pop $INSTDIR
-    Pop $INSTDIR
+    Pop $INSTDIR ; discard the return value of getDefaultInstallDir
+    Pop $INSTDIR ; restore to original (see above)
     !insertmacro AssertEqual INSTDIR "$1"
 
     ; Later, we also want to check that none of the common registers have been
