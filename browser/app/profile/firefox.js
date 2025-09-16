@@ -1390,9 +1390,6 @@ pref("browser.sessionstore.loglevel", "Warn");
 // How old can a log file be before it gets deleted?
 pref("browser.sessionstore.log.appender.file.maxErrorAge", 864000); // 10 days
 
-// Max time to wait between flushing any log messages to disk (defaults to 1hr.)
-pref("browser.sessionstore.logFlushIntervalSeconds", 3600);
-
 // on which sites to save text data, POSTDATA and cookies
 // 0 = everywhere, 1 = unencrypted sites, 2 = nowhere
 pref("browser.sessionstore.privacy_level", 0);

@@ -1,8 +1,6 @@
 [DEFAULT]
 tags = "local"
 
-["test_log_files.py"]
-
 ["test_persist_closed_tabs_restore_manually.py"]
 
 ["test_restore_loading_tab.py"]
