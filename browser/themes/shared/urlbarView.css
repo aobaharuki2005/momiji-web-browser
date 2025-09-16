@@ -903,7 +903,7 @@
     width: 52px;
     height: 52px;
     flex-basis: 52px;
-    border-radius: 2px;
+    border-radius: var(--border-radius-xsmall);
   }
 }
 
@@ -1071,7 +1071,7 @@
 .urlbarView-row[type$="_amo"][icon-size="24"] > .urlbarView-row-inner > .urlbarView-favicon {
   padding: calc((var(--urlbarView-top-pick-large-icon-box-size) - 24px) / 2);
   background-color: var(--urlbar-box-focus-bgcolor);
-  border-radius: 2px;
+  border-radius: var(--border-radius-xsmall);
 }
 
 .urlbarView-row[type$="_amo"][icon-size="24"]:is([selected], :hover) > .urlbarView-row-inner > .urlbarView-favicon {

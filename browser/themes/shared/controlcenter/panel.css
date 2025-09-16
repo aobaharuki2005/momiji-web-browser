@@ -414,7 +414,7 @@
 }
 
 #protections-popup-not-blocking-section-why {
-  border-radius: 2px;
+  border-radius: var(--border-radius-xsmall);
 
   &:hover {
     outline: 4px solid var(--button-background-color-ghost-hover);
