@@ -2104,6 +2104,7 @@ abstract class BaseBrowserFragment :
             .getBookmarksWithUrl(sessionUrl)
             .getOrDefault(listOf())
             .firstOrNull { it.url == sessionUrl }
+
         if (existing != null) {
             // Bookmark exists, go to edit fragment
             withContext(Main) {

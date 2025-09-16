@@ -19,6 +19,7 @@ import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
@@ -1581,9 +1582,97 @@ class BookmarksMiddlewareTest {
             verify(lastSavedFolderCache).setGuid(null)
         }
 
+    @Test
+    fun `GIVEN editing a bookmark WHEN edit fails THEN result is reported`() = runTestOnMain {
+        val tree = generateBookmarkTree()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(Result.success(tree))
+        val bookmark = tree.children?.first { it.type == BookmarkNodeType.ITEM }!!
+        val bookmarkItem = BookmarkItem.Bookmark(title = bookmark.title!!, guid = bookmark.guid, url = bookmark.url!!, previewImageUrl = bookmark.url!!, position = bookmark.position)
+        `when`(bookmarksStorage.updateNode(eq(bookmark.guid), any())).thenReturn(Result.failure(IllegalStateException()))
+
+        var reported: BookmarksGlobalResultReport? = null
+        val middleware = buildMiddleware(reportResultGlobally = { reported = it })
+        val store = middleware.makeStore()
+
+        store.dispatch(BookmarksListMenuAction.Bookmark.EditClicked(bookmarkItem))
+        store.dispatch(EditBookmarkAction.TitleChanged("a title with query strings or other failures"))
+        store.dispatch(BackClicked)
+
+        assertEquals(reported, BookmarksGlobalResultReport.EditBookmarkFailed)
+    }
+
+    @Test
+    fun `GIVEN adding a folder WHEN adding fails THEN result is reported`() = runTestOnMain {
+        val tree = generateBookmarkTree()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(Result.success(tree))
+        val newTitle = "new"
+        `when`(bookmarksStorage.addFolder(BookmarkRoot.Mobile.id, newTitle)).thenReturn(Result.failure(IllegalStateException()))
+
+        var reported: BookmarksGlobalResultReport? = null
+        val middleware = buildMiddleware(reportResultGlobally = { reported = it })
+        val store = middleware.makeStore()
+
+        store.dispatch(AddFolderClicked)
+        store.dispatch(AddFolderAction.TitleChanged(newTitle))
+        store.dispatch(BackClicked)
+
+        store.dispatch(BackClicked)
+
+        assertEquals(BookmarksGlobalResultReport.AddFolderFailed, reported)
+    }
+
+    @Test
+    fun `GIVEN editing a folder WHEN adding fails THEN result is reported`() = runTestOnMain {
+        val tree = generateBookmarkTree()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(Result.success(tree))
+        `when`(bookmarksStorage.updateNode(any(), any())).thenReturn(Result.failure(IllegalStateException()))
+        val folder = tree.children?.first { it.type == BookmarkNodeType.FOLDER }!!
+        val newParent = tree.children?.last { it.type == BookmarkNodeType.FOLDER }!!
+        val folderItem = BookmarkItem.Folder(title = folder.title!!, guid = folder.guid, position = folder.position)
+
+        var reported: BookmarksGlobalResultReport? = null
+        val middleware = buildMiddleware(reportResultGlobally = { reported = it })
+        val store = middleware.makeStore()
+
+        store.dispatch(BookmarksListMenuAction.Folder.EditClicked(folderItem))
+        store.dispatch(EditFolderAction.TitleChanged("secrets"))
+        store.dispatch(BackClicked)
+
+        assertEquals(BookmarksGlobalResultReport.EditFolderFailed, reported)
+    }
+
+    @Test
+    fun `GIVEN moving a bookmark item WHEN moving fails THEN result is reported`() = runTestOnMain {
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(Result.success(generateBookmarkTree()))
+        `when`(bookmarksStorage.updateNode(any(), any())).thenReturn(Result.failure(IllegalStateException()))
+        var reported: BookmarksGlobalResultReport? = null
+        val middleware = buildMiddleware(reportResultGlobally = { reported = it })
+
+        val store = middleware.makeStore(
+            initialState = BookmarksState.default.copy(
+                bookmarksMultiselectMoveState = MultiselectMoveState(
+                    guidsToMove = listOf("item guid 1", "item guid 2"),
+                    destination = "folder guid 1",
+                ),
+                bookmarksSelectFolderState = BookmarksSelectFolderState(
+                    outerSelectionGuid = "folder guid 1",
+                ),
+            ),
+        )
+
+        store.dispatch(BackClicked)
+
+        assertEquals(BookmarksGlobalResultReport.SelectFolderFailed, reported)
+    }
+
     private fun buildMiddleware(
         useNewSearchUX: Boolean = false,
         openBookmarksInNewTab: Boolean = false,
+        reportResultGlobally: (BookmarksGlobalResultReport) -> Unit = {},
     ) = BookmarksMiddleware(
         bookmarksStorage = bookmarksStorage,
         clipboardManager = clipboardManager,
@@ -1603,6 +1692,7 @@ class BookmarksMiddlewareTest {
         ioDispatcher = coroutineRule.testDispatcher,
         saveBookmarkSortOrder = saveSortOrder,
         lastSavedFolderCache = lastSavedFolderCache,
+        reportResultGlobally = reportResultGlobally,
     )
 
     private fun BookmarksMiddleware.makeStore(
