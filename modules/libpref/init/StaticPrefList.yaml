@@ -2155,14 +2155,15 @@
 #endif
   mirror: always
 
-#ifdef XP_WIN
-  # allow to copy clipboard data to Clipboard History/Cloud
-  # (used on sensitive data in about:logins and Private Browsing)
--   name: clipboard.copyPrivateDataToClipboardCloudOrHistory
-    type: bool
-    value: false
-    mirror: always
+# Allow clipboard data to be copied to the clipboard history/cloud
+# (used for sensitive data from about:logins and Private Browsing)
+# On GTK this controls the usage of the x-kde-passwordManagerHint MIME.
+- name: clipboard.copyPrivateDataToClipboardCloudOrHistory
+  type: bool
+  value: false
+  mirror: always
 
+#ifdef XP_WIN
   # Whether to put a file promise onto the clipboard when copying images on Windows
 -   name: clipboard.imageAsFile.enabled
     type: bool
