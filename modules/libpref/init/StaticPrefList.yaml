@@ -8767,6 +8767,14 @@
   mirror: always
   set_spidermonkey_pref: startup
 
+# Whether object fuses are used to optimize constant properties on builtin JS
+# constructors and prototypes.
+- name: javascript.options.objectfuse_for_js_builtin_ctors_protos
+  type: bool
+  value: true
+  mirror: always
+  set_spidermonkey_pref: startup
+
 - name: javascript.options.compact_on_user_inactive
   type: bool
   value: true
