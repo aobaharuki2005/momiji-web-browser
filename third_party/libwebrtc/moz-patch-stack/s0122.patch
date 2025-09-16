@@ -1,26 +1,21 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Wed, 16 Jul 2025 21:08:00 +0300
-Subject: Bug 1974813 - turn off rust in libwebrtc since we don't use any
- libwebrtc rust code. r=ng?
+Date: Wed, 6 Aug 2025 15:31:00 -0500
+Subject: Bug 1980479 - (fix-e83cf6587a) fixes for c++20 support
 
-Note: no moz.build changes are caused by this change.
-
-Differential Revision: https://phabricator.services.mozilla.com/D257316
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/14ee98c4832a55bf32116c925540ab0f53e46cd3
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a54236b6124ec4850290e0b12bf071e3b6325530
 ---
- .gn | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ rtc_base/containers/flat_set.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/.gn b/.gn
-index 655830c04c..62a914c369 100644
---- a/.gn
-+++ b/.gn
-@@ -89,7 +89,7 @@ default_args = {
-   use_fuzztest_wrapper = false
+diff --git a/rtc_base/containers/flat_set.h b/rtc_base/containers/flat_set.h
+index 22001d3d5c..3e756f7ede 100644
+--- a/rtc_base/containers/flat_set.h
++++ b/rtc_base/containers/flat_set.h
+@@ -17,6 +17,7 @@
+ #include <vector>
  
-   # Enable Rust in WebRTC
--  enable_rust = true
-+  enable_rust = false # Mozilla
-   enable_rust_cxx = true
-   enable_chromium_prelude = true
+ #include "rtc_base/containers/flat_tree.h"  // IWYU pragma: export
++#include "rtc_base/containers/identity.h"  // Mozilla: remove when fixing Bug 1980501
+ 
+ namespace webrtc {
  

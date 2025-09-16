@@ -1,25 +1,57 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 8 Feb 2023 08:01:00 +0000
-Subject: Bug 1814692 - Don't attempt realtime scheduling rtc::PlatformThreads.
- r=webrtc-reviewers,bwc
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Tue, 6 Jun 2023 16:37:00 -0700
+Subject: Bug 1833237 - (fix-f0be3bee1f) remove reference to
+ portal:pipewire_base;r?pehrsons
 
-Differential Revision: https://phabricator.services.mozilla.com/D169036
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9e64a965e26c8379261466e5273c3b383164b2c7
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8ff886a4d366b4be35b329d1ef733a6df542067c
 ---
- rtc_base/platform_thread.cc | 3 +++
- 1 file changed, 3 insertions(+)
+ modules/video_capture/BUILD.gn                      | 4 ++++
+ modules/video_capture/linux/device_info_pipewire.cc | 4 ++--
+ modules/video_capture/linux/device_info_pipewire.h  | 3 ++-
+ 3 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
-index ebde0b3865..732181d210 100644
---- a/rtc_base/platform_thread.cc
-+++ b/rtc_base/platform_thread.cc
-@@ -58,6 +58,9 @@ bool SetPriority(ThreadPriority priority) {
-   // TODO(tommi): Switch to the same mechanism as Chromium uses for changing
-   // thread priorities.
-   return true;
-+#elif defined(WEBRTC_MOZILLA_BUILD) && defined(WEBRTC_LINUX)
-+  // Only realtime audio uses realtime scheduling in Firefox.
-+  return true;
- #else
-   const int policy = SCHED_FIFO;
-   const int min_prio = sched_get_priority_min(policy);
+diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
+index a525311157..7cc8f5df17 100644
+--- a/modules/video_capture/BUILD.gn
++++ b/modules/video_capture/BUILD.gn
+@@ -114,6 +114,10 @@ if (!build_with_chromium || is_linux || is_chromeos) {
+           "../../media:rtc_media_base",
+           "../portal",
+         ]
++        if (build_with_mozilla) {
++          configs -= [ "../portal:pipewire_base" ]
++          public_deps = [ "//third_party/pipewire" ]
++        }
+       }
+     }
+     if (is_win) {
+diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
+index 0ec0da3933..b802fe580c 100644
+--- a/modules/video_capture/linux/device_info_pipewire.cc
++++ b/modules/video_capture/linux/device_info_pipewire.cc
+@@ -49,9 +49,9 @@ int32_t DeviceInfoPipeWire::GetDeviceName(uint32_t deviceNumber,
+                                           char* deviceUniqueIdUTF8,
+                                           uint32_t deviceUniqueIdUTF8Length,
+                                           char* productUniqueIdUTF8,
+-                                          uint32_t productUniqueIdUTF8Length) {
++                                          uint32_t productUniqueIdUTF8Length,
++                                          pid_t* pid) {
+   RTC_CHECK(pipewire_session_);
+-
+   if (deviceNumber >= NumberOfDevices())
+     return -1;
+ 
+diff --git a/modules/video_capture/linux/device_info_pipewire.h b/modules/video_capture/linux/device_info_pipewire.h
+index 0187e47e5f..1e75f35909 100644
+--- a/modules/video_capture/linux/device_info_pipewire.h
++++ b/modules/video_capture/linux/device_info_pipewire.h
+@@ -29,7 +29,8 @@ class DeviceInfoPipeWire : public DeviceInfoImpl {
+                         char* deviceUniqueIdUTF8,
+                         uint32_t deviceUniqueIdUTF8Length,
+                         char* productUniqueIdUTF8 = nullptr,
+-                        uint32_t productUniqueIdUTF8Length = 0) override;
++                        uint32_t productUniqueIdUTF8Length = 0,
++                        pid_t* pid = 0) override;
+   /*
+    * Fills the membervariable _captureCapabilities with capabilites for the
+    * given device name.

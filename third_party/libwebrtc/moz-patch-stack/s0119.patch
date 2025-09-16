@@ -1,63 +1,69 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Mon, 14 Apr 2025 16:37:00 +0000
-Subject: Bug 1954903 - Update libwebrtc GN configs r=webrtc-reviewers,mjf
+From: Michael Froman <mfroman@mozilla.com>
+Date: Fri, 18 Jul 2025 16:07:00 -0500
+Subject: Bug 1971201 - (fix-70fb834e8c) most all of libwebrtc has converted
+ from rtc:: to webrtc::
 
-Update GN config files for the special handling in gn_processor.py for
-gbm, drm and PipeWire libraries.
-
-Also remove libwebrtc/third_party/[gbm,drm,pipewire] libs for which we
-now have a special handling in gn_processor.py.
-
-Differential Revision: https://phabricator.services.mozilla.com/D242101
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/506d4efaf2dc29472623beff64cc2bd0d5555afd
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d51a82971b9e755d5514572fcd8ddc557153c8ef
 ---
- modules/desktop_capture/BUILD.gn | 4 ++++
- modules/portal/BUILD.gn          | 4 +---
- modules/video_capture/BUILD.gn   | 2 +-
- 3 files changed, 6 insertions(+), 4 deletions(-)
+ modules/rtp_rtcp/source/rtp_header_extensions.h | 4 ++--
+ modules/video_capture/video_capture.h           | 2 +-
+ modules/video_capture/video_capture_impl.cc     | 2 +-
+ modules/video_capture/video_capture_impl.h      | 2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index 3cb9012e8d..d6ce6ca352 100644
---- a/modules/desktop_capture/BUILD.gn
-+++ b/modules/desktop_capture/BUILD.gn
-@@ -554,6 +554,10 @@ rtc_library("desktop_capture") {
-       "../../rtc_base:sanitizer",
-       "../portal",
-     ]
-+
-+    if (build_with_mozilla) {
-+      defines += [ "WEBRTC_USE_PIPEWIRE" ]
-+    }
-   }
+diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.h b/modules/rtp_rtcp/source/rtp_header_extensions.h
+index cc811cae3a..46d80e424a 100644
+--- a/modules/rtp_rtcp/source/rtp_header_extensions.h
++++ b/modules/rtp_rtcp/source/rtp_header_extensions.h
+@@ -321,10 +321,10 @@ class CsrcAudioLevel {
+   static constexpr const char* kUri =
+       "urn:ietf:params:rtp-hdrext:csrc-audio-level";
  
-   if (rtc_enable_win_wgc) {
-diff --git a/modules/portal/BUILD.gn b/modules/portal/BUILD.gn
-index 72972d18e1..70b4739ad0 100644
---- a/modules/portal/BUILD.gn
-+++ b/modules/portal/BUILD.gn
-@@ -139,11 +139,9 @@ if (!build_with_mozilla) {
-       deps -= [ ":pipewire_stubs" ]
-       defines -= [ "WEBRTC_DLOPEN_PIPEWIRE" ]
-       public_deps = [
--        "../../third_party/pipewire",
--        "../../third_party/drm",
--        "../../third_party/gbm",
-         "../../third_party/libepoxy"
-       ]
-+      defines += [ "WEBRTC_USE_PIPEWIRE" ]
-     }
-   }
+-  static bool Parse(rtc::ArrayView<const uint8_t> data,
++  static bool Parse(webrtc::ArrayView<const uint8_t> data,
+                     CsrcAudioLevelList* csrcAudioLevels);
+   static size_t ValueSize(const CsrcAudioLevelList& csrcAudioLevels);
+-  static bool Write(rtc::ArrayView<uint8_t> data,
++  static bool Write(webrtc::ArrayView<uint8_t> data,
+                     const CsrcAudioLevelList& csrcAudioLevels);
+ };
+ #endif
+diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
+index a7c1764c51..8a91ca2f83 100644
+--- a/modules/video_capture/video_capture.h
++++ b/modules/video_capture/video_capture.h
+@@ -123,7 +123,7 @@ class VideoCaptureModule : public RefCountInterface {
+ 
+   //  Remove capture data callback
+   virtual void DeRegisterCaptureDataCallback(
+-      rtc::VideoSinkInterface<VideoFrame> *dataCallback) = 0;
++      webrtc::VideoSinkInterface<VideoFrame> *dataCallback) = 0;
+ 
+   // Start capture device
+   virtual int32_t StartCapture(const VideoCaptureCapability& capability) = 0;
+diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
+index d47e25f271..0193bed0ba 100644
+--- a/modules/video_capture/video_capture_impl.cc
++++ b/modules/video_capture/video_capture_impl.cc
+@@ -120,7 +120,7 @@ void VideoCaptureImpl::RegisterCaptureDataCallback(
  }
-diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
-index df08cddc58..0e77bdb07f 100644
---- a/modules/video_capture/BUILD.gn
-+++ b/modules/video_capture/BUILD.gn
-@@ -116,7 +116,7 @@ if (!build_with_chromium || is_linux || is_chromeos) {
-         ]
-         if (build_with_mozilla) {
-           configs -= [ "../portal:pipewire_base" ]
--          public_deps = [ "../../third_party/pipewire" ]
-+          defines = [ "WEBRTC_USE_PIPEWIRE" ]
-         }
-       }
-     }
+ 
+ void VideoCaptureImpl::DeRegisterCaptureDataCallback(
+-    rtc::VideoSinkInterface<VideoFrame>* dataCallBack) {
++    webrtc::VideoSinkInterface<VideoFrame>* dataCallBack) {
+   MutexLock lock(&api_lock_);
+   auto it = _dataCallBacks.find(dataCallBack);
+   if (it != _dataCallBacks.end()) {
+diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
+index f9bf4f97db..c177744e3d 100644
+--- a/modules/video_capture/video_capture_impl.h
++++ b/modules/video_capture/video_capture_impl.h
+@@ -67,7 +67,7 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
+   virtual void RegisterCaptureDataCallback(
+       RawVideoSinkInterface* dataCallback) override;
+   void DeRegisterCaptureDataCallback(
+-      rtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
++      webrtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
+ 
+   int32_t StopCaptureIfAllClientsClose() override;
+   int32_t SetCaptureRotation(VideoRotation rotation) override;

@@ -1,23 +1,26 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 7 Mar 2025 17:43:00 -0600
-Subject: Bug 1952339 - (fix-68e7b00928) add default param to emplace() to fix
- compile issue
+Date: Wed, 16 Jul 2025 21:08:00 +0300
+Subject: Bug 1974813 - turn off rust in libwebrtc since we don't use any
+ libwebrtc rust code. r=ng?
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/26c916591791b13a3d8888066c22c5ba49c86c47
+Note: no moz.build changes are caused by this change.
+
+Differential Revision: https://phabricator.services.mozilla.com/D257316
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/14ee98c4832a55bf32116c925540ab0f53e46cd3
 ---
- call/rtp_config.cc | 2 +-
+ .gn | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/call/rtp_config.cc b/call/rtp_config.cc
-index 115912cd46..5e08467d1f 100644
---- a/call/rtp_config.cc
-+++ b/call/rtp_config.cc
-@@ -258,7 +258,7 @@ RtpStreamConfig RtpConfig::GetStreamConfig(size_t index) const {
-   stream_config.raw_payload = raw_payload;
-   if (!rtx.ssrcs.empty()) {
-     RTC_DCHECK_EQ(ssrcs.size(), rtx.ssrcs.size());
--    auto& stream_config_rtx = stream_config.rtx.emplace();
-+    auto& stream_config_rtx = stream_config.rtx.emplace(RtpStreamConfig::Rtx());
-     stream_config_rtx.ssrc = rtx.ssrcs[index];
-     stream_config_rtx.payload_type = rtx.payload_type;
-   }
+diff --git a/.gn b/.gn
+index 655830c04c..62a914c369 100644
+--- a/.gn
++++ b/.gn
+@@ -89,7 +89,7 @@ default_args = {
+   use_fuzztest_wrapper = false
+ 
+   # Enable Rust in WebRTC
+-  enable_rust = true
++  enable_rust = false # Mozilla
+   enable_rust_cxx = true
+   enable_chromium_prelude = true
+ 

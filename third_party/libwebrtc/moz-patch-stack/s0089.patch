@@ -1,23 +1,31 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 19 Apr 2024 06:09:00 +0000
-Subject: Bug 1892221 - Initialize VideoCaptureModuleV4L2::_streaming in ctor.
- r=webrtc-reviewers,dbaker
+Date: Mon, 6 May 2024 07:28:00 +0000
+Subject: Bug 1892329 - Fix threading issues in VideoCaptureModuleV4L2 once and
+ for all. r=webrtc-reviewers,mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D207926
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/00c4bd7039dc8992dd93d4a5948a9260b72ec2a8
+Differential Revision: https://phabricator.services.mozilla.com/D208187
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/65e120a9c1dcb9c8f1c8930e808b03aa149eaf40
 ---
- modules/video_capture/linux/video_capture_v4l2.cc | 1 +
- 1 file changed, 1 insertion(+)
+ modules/video_capture/linux/video_capture_v4l2.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
-index b56a06f14b..4c128cc7be 100644
+index 6b2ae72ce7..b40f17cc4d 100644
 --- a/modules/video_capture/linux/video_capture_v4l2.cc
 +++ b/modules/video_capture/linux/video_capture_v4l2.cc
-@@ -62,6 +62,7 @@ VideoCaptureModuleV4L2::VideoCaptureModuleV4L2()
-       _deviceId(-1),
-       _deviceFd(-1),
-       _buffersAllocatedByDevice(-1),
-+      _streaming(false),
-       _captureStarted(false),
-       _pool(nullptr) {}
+@@ -298,7 +298,6 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   _requestedCapability = capability;
+   _captureStarted = true;
+   _streaming = true;
+-  }
  
+   // start capture thread;
+   if (!_captureThread.empty()) {
+@@ -306,6 +305,7 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   }
+ 
+   quit_ = false;
++  }
+ 
+   _captureThread = PlatformThread::SpawnJoinable(
+       [self = scoped_refptr(this)] {
