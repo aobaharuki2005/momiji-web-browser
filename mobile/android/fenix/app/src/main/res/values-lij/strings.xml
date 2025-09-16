@@ -651,7 +651,7 @@
   -->
   <string name="sync_sent_tabs_snackbar">Feuggi mandæ!</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
-  <string name="sync_sent_tab_snackbar">Feuggio mandou!</string>
+  <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Feuggio mandou!</string>
   <!-- Text shown in snackbar when sharing tabs failed -->
   <string name="sync_sent_tab_error_snackbar">No son ariesciou a mandâ</string>
   <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
