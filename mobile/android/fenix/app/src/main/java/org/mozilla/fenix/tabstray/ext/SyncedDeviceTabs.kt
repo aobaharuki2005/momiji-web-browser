@@ -6,6 +6,7 @@ package org.mozilla.fenix.tabstray.ext
 
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.concept.sync.DeviceCapability
+import mozilla.components.support.ktx.kotlin.getRepresentativeSnippet
 import mozilla.components.support.ktx.kotlin.trimmed
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListSupportedFeature
@@ -23,7 +24,7 @@ fun List<SyncedDeviceTabs>.toComposeList(
             emptyList()
         } else {
             tabs.map {
-                val url = it.active().url
+                val url = it.active().url.getRepresentativeSnippet()
                 val titleText = it.active().title.ifEmpty { url.trimmed() }
                 SyncedTabsListItem.Tab(
                     displayTitle = titleText,
