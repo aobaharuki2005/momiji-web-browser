@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_layers_ElementStateManager_h
-#define mozilla_layers_ElementStateManager_h
+#ifndef mozilla_layers_ActiveElementManager_h
+#define mozilla_layers_ActiveElementManager_h
 
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
@@ -29,18 +29,17 @@ enum class SingleTapState : uint8_t;
 }  // namespace apz
 
 /**
- * Manages setting and clearing the ':active' or `:hover` CSS pseudostate in the
- * presence of touch input.
+ * Manages setting and clearing the ':active' CSS pseudostate in the presence
+ * of touch input.
  */
-class ElementStateManager final {
-  ~ElementStateManager();
+class ActiveElementManager final {
+  ~ActiveElementManager();
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(ElementStateManager)
+  NS_INLINE_DECL_REFCOUNTING(ActiveElementManager)
 
-  ElementStateManager();
+  ActiveElementManager();
 
-  enum class PreventDefault : bool { No, Yes };
   /**
    * Specify the target of a touch. Typically this should be called right
    * after HandleTouchStart(), but in cases where the APZ needs to wait for
@@ -48,20 +47,13 @@ class ElementStateManager final {
    * this function can be called first.
    * |aTarget| may be nullptr.
    */
-  void SetTargetElement(dom::EventTarget* aTarget,
-                        PreventDefault aTouchStartPreventDefault);
+  void SetTargetElement(dom::EventTarget* aTarget);
   /**
    * Handle a touch-start state notification from APZ. This notification
    * may be delayed until after touch listeners have responded to the APZ.
    * @param aCanBePanOrZoom whether the touch can be a pan or double-tap-to-zoom
    */
   void HandleTouchStart(bool aCanBePanOrZoom);
-
-  /**
-   * Handle an eStartPanning state notification from APZ.
-   */
-  void HandleStartPanning();
-
   /**
    * Clear the active element.
    */
@@ -127,11 +119,6 @@ class ElementStateManager final {
    */
   RefPtr<CancelableRunnable> mSetActiveTask;
 
-  /**
-   * A task for calling SetHover() after a timeout.
-   */
-  RefPtr<CancelableRunnable> mSetHoverTask;
-
   // Store the pending single tap event element activation clearing
   // task.
   RefPtr<DelayedClearElementActivation> mDelayedClearElementActivation;
@@ -139,15 +126,10 @@ class ElementStateManager final {
   // Helpers
   void TriggerElementActivation();
   void SetActive(dom::Element* aTarget);
-  void SetHover(dom::Element* aTarget);
   void ResetActive();
   void ResetTouchBlockState();
-  void ScheduleSetActiveTask();
   void SetActiveTask(const nsCOMPtr<dom::Element>& aTarget);
-  void CancelActiveTask();
-  void ScheduleSetHoverTask();
-  void SetHoverTask(const nsCOMPtr<dom::Element>& aTarget);
-  void CancelHoverTask();
+  void CancelTask();
   // Returns true if the function changed the active element state.
   bool MaybeChangeActiveState(apz::SingleTapState aState);
 };
@@ -155,4 +137,4 @@ class ElementStateManager final {
 }  // namespace layers
 }  // namespace mozilla
 
-#endif /* mozilla_layers_ElementStateManager_h */
+#endif /* mozilla_layers_ActiveElementManager_h */
