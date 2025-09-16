@@ -109,7 +109,6 @@ import org.mozilla.fenix.databinding.ActivityHomeBinding
 import org.mozilla.fenix.debugsettings.data.DefaultDebugSettingsRepository
 import org.mozilla.fenix.debugsettings.ui.FenixOverlay
 import org.mozilla.fenix.downloads.DownloadSnackbar
-import org.mozilla.fenix.downloads.DownloadStatusBinding
 import org.mozilla.fenix.experiments.ResearchSurfaceDialogFragment
 import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.breadcrumb
@@ -225,13 +224,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         AboutHomeBinding(
             browserStore = components.core.store,
             navController = navHost.navController,
-        )
-    }
-
-    private val downloadStatusBinding by lazy {
-        DownloadStatusBinding(
-            browserStore = components.core.store,
-            appStore = components.appStore,
         )
     }
 
@@ -550,7 +542,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             ),
             downloadSnackbar,
             privateBrowsingLockFeature,
-            downloadStatusBinding,
         )
 
         if (!isCustomTabIntent(intent)) {
