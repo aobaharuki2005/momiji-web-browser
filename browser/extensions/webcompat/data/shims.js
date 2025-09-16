@@ -512,6 +512,8 @@ const AVAILABLE_SHIMS = [
       "wjactv.com",
       "keprtv.com",
       "katu.com",
+      "kfoxtv.com",
+      "thenationaldesk.com",
     ],
     matches: [
       "*://www.googletagservices.com/tag/js/gpt.js*",
