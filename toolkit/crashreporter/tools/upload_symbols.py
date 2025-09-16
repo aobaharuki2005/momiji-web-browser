@@ -163,8 +163,10 @@ def convert_zst_archive(zst_archive, tmpdir):
                 info = tar.next()
                 if info is None:
                     break
-                data = tar.extractfile(info).read()
-                yield (info.name, data)
+                file = tar.extractfile(info)
+                if file:
+                    data = file.read()
+                    yield (info.name, data)
 
     def prepare_from(archive, tmpdir):
         if archive.startswith("http"):
