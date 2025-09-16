@@ -799,6 +799,7 @@ win64-dxc:
         symbol: TW64(dxc)
     run:
         script: build-dxc.sh
+        sparse-profile: null
         arguments:
             - "x86_64"
         toolchain-artifact: public/build/dxc-x86_64-pc-windows-msvc.tar.zst
@@ -818,6 +819,7 @@ win64-aarch64-dxc:
         symbol: TWA64(dxc)
     run:
         script: build-dxc.sh
+        sparse-profile: null
         arguments:
             - "aarch64"
         toolchain-artifact: public/build/dxc-aarch64-pc-windows-msvc.tar.zst
