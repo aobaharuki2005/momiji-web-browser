@@ -143,7 +143,7 @@ class MenuDialogMiddlewareTest {
             ),
         )
 
-        assertEquals(guid, store.state.browserMenuState!!.bookmarkState.guid)
+        assertEquals(guid.getOrNull()!!, store.state.browserMenuState!!.bookmarkState.guid)
         assertTrue(store.state.browserMenuState!!.bookmarkState.isBookmarked)
     }
 
@@ -370,7 +370,7 @@ class MenuDialogMiddlewareTest {
             onDismiss = { dismissWasCalled = true },
         )
 
-        assertEquals(guid, store.state.browserMenuState!!.bookmarkState.guid)
+        assertEquals(guid.getOrNull()!!, store.state.browserMenuState!!.bookmarkState.guid)
         assertTrue(store.state.browserMenuState!!.bookmarkState.isBookmarked)
 
         store.dispatch(MenuAction.AddBookmark)

@@ -97,12 +97,12 @@ internal class BookmarksMiddleware(
             Init -> context.store.tryDispatchLoadFor(BookmarkRoot.Mobile.id)
             is InitEdit -> scope.launch {
                 Result.runCatching {
-                    val bookmarkNode = bookmarksStorage.getBookmark(action.guid)
+                    val bookmarkNode = bookmarksStorage.getBookmark(action.guid).getOrNull()
                     val bookmark = bookmarkNode?.let {
                         BookmarkItem.Bookmark(it.url!!, it.title ?: "", it.url!!, it.guid, it.position)
                     }
                     val folder = bookmarkNode?.parentGuid
-                        ?.let { bookmarksStorage.getBookmark(it) }
+                        ?.let { bookmarksStorage.getBookmark(it).getOrNull() }
                         ?.let {
                             BookmarkItem.Folder(
                                 guid = it.guid,
@@ -165,8 +165,8 @@ internal class BookmarksMiddleware(
                                 val guid = bookmarksStorage.addFolder(
                                     parentGuid = preReductionState.bookmarksAddFolderState.parent.guid,
                                     title = newFolderTitle,
-                                )
-                                val position = bookmarksStorage.getBookmark(guid)?.position
+                                ).getOrDefault("")
+                                val position = bookmarksStorage.getBookmark(guid).getOrNull()?.position
                                 val folder = BookmarkItem.Folder(
                                     guid = guid,
                                     title = newFolderTitle,
@@ -247,6 +247,7 @@ internal class BookmarksMiddleware(
                             val parentFolderGuid = withContext(ioDispatcher) {
                                 bookmarksStorage
                                     .getBookmark(preReductionState.currentFolder.guid)
+                                    .getOrNull()
                                     ?.parentGuid ?: BookmarkRoot.Mobile.id
                             }
                             context.store.tryDispatchLoadFor(parentFolderGuid)
@@ -295,7 +296,7 @@ internal class BookmarksMiddleware(
                             bookmarksStorage.deleteNode(it)
                         }
                         lastSavedFolderCache.getGuid()?.let {
-                            if (bookmarksStorage.getBookmark(it) == null) {
+                            if (bookmarksStorage.getBookmark(it).getOrNull() == null) {
                                 lastSavedFolderCache.setGuid(null)
                             }
                         }
@@ -309,7 +310,7 @@ internal class BookmarksMiddleware(
                         bookmarksStorage.deleteNode(it)
                     }
                     lastSavedFolderCache.getGuid()?.let {
-                        if (bookmarksStorage.getBookmark(it) == null) {
+                        if (bookmarksStorage.getBookmark(it).getOrNull() == null) {
                             lastSavedFolderCache.setGuid(null)
                         }
                     }
@@ -322,7 +323,7 @@ internal class BookmarksMiddleware(
             OpenTabsConfirmationDialogAction.ConfirmTapped -> scope.launch {
                 val dialog = preReductionState.openTabsConfirmationDialog
                 if (dialog is OpenTabsConfirmationDialog.Presenting) {
-                    bookmarksStorage.getTree(dialog.guidToOpen)?.also {
+                    bookmarksStorage.getTree(dialog.guidToOpen).getOrNull()?.also {
                         it.children
                             ?.mapNotNull { it.url }
                             ?.forEach { url -> addNewTabUseCase(url = url, private = dialog.isPrivate) }
@@ -343,7 +344,7 @@ internal class BookmarksMiddleware(
                                 bookmarksStorage.deleteNode(it)
                             }
                             lastSavedFolderCache.getGuid()?.let {
-                                if (bookmarksStorage.getBookmark(it) == null) {
+                                if (bookmarksStorage.getBookmark(it).getOrNull() == null) {
                                     lastSavedFolderCache.setGuid(null)
                                 }
                             }
@@ -377,7 +378,7 @@ internal class BookmarksMiddleware(
     private fun Store<BookmarksState, BookmarksAction>.tryDispatchLoadFolders() =
         scope.launch {
             val folders = if (bookmarksStorage.hasDesktopBookmarks()) {
-                bookmarksStorage.getTree(BookmarkRoot.Root.id, recursive = true)?.let { rootNode ->
+                bookmarksStorage.getTree(BookmarkRoot.Root.id, recursive = true).getOrNull()?.let { rootNode ->
                     val excludingMobile =
                         rootNode.children?.filterNot { it.guid == BookmarkRoot.Mobile.id }
                     val desktopRoot = rootNode.copy(children = excludingMobile)
@@ -393,7 +394,7 @@ internal class BookmarksMiddleware(
                     }
                 }
             } else {
-                bookmarksStorage.getTree(BookmarkRoot.Mobile.id, recursive = true)
+                bookmarksStorage.getTree(BookmarkRoot.Mobile.id, recursive = true).getOrNull()
                     ?.let {
                         collectFolders(
                             node = it,
@@ -408,7 +409,7 @@ internal class BookmarksMiddleware(
 
     private fun Store<BookmarksState, BookmarksAction>.tryDispatchLoadFor(guid: String) =
         scope.launch {
-            bookmarksStorage.getTree(guid)?.let { rootNode ->
+            bookmarksStorage.getTree(guid).getOrNull()?.let { rootNode ->
                 val folder = BookmarkItem.Folder(
                     guid = guid,
                     title = resolveFolderTitle(rootNode),
@@ -425,7 +426,7 @@ internal class BookmarksMiddleware(
                     }
                     BookmarkRoot.Mobile.id -> {
                         if (bookmarksStorage.hasDesktopBookmarks()) {
-                            val desktopNode = bookmarksStorage.getTree(BookmarkRoot.Root.id)?.let {
+                            val desktopNode = bookmarksStorage.getTree(BookmarkRoot.Root.id).getOrNull()?.let {
                                 it.copy(title = resolveFolderTitle(it))
                             }
 
@@ -492,10 +493,11 @@ internal class BookmarksMiddleware(
                     addNewTabUseCase(item.url, private = isPrivate)
                 }
                 is BookmarkItem.Folder -> {
-                    bookmarksStorage.getTree(
-                        guid = item.guid,
-                        recursive = true,
-                    )
+                    bookmarksStorage
+                        .getTree(
+                            guid = item.guid,
+                            recursive = true,
+                        ).getOrNull()
                         ?.collectUrlsRecursive()
                         ?.forEach {
                             addNewTabUseCase(url = it, private = isPrivate)
@@ -588,7 +590,7 @@ internal class BookmarksMiddleware(
             }
 
             is BookmarksListMenuAction.Folder.OpenAllInNormalTabClicked -> scope.launch {
-                bookmarksStorage.getTree(folder.guid)?.also {
+                bookmarksStorage.getTree(folder.guid).getOrNull()?.also {
                     val count = it.children?.count() ?: 0
                     if (count >= WARN_OPEN_ALL_SIZE) {
                         store.dispatch(OpenTabsConfirmationDialogAction.Present(folder.guid, count, false))
@@ -604,7 +606,7 @@ internal class BookmarksMiddleware(
             }
 
             is BookmarksListMenuAction.Folder.OpenAllInPrivateTabClicked -> scope.launch {
-                bookmarksStorage.getTree(folder.guid)?.also {
+                bookmarksStorage.getTree(folder.guid).getOrNull()?.also {
                     val count = it.children?.count() ?: 0
                     if (count >= WARN_OPEN_ALL_SIZE) {
                         store.dispatch(OpenTabsConfirmationDialogAction.Present(folder.guid, count, true))
