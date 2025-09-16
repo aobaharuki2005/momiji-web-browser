@@ -46,6 +46,7 @@ import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.onboarding.view.Action
 import org.mozilla.fenix.onboarding.view.OnboardingMarketingData
 import org.mozilla.fenix.onboarding.view.OnboardingPageState
+import org.mozilla.fenix.onboarding.view.imageHeight
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**

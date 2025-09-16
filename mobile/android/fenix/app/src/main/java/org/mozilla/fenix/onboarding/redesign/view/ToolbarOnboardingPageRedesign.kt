@@ -50,6 +50,8 @@ import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.R
 import org.mozilla.fenix.onboarding.store.OnboardingStore
 import org.mozilla.fenix.onboarding.view.Action
+import org.mozilla.fenix.onboarding.view.ONBOARDING_MEDIUM_DEVICE
+import org.mozilla.fenix.onboarding.view.ONBOARDING_SMALL_DEVICE
 import org.mozilla.fenix.onboarding.view.OnboardingPageState
 import org.mozilla.fenix.onboarding.view.ToolbarOption
 import org.mozilla.fenix.onboarding.view.ToolbarOptionType

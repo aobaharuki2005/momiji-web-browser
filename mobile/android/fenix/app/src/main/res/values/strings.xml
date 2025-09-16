@@ -503,6 +503,11 @@
     <!-- Terms of use (ToU) onboarding page continue button label. -->
     <string name="onboarding_redesign_tou_agree_and_continue_button_label">Continue</string>
 
+    <!-- Set to default browser onboarding redesign title. -->
+    <string name="onboarding_redesign_set_default_browser_title">Get automatic tracking protection by default</string>
+    <!-- Set to default browser onboarding redesign body. -->
+    <string name="onboarding_redesign_set_default_browser_body">One tap helps stop companies spying on your clicks.</string>
+
     <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
     <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Help us grow Firefox</string>
     <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->

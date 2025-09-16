@@ -6,6 +6,7 @@ package org.mozilla.fenix.onboarding.redesign.view
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
@@ -53,6 +54,7 @@ import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.PagerIndicator
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.onboarding.WidgetPinnedReceiver.WidgetPinnedState
+import org.mozilla.fenix.onboarding.redesign.view.defaultbrowser.SetToDefaultMainImage
 import org.mozilla.fenix.onboarding.store.OnboardingAction.OnboardingToolbarAction
 import org.mozilla.fenix.onboarding.store.OnboardingStore
 import org.mozilla.fenix.onboarding.view.Caption
@@ -277,7 +279,7 @@ private fun OnboardingContent(
             contentScale = ContentScale.FillWidth,
         )
 
-        Column {
+        Column(verticalArrangement = Arrangement.Center) {
             Spacer(Modifier.weight(1f))
 
             HorizontalPager(
@@ -291,6 +293,7 @@ private fun OnboardingContent(
                 beyondViewportPageCount = 2,
                 pageSpacing = 8.dp,
                 key = { pagesToDisplay[it].type },
+                overscrollEffect = null,
             ) { pageIndex ->
                 // protect against a rare case where the user goes to the marketing screen at the same
                 // moment it gets removed by [MarketingPageRemovalSupport]
@@ -344,7 +347,11 @@ private fun OnboardingPageForType(
     onMarketingDataContinueClick: (allowMarketingDataCollection: Boolean) -> Unit,
 ) {
     when (type) {
-        OnboardingPageUiData.Type.DEFAULT_BROWSER,
+        OnboardingPageUiData.Type.DEFAULT_BROWSER -> OnboardingPageRedesign(
+            pageState = state,
+            mainImage = { SetToDefaultMainImage() },
+        )
+
         OnboardingPageUiData.Type.SYNC_SIGN_IN,
         OnboardingPageUiData.Type.ADD_SEARCH_WIDGET,
         -> OnboardingPageRedesign(state)
@@ -390,9 +397,9 @@ private fun OnboardingPageForType(
 }
 
 private object PageContentLayout {
-    val MIN_HEIGHT_DP = 600.dp
+    val MIN_HEIGHT_DP = 650.dp
     val MIN_WIDTH_DP = 360.dp
-    const val HEIGHT_RATIO = 0.7f
+    const val HEIGHT_RATIO = 0.8f
     const val WIDTH_RATIO = 0.85f
 }
 
@@ -489,18 +496,10 @@ private fun touPageUIData() = OnboardingPageUiData(
 private fun defaultBrowserPageUiData() = OnboardingPageUiData(
     type = OnboardingPageUiData.Type.DEFAULT_BROWSER,
     imageRes = R.drawable.ic_onboarding_welcome,
-    title = stringResource(R.string.juno_onboarding_default_browser_title_nimbus_2),
-    description = stringResource(R.string.juno_onboarding_default_browser_description_nimbus_3),
+    title = stringResource(R.string.onboarding_redesign_set_default_browser_title),
+    description = stringResource(R.string.onboarding_redesign_set_default_browser_body),
     primaryButtonLabel = stringResource(R.string.juno_onboarding_default_browser_positive_button),
     secondaryButtonLabel = stringResource(R.string.juno_onboarding_default_browser_negative_button),
-    privacyCaption = Caption(
-        text = stringResource(R.string.juno_onboarding_privacy_notice_text),
-        linkTextState = LinkTextState(
-            text = stringResource(R.string.juno_onboarding_privacy_notice_text),
-            url = "",
-            onClick = {},
-        ),
-    ),
 )
 
 @Composable
