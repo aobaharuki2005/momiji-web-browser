@@ -15,6 +15,7 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.Runs
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -2494,6 +2495,40 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(0, navigationActions.size)
     }
 
+    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
+    @Test
+    fun `GIVEN current page is bookmarked WHEN initializing navigation bar THEN show ACTIVE EditBookmark button`() = runTest {
+        every { settings.shouldUseExpandedToolbar } returns true
+
+        mockkStatic(Context::isTallWindow) {
+            every { any<Context>().isTallWindow() } returns true
+            val tab = createTab("https://example.com")
+            val browserStore = BrowserStore(
+                BrowserState(
+                    tabs = listOf(tab),
+                    selectedTabId = tab.id,
+                ),
+            )
+
+            coEvery { bookmarksStorage.getBookmarksWithUrl(tab.content.url) } returns listOf(
+                mockk(relaxed = true),
+            )
+
+            val middleware = buildMiddleware(
+                browserStore = browserStore,
+                bookmarksStorage = bookmarksStorage,
+            )
+
+            val toolbarStore = buildStore(middleware)
+            mainLooperRule.idle()
+
+            val navigationActions = toolbarStore.state.displayState.navigationActions
+            val editButton = navigationActions.first() as ActionButtonRes
+
+            assertEquals(expectedEditBookmarkButton(Source.NavigationBar), editButton)
+        }
+    }
+
     private fun assertEqualsTabCounterButton(expected: TabCounterAction, actual: TabCounterAction) {
         assertEquals(expected.count, actual.count)
         assertEquals(expected.contentDescription, actual.contentDescription)
@@ -2647,6 +2682,13 @@ class BrowserToolbarMiddlewareTest {
         drawableResId = iconsR.drawable.mozac_ic_bookmark_24,
         contentDescription = R.string.browser_menu_bookmark_this_page_2,
         onClick = AddBookmarkClicked(source),
+    )
+
+    private fun expectedEditBookmarkButton(source: Source = Source.AddressBar) = ActionButtonRes(
+        drawableResId = iconsR.drawable.mozac_ic_bookmark_fill_24,
+        contentDescription = R.string.browser_menu_edit_bookmark,
+        onClick = EditBookmarkClicked(source),
+        state = ActionButton.State.ACTIVE,
     )
 
     private fun expectedShareButton(source: Source = Source.AddressBar) = ActionButtonRes(

@@ -166,6 +166,7 @@ class TabPreview @JvmOverloads constructor(
                     drawableResId = iconsR.drawable.mozac_ic_bookmark_fill_24,
                     contentDescription = R.string.browser_menu_edit_bookmark,
                     onClick = object : BrowserToolbarEvent {},
+                    state = ActionButton.State.ACTIVE,
                 )
             }
 
