@@ -800,7 +800,7 @@ menupopup::part(drop-indicator) {
 
   &:hover {
     background-color: hsla(0, 0%, 70%, 0.2);
-    border-radius: var(--border-radius-xsmall);
+    border-radius: 2px;
   }
 }
 
@@ -885,7 +885,7 @@ menupopup::part(drop-indicator) {
       background-color: rgba(216, 216, 216, 0.2);
       color: white;
       border: none;
-      border-radius: var(--border-radius-xsmall);
+      border-radius: 2px;
       margin: 4px;
       padding: 3px 12px;
       flex: 1;
@@ -915,7 +915,7 @@ menupopup::part(drop-indicator) {
     .popup-notification-secondary-button {
       margin: 3px;
       border: none;
-      border-radius: var(--border-radius-xsmall);
+      border-radius: 2px;
       background-image: url(chrome://global/skin/icons/close.svg);
       background-color: transparent;
       background-repeat: no-repeat;
