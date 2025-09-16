@@ -487,6 +487,7 @@ class Dumper:
         s3_bucket=None,
         file_mapping=None,
         include_moz_extra_info=True,
+        map_rust_sources=True,
     ):
         # popen likes absolute paths, at least on windows
         self.dump_syms = os.path.abspath(dump_syms)
@@ -504,14 +505,15 @@ class Dumper:
         self.s3_bucket = s3_bucket
         self.file_mapping = file_mapping or {}
         self.include_moz_extra_info = include_moz_extra_info
-        # Add a static mapping for Rust sources. Since Rust 1.30 official Rust builds map
-        # source paths to start with "/rustc/<sha>/".
-        rust_sha = buildconfig.substs["RUSTC_COMMIT"]
-        rust_srcdir = "/rustc/" + rust_sha
-        self.srcdirs.append(rust_srcdir)
-        Dumper.srcdirRepoInfo[rust_srcdir] = GitRepoInfo(
-            rust_srcdir, rust_sha, "https://github.com/rust-lang/rust/"
-        )
+        if map_rust_sources:
+            # Add a static mapping for Rust sources. Since Rust 1.30 official Rust builds map
+            # source paths to start with "/rustc/<sha>/".
+            rust_sha = buildconfig.substs["RUSTC_COMMIT"]
+            rust_srcdir = "/rustc/" + rust_sha
+            self.srcdirs.append(rust_srcdir)
+            Dumper.srcdirRepoInfo[rust_srcdir] = GitRepoInfo(
+                rust_srcdir, rust_sha, "https://github.com/rust-lang/rust/"
+            )
 
     # subclasses override this
     def ShouldProcess(self, file):
@@ -1141,6 +1143,14 @@ to canonical locations in the source repository. Specify
         + "If unset, require `MOZ_UPDATE_CHANNEL` and `MOZ_APP_VERSION` to be set "
         + "either through build config. or through environment variables.",
     )
+    parser.add_option(
+        "--no-rust",
+        action="store_true",
+        dest="no_rust",
+        default=False,
+        help="Whether to map Rust sources. If unset, require `RUSTC_COMMIT` to be set "
+        + "either through build config. or through environment variables",
+    )
     (options, args) = parser.parse_args()
 
     # check to see if the pdbstr.exe exists
@@ -1172,6 +1182,7 @@ to canonical locations in the source repository. Specify
         file_mapping=file_mapping,
         platform=options.platform,
         include_moz_extra_info=not options.no_moz_extra_info,
+        map_rust_sources=not options.no_rust,
     )
 
     dumper.Process(args[2], options.count_ctors)
