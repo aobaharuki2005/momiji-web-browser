@@ -583,7 +583,7 @@ index 2605c54650..53aabb46fe 100644
  
    scoped_refptr<SharedXDisplay> x_display_;
 diff --git a/modules/desktop_capture/win/screen_capture_utils.cc b/modules/desktop_capture/win/screen_capture_utils.cc
-index 42f8c5718f..82e69f3e50 100644
+index 28509654c4..1e2ae94c85 100644
 --- a/modules/desktop_capture/win/screen_capture_utils.cc
 +++ b/modules/desktop_capture/win/screen_capture_utils.cc
 @@ -55,7 +55,7 @@ bool GetScreenList(DesktopCapturer::SourceList* screens,
@@ -593,7 +593,7 @@ index 42f8c5718f..82e69f3e50 100644
 -    screens->push_back({device_index, std::string()});
 +    screens->push_back({device_index, 0, std::string()});
      if (device_names) {
-       device_names->push_back(webrtc::ToUtf8(device.DeviceName));
+       device_names->push_back(ToUtf8(device.DeviceName));
      }
 diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
 index e06698e0db..2629fe0aab 100644
