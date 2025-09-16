@@ -5,7 +5,6 @@
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ReaderMode: "moz-src:///toolkit/components/reader/ReaderMode.sys.mjs",
-  Readerable: "resource://gre/modules/Readerable.sys.mjs",
 });
 
 export class PageAssistChild extends JSWindowActorChild {
@@ -34,20 +33,6 @@ export class PageAssistChild extends JSWindowActorChild {
   async getPageData() {
     try {
       const doc = this.contentWindow.document;
-      if (
-        !lazy.Readerable.shouldCheckUri(doc.documentURIObject) ||
-        !lazy.Readerable.isProbablyReaderable(doc)
-      ) {
-        return {
-          url: this.contentWindow.location.href,
-          title: doc.title || "",
-          content: "",
-          textContent: "",
-          excerpt: "",
-          isReaderable: false,
-        };
-      }
-
       const article = await lazy.ReaderMode.parseDocument(doc);
 
       return {
