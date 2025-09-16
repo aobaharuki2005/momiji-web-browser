@@ -141,7 +141,7 @@ index 8f5108a0af..83626bb669 100644
  
  group("api") {
 diff --git a/api/audio/test/BUILD.gn b/api/audio/test/BUILD.gn
-index 73762fc54a..839d46f7d6 100644
+index b1060faae3..c567b6b0f3 100644
 --- a/api/audio/test/BUILD.gn
 +++ b/api/audio/test/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -276,7 +276,7 @@ index 802f8cc436..eb4fbcad65 100644
  
  rtc_library("scalability_mode") {
 diff --git a/audio/BUILD.gn b/audio/BUILD.gn
-index 0492dd24e5..be9eac131d 100644
+index bfbd57559c..98780bea4f 100644
 --- a/audio/BUILD.gn
 +++ b/audio/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -291,7 +291,7 @@ index 0492dd24e5..be9eac131d 100644
  
  rtc_library("audio") {
 diff --git a/common_audio/BUILD.gn b/common_audio/BUILD.gn
-index 7c04fd13fe..0d14961968 100644
+index 16ad9c11e9..9a2940d043 100644
 --- a/common_audio/BUILD.gn
 +++ b/common_audio/BUILD.gn
 @@ -288,7 +288,7 @@ if (rtc_build_with_neon) {
@@ -455,7 +455,7 @@ index 037813066f..711b3bbcb8 100644
  
  config("audio_device_warnings_config") {
 diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
-index 9292522c6a..b378cdfb60 100644
+index 6d942b7883..b414b7c538 100644
 --- a/modules/audio_processing/aec3/BUILD.gn
 +++ b/modules/audio_processing/aec3/BUILD.gn
 @@ -124,7 +124,7 @@ rtc_library("aec3") {
@@ -494,10 +494,10 @@ index de7a61b909..795649ccd9 100644
      }
    }
 diff --git a/modules/audio_processing/agc2/BUILD.gn b/modules/audio_processing/agc2/BUILD.gn
-index 27bd6ff1d3..dabf67d6d4 100644
+index 36d7f983f1..ee39b667b1 100644
 --- a/modules/audio_processing/agc2/BUILD.gn
 +++ b/modules/audio_processing/agc2/BUILD.gn
-@@ -259,7 +259,7 @@ rtc_library("vad_wrapper") {
+@@ -258,7 +258,7 @@ rtc_library("vad_wrapper") {
  
    defines = []
    if (rtc_build_with_neon && current_cpu != "arm64") {
