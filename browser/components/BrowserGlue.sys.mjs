@@ -53,8 +53,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ProfileDataUpgrader:
     "moz-src:///browser/components/ProfileDataUpgrader.sys.mjs",
-  RemoteSecuritySettings:
-    "resource://gre/modules/psm/RemoteSecuritySettings.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.sys.mjs",
   Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
@@ -1348,10 +1346,6 @@ BrowserGlue.prototype = {
         lazy.RemoteSettings.init();
         this._addBreachesSyncHandler();
       }.bind(this),
-
-      function RemoteSecuritySettingsInit() {
-        lazy.RemoteSecuritySettings.init();
-      },
 
       function searchBackgroundChecks() {
         Services.search.runBackgroundChecks();

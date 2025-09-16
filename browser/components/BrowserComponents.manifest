@@ -59,6 +59,7 @@ category browser-idle-startup moz-src:///browser/components/places/PlacesUIUtils
 category browser-idle-startup resource:///modules/BuiltInThemes.sys.mjs BuiltInThemes.ensureBuiltInThemes
 category browser-idle-startup resource://gre/modules/RFPHelper.sys.mjs RFPHelper.init
 category browser-idle-startup resource://gre/modules/Blocklist.sys.mjs Blocklist.loadBlocklistAsync
+category browser-idle-startup resource://gre/modules/psm/RemoteSecuritySettings.sys.mjs RemoteSecuritySettings.init
 category browser-idle-startup moz-src:///browser/components/tabbrowser/TabUnloader.sys.mjs TabUnloader.init
 category browser-idle-startup resource:///modules/GenAI.sys.mjs GenAI.init
 category browser-idle-startup moz-src:///browser/components/urlbar/QuickSuggest.sys.mjs QuickSuggest.init
