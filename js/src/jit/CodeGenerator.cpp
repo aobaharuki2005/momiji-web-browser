@@ -21612,7 +21612,7 @@ void CodeGenerator::visitBuiltinObject(LBuiltinObject* lir) {
 void CodeGenerator::visitSuperFunction(LSuperFunction* lir) {
   Register callee = ToRegister(lir->callee());
   ValueOperand out = ToOutValue(lir);
-  Register temp = ToRegister(lir->temp0());
+  Register temp = out.scratchReg();
 
 #ifdef DEBUG
   Label classCheckDone;
