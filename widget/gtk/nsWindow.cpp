@@ -3350,8 +3350,12 @@ void nsWindow::RecomputeBounds(MayChangeCsdMargin aMayChangeCsdMargin) {
     if (!decorated) {
       return LayoutDeviceIntMargin{};
     }
-    const auto systemMargin = mBounds - toplevelBounds;
-    return systemMargin + mCsdMargin;
+    if (mayChangeCsdMargin) {
+      const auto systemMargin = mBounds - toplevelBounds;
+      return systemMargin + mCsdMargin;
+    }
+    // Same as above, wait for the window state to be complete.
+    return mClientMargin;
   }();
   mClientMargin.EnsureAtLeast(LayoutDeviceIntMargin());
 
@@ -4130,9 +4134,7 @@ gboolean nsWindow::OnShellConfigureEvent(GdkEventConfigure* aEvent) {
     return FALSE;
   }
 
-  // FIXME(emilio): This sync bounds computation should ideally not be needed
-  // but it causes timeouts on automation. See bug 1946184 comment 14.
-  RecomputeBounds(MayChangeCsdMargin::No);
+  SchedulePendingBounds(MayChangeCsdMargin::No);
   return FALSE;
 }
 
