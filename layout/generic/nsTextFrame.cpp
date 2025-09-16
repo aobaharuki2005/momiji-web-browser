@@ -107,6 +107,16 @@ using namespace mozilla::gfx;
 
 namespace mozilla {
 
+// Is the given frame using a vertical-* (not sideways-*) writing-mode with
+// text-orientation:upright applied, or is it using text-combine-upright?
+static bool IsVerticalUpright(const nsIFrame* aFrame) {
+  return (aFrame->GetWritingMode().IsVertical() &&
+          !aFrame->GetWritingMode().IsVerticalSideways() &&
+          aFrame->StyleVisibility()->mTextOrientation ==
+              StyleTextOrientation::Upright) ||
+         aFrame->Style()->IsTextCombined();
+}
+
 bool TextAutospace::Enabled(const StyleTextAutospace& aStyleTextAutospace,
                             const nsIFrame* aFrame) {
   if (aStyleTextAutospace == StyleTextAutospace::NO_AUTOSPACE) {
@@ -120,16 +130,11 @@ bool TextAutospace::Enabled(const StyleTextAutospace& aStyleTextAutospace,
     return false;
   }
 
-  WritingMode wm = aFrame->GetWritingMode();
-  if (wm.IsVertical() && !wm.IsVerticalSideways() &&
-      aFrame->StyleVisibility()->mTextOrientation ==
-          StyleTextOrientation::Upright) {
-    // If writing-mode is vertical-* and 'text-orientation: upright',
-    // a character cannot be a non-ideographic letter or numeral,
-    // so ideograph-alpha or ideograph-numeric boundaries cannot occur.
-    //
-    // Note: 'text-combine-upright' is checked in
-    // PropertyProvider::GetSpacingInternal(), so we do not check it here.
+  if (IsVerticalUpright(aFrame)) {
+    // If writing-mode is vertical-* and 'text-orientation: upright', or the
+    // frame uses text-combine-upright, a character cannot be a non-ideographic
+    // letter or numeral, so ideograph-alpha or ideograph-numeric boundaries
+    // cannot occur.
     return false;
   }
 
@@ -3952,9 +3957,7 @@ static Maybe<TextAutospace::CharClass> GetPrecedingCharClassFromFrameTree(
       if (prevClass) {
         if ((*prevClass == CharClass::NonIdeographicLetter ||
              *prevClass == CharClass::NonIdeographicNumeral) &&
-            (f->StyleVisibility()->mTextOrientation ==
-                 StyleTextOrientation::Upright ||
-             f->Style()->IsTextCombined())) {
+            IsVerticalUpright(f)) {
           // If we're in vertical writing mode with forced upright glyph
           // orientation, these classes are not applicable.
           return Some(CharClass::Other);
