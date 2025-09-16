@@ -70,15 +70,11 @@ String mozToString(double aNum) {
 }
 
 String mozToString(int64_t aNum) {
-  std::ostringstream o;
-  o << std::setprecision(std::numeric_limits<int64_t>::digits10) << aNum;
-  return o.str();
+  return std::to_string(aNum);
 }
 
 String mozToString(uint64_t aNum) {
-  std::ostringstream o;
-  o << std::setprecision(std::numeric_limits<uint64_t>::digits10) << aNum;
-  return o.str();
+  return std::to_string(aNum);
 }
 
 namespace moz_decimal_utils {
