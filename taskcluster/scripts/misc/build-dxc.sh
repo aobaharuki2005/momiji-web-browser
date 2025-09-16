@@ -23,8 +23,8 @@ cd "$dxc_src_dir"
 
 # Configure and build.
 dxc_build_dir="$dxc_src_dir/build"
-mkdir $dxc_build_dir
-cd $dxc_build_dir
+mkdir "$dxc_build_dir"
+cd "$dxc_build_dir"
 
 # Note: it is important that LLVM_ENABLE_ASSERTIONS remains enabled.
 
@@ -55,8 +55,8 @@ cmake .. \
 ninja dxcompiler.dll
 
 # Pack the result and upload.
-mkdir $dxc_folder
-cp bin/dxcompiler.dll bin/dxcompiler.pdb $dxc_folder
+mkdir "$dxc_folder"
+cp bin/dxcompiler.dll bin/dxcompiler.pdb "$dxc_folder"
 
-mkdir -p $UPLOAD_DIR
-tar cavf $UPLOAD_DIR/$artifact $dxc_folder
+mkdir -p "$UPLOAD_DIR"
+tar cavf "$UPLOAD_DIR/$artifact" "$dxc_folder"
