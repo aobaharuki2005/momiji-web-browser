@@ -244,6 +244,8 @@ mobile/android/android-components/**/assets/extensions/**/manifest.json
 
 # XCode project cruft
 /*.xcodeproj/
+mobile/ios/GeckoTestBrowser/GeckoTestBrowser.xcodeproj/project.xcworkspace/xcuserdata
+mobile/ios/GeckoTestBrowser/GeckoTestBrowser.xcodeproj/xcuserdata
 
 # Rust/Cargo output from running `cargo` directly
 /target/

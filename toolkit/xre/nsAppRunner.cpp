@@ -6016,6 +6016,17 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
     greDir->GetParent(getter_AddRefs(parent));
     greDir = parent.forget();
     greDir->AppendNative("Resources"_ns);
+#elif defined(XP_IOS)
+    // FIXME: Consider looking up the GeckoView.framework bundle directly,
+    // rather than deriving it from XRE_GetBinaryPath on iOS. This may be more
+    // resilient especially once we properly bundle XUL into a separate
+    // framework or support multiple embedders.
+    rv = greDir->AppendNative("Frameworks"_ns);
+    NS_ENSURE_SUCCESS(rv, 2);
+    rv = greDir->AppendNative("GeckoView.framework"_ns);
+    NS_ENSURE_SUCCESS(rv, 2);
+    rv = greDir->AppendNative("Frameworks"_ns);
+    NS_ENSURE_SUCCESS(rv, 2);
 #endif
 
     mAppData->xreDirectory = greDir;

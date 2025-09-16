@@ -211,6 +211,9 @@ export default [
   "mobile/android/fenix/app/src/androidTest/assets/",
   "mobile/android/focus-android/app/src/androidTest/assets/",
 
+  // Contains pref files.
+  "mobile/ios/app/",
+
   // Pre-processed/pref files
   "modules/libpref/greprefs.js",
   "modules/libpref/init/all.js",

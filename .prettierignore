@@ -1161,6 +1161,9 @@ mobile/android/locales/
 mobile/android/android-components/components/feature/readerview/src/main/assets/extensions/readerview/manifest.json
 mobile/android/android-components/samples/browser/src/main/assets/extensions/test/manifest.json
 
+# Contains pref files.
+mobile/ios/app/
+
 # Pre-processed/pref files
 modules/libpref/greprefs.js
 modules/libpref/init/all.js
