@@ -12914,13 +12914,6 @@ nsSize PresShell::GetLayoutViewportSize() const {
   return result;
 }
 
-nsSize PresShell::GetInnerSize() const {
-  if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
-    return sf->GetSizeForWindowInnerSize();
-  }
-  return mPresContext->GetVisibleArea().Size();
-}
-
 nsSize PresShell::GetVisualViewportSizeUpdatedByDynamicToolbar() const {
   NS_ASSERTION(mVisualViewportSizeSet,
                "asking for visual viewport size when its not set?");
