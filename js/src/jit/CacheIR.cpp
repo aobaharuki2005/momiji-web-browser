@@ -1044,6 +1044,24 @@ void IRGenerator::emitGuardGetterSetterSlot(NativeObject* holder,
   }
 }
 
+static ObjOperandId EmitGuardObjectFuseHolder(CacheIRWriter& writer,
+                                              NativeObject* obj,
+                                              NativeObject* holder,
+                                              ObjOperandId objId) {
+  if (obj == holder) {
+    // Guard the object is the current |holder| object because each ObjectFuse
+    // applies to a single object.
+    writer.guardSpecificObject(objId, obj);
+    return objId;
+  }
+
+  // Note: we don't need to call GeneratePrototypeGuards here because the
+  // ObjectFuse's generation will be updated when the proto chain is
+  // mutated.
+  TestMatchingNativeReceiver(writer, obj, objId);
+  return writer.loadObject(holder);
+}
+
 void IRGenerator::emitCallAccessorGuards(NativeObject* obj,
                                          NativeObject* holder, HandleId id,
                                          PropertyInfo prop, ObjOperandId objId,
@@ -1058,17 +1076,8 @@ void IRGenerator::emitCallAccessorGuards(NativeObject* obj,
     // Fast path for constant properties of objects with an ObjectFuse.
     ObjectFuse* objFuse = nullptr;
     if (canOptimizeConstantAccessorProperty(holder, prop, &objFuse)) {
-      ObjOperandId holderId;
-      if (obj == holder) {
-        writer.guardSpecificObject(objId, obj);
-        holderId = objId;
-      } else {
-        // Note: we don't need to call GeneratePrototypeGuards here because the
-        // ObjectFuse's generation will be updated when the proto chain is
-        // mutated.
-        TestMatchingNativeReceiver(writer, obj, objId);
-        holderId = writer.loadObject(holder);
-      }
+      ObjOperandId holderId =
+          EmitGuardObjectFuseHolder(writer, obj, holder, objId);
       emitGuardConstantAccessorProperty(holder, holderId, id, prop, objFuse);
       return;
     }
@@ -1261,7 +1270,7 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
 
       maybeEmitIdGuard(id);
       if (kind == NativeGetPropKind::Slot) {
-        EmitReadSlotResult(writer, nobj, holder, *prop, objId);
+        emitLoadDataPropertyResult(nobj, holder, id, *prop, objId);
         writer.returnFromIC();
         trackAttached("GetProp.NativeSlot");
       } else {
@@ -1387,13 +1396,7 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
       maybeEmitIdGuard(id);
       ObjOperandId windowObjId =
           GuardAndLoadWindowProxyWindow(writer, objId, windowObj);
-      ObjectFuse* objFuse = nullptr;
-      if (holder == windowObj &&
-          canOptimizeConstantDataProperty(holder, *prop, &objFuse)) {
-        emitConstantDataPropertyResult(holder, windowObjId, id, *prop, objFuse);
-      } else {
-        EmitReadSlotResult(writer, windowObj, holder, *prop, windowObjId);
-      }
+      emitLoadDataPropertyResult(windowObj, holder, id, *prop, windowObjId);
       writer.returnFromIC();
 
       trackAttached("GetProp.WindowProxySlot");
@@ -2327,6 +2330,21 @@ void IRGenerator::emitConstantDataPropertyResult(NativeObject* holder,
   }
 }
 
+void IRGenerator::emitLoadDataPropertyResult(NativeObject* obj,
+                                             NativeObject* holder,
+                                             PropertyKey key, PropertyInfo prop,
+                                             ObjOperandId objId) {
+  ObjectFuse* objFuse = nullptr;
+  if (canOptimizeConstantDataProperty(holder, prop, &objFuse)) {
+    ObjOperandId holderId =
+        EmitGuardObjectFuseHolder(writer, obj, holder, objId);
+    emitConstantDataPropertyResult(holder, holderId, key, prop, objFuse);
+    return;
+  }
+
+  EmitReadSlotResult(writer, obj, holder, prop, objId);
+}
+
 bool IRGenerator::canOptimizeConstantAccessorProperty(NativeObject* holder,
                                                       PropertyInfo prop,
                                                       ObjectFuse** objFuse) {
@@ -3014,7 +3032,7 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
 
       ObjOperandId protoId = writer.loadObject(nproto);
       if (kind == NativeGetPropKind::Slot) {
-        EmitReadSlotResult(writer, nproto, holder, *prop, protoId);
+        emitLoadDataPropertyResult(nproto, holder, id, *prop, protoId);
         writer.returnFromIC();
         trackAttached("GetProp.PrimitiveSlot");
       } else {
