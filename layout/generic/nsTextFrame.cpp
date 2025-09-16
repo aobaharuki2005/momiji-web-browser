@@ -4029,9 +4029,13 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
     using CharClass = TextAutospace::CharClass;
     // The non-mark class of a previous character at a cluster start (if any).
     Maybe<CharClass> prevClass;
-    if (mTextAutospace) {
-      // We may need the class of the character immediately before the current
-      // aRange.
+
+    // Initialization of prevClass at start-of-frame may be a bit expensive,
+    // and we don't always need that initial value, so we encapsulate it in a
+    // helper to be called on-demand.
+    auto findPrecedingClass = [&]() -> CharClass {
+      // Get the class of the character immediately before the current aRange.
+      Maybe<CharClass> prevClass;
       if (aRange.start > 0) {
         gfxSkipCharsIterator iter = start;
         prevClass = LastNonMarkCharClass(iter, mTextRun, mCharacterDataBuffer);
@@ -4058,7 +4062,11 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
           }
         }
       }
-    }
+      // If no valid class was found, return `Other`, which never participates
+      // in autospacing rules.
+      return prevClass.valueOr(CharClass::Other);
+    };
+
     while (run.NextRun()) {
       uint32_t runOffsetInSubstring = run.GetSkippedOffset() - aRange.start;
       gfxSkipCharsIterator iter = run.GetPos();
@@ -4096,11 +4104,17 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
           // combining marks are not cluster starts. We still check in case a
           // stray mark appears at the start of a frame.
           if (currClass != CharClass::CombiningMark) {
-            if (!atStart && prevClass &&
-                mTextAutospace->ShouldApplySpacing(*prevClass, currClass)) {
+            // We don't need to do anything if at start of line, or if the
+            // current class is `Other`, which never participates in spacing.
+            if (!atStart && currClass != CharClass::Other &&
+                mTextAutospace->ShouldApplySpacing(
+                    prevClass.valueOr(findPrecedingClass()), currClass)) {
               aSpacing[runOffsetInSubstring + i].mBefore +=
                   mTextAutospace->InterScriptSpacing();
             }
+            // Even if we didn't actually need to check spacing rules here, we
+            // record the new prevClass. (Incidentally, this ensure that we'll
+            // only call the findPrecedingClass() helper once.)
             prevClass = Some(currClass);
           }
         }
