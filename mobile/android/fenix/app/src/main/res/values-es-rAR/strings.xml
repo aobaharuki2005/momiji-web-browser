@@ -2356,9 +2356,9 @@
 
     Title for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection
   -->
-  <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">¿Está seguro de querer desactivar las correcciones?</string>
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">¿Estás seguro de querer desactivar las correcciones?</string>
   <!-- Message for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. %1$s is the name of the application (e.g. Fenix). -->
-  <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">Esta configuración ayuda a solucionar los problemas más comunes del sitio. Si lo desactivas, es posible que algunos sitios no funcionen y %1$s no podrá ayudar a solucionar esos problemas.</string>
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">Esta configuración ayuda a solucionar los problemas más comunes del sitio. Si se desactiva, es posible que algunos sitios no funcionen y %1$s no podrá ayudar a solucionar esos problemas.</string>
   <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
   <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Desactivar correcciones</string>
   <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->

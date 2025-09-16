@@ -336,16 +336,9 @@ class DataChannelConnection : public net::NeckoTargetHolder {
   /***********************************************************/
 
   /*********************** STS only **************************/
-  bool mSendInterleaved = false;
-  uint32_t mCurrentStream = 0;
   std::set<RefPtr<DataChannel>> mPending;
   uint16_t mNegotiatedIdLimit = 0;
   PendingType mPendingType = PendingType::None;
-  // holds outgoing control messages
-  nsTArray<OutgoingMsg> mBufferedControl;
-  // For partial DCEP messages (should be _really_ rare, since they're small)
-  Maybe<IncomingMsg> mRecvBuffer;
-  bool mSctpConfigured = false;
   std::string mTransportId;
   bool mConnectedToTransportHandler = false;
   RefPtr<MediaTransportHandler> mTransportHandler;
