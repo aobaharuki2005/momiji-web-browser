@@ -39,7 +39,7 @@ index cc8881e4cd..be58982b26 100644
  
  group("media") {
 diff --git a/modules/video_coding/BUILD.gn b/modules/video_coding/BUILD.gn
-index 950ef68ba2..87e12e64ef 100644
+index d2de8af869..1044ce6c79 100644
 --- a/modules/video_coding/BUILD.gn
 +++ b/modules/video_coding/BUILD.gn
 @@ -7,7 +7,7 @@
