@@ -3916,7 +3916,7 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
 
     using CharClass = TextAutospace::CharClass;
     // Previous non-mark class of a scalar at a cluster start.
-    CharClass prevClass = CharClass::Other;
+    Maybe<CharClass> prevClass;
     if (mTextAutospace) {
       // We may need the class of the scalar immediately before the current
       // aRange.
@@ -3927,8 +3927,8 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
           FindClusterStart(mTextRun, 0, &findPrevCluster);
           const char32_t prevScalar = mCharacterDataBuffer.ScalarValueAt(
               findPrevCluster.GetOriginalOffset());
-          prevClass = TextAutospace::GetCharClass(prevScalar);
-        } while (prevClass == CharClass::CombiningMark &&
+          prevClass = Some(TextAutospace::GetCharClass(prevScalar));
+        } while (*prevClass == CharClass::CombiningMark &&
                  findPrevCluster.GetOriginalOffset() > 0);
       } else {
         // Bug 1986837: Look for the last non-mark cluster start of the
@@ -3972,12 +3972,12 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
           // combining marks are not cluster starts. We still check in case a
           // stray mark appears at the start of a frame.
           if (currClass != CharClass::CombiningMark) {
-            if (!atStart &&
-                mTextAutospace->ShouldApplySpacing(prevClass, currClass)) {
+            if (!atStart && prevClass &&
+                mTextAutospace->ShouldApplySpacing(*prevClass, currClass)) {
               aSpacing[runOffsetInSubstring + i].mBefore +=
                   mTextAutospace->InterScriptSpacing();
             }
-            prevClass = currClass;
+            prevClass = Some(currClass);
           }
         }
         atStart = false;
