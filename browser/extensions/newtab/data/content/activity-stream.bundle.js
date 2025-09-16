@@ -9273,8 +9273,7 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       link,
       onClick,
       title,
-      isAddButton,
-      visibleTopSites
+      isAddButton
     } = this.props;
     const topSiteOuterClassName = `top-site-outer${className ? ` ${className}` : ""}${link.isDragged ? " dragged" : ""}${link.searchTopSite ? " search-shortcut" : ""}`;
     const [letterFallback] = title;
@@ -9329,8 +9328,7 @@ class TopSiteLink extends (external_React_default()).PureComponent {
           tile_id: link.sponsored_tile_id || -1,
           reporting_url: link.sponsored_impression_url,
           advertiser: title.toLocaleLowerCase(),
-          source: NEWTAB_SOURCE,
-          visible_topsites: visibleTopSites
+          source: NEWTAB_SOURCE
         }
         // For testing.
         ,
@@ -9346,8 +9344,7 @@ class TopSiteLink extends (external_React_default()).PureComponent {
           position: this.props.index,
           source: NEWTAB_SOURCE,
           isPinned: this.props.link.isPinned,
-          guid: this.props.link.guid,
-          visible_topsites: visibleTopSites
+          guid: this.props.link.guid
         }
         // For testing.
         ,
@@ -9546,8 +9543,7 @@ class TopSite extends (external_React_default()).PureComponent {
             tile_id: this.props.link.sponsored_tile_id || -1,
             reporting_url: this.props.link.sponsored_click_url,
             advertiser: title.toLocaleLowerCase(),
-            source: NEWTAB_SOURCE,
-            visible_topsites: this.props.visibleTopSites
+            source: NEWTAB_SOURCE
           }
         }));
       } else {
@@ -9559,8 +9555,7 @@ class TopSite extends (external_React_default()).PureComponent {
             position: this.props.index,
             source: NEWTAB_SOURCE,
             isPinned: this.props.link.isPinned,
-            guid: this.props.link.guid,
-            visible_topsites: this.props.visibleTopSites
+            guid: this.props.link.guid
           }
         }));
       }
@@ -9907,8 +9902,7 @@ class _TopSiteList extends (external_React_default()).PureComponent {
           onFocus: () => {
             this.onTopsiteFocus(i);
           },
-          Messages: this.props.Messages,
-          visibleTopSites: this.props.visibleTopSites
+          Messages: this.props.Messages
         }));
       } else {
         topSiteLink = /*#__PURE__*/external_React_default().createElement(TopSite, TopSite_extends({
@@ -9923,8 +9917,7 @@ class _TopSiteList extends (external_React_default()).PureComponent {
           tabIndex: i === this.state.focusedIndex ? 0 : -1,
           onFocus: () => {
             this.onTopsiteFocus(i);
-          },
-          visibleTopSites: this.props.visibleTopSites
+          }
         }));
       }
       topSitesUI.push(topSiteLink);
@@ -10349,13 +10342,7 @@ class _TopSites extends (external_React_default()).PureComponent {
       showSearchShortcutsForm
     } = props.TopSites;
     const extraMenuOptions = ["AddTopSite"];
-    let visibleTopSites;
     const colors = props.Prefs.values["newNewtabExperience.colors"];
-
-    // do not run this function when for startup cache
-    if (!props.App.isForStartupCache.TopSites) {
-      visibleTopSites = this._getVisibleTopSites()?.length;
-    }
     if (props.Prefs.values["improvesearch.topSiteSearchShortcuts"]) {
       extraMenuOptions.push("AddSearchShortcut");
     }
@@ -10383,8 +10370,7 @@ class _TopSites extends (external_React_default()).PureComponent {
       TopSitesRows: props.TopSitesRows,
       dispatch: props.dispatch,
       topSiteIconType: topSiteIconType,
-      colors: colors,
-      visibleTopSites: visibleTopSites
+      colors: colors
     }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "edit-topsites-wrapper"
     }, editForm && /*#__PURE__*/external_React_default().createElement("div", {
@@ -10411,7 +10397,6 @@ class _TopSites extends (external_React_default()).PureComponent {
   }
 }
 const TopSites_TopSites = (0,external_ReactRedux_namespaceObject.connect)(state => ({
-  App: state.App,
   TopSites: state.TopSites,
   Prefs: state.Prefs,
   TopSitesRows: state.Prefs.values.topSitesRows

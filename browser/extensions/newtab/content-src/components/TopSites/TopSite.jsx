@@ -269,7 +269,6 @@ export class TopSiteLink extends React.PureComponent {
       onClick,
       title,
       isAddButton,
-      visibleTopSites,
     } = this.props;
 
     const topSiteOuterClassName = `top-site-outer${
@@ -336,7 +335,6 @@ export class TopSiteLink extends React.PureComponent {
             reporting_url: link.sponsored_impression_url,
             advertiser: title.toLocaleLowerCase(),
             source: NEWTAB_SOURCE,
-            visible_topsites: visibleTopSites,
           }}
           // For testing.
           IntersectionObserver={this.props.IntersectionObserver}
@@ -354,7 +352,6 @@ export class TopSiteLink extends React.PureComponent {
             source: NEWTAB_SOURCE,
             isPinned: this.props.link.isPinned,
             guid: this.props.link.guid,
-            visible_topsites: visibleTopSites,
           }}
           // For testing.
           IntersectionObserver={this.props.IntersectionObserver}
@@ -581,7 +578,6 @@ export class TopSite extends React.PureComponent {
               reporting_url: this.props.link.sponsored_click_url,
               advertiser: title.toLocaleLowerCase(),
               source: NEWTAB_SOURCE,
-              visible_topsites: this.props.visibleTopSites,
             },
           })
         );
@@ -596,7 +592,6 @@ export class TopSite extends React.PureComponent {
               source: NEWTAB_SOURCE,
               isPinned: this.props.link.isPinned,
               guid: this.props.link.guid,
-              visible_topsites: this.props.visibleTopSites,
             },
           })
         );
@@ -1010,7 +1005,6 @@ export class _TopSiteList extends React.PureComponent {
               this.onTopsiteFocus(i);
             }}
             Messages={this.props.Messages}
-            visibleTopSites={this.props.visibleTopSites}
           />
         );
       } else {
@@ -1033,7 +1027,6 @@ export class _TopSiteList extends React.PureComponent {
             onFocus={() => {
               this.onTopsiteFocus(i);
             }}
-            visibleTopSites={this.props.visibleTopSites}
           />
         );
       }
