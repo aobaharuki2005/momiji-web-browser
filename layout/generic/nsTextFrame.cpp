@@ -169,7 +169,7 @@ bool TextAutospace::ShouldApplySpacing(CharClass aPrevClass,
   return false;
 }
 
-bool TextAutospace::IsIdeograph(char32_t aChar) const {
+bool TextAutospace::IsIdeograph(char32_t aChar) {
   // All characters in the range of U+3041 to U+30FF, except those that belong
   // to Unicode Punctuation [P*] general category.
   if (0x3041 <= aChar && aChar <= 0x30FF) {
@@ -194,7 +194,7 @@ bool TextAutospace::IsIdeograph(char32_t aChar) const {
   return false;
 }
 
-TextAutospace::CharClass TextAutospace::GetCharClass(char32_t aChar) const {
+TextAutospace::CharClass TextAutospace::GetCharClass(char32_t aChar) {
   if (IsIdeograph(aChar)) {
     return CharClass::Ideograph;
   }
@@ -3934,7 +3934,7 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
           FindClusterStart(mTextRun, 0, &findPrevCluster);
           const char32_t prevScalar = mCharacterDataBuffer.ScalarValueAt(
               findPrevCluster.GetOriginalOffset());
-          prevClass = mTextAutospace->GetCharClass(prevScalar);
+          prevClass = TextAutospace::GetCharClass(prevScalar);
         } while (prevClass == CharClass::CombiningMark &&
                  findPrevCluster.GetOriginalOffset() > 0);
       } else {
@@ -3973,7 +3973,7 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
             mTextRun->IsClusterStart(run.GetSkippedOffset() + i)) {
           const char32_t currScalar =
               mCharacterDataBuffer.ScalarValueAt(run.GetOriginalOffset() + i);
-          const auto currClass = mTextAutospace->GetCharClass(currScalar);
+          const auto currClass = TextAutospace::GetCharClass(currScalar);
 
           // It is rare for the current class to be is a combining mark, as
           // combining marks are not cluster starts. We still check in case a

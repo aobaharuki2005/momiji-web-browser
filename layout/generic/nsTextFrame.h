@@ -71,11 +71,11 @@ class MOZ_STACK_CLASS TextAutospace final {
 
   // Return true if aChar is an ideograph.
   // https://drafts.csswg.org/css-text-4/#ideographs
-  bool IsIdeograph(char32_t aChar) const;
+  static bool IsIdeograph(char32_t aChar);
 
   // Get character class for aChar.
   // https://drafts.csswg.org/css-text-4/#text-spacing-classes
-  CharClass GetCharClass(char32_t aChar) const;
+  static CharClass GetCharClass(char32_t aChar);
 
  private:
   BoundarySet InitBoundarySet(
