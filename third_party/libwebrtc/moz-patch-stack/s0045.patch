@@ -59,7 +59,7 @@ index e3c2395f49..119cb07ab8 100644
  struct v4l2_capability;
  
 diff --git a/rtc_base/platform_thread_types.cc b/rtc_base/platform_thread_types.cc
-index 9b6e7a13d8..712ae2c785 100644
+index f057d4b7c3..61d8af14c2 100644
 --- a/rtc_base/platform_thread_types.cc
 +++ b/rtc_base/platform_thread_types.cc
 @@ -52,7 +52,9 @@ PlatformThreadId CurrentThreadId() {

@@ -616,7 +616,7 @@ index 704aa2ad87..1147706e87 100644
  
  if (rtc_build_libsrtp) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 1a35e55ddb..27ceb99698 100644
+index fc9f631501..74039dc202 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -9,8 +9,8 @@
@@ -630,7 +630,7 @@ index 1a35e55ddb..27ceb99698 100644
  }
  
  rtc_source_set("protobuf_utils") {
-@@ -1866,8 +1866,8 @@ rtc_library("base64") {
+@@ -1853,8 +1853,8 @@ rtc_library("base64") {
  }
  
  if (rtc_rusty_base64) {
@@ -657,7 +657,7 @@ index 9a55af3ea9..3d272ba975 100644
  
  rtc_library("aligned_malloc") {
 diff --git a/rtc_base/synchronization/BUILD.gn b/rtc_base/synchronization/BUILD.gn
-index 6b05f5ce1d..e6dca83a70 100644
+index 934f71d31d..e359df920a 100644
 --- a/rtc_base/synchronization/BUILD.gn
 +++ b/rtc_base/synchronization/BUILD.gn
 @@ -8,8 +8,8 @@
