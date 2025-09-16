@@ -104,7 +104,7 @@ class ScaledFont;
 
 namespace gfx {
 
-class GaussianBlur;
+class AlphaBoxBlur;
 class ScaledFont;
 class SourceSurface;
 class DataSourceSurface;
@@ -1844,7 +1844,7 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
    * Perform an in-place blur operation. This is only supported on data draw
    * targets.
    */
-  virtual void Blur(const GaussianBlur& aBlur);
+  virtual void Blur(const AlphaBoxBlur& aBlur);
 
   /**
    * Performs an in-place edge padding operation.

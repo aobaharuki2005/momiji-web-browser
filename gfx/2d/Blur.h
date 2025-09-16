@@ -9,29 +9,26 @@
 
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/Point.h"
-#include "mozilla/gfx/Types.h"
 #include "mozilla/CheckedInt.h"
-
-class SkSurface;
 
 namespace mozilla {
 namespace gfx {
-
-class DrawTargetSkia;
 
 #ifdef _MSC_VER
 #  pragma warning(disable : 4251)
 #endif
 
 /**
- * Implementation of a Gaussian blur.
+ * Implementation of a triple box blur approximation of a Gaussian blur.
  *
  * A Gaussian blur is good for blurring because, when done independently
  * in the horizontal and vertical directions, it matches the result that
- * would be obtained using a different (rotated) set of axes.
+ * would be obtained using a different (rotated) set of axes.  A triple
+ * box blur is a very close approximation of a Gaussian.
  *
  * This is a "service" class; the constructors set up all the information
- * based on the values.
+ * based on the values and compute the minimum size for an 8-bit alpha
+ * channel context.
  * The callers are responsible for creating and managing the backing surface
  * and passing the pointer to the data to the Blur() method.  This class does
  * not retain the pointer to the data outside of the Blur() call.
@@ -39,13 +36,17 @@ class DrawTargetSkia;
  * A spread N makes each output pixel the maximum value of all source
  * pixels within a square of side length 2N+1 centered on the output pixel.
  */
-class GFX2D_API GaussianBlur final {
+class GFX2D_API AlphaBoxBlur final {
  public:
-  /** Constructs a Gaussian blur and computes the backing surface size.
+  /** Constructs a box blur and computes the backing surface size.
    *
    * @param aRect The coordinates of the surface to create in device units.
    *
-   * @param aSigma The blur sigma.
+   * @param aBlurRadius The blur radius in pixels.  This is the radius of the
+   *   entire (triple) kernel function.  Each individual box blur has radius
+   *   approximately 1/3 this value, or diameter approximately 2/3 this value.
+   *   This parameter should nearly always be computed using
+   * CalculateBlurRadius, below.
    *
    * @param aDirtyRect A pointer to a dirty rect, measured in device units, if
    *   available.  This will be used for optimizing the blur operation. It is
@@ -54,45 +55,34 @@ class GFX2D_API GaussianBlur final {
    * @param aSkipRect A pointer to a rect, measured in device units, that
    *   represents an area where blurring is unnecessary and shouldn't be done
    * for speed reasons. It is safe to pass nullptr here.
-   *
-   * @param aFormat The format of the surface's data.
-   *
-   * @param aClamp Whether clamping at border pixels is required.
    */
-  GaussianBlur(const Rect& aRect, const IntSize& aSpreadRadius,
-               const Point& aSigma, const Rect* aDirtyRect,
-               const Rect* aSkipRect, SurfaceFormat aFormat = SurfaceFormat::A8,
-               bool aClamp = false);
+  AlphaBoxBlur(const Rect& aRect, const IntSize& aSpreadRadius,
+               const IntSize& aBlurRadius, const Rect* aDirtyRect,
+               const Rect* aSkipRect);
 
-  GaussianBlur(const Rect& aRect, int32_t aStride, const Point& aSigma,
-               SurfaceFormat aFormat = SurfaceFormat::A8, bool aClamp = false);
+  AlphaBoxBlur(const Rect& aRect, int32_t aStride, float aSigmaX,
+               float aSigmaY);
 
-  GaussianBlur();
+  AlphaBoxBlur();
 
   void Init(const Rect& aRect, const IntSize& aSpreadRadius,
-            const Point& aBlurSigma, const Rect* aDirtyRect,
-            const Rect* aSkipRect, SurfaceFormat aFormat = SurfaceFormat::A8,
-            bool aClamp = false);
+            const IntSize& aBlurRadius, const Rect* aDirtyRect,
+            const Rect* aSkipRect);
 
-  ~GaussianBlur();
+  ~AlphaBoxBlur();
 
   /**
-   * Return the size, in pixels, of the surface we'd use.
+   * Return the size, in pixels, of the 8-bit alpha surface we'd use.
    */
   IntSize GetSize() const;
 
   /**
-   * Return the format of the blur data.
-   */
-  SurfaceFormat GetFormat() const;
-
-  /**
-   * Return the stride, in bytes, of the surface we'd use.
+   * Return the stride, in bytes, of the 8-bit alpha surface we'd use.
    */
   int32_t GetStride() const;
 
   /**
-   * Returns the device-space rectangle the surface covers.
+   * Returns the device-space rectangle the 8-bit alpha surface covers.
    */
   IntRect GetRect() const;
 
@@ -108,19 +98,9 @@ class GFX2D_API GaussianBlur final {
   IntSize GetSpreadRadius() const { return mSpreadRadius; }
 
   /**
-   * Return the blur sigma.
-   */
-  Point GetBlurSigma() const { return mBlurSigma; }
-
-  /**
    * Return the blur radius, in pixels.
    */
   IntSize GetBlurRadius() const { return mBlurRadius; }
-
-  /**
-   * Return the skip rect.
-   */
-  IntRect GetSkipRect() const { return mSkipRect; }
 
   /**
    * Return the minimum buffer size that should be given to Blur() method.  If
@@ -132,22 +112,41 @@ class GFX2D_API GaussianBlur final {
   size_t GetSurfaceAllocationSize() const;
 
   /**
-   * Perform the blur in-place on the surface backed by specified surface data.
-   * The size must be at least that returned by GetSurfaceAllocationSize() or
-   * bad things will happen.
+   * Perform the blur in-place on the surface backed by specified 8-bit
+   * alpha surface data. The size must be at least that returned by
+   * GetSurfaceAllocationSize() or bad things will happen.
    */
   void Blur(uint8_t* aData) const;
 
   /**
    * Calculates a blur radius that, when used with box blur, approximates a
    * Gaussian blur with the given standard deviation.  The result of this
-   * function should be used as the aBlurRadius parameter to GaussianBlur's
+   * function should be used as the aBlurRadius parameter to AlphaBoxBlur's
    * constructor, above.
    */
   static IntSize CalculateBlurRadius(const Point& aStandardDeviation);
   static Float CalculateBlurSigma(int32_t aBlurRadius);
 
  private:
+  void BoxBlur_C(uint8_t* aData, int32_t aLeftLobe, int32_t aRightLobe,
+                 int32_t aTopLobe, int32_t aBottomLobe,
+                 uint32_t* aIntegralImage, size_t aIntegralImageStride) const;
+  void BoxBlur_SSE2(uint8_t* aData, int32_t aLeftLobe, int32_t aRightLobe,
+                    int32_t aTopLobe, int32_t aBottomLobe,
+                    uint32_t* aIntegralImage,
+                    size_t aIntegralImageStride) const;
+  void BoxBlur_NEON(uint8_t* aData, int32_t aLeftLobe, int32_t aRightLobe,
+                    int32_t aTopLobe, int32_t aBottomLobe,
+                    uint32_t* aIntegralImage,
+                    size_t aIntegralImageStride) const;
+#ifdef _MIPS_ARCH_LOONGSON3A
+  void BoxBlur_LS3(uint8_t* aData, int32_t aLeftLobe, int32_t aRightLobe,
+                   int32_t aTopLobe, int32_t aBottomLobe,
+                   uint32_t* aIntegralImage, size_t aIntegralImageStride) const;
+#endif
+
+  static CheckedInt<int32_t> RoundUpToMultipleOf4(int32_t aVal);
+
   /**
    * A rect indicating the area where blurring is unnecessary, and the blur
    * algorithm should skip over it.
@@ -157,7 +156,7 @@ class GFX2D_API GaussianBlur final {
   IntRect mSkipRect;
 
   /**
-   * The device-space rectangle the backing surface covers.
+   * The device-space rectangle the the backing 8-bit alpha surface covers.
    */
   IntRect mRect;
 
@@ -173,45 +172,24 @@ class GFX2D_API GaussianBlur final {
   IntSize mSpreadRadius;
 
   /**
-   * The blur sigma (standard deviation).
-   */
-  Point mBlurSigma;
-
-  /**
    * The blur radius, in pixels.
    */
   IntSize mBlurRadius;
 
   /**
-   * The format of the data passed to Blur()
-   */
-  SurfaceFormat mFormat = SurfaceFormat::A8;
-
-  /**
-   * Whether clamping at border pixels is required.
-   */
-  bool mClamp = false;
-
-  /**
    * The stride of the data passed to Blur()
    */
-  int32_t mStride = 0;
+  int32_t mStride;
 
   /**
    * The minimum size of the buffer needed for the Blur() operation.
    */
-  size_t mSurfaceAllocationSize = 0;
+  size_t mSurfaceAllocationSize;
 
   /**
    * Whether mDirtyRect contains valid data.
    */
-  bool mHasDirtyRect = false;
-
-  bool Spread(uint8_t* aData) const;
-
-  friend class DrawTargetSkia;
-
-  bool BlurSkSurface(SkSurface* aSurface) const;
+  bool mHasDirtyRect;
 };
 
 }  // namespace gfx

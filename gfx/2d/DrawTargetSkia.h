@@ -66,7 +66,6 @@ class DrawTargetSkia : public DrawTarget {
                                      const Point& aDest,
                                      const ShadowOptions& aShadow,
                                      CompositionOp aOperator) override;
-  virtual void Blur(const GaussianBlur& aBlur) override;
   virtual void ClearRect(const Rect& aRect) override;
   virtual void CopySurface(SourceSurface* aSurface, const IntRect& aSourceRect,
                            const IntPoint& aDestination) override;

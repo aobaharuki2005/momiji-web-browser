@@ -7055,7 +7055,9 @@ void nsTextFrame::PaintShadows(Span<const StyleSimpleShadow> aShadows,
 
   // If the textrun uses any color or SVG fonts, we need to force use of a mask
   // for shadow rendering even if blur radius is zero.
-  uint32_t blurFlags = 0;
+  // Force disable hardware acceleration for text shadows since it's usually
+  // more expensive than just doing it on the CPU.
+  uint32_t blurFlags = nsContextBoxBlur::DISABLE_HARDWARE_ACCELERATION_BLUR;
   uint32_t numGlyphRuns;
   const gfxTextRun::GlyphRun* run = mTextRun->GetGlyphRuns(&numGlyphRuns);
   while (numGlyphRuns-- > 0) {

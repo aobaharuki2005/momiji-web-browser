@@ -2996,7 +2996,7 @@ already_AddRefed<DataSourceSurface> FilterNodeBlurXYSoftware::Render(
     const IntRect& aRect) {
   Size sigmaXY = StdDeviationXY();
   IntSize d =
-      GaussianBlur::CalculateBlurRadius(Point(sigmaXY.width, sigmaXY.height));
+      AlphaBoxBlur::CalculateBlurRadius(Point(sigmaXY.width, sigmaXY.height));
 
   if (d.width == 0 && d.height == 0) {
     return GetInputDataSourceSurface(IN_GAUSSIAN_BLUR_IN, aRect);
@@ -3012,19 +3012,52 @@ already_AddRefed<DataSourceSurface> FilterNodeBlurXYSoftware::Render(
   RefPtr<DataSourceSurface> target;
   Rect r(0, 0, srcRect.Width(), srcRect.Height());
 
-  target = Factory::CreateDataSourceSurface(srcRect.Size(), input->GetFormat());
-  if (MOZ2D_WARN_IF(!target)) {
-    return nullptr;
-  }
-  CopyRect(input, target, IntRect(IntPoint(), input->GetSize()), IntPoint());
+  if (input->GetFormat() == SurfaceFormat::A8) {
+    target =
+        Factory::CreateDataSourceSurface(srcRect.Size(), SurfaceFormat::A8);
+    if (MOZ2D_WARN_IF(!target)) {
+      return nullptr;
+    }
+    CopyRect(input, target, IntRect(IntPoint(), input->GetSize()), IntPoint());
 
-  DataSourceSurface::ScopedMap targetMap(target, DataSourceSurface::READ_WRITE);
-  if (MOZ2D_WARN_IF(!targetMap.IsMapped())) {
-    return nullptr;
+    DataSourceSurface::ScopedMap targetMap(target,
+                                           DataSourceSurface::READ_WRITE);
+    if (MOZ2D_WARN_IF(!targetMap.IsMapped())) {
+      return nullptr;
+    }
+    AlphaBoxBlur blur(r, targetMap.GetStride(), sigmaXY.width, sigmaXY.height);
+    blur.Blur(targetMap.GetData());
+  } else {
+    RefPtr<DataSourceSurface> channel0, channel1, channel2, channel3;
+    FilterProcessing::SeparateColorChannels(input, channel0, channel1, channel2,
+                                            channel3);
+    if (MOZ2D_WARN_IF(!(channel0 && channel1 && channel2 && channel3))) {
+      return nullptr;
+    }
+    {
+      DataSourceSurface::ScopedMap channel0Map(channel0,
+                                               DataSourceSurface::READ_WRITE);
+      DataSourceSurface::ScopedMap channel1Map(channel1,
+                                               DataSourceSurface::READ_WRITE);
+      DataSourceSurface::ScopedMap channel2Map(channel2,
+                                               DataSourceSurface::READ_WRITE);
+      DataSourceSurface::ScopedMap channel3Map(channel3,
+                                               DataSourceSurface::READ_WRITE);
+      if (MOZ2D_WARN_IF(!(channel0Map.IsMapped() && channel1Map.IsMapped() &&
+                          channel2Map.IsMapped() && channel3Map.IsMapped()))) {
+        return nullptr;
+      }
+
+      AlphaBoxBlur blur(r, channel0Map.GetStride(), sigmaXY.width,
+                        sigmaXY.height);
+      blur.Blur(channel0Map.GetData());
+      blur.Blur(channel1Map.GetData());
+      blur.Blur(channel2Map.GetData());
+      blur.Blur(channel3Map.GetData());
+    }
+    target = FilterProcessing::CombineColorChannels(channel0, channel1,
+                                                    channel2, channel3);
   }
-  GaussianBlur blur(r, targetMap.GetStride(),
-                    Point(sigmaXY.width, sigmaXY.height), target->GetFormat());
-  blur.Blur(targetMap.GetData());
 
   return GetDataSurfaceInRect(target, srcRect, aRect, EDGE_MODE_NONE);
 }
@@ -3044,7 +3077,7 @@ IntRect FilterNodeBlurXYSoftware::InflatedSourceOrDestRect(
     const IntRect& aDestRect) {
   Size sigmaXY = StdDeviationXY();
   IntSize d =
-      GaussianBlur::CalculateBlurRadius(Point(sigmaXY.width, sigmaXY.height));
+      AlphaBoxBlur::CalculateBlurRadius(Point(sigmaXY.width, sigmaXY.height));
   IntRect srcRect = aDestRect;
   srcRect.Inflate(d);
   return srcRect;

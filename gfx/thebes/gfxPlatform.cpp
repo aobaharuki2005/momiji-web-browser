@@ -1271,7 +1271,7 @@ void gfxPlatform::Shutdown() {
   // started up. That's OK, they can handle it.
   gfxFontCache::Shutdown();
   gfxGradientCache::Shutdown();
-  gfxGaussianBlur::ShutdownBlurCache();
+  gfxAlphaBoxBlur::ShutdownBlurCache();
   gfxGraphiteShaper::Shutdown();
   gfxPlatformFontList::Shutdown();
   gfxFontMissingGlyphs::Shutdown();

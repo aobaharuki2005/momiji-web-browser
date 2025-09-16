@@ -4810,10 +4810,16 @@ bool SharedContextWebgl::DrawPathAccel(
         return false;
       }
       // Blur the shadow if required.
-      GaussianBlur blur(Rect(pathDT->GetRect()), IntSize(0, 0),
-                        Point(aShadow->mSigma, aShadow->mSigma), nullptr,
-                        nullptr, pathDT->GetFormat());
-      pathDT->Blur(blur);
+      uint8_t* data = nullptr;
+      IntSize size;
+      int32_t stride = 0;
+      SurfaceFormat format = SurfaceFormat::UNKNOWN;
+      if (pathDT->LockBits(&data, &size, &stride, &format)) {
+        AlphaBoxBlur blur(Rect(pathDT->GetRect()), stride, aShadow->mSigma,
+                          aShadow->mSigma);
+        blur.Blur(data);
+        pathDT->ReleaseBits(data);
+      }
     }
     RefPtr<SourceSurface> pathSurface = pathDT->Snapshot();
     // If the target changed, try to restore it.

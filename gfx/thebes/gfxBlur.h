@@ -25,11 +25,12 @@ class DrawTarget;
 }  // namespace mozilla
 
 /**
- * Implementation of a Gaussian blur.
+ * Implementation of a triple box blur approximation of a Gaussian blur.
  *
  * A Gaussian blur is good for blurring because, when done independently
  * in the horizontal and vertical directions, it matches the result that
- * would be obtained using a different (rotated) set of axes.
+ * would be obtained using a different (rotated) set of axes.  A triple
+ * box blur is a very close approximation of a Gaussian.
  *
  * Creates an 8-bit alpha channel context for callers to draw in,
  * spreads the contents of that context, blurs the contents, and applies
@@ -42,24 +43,28 @@ class DrawTarget;
  * any desired content onto the context acquired through GetContext, and lastly
  * calls Paint to apply the blurred content as an alpha mask.
  */
-class gfxGaussianBlur final {
+class gfxAlphaBoxBlur final {
   typedef mozilla::gfx::sRGBColor sRGBColor;
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
 
  public:
-  gfxGaussianBlur() = default;
+  gfxAlphaBoxBlur() = default;
 
-  ~gfxGaussianBlur();
+  ~gfxAlphaBoxBlur();
 
   /**
-   * Constructs a gaussian blur and initializes the temporary surface.
+   * Constructs a box blur and initializes the temporary surface.
    *
    * @param aDestinationCtx The destination to blur to.
    *
    * @param aRect The coordinates of the surface to create in device units.
    *
-   * @param aBlurSigma The blur sigma.
+   * @param aBlurRadius The blur radius in pixels.  This is the radius of
+   *   the entire (triple) kernel function.  Each individual box blur has
+   *   radius approximately 1/3 this value, or diameter approximately 2/3
+   *   this value.  This parameter should nearly always be computed using
+   *   CalculateBlurRadius, below.
    *
    * @param aDirtyRect A pointer to a dirty rect, measured in device units,
    *  if available. This will be used for optimizing the blur operation. It
@@ -69,27 +74,23 @@ class gfxGaussianBlur final {
    *  represents an area where blurring is unnecessary and shouldn't be done
    *  for speed reasons. It is safe to pass nullptr here.
    *
-   * @param aClamp Whether clamping at border pixels is required.
+   * @param aUseHardwareAccel Flag to state whether or not we can use hardware
+   *  acceleration to speed up this blur.
    */
   mozilla::UniquePtr<gfxContext> Init(
       gfxContext* aDestinationCtx, const gfxRect& aRect,
       const mozilla::gfx::IntSize& aSpreadRadius,
-      const mozilla::gfx::Point& aBlurSigma, const gfxRect* aDirtyRect,
-      const gfxRect* aSkipRect, bool aClamp = false);
-
-  mozilla::UniquePtr<gfxContext> Init(
-      gfxContext* aDestinationCtx, const gfxRect& aRect,
-      const mozilla::gfx::IntSize& aSpreadRadius,
       const mozilla::gfx::IntSize& aBlurRadius, const gfxRect* aDirtyRect,
-      const gfxRect* aSkipRect, bool aClamp = false);
+      const gfxRect* aSkipRect, bool aUseHardwareAccel = true);
 
   already_AddRefed<DrawTarget> InitDrawTarget(
       const mozilla::gfx::DrawTarget* aReferenceDT,
       const mozilla::gfx::Rect& aRect,
       const mozilla::gfx::IntSize& aSpreadRadius,
-      const mozilla::gfx::Point& aBlurSigma,
+      const mozilla::gfx::IntSize& aBlurRadius,
       const mozilla::gfx::Rect* aDirtyRect = nullptr,
-      const mozilla::gfx::Rect* aSkipRect = nullptr, bool aClamp = false);
+      const mozilla::gfx::Rect* aSkipRect = nullptr,
+      bool aUseHardwareAccel = true);
 
   /**
    * Performs the blur and optionally colors the result if aShadowColor is not
@@ -117,8 +118,6 @@ class gfxGaussianBlur final {
    */
   static mozilla::gfx::IntSize CalculateBlurRadius(
       const gfxPoint& aStandardDeviation);
-  static mozilla::gfx::Point CalculateBlurSigma(
-      const mozilla::gfx::IntSize& aBlurRadius);
 
   /**
    * Blurs a coloured rectangle onto aDestinationCtx. This is equivalent
@@ -193,7 +192,12 @@ class gfxGaussianBlur final {
   /**
    * The object that actually does the blurring for us.
    */
-  mozilla::gfx::GaussianBlur mBlur;
+  mozilla::gfx::AlphaBoxBlur mBlur;
+
+  /**
+   * Indicates using DrawTarget-accelerated blurs.
+   */
+  bool mAccelerated = false;
 };
 
 #endif /* GFX_BLUR_H */
