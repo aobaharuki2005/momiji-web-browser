@@ -9,6 +9,7 @@
 #include <windows.h>
 
 #include "mozilla/Logging.h"
+#include "mozilla/Vector.h"
 #include "nsStringFwd.h"
 #include "nsUnicharUtils.h"
 #include "sandbox/win/src/policy_engine_opcodes.h"
@@ -120,6 +121,10 @@ void UserFontConfigHelper::AddRules(SizeTrackingConfig& aConfig) const {
   nsAutoString winUserProfile(mWinUserProfile);
   winUserProfile += L'\\';
 
+  // We will add rules for fonts outside of the User's directory at the end, in
+  // case we run out of space.
+  Vector<nsString> nonUserDirFonts;
+
   for (DWORD valueIndex = 0; /* break on ERROR_NO_MORE_ITEMS */; ++valueIndex) {
     DWORD keyType;
     wchar_t name[1024];
@@ -167,11 +172,12 @@ void UserFontConfigHelper::AddRules(SizeTrackingConfig& aConfig) const {
       continue;
     }
 
-    // Skip if not in user's dir.
+    // If not in the user's dir, store until the end.
     if (dataSizeInWChars < winUserProfile.Length() ||
         !winUserProfile.Equals(
             nsDependentSubstring(data, winUserProfile.Length()),
             nsCaseInsensitiveStringComparator)) {
+      Unused << nonUserDirFonts.emplaceBack(data, dataSizeInWChars);
       continue;
     }
 
@@ -188,6 +194,21 @@ void UserFontConfigHelper::AddRules(SizeTrackingConfig& aConfig) const {
     if (result != sandbox::SBOX_ALL_OK) {
       NS_WARNING("Failed to add specific user font policy rule.");
       LOG_W("Failed (ResultCode %d) to add read access to: %S", result, data);
+      if (result == sandbox::SBOX_ERROR_NO_SPACE) {
+        return;
+      }
+    }
+  }
+
+  // Finally add rules for fonts outside the user's dir. These are less likely
+  // to have access blocked by USER_LIMITED.
+  for (const auto& fontPath : nonUserDirFonts) {
+    result = aConfig.AllowFileAccess(sandbox::FileSemantics::kAllowReadonly,
+                                     fontPath.getW());
+    if (result != sandbox::SBOX_ALL_OK) {
+      NS_WARNING("Failed to add specific user font policy rule.");
+      LOG_W("Failed (ResultCode %d) to add read access to: %S", result,
+            fontPath.getW());
       if (result == sandbox::SBOX_ERROR_NO_SPACE) {
         return;
       }
