@@ -893,15 +893,6 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
   WritingMode wm = aKidFrame->GetWritingMode();
   LogicalSize logicalCBSize(wm, aContainingBlock.Size());
   nscoord availISize = logicalCBSize.ISize(wm);
-  if (availISize == -1) {
-    NS_ASSERTION(
-        aReflowInput.ComputedSize(wm).ISize(wm) != NS_UNCONSTRAINEDSIZE,
-        "Must have a useful inline-size _somewhere_");
-    // Note: if |aDelegatingFrame| is ViewportFrame, the caller should always
-    // provide |aContainingBlock| with a valid isize, so we don't have to tweak
-    // aReflowInput here for scrolbars.
-    availISize = aReflowInput.ComputedSizeWithPadding(wm).ISize(wm);
-  }
 
   ReflowInput::InitFlags initFlags;
   if (aFlags & AbsPosReflowFlags::IsGridContainerCB) {
