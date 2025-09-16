@@ -52,6 +52,7 @@
 #include "nsContentList.h"
 #include "nsFieldSetFrame.h"
 #include "nsGlobalWindowInner.h"
+#include "nsGridContainerFrame.h"
 #include "nsIContentInlines.h"
 #include "nsLayoutUtils.h"
 #include "nsNameSpaceManager.h"
@@ -1350,4 +1351,22 @@ void InspectorUtils::SetDynamicToolbarMaxHeight(
 
   parent->DynamicToolbarMaxHeightChanged(aHeight);
 }
+
+uint16_t InspectorUtils::GetGridContainerType(GlobalObject&,
+                                              Element& aElement) {
+  auto* f = nsGridContainerFrame::GetGridContainerFrame(
+      aElement.GetPrimaryFrame(FlushType::Frames));
+  if (!f) {
+    return InspectorUtils_Binding::GRID_NONE;
+  }
+  uint16_t result = InspectorUtils_Binding::GRID_CONTAINER;
+  if (f->IsRowSubgrid()) {
+    result |= InspectorUtils_Binding::GRID_SUBGRID_ROW;
+  }
+  if (f->IsColSubgrid()) {
+    result |= InspectorUtils_Binding::GRID_SUBGRID_COL;
+  }
+  return result;
+}
+
 }  // namespace mozilla::dom

@@ -135,6 +135,18 @@ namespace InspectorUtils {
                                              long aOffset);
   [ChromeOnly] undefined setDynamicToolbarMaxHeight(BrowsingContext? aContext,
                                              long aHeight);
+
+  // This element is not a grid container.
+  const unsigned short GRID_NONE = 0;
+  // This element is a grid container, and might additionally be a subgrid.
+  const unsigned short GRID_CONTAINER = 1;
+  // This element is a subgrid in the row direction.
+  const unsigned short GRID_SUBGRID_ROW = 2;
+  // This element is a subgrid in the col direction.
+  const unsigned short GRID_SUBGRID_COL = 4;
+  // Returns a set of GRID_* flags based on whether the element is a grid
+  // container or not.
+  unsigned short getGridContainerType(Element aElement);
 };
 
 enum DeclarationOrigin {

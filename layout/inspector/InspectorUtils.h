@@ -314,6 +314,7 @@ class InspectorUtils {
   static void SetDynamicToolbarMaxHeight(GlobalObject&,
                                          BrowsingContext* aContext,
                                          mozilla::ScreenIntCoord aHeight);
+  static uint16_t GetGridContainerType(GlobalObject&, Element&);
 };
 
 }  // namespace mozilla::dom
