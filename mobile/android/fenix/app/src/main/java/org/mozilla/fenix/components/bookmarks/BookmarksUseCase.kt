@@ -41,10 +41,7 @@ class BookmarksUseCase(
             parentGuid: String? = null,
         ): String? {
             return try {
-                val canAdd = storage
-                    .getBookmarksWithUrl(url)
-                    .getOrDefault(listOf())
-                    .firstOrNull { it.url == url } == null
+                val canAdd = storage.getBookmarksWithUrl(url).firstOrNull { it.url == url } == null
 
                 return if (canAdd) {
                     storage.addItem(
@@ -52,7 +49,7 @@ class BookmarksUseCase(
                         url = url,
                         title = title,
                         position = position,
-                    ).getOrNull()
+                    )
                 } else {
                     null
                 }
@@ -95,7 +92,6 @@ class BookmarksUseCase(
 
             return bookmarksStorage
                 .getRecentBookmarks(count)
-                .getOrDefault(listOf())
                 .map { bookmark ->
                     Bookmark(
                         title = bookmark.title,
