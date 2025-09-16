@@ -2347,6 +2347,10 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline">Tillad at %1$s automatisk anvender undtagelser, som er nødvendige for at undgå alvorlige problemer med indlæsning af websteder.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience">Anvend også automatisk undtagelser, der kun er nødvendige for at løse mindre problemer og gøre ikke-essentielle funktioner tilgængelige.</string>
+  <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Slå løsning af problemer fra</string>
+  <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_cancel">Behold løsning af problemer slået til</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Hvad der bliver blokeret af striks beskyttelse mod sporing</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->

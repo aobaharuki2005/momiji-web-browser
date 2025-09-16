@@ -1709,6 +1709,8 @@
   <string name="webcompat_reporter_send">Ուղարկել</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
   <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Ձեր զեկույցն ուղարկվեց</string>
+  <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
+  <string name="webcompat_reporter_success_snackbar_text_2">Զեկույցն ուղարկվեց</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Փակել</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
@@ -1888,6 +1890,8 @@
   <string name="bookmark_close_button_content_description">Փակել էջանիշերը</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">Դեռևս էջանիշեր չկան</string>
+  <!-- Bookmark screen folder description. %s is the count of bookmark folder children -->
+  <string name="bookmarks_folder_description">Էջանիշներ թղթապանակում՝ %s</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
   <string name="bookmark_empty_list_guest_description">Պահպանեք կայքերը, որոնք դիտարկում եք: Մուտք գործեք՝ այլ համաժամացված սարքերից էջանիշեր վերցնելու համար:</string>
   <!-- Text for the button to navigate to sync authentication -->
@@ -2347,6 +2351,18 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline">Թույլատրել %1$s-ին ինքնաբար գործադրել կայքի խոշոր խափանումներից խուսափելու համար անհրաժեշտ բացառությունները։</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience">Նաև ինքնաբար գործադրել բացառությունները, որոնք անհրաժեշտ են միայն աննշան խնդիրները շտկելու և հարմարության գործառույթները հասանելի դարձնելու համար։</string>
+  <!--
+    Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
+
+    Title for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection
+  -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">Վստա՞հ եք, որ ուզում եք անջատել ուղղումները։</string>
+  <!-- Message for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">Այս կարգավորումն օգնում է լուծել կայքերի ամենատարածված խնդիրները: Եթե այն անջատեք, որոշ կայքեր կարող են չաշխատել, և %1$s-ը չի կարողանա խափանաշտկել այդ խնդիրները:</string>
+  <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Անջատել ուղղումները</string>
+  <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_cancel">Պահել շտկումները միացված</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Ինչն է արգելափակված խիստ հետագծման պաշտպանությամբ</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->

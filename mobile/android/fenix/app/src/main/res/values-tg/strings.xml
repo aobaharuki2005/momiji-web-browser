@@ -1709,6 +1709,8 @@
   <string name="webcompat_reporter_send">Фиристодан</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
   <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Гузориши шумо ирсол шуд</string>
+  <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
+  <string name="webcompat_reporter_success_snackbar_text_2">Гузориш фиристода шуд</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Пӯшидан</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
@@ -1888,6 +1890,8 @@
   <string name="bookmark_close_button_content_description">Пӯшидани хатбаракҳо</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">То ҳол ягон хатбарак нест</string>
+  <!-- Bookmark screen folder description. %s is the count of bookmark folder children -->
+  <string name="bookmarks_folder_description">Хатбаракҳо дар ҷузвдон: %s</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
   <string name="bookmark_empty_list_guest_description">Сомонаҳоро ҳангоми тамошо нигоҳ доред. Барои ба даст овардани хатбаракҳо аз дастгоҳҳои ҳамоҳангшудаи дигар, ба ҳисоби худ ворид шавед.</string>
   <!-- Text for the button to navigate to sync authentication -->
@@ -2347,6 +2351,18 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline">Ба «%1$s» иҷозат диҳед, ки истисноҳои заруриро ба таври худкор татбиқ кунад ва вайроншавии асосии сомонаро пешгирӣ намояд.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience">Инчунин, истисноҳоеро ба таври худкор татбиқ кунед, ки танҳо барои ислоҳ кардани мушкилиҳои хурд ва дастрас кардани хусусиятҳои қулай заруранд.</string>
+  <!--
+    Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
+
+    Title for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection
+  -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">Шумо мутмаин ҳастед, ки мехоҳед ислоҳи нуқсонҳоро хомӯш кунед?</string>
+  <!-- Message for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">Ин танзим барои ислоҳи мушкилиҳои асосии сомона кумак мекунад. Агар онро ғайрифаъол кунед, баъзе сомонаҳо метавонанд дуруст кор накунанд ва «%1$s» наметавонад дар ҳалли он мушкилиҳо ёрӣ расонад.</string>
+  <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Хомӯш кардани ислоҳи нуқсонҳо</string>
+  <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_cancel">Фаъол кардани ислоҳи нуқсонҳо</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Ба воситаи муҳофизати ҷиддӣ аз пайгирӣ чӣ баста шудааст</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
