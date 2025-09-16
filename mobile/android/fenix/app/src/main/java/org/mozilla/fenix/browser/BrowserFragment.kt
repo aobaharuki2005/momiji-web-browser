@@ -35,7 +35,6 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.kotlin.isContentUrl
 import mozilla.telemetry.glean.private.NoExtras
-import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.store.BrowserScreenAction.ReaderModeStatusUpdated
@@ -292,22 +291,20 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     }
 
     private fun initTranslationsUpdates(context: Context, rootView: View) {
-        if (Config.channel.isDebug) {
-            translationsBannerIntegration.set(
-                feature = TranslationsBannerIntegration(
-                    browserStore = context.components.core.store,
-                    browserScreenStore = browserScreenStore,
-                    binding = binding,
-                    onExpand = {
-                        val directions =
-                            BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment()
-                        findNavController().navigateSafe(R.id.browserFragment, directions)
-                    },
-                ),
-                owner = this,
-                view = rootView,
-            )
-        }
+        translationsBannerIntegration.set(
+            feature = TranslationsBannerIntegration(
+                browserStore = context.components.core.store,
+                browserScreenStore = browserScreenStore,
+                binding = binding,
+                onExpand = {
+                    val directions =
+                        BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment()
+                    findNavController().navigateSafe(R.id.browserFragment, directions)
+                },
+            ),
+            owner = this,
+            view = rootView,
+        )
 
         if (FxNimbus.features.translations.value().mainFlowToolbarEnabled) {
             translationsBinding.set(
