@@ -319,8 +319,6 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fc01107426c3adebb
  .../linux/x11/screen_capturer_x11.cc          |   2 +-
  .../linux/x11/window_capturer_x11.cc          |   9 +
  .../linux/x11/window_capturer_x11.h           |   4 +
- .../desktop_capture/linux/x11/x_error_trap.cc |  68 ++++---
- .../desktop_capture/linux/x11/x_error_trap.h  |  29 ++-
  .../win/screen_capture_utils.cc               |   2 +-
  modules/rtp_rtcp/source/rtcp_sender.cc        |   2 +-
  .../rtp_rtcp/source/rtp_header_extensions.cc  |  39 ++++
@@ -345,7 +343,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fc01107426c3adebb
  test/fuzzers/rtp_packet_fuzzer.cc             |   4 +
  test/vcm_capturer.cc                          |   2 +-
  webrtc.gni                                    |   2 +-
- 38 files changed, 565 insertions(+), 81 deletions(-)
+ 36 files changed, 507 insertions(+), 42 deletions(-)
 
 diff --git a/api/rtp_headers.cc b/api/rtp_headers.cc
 index c272ccae06..0271714c44 100644
@@ -584,152 +582,6 @@ index 2605c54650..53aabb46fe 100644
    Callback* callback_ = nullptr;
  
    scoped_refptr<SharedXDisplay> x_display_;
-diff --git a/modules/desktop_capture/linux/x11/x_error_trap.cc b/modules/desktop_capture/linux/x11/x_error_trap.cc
-index 24c2065111..3314dd286c 100644
---- a/modules/desktop_capture/linux/x11/x_error_trap.cc
-+++ b/modules/desktop_capture/linux/x11/x_error_trap.cc
-@@ -12,48 +12,58 @@
- 
- #include <stddef.h>
- 
--#include <atomic>
-+#include <limits>
- 
- #include "rtc_base/checks.h"
- 
--namespace webrtc {
--
--namespace {
--
--static int g_last_xserver_error_code = 0;
--static std::atomic<Display*> g_display_for_error_handler = nullptr;
- 
--Mutex* AcquireMutex() {
--  static Mutex* mutex = new Mutex();
--  return mutex;
--}
-+namespace webrtc {
- 
--int XServerErrorHandler(Display* display, XErrorEvent* error_event) {
--  RTC_DCHECK_EQ(display, g_display_for_error_handler.load());
--  g_last_xserver_error_code = error_event->error_code;
--  return 0;
-+Bool XErrorTrap::XServerErrorHandler(Display* display, xReply* rep,
-+                                     char* /* buf */, int /* len */,
-+                                     XPointer data) {
-+  XErrorTrap* self = reinterpret_cast<XErrorTrap*>(data);
-+  if (rep->generic.type != X_Error ||
-+      // Overflow-safe last_request_read <= last_ignored_request_ for skipping
-+      // async replies from requests before XErrorTrap was created.
-+      self->last_ignored_request_ - display->last_request_read <
-+      std::numeric_limits<unsigned long>::max() >> 1)
-+    return False;
-+  self->last_xserver_error_code_ = rep->error.errorCode;
-+  return True;
- }
- 
--}  // namespace
--
--XErrorTrap::XErrorTrap(Display* display) : mutex_lock_(AcquireMutex()) {
--  // We don't expect this class to be used in a nested fashion so therefore
--  // g_display_for_error_handler should never be valid here.
--  RTC_DCHECK(!g_display_for_error_handler.load());
--  RTC_DCHECK(display);
--  g_display_for_error_handler.store(display);
--  g_last_xserver_error_code = 0;
--  original_error_handler_ = XSetErrorHandler(&XServerErrorHandler);
-+XErrorTrap::XErrorTrap(Display* display)
-+    : display_(display),
-+      last_xserver_error_code_(0),
-+      enabled_(true) {
-+  // Use async_handlers instead of XSetErrorHandler().  async_handlers can
-+  // remain in place and then be safely removed at the right time even if a
-+  // handler change happens concurrently on another thread.  async_handlers
-+  // are processed first and so can prevent errors reaching the global
-+  // XSetErrorHandler handler.  They also will not see errors from or affect
-+  // handling of errors on other Displays, which may be processed on other
-+  // threads.
-+  LockDisplay(display);
-+  async_handler_.next = display->async_handlers;
-+  async_handler_.handler = XServerErrorHandler;
-+  async_handler_.data = reinterpret_cast<XPointer>(this);
-+  display->async_handlers = &async_handler_;
-+  last_ignored_request_ = display->request;
-+  UnlockDisplay(display);
- }
- 
- int XErrorTrap::GetLastErrorAndDisable() {
--  g_display_for_error_handler.store(nullptr);
--  XSetErrorHandler(original_error_handler_);
--  return g_last_xserver_error_code;
-+  assert(enabled_);
-+  enabled_ = false;
-+  LockDisplay(display_);
-+  DeqAsyncHandler(display_, &async_handler_);
-+  UnlockDisplay(display_);
-+  return last_xserver_error_code_;
- }
- 
- XErrorTrap::~XErrorTrap() {
--  if (g_display_for_error_handler.load() != nullptr)
-+  if (enabled_)
-     GetLastErrorAndDisable();
- }
- 
-diff --git a/modules/desktop_capture/linux/x11/x_error_trap.h b/modules/desktop_capture/linux/x11/x_error_trap.h
-index 1f21ab969c..df7e86bf03 100644
---- a/modules/desktop_capture/linux/x11/x_error_trap.h
-+++ b/modules/desktop_capture/linux/x11/x_error_trap.h
-@@ -11,30 +11,39 @@
- #ifndef MODULES_DESKTOP_CAPTURE_LINUX_X11_X_ERROR_TRAP_H_
- #define MODULES_DESKTOP_CAPTURE_LINUX_X11_X_ERROR_TRAP_H_
- 
--#include <X11/Xlib.h>
--
--#include "rtc_base/synchronization/mutex.h"
-+#include <X11/Xlibint.h>
-+#undef max // Xlibint.h defines this and it breaks std::max
-+#undef min // Xlibint.h defines this and it breaks std::min
- 
- namespace webrtc {
- 
--// Helper class that registers an X Window error handler. Caller can use
-+// Helper class that registers X Window error handler. Caller can use
- // GetLastErrorAndDisable() to get the last error that was caught, if any.
-+// An XErrorTrap may be constructed on any thread, but errors are collected
-+// from all threads and so |display| should be used only on one thread.
-+// Other Displays are unaffected.
- class XErrorTrap {
-  public:
-   explicit XErrorTrap(Display* display);
-+  ~XErrorTrap();
- 
-   XErrorTrap(const XErrorTrap&) = delete;
-   XErrorTrap& operator=(const XErrorTrap&) = delete;
- 
--  ~XErrorTrap();
--
--  // Returns the last error if one was caught, otherwise 0. Also unregisters the
--  // error handler and replaces it with `original_error_handler_`.
-+  // Returns last error and removes unregisters the error handler.
-+  // Must not be called more than once.
-   int GetLastErrorAndDisable();
- 
-  private:
--  MutexLock mutex_lock_;
--  XErrorHandler original_error_handler_ = nullptr;
-+  static Bool XServerErrorHandler(Display* display, xReply* rep,
-+                                  char* /* buf */, int /* len */,
-+                                  XPointer data);
-+
-+  _XAsyncHandler async_handler_;
-+  Display* display_;
-+  unsigned long last_ignored_request_;
-+  int last_xserver_error_code_;
-+  bool enabled_;
- };
- 
- }  // namespace webrtc
 diff --git a/modules/desktop_capture/win/screen_capture_utils.cc b/modules/desktop_capture/win/screen_capture_utils.cc
 index 8ac8bfcd0c..4f6922f22c 100644
 --- a/modules/desktop_capture/win/screen_capture_utils.cc
