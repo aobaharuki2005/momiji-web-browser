@@ -224,6 +224,13 @@ void MacroAssemblerMIPS64::ma_li(Register dest, ImmWord imm) {
     }
     as_dsll(dest, dest, 16);
   } else {
+    uint32_t trailingZeroes = mozilla::CountTrailingZeroes64(value);
+    if (Imm16::IsInSignedRange(value >> trailingZeroes)) {
+      as_addiu(dest, zero, int32_t(value >> trailingZeroes));
+      as_dsll32(dest, dest, trailingZeroes);
+      return;
+    }
+
     as_lui(dest, uint16_t(value >> 48));
     if (uint16_t(value >> 32)) {
       as_ori(dest, dest, uint16_t(value >> 32));
