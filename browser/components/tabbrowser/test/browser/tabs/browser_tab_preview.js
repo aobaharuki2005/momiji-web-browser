@@ -132,8 +132,6 @@ add_setup(async function () {
       ["browser.tabs.hoverPreview.enabled", true],
       ["browser.tabs.hoverPreview.showThumbnails", false],
       ["browser.tabs.tooltipsShowPidAndActiveness", false],
-      ["sidebar.revamp", false],
-      ["sidebar.verticalTabs", false],
       ["test.wait300msAfterTabSwitch", true],
       ["ui.tooltip.delay_ms", 0],
     ],
@@ -470,6 +468,7 @@ add_task(async function tabUrlBarInputTests() {
  * the tab strip is overflowing.
  */
 add_task(async function tabWheelTests() {
+  let initialTab = gBrowser.tabs[0];
   const previewPanel = document.getElementById(TAB_PREVIEW_PANEL_ID);
   const tab1 = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -485,7 +484,7 @@ add_task(async function tabWheelTests() {
     gBrowser.tabContainer.arrowScrollbox,
     "overflow"
   );
-  BrowserTestUtils.overflowTabs(registerCleanupFunction, window, {
+  await BrowserTestUtils.overflowTabs(registerCleanupFunction, window, {
     overflowAtStart: false,
   });
   await scrollOverflowEvent;
@@ -497,10 +496,8 @@ add_task(async function tabWheelTests() {
     "Panel has rolluponmousewheel=true when tabs overflow"
   );
 
-  // Clean up extra tabs
-  while (gBrowser.tabs.length > 1) {
-    BrowserTestUtils.removeTab(gBrowser.tabs[0]);
-  }
+  await closeTabPreviews();
+  gBrowser.removeAllTabsBut(initialTab);
   await resetState();
 });
 
@@ -906,7 +903,7 @@ add_task(async function delayTests() {
     "Delay is not reset when moving between tabs"
   );
 
-  EventUtils.synthesizeMouseAtCenter(document.getElementById("reload-button"), {
+  EventUtils.synthesizeMouseAtCenter(document.getElementById("back-button"), {
     type: "mousemove",
   });
 
