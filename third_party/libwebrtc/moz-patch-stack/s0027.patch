@@ -344,7 +344,7 @@ index 6ad3ea247f..8f5108a0af 100644
  rtc_library("neteq_simulator_api") {
    visibility = [ "*" ]
 diff --git a/api/rtp_sender_interface.h b/api/rtp_sender_interface.h
-index 478e15d570..2b3f7d9cac 100644
+index 2a7907dc4e..18d27b2499 100644
 --- a/api/rtp_sender_interface.h
 +++ b/api/rtp_sender_interface.h
 @@ -34,6 +34,8 @@
@@ -362,7 +362,7 @@ index 478e15d570..2b3f7d9cac 100644
  
 -using SetParametersCallback = absl::AnyInvocable<void(RTCError) &&>;
 -
- class RTC_EXPORT RtpSenderInterface : public webrtc::RefCountInterface,
+ class RTC_EXPORT RtpSenderInterface : public RefCountInterface,
                                        public FrameTransformerHost {
   public:
 diff --git a/api/rtp_sender_setparameters_callback.cc b/api/rtp_sender_setparameters_callback.cc
