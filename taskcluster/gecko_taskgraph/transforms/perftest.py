@@ -273,6 +273,7 @@ def create_duplicate_simpleperf_jobs(config, jobs):
         ):
             new_job = deepcopy(job)
             new_job["run-on-projects"] = []
+            new_job["attributes"] = {"cron": False}
             new_job["dependencies"] = {
                 "android-aarch64-shippable": "build-android-aarch64-shippable/opt"
             }
