@@ -13,6 +13,7 @@ import android.content.Intent.ACTION_VIEW
 import android.content.Intent.ACTION_WEB_SEARCH
 import android.content.Intent.EXTRA_TEXT
 import android.nfc.NfcAdapter.ACTION_NDEF_DISCOVERED
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
@@ -20,6 +21,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.externalPackage
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.APP_LINK_LAUNCH_TYPE_UNKNOWN
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.base.log.logger.Logger
@@ -60,14 +62,27 @@ class TabIntentProcessor(
             // Don't do app-link DNS warmup when DoH is enabled. See Bug 1929005.
             warmupDNS(url.toNormalizedUrl())
 
+            val flags = computeLoadUrlFlags(intent)
+
             val caller = intent.externalPackage()
             tabsUseCases.selectOrAddTab(
                 url.toNormalizedUrl(),
                 private = isPrivate,
                 source = SessionState.Source.External.ActionView(caller),
-                flags = LoadUrlFlags.external(),
+                flags = flags,
             )
             true
+        }
+    }
+
+    @VisibleForTesting
+    internal fun computeLoadUrlFlags(intent: SafeIntent): LoadUrlFlags {
+        return if (intent.hasExtra(EXTRA_APP_LINK_LAUNCH_TYPE)) {
+            val intentLaunchType =
+                intent.getIntExtra(EXTRA_APP_LINK_LAUNCH_TYPE, APP_LINK_LAUNCH_TYPE_UNKNOWN)
+            LoadUrlFlags.select(LoadUrlFlags.external().value, intentLaunchType)
+        } else {
+            LoadUrlFlags.external()
         }
     }
 
@@ -145,5 +160,12 @@ class TabIntentProcessor(
             ACTION_SEARCH, ACTION_WEB_SEARCH -> processSearchIntent(safeIntent)
             else -> false
         }
+    }
+
+    /**
+     * Companion object for [TabIntentProcessor].
+     */
+    companion object {
+        const val EXTRA_APP_LINK_LAUNCH_TYPE = "APP_LINK_LAUNCH_TYPE"
     }
 }

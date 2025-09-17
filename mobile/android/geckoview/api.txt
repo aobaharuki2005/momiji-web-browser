@@ -1247,6 +1247,10 @@ package org.mozilla.geckoview {
     method @AnyThread public void setTranslationsSessionDelegate(@Nullable TranslationsController.SessionTranslation.Delegate);
     method @AnyThread public void stop();
     method @UiThread protected void setShouldPinOnScreen(boolean);
+    field public static final int APP_LINK_LAUNCH_TYPE_COLD = 1;
+    field public static final int APP_LINK_LAUNCH_TYPE_HOT = 3;
+    field public static final int APP_LINK_LAUNCH_TYPE_UNKNOWN = 0;
+    field public static final int APP_LINK_LAUNCH_TYPE_WARM = 2;
     field public static final int FINDER_DISPLAY_DIM_PAGE = 2;
     field public static final int FINDER_DISPLAY_DRAW_LINK_OUTLINE = 4;
     field public static final int FINDER_DISPLAY_HIGHLIGHT_ALL = 1;
@@ -1269,6 +1273,9 @@ package org.mozilla.geckoview {
     field public static final int PRIORITY_DEFAULT = 0;
     field public static final int PRIORITY_HIGH = 1;
     field @Nullable protected GeckoSession.Window mWindow;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.AppLinkLaunchType {
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.ClipboardPermissionType {
@@ -1382,6 +1389,7 @@ package org.mozilla.geckoview {
   @AnyThread public static class GeckoSession.Loader {
     ctor public Loader();
     method @NonNull public GeckoSession.Loader additionalHeaders(@NonNull Map<String,String>);
+    method @NonNull public GeckoSession.Loader appLinkLaunchType(int);
     method @NonNull public GeckoSession.Loader data(@NonNull byte[], @Nullable String);
     method @NonNull public GeckoSession.Loader data(@NonNull String, @Nullable String);
     method @NonNull public GeckoSession.Loader flags(int);

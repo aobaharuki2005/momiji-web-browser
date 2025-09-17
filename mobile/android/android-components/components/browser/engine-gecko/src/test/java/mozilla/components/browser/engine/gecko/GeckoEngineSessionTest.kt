@@ -659,6 +659,16 @@ class GeckoEngineSessionTest {
         verify(geckoSession).load(
             GeckoSession.Loader().uri("http://mozilla.org").textDirectiveUserActivation(true),
         )
+
+        engineSession.loadUrl("https://example.com")
+        verify(geckoSession).load(
+            GeckoSession.Loader().uri("https://example.com").appLinkLaunchType(LoadUrlFlags.APP_LINK_LAUNCH_TYPE_UNKNOWN),
+        )
+
+        engineSession.loadUrl("http://mozilla.org")
+        verify(geckoSession).load(
+            GeckoSession.Loader().uri("https://example.com").appLinkLaunchType(LoadUrlFlags.APP_LINK_LAUNCH_TYPE_COLD),
+        )
     }
 
     @Test
