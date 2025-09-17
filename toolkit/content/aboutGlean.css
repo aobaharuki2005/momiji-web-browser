@@ -85,3 +85,27 @@ td[data-d3-cell="value"] > pre {
   overflow-x: scroll;
   width: fit-content;
 }
+
+td[data-d3-cell="value"] > svg {
+  color: var(--text-color);
+  border: 1px solid var(--border-color-card);
+  border-radius: var(--border-radius-small);
+  background-color: var(--background-color-box);
+}
+
+.histogram .boxes rect {
+  fill: var(--color-accent-primary);
+}
+
+.histogram .boxes .hovered rect {
+  fill: var(--color-accent-primary-hover);
+}
+
+.histogram .boxes text {
+  fill: var(--text-color);
+}
+
+.histogram .tick *,
+.histogram .domain {
+  fill: var(--text-color);
+}
