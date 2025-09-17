@@ -15,6 +15,7 @@ import android.text.style.StyleSpan
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
+import androidx.fragment.app.Fragment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChangedBy
@@ -25,6 +26,7 @@ import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.android.content.res.getSpanned
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
@@ -33,6 +35,7 @@ import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.appstate.AppAction.QrScannerAction
+import org.mozilla.fenix.ext.components
 
 /**
  * Handles QR Scan Activity requests and results.
@@ -145,6 +148,47 @@ class QrScanFenixFeature(
             launchQrScan()
         } else {
             appStore.dispatch(QrScannerAction.QrScannerDismissed)
+        }
+    }
+
+    /**
+     * Static binding for [QrScanFenixFeature]
+     */
+    companion object {
+
+        /**
+         * Convenient method to register [QrScanFenixFeature] with [Fragment].
+         * Upon destruction of the fragment's view, the binding will be unregistered and all
+         * references cleared.
+         *
+         * @param fragment the fragment to register with.
+         * @param activityResultLauncher the [ActivityResultLauncher] to use for the result.
+         */
+        fun register(
+            fragment: Fragment,
+            activityResultLauncher: ActivityResultLauncher<Intent>,
+        ): ViewBoundFeatureWrapper<QrScanFenixFeature>? {
+            var qrBinding: ViewBoundFeatureWrapper<QrScanFenixFeature>? = ViewBoundFeatureWrapper()
+
+            qrBinding?.set(
+                feature = QrScanFenixFeature(
+                    context = fragment.requireContext(),
+                    appStore = fragment.requireContext().components.appStore,
+                    qrScanActivityLauncher = activityResultLauncher,
+                ),
+                owner = fragment.viewLifecycleOwner,
+                view = fragment.requireView(),
+            )
+
+            fragment.viewLifecycleOwner.lifecycle.addObserver(
+                object : androidx.lifecycle.DefaultLifecycleObserver {
+                    override fun onDestroy(owner: androidx.lifecycle.LifecycleOwner) {
+                        qrBinding = null
+                    }
+                },
+            )
+
+            return qrBinding
         }
     }
 }

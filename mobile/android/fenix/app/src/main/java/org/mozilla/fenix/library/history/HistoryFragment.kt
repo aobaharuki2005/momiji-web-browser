@@ -162,15 +162,12 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
 
     private var verificationResultLauncher: ActivityResultLauncher<Intent> =
         registerForVerification(onVerified = ::openHistoryInPrivate)
-
-    private val qrScanFenixFeature by lazy(LazyThreadSafetyMode.NONE) {
+    private var qrScanFenixFeature: ViewBoundFeatureWrapper<QrScanFenixFeature>? =
         ViewBoundFeatureWrapper<QrScanFenixFeature>()
-    }
-    private val qrScannerLauncher: ActivityResultLauncher<Intent> =
+    private val qrScanLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            qrScanFenixFeature.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
+            qrScanFenixFeature?.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
         }
-
     private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
         ViewBoundFeatureWrapper<VoiceSearchFeature>()
     }
@@ -262,15 +259,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
 
         if (requireContext().settings().shouldUseComposableToolbar) {
             toolbarStore = buildToolbarStore()
-            qrScanFenixFeature.set(
-                feature = QrScanFenixFeature(
-                    context = requireContext(),
-                    appStore = requireContext().components.appStore,
-                    qrScanActivityLauncher = qrScannerLauncher,
-                ),
-                owner = viewLifecycleOwner,
-                view = view,
-            )
+            qrScanFenixFeature = QrScanFenixFeature.register(this, qrScanLauncher)
             voiceSearchFeature.set(
                 feature = VoiceSearchFeature(
                     context = requireContext(),

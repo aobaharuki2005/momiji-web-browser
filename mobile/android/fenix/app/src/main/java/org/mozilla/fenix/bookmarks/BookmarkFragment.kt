@@ -66,15 +66,12 @@ import org.mozilla.fenix.utils.lastSavedFolderCache
 class BookmarkFragment : Fragment() {
 
     private val verificationResultLauncher = registerForVerification()
-
-    private val qrScanFenixFeature by lazy(LazyThreadSafetyMode.NONE) {
+    private var qrScanFenixFeature: ViewBoundFeatureWrapper<QrScanFenixFeature>? =
         ViewBoundFeatureWrapper<QrScanFenixFeature>()
-    }
-    private val qrScannerLauncher: ActivityResultLauncher<Intent> =
+    private val qrScanLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            qrScanFenixFeature.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
+            qrScanFenixFeature?.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
         }
-
     private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
         ViewBoundFeatureWrapper<VoiceSearchFeature>()
     }
@@ -212,15 +209,7 @@ class BookmarkFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         if (requireContext().settings().shouldUseComposableToolbar) {
-            qrScanFenixFeature.set(
-                feature = QrScanFenixFeature(
-                    context = requireContext(),
-                    appStore = requireContext().components.appStore,
-                    qrScanActivityLauncher = qrScannerLauncher,
-                ),
-                owner = viewLifecycleOwner,
-                view = view,
-            )
+            qrScanFenixFeature = QrScanFenixFeature.register(this, qrScanLauncher)
             voiceSearchFeature.set(
                 feature = VoiceSearchFeature(
                     context = requireContext(),

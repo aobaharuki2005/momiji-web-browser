@@ -76,15 +76,12 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private val translationsBinding = ViewBoundFeatureWrapper<TranslationsBinding>()
     private val translationsBannerIntegration = ViewBoundFeatureWrapper<TranslationsBannerIntegration>()
 
-    private val qrScanFenixFeature by lazy(LazyThreadSafetyMode.NONE) {
+    private var qrScanFenixFeature: ViewBoundFeatureWrapper<QrScanFenixFeature>? =
         ViewBoundFeatureWrapper<QrScanFenixFeature>()
-    }
-
     private val qrScanLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            qrScanFenixFeature.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
+            qrScanFenixFeature?.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
         }
-
     private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
         ViewBoundFeatureWrapper<VoiceSearchFeature>()
     }
@@ -183,7 +180,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private fun initBrowserToolbarComposableUpdates(rootView: View) {
         initReaderModeUpdates(rootView.context, rootView)
-        initQrScannerSupport(rootView.context)
+        qrScanFenixFeature = QrScanFenixFeature.register(this, qrScanLauncher)
         initVoiceSearchSupport(rootView.context)
     }
 
@@ -330,18 +327,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 context = context,
                 appStore = context.components.appStore,
                 voiceSearchLauncher = voiceSearchLauncher,
-            ),
-            owner = viewLifecycleOwner,
-            view = binding.root,
-        )
-    }
-
-    private fun initQrScannerSupport(context: Context) {
-        qrScanFenixFeature.set(
-            feature = QrScanFenixFeature(
-                context = context,
-                appStore = context.components.appStore,
-                qrScanActivityLauncher = qrScanLauncher,
             ),
             owner = viewLifecycleOwner,
             view = binding.root,

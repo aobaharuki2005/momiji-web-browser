@@ -256,23 +256,19 @@ class HomeFragment : Fragment() {
     private val searchSelectorBinding = ViewBoundFeatureWrapper<SearchSelectorBinding>()
     private val searchSelectorMenuBinding = ViewBoundFeatureWrapper<SearchSelectorMenuBinding>()
     private val thumbnailsFeature = ViewBoundFeatureWrapper<HomepageThumbnailIntegration>()
-
+    private var qrScanFenixFeature: ViewBoundFeatureWrapper<QrScanFenixFeature>? =
+        ViewBoundFeatureWrapper<QrScanFenixFeature>()
+    private val qrScanLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            qrScanFenixFeature?.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
+        }
     private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
         ViewBoundFeatureWrapper<VoiceSearchFeature>()
-    }
-
-    private val qrScanFenixFeature by lazy(LazyThreadSafetyMode.NONE) {
-        ViewBoundFeatureWrapper<QrScanFenixFeature>()
     }
 
     private val voiceSearchLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             voiceSearchFeature.get()?.handleVoiceSearchResult(result.resultCode, result.data)
-        }
-
-    private val qrScanLauncher: ActivityResultLauncher<Intent> =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            qrScanFenixFeature.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -922,15 +918,7 @@ class HomeFragment : Fragment() {
         }
 
         if (requireContext().settings().shouldUseComposableToolbar) {
-            qrScanFenixFeature.set(
-                feature = QrScanFenixFeature(
-                    context = requireContext(),
-                    appStore = requireContext().components.appStore,
-                    qrScanActivityLauncher = qrScanLauncher,
-                ),
-                owner = viewLifecycleOwner,
-                view = binding.root,
-            )
+            qrScanFenixFeature = QrScanFenixFeature.register(this, qrScanLauncher)
         }
 
         (toolbarView as? HomeToolbarView)?.let {
