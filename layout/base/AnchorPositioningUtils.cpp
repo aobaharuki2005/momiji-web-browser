@@ -433,4 +433,161 @@ Maybe<AnchorPosInfo> AnchorPositioningUtils::GetAnchorPosRect(
   });
 }
 
+/**
+ * Strips the Span and SelfWM flags from a position-area keyword value.
+ */
+static inline StylePositionAreaKeyword StripSpanAndSelfWMFlags(
+    StylePositionAreaKeyword aValue) {
+  return StylePositionAreaKeyword(uint8_t(aValue) &
+                                  ~(uint8_t(StylePositionAreaKeyword::Span) |
+                                    uint8_t(StylePositionAreaKeyword::SelfWM)));
+}
+
+/**
+ * Returns the given PositionArea with the second keyword converted to the
+ * implied keyword if it was not specified (its value is `None`).
+ */
+static inline StylePositionArea MakeMissingSecondExplicit(
+    StylePositionArea aPositionArea) {
+  auto first = aPositionArea.first;
+  if (aPositionArea.second == StylePositionAreaKeyword::None) {
+    switch (StripSpanAndSelfWMFlags(first)) {
+      // Per spec, if the single specified keyword is ambiguous about its axis
+      // then it is repeated.
+      case StylePositionAreaKeyword::Center:
+      case StylePositionAreaKeyword::SpanAll:
+      case StylePositionAreaKeyword::Start:
+      case StylePositionAreaKeyword::End:
+        return {first, first};
+
+      // Otherwise, the other keyword is `span-all`. The "first" keyword may
+      // actually belong canonically in the second position, depending which
+      // axis it refers to, but that will be resolved later.
+      default:
+        return {first, StylePositionAreaKeyword::SpanAll};
+    }
+  }
+  return aPositionArea;
+}
+
+/**
+ * Returns an equivalent StylePositionArea that contains:
+ * [
+ *   [ left | center | right | span-left | span-right | span-all]
+ *   [ top | center | bottom | span-top | span-bottom | span-all]
+ * ]
+ */
+[[maybe_unused]]
+static StylePositionArea ToPhysicalPositionArea(StylePositionArea aPosArea,
+                                                WritingMode aCbWM,
+                                                WritingMode aPosWM) {
+  auto pa = MakeMissingSecondExplicit(aPosArea);
+
+  auto toPhysical = [=](StylePositionAreaKeyword aValue,
+                        bool aImplicitIsBlock) -> StylePositionAreaKeyword {
+    if (aValue < StylePositionAreaKeyword::Left) {
+      return aValue;
+    }
+
+    // Extract the `span` and `selfWM` bits and mask them out of aValue.
+    uint8_t span = uint8_t(aValue) & uint8_t(StylePositionAreaKeyword::Span);
+    uint8_t selfWM =
+        uint8_t(aValue) & uint8_t(StylePositionAreaKeyword::SelfWM);
+    aValue = StripSpanAndSelfWMFlags(aValue);
+
+    // Determine which logical side, if any, is used.
+    Maybe<LogicalSide> ls;
+    WritingMode wm = selfWM ? aPosWM : aCbWM;
+    switch (aValue) {
+      case StylePositionAreaKeyword::Start:
+        ls = Some(aImplicitIsBlock ? LogicalSide::BStart : LogicalSide::IStart);
+        break;
+      case StylePositionAreaKeyword::End:
+        ls = Some(aImplicitIsBlock ? LogicalSide::BEnd : LogicalSide::IEnd);
+        break;
+
+      case StylePositionAreaKeyword::BlockStart:
+        ls = Some(LogicalSide::BStart);
+        break;
+      case StylePositionAreaKeyword::BlockEnd:
+        ls = Some(LogicalSide::BEnd);
+        break;
+      case StylePositionAreaKeyword::InlineStart:
+        ls = Some(LogicalSide::IStart);
+        break;
+      case StylePositionAreaKeyword::InlineEnd:
+        ls = Some(LogicalSide::IEnd);
+        break;
+
+      case StylePositionAreaKeyword::XStart:
+        ls = Some(wm.IsVertical() ? LogicalSide::BStart : LogicalSide::IStart);
+        break;
+      case StylePositionAreaKeyword::XEnd:
+        ls = Some(wm.IsVertical() ? LogicalSide::BEnd : LogicalSide::IEnd);
+        break;
+      case StylePositionAreaKeyword::YStart:
+        ls = Some(wm.IsVertical() ? LogicalSide::IStart : LogicalSide::BStart);
+        break;
+      case StylePositionAreaKeyword::YEnd:
+        ls = Some(wm.IsVertical() ? LogicalSide::IEnd : LogicalSide::BEnd);
+        break;
+
+      default:
+        break;
+    }
+
+    // If a logical side was used, resolve it to physical using the appropriate
+    // writing-mode.
+    if (ls.isSome()) {
+      switch (wm.PhysicalSide(ls.ref())) {
+        case Side::eSideLeft:
+          aValue = StylePositionAreaKeyword::Left;
+          break;
+        case Side::eSideRight:
+          aValue = StylePositionAreaKeyword::Right;
+          break;
+        case Side::eSideTop:
+          aValue = StylePositionAreaKeyword::Top;
+          break;
+        case Side::eSideBottom:
+          aValue = StylePositionAreaKeyword::Bottom;
+          break;
+      }
+    }
+
+    // Restore the `span` component of the value, if present originally.
+    return StylePositionAreaKeyword(uint8_t(aValue) | span);
+  };
+
+  pa.first = toPhysical(pa.first, /* aImplicitIsBlock = */ true);
+  pa.second = toPhysical(pa.second, /* aImplicitIsBlock = */ false);
+
+  // Ensure the physical values are in the expected order, with Left or Right
+  // in the first position, Top or Bottom in second. (Center and SpanAll may
+  // occur in either slot.)
+  switch (StripSpanAndSelfWMFlags(pa.first)) {
+    case StylePositionAreaKeyword::Top:
+    case StylePositionAreaKeyword::Bottom:
+      std::swap(pa.first, pa.second);
+      break;
+
+    case StylePositionAreaKeyword::Center:
+    case StylePositionAreaKeyword::SpanAll:
+      switch (StripSpanAndSelfWMFlags(pa.second)) {
+        case StylePositionAreaKeyword::Left:
+        case StylePositionAreaKeyword::Right:
+          std::swap(pa.first, pa.second);
+          break;
+        default:
+          break;
+      }
+      break;
+
+    default:
+      break;
+  }
+
+  return pa;
+}
+
 }  // namespace mozilla
