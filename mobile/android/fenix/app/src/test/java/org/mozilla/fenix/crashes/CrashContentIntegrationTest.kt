@@ -53,7 +53,7 @@ class CrashContentIntegrationTest {
         )
         appStore = AppStore()
         settings = mockk {
-            every { getBottomToolbarHeight() } returns 100
+            every { getBottomToolbarHeight(any()) } returns 100
             every { getTopToolbarHeight(any()) } returns 100
         }
     }
@@ -75,7 +75,7 @@ class CrashContentIntegrationTest {
             components = components,
             settings = settings,
             navController = mockk(),
-            sessionId = sessionId,
+            customTabSessionId = sessionId,
         )
         val controllerCaptor = slot<CrashReporterController>()
         integration.viewProvider = { crashReporterView }
@@ -107,7 +107,7 @@ class CrashContentIntegrationTest {
             components = mockk(),
             settings = settings,
             navController = mockk(),
-            sessionId = sessionId,
+            customTabSessionId = sessionId,
         )
 
         integration.viewProvider = { crashReporterView }
@@ -132,7 +132,7 @@ class CrashContentIntegrationTest {
                 components = mockk(),
                 settings = settings,
                 navController = mockk(),
-                sessionId = sessionId,
+                customTabSessionId = sessionId,
             ),
         )
 
@@ -158,7 +158,7 @@ class CrashContentIntegrationTest {
                 components = mockk(),
                 settings = settings,
                 navController = mockk(),
-                sessionId = sessionId,
+                customTabSessionId = sessionId,
             ),
         )
         val scopeTwo = TestScope()
@@ -193,7 +193,7 @@ class CrashContentIntegrationTest {
             components = components,
             settings = settings,
             navController = mockk(),
-            sessionId = sessionId,
+            customTabSessionId = sessionId,
         )
         val controllerCaptor = slot<CrashReporterController>()
         integration.viewProvider = { crashReporterView }

@@ -877,7 +877,9 @@ abstract class BaseBrowserFragment :
             )
         }
 
-        val bottomToolbarHeight = context.settings().getBottomToolbarHeight()
+        val bottomToolbarHeight = context.settings().getBottomToolbarHeight(
+            includeNavBarIfEnabled = customTabSessionId == null,
+        )
 
         downloadFeature.onDownloadStopped = { downloadState, _, downloadJobStatus ->
             handleOnDownloadFinished(
@@ -1126,7 +1128,7 @@ abstract class BaseBrowserFragment :
                 components = requireComponents,
                 settings = context.settings(),
                 navController = findNavController(),
-                sessionId = customTabSessionId,
+                customTabSessionId = customTabSessionId,
             ).apply {
                 viewProvider = {
                     view.findViewById(R.id.crash_reporter_view)
@@ -1292,7 +1294,7 @@ abstract class BaseBrowserFragment :
 
         initializeEngineView(
             topToolbarHeight = context.settings().getTopToolbarHeight(
-                includeTabStrip = customTabSessionId == null && context.settings().isTabStripEnabled,
+                includeTabStripIfAvailable = customTabSessionId == null,
             ),
             bottomToolbarHeight = bottomToolbarHeight,
         )
@@ -2041,9 +2043,11 @@ abstract class BaseBrowserFragment :
         if (fullScreenFeature.get()?.isFullScreen == true) return 0 to 0
 
         val topToolbarHeight = context.settings().getTopToolbarHeight(
-            includeTabStrip = customTabSessionId == null && context.settings().isTabStripEnabled,
+            includeTabStripIfAvailable = customTabSessionId == null,
         )
-        val bottomToolbarHeight = context.settings().getBottomToolbarHeight()
+        val bottomToolbarHeight = context.settings().getBottomToolbarHeight(
+            includeNavBarIfEnabled = customTabSessionId == null,
+        )
 
         return topToolbarHeight to bottomToolbarHeight
     }
@@ -2322,9 +2326,11 @@ abstract class BaseBrowserFragment :
         val isFullscreen = fullScreenFeature.get()?.isFullScreen == true
         val shouldToolbarsBeHidden = isFullscreen || !webAppToolbarShouldBeVisible
         val topToolbarHeight = requireContext().settings().getTopToolbarHeight(
-            includeTabStrip = customTabSessionId == null && requireContext().settings().isTabStripEnabled,
+            includeTabStripIfAvailable = customTabSessionId == null,
         )
-        val bottomToolbarHeight = requireContext().settings().getBottomToolbarHeight()
+        val bottomToolbarHeight = requireContext().settings().getBottomToolbarHeight(
+            includeNavBarIfEnabled = customTabSessionId == null,
+        )
 
         initializeEngineView(
             topToolbarHeight = if (shouldToolbarsBeHidden) 0 else topToolbarHeight,

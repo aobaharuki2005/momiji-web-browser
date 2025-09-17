@@ -39,7 +39,7 @@ import org.mozilla.fenix.utils.Settings
  * @param components [Components] allowing interactions with other app features.
  * @param settings [Settings] allowing to check whether crash reporting is enabled or not.
  * @param navController [NavController] used to navigate to other parts of the app.
- * @param sessionId [String] Id of the tab or custom tab which should be observed for [EngineState.crashed]
+ * @param customTabSessionId [String] Id of the tab or custom tab which should be observed for [EngineState.crashed]
  * depending on which the [CrashContentView] provided by [viewProvider] will be shown or hidden.
  *
  * Sample usage:
@@ -67,7 +67,7 @@ class CrashContentIntegration(
     private val components: Components,
     private val settings: Settings,
     private val navController: NavController,
-    private val sessionId: String?,
+    private val customTabSessionId: String?,
 ) : LifecycleAwareFeature {
 
     /**
@@ -85,7 +85,7 @@ class CrashContentIntegration(
         scope = MainScope().apply {
             launch {
                 browserStore.flow()
-                    .mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(sessionId) }
+                    .mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(customTabSessionId) }
                     .distinctUntilChangedBy { tab -> tab.engineState.crashed }
                     .collect { tab ->
                         if (tab.engineState.crashed) {
@@ -134,9 +134,9 @@ class CrashContentIntegration(
     @VisibleForTesting
     internal fun updateVerticalMargins() = crashReporterView?.apply {
         with(layoutParams as MarginLayoutParams) {
-            val includeTabStrip = sessionId == null && settings.isTabStripEnabled
-            topMargin = settings.getTopToolbarHeight(includeTabStrip)
-            bottomMargin = settings.getBottomToolbarHeight()
+            // TabStrip and navBar are not used in custom tabs
+            topMargin = settings.getTopToolbarHeight(includeTabStripIfAvailable = customTabSessionId == null)
+            bottomMargin = settings.getBottomToolbarHeight(includeNavBarIfEnabled = customTabSessionId == null)
         }
     }
 }
