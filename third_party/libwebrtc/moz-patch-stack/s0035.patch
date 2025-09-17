@@ -134,16 +134,16 @@ index 4ae9ba04de..098307f135 100644
  
      // Receive-side RTT.
 diff --git a/call/video_receive_stream.cc b/call/video_receive_stream.cc
-index 3bfb35297f..20c91982c1 100644
+index c16cd59b4d..94a76388fb 100644
 --- a/call/video_receive_stream.cc
 +++ b/call/video_receive_stream.cc
-@@ -169,6 +169,8 @@ std::string VideoReceiveStreamInterface::Config::Rtp::ToString() const {
+@@ -165,6 +165,8 @@ std::string VideoReceiveStreamInterface::Config::Rtp::ToString() const {
      ss << pt << ", ";
    }
-   ss << '}';
+   ss << "}";
 +  ss << ", rtcp_event_observer: "
 +     << (rtcp_event_observer ? "(rtcp_event_observer)" : "nullptr");
-   ss << '}';
+   ss << "}";
    return ss.str();
  }
 diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
