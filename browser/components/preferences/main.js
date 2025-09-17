@@ -321,7 +321,22 @@ Preferences.addSetting({
   pref: "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
 });
 
+Preferences.addSetting({ id: "zoomPlaceholder" });
+
 let SETTINGS_CONFIG = {
+  zoom: {
+    // This section is marked as in progress for testing purposes
+    inProgress: true,
+    items: [
+      {
+        id: "zoomPlaceholder",
+        control: "moz-message-bar",
+        controlAttrs: {
+          message: "Placeholder for updated zoom controls",
+        },
+      },
+    ],
+  },
   browsing: {
     l10nId: "browsing-group-label",
     items: [
@@ -434,8 +449,20 @@ let SETTINGS_CONFIG = {
 
 function initSettingGroup(id) {
   let group = document.querySelector(`setting-group[groupid=${id}]`);
-  if (group && SETTINGS_CONFIG[id]) {
-    group.config = SETTINGS_CONFIG[id];
+  let config = SETTINGS_CONFIG[id];
+  if (group && config) {
+    if (config.inProgress && !srdSectionEnabled(id)) {
+      group.remove();
+      return;
+    }
+
+    let legacySections = document.querySelectorAll(`[data-srd-groupid=${id}]`);
+    for (let section of legacySections) {
+      section.hidden = true;
+      section.removeAttribute("data-category");
+      section.setAttribute("data-hidden-from-search", "true");
+    }
+    group.config = config;
     group.getSetting = Preferences.getSetting.bind(Preferences);
   }
 }
@@ -578,6 +605,7 @@ var gMainPane = {
 
     gMainPane.initTranslations();
 
+    initSettingGroup("zoom");
     initSettingGroup("browsing");
 
     if (AppConstants.platform == "win") {

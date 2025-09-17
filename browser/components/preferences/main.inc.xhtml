@@ -369,7 +369,7 @@
 </groupbox>
 
 <!-- Zoom -->
-<groupbox id="zoomGroup" data-category="paneGeneral" hidden="true">
+<groupbox id="zoomGroup" data-category="paneGeneral" hidden="true" data-srd-groupid="zoom">
   <label><html:h2 data-l10n-id="preferences-zoom-header"/></label>
   <hbox id="zoomBox" align="center" hidden="true">
     <label control="defaultZoom" data-l10n-id="preferences-default-zoom"/>
@@ -382,6 +382,8 @@
     data-l10n-id="preferences-zoom-text-only"/>
 
 </groupbox>
+
+<html:setting-group hidden="true" data-category="paneGeneral" groupid="zoom" />
 
 <!-- Languages -->
 <groupbox id="languagesGroup" data-category="paneGeneral" hidden="true">

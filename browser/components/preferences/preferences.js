@@ -145,6 +145,26 @@ ChromeUtils.defineLazyGetter(this, "gSubDialog", function () {
   });
 });
 
+const srdSectionPrefs = {};
+XPCOMUtils.defineLazyPreferenceGetter(
+  srdSectionPrefs,
+  "all",
+  "browser.settings-redesign.enabled",
+  false
+);
+
+function srdSectionEnabled(section) {
+  if (!(section in srdSectionPrefs)) {
+    XPCOMUtils.defineLazyPreferenceGetter(
+      srdSectionPrefs,
+      section,
+      `browser.settings-redesign.${section}.enabled`,
+      false
+    );
+  }
+  return srdSectionPrefs.all || srdSectionPrefs[section];
+}
+
 var gLastCategory = { category: undefined, subcategory: undefined };
 const gXULDOMParser = new DOMParser();
 var gCategoryModules = new Map();
