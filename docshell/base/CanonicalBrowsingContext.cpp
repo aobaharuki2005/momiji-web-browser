@@ -746,11 +746,20 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     [[maybe_unused]] auto pred = [&](auto& entry) {
       return entry.NavigationKey() == loadingInfo->mInfo.NavigationKey();
     };
-    MOZ_DIAGNOSTIC_ASSERT(
-        mozilla::AnyOf(loadingInfo->mContiguousEntries.begin(),
-                       loadingInfo->mContiguousEntries.end(), pred),
-        "The target entry now needs to be a part of the contiguous list of "
-        "entries.");
+    if (StaticPrefs::dom_navigation_api_strict_enabled()) {
+      // https://bugzil.la/1989045
+      MOZ_DIAGNOSTIC_ASSERT(
+          mozilla::AnyOf(loadingInfo->mContiguousEntries.begin(),
+                         loadingInfo->mContiguousEntries.end(), pred),
+          "The target entry now needs to be a part of the contiguous list of "
+          "entries.");
+    } else {
+      MOZ_ASSERT(
+          mozilla::AnyOf(loadingInfo->mContiguousEntries.begin(),
+                         loadingInfo->mContiguousEntries.end(), pred),
+          "The target entry now needs to be a part of the contiguous list of "
+          "entries.");
+    }
   }
 
   MOZ_ASSERT(SessionHistoryEntry::GetByLoadId(loadingInfo->mLoadId)->mEntry ==

@@ -3684,6 +3684,14 @@
   mirror: always
   do_not_use_directly: true
 
+# Strict mode for navigation API.
+# Known issues can be guarded using this pref
+# to avoid crashing users while investigating the issue.
+- name: dom.navigation.api.strict.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Network Information API
 # This feature is not available on Firefox desktop. It exposes too much
 # user information. Let's be consistent and disable it on Android.
