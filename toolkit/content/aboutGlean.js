@@ -282,7 +282,7 @@ function onLoad() {
   // Handle loading all metric data
   document.getElementById("load-all").addEventListener("click", () => {
     MAPPED_METRIC_DATA.forEach(datum => {
-      updateDatum(datum);
+      updateDatum(datum, false);
     });
     updateTable();
   });
@@ -327,100 +327,11 @@ function updateButtonsSelection(selection) {
   );
 }
 
-function createOrUpdateHistogram(selection, datum) {
-  const values = Object.entries(datum.value?.values || {}).map((d, i) => [
-    ...d,
-    i,
-  ]);
-
-  if (!values || values.length === 0) {
-    selection.select("p")?.remove();
-    selection
-      .append("p")
-      .attr("data-l10n-id", "about-glean-no-data-to-display");
-    selection.select("svg")?.remove();
-    return;
-  }
-  selection.select("p")?.remove();
-
-  const max = values.map(d => d[1]).sort((a, b) => b - a)[0],
-    keyMax = values.map(d => d[0]).sort((a, b) => b - a)[0],
-    boxWidth = Math.max(`${Math.max(max, keyMax)}`.length * 10, 30),
-    boxPadding = 5,
-    chartMax = 150,
-    leftPadding = 20,
-    chartPadding = 50,
-    scaledMax = 110,
-    denom = max / scaledMax;
-
-  let hist = selection.select(`svg[data-d3-datum='${datum.fullName}']`);
-  if (hist.empty()) {
-    hist = selection
-      .append("svg")
-      .classed({ histogram: true })
-      .attr("data-d3-datum", datum.fullName)
-      .attr(
-        "width",
-        values.length * (boxWidth + boxPadding) + chartPadding + leftPadding
-      )
-      .attr("height", chartMax + chartPadding);
-  }
-
-  let boxesContainer = hist.select("g.boxes");
-  if (boxesContainer.empty()) {
-    boxesContainer = hist.append("g").classed({ boxes: true });
-  }
-
-  const boxes = boxesContainer.selectAll("g").data(values, d => d);
-
-  const newBoxes = boxes.enter().append("g").attr("tabindex", 0);
-  newBoxes.append("rect").attr("width", boxWidth);
-  newBoxes.append("text").attr("data-d3-role", "y");
-  newBoxes.append("text").attr("data-d3-role", "x");
-
-  const xFn = index => boxWidth * index + boxPadding * index + leftPadding;
-  const yFn = yv =>
-    Math.abs(Math.max(yv / denom, 1) - scaledMax) + (chartMax - scaledMax);
-
-  boxes
-    .selectAll("rect")
-    .attr("height", d => Math.max(d[1] / denom, 1))
-    .attr("x", (_, __, i) => xFn(i))
-    .attr("y", d => yFn(d[1]));
-  boxes
-    .selectAll("text[data-d3-role=y]")
-    .attr("x", (_, __, i) => xFn(i))
-    .attr("y", d => yFn(d[1]) - 5)
-    .text(d => d[1]);
-  boxes
-    .selectAll("text[data-d3-role=x]")
-    .attr("x", d => xFn(d[2]))
-    .attr("y", chartMax + 20)
-    .text(d => d[0]);
-
-  function focusStart(_) {
-    this.classList.add("hovered");
-  }
-
-  function focusEnd(_) {
-    this.classList.remove("hovered");
-  }
-
-  boxes
-    .attr("data-d3-box", d => d[0])
-    .on("focusin", focusStart)
-    .on("mouseover", focusStart)
-    .on("focusout", focusEnd)
-    .on("mouseout", focusEnd);
-
-  boxes.exit().remove();
-}
-
 function updateValueSelection(selection) {
   // Set the `data-l10n-id` attribute to the appropriate warning if the value is invalid, otherwise
   // unset it by returning `null`.
   selection
-    ?.attr("data-l10n-id", d => {
+    .attr("data-l10n-id", d => {
       switch (d.invalidValue) {
         case INVALID_VALUE_REASONS.LABELED_METRIC:
           return "about-glean-labeled-metric-warning";
@@ -430,19 +341,14 @@ function updateValueSelection(selection) {
           return null;
       }
     })
-    ?.each(function (datum) {
+    .each(function (datum) {
       if (datum.loaded) {
         let codeSelection = d3.select(this).select("pre>code");
+        if (codeSelection.empty()) {
+          codeSelection = d3.select(this).append("pre").append("code");
+        }
         switch (datum.type) {
-          case "CustomDistribution":
-          case "MemoryDistribution":
-          case "TimingDistribution":
-            createOrUpdateHistogram(d3.select(this), datum);
-            break;
           default:
-            if (codeSelection.empty()) {
-              codeSelection = d3.select(this).append("pre").append("code");
-            }
             codeSelection.text(prettyPrint(datum.value));
         }
       }
@@ -455,7 +361,7 @@ function updateValueSelection(selection) {
  * @param {*} datum the datum object to update
  * @param {*} update update the table after updating the datum (defaults to `true`)
  */
-function updateDatum(datum) {
+function updateDatum(datum, update = true) {
   if (typeof datum.metric.testGetValue == "function") {
     try {
       datum.value = datum.metric.testGetValue();
@@ -470,12 +376,13 @@ function updateDatum(datum) {
   } else {
     datum.invalidValue = INVALID_VALUE_REASONS.UNKNOWN_METRIC;
   }
-
-  updateValueSelection(
-    DOCUMENT_BODY_SEL.select(
-      `tr[data-d3-row="${datum.fullName}"]>td[data-d3-cell=value]`
-    )
-  );
+  if (update) {
+    updateValueSelection(
+      DOCUMENT_BODY_SEL.select(
+        `tr[data-d3-row="${datum.fullName}"]>td[data-d3-cell=value]`
+      )
+    );
+  }
 }
 
 /**
