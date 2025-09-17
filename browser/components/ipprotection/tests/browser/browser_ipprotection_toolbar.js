@@ -24,9 +24,11 @@ add_task(async function toolbar_added_and_removed() {
   let position = CustomizableUI.getPlacementOfWidget(
     IPProtectionWidget.WIDGET_ID
   ).position;
+  // By default, the button for revamped sidebar is placed at the beginning of the navbar.
+  let expectedPosition = Services.prefs.getBoolPref("sidebar.revamp") ? 8 : 7;
   Assert.equal(
     position,
-    7,
+    expectedPosition,
     "IP Protection widget added in the correct position"
   );
   // Disable the feature
