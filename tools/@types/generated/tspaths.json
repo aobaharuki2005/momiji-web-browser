@@ -326,6 +326,18 @@
       "chrome://global/content/net-error-card.mjs": [
         "toolkit/content/net-error-card.mjs"
       ],
+      "chrome://global/content/preferences/AsyncSetting.mjs": [
+        "toolkit/content/preferences/AsyncSetting.mjs"
+      ],
+      "chrome://global/content/preferences/Preference.mjs": [
+        "toolkit/content/preferences/Preference.mjs"
+      ],
+      "chrome://global/content/preferences/Preferences.mjs": [
+        "toolkit/content/preferences/Preferences.mjs"
+      ],
+      "chrome://global/content/preferences/Setting.mjs": [
+        "toolkit/content/preferences/Setting.mjs"
+      ],
       "chrome://global/content/reader/moz-slider.mjs": [
         "toolkit/components/reader/moz-slider.mjs"
       ],
