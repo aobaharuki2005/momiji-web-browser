@@ -705,9 +705,9 @@ search.suggestions:
     type: labeled_timing_distribution
     description: >
       Records the latencies (ms) of search suggestions fetches per search
-      engine. Keys in this histogram are the search engine identifier for
-      configuration provided search engines and 'other' for search engines
-      installed via other methods.
+      engine when not using OHTTP. Keys in this histogram are the search engine
+      identifier for configuration provided search engines and 'other' for
+      search engines installed via other methods.
 
       This metric was generated to correspond to the Legacy Telemetry
       exponential histogram SEARCH_SUGGESTIONS_LATENCY_MS.
@@ -775,3 +775,25 @@ search.suggestions:
     notification_emails:
       - fx-search-telemetry@mozilla.com
     expires: 146
+
+search.suggestions.ohttp:
+  latency:
+    type: labeled_timing_distribution
+    description: >
+      Records the latencies (ms) of search suggestions fetches per search
+      engine when using OHTTP. Keys in this histogram are the search engine
+      identifier for configuration provided search engines and 'other' for
+      search engines installed via other methods.
+    time_unit: millisecond
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1743885
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1743885
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - adw@mozilla.com
+    expires: never
