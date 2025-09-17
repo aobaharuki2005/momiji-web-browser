@@ -18,12 +18,9 @@
 -keep class io.sentry.event.Event { *; }
 
 ####################################################################################################
-# Android and GeckoView built-ins
+# GeckoView built-ins
 ####################################################################################################
 
--dontwarn android.**
--dontwarn androidx.**
--dontwarn com.google.**
 -dontwarn org.mozilla.geckoview.**
 
 # Raptor now writes a *-config.yaml file to specify Gecko runtime settings (e.g. the profile dir). This
@@ -64,12 +61,6 @@
 -keep class mozilla.appservices.** { *; }
 
 ####################################################################################################
-# ViewModels
-####################################################################################################
-
--keep class org.mozilla.fenix.**ViewModel { *; }
-
-####################################################################################################
 # Adjust
 ####################################################################################################
 
@@ -103,10 +94,6 @@
 # Keep code generated from Glean Metrics
 -keep class org.mozilla.fenix.GleanMetrics.** {  *; }
 
-# Keep motionlayout internal methods
-# https://github.com/mozilla-mobile/fenix/issues/2094
--keep class androidx.constraintlayout.** { *; }
-
 # Keep adjust relevant classes
 -keep class com.adjust.sdk.** { *; }
 -keep class com.google.android.gms.common.ConnectionResult {
@@ -120,10 +107,6 @@
     boolean isLimitAdTrackingEnabled();
 }
 -keep public class com.android.installreferrer.** { *; }
-
-# Keep Android Lifecycle methods
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1596302
--keep class androidx.lifecycle.** { *; }
 
 -dontwarn java.beans.BeanInfo
 -dontwarn java.beans.FeatureDescriptor
