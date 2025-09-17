@@ -4615,7 +4615,7 @@ void MacroAssembler::moveValue(const TypedOrValueRegister& src,
   AnyRegister reg = src.typedReg();
 
   if (!IsFloatingPointType(type)) {
-    boxNonDouble(ValueTypeFromMIRType(type), reg.gpr(), dest);
+    tagValue(ValueTypeFromMIRType(type), reg.gpr(), dest);
     return;
   }
 
