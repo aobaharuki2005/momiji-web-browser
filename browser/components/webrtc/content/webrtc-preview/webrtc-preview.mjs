@@ -94,8 +94,8 @@ export class WebRTCPreview extends MozLitElement {
         mediaSource: this.mediaSource,
         deviceId: { exact: this.deviceId },
         frameRate: 30,
-        width: 1280,
-        height: 720,
+        width: 854,
+        height: 480,
       },
     };
 
