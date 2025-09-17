@@ -35,8 +35,8 @@ import org.mozilla.fenix.onboarding.view.Action
 import org.mozilla.fenix.onboarding.view.OnboardingPageState
 import org.mozilla.fenix.theme.FirefoxTheme
 
-const val TITLE_TOP_SPACER_WEIGHT = 0.3f
-const val BODY_BUTTON_SPACER_WEIGHT = 1f
+private const val TITLE_TOP_SPACER_WEIGHT = 0.3f
+private const val BODY_BUTTON_SPACER_WEIGHT = 1f
 
 /**
  * A composable for displaying onboarding page content.

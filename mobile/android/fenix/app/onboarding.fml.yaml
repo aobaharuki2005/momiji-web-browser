@@ -203,7 +203,7 @@ features:
               secondary-button-label: juno_onboarding_sign_in_negative_button
 
             notification-permission:
-              enabled: false
+              enabled: true
               card-type: notification-permission
               title: juno_onboarding_enable_notifications_title_nimbus_2
               body: juno_onboarding_enable_notifications_description_nimbus_2
@@ -240,23 +240,6 @@ features:
               image-res: ic_onboarding_customize_toolbar
               ordering: 35
               primary-button-label: onboarding_save_and_start_button
-              extra-data:
-                customization-toolbar-data:
-                  - toolbar-type: toolbar-top
-                    label: onboarding_customize_toolbar_top_option
-                    image-res: ic_onboarding_top_toolbar
-                  - toolbar-type: toolbar-bottom
-                    label: onboarding_customize_toolbar_bottom_option
-                    image-res: ic_onboarding_bottom_toolbar
-
-            toolbar-placement-redesign:
-              card-type: toolbar-placement
-              enabled: false
-              title: onboarding_redesign_customize_toolbar_title
-              body: onboarding_customize_toolbar_description
-              image-res: ic_onboarding_customize_toolbar
-              ordering: 35
-              primary-button-label: onboarding_redesign_continue_button
               extra-data:
                 customization-toolbar-data:
                   - toolbar-type: toolbar-top
