@@ -98,14 +98,6 @@ class FilterProcessing {
   static void ApplyComposition_Scalar(DataSourceSurface* aSource,
                                       DataSourceSurface* aDest,
                                       CompositeOperator aOperator);
-  static void DoPremultiplicationCalculation_Scalar(const IntSize& aSize,
-                                                    uint8_t* aTargetData,
-                                                    int32_t aTargetStride,
-                                                    const uint8_t* aSourceData,
-                                                    int32_t aSourceStride);
-  static void DoUnpremultiplicationCalculation_Scalar(
-      const IntSize& aSize, uint8_t* aTargetData, int32_t aTargetStride,
-      const uint8_t* aSourceData, int32_t aSourceStride);
   static void DoOpacityCalculation_Scalar(const IntSize& aSize,
                                           uint8_t* aTargetData,
                                           int32_t aTargetStride,
@@ -144,16 +136,6 @@ class FilterProcessing {
   static void ApplyComposition_SSE2(DataSourceSurface* aSource,
                                     DataSourceSurface* aDest,
                                     CompositeOperator aOperator);
-  static void DoPremultiplicationCalculation_SSE2(const IntSize& aSize,
-                                                  uint8_t* aTargetData,
-                                                  int32_t aTargetStride,
-                                                  const uint8_t* aSourceData,
-                                                  int32_t aSourceStride);
-  static void DoUnpremultiplicationCalculation_SSE2(const IntSize& aSize,
-                                                    uint8_t* aTargetData,
-                                                    int32_t aTargetStride,
-                                                    const uint8_t* aSourceData,
-                                                    int32_t aSourceStride);
   static void DoOpacityCalculation_SSE2(const IntSize& aSize,
                                         uint8_t* aTargetData,
                                         int32_t aTargetStride,
