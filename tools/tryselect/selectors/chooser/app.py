@@ -88,7 +88,7 @@ class Platform(Section):
 @register_section
 class Test(Section):
     name = "test"
-    kind = "test"
+    kind = "test,mochitest"
     title = "Test Suites"
     attrs = ["unittest_suite"]
 
