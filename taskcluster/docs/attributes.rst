@@ -568,3 +568,8 @@ matrix
 ======
 Used to generate several tasks from a task, using the substitution given in the
 matrix.
+
+dxc-crash-symbols
+=================
+
+Indicates that the job produces crash symbols for `dxcompiler.dll`.

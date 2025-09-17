@@ -794,6 +794,8 @@ talos-pdfs:
 win64-dxc:
     description: "DirectX Shader Compiler (x86_64)"
     attributes:
+        dxc-crash-symbols: true
+        enable-full-crashsymbols: true
         local-toolchain: true
     treeherder:
         symbol: TW64(dxc)
@@ -820,6 +822,8 @@ win64-dxc:
 win64-aarch64-dxc:
     description: "DirectX Shader Compiler (aarch64)"
     attributes:
+        dxc-crash-symbols: true
+        enable-full-crashsymbols: true
         local-toolchain: true
     treeherder:
         symbol: TWA64(dxc)
