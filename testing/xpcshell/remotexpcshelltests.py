@@ -760,7 +760,7 @@ def main():
     options = parser.parse_args()
 
     options = verifyRemoteOptions(parser, options)
-    log = commandline.setup_logging("Remote XPCShell", options, {"tbpl": sys.stdout})
+    log = commandline.setup_logging("Remote XPCShell", options, {"raw": sys.stdout})
 
     if options["interactive"] and not options["testPath"]:
         print(
