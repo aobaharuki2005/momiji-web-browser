@@ -21,8 +21,10 @@
 #include <unistd.h>
 #elif defined(WEBRTC_FUCHSIA)
 #include <zircon/syscalls.h>
-#elif defined(WEBRTC_LINUX)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+#if defined(WEBRTC_LINUX)
 #include <features.h>
+#endif
 #include <stdlib.h>
 #include <string.h>  // IWYU pragma: keep
 #include <unistd.h>
@@ -50,7 +52,7 @@
 #if defined(WEBRTC_ARCH_X86_FAMILY) && defined(_MSC_VER)
 #include <intrin.h>
 #endif
-#if defined(WEBRTC_ARCH_ARM_FAMILY) && defined(WEBRTC_LINUX)
+#if defined(WEBRTC_ARCH_ARM_FAMILY) && (defined(WEBRTC_LINUX) || defined(WEBRTC_BSD))
 #include <asm/hwcap.h>
 #endif
 
@@ -189,6 +191,9 @@ bool Supports(ISA instruction_set_architecture) {
   if (instruction_set_architecture == ISA::kNeon) {
 #if defined(WEBRTC_ANDROID)
     return 0 != (android_getCpuFeatures() & ANDROID_CPU_ARM_FEATURE_NEON);
+#elif defined(WEBRTC_BSD)
+    // OpenBSD does not have getauxval() and does not have /proc reading
+    return false;
 #elif defined(WEBRTC_LINUX)
     uint64_t hwcap = 0;
 #if WEBRTC_GLIBC_PREREQ(2, 16)
