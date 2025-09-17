@@ -31,6 +31,7 @@ skip-if = [
   "win10_2009 && bits == 64 && !debug", # Bug 1652119
   "win11_2009 && bits == 64 && !debug", # Bug 1652119
   "socketprocess_networking", # Bug 1759035
+  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && opt", # Bug 1987229
 ]
 run-sequentially = "very high failure rate in parallel"
 

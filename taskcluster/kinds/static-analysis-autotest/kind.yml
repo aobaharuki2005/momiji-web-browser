@@ -43,7 +43,7 @@ tasks:
             job-name: linux64-st-autotest-debug
         treeherder:
             platform: linux64/debug
-        worker-type: t-linux-docker
+        worker-type: t-linux-docker-amd
         worker:
             docker-image: {in-tree: static-analysis-build}
             env:
