@@ -604,9 +604,12 @@ class UseScratchRegisterScope {
 
 // Class Operand represents a shifter operand in data processing instructions.
 class Operand {
- public:
   enum Tag { REG, FREG, MEM, IMM };
-  Operand(FloatRegister freg) : tag(FREG), rm_(freg.encoding()) {}
+
+ public:
+  MOZ_IMPLICIT Operand(Register rm) : tag(REG), rm_(rm.code()) {}
+
+  explicit Operand(FloatRegister freg) : tag(FREG), rm_(freg.encoding()) {}
 
   explicit Operand(Register base, Imm32 off)
       : tag(MEM), rm_(base.code()), offset_(off.value) {}
@@ -617,48 +620,52 @@ class Operand {
   explicit Operand(const Address& addr)
       : tag(MEM), rm_(addr.base.code()), offset_(addr.offset) {}
 
-  explicit Operand(int64_t immediate) : tag(IMM), rm_() { value_ = immediate; }
-  // Register.
-  Operand(const Register rm) : tag(REG), rm_(rm.code()) {}
-  // Return true if this is a register operand.
+  explicit Operand(int64_t immediate) : tag(IMM), value_(immediate) {}
+
   bool is_reg() const { return tag == REG; }
   bool is_freg() const { return tag == FREG; }
   bool is_mem() const { return tag == MEM; }
   bool is_imm() const { return tag == IMM; }
-  inline int64_t immediate() const {
+
+  int64_t immediate() const {
     MOZ_ASSERT(is_imm());
     return value_;
   }
-  bool IsImmediate() const { return !is_reg(); }
-  Register rm() const { return Register::FromCode(rm_); }
+
+  Register rm() const {
+    MOZ_ASSERT(is_reg() || is_mem());
+    return Register::FromCode(rm_);
+  }
+
   int32_t offset() const {
     MOZ_ASSERT(is_mem());
     return offset_;
   }
 
   FloatRegister toFReg() const {
-    MOZ_ASSERT(tag == FREG);
+    MOZ_ASSERT(is_freg());
     return FloatRegister::FromCode(rm_);
   }
 
   Register toReg() const {
-    MOZ_ASSERT(tag == REG);
+    MOZ_ASSERT(is_reg());
     return Register::FromCode(rm_);
   }
 
   Address toAddress() const {
-    MOZ_ASSERT(tag == MEM);
+    MOZ_ASSERT(is_mem());
     return Address(Register::FromCode(rm_), offset());
   }
 
  private:
   Tag tag;
-  uint32_t rm_;
-  int32_t offset_;
-  int64_t value_;  // valid if rm_ == no_reg
-
-  friend class Assembler;
-  friend class MacroAssembler;
+  union {
+    struct {
+      uint32_t rm_;
+      int32_t offset_;
+    };
+    int64_t value_;  // valid if tag == IMM
+  };
 };
 
 static const uint32_t NumIntArgRegs = 8;
