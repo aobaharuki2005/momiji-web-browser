@@ -1005,9 +1005,9 @@ function updateSearchHistory(operation, value) {
 
 function assertLatencyCollection(engine, shouldRecord) {
   let latencyDistribution =
-    Glean.search.suggestionsLatency[
+    Glean.searchSuggestions.latency[
       // Third party engines are always recorded as "other".
-      engine.isConfigEngine ? engine.telemetryId : "other"
+      engine.isConfigEngine ? engine.id : "other"
     ].testGetValue();
 
   if (shouldRecord) {

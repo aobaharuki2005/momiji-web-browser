@@ -6662,10 +6662,6 @@ interface GleanImpl {
     secureOpensearchUpdateCount: GleanQuantity;
   }
 
-  search: {
-    suggestionsLatency: Record<string, GleanTimingDistribution>;
-  }
-
   searchEngineDefault: {
     changed: GleanEventWithExtras<{ change_reason?: string, new_display_name?: string, new_engine_id?: string, new_load_path?: string, new_submission_url?: string, previous_engine_id?: string }>;
     displayName: GleanString;
@@ -6696,6 +6692,7 @@ interface GleanImpl {
   searchSuggestions: {
     abortedRequests: Record<string, GleanCounter>;
     failedRequests: Record<string, GleanCounter>;
+    latency: Record<string, GleanTimingDistribution>;
     successfulRequests: Record<string, GleanCounter>;
   }
 
