@@ -1264,6 +1264,10 @@ class PresShell final : public nsStubDocumentObserver,
   nsPoint GetLayoutViewportOffset() const;
   nsSize GetLayoutViewportSize() const;
 
+  // Returns the size used for window.inner{Height,Width}. Unlike the above
+  // layout viewport size, this size includes the scrollbar gutters.
+  nsSize GetInnerSize() const;
+
   /**
    * Documents belonging to an invisible DocShell must not be painted ever.
    */

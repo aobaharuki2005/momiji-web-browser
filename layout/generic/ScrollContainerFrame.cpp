@@ -7999,3 +7999,10 @@ void ScrollContainerFrame::ScheduleScrollAnimations() {
       AnimationUtils::GetElementPseudoPair(elementOrPseudo);
   ProgressTimelineScheduler::ScheduleAnimations(element, request);
 }
+
+nsSize ScrollContainerFrame::GetSizeForWindowInnerSize() const {
+  MOZ_ASSERT(mIsRoot);
+
+  return mIsUsingMinimumScaleSize ? mMinimumScaleSize
+                                  : PresContext()->GetVisibleArea().Size();
+}
