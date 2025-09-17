@@ -2062,6 +2062,7 @@ main section {
   background-color: var(--newtab-background-color-secondary);
   width: 432px;
   height: 100%;
+  display: none;
   position: fixed;
   inset-block: 0;
   inset-inline-end: 0;
@@ -2072,6 +2073,9 @@ main section {
   transform: translateX(435px);
   visibility: hidden;
   cursor: default;
+}
+.customize-menu.customize-animate-enter, .customize-menu.customize-animate-exit, .customize-menu.customize-animate-enter-done, .customize-menu.customize-animate-exit-done {
+  display: block;
 }
 @media (prefers-reduced-motion: no-preference) {
   .customize-menu.customize-animate-enter, .customize-menu.customize-animate-exit, .customize-menu.customize-animate-enter-done, .customize-menu.customize-animate-exit-done {
