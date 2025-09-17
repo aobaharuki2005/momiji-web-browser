@@ -745,7 +745,7 @@ class NavigationRegistry extends EventEmitter {
   };
 
   #onDownloadStarted = (eventName, data) => {
-    const { download, navigationId } = data;
+    const { download } = data;
 
     const contextId = download.source.browsingContextId;
     const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
@@ -757,10 +757,17 @@ class NavigationRegistry extends EventEmitter {
       lazy.TabManager.getIdForBrowsingContext(browsingContext);
     const url = download.source.url;
 
-    // Generating the download navigationId and tracking navigations is
-    // delegated to the DownloadListener. It is exposed via the DownloadManager
-    // for consistency and also to enforce having a singleton and consistent
-    // navigation ids across sessions.
+    const navigation = this.#navigations.get(navigableId);
+    let navigationId = null;
+    if (navigation && navigation.state === NavigationState.Started) {
+      // navigationId is optional and should only be set if there is an ongoing
+      // navigation.
+      navigationId = navigation.navigationId;
+    }
+
+    // Tracking navigations is delegated to the DownloadListener. It is exposed
+    // via the DownloadManager for consistency and also to enforce having a
+    // singleton and consistent navigation ids across sessions.
     this.emit(NAVIGATION_EVENTS.DownloadStarted, {
       navigationId,
       navigableId,

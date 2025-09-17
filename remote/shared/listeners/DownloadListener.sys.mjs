@@ -7,8 +7,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
   EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
-
-  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
 });
 
 /**
@@ -127,7 +125,6 @@ export class DownloadListener {
   #getDownloadState(download) {
     if (!this.#trackedDownloads.has(download)) {
       this.#trackedDownloads.set(download, {
-        navigationId: lazy.generateUUID(),
         started: false,
       });
     }
@@ -140,7 +137,6 @@ export class DownloadListener {
       state.started = true;
       this.emit("download-started", {
         download,
-        navigationId: state.navigationId,
       });
     }
   }
