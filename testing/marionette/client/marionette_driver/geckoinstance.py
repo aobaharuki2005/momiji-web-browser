@@ -608,6 +608,8 @@ class DesktopInstance(GeckoInstance):
         # !!! For backward compatibility up to Firefox 64. Only remove
         # when this Firefox version is no longer supported by the client !!!
         "app.update.auto": False,
+        # Disable the profile backup service.
+        "browser.backup.enabled": False,
         # Don't show the content blocking introduction panel
         # We use a larger number than the default 22 to have some buffer
         # This can be removed once Firefox 69 and 68 ESR and are no longer supported.
