@@ -6,7 +6,6 @@
 
 #include "FilterProcessing.h"
 #include "Logging.h"
-#include "Swizzle.h"
 
 namespace mozilla {
 namespace gfx {
@@ -118,15 +117,29 @@ void FilterProcessing::ApplyComposition(DataSourceSurface* aSource,
 void FilterProcessing::DoPremultiplicationCalculation(
     const IntSize& aSize, uint8_t* aTargetData, int32_t aTargetStride,
     const uint8_t* aSourceData, int32_t aSourceStride) {
-  PremultiplyData(aSourceData, aSourceStride, SurfaceFormat::B8G8R8A8,
-                  aTargetData, aTargetStride, SurfaceFormat::B8G8R8A8, aSize);
+  if (Factory::HasSSE2()) {
+#ifdef USE_SSE2
+    DoPremultiplicationCalculation_SSE2(aSize, aTargetData, aTargetStride,
+                                        aSourceData, aSourceStride);
+#endif
+  } else {
+    DoPremultiplicationCalculation_Scalar(aSize, aTargetData, aTargetStride,
+                                          aSourceData, aSourceStride);
+  }
 }
 
 void FilterProcessing::DoUnpremultiplicationCalculation(
     const IntSize& aSize, uint8_t* aTargetData, int32_t aTargetStride,
     const uint8_t* aSourceData, int32_t aSourceStride) {
-  UnpremultiplyData(aSourceData, aSourceStride, SurfaceFormat::B8G8R8A8,
-                    aTargetData, aTargetStride, SurfaceFormat::B8G8R8A8, aSize);
+  if (Factory::HasSSE2()) {
+#ifdef USE_SSE2
+    DoUnpremultiplicationCalculation_SSE2(aSize, aTargetData, aTargetStride,
+                                          aSourceData, aSourceStride);
+#endif
+  } else {
+    DoUnpremultiplicationCalculation_Scalar(aSize, aTargetData, aTargetStride,
+                                            aSourceData, aSourceStride);
+  }
 }
 
 void FilterProcessing::DoOpacityCalculation(

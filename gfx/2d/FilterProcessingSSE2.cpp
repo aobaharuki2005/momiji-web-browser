@@ -66,6 +66,20 @@ void FilterProcessing::ApplyComposition_SSE2(DataSourceSurface* aSource,
                                                           aOperator);
 }
 
+void FilterProcessing::DoPremultiplicationCalculation_SSE2(
+    const IntSize& aSize, uint8_t* aTargetData, int32_t aTargetStride,
+    const uint8_t* aSourceData, int32_t aSourceStride) {
+  DoPremultiplicationCalculation_SIMD<__m128i, __m128i, __m128i>(
+      aSize, aTargetData, aTargetStride, aSourceData, aSourceStride);
+}
+
+void FilterProcessing::DoUnpremultiplicationCalculation_SSE2(
+    const IntSize& aSize, uint8_t* aTargetData, int32_t aTargetStride,
+    const uint8_t* aSourceData, int32_t aSourceStride) {
+  DoUnpremultiplicationCalculation_SIMD<__m128i, __m128i>(
+      aSize, aTargetData, aTargetStride, aSourceData, aSourceStride);
+}
+
 void FilterProcessing::DoOpacityCalculation_SSE2(
     const IntSize& aSize, uint8_t* aTargetData, int32_t aTargetStride,
     const uint8_t* aSourceData, int32_t aSourceStride, Float aValue) {
