@@ -29,7 +29,7 @@
   --tab-pinned-margin-inline-expanded: var(--space-xsmall);
   --tab-pinned-min-width-expanded: calc(var(--tab-pinned-expanded-background-width) + 2 * var(--tab-pinned-margin-inline-expanded));
   --tab-pinned-container-margin-inline-expanded: var(--space-small);
-  --tab-border-radius: 4px;
+  --tab-border-radius: var(--border-radius-medium);
   --tab-overflow-clip-margin: 2px;
   --tab-close-button-padding: 6px;
   --tab-block-margin: 4px;
@@ -797,7 +797,7 @@
   height: 24px;
   box-sizing: border-box;
   padding: var(--tab-close-button-padding);
-  border-radius: var(--tab-border-radius);
+  border-radius: var(--border-radius-small);
   list-style-image: url(resource://content-accessible/close-12.svg);
 
   #tabbrowser-tabs[orient="horizontal"] &[pinned],
@@ -1104,7 +1104,7 @@
   }
 
   #tabbrowser-tabs[orient="vertical"] & {
-    border-radius: var(--border-radius-large);
+    border-radius: var(--tab-border-radius);
     gap: var(--space-xsmall);
 
     @container vertical-tabs-container (max-width: 210px) {
@@ -1361,7 +1361,7 @@ tab-group {
 
 .tab-group-label-hover-highlight {
   tab-group[collapsed] & {
-    border-radius: 2px;
+    border-radius: var(--tab-border-radius);
 
     #tabbrowser-tabs[orient="horizontal"] & {
       padding-block: 4px;
@@ -1409,7 +1409,7 @@ tab-group {
   white-space: nowrap;
   overflow: hidden;
   text-shadow: none;
-  border-radius: var(--tab-border-radius);
+  border-radius: var(--border-radius-small);
   line-height: calc(var(--tab-group-label-height) - var(--tab-group-line-thickness));
   min-height: var(--tab-group-label-height);
   min-width: var(--tab-group-label-height);
@@ -1694,7 +1694,7 @@ tab-group {
   appearance: none;
   min-height: var(--tab-min-height);
   line-height: var(--tab-label-line-height);
-  border-radius: var(--border-radius-medium);
+  border-radius: var(--tab-border-radius);
   padding: 0 calc(var(--tab-inline-padding) - var(--tab-inner-inline-margin));
   width: var(--tab-collapsed-background-width);
   margin-inline: var(--tab-inner-inline-margin);
@@ -1769,12 +1769,8 @@ tab-group {
     overflow-y: auto;
   }
 
-  .tab-background {
-    border-radius: var(--border-radius-medium);
-
-    .tabbrowser-tab:not(:hover) > .tab-stack > &:not([selected], [multiselected]) {
-      background-color: color-mix(in srgb, currentColor 7%, transparent);
-    }
+  .tabbrowser-tab:not(:hover) > .tab-stack > .tab-background:not([selected], [multiselected]) {
+    background-color: color-mix(in srgb, currentColor 7%, transparent);
   }
 
   &::part(items-wrapper) {
@@ -1911,7 +1907,6 @@ tab-group {
 
   .tab-background {
     flex-direction: row-reverse;
-    border-radius: var(--border-radius-medium);
     margin-inline: var(--tab-inner-inline-margin);
   }
 
