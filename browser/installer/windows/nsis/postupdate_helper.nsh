@@ -115,7 +115,6 @@ Function findUninstallKey
     ${EndIf}
   ${EndIf}
 
-  StrCpy $0 ""
   Pop $2
   Pop $1
   Exch $0
