@@ -512,10 +512,6 @@ criteria = "safe-to-deploy"
 version = "3.1.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.lazycell]]
-version = "1.3.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.libdbus-sys]]
 version = "0.2.2"
 criteria = "safe-to-deploy"
@@ -632,10 +628,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.rust-ini]]
 version = "0.10.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.rust_decimal]]
-version = "1.24.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.scroll]]

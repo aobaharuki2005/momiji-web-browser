@@ -5748,16 +5748,6 @@ criteria = "safe-to-deploy"
 delta = "0.2.12 -> 0.2.14"
 notes = "Minor API additions, trivial no-std support, and minor inlining tweaks."
 
-[[audits.thin-vec]]
-who = "Emilio Cobos Álvarez <emilio@crisal.io>"
-criteria = "safe-to-deploy"
-delta = "0.2.14 -> 0.2.14@git:3b4d5c838eacf5e2156d89bfdb559b6377bd6c39"
-importable = false
-notes = """
-Main changes are Gecko specific, reviewed in bug 1978229. Other changes are
-minor and look good as well.
-"""
-
 [[audits.thiserror]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
