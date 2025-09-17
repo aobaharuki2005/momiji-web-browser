@@ -91,7 +91,7 @@ class TabPreview @JvmOverloads constructor(
         val isVisible: () -> Boolean = { true },
     )
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun buildAction(
         toolbarAction: ToolbarAction,
         tab: TabSessionState?,
@@ -183,7 +183,11 @@ class TabPreview @JvmOverloads constructor(
                         contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
                         onClick = object : BrowserToolbarEvent {},
                     )
-                } else if (tab?.content?.securityInfo?.secure == true) {
+                } else if (
+                    tab?.content?.securityInfo?.secure == true &&
+                    tab.trackingProtection.enabled &&
+                    !tab.trackingProtection.ignoredOnTrackingProtection
+                ) {
                     ActionButtonRes(
                         drawableResId = iconsR.drawable.mozac_ic_shield_checkmark_24,
                         contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,

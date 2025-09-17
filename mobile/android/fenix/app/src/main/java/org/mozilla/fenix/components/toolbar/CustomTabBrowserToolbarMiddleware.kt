@@ -155,6 +155,7 @@ class CustomTabBrowserToolbarMiddleware(
                 observePageLoadUpdates(context)
                 observePageOriginUpdates(context)
                 observePageSecurityUpdates(context)
+                observePageTrackingProtectionUpdates(context)
             }
 
             is EnvironmentCleared -> {
@@ -333,6 +334,16 @@ class CustomTabBrowserToolbarMiddleware(
         }
     }
 
+    private fun observePageTrackingProtectionUpdates(
+        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
+    ) {
+        browserStore.observeWhileActive {
+            mapNotNull { state -> state.findCustomTab(customTabId) }
+                .distinctUntilChangedBy { tab -> tab.trackingProtection }
+                .collect { updateStartPageActions(context, it) }
+        }
+    }
+
     private fun updateStartBrowserActions(
         context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         customTab: CustomTabSessionState?,
@@ -423,7 +434,11 @@ class CustomTabBrowserToolbarMiddleware(
                     onClick = SiteInfoClicked,
                 ),
             )
-        } else if (customTab?.content?.securityInfo?.secure == true) {
+        } else if (
+                customTab?.content?.securityInfo?.secure == true &&
+                customTab.trackingProtection.enabled &&
+                !customTab.trackingProtection.ignoredOnTrackingProtection
+            ) {
             add(
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_shield_checkmark_24,
