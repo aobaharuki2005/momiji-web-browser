@@ -700,6 +700,7 @@ browser.searchinit:
     expires: 151
     unit: updates
 
+# New metrics added to this section should also be duplicated to search.suggestions.ohttp.
 search.suggestions:
   latency:
     type: labeled_timing_distribution
@@ -726,7 +727,6 @@ search.suggestions:
       - technical
     notification_emails:
       - fx-search-telemetry@mozilla.com
-      - adw@mozilla.com
     expires: never
     telemetry_mirror: SEARCH_SUGGESTIONS_LATENCY_MS
 
@@ -738,13 +738,16 @@ search.suggestions:
       ('id', not 'identifier') as labels.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
     data_sensitivity:
       - interaction
     notification_emails:
       - fx-search-telemetry@mozilla.com
-    expires: 146
+    expires: 153
+
   aborted_requests:
     type: labeled_counter
     description: >
@@ -753,13 +756,16 @@ search.suggestions:
       ('id', not 'identifier') as labels.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
     data_sensitivity:
       - interaction
     notification_emails:
       - fx-search-telemetry@mozilla.com
-    expires: 146
+    expires: 153
+
   failed_requests:
     type: labeled_counter
     description: >
@@ -768,14 +774,17 @@ search.suggestions:
       ('id', not 'identifier') as labels.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
     data_sensitivity:
       - interaction
     notification_emails:
       - fx-search-telemetry@mozilla.com
-    expires: 146
+    expires: 153
 
+# New metrics added to this section should also be duplicated to search.suggestions.
 search.suggestions.ohttp:
   latency:
     type: labeled_timing_distribution
@@ -795,5 +804,58 @@ search.suggestions.ohttp:
       - technical
     notification_emails:
       - fx-search-telemetry@mozilla.com
-      - adw@mozilla.com
     expires: never
+
+  successful_requests:
+    type: labeled_counter
+    description: >
+      Counts the number of successful search suggestion fetches per search
+      engine. Only records config engines using their short IDs
+      ('id', not 'identifier') as labels.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: 153
+
+  aborted_requests:
+    type: labeled_counter
+    description: >
+      Counts the number of aborted search suggestion fetches per search
+      engine. Only records config engines using their short IDs
+      ('id', not 'identifier') as labels.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: 153
+
+  failed_requests:
+    type: labeled_counter
+    description: >
+      Counts the number of failed search suggestion fetches per search
+      engine. Only records config engines using their short IDs
+      ('id', not 'identifier') as labels.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: 153
