@@ -214,7 +214,7 @@ index 023f4fa5f2..9c4df5c5ea 100644
                                     int current_delay_ms,
                                     int target_delay_ms,
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 636a41d682..6d9227bc86 100644
+index beb2c93f82..f414c80996 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -286,6 +286,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
@@ -284,7 +284,7 @@ index ec9be0a5a2..77db1f96a2 100644
                                   std::move(config_.frame_decryptor),
                                   std::move(config_.frame_transformer)),
 diff --git a/video/video_stream_buffer_controller.cc b/video/video_stream_buffer_controller.cc
-index 93bb147802..a7f2610eb9 100644
+index ff778633c9..1137c3fb5a 100644
 --- a/video/video_stream_buffer_controller.cc
 +++ b/video/video_stream_buffer_controller.cc
 @@ -264,6 +264,7 @@ void VideoStreamBufferController::OnFrameReady(

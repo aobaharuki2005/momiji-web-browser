@@ -102,7 +102,7 @@ index 95c8ebc864..9098998a52 100644
  #include <endian.h>
  #else
 diff --git a/rtc_base/cpu_info.cc b/rtc_base/cpu_info.cc
-index 53cfc586ca..a35b19042d 100644
+index 56aba5ee63..0923e7aca7 100644
 --- a/rtc_base/cpu_info.cc
 +++ b/rtc_base/cpu_info.cc
 @@ -65,7 +65,7 @@ uint32_t DetectNumberOfCores() {
@@ -115,7 +115,7 @@ index 53cfc586ca..a35b19042d 100644
    if (number_of_cores <= 0) {
      RTC_LOG(LS_ERROR) << "Failed to get number of cores";
 diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
-index fa4e15dd20..4f0f29975a 100644
+index 0844b7fa66..57dc31e558 100644
 --- a/rtc_base/physical_socket_server.cc
 +++ b/rtc_base/physical_socket_server.cc
 @@ -85,7 +85,10 @@ typedef void* SockOptArg;
