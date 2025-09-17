@@ -23,6 +23,9 @@
       "chrome://browser/content/backup/backup-constants.mjs": [
         "browser/components/backup/common/backup-constants.mjs"
       ],
+      "chrome://browser/content/backup/backup-errors.mjs": [
+        "browser/components/backup/common/backup-errors.mjs"
+      ],
       "chrome://browser/content/backup/disable-backup-encryption.mjs": [
         "browser/components/backup/content/disable-backup-encryption.mjs"
       ],
@@ -88,6 +91,9 @@
       ],
       "chrome://browser/content/ipprotection/ipprotection-signedout.mjs": [
         "browser/components/ipprotection/content/ipprotection-signedout.mjs"
+      ],
+      "chrome://browser/content/ipprotection/ipprotection-timer.mjs": [
+        "browser/components/ipprotection/content/ipprotection-timer.mjs"
       ],
       "chrome://browser/content/migration/migration-wizard-constants.mjs": [
         "browser/components/migration/content/migration-wizard-constants.mjs"
@@ -272,9 +278,6 @@
       "chrome://global/content/ml/EngineProcess.sys.mjs": [
         "toolkit/components/ml/content/EngineProcess.sys.mjs"
       ],
-      "chrome://global/content/ml/HttpInference.sys.mjs": [
-        "toolkit/components/ml/content/HttpInference.sys.mjs"
-      ],
       "chrome://global/content/ml/ModelHub.sys.mjs": [
         "toolkit/components/ml/content/ModelHub.sys.mjs"
       ],
@@ -293,8 +296,17 @@
       "chrome://global/content/ml/backends/ONNXPipeline.mjs": [
         "toolkit/components/ml/content/backends/ONNXPipeline.mjs"
       ],
+      "chrome://global/content/ml/backends/OpenAIPipeline.mjs": [
+        "toolkit/components/ml/content/backends/OpenAIPipeline.mjs"
+      ],
       "chrome://global/content/ml/backends/Pipeline.mjs": [
         "toolkit/components/ml/content/backends/Pipeline.mjs"
+      ],
+      "chrome://global/content/ml/openai-dev.mjs": [
+        "toolkit/components/ml/vendor/openai/dist/openai-dev.mjs"
+      ],
+      "chrome://global/content/ml/openai.mjs": [
+        "toolkit/components/ml/vendor/openai/dist/openai.mjs"
       ],
       "chrome://global/content/ml/ort.webgpu-dev.mjs": [
         "toolkit/components/ml/vendor/ort.webgpu-dev.mjs"
@@ -6989,17 +7001,8 @@
       "resource://test/es6module_dynamic_import_runtime_error.js": [
         "js/xpconnect/tests/unit/es6module_dynamic_import_runtime_error.js"
       ],
-      "resource://test/es6module_dynamic_import_syntax_error.js": [
-        "js/xpconnect/tests/unit/es6module_dynamic_import_syntax_error.js"
-      ],
       "resource://test/es6module_import_error.js": [
         "js/xpconnect/tests/unit/es6module_import_error.js"
-      ],
-      "resource://test/es6module_parse_error.js": [
-        "js/xpconnect/tests/unit/es6module_parse_error.js"
-      ],
-      "resource://test/es6module_parse_error_in_import.js": [
-        "js/xpconnect/tests/unit/es6module_parse_error_in_import.js"
       ],
       "resource://test/es6module_throws.js": [
         "js/xpconnect/tests/unit/es6module_throws.js"
