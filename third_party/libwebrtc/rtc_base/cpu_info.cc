@@ -17,7 +17,9 @@
 #elif defined(WEBRTC_MAC)
 #include <sys/sysctl.h>
 #elif defined(WEBRTC_ANDROID)
+#if !defined(WEBRTC_MOZILLA_BUILD)
 #include <cpu-features.h>
+#endif
 #include <unistd.h>
 #elif defined(WEBRTC_FUCHSIA)
 #include <zircon/syscalls.h>
@@ -190,7 +192,14 @@ bool Supports(ISA instruction_set_architecture) {
 #elif defined(WEBRTC_ARCH_ARM_FAMILY)
   if (instruction_set_architecture == ISA::kNeon) {
 #if defined(WEBRTC_ANDROID)
+#if defined(WEBRTC_MOZILLA_BUILD)
+    // We should revisit this if Supports(...) is ever more widely used.
+    // Currently, it is used in unittests and when WEBRTC_ARCH_X86_FAMILY
+    // is defined in non-unittest code.
+    return false;
+#else
     return 0 != (android_getCpuFeatures() & ANDROID_CPU_ARM_FEATURE_NEON);
+#endif
 #elif defined(WEBRTC_BSD)
     // OpenBSD does not have getauxval() and does not have /proc reading
     return false;
