@@ -441,6 +441,12 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "telemetry.surfaceId",
+    {
+      title: "surface id",
+    },
+  ],
+  [
     "telemetry.privatePing.redactNewtabPing.enabled",
     {
       title: "Redacts content interaction ids from original New Tab ping",

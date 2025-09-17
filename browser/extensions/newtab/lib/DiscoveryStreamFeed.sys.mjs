@@ -2069,12 +2069,14 @@ export class DiscoveryStreamFeed {
           : this.store.getState().InferredPersonalization
               .coarsePrivateInferredInterests) || {};
     }
+
     const requestMetadata = {
-      utc_offset: lazy.NewTabUtils.getUtcOffset(prefs[PREF_SURFACE_ID]),
-      surface_id: prefs[PREF_SURFACE_ID] || "",
+      utc_offset: prefs.inferredPersonalizationConfig
+        ?.include_normalized_time_zone_offset
+        ? lazy.NewTabUtils.getUtcOffset(prefs[PREF_SURFACE_ID])
+        : undefined,
       inferredInterests,
     };
-
     headers.append("content-type", "application/json");
     let body = {
       ...(prefMerinoFeedExperiment ? this.getExperimentInfo() : {}),
