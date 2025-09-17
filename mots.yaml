@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2025-09-16T15:59:07.893854+00:00'
+updated_at: '2025-09-16T16:01:15.654136+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3872,6 +3872,7 @@ modules:
         includes:
           - browser/components/preferences/**/*
           - browser/themes/*/preferences
+          - toolkit/components/aboutconfig/*
           - toolkit/content/preferencesBindings.js
           - toolkit/content/preferences/*
           - toolkit/mozapps/preferences/*
@@ -4620,5 +4621,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: d8b8ecc5d11b7918a2c9fcc2c7bc23080a488c71
-  export: 721674aa74732d72161ed02a407e16e2deeb1d14
+  config: 7ca7bbc06b4bf22575e5999b1b97b47f2eed3fd0
+  export: 254dc74360323868ec96f9956c832e3b853fb82f
