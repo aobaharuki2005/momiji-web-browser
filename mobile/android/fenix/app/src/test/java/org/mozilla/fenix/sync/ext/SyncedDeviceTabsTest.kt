@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.sync.ext
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.every
 import io.mockk.mockk
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
@@ -15,12 +14,10 @@ import mozilla.components.concept.sync.DeviceType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mozilla.fenix.tabstray.ext.toComposeList
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListSupportedFeature
 
-@RunWith(AndroidJUnit4::class)
 class SyncedDeviceTabsTest {
     private val noTabDevice = SyncedDeviceTabs(
         device = mockk {
