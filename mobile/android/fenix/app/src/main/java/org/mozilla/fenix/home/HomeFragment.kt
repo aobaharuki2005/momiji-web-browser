@@ -262,13 +262,11 @@ class HomeFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             qrScanFenixFeature?.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
         }
-    private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
+    private var voiceSearchFeature: ViewBoundFeatureWrapper<VoiceSearchFeature>? =
         ViewBoundFeatureWrapper<VoiceSearchFeature>()
-    }
-
     private val voiceSearchLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            voiceSearchFeature.get()?.handleVoiceSearchResult(result.resultCode, result.data)
+            voiceSearchFeature?.get()?.handleVoiceSearchResult(result.resultCode, result.data)
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -612,16 +610,6 @@ class HomeFragment : Fragment() {
                     hideWhenKeyboardShown = true,
                 )
 
-                voiceSearchFeature.set(
-                    feature = VoiceSearchFeature(
-                        context = activity,
-                        appStore = activity.components.appStore,
-                        voiceSearchLauncher = voiceSearchLauncher,
-                    ),
-                    owner = viewLifecycleOwner,
-                    view = binding.root,
-                )
-
                 HomeToolbarComposable(
                     context = activity,
                     homeBinding = binding,
@@ -919,6 +907,7 @@ class HomeFragment : Fragment() {
 
         if (requireContext().settings().shouldUseComposableToolbar) {
             qrScanFenixFeature = QrScanFenixFeature.register(this, qrScanLauncher)
+            voiceSearchFeature = VoiceSearchFeature.register(this, voiceSearchLauncher)
         }
 
         (toolbarView as? HomeToolbarView)?.let {

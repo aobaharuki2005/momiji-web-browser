@@ -39,7 +39,6 @@ import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.ext.bookmarkStorage
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -72,12 +71,11 @@ class BookmarkFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             qrScanFenixFeature?.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
         }
-    private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
+    private var voiceSearchFeature: ViewBoundFeatureWrapper<VoiceSearchFeature>? =
         ViewBoundFeatureWrapper<VoiceSearchFeature>()
-    }
     private val voiceSearchLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            voiceSearchFeature.get()?.handleVoiceSearchResult(result.resultCode, result.data)
+            voiceSearchFeature?.get()?.handleVoiceSearchResult(result.resultCode, result.data)
         }
 
     @Suppress("LongMethod")
@@ -210,15 +208,7 @@ class BookmarkFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         if (requireContext().settings().shouldUseComposableToolbar) {
             qrScanFenixFeature = QrScanFenixFeature.register(this, qrScanLauncher)
-            voiceSearchFeature.set(
-                feature = VoiceSearchFeature(
-                    context = requireContext(),
-                    appStore = requireContext().components.appStore,
-                    voiceSearchLauncher = voiceSearchLauncher,
-                ),
-                owner = viewLifecycleOwner,
-                view = view,
-            )
+            voiceSearchFeature = VoiceSearchFeature.register(this, voiceSearchLauncher)
         }
     }
 

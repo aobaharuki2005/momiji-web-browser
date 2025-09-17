@@ -82,12 +82,11 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             qrScanFenixFeature?.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
         }
-    private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
+    private var voiceSearchFeature: ViewBoundFeatureWrapper<VoiceSearchFeature>? =
         ViewBoundFeatureWrapper<VoiceSearchFeature>()
-    }
     private val voiceSearchLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            voiceSearchFeature.get()?.handleVoiceSearchResult(result.resultCode, result.data)
+            voiceSearchFeature?.get()?.handleVoiceSearchResult(result.resultCode, result.data)
         }
 
     private var readerModeAvailable = false
@@ -181,7 +180,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private fun initBrowserToolbarComposableUpdates(rootView: View) {
         initReaderModeUpdates(rootView.context, rootView)
         qrScanFenixFeature = QrScanFenixFeature.register(this, qrScanLauncher)
-        initVoiceSearchSupport(rootView.context)
+        voiceSearchFeature = VoiceSearchFeature.register(this, voiceSearchLauncher)
     }
 
     private fun initSharePageAction(context: Context) {
@@ -319,18 +318,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 view = rootView,
             )
         }
-    }
-
-    private fun initVoiceSearchSupport(context: Context) {
-        voiceSearchFeature.set(
-            feature = VoiceSearchFeature(
-                context = context,
-                appStore = context.components.appStore,
-                voiceSearchLauncher = voiceSearchLauncher,
-            ),
-            owner = viewLifecycleOwner,
-            view = binding.root,
-        )
     }
 
     private fun initReaderMode(context: Context, view: View) {

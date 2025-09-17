@@ -168,12 +168,11 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             qrScanFenixFeature?.get()?.handleToolbarQrScanResults(result.resultCode, result.data)
         }
-    private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
+    private var voiceSearchFeature: ViewBoundFeatureWrapper<VoiceSearchFeature>? =
         ViewBoundFeatureWrapper<VoiceSearchFeature>()
-    }
     private val voiceSearchLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            voiceSearchFeature.get()?.handleVoiceSearchResult(result.resultCode, result.data)
+            voiceSearchFeature?.get()?.handleVoiceSearchResult(result.resultCode, result.data)
         }
 
     private val menuBinding by lazy {
@@ -260,15 +259,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         if (requireContext().settings().shouldUseComposableToolbar) {
             toolbarStore = buildToolbarStore()
             qrScanFenixFeature = QrScanFenixFeature.register(this, qrScanLauncher)
-            voiceSearchFeature.set(
-                feature = VoiceSearchFeature(
-                    context = requireContext(),
-                    appStore = requireContext().components.appStore,
-                    voiceSearchLauncher = voiceSearchLauncher,
-                ),
-                owner = viewLifecycleOwner,
-                view = view,
-            )
+            voiceSearchFeature = VoiceSearchFeature.register(this, voiceSearchLauncher)
         }
 
         consumeFrom(historyStore) {
