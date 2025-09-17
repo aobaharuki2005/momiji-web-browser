@@ -519,7 +519,8 @@ DIRS += [
 if CONFIG["OS_TARGET"] == "Android":
 
     DIRS += [
-        "/third_party/libwebrtc/rtc_base/ifaddrs_android_gn"
+        "/third_party/libwebrtc/rtc_base/ifaddrs_android_gn",
+        "/third_party/libwebrtc/third_party/cpu_features/ndk_compat_gn"
     ]
 
 if CONFIG["OS_TARGET"] == "Darwin":

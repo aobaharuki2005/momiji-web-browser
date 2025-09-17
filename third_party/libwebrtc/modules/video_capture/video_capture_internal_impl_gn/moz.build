@@ -93,10 +93,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
-    OS_LIBS += [
-        "rt"
-    ]
-
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/modules/video_capture/linux/device_info_linux.cc",
         "/third_party/libwebrtc/modules/video_capture/linux/device_info_v4l2.cc",
