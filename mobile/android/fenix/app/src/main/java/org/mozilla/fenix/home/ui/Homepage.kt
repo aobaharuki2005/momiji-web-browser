@@ -72,6 +72,8 @@ import org.mozilla.fenix.theme.Theme
 import org.mozilla.fenix.utils.isLargeScreenSize
 import org.mozilla.fenix.wallpapers.WallpaperState
 
+private const val BOTTOM_PADDING = 47
+
 /**
  * Top level composable for the homepage.
  *
@@ -210,6 +212,8 @@ internal fun Homepage(
                 }
             }
         }
+
+        Spacer(Modifier.height(BOTTOM_PADDING.dp))
     }
 }
 

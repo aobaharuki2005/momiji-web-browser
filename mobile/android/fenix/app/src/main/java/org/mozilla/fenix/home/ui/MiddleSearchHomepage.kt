@@ -35,6 +35,8 @@ import org.mozilla.fenix.home.ui.HomepageTestTag.HOMEPAGE
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.WallpaperState
 
+private const val BOTTOM_PADDING = 47
+
 /**
  * Top level composable for the middle search homepage.
  *
@@ -126,7 +128,7 @@ internal fun MiddleSearchHomepage(
                                 )
                             }
 
-                            Spacer(Modifier.height(47.dp))
+                            Spacer(Modifier.height(BOTTOM_PADDING.dp))
                         }
                     }
                 }
