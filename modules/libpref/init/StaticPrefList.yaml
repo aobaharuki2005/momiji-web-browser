@@ -10798,7 +10798,7 @@
 # below.
 - name: layout.css.webkit-fill-available.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 
