@@ -1766,26 +1766,62 @@ void MacroAssemblerRiscv64Compat::boxDouble(FloatRegister src,
   fmv_x_d(dest.valueReg(), src);
 }
 
-void MacroAssemblerRiscv64Compat::boxNonDouble(JSValueType type, Register src,
-                                               const ValueOperand& dest) {
-  MOZ_ASSERT(src != dest.valueReg());
-  boxValue(type, src, dest.valueReg());
+#ifdef DEBUG
+static constexpr int32_t PayloadSize(JSValueType type) {
+  switch (type) {
+    case JSVAL_TYPE_UNDEFINED:
+    case JSVAL_TYPE_NULL:
+      return 0;
+    case JSVAL_TYPE_BOOLEAN:
+      return 1;
+    case JSVAL_TYPE_INT32:
+    case JSVAL_TYPE_MAGIC:
+      return 32;
+    case JSVAL_TYPE_STRING:
+    case JSVAL_TYPE_SYMBOL:
+    case JSVAL_TYPE_PRIVATE_GCTHING:
+    case JSVAL_TYPE_BIGINT:
+    case JSVAL_TYPE_OBJECT:
+      return JSVAL_TAG_SHIFT;
+    case JSVAL_TYPE_DOUBLE:
+    case JSVAL_TYPE_UNKNOWN:
+      break;
+  }
+  MOZ_CRASH("bad value type");
 }
+#endif
 
-void MacroAssemblerRiscv64Compat::boxNonDouble(Register type, Register src,
-                                               const ValueOperand& dest) {
-  MOZ_ASSERT(src != dest.valueReg());
-  boxValue(type, src, dest.valueReg());
+static void AssertValidPayload(MacroAssemblerRiscv64Compat& masm,
+                               JSValueType type, Register payload,
+                               Register scratch) {
+#ifdef DEBUG
+  if (type == JSVAL_TYPE_INT32) {
+    // Ensure the payload is a properly sign-extended int32.
+    Label signExtended;
+    masm.SignExtendWord(scratch, payload);
+    masm.ma_b(payload, scratch, &signExtended, Assembler::Equal, ShortJump);
+    masm.breakpoint();
+    masm.bind(&signExtended);
+  } else {
+    // All bits above the payload must be zeroed.
+    Label zeroed;
+    masm.srli(scratch, payload, PayloadSize(type));
+    masm.ma_b(scratch, Imm32(0), &zeroed, Assembler::Equal, ShortJump);
+    masm.breakpoint();
+    masm.bind(&zeroed);
+  }
+#endif
 }
 
 void MacroAssemblerRiscv64Compat::boxValue(JSValueType type, Register src,
                                            Register dest) {
+  MOZ_ASSERT(type != JSVAL_TYPE_UNDEFINED && type != JSVAL_TYPE_NULL);
   MOZ_ASSERT(src != dest);
 
+  AssertValidPayload(*this, type, src, dest);
+
   switch (type) {
-    case JSVAL_TYPE_INT32:
-    case JSVAL_TYPE_BOOLEAN:
-    case JSVAL_TYPE_MAGIC: {
+    case JSVAL_TYPE_INT32: {
       // Loading the shifted tag requires only two instructions.
       ma_li(dest, ImmShiftedTag(type));
 
@@ -1797,24 +1833,17 @@ void MacroAssemblerRiscv64Compat::boxValue(JSValueType type, Register src,
       or_(dest, dest, scratch);
       return;
     }
+    case JSVAL_TYPE_BOOLEAN:
+    case JSVAL_TYPE_MAGIC:
     case JSVAL_TYPE_STRING:
     case JSVAL_TYPE_SYMBOL:
     case JSVAL_TYPE_PRIVATE_GCTHING:
     case JSVAL_TYPE_BIGINT:
     case JSVAL_TYPE_OBJECT: {
-#ifdef DEBUG
-      // High bits of pointer-valued types must be zero.
-      Label done;
-      srli(dest, src, JSVAL_TAG_SHIFT);
-      ma_b(dest, Imm32(0), &done, Assembler::Equal, ShortJump);
-      breakpoint();
-      bind(&done);
-#endif
-
       // Loading the shifted tag requires only two instructions.
       ma_li(dest, ImmShiftedTag(type));
 
-      // Insert 47-bit payload.
+      // Insert payload.
       or_(dest, dest, src);
       return;
     }
@@ -1832,29 +1861,45 @@ void MacroAssemblerRiscv64Compat::boxValue(Register type, Register src,
   MOZ_ASSERT(src != dest);
 
 #ifdef DEBUG
-  // Ensure |src| is sign-extended.
-  Label check, done;
-  ma_b(type, Imm32(JSVAL_TYPE_INT32), &check, Assembler::Equal, ShortJump);
-  ma_b(type, Imm32(JSVAL_TYPE_BOOLEAN), &check, Assembler::Equal, ShortJump);
-  ma_b(type, Imm32(JSVAL_TYPE_NULL), &check, Assembler::Equal, ShortJump);
-  ma_b(type, Imm32(JSVAL_TYPE_UNDEFINED), &done, Assembler::NotEqual,
-       ShortJump);
-  {
-    bind(&check);
+  Label done, isNullOrUndefined, isBoolean, isInt32OrMagic, isPointerSized;
 
+  asMasm().branch32(Assembler::Equal, type, Imm32(JSVAL_TYPE_NULL),
+                    &isNullOrUndefined);
+  asMasm().branch32(Assembler::Equal, type, Imm32(JSVAL_TYPE_UNDEFINED),
+                    &isNullOrUndefined);
+  asMasm().branch32(Assembler::Equal, type, Imm32(JSVAL_TYPE_BOOLEAN),
+                    &isBoolean);
+  asMasm().branch32(Assembler::Equal, type, Imm32(JSVAL_TYPE_INT32),
+                    &isInt32OrMagic);
+  asMasm().branch32(Assembler::Equal, type, Imm32(JSVAL_TYPE_MAGIC),
+                    &isInt32OrMagic);
+  // GCThing types aren't currently supported, because SignExtendWord truncates
+  // payloads above UINT32_MAX.
+  breakpoint();
+  {
+    bind(&isNullOrUndefined);
+
+    // Ensure no payload for null and undefined.
+    ma_b(src, src, &done, Assembler::Zero, ShortJump);
+    breakpoint();
+  }
+  {
+    bind(&isBoolean);
+
+    // Ensure boolean values are either 0 or 1.
+    ma_b(src, Imm32(1), &done, Assembler::BelowOrEqual, ShortJump);
+    breakpoint();
+  }
+  {
+    bind(&isInt32OrMagic);
+
+    // Ensure |src| is sign-extended.
     ScratchRegisterScope scratch(asMasm());
     SignExtendWord(scratch, src);
     ma_b(src, scratch, &done, Assembler::Equal, ShortJump);
     breakpoint();
   }
   bind(&done);
-
-  // GCThing types aren't currently supported, because slli/srli truncates
-  // payloads above UINT32_MAX.
-  Label ok;
-  ma_b(type, Imm32(JSVAL_TYPE_NULL), &ok, Assembler::BelowOrEqual, ShortJump);
-  breakpoint();
-  bind(&ok);
 #endif
 
   // JSVAL_TAG_MAX_DOUBLE can't be directly encoded in a single `ori`
@@ -1992,6 +2037,15 @@ void MacroAssemblerRiscv64Compat::storeValue(ValueOperand val,
 void MacroAssemblerRiscv64Compat::storeValue(JSValueType type, Register reg,
                                              Address dest) {
   if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
+#ifdef DEBUG
+    {
+      UseScratchRegisterScope temps(this);
+      Register scratch = temps.Acquire();
+
+      AssertValidPayload(*this, type, reg, scratch);
+    }
+#endif
+
     store32(reg, dest);
     JSValueShiftedTag tag = (JSValueShiftedTag)JSVAL_TYPE_TO_SHIFTED_TAG(type);
     store32(Imm64(tag).hi(), Address(dest.base, dest.offset + 4));
@@ -2045,6 +2099,8 @@ void MacroAssemblerRiscv64Compat::loadValue(Address src, ValueOperand val) {
 
 void MacroAssemblerRiscv64Compat::tagValue(JSValueType type, Register payload,
                                            ValueOperand dest) {
+  MOZ_ASSERT(type != JSVAL_TYPE_UNDEFINED && type != JSVAL_TYPE_NULL);
+
   JitSpew(JitSpew_Codegen, "[ tagValue");
 
   if (payload == dest.valueReg()) {
@@ -2052,10 +2108,10 @@ void MacroAssemblerRiscv64Compat::tagValue(JSValueType type, Register payload,
     Register scratch = temps.Acquire();
     MOZ_ASSERT(dest.valueReg() != scratch);
 
+    AssertValidPayload(*this, type, payload, scratch);
+
     switch (type) {
-      case JSVAL_TYPE_INT32:
-      case JSVAL_TYPE_BOOLEAN:
-      case JSVAL_TYPE_MAGIC: {
+      case JSVAL_TYPE_INT32: {
         // Loading the shifted tag requires only two instructions.
         ma_li(scratch, ImmShiftedTag(type));
 
@@ -2064,24 +2120,17 @@ void MacroAssemblerRiscv64Compat::tagValue(JSValueType type, Register payload,
         or_(dest.valueReg(), payload, scratch);
         break;
       }
+      case JSVAL_TYPE_BOOLEAN:
+      case JSVAL_TYPE_MAGIC:
       case JSVAL_TYPE_STRING:
       case JSVAL_TYPE_SYMBOL:
       case JSVAL_TYPE_PRIVATE_GCTHING:
       case JSVAL_TYPE_BIGINT:
       case JSVAL_TYPE_OBJECT: {
-#ifdef DEBUG
-        // High bits of pointer-valued types must be zero.
-        Label done;
-        srli(scratch, payload, JSVAL_TAG_SHIFT);
-        ma_b(scratch, Imm32(0), &done, Assembler::Equal, ShortJump);
-        breakpoint();
-        bind(&done);
-#endif
-
         // Loading the shifted tag requires only two instructions.
         ma_li(scratch, ImmShiftedTag(type));
 
-        // Insert 47-bit payload.
+        // Insert payload.
         or_(dest.valueReg(), payload, scratch);
         break;
       }
