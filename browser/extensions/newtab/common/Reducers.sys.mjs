@@ -132,7 +132,7 @@ export const INITIAL_STATE = {
   InferredPersonalization: {
     initialized: false,
     lastUpdated: null,
-    inferredIntrests: {},
+    inferredInterests: {},
     coarseInferredInterests: {},
     coarsePrivateInferredInterests: {},
   },
