@@ -707,8 +707,12 @@ class MacroAssemblerLOONG64Compat : public MacroAssemblerLOONG64 {
 
   // boxing code
   void boxDouble(FloatRegister src, const ValueOperand& dest, FloatRegister);
-  void boxNonDouble(JSValueType type, Register src, const ValueOperand& dest);
-  void boxNonDouble(Register type, Register src, const ValueOperand& dest);
+  void boxNonDouble(JSValueType type, Register src, const ValueOperand& dest) {
+    boxValue(type, src, dest.valueReg());
+  }
+  void boxNonDouble(Register type, Register src, const ValueOperand& dest) {
+    boxValue(type, src, dest.valueReg());
+  }
 
   // Extended unboxing API. If the payload is already in a register, returns
   // that register. Otherwise, provides a move to the given scratch register,
@@ -769,28 +773,7 @@ class MacroAssemblerLOONG64Compat : public MacroAssemblerLOONG64 {
     }
   }
 
-  void boxValue(JSValueType type, Register src, Register dest) {
-    ScratchRegisterScope scratch(asMasm());
-    if (src == dest) {
-      as_ori(scratch, src, 0);
-      src = scratch;
-    }
-#ifdef DEBUG
-    if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
-      Label upper32BitsSignExtended;
-      as_slli_w(dest, src, 0);
-      ma_b(src, dest, &upper32BitsSignExtended, Equal, ShortJump);
-      breakpoint();
-      bind(&upper32BitsSignExtended);
-    }
-#endif
-    ma_li(dest, ImmShiftedTag(type));
-    if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
-      as_bstrins_d(dest, src, 31, 0);
-    } else {
-      as_bstrins_d(dest, src, JSVAL_TAG_SHIFT - 1, 0);
-    }
-  }
+  void boxValue(JSValueType type, Register src, Register dest);
   void boxValue(Register type, Register src, Register dest);
 
   void storeValue(ValueOperand val, const Address& dest);

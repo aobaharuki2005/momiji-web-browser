@@ -5338,14 +5338,91 @@ void MacroAssemblerLOONG64Compat::boxDouble(FloatRegister src,
   as_movfr2gr_d(dest.valueReg(), src);
 }
 
-void MacroAssemblerLOONG64Compat::boxNonDouble(JSValueType type, Register src,
-                                               const ValueOperand& dest) {
-  boxValue(type, src, dest.valueReg());
+#ifdef DEBUG
+static constexpr int32_t PayloadSize(JSValueType type) {
+  switch (type) {
+    case JSVAL_TYPE_UNDEFINED:
+    case JSVAL_TYPE_NULL:
+      return 0;
+    case JSVAL_TYPE_BOOLEAN:
+      return 1;
+    case JSVAL_TYPE_INT32:
+    case JSVAL_TYPE_MAGIC:
+      return 32;
+    case JSVAL_TYPE_STRING:
+    case JSVAL_TYPE_SYMBOL:
+    case JSVAL_TYPE_PRIVATE_GCTHING:
+    case JSVAL_TYPE_BIGINT:
+    case JSVAL_TYPE_OBJECT:
+      return JSVAL_TAG_SHIFT;
+    case JSVAL_TYPE_DOUBLE:
+    case JSVAL_TYPE_UNKNOWN:
+      break;
+  }
+  MOZ_CRASH("bad value type");
+}
+#endif
+
+static void AssertValidPayload(MacroAssemblerLOONG64Compat& masm,
+                               JSValueType type, Register payload,
+                               Register scratch) {
+#ifdef DEBUG
+  if (type == JSVAL_TYPE_INT32) {
+    // Ensure the payload is a properly sign-extended int32.
+    Label signExtended;
+    masm.as_slli_w(scratch, payload, 0);
+    masm.ma_b(payload, scratch, &signExtended, Assembler::Equal, ShortJump);
+    masm.breakpoint();
+    masm.bind(&signExtended);
+  } else {
+    // All bits above the payload must be zeroed.
+    Label zeroed;
+    masm.as_srli_d(scratch, payload, PayloadSize(type));
+    masm.ma_b(scratch, scratch, &zeroed, Assembler::Zero, ShortJump);
+    masm.breakpoint();
+    masm.bind(&zeroed);
+  }
+#endif
 }
 
-void MacroAssemblerLOONG64Compat::boxNonDouble(Register type, Register src,
-                                               const ValueOperand& dest) {
-  boxValue(type, src, dest.valueReg());
+void MacroAssemblerLOONG64Compat::boxValue(JSValueType type, Register src,
+                                           Register dest) {
+  MOZ_ASSERT(src != dest);
+  MOZ_ASSERT(type != JSVAL_TYPE_UNDEFINED && type != JSVAL_TYPE_NULL);
+
+  AssertValidPayload(*this, type, src, dest);
+
+  int64_t shifted = int64_t(JSVAL_TYPE_TO_SHIFTED_TAG(type)) >> 32;
+  MOZ_ASSERT(is_intN(shifted, 20),
+             "upper 32 bits of shifted tag fit into lu32i.d");
+
+  // Store shifted tag into upper 32 bits. The lower 32 bits are left unchanged.
+  as_lu32i_d(dest, shifted);
+
+  switch (type) {
+    case JSVAL_TYPE_BOOLEAN:
+    case JSVAL_TYPE_INT32:
+    case JSVAL_TYPE_MAGIC: {
+      // Insert payload into lower 32 bits.
+      as_bstrins_d(dest, src, 31, 0);
+      return;
+    }
+    case JSVAL_TYPE_STRING:
+    case JSVAL_TYPE_SYMBOL:
+    case JSVAL_TYPE_PRIVATE_GCTHING:
+    case JSVAL_TYPE_BIGINT:
+    case JSVAL_TYPE_OBJECT: {
+      // Insert payload into lower 47 bits.
+      as_bstrins_d(dest, src, JSVAL_TAG_SHIFT - 1, 0);
+      return;
+    }
+    case JSVAL_TYPE_DOUBLE:
+    case JSVAL_TYPE_UNDEFINED:
+    case JSVAL_TYPE_NULL:
+    case JSVAL_TYPE_UNKNOWN:
+      break;
+  }
+  MOZ_CRASH("bad value type");
 }
 
 void MacroAssemblerLOONG64Compat::boxValue(Register type, Register src,
@@ -5353,29 +5430,45 @@ void MacroAssemblerLOONG64Compat::boxValue(Register type, Register src,
   MOZ_ASSERT(src != dest);
 
 #ifdef DEBUG
-  // Ensure |src| is sign-extended.
-  Label check, done;
-  ma_b(type, Imm32(JSVAL_TYPE_INT32), &check, Assembler::Equal, ShortJump);
-  ma_b(type, Imm32(JSVAL_TYPE_BOOLEAN), &check, Assembler::Equal, ShortJump);
-  ma_b(type, Imm32(JSVAL_TYPE_NULL), &check, Assembler::Equal, ShortJump);
-  ma_b(type, Imm32(JSVAL_TYPE_UNDEFINED), &done, Assembler::NotEqual,
-       ShortJump);
-  {
-    bind(&check);
+  Label done, isNullOrUndefined, isBoolean, isInt32OrMagic, isPointerSized;
 
+  asMasm().branch32(Assembler::Equal, type, Imm32(JSVAL_TYPE_NULL),
+                    &isNullOrUndefined);
+  asMasm().branch32(Assembler::Equal, type, Imm32(JSVAL_TYPE_UNDEFINED),
+                    &isNullOrUndefined);
+  asMasm().branch32(Assembler::Equal, type, Imm32(JSVAL_TYPE_BOOLEAN),
+                    &isBoolean);
+  asMasm().branch32(Assembler::Equal, type, Imm32(JSVAL_TYPE_INT32),
+                    &isInt32OrMagic);
+  asMasm().branch32(Assembler::Equal, type, Imm32(JSVAL_TYPE_MAGIC),
+                    &isInt32OrMagic);
+  // GCThing types aren't currently supported, because as_bstrins_d truncates
+  // payloads above UINT32_MAX.
+  breakpoint();
+  {
+    bind(&isNullOrUndefined);
+
+    // Ensure no payload for null and undefined.
+    ma_b(src, src, &done, Assembler::Zero, ShortJump);
+    breakpoint();
+  }
+  {
+    bind(&isBoolean);
+
+    // Ensure boolean values are either 0 or 1.
+    ma_b(src, Imm32(1), &done, Assembler::BelowOrEqual, ShortJump);
+    breakpoint();
+  }
+  {
+    bind(&isInt32OrMagic);
+
+    // Ensure |src| is sign-extended.
     ScratchRegisterScope scratch(asMasm());
     as_slli_w(scratch, src, 0);
     ma_b(src, scratch, &done, Assembler::Equal, ShortJump);
     breakpoint();
   }
   bind(&done);
-
-  // GCThing types aren't currently supported, because as_bstrins_d truncates
-  // payloads above UINT32_MAX.
-  Label ok;
-  ma_b(type, Imm32(JSVAL_TYPE_NULL), &ok, Assembler::BelowOrEqual, ShortJump);
-  breakpoint();
-  bind(&ok);
 #endif
 
   ma_or(dest, type, Imm32(JSVAL_TAG_MAX_DOUBLE));
@@ -5463,7 +5556,7 @@ void MacroAssemblerLOONG64Compat::storeValue(JSValueType type, Register reg,
   SecondScratchRegisterScope scratch2(asMasm());
   MOZ_ASSERT(dest.base != scratch2);
 
-  tagValue(type, reg, ValueOperand(scratch2));
+  boxValue(type, reg, scratch2);
   storePtr(scratch2, dest);
 }
 
@@ -5472,7 +5565,7 @@ void MacroAssemblerLOONG64Compat::storeValue(JSValueType type, Register reg,
   SecondScratchRegisterScope scratch2(asMasm());
   MOZ_ASSERT(dest.base != scratch2);
 
-  tagValue(type, reg, ValueOperand(scratch2));
+  boxValue(type, reg, scratch2);
   storePtr(scratch2, dest);
 }
 
@@ -5513,18 +5606,54 @@ void MacroAssemblerLOONG64Compat::loadValue(const BaseIndex& src,
 
 void MacroAssemblerLOONG64Compat::tagValue(JSValueType type, Register payload,
                                            ValueOperand dest) {
-  ScratchRegisterScope scratch(asMasm());
-  MOZ_ASSERT(dest.valueReg() != scratch);
+  MOZ_ASSERT(type != JSVAL_TYPE_UNDEFINED && type != JSVAL_TYPE_NULL);
 
   if (payload == dest.valueReg()) {
-    as_or(scratch, payload, zero);
-    payload = scratch;
-  }
-  ma_li(dest.valueReg(), ImmShiftedTag(type));
-  if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
-    as_bstrins_d(dest.valueReg(), payload, 31, 0);
+    ScratchRegisterScope scratch(asMasm());
+    MOZ_ASSERT(dest.valueReg() != scratch);
+
+    AssertValidPayload(*this, type, payload, scratch);
+
+    switch (type) {
+      case JSVAL_TYPE_BOOLEAN:
+      case JSVAL_TYPE_INT32:
+      case JSVAL_TYPE_MAGIC: {
+        int64_t shifted = int64_t(JSVAL_TYPE_TO_SHIFTED_TAG(type)) >> 32;
+        MOZ_ASSERT(is_intN(shifted, 20),
+                   "upper 32 bit of shifted tag fit into lu32i.d");
+
+        // Store shifted tag into upper 32 bits. The lower 32 bits, containing
+        // the payload, are left unchanged.
+        as_lu32i_d(dest.valueReg(), shifted);
+        return;
+      }
+      case JSVAL_TYPE_STRING:
+      case JSVAL_TYPE_SYMBOL:
+      case JSVAL_TYPE_PRIVATE_GCTHING:
+      case JSVAL_TYPE_BIGINT:
+      case JSVAL_TYPE_OBJECT: {
+        int64_t signExtendedShiftedTag =
+            int64_t(JSVAL_TYPE_TO_SHIFTED_TAG(type)) >> JSVAL_TAG_SHIFT;
+        MOZ_ASSERT(is_intN(signExtendedShiftedTag, 12),
+                   "sign-extended shifted tag can be materialised in a single "
+                   "addi.w instruction");
+
+        // Store sign-extended tag into lower 17 bits of the scratch register.
+        as_addi_w(scratch, zero, signExtendedShiftedTag);
+
+        // Insert tag into the result.
+        as_bstrins_d(dest.valueReg(), scratch, 63, JSVAL_TAG_SHIFT);
+        return;
+      }
+      case JSVAL_TYPE_DOUBLE:
+      case JSVAL_TYPE_UNDEFINED:
+      case JSVAL_TYPE_NULL:
+      case JSVAL_TYPE_UNKNOWN:
+        break;
+    }
+    MOZ_CRASH("bad value type");
   } else {
-    as_bstrins_d(dest.valueReg(), payload, JSVAL_TAG_SHIFT - 1, 0);
+    boxNonDouble(type, payload, dest);
   }
 }
 
