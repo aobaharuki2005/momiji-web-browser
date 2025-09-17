@@ -1234,3 +1234,208 @@ add_task(async function dismiss_on_pref_value_change() {
 
   Services.prefs.clearUserPref(PREF);
 });
+
+add_task(async function global_does_not_replace_without_permission() {
+  const sandbox = sinon.createSandbox();
+
+  const windowWithInfobar = BrowserWindowTracker.getTopWindow();
+  const browserInWindow = windowWithInfobar.gBrowser.selectedBrowser;
+
+  const removeById = id => {
+    const node =
+      windowWithInfobar.gNotificationBox.getNotificationWithValue(id);
+    if (node) {
+      windowWithInfobar.gNotificationBox.removeNotification(node);
+    }
+  };
+
+  const originalGlobalMessage = {
+    id: "TEST_GLOBAL_ORIGINAL",
+    content: {
+      type: "global",
+      text: "original global message",
+      buttons: [],
+      // no canReplace
+    },
+  };
+
+  const secondGlobalMessage = {
+    id: "TEST_GLOBAL_ATTEMPT_REPLACE",
+    content: {
+      type: "global",
+      text: "attempted replacement global message",
+      buttons: [],
+      // no canReplace
+    },
+  };
+
+  const getNotification = id =>
+    windowWithInfobar.gNotificationBox.getNotificationWithValue(id);
+
+  const dispatchOriginal = sandbox.stub();
+  await InfoBar.showInfoBarMessage(
+    browserInWindow,
+    originalGlobalMessage,
+    dispatchOriginal
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () => !!getNotification(originalGlobalMessage.id),
+    "Original global infobar is visible"
+  );
+  Assert.ok(
+    dispatchOriginal.calledWith(
+      sinon.match({
+        type: "IMPRESSION",
+        data: sinon.match.has("id", originalGlobalMessage.id),
+      })
+    ),
+    "Impression recorded for the original global message"
+  );
+
+  const dispatchAttempt = sandbox.stub();
+  const result = await InfoBar.showInfoBarMessage(
+    browserInWindow,
+    secondGlobalMessage,
+    dispatchAttempt
+  );
+
+  Assert.equal(
+    result,
+    null,
+    "showInfoBarMessage returned null because stacking was prevented (replacement not allowed)"
+  );
+  Assert.ok(
+    !!getNotification(originalGlobalMessage.id),
+    "Original global infobar remains visible because replacement was not allowed"
+  );
+  Assert.ok(
+    dispatchAttempt.notCalled,
+    "No impression recorded for the unpermitted replacement attempt"
+  );
+
+  // Cleanup
+  removeById(originalGlobalMessage.id);
+  removeById(secondGlobalMessage.id);
+  InfoBar._activeInfobar = null;
+  InfoBar._universalInfobars = [];
+  sandbox.restore();
+});
+
+add_task(async function replace_global_with_global_and_record_impressions() {
+  const sandbox = sinon.createSandbox();
+
+  const getFromWin = (win, id) =>
+    win.gNotificationBox?.getNotificationWithValue(id);
+
+  const removeByIdInWin = (win, id) => {
+    const box = win.gNotificationBox;
+    if (!box) {
+      return;
+    }
+    const node = box.getNotificationWithValue(id);
+    if (node) {
+      box.removeNotification(node);
+    }
+  };
+
+  const win = BrowserWindowTracker.getTopWindow();
+  const browser = win.gBrowser.selectedBrowser;
+
+  const firstGlobalMessage = {
+    id: "TEST_REPLACE_GLOBAL_WITH_GLOBAL_FIRST",
+    content: {
+      type: "global",
+      text: "first global message",
+      buttons: [],
+      canReplace: ["TEST_REPLACE_GLOBAL_WITH_GLOBAL_SECOND"],
+    },
+  };
+
+  const secondGlobalMessage = {
+    id: "TEST_REPLACE_GLOBAL_WITH_GLOBAL_SECOND",
+    content: {
+      type: "global",
+      text: "second global message",
+      buttons: [],
+      canReplace: ["TEST_REPLACE_GLOBAL_WITH_GLOBAL_FIRST"],
+    },
+  };
+
+  const dispatchFirstGlobal = sandbox.stub();
+  await InfoBar.showInfoBarMessage(
+    browser,
+    firstGlobalMessage,
+    dispatchFirstGlobal
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () => !!getFromWin(win, firstGlobalMessage.id),
+    "First global visible"
+  );
+  Assert.ok(
+    dispatchFirstGlobal.calledWith(
+      sinon.match({
+        type: "IMPRESSION",
+        data: sinon.match.has("id", firstGlobalMessage.id),
+      })
+    ),
+    "Impression recorded for the first global"
+  );
+
+  const dispatchSecondGlobal = sandbox.stub();
+  await InfoBar.showInfoBarMessage(
+    browser,
+    secondGlobalMessage,
+    dispatchSecondGlobal
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () => !!getFromWin(win, secondGlobalMessage.id),
+    "Second global visible"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !getFromWin(win, firstGlobalMessage.id),
+    "First global removed"
+  );
+  Assert.ok(
+    dispatchSecondGlobal.calledWith(
+      sinon.match({
+        type: "IMPRESSION",
+        data: sinon.match.has("id", secondGlobalMessage.id),
+      })
+    ),
+    "Impression recorded for the second global"
+  );
+
+  const dispatchFirstGlobalAgain = sandbox.stub();
+  await InfoBar.showInfoBarMessage(
+    browser,
+    firstGlobalMessage,
+    dispatchFirstGlobalAgain
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () => !!getFromWin(win, firstGlobalMessage.id),
+    "First global visible again"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !getFromWin(win, secondGlobalMessage.id),
+    "Second global removed"
+  );
+  Assert.ok(
+    dispatchFirstGlobalAgain.calledWith(
+      sinon.match({
+        type: "IMPRESSION",
+        data: sinon.match.has("id", firstGlobalMessage.id),
+      })
+    ),
+    "Impression recorded again for the first global when shown again"
+  );
+
+  removeByIdInWin(win, firstGlobalMessage.id);
+  removeByIdInWin(win, secondGlobalMessage.id);
+  sandbox.restore();
+  InfoBar._activeInfobar = null;
+  InfoBar._universalInfobars = [];
+});

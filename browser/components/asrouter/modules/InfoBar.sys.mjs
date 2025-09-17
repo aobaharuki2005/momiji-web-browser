@@ -209,7 +209,7 @@ class InfoBarNotification {
     // where a notification could add itself after removeUniversalInfobars().
     if (
       content.type === TYPES.UNIVERSAL &&
-      InfoBar._activeInfobar?.message.content.type === TYPES.UNIVERSAL
+      InfoBar._activeInfobar?.message?.id === this.message.id
     ) {
       InfoBar._universalInfobars.push({
         box: notificationContainer,
@@ -373,20 +373,25 @@ class InfoBarNotification {
   infobarCallback(eventType) {
     // Clean up the pref observer on any removal/dismissal path.
     this._removePrefObserver();
-
-    const wasUniversal =
-      InfoBar._activeInfobar?.message.content.type === TYPES.UNIVERSAL;
+    const wasUniversal = this.message.content.type === TYPES.UNIVERSAL;
+    const isActiveMessage =
+      InfoBar._activeInfobar?.message?.id === this.message.id;
     if (eventType === "removed") {
       this.notification = null;
-      InfoBar._activeInfobar = null;
+      if (isActiveMessage) {
+        InfoBar._activeInfobar = null;
+      }
     } else if (this.notification) {
       this.sendUserEventTelemetry("DISMISSED");
       this.notification = null;
-      InfoBar._activeInfobar = null;
+
+      if (isActiveMessage) {
+        InfoBar._activeInfobar = null;
+      }
     }
     // If one instance of universal infobar is removed, remove all instances and
     // the new window observer
-    if (wasUniversal) {
+    if (wasUniversal && isActiveMessage && InfoBar._universalInfobars.length) {
       this.removeUniversalInfobars();
     }
   }
@@ -544,6 +549,29 @@ export const InfoBar = {
     }
   },
 
+  _maybeReplaceActiveInfoBar(nextMessage) {
+    if (!this._activeInfobar) {
+      return false;
+    }
+    const replacementEligible = nextMessage?.content?.canReplace || [];
+    const activeId = this._activeInfobar.message?.id;
+    if (!replacementEligible.includes(activeId)) {
+      return false;
+    }
+    const activeType = this._activeInfobar.message?.content?.type;
+    if (activeType === TYPES.UNIVERSAL) {
+      this._activeInfobar.notification?.removeUniversalInfobars();
+    } else {
+      try {
+        this._activeInfobar.notification?.notification.dismiss();
+      } catch (e) {
+        console.error("Failed to dismiss active infobar:", e);
+      }
+    }
+    this._activeInfobar = null;
+    return true;
+  },
+
   /**
    * Displays an infobar notification in the specified browser window.
    * For the first universal infobar, shows the notification in all open browser windows
@@ -566,16 +594,21 @@ export const InfoBar = {
     const isFirstUniversal = !universalInNewWin && isUniversal;
     // Prevent stacking multiple infobars
     if (this._activeInfobar && !universalInNewWin) {
-      return null;
-    }
-    if (!universalInNewWin) {
-      this._activeInfobar = { message, dispatch };
+      // Check if infobar is configured to replace the current infobar.
+      if (!this._maybeReplaceActiveInfoBar(message)) {
+        return null;
+      }
     }
 
     this.maybeLoadCustomElement(win);
     this.maybeInsertFTL(win);
 
     let notification = new InfoBarNotification(message, dispatch);
+
+    if (!universalInNewWin) {
+      this._activeInfobar = { message, dispatch, notification };
+    }
+
     if (isFirstUniversal) {
       await this.showNotificationAllWindows(notification);
       Services.obs.addObserver(this, "domwindowopened");
@@ -584,7 +617,7 @@ export const InfoBar = {
     }
 
     if (!universalInNewWin) {
-      this._activeInfobar = { message, dispatch };
+      this._activeInfobar = { message, dispatch, notification };
       // If the window closes before the user interacts with the active infobar,
       // clear it
       win.addEventListener(
@@ -601,7 +634,10 @@ export const InfoBar = {
             const nextEntry = InfoBar._universalInfobars.find(
               ({ box }) => !box.ownerGlobal?.closed
             );
-            InfoBar._activeInfobar = nextEntry ? { message, dispatch } : null;
+            const nextNotification = nextEntry?.notification;
+            InfoBar._activeInfobar = nextNotification
+              ? { message, dispatch, nextNotification }
+              : null;
           } else {
             // Non-universal always clears on unload
             InfoBar._activeInfobar = null;
