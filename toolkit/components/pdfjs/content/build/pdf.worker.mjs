@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.135
- * pdfjsBuild = 5a10376e4
+ * pdfjsVersion = 5.4.224
+ * pdfjsBuild = 4eeabcb70
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -79,6 +79,7 @@ const AnnotationEditorType = {
   HIGHLIGHT: 9,
   STAMP: 13,
   INK: 15,
+  POPUP: 16,
   SIGNATURE: 101,
   COMMENT: 102
 };
@@ -1106,7 +1107,7 @@ class Dict {
     return dict;
   }
   delete(key) {
-    delete this._map[key];
+    this._map.delete(key);
   }
 }
 class Ref {
@@ -33670,8 +33671,12 @@ class PartialEvaluator {
     if (baseEncodingName) {
       properties.defaultEncoding = getEncoding(baseEncodingName);
     } else {
-      const isSymbolicFont = !!(properties.flags & FontFlags.Symbolic);
+      let isSymbolicFont = !!(properties.flags & FontFlags.Symbolic);
       const isNonsymbolicFont = !!(properties.flags & FontFlags.Nonsymbolic);
+      if (properties.type === "TrueType" && isSymbolicFont && isNonsymbolicFont && differences.length !== 0) {
+        properties.flags &= ~FontFlags.Symbolic;
+        isSymbolicFont = false;
+      }
       encoding = StandardEncoding;
       if (properties.type === "TrueType" && !isNonsymbolicFont) {
         encoding = WinAnsiEncoding;
@@ -50356,8 +50361,10 @@ class MarkupAnnotation extends Annotation {
     const retRef = {
       ref: annotationRef
     };
-    if (annotation.popup) {
-      const popup = annotation.popup;
+    const {
+      popup
+    } = annotation;
+    if (popup) {
       if (popup.deleted) {
         annotationDict.delete("Popup");
         annotationDict.delete("Contents");
@@ -57667,7 +57674,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "5.4.135";
+    const workerVersion = "5.4.224";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
