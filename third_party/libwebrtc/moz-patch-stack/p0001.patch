@@ -36,10 +36,10 @@ Cr-Commit-Position: refs/heads/main@{#44922}
  5 files changed, 46 insertions(+), 44 deletions(-)
 
 diff --git a/api/jsep_session_description.h b/api/jsep_session_description.h
-index 978a4725eb..19dbf99bde 100644
+index c32d8276e5..d2683a01db 100644
 --- a/api/jsep_session_description.h
 +++ b/api/jsep_session_description.h
-@@ -72,9 +72,8 @@ class JsepSessionDescription : public SessionDescriptionInterface {
+@@ -75,9 +75,8 @@ class JsepSessionDescription : public SessionDescriptionInterface {
    SdpType type_;
    std::vector<JsepCandidateCollection> candidate_collection_;
  
@@ -52,7 +52,7 @@ index 978a4725eb..19dbf99bde 100644
  
  }  // namespace webrtc
 diff --git a/pc/jsep_session_description.cc b/pc/jsep_session_description.cc
-index cf5dfa3b9d..bded5cd568 100644
+index 8613adaf34..bbeb4c3c07 100644
 --- a/pc/jsep_session_description.cc
 +++ b/pc/jsep_session_description.cc
 @@ -10,9 +10,7 @@
@@ -73,7 +73,7 @@ index cf5dfa3b9d..bded5cd568 100644
  }  // namespace
  
  // TODO(steveanton): Remove this default implementation once Chromium has been
-@@ -269,7 +268,7 @@ size_t JsepSessionDescription::RemoveCandidates(
+@@ -283,7 +282,7 @@ size_t JsepSessionDescription::RemoveCandidates(
      const std::vector<Candidate>& candidates) {
    size_t num_removed = 0;
    for (auto& candidate : candidates) {
@@ -82,7 +82,7 @@ index cf5dfa3b9d..bded5cd568 100644
      if (mediasection_index < 0) {
        // Not found.
        continue;
-@@ -303,33 +302,51 @@ bool JsepSessionDescription::ToString(std::string* out) const {
+@@ -317,33 +316,51 @@ bool JsepSessionDescription::ToString(std::string* out) const {
    return !out->empty();
  }
  
@@ -155,10 +155,10 @@ index cf5dfa3b9d..bded5cd568 100644
 +
  }  // namespace webrtc
 diff --git a/pc/jsep_session_description_unittest.cc b/pc/jsep_session_description_unittest.cc
-index c00e48d072..1de2a1a92e 100644
+index ee623cbcce..7619e5a7f6 100644
 --- a/pc/jsep_session_description_unittest.cc
 +++ b/pc/jsep_session_description_unittest.cc
-@@ -166,16 +166,6 @@ TEST_F(JsepSessionDescriptionTest, CheckSessionDescription) {
+@@ -168,16 +168,6 @@ TEST_F(JsepSessionDescriptionTest, CheckSessionDescription) {
    EXPECT_EQ(2u, jsep_desc_->number_of_mediasections());
  }
  
