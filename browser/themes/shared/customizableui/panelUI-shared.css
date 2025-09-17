@@ -1091,7 +1091,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   /* !important for the color as an OSX specific rule when a lightweight theme
      is used for buttons in the toolbox overrides. See bug 1238531 for details */
   color: white !important;
-  border-radius: 2px;
+  border-radius: var(--border-radius-xsmall);
   /* If you change the margin or padding below, the min-height of the synced tabs
      panel (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync,
      etc) may need adjusting (see bug 1248506) */
@@ -1350,7 +1350,7 @@ panelview .toolbarbutton-1,
 
 #appMenu-zoomReset-button2 > .toolbarbutton-text,
 #appMenu-fullscreen-button2 > .toolbarbutton-icon {
-  border-radius: 2px;
+  border-radius: var(--border-radius-xsmall);
 }
 
 #appMenu-fullscreen-button2 > .toolbarbutton-icon {
