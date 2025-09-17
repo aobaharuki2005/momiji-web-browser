@@ -126,8 +126,6 @@ internal fun MiddleSearchHomepage(
                                 )
                             }
 
-                            Spacer(Modifier.height(state.bottomSpacerHeight))
-
                             Spacer(Modifier.height(47.dp))
                         }
                     }
@@ -183,7 +181,6 @@ private fun MiddleSearchHomepagePreview() {
                 cardBackgroundColor = WallpaperState.default.cardBackgroundColor,
                 buttonTextColor = WallpaperState.default.buttonTextColor,
                 buttonBackgroundColor = WallpaperState.default.buttonBackgroundColor,
-                bottomSpacerHeight = 188.dp,
                 isSearchInProgress = false,
             ),
             interactor = FakeHomepagePreview.homepageInteractor,

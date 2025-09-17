@@ -206,8 +206,6 @@ internal fun Homepage(
                                 interactor = interactor,
                             )
                         }
-
-                        Spacer(Modifier.height(bottomSpacerHeight))
                     }
                 }
             }
@@ -469,7 +467,6 @@ private fun HomepagePreview() {
                     cardBackgroundColor = WallpaperState.default.cardBackgroundColor,
                     buttonTextColor = WallpaperState.default.buttonTextColor,
                     buttonBackgroundColor = WallpaperState.default.buttonBackgroundColor,
-                    bottomSpacerHeight = 188.dp,
                     isSearchInProgress = false,
                 ),
                 interactor = FakeHomepagePreview.homepageInteractor,
@@ -509,7 +506,6 @@ private fun HomepagePreviewCollections() {
                 cardBackgroundColor = WallpaperState.default.cardBackgroundColor,
                 buttonTextColor = WallpaperState.default.buttonTextColor,
                 buttonBackgroundColor = WallpaperState.default.buttonBackgroundColor,
-                bottomSpacerHeight = 188.dp,
                 isSearchInProgress = false,
             ),
             interactor = FakeHomepagePreview.homepageInteractor,
@@ -532,7 +528,6 @@ private fun PrivateHomepagePreview() {
                     showHeader = false,
                     firstFrameDrawn = true,
                     isSearchInProgress = false,
-                    bottomSpacerHeight = 188.dp,
                 ),
                 interactor = FakeHomepagePreview.homepageInteractor,
                 onTopSitesItemBound = {},
