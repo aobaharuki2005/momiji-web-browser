@@ -172,3 +172,99 @@ add_task(async function test_about_glean_metrics_table_loads_dynamically() {
     });
   });
 });
+
+add_task(async function t() {
+  Services.fog.testResetFOG();
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("about.glean.redesign.enabled");
+  });
+  Services.prefs.setBoolPref("about.glean.redesign.enabled", true);
+
+  await BrowserTestUtils.withNewTab("about:glean", async function (browser) {
+    ok(!browser.isRemoteBrowser, "Browser should not be remote.");
+    await ContentTask.spawn(browser, null, async function () {
+      const { TestUtils } = ChromeUtils.importESModule(
+        "resource://testing-common/TestUtils.sys.mjs"
+      );
+      content.document.getElementById("category-metrics-table").click();
+
+      let tableBody;
+      const fetchTableBody = () => {
+        tableBody = content.document.getElementById("metrics-table-body");
+        info(tableBody);
+      };
+      fetchTableBody();
+      let currentFirstChild =
+        tableBody.children[0].attributes["data-d3-row"].value;
+
+      const tableFirstChildChanged = () => {
+        fetchTableBody();
+        if (
+          currentFirstChild !=
+          tableBody.children[0].attributes["data-d3-row"].value
+        ) {
+          currentFirstChild =
+            tableBody.children[0].attributes["data-d3-row"].value;
+          return true;
+        }
+        return false;
+      };
+
+      const input = content.document.getElementById("filter-metrics");
+      input.value = "aCustomDist";
+      input.dispatchEvent(new Event("input"));
+
+      await TestUtils.waitForCondition(
+        tableFirstChildChanged,
+        "Wait for the table's first child to change",
+        100,
+        3
+      );
+
+      Glean.testOnlyIpc.aCustomDist.accumulateSamples([0, 0, 1, 1, 1]);
+
+      content.document
+        .querySelector(
+          "[data-d3-row='testOnlyIpc.aCustomDist'] button[data-l10n-id='about-glean-button-load-value']"
+        )
+        .click();
+
+      let valueCell;
+      const getValueCell = () => {
+        valueCell = content.document.querySelector(
+          "[data-d3-row='testOnlyIpc.aCustomDist'] [data-d3-cell='value']"
+        );
+        info(valueCell);
+      };
+      getValueCell();
+
+      Assert.equal(valueCell.childElementCount, 1);
+      Assert.equal(valueCell.firstChild.tagName, "svg");
+
+      //            td        svg        g.boxes    g*n     >rect+text+text
+      const boxes = valueCell.firstChild.firstChild.children;
+
+      Assert.equal(boxes.length, 3);
+      Assert.equal(boxes[0].children[1].textContent, "2");
+      Assert.equal(boxes[0].children[2].textContent, "0");
+      Assert.equal(boxes[1].children[1].textContent, "3");
+      Assert.equal(boxes[1].children[2].textContent, "1");
+
+      Services.fog.testResetFOG();
+      content.document
+        .querySelector(
+          "[data-d3-row='testOnlyIpc.aCustomDist'] button[data-l10n-id='about-glean-button-load-value']"
+        )
+        .click();
+
+      getValueCell();
+
+      Assert.equal(valueCell.childElementCount, 1);
+      Assert.equal(valueCell.firstChild.tagName, "P");
+      Assert.equal(
+        valueCell.firstChild.getAttribute("data-l10n-id"),
+        "about-glean-no-data-to-display"
+      );
+    });
+  });
+});
