@@ -260,7 +260,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     vixl::UseScratchRegisterScope temps(this);
     const Register scratch = temps.AcquireX().asUnsized();
     MOZ_ASSERT(scratch != reg);
-    tagValue(type, reg, ValueOperand(scratch));
+    boxValue(type, reg, scratch);
     storeValue(ValueOperand(scratch), dest);
   }
   template <typename T>
@@ -297,11 +297,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void loadUnalignedValue(const Address& src, ValueOperand dest) {
     loadValue(src, dest);
   }
-  void tagValue(JSValueType type, Register payload, ValueOperand dest) {
-    // This could be cleverer, but the first attempt had bugs.
-    Orr(ARMRegister(dest.valueReg(), 64), ARMRegister(payload, 64),
-        Operand(ImmShiftedTag(type).value));
-  }
+  void tagValue(JSValueType type, Register payload, ValueOperand dest);
   void pushValue(ValueOperand val) {
     vixl::MacroAssembler::Push(ARMRegister(val.valueReg(), 64));
   }
@@ -327,7 +323,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     vixl::UseScratchRegisterScope temps(this);
     const Register scratch = temps.AcquireX().asUnsized();
     MOZ_ASSERT(scratch != reg);
-    tagValue(type, reg, ValueOperand(scratch));
+    boxValue(type, reg, scratch);
     push(scratch);
   }
   void pushValue(const Address& addr) {
