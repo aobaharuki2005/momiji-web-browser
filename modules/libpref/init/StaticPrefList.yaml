@@ -10792,7 +10792,22 @@
   rust: true
 
 # Is the '-webkit-fill-available' keyword enabled, as an alias for 'stretch'?
+# NOTE: This pref being 'true' is sufficient to enable this keyword in the
+# 'width' and 'height' properties (and their logical aliases).  To enable
+# the keyword for other properties, see the "all-size-properties" variant
+# below.
 - name: layout.css.webkit-fill-available.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
+# This pref is an additional gate on whether the '-webkit-fill-available'
+# keyword is enabled for other size-valued CSS properties (beyond 'width' and
+# 'height'). In such properties, -webkit-fill-available will not be accepted
+# unless this pref *and* layout.css.webkit-fill-available.enabled are both
+# set to 'true'.
+- name: layout.css.webkit-fill-available.all-size-properties.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
