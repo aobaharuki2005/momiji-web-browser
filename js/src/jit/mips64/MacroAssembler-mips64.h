@@ -513,8 +513,12 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
 
   // boxing code
   void boxDouble(FloatRegister src, const ValueOperand& dest, FloatRegister);
-  void boxNonDouble(JSValueType type, Register src, const ValueOperand& dest);
-  void boxNonDouble(Register type, Register src, const ValueOperand& dest);
+  void boxNonDouble(JSValueType type, Register src, const ValueOperand& dest) {
+    boxValue(type, src, dest.valueReg());
+  }
+  void boxNonDouble(Register type, Register src, const ValueOperand& dest) {
+    boxValue(type, src, dest.valueReg());
+  }
 
   // Extended unboxing API. If the payload is already in a register, returns
   // that register. Otherwise, provides a move to the given scratch register,
@@ -576,18 +580,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
     }
   }
 
-  void boxValue(JSValueType type, Register src, Register dest) {
-    MOZ_ASSERT(src != dest);
-
-    JSValueTag tag = (JSValueTag)JSVAL_TYPE_TO_TAG(type);
-    ma_li(dest, Imm32(tag));
-    ma_dsll(dest, dest, Imm32(JSVAL_TAG_SHIFT));
-    if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
-      ma_dins(dest, src, Imm32(0), Imm32(32));
-    } else {
-      ma_dins(dest, src, Imm32(0), Imm32(JSVAL_TAG_SHIFT));
-    }
-  }
+  void boxValue(JSValueType type, Register src, Register dest);
   void boxValue(Register type, Register src, Register dest);
 
   void storeValue(ValueOperand val, Operand dst);
