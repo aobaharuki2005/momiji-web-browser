@@ -21,6 +21,7 @@
   Services.scriptloader.loadSubScript("chrome://browser/content/sidebar/browser-sidebar.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-customtitlebar.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-unified-extensions.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/drag-and-drop.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tab.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tabbrowser.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tabgroup.js", this);
