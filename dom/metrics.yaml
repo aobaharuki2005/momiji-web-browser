@@ -172,6 +172,16 @@ perf:
             - 9 mobile
         type: quantity
         unit: integer
+      android_app_link_launch_type:
+        description:
+          "AppLink launch type, android only. UNKNOWN = 0 COLD = 1, WARM = 2, HOT = 3, see LoadURIOptions.webidl"
+        type: quantity
+        unit: integer
+      android_app_link_to_navigation_start:
+        type: quantity
+        description:
+          "For android navigations, the time from application launch (i.e parent process start) to navigation start. Only meaningful with android_app_link_launch_type = COLD"
+        unit: ms
     send_in_pings:
       - pageload
   page_load_domain:

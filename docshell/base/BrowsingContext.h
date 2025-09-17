@@ -220,6 +220,8 @@ struct EmbedderColorSchemes {
   FIELD(OverrideDPPX, float)                                                  \
   /* The current in-progress load. */                                         \
   FIELD(CurrentLoadIdentifier, Maybe<uint64_t>)                               \
+  /* The android load identifier. Used to map to applink type */              \
+  FIELD(AndroidAppLinkLoadIdentifier, Maybe<uint64_t>)                        \
   /* See nsIRequest for possible flags. */                                    \
   FIELD(DefaultLoadFlags, uint32_t)                                           \
   /* Signals that session history is enabled for this browsing context tree.  \

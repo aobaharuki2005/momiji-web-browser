@@ -2181,6 +2181,24 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
 
       cp->TransmitBlobDataIfBlobURL(aLoadState->URI());
 
+#ifdef ANDROID
+      // Generate a unique android load identifier for this url load
+      // Used to map back to the app link launch type in
+      // ContentParent::RecordAndroidAppLinkTelemetry() so we can avoid
+      // sending the app link launch type to the content process
+      uint64_t androidLoadIdentifier = nsContentUtils::GenerateTabId();
+      MOZ_ALWAYS_SUCCEEDS(
+          SetAndroidAppLinkLoadIdentifier(Some(androidLoadIdentifier)));
+
+      uint32_t appLinkLaunchType = aLoadState->GetAppLinkLaunchType();
+      cp->SetAndroidAppLinkLaunchType(androidLoadIdentifier, appLinkLaunchType);
+
+      PROFILER_MARKER_FMT("BrowsingContext::LoadURI", NETWORK, {},
+                          "android appLinkLaunchType {} URL {}",
+                          appLinkLaunchType,
+                          aLoadState->URI()->GetSpecOrDefault().get());
+#endif
+
       // Setup a confirmation callback once the content process receives this
       // load. Normally we'd expect a PDocumentChannel actor to have been
       // created to claim the load identifier by that time. If not, then it

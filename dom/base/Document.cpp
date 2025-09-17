@@ -2285,7 +2285,22 @@ void Document::RecordPageLoadEventTelemetry() {
 
   // Sending a glean ping must be done on the parent process.
   if (ContentChild* cc = ContentChild::GetSingleton()) {
-    cc->SendRecordPageLoadEvent(mPageloadEventData);
+    if (GetNavigationTiming()) {
+      uint64_t androidAppLinkLoadIdentifier = 0;
+#ifdef ANDROID
+      if (BrowsingContext* bc = GetBrowsingContext()) {
+        Maybe<uint64_t> contextAppLinkLoadIdentifier =
+            bc->GetAndroidAppLinkLoadIdentifier();
+        if (contextAppLinkLoadIdentifier.isSome()) {
+          androidAppLinkLoadIdentifier = contextAppLinkLoadIdentifier.value();
+        }
+      }
+#endif
+      cc->SendRecordPageLoadEvent(
+          mPageloadEventData,
+          GetNavigationTiming()->GetNavigationStartTimeStamp(),
+          androidAppLinkLoadIdentifier);
+    }
   }
 }
 
