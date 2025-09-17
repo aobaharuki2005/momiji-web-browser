@@ -67,23 +67,6 @@ def cache_key(attr, params, disable_target_task_filter, target_tasks_method):
     return key
 
 
-def remove_artifact(tg, try_config_params):
-    artifact_build = False
-    if try_config_params:
-        artifact_build = try_config_params.get("try_task_config", {}).get(
-            "use-artifact-builds", False
-        )
-
-    if not artifact_build:
-        return tg
-
-    temp_tasks = list(tg.tasks.items())
-    for task_name, task in temp_tasks:
-        if not task.attributes.get("supports-artifact-builds", True):
-            del tg.tasks[task_name]
-    return tg
-
-
 def add_chunk_patterns(tg):
     for task_name, task in tg.tasks.items():
         chunk_index = -1
@@ -111,7 +94,6 @@ def generate_tasks(
     full=False,
     disable_target_task_filter=False,
     target_tasks_method=None,
-    try_config_params=None,
 ):
     attr = "full_task_set" if full else "target_task_set"
 
@@ -148,10 +130,7 @@ def generate_tasks(
     invalidate(cache)
     if os.path.isfile(cache):
         with open(cache) as fh:
-            return remove_artifact(
-                add_chunk_patterns(TaskGraph.from_json(json.load(fh))[1]),
-                try_config_params,
-            )
+            return add_chunk_patterns(TaskGraph.from_json(json.load(fh))[1])
 
     if not os.path.isdir(cache_dir):
         os.makedirs(cache_dir)
@@ -174,7 +153,7 @@ def generate_tasks(
         )
         with open(os.path.join(cache_dir, key), "w") as fh:
             json.dump(tg.to_json(), fh)
-        return remove_artifact(add_chunk_patterns(tg), try_config_params)
+        return add_chunk_patterns(tg)
 
     # Cache both full_task_set and target_task_set regardless of whether or not
     # --full was requested. Caching is cheap and can potentially save a lot of
