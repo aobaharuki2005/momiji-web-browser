@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2025-09-17T17:42:26.495086+00:00'
+updated_at: '2025-09-17T20:16:14.295054+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -969,10 +969,6 @@ people:
     bmo_id: 703413
     name: Stephanie Cunnane
     nick: scunnane
-  - &sefeng
-    bmo_id: 625922
-    name: Sean Feng
-    nick: sefeng
   - &serg
     bmo_id: 691597
     name: Sergey Galich
@@ -1646,6 +1642,7 @@ modules:
         - Ehsan Akhgari
         - Axel Hecht
         - Eric Rahm
+        - Sean Feng
       url: http://developer.mozilla.org/en/docs/DOM
       components:
         - Core::DOM
@@ -1665,7 +1662,7 @@ modules:
       - *asuth
       - *edgar
       - *saschanaz
-      - *sefeng
+      - *tschuster
     machine_name: core_document_object_model
 
   - name: 'Core: DOM File'
@@ -4622,5 +4619,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 028dbacb8b397ae8dc4cb0a50f85699d74a0f15e
-  export: 487f775e63d1e44f79bc1c5a1e3d5a6cf674620b
+  config: f4f4e890cf9118fd024b7944c7faf03147919273
+  export: c939e52f8a48999348561a32cc762b15856c70bc
