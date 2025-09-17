@@ -397,7 +397,7 @@ void MacroAssemblerMIPS64::ma_daddu(Register rd, Register rs, Imm32 imm) {
 }
 
 void MacroAssemblerMIPS64::ma_daddu(Register rd, Register rs, ImmWord imm) {
-  if (Imm16::IsInSignedRange(imm.value)) {
+  if (Imm16::IsInSignedRange(int64_t(imm.value))) {
     as_daddiu(rd, rs, imm.value);
   } else {
     ma_li(ScratchRegister, imm);
@@ -502,7 +502,7 @@ void MacroAssemblerMIPS64::ma_addPtrTestCarry(Condition cond, Register rd,
                                               Register rs, ImmWord imm,
                                               Label* overflow) {
   // Check for signed range because of as_daddiu
-  if (Imm16::IsInSignedRange(imm.value)) {
+  if (Imm16::IsInSignedRange(int64_t(imm.value))) {
     SecondScratchRegisterScope scratch2(asMasm());
     as_daddiu(rd, rs, imm.value);
     as_sltiu(scratch2, rd, imm.value);
@@ -554,7 +554,7 @@ void MacroAssemblerMIPS64::ma_dsubu(Register rd, Register rs, Imm32 imm) {
 }
 
 void MacroAssemblerMIPS64::ma_dsubu(Register rd, Register rs, ImmWord imm) {
-  if (Imm16::IsInSignedRange(-imm.value)) {
+  if (Imm16::IsInSignedRange(int64_t(-imm.value))) {
     as_daddiu(rd, rs, -imm.value);
   } else {
     ma_li(ScratchRegister, imm);

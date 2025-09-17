@@ -586,6 +586,9 @@ class Imm16 {
   static bool IsInSignedRange(int32_t imm) {
     return imm >= INT16_MIN && imm <= INT16_MAX;
   }
+  static bool IsInSignedRange(int64_t imm) {
+    return imm >= INT16_MIN && imm <= INT16_MAX;
+  }
   static bool IsInUnsignedRange(uint32_t imm) { return imm <= UINT16_MAX; }
   static Imm16 Lower(Imm32 imm) { return Imm16(imm.value & 0xffff); }
   static Imm16 Upper(Imm32 imm) { return Imm16((imm.value >> 16) & 0xffff); }
