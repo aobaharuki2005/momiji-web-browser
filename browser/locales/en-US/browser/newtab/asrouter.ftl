@@ -387,3 +387,5 @@ etp-strict-exceptions-infobar-message = <strong>Strict tracking protection can c
 etp-strict-exceptions-infobar-learn-more = Learn more
 etp-strict-exceptions-infobar-button = Apply fixes
   .accesskey = A
+etp-strict-exceptions-infobar-not-now = Not now
+  .accesskey = N
