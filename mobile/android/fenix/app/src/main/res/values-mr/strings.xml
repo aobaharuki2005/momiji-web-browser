@@ -657,7 +657,7 @@
   -->
   <string name="sync_sent_tabs_snackbar">टॅब्स पाठवले!</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
-  <string name="sync_sent_tab_snackbar">टॅब पाठवला!</string>
+  <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">टॅब पाठवला!</string>
   <!-- Text shown in snackbar when sharing tabs failed -->
   <string name="sync_sent_tab_error_snackbar">पाठविण्यात असमर्थ</string>
   <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->

@@ -713,7 +713,7 @@
   -->
   <string name="onboarding_firefox_account_sync_is_on">Sync চালু আছে</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
-  <string name="sync_sent_tab_snackbar">ট্যাব পাঠানো হয়েছে!</string>
+  <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">ট্যাব পাঠানো হয়েছে!</string>
   <!-- Text shown in snackbar when sharing tabs failed -->
   <string name="sync_sent_tab_error_snackbar">পাঠানো সম্ভব হচ্ছে না</string>
   <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->

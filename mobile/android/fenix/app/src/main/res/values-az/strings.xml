@@ -530,7 +530,7 @@
   -->
   <string name="sync_sent_tabs_snackbar">Vərəqlər göndərildi!</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
-  <string name="sync_sent_tab_snackbar">Vərəq göndərildi!</string>
+  <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Vərəq göndərildi!</string>
   <!-- Text shown in snackbar when sharing tabs failed -->
   <string name="sync_sent_tab_error_snackbar">Göndərilə bilmədi</string>
   <!-- Title of QR Pairing Fragment -->
