@@ -10,6 +10,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -169,13 +170,17 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                 val bottomSheet = findViewById<View?>(materialR.id.design_bottom_sheet)
                 if (Config.channel.isNightlyOrDebug) {
                     bottomSheet?.setBackgroundResource(R.drawable.bottom_sheet_with_top_rounded_corners)
-                    bottomSheet?.let { sheet ->
-                        sheet.translationY = sheet.height * MenuAnimationConfig.START_OFFSET_RATIO
-                        sheet.animate()
-                            .translationY(0f)
-                            .setInterpolator(OvershootInterpolator())
-                            .setDuration(MenuAnimationConfig.DURATION)
-                            .start()
+
+                    // https://bugzilla.mozilla.org/show_bug.cgi?id=1982004
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                        bottomSheet?.let { sheet ->
+                            sheet.translationY = sheet.height * MenuAnimationConfig.START_OFFSET_RATIO
+                            sheet.animate()
+                                .translationY(0f)
+                                .setInterpolator(OvershootInterpolator())
+                                .setDuration(MenuAnimationConfig.DURATION)
+                                .start()
+                        }
                     }
                 } else {
                     bottomSheet?.setBackgroundResource(android.R.color.transparent)
