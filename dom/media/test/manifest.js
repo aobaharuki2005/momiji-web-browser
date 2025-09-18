@@ -484,14 +484,14 @@ var gMKVtests = [
   // -c:a aac -b:a 128k output-aac.mkv
   {
     name: "output_aac.mkv",
-    type: "audio/matroska",
+    type: 'audio/matroska; codecs="mp4a.40.2"',
     duration: 1.0,
   },
   // ffmpeg -f lavfi -i "smptebars=size=1280x720:rate=30:duration=1" \
   // -c:v libx264 -pix_fmt yuv420p output-avc.mkv
   {
     name: "output_avc.mkv",
-    type: "video/matroska",
+    type: 'video/matroska; codecs="avc1.42C01F"',
     duration: 1.0,
   },
   // ffmpeg \
@@ -501,37 +501,37 @@ var gMKVtests = [
   // -c:a aac -ar 44100 -b:a 128k output_avc_hl41_1080p_aaclc_44100.mkv
   {
     name: "output_avc_hl41_1080p_aaclc_44100.mkv",
-    type: "video/matroska",
+    type: 'video/matroska; codecs="avc1.640029, mp4a.40.2"',
     duration: 1.0,
   },
   // ffmpeg -f lavfi -i sine=frequency=1000:duration=1 -c:a libvorbis output_vorbis.mkv
   {
     name: "output_vorbis.mkv",
-    type: "audio/matroska",
+    type: 'audio/matroska; codecs="vorbis"',
     duration: 1.0,
   },
   // ffmpeg -f lavfi -i sine=frequency=1000:duration=1 -c:a libopus output_opus.mkv
   {
     name: "output_opus.mkv",
-    type: "audio/matroska",
+    type: 'audio/matroska; codecs="opus"',
     duration: 1.0,
   },
   // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libvpx output_vp8.mkv
   {
     name: "output_vp8.mkv",
-    type: "video/matroska",
+    type: 'video/matroska; codecs="vp8"',
     duration: 1.0,
   },
   // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libvpx-vp9 -pix_fmt yuv420p output_vp9.mkv
   {
     name: "output_vp9.mkv",
-    type: "video/matroska",
+    type: 'video/matroska; codecs="vp9"',
     duration: 1.0,
   },
   // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libaom-av1 -pix_fmt yuv420p output_av1.mkv
   {
     name: "output_av1.mkv",
-    type: "video/matroska",
+    type: 'video/matroska; codecs="av1"',
     duration: 1.0,
   },
 ];
@@ -547,7 +547,7 @@ if (
   // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libx265 -pix_fmt yuv420p output_hevc.mkv
   gMKVtests.push({
     name: "output_hevc.mkv",
-    type: "video/matroska",
+    type: 'video/matroska;  codecs="hvc1.1.6.L63.B0"',
     duration: 1.0,
   });
 }

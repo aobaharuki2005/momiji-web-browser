@@ -22,7 +22,9 @@ namespace mozilla {
 bool MatroskaDecoder::IsMatroskaType(const MediaContainerType& aType) {
   const auto& mimeType = aType.Type();
   return mimeType == MEDIAMIMETYPE(VIDEO_MATROSKA) ||
-         mimeType == MEDIAMIMETYPE(AUDIO_MATROSKA);
+         mimeType == MEDIAMIMETYPE(VIDEO_MATROSKA_LEGACY) ||
+         mimeType == MEDIAMIMETYPE(AUDIO_MATROSKA) ||
+         mimeType == MEDIAMIMETYPE(AUDIO_MATROSKA_LEGACY);
 }
 
 /* static */
