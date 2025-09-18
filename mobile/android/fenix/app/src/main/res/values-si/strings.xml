@@ -11,10 +11,6 @@
   -->
   <string name="content_description_menu">තවත් විකල්ප</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">පෞද්. පිරික්සීම සබල කරන්න</string>
-  <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_disable_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">පෞද්. පිරික්සීම අබල කරන්න</string>
-  <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
   <string name="content_description_private_browsing">පෞද්. පිරික්සුම</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
   <string name="search_hint">සොයන්න හෝ ලිපිනය ලියන්න</string>
@@ -257,10 +253,6 @@
   <string name="browser_menu_new_private_tab">නව පෞද්. පටිත්ත</string>
   <!-- Browser menu label that navigates to the Password screen -->
   <string name="browser_menu_passwords">මුරපද</string>
-  <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">ජංගම අඩවිය</string>
-  <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
-  <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">ප්‍රධාන වට්ටෝරු පත්‍රය වසන්න</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">උදව්</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -344,10 +336,8 @@
   <!--
     Home onboarding
 
-    Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section.
+    Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog
   -->
-  <string name="sync_cfr_message" moz:removedIn="142" tools:ignore="UnusedResources">පටිති සමමුහූර්ත වෙමින්! අනෙක් උපාංගයේ ඔබ නතර කළ තැනින් අතට ගන්න.</string>
-  <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
   <string name="onboarding_home_content_description_close_button">වසන්න</string>
   <!--
     Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments.
@@ -1095,8 +1085,6 @@
   <string name="webcompat_reporter_label_url">ඒ.ස.නි.</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
   <string name="webcompat_reporter_url_error_invalid">වලංගු ඒ.ස.නි. ලියන්න</string>
-  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">හේතුව තෝරන්න</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">ගැටලුව විස්තර කරන්න (විකල්පයකි)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
@@ -1119,8 +1107,6 @@
   <string name="tab_crash_close">පටිත්ත වසන්න</string>
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">පටිත්ත ප්‍රත්‍යර්පණය</string>
-  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s යළි ඇරඹීමට සිදු විය</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">බිඳවැටුම් වාර්තා ස්වයංක්‍රීයව යවන්න</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1357,12 +1343,10 @@
     %d is a placeholder for the number of tabs selected.
   -->
   <string name="create_collection_save_to_collection_tab_selected">පටිති %d ක් තෝරා ඇත</string>
-  <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">පටිත්ත සුරැකිණි!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection" tools:ignore="UnusedResources" moz:removedIn="144">එකතුව සුරැකිණි!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
-  <string name="create_collection_tab_saved">පටිත්ත සුරැකිණි!</string>
+  <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">පටිත්ත සුරැකිණි!</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
   <string name="create_collection_close">වසන්න</string>
   <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator -->
@@ -1523,8 +1507,6 @@
   <string name="tab_collection_dialog_message">%1$s මකා දැමීමට වුවමනා ද?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">මකන්න</string>
-  <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">ඒ.ස.නි. පිටපත් විය</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">මෙය පෙළ නිදසුනකි. මෙම සැකසුම සමඟ ඔබ ප්‍රමාණය වැඩි හෝ අඩු කරන විට පෙළ දිස්වන ආකාරය පෙන්වීමට මෙහි තිබේ.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -1611,7 +1593,7 @@
 
     Text shown in snackbar when multiple tabs have been sent to device
   -->
-  <string name="sync_sent_tabs_snackbar">පටිත්ත යැවිණි!</string>
+  <string name="sync_sent_tabs_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">පටිත්ත යැවිණි!</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
   <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">පටිත්ත යැවිණි!</string>
   <!-- Text shown in snackbar when sharing tabs failed -->
@@ -2020,12 +2002,6 @@
   <string name="search_add_custom_engine_error_empty_search_string">සෙවුම් පදය යොදන්න</string>
   <!-- Text shown when a user leaves out the required template string -->
   <string name="search_add_custom_engine_error_missing_template">සෙවුම් තන්තු උදාහරණ ආකෘතියට ගැළපෙන බව පරීක්‍ෂා කරන්න</string>
-  <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s සෑදිණි</string>
-  <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s සුරැකිණි</string>
-  <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_delete_search_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s මැකිණි</string>
   <!-- Heading for the instructions to allow a permission -->
   <string name="phone_feature_blocked_intro">එයට ඉඩ දීමට:</string>
   <!-- First step for the allowing a permission -->

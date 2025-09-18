@@ -11,10 +11,6 @@
   -->
   <string name="content_description_menu">Ugar n yiγewwaṛen</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Rmed tunigin tusligt</string>
-  <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_disable_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Sens tunigin tusligt</string>
-  <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
   <string name="content_description_private_browsing">Tunigin tusligt</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
   <string name="search_hint">Nadi neɣ sekcem tansa</string>
@@ -287,10 +283,6 @@
   <string name="browser_menu_new_private_tab">Iccer uslig amaynut</string>
   <!-- Browser menu label that navigates to the Password screen -->
   <string name="browser_menu_passwords">Awalen uffiren</string>
-  <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Uɣal ɣer usmel aziraz</string>
-  <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
-  <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">Mdel tiferkit n wumuɣ agejdan</string>
   <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
   <string name="browser_close_main_menu_handlebar_content_description">Mdel umuɣ</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
@@ -337,8 +329,6 @@
   <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Kra n tsinin kan. Beddel sya ɣer da</string>
   <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle_2">D arurad, d uslig, yettwaxdem i kečč⋅kemm.</string>
-  <!-- Content description for the button that dismisses the set as default banner in the menu -->
-  <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Zgel</string>
   <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
   <string name="browser_menu_recommended_extensions_content_description">Ugar n telɣut</string>
   <!--
@@ -421,10 +411,8 @@
   <!--
     Home onboarding
 
-    Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section.
+    Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog
   -->
-  <string name="sync_cfr_message" moz:removedIn="142" tools:ignore="UnusedResources">Accaren-ik·im mtawan! Kemmel seg wanda i tḥebseḍ ɣef yibenk-ik·im-nniḍen.</string>
-  <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
   <string name="onboarding_home_content_description_close_button">Mdel</string>
   <!--
     Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments.
@@ -1125,12 +1113,8 @@
   <string name="preferences_daily_usage_ping_title">Ping n useqdec n yal ass</string>
   <string name="preferences_daily_usage_ping_description">Aya yettallel Mozilla ad tessekyed amḍan n yiseqdacen urmiden.</string>
   <string name="preferences_daily_usage_ping_learn_more">Issin ugar ɣef ping n useqdec n yal ass</string>
-  <!-- Preference switch title for automatically submitting crash reports -->
-  <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Azen s wudem awurman ineqqisen n truẓi</string>
   <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="crash_reporting_snack_bar_message">Aneqqis yettwazen</string>
-  <!-- Preference switch description for automatically submitting crash reports -->
-  <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Aya yettall-aneɣ ad nesnined syen ad nṣeggem uguren akked yiminig. Ineqqisen zemren ad d-skecmen isefka udmawanen neɣ imḥulfa.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
   <string name="preferences_crashes_learn_more">Issin ugar ɣef yineqqisen yerrẓen</string>
   <!-- Title Headers for data collection settings screen -->
@@ -1145,8 +1129,6 @@
   <string name="preferences_marketing_data_2">Isefka n usket n tudrin</string>
   <!-- Learn more link for marketing data preference -->
   <string name="preferences_marketing_data_learn_more">Issin ugar ɣef yisefka n ulzuz</string>
-  <!-- Learn more link for crash reporting preference -->
-  <string name="onboarding_preferences_dialog_crash_reporting_learn_more" tools:ignore="UnusedResources" moz:removedIn="142">Issin ugar ɣef yineqqisen yerrẓen</string>
   <!-- Title for studies preferences -->
   <string name="preference_experiments_2">Studies</string>
   <!-- Summary for studies preferences -->
@@ -1610,8 +1592,6 @@
     The title of the Web Compat Reporter feature. This is displayed in the top app bar.
   -->
   <string name="webcompat_reporter_screen_title">Cegger asmel yerẓen</string>
-  <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Allel ad nerr %1$s igerrez i yal yiwen. Ixaddamen n Mozilla sseqdacen talɣut ara ak-n-aznen i ferru n wuguren n usmel web.</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Issin ugar</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1620,8 +1600,6 @@
   <string name="webcompat_reporter_url_error_invalid">Ma ulac aɣilif, sekcem URL ameɣtu</string>
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">D acu i yerẓen?</string>
-  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Fren ssebba</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_2">Fren tazɣint</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
@@ -1670,8 +1648,6 @@
   <string name="tab_crash_close">Mdel iccer</string>
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Err-d iccer</string>
-  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s ilaq ad yales tanekra</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Azen s wudem awurman ineqqisen n truẓi</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1945,12 +1921,10 @@
     %d is a placeholder for the number of tabs selected.
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d n yiccer yettwafren</string>
-  <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Accaren ttwaskelsen!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection" tools:ignore="UnusedResources" moz:removedIn="144">Tagrumma tettwasekles!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
-  <string name="create_collection_tab_saved">Iccer yettwaselkes!</string>
+  <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">Iccer yettwaselkes!</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
   <string name="create_collection_close">Mdel</string>
   <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator -->
@@ -2115,8 +2089,6 @@
   <string name="tab_collection_dialog_message">Tebɣiḍ ad tekseḍ %1$s?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Kkes</string>
-  <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Tansa URL tettwanγel</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Aḍris-a d amedya. akken ad tezṛeḍ amek ara d-iban u dris mi ara ad tesneɣseḍ neɣ ad ternuḍ tuɣzi deg iɣewwaṛen.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2205,7 +2177,7 @@
 
     Text shown in snackbar when multiple tabs have been sent to device
   -->
-  <string name="sync_sent_tabs_snackbar">Ttwaznen iccaren!</string>
+  <string name="sync_sent_tabs_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Ttwaznen iccaren!</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
   <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Ittwazen iccer!</string>
   <!-- Text shown in snackbar when sharing tabs failed -->
@@ -2734,12 +2706,6 @@
   <string name="search_add_custom_engine_error_empty_search_string">Sekcem aḍris n unadi</string>
   <!-- Text shown when a user leaves out the required template string -->
   <string name="search_add_custom_engine_error_missing_template">Senqed akken aḍris n unadi yemsaḍa akked tawsit n umedya</string>
-  <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Timerna n %s</string>
-  <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s yettwasekles</string>
-  <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_delete_search_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s yettwakkes</string>
   <!-- Heading for the instructions to allow a permission -->
   <string name="phone_feature_blocked_intro">Sireg-it:</string>
   <!-- First step for the allowing a permission -->
@@ -3230,12 +3196,8 @@
   <!--
     Unified Trust Panel
 
-    Text for the protection panel header when the site is secure.
+    Title text for the protection panel banner when the site is not secure.
   -->
-  <string name="protection_panel_header_secure" moz:removedIn="142" tools:ignore="UnusedResources">Aɣelsan</string>
-  <!-- Text for the protection panel header when the site is not secure. -->
-  <string name="protection_panel_header_not_secure" moz:removedIn="142" tools:ignore="UnusedResources">D araɣelsan</string>
-  <!-- Title text for the protection panel banner when the site is not secure. -->
   <string name="protection_panel_banner_not_secure_title">Ḥader asmel-a</string>
   <!-- Description text for the protection panel banner when the site is not secure. -->
   <string name="protection_panel_banner_not_secure_description">Tuqqna-inek d taraɣelsant.</string>
@@ -3260,11 +3222,7 @@
   <!-- Toggle if Enhanced Tracking Protection is turned off -->
   <string name="protection_panel_etp_toggle_off">Yensa</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
-  <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Ma yella wayen ur nteddu ara ɣef usmel-a, εreḍ ad tsenseḍ ammesten.</string>
-  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
   <string name="protection_panel_etp_toggle_enabled_description_2">Ma yella wayen ur nteddu ara ɣef usmel-a, εreḍ ad tsenseḍ tamahilt-a.</string>
-  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
-  <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Ammesten yensa. Ad nsumer ad t-tremdeḍ.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3272,8 +3230,6 @@
   <string name="protection_panel_num_trackers_blocked">Ineḍfaren ttusweḥlen: %d</string>
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">Ulac ineḍfaren i yettwafen</string>
-  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Iɣewwaren n tbaḍnit d tɣellist</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings_2">Iɣewwaren n tbaḍnit</string>
   <!-- Title text for the protection panel permissions section. -->

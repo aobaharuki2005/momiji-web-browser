@@ -11,10 +11,6 @@
   -->
   <string name="content_description_menu">ຕົວເລືອກເພີ່ມເຕີມ</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">ເປີດນຳໃຊ້ການທ່ອງເວັບແບບສ່ວນຕົວ</string>
-  <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_disable_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">ປຶດນຳໃຊ້ການທ່ອງເວັບແບບສ່ວນຕົວ</string>
-  <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
   <string name="content_description_private_browsing">ການທ່ອງເວັບແບບສ່ວນຕົວ</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
   <string name="search_hint">ຄົ້ນຫາ ຫລື ປ້ອນທີ່ຢູ່ໃສ່</string>
@@ -293,10 +289,6 @@
   <string name="browser_menu_new_private_tab">ແທັບສ່ວນຕົວໃຫມ່</string>
   <!-- Browser menu label that navigates to the Password screen -->
   <string name="browser_menu_passwords">ລະຫັດຜ່ານ</string>
-  <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">ປ່ຽນໄປຫາເວັບໄຊທ໌ມືຖື</string>
-  <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
-  <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">ປິດແຜ່ນເມນູຫຼັກ</string>
   <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
   <string name="browser_close_main_menu_handlebar_content_description">ປິດເມນູ</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
@@ -343,8 +335,6 @@
   <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">ໃຊ້ເວລາວິນາທີ. ປ່ຽນໄດ້ທຸກເວລາ.</string>
   <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle_2">ໄວ, ສ່ວນຕົວ, ແລະ ສ້າງມາສໍາລັບທ່ານ.</string>
-  <!-- Content description for the button that dismisses the set as default banner in the menu -->
-  <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">ຍົກເລີກ</string>
   <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss_promotion">ປິດໂປໂມຊັ່ນ</string>
   <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
@@ -439,10 +429,8 @@
   <!--
     Home onboarding
 
-    Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section.
+    Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog
   -->
-  <string name="sync_cfr_message" moz:removedIn="142" tools:ignore="UnusedResources">ແຖບຂອງທ່ານກຳລັງຊິ້ງຢູ່! ເອົາບ່ອນທີ່ເຈົ້າຄ້າງໄວ້ໃນອຸປະກອນອື່ນຂອງເຈົ້າ.</string>
-  <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
   <string name="onboarding_home_content_description_close_button">ປິດ</string>
   <!--
     Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments.
@@ -995,6 +983,26 @@
   <string name="alternative_app_icon_option_green">ສີຂຽວ</string>
   <!-- Title for the "Blue" alternative app icon variant in the icon picker screen. -->
   <string name="alternative_app_icon_option_blue">ສີຟ້າ</string>
+  <!-- Title for the "Purple" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_purple">ສີມ່ວງ</string>
+  <!-- Title for the "Purple Dark" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_purple_dark">ສີມ່ວງເຂັ້ມ</string>
+  <!-- Title for the "Sunrise" gradient alternative app icon variant in the icon picker screen. The app icon features a soft yellow-to-blue gradient background, resembling the colors of early morning light. -->
+  <string name="alternative_app_icon_option_gradient_sunrise">ສີເຫຼືອງຕາເວັນຂຶ້ນ</string>
+  <!-- Title for the "Golden Hour" gradient alternative app icon variant in the icon picker screen. The app icon features a warm golden-to-pink gradient background, resembling the colors of the sunlight shortly before sunset. -->
+  <string name="alternative_app_icon_option_gradient_golden_hour">ສີເຫຼືອງຍາມແລງ</string>
+  <!-- Title for the "Sunset" gradient alternative app icon variant in the icon picker screen. The app icon has a rich red-to-purple gradient background, resembling the tones of a sunset sky. -->
+  <string name="alternative_app_icon_option_gradient_sunset">ສີເຫຼືອງຕາເວັນຕົກ</string>
+  <!-- Title for the "Blue Hour" gradient alternative app icon variant in the icon picker screen. The app icon has a cool blue gradient background, resembling the sky color around the time just after sunset or before sunrise. -->
+  <string name="alternative_app_icon_option_gradient_blue_hour">ສີຟ້າແບບໃກ້ແຈ້ງ</string>
+  <!-- Title for the "Twilight" gradient alternative app icon variant in the icon picker screen. The app icon has a purple-toned gradient background, resembling the sky color during twilight. -->
+  <string name="alternative_app_icon_option_gradient_twilight">Twilight</string>
+  <!-- Title for the "Cuddling" themed alternative app icon variant in the icon picker screen. The app icon features a playful design with an adorable aesthetic. -->
+  <string name="alternative_app_icon_option_cuddling">ກອດ</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_warning_dialog_body_2">ແອັບອາດຈະປິດ. ພຽງແຕ່ແຕະໃສ່ໄອຄອນໃໝ່ທີ່ເງົາງາມຂອງທ່ານເພື່ອເປີດ %1$s ຄືນໃໝ່.</string>
+  <!-- Dialog button text for confirming the possible app restart and new icon selection -->
+  <string name="restart_warning_dialog_button_positive_2">ປ່ຽນໄອຄອນ</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1109,10 +1117,6 @@
   <string name="preferences_daily_usage_ping_title">ping ການນໍາໃຊ້ປະຈໍາວັນ</string>
   <string name="preferences_daily_usage_ping_description">ນີ້ຊ່ວຍໃຫ້ Mozilla ຄາດຄະເນຜູ້ໃຊ້ງານທີ່ມີການເຄື່ອນໄຫວ.</string>
   <string name="preferences_daily_usage_ping_learn_more">ສຶກສາເພີ່ມເຕີມກ່ຽວກັບການໃຊ້ ping ປະຈໍາວັນ</string>
-  <!-- Preference switch title for automatically submitting crash reports -->
-  <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">ສົ່ງລາຍງານການຂັດຂ້ອງໂດຍອັດຕະໂນມັດ</string>
-  <!-- Preference switch description for automatically submitting crash reports -->
-  <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">ນີ້ຈະຊ່ວຍໃຫ້ພວກເຮົາວິນິດໄສ ແລະ ແກ້ໄຂບັນຫາກັບຕົວທ່ອງເວັບ. ບົດລາຍງານອາດຈະປະກອບມີຂໍ້ມູນສ່ວນຕົວ ຫຼື ຂໍ້ມູນທີ່ລະອຽດອ່ອນ.</string>
   <!-- Preference switch for campaign measurement data (marketing data) collection -->
   <string name="preferences_marketing_data_2">ຂໍ້ມູນການວັດແທກແຄມເປນ</string>
   <!--
@@ -1122,8 +1126,6 @@
   <string name="preferences_marketing_data_description_4" tools:ignore="BrandUsage">ແບ່ງປັນວິທີທີ່ທ່ານຄົ້ນພົບ Firefox ແລະ ທີ່ທ່ານໃຊ້ມັນກັບຄູ່ຄ້າດ້ານເຕັກໂນໂລຢີການຕະຫຼາດຂອງ Mozilla.</string>
   <!-- Learn more link for marketing data preference -->
   <string name="preferences_marketing_data_learn_more">ສຶກສາເພີ່ມເຕີມກ່ຽວກັບຂໍ້ມູນການຕະຫຼາດ</string>
-  <!-- Learn more link for crash reporting preference -->
-  <string name="onboarding_preferences_dialog_crash_reporting_learn_more" tools:ignore="UnusedResources" moz:removedIn="142">ສຶກສາເພີ່ມເຕີມກ່ຽວກັບລາຍງານການຂັດຂ້ອງ</string>
   <!-- Title for studies preferences -->
   <string name="preference_experiments_2">ການສຶກສາ</string>
   <!-- Summary for studies preferences -->
@@ -1515,16 +1517,12 @@
     The title of the Web Compat Reporter feature. This is displayed in the top app bar.
   -->
   <string name="webcompat_reporter_screen_title">ລາຍງານເວັບໄຊທີ່ມີບັນຫາ</string>
-  <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">ຊ່ວຍເຮັດໃຫ້ %1$s ດີຂຶ້ນສຳລັບທຸກຄົນ. ພະນັກງານ Mozilla ໃຊ້ຂໍ້ມູນທີ່ທ່ານສົ່ງເພື່ອແກ້ໄຂບັນຫາເວັບໄຊທ໌.</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
   <string name="webcompat_reporter_url_error_invalid">ກະລຸນາປ້ອນ URL ທີ່ຖືກຕ້ອງ</string>
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">ບັນຫາແມ່ນຫຍັງ?</string>
-  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">ເລືອກເຫດຜົນ</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">ກະລຸນາເລືອກເຫດຜົນ</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -1553,8 +1551,6 @@
   <string name="tab_crash_close">ປິດແທັບ</string>
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">ກູ້ຄືນແທັບ</string>
-  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s ຈຳເປັນຕ້ອງປິດ ແລະ ເປີດໃໝ່</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">ສົ່ງລາຍງານການຂັດຂ້ອງໂດຍອັດຕະໂນມັດ</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1807,12 +1803,10 @@
     %d is a placeholder for the number of tabs selected.
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d ແທັບທີ່ເລືອກແລ້ວ</string>
-  <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">ບັນທຶກແທັບແລ້ວ!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection" tools:ignore="UnusedResources" moz:removedIn="144">ບັນທຶກຄໍເລັກຊັນແລ້ວ!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
-  <string name="create_collection_tab_saved">ບັນທຶກແທັບແລ້ວ!</string>
+  <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">ບັນທຶກແທັບແລ້ວ!</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
   <string name="create_collection_close">ປິດ</string>
   <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator -->
@@ -1975,8 +1969,6 @@
   <string name="tab_collection_dialog_message">ທ່ານແນ່ໃຈແລ້ວບໍ່ວ່າທ່ານຕ້ອງການລຶບ %1$s?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">ລຶບ</string>
-  <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">ສຳເນົາ URL ແລ້ວ</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">ນີ້ແມ່ນຂໍ້ຄວາມຕົວຢ່າງ. ມັນຢູ່ທີ່ນີ້ເພື່ອສະແດງໃຫ້ເຫັນວ່າຂໍ້ຄວາມຈະປາກົດແນວໃດເມື່ອທ່ານເພີ່ມຫຼືຫຼຸດລົງຂະຫນາດດ້ວຍການຕັ້ງຄ່ານີ້.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2063,7 +2055,7 @@
 
     Text shown in snackbar when multiple tabs have been sent to device
   -->
-  <string name="sync_sent_tabs_snackbar">ສົ່ງແທັບແລ້ວ!</string>
+  <string name="sync_sent_tabs_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">ສົ່ງແທັບແລ້ວ!</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
   <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">ສົ່ງແທັບແລ້ວ!</string>
   <!-- Text shown in snackbar when sharing tabs failed -->
@@ -2514,12 +2506,6 @@
   <string name="search_add_custom_engine_error_empty_search_string">ໃສ່ຂໍ້ຄວາມການຄົ້ນຫາ</string>
   <!-- Text shown when a user leaves out the required template string -->
   <string name="search_add_custom_engine_error_missing_template">ກວດເບິງວ່າຂໍ້ຄວາມການຄົ້ນຫາກົງກັບຮູບແບບຕົວຢ່າງ</string>
-  <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s ສ້າງແລ້ວ</string>
-  <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s ບັນທຶກໄວ້ແລ້ວ</string>
-  <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_delete_search_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s ລຶບແລ້ວ</string>
   <!-- Heading for the instructions to allow a permission -->
   <string name="phone_feature_blocked_intro">ເພື່ອຕ້ອງການອະນຸຍາດ:</string>
   <!-- First step for the allowing a permission -->
@@ -2719,8 +2705,6 @@
   <string name="delete_language_all_languages_file_dialog_title">ລຶບທຸກພາສາ (%1$s) ບໍ?</string>
   <!-- Additional information for the dialog used by the translations feature to confirm deleting all languages file. %1$s is the name of the app (for example "Firefox"). -->
   <string name="delete_language_all_languages_file_dialog_message">ຖ້າທ່ານລຶບທຸກພາສາ, %1$s ຈະດາວໂຫຼດບາງພາສາໃສ່ແຄດຂອງທ່ານເມື່ອທ່ານແປ.</string>
-  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">ການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວ ແລະ ຄວາມປອດໄພ</string>
   <!-- Option for likert scale. Note: The word "Firefox" should NOT be translated. -->
   <string name="likert_scale_option_7" tools:ignore="BrandUsage,UnusedResources">ຂ້ອຍບໍ່ໃຊ້ການຄົ້ນຫາໃນ Firefox</string>
   <!-- Text shown in prompt for search microsurvey. Note: The word "Firefox" should NOT be translated. -->

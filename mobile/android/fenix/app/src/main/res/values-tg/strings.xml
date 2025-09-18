@@ -11,10 +11,6 @@
   -->
   <string name="content_description_menu">Имконоти бештар</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Фаъол кардани тамошобинии хусусӣ</string>
-  <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_disable_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Ғайрифаъол кардани тамошобинии хусусӣ</string>
-  <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
   <string name="content_description_private_browsing">Тамошобинии махфӣ</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
   <string name="search_hint">Нишониеро ҷустуҷӯ кунед ё ворид намоед</string>
@@ -293,10 +289,6 @@
   <string name="browser_menu_new_private_tab">Варақаи хусусии нав</string>
   <!-- Browser menu label that navigates to the Password screen -->
   <string name="browser_menu_passwords">Ниҳонвожаҳо</string>
-  <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Гузариш ба версияи мобилии сомона</string>
-  <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
-  <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">Варақи менюи асосиро мепӯшад</string>
   <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
   <string name="browser_close_main_menu_handlebar_content_description">Пӯшидани меню</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
@@ -343,8 +335,6 @@
   <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Дар як лаҳза танзим кунед. Дар вақти дилхоҳ иваз намоед.</string>
   <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle_2">Зудкор, хусусӣ ва барои шумо сохта шудааст.</string>
-  <!-- Content description for the button that dismisses the set as default banner in the menu -->
-  <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Нодида гузарондан</string>
   <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss_promotion">Пинҳон кардани таблиғу реклама</string>
   <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
@@ -439,10 +429,8 @@
   <!--
     Home onboarding
 
-    Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section.
+    Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog
   -->
-  <string name="sync_cfr_message" moz:removedIn="142" tools:ignore="UnusedResources">Варақаҳои шумо ҳамоҳанг карда мешаванд! Ҳамаи он ҷойҳоеро, ки шумо дар дастгоҳи дигари худ дидаед, ба даст оред.</string>
-  <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
   <string name="onboarding_home_content_description_close_button">Пӯшидан</string>
   <!--
     Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments.
@@ -584,6 +572,8 @@
   <string name="onboarding_redesign_tou_body_three_link_text">Идоракунии танзимот</string>
   <!-- Terms of use (ToU) onboarding page continue button label. -->
   <string name="onboarding_redesign_tou_agree_and_continue_button_label">Идома додан</string>
+  <!-- Set to default browser onboarding redesign title. -->
+  <string name="onboarding_redesign_set_default_browser_title">Истифодаи муҳофизати худкор аз пайгирӣ ба таври пешфарз</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Ба мо барои инкишофи браузери «Firefox» кумак расонед</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -1169,12 +1159,8 @@
   <string name="preferences_daily_usage_ping_title">Пинги истифодабарии ҳаррӯза</string>
   <string name="preferences_daily_usage_ping_description">Ин ба «Mozilla» кумак мекунад, ки корбарони фаъолро ҳисоб кунад.</string>
   <string name="preferences_daily_usage_ping_learn_more">Маълумоти бештар дар бораи пинги истифодабарии ҳаррӯза</string>
-  <!-- Preference switch title for automatically submitting crash reports -->
-  <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Ба таври худкор фиристодани гузоришҳо дар бораи вайронӣ</string>
   <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="crash_reporting_snack_bar_message">Гузориш фиристода шуд</string>
-  <!-- Preference switch description for automatically submitting crash reports -->
-  <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Ин ба мо барои ташхис ва ислоҳ кардани хатоҳои браузер кумак мекунад. Гузоришҳо метавонанд маълумоти шахсӣ ва махфиро дар бар гиранд.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
   <string name="preferences_crashes_learn_more">Маълумоти бештар дар бораи гузоришҳо дар бораи вайронӣ</string>
   <!-- Title Headers for data collection settings screen -->
@@ -1194,8 +1180,6 @@
   <string name="preferences_marketing_data_description_4" tools:ignore="BrandUsage">Ба шарикони технологияи бозоршиносии «Mozilla» хабар диҳед, ки шумо чӣ тавр браузери «Firefox»-ро пайдо кардед ва онро истифода мебаред.</string>
   <!-- Learn more link for marketing data preference -->
   <string name="preferences_marketing_data_learn_more">Маълумоти бештар дар бораи иттилооти бозоршиносӣ</string>
-  <!-- Learn more link for crash reporting preference -->
-  <string name="onboarding_preferences_dialog_crash_reporting_learn_more" tools:ignore="UnusedResources" moz:removedIn="142">Маълумоти бештар дар бораи гузоришҳо дар бораи вайронӣ</string>
   <!-- Title for studies preferences -->
   <string name="preference_experiments_2">Таҳқиқҳо</string>
   <!-- Summary for studies preferences -->
@@ -1677,8 +1661,6 @@
     The title of the Web Compat Reporter feature. This is displayed in the top app bar.
   -->
   <string name="webcompat_reporter_screen_title">Гузориш дар бораи сомонаи вайроншуда</string>
-  <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Кумак кунед, ки «%1$s» барои ҳамаи мо беҳтар шавад. Кормандони «Mozilla» маълумотеро, ки шумо ирсол мекунед, барои ислоҳ кардани мушкилиҳои сомона истифода мебаранд.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Гузориши шумо ба мо кумак мекунад, то ки тавонем ҳар гуна мушкилиро дар «%1$s» фаҳмем ва ислоҳ намоем, ва барномаро барои ҳамаи мо беҳтар созем. Маълумоти бештар гиред</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
@@ -1691,8 +1673,6 @@
   <string name="webcompat_reporter_url_error_invalid">Лутфан, нишонии URL-и эътиборро ворид намоед</string>
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">Чӣ вайрон шудааст?</string>
-  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Сабаберо интихоб намоед</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_2">Сабаберо интихоб намоед</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
@@ -1749,8 +1729,6 @@
   <string name="tab_crash_close">Пӯшидани варақа</string>
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Барқарор кардани варақа</string>
-  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">«%s» маҷбуран аз нав оғоз карда шуд</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title_2">«%s» вайрон шуд. Гузоришеро мефиристонед?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
@@ -2036,14 +2014,14 @@
     %d is a placeholder for the number of tabs selected.
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d варақа интихоб карда шуд</string>
-  <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Варақаҳо нигоҳ дошта шудад!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection" tools:ignore="UnusedResources" moz:removedIn="144">Маҷмуа нигоҳ дошта шуд!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection_2">Маҷмуа нигоҳ дошта шуд</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
-  <string name="create_collection_tab_saved">Варақа нигоҳ дошта шуд!</string>
+  <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">Варақа нигоҳ дошта шуд!</string>
+  <!-- Text shown in snackbar when one tab has been saved in a collection -->
+  <string name="create_collection_tab_saved_2">Варақа нигоҳ дошта шуд</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
   <string name="create_collection_close">Пӯшидан</string>
   <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator -->
@@ -2210,8 +2188,6 @@
   <string name="tab_collection_dialog_message">Шумо мутмаин ҳастед, ки мехоҳед %1$s-ро нест намоед?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Нест кардан</string>
-  <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Нишонии URL нусха бардошта шуд</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Ин матни намунавӣ мебошад. Дар ин ҷо матни намунавӣ нишон медиҳад, ки чӣ тавр он ҳангоми калон ва хурд кардани андозаи ҳуруф бо танзими ҷорӣ нишон дода мешавад.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2300,7 +2276,9 @@
 
     Text shown in snackbar when multiple tabs have been sent to device
   -->
-  <string name="sync_sent_tabs_snackbar">Варақаҳо фиристода шуданд!</string>
+  <string name="sync_sent_tabs_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Варақаҳо фиристода шуданд!</string>
+  <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+  <string name="sync_sent_tabs_snackbar_2">Варақаҳо фиристода шуданд</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
   <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Варақа фиристода шуд!</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
@@ -2865,12 +2843,6 @@
   <string name="search_add_custom_engine_error_empty_search_string">Сатри ҷустуҷӯро ворид кунед</string>
   <!-- Text shown when a user leaves out the required template string -->
   <string name="search_add_custom_engine_error_missing_template">Тафтиш кунед, ки сатри ҷустуҷӯ ба шакли намунавӣ мувофиқат мекунад</string>
-  <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s эҷод карда шуд</string>
-  <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s нигоҳ дошта шуд</string>
-  <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_delete_search_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s нест карда шуд</string>
   <!-- Heading for the instructions to allow a permission -->
   <string name="phone_feature_blocked_intro">Барои иҷозат додан:</string>
   <!-- First step for the allowing a permission -->
@@ -3366,12 +3338,8 @@
   <!--
     Unified Trust Panel
 
-    Text for the protection panel header when the site is secure.
+    Title text for the protection panel banner when the site is not secure.
   -->
-  <string name="protection_panel_header_secure" moz:removedIn="142" tools:ignore="UnusedResources">Бехатар</string>
-  <!-- Text for the protection panel header when the site is not secure. -->
-  <string name="protection_panel_header_not_secure" moz:removedIn="142" tools:ignore="UnusedResources">Бехатар нест</string>
-  <!-- Title text for the protection panel banner when the site is not secure. -->
   <string name="protection_panel_banner_not_secure_title">Дар ин сомона эҳтиёт шавед</string>
   <!-- Description text for the protection panel banner when the site is not secure. -->
   <string name="protection_panel_banner_not_secure_description">Пайвасти шумо бехатар нест.</string>
@@ -3396,11 +3364,7 @@
   <!-- Toggle if Enhanced Tracking Protection is turned off -->
   <string name="protection_panel_etp_toggle_off">Ғайрифаъол</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
-  <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Агар ягон чиз дар ин сомона вайрон бошад, кӯшиш кунед, ки воситаи муҳофизатро хомӯш намоед.</string>
-  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
   <string name="protection_panel_etp_toggle_enabled_description_2">Агар ягон чиз дар ин сомона вайрон бошад, кӯшиш кунед, ки онро хомӯш намоед.</string>
-  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
-  <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Воситаи муҳофизат ХОМӮШ АСТ. Мо тавсия медиҳем, ки шумо онро аз нав фаъол созед.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
   <string name="protection_panel_etp_toggle_disabled_description_2">Фаъолсозии хусусияти «Муҳофизат аз пайгирӣ» тавсия дода мешавад.</string>
   <!--
@@ -3412,8 +3376,6 @@
   <string name="protection_panel_no_trackers_blocked">Ягон васоити пайгирӣ ёфт нашуд</string>
   <!-- Text for when tracking protection is disabled and no trackers are blocked. -->
   <string name="protection_panel_etp_disabled_no_trackers_blocked">Васоити пайгирӣ манъ карда намешаванд</string>
-  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Танзимоти махфият ва амният</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings_2">Танзимоти махфият</string>
   <!-- Title text for the protection panel permissions section. -->
