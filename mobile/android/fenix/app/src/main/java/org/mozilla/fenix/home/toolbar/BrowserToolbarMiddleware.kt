@@ -156,6 +156,7 @@ class BrowserToolbarMiddleware(
                 updateNavigationActions(context)
                 updateToolbarActionsBasedOnOrientation(context)
                 updateTabsCount(context)
+                updateMenuHighlight(context)
             }
 
             is EnvironmentCleared -> {
@@ -421,6 +422,16 @@ class BrowserToolbarMiddleware(
         }
     }
 
+    private fun updateMenuHighlight(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
+        appStore.observeWhileActive {
+            distinctUntilChangedBy { it.supportedMenuNotifications.isNotEmpty() }
+                .collect {
+                    updateEndBrowserActions(context)
+                    updateNavigationActions(context)
+                }
+        }
+    }
+
     private inline fun <S : State, A : MVIAction> Store<S, A>.observeWhileActive(
         crossinline observe: suspend (Flow<S>.() -> Unit),
     ): Job? = environment?.viewLifecycleOwner?.run {
@@ -481,6 +492,7 @@ class BrowserToolbarMiddleware(
         HomeToolbarAction.Menu -> ActionButtonRes(
             drawableResId = iconsR.drawable.mozac_ic_ellipsis_vertical_24,
             contentDescription = R.string.content_description_menu,
+            highlighted = appStore.state.supportedMenuNotifications.isNotEmpty(),
             onClick = MenuClicked(source),
         )
 

@@ -273,6 +273,7 @@ class BrowserToolbarMiddleware(
                 observeProgressBarUpdates(context)
                 observeOrientationChanges(context)
                 observeTabsCountUpdates(context)
+                observeMenuHighlightChanges(context)
                 observeAcceptingCancellingPrivateDownloads(context)
                 observePageNavigationStatus(context)
                 observePageOriginUpdates(context)
@@ -903,6 +904,16 @@ class BrowserToolbarMiddleware(
         }
     }
 
+    private fun observeMenuHighlightChanges(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
+        appStore.observeWhileActive {
+            distinctUntilChangedBy { it.supportedMenuNotifications.isNotEmpty() }
+            .collect {
+                updateEndBrowserActions(context)
+                updateNavigationActions(context)
+            }
+        }
+    }
+
     private fun observePageOriginUpdates(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
         browserStore.observeWhileActive {
             distinctUntilChangedBy { it.selectedTab?.content?.url }
@@ -1131,6 +1142,7 @@ class BrowserToolbarMiddleware(
         ToolbarAction.Menu -> ActionButtonRes(
             drawableResId = iconsR.drawable.mozac_ic_ellipsis_vertical_24,
             contentDescription = R.string.content_description_menu,
+            highlighted = appStore.state.supportedMenuNotifications.isNotEmpty(),
             onClick = MenuClicked(source),
         )
 
