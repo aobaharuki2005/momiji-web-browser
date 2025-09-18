@@ -11,6 +11,8 @@
 
 #include <math.h>
 
+#include <cstdint>
+
 #include "rtc_base/checks.h"
 #include "rtc_base/numerics/safe_conversions.h"
 

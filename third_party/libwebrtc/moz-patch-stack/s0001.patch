@@ -1383,10 +1383,10 @@ index d5ce6105a3..8bfd24de2b 100644
    const bool enable_svc_for_simulcast_;
    std::optional<SimulcastToSvcConverter> simulcast_to_svc_converter_;
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 3277395910..9dde553845 100644
+index 216b91fcfd..c94b9ffb6c 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
-@@ -446,6 +446,12 @@ rtc_library("logging") {
+@@ -448,6 +448,12 @@ rtc_library("logging") {
      "//third_party/abseil-cpp/absl/strings:string_view",
    ]
  
@@ -1446,10 +1446,10 @@ index 1a07e9641e..de97fe9446 100644
  // The list of logging streams currently configured.
  // Note: we explicitly do not clean this up, because of the uncertain ordering
 diff --git a/rtc_base/logging.h b/rtc_base/logging.h
-index b011acbefa..717aae2e19 100644
+index c87e707ebc..caea4e8a51 100644
 --- a/rtc_base/logging.h
 +++ b/rtc_base/logging.h
-@@ -555,6 +555,12 @@ class LogMessage {
+@@ -554,6 +554,12 @@ class LogMessage {
    }
  #endif  // RTC_LOG_ENABLED()
  
@@ -1462,7 +1462,7 @@ index b011acbefa..717aae2e19 100644
   private:
    friend class LogMessageForTesting;
  
-@@ -610,6 +616,9 @@ class LogMessage {
+@@ -609,6 +615,9 @@ class LogMessage {
  
    // The stringbuilder that buffers the formatted message before output
    StringBuilder print_stream_;

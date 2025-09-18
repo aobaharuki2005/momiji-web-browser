@@ -211,6 +211,7 @@ rtc_library("event_tracer") {
     ":timeutils",
     "..:tracing",
     "../api:sequence_checker",
+    "../api/units:time_delta",
     "synchronization:mutex",
     "system:rtc_export",
     "//third_party/abseil-cpp/absl/strings:string_view",
@@ -293,6 +294,7 @@ rtc_library("rate_statistics") {
   deps = [
     ":checks",
     ":logging",
+    ":safe_compare",
     ":safe_conversions",
     "system:rtc_export",
   ]
@@ -700,6 +702,7 @@ rtc_library("rtc_task_queue_stdlib") {
     ":rtc_event",
     ":safe_conversions",
     ":timeutils",
+    "../api:location",
     "../api/task_queue",
     "../api/units:time_delta",
     "synchronization:mutex",
@@ -719,11 +722,13 @@ if (rtc_include_tests) {
       ":rtc_event",
       ":rtc_task_queue_stdlib",
       ":threading",
+      "../api:field_trials_view",
       "../api/task_queue",
       "../api/task_queue:task_queue_test",
       "../api/units:time_delta",
       "../test:test_main",
       "../test:test_support",
+      "//third_party/abseil-cpp/absl/strings:string_view",
     ]
   }
 }
@@ -801,6 +806,7 @@ rtc_library("rtc_json") {
   ]
   deps = [
     ":stringutils",
+    "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/strings:string_view",
   ]
 if (!build_with_mozilla) {
@@ -863,15 +869,26 @@ rtc_library("async_dns_resolver") {
     "async_dns_resolver.h",
   ]
   deps = [
+    ":checks",
+    ":ip_address",
     ":logging",
     ":macromagic",
+    ":net_helpers",
     ":platform_thread",
     ":refcount",
+    ":socket_address",
     "../api:async_dns_resolver",
     "../api:make_ref_counted",
+    "../api:refcountedbase",
+    "../api:scoped_refptr",
     "../api:sequence_checker",
+    "../api/task_queue",
     "../api/task_queue:pending_task_safety_flag",
+    "synchronization:mutex",
+    "system:no_unique_address",
     "system:rtc_export",
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/strings:string_view",
   ]
 }
 
@@ -988,6 +1005,7 @@ rtc_library("threading") {
     ":ip_address",
     ":logging",
     ":macromagic",
+    ":net_helpers",
     ":network_constants",
     ":null_socket_server",
     ":platform_thread",
@@ -1123,6 +1141,7 @@ rtc_library("ifaddrs_converter") {
     ":checks",
     ":ip_address",
     ":logging",
+    ":net_helpers",
   ]
 
   if (is_android) {
@@ -1293,6 +1312,8 @@ if (!build_with_mozilla) {
     ":socket_address",
     ":timeutils",
     "../api:array_view",
+    "../api/units:timestamp",
+    "network:received_packet",
     "network:sent_packet",
   ]
 }
@@ -1359,6 +1380,7 @@ if (rtc_include_tests) {
     deps = [
       ":async_packet_socket",
       ":gunit_helpers",
+      ":socket",
       ":socket_address",
       "../test:test_support",
       "network:received_packet",
@@ -1428,12 +1450,15 @@ if (!build_with_mozilla) {
     "unique_id_generator.h",
   ]
   deps = [
+    ":checks",
     ":crypto_random",
+    ":macromagic",
     ":stringutils",
     "../api:array_view",
     "../api:sequence_checker",
     "synchronization:mutex",
     "system:no_unique_address",
+    "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/strings:string_view",
   ]
 }
@@ -1709,6 +1734,7 @@ rtc_library("testclient") {
     "../api/units:timestamp",
     "network:received_packet",
     "synchronization:mutex",
+    "third_party/sigslot",
   ]
 }
 
@@ -1719,6 +1745,7 @@ rtc_library("callback_list_unittests") {
   deps = [
     ":callback_list",
     ":gunit_helpers",
+    ":untyped_function",
     "../api:function_view",
     "../test:test_support",
   ]
@@ -1832,9 +1859,12 @@ rtc_library("task_queue_for_test") {
     ":checks",
     ":rtc_event",
     "../api:function_view",
+    "../api:location",
     "../api/task_queue",
     "../api/task_queue:default_task_queue_factory",
+    "../api/units:time_delta",
     "//third_party/abseil-cpp/absl/cleanup",
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
     "//third_party/abseil-cpp/absl/strings:string_view",
   ]
 }
@@ -2306,6 +2336,7 @@ if (rtc_include_tests) {
         "../api:array_view",
         "../api:field_trials",
         "../api:field_trials_view",
+        "../api:location",
         "../api:make_ref_counted",
         "../api:rtc_error_matchers",
         "../api:scoped_refptr",
@@ -2317,6 +2348,7 @@ if (rtc_include_tests) {
         "../api/task_queue:pending_task_safety_flag",
         "../api/task_queue:task_queue_test",
         "../api/units:time_delta",
+        "../api/units:timestamp",
         "../system_wrappers",
         "../test:create_test_field_trials",
         "../test:fileutils",

@@ -11,8 +11,8 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/313582b2ffb3f3f9a
  modules/audio_processing/ns/noise_estimator.cc      |  8 +-------
  modules/audio_processing/three_band_filter_bank.cc  | 13 ++++---------
  .../event_based_exponential_moving_average.cc       |  3 +--
- rtc_base/random.cc                                  |  4 +---
- 8 files changed, 14 insertions(+), 37 deletions(-)
+ rtc_base/random.cc                                  |  3 +--
+ 8 files changed, 14 insertions(+), 36 deletions(-)
 
 diff --git a/common_audio/window_generator.cc b/common_audio/window_generator.cc
 index 5a6de1aec1..d364eed826 100644
@@ -227,19 +227,18 @@ index 419902dc52..27b2066a97 100644
  }
  
 diff --git a/rtc_base/random.cc b/rtc_base/random.cc
-index 28e48f0d3d..55b8749cb7 100644
+index 319ad72177..3e0cc45262 100644
 --- a/rtc_base/random.cc
 +++ b/rtc_base/random.cc
-@@ -11,8 +11,6 @@
- 
+@@ -12,7 +12,6 @@
  #include <math.h>
  
+ #include <cstdint>
 -#include <numbers>
--
+ 
  #include "rtc_base/checks.h"
  #include "rtc_base/numerics/safe_conversions.h"
- 
-@@ -73,7 +71,7 @@ double Random::Gaussian(double mean, double standard_deviation) {
+@@ -74,7 +73,7 @@ double Random::Gaussian(double mean, double standard_deviation) {
    // interval (0, 1]. Note that we rely on NextOutput to generate integers
    // in the range [1, 2^64-1]. Normally this behavior is a bit frustrating,
    // but here it is exactly what we need.
