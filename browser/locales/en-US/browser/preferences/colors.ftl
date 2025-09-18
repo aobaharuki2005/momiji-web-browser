@@ -11,20 +11,16 @@ colors-close-key =
 
 colors-text-and-background = Text and Background
 
-colors-text =
-    .label = Text
+colors-text-header = Text
     .accesskey = T
 
-colors-text-background =
-    .label = Background
+colors-background = Background
     .accesskey = B
 
 colors-links-header = Link Colors
 
-colors-links-unvisited =
-    .label = Unvisited Links
+colors-unvisited-links = Unvisited Links
     .accesskey = L
 
-colors-links-visited =
-    .label = Visited Links
+colors-visited-links = Visited Links
     .accesskey = V
