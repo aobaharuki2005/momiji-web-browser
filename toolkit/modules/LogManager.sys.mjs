@@ -52,10 +52,10 @@ const PR_UINT32_MAX = 0xffffffff;
  * e.g. write it to disk asynchronously.
  */
 class StorageStreamAppender extends Log.Appender {
-  constructor(formatter) {
+  constructor(formatter, { onAppendTopic = "" } = {}) {
     super(formatter);
     this._name = "StorageStreamAppender";
-
+    this._onAppendTopic = onAppendTopic;
     this._converterStream = null; // holds the nsIConverterOutputStream
     this._outputStream = null; // holds the underlying nsIOutputStream
 
@@ -110,8 +110,10 @@ class StorageStreamAppender extends Log.Appender {
     if (!formatted) {
       return;
     }
+    let didAppend = false;
     try {
       this.outputStream.writeString(formatted + "\n");
+      didAppend = true;
     } catch (ex) {
       if (ex.result == Cr.NS_BASE_STREAM_CLOSED) {
         // The underlying output stream is closed, so let's open a new one
@@ -120,9 +122,13 @@ class StorageStreamAppender extends Log.Appender {
       }
       try {
         this.outputStream.writeString(formatted + "\n");
+        didAppend = true;
       } catch (ex) {
         // Ah well, we tried, but something seems to be hosed permanently.
       }
+    }
+    if (didAppend && this._onAppendTopic) {
+      Services.obs.notifyObservers(null, this._onAppendTopic, {});
     }
   }
 }
@@ -139,10 +145,14 @@ class StorageStreamAppender extends Log.Appender {
  */
 class FlushableStorageAppender extends StorageStreamAppender {
   #overwriteFileOnFlush = true;
+  #debugMessageCount = 0;
   #lastFlushTime = 0;
 
-  constructor(formatter, { overwriteFileOnFlush = true } = {}) {
-    super(formatter);
+  constructor(
+    formatter,
+    { overwriteFileOnFlush = true, onAppendTopic = "" } = {}
+  ) {
+    super(formatter, { onAppendTopic });
     this.sawError = false;
     this.#overwriteFileOnFlush = overwriteFileOnFlush;
   }
@@ -151,9 +161,15 @@ class FlushableStorageAppender extends StorageStreamAppender {
     return this.#lastFlushTime;
   }
 
+  get debugMessageCount() {
+    return this.#debugMessageCount;
+  }
+
   append(message) {
     if (message.level >= Log.Level.Error) {
       this.sawError = true;
+    } else {
+      this.#debugMessageCount++;
     }
     StorageStreamAppender.prototype.append.call(this, message);
   }
@@ -161,6 +177,7 @@ class FlushableStorageAppender extends StorageStreamAppender {
   reset() {
     super.reset();
     this.sawError = false;
+    this.#debugMessageCount = 0;
   }
 
   /**
@@ -252,6 +269,7 @@ export class LogManager {
     logFilePrefix,
     logFileSubDirectoryEntries,
     testTopicPrefix,
+    fileAppenderChangeTopic,
     overwriteFileOnFlush,
   } = {}) {
     this._prefs = Services.prefs.getBranch(prefRoot);
@@ -259,6 +277,7 @@ export class LogManager {
 
     this.logFilePrefix = logFilePrefix;
     this._testTopicPrefix = testTopicPrefix;
+    this._fileAppenderChangeTopic = fileAppenderChangeTopic;
     this._overwriteFileOnFlush = overwriteFileOnFlush;
 
     // At this point we don't allow a custom directory for the logs, nor allow
@@ -325,6 +344,7 @@ export class LogManager {
     // The file appender doesn't get the special singleton behaviour.
     let fapp = (this._fileAppender = new FlushableStorageAppender(formatter, {
       overwriteFileOnFlush: this._overwriteFileOnFlush,
+      onAppendTopic: this._fileAppenderChangeTopic,
     }));
     // the stream gets a default of Debug as the user must go out of their way
     // to see the stuff spewed to it.
@@ -398,7 +418,7 @@ export class LogManager {
           true
         );
         reasonPrefix = "error";
-      } else {
+      } else if (this._fileAppender.debugMessageCount) {
         reason = this.SUCCESS_LOG_WRITTEN;
         flushToFile = this._prefs.getBoolPref(
           "log.appender.file.logOnSuccess",
