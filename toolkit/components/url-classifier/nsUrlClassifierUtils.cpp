@@ -1002,6 +1002,9 @@ nsresult nsUrlClassifierUtils::ReadProvidersFromPrefs(ProviderDictType& aDict) {
     providers.Insert(provider);
   }
 
+  bool isGoogle5Enabled = mozilla::Preferences::GetBool(
+      "browser.safebrowsing.provider.google5.enabled");
+
   // Now we have all providers. Check which one owns |aTableName|.
   // e.g. The owning lists of provider "google" is defined in
   // "browser.safebrowsing.provider.google.lists".
@@ -1024,9 +1027,7 @@ nsresult nsUrlClassifierUtils::ReadProvidersFromPrefs(ProviderDictType& aDict) {
       // If the Safe Browsing V5 is disabled, we will use V4 instead. This means
       // that we will put the V5 lists to the V4 provider to instruct using
       // Safe Browsing V4 for those tables.
-      if (!mozilla::Preferences::GetBool(
-              "browser.safebrowsing.provider.google5.enabled") &&
-          providerToUse.EqualsLiteral("google5")) {
+      if (!isGoogle5Enabled && providerToUse.EqualsLiteral("google5")) {
         providerToUse.AssignLiteral("google4");
       }
       aDict.InsertOrUpdate(tableName, MakeUnique<nsCString>(providerToUse));
