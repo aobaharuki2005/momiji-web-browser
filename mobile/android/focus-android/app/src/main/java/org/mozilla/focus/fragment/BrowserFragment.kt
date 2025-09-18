@@ -265,7 +265,6 @@ class BrowserFragment :
         }
     }
 
-    @Suppress("LongMethod", "ComplexMethod")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentBrowserBinding.inflate(inflater, container, false)
 
@@ -868,7 +867,7 @@ class BrowserFragment :
 
     override fun onHomePressed() = pictureInPictureFeature?.onHomePressed() ?: false
 
-    @Suppress("ComplexMethod", "ReturnCount")
+    @Suppress("ReturnCount")
     override fun onBackPressed(): Boolean {
         if (findInPageIntegration.onBackPressed()) {
             return true

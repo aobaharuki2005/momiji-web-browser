@@ -41,7 +41,6 @@ import org.mozilla.focus.telemetry.ProfilerMarkerFactProcessor
 import org.mozilla.focus.utils.AppConstants
 import kotlin.coroutines.CoroutineContext
 
-@Suppress("TooManyFunctions")
 open class FocusApplication : LocaleAwareApplication(), Provider, CoroutineScope {
     private var job = Job()
     override val coroutineContext: CoroutineContext

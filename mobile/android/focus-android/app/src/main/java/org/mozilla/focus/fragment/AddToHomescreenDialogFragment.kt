@@ -70,7 +70,6 @@ class AddToHomescreenDialogFragment : DialogFragment() {
         return builder.create()
     }
 
-    @Suppress("LongParameterList")
     private fun setButtons(
         parentView: View,
         editableTitle: EditText,

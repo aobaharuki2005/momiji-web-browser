@@ -362,8 +362,6 @@ class UrlInputFragment :
         }
     }
 
-    // This method triggers the complexity warning. However it's actually not that hard to understand.
-    @Suppress("ComplexMethod")
     override fun onClick(view: View) {
         if (view.id == R.id.dismissView) {
             handleDismiss()
@@ -419,7 +417,6 @@ class UrlInputFragment :
      */
     // This method correctly triggers a complexity warning. This method is indeed very and too complex.
     // However refactoring it is not trivial at this point so we ignore the warning for now.
-    @Suppress("ComplexMethod")
     private fun playVisibilityAnimation(reverse: Boolean) {
         if (isAnimating) {
             // We are already animating, let's ignore another request.

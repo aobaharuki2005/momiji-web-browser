@@ -52,7 +52,6 @@ import org.mozilla.focus.utils.ViewUtils
  * Class performing the actual navigation in [MainActivity] by performing fragment transactions if
  * needed.
  */
-@Suppress("TooManyFunctions")
 class MainActivityNavigation(
     private val activity: MainActivity,
 ) {
@@ -261,7 +260,7 @@ class MainActivityNavigation(
         }
     }
 
-    @Suppress("ComplexMethod")
+    @Suppress("CyclomaticComplexMethod")
     fun settings(page: Screen.Settings.Page) {
         val fragment = when (page) {
             Screen.Settings.Page.Start -> SettingsFragment()

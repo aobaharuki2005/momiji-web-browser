@@ -19,7 +19,7 @@ import org.mozilla.focus.appreview.AppReviewUtils
  * STARTED state (meaning some part of our application is visible).
  * Based on this information the current task can be removed if the app is not visible.
  */
-@Suppress("TooManyFunctions", "EmptyFunctionBlock")
+@Suppress("EmptyFunctionBlock")
 class VisibilityLifeCycleCallback(private val context: Context) : ActivityLifecycleCallbacks, ComponentCallbacks2 {
     /**
      * Activities are not stopped/started in an ordered way. So we are using

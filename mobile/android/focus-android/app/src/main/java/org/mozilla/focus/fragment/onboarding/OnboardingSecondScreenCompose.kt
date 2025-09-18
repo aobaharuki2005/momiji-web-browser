@@ -49,7 +49,6 @@ private fun OnBoardingSecondScreenComposePreview() {
  * @param skipScreen Will be called when the user clicks on Skip button.
  */
 @Composable
-@Suppress("LongMethod")
 fun OnBoardingSecondScreenCompose(
     setAsDefaultBrowser: () -> Unit,
     skipScreen: () -> Unit,

@@ -49,7 +49,6 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.util.concurrent.TimeUnit
 
-@Suppress("TooManyFunctions")
 class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
     override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         addPreferencesFromResource(R.xml.manual_add_search_engine)

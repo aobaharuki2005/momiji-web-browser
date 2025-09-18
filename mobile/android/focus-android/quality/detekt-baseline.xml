@@ -245,7 +245,7 @@
     <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment$fun handleTabCrash(crash: Crash)</ID>
     <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment$fun showTrackingProtectionPanel()</ID>
     <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment.Companion$fun createForTab(tabId: String): BrowserFragment</ID>
-    <ID>UndocumentedPublicFunction:BrowserMenuController.kt$BrowserMenuController$@Suppress("ComplexMethod") fun handleMenuInteraction(item: ToolbarMenu.Item)</ID>
+    <ID>UndocumentedPublicFunction:BrowserMenuController.kt$BrowserMenuController$fun handleMenuInteraction(item: ToolbarMenu.Item)</ID>
     <ID>UndocumentedPublicFunction:BrowsersCache.kt$BrowsersCache$@Synchronized fun all(context: Context): Browsers</ID>
     <ID>UndocumentedPublicFunction:ClientWrapper.kt$ClientWrapper$@Deprecated("Non-private Client usage should be prevented") fun unwrap(): Client</ID>
     <ID>UndocumentedPublicFunction:CookiesPreference.kt$CookiesPreference$fun updateSummary()</ID>
@@ -283,7 +283,7 @@
     <ID>UndocumentedPublicFunction:MainActivity.kt$MainActivity$fun customizeStatusBar(backgroundColorId: Int? = null)</ID>
     <ID>UndocumentedPublicFunction:MainActivity.kt$MainActivity$fun getToolbar(): ActionBar</ID>
     <ID>UndocumentedPublicFunction:MainActivity.kt$MainActivity$fun hideStatusBarBackground()</ID>
-    <ID>UndocumentedPublicFunction:MainActivityNavigation.kt$MainActivityNavigation$@Suppress("ComplexMethod") fun settings(page: Screen.Settings.Page)</ID>
+    <ID>UndocumentedPublicFunction:MainActivityNavigation.kt$MainActivityNavigation$@Suppress("CyclomaticComplexMethod") fun settings(page: Screen.Settings.Page)</ID>
     <ID>UndocumentedPublicFunction:MainActivityNavigation.kt$MainActivityNavigation$fun showOnBoardingSecondScreen()</ID>
     <ID>UndocumentedPublicFunction:MainActivityNavigation.kt$MainActivityNavigation$fun sitePermissionOptionsFragment(sitePermission: SitePermission)</ID>
     <ID>UndocumentedPublicFunction:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference$fun setProgressViewShown(isShown: Boolean)</ID>

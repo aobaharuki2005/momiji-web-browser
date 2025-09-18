@@ -42,7 +42,6 @@ class BrowserMenuController(
     private val currentTab: SessionState?
         get() = store.state.findTabOrCustomTabOrSelectedTab(currentTabId)
 
-    @Suppress("ComplexMethod")
     fun handleMenuInteraction(item: ToolbarMenu.Item) {
         recordBrowserMenuTelemetry(item)
 
