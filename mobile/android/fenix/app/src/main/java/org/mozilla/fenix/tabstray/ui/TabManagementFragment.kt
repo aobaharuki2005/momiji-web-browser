@@ -5,6 +5,7 @@
 package org.mozilla.fenix.tabstray.ui
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -15,10 +16,13 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.UiThread
 import androidx.annotation.VisibleForTesting
 import androidx.biometric.BiometricManager
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.fragment.app.Fragment
+import androidx.compose.ui.graphics.toArgb
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.compose.content
@@ -39,6 +43,8 @@ import mozilla.components.feature.downloads.ui.DownloadCancelDialogFragment
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.lib.state.ext.observeAsState
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.android.view.setNavigationBarTheme
+import mozilla.components.support.ktx.android.view.setStatusBarTheme
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingLocked
@@ -95,7 +101,7 @@ import kotlin.math.abs
  * The fullscreen fragment for displaying the tabs management UI.
  */
 @Suppress("TooManyFunctions", "LargeClass")
-class TabManagementFragment : Fragment() {
+class TabManagementFragment : DialogFragment() {
 
     private lateinit var tabManagerInteractor: TabManagerInteractor
     private lateinit var tabManagerController: TabManagerController
@@ -199,6 +205,8 @@ class TabManagementFragment : Fragment() {
         tabManagerInteractor = DefaultTabManagerInteractor(
             controller = tabManagerController,
         )
+
+        setStyle(STYLE_NO_TITLE, R.style.TabManagerDialogStyle)
     }
 
     @Suppress("LongMethod")
@@ -219,6 +227,16 @@ class TabManagementFragment : Fragment() {
         }
 
         FirefoxTheme(theme = getTabManagerTheme(page = page)) {
+            val navBarColor = MaterialTheme.colorScheme.surfaceContainerHigh.toArgb()
+            val statusBarColor = MaterialTheme.colorScheme.surface.toArgb()
+
+            LaunchedEffect(page) {
+                updateSystemBarColors(
+                    navBarColor = navBarColor,
+                    statusBarColor = statusBarColor,
+                )
+            }
+
             TabsTray(
                 tabsTrayStore = tabsTrayStore,
                 displayTabsInGrid = requireContext().settings().gridTabView,
@@ -540,8 +558,9 @@ class TabManagementFragment : Fragment() {
         navControllerProvider: NavControllerProvider = DefaultNavControllerProvider(),
     ) {
         homeViewModel.sessionToDelete = sessionId
-        val directions = NavGraphDirections.actionGlobalHome()
-        navControllerProvider.getNavController(this).navigate(directions)
+        navControllerProvider
+            .getNavController(this)
+            .navigate(TabManagementFragmentDirections.actionGlobalHome())
     }
 
     @VisibleForTesting
@@ -715,6 +734,30 @@ class TabManagementFragment : Fragment() {
         shouldShowBanner: Boolean,
     ): Boolean {
         return isPrivateMode && hasPrivateTabs && biometricAvailable && !privateLockEnabled && shouldShowBanner
+    }
+
+    /**
+     * Updates the NavBar and Status bar colors. If Android version >= Q/29, those colors
+     * are handled automatically, and we instead set the nav bar contrast to false.
+     *
+     * @param navBarColor The ARGB int value to set the NavBar (the bottom navigation area of the device.
+     * @param statusBarColor The ARGB int value to set the Status Bar.
+     */
+    private fun updateSystemBarColors(
+        navBarColor: Int,
+        statusBarColor: Int,
+    ) {
+        dialog?.window?.apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                setNavigationBarContrastEnforced(false)
+            } else {
+                setNavigationBarTheme(
+                    navBarColor = navBarColor,
+                    navBarDividerColor = navBarColor,
+                )
+                setStatusBarTheme(color = statusBarColor)
+            }
+        }
     }
 
     private companion object {
