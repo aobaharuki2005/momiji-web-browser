@@ -68,7 +68,6 @@
     <ID>UndocumentedPublicClass:CoordinateScrollingFeature.kt$CoordinateScrollingFeature$Companion</ID>
     <ID>UndocumentedPublicClass:Crash.kt$Crash$Companion</ID>
     <ID>UndocumentedPublicClass:Crash.kt$Crash.NativeCodeCrash$Companion</ID>
-    <ID>UndocumentedPublicClass:Crash.kt$Crash.NativeCodeCrash.Companion$ProcessType</ID>
     <ID>UndocumentedPublicClass:Crash.kt$Crash.UncaughtExceptionCrash$Companion</ID>
     <ID>UndocumentedPublicClass:CrashActivity.kt$CrashActivity : AppCompatActivityOnClickListener</ID>
     <ID>UndocumentedPublicClass:CrashApplication.kt$CrashApplication : Application</ID>
@@ -303,9 +302,6 @@
     <ID>UndocumentedPublicClass:ThreadUtils.kt$ThreadUtils</ID>
     <ID>UndocumentedPublicClass:Token.kt$Token$Type</ID>
     <ID>UndocumentedPublicClass:ToolbarActivity.kt$ToolbarActivity$Companion</ID>
-    <ID>UndocumentedPublicClass:ToolbarFeature.kt$ToolbarFeature.RenderStyle$ColoredUrl : RenderStyle</ID>
-    <ID>UndocumentedPublicClass:ToolbarFeature.kt$ToolbarFeature.RenderStyle$RegistrableDomain : RenderStyle</ID>
-    <ID>UndocumentedPublicClass:ToolbarFeature.kt$ToolbarFeature.RenderStyle$UncoloredUrl : RenderStyle</ID>
     <ID>UndocumentedPublicClass:Trie.kt$Trie$Companion</ID>
     <ID>UndocumentedPublicClass:URLStringUtils.kt$URLStringUtils</ID>
     <ID>UndocumentedPublicClass:UrlMatcher.kt$UrlMatcher$Companion</ID>
@@ -497,6 +493,5 @@
     <ID>UndocumentedPublicFunction:WebAppManifestParser.kt$WebAppManifestParser$fun serialize(manifest: WebAppManifest)</ID>
     <ID>UndocumentedPublicFunction:WorkManagerSyncManager.kt$fun getLastSynced(context: Context): Long</ID>
     <ID>UndocumentedPublicFunction:nodes.kt$AstNode$open fun toString(level: Int, isTopLevel: Boolean = true): String</ID>
-    <ID>WildcardImport:ContextCompatDetector.kt$import com.android.tools.lint.detector.api.*</ID>
   </CurrentIssues>
 </SmellBaseline>
