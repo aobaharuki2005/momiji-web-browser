@@ -25,8 +25,8 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/dom/WorkerCommon.h"
 
-#include "plbase64.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Base64.h"
 
 #ifdef XP_DARWIN
 #  include <CoreFoundation/CoreFoundation.h>
@@ -963,7 +963,7 @@ void gfxFontUtils::GetPrefsFontList(const char* aPrefName,
 // than 31 characters in length.  Using AddFontMemResourceEx on Windows fails
 // for names longer than 30 characters in length.
 
-#define MAX_B64_LEN 32
+constexpr uint32_t MAX_B64_LEN = 32;
 
 nsresult gfxFontUtils::MakeUniqueUserFontName(nsAString& aName) {
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -977,9 +977,10 @@ nsresult gfxFontUtils::MakeUniqueUserFontName(nsAString& aName) {
   nsresult rv = uuidgen->GenerateUUIDInPlace(&guid);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  char guidB64[MAX_B64_LEN] = {0};
+  char guidB64[MAX_B64_LEN];
 
-  if (!PL_Base64Encode(reinterpret_cast<char*>(&guid), sizeof(guid), guidB64))
+  if (NS_FAILED(mozilla::Base64Encode(reinterpret_cast<char*>(&guid),
+                                      sizeof(guid), guidB64)))
     return NS_ERROR_FAILURE;
 
   // all b64 characters except for '/' are allowed in Postscript names, so
