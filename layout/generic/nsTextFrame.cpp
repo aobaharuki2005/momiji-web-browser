@@ -3886,6 +3886,9 @@ static Maybe<TextAutospace::CharClass> LastNonMarkCharClass(
 static Maybe<TextAutospace::CharClass> LastNonMarkCharClassInFrame(
     nsTextFrame* aFrame) {
   using CharClass = TextAutospace::CharClass;
+  if (!aFrame->GetContentLength()) {
+    return Nothing();
+  }
   gfxSkipCharsIterator iter = aFrame->EnsureTextRun(nsTextFrame::eInflated);
   iter.SetOriginalOffset(aFrame->GetContentEnd());
   Maybe<CharClass> prevClass =
