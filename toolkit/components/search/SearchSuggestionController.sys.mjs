@@ -79,8 +79,6 @@ const lazy = XPCOMUtils.declareLazy({
  * @typedef {object} SuggestionExtraContext
  * @property {boolean} awaitingLocalResults
  *   Indicates if this request context is awaiting local results.
- * @property {string} engineId
- *   The engine identifier to use for some telemetry.
  * @property {XMLHttpRequest} [request]
  *   The request for this suggestion context.
  * @property {number} gleanTimerId
@@ -352,7 +350,6 @@ export class SearchSuggestionController {
       awaitingLocalResults: false,
       dedupeRemoteAndLocal,
       engine,
-      engineId: engine?.identifier || "other",
       fetchTrending,
       inPrivateBrowsing,
       restrictToEngine,
@@ -475,13 +472,14 @@ export class SearchSuggestionController {
     // If the timer id has been reset, then we have already handled telemetry.
     // This might occur in the context of an abort or or cancel.
     if (context.gleanTimerId) {
+      let engineId = context.engine.isConfigEngine
+        ? context.engine.id
+        : "other";
       // Stop the latency stopwatch.
       if (context.aborted) {
-        Glean.search.suggestionsLatency[context.engineId].cancel(
-          context.gleanTimerId
-        );
+        Glean.searchSuggestions.latency[engineId].cancel(context.gleanTimerId);
       } else {
-        Glean.search.suggestionsLatency[context.engineId].stopAndAccumulate(
+        Glean.searchSuggestions.latency[engineId].stopAndAccumulate(
           context.gleanTimerId
         );
       }
@@ -636,7 +634,9 @@ export class SearchSuggestionController {
     }
 
     context.gleanTimerId =
-      Glean.search.suggestionsLatency[context.engineId].start();
+      Glean.searchSuggestions.latency[
+        context.engine.isConfigEngine ? context.engine.id : "other"
+      ].start();
 
     return deferredResponse.promise;
   }
@@ -667,7 +667,9 @@ export class SearchSuggestionController {
     lazy.logConsole.debug(`OHTTP request started for ${submission.uri.spec}`);
 
     context.gleanTimerId =
-      Glean.search.suggestionsLatency[context.engineId].start();
+      Glean.searchSuggestions.latency[
+        context.engine.isConfigEngine ? context.engine.id : "other"
+      ].start();
 
     let merinoSuggestions = await this.#merino.fetch({
       query: context.searchString,
