@@ -333,18 +333,20 @@ fun TopSiteItem(
                     backgroundColor = topSiteColors.faviconCardBackgroundColor,
                 )
 
-                Box(
-                    modifier = Modifier
-                        .size(16.dp)
-                        .background(color = Color(PIN_BACKGROUND_COLOR), shape = CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Image(
-                        modifier = Modifier.size(10.dp),
-                        painter = painterResource(id = R.drawable.ic_new_pin),
-                        colorFilter = ColorFilter.tint(Color(PIN_COLOR)),
-                        contentDescription = null,
-                    )
+                if (topSite is TopSite.Pinned || topSite is TopSite.Default) {
+                    Box(
+                        modifier = Modifier
+                            .size(16.dp)
+                            .background(color = Color(PIN_BACKGROUND_COLOR), shape = CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Image(
+                            modifier = Modifier.size(10.dp),
+                            painter = painterResource(id = R.drawable.ic_new_pin),
+                            colorFilter = ColorFilter.tint(Color(PIN_COLOR)),
+                            contentDescription = null,
+                        )
+                    }
                 }
             }
 
