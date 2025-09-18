@@ -2124,7 +2124,7 @@ export class DiscoveryStreamFeed {
 
     const requestMetadata = {
       utc_offset: prefs.inferredPersonalizationConfig
-        ?.include_normalized_time_zone_offset
+        ?.normalized_time_zone_offset
         ? lazy.NewTabUtils.getUtcOffset(prefs[PREF_SURFACE_ID])
         : undefined,
       inferredInterests,
