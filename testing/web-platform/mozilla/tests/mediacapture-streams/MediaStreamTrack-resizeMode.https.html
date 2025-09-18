@@ -133,6 +133,29 @@
     }, `gUM gets ${JSON.stringify(expected)} mode by ${JSON.stringify(video)}`));
 
   promise_test(async t => {
+    const stream = await navigator.mediaDevices.getUserMedia({video: {resizeMode: "none", height: 720}});
+    const [track] = stream.getTracks();
+    const stream2 = await navigator.mediaDevices.getUserMedia({video: {resizeMode: "crop-and-scale", height: 300}});
+    const [track2] = stream2.getTracks();
+    t.add_cleanup(() => {
+      track.stop();
+      track2.stop();
+    });
+    const settings = track.getSettings();
+    assert_equals(settings.resizeMode, "none", "track resizeMode");
+    assert_equals(settings.width, 1280, "track width");
+    assert_equals(settings.height, 720, "track height");
+    assert_equals(settings.frameRate, 10, "track framerate");
+    const settings2 = track2.getSettings();
+    assert_equals(settings2.resizeMode, "crop-and-scale", "track2 resizeMode");
+    assert_equals(settings2.width, 400, "track2 width");
+    assert_equals(settings2.height, 300, "track2 height");
+    // Bug 1988466: source is configured at 10fps so we cannot completely
+    // masquerade the selected capability.
+    assert_equals(settings2.frameRate, 30, "track2 framerate");
+  }, `gUM gets expected downscaling with competing capabilities`);
+
+  promise_test(async t => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia(
           {video: {resizeMode: "none", width: {min: 2000}}}

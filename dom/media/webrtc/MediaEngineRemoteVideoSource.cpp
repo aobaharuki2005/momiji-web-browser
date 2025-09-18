@@ -136,10 +136,10 @@ static gfx::IntSize CalculateDesiredSize(DesiredSizeInput aInput) {
     // Max constraints decide the envelope.
     const double scale_width_strict =
         std::min(1.0, AssertedCast<double>(aInput.mConstraints.mWidth.mMax) /
-                          AssertedCast<double>(aInput.mInputWidth));
+                          AssertedCast<double>(inputWidth));
     const double scale_height_strict =
         std::min(1.0, AssertedCast<double>(aInput.mConstraints.mHeight.mMax) /
-                          AssertedCast<double>(aInput.mInputHeight));
+                          AssertedCast<double>(inputHeight));
 
     double scale_width =
         AssertedCast<double>(dst_width) / AssertedCast<double>(inputWidth);
@@ -156,9 +156,9 @@ static gfx::IntSize CalculateDesiredSize(DesiredSizeInput aInput) {
         {scale_width, scale_height, scale_width_strict, scale_height_strict});
 
     dst_width = AssertedCast<int32_t>(
-        std::round(scale * AssertedCast<double>(aInput.mInputWidth)));
+        std::round(scale * AssertedCast<double>(inputWidth)));
     dst_height = AssertedCast<int32_t>(
-        std::round(scale * AssertedCast<double>(aInput.mInputHeight)));
+        std::round(scale * AssertedCast<double>(inputHeight)));
   }
 
   if (aInput.mCapEngine == camera::CameraEngine) {
