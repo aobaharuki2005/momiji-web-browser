@@ -106,14 +106,14 @@ export class IPProtectionPanel {
     this.handleEvent = this.#handleEvent.bind(this);
 
     let {
-      isSignedOut,
+      isSignedIn,
       isActive: isProtectionEnabled,
       activatedAt: protectionEnabledSince,
       hasUpgraded,
     } = lazy.IPProtectionService;
 
     this.state = {
-      isSignedOut,
+      isSignedOut: !isSignedIn,
       isProtectionEnabled,
       protectionEnabledSince,
       location: {
