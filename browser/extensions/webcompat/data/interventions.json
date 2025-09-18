@@ -2023,6 +2023,7 @@
     "interventions": [
       {
         "platforms": ["all"],
+        "pref_check": { "layout.css.webkit-fill-available.enabled": false },
         "content_scripts": {
           "css": ["bug1896571-gracobaby.ca-unlock-scrolling.css"]
         }
@@ -4346,6 +4347,7 @@
     "interventions": [
       {
         "platforms": ["android"],
+        "pref_check": { "layout.css.webkit-fill-available.enabled": false },
         "content_scripts": {
           "css": ["bug1944727-www.linkedin.com-fix-dark-overlay.css"]
         }
@@ -4967,6 +4969,7 @@
     "interventions": [
       {
         "platforms": ["all"],
+        "pref_check": { "layout.css.webkit-fill-available.enabled": false },
         "content_scripts": {
           "all_frames": true,
           "css": ["bug1966389-boots.com-align-element-widths.css"]
