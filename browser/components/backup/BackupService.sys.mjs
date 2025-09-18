@@ -1108,7 +1108,10 @@ export class BackupService extends EventTarget {
    * @returns {Promise<string, Error>}
    */
   async resolveExistingArchiveDestFolderPath(configuredDestFolderPath) {
-    if (await IOUtils.exists(configuredDestFolderPath)) {
+    if (
+      configuredDestFolderPath &&
+      (await IOUtils.exists(configuredDestFolderPath))
+    ) {
       return configuredDestFolderPath;
     }
 
@@ -3581,12 +3584,32 @@ export class BackupService extends EventTarget {
   }
 
   /**
-   * Looks for valid backup files in the default location to auto populate the file picker.
+   * Searches for a valid backup file in the default backup folder.
+   *
+   * This function checks the possible backup directory's for `.html` backup files.
+   * If multiple backups are present and `multipleFiles` is false, it will not select one.
+   * Optionally validates each candidate file before selecting it.
+   *
+   * @param {object} [options={}] - Configuration options.
+   * @param {boolean} [options.validateFile=true] - Whether to validate each backup file before selecting it.
+   * @param {boolean} [options.multipleFiles=false] - Whether to allow selecting when multiple backup files are found.
+   * @param {boolean} [options.speedUpHeuristic=false] - Whether we want to avoid performance bottlenecks in exchange for
+   *                              possibly missing valid files.
+   *
+   * @returns {Promise<object>} A result object with the following properties:
+   * - {boolean} multipleBackupsFound — True if more than one backup candidate was found and `multipleFiles` is false.
    */
-  async findIfABackupFileExists() {
+  async findIfABackupFileExists({
+    validateFile = true,
+    multipleFiles = false,
+    speedUpHeuristic = false,
+  } = {}) {
     // Do we already have a backup for this browser? if so, we don't need to do any searching!
     if (this.#_state.lastBackupFileName) {
-      return;
+      return {
+        found: true,
+        multipleBackupsFound: false,
+      };
     }
 
     try {
@@ -3594,24 +3617,43 @@ export class BackupService extends EventTarget {
       let archiveDestPath = await this.resolveExistingArchiveDestFolderPath(
         this.#_state.backupDirPath
       );
+
       let dirExists = await this.#infalliblePathExists(archiveDestPath);
-      if (dirExists) {
-        const files = await IOUtils.getChildren(archiveDestPath);
+      if (!dirExists) {
+        return {
+          multipleBackupsFound: false,
+        };
+      }
 
-        for (const file of files) {
-          // The backup is always a html file, disregard any other files in the folder
-          if (!file.endsWith(".html")) {
-            continue;
-          }
+      let files = await IOUtils.getChildren(archiveDestPath);
+      // filtering is an O(N) operation, we can return early if there's too many files
+      // in this folder to filter to avoid a performance bottleneck
+      if (speedUpHeuristic && files && files.length > 1000) {
+        return {
+          multipleBackupsFound: false,
+        };
+      }
+
+      // The backup is always a html file and starts with "FirefoxBackup_"
+      // disregard any other files in the folder
+      let maybeBackupFiles = files.filter(f => {
+        let name = PathUtils.filename(f);
+
+        // Note: The Firefox backup filename is localized (see BackupService.BACKUP_FILE_NAME).
+        // For now, we use a hardcoded regex string directly for performance reasons.
+        return /^FirefoxBackup_.*\.html$/.test(name);
+      });
+
+      // if we aren't validating files, and there's more than 1 html file, we decide
+      // that there's no valid backup file found
+      if (!multipleFiles && maybeBackupFiles.length > 1 && !validateFile) {
+        return { multipleBackupsFound: true };
+      }
+
+      for (const file of maybeBackupFiles) {
+        if (validateFile) {
           try {
-            await this.sampleArchive(file);
-            this.#_state.backupFileToRestore = file;
-            this.stateUpdate();
-
-            // TODO: support multiple valid backups for different profiles.
-            // Currently, we break out of the loop and select the first profile that works.
-            // We want to eventually support showing multiple valid profiles to the user.
-            break;
+            await this.getBackupFileInfo(file);
           } catch (e) {
             lazy.logConsole.log(
               "Not a valid backup file in the default folder",
@@ -3619,20 +3661,69 @@ export class BackupService extends EventTarget {
               e
             );
 
-            if (this.#_state.backupFileToRestore !== file) {
-              continue;
+            // If this was previously selected but is no longer valid, unbind it
+            if (this.#_state.backupFileToRestore === file) {
+              this.#_state.backupFileToRestore = null;
+              this.#_state.backupFileInfo = null;
+              this.stateUpdate();
             }
 
-            // If this is the file that's selected already, but was tampered with, we should unbind it
-            this.#_state.backupFileToRestore = null;
-            this.#_state.backupFileInfo = null;
-            this.stateUpdate();
+            // let's move on to finding another file
+            continue;
           }
         }
+
+        this.#_state.backupFileToRestore = file;
+        this.stateUpdate();
+
+        // TODO: support multiple valid backups for different profiles.
+        // Currently, we break out of the loop and select the first profile that works.
+        // We want to eventually support showing multiple valid profiles to the user.
+        return { multipleBackupsFound: false };
       }
     } catch (e) {
-      // no folder to go to!
+      lazy.logConsole.error(
+        "There was an error while looking for backups: ",
+        e
+      );
     }
+
+    return { multipleBackupsFound: false };
+  }
+
+  /**
+   * Searches for backup files in predefined "well-known" locations.
+   *
+   * This function wraps findIfABackupFileExists to present the result
+   * in an object for processing in the frontend.
+   *
+   * Assumptions:
+   * - Intended to be called before `about:welcome` opens.
+   * - Clears any existing `lastBackupFileName` and `backupFileToRestore`
+   *   in the internal state prior to searching.
+   *
+   * @returns {Promise<object>} A result object with the following properties:
+   * - {boolean} found — Whether a backup file was found.
+   * - {string|null} backupFileToRestore — Path or identifier of the backup file (if found).
+   * - {boolean} multipleBackupsFound — Currently always `false`, reserved for future use.
+   */
+  async findBackupsInWellKnownLocations() {
+    this.#_state.lastBackupFileName = "";
+    this.#_state.backupFileToRestore = null;
+
+    let { multipleBackupsFound } = await this.findIfABackupFileExists({
+      validateFile: false,
+    });
+
+    // if a valid backup file was found, backupFileToRestore should be set
+    if (this.#_state.backupFileToRestore) {
+      return {
+        found: true,
+        backupFileToRestore: this.#_state.backupFileToRestore,
+        multipleBackupsFound,
+      };
+    }
+    return { found: false, backupFileToRestore: null, multipleBackupsFound };
   }
 
   /**
