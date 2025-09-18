@@ -241,8 +241,6 @@ Preferences.addAll([
 
   { id: "security.disable_button.openDeviceManager", type: "bool" },
 
-  { id: "security.OCSP.enabled", type: "int" },
-
   { id: "security.enterprise_roots.enabled", type: "bool" },
 
   // Add-ons, malware, phishing
@@ -2213,8 +2211,6 @@ var gPrivacyPane = {
     setSyncFromPrefListener("warnAddonInstall", () =>
       this.readWarnAddonInstall()
     );
-    setSyncFromPrefListener("enableOCSP", () => this.readEnableOCSP());
-    setSyncToPrefListener("enableOCSP", () => this.writeEnableOCSP());
 
     if (AlertsServiceDND) {
       let notificationsDoNotDisturbBox = document.getElementById(
@@ -4390,48 +4386,6 @@ var gPrivacyPane = {
     allowVisible: true,
     prefilledHost: "",
     permissionType: "install",
-  },
-
-  /**
-   * readEnableOCSP is used by the preferences UI to determine whether or not
-   * the checkbox for OCSP fetching should be checked (it returns true if it
-   * should be checked and false otherwise). The about:config preference
-   * "security.OCSP.enabled" is an integer rather than a boolean, so it can't be
-   * directly mapped from {true,false} to {checked,unchecked}. The possible
-   * values for "security.OCSP.enabled" are:
-   * 0: fetching is disabled
-   * 1: fetch for all certificates
-   * 2: fetch only for EV certificates
-   * Hence, if "security.OCSP.enabled" is non-zero, the checkbox should be
-   * checked. Otherwise, it should be unchecked.
-   */
-  readEnableOCSP() {
-    var preference = Preferences.get("security.OCSP.enabled");
-    // This is the case if the preference is the default value.
-    if (preference.value === undefined) {
-      return true;
-    }
-    return preference.value != 0;
-  },
-
-  /**
-   * writeEnableOCSP is used by the preferences UI to map the checked/unchecked
-   * state of the OCSP fetching checkbox to the value that the preference
-   * "security.OCSP.enabled" should be set to (it returns that value). See the
-   * readEnableOCSP documentation for more background. We unfortunately don't
-   * have enough information to map from {true,false} to all possible values for
-   * "security.OCSP.enabled", but a reasonable alternative is to map from
-   * {true,false} to {<the default value>,0}. That is, if the box is checked,
-   * "security.OCSP.enabled" will be set to whatever default it should be, given
-   * the platform and channel. If the box is unchecked, the preference will be
-   * set to 0. Obviously this won't work if the default is 0, so we will have to
-   * revisit this if we ever set it to 0.
-   */
-  writeEnableOCSP() {
-    var checkbox = document.getElementById("enableOCSP");
-    var defaults = Services.prefs.getDefaultBranch(null);
-    var defaultValue = defaults.getIntPref("security.OCSP.enabled");
-    return checkbox.checked ? defaultValue : 0;
   },
 
   /**

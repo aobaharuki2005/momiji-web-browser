@@ -1120,10 +1120,13 @@
 <groupbox id="certSelection" data-category="panePrivacy" hidden="true">
   <label><html:h2 data-l10n-id="certs-header"/></label>
   <hbox align="start">
-    <checkbox id="enableOCSP"
-              data-l10n-id="certs-enable-ocsp"
-              preference="security.OCSP.enabled"
-              flex="1" />
+    <vbox data-subcategory="certs" flex="1">
+      <description id="certsDescription" class="description-deemphasized" data-l10n-id="certs-description"/>
+      <html:a is="moz-support-link"
+              class="learnMore"
+              support-page="secure-website-certificate"
+      />
+    </vbox>
     <vbox align="end">
       <button id="viewCertificatesButton"
               is="highlightable-button"

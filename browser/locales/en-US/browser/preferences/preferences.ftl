@@ -1580,9 +1580,7 @@ security-block-uncommon-software =
 
 certs-header = Certificates
 
-certs-enable-ocsp =
-    .label = Query OCSP responder servers to confirm the current validity of certificates
-    .accesskey = Q
+certs-description = Configure the certificates that { -brand-short-name } uses for authentication.
 
 certs-view =
     .label = View Certificates…
