@@ -14,17 +14,12 @@ const { FormHistory } = ChromeUtils.importESModule(
 const { SearchSuggestionController } = ChromeUtils.importESModule(
   "moz-src:///toolkit/components/search/SearchSuggestionController.sys.mjs"
 );
-const THIRD_PARTY_ENGINE_ID = "other";
 
-// We must make sure the FormHistoryStartup component is
-// initialized in order for it to respond to FormHistory
-// requests from FormHistoryAutoComplete.sys.mjs.
-var formHistoryStartup = Cc[
-  "@mozilla.org/satchel/form-history-startup;1"
-].getService(Ci.nsIObserver);
-formHistoryStartup.observe(null, "profile-after-change", null);
-
-var getEngine, postEngine, unresolvableEngine, alternateJSONEngine;
+let getEngine;
+let postEngine;
+let unresolvableEngine;
+let alternateJSONEngine;
+let thirdPartyEngine;
 
 add_setup(async function () {
   Services.fog.initializeFOG();
@@ -42,47 +37,76 @@ add_setup(async function () {
   let server = useHttpServer();
   server.registerContentType("sjs", "sjs");
 
-  let getEngineData = {
+  const ENGINE_DATA = [
+    {
+      id: "get-engine",
+      baseURL: `${gHttpURL}/sjs/`,
+      name: "GET suggestion engine",
+      method: "GET",
+      telemetrySuffix: "suffix",
+    },
+    {
+      id: "post-engine",
+      baseURL: `${gHttpURL}/sjs/`,
+      name: "POST suggestion engine",
+      method: "POST",
+    },
+    {
+      id: "offline-engine",
+      baseURL: "http://example.invalid/",
+      name: "Offline suggestion engine",
+      method: "GET",
+    },
+    {
+      id: "alternative-json-engine",
+      baseURL: `${gHttpURL}/sjs/`,
+      name: "Alternative JSON suggestion type",
+      method: "GET",
+      alternativeJSONType: true,
+    },
+  ];
+
+  SearchTestUtils.setRemoteSettingsConfig(
+    ENGINE_DATA.map(data => {
+      return {
+        identifier: data.id,
+        base: {
+          name: data.name,
+          urls: {
+            suggestions: {
+              base: data.baseURL + "searchSuggestions.sjs",
+              searchTermParamName: "q",
+            },
+          },
+        },
+        variants: [
+          {
+            environment: {
+              allRegionsAndLocales: true,
+            },
+            telemetrySuffix: data.telemetrySuffix,
+          },
+        ],
+      };
+    })
+  );
+  await Services.search.init();
+
+  let thirdPartyData = {
     baseURL: `${gHttpURL}/sjs/`,
-    name: "GET suggestion engine",
+    name: "Third Party",
     method: "GET",
   };
-
-  let postEngineData = {
-    baseURL: `${gHttpURL}/sjs/`,
-    name: "POST suggestion engine",
-    method: "POST",
-  };
-
-  let unresolvableEngineData = {
-    baseURL: "http://example.invalid/",
-    name: "Offline suggestion engine",
-    method: "GET",
-  };
-
-  let alternateJSONSuggestEngineData = {
-    baseURL: `${gHttpURL}/sjs/`,
-    name: "Alternative JSON suggestion type",
-    method: "GET",
-    alternativeJSONType: true,
-  };
-
-  getEngine = await SearchTestUtils.installOpenSearchEngine({
-    url: `${gHttpURL}/sjs/engineMaker.sjs?${JSON.stringify(getEngineData)}`,
+  thirdPartyEngine = await SearchTestUtils.installOpenSearchEngine({
+    url: `${gHttpURL}/sjs/engineMaker.sjs?${JSON.stringify(thirdPartyData)}`,
   });
-  postEngine = await SearchTestUtils.installOpenSearchEngine({
-    url: `${gHttpURL}/sjs/engineMaker.sjs?${JSON.stringify(postEngineData)}`,
-  });
-  unresolvableEngine = await SearchTestUtils.installOpenSearchEngine({
-    url: `${gHttpURL}/sjs/engineMaker.sjs?${JSON.stringify(
-      unresolvableEngineData
-    )}`,
-  });
-  alternateJSONEngine = await SearchTestUtils.installOpenSearchEngine({
-    url: `${gHttpURL}/sjs/engineMaker.sjs?${JSON.stringify(
-      alternateJSONSuggestEngineData
-    )}`,
-  });
+
+  getEngine = Services.search.getEngineById("get-engine");
+  postEngine = Services.search.getEngineById("post-engine");
+  unresolvableEngine = Services.search.getEngineById("offline-engine");
+  alternateJSONEngine = Services.search.getEngineById(
+    "alternative-json-engine"
+  );
 
   registerCleanupFunction(async () => {
     // Remove added form history entries
@@ -121,7 +145,24 @@ add_task(async function simple_remote_no_local_result() {
   Assert.equal(result.remote[1].value, "modern");
   Assert.equal(result.remote[2].value, "mom");
 
-  assertLatencyCollection(true);
+  assertLatencyCollection(getEngine, true);
+});
+
+add_task(async function simple_third_party_remote_no_local_result() {
+  let controller = new SearchSuggestionController();
+  let result = await controller.fetch({
+    searchString: "mo",
+    inPrivateBrowsing: false,
+    engine: thirdPartyEngine,
+  });
+  Assert.equal(result.term, "mo");
+  Assert.equal(result.local.length, 0);
+  Assert.equal(result.remote.length, 3);
+  Assert.equal(result.remote[0].value, "Mozilla");
+  Assert.equal(result.remote[1].value, "modern");
+  Assert.equal(result.remote[2].value, "mom");
+
+  assertLatencyCollection(thirdPartyEngine, true);
 });
 
 add_task(async function simple_remote_no_local_result_alternative_type() {
@@ -405,7 +446,7 @@ add_task(async function fetch_twice_in_a_row() {
 
   // Only the second fetch's latency should be recorded since the first fetch
   // was aborted and latencies for aborted fetches are not recorded.
-  assertLatencyCollection(true);
+  assertLatencyCollection(getEngine, true);
 });
 
 add_task(async function both_identical_with_more_than_max_results() {
@@ -470,7 +511,7 @@ add_task(async function noremote_maxLocal() {
   }
   Assert.equal(result.remote.length, 0);
 
-  assertLatencyCollection(false);
+  assertLatencyCollection(getEngine, false);
 });
 
 add_task(async function someremote_maxLocal() {
@@ -499,7 +540,7 @@ add_task(async function someremote_maxLocal() {
     );
   }
 
-  assertLatencyCollection(true);
+  assertLatencyCollection(getEngine, true);
 });
 
 add_task(async function one_of_each() {
@@ -541,7 +582,7 @@ add_task(async function local_result_returned_remote_result_disabled() {
     );
   }
   Assert.equal(result.remote.length, 0);
-  assertLatencyCollection(false);
+  assertLatencyCollection(getEngine, false);
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
 });
 
@@ -565,7 +606,7 @@ add_task(
       );
     }
     Assert.equal(result.remote.length, 0);
-    assertLatencyCollection(false);
+    assertLatencyCollection(getEngine, false);
     Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
   }
 );
@@ -588,7 +629,7 @@ add_task(
     Assert.equal(result.remote.length, 1);
     Assert.equal(result.remote[0].value, "letter B");
 
-    assertLatencyCollection(true);
+    assertLatencyCollection(getEngine, true);
 
     Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
   }
@@ -612,7 +653,7 @@ add_task(async function one_local_zero_remote() {
     );
   }
   Assert.equal(result.remote.length, 0);
-  assertLatencyCollection(false);
+  assertLatencyCollection(getEngine, false);
 });
 
 add_task(async function zero_local_one_remote() {
@@ -628,7 +669,7 @@ add_task(async function zero_local_one_remote() {
   Assert.equal(result.local.length, 0);
   Assert.equal(result.remote.length, 1);
   Assert.equal(result.remote[0].value, "letter A");
-  assertLatencyCollection(true);
+  assertLatencyCollection(getEngine, true);
 });
 
 add_task(async function stop_search() {
@@ -642,7 +683,7 @@ add_task(async function stop_search() {
   await resultPromise.then(result => {
     Assert.equal(null, result);
   });
-  assertLatencyCollection(false);
+  assertLatencyCollection(getEngine, false);
 });
 
 add_task(async function empty_searchTerm() {
@@ -656,7 +697,7 @@ add_task(async function empty_searchTerm() {
   Assert.equal(result.term, "");
   Assert.ok(!!result.local.length);
   Assert.equal(result.remote.length, 0);
-  assertLatencyCollection(false);
+  assertLatencyCollection(getEngine, false);
 });
 
 add_task(async function slow_timeout() {
@@ -684,13 +725,13 @@ add_task(async function slow_timeout() {
 
   // The remote fetch isn't done yet, so the latency histogram should not be
   // updated.
-  assertLatencyCollection(false);
+  assertLatencyCollection(getEngine, false);
 
   // Wait for the remote fetch to finish.
   await new Promise(r => setTimeout(r, delayMs));
 
   // Now the latency histogram should be updated.
-  assertLatencyCollection(true);
+  assertLatencyCollection(getEngine, true);
 });
 
 add_task(async function slow_timeout_2() {
@@ -723,14 +764,14 @@ add_task(async function slow_timeout_2() {
 
   // The remote fetch of the second search isn't done yet, so the latency
   // histogram should not be updated.
-  assertLatencyCollection(false);
+  assertLatencyCollection(getEngine, false);
 
   // Wait for the second remote fetch to finish.
   await new Promise(r => setTimeout(r, delayMs));
 
   // Now the latency histogram should be updated, and only the remote fetch of
   // the second search should be recorded.
-  assertLatencyCollection(true);
+  assertLatencyCollection(getEngine, true);
 });
 
 add_task(async function slow_stop() {
@@ -758,7 +799,7 @@ add_task(async function slow_stop() {
 
   // Since the latencies of aborted fetches are not recorded, the latency
   // histogram should not be updated.
-  assertLatencyCollection(false);
+  assertLatencyCollection(getEngine, false);
 });
 
 // Error handling
@@ -777,7 +818,7 @@ add_task(async function remote_term_mismatch() {
   Assert.equal(result.local[0].value, "Query Mismatch Entry");
   Assert.equal(result.remote.length, 0);
 
-  assertLatencyCollection(true);
+  assertLatencyCollection(getEngine, true);
 });
 
 add_task(async function http_404() {
@@ -794,7 +835,7 @@ add_task(async function http_404() {
   Assert.equal(result.local[0].value, "HTTP 404 Entry");
   Assert.equal(result.remote.length, 0);
 
-  assertLatencyCollection(true);
+  assertLatencyCollection(getEngine, true);
 });
 
 add_task(async function http_500() {
@@ -811,7 +852,7 @@ add_task(async function http_500() {
   Assert.equal(result.local[0].value, "HTTP 500 Entry");
   Assert.equal(result.remote.length, 0);
 
-  assertLatencyCollection(true);
+  assertLatencyCollection(getEngine, true);
 });
 
 add_task(async function invalid_response_does_not_throw() {
@@ -861,7 +902,7 @@ add_task(async function unresolvable_server() {
   Assert.equal(result.local[0].value, "Unresolvable Server Entry");
   Assert.equal(result.remote.length, 0);
 
-  assertLatencyCollection(true);
+  assertLatencyCollection(unresolvableEngine, true);
 });
 
 // Exception handling
@@ -962,9 +1003,12 @@ function updateSearchHistory(operation, value) {
   });
 }
 
-function assertLatencyCollection(shouldRecord) {
+function assertLatencyCollection(engine, shouldRecord) {
   let latencyDistribution =
-    Glean.search.suggestionsLatency[THIRD_PARTY_ENGINE_ID].testGetValue();
+    Glean.search.suggestionsLatency[
+      // Third party engines are always recorded as "other".
+      engine.isConfigEngine ? engine.telemetryId : "other"
+    ].testGetValue();
 
   if (shouldRecord) {
     Assert.deepEqual(
