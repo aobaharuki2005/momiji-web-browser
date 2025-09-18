@@ -25,6 +25,15 @@ namespace mozilla {
 
 namespace {
 
+bool DoTreeScopedPropertiesOfElementApplyToContent(
+    const nsINode* aStylePropertyElement, const nsINode* aStyledContent) {
+  // XXX: The proper implementation is deferred to bug 1988038
+  // concerning tree-scoped name resolution. For now, we just
+  // keep the shadow and light trees separate.
+  return aStylePropertyElement->GetContainingDocumentOrShadowRoot() ==
+         aStyledContent->GetContainingDocumentOrShadowRoot();
+}
+
 /**
  * Checks for the implementation of `anchor-scope`:
  * https://drafts.csswg.org/css-anchor-position-1/#anchor-scope
@@ -346,8 +355,17 @@ nsIFrame* AnchorPositioningUtils::FindFirstAcceptableAnchor(
     const nsAtom* aName, const nsIFrame* aPositionedFrame,
     const nsTArray<nsIFrame*>& aPossibleAnchorFrames) {
   LazyAncestorHolder positionedFrameAncestorHolder(aPositionedFrame);
+  const auto* positionedContent = aPositionedFrame->GetContent();
+
   for (auto it = aPossibleAnchorFrames.rbegin();
        it != aPossibleAnchorFrames.rend(); ++it) {
+    const nsIFrame* possibleAnchorFrame = *it;
+    if (!DoTreeScopedPropertiesOfElementApplyToContent(
+            possibleAnchorFrame->GetContent(), positionedContent)) {
+      // Skip anchors in different shadow trees.
+      continue;
+    }
+
     // Check if the possible anchor is an acceptable anchor element.
     if (IsAcceptableAnchorElement(*it, aName, aPositionedFrame,
                                   positionedFrameAncestorHolder)) {
