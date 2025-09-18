@@ -684,6 +684,7 @@ class RelayOffered {
           if (await this.notifyServerTermsAcceptedAsync(browser)) {
             feature.markAsEnabled();
             fillUsername(await generateUsernameAsync(browser, origin));
+            Glean.relayIntegration.placedEmailMask.record({ value: gFlowId });
           }
         };
         for (const notificationToObserve of notificationsToObserve) {
@@ -793,6 +794,7 @@ class RelayOffered {
         if (await this.notifyServerTermsAcceptedAsync(browser)) {
           feature.markAsEnabled();
           fillUsername(await generateUsernameAsync(browser, origin));
+          Glean.relayIntegration.placedEmailMask.record({ value: gFlowId });
         }
       },
     };
@@ -882,6 +884,7 @@ class RelayEnabled {
   }
 
   async generateUsername(browser, origin) {
+    Glean.relayIntegration.placedEmailMask.record({ value: gFlowId });
     return generateUsernameAsync(browser, origin);
   }
 }

@@ -1217,7 +1217,10 @@ relay_integration:
   clicked_fill_username:
     type: event
     description: >
-      Firefox relay integration autocomplete popup
+      Firefox relay integration autocomplete popup.
+      Note: this event does NOT fire when a user places an email mask
+        during their first Relay opt-in flow.
+        So, we also fire `placed_email_mask`, defined below.
       This event was generated to correspond to the Legacy Telemetry event
       relay_integration.clicked#fill_username.
     bugs: *relay_integration_shown_bugs
@@ -1226,6 +1229,17 @@ relay_integration:
     expires: never
     extra_keys: *relay_integration_fill_username
     telemetry_mirror: Relay_integration_Clicked_FillUsername
+
+  placed_email_mask:
+    type: event
+    description: >
+        Recorded when a Firefox Relay mask is placed (filled) in a
+        form field, e.g., when the user selects a Relay-provided mask fromautocompleteautocomplete, or after successful opt-in.
+    bugs: *relay_integration_shown_bugs
+    data_reviews: *relay_integration_shown_data_reviews
+    notification_emails: *relay_integration_shown_emails
+    expires: never
+    extra_keys: *relay_integration_fill_username
 
   shown_reuse_panel:
     type: event
