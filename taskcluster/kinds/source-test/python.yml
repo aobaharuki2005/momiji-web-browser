@@ -18,6 +18,8 @@ task-defaults:
             linux2404-64.*:
                 docker-image: {in-tree: "lint"}
                 max-run-time: 3600
+                env:
+                    TASKGRAPH_SERIAL: "1"
             macosx.*:
                 max-run-time: 3600
                 env:
@@ -25,8 +27,11 @@ task-defaults:
                     # ensure we don't use internal pypi for these tasks
                     PIP_INDEX_URL: https://pypi.python.org/simple/
                     PIP_NO_INDEX: "0"
+                    TASKGRAPH_SERIAL: "1"
             default:
                 max-run-time: 3600
+                env:
+                    TASKGRAPH_SERIAL: "1"
     use-python: default
     treeherder:
         kind: test
