@@ -98,6 +98,7 @@ let px = number => number.toFixed(2) + "px";
 export class UrlbarInput {
   #allowBreakout = false;
   #breakoutBlockerCount = 0;
+  #eventTelemetryCategory;
   #userTypedValue;
 
   /**
@@ -135,6 +136,7 @@ export class UrlbarInput {
     this._suppressStartQuery = false;
     this._suppressPrimaryAdjustment = false;
     this._untrimmedValue = "";
+    this.#eventTelemetryCategory = eventTelemetryCategory;
 
     this.QueryInterface = ChromeUtils.generateQI([
       "nsIObserver",
@@ -1200,7 +1202,7 @@ export class UrlbarInput {
     let openParams = {
       allowInheritPrincipal: false,
       globalHistoryOptions: {
-        triggeringSource: "urlbar",
+        triggeringSource: this.#eventTelemetryCategory,
         triggeringSearchEngine: result.payload?.engine,
         triggeringSponsoredURL: result.payload?.isSponsored
           ? result.payload.url
@@ -1551,7 +1553,7 @@ export class UrlbarInput {
     if (result.payload.sendAttributionRequest) {
       lazy.PartnerLinkAttribution.makeRequest({
         targetURL: result.payload.url,
-        source: "urlbar",
+        source: this.#eventTelemetryCategory,
         campaignID: Services.prefs.getStringPref(
           "browser.partnerlink.campaign.topsites"
         ),
@@ -1995,7 +1997,10 @@ export class UrlbarInput {
       // TODO: record SAP telemetry, see Bug 1961789.
     } else {
       url = searchEngine.searchForm;
-      lazy.BrowserSearchTelemetry.recordSearchForm(searchEngine, "urlbar");
+      lazy.BrowserSearchTelemetry.recordSearchForm(
+        searchEngine,
+        this.#eventTelemetryCategory
+      );
     }
 
     this._lastSearchString = "";
@@ -2489,30 +2494,32 @@ export class UrlbarInput {
    *   The source name.
    */
   getSearchSource(event) {
-    if (this._isHandoffSession) {
-      return "urlbar-handoff";
-    }
+    if (this.isAddressbar) {
+      if (this._isHandoffSession) {
+        return "urlbar-handoff";
+      }
 
-    const isOneOff = this.view.oneOffSearchButtons?.eventTargetIsAOneOff(event);
-    if (this.searchMode && !isOneOff) {
-      // Without checking !isOneOff, we might record the string
-      // oneoff_urlbar-searchmode in the SEARCH_COUNTS probe (in addition to
-      // oneoff_urlbar and oneoff_searchbar). The extra information is not
-      // necessary; the intent is the same regardless of whether the user is
-      // in search mode when they do a key-modified click/enter on a one-off.
-      return "urlbar-searchmode";
-    }
+      const isOneOff =
+        this.view.oneOffSearchButtons?.eventTargetIsAOneOff(event);
+      if (this.searchMode && !isOneOff) {
+        // Without checking !isOneOff, we might record the string
+        // oneoff_urlbar-searchmode in the SEARCH_COUNTS probe (in addition to
+        // oneoff_urlbar and oneoff_searchbar). The extra information is not
+        // necessary; the intent is the same regardless of whether the user is
+        // in search mode when they do a key-modified click/enter on a one-off.
+        return "urlbar-searchmode";
+      }
 
-    let state = this.getBrowserState(this.window.gBrowser.selectedBrowser);
-    if (state.persist?.searchTerms && !isOneOff) {
-      // Normally, we use state.persist.shouldPersist to check if search terms
-      // persisted. However when the user modifies the search term, the boolean
-      // will become false. Thus, we check the presence of the search terms to
-      // know whether or not search terms ever persisted in the address bar.
-      return "urlbar-persisted";
+      let state = this.getBrowserState(this.window.gBrowser.selectedBrowser);
+      if (state.persist?.searchTerms && !isOneOff) {
+        // Normally, we use state.persist.shouldPersist to check if search terms
+        // persisted. However when the user modifies the search term, the boolean
+        // will become false. Thus, we check the presence of the search terms to
+        // know whether or not search terms ever persisted in the address bar.
+        return "urlbar-persisted";
+      }
     }
-
-    return "urlbar";
+    return this.#eventTelemetryCategory;
   }
 
   // Private methods below.

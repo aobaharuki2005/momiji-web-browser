@@ -1028,6 +1028,8 @@ class TelemetryEvent {
     let sap = "urlbar";
     if (searchSource === "urlbar-handoff") {
       sap = "handoff";
+    } else if (searchSource === "searchbar") {
+      sap = "searchbar";
     } else if (
       browserWindow.isBlankPageURL(browserWindow.gBrowser.currentURI.spec)
     ) {

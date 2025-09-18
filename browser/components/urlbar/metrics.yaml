@@ -24,7 +24,7 @@ urlbar:
         description: >
           `sap` is the meaning of `search access point`. It records where the
           user started the search action from. The possible values are: `urlbar`
-          , `handoff`, `urlbar_newtab` and `urlbar_addonpage`.
+          , `handoff`, `urlbar_newtab`, `urlbar_addonpage`, and `searchbar`.
         type: string
       interaction:
         description: >
@@ -194,7 +194,7 @@ urlbar:
         description: >
           `sap` is the meaning of `search access point`. It records where the
           user started the search action from. The possible values are: `urlbar`
-          , `handoff`, `urlbar_newtab` and `urlbar_addonpage`.
+          , `handoff`, `urlbar_newtab`, `urlbar_addonpage`, and `searchbar`.
         type: string
       interaction:
         description: >
@@ -315,7 +315,7 @@ urlbar:
         description: >
           `sap` is the meaning of `search access point`. It records where the
           user started the search action from. The possible values are: `urlbar`
-          , `handoff`, `urlbar_newtab` and `urlbar_addonpage`.
+          , `handoff`, `urlbar_newtab`, `urlbar_addonpage`, and `searchbar`.
         type: string
       interaction:
         description: >
@@ -403,7 +403,7 @@ urlbar:
         description: >
           `sap` is the meaning of `search access point`. It records where the
           user started the search action from. The possible values are: `urlbar`
-          , `handoff`, `urlbar_newtab` and `urlbar_addonpage`.
+          , `handoff`, `urlbar_newtab`, `urlbar_addonpage`, and `searchbar`.
         type: string
       interaction:
         description: >
