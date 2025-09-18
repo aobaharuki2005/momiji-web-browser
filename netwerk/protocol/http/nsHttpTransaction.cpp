@@ -178,7 +178,22 @@ nsresult nsHttpTransaction::Init(
 
   LOG1(("nsHttpTransaction::Init [this=%p caps=%x]\n", this, caps));
 
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+  bool isBeacon = false;
+  RefPtr<nsHttpChannel> httpChannel = do_QueryObject(eventsink);
+  if (httpChannel) {
+    // Beacons are sometimes sent in pagehide during browser shutdown.
+    // When that happens, we should allow the beacon to maybe succeed
+    // even though it's going to be racy (shutdown may finish first).
+    // See bug 1931956.
+    nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->LoadInfo();
+    if (loadInfo->InternalContentPolicyType() ==
+        nsIContentPolicy::TYPE_BEACON) {
+      isBeacon = true;
+    }
+  }
+
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed) &&
+      !isBeacon) {
     LOG(
         ("nsHttpTransaction aborting init because of app"
          "shutdown"));
@@ -349,7 +364,6 @@ nsresult nsHttpTransaction::Init(
     }
   }
 
-  RefPtr<nsHttpChannel> httpChannel = do_QueryObject(eventsink);
   if (httpChannel) {
     RefPtr<WebTransportSessionEventListener> listener =
         httpChannel->GetWebTransportSessionEventListener();
