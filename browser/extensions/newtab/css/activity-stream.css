@@ -4275,11 +4275,10 @@ main section {
   padding-block-end: calc(var(--space-xlarge) * 2);
 }
 .widgets-wrapper .widgets-scroll-message {
-  color: var(--newtab-text-primary-color);
+  color: var(--newtab-contextual-text-primary-color);
   position: absolute;
   bottom: 0;
   border-radius: var(--button-border-radius);
-  background: var(--button-background-color);
   padding: var(--space-small) var(--space-large);
 }
 .lightWallpaper .widgets-wrapper .widgets-scroll-message {
@@ -4399,7 +4398,7 @@ main section {
   position: absolute;
   inset-block-start: 50%;
   transform: translateY(-50%);
-  inset-inline-start: var(--space-xlarge);
+  inset-inline-start: calc(var(--space-medium) + var(--space-small));
 }
 .lists .add-task-container .icon.icon-add.icon-disabled {
   fill: var(--text-color-disabled);
@@ -4407,7 +4406,8 @@ main section {
 .lists .add-task-container .add-task-input {
   background: var(--button-background-color);
   padding-block: var(--space-small);
-  padding-inline: var(--space-xxlarge) var(--space-large);
+  padding-inline-start: calc(var(--space-large) * 2 + var(--space-xsmall));
+  padding-inline-end: var(--space-large);
   outline: none;
   border: none;
   border-radius: var(--border-radius-small);
@@ -4426,10 +4426,12 @@ main section {
 }
 .lists .task-list-wrapper {
   height: 100%;
+  padding-block-start: var(--space-xsmall);
 }
 .lists fieldset {
-  padding: 0 var(--space-medium);
-  margin: 0 var(--space-xsmall);
+  margin: 0;
+  padding-block: 0;
+  padding-inline: var(--space-medium);
   border: none;
   overflow-y: auto;
   max-height: 165px;
@@ -4438,16 +4440,13 @@ main section {
   align-items: center;
   background: transparent;
   border-radius: var(--border-radius-small);
-  padding: var(--space-xsmall);
   display: flex;
   justify-content: space-between;
   transition: opacity 300ms ease;
+  margin-block-end: var(--space-xsmall);
 }
 .lists .task-item.task-type-tasks:last-of-type {
   margin-block-end: var(--space-small);
-}
-.lists .task-item.task-type-completed:first-of-type {
-  margin-block-start: var(--space-small);
 }
 @media (prefers-reduced-motion: no-preference) {
   .lists .task-item.exiting {
@@ -4458,6 +4457,7 @@ main section {
   display: flex;
   align-items: center;
   flex-grow: 2;
+  padding-block: var(--space-small);
 }
 .lists .task-item .checkbox-wrapper span {
   -webkit-line-clamp: 3;
@@ -4471,6 +4471,8 @@ main section {
   height: var(--space-large);
   width: var(--space-large);
   accent-color: var(--button-background-color-primary);
+  margin-inline-start: var(--space-small);
+  padding: 0;
 }
 .lists .task-item .task-label {
   position: relative;
@@ -4481,7 +4483,7 @@ main section {
   text-decoration: line-through;
 }
 .lists .task-item moz-button {
-  align-self: flex-start;
+  margin-inline-end: var(--space-xsmall);
   visibility: hidden;
 }
 .lists .task-item moz-button:has(+ panel-list[open]) {
@@ -4512,7 +4514,7 @@ main section {
   align-items: center;
   gap: var(--space-small);
   height: 100%;
-  padding-block: var(--space-large);
+  padding-block-end: var(--space-medium);
 }
 .lightWallpaper .lists .empty-list {
   color-scheme: light;
@@ -4525,6 +4527,12 @@ main section {
   text-align: center;
   color: var(--text-color-deemphasized);
   font-size: var(--font-size-small);
+  padding-inline: var(--space-medium);
+}
+.lists .completed-task-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-small);
 }
 .lists .completed-task-wrapper summary {
   list-style: none;
