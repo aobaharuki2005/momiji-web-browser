@@ -4,7 +4,7 @@
 
 use api::{units::DeviceRect, ColorF};
 
-use crate::{clip::ClipStore, render_task_graph::{RenderTaskGraphBuilder, RenderTaskId}, renderer::GpuBufferBuilder, scene::SceneProperties, spatial_tree::SpatialTree};
+use crate::{clip::ClipStore, frame_builder::FrameBuilderConfig, render_task_graph::{RenderTaskGraphBuilder, RenderTaskId}, renderer::GpuBufferBuilder, scene::SceneProperties, spatial_tree::SpatialTree};
 
 #[repr(u32)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -68,6 +68,7 @@ impl PatternTextureInput {
 pub struct PatternBuilderContext<'a> {
     pub scene_properties: &'a SceneProperties,
     pub spatial_tree: &'a SpatialTree,
+    pub fb_config: &'a FrameBuilderConfig,
 }
 
 pub struct PatternBuilderState<'a> {
