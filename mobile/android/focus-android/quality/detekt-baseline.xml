@@ -9,7 +9,6 @@
     <ID>OutdatedDocumentation:AppState.kt$Screen</ID>
     <ID>OutdatedDocumentation:AppState.kt$Screen$Locked : Screen</ID>
     <ID>OutdatedDocumentation:DefaultTopSitesStorage.kt$DefaultTopSitesStorage : TopSitesStorageObservable</ID>
-    <ID>OutdatedDocumentation:FocusDialog.kt$@Suppress("LongParameterList") @Composable fun FocusDialog( dialogTitle: String, dialogTextComposable: @Composable (() -&gt; Unit)? = null, dialogText: String = "", onConfirmRequest: () -&gt; Unit, onDismissRequest: () -&gt; Unit, confirmButtonText: String = "null", dismissButtonText: String = "null", isConfirmButtonEnabled: Boolean = true, isDismissButtonEnabled: Boolean = true, isConfirmButtonVisible: Boolean = true, isDismissButtonVisible: Boolean = true, )</ID>
     <ID>OutdatedDocumentation:Language.kt$Language</ID>
     <ID>OutdatedDocumentation:LanguageListItem.kt$LanguageListItem</ID>
     <ID>OutdatedDocumentation:LanguageStorage.kt$LanguageStorage$fun saveCurrentLanguageInSharePref(languageTag: String)</ID>
@@ -264,9 +263,6 @@
     <ID>UndocumentedPublicFunction:FirstrunFragment.kt$FirstrunFragment.Companion$fun create(): FirstrunFragment</ID>
     <ID>UndocumentedPublicFunction:FirstrunPagerAdapter.kt$FirstrunPagerAdapter$fun getPageAccessibilityDescription(position: Int): String</ID>
     <ID>UndocumentedPublicFunction:FocusApplication.kt$FocusApplication$open fun updateLeakCanaryState(isEnabled: Boolean)</ID>
-    <ID>UndocumentedPublicFunction:FocusDialog.kt$@Composable fun FocusDialogSample()</ID>
-    <ID>UndocumentedPublicFunction:FocusDialog.kt$@Preview( name = "dark theme", showBackground = true, backgroundColor = 0xFF393473, uiMode = Configuration.UI_MODE_NIGHT_MASK, ) @Composable fun DialogTitlePreviewDark()</ID>
-    <ID>UndocumentedPublicFunction:FocusDialog.kt$@Preview( name = "light theme", showBackground = true, backgroundColor = 0xFFFBFBFE, uiMode = Configuration.UI_MODE_NIGHT_NO, ) @Composable fun DialogTitlePreviewLight()</ID>
     <ID>UndocumentedPublicFunction:FocusSnackbar.kt$FocusSnackbar$fun setText(text: String)</ID>
     <ID>UndocumentedPublicFunction:FocusTheme.kt$fun phoneDimensions()</ID>
     <ID>UndocumentedPublicFunction:FocusTheme.kt$fun tabletDimensions()</ID>
