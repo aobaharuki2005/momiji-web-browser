@@ -510,6 +510,18 @@ var gMKVtests = [
     type: "audio/matroska",
     duration: 1.0,
   },
+  // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libvpx output_vp8.mkv
+  {
+    name: "output_vp8.mkv",
+    type: "video/matroska",
+    duration: 1.0,
+  },
+  // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libvpx-vp9 -pix_fmt yuv420p output_vp9.mkv
+  {
+    name: "output_vp9.mkv",
+    type: "video/matroska",
+    duration: 1.0,
+  },
 ];
 
 // HEVC file can only be tested on the gpu worker which has hardware decoder
@@ -530,18 +542,6 @@ if (
 
 // The following files should be added to gMKVtests once they are supported.
 var gUnsupportedMKVtests = [
-  // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libvpx output_vp8.mkv
-  {
-    name: "output_vp8.mkv",
-    type: "video/matroska",
-    duration: 1.0,
-  },
-  // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libvpx-vp9 output_vp9.mkv
-  {
-    name: "output_vp9.mkv",
-    type: "video/matroska",
-    duration: 1.0,
-  },
   // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libaom-av1 output_av1.mkv
   {
     name: "output_av1.mkv",

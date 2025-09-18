@@ -73,6 +73,20 @@ nsTArray<UniquePtr<TrackInfo>> MatroskaDecoder::GetTracksInfo(
       tracks.AppendElement(std::move(trackInfo));
       continue;
     }
+    if (IsVP9CodecString(codec)) {
+      auto trackInfo =
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              "video/vp9"_ns, aType);
+      tracks.AppendElement(std::move(trackInfo));
+      continue;
+    }
+    if (IsVP8CodecString(codec)) {
+      auto trackInfo =
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              "video/vp8"_ns, aType);
+      tracks.AppendElement(std::move(trackInfo));
+      continue;
+    }
     aError = MediaResult(
         NS_ERROR_DOM_MEDIA_FATAL_ERR,
         RESULT_DETAIL("Unknown codec:%s", NS_ConvertUTF16toUTF8(codec).get()));
@@ -124,6 +138,12 @@ bool MatroskaDecoder::IsSupportedType(const MediaContainerType& aContainerType,
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
               "video/hevc"_ns, aContainerType));
     }
+    tracks.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+            "video/vp8"_ns, aContainerType));
+    tracks.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+            "video/vp9"_ns, aContainerType));
   }
 
   // Check that something is supported at least.

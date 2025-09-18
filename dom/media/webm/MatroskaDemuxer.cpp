@@ -8,6 +8,7 @@
 
 #include "H264.h"
 #include "H265.h"
+#include "VPXDecoder.h"
 #include "mozilla/glean/DomMediaMetrics.h"
 
 namespace mozilla {
@@ -108,6 +109,12 @@ nsresult MatroskaDemuxer::SetVideoCodecInfo(nestegg* aContext, int aTrackId) {
       }
       break;
     }
+    case NESTEGG_CODEC_VP8:
+      mInfo.mVideo.mMimeType = "video/vp8";
+      break;
+    case NESTEGG_CODEC_VP9:
+      mInfo.mVideo.mMimeType = "video/vp9";
+      break;
     default:
       NS_WARNING("Unknown Matroska video codec");
       return NS_ERROR_FAILURE;
@@ -235,6 +242,10 @@ bool MatroskaDemuxer::CheckKeyFrameByExamineByteStream(
       auto isKeyFrame = H265::IsKeyFrame(aSample);
       return isKeyFrame.isOk() ? isKeyFrame.unwrap() : false;
     }
+    case NESTEGG_CODEC_VP8:
+      return VPXDecoder::IsKeyframe(*aSample, VPXDecoder::Codec::VP8);
+    case NESTEGG_CODEC_VP9:
+      return VPXDecoder::IsKeyframe(*aSample, VPXDecoder::Codec::VP9);
     default:
       MOZ_ASSERT_UNREACHABLE(
           "Cannot detect keyframes in unknown Matroska video codec");
