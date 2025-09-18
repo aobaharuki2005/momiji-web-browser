@@ -56,6 +56,10 @@ class MockGraph : public MediaTrackGraphImpl {
     mOutputDeviceForAEC = aID;
   }
 
+  void ForceDefaultOutputDevice(CubebUtils::AudioDeviceID aID) {
+    mDefaultOutputDeviceID = aID;
+  }
+
   void UpdateEnumeratorDefaultDeviceTracking() override {}
 
   MOCK_CONST_METHOD0(OnGraphThread, bool());
@@ -736,6 +740,7 @@ TEST(TestAudioInputProcessing, PlatformProcessingSetSinkId)
   const TrackRate rate = 44100;
   const uint32_t channels = 1;
   auto graph = MakeRefPtr<NiceMock<MockGraph>>(rate);
+  graph->ForceDefaultOutputDevice(CubebUtils::AudioDeviceID(1));
   graph->ForceOutputDeviceForAEC(CubebUtils::AudioDeviceID(2));
   graph->Init(channels);
   ASSERT_EQ(graph->PrimaryOutputDeviceID(), nullptr);
@@ -788,7 +793,7 @@ TEST(TestAudioInputProcessing, PlatformProcessingSetSinkId)
   const GraphTime frames = MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(100);
   AudioGenerator<AudioDataValue> generator(channels, rate);
 
-  graph->ForceOutputDeviceForAEC(nullptr);
+  graph->ForceOutputDeviceForAEC(CubebUtils::AudioDeviceID(1));
   GraphTime processedTime = 0, nextTime = 0;
   {
     AudioSegment input, output;

@@ -591,9 +591,18 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * output device, and the output device used for the aec reverse stream is
    * explicit and matches the current system default output device. */
   bool OutputForAECIsPrimary() {
-    // TODO: Fix implicit case.
     AssertOnGraphThread();
-    return mOutputDeviceForAEC == PrimaryOutputDeviceID();
+    if (mOutputDeviceForAEC == PrimaryOutputDeviceID()) {
+      // Output device for AEC is explicitly the primary output device, which is
+      // used for the duplex stream of the graph driver.
+      return true;
+    }
+    // The output device for AEC is still considered primary if the primary
+    // output device is set to follow the system default output device, and the
+    // output device for AEC is explicitly the current system default output
+    // device.
+    return PrimaryOutputDeviceID() == DEFAULT_OUTPUT_DEVICE &&
+           mOutputDeviceForAEC == mDefaultOutputDeviceID;
   }
   CubebUtils::AudioDeviceID DefaultOutputDeviceID() const {
     return mDefaultOutputDeviceID.load(std::memory_order_relaxed);
