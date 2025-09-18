@@ -138,6 +138,7 @@
 ::before::marker,
 ::after::marker {
   text-align: end;
+  text-align-last: end;
   text-transform: none;
   unicode-bidi: isolate;
   font-variant-numeric: tabular-nums;
