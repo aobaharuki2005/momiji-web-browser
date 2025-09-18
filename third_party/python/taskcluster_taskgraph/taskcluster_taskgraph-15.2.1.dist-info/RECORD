@@ -4,7 +4,7 @@ taskgraph/create.py,sha256=tHz0ErolW8U-mSDnSq8wJICKOxK1aMnIdUWAyhrc-JQ,5299
 taskgraph/decision.py,sha256=dcl2NnbkKUfKVFDSVkKEHRub0wXcP2P0jxrxlFjrnLY,14091
 taskgraph/docker.py,sha256=lKMK0CDvsVGKwxKRT5kk7UX9G6bfU0rKGtPtOkSf93E,13586
 taskgraph/filter_tasks.py,sha256=R7tYXiaVPGIkQ6O1c9-QJrKZ59m9pFXCloUlPraVnZU,866
-taskgraph/generator.py,sha256=E-P7e3mDlB_s8updC291njYpayRYPvpePIt0WgOX-AY,16673
+taskgraph/generator.py,sha256=_VQ0CZC2y_0Cab042EHhqjyWsmi3wjGHOAsljd_G7hg,20414
 taskgraph/graph.py,sha256=qvihwxxdc3C55ZJ5FLc2phFV0D7oZNXKXEHBIA_GI1U,4696
 taskgraph/main.py,sha256=aX3xc07r8SqtwokhXf08y_HOPzeN3t6PsXWNFPzhksY,32895
 taskgraph/morph.py,sha256=lK5mBjhnMlL--ucUUeqMg21aXmCfiUmTUo3wDvtxkoQ,9215
@@ -74,8 +74,8 @@ taskgraph/util/vcs.py,sha256=4HeyFK0LKygeLfVi087_EpE7EPkel8PiFBtIvlOpiWI,19810
 taskgraph/util/verify.py,sha256=V5MyL5UaxrX9SeLJZU9S1OEvfovvxWXu4oj77swmkxk,9577
 taskgraph/util/workertypes.py,sha256=dR5NkwvmcY-no_I4l22mw93EKyvGbe_Xv7N9hzkiG1U,2570
 taskgraph/util/yaml.py,sha256=29h6RE7JA4z0U2V3WCu-S39lPMBS9CEZEglv1delDvw,1075
-taskcluster_taskgraph-15.1.4.dist-info/METADATA,sha256=WbAxa_Z-wcZ7727-nlhKy5RBMFo-biYKW3PIzIjkYPE,5001
-taskcluster_taskgraph-15.1.4.dist-info/WHEEL,sha256=qtCwoSJWgHk21S1Kb4ihdzI2rlJ1ZKaIurTj_ngOhyQ,87
-taskcluster_taskgraph-15.1.4.dist-info/entry_points.txt,sha256=2hxDzE3qq_sHh-J3ROqwpxgQgxO-196phWAQREl2-XA,50
-taskcluster_taskgraph-15.1.4.dist-info/licenses/LICENSE,sha256=HyVuytGSiAUQ6ErWBHTqt1iSGHhLmlC8fO7jTCuR8dU,16725
-taskcluster_taskgraph-15.1.4.dist-info/RECORD,,
+taskcluster_taskgraph-15.2.1.dist-info/METADATA,sha256=nzWmOD0TJiPp76e1dNoY_cJysMG6oKs-FqmG0tSVy-c,5001
+taskcluster_taskgraph-15.2.1.dist-info/WHEEL,sha256=qtCwoSJWgHk21S1Kb4ihdzI2rlJ1ZKaIurTj_ngOhyQ,87
+taskcluster_taskgraph-15.2.1.dist-info/entry_points.txt,sha256=2hxDzE3qq_sHh-J3ROqwpxgQgxO-196phWAQREl2-XA,50
+taskcluster_taskgraph-15.2.1.dist-info/licenses/LICENSE,sha256=HyVuytGSiAUQ6ErWBHTqt1iSGHhLmlC8fO7jTCuR8dU,16725
+taskcluster_taskgraph-15.2.1.dist-info/RECORD,,
