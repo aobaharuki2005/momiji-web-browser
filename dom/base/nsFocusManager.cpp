@@ -3937,7 +3937,7 @@ void ScopedContentTraversal::Prev() {
   SetCurrent(parent == mOwner ? nullptr : parent);
 }
 
-static bool IsOpenPopoverWithInvoker(const nsIContent* aContent) {
+static bool IsOpenPopoverWithInvoker(nsIContent* aContent) {
   if (auto* popover = Element::FromNode(aContent)) {
     return popover && popover->IsPopoverOpen() &&
            popover->GetPopoverData()->GetInvoker();
@@ -3967,41 +3967,22 @@ static nsIContent* InvokerForPopoverShowingState(nsIContent* aContent) {
 }
 
 /**
- * Returns true if the content is a Document, Host, Slot or Open popover with an
- * invoker */
-static bool IsScopeOwner(const nsIContent* aContent) {
-  return aContent && (IsHostOrSlot(aContent) || aContent->IsDocument() ||
-                      IsOpenPopoverWithInvoker(aContent));
-}
-
-/**
  * Returns scope owner of aContent.
- * A scope owner is either a shadow host, or slot, or an open popover with a
- * trigger. See https://html.spec.whatwg.org/#focus-navigation-scope-owner.
- * While FindScopeOwner adheres to this part of the spec, some issues remain
- * especially around tabindex; see
- * https://bugzilla.mozilla.org/show_bug.cgi?id=1955857.
+ * A scope owner is either a shadow host, or slot.
  */
 static nsIContent* FindScopeOwner(nsIContent* aContent) {
   nsIContent* currentContent = aContent;
   while (currentContent) {
     nsIContent* parent = currentContent->GetFlattenedTreeParent();
 
-    // 2. If element's parent is a shadow host, then return element's assigned
-    // slot.
-    // 3. If element's parent is a shadow root, then return the parent's host.
-    // 4. If element's parent is the document element, then return the parent's
-    // node document.
-    // 5. If element is in the popover showing state and has a popover trigger
-    // set, then return element's popover trigger.
-    if (IsScopeOwner(parent)) {
+    // Shadow host / Slot
+    if (IsHostOrSlot(parent)) {
       return parent;
     }
 
     currentContent = parent;
   }
 
-  // 1. If element's parent is null, then return null.
   return nullptr;
 }
 
@@ -4188,13 +4169,12 @@ nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
     bool* aIgnoreTabIndex, bool aForDocumentNavigation, bool aNavigateByKey,
     bool aReachedToEndForDocumentNavigation) {
   MOZ_ASSERT(aStartOwner == FindScopeOwner(aStartContent),
-             "aStartOwner should be the scope owner of aStartContent");
-  MOZ_ASSERT(IsScopeOwner(aStartOwner),
-             "scope owner should be host, slot, or popover");
+             "aStartOWner should be the scope owner of aStartContent");
+  MOZ_ASSERT(IsHostOrSlot(aStartOwner), "scope owner should be host or slot");
 
   nsCOMPtr<nsIContent> owner = aStartOwner;
   nsCOMPtr<nsIContent> startContent = aStartContent;
-  while (IsScopeOwner(owner)) {
+  while (IsHostOrSlot(owner)) {
     int32_t tabIndex = 0;
     if (IsHostOrSlot(startContent)) {
       tabIndex = HostOrSlotTabIndexValue(startContent);
@@ -4207,7 +4187,7 @@ nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
         owner, startContent, aOriginalStartContent, aForward, tabIndex,
         tabIndex < 0, aForDocumentNavigation, aNavigateByKey,
         false /* aSkipOwner */, aReachedToEndForDocumentNavigation);
-    if (contentToFocus && contentToFocus != aStartContent) {
+    if (contentToFocus) {
       return contentToFocus;
     }
 
@@ -4218,13 +4198,7 @@ nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
   // If not found in shadow DOM, search from the top level shadow host in light
   // DOM
   aStartContent = startContent;
-  if (IsHostOrSlot(startContent)) {
-    *aCurrentTabIndex = HostOrSlotTabIndexValue(startContent);
-  } else if (nsIFrame* frame = startContent->GetPrimaryFrame()) {
-    *aCurrentTabIndex = frame->IsFocusable().mTabIndex;
-  } else {
-    *aCurrentTabIndex = startContent->IsFocusableWithoutStyle().mTabIndex;
-  }
+  *aCurrentTabIndex = HostOrSlotTabIndexValue(startContent);
 
   if (*aCurrentTabIndex < 0) {
     *aIgnoreTabIndex = true;
@@ -4304,8 +4278,8 @@ nsresult nsFocusManager::GetNextTabbableContent(
     }
   }
 
-  // If startContent is in a scope owned by Shadow DOM or popover, search
-  // from scope including startContent
+  // If startContent is in a scope owned by Shadow DOM search from scope
+  // including startContent
   if (nsCOMPtr<nsIContent> owner = FindScopeOwner(startContent)) {
     nsIContent* contentToFocus = GetNextTabbableContentInAncestorScopes(
         owner, startContent /* inout */, aOriginalStartContent, aForward,
@@ -4317,9 +4291,9 @@ nsresult nsFocusManager::GetNextTabbableContent(
     }
   }
 
-  // If we reach here, it means no next tabbable content in shadow DOM or
-  // popover. We need to continue searching in light DOM, starting at the top
-  // level shadow host in light DOM (updated startContent) and its tabindex
+  // If we reach here, it means no next tabbable content in shadow DOM.
+  // We need to continue searching in light DOM, starting at the top level
+  // shadow host in light DOM (updated startContent) and its tabindex
   // (updated aCurrentTabIndex).
   MOZ_ASSERT(!FindScopeOwner(startContent),
              "startContent should not be owned by Shadow DOM at this point");
