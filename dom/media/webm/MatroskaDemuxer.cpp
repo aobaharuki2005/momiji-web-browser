@@ -9,6 +9,7 @@
 #include "H264.h"
 #include "H265.h"
 #include "VPXDecoder.h"
+#include "XiphExtradata.h"
 #include "mozilla/glean/DomMediaMetrics.h"
 
 namespace mozilla {
@@ -208,6 +209,29 @@ nsresult MatroskaDemuxer::SetAudioCodecInfo(
           headers[0], headerLens[0]);
       mInfo.mAudio.mCodecSpecificConfig =
           AudioCodecSpecificVariant{std::move(aacCodecSpecificData)};
+      break;
+    }
+    case NESTEGG_CODEC_VORBIS: {
+      mInfo.mAudio.mCodecSpecificConfig =
+          AudioCodecSpecificVariant{VorbisCodecSpecificData{}};
+      mInfo.mAudio.mMimeType = "audio/vorbis";
+      AutoTArray<const unsigned char*, 4> headers;
+      AutoTArray<size_t, 4> headerLens;
+      nsresult rv =
+          GetCodecPrivateData(aContext, aTrackId, &headers, &headerLens);
+      if (NS_FAILED(rv)) {
+        MKV_DEBUG("GetCodecPrivateData error for vorbis");
+        return rv;
+      }
+      // Vorbis has 3 headers, convert to Xiph extradata format to send them to
+      // the demuxer.
+      RefPtr<MediaByteBuffer> audioCodecSpecificBlob =
+          GetAudioCodecSpecificBlob(mInfo.mAudio.mCodecSpecificConfig);
+      if (!XiphHeadersToExtradata(audioCodecSpecificBlob, headers,
+                                  headerLens)) {
+        MKV_DEBUG("Couldn't parse Xiph headers");
+        return NS_ERROR_FAILURE;
+      }
       break;
     }
     case NESTEGG_CODEC_OPUS: {
