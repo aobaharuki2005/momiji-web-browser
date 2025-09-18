@@ -54,6 +54,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
 #include "pk11pub.h"
+#include "plbase64.h"
 #include "runnable_utils.h"
 
 // nICEr includes
@@ -78,7 +79,6 @@ extern "C" {
 }
 
 // Local includes
-#include "mozilla/Base64.h"
 #include "nr_socket_prsock.h"
 #include "nricectx.h"
 #include "nricemediastream.h"
@@ -1116,9 +1116,9 @@ void nr_ice_compute_codeword(char* buf, int len, char* codeword) {
   UINT4 c;
 
   r_crc32(buf, len, &c);
-  [[maybe_unused]] nsresult nr = mozilla::Base64Encode(
-      reinterpret_cast<char*>(&c), 3, mozilla::Span(codeword, 4));
-  MOZ_ASSERT(NS_SUCCEEDED(nr));
+
+  PL_Base64Encode(reinterpret_cast<char*>(&c), 3, codeword);
+  codeword[4] = 0;
 }
 
 int nr_socket_local_create(void* obj, nr_transport_addr* addr,
