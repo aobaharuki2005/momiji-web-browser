@@ -94,7 +94,7 @@ use crate::tile_cache::PictureCacheDebugInfo;
 use crate::util::drain_filter;
 use crate::rectangle_occlusion as occlusion;
 #[cfg(feature = "debugger")]
-use crate::debugger::Debugger;
+use crate::debugger::{Debugger, DebugQueryKind};
 use upload::{upload_to_texture_cache, UploadTexturePool};
 use init::*;
 
@@ -1283,8 +1283,23 @@ impl Renderer {
                 panic!("Should be handled by render backend");
             }
             #[cfg(feature = "debugger")]
-            DebugCommand::Query(_) => {
-                panic!("Should be handled by render backend");
+            DebugCommand::Query(ref query) => {
+                match query.kind {
+                    DebugQueryKind::SpatialTree { .. } => {
+                        panic!("Should be handled by render backend");
+                    }
+                    DebugQueryKind::Compositor { .. } => {
+                        let result = match self.active_documents.iter().last() {
+                            Some((_, doc)) => {
+                                doc.frame.composite_state.print_to_string()
+                            }
+                            None => {
+                                "No active documents".into()
+                            }
+                        };
+                        query.result.send(result).ok();
+                    }
+                }
             }
             DebugCommand::SaveCapture(..) |
             DebugCommand::LoadCapture(..) |

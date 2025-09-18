@@ -29,9 +29,9 @@ use sha1::{Sha1, Digest};
 #[derive(Clone)]
 pub enum DebugQueryKind {
     /// Query the current spatial tree
-    SpatialTree {
-
-    },
+    SpatialTree {},
+    /// Query the compositing config
+    Compositor {},
 }
 
 /// Details about the debug query being requested
@@ -196,25 +196,29 @@ pub fn start(api: RenderApi) {
                 }
                 "/query" => {
                     // Query internal state about WR.
-                    match args.get("type").map(|s| s.as_str()) {
-                        Some("spatial-tree") => {
-                            let (tx, rx) = crossbeam_channel::unbounded();
-                            let query = DebugQuery {
-                                result: tx,
-                                kind: DebugQueryKind::SpatialTree {
+                    let (tx, rx) = crossbeam_channel::unbounded();
 
-                                },
-                            };
-                            api.send_debug_cmd(
-                                DebugCommand::Query(query)
-                            );
-                            let result = rx.recv().expect("no response");
-                            request.respond(Response::from_string(result)).ok();
-                        }
+                    let kind = match args.get("type").map(|s| s.as_str()) {
+                        Some("spatial-tree") => DebugQueryKind::SpatialTree {},
+                        Some("composite-config") => DebugQueryKind::Compositor {},
                         _ => {
                             request.respond(Response::from_string("Unknown query")).ok();
+                            return;
                         }
-                    }
+                    };
+
+                    let query = DebugQuery {
+                        result: tx,
+                        kind,
+                    };
+                    api.send_debug_cmd(
+                        DebugCommand::Query(query)
+                    );
+                    let result = match rx.recv() {
+                        Ok(result) => result,
+                        Err(..) => "No response received from WR".into(),
+                    };
+                    request.respond(Response::from_string(result)).ok();
                 }
                 "/debugger-socket" => {
                     // Connect to a realtime stream of events from WR. This is handled
