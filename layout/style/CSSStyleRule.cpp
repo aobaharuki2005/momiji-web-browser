@@ -389,7 +389,7 @@ already_AddRefed<nsINodeList> CSSStyleRule::QuerySelectorAll(nsINode& aRoot) {
 
 StylePropertyMap* CSSStyleRule::StyleMap() {
   if (!mStyleMap) {
-    mStyleMap = MakeRefPtr<StylePropertyMap>(this);
+    mStyleMap = MakeRefPtr<StylePropertyMap>(this, /* aComputed */ false);
   }
 
   return mStyleMap;

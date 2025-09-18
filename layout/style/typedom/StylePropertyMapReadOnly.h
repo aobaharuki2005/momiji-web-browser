@@ -32,7 +32,7 @@ class OwningUndefinedOrCSSStyleValue;
 
 class StylePropertyMapReadOnly : public nsISupports, public nsWrapperCache {
  public:
-  explicit StylePropertyMapReadOnly(nsCOMPtr<nsISupports> aParent);
+  StylePropertyMapReadOnly(nsCOMPtr<nsISupports> aParent, bool aComputed);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(StylePropertyMapReadOnly)
@@ -69,6 +69,7 @@ class StylePropertyMapReadOnly : public nsISupports, public nsWrapperCache {
   virtual ~StylePropertyMapReadOnly() = default;
 
   nsCOMPtr<nsISupports> mParent;
+  const bool mComputed;
 };
 
 }  // namespace dom

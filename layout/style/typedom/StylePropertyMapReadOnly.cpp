@@ -6,18 +6,24 @@
 
 #include "mozilla/dom/StylePropertyMapReadOnly.h"
 
+#include "CSSUnsupportedValue.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/CSSStyleValue.h"
 #include "mozilla/dom/StylePropertyMapReadOnlyBinding.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsICSSDeclaration.h"
+#include "nsQueryObject.h"
 #include "nsReadableUtils.h"
+#include "nsString.h"
+#include "nsStyledElement.h"
 
 namespace mozilla::dom {
 
 StylePropertyMapReadOnly::StylePropertyMapReadOnly(
-    nsCOMPtr<nsISupports> aParent)
-    : mParent(std::move(aParent)) {
+    nsCOMPtr<nsISupports> aParent, bool aComputed)
+    : mParent(std::move(aParent)), mComputed(aComputed) {
   MOZ_ASSERT(mParent);
 }
 
@@ -41,16 +47,54 @@ JSObject* StylePropertyMapReadOnly::WrapObject(
 
 // start of StylePropertyMapReadOnly Web IDL implementation
 
+// XXX This is not yet fully implemented and optimized!
 void StylePropertyMapReadOnly::Get(const nsACString& aProperty,
                                    OwningUndefinedOrCSSStyleValue& aRetVal,
                                    ErrorResult& aRv) const {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  if (mComputed) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return;
+  }
+
+  // Step 3.
+
+  RefPtr<nsStyledElement> styledElement = do_QueryObject(mParent);
+  if (!styledElement) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return;
+  }
+
+  nsCOMPtr<nsICSSDeclaration> declaration = styledElement->Style();
+
+  nsCString value;
+  declaration->GetPropertyValue(aProperty, value);
+
+  // Step 4.
+
+  if (!value.IsEmpty()) {
+    auto unsupportedValue = MakeRefPtr<CSSUnsupportedValue>(mParent, value);
+
+    aRetVal.SetAsCSSStyleValue() = std::move(unsupportedValue);
+  } else {
+    aRetVal.SetUndefined();
+  }
 }
 
+// XXX This is not yet fully implemented and optimized!
 void StylePropertyMapReadOnly::GetAll(const nsACString& aProperty,
                                       nsTArray<RefPtr<CSSStyleValue>>& aRetVal,
                                       ErrorResult& aRv) const {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  OwningUndefinedOrCSSStyleValue retVal;
+
+  Get(aProperty, retVal, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (retVal.IsCSSStyleValue()) {
+    auto styleValue = retVal.GetAsCSSStyleValue();
+    aRetVal.AppendElement(styleValue);
+  }
 }
 
 bool StylePropertyMapReadOnly::Has(const nsACString& aProperty,

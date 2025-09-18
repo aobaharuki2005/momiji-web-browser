@@ -5322,7 +5322,8 @@ StylePropertyMapReadOnly* Element::ComputedStyleMap() {
   nsDOMSlots* slots = DOMSlots();
 
   if (!slots->mComputedStyleMap) {
-    slots->mComputedStyleMap = MakeRefPtr<StylePropertyMapReadOnly>(this);
+    slots->mComputedStyleMap =
+        MakeRefPtr<StylePropertyMapReadOnly>(this, /* aComputed */ true);
   }
 
   return slots->mComputedStyleMap;
