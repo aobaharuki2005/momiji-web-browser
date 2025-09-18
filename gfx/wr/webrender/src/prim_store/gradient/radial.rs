@@ -29,7 +29,8 @@ use crate::renderer::{GpuBufferAddress, GpuBufferBuilder};
 use std::{hash, ops::{Deref, DerefMut}};
 use super::{
     stops_and_min_alpha, GradientStopKey, GradientGpuBlockBuilder,
-    apply_gradient_local_clip, write_gpu_gradient_stops, gpu_gradient_stops_blocks,
+    apply_gradient_local_clip, gpu_gradient_stops_blocks,
+    write_gpu_gradient_stops_linear, write_gpu_gradient_stops_tree,
 };
 
 /// Hashable radial gradient parameters, for use during prim interning.
@@ -124,6 +125,7 @@ impl PatternBuilder for RadialGradientTemplate {
                 &self.params,
                 self.extend_mode,
                 &self.stops,
+                ctx.fb_config.is_software,
                 state.frame_gpu_data,
             )
         } else {
@@ -624,9 +626,10 @@ pub fn radial_gradient_pattern(
     params: &RadialGradientParams,
     extend_mode: ExtendMode,
     stops: &[GradientStop],
+    is_software: bool,
     gpu_buffer_builder: &mut GpuBufferBuilder
 ) -> Pattern {
-    let num_blocks = 2 + gpu_gradient_stops_blocks(stops.len());
+    let num_blocks = 2 + gpu_gradient_stops_blocks(stops.len(), !is_software);
     let mut writer = gpu_buffer_builder.f32.write_blocks(num_blocks);
     writer.push_one([
         center.x,
@@ -640,7 +643,18 @@ pub fn radial_gradient_pattern(
         params.ratio_xy,
         0.0,
     ]);
-    let is_opaque = write_gpu_gradient_stops(stops, GradientKind::Radial, extend_mode, &mut writer);
+
+    let is_opaque = if is_software {
+        // The SWGL span shaders for precise gradients can incrementally search
+        // through the stops (each search starts from where the previous one
+        // landed). So it is more efficient to store them linearly in this
+        // configuration.
+        write_gpu_gradient_stops_linear(stops, GradientKind::Radial, extend_mode, &mut writer)
+    } else {
+        // On GPUs, each pixel does its own search so we greatly benefit from
+        // the tree traversal, especially when there are many stops.
+        write_gpu_gradient_stops_tree(stops, GradientKind::Radial, extend_mode, &mut writer)
+    };
     let gradient_address = writer.finish();
 
     Pattern {

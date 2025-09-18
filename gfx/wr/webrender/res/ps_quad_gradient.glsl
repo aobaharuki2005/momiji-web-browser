@@ -182,79 +182,104 @@ float apply_extend_mode(float offset) {
 // Sample the gradient using a sequence of gradient stops located at the provided
 // addresses.
 //
-// See the comment above `prim_store::gradient::write_gpu_gradient_stops` about
+// See the comment above `prim_store::gradient::write_gpu_gradient_stops_tree` about
 // the layout of the gradient data in the gpu buffer.
-//
-// This function expects that:
-//  - Offset is between 0 and 1.
-//  - Stop offsets are in increasing order.
-vec4 sample_gradient_stops(float offset) {
+vec4 sample_gradient_stops_tree(float offset) {
     int count = v_gradient_header.y;
     int colors_addr = v_gradient_header.w;
-    // Current stop offset address.
-    int addr = colors_addr + count;
-
-    // Index of the first gradient stop that is after
-    // the current offset.
+    // Address of the current level
+    int level_base_addr = colors_addr + count;
+    // Number of blocks of 4 indices for the current level.
+    // At the root, a single block is stored. Each level stores
+    // 5 times more blocks than the previous one.
+    int level_stride = 1;
+    // Relative address within the current level.
+    int offset_in_level = 0;
+    // Current gradient stop index.
     int index = 0;
+    // The index distance between consecutive stop offsets at
+    // the current level. At the last level, the stride is 1.
+    // each has a 5 times more stride than the next (so the
+    // index stride starts high and is devided by 5 at each
+    // iteration).
+    int index_stride = 1;
+    while (index_stride * 5 <= count) {
+        index_stride *= 5;
+    }
 
-    // Loop over the gradient stop offsets by fetching them four at a time
-    // until we find the pair of gradient stops that affect the current pixel.
+    // The offsets of the stops before and after the target offset.
+    // They will converge to the correct values as the tree is
+    // traversed.
+    float prev_offset = 1.0;
+    float next_offset = 0.0;
 
-    // Fetch the first offsets from varyings instead of reading them from the
-    // the gpu bufer.
-    vec4 stop_offsets = v_stop_offsets;
-    float prev_stop_offset = stop_offsets.x;
-    float stop_offset = stop_offsets.x;
+    // First offsets are the root level.
+    vec4 current_stops = v_stop_offsets;
 
-    while (index < count) {
-        prev_stop_offset = stop_offset;
-        stop_offset = stop_offsets.x;
-        if (stop_offset > offset) { break; }
-        index += 1;
+    // This could be a while(true) since we are going to exit this loop
+    // its break statement, but we get miscompilations with while(true)
+    // so instead we put a dummy condition that always evaluates to true.
+    while (index_stride > 0) {
+        // Determine which of the five partitions (sub-trees)
+        // to take next.
+        int next_partition = 4;
+        if (current_stops.x > offset) {
+            next_partition = 0;
+            next_offset = current_stops.x;
+        } else if (current_stops.y > offset) {
+            next_partition = 1;
+            prev_offset = current_stops.x;
+            next_offset = current_stops.y;
+        } else if (current_stops.z > offset) {
+            next_partition = 2;
+            prev_offset = current_stops.y;
+            next_offset = current_stops.z;
+        } else if (current_stops.w > offset) {
+            next_partition = 3;
+            prev_offset = current_stops.z;
+            next_offset = current_stops.w;
+        } else {
+            prev_offset = current_stops.w;
+        }
 
-        prev_stop_offset = stop_offset;
-        stop_offset = stop_offsets.y;
-        if (stop_offset > offset) { break; }
-        index += 1;
+        index += next_partition * index_stride;
 
-        prev_stop_offset = stop_offset;
-        stop_offset = stop_offsets.z;
-        if (stop_offset > offset) { break; }
-        index += 1;
-
-        prev_stop_offset = stop_offset;
-        stop_offset = stop_offsets.w;
-        if (stop_offset > offset) { break; }
-        index += 1;
-
-        addr += 1;
-        if (index >= count) {
-            // If we exit the loop through here, it means that there isn't a
-            // gradient stop after the current offset. In this case we must
-            // use the color of the last gradient stop. We do so by noticing
-            // that the index is greater or equal to the stop count and set
-            // the interpolation factor to 1.0.
+        if (index_stride == 1) {
+            // If the index stride is 1, we visited a leaf,
+            // we are done.
             break;
         }
 
-        stop_offsets = fetch_from_gpu_buffer_1f(addr);
+        index_stride /= 5;
+        level_base_addr += level_stride;
+        level_stride *= 5;
+        offset_in_level = offset_in_level * 5 + next_partition;
+
+        // Fetch new offsets for the next iteration.
+        current_stops = fetch_from_gpu_buffer_1f(level_base_addr + offset_in_level);
     }
 
-    int color_pair_address = colors_addr + min(max(1, index), count - 1) - 1;
-    vec4 color_pair[2] = fetch_from_gpu_buffer_2f(color_pair_address);
-
-    // If we are before the first gradient stop, stop_offset and prev_stop_offset
+    // If we are before the first gradient stop, next_offset and prev_offset
     // will be equal, in which case we want the contribution of the first stop, so
     // the interpolaiton factor remains zero.
-    float d = stop_offset - prev_stop_offset;
+    float d = next_offset - prev_offset;
     float factor = 0.0;
     if (index >= count) {
         // The current offset is after the last gradient stop.
         factor = 1.0;
     } else if (d > 0.0) {
-        factor = clamp((offset - prev_stop_offset) / d, 0.0, 1.0);
+        factor = clamp((offset - prev_offset) / d, 0.0, 1.0);
     }
+
+    // TODO: This is clamp(index, 1, count - 1) but swgl
+    // does not have the clamp overload for ints.
+    if (index < 1) {
+        index = 1;
+    } else if (index > count - 1) {
+        index = count - 1;
+    }
+    int color_pair_address = colors_addr + index - 1;
+    vec4 color_pair[2] = fetch_from_gpu_buffer_2f(color_pair_address);
 
     // Interpolate and apply dithering.
     return dither(mix(color_pair[0], color_pair[1], factor));
@@ -334,7 +359,7 @@ vec4 pattern_fragment(vec4 color) {
     if (stop_count <= 2) {
         color *= sample_gradient_stops_fast(offset);
     } else {
-        color *= sample_gradient_stops(offset);
+        color *= sample_gradient_stops_tree(offset);
     }
 
     return color;
@@ -347,11 +372,18 @@ void swgl_drawSpanRGBA8() {
     }
 
     int stop_count = v_gradient_header.y;
-    int colors_addr = swgl_validateGradient(sGpuBufferF, get_gpu_buffer_uv(v_gradient_header.w),
+    int colors_address = v_gradient_header.w;
+    int colors_addr = swgl_validateGradient(sGpuBufferF, get_gpu_buffer_uv(colors_address),
                                             stop_count);
-    int offsets_addr = swgl_validateGradient(sGpuBufferF, get_gpu_buffer_uv(v_gradient_header.z + stop_count),
+    int offsets_addr = swgl_validateGradient(sGpuBufferF, get_gpu_buffer_uv(colors_address + stop_count),
                                              stop_count);
     if (offsets_addr < 0 || colors_addr < 0) {
+        // The gradient is invalid, this should not happen. We can't fall back to
+        // the regular shader code because it expects the gradient stop offsets
+        // to be laid out for a tree traversal but we laid them out linearly because
+        // that's the fastest way for the span shader.
+        // Replace the gradient with a pink solid color.
+        swgl_commitSolidRGBA8(vec4(1.0, 0.0, 1.0, 1.0));
         return;
     }
 
