@@ -208,7 +208,6 @@ def assert_ordered_task_outcomes(objdir, ordered_expected_task_statuses):
 
 def test_artifact_build(objdir, mozconfig, run_mach):
     (returncode, output) = run_mach(["build"])
-
     assert returncode == 0
 
     # Order matters, since `mach build stage-package` depends on the
@@ -260,6 +259,24 @@ def test_minify_fenix_incremental_build(objdir, mozconfig, run_mach):
     assert_ordered_task_outcomes(
         objdir, [(":fenix:minifyFenixReleaseWithR8", "UP-TO-DATE")]
     )
+
+
+def test_geckoview_build(objdir, mozconfig, run_mach):
+    (returncode, output) = run_mach(["build"])
+    assert returncode == 0
+
+    (returncode, output) = run_mach(["gradle", "geckoview:clean"])
+    assert returncode == 0
+
+    (returncode, output) = run_mach(["gradle", "geckoview:assembleDebug"])
+    assert returncode == 0
+
+    assert_all_task_statuses(objdir, ["EXECUTED", "UP-TO-DATE", "SKIPPED"])
+
+    (returncode, output) = run_mach(["gradle", "geckoview:assembleDebug"])
+    assert returncode == 0
+
+    assert_all_task_statuses(objdir, ["UP-TO-DATE", "SKIPPED"])
 
 
 if __name__ == "__main__":
