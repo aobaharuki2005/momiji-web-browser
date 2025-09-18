@@ -1134,6 +1134,21 @@ class SystemResourceMonitor:
                             },
                         ],
                     },
+                    {
+                        "name": "Interval",
+                        "tooltipLabel": "{marker.name}",
+                        "display": [],
+                        "data": [
+                            {
+                                "key": "interval",
+                                "label": "Interval",
+                                "format": "duration",
+                            }
+                        ],
+                        "graphs": [
+                            {"key": "interval", "color": "purple", "type": "line"}
+                        ],
+                    },
                 ],
                 "usesOnlyOneStackType": True,
             },
@@ -1263,6 +1278,7 @@ class SystemResourceMonitor:
         cpu_string_index = get_string_index("CPU Use")
         memory_string_index = get_string_index("Memory")
         io_string_index = get_string_index("IO")
+        interval_string_index = get_string_index("Sampling Interval")
         valid_cpu_fields = set()
         for m in self.measurements:
             # Ignore samples that are much too short.
@@ -1327,6 +1343,17 @@ class SystemResourceMonitor:
                 "write_bytes": m.io.write_bytes,
             }
             add_marker(io_string_index, m.start, m.end, markerData)
+
+            # Sampling interval marker
+            add_marker(
+                interval_string_index,
+                m.end,
+                None,
+                {
+                    "type": "Interval",
+                    "interval": round((m.end - m.start) * 1000),
+                },
+            )
 
         # The marker schema for CPU markers should only contain graph
         # definitions for fields we actually have, or the profiler front-end
