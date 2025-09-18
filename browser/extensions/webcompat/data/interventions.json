@@ -5344,21 +5344,6 @@
       }
     ]
   },
-  "1983778": {
-    "label": "daotranslate.com",
-    "bugs": {
-      "1983778": {
-        "issue": "firefox-blocked-completely",
-        "matches": ["*://daotranslate.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "ua_string": ["change_Firefox_to_FireFox"]
-      }
-    ]
-  },
   "1984434": {
     "label": "fxnetworkspressroom.com",
     "bugs": {
