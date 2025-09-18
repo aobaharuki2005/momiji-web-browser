@@ -135,40 +135,7 @@ def get_test_run_build_metrics(objdir):
         return None
 
 
-def assert_all_task_statuses(objdir, acceptable_statuses, always_executed_tasks=None):
-    """Asserts that all tasks in build metrics have acceptable statuses."""
-
-    if always_executed_tasks is None:
-        always_executed_tasks = [
-            ":machBuildFaster",
-            ":machStagePackage",
-            # Always executes because it depends on assets from ${topobjdir}/dist/geckoview/assets
-            # which get timestamps updated by the mach tasks above. Takes 0.000 seconds so not
-            # a performance issue, but will be resolved when mach tasks get proper Gradle dependencies.
-            ":geckoview:generateDebugAssets",
-        ]
-
-    build_metrics = get_test_run_build_metrics(objdir)
-    assert build_metrics is not None, "Build metrics JSON not found"
-    assert "tasks" in build_metrics, "Build metrics missing 'tasks' section"
-
-    metrics_tasks = build_metrics.get("tasks", [])
-
-    for task in metrics_tasks:
-        task_name = task.get("path")
-        actual_status = task.get("status")
-
-        if task_name in always_executed_tasks:
-            assert (
-                actual_status == "EXECUTED"
-            ), f"Task {task_name} should always execute, got '{actual_status}'"
-        else:
-            assert (
-                actual_status in acceptable_statuses
-            ), f"Task {task_name} had status '{actual_status}', expected one of {acceptable_statuses}"
-
-
-def assert_ordered_task_outcomes(objdir, ordered_expected_task_statuses):
+def assert_task_outcomes(objdir, ordered_expected_task_statuses):
     """Takes a list of (task_name, expected_status) tuples and verifies that they appear
     in the build metrics in the same order with the expected statuses.
     """
@@ -208,11 +175,12 @@ def assert_ordered_task_outcomes(objdir, ordered_expected_task_statuses):
 
 def test_artifact_build(objdir, mozconfig, run_mach):
     (returncode, output) = run_mach(["build"])
+
     assert returncode == 0
 
     # Order matters, since `mach build stage-package` depends on the
     # outputs of `mach build faster`.
-    assert_ordered_task_outcomes(
+    assert_task_outcomes(
         objdir, [(":machBuildFaster", "SKIPPED"), (":machStagePackage", "SKIPPED")]
     )
 
@@ -226,7 +194,7 @@ def test_artifact_build(objdir, mozconfig, run_mach):
 
     # Order matters, since `mach build stage-package` depends on the
     # outputs of `mach build faster`.
-    assert_ordered_task_outcomes(
+    assert_task_outcomes(
         objdir, [(":machBuildFaster", "EXECUTED"), (":machStagePackage", "EXECUTED")]
     )
 
@@ -249,84 +217,12 @@ def test_minify_fenix_incremental_build(objdir, mozconfig, run_mach):
     (returncode, output) = run_mach(["gradle", ":fenix:minifyFenixReleaseWithR8"])
     assert returncode == 0
 
-    assert_ordered_task_outcomes(
-        objdir, [(":fenix:minifyFenixReleaseWithR8", "EXECUTED")]
-    )
+    assert_task_outcomes(objdir, [(":fenix:minifyFenixReleaseWithR8", "EXECUTED")])
 
     (returncode, output) = run_mach(["gradle", ":fenix:minifyFenixReleaseWithR8"])
     assert returncode == 0
 
-    assert_ordered_task_outcomes(
-        objdir, [(":fenix:minifyFenixReleaseWithR8", "UP-TO-DATE")]
-    )
-
-
-def test_geckoview_build(objdir, mozconfig, run_mach):
-    (returncode, output) = run_mach(["build"])
-    assert returncode == 0
-
-    (returncode, output) = run_mach(["gradle", "geckoview:clean"])
-    assert returncode == 0
-
-    (returncode, output) = run_mach(["gradle", "geckoview:assembleDebug"])
-    assert returncode == 0
-
-    assert_all_task_statuses(objdir, ["EXECUTED", "UP-TO-DATE", "SKIPPED"])
-
-    (returncode, output) = run_mach(["gradle", "geckoview:assembleDebug"])
-    assert returncode == 0
-
-    assert_all_task_statuses(objdir, ["UP-TO-DATE", "SKIPPED"])
-
-
-def test_fenix_build(objdir, mozconfig, run_mach):
-    (returncode, output) = run_mach(["build"])
-    assert returncode == 0
-
-    (returncode, output) = run_mach(
-        ["gradle", "fenix:clean", ":components:support-base:clean"]
-    )
-    assert returncode == 0
-
-    (returncode, output) = run_mach(["gradle", "fenix:assembleDebug"])
-    assert returncode == 0
-
-    assert_ordered_task_outcomes(
-        objdir, [(":components:support-base:generateComponentEnum", "EXECUTED")]
-    )
-    assert_all_task_statuses(objdir, ["EXECUTED", "UP-TO-DATE", "SKIPPED"])
-
-    (returncode, output) = run_mach(["gradle", "fenix:assembleDebug"])
-    assert returncode == 0
-
-    assert_ordered_task_outcomes(
-        objdir, [(":components:support-base:generateComponentEnum", "UP-TO-DATE")]
-    )
-    assert_all_task_statuses(objdir, ["UP-TO-DATE", "SKIPPED"])
-
-
-def test_focus_build(objdir, mozconfig, run_mach):
-    (returncode, output) = run_mach(["build"])
-    assert returncode == 0
-
-    (returncode, output) = run_mach(["gradle", "focus:clean"])
-    assert returncode == 0
-
-    (returncode, output) = run_mach(["gradle", "focus:assembleDebug"])
-    assert returncode == 0
-
-    assert_ordered_task_outcomes(
-        objdir, [(":focus-android:generateLocaleList", "EXECUTED")]
-    )
-    assert_all_task_statuses(objdir, ["EXECUTED", "UP-TO-DATE", "SKIPPED"])
-
-    (returncode, output) = run_mach(["gradle", "focus:assembleDebug"])
-    assert returncode == 0
-
-    assert_ordered_task_outcomes(
-        objdir, [(":focus-android:generateLocaleList", "UP-TO-DATE")]
-    )
-    assert_all_task_statuses(objdir, ["UP-TO-DATE", "SKIPPED"])
+    assert_task_outcomes(objdir, [(":fenix:minifyFenixReleaseWithR8", "UP-TO-DATE")])
 
 
 if __name__ == "__main__":

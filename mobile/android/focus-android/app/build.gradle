@@ -555,10 +555,6 @@ def enabledLocales = project.provider { getEnabledLocales() }
 
 tasks.register('generateLocaleList') {
     def localeList = file(new File(generatedLocaleListDir, generatedLocaleListFilename))
-    
-    inputs.property("enabledLocales", enabledLocales)
-    outputs.file(localeList)
-    
     doLast {
         generatedLocaleListDir.mkdir()
         localeList.delete()
