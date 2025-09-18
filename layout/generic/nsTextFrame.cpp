@@ -3924,13 +3924,20 @@ static Maybe<TextAutospace::CharClass> LastNonMarkCharClassInFrame(
 }
 
 // Look for the autospace class of the content preceding the given aFrame
-// from the mapped flows.
+// in the mapped flows of the current textrun.
 static Maybe<TextAutospace::CharClass> GetPrecedingCharClassFromMappedFlows(
     const nsTextFrame* aFrame, const gfxTextRun* aTextRun) {
   using CharClass = TextAutospace::CharClass;
-  TextRunMappedFlow* mappedFlows = GetMappedFlows(aTextRun);
+
+  if (aTextRun->GetFlags2() & nsTextFrameUtils::Flags::IsSimpleFlow) {
+    return Nothing();
+  }
+
   auto data = static_cast<TextRunUserData*>(aTextRun->GetUserData());
-  MOZ_ASSERT(mappedFlows && data, "missing mapped-flow data!");
+  if (!data) {
+    return Nothing();
+  }
+  TextRunMappedFlow* mappedFlows = GetMappedFlows(aTextRun);
 
   // Search for aFrame in the mapped flows.
   uint32_t i = 0;
@@ -4070,10 +4077,7 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
           // If the textrun is mapping multiple content flows, we may be able
           // to find preceding content from there (without having to walk the
           // potentially more complex frame tree).
-          if (!(mTextRun->GetFlags2() &
-                nsTextFrameUtils::Flags::IsSimpleFlow)) {
-            prevClass = GetPrecedingCharClassFromMappedFlows(mFrame, mTextRun);
-          }
+          prevClass = GetPrecedingCharClassFromMappedFlows(mFrame, mTextRun);
           // If we couldn't get it from an earlier flow covered by the textrun,
           // we'll have to delve into the frame tree to see what preceded this.
           if (!prevClass) {
