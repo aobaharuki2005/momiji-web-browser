@@ -40,6 +40,8 @@ const CONFIG = [
   },
 ];
 
+let configEngine;
+
 add_setup(async function () {
   Services.fog.initializeFOG();
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
@@ -55,6 +57,8 @@ add_setup(async function () {
 
   SearchTestUtils.setRemoteSettingsConfig(CONFIG);
   await Services.search.init();
+
+  configEngine = Services.search.getEngineById(CONFIG[0].identifier);
 
   SearchSuggestionController.oHTTPEngineId = CONFIG[0].identifier;
 
@@ -113,11 +117,7 @@ add_task(async function simple_remote_results_merino() {
     "Should have the expected remote suggestions"
   );
 
-  Assert.greater(
-    Glean.search.suggestionsLatency[ENGINE_ID].testGetValue().sum,
-    0,
-    "Should have recorded latency."
-  );
+  assertLatencyCollection(configEngine, true);
 
   Assert.equal(
     ObliviousHTTP.ohttpRequest.callCount,
@@ -198,11 +198,7 @@ add_task(async function simple_merino_empty_result() {
     "Should have no remote suggestions"
   );
 
-  Assert.greater(
-    Glean.search.suggestionsLatency[ENGINE_ID].testGetValue().sum,
-    0,
-    "Should have recorded latency."
-  );
+  assertLatencyCollection(configEngine, true);
 
   Assert.equal(
     ObliviousHTTP.ohttpRequest.callCount,
@@ -238,6 +234,103 @@ add_task(async function simple_merino_empty_result() {
   }
 });
 
+add_task(async function simple_remote_results_merino_third_party() {
+  let thirdPartyData = {
+    baseURL: `${gHttpURL}/sjs/`,
+    name: "Third Party",
+    method: "GET",
+  };
+  let thirdPartyEngine = await SearchTestUtils.installOpenSearchEngine({
+    url: `${gHttpURL}/sjs/engineMaker.sjs?${JSON.stringify(thirdPartyData)}`,
+  });
+
+  SearchSuggestionController.oHTTPEngineId = thirdPartyEngine.id;
+
+  const suggestions = ["Mozilla", "modern", "mom"];
+
+  ObliviousHTTP.ohttpRequest.resetHistory();
+  ObliviousHTTP.ohttpRequest.callsFake(() => {
+    return {
+      status: 200,
+      json: async () =>
+        Promise.resolve({
+          suggestions: [
+            {
+              title: "",
+              url: "https://merino.services.mozilla.com",
+              provider: "google_suggest",
+              is_sponsored: false,
+              score: 1,
+              custom_details: {
+                google_suggest: {
+                  suggestions: ["mo", suggestions],
+                },
+              },
+            },
+          ],
+        }),
+      ok: true,
+    };
+  });
+
+  let expectedParams = {
+    q: "mo",
+    providers: "google_suggest",
+    google_suggest_params: new URLSearchParams([["q", "mo"]]),
+  };
+
+  // Now do the actual request.
+  let controller = new SearchSuggestionController();
+  let result = await controller.fetch({
+    searchString: "mo",
+    inPrivateBrowsing: false,
+    engine: thirdPartyEngine,
+  });
+  Assert.equal(result.term, "mo", "Should have the term matching the query");
+  Assert.equal(result.local.length, 0, "Should have no local suggestions");
+  Assert.deepEqual(
+    result.remote.map(r => r.value),
+    suggestions,
+    "Should have the expected remote suggestions"
+  );
+
+  assertLatencyCollection(thirdPartyEngine, true);
+
+  Assert.equal(
+    ObliviousHTTP.ohttpRequest.callCount,
+    1,
+    "Should have requested via OHTTP once"
+  );
+  let args = ObliviousHTTP.ohttpRequest.firstCall.args;
+  Assert.deepEqual(
+    args[0],
+    "https://example.com/relay",
+    "Should have called the Relay URL"
+  );
+  let url = new URL(args[2]);
+  Assert.deepEqual(
+    url.origin + url.pathname,
+    Services.prefs.getCharPref("browser.urlbar.merino.endpointURL"),
+    "Should have the correct URL base"
+  );
+  for (let [param, value] of Object.entries(expectedParams)) {
+    if (URLSearchParams.isInstance(value)) {
+      Assert.equal(
+        url.searchParams.get(param),
+        value.toString(),
+        `Should have set the correct value for ${param}`
+      );
+    } else {
+      Assert.equal(
+        url.searchParams.get(param),
+        value,
+        `Should have set the correct value for ${param}`
+      );
+    }
+  }
+  SearchSuggestionController.oHTTPEngineId = configEngine.id;
+});
+
 add_task(async function test_merino_not_used_when_ohttp_prefs_not_set() {
   // Clear the preferences, so that OHTTP isn't enabled.
   Services.prefs.setCharPref("browser.urlbar.merino.ohttpConfigURL", "");
@@ -268,3 +361,27 @@ add_task(async function test_merino_not_used_when_ohttp_prefs_not_set() {
 
   Services.search.defaultEngine.wrappedJSObject.Submission;
 });
+
+function assertLatencyCollection(engine, shouldRecord) {
+  let latencyDistribution =
+    Glean.searchSuggestionsOhttp.latency[
+      // Third party engines are always recorded as "other".
+      engine.isConfigEngine ? engine.id : "other"
+    ].testGetValue();
+
+  if (shouldRecord) {
+    Assert.deepEqual(
+      latencyDistribution.count,
+      1,
+      "Should have recorded a latency count"
+    );
+  } else {
+    Assert.deepEqual(
+      latencyDistribution,
+      null,
+      "Should not have recorded a latency count"
+    );
+  }
+
+  Services.fog.testResetFOG();
+}

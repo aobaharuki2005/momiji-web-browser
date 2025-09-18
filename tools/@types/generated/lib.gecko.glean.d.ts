@@ -6696,6 +6696,10 @@ interface GleanImpl {
     successfulRequests: Record<string, GleanCounter>;
   }
 
+  searchSuggestionsOhttp: {
+    latency: Record<string, GleanTimingDistribution>;
+  }
+
   legacyTelemetry: {
     clientId: GleanUuid;
     profileGroupId: GleanUuid;
