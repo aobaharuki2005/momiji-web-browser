@@ -47,12 +47,11 @@ import mozilla.components.compose.base.modifier.dashedBorder
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.list.ExpandableListHeader
-import org.mozilla.fenix.compose.list.FaviconListItem
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
+import org.mozilla.fenix.tabstray.ui.tabitems.BasicTabListItem
 import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.browser.storage.sync.Tab as SyncTab
-import mozilla.components.ui.icons.R as iconsR
 
 private const val EXPANDED_BY_DEFAULT = true
 private val CardRoundedCornerShape = RoundedCornerShape(12.dp)
@@ -126,28 +125,24 @@ fun SyncedTabsList(
                                         syncedTabItem.tabs.forEachIndexed { index, syncedTab ->
                                             val isLast = index == syncedTabItem.tabs.lastIndex
                                             when (syncedTab.action) {
-                                                is SyncedTabsListItem.Tab.Action.Close -> FaviconListItem(
-                                                    label = syncedTab.displayTitle,
+                                                is SyncedTabsListItem.Tab.Action.Close -> BasicTabListItem(
+                                                    title = syncedTab.displayTitle,
                                                     url = syncedTab.displayURL,
                                                     faviconShape = CircleShape,
-                                                    description = syncedTab.displayURL,
+                                                    showCloseButton = true,
                                                     onClick = { onTabClick(syncedTab.tab) },
-                                                    iconDescription = stringResource(R.string.close_tab),
-                                                    iconPainter = painterResource(iconsR.drawable.mozac_ic_cross_20),
-                                                    onIconClick = {
+                                                    onCloseButtonClick = {
                                                         onTabCloseClick(
                                                             syncedTab.action.deviceId,
                                                             syncedTab.tab,
                                                         )
                                                     },
                                                 )
-
-                                                is SyncedTabsListItem.Tab.Action.None -> FaviconListItem(
-                                                    label = syncedTab.displayTitle,
+                                                is SyncedTabsListItem.Tab.Action.None -> BasicTabListItem(
+                                                    title = syncedTab.displayTitle,
                                                     url = syncedTab.displayURL,
-                                                    faviconShape = CircleShape,
                                                     modifier = Modifier.padding(vertical = 2.dp),
-                                                    description = syncedTab.displayURL,
+                                                    faviconShape = CircleShape,
                                                     onClick = { onTabClick(syncedTab.tab) },
                                                 )
                                             }
@@ -306,10 +301,9 @@ private fun SyncedTabsListItemsPreview() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            FaviconListItem(
-                label = "Mozilla",
+            BasicTabListItem(
+                title = "Mozilla",
                 url = "www.mozilla.org",
-                description = "www.mozilla.org",
                 onClick = {},
             )
 

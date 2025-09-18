@@ -48,9 +48,9 @@ import mozilla.components.compose.cfr.CFRPopupLayout
 import mozilla.components.compose.cfr.CFRPopupProperties
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.list.ExpandableListHeader
-import org.mozilla.fenix.compose.list.FaviconListItem
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.tabstray.ext.toDisplayTitle
+import org.mozilla.fenix.tabstray.ui.tabitems.BasicTabListItem
 import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.ui.icons.R as iconsR
 
@@ -129,16 +129,13 @@ fun InactiveTabsList(
                             prepareToDraw()
                             BitmapPainter(asImageBitmap())
                         }
-
-                        FaviconListItem(
-                            label = tab.toDisplayTitle(),
+                        BasicTabListItem(
+                            title = tab.toDisplayTitle(),
                             url = tabUrl,
-                            description = tabUrl,
                             faviconPainter = faviconPainter,
                             onClick = { onTabClick(tab) },
-                            iconPainter = painterResource(iconsR.drawable.mozac_ic_cross_24),
-                            iconDescription = stringResource(R.string.content_description_close_button),
-                            onIconClick = { onTabCloseClick(tab) },
+                            showCloseButton = true,
+                            onCloseButtonClick = { onTabCloseClick(tab) },
                         )
                     }
                 }

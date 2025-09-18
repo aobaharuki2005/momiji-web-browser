@@ -1218,6 +1218,8 @@
     <string name="close_tabs_after_one_month">After one month</string>
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Auto-close open tabs</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button -->
+    <string name="tab_manager_close_tabs">Close</string>
 
     <!-- Opening screen -->
     <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
