@@ -649,7 +649,7 @@ class SettingsRobot {
 
         fun openTurnOnSyncMenu(interact: SettingsTurnOnSyncRobot.() -> Unit): SettingsTurnOnSyncRobot.Transition {
             Log.i(TAG, "openTurnOnSyncMenu: Trying to click the \"Sync and save your data\" button")
-            onView(withText("Sync and save your data")).click()
+            onView(withText("Sign in")).click()
             Log.i(TAG, "openTurnOnSyncMenu: Clicked the \"Sync and save your data\" button")
 
             SettingsTurnOnSyncRobot().interact()
