@@ -14,6 +14,10 @@
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
+// eslint-disable-next-line mozilla/use-static-import
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 
 import {
   actionTypes as at,
@@ -340,6 +344,25 @@ export class TelemetryFeed {
   }
 
   /**
+   * Removes fields for users with a 143 major version of firefox
+   * This should be removed once 143 lands in release
+   * @param {*} pingDict
+   * @returns {*} possibly redacted pingDict
+   */
+  redactPingFor143(pingDict) {
+    const isMajor143 =
+      Services.vc.compare(AppConstants.MOZ_APP_VERSION, "143.0a1") >= 0 &&
+      Services.vc.compare(AppConstants.MOZ_APP_VERSION, "144.0a1") < 0;
+    if (isMajor143) {
+      // eslint-disable-next-line no-unused-vars
+      const { is_pinned, layout_name, visible_topsites, ...rest } = pingDict;
+      return rest;
+    }
+
+    return pingDict;
+  }
+
+  /**
    * Removes fields that link to any user content preference.
    * Redactions only occur if the appropriate pref is enabled.
    * @param {*} pingDict Input dictionary
@@ -587,14 +610,16 @@ export class TelemetryFeed {
         `${source}_${legacyTelemetryPosition}`
       ].add(1);
       if (session) {
-        Glean.topsites.impression.record({
-          advertiser_name,
-          tile_id,
-          newtab_visit_id: session.session_id,
-          is_sponsored: true,
-          position,
-          visible_topsites,
-        });
+        Glean.topsites.impression.record(
+          this.redactPingFor143({
+            advertiser_name,
+            tile_id,
+            newtab_visit_id: session.session_id,
+            is_sponsored: true,
+            position,
+            visible_topsites,
+          })
+        );
       }
     } else if (type === "click") {
       pingType = "topsites-click";
@@ -602,14 +627,16 @@ export class TelemetryFeed {
         `${source}_${legacyTelemetryPosition}`
       ].add(1);
       if (session) {
-        Glean.topsites.click.record({
-          advertiser_name,
-          tile_id,
-          newtab_visit_id: session.session_id,
-          is_sponsored: true,
-          position,
-          visible_topsites,
-        });
+        Glean.topsites.click.record(
+          this.redactPingFor143({
+            advertiser_name,
+            tile_id,
+            newtab_visit_id: session.session_id,
+            is_sponsored: true,
+            position,
+            visible_topsites,
+          })
+        );
       }
     } else {
       console.error("Unknown ping type for sponsored TopSites impression");
@@ -645,23 +672,27 @@ export class TelemetryFeed {
 
     switch (action.data?.type) {
       case "impression":
-        Glean.topsites.impression.record({
-          newtab_visit_id: session.session_id,
-          is_sponsored: false,
-          position: action.data.position,
-          is_pinned: !!action.data.isPinned,
-          visible_topsites,
-        });
+        Glean.topsites.impression.record(
+          this.redactPingFor143({
+            newtab_visit_id: session.session_id,
+            is_sponsored: false,
+            position: action.data.position,
+            is_pinned: !!action.data.isPinned,
+            visible_topsites,
+          })
+        );
         break;
 
       case "click":
-        Glean.topsites.click.record({
-          newtab_visit_id: session.session_id,
-          is_sponsored: false,
-          position: action.data.position,
-          is_pinned: !!action.data.isPinned,
-          visible_topsites,
-        });
+        Glean.topsites.click.record(
+          this.redactPingFor143({
+            newtab_visit_id: session.session_id,
+            is_sponsored: false,
+            position: action.data.position,
+            is_pinned: !!action.data.isPinned,
+            visible_topsites,
+          })
+        );
         break;
 
       default:
@@ -805,9 +836,11 @@ export class TelemetryFeed {
                   recommendation_id,
                 }),
           };
-
           Glean.pocket.click.record({
-            ...this.redactNewTabPing(gleanData, is_sponsored),
+            ...this.redactNewTabPing(
+              this.redactPingFor143(gleanData),
+              is_sponsored
+            ),
             newtab_visit_id: session.session_id,
           });
 
@@ -1504,21 +1537,24 @@ export class TelemetryFeed {
           }
           break;
         case "CARD_SECTION_IMPRESSION":
-          Glean.newtab.sectionsImpression.record(
-            this.redactNewTabPing({
+          {
+            const gleanData = this.redactPingFor143({
               newtab_visit_id: session.session_id,
               section,
               section_position,
               is_section_followed,
               layout_name,
-            })
-          );
-          if (this.privatePingEnabled) {
-            this.newtabContentPing.recordEvent("sectionsImpression", {
-              section,
-              section_position,
-              is_section_followed,
             });
+            Glean.newtab.sectionsImpression.record(
+              this.redactNewTabPing(gleanData)
+            );
+            if (this.privatePingEnabled) {
+              this.newtabContentPing.recordEvent("sectionsImpression", {
+                section,
+                section_position,
+                is_section_followed,
+              });
+            }
           }
           break;
         case "FOLLOW_SECTION": {
@@ -1857,7 +1893,10 @@ export class TelemetryFeed {
               }),
         };
         Glean.pocket.impression.record({
-          ...this.redactNewTabPing(gleanData, is_sponsored),
+          ...this.redactNewTabPing(
+            this.redactPingFor143(gleanData),
+            is_sponsored
+          ),
           newtab_visit_id: session.session_id,
         });
         if (this.privatePingEnabled) {
