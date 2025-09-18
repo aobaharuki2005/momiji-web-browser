@@ -185,6 +185,18 @@ nsresult MatroskaDemuxer::SetAudioCodecInfo(
           AudioCodecSpecificVariant{std::move(aacCodecSpecificData)};
       break;
     }
+    case NESTEGG_CODEC_OPUS: {
+      uint64_t codecDelayUs = aParams.codec_delay / NSECS_PER_USEC;
+      mInfo.mAudio.mMimeType = "audio/opus";
+      OpusCodecSpecificData opusCodecSpecificData;
+      opusCodecSpecificData.mContainerCodecDelayFrames =
+          AssertedCast<int64_t>(USECS_PER_S * codecDelayUs / 48000);
+      MKV_DEBUG("Preroll for Opus: %" PRIu64 " frames",
+                opusCodecSpecificData.mContainerCodecDelayFrames);
+      mInfo.mAudio.mCodecSpecificConfig =
+          AudioCodecSpecificVariant{std::move(opusCodecSpecificData)};
+      break;
+    }
     default:
       NS_WARNING("Unknown Matroska audio codec");
       return NS_ERROR_FAILURE;

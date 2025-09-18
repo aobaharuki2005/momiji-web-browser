@@ -504,6 +504,12 @@ var gMKVtests = [
     type: "video/matroska",
     duration: 1.0,
   },
+  // ffmpeg -f lavfi -i sine=frequency=1000:duration=1 -c:a libopus output_opus.mkv
+  {
+    name: "output_opus.mkv",
+    type: "audio/matroska",
+    duration: 1.0,
+  },
 ];
 
 // The following files should be added to gMKVtests once they are supported.
@@ -541,12 +547,6 @@ var gUnsupportedMKVtests = [
   // ffmpeg -f lavfi -i sine=frequency=1000:duration=1 -c:a libvorbis output_vorbis.mkv
   {
     name: "output_vorbis.mkv",
-    type: "audio/matroska",
-    duration: 1.0,
-  },
-  // ffmpeg -f lavfi -i sine=frequency=1000:duration=1 -c:a libopus output_opus.mkv
-  {
-    name: "output_opus.mkv",
     type: "audio/matroska",
     duration: 1.0,
   },
