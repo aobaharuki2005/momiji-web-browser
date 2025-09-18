@@ -3894,7 +3894,7 @@ toolbar#nav-bar {
                         mozinfo.info.get("socketprocess_e10s", False)
                     )
                 )
-                self.log.info("runtests.py | Running tests: start.\n")
+                self.log.info(f"runtests.py | Running {scheme} tests: start.\n")
                 ret, _ = self.runApp(
                     testURL,
                     self.browserEnv,
@@ -3917,6 +3917,9 @@ toolbar#nav-bar {
                     runFailures=options.runFailures,
                     crashAsPass=options.crashAsPass,
                     currentManifest=manifestToFilter,
+                )
+                self.log.info(
+                    f"runtests.py | Running {scheme} tests: end. status: {ret}"
                 )
                 status = ret or status
         except KeyboardInterrupt:
@@ -3965,8 +3968,6 @@ toolbar#nav-bar {
                 stack_fixer=get_stack_fixer_function(utilityPath, options.symbolsPath),
                 scope=manifestToFilter,
             )
-
-        self.log.info("runtests.py | Running tests: end.")
 
         if self.manifest is not None:
             self.cleanup(options, False)
