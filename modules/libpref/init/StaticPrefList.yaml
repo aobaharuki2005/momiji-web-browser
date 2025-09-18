@@ -8064,8 +8064,29 @@
   value: true
   mirror: once
 
-# Use a more precise method for sampling gradients.
-- name: gfx.webrender.precise-gradients
+# Use a more precise method for sampling gradients when *not* using SWGL .
+- name: gfx.webrender.precise-radial-gradients
+  type: bool
+  rust: true
+  value: false
+  mirror: once
+
+# Use a more precise method for sampling gradients when using SWGL.
+- name: gfx.webrender.precise-radial-gradients-swgl
+  type: bool
+  rust: true
+  value: false
+  mirror: once
+
+# Use a more precise method for sampling gradients when *not* using SWGL .
+- name: gfx.webrender.precise-conic-gradients
+  type: bool
+  rust: true
+  value: false
+  mirror: once
+
+# Use a more precise method for sampling gradients when using SWGL.
+- name: gfx.webrender.precise-conic-gradients-swgl
   type: bool
   rust: true
   value: false
