@@ -179,6 +179,7 @@ def taskgraph_decision(options, parameters=None):
     )
 
     decision_task_id = os.environ["TASK_ID"]
+    os.environ["TASKGRAPH_SERIAL"] = "1"
 
     # create a TaskGraphGenerator instance
     tgg = TaskGraphGenerator(
