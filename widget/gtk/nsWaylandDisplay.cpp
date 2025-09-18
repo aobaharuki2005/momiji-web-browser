@@ -207,7 +207,9 @@ static void pointer_handle_motion(void* data, struct wl_pointer* pointer,
 static void pointer_handle_button(void* data, struct wl_pointer* pointer,
                                   uint32_t serial, uint32_t time,
                                   uint32_t button, uint32_t state) {
-  gLastSerial = serial;
+  if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
+    gLastSerial = serial;
+  }
 }
 
 static void pointer_handle_axis(void* data, struct wl_pointer* pointer,
@@ -356,19 +358,19 @@ static void keyboard_handle_keymap(void* data, struct wl_keyboard* wl_keyboard,
 
 static void keyboard_handle_enter(void* data, struct wl_keyboard* keyboard,
                                   uint32_t serial, struct wl_surface* surface,
-                                  struct wl_array* keys) {
-  KeymapWrapper::SetFocusIn(surface, serial);
-}
+                                  struct wl_array* keys) {}
 
 static void keyboard_handle_leave(void* data, struct wl_keyboard* keyboard,
                                   uint32_t serial, struct wl_surface* surface) {
-  KeymapWrapper::SetFocusOut(surface);
+  KeymapWrapper::ResetRepeatState();
 }
 
 static void keyboard_handle_key(void* data, struct wl_keyboard* keyboard,
                                 uint32_t serial, uint32_t time, uint32_t key,
                                 uint32_t state) {
-  gLastSerial = serial;
+  if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
+    gLastSerial = serial;
+  }
   // hardware key code is +8.
   // https://gitlab.gnome.org/GNOME/gtk/-/blob/3.24.41/gdk/wayland/gdkdevice-wayland.c#L2341
   KeymapWrapper::KeyboardHandlerForWayland(serial, key + 8, state);
