@@ -221,9 +221,6 @@ export var ToolbarContextMenu = {
             !toolbar.hasAttribute(hidingAttribute)
           );
           menuItem.setAttribute("accesskey", toolbar.getAttribute("accesskey"));
-          if (popup.id != "toolbar-context-menu") {
-            menuItem.setAttribute("key", toolbar.getAttribute("key"));
-          }
 
           popup.insertBefore(menuItem, firstMenuItem);
           menuItem.addEventListener("command", onViewToolbarCommand);
