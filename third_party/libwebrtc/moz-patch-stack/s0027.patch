@@ -203,7 +203,7 @@ index 4ad7f3e00c..7859461b97 100644
      }
  
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 346e1fe3e1..b5b3123d7f 100644
+index 706c48dcc6..f62fee9071 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -44,6 +44,9 @@ rtc_library("enable_media") {
@@ -311,7 +311,7 @@ index 346e1fe3e1..b5b3123d7f 100644
  
  rtc_library("frame_generator_api") {
    visibility = [ "*" ]
-@@ -788,6 +819,7 @@ rtc_library("create_frame_generator") {
+@@ -771,6 +802,7 @@ rtc_library("create_frame_generator") {
    ]
  }
  
@@ -319,7 +319,7 @@ index 346e1fe3e1..b5b3123d7f 100644
  rtc_library("create_peer_connection_quality_test_frame_generator") {
    visibility = [ "*" ]
    testonly = true
-@@ -805,6 +837,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
+@@ -788,6 +820,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
      "units:time_delta",
    ]
  }
@@ -327,7 +327,7 @@ index 346e1fe3e1..b5b3123d7f 100644
  
  rtc_source_set("data_channel_event_observer_interface") {
    visibility = [ "*" ]
-@@ -993,6 +1026,7 @@ rtc_source_set("refcountedbase") {
+@@ -976,6 +1009,7 @@ rtc_source_set("refcountedbase") {
    ]
  }
  
@@ -335,7 +335,7 @@ index 346e1fe3e1..b5b3123d7f 100644
  rtc_library("ice_transport_factory") {
    visibility = [ "*" ]
    sources = [
-@@ -1017,6 +1051,7 @@ rtc_library("ice_transport_factory") {
+@@ -1000,6 +1034,7 @@ rtc_library("ice_transport_factory") {
      "rtc_event_log:rtc_event_log",
    ]
  }
@@ -1194,7 +1194,7 @@ index c1181618e9..4a772795ed 100644
      deps += [
        "..:logging",
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index dc2fcb7ac5..bf88e37568 100644
+index 61c56738f6..63e956ba36 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -258,6 +258,7 @@ rtc_library("audio_test_common") {
@@ -1253,7 +1253,7 @@ index dc2fcb7ac5..bf88e37568 100644
  rtc_library("call_config_utils") {
    testonly = true
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index a0a8dd25ba..ed3dabec32 100644
+index af02a74467..b543f5933e 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {
