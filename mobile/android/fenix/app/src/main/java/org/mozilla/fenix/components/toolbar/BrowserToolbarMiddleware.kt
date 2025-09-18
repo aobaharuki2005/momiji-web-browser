@@ -538,7 +538,7 @@ class BrowserToolbarMiddleware(
                 selectedTab?.let {
                     environment?.viewLifecycleOwner?.lifecycleScope?.launch(Dispatchers.IO) {
                         val parentGuid = settings.lastSavedFolderCache.getGuid() ?: BookmarkRoot.Mobile.id
-                        val parentNode = bookmarksStorage.getBookmark(parentGuid)
+                        val parentNode = bookmarksStorage.getBookmark(parentGuid).getOrNull()
                         val guidToEdit = useCases.bookmarksUseCases.addBookmark(
                             url = selectedTab.content.url,
                             title = selectedTab.content.title,
@@ -564,9 +564,10 @@ class BrowserToolbarMiddleware(
                 environment?.viewLifecycleOwner?.lifecycleScope?.launch(Dispatchers.Main) {
                     val guidToEdit: String? = withContext(Dispatchers.IO) {
                       bookmarksStorage
-                        .getBookmarksWithUrl(selectedTab.content.url)
-                        .firstOrNull()
-                        ?.guid
+                          .getBookmarksWithUrl(selectedTab.content.url)
+                          .getOrDefault(listOf())
+                          .firstOrNull()
+                          ?.guid
                     }
 
                     guidToEdit?.let { guid ->
@@ -807,7 +808,7 @@ class BrowserToolbarMiddleware(
         val url = browserStore.state.selectedTab?.content?.url
         val isBookmarked = if (url != null) {
             withContext(Dispatchers.IO) {
-                bookmarksStorage.getBookmarksWithUrl(url).isNotEmpty()
+                bookmarksStorage.getBookmarksWithUrl(url).getOrDefault(listOf()).isNotEmpty()
             }
         } else {
             false

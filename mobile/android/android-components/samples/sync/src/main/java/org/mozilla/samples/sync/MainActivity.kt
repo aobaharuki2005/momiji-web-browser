@@ -440,7 +440,7 @@ class MainActivity :
                 bookmarksResultTextView.setHorizontallyScrolling(true)
                 bookmarksResultTextView.movementMethod = ScrollingMovementMethod.getInstance()
                 bookmarksResultTextView.text = withContext(Dispatchers.IO) {
-                    val bookmarksRoot = bookmarksStorage.value.getTree("root________", recursive = true)
+                    val bookmarksRoot = bookmarksStorage.value.getTree("root________", recursive = true).getOrNull()
                     if (bookmarksRoot == null) {
                         getString(R.string.no_bookmarks_root)
                     } else {
