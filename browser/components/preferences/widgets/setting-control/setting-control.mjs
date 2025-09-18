@@ -116,6 +116,7 @@ function getControlInstance(control = "moz-checkbox") {
 const KNOWN_OPTIONS = new Map([
   ["moz-radio-group", literal`moz-radio`],
   ["moz-select", literal`moz-option`],
+  ["moz-visual-picker", literal`moz-visual-picker-item`],
 ]);
 
 /**
