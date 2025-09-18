@@ -170,14 +170,6 @@ newtab-trainhop-tests:
 ### Specific platform test sets
 
 # Linux
-linux32-gtest:
-    - gtest
-
-linux32-tests:
-    - web-platform-tests
-    - web-platform-tests-webcodecs
-    - web-platform-tests-eme
-
 linux-tests:
     - cppunittest
     - crashtest

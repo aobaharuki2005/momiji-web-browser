@@ -20,7 +20,6 @@ kind-dependencies:
 only-for-build-platforms:
     - linux64/opt
     - linux64-aarch64/opt
-    - linux/opt
     - macosx64/opt
     - win32/opt
     - win64/opt
@@ -62,7 +61,6 @@ tasks:
             product: firefox
             job-name:
                 by-build-platform:
-                    linux(?!64).*: linux-opt
                     linux64(?!-aarch64).*: linux64-opt
                     linux64-aarch64.*: linux64-aarch64-opt
                     macosx64.*: macosx64-opt
@@ -80,7 +78,6 @@ tasks:
                 by-build-platform:
                     linux64: linux64/opt
                     linux64-aarch64: linux64-aarch64/opt
-                    linux: linux32/opt
                     macosx64: osx-cross/opt
                     win32: windows2012-32/opt
                     win64: windows2012-64/opt
@@ -95,11 +92,6 @@ tasks:
         mozharness:
             config:
                 by-build-platform:
-                    linux(?!64).*:
-                        - single_locale/firefox.py
-                        - single_locale/linux32.py
-                        - single_locale/tc_common.py
-                        - single_locale/tc_linux_common.py
                     linux64.*:
                         - single_locale/firefox.py
                         - single_locale/linux64.py
