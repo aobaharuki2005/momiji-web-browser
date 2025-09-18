@@ -24,10 +24,11 @@ add_task(async function test_about_glean_redesign_views_hidden_behind_pref() {
     });
   });
 
-  Services.prefs.setBoolPref("about.glean.redesign.enabled", true);
   await BrowserTestUtils.withNewTab("about:glean", async function (browser) {
     ok(!browser.isRemoteBrowser, "Browser should not be remote.");
     await ContentTask.spawn(browser, null, async function () {
+      content.document.getElementById("enable-new-features").click();
+
       let metrics_table_category_button = content.document.getElementById(
         "category-metrics-table"
       );
