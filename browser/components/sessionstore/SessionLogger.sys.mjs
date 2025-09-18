@@ -21,6 +21,7 @@ sessionStoreLogger.manageLevelFromPref("browser.sessionstore.loglevel");
 
 class SessionLogManager extends LogManager {
   #idleCallbackId = null;
+  #startupTime = 0;
   #observers = new Set();
 
   QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver]);
@@ -41,6 +42,14 @@ class SessionLogManager extends LogManager {
 
   get isDebug() {
     return this.level >= Log.Level.Debug;
+  }
+
+  getLogFilename(reasonPrefix = "success") {
+    if (!this.#startupTime) {
+      this.#startupTime = Services.startup.getStartupInfo().main.getTime();
+    }
+    // For session restore, we want to append to a single success and error log file for each startup
+    return super.getLogFilename(reasonPrefix, this.#startupTime);
   }
 
   async stop() {
@@ -88,4 +97,5 @@ export const logManager = new SessionLogManager({
   logFilePrefix: "sessionrestore",
   logFileSubDirectoryEntries: ["sessionstore-logs"],
   testTopicPrefix: "sessionrestore:log-manager:",
+  overwriteFileOnFlush: false,
 });
