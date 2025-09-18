@@ -4845,23 +4845,6 @@
       }
     ]
   },
-  "1960595": {
-    "label": "de.pons.com",
-    "bugs": {
-      "1960595": {
-        "issue": "unsupported-warning",
-        "matches": ["*://de.pons.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["android"],
-        "content_scripts": {
-          "js": ["bug1960595-de.pons.com-hide-unsupported-banner.js"]
-        }
-      }
-    ]
-  },
   "1962587": {
     "label": "virtualvisit.telushealth.com",
     "bugs": {
