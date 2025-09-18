@@ -373,7 +373,6 @@ Preferences.addSetting({
 Preferences.addSetting({ id: "zoomPlaceholder" });
 
 let SETTINGS_CONFIG = {
-<<<<<<< HEAD
   zoom: {
     // This section is marked as in progress for testing purposes
     inProgress: true,
@@ -383,7 +382,10 @@ let SETTINGS_CONFIG = {
         control: "moz-message-bar",
         controlAttrs: {
           message: "Placeholder for updated zoom controls",
-=======
+        },
+      },
+    ],
+  },
   appearance: {
     l10nId: "web-appearance-group",
     items: [
@@ -434,7 +436,6 @@ let SETTINGS_CONFIG = {
         control: "moz-box-link",
         controlAttrs: {
           href: "about:addons",
->>>>>>> 4ae87ca4a582 (Bug 1971628 - Part 2: convert appearance settings to be backed by config r=#recomp-reviewers)
         },
       },
     ],

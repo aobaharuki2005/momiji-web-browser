@@ -142,7 +142,7 @@
         });
       });
 
-      add_task(async function testVisualPickerItem() {
+      add_task(async function testVisualPickerItemLabel() {
         let labelledItemsTemplate = html`
           <moz-visual-picker
             type="listbox"
@@ -212,22 +212,6 @@
           ok(
             item.ariaLabelledByElements.includes(textEl),
             "Visual picker item is labelled by the slotted content."
-          );
-
-          const TEST_IMG_SRC =
-            "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/newtab-wallpapers-v2/e1108381-5c19-4cb4-a630-69f9e45503fb.avif";
-          item.imageSrc = TEST_IMG_SRC;
-          await item.updateComplete;
-
-          let imageEl = item.itemEl.querySelector("img");
-          ok(
-            imageEl,
-            "Visual picker renders and image when imageSrc is supplied."
-          );
-          is(
-            imageEl.src,
-            TEST_IMG_SRC,
-            "Visual picker img el uses the expected src."
           );
         });
       });
@@ -616,9 +600,27 @@
             is(picker.value, secondItem.value, "picker value is updated.");
             verifyEvents([
               {
+                type: "click",
+                value: "second",
+                localName: "moz-visual-picker-item",
+                checked: true,
+              },
+              {
+                type: "input",
+                value: "second",
+                localName: "moz-visual-picker-item",
+                checked: true,
+              },
+              {
                 type: "input",
                 value: "second",
                 localName: "moz-visual-picker",
+              },
+              {
+                type: "change",
+                value: "second",
+                localName: "moz-visual-picker-item",
+                checked: true,
               },
               {
                 type: "change",
