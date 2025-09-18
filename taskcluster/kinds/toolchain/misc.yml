@@ -846,3 +846,17 @@ win64-aarch64-dxc:
             - vs-toolchain
         fetch:
             - dxc-src
+
+symbolicator-cli:
+    description: "symbolicator-cli from firefox profiler"
+    treeherder:
+        symbol: TL(symbolicator-cli)
+    run:
+        script: build-symbolicator-cli.sh
+        toolchain-artifact: public/build/symbolicator-cli.tar.zst
+    run-on-projects: []
+    fetches:
+        fetch:
+            - firefox-profiler
+        toolchain:
+            - linux64-node

@@ -822,3 +822,10 @@ jj:
         type: git
         repo: https://github.com/jj-vcs/jj
         revision: 94269d2e7228ff502b2116258e5ae6b3b07ec434
+
+firefox-profiler:
+    description: firefox profiler source code
+    fetch:
+        type: git
+        repo: https://github.com/firefox-devtools/profiler
+        revision: 5a054f9ae741515b8112d4c248e8ac096ee7a3ce
