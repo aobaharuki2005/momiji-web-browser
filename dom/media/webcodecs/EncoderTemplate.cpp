@@ -13,6 +13,7 @@
 #include "WebCodecsUtils.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Try.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -1215,8 +1216,13 @@ void EncoderTemplate<EncoderType>::PushEncodeRequest(
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
 
-  const size_t batchSize = std::max<size_t>(
-      StaticPrefs::dom_media_webcodecs_batch_encoding_size(), 1);
+  // TODO(Bug 1984936): Enable batch encoding for selected encoders now.
+  const size_t batchSize =
+      (StaticPrefs::media_use_remote_encoder_video() && mActiveConfig &&
+       IsH264CodecString(mActiveConfig->mCodec))
+          ? std::max<size_t>(
+                StaticPrefs::dom_media_webcodecs_batch_encoding_size(), 1)
+          : 1;
 
   RefPtr<EncodeMessage> msg;
   if (!mControlMessageQueue.empty()) {
