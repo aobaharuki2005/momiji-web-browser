@@ -245,7 +245,9 @@ export class SelectControlBaseElement extends MozLitElement {
               composed: true,
             })
           );
-          this.dispatchEvent(new Event("change", { bubbles: true }));
+          this.dispatchEvent(
+            new Event("change", { bubbles: true, composed: true })
+          );
         }
         nextItem.focus();
         return;

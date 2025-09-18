@@ -280,34 +280,26 @@ preferences-web-appearance-header = Website appearance
 
 preferences-web-appearance-description = Some websites adapt their color scheme based on your preferences. Choose which color scheme you’d like to use for those sites.
 
-preferences-web-appearance-choice-auto = Automatic
-preferences-web-appearance-choice-light = Light
-preferences-web-appearance-choice-dark = Dark
-
-preferences-web-appearance-choice-tooltip-auto =
+preferences-web-appearance-choice-auto2 =
+  .label = Automatic
   .title = Automatically change website backgrounds and content based on your system settings and { -brand-short-name } theme.
-preferences-web-appearance-choice-tooltip-light =
+preferences-web-appearance-choice-light2 =
+  .label = Light
   .title = Use a light appearance for website backgrounds and content.
-preferences-web-appearance-choice-tooltip-dark =
+preferences-web-appearance-choice-dark2 =
+  .label = Dark
   .title = Use a dark appearance for website backgrounds and content.
 
-preferences-web-appearance-choice-input-auto =
-  .aria-description = { preferences-web-appearance-choice-tooltip-auto.title }
-
-preferences-web-appearance-choice-input-light =
-  .aria-description = { preferences-web-appearance-choice-tooltip-light.title }
-
-preferences-web-appearance-choice-input-dark =
-  .aria-description = { preferences-web-appearance-choice-tooltip-dark.title }
+web-appearance-group =
+  .aria-label = Website appearance
 
 # This can appear when using windows HCM or "Override colors: always" without
 # system colors.
 preferences-web-appearance-override-warning3 =
     .message = Your contrast control settings are overriding website appearance.
 
-# This message contains one link. It can be moved within the sentence as needed
-# to adapt to your language, but should not be changed.
-preferences-web-appearance-footer = Manage { -brand-short-name } themes in <a data-l10n-name="themes-link">Extensions & Themes</a>
+preferences-web-appearance-link =
+    .label = Manage { -brand-short-name } themes in Extensions & Themes
 
 preferences-contrast-control-header = Contrast Control
 

@@ -1383,74 +1383,27 @@ richlistitem .text-link:hover {
   }
 }
 
-#websiteAppearanceGroup {
-  display: block;
+#webAppearanceGroup .description-deemphasized {
+  margin-block-end: var(--space-large);
 }
 
-#web-appearance-chooser {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-large);
-}
+/** SRD web-appearance-chooser control START **/
+.appearance-chooser-item {
+  flex: 1;
 
-#web-appearance-chooser,
-#web-appearance-override-warning,
-#text-zoom-override-warning {
-  margin: var(--space-medium) 0;
-}
-
-#web-appearance-override-warning:not([hidden]) {
-  display: flex;
-}
-
-.web-appearance-choice {
-  width: 100%;
-  border: 1px solid var(--in-content-box-border-color);
-  background-color: var(--background-color-box);
-  color: var(--text-color);
-  border-radius: var(--border-radius-small);
-  overflow: clip;
-}
-
-.web-appearance-choice-image-container {
-  background-color: var(--button-background-color);
-  padding: var(--space-medium) 0;
-
-  .web-appearance-choice:hover > & {
-    background-color: var(--button-background-color-hover);
+  &::part(image) {
+    width: 54px;
+    box-shadow: var(--box-shadow-card);
+    margin-block: var(--space-medium);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--border-radius-small);
   }
 
-  .web-appearance-choice:hover:active > & {
-    background-color: var(--button-background-color-active);
+  &:dir(rtl)::part(image) {
+    transform: scaleX(-1);
   }
 }
-
-.web-appearance-choice img {
-  display: block;
-  margin: 0 auto;
-
-  border: 1px solid var(--in-content-box-border-color);
-  border-radius: var(--border-radius-small);
-  box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.2);
-
-  transform: scaleX(1);
-  content: url("chrome://browser/content/preferences/web-appearance-light.svg");
-}
-
-.web-appearance-choice.dark img {
-  content: url("chrome://browser/content/preferences/web-appearance-dark.svg");
-}
-
-.web-appearance-choice img:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
-}
-
-.web-appearance-choice-footer {
-  border-top: 1px solid var(--in-content-box-border-color);
-  padding: 4px 8px;
-  overflow-wrap: anywhere;
-  display: flex;
-}
+/** SRD web-appearance-chooser control END **/
 
 #translations-manage-install-list {
   height: 220px;
