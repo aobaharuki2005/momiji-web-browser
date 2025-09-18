@@ -2789,6 +2789,9 @@
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">Inactive tabs</string>
+    <!-- Text displayed in the tabs tray, indicating the number of inactive tabs.
+        %d is the number of inactive tabs. -->
+    <string name="inactive_tabs_num_items">Items: %d</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Close all inactive tabs</string>
     <!-- Content description for expanding the inactive tabs section. -->

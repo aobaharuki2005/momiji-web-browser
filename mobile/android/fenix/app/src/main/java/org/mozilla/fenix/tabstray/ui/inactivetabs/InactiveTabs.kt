@@ -6,12 +6,12 @@
 
 package org.mozilla.fenix.tabstray.ui.inactivetabs
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,8 +21,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -54,7 +56,7 @@ import org.mozilla.fenix.tabstray.ui.tabitems.BasicTabListItem
 import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.ui.icons.R as iconsR
 
-private val ROUNDED_CORNER_SHAPE = RoundedCornerShape(8.dp)
+private val CardShape = RoundedCornerShape(12.dp)
 
 /**
  * Top-level list for displaying an expandable section of Inactive Tabs.
@@ -91,57 +93,55 @@ fun InactiveTabsList(
     onCFRDismiss: () -> Unit,
 ) {
     Card(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-        colors = CardDefaults.cardColors(containerColor = FirefoxTheme.colors.layer2),
-        shape = ROUNDED_CORNER_SHAPE,
-        border = BorderStroke(
-            width = 1.dp,
-            color = FirefoxTheme.colors.borderPrimary,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            contentColor = MaterialTheme.colorScheme.secondary,
         ),
+        shape = CardShape,
     ) {
-        Column(
-            modifier = Modifier
-                .animateContentSize()
-                .fillMaxWidth(),
-        ) {
-            InactiveTabsHeader(
-                expanded = expanded,
-                showCFR = showCFR,
-                onCFRShown = onCFRShown,
-                onCFRClick = onCFRClick,
-                onCFRDismiss = onCFRDismiss,
-                onClick = { onHeaderClick(!expanded) },
-                onDeleteAllClick = onDeleteAllButtonClick,
+        InactiveTabsHeader(
+            expanded = expanded,
+            showCFR = showCFR,
+            onCFRShown = onCFRShown,
+            onCFRClick = onCFRClick,
+            onCFRDismiss = onCFRDismiss,
+            onClick = { onHeaderClick(!expanded) },
+        )
+
+        if (expanded) {
+            if (showAutoCloseDialog) {
+                InactiveTabsAutoClosePrompt(
+                    onDismissClick = onAutoCloseDismissClick,
+                    onEnableAutoCloseClick = onEnableAutoCloseClick,
+                )
+            }
+
+            InactiveTabsSubHeader(
+                inactiveTabsSize = inactiveTabs.size,
+                onDeleteAllButtonClick = onDeleteAllButtonClick,
             )
 
-            if (expanded) {
-                if (showAutoCloseDialog) {
-                    InactiveTabsAutoClosePrompt(
-                        onDismissClick = onAutoCloseDismissClick,
-                        onEnableAutoCloseClick = onEnableAutoCloseClick,
-                    )
+            inactiveTabs.forEachIndexed { index, tab ->
+                val tabUrl = tab.content.url.toShortUrl()
+                val faviconPainter = tab.content.icon?.run {
+                    prepareToDraw()
+                    BitmapPainter(asImageBitmap())
                 }
+                BasicTabListItem(
+                    title = tab.toDisplayTitle(),
+                    url = tabUrl,
+                    faviconPainter = faviconPainter,
+                    onClick = { onTabClick(tab) },
+                    showCloseButton = true,
+                    onCloseButtonClick = { onTabCloseClick(tab) },
+                )
 
-                Column {
-                    inactiveTabs.forEach { tab ->
-                        val tabUrl = tab.content.url.toShortUrl()
-                        val faviconPainter = tab.content.icon?.run {
-                            prepareToDraw()
-                            BitmapPainter(asImageBitmap())
-                        }
-                        BasicTabListItem(
-                            title = tab.toDisplayTitle(),
-                            url = tabUrl,
-                            faviconPainter = faviconPainter,
-                            onClick = { onTabClick(tab) },
-                            showCloseButton = true,
-                            onCloseButtonClick = { onTabCloseClick(tab) },
-                        )
-                    }
+                if (index != inactiveTabs.size - 1) {
+                    HorizontalDivider()
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
@@ -152,7 +152,6 @@ fun InactiveTabsList(
  * @param expanded Whether the section is expanded.
  * @param showCFR Whether to show the CFR.
  * @param onClick Called when the user clicks on the header.
- * @param onDeleteAllClick Called when the user clicks on the delete all button.
  * @param onCFRShown Invoked when the CFR is displayed.
  * @param onCFRClick Invoked when the CFR is clicked.
  * @param onCFRDismiss Invoked when the CFR is dismissed.
@@ -162,7 +161,6 @@ private fun InactiveTabsHeader(
     expanded: Boolean,
     showCFR: Boolean,
     onClick: () -> Unit,
-    onDeleteAllClick: () -> Unit,
     onCFRShown: () -> Unit,
     onCFRClick: () -> Unit,
     onCFRDismiss: () -> Unit,
@@ -207,22 +205,46 @@ private fun InactiveTabsHeader(
     ) {
         ExpandableListHeader(
             headerText = stringResource(R.string.inactive_tabs_title),
-            headerTextStyle = FirefoxTheme.typography.headline7,
+            headerTextStyle = FirefoxTheme.typography.body1,
+            headerTextColor = MaterialTheme.colorScheme.secondary,
+            iconTint = MaterialTheme.colorScheme.secondary,
+            contentPadding = PaddingValues(all = 16.dp),
             expanded = expanded,
             expandActionContentDescription = stringResource(R.string.inactive_tabs_expand_content_description),
             collapseActionContentDescription = stringResource(R.string.inactive_tabs_collapse_content_description),
             onClick = onClick,
+        )
+    }
+}
+
+@Composable
+private fun InactiveTabsSubHeader(
+    inactiveTabsSize: Int,
+    onDeleteAllButtonClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .padding(start = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(
+                R.string.inactive_tabs_num_items,
+                inactiveTabsSize,
+            ),
+            modifier = Modifier.weight(1f),
+            style = FirefoxTheme.typography.body1,
+        )
+
+        IconButton(
+            onClick = onDeleteAllButtonClick,
         ) {
-            IconButton(
-                onClick = onDeleteAllClick,
-                modifier = Modifier.padding(horizontal = 4.dp),
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_delete),
-                    contentDescription = stringResource(R.string.inactive_tabs_delete_all),
-                    tint = FirefoxTheme.colors.iconPrimary,
-                )
-            }
+            Icon(
+                painter = painterResource(iconsR.drawable.mozac_ic_delete_24),
+                contentDescription = stringResource(R.string.inactive_tabs_delete_all),
+            )
         }
     }
 }
@@ -240,7 +262,7 @@ private fun InactiveTabsAutoClosePrompt(
 ) {
     Card(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-        shape = ROUNDED_CORNER_SHAPE,
+        shape = CardShape,
         colors = CardDefaults.cardColors(containerColor = FirefoxTheme.colors.layer2),
         border = BorderStroke(
             width = 1.dp,
