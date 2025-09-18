@@ -985,6 +985,16 @@
     Title for the "Default" alternative app icon variant in the icon picker screen.
   -->
   <string name="alternative_app_icon_option_default">ຄ່າເລິ່ມຕົ້ນ</string>
+  <!-- Title for the "Light" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_light">ແຈ້ງ</string>
+  <!-- Title for the "Dark" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_dark">ມືດ</string>
+  <!-- Title for the "Red" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_red">ສີແດງ</string>
+  <!-- Title for the "Green" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_green">ສີຂຽວ</string>
+  <!-- Title for the "Blue" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_blue">ສີຟ້າ</string>
   <!--
     Add-ons general availability nimbus message
 
