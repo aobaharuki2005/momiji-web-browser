@@ -553,9 +553,28 @@ export var SafeBrowsing = {
       log("Providers: " + providerStr);
     }
 
-    Object.keys(this.providers).forEach(function (provider) {
+    // Most tables are currently available in both SafeBrowsing v4 and v5. When
+    // a table exists in both versions, we prefer the SafeBrowsing v5 provider
+    // as it is the up-to-date version.
+    let providerKeys = Object.keys(this.providers);
+    providerKeys.push(
+      providerKeys.splice(providerKeys.indexOf("google5"), 1)[0]
+    );
+
+    providerKeys.forEach(function (provider) {
       if (provider == "test") {
         return; // skip
+      }
+
+      // If the SafeBrowsing V5 is disabled, we will skip creating the provider
+      // and use the SafeBrowsing V4 provider instead.
+      if (
+        provider == "google5" &&
+        !Services.prefs.getBoolPref(
+          "browser.safebrowsing.provider.google5.enabled"
+        )
+      ) {
+        return;
       }
 
       let updateURL = this.formatProviderURLFromPref(
@@ -569,7 +588,7 @@ export var SafeBrowsing = {
 
       // Disable updates and gethash if the Google API key is missing.
       if (
-        (provider == "google" || provider == "google4") &&
+        ["google", "google4", "google5"].includes(provider) &&
         !this.checkGoogleSafeBrowsingKey()
       ) {
         log(
@@ -598,44 +617,6 @@ export var SafeBrowsing = {
         log("Update URL given but no lists managed for provider: " + provider);
       }
     }, this);
-
-    // If the Safe Browsing V5 is disabled, we will use V4 instead. This means
-    // that we will put the V5 lists to the V4 provider to instruct using
-    // Safe Browsing V4 for those tables.
-    if (
-      !Services.prefs.getBoolPref(
-        "browser.safebrowsing.provider.google5.enabled"
-      )
-    ) {
-      // Get the lists for Safe Browsing V5, skip if no lists are managed.
-      let v5Lists = getLists("browser.safebrowsing.provider.google5.lists");
-      if (!v5Lists) {
-        log("No lists managed for Safe Browsing V5.");
-        return;
-      }
-
-      // Indicate that the lists are managed by the Google v5 provider.
-      v5Lists.forEach(list => {
-        this.listToProvider[list] = "google4";
-      });
-
-      // Ensure that the V4 provider is present.
-      if (!this.providers.google4) {
-        this.providers.google4 = {
-          updateURL: this.formatProviderURLFromPref(
-            "browser.safebrowsing.provider.google4.updateURL",
-            clientID
-          ),
-          gethashURL: this.formatProviderURLFromPref(
-            "browser.safebrowsing.provider.google4.gethashURL",
-            clientID
-          ),
-        };
-      }
-
-      // Delete the V5 provider from the providers object.
-      delete this.providers.google5;
-    }
   },
 
   controlUpdateChecking() {
