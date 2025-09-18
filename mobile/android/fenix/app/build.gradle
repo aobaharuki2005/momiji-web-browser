@@ -294,10 +294,6 @@ android {
         compose = true
     }
 
-    compileOptions {
-        coreLibraryDesugaringEnabled = true
-    }
-
     namespace = 'org.mozilla.fenix'
 }
 
@@ -546,8 +542,6 @@ tasks.withType(KotlinCompile).configureEach {
 }
 
 dependencies {
-    coreLibraryDesugaring libs.desugar.jdk.libs
-
     // We pick up JNA transitively by way of Glean, which is currently on version 5.14.0.
     // However, we need to force version 5.17.0 due to Google Play's 16KB page size requirement.
     // JNA 5.15.0+ crashes on Android <7, however, so it can't be bumped in Glean at this time.

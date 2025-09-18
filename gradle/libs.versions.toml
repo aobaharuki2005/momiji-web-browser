@@ -49,7 +49,6 @@ work = "2.10.4"
 
 # Google other
 accompanist = "0.37.3"
-desugar-jdk-libs = "2.1.5"
 firebase-messaging = "25.0.0"
 installreferrer = "2.2"
 material = "1.13.0"
@@ -201,7 +200,6 @@ androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "u
 
 # Google other
 accompanist-drawablepainter = { group = "com.google.accompanist", name = "accompanist-drawablepainter", version.ref = "accompanist" }
-desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebase-messaging" }
 installreferrer = { group = "com.android.installreferrer", name = "installreferrer", version.ref = "installreferrer" }
 google-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
