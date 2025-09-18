@@ -9,6 +9,7 @@
 #include "AudioNodeTrack.h"
 #include "AudioSegment.h"
 #include "CrossGraphPort.h"
+#include "CubebDeviceEnumerator.h"
 #include "ForwardedInputTrack.h"
 #include "ImageContainer.h"
 #include "MediaTrackGraphImpl.h"
@@ -822,6 +823,7 @@ void MediaTrackGraphImpl::OpenAudioInput(DeviceInputTrack* aTrack) {
   };
 
   mDeviceInputTrackManagerMainThread.Add(aTrack);
+  UpdateEnumeratorDefaultDeviceTracking();
 
   this->AppendMessage(MakeUnique<Message>(this, aTrack));
 }
@@ -900,6 +902,7 @@ void MediaTrackGraphImpl::CloseAudioInput(DeviceInputTrack* aTrack) {
   // aTrack->Destroy() is called after this. See DeviceInputTrack::CloseAudio
   // for more details.
   mDeviceInputTrackManagerMainThread.Remove(aTrack);
+  UpdateEnumeratorDefaultDeviceTracking();
 
   this->AppendMessage(MakeUnique<Message>(this, aTrack));
 
@@ -1771,6 +1774,7 @@ MediaTrackGraphImpl::Notify(nsITimer* aTimer) {
   // Sigh, graph took too long to shut down.  Stop blocking system
   // shutdown and hope all is well.
   RemoveShutdownBlocker();
+  mOutputDevicesChangedListener.DisconnectIfExists();
   return NS_OK;
 }
 
@@ -4344,6 +4348,53 @@ void MediaTrackGraphImpl::SetNewNativeInput() {
       ("%p Native input device is set to device %p now", this, deviceId));
 
   MOZ_ASSERT(mDeviceInputTrackManagerMainThread.GetNativeInputTrack());
+}
+
+void MediaTrackGraphImpl::UpdateEnumeratorDefaultDeviceTracking() {
+  MOZ_ASSERT(NS_IsMainThread());
+  auto onExit = MakeScopeExit([&] { UpdateDefaultDevice(); });
+
+  if (!mDeviceInputTrackManagerMainThread.GetNativeInputTrack()) {
+    mEnumeratorMainThread = nullptr;
+    mOutputDevicesChangedListener.DisconnectIfExists();
+    LOG(LogLevel::Debug,
+        ("%p No longer tracking system default output device", this));
+    return;
+  }
+
+  if (mEnumeratorMainThread) {
+    onExit.release();
+    return;
+  }
+
+  mEnumeratorMainThread = CubebDeviceEnumerator::GetInstance();
+  mOutputDevicesChangedListener =
+      mEnumeratorMainThread->OnAudioOutputDeviceListChange().Connect(
+          GetCurrentSerialEventTarget(), this,
+          &MediaTrackGraphImpl::UpdateDefaultDevice);
+  LOG(LogLevel::Debug, ("%p Now tracking system default output device", this));
+}
+
+void MediaTrackGraphImpl::UpdateDefaultDevice() {
+  MOZ_ASSERT(NS_IsMainThread());
+  CubebUtils::AudioDeviceID id = nullptr;
+  auto onExit = MakeScopeExit([&] {
+    mDefaultOutputDeviceID.store(id, std::memory_order_relaxed);
+    LOG(LogLevel::Debug,
+        ("%p Tracked system default output device ID is now %p", this, id));
+  });
+
+  if (!mEnumeratorMainThread) {
+    return;
+  }
+
+  auto dev =
+      mEnumeratorMainThread->DefaultDevice(CubebDeviceEnumerator::Side::OUTPUT);
+  if (!dev) {
+    return;
+  }
+
+  id = dev->DeviceID();
 }
 
 // nsIThreadObserver methods

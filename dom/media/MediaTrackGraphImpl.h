@@ -6,10 +6,13 @@
 #ifndef MOZILLA_MEDIATRACKGRAPHIMPL_H_
 #define MOZILLA_MEDIATRACKGRAPHIMPL_H_
 
+#include <atomic>
+
 #include "AsyncLogger.h"
 #include "AudioMixer.h"
 #include "DeviceInputTrack.h"
 #include "GraphDriver.h"
+#include "MediaEventSource.h"
 #include "MediaTrackGraph.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
@@ -31,6 +34,7 @@ class ShutdownBlocker;
 }
 
 class AudioContextOperationControlMessage;
+class CubebDeviceEnumerator;
 template <typename T>
 class LinkedList;
 class GraphRunner;
@@ -591,6 +595,20 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
     AssertOnGraphThread();
     return mOutputDeviceForAEC == PrimaryOutputDeviceID();
   }
+  CubebUtils::AudioDeviceID DefaultOutputDeviceID() const {
+    return mDefaultOutputDeviceID.load(std::memory_order_relaxed);
+  }
+  /**
+   * Update whether the enumerator is set up for default output device tracking,
+   * based on presence of input devices.
+   * Marked virtual for unittests. Main thread only.
+   */
+  virtual void UpdateEnumeratorDefaultDeviceTracking();
+  /**
+   * Update the tracked default output device from the enumerator.
+   * Main thread only.
+   */
+  void UpdateDefaultDevice();
   /**
    * The audio input channel count for a MediaTrackGraph is the max of all the
    * channel counts requested by the listeners. The max channel count is
@@ -1167,11 +1185,25 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    */
   DeviceInputTrackManager mDeviceInputTrackManagerMainThread;
 
+  /**
+   * An enumerator for tracking the system default output device. Set only while
+   * an input track is present in the graph, as the system default output device
+   * is used for AEC decisions. Main thread only.
+   */
+  RefPtr<CubebDeviceEnumerator> mEnumeratorMainThread;
+
  protected:
   /**
    * Manage the native or non-native input device in graph. Graph thread only.
    */
   DeviceInputTrackManager mDeviceInputTrackManagerGraphThread;
+  MediaEventListener mOutputDevicesChangedListener;
+  /**
+   * The system's current default device. When PrimaryOutputDeviceID() is
+   * nullptr, this is what it maps to. There will be a delay between a user
+   * changing their default device, to this device ID being up to date.
+   */
+  std::atomic<CubebUtils::AudioDeviceID> mDefaultOutputDeviceID = {nullptr};
   /**
    * The mixer that the graph mixes into during an iteration. This is here
    * rather than on the stack so that its buffer is not allocated each

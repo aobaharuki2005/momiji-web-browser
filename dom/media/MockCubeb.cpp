@@ -733,6 +733,34 @@ void MockCubeb::ClearDevices(cubeb_device_type aType) {
   }
 }
 
+void MockCubeb::SetPreferredDevice(cubeb_devid aId, cubeb_device_type aType) {
+  nsTArray<cubeb_device_info>& devs =
+      aType == CUBEB_DEVICE_TYPE_INPUT ? mInputDevices : mOutputDevices;
+  bool found{};
+  for (const auto& dev : devs) {
+    if (dev.devid == aId) {
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    return;
+  }
+  for (auto& dev : devs) {
+    dev.preferred =
+        dev.devid == aId ? CUBEB_DEVICE_PREF_ALL : CUBEB_DEVICE_PREF_NONE;
+  }
+  auto& callback = aType == CUBEB_DEVICE_TYPE_INPUT
+                       ? mInputDeviceCollectionChangeCallback
+                       : mOutputDeviceCollectionChangeCallback;
+  void* user_ptr = aType == CUBEB_DEVICE_TYPE_INPUT
+                       ? mInputDeviceCollectionChangeUserPtr
+                       : mOutputDeviceCollectionChangeUserPtr;
+  if (found && callback) {
+    callback(AsCubebContext(), user_ptr);
+  }
+}
+
 void MockCubeb::SetSupportDeviceChangeCallback(bool aSupports) {
   mSupportsDeviceCollectionChangedCallback = aSupports;
 }
