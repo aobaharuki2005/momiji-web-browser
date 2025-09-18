@@ -4392,6 +4392,21 @@
       }
     ]
   },
+  "1945561": {
+    "label": "webex.com",
+    "bugs": {
+      "1945561": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://*.webex.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "ua_string": ["Chrome"]
+      }
+    ]
+  },
   "1946409": {
     "label": "www.lush.com",
     "bugs": {
