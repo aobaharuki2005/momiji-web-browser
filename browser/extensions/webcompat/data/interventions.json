@@ -66,10 +66,6 @@
         "issue": "broken-interactive-elements",
         "matches": ["*://*.lafoodbank.org/*"]
       },
-      "1944013": {
-        "issue": "broken-interactive-elements",
-        "matches": ["*://*.lamudi.co.id/*"]
-      },
       "1944015": {
         "issue": "broken-interactive-elements",
         "matches": ["*://*.lawnmowerpartsworld.com/*"]
