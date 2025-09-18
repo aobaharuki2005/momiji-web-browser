@@ -68,6 +68,10 @@ class MOZ_STACK_CLASS TextAutospace final {
   // and aCurrClass.
   bool ShouldApplySpacing(CharClass aPrevClass, CharClass aCurrClass) const;
 
+  // Returns true when non-ideographic letters/numerals should not participate
+  // in autospace boundaries for aFrame.
+  static bool ShouldSuppressLetterNumeralSpacing(const nsIFrame* aFrame);
+
   // Return true if aChar is an ideograph.
   // https://drafts.csswg.org/css-text-4/#ideographs
   static bool IsIdeograph(char32_t aChar);

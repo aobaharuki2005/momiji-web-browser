@@ -107,14 +107,25 @@ using namespace mozilla::gfx;
 
 namespace mozilla {
 
-// Is the given frame using a vertical-* (not sideways-*) writing-mode with
-// text-orientation:upright applied, or is it using text-combine-upright?
-static bool IsVerticalUpright(const nsIFrame* aFrame) {
-  return (aFrame->GetWritingMode().IsVertical() &&
-          !aFrame->GetWritingMode().IsVerticalSideways() &&
-          aFrame->StyleVisibility()->mTextOrientation ==
-              StyleTextOrientation::Upright) ||
-         aFrame->Style()->IsTextCombined();
+bool TextAutospace::ShouldSuppressLetterNumeralSpacing(const nsIFrame* aFrame) {
+  const auto wm = aFrame->GetWritingMode();
+  if (wm.IsVertical() && !wm.IsVerticalSideways() &&
+      aFrame->StyleVisibility()->mTextOrientation ==
+          StyleTextOrientation::Upright) {
+    // The characters are in vertical writing mode with forced upright glyph
+    // orientation.
+    return true;
+  }
+  if (aFrame->Style()->IsTextCombined()) {
+    // The characters have combined forced upright glyph orientation.
+    return true;
+  }
+  if (aFrame->StyleText()->mTextTransform & StyleTextTransform::FULL_WIDTH) {
+    // The characters are transformed to full-width, so non-ideographic
+    // letters/numerals look like ideograph letter/numerals.
+    return true;
+  }
+  return false;
 }
 
 bool TextAutospace::Enabled(const StyleTextAutospace& aStyleTextAutospace,
@@ -130,11 +141,9 @@ bool TextAutospace::Enabled(const StyleTextAutospace& aStyleTextAutospace,
     return false;
   }
 
-  if (IsVerticalUpright(aFrame)) {
-    // If writing-mode is vertical-* and 'text-orientation: upright', or the
-    // frame uses text-combine-upright, a character cannot be a non-ideographic
-    // letter or numeral, so ideograph-alpha or ideograph-numeric boundaries
-    // cannot occur.
+  if (ShouldSuppressLetterNumeralSpacing(aFrame)) {
+    // If we suppress the spacing for aFrame, ideograph-alpha or
+    // ideograph-numeric boundaries cannot occur.
     return false;
   }
 
@@ -3960,9 +3969,7 @@ static Maybe<TextAutospace::CharClass> GetPrecedingCharClassFromFrameTree(
       if (prevClass) {
         if ((*prevClass == CharClass::NonIdeographicLetter ||
              *prevClass == CharClass::NonIdeographicNumeral) &&
-            IsVerticalUpright(f)) {
-          // If we're in vertical writing mode with forced upright glyph
-          // orientation, these classes are not applicable.
+            TextAutospace::ShouldSuppressLetterNumeralSpacing(f)) {
           return Some(CharClass::Other);
         }
         return prevClass;
