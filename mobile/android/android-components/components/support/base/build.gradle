@@ -75,39 +75,51 @@ dependencies {
     testImplementation libs.robolectric
 }
 
-preBuild.finalizedBy("generateComponentEnum")
-
 /**
  * Generates a "Components" enum listing all published components.
  */
 tasks.register("generateComponentEnum") {
     def buildConfigCache = buildConfig
+    def publishedProjects = buildConfigCache.projects.findAll { project ->
+        project.value.publish
+    }
+    def file = new File(generatedSrcDir, "Component.kt")
+
+    inputs.property("publishedProjects", publishedProjects.collect { project ->
+        project.key + ":" + project.value.publish
+    }.sort())
+
+    outputs.file(file)
+    
     doLast {
         generatedSrcDir.mkdirs()
 
-        def file = new File(generatedSrcDir, "Component.kt")
-        file.delete()
-        file.createNewFile()
-
-        file << "/* This Source Code Form is subject to the terms of the Mozilla Public\n" +
+        def content = new StringBuilder()
+        content << "/* This Source Code Form is subject to the terms of the Mozilla Public\n" +
                 " * License, v. 2.0. If a copy of the MPL was not distributed with this\n" +
                 " * file, You can obtain one at http://mozilla.org/MPL/2.0/. */\n"
 
-        file << "package mozilla.components.support.base" << "\n"
-        file << "\n"
-        file << "// Automatically generated file. DO NOT MODIFY" << "\n"
-        file << "\n"
-        file << "enum class Component {" << "\n"
+        content << "package mozilla.components.support.base" << "\n"
+        content << "\n"
+        content << "// Automatically generated file. DO NOT MODIFY" << "\n"
+        content << "\n"
+        content << "enum class Component {" << "\n"
 
-        file << buildConfigCache.projects.findAll { project ->
-            project.value.publish
-        }.collect { project ->
+        content << publishedProjects.collect { project ->
             "    " + project.key.replaceFirst(/^components:/, "").replace("-", "_").toUpperCase(Locale.US)
         }.join(", \n")
 
-        file << "\n"
-        file << "}\n"
-        file << "\n"
+        content << "\n"
+        content << "}\n"
+        content << "\n"
+
+        file.text = content.toString()
+    }
+}
+
+afterEvaluate {
+    tasks.matching { it.name.startsWith("compile") && it.name.endsWith("Kotlin") }.configureEach {
+        dependsOn("generateComponentEnum")
     }
 }
 
