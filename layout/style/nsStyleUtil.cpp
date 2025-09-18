@@ -141,8 +141,7 @@ bool nsStyleUtil::ValueIncludes(const nsAString& aValueList,
 }
 
 void nsStyleUtil::AppendEscapedCSSString(const nsACString& aString,
-                                         nsACString& aReturn,
-                                         char aQuoteChar) {
+                                         nsACString& aReturn, char aQuoteChar) {
   MOZ_ASSERT(aQuoteChar == '\'' || aQuoteChar == '"',
              "CSS strings must be quoted with ' or \"");
 
