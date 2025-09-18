@@ -249,6 +249,23 @@ features:
                     label: onboarding_customize_toolbar_bottom_option
                     image-res: ic_onboarding_bottom_toolbar
 
+            toolbar-placement-redesign:
+              card-type: toolbar-placement
+              enabled: false
+              title: onboarding_redesign_customize_toolbar_title
+              body: onboarding_customize_toolbar_description
+              image-res: ic_onboarding_customize_toolbar
+              ordering: 35
+              primary-button-label: onboarding_redesign_continue_button
+              extra-data:
+                customization-toolbar-data:
+                  - toolbar-type: toolbar-top
+                    label: onboarding_customize_toolbar_top_option
+                    image-res: ic_onboarding_top_toolbar
+                  - toolbar-type: toolbar-bottom
+                    label: onboarding_customize_toolbar_bottom_option
+                    image-res: ic_onboarding_bottom_toolbar
+
             marketing-data:
               card-type: marketing-data
               enabled: false
