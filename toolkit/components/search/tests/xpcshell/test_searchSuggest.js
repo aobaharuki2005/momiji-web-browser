@@ -14,12 +14,7 @@ const { FormHistory } = ChromeUtils.importESModule(
 const { SearchSuggestionController } = ChromeUtils.importESModule(
   "moz-src:///toolkit/components/search/SearchSuggestionController.sys.mjs"
 );
-const { TelemetryTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TelemetryTestUtils.sys.mjs"
-);
-
-const ENGINE_NAME = "other";
-const SEARCH_TELEMETRY_LATENCY = "SEARCH_SUGGESTIONS_LATENCY_MS";
+const THIRD_PARTY_ENGINE_ID = "other";
 
 // We must make sure the FormHistoryStartup component is
 // initialized in order for it to respond to FormHistory
@@ -32,6 +27,8 @@ formHistoryStartup.observe(null, "profile-after-change", null);
 var getEngine, postEngine, unresolvableEngine, alternateJSONEngine;
 
 add_setup(async function () {
+  Services.fog.initializeFOG();
+
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
   // These tests intentionally test broken connections.
   consoleAllowList = consoleAllowList.concat([
@@ -97,10 +94,6 @@ add_setup(async function () {
 // Begin tests
 
 add_task(async function simple_no_result_promise() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
-
   let controller = new SearchSuggestionController();
   let result = await controller.fetch({
     searchString: "no remote",
@@ -111,14 +104,10 @@ add_task(async function simple_no_result_promise() {
   Assert.equal(result.local.length, 0);
   Assert.equal(result.remote.length, 0);
 
-  assertLatencyHistogram(histogram, true);
+  assertLatencyCollection(true);
 });
 
 add_task(async function simple_remote_no_local_result() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
-
   let controller = new SearchSuggestionController();
   let result = await controller.fetch({
     searchString: "mo",
@@ -132,7 +121,7 @@ add_task(async function simple_remote_no_local_result() {
   Assert.equal(result.remote[1].value, "modern");
   Assert.equal(result.remote[2].value, "mom");
 
-  assertLatencyHistogram(histogram, true);
+  assertLatencyCollection(true);
 });
 
 add_task(async function simple_remote_no_local_result_alternative_type() {
@@ -384,9 +373,9 @@ add_task(async function tail_offset_index() {
 });
 
 add_task(async function fetch_twice_in_a_row() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
+  // The previous tests weren't testing telemetry, but this one is, so reset
+  // it before use.
+  Services.fog.testResetFOG();
 
   // Two entries since the first will match the first fetch but not the second.
   await updateSearchHistory("bump", "delay local");
@@ -416,7 +405,7 @@ add_task(async function fetch_twice_in_a_row() {
 
   // Only the second fetch's latency should be recorded since the first fetch
   // was aborted and latencies for aborted fetches are not recorded.
-  assertLatencyHistogram(histogram, true);
+  assertLatencyCollection(true);
 });
 
 add_task(async function both_identical_with_more_than_max_results() {
@@ -459,9 +448,9 @@ add_task(async function both_identical_with_more_than_max_results() {
 });
 
 add_task(async function noremote_maxLocal() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
+  // The previous tests weren't testing telemetry, but this one is, so reset
+  // it before use.
+  Services.fog.testResetFOG();
 
   let controller = new SearchSuggestionController();
   controller.maxLocalResults = 2; // (should be ignored because no remote results)
@@ -481,14 +470,10 @@ add_task(async function noremote_maxLocal() {
   }
   Assert.equal(result.remote.length, 0);
 
-  assertLatencyHistogram(histogram, false);
+  assertLatencyCollection(false);
 });
 
 add_task(async function someremote_maxLocal() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
-
   let controller = new SearchSuggestionController();
   controller.maxLocalResults = 2;
   controller.maxRemoteResults = 4;
@@ -514,7 +499,7 @@ add_task(async function someremote_maxLocal() {
     );
   }
 
-  assertLatencyHistogram(histogram, true);
+  assertLatencyCollection(true);
 });
 
 add_task(async function one_of_each() {
@@ -534,9 +519,9 @@ add_task(async function one_of_each() {
 });
 
 add_task(async function local_result_returned_remote_result_disabled() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
+  // The previous tests weren't testing telemetry, but this one is, so reset
+  // it before use.
+  Services.fog.testResetFOG();
 
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
   let controller = new SearchSuggestionController();
@@ -556,15 +541,12 @@ add_task(async function local_result_returned_remote_result_disabled() {
     );
   }
   Assert.equal(result.remote.length, 0);
-  assertLatencyHistogram(histogram, false);
+  assertLatencyCollection(false);
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
 });
 
 add_task(
   async function local_result_returned_remote_result_disabled_after_creation_of_controller() {
-    let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-      SEARCH_TELEMETRY_LATENCY
-    );
     let controller = new SearchSuggestionController();
     controller.maxLocalResults = 1;
     controller.maxRemoteResults = 1;
@@ -583,17 +565,13 @@ add_task(
       );
     }
     Assert.equal(result.remote.length, 0);
-    assertLatencyHistogram(histogram, false);
+    assertLatencyCollection(false);
     Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
   }
 );
 
 add_task(
   async function one_of_each_disabled_before_creation_enabled_after_creation_of_controller() {
-    let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-      SEARCH_TELEMETRY_LATENCY
-    );
-
     Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
     let controller = new SearchSuggestionController();
     controller.maxLocalResults = 1;
@@ -610,16 +588,13 @@ add_task(
     Assert.equal(result.remote.length, 1);
     Assert.equal(result.remote[0].value, "letter B");
 
-    assertLatencyHistogram(histogram, true);
+    assertLatencyCollection(true);
 
     Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
   }
 );
 
 add_task(async function one_local_zero_remote() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
   let controller = new SearchSuggestionController();
   controller.maxLocalResults = 1;
   controller.maxRemoteResults = 0;
@@ -637,13 +612,10 @@ add_task(async function one_local_zero_remote() {
     );
   }
   Assert.equal(result.remote.length, 0);
-  assertLatencyHistogram(histogram, false);
+  assertLatencyCollection(false);
 });
 
 add_task(async function zero_local_one_remote() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
   let controller = new SearchSuggestionController();
   controller.maxLocalResults = 0;
   controller.maxRemoteResults = 1;
@@ -656,13 +628,10 @@ add_task(async function zero_local_one_remote() {
   Assert.equal(result.local.length, 0);
   Assert.equal(result.remote.length, 1);
   Assert.equal(result.remote[0].value, "letter A");
-  assertLatencyHistogram(histogram, true);
+  assertLatencyCollection(true);
 });
 
 add_task(async function stop_search() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
   let controller = new SearchSuggestionController();
   let resultPromise = controller.fetch({
     searchString: "mo",
@@ -673,14 +642,11 @@ add_task(async function stop_search() {
   await resultPromise.then(result => {
     Assert.equal(null, result);
   });
-  assertLatencyHistogram(histogram, false);
+  assertLatencyCollection(false);
 });
 
 add_task(async function empty_searchTerm() {
   // Empty searches don't go to the server but still get form history.
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
   let controller = new SearchSuggestionController();
   let result = await controller.fetch({
     searchString: "",
@@ -690,14 +656,10 @@ add_task(async function empty_searchTerm() {
   Assert.equal(result.term, "");
   Assert.ok(!!result.local.length);
   Assert.equal(result.remote.length, 0);
-  assertLatencyHistogram(histogram, false);
+  assertLatencyCollection(false);
 });
 
 add_task(async function slow_timeout() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
-
   // Make the server return suggestions on a delay longer than the timeout of
   // the suggestion controller.
   let delayMs = 3 * SearchSuggestionController.REMOTE_TIMEOUT_DEFAULT;
@@ -722,20 +684,16 @@ add_task(async function slow_timeout() {
 
   // The remote fetch isn't done yet, so the latency histogram should not be
   // updated.
-  assertLatencyHistogram(histogram, false);
+  assertLatencyCollection(false);
 
   // Wait for the remote fetch to finish.
   await new Promise(r => setTimeout(r, delayMs));
 
   // Now the latency histogram should be updated.
-  assertLatencyHistogram(histogram, true);
+  assertLatencyCollection(true);
 });
 
 add_task(async function slow_timeout_2() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
-
   // Make the server return suggestions on a delay longer the timeout of the
   // suggestion controller.
   let delayMs = 3 * SearchSuggestionController.REMOTE_TIMEOUT_DEFAULT;
@@ -765,21 +723,17 @@ add_task(async function slow_timeout_2() {
 
   // The remote fetch of the second search isn't done yet, so the latency
   // histogram should not be updated.
-  assertLatencyHistogram(histogram, false);
+  assertLatencyCollection(false);
 
   // Wait for the second remote fetch to finish.
   await new Promise(r => setTimeout(r, delayMs));
 
   // Now the latency histogram should be updated, and only the remote fetch of
   // the second search should be recorded.
-  assertLatencyHistogram(histogram, true);
+  assertLatencyCollection(true);
 });
 
 add_task(async function slow_stop() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
-
   // Make the server return suggestions on a delay longer the timeout of the
   // suggestion controller.
   let delayMs = 3 * SearchSuggestionController.REMOTE_TIMEOUT_DEFAULT;
@@ -804,17 +758,13 @@ add_task(async function slow_stop() {
 
   // Since the latencies of aborted fetches are not recorded, the latency
   // histogram should not be updated.
-  assertLatencyHistogram(histogram, false);
+  assertLatencyCollection(false);
 });
 
 // Error handling
 
 add_task(async function remote_term_mismatch() {
   await updateSearchHistory("bump", "Query Mismatch Entry");
-
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
 
   let controller = new SearchSuggestionController();
   let result = await controller.fetch({
@@ -827,15 +777,11 @@ add_task(async function remote_term_mismatch() {
   Assert.equal(result.local[0].value, "Query Mismatch Entry");
   Assert.equal(result.remote.length, 0);
 
-  assertLatencyHistogram(histogram, true);
+  assertLatencyCollection(true);
 });
 
 add_task(async function http_404() {
   await updateSearchHistory("bump", "HTTP 404 Entry");
-
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
 
   let controller = new SearchSuggestionController();
   let result = await controller.fetch({
@@ -848,15 +794,11 @@ add_task(async function http_404() {
   Assert.equal(result.local[0].value, "HTTP 404 Entry");
   Assert.equal(result.remote.length, 0);
 
-  assertLatencyHistogram(histogram, true);
+  assertLatencyCollection(true);
 });
 
 add_task(async function http_500() {
   await updateSearchHistory("bump", "HTTP 500 Entry");
-
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
 
   let controller = new SearchSuggestionController();
   let result = await controller.fetch({
@@ -869,7 +811,7 @@ add_task(async function http_500() {
   Assert.equal(result.local[0].value, "HTTP 500 Entry");
   Assert.equal(result.remote.length, 0);
 
-  assertLatencyHistogram(histogram, true);
+  assertLatencyCollection(true);
 });
 
 add_task(async function invalid_response_does_not_throw() {
@@ -902,11 +844,11 @@ add_task(async function invalid_content_type_treated_as_json() {
 });
 
 add_task(async function unresolvable_server() {
-  await updateSearchHistory("bump", "Unresolvable Server Entry");
+  // The previous tests weren't testing telemetry, but this one is, so reset
+  // it before use.
+  Services.fog.testResetFOG();
 
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
+  await updateSearchHistory("bump", "Unresolvable Server Entry");
 
   let controller = new SearchSuggestionController();
   let result = await controller.fetch({
@@ -919,7 +861,7 @@ add_task(async function unresolvable_server() {
   Assert.equal(result.local[0].value, "Unresolvable Server Entry");
   Assert.equal(result.remote.length, 0);
 
-  assertLatencyHistogram(histogram, true);
+  assertLatencyCollection(true);
 });
 
 // Exception handling
@@ -1020,23 +962,23 @@ function updateSearchHistory(operation, value) {
   });
 }
 
-function assertLatencyHistogram(histogram, shouldRecord) {
-  let snapshot = histogram.snapshot();
-  info("Checking latency snapshot: " + JSON.stringify(snapshot));
+function assertLatencyCollection(shouldRecord) {
+  let latencyDistribution =
+    Glean.search.suggestionsLatency[THIRD_PARTY_ENGINE_ID].testGetValue();
 
-  // Build a map from engine ID => number of non-zero values recorded for it.
-  let valueCountByEngineId = Object.entries(snapshot).reduce(
-    (memo, [key, data]) => {
-      memo[key] = Object.values(data.values).filter(v => v != 0);
-      return memo;
-    },
-    {}
-  );
+  if (shouldRecord) {
+    Assert.deepEqual(
+      latencyDistribution.count,
+      1,
+      "Should have recorded a latency count"
+    );
+  } else {
+    Assert.deepEqual(
+      latencyDistribution,
+      null,
+      "Should not have recorded a latency count"
+    );
+  }
 
-  let expected = shouldRecord ? { [ENGINE_NAME]: [1] } : {};
-  Assert.deepEqual(
-    valueCountByEngineId,
-    expected,
-    shouldRecord ? "Latency histogram updated" : "Latency histogram not updated"
-  );
+  Services.fog.testResetFOG();
 }
