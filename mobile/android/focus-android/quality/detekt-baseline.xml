@@ -2,6 +2,22 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
+    <ID>ForbiddenSuppress:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment$@Suppress("LongMethod")</ID>
+    <ID>ForbiddenSuppress:AppReducer.kt$@Suppress("ComplexMethod", "ReturnCount")</ID>
+    <ID>ForbiddenSuppress:AppReducer.kt$AppReducer$@Suppress("ComplexMethod")</ID>
+    <ID>ForbiddenSuppress:BrowserFragment.kt$BrowserFragment$@Suppress("ComplexCondition", "LongMethod")</ID>
+    <ID>ForbiddenSuppress:BrowserFragment.kt$BrowserFragment$@Suppress("ComplexMethod", "ReturnCount")</ID>
+    <ID>ForbiddenSuppress:BrowserFragment.kt$BrowserFragment$@Suppress("LongMethod", "ComplexMethod")</ID>
+    <ID>ForbiddenSuppress:BrowserMenuController.kt$BrowserMenuController$@Suppress("ComplexMethod")</ID>
+    <ID>ForbiddenSuppress:BrowserMenuController.kt$BrowserMenuController$@Suppress("LongMethod")</ID>
+    <ID>ForbiddenSuppress:IntentProcessor.kt$IntentProcessor$@Suppress("ComplexMethod", "ReturnCount")</ID>
+    <ID>ForbiddenSuppress:MainActivityNavigation.kt$MainActivityNavigation$@Suppress("ComplexMethod")</ID>
+    <ID>ForbiddenSuppress:MainActivityNavigation.kt$MainActivityNavigation$@Suppress("MagicNumber")</ID>
+    <ID>ForbiddenSuppress:OnboardingSecondScreenCompose.kt$@Suppress("LongMethod")</ID>
+    <ID>ForbiddenSuppress:PromoteSearchWidgetDialogCompose.kt$@Suppress("LongMethod")</ID>
+    <ID>ForbiddenSuppress:StartupStateProvider.kt$StartupStateProvider$@Suppress("MagicNumber")</ID>
+    <ID>ForbiddenSuppress:UrlInputFragment.kt$UrlInputFragment$@Suppress("ComplexMethod")</ID>
+    <ID>ForbiddenSuppress:UrlInputFragment.kt$UrlInputFragment$@Suppress("LongMethod")</ID>
     <ID>OutdatedDocumentation:AppAdapter.kt$AppAdapter : Adapter</ID>
     <ID>OutdatedDocumentation:AppReviewUtils.kt$AppReviewUtils$fun addAppOpenings(context: Context)</ID>
     <ID>OutdatedDocumentation:AppReviewUtils.kt$AppReviewUtils$fun showAppReview(activity: Activity)</ID>
