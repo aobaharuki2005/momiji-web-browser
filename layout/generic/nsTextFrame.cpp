@@ -105,6 +105,22 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
+static bool NeedsToMaskPassword(const nsTextFrame* aFrame) {
+  MOZ_ASSERT(aFrame);
+  MOZ_ASSERT(aFrame->GetContent());
+  if (!aFrame->GetContent()->HasFlag(NS_MAYBE_MASKED)) {
+    return false;
+  }
+  // TODO: can we completely const-ify GetClosestFrameOfType? It doesn't modify
+  // anything, but currently some callers expect a non-const return value; it
+  // would be nice to propagate const-ness if possible.
+  const nsIFrame* frame = nsLayoutUtils::GetClosestFrameOfType(
+      const_cast<nsTextFrame*>(aFrame), LayoutFrameType::TextInput);
+  MOZ_ASSERT(frame, "How do we have a masked text node without a text input?");
+  return !frame || !frame->GetContent()->AsElement()->State().HasState(
+                       ElementState::REVEALED);
+}
+
 namespace mozilla {
 
 bool TextAutospace::ShouldSuppressLetterNumeralSpacing(const nsIFrame* aFrame) {
@@ -129,7 +145,7 @@ bool TextAutospace::ShouldSuppressLetterNumeralSpacing(const nsIFrame* aFrame) {
 }
 
 bool TextAutospace::Enabled(const StyleTextAutospace& aStyleTextAutospace,
-                            const nsIFrame* aFrame) {
+                            const nsTextFrame* aFrame) {
   if (aStyleTextAutospace == StyleTextAutospace::NO_AUTOSPACE) {
     return false;
   }
@@ -144,6 +160,12 @@ bool TextAutospace::Enabled(const StyleTextAutospace& aStyleTextAutospace,
   if (ShouldSuppressLetterNumeralSpacing(aFrame)) {
     // If we suppress the spacing for aFrame, ideograph-alpha or
     // ideograph-numeric boundaries cannot occur.
+    return false;
+  }
+
+  if (NeedsToMaskPassword(aFrame)) {
+    // Don't allow autospacing in masked password fields, as it could reveal
+    // hints about the types of characters present.
     return false;
   }
 
@@ -246,19 +268,6 @@ TextAutospace::BoundarySet TextAutospace::InitBoundarySet(
 }
 
 }  // namespace mozilla
-
-static bool NeedsToMaskPassword(nsTextFrame* aFrame) {
-  MOZ_ASSERT(aFrame);
-  MOZ_ASSERT(aFrame->GetContent());
-  if (!aFrame->GetContent()->HasFlag(NS_MAYBE_MASKED)) {
-    return false;
-  }
-  nsIFrame* frame =
-      nsLayoutUtils::GetClosestFrameOfType(aFrame, LayoutFrameType::TextInput);
-  MOZ_ASSERT(frame, "How do we have a masked text node without a text input?");
-  return !frame || !frame->GetContent()->AsElement()->State().HasState(
-                       ElementState::REVEALED);
-}
 
 struct TabWidth {
   TabWidth(uint32_t aOffset, uint32_t aWidth)
