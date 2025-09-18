@@ -725,8 +725,12 @@ bool MockCubeb::RemoveDevice(cubeb_devid aId) {
 }
 
 void MockCubeb::ClearDevices(cubeb_device_type aType) {
-  mInputDevices.Clear();
-  mOutputDevices.Clear();
+  if (aType != CUBEB_DEVICE_TYPE_OUTPUT) {
+    mInputDevices.Clear();
+  }
+  if (aType != CUBEB_DEVICE_TYPE_INPUT) {
+    mOutputDevices.Clear();
+  }
 }
 
 void MockCubeb::SetSupportDeviceChangeCallback(bool aSupports) {
