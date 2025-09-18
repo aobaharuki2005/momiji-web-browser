@@ -305,5 +305,29 @@ def test_fenix_build(objdir, mozconfig, run_mach):
     assert_all_task_statuses(objdir, ["UP-TO-DATE", "SKIPPED"])
 
 
+def test_focus_build(objdir, mozconfig, run_mach):
+    (returncode, output) = run_mach(["build"])
+    assert returncode == 0
+
+    (returncode, output) = run_mach(["gradle", "focus:clean"])
+    assert returncode == 0
+
+    (returncode, output) = run_mach(["gradle", "focus:assembleDebug"])
+    assert returncode == 0
+
+    assert_ordered_task_outcomes(
+        objdir, [(":focus-android:generateLocaleList", "EXECUTED")]
+    )
+    assert_all_task_statuses(objdir, ["EXECUTED", "UP-TO-DATE", "SKIPPED"])
+
+    (returncode, output) = run_mach(["gradle", "focus:assembleDebug"])
+    assert returncode == 0
+
+    assert_ordered_task_outcomes(
+        objdir, [(":focus-android:generateLocaleList", "UP-TO-DATE")]
+    )
+    assert_all_task_statuses(objdir, ["UP-TO-DATE", "SKIPPED"])
+
+
 if __name__ == "__main__":
     mozunit.main()
