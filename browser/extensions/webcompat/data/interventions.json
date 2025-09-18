@@ -121,6 +121,10 @@
       "1982801": {
         "issue": "broken-interactive-elements",
         "matches": ["*://www.linguee.de/*"]
+      },
+      "1986875": {
+        "issue": "broken-interactive-elements",
+        "matches": ["*://www.electrosport.com/*"]
       }
     },
     "interventions": [
