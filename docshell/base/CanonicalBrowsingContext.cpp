@@ -1217,7 +1217,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
               }
             }
           }
-          if (Navigation::IsAPIEnabled()) {
+          if (Navigation::IsAPIEnabled() && !newActiveEntry->isInList()) {
             mActiveEntryList.insertBack(newActiveEntry);
           }
           mActiveEntry = newActiveEntry;
@@ -1240,7 +1240,10 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
             while (entry) {
               entry = entry->removeAndGetNext();
             }
-            mActiveEntryList.insertBack(newActiveEntry);
+            // TODO(avandolder): Can this check ever actually be false?
+            if (!newActiveEntry->isInList()) {
+              mActiveEntryList.insertBack(newActiveEntry);
+            }
           }
           mActiveEntry = newActiveEntry;
         } else if (!mActiveEntry) {
