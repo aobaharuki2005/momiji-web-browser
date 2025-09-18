@@ -4809,7 +4809,6 @@ dependencies = [
  "nserror",
  "nsstring",
  "thin-vec",
- "windows-sys",
 ]
 
 [[package]]
