@@ -833,9 +833,23 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       return;
     }
 
-    const { bindingElement: node, pseudo } = getBindingElementAndPseudo(
-      this.currentNode
-    );
+    // The binding element of a pseudo element can also be a pseudo element (for example
+    // ::before::marker), so walk up through the tree until we get a non pseudo binding
+    // element.
+    let node = this.currentNode,
+      pseudo = "";
+    while (true) {
+      const res = getBindingElementAndPseudo(node);
+
+      // Stop as soon as the binding element is the same as the passed node, meaning we
+      // found the ultimate originating element (https://drafts.csswg.org/selectors-4/#ultimate-originating-element).
+      if (res.bindingElement === node) {
+        break;
+      }
+
+      node = res.bindingElement;
+      pseudo = res.pseudo + pseudo;
+    }
 
     // Update the tag, id, classes, pseudo-classes and dimensions
     const displayName = getNodeDisplayName(node);
