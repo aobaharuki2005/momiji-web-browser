@@ -31,6 +31,8 @@ const PREF_CONTAINERS_EXTENSION = "privacy.userContext.extension";
 // Strings to identify ExtensionSettingsStore overrides
 const CONTAINERS_KEY = "privacy.containers";
 
+const PREF_CONTENT_APPEARANCE =
+  "layout.css.prefers-color-scheme.content-override";
 const FORCED_COLORS_QUERY = matchMedia("(forced-colors)");
 
 const AUTO_UPDATE_CHANGED_TOPIC =
@@ -180,9 +182,6 @@ Preferences.addAll([
 
   // Media
   { id: "media.hardwaremediakeys.enabled", type: "bool" },
-
-  // Appearance
-  { id: "layout.css.prefers-color-scheme.content-override", type: "int" },
 ]);
 
 if (AppConstants.HAVE_SHELL_SERVICE) {
@@ -321,59 +320,10 @@ Preferences.addSetting({
   id: "cfrRecommendations-features",
   pref: "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
 });
-Preferences.addSetting({
-  id: "web-appearance-override-warning",
-  setup: emitChange => {
-    FORCED_COLORS_QUERY.addEventListener("change", emitChange);
-    return () => FORCED_COLORS_QUERY.removeEventListener("change", emitChange);
-  },
-  visible: () => {
-    return FORCED_COLORS_QUERY.matches;
-  },
-});
-
-Preferences.addSetting({
-  id: "web-appearance-chooser",
-  themeNames: ["dark", "light", "auto"],
-  pref: "layout.css.prefers-color-scheme.content-override",
-  setup(emitChange) {
-    Services.obs.addObserver(emitChange, "look-and-feel-changed");
-    return () =>
-      Services.obs.removeObserver(emitChange, "look-and-feel-changed");
-  },
-  get(val, _, setting) {
-    return this.themeNames[val] || this.themeNames[setting.pref.defaultValue];
-  },
-  set(val) {
-    return this.themeNames.indexOf(val);
-  },
-  getControlConfig(config) {
-    // Set the auto theme image to the light/dark that matches.
-    let systemThemeIndex = Services.appinfo.contentThemeDerivedColorSchemeIsDark
-      ? 2
-      : 1;
-    config.options[0].controlAttrs = {
-      ...config.options[0].controlAttrs,
-      imagesrc: config.options[systemThemeIndex].controlAttrs.imagesrc,
-    };
-    return config;
-  },
-});
-
-Preferences.addSetting({
-  id: "web-appearance-manage-themes-link",
-  onUserClick: e => {
-    e.preventDefault();
-    window.browsingContext.topChromeWindow.BrowserAddonUI.openAddonsMgr(
-      "addons://list/theme"
-    );
-  },
-});
 
 Preferences.addSetting({ id: "zoomPlaceholder" });
 
 let SETTINGS_CONFIG = {
-<<<<<<< HEAD
   zoom: {
     // This section is marked as in progress for testing purposes
     inProgress: true,
@@ -383,58 +333,6 @@ let SETTINGS_CONFIG = {
         control: "moz-message-bar",
         controlAttrs: {
           message: "Placeholder for updated zoom controls",
-=======
-  appearance: {
-    l10nId: "web-appearance-group",
-    items: [
-      {
-        id: "web-appearance-override-warning",
-        l10nId: "preferences-web-appearance-override-warning3",
-        control: "moz-message-bar",
-      },
-      {
-        id: "web-appearance-chooser",
-        control: "moz-visual-picker",
-        options: [
-          {
-            value: "auto",
-            l10nId: "preferences-web-appearance-choice-auto2",
-            controlAttrs: {
-              id: "preferences-web-appearance-choice-auto",
-              class: "appearance-chooser-item",
-              imagesrc:
-                "chrome://browser/content/preferences/web-appearance-light.svg",
-            },
-          },
-          {
-            value: "light",
-            l10nId: "preferences-web-appearance-choice-light2",
-            controlAttrs: {
-              id: "preferences-web-appearance-choice-light",
-              class: "appearance-chooser-item",
-              imagesrc:
-                "chrome://browser/content/preferences/web-appearance-light.svg",
-            },
-          },
-          {
-            value: "dark",
-            l10nId: "preferences-web-appearance-choice-dark2",
-            controlAttrs: {
-              id: "preferences-web-appearance-choice-dark",
-              class: "appearance-chooser-item",
-              imagesrc:
-                "chrome://browser/content/preferences/web-appearance-dark.svg",
-            },
-          },
-        ],
-      },
-      {
-        id: "web-appearance-manage-themes-link",
-        l10nId: "preferences-web-appearance-link",
-        control: "moz-box-link",
-        controlAttrs: {
-          href: "about:addons",
->>>>>>> 4ae87ca4a582 (Bug 1971628 - Part 2: convert appearance settings to be backed by config r=#recomp-reviewers)
         },
       },
     ],
@@ -707,10 +605,8 @@ var gMainPane = {
 
     gMainPane.initTranslations();
 
-    // Initialize settings groups from the config object.
-    initSettingGroup("appearance");
-    initSettingGroup("browsing");
     initSettingGroup("zoom");
+    initSettingGroup("browsing");
 
     if (AppConstants.platform == "win") {
       // Functionality for "Show tabs in taskbar" on Windows 7 and up.
@@ -1150,6 +1046,8 @@ var gMainPane = {
         "user-context-shopping",
       ].map(ContextualIdentityService.formatContextLabel)
     );
+
+    AppearanceChooser.init();
 
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "main-pane-loaded");
@@ -3007,6 +2905,8 @@ var gMainPane = {
       this._translationsView.destroy();
       this._translationsView = null;
     }
+
+    AppearanceChooser.destroy();
   },
 
   // nsISupports
@@ -4657,3 +4557,104 @@ class ViewableInternallyHandlerInfoWrapper extends InternalHandlerInfoWrapper {
     return DownloadIntegration.shouldViewDownloadInternally(this.type);
   }
 }
+
+const AppearanceChooser = {
+  // NOTE: This order must match the values of the
+  // layout.css.prefers-color-scheme.content-override
+  // preference.
+  choices: ["dark", "light", "auto"],
+  chooser: null,
+  radios: null,
+  warning: null,
+
+  init() {
+    this.chooser = document.getElementById("web-appearance-chooser");
+    this.radios = [...this.chooser.querySelectorAll("input")];
+    for (let radio of this.radios) {
+      radio.addEventListener("change", e => {
+        let index = this.choices.indexOf(e.target.value);
+        // The pref change callback will update state if needed.
+        if (index >= 0) {
+          Services.prefs.setIntPref(PREF_CONTENT_APPEARANCE, index);
+        } else {
+          // Shouldn't happen but let's do something sane...
+          Services.prefs.clearUserPref(PREF_CONTENT_APPEARANCE);
+        }
+      });
+    }
+
+    let webAppearanceSettings = document.getElementById(
+      "webAppearanceSettings"
+    );
+    webAppearanceSettings.addEventListener("click", this);
+
+    this.warning = document.getElementById("web-appearance-override-warning");
+
+    FORCED_COLORS_QUERY.addEventListener("change", this);
+    Services.obs.addObserver(this, "look-and-feel-changed");
+    this._update();
+  },
+
+  _update() {
+    this._updateWarning();
+    this._updateOptions();
+  },
+
+  handleEvent(e) {
+    if (e.type == "click") {
+      switch (e.target.id) {
+        case "web-appearance-manage-themes-link":
+          window.browsingContext.topChromeWindow.BrowserAddonUI.openAddonsMgr(
+            "addons://list/theme"
+          );
+          e.preventDefault();
+          break;
+        default:
+          break;
+      }
+    }
+    this._update();
+  },
+
+  observe() {
+    this._update();
+  },
+
+  destroy() {
+    Services.obs.removeObserver(this, "look-and-feel-changed");
+    FORCED_COLORS_QUERY.removeEventListener("change", this);
+  },
+
+  _isValueDark(value) {
+    switch (value) {
+      case "light":
+        return false;
+      case "dark":
+        return true;
+      case "auto":
+        return Services.appinfo.contentThemeDerivedColorSchemeIsDark;
+    }
+    throw new Error("Unknown value");
+  },
+
+  _updateOptions() {
+    let index = Services.prefs.getIntPref(PREF_CONTENT_APPEARANCE);
+    if (index < 0 || index >= this.choices.length) {
+      index = Services.prefs
+        .getDefaultBranch(null)
+        .getIntPref(PREF_CONTENT_APPEARANCE);
+    }
+    let value = this.choices[index];
+    for (let radio of this.radios) {
+      let checked = radio.value == value;
+      let isDark = this._isValueDark(radio.value);
+
+      radio.checked = checked;
+      radio.closest("label").classList.toggle("dark", isDark);
+    }
+  },
+
+  _updateWarning() {
+    this.warning.hidden = !FORCED_COLORS_QUERY.matches;
+  },
+};

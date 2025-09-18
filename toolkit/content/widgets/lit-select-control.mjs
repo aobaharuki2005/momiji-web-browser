@@ -237,10 +237,15 @@ export class SelectControlBaseElement extends MozLitElement {
       let nextItem = children[nextIndex];
 
       if (nextItem && !nextItem.disabled) {
-        nextItem.focus();
         if (isRadio) {
           this.value = nextItem.value;
-          nextItem.click();
+          this.dispatchEvent(
+            new Event("input", {
+              bubbles: true,
+              composed: true,
+            })
+          );
+          this.dispatchEvent(new Event("change", { bubbles: true }));
         }
         nextItem.focus();
         return;

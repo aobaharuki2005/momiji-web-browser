@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  html,
-  nothing,
-  classMap,
-} from "chrome://global/content/vendor/lit.all.mjs";
+import { html, nothing } from "chrome://global/content/vendor/lit.all.mjs";
 import {
   SelectControlItemMixin,
   SelectControlBaseElement,
@@ -48,16 +44,12 @@ customElements.define("moz-visual-picker", MozVisualPicker);
  * @property {string} name
  *  Name of the item, set by the associated moz-visual-picker parent element.
  * @property {string} value - Value of the item.
- * @property {string} label - Visible label for the picker item.
- * @property {string} ariaLabel - Value for the aria-label attribute.
- * @property {string} imageSrc - Path to an image to display in the picker item.
  * @slot default - The item's content, used for what gets displayed.
  */
 export class MozVisualPickerItem extends SelectControlItemMixin(MozLitElement) {
   static properties = {
-    label: { type: String, fluent: true },
+    label: { type: String },
     ariaLabel: { type: String, fluent: true, mapped: true },
-    imageSrc: { type: String },
   };
 
   static queries = {
@@ -105,7 +97,6 @@ export class MozVisualPickerItem extends SelectControlItemMixin(MozLitElement) {
     this.dispatchEvent(
       new Event("change", {
         bubbles: true,
-        composed: true,
       })
     );
   }
@@ -119,19 +110,6 @@ export class MozVisualPickerItem extends SelectControlItemMixin(MozLitElement) {
     }
   }
 
-  contentTemplate() {
-    if (!this.imageSrc && !this.label) {
-      return html`<slot></slot>`;
-    }
-
-    return html`
-      ${this.imageSrc
-        ? html`<img src=${this.imageSrc} role="presentation" part="image" />`
-        : nothing}
-      ${this.label ? html`<p class="label">${this.label}</p>` : nothing}
-    `;
-  }
-
   render() {
     return html`
       <link
@@ -139,10 +117,7 @@ export class MozVisualPickerItem extends SelectControlItemMixin(MozLitElement) {
         href="chrome://global/content/elements/moz-visual-picker-item.css"
       />
       <div
-        class=${classMap({
-          "picker-item": true,
-          "image-item": this.imageSrc && this.label,
-        })}
+        class="picker-item"
         role=${this.role}
         value=${this.value}
         aria-label=${ifDefined(this.ariaLabel)}
@@ -155,7 +130,9 @@ export class MozVisualPickerItem extends SelectControlItemMixin(MozLitElement) {
         @keydown=${this.handleKeydown}
         @slotchange=${this.handleSlotchange}
       >
-        ${this.contentTemplate()}
+        ${this.label
+          ? html`<p class="label">${this.label}</p>`
+          : html`<slot></slot>`}
       </div>
     `;
   }
