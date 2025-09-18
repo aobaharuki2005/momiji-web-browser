@@ -1,23 +1,7 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
-  <ManuallySuppressedIssues/>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
-    <ID>ForbiddenSuppress:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment$@Suppress("LongMethod")</ID>
-    <ID>ForbiddenSuppress:AppReducer.kt$@Suppress("ComplexMethod", "ReturnCount")</ID>
-    <ID>ForbiddenSuppress:AppReducer.kt$AppReducer$@Suppress("ComplexMethod")</ID>
-    <ID>ForbiddenSuppress:BrowserFragment.kt$BrowserFragment$@Suppress("ComplexCondition", "LongMethod")</ID>
-    <ID>ForbiddenSuppress:BrowserFragment.kt$BrowserFragment$@Suppress("ComplexMethod", "ReturnCount")</ID>
-    <ID>ForbiddenSuppress:BrowserFragment.kt$BrowserFragment$@Suppress("LongMethod", "ComplexMethod")</ID>
-    <ID>ForbiddenSuppress:BrowserMenuController.kt$BrowserMenuController$@Suppress("ComplexMethod")</ID>
-    <ID>ForbiddenSuppress:BrowserMenuController.kt$BrowserMenuController$@Suppress("LongMethod")</ID>
-    <ID>ForbiddenSuppress:IntentProcessor.kt$IntentProcessor$@Suppress("ComplexMethod", "ReturnCount")</ID>
-    <ID>ForbiddenSuppress:MainActivityNavigation.kt$MainActivityNavigation$@Suppress("ComplexMethod")</ID>
-    <ID>ForbiddenSuppress:MainActivityNavigation.kt$MainActivityNavigation$@Suppress("MagicNumber")</ID>
-    <ID>ForbiddenSuppress:OnboardingSecondScreenCompose.kt$@Suppress("LongMethod")</ID>
-    <ID>ForbiddenSuppress:PromoteSearchWidgetDialogCompose.kt$@Suppress("LongMethod")</ID>
-    <ID>ForbiddenSuppress:StartupStateProvider.kt$StartupStateProvider$@Suppress("MagicNumber")</ID>
-    <ID>ForbiddenSuppress:UrlInputFragment.kt$UrlInputFragment$@Suppress("ComplexMethod")</ID>
-    <ID>ForbiddenSuppress:UrlInputFragment.kt$UrlInputFragment$@Suppress("LongMethod")</ID>
     <ID>OutdatedDocumentation:AppAdapter.kt$AppAdapter : Adapter</ID>
     <ID>OutdatedDocumentation:AppReviewUtils.kt$AppReviewUtils$fun addAppOpenings(context: Context)</ID>
     <ID>OutdatedDocumentation:AppReviewUtils.kt$AppReviewUtils$fun showAppReview(activity: Activity)</ID>
@@ -33,6 +17,7 @@
     <ID>OutdatedDocumentation:SitePermissionOptionsFragmentCompose.kt$@Composable fun OptionsPermissionList( optionsListItems: List&lt;SitePermissionOptionListItem&gt;, state: MutableState&lt;Int&gt;, permissionLabel: String?, goToPhoneSettings: () -&gt; Unit, componentPermissionBlockedByAndroidVisibility: Boolean, )</ID>
     <ID>UndocumentedPublicClass:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment$Companion</ID>
     <ID>UndocumentedPublicClass:AdvancedSettingsFragment.kt$AdvancedSettingsFragment : BaseSettingsFragmentOnSharedPreferenceChangeListener</ID>
+    <ID>UndocumentedPublicClass:AdvancedSettingsFragment.kt$AdvancedSettingsFragment$Companion</ID>
     <ID>UndocumentedPublicClass:AppAction.kt$AppAction$NavigateUp : AppAction</ID>
     <ID>UndocumentedPublicClass:AppAction.kt$AppAction$OpenSettings : AppAction</ID>
     <ID>UndocumentedPublicClass:AppAction.kt$AppAction$OpenSitePermissionOptionsScreen : AppAction</ID>
@@ -62,6 +47,7 @@
     <ID>UndocumentedPublicClass:CookieBannerOption.kt$CookieBannerOption$CookieBannerDisabled : CookieBannerOption</ID>
     <ID>UndocumentedPublicClass:CookieBannerOption.kt$CookieBannerOption$CookieBannerRejectAll : CookieBannerOption</ID>
     <ID>UndocumentedPublicClass:CookieBannerRejectAllPreference.kt$CookieBannerRejectAllPreference : LearnMoreSwitchPreference</ID>
+    <ID>UndocumentedPublicClass:CrashListActivity.kt$CrashListActivity : AbstractCrashListActivity</ID>
     <ID>UndocumentedPublicClass:CrashReporterFragment.kt$CrashReporterFragment : Fragment</ID>
     <ID>UndocumentedPublicClass:CrashReporterFragment.kt$CrashReporterFragment$Companion</ID>
     <ID>UndocumentedPublicClass:CustomTabActivity.kt$CustomTabActivity$Companion</ID>
@@ -83,6 +69,10 @@
     <ID>UndocumentedPublicClass:FenixProductDetector.kt$FenixProductDetector</ID>
     <ID>UndocumentedPublicClass:FenixProductDetector.kt$FenixProductDetector$FenixVersion</ID>
     <ID>UndocumentedPublicClass:FindInPageIntegration.kt$FindInPageIntegration : LifecycleAwareFeatureUserInteractionHandler</ID>
+    <ID>UndocumentedPublicClass:FirstrunCardView.kt$FirstrunCardView : CardView</ID>
+    <ID>UndocumentedPublicClass:FirstrunFragment.kt$FirstrunFragment : FragmentOnClickListener</ID>
+    <ID>UndocumentedPublicClass:FirstrunFragment.kt$FirstrunFragment$Companion</ID>
+    <ID>UndocumentedPublicClass:FirstrunPagerAdapter.kt$FirstrunPagerAdapter : PagerAdapter</ID>
     <ID>UndocumentedPublicClass:FocusApplication.kt$FocusApplication : LocaleAwareApplicationProviderCoroutineScope</ID>
     <ID>UndocumentedPublicClass:FocusSnackbar.kt$FocusSnackbar : BaseTransientBottomBar</ID>
     <ID>UndocumentedPublicClass:FocusSnackbar.kt$FocusSnackbar$Companion</ID>
@@ -113,6 +103,8 @@
     <ID>UndocumentedPublicClass:LearnMoreSwitchPreference.kt$LearnMoreSwitchPreference : SwitchPreferenceCompat</ID>
     <ID>UndocumentedPublicClass:LocaleDescriptor.kt$LocaleDescriptor : Comparable</ID>
     <ID>UndocumentedPublicClass:LocaleDescriptor.kt$LocaleDescriptor$Companion</ID>
+    <ID>UndocumentedPublicClass:LocalizedContent.kt$LocalizedContent</ID>
+    <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity : LocaleAwareAppCompatActivity</ID>
     <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity$AppOpenType</ID>
     <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity$Companion</ID>
     <ID>UndocumentedPublicClass:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference : Preference</ID>
@@ -160,6 +152,7 @@
     <ID>UndocumentedPublicClass:SecretSettingsFragment.kt$SecretSettingsFragment : BaseSettingsFragmentOnSharedPreferenceChangeListener</ID>
     <ID>UndocumentedPublicClass:SecretSettingsUnlocker.kt$SecretSettingsUnlocker$Companion</ID>
     <ID>UndocumentedPublicClass:SessionNotificationService.kt$SessionNotificationService$Companion</ID>
+    <ID>UndocumentedPublicClass:Settings.kt$Settings$Companion</ID>
     <ID>UndocumentedPublicClass:SettingsFragment.kt$SettingsFragment : BaseSettingsFragment</ID>
     <ID>UndocumentedPublicClass:SitePermission.kt$SitePermission : Parcelable</ID>
     <ID>UndocumentedPublicClass:SitePermissionOption.kt$AutoplayOption</ID>
@@ -193,6 +186,17 @@
     <ID>UndocumentedPublicClass:StartupPathProvider.kt$StartupPathProvider$StartupPath</ID>
     <ID>UndocumentedPublicClass:StartupPathProvider.kt$StartupPathProvider$StartupPathLifecycleObserver : DefaultLifecycleObserver</ID>
     <ID>UndocumentedPublicClass:StartupStateProvider.kt$StartupStateProvider$StartupState</ID>
+    <ID>UndocumentedPublicClass:StudiesAdapter.kt$StudiesAdapter : ListAdapter</ID>
+    <ID>UndocumentedPublicClass:StudiesAdapter.kt$StudiesAdapter$StudiesDiffCallback : ItemCallback</ID>
+    <ID>UndocumentedPublicClass:StudiesFragment.kt$StudiesFragment : BaseSettingsLikeFragment</ID>
+    <ID>UndocumentedPublicClass:StudiesListItem.kt$StudiesListItem</ID>
+    <ID>UndocumentedPublicClass:StudiesListItem.kt$StudiesListItem$ActiveStudy : StudiesListItem</ID>
+    <ID>UndocumentedPublicClass:StudiesListItem.kt$StudiesListItem$Section : StudiesListItem</ID>
+    <ID>UndocumentedPublicClass:StudiesRecyclerView.kt$StudiesRecyclerView : RecyclerView</ID>
+    <ID>UndocumentedPublicClass:StudiesViewHolder.kt$StudiesViewHolder : ViewHolder</ID>
+    <ID>UndocumentedPublicClass:StudiesViewHolder.kt$StudiesViewHolder$ActiveStudiesViewHolder : StudiesViewHolder</ID>
+    <ID>UndocumentedPublicClass:StudiesViewHolder.kt$StudiesViewHolder$SectionViewHolder : StudiesViewHolder</ID>
+    <ID>UndocumentedPublicClass:StudiesViewModel.kt$StudiesViewModel : AndroidViewModel</ID>
     <ID>UndocumentedPublicClass:SupportUtils.kt$SupportUtils</ID>
     <ID>UndocumentedPublicClass:SupportUtils.kt$SupportUtils$SumoTopic</ID>
     <ID>UndocumentedPublicClass:SwitchWithDescription.kt$SwitchWithDescription : ConstraintLayout</ID>
@@ -257,6 +261,8 @@
     <ID>UndocumentedPublicFunction:FenixProductDetector.kt$FenixProductDetector$fun isFenixDefaultBrowser(defaultBrowser: ActivityInfo?): Boolean</ID>
     <ID>UndocumentedPublicFunction:FindInPageIntegration.kt$FindInPageIntegration$fun hide()</ID>
     <ID>UndocumentedPublicFunction:FindInPageIntegration.kt$FindInPageIntegration$fun show(sessionState: SessionState)</ID>
+    <ID>UndocumentedPublicFunction:FirstrunFragment.kt$FirstrunFragment.Companion$fun create(): FirstrunFragment</ID>
+    <ID>UndocumentedPublicFunction:FirstrunPagerAdapter.kt$FirstrunPagerAdapter$fun getPageAccessibilityDescription(position: Int): String</ID>
     <ID>UndocumentedPublicFunction:FocusApplication.kt$FocusApplication$open fun updateLeakCanaryState(isEnabled: Boolean)</ID>
     <ID>UndocumentedPublicFunction:FocusDialog.kt$@Composable fun FocusDialogSample()</ID>
     <ID>UndocumentedPublicFunction:FocusDialog.kt$@Preview( name = "dark theme", showBackground = true, backgroundColor = 0xFF393473, uiMode = Configuration.UI_MODE_NIGHT_MASK, ) @Composable fun DialogTitlePreviewDark()</ID>
@@ -265,12 +271,18 @@
     <ID>UndocumentedPublicFunction:FocusTheme.kt$fun phoneDimensions()</ID>
     <ID>UndocumentedPublicFunction:FocusTheme.kt$fun tabletDimensions()</ID>
     <ID>UndocumentedPublicFunction:HomeMenu.kt$HomeMenu$fun getMenuBuilder(): BrowserMenuBuilder</ID>
+    <ID>UndocumentedPublicFunction:IconGenerator.kt$IconGenerator$@JvmStatic fun generateLauncherIconPreOreo(context: Context, character: Char): Bitmap</ID>
+    <ID>UndocumentedPublicFunction:InstalledSearchEnginesSettingsFragment.kt$InstalledSearchEnginesSettingsFragment.Companion$fun newInstance()</ID>
     <ID>UndocumentedPublicFunction:LearnMoreSwitchPreference.kt$LearnMoreSwitchPreference$abstract fun getLearnMoreUrl(): String</ID>
     <ID>UndocumentedPublicFunction:LearnMoreSwitchPreference.kt$LearnMoreSwitchPreference$open fun getDescription(): String?</ID>
     <ID>UndocumentedPublicFunction:LocaleDescriptor.kt$LocaleDescriptor$fun getNativeName(): String?</ID>
     <ID>UndocumentedPublicFunction:LocaleDescriptor.kt$LocaleDescriptor$fun getTag(): String</ID>
     <ID>UndocumentedPublicFunction:LocaleFragmentCompose.kt$@Composable fun LanguageNameAndTagItem( language: Language, isSelected: Boolean, onClick: (String) -&gt; Unit, )</ID>
+    <ID>UndocumentedPublicFunction:LocalizedContent.kt$LocalizedContent$fun loadGPL(context: Context): String</ID>
+    <ID>UndocumentedPublicFunction:LocalizedContent.kt$LocalizedContent$fun loadLicenses(context: Context): String</ID>
+    <ID>UndocumentedPublicFunction:MainActivity.kt$MainActivity$fun customizeStatusBar(backgroundColorId: Int? = null)</ID>
     <ID>UndocumentedPublicFunction:MainActivity.kt$MainActivity$fun getToolbar(): ActionBar</ID>
+    <ID>UndocumentedPublicFunction:MainActivity.kt$MainActivity$fun hideStatusBarBackground()</ID>
     <ID>UndocumentedPublicFunction:MainActivityNavigation.kt$MainActivityNavigation$@Suppress("ComplexMethod") fun settings(page: Screen.Settings.Page)</ID>
     <ID>UndocumentedPublicFunction:MainActivityNavigation.kt$MainActivityNavigation$fun showOnBoardingSecondScreen()</ID>
     <ID>UndocumentedPublicFunction:MainActivityNavigation.kt$MainActivityNavigation$fun sitePermissionOptionsFragment(sitePermission: SitePermission)</ID>
@@ -297,7 +309,9 @@
     <ID>UndocumentedPublicFunction:RadioButtonPreference.kt$GroupableRadioButton$fun updateRadioValue(isChecked: Boolean)</ID>
     <ID>UndocumentedPublicFunction:RadioButtonPreference.kt$RadioButtonPreference$fun onClickListener(listener: (() -&gt; Unit))</ID>
     <ID>UndocumentedPublicFunction:RadioButtonPreference.kt$fun Iterable&lt;GroupableRadioButton&gt;.uncheckAll()</ID>
+    <ID>UndocumentedPublicFunction:RemoveSearchEnginesSettingsFragment.kt$RemoveSearchEnginesSettingsFragment.Companion$fun newInstance()</ID>
     <ID>UndocumentedPublicFunction:SearchEngineListPreference.kt$SearchEngineListPreference$fun refetchSearchEngines()</ID>
+    <ID>UndocumentedPublicFunction:SearchSettingsFragment.kt$SearchSettingsFragment.Companion$fun newInstance(): SearchSettingsFragment</ID>
     <ID>UndocumentedPublicFunction:SearchSuggestionsFragment.kt$SearchSuggestionsFragment.Companion$fun create()</ID>
     <ID>UndocumentedPublicFunction:SearchSuggestionsPreferences.kt$SearchSuggestionsPreferences$fun disableSearchSuggestions()</ID>
     <ID>UndocumentedPublicFunction:SearchSuggestionsPreferences.kt$SearchSuggestionsPreferences$fun dismissNoSuggestionsMessage()</ID>
@@ -342,6 +356,7 @@
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldUseSecureMode(): Boolean</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun userHasDismissedNoSuggestionsMessage(): Boolean</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun userHasToggledSearchSuggestions(): Boolean</ID>
+    <ID>UndocumentedPublicFunction:SettingsFragment.kt$SettingsFragment.Companion$fun newInstance(): SettingsFragment</ID>
     <ID>UndocumentedPublicFunction:SitePermissionOptionsFragment.kt$SitePermissionOptionsFragment.Companion$fun addSitePermission(sitePermission: SitePermission): SitePermissionOptionsFragment</ID>
     <ID>UndocumentedPublicFunction:SitePermissionOptionsStorage.kt$SitePermissionOptionsStorage$fun getSitePermissionLabel(sitePermission: SitePermission): String</ID>
     <ID>UndocumentedPublicFunction:SitePermissionOptionsStorage.kt$SitePermissionOptionsStorage$fun getSitePermissionsSettingsRules()</ID>
@@ -353,13 +368,20 @@
     <ID>UndocumentedPublicFunction:StartupPathProvider.kt$StartupPathProvider$@VisibleForTesting(otherwise = NONE) fun getTestCallbacks()</ID>
     <ID>UndocumentedPublicFunction:StartupPathProvider.kt$StartupPathProvider$fun attachOnActivityOnCreate(lifecycle: Lifecycle, intent: Intent?)</ID>
     <ID>UndocumentedPublicFunction:StoreLink.kt$StoreLink$fun start()</ID>
+    <ID>UndocumentedPublicFunction:StudiesViewHolder.kt$StudiesViewHolder.ActiveStudiesViewHolder$fun bindStudy( activeStudy: StudiesListItem.ActiveStudy, removeStudyListener: (StudiesListItem.ActiveStudy) -&gt; Unit, )</ID>
+    <ID>UndocumentedPublicFunction:StudiesViewHolder.kt$StudiesViewHolder.SectionViewHolder$fun bindSection(section: StudiesListItem.Section)</ID>
+    <ID>UndocumentedPublicFunction:StudiesViewModel.kt$StudiesViewModel$fun removeStudy(study: StudiesListItem.ActiveStudy)</ID>
+    <ID>UndocumentedPublicFunction:StudiesViewModel.kt$StudiesViewModel$fun setStudiesState(state: Boolean)</ID>
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun getGenericSumoURLForTopic(topic: SumoTopic): String</ID>
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun getSafeBrowsingURL(): String</ID>
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun openDefaultBrowserSumoPage(context: Context)</ID>
+    <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun openUrlInCustomTab(activity: FragmentActivity, destinationUrl: String)</ID>
     <ID>UndocumentedPublicFunction:Theme.kt$fun Resources.Theme.resolveAttribute(attribute: Int): Int</ID>
     <ID>UndocumentedPublicFunction:UrlInputFragment.kt$UrlInputFragment$fun onBackPressed(): Boolean</ID>
     <ID>UndocumentedPublicFunction:UrlInputFragment.kt$UrlInputFragment.Companion$@JvmStatic fun createWithTab( tabId: String, ): UrlInputFragment</ID>
     <ID>UndocumentedPublicFunction:UrlInputFragment.kt$UrlInputFragment.Companion$@JvmStatic fun createWithoutSession(): UrlInputFragment</ID>
+    <ID>UndocumentedPublicFunction:ViewUtils.kt$ViewUtils$fun hideKeyboard(view: View?)</ID>
+    <ID>UndocumentedPublicFunction:ViewUtils.kt$ViewUtils$fun showKeyboard(view: View?)</ID>
     <ID>UndocumentedPublicFunction:VisibilityLifeCycleCallback.kt$VisibilityLifeCycleCallback.Companion$fun isInBackground(context: Context): Boolean</ID>
   </CurrentIssues>
 </SmellBaseline>
