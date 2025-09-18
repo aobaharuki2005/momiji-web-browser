@@ -15,6 +15,10 @@ add_setup(async _ => {
   SpecialPowers.pushPrefEnv({
     set: [
       ["browser.safebrowsing.provider.google5.enabled", true],
+      [
+        "browser.safebrowsing.provider.google5.excludeFromGoogleSafeBrowsingKeyCheck",
+        true,
+      ],
       ["browser.safebrowsing.provider.google5.gethashURL", GETHASH_URL],
     ],
   });

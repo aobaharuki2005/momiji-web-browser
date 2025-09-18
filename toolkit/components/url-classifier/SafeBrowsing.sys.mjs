@@ -500,8 +500,21 @@ export var SafeBrowsing = {
   },
 
   // A helper function to check if the Google Safe Browsing API key is set.
-  checkGoogleSafeBrowsingKey() {
-    let googleSafebrowsingKey = Services.urlFormatter
+  checkGoogleSafeBrowsingKey(provider) {
+    if (!provider.startsWith("google")) {
+      return true;
+    }
+
+    if (
+      Services.prefs.getBoolPref(
+        `browser.safebrowsing.provider.${provider}.excludeFromGoogleSafeBrowsingKeyCheck`,
+        false
+      )
+    ) {
+      return true;
+    }
+
+    const googleSafebrowsingKey = Services.urlFormatter
       .formatURL("%GOOGLE_SAFEBROWSING_API_KEY%")
       .trim();
 
@@ -587,10 +600,7 @@ export var SafeBrowsing = {
       );
 
       // Disable updates and gethash if the Google API key is missing.
-      if (
-        ["google", "google4", "google5"].includes(provider) &&
-        !this.checkGoogleSafeBrowsingKey()
-      ) {
+      if (!this.checkGoogleSafeBrowsingKey(provider)) {
         log(
           "Missing Google SafeBrowsing API key, clearing updateURL and gethashURL."
         );
