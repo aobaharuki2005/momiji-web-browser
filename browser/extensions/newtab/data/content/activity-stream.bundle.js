@@ -13373,15 +13373,29 @@ const FocusTimer = ({
     // Shows the correct live time in the UI whenever the timer state changes
     const newTime = isRunning ? calculateTimeRemaining(duration, startTime) : duration;
     setTimeLeft(newTime);
+
+    // Set progress for paused timers (handles page load and timer type toggling)
+    if (!isRunning && duration < initialDuration) {
+      // Show previously elapsed time
+      setProgress((initialDuration - duration) / initialDuration);
+    } else if (!isRunning) {
+      // Reset progress for fresh timers
+      setProgress(0);
+    }
     return () => clearInterval(interval);
   }, [isRunning, startTime, duration, initialDuration, dispatch, resetProgressCircle, timerType, initialTimerDuration]);
 
   // Update the clip-path of the gradient circle to match the current progress value
   (0,external_React_namespaceObject.useEffect)(() => {
     if (arcRef?.current) {
-      arcRef.current.style.clipPath = getClipPath(progress);
+      // Only set clip-path if current timer has been started or is running
+      if (progress > 0 || isRunning) {
+        arcRef.current.style.clipPath = getClipPath(progress);
+      } else {
+        arcRef.current.style.clipPath = "";
+      }
     }
-  }, [progress, timerType]);
+  }, [progress, isRunning]);
 
   // set timer function
   const setTimerDuration = () => {
