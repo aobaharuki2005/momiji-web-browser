@@ -132,9 +132,9 @@ namespace InspectorUtils {
   // This interface may not be the clearest, but we want to match
   // what has been established by the GeckoView API
   [ChromeOnly] undefined setVerticalClipping(BrowsingContext? aContext,
-                                             float aOffset);
+                                             long aOffset);
   [ChromeOnly] undefined setDynamicToolbarMaxHeight(BrowsingContext? aContext,
-                                             float aHeight);
+                                             long aHeight);
 
   // This element is not a grid container.
   const unsigned short GRID_NONE = 0;

@@ -310,10 +310,10 @@ class InspectorUtils {
       nsACString& aNewStyleSheetText);
 
   static void SetVerticalClipping(GlobalObject&, BrowsingContext* aContext,
-                                  mozilla::CSSCoord aOffset);
+                                  mozilla::ScreenIntCoord aOffset);
   static void SetDynamicToolbarMaxHeight(GlobalObject&,
                                          BrowsingContext* aContext,
-                                         mozilla::CSSCoord aHeight);
+                                         mozilla::ScreenIntCoord aHeight);
   static uint16_t GetGridContainerType(GlobalObject&, Element&);
 };
 
