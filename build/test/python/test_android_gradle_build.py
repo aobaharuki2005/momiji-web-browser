@@ -279,5 +279,31 @@ def test_geckoview_build(objdir, mozconfig, run_mach):
     assert_all_task_statuses(objdir, ["UP-TO-DATE", "SKIPPED"])
 
 
+def test_fenix_build(objdir, mozconfig, run_mach):
+    (returncode, output) = run_mach(["build"])
+    assert returncode == 0
+
+    (returncode, output) = run_mach(
+        ["gradle", "fenix:clean", ":components:support-base:clean"]
+    )
+    assert returncode == 0
+
+    (returncode, output) = run_mach(["gradle", "fenix:assembleDebug"])
+    assert returncode == 0
+
+    assert_ordered_task_outcomes(
+        objdir, [(":components:support-base:generateComponentEnum", "EXECUTED")]
+    )
+    assert_all_task_statuses(objdir, ["EXECUTED", "UP-TO-DATE", "SKIPPED"])
+
+    (returncode, output) = run_mach(["gradle", "fenix:assembleDebug"])
+    assert returncode == 0
+
+    assert_ordered_task_outcomes(
+        objdir, [(":components:support-base:generateComponentEnum", "UP-TO-DATE")]
+    )
+    assert_all_task_statuses(objdir, ["UP-TO-DATE", "SKIPPED"])
+
+
 if __name__ == "__main__":
     mozunit.main()
