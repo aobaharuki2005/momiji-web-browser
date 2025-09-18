@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, ColorU, GradientStop, PremultipliedColorF};
+use api::{ColorF, ColorU, ExtendMode, GradientStop, PremultipliedColorF};
 use api::units::{LayoutRect, LayoutSize, LayoutVector2D};
-use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF};
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF, GpuBufferWriterF};
 use std::hash;
 
 mod linear;
@@ -16,6 +16,14 @@ pub use linear::MAX_CACHED_SIZE as LINEAR_MAX_CACHED_SIZE;
 pub use linear::*;
 pub use radial::*;
 pub use conic::*;
+
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+pub enum GradientKind {
+    #[allow(unused)] Linear = 0,
+    Radial = 1,
+    Conic = 2,
+}
 
 /// A hashable gradient stop that can be used in primitive keys.
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -60,6 +68,63 @@ fn stops_and_min_alpha(stop_keys: &[GradientStopKey]) -> (Vec<GradientStop>, f32
     }).collect();
 
     (stops, min_alpha)
+}
+
+/// Builds the gpu representation for common gradient parameters and
+/// returns whether the gradient is fully opaque.
+///
+/// The format is:
+///
+/// ```ascii
+///
+/// [count, extend_mode, <padding>, offset0, offset1, ..., <padding>, color0.r, color0.g, color0.b, color0.a, ...]
+/// |_____________________________| |_______________________________| |__________________________________________|
+///        header: vec4                 offsets: [vec4; ceil(n/4)]               colors: [vec4; n]
+/// ```
+///
+/// Packed contiguously such that each portion is 4-floats aligned to facilitate
+/// reading them from the gpu buffer.
+fn write_gpu_gradient_stops(
+    stops: &[GradientStop],
+    kind: GradientKind,
+    extend_mode: ExtendMode,
+    writer: &mut GpuBufferWriterF,
+) -> bool {
+    // Write the header.
+    writer.push_one([
+        (kind as u8) as f32,
+        stops.len() as f32,
+        if extend_mode == ExtendMode::Repeat { 1.0 } else { 0.0 },
+        0.0
+    ]);
+
+    // Write the stop offsets.
+    for chunk in stops.chunks(4) {
+        let mut block = [0.0; 4];
+        let mut i = 0;
+        for stop in chunk {
+            block[i] = stop.offset;
+            i += 1;
+        }
+        writer.push_one(block);
+    }
+
+    // Write the stop colors.
+    let mut is_opaque = true;
+    for stop in stops {
+        writer.push_one(stop.color.premultiplied());
+        is_opaque &= stop.color.a == 1.0;
+    }
+
+    return is_opaque;
+}
+
+fn gpu_gradient_stops_blocks(num_stops: usize) -> usize {
+    let header = 1;
+    let offsets = f32::ceil((num_stops as f32) / 4.0) as usize;
+    let colors = num_stops;
+
+    header + offsets + colors
 }
 
 impl Eq for GradientStopKey {}

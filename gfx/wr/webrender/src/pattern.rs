@@ -14,12 +14,13 @@ pub enum PatternKind {
     ColorOrTexture = 0,
     RadialGradient = 1,
     ConicGradient = 2,
+    Gradient = 3,
 
-    Mask = 3,
+    Mask = 4,
     // When adding patterns, don't forget to update the NUM_PATTERNS constant.
 }
 
-pub const NUM_PATTERNS: u32 = 4;
+pub const NUM_PATTERNS: u32 = 5;
 
 impl PatternKind {
     pub fn from_u32(val: u32) -> Self {

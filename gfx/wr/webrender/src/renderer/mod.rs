@@ -129,7 +129,8 @@ pub(crate) mod init;
 pub use debug::DebugRenderer;
 pub use shade::{PendingShadersToPrecache, Shaders, SharedShaders};
 pub use vertex::{desc, VertexArrayKind, MAX_VERTEX_TEXTURE_WIDTH};
-pub use gpu_buffer::{GpuBuffer, GpuBufferF, GpuBufferBuilderF, GpuBufferI, GpuBufferBuilderI, GpuBufferAddress, GpuBufferBuilder};
+pub use gpu_buffer::{GpuBuffer, GpuBufferF, GpuBufferBuilderF, GpuBufferI, GpuBufferBuilderI};
+pub use gpu_buffer::{GpuBufferAddress, GpuBufferBuilder, GpuBufferWriterF};
 
 /// The size of the array of each type of vertex data texture that
 /// is round-robin-ed each frame during bind_frame_data. Doing this
@@ -192,6 +193,10 @@ const GPU_TAG_CACHE_FAST_LINEAR_GRADIENT: GpuProfileTag = GpuProfileTag {
 };
 const GPU_TAG_CACHE_LINEAR_GRADIENT: GpuProfileTag = GpuProfileTag {
     label: "C_LinearGradient",
+    color: debug_colors::BROWN,
+};
+const GPU_TAG_GRADIENT: GpuProfileTag = GpuProfileTag {
+    label: "C_Gradient",
     color: debug_colors::BROWN,
 };
 const GPU_TAG_RADIAL_GRADIENT: GpuProfileTag = GpuProfileTag {
@@ -332,6 +337,7 @@ impl BatchKind {
             }
             BatchKind::TextRun(_) => GPU_TAG_PRIM_TEXT_RUN,
             BatchKind::Quad(PatternKind::ColorOrTexture) => GPU_TAG_PRIMITIVE,
+            BatchKind::Quad(PatternKind::Gradient) => GPU_TAG_GRADIENT,
             BatchKind::Quad(PatternKind::RadialGradient) => GPU_TAG_RADIAL_GRADIENT,
             BatchKind::Quad(PatternKind::ConicGradient) => GPU_TAG_CONIC_GRADIENT,
             BatchKind::Quad(PatternKind::Mask) => GPU_TAG_INDIRECT_MASK,
