@@ -57,7 +57,7 @@ class MOZ_STACK_CLASS TextAutospace final {
 
   // Returns true if inter-script spacing may be added at boundaries.
   static bool Enabled(const StyleTextAutospace& aStyleTextAutospace,
-                      const nsTextFrame* aFrame);
+                      const nsIFrame* aFrame);
 
   TextAutospace(const StyleTextAutospace& aStyleTextAutospace,
                 nscoord aSpacing);
@@ -67,10 +67,6 @@ class MOZ_STACK_CLASS TextAutospace final {
   // Return true if inter-script spacing should be applied between aPrevClass
   // and aCurrClass.
   bool ShouldApplySpacing(CharClass aPrevClass, CharClass aCurrClass) const;
-
-  // Returns true when non-ideographic letters/numerals should not participate
-  // in autospace boundaries for aFrame.
-  static bool ShouldSuppressLetterNumeralSpacing(const nsIFrame* aFrame);
 
   // Return true if aChar is an ideograph.
   // https://drafts.csswg.org/css-text-4/#ideographs
