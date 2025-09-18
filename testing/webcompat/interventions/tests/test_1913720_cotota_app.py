@@ -1,9 +1,9 @@
 import pytest
 
-URL = "https://h2breeze.com/"
+URL = "https://cotota.app/"
 
 SUCCESS_CSS = "#content"
-BLOCKED_TEXT = "404 Not Found"
+BLOCKED_TEXT = "403 Forbidden"
 
 
 @pytest.mark.skip_platforms("android")
@@ -11,7 +11,7 @@ BLOCKED_TEXT = "404 Not Found"
 @pytest.mark.with_interventions
 async def test_enabled(client):
     await client.navigate(URL, wait="none")
-    assert client.await_css(SUCCESS_CSS, is_displayed=True)
+    assert client.await_css(SUCCESS_CSS, is_displayed=True, timeout=20)
     assert not client.find_text(BLOCKED_TEXT, is_displayed=True)
 
 
@@ -20,7 +20,7 @@ async def test_enabled(client):
 @pytest.mark.without_interventions
 async def test_disabled(client):
     await client.navigate(URL, wait="none")
-    assert client.await_text(BLOCKED_TEXT, is_displayed=True)
+    assert client.await_text(BLOCKED_TEXT, is_displayed=True, timeout=20)
     assert not client.find_css(SUCCESS_CSS, is_displayed=True)
 
 
@@ -29,5 +29,5 @@ async def test_disabled(client):
 @pytest.mark.without_interventions
 async def test_disabled_mobile(client):
     await client.navigate(URL, wait="none")
-    assert client.await_css(SUCCESS_CSS, is_displayed=True)
+    assert client.await_css(SUCCESS_CSS, is_displayed=True, timeout=20)
     assert not client.find_text(BLOCKED_TEXT, is_displayed=True)
