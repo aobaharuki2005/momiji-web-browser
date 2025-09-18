@@ -2488,7 +2488,6 @@ pref("font.size.monospace.x-math", 13);
   // XP_MACOSX changes to default font sizes
   pref("font.minimum-size.th", 10);
 
-  // Apple's Symbol is Unicode so use it
   pref("font.name-list.serif.x-math", "Latin Modern Math, STIX Two Math, XITS Math, Cambria Math, Libertinus Math, DejaVu Math TeX Gyre, TeX Gyre Bonum Math, TeX Gyre Pagella Math, TeX Gyre Schola, TeX Gyre Termes Math, STIX Math, Asana Math, STIXGeneral, DejaVu Serif, DejaVu Sans, Symbol, Times");
   pref("font.name-list.sans-serif.x-math", "Helvetica");
   pref("font.name-list.monospace.x-math", "Menlo");

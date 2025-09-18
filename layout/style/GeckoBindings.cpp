@@ -1801,6 +1801,8 @@ void StyleSingleFontFamily::AppendToString(nsACString& aName,
       return aName.AppendLiteral("cursive");
     case StyleGenericFontFamily::Fantasy:
       return aName.AppendLiteral("fantasy");
+    case StyleGenericFontFamily::Math:
+      return aName.AppendLiteral("math");
     case StyleGenericFontFamily::SystemUi:
       return aName.AppendLiteral("system-ui");
   }

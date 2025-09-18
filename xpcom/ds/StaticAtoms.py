@@ -2239,6 +2239,7 @@ STATIC_ATOMS = [
     Atom("ga", "ga"),
     # Atom("lt", "lt"),  # "lt" is present above (atom name "lt_")
     Atom("nl", "nl"),
+    # TODO(1788937): Remove with mathml.font-family-math.enabled
     # mathematical language, used for MathML
     Atom("x_math", "x-math"),
     # other languages mentioned in :lang() rules in UA style sheets
@@ -2437,6 +2438,7 @@ STATIC_ATOMS = [
     Atom("onsupportedkeyschange", "onsupportedkeyschange"),
     # Media query prefs for UA sheets.
     Atom("mathml_legacy_mathvariant_attribute_disabled", "mathml.legacy_mathvariant_attribute.disabled"),
+    Atom("mathml_font_family_math_enabled", "mathml.font_family_math.enabled"),
     Atom("layout_css_always_underline_links", "layout.css.always_underline_links"),
     Atom("layout_css_android_pip_enabled", "layout.css.android-pip.enabled"),
     Atom("layout_css_cached_scrollbar_styles_enabled", "layout.css.cached-scrollbar-styles.enabled"),

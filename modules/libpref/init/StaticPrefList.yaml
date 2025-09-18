@@ -11073,6 +11073,14 @@
   mirror: always
   rust: true
 
+# Whether to enable font-family: math in mathml instead of using the
+# internal language x-math.
+- name: mathml.font_family_math.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 #---------------------------------------------------------------------------
 # Prefs starting with "media."
 #---------------------------------------------------------------------------
