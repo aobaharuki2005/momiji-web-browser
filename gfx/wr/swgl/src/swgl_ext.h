@@ -7,6 +7,7 @@
 // the entire span of clip mask texture before the blend stage to more
 // efficiently process it and modulate it with color without incurring blend
 // stage overheads.
+#include <cstdint>
 template <typename P, typename C>
 static void commit_masked_solid_span(P* buf, C color, int len) {
   override_clip_mask();
@@ -1833,6 +1834,300 @@ static bool commitRadialGradient(sampler2D sampler, int address, float size,
   return true;
 }
 
+// Finds the gradient stop pair that affects the provided offset.
+//
+// The returned index corresponds to the gradient stop immediately before the
+// current offset (in increasing offset order), so the gradient stop pair
+// is defined by [index, index + 1].
+//
+// Output parameters:
+//  - (out) prevOffset is set to the offset of the returned stop.
+//  - (out) nextOffset is set to the offset of the following stop.
+//  - (in/out) initialIndex is the index at which to start the search.
+//    It is updated by this function.
+//  - (in/out) initialOffset is the offset of the stop at initalOffset.
+//    It is updated by this function.
+static int32_t findGradientStopPair(float offset, float* stops, int32_t numStops,
+                                    int32_t& initialIndex, float& initialOffset,
+                                    float& prevOffset, float& nextOffset) {
+    int32_t index = initialIndex;
+
+    // Walk forward or backward depending on where the target offset is relative
+    // to the initial offset.
+    if (offset >= initialOffset) {
+        // Walk the gradient stops forward
+        float next = stops[initialIndex];
+        float prev = stops[max(initialIndex - 1, 0)];
+        while (index < numStops) {
+            if (next > offset) {
+                break;
+            }
+
+            index += 1;
+            prev = next;
+            next = stops[index];
+        }
+
+        // We wither:
+        //  - Walked 1 stop past the one we are looking for, so we need to
+        //    adjust the index by decrementing it.
+        //  - Walked past the last stop so the index is out of bounds. We
+        //    don't *have* to decrement it since we are going to clamp it
+        //    at the end of the function but doing it does not break the
+        //    logic either.
+        index -= 1;
+
+        prevOffset = prev;
+        nextOffset = next;
+    } else {
+        // Walk back.
+        float next = stops[initialIndex];
+        float prev = stops[min(initialIndex + 1, numStops - 1)];
+        while (index > 0) {
+            if (next < offset) {
+                break;
+            }
+
+            index -= 1;
+            prev = next;
+            next = stops[index];
+        }
+
+        // Since we are walking backwards, prev and next are swapped.
+        prevOffset = next;
+        nextOffset = prev;
+    }
+
+    index = clamp(index, 0, numStops - 2);
+
+    initialIndex = index;
+    initialOffset = prevOffset;
+
+    return index;
+}
+
+// Samples an entire span of a radial gradient.
+template <bool BLEND>
+static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress, int colorsAddress, float stopCount,
+                                          bool repeat, vec2 pos, float radius,
+                                          uint32_t* buf, int span) {
+  assert(sampler->format == TextureFormat::RGBA32F);
+  // Stop offsets are expected to be stored just before the colors.
+  assert(offsetsAddress >= 0 && offsetsAddress < colorsAddress);
+  assert(colorsAddress >= 0 && colorsAddress + stopCount < int(sampler->height * sampler->stride));
+  float* stopOffsets = (float*)&sampler->buf[offsetsAddress];
+  Float* stopColors = (Float*)&sampler->buf[colorsAddress];
+  // clang-format off
+  // Given position p, delta d, and radius r, we need to repeatedly solve the
+  // following quadratic for the pixel offset t:
+  //    length(p + t*d) = r
+  //    (px + t*dx)^2 + (py + t*dy)^2 = r^2
+  // Rearranged into quadratic equation form (t^2*a + t*b + c = 0) this is:
+  //    t^2*(dx^2+dy^2) + t*2*(dx*px+dy*py) + (px^2+py^2-r^2) = 0
+  //    t^2*d.d + t*2*d.p + (p.p-r^2) = 0
+  // The solution of the quadratic formula t=(-b+-sqrt(b^2-4ac))/2a reduces to:
+  //    t = -d.p/d.d +- sqrt((d.p/d.d)^2 - (p.p-r^2)/d.d)
+  // Note that d.p, d.d, p.p, and r^2 are constant across the gradient, and so
+  // we cache them below for faster computation.
+  //
+  // The quadratic has two solutions, representing the span intersecting the
+  // given radius of gradient, which can occur at two offsets. If there is only
+  // one solution (where b^2-4ac = 0), this represents the point at which the
+  // span runs tangent to the radius. This middle point is significant in that
+  // before it, we walk down the gradient ramp, and after it, we walk up the
+  // ramp.
+  // clang-format on
+  vec2_scalar pos0 = {pos.x.x, pos.y.x};
+  vec2_scalar delta = {pos.x.y - pos.x.x, pos.y.y - pos.y.x};
+  float deltaDelta = dot(delta, delta);
+  if (!isfinite(deltaDelta) || !isfinite(radius)) {
+    return false;
+  }
+  float invDelta, middleT, middleB;
+  if (deltaDelta > 0) {
+    invDelta = 1.0f / deltaDelta;
+    middleT = -dot(delta, pos0) * invDelta;
+    middleB = middleT * middleT - dot(pos0, pos0) * invDelta;
+  } else {
+    // If position is invariant, just set the coefficients so the quadratic
+    // always reduces to the end of the span.
+    invDelta = 0.0f;
+    middleT = float(span);
+    middleB = 0.0f;
+  }
+  // We only want search for merged gradients up to the minimum of either the
+  // mid-point or the span length. Cache those offsets here as they don't vary
+  // in the inner loop.
+  Float middleEndRadius = fastLength<true>(
+      pos0 + delta * (Float){middleT, float(span), 0.0f, 0.0f});
+  float middleRadius = span < middleT ? middleEndRadius.y : middleEndRadius.x;
+  float endRadius = middleEndRadius.y;
+  // Convert delta to change in position per chunk.
+  delta *= 4;
+  deltaDelta *= 4 * 4;
+  // clang-format off
+  // Given current position p and delta d, we reduce:
+  //    length(p) = sqrt(dot(p,p)) = dot(p,p) * invsqrt(dot(p,p))
+  // where dot(p+d,p+d) can be accumulated as:
+  //    (x+dx)^2+(y+dy)^2 = (x^2+y^2) + 2(x*dx+y*dy) + (dx^2+dy^2)
+  //                      = p.p + 2p.d + d.d
+  // Since p increases by d every loop iteration, p.d increases by d.d, and thus
+  // we can accumulate d.d to calculate 2p.d, then allowing us to get the next
+  // dot-product by adding it to dot-product p.p of the prior iteration. This
+  // saves us some multiplications and an expensive sqrt inside the inner loop.
+  // clang-format on
+  Float dotPos = dot(pos, pos);
+  Float dotPosDelta = 2.0f * dot(pos, delta) + deltaDelta;
+  float deltaDelta2 = 2.0f * deltaDelta;
+  // In order to avoid re-traversing the whole sequence of gradient stops for
+  // each sub-span when searching for the pair of stops that affect it, we keep
+  // track a recent offset+index to start the search from. We start from the
+  // last stop since it is more likely that the edge of the quad is away from
+  // the center than close to it.
+  int32_t initialIndex = stopCount - 1;
+  // This is not the real offset what matters is that it is greater than the
+  // outermost one.
+  float initialOffset = 2.0;
+  for (int t = 0; t < span;) {
+    // Compute the gradient table offset from the current position.
+    Float offset = fastSqrt<true>(dotPos) - radius;
+    float startRadius = radius;
+    // If repeat is desired, we need to limit the offset to a fractional value.
+    if (repeat) {
+      // The non-repeating radius at which the gradient table actually starts,
+      // radius + floor(offset) = radius + (offset - fract(offset)).
+      startRadius += offset.x;
+      offset = fract(offset);
+      startRadius -= offset.x;
+    }
+
+    // We need to find the pair of gradient stops that affect the the current
+    // portion of the span as well as the intercept point where we leave this
+    // gradient.
+    float intercept = -1;
+    int32_t stopIndex = 0;
+    float prevOffset = 0.0;
+    float nextOffset = 0.0;
+    if (offset.x < 0) {
+      // If inside the inner radius of the gradient table, then use the first
+      // stop. Set the intercept to advance forward to the start of the gradient
+      // table.
+      if (t >= middleT) {
+        intercept = radius;
+      }
+    } else if (offset.x >= 1) {
+      // If outside the outer radius of the gradient table, then use the last
+      // stop. Set the intercept to advance toward the valid part of the
+      // gradient table if going in, or just run to the end of the span if going
+      // away from the gradient.
+      stopIndex = stopCount - 1;
+      if (t < middleT) {
+        intercept = radius + 1;
+      }
+    } else {
+      // Otherwise, we're inside the valid part of the gradient table.
+
+      stopIndex = findGradientStopPair(offset.x, stopOffsets, stopCount,
+                                       initialIndex, initialOffset,
+                                       prevOffset, nextOffset);
+      if (t >= middleT) {
+        intercept = startRadius + nextOffset;
+      } else {
+        intercept = startRadius + prevOffset;
+      }
+    }
+    // Solve the quadratic for t to find where the merged gradient ends. If no
+    // intercept is found, just go to the middle or end of the span.
+    float endT = t >= middleT ? span : min(span, int(middleT));
+    if (intercept >= 0) {
+      float b = middleB + intercept * intercept * invDelta;
+      if (b > 0) {
+        b = fastSqrt<false>(b);
+        endT = min(endT, t >= middleT ? middleT + b : middleT - b);
+      } else {
+        // Due to the imprecision of fastSqrt in offset calculations, solving
+        // the quadratic may fail. However, if the discriminant is still close
+        // to 0, then just assume it is 0.
+        endT = min(endT, middleT);
+      }
+    }
+
+    // Ensure that we are advancing by at least one pixel at each iteration.
+    endT = max(endT, t + 1.0);
+
+    // Figure out how many chunks are actually inside the merged gradient.
+    int inside = int(endT - t) & ~3;
+    // Convert start and end colors to BGRA and scale to 0..255 range.
+    auto minColorF = stopColors[stopIndex].zyxw * 255.0f;
+    auto maxColorF = stopColors[stopIndex + 1].zyxw * 255.0f;
+    // Compute the change in color per change in gradient offset.
+    auto deltaOffset = nextOffset - prevOffset;
+    Float deltaColorF;
+    if (deltaOffset == 0.0) {
+      // Note: If we take this branch, we know that we are going to fill
+      // some pixels with a solid color (we are in or out of the range of
+      // gradient stops). We could leverage that to skip the offset
+      // calculation.
+      deltaColorF = Float(0.0);
+    } else {
+      deltaColorF = (maxColorF - minColorF) / deltaOffset;
+    }
+    // Subtract off the color difference of the beginning of the current span
+    // from the beginning of the gradient.
+    Float colorF =
+        minColorF - deltaColorF * (startRadius + prevOffset); // TODO
+    // Finally, walk over the span accumulating the position dot product and
+    // getting its sqrt as an offset into the color ramp. Since we're already
+    // in BGRA format and scaled to 255, we just need to round to an integer
+    // and pack down to pixel format.
+    for (auto* end = buf + inside; buf < end; buf += 4) {
+      Float offsetG = fastSqrt<false>(dotPos);
+      commit_blend_span<BLEND>(
+          buf,
+          combine(
+              packRGBA8(round_pixel(colorF + deltaColorF * offsetG.x, 1),
+                        round_pixel(colorF + deltaColorF * offsetG.y, 1)),
+              packRGBA8(round_pixel(colorF + deltaColorF * offsetG.z, 1),
+                        round_pixel(colorF + deltaColorF * offsetG.w, 1))));
+      dotPos += dotPosDelta;
+      dotPosDelta += deltaDelta2;
+    }
+    // Advance past the portion of gradient we just processed.
+    t += inside;
+
+    // If we hit the end of the span, exit out now.
+    if (t >= span) {
+      break;
+    }
+
+    // Otherwise we may have a partial chunk to write.
+    int remainder = endT - t;
+    if (remainder > 0) {
+      assert(remainder < 4);
+      // The logic here is similar to the full chunks loop above, but we do a
+      // partial write instead of a pushing a full chunk.
+      Float offsetG = fastSqrt<false>(dotPos);
+      commit_blend_span<BLEND>(
+          buf,
+          combine(
+              packRGBA8(round_pixel(colorF + deltaColorF * offsetG.x, 1),
+                        round_pixel(colorF + deltaColorF * offsetG.y, 1)),
+              packRGBA8(round_pixel(colorF + deltaColorF * offsetG.z, 1),
+                        round_pixel(colorF + deltaColorF * offsetG.w, 1))),
+          remainder
+      );
+
+      buf += remainder;
+      t += remainder;
+
+      float f = float(remainder) * 0.25;
+      dotPos += dotPosDelta * f;
+      dotPosDelta += deltaDelta2 * f;
+    }
+  }
+  return true;
+}
+
 // Commits an entire span of a radial gradient similar to
 // swglcommitLinearGradient, but given a varying 2D position scaled to
 // gradient-space and a radius at which the distance from the origin maps to the
@@ -1855,6 +2150,35 @@ static bool commitRadialGradient(sampler2D sampler, int address, float size,
       swgl_SpanLength = 0;                                                     \
     }                                                                          \
   } while (0)
+
+// Commits an entire span of a radial gradient similar to
+// swglcommitLinearGradient, but given a varying 2D position scaled to
+// gradient-space and a radius at which the distance from the origin maps to the
+// start of the gradient table.
+#define swgl_commitRadialGradientFromStopsRGBA8(sampler, offsetsAddress,       \
+                                                colorsAddress, size, repeat,   \
+                                                pos, radius)                   \
+  do {                                                                         \
+    bool drawn = false;                                                        \
+    if (blend_key) {                                                           \
+      drawn =                                                                  \
+          commitRadialGradientFromStops<true>(sampler, offsetsAddress,         \
+                                              colorsAddress, size, repeat,     \
+                                              pos, radius, swgl_OutRGBA8,      \
+                                              swgl_SpanLength);                \
+    } else {                                                                   \
+      drawn =                                                                  \
+          commitRadialGradientFromStops<false>(sampler, offsetsAddress,        \
+                                               colorsAddress, size, repeat,    \
+                                               pos, radius, swgl_OutRGBA8,     \
+                                               swgl_SpanLength);               \
+    }                                                                          \
+    if (drawn) {                                                               \
+      swgl_OutRGBA8 += swgl_SpanLength;                                        \
+      swgl_SpanLength = 0;                                                     \
+    }                                                                          \
+  } while (0)
+
 
 // Extension to set a clip mask image to be sampled during blending. The offset
 // specifies the positioning of the clip mask image relative to the viewport
