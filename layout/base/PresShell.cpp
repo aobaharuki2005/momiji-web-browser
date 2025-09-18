@@ -12327,12 +12327,45 @@ void PresShell::UpdateAnchorPosLayoutForScroll(
       // Already dirty? Skip.
       continue;
     }
+
+    const auto* stylePos = positioned->StylePosition();
+    if (!stylePos->mPositionAnchor.IsIdent()) {
+      // If it doesn't have a default anchor then it doesn't compensate for
+      // scroll.
+      continue;
+    }
+
     const auto* referencedAnchors =
         positioned->GetProperty(nsIFrame::AnchorPosReferences());
     if (!referencedAnchors || referencedAnchors->IsEmpty()) {
+      // If it doesn't reference any anchors then it doesn't compensate for
+      // scroll.
       continue;
     }
+
+    const nsAtom* defaultAnchorName =
+        stylePos->mPositionAnchor.AsIdent().AsAtom();
+    // We might not need to do this GetAnchorPosAnchor call at all if none of
+    // the affected anchors are referenced by positioned below. We could
+    // improve this.
+    auto* defaultAnchorFrame =
+        GetAnchorPosAnchor(defaultAnchorName, positioned);
+    if (!defaultAnchorFrame) {
+      continue;
+    }
+    auto* nearestScrollToDefaultAnchor =
+        FindScrollContainerFrameOf(defaultAnchorFrame);
+
     auto* absoluteContainingBlock = positioned->GetParent();
+
+    if (UnderScrollContainer(absoluteContainingBlock,
+                             nearestScrollToDefaultAnchor)) {
+      // If the positioned element's containing block is under the only possible
+      // anchor scroll container that it can scroll with, they'll scroll
+      // together without intervention, so skip the update.
+      continue;
+    }
+
     for (const auto& entry : affectedAnchors) {
       const auto* anchorName = entry.mAnchorName;
       const auto& anchors = entry.mFrames;
@@ -12340,7 +12373,10 @@ void PresShell::UpdateAnchorPosLayoutForScroll(
       if (!data) {
         continue;
       }
-      const auto* anchorFrame = GetAnchorPosAnchor(anchorName, positioned);
+      const auto* anchorFrame =
+          anchorName == defaultAnchorName
+              ? defaultAnchorFrame
+              : GetAnchorPosAnchor(anchorName, positioned);
       const auto idx = anchors.IndexOf(anchorFrame, 0, Comparator{});
       if (idx == anchors.NoIndex) {
         // Referring to an anchor of the same name but unaffected by scrolling -
@@ -12349,11 +12385,8 @@ void PresShell::UpdateAnchorPosLayoutForScroll(
       }
       auto* anchorScrollContainer =
           anchors.ElementAt(idx).mNearestScrollContainer;
-      if (UnderScrollContainer(absoluteContainingBlock,
-                               anchorScrollContainer)) {
-        // If the positioned element's containing block is under the anchor's
-        // scroll container, they'll scroll together without intervention, so
-        // skip the update.
+      if (anchorScrollContainer != nearestScrollToDefaultAnchor) {
+        // We do not compensate for scroll for this anchor
         continue;
       }
 
