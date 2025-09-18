@@ -53,7 +53,7 @@ tasks:
             - t-osx-1015-r8
 
     update-test-linux-docker-locale-fx:
-        worker-type: t-linux-docker-amd
+        worker-type: t-linux-docker
         worker:
             artifacts:
                 - type: directory

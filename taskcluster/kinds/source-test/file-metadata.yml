@@ -7,7 +7,7 @@ task-defaults:
     treeherder:
         kind: other
         tier: 1
-    worker-type: t-linux-docker-amd
+    worker-type: t-linux-docker
     worker:
         artifacts:
             - type: directory
