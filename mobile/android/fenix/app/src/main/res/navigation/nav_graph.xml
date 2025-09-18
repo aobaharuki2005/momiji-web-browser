@@ -50,7 +50,8 @@
 
     <action
         android:id="@+id/action_global_terms_of_use_dialog"
-        app:destination="@+id/termsOfUseDialogFragment" />
+        app:destination="@+id/termsOfUseDialogFragment"
+        app:launchSingleTop="true" />
 
     <action
         android:id="@+id/action_global_search_dialog"
