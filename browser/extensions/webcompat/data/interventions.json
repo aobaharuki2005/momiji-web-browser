@@ -1084,23 +1084,6 @@
       }
     ]
   },
-  "1827678_119017": {
-    "label": "nppes.cms.hhs.gov",
-    "bugs": {
-      "1898955": {
-        "issue": "unsupported-warning",
-        "matches": ["*://nppes.cms.hhs.gov/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "content_scripts": {
-          "css": ["bug1819678-nppes.cms.hhs.gov-unsupported-banner.css"]
-        }
-      }
-    ]
-  },
   "1827678_119402": {
     "label": "oirsa.org",
     "bugs": {
