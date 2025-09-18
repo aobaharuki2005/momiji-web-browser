@@ -55,6 +55,8 @@ run-if = ["os == 'win'"] # Windows-specific handler application selection dialog
 
 ["browser_checkspelling.js"]
 
+["browser_colors_dialog.js"]
+
 ["browser_connection.js"]
 
 ["browser_connection_bug388287.js"]
