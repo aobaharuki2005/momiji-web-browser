@@ -4110,6 +4110,9 @@ double MediaTrackGraphImpl::AudioOutputLatency() {
 bool MediaTrackGraph::OutputForAECMightDrift() {
   return static_cast<MediaTrackGraphImpl*>(this)->OutputForAECMightDrift();
 }
+bool MediaTrackGraph::OutputForAECIsPrimary() {
+  return static_cast<MediaTrackGraphImpl*>(this)->OutputForAECIsPrimary();
+}
 bool MediaTrackGraph::IsNonRealtime() const {
   return !static_cast<const MediaTrackGraphImpl*>(this)->mRealtime;
 }

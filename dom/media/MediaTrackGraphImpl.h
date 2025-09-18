@@ -458,7 +458,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   TrackTime GraphTimeToTrackTimeWithBlocking(const MediaTrack* aTrack,
                                              GraphTime aTime) const;
 
- private:
+ protected:
   /**
    * Set mOutputDeviceForAEC to indicate the audio output to be passed as the
    * reverse stream for audio echo cancellation.  Graph thread.
@@ -561,7 +561,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
     mTrackOrderDirty = true;
   }
 
- private:
+ protected:
   // Get the current maximum channel count required for a device.
   // aDevice is an element of mOutputDevices.  Graph thread only.
   struct OutputDeviceEntry;
@@ -580,6 +580,16 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   bool OutputForAECMightDrift() {
     AssertOnGraphThread();
     return mOutputDeviceForAEC != PrimaryOutputDeviceID();
+  }
+  /* Return whether the audio output device used for the aec reverse stream
+   * corresponds to the primary output device, explicitly or implicitly.
+   * Implicitly meaning when the primary output device is the system default
+   * output device, and the output device used for the aec reverse stream is
+   * explicit and matches the current system default output device. */
+  bool OutputForAECIsPrimary() {
+    // TODO: Fix implicit case.
+    AssertOnGraphThread();
+    return mOutputDeviceForAEC == PrimaryOutputDeviceID();
   }
   /**
    * The audio input channel count for a MediaTrackGraph is the max of all the
@@ -1009,7 +1019,6 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
  protected:
   virtual ~MediaTrackGraphImpl();
 
- private:
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
   // Set a new native iput device when the current native input device is close.
@@ -1120,14 +1129,12 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   const float mGlobalVolume;
 
 #ifdef DEBUG
- protected:
   /**
    * Used to assert when AppendMessage() runs control messages synchronously.
    */
   bool mCanRunMessagesSynchronously;
 #endif
 
- private:
   /**
    * The graph's main-thread observable graph time.
    * Updated by the stable state runnable after each iteration.
@@ -1160,7 +1167,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    */
   DeviceInputTrackManager mDeviceInputTrackManagerMainThread;
 
- private:
+ protected:
   /**
    * Manage the native or non-native input device in graph. Graph thread only.
    */
