@@ -85,22 +85,23 @@ void conic_gradient_vertex(vec2 position, vec4 data0, vec4 data1) {
 
 ivec4 decode_gradient_header(int base_address, vec4 payload) {
     int kind = int(payload.x);
-    float count = payload.y;
+    int count = int(payload.y);
     int extend_mode = int(payload.z);
-    int offsets_address = base_address + 1;
-    int colors_address = offsets_address + int(ceil(count * 0.25));
+    int colors_address = base_address + 1;
 
     return ivec4(
         kind,
-        int(count) | (extend_mode << 24),
-        offsets_address,
+        count,
+        extend_mode,
         colors_address
     );
 }
 
 void pattern_vertex(PrimitiveInfo info) {
     int address = info.pattern_input.x;
-    vec4[4] gradient = fetch_from_gpu_buffer_4f(address);
+    // gradient[0..1] contains linear/radial/conic specific data,
+    // gradient[2] contains the header to interpret gradient stops.
+    vec4[3] gradient = fetch_from_gpu_buffer_3f(address);
     ivec4 header = decode_gradient_header(address + 2, gradient[2]);
 
     vec2 pos = info.local_pos - info.local_prim_rect.p0;
@@ -126,13 +127,16 @@ void pattern_vertex(PrimitiveInfo info) {
         }
     }
 
-    v_gradient_header = header;
-    v_stop_offsets = gradient[3];
-
     int count = header.y;
+    int colors_addr = header.w;
+    int offsets_addrs = colors_addr + count;
+
+    v_stop_offsets = fetch_from_gpu_buffer_1f(offsets_addrs);
+    v_gradient_header = header;
+
     if (count == 2) {
         // Fast path: If we have only two color stops, pass them by varyings.
-        vec4[2] colors = fetch_from_gpu_buffer_2f(address + 4);
+        vec4[2] colors = fetch_from_gpu_buffer_2f(colors_addr);
         v_color0 = colors[0];
         v_color1 = colors[1];
     }
@@ -169,11 +173,12 @@ float approx_atan2(float y, float x) {
 
 float apply_extend_mode(float offset) {
     // Handle the repeat mode.
-    float mode = float(v_gradient_header.y >> 24);
+    float mode = float(v_gradient_header.z);
     offset -= floor(offset) * mode;
 
     return offset;
 }
+
 // Sample the gradient using a sequence of gradient stops located at the provided
 // addresses.
 //
@@ -184,9 +189,10 @@ float apply_extend_mode(float offset) {
 //  - Offset is between 0 and 1.
 //  - Stop offsets are in increasing order.
 vec4 sample_gradient_stops(float offset) {
-    int count = v_gradient_header.y & 0x0FFFFFF;
-    int addr = v_gradient_header.z;
+    int count = v_gradient_header.y;
     int colors_addr = v_gradient_header.w;
+    // Current stop offset address.
+    int addr = colors_addr + count;
 
     // Index of the first gradient stop that is after
     // the current offset.
@@ -341,17 +347,17 @@ void swgl_drawSpanRGBA8() {
     }
 
     int stop_count = v_gradient_header.y;
-    int offsets_addr = swgl_validateGradient(sGpuBufferF, get_gpu_buffer_uv(v_gradient_header.z),
-                                             stop_count);
     int colors_addr = swgl_validateGradient(sGpuBufferF, get_gpu_buffer_uv(v_gradient_header.w),
                                             stop_count);
+    int offsets_addr = swgl_validateGradient(sGpuBufferF, get_gpu_buffer_uv(v_gradient_header.z + stop_count),
+                                             stop_count);
     if (offsets_addr < 0 || colors_addr < 0) {
         return;
     }
 
     vec2 pos = v_interpolated_data.xy;
     float start_radius = v_flat_data.z;
-    bool repeat = (v_gradient_header.y >> 24) != 0.0;
+    bool repeat = v_gradient_header.z != 0.0;
 
     swgl_commitRadialGradientFromStopsRGBA8(sGpuBufferF, offsets_addr, colors_addr,
                                             stop_count, repeat, pos, start_radius);

@@ -1912,9 +1912,9 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
                                           bool repeat, vec2 pos, float radius,
                                           uint32_t* buf, int span) {
   assert(sampler->format == TextureFormat::RGBA32F);
-  // Stop offsets are expected to be stored just before the colors.
-  assert(offsetsAddress >= 0 && offsetsAddress < colorsAddress);
-  assert(colorsAddress >= 0 && colorsAddress + stopCount < int(sampler->height * sampler->stride));
+  // Stop offsets are expected to be stored just after the colors.
+  assert(colorsAddress >= 0 && colorsAddress < offsetsAddress);
+  assert(offsetsAddress >= 0 && offsetsAddress + (stopCount + 3) / 4 < int(sampler->height * sampler->stride));
   float* stopOffsets = (float*)&sampler->buf[offsetsAddress];
   Float* stopColors = (Float*)&sampler->buf[colorsAddress];
   // clang-format off

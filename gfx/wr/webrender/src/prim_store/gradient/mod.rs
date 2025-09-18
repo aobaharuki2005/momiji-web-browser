@@ -77,9 +77,9 @@ fn stops_and_min_alpha(stop_keys: &[GradientStopKey]) -> (Vec<GradientStop>, f32
 ///
 /// ```ascii
 ///
-/// [count, extend_mode, <padding>, offset0, offset1, ..., <padding>, color0.r, color0.g, color0.b, color0.a, ...]
-/// |_____________________________| |_______________________________| |__________________________________________|
-///        header: vec4                 offsets: [vec4; ceil(n/4)]               colors: [vec4; n]
+/// [count, extend_mode, <padding>, color0.r, color0.g, color0.b, color0.a, ..., offset0, offset1, ..., <padding>]
+/// |_____________________________| |__________________________________________| |_______________________________|
+///        header: vec4                        colors: [vec4; n]                     offsets: [vec4; ceil(n/4)]
 /// ```
 ///
 /// Packed contiguously such that each portion is 4-floats aligned to facilitate
@@ -98,6 +98,13 @@ fn write_gpu_gradient_stops(
         0.0
     ]);
 
+    // Write the stop colors.
+    let mut is_opaque = true;
+    for stop in stops {
+        writer.push_one(stop.color.premultiplied());
+        is_opaque &= stop.color.a == 1.0;
+    }
+
     // Write the stop offsets.
     for chunk in stops.chunks(4) {
         let mut block = [0.0; 4];
@@ -107,13 +114,6 @@ fn write_gpu_gradient_stops(
             i += 1;
         }
         writer.push_one(block);
-    }
-
-    // Write the stop colors.
-    let mut is_opaque = true;
-    for stop in stops {
-        writer.push_one(stop.color.premultiplied());
-        is_opaque &= stop.color.a == 1.0;
     }
 
     return is_opaque;
