@@ -33,7 +33,7 @@ Var TestBreakpointNumber
 !include "TextFunc.nsh"
 !include "WinVer.nsh"
 !include "WordFunc.nsh"
-
+!include "control_utils.nsh"
 
 Function ExitProcess
 FunctionEnd
@@ -75,17 +75,26 @@ FunctionEnd
   StrCmp `${_v}` 'true' `${_t}` `${_f}`
 !macroend
 
+; Fail a unit test. Prints the message and location of the failure.
+!macro Fail _message
+    StrCpy $FailureMessage "At Line ${__LINE__}: ${_message}"
+    SetErrors
+    Return
+!macroend
+!define Fail "!insertmacro Fail"
+
 ; A helpful macro for testing that a variable is equal to a value.
 ; Provide the variable name (bare, without $ prefix) and the expected value.
 ; For example, to test that $MyVariable is equal to "hello there", you would write:
 ; !insertmacro AssertEqual MyVariable "hello there"
 !macro AssertEqual _variableName _expectedValue
     ${If} "$${_variableName}" != "${_expectedValue}" ; quoted to prevent numeric coercion (01 != 1)
-        StrCpy $FailureMessage "At Line ${__LINE__}: Expected ${_variableName} of ${_expectedValue} , got $${_variableName}"
+        ${Fail} "Expected ${_variableName} to have value `${_expectedValue}` , actual value was `$${_variableName}`"
         SetErrors
         Return
     ${EndIf}
 !macroend
+!define AssertEqual "!insertmacro AssertEqual"
 
 Var TestFailureCount
 
@@ -96,6 +105,7 @@ Var TestFailureCount
     FileWrite $Stdout "FAILURE: $FailureMessage; "
     ClearErrors
 !macroend
+!define UnitTest "!insertmacro UnitTest"
 
 ; Redefine ElevateUAC as a no-op in this test exectuable
 !define /redef ElevateUAC ``
@@ -108,21 +118,23 @@ Function .onInit
     Call AttachConsole
     Pop $Stdout
     IntOp $TestFailureCount 0 + 0
-    !insertmacro UnitTest TestDontInstallOnOldWindows
+    ${UnitTest} TestDontInstallOnOldWindows
 
-    !insertmacro UnitTest TestDontInstallOnNewWindowsWithoutSSE
+    ${UnitTest} TestDontInstallOnNewWindowsWithoutSSE
 
-    !insertmacro UnitTest TestDontInstallOnOldWindowsWithoutSSE
+    ${UnitTest} TestDontInstallOnOldWindowsWithoutSSE
 
-    !insertmacro UnitTest TestGetArchToInstall
+    ${UnitTest} TestGetArchToInstall
 
-    !insertmacro UnitTest TestMaintServiceCfg
+    ${UnitTest} TestMaintServiceCfg
 
-    !insertmacro UnitTest TestCanWriteToDirSuccess
+    ${UnitTest} TestCanWriteToDirSuccess
 
-    !insertmacro UnitTest TestCanWriteToDirFail
+    ${UnitTest} TestCanWriteToDirFail
 
-    !insertmacro UnitTest TestUninstallRegKey
+    ${UnitTest} TestUninstallRegKey
+
+    ${UnitTest} TestSwapShellVarContext
 
     ${If} $TestFailureCount = 0
         ; On success, write the success metric and jump to the end
@@ -432,6 +444,44 @@ Function TestUninstallRegKey
     ${EndIf}
     Pop $INSTDIR
     Pop $R0
+FunctionEnd
+
+Function TestSwapShellVarContext
+    Push $0
+    StrCpy $0 ""
+    SetShellVarContext current
+
+    ; Swap from current to all
+    ${SwapShellVarContext} all $0
+    ${AssertEqual} 0 "current"
+    ${IfNot} ${ShellVarContextAll}
+        ${Fail} "Expected shell var context to have value 'all', but it was 'current'"
+    ${EndIf}
+
+    ; Swap from all to all
+    ${SwapShellVarContext} all $0
+    ${AssertEqual} 0 "all"
+    ${IfNot} ${ShellVarContextAll}
+        ${Fail} "Expected shell var context to have value 'all', but it was 'current'"
+    ${EndIf}
+
+    ; Swap from all to current
+    ${SwapShellVarContext} current $0
+    ${AssertEqual} 0 "all"
+    ${If} ${ShellVarContextAll}
+        ${Fail} "Expected shell var context to have value 'current', but it was 'all'"
+    ${EndIf}
+
+    ; Swap from current to current
+    ${SwapShellVarContext} current $0
+    ${AssertEqual} 0 "current"
+    ${If} ${ShellVarContextAll}
+        ${Fail} "Expected shell var context to have value 'current', but it was 'all'"
+    ${EndIf}
+
+    ; Leave context and register in expected start state
+    SetShellVarContext current
+    Pop $0
 FunctionEnd
 
 Section
