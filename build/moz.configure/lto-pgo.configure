@@ -261,21 +261,6 @@ option(
 imply_option("MOZ_LD64_KNOWN_GOOD", moz_automation)
 
 
-@depends("--enable-lto", c_compiler, select_linker, target, enable_tests)
-def use_fat_lto(lto, c_compiler, linker, target, enable_tests):
-    if not lto:
-        return False
-    if not enable_tests:
-        return False
-    if c_compiler.type not in ("clang", "clang-cl"):
-        return false
-
-    if c_compiler.version < "18.0.0":
-        return False
-
-    return linker and linker.KIND == "lld" and target.os != "OSX"
-
-
 @depends(
     "--enable-lto",
     c_compiler,
@@ -286,7 +271,6 @@ def use_fat_lto(lto, c_compiler, linker, target, enable_tests):
     pass_manager.enabled,
     "--enable-profile-use",
     moz_automation,
-    use_fat_lto,
 )
 @imports("multiprocessing")
 def lto(
@@ -299,7 +283,6 @@ def lto(
     pass_manager,
     pgo_build,
     moz_automation,
-    fat,
 ):
     cflags = []
     ldflags = []
@@ -450,13 +433,8 @@ def lto(
     else:
         rust_lto = ""
 
-    if fat:
-        cflags.append("-ffat-lto-objects")
-        ldflags.append("-ffat-lto-objects")
-
     return namespace(
         enabled=True,
-        fat=fat,
         cflags=cflags,
         ldflags=ldflags,
         rust_lto=rust_lto,
@@ -479,4 +457,3 @@ set_define("MOZ_LTO", lto.enabled)
 set_config("MOZ_LTO_CFLAGS", lto.cflags)
 set_config("MOZ_LTO_LDFLAGS", lto.ldflags)
 set_config("MOZ_LTO_RUST_CROSS", lto.rust_lto)
-set_config("MOZ_LTO_FAT", lto.fat)
