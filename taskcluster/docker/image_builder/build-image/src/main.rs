@@ -5,6 +5,7 @@
 #![forbid(unsafe_code)]
 
 use std::collections::HashMap;
+use std::os::unix::fs::chown;
 use std::path::Path;
 use std::process::Command;
 
@@ -173,7 +174,7 @@ fn main() -> Result<()> {
 
         log_step(&format!("Parent image digest {}", &digest));
         std::fs::create_dir_all("/workspace/cache")?;
-        std::fs::rename(parent_path, format!("/workspace/cache/{}", digest))?;
+        std::fs::copy(parent_path, format!("/workspace/cache/{}", digest))?;
 
         build_args.insert(
             "DOCKER_IMAGE_PARENT".into(),
@@ -202,6 +203,11 @@ fn main() -> Result<()> {
         config.docker_image_zstd_level,
     )?;
 
+    if let Some(owner) = config.chown_output {
+        log_step(&format!("Changing ownership to {}", owner));
+        chown_output_files(&owner, output_dir)?;
+    }
+
     Ok(())
 }
 
@@ -215,4 +221,29 @@ fn compress_file(
         std::fs::File::create(dest)?,
         zstd_level,
     )?)
+}
+
+fn chown_output_files(owner: &str, output_dir: &Path) -> Result<()> {
+    let parts: Vec<&str> = owner.split(':').collect();
+    ensure!(
+        parts.len() == 2,
+        "Owner must be in format 'uid:gid', got: {}",
+        owner
+    );
+
+    let uid = parts[0]
+        .parse::<u32>()
+        .with_context(|| format!("Failed to parse uid: {}", parts[0]))?;
+    let gid = parts[1]
+        .parse::<u32>()
+        .with_context(|| format!("Failed to parse gid: {}", parts[1]))?;
+
+    for entry in std::fs::read_dir(output_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        chown(&path, Some(uid), Some(gid))
+            .with_context(|| format!("Failed to chown {}", path.display()))?;
+    }
+
+    Ok(())
 }
