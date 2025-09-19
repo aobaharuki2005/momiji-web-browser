@@ -136,12 +136,24 @@ export class EditProfileCard extends MozLitElement {
       this.updateNameDebouncer.timeout = 50;
     }
 
-    this.setProfile(currentProfile);
+    this.profile = currentProfile;
     this.profiles = profiles;
     this.themes = themes;
+
+    if (this.profile.hasCustomAvatar) {
+      this.createAvatarURL();
+    }
+
+    this.setFavicon();
   }
 
   createAvatarURL() {
+    if (this.profile.avatarURLs.url16) {
+      URL.revokeObjectURL(this.profile.avatarURLs.url16);
+      delete this.profile.avatarURLs.url16;
+      delete this.profile.avatarURLs.url80;
+    }
+
     if (this.profile.avatarFiles?.file16) {
       const objURL = URL.createObjectURL(this.profile.avatarFiles.file16);
       this.profile.avatarURLs.url16 = objURL;
@@ -161,40 +173,9 @@ export class EditProfileCard extends MozLitElement {
     return result;
   }
 
-  setProfile(newProfile) {
-    if (this.profile?.hasCustomAvatar && this.profile?.avatarURLs.url16) {
-      URL.revokeObjectURL(this.profile.avatarURLs.url16);
-      delete this.profile.avatarURLs.url16;
-      delete this.profile.avatarURLs.url80;
-    }
-
-    if (this.profile?.favicon) {
-      URL.revokeObjectURL(this.profile.favicon);
-    }
-
-    this.profile = newProfile;
-
-    if (this.profile.hasCustomAvatar) {
-      this.createAvatarURL();
-    }
-
-    this.setFavicon();
-  }
-
   setFavicon() {
-    const favicon = document.getElementById("favicon");
-
-    if (this.profile.hasCustomAvatar) {
-      favicon.href = this.profile.avatarURLs.url16;
-      return;
-    }
-
-    const faviconBlob = new Blob([this.profile.faviconSVGText], {
-      type: "image/svg+xml",
-    });
-    const faviconObjURL = URL.createObjectURL(faviconBlob);
-    this.profile.favicon = faviconObjURL;
-    favicon.href = faviconObjURL;
+    let favicon = document.getElementById("favicon");
+    favicon.href = this.profile.avatarURLs.url16;
   }
 
   handleEvent(event) {
@@ -256,12 +237,11 @@ export class EditProfileCard extends MozLitElement {
       return;
     }
 
-    let updatedProfile = await RPMSendQuery(
-      "Profiles:UpdateProfileTheme",
-      newThemeId
-    );
+    let theme = await RPMSendQuery("Profiles:UpdateProfileTheme", newThemeId);
+    this.profile.themeId = theme.themeId;
+    this.profile.themeFg = theme.themeFg;
+    this.profile.themeBg = theme.themeBg;
 
-    this.setProfile(updatedProfile);
     this.requestUpdate();
   }
 
@@ -274,8 +254,14 @@ export class EditProfileCard extends MozLitElement {
       avatarOrFile: newAvatar,
     });
 
-    this.setProfile(updatedProfile);
+    this.profile = updatedProfile;
+
+    if (this.profile.hasCustomAvatar) {
+      this.createAvatarURL();
+    }
+
     this.requestUpdate();
+    this.setFavicon();
   }
 
   isDuplicateName(newName) {
