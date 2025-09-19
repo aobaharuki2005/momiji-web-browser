@@ -459,6 +459,7 @@ add_task(async function ariaLabel() {
 });
 
 add_task(async function hideRowLabel() {
+  let engineName = Services.search.defaultEngine.name;
   const results = [
     Object.assign(
       new UrlbarResult(
@@ -481,6 +482,29 @@ add_task(async function hideRowLabel() {
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       { url: "http://example.com/3" }
     ),
+    Object.assign(
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.RESTRICT,
+        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        { keyword: "*" }
+      ),
+      {
+        hideRowLabel: true,
+      }
+    ),
+    Object.assign(
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.SEARCH,
+        UrlbarUtils.RESULT_SOURCE.SEARCH,
+        {
+          engine: engineName,
+          keyword: "@keyword",
+        }
+      ),
+      {
+        hideRowLabel: true,
+      }
+    ),
   ];
   const provider = new UrlbarTestUtils.TestProvider({
     results,
@@ -496,6 +520,8 @@ add_task(async function hideRowLabel() {
   const expectedRows = [
     { hasGroupAriaLabel: false },
     { hasGroupAriaLabel: true, ariaLabel: FIREFOX_SUGGEST_LABEL },
+    { hasGroupAriaLabel: false },
+    { hasGroupAriaLabel: false },
     { hasGroupAriaLabel: false },
   ];
   await checkGroupAriaLabels(expectedRows);

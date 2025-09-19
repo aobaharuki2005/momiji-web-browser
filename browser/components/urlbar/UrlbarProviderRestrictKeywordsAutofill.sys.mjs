@@ -137,15 +137,20 @@ export class UrlbarProviderRestrictKeywordsAutofill extends UrlbarProvider {
     }
 
     if (restrictSymbol && typedKeyword == aliasKeyword) {
-      let result = new lazy.UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.RESTRICT,
-        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-          keyword: restrictSymbol,
-          providesSearchMode: false,
-        })
+      let result = Object.assign(
+        new lazy.UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.RESTRICT,
+          UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+          ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+            keyword: restrictSymbol,
+            providesSearchMode: false,
+          })
+        ),
+        {
+          heuristic: true,
+          hideRowLabel: true,
+        }
       );
-      result.heuristic = true;
       addCallback(this, result);
     }
 
@@ -180,29 +185,36 @@ export class UrlbarProviderRestrictKeywordsAutofill extends UrlbarProvider {
           mode => mode.restrict == token
         )?.icon;
 
-        let result = new lazy.UrlbarResult(
-          UrlbarUtils.RESULT_TYPE.RESTRICT,
-          UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-          ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-            icon,
-            keyword: token,
-            l10nRestrictKeywords: [
-              l10nRestrictKeywords,
-              UrlbarUtils.HIGHLIGHT.TYPED,
-            ],
-            autofillKeyword: [
-              keywordPreservingUserCase,
-              UrlbarUtils.HIGHLIGHT.TYPED,
-            ],
-            providesSearchMode: true,
-          })
+        let result = Object.assign(
+          new lazy.UrlbarResult(
+            UrlbarUtils.RESULT_TYPE.RESTRICT,
+            UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+            ...lazy.UrlbarResult.payloadAndSimpleHighlights(
+              queryContext.tokens,
+              {
+                icon,
+                keyword: token,
+                l10nRestrictKeywords: [
+                  l10nRestrictKeywords,
+                  UrlbarUtils.HIGHLIGHT.TYPED,
+                ],
+                autofillKeyword: [
+                  keywordPreservingUserCase,
+                  UrlbarUtils.HIGHLIGHT.TYPED,
+                ],
+                providesSearchMode: true,
+              }
+            )
+          ),
+          {
+            hideRowLabel: true,
+            autofill: {
+              value,
+              selectionStart: queryContext.searchString.length,
+              selectionEnd: value.length,
+            },
+          }
         );
-
-        result.autofill = {
-          value,
-          selectionStart: queryContext.searchString.length,
-          selectionEnd: value.length,
-        };
 
         return result;
       }

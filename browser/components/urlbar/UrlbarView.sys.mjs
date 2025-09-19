@@ -2484,9 +2484,11 @@ export class UrlbarView {
       isItemVisible &&
       // Show the search suggestions label only if there are other visible
       // results before this one that aren't the heuristic or suggestions.
-      (item.result.type != lazy.UrlbarUtils.RESULT_TYPE.SEARCH ||
-        !item.result.payload.suggestion ||
-        !seenOnlyHeuristicOrSearchSuggestions)
+      !(
+        item.result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH &&
+        item.result.payload.suggestion &&
+        seenOnlyHeuristicOrSearchSuggestions
+      )
     ) {
       label = this.#rowLabel(item);
     }
