@@ -825,7 +825,6 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
             packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_UNENCRYPTED ||
                 packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_FALSE,
             "Unencrypted packet expected");
-
         sample->mKeyframe = CheckKeyFrameByExamineByteStream(sample);
       }
     }

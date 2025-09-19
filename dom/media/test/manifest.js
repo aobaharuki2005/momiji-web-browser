@@ -512,6 +512,22 @@ var gMKVtests = [
   },
 ];
 
+// HEVC file can only be tested on the gpu worker which has hardware decoder
+// support. This pref will only be set on the `media-gpu` task.
+if (
+  SpecialPowers.Services.prefs.getBoolPref(
+    "media.hardware-video-decoding.force-enabled",
+    0
+  )
+) {
+  // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libx265 -pix_fmt yuv420p output_hevc.mkv
+  gMKVtests.push({
+    name: "output_hevc.mkv",
+    type: "video/matroska",
+    duration: 1.0,
+  });
+}
+
 // The following files should be added to gMKVtests once they are supported.
 var gUnsupportedMKVtests = [
   // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libvpx output_vp8.mkv
@@ -535,12 +551,6 @@ var gUnsupportedMKVtests = [
   // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libaom-av1 output_av1.mkv
   {
     name: "output_av1.mkv",
-    type: "video/matroska",
-    duration: 1.0,
-  },
-  // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libx265 output_hevc.mkv
-  {
-    name: "output_hevc.mkv",
     type: "video/matroska",
     duration: 1.0,
   },

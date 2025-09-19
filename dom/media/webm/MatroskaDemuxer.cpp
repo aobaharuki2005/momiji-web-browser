@@ -7,6 +7,7 @@
 #include "MatroskaDemuxer.h"
 
 #include "H264.h"
+#include "H265.h"
 #include "mozilla/glean/DomMediaMetrics.h"
 
 namespace mozilla {
@@ -91,22 +92,39 @@ nsresult MatroskaDemuxer::SetVideoCodecInfo(nestegg* aContext, int aTrackId) {
   switch (mVideoCodec) {
     case NESTEGG_CODEC_AVC: {
       mInfo.mVideo.mMimeType = "video/avc";
-      // Retrieve the extradata from the codec private.
-      nsTArray<const unsigned char*> headers;
-      nsTArray<size_t> headerLens;
-      nsresult rv =
-          GetCodecPrivateData(aContext, aTrackId, &headers, &headerLens);
+      nsresult rv = SetCodecPrivateToVideoExtraData(aContext, aTrackId);
       if (NS_FAILED(rv)) {
-        MKV_DEBUG("GetCodecPrivateData error for AVC");
+        MKV_DEBUG("Failed to set extradata for avc");
         return rv;
       }
-      mInfo.mVideo.mExtraData->AppendElements(headers[0], headerLens[0]);
+      break;
+    }
+    case NESTEGG_CODEC_HEVC: {
+      mInfo.mVideo.mMimeType = "video/hevc";
+      nsresult rv = SetCodecPrivateToVideoExtraData(aContext, aTrackId);
+      if (NS_FAILED(rv)) {
+        MKV_DEBUG("Failed to set extradata for hevc");
+        return rv;
+      }
       break;
     }
     default:
       NS_WARNING("Unknown Matroska video codec");
       return NS_ERROR_FAILURE;
   }
+  return NS_OK;
+}
+
+nsresult MatroskaDemuxer::SetCodecPrivateToVideoExtraData(nestegg* aContext,
+                                                          int aTrackId) {
+  nsTArray<const unsigned char*> headers;
+  nsTArray<size_t> headerLens;
+  nsresult rv = GetCodecPrivateData(aContext, aTrackId, &headers, &headerLens);
+  if (NS_FAILED(rv)) {
+    MKV_DEBUG("GetCodecPrivateData error");
+    return rv;
+  }
+  mInfo.mVideo.mExtraData->AppendElements(headers[0], headerLens[0]);
   return NS_OK;
 }
 
@@ -212,6 +230,10 @@ bool MatroskaDemuxer::CheckKeyFrameByExamineByteStream(
       auto frameType = H264::GetFrameType(aSample);
       return frameType == H264::FrameType::I_FRAME_IDR ||
              frameType == H264::FrameType::I_FRAME_OTHER;
+    }
+    case NESTEGG_CODEC_HEVC: {
+      auto isKeyFrame = H265::IsKeyFrame(aSample);
+      return isKeyFrame.isOk() ? isKeyFrame.unwrap() : false;
     }
     default:
       MOZ_ASSERT_UNREACHABLE(

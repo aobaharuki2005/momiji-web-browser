@@ -66,6 +66,13 @@ nsTArray<UniquePtr<TrackInfo>> MatroskaDecoder::GetTracksInfo(
       tracks.AppendElement(std::move(trackInfo));
       continue;
     }
+    if (StaticPrefs::media_hevc_enabled() && IsH265CodecString(codec)) {
+      auto trackInfo =
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              "video/hevc"_ns, aType);
+      tracks.AppendElement(std::move(trackInfo));
+      continue;
+    }
     aError = MediaResult(
         NS_ERROR_DOM_MEDIA_FATAL_ERR,
         RESULT_DETAIL("Unknown codec:%s", NS_ConvertUTF16toUTF8(codec).get()));
@@ -112,6 +119,11 @@ bool MatroskaDecoder::IsSupportedType(const MediaContainerType& aContainerType,
     tracks.AppendElement(
         CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
             "video/avc"_ns, aContainerType));
+    if (StaticPrefs::media_hevc_enabled()) {
+      tracks.AppendElement(
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              "video/hevc"_ns, aContainerType));
+    }
   }
 
   // Check that something is supported at least.
