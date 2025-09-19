@@ -50,6 +50,7 @@ import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.verifyDarkThemeApplied
 import org.mozilla.fenix.helpers.TestHelper.verifyLightThemeApplied
+import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
 import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.nimbus.FxNimbus
@@ -904,6 +905,62 @@ class NavigationToolbarTestCompose : TestSetup() {
                 typeSearchWithComposableToolbar("mozilla ")
                 verifyScanButtonWithComposableToolbar(composeTestRule, isDisplayed = false)
                 verifyVoiceSearchButtonVisibility(enabled = true)
+            }
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135016
+    @Test
+    fun verifySearchSelectorMenuItemsTest() {
+        runWithCondition(
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            homeScreen {
+            }.openSearchWithComposableToolbar(composeTestRule) {
+                clickSearchSelectorButtonWithComposableToolbar(composeTestRule)
+                verifySearchShortcutListWithComposableToolbar(
+                    composeTestRule = composeTestRule,
+                    *generalEnginesList.toTypedArray(),
+                    *topicEnginesList.toTypedArray(),
+                    "Bookmarks", "Tabs", "History", "Search settings",
+                )
+            }
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135021
+    @SdkSuppress(minSdkVersion = 34)
+    @Test
+    fun verifyTabsSearchItemsTest() {
+        runWithCondition(
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            searchScreen {
+                clickSearchSelectorButtonWithComposableToolbar(composeTestRule)
+                selectTemporarySearchMethodWithComposableToolbar(composeTestRule, "Tabs")
+                verifyVoiceSearchButtonWithComposableToolbar(composeTestRule, isDisplayed = true)
+                verifySearchBarPlaceholderWithComposableToolbar("Search tabs")
+                verifyScanButtonWithComposableToolbar(composeTestRule, isDisplayed = false)
+            }
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135048
+    @SdkSuppress(minSdkVersion = 34)
+    @Test
+    fun verifyHistorySearchItemsTest() {
+        runWithCondition(
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            searchScreen {
+                clickSearchSelectorButtonWithComposableToolbar(composeTestRule)
+                selectTemporarySearchMethodWithComposableToolbar(composeTestRule, "History")
+                verifyVoiceSearchButtonWithComposableToolbar(composeTestRule, isDisplayed = true)
+                verifySearchBarPlaceholderWithComposableToolbar("Search history")
+                verifyScanButtonWithComposableToolbar(composeTestRule, isDisplayed = false)
             }
         }
     }
