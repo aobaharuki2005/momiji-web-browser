@@ -62,7 +62,8 @@
 #ifdef MOZ_WIDGET_COCOA
 #  include <Carbon/Carbon.h>
 #  include "CocoaFileUtils.h"
-#  include "mozilla/Base64.h"
+#  include "prmem.h"
+#  include "plbase64.h"
 
 static nsresult MacErrorMapper(OSErr inErr);
 #endif
@@ -2313,10 +2314,9 @@ nsLocalFile::SetPersistentDescriptor(const nsACString& aPersistentDescriptor) {
   }
 
   uint32_t dataSize = aPersistentDescriptor.Length();
-  nsAutoCString decodedData;
-  nsResult nr = mozilla::Base64Decode(
-      PromiseFlatCString(aPersistentDescriptor).get(), dataSize, decodedData);
-  if (NS_FAILED(nr)) {
+  char* decodedData = PL_Base64Decode(
+      PromiseFlatCString(aPersistentDescriptor).get(), dataSize, nullptr);
+  if (!decodedData) {
     NS_ERROR("SetPersistentDescriptor was given bad data");
     return NS_ERROR_FAILURE;
   }
@@ -2326,6 +2326,7 @@ nsLocalFile::SetPersistentDescriptor(const nsACString& aPersistentDescriptor) {
   int32_t aliasSize = ::GetAliasSizeFromPtr(&aliasHeader);
   if (aliasSize >
       ((int32_t)dataSize * 3) / 4) {  // be paranoid about having too few data
+    PR_Free(decodedData);             // PL_Base64Decode() uses PR_Malloc().
     return NS_ERROR_FAILURE;
   }
 
@@ -2335,9 +2336,10 @@ nsLocalFile::SetPersistentDescriptor(const nsACString& aPersistentDescriptor) {
   // The size of the decoded data is 3/4 the size of the encoded data. See
   // plbase64.h
   Handle newHandle = nullptr;
-  if (::PtrToHand(decodedData.get(), &newHandle, aliasSize) != noErr) {
+  if (::PtrToHand(decodedData, &newHandle, aliasSize) != noErr) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
+  PR_Free(decodedData);  // PL_Base64Decode() uses PR_Malloc().
   if (NS_FAILED(rv)) {
     return rv;
   }
