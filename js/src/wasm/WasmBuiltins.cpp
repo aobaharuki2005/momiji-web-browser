@@ -21,6 +21,8 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/ScopeExit.h"
 
+#include <cmath>
+
 #include "fdlibm.h"
 #include "jslibmath.h"
 #include "jsmath.h"
@@ -1419,28 +1421,28 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       return FuncCast<double(double)>(fdlibm_atan, *abiType);
     case SymbolicAddress::CeilD:
       *abiType = Args_Double_Double;
-      return FuncCast<double(double)>(fdlibm_ceil, *abiType);
+      return FuncCast<double(double)>(std::ceil, *abiType);
     case SymbolicAddress::CeilF:
       *abiType = Args_Float32_Float32;
-      return FuncCast<float(float)>(fdlibm_ceilf, *abiType);
+      return FuncCast<float(float)>(std::ceil, *abiType);
     case SymbolicAddress::FloorD:
       *abiType = Args_Double_Double;
-      return FuncCast<double(double)>(fdlibm_floor, *abiType);
+      return FuncCast<double(double)>(std::floor, *abiType);
     case SymbolicAddress::FloorF:
       *abiType = Args_Float32_Float32;
-      return FuncCast<float(float)>(fdlibm_floorf, *abiType);
+      return FuncCast<float(float)>(std::floor, *abiType);
     case SymbolicAddress::TruncD:
       *abiType = Args_Double_Double;
-      return FuncCast<double(double)>(fdlibm_trunc, *abiType);
+      return FuncCast<double(double)>(std::trunc, *abiType);
     case SymbolicAddress::TruncF:
       *abiType = Args_Float32_Float32;
-      return FuncCast<float(float)>(fdlibm_truncf, *abiType);
+      return FuncCast<float(float)>(std::trunc, *abiType);
     case SymbolicAddress::NearbyIntD:
       *abiType = Args_Double_Double;
-      return FuncCast<double(double)>(fdlibm_nearbyint, *abiType);
+      return FuncCast<double(double)>(std::nearbyint, *abiType);
     case SymbolicAddress::NearbyIntF:
       *abiType = Args_Float32_Float32;
-      return FuncCast<float(float)>(fdlibm_nearbyintf, *abiType);
+      return FuncCast<float(float)>(std::nearbyint, *abiType);
     case SymbolicAddress::ExpD:
       *abiType = Args_Double_Double;
       return FuncCast<double(double)>(fdlibm_exp, *abiType);
