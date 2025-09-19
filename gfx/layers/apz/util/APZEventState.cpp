@@ -239,9 +239,11 @@ void APZEventState::ProcessTouchEvent(
     uint64_t aInputBlockId, nsEventStatus aApzResponse,
     nsEventStatus aContentResponse,
     nsTArray<TouchBehaviorFlags>&& aAllowedTouchBehaviors) {
+  bool isTouchPrevented = aContentResponse == nsEventStatus_eConsumeNoDefault;
   if (aEvent.mMessage == eTouchStart && aEvent.mTouches.Length() > 0) {
     mElementStateManager->SetTargetElement(
-        aEvent.mTouches[0]->GetOriginalTarget());
+        aEvent.mTouches[0]->GetOriginalTarget(),
+        ElementStateManager::PreventDefault{isTouchPrevented});
     mLastTouchIdentifier = aEvent.mTouches[0]->Identifier();
     mLastTouchSynthesizedForTests =
         static_cast<SynthesizeForTests>(aEvent.mFlags.mIsSynthesizedForTests);
@@ -253,7 +255,6 @@ void APZEventState::ProcessTouchEvent(
     mTouchBlockAllowedBehaviors = std::move(aAllowedTouchBehaviors);
   }
 
-  bool isTouchPrevented = aContentResponse == nsEventStatus_eConsumeNoDefault;
   bool mayNeedPointerCancelEvent = false;
   APZES_LOG("Handling event type %d isPrevented=%d\n", aEvent.mMessage,
             isTouchPrevented);

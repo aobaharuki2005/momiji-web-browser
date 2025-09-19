@@ -149,7 +149,8 @@ ElementStateManager::ElementStateManager()
 
 ElementStateManager::~ElementStateManager() = default;
 
-void ElementStateManager::SetTargetElement(dom::EventTarget* aTarget) {
+void ElementStateManager::SetTargetElement(
+    dom::EventTarget* aTarget, PreventDefault aTouchStartPreventDefault) {
   if (mTarget) {
     // Multiple fingers on screen (since HandleTouchEnd clears mTarget).
     ESM_LOG("Multiple fingers on-screen, clearing target element");
@@ -162,7 +163,7 @@ void ElementStateManager::SetTargetElement(dom::EventTarget* aTarget) {
   mTarget = dom::Element::FromEventTargetOrNull(aTarget);
   ESM_LOG("Setting target element to %p", mTarget.get());
   TriggerElementActivation();
-  if (mTarget) {
+  if (mTarget && !bool(aTouchStartPreventDefault)) {
     ScheduleSetHoverTask();
   }
 }
