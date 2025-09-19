@@ -125,12 +125,10 @@ var snapshotFormatters = {
         Ci.nsIFile
       ).path;
     }
-    if (AppConstants.platform != "android") {
-      $("profile-dir-box").textContent = Services.dirsvc.get(
-        "ProfD",
-        Ci.nsIFile
-      ).path;
-    }
+    $("profile-dir-box").textContent = Services.dirsvc.get(
+      "ProfD",
+      Ci.nsIFile
+    ).path;
 
     try {
       let launcherStatusTextId = "launcher-process-status-unknown";
@@ -276,11 +274,11 @@ var snapshotFormatters = {
       }
     } catch (e) {}
     if (!reportURL) {
-      $("crashes-noConfig").hidden = false;
+      $("crashes-noConfig").style.display = "block";
       $("crashes-noConfig").classList.remove("no-copy");
       return;
     }
-    $("crashes-allReports").hidden = false;
+    $("crashes-allReports").style.display = "block";
 
     if (data.pending > 0) {
       document.l10n.setAttributes(
@@ -424,22 +422,22 @@ var snapshotFormatters = {
         ]);
       })
     );
-    statsBody.hidden = true;
+    statsBody.style.display = "none";
     $("place-database-stats-toggle").addEventListener(
       "click",
       function (event) {
-        if (statsBody.hidden) {
+        if (statsBody.style.display === "none") {
           document.l10n.setAttributes(
             event.target,
             "place-database-stats-hide"
           );
-          statsBody.hidden = false;
+          statsBody.style.display = "";
         } else {
           document.l10n.setAttributes(
             event.target,
             "place-database-stats-show"
           );
-          statsBody.hidden = true;
+          statsBody.style.display = "none";
         }
       }
     );
@@ -631,7 +629,7 @@ var snapshotFormatters = {
       }
       delete data.failures;
     } else {
-      $("graphics-failures-tbody").hidden = true;
+      $("graphics-failures-tbody").style.display = "none";
     }
 
     // Add a new row to the table, and take the key (or keys) out of data.
@@ -774,7 +772,7 @@ var snapshotFormatters = {
       }
 
       if (!trs.length) {
-        $("graphics-" + id + "-tbody").hidden = true;
+        $("graphics-" + id + "-tbody").style.display = "none";
         return;
       }
 
@@ -856,7 +854,7 @@ var snapshotFormatters = {
         addRow("decisions", "#" + feature.name, [$.new("table", trs)]);
       }
     } else {
-      $("graphics-decisions-tbody").hidden = true;
+      $("graphics-decisions-tbody").style.display = "none";
     }
 
     if (featureLog.fallbacks.length) {
@@ -866,7 +864,7 @@ var snapshotFormatters = {
         ]);
       }
     } else {
-      $("graphics-workarounds-tbody").hidden = true;
+      $("graphics-workarounds-tbody").style.display = "none";
     }
 
     let crashGuards = data.crashGuards;
@@ -887,7 +885,7 @@ var snapshotFormatters = {
         addRow("crashguards", guard.type + "CrashGuard", [resetButton]);
       }
     } else {
-      $("graphics-crashguards-tbody").hidden = true;
+      $("graphics-crashguards-tbody").style.display = "none";
     }
 
     // Now that we're done, grab any remaining keys in data and drop them into
@@ -1006,7 +1004,7 @@ var snapshotFormatters = {
       if (
         !Services.prefs.getBoolPref("media.mediacapabilities.from-database")
       ) {
-        $("media-capabilities-tbody").hidden = true;
+        $("media-capabilities-tbody").style.display = "none";
         return;
       }
       let button = $("enumerate-database-button");
@@ -1039,7 +1037,7 @@ var snapshotFormatters = {
               });
           }
 
-          $("enumerate-database-result").hidden = false;
+          $("enumerate-database-result").style.display = "block";
           $("enumerate-database-result").classList.remove("no-copy");
           $("enumerate-database-result").textContent = "";
 
@@ -1405,9 +1403,6 @@ var snapshotFormatters = {
   },
 
   contentAnalysis(data) {
-    if (AppConstants.platform == "android") {
-      return;
-    }
     $("content-analysis-active").textContent = data.active;
     if (data.active) {
       $("content-analysis-connected-to-agent").textContent = data.connected;
@@ -1463,8 +1458,9 @@ var snapshotFormatters = {
     let userJSFile = Services.dirsvc.get("PrefD", Ci.nsIFile);
     userJSFile.append("user.js");
     $("prefs-user-js-link").href = Services.io.newFileURI(userJSFile).spec;
-    $("prefs-user-js-section").hidden = false;
-    $("prefs-user-js-section").classList.remove("no-copy");
+    $("prefs-user-js-section").style.display = "";
+    // Clear the no-copy class
+    $("prefs-user-js-section").className = "";
   },
 
   sandbox(data) {
@@ -1575,9 +1571,10 @@ var snapshotFormatters = {
     const { isSynchronizationBroken, lastCheck, localTimestamp, history } =
       data;
 
-    $("support-remote-settings-status-ok").hidden = isSynchronizationBroken;
-    $("support-remote-settings-status-broken").hidden =
-      !isSynchronizationBroken;
+    $("support-remote-settings-status-ok").style.display =
+      isSynchronizationBroken ? "none" : "block";
+    $("support-remote-settings-status-broken").style.display =
+      isSynchronizationBroken ? "block" : "none";
     $("support-remote-settings-last-check").textContent = lastCheck;
     $("support-remote-settings-local-timestamp").textContent = localTimestamp;
     $.append(
@@ -1873,7 +1870,7 @@ Serializer.prototype = {
   },
 
   _isHiddenSubHeading(th) {
-    return th.parentNode.parentNode.hidden;
+    return th.parentNode.parentNode.style.display == "none";
   },
 
   _serializeTable(table) {
@@ -1992,10 +1989,10 @@ function openProfileDirectory() {
  */
 function populateActionBox() {
   if (ResetProfile.resetSupported()) {
-    $("reset-box").hidden = false;
+    $("reset-box").style.display = "block";
   }
   if (!Services.appinfo.inSafeMode && AppConstants.platform !== "android") {
-    $("safe-mode-box").hidden = false;
+    $("safe-mode-box").style.display = "block";
 
     if (Services.policies && !Services.policies.isAllowed("safeMode")) {
       $("restart-in-safe-mode-button").setAttribute("disabled", "true");
@@ -2118,7 +2115,7 @@ function setupEventListeners() {
           let prefix = value.succeeded ? "+ " : "- ";
           logs = logs.concat(value.logs.map(m => `${prefix}${m}`));
         }
-        $("verify-place-result").hidden = false;
+        $("verify-place-result").style.display = "block";
         $("verify-place-result").classList.remove("no-copy");
         $("verify-place-result").textContent = logs.join("\n");
       });
@@ -2131,11 +2128,9 @@ function setupEventListeners() {
   $("copy-to-clipboard").addEventListener("click", function () {
     copyContentsToClipboard();
   });
-  if (AppConstants.platform != "android") {
-    $("profile-dir-button").addEventListener("click", function () {
-      openProfileDirectory();
-    });
-  }
+  $("profile-dir-button").addEventListener("click", function () {
+    openProfileDirectory();
+  });
 }
 
 /**

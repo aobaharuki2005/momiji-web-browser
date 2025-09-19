@@ -84,3 +84,11 @@ td {
   white-space: nowrap;
   overflow: hidden;
 }
+
+#profile-row {
+  display: none;
+}
+
+#reset-box {
+  display: none;
+}
