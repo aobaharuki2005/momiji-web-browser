@@ -574,6 +574,8 @@
   <string name="onboarding_redesign_tou_agree_and_continue_button_label">განაგრძეთ</string>
   <!-- Set to default browser onboarding redesign title. -->
   <string name="onboarding_redesign_set_default_browser_title">თვალთვალისგან თავისთავადი დაცვა ნაგულისხმევად</string>
+  <!-- Set to default browser onboarding redesign body. -->
+  <string name="onboarding_redesign_set_default_browser_body">ერთი შეხებით აირიდეთ კომპანიებისგან თვალთვალი ყოველი დაწკაპებისას.</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">დაგვეხმარეთ, გავავრცელოთ Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->

@@ -572,6 +572,10 @@
   <string name="onboarding_redesign_tou_body_three_link_text">Quản lý cài đặt</string>
   <!-- Terms of use (ToU) onboarding page continue button label. -->
   <string name="onboarding_redesign_tou_agree_and_continue_button_label">Tiếp tục</string>
+  <!-- Set to default browser onboarding redesign title. -->
+  <string name="onboarding_redesign_set_default_browser_title">Nhận trình chống theo dõi tự động theo mặc định</string>
+  <!-- Set to default browser onboarding redesign body. -->
+  <string name="onboarding_redesign_set_default_browser_body">Chỉ cần một cú nhấp có thể ngăn các công ty theo dõi lượt nhấp chuột của bạn.</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Giúp chúng tôi phát triển Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -2018,6 +2022,8 @@
   <string name="create_collection_tabs_saved_new_collection_2">Đã lưu bộ sưu tập</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
   <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">Đã lưu thẻ!</string>
+  <!-- Text shown in snackbar when one tab has been saved in a collection -->
+  <string name="create_collection_tab_saved_2">Đã lưu thẻ</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
   <string name="create_collection_close">Đóng</string>
   <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator -->
@@ -2273,6 +2279,8 @@
     Text shown in snackbar when multiple tabs have been sent to device
   -->
   <string name="sync_sent_tabs_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Đã gửi các thẻ!</string>
+  <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+  <string name="sync_sent_tabs_snackbar_2">Đã gửi các thẻ</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
   <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Đã gửi thẻ!</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->

@@ -2018,6 +2018,8 @@
   <string name="create_collection_tabs_saved_new_collection_2">Kolleksje bewarre</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
   <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">Ljepblêd bewarre!</string>
+  <!-- Text shown in snackbar when one tab has been saved in a collection -->
+  <string name="create_collection_tab_saved_2">Ljepblêd bewarre</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
   <string name="create_collection_close">Slute</string>
   <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator -->
@@ -2273,6 +2275,8 @@
     Text shown in snackbar when multiple tabs have been sent to device
   -->
   <string name="sync_sent_tabs_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Ljepblêden ferstjoerd!</string>
+  <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+  <string name="sync_sent_tabs_snackbar_2">Ljepblêden ferstjoerd</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
   <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Ljepblêd ferstjoerd!</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
