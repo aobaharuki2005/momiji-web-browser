@@ -34,7 +34,9 @@ class SecureTabManagerBinding(
                 )
             }
             .collect { state ->
-                if (state.selectedPage == Page.PrivateTabs) {
+                if (state.selectedPage == Page.PrivateTabs &&
+                    !settings.allowScreenshotsInPrivateMode
+                ) {
                     fragment.secure()
                 } else if (!settings.lastKnownMode.isPrivate) {
                     fragment.removeSecure()
