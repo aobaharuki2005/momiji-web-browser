@@ -929,7 +929,10 @@ void AsyncPanZoomController::Destroy() {
   {  // scope the lock
     MonitorAutoLock lock(mRefPtrMonitor);
     mGeckoContentController = nullptr;
-    mGestureEventListener = nullptr;
+    if (mGestureEventListener) {
+      mGestureEventListener->Destroy();
+      mGestureEventListener = nullptr;
+    }
   }
   mParent = nullptr;
   mTreeManager = nullptr;
