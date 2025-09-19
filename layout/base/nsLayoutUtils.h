@@ -303,12 +303,17 @@ class nsLayoutUtils {
    * @param aFrame the frame to start at
    * @param aFrameType the frame type to look for
    * @param aStopAt a frame to stop at after we checked it
-   * @return a frame of the given type or nullptr if no
-   *         such ancestor exists
+   * @return a frame of the given type or nullptr if no such ancestor exists
+   *
+   * Note: prefer the const overload if possible; the non-const wrapper exists
+   * for legacy callers.
    */
+  static const nsIFrame* GetClosestFrameOfType(
+      const nsIFrame* aFrame, mozilla::LayoutFrameType aFrameType,
+      const nsIFrame* aStopAt = nullptr);
   static nsIFrame* GetClosestFrameOfType(nsIFrame* aFrame,
                                          mozilla::LayoutFrameType aFrameType,
-                                         nsIFrame* aStopAt = nullptr);
+                                         const nsIFrame* aStopAt = nullptr);
 
   /**
    * Given a frame, search up the frame tree until we find an

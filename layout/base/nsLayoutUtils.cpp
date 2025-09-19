@@ -913,11 +913,10 @@ void nsLayoutUtils::GetMarkerSpokenText(const nsIContent* aContent,
 }
 #endif
 
-// static
-nsIFrame* nsLayoutUtils::GetClosestFrameOfType(nsIFrame* aFrame,
-                                               LayoutFrameType aFrameType,
-                                               nsIFrame* aStopAt) {
-  for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
+const nsIFrame* nsLayoutUtils::GetClosestFrameOfType(const nsIFrame* aFrame,
+                                                     LayoutFrameType aFrameType,
+                                                     const nsIFrame* aStopAt) {
+  for (const nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
     if (frame->Type() == aFrameType) {
       return frame;
     }
@@ -926,6 +925,12 @@ nsIFrame* nsLayoutUtils::GetClosestFrameOfType(nsIFrame* aFrame,
     }
   }
   return nullptr;
+}
+nsIFrame* nsLayoutUtils::GetClosestFrameOfType(nsIFrame* aFrame,
+                                               LayoutFrameType aFrameType,
+                                               const nsIFrame* aStopAt) {
+  return const_cast<nsIFrame*>(GetClosestFrameOfType(
+      const_cast<const nsIFrame*>(aFrame), aFrameType, aStopAt));
 }
 
 /* static */

@@ -111,11 +111,8 @@ static bool NeedsToMaskPassword(const nsTextFrame* aFrame) {
   if (!aFrame->GetContent()->HasFlag(NS_MAYBE_MASKED)) {
     return false;
   }
-  // TODO: can we completely const-ify GetClosestFrameOfType? It doesn't modify
-  // anything, but currently some callers expect a non-const return value; it
-  // would be nice to propagate const-ness if possible.
-  const nsIFrame* frame = nsLayoutUtils::GetClosestFrameOfType(
-      const_cast<nsTextFrame*>(aFrame), LayoutFrameType::TextInput);
+  const nsIFrame* frame =
+      nsLayoutUtils::GetClosestFrameOfType(aFrame, LayoutFrameType::TextInput);
   MOZ_ASSERT(frame, "How do we have a masked text node without a text input?");
   return !frame || !frame->GetContent()->AsElement()->State().HasState(
                        ElementState::REVEALED);
