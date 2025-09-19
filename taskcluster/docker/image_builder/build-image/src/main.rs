@@ -137,24 +137,43 @@ fn main() -> Result<()> {
 
     build_args.insert("TASKCLUSTER_ROOT_URL".into(), cluster.root_url());
 
-    log_step("Downloading context.");
+    let output_dir = Path::new("/workspace/out");
+    if !output_dir.is_dir() {
+        std::fs::create_dir_all(output_dir)?;
+    }
 
-    std::io::copy(
-        &mut cluster.stream_artifact(&config.context_task_id, &config.context_path)?,
-        &mut std::fs::File::create("/workspace/context.tar.gz")?,
-    )
-    .context("Could not download image context.")?;
+    let context_path = Path::new("/workspace/context.tar.gz");
+    if !context_path.is_file() {
+        log_step("Downloading context.");
+
+        std::io::copy(
+            &mut cluster.stream_artifact(&config.context_task_id, &config.context_path)?,
+            &mut std::fs::File::create(context_path)?,
+        )
+        .context("Could not download image context.")?;
+    } else {
+        log_step(&format!(
+            "Using existing context from {}",
+            context_path.display()
+        ));
+    }
 
     if let Some(parent_task_id) = config.parent_task_id {
-        log_step("Downloading image.");
-        let digest = download_parent_image(&cluster, &parent_task_id, "/workspace/parent.tar")?;
+        let parent_path = Path::new("/workspace/parent.tar");
+        let digest = if parent_path.is_file() {
+            log_step(&format!(
+                "Using existing parent image from {}",
+                parent_path.display()
+            ));
+            read_image_digest(parent_path.to_str().unwrap())?
+        } else {
+            log_step("Downloading image.");
+            download_parent_image(&cluster, &parent_task_id, parent_path.to_str().unwrap())?
+        };
 
         log_step(&format!("Parent image digest {}", &digest));
         std::fs::create_dir_all("/workspace/cache")?;
-        std::fs::rename(
-            "/workspace/parent.tar",
-            format!("/workspace/cache/{}", digest),
-        )?;
+        std::fs::rename(parent_path, format!("/workspace/cache/{}", digest))?;
 
         build_args.insert(
             "DOCKER_IMAGE_PARENT".into(),
@@ -164,22 +183,22 @@ fn main() -> Result<()> {
 
     log_step("Building image.");
     build_image(
-        "/workspace/context.tar.gz",
-        "/workspace/image-pre.tar",
+        context_path.to_str().unwrap(),
+        output_dir.join("image-pre.tar").to_str().unwrap(),
         config.debug,
         build_args,
     )?;
     log_step("Repacking image.");
     repack_image(
-        "/workspace/image-pre.tar",
-        "/workspace/image.tar",
+        output_dir.join("image-pre.tar").to_str().unwrap(),
+        output_dir.join("image.tar").to_str().unwrap(),
         &config.image_name,
     )?;
 
     log_step("Compressing image.");
     compress_file(
-        "/workspace/image.tar",
-        "/workspace/image.tar.zst",
+        output_dir.join("image.tar"),
+        output_dir.join("image.tar.zst"),
         config.docker_image_zstd_level,
     )?;
 
