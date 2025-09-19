@@ -15,7 +15,6 @@ const { DeferredTask } = ChromeUtils.importESModule(
 const toolsNameMap = {
   viewGenaiChatSidebar: "aichat",
   viewGenaiPageAssistSidebar: "aipageassist",
-  viewGenaiSmartAssistSidebar: "aismartassist",
   viewTabsSidebar: "syncedtabs",
   viewHistorySidebar: "history",
   viewBookmarksSidebar: "bookmarks",
@@ -199,20 +198,6 @@ var SidebarController = {
         menuL10nId: "menu-view-genai-page-assist",
         revampL10nId: "sidebar-menu-genai-page-assist-label",
         iconUrl: "chrome://browser/skin/reader-mode.svg",
-      }
-    );
-
-    this.registerPrefSidebar(
-      "browser.ml.smartAssist.enabled",
-      "viewGenaiSmartAssistSidebar",
-      {
-        name: "aismartassist",
-        elementId: "sidebar-switcher-genai-smart-assist",
-        url: "chrome://browser/content/genai/SmartAssist.html",
-        menuId: "menu_genaiSmartAssistSidebar",
-        menuL10nId: "menu-view-genai-smart-assist",
-        revampL10nId: "sidebar-menu-genai-smart-assist-label",
-        iconUrl: "chrome://browser/skin/trending.svg",
       }
     );
 
