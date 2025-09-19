@@ -11,10 +11,6 @@
   -->
   <string name="content_description_menu">Күбрәк опцияләр</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Хосусый гизү режимын кабызу</string>
-  <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_disable_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Хосусый гизү режимын сүндерү</string>
-  <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
   <string name="content_description_private_browsing">Хосусый гизү</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
   <string name="search_hint">Эзләү яки адрес язу</string>
@@ -237,8 +233,6 @@
   <string name="browser_menu_new_private_tab">Яңа хосусый таб</string>
   <!-- Browser menu label that navigates to the Password screen -->
   <string name="browser_menu_passwords">Серсүзләр</string>
-  <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Сайтның мобиль версиясенә күчү</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">Ярдәм</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -320,10 +314,8 @@
   <!--
     Home onboarding
 
-    Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section.
+    Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog
   -->
-  <string name="sync_cfr_message" moz:removedIn="142" tools:ignore="UnusedResources">Сезнең таблар синхронлана! Башка җиһазыгызда туктап калган җирегездән дәвам итегез.</string>
-  <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
   <string name="onboarding_home_content_description_close_button">Ябу</string>
   <!--
     Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments.
@@ -755,8 +747,6 @@
   <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Барлык сайтлар өчен дә кабызу</string>
   <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
   <string name="exceptions_empty_message_learn_more_link">Күбрәк белү</string>
-  <!-- Learn more link for crash reporting preference -->
-  <string name="onboarding_preferences_dialog_crash_reporting_learn_more" tools:ignore="UnusedResources" moz:removedIn="142">Ватылу хәбәрләре турында күбрәк белү</string>
   <!-- Title for studies preferences -->
   <string name="preference_experiments_2">Тикшеренүләр</string>
   <!-- Summary for studies preferences -->
@@ -1046,8 +1036,6 @@
   <string name="tab_crash_close">Табны ябу</string>
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Табны кире кайтару</string>
-  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s кушымчасын сүндереп кабызырга туры килде</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Ватылу турындагы хәбәрләрне автоматик рәвештә җибәрү</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1280,12 +1268,10 @@
     %d is a placeholder for the number of tabs selected.
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d таб сайланды</string>
-  <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Таблар сакланды!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection" tools:ignore="UnusedResources" moz:removedIn="144">Җыентык cакланды!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
-  <string name="create_collection_tab_saved">Таб сакланды!</string>
+  <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">Таб сакланды!</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
   <string name="create_collection_close">Ябу</string>
   <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator -->
@@ -1426,8 +1412,6 @@
   <string name="tab_collection_dialog_message">%1$s җыентыгын бетерүне раслыйсызмы?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Бетерү</string>
-  <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL копияләнде</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_text_size_summary">Вебсайтларда текстны зурайту я кечерәйтү</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -1510,7 +1494,7 @@
 
     Text shown in snackbar when multiple tabs have been sent to device
   -->
-  <string name="sync_sent_tabs_snackbar">Таблар җибәрелде!</string>
+  <string name="sync_sent_tabs_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Таблар җибәрелде!</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
   <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Таб җибәрелде!</string>
   <!-- Text shown in snackbar when sharing tabs failed -->
@@ -1881,12 +1865,6 @@
   <string name="search_add_custom_engine_error_empty_search_string">Эзләнәсе сүзтезмәне кертегез</string>
   <!-- Text shown when a user leaves out the required template string -->
   <string name="search_add_custom_engine_error_missing_template">Эзләнәсе сүзтезмәнең Мисал форматына туры килүен тикшерегез</string>
-  <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s ясалды</string>
-  <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s сакланды</string>
-  <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_delete_search_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s бетерелде</string>
   <!-- Heading for the instructions to allow a permission -->
   <string name="phone_feature_blocked_intro">Рөхсәт итү өчен:</string>
   <!-- First step for the allowing a permission -->

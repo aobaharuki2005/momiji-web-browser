@@ -10,10 +10,6 @@
     Content description (not visible, for screen readers etc.): "Three dot" menu button.
   -->
   <string name="content_description_menu">Àwọn àṣàyàn si</string>
-  <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Ṣe ìgbàláyè fún bíráwúsínnì ìkọ̀kọ̀</string>
-  <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_disable_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Má ṣe ìgbàláyè fún bíráwúsìnnì ìkọ̀kọ̀</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
   <string name="search_hint">Ṣàwárí tàbí fi àdìrẹ́sì si</string>
   <!-- Placeholder text shown in the search bar when using application search engines -->
@@ -215,12 +211,6 @@
   <string name="search_engine_suggestions_description">Wá tààrà láti ààyè ìfi-àdírẹ̀sì-sí</string>
   <!-- Menu option in the search selector menu to open the search settings -->
   <string name="search_settings_menu_item">Àwọn ètò ìwádìí</string>
-  <!--
-    Home onboarding
-
-    Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section.
-  -->
-  <string name="sync_cfr_message" moz:removedIn="142" tools:ignore="UnusedResources">Àwọn táàbù rẹ ti ń ṣiṣẹ́ pọ̀! Mú u sókè níbi tí o ti kúrò lóri ẹ̀rọ rẹ mìíràn.</string>
   <!--
     Search Widget
 
@@ -863,12 +853,10 @@
     %d is a placeholder for the number of tabs selected.
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d àwọn táàbù tí a yàn</string>
-  <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Ti fi táàbù pamọ́!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection" tools:ignore="UnusedResources" moz:removedIn="144">Ti fi àkójọpọ̀ pamọ́!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
-  <string name="create_collection_tab_saved">Táàbù ti wà ní ìfipamọ́!</string>
+  <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">Táàbù ti wà ní ìfipamọ́!</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
   <string name="create_collection_close">Padé</string>
   <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator -->
@@ -969,8 +957,6 @@
   <string name="tab_collection_dialog_message">Ṣé ó dá ọ lójú pé o fẹ́ paárẹ́ %1$s?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Parẹ́</string>
-  <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL ti di dídàkọ</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Èyí jẹ́ àpẹẹrẹ ọ̀rọ̀. Ó wà níbí láti ṣàfihàn bí ọ̀rọ̀ yóò ṣe ma hàn nígbà tí o bá ṣe ìlékún tàbí ìdíkù sí ìwọ̀n rẹ̀ pẹ̀lú ètò yìí.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -1047,7 +1033,7 @@
 
     Text shown in snackbar when multiple tabs have been sent to device
   -->
-  <string name="sync_sent_tabs_snackbar">Àwọn táàbù ti a fi ránṣẹ́!</string>
+  <string name="sync_sent_tabs_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Àwọn táàbù ti a fi ránṣẹ́!</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
   <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Táàbù ti a fi ránṣẹ́!</string>
   <!-- Text shown in snackbar when sharing tabs failed -->
@@ -1381,12 +1367,6 @@
   <string name="search_add_custom_engine_error_empty_search_string">Tẹ àkójọ ohun ìwádìí kan</string>
   <!-- Text shown when a user leaves out the required template string -->
   <string name="search_add_custom_engine_error_missing_template">Ri pé àkójọ ohun ìwádìí bá ìlànà àpẹẹrẹ náà mu</string>
-  <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Ti ṣẹ̀dá%s</string>
-  <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Ti fipamọ́%s</string>
-  <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_delete_search_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Ti parẹ́%s</string>
   <!-- Heading for the instructions to allow a permission -->
   <string name="phone_feature_blocked_intro">Láti gbàá láyè:</string>
   <!-- First step for the allowing a permission -->

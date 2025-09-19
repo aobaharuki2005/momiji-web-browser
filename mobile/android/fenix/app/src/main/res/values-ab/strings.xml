@@ -10,10 +10,6 @@
     Content description (not visible, for screen readers etc.): "Three dot" menu button.
   -->
   <string name="content_description_menu">Егьырҭ архиарақәа</string>
-  <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Ахатә ԥшаара аҿактәуп</string>
-  <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_disable_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Ихатәу абраузер аҿыхтәуп</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
   <string name="search_hint">Иҭажәгал шәзыҳәара ма шәҭыӡҭыԥ</string>
   <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
@@ -255,10 +251,6 @@
   <string name="browser_menu_new_private_tab">Ахатә абӷьыц ҿыц</string>
   <!-- Browser menu label that navigates to the Password screen -->
   <string name="browser_menu_passwords">Амаӡажәақәа</string>
-  <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Мобилтә саит ахь ацара</string>
-  <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
-  <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">Амениу хада адаҟьа арктәуп</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">Анарҭбаарақәа рмениу адаҟьа арктәуп</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -346,10 +338,8 @@
   <!--
     Home onboarding
 
-    Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section.
+    Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog
   -->
-  <string name="sync_cfr_message" moz:removedIn="142" tools:ignore="UnusedResources">Уара уҭаӡҩырақәа асинхронизациа ҟаҵоуп! Даҽа ҳәагак аҿы иахьаанужьыз иацҵа.</string>
-  <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
   <string name="onboarding_home_content_description_close_button">Аркра</string>
   <!--
     Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments.
@@ -1098,8 +1088,6 @@
   <string name="tab_crash_close">Абларҭа арктәуп</string>
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Агәылаҵа аиҭашьақәыргылара</string>
-  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s ҿыц аус арура аҭахын</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Аиԥҟьара аҳасабырбақәа автоматикала идәықәҵатәуп</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1340,12 +1328,10 @@
     %d is a placeholder for the number of tabs selected.
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d абларҭа алхуп</string>
-  <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Аҭаӡқәа еиқәырхоуп!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection" tools:ignore="UnusedResources" moz:removedIn="144">Аизга еиқәырхоуп!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
-  <string name="create_collection_tab_saved">Аҭаӡҩыра еиқәырхоуп!</string>
+  <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">Аҭаӡҩыра еиқәырхоуп!</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
   <string name="create_collection_close">Аркра</string>
   <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator -->
@@ -1506,8 +1492,6 @@
   <string name="tab_collection_dialog_message">Агәра ганы уҟоума %1$s аԥыхра уҭахума?</string>
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Аныхра</string>
-  <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Азхьарԥш ақәҭыхуп</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Ари текст ҿырԥштәуп. Абраҟа атекст ашәагаа анузырҳалак ма ианурмаҷуа ишааԥшуа аарԥшразы ауп.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -1594,7 +1578,7 @@
 
     Text shown in snackbar when multiple tabs have been sent to device
   -->
-  <string name="sync_sent_tabs_snackbar">Аҭаӡҩырақәа шьҭуп!</string>
+  <string name="sync_sent_tabs_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Аҭаӡҩырақәа шьҭуп!</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
   <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Аҭаӡҩыра шьҭуп!</string>
   <!-- Text shown in snackbar when sharing tabs failed -->
@@ -2031,12 +2015,6 @@
   <string name="search_add_custom_engine_error_empty_search_string">Иҭажәгал аԥшааратә цәаҳәа</string>
   <!-- Text shown when a user leaves out the required template string -->
   <string name="search_add_custom_engine_error_missing_template">Аԥшааратә цәаҳәа аҿырԥштәы аформат иақәшәоит ҳәа агәра ганы шәыҟаз</string>
-  <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s ацҵоуп</string>
-  <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s еиқәырхоуп</string>
-  <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_delete_search_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s аныхуп</string>
   <!-- Heading for the instructions to allow a permission -->
   <string name="phone_feature_blocked_intro">Абри аӡбаразы:</string>
   <!-- First step for the allowing a permission -->
