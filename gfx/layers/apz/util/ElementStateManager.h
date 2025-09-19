@@ -29,8 +29,8 @@ enum class SingleTapState : uint8_t;
 }  // namespace apz
 
 /**
- * Manages setting and clearing the ':active' CSS pseudostate in the presence
- * of touch input.
+ * Manages setting and clearing the ':active' or `:hover` CSS pseudostate in the
+ * presence of touch input.
  */
 class ElementStateManager final {
   ~ElementStateManager();
@@ -54,6 +54,12 @@ class ElementStateManager final {
    * @param aCanBePanOrZoom whether the touch can be a pan or double-tap-to-zoom
    */
   void HandleTouchStart(bool aCanBePanOrZoom);
+
+  /**
+   * Handle an eStartPanning state notification from APZ.
+   */
+  void HandleStartPanning();
+
   /**
    * Clear the active element.
    */
@@ -119,6 +125,11 @@ class ElementStateManager final {
    */
   RefPtr<CancelableRunnable> mSetActiveTask;
 
+  /**
+   * A task for calling SetHover() after a timeout.
+   */
+  RefPtr<CancelableRunnable> mSetHoverTask;
+
   // Store the pending single tap event element activation clearing
   // task.
   RefPtr<DelayedClearElementActivation> mDelayedClearElementActivation;
@@ -126,11 +137,15 @@ class ElementStateManager final {
   // Helpers
   void TriggerElementActivation();
   void SetActive(dom::Element* aTarget);
+  void SetHover(dom::Element* aTarget);
   void ResetActive();
   void ResetTouchBlockState();
   void ScheduleSetActiveTask();
   void SetActiveTask(const nsCOMPtr<dom::Element>& aTarget);
   void CancelActiveTask();
+  void ScheduleSetHoverTask();
+  void SetHoverTask(const nsCOMPtr<dom::Element>& aTarget);
+  void CancelHoverTask();
   // Returns true if the function changed the active element state.
   bool MaybeChangeActiveState(apz::SingleTapState aState);
 };
