@@ -452,9 +452,16 @@
           "aria-expanded on button is set to false when the panel-list is hidden"
         );
 
+        assertButtonPropertiesMatch(menuButton, {
+          backgroundColor: "--button-background-color",
+          color: "--button-text-color",
+          borderColor: "--button-border-color",
+        });
+
         let openPromise = BrowserTestUtils.waitForEvent(panelList, "shown");
         synthesizeMouseAtCenter(menuButton, {});
         await openPromise;
+        synthesizeMouseAtCenter(panelList, { type: "mousemove" }, window);
 
         ok(panelList.open, "panel-list is open");
 
@@ -464,6 +471,12 @@
           "true",
           "aria-expanded on button is set to true when the panel-list is open"
         );
+
+        assertButtonPropertiesMatch(menuButton, {
+          backgroundColor: "--button-background-color-selected",
+          color: "--button-text-color-selected",
+          borderColor: "--button-border-color-selected",
+        });
 
         let hidePromise = BrowserTestUtils.waitForEvent(panelList, "hidden");
         synthesizeKey("Escape", {});

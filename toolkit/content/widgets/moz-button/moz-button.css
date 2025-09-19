@@ -82,6 +82,12 @@ button {
     color: var(--button-text-color-active);
   }
 
+  button:is([aria-expanded="true"], [aria-pressed="true"]):not(:hover, :disabled) > & {
+    background-color: var(--button-background-color-selected);
+    border-color: var(--button-border-color-selected);
+    color: var(--button-text-color-selected);
+  }
+
   button:disabled > & {
     background-color: var(--button-background-color-disabled);
     border-color: var(--button-border-color-disabled);
@@ -111,6 +117,12 @@ button {
       color: var(--button-text-color-primary-active);
     }
 
+    button:is([aria-expanded="true"], [aria-pressed="true"]):not(:hover, :disabled) > & {
+      background-color: var(--button-background-color-primary-selected);
+      border-color: var(--button-border-color-primary-selected);
+      color: var(--button-text-color-primary-selected);
+    }
+
     button:disabled > & {
       background-color: var(--button-background-color-primary-disabled);
       border-color: var(--button-border-color-primary-disabled);
@@ -135,6 +147,12 @@ button {
       color: var(--button-text-color-destructive-active);
     }
 
+    button:is([aria-expanded="true"], [aria-pressed="true"]):not(:hover, :disabled) > & {
+      background-color: var(--button-background-color-destructive-selected);
+      border-color: var(--button-border-color-destructive-selected);
+      color: var(--button-text-color-destructive-selected);
+    }
+
     button:disabled > & {
       background-color: var(--button-background-color-destructive-disabled);
       border-color: var(--button-border-color-destructive-disabled);
@@ -157,6 +175,12 @@ button {
       background-color: var(--button-background-color-ghost-active);
       border-color: var(--button-border-color-ghost-active);
       color: var(--button-text-color-ghost-active);
+    }
+
+    button:is([aria-expanded="true"], [aria-pressed="true"]):not(:hover, :disabled) > & {
+      background-color: var(--button-background-color-ghost-selected);
+      border-color: var(--button-border-color-ghost-selected);
+      color: var(--button-text-color-ghost-selected);
     }
 
     button:disabled > & {

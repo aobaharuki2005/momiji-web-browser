@@ -307,6 +307,10 @@ export const tokensTable = {
       name: "--button-background-color-primary-disabled",
     },
     {
+      value: "var(--button-background-color-primary-active)",
+      name: "--button-background-color-primary-selected",
+    },
+    {
       value: {
         light: "var(--color-red-60)",
         dark: "var(--color-red-30)",
@@ -341,6 +345,10 @@ export const tokensTable = {
       name: "--button-background-color-destructive-hover",
     },
     {
+      value: "var(--button-background-color-destructive-active)",
+      name: "--button-background-color-destructive-selected",
+    },
+    {
       value: {
         default: "transparent",
         brand: { forcedColors: "var(--button-background-color)" },
@@ -361,6 +369,14 @@ export const tokensTable = {
     {
       value: "var(--button-background-color-hover)",
       name: "--button-background-color-ghost-hover",
+    },
+    {
+      value: "var(--button-background-color-ghost-active)",
+      name: "--button-background-color-ghost-selected",
+    },
+    {
+      value: "var(--button-background-color-active)",
+      name: "--button-background-color-selected",
     },
     {
       value: "var(--background-color-box-info)",
@@ -509,6 +525,10 @@ export const tokensTable = {
       name: "--button-border-color-destructive-hover",
     },
     {
+      value: "var(--button-border-color-destructive-active)",
+      name: "--button-border-color-destructive-selected",
+    },
+    {
       value: {
         default: "var(--button-border-color)",
         forcedColors: "var(--border-color-interactive-disabled)",
@@ -530,6 +550,10 @@ export const tokensTable = {
     {
       value: { default: "var(--button-border-color-hover)" },
       name: "--button-border-color-ghost-hover",
+    },
+    {
+      value: "var(--button-border-color-ghost-active)",
+      name: "--button-border-color-ghost-selected",
     },
     {
       value: {
@@ -559,6 +583,14 @@ export const tokensTable = {
         forcedColors: "SelectedItemText",
       },
       name: "--button-border-color-primary-hover",
+    },
+    {
+      value: "var(--button-border-color-primary-active)",
+      name: "--button-border-color-primary-selected",
+    },
+    {
+      value: "var(--button-border-color-active)",
+      name: "--button-border-color-selected",
     },
   ],
   "border-radius": [
@@ -769,6 +801,10 @@ export const tokensTable = {
       name: "--button-text-color-destructive-hover",
     },
     {
+      value: "var(--button-text-color-destructive-active)",
+      name: "--button-text-color-destructive-selected",
+    },
+    {
       value: { default: "var(--button-text-color)", forcedColors: "GrayText" },
       name: "--button-text-color-disabled",
     },
@@ -809,6 +845,10 @@ export const tokensTable = {
       name: "--button-text-color-ghost-hover",
     },
     {
+      value: "var(--button-text-color-ghost-active)",
+      name: "--button-text-color-ghost-selected",
+    },
+    {
       value: {
         default: "var(--button-text-color)",
         forcedColors: "SelectedItem",
@@ -841,6 +881,14 @@ export const tokensTable = {
         forcedColors: "SelectedItemText",
       },
       name: "--button-text-color-primary-hover",
+    },
+    {
+      value: "var(--button-text-color-primary-active)",
+      name: "--button-text-color-primary-selected",
+    },
+    {
+      value: "var(--button-text-color-active)",
+      name: "--button-text-color-selected",
     },
     {
       value: {
@@ -1162,6 +1210,8 @@ export const variableLookupTable = {
     default: "var(--button-background-color-primary)",
     forcedColors: "var(--button-text-color-disabled)",
   },
+  "button-background-color-primary-selected":
+    "var(--button-background-color-primary-active)",
   "button-background-color-destructive": {
     light: "var(--color-red-60)",
     dark: "var(--color-red-30)",
@@ -1184,6 +1234,8 @@ export const variableLookupTable = {
     forcedColors: "var(--button-background-color-primary-hover)",
     default: "light-dark(var(--color-red-70), var(--color-red-20))",
   },
+  "button-background-color-destructive-selected":
+    "var(--button-background-color-destructive-active)",
   "button-background-color-ghost": {
     default: "transparent",
     brand: { forcedColors: "var(--button-background-color)" },
@@ -1195,6 +1247,9 @@ export const variableLookupTable = {
     brand: { forcedColors: "var(--button-background-color-disabled)" },
   },
   "button-background-color-ghost-hover": "var(--button-background-color-hover)",
+  "button-background-color-ghost-selected":
+    "var(--button-background-color-ghost-active)",
+  "button-background-color-selected": "var(--button-background-color-active)",
   "button-border": "var(--border-width) solid var(--button-border-color)",
   "button-border-color": {
     default: "transparent",
@@ -1221,6 +1276,8 @@ export const variableLookupTable = {
     default: "var(--button-border-color-destructive)",
     forcedColors: "var(--button-border-color-primary-hover)",
   },
+  "button-border-color-destructive-selected":
+    "var(--button-border-color-destructive-active)",
   "button-border-color-disabled": {
     default: "var(--button-border-color)",
     forcedColors: "var(--border-color-interactive-disabled)",
@@ -1235,6 +1292,8 @@ export const variableLookupTable = {
   "button-border-color-ghost-hover": {
     default: "var(--button-border-color-hover)",
   },
+  "button-border-color-ghost-selected":
+    "var(--button-border-color-ghost-active)",
   "button-border-color-hover": {
     default: "var(--button-border-color)",
     forcedColors: "var(--border-color-interactive-hover)",
@@ -1252,6 +1311,9 @@ export const variableLookupTable = {
     default: "var(--button-border-color-primary)",
     forcedColors: "SelectedItemText",
   },
+  "button-border-color-primary-selected":
+    "var(--button-border-color-primary-active)",
+  "button-border-color-selected": "var(--button-border-color-active)",
   "button-border-radius": "var(--border-radius-small)",
   "button-font-size": "var(--font-size-root)",
   "button-font-size-small": "var(--font-size-small)",
@@ -1296,6 +1358,8 @@ export const variableLookupTable = {
     default: "var(--button-text-color-destructive)",
     forcedColors: "var(--button-text-color-primary-hover)",
   },
+  "button-text-color-destructive-selected":
+    "var(--button-text-color-destructive-active)",
   "button-text-color-disabled": {
     default: "var(--button-text-color)",
     forcedColors: "GrayText",
@@ -1324,6 +1388,7 @@ export const variableLookupTable = {
     prefersContrast: "var(--button-text-color-hover)",
     forcedColors: "var(--button-text-color-hover)",
   },
+  "button-text-color-ghost-selected": "var(--button-text-color-ghost-active)",
   "button-text-color-hover": {
     default: "var(--button-text-color)",
     forcedColors: "SelectedItem",
@@ -1343,6 +1408,9 @@ export const variableLookupTable = {
     default: "var(--button-text-color-primary)",
     forcedColors: "SelectedItemText",
   },
+  "button-text-color-primary-selected":
+    "var(--button-text-color-primary-active)",
+  "button-text-color-selected": "var(--button-text-color-active)",
   "checkbox-margin-inline": "var(--space-small)",
   "checkbox-size": "var(--size-item-small)",
   "color-gray-20": "#f0f0f4",
