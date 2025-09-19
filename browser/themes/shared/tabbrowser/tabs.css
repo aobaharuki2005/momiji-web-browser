@@ -797,8 +797,11 @@
   height: 24px;
   box-sizing: border-box;
   padding: var(--tab-close-button-padding);
-  border-radius: var(--border-radius-small);
   list-style-image: url(resource://content-accessible/close-12.svg);
+
+  /* Adjust border radius by the distance to the tab. This is a hardcoded approximation
+     because the exact distance is intentionally not always equal across all sides. */
+  border-radius: calc(var(--tab-border-radius) - 3px);
 
   #tabbrowser-tabs[orient="horizontal"] &[pinned],
   :root:not([sidebar-expand-on-hover]) #tabbrowser-tabs[orient="vertical"] &[pinned],
