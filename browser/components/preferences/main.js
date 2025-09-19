@@ -55,6 +55,7 @@ Preferences.addAll([
 
   // Downloads
   { id: "browser.download.useDownloadDir", type: "bool", inverted: true },
+  { id: "browser.download.enableDeletePrivate", type: "bool" },
   { id: "browser.download.deletePrivate", type: "bool" },
   { id: "browser.download.always_ask_before_handling_new_types", type: "bool" },
   { id: "browser.download.folderList", type: "int" },
@@ -372,6 +373,288 @@ Preferences.addSetting({
 
 Preferences.addSetting({ id: "zoomPlaceholder" });
 
+// Downloads
+/*
+ * Preferences:
+ *
+ * browser.download.useDownloadDir - bool
+ *   True - Save files directly to the folder configured via the
+ *   browser.download.folderList preference.
+ *   False - Always ask the user where to save a file and default to
+ *  browser.download.lastDir when displaying a folder picker dialog.
+ *  browser.download.deletePrivate - bool
+ *   True - Delete files that were downloaded in a private browsing session
+ *   on close of the session
+ *   False - Keep files that were downloaded in a private browsing
+ *   session
+ * browser.download.always_ask_before_handling_new_types - bool
+ *   Defines the default behavior for new file handlers.
+ *   True - When downloading a file that doesn't match any existing
+ *   handlers, ask the user whether to save or open the file.
+ *   False - Save the file. The user can change the default action in
+ *   the Applications section in the preferences UI.
+ * browser.download.dir - local file handle
+ *   A local folder the user may have selected for downloaded files to be
+ *   saved. Migration of other browser settings may also set this path.
+ *   This folder is enabled when folderList equals 2.
+ * browser.download.lastDir - local file handle
+ *   May contain the last folder path accessed when the user browsed
+ *   via the file save-as dialog. (see contentAreaUtils.js)
+ * browser.download.folderList - int
+ *   Indicates the location users wish to save downloaded files too.
+ *   It is also used to display special file labels when the default
+ *   download location is either the Desktop or the Downloads folder.
+ *   Values:
+ *     0 - The desktop is the default download location.
+ *     1 - The system's downloads folder is the default download location.
+ *     2 - The default download location is elsewhere as specified in
+ *         browser.download.dir.
+ * browser.download.downloadDir
+ *   deprecated.
+ * browser.download.defaultFolder
+ *   deprecated.
+ */
+
+/**
+ * Helper object for managing the various downloads related settings.
+ */
+const DownloadsHelpers = new (class DownloadsHelpers {
+  folder;
+  folderPath;
+  folderHostPath;
+  displayName;
+  downloadsDir;
+  desktopDir;
+  downloadsFolderLocalizedName;
+  desktopFolderLocalizedName;
+
+  setupDownloadsHelpersFields = async () => {
+    this.downloadsDir = await this._getDownloadsFolder("Downloads");
+    this.desktopDir = await this._getDownloadsFolder("Desktop");
+    [this.downloadsFolderLocalizedName, this.desktopFolderLocalizedName] =
+      await document.l10n.formatValues([
+        { id: "downloads-folder-name" },
+        { id: "desktop-folder-name" },
+      ]);
+  };
+
+  /**
+   * Returns the Downloads folder.  If aFolder is "Desktop", then the Downloads
+   * folder returned is the desktop folder; otherwise, it is a folder whose name
+   * indicates that it is a download folder and whose path is as determined by
+   * the XPCOM directory service via the download manager's attribute
+   * defaultDownloadsDirectory.
+   *
+   * @throws if aFolder is not "Desktop" or "Downloads"
+   */
+  async _getDownloadsFolder(aFolder) {
+    switch (aFolder) {
+      case "Desktop":
+        return Services.dirsvc.get("Desk", Ci.nsIFile);
+      case "Downloads": {
+        let downloadsDir = await Downloads.getSystemDownloadsDirectory();
+        return new FileUtils.File(downloadsDir);
+      }
+    }
+    throw new Error(
+      "ASSERTION FAILED: folder type should be 'Desktop' or 'Downloads'"
+    );
+  }
+
+  _getSystemDownloadFolderDetails(folderIndex) {
+    let currentDirPref = Preferences.get("browser.download.dir");
+
+    let file;
+    let firefoxLocalizedName;
+    if (folderIndex == 2 && currentDirPref.value) {
+      file = currentDirPref.value;
+      if (file.equals(this.downloadsDir)) {
+        folderIndex = 1;
+      } else if (file.equals(this.desktopDir)) {
+        folderIndex = 0;
+      }
+    }
+    switch (folderIndex) {
+      case 2: // custom path, handled above.
+        break;
+
+      case 1: {
+        // downloads
+        file = this.downloadsDir;
+        firefoxLocalizedName = this.downloadsFolderLocalizedName;
+        break;
+      }
+
+      case 0:
+      // fall through
+      default: {
+        file = this.desktopDir;
+        firefoxLocalizedName = this.desktopFolderLocalizedName;
+      }
+    }
+
+    if (file) {
+      let displayName = file.path;
+
+      // Attempt to translate path to the path as exists on the host
+      // in case the provided path comes from the document portal
+      if (AppConstants.platform == "linux") {
+        if (this.folderHostPath && displayName == this.folderPath) {
+          displayName = this.folderHostPath;
+          if (displayName == this.downloadsDir.path) {
+            firefoxLocalizedName = this.downloadsFolderLocalizedName;
+          } else if (displayName == this.desktopDir.path) {
+            firefoxLocalizedName = this.desktopFolderLocalizedName;
+          }
+        } else if (displayName != this.folderPath) {
+          this.folderHostPath = null;
+          try {
+            file.hostPath().then(folderHostPath => {
+              this.folderHostPath = folderHostPath;
+              Preferences.getSetting("downloadFolder")?.onChange();
+            });
+          } catch (error) {
+            /* ignored */
+          }
+        }
+      }
+
+      if (firefoxLocalizedName) {
+        let folderDisplayName, leafName;
+        // Either/both of these can throw, so check for failures in both cases
+        // so we don't just break display of the download pref:
+        try {
+          folderDisplayName = file.displayName;
+        } catch (ex) {
+          /* ignored */
+        }
+        try {
+          leafName = file.leafName;
+        } catch (ex) {
+          /* ignored */
+        }
+
+        // If we found a localized name that's different from the leaf name,
+        // use that:
+        if (folderDisplayName && folderDisplayName != leafName) {
+          return { file, folderDisplayName };
+        }
+
+        // Otherwise, check if we've got a localized name ourselves.
+        // You can't move the system download or desktop dir on macOS,
+        // so if those are in use just display them. On other platforms
+        // only do so if the folder matches the localized name.
+        if (
+          AppConstants.platform == "macosx" ||
+          leafName == firefoxLocalizedName
+        ) {
+          return { file, folderDisplayName: firefoxLocalizedName };
+        }
+      }
+
+      // If we get here, attempts to use a "pretty" name failed. Just display
+      // the full path:
+      // Force the left-to-right direction when displaying a custom path.
+      return { file, folderDisplayName: `\u2066${displayName}\u2069` };
+    }
+
+    // Don't even have a file - fall back to desktop directory for the
+    // use of the icon, and an empty label:
+    file = this.desktopDir;
+    return { file, folderDisplayName: "" };
+  }
+
+  /**
+   * Determines the type of the given folder.
+   *
+   * @param   aFolder
+   *          the folder whose type is to be determined
+   * @returns integer
+   *          0 if aFolder is the Desktop or is unspecified,
+   *          1 if aFolder is the Downloads folder,
+   *          2 otherwise
+   */
+  _folderToIndex(aFolder) {
+    if (!aFolder || aFolder.equals(this.desktopDir)) {
+      return 0;
+    } else if (aFolder.equals(this.downloadsDir)) {
+      return 1;
+    }
+    return 2;
+  }
+
+  getFolderDetails() {
+    let folderIndex = Preferences.get("browser.download.folderList").value;
+    let { folderDisplayName, file } =
+      this._getSystemDownloadFolderDetails(folderIndex);
+
+    this.folderPath = file?.path ?? "";
+    this.displayName = folderDisplayName;
+  }
+
+  setFolder(folder) {
+    this.folder = folder;
+
+    let folderListPref = Preferences.get("browser.download.folderList");
+    folderListPref.value = this._folderToIndex(this.folder);
+  }
+})();
+
+Preferences.addSetting({
+  id: "browserDownloadFolderList",
+  pref: "browser.download.folderList",
+});
+Preferences.addSetting({
+  id: "downloadFolder",
+  pref: "browser.download.dir",
+  deps: ["browserDownloadFolderList"],
+  get() {
+    DownloadsHelpers.getFolderDetails();
+    return DownloadsHelpers.folderPath;
+  },
+  set(folder) {
+    DownloadsHelpers.setFolder(folder);
+    return DownloadsHelpers.folder;
+  },
+  getControlConfig(config) {
+    if (DownloadsHelpers.displayName) {
+      return {
+        ...config,
+        controlAttrs: {
+          ...config.controlAttrs,
+          ".displayValue": DownloadsHelpers.displayName,
+        },
+      };
+    }
+    return {
+      ...config,
+    };
+  },
+  setup(emitChange) {
+    DownloadsHelpers.setupDownloadsHelpersFields().then(emitChange);
+  },
+  disabled: ({ browserDownloadFolderList }) => {
+    return browserDownloadFolderList.locked;
+  },
+});
+Preferences.addSetting({
+  id: "alwaysAsk",
+  pref: "browser.download.useDownloadDir",
+});
+Preferences.addSetting({
+  id: "enableDeletePrivate",
+  pref: "browser.download.enableDeletePrivate",
+});
+Preferences.addSetting({
+  id: "deletePrivate",
+  pref: "browser.download.deletePrivate",
+  deps: ["enableDeletePrivate"],
+  visible: ({ enableDeletePrivate }) => enableDeletePrivate.value,
+  onUserChange() {
+    Services.prefs.setBoolPref("browser.download.deletePrivate.chosen", true);
+  },
+});
+
 let SETTINGS_CONFIG = {
   zoom: {
     // This section is marked as in progress for testing purposes
@@ -437,6 +720,28 @@ let SETTINGS_CONFIG = {
         controlAttrs: {
           href: "about:addons",
         },
+      },
+    ],
+  },
+  downloads: {
+    l10nId: "downloads-header-2",
+    headingLevel: 2,
+    items: [
+      {
+        id: "downloadFolder",
+        l10nId: "download-save-where-2",
+        control: "moz-input-folder",
+        controlAttrs: {
+          id: "chooseFolder",
+        },
+      },
+      {
+        id: "alwaysAsk",
+        l10nId: "download-always-ask-where",
+      },
+      {
+        id: "deletePrivate",
+        l10nId: "download-private-browsing-delete",
       },
     ],
   },
@@ -710,6 +1015,7 @@ var gMainPane = {
 
     // Initialize settings groups from the config object.
     initSettingGroup("appearance");
+    initSettingGroup("downloads");
     initSettingGroup("browsing");
     initSettingGroup("zoom");
 
@@ -886,11 +1192,6 @@ var gMainPane = {
       "data-migration",
       "command",
       gMainPane.onMigrationButtonCommand
-    );
-    setEventListener(
-      "deletePrivate",
-      "command",
-      gMainPane.onDeletePrivateChanged
     );
 
     document
@@ -1114,16 +1415,6 @@ var gMainPane = {
     setEventListener("filter", "MozInputSearch:search", gMainPane.filter);
     setEventListener("typeColumn", "click", gMainPane.sort);
     setEventListener("actionColumn", "click", gMainPane.sort);
-    setEventListener("chooseFolder", "command", gMainPane.chooseFolder);
-    Preferences.get("browser.download.folderList").on(
-      "change",
-      gMainPane.displayDownloadDirPref.bind(gMainPane)
-    );
-    Preferences.get("browser.download.dir").on(
-      "change",
-      gMainPane.displayDownloadDirPref.bind(gMainPane)
-    );
-    gMainPane.displayDownloadDirPref();
 
     // Listen for window unload so we can remove our preference observers.
     window.addEventListener("unload", this);
@@ -1168,10 +1459,6 @@ var gMainPane = {
       () => this.writeCheckSpelling()
     );
     Preferences.addSyncFromPrefListener(
-      document.getElementById("alwaysAsk"),
-      () => this.readUseDownloadDir()
-    );
-    Preferences.addSyncFromPrefListener(
       document.getElementById("linkTargeting"),
       () => this.readLinkTarget()
     );
@@ -1183,11 +1470,6 @@ var gMainPane = {
       document.getElementById("browserContainersCheckbox"),
       () => this.readBrowserContainersCheckbox()
     );
-
-    if (!Services.prefs.getBoolPref("browser.download.enableDeletePrivate")) {
-      let deletePrivateCheckbox = document.getElementById("deletePrivate");
-      deletePrivateCheckbox.hidden = true;
-    }
 
     this.setInitialized();
   },
@@ -2625,10 +2907,6 @@ var gMainPane = {
     });
   },
 
-  onDeletePrivateChanged() {
-    Services.prefs.setBoolPref("browser.download.deletePrivate.chosen", true);
-  },
-
   /**
    * Displays the migration wizard dialog in an HTML dialog.
    */
@@ -3834,335 +4112,6 @@ var gMainPane = {
     }
 
     return "";
-  },
-
-  // DOWNLOADS
-
-  /*
-   * Preferences:
-   *
-   * browser.download.useDownloadDir - bool
-   *   True - Save files directly to the folder configured via the
-   *   browser.download.folderList preference.
-   *   False - Always ask the user where to save a file and default to
-   *  browser.download.lastDir when displaying a folder picker dialog.
-   *  browser.download.deletePrivate - bool
-   *   True - Delete files that were downloaded in a private browsing session
-   *   on close of the session
-   *   False - Keep files that were downloaded in a private browsing
-   *   session
-   * browser.download.always_ask_before_handling_new_types - bool
-   *   Defines the default behavior for new file handlers.
-   *   True - When downloading a file that doesn't match any existing
-   *   handlers, ask the user whether to save or open the file.
-   *   False - Save the file. The user can change the default action in
-   *   the Applications section in the preferences UI.
-   * browser.download.dir - local file handle
-   *   A local folder the user may have selected for downloaded files to be
-   *   saved. Migration of other browser settings may also set this path.
-   *   This folder is enabled when folderList equals 2.
-   * browser.download.lastDir - local file handle
-   *   May contain the last folder path accessed when the user browsed
-   *   via the file save-as dialog. (see contentAreaUtils.js)
-   * browser.download.folderList - int
-   *   Indicates the location users wish to save downloaded files too.
-   *   It is also used to display special file labels when the default
-   *   download location is either the Desktop or the Downloads folder.
-   *   Values:
-   *     0 - The desktop is the default download location.
-   *     1 - The system's downloads folder is the default download location.
-   *     2 - The default download location is elsewhere as specified in
-   *         browser.download.dir.
-   * browser.download.downloadDir
-   *   deprecated.
-   * browser.download.defaultFolder
-   *   deprecated.
-   */
-
-  /**
-   * Disables the downloads folder field and Browse button if the default
-   * download directory pref is locked (e.g., by the DownloadDirectory or
-   * DefaultDownloadDirectory policies)
-   */
-  readUseDownloadDir() {
-    document.getElementById("downloadFolder").disabled =
-      document.getElementById("chooseFolder").disabled =
-      document.getElementById("saveTo").disabled =
-        Preferences.get("browser.download.dir").locked ||
-        Preferences.get("browser.download.folderList").locked;
-    // don't override the preference's value in UI
-    return undefined;
-  },
-
-  /**
-   * Displays a file picker in which the user can choose the location where
-   * downloads are automatically saved, updating preferences and UI in
-   * response to the choice, if one is made.
-   */
-  chooseFolder() {
-    return this.chooseFolderTask().catch(console.error);
-  },
-  async chooseFolderTask() {
-    let [title] = await document.l10n.formatValues([
-      { id: "choose-download-folder-title" },
-    ]);
-    let folderListPref = Preferences.get("browser.download.folderList");
-    let currentDirPref = await this._indexToFolder(folderListPref.value);
-    let defDownloads = await this._indexToFolder(1);
-    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-
-    fp.init(window.browsingContext, title, Ci.nsIFilePicker.modeGetFolder);
-    fp.appendFilters(Ci.nsIFilePicker.filterAll);
-    // First try to open what's currently configured
-    if (currentDirPref && currentDirPref.exists()) {
-      fp.displayDirectory = currentDirPref;
-    } else if (defDownloads && defDownloads.exists()) {
-      // Try the system's download dir
-      fp.displayDirectory = defDownloads;
-    } else {
-      // Fall back to Desktop
-      fp.displayDirectory = await this._indexToFolder(0);
-    }
-
-    let result = await new Promise(resolve => fp.open(resolve));
-    if (result != Ci.nsIFilePicker.returnOK) {
-      return;
-    }
-
-    let downloadDirPref = Preferences.get("browser.download.dir");
-    downloadDirPref.value = fp.file;
-    folderListPref.value = await this._folderToIndex(fp.file);
-    // Note, the real prefs will not be updated yet, so dnld manager's
-    // userDownloadsDirectory may not return the right folder after
-    // this code executes. displayDownloadDirPref will be called on
-    // the assignment above to update the UI.
-  },
-
-  /**
-   * Initializes the download folder display settings based on the user's
-   * preferences.
-   */
-  displayDownloadDirPref() {
-    this.displayDownloadDirPrefTask().catch(console.error);
-
-    // don't override the preference's value in UI
-    return undefined;
-  },
-
-  async displayDownloadDirPrefTask() {
-    // We're async for localization reasons, and we can get called several
-    // times in the same turn of the event loop (!) because of how the
-    // preferences bindings work... but the speed of localization
-    // shouldn't impact what gets displayed to the user in the end - the
-    // last call should always win.
-    // To accomplish this, store a unique object when we enter this function,
-    // and if by the end of the function that stored object has been
-    // overwritten, don't update the UI but leave it to the last
-    // caller to this function to do.
-    let token = {};
-    this._downloadDisplayToken = token;
-
-    var downloadFolder = document.getElementById("downloadFolder");
-
-    let folderIndex = Preferences.get("browser.download.folderList").value;
-    // For legacy users using cloudstorage pref with folderIndex as 3 (See bug 1751093),
-    // compute folderIndex using the current directory pref
-    if (folderIndex == 3) {
-      let currentDirPref = Preferences.get("browser.download.dir");
-      folderIndex = currentDirPref.value
-        ? await this._folderToIndex(currentDirPref.value)
-        : 1;
-    }
-
-    // Display a 'pretty' label or the path in the UI.
-    let { folderDisplayName, file } =
-      await this._getSystemDownloadFolderDetails(folderIndex);
-    // Figure out an icon url:
-    let fph = Services.io
-      .getProtocolHandler("file")
-      .QueryInterface(Ci.nsIFileProtocolHandler);
-    let iconUrlSpec = fph.getURLSpecFromDir(file);
-
-    // Ensure that the last entry to this function always wins
-    // (see comment at the start of this method):
-    if (this._downloadDisplayToken != token) {
-      return;
-    }
-    // note: downloadFolder.value is not read elsewhere in the code, its only purpose is to display to the user
-    downloadFolder.value = folderDisplayName;
-    downloadFolder.style.backgroundImage = `image-set("moz-icon://${iconUrlSpec}?size=16&scale=1" 1x, "moz-icon://${iconUrlSpec}?size=16&scale=2" 2x, "moz-icon://${iconUrlSpec}?size=16&scale=3" 3x)`;
-  },
-
-  async _getSystemDownloadFolderDetails(folderIndex) {
-    let downloadsDir = await this._getDownloadsFolder("Downloads");
-    let desktopDir = await this._getDownloadsFolder("Desktop");
-    let currentDirPref = Preferences.get("browser.download.dir");
-
-    let file;
-    let firefoxLocalizedName;
-    if (folderIndex == 2 && currentDirPref.value) {
-      file = currentDirPref.value;
-      if (file.equals(downloadsDir)) {
-        folderIndex = 1;
-      } else if (file.equals(desktopDir)) {
-        folderIndex = 0;
-      }
-    }
-    switch (folderIndex) {
-      case 2: // custom path, handled above.
-        break;
-
-      case 1: {
-        // downloads
-        file = downloadsDir;
-        firefoxLocalizedName = await document.l10n.formatValues([
-          { id: "downloads-folder-name" },
-        ]);
-        break;
-      }
-
-      case 0:
-      // fall through
-      default: {
-        file = desktopDir;
-        firefoxLocalizedName = await document.l10n.formatValues([
-          { id: "desktop-folder-name" },
-        ]);
-      }
-    }
-
-    if (file) {
-      let displayName = file.path;
-
-      // Attempt to translate path to the path as exists on the host
-      // in case the provided path comes from the document portal
-      if (AppConstants.platform == "linux") {
-        try {
-          displayName = await file.hostPath();
-        } catch (error) {
-          /* ignored */
-        }
-
-        if (displayName) {
-          if (displayName == downloadsDir.path) {
-            firefoxLocalizedName = await document.l10n.formatValues([
-              { id: "downloads-folder-name" },
-            ]);
-          } else if (displayName == desktopDir.path) {
-            firefoxLocalizedName = await document.l10n.formatValues([
-              { id: "desktop-folder-name" },
-            ]);
-          }
-        }
-      }
-
-      if (firefoxLocalizedName) {
-        let folderDisplayName, leafName;
-        // Either/both of these can throw, so check for failures in both cases
-        // so we don't just break display of the download pref:
-        try {
-          folderDisplayName = file.displayName;
-        } catch (ex) {
-          /* ignored */
-        }
-        try {
-          leafName = file.leafName;
-        } catch (ex) {
-          /* ignored */
-        }
-
-        // If we found a localized name that's different from the leaf name,
-        // use that:
-        if (folderDisplayName && folderDisplayName != leafName) {
-          return { file, folderDisplayName };
-        }
-
-        // Otherwise, check if we've got a localized name ourselves.
-        if (firefoxLocalizedName) {
-          // You can't move the system download or desktop dir on macOS,
-          // so if those are in use just display them. On other platforms
-          // only do so if the folder matches the localized name.
-          if (
-            AppConstants.platform == "macosx" ||
-            leafName == firefoxLocalizedName
-          ) {
-            return { file, folderDisplayName: firefoxLocalizedName };
-          }
-        }
-      }
-
-      // If we get here, attempts to use a "pretty" name failed. Just display
-      // the full path:
-      // Force the left-to-right direction when displaying a custom path.
-      return { file, folderDisplayName: `\u2066${displayName}\u2069` };
-    }
-
-    // Don't even have a file - fall back to desktop directory for the
-    // use of the icon, and an empty label:
-    file = desktopDir;
-    return { file, folderDisplayName: "" };
-  },
-
-  /**
-   * Returns the Downloads folder.  If aFolder is "Desktop", then the Downloads
-   * folder returned is the desktop folder; otherwise, it is a folder whose name
-   * indicates that it is a download folder and whose path is as determined by
-   * the XPCOM directory service via the download manager's attribute
-   * defaultDownloadsDirectory.
-   *
-   * @throws if aFolder is not "Desktop" or "Downloads"
-   */
-  async _getDownloadsFolder(aFolder) {
-    switch (aFolder) {
-      case "Desktop":
-        return Services.dirsvc.get("Desk", Ci.nsIFile);
-      case "Downloads": {
-        let downloadsDir = await Downloads.getSystemDownloadsDirectory();
-        return new FileUtils.File(downloadsDir);
-      }
-    }
-    throw new Error(
-      "ASSERTION FAILED: folder type should be 'Desktop' or 'Downloads'"
-    );
-  },
-
-  /**
-   * Determines the type of the given folder.
-   *
-   * @param   aFolder
-   *          the folder whose type is to be determined
-   * @returns integer
-   *          0 if aFolder is the Desktop or is unspecified,
-   *          1 if aFolder is the Downloads folder,
-   *          2 otherwise
-   */
-  async _folderToIndex(aFolder) {
-    if (!aFolder || aFolder.equals(await this._getDownloadsFolder("Desktop"))) {
-      return 0;
-    } else if (aFolder.equals(await this._getDownloadsFolder("Downloads"))) {
-      return 1;
-    }
-    return 2;
-  },
-
-  /**
-   * Converts an integer into the corresponding folder.
-   *
-   * @param   aIndex
-   *          an integer
-   * @returns the Desktop folder if aIndex == 0,
-   *          the Downloads folder if aIndex == 1,
-   *          the folder stored in browser.download.dir
-   */
-  _indexToFolder(aIndex) {
-    switch (aIndex) {
-      case 0:
-        return this._getDownloadsFolder("Desktop");
-      case 1:
-        return this._getDownloadsFolder("Downloads");
-    }
-    var currentDirPref = Preferences.get("browser.download.dir");
-    return currentDirPref.value;
   },
 };
 
