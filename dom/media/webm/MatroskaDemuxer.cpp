@@ -6,6 +6,9 @@
 
 #include "MatroskaDemuxer.h"
 
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 #include "H264.h"
 #include "H265.h"
 #include "VPXDecoder.h"
@@ -115,6 +118,9 @@ nsresult MatroskaDemuxer::SetVideoCodecInfo(nestegg* aContext, int aTrackId) {
       break;
     case NESTEGG_CODEC_VP9:
       mInfo.mVideo.mMimeType = "video/vp9";
+      break;
+    case NESTEGG_CODEC_AV1:
+      mInfo.mVideo.mMimeType = "video/av1";
       break;
     default:
       NS_WARNING("Unknown Matroska video codec");
@@ -270,6 +276,10 @@ bool MatroskaDemuxer::CheckKeyFrameByExamineByteStream(
       return VPXDecoder::IsKeyframe(*aSample, VPXDecoder::Codec::VP8);
     case NESTEGG_CODEC_VP9:
       return VPXDecoder::IsKeyframe(*aSample, VPXDecoder::Codec::VP9);
+#ifdef MOZ_AV1
+    case NESTEGG_CODEC_AV1:
+      return AOMDecoder::IsKeyframe(*aSample);
+#endif
     default:
       MOZ_ASSERT_UNREACHABLE(
           "Cannot detect keyframes in unknown Matroska video codec");
