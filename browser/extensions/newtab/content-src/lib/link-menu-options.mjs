@@ -472,7 +472,7 @@ export const LinkMenuOptions = {
     id: "newtab-menu-section-unfollow",
     action: ac.AlsoToMain({
       type: at.SECTION_PERSONALIZATION_SET,
-      data: (({ sectionKey: _sectionKey, ...remaining }) => remaining)(
+      data: (({ [sectionKey]: _sectionKey, ...remaining }) => remaining)(
         sectionPersonalization
       ),
     }),

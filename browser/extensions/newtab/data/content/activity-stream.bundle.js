@@ -2249,7 +2249,7 @@ const LinkMenuOptions = {
     id: "newtab-menu-section-unfollow",
     action: actionCreators.AlsoToMain({
       type: actionTypes.SECTION_PERSONALIZATION_SET,
-      data: (({ sectionKey: _sectionKey, ...remaining }) => remaining)(
+      data: (({ [sectionKey]: _sectionKey, ...remaining }) => remaining)(
         sectionPersonalization
       ),
     }),
