@@ -128,6 +128,7 @@ class ElementStateManager final {
   void SetActive(dom::Element* aTarget);
   void ResetActive();
   void ResetTouchBlockState();
+  void ScheduleSetActiveTask();
   void SetActiveTask(const nsCOMPtr<dom::Element>& aTarget);
   void CancelTask();
   // Returns true if the function changed the active element state.
