@@ -23,8 +23,6 @@ class MatroskaDemuxer : public WebMDemuxer {
   nsresult SetAudioCodecInfo(nestegg* aContext, int aTrackId,
                              const nestegg_audio_params& aParams) override;
   bool CheckKeyFrameByExamineByteStream(const MediaRawData* aSample) override;
-
-  nsresult SetCodecPrivateToVideoExtraData(nestegg* aContext, int aTrackId);
 };
 
 }  // namespace mozilla
