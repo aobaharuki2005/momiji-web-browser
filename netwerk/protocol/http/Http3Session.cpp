@@ -134,11 +134,6 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
     mWebTransportNegotiationStatus = WebTransportNegotiation::NEGOTIATING;
   }
 
-  uint32_t datagramSize =
-      StaticPrefs::network_webtransport_datagrams_enabled()
-          ? StaticPrefs::network_webtransport_datagram_size()
-          : 0;
-
   mUseNSPRForIO = StaticPrefs::network_http_http3_use_nspr_for_io();
 
   uint32_t idleTimeout =
@@ -156,8 +151,7 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
         StaticPrefs::network_http_http3_max_stream_data(),
         StaticPrefs::network_http_http3_version_negotiation_enabled(),
         mConnInfo->GetWebTransport(), gHttpHandler->Http3QlogDir(),
-        datagramSize, aProviderFlags, idleTimeout,
-        getter_AddRefs(mHttp3Connection));
+        aProviderFlags, idleTimeout, getter_AddRefs(mHttp3Connection));
   } else {
     rv = NeqoHttp3Conn::Init(
         mConnInfo->GetOrigin(), mConnInfo->GetNPNToken(), selfAddr, peerAddr,
@@ -167,7 +161,7 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
         StaticPrefs::network_http_http3_max_stream_data(),
         StaticPrefs::network_http_http3_version_negotiation_enabled(),
         mConnInfo->GetWebTransport(), gHttpHandler->Http3QlogDir(),
-        datagramSize, aProviderFlags, idleTimeout, socket->GetFileDescriptor(),
+        aProviderFlags, idleTimeout, socket->GetFileDescriptor(),
         getter_AddRefs(mHttp3Connection));
   }
   if (NS_FAILED(rv)) {

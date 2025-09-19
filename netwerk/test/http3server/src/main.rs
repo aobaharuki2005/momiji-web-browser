@@ -10,7 +10,7 @@ use neqo_common::{event::Provider, qdebug, qtrace, Datagram, Header};
 use neqo_crypto::{generate_ech_keys, init_db, AllowZeroRtt, AntiReplay};
 use neqo_http3::{
     Error, Http3OrWebTransportStream, Http3Parameters, Http3Server, Http3ServerEvent,
-    WebTransportRequest, WebTransportServerEvent, WebTransportSessionAcceptAction,
+    SessionAcceptAction, WebTransportRequest, WebTransportServerEvent,
 };
 use neqo_transport::server::ConnectionRef;
 use neqo_transport::{
@@ -549,12 +549,10 @@ impl HttpServer for Http3TestServer {
                             let path = ph.value();
                             qtrace!("Serve request {}", path);
                             if path == "/success" {
-                                session
-                                    .response(&WebTransportSessionAcceptAction::Accept)
-                                    .unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                             } else if path == "/redirect" {
                                 session
-                                    .response(&WebTransportSessionAcceptAction::Reject(
+                                    .response(&SessionAcceptAction::Reject(
                                         [
                                             Header::new(":status", "302"),
                                             Header::new("location", "/"),
@@ -564,22 +562,18 @@ impl HttpServer for Http3TestServer {
                                     .unwrap();
                             } else if path == "/reject" {
                                 session
-                                    .response(&WebTransportSessionAcceptAction::Reject(
+                                    .response(&SessionAcceptAction::Reject(
                                         [Header::new(":status", "404")].to_vec(),
                                     ))
                                     .unwrap();
                             } else if path == "/closeafter0ms" {
-                                session
-                                    .response(&WebTransportSessionAcceptAction::Accept)
-                                    .unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                                 if !self.sessions_to_close.contains_key(&now) {
                                     self.sessions_to_close.insert(now, Vec::new());
                                 }
                                 self.sessions_to_close.get_mut(&now).unwrap().push(session);
                             } else if path == "/closeafter100ms" {
-                                session
-                                    .response(&WebTransportSessionAcceptAction::Accept)
-                                    .unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                                 let expires = Instant::now() + Duration::from_millis(100);
                                 if !self.sessions_to_close.contains_key(&expires) {
                                     self.sessions_to_close.insert(expires, Vec::new());
@@ -589,27 +583,21 @@ impl HttpServer for Http3TestServer {
                                     .unwrap()
                                     .push(session);
                             } else if path == "/create_unidi_stream" {
-                                session
-                                    .response(&WebTransportSessionAcceptAction::Accept)
-                                    .unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                                 self.sessions_to_create_stream.push((
                                     session,
                                     StreamType::UniDi,
                                     None,
                                 ));
                             } else if path == "/create_unidi_stream_and_hello" {
-                                session
-                                    .response(&WebTransportSessionAcceptAction::Accept)
-                                    .unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                                 self.sessions_to_create_stream.push((
                                     session,
                                     StreamType::UniDi,
                                     Some(Vec::from("qwerty")),
                                 ));
                             } else if path == "/create_bidi_stream" {
-                                session
-                                    .response(&WebTransportSessionAcceptAction::Accept)
-                                    .unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                                 self.sessions_to_create_stream.push((
                                     session,
                                     StreamType::BiDi,
@@ -617,9 +605,7 @@ impl HttpServer for Http3TestServer {
                                 ));
                             } else if path == "/create_bidi_stream_and_hello" {
                                 self.webtransport_bidi_stream.clear();
-                                session
-                                    .response(&WebTransportSessionAcceptAction::Accept)
-                                    .unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                                 self.sessions_to_create_stream.push((
                                     session,
                                     StreamType::BiDi,
@@ -628,23 +614,19 @@ impl HttpServer for Http3TestServer {
                             } else if path == "/create_bidi_stream_and_large_data" {
                                 self.webtransport_bidi_stream.clear();
                                 let data: Vec<u8> = vec![1u8; 32 * 1024 * 1024];
-                                session
-                                    .response(&WebTransportSessionAcceptAction::Accept)
-                                    .unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                                 self.sessions_to_create_stream.push((
                                     session,
                                     StreamType::BiDi,
                                     Some(data),
                                 ));
                             } else {
-                                session
-                                    .response(&WebTransportSessionAcceptAction::Accept)
-                                    .unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                             }
                         }
                         _ => {
                             session
-                                .response(&WebTransportSessionAcceptAction::Reject(
+                                .response(&SessionAcceptAction::Reject(
                                     [Header::new(":status", "404")].to_vec(),
                                 ))
                                 .unwrap();
@@ -689,6 +671,9 @@ impl HttpServer for Http3TestServer {
                         datagram
                     );
                     self.received_datagram = Some(datagram);
+                }
+                Http3ServerEvent::ConnectUdp(_) => {
+                    unimplemented!()
                 }
             }
         }
@@ -1064,6 +1049,7 @@ impl HttpServer for Http3ProxyServer {
                     );
                 }
                 Http3ServerEvent::WebTransport(_) => {}
+                Http3ServerEvent::ConnectUdp(_) => {}
             }
         }
     }
@@ -1099,7 +1085,7 @@ impl HttpServer for NonRespondingServer {
     }
 }
 
-fn spawn_server<S: HttpServer + 'static>(
+fn spawn_server<S: HttpServer + Unpin + 'static>(
     server: S,
     port: u16,
     task_set: &LocalSet,

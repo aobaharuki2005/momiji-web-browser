@@ -15608,18 +15608,6 @@
   value: true
   mirror: always
 
-# WebTransport Datagram support
-- name: network.webtransport.datagrams.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# WebTransport Datagram size
-- name: network.webtransport.datagram_size
-  type: RelaxedAtomicUint32
-  value: 1200
-  mirror: always
-
 # WebTransport Redirect support
 - name: network.webtransport.redirect.enabled
   type: RelaxedAtomicBool
