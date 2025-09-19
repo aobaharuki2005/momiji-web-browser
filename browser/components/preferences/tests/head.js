@@ -21,6 +21,7 @@ ChromeUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
 
 ChromeUtils.defineESModuleGetters(this, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
+  QuickSuggest: "moz-src:///browser/components/urlbar/QuickSuggest.sys.mjs",
 });
 
 NimbusTestUtils.init(this);
