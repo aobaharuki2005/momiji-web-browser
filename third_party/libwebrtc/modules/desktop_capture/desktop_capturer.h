@@ -23,7 +23,6 @@
 #include "modules/desktop_capture/delegated_source_list_controller.h"
 #include "modules/desktop_capture/desktop_capture_metadata.h"
 #include "modules/desktop_capture/desktop_capture_types.h"
-#include "modules/desktop_capture/desktop_geometry.h"
 #include "modules/desktop_capture/shared_memory.h"
 #include "rtc_base/system/rtc_export.h"
 
