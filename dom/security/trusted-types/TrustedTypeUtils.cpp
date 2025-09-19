@@ -443,6 +443,9 @@ MOZ_CAN_RUN_SCRIPT inline const nsAString* GetTrustedTypesCompliantString(
   nsIGlobalObject* globalObject = nullptr;
   nsPIDOMWindowInner* piDOMWindowInner = nullptr;
   if constexpr (std::is_same_v<NodeOrGlobalObjectArg, nsINode>) {
+    if (aNodeOrGlobalObject.HasBeenInUAWidget()) {
+      return GetAsString(aInput);
+    }
     Document* ownerDoc = aNodeOrGlobalObject.OwnerDoc();
     const bool ownerDocLoadedAsData = ownerDoc->IsLoadedAsData();
     if (!ownerDoc->HasPolicyWithRequireTrustedTypesForDirective() &&
