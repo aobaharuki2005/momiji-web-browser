@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_layers_ActiveElementManager_h
-#define mozilla_layers_ActiveElementManager_h
+#ifndef mozilla_layers_ElementStateManager_h
+#define mozilla_layers_ElementStateManager_h
 
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
@@ -32,13 +32,13 @@ enum class SingleTapState : uint8_t;
  * Manages setting and clearing the ':active' CSS pseudostate in the presence
  * of touch input.
  */
-class ActiveElementManager final {
-  ~ActiveElementManager();
+class ElementStateManager final {
+  ~ElementStateManager();
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(ActiveElementManager)
+  NS_INLINE_DECL_REFCOUNTING(ElementStateManager)
 
-  ActiveElementManager();
+  ElementStateManager();
 
   /**
    * Specify the target of a touch. Typically this should be called right
@@ -137,4 +137,4 @@ class ActiveElementManager final {
 }  // namespace layers
 }  // namespace mozilla
 
-#endif /* mozilla_layers_ActiveElementManager_h */
+#endif /* mozilla_layers_ElementStateManager_h */
