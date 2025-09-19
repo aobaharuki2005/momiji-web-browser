@@ -126,7 +126,11 @@ class LintSandbox(ConfigureSandbox):
         used_args = set()
 
         for instr in Bytecode(func):
-            if instr.opname in ("LOAD_FAST", "LOAD_CLOSURE"):
+            if instr.opname == "LOAD_FAST_LOAD_FAST":
+                for argval in instr.argval:
+                    if argval in all_args:
+                        used_args.add(argval)
+            elif instr.opname in ("LOAD_FAST", "LOAD_CLOSURE"):
                 if instr.argval in all_args:
                     used_args.add(instr.argval)
 
