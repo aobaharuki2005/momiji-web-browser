@@ -2615,7 +2615,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var enableComposeLogins by booleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_compose_logins),
-        default = true,
+        default = false,
     )
 
     var loginsListSortOrder by stringPreference(
