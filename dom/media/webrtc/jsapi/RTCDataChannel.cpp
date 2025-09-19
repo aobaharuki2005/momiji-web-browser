@@ -122,6 +122,7 @@ nsresult RTCDataChannel::Init() {
                                   mDataChannel->UnsetWorkerDomDataChannel();
                                   // Also allow ourselves to be GC'ed
                                   UnsetWorkerNeedsUs();
+                                  DontKeepAliveAnyMore();
                                   mWorkerRef = nullptr;
                                 });
     if (NS_WARN_IF(!strongWorkerRef)) {
@@ -604,6 +605,13 @@ dom::RTCDataChannelStats RTCDataChannel::GetStats(
   stats.mMessagesReceived.Construct(mMessagesReceived);
   stats.mBytesReceived.Construct(mBytesReceived);
   return stats;
+}
+
+void RTCDataChannel::UnsetWorkerNeedsUs() {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+  mWorkerNeedsUs = false;
+  mWorkerRef = nullptr;
+  UpdateMustKeepAlive();
 }
 
 void RTCDataChannel::IncrementBufferedAmount(size_t aSize) {
