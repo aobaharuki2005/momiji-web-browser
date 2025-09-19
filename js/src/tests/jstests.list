@@ -722,6 +722,9 @@ skip-if(!xulRuntime.shell) script test262/language/module-code/top-level-await/a
 # Tests disabled due to invalid test expectations  #
 ####################################################
 
+# This test is lacking the feature "symbols-as-weakmap-keys", see https://github.com/tc39/test262/pull/4579
+skip script test262/built-ins/WeakMap/prototype/getOrInsertComputed/check-state-after-callback-fn-throws.js
+
 # These tests seem incorrect, see https://github.com/tc39/test262/pull/3907
 skip script test262/language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js
 skip script test262/language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js
