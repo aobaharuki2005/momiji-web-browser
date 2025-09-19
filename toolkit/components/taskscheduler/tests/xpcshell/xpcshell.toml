@@ -1,4 +1,5 @@
 [DEFAULT]
+run-if = ["os != 'android'"]
 tags = "os_integration"
 
 ["test_TaskScheduler.js"]

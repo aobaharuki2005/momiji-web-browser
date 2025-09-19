@@ -1,4 +1,5 @@
 [DEFAULT]
+run-if = ["os != 'android'"]
 head = "head_migration.js"
 tags = "condprof os_integration"
 firefox-appdir = "browser"

@@ -1,4 +1,5 @@
 [DEFAULT]
+run-if = ["os != 'android'"]
 tags = "appupdate"
 head = "head_update.js"
 skip-if = [

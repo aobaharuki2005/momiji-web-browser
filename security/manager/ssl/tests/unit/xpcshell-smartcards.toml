@@ -1,7 +1,7 @@
 [DEFAULT]
+run-if = ["os != 'android'"]
 head = "head_psm.js"
 tags = "psm"
-skip-if = ["os == 'android'"]
 support-files = [
   "bad_certs/**",
   "tlsserver/**",

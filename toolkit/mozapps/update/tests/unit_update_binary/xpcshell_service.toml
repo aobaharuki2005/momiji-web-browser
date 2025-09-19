@@ -1,4 +1,5 @@
 [DEFAULT]
+run-if = ["os != 'android'"]
 skip-if = [
   "os == 'win' && verify",
   "os == 'win' && ccov", # 1532801
