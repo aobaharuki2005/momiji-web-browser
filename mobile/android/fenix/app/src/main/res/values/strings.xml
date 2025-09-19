@@ -506,6 +506,14 @@
     <string name="onboarding_redesign_customize_toolbar_title">Where do you want your address bar?</string>
     <!-- Onboarding label for 'Continue' button. -->
     <string name="onboarding_redesign_continue_button">Continue</string>
+    <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
+    <string name="onboarding_marketing_redesign_title" tools:ignore="BrandUsage">Help us grow Firefox</string>
+    <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+    <string name="onboarding_marketing_redesign_opt_out_checkbox" tools:ignore="BrandUsage">Share how you discovered Firefox, and that you use it, with Mozilla’s marketing partners. This data is never sold.</string>
+    <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
+    <string name="onboarding_marketing_redesign_learn_more">How we use the data</string>
+    <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
+    <string name="onboarding_marketing_redesign_positive_button">Confirm</string>
 
     <!-- Set to default browser onboarding redesign title. -->
     <string name="onboarding_redesign_set_default_browser_title">Get automatic tracking protection by default</string>
