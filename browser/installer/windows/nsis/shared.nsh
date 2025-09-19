@@ -886,6 +886,29 @@ FunctionEnd
 !macroend
 !define SetAppKeys "!insertmacro SetAppKeys"
 
+!macro RegistryWriteVersion
+  Exch $0
+  Push $R0
+  Push $R1
+  Push $R2
+  Push $R3
+
+  GetDLLVersion "$8\${FileMainEXE}" $R0 $R1
+  IntOp $R2 $R0 >> 16
+  IntOp $R2 $R2 & 0x0000FFFF ; $R2 now contains major version
+  IntOp $R3 $R0 & 0x0000FFFF ; $R3 now contains minor version
+
+  ${WriteRegStr2} $RegHive "$0" "DisplayVersion" "${AppVersion}" 0
+  ${WriteRegStr2} $RegHive "$0" "VersionMajor" "$R2" 0
+  ${WriteRegStr2} $RegHive "$0" "VersionMinor" "$R3" 0
+
+  Pop $R3
+  Pop $R2
+  Pop $R1
+  Pop $R0
+  Pop $0
+!macroend
+
 ; Add uninstall registry entries. This macro tests for write access to determine
 ; if the uninstall keys should be added to HKLM or HKCU.
 ; This expects $RegHive to already have been set correctly.
@@ -921,7 +944,6 @@ FunctionEnd
     ${WriteRegStr2} $RegHive "$0" "Comments" "${BrandFullNameInternal} ${AppVersion}$3 (${ARCH} ${AB_CD})" 0
     ${WriteRegStr2} $RegHive "$0" "DisplayIcon" "$8\${FileMainEXE},${IDI_APPICON_ZERO_BASED}" 0
     ${WriteRegStr2} $RegHive "$0" "DisplayName" "${BrandFullNameInternal}$3 (${ARCH} ${AB_CD})" 0
-    ${WriteRegStr2} $RegHive "$0" "DisplayVersion" "${AppVersion}" 0
     ${WriteRegStr2} $RegHive "$0" "HelpLink" "${HelpLink}" 0
     ${WriteRegStr2} $RegHive "$0" "InstallLocation" "$8" 0
     ${WriteRegStr2} $RegHive "$0" "Publisher" "Mozilla" 0
@@ -941,6 +963,9 @@ FunctionEnd
 
     ${GetSize} "$8" "/S=0K" $R2 $R3 $R4
     ${WriteRegDWORD2} $RegHive "$0" "EstimatedSize" $R2 0
+
+    Push $0
+    !insertmacro RegistryWriteVersion
   ${EndIf}
 !macroend
 !define SetUninstallKeys "!insertmacro SetUninstallKeys"
