@@ -5500,6 +5500,65 @@ static Matrix ComputeRotationMatrix(gfxFloat aRotatedWidth,
       .PostTranslate(shiftLeftTopToOrigin);
 }
 
+// -
+
+bool ValidSurfaceDescriptorForRemoteCanvas2d(
+    const layers::SurfaceDescriptor& aSd,
+    Maybe<layers::SurfaceDescriptor>* aResultSd) {
+  if (aSd.type() != layers::SurfaceDescriptor::TSurfaceDescriptorGPUVideo) {
+    return false;
+  }
+
+  const auto& sdv = aSd.get_SurfaceDescriptorGPUVideo();
+  if (sdv.type() !=
+      layers::SurfaceDescriptorGPUVideo::TSurfaceDescriptorRemoteDecoder) {
+    return false;
+  }
+  const auto& sdrd = sdv.get_SurfaceDescriptorRemoteDecoder();
+  const auto& subdesc = sdrd.subdesc();
+  switch (subdesc.type()) {
+    case layers::RemoteDecoderVideoSubDescriptor::Tnull_t:
+      break;
+#ifdef XP_MACOSX
+    case layers::RemoteDecoderVideoSubDescriptor::
+        TSurfaceDescriptorMacIOSurface: {
+      const auto& ssd = subdesc.get_SurfaceDescriptorMacIOSurface();
+      if (ssd.gpuFence()) {
+        return false;
+      }
+      break;
+    }
+#endif
+#ifdef XP_WIN
+    case layers::RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorD3D10: {
+      if (!StaticPrefs::gfx_canvas_remote_use_draw_image_fast_path_d3d()) {
+        return false;
+      }
+      const auto& ssd = subdesc.get_SurfaceDescriptorD3D10();
+      if (aResultSd) {
+        *aResultSd = Some(aSd);
+        // Not IPC-able, but it's just an optimization to have this.
+        aResultSd->ref()
+            .get_SurfaceDescriptorGPUVideo()
+            .get_SurfaceDescriptorRemoteDecoder()
+            .subdesc()
+            .get_SurfaceDescriptorD3D10()
+            .handle() = nullptr;
+      } else if (ssd.handle()) {
+        return false;
+      }
+      return true;
+    }
+#endif
+    default:
+      return false;
+  }
+  if (aResultSd) {
+    *aResultSd = Some(aSd);
+  }
+  return true;
+}
+
 static Maybe<layers::SurfaceDescriptor>
 MaybeGetSurfaceDescriptorForRemoteCanvas(
     const SurfaceFromElementResult& aResult) {
@@ -5511,42 +5570,12 @@ MaybeGetSurfaceDescriptorForRemoteCanvas(
     return Nothing();
   }
 
-  Maybe<layers::SurfaceDescriptor> sd;
-  sd = aResult.mLayersImage->GetDesc();
-  if (sd.isNothing() ||
-      sd.ref().type() !=
-          layers::SurfaceDescriptor::TSurfaceDescriptorGPUVideo) {
-    return Nothing();
-  }
-
-  auto& sdv = sd.ref().get_SurfaceDescriptorGPUVideo();
-  const auto& sdvType = sdv.type();
-  if (sdvType ==
-      layers::SurfaceDescriptorGPUVideo::TSurfaceDescriptorRemoteDecoder) {
-    auto& sdrd = sdv.get_SurfaceDescriptorRemoteDecoder();
-    auto& subdesc = sdrd.subdesc();
-    const auto& subdescType = subdesc.type();
-    if (subdescType == layers::RemoteDecoderVideoSubDescriptor::Tnull_t) {
-      return sd;
-    }
-    if (subdescType == layers::RemoteDecoderVideoSubDescriptor::
-                           TSurfaceDescriptorMacIOSurface) {
-      return sd;
-    }
-    if (subdescType ==
-            layers::RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorD3D10 &&
-        StaticPrefs::gfx_canvas_remote_use_draw_image_fast_path_d3d()) {
-      auto& descD3D10 = subdesc.get_SurfaceDescriptorD3D10();
-      // Clear FileHandleWrapper, since FileHandleWrapper::mHandle could not be
-      // cross process delivered by using Shmem. Cross-process delivery of
-      // FileHandleWrapper::mHandle is not possible simply by using shmen. When
-      // it is tried, parent side process just causes crash during destroying
-      // FileHandleWrapper.
-      descD3D10.handle() = nullptr;
-      return sd;
+  if (const auto sd = aResult.mLayersImage->GetDesc()) {
+    Maybe<layers::SurfaceDescriptor> result;
+    if (ValidSurfaceDescriptorForRemoteCanvas2d(*sd, &result)) {
+      return result;
     }
   }
-
   return Nothing();
 }
 

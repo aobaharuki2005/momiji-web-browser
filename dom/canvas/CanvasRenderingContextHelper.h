@@ -85,6 +85,10 @@ class CanvasRenderingContextHelper {
   nsCOMPtr<nsICanvasRenderingContextInternal> mCurrentContext;
 };
 
+bool ValidSurfaceDescriptorForRemoteCanvas2d(
+    const layers::SurfaceDescriptor& aSd,
+    Maybe<layers::SurfaceDescriptor>* aResultSd = nullptr);
+
 }  // namespace dom
 namespace CanvasUtils {
 bool GetCanvasContextType(const nsAString&, dom::CanvasContextType* const);
