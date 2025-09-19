@@ -40,6 +40,7 @@ class ElementStateManager final {
 
   ElementStateManager();
 
+  enum class PreventDefault : bool { No, Yes };
   /**
    * Specify the target of a touch. Typically this should be called right
    * after HandleTouchStart(), but in cases where the APZ needs to wait for
@@ -47,7 +48,8 @@ class ElementStateManager final {
    * this function can be called first.
    * |aTarget| may be nullptr.
    */
-  void SetTargetElement(dom::EventTarget* aTarget);
+  void SetTargetElement(dom::EventTarget* aTarget,
+                        PreventDefault aTouchStartPreventDefault);
   /**
    * Handle a touch-start state notification from APZ. This notification
    * may be delayed until after touch listeners have responded to the APZ.
