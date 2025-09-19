@@ -222,16 +222,7 @@ void ElementStateManager::TriggerElementActivation() {
   } else {
     CancelTask();  // this is only needed because of bug 1169802. Fixing that
                    // bug properly should make this unnecessary.
-    MOZ_ASSERT(mSetActiveTask == nullptr);
-
-    RefPtr<CancelableRunnable> task =
-        NewCancelableRunnableMethod<nsCOMPtr<dom::Element>>(
-            "layers::ElementStateManager::SetActiveTask", this,
-            &ElementStateManager::SetActiveTask, mTarget);
-    mSetActiveTask = task;
-    NS_GetCurrentThread()->DelayedDispatch(
-        task.forget(), StaticPrefs::ui_touch_activation_delay_ms());
-    ESM_LOG("Scheduling mSetActiveTask %p\n", mSetActiveTask.get());
+    ScheduleSetActiveTask();
   }
   ESM_LOG(
       "Got both touch-end event and end touch notiication, clearing pan "
@@ -359,6 +350,19 @@ void ElementStateManager::ResetTouchBlockState() {
   // because on environments where double-tap is enabled ProcessSingleTap()
   // gets called after both of touch-end event and end touch notiication
   // arrived.
+}
+
+void ElementStateManager::ScheduleSetActiveTask() {
+  MOZ_ASSERT(mSetActiveTask == nullptr);
+
+  RefPtr<CancelableRunnable> task =
+      NewCancelableRunnableMethod<nsCOMPtr<dom::Element>>(
+          "layers::ElementStateManager::SetActiveTask", this,
+          &ElementStateManager::SetActiveTask, mTarget);
+  mSetActiveTask = task;
+  NS_GetCurrentThread()->DelayedDispatch(
+      task.forget(), StaticPrefs::ui_touch_activation_delay_ms());
+  ESM_LOG("Scheduling mSetActiveTask %p\n", mSetActiveTask.get());
 }
 
 void ElementStateManager::SetActiveTask(const nsCOMPtr<dom::Element>& aTarget) {
