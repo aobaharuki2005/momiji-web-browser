@@ -929,10 +929,7 @@ void AsyncPanZoomController::Destroy() {
   {  // scope the lock
     MonitorAutoLock lock(mRefPtrMonitor);
     mGeckoContentController = nullptr;
-    if (mGestureEventListener) {
-      mGestureEventListener->Destroy();
-      mGestureEventListener = nullptr;
-    }
+    mGestureEventListener = nullptr;
   }
   mParent = nullptr;
   mTreeManager = nullptr;
@@ -3325,8 +3322,8 @@ nsEventStatus AsyncPanZoomController::OnSingleTapUp(
   }
 
   // Here we need to wait for the call to OnSingleTapConfirmed, we need to tell
-  // it to ElementStateManager so that we can do element activation once
-  // ElementStateManager got a single tap event later.
+  // it to ActiveElementManager so that we can do element activation once
+  // ActiveElementManager got a single tap event later.
   if (TouchBlockState* touch = GetCurrentTouchBlock()) {
     if (!touch->IsDuringFastFling()) {
       touch->SetSingleTapState(apz::SingleTapState::NotYetDetermined);

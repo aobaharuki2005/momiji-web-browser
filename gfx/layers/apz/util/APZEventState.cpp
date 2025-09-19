@@ -9,7 +9,7 @@
 #include <utility>
 
 #include "APZCCallbackHelper.h"
-#include "ElementStateManager.h"
+#include "ActiveElementManager.h"
 #include "TouchManager.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/BasicEvents.h"
@@ -53,7 +53,7 @@ APZEventState::APZEventState(nsIWidget* aWidget,
                              ContentReceivedInputBlockCallback&& aCallback)
     : mWidget(nullptr)  // initialized in constructor body
       ,
-      mElementStateManager(new ElementStateManager()),
+      mActiveElementManager(new ActiveElementManager()),
       mContentReceivedInputBlockCallback(std::move(aCallback)),
       mPendingTouchPreventedBlockId(0),
       mEndTouchState(apz::SingleTapState::NotClick) {
@@ -93,7 +93,7 @@ void APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
         mPrecedingPointerDownState, localWidget, mLastTouchSynthesizedForTests);
   }
 
-  mElementStateManager->ProcessSingleTap();
+  mActiveElementManager->ProcessSingleTap();
 }
 
 PreventDefaultResult APZEventState::FireContextmenuEvents(
@@ -124,7 +124,7 @@ PreventDefaultResult APZEventState::FireContextmenuEvents(
   if (preventDefaultResult != PreventDefaultResult::No) {
     // If the contextmenu event was handled then we're showing a contextmenu,
     // and so we should remove any activation
-    mElementStateManager->ClearActivation();
+    mActiveElementManager->ClearActivation();
 #ifndef XP_WIN
   } else {
     // If the contextmenu wasn't consumed, fire the eMouseLongTap event.
@@ -239,11 +239,9 @@ void APZEventState::ProcessTouchEvent(
     uint64_t aInputBlockId, nsEventStatus aApzResponse,
     nsEventStatus aContentResponse,
     nsTArray<TouchBehaviorFlags>&& aAllowedTouchBehaviors) {
-  bool isTouchPrevented = aContentResponse == nsEventStatus_eConsumeNoDefault;
   if (aEvent.mMessage == eTouchStart && aEvent.mTouches.Length() > 0) {
-    mElementStateManager->SetTargetElement(
-        aEvent.mTouches[0]->GetOriginalTarget(),
-        ElementStateManager::PreventDefault{isTouchPrevented});
+    mActiveElementManager->SetTargetElement(
+        aEvent.mTouches[0]->GetOriginalTarget());
     mLastTouchIdentifier = aEvent.mTouches[0]->Identifier();
     mLastTouchSynthesizedForTests =
         static_cast<SynthesizeForTests>(aEvent.mFlags.mIsSynthesizedForTests);
@@ -255,6 +253,7 @@ void APZEventState::ProcessTouchEvent(
     mTouchBlockAllowedBehaviors = std::move(aAllowedTouchBehaviors);
   }
 
+  bool isTouchPrevented = aContentResponse == nsEventStatus_eConsumeNoDefault;
   bool mayNeedPointerCancelEvent = false;
   APZES_LOG("Handling event type %d isPrevented=%d\n", aEvent.mMessage,
             isTouchPrevented);
@@ -316,7 +315,7 @@ void APZEventState::ProcessTouchEvent(
       }
       [[fallthrough]];
     case eTouchCancel:
-      if (mElementStateManager->HandleTouchEndEvent(mEndTouchState)) {
+      if (mActiveElementManager->HandleTouchEndEvent(mEndTouchState)) {
         mEndTouchState = apz::SingleTapState::NotClick;
       }
       [[fallthrough]];
@@ -486,7 +485,7 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
     }
     case APZStateChange::eStartTouch: {
       bool canBePanOrZoom = aArg;
-      mElementStateManager->HandleTouchStart(canBePanOrZoom);
+      mActiveElementManager->HandleTouchStart(canBePanOrZoom);
       // If this is a non-scrollable content, set a timer for the amount of
       // time specified by ui.touch_activation.duration_ms to clear the
       // active element state.
@@ -498,12 +497,12 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
     }
     case APZStateChange::eStartPanning: {
       // The user started to pan, so we don't want anything to be :active.
-      mElementStateManager->HandleStartPanning();
+      mActiveElementManager->ClearActivation();
       break;
     }
     case APZStateChange::eEndTouch: {
       mEndTouchState = static_cast<apz::SingleTapState>(aArg);
-      if (mElementStateManager->HandleTouchEnd(mEndTouchState)) {
+      if (mActiveElementManager->HandleTouchEnd(mEndTouchState)) {
         mEndTouchState = apz::SingleTapState::NotClick;
       }
       break;
@@ -511,7 +510,7 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
   }
 }
 
-void APZEventState::Destroy() { mElementStateManager->Destroy(); }
+void APZEventState::Destroy() { mActiveElementManager->Destroy(); }
 
 void APZEventState::SendPendingTouchPreventedResponse(bool aPreventDefault) {
   if (mPendingTouchPreventedResponse) {
