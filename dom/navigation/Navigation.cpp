@@ -662,7 +662,7 @@ void Navigation::PerformNavigationTraversal(JSContext* aCx, const nsID& aKey,
 
   // 12. Append the following session history traversal steps to traversable:
   auto* childSHistory = traversable->GetChildSessionHistory();
-  auto performNavigationTraversalSteps =
+  auto performNaviationTraversalSteps =
       [finished =
            RefPtr(apiMethodTracker->FinishedPromise())](nsresult aResult) {
         switch (aResult) {
@@ -706,8 +706,7 @@ void Navigation::PerformNavigationTraversal(JSContext* aCx, const nsID& aKey,
   //      navigable, and "none".
   childSHistory->AsyncGo(aKey, navigable, /*aRequireUserInteraction=*/false,
                          /*aUserActivation=*/false,
-                         /*aCheckForCancelation=*/true,
-                         performNavigationTraversalSteps);
+                         performNaviationTraversalSteps);
 }
 
 // https://html.spec.whatwg.org/#dom-navigation-reload
@@ -1147,20 +1146,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(NavigationWaitForAllScope)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(NavigationWaitForAllScope)
 
-// https://html.spec.whatwg.org/#resume-applying-the-traverse-history-step
-static void ResumeApplyTheHistoryStep(
-    SessionHistoryInfo* aTarget, BrowsingContext* aTraversable,
-    UserNavigationInvolvement aUserInvolvement) {
-  MOZ_DIAGNOSTIC_ASSERT(aTraversable->IsTop());
-  auto* childSHistory = aTraversable->GetChildSessionHistory();
-  // Since we've already called #checking-if-unloading-is-canceled, we here pass
-  // checkForCancelation set to false.
-  childSHistory->AsyncGo(aTarget->NavigationKey(), aTraversable,
-                         /* aRequireUserInteraction */ false,
-                         /* aUserActivation */ false,
-                         /* aCheckForCancelation */ false, [](auto) {});
-}
-
 // https://html.spec.whatwg.org/#inner-navigate-event-firing-algorithm
 bool Navigation::InnerFireNavigateEvent(
     JSContext* aCx, NavigationType aNavigationType,
@@ -1342,23 +1327,6 @@ bool Navigation::InnerFireNavigateEvent(
       case NavigationType::Traverse:
         // Step 33.6
         mSuppressNormalScrollRestorationDuringOngoingNavigation = true;
-        // The following steps are from after the precommit handler re-write.
-        // Numbering is a bit messed up, but will be fixed when precommit
-        // handlers are implemented.
-        // Step 32.7.1, case "traverse"
-        if (auto* entry = aDestination->GetEntry()) {
-          // 32.7.1.2
-          UserNavigationInvolvement userInvolvement =
-              UserNavigationInvolvement::None;
-          // 32.7.1.3
-          if (event->UserInitiated()) {
-            userInvolvement = UserNavigationInvolvement::Activation;
-          }
-          // 32.7.1.4
-          ResumeApplyTheHistoryStep(entry->SessionHistoryInfo(),
-                                    navigable->Top(), userInvolvement);
-        }
-
         break;
       case NavigationType::Push:
       case NavigationType::Replace:

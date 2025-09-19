@@ -1366,7 +1366,7 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
 }
 
 MOZ_CAN_RUN_SCRIPT
-static bool MaybeLoadBFCache(const nsSHistory::LoadEntryResult& aLoadEntry) {
+static bool MaybeLoadBFCache(nsSHistory::LoadEntryResult& aLoadEntry) {
   MOZ_ASSERT(XRE_IsParentProcess());
   RefPtr<nsDocShellLoadState> loadState = aLoadEntry.mLoadState;
   RefPtr<CanonicalBrowsingContext> canonicalBC =
@@ -1435,7 +1435,7 @@ static bool MaybeLoadBFCache(const nsSHistory::LoadEntryResult& aLoadEntry) {
 }
 
 /* static */
-void nsSHistory::LoadURIOrBFCache(const LoadEntryResult& aLoadEntry) {
+void nsSHistory::LoadURIOrBFCache(LoadEntryResult& aLoadEntry) {
   if (mozilla::BFCacheInParent() && aLoadEntry.mBrowsingContext->IsTop()) {
     if (MaybeLoadBFCache(aLoadEntry)) {
       return;
@@ -1456,7 +1456,7 @@ void nsSHistory::LoadURIOrBFCache(const LoadEntryResult& aLoadEntry) {
 // tree.
 MOZ_CAN_RUN_SCRIPT
 static bool MaybeCheckUnloadingIsCanceled(
-    const nsTArray<nsSHistory::LoadEntryResult>& aLoadResults,
+    nsTArray<nsSHistory::LoadEntryResult>& aLoadResults,
     BrowsingContext* aTraversable,
     std::function<void(nsTArray<nsSHistory::LoadEntryResult>&,
                        nsIDocumentViewer::PermitUnloadResult)>&& aResolver) {
@@ -1554,20 +1554,13 @@ static bool MaybeCheckUnloadingIsCanceled(
   return true;
 }
 
-// https://html.spec.whatwg.org/#apply-the-history-step
-// nsSHistory::LoadURIs is also implementing #apply-the-history-step, maybe even
-// more so than `CanonicalBrowsingContext::HistoryGo`.
 /* static */
-void nsSHistory::LoadURIs(const nsTArray<LoadEntryResult>& aLoadResults,
-                          bool aCheckForCancelation,
+void nsSHistory::LoadURIs(nsTArray<LoadEntryResult>& aLoadResults,
                           const std::function<void(nsresult)>& aResolver,
                           BrowsingContext* aTraversable) {
-  // Step 5. We need to handle the case where we shouldn't check for
-  // cancelation, e.g when our caller is
-  // #resume-applying-the-traverse-history-step, and we're already ran
-  // #checking-if-unloading-is-canceled
-  if (aCheckForCancelation &&
-      MaybeCheckUnloadingIsCanceled(
+  // Here we have call a path that handles firing the "traverse" navigate event
+  // if applicable.
+  if (MaybeCheckUnloadingIsCanceled(
           aLoadResults, aTraversable,
           [traversable = RefPtr{aTraversable}, aResolver](
               nsTArray<LoadEntryResult>& aLoadResults,
@@ -1616,7 +1609,7 @@ void nsSHistory::LoadURIs(const nsTArray<LoadEntryResult>& aLoadResults,
 
   // And we fall back to the simple case if we shouldn't fire a "traverse"
   // navigate event.
-  for (const LoadEntryResult& loadEntry : aLoadResults) {
+  for (LoadEntryResult& loadEntry : aLoadResults) {
     LoadURIOrBFCache(loadEntry);
   }
 }
@@ -1631,7 +1624,7 @@ nsSHistory::Reload(uint32_t aReloadFlags) {
     return NS_OK;
   }
 
-  LoadURIs(loadResults, /* aCheckForCancelation */ true);
+  LoadURIs(loadResults);
   return NS_OK;
 }
 
@@ -1681,7 +1674,7 @@ nsSHistory::ReloadCurrentEntry() {
   nsresult rv = ReloadCurrentEntry(loadResults);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  LoadURIs(loadResults, /* aCheckForCancelation */ true);
+  LoadURIs(loadResults);
   return NS_OK;
 }
 
@@ -2232,7 +2225,7 @@ nsSHistory::GotoIndex(int32_t aIndex, bool aUserActivation) {
                           aIndex == mIndex, aUserActivation);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  LoadURIs(loadResults, /* aCheckForCancelation */ true);
+  LoadURIs(loadResults);
   return NS_OK;
 }
 

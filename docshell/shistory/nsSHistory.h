@@ -161,12 +161,12 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
 
   MOZ_CAN_RUN_SCRIPT
   static void LoadURIs(
-      const nsTArray<LoadEntryResult>& aLoadResults, bool aCheckForCancelation,
+      nsTArray<LoadEntryResult>& aLoadResults,
       const std::function<void(nsresult)>& aResolver = [](auto) {},
       mozilla::dom::BrowsingContext* aTraversable = nullptr);
 
   MOZ_CAN_RUN_SCRIPT
-  static void LoadURIOrBFCache(const LoadEntryResult& aLoadEntry);
+  static void LoadURIOrBFCache(LoadEntryResult& aLoadEntry);
 
   // If this doesn't return an error then either aLoadResult is set to nothing,
   // in which case the caller should ignore the load, or it returns a valid

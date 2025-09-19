@@ -1317,13 +1317,12 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvHistoryGo(
       const MaybeDiscarded<BrowsingContext>& aContext, int32_t aOffset,
       uint64_t aHistoryEpoch, bool aRequireUserInteraction,
-      bool aUserActivation, bool aCheckForCancelation,
-      HistoryGoResolver&& aResolveRequestedIndex);
+      bool aUserActivation, HistoryGoResolver&& aResolveRequestedIndex);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvNavigationTraverse(
       const MaybeDiscarded<BrowsingContext>& aContext, const nsID& aKey,
-      uint64_t aHistoryEpoch, bool aUserActivation, bool aCheckForCancelation,
+      uint64_t aHistoryEpoch, bool aUserActivation,
       NavigationTraverseResolver&& aResolveRequestedIndex);
 
   mozilla::ipc::IPCResult RecvSynchronizeLayoutHistoryState(

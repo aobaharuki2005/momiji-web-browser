@@ -4303,42 +4303,36 @@ void BrowsingContext::RemoveFromSessionHistory(const nsID& aChangeID) {
 void BrowsingContext::HistoryGo(
     int32_t aOffset, uint64_t aHistoryEpoch, bool aRequireUserInteraction,
     bool aUserActivation, std::function<void(Maybe<int32_t>&&)>&& aResolver) {
-  // We always pass checkForCancelation as true here, since we'll never call
-  // HistoryGo in a context where we beforehand know that we want to skip
-  // onbeforeunload or onnavigate.
-  bool checkForCancelation = true;
   if (XRE_IsContentProcess()) {
     ContentChild::GetSingleton()->SendHistoryGo(
         this, aOffset, aHistoryEpoch, aRequireUserInteraction, aUserActivation,
-        checkForCancelation, std::move(aResolver),
-        [](mozilla::ipc::
-               ResponseRejectReason) { /* FIXME Is ignoring this fine? */ });
-  } else {
-    RefPtr<CanonicalBrowsingContext> self = Canonical();
-    aResolver(self->HistoryGo(aOffset, aHistoryEpoch, aRequireUserInteraction,
-                              aUserActivation, checkForCancelation,
-                              self->GetContentParent()
-                                  ? Some(self->GetContentParent()->ChildID())
-                                  : Nothing()));
-  }
-}
-
-void BrowsingContext::NavigationTraverse(
-    const nsID& aKey, uint64_t aHistoryEpoch, bool aUserActivation,
-    bool aCheckForCancelation, std::function<void(nsresult)>&& aResolver) {
-  if (XRE_IsContentProcess()) {
-    ContentChild::GetSingleton()->SendNavigationTraverse(
-        this, aKey, aHistoryEpoch, aUserActivation, aCheckForCancelation,
         std::move(aResolver),
         [](mozilla::ipc::
                ResponseRejectReason) { /* FIXME Is ignoring this fine? */ });
   } else {
     RefPtr<CanonicalBrowsingContext> self = Canonical();
-    self->NavigationTraverse(
-        aKey, aHistoryEpoch, aUserActivation, aCheckForCancelation,
+    aResolver(self->HistoryGo(
+        aOffset, aHistoryEpoch, aRequireUserInteraction, aUserActivation,
         self->GetContentParent() ? Some(self->GetContentParent()->ChildID())
+                                 : Nothing()));
+  }
+}
+
+void BrowsingContext::NavigationTraverse(
+    const nsID& aKey, uint64_t aHistoryEpoch, bool aUserActivation,
+    std::function<void(nsresult)>&& aResolver) {
+  if (XRE_IsContentProcess()) {
+    ContentChild::GetSingleton()->SendNavigationTraverse(
+        this, aKey, aHistoryEpoch, aUserActivation, std::move(aResolver),
+        [](mozilla::ipc::
+               ResponseRejectReason) { /* FIXME Is ignoring this fine? */ });
+  } else {
+    RefPtr<CanonicalBrowsingContext> self = Canonical();
+    self->NavigationTraverse(aKey, aHistoryEpoch, aUserActivation,
+                             self->GetContentParent()
+                                 ? Some(self->GetContentParent()->ChildID())
                                  : Nothing(),
-        std::move(aResolver));
+                             std::move(aResolver));
   }
 }
 
