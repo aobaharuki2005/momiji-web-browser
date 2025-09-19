@@ -514,12 +514,18 @@
     <string name="onboarding_marketing_redesign_learn_more">How we use the data</string>
     <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
     <string name="onboarding_marketing_redesign_positive_button">Confirm</string>
-
     <!-- Set to default browser onboarding redesign title. -->
     <string name="onboarding_redesign_set_default_browser_title">Get automatic tracking protection by default</string>
     <!-- Set to default browser onboarding redesign body. -->
     <string name="onboarding_redesign_set_default_browser_body">One tap helps stop companies spying on your clicks.</string>
-
+    <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+    <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Sync everywhere you use Firefox</string>
+    <!-- Sync onboarding redesign body. -->
+    <string name="onboarding_redesign_sync_body">Get bookmarks, tabs, and passwords on any device. All protected with encryption.</string>
+    <!-- Sync onboarding redesign positive button text. -->
+    <string name="onboarding_redesign_sync_positive_button">Start syncing</string>
+    <!-- Sync onboarding redesign negative button text. -->
+    <string name="onboarding_redesign_sync_negative_button">Not now</string>
     <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
     <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Help us grow Firefox</string>
     <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->

@@ -202,6 +202,15 @@ features:
               primary-button-label: juno_onboarding_sign_in_positive_button
               secondary-button-label: juno_onboarding_sign_in_negative_button
 
+            sync-sign-in-redesign:
+              enabled: false
+              card-type: sync-sign-in
+              title: onboarding_redesign_sync_title
+              body: onboarding_redesign_sync_body
+              ordering: 15
+              primary-button-label: onboarding_redesign_sync_positive_button
+              secondary-button-label: onboarding_redesign_sync_negative_button
+
             notification-permission:
               enabled: true
               card-type: notification-permission

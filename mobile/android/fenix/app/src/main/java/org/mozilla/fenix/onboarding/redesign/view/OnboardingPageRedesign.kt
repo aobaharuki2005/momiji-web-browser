@@ -25,12 +25,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.PrimaryButton
 import mozilla.components.compose.base.button.TextButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.onboarding.redesign.view.defaultbrowser.SetToDefaultMainImage
+import org.mozilla.fenix.onboarding.redesign.view.sync.SyncMainImage
 import org.mozilla.fenix.onboarding.view.Action
 import org.mozilla.fenix.onboarding.view.OnboardingPageState
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -154,7 +155,7 @@ private fun Content(
     }
 }
 
-@FlexibleWindowLightDarkPreview
+@PreviewLightDark
 @Composable
 private fun OnboardingPageSetToDefaultPreview() {
     FirefoxTheme {
@@ -174,6 +175,30 @@ private fun OnboardingPageSetToDefaultPreview() {
                 onRecordImpressionEvent = {},
             ),
             mainImage = { SetToDefaultMainImage() },
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun OnboardingPageSyncPreview() {
+    FirefoxTheme {
+        OnboardingPageRedesign(
+            pageState = OnboardingPageState(
+                imageRes = R.drawable.ic_notification_permission, // Unused in the redesign.
+                title = stringResource(R.string.onboarding_redesign_sync_title),
+                description = stringResource(R.string.onboarding_redesign_sync_body),
+                primaryButton = Action(
+                    text = stringResource(R.string.onboarding_redesign_sync_positive_button),
+                    onClick = {},
+                ),
+                secondaryButton = Action(
+                    text = stringResource(R.string.onboarding_redesign_sync_negative_button),
+                    onClick = {},
+                ),
+                onRecordImpressionEvent = {},
+            ),
+            mainImage = { SyncMainImage() },
         )
     }
 }

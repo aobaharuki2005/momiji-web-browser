@@ -55,6 +55,7 @@ import org.mozilla.fenix.compose.PagerIndicator
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.onboarding.WidgetPinnedReceiver.WidgetPinnedState
 import org.mozilla.fenix.onboarding.redesign.view.defaultbrowser.SetToDefaultMainImage
+import org.mozilla.fenix.onboarding.redesign.view.sync.SyncMainImage
 import org.mozilla.fenix.onboarding.store.OnboardingAction.OnboardingToolbarAction
 import org.mozilla.fenix.onboarding.store.OnboardingStore
 import org.mozilla.fenix.onboarding.view.Caption
@@ -352,9 +353,10 @@ private fun OnboardingPageForType(
             mainImage = { SetToDefaultMainImage() },
         )
 
-        OnboardingPageUiData.Type.SYNC_SIGN_IN,
-        OnboardingPageUiData.Type.ADD_SEARCH_WIDGET,
-        -> OnboardingPageRedesign(state)
+        OnboardingPageUiData.Type.SYNC_SIGN_IN -> OnboardingPageRedesign(
+            pageState = state,
+            mainImage = { SyncMainImage() },
+        )
 
         OnboardingPageUiData.Type.TOOLBAR_PLACEMENT -> {
             val context = LocalContext.current
@@ -388,6 +390,7 @@ private fun OnboardingPageForType(
         )
 
         // no-ops
+        OnboardingPageUiData.Type.ADD_SEARCH_WIDGET,
         OnboardingPageUiData.Type.NOTIFICATION_PERMISSION,
         OnboardingPageUiData.Type.THEME_SELECTION,
             -> {
