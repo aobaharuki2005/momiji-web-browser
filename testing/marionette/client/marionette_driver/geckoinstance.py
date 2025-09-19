@@ -673,6 +673,9 @@ class DesktopInstance(GeckoInstance):
         # TODO: Should be considered to get removed once bug 1960741 is fixed.
         "threads.lower_mainthread_priority_in_background.enabled": False,
         "dom.ipc.processPriorityManager.enabled": False,
+        # Turn off semantic history search as it triggers network connections to
+        # download ML models.
+        "places.semanticHistory.featureGate": False,
         # Disable first-run welcome page
         "startup.homepage_welcome_url": "about:blank",
         "startup.homepage_welcome_url.additional": "",

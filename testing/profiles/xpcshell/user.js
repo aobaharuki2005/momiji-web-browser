@@ -60,3 +60,7 @@ user_pref("nimbus.profilesdatastoreservice.enabled", false);
 // TODO(bug 1967779): Require the ProfileDatastoreService by default.
 // TODO(bug 1972426): Make this the default and remove this.
 user_pref("nimbus.profilesdatastoreservice.read.enabled", false);
+
+// Turn off semantic history search as it triggers network connections to
+// download ML models.
+user_pref("places.semanticHistory.featureGate", false);

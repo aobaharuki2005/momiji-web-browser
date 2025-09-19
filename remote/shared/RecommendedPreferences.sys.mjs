@@ -345,6 +345,10 @@ const COMMON_PREFERENCES = new Map([
   // Make sure SNTP requests do not hit the network
   ["network.sntp.pools", "%(server)s"],
 
+  // Turn off semantic history search as it triggers network connections to
+  // download ML models.
+  ["places.semanticHistory.featureGate", false],
+
   // Privacy and Tracking Protection
   ["privacy.trackingprotection.enabled", false],
 
