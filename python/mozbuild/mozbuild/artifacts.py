@@ -1331,8 +1331,6 @@ class Artifacts:
         if self._substs.get("MOZ_BUILD_APP", "") == "mobile/android":
             if self._substs["ANDROID_CPU_ARCH"] == "x86_64":
                 return "android-x86_64" + target_suffix
-            if self._substs["ANDROID_CPU_ARCH"] == "x86":
-                return "android-x86" + target_suffix
             if self._substs["ANDROID_CPU_ARCH"] == "arm64-v8a":
                 return "android-aarch64" + target_suffix
             return "android-arm" + target_suffix
