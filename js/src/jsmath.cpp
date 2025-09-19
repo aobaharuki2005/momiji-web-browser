@@ -61,6 +61,17 @@ static inline bool UseFdlibmForSinCosTan(const CallArgs& args) {
          args.callee().nonCCWRealm()->creationOptions().alwaysUseFdlibm();
 }
 
+// Stack alignment on x86 Windows is 4 byte. Align to 16 bytes when calling
+// rounding functions with double parameters.
+//
+// See |ABIStackAlignment| in "js/src/jit/x86/Assembler-x86.h".
+#if defined(JS_CODEGEN_X86) && (!defined(__GNUC__) || defined(__MINGW32__))
+#  define ALIGN_STACK_FOR_ROUNDING_FUNCTION \
+    __attribute__((force_align_arg_pointer))
+#else
+#  define ALIGN_STACK_FOR_ROUNDING_FUNCTION
+#endif
+
 template <UnaryMathFunctionType F>
 static bool math_function(JSContext* cx, CallArgs& args) {
   if (args.length() == 0) {
@@ -155,6 +166,7 @@ static bool math_atan2(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+ALIGN_STACK_FOR_ROUNDING_FUNCTION
 double js::math_ceil_impl(double x) {
   AutoUnsafeCallWithABI unsafe;
   return std::ceil(x);
@@ -228,6 +240,7 @@ static bool math_exp(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_exp_impl>(cx, args);
 }
 
+ALIGN_STACK_FOR_ROUNDING_FUNCTION
 double js::math_floor_impl(double x) {
   AutoUnsafeCallWithABI unsafe;
   return std::floor(x);
@@ -580,6 +593,7 @@ T js::GetBiggestNumberLessThan(T x) {
 template double js::GetBiggestNumberLessThan<>(double x);
 template float js::GetBiggestNumberLessThan<>(float x);
 
+ALIGN_STACK_FOR_ROUNDING_FUNCTION
 double js::math_round_impl(double x) {
   AutoUnsafeCallWithABI unsafe;
 
@@ -860,6 +874,7 @@ bool js::math_hypot_handle(JSContext* cx, HandleValueArray args,
   return true;
 }
 
+ALIGN_STACK_FOR_ROUNDING_FUNCTION
 double js::math_trunc_impl(double x) {
   AutoUnsafeCallWithABI unsafe;
   return std::trunc(x);
@@ -1271,3 +1286,5 @@ const JSClass js::MathClass = {
     JS_NULL_CLASS_OPS,
     &MathClassSpec,
 };
+
+#undef ALIGN_STACK_FOR_ROUNDING_FUNCTION
