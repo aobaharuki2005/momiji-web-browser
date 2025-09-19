@@ -60,6 +60,8 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -1457,6 +1459,10 @@ private fun BookmarkEditor(
     onTitleChanged: (String) -> Unit,
     onURLChanged: (String) -> Unit,
 ) {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
     Row(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -1474,10 +1480,11 @@ private fun BookmarkEditor(
                 onValueChange = onTitleChanged,
                 placeholder = stringResource(R.string.bookmark_name_label_normal_case),
                 modifier =
-                Modifier
-                    .semantics {
-                        testTag = EDIT_BOOKMARK_ITEM_TITLE_TEXT_FIELD
-                    },
+                    Modifier
+                        .semantics {
+                            testTag = EDIT_BOOKMARK_ITEM_TITLE_TEXT_FIELD
+                        }
+                        .focusRequester(focusRequester),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
