@@ -2396,6 +2396,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "gecko-trace"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cstr",
+ "firefox-on-glean",
+ "hex",
+ "log",
+ "moz_task",
+ "mozbuild",
+ "nserror",
+ "once_cell",
+ "prost",
+ "xpcom",
+]
+
+[[package]]
 name = "gecko_logger"
 version = "0.1.0"
 dependencies = [
@@ -2581,6 +2598,7 @@ dependencies = [
  "fluent-langneg-ffi",
  "fog_control",
  "gecko-profiler",
+ "gecko-trace",
  "gecko_logger",
  "gecko_tracing",
  "geckoservo",

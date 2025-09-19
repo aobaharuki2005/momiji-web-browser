@@ -114,6 +114,8 @@ uritemplate_glue = { path = "../../../../netwerk/base/uritemplate_glue" }
 
 libz-rs-sys = { version = "0.4.1", features = ["custom-prefix"], optional = true }
 
+gecko-trace = { path = "../../../components/gecko-trace" }
+
 [target.'cfg(any(target_os = "android", target_os = "macos", target_os = "ios", all(target_os = "windows", not(target_arch = "aarch64"))))'.dependencies]
 osclientcerts = { path = "../../../../security/manager/ssl/osclientcerts" }
 

@@ -67,7 +67,7 @@ gecko_trace:
                   attributes:
                     type: object
                     properties:
-                      gecko.process.id:
+                      gecko.process.internal_id:
                         type: number
                       gecko.process.type:
                         type: string
@@ -79,8 +79,6 @@ gecko_trace:
                         type: string
                       telemetry.sdk.version:
                         type: string
-                  dropped_attributes_count:
-                    type: number
               scope_spans:
                 type: array
                 items:
@@ -163,7 +161,3 @@ gecko_trace:
                                       {% endif %}
                                     {% endfor %}
                                   {% endfor %}
-                                dropped_attributes_count:
-                                  type: number
-                          dropped_events_count:
-                            type: number

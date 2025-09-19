@@ -42,6 +42,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FOGIPC.h"
 #include "mozilla/GeckoArgs.h"
+#include "mozilla/GeckoTrace.h"
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/HangDetails.h"
 #include "mozilla/LookAndFeel.h"
@@ -7978,6 +7979,11 @@ already_AddRefed<JSActor> ContentParent::InitJSActor(
 
 IPCResult ContentParent::RecvFOGData(ByteBuf&& buf) {
   glean::FOGData(std::move(buf));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvGeckoTraceExport(ByteBuf&& aBuf) {
+  recv_gecko_trace_export(aBuf.mData, aBuf.mLen);
   return IPC_OK();
 }
 

@@ -16,6 +16,7 @@ traces:
   data_reviews:
     - https://bugzilla.mozilla.org/show_bug.cgi?id=1930954
   reasons:
+    # This reason is currently never triggered
     idle: |
       Sent when the user has been idle for a configured period, allowing
       trace data collection to be transmitted during periods of low activity.

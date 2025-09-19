@@ -1942,6 +1942,9 @@ parent:
     // Buffer contains bincoded Rust structs.
     async FOGData(ByteBuf buf);
 
+parent:
+    async GeckoTraceExport(ByteBuf aBuf);
+
 child:
     // Temporary (bug 1641989) conduit for Glean data in content processes.
     // Tells the child to flush any pending data. Used in tests and ping

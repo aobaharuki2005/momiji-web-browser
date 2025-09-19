@@ -27,11 +27,11 @@ class SpanEvent {
   /**
    * Iterate over all key-value pairs in this event.
    *
-   * Calls the provided callback function for each attribute set on this event
+   * Calls the provided callback function for each attribute set in this event
    * instance. The iteration includes attributes from parent classes if this
    * event inherits from other events.
    *
-   * @param aCallback Function to call for each key-value pair.
+   * @param `aCallback` Function to call for each key-value pair.
    *                  Should return true to continue iteration, false to stop.
    * @return true if all callbacks returned true, false if any returned false
    */
