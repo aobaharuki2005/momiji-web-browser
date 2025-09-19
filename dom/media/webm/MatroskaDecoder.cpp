@@ -36,12 +36,20 @@ nsTArray<UniquePtr<TrackInfo>> MatroskaDecoder::GetTracksInfo(
 
   // TODO : add more codec support.
   for (const auto& codec : codecs.Range()) {
+    // Audio codecs
     if (IsAACCodecString(codec)) {
       tracks.AppendElement(
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
               "audio/mp4a-latm"_ns, aType));
       continue;
     }
+    if (codec.EqualsLiteral("opus")) {
+      tracks.AppendElement(
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              "audio/opus"_ns, aType));
+      continue;
+    }
+    // Video codecs
     if (IsAllowedH264Codec(codec)) {
       auto trackInfo =
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
@@ -97,6 +105,9 @@ bool MatroskaDecoder::IsSupportedType(const MediaContainerType& aContainerType,
     tracks.AppendElement(
         CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
             "audio/mp4a-latm"_ns, aContainerType));
+    tracks.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+            "audio/opus"_ns, aContainerType));
   } else {
     tracks.AppendElement(
         CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
