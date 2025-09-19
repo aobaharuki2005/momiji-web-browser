@@ -15,7 +15,9 @@
 #include "vm/PortableBaselineInterpret.h"
 
 #include "mozilla/Maybe.h"
+
 #include <algorithm>
+#include <cmath>
 
 #include "fdlibm.h"
 #include "jsapi.h"
@@ -3770,7 +3772,7 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
       CACHEOP_CASE(MathFloorNumberResult) {
         NumberOperandId inputId = cacheIRReader.numberOperandId();
         double input = READ_VALUE_REG(inputId.id()).toNumber();
-        double result = fdlibm_floor(input);
+        double result = std::floor(input);
         retValue = DoubleValue(result).asRawBits();
         PREDICT_RETURN();
         DISPATCH_CACHEOP();
@@ -3779,7 +3781,7 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
       CACHEOP_CASE(MathCeilNumberResult) {
         NumberOperandId inputId = cacheIRReader.numberOperandId();
         double input = READ_VALUE_REG(inputId.id()).toNumber();
-        double result = fdlibm_ceil(input);
+        double result = std::ceil(input);
         retValue = DoubleValue(result).asRawBits();
         PREDICT_RETURN();
         DISPATCH_CACHEOP();
@@ -3788,7 +3790,7 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
       CACHEOP_CASE(MathTruncNumberResult) {
         NumberOperandId inputId = cacheIRReader.numberOperandId();
         double input = READ_VALUE_REG(inputId.id()).toNumber();
-        double result = fdlibm_trunc(input);
+        double result = std::trunc(input);
         retValue = DoubleValue(result).asRawBits();
         PREDICT_RETURN();
         DISPATCH_CACHEOP();
@@ -3800,7 +3802,7 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
         if (input == 0.0 && std::signbit(input)) {
           FAIL_IC();
         }
-        double result = fdlibm_floor(input);
+        double result = std::floor(input);
         int32_t intResult = int32_t(result);
         if (double(intResult) != result) {
           FAIL_IC();
@@ -3816,7 +3818,7 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
         if (input > -1.0 && std::signbit(input)) {
           FAIL_IC();
         }
-        double result = fdlibm_ceil(input);
+        double result = std::ceil(input);
         int32_t intResult = int32_t(result);
         if (double(intResult) != result) {
           FAIL_IC();
@@ -3832,7 +3834,7 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
         if (input == 0.0 && std::signbit(input)) {
           FAIL_IC();
         }
-        double result = fdlibm_trunc(input);
+        double result = std::trunc(input);
         int32_t intResult = int32_t(result);
         if (double(intResult) != result) {
           FAIL_IC();

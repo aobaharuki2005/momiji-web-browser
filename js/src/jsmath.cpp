@@ -157,7 +157,7 @@ static bool math_atan2(JSContext* cx, unsigned argc, Value* vp) {
 
 double js::math_ceil_impl(double x) {
   AutoUnsafeCallWithABI unsafe;
-  return fdlibm_ceil(x);
+  return std::ceil(x);
 }
 
 static bool math_ceil(JSContext* cx, unsigned argc, Value* vp) {
@@ -230,7 +230,7 @@ static bool math_exp(JSContext* cx, unsigned argc, Value* vp) {
 
 double js::math_floor_impl(double x) {
   AutoUnsafeCallWithABI unsafe;
-  return fdlibm_floor(x);
+  return std::floor(x);
 }
 
 bool js::math_floor(JSContext* cx, unsigned argc, Value* vp) {
@@ -583,7 +583,7 @@ template float js::GetBiggestNumberLessThan<>(float x);
 double js::math_round_impl(double x) {
   AutoUnsafeCallWithABI unsafe;
 
-  double result = fdlibm_ceil(x);
+  double result = std::ceil(x);
   if (x < result - 0.5) {
     result -= 1.0;
   }
@@ -593,7 +593,7 @@ double js::math_round_impl(double x) {
 float js::math_roundf_impl(float x) {
   AutoUnsafeCallWithABI unsafe;
 
-  float result = fdlibm_ceilf(x);
+  float result = std::ceil(x);
   if (x < result - 0.5f) {
     result -= 1.0f;
   }
@@ -862,12 +862,7 @@ bool js::math_hypot_handle(JSContext* cx, HandleValueArray args,
 
 double js::math_trunc_impl(double x) {
   AutoUnsafeCallWithABI unsafe;
-  return fdlibm_trunc(x);
-}
-
-float js::math_truncf_impl(float x) {
-  AutoUnsafeCallWithABI unsafe;
-  return fdlibm_truncf(x);
+  return std::trunc(x);
 }
 
 bool js::math_trunc(JSContext* cx, unsigned argc, Value* vp) {

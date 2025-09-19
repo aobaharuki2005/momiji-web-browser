@@ -19,6 +19,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/SIMD.h"
 
+#include <cmath>
 #include <limits>
 #include <type_traits>
 #include <utility>
@@ -11779,17 +11780,18 @@ void CodeGenerator::visitMathFunctionF(LMathFunctionF* ins) {
   CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check;
   switch (ins->mir()->function()) {
     case UnaryMathFunction::Floor:
-      funptr = floorf;
+      funptr = std::floor;
       check = CheckUnsafeCallWithABI::DontCheckOther;
       break;
     case UnaryMathFunction::Round:
       funptr = math_roundf_impl;
       break;
     case UnaryMathFunction::Trunc:
-      funptr = math_truncf_impl;
+      funptr = std::trunc;
+      check = CheckUnsafeCallWithABI::DontCheckOther;
       break;
     case UnaryMathFunction::Ceil:
-      funptr = ceilf;
+      funptr = std::ceil;
       check = CheckUnsafeCallWithABI::DontCheckOther;
       break;
     default:
