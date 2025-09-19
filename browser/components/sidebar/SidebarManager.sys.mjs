@@ -40,7 +40,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   VERTICAL_TABS_PREF,
   false,
   (pref, oldVal, newVal) => {
-    sidebarManager.handleVerticalTabsPrefChange(newVal, true);
+    SidebarManager.handleVerticalTabsPrefChange(newVal, true);
   }
 );
 
@@ -50,7 +50,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "sidebar.revamp",
   false,
   (pref, oldVal, newVal) => {
-    sidebarManager.updateDefaultTools();
+    SidebarManager.updateDefaultTools();
 
     if (!newVal) {
       // Disable vertical tabs if revamped sidebar is turned off
@@ -75,7 +75,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "newSidebarHasBeenUsed",
   "sidebar.new-sidebar.has-used",
   false,
-  () => sidebarManager.updateDefaultTools()
+  () => SidebarManager.updateDefaultTools()
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -85,15 +85,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-class SidebarManager extends EventTarget {
+export const SidebarManager = {
   /**
-   * SidebarManager is a singleton that handles startup tasks like telemetry,
-   * adding listeners and updating sidebar-related preferences.
+   * Handle startup tasks like telemetry, adding listeners.
    */
-  constructor() {
-    super();
-    this.checkForPinnedTabsComplete = false;
-  }
+
   init() {
     // Handle nimbus feature pref setting updates on init and enrollment
     const featureId = "sidebar";
@@ -153,7 +149,7 @@ class SidebarManager extends EventTarget {
       lazy.verticalTabsEnabled,
       shouldResetVisibility
     );
-  }
+  },
 
   /**
    * Ensure the drag-to-pin promo card is not displayed to existing users who already have pinned tabs.
@@ -163,13 +159,11 @@ class SidebarManager extends EventTarget {
       for (let win of lazy.BrowserWindowTracker.getOrderedWindows()) {
         if (win.gBrowser.pinnedTabCount > 0) {
           Services.prefs.setBoolPref(PINNED_PROMO_PREF, true);
-          break;
+          return;
         }
       }
     }
-    this.checkForPinnedTabsComplete = true;
-    this.dispatchEvent(new CustomEvent("checkForPinnedTabsComplete"));
-  }
+  },
 
   /**
    * Called when any widget is removed. We're only interested in the sidebar
@@ -190,7 +184,7 @@ class SidebarManager extends EventTarget {
         this.closeAllSidebars();
       }
     }
-  }
+  },
 
   /**
    * Convenience method to tell all sidebars to close when the toolbar button
@@ -205,7 +199,7 @@ class SidebarManager extends EventTarget {
         ...lazy.SidebarState.defaultProperties,
       });
     }
-  }
+  },
 
   /**
    * Adjust for a change to the verticalTabs pref.
@@ -218,7 +212,7 @@ class SidebarManager extends EventTarget {
       // only reset visibility pref when switching to vertical tabs and explictly indicated
       Services.prefs.setStringPref(VISIBILITY_SETTING_PREF, "always-show");
     }
-  }
+  },
 
   /**
    * Has the new sidebar launcher already been visible and "used" in this profile?
@@ -243,7 +237,7 @@ class SidebarManager extends EventTarget {
       }
     }
     return false;
-  }
+  },
 
   /**
    * Prepopulates default tools for new sidebar users and appends any new tools defined
@@ -298,7 +292,7 @@ class SidebarManager extends EventTarget {
     if (tools.length > lazy.sidebarTools.length) {
       Services.prefs.setStringPref(SIDEBAR_TOOLS, tools);
     }
-  }
+  },
 
   updateToolsPref(toolName, remove = null) {
     const updatedTools = lazy.sidebarTools ? lazy.sidebarTools.split(",") : [];
@@ -315,7 +309,7 @@ class SidebarManager extends EventTarget {
     }
 
     Services.prefs.setStringPref(SIDEBAR_TOOLS, updatedTools.join());
-  }
+  },
 
   clearExtensionsPref(toolName) {
     let installedExtensions = lazy.sidebarExtensions
@@ -329,12 +323,12 @@ class SidebarManager extends EventTarget {
         installedExtensions.join()
       );
     }
-  }
+  },
 
   cleanupPrefs(id) {
     this.clearExtensionsPref(id);
     this.updateToolsPref(id, true);
-  }
+  },
 
   /**
    * Return a list of tool IDs that have registered a badge for notification.
@@ -347,7 +341,7 @@ class SidebarManager extends EventTarget {
     const badgePrefs = Services.prefs.getChildList(BADGE_PREF_BRANCH);
 
     return badgePrefs.map(pref => pref.slice(BADGE_PREF_BRANCH.length));
-  }
+  },
 
   /**
    * Provide a system-level "backup" state to be stored for those using "Never
@@ -364,7 +358,7 @@ class SidebarManager extends EventTarget {
       Services.prefs.clearUserPref(BACKUP_STATE_PREF);
       return null;
     }
-  }
+  },
 
   /**
    * Set the backup state.
@@ -376,10 +370,8 @@ class SidebarManager extends EventTarget {
       return;
     }
     Services.prefs.setStringPref(BACKUP_STATE_PREF, JSON.stringify(state));
-  }
-}
+  },
+};
 
 // Initialize on first import
-const sidebarManager = new SidebarManager();
-sidebarManager.init();
-export { sidebarManager as SidebarManager };
+SidebarManager.init();
