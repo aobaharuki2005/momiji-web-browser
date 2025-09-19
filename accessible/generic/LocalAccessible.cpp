@@ -2631,6 +2631,11 @@ void LocalAccessible::ScrollToPoint(uint32_t aCoordinateType, int32_t aX,
   }
 }
 
+bool LocalAccessible::IsScrollable() const {
+  const auto [scrollPosition, scrollRange] = mDoc->ComputeScrollData(this);
+  return scrollRange.width > 0 || scrollRange.height > 0;
+}
+
 void LocalAccessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
                                    uint32_t aLength) {
   // Return text representation of non-text accessible within hypertext

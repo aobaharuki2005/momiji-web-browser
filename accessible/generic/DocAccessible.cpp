@@ -753,7 +753,7 @@ void DocAccessible::HandleScroll(nsINode* aTarget) {
 }
 
 std::pair<nsPoint, nsRect> DocAccessible::ComputeScrollData(
-    LocalAccessible* aAcc) {
+    const LocalAccessible* aAcc) {
   nsPoint scrollPoint;
   nsRect scrollRange;
 

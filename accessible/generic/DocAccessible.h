@@ -403,7 +403,7 @@ class DocAccessible : public HyperTextAccessible,
    * the root scroll frame. Return values have been scaled by the
    * PresShell's resolution.
    */
-  std::pair<nsPoint, nsRect> ComputeScrollData(LocalAccessible* aAcc);
+  std::pair<nsPoint, nsRect> ComputeScrollData(const LocalAccessible* aAcc);
 
   /**
    * Only works in content process documents.

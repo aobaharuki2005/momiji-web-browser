@@ -1500,6 +1500,13 @@ void RemoteAccessible::ScrollToPoint(uint32_t aScrollType, int32_t aX,
   Unused << mDoc->SendScrollToPoint(mID, aScrollType, aX, aY);
 }
 
+bool RemoteAccessible::IsScrollable() const {
+  if (RequestDomainsIfInactive(CacheDomain::ScrollPosition)) {
+    return false;
+  }
+  return mCachedFields && mCachedFields->HasAttribute(CacheKey::ScrollPosition);
+}
+
 #if !defined(XP_WIN)
 void RemoteAccessible::Announce(const nsString& aAnnouncement,
                                 uint16_t aPriority) {

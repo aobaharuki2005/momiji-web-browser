@@ -430,6 +430,8 @@ class LocalAccessible : public nsISupports, public Accessible {
   virtual void ScrollToPoint(uint32_t aCoordinateType, int32_t aX,
                              int32_t aY) override;
 
+  virtual bool IsScrollable() const override;
+
   /**
    * Get a pointer to accessibility interface for this node, which is specific
    * to the OS/accessibility toolkit we're running on.

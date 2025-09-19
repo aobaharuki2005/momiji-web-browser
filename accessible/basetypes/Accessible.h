@@ -469,6 +469,11 @@ class Accessible {
                              int32_t aY) = 0;
 
   /**
+   * Return true if the accessible is scrollable.
+   */
+  virtual bool IsScrollable() const = 0;
+
+  /**
    * Return tag name of associated DOM node.
    */
   virtual nsAtom* TagName() const = 0;
