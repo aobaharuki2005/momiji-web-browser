@@ -148,7 +148,7 @@ def fill_template(config, tasks):
                 "artifacts": [
                     {
                         "type": "file",
-                        "path": "/workspace/image.tar.zst",
+                        "path": "/workspace/out/image.tar.zst",
                         "name": "public/image.tar.zst",
                     }
                 ],
@@ -178,6 +178,10 @@ def fill_template(config, tasks):
         if image_name == "image_builder":
             worker["docker-image"] = IMAGE_BUILDER_IMAGE
             digest_data.append(f"image-builder-image:{IMAGE_BUILDER_IMAGE}")
+
+            # TODO remove this when IMAGE_BUILDER_IMAGE references version
+            # 6.0.0 or higher.
+            worker["artifacts"][0]["path"] = "/workspace/image.tar.zst"
         else:
             if task.get("arch", "") == "arm64":
                 image_builder = "image_builder_arm64"
