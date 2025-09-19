@@ -1025,11 +1025,6 @@ const gClickAndHoldListenersOnElement = {
   },
 };
 
-// See bug 1898356 - Navigation buttons aren't being properly disabled
-// when clearing the history. This is due that this callback is called
-// before the panel is closed. By setting "wasdisabled" attribute instead
-// of "disabled" attribute, we are sort of "lying" to `_updateMenuAndCommandState`
-// that they where previously disabled, so it will not enable them.
 const gSessionHistoryObserver = {
   observe(subject, topic) {
     if (topic != "browser:purge-session-history") {
@@ -1037,9 +1032,9 @@ const gSessionHistoryObserver = {
     }
 
     var backCommand = document.getElementById("Browser:Back");
-    backCommand.setAttribute("wasdisabled", "true");
+    backCommand.setAttribute("disabled", "true");
     var fwdCommand = document.getElementById("Browser:Forward");
-    fwdCommand.setAttribute("wasdisabled", "true");
+    fwdCommand.setAttribute("disabled", "true");
 
     // Clear undo history of the URL bar
     gURLBar.editor.clearUndoRedo();
