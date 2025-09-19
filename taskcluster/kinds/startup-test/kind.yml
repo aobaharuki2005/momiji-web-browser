@@ -49,7 +49,7 @@ tasks:
             upstream_kind: build-signing
             upstream_artifact: target.tar.xz
             binary: firefox
-        worker-type: t-linux-docker
+        worker-type: t-linux-docker-amd
         worker:
             docker-image: {in-tree: ubuntu2404-test}
         shipping-product: firefox
