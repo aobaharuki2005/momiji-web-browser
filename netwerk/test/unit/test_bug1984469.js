@@ -62,11 +62,6 @@ class AuthRequestor {
 add_task(async function test_http2_auth_retry_twice() {
   Services.prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
 
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-    Ci.nsIX509CertDB
-  );
-  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
-
   let server = new NodeHTTP2Server();
   await server.start();
   registerCleanupFunction(async () => {

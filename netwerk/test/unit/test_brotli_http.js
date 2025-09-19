@@ -89,10 +89,6 @@ add_task(
       "network.http.encoding.trustworthy_is_https",
       true
     );
-    let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-      Ci.nsIX509CertDB
-    );
-    addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
     let server = new NodeHTTPSServer();
     await server.start();

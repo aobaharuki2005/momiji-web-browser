@@ -105,11 +105,6 @@ add_task(async function test_http() {
 });
 
 add_task(async function test_https() {
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-    Ci.nsIX509CertDB
-  );
-  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
-
   let server = new NodeHTTPSServer();
   await server.start();
   registerCleanupFunction(async () => {
@@ -134,11 +129,6 @@ add_task(async function test_https() {
 });
 
 add_task(async function test_http2() {
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-    Ci.nsIX509CertDB
-  );
-  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
-
   let server = new NodeHTTP2Server();
   await server.start();
   registerCleanupFunction(async () => {
@@ -163,11 +153,6 @@ add_task(async function test_http2() {
 });
 
 add_task(async function test_http1_proxy() {
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-    Ci.nsIX509CertDB
-  );
-  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
-
   let proxy = new NodeHTTPProxyServer();
   await proxy.start();
   registerCleanupFunction(async () => {
@@ -208,12 +193,6 @@ add_task(async function test_http1_proxy() {
 });
 
 add_task(async function test_https_proxy() {
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-    Ci.nsIX509CertDB
-  );
-  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
-  addCertFromFile(certdb, "proxy-ca.pem", "CTu,u,u");
-
   let proxy = new NodeHTTPSProxyServer();
   await proxy.start();
   registerCleanupFunction(async () => {
@@ -249,12 +228,6 @@ add_task(async function test_https_proxy() {
 });
 
 add_task(async function test_http2_proxy() {
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-    Ci.nsIX509CertDB
-  );
-  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
-  addCertFromFile(certdb, "proxy-ca.pem", "CTu,u,u");
-
   let proxy = new NodeHTTP2ProxyServer();
   await proxy.start();
   registerCleanupFunction(async () => {
@@ -289,11 +262,6 @@ add_task(async function test_http2_proxy() {
 });
 
 add_task(async function test_proxy_with_redirects() {
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-    Ci.nsIX509CertDB
-  );
-  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
-
   let proxies = [
     NodeHTTPProxyServer,
     NodeHTTPSProxyServer,

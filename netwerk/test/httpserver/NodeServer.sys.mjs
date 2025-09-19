@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { NetUtil } from "resource://gre/modules/NetUtil.sys.mjs";
 
 /* globals require, __dirname, global, Buffer, process */
 
@@ -114,6 +115,73 @@ class BaseNodeServer {
     return `localhost`;
   }
 
+  static async installCert(filename) {
+    if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+      // Can't install cert from content process.
+      return;
+    }
+    let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+      Ci.nsIX509CertDB
+    );
+
+    function readFile(file) {
+      let fstream = Cc[
+        "@mozilla.org/network/file-input-stream;1"
+      ].createInstance(Ci.nsIFileInputStream);
+      fstream.init(file, -1, 0, 0);
+      let data = NetUtil.readInputStreamToString(fstream, fstream.available());
+      fstream.close();
+      return data;
+    }
+
+    // Find the root directory that contains netwerk/
+    let currentDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
+    let rootDir = currentDir.clone();
+
+    // XXX(valentin) The certs are stored in netwerk/test/unit
+    // Walk up until the dir contains netwerk/
+    // This is hacky, but the alternative would also require
+    // us to walk up the path to the root dir.
+    while (rootDir) {
+      let netwerkDir = rootDir.clone();
+      netwerkDir.append("netwerk");
+      if (netwerkDir.exists() && netwerkDir.isDirectory()) {
+        break;
+      }
+      let parent = rootDir.parent;
+      if (!parent || parent.equals(rootDir)) {
+        // Reached filesystem root, fallback to current directory
+        rootDir = currentDir;
+        break;
+      }
+      rootDir = parent;
+    }
+
+    let certFile = rootDir.clone();
+    certFile.append("netwerk");
+    certFile.append("test");
+    certFile.append("unit");
+    certFile.append(filename);
+
+    try {
+      let pem = readFile(certFile)
+        .replace(/-----BEGIN CERTIFICATE-----/, "")
+        .replace(/-----END CERTIFICATE-----/, "")
+        .replace(/[\r\n]/g, "");
+      certdb.addCertFromBase64(pem, "CTu,u,u");
+    } catch (e) {
+      let errStr = e.toString();
+      console.log(`Error installing cert ${errStr}`);
+      if (errStr.includes("0x805a1fe8")) {
+        // Can't install the cert without a profile
+        // Let's show an error, otherwise this will be difficult to diagnose.
+        console.log(
+          `!!! BaseNodeServer.installCert > Make sure your unit test calls do_get_profile()`
+        );
+      }
+    }
+  }
+
   /// Stops the server
   async stop() {
     if (this.processId) {
@@ -194,6 +262,9 @@ export class NodeHTTPSServer extends BaseNodeServer {
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
   async start(port = 0) {
+    if (!this._skipCert) {
+      await BaseNodeServer.installCert("http2-ca.pem");
+    }
     this.processId = await NodeServer.fork();
 
     await this.execute(BaseNodeHTTPServerCode);
@@ -245,6 +316,9 @@ export class NodeHTTP2Server extends BaseNodeServer {
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
   async start(port = 0) {
+    if (!this._skipCert) {
+      await BaseNodeServer.installCert("http2-ca.pem");
+    }
     this.processId = await NodeServer.fork();
 
     await this.execute(BaseNodeHTTPServerCode);
@@ -466,6 +540,9 @@ export class NodeHTTPSProxyServer extends BaseHTTPProxy {
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
   async start(port = 0) {
+    if (!this._skipCert) {
+      await BaseNodeServer.installCert("proxy-ca.pem");
+    }
     this.processId = await NodeServer.fork();
 
     await this.execute(BaseProxyCode);
@@ -641,6 +718,9 @@ export class NodeHTTP2ProxyServer extends BaseHTTPProxy {
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
   async start(port = 0, auth, maxConcurrentStreams = 100) {
+    if (!this._skipCert) {
+      await BaseNodeServer.installCert("proxy-ca.pem");
+    }
     this.processId = await NodeServer.fork();
 
     await this.execute(BaseProxyCode);
@@ -705,6 +785,9 @@ export class NodeWebSocketServer extends BaseNodeServer {
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
   async start(port = 0) {
+    if (!this._skipCert) {
+      await BaseNodeServer.installCert("http2-ca.pem");
+    }
     this.processId = await NodeServer.fork();
 
     await this.execute(BaseNodeHTTPServerCode);
@@ -775,6 +858,9 @@ export class NodeWebSocketHttp2Server extends BaseNodeServer {
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
   async start(port = 0, fallbackToH1 = false) {
+    if (!this._skipCert) {
+      await BaseNodeServer.installCert("http2-ca.pem");
+    }
     this.processId = await NodeServer.fork();
 
     await this.execute(BaseNodeHTTPServerCode);
