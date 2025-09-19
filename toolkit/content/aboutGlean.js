@@ -216,6 +216,28 @@ function handleRedesign() {
     document
       .getElementById("enable-new-features")
       .setAttribute("data-l10n-id", "about-glean-disable-new-features-button");
+
+    /**
+     * Handle metric filter input.
+     *
+     * This uses a timeout to debounce the events down to 200ms.
+     * Instead of updating the DOM every time the input changes, it'll only update when the input hasn't changed in the last 200ms since it last changed.
+     */
+    let inputTimeout = undefined;
+    document.getElementById("filter-metrics").addEventListener("input", e => {
+      clearTimeout(inputTimeout);
+      inputTimeout = setTimeout(() => {
+        updateFilteredMetricData(e.target.value ?? "");
+      }, 200);
+    });
+
+    // Handle loading all metric data
+    document.getElementById("load-all").addEventListener("click", () => {
+      MAPPED_METRIC_DATA.forEach(datum => {
+        updateDatum(datum);
+      });
+      updateTable();
+    });
   } else {
     document
       .getElementById("enable-new-features")
@@ -276,28 +298,6 @@ function onLoad() {
   handleRedesign();
 
   DOCUMENT_BODY_SEL = d3.select(document.body);
-
-  /**
-   * Handle metric filter input.
-   *
-   * This uses a timeout to debounce the events down to 200ms.
-   * Instead of updating the DOM every time the input changes, it'll only update when the input hasn't changed in the last 200ms since it last changed.
-   */
-  let inputTimeout = undefined;
-  document.getElementById("filter-metrics").addEventListener("input", e => {
-    clearTimeout(inputTimeout);
-    inputTimeout = setTimeout(() => {
-      updateFilteredMetricData(e.target.value ?? "");
-    }, 200);
-  });
-
-  // Handle loading all metric data
-  document.getElementById("load-all").addEventListener("click", () => {
-    MAPPED_METRIC_DATA.forEach(datum => {
-      updateDatum(datum);
-    });
-    updateTable();
-  });
 
   document
     .getElementById("enable-new-features")
