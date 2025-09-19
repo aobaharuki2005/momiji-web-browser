@@ -898,12 +898,10 @@ void nsCocoaWindow::CreateCompositor(int aWidth, int aHeight) {
   // To clarify, we'll attempt to start the gpu process ourself, and
   // handle the error cases here.
 
-  // Make sure the gfxPlatform is initialized, which is necessary to create
-  // the GPUProcessManager.
-  auto* platform = gfxPlatform::GetPlatform();
   auto* pm = mozilla::gfx::GPUProcessManager::Get();
-  MOZ_ASSERT(
-      pm, "Getting the gfxPlatform should have created the GPUProcessManager.");
+  if (!pm) {
+    return;
+  }
 
   // Ensure the GPU process has had a chance to start. The logic below
   // will handle both success and error cases correctly, so we don't check an
