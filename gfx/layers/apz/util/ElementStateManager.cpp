@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ActiveElementManager.h"
+#include "ElementStateManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_ui.h"
@@ -14,8 +14,8 @@
 #include "mozilla/layers/APZUtils.h"
 #include "nsITimer.h"
 
-static mozilla::LazyLogModule sApzAemLog("apz.activeelement");
-#define AEM_LOG(...) MOZ_LOG(sApzAemLog, LogLevel::Debug, (__VA_ARGS__))
+static mozilla::LazyLogModule sApzAemLog("apz.elementstate");
+#define ESM_LOG(...) MOZ_LOG(sApzAemLog, LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
 namespace layers {
@@ -91,12 +91,12 @@ RefPtr<DelayedClearElementActivation> DelayedClearElementActivation::Create(
 }
 
 NS_IMETHODIMP DelayedClearElementActivation::Notify(nsITimer*) {
-  AEM_LOG("DelayedClearElementActivation notification ready=%d",
+  ESM_LOG("DelayedClearElementActivation notification ready=%d",
           mProcessedSingleTap);
   // If the single tap has been processed and the timer has expired,
   // clear the active element state.
   if (mProcessedSingleTap) {
-    AEM_LOG("DelayedClearElementActivation clearing active content\n");
+    ESM_LOG("DelayedClearElementActivation clearing active content\n");
     ClearGlobalActiveContent();
   }
   mTimer = nullptr;
@@ -125,7 +125,7 @@ void DelayedClearElementActivation::StartTimer() {
 void DelayedClearElementActivation::MarkSingleTapProcessed() {
   mProcessedSingleTap = true;
   if (!mTimer) {
-    AEM_LOG("Clear activation immediate!");
+    ESM_LOG("Clear activation immediate!");
     ClearGlobalActiveContent();
   }
 }
@@ -139,19 +139,19 @@ void DelayedClearElementActivation::ClearGlobalActiveContent() {
 
 NS_IMPL_ISUPPORTS(DelayedClearElementActivation, nsITimerCallback, nsINamed)
 
-ActiveElementManager::ActiveElementManager()
+ElementStateManager::ElementStateManager()
     : mCanBePanOrZoom(false),
       mCanBePanOrZoomSet(false),
       mSingleTapBeforeActivation(false),
       mSingleTapState(apz::SingleTapState::NotClick),
       mSetActiveTask(nullptr) {}
 
-ActiveElementManager::~ActiveElementManager() = default;
+ElementStateManager::~ElementStateManager() = default;
 
-void ActiveElementManager::SetTargetElement(dom::EventTarget* aTarget) {
+void ElementStateManager::SetTargetElement(dom::EventTarget* aTarget) {
   if (mTarget) {
     // Multiple fingers on screen (since HandleTouchEnd clears mTarget).
-    AEM_LOG("Multiple fingers on-screen, clearing target element\n");
+    ESM_LOG("Multiple fingers on-screen, clearing target element\n");
     CancelTask();
     ResetActive();
     ResetTouchBlockState();
@@ -159,15 +159,15 @@ void ActiveElementManager::SetTargetElement(dom::EventTarget* aTarget) {
   }
 
   mTarget = dom::Element::FromEventTargetOrNull(aTarget);
-  AEM_LOG("Setting target element to %p\n", mTarget.get());
+  ESM_LOG("Setting target element to %p\n", mTarget.get());
   TriggerElementActivation();
 }
 
-void ActiveElementManager::HandleTouchStart(bool aCanBePanOrZoom) {
-  AEM_LOG("Touch start, aCanBePanOrZoom: %d\n", aCanBePanOrZoom);
+void ElementStateManager::HandleTouchStart(bool aCanBePanOrZoom) {
+  ESM_LOG("Touch start, aCanBePanOrZoom: %d\n", aCanBePanOrZoom);
   if (mCanBePanOrZoomSet) {
     // Multiple fingers on screen (since HandleTouchEnd clears mCanBePanSet).
-    AEM_LOG("Multiple fingers on-screen, clearing touch block state\n");
+    ESM_LOG("Multiple fingers on-screen, clearing touch block state\n");
     CancelTask();
     ResetActive();
     ResetTouchBlockState();
@@ -179,7 +179,7 @@ void ActiveElementManager::HandleTouchStart(bool aCanBePanOrZoom) {
   TriggerElementActivation();
 }
 
-void ActiveElementManager::TriggerElementActivation() {
+void ElementStateManager::TriggerElementActivation() {
   // Reset mSingleTapState here either when HandleTouchStart() or
   // SetTargetElement() gets called.
   // NOTE: It's possible that ProcessSingleTap() gets called in between
@@ -226,40 +226,40 @@ void ActiveElementManager::TriggerElementActivation() {
 
     RefPtr<CancelableRunnable> task =
         NewCancelableRunnableMethod<nsCOMPtr<dom::Element>>(
-            "layers::ActiveElementManager::SetActiveTask", this,
-            &ActiveElementManager::SetActiveTask, mTarget);
+            "layers::ElementStateManager::SetActiveTask", this,
+            &ElementStateManager::SetActiveTask, mTarget);
     mSetActiveTask = task;
     NS_GetCurrentThread()->DelayedDispatch(
         task.forget(), StaticPrefs::ui_touch_activation_delay_ms());
-    AEM_LOG("Scheduling mSetActiveTask %p\n", mSetActiveTask.get());
+    ESM_LOG("Scheduling mSetActiveTask %p\n", mSetActiveTask.get());
   }
-  AEM_LOG(
+  ESM_LOG(
       "Got both touch-end event and end touch notiication, clearing pan "
       "state\n");
   mCanBePanOrZoomSet = false;
 }
 
-void ActiveElementManager::ClearActivation() {
-  AEM_LOG("Clearing element activation\n");
+void ElementStateManager::ClearActivation() {
+  ESM_LOG("Clearing element activation\n");
   CancelTask();
   ResetActive();
 }
 
-bool ActiveElementManager::HandleTouchEndEvent(apz::SingleTapState aState) {
-  AEM_LOG("Touch end event, state: %hhu\n", static_cast<uint8_t>(aState));
+bool ElementStateManager::HandleTouchEndEvent(apz::SingleTapState aState) {
+  ESM_LOG("Touch end event, state: %hhu\n", static_cast<uint8_t>(aState));
 
   mTouchEndState += TouchEndState::GotTouchEndEvent;
   return MaybeChangeActiveState(aState);
 }
 
-bool ActiveElementManager::HandleTouchEnd(apz::SingleTapState aState) {
-  AEM_LOG("Touch end\n");
+bool ElementStateManager::HandleTouchEnd(apz::SingleTapState aState) {
+  ESM_LOG("Touch end\n");
 
   mTouchEndState += TouchEndState::GotTouchEndNotification;
   return MaybeChangeActiveState(aState);
 }
 
-bool ActiveElementManager::MaybeChangeActiveState(apz::SingleTapState aState) {
+bool ElementStateManager::MaybeChangeActiveState(apz::SingleTapState aState) {
   if (mTouchEndState !=
       TouchEndStates(TouchEndState::GotTouchEndEvent,
                      TouchEndState::GotTouchEndNotification)) {
@@ -289,7 +289,7 @@ bool ActiveElementManager::MaybeChangeActiveState(apz::SingleTapState aState) {
   return true;
 }
 
-void ActiveElementManager::ProcessSingleTap() {
+void ElementStateManager::ProcessSingleTap() {
   if (!mDelayedClearElementActivation) {
     // We have not received touch-start notification yet. We will have to run
     // MarkSingleTapProcessed() when we receive the touch-start notification.
@@ -320,15 +320,15 @@ void ActiveElementManager::ProcessSingleTap() {
   mDelayedClearElementActivation = nullptr;
 }
 
-void ActiveElementManager::Destroy() {
+void ElementStateManager::Destroy() {
   if (mDelayedClearElementActivation) {
     mDelayedClearElementActivation->ClearTimer();
     mDelayedClearElementActivation = nullptr;
   }
 }
 
-void ActiveElementManager::SetActive(dom::Element* aTarget) {
-  AEM_LOG("Setting active %p\n", aTarget);
+void ElementStateManager::SetActive(dom::Element* aTarget) {
+  ESM_LOG("Setting active %p\n", aTarget);
 
   if (nsPresContext* pc = GetPresContextFor(aTarget)) {
     pc->EventStateManager()->SetContentState(aTarget,
@@ -336,20 +336,20 @@ void ActiveElementManager::SetActive(dom::Element* aTarget) {
   }
 }
 
-void ActiveElementManager::ResetActive() {
-  AEM_LOG("Resetting active from %p\n", mTarget.get());
+void ElementStateManager::ResetActive() {
+  ESM_LOG("Resetting active from %p\n", mTarget.get());
 
   // Clear the :active flag from mTarget by setting it on the document root.
   if (mTarget) {
     dom::Element* root = mTarget->OwnerDoc()->GetDocumentElement();
     if (root) {
-      AEM_LOG("Found root %p, making active\n", root);
+      ESM_LOG("Found root %p, making active\n", root);
       SetActive(root);
     }
   }
 }
 
-void ActiveElementManager::ResetTouchBlockState() {
+void ElementStateManager::ResetTouchBlockState() {
   mTarget = nullptr;
   mCanBePanOrZoomSet = false;
   mTouchEndState.clear();
@@ -361,9 +361,8 @@ void ActiveElementManager::ResetTouchBlockState() {
   // arrived.
 }
 
-void ActiveElementManager::SetActiveTask(
-    const nsCOMPtr<dom::Element>& aTarget) {
-  AEM_LOG("mSetActiveTask %p running\n", mSetActiveTask.get());
+void ElementStateManager::SetActiveTask(const nsCOMPtr<dom::Element>& aTarget) {
+  ESM_LOG("mSetActiveTask %p running\n", mSetActiveTask.get());
 
   // This gets called from mSetActiveTask's Run() method. The message loop
   // deletes the task right after running it, so we need to null out
@@ -372,8 +371,8 @@ void ActiveElementManager::SetActiveTask(
   SetActive(aTarget);
 }
 
-void ActiveElementManager::CancelTask() {
-  AEM_LOG("Cancelling task %p\n", mSetActiveTask.get());
+void ElementStateManager::CancelTask() {
+  ESM_LOG("Cancelling task %p\n", mSetActiveTask.get());
 
   if (mSetActiveTask) {
     mSetActiveTask->Cancel();
