@@ -1232,11 +1232,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
           MOZ_LOG_FMT(gSHLog, LogLevel::Verbose, "IsTop: Adding new entry");
 
           if (Navigation::IsAPIEnabled() && mActiveEntry->isInList()) {
-            bool isTransient = false;
-            mActiveEntry->IsTransient(&isTransient);
-
-            RefPtr entry =
-                isTransient ? mActiveEntry.get() : mActiveEntry->getNext();
+            RefPtr entry = mActiveEntry->getNext();
             while (entry) {
               entry = entry->removeAndGetNext();
             }
