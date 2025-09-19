@@ -208,11 +208,7 @@ enum class Client : uint64_t {
   VoiceOver,
   SwitchControl,
   FullKeyboardAccess,
-  VoiceControl,
-  SpeakSelection,
-  SpeakItemUnderMouse,
-  SpeakTypingFeedback,
-  HoverText
+  VoiceControl
 };
 
 // Get the set of currently-active clients and the client to log.
@@ -235,115 +231,71 @@ std::pair<EnumSet<Client>, Client> GetClients() {
              [[NSWorkspace sharedWorkspace] isSwitchControlEnabled]) {
     AddClient(Client::SwitchControl);
   } else {
-    Boolean foundSpecificClient = false;
-
     // This is more complicated than the NSWorkspace queries above
     // because (a) there is no "full keyboard access" query for NSWorkspace
     // and (b) the [NSApplication fullKeyboardAccessEnabled] query checks
     // the pre-Monterey version of full keyboard access, which is not what
     // we're looking for here. For more info, see bug 1772375 comment 7.
     Boolean exists;
-    long val = CFPreferencesGetAppIntegerValue(
+    int val = CFPreferencesGetAppIntegerValue(
         CFSTR("FullKeyboardAccessEnabled"), CFSTR("com.apple.Accessibility"),
         &exists);
     if (exists && val == 1) {
-      foundSpecificClient = true;
       AddClient(Client::FullKeyboardAccess);
-    }
-
-    val = CFPreferencesGetAppIntegerValue(CFSTR("CommandAndControlEnabled"),
-                                          CFSTR("com.apple.Accessibility"),
-                                          &exists);
-    if (exists && val == 1) {
-      foundSpecificClient = true;
-      AddClient(Client::VoiceControl);
-    }
-
-    val = CFPreferencesGetAppIntegerValue(
-        CFSTR("SpeakThisEnabled"), CFSTR("com.apple.universalaccess"), &exists);
-    if (exists && val == 1) {
-      foundSpecificClient = true;
-      AddClient(Client::SpeakSelection);
-
-      val = CFPreferencesGetAppIntegerValue(CFSTR("speakItemUnderMouseEnabled"),
-                                            CFSTR("com.apple.universalaccess"),
+    } else {
+      val = CFPreferencesGetAppIntegerValue(CFSTR("CommandAndControlEnabled"),
+                                            CFSTR("com.apple.Accessibility"),
                                             &exists);
       if (exists && val == 1) {
-        foundSpecificClient = true;
-        AddClient(Client::SpeakItemUnderMouse);
-      }
-
-      val = CFPreferencesGetAppIntegerValue(CFSTR("typingEchoEnabled"),
-                                            CFSTR("com.apple.universalaccess"),
-                                            &exists);
-      if (exists && val == 1) {
-        foundSpecificClient = true;
-        AddClient(Client::SpeakTypingFeedback);
-      }
-
-      val = CFPreferencesGetAppIntegerValue(CFSTR("hoverTextEnabled"),
-                                            CFSTR("com.apple.universalaccess"),
-                                            &exists);
-      if (exists && val == 1) {
-        foundSpecificClient = true;
-        AddClient(Client::HoverText);
-      }
-
-      if (!foundSpecificClient) {
+        AddClient(Client::VoiceControl);
+      } else {
         AddClient(Client::Unknown);
       }
     }
-    return std::make_pair(clients, clientToLog.value());
   }
+  return std::make_pair(clients, clientToLog.value());
+}
 
-  // Expects a single client, returns a string representation of that client.
-  constexpr const char* GetStringForClient(Client aClient) {
-    switch (aClient) {
-      case Client::Unknown:
-        return "Unknown";
-      case Client::VoiceOver:
-        return "VoiceOver";
-      case Client::SwitchControl:
-        return "SwitchControl";
-      case Client::FullKeyboardAccess:
-        return "FullKeyboardAccess";
-      case Client::VoiceControl:
-        return "VoiceControl";
-      case Client::SpeakSelection:
-        return "SpeakSelection";
-      case Client::SpeakItemUnderMouse:
-        return "SpeakItemUnderMouse";
-      case Client::SpeakTypingFeedback:
-        return "SpeakTypingFeedback";
-      case Client::HoverText:
-        return "HoverText";
-      default:
-        break;
-    }
-    MOZ_ASSERT_UNREACHABLE("Unknown Client enum value!");
-    return "";
+// Expects a single client, returns a string representation of that client.
+constexpr const char* GetStringForClient(Client aClient) {
+  switch (aClient) {
+    case Client::Unknown:
+      return "Unknown";
+    case Client::VoiceOver:
+      return "VoiceOver";
+    case Client::SwitchControl:
+      return "SwitchControl";
+    case Client::FullKeyboardAccess:
+      return "FullKeyboardAccess";
+    case Client::VoiceControl:
+      return "VoiceControl";
+    default:
+      break;
   }
+  MOZ_ASSERT_UNREACHABLE("Unknown Client enum value!");
+  return "";
+}
 
-  uint64_t GetCacheDomainsForKnownClients(uint64_t aCacheDomains) {
-    auto [clients, _] = GetClients();
-    // We expect VoiceOver will require all information we have.
-    if (clients.contains(Client::VoiceOver)) {
-      return CacheDomain::All;
-    }
-    if (clients.contains(Client::FullKeyboardAccess)) {
-      aCacheDomains |= CacheDomain::Bounds;
-    }
-    if (clients.contains(Client::SwitchControl)) {
-      // XXX: Find minimum set of domains required for SwitchControl.
-      // SwitchControl can give up if we don't furnish it certain information.
-      return CacheDomain::All;
-    }
-    if (clients.contains(Client::VoiceControl)) {
-      // XXX: Find minimum set of domains required for VoiceControl.
-      return CacheDomain::All;
-    }
-    return aCacheDomains;
+uint64_t GetCacheDomainsForKnownClients(uint64_t aCacheDomains) {
+  auto [clients, _] = GetClients();
+  // We expect VoiceOver will require all information we have.
+  if (clients.contains(Client::VoiceOver)) {
+    return CacheDomain::All;
   }
+  if (clients.contains(Client::FullKeyboardAccess)) {
+    aCacheDomains |= CacheDomain::Bounds;
+  }
+  if (clients.contains(Client::SwitchControl)) {
+    // XXX: Find minimum set of domains required for SwitchControl.
+    // SwitchControl can give up if we don't furnish it certain information.
+    return CacheDomain::All;
+  }
+  if (clients.contains(Client::VoiceControl)) {
+    // XXX: Find minimum set of domains required for VoiceControl.
+    return CacheDomain::All;
+  }
+  return aCacheDomains;
+}
 
 }  // namespace a11y
 }  // namespace mozilla
