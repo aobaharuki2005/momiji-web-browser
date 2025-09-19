@@ -824,10 +824,9 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
 
     BrowsingContext* bc = mWGP->GetBrowsingContext();
     auto resolve = [self](nsIDocumentViewer::PermitUnloadResult aResult) {
-      if (aResult != nsIDocumentViewer::eContinue) {
-        self->mFoundBlocker = true;
-        self->mReason = aResult;
-      }
+      self->mFoundBlocker =
+          aResult == nsIDocumentViewer::eCanceledByBeforeUnload;
+      self->mReason = aResult;
       self->ResolveRequest();
     };
     auto reject = [self](auto) { self->ResolveRequest(); };
