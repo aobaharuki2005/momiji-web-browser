@@ -136,6 +136,17 @@ Function .onInit
 
     ${UnitTest} TestSwapShellVarContext
 
+    ${UnitTest} TestGetInstallationTypeAbsent
+    ${UnitTest} TestGetInstallationTypeEmpty
+    ${UnitTest} TestGetInstallationTypeInvalid_ACP
+    ${UnitTest} TestGetInstallationTypeStub_ACP
+    ${UnitTest} TestGetInstallationTypeFull_ACP
+    ${UnitTest} TestGetInstallationTypeOther_ACP
+    ${UnitTest} TestGetInstallationTypeInvalid_UTF16
+    ${UnitTest} TestGetInstallationTypeStub_UTF16
+    ${UnitTest} TestGetInstallationTypeFull_UTF16
+    ${UnitTest} TestGetInstallationTypeOther_UTF16
+
     ${If} $TestFailureCount = 0
         ; On success, write the success metric and jump to the end
         FileWrite $Stdout "All stub installer tests passed"
@@ -483,6 +494,83 @@ Function TestSwapShellVarContext
     SetShellVarContext current
     Pop $0
 FunctionEnd
+
+Function TestGetInstallationTypeAbsent
+    GetTempFileName $1
+    Delete "$1"
+    Push $1
+    Call GetInstallationType
+    Pop $0
+    ${AssertEqual} 0 "unknown"
+FunctionEnd
+
+Function TestGetInstallationTypeEmpty
+    GetTempFileName $1
+    FileOpen $0 "$1" w
+    FileClose $0
+
+    Push $1
+    Call GetInstallationType
+    Pop $0
+    ${AssertEqual} 0 "unknown"
+    Delete $1
+FunctionEnd
+
+!macro GetInstallationTypeTests _WRITEFUNC _ENCODING
+Function TestGetInstallationTypeInvalid_${_ENCODING}
+    GetTempFileName $1
+    FileOpen $0 "$1" w
+    ${_WRITEFUNC} $0 "{$\"installer_type$\":[1, 2, 3]}"
+    FileClose $0
+
+    Push $1
+    Call GetInstallationType
+    Pop $0
+    Delete $1
+    ${AssertEqual} 0 "unknown"
+FunctionEnd
+
+Function TestGetInstallationTypeStub_${_ENCODING}
+    GetTempFileName $1
+    FileOpen $0 "$1" w
+    ${_WRITEFUNC} $0 "{$\"installer_type$\":$\"stub$\"}"
+    FileClose $0
+
+    Push $1
+    Call GetInstallationType
+    Pop $0
+    Delete $1
+    ${AssertEqual} 0 "stub"
+FunctionEnd
+
+Function TestGetInstallationTypeFull_${_ENCODING}
+    GetTempFileName $1
+    FileOpen $0 "$1" w
+    ${_WRITEFUNC} $0 "{$\"installer_type$\":$\"full$\"}"
+    FileClose $0
+
+    Push $1
+    Call GetInstallationType
+    Pop $0
+    Delete $1
+    ${AssertEqual} 0 "full"
+FunctionEnd
+
+Function TestGetInstallationTypeOther_${_ENCODING}
+    GetTempFileName $1
+    FileOpen $0 "$1" w
+    ${_WRITEFUNC} $0 "{$\"installer_type$\":$\"abc$\"}"
+    FileClose $0
+
+    Push $1
+    Call GetInstallationType
+    Pop $0
+    Delete $1
+    ${AssertEqual} 0 "abc"
+FunctionEnd
+!macroend
+!insertmacro GetInstallationTypeTests FileWrite ACP
+!insertmacro GetInstallationTypeTests FileWriteUTF16LE UTF16
 
 Section
 SectionEnd

@@ -14,6 +14,7 @@ TEST_STUB_INSTALLER_DEPS := \
 	$(topsrcdir)/toolkit/mozapps/installer/windows/nsis/common.nsh \
 	shared.nsh \
 	control_utils.nsh \
+	postupdate_helper.nsh \
 	defines.nsi.in \
 	$(NULL)
 

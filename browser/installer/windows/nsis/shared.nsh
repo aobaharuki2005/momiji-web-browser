@@ -368,6 +368,7 @@ Function OnUpdateDesktopLauncherHandler
   Var /GLOBAL UserShortcutExists
   Var /GLOBAL SharedShortcutExists
   Var /GLOBAL LauncherEverInstalled
+  Var /GLOBAL InstallationType
 
   Push $0 ; Used to store original shell var context
 
@@ -386,7 +387,12 @@ Function OnUpdateDesktopLauncherHandler
   SetShellVarContext all
   Call IsDesktopShortcutPresent
   Pop $SharedShortcutExists
- 
+
+  ; Now, let's figure out what type of installer was used.
+  Push "$INSTDIR\installation_telemetry.json"
+  Call GetInstallationType
+  Pop $InstallationType
+
   ; Now that we know the state of the installation, we can decide what to do
   ${If} $UserLauncherExists == "true"
     ; This is the update case. The user already has the launcher, so
@@ -394,16 +400,17 @@ Function OnUpdateDesktopLauncherHandler
     ; up-to-date.
     SetShellVarContext current
     Call InstallDesktopLauncher
+  ${ElseIf} $InstallationType != "stub"
+    ; If it's not a stub installer, we don't want to replace the shortcut.
+    ; Leave it as-is.
   ${ElseIf} $UserShortcutExists == "true"
   ${AndIf} $LauncherEverInstalled == "false"
-    ; TODO: This case needs more nuance. To be fixed as part of Bug 1983699
     ; Remove the shortcut and add the launcher
     SetShellVarContext current
     Call InstallDesktopLauncher
     Call DeleteDesktopShortcut ; delete the shortcut from the user's own Desktop
   ${ElseIf} $SharedShortcutExists == "true"
   ${AndIf} $LauncherEverInstalled == "false"
-    ; TODO: This case needs more nuance. To be fixed as part of Bug 1983699
     ; Remove the shortcut and add the launcher
     SetShellVarContext current
     Call InstallDesktopLauncher
