@@ -41,6 +41,18 @@ var subtests = [
     ["apz.touch_start_tolerance", "0.0"]
   ]},
   {"file": "helper_hover_state_with_prevent_default_on_touchstart.html", "prefs": hover_test_prefs},
+  // These two tests check whether each scheduled :hover or :active task
+  // will not leak when the target document is destroyed.
+  {"file": "helper_cancel_active_task.html",
+   "prefs": [["ui.touch_active.delay_ms", 10000],
+             ["ui.click_hold_context_menus.delay", 1000000],
+             ["test.events.async.enabled", true]
+   ]},
+  {"file": "helper_cancel_hover_task.html",
+   "prefs": [["ui.touch_hover.delay_ms", 10000],
+             ["ui.click_hold_context_menus.delay", 1000000],
+             ["test.events.async.enabled", true]
+   ]},
 
   // Add new subtests here. If this starts timing out because it's taking too
   // long, create a test_group_touchevents-7.html file. Refer to 1423011#c57

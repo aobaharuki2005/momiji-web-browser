@@ -321,6 +321,8 @@ void ElementStateManager::Destroy() {
     mDelayedClearElementActivation->ClearTimer();
     mDelayedClearElementActivation = nullptr;
   }
+  CancelActiveTask();
+  CancelHoverTask();
 }
 
 void ElementStateManager::HandleStartPanning() {
