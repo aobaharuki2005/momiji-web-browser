@@ -1316,7 +1316,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     }
 
     private fun updateSecureWindowFlags(mode: BrowsingMode = browsingModeManager.mode) {
-        if (mode == BrowsingMode.Private && !settings().allowScreenshotsInPrivateMode) {
+        if (mode == BrowsingMode.Private) {
             window.addFlags(FLAG_SECURE)
         } else {
             window.clearFlags(FLAG_SECURE)
