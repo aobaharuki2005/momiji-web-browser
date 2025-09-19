@@ -644,7 +644,8 @@ Section "-Application" APP_IDX
   ${EndIf}
 
 !ifdef DESKTOP_LAUNCHER_ENABLED
-  Call InstallDesktopLauncherApp
+  ; Entry point for installing launcher when Firefox is being installed
+  Call OnInstallDesktopLauncherHandler
 !else
   ${If} $AddDesktopSC == 1
     ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
