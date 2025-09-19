@@ -53,6 +53,8 @@ category browser-first-window-ready resource:///modules/ipprotection/IPProtectio
 #ifdef XP_LINUX
 category browser-first-window-ready resource://gre/modules/SandboxUtils.sys.mjs SandboxUtils.maybeWarnAboutMissingUserNamespaces
 #endif
+category browser-window-delayed-startup resource://gre/modules/SandboxUtils.sys.mjs SandboxUtils.maybeWarnAboutDisabledContentSandbox
+category browser-first-window-ready resource://gre/modules/SandboxUtils.sys.mjs SandboxUtils.observeContentSandboxPref
 #endif
 
 category browser-idle-startup moz-src:///browser/components/places/PlacesUIUtils.sys.mjs PlacesUIUtils.unblockToolbars
