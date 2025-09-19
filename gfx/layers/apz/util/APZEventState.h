@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 
-#include "ElementStateManager.h"
+#include "ActiveElementManager.h"
 #include "Units.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/GeckoContentControllerTypes.h"  // for APZStateChange
@@ -37,7 +37,7 @@ enum class PreventDefaultResult : uint8_t;
 
 namespace layers {
 
-class ElementStateManager;
+class ActiveElementManager;
 
 enum class SynthesizeForTests : bool;  // Defined in APZCCallbackHelper.cpp
 
@@ -109,7 +109,7 @@ class APZEventState final {
 
  private:
   nsWeakPtr mWidget;
-  RefPtr<ElementStateManager> mElementStateManager;
+  RefPtr<ActiveElementManager> mActiveElementManager;
   ContentReceivedInputBlockCallback mContentReceivedInputBlockCallback;
   TouchCounter mTouchCounter;
   ScrollableLayerGuid mPendingTouchPreventedGuid;
