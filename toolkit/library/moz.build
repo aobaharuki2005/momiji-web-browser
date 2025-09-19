@@ -110,11 +110,6 @@ def Libxul(name, output_category=None):
     if name == "xul-real":
         SYMBOLS_FILE = "../libxul.symbols"
 
-    # Disable full lto for xul-gtest, it takes a lot of time with no clear
-    # benefit.
-    if name == "xul-gtest" and CONFIG["MOZ_LTO_FAT"]:
-        LDFLAGS += ["-fno-lto"]
-
 
 # The real libxul definition is in ./build/moz.build, but we define a
 # xul library here such that # FINAL_LIBRARY = 'xul' refers to here, which
