@@ -8,7 +8,6 @@
 #include "Helpers.h"
 #include "SQLFunctions.h"
 
-#include "MainThreadUtils.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -97,7 +96,7 @@ NS_IMPL_ISUPPORTS(ConcurrentConnection, nsIObserver, nsISupportsWeakReference,
 ConcurrentConnection::ConcurrentConnection() {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
                         "Can only instantiate in the parent process");
-  AssertIsOnMainThread();
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread(), "Must be on the main-thread");
 
   // Check shutdown and try to add this as a blocker.
   nsCOMPtr<nsIAsyncShutdownService> asyncShutdownSvc =
@@ -135,7 +134,6 @@ ConcurrentConnection::ConcurrentConnection() {
 }
 
 Maybe<ConcurrentConnection*> ConcurrentConnection::GetInstance() {
-  AssertIsOnMainThread();
   static StaticRefPtr<ConcurrentConnection> sInstance;
   if (!sInstance &&
       !AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownTeardown)) {
@@ -173,7 +171,7 @@ ConcurrentConnection::GetState(nsIPropertyBag** _state) {
 // nsIAsyncShutdownBlocker
 NS_IMETHODIMP
 ConcurrentConnection::BlockShutdown(nsIAsyncShutdownClient* aBarrierClient) {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread(), "Must be on the main-thread");
   mShutdownBarrierClient = aBarrierClient;
   mState = AWAITING_DATABASE_CLOSED;
   mIsShuttingDown = true;
@@ -192,17 +190,11 @@ ConcurrentConnection::BlockShutdown(nsIAsyncShutdownClient* aBarrierClient) {
 // mozIStorageCompletionCallback
 NS_IMETHODIMP
 ConcurrentConnection::Complete(nsresult aRv, nsISupports* aData) {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread(), "Must be on main-thread");
 
-  // This is invoked as a consequence of connection opening, but the internal
-  // connection handle is not yet available, nor ready for consumption.
+  // This is invoked only for connection opening.
   MOZ_ASSERT(!mConn);
-#ifdef DEBUG
-  mConnectionReadyMutex.NoteOnMainThread();
-  if (mIsConnectionReady) {
-    MOZ_CRASH("The connection should not be markes as ready yet");
-  }
-#endif
+  MOZ_ASSERT(!mIsConnectionReady);
 
   // It's possible we got shutdown while the connection was being opened. We
   // don't even assign the connection, just try to close it.
@@ -305,14 +297,8 @@ NS_IMETHODIMP ConcurrentConnection::HandleCompletion(uint16_t aReason) {
 }
 
 void ConcurrentConnection::CloseConnection() {
-  AssertIsOnMainThread();
-  nsCOMPtr<mozIStorageAsyncConnection> conn;
-  {
-    MutexAutoLock lock(mConnectionReadyMutex.Lock());
-    mConnectionReadyMutex.NoteExclusiveAccess();
-    mIsConnectionReady = false;
-    conn = mConn.forget();
-  }
+  mIsConnectionReady = false;
+  nsCOMPtr<mozIStorageAsyncConnection> conn = mConn.forget();
 
   if (mAsyncStatements) {
     mAsyncStatements->FinalizeStatements();
@@ -343,7 +329,6 @@ void ConcurrentConnection::CloseConnectionComplete(nsresult rv) {
 
 void ConcurrentConnection::SetupConnection() {
   MOZ_ASSERT(mConn, "Connection must be defined at this point");
-  AssertIsOnMainThread();
 
   // Create common functions.
   nsresult rv = Database::InitFunctions(mConn);
@@ -361,15 +346,11 @@ void ConcurrentConnection::SetupConnection() {
     return;
   }
 
-  {
-    MutexAutoLock lock(mConnectionReadyMutex.Lock());
-    mConnectionReadyMutex.NoteExclusiveAccess();
-    // Create the statements caches.
-    mAsyncStatements = MakeUnique<AsyncStatementCache>(mConn);
-    mHelperThreadStatements = MakeUnique<StatementCache>(mConn);
-    mIsConnectionReady = true;
-  }
+  // Create the statements caches.
+  mAsyncStatements = MakeUnique<AsyncStatementCache>(mConn);
+  mHelperThreadStatements = MakeUnique<StatementCache>(mConn);
 
+  mIsConnectionReady = true;
   TryToConsumeQueues();
 }
 
@@ -404,7 +385,7 @@ nsresult ConcurrentConnection::AttachDatabase(const nsString& aFileName,
 NS_IMETHODIMP
 ConcurrentConnection::Observe(nsISupports* aSubject, const char* aTopic,
                               const char16_t* aData) {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   if (strcmp(aTopic, TOPIC_PLACES_INIT_COMPLETE) == 0) {
     mPlacesIsInitialized = true;
     TryToOpenConnection();
@@ -414,7 +395,7 @@ ConcurrentConnection::Observe(nsISupports* aSubject, const char* aTopic,
 
 void ConcurrentConnection::Queue(const nsCString& aSQL,
                                  PendingStatementCallback* aCallback) {
-  AssertIsOnMainThread();
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread(), "Must be on the main-thread");
   if (mIsShuttingDown) {
     return;
   }
@@ -423,7 +404,7 @@ void ConcurrentConnection::Queue(const nsCString& aSQL,
 }
 
 void ConcurrentConnection::Queue(Runnable* aRunnable) {
-  AssertIsOnMainThread();
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread(), "Must be on the main-thread");
   if (mIsShuttingDown) {
     return;
   }
@@ -437,11 +418,6 @@ ConcurrentConnection::GetStatementOnHelperThread(const nsCString& aQuery) {
     MOZ_DIAGNOSTIC_CRASH("Use `GetStatement()` on the main-thread");
     return nullptr;
   }
-  MutexAutoLock lock(mConnectionReadyMutex.Lock());
-  mConnectionReadyMutex.NoteLockHeld();
-  if (!mIsConnectionReady) {
-    return nullptr;
-  }
   nsCOMPtr<mozIStorageStatement> stmt =
       mHelperThreadStatements->GetCachedStatement(aQuery);
   if (stmt) {
@@ -452,7 +428,6 @@ ConcurrentConnection::GetStatementOnHelperThread(const nsCString& aQuery) {
 
 already_AddRefed<mozIStorageAsyncStatement> ConcurrentConnection::GetStatement(
     const nsCString& aQuery) {
-  AssertIsOnMainThread();
   if (!NS_IsMainThread()) {
     MOZ_DIAGNOSTIC_CRASH(
         "Use `GetStatementOnHelperThread()` on the helper thread");
@@ -467,8 +442,6 @@ already_AddRefed<mozIStorageAsyncStatement> ConcurrentConnection::GetStatement(
 }
 
 void ConcurrentConnection::TryToConsumeQueues() {
-  AssertIsOnMainThread();
-  mConnectionReadyMutex.NoteOnMainThread();
   if (!mConn || !mIsConnectionReady) {
     return;
   }
@@ -499,13 +472,10 @@ void ConcurrentConnection::TryToConsumeQueues() {
 }
 
 void ConcurrentConnection::TryToOpenConnection() {
-  AssertIsOnMainThread();
-  mConnectionReadyMutex.NoteOnMainThread();
   // This is invoked at different times, thus it may try to re-enter.
   if (mIsShuttingDown || mIsOpening || mIsConnectionReady) {
     return;
   }
-
   mIsOpening = true;
 
   // Any error here means we'll be unable to do anything, thus we just shutdown.
@@ -538,14 +508,6 @@ void ConcurrentConnection::TryToOpenConnection() {
 
 void ConcurrentConnection::Shutdown() {
   MOZ_ASSERT(!mConn, "Connection should have been closed");
-#ifdef DEBUG
-  AssertIsOnMainThread();
-  mConnectionReadyMutex.NoteOnMainThread();
-  if (mIsConnectionReady) {
-    MOZ_CRASH("Connection should be closed");
-  }
-#endif
-
   mConn = nullptr;
   mIsOpening = false;
   mIsShuttingDown = true;

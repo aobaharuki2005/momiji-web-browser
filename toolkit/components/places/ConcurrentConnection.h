@@ -5,8 +5,6 @@
 #ifndef mozilla_places_ConcurrentConnection_h_
 #define mozilla_places_ConcurrentConnection_h_
 
-#include "mozilla/EventTargetAndLockCapability.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/storage/StatementCache.h"
 #include "mozIStorageCompletionCallback.h"
 #include "mozIStorageStatementCallback.h"
@@ -164,13 +162,7 @@ class ConcurrentConnection final : public nsIObserver,
   bool mPlacesIsInitialized = false;
   bool mRetryOpening = true;
   bool mIsShuttingDown = false;
-
-  // mIsConnectionReady is only changed on the main-thread, though it may be
-  // read on the helper thread for which it needs a mutex.
-  MainThreadAndLockCapability<Mutex> mConnectionReadyMutex{
-      "ConcurrentConnection::mConnectionReadyMutex"};
-  bool mIsConnectionReady MOZ_GUARDED_BY(mConnectionReadyMutex) = false;
-
+  bool mIsConnectionReady = false;
   int32_t mSchemaVersion = -1;
 
   // Ideally this should be a mozIStorageAsyncConnection, as that would give us
