@@ -9,6 +9,16 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
+const hover_test_prefs = [
+  // Shorten touch_hover.delay_ms to set :hover state without any delay.
+  ["ui.touch_hover.delay_ms", 0],
+  // Synthesizing mousemove on reflow causes unexpected :hover state
+  // while the page is loading.
+  ["layout.reflow.synthMouseMove", false],
+  // Avoid opening contextmenu.
+  ["ui.click_hold_context_menus.delay", 10000]
+];
+
 var subtests = [
   {"file": "helper_event_during_fast_fling.html",
    "prefs": [["apz.touch_start_tolerance", "0.0"],
@@ -22,6 +32,14 @@ var subtests = [
              // Avoid to the pan gesture is treated as  on-touch-pinch-zoom gesture on Android.
              ["apz.max_tap_time", 0],
              ...getPrefs("TOUCH_EVENTS:PAN")]},
+  {"file": "helper_hover_state.html", "prefs": hover_test_prefs},
+  {"file": "helper_hover_state_with_touch_action_none.html", "prefs": hover_test_prefs},
+  {"file": "helper_hover_state_with_event_listener.html", "prefs": hover_test_prefs},
+  {"file": "helper_hover_state_with_prevent_default_on_touchmove.html", "prefs": hover_test_prefs},
+  {"file": "helper_hover_state_while_scroll.html", "prefs": [
+    ...hover_test_prefs,
+    ["apz.touch_start_tolerance", "0.0"]
+  ]},
 
   // Add new subtests here. If this starts timing out because it's taking too
   // long, create a test_group_touchevents-7.html file. Refer to 1423011#c57

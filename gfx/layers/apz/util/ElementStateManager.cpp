@@ -144,7 +144,8 @@ ElementStateManager::ElementStateManager()
       mCanBePanOrZoomSet(false),
       mSingleTapBeforeActivation(false),
       mSingleTapState(apz::SingleTapState::NotClick),
-      mSetActiveTask(nullptr) {}
+      mSetActiveTask(nullptr),
+      mSetHoverTask(nullptr) {}
 
 ElementStateManager::~ElementStateManager() = default;
 
@@ -161,6 +162,9 @@ void ElementStateManager::SetTargetElement(dom::EventTarget* aTarget) {
   mTarget = dom::Element::FromEventTargetOrNull(aTarget);
   ESM_LOG("Setting target element to %p", mTarget.get());
   TriggerElementActivation();
+  if (mTarget) {
+    ScheduleSetHoverTask();
+  }
 }
 
 void ElementStateManager::HandleTouchStart(bool aCanBePanOrZoom) {
@@ -318,12 +322,28 @@ void ElementStateManager::Destroy() {
   }
 }
 
+void ElementStateManager::HandleStartPanning() {
+  ESM_LOG("Start panning");
+  ClearActivation();
+  // Unlike :active we don't need to unset :hover state.
+  // We just need to stop the hover task if it hasn't yet been triggered.
+  CancelHoverTask();
+}
+
 void ElementStateManager::SetActive(dom::Element* aTarget) {
   ESM_LOG("Setting active %p", aTarget);
 
   if (nsPresContext* pc = GetPresContextFor(aTarget)) {
     pc->EventStateManager()->SetContentState(aTarget,
                                              dom::ElementState::ACTIVE);
+  }
+}
+
+void ElementStateManager::SetHover(dom::Element* aTarget) {
+  ESM_LOG("Setting hover %p", aTarget);
+
+  if (nsPresContext* pc = GetPresContextFor(aTarget)) {
+    pc->EventStateManager()->SetContentState(aTarget, dom::ElementState::HOVER);
   }
 }
 
@@ -381,6 +401,43 @@ void ElementStateManager::CancelActiveTask() {
   if (mSetActiveTask) {
     mSetActiveTask->Cancel();
     mSetActiveTask = nullptr;
+  }
+}
+
+void ElementStateManager::ScheduleSetHoverTask() {
+  // Clobber the previous hover task.
+  CancelHoverTask();
+
+  RefPtr<CancelableRunnable> task =
+      NewCancelableRunnableMethod<nsCOMPtr<dom::Element>>(
+          "layers::ElementStateManager::SetHoverTask", this,
+          &ElementStateManager::SetHoverTask, mTarget);
+  mSetHoverTask = task;
+  int32_t delay = StaticPrefs::ui_touch_hover_delay_ms();
+  if (delay) {
+    NS_GetCurrentThread()->DelayedDispatch(task.forget(), delay);
+  } else {
+    NS_GetCurrentThread()->Dispatch(task.forget());
+  }
+  ESM_LOG("Scheduling mSetHoverTask %p", mSetHoverTask.get());
+}
+
+void ElementStateManager::SetHoverTask(const nsCOMPtr<dom::Element>& aTarget) {
+  ESM_LOG("mSetHoverTask %p running", mSetHoverTask.get());
+
+  // This gets called from mSetHoverTask's Run() method. The message loop
+  // deletes the task right after running it, so we need to null out
+  // mSetHoverTask to make sure we're not left with a dangling pointer.
+  mSetHoverTask = nullptr;
+  SetHover(aTarget);
+}
+
+void ElementStateManager::CancelHoverTask() {
+  ESM_LOG("Cancelling task %p", mSetHoverTask.get());
+
+  if (mSetHoverTask) {
+    mSetHoverTask->Cancel();
+    mSetHoverTask = nullptr;
   }
 }
 }  // namespace layers

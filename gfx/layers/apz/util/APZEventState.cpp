@@ -497,7 +497,7 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
     }
     case APZStateChange::eStartPanning: {
       // The user started to pan, so we don't want anything to be :active.
-      mElementStateManager->ClearActivation();
+      mElementStateManager->HandleStartPanning();
       break;
     }
     case APZStateChange::eEndTouch: {
