@@ -7,8 +7,10 @@
 /* import-globals-from head_cache.js */
 /* import-globals-from head_cookies.js */
 /* import-globals-from head_channels.js */
-/* import-globals-from head_servers.js */
 /* import-globals-from head_websocket.js */
+
+const { NodeHTTPSProxyServer, NodeWebSocketServer } =
+  ChromeUtils.importESModule("resource://testing-common/NodeServer.sys.mjs");
 
 // We don't normally allow localhost channels to be proxied, but this
 // is easier than updating all the certs and/or domains.

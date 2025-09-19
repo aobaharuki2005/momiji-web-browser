@@ -2,24 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-/* import-globals-from head_cache.js */
-/* import-globals-from head_cookies.js */
-/* import-globals-from head_channels.js */
-
-const { NodeServer } = ChromeUtils.importESModule(
-  "resource://testing-common/httpd.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 /* globals require, __dirname, global, Buffer, process */
 
 class BaseNodeHTTPServerCode {
   static globalHandler(req, resp) {
-    let path = new URL(req.url, "http://example.com").pathname;
+    let path = new URL(req.url, "https://example.com").pathname;
     let handler = global.path_handlers[path];
     if (handler) {
       return handler(req, resp);
@@ -161,7 +150,7 @@ class NodeHTTPServerCode extends BaseNodeHTTPServerCode {
   }
 }
 
-class NodeHTTPServer extends BaseNodeServer {
+export class NodeHTTPServer extends BaseNodeServer {
   _protocol = "http";
   _version = "http/1.1";
   /// Starts the server
@@ -198,7 +187,7 @@ class NodeHTTPSServerCode extends BaseNodeHTTPServerCode {
   }
 }
 
-class NodeHTTPSServer extends BaseNodeServer {
+export class NodeHTTPSServer extends BaseNodeServer {
   _protocol = "https";
   _version = "http/1.1";
   /// Starts the server
@@ -249,7 +238,7 @@ class NodeHTTP2ServerCode extends BaseNodeHTTPServerCode {
   }
 }
 
-class NodeHTTP2Server extends BaseNodeServer {
+export class NodeHTTP2Server extends BaseNodeServer {
   _protocol = "https";
   _version = "h2";
   /// Starts the server
@@ -374,9 +363,6 @@ class BaseHTTPProxy extends BaseNodeServer {
       0
     );
     pps.registerFilter(this.filter, 10);
-    registerCleanupFunction(() => {
-      this.unregisterFilter();
-    });
   }
 
   unregisterFilter() {
@@ -401,7 +387,7 @@ class BaseHTTPProxy extends BaseNodeServer {
 
 // HTTP1 Proxy
 
-class NodeProxyFilter {
+export class NodeProxyFilter {
   constructor(type, host, port, flags) {
     this._type = type;
     this._host = host;
@@ -438,7 +424,7 @@ class HTTPProxyCode {
   }
 }
 
-class NodeHTTPProxyServer extends BaseHTTPProxy {
+export class NodeHTTPProxyServer extends BaseHTTPProxy {
   _protocol = "http";
   /// Starts the server
   /// @port - default 0
@@ -474,7 +460,7 @@ class HTTPSProxyCode {
   }
 }
 
-class NodeHTTPSProxyServer extends BaseHTTPProxy {
+export class NodeHTTPSProxyServer extends BaseHTTPProxy {
   _protocol = "https";
   /// Starts the server
   /// @port - default 0
@@ -649,7 +635,7 @@ class HTTP2ProxyCode {
   }
 }
 
-class NodeHTTP2ProxyServer extends BaseHTTPProxy {
+export class NodeHTTP2ProxyServer extends BaseHTTPProxy {
   _protocol = "https";
   /// Starts the server
   /// @port - default 0
@@ -699,9 +685,9 @@ class NodeWebSocketServerCode extends BaseNodeHTTPServerCode {
     );
 
     let node_ws_root = `${__dirname}/../node-ws`;
-    const WebSocket = require(`${node_ws_root}/lib/websocket`);
-    WebSocket.Server = require(`${node_ws_root}/lib/websocket-server`);
-    global.webSocketServer = new WebSocket.Server({ server: global.server });
+    const WS = require(`${node_ws_root}/lib/websocket`);
+    WS.Server = require(`${node_ws_root}/lib/websocket-server`);
+    global.webSocketServer = new WS.Server({ server: global.server });
     global.webSocketServer.on("connection", function connection(ws) {
       ws.on("message", data =>
         NodeWebSocketServerCode.messageHandler(data, ws)
@@ -713,7 +699,7 @@ class NodeWebSocketServerCode extends BaseNodeHTTPServerCode {
   }
 }
 
-class NodeWebSocketServer extends BaseNodeServer {
+export class NodeWebSocketServer extends BaseNodeServer {
   _protocol = "wss";
   /// Starts the server
   /// @port - default 0
@@ -754,13 +740,13 @@ class NodeWebSocketHttp2ServerCode extends BaseNodeHTTPServerCode {
     global.h2Server = http2.createSecureServer(options);
 
     let node_ws_root = `${__dirname}/../node-ws`;
-    const WebSocket = require(`${node_ws_root}/lib/websocket`);
+    const WS = require(`${node_ws_root}/lib/websocket`);
 
     global.h2Server.on("stream", (stream, headers) => {
       if (headers[":method"] === "CONNECT") {
         stream.respond();
 
-        const ws = new WebSocket(null);
+        const ws = new WS(null);
         stream.setNoDelay = () => {};
         ws.setSocket(stream, Buffer.from(""), 100 * 1024 * 1024);
 
@@ -783,7 +769,7 @@ class NodeWebSocketHttp2ServerCode extends BaseNodeHTTPServerCode {
   }
 }
 
-class NodeWebSocketHttp2Server extends BaseNodeServer {
+export class NodeWebSocketHttp2Server extends BaseNodeServer {
   _protocol = "h2ws";
   /// Starts the server
   /// @port - default 0
@@ -808,37 +794,16 @@ class NodeWebSocketHttp2Server extends BaseNodeServer {
 
 // Helper functions
 
-async function with_node_servers(arrayOfClasses, asyncClosure) {
+export async function with_node_servers(arrayOfClasses, asyncClosure) {
   for (let s of arrayOfClasses) {
     let server = new s();
     await server.start();
-    registerCleanupFunction(async () => {
-      await server.stop();
-    });
     await asyncClosure(server);
     await server.stop();
   }
 }
 
-// nsITLSServerSocket needs a certificate with a corresponding private key
-// available. xpcshell tests can import the test file "client-cert.p12" using
-// the password "password", resulting in a certificate with the common name
-// "Test End-entity" being available with a corresponding private key.
-function getTestServerCertificate() {
-  const certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
-    Ci.nsIX509CertDB
-  );
-  const certFile = do_get_file("client-cert.p12");
-  certDB.importPKCS12File(certFile, "password");
-  for (const cert of certDB.getCerts()) {
-    if (cert.commonName == "Test End-entity") {
-      return cert;
-    }
-  }
-  return null;
-}
-
-class WebSocketConnection {
+export class WebSocketConnection {
   constructor() {
     this._openPromise = new Promise(resolve => {
       this._openCallback = resolve;
@@ -943,8 +908,11 @@ class WebSocketConnection {
   }
 }
 
-class HTTP3Server {
+export class HTTP3Server {
   protocol() {
+    return "https";
+  }
+  version() {
     return "h3";
   }
   origin() {
@@ -987,5 +955,103 @@ class HTTP3Server {
     }
 
     return undefined;
+  }
+}
+
+export class NodeServer {
+  // Executes command in the context of a node server.
+  // See handler in moz-http2.js
+  //
+  // Example use:
+  // let id = NodeServer.fork(); // id is a random string
+  // await NodeServer.execute(id, `"hello"`)
+  // > "hello"
+  // await NodeServer.execute(id, `(() => "hello")()`)
+  // > "hello"
+  // await NodeServer.execute(id, `(() => var_defined_on_server)()`)
+  // > "0"
+  // await NodeServer.execute(id, `var_defined_on_server`)
+  // > "0"
+  // function f(param) { if (param) return param; return "bla"; }
+  // await NodeServer.execute(id, f); // Defines the function on the server
+  // await NodeServer.execute(id, `f()`) // executes defined function
+  // > "bla"
+  // let result = await NodeServer.execute(id, `f("test")`);
+  // > "test"
+  // await NodeServer.kill(id); // shuts down the server
+
+  // Forks a new node server using moz-http2-child.js as a starting point
+  static fork() {
+    return this.sendCommand("", "/fork");
+  }
+  // Executes command in the context of the node server indicated by `id`
+  static execute(id, command) {
+    return this.sendCommand(command, `/execute/${id}`);
+  }
+  // Shuts down the server
+  static kill(id) {
+    return this.sendCommand("", `/kill/${id}`);
+  }
+
+  // Issues a request to the node server (handler defined in moz-http2.js)
+  // This method should not be called directly.
+  static sendCommand(command, path) {
+    let h2Port = Services.env.get("MOZNODE_EXEC_PORT");
+    if (!h2Port) {
+      throw new Error("Could not find MOZNODE_EXEC_PORT");
+    }
+
+    let req = new XMLHttpRequest({ mozAnon: true, mozSystem: true });
+    const serverIP =
+      AppConstants.platform == "android" ? "10.0.2.2" : "127.0.0.1";
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+    req.open("POST", `http://${serverIP}:${h2Port}${path}`);
+    req.channel.QueryInterface(Ci.nsIHttpChannelInternal).bypassProxy = true;
+    req.channel.loadFlags |= Ci.nsIChannel.LOAD_BYPASS_URL_CLASSIFIER;
+    // Prevent HTTPS-Only Mode from upgrading the request.
+    req.channel.loadInfo.httpsOnlyStatus |= Ci.nsILoadInfo.HTTPS_ONLY_EXEMPT;
+    // Allow deprecated HTTP request from SystemPrincipal
+    req.channel.loadInfo.allowDeprecatedSystemRequests = true;
+
+    // Passing a function to NodeServer.execute will define that function
+    // in node. It can be called in a later execute command.
+    let isFunction = function (obj) {
+      return !!(obj && obj.constructor && obj.call && obj.apply);
+    };
+    let payload = command;
+    if (isFunction(command)) {
+      payload = `${command.name} = ${command.toString()};`;
+    }
+
+    return new Promise((resolve, reject) => {
+      req.onload = () => {
+        let x = null;
+
+        if (req.statusText != "OK") {
+          reject(`XHR request failed: ${req.statusText}`);
+          return;
+        }
+
+        try {
+          x = JSON.parse(req.responseText);
+        } catch (e) {
+          reject(`Failed to parse ${req.responseText} - ${e}`);
+          return;
+        }
+
+        if (x.error) {
+          let e = new Error(x.error, "", 0);
+          e.stack = x.errorStack;
+          reject(e);
+          return;
+        }
+        resolve(x.result);
+      };
+      req.onerror = e => {
+        reject(e);
+      };
+
+      req.send(payload.toString());
+    });
   }
 }

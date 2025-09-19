@@ -13,6 +13,14 @@ const { HttpServer } = ChromeUtils.importESModule(
   "resource://testing-common/httpd.sys.mjs"
 );
 
+const { NodeHTTPSServer } = ChromeUtils.importESModule(
+  "resource://testing-common/NodeServer.sys.mjs"
+);
+
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+
 ChromeUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpServer.identity.primaryPort + "/content";
 });

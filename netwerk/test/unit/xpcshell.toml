@@ -1,5 +1,5 @@
 [DEFAULT]
-head = "head_channels.js head_cache.js head_cache2.js head_cookies.js head_servers.js head_trr.js head_http3.js head_telemetry.js head_websocket.js head_webtransport.js"
+head = "head_channels.js head_cache.js head_cache2.js head_cookies.js head_trr.js head_http3.js head_telemetry.js head_websocket.js head_webtransport.js"
 support-files = [
   "http2-ca.pem",
   "proxy-ca.pem",
@@ -347,11 +347,11 @@ skip-if = [
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64'", # Bug 1808048
 ]
 
+["test_bug1984469.js"]
+
 ["test_bug_1918928.js"]
 run-if = ["!socketprocess_networking"] # confirmation state isn't passed cross-process
 skip-if = ["appname == 'thunderbird'"] # bug 1760097
-
-["test_bug1984469.js"]
 
 ["test_cache-control_request.js"]
 
@@ -607,7 +607,7 @@ skip-if = [
 ["test_domain_eviction.js"]
 
 ["test_dooh.js"]
-head = "head_channels.js head_cache.js head_cookies.js head_servers.js head_trr.js head_http3.js trr_common.js"
+head = "head_channels.js head_cache.js head_cookies.js head_trr.js head_http3.js trr_common.js"
 run-if = ["!socketprocess_networking"]
 run-sequentially = "node server exceptions dont replay well"
 
@@ -695,14 +695,14 @@ skip-if = [
 
 ["test_http2.js"]
 run-sequentially = "node server exceptions dont replay well"
-head = "head_channels.js head_cache.js head_cookies.js head_servers.js head_trr.js head_http3.js http2_test_common.js"
+head = "head_channels.js head_cache.js head_cookies.js head_trr.js head_http3.js http2_test_common.js"
 
 ["test_http2_proxy_concurrent_stream.js"]
 skip-if = ["os == 'android'"]
 
 ["test_http2_with_proxy.js"]
 run-sequentially = "node server exceptions dont replay well"
-head = "head_channels.js head_cache.js head_cookies.js head_servers.js head_trr.js head_http3.js http2_test_common.js"
+head = "head_channels.js head_cache.js head_cookies.js head_trr.js head_http3.js http2_test_common.js"
 
 ["test_http3.js"]
 run-sequentially = "http3server"
@@ -1325,7 +1325,7 @@ firefox-appdir = "browser"
 ["test_transparent_redirect.js"]
 
 ["test_trr.js"]
-head = "head_channels.js head_cache.js head_cookies.js head_servers.js head_trr.js head_http3.js trr_common.js"
+head = "head_channels.js head_cache.js head_cookies.js head_trr.js head_http3.js trr_common.js"
 run-sequentially = "very high failure rate in parallel"
 
 ["test_trr_additional_section.js"]
@@ -1409,13 +1409,13 @@ run-if = ["!socketprocess_networking"]
 ["test_trr_strict_mode.js"]
 
 ["test_trr_telemetry.js"]
-head = "head_channels.js head_cache.js head_cookies.js head_servers.js head_trr.js head_http3.js trr_common.js"
+head = "head_channels.js head_cache.js head_cookies.js head_trr.js head_http3.js trr_common.js"
 run-if = ["!socketprocess_networking"]
 
 ["test_trr_ttl.js"]
 
 ["test_trr_with_proxy.js"]
-head = "head_channels.js head_cache.js head_cookies.js head_servers.js head_trr.js trr_common.js"
+head = "head_channels.js head_cache.js head_cookies.js head_trr.js trr_common.js"
 run-sequentially = "node server exceptions dont replay well"
 skip-if = [
   "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && ccov && !fission && socketprocess_networking", # Bug 1808233

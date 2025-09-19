@@ -7,7 +7,6 @@
 /* import-globals-from head_cache.js */
 /* import-globals-from head_cookies.js */
 /* import-globals-from head_channels.js */
-/* import-globals-from head_servers.js */
 
 // We don't normally allow localhost channels to be proxied, but this
 // is easier than updating all the certs and/or domains.
@@ -19,6 +18,15 @@ registerCleanupFunction(() => {
 const { HttpServer } = ChromeUtils.importESModule(
   "resource://testing-common/httpd.sys.mjs"
 );
+const {
+  NodeHTTPServer,
+  NodeHTTPSServer,
+  NodeHTTP2Server,
+  NodeHTTPProxyServer,
+  NodeHTTPSProxyServer,
+  NodeHTTP2ProxyServer,
+  with_node_servers,
+} = ChromeUtils.importESModule("resource://testing-common/NodeServer.sys.mjs");
 
 function makeChan(uri) {
   let chan = NetUtil.newChannel({

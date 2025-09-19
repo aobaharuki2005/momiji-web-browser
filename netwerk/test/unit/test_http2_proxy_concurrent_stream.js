@@ -7,11 +7,18 @@
 /* import-globals-from head_cache.js */
 /* import-globals-from head_cookies.js */
 /* import-globals-from head_channels.js */
-/* import-globals-from head_servers.js */
 
-var { setTimeout } = ChromeUtils.importESModule(
+const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
+
+const {
+  NodeHTTPServer,
+  NodeHTTPSServer,
+  NodeHTTP2Server,
+  NodeHTTP2ProxyServer,
+  with_node_servers,
+} = ChromeUtils.importESModule("resource://testing-common/NodeServer.sys.mjs");
 
 add_setup(async function () {
   Services.prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);

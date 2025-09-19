@@ -4,12 +4,15 @@
 
 /* import-globals-from head_channels.js */
 /* import-globals-from head_cookies.js */
-/* import-globals-from head_servers.js */
+
+const { HTTP3Server: HeadHTTP3Server } = ChromeUtils.importESModule(
+  "resource://testing-common/NodeServer.sys.mjs"
+);
 
 async function create_h3_server() {
   let h3ServerPath = Services.env.get("MOZ_HTTP3_SERVER_PATH");
   let h3DBPath = Services.env.get("MOZ_HTTP3_CERT_DB_PATH");
-  let server = new HTTP3Server();
+  let server = new HeadHTTP3Server();
   let h3Port = await server.start(h3ServerPath, h3DBPath);
   registerCleanupFunction(async () => {
     await server.stop();
