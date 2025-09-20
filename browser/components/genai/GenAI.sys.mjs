@@ -1103,6 +1103,10 @@ export const GenAI = {
     if (lazy.chatSidebar) {
       await SidebarController.show("viewGenaiChatSidebar");
       browser = await SidebarController.browser.contentWindow.browserPromise;
+      if (!browser) {
+        console.error("Failed to get chat sidebar browser");
+        return;
+      }
       const showWarning =
         isPageSummarizeRequest && this.isContextTooLong(context.selection);
 
