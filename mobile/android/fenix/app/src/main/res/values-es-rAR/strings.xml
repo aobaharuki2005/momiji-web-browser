@@ -575,7 +575,7 @@
   <!-- Set to default browser onboarding redesign title. -->
   <string name="onboarding_redesign_set_default_browser_title">Obtener protección contra rastreo automática por defecto</string>
   <!-- Set to default browser onboarding redesign body. -->
-  <string name="onboarding_redesign_set_default_browser_body">Un toque ayuda a evitar que las empresas espíen sus clics.</string>
+  <string name="onboarding_redesign_set_default_browser_body">Un toque ayuda a evitar que las empresas espíen tus clics.</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Ayúdanos a hacer crecer a Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->

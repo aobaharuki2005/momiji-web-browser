@@ -3706,9 +3706,9 @@
   <!-- Subtitle for the setup checklist when the second task is completed. -->
   <string name="setup_checklist_subtitle_5_steps_second_step">Завършихте 2 от общо 5 стъпки. Страхотен напредък!</string>
   <!-- Subtitle for a setup checklist with 5 steps when three of the tasks are completed. -->
-  <string name="setup_checklist_subtitle_5_steps_third_step">Вие сте наполовина там! Три стъпки са завършени и остават 2.</string>
+  <string name="setup_checklist_subtitle_5_steps_third_step">Почти е готово! Три стъпки са завършени, а остават 2.</string>
   <!-- Subtitle for a setup checklist with 5 steps when the fifth task is completed. -->
-  <string name="setup_checklist_subtitle_5_steps_fourth_step">Почти е готов! Вие сте само на 1 крачка от финалната линия.</string>
+  <string name="setup_checklist_subtitle_5_steps_fourth_step">Още малко! Вие сте само на 1 крачка от финалната права.</string>
   <!-- Subtitle for a setup checklist with 5 steps completed state. %1$s is the name of the app (for example "Firefox"). -->
   <string name="setup_checklist_subtitle_5_steps_completed_state">Завършихте всичките 5 стъпки за настройка. Насладете се на скоростта, поверителността и сигурността на %1$s.</string>
   <!--
@@ -3766,7 +3766,7 @@
   <!-- Authentication prompt title to enable the private tabs mode -->
   <string name="pbm_authentication_enable_lock">Активиране на заключване на екрана на поверителните раздели</string>
   <!-- Authentication prompt title to disable the private tabs mode -->
-  <string name="pbm_authentication_disable_lock">Изключване на заключването на екрана на поверителните раздели</string>
+  <string name="pbm_authentication_disable_lock">Деактивиране на заключването на екрана на поверителните раздели</string>
   <!-- Label for a preference shown when the device supports screen lock (e.g., PIN, pattern, or password) but the user has not set one up. -->
   <string name="pbm_authentication_lock_device_feature_disabled">Настройте заключване на екрана, за да скривате раздели</string>
   <!-- Title text for the contextual feature recommendation (CFR) suggesting the user enable a screen lock to protect private tabs -->
@@ -3820,5 +3820,5 @@
   <!-- Label for a button to accept the terms of use -->
   <string name="terms_of_use_prompt_accept">Приемане</string>
   <!-- Label for a button to postpone accepting the terms of use -->
-  <string name="terms_of_use_prompt_postpone">Напомни ми по-късно</string>
+  <string name="terms_of_use_prompt_postpone">Напомняне по-късно</string>
 </resources>
