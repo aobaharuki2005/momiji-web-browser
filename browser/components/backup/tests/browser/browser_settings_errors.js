@@ -28,7 +28,6 @@ add_task(async function test_error_visibility_heuristic() {
       .stub(bs, "resolveArchiveDestFolderPath")
       .rejects(new BackupError("forced failure", ERRORS.UNKNOWN));
 
-    // let prefObserver = promisePrefChangeObserved(BACKUP_ERROR_CODE_PREF_NAME);
     settings.triggerBackupButtonEl.click();
 
     // ensure that the error message is shown
