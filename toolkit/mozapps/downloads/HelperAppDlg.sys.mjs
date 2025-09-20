@@ -211,7 +211,7 @@ export class nsUnknownContentTypeDialog {
   #debuglog(...args) {
     if (!this.#log) {
       this.#log = console.createInstance({
-        maxLogLevelPref: "browser.download.loglevel",
+        maxLogLevelPref: "toolkit.download.loglevel",
         prefix: "HelperAppService",
       });
       let info = this.mLauncher.MIMEInfo;
