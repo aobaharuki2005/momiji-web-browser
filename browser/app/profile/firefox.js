@@ -3441,8 +3441,6 @@ pref("browser.backup.template.fallback-download.aurora", "https://www.mozilla.or
 pref("browser.backup.template.fallback-download.nightly", "https://www.mozilla.org/firefox/channel/desktop/?utm_medium=firefox-desktop&utm_source=backup&utm_campaign=firefox-backup-2024&utm_content=control#nightly");
 pref("browser.backup.template.fallback-download.esr", "https://www.mozilla.org/firefox/enterprise/?utm_medium=firefox-desktop&utm_source=backup&utm_campaign=firefox-backup-2024&utm_content=control#download");
 pref("browser.backup.errorCode", 0);
-pref("browser.backup.backup-retry-limit", 100);
-pref("browser.backup.disabled-on-idle-backup-retry", false);
 
 #ifdef NIGHTLY_BUILD
   // Pref to enable the new profiles

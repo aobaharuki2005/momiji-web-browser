@@ -158,11 +158,7 @@ async function testCreateBackupHelper(sandbox, taskFn) {
   let { manifest, archivePath: backupFilePath } = await bs.createBackup({
     profilePath: fakeProfilePath,
   });
-  Assert.notStrictEqual(
-    bs.state.lastBackupDate,
-    null,
-    "The backup date was recorded."
-  );
+  Assert.ok(bs.state.lastBackupDate, "The backup date was recorded.");
 
   let legacyEvents = TelemetryTestUtils.getEvents(
     { category: "browser.backup", method: "created", object: "BackupService" },
@@ -395,9 +391,8 @@ async function testDeleteLastBackupHelper(taskFn) {
   Services.prefs.clearUserPref(LAST_BACKUP_FILE_NAME_PREF_NAME);
 
   await testCreateBackupHelper(sandbox, async (bs, _manifest) => {
-    Assert.notStrictEqual(
+    Assert.ok(
       bs.state.lastBackupDate,
-      null,
       "Should have a last backup date recorded."
     );
     Assert.ok(

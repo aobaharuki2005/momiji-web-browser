@@ -120,8 +120,6 @@ add_task(async function test_turn_on_custom_location_filepicker() {
       "Button to turn on scheduled backups should be found"
     );
 
-    turnOnButton.click();
-
     await settings.updateComplete;
     let turnOnScheduledBackups = settings.turnOnScheduledBackupsEl;
 
