@@ -103,6 +103,11 @@ void wgpu_child_resolve_request_adapter_promise(
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
 
+  if (!pending_promise.promise) {
+    // The JS global was deleted; there's nobody left waiting for the promise.
+    return;
+  }
+
   MOZ_RELEASE_ASSERT(pending_promise.adapter_id == aAdapterId);
 
   if (aAdapterInfo == nullptr) {
@@ -121,6 +126,11 @@ void wgpu_child_resolve_request_device_promise(WGPUWebGPUChildPtr aChild,
   auto& pending_promises = c->mPendingRequestDevicePromises;
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
+
+  if (!pending_promise.promise) {
+    // The JS global was deleted; there's nobody left waiting for the promise.
+    return;
+  }
 
   MOZ_RELEASE_ASSERT(pending_promise.device_id == aDeviceId);
   MOZ_RELEASE_ASSERT(pending_promise.queue_id == aQueueId);
@@ -145,6 +155,11 @@ void wgpu_child_resolve_pop_error_scope_promise(WGPUWebGPUChildPtr aChild,
   auto& pending_promises = c->mPendingPopErrorScopePromises;
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
+
+  if (!pending_promise.promise) {
+    // The JS global was deleted; there's nobody left waiting for the promise.
+    return;
+  }
 
   MOZ_RELEASE_ASSERT(pending_promise.device->GetId() == aDeviceId);
 
@@ -191,6 +206,11 @@ void wgpu_child_resolve_create_pipeline_promise(WGPUWebGPUChildPtr aChild,
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
 
+  if (!pending_promise.promise) {
+    // The JS global was deleted; there's nobody left waiting for the promise.
+    return;
+  }
+
   MOZ_RELEASE_ASSERT(pending_promise.pipeline_id == aPipelineId);
   MOZ_RELEASE_ASSERT(pending_promise.is_render_pipeline == aIsRenderPipeline);
 
@@ -225,6 +245,11 @@ void wgpu_child_resolve_create_shader_module_promise(
   auto& pending_promises = c->mPendingCreateShaderModulePromises;
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
+
+  if (!pending_promise.promise) {
+    // The JS global was deleted; there's nobody left waiting for the promise.
+    return;
+  }
 
   MOZ_RELEASE_ASSERT(pending_promise.shader_module->GetId() == aShaderModuleId);
 
@@ -274,6 +299,11 @@ void wgpu_child_resolve_buffer_map_promise(WGPUWebGPUChildPtr aChild,
     NS_ERROR("Missing pending promise for buffer map");
   }
 
+  if (!pending_promise.promise) {
+    // The JS global was deleted; there's nobody left waiting for the promise.
+    return;
+  }
+
   // Unmap might have been called while the result was on the way back.
   if (pending_promise.promise->State() != dom::Promise::PromiseState::Pending) {
     return;
@@ -298,6 +328,11 @@ void wgpu_child_resolve_on_submitted_work_done_promise(
 
   if (pending_promises.empty()) {
     c->mPendingOnSubmittedWorkDonePromises.erase(it);
+  }
+
+  if (!pending_promise) {
+    // The JS global was deleted; there's nobody left waiting for the promise.
+    return;
   }
 
   pending_promise->MaybeResolveWithUndefined();
@@ -403,13 +438,8 @@ ipc::IPCResult WebGPUChild::RecvDeviceLost(RawId aDeviceId, uint8_t aReason,
   // set the lost reason to "destroyed".
   auto device_lost_promise_entry =
       mPendingDeviceLostPromises.extract(aDeviceId);
-  if (!device_lost_promise_entry.empty()) {
-    auto promise = std::move(device_lost_promise_entry.mapped());
-    RefPtr<DeviceLostInfo> info = new DeviceLostInfo(
-        promise->GetParentObject(), dom::GPUDeviceLostReason::Destroyed,
-        u"Device destroyed"_ns);
-    promise->MaybeResolve(info);
-  } else {
+
+  if (device_lost_promise_entry.empty()) {
     auto message = NS_ConvertUTF8toUTF16(aMessage);
 
     const auto itr = mDeviceMap.find(aDeviceId);
@@ -424,7 +454,20 @@ ipc::IPCResult WebGPUChild::RecvDeviceLost(RawId aDeviceId, uint8_t aReason,
           static_cast<dom::GPUDeviceLostReason>(aReason);
       device->ResolveLost(reason, message);
     }
+
+    return IPC_OK();
   }
+
+  auto promise = std::move(device_lost_promise_entry.mapped());
+  if (!promise) {
+    // The JS global was deleted; there's nobody left waiting for the promise.
+    return IPC_OK();
+  }
+
+  RefPtr<DeviceLostInfo> info = new DeviceLostInfo(
+      promise->GetParentObject(), dom::GPUDeviceLostReason::Destroyed,
+      u"Device destroyed"_ns);
+  promise->MaybeResolve(info);
 
   return IPC_OK();
 }
@@ -459,6 +502,8 @@ void WebGPUChild::ClearActorState() {
   // can perform further calls that add more promises to data structures, so
   // all code sections below should not use iterators!
 
+  // Be prepared for entries that have been cleared due to JS global teardown.
+
   // Make sure we resolve/reject all pending promises; even the ones that get
   // enqueued immediately by JS code that gets to run as a result of a promise
   // we just resolved/rejected.
@@ -467,6 +512,7 @@ void WebGPUChild::ClearActorState() {
     if (!mPendingRequestAdapterPromises.empty()) {
       auto pending_promise = std::move(mPendingRequestAdapterPromises.front());
       mPendingRequestAdapterPromises.pop_front();
+      if (!pending_promise.promise) continue;
 
       pending_promise.promise->MaybeResolve(JS::NullHandleValue);
     }
@@ -474,6 +520,7 @@ void WebGPUChild::ClearActorState() {
     else if (!mPendingRequestDevicePromises.empty()) {
       auto pending_promise = std::move(mPendingRequestDevicePromises.front());
       mPendingRequestDevicePromises.pop_front();
+      if (!pending_promise.promise) continue;
 
       RefPtr<Device> device =
           new Device(pending_promise.adapter, pending_promise.device_id,
@@ -491,6 +538,7 @@ void WebGPUChild::ClearActorState() {
       auto pending_promise_entry = mPendingDeviceLostPromises.begin();
       auto pending_promise = std::move(pending_promise_entry->second);
       mPendingDeviceLostPromises.erase(pending_promise_entry->first);
+      if (!pending_promise) continue;
 
       RefPtr<DeviceLostInfo> info = new DeviceLostInfo(
           pending_promise->GetParentObject(),
@@ -512,6 +560,7 @@ void WebGPUChild::ClearActorState() {
     else if (!mPendingPopErrorScopePromises.empty()) {
       auto pending_promise = std::move(mPendingPopErrorScopePromises.front());
       mPendingPopErrorScopePromises.pop_front();
+      if (!pending_promise.promise) continue;
 
       pending_promise.promise->MaybeResolve(JS::NullHandleValue);
     }
@@ -519,6 +568,7 @@ void WebGPUChild::ClearActorState() {
     else if (!mPendingCreatePipelinePromises.empty()) {
       auto pending_promise = std::move(mPendingCreatePipelinePromises.front());
       mPendingCreatePipelinePromises.pop_front();
+      if (!pending_promise.promise) continue;
 
       if (pending_promise.is_render_pipeline) {
         RefPtr<RenderPipeline> object = new RenderPipeline(
@@ -537,6 +587,7 @@ void WebGPUChild::ClearActorState() {
       auto pending_promise =
           std::move(mPendingCreateShaderModulePromises.front());
       mPendingCreateShaderModulePromises.pop_front();
+      if (!pending_promise.promise) continue;
 
       nsTArray<WebGPUCompilationMessage> messages;
       RefPtr<CompilationInfo> infoObject(
@@ -552,6 +603,7 @@ void WebGPUChild::ClearActorState() {
       if (pending_promises->second.empty()) {
         mPendingBufferMapPromises.erase(pending_promises->first);
       }
+      if (!pending_promise.promise) continue;
 
       // Unmap might have been called.
       if (pending_promise.promise->State() !=
@@ -575,9 +627,50 @@ void WebGPUChild::ClearActorState() {
         mPendingOnSubmittedWorkDonePromises.erase(it);
       }
 
+      if (!pending_promise) continue;
+
       pending_promise->MaybeResolveWithUndefined();
     } else {
       break;
+    }
+  }
+}
+
+void WebGPUChild::ClearStateForGlobal(nsIGlobalObject* aGlobal) {
+  for (auto& elt : mPendingRequestAdapterPromises) {
+    if (elt.promise && elt.promise->GetParentObject() == aGlobal) {
+      elt = PendingRequestAdapterPromise();
+    }
+  }
+  for (auto& elt : mPendingRequestDevicePromises) {
+    if (elt.promise && elt.promise->GetParentObject() == aGlobal)
+      elt = PendingRequestDevicePromise();
+  }
+  for (auto& pair : mPendingDeviceLostPromises) {
+    if (pair.second && pair.second->GetParentObject() == aGlobal)
+      pair.second = nullptr;
+  }
+  for (auto& elt : mPendingPopErrorScopePromises) {
+    if (elt.promise && elt.promise->GetParentObject() == aGlobal)
+      elt = PendingPopErrorScopePromise();
+  }
+  for (auto& elt : mPendingCreatePipelinePromises) {
+    if (elt.promise && elt.promise->GetParentObject() == aGlobal)
+      elt = PendingCreatePipelinePromise();
+  }
+  for (auto& elt : mPendingCreateShaderModulePromises) {
+    if (elt.promise && elt.promise->GetParentObject() == aGlobal)
+      elt = PendingCreateShaderModulePromise();
+  }
+  for (auto& pair : mPendingBufferMapPromises) {
+    for (auto& elt : pair.second) {
+      if (elt.promise && elt.promise->GetParentObject() == aGlobal)
+        elt = PendingBufferMapPromise();
+    }
+  }
+  for (auto& pair : mPendingOnSubmittedWorkDonePromises) {
+    for (auto& elt : pair.second) {
+      if (elt && elt->GetParentObject() == aGlobal) elt = nullptr;
     }
   }
 }

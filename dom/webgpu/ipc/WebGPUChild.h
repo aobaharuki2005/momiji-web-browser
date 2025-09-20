@@ -120,7 +120,34 @@ class WebGPUChild final : public PWebGPUChild {
   void ScheduleFlushQueuedMessages();
   void FlushQueuedMessages();
 
+  // Remove all state related to `aGlobal`.
+  //
+  // Given that `aGlobal` is going away, remove all state from this
+  // `WebGPUChild` for devices or other resources parented by
+  // `aGlobal`.
+  void ClearStateForGlobal(nsIGlobalObject* aGlobal);
+
   void ActorDestroy(ActorDestroyReason) override;
+
+  // The following members track promises that will be resolved by messages from
+  // the GPU process.
+  //
+  // Each content process has a single WebGPUChild to mediate WebGPU
+  // communication for all the JavaScript activity in that process. Thus, a
+  // single WebGPUChild will generally be managing many JS globals. When a JS
+  // global is torn down, `ClearStateForGlobal` must search the following
+  // members to ensure that nothing retains pointers to resources in that
+  // global.
+  //
+  // However, we cannot in general avoid receiving IPDL messages for JS globals
+  // that have been torn down, so these client queues must stay in sync with the
+  // parent. This means that, for JS global teardown, we need to *leave the
+  // entries in place*, but simply "zero them out" --- typically by assigning
+  // default-constructed values to them.
+  //
+  // Thus, code that consults these members must be prepared to find everything
+  // zeroed out. Checking `promise` before operating on the rest of the struct
+  // should suffice.
 
   struct PendingRequestAdapterPromise {
     RefPtr<dom::Promise> promise;

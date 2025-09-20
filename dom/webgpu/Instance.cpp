@@ -31,6 +31,12 @@ namespace mozilla::webgpu {
 GPU_IMPL_CYCLE_COLLECTION(WGSLLanguageFeatures, mParent)
 
 GPU_IMPL_CYCLE_COLLECTION(Instance, mOwner, mWgslLanguageFeatures)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(Instance)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(Instance)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Instance)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
 static inline nsDependentCString ToCString(const std::string_view s) {
   return {s.data(), s.length()};
@@ -61,6 +67,7 @@ static inline nsDependentCString ToCString(const std::string_view s) {
 /*static*/
 already_AddRefed<Instance> Instance::Create(nsIGlobalObject* aOwner) {
   RefPtr<Instance> result = new Instance(aOwner);
+  result->GlobalTeardownObserver::BindToOwner(aOwner);
   return result.forget();
 }
 
@@ -219,6 +226,16 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
   child->mPendingRequestAdapterPromises.push_back(std::move(pending_promise));
 
   return promise.forget();
+}
+
+void Instance::DisconnectFromOwner() {
+  if (auto* const canvasManager = gfx::CanvasManagerChild::Get()) {
+    RefPtr<WebGPUChild> child = canvasManager->GetWebGPUChild();
+    if (child) {
+      child->ClearStateForGlobal(GetParentObject());
+    }
+  }
+  GlobalTeardownObserver::DisconnectFromOwner();
 }
 
 }  // namespace mozilla::webgpu
