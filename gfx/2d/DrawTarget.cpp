@@ -269,7 +269,11 @@ void DrawTarget::Blur(const GaussianBlur& aBlur) {
     return;
   }
 
-  aBlur.Blur(data, stride, size, format);
+  // Sanity check that the blur size matches the draw target.
+  MOZ_ASSERT(format == aBlur.GetFormat());
+  MOZ_ASSERT(size == aBlur.GetSize());
+  MOZ_ASSERT(stride == aBlur.GetStride());
+  aBlur.Blur(data);
 
   ReleaseBits(data);
 }

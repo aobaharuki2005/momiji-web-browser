@@ -4810,7 +4810,9 @@ bool SharedContextWebgl::DrawPathAccel(
         return false;
       }
       // Blur the shadow if required.
-      GaussianBlur blur(Point(aShadow->mSigma, aShadow->mSigma));
+      GaussianBlur blur(Rect(pathDT->GetRect()), IntSize(0, 0),
+                        Point(aShadow->mSigma, aShadow->mSigma), nullptr,
+                        nullptr, pathDT->GetFormat());
       pathDT->Blur(blur);
     }
     RefPtr<SourceSurface> pathSurface = pathDT->Snapshot();

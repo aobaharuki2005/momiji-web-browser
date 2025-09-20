@@ -74,9 +74,9 @@ already_AddRefed<DrawTarget> gfxGaussianBlur::InitDrawTarget(
       Factory::DoesBackendSupportDataDrawtarget(backend)
           ? Factory::CreateDrawTargetForData(backend, mData, mBlur.GetSize(),
                                              mBlur.GetStride(),
-                                             mBlur.GetFormat())
+                                             SurfaceFormat::A8)
           : gfxPlatform::CreateDrawTargetForData(
-                mData, mBlur.GetSize(), mBlur.GetStride(), mBlur.GetFormat());
+                mData, mBlur.GetSize(), mBlur.GetStride(), SurfaceFormat::A8);
 
   if (!mDrawTarget || !mDrawTarget->IsValid()) {
     if (mData) {

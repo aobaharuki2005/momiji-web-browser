@@ -3009,8 +3009,10 @@ already_AddRefed<DataSourceSurface> FilterNodeBlurXYSoftware::Render(
     return nullptr;
   }
 
-  RefPtr<DataSourceSurface> target =
-      Factory::CreateDataSourceSurface(srcRect.Size(), input->GetFormat());
+  RefPtr<DataSourceSurface> target;
+  Rect r(0, 0, srcRect.Width(), srcRect.Height());
+
+  target = Factory::CreateDataSourceSurface(srcRect.Size(), input->GetFormat());
   if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
   }
@@ -3020,9 +3022,9 @@ already_AddRefed<DataSourceSurface> FilterNodeBlurXYSoftware::Render(
   if (MOZ2D_WARN_IF(!targetMap.IsMapped())) {
     return nullptr;
   }
-  GaussianBlur blur(Point(sigmaXY.width, sigmaXY.height));
-  blur.Blur(targetMap.GetData(), targetMap.GetStride(), target->GetSize(),
-            target->GetFormat());
+  GaussianBlur blur(r, targetMap.GetStride(),
+                    Point(sigmaXY.width, sigmaXY.height), target->GetFormat());
+  blur.Blur(targetMap.GetData());
 
   return GetDataSurfaceInRect(target, srcRect, aRect, EDGE_MODE_NONE);
 }

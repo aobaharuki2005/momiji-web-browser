@@ -968,9 +968,8 @@ void DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface* aSurface,
 
   AutoClearDeviceOffset clear(aSurface);
 
-  IntSize size = aSurface->GetSize();
-  Float width = Float(size.width);
-  Float height = Float(size.height);
+  Float width = Float(aSurface->GetSize().width);
+  Float height = Float(aSurface->GetSize().height);
 
   SourceSurfaceCairo* source = static_cast<SourceSurfaceCairo*>(aSurface);
   cairo_surface_t* sourcesurf = source->GetSurface();
@@ -989,10 +988,10 @@ void DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface* aSurface,
 
   if (aShadow.mSigma != 0.0f) {
     MOZ_ASSERT(cairo_surface_get_type(blursurf) == CAIRO_SURFACE_TYPE_IMAGE);
-    GaussianBlur blur(Point(aShadow.mSigma, aShadow.mSigma));
-    blur.Blur(cairo_image_surface_get_data(blursurf),
-              cairo_image_surface_get_stride(blursurf), size,
-              aSurface->GetFormat());
+    Rect extents(0, 0, width, height);
+    GaussianBlur blur(extents, cairo_image_surface_get_stride(blursurf),
+                      Point(aShadow.mSigma, aShadow.mSigma));
+    blur.Blur(cairo_image_surface_get_data(blursurf));
   }
 
   WillChange();
