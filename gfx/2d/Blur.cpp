@@ -232,28 +232,10 @@ void GaussianBlur::Init(const Rect& aRect, const IntSize& aSpreadRadius,
   }
 }
 
-GaussianBlur::GaussianBlur(const Rect& aRect, int32_t aStride,
-                           const Point& aSigma, SurfaceFormat aFormat,
-                           bool aClamp)
-    : mRect(TruncatedToInt(aRect)),
-      mBlurSigma(aSigma),
+GaussianBlur::GaussianBlur(const Point& aSigma, bool aClamp)
+    : mBlurSigma(aSigma),
       mBlurRadius(CalculateBlurRadius(aSigma)),
-      mFormat(aFormat),
-      mClamp(aClamp),
-      mStride(aStride) {
-  IntRect intRect;
-  if (aRect.ToIntRect(&intRect)) {
-    CheckedInt<int32_t> stride =
-        CheckedInt<int32_t>(BytesPerPixel(aFormat)) * intRect.Width();
-    if (stride.isValid()) {
-      size_t minDataSize =
-          BufferSizeFromStrideAndHeight(stride.value(), intRect.Height());
-      if (minDataSize != 0) {
-        mSurfaceAllocationSize = minDataSize;
-      }
-    }
-  }
-}
+      mClamp(aClamp) {}
 
 GaussianBlur::~GaussianBlur() = default;
 
@@ -277,8 +259,9 @@ size_t GaussianBlur::GetSurfaceAllocationSize() const {
   return mSurfaceAllocationSize;
 }
 
-bool GaussianBlur::Spread(uint8_t* aData) const {
-  size_t bufSize = BufferSizeFromStrideAndHeight(mStride, mRect.height);
+bool GaussianBlur::Spread(uint8_t* aData, int32_t aStride, const IntSize& aSize,
+                          SurfaceFormat aFormat) const {
+  size_t bufSize = BufferSizeFromStrideAndHeight(aStride, aSize.height);
   if (!bufSize) {
     return false;
   }
@@ -286,33 +269,39 @@ bool GaussianBlur::Spread(uint8_t* aData) const {
   if (!tmpData) {
     return false;
   }
-  if (mFormat == SurfaceFormat::A8) {
-    SpreadHorizontal(aData, tmpData, mSpreadRadius.width, mRect.width,
-                     mRect.height, mStride, mSkipRect);
-    SpreadVertical(tmpData, aData, mSpreadRadius.height, mRect.width,
-                   mRect.height, mStride, mSkipRect);
+  if (aFormat == SurfaceFormat::A8) {
+    SpreadHorizontal(aData, tmpData, mSpreadRadius.width, aSize.width,
+                     aSize.height, aStride, mSkipRect);
+    SpreadVertical(tmpData, aData, mSpreadRadius.height, aSize.width,
+                   aSize.height, aStride, mSkipRect);
   } else {
     uint32_t* data32 = reinterpret_cast<uint32_t*>(aData);
     uint32_t* tmpData32 = reinterpret_cast<uint32_t*>(tmpData);
-    int32_t stride32 = mStride / sizeof(uint32_t);
-    SpreadHorizontal(data32, tmpData32, mSpreadRadius.width, mRect.width,
-                     mRect.height, stride32, mSkipRect);
-    SpreadVertical(tmpData32, data32, mSpreadRadius.height, mRect.width,
-                   mRect.height, stride32, mSkipRect);
+    int32_t stride32 = aStride / sizeof(uint32_t);
+    SpreadHorizontal(data32, tmpData32, mSpreadRadius.width, aSize.width,
+                     aSize.height, stride32, mSkipRect);
+    SpreadVertical(tmpData32, data32, mSpreadRadius.height, aSize.width,
+                   aSize.height, stride32, mSkipRect);
   }
   free(tmpData);
   return true;
 }
 
-void GaussianBlur::Blur(uint8_t* aData) const {
-  if (!aData) {
+void GaussianBlur::Blur(uint8_t* aData, int32_t aStride, const IntSize& aSize,
+                        SurfaceFormat aFormat) const {
+  if (!aData || aStride <= 0) {
     return;
   }
-
+  if (aFormat == SurfaceFormat::UNKNOWN) {
+    aFormat = mFormat;
+    if (aFormat == SurfaceFormat::UNKNOWN) {
+      return;
+    }
+  }
   if (mBlurRadius.width > 0 || mBlurRadius.height > 0 ||
       mSpreadRadius.width > 0 || mSpreadRadius.height > 0) {
     if (sk_sp<SkSurface> surface = SkSurfaces::WrapPixels(
-            MakeSkiaImageInfo(mRect.Size(), mFormat), aData, mStride)) {
+            MakeSkiaImageInfo(aSize, aFormat), aData, aStride)) {
       BlurSkSurface(surface.get());
     }
   }
@@ -320,15 +309,19 @@ void GaussianBlur::Blur(uint8_t* aData) const {
 
 bool GaussianBlur::BlurSkSurface(SkSurface* aSurface) const {
   IntSize size(aSurface->width(), aSurface->height());
-  MOZ_ASSERT(size == mRect.Size());
+  MOZ_ASSERT(mRect.IsEmpty() || size == mRect.Size());
   SkCanvas* canvas = aSurface->getCanvas();
   if (!canvas) {
     return false;
   }
 
   if (mSpreadRadius.width > 0 || mSpreadRadius.height > 0) {
-    uint8_t* pixels = (uint8_t*)canvas->accessTopLayerPixels(nullptr, nullptr);
-    if (!pixels || !Spread(pixels)) {
+    SkImageInfo info;
+    size_t rowBytes = 0;
+    uint8_t* pixels = (uint8_t*)canvas->accessTopLayerPixels(&info, &rowBytes);
+    if (!pixels ||
+        !Spread(pixels, rowBytes, IntSize(info.width(), info.height()),
+                SkiaColorTypeToGfxFormat(info.colorType()))) {
       return false;
     }
   }
