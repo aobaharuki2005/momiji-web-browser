@@ -118,6 +118,7 @@ use style::properties::{
     PropertyDeclarationBlock, PropertyDeclarationId, PropertyDeclarationIdSet, PropertyId,
     ShorthandId, SourcePropertyDeclaration, StyleBuilder,
 };
+use style::properties::declaration_block::PropertyTypedValue;
 use style::properties_and_values::registry::{PropertyRegistration, PropertyRegistrationData};
 use style::properties_and_values::rule::Inherits as PropertyInherits;
 use style::rule_cache::RuleCacheConditions;
@@ -5298,6 +5299,22 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_GetPropertyIsImportant(
     read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
         decls.property_priority(&property_id).important()
     })
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_DeclarationBlock_GetPropertyTypedValue(
+    declarations: &LockedDeclarationBlock,
+    property: &nsACString,
+    result: *mut PropertyTypedValue,
+) -> bool {
+    let property_id = get_property_id_from_property!(property, false);
+
+    let property_typed_value = read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
+        decls.property_value_to_typed(&property_id)
+    });
+
+    *result = property_typed_value;
+    true
 }
 
 #[inline(always)]

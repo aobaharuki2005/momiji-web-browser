@@ -7,6 +7,7 @@
 #ifndef LAYOUT_STYLE_TYPEDOM_CSSUNSUPPORTEDVALUE_H_
 #define LAYOUT_STYLE_TYPEDOM_CSSUNSUPPORTEDVALUE_H_
 
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/CSSStyleValue.h"
 #include "nsString.h"
 
@@ -16,18 +17,29 @@ class nsISupports;
 
 namespace mozilla {
 
+class DeclarationBlock;
+
 namespace dom {
 
+// https://drafts.css-houdini.org/css-typed-om/#reify-failure
+//
+// Represents a property value that cannot be reified into any of the
+// supported CSSStyleValue subclasses. Per the spec, such values are still
+// exposed as CSSStyleValue objects tied to their originating property,
+// but they cannot be transferred to other properties.
 class CSSUnsupportedValue final : public CSSStyleValue {
  public:
-  CSSUnsupportedValue(nsCOMPtr<nsISupports> aParent, const nsACString& aValue);
+  CSSUnsupportedValue(nsCOMPtr<nsISupports> aParent,
+                      const nsACString& aProperty,
+                      RefPtr<DeclarationBlock> aDeclarations);
 
-  const nsACString& GetValue() const { return mValue; }
+  nsCString GetValue() const;
 
  private:
   virtual ~CSSUnsupportedValue() = default;
 
-  nsCString mValue;
+  nsCString mProperty;
+  RefPtr<DeclarationBlock> mDeclarations;
 };
 
 }  // namespace dom

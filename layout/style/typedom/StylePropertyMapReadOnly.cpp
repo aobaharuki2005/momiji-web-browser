@@ -8,16 +8,16 @@
 
 #include "CSSUnsupportedValue.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ServoStyleConsts.h"
 #include "mozilla/dom/CSSStyleValue.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/StylePropertyMapReadOnlyBinding.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsICSSDeclaration.h"
 #include "nsQueryObject.h"
 #include "nsReadableUtils.h"
-#include "nsString.h"
-#include "nsStyledElement.h"
 
 namespace mozilla::dom {
 
@@ -58,26 +58,45 @@ void StylePropertyMapReadOnly::Get(const nsACString& aProperty,
 
   // Step 3.
 
-  RefPtr<nsStyledElement> styledElement = do_QueryObject(mParent);
-  if (!styledElement) {
+  RefPtr<Element> element = do_QueryObject(mParent);
+  if (!element) {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return;
   }
 
-  nsCOMPtr<nsICSSDeclaration> declaration = styledElement->Style();
+  DeclarationBlock* declarations = element->GetInlineStyleDeclaration();
+  if (!declarations) {
+    aRetVal.SetUndefined();
+    return;
+  }
 
-  nsCString value;
-  declaration->GetPropertyValue(aProperty, value);
+  auto propTypedValue = StylePropertyTypedValue::None();
+  bool result = declarations->GetPropertyTypedValue(aProperty, propTypedValue);
+  if (!result) {
+    aRv.ThrowTypeError("Invalid CSS property");
+    return;
+  }
+
+  if (propTypedValue.IsNone()) {
+    aRetVal.SetUndefined();
+    return;
+  }
 
   // Step 4.
 
-  if (!value.IsEmpty()) {
-    auto unsupportedValue = MakeRefPtr<CSSUnsupportedValue>(mParent, value);
+  if (propTypedValue.IsUnsupported()) {
+    RefPtr<DeclarationBlock> clonedDeclarations = declarations->Clone();
+
+    auto unsupportedValue = MakeRefPtr<CSSUnsupportedValue>(
+        mParent, aProperty, std::move(clonedDeclarations));
 
     aRetVal.SetAsCSSStyleValue() = std::move(unsupportedValue);
-  } else {
-    aRetVal.SetUndefined();
+    return;
   }
+
+  MOZ_ASSERT(propTypedValue.IsTyped());
+
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 // XXX This is not yet fully implemented and optimized!

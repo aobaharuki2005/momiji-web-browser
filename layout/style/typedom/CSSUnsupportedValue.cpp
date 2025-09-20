@@ -7,13 +7,23 @@
 #include "CSSUnsupportedValue.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/DeclarationBlock.h"
 
 namespace mozilla::dom {
 
 CSSUnsupportedValue::CSSUnsupportedValue(nsCOMPtr<nsISupports> aParent,
-                                         const nsACString& aValue)
+                                         const nsACString& aProperty,
+                                         RefPtr<DeclarationBlock> aDeclarations)
     : CSSStyleValue(std::move(aParent), ValueType::Unsupported),
-      mValue(aValue) {}
+      mProperty(aProperty),
+      mDeclarations(std::move(aDeclarations)) {}
+
+nsCString CSSUnsupportedValue::GetValue() const {
+  nsCString value;
+  mDeclarations->GetPropertyValue(mProperty, value);
+
+  return value;
+}
 
 CSSUnsupportedValue& CSSStyleValue::GetAsCSSUnsupportedValue() {
   MOZ_DIAGNOSTIC_ASSERT(mValueType == ValueType::Unsupported);

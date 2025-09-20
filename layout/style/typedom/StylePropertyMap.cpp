@@ -15,6 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsICSSDeclaration.h"
 #include "nsQueryObject.h"
+#include "nsString.h"
 #include "nsStyledElement.h"
 
 namespace mozilla::dom {
@@ -58,7 +59,7 @@ void StylePropertyMap::Set(
 
   CSSUnsupportedValue& unsupportedValue = styleValue.GetAsCSSUnsupportedValue();
 
-  const nsACString& value = unsupportedValue.GetValue();
+  const nsCString value = unsupportedValue.GetValue();
 
   // Step 6.
 
