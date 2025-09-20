@@ -694,12 +694,13 @@ abstract class BaseBrowserFragment :
             view = binding.root,
         )
 
+        val allowScreenshotsInPrivateMode = context.settings().allowScreenshotsInPrivateMode
         secureWindowFeature.set(
             feature = SecureWindowFeature(
                 window = requireActivity().window,
                 store = store,
                 customTabId = customTabSessionId,
-                isSecure = { it.content.private },
+                isSecure = { !allowScreenshotsInPrivateMode && it.content.private },
                 clearFlagOnStop = false,
             ),
             owner = this,
