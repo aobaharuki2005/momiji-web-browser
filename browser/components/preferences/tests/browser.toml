@@ -86,6 +86,8 @@ run-if = ["os == 'win'"]
 
 ["browser_dns_over_https_exceptions_subdialog.js"]
 
+["browser_downloads.js"]
+
 ["browser_ensure_prefs_bindings_initted.js"]
 
 ["browser_etp_exceptions_dialog.js"]

@@ -35,7 +35,6 @@ from .files_changed import get_changed_files
 from .parameters import get_app_version, get_version
 from .util.backstop import ANDROID_PERFTEST_BACKSTOP_INDEX, BACKSTOP_INDEX, is_backstop
 from .util.bugbug import push_schedules
-from .util.chunking import resolver
 from .util.hg import get_hg_commit_message, get_hg_revision_branch, get_hg_revision_info
 from .util.partials import populate_release_history
 from .util.taskcluster import insert_index
@@ -179,7 +178,6 @@ def taskgraph_decision(options, parameters=None):
     )
 
     decision_task_id = os.environ["TASK_ID"]
-    os.environ["TASKGRAPH_SERIAL"] = "1"
 
     # create a TaskGraphGenerator instance
     tgg = TaskGraphGenerator(
@@ -217,8 +215,11 @@ def taskgraph_decision(options, parameters=None):
         full_task_graph_to_manifests_by_task(full_task_json),
     )
 
-    # write out the public/tests-by-manifest.json file
-    write_artifact("tests-by-manifest.json.gz", resolver.tests_by_manifest)
+    # `tests-by-manifest.json.gz` was previously written out here
+    # it was moved to `loader/test.py` because its contents now depend on
+    # data generated in a subprocess which we do not have access to here
+    # see https://bugzilla.mozilla.org/show_bug.cgi?id=1989038 for additional
+    # details
 
     # this is just a test to check whether the from_json() function is working
     _, _ = TaskGraph.from_json(full_task_json)

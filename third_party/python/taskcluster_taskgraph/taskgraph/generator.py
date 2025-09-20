@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import copy
+import inspect
 import logging
 import multiprocessing
 import os
@@ -60,12 +61,17 @@ class Kind:
         loader = self._get_loader()
         config = copy.deepcopy(self.config)
 
+        if "write_artifacts" in inspect.signature(loader).parameters:
+            extra_args = (write_artifacts,)
+        else:
+            extra_args = ()
         inputs = loader(
             self.name,
             self.path,
             config,
             parameters,
             list(kind_dependencies_tasks.values()),
+            *extra_args,
         )
 
         transforms = TransformSequence()
