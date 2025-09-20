@@ -139,6 +139,7 @@ class MockVideoSendStream : public webrtc::VideoSendStream {
     return std::vector<webrtc::scoped_refptr<webrtc::Resource>>();
   }
 
+  void SetCsrcs(webrtc::ArrayView<const uint32_t> csrcs) override {}
   void GenerateKeyFrame(const std::vector<std::string>& rids) override {}
 
   virtual ~MockVideoSendStream() {}

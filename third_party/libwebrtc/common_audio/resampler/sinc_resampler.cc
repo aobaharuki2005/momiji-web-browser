@@ -82,19 +82,16 @@
 // Note: we're glossing over how the sub-sample handling works with
 // `virtual_source_idx_`, etc.
 
-// MSVC++ requires this to be set before any other includes to get M_PI.
-#define _USE_MATH_DEFINES
-
 #include "common_audio/resampler/sinc_resampler.h"
 
-#include <math.h>
-#include <stdint.h>
-#include <string.h>
-
+#include <cmath>
+#include <cstdint>
+#include <cstring>
 #include <limits>
 
 #include "rtc_base/checks.h"
 #include "rtc_base/cpu_info.h"
+#include "rtc_base/memory/aligned_malloc.h"
 #include "rtc_base/system/arch.h"
 
 namespace webrtc {

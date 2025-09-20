@@ -10,9 +10,11 @@
 
 #include "modules/audio_processing/ns/fast_math.h"
 
-#include <math.h>
-#include <stdint.h>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 
+#include "api/array_view.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {

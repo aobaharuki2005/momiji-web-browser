@@ -32,8 +32,10 @@
 
 #include "modules/audio_processing/three_band_filter_bank.h"
 
+#include <algorithm>
 #include <array>
 
+#include "api/array_view.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {
