@@ -235,10 +235,14 @@ export class BackupUIParent extends JSWindowActorParent {
        */
       return { success: true };
     } else if (message.name == "FindIfABackupFileExists") {
-      this.#bs.findIfABackupFileExists({
-        validateFile: true,
-        multipleFiles: true,
-      });
+      try {
+        await this.#bs.findIfABackupFileExists({
+          validateFile: true,
+          multipleFiles: true,
+        });
+      } catch (e) {
+        lazy.logConsole.error(`Failed to find a backup file`, e);
+      }
     } else if (message.name == "ShowBackupLocation") {
       this.#bs.showBackupLocation();
     } else if (message.name == "EditBackupLocation") {

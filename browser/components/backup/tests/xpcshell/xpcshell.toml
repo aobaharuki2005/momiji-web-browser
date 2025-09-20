@@ -48,6 +48,8 @@ run-sequentially = "Mock Windows registry interferes with normal operations"
 
 ["test_BackupService_resolveDownloadLink.js"]
 
+["test_BackupService_retryHeuristic.js"]
+
 ["test_BackupService_scheduler.js"]
 
 ["test_BackupService_schema_versions.js"]
