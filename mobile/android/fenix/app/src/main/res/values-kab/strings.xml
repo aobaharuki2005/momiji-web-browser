@@ -753,7 +753,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Sagen</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">Qqen ɣer waccaren yemtawan, ticraḍ n yisebtar, awalen uffiren d wugar n wayen-nniḍen.</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Qqen ɣer waccaren yemtawan, ticraḍ n yisebtar, awalen uffiren d wugar n wayen-nniḍen.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Amiḍan n Mozilla</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1138,7 +1138,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">Mtawi sakin sekles isefka-inek</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Mtawi sakin sekles isefka-inek</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Kcem akken ad talseḍ tuqqna</string>
   <!-- Preference for removing FxA account -->
@@ -1971,7 +1971,7 @@
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Qqen ɣer Sync</string>
   <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data">Mtawi sakin sekles isefka</string>
+  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Mtawi sakin sekles isefka</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Azen ɣer yibenkan meṛṛa</string>
   <!-- An option from the share dialog to reconnect to sync -->

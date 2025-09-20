@@ -667,7 +667,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Ipasadya</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">Mag-sign in para makapag-sync ng mga tab, bookmark, password, at iba pa.</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Mag-sign in para makapag-sync ng mga tab, bookmark, password, at iba pa.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Mozilla account</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -959,7 +959,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">i-Sync at i-save ang iyong data</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">i-Sync at i-save ang iyong data</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Mag-sign in para mag-reconnect</string>
   <!-- Preference for removing FxA account -->
@@ -1677,7 +1677,7 @@
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Mag-sign in sa Sync</string>
   <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data">I-sync at i-save ang data</string>
+  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">I-sync at i-save ang data</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Ipadala sa lahat ng mga device</string>
   <!-- An option from the share dialog to reconnect to sync -->

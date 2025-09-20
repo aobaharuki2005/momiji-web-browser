@@ -785,7 +785,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Προσαρμογή</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">Συνδεθείτε για να συγχρονίσετε τις καρτέλες, τους σελιδοδείκτες, τους κωδικούς πρόσβασης και πολλά άλλα.</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Συνδεθείτε για να συγχρονίσετε τις καρτέλες, τους σελιδοδείκτες, τους κωδικούς πρόσβασης και πολλά άλλα.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Λογαριασμός Mozilla</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1187,7 +1187,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">Συγχρονισμός δεδομένων</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Συγχρονισμός δεδομένων</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Συνδεθείτε για επανασύνδεση</string>
   <!-- Preference for removing FxA account -->
@@ -2062,7 +2062,7 @@
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Σύνδεση στο Sync</string>
   <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data">Συγχρονισμός δεδομένων</string>
+  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Συγχρονισμός δεδομένων</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Αποστολή σε όλες τις συσκευές</string>
   <!-- An option from the share dialog to reconnect to sync -->

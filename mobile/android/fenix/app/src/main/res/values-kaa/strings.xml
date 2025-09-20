@@ -343,7 +343,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Jeke sazlaw</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">Betler, saylandılar, paroller hám basqalardı sáykeslestiriw ushın kiriń.</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Betler, saylandılar, paroller hám basqalardı sáykeslestiriw ushın kiriń.</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
   <string name="preferences_account_sync_error">Sáykeslestiriwdi dawam ettiriw ushın qayta jalǵanıń</string>
   <!-- Preference for language -->
@@ -502,7 +502,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">Maǵlıwmatlarıńızdı sáykeslestiriń hám saqlań</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Maǵlıwmatlarıńızdı sáykeslestiriń hám saqlań</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Qayta jalǵanıw ushın sistemaǵa kiriń</string>
   <!-- Preference for removing FxA account -->
@@ -1013,7 +1013,7 @@
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Sáykeslestiriwge kiriw</string>
   <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data">Maǵlıwmatlarıńızdı sáykeslestiriń hám saqlań</string>
+  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Maǵlıwmatlarıńızdı sáykeslestiriń hám saqlań</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Barlıq qurılmalarǵa jiberiw</string>
   <!-- An option from the share dialog to reconnect to sync -->

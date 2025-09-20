@@ -787,7 +787,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Фармоишдиҳӣ</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">Барои ҳамоҳангсозии варақаҳо, хатбаракҳо, ниҳонвожаҳо ва чизҳои дигар, ворид шавед.</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Барои ҳамоҳангсозии варақаҳо, хатбаракҳо, ниҳонвожаҳо ва чизҳои дигар, ворид шавед.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Ҳисоби «Mozilla»</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1189,7 +1189,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">Ҳамоҳангсозӣ ва нигоҳ доштани маълумоти шумо</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Ҳамоҳангсозӣ ва нигоҳ доштани маълумоти шумо</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Барои аз нав пайваст шудан ворид шавед</string>
   <!-- Preference for removing FxA account -->
@@ -2068,7 +2068,7 @@
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Барои ҳамоҳангсозӣ ворид шавед</string>
   <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data">Ҳамоҳангсозӣ ва нигоҳ доштани маълумот</string>
+  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Ҳамоҳангсозӣ ва нигоҳ доштани маълумот</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Фиристодан ба ҳамаи дастгоҳҳо</string>
   <!-- An option from the share dialog to reconnect to sync -->

@@ -785,7 +785,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Persunalisar</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">T\'annunzia per sincronisar tabs, segnapaginas, pleds-clav e dapli.</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">T\'annunzia per sincronisar tabs, segnapaginas, pleds-clav e dapli.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Conto Mozilla</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1187,7 +1187,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">Sincronisar e memorisar tias datas</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Sincronisar e memorisar tias datas</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">T\'annunzia per ta reconnectar</string>
   <!-- Preference for removing FxA account -->
@@ -2058,7 +2058,7 @@
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">S\'annunziar tar Sync</string>
   <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data">Sincronisar e memorisar las datas</string>
+  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Sincronisar e memorisar las datas</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Trametter a tut ils apparats</string>
   <!-- An option from the share dialog to reconnect to sync -->
