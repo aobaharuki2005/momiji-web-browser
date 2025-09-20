@@ -55,3 +55,6 @@ skip-if = [
 ]
 
 ["browser_weather.js"]
+skip-if = [
+  "os == 'win' && os_version == '11.26100'", # Bug 1885264
+]
