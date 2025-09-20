@@ -1149,9 +1149,7 @@ export class TelemetryFeed {
         : PRIVATE_PING_SURFACE_COUNTRY_MAP[surfaceId][0];
     }
 
-    if (
-      prefs.inferredPersonalizationConfig?.include_normalized_time_zone_offset
-    ) {
+    if (prefs.inferredPersonalizationConfig?.normalized_time_zone_offset) {
       privateMetrics.utcOffset = lazy.NewTabUtils.getUtcOffset(surfaceId);
     }
     // To prevent fingerprinting we only send one current experiment / branch
