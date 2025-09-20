@@ -64,8 +64,7 @@ class GFX2D_API GaussianBlur final {
                const Rect* aSkipRect, SurfaceFormat aFormat = SurfaceFormat::A8,
                bool aClamp = false);
 
-  GaussianBlur(const Rect& aRect, int32_t aStride, const Point& aSigma,
-               SurfaceFormat aFormat = SurfaceFormat::A8, bool aClamp = false);
+  explicit GaussianBlur(const Point& aSigma, bool aClamp = false);
 
   GaussianBlur();
 
@@ -136,7 +135,8 @@ class GFX2D_API GaussianBlur final {
    * The size must be at least that returned by GetSurfaceAllocationSize() or
    * bad things will happen.
    */
-  void Blur(uint8_t* aData) const;
+  void Blur(uint8_t* aData, int32_t aStride, const IntSize& aSize,
+            SurfaceFormat aFormat = SurfaceFormat::UNKNOWN) const;
 
   /**
    * Calculates a blur radius that, when used with box blur, approximates a
@@ -185,7 +185,7 @@ class GFX2D_API GaussianBlur final {
   /**
    * The format of the data passed to Blur()
    */
-  SurfaceFormat mFormat = SurfaceFormat::A8;
+  SurfaceFormat mFormat = SurfaceFormat::UNKNOWN;
 
   /**
    * Whether clamping at border pixels is required.
@@ -207,7 +207,8 @@ class GFX2D_API GaussianBlur final {
    */
   bool mHasDirtyRect = false;
 
-  bool Spread(uint8_t* aData) const;
+  bool Spread(uint8_t* aData, int32_t aStride, const IntSize& aSize,
+              SurfaceFormat aFormat) const;
 
   friend class DrawTargetSkia;
 
