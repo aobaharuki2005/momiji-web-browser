@@ -699,6 +699,10 @@ newtab:
         description: >
           Are content details sent separately in the newtab_content ping
         type: boolean
+      layout_name: &layout_name
+        description: >
+          description of the section layout
+        type: string
     send_in_pings:
       - newtab
 
@@ -1955,10 +1959,7 @@ pocket:
           If click belongs in a section, the numeric position of the section
         type: string
       is_section_followed: *is_section_followed
-      layout_name: &layout_name
-        description: >
-          description of the section layout
-        type: string
+      layout_name: *layout_name
       content_redacted:
         description: >
           Are content details sent separately in the newtab_content ping
