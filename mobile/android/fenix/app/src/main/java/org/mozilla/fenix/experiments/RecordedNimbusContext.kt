@@ -150,7 +150,7 @@ class RecordedNimbusContext(
                 "device_manufacturer" to deviceManufacturer,
                 "device_model" to deviceModel,
                 "user_accepted_tou" to userAcceptedTou,
-                "no_shortcuts_or_stories_opt_out" to noShortcutsOrStoriesOptOuts,
+                "no_shortcuts_or_stories_opt_outs" to noShortcutsOrStoriesOptOuts,
                 "user_clicked_tou_prompt_link" to userClickedTouPromptLink,
                 "user_clicked_tou_prompt_remind_me_later" to userClickedTouPromptRemindMeLater,
             ),

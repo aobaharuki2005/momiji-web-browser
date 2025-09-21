@@ -568,3 +568,346 @@ add_task(async function universal_dismiss_on_pref_change_multiple_windows() {
   cleanupInfobars();
   Services.prefs.clearUserPref(PREF);
 });
+
+const removeByIdInWin = (win, id) => {
+  const n = win.gNotificationBox.getNotificationWithValue(id);
+  if (n) {
+    win.gNotificationBox.removeNotification(n);
+  }
+};
+
+add_task(async function replace_universal_with_universal_across_two_windows() {
+  const sandbox = sinon.createSandbox();
+  const win1 = BrowserWindowTracker.getTopWindow();
+  const browser1 = win1.gBrowser.selectedBrowser;
+  const win2 = await BrowserTestUtils.openNewBrowserWindow();
+
+  const firstUniversalMessage = {
+    id: "TEST_REPLACE_UNIVERSAL_WITH_UNIVERSAL_FIRST",
+    content: {
+      type: "universal",
+      text: "first universal message",
+      buttons: [],
+      canReplace: ["TEST_REPLACE_UNIVERSAL_WITH_UNIVERSAL_SECOND"],
+    },
+  };
+
+  const secondUniversalMessage = {
+    id: "TEST_REPLACE_UNIVERSAL_WITH_UNIVERSAL_SECOND",
+    content: {
+      type: "universal",
+      text: "second universal message",
+      buttons: [],
+      canReplace: ["TEST_REPLACE_UNIVERSAL_WITH_UNIVERSAL_FIRST"],
+    },
+  };
+
+  const getFromWin1 = id => win1.gNotificationBox.getNotificationWithValue(id);
+  const getFromWin2 = id => win2.gNotificationBox.getNotificationWithValue(id);
+
+  const dispatchFirstUniversal = sandbox.stub();
+  await InfoBar.showInfoBarMessage(
+    browser1,
+    firstUniversalMessage,
+    dispatchFirstUniversal
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () => !!getFromWin1(firstUniversalMessage.id),
+    "First universal visible in window 1"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !!getFromWin2(firstUniversalMessage.id),
+    "First universal visible in window 2"
+  );
+  Assert.ok(
+    dispatchFirstUniversal.calledWith(
+      sinon.match({
+        type: "IMPRESSION",
+        data: sinon.match.has("id", firstUniversalMessage.id),
+      })
+    ),
+    "Impression recorded for the first universal"
+  );
+
+  const dispatchSecondUniversal = sandbox.stub();
+  await InfoBar.showInfoBarMessage(
+    browser1,
+    secondUniversalMessage,
+    dispatchSecondUniversal
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () => !!getFromWin1(secondUniversalMessage.id),
+    "Second universal visible in window 1"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !!getFromWin2(secondUniversalMessage.id),
+    "Second universal visible in window 2"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !getFromWin1(firstUniversalMessage.id),
+    "First universal removed in window 1"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !getFromWin2(firstUniversalMessage.id),
+    "First universal removed in window 2"
+  );
+  Assert.ok(
+    dispatchSecondUniversal.calledWith(
+      sinon.match({
+        type: "IMPRESSION",
+        data: sinon.match.has("id", secondUniversalMessage.id),
+      })
+    ),
+    "Impression recorded for the second universal"
+  );
+
+  const dispatchFirstUniversalAgain = sandbox.stub();
+  await InfoBar.showInfoBarMessage(
+    browser1,
+    firstUniversalMessage,
+    dispatchFirstUniversalAgain
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () => !!getFromWin1(firstUniversalMessage.id),
+    "First universal visible again in window 1"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !!getFromWin2(firstUniversalMessage.id),
+    "First universal visible again in window 2"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !getFromWin1(secondUniversalMessage.id),
+    "Second universal removed in window 1"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !getFromWin2(secondUniversalMessage.id),
+    "Second universal removed in window 2"
+  );
+  Assert.ok(
+    dispatchFirstUniversalAgain.calledWith(
+      sinon.match({
+        type: "IMPRESSION",
+        data: sinon.match.has("id", firstUniversalMessage.id),
+      })
+    ),
+    "Impression recorded again for the first universal when shown again"
+  );
+
+  // Cleanup
+  removeByIdInWin(win1, firstUniversalMessage.id);
+  removeByIdInWin(win2, firstUniversalMessage.id);
+  removeByIdInWin(win1, secondUniversalMessage.id);
+  removeByIdInWin(win2, secondUniversalMessage.id);
+  await BrowserTestUtils.closeWindow(win2);
+  sandbox.restore();
+  cleanupInfobars();
+});
+
+const getNotificationFromWin = (win, id) =>
+  win?.gNotificationBox?.getNotificationWithValue?.(id);
+
+add_task(async function universal_replaces_global_across_windows() {
+  const sandbox = sinon.createSandbox();
+
+  const firstWindow = BrowserWindowTracker.getTopWindow();
+  const firstBrowser = firstWindow.gBrowser.selectedBrowser;
+  const secondWindow = await BrowserTestUtils.openNewBrowserWindow();
+
+  const globalMessage = {
+    id: "TEST_GLOBAL_ORIGINAL_FOR_UNIVERSAL_REPLACEMENT",
+    content: {
+      type: "global",
+      text: "original global",
+      buttons: [],
+      // no canReplace
+    },
+  };
+
+  const universalReplacement = {
+    id: "TEST_UNIVERSAL_REPLACES_GLOBAL",
+    content: {
+      type: "universal",
+      text: "replacement universal",
+      buttons: [],
+      canReplace: [globalMessage.id],
+    },
+  };
+
+  const dispatchGlobal = sandbox.stub();
+  await InfoBar.showInfoBarMessage(firstBrowser, globalMessage, dispatchGlobal);
+
+  await BrowserTestUtils.waitForCondition(
+    () => !!getNotificationFromWin(firstWindow, globalMessage.id),
+    "Global infobar visible in the first window"
+  );
+  Assert.ok(
+    !getNotificationFromWin(secondWindow, globalMessage.id),
+    "Global infobar is NOT shown in the second window"
+  );
+  Assert.ok(
+    dispatchGlobal.calledWith(
+      sinon.match({
+        type: "IMPRESSION",
+        data: sinon.match.has("id", globalMessage.id),
+      })
+    ),
+    "Recorded impression for the original global message"
+  );
+
+  const dispatchUniversal = sandbox.stub();
+  await InfoBar.showInfoBarMessage(
+    firstBrowser,
+    universalReplacement,
+    dispatchUniversal
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () => !!getNotificationFromWin(firstWindow, universalReplacement.id),
+    "Universal replacement visible in the first window"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !!getNotificationFromWin(secondWindow, universalReplacement.id),
+    "Universal replacement visible in the second window"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !getNotificationFromWin(firstWindow, globalMessage.id),
+    "Original global infobar removed from the first window"
+  );
+
+  Assert.ok(
+    dispatchUniversal.calledWith(
+      sinon.match({
+        type: "IMPRESSION",
+        data: sinon.match.has("id", universalReplacement.id),
+      })
+    ),
+    "Recorded impression for the universal replacement (first appearance only)"
+  );
+
+  // Cleanup
+  removeByIdInWin(firstWindow, universalReplacement.id);
+  removeByIdInWin(secondWindow, universalReplacement.id);
+  removeByIdInWin(firstWindow, globalMessage.id);
+  await BrowserTestUtils.closeWindow(secondWindow);
+  sandbox.restore();
+  cleanupInfobars();
+});
+
+add_task(async function global_replaces_universal_across_windows() {
+  const sandbox = sinon.createSandbox();
+
+  const firstWindow = BrowserWindowTracker.getTopWindow();
+  const firstBrowser = firstWindow.gBrowser.selectedBrowser;
+  const secondWindow = await BrowserTestUtils.openNewBrowserWindow();
+
+  const universalOriginal = {
+    id: "TEST_UNIVERSAL_ORIGINAL_FOR_GLOBAL_REPLACEMENT",
+    content: {
+      type: "universal",
+      text: "original universal",
+      buttons: [],
+    },
+  };
+
+  const globalReplacement = {
+    id: "TEST_GLOBAL_REPLACES_UNIVERSAL",
+    content: {
+      type: "global",
+      text: "replacement global",
+      buttons: [],
+      canReplace: [universalOriginal.id],
+    },
+  };
+
+  const dispatchUniversal = sandbox.stub();
+  await InfoBar.showInfoBarMessage(
+    firstBrowser,
+    universalOriginal,
+    dispatchUniversal
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () => !!getNotificationFromWin(firstWindow, universalOriginal.id),
+    "Original universal visible in the first window"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !!getNotificationFromWin(secondWindow, universalOriginal.id),
+    "Original universal visible in the second window"
+  );
+  Assert.ok(
+    dispatchUniversal.calledWith(
+      sinon.match({
+        type: "IMPRESSION",
+        data: sinon.match.has("id", universalOriginal.id),
+      })
+    ),
+    "Recorded impression for the original universal"
+  );
+
+  const originalObs = Services.obs;
+  const removeSpy = sandbox.spy();
+  Services.obs = {
+    addObserver: originalObs.addObserver.bind(originalObs),
+    notifyObservers: originalObs.notifyObservers.bind(originalObs),
+    removeObserver(subject, topic) {
+      removeSpy(subject, topic);
+      return originalObs.removeObserver(subject, topic);
+    },
+  };
+  registerCleanupFunction(() => {
+    Services.obs = originalObs;
+  });
+
+  const dispatchGlobal = sandbox.stub();
+  await InfoBar.showInfoBarMessage(
+    firstBrowser,
+    globalReplacement,
+    dispatchGlobal
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () => !getNotificationFromWin(firstWindow, universalOriginal.id),
+    "Universal removed from the first window"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !getNotificationFromWin(secondWindow, universalOriginal.id),
+    "Universal removed from the second window"
+  );
+  await BrowserTestUtils.waitForCondition(
+    () => !!getNotificationFromWin(firstWindow, globalReplacement.id),
+    "Global replacement visible in the first window"
+  );
+  Assert.ok(
+    !getNotificationFromWin(secondWindow, globalReplacement.id),
+    "Global replacement does NOT appear in the second window"
+  );
+
+  await TestUtils.waitForCondition(
+    () =>
+      removeSpy
+        .getCalls()
+        .some(c => c.args[0] === InfoBar && c.args[1] === "domwindowopened"),
+    "removeObserver was invoked for domwindowopened"
+  );
+
+  Assert.ok(
+    dispatchGlobal.calledWith(
+      sinon.match({
+        type: "IMPRESSION",
+        data: sinon.match.has("id", globalReplacement.id),
+      })
+    ),
+    "Recorded impression for the global replacement"
+  );
+
+  // Cleanup
+  removeByIdInWin(firstWindow, globalReplacement.id);
+  removeByIdInWin(firstWindow, universalOriginal.id);
+  removeByIdInWin(secondWindow, universalOriginal.id);
+  await BrowserTestUtils.closeWindow(secondWindow);
+  sandbox.restore();
+  cleanupInfobars();
+});

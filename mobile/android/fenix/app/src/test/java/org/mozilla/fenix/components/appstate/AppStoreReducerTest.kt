@@ -340,6 +340,7 @@ class AppStoreReducerTest {
             ),
             appStore.state.snackbarState,
         )
+        assertTrue(appStore.state.supportedMenuNotifications.contains(SupportedMenuNotifications.Downloads))
     }
 
     @Test

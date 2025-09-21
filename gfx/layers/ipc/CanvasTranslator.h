@@ -583,6 +583,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
     gfx::ReferencePtr mRefPtr;
     UniquePtr<TextureData> mTextureData;
     RefPtr<gfx::DrawTarget> mDrawTarget;
+    RefPtr<gfx::DrawTarget> mFallbackDrawTarget;
     bool mNotifiedRequiresRefresh = false;
     // Ref-count of how active uses of the DT. Avoids deletion when locked.
     int32_t mLocked = 1;

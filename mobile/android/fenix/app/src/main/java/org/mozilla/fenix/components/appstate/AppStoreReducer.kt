@@ -246,6 +246,7 @@ internal object AppStoreReducer {
             snackbarState = SnackbarState.DownloadCompleted(
                 action.downloadState,
             ),
+            supportedMenuNotifications = state.supportedMenuNotifications + SupportedMenuNotifications.Downloads,
         )
 
         is AppAction.DownloadAction.CannotOpenFile -> state.copy(

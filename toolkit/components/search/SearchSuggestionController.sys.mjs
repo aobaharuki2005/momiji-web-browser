@@ -79,8 +79,6 @@ const lazy = XPCOMUtils.declareLazy({
  * @typedef {object} SuggestionExtraContext
  * @property {boolean} awaitingLocalResults
  *   Indicates if this request context is awaiting local results.
- * @property {string} engineId
- *   The engine identifier to use for some telemetry.
  * @property {XMLHttpRequest} [request]
  *   The request for this suggestion context.
  * @property {number} gleanTimerId
@@ -352,7 +350,6 @@ export class SearchSuggestionController {
       awaitingLocalResults: false,
       dedupeRemoteAndLocal,
       engine,
-      engineId: engine?.identifier || "other",
       fetchTrending,
       inPrivateBrowsing,
       restrictToEngine,
@@ -470,29 +467,33 @@ export class SearchSuggestionController {
    *
    * @param {SuggestionRequestContext} context
    *   The search context.
+   * @param {boolean} usedOHTTP
+   *   True if OHTTP was used for the suggestion request.
    */
-  #reportTelemetryForEngine(context) {
+  #reportTelemetryForEngine(context, usedOHTTP) {
+    let category = usedOHTTP
+      ? Glean.searchSuggestionsOhttp
+      : Glean.searchSuggestions;
     // If the timer id has been reset, then we have already handled telemetry.
     // This might occur in the context of an abort or or cancel.
     if (context.gleanTimerId) {
+      let engineId = context.engine.isConfigEngine
+        ? context.engine.id
+        : "other";
       // Stop the latency stopwatch.
       if (context.aborted) {
-        Glean.search.suggestionsLatency[context.engineId].cancel(
-          context.gleanTimerId
-        );
+        category.latency[engineId].cancel(context.gleanTimerId);
       } else {
-        Glean.search.suggestionsLatency[context.engineId].stopAndAccumulate(
-          context.gleanTimerId
-        );
+        category.latency[engineId].stopAndAccumulate(context.gleanTimerId);
       }
       context.gleanTimerId = 0;
       if (context.engine.isConfigEngine) {
         if (context.aborted) {
-          Glean.searchSuggestions.abortedRequests[context.engine.id].add();
+          category.abortedRequests[context.engine.id].add();
         } else if (context.errorWasReceived) {
-          Glean.searchSuggestions.failedRequests[context.engine.id].add();
+          category.failedRequests[context.engine.id].add();
         } else {
-          Glean.searchSuggestions.successfulRequests[context.engine.id].add();
+          category.successfulRequests[context.engine.id].add();
         }
       }
     }
@@ -582,7 +583,7 @@ export class SearchSuggestionController {
 
     request.addEventListener("load", () => {
       context.timer.cancel();
-      this.#reportTelemetryForEngine(context);
+      this.#reportTelemetryForEngine(context, false);
       if (!this.#context || context != this.#context || context.aborted) {
         deferredResponse.resolve(
           "Got HTTP response after the request was cancelled"
@@ -615,7 +616,7 @@ export class SearchSuggestionController {
 
     request.addEventListener("error", () => {
       this.#context.errorWasReceived = true;
-      this.#reportTelemetryForEngine(context);
+      this.#reportTelemetryForEngine(context, false);
       deferredResponse.resolve("HTTP error");
     });
 
@@ -623,7 +624,7 @@ export class SearchSuggestionController {
     // shouldn't return local or remote results for existing searches.
     request.addEventListener("abort", () => {
       context.timer.cancel();
-      this.#reportTelemetryForEngine(context);
+      this.#reportTelemetryForEngine(context, false);
       deferredResponse.reject(
         `HTTP request aborted for ${submission.uri.spec}}`
       );
@@ -636,7 +637,9 @@ export class SearchSuggestionController {
     }
 
     context.gleanTimerId =
-      Glean.search.suggestionsLatency[context.engineId].start();
+      Glean.searchSuggestions.latency[
+        context.engine.isConfigEngine ? context.engine.id : "other"
+      ].start();
 
     return deferredResponse.promise;
   }
@@ -667,7 +670,9 @@ export class SearchSuggestionController {
     lazy.logConsole.debug(`OHTTP request started for ${submission.uri.spec}`);
 
     context.gleanTimerId =
-      Glean.search.suggestionsLatency[context.engineId].start();
+      Glean.searchSuggestionsOhttp.latency[
+        context.engine.isConfigEngine ? context.engine.id : "other"
+      ].start();
 
     let merinoSuggestions = await this.#merino.fetch({
       query: context.searchString,
@@ -678,7 +683,7 @@ export class SearchSuggestionController {
       },
     });
 
-    this.#reportTelemetryForEngine(context);
+    this.#reportTelemetryForEngine(context, true);
     if (!this.#context || context != this.#context || context.aborted) {
       return "Got OHTTP response after the request was cancelled";
     }

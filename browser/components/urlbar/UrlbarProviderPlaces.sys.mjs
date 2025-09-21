@@ -44,7 +44,7 @@ function defaultQuery(conditions = "") {
   let query = `
      SELECT h.url, h.title, ${SQL_BOOKMARK_TAGS_FRAGMENT}, h.id, t.open_count,
             ${lazy.PAGES_FRECENCY_FIELD} AS frecency, t.userContextId,
-            h.last_visit_date, t.groupId
+            h.last_visit_date, NULLIF(t.groupId, '') groupId
      FROM moz_places h
      LEFT JOIN moz_openpages_temp t
             ON t.url = h.url
@@ -76,7 +76,7 @@ function defaultQuery(conditions = "") {
 const SQL_SWITCHTAB_QUERY = `
     SELECT t.url, t.url AS title, 0 AS bookmarked, NULL AS btitle,
            NULL AS tags, NULL AS id, t.open_count, NULL AS frecency,
-           t.userContextId, NULL AS last_visit_date, t.groupId
+           t.userContextId, NULL AS last_visit_date, NULLIF(t.groupId, '') groupId
    FROM moz_openpages_temp t
    LEFT JOIN moz_places h ON h.url_hash = hash(t.url) AND h.url = t.url
    WHERE h.id IS NULL

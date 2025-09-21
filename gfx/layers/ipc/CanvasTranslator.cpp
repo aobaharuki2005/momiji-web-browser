@@ -545,6 +545,9 @@ bool CanvasTranslator::TryDrawTargetWebglFallback(
   NotifyRequiresRefresh(aTextureOwnerId);
 
   const auto& info = mTextureInfo[aTextureOwnerId];
+  if (info.mTextureData) {
+    return true;
+  }
   if (RefPtr<gfx::DrawTarget> dt =
           CreateFallbackDrawTarget(info.mRefPtr, aTextureOwnerId,
                                    aWebgl->GetSize(), aWebgl->GetFormat())) {
@@ -945,6 +948,9 @@ void CanvasTranslator::DeviceResetAcknowledged() { DeviceChangeAcknowledged(); }
 
 bool CanvasTranslator::CreateReferenceTexture() {
   if (mReferenceTextureData) {
+    if (mBaseDT) {
+      mReferenceTextureData->ReturnDrawTarget(mBaseDT.forget());
+    }
     mReferenceTextureData->Unlock();
   }
 
@@ -1116,14 +1122,12 @@ void CanvasTranslator::PrepareShmem(
     const RemoteTextureOwnerId aTextureOwnerId) {
   if (gfx::DrawTargetWebgl* webgl =
           GetDrawTargetWebgl(aTextureOwnerId, false)) {
-    if (const auto& fallback = mTextureInfo[aTextureOwnerId].mTextureData) {
+    if (RefPtr<gfx::DrawTarget> dt =
+            mTextureInfo[aTextureOwnerId].mFallbackDrawTarget) {
       // If there was a fallback, copy the fallback to the software framebuffer
       // shmem for reading.
-      if (RefPtr<gfx::DrawTarget> dt = fallback->BorrowDrawTarget()) {
-        if (RefPtr<gfx::SourceSurface> snapshot = dt->Snapshot()) {
-          webgl->CopySurface(snapshot, snapshot->GetRect(),
-                             gfx::IntPoint(0, 0));
-        }
+      if (RefPtr<gfx::SourceSurface> snapshot = dt->Snapshot()) {
+        webgl->CopySurface(snapshot, snapshot->GetRect(), gfx::IntPoint(0, 0));
       }
     } else {
       // Otherwise, just ensure the software framebuffer is up to date.
@@ -1226,6 +1230,7 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateFallbackDrawTarget(
 
     TextureInfo& info = mTextureInfo[aTextureOwnerId];
     info.mRefPtr = aRefPtr;
+    info.mFallbackDrawTarget = dt;
     info.mTextureData = std::move(textureData);
     info.mTextureLockMode = kInitMode;
   } while (!dt && CheckForFreshCanvasDevice(__LINE__));
@@ -1240,6 +1245,19 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
     MOZ_DIAGNOSTIC_CRASH("No texture owner set");
 #endif
     return nullptr;
+  }
+
+  {
+    auto result = mTextureInfo.find(aTextureOwnerId);
+    if (result != mTextureInfo.end()) {
+      const TextureInfo& info = result->second;
+      if (info.mTextureData || info.mDrawTarget) {
+#ifndef FUZZING_SNAPSHOT
+        MOZ_DIAGNOSTIC_CRASH("DrawTarget already exists");
+#endif
+        return nullptr;
+      }
+    }
   }
 
   RefPtr<gfx::DrawTarget> dt;
@@ -1306,7 +1324,11 @@ void CanvasTranslator::RemoveTexture(const RemoteTextureOwnerId aTextureOwnerId,
   if (--info.mLocked > 0) {
     return;
   }
+  RemoveDrawTarget(info.mRefPtr);
   if (info.mTextureData) {
+    if (info.mFallbackDrawTarget) {
+      info.mTextureData->ReturnDrawTarget(info.mFallbackDrawTarget.forget());
+    }
     info.mTextureData->Unlock();
   }
   if (mRemoteTextureOwner) {
@@ -1474,9 +1496,13 @@ void CanvasTranslator::ClearTextureInfo() {
   mUsedWrapperForSurfaceDescriptor = nullptr;
   mUsedSurfaceDescriptorForSurfaceDescriptor = Nothing();
 
-  for (auto const& entry : mTextureInfo) {
-    if (entry.second.mTextureData) {
-      entry.second.mTextureData->Unlock();
+  for (auto& entry : mTextureInfo) {
+    auto& info = entry.second;
+    if (info.mTextureData) {
+      if (info.mFallbackDrawTarget) {
+        info.mTextureData->ReturnDrawTarget(info.mFallbackDrawTarget.forget());
+      }
+      info.mTextureData->Unlock();
     }
   }
   mTextureInfo.clear();
@@ -1489,8 +1515,10 @@ void CanvasTranslator::ClearTextureInfo() {
   if (sSharedContext && sSharedContext->hasOneRef()) {
     sSharedContext->ClearCaches();
   }
-  mBaseDT = nullptr;
   if (mReferenceTextureData) {
+    if (mBaseDT) {
+      mReferenceTextureData->ReturnDrawTarget(mBaseDT.forget());
+    }
     mReferenceTextureData->Unlock();
   }
   if (mRemoteTextureOwner) {

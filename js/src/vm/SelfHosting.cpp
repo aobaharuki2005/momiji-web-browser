@@ -100,6 +100,7 @@
 #include "vm/Uint8Clamped.h"
 #include "vm/WrapperObject.h"
 
+#include "gc/WeakMap-inl.h"
 #include "vm/Compartment-inl.h"
 #include "vm/JSAtomUtils-inl.h"  // PrimitiveValueToId
 #include "vm/JSFunction-inl.h"
@@ -1573,6 +1574,14 @@ static bool intrinsic_newList(JSContext* cx, unsigned argc, js::Value* vp) {
   return true;
 }
 
+static bool intrinsic_CanBeHeldWeakly(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+
+  args.rval().setBoolean(CanBeHeldWeakly(args[0]));
+  return true;
+}
+
 static const JSFunctionSpec intrinsic_functions[] = {
     // Intrinsic helper functions
     JS_INLINABLE_FN("ArrayIteratorPrototypeOptimizable",
@@ -1619,6 +1628,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
           CallNonGenericSelfhostedMethod<Is<WeakMapObject>>, 2, 0),
     JS_FN("CallWrapForValidIteratorMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<WrapForValidIteratorObject>>, 2, 0),
+    JS_FN("CanBeHeldWeakly", intrinsic_CanBeHeldWeakly, 1, 0),
     JS_INLINABLE_FN("CanOptimizeArraySpecies",
                     intrinsic_CanOptimizeArraySpecies, 1, 0,
                     IntrinsicCanOptimizeArraySpecies),

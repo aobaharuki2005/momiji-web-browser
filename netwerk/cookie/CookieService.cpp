@@ -1700,15 +1700,13 @@ CookieStorage* CookieService::PickStorage(
   return mPersistentStorage;
 }
 
-bool CookieService::SetCookiesFromIPC(const nsACString& aBaseDomain,
-                                      const OriginAttributes& aAttrs,
-                                      nsIURI* aHostURI, bool aFromHttp,
-                                      bool aIsThirdParty,
-                                      const nsTArray<CookieStruct>& aCookies,
-                                      BrowsingContext* aBrowsingContext) {
+nsICookieValidation::ValidationError CookieService::SetCookiesFromIPC(
+    const nsACString& aBaseDomain, const OriginAttributes& aAttrs,
+    nsIURI* aHostURI, bool aFromHttp, bool aIsThirdParty,
+    const nsTArray<CookieStruct>& aCookies, BrowsingContext* aBrowsingContext) {
   if (!IsInitialized()) {
     // If we are probably shutting down, we can ignore this cookie.
-    return true;
+    return nsICookieValidation::eOK;
   }
 
   CookieStorage* storage = PickStorage(aAttrs);
@@ -1720,7 +1718,7 @@ bool CookieService::SetCookiesFromIPC(const nsACString& aBaseDomain,
     MOZ_ASSERT(validation);
 
     if (validation->Result() != nsICookieValidation::eOK) {
-      return false;
+      return validation->Result();
     }
 
     // create a new Cookie and copy attributes
@@ -1738,7 +1736,7 @@ bool CookieService::SetCookiesFromIPC(const nsACString& aBaseDomain,
                        aBrowsingContext);
   }
 
-  return true;
+  return nsICookieValidation::eOK;
 }
 
 void CookieService::GetCookiesFromHost(

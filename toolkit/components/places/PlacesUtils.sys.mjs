@@ -3147,9 +3147,9 @@ ChromeUtils.defineLazyGetter(lazy, "gAsyncDBLargeCacheConnPromised", () =>
       // This should be kept in sync with nsPlacesTables.h.
       await conn.execute(`
         CREATE TEMP TABLE IF NOT EXISTS moz_openpages_temp (
-          url TEXT,
-          userContextId INTEGER,
-          groupId TEXT,
+          url TEXT NOT NULL,
+          userContextId INTEGER NOT NULL,
+          groupId TEXT NOT NULL,
           open_count INTEGER,
           PRIMARY KEY (url, userContextId, groupId)
         )`);
@@ -3162,7 +3162,7 @@ ChromeUtils.defineLazyGetter(lazy, "gAsyncDBLargeCacheConnPromised", () =>
           DELETE FROM moz_openpages_temp
           WHERE url = NEW.url
             AND userContextId = NEW.userContextId
-            AND groupId IS NEW.groupId;
+            AND groupId = NEW.groupId;
         END`);
       gAsyncDBLargeCacheConnDeferred.resolve(conn);
       return conn;
