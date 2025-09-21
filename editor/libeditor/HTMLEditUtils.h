@@ -1722,32 +1722,48 @@ class HTMLEditUtils final {
    * aAncestorTypes.
    */
   enum class AncestorType {
-    // If there is an ancestor block, it's a limiter of the scan.
+    // Return the closest block element.
     ClosestBlockElement,
-    // If there is an ancestor container element, it's a limiter of the scan.
+    // Return the closest container element, either block or inline.  I.e., this
+    // ignores void elements like <br>, <hr>, etc.
     ClosestContainerElement,
-    // If there is no ancestor block in the range, the topmost inline element is
-    // a limiter of the scan.
+    // Return a child element of the closest block element.
+    // NOTE: If the scanning start node is a block element, the methods return
+    // nullptr or the ancestor limiter if AllowRootOrAncestorLimiterElement is
+    // set.
+    // NOTE: If ClosestButtonElement is set, the methods may return a <button>.
+    // NOTE: If StopAtClosestButtonElement is set, the methods return a child of
+    // <button>.
     MostDistantInlineElementInBlock,
     // Ignore ancestor <hr> elements to check whether a block.
     IgnoreHRElement,
-    // If there is an ancestor <button> element, it's also a limiter of the
-    // scan.
-    ButtonElement,
-    // The root element of the scan start node or the ancestor limiter may be
-    // return if there is no proper element.
-    AllowRootOrAncestorLimiterElement,
+    // Return the closest button element.
+    ClosestButtonElement,
+    // Stop scanning at <button> element.  The methods do not return the
+    // <button> element if MostDistantInlineElementInBlock is set.
+    StopAtClosestButtonElement,
+    // When there is no ancestor which matches with the other flags and reached
+    // the ancestor limiter (or an editing host, the editable <body> or the
+    // editable root document element if and only if EditableElement is
+    // specified), return the ancestor limiter, editable <body> or editable root
+    // document element instead.
+    ReturnAncestorLimiterIfNoProperAncestor,
 
     // Limit to editable elements.  If it reaches an non-editable element,
-    // return its child element.
+    // return the last ancestor element which matches with the other types.
     EditableElement,
   };
   using AncestorTypes = EnumSet<AncestorType>;
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const AncestorType& aType);
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const AncestorTypes& aTypes);
+
   constexpr static AncestorTypes
       ClosestEditableBlockElementOrInlineEditingHost = {
-          AncestorType::ClosestBlockElement,
-          AncestorType::MostDistantInlineElementInBlock,
-          AncestorType::EditableElement};
+          AncestorType::ClosestBlockElement, AncestorType::EditableElement,
+          AncestorType::ReturnAncestorLimiterIfNoProperAncestor};
   constexpr static AncestorTypes ClosestBlockElement = {
       AncestorType::ClosestBlockElement};
   constexpr static AncestorTypes ClosestEditableBlockElement = {
@@ -1759,7 +1775,23 @@ class HTMLEditUtils final {
       AncestorType::EditableElement};
   constexpr static AncestorTypes ClosestEditableBlockElementOrButtonElement = {
       AncestorType::ClosestBlockElement, AncestorType::EditableElement,
-      AncestorType::ButtonElement};
+      AncestorType::ClosestButtonElement};
+  // Return the most distant ancestor element in current block or <button>.
+  constexpr static AncestorTypes
+      MostDistantEditableInlineElementInBlockOrButton = {
+          AncestorType::MostDistantInlineElementInBlock,
+          AncestorType::StopAtClosestButtonElement};
+  // Return the most distant ancestor element in current block or the closest
+  // <button> if starting to scan within a <button>.  If you want a child in the
+  // <button> in the latter case, use
+  // MostDistantEditableInlineElementInBlockOrButton.
+  constexpr static AncestorTypes
+      MostDistantEditableInlineElementInBlockOrClosestButton = {
+          AncestorType::MostDistantInlineElementInBlock,
+          AncestorType::ClosestButtonElement};
+  constexpr static AncestorTypes ClosestContainerElementOrVoidAncestorLimiter =
+      {AncestorType::ClosestContainerElement,
+       AncestorType::ReturnAncestorLimiterIfNoProperAncestor};
   static Element* GetAncestorElement(const nsIContent& aContent,
                                      const AncestorTypes& aAncestorTypes,
                                      BlockInlineCheck aBlockInlineCheck,

@@ -1453,8 +1453,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoInsertParagraphHandler::
   const Element* const closestContainerElement =
       HTMLEditUtils::GetInclusiveAncestorElement(
           *aPointToSplit.ContainerAs<nsIContent>(),
-          {HTMLEditUtils::AncestorType::ClosestContainerElement,
-           HTMLEditUtils::AncestorType::AllowRootOrAncestorLimiterElement},
+          HTMLEditUtils::ClosestContainerElementOrVoidAncestorLimiter,
           BlockInlineCheck::UseComputedDisplayOutsideStyle,
           &aBlockElementToSplit);
   MOZ_ASSERT(closestContainerElement);
@@ -1666,8 +1665,7 @@ HTMLEditor::AutoInsertParagraphHandler::SplitParagraphWithTransaction(
   const RefPtr<Element> deepestContainerElementToSplit =
       HTMLEditUtils::GetInclusiveAncestorElement(
           *pointToSplit.ContainerAs<nsIContent>(),
-          {HTMLEditUtils::AncestorType::ClosestContainerElement,
-           HTMLEditUtils::AncestorType::AllowRootOrAncestorLimiterElement},
+          HTMLEditUtils::ClosestContainerElementOrVoidAncestorLimiter,
           BlockInlineCheck::UseComputedDisplayOutsideStyle,
           &aBlockElementToSplit);
   if (NS_WARN_IF(!deepestContainerElementToSplit)) {
