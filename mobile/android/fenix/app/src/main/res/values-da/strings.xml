@@ -2338,9 +2338,9 @@
   <!-- Message for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. %1$s is the name of the application (e.g. Fenix). -->
   <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">Denne indstilling løser de mest almindelige websteds-problemer. Hvis du slår den fra vil nogle websteder måske ikke fungere som de skal, og %1$s kan ikke hjælpe med at fejlsøge problemerne.</string>
   <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
-  <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Slå løsninger fra</string>
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Slå løsning af problemer fra</string>
   <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
-  <string name="preference_enhanced_tracking_protection_allow_list_dialog_cancel">Behold løsninger slået til</string>
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_cancel">Behold løsning af problemer slået til</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Hvad der bliver blokeret af striks beskyttelse mod sporing</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->

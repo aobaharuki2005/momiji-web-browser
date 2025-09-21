@@ -1823,7 +1823,7 @@
   <!-- Accessibility label for sorting options -->
   <string name="bookmark_sort_menu_content_desc">Sortierungsoptionen</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
-  <string name="bookmark_sort_menu_custom">Nach benutzerdefinierter Reihenfolge sortieren</string>
+  <string name="bookmark_sort_menu_custom">Benutzerdefiniert</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_newest">Nach Neuesten sortieren</string>
   <!-- Label for button to sort bookmarks by oldest in the bookmark sorting overflow menu. -->
