@@ -43,19 +43,18 @@ add_setup(async function () {
   //   test covers both cases, where the row does and does not have a row label.
   gTestProvider = new TestProvider({
     results: [
-      Object.assign(
-        new UrlbarResult(
-          UrlbarUtils.RESULT_TYPE.URL,
-          UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-          {
-            url: "https://example.com/",
-            isBlockable: true,
-          }
-        ),
-        // This ensures the result is sandwiched between the two history results
-        // in the Firefox Suggest group.
-        { suggestedIndex: 1, isSuggestedIndexRelativeToGroup: true }
-      ),
+      new UrlbarResult({
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        payload: {
+          url: "https://example.com/",
+          isBlockable: true,
+        },
+        // This ensures the result is sandwiched between the two history
+        // results in the Firefox Suggest group.
+        suggestedIndex: 1,
+        isSuggestedIndexRelativeToGroup: true,
+      }),
     ],
   });
 

@@ -646,19 +646,19 @@ export class UrlbarProviderInterventions extends UrlbarProvider {
     // At this point, this.currentTip != TIPS.UPDATE_CHECKING because we
     // returned early above if it was.
 
-    let result = new lazy.UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.TIP,
-      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      {
+    let result = new lazy.UrlbarResult({
+      type: UrlbarUtils.RESULT_TYPE.TIP,
+      source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      suggestedIndex: 1,
+      payload: {
         ...getPayloadForTip(this.currentTip),
         type: this.currentTip,
         icon: UrlbarUtils.ICON.TIP,
         helpL10n: {
           id: "urlbar-result-menu-tip-get-help",
         },
-      }
-    );
-    result.suggestedIndex = 1;
+      },
+    });
     addCallback(this, result);
   }
 

@@ -342,15 +342,15 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
         }
         addCallback(
           this,
-          new lazy.UrlbarResult(
-            UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-            UrlbarUtils.RESULT_SOURCE.TABS,
-            {
+          new lazy.UrlbarResult({
+            type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+            source: UrlbarUtils.RESULT_SOURCE.TABS,
+            payload: {
               url: row.getResultByName("url"),
               userContextId: row.getResultByName("userContextId"),
               tabGroup: row.getResultByName("groupId"),
-            }
-          )
+            },
+          })
         );
       }
     );

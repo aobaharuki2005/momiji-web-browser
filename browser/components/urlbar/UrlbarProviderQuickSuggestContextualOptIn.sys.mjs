@@ -323,10 +323,11 @@ export class UrlbarProviderQuickSuggestContextualOptIn extends UrlbarProvider {
    * @returns {Promise} resolved when the query stops.
    */
   async startQuery(queryContext, addCallback) {
-    let result = new lazy.UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.DYNAMIC,
-      UrlbarUtils.RESULT_SOURCE.SEARCH,
-      {
+    let result = new lazy.UrlbarResult({
+      type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      suggestedIndex: 0,
+      payload: {
         buttons: [
           {
             l10n: {
@@ -342,9 +343,8 @@ export class UrlbarProviderQuickSuggestContextualOptIn extends UrlbarProvider {
           },
         ],
         dynamicType: DYNAMIC_RESULT_TYPE,
-      }
-    );
-    result.suggestedIndex = 0;
+      },
+    });
     addCallback(this, result);
 
     this._recordGlean("impression");

@@ -143,19 +143,16 @@ export class UrlbarProviderUnitConversion extends UrlbarProvider {
    *   The callback invoked by this method to add each result.
    */
   startQuery(queryContext, addCallback) {
-    const result = new lazy.UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.DYNAMIC,
-      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      {
+    const result = new lazy.UrlbarResult({
+      type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
+      source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      suggestedIndex: lazy.UrlbarPrefs.get("unitConversion.suggestedIndex"),
+      payload: {
         dynamicType: DYNAMIC_RESULT_TYPE,
         output: this._activeResult,
         input: queryContext.searchString,
-      }
-    );
-    result.suggestedIndex = lazy.UrlbarPrefs.get(
-      "unitConversion.suggestedIndex"
-    );
-
+      },
+    });
     addCallback(this, result);
   }
 

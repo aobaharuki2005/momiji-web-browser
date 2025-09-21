@@ -103,18 +103,18 @@ export class UrlbarProviderPrivateSearch extends UrlbarProvider {
       return;
     }
 
-    let result = new lazy.UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.SEARCH,
-      UrlbarUtils.RESULT_SOURCE.SEARCH,
+    let result = new lazy.UrlbarResult({
+      type: UrlbarUtils.RESULT_TYPE.SEARCH,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      suggestedIndex: 1,
       ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
         query: [searchString, UrlbarUtils.HIGHLIGHT.NONE],
         icon,
         inPrivateWindow: true,
         isPrivateEngine,
-      })
-    );
-    result.suggestedIndex = 1;
+      }),
+    });
     addCallback(this, result);
   }
 }

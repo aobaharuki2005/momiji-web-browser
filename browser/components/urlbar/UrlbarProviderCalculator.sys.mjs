@@ -121,16 +121,16 @@ export class UrlbarProviderCalculator extends UrlbarProvider {
         return;
       }
       let value = Calculator.evaluatePostfix(postfix);
-      const result = new lazy.UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.DYNAMIC,
-        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        {
+      const result = new lazy.UrlbarResult({
+        type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        suggestedIndex: 1,
+        payload: {
           value,
           input: queryContext.searchString,
           dynamicType: DYNAMIC_RESULT_TYPE,
-        }
-      );
-      result.suggestedIndex = 1;
+        },
+      });
       addCallback(this, result);
     } catch (e) {}
   }

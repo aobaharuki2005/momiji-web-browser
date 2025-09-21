@@ -139,32 +139,32 @@ export class AmpSuggestions extends SuggestProvider {
         : lazy.UrlbarUtils.HIGHLIGHT.SUGGESTED,
     ];
 
-    let result = new lazy.UrlbarResult(
-      lazy.UrlbarUtils.RESULT_TYPE.URL,
-      lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(
-        queryContext.tokens,
-        payload
-      )
-    );
-
-    result.isRichSuggestion = true;
+    let resultParams = {};
     if (isTopPick) {
-      result.isBestMatch = true;
-      result.suggestedIndex = 1;
+      resultParams.isBestMatch = true;
+      resultParams.suggestedIndex = 1;
     } else {
       if (lazy.UrlbarPrefs.get("quickSuggestSponsoredPriority")) {
-        result.isBestMatch = true;
-        result.suggestedIndex = 1;
+        resultParams.isBestMatch = true;
+        resultParams.suggestedIndex = 1;
       } else {
-        result.richSuggestionIconSize = 16;
+        resultParams.richSuggestionIconSize = 16;
       }
-      result.payload.descriptionL10n = {
+      payload.descriptionL10n = {
         id: "urlbar-result-action-sponsored",
       };
     }
 
-    return result;
+    return new lazy.UrlbarResult({
+      type: lazy.UrlbarUtils.RESULT_TYPE.URL,
+      source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
+      isRichSuggestion: true,
+      ...resultParams,
+      ...lazy.UrlbarResult.payloadAndSimpleHighlights(
+        queryContext.tokens,
+        payload
+      ),
+    });
   }
 
   onImpression(state, queryContext, controller, featureResults, details) {
