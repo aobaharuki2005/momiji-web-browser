@@ -473,6 +473,7 @@ ChromeUtils.defineLazyGetter(this, "PopupNotifications", () => {
         return anchorElement;
       }
       let fallback = [
+        document.getElementById("trust-icon-container"),
         gURLBar.querySelector(".searchmode-switcher-icon"),
         document.getElementById("identity-icon"),
         document.getElementById("remote-control-icon"),

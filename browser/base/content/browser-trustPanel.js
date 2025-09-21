@@ -16,11 +16,47 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "insecureConnectionTextEnabled",
+  "security.insecure_connection_text.enabled"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "insecureConnectionTextPBModeEnabled",
+  "security.insecure_connection_text.pbmode.enabled"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "httpsOnlyModeEnabled",
+  "dom.security.https_only_mode"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "httpsFirstModeEnabled",
+  "dom.security.https_first"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "schemelessHttpsFirstModeEnabled",
+  "dom.security.https_first_schemeless"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "httpsFirstModeEnabledPBM",
+  "dom.security.https_first_pbm"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "httpsOnlyModeEnabledPBM",
+  "dom.security.https_only_mode_pbm"
+);
+
 const ETP_ENABLED_ASSETS = {
   label: "trustpanel-etp-label-enabled",
   description: "trustpanel-etp-description-enabled",
   header: "trustpanel-header-enabled",
-  innerDescription: "trustpanel-description-enabled",
+  innerDescription: "trustpanel-description-enabled2",
 };
 
 const ETP_DISABLED_ASSETS = {
@@ -38,15 +74,7 @@ class TrustPanel {
   #pageExtensionPolicy = null;
   #isURILoadedFromFile = null;
   #isSecureContext = null;
-
-  // Lazy pref getters.
-  #insecureConnectionTextEnabled = null;
-  #insecureConnectionTextPBModeEnabled = null;
-  #httpsOnlyModeEnabled = null;
-  #httpsFirstModeEnabled = null;
-  #schemelessHttpsFirstModeEnabled = null;
-  #httpsFirstModeEnabledPBM = null;
-  #httpsOnlyModeEnabledPBM = null;
+  #isSecureInternalUI = null;
 
   #lastEvent = null;
 
@@ -64,41 +92,6 @@ class TrustPanel {
         blocker.init();
       }
     }
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "#insecureConnectionTextEnabled",
-      "security.insecure_connection_text.enabled"
-    );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "#insecureConnectionTextPBModeEnabled",
-      "security.insecure_connection_text.pbmode.enabled"
-    );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "#httpsOnlyModeEnabled",
-      "dom.security.https_only_mode"
-    );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "#httpsFirstModeEnabled",
-      "dom.security.https_first"
-    );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "#schemelessHttpsFirstModeEnabled",
-      "dom.security.https_first_schemeless"
-    );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "#httpsFirstModeEnabledPBM",
-      "dom.security.https_first_pbm"
-    );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "#httpsOnlyModeEnabledPBM",
-      "dom.security.https_only_mode_pbm"
-    );
   }
 
   uninit() {
@@ -197,6 +190,9 @@ class TrustPanel {
       document
         .getElementById("identity-popup-remove-cert-exception")
         .addEventListener("click", () => this.#removeCertException());
+      document
+        .getElementById("trustpanel-popup-security-httpsonlymode-menulist")
+        .addEventListener("command", () => this.#changeHttpsOnlyPermission());
     }
   }
 
@@ -234,6 +230,17 @@ class TrustPanel {
     this.#isURILoadedFromFile = uri.schemeIs("file");
     this.#isSecureContext = this.#getIsSecureContext();
 
+    this.#isSecureInternalUI = false;
+    if (this.#uri.schemeIs("about")) {
+      let module = E10SUtils.getAboutModule(this.#uri);
+      if (module) {
+        let flags = module.getURIFlags(this.#uri);
+        this.#isSecureInternalUI = !!(
+          flags & Ci.nsIAboutModule.IS_SECURE_CHROME_UI
+        );
+      }
+    }
+
     this.#updateUrlbarIcon();
   }
 
@@ -252,15 +259,7 @@ class TrustPanel {
       icon.classList.add("warning");
     }
 
-    let chickletShown = this.#uri.schemeIs("moz-extension");
-    if (this.#uri.schemeIs("about")) {
-      let module = E10SUtils.getAboutModule(this.#uri);
-      if (module) {
-        let flags = module.getURIFlags(this.#uri);
-        chickletShown = !!(flags & Ci.nsIAboutModule.IS_SECURE_CHROME_UI);
-      }
-    }
-    icon.classList.toggle("chickletShown", chickletShown);
+    icon.classList.toggle("chickletShown", this.#isSecureInternalUI);
   }
 
   async #updatePopup() {
@@ -560,24 +559,20 @@ class TrustPanel {
   }
 
   #isHttpsOnlyModeActive(isWindowPrivate) {
-    return (
-      this.#httpsOnlyModeEnabled ||
-      (isWindowPrivate && this.#httpsOnlyModeEnabledPBM)
-    );
+    return httpsOnlyModeEnabled || (isWindowPrivate && httpsOnlyModeEnabledPBM);
   }
 
   #isHttpsFirstModeActive(isWindowPrivate) {
     return (
       !this.#isHttpsOnlyModeActive(isWindowPrivate) &&
-      (this.#httpsFirstModeEnabled ||
-        (isWindowPrivate && this.#httpsFirstModeEnabledPBM))
+      (httpsFirstModeEnabled || (isWindowPrivate && httpsFirstModeEnabledPBM))
     );
   }
   #isSchemelessHttpsFirstModeActive(isWindowPrivate) {
     return (
       !this.#isHttpsOnlyModeActive(isWindowPrivate) &&
       !this.#isHttpsFirstModeActive(isWindowPrivate) &&
-      this.#schemelessHttpsFirstModeEnabled
+      schemelessHttpsFirstModeEnabled
     );
   }
   /**
@@ -819,8 +814,8 @@ class TrustPanel {
   #tooltipText() {
     let tooltip = "";
     let warnTextOnInsecure =
-      this.#insecureConnectionTextEnabled ||
-      (this.#insecureConnectionTextPBModeEnabled &&
+      insecureConnectionTextEnabled ||
+      (insecureConnectionTextPBModeEnabled &&
         PrivateBrowsingUtils.isWindowPrivate(window));
 
     if (this.#uriHasHost && this.#isSecureConnection) {
@@ -858,7 +853,7 @@ class TrustPanel {
   #connectionState() {
     // Determine connection security information.
     let connection = "not-secure";
-    if (this._isSecureInternalUI) {
+    if (this.#isSecureInternalUI) {
       connection = "chrome";
     } else if (this.#pageExtensionPolicy) {
       connection = "extension";
@@ -928,6 +923,7 @@ class TrustPanel {
       this.#isSchemelessHttpsFirstModeActive(privateBrowsingWindow);
 
     let httpsOnlyStatus = "";
+
     if (
       isHttpsFirstModeActive ||
       isHttpsOnlyModeActive ||
@@ -935,24 +931,25 @@ class TrustPanel {
     ) {
       // Note: value and permission association is laid out
       //       in _getHttpsOnlyPermission
-      let value = this._getHttpsOnlyPermission();
+      let value = this.#getHttpsOnlyPermission();
 
       // We do not want to display the exception ui for schemeless
       // HTTPS-First, but we still want the "Upgraded to HTTPS" label.
-      document.getElementById("identity-popup-security-httpsonlymode").hidden =
-        isSchemelessHttpsFirstModeActive;
+      document.getElementById(
+        "trustpanel-popup-security-httpsonlymode"
+      ).hidden = isSchemelessHttpsFirstModeActive;
 
       document.getElementById(
-        "identity-popup-security-menulist-off-item"
+        "trustpanel-popup-security-menulist-off-item"
       ).hidden = privateBrowsingWindow && value != 1;
       document.getElementById(
-        "identity-popup-security-httpsonlymode-menulist"
+        "trustpanel-popup-security-httpsonlymode-menulist"
       ).value = value;
 
       if (value > 0) {
         httpsOnlyStatus = "exception";
       } else if (
-        this._isAboutHttpsOnlyErrorPage ||
+        this.#isAboutHttpsOnlyErrorPage ||
         (isHttpsFirstModeActive && this.#isContentHttpsOnlyModeUpgradeFailed)
       ) {
         httpsOnlyStatus = "failed-top";
@@ -966,6 +963,121 @@ class TrustPanel {
       }
     }
     return httpsOnlyStatus;
+  }
+
+  /**
+   * Gets the current HTTPS-Only mode permission for the current page.
+   * Values are the same as in #identity-popup-security-httpsonlymode-menulist,
+   * -1 indicates a incompatible scheme on the current URI.
+   */
+  #getHttpsOnlyPermission() {
+    let uri = gBrowser.currentURI;
+    if (uri instanceof Ci.nsINestedURI) {
+      uri = uri.QueryInterface(Ci.nsINestedURI).innermostURI;
+    }
+    if (!uri.schemeIs("http") && !uri.schemeIs("https")) {
+      return -1;
+    }
+    uri = uri.mutate().setScheme("http").finalize();
+    const principal = Services.scriptSecurityManager.createContentPrincipal(
+      uri,
+      gBrowser.contentPrincipal.originAttributes
+    );
+    const { state } = SitePermissions.getForPrincipal(
+      principal,
+      "https-only-load-insecure"
+    );
+    switch (state) {
+      case Ci.nsIHttpsOnlyModePermission.LOAD_INSECURE_ALLOW_SESSION:
+        return 2; // Off temporarily
+      case Ci.nsIHttpsOnlyModePermission.LOAD_INSECURE_ALLOW:
+        return 1; // Off
+      default:
+        return 0; // On
+    }
+  }
+
+  /**
+   * Sets/removes HTTPS-Only Mode exception and possibly reloads the page.
+   */
+  #changeHttpsOnlyPermission() {
+    // Get the new value from the menulist and the current value
+    // Note: value and permission association is laid out
+    //       in _getHttpsOnlyPermission
+    const oldValue = this.#getHttpsOnlyPermission();
+    if (oldValue < 0) {
+      console.error(
+        "Did not update HTTPS-Only permission since scheme is incompatible"
+      );
+      return;
+    }
+
+    let menulist = document.getElementById(
+      "trustpanel-popup-security-httpsonlymode-menulist"
+    );
+    let newValue = parseInt(menulist.selectedItem.value, 10);
+
+    // If nothing changed, just return here
+    if (newValue === oldValue) {
+      return;
+    }
+
+    // We always want to set the exception for the HTTP version of the current URI,
+    // since when we check wether we should upgrade a request, we are checking permissons
+    // for the HTTP principal (Bug 1757297).
+    let newURI = gBrowser.currentURI;
+    if (newURI instanceof Ci.nsINestedURI) {
+      newURI = newURI.QueryInterface(Ci.nsINestedURI).innermostURI;
+    }
+    newURI = newURI.mutate().setScheme("http").finalize();
+    const principal = Services.scriptSecurityManager.createContentPrincipal(
+      newURI,
+      gBrowser.contentPrincipal.originAttributes
+    );
+
+    // Set or remove the permission
+    if (newValue === 0) {
+      SitePermissions.removeFromPrincipal(
+        principal,
+        "https-only-load-insecure"
+      );
+    } else if (newValue === 1) {
+      SitePermissions.setForPrincipal(
+        principal,
+        "https-only-load-insecure",
+        Ci.nsIHttpsOnlyModePermission.LOAD_INSECURE_ALLOW,
+        SitePermissions.SCOPE_PERSISTENT
+      );
+    } else {
+      SitePermissions.setForPrincipal(
+        principal,
+        "https-only-load-insecure",
+        Ci.nsIHttpsOnlyModePermission.LOAD_INSECURE_ALLOW_SESSION,
+        SitePermissions.SCOPE_SESSION
+      );
+    }
+
+    // If we're on the error-page, we have to redirect the user
+    // from HTTPS to HTTP. Otherwise we can just reload the page.
+    if (this.#isAboutHttpsOnlyErrorPage) {
+      gBrowser.loadURI(newURI, {
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
+        loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
+      });
+      PanelMultiView.hidePopup(this.#popup);
+      return;
+    }
+    // The page only needs to reload if we switch between allow and block
+    // Because "off" is 1 and "off temporarily" is 2, we can just check if the
+    // sum of newValue and oldValue is 3.
+    if (newValue + oldValue !== 3) {
+      BrowserCommands.reloadSkipCache();
+      PanelMultiView.hidePopup(this.#popup);
+      // Ensure the browser is focused again, otherwise we may not trigger the
+      // security delay on a potential error page following this reload.
+      gBrowser.selectedBrowser.focus();
+    }
   }
 
   #updateAttribute(elem, attr, value) {

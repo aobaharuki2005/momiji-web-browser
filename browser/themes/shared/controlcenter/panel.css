@@ -267,6 +267,7 @@
   height: 16px;
 }
 
+.identity-popup-security-connection description,
 .identity-popup-connection-secure.security-view,
 .identity-popup-connection-secure.upgraded,
 .identity-popup-connection-not-secure.security-view {
@@ -798,6 +799,7 @@
 
 #trustpanel-popup-host {
   align-self: center;
+  white-space: nowrap;
 }
 
 #trustpanel-graphic-section {
@@ -806,6 +808,14 @@
   padding-block-start: var(--space-small);
   border-radius: var(--border-radius-medium);
   flex-direction: column;
+}
+
+.only-trustpanel {
+  visibility: hidden;
+
+  #trustpanel-popup & {
+    visibility: visible;
+  }
 }
 
 #trustpanel-popup {
@@ -922,6 +932,10 @@
 #trustpanel-blocker-section {
   background: light-dark(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.12));
   border: var(--trustpanel-inner-border);
+}
+
+.trustpanel-blocker-section[hidden] + toolbarseparator {
+  display: none;
 }
 
 #trustpanel-insecure-section {

@@ -450,6 +450,8 @@ pref("browser.urlbar.deduplication.thresholdDays", 0);
 
 pref("browser.urlbar.scotchBonnet.enableOverride", true);
 
+pref("browser.urlbar.trustPanel.featureGate", false);
+
 // Once Perplexity has entered search mode at least once,
 // we no longer show the Perplexity onboarding callout.
 // This pref will be set to true when perplexity search mode is detected.
