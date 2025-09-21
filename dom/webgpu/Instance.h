@@ -8,7 +8,6 @@
 
 #include "ObjectModel.h"
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/GlobalTeardownObserver.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "mozilla/layers/BuildConstants.h"
@@ -49,10 +48,9 @@ class WGSLLanguageFeatures final : public nsWrapperCache,
   }
 };
 
-class Instance final : public GlobalTeardownObserver, public nsWrapperCache {
+class Instance final : public nsWrapperCache {
  public:
-  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Instance)
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
+  GPU_DECL_CYCLE_COLLECTION(Instance)
   GPU_DECL_JS_WRAP(Instance)
 
   nsIGlobalObject* GetParentObject() const { return mOwner; }
@@ -87,19 +85,6 @@ class Instance final : public GlobalTeardownObserver, public nsWrapperCache {
     RefPtr<WGSLLanguageFeatures> features = mWgslLanguageFeatures;
     return features.forget();
   }
-
- protected:
-  // Override `GlobalTeardownObserver::DisconnectFromOwner` to remove all
-  // promises in the outgoing global from `WebGPUChild`'s various tables.
-  //
-  // If `Instance` observes global teardown, it should not be necessary for any
-  // other WebGPU objects to do so. The `Instance` is always created before any
-  // other WebGPU resources, and is cached in `mozilla::dom::Navigator::mWebGPU`
-  // until the `Navigator` object is destroyed; and since `navigator` is a
-  // read-only attribute, that cannot happen until the window itself is
-  // destroyed. So `Instance` will observe any teardowns that could be relevant
-  // to `WebGPUChild`.
-  void DisconnectFromOwner() override;
 };
 
 }  // namespace webgpu
