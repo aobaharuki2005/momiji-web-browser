@@ -700,7 +700,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">አብጅ</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">ትሮችን፣ እልባቶችን፣ የይለፍ ቃላትን እና ሌሎችን ለማመሳሰል ይግቡ።</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">ትሮችን፣ እልባቶችን፣ የይለፍ ቃላትን እና ሌሎችን ለማመሳሰል ይግቡ።</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">የMozilla መለያ</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1082,7 +1082,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">ያመሳስሉ እና ውሂብዎን ያስቀምጡ</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">ያመሳስሉ እና ውሂብዎን ያስቀምጡ</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">ዳግም ለመገናኘት ይግቡ</string>
   <!-- Preference for removing FxA account -->
@@ -1883,7 +1883,7 @@
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">ለማመሳሰል ይግቡ</string>
   <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data">አመሳስል እና ውሂብ አስቀምጥ</string>
+  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">አመሳስል እና ውሂብ አስቀምጥ</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">ወደ ሁሉም መሳሪያዎች ላክ</string>
   <!-- An option from the share dialog to reconnect to sync -->

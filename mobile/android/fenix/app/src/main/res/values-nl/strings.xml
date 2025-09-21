@@ -572,6 +572,10 @@
   <string name="onboarding_redesign_tou_body_three_link_text">Instellingen beheren</string>
   <!-- Terms of use (ToU) onboarding page continue button label. -->
   <string name="onboarding_redesign_tou_agree_and_continue_button_label">Doorgaan</string>
+  <!-- Set to default browser onboarding redesign title. -->
+  <string name="onboarding_redesign_set_default_browser_title">Ontvang standaard automatische bescherming tegen volgen</string>
+  <!-- Set to default browser onboarding redesign body. -->
+  <string name="onboarding_redesign_set_default_browser_body">Met één tik voorkomen dat bedrijven uw tikken bespioneren.</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Help ons Firefox te laten groeien</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -785,7 +789,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Aanpassen</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">Meld u aan om uw tabbladen, bladwijzers, wachtwoorden en meer te synchroniseren.</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Meld u aan om uw tabbladen, bladwijzers, wachtwoorden en meer te synchroniseren.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Mozilla-account</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1187,7 +1191,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">Uw gegevens synchroniseren en opslaan</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Uw gegevens synchroniseren en opslaan</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Aanmelden om opnieuw te verbinden</string>
   <!-- Preference for removing FxA account -->
@@ -2066,7 +2070,7 @@
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Aanmelden om te synchroniseren</string>
   <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data">Synchroniseren en gegevens opslaan</string>
+  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Synchroniseren en gegevens opslaan</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Verzenden naar alle apparaten</string>
   <!-- An option from the share dialog to reconnect to sync -->

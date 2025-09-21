@@ -789,7 +789,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">ການປັບແຕ່ງ</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">Sync ແທັບ, ບຸກມາກ, ລະຫັດຜ່ານ ແລະ ອື່ນໆຂອງທ່ານ.</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Sync ແທັບ, ບຸກມາກ, ລະຫັດຜ່ານ ແລະ ອື່ນໆຂອງທ່ານ.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">ບັນຊີ Mozilla</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1011,16 +1011,38 @@
   <string name="alternative_app_icon_option_retro_2017" tools:ignore="UnusedResources" moz:removedIn="144">Retro 2017</string>
   <!-- Title for the "Pixelated" themed alternative app icon variant in the icon picker screen. This app icon features a pixel-art style, resembling retro 8-bit graphics. -->
   <string name="alternative_app_icon_option_pixelated">pixelated</string>
+  <!-- Title for the "Minimal" themed alternative app icon variant in the icon picker screen. The app icon presents a simplified, flat and monochrome version of the Firefox logo. -->
+  <string name="alternative_app_icon_option_minimal">ໜ້ອຍທີ່ສຸດ</string>
+  <!-- Title for the "Pride" themed alternative app icon variant in the icon picker screen. The app icon incorporates a rainbow color scheme in support of the LGBTQ+ community. -->
+  <string name="alternative_app_icon_option_pride">ຄວາມພາກພູມໃຈ</string>
+  <!-- Title for the "Cute" themed alternative app icon variant in the icon picker screen. The app icon features a playful design with an adorable aesthetic. -->
+  <string name="alternative_app_icon_option_cute" tools:ignore="UnusedResources" moz:removedIn="144">ໜ້າຮັກ</string>
+  <!-- Title for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
+  <string name="alternative_app_icon_option_momo">ໂມໂມ</string>
+  <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
+  <string name="alternative_app_icon_option_momo_subtitle">ສ້າງໂດຍ @heyheymomodraws</string>
   <!-- Title for the "Cuddling" themed alternative app icon variant in the icon picker screen. The app icon features a playful design with an adorable aesthetic. -->
   <string name="alternative_app_icon_option_cuddling">ກອດ</string>
   <!-- Title for the "Flaming" themed alternative app icon variant in the icon picker screen. The app icon features a fiery design, with the Firefox logo surrounded by flames for a bold, energetic look. -->
   <string name="alternative_app_icon_option_flaming">ແປວໄຟ</string>
   <!-- Title for the "Cool" themed alternative app icon variant in the icon picker screen. The app icon uses a warm orange-to-yellow gradient background with a sleek, modern twist on the Firefox logo, giving it a fresh and stylish appearance. -->
   <string name="alternative_app_icon_option_cool">ເຢັນ</string>
+  <!-- Title for the "Solid colors" group of alternative app icon variants in the icon picker screen. This group contains icons with flat, uniform color backgrounds. -->
+  <string name="alternative_app_icon_group_solid_colors">ສີແຂງ</string>
+  <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
+  <string name="alternative_app_icon_group_gradients">ຊັ້ນສີ</string>
+  <!-- Title to show in alert when user selects an alternative app icon -->
+  <string name="restart_warning_dialog_title">ປ່ຽນໄອຄອນແອັບບໍ?</string>
+  <!-- Message to warn users that applying an alternative app icon requires an app restart -->
+  <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">ການປ່ຽນໄອຄອນຕ້ອງການໃຫ້ແອັບຯຣີສະຕາດ.</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">ແອັບອາດຈະປິດ. ພຽງແຕ່ແຕະໃສ່ໄອຄອນໃໝ່ທີ່ເງົາງາມຂອງທ່ານເພື່ອເປີດ %1$s ຄືນໃໝ່.</string>
+  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
+  <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">ເລີ່ມລະບົບໃໝ່ດຽວນີ້</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">ປ່ຽນໄອຄອນ</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">ຍົກເລີກ</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1153,7 +1175,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">ຊິງຄ໌ແລະບັນທຶກຂໍ້ມູນ</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">ຊິງຄ໌ແລະບັນທຶກຂໍ້ມູນ</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">ເຂົ້າສູ່ລະບົບເພື່ອເຊື່ອມຕໍ່ຄືນໃຫມ່</string>
   <!-- Preference for removing FxA account -->
@@ -1871,7 +1893,7 @@
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">ລົງຊື່ເຂົ້າໃຊ້ເພື່ອ Sync</string>
   <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data">ຊິງຄ໌ແລະບັນທຶກຂໍ້ມູນ</string>
+  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">ຊິງຄ໌ແລະບັນທຶກຂໍ້ມູນ</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">ສົ່ງໄປຫາທຸກອຸປະກອນ</string>
   <!-- An option from the share dialog to reconnect to sync -->

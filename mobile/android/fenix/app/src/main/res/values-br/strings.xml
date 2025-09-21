@@ -683,7 +683,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Personelaat</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">Kennaskit evit goubredañ an ivinelloù, sinedoù, gerioù-tremen ha muioc’h c’hoazh.</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Kennaskit evit goubredañ an ivinelloù, sinedoù, gerioù-tremen ha muioc’h c’hoazh.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Kont Mozilla</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1015,7 +1015,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">Goubredañ hag enrollañ ho roadennoù</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Goubredañ hag enrollañ ho roadennoù</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Kennaskit en-dro</string>
   <!-- Preference for removing FxA account -->
@@ -1758,7 +1758,7 @@
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Kennaskañ ouzh Sync</string>
   <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data">Goubredañ hag enrollañ ar roadennoù</string>
+  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Goubredañ hag enrollañ ar roadennoù</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Kas dʼan holl drevnadoù</string>
   <!-- An option from the share dialog to reconnect to sync -->

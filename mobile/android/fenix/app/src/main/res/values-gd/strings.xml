@@ -698,7 +698,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Gnàthaich</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">Clàraich a-steach gus na tabaichean, comharran-lìn, faclan-faire is mòran a bharrachd a shioncronachadh.</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Clàraich a-steach gus na tabaichean, comharran-lìn, faclan-faire is mòran a bharrachd a shioncronachadh.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Cunntas Mozilla</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1041,7 +1041,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">Sioncronaich is sàbhail an dàta agad</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Sioncronaich is sàbhail an dàta agad</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Clàraich a-steach airson ceangal ris às ùr</string>
   <!-- Preference for removing FxA account -->
@@ -1610,7 +1610,7 @@
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Clàraich a-steach a shioncronachadh</string>
   <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data">Sioncronaich is sàbhail an dàta</string>
+  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Sioncronaich is sàbhail an dàta</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Cuir gun a h-uile uidheam</string>
   <!-- An option from the share dialog to reconnect to sync -->

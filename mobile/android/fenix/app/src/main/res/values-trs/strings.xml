@@ -357,7 +357,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Nādunō\' dàj huin ruhuô\'</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">Gāyi’ì sēsiûn da’ nāgi’hiaj nūguan’ànt nej rakïj ñanj, nej markadô, nej da’nga’ huìi nī doj sa huāa.</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Gāyi’ì sēsiûn da’ nāgi’hiaj nūguan’ànt nej rakïj ñanj, nej markadô, nej da’nga’ huìi nī doj sa huāa.</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
   <string name="preferences_account_sync_error">Nātū nākà ñû da\' gānahuij nāgi\'iaj nūguàn\'anj</string>
   <!-- Preference for language -->
@@ -532,7 +532,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">Nāgi\\’hiaj nūguà\'àn nī na’nïnj sà\\’t nej si datôt</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Nāgi\\’hiaj nūguà\'àn nī na’nïnj sà\\’t nej si datôt</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Gāyi\'ì sēsiûn da\' ga\'ue gānātū nûnt</string>
   <!-- Preference for removing FxA account -->
@@ -1049,7 +1049,7 @@
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Gāyi\'ì sēsiû riña Sync</string>
   <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data">Nāgi\\’hiaj nūguà\'àn nī na’nïnj sà\\’t nej dâto</string>
+  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Nāgi\\’hiaj nūguà\'àn nī na’nïnj sà\\’t nej dâto</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Gā \'nïnj gan\'an riña daran\' nej aga\'a</string>
   <!-- An option from the share dialog to reconnect to sync -->
