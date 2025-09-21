@@ -446,10 +446,9 @@ function makeBookmarkResult(
     source = UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
   }
 ) {
-  return new UrlbarResult({
-    type: UrlbarUtils.RESULT_TYPE.URL,
+  let result = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.URL,
     source,
-    heuristic,
     ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
       url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
       // Check against undefined so consumers can pass in the empty string.
@@ -467,8 +466,11 @@ function makeBookmarkResult(
           ? Services.urlFormatter.formatURLPref("app.support.baseURL") +
             "awesome-bar-result-menu"
           : undefined,
-    }),
-  });
+    })
+  );
+
+  result.heuristic = heuristic;
+  return result;
 }
 
 /**
@@ -485,9 +487,9 @@ function makeBookmarkResult(
  * @returns {UrlbarResult}
  */
 function makeFormHistoryResult(queryContext, { suggestion, engineName }) {
-  return new UrlbarResult({
-    type: UrlbarUtils.RESULT_TYPE.SEARCH,
-    source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+  return new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.SEARCH,
+    UrlbarUtils.RESULT_SOURCE.HISTORY,
     ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
       engine: engineName,
       suggestion: [suggestion, UrlbarUtils.HIGHLIGHT.SUGGESTED],
@@ -497,8 +499,8 @@ function makeFormHistoryResult(queryContext, { suggestion, engineName }) {
       helpUrl:
         Services.urlFormatter.formatURLPref("app.support.baseURL") +
         "awesome-bar-result-menu",
-    }),
-  });
+    })
+  );
 }
 
 /**
@@ -530,12 +532,14 @@ function makeOmniboxResult(
     keyword: [keyword, UrlbarUtils.HIGHLIGHT.TYPED],
     icon: [UrlbarUtils.ICON.EXTENSION],
   };
-  return new UrlbarResult({
-    type: UrlbarUtils.RESULT_TYPE.OMNIBOX,
-    source: UrlbarUtils.RESULT_SOURCE.ADDON,
-    heuristic,
-    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload),
-  });
+  let result = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.OMNIBOX,
+    UrlbarUtils.RESULT_SOURCE.ADDON,
+    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
+  );
+  result.heuristic = heuristic;
+
+  return result;
 }
 
 /**
@@ -561,9 +565,9 @@ function makeTabSwitchResult(
   queryContext,
   { uri, title, iconUri, userContextId, tabGroup }
 ) {
-  return new UrlbarResult({
-    type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-    source: UrlbarUtils.RESULT_SOURCE.TABS,
+  return new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+    UrlbarUtils.RESULT_SOURCE.TABS,
     ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
       url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
       title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
@@ -571,8 +575,8 @@ function makeTabSwitchResult(
       icon: typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`,
       userContextId: [userContextId || 0],
       tabGroup: [tabGroup || null],
-    }),
-  });
+    })
+  );
 }
 
 /**
@@ -600,10 +604,9 @@ function makeKeywordSearchResult(
   queryContext,
   { uri, keyword, title, iconUri, postData, heuristic = false }
 ) {
-  return new UrlbarResult({
-    type: UrlbarUtils.RESULT_TYPE.KEYWORD,
-    source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
-    heuristic,
+  let result = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.KEYWORD,
+    UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
     ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
       title: [title ? title : uri, UrlbarUtils.HIGHLIGHT.TYPED],
       url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
@@ -611,8 +614,13 @@ function makeKeywordSearchResult(
       input: [queryContext.searchString, UrlbarUtils.HIGHLIGHT.TYPED],
       postData: postData || null,
       icon: typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`,
-    }),
-  });
+    })
+  );
+
+  if (heuristic) {
+    result.heuristic = heuristic;
+  }
+  return result;
 }
 
 /**
@@ -654,11 +662,13 @@ function makeRemoteTabResult(
     payload.title = [uri, UrlbarUtils.HIGHLIGHT.TYPED];
   }
 
-  return new UrlbarResult({
-    type: UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
-    source: UrlbarUtils.RESULT_SOURCE.TABS,
-    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload),
-  });
+  let result = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
+    UrlbarUtils.RESULT_SOURCE.TABS,
+    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
+  );
+
+  return result;
 }
 
 /**
@@ -793,25 +803,31 @@ function makeSearchResult(
     payload.keywords = alias?.toLowerCase();
   }
 
+  let result = new UrlbarResult(
+    type,
+    source,
+    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
+  );
+
   if (typeof suggestion == "string") {
-    payload.lowerCaseSuggestion = suggestion.toLocaleLowerCase();
-    payload.trending = trending;
+    result.payload.lowerCaseSuggestion =
+      result.payload.suggestion.toLocaleLowerCase();
+    result.payload.trending = trending;
+    result.isRichSuggestion = isRichSuggestion;
   }
 
   if (isRichSuggestion) {
-    payload.icon =
+    result.payload.icon =
       "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
-    payload.description = "description";
+    result.payload.description = "description";
   }
 
-  return new UrlbarResult({
-    type,
-    source,
-    heuristic,
-    isRichSuggestion,
-    providerName,
-    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload),
-  });
+  if (providerName) {
+    result.providerName = providerName;
+  }
+
+  result.heuristic = heuristic;
+  return result;
 }
 
 /**
@@ -890,13 +906,18 @@ function makeVisitResult(
     payload.tags = [tags, UrlbarUtils.HIGHLIGHT.TYPED];
   }
 
-  return new UrlbarResult({
-    type: UrlbarUtils.RESULT_TYPE.URL,
+  let result = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.URL,
     source,
-    heuristic,
-    providerName,
-    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload),
-  });
+    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
+  );
+
+  if (providerName) {
+    result.providerName = providerName;
+  }
+
+  result.heuristic = heuristic;
+  return result;
 }
 
 /**
@@ -911,15 +932,16 @@ function makeVisitResult(
  * @returns {UrlbarResult}
  */
 function makeCalculatorResult(queryContext, { value }) {
-  return new UrlbarResult({
-    type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
-    source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-    payload: {
+  const result = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.DYNAMIC,
+    UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    {
       value,
       input: queryContext.searchString,
       dynamicType: "calculator",
-    },
-  });
+    }
+  );
+  return result;
 }
 
 /**
@@ -960,12 +982,15 @@ function makeGlobalActionsResult({
     engine,
   };
 
-  return new UrlbarResult({
-    type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
-    source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
-    providerName: "UrlbarProviderGlobalActions",
-    payload,
-  });
+  const result = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.DYNAMIC,
+    UrlbarUtils.RESULT_SOURCE.ACTIONS,
+    payload
+  );
+
+  result.providerName = "UrlbarProviderGlobalActions";
+
+  return result;
 }
 
 /**

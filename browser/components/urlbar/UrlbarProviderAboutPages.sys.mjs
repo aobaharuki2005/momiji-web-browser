@@ -52,15 +52,15 @@ export class UrlbarProviderAboutPages extends UrlbarProvider {
     let searchString = queryContext.trimmedLowerCaseSearchString;
     for (const aboutUrl of lazy.AboutPagesUtils.visibleAboutUrls) {
       if (aboutUrl.startsWith(searchString)) {
-        let result = new lazy.UrlbarResult({
-          type: UrlbarUtils.RESULT_TYPE.URL,
-          source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        let result = new lazy.UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.URL,
+          UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
             title: [aboutUrl, UrlbarUtils.HIGHLIGHT.TYPED],
             url: [aboutUrl, UrlbarUtils.HIGHLIGHT.TYPED],
             icon: UrlbarUtils.getIconForUrl(aboutUrl),
-          }),
-        });
+          })
+        );
         addCallback(this, result);
       }
     }

@@ -177,14 +177,16 @@ async function withProvider(result, callback) {
 }
 
 function makeBestMatchResult(payloadExtra = {}) {
-  return new UrlbarResult({
-    type: UrlbarUtils.RESULT_TYPE.URL,
-    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-    isBestMatch: true,
-    ...UrlbarResult.payloadAndSimpleHighlights([], {
-      title: "Test best match",
-      url: "https://example.com/best-match",
-      ...payloadExtra,
-    }),
-  });
+  return Object.assign(
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.SEARCH,
+      ...UrlbarResult.payloadAndSimpleHighlights([], {
+        title: "Test best match",
+        url: "https://example.com/best-match",
+        ...payloadExtra,
+      })
+    ),
+    { isBestMatch: true }
+  );
 }

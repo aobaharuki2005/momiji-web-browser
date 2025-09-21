@@ -180,34 +180,37 @@ export class UrlbarProviderSearchTips extends UrlbarProvider {
       return;
     }
 
-    let result;
+    let result = new lazy.UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.TIP,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      {
+        type: tip,
+        buttons: [{ l10n: { id: "urlbar-search-tips-confirm" } }],
+        icon,
+      }
+    );
+
     switch (tip) {
       case TIPS.ONBOARD:
-        result = this.#makeResult({
-          tip,
-          icon,
-          titleL10n: {
-            id: "urlbar-search-tips-onboard",
-            args: {
-              engineName: defaultEngine.name,
-            },
+        result.heuristic = true;
+        result.payload.titleL10n = {
+          id: "urlbar-search-tips-onboard",
+          args: {
+            engineName: defaultEngine.name,
           },
-          heuristic: true,
-        });
+        };
         break;
       case TIPS.REDIRECT:
-        result = this.#makeResult({
-          tip,
-          icon,
-          titleL10n: {
-            id: "urlbar-search-tips-redirect-2",
-            args: {
-              engineName: defaultEngine.name,
-            },
+        result.heuristic = false;
+        result.payload.titleL10n = {
+          id: "urlbar-search-tips-redirect-2",
+          args: {
+            engineName: defaultEngine.name,
           },
-        });
+        };
         break;
     }
+
     addCallback(this, result);
   }
 
@@ -419,20 +422,6 @@ export class UrlbarProviderSearchTips extends UrlbarProvider {
 
       window.gURLBar.search("", { focus: tip == TIPS.ONBOARD });
     }, SHOW_TIP_DELAY_MS);
-  }
-
-  #makeResult({ tip, icon, titleL10n, heuristic = false }) {
-    return new lazy.UrlbarResult({
-      type: UrlbarUtils.RESULT_TYPE.TIP,
-      source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      heuristic,
-      payload: {
-        type: tip,
-        buttons: [{ l10n: { id: "urlbar-search-tips-confirm" } }],
-        icon,
-        titleL10n,
-      },
-    });
   }
 }
 

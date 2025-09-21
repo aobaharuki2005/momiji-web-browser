@@ -138,24 +138,25 @@ export class UrlbarProviderInputHistory extends UrlbarProvider {
           continue;
         }
         let userContextId = row.getResultByName("userContextId") || 0;
-        let { payload, payloadHighlights } =
-          lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+        let payload = lazy.UrlbarResult.payloadAndSimpleHighlights(
+          queryContext.tokens,
+          {
             url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
             title: [resultTitle, UrlbarUtils.HIGHLIGHT.TYPED],
             icon: UrlbarUtils.getIconForUrl(url),
             userContextId,
             lastVisit,
-          });
+          }
+        );
         if (lazy.UrlbarPrefs.get("secondaryActions.switchToTab")) {
-          payload.action =
+          payload[0].action =
             UrlbarUtils.createTabSwitchSecondaryAction(userContextId);
         }
-        let result = new lazy.UrlbarResult({
-          type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-          source: UrlbarUtils.RESULT_SOURCE.TABS,
-          payload,
-          payloadHighlights,
-        });
+        let result = new lazy.UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+          UrlbarUtils.RESULT_SOURCE.TABS,
+          ...payload
+        );
         addCallback(this, result);
         continue;
       }
@@ -179,9 +180,9 @@ export class UrlbarProviderInputHistory extends UrlbarProvider {
 
       let isBlockable = resultSource == UrlbarUtils.RESULT_SOURCE.HISTORY;
 
-      let result = new lazy.UrlbarResult({
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: resultSource,
+      let result = new lazy.UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        resultSource,
         ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
           url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
           title: [resultTitle, UrlbarUtils.HIGHLIGHT.TYPED],
@@ -196,8 +197,8 @@ export class UrlbarProviderInputHistory extends UrlbarProvider {
               "awesome-bar-result-menu"
             : undefined,
           lastVisit,
-        }),
-      });
+        })
+      );
 
       addCallback(this, result);
     }

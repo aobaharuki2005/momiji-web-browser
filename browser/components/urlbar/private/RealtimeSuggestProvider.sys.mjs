@@ -293,16 +293,20 @@ export class RealtimeSuggestProvider extends SuggestProvider {
     ) {
       return null;
     }
-    return new lazy.UrlbarResult({
-      type: lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
-      source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
-      isBestMatch: true,
-      hideRowLabel: true,
-      payload: {
-        ...suggestion.custom_details,
-        dynamicType: this.realtimeType,
-      },
-    });
+    return Object.assign(
+      new lazy.UrlbarResult(
+        lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
+        lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
+        {
+          ...suggestion.custom_details,
+          dynamicType: this.realtimeType,
+        }
+      ),
+      {
+        isBestMatch: true,
+        hideRowLabel: true,
+      }
+    );
   }
 
   makeOptInResult(queryContext, _suggestion) {
@@ -325,44 +329,48 @@ export class RealtimeSuggestProvider extends SuggestProvider {
           },
         };
 
-    return new lazy.UrlbarResult({
-      type: lazy.UrlbarUtils.RESULT_TYPE.TIP,
-      source: lazy.UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      isBestMatch: true,
-      hideRowLabel: true,
-      payload: {
-        // This `type` is the tip type, required for `TIP` results.
-        type: "realtime_opt_in",
-        icon: this.optInIcon,
-        titleL10n: this.optInTitleL10n,
-        descriptionL10n: this.optInDescriptionL10n,
-        descriptionLearnMoreTopic: lazy.QuickSuggest.HELP_TOPIC,
-        buttons: [
-          {
-            command: "opt_in",
-            l10n: {
-              id: "urlbar-result-realtime-opt-in-allow",
-              cacheable: true,
-            },
-            input: queryContext.searchString,
-            attributes: {
-              primary: "",
-            },
-          },
-          {
-            ...splitButtonMain,
-            menu: [
-              {
-                name: "not_interested",
-                l10n: {
-                  id: "urlbar-result-realtime-opt-in-dismiss-all",
-                },
+    return Object.assign(
+      new lazy.UrlbarResult(
+        lazy.UrlbarUtils.RESULT_TYPE.TIP,
+        lazy.UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        {
+          // This `type` is the tip type, required for `TIP` results.
+          type: "realtime_opt_in",
+          icon: this.optInIcon,
+          titleL10n: this.optInTitleL10n,
+          descriptionL10n: this.optInDescriptionL10n,
+          descriptionLearnMoreTopic: lazy.QuickSuggest.HELP_TOPIC,
+          buttons: [
+            {
+              command: "opt_in",
+              l10n: {
+                id: "urlbar-result-realtime-opt-in-allow",
+                cacheable: true,
               },
-            ],
-          },
-        ],
-      },
-    });
+              input: queryContext.searchString,
+              attributes: {
+                primary: "",
+              },
+            },
+            {
+              ...splitButtonMain,
+              menu: [
+                {
+                  name: "not_interested",
+                  l10n: {
+                    id: "urlbar-result-realtime-opt-in-dismiss-all",
+                  },
+                },
+              ],
+            },
+          ],
+        }
+      ),
+      {
+        isBestMatch: true,
+        hideRowLabel: true,
+      }
+    );
   }
 
   getResultCommands(result) {

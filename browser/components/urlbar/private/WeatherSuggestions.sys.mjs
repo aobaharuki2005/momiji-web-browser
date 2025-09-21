@@ -233,60 +233,69 @@ export class WeatherSuggestions extends SuggestProvider {
 
     let titleL10n = await this.#getTitleL10n(suggestion.city, merinoSuggestion);
 
-    return new lazy.UrlbarResult({
-      type: lazy.UrlbarUtils.RESULT_TYPE.URL,
-      source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
-      suggestedIndex: 1,
-      isRichSuggestion: true,
-      richSuggestionIconVariation: String(
-        merinoSuggestion.current_conditions.icon_id
-      ),
-      payload: {
-        url: merinoSuggestion.url,
-        titleL10n: {
-          id: titleL10n.id,
-          args: {
-            temperature: merinoSuggestion.current_conditions.temperature[unit],
-            unit: unit.toUpperCase(),
-            ...titleL10n.args,
+    return Object.assign(
+      new lazy.UrlbarResult(
+        lazy.UrlbarUtils.RESULT_TYPE.URL,
+        lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
+        {
+          url: merinoSuggestion.url,
+          titleL10n: {
+            id: titleL10n.id,
+            args: {
+              temperature:
+                merinoSuggestion.current_conditions.temperature[unit],
+              unit: unit.toUpperCase(),
+              ...titleL10n.args,
+            },
+            parseMarkup: true,
+            cacheable: true,
+            excludeArgsFromCacheKey: true,
           },
-          parseMarkup: true,
-          cacheable: true,
-          excludeArgsFromCacheKey: true,
-        },
-        bottomTextL10n: {
-          id: "urlbar-result-weather-provider-sponsored",
-          args: { provider: WEATHER_PROVIDER_DISPLAY_NAME },
-          cacheable: true,
-        },
-        helpUrl: lazy.QuickSuggest.HELP_URL,
-      },
-    });
+          bottomTextL10n: {
+            id: "urlbar-result-weather-provider-sponsored",
+            args: { provider: WEATHER_PROVIDER_DISPLAY_NAME },
+            cacheable: true,
+          },
+          helpUrl: lazy.QuickSuggest.HELP_URL,
+        }
+      ),
+      {
+        suggestedIndex: 1,
+        isRichSuggestion: true,
+        richSuggestionIconVariation: String(
+          merinoSuggestion.current_conditions.icon_id
+        ),
+      }
+    );
   }
 
   #makeDynamicResult(suggestion, unit) {
-    return new lazy.UrlbarResult({
-      type: lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
-      source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
-      showFeedbackMenu: true,
-      suggestedIndex: 1,
-      payload: {
-        url: suggestion.url,
-        input: suggestion.url,
-        iconId: suggestion.current_conditions.icon_id,
-        dynamicType: WEATHER_DYNAMIC_TYPE,
-        city: suggestion.city_name,
-        region: suggestion.region_code,
-        temperatureUnit: unit,
-        temperature: suggestion.current_conditions.temperature[unit],
-        currentConditions: suggestion.current_conditions.summary,
-        forecast: suggestion.forecast.summary,
-        high: suggestion.forecast.high[unit],
-        low: suggestion.forecast.low[unit],
-        showRowLabel: true,
-        helpUrl: lazy.QuickSuggest.HELP_URL,
-      },
-    });
+    return Object.assign(
+      new lazy.UrlbarResult(
+        lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
+        lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
+        {
+          url: suggestion.url,
+          input: suggestion.url,
+          iconId: suggestion.current_conditions.icon_id,
+          dynamicType: WEATHER_DYNAMIC_TYPE,
+          city: suggestion.city_name,
+          region: suggestion.region_code,
+          temperatureUnit: unit,
+          temperature: suggestion.current_conditions.temperature[unit],
+          currentConditions: suggestion.current_conditions.summary,
+          forecast: suggestion.forecast.summary,
+          high: suggestion.forecast.high[unit],
+          low: suggestion.forecast.low[unit],
+          showRowLabel: true,
+          helpUrl: lazy.QuickSuggest.HELP_URL,
+        }
+      ),
+      {
+        showFeedbackMenu: true,
+        suggestedIndex: 1,
+      }
+    );
   }
 
   getViewUpdate(result) {

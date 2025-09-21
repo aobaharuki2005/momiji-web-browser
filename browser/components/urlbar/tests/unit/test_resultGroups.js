@@ -1292,7 +1292,7 @@ add_resultGroupsLimit_tasks({
     // max results remote suggestions
     ...makeRemoteSuggestionResults(MAX_RESULTS),
     // 1 history with resultSpan = 3
-    ...makeHistoryResults(1, { resultSpan: 3 }),
+    Object.assign(makeHistoryResults(1)[0], { resultSpan: 3 }),
   ],
   expectedResultIndexes: [
     // general/history: 1
@@ -1329,9 +1329,9 @@ add_resultGroups_task({
     ],
   },
   providerResults: [
-    ...makeHistoryResults(1, { resultSpan: 3 }),
-    ...makeHistoryResults(1, { resultSpan: 3 }),
-    ...makeHistoryResults(1, { resultSpan: 3 }),
+    Object.assign(makeHistoryResults(1)[0], { resultSpan: 3 }),
+    Object.assign(makeHistoryResults(1)[0], { resultSpan: 3 }),
+    Object.assign(makeHistoryResults(1)[0], { resultSpan: 3 }),
   ],
   expectedResultIndexes: [0],
 });
@@ -1362,7 +1362,7 @@ add_resultGroups_task({
       },
     ],
   },
-  providerResults: makeHistoryResults(1, { resultSpan: 3 }),
+  providerResults: [Object.assign(makeHistoryResults(1)[0], { resultSpan: 3 })],
   expectedResultIndexes: [],
 });
 
@@ -1390,7 +1390,7 @@ add_resultGroups_task({
       },
     ],
   },
-  providerResults: makeHistoryResults(1, { resultSpan: 3 }),
+  providerResults: [Object.assign(makeHistoryResults(1)[0], { resultSpan: 3 })],
   expectedResultIndexes: [],
 });
 
@@ -1406,7 +1406,7 @@ add_resultGroups_task({
   },
   providerResults: [
     makeHistoryResults(1)[0],
-    ...makeHistoryResults(1, { resultSpan: 2 }),
+    Object.assign(makeHistoryResults(1)[0], { resultSpan: 2 }),
     makeHistoryResults(1)[0],
   ],
   expectedResultIndexes: [0, 1],
@@ -1423,7 +1423,7 @@ add_resultGroups_task({
     ],
   },
   providerResults: [
-    ...makeHistoryResults(1, { resultSpan: 2 }),
+    Object.assign(makeHistoryResults(1)[0], { resultSpan: 2 }),
     makeHistoryResults(1)[0],
     makeHistoryResults(1)[0],
   ],
@@ -1509,16 +1509,15 @@ function replaceLimitWithKey(group, key) {
   return group;
 }
 
-function makeHistoryResults(count, { resultSpan } = {}) {
+function makeHistoryResults(count) {
   let results = [];
   for (let i = 0; i < count; i++) {
     results.push(
-      new UrlbarResult({
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-        resultSpan: resultSpan && i == 0 ? resultSpan : undefined,
-        payload: { url: "http://example.com/" + i },
-      })
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        { url: "http://example.com/" + i }
+      )
     );
   }
   return results;
@@ -1528,16 +1527,16 @@ function makeRemoteSuggestionResults(count) {
   let results = [];
   for (let i = 0; i < count; i++) {
     results.push(
-      new UrlbarResult({
-        type: UrlbarUtils.RESULT_TYPE.SEARCH,
-        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-        payload: {
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.SEARCH,
+        UrlbarUtils.RESULT_SOURCE.SEARCH,
+        {
           engine: "test",
           query: "test",
           suggestion: "test " + i,
           lowerCaseSuggestion: "test " + i,
-        },
-      })
+        }
+      )
     );
   }
   return results;
@@ -1547,15 +1546,15 @@ function makeFormHistoryResults(count) {
   let results = [];
   for (let i = 0; i < count; i++) {
     results.push(
-      new UrlbarResult({
-        type: UrlbarUtils.RESULT_TYPE.SEARCH,
-        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-        payload: {
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.SEARCH,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        {
           engine: "test",
           suggestion: "test " + i,
           lowerCaseSuggestion: "test " + i,
-        },
-      })
+        }
+      )
     );
   }
   return results;

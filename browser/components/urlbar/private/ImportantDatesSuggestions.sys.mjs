@@ -213,32 +213,37 @@ export class ImportantDatesSuggestions extends SuggestProvider {
     }
 
     let dateString = this.#formatDateOrRange(eventDateOrRange);
-    return new lazy.UrlbarResult({
-      type: lazy.UrlbarUtils.RESULT_TYPE.SEARCH,
-      source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
-      isBestMatch: true,
-      hideRowLabel: true,
-      richSuggestionIconSize: 24,
-      payload: {
-        title: dateString,
-        description,
-        engine: lazy.UrlbarSearchUtils.getDefaultEngine(queryContext.isPrivate)
-          .name,
-        descriptionL10n,
-        query: payload.name,
-        lowerCaseSuggestion: payload.name.toLowerCase(),
-        icon: "chrome://browser/skin/calendar-24.svg",
-        helpUrl: lazy.QuickSuggest.HELP_URL,
-        isManageable: true,
-        isBlockable: true,
-      },
-      payloadHighlights: {
-        title: [
-          // Make whole title bold.
-          [0, dateString.length],
-        ],
-      },
-    });
+    return Object.assign(
+      new lazy.UrlbarResult(
+        lazy.UrlbarUtils.RESULT_TYPE.SEARCH,
+        lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
+        {
+          title: dateString,
+          description,
+          engine: lazy.UrlbarSearchUtils.getDefaultEngine(
+            queryContext.isPrivate
+          ).name,
+          descriptionL10n,
+          query: payload.name,
+          lowerCaseSuggestion: payload.name.toLowerCase(),
+          icon: "chrome://browser/skin/calendar-24.svg",
+          helpUrl: lazy.QuickSuggest.HELP_URL,
+          isManageable: true,
+          isBlockable: true,
+        },
+        {
+          title: [
+            // Make whole title bold.
+            [0, dateString.length],
+          ],
+        }
+      ),
+      {
+        isBestMatch: true,
+        hideRowLabel: true,
+        richSuggestionIconSize: 24,
+      }
+    );
   }
 
   onEngagement(_queryContext, controller, details, _searchString) {

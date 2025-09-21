@@ -350,12 +350,14 @@ function registerTestProvider({
 
   let provider = new UrlbarTestUtils.TestProvider({
     results: [
-      new UrlbarResult({
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        suggestedIndex,
-        payload,
-      }),
+      Object.assign(
+        new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.URL,
+          UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+          payload
+        ),
+        { suggestedIndex }
+      ),
     ],
   });
   UrlbarProvidersManager.registerProvider(provider);

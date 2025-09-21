@@ -38,15 +38,17 @@ add_task(async function extension() {
         name: "ExtensionTest",
         type: UrlbarUtils.PROVIDER_TYPE.EXTENSION,
         results: [
-          new UrlbarResult({
-            type: UrlbarUtils.RESULT_TYPE.URL,
-            source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-            heuristic: true,
-            payload: {
-              url,
-              title: "Test",
-            },
-          }),
+          Object.assign(
+            new UrlbarResult(
+              UrlbarUtils.RESULT_TYPE.URL,
+              UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+              {
+                url,
+                title: "Test",
+              }
+            ),
+            { heuristic: true }
+          ),
         ],
       });
       UrlbarProvidersManager.registerProvider(provider);

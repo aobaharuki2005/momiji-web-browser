@@ -42,9 +42,21 @@ add_setup(async function () {
   //   separate task that specifically checks the row label, and that way this
   //   test covers both cases, where the row does and does not have a row label.
   gTestProvider = new TestProvider({
-    // This ensures the result is sandwiched between the two history
-    // results in the Firefox Suggest group.
-    results: [makeResult({ suggestedIndex: 1 })],
+    results: [
+      Object.assign(
+        new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.URL,
+          UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+          {
+            url: "https://example.com/",
+            isBlockable: true,
+          }
+        ),
+        // This ensures the result is sandwiched between the two history results
+        // in the Firefox Suggest group.
+        { suggestedIndex: 1, isSuggestedIndexRelativeToGroup: true }
+      ),
+    ],
   });
 
   gTestProvider.commandCount = {};
@@ -155,7 +167,8 @@ add_task(async function acknowledgeDismissal_all() {
 add_task(async function acknowledgeDismissal_rowLabel() {
   // Show the result as the first row in the Firefox Suggest section so that it
   // has the "Firefox Suggest" group label.
-  gTestProvider.results[0] = makeResult({ suggestedIndex: 0 });
+  let { suggestedIndex } = gTestProvider.results[0];
+  gTestProvider.results[0].suggestedIndex = 0;
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -167,6 +180,8 @@ add_task(async function acknowledgeDismissal_rowLabel() {
     shouldBeSelected: false,
     expectedLabelOnOriginalRow: "Firefox Suggest",
   });
+
+  gTestProvider.results[0].suggestedIndex = suggestedIndex;
 });
 
 // When a row with `hideRowLabel` set is dismissed, the dismissal acknowledgment
@@ -174,7 +189,8 @@ add_task(async function acknowledgeDismissal_rowLabel() {
 add_task(async function acknowledgeDismissal_hideRowLabel() {
   // Show the result as the first row in the Firefox Suggest section so that it
   // has the "Firefox Suggest" group label.
-  gTestProvider.results[0] = makeResult({ suggestedIndex: 0 });
+  let { suggestedIndex } = gTestProvider.results[0];
+  gTestProvider.results[0].suggestedIndex = 0;
 
   // Make sure the label is visible.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -185,10 +201,7 @@ add_task(async function acknowledgeDismissal_hideRowLabel() {
   await UrlbarTestUtils.promisePopupClose(window);
 
   // Now hide the row label and dismiss the result.
-  gTestProvider.results[0] = makeResult({
-    suggestedIndex: 0,
-    hideRowLabel: true,
-  });
+  gTestProvider.results[0].hideRowLabel = true;
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "test",
@@ -204,6 +217,9 @@ add_task(async function acknowledgeDismissal_hideRowLabel() {
     expectedLabelOnOriginalRow: null,
     expectedLabelOnReplacementRow: "Firefox Suggest",
   });
+
+  gTestProvider.results[0].suggestedIndex = suggestedIndex;
+  delete gTestProvider.results[0].hideRowLabel;
 });
 
 /**
@@ -468,17 +484,4 @@ async function checkRowLabel(resultIndex, expectedLabel) {
       "Row should not have a label attribute"
     );
   }
-}
-
-function makeResult(resultParams) {
-  return new UrlbarResult({
-    type: UrlbarUtils.RESULT_TYPE.URL,
-    source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-    payload: {
-      url: "https://example.com/",
-      isBlockable: true,
-    },
-    isSuggestedIndexRelativeToGroup: true,
-    ...resultParams,
-  });
 }

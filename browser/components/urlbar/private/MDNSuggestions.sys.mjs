@@ -69,16 +69,20 @@ export class MDNSuggestions extends SuggestProvider {
       bottomTextL10n: { id: "firefox-suggest-mdn-bottom-text" },
     };
 
-    return new lazy.UrlbarResult({
-      type: lazy.UrlbarUtils.RESULT_TYPE.URL,
-      source: lazy.UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
-      isBestMatch: true,
-      showFeedbackMenu: true,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(
-        queryContext.tokens,
-        payload
+    return Object.assign(
+      new lazy.UrlbarResult(
+        lazy.UrlbarUtils.RESULT_TYPE.URL,
+        lazy.UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
+        ...lazy.UrlbarResult.payloadAndSimpleHighlights(
+          queryContext.tokens,
+          payload
+        )
       ),
-    });
+      {
+        isBestMatch: true,
+        showFeedbackMenu: true,
+      }
+    );
   }
 
   /**

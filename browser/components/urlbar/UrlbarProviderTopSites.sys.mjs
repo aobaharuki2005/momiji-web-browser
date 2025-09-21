@@ -247,14 +247,14 @@ export class UrlbarProviderTopSites extends UrlbarProvider {
                   continue;
                 }
                 payload.userContextId = userContextId;
-                let result = new lazy.UrlbarResult({
-                  type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-                  source: UrlbarUtils.RESULT_SOURCE.TABS,
+                let result = new lazy.UrlbarResult(
+                  UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+                  UrlbarUtils.RESULT_SOURCE.TABS,
                   ...lazy.UrlbarResult.payloadAndSimpleHighlights(
                     queryContext.tokens,
                     payload
-                  ),
-                });
+                  )
+                );
                 addCallback(this, result);
                 switchToTabResultAdded = true;
               }
@@ -286,14 +286,14 @@ export class UrlbarProviderTopSites extends UrlbarProvider {
             }
           }
 
-          let result = new lazy.UrlbarResult({
-            type: UrlbarUtils.RESULT_TYPE.URL,
-            source: resultSource,
+          let result = new lazy.UrlbarResult(
+            UrlbarUtils.RESULT_TYPE.URL,
+            resultSource,
             ...lazy.UrlbarResult.payloadAndSimpleHighlights(
               queryContext.tokens,
               payload
-            ),
-          });
+            )
+          );
           addCallback(this, result);
           break;
         }
@@ -319,9 +319,9 @@ export class UrlbarProviderTopSites extends UrlbarProvider {
             break;
           }
 
-          let result = new lazy.UrlbarResult({
-            type: UrlbarUtils.RESULT_TYPE.SEARCH,
-            source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+          let result = new lazy.UrlbarResult(
+            UrlbarUtils.RESULT_TYPE.SEARCH,
+            UrlbarUtils.RESULT_SOURCE.SEARCH,
             ...lazy.UrlbarResult.payloadAndSimpleHighlights(
               queryContext.tokens,
               {
@@ -332,8 +332,8 @@ export class UrlbarProviderTopSites extends UrlbarProvider {
                 icon: site.favicon,
                 isPinned: site.isPinned,
               }
-            ),
-          });
+            )
+          );
           addCallback(this, result);
           break;
         }

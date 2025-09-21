@@ -427,6 +427,7 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
       return;
     }
 
+    this._autofillData.result.heuristic = true;
     addCallback(this, this._autofillData.result);
     this._autofillData = null;
   }
@@ -880,22 +881,23 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
       payload.fallbackTitle = [fallbackTitle, UrlbarUtils.HIGHLIGHT.TYPED];
     }
 
-    return new lazy.UrlbarResult({
-      type: UrlbarUtils.RESULT_TYPE.URL,
-      source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-      heuristic: true,
-      autofill: {
-        adaptiveHistoryInput,
-        value: autofilledValue,
-        selectionStart: queryContext.searchString.length,
-        selectionEnd: autofilledValue.length,
-        type: autofilledType,
-      },
+    let result = new lazy.UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.HISTORY,
       ...lazy.UrlbarResult.payloadAndSimpleHighlights(
         queryContext.tokens,
         payload
-      ),
-    });
+      )
+    );
+
+    result.autofill = {
+      adaptiveHistoryInput,
+      value: autofilledValue,
+      selectionStart: queryContext.searchString.length,
+      selectionEnd: autofilledValue.length,
+      type: autofilledType,
+    };
+    return result;
   }
 
   async _getAutofillResult(queryContext) {
@@ -928,25 +930,25 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
           trimEmptyQuery: true,
           trimSlash: !this._searchString.includes("/"),
         });
-        let autofilledValue =
-          queryContext.searchString +
-          aboutUrl.substring(queryContext.searchString.length);
-        return new lazy.UrlbarResult({
-          type: UrlbarUtils.RESULT_TYPE.URL,
-          source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-          heuristic: true,
-          autofill: {
-            type: "about",
-            value: autofilledValue,
-            selectionStart: queryContext.searchString.length,
-            selectionEnd: autofilledValue.length,
-          },
+        let result = new lazy.UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.URL,
+          UrlbarUtils.RESULT_SOURCE.HISTORY,
           ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
             title: [trimmedUrl, UrlbarUtils.HIGHLIGHT.TYPED],
             url: [aboutUrl, UrlbarUtils.HIGHLIGHT.TYPED],
             icon: UrlbarUtils.getIconForUrl(aboutUrl),
-          }),
-        });
+          })
+        );
+        let autofilledValue =
+          queryContext.searchString +
+          aboutUrl.substring(queryContext.searchString.length);
+        result.autofill = {
+          type: "about",
+          value: autofilledValue,
+          selectionStart: queryContext.searchString.length,
+          selectionEnd: autofilledValue.length,
+        };
+        return result;
       }
     }
     return null;

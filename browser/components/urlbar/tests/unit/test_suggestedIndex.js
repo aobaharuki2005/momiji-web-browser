@@ -531,30 +531,35 @@ async function doSuggestedIndexTest({
   let results = [];
   for (let i = 0; i < resultCount; i++) {
     results.push(
-      new UrlbarResult({
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-        resultSpan: spansByIndex[results.length],
-        payload: {
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        {
           url: "http://example.com/" + i,
-        },
-      })
+        }
+      )
     );
   }
 
   // Make the suggested-index results.
   for (let suggestedIndex of suggestedIndexes) {
     results.push(
-      new UrlbarResult({
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-        suggestedIndex,
-        resultSpan: spansByIndex[results.length],
-        payload: {
-          url: "http://example.com/si " + suggestedIndex,
-        },
-      })
+      Object.assign(
+        new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.URL,
+          UrlbarUtils.RESULT_SOURCE.HISTORY,
+          {
+            url: "http://example.com/si " + suggestedIndex,
+          }
+        ),
+        { suggestedIndex }
+      )
     );
+  }
+
+  // Set resultSpan on each result as indicated by spansByIndex.
+  for (let [index, span] of Object.entries(spansByIndex)) {
+    results[index].resultSpan = span;
   }
 
   // Set up the provider, etc.

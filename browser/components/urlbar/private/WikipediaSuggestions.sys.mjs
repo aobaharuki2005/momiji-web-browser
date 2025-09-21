@@ -48,9 +48,9 @@ export class WikipediaSuggestions extends SuggestProvider {
   }
 
   makeResult(queryContext, suggestion) {
-    return new lazy.UrlbarResult({
-      type: lazy.UrlbarUtils.RESULT_TYPE.URL,
-      source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
+    return new lazy.UrlbarResult(
+      lazy.UrlbarUtils.RESULT_TYPE.URL,
+      lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         url: suggestion.url,
         title: suggestion.title,
@@ -61,8 +61,8 @@ export class WikipediaSuggestions extends SuggestProvider {
         ],
         isBlockable: true,
         isManageable: true,
-      }),
-    });
+      })
+    );
   }
 
   onEngagement(queryContext, controller, details, _searchString) {

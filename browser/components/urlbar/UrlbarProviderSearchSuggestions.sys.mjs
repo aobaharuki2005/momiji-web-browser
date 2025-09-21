@@ -531,15 +531,17 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
         }
 
         results.push(
-          new lazy.UrlbarResult({
-            type: UrlbarUtils.RESULT_TYPE.SEARCH,
-            source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-            isRichSuggestion: !!entry.icon,
-            ...lazy.UrlbarResult.payloadAndSimpleHighlights(
-              queryContext.tokens,
-              payload
+          Object.assign(
+            new lazy.UrlbarResult(
+              UrlbarUtils.RESULT_TYPE.SEARCH,
+              UrlbarUtils.RESULT_SOURCE.SEARCH,
+              ...lazy.UrlbarResult.payloadAndSimpleHighlights(
+                queryContext.tokens,
+                payload
+              )
             ),
-          })
+            { isRichSuggestion: !!entry.icon }
+          )
         );
       } catch (err) {
         this.logger.error(err);
@@ -657,9 +659,9 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
 }
 
 function makeFormHistoryResult(queryContext, engine, entry) {
-  return new lazy.UrlbarResult({
-    type: UrlbarUtils.RESULT_TYPE.SEARCH,
-    source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+  return new lazy.UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.SEARCH,
+    UrlbarUtils.RESULT_SOURCE.HISTORY,
     ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
       engine: engine.name,
       suggestion: [entry.value, UrlbarUtils.HIGHLIGHT.SUGGESTED],
@@ -669,6 +671,6 @@ function makeFormHistoryResult(queryContext, engine, entry) {
       helpUrl:
         Services.urlFormatter.formatURLPref("app.support.baseURL") +
         "awesome-bar-result-menu",
-    }),
-  });
+    })
+  );
 }

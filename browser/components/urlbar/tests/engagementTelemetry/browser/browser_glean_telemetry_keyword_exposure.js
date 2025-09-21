@@ -455,10 +455,8 @@ async function doTest({
       }
       addCallback(
         provider,
-        new UrlbarResult({
-          type: UrlbarUtils.RESULT_TYPE.URL,
-          source,
-          payload: { url: "https://example.com/" },
+        new UrlbarResult(UrlbarUtils.RESULT_TYPE.URL, source, {
+          url: "https://example.com/",
         })
       );
     }

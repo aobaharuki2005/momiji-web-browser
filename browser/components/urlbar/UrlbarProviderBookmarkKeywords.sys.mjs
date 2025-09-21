@@ -85,10 +85,9 @@ export class UrlbarProviderBookmarkKeywords extends UrlbarProvider {
       title = UrlbarUtils.prepareUrlForDisplay(url);
     }
 
-    let result = new lazy.UrlbarResult({
-      type: UrlbarUtils.RESULT_TYPE.KEYWORD,
-      source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
-      heuristic: true,
+    let result = new lazy.UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.KEYWORD,
+      UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
       ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
         url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
@@ -96,8 +95,9 @@ export class UrlbarProviderBookmarkKeywords extends UrlbarProvider {
         input: queryContext.searchString,
         postData,
         icon: UrlbarUtils.getIconForUrl(entry.url),
-      }),
-    });
+      })
+    );
+    result.heuristic = true;
     addCallback(this, result);
   }
 }

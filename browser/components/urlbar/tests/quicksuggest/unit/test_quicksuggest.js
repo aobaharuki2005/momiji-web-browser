@@ -861,11 +861,11 @@ async function doManySuggestResultsTest({
   let maxResults = UrlbarPrefs.get("maxRichResults");
   for (let i = 0; i < maxResults; i++) {
     otherResults.push(
-      new UrlbarResult({
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-        payload: { url: "http://example.com/history/" + i },
-      })
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        { url: "http://example.com/history/" + i }
+      )
     );
   }
 

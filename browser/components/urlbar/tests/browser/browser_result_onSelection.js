@@ -9,31 +9,30 @@ add_task(async function test() {
   });
 
   let results = [
-    new UrlbarResult({
-      type: UrlbarUtils.RESULT_TYPE.URL,
-      source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-      heuristic: true,
-      payload: {
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.HISTORY,
+      {
         url: "http://mozilla.org/1",
         helpUrl: "http://example.com/",
         isBlockable: true,
         blockL10n: { id: "urlbar-result-menu-remove-from-history" },
-      },
-    }),
-    new UrlbarResult({
-      type: UrlbarUtils.RESULT_TYPE.URL,
-      source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-      payload: {
+      }
+    ),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.HISTORY,
+      {
         url: "http://mozilla.org/2",
         helpUrl: "http://example.com/",
         isBlockable: true,
         blockL10n: { id: "urlbar-result-menu-remove-from-history" },
-      },
-    }),
-    new UrlbarResult({
-      type: UrlbarUtils.RESULT_TYPE.TIP,
-      source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      payload: {
+      }
+    ),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.TIP,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      {
         helpUrl: "http://example.com/",
         type: "test",
         titleL10n: { id: "urlbar-search-tips-confirm" },
@@ -43,9 +42,11 @@ add_task(async function test() {
             l10n: { id: "urlbar-search-tips-confirm" },
           },
         ],
-      },
-    }),
+      }
+    ),
   ];
+
+  results[0].heuristic = true;
 
   let selectionCount = 0;
   let provider = new UrlbarTestUtils.TestProvider({

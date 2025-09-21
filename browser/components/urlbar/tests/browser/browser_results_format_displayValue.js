@@ -9,14 +9,16 @@ add_task(async function test_receive_punycode_result() {
   // eslint-disable-next-line jsdoc/require-jsdoc
   class ResultWithHighlightsProvider extends UrlbarTestUtils.TestProvider {
     startQuery(context, addCallback) {
-      let result = new UrlbarResult({
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-        suggestedIndex: 0,
-        ...UrlbarResult.payloadAndSimpleHighlights(context.tokens, {
-          url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
-        }),
-      });
+      let result = Object.assign(
+        new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.URL,
+          UrlbarUtils.RESULT_SOURCE.HISTORY,
+          ...UrlbarResult.payloadAndSimpleHighlights(context.tokens, {
+            url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
+          })
+        ),
+        { suggestedIndex: 0 }
+      );
       addCallback(this, result);
     }
 

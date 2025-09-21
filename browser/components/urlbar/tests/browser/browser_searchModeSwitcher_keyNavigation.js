@@ -47,20 +47,20 @@ add_task(
     });
 
     let results = [
-      new UrlbarResult({
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-        payload: {
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        {
           url: "https://mozilla.org/a",
-        },
-      }),
-      new UrlbarResult({
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-        payload: {
+        }
+      ),
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        {
           url: "https://mozilla.org/b",
-        },
-      }),
+        }
+      ),
     ];
 
     let provider = new UrlbarTestUtils.TestProvider({ results, priority: 1 });

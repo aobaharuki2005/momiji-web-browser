@@ -123,19 +123,26 @@ export class UrlbarProviderTokenAliasEngines extends UrlbarProvider {
         tokenAliases[0].startsWith(queryContext.trimmedSearchString) &&
         engine.name != this._autofillData?.result.payload.engine
       ) {
-        let result = new lazy.UrlbarResult({
-          type: UrlbarUtils.RESULT_TYPE.SEARCH,
-          source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-          hideRowLabel: true,
-          ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-            engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
-            keyword: [tokenAliases[0], UrlbarUtils.HIGHLIGHT.TYPED],
-            keywords: tokenAliases.join(", "),
-            query: ["", UrlbarUtils.HIGHLIGHT.TYPED],
-            icon: await engine.getIconURL(),
-            providesSearchMode: true,
-          }),
-        });
+        let result = Object.assign(
+          new lazy.UrlbarResult(
+            UrlbarUtils.RESULT_TYPE.SEARCH,
+            UrlbarUtils.RESULT_SOURCE.SEARCH,
+            ...lazy.UrlbarResult.payloadAndSimpleHighlights(
+              queryContext.tokens,
+              {
+                engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
+                keyword: [tokenAliases[0], UrlbarUtils.HIGHLIGHT.TYPED],
+                keywords: tokenAliases.join(", "),
+                query: ["", UrlbarUtils.HIGHLIGHT.TYPED],
+                icon: await engine.getIconURL(),
+                providesSearchMode: true,
+              }
+            )
+          ),
+          {
+            hideRowLabel: true,
+          }
+        );
         if (instance != this.queryInstance) {
           break;
         }
@@ -190,32 +197,42 @@ export class UrlbarProviderTokenAliasEngines extends UrlbarProvider {
             queryContext.searchString +
             alias.substr(queryContext.searchString.length);
           let value = aliasPreservingUserCase + " ";
-          return new lazy.UrlbarResult({
-            type: UrlbarUtils.RESULT_TYPE.SEARCH,
-            source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-            // We set suggestedIndex = 0 instead of the heuristic because we
-            // don't want this result to be automatically selected. That way,
-            // users can press Tab to select the result, building on their
-            // muscle memory from tab-to-search.
-            suggestedIndex: 0,
-            autofill: {
-              value,
-              selectionStart: queryContext.searchString.length,
-              selectionEnd: value.length,
-            },
-            hideRowLabel: true,
-            ...lazy.UrlbarResult.payloadAndSimpleHighlights(
-              queryContext.tokens,
-              {
-                engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
-                keyword: [aliasPreservingUserCase, UrlbarUtils.HIGHLIGHT.TYPED],
-                keywords: tokenAliases.join(", "),
-                query: ["", UrlbarUtils.HIGHLIGHT.TYPED],
-                icon: await engine.getIconURL(),
-                providesSearchMode: true,
-              }
+          let result = Object.assign(
+            new lazy.UrlbarResult(
+              UrlbarUtils.RESULT_TYPE.SEARCH,
+              UrlbarUtils.RESULT_SOURCE.SEARCH,
+              ...lazy.UrlbarResult.payloadAndSimpleHighlights(
+                queryContext.tokens,
+                {
+                  engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
+                  keyword: [
+                    aliasPreservingUserCase,
+                    UrlbarUtils.HIGHLIGHT.TYPED,
+                  ],
+                  keywords: tokenAliases.join(", "),
+                  query: ["", UrlbarUtils.HIGHLIGHT.TYPED],
+                  icon: await engine.getIconURL(),
+                  providesSearchMode: true,
+                }
+              )
             ),
-          });
+            {
+              hideRowLabel: true,
+            }
+          );
+
+          // We set suggestedIndex = 0 instead of the heuristic because we
+          // don't want this result to be automatically selected. That way,
+          // users can press Tab to select the result, building on their
+          // muscle memory from tab-to-search.
+          result.suggestedIndex = 0;
+
+          result.autofill = {
+            value,
+            selectionStart: queryContext.searchString.length,
+            selectionEnd: value.length,
+          };
+          return result;
         }
       }
     }

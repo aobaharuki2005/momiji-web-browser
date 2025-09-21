@@ -106,19 +106,23 @@ export class AddonSuggestions extends SuggestProvider {
       helpUrl: lazy.QuickSuggest.HELP_URL,
     };
 
-    return new lazy.UrlbarResult({
-      type: lazy.UrlbarUtils.RESULT_TYPE.URL,
-      source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
-      isBestMatch: true,
-      suggestedIndex: 1,
-      isRichSuggestion: true,
-      richSuggestionIconSize: 24,
-      showFeedbackMenu: true,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(
-        queryContext.tokens,
-        payload
+    return Object.assign(
+      new lazy.UrlbarResult(
+        lazy.UrlbarUtils.RESULT_TYPE.URL,
+        lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
+        ...lazy.UrlbarResult.payloadAndSimpleHighlights(
+          queryContext.tokens,
+          payload
+        )
       ),
-    });
+      {
+        isBestMatch: true,
+        suggestedIndex: 1,
+        isRichSuggestion: true,
+        richSuggestionIconSize: 24,
+        showFeedbackMenu: true,
+      }
+    );
   }
 
   /**

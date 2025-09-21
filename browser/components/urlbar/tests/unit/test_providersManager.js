@@ -47,11 +47,11 @@ add_task(async function test_providers() {
     "Should throw with invalid cancelQuery"
   );
 
-  let match = new UrlbarResult({
-    type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-    source: UrlbarUtils.RESULT_SOURCE.TABS,
-    payload: { url: "http://mozilla.org/foo/" },
-  });
+  let match = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+    UrlbarUtils.RESULT_SOURCE.TABS,
+    { url: "http://mozilla.org/foo/" }
+  );
 
   let provider = registerBasicTestProvider([match]);
   let context = createContext(undefined, { providers: [provider.name] });

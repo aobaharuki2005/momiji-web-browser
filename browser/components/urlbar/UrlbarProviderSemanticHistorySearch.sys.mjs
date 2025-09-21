@@ -140,9 +140,9 @@ export class UrlbarProviderSemanticHistorySearch extends UrlbarProvider {
           addCallback
         )
       ) {
-        const result = new lazy.UrlbarResult({
-          type: UrlbarUtils.RESULT_TYPE.URL,
-          source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        const result = new lazy.UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.URL,
+          UrlbarUtils.RESULT_SOURCE.HISTORY,
           ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
             title: [res.title, UrlbarUtils.HIGHLIGHT.NONE],
             url: [res.url, UrlbarUtils.HIGHLIGHT.NONE],
@@ -153,8 +153,8 @@ export class UrlbarProviderSemanticHistorySearch extends UrlbarProvider {
               Services.urlFormatter.formatURLPref("app.support.baseURL") +
               "awesome-bar-result-menu",
             frecency: res.frecency,
-          }),
-        });
+          })
+        );
         addCallback(this, result);
       }
     }
@@ -202,25 +202,26 @@ export class UrlbarProviderSemanticHistorySearch extends UrlbarProvider {
       ) {
         continue;
       }
-      let { payload, payloadHighlights } =
-        lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+      let payload = lazy.UrlbarResult.payloadAndSimpleHighlights(
+        queryContext.tokens,
+        {
           url: [res.url, UrlbarUtils.HIGHLIGHT.NONE],
           title: [res.title, UrlbarUtils.HIGHLIGHT.NONE],
           icon: UrlbarUtils.getIconForUrl(res.url),
           userContextId: tabUserContextId,
           tabGroup: tabGroupId,
           lastVisit: res.lastVisit,
-        });
+        }
+      );
       if (lazy.UrlbarPrefs.get("secondaryActions.switchToTab")) {
-        payload.action =
+        payload[0].action =
           UrlbarUtils.createTabSwitchSecondaryAction(tabUserContextId);
       }
-      let result = new lazy.UrlbarResult({
-        type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-        source: UrlbarUtils.RESULT_SOURCE.TABS,
-        payload,
-        payloadHighlights,
-      });
+      let result = new lazy.UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+        UrlbarUtils.RESULT_SOURCE.TABS,
+        ...payload
+      );
       addCallback(this, result);
       added = true;
     }

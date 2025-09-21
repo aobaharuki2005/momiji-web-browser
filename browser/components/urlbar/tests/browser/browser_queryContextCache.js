@@ -197,14 +197,16 @@ add_task(async function topSites_nonTopSitesResults() {
     let provider = new UrlbarTestUtils.TestProvider({
       priority: lazy.UrlbarProviderTopSites.PRIORITY,
       results: [
-        new UrlbarResult({
-          type: UrlbarUtils.RESULT_TYPE.URL,
-          source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-          suggestedIndex: 0,
-          payload: {
-            url: suggestedIndexURL,
-          },
-        }),
+        Object.assign(
+          new UrlbarResult(
+            UrlbarUtils.RESULT_TYPE.URL,
+            UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+            {
+              url: suggestedIndexURL,
+            }
+          ),
+          { suggestedIndex: 0 }
+        ),
       ],
     });
     UrlbarProvidersManager.registerProvider(provider);
