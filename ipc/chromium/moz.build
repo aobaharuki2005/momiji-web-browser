@@ -55,21 +55,18 @@ if CONFIG["TARGET_KERNEL"] == "WINNT":
         "src/chrome/common/process_watcher_win.cc",
     ]
 
-#it ain't workin, sorry nika
-    # elif CONFIG["TARGET_KERNEL"] != "Darwin":
-    #UNIFIED_SOURCES += [
-    #    "src/base/message_pump_libevent.cc",
-    #]
+elif CONFIG["TARGET_KERNEL"] != "Darwin":
+    UNIFIED_SOURCES += [
+        "src/base/message_pump_libevent.cc",
+    ]
 
-elif not CONFIG["MOZ_SYSTEM_LIBEVENT"]:
+    if not CONFIG["MOZ_SYSTEM_LIBEVENT"]:
         DIRS += ["src/third_party"]
 
 if CONFIG["TARGET_KERNEL"] != "WINNT":
     UNIFIED_SOURCES += [
         "src/base/condition_variable_posix.cc",
         "src/base/lock_impl_posix.cc",
-        #it ain't workin, sorry nika
-        "src/base/message_pump_libevent.cc",
         "src/base/platform_thread_posix.cc",
         "src/base/process_util_posix.cc",
         "src/base/string16.cc",
@@ -89,14 +86,12 @@ if CONFIG["TARGET_KERNEL"] != "WINNT":
 
 if CONFIG["TARGET_KERNEL"] == "Darwin":
     UNIFIED_SOURCES += [
-        #it ain't working. sorry nika
-        #"src/base/message_pump_kqueue.cc",
+        "src/base/message_pump_kqueue.cc",
         "src/base/message_pump_mac.mm",
         "src/base/scoped_nsautorelease_pool.mm",
         "src/base/sys_string_conversions_mac.mm",
         "src/base/time_mac.cc",
-        #it ain't working. sorry nika
-        #"src/chrome/common/ipc_channel_mach.cc",
+        "src/chrome/common/ipc_channel_mach.cc",
         "src/chrome/common/mach_ipc_mac.cc",
         "src/chrome/common/mach_message_source_mac.cc",
     ]

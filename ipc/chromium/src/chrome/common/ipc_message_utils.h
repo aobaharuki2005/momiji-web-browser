@@ -123,12 +123,10 @@ class MOZ_STACK_CLASS MessageWriter final {
   bool WriteMachSendRight(mozilla::UniqueMachSendRight port) {
     return message_.WriteMachSendRight(std::move(port));
   }
-  //it ain't workin sorry nika
-  /*
+
   bool WriteMachReceiveRight(mozilla::UniqueMachReceiveRight port) {
     return message_.WriteMachReceiveRight(std::move(port));
   }
-  */
 #endif
 
   void FatalError(const char* aErrorMsg) const {
@@ -224,13 +222,10 @@ class MOZ_STACK_CLASS MessageReader final {
     return message_.ConsumeMachSendRight(&iter_, port);
   }
 
-  //it ain't workin sorry nika
-  /*
   [[nodiscard]] bool ConsumeMachReceiveRight(
       mozilla::UniqueMachReceiveRight* port) {
     return message_.ConsumeMachReceiveRight(&iter_, port);
   }
-  */
 #endif
 
   void FatalError(const char* aErrorMsg) const {
@@ -1123,8 +1118,6 @@ struct ParamTraitsIPC<mozilla::UniqueMachSendRight> {
   }
 };
 
-//it ain't workin sorry nbika
-/*
 // `UniqueMachReceiveRight` may be serialized over IPC channels. On the
 // receiving side, the UniqueMachReceiveRight is the local name of the right
 // which was transmitted.
@@ -1166,7 +1159,7 @@ struct ParamTraitsIPC<mozilla::UniqueMachReceiveRight> {
     }
     return true;
   }
-};*/
+};
 #endif
 
 // Mozilla-specific types.

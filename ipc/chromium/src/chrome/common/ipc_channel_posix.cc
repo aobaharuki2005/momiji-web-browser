@@ -1086,14 +1086,12 @@ bool ChannelPosix::AcceptMachPorts(Message& msg) {
 // required information for AcceptMachPorts to the message footer. See comment
 // above for details.
 bool ChannelPosix::TransferMachPorts(Message& msg) {
-//it ain't working sorry nika
-/*
   uint32_t num_receive_rights = msg.num_receive_rights();
   if (num_receive_rights != 0) {
     CHROMIUM_LOG(ERROR) << "ChannelPosix does not support receive rights";
     return false;
   }
-*/
+
   uint32_t num_send_rights = msg.num_send_rights();
   if (num_send_rights == 0) {
     return true;

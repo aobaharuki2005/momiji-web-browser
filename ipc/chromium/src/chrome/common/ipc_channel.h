@@ -39,12 +39,10 @@ class Channel {
   // endpoints may be passed around directly using IPC messages.
   using ChannelHandle =
       std::variant<std::monostate, mozilla::UniqueFileHandle
-//it ain't workin. sorry nika
-/*#if defined(XP_DARWIN)
+#if defined(XP_DARWIN)
                    ,
                    mozilla::UniqueMachSendRight, mozilla::UniqueMachReceiveRight
 #endif
-*/
                    >;
 
   // Implemented by consumers of a Channel to receive messages.

@@ -188,8 +188,6 @@ uint32_t Message::num_send_rights() const {
   return attached_send_rights_.Length();
 }
 
-//it ain't working sorry nika
-/*
 bool Message::WriteMachReceiveRight(mozilla::UniqueMachReceiveRight port) {
   uint32_t index = attached_receive_rights_.Length();
   WriteUInt32(index);
@@ -218,7 +216,6 @@ bool Message::ConsumeMachReceiveRight(
 uint32_t Message::num_receive_rights() const {
   return attached_receive_rights_.Length();
 }
-*/
 #endif
 
 bool Message::WillBeRoutedExternally(
