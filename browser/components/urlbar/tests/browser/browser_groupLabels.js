@@ -280,28 +280,28 @@ add_task(async function repeatLabels() {
     new UrlbarResult({
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      suggestedIndex: 0,
       payload: { url: "http://example.com/1" },
     }),
     new UrlbarResult({
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      suggestedIndex: 1,
       payload: { suggestion: "test1", engine: engineName },
     }),
     new UrlbarResult({
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      suggestedIndex: 2,
       payload: { url: "http://example.com/2" },
     }),
     new UrlbarResult({
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      suggestedIndex: 3,
       payload: { suggestion: "test2", engine: engineName },
     }),
   ];
-
-  for (let i = 0; i < results.length; i++) {
-    results[i].suggestedIndex = i;
-  }
 
   let provider = new UrlbarTestUtils.TestProvider({
     results,
@@ -414,23 +414,22 @@ add_task(async function ariaLabel() {
     new UrlbarResult({
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      suggestedIndex: 0,
       payload: { url: "http://example.com/1", helpUrl },
     }),
     new UrlbarResult({
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      suggestedIndex: 1,
       payload: { url: "http://example.com/2", helpUrl },
     }),
     new UrlbarResult({
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      suggestedIndex: 2,
       payload: { url: "http://example.com/3" },
     }),
   ];
-
-  for (let i = 0; i < results.length; i++) {
-    results[i].suggestedIndex = i;
-  }
 
   const provider = new UrlbarTestUtils.TestProvider({
     results,

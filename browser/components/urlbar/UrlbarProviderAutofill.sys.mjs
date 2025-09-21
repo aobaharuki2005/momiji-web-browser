@@ -427,7 +427,6 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
       return;
     }
 
-    this._autofillData.result.heuristic = true;
     addCallback(this, this._autofillData.result);
     this._autofillData = null;
   }
@@ -884,6 +883,7 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
     return new lazy.UrlbarResult({
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+      heuristic: true,
       autofill: {
         adaptiveHistoryInput,
         value: autofilledValue,
@@ -928,25 +928,25 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
           trimEmptyQuery: true,
           trimSlash: !this._searchString.includes("/"),
         });
-        let result = new lazy.UrlbarResult({
+        let autofilledValue =
+          queryContext.searchString +
+          aboutUrl.substring(queryContext.searchString.length);
+        return new lazy.UrlbarResult({
           type: UrlbarUtils.RESULT_TYPE.URL,
           source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+          heuristic: true,
+          autofill: {
+            type: "about",
+            value: autofilledValue,
+            selectionStart: queryContext.searchString.length,
+            selectionEnd: autofilledValue.length,
+          },
           ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
             title: [trimmedUrl, UrlbarUtils.HIGHLIGHT.TYPED],
             url: [aboutUrl, UrlbarUtils.HIGHLIGHT.TYPED],
             icon: UrlbarUtils.getIconForUrl(aboutUrl),
           }),
         });
-        let autofilledValue =
-          queryContext.searchString +
-          aboutUrl.substring(queryContext.searchString.length);
-        result.autofill = {
-          type: "about",
-          value: autofilledValue,
-          selectionStart: queryContext.searchString.length,
-          selectionEnd: autofilledValue.length,
-        };
-        return result;
       }
     }
     return null;

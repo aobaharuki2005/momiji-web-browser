@@ -534,6 +534,7 @@ async function doSuggestedIndexTest({
       new UrlbarResult({
         type: UrlbarUtils.RESULT_TYPE.URL,
         source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        resultSpan: spansByIndex[results.length],
         payload: {
           url: "http://example.com/" + i,
         },
@@ -548,16 +549,12 @@ async function doSuggestedIndexTest({
         type: UrlbarUtils.RESULT_TYPE.URL,
         source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         suggestedIndex,
+        resultSpan: spansByIndex[results.length],
         payload: {
           url: "http://example.com/si " + suggestedIndex,
         },
       })
     );
-  }
-
-  // Set resultSpan on each result as indicated by spansByIndex.
-  for (let [index, span] of Object.entries(spansByIndex)) {
-    results[index].resultSpan = span;
   }
 
   // Set up the provider, etc.

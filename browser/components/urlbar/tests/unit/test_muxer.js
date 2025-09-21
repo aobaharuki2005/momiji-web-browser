@@ -111,6 +111,7 @@ add_task(async function test_preselectedHeuristic_singleProvider() {
     new UrlbarResult({
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+      heuristic: true,
       payload: { url: "http://mozilla.org/b" },
     }),
     new UrlbarResult({
@@ -119,7 +120,6 @@ add_task(async function test_preselectedHeuristic_singleProvider() {
       payload: { url: "http://mozilla.org/c" },
     }),
   ];
-  matches[1].heuristic = true;
 
   let provider = registerBasicTestProvider(matches);
   let context = createContext(undefined, {
@@ -160,6 +160,7 @@ add_task(async function test_preselectedHeuristic_multiProviders() {
     new UrlbarResult({
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+      heuristic: true,
       payload: { url: "http://mozilla.org/e" },
     }),
     new UrlbarResult({
@@ -168,7 +169,6 @@ add_task(async function test_preselectedHeuristic_multiProviders() {
       payload: { url: "http://mozilla.org/f" },
     }),
   ];
-  matches2[1].heuristic = true;
 
   let provider1 = registerBasicTestProvider(matches1);
   let provider2 = registerBasicTestProvider(matches2);
@@ -279,13 +279,13 @@ add_task(async function test_deduplicate_for_unitConversion() {
   const unitConversionSuggestion = new UrlbarResult({
     type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
     source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    suggestedIndex: 1,
     payload: {
       dynamicType: "unitConversion",
       output: "0.1 m",
       input: "10cm to m",
     },
   });
-  unitConversionSuggestion.suggestedIndex = 1;
 
   const unitConversion = registerBasicTestProvider(
     [unitConversionSuggestion],
