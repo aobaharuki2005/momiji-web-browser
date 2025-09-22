@@ -1038,6 +1038,12 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
             self.info("Validating Perfherder data against %s" % schema_path)
             jsonschema.validate(data, schema)
             self.info("PERFHERDER_DATA: %s" % json.dumps(data))
+            if "MOZ_AUTOMATION" in os.environ:
+                upload_dir = Path(self.query_abs_dirs()["abs_blob_upload_dir"])
+                upload_dir.mkdir(parents=True, exist_ok=True)
+                upload_path = upload_dir / "perfherder-data-resource-usage.json"
+                with upload_path.open("w", encoding="utf-8") as f:
+                    json.dump(data, f)
 
         log_usage("Total resource usage", duration, cpu_percent, cpu_times, io)
 
