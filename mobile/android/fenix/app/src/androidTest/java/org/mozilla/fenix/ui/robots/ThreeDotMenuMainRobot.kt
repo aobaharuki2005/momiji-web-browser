@@ -320,7 +320,7 @@ class ThreeDotMenuMainRobot {
             Log.i(TAG, "openSyncSignIn: Trying to perform swipe down action on the three dot menu")
             threeDotMenuRecyclerView().perform(swipeDown())
             Log.i(TAG, "openSyncSignIn: Performed swipe down action on the three dot menu")
-            mDevice.waitNotNull(Until.findObject(By.text("Sync and save data")), waitingTime)
+            mDevice.waitNotNull(Until.findObject(By.text("Sign in")), waitingTime)
             Log.i(TAG, "openSyncSignIn: Trying to click the \"Sync and save data\" button")
             syncAndSaveDataButton().click()
             Log.i(TAG, "openSyncSignIn: Clicked the \"Sync and save data\" button")
@@ -773,7 +773,7 @@ private fun customizeHomeButton() =
 private fun settingsButton(localizedText: String = getStringResource(R.string.browser_menu_settings)) =
     itemContainingText(localizedText)
 private fun syncAndSaveDataButton() =
-    itemContainingText(getStringResource(R.string.sync_menu_sync_and_save_data))
+    itemContainingText(getStringResource(R.string.sync_menu_sign_in))
 private fun normalBrowsingNewTabButton() =
     itemContainingText(getStringResource(R.string.library_new_tab))
 private fun addBookmarkButton() =

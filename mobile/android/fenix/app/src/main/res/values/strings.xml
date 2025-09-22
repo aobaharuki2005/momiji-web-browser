@@ -724,7 +724,9 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Customize</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description_2">Sign in to sync tabs, bookmarks, passwords, and more.</string>
+    <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Sign in to sync tabs, bookmarks, passwords, and more.</string>
+    <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
+    <string name="preferences_sign_in_description">Sync tabs, bookmarks, passwords, and more.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name_2">Mozilla account</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1105,7 +1107,9 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Sync and save your data preference view -->
-    <string name="preferences_sync_2">Sync and save your data</string>
+    <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Sync and save your data</string>
+    <!-- Header of the Sign in preference view -->
+    <string name="preferences_sign_in">Sign in</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Sign in to reconnect</string>
     <!-- Preference for removing FxA account -->
@@ -1901,7 +1905,9 @@
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sign in to Sync</string>
     <!-- An option from the three dot menu to sync and save data -->
-    <string name="sync_menu_sync_and_save_data">Sync and save data</string>
+    <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Sync and save data</string>
+    <!-- An option from the three dot menu to sign in -->
+    <string name="sync_menu_sign_in">Sign in</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Send to all devices</string>
     <!-- An option from the share dialog to reconnect to sync -->
