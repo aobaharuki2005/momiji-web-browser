@@ -80,7 +80,7 @@ add_task(async function test_IPProtectionService_start() {
     "IP Protection service should have an activation timestamp"
   );
   Assert.ok(
-    IPProtectionService.connection.active,
+    IPProtectionService.proxyManager.active,
     "IP Protection service should have an active connection"
   );
 

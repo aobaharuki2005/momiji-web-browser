@@ -13,6 +13,7 @@ EXTRA_JS_MODULES.ipprotection += [
     "GuardianClient.sys.mjs",
     "IPPChannelFilter.sys.mjs",
     "IPPNetworkErrorObserver.sys.mjs",
+    "IPPProxyManager.sys.mjs",
     "IPProtection.sys.mjs",
     "IPProtectionPanel.sys.mjs",
     "IPProtectionServerlist.sys.mjs",

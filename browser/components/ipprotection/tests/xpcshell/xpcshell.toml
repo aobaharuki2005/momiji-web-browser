@@ -17,3 +17,5 @@ prefs = [
 ["test_IPProtectionService.js"]
 
 ["test_IPProtectionUsage.js"]
+
+["test_IPProxyManager.js"]
