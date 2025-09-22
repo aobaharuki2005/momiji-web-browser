@@ -41,12 +41,10 @@ import androidx.compose.ui.semantics.collectionItemInfo
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import mozilla.components.compose.base.modifier.optionalClickable
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.WEB_EXTENSION_ITEM
 import org.mozilla.fenix.compose.list.IconListItem
@@ -125,10 +123,6 @@ internal fun MenuItem(
     IconListItem(
         label = label,
         modifier = modifier
-            .optionalClickable(
-                enabled = enabled,
-                onClick = onClick,
-            )
             .clearAndSetSemantics {
                 if (onClick != null || state == MenuItemState.DISABLED) {
                     role = Role.Button
@@ -235,10 +229,6 @@ internal fun WebExtensionMenuItem(
         enabled = enabled == true,
         onClick = onClick,
         modifier = Modifier
-            .optionalClickable(
-                enabled = enabled == true,
-                onClick = onClick,
-            )
             .testTag(WEB_EXTENSION_ITEM)
             .clearAndSetSemantics {
                 onClick?.let { role = Role.Button }

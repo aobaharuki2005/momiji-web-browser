@@ -5,7 +5,6 @@
 package org.mozilla.fenix.components.menu.compose
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -80,7 +79,6 @@ internal fun AddonMenuItem(
                 .background(
                     color = FirefoxTheme.colors.layer3,
                 )
-                .clickable {}
                 .semantics {
                     role = Role.Button
                     collectionItemInfo =
