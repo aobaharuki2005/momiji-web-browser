@@ -818,6 +818,12 @@ class RelayOffered {
             case "shown": {
               const document = notification.owner.panel.ownerDocument;
               customizeNotificationHeader(notification, "with-domain");
+              const learnMore = document.querySelector(
+                '[data-l10n-name="firefox-relay-learn-more-url"]'
+              );
+              if (learnMore) {
+                learnMore.href = gConfig.learnMoreURL;
+              }
               const baseDomain = Services.eTLD.getBaseDomain(
                 Services.io.newURI(origin)
               );
