@@ -119,26 +119,6 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
-  AboutTranslations: {
-    parent: {
-      esModuleURI: "resource://gre/actors/AboutTranslationsParent.sys.mjs",
-    },
-    child: {
-      esModuleURI: "resource://gre/actors/AboutTranslationsChild.sys.mjs",
-      events: {
-        // Run the actor before any content of the page appears to inject functions.
-        DOMDocElementInserted: {},
-        DOMContentLoaded: {},
-        // Used to show and hide the translations button.
-        pageshow: { mozSystemGroup: true },
-        pagehide: { mozSystemGroup: true },
-      },
-    },
-    matches: ["about:translations"],
-    remoteTypes: ["privilegedabout"],
-    enablePreference: "browser.translations.enable",
-  },
-
   AudioPlayback: {
     parent: {
       esModuleURI: "resource://gre/actors/AudioPlaybackParent.sys.mjs",
@@ -729,6 +709,26 @@ if (AppConstants.platform != "android") {
     },
 
     allFrames: true,
+  };
+
+  JSWINDOWACTORS.AboutTranslations = {
+    parent: {
+      esModuleURI: "resource://gre/actors/AboutTranslationsParent.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource://gre/actors/AboutTranslationsChild.sys.mjs",
+      events: {
+        // Run the actor before any content of the page appears to inject functions.
+        DOMDocElementInserted: {},
+        DOMContentLoaded: {},
+        // Used to show and hide the translations button.
+        pageshow: { mozSystemGroup: true },
+        pagehide: { mozSystemGroup: true },
+      },
+    },
+    matches: ["about:translations"],
+    remoteTypes: ["privilegedabout"],
+    enablePreference: "browser.translations.enable",
   };
 }
 
