@@ -20,6 +20,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsTArray.h"
 
+class nsDOMCSSDeclaration;
 class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
 class nsIArray;
@@ -27,7 +28,6 @@ class nsIBaseWindow;
 class nsIChannel;
 class nsIContent;
 class nsIContentSecurityPolicy;
-class nsICSSDeclaration;
 class nsIDocShell;
 class nsIDocShellTreeOwner;
 class nsDocShellLoadState;
@@ -589,7 +589,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   MOZ_CAN_RUN_SCRIPT virtual nsresult GetInnerWidth(double* aWidth) = 0;
   MOZ_CAN_RUN_SCRIPT virtual nsresult GetInnerHeight(double* aHeight) = 0;
 
-  virtual already_AddRefed<nsICSSDeclaration> GetComputedStyle(
+  virtual already_AddRefed<nsDOMCSSDeclaration> GetComputedStyle(
       mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
       mozilla::ErrorResult& aError) = 0;
 

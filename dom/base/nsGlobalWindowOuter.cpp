@@ -6541,7 +6541,7 @@ void nsGlobalWindowOuter::PageHidden(bool aIsEnteringBFCacheInParent) {
   FORWARD_TO_INNER_VOID(PageHidden, (aIsEnteringBFCacheInParent));
 }
 
-already_AddRefed<nsICSSDeclaration>
+already_AddRefed<nsDOMCSSDeclaration>
 nsGlobalWindowOuter::GetComputedStyleHelperOuter(Element& aElt,
                                                  const nsAString& aPseudoElt,
                                                  bool aDefaultStylesOnly,
@@ -6550,7 +6550,7 @@ nsGlobalWindowOuter::GetComputedStyleHelperOuter(Element& aElt,
     return nullptr;
   }
 
-  RefPtr<nsICSSDeclaration> compStyle = NS_NewComputedDOMStyle(
+  RefPtr<nsDOMCSSDeclaration> compStyle = NS_NewComputedDOMStyle(
       &aElt, aPseudoElt, mDoc,
       aDefaultStylesOnly ? nsComputedDOMStyle::StyleType::DefaultOnly
                          : nsComputedDOMStyle::StyleType::All,

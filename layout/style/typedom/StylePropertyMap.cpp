@@ -13,7 +13,7 @@
 #include "mozilla/dom/CSSStyleValue.h"
 #include "mozilla/dom/StylePropertyMapBinding.h"
 #include "nsCOMPtr.h"
-#include "nsICSSDeclaration.h"
+#include "nsDOMCSSDeclaration.h"
 #include "nsQueryObject.h"
 #include "nsString.h"
 #include "nsStyledElement.h"
@@ -69,7 +69,7 @@ void StylePropertyMap::Set(
     return;
   }
 
-  nsCOMPtr<nsICSSDeclaration> declaration = styledElement->Style();
+  nsCOMPtr<nsDOMCSSDeclaration> declaration = styledElement->Style();
 
   declaration->SetProperty(aProperty, value, ""_ns, aRv);
 }

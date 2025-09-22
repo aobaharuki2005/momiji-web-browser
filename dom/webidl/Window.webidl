@@ -297,8 +297,8 @@ partial interface Window {
 
 // https://drafts.csswg.org/cssom/#extensions-to-the-window-interface
 partial interface Window {
-  //[NewObject, Throws] CSSStyleDeclaration getComputedStyle(Element elt, optional DOMString? pseudoElt = "");
-  [NewObject, Throws] CSSStyleDeclaration? getComputedStyle(Element elt, optional DOMString? pseudoElt = "");
+  //[NewObject, Throws] CSSStyleProperties getComputedStyle(Element elt, optional DOMString? pseudoElt = "");
+  [NewObject, Throws] CSSStyleProperties? getComputedStyle(Element elt, optional DOMString? pseudoElt = "");
 };
 
 // http://dev.w3.org/csswg/cssom-view/

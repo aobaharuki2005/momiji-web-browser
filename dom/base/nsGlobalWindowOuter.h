@@ -844,7 +844,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
  protected:
   // Helper for getComputedStyle and getDefaultComputedStyle
-  already_AddRefed<nsICSSDeclaration> GetComputedStyleHelperOuter(
+  already_AddRefed<nsDOMCSSDeclaration> GetComputedStyleHelperOuter(
       mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
       bool aDefaultStylesOnly, mozilla::ErrorResult& aRv);
 

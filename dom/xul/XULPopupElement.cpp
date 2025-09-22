@@ -17,8 +17,8 @@
 #include "mozilla/dom/XULMenuElement.h"
 #include "mozilla/dom/XULPopupElementBinding.h"
 #include "nsCOMPtr.h"
+#include "nsDOMCSSDeclaration.h"
 #include "nsGkAtoms.h"
-#include "nsICSSDeclaration.h"
 #include "nsIContent.h"
 #include "nsMenuPopupFrame.h"
 #include "nsNameSpaceManager.h"
@@ -223,7 +223,7 @@ void XULPopupElement::SizeTo(int32_t aWidth, int32_t aHeight) {
   height.AppendInt(aHeight);
   height.AppendLiteral("px");
 
-  nsCOMPtr<nsICSSDeclaration> style = Style();
+  nsCOMPtr<nsDOMCSSDeclaration> style = Style();
   style->SetProperty("width"_ns, width, ""_ns, IgnoreErrors());
   style->SetProperty("height"_ns, height, ""_ns, IgnoreErrors());
 

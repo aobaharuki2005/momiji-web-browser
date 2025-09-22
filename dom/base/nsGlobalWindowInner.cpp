@@ -4551,21 +4551,23 @@ nsresult nsGlobalWindowInner::DispatchSyncPopState() {
   return err.StealNSResult();
 }
 
-already_AddRefed<nsICSSDeclaration> nsGlobalWindowInner::GetComputedStyle(
+already_AddRefed<nsDOMCSSDeclaration> nsGlobalWindowInner::GetComputedStyle(
     Element& aElt, const nsAString& aPseudoElt, ErrorResult& aError) {
   return GetComputedStyleHelper(aElt, aPseudoElt, false, aError);
 }
 
-already_AddRefed<nsICSSDeclaration>
+already_AddRefed<nsDOMCSSDeclaration>
 nsGlobalWindowInner::GetDefaultComputedStyle(Element& aElt,
                                              const nsAString& aPseudoElt,
                                              ErrorResult& aError) {
   return GetComputedStyleHelper(aElt, aPseudoElt, true, aError);
 }
 
-already_AddRefed<nsICSSDeclaration> nsGlobalWindowInner::GetComputedStyleHelper(
-    Element& aElt, const nsAString& aPseudoElt, bool aDefaultStylesOnly,
-    ErrorResult& aError) {
+already_AddRefed<nsDOMCSSDeclaration>
+nsGlobalWindowInner::GetComputedStyleHelper(Element& aElt,
+                                            const nsAString& aPseudoElt,
+                                            bool aDefaultStylesOnly,
+                                            ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(GetComputedStyleHelperOuter,
                             (aElt, aPseudoElt, aDefaultStylesOnly, aError),
                             aError, nullptr);
