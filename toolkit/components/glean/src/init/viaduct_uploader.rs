@@ -6,7 +6,7 @@ use glean::net::{CapablePingUploadRequest, PingUploadRequest, PingUploader, Uplo
 use once_cell::sync::OnceCell;
 use std::sync::Once;
 use url::Url;
-use viaduct::{Error::*, Request};
+use viaduct::{ViaductError::*, Request};
 
 extern "C" {
     fn FOG_TooLateToSend() -> bool;
@@ -68,7 +68,7 @@ impl PingUploader for ViaductUploader {
         match result {
             Ok(result) => result,
             Err(ViaductUploaderError::Viaduct(ve)) => match ve {
-                NonTlsUrl | UrlError(_) => UploadResult::unrecoverable_failure(),
+                NonTlsUrl | UrlError(_) | BackendAlreadyInitialized => UploadResult::unrecoverable_failure(),
                 RequestHeaderError(_)
                 | BackendError(_)
                 | NetworkError(_)
@@ -190,8 +190,8 @@ enum ViaductUploaderError {
     #[error("ohttp::Error {0}")]
     Ohttp(#[from] ohttp::Error),
 
-    #[error("viaduct::Error {0}")]
-    Viaduct(#[from] viaduct::Error),
+    #[error("viaduct::ViaductError {0}")]
+    Viaduct(#[from] viaduct::ViaductError),
 
     #[error("Fatal upload error")]
     Fatal,
@@ -199,6 +199,6 @@ enum ViaductUploaderError {
 
 impl From<url::ParseError> for ViaductUploaderError {
     fn from(e: url::ParseError) -> Self {
-        ViaductUploaderError::Viaduct(viaduct::Error::from(e))
+        ViaductUploaderError::Viaduct(viaduct::ViaductError::from(e))
     }
 }

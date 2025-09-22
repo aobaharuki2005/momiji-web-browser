@@ -68,6 +68,10 @@ RemoteCommandStore = "AsyncWrapped"
 TabsBridgedEngine = "AsyncWrapped"
 TabsStore = "AsyncWrapped"
 
+[viaduct.async_wrappers]
+"allow_android_emulator_loopback" = "Sync"
+"init_backend" = "Sync"
+
 [webext_storage.async_wrappers]
 WebExtStorageBridgedEngine = "AsyncWrapped"
 WebExtStorageStore = "AsyncWrapped"
