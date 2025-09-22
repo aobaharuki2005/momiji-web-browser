@@ -53,6 +53,7 @@ class Http3WebTransportStream final : public WebTransportStreamBase,
   }
   Http3Stream* GetHttp3Stream() override { return nullptr; }
   Http3ConnectUDPStream* GetHttp3ConnectUDPStream() override { return nullptr; }
+  Http3StreamTunnel* GetHttp3StreamTunnel() override { return nullptr; }
 
   void SetSendOrder(Maybe<int64_t> aSendOrder) override;
 

@@ -29,6 +29,7 @@
 #include "nsISocketProvider.h"
 #include "nsNetAddr.h"
 #include "nsINetAddr.h"
+#include "nsStringStream.h"
 
 namespace mozilla {
 namespace net {
@@ -108,7 +109,7 @@ class ConnectUDPTransaction : public nsAHttpTransaction {
     return NS_OK;
   }
 
- private:
+ protected:
   virtual ~ConnectUDPTransaction() {
     LOG(("ConnectUDPTransaction dtor: %p", this));
   }
@@ -121,6 +122,52 @@ class ConnectUDPTransaction : public nsAHttpTransaction {
 };
 
 NS_IMPL_ISUPPORTS(ConnectUDPTransaction, nsISupportsWeakReference)
+
+//-----------------------------------------------------------------------------
+// Http3ConnectTransaction
+//-----------------------------------------------------------------------------
+
+// We need a dummy transaction to keep the Http3StreamTunnel alive.
+// Http3StreamTunnel instances are owned via the transaction-to-stream map
+// in Http3Session::mStreamTransactionHash.
+class Http3ConnectTransaction : public ConnectUDPTransaction {
+ public:
+  explicit Http3ConnectTransaction(uint32_t aCaps, nsHttpConnectionInfo* aInfo)
+      : ConnectUDPTransaction(nullptr, nullptr),
+        mCaps(aCaps),
+        mConnInfo(aInfo) {
+    LOG(("Http3ConnectTransaction ctor: %p", this));
+  }
+
+  uint32_t Caps() override { return mCaps; }
+  nsHttpConnectionInfo* ConnectionInfo() override { return mConnInfo; }
+
+  void OnTransportStatus(nsITransport* transport, nsresult status,
+                         int64_t progress) override {}
+
+  [[nodiscard]] nsresult ReadSegments(nsAHttpSegmentReader* reader,
+                                      uint32_t count,
+                                      uint32_t* countRead) override {
+    MOZ_ASSERT_UNREACHABLE("Shouldn't be called");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  [[nodiscard]] nsresult WriteSegments(nsAHttpSegmentWriter* writer,
+                                       uint32_t count,
+                                       uint32_t* countWritten) override {
+    MOZ_ASSERT_UNREACHABLE("Shouldn't be called");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  void Close(nsresult reason) override { mConnection = nullptr; }
+
+ private:
+  virtual ~Http3ConnectTransaction() {
+    LOG(("Http3ConnectTransaction dtor: %p", this));
+  }
+
+  uint32_t mCaps = 0;
+  RefPtr<nsHttpConnectionInfo> mConnInfo;
+};
 
 //-----------------------------------------------------------------------------
 // HttpConnectionUDP <public>
@@ -137,6 +184,9 @@ HttpConnectionUDP::~HttpConnectionUDP() {
     mForceSendTimer->Cancel();
     mForceSendTimer = nullptr;
   }
+
+  MOZ_ASSERT(mQueuedTransaction.IsEmpty(),
+             "Should not have any queued transactions");
 }
 
 nsresult HttpConnectionUDP::Init(nsHttpConnectionInfo* info,
@@ -149,7 +199,7 @@ nsresult HttpConnectionUDP::Init(nsHttpConnectionInfo* info,
 
   mConnInfo = info;
   MOZ_ASSERT(mConnInfo);
-  MOZ_ASSERT(mConnInfo->IsHttp3());
+  MOZ_ASSERT(mConnInfo->IsHttp3() || mConnInfo->IsHttp3ProxyConnection());
 
   mErrorBeforeConnect = status;
   mAlpnToken = mConnInfo->GetNPNToken();
@@ -208,7 +258,7 @@ nsresult HttpConnectionUDP::InitWithSocket(nsHttpConnectionInfo* info,
   NS_ENSURE_TRUE(!mConnInfo, NS_ERROR_ALREADY_INITIALIZED);
 
   mConnInfo = info;
-  MOZ_ASSERT(mConnInfo->IsHttp3());
+  MOZ_ASSERT(mConnInfo->IsHttp3() || mConnInfo->IsHttp3ProxyConnection());
 
   mErrorBeforeConnect = NS_OK;
   mAlpnToken = mConnInfo->GetNPNToken();
@@ -375,11 +425,30 @@ nsresult HttpConnectionUDP::Activate(nsAHttpTransaction* trans, uint32_t caps,
     return mErrorBeforeConnect;
   }
 
+  // When mIsInTunnel is false, this HttpConnectionUDP represents the *outer*
+  // connection to the proxy. If a proxy CONNECT is still in progress,
+  // we need to queue the transaction until the outer connection is fully
+  // established.
+  //
+  // Important: we must not reset the transaction while the outer connection
+  // is still connecting. Resetting here could lead to opening another HTTP/3
+  // connection.
   if (IsProxyConnectInProgress() && !mIsInTunnel && hTrans) {
-    ResetTransaction(hTrans);
+    if (!mConnected) {
+      mQueuedTransaction.AppendElement(hTrans);
+      Unused << ResumeSend();
+    } else {
+      ResetTransaction(hTrans);
+    }
     return NS_OK;
   }
 
+  // This is the CONNECT-UDP case. When mIsInTunnel is true, thi is
+  // the *inner* connection from the proxy tunnel to the destination website.
+  // If the proxy CONNECT is still in progress, we cannot send any data
+  // yet because Http3ConnectUDPStream is not allowed to transmit until the
+  // tunnel is established. In this case, we queue the transaction and will
+  // add it to the Http3Session once the proxy CONNECT completes.
   if (mIsInTunnel && IsProxyConnectInProgress() && hTrans) {
     LOG(("Queue trans %p due to proxy connct in progress", hTrans));
     mQueuedTransaction.AppendElement(hTrans);
@@ -399,6 +468,21 @@ nsresult HttpConnectionUDP::Activate(nsAHttpTransaction* trans, uint32_t caps,
 
   Unused << ResumeSend();
   return NS_OK;
+}
+
+void HttpConnectionUDP::OnConnected() {
+  LOG(("HttpConnectionUDP::OnConnected %p", this));
+  MOZ_ASSERT(!mConnected, "Called more than once");
+
+  mConnected = true;
+  if (mIsInTunnel) {
+    return;
+  }
+
+  for (const auto& trans : mQueuedTransaction) {
+    ResetTransaction(trans);
+  }
+  mQueuedTransaction.Clear();
 }
 
 already_AddRefed<nsIInputStream> HttpConnectionUDP::CreateProxyConnectStream(
@@ -453,6 +537,20 @@ nsresult HttpConnectionUDP::CreateTunnelStream(
     return NS_ERROR_UNEXPECTED;
   }
 
+  bool isHttp3 = httpTransaction->ConnectionInfo()->IsHttp3();
+
+  if (!isHttp3) {
+    RefPtr<Http3ConnectTransaction> trans = new Http3ConnectTransaction(
+        httpTransaction->Caps(), httpTransaction->ConnectionInfo());
+    RefPtr<nsHttpConnection> conn =
+        mHttp3Session->CreateTunnelStream(trans, mCallbacks, mRtt, false);
+    RefPtr<ConnectionHandle> handle = new ConnectionHandle(conn);
+    trans->SetConnection(handle);
+
+    conn.forget(aHttpConnection);
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIInputStream> proxyConnectStream =
       CreateProxyConnectStream(httpTransaction);
   if (!proxyConnectStream) {
@@ -498,6 +596,11 @@ void HttpConnectionUDP::Close(nsresult reason, bool aIsShutdown) {
   if (socket) {
     socket->Close();
   }
+
+  for (const auto& trans : mQueuedTransaction) {
+    trans->Close(reason);
+  }
+  mQueuedTransaction.Clear();
 }
 
 void HttpConnectionUDP::DontReuse() {
@@ -669,6 +772,7 @@ void HttpConnectionUDP::ResetTransaction(nsHttpTransaction* aHttpTransaction) {
   gHttpHandler->ConnMgr()->MoveToWildCardConnEntry(mConnInfo, wildCardProxyCi,
                                                    this);
   mConnInfo = wildCardProxyCi;
+  aHttpTransaction->DoNotRemoveAltSvc();
   aHttpTransaction->Close(NS_ERROR_NET_RESET);
 }
 

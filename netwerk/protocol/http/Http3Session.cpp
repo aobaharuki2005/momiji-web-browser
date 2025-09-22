@@ -10,6 +10,7 @@
 #include "Http3StreamBase.h"
 #include "Http3WebTransportSession.h"
 #include "Http3ConnectUDPStream.h"
+#include "Http3StreamTunnel.h"
 #include "Http3WebTransportStream.h"
 #include "HttpConnectionUDP.h"
 #include "HttpLog.h"
@@ -671,7 +672,7 @@ nsresult Http3Session::ProcessEvents() {
         }
 
         OnTransportStatus(nullptr, NS_NET_STATUS_CONNECTED_TO, 0);
-
+        mUdpConn->OnConnected();
         ReportHttp3Connection();
         // Maybe call ResumeSend:
         // In case ZeroRtt has been used and it has been rejected, 2 events will
@@ -1456,8 +1457,14 @@ nsresult Http3Session::TryActivating(
   }
 
   nsresult rv = NS_OK;
-  RefPtr<Http3Stream> httpStream = aStream->GetHttp3Stream();
-  if (httpStream) {
+  // The order of these checks is important: Http3StreamTunnel inherits from
+  // Http3Stream, so a tunnel will also match conditions for a regular stream.
+  // Ensure we handle Http3StreamTunnel cases before generic Http3Stream logic.
+  if (RefPtr<Http3StreamTunnel> streamTunnel =
+          aStream->GetHttp3StreamTunnel()) {
+    rv = mHttp3Connection->Connect(aAuthorityHeader, aHeaders, aStreamId, 3,
+                                   false);
+  } else if (RefPtr<Http3Stream> httpStream = aStream->GetHttp3Stream()) {
     rv = mHttp3Connection->Fetch(
         aMethod, aScheme, aAuthorityHeader, aPath, aHeaders, aStreamId,
         httpStream->PriorityUrgency(), httpStream->PriorityIncremental());
@@ -2958,6 +2965,22 @@ void Http3Session::FinishTunnelSetup(nsAHttpTransaction* aTransaction) {
   RemoveStreamFromQueues(stream);
   mStreamTransactionHash.Remove(aTransaction);
   mTunnelStreams.AppendElement(stream);
+}
+
+already_AddRefed<nsHttpConnection> Http3Session::CreateTunnelStream(
+    nsAHttpTransaction* aHttpTransaction, nsIInterfaceRequestor* aCallbacks,
+    PRIntervalTime aRtt, bool aIsExtendedCONNECT) {
+  LOG(("Http3Session::CreateTunnelStream %p aHttpTransaction=%p", this,
+       aHttpTransaction));
+  RefPtr<Http3StreamBase> stream =
+      new Http3StreamTunnel(aHttpTransaction, this, mCurrentBrowserId);
+  mStreamTransactionHash.InsertOrUpdate(aHttpTransaction, RefPtr{stream});
+  StreamHasDataToWrite(stream);
+
+  RefPtr<nsHttpConnection> conn =
+      stream->GetHttp3StreamTunnel()->CreateHttpConnection(aCallbacks, aRtt,
+                                                           aIsExtendedCONNECT);
+  return conn.forget();
 }
 
 }  // namespace mozilla::net

@@ -51,6 +51,7 @@ class Http3ConnectUDPStream final : public Http3TunnelStreamBase,
   }
   Http3Stream* GetHttp3Stream() override { return nullptr; }
   Http3ConnectUDPStream* GetHttp3ConnectUDPStream() override { return this; }
+  Http3StreamTunnel* GetHttp3StreamTunnel() override { return nullptr; }
 
   nsresult TryActivating() override;
 
@@ -62,7 +63,7 @@ class Http3ConnectUDPStream final : public Http3TunnelStreamBase,
 
   bool OnActivated() override;
 
-  void OnProcessDatagram() override;
+  nsresult OnProcessDatagram() override;
 
   // nsASocketHandler methods:
   void OnSocketReady(PRFileDesc* fd, int16_t outFlags) override;

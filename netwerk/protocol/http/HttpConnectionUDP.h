@@ -103,6 +103,8 @@ class HttpConnectionUDP final : public HttpConnectionBase,
                               HttpConnectionBase** aHttpConnection,
                               bool aIsExtendedCONNECT = false) override;
 
+  void OnConnected();
+
  private:
   nsresult InitCommon(nsIUDPSocket* aSocket, const NetAddr& aPeerAddr,
                       nsIInterfaceRequestor* callbacks, uint32_t caps,
@@ -122,6 +124,7 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   bool mDontReuse = false;
   bool mIsReused = false;
   bool mLastTransactionExpectedNoContent = false;
+  bool mConnected = false;
 
   int32_t mPriority = nsISupportsPriority::PRIORITY_NORMAL;
 

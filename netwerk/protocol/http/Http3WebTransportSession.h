@@ -41,7 +41,7 @@ class Http3TunnelStreamBase : public Http3StreamBase,
   void TransactionIsDone(nsresult aResult);
 
   virtual bool OnActivated() { return true; }
-  virtual void OnProcessDatagram() {}
+  virtual nsresult OnProcessDatagram() { return NS_OK; }
 
  protected:
   bool ConsumeHeaders(const char* buf, uint32_t avail, uint32_t* countUsed);
@@ -89,6 +89,7 @@ class Http3WebTransportSession final : public WebTransportSessionBase,
   }
   Http3Stream* GetHttp3Stream() override { return nullptr; }
   Http3ConnectUDPStream* GetHttp3ConnectUDPStream() override { return nullptr; }
+  Http3StreamTunnel* GetHttp3StreamTunnel() override { return nullptr; }
 
   void Close(nsresult aResult) override;
 

@@ -79,13 +79,14 @@ bool Http3ConnectUDPStream::OnActivated() {
   return false;
 }
 
-void Http3ConnectUDPStream::OnProcessDatagram() {
+nsresult Http3ConnectUDPStream::OnProcessDatagram() {
   LOG(("Http3ConnectUDPStream::OnProcessDatagram %p", this));
 
   while (!mOutputData.IsEmpty()) {
     nsTArray<uint8_t> data = mOutputData.Pop()->TakeData();
     mSession->SendHTTPDatagram(mStreamId, data, mTrackingId++);
   }
+  return NS_OK;
 }
 
 nsresult Http3ConnectUDPStream::TryActivating() {

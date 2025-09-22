@@ -18,6 +18,7 @@ class Http3Stream;
 class Http3WebTransportSession;
 class Http3WebTransportStream;
 class Http3ConnectUDPStream;
+class Http3StreamTunnel;
 
 class Http3StreamBase : public SupportsWeakPtr, public ARefBase {
  public:
@@ -27,6 +28,7 @@ class Http3StreamBase : public SupportsWeakPtr, public ARefBase {
   virtual Http3WebTransportStream* GetHttp3WebTransportStream() = 0;
   virtual Http3Stream* GetHttp3Stream() = 0;
   virtual Http3ConnectUDPStream* GetHttp3ConnectUDPStream() = 0;
+  virtual Http3StreamTunnel* GetHttp3StreamTunnel() = 0;
 
   bool HasStreamId() const { return mStreamId != UINT64_MAX; }
   uint64_t StreamId() const { return mStreamId; }

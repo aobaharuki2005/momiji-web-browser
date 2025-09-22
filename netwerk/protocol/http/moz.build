@@ -123,6 +123,7 @@ UNIFIED_SOURCES += [
     "Http3ConnectUDPStream.cpp",
     "Http3Session.cpp",
     "Http3Stream.cpp",
+    "Http3StreamTunnel.cpp",
     "Http3WebTransportSession.cpp",
     "Http3WebTransportStream.cpp",
     "HttpAuthUtils.cpp",

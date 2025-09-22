@@ -107,6 +107,7 @@ class Http3StreamBase;
 class QuicSocketControl;
 class Http3WebTransportSession;
 class Http3WebTransportStream;
+class nsHttpConnection;
 
 // IID for the Http3Session interface
 #define NS_HTTP3SESSION_IID \
@@ -144,6 +145,8 @@ class Http3SessionBase {
                                     uint32_t aCount, uint32_t* aCountWritten,
                                     bool* aFin) = 0;
   virtual void FinishTunnelSetup(nsAHttpTransaction* aTransaction) = 0;
+
+  virtual void CloseStream(Http3StreamBase* aStream, nsresult aResult) {}
 
   // For WebTransport
   virtual void CloseWebTransportConn() = 0;
@@ -226,7 +229,7 @@ class Http3Session final : public Http3SessionBase,
   nsresult CreateWebTransportStream(uint64_t aSessionId,
                                     WebTransportStreamType aStreamType,
                                     uint64_t* aStreamId);
-  void CloseStream(Http3StreamBase* aStream, nsresult aResult);
+  void CloseStream(Http3StreamBase* aStream, nsresult aResult) override;
   void CloseStreamInternal(Http3StreamBase* aStream, nsresult aResult);
 
   void SetCleanShutdown(bool aCleanShutdown) {
@@ -291,6 +294,10 @@ class Http3Session final : public Http3SessionBase,
   // For connect-udp
   already_AddRefed<HttpConnectionUDP> CreateTunnelStream(
       nsAHttpTransaction* aHttpTransaction, nsIInterfaceRequestor* aCallbacks);
+  // For HTTP CONNECT
+  already_AddRefed<nsHttpConnection> CreateTunnelStream(
+      nsAHttpTransaction* aHttpTransaction, nsIInterfaceRequestor* aCallbacks,
+      PRIntervalTime aRtt, bool aIsExtendedCONNECT);
   void SetIsInTunnel() { mIsInTunnel = true; }
 
  private:
