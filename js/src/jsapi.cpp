@@ -1801,6 +1801,15 @@ JS::RealmCreationOptions& JS::RealmCreationOptions::setLocaleCopyZ(
   return *this;
 }
 
+JS::RealmBehaviors& JS::RealmBehaviors::setLocaleOverride(const char* locale) {
+  if (locale) {
+    localeOverride_ = CopyStringZ<JS::LocaleString>(locale);
+  } else {
+    localeOverride_ = nullptr;
+  }
+  return *this;
+}
+
 JS::RealmBehaviors& JS::RealmBehaviors::setTimeZoneCopyZ(const char* timeZone) {
   if (timeZone) {
     timeZone_ = CopyStringZ<JS::TimeZoneString>(timeZone);

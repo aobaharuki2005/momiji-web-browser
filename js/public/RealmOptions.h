@@ -299,26 +299,7 @@ class JS_PUBLIC_API RealmBehaviors {
   }
 
   RefPtr<LocaleString> localeOverride() const { return localeOverride_; }
-  RealmBehaviors& setLocaleOverride(const char* locale) {
-    if (locale) {
-      const size_t size = strlen(locale) + 1;
-
-      js::AutoEnterOOMUnsafeRegion oomUnsafe;
-      char* memoryPtr = js_pod_malloc<char>(sizeof(LocaleString) + size);
-      if (!memoryPtr) {
-        oomUnsafe.crash("RealmBehaviors::setLocaleOverride");
-      }
-
-      char* localePtr = memoryPtr + sizeof(LocaleString);
-      memcpy(localePtr, locale, size);
-
-      localeOverride_ = new (memoryPtr) LocaleString(localePtr);
-    } else {
-      localeOverride_ = nullptr;
-    }
-
-    return *this;
-  };
+  RealmBehaviors& setLocaleOverride(const char* locale);
 
   // Change the realm's current time zone to a different value than the system
   // default time zone. The time zone must be a valid IANA time zone identifier,
