@@ -15,22 +15,19 @@
 namespace js {
 
 inline bool EmulatesUndefined(JSObject* obj) {
-  // This may be called off the main thread. It's OK not to expose the object
-  // here as it doesn't escape.
+  // Called from ProcessTryNotes via ToBoolean with a pending exception.
   AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
   JSObject* actual = MOZ_LIKELY(!obj->is<WrapperObject>())
                          ? obj
-                         : UncheckedUnwrapWithoutExpose(obj);
+                         : UncheckedUnwrap(obj);
   return actual->getClass()->emulatesUndefined();
 }
 
 inline bool EmulatesUndefinedCheckFuse(JSObject* obj, size_t fuseValue) {
-  // This may be called off the main thread. It's OK not to expose the object
-  // here as it doesn't escape.
-  AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
+  AutoUnsafeCallWithABI unsafe;
   JSObject* actual = MOZ_LIKELY(!obj->is<WrapperObject>())
                          ? obj
-                         : UncheckedUnwrapWithoutExpose(obj);
+                         : UncheckedUnwrap(obj);
   bool emulatesUndefined = actual->getClass()->emulatesUndefined();
   if (emulatesUndefined) {
     MOZ_RELEASE_ASSERT(fuseValue != 0);
