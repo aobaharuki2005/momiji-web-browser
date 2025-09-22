@@ -58,6 +58,8 @@ use crate::composite::{CompositeState, CompositeTileSurface, CompositorInputLaye
 use crate::composite::{CompositorKind, Compositor, NativeTileId, CompositeFeatures, CompositeSurfaceFormat, ResolvedExternalSurfaceColorData};
 use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSurfaceId, NativeSurfaceOperation, ClipRadius};
 use crate::composite::TileKind;
+#[cfg(feature = "debugger")]
+use api::debugger::CompositorDebugInfo;
 use crate::segment::SegmentBuilder;
 use crate::{debug_colors, CompositorInputConfig, CompositorSurfaceUsage};
 use crate::device::{DepthFunction, Device, DrawTarget, ExternalTexture, GpuFrameId, UploadPBOPool};
@@ -1288,10 +1290,22 @@ impl Renderer {
                     DebugQueryKind::SpatialTree { .. } => {
                         panic!("Should be handled by render backend");
                     }
-                    DebugQueryKind::Compositor { .. } => {
+                    DebugQueryKind::CompositorConfig { .. } => {
                         let result = match self.active_documents.iter().last() {
                             Some((_, doc)) => {
                                 doc.frame.composite_state.print_to_string()
+                            }
+                            None => {
+                                "No active documents".into()
+                            }
+                        };
+                        query.result.send(result).ok();
+                    }
+                    DebugQueryKind::CompositorView { .. } => {
+                        let result = match self.active_documents.iter().last() {
+                            Some((_, doc)) => {
+                                let info = CompositorDebugInfo::from(&doc.frame.composite_state);
+                                serde_json::to_string(&info).unwrap()
                             }
                             None => {
                                 "No active documents".into()

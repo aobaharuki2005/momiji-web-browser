@@ -4,11 +4,13 @@
  
 use crate::{DebugCommand, RenderApi};
 use crate::profiler::Profiler;
+use crate::composite::CompositeState;
 use std::collections::HashMap;
 use api::crossbeam_channel;
 use api::DebugFlags;
 use api::debugger::{DebuggerMessage, SetDebugFlagsMessage, ProfileCounterDescriptor};
 use api::debugger::{UpdateProfileCountersMessage, InitProfileCountersMessage, ProfileCounterId};
+use api::debugger::{CompositorDebugInfo, CompositorDebugTile};
 use std::thread;
 use tiny_http::{Server, Response, ReadWrite, Method};
 use base64::prelude::*;
@@ -31,7 +33,9 @@ pub enum DebugQueryKind {
     /// Query the current spatial tree
     SpatialTree {},
     /// Query the compositing config
-    Compositor {},
+    CompositorConfig {},
+    /// Query the compositing view
+    CompositorView {},
 }
 
 /// Details about the debug query being requested
@@ -200,7 +204,8 @@ pub fn start(api: RenderApi) {
 
                     let kind = match args.get("type").map(|s| s.as_str()) {
                         Some("spatial-tree") => DebugQueryKind::SpatialTree {},
-                        Some("composite-config") => DebugQueryKind::Compositor {},
+                        Some("composite-view") => DebugQueryKind::CompositorView {},
+                        Some("composite-config") => DebugQueryKind::CompositorConfig {},
                         _ => {
                             request.respond(Response::from_string("Unknown query")).ok();
                             return;
@@ -309,4 +314,28 @@ pub fn construct_server_ws_frame(payload: &str) -> Vec<u8> {
     frame.extend_from_slice(payload_bytes);
 
     frame
+}
+
+impl From<&CompositeState> for CompositorDebugInfo {
+    fn from(state: &CompositeState) -> Self {
+        let tiles = state.tiles
+            .iter()
+            .map(|tile| {
+                CompositorDebugTile {
+                    local_rect: tile.local_rect,
+                    clip_rect: tile.device_clip_rect,
+                    device_rect: state.get_device_rect(
+                        &tile.local_rect,
+                        tile.transform_index,
+                    ),
+                    z_id: tile.z_id.0,
+                }
+            })
+            .collect();
+
+        CompositorDebugInfo {
+            enabled_z_layers: !0,
+            tiles,
+        }
+    }
 }
