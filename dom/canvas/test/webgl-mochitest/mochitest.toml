@@ -221,7 +221,9 @@ tags = "os_integration"
 ["test_read_pixels_no_format.html"]
 
 ["test_renderer_strings.html"]
-skip-if = ["display == 'wayland'"]
+skip-if = [
+  "os == 'linux' && os_version == '22.04' && display == 'wayland'",
+]
 tags = "os_integration"
 
 ["test_sab_with_webgl.html"]

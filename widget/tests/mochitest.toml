@@ -22,7 +22,7 @@ skip-if = [
 ["test_clipboard.html"]
 skip-if = [
   "headless", # bug 1852983
-  "display == 'wayland' && os_version == '22.04'", # Bug 1857075
+  "os == 'linux' && os_version == '22.04' && display == 'wayland'", # Bug 1857075
 ]
 support-files = ["file_test_clipboard.js"]
 
@@ -32,7 +32,7 @@ support-files = ["file_test_clipboard_asyncSetData.js"]
 ["test_clipboard_getDataSnapshot.html"]
 support-files = ["file_test_clipboard_getDataSnapshot.js"]
 skip-if = [
-  "display == 'wayland'", # Bug 1879835
+  "os == 'linux' && os_version == '22.04' && display == 'wayland'", # Bug 1879835
   "os == 'android' && android_version == '34' && processor == 'x86_64' && debug", # Bug 1982951
   "os == 'android' && android_version == '34' && processor == 'x86_64' && opt", # Bug 1982951
 ]
@@ -40,7 +40,7 @@ skip-if = [
 ["test_clipboard_getDataSnapshotSync.html"]
 support-files = "file_test_clipboard_getDataSnapshotSync.js"
 skip-if = [
-  "display == 'wayland'", # Bug 1879835
+  "os == 'linux' && os_version == '22.04' && display == 'wayland'", # Bug 1879835
   "os == 'android' && android_version == '34' && processor == 'x86_64' && debug", # Bug 1982951
   "os == 'android' && android_version == '34' && processor == 'x86_64' && opt", # Bug 1982951
 ]
@@ -93,4 +93,4 @@ skip-if = [
 support-files = ["window_picker_no_crash_child.html"]
 
 ["test_textScaleFactor_system_font.html"]
-skip-if = ["display == 'wayland' && os_version == '22.04'"] # Bug 1857075
+skip-if = ["os == 'linux' && os_version == '22.04' && display == 'wayland'"] # Bug 1857075

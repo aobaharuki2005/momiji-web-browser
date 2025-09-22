@@ -443,7 +443,9 @@ skip-if = ["os == 'android'"] # Needs interaction with the scrollbar
 ["test_editing_UI_in_plaintext-only.html"]
 
 ["test_execCommandPaste_noTarget.html"]
-skip-if = ["display == 'wayland'"] # Bug 1935188
+skip-if = [
+  "os == 'linux' && os_version == '22.04' && display == 'wayland'", # Bug 1935188
+]
 
 ["test_focus_caret_navigation_between_nested_editors.html"]
 
