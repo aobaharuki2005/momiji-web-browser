@@ -17,6 +17,8 @@ import {
 } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
+/** @import MozCheckbox from "../../../../../toolkit/content/widgets/moz-checkbox/moz-checkbox.mjs"*/
+
 /**
  * A Lit directive that applies all properties of an object to a DOM element.
  *
@@ -137,6 +139,9 @@ const ITEM_SLOT_BY_PARENT = new Map([
 ]);
 
 export class SettingControl extends MozLitElement {
+  /**
+   * @type {Setting | undefined}
+   */
   #lastSetting;
 
   static properties = {
@@ -149,6 +154,26 @@ export class SettingControl extends MozLitElement {
   constructor() {
     super();
     this.controlRef = createRef();
+
+    /**
+     * @type {Preferences['getSetting'] | undefined}
+     */
+    this.getSetting = undefined;
+
+    /**
+     * @type {Setting | undefined}
+     */
+    this.setting = undefined;
+
+    /**
+     * @type {PreferencesSettingsConfig | undefined}
+     */
+    this.config = undefined;
+
+    /**
+     * @type {boolean | undefined}
+     */
+    this.parentDisabled = undefined;
   }
 
   createRenderRoot() {
@@ -174,6 +199,9 @@ export class SettingControl extends MozLitElement {
     this.requestUpdate();
   };
 
+  /**
+   * @type {MozLitElement['willUpdate']}
+   */
   willUpdate(changedProperties) {
     if (changedProperties.has("setting")) {
       if (this.#lastSetting) {
@@ -192,6 +220,11 @@ export class SettingControl extends MozLitElement {
 
   /**
    * The default properties that controls and options accept.
+   * Note: for the disabled property, a setting can either be locked,
+   * or controlled by an extension but not both.
+   *
+   * @param {PreferencesSettingsConfig} config
+   * @returns {Record<string, any>}
    */
   getCommonPropertyMapping(config) {
     return {
@@ -251,6 +284,10 @@ export class SettingControl extends MozLitElement {
     this.value = this.setting.value;
   };
 
+  /**
+   * @param {MozCheckbox | HTMLInputElement} el
+   * @returns {boolean | string | undefined}
+   */
   controlValue(el) {
     if (el.constructor.activatedProperty && el.localName != "moz-radio") {
       return el[el.constructor.activatedProperty];

@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**@import { SettingGroup } from "./widgets/setting-group/setting-group.mjs" */
+/** @import { PreferencesSettingsConfig } from "chrome://global/content/preferences/Preferences.mjs" */
+
 /* import-globals-from extensionControlled.js */
 /* import-globals-from preferences.js */
 /* import-globals-from /toolkit/mozapps/preferences/fontbuilder.js */
@@ -655,6 +658,9 @@ Preferences.addSetting({
   },
 });
 
+/**
+ * @type {Record<string, PreferencesSettingsConfig>} SettingConfig
+ */
 let SETTINGS_CONFIG = {
   zoom: {
     // This section is marked as in progress for testing purposes
@@ -855,9 +861,13 @@ let SETTINGS_CONFIG = {
   },
 };
 
+/**
+ * @param {string} id - ID of {@link SettingGroup} custom element.
+ */
 function initSettingGroup(id) {
+  /** @type {SettingGroup} */
   let group = document.querySelector(`setting-group[groupid=${id}]`);
-  let config = SETTINGS_CONFIG[id];
+  const config = SETTINGS_CONFIG[id];
   if (group && config) {
     if (config.inProgress && !srdSectionEnabled(id)) {
       group.remove();

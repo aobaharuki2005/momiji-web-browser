@@ -8,6 +8,18 @@ const { EventEmitter } = ChromeUtils.importESModule(
   "resource://gre/modules/EventEmitter.sys.mjs"
 );
 
+/**
+ * @typedef {object} PreferenceConfigInfo
+ * @property {string} id
+ * @property {string} type
+ * @property {boolean} [inverted]
+ */
+
+/**
+ * @param {string} name
+ * @param {string} value
+ * @returns {NodeListOf<HTMLInputElement>}
+ */
 function getElementsByAttribute(name, value) {
   // If we needed to defend against arbitrary values, we would escape
   // double quotes (") and escape characters (\) in them, i.e.:
@@ -16,6 +28,14 @@ function getElementsByAttribute(name, value) {
 }
 
 export class Preference extends EventEmitter {
+  /**
+   * @type {string | undefined | null}
+   */
+  _value;
+
+  /**
+   * @param {PreferenceConfigInfo} configInfo
+   */
   constructor({ id, type, inverted }) {
     super();
     this.on("change", this.onChange.bind(this));
@@ -60,6 +80,9 @@ export class Preference extends EventEmitter {
     Services.console.logStringMessage(msg);
   }
 
+  /**
+   * @param {HTMLInputElement} aElement
+   */
   setElementValue(aElement) {
     if (this.locked) {
       aElement.disabled = true;
@@ -126,6 +149,10 @@ export class Preference extends EventEmitter {
     }
   }
 
+  /**
+   * @param {HTMLElement} aElement
+   * @returns {string}
+   */
   getElementValue(aElement) {
     if (Preferences._syncToPrefListeners.has(aElement)) {
       try {
@@ -172,6 +199,10 @@ export class Preference extends EventEmitter {
     return value;
   }
 
+  /**
+   * @param {HTMLElement} aElement
+   * @returns {boolean}
+   */
   isElementEditable(aElement) {
     switch (aElement.localName) {
       case "checkbox":
@@ -209,10 +240,16 @@ export class Preference extends EventEmitter {
     this.updateElements();
   }
 
+  /**
+   * @type {Preference['_value']}
+   */
   get value() {
     return this._value;
   }
 
+  /**
+   * @param {string} val
+   */
   set value(val) {
     if (this.value !== val) {
       this._value = val;
@@ -223,10 +260,17 @@ export class Preference extends EventEmitter {
     }
   }
 
+  /**
+   * @type {boolean}
+   */
   get locked() {
     return Services.prefs.prefIsLocked(this.id);
   }
 
+  /**
+   * @param {boolean | string} val
+   * @returns {void}
+   */
   updateControlDisabledState(val) {
     if (!this.id) {
       return;
@@ -260,6 +304,9 @@ export class Preference extends EventEmitter {
     return this._useDefault ? Preferences.defaultBranch : Services.prefs;
   }
 
+  /**
+   * @type {string}
+   */
   get valueFromPreferences() {
     try {
       // Force a resync of value with preferences.
@@ -296,6 +343,9 @@ export class Preference extends EventEmitter {
     return null;
   }
 
+  /**
+   * @param {string} val
+   */
   set valueFromPreferences(val) {
     // Exit early if nothing to do.
     if (this.readonly || this.valueFromPreferences == val) {

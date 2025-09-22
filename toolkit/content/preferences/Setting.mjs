@@ -44,6 +44,15 @@ export class Setting extends EventEmitter {
    */
   _deps;
 
+  /**
+   * @type {PreferencesSettingsConfig}
+   */
+  config;
+
+  /**
+   * @param {PreferencesSettingsConfig['id']} id
+   * @param {PreferencesSettingsConfig} config
+   */
   constructor(id, config) {
     super();
 
@@ -104,6 +113,9 @@ export class Setting extends EventEmitter {
     return this._deps;
   }
 
+  /**
+   * @type {string | undefined}
+   */
   get value() {
     let prefVal = this.pref?.value;
     if (this.config.get) {
@@ -112,6 +124,9 @@ export class Setting extends EventEmitter {
     return prefVal;
   }
 
+  /**
+   * @param {string} val
+   */
   set value(val) {
     let newVal = this.config.set ? this.config.set(val, this.deps, this) : val;
     if (this.pref) {
@@ -119,6 +134,9 @@ export class Setting extends EventEmitter {
     }
   }
 
+  /**
+   * @type {boolean}
+   */
   get locked() {
     return this.pref?.locked ?? false;
   }
@@ -131,6 +149,10 @@ export class Setting extends EventEmitter {
     return this.config.disabled ? this.config.disabled(this.deps, this) : false;
   }
 
+  /**
+   * @param {PreferencesSettingsConfig} config
+   * @returns {PreferencesSettingsConfig | undefined}
+   */
   getControlConfig(config) {
     if (this.config.getControlConfig) {
       return this.config.getControlConfig(config, this.deps, this);
@@ -144,6 +166,9 @@ export class Setting extends EventEmitter {
     }
   }
 
+  /**
+   * @param {string} val
+   */
   userChange(val) {
     this.value = val;
     if (this.config.onUserChange) {

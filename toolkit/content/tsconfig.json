@@ -1,0 +1,17 @@
+{
+  "extends": "../../tools/@types/tsconfig.json",
+  "include": [
+    "preferences/*.mjs",
+    "widgets/**/*.mjs",
+    "./preferencesBindings.js"
+  ],
+  "compilerOptions": {
+    "checkJs": true,
+    "plugins": [
+      {
+        "transform": "../../tools/ts/plugins/checkRootOnly.js",
+        "transformProgram": true
+      }
+    ]
+  }
+}

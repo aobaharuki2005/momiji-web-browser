@@ -6,6 +6,110 @@ import { AsyncSetting } from "chrome://global/content/preferences/AsyncSetting.m
 import { Preference } from "chrome://global/content/preferences/Preference.mjs";
 import { Setting } from "chrome://global/content/preferences/Setting.mjs";
 
+/**
+ * A map of Setting instances (values) along with their IDs
+ * (keys) so that the dependencies of a setting can
+ * be easily looked up by just their ID.
+ *
+ * @typedef {Record<string, Setting>} PreferenceSettingDepsMap
+ */
+
+/**
+ * @callback PreferenceSettingVisibleFunction
+ * @returns {boolean | string | undefined} If truthy shows the setting in the UI, or hides it if not
+ */
+
+/**
+ * Gets the value of a {@link PreferencesSettingsConfig}.
+ *
+ * @callback PreferenceSettingGetter
+ * @param {string | number} val - The value that was retrieved from the preferences backend
+ * @param {PreferenceSettingDepsMap} deps
+ * @param {Setting} setting*
+ * @returns {any} - The value to set onto the setting
+ */
+
+/**
+ * Sets the value of a {@link PreferencesSettingsConfig}.
+ *
+ * @callback PreferenceSettingSetter
+ * @param {string | undefined} val - The value/pressed/checked from the input (control) associated with the setting
+ * @param {PreferenceSettingDepsMap} deps
+ * @param {Setting} setting
+ * @returns {void}
+ */
+
+/**
+ * @callback PreferencesSettingOnUserChangeFunction
+ * @param {string} val - The value/pressed/checked from the input of the control associated with the setting
+ * @param {PreferenceSettingDepsMap} deps
+ * @param {Setting} setting
+ * @returns {void}
+ */
+
+/**
+ * @callback PreferencesSettingConfigDisabledFunction
+ * @param {string} val - The value/pressed/checked from the input of the control associated with the setting
+ * @param {PreferenceSettingDepsMap} deps
+ * @param {Setting} setting
+ * @returns {boolean}
+ */
+
+/**
+ * @callback PreferencesSettingGetControlConfigFunction
+ * @param {PreferencesSettingsConfig} config
+ * @param {PreferenceSettingDepsMap} deps
+ * @param {Setting} setting
+ * @returns {PreferencesSettingsConfig | undefined}
+ */
+
+/**
+ * @callback PreferencesSettingConfigTeardownFunction
+ * @returns {void}
+ */
+
+/**
+ * @callback PreferencesSettingConfigSetupFunction
+ * @param {Function} emitChange
+ * @param {PreferenceSettingDepsMap} deps
+ * @param {Setting} setting
+ * @returns {PreferencesSettingConfigTeardownFunction | void}
+ */
+
+/**
+ * @callback PreferencesSettingConfigOnUserClickFunction
+ * @param {Event} event
+ * @returns {void}
+ */
+
+/**
+ * @typedef {object} PreferencesSettingsConfig
+ * @property {string} id - The ID for the Setting, this should match the layout id
+ * @property {string} [l10nId]
+ * @property {string} [pref] - A {@link Services.prefs} id that will be used as the backend if it is provided
+ * @property {PreferenceSettingVisibleFunction} [visible] - Function to determine if a setting is visible in the UI
+ * @property {PreferenceSettingGetter} [get] - Function to get the value of the setting. Optional if {@link PreferencesSettingsConfig#pref} is set.
+ * @property {PreferenceSettingSetter} [set] - Function to set the value of the setting. Optional if {@link PreferencesSettingsConfig#pref} is set.
+ * @property {PreferencesSettingGetControlConfigFunction} [getControlConfig] -  Function that allows the setting to modify its layout, this is intended to be used to provide the options, {@link PreferencesSettingsConfig#l10nId} or {@link PreferencesSettingsConfig#l10nArgs} data if necessary, but technically it can change anything (that doesn't mean it will have any effect though).
+ * @property {PreferencesSettingOnUserChangeFunction} [onUserChange] - A function that will be called when the setting
+ *    has been modified by the user, it is passed the value/pressed/checked from its input. NOTE: This should be used for
+ *    additional work that needs to happen, such as recording telemetry.
+ *    If you want to set the value of the Setting then use the {@link PreferencesSettingsConfig.set} function.
+ * @property {Array<PreferencesSettingsConfig> | undefined} [items]
+ * @property {string | undefined} [control]
+ * @property {PreferencesSettingConfigSetupFunction} [setup] -  A function to be called to register listeners for
+ *    the setting. It should return a {@link PreferencesSettingConfigTeardownFunction} function to
+ *    remove the listeners if necessary. This should emit change events when the setting has changed to
+ *    ensure the UI stays in sync if possible.
+ * @property {PreferencesSettingConfigDisabledFunction} [disabled] - A function to determine if a setting should be disabled
+ * @property {PreferencesSettingConfigOnUserClickFunction} [onUserClick] - A function that will be called when a setting has been
+ *    clicked, the element name must be included in the CLICK_HANDLERS array
+ *    in {@link file://./../../browser/components/preferences/widgets/setting-group/setting-group.mjs}. This should be
+ *    used for controls that aren’t regular form controls but instead perform an action when clicked, like a button or link.
+ * @property {Array<string> | void} [deps] - An array of setting IDs that this setting depends on, when these settings change this setting will emit a change event to update the UI
+ * @property {Record<string, any>} [controlAttrs] - An object of additional attributes to be set on the control. These can be used to further customize the control for example a message bar of the warning type, or what dialog a button should open
+ */
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
@@ -19,9 +123,19 @@ const domContentLoadedPromise = new Promise(resolve => {
 });
 
 export const Preferences = {
+  /**
+   * @type {Record<string, Preference>}
+   */
   _all: {},
+
+  /**
+   * @type {Map<string, Setting>}
+   */
   _settings: new Map(),
 
+  /**
+   * @param {PreferenceConfigInfo} prefInfo
+   */
   _add(prefInfo) {
     if (this._all[prefInfo.id]) {
       throw new Error(`preference with id '${prefInfo.id}' already added`);
@@ -36,23 +150,44 @@ export const Preferences = {
     return pref;
   },
 
+  /**
+   * @param {PreferenceConfigInfo} prefInfo
+   * @returns {Preference}
+   */
   add(prefInfo) {
     const pref = this._add(prefInfo);
     return pref;
   },
 
+  /**
+   * @param {Array<PreferenceConfigInfo>} prefInfos
+   */
   addAll(prefInfos) {
     prefInfos.map(prefInfo => this._add(prefInfo));
   },
 
+  /**
+   * @param {string} id
+   * @returns {Preference | null}
+   */
   get(id) {
     return this._all[id] || null;
   },
 
+  /**
+   * @returns {Array<PreferenceConfigInfo>}
+   */
   getAll() {
     return Object.values(this._all);
   },
 
+  /**
+   * A configuration object that adds an element (control) associated with a pref,
+   * that includes all of the configuration for the control
+   * such as its Fluent strings, support page, subcategory etc.
+   *
+   * @param {PreferencesSettingsConfig} settingConfig
+   */
   addSetting(settingConfig) {
     this._settings.set(
       settingConfig.id,
@@ -60,6 +195,10 @@ export const Preferences = {
     );
   },
 
+  /**
+   * @param {string} settingId
+   * @returns {Setting | undefined}
+   */
   getSetting(settingId) {
     return this._settings.get(settingId);
   },
