@@ -3588,6 +3588,9 @@ pref("narrate.filter-voices", true);
 
 pref("memory.report_concurrency", 10);
 
+// Enable logging downloads operations to the Console.
+pref("toolkit.download.loglevel", "Error");
+
 pref("toolkit.pageThumbs.screenSizeDivisor", 7);
 pref("toolkit.pageThumbs.minWidth", 0);
 pref("toolkit.pageThumbs.minHeight", 0);

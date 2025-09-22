@@ -53,7 +53,7 @@ ChromeUtils.defineLazyGetter(lazy, "DownloadsLogger", () => {
     "resource://gre/modules/Console.sys.mjs"
   );
   let consoleOptions = {
-    maxLogLevelPref: "browser.download.loglevel",
+    maxLogLevelPref: "toolkit.download.loglevel",
     prefix: "Downloads",
   };
   return new ConsoleAPI(consoleOptions);
