@@ -579,7 +579,7 @@
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_redesign_title" tools:ignore="BrandUsage">Hjälp oss att utveckla Firefox</string>
   <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_redesign_opt_out_checkbox" tools:ignore="BrandUsage">Dela hur du upptäckte Firefox, och att du använder den, med Mozillas marknadsföringspartners. Denna data säljs aldrig.</string>
+  <string name="onboarding_marketing_redesign_opt_out_checkbox" tools:ignore="BrandUsage">Dela med dig av hur du upptäckte Firefox och att du använder det till Mozillas marknadsföringspartners. Denna information säljs aldrig.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_redesign_learn_more">Hur vi använder informationen</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1791,11 +1791,11 @@
   <!-- Snackbar title describing failure to add a new folder -->
   <string name="bookmark_error_add_folder">Det gick inte att lägga till mapp</string>
   <!-- Snackbar title describing failure to edit an existing folder -->
-  <string name="bookmark_error_edit_folder">Det gick inte att redigera mappen</string>
+  <string name="bookmark_error_edit_folder">Det gick inte att redigera mapp</string>
   <!-- Snackbar title describing failure to select a new parent folder for a bookmark or folder -->
   <string name="bookmark_error_select_folder">Det gick inte att ändra överordnad mapp</string>
   <!-- Snackbar title describing failure to edit a bookmark -->
-  <string name="bookmark_error_edit_bookmark">Det gick inte att redigera bokmärket</string>
+  <string name="bookmark_error_edit_bookmark">Det gick inte att redigera bokmärke</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
   <string name="edit_bookmark_snackbar_action">REDIGERA</string>
   <!-- Bookmark menu move button -->

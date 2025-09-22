@@ -572,6 +572,10 @@
   <string name="onboarding_redesign_tou_body_three_link_text">Διαχείριση ρυθμίσεων</string>
   <!-- Terms of use (ToU) onboarding page continue button label. -->
   <string name="onboarding_redesign_tou_agree_and_continue_button_label">Συνέχεια</string>
+  <!-- Onboarding label for 'Continue' button. -->
+  <string name="onboarding_redesign_continue_button">Συνέχεια</string>
+  <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
+  <string name="onboarding_marketing_redesign_positive_button">Επιβεβαίωση</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Βοηθήστε μας να αναπτύξουμε το Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -1188,6 +1192,8 @@
     Header of the Sync and save your data preference view
   -->
   <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Συγχρονισμός δεδομένων</string>
+  <!-- Header of the Sign in preference view -->
+  <string name="preferences_sign_in">Σύνδεση</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Συνδεθείτε για επανασύνδεση</string>
   <!-- Preference for removing FxA account -->
@@ -1336,6 +1342,8 @@
   <string name="close_tabs_after_one_month">Μετά από έναν μήνα</string>
   <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
   <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Αυτόματο κλείσιμο ανοικτών καρτελών</string>
+  <!-- Content description (not visible, for screen readers etc.): Close tab button -->
+  <string name="tab_manager_close_tabs">Κλείσιμο</string>
   <!--
     Opening screen
 
@@ -2063,6 +2071,8 @@
   <string name="sync_sign_in">Σύνδεση στο Sync</string>
   <!-- An option from the three dot menu to sync and save data -->
   <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Συγχρονισμός δεδομένων</string>
+  <!-- An option from the three dot menu to sign in -->
+  <string name="sync_menu_sign_in">Σύνδεση</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Αποστολή σε όλες τις συσκευές</string>
   <!-- An option from the share dialog to reconnect to sync -->
@@ -2983,6 +2993,11 @@
     Title text displayed in the tabs tray when a tab has been unused for 14 days.
   -->
   <string name="inactive_tabs_title">Ανενεργές καρτέλες</string>
+  <!--
+    Text displayed in the tabs tray, indicating the number of inactive tabs.
+    %d is the number of inactive tabs.
+  -->
+  <string name="inactive_tabs_num_items">Στοιχεία: %d</string>
   <!-- Content description for closing all inactive tabs -->
   <string name="inactive_tabs_delete_all">Κλείσιμο όλων των ανενεργών καρτελών</string>
   <!-- Content description for expanding the inactive tabs section. -->

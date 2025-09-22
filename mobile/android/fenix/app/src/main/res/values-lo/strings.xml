@@ -572,6 +572,12 @@
   <string name="onboarding_redesign_tou_body_three_link_text">ຈັດການການຕັ້ງຄ່າ</string>
   <!-- Terms of use (ToU) onboarding page continue button label. -->
   <string name="onboarding_redesign_tou_agree_and_continue_button_label">ສືບຕໍ່</string>
+  <!-- Onboarding header for the toolbar selection card. -->
+  <string name="onboarding_redesign_customize_toolbar_title">ທ່ານຕ້ອງການແຖບທີ່ຢູ່ຂອງທ່ານຢູ່ໃສ?</string>
+  <!-- Onboarding label for 'Continue' button. -->
+  <string name="onboarding_redesign_continue_button">ສືບຕໍ່</string>
+  <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_redesign_title" tools:ignore="BrandUsage">ຊ່ວຍພວກເຮົາພັດທະນາ Firefox</string>
   <!-- Set to default browser onboarding redesign title. -->
   <string name="onboarding_redesign_set_default_browser_title">ໄດ້ຮັບການປົກປ້ອງການຕິດຕາມອັດຕະໂນມັດໂດຍຄ່າເລີ່ມຕົ້ນ</string>
   <!-- Set to default browser onboarding redesign body. -->
