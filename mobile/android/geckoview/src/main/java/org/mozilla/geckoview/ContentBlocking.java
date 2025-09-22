@@ -77,11 +77,21 @@ public class ContentBlocking {
   /** {@link SafeBrowsingProvider} configuration for Google's SafeBrowsing V5 server. */
   public static final SafeBrowsingProvider GOOGLE_SAFE_BROWSING_V5_PROVIDER =
       SafeBrowsingProvider.withName("google5")
-          .lists("")
+          .lists(
+              "goog-phish-proto",
+              "googpub-phish-proto",
+              "goog-malware-proto",
+              "goog-unwanted-proto",
+              "goog-harmful-proto")
           .updateUrl(
               "https://safebrowsing.googleapis.com/v5/hashLists:batchGet?key=%GOOGLE_SAFEBROWSING_API_KEY%")
           .getHashUrl(
               "https://safebrowsing.googleapis.com/v5/hashes:search?key=%GOOGLE_SAFEBROWSING_API_KEY%")
+          .reportUrl("https://safebrowsing.google.com/safebrowsing/diagnostic?site=")
+          .reportPhishingMistakeUrl("https://%LOCALE%.phish-error.mozilla.com/?url=")
+          .reportMalwareMistakeUrl("https://%LOCALE%.malware-error.mozilla.com/?url=")
+          .advisoryUrl("https://developers.google.com/safe-browsing/v4/advisory")
+          .advisoryName("Google Safe Browsing")
           .enabled(false)
           .build();
 
