@@ -16,11 +16,10 @@ import android.view.ViewGroup
 import android.widget.EditText
 import androidx.annotation.WorkerThread
 import androidx.core.view.forEach
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -54,7 +53,6 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         addPreferencesFromResource(R.xml.manual_add_search_engine)
     }
 
-    private var scope: CoroutineScope? = null
     private var menuItemForActiveAsyncTask: MenuItem? = null
     private var job: Job? = null
 
@@ -102,8 +100,11 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
                 setUiIsValidatingAsync(true, menuItem)
 
                 menuItemForActiveAsyncTask = menuItem
-                scope?.launch {
-                    validateSearchEngine(engineName, searchQuery, requireComponents.client)
+
+                viewLifecycleOwner.lifecycleScope.launch {
+                    withContext(Dispatchers.IO) {
+                        validateSearchEngine(engineName, searchQuery, requireComponents.client)
+                    }
                 }
             } else {
                 SearchEngines.saveEngineTapped.record(SearchEngines.SaveEngineTappedExtra(false))
@@ -124,12 +125,10 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        scope = CoroutineScope(Dispatchers.IO)
         return super.onCreateView(inflater, container, savedInstanceState)
     }
 
     override fun onDestroyView() {
-        scope?.cancel()
         super.onDestroyView()
         view?.hideKeyboard()
     }
@@ -147,7 +146,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         if (isValidating) {
             view?.alpha = DISABLED_ALPHA
             // Delay showing the loading indicator to prevent it flashing on the screen
-            job = scope?.launch(Dispatchers.Main) {
+            job = viewLifecycleOwner.lifecycleScope.launch {
                 delay(LOADING_INDICATOR_DELAY)
                 pref?.setProgressViewShown(isValidating)
                 updateViews()
@@ -155,7 +154,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         } else {
             view?.alpha = 1f
             job?.cancel()
-            pref?.setProgressViewShown(isValidating)
+            pref?.setProgressViewShown(false)
             updateViews()
         }
     }
