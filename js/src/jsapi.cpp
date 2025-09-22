@@ -1795,12 +1795,6 @@ static RefCountedString* CopyStringZ(const char* str) {
   return new (memoryPtr) RefCountedString(strPtr);
 }
 
-JS::RealmCreationOptions& JS::RealmCreationOptions::setLocaleCopyZ(
-    const char* locale) {
-  locale_ = CopyStringZ<JS::LocaleString>(locale);
-  return *this;
-}
-
 JS::RealmBehaviors& JS::RealmBehaviors::setLocaleOverride(const char* locale) {
   if (locale) {
     localeOverride_ = CopyStringZ<JS::LocaleString>(locale);

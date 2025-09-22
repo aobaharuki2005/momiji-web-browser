@@ -504,10 +504,8 @@ void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
   aOptions.creationOptions().setAlwaysUseFdlibm(aAlwaysUseFdlibm);
   if (aLocaleEnUS) {
     nsCString locale = nsRFPService::GetSpoofedJSLocale();
-    aOptions.creationOptions().setLocaleCopyZ(locale.get());
-  }
-
-  if (!aLanguageOverride.IsEmpty()) {
+    aOptions.behaviors().setLocaleOverride(locale.get());
+  } else if (!aLanguageOverride.IsEmpty()) {
     aOptions.behaviors().setLocaleOverride(
         PromiseFlatCString(aLanguageOverride).get());
   }

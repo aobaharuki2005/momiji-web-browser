@@ -211,9 +211,6 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
-  RefPtr<LocaleString> locale() const { return locale_; }
-  RealmCreationOptions& setLocaleCopyZ(const char* locale);
-
   // Always use the fdlibm implementation of math functions instead of the
   // platform native libc implementations. Useful for fingerprinting protection
   // and cross-platform consistency.
@@ -237,7 +234,6 @@ class JS_PUBLIC_API RealmCreationOptions {
     Zone* zone_;
   };
   uint64_t profilerRealmID_ = 0;
-  RefPtr<LocaleString> locale_;
   bool invisibleToDebugger_ = false;
   bool preserveJitCode_ = false;
   bool sharedMemoryAndAtomics_ = false;

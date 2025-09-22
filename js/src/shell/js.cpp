@@ -7448,7 +7448,7 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
       if (!locale) {
         return false;
       }
-      creationOptions.setLocaleCopyZ(locale.get());
+      behaviors.setLocaleOverride(locale.get());
     }
   }
 

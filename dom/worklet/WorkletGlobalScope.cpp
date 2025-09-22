@@ -140,7 +140,7 @@ JS::RealmOptions WorkletGlobalScope::CreateRealmOptions() const {
       ShouldResistFingerprinting(RFPTarget::JSMathFdlibm));
   if (ShouldResistFingerprinting(RFPTarget::JSLocale)) {
     nsCString locale = nsRFPService::GetSpoofedJSLocale();
-    options.creationOptions().setLocaleCopyZ(locale.get());
+    options.behaviors().setLocaleOverride(locale.get());
   }
 
   // The SharedArrayBuffer global constructor property should not be present in
