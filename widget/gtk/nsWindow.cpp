@@ -3322,7 +3322,10 @@ void nsWindow::RecomputeBounds(MayChangeCsdMargin aMayChangeCsdMargin) {
       IsTopLevelWidget() && mSizeMode != nsSizeMode_Fullscreen && !mUndecorated;
   const auto toplevelBounds = GetBounds(toplevel);
 
-  mBounds = frameBounds;
+  // The frameBounds should always really include the toplevel bounds, but when
+  // opening multiple windows in quick succession on X11 they might not (see bug
+  // 1988787). This prevents having a really small window in such case.
+  mBounds = frameBounds.Union(toplevelBounds);
 
   // NOTE(emilio): This is a bit hacky. We try to do our best to get the right
   // margin at all times, but due to how the configure and size-allocate and
@@ -3379,8 +3382,10 @@ void nsWindow::RecomputeBounds(MayChangeCsdMargin aMayChangeCsdMargin) {
   auto unconstrainedBounds = mBounds;
   mBounds.SizeTo(GetSafeWindowSize(mBounds.Size()));
 
-  LOG("bounds: %s -> %s (%s unconstrained)", ToString(oldBounds).c_str(),
-      ToString(mBounds).c_str(), ToString(unconstrainedBounds).c_str());
+  LOG("bounds: %s -> %s (%s unconstrained, frame = %s, toplevel = %s)",
+      ToString(oldBounds).c_str(), ToString(mBounds).c_str(),
+      ToString(unconstrainedBounds).c_str(), ToString(frameBounds).c_str(),
+      ToString(toplevelBounds).c_str());
   LOG("margin: %s -> %s", ToString(oldMargin).c_str(),
       ToString(mClientMargin).c_str());
 
