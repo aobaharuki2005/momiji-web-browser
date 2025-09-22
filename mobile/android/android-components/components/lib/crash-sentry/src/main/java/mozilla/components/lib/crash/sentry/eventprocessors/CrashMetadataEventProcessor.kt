@@ -27,6 +27,10 @@ class CrashMetadataEventProcessor : EventProcessor {
             event.setTag("ac.as.build_version", crash.asVersion)
             event.setTag("ac.glean.build_version", crash.gleanVersion)
             event.setTag("user.locale", crash.locale)
+
+            crash.experimentData?.data?.forEach { (key, value) ->
+                event.setTag("experiment.$key", value)
+            }
         }
         return event.also {
             crashToProcess = null
