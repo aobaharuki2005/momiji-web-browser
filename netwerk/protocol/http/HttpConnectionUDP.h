@@ -146,7 +146,7 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   RefPtr<Http3Session> mHttp3Session;
   nsCString mAlpnToken;
   bool mIsInTunnel = false;
-  bool mProxyConnectFailed = false;
+  bool mProxyConnectSucceeded = false;
   nsTArray<RefPtr<nsHttpTransaction>> mQueuedTransaction;
 };
 

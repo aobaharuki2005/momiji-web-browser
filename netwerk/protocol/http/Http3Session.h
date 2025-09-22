@@ -8,6 +8,7 @@
 #define Http3Session_H__
 
 #include "HttpTrafficAnalyzer.h"
+#include "mozilla/Array.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/net/NeqoHttp3Conn.h"
@@ -435,15 +436,32 @@ class Http3Session final : public Http3SessionBase,
 
   nsCOMPtr<nsINetAddr> mNetAddr;
 
-  enum WebTransportNegotiation { DISABLED, NEGOTIATING, FAILED, SUCCEEDED };
-  WebTransportNegotiation mWebTransportNegotiationStatus{
-      WebTransportNegotiation::DISABLED};
+  enum class ExtendedConnectKind : uint8_t {
+    WebTransport = 0,
+    ConnectUDP,
+    // add more extended CONNECT protocols here
+  };
 
-  nsTArray<WeakPtr<Http3StreamBase>> mWaitingForWebTransportNegotiation;
+  enum ExtendedConnectNegotiation { DISABLED, NEGOTIATING, FAILED, SUCCEEDED };
+
+  struct ExtendedConnectState {
+    ExtendedConnectNegotiation mStatus = DISABLED;
+    nsTArray<WeakPtr<Http3StreamBase>> mWaiters;
+  };
+
+  Array<ExtendedConnectState, 2> mExtConnect{ExtendedConnectState{},
+                                             ExtendedConnectState{}};
+
+  // convenience accessors
+  ExtendedConnectState& ExtState(ExtendedConnectKind aKind) {
+    return mExtConnect[static_cast<size_t>(aKind)];
+  }
+
+  bool DeferIfNegotiating(ExtendedConnectKind aKind, Http3StreamBase* aStream);
   // 1795854 implement the case when WebTransport is not supported.
   // Also, implement the case when the  HTTP/3 session fails before settings
   // are exchanged.
-  void WebTransportNegotiationDone();
+  void FinishNegotiation(ExtendedConnectKind aKind, bool aSuccess);
 
   nsTArray<RefPtr<Http3StreamBase>> mWebTransportSessions;
   nsTArray<RefPtr<Http3StreamBase>> mWebTransportStreams;

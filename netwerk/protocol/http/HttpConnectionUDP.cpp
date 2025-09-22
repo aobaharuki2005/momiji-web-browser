@@ -626,12 +626,12 @@ void HttpConnectionUDP::HandleTunnelResponse(
       }
     }
     mQueuedTransaction.Clear();
+    mProxyConnectSucceeded = true;
     Unused << ResumeSend();
   } else {
     LOG(("proxy CONNECT failed! onlyconnect=%d\n", onlyConnect));
     aHttpTransaction->SetProxyConnectFailed();
     mQueuedTransaction.Clear();
-    mProxyConnectFailed = true;
   }
 }
 
@@ -815,7 +815,8 @@ void HttpConnectionUDP::CloseTransaction(nsAHttpTransaction* trans,
   if (mHttp3Session) {
     // When proxy connnect failed, we call Http3Session::SetCleanShutdown to
     // force Http3Session to release this UDP connection.
-    mHttp3Session->SetCleanShutdown(aIsShutdown || mProxyConnectFailed);
+    mHttp3Session->SetCleanShutdown(aIsShutdown ||
+                                    (mIsInTunnel && !mProxyConnectSucceeded));
     mHttp3Session->Close(reason);
     if (!mHttp3Session->IsClosed()) {
       // During closing phase we still keep mHttp3Session session,

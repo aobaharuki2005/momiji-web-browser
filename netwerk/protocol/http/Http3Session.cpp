@@ -146,7 +146,10 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
        mConnInfo->GetWebTransport(), this));
 
   if (mConnInfo->GetWebTransport()) {
-    mWebTransportNegotiationStatus = WebTransportNegotiation::NEGOTIATING;
+    ExtState(ExtendedConnectKind::WebTransport).mStatus = NEGOTIATING;
+  }
+  if (isOuterConnection) {
+    ExtState(ExtendedConnectKind::ConnectUDP).mStatus = NEGOTIATING;
   }
 
   mUseNSPRForIO =
@@ -760,13 +763,8 @@ nsresult Http3Session::ProcessEvents() {
           case WebTransportEventExternal::Tag::Negotiated:
             LOG(("Http3Session::ProcessEvents - WebTransport %d",
                  event.web_transport._0.negotiated._0));
-            MOZ_ASSERT(mWebTransportNegotiationStatus ==
-                       WebTransportNegotiation::NEGOTIATING);
-            mWebTransportNegotiationStatus =
-                event.web_transport._0.negotiated._0
-                    ? WebTransportNegotiation::SUCCEEDED
-                    : WebTransportNegotiation::FAILED;
-            WebTransportNegotiationDone();
+            FinishNegotiation(ExtendedConnectKind::WebTransport,
+                              event.web_transport._0.negotiated._0);
             break;
           case WebTransportEventExternal::Tag::Session: {
             MOZ_ASSERT(mState == CONNECTED);
@@ -936,6 +934,8 @@ nsresult Http3Session::ProcessEvents() {
           case ConnectUdpEventExternal::Tag::Negotiated:
             LOG(("Http3Session::ProcessEvents - ConnectUdp Negotiated %d",
                  event.connect_udp._0.negotiated._0));
+            FinishNegotiation(ExtendedConnectKind::ConnectUDP,
+                              event.connect_udp._0.negotiated._0);
             break;
           case ConnectUdpEventExternal::Tag::Session: {
             MOZ_ASSERT(mState == CONNECTED);
@@ -1311,23 +1311,24 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
       if (!mCannotDo0RTTStreams.Contains(stream)) {
         mCannotDo0RTTStreams.AppendElement(stream);
       }
-      if ((mWebTransportNegotiationStatus ==
-           WebTransportNegotiation::NEGOTIATING) &&
-          (trans && trans->IsForWebTransport())) {
-        LOG(("waiting for negotiation"));
-        mWaitingForWebTransportNegotiation.AppendElement(stream);
+      if (stream->GetHttp3WebTransportSession()) {
+        DeferIfNegotiating(ExtendedConnectKind::WebTransport, stream);
+      } else if (stream->GetHttp3ConnectUDPStream()) {
+        DeferIfNegotiating(ExtendedConnectKind::ConnectUDP, stream);
       }
       return true;
     }
     m0RTTStreams.AppendElement(stream);
   }
 
-  if ((mWebTransportNegotiationStatus ==
-       WebTransportNegotiation::NEGOTIATING) &&
-      (trans && trans->IsForWebTransport())) {
-    LOG(("waiting for negotiation"));
-    mWaitingForWebTransportNegotiation.AppendElement(stream);
-    return true;
+  if (stream->GetHttp3WebTransportSession()) {
+    if (DeferIfNegotiating(ExtendedConnectKind::WebTransport, stream)) {
+      return true;
+    }
+  } else if (stream->GetHttp3ConnectUDPStream()) {
+    if (DeferIfNegotiating(ExtendedConnectKind::ConnectUDP, stream)) {
+      return true;
+    }
   }
 
   if (!mFirstHttpTransaction && !IsConnected()) {
@@ -1338,6 +1339,38 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
   StreamReadyToWrite(stream);
 
   return true;
+}
+
+bool Http3Session::DeferIfNegotiating(ExtendedConnectKind aKind,
+                                      Http3StreamBase* aStream) {
+  auto& st = ExtState(aKind);
+  if (st.mStatus == NEGOTIATING) {
+    if (!st.mWaiters.Contains(aStream)) {
+      LOG(("waiting for negotiation"));
+      st.mWaiters.AppendElement(aStream);
+    }
+    return true;
+  }
+  return false;
+}
+
+void Http3Session::FinishNegotiation(ExtendedConnectKind aKind, bool aSuccess) {
+  auto& st = ExtState(aKind);
+  if (st.mWaiters.IsEmpty()) {
+    st.mStatus = aSuccess ? SUCCEEDED : FAILED;
+    return;
+  }
+
+  MOZ_ASSERT(st.mStatus == NEGOTIATING);
+  st.mStatus = aSuccess ? SUCCEEDED : FAILED;
+
+  for (size_t i = 0; i < st.mWaiters.Length(); ++i) {
+    if (st.mWaiters[i]) {
+      mReadyForWrite.Push(st.mWaiters[i]);
+    }
+  }
+  st.mWaiters.Clear();
+  MaybeResumeSend();
 }
 
 bool Http3Session::CanReuse() {
@@ -1429,6 +1462,9 @@ nsresult Http3Session::TryActivating(
         httpStream->PriorityUrgency(), httpStream->PriorityIncremental());
   } else if (RefPtr<Http3ConnectUDPStream> udpStream =
                  aStream->GetHttp3ConnectUDPStream()) {
+    if (DeferIfNegotiating(ExtendedConnectKind::ConnectUDP, aStream)) {
+      return NS_BASE_STREAM_WOULD_BLOCK;
+    }
     rv = mHttp3Connection->CreateConnectUdp(aAuthorityHeader, aPath, aHeaders,
                                             aStreamId);
   } else {
@@ -1436,11 +1472,7 @@ nsresult Http3Session::TryActivating(
                        "It must be a WebTransport session");
     // Don't call CreateWebTransport if we are still waiting for the negotiation
     // result.
-    if (mWebTransportNegotiationStatus ==
-        WebTransportNegotiation::NEGOTIATING) {
-      if (!mWaitingForWebTransportNegotiation.Contains(aStream)) {
-        mWaitingForWebTransportNegotiation.AppendElement(aStream);
-      }
+    if (DeferIfNegotiating(ExtendedConnectKind::WebTransport, aStream)) {
       return NS_BASE_STREAM_WOULD_BLOCK;
     }
     rv = mHttp3Connection->CreateWebTransport(aAuthorityHeader, aPath, aHeaders,
@@ -2803,16 +2835,6 @@ nsresult Http3Session::GetTransactionTLSSocketControl(
 }
 
 PRIntervalTime Http3Session::LastWriteTime() { return mLastWriteTime; }
-
-void Http3Session::WebTransportNegotiationDone() {
-  for (size_t i = 0; i < mWaitingForWebTransportNegotiation.Length(); ++i) {
-    if (mWaitingForWebTransportNegotiation[i]) {
-      mReadyForWrite.Push(mWaitingForWebTransportNegotiation[i]);
-    }
-  }
-  mWaitingForWebTransportNegotiation.Clear();
-  MaybeResumeSend();
-}
 
 //=========================================================================
 // WebTransport
