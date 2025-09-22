@@ -8803,6 +8803,66 @@ static bool SetDefaultLocale(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool GetRealmLocale(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
+
+  if (args.length() != 0) {
+    ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
+    return false;
+  }
+
+#ifdef JS_HAS_INTL_API
+  auto* str = cx->global()->globalIntlData().defaultLocale(cx);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+#else
+  // Realm locales require Intl support.
+  args.rval().setString(cx->emptyString());
+#endif
+
+  return true;
+}
+
+static bool SetRealmLocale(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
+
+  if (args.length() != 1) {
+    ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
+    return false;
+  }
+
+  if (!args[0].isString() && !args[0].isUndefined()) {
+    ReportUsageErrorASCII(cx, callee,
+                          "First argument should be a string or undefined");
+    return false;
+  }
+
+  if (args[0].isString() && !args[0].toString()->empty()) {
+    Rooted<JSString*> str(cx, args[0].toString());
+    if (!str) {
+      return false;
+    }
+
+    auto locale = StringToLocale(cx, callee, str);
+    if (!locale) {
+      return false;
+    }
+
+    cx->realm()->setLocaleOverride(locale.get());
+  } else {
+    // Reset to use the system default locale.
+    cx->realm()->setLocaleOverride(nullptr);
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
 #ifdef AFLFUZZ
 static bool AflLoop(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -11035,6 +11095,16 @@ JS_FN_HELP("setDefaultLocale", SetDefaultLocale, 1, 0,
 "  Set the runtime default locale to the given value.\n"
 "  An empty string or undefined resets the runtime locale to its default value.\n"
 "  NOTE: The input string is not fully validated, it must be a valid BCP-47 language tag."),
+
+JS_FN_HELP("getRealmLocale", GetRealmLocale, 0, 0,
+"getRealmLocale()",
+"  Get the locale for the current realm."),
+
+JS_FN_HELP("setRealmLocale", SetRealmLocale, 1, 0,
+"setRealmLocale(locale)",
+"  Set the locale for the current realm.\n"
+"  The locale must be a valid BCP-47 locale identifier.\n"
+"  An empty string or undefined resets the realm locale to the system default locale."),
 
 JS_FN_HELP("isCollectingDelazifications", IsCollectingDelazifications, 1, 0,
 "isCollectingDelazifications(fun)",
