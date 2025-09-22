@@ -75,6 +75,8 @@ const PREF_USER_INFERRED_PERSONALIZATION =
   "discoverystream.sections.personalization.inferred.user.enabled";
 const PREF_SYSTEM_INFERRED_PERSONALIZATION =
   "discoverystream.sections.personalization.inferred.enabled";
+const PREF_SECTIONS_PERSONALIZATION_ENABLED =
+  "discoverystream.sections.personalization.enabled";
 
 // This is a mapping table between the user preferences and its encoding code
 export const USER_PREFS_ENCODING = {
@@ -172,6 +174,10 @@ export class TelemetryFeed {
       this._prefs.get(PREF_USER_INFERRED_PERSONALIZATION) &&
       this._prefs.get(PREF_SYSTEM_INFERRED_PERSONALIZATION)
     );
+  }
+
+  get sectionsPersonalizationEnabled() {
+    return this._prefs.get(PREF_SECTIONS_PERSONALIZATION_ENABLED);
   }
 
   get inferredInterests() {
@@ -813,7 +819,9 @@ export class TelemetryFeed {
               ? {
                   section,
                   section_position,
-                  is_section_followed,
+                  ...(this.sectionsPersonalizationEnabled
+                    ? { is_section_followed: !!is_section_followed }
+                    : {}),
                   layout_name,
                 }
               : {}),
@@ -909,7 +917,9 @@ export class TelemetryFeed {
             ? {
                 section,
                 section_position,
-                is_section_followed,
+                ...(this.sectionsPersonalizationEnabled
+                  ? { is_section_followed: !!is_section_followed }
+                  : {}),
               }
             : {}),
         };
@@ -1542,7 +1552,9 @@ export class TelemetryFeed {
               newtab_visit_id: session.session_id,
               section,
               section_position,
-              is_section_followed,
+              ...(this.sectionsPersonalizationEnabled
+                ? { is_section_followed: !!is_section_followed }
+                : {}),
               layout_name,
             });
             Glean.newtab.sectionsImpression.record(
@@ -1552,7 +1564,9 @@ export class TelemetryFeed {
               this.newtabContentPing.recordEvent("sectionsImpression", {
                 section,
                 section_position,
-                is_section_followed,
+                ...(this.sectionsPersonalizationEnabled
+                  ? { is_section_followed: !!is_section_followed }
+                  : {}),
               });
             }
           }
@@ -1783,7 +1797,9 @@ export class TelemetryFeed {
             ? {
                 section: datum.section,
                 section_position: datum.section_position,
-                is_section_followed: datum.is_section_followed,
+                ...(this.sectionsPersonalizationEnabled
+                  ? { is_section_followed: !!datum.is_section_followed }
+                  : {}),
               }
             : {}),
           // We conditionally add in a few props.
@@ -1871,7 +1887,9 @@ export class TelemetryFeed {
             ? {
                 section: tile.section,
                 section_position: tile.section_position,
-                is_section_followed: tile.is_section_followed,
+                ...(this.sectionsPersonalizationEnabled
+                  ? { is_section_followed: !!tile.is_section_followed }
+                  : {}),
                 layout_name: tile.layout_name,
               }
             : {}),
