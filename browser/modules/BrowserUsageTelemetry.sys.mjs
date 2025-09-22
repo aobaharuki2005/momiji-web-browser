@@ -122,6 +122,11 @@ const BROWSER_UI_CONTAINER_IDS = {
   pageActionPanel: "pageaction-panel",
   "unified-extensions-area": "unified-extensions-area",
   "allTabsMenu-allTabsView": "alltabs-menu",
+  // Historically, panels opened from a button on any toolbar have been
+  // considered part of the nav-bar. Due to a technical change these panels
+  // are no longer descendants of the nav-bar; this entry just preserves
+  // continuity for telemetry.
+  "customizationui-widget-panel": "nav-bar",
 
   // This should appear last as some of the above are inside the nav bar.
   "nav-bar": "nav-bar",
