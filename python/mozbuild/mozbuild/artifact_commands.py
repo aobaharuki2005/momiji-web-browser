@@ -8,6 +8,7 @@ import hashlib
 import json
 import logging
 import os
+import pathlib
 import shutil
 from collections import OrderedDict
 
@@ -629,5 +630,10 @@ def artifact_toolchain(
             {"data": json.dumps(perfherder_data)},
             "PERFHERDER_DATA: {data}",
         )
+        upload_dir = pathlib.Path(os.environ.get("UPLOAD_DIR"))
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        upload_path = upload_dir / "perfherder-data-artifact.json"
+        with upload_path.open("w", encoding="utf-8") as f:
+            json.dump(perfherder_data, f)
 
     return 0
