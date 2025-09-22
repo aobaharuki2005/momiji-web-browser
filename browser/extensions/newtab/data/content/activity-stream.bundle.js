@@ -3902,6 +3902,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       event: "POCKET_THUMBS_UP",
       source: "THUMBS_UI",
       value: {
+        action_position: this.props.pos,
         recommendation_id: this.props.recommendation_id,
         tile_id: this.props.id,
         corpus_item_id: this.props.corpus_item_id,
@@ -3979,6 +3980,7 @@ class _DSCard extends (external_React_default()).PureComponent {
         event: "POCKET_THUMBS_DOWN",
         source: "THUMBS_UI",
         value: {
+          action_position: this.props.pos,
           recommendation_id: this.props.recommendation_id,
           tile_id: this.props.id,
           corpus_item_id: this.props.corpus_item_id,

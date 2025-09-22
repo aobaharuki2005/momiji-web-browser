@@ -1399,7 +1399,6 @@ newtab.handoff_preference:
     notification_emails:
       - fx-search-telemetry@mozilla.com
 
-
 topsites:
   enabled:
     lifetime: application
@@ -2264,6 +2263,7 @@ pocket:
       recommendation_id: *recommendation_id
       tile_id: *pocket_tile_id
       format: *format
+      position: *pocket_position
       thumbs_up:
         description: >
           If the user clicked thumbs up.
@@ -2660,6 +2660,7 @@ newtab_content:
       recommendation_id: *recommendation_id
       tile_id: *pocket_tile_id
       format: *format
+      position: *pocket_position
       thumbs_up:
         description: >
           If the user clicked thumbs up.

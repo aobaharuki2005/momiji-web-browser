@@ -885,6 +885,7 @@ export class TelemetryFeed {
           corpus_item_id,
           format,
           is_section_followed,
+          action_position,
           received_rank,
           recommendation_id,
           recommended_at,
@@ -896,8 +897,10 @@ export class TelemetryFeed {
           tile_id,
           topic,
         } = action.data.value ?? {};
+
         const gleanData = {
           tile_id,
+          position: action_position,
           // We conditionally add in a few props.
           ...(corpus_item_id ? { corpus_item_id } : {}),
           ...(scheduled_corpus_item_id ? { scheduled_corpus_item_id } : {}),
@@ -1786,11 +1789,12 @@ export class TelemetryFeed {
     const { data } = action;
     for (const datum of data) {
       const { corpus_item_id, scheduled_corpus_item_id } = datum;
+
       if (datum.is_pocket_card) {
         const gleanData = {
           is_sponsored: datum.card_type === "spoc",
           ...(datum.format ? { format: datum.format } : {}),
-          position: datum.pos,
+          position: datum.position,
           tile_id: datum.id || datum.tile_id,
           is_list_card: datum.is_list_card,
           ...(datum.section
