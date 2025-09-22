@@ -462,16 +462,33 @@ class BaseHTTPProxy extends BaseNodeServer {
 // HTTP1 Proxy
 
 export class NodeProxyFilter {
-  constructor(type, host, port, flags) {
+  constructor(type, host, port, flags, pathTemplate) {
     this._type = type;
     this._host = host;
     this._port = port;
     this._flags = flags;
+    this._pathTemplate = pathTemplate;
     this.QueryInterface = ChromeUtils.generateQI(["nsIProtocolProxyFilter"]);
   }
   applyFilter(uri, pi, cb) {
     const pps =
       Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
+    if (this._type === "connect-udp") {
+      cb.onProxyFilterResult(
+        pps.newMASQUEProxyInfo(
+          this._type,
+          this._host,
+          this._port,
+          this._pathTemplate,
+          "",
+          "",
+          this._flags,
+          1000,
+          null
+        )
+      );
+      return;
+    }
     cb.onProxyFilterResult(
       pps.newProxyInfo(
         this._type,
