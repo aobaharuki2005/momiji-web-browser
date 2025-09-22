@@ -701,49 +701,42 @@ add_task(async function tabGroupPanelExpandDismissesPanel() {
   await resetState();
 });
 
-add_task(
-  {
-    skip_if: () => AppConstants.platform == "macosx", // bug1982893
-  },
-  async function tabGroupPanelClickElementSwitchesTabs() {
-    const tabs = [
-      BrowserTestUtils.addTab(gBrowser, "about:robots"),
-      BrowserTestUtils.addTab(gBrowser, "about:mozilla"),
-    ];
-    const group = gBrowser.addTabGroup(tabs);
-    group.collapsed = true;
+add_task(async function tabGroupPanelClickElementSwitchesTabs() {
+  const tabs = [
+    BrowserTestUtils.addTab(gBrowser, "about:robots"),
+    BrowserTestUtils.addTab(gBrowser, "about:mozilla"),
+  ];
+  const group = gBrowser.addTabGroup(tabs);
+  group.collapsed = true;
 
-    Assert.equal(
-      gBrowser.selectedTab,
-      gBrowser.tabs[0],
-      "Selected tab is first tab on tab strip before clicking the panel item"
-    );
+  Assert.equal(
+    gBrowser.selectedTab,
+    gBrowser.tabs[0],
+    "Selected tab is first tab on tab strip before clicking the panel item"
+  );
 
-    await openGroupPreview(group);
-    const previewPanel = window.document.getElementById(
-      TAB_GROUP_PREVIEW_PANEL_ID
-    );
+  await openGroupPreview(group);
+  const previewPanel = window.document.getElementById(
+    TAB_GROUP_PREVIEW_PANEL_ID
+  );
 
-    EventUtils.synthesizeMouseAtCenter(previewPanel.children[1], {}, window);
+  let tabSelectEvent = BrowserTestUtils.waitForEvent(group, "TabSelect");
+  previewPanel.children[1].click();
+  await tabSelectEvent;
 
-    await BrowserTestUtils.waitForCondition(() => {
-      return gBrowser.selectedTab != gBrowser.tabs[0];
-    }, "Waiting for selected tab to change");
-    Assert.equal(previewPanel.state, "closed");
-    Assert.equal(
-      gBrowser.selectedTab,
-      gBrowser.tabs[2],
-      "Selected tab is second tab within the tab group after clicking panel item"
-    );
-    Assert.ok(
-      group.collapsed,
-      "Group is still in collapsed state even though it has the active tab"
-    );
+  Assert.equal(
+    gBrowser.selectedTab,
+    gBrowser.tabs[2],
+    "Selected tab is second tab within the tab group after clicking panel item"
+  );
+  Assert.ok(
+    group.collapsed,
+    "Group is still in collapsed state even though it has the active tab"
+  );
 
-    await removeTabGroup(group);
-    await resetState();
-  }
-);
+  await removeTabGroup(group);
+  await resetState();
+});
 
 // bug1983054: The panel moves correctly when moving between two adjacent tab groups
 add_task(async function moveBetweenTabGroupsTests() {
