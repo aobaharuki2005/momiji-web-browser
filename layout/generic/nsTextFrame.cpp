@@ -4118,8 +4118,12 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
           uint32_t runOffset = iter.GetSkippedOffset() - aRange.start;
           aSpacing[runOffset].mAfter += mWordSpacing;
         }
-        // Add text-autospace spacing.
+        // Add text-autospace spacing only at cluster starts. Always check
+        // 2-byte text; for 1-byte, check only at the frame start (a preceding
+        // content might be an ideograph requiring autospacing).
         if (mTextAutospace &&
+            (mCharacterDataBuffer.Is2b() ||
+             run.GetOriginalOffset() + i == mFrame->GetContentOffset()) &&
             mTextRun->IsClusterStart(run.GetSkippedOffset() + i)) {
           const char32_t currScalar =
               mCharacterDataBuffer.ScalarValueAt(run.GetOriginalOffset() + i);
