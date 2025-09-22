@@ -209,10 +209,12 @@ static CommandLineArg<const char*> sAppOmni{"-appomni", "appomni"};
 static CommandLineArg<const char*> sProfile{"-profile", "profile"};
 
 static CommandLineArg<UniqueFileHandle> sIPCHandle{"-ipcHandle", "ipchandle"};
+//it ain't workin sorry nika 
+/*
 #if defined(XP_DARWIN)
 static CommandLineArg<UniqueMachSendRight> sIPCPort{"-ipcPort", "ipcport"};
 #endif
-
+*/
 static CommandLineArg<mozilla::ipc::ReadOnlySharedMemoryHandle> sJsInitHandle{
     "-jsInitHandle", "jsinithandle"};
 static CommandLineArg<mozilla::ipc::ReadOnlySharedMemoryHandle> sPrefsHandle{
