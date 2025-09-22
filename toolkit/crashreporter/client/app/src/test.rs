@@ -190,10 +190,6 @@ impl GuiTest {
         // Create a default mock environment which allows successful operation.
         let mut mock = mock::builder();
         mock.set(
-            Command::mock("work_dir/pingsender"),
-            Box::new(|_| Ok(crate::std::process::success_output())),
-        )
-        .set(
             Command::mock("curl"),
             Box::new(|_| {
                 let mut output = crate::std::process::success_output();
@@ -736,44 +732,6 @@ fn network_failure() {
                 serde_json::json! {{
                     "foo": "bar",
                     "MinidumpSha256Hash": MOCK_MINIDUMP_SHA256,
-                    "StackTraces": { "status": "OK" }
-                }}
-            ),
-        );
-}
-
-#[test]
-fn pingsender_failure() {
-    let mut test = GuiTest::new();
-    test.mock.set(
-        Command::mock("work_dir/pingsender"),
-        Box::new(|_| Err(ErrorKind::NotFound.into())),
-    );
-    test.files.add_dir("events_dir").add_file(
-        "events_dir/minidump",
-        "1\n\
-         12:34:56\n\
-         e0423878-8d59-4452-b82e-cad9c846836e\n\
-         {\"foo\":\"bar\"}",
-    );
-    test.run(|interact| {
-        interact.element("quit", |_style, b: &model::Button| b.click.fire(&()));
-    });
-    test.assert_files()
-        .saved_settings(Settings::default())
-        .submitted()
-        .submission_event(true)
-        .check(
-            "events_dir/minidump",
-            format!(
-                "1\n\
-                12:34:56\n\
-                e0423878-8d59-4452-b82e-cad9c846836e\n\
-                {}",
-                serde_json::json! {{
-                    "foo": "bar",
-                    "MinidumpSha256Hash": MOCK_MINIDUMP_SHA256,
-                    // No crash ping UUID since pingsender fails
                     "StackTraces": { "status": "OK" }
                 }}
             ),
