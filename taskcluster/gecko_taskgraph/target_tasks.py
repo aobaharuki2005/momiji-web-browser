@@ -1640,7 +1640,13 @@ def target_tasks_os_integration(full_task_graph, parameters, graph_config):
 
     labels = []
     for label, task in full_task_graph.tasks.items():
-        if task.kind not in ("test", "source-test", "perftest", "startup-test"):
+        if task.kind not in (
+            "test",
+            "source-test",
+            "perftest",
+            "startup-test",
+            "mochitest",
+        ):
             continue
 
         # Match tasks against attribute sets defined in os-integration.yml.
