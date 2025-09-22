@@ -7218,7 +7218,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
     let data = raw_data.borrow();
     let name = Atom::from_raw(name);
 
-    let animation = match data.stylist.get_animation(&name, element) {
+    let animation = match data.stylist.lookup_keyframes(&name, element) {
         Some(animation) => animation,
         None => return false,
     };
