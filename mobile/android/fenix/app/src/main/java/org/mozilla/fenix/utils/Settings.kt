@@ -1926,6 +1926,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true,
     )
 
+    var isSettingsSearchEnabled by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_allow_settings_search),
+        default = { FxNimbus.features.settingsSearch.value().enabled },
+    )
+
     var isTabStripEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_tab_strip_show),
         default = FxNimbus.features.tabStrip.value().enabled &&

@@ -233,6 +233,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
+        requirePreference<SwitchPreference>(R.string.pref_key_allow_settings_search).apply {
+            isVisible = Config.channel.isNightlyOrDebug
+            isChecked = context.settings().isSettingsSearchEnabled
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
         requirePreference<SwitchPreference>(R.string.pref_key_enable_fxsuggest).apply {
             isVisible = FeatureFlags.FX_SUGGEST
             isChecked = context.settings().enableFxSuggest

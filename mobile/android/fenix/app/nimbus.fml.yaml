@@ -917,6 +917,15 @@ features:
         value:
           enabled: true
 
+  settings-search:
+      description: Feature to allow users to search for settings.
+      variables:
+        enabled:
+          description: >
+            Enables the user to search for settings.
+          type: Boolean
+          default: false
+
   toolbar-redesign-option:
     description: Control the visibility of toolbar redesign option in settings.
     variables:
