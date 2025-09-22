@@ -143,3 +143,10 @@ gecko_trace:
                                       type: string
                                     source.line:
                                       type: number
+                                    # Generated from: dom/quota/gecko-trace.yaml:3:4
+                                    frame_id:
+                                      type: string
+                                    result:
+                                      type: string
+                                    severity:
+                                      type: string
