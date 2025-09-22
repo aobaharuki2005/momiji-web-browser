@@ -496,6 +496,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_webconsole_limit_multiline.js"]
 
 ["browser_webconsole_location_debugger_link.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_location_logpoint_debugger_link.js"]
 

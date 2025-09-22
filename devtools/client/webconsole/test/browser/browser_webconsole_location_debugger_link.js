@@ -13,7 +13,7 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(/this\.worker is null/);
 requestLongerTimeout(2);
 
 const TEST_URI =
-  "http://example.com/browser/devtools/client/webconsole/" +
+  "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-location-debugger-link.html";
 
 add_task(async function () {
@@ -63,5 +63,12 @@ add_task(async function () {
     // "debugger eval code" isn't an actual URL and is not stored as such in the Debugger
     // state, so don't check it.
     expectUrl: false,
+  });
+
+  await testOpenInDebugger(hud, {
+    text: "String contains an invalid character",
+    typeSelector: ".error",
+    // atob exception comes with no particular column
+    expectColumn: false,
   });
 });
