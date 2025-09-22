@@ -261,6 +261,7 @@ class Components(private val context: Context) {
                 setupChecklistState = setupChecklistState(),
             ).run { filterState(blocklistHandler) },
             middlewares = listOf(
+                ProfileMarkerMiddleware(markerName = "AppStore", profiler = core.engine.profiler),
                 LogMiddleware(tag = "AppStore", shouldIncludeDetailedData = { Config.channel.isDebug }),
                 BlocklistMiddleware(blocklistHandler),
                 PocketMiddleware(
