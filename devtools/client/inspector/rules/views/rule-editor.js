@@ -101,6 +101,10 @@ function RuleEditor(ruleView, rule, options = {}) {
 
 RuleEditor.prototype = {
   destroy() {
+    for (const prop of this.rule.textProps) {
+      prop.editor?.destroy();
+    }
+
     this.rule.domRule.off("location-changed");
     this.toolbox.off("tool-registered", this._onToolChanged);
     this.toolbox.off("tool-unregistered", this._onToolChanged);
