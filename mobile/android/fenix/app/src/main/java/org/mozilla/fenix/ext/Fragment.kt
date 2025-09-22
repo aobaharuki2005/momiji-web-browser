@@ -7,6 +7,9 @@ package org.mozilla.fenix.ext
 import android.app.Activity
 import android.content.Intent
 import android.content.res.Resources
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.activity.result.ActivityResult
@@ -16,7 +19,10 @@ import androidx.annotation.DimenRes
 import androidx.annotation.IdRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
@@ -68,6 +74,45 @@ fun Fragment.showToolbar(title: String) {
     (requireActivity() as AppCompatActivity).title = title
     activity?.setNavigationIcon(R.drawable.ic_back_button)
     (activity as? NavHostActivity)?.getSupportActionBarAndInflateIfNecessary()?.show()
+}
+
+/**
+ * Displays the activity toolbar with a given [title] and an icon button
+ * with the given [iconResId] and [onClick]
+ * Throws if the fragment is not attached to an [AppCompatActivity].
+ *
+ * @param title The title of the toolbar.
+ * @param iconResId The resource ID of the icon to be displayed.
+ * @param onClick The click event for the icon button.
+ */
+fun Fragment.showToolbarWithIconButton(
+        title: String,
+        iconResId: Int,
+        onClick: () -> Unit,
+ ) {
+    val activity = requireActivity() as AppCompatActivity
+    activity.title = title
+    activity.setNavigationIcon(R.drawable.ic_back_button)
+    (activity as? NavHostActivity)?.getSupportActionBarAndInflateIfNecessary()?.show()
+
+    val menuHost = activity as MenuHost
+    val provider = object : MenuProvider {
+        override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+            menu.clear()
+
+            val item = menu.add(Menu.NONE, Menu.NONE, Menu.NONE, "")
+            item.setIcon(iconResId)
+            item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            item.setOnMenuItemClickListener {
+                onClick()
+                true
+            }
+        }
+
+        override fun onMenuItemSelected(menuItem: MenuItem): Boolean = false
+    }
+
+    menuHost.addMenuProvider(provider, viewLifecycleOwner, Lifecycle.State.RESUMED)
 }
 
 /**
