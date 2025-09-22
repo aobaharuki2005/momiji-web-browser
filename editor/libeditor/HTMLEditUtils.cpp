@@ -43,7 +43,6 @@
 #include "nsGkAtoms.h"           // for nsGkAtoms, nsGkAtoms::a, etc.
 #include "nsHTMLTags.h"
 #include "nsIContentInlines.h"   // for nsIContent::IsInDesignMode(), etc.
-#include "nsIFrameInlines.h"     // for nsIFrame::IsFlexOrGridItem()
 #include "nsLiteralString.h"     // for NS_LITERAL_STRING
 #include "nsNameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsPrintfCString.h"     // nsPringfCString
@@ -369,8 +368,46 @@ bool HTMLEditUtils::IsInlineContent(const nsIContent& aContent,
 }
 
 bool HTMLEditUtils::IsFlexOrGridItem(const Element& aElement) {
-  nsIFrame* frame = aElement.GetPrimaryFrame();
-  return frame && frame->IsFlexOrGridItem();
+  Element* const parentElement = aElement.GetParentElement();
+  // Editable state does not affect to elements across shadow DOM boundaries.
+  // Therefore, we don't need to treat aElement as an flex item nor a grid item
+  // as so if aElement is a root element of a shadow DOM unless we'll support
+  // inline editing host support better (all browsers do not handle surrounding
+  // content of the inline editing host strictly, e.g., when inserting a
+  // collapsible white-space at start or end of it).
+  if (MOZ_UNLIKELY(!parentElement)) {
+    return false;
+  }
+  // We should consider whether the element is a flex item or a grid item
+  // without nsIFrame since we don't want to refresh the layout while
+  // `HTMLEditor` handles an action to avoid to run script.
+  RefPtr<const ComputedStyle> elementStyle =
+      nsComputedDOMStyle::GetComputedStyleNoFlush(&aElement);
+  if (MOZ_UNLIKELY(!elementStyle)) {
+    return false;
+  }
+  const nsStyleDisplay* styleDisplay = elementStyle->StyleDisplay();
+  if (MOZ_UNLIKELY(styleDisplay->mDisplay == StyleDisplay::None)) {
+    return false;
+  }
+  const RefPtr<const ComputedStyle> parentElementStyle =
+      nsComputedDOMStyle::GetComputedStyleNoFlush(parentElement);
+  if (MOZ_UNLIKELY(!parentElementStyle)) {
+    return false;
+  }
+  const nsStyleDisplay* parentStyleDisplay = parentElementStyle->StyleDisplay();
+  const auto parentDisplayInside = parentStyleDisplay->DisplayInside();
+  const bool parentIsFlexContainerOrGridContainer =
+      parentDisplayInside == StyleDisplayInside::Flex ||
+      parentDisplayInside == StyleDisplayInside::Grid;
+  // We assume that the computed `display` value of a flex item and a grid item
+  // is "block".  If it would be false, we need to update
+  // HTMLEditUtils::IsBlockElement() and HTMLEditUtils::IsInlineContent().
+  // However, they are called a lot so that we need to be careful about changing
+  // them to check the parent style.
+  MOZ_ASSERT_IF(parentIsFlexContainerOrGridContainer,
+                styleDisplay->IsBlockOutsideStyle());
+  return parentIsFlexContainerOrGridContainer;
 }
 
 bool HTMLEditUtils::IsInclusiveAncestorCSSDisplayNone(
