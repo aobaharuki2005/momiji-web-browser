@@ -992,11 +992,49 @@ nsresult Http3Session::ProcessEvents() {
               return rv;
             }
           } break;
-          case ConnectUdpEventExternal::Tag::SessionClosed:
+          case ConnectUdpEventExternal::Tag::SessionClosed: {
+            uint64_t id = event.connect_udp._0.session_closed.stream_id;
             LOG(
-                ("Http3Session::ProcessEvents - ConnectUdp "
-                 "NegotiSessionClosedated"));
-            break;
+                ("Http3Session::ProcessEvents - connect_udp SessionClosed "
+                 " sessionId=0x%" PRIx64,
+                 id));
+            RefPtr<Http3StreamBase> stream = mStreamIdHash.Get(id);
+            if (!stream) {
+              LOG(
+                  ("Http3Session::ProcessEvents - connect_udp SessionClosed - "
+                   "stream not found "
+                   "stream_id=0x%" PRIx64 " [this=%p].",
+                   id, this));
+              break;
+            }
+
+            RefPtr<Http3ConnectUDPStream> connectUDPStream =
+                stream->GetHttp3ConnectUDPStream();
+            MOZ_RELEASE_ASSERT(connectUDPStream,
+                               "It must be a ConnectUDP stream");
+
+            // TODO we do not handle the case when a ConnectUDP session stream
+            // is closed before headers are sent.
+            SessionCloseReasonExternal& reasonExternal =
+                event.connect_udp._0.session_closed.reason;
+            uint32_t status = 0;
+            nsCString reason = ""_ns;
+            if (reasonExternal.tag == SessionCloseReasonExternal::Tag::Error) {
+              status = reasonExternal.error._0;
+            } else if (reasonExternal.tag ==
+                       SessionCloseReasonExternal::Tag::Status) {
+              status = reasonExternal.status._0;
+            } else {
+              status = reasonExternal.clean._0;
+              reason.Assign(reinterpret_cast<const char*>(data.Elements()),
+                            data.Length());
+            }
+            LOG(("reason.tag=%u err=%u data=%s\n",
+                 static_cast<uint32_t>(reasonExternal.tag), status,
+                 reason.get()));
+            CloseStream(connectUDPStream,
+                        status == 0 ? NS_OK : NS_ERROR_FAILURE);
+          } break;
           case ConnectUdpEventExternal::Tag::Datagram:
             LOG(("Http3Session::ProcessEvents - ConnectUdp Datagram"));
             uint64_t streamId = event.connect_udp._0.datagram.session_id;

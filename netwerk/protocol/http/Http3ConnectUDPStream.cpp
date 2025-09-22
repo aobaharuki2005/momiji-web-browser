@@ -50,14 +50,11 @@ already_AddRefed<HttpConnectionUDP> Http3ConnectUDPStream::CreateUDPConnection(
 void Http3ConnectUDPStream::Close(nsresult aResult) {
   LOG(("Http3ConnectUDPStream::Close %p aResult=%x", this,
        static_cast<uint32_t>(aResult)));
-  if ((mRecvState != CLOSE_PENDING) && (mRecvState != RECV_DONE)) {
-    mSession->ConnectSlowConsumer(this);
-    mRecvState = CLOSE_PENDING;
-    mSendState = SEND_DONE;
-    if (mSyncListener) {
-      Unused << mSyncListener->OnStopListening(this, aResult);
-    }
+  if (mSyncListener) {
+    Unused << mSyncListener->OnStopListening(this, aResult);
   }
+  mRecvState = RECV_DONE;
+  mSendState = SEND_DONE;
   if (mTransaction) {
     mTransaction->Close(aResult);
     mTransaction = nullptr;
@@ -79,7 +76,6 @@ void Http3ConnectUDPStream::OnDatagramReceived(nsTArray<uint8_t>&& aData) {
 bool Http3ConnectUDPStream::OnActivated() {
   LOG(("Http3ConnectUDPStream::OnActivated %p", this));
   mSession->FinishTunnelSetup(mTransaction);
-  mTransaction->OnProxyConnectComplete(200);
   return false;
 }
 
@@ -123,20 +119,6 @@ nsresult Http3ConnectUDPStream::TryActivating() {
                                  mFlatHttpRequestHeaders, &mStreamId, this);
 }
 
-void Http3ConnectUDPStream::OnSessionClosed(bool aCleanly, uint32_t aStatus,
-                                            const nsACString& aReason) {
-  LOG(("Http3ConnectUDPStream::OnSessionClosed [this=%p]", this));
-  if (mTransaction) {
-    mTransaction->Close(NS_BASE_STREAM_CLOSED);
-    mTransaction = nullptr;
-  }
-  if (mSyncListener) {
-    Unused << mSyncListener->OnStopListening(this, NS_BASE_STREAM_CLOSED);
-  }
-  mRecvState = RECV_DONE;
-  mSendState = SEND_DONE;
-}
-
 void Http3ConnectUDPStream::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {}
 
 void Http3ConnectUDPStream::OnSocketDetached(PRFileDesc* fd) {}
@@ -165,7 +147,7 @@ NS_IMETHODIMP Http3ConnectUDPStream::InitWithAddress(
 }
 
 NS_IMETHODIMP Http3ConnectUDPStream::Close() {
-  Close(NS_BASE_STREAM_CLOSED);
+  Close(NS_ERROR_ABORT);
   return NS_OK;
 }
 

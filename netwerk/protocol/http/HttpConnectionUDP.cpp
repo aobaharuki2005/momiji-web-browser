@@ -92,11 +92,7 @@ class ConnectUDPTransaction : public nsAHttpTransaction {
     }
     return mTransaction->WriteSegments(writer, count, countWritten);
   }
-  void Close(nsresult reason) override {
-    if (mTransaction) {
-      mTransaction->Close(reason);
-    }
-  }
+  void Close(nsresult reason) override { mTransaction->Close(reason); }
   nsHttpConnectionInfo* ConnectionInfo() override {
     return mTransaction->ConnectionInfo();
   }
@@ -111,7 +107,6 @@ class ConnectUDPTransaction : public nsAHttpTransaction {
       nsTArray<RefPtr<nsAHttpTransaction>>& outTransactions) override {
     return NS_OK;
   }
-  void OnProxyConnectComplete(int32_t) override { mTransaction = nullptr; }
 
  private:
   virtual ~ConnectUDPTransaction() {
@@ -498,9 +493,10 @@ void HttpConnectionUDP::Close(nsresult reason, bool aIsShutdown) {
       MOZ_ASSERT(mTrafficCategory.IsEmpty());
     }
   }
-  if (mSocket) {
-    mSocket->Close();
-    mSocket = nullptr;
+
+  nsCOMPtr<nsIUDPSocket> socket = std::move(mSocket);
+  if (socket) {
+    socket->Close();
   }
 }
 
@@ -634,6 +630,8 @@ void HttpConnectionUDP::HandleTunnelResponse(
   } else {
     LOG(("proxy CONNECT failed! onlyconnect=%d\n", onlyConnect));
     aHttpTransaction->SetProxyConnectFailed();
+    mQueuedTransaction.Clear();
+    mProxyConnectFailed = true;
   }
 }
 
@@ -815,7 +813,9 @@ void HttpConnectionUDP::CloseTransaction(nsAHttpTransaction* trans,
 
   mDontReuse = true;
   if (mHttp3Session) {
-    mHttp3Session->SetCleanShutdown(aIsShutdown);
+    // When proxy connnect failed, we call Http3Session::SetCleanShutdown to
+    // force Http3Session to release this UDP connection.
+    mHttp3Session->SetCleanShutdown(aIsShutdown || mProxyConnectFailed);
     mHttp3Session->Close(reason);
     if (!mHttp3Session->IsClosed()) {
       // During closing phase we still keep mHttp3Session session,
