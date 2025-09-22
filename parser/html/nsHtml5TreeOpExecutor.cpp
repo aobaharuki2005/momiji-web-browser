@@ -826,6 +826,7 @@ void nsHtml5TreeOpExecutor::CommitToInternalEncoding() {
   }
   mStreamParser->ContinueAfterScriptsOrEncodingCommitment(nullptr, nullptr,
                                                           false);
+  ContinueInterruptedParsingAsync();
 }
 
 [[nodiscard]] bool nsHtml5TreeOpExecutor::TakeOpsFromStage() {
