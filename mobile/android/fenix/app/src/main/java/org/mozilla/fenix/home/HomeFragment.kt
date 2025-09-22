@@ -44,7 +44,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.appbar.AppBarLayout
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
@@ -89,8 +88,6 @@ import org.mozilla.fenix.components.appstate.AppAction.ContentRecommendationsAct
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MicrosurveyAction
 import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction.CheckIfEligibleForReviewPrompt
-import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction.ReviewPromptShown
-import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.OrientationMode
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.components.toolbar.BottomToolbarContainerView
@@ -155,8 +152,7 @@ import org.mozilla.fenix.pbmlock.NavigationOrigin
 import org.mozilla.fenix.pbmlock.observePrivateModeLock
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.perf.StartupTimeline
-import org.mozilla.fenix.reviewprompt.ReviewPromptState
-import org.mozilla.fenix.reviewprompt.ReviewPromptState.Eligible.Type
+import org.mozilla.fenix.reviewprompt.ShowPlayStoreReviewPrompt
 import org.mozilla.fenix.search.SearchDialogFragment
 import org.mozilla.fenix.search.awesomebar.AwesomeBarComposable
 import org.mozilla.fenix.search.toolbar.DefaultSearchSelectorController
@@ -268,6 +264,7 @@ class HomeFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             voiceSearchFeature?.get()?.handleVoiceSearchResult(result.resultCode, result.data)
         }
+    private val showPlayStoreReviewPrompt = ViewBoundFeatureWrapper<ShowPlayStoreReviewPrompt>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // DO NOT ADD ANYTHING ABOVE THIS getProfilerTime CALL!
@@ -934,7 +931,17 @@ class HomeFragment : Fragment() {
             view = view,
         )
 
-        observeReviewPromptState()
+        showPlayStoreReviewPrompt.set(
+            feature = ShowPlayStoreReviewPrompt(
+                appStore = requireComponents.appStore,
+                promptController = requireComponents.playStoreReviewPromptController,
+                activityRef = WeakReference(activity),
+                uiScope = viewLifecycleOwner.lifecycleScope,
+                navigationDirection = { findNavController().navigate(it) },
+            ),
+            owner = viewLifecycleOwner,
+            view = view,
+        )
 
         // DO NOT MOVE ANYTHING BELOW THIS addMarker CALL!
         requireComponents.core.engine.profiler?.addMarker(
@@ -1382,49 +1389,6 @@ class HomeFragment : Fragment() {
         ).also {
             awesomeBarComposable = it
         }
-    }
-
-    private fun observeReviewPromptState() {
-        consumeFlow(requireComponents.appStore) { appStates ->
-            val components = context?.components ?: return@consumeFlow
-            val activity = activity ?: return@consumeFlow
-
-            observeReviewPromptState(
-                appStates = appStates,
-                dispatchAction = components.appStore::dispatch,
-                tryShowPlayStorePrompt = { components.playStoreReviewPromptController.tryPromptReview(activity) },
-                showCustomPrompt = {
-                    findNavController().navigate(
-                        NavGraphDirections.actionGlobalCustomReviewPromptDialogFragment(),
-                    )
-                },
-            )
-        }
-    }
-
-    @VisibleForTesting
-    internal suspend fun observeReviewPromptState(
-        appStates: Flow<AppState>,
-        dispatchAction: (AppAction) -> Unit,
-        tryShowPlayStorePrompt: suspend () -> Unit,
-        showCustomPrompt: () -> Unit,
-    ) {
-        appStates
-            .map { it.reviewPrompt }
-            .distinctUntilChanged()
-            .collect {
-                when (it) {
-                    ReviewPromptState.Unknown, ReviewPromptState.NotEligible -> {}
-
-                    is ReviewPromptState.Eligible -> {
-                        when (it.type) {
-                            Type.PlayStore -> tryShowPlayStorePrompt()
-                            Type.Custom -> showCustomPrompt()
-                        }
-                        dispatchAction(ReviewPromptShown)
-                    }
-                }
-            }
     }
 
     companion object {
