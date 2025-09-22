@@ -1858,7 +1858,7 @@ nsresult Http3Session::PushBack(const char* buf, uint32_t len) {
 }
 
 already_AddRefed<HttpConnectionBase> Http3Session::TakeHttpConnection() {
-  MOZ_ASSERT(false, "TakeHttpConnection of Http3Session");
+  LOG(("Http3Session::TakeHttpConnection %p", this));
   return nullptr;
 }
 
