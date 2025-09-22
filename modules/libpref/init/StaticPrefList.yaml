@@ -17491,7 +17491,7 @@
 
 - name: security.integrity_policy.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 - name: security.integrity_policy.stylesheet.enabled
