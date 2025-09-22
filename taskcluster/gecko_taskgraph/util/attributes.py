@@ -31,6 +31,8 @@ RELEASE_PROJECTS = {
     "larch",
     # maple is also an L3 branch: https://phabricator.services.mozilla.com/D184833
     "maple",
+    # bug 1988213: cypress project branch
+    "cypress",
 }
 
 RELEASE_PROMOTION_PROJECTS = {

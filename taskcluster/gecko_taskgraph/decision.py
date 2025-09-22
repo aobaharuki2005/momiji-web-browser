@@ -104,6 +104,7 @@ PER_PROJECT_PARAMETERS = {
     },
     "cypress": {
         "target_tasks_method": "cypress_tasks",
+        "release_type": "nightly-cypress",
     },
     "larch": {
         "target_tasks_method": "larch_tasks",
