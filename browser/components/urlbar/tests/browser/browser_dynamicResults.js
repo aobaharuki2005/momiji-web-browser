@@ -468,11 +468,19 @@ add_task(async function shouldNavigate() {
      * @param {Function} addCallback - Function to add a result to the query.
      */
     async startQuery(context, addCallback) {
-      for (let result of this.results) {
-        result.payload.searchString = context.searchString;
-        result.payload.url = DUMMY_PAGE;
-        addCallback(this, result);
-      }
+      addCallback(
+        this,
+        new UrlbarResult({
+          type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
+          source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+          suggestedIndex: 1,
+          payload: {
+            dynamicType: DYNAMIC_TYPE_NAME,
+            url: DUMMY_PAGE,
+            searchString: context.searchString,
+          },
+        })
+      );
     }
   }
 
@@ -802,10 +810,17 @@ add_task(async function clear_dynamicType_attribute() {
      * @param {Function} addCallback - Function to add a result to the query.
      */
     async startQuery(context, addCallback) {
-      for (let result of this.results) {
-        result.suggestedIndex = 0;
-        addCallback(this, result);
-      }
+      addCallback(
+        this,
+        new UrlbarResult({
+          type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
+          source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+          suggestedIndex: 0,
+          payload: {
+            dynamicType: DYNAMIC_TYPE_NAME,
+          },
+        })
+      );
     }
   }
 
@@ -920,26 +935,19 @@ async function doAttributesTest({
  * Provides a dynamic result.
  */
 class TestProvider extends UrlbarTestUtils.TestProvider {
-  constructor() {
-    super({
-      results: [
-        new UrlbarResult({
-          type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
-          source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-          suggestedIndex: 1,
-          payload: {
-            dynamicType: DYNAMIC_TYPE_NAME,
-          },
-        }),
-      ],
-    });
-  }
-
   async startQuery(context, addCallback) {
-    for (let result of this.results) {
-      result.payload.searchString = context.searchString;
-      addCallback(this, result);
-    }
+    addCallback(
+      this,
+      new UrlbarResult({
+        type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        suggestedIndex: 1,
+        payload: {
+          dynamicType: DYNAMIC_TYPE_NAME,
+          searchString: context.searchString,
+        },
+      })
+    );
   }
 
   getViewUpdate(result, idsByName) {

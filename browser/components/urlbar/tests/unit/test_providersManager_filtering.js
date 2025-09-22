@@ -233,6 +233,7 @@ add_task(async function test_nofilter_heuristic() {
     new UrlbarResult({
       type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
       source: UrlbarUtils.RESULT_SOURCE.TABS,
+      heuristic: true,
       payload: { url: "http://mozilla.org/foo/" },
     }),
     new UrlbarResult({
@@ -241,7 +242,6 @@ add_task(async function test_nofilter_heuristic() {
       payload: { url: "http://mozilla.org/foo2/" },
     }),
   ];
-  matches[0].heuristic = true;
   let provider = registerBasicTestProvider(
     matches,
     undefined,

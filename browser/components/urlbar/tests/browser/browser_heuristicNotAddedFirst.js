@@ -35,8 +35,7 @@ add_task(async function slowHeuristicSelected() {
 
   // Second, add another provider that adds a non-heuristic result immediately
   // with suggestedIndex = 1.
-  let nonHeuristicResult = makeTipResult();
-  nonHeuristicResult.suggestedIndex = 1;
+  let nonHeuristicResult = makeTipResult({ suggestedIndex: 1 });
   let nonHeuristicProvider = new UrlbarTestUtils.TestProvider({
     results: [nonHeuristicResult],
     name: "nonHeuristicProvider",
@@ -93,8 +92,7 @@ add_task(async function oneOffRemainsSelected() {
 
   // Second, add another provider that adds a non-heuristic result immediately
   // with suggestedIndex = 1.
-  let nonHeuristicResult = makeTipResult();
-  nonHeuristicResult.suggestedIndex = 1;
+  let nonHeuristicResult = makeTipResult({ suggestedIndex: 1 });
   let nonHeuristicProvider = new UrlbarTestUtils.TestProvider({
     results: [nonHeuristicResult],
     name: "nonHeuristicProvider",
@@ -143,10 +141,11 @@ add_task(async function oneOffRemainsSelected() {
   await BrowserTestUtils.closeWindow(win);
 });
 
-function makeTipResult() {
+function makeTipResult({ suggestedIndex }) {
   return new UrlbarResult({
     type: UrlbarUtils.RESULT_TYPE.TIP,
     source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    suggestedIndex,
     payload: {
       helpUrl: "http://example.com/",
       type: "test",

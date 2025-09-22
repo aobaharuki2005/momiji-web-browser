@@ -187,12 +187,11 @@ add_task(async function customValue() {
       new UrlbarResult({
         type: UrlbarUtils.RESULT_TYPE.URL,
         source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        resultSpan: i == 1 ? 5 : undefined,
         payload: { url: `http://mozilla.org/${i}` },
       })
     );
   }
-
-  results[1].resultSpan = 5;
 
   let expectedResults = Array.from(results);
   expectedResults = expectedResults.slice(0, 6);

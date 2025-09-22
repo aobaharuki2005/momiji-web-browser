@@ -91,58 +91,113 @@ export class UrlbarResult {
     if (!Object.values(lazy.UrlbarUtils.RESULT_TYPE).includes(type)) {
       throw new Error("Invalid result type");
     }
-    this.type = type;
+    this.#type = type;
 
     // Source describes which data has been used to derive this result. In case
     // multiple sources are involved, use the more privacy restricted.
     if (!Object.values(lazy.UrlbarUtils.RESULT_SOURCE).includes(source)) {
       throw new Error("Invalid result source");
     }
-    this.source = source;
+    this.#source = source;
 
     // The payload contains result data. Some of the data is common across
     // multiple types, but most of it will vary.
     if (!payload || typeof payload != "object") {
       throw new Error("Invalid result payload");
     }
-    this.payload = this.#validatePayload(payload);
+    this.#payload = this.#validatePayload(payload);
 
     if (!payloadHighlights || typeof payloadHighlights != "object") {
       throw new Error("Invalid result payload highlights");
     }
-    this.payloadHighlights = payloadHighlights;
-
     // Make sure every property in the payload has an array of highlights.  If a
     // payload property does not have a highlights array, then give it one now.
     // That way the consumer doesn't need to check whether it exists.
     for (let name in payload) {
-      if (!(name in this.payloadHighlights)) {
-        this.payloadHighlights[name] = [];
+      if (!(name in payloadHighlights)) {
+        payloadHighlights[name] = [];
       }
     }
+    this.#payloadHighlights = Object.freeze(payloadHighlights);
 
-    this.autofill = autofill;
-    this.exposureTelemetry = exposureTelemetry;
-    this.group = group;
-    this.heuristic = heuristic;
-    this.hideRowLabel = hideRowLabel;
-    this.isBestMatch = isBestMatch;
-    this.isRichSuggestion = isRichSuggestion;
-    this.isSuggestedIndexRelativeToGroup = isSuggestedIndexRelativeToGroup;
-    this.richSuggestionIconSize = richSuggestionIconSize;
-    this.richSuggestionIconVariation = richSuggestionIconVariation;
-    this.providerName = providerName;
-    this.resultSpan = resultSpan;
-    this.rowLabel = rowLabel;
-    this.showFeedbackMenu = showFeedbackMenu;
-    this.suggestedIndex = suggestedIndex;
+    this.#autofill = autofill;
+    this.#exposureTelemetry = exposureTelemetry;
+    this.#group = group;
+    this.#heuristic = heuristic;
+    this.#hideRowLabel = hideRowLabel;
+    this.#isBestMatch = isBestMatch;
+    this.#isRichSuggestion = isRichSuggestion;
+    this.#isSuggestedIndexRelativeToGroup = isSuggestedIndexRelativeToGroup;
+    this.#richSuggestionIconSize = richSuggestionIconSize;
+    this.#richSuggestionIconVariation = richSuggestionIconVariation;
+    this.#providerName = providerName;
+    this.#resultSpan = resultSpan;
+    this.#rowLabel = rowLabel;
+    this.#showFeedbackMenu = showFeedbackMenu;
+    this.#suggestedIndex = suggestedIndex;
 
-    if (this.type == lazy.UrlbarUtils.RESULT_TYPE.TIP) {
-      this.isRichSuggestion = true;
-      this.richSuggestionIconSize = 24;
+    if (this.#type == lazy.UrlbarUtils.RESULT_TYPE.TIP) {
+      this.#isRichSuggestion = true;
+      this.#richSuggestionIconSize = 24;
     }
 
-    this.testForceNewContent = testForceNewContent;
+    this.#testForceNewContent = testForceNewContent;
+  }
+
+  get type() {
+    return this.#type;
+  }
+
+  get source() {
+    return this.#source;
+  }
+
+  get autofill() {
+    return this.#autofill;
+  }
+
+  get exposureTelemetry() {
+    return this.#exposureTelemetry;
+  }
+  set exposureTelemetry(value) {
+    this.#exposureTelemetry = value;
+  }
+
+  get group() {
+    return this.#group;
+  }
+
+  get heuristic() {
+    return this.#heuristic;
+  }
+
+  get hideRowLabel() {
+    return this.#hideRowLabel;
+  }
+
+  get isBestMatch() {
+    return this.#isBestMatch;
+  }
+
+  get isRichSuggestion() {
+    return this.#isRichSuggestion;
+  }
+  set isRichSuggestion(value) {
+    this.#isRichSuggestion = value;
+  }
+
+  get isSuggestedIndexRelativeToGroup() {
+    return this.#isSuggestedIndexRelativeToGroup;
+  }
+  set isSuggestedIndexRelativeToGroup(value) {
+    this.#isSuggestedIndexRelativeToGroup = value;
+  }
+
+  get providerName() {
+    return this.#providerName;
+  }
+  set providerName(value) {
+    this.#providerName = value;
   }
 
   /**
@@ -150,7 +205,54 @@ export class UrlbarResult {
    *
    * @type {?Values<typeof lazy.UrlbarUtils.PROVIDER_TYPE>}
    */
-  providerType;
+  get providerType() {
+    return this.#providerType;
+  }
+  set providerType(value) {
+    this.#providerType = value;
+  }
+
+  get resultSpan() {
+    return this.#resultSpan;
+  }
+
+  get richSuggestionIconSize() {
+    return this.#richSuggestionIconSize;
+  }
+
+  get richSuggestionIconVariation() {
+    return this.#richSuggestionIconVariation;
+  }
+  set richSuggestionIconSize(value) {
+    this.#richSuggestionIconSize = value;
+  }
+
+  get rowLabel() {
+    return this.#rowLabel;
+  }
+
+  get showFeedbackMenu() {
+    return this.#showFeedbackMenu;
+  }
+
+  get suggestedIndex() {
+    return this.#suggestedIndex;
+  }
+  set suggestedIndex(value) {
+    this.#suggestedIndex = value;
+  }
+
+  get payload() {
+    return this.#payload;
+  }
+
+  get payloadHighlights() {
+    return this.#payloadHighlights;
+  }
+
+  get testForceNewContent() {
+    return this.#testForceNewContent;
+  }
 
   /**
    * Returns a title that could be used as a label for this result.
@@ -453,4 +555,26 @@ export class UrlbarResult {
     }
     return JSON.stringify(this);
   }
+
+  #type;
+  #source;
+  #autofill;
+  #exposureTelemetry;
+  #group;
+  #heuristic;
+  #hideRowLabel;
+  #isBestMatch;
+  #isRichSuggestion;
+  #isSuggestedIndexRelativeToGroup;
+  #providerName;
+  #providerType;
+  #resultSpan;
+  #richSuggestionIconSize;
+  #richSuggestionIconVariation;
+  #rowLabel;
+  #showFeedbackMenu;
+  #suggestedIndex;
+  #payload;
+  #payloadHighlights;
+  #testForceNewContent;
 }
