@@ -43,13 +43,14 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.SearchAction
@@ -1343,20 +1344,23 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         isVisuallyComplete = true
     }
 
-    private fun captureSnapshotTelemetryMetrics() = CoroutineScope(IO).launch {
-        // PWA
-        val recentlyUsedPwaCount = components.core.webAppShortcutManager.recentlyUsedWebAppsCount(
-            activeThresholdMs = PWA_RECENTLY_USED_THRESHOLD,
-        )
-        if (recentlyUsedPwaCount == 0) {
-            Metrics.hasRecentPwas.set(false)
-        } else {
-            Metrics.hasRecentPwas.set(true)
-            // This metric's lifecycle is set to 'application', meaning that it gets reset upon
-            // application restart. Combined with the behaviour of the metric type itself (a growing counter),
-            // it's important that this metric is only set once per application's lifetime.
-            // Otherwise, we're going to over-count.
-            Metrics.recentlyUsedPwaCount.add(recentlyUsedPwaCount)
+    private fun captureSnapshotTelemetryMetrics() {
+        lifecycleScope.launch {
+            val recentlyUsedPwaCount = withContext(Dispatchers.IO) {
+                components.core.webAppShortcutManager.recentlyUsedWebAppsCount(
+                    activeThresholdMs = PWA_RECENTLY_USED_THRESHOLD,
+                )
+            }
+            if (recentlyUsedPwaCount == 0) {
+                Metrics.hasRecentPwas.set(false)
+            } else {
+                Metrics.hasRecentPwas.set(true)
+                // This metric's lifecycle is set to 'application', meaning that it gets reset upon
+                // application restart. Combined with the behaviour of the metric type itself (a growing counter),
+                // it's important that this metric is only set once per application's lifetime.
+                // Otherwise, we're going to over-count.
+                Metrics.recentlyUsedPwaCount.add(recentlyUsedPwaCount)
+            }
         }
     }
 
