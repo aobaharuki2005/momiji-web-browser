@@ -2718,6 +2718,10 @@ bool nsHttpHandler::IsHttp2Excluded(const nsHttpConnectionInfo* ci) {
 }
 
 void nsHttpHandler::ExcludeHttp3(const nsHttpConnectionInfo* ci) {
+  // TODO: exclude HTTP/3 for proxy connection properly.
+  if (ci->IsHttp3ProxyConnection()) {
+    return;
+  }
   MOZ_ASSERT(ci->IsHttp3());
   ExcludeHttp2OrHttp3Internal(ci);
 }

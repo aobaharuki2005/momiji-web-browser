@@ -195,7 +195,12 @@ void nsHttpConnection::ResetTransaction(RefPtr<nsAHttpTransaction>&& trans,
     // Only do this when this is for websocket or webtransport over HTTP/2.
     trans->SetResettingForTunnelConn(true);
   }
-  trans->Close(NS_ERROR_NET_RESET);
+  if (trans->IsForFallback()) {
+    trans->InvokeCallback();
+    trans->Close(NS_OK);
+  } else {
+    trans->Close(NS_ERROR_NET_RESET);
+  }
 }
 
 nsresult nsHttpConnection::MoveTransactionsToSpdy(

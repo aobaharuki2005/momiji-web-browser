@@ -253,5 +253,20 @@ already_AddRefed<nsProxyInfo> nsProxyInfo::CloneProxyInfoWithNewResolveFlags(
   return result.forget();
 }
 
+already_AddRefed<nsProxyInfo> nsProxyInfo::CreateFallbackProxyInfo() {
+  nsTArray<ProxyInfoCloneArgs> args;
+  SerializeProxyInfo(this, args);
+
+  for (auto& arg : args) {
+    if (arg.type().Equals("connect-udp"_ns)) {
+      arg.type().AssignASCII(kProxyType_HTTPS);
+      arg.alpn().Truncate();
+    }
+  }
+
+  RefPtr<nsProxyInfo> result = DeserializeProxyInfo(args);
+  return result.forget();
+}
+
 }  // namespace net
 }  // namespace mozilla

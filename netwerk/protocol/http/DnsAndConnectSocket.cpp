@@ -659,7 +659,8 @@ nsresult DnsAndConnectSocket::SetupConn(bool isPrimary, nsresult status) {
     // the NullHttpTransaction does not know how to drive Connect
     // Http3 cannot be dispatched using OnMsgReclaimConnection (see below),
     // therefore we need to use a Nulltransaction.
-    if (!connTCP ||
+    // Ensure that the fallback transacion is always dispatched.
+    if (!connTCP || ent->mConnInfo->GetFallbackConnection() ||
         (ent->mConnInfo->FirstHopSSL() && !ent->UrgentStartQueueLength() &&
          !ent->PendingQueueLength() && !ent->mConnInfo->UsingConnect())) {
       LOG(

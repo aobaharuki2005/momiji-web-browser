@@ -403,8 +403,8 @@ void nsHttpTransaction::OnPendingQueueInserted(
   }
 
   // Don't create mHttp3BackupTimer if HTTPS RR is in play.
-  if (mConnInfo->IsHttp3() && !mOrigConnInfo && !mConnInfo->GetWebTransport() &&
-      !mConnInfo->UsingConnectUDP()) {
+  if ((mConnInfo->IsHttp3() || mConnInfo->IsHttp3ProxyConnection()) &&
+      !mOrigConnInfo && !mConnInfo->GetWebTransport()) {
     // Backup timer should only be created once.
     if (!mHttp3BackupTimerCreated) {
       CreateAndStartTimer(mHttp3BackupTimer, this,
@@ -3466,7 +3466,7 @@ static void CreateBackupConnection(
     nsHttpConnectionInfo* aBackupConnInfo, nsIInterfaceRequestor* aCallbacks,
     uint32_t aCaps, std::function<void(bool)>&& aResultCallback) {
   aBackupConnInfo->SetFallbackConnection(true);
-  RefPtr<SpeculativeTransaction> trans = new SpeculativeTransaction(
+  RefPtr<SpeculativeTransaction> trans = new FallbackTransaction(
       aBackupConnInfo, aCallbacks, aCaps | NS_HTTP_DISALLOW_HTTP3,
       std::move(aResultCallback));
   uint32_t limit =
@@ -3481,12 +3481,16 @@ static void CreateBackupConnection(
 void nsHttpTransaction::OnHttp3BackupTimer() {
   LOG(("nsHttpTransaction::OnHttp3BackupTimer [%p]", this));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  MOZ_ASSERT(mConnInfo->IsHttp3());
+  MOZ_ASSERT(mConnInfo->IsHttp3() || mConnInfo->IsHttp3ProxyConnection());
 
   mHttp3BackupTimer = nullptr;
 
-  mConnInfo->CloneAsDirectRoute(getter_AddRefs(mBackupConnInfo));
-  MOZ_ASSERT(!mBackupConnInfo->IsHttp3());
+  if (mConnInfo->IsHttp3ProxyConnection()) {
+    mBackupConnInfo = mConnInfo->CreateConnectUDPFallbackConnInfo();
+  } else {
+    mConnInfo->CloneAsDirectRoute(getter_AddRefs(mBackupConnInfo));
+    MOZ_ASSERT(!mBackupConnInfo->IsHttp3());
+  }
 
   RefPtr<nsHttpTransaction> self = this;
   auto callback = [self](bool aSucceded) {

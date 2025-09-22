@@ -67,6 +67,8 @@ class nsProxyInfo final : public nsIProxyInfo {
   already_AddRefed<nsProxyInfo> CloneProxyInfoWithNewResolveFlags(
       uint32_t aResolveFlags);
 
+  already_AddRefed<nsProxyInfo> CreateFallbackProxyInfo();
+
  private:
   friend class nsProtocolProxyService;
 

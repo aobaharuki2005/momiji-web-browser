@@ -736,6 +736,11 @@ export class NodeHTTP2ProxyServer extends BaseHTTPProxy {
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
   async start(port = 0, auth, maxConcurrentStreams = 100) {
+    await this.startWithoutProxyFilter(port, auth, maxConcurrentStreams);
+    this.registerFilter();
+  }
+
+  async startWithoutProxyFilter(port = 0, auth, maxConcurrentStreams = 100) {
     if (!this._skipCert) {
       await BaseNodeServer.installCert("proxy-ca.pem");
     }
@@ -748,8 +753,6 @@ export class NodeHTTP2ProxyServer extends BaseHTTPProxy {
     this._port = await this.execute(
       `HTTP2ProxyCode.startServer(${port}, ${auth}, ${maxConcurrentStreams})`
     );
-
-    this.registerFilter();
   }
 
   async socketCount(port) {
