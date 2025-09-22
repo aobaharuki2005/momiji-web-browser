@@ -18,15 +18,15 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
@@ -64,6 +64,7 @@ import org.mozilla.samples.toolbar.compose.BrowserToolbar
 import org.mozilla.samples.toolbar.databinding.ActivityToolbarBinding
 import org.mozilla.samples.toolbar.middleware.BrowserToolbarMiddleware
 import org.mozilla.samples.toolbar.middleware.BrowserToolbarMiddleware.Companion.Dependencies
+import kotlin.coroutines.cancellation.CancellationException
 import mozilla.components.browser.menu.R as menuR
 import mozilla.components.browser.toolbar.R as toolbarR
 import mozilla.components.ui.colors.R as colorsR
@@ -601,12 +602,10 @@ class ToolbarActivity : AppCompatActivity() {
 
         loading.value = true
 
-        job = CoroutineScope(Dispatchers.Main).launch {
+        job = lifecycleScope.launch {
             try {
                 loop@ for (progress in PROGRESS_RANGE step RELOAD_STEP_SIZE) {
-                    if (!isActive) {
-                        break@loop
-                    }
+                    ensureActive()
 
                     if (view == null) {
                         binding.toolbar.displayProgress(progress)
@@ -615,6 +614,13 @@ class ToolbarActivity : AppCompatActivity() {
                     }
 
                     delay(progress * RELOAD_STEP_SIZE.toLong())
+                }
+            } catch (e: CancellationException) {
+                // Handle cancellation specifically
+                if (view == null) {
+                    binding.toolbar.displayProgress(0)
+                } else {
+                    view.progress = 0
                 }
             } catch (t: Throwable) {
                 if (view == null) {
