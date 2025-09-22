@@ -5646,11 +5646,6 @@
   value: false
   mirror: always
 
-- name: dom.webnotifications.forbid_nested_first_party.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: dom.webnotifications.enabled
   type: RelaxedAtomicBool
   value: true

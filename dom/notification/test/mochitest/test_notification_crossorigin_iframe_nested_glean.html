@@ -30,15 +30,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1560741
       iframe.onload = resolve;
     });
 
-    await SpecialPowers.pushPermissions([
-      {
-        type: "desktop-notification",
-        allow: SpecialPowers.Services.perms.ALLOW_ACTION,
-        context: document,
-      },
-    ]);
-    is(Notification.permission, "granted", "Notification permission for the top level should be granted")
-
     await SpecialPowers.spawn(iframe, [kChildURL], async (childURL) => {
       const nested = this.content.document.createElement("iframe");
       nested.src = childURL;
@@ -60,14 +51,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1560741
     const requestCount = await GleanTest.webNotification.requestPermissionOrigin.nested_first_party.testGetValue();
     is(requestCount, 1, "Notification nested first party request permission counter should increment once.");
 
-    const permissionNested = await SpecialPowers.spawn(iframe, [], async () => {
+    await SpecialPowers.spawn(iframe, [], async () => {
       const nested = this.content.document.querySelector("iframe");
-      return await SpecialPowers.spawn(nested, [], async () => {
-        return this.content.Notification.permission;
+      await SpecialPowers.spawn(nested, [], async () => {
+        this.content.Notification.permission;
       });
     });
 
-    is(permissionNested, "denied", "Notification nested first party permission should be denied");
     const permissionCount = await GleanTest.webNotification.permissionOrigin.nested_first_party.testGetValue();
     is(permissionCount, 1, "Notification nested first party permission read counter should increment once.");
 

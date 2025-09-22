@@ -97,8 +97,7 @@ bool IsNotificationForbiddenFor(nsIPrincipal* aPrincipal,
   if (outForeignByAncestorContext) {
     // nested first party
     ReportTelemetry(GleanLabel::eNestedFirstParty, aPurpose);
-    return StaticPrefs::
-        dom_webnotifications_forbid_nested_first_party_enabled();
+    return false;
   }
 
   // third party
