@@ -180,50 +180,6 @@
     <issue
         id="UsingMaterialAndMaterial3Libraries"
         message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.AlertDialog"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/ui/dialog/FocusDialog.kt"
-            line="9"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.MaterialTheme"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/ui/dialog/FocusDialog.kt"
-            line="10"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.TextField"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/ui/dialog/FocusDialog.kt"
-            line="11"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.TextFieldDefaults"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/ui/dialog/FocusDialog.kt"
-            line="12"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
         errorLine1="import androidx.compose.material.Colors"
         errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location

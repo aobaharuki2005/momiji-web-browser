@@ -6,12 +6,12 @@ package org.mozilla.focus.ui.dialog
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.TextField
-import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,8 +31,8 @@ import org.mozilla.focus.ui.theme.focusTypography
  *                         (e.g., by tapping outside or pressing the back button).
  * @param confirmButtonConfig Optional configuration for the confirm button. If null, the button is not shown.
  * @param dismissButtonConfig Optional configuration for the dismiss button. If null, the button is not shown.
- * @param dialogBackgroundColor Background color for the dialog. Defaults to `focusColors.secondary`.
- * @param dialogShape Shape for the dialog. Defaults to `MaterialTheme.shapes.medium`.
+ * @param dialogContainerColor Background color for the dialog. Defaults to `focusColors.secondary`.
+ * @param dialogShape Shape for the dialog. Defaults to `MaterialTheme.shapes.extraSmall`.
  */
 @Composable
 fun FocusDialog(
@@ -42,8 +42,8 @@ fun FocusDialog(
     onDismissRequest: () -> Unit,
     confirmButtonConfig: DialogButtonConfig? = null,
     dismissButtonConfig: DialogButtonConfig? = null,
-    dialogBackgroundColor: Color = focusColors.secondary,
-    dialogShape: Shape = MaterialTheme.shapes.medium,
+    dialogContainerColor: Color = focusColors.secondary,
+    dialogShape: Shape = MaterialTheme.shapes.extraSmall,
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -75,7 +75,7 @@ fun FocusDialog(
                 }
             }
         },
-        backgroundColor = dialogBackgroundColor,
+        containerColor = dialogContainerColor,
         shape = dialogShape,
     )
 }
@@ -141,7 +141,7 @@ fun DialogTextButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        shape = MaterialTheme.shapes.large,
+        shape = MaterialTheme.shapes.extraSmall,
     ) {
         Text(
             modifier = modifier,
@@ -151,7 +151,7 @@ fun DialogTextButton(
                 focusColors.dialogActiveControls.copy(alpha = 0.5f)
             },
             text = text,
-            style = MaterialTheme.typography.button,
+            style = MaterialTheme.typography.labelLarge,
         )
     }
 }
@@ -173,15 +173,18 @@ fun DialogInputField(
         placeholder = placeholder,
         onValueChange = onValueChange,
         textStyle = focusTypography.dialogInput,
-        colors = TextFieldDefaults.textFieldColors(
-            backgroundColor = focusColors.secondary,
-            textColor = focusColors.onSecondary,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = focusColors.secondary,
+            unfocusedContainerColor = focusColors.secondary,
+            disabledContainerColor = focusColors.secondary,
+            focusedTextColor = focusColors.onSecondary,
+            unfocusedTextColor = focusColors.onSecondary,
             cursorColor = focusColors.onPrimary,
             focusedIndicatorColor = focusColors.dialogActiveControls,
             unfocusedIndicatorColor = focusColors.dialogActiveControls,
         ),
         singleLine = true,
-        shape = MaterialTheme.shapes.large,
+        shape = MaterialTheme.shapes.extraSmall,
     )
 }
 
