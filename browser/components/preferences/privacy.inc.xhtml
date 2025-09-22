@@ -1095,25 +1095,9 @@
 </hbox>
 
 <!-- addons, forgery (phishing) UI Security -->
-<groupbox id="browsingProtectionGroup" data-category="panePrivacy" hidden="true">
+<groupbox data-category="panePrivacy" hidden="true">
   <label><html:h2 data-l10n-id="security-browsing-protection"/></label>
-  <hbox align = "center">
-    <checkbox id="enableSafeBrowsing"
-              data-l10n-id="security-enable-safe-browsing"
-              class="tail-with-learn-more"/>
-    <html:a is="moz-support-link"
-            id="enableSafeBrowsingLearnMore"
-            class="learnMore"
-            data-l10n-id="security-enable-safe-browsing-link"
-            support-page="phishing-malware"
-    />
-  </hbox>
-  <vbox class="indent">
-    <checkbox id="blockDownloads"
-              data-l10n-id="security-block-downloads"/>
-    <checkbox id="blockUncommonUnwanted"
-              data-l10n-id="security-block-uncommon-software"/>
-  </vbox>
+  <html:setting-group groupid="browsingProtection"></html:setting-group>
 </groupbox>
 
 <!-- Certificates -->

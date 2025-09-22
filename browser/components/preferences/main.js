@@ -862,6 +862,26 @@ let SETTINGS_CONFIG = {
       },
     ],
   },
+  browsingProtection: {
+    items: [
+      {
+        id: "enableSafeBrowsing",
+        l10nId: "security-enable-safe-browsing",
+        supportPage: "phishing-malware",
+        control: "moz-checkbox",
+        items: [
+          {
+            id: "blockDownloads",
+            l10nId: "security-block-downloads",
+          },
+          {
+            id: "blockUncommonUnwanted",
+            l10nId: "security-block-uncommon-software",
+          },
+        ],
+      },
+    ],
+  },
   nonTechnicalPrivacy: {
     l10nId: "non-technical-privacy-label",
     items: [
