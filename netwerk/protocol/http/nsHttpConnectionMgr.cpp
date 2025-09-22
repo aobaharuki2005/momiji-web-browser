@@ -3763,6 +3763,8 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
        wcEnt->DnsAndConnectSocketsLength(), wcEnt->PendingQueueLength()));
 
   ent->MoveConnection(proxyConn, wcEnt);
+  // Ensure other wildcard connections are closed gracefully.
+  wcEnt->MakeAllDontReuseExcept(proxyConn);
 }
 
 bool nsHttpConnectionMgr::RemoveTransFromConnEntry(nsHttpTransaction* aTrans,
