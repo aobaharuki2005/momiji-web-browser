@@ -1366,6 +1366,107 @@ Preferences.addSetting({
   },
 });
 
+Preferences.addSetting({
+  id: "enableSafeBrowsingPhishing",
+  pref: "browser.safebrowsing.phishing.enabled",
+});
+Preferences.addSetting({
+  id: "enableSafeBrowsingMalware",
+  pref: "browser.safebrowsing.malware.enabled",
+});
+Preferences.addSetting({
+  id: "enableSafeBrowsing",
+  deps: ["enableSafeBrowsingPhishing", "enableSafeBrowsingMalware"],
+  get: (_value, deps) => {
+    return (
+      deps.enableSafeBrowsingPhishing.value &&
+      deps.enableSafeBrowsingMalware.value
+    );
+  },
+  set: (value, deps) => {
+    deps.enableSafeBrowsingPhishing.value = value;
+    deps.enableSafeBrowsingMalware.value = value;
+  },
+  disabled: deps => {
+    return (
+      deps.enableSafeBrowsingPhishing.locked ||
+      deps.enableSafeBrowsingMalware.locked
+    );
+  },
+});
+Preferences.addSetting({
+  id: "blockDownloads",
+  pref: "browser.safebrowsing.downloads.enabled",
+  deps: ["enableSafeBrowsing"],
+  disabled: (deps, self) => {
+    return !deps.enableSafeBrowsing.value || self.locked;
+  },
+});
+Preferences.addSetting({
+  id: "malwareTable",
+  pref: "urlclassifier.malwareTable",
+});
+Preferences.addSetting({
+  id: "blockUncommonDownloads",
+  pref: "browser.safebrowsing.downloads.remote.block_uncommon",
+});
+Preferences.addSetting({
+  id: "blockUnwantedDownloads",
+  pref: "browser.safebrowsing.downloads.remote.block_potentially_unwanted",
+});
+Preferences.addSetting({
+  id: "blockUncommonUnwanted",
+  deps: [
+    "enableSafeBrowsing",
+    "blockDownloads",
+    "blockUncommonDownloads",
+    "blockUnwantedDownloads",
+  ],
+  get: (_value, deps) => {
+    return (
+      deps.blockUncommonDownloads.value && deps.blockUnwantedDownloads.value
+    );
+  },
+  set: (value, deps) => {
+    deps.blockUncommonDownloads.value = value;
+    deps.blockUnwantedDownloads.value = value;
+
+    let malwareTable = Preferences.get("urlclassifier.malwareTable");
+    let malware = malwareTable.value
+      .split(",")
+      .filter(
+        x =>
+          x !== "goog-unwanted-proto" &&
+          x !== "goog-unwanted-shavar" &&
+          x !== "moztest-unwanted-simple"
+      );
+
+    if (value) {
+      if (malware.includes("goog-malware-shavar")) {
+        malware.push("goog-unwanted-shavar");
+      } else {
+        malware.push("goog-unwanted-proto");
+      }
+      malware.push("moztest-unwanted-simple");
+    }
+
+    // sort alphabetically to keep the pref consistent
+    malware.sort();
+    malwareTable.value = malware.join(",");
+
+    // Force an update after changing the malware table.
+    listManager.forceUpdates(malwareTable.value);
+  },
+  disabled: deps => {
+    return (
+      !deps.enableSafeBrowsing.value ||
+      !deps.blockDownloads.value ||
+      deps.blockUncommonDownloads.locked ||
+      deps.blockUnwantedDownloads.locked
+    );
+  },
+});
+
 function setEventListener(aId, aEventType, aCallback) {
   document
     .getElementById(aId)
@@ -1967,6 +2068,7 @@ var gPrivacyPane = {
       initSettingGroup("securityPrivacyStatus");
     }
     initSettingGroup("httpsOnly");
+    initSettingGroup("browsingProtection");
 
     this.initNonTechnicalPrivacySection();
 
@@ -2107,8 +2209,6 @@ var gPrivacyPane = {
     this._initOSAuthentication();
 
     this.initListenersForExtensionControllingPasswordManager();
-
-    this._initSafeBrowsing();
 
     setEventListener(
       "autoplaySettingsButton",
@@ -4237,112 +4337,6 @@ var gPrivacyPane = {
 
     // don't override the preference value
     return undefined;
-  },
-
-  _initSafeBrowsing() {
-    let enableSafeBrowsing = document.getElementById("enableSafeBrowsing");
-    let blockDownloads = document.getElementById("blockDownloads");
-    let blockUncommonUnwanted = document.getElementById(
-      "blockUncommonUnwanted"
-    );
-
-    let safeBrowsingPhishingPref = Preferences.get(
-      "browser.safebrowsing.phishing.enabled"
-    );
-    let safeBrowsingMalwarePref = Preferences.get(
-      "browser.safebrowsing.malware.enabled"
-    );
-
-    let blockDownloadsPref = Preferences.get(
-      "browser.safebrowsing.downloads.enabled"
-    );
-    let malwareTable = Preferences.get("urlclassifier.malwareTable");
-
-    let blockUnwantedPref = Preferences.get(
-      "browser.safebrowsing.downloads.remote.block_potentially_unwanted"
-    );
-    let blockUncommonPref = Preferences.get(
-      "browser.safebrowsing.downloads.remote.block_uncommon"
-    );
-
-    enableSafeBrowsing.addEventListener("command", function () {
-      safeBrowsingPhishingPref.value = enableSafeBrowsing.checked;
-      safeBrowsingMalwarePref.value = enableSafeBrowsing.checked;
-
-      blockDownloads.disabled =
-        !enableSafeBrowsing.checked || blockDownloadsPref.locked;
-      blockUncommonUnwanted.disabled =
-        !blockDownloads.checked ||
-        !enableSafeBrowsing.checked ||
-        blockUnwantedPref.locked ||
-        blockUncommonPref.locked;
-    });
-
-    blockDownloads.addEventListener("command", function () {
-      blockDownloadsPref.value = blockDownloads.checked;
-      blockUncommonUnwanted.disabled =
-        !blockDownloads.checked ||
-        blockUnwantedPref.locked ||
-        blockUncommonPref.locked;
-    });
-
-    blockUncommonUnwanted.addEventListener("command", function () {
-      blockUnwantedPref.value = blockUncommonUnwanted.checked;
-      blockUncommonPref.value = blockUncommonUnwanted.checked;
-
-      let malware = malwareTable.value
-        .split(",")
-        .filter(
-          x =>
-            x !== "goog-unwanted-proto" &&
-            x !== "goog-unwanted-shavar" &&
-            x !== "moztest-unwanted-simple"
-        );
-
-      if (blockUncommonUnwanted.checked) {
-        if (malware.includes("goog-malware-shavar")) {
-          malware.push("goog-unwanted-shavar");
-        } else {
-          malware.push("goog-unwanted-proto");
-        }
-
-        malware.push("moztest-unwanted-simple");
-      }
-
-      // sort alphabetically to keep the pref consistent
-      malware.sort();
-
-      malwareTable.value = malware.join(",");
-
-      // Force an update after changing the malware table.
-      listManager.forceUpdates(malwareTable.value);
-    });
-
-    // set initial values
-
-    enableSafeBrowsing.checked =
-      safeBrowsingPhishingPref.value && safeBrowsingMalwarePref.value;
-    if (!enableSafeBrowsing.checked) {
-      blockDownloads.setAttribute("disabled", "true");
-      blockUncommonUnwanted.setAttribute("disabled", "true");
-    }
-
-    blockDownloads.checked = blockDownloadsPref.value;
-    if (!blockDownloadsPref.value) {
-      blockUncommonUnwanted.setAttribute("disabled", "true");
-    }
-    blockUncommonUnwanted.checked =
-      blockUnwantedPref.value && blockUncommonPref.value;
-
-    if (safeBrowsingPhishingPref.locked || safeBrowsingMalwarePref.locked) {
-      enableSafeBrowsing.disabled = true;
-    }
-    if (blockDownloadsPref.locked) {
-      blockDownloads.disabled = true;
-    }
-    if (blockUnwantedPref.locked || blockUncommonPref.locked) {
-      blockUncommonUnwanted.disabled = true;
-    }
   },
 
   /**
