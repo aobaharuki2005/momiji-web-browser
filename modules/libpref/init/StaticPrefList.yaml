@@ -15135,7 +15135,7 @@
 # network.http.http3.use_nspr_for_io is true.
 - name: network.http.http3.ecn_mark
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
   rust: true
 
