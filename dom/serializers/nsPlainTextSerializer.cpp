@@ -405,7 +405,7 @@ static bool IsIgnorableScriptOrStyle(Element* aElement) {
 }
 
 NS_IMETHODIMP
-nsPlainTextSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
+nsPlainTextSerializer::AppendText(Text* aText, int32_t aStartOffset,
                                   int32_t aEndOffset) {
   if (mIgnoreAboveIndex != (uint32_t)kNotFound) {
     return NS_OK;
@@ -418,9 +418,8 @@ nsPlainTextSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
 
   nsresult rv = NS_OK;
 
-  nsIContent* content = aText;
   const CharacterDataBuffer* characterDataBuffer = nullptr;
-  if (!content || !(characterDataBuffer = content->GetCharacterDataBuffer())) {
+  if (!(characterDataBuffer = aText->GetCharacterDataBuffer())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -445,8 +444,8 @@ nsPlainTextSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
   }
 
   // Mask the text if the text node is in a password field.
-  if (content->HasFlag(NS_MAYBE_MASKED)) {
-    TextEditor::MaskString(textstr, *content->AsText(), 0, aStartOffset);
+  if (aText->HasFlag(NS_MAYBE_MASKED)) {
+    TextEditor::MaskString(textstr, *aText, 0, aStartOffset);
   }
 
   // We have to split the string across newlines
@@ -479,9 +478,11 @@ nsPlainTextSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
 }
 
 NS_IMETHODIMP
-nsPlainTextSerializer::AppendCDATASection(nsIContent* aCDATASection,
+nsPlainTextSerializer::AppendCDATASection(Text* aCDATASection,
                                           int32_t aStartOffset,
                                           int32_t aEndOffset) {
+  MOZ_ASSERT(!aCDATASection ||
+             aCDATASection->NodeType() == nsINode::CDATA_SECTION_NODE);
   return AppendText(aCDATASection, aStartOffset, aEndOffset);
 }
 

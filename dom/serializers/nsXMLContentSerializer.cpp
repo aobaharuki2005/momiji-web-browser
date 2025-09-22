@@ -127,14 +127,13 @@ nsXMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
   return NS_OK;
 }
 
-nsresult nsXMLContentSerializer::AppendTextData(nsIContent* aNode,
+nsresult nsXMLContentSerializer::AppendTextData(Text* aText,
                                                 int32_t aStartOffset,
                                                 int32_t aEndOffset,
                                                 nsAString& aStr,
                                                 bool aTranslateEntities) {
-  nsIContent* content = aNode;
   const CharacterDataBuffer* characterDataBuffer = nullptr;
-  if (!content || !(characterDataBuffer = content->GetCharacterDataBuffer())) {
+  if (!aText || !(characterDataBuffer = aText->GetCharacterDataBuffer())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -184,7 +183,7 @@ nsresult nsXMLContentSerializer::AppendTextData(nsIContent* aNode,
 }
 
 NS_IMETHODIMP
-nsXMLContentSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
+nsXMLContentSerializer::AppendText(Text* aText, int32_t aStartOffset,
                                    int32_t aEndOffset) {
   NS_ENSURE_ARG(aText);
   NS_ENSURE_STATE(mOutput);
@@ -213,11 +212,12 @@ nsXMLContentSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
 }
 
 NS_IMETHODIMP
-nsXMLContentSerializer::AppendCDATASection(nsIContent* aCDATASection,
+nsXMLContentSerializer::AppendCDATASection(Text* aCDATASection,
                                            int32_t aStartOffset,
                                            int32_t aEndOffset) {
   NS_ENSURE_ARG(aCDATASection);
   NS_ENSURE_STATE(mOutput);
+  MOZ_ASSERT(aCDATASection->NodeType() == nsINode::CDATA_SECTION_NODE);
 
   nsresult rv;
 

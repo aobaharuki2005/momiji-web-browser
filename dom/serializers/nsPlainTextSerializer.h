@@ -44,9 +44,10 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
                   bool aIsWholeDocument, bool* aNeedsPreformatScanning,
                   nsAString& aOutput) override;
 
-  NS_IMETHOD AppendText(nsIContent* aText, int32_t aStartOffset,
+  NS_IMETHOD AppendText(mozilla::dom::Text* aText, int32_t aStartOffset,
                         int32_t aEndOffset) override;
-  NS_IMETHOD AppendCDATASection(nsIContent* aCDATASection, int32_t aStartOffset,
+  NS_IMETHOD AppendCDATASection(mozilla::dom::Text* aCDATASection,
+                                int32_t aStartOffset,
                                 int32_t aEndOffset) override;
   NS_IMETHOD AppendProcessingInstruction(
       mozilla::dom::ProcessingInstruction* aPI, int32_t aStartOffset,
