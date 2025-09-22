@@ -64,6 +64,10 @@ const REGION_WEATHER_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.region-weather-config";
 const LOCALE_WEATHER_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.locale-weather-config";
+const REGION_OPTIN_WEATHER_CONFIG =
+  "browser.newtabpage.activity-stream.discoverystream.optIn-region-weather-config";
+const LOCALE_OPTIN_WEATHER_CONFIG =
+  "browser.newtabpage.activity-stream.discoverystream.optIn-locale-weather-config";
 
 const REGION_TOPICS_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.topicSelection.region-topics-config";
@@ -139,6 +143,13 @@ function showWeather({ geo, locale }) {
   return (
     csvPrefHasValue(REGION_WEATHER_CONFIG, geo) &&
     csvPrefHasValue(LOCALE_WEATHER_CONFIG, locale)
+  );
+}
+
+function showWeatherOptIn({ geo, locale }) {
+  return (
+    csvPrefHasValue(REGION_OPTIN_WEATHER_CONFIG, geo) &&
+    csvPrefHasValue(LOCALE_OPTIN_WEATHER_CONFIG, locale)
   );
 }
 
@@ -331,6 +342,52 @@ export const PREFS_CONFIG = new Map([
     {
       title: "showWeather",
       value: true,
+    },
+  ],
+  [
+    "system.showWeatherOptIn",
+    {
+      title: "system.showWeatherOptIn",
+      // pref is dynamic
+      getValue: showWeatherOptIn,
+    },
+  ],
+  [
+    "discoverystream.optIn-region-weather-config",
+    {
+      title: "Regions for weather opt-in.",
+      value: "DE,GB,FR,ES,IT,CH,AT,BE,IE,NL,PL,CZ,SE,SG,HU,SK,FI,DK,NO,PT",
+    },
+  ],
+  [
+    "discoverystream.optIn-locale-weather-config",
+    {
+      title: "Locales for weather opt-in.",
+      value: "fr,de",
+    },
+  ],
+  [
+    "weather.optInDisplayed",
+    {
+      title:
+        "Enable opt-in dialog to display for weather widget in GDPR regions.",
+      value: false,
+    },
+  ],
+  [
+    "weather.optInAccepted",
+    {
+      title:
+        "User choice made when prompted with the opt-in dialog for weather.",
+      value: false,
+    },
+  ],
+  [
+    "weather.staticData.enabled",
+    {
+      title:
+        "Static weather data shown when user has not set/enabled location from opt-in.",
+      value: false,
     },
   ],
   [

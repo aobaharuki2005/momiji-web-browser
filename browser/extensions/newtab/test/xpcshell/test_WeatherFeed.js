@@ -94,7 +94,7 @@ add_task(async function test_onAction_INIT() {
     type: actionTypes.INIT,
   });
 
-  Assert.ok(feed.store.dispatch.calledOnce);
+  Assert.equal(feed.store.dispatch.callCount, 2);
   Assert.ok(
     feed.store.dispatch.calledWith(
       actionCreators.BroadcastToContent({
