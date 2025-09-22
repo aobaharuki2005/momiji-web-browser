@@ -98,9 +98,10 @@ add_task(async function test_telemetry() {
   let lookupMissUnwanted = await GleanTest.urlclassifier.lookupMiss[UNWANTED_LIST].testGetValue();
 
   // The test frame loads one malware URL and one unwanted URL. Verifying
-  // the lookup hits.
-  is(lookupHitMalware, 1, "Lookup hit should be 1 for malware");
-  is(lookupHitUnwanted, 1, "Lookup hit should be 1 for unwanted");
+  // the lookup hits. The conditions use >= to tolerate different speculative
+  // load timings.
+  ok(lookupHitMalware >= 1, "Lookup hit should be at least 1 for malware");
+  ok(lookupHitUnwanted >= 1, "Lookup hit should be at least 1 for unwanted");
 
   // Loading the test frame also makes requests to URLs that are not in the
   // database. Verifying the lookup misses are not null.
@@ -110,7 +111,7 @@ add_task(async function test_telemetry() {
   // Verifying the completion. There should be one confirmed for malware and one
   // not confirmed for malware.
   let completion_events = await GleanTest.urlclassifier.completion.testGetValue();
-  is(completion_events.length, 2, "There should be 2 completion events");
+  ok(completion_events.length >= 2, "There should be at least 2 completion events");
 
   for (let event of completion_events) {
     if (event.extra.table_name == MALWARE_LIST) {
