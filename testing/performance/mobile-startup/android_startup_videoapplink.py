@@ -40,6 +40,7 @@ BACKGROUND_TABS = [
     "https://www.espn.com/nfl/game/_/gameId/401671793/chiefs-falcons",
 ]
 ITERATIONS = 5
+MAX_STARTUP_TIME = 25000  # 25000ms = 25 seconds
 PROD_CHRM = "chrome-m"
 PROD_FENIX = "fenix"
 
@@ -211,7 +212,12 @@ class ImageAnalzer:
     def get_time_from_frame_num(self, frame_num):
         self.video.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
         self.video.read()
-        return self.video.get(cv2.CAP_PROP_POS_MSEC)
+        video_timestamp = self.video.get(cv2.CAP_PROP_POS_MSEC)
+        if video_timestamp > MAX_STARTUP_TIME:
+            raise ValueError(
+                f"Startup time of {video_timestamp/1000}s exceeds max time of {MAX_STARTUP_TIME/1000}s"
+            )
+        return video_timestamp
 
     def load_page_to_test_startup(self):
         # Navigate to the page we want to use for testing startup
