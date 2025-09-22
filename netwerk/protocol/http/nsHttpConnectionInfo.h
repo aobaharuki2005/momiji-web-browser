@@ -236,7 +236,8 @@ class nsHttpConnectionInfo final : public ARefBase {
   void SetWebTransportId(uint64_t id);
   uint32_t GetWebTransportId() const { return mWebTransportId; };
 
-  const nsCString& GetNPNToken() { return mNPNToken; }
+  const nsCString& GetNPNToken() const { return mNPNToken; }
+  const nsCString& GetProxyNPNToken() const { return mProxyNPNToken; }
   const nsCString& GetUsername() { return mUsername; }
 
   const OriginAttributes& GetOriginAttributes() { return mOriginAttributes; }
@@ -277,6 +278,7 @@ class nsHttpConnectionInfo final : public ARefBase {
   }
 
   bool IsHttp3() const { return mIsHttp3; }
+  bool IsHttp3ProxyConnection() const { return mIsHttp3ProxyConnection; }
 
   void SetHasIPHintAddress(bool aHasIPHint) { mHasIPHintAddress = aHasIPHint; }
   bool HasIPHintAddress() const { return mHasIPHintAddress; }
@@ -313,6 +315,7 @@ class nsHttpConnectionInfo final : public ARefBase {
   // if will use CONNECT with http proxy
   bool mUsingConnect = false;
   nsCString mNPNToken;
+  nsCString mProxyNPNToken;
   OriginAttributes mOriginAttributes;
   nsIRequest::TRRMode mTRRMode;
 
@@ -325,6 +328,7 @@ class nsHttpConnectionInfo final : public ARefBase {
                         // tls1.3. If the tls version is till not know or it
                         // is 1.3 or greater the value will be false.
   bool mIsHttp3 = false;
+  bool mIsHttp3ProxyConnection = false;
   bool mWebTransport = false;
 
   bool mHasIPHintAddress = false;

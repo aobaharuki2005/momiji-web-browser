@@ -1226,7 +1226,7 @@ bool nsHttpConnectionMgr::AtActiveConnectionLimit(ConnectionEntry* ent,
   nsHttpConnectionInfo* ci = ent->mConnInfo;
   uint32_t totalCount = ent->TotalActiveConnections();
 
-  if (ci->IsHttp3()) {
+  if (ci->IsHttp3() || ci->IsHttp3ProxyConnection()) {
     if (ci->GetWebTransport()) {
       // TODO: implement this properly in bug 1815735.
       return false;
@@ -1848,10 +1848,15 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
     trans->SetConnection(nullptr);
     rv = DispatchTransaction(ent, trans, conn);
   } else if (isWildcard) {
-    // We have a HTTP/2 session to the proxy, create a new tunneled
-    // connection.
+    // Determine which connections we want to use.
+    // - If this is an HTTP/3 proxy connection (`isHttp3Proxy == true`), we only
+    //   want to consider existing HTTP/3 connections, so we set aNoHttp2 = true
+    //   and aNoHttp3 = false.
+    // - Otherwise (`isHttp3Proxy == false`), we are looking for a regular
+    //   HTTP/2 connection, so we set aNoHttp2 = false and aNoHttp3 = true.
+    bool isHttp3Proxy = ci->IsHttp3ProxyConnection();
     RefPtr<HttpConnectionBase> conn =
-        GetH2orH3ActiveConn(ent, false, !ci->IsHttp3());
+        GetH2orH3ActiveConn(ent, isHttp3Proxy, !isHttp3Proxy);
     if (ci->UsingHttpsProxy() && ci->UsingConnect()) {
       LOG(("About to create new tunnel conn from [%p]", conn.get()));
       ConnectionEntry* specificEnt = mCT.GetWeak(ci->HashKey());
@@ -2057,9 +2062,10 @@ HttpConnectionBase* nsHttpConnectionMgr::GetH2orH3ActiveConn(
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(ent);
 
+  bool isHttp3 = ent->IsHttp3() || ent->IsHttp3ProxyConnection();
   // First look at ent. If protocol that ent provides is no forbidden,
   // i.e. ent use HTTP3 and !aNoHttp3 or en uses HTTP over TCP and !aNoHttp2.
-  if ((!aNoHttp3 && ent->IsHttp3()) || (!aNoHttp2 && !ent->IsHttp3())) {
+  if ((!aNoHttp3 && isHttp3) || (!aNoHttp2 && !isHttp3)) {
     HttpConnectionBase* conn = ent->GetH2orH3ActiveConn();
     if (conn) {
       return conn;
@@ -3723,9 +3729,10 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
   LOG(
       ("nsHttpConnectionMgr::MakeConnEntryWildCard conn %p using ent %p (spdy "
        "%d, h3=%d)\n",
-       proxyConn, ent, ent ? ent->mUsingSpdy : 0, ent ? ent->IsHttp3() : 0));
+       proxyConn, ent, ent ? ent->mUsingSpdy : 0,
+       ent ? ent->IsHttp3ProxyConnection() : 0));
 
-  if (!ent || (!ent->mUsingSpdy && !ent->IsHttp3())) {
+  if (!ent || (!ent->mUsingSpdy && !ent->IsHttp3ProxyConnection())) {
     return;
   }
 
@@ -3740,7 +3747,7 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
   if (ent->mUsingSpdy) {
     wcEnt->mUsingSpdy = true;
   } else {
-    MOZ_ASSERT(wcEnt->IsHttp3());
+    MOZ_ASSERT(wcEnt->IsHttp3ProxyConnection());
   }
 
   LOG(

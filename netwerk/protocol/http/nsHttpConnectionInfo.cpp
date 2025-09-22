@@ -122,10 +122,9 @@ void nsHttpConnectionInfo::Init(const nsACString& host, int32_t port,
     }
   }
 
-  // Force HTTP/3 for connect-udp for now.
-  if (proxyInfo && proxyInfo->IsConnectUDP()) {
-    mIsHttp3 = true;
-    mNPNToken = "h3"_ns;
+  if (mUsingHttpsProxy) {
+    mProxyNPNToken = proxyInfo->Alpn();
+    mIsHttp3ProxyConnection = mProxyNPNToken.Equals("h3"_ns);
   }
 
   SetOriginServer(host, port);
@@ -240,7 +239,11 @@ void nsHttpConnectionInfo::BuildHashKey() {
     mHashKey.Append('>');
   }
 
-  if (!mNPNToken.IsEmpty()) {
+  if (!mProxyNPNToken.IsEmpty()) {
+    mHashKey.AppendLiteral(" {Proxy-NPN ");
+    mHashKey.Append(mProxyNPNToken);
+    mHashKey.AppendLiteral("}");
+  } else if (!mNPNToken.IsEmpty()) {
     mHashKey.AppendLiteral(" {NPN-TOKEN ");
     mHashKey.Append(mNPNToken);
     mHashKey.AppendLiteral("}");

@@ -158,6 +158,9 @@ class ConnectionEntry {
   bool mDoNotDestroy : 1;
 
   bool IsHttp3() const { return mConnInfo->IsHttp3(); }
+  bool IsHttp3ProxyConnection() const {
+    return mConnInfo->IsHttp3ProxyConnection();
+  }
   bool AllowHttp2() const { return mCanUseSpdy; }
   void DisallowHttp2();
   void DontReuseHttp3Conn();

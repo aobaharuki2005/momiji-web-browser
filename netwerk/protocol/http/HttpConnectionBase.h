@@ -162,6 +162,7 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   virtual PRIntervalTime LastWriteTime() = 0;
 
   void ChangeConnectionState(ConnectionState aState);
+  ConnectionCloseReason CloseReason() const { return mCloseReason; }
   void SetCloseReason(ConnectionCloseReason aReason) {
     if (mCloseReason == ConnectionCloseReason::UNSET) {
       mCloseReason = aReason;

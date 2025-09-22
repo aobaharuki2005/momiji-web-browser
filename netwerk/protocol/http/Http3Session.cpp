@@ -128,6 +128,8 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
                             isOuterConnection ? aConnInfo->ProxyInfo()->Port()
                                               : aConnInfo->OriginPort(),
                             aProviderFlags, this);
+  const nsCString& alpn = isOuterConnection ? aConnInfo->GetProxyNPNToken()
+                                            : aConnInfo->GetNPNToken();
 
   NetAddr selfAddr;
   MOZ_ALWAYS_SUCCEEDS(aSelfAddr->GetNetAddr(&selfAddr));
@@ -139,9 +141,8 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
        " qpack table size=%u, max blocked streams=%u webtransport=%d "
        "[this=%p]",
        PromiseFlatCString(mSocketControl->GetHostName()).get(),
-       PromiseFlatCString(mConnInfo->GetNPNToken()).get(),
-       selfAddr.ToString().get(), peerAddr.ToString().get(),
-       gHttpHandler->DefaultQpackTableSize(),
+       PromiseFlatCString(alpn).get(), selfAddr.ToString().get(),
+       peerAddr.ToString().get(), gHttpHandler->DefaultQpackTableSize(),
        gHttpHandler->DefaultHttp3MaxBlockedStreams(),
        mConnInfo->GetWebTransport(), this));
 
@@ -163,8 +164,8 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
   nsresult rv;
   if (mUseNSPRForIO) {
     rv = NeqoHttp3Conn::InitUseNSPRForIO(
-        mSocketControl->GetHostName(), mConnInfo->GetNPNToken(), selfAddr,
-        peerAddr, gHttpHandler->DefaultQpackTableSize(),
+        mSocketControl->GetHostName(), alpn, selfAddr, peerAddr,
+        gHttpHandler->DefaultQpackTableSize(),
         gHttpHandler->DefaultHttp3MaxBlockedStreams(),
         StaticPrefs::network_http_http3_max_data(),
         StaticPrefs::network_http_http3_max_stream_data(),
@@ -173,8 +174,8 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
         aProviderFlags, idleTimeout, getter_AddRefs(mHttp3Connection));
   } else {
     rv = NeqoHttp3Conn::Init(
-        mSocketControl->GetHostName(), mConnInfo->GetNPNToken(), selfAddr,
-        peerAddr, gHttpHandler->DefaultQpackTableSize(),
+        mSocketControl->GetHostName(), alpn, selfAddr, peerAddr,
+        gHttpHandler->DefaultQpackTableSize(),
         gHttpHandler->DefaultHttp3MaxBlockedStreams(),
         StaticPrefs::network_http_http3_max_data(),
         StaticPrefs::network_http_http3_max_stream_data(),
@@ -2233,6 +2234,15 @@ void Http3Session::DontReuse() {
 
   mShouldClose = true;
   if (!mStreamTransactionHash.Count()) {
+    // This is a temporary workaround and should be fixed properly in Happy
+    // Eyeballs project. We should not exclude this domain if
+    // Http3Session::DontReuse is called from
+    // ConnectionEntry::MakeAllDontReuseExcept.
+    if (mUdpConn &&
+        mUdpConn->CloseReason() ==
+            ConnectionCloseReason::CLOSE_EXISTING_CONN_FOR_COALESCING) {
+      mDontExclude = true;
+    }
     Close(NS_OK);
   }
 }
@@ -2371,6 +2381,12 @@ bool Http3Session::RealJoinConnection(const nsACString& hostname, int32_t port,
   }
 
   nsHttpConnectionInfo* ci = ConnectionInfo();
+  if (ci->UsingProxy()) {
+    MOZ_ASSERT(false,
+               "RealJoinConnection should not be called when using proxy");
+    return false;
+  }
+
   if (nsCString(hostname).EqualsIgnoreCase(ci->Origin()) &&
       (port == ci->OriginPort())) {
     return true;

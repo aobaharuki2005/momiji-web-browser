@@ -927,7 +927,7 @@ Http3ConnectionStatsParams ConnectionEntry::GetHttp3ConnectionStatsData() {
 }
 
 void ConnectionEntry::LogConnections() {
-  if (!mConnInfo->IsHttp3()) {
+  if (!mConnInfo->IsHttp3() && !mConnInfo->IsHttp3ProxyConnection()) {
     LOG(("active urgent conns ["));
     for (HttpConnectionBase* conn : mActiveConns) {
       RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
@@ -1105,7 +1105,7 @@ bool ConnectionEntry::AllowToRetryDifferentIPFamilyForHttp3(nsresult aError) {
       ("ConnectionEntry::AllowToRetryDifferentIPFamilyForHttp3 %p "
        "error=%" PRIx32,
        this, static_cast<uint32_t>(aError)));
-  if (!IsHttp3()) {
+  if (!mConnInfo->IsHttp3() && !mConnInfo->IsHttp3ProxyConnection()) {
     MOZ_ASSERT(false, "Should not be called for non Http/3 connection");
     return false;
   }
