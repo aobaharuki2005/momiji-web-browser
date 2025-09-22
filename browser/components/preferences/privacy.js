@@ -1301,6 +1301,71 @@ Preferences.addSetting({
   },
 });
 
+Preferences.addSetting({
+  id: "httpsOnlyEnabled",
+  pref: "dom.security.https_only_mode",
+});
+Preferences.addSetting({
+  id: "httpsOnlyEnabledPBM",
+  pref: "dom.security.https_only_mode_pbm",
+});
+Preferences.addSetting({
+  id: "httpsOnlyRadioGroup",
+  deps: ["httpsOnlyEnabled", "httpsOnlyEnabledPBM"],
+  get: (_value, deps) => {
+    if (deps.httpsOnlyEnabled.value) {
+      return "enabled";
+    }
+    if (deps.httpsOnlyEnabledPBM.value) {
+      return "privateOnly";
+    }
+    return "disabled";
+  },
+  set: (value, deps) => {
+    if (value == "enabled") {
+      deps.httpsOnlyEnabled.value = true;
+      deps.httpsOnlyEnabledPBM.value = false;
+    } else if (value == "privateOnly") {
+      deps.httpsOnlyEnabled.value = false;
+      deps.httpsOnlyEnabledPBM.value = true;
+    } else if (value == "disabled") {
+      deps.httpsOnlyEnabled.value = false;
+      deps.httpsOnlyEnabledPBM.value = false;
+    }
+  },
+  disabled: deps => {
+    return deps.httpsOnlyEnabled.locked || deps.httpsOnlyEnabledPBM.locked;
+  },
+});
+Preferences.addSetting({
+  id: "httpsFirstEnabled",
+  pref: "dom.security.https_first",
+});
+Preferences.addSetting({
+  id: "httpsFirstEnabledPBM",
+  pref: "dom.security.https_first_pbm",
+});
+Preferences.addSetting({
+  id: "httpsOnlyExceptionButton",
+  deps: [
+    "httpsOnlyEnabled",
+    "httpsOnlyEnabledPBM",
+    "httpsFirstEnabled",
+    "httpsFirstEnabledPBM",
+  ],
+  disabled: deps => {
+    return (
+      !deps.httpsOnlyEnabled.value &&
+      !deps.httpsOnlyEnabledPBM.value &&
+      !deps.httpsFirstEnabled.value &&
+      !deps.httpsFirstEnabledPBM.value
+    );
+  },
+  onUserClick: () => {
+    gPrivacyPane.showHttpsOnlyModeExceptions();
+  },
+});
+
 function setEventListener(aId, aEventType, aCallback) {
   document
     .getElementById(aId)
@@ -1505,83 +1570,6 @@ var gPrivacyPane = {
 
     document.getElementById("certEnableThirdPartyToggleBox").hidden =
       !canConfigureThirdPartyCerts;
-  },
-
-  syncFromHttpsOnlyPref() {
-    let httpsOnlyOnPref = Services.prefs.getBoolPref(
-      "dom.security.https_only_mode"
-    );
-    let httpsOnlyOnPBMPref = Services.prefs.getBoolPref(
-      "dom.security.https_only_mode_pbm"
-    );
-    let httpsFirstOnPref = Services.prefs.getBoolPref(
-      "dom.security.https_first"
-    );
-    let httpsFirstOnPBMPref = Services.prefs.getBoolPref(
-      "dom.security.https_first_pbm"
-    );
-    let httpsOnlyRadioGroup = document.getElementById("httpsOnlyRadioGroup");
-    let httpsOnlyExceptionButton = document.getElementById(
-      "httpsOnlyExceptionButton"
-    );
-
-    if (httpsOnlyOnPref) {
-      httpsOnlyRadioGroup.value = "enabled";
-    } else if (httpsOnlyOnPBMPref) {
-      httpsOnlyRadioGroup.value = "privateOnly";
-    } else {
-      httpsOnlyRadioGroup.value = "disabled";
-    }
-
-    httpsOnlyExceptionButton.disabled =
-      !httpsOnlyOnPref &&
-      !httpsFirstOnPref &&
-      !httpsOnlyOnPBMPref &&
-      !httpsFirstOnPBMPref;
-
-    if (
-      Services.prefs.prefIsLocked("dom.security.https_only_mode") ||
-      Services.prefs.prefIsLocked("dom.security.https_only_mode_pbm")
-    ) {
-      httpsOnlyRadioGroup.disabled = true;
-    }
-  },
-
-  syncToHttpsOnlyPref() {
-    let value = document.getElementById("httpsOnlyRadioGroup").value;
-    Services.prefs.setBoolPref(
-      "dom.security.https_only_mode_pbm",
-      value == "privateOnly"
-    );
-    Services.prefs.setBoolPref(
-      "dom.security.https_only_mode",
-      value == "enabled"
-    );
-  },
-
-  /**
-   * Init HTTPS-Only mode and corresponding prefs
-   */
-  initHttpsOnly() {
-    // Set radio-value based on the pref value
-    this.syncFromHttpsOnlyPref();
-
-    // Create event listener for when the user clicks
-    // on one of the radio buttons
-    setEventListener("httpsOnlyRadioGroup", "change", this.syncToHttpsOnlyPref);
-    // Update radio-value when the pref changes
-    Preferences.get("dom.security.https_only_mode").on("change", () =>
-      this.syncFromHttpsOnlyPref()
-    );
-    Preferences.get("dom.security.https_only_mode_pbm").on("change", () =>
-      this.syncFromHttpsOnlyPref()
-    );
-    Preferences.get("dom.security.https_first").on("change", () =>
-      this.syncFromHttpsOnlyPref()
-    );
-    Preferences.get("dom.security.https_first_pbm").on("change", () =>
-      this.syncFromHttpsOnlyPref()
-    );
   },
 
   get dnsOverHttpsResolvers() {
@@ -1978,6 +1966,7 @@ var gPrivacyPane = {
     if (Services.prefs.getBoolPref("privacy.ui.status_card", false)) {
       initSettingGroup("securityPrivacyStatus");
     }
+    initSettingGroup("httpsOnly");
 
     this.initNonTechnicalPrivacySection();
 
@@ -2067,11 +2056,6 @@ var gPrivacyPane = {
       "cookieExceptions",
       "command",
       gPrivacyPane.showCookieExceptions
-    );
-    setEventListener(
-      "httpsOnlyExceptionButton",
-      "command",
-      gPrivacyPane.showHttpsOnlyModeExceptions
     );
     setEventListener(
       "dohExceptionsButton",
@@ -2320,9 +2304,6 @@ var gPrivacyPane = {
       "change",
       gPrivacyPane.maybeNotifyUserToReload
     );
-
-    /* init HTTPS-Only mode */
-    this.initHttpsOnly();
 
     this.initDoH();
 
