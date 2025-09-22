@@ -11,8 +11,7 @@ import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManagerException
@@ -27,7 +26,6 @@ import org.mozilla.samples.browser.ext.components
  */
 @Suppress("LargeClass")
 class InstalledAddonDetailsActivity : AppCompatActivity() {
-    private val scope = CoroutineScope(Dispatchers.IO)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,25 +35,22 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
     }
 
     private fun bindAddon(addon: Addon) {
-        scope.launch {
+        lifecycleScope.launch {
             try {
                 val context = baseContext
+                // Call getAddonByID directly. It will internally switch to ioDispatcher.
                 val latestAddon = context.components.addonManager.getAddonByID(addon.id)
-                scope.launch(Dispatchers.Main) {
-                    if (latestAddon == null) {
-                        throw AddonManagerException(Exception("Addon ${addon.id} not found"))
-                    } else {
-                        bindUI(latestAddon)
-                    }
+                if (latestAddon == null) {
+                    throw AddonManagerException(Exception("Addon ${addon.id} not found"))
+                } else {
+                    bindUI(latestAddon)
                 }
             } catch (e: AddonManagerException) {
-                scope.launch(Dispatchers.Main) {
-                    Toast.makeText(
-                        baseContext,
-                        R.string.mozac_feature_addons_failed_to_query_extensions,
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }
+                Toast.makeText(
+                    baseContext,
+                    R.string.mozac_feature_addons_failed_to_query_extensions,
+                    Toast.LENGTH_SHORT,
+                ).show()
             }
         }
     }
