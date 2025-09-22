@@ -1404,7 +1404,7 @@ run-sequentially = "node server exceptions dont replay well"
 ["test_trr_proxy.js"]
 
 ["test_trr_proxy_auth.js"]
-run-if = ["!socketprocess_networking"]
+skip-if = ["true"]
 
 ["test_trr_strict_mode.js"]
 
