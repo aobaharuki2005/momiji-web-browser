@@ -436,6 +436,7 @@ struct ProxyInfoCloneArgs
   nsCString host;
   int32_t port;
   nsCString pathTemplate;
+  nsCString alpn;
   nsCString username;
   nsCString password;
   uint32_t flags;

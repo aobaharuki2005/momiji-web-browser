@@ -1704,8 +1704,8 @@ nsProtocolProxyService::NewProxyInfoWithAuth(
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  return NewProxyInfo_Internal(type, aHost, aPort, ""_ns, aUsername, aPassword,
-                               aProxyAuthorizationHeader,
+  return NewProxyInfo_Internal(type, aHost, aPort, ""_ns, ""_ns, aUsername,
+                               aPassword, aProxyAuthorizationHeader,
                                aConnectionIsolationKey, aFlags,
                                aFailoverTimeout, aFailoverProxy, 0, aResult);
 }
@@ -1713,7 +1713,7 @@ nsProtocolProxyService::NewProxyInfoWithAuth(
 NS_IMETHODIMP
 nsProtocolProxyService::NewMASQUEProxyInfo(
     const nsACString& aType, const nsACString& aHost, int32_t aPort,
-    const nsACString& aPathTemplate,
+    const nsACString& aPathTemplate, const nsACString& aAlpn,
     const nsACString& aProxyAuthorizationHeader,
     const nsACString& aConnectionIsolationKey, uint32_t aFlags,
     uint32_t aFailoverTimeout, nsIProxyInfo* aFailoverProxy,
@@ -1727,8 +1727,8 @@ nsProtocolProxyService::NewMASQUEProxyInfo(
     return NS_ERROR_INVALID_ARG;
   }
 
-  return NewProxyInfo_Internal(type, aHost, aPort, aPathTemplate, ""_ns, ""_ns,
-                               aProxyAuthorizationHeader,
+  return NewProxyInfo_Internal(type, aHost, aPort, aPathTemplate, aAlpn, ""_ns,
+                               ""_ns, aProxyAuthorizationHeader,
                                aConnectionIsolationKey, aFlags,
                                aFailoverTimeout, aFailoverProxy, 0, aResult);
 }
@@ -2100,8 +2100,9 @@ nsresult nsProtocolProxyService::GetProtocolInfo(nsIURI* uri,
 
 nsresult nsProtocolProxyService::NewProxyInfo_Internal(
     const char* aType, const nsACString& aHost, int32_t aPort,
-    const nsACString& aPathTemplate, const nsACString& aUsername,
-    const nsACString& aPassword, const nsACString& aProxyAuthorizationHeader,
+    const nsACString& aPathTemplate, const nsACString& aAlpn,
+    const nsACString& aUsername, const nsACString& aPassword,
+    const nsACString& aProxyAuthorizationHeader,
     const nsACString& aConnectionIsolationKey, uint32_t aFlags,
     uint32_t aFailoverTimeout, nsIProxyInfo* aFailoverProxy,
     uint32_t aResolveFlags, nsIProxyInfo** aResult) {
@@ -2119,6 +2120,7 @@ nsresult nsProtocolProxyService::NewProxyInfo_Internal(
   proxyInfo->mHost = aHost;
   proxyInfo->mPort = aPort;
   proxyInfo->mPathTemplate = aPathTemplate;
+  proxyInfo->mAlpn = aAlpn;
   proxyInfo->mUsername = aUsername;
   proxyInfo->mPassword = aPassword;
   proxyInfo->mFlags = aFlags;
@@ -2322,8 +2324,8 @@ nsresult nsProtocolProxyService::Resolve_Internal(nsIChannel* channel,
 
   if (type) {
     rv = NewProxyInfo_Internal(type, *host, port, ""_ns, ""_ns, ""_ns, ""_ns,
-                               ""_ns, proxyFlags, UINT32_MAX, nullptr, flags,
-                               result);
+                               ""_ns, ""_ns, proxyFlags, UINT32_MAX, nullptr,
+                               flags, result);
     if (NS_FAILED(rv)) return rv;
   }
 

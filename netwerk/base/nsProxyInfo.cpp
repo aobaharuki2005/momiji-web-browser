@@ -33,13 +33,15 @@ nsProxyInfo::nsProxyInfo(const nsACString& aType, const nsACString& aHost,
                          uint32_t aTimeout, uint32_t aResolveFlags,
                          const nsACString& aProxyAuthorizationHeader,
                          const nsACString& aConnectionIsolationKey,
-                         const nsACString& aPathTemplate)
+                         const nsACString& aPathTemplate,
+                         const nsACString& aAlpn)
     : mHost(aHost),
       mUsername(aUsername),
       mPassword(aPassword),
       mProxyAuthorizationHeader(aProxyAuthorizationHeader),
       mConnectionIsolationKey(aConnectionIsolationKey),
       mPathTemplate(aPathTemplate),
+      mAlpn(aAlpn),
       mPort(aPort),
       mFlags(aFlags),
       mResolveFlags(aResolveFlags),
@@ -165,6 +167,18 @@ nsProxyInfo::GetPathTemplate(nsACString& aPathTemplate) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsProxyInfo::SetAlpn(const nsACString& aAlpn) {
+  mAlpn = aAlpn;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProxyInfo::GetAlpn(nsACString& aAlpn) {
+  aAlpn = mAlpn;
+  return NS_OK;
+}
+
 bool nsProxyInfo::IsDirect() {
   if (!mType) return true;
   return mType == kProxyType_DIRECT;
@@ -192,6 +206,7 @@ void nsProxyInfo::SerializeProxyInfo(nsProxyInfo* aProxyInfo,
     arg->host() = iter->Host();
     arg->port() = iter->Port();
     arg->pathTemplate() = iter->PathTemplate();
+    arg->alpn() = iter->Alpn();
     arg->username() = iter->Username();
     arg->password() = iter->Password();
     arg->proxyAuthorizationHeader() = iter->ProxyAuthorizationHeader();
@@ -210,7 +225,8 @@ nsProxyInfo* nsProxyInfo::DeserializeProxyInfo(
     pi = new nsProxyInfo(info.type(), info.host(), info.port(), info.username(),
                          info.password(), info.flags(), info.timeout(),
                          info.resolveFlags(), info.proxyAuthorizationHeader(),
-                         info.connectionIsolationKey(), info.pathTemplate());
+                         info.connectionIsolationKey(), info.pathTemplate(),
+                         info.alpn());
     if (last) {
       last->mNext = pi;
       // |mNext| will be released in |last|'s destructor.

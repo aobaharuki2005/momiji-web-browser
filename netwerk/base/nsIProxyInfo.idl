@@ -99,6 +99,14 @@ interface nsIProxyInfo : nsISupports
   attribute AUTF8String pathTemplate;
 
   /**
+   * Hint for which ALPN the proxy connection should use.
+   * Applicable only for proxy types connect-udp, HTTP, and HTTPS.
+   * When ALPN is set to "h3", Necko may fall back to "h2" or "h1"
+   * if establishing the proxy connection over h3 fails.
+   */
+  attribute AUTF8String alpn;
+
+  /**
    * The following two constants can be used to compare against
    * network.proxy.socks_version
    */

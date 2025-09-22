@@ -208,6 +208,7 @@ interface nsIProtocolProxyService : nsISupports
                                     in AUTF8String aHost,
                                     in long aPort,
                                     in AUTF8String aPathTemplate,
+                                    in AUTF8String aAlpn,
                                     in ACString aProxyAuthorizationHeader,
                                     in ACString aConnectionIsolationKey,
                                     in unsigned long aFlags,
