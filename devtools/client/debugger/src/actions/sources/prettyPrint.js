@@ -188,8 +188,18 @@ async function prettyPrintHtmlFile({
       sourceInfo.sourceStartLine > 1
         ? allLineBreaks[sourceInfo.sourceStartLine - 2].index + 1
         : 0;
-    const startIndex =
+
+    // The `sourceStartColumn` refers to final unicode characters column (including 16-bits characters),
+    // not including any unicode characters encoded by surrogate pairs (two 16 bit code units)
+    // i.e outside of the Basic Multiligual Plane. So calculate and add those characters to the looked-up start index.
+    const startColumn =
       indexAfterPreviousLineBreakInHtml + sourceInfo.sourceStartColumn;
+    const htmlBeforeStr = htmlFileText.substring(0, startColumn);
+    const codeUnitLength = htmlBeforeStr.length,
+      codePointLength = [...htmlBeforeStr].length;
+    const extraCharsWithForStrTwoCodeUnits = codeUnitLength - codePointLength;
+
+    const startIndex = startColumn + extraCharsWithForStrTwoCodeUnits;
     const endIndex = startIndex + sourceInfo.sourceLength;
     const scriptText = htmlFileText.substring(startIndex, endIndex);
     DevToolsUtils.assert(
