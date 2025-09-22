@@ -33,6 +33,7 @@ add_task(async function testSendButton() {
     description: "another test description",
     antitracking: {
       blockList: "strict",
+      blockedOrigins: ["https://trackertest.org"],
       isPrivateBrowsing: true,
       hasTrackingContentBlocked: true,
       hasMixedActiveContentBlocked: true,
@@ -62,6 +63,7 @@ add_task(async function testSendingMoreInfo() {
   await testSendMoreInfo(tab, HelpMenu(win), {
     antitracking: {
       blockList: "strict",
+      blockedOrigins: ["https://trackertest.org"],
       isPrivateBrowsing: true,
       hasTrackingContentBlocked: true,
       hasMixedActiveContentBlocked: true,

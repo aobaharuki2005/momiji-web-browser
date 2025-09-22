@@ -694,7 +694,10 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
     gGraphics.devicePixelRatio.set(devicePixelRatio);
 
     for (const [name, value] of Object.entries(antitracking)) {
-      gAntitracking[name].set(value);
+      // TODO: Blocked origins will be included in bug 1987781.
+      if (name !== "blockedOrigins" || Cu.isInAutomation) {
+        gAntitracking[name].set(value);
+      }
     }
 
     for (const [name, value] of Object.entries(frameworks)) {
