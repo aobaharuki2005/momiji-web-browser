@@ -8689,14 +8689,7 @@ static bool GetRealmTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   }
 
 #ifdef JS_HAS_INTL_API
-  TimeZoneIdentifierVector timeZoneId;
-  if (!DateTimeInfo::timeZoneId(cx->realm()->getDateTimeInfo(), timeZoneId)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  auto* str = NewStringCopy<CanGC>(
-      cx, static_cast<mozilla::Span<const char>>(timeZoneId));
+  auto* str = cx->global()->globalIntlData().defaultTimeZone(cx);
   if (!str) {
     return false;
   }
