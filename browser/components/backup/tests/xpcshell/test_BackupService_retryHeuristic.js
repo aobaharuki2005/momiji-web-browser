@@ -116,7 +116,7 @@ add_task(async function test_retry_limit() {
   // now that we have an idle service, let's call create backup RETRY_LIMIT times
   for (let i = 0; i <= n; i++) {
     // ensure that there is no error code set
-    Services.prefs.setIntPref(BACKUP_ERROR_CODE_PREF_NAME, 0);
+    Services.prefs.setIntPref(BACKUP_ERROR_CODE_PREF_NAME, ERRORS.NONE);
 
     bs.createBackupOnIdleDispatch();
 
@@ -211,8 +211,8 @@ add_task(async function test_retry_limit() {
 
   Assert.equal(
     Services.prefs.getIntPref(BACKUP_ERROR_CODE_PREF_NAME),
-    0,
-    "The error code is reset to 0"
+    ERRORS.NONE,
+    "The error code is reset to NONE"
   );
 
   Assert.ok(

@@ -1231,7 +1231,7 @@ export class BackupService extends EventTarget {
 
         // reset the error state prefs
         Services.prefs.clearUserPref(BACKUP_DEBUG_INFO_PREF_NAME);
-        Services.prefs.clearUserPref(BACKUP_ERROR_CODE_PREF_NAME);
+        Services.prefs.setIntPref(BACKUP_ERROR_CODE_PREF_NAME, ERRORS.NONE);
 
         try {
           lazy.logConsole.debug(
@@ -2980,7 +2980,7 @@ export class BackupService extends EventTarget {
 
     if (shouldEnableScheduledBackups) {
       // reset the error states when reenabling backup
-      Services.prefs.setIntPref(BACKUP_ERROR_CODE_PREF_NAME, 0);
+      Services.prefs.setIntPref(BACKUP_ERROR_CODE_PREF_NAME, ERRORS.NONE);
     }
   }
 
