@@ -144,6 +144,16 @@ export var PopupAndRedirectBlockerObserver = {
     const window = aEvent.originalTarget.ownerGlobal;
     const { gBrowser, document } = window;
 
+    // We get `uriHost` from the principal whenever possible and fall
+    // back to the `spec` for special pages without a host, e.g. "about:".
+    const browser = gBrowser.selectedBrowser;
+    const uriOrPrincipal = browser.isContentPrincipal
+      ? browser.contentPrincipal
+      : browser.currentURI;
+    const uriHost = uriOrPrincipal.asciiHost
+      ? uriOrPrincipal.displayHost
+      : uriOrPrincipal.spec;
+
     // "Allow pop-ups for site..."
     const blockedPopupAllowSite = document.getElementById(
       "blockedPopupAllowSite"
@@ -152,7 +162,7 @@ export var PopupAndRedirectBlockerObserver = {
     document.l10n.setAttributes(
       blockedPopupAllowSite,
       "popups-infobar-allow2",
-      { uriHost: gBrowser.currentURI.displayHost }
+      { uriHost }
     );
 
     // "Dont show this message when..."
