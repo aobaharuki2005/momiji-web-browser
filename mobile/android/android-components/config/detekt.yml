@@ -81,6 +81,7 @@ comments:
     searchInInnerObject: true
     searchInInnerInterface: true
     searchInProtectedClass: false
+    ignoreDefaultCompanionObject: true
   UndocumentedPublicFunction:
     active: true # Enabled in https://github.com/mozilla-mobile/android-components/issues/76
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/jsTest/**', '**/iosTest/**']
