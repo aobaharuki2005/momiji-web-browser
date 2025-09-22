@@ -45,6 +45,7 @@ import mozilla.components.ui.icons.R as iconsR
 
 private const val NO_TOOLBAR_PADDING_DP = 0
 private const val TOOLBAR_PADDING_DP = 8
+private const val LARGE_TOOLBAR_PADDING_DP = 24
 private const val MINIMUM_PROGRESS_BAR_STATE = 1
 private const val MAXIMUM_PROGRESS_BAR_STATE = 99
 
@@ -104,7 +105,13 @@ fun BrowserDisplayToolbar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp)
+                .padding(
+                    horizontal = when (isSmallWidthScreen) {
+                        true -> NO_TOOLBAR_PADDING_DP.dp
+                        else -> LARGE_TOOLBAR_PADDING_DP.dp
+                    },
+                    vertical = 8.dp,
+                )
                 .height(48.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
