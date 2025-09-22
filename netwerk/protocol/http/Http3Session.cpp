@@ -118,7 +118,7 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
   bool isOuterConnection = false;
   if (!aIsTunnel) {
     if (auto* proxyInfo = aConnInfo->ProxyInfo()) {
-      isOuterConnection = proxyInfo->IsConnectUDP();
+      isOuterConnection = proxyInfo->IsHttp3Proxy();
     }
   }
 
@@ -1289,7 +1289,7 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
 
   Http3StreamBase* stream = nullptr;
 
-  if (trans && mConnInfo->UsingConnectUDP() && !mIsInTunnel) {
+  if (trans && mConnInfo->IsHttp3ProxyConnection() && !mIsInTunnel) {
     LOG3(("Http3Session::AddStream new connect-udp stream %p atrans=%p.\n",
           this, aHttpTransaction));
     stream = new Http3ConnectUDPStream(aHttpTransaction, this,

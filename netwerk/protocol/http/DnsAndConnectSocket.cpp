@@ -596,7 +596,7 @@ nsresult DnsAndConnectSocket::SetupConn(bool isPrimary, nsresult status) {
 
     if (nsHttpTransaction* trans = mTransaction->QueryHttpTransaction()) {
       if (mIsHttp3 && !mConnInfo->GetWebTransport() &&
-          !mConnInfo->UsingConnectUDP()) {
+          !mConnInfo->IsHttp3ProxyConnection()) {
         trans->DisableHttp3(true);
         gHttpHandler->ExcludeHttp3(mConnInfo);
       }

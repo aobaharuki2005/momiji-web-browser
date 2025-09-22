@@ -3351,8 +3351,10 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
       mConnInfo->CloneAndAdoptHTTPSSVCRecord(svcbRecord);
   // Don't fallback until we support WebTransport over HTTP/2.
   // TODO: implement fallback in bug 1874102.
+  // Note: We don't support HTTPS RR for proxy connection yet, so disable the
+  // fallback.
   bool needFastFallback = newInfo->IsHttp3() && !newInfo->GetWebTransport() &&
-                          !newInfo->UsingConnectUDP();
+                          !newInfo->IsHttp3ProxyConnection();
   bool foundInPendingQ = gHttpHandler->ConnMgr()->RemoveTransFromConnEntry(
       this, mHashKeyOfConnectionEntry);
 

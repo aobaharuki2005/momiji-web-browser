@@ -60,7 +60,7 @@ bool AltSvcMapping::AcceptableProxy(nsProxyInfo* proxyInfo) {
   // TODO: We also need to make sure the inner connection will connect to the
   // routed host.
   return !proxyInfo || proxyInfo->IsDirect() || proxyInfo->IsSOCKS() ||
-         proxyInfo->IsConnectUDP();
+         proxyInfo->IsHttp3Proxy();
 }
 
 void AltSvcMapping::ProcessHeader(

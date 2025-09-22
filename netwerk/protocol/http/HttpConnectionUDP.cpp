@@ -221,7 +221,7 @@ nsresult HttpConnectionUDP::Init(nsHttpConnectionInfo* info,
   dnsAddrRecord->GetTrrSkipReason(&mTRRSkipReason);
   NetAddr peerAddr;
   uint16_t port =
-      mConnInfo->UsingConnectUDP()
+      mConnInfo->IsHttp3ProxyConnection()
           ? mConnInfo->ProxyPort()
           : (!mConnInfo->GetRoutedHost().IsEmpty() ? mConnInfo->RoutedPort()
                                                    : mConnInfo->OriginPort());

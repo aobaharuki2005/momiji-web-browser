@@ -56,8 +56,7 @@ class nsProxyInfo final : public nsIProxyInfo {
   bool IsHTTP();
   bool IsHTTPS();
   bool IsSOCKS();
-  bool IsConnectTCP();
-  bool IsConnectUDP();
+  bool IsHttp3Proxy();
 
   static void SerializeProxyInfo(nsProxyInfo* aProxyInfo,
                                  nsTArray<ProxyInfoCloneArgs>& aResult);

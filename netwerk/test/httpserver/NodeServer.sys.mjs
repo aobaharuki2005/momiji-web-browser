@@ -462,8 +462,33 @@ class BaseHTTPProxy extends BaseNodeServer {
 // HTTP1 Proxy
 
 export class NodeProxyFilter {
-  constructor(type, host, port, flags, pathTemplate, auth) {
+  constructor(type, host, port, flags) {
     this._type = type;
+    this._host = host;
+    this._port = port;
+    this._flags = flags;
+    this.QueryInterface = ChromeUtils.generateQI(["nsIProtocolProxyFilter"]);
+  }
+  applyFilter(uri, pi, cb) {
+    const pps =
+      Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
+    cb.onProxyFilterResult(
+      pps.newProxyInfo(
+        this._type,
+        this._host,
+        this._port,
+        "",
+        "",
+        this._flags,
+        1000,
+        null
+      )
+    );
+  }
+}
+
+export class Http3ProxyFilter {
+  constructor(host, port, flags, pathTemplate, auth) {
     this._host = host;
     this._port = port;
     this._flags = flags;
@@ -474,28 +499,13 @@ export class NodeProxyFilter {
   applyFilter(uri, pi, cb) {
     const pps =
       Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
-    if (this._type === "connect-udp") {
-      cb.onProxyFilterResult(
-        pps.newMASQUEProxyInfo(
-          this._type,
-          this._host,
-          this._port,
-          this._pathTemplate,
-          this._auth,
-          "",
-          this._flags,
-          1000,
-          null
-        )
-      );
-      return;
-    }
     cb.onProxyFilterResult(
-      pps.newProxyInfo(
-        this._type,
+      pps.newMASQUEProxyInfo(
         this._host,
         this._port,
-        "",
+        this._pathTemplate,
+        "h3",
+        this._auth,
         "",
         this._flags,
         1000,

@@ -22,8 +22,6 @@ extern const char kProxyType_HTTPS[];
 extern const char kProxyType_SOCKS[];
 extern const char kProxyType_SOCKS4[];
 extern const char kProxyType_SOCKS5[];
-extern const char kProxyType_CONNECT_TCP[];
-extern const char kProxyType_CONNECT_UDP[];
 extern const char kProxyType_DIRECT[];
 extern const char kProxyType_PROXY[];
 
@@ -59,10 +57,6 @@ nsProxyInfo::nsProxyInfo(const nsACString& aType, const nsACString& aHost,
     mType = kProxyType_SOCKS5;
   } else if (aType.EqualsASCII(kProxyType_PROXY)) {
     mType = kProxyType_PROXY;
-  } else if (aType.EqualsASCII(kProxyType_CONNECT_TCP)) {
-    mType = kProxyType_CONNECT_TCP;
-  } else if (aType.EqualsASCII(kProxyType_CONNECT_UDP)) {
-    mType = kProxyType_CONNECT_UDP;
   } else {
     mType = kProxyType_DIRECT;
   }
@@ -193,9 +187,7 @@ bool nsProxyInfo::IsSOCKS() {
          mType == kProxyType_SOCKS5;
 }
 
-bool nsProxyInfo::IsConnectTCP() { return mType == kProxyType_CONNECT_TCP; }
-
-bool nsProxyInfo::IsConnectUDP() { return mType == kProxyType_CONNECT_UDP; }
+bool nsProxyInfo::IsHttp3Proxy() { return mAlpn.Equals("h3"_ns); }
 
 /* static */
 void nsProxyInfo::SerializeProxyInfo(nsProxyInfo* aProxyInfo,
@@ -258,8 +250,7 @@ already_AddRefed<nsProxyInfo> nsProxyInfo::CreateFallbackProxyInfo() {
   SerializeProxyInfo(this, args);
 
   for (auto& arg : args) {
-    if (arg.type().Equals("connect-udp"_ns)) {
-      arg.type().AssignASCII(kProxyType_HTTPS);
+    if (arg.alpn().Equals("h3"_ns)) {
       arg.alpn().Truncate();
     }
   }

@@ -55,8 +55,6 @@ extern const char kProxyType_HTTPS[];
 extern const char kProxyType_SOCKS[];
 extern const char kProxyType_SOCKS4[];
 extern const char kProxyType_SOCKS5[];
-extern const char kProxyType_CONNECT_TCP[];
-extern const char kProxyType_CONNECT_UDP[];
 extern const char kProxyType_DIRECT[];
 extern const char kProxyType_PROXY[];
 
@@ -1262,8 +1260,6 @@ const char kProxyType_PROXY[] = "proxy";
 const char kProxyType_SOCKS[] = "socks";
 const char kProxyType_SOCKS4[] = "socks4";
 const char kProxyType_SOCKS5[] = "socks5";
-const char kProxyType_CONNECT_TCP[] = "connect-tcp";
-const char kProxyType_CONNECT_UDP[] = "connect-udp";
 const char kProxyType_DIRECT[] = "direct";
 
 const char* nsProtocolProxyService::ExtractProxyInfo(const char* start,
@@ -1712,23 +1708,13 @@ nsProtocolProxyService::NewProxyInfoWithAuth(
 
 NS_IMETHODIMP
 nsProtocolProxyService::NewMASQUEProxyInfo(
-    const nsACString& aType, const nsACString& aHost, int32_t aPort,
-    const nsACString& aPathTemplate, const nsACString& aAlpn,
-    const nsACString& aProxyAuthorizationHeader,
+    const nsACString& aHost, int32_t aPort, const nsACString& aPathTemplate,
+    const nsACString& aAlpn, const nsACString& aProxyAuthorizationHeader,
     const nsACString& aConnectionIsolationKey, uint32_t aFlags,
     uint32_t aFailoverTimeout, nsIProxyInfo* aFailoverProxy,
     nsIProxyInfo** aResult) {
-  const char* type = nullptr;
-  if (aType.LowerCaseEqualsASCII(kProxyType_CONNECT_TCP)) {
-    type = kProxyType_CONNECT_TCP;
-  } else if (aType.LowerCaseEqualsASCII(kProxyType_CONNECT_UDP)) {
-    type = kProxyType_CONNECT_UDP;
-  } else {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  return NewProxyInfo_Internal(type, aHost, aPort, aPathTemplate, aAlpn, ""_ns,
-                               ""_ns, aProxyAuthorizationHeader,
+  return NewProxyInfo_Internal(kProxyType_HTTPS, aHost, aPort, aPathTemplate,
+                               aAlpn, ""_ns, ""_ns, aProxyAuthorizationHeader,
                                aConnectionIsolationKey, aFlags,
                                aFailoverTimeout, aFailoverProxy, 0, aResult);
 }

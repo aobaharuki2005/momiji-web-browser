@@ -52,8 +52,7 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
   bool UsingSSL() const { return mUsingSSL; }
 
   bool UsingHttpProxy() const {
-    return mProxyInfo && (mProxyInfo->IsHTTP() || mProxyInfo->IsHTTPS() ||
-                          mProxyInfo->IsConnectUDP());
+    return mProxyInfo && (mProxyInfo->IsHTTP() || mProxyInfo->IsHTTPS());
   }
 
   [[nodiscard]] nsresult PrepareForAuthentication(bool proxyAuth);

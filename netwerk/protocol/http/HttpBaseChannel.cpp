@@ -6500,7 +6500,7 @@ void HttpBaseChannel::DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() {}
 bool HttpBaseChannel::Http3Allowed() const {
   bool allowedProxyInfo =
       mProxyInfo ? (static_cast<nsProxyInfo*>(mProxyInfo.get())->IsDirect() ||
-                    static_cast<nsProxyInfo*>(mProxyInfo.get())->IsConnectUDP())
+                    static_cast<nsProxyInfo*>(mProxyInfo.get())->IsHttp3Proxy())
                  : true;
   // TODO: When mUpgradeProtocolCallback is not null, we should allow HTTP/3 for
   // connect-udp.

@@ -105,14 +105,11 @@ void nsHttpConnectionInfo::Init(const nsACString& host, int32_t port,
   mIPv6Disabled = false;
   mHasIPHintAddress = false;
 
-  mUsingHttpsProxy =
-      (proxyInfo && (proxyInfo->IsHTTPS() || proxyInfo->IsConnectTCP() ||
-                     proxyInfo->IsConnectUDP()));
+  mUsingHttpsProxy = (proxyInfo && proxyInfo->IsHTTPS());
   mUsingHttpProxy = mUsingHttpsProxy || (proxyInfo && proxyInfo->IsHTTP());
 
   if (mUsingHttpProxy) {
-    mUsingConnect =
-        mEndToEndSSL || proxyInfo->IsConnectTCP() || proxyInfo->IsConnectUDP();
+    mUsingConnect = mEndToEndSSL || proxyInfo->IsHttp3Proxy();
     if (!mUsingConnect) {
       uint32_t resolveFlags = 0;
       if (NS_SUCCEEDED(mProxyInfo->GetResolveFlags(&resolveFlags)) &&
@@ -239,11 +236,7 @@ void nsHttpConnectionInfo::BuildHashKey() {
     mHashKey.Append('>');
   }
 
-  if (!mProxyNPNToken.IsEmpty()) {
-    mHashKey.AppendLiteral(" {Proxy-NPN ");
-    mHashKey.Append(mProxyNPNToken);
-    mHashKey.AppendLiteral("}");
-  } else if (!mNPNToken.IsEmpty()) {
+  if (!mNPNToken.IsEmpty()) {
     mHashKey.AppendLiteral(" {NPN-TOKEN ");
     mHashKey.Append(mNPNToken);
     mHashKey.AppendLiteral("}");
@@ -530,7 +523,7 @@ void nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo** outCI,
 
 already_AddRefed<nsHttpConnectionInfo>
 nsHttpConnectionInfo::CreateConnectUDPFallbackConnInfo() {
-  if (!mProxyInfo || !mProxyInfo->IsConnectUDP()) {
+  if (!mProxyInfo || !mProxyInfo->IsHttp3Proxy()) {
     return nullptr;
   }
 
@@ -556,6 +549,7 @@ nsresult nsHttpConnectionInfo::CreateWildCard(nsHttpConnectionInfo** outParam) {
   // Make sure the anonymous and private flags are transferred!
   clone->SetAnonymous(GetAnonymous());
   clone->SetPrivate(GetPrivate());
+  clone->SetFallbackConnection(GetFallbackConnection());
   clone.forget(outParam);
   return NS_OK;
 }
