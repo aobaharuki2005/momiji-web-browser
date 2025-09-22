@@ -1171,53 +1171,6 @@ void Metrics::addTelemetry(JSMetric id, uint32_t sample) {
   rt_->addTelemetry(id, sample);
 }
 
-static MOZ_ALWAYS_INLINE void MakeRangeGCSafe(Value* vec, size_t len) {
-  // Don't PodZero here because JS::Value is non-trivial.
-  for (size_t i = 0; i < len; i++) {
-    vec[i].setDouble(+0.0);
-  }
-}
-
-static MOZ_ALWAYS_INLINE void MakeRangeGCSafe(Value* beg, Value* end) {
-  MakeRangeGCSafe(beg, end - beg);
-}
-
-static MOZ_ALWAYS_INLINE void MakeRangeGCSafe(jsid* beg, jsid* end) {
-  std::fill(beg, end, PropertyKey::Int(0));
-}
-
-static MOZ_ALWAYS_INLINE void MakeRangeGCSafe(jsid* vec, size_t len) {
-  MakeRangeGCSafe(vec, vec + len);
-}
-
-static MOZ_ALWAYS_INLINE void MakeRangeGCSafe(Shape** beg, Shape** end) {
-  std::fill(beg, end, nullptr);
-}
-
-static MOZ_ALWAYS_INLINE void MakeRangeGCSafe(Shape** vec, size_t len) {
-  MakeRangeGCSafe(vec, vec + len);
-}
-
-static MOZ_ALWAYS_INLINE void SetValueRangeToUndefined(Value* beg, Value* end) {
-  for (Value* v = beg; v != end; ++v) {
-    v->setUndefined();
-  }
-}
-
-static MOZ_ALWAYS_INLINE void SetValueRangeToUndefined(Value* vec, size_t len) {
-  SetValueRangeToUndefined(vec, vec + len);
-}
-
-static MOZ_ALWAYS_INLINE void SetValueRangeToNull(Value* beg, Value* end) {
-  for (Value* v = beg; v != end; ++v) {
-    v->setNull();
-  }
-}
-
-static MOZ_ALWAYS_INLINE void SetValueRangeToNull(Value* vec, size_t len) {
-  SetValueRangeToNull(vec, vec + len);
-}
-
 extern const JSSecurityCallbacks NullSecurityCallbacks;
 
 // This callback is set by JS::SetProcessLargeAllocationFailureCallback
