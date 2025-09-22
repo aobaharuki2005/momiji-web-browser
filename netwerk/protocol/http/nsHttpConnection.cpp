@@ -156,12 +156,6 @@ nsresult nsHttpConnection::Init(
   return NS_OK;
 }
 
-void nsHttpConnection::ChangeState(HttpConnectionState newState) {
-  LOG(("nsHttpConnection::ChangeState %d -> %d [this=%p]", mState, newState,
-       this));
-  mState = newState;
-}
-
 nsresult nsHttpConnection::TryTakeSubTransactions(
     nsTArray<RefPtr<nsAHttpTransaction> >& list) {
   nsresult rv = mTransaction->TakeSubTransactions(list);
@@ -608,7 +602,7 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
 
   // need to handle HTTP CONNECT tunnels if this is the first time if
   // we are tunneling through a proxy
-  nsresult rv = CheckTunnelIsNeeded();
+  nsresult rv = CheckTunnelIsNeeded(mTransaction);
   if (NS_FAILED(rv)) goto failed_activation;
 
   // Clear the per activation counter
@@ -698,7 +692,7 @@ nsresult nsHttpConnection::AddTransaction(nsAHttpTransaction* httpTransaction,
 }
 
 nsresult nsHttpConnection::CreateTunnelStream(
-    nsAHttpTransaction* httpTransaction, nsHttpConnection** aHttpConnection,
+    nsAHttpTransaction* httpTransaction, HttpConnectionBase** aHttpConnection,
     bool aIsExtendedCONNECT) {
   if (!mSpdySession) {
     return NS_ERROR_UNEXPECTED;
@@ -1948,7 +1942,7 @@ void nsHttpConnection::SetupSecondaryTLS() {
   }
 }
 
-void nsHttpConnection::SetInSpdyTunnel() {
+void nsHttpConnection::SetInTunnel() {
   mInSpdyTunnel = true;
   mForcePlainText = true;
 }
@@ -2396,10 +2390,6 @@ ExtendedCONNECTSupport nsHttpConnection::GetExtendedCONNECTSupport() {
   return ExtendedCONNECTSupport::NO_SUPPORT;
 }
 
-bool nsHttpConnection::IsProxyConnectInProgress() {
-  return mState == SETTING_UP_TUNNEL;
-}
-
 bool nsHttpConnection::LastTransactionExpectedNoContent() {
   return mLastTransactionExpectedNoContent;
 }
@@ -2609,33 +2599,6 @@ void nsHttpConnection::SetTunnelSetupDone() {
 
   ChangeState(HttpConnectionState::REQUEST);
   mProxyConnectStream = nullptr;
-}
-
-nsresult nsHttpConnection::CheckTunnelIsNeeded() {
-  switch (mState) {
-    case HttpConnectionState::UNINITIALIZED: {
-      // This is is called first time. Check if we need a tunnel.
-      if (!mTransaction->ConnectionInfo()->UsingConnect()) {
-        ChangeState(HttpConnectionState::REQUEST);
-        return NS_OK;
-      }
-      ChangeState(HttpConnectionState::SETTING_UP_TUNNEL);
-    }
-      [[fallthrough]];
-    case HttpConnectionState::SETTING_UP_TUNNEL: {
-      // When a nsHttpConnection is in this state that means that an
-      // authentication was needed and we are resending a CONNECT
-      // request. This request will include authentication headers.
-      nsresult rv = SetupProxyConnectStream();
-      if (NS_FAILED(rv)) {
-        ChangeState(HttpConnectionState::UNINITIALIZED);
-      }
-      return rv;
-    }
-    case HttpConnectionState::REQUEST:
-      return NS_OK;
-  }
-  return NS_OK;
 }
 
 nsresult nsHttpConnection::SetupProxyConnectStream() {

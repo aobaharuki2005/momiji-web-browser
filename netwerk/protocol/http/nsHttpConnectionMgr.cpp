@@ -1630,7 +1630,7 @@ nsresult nsHttpConnectionMgr::TryDispatchExtendedCONNECTransaction(
 
     // No limit for number of websockets, dispatch transaction to the
     // tunnel
-    RefPtr<nsHttpConnection> connToTunnel;
+    RefPtr<HttpConnectionBase> connToTunnel;
     nsresult rv =
         aConn->CreateTunnelStream(aTrans, getter_AddRefs(connToTunnel), true);
     if (rv == NS_ERROR_WEBTRANSPORT_SESSION_LIMIT_EXCEEDED) {
@@ -1641,7 +1641,7 @@ nsresult nsHttpConnectionMgr::TryDispatchExtendedCONNECTransaction(
     }
     aEnt->InsertIntoExtendedCONNECTConns(connToTunnel);
     aTrans->SetConnection(nullptr);
-    connToTunnel->SetInSpdyTunnel();  // tells conn it is already in tunnel
+    connToTunnel->SetInTunnel();  // tells conn it is already in tunnel
     if (aTrans->IsWebsocketUpgrade()) {
       aTrans->SetIsHttp2Websocket(true);
     }
@@ -1850,10 +1850,10 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
   } else if (isWildcard) {
     // We have a HTTP/2 session to the proxy, create a new tunneled
     // connection.
-    RefPtr<HttpConnectionBase> conn = GetH2orH3ActiveConn(ent, false, true);
-    RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
+    RefPtr<HttpConnectionBase> conn =
+        GetH2orH3ActiveConn(ent, false, !ci->IsHttp3());
     if (ci->UsingHttpsProxy() && ci->UsingConnect()) {
-      LOG(("About to create new tunnel conn from [%p]", connTCP.get()));
+      LOG(("About to create new tunnel conn from [%p]", conn.get()));
       ConnectionEntry* specificEnt = mCT.GetWeak(ci->HashKey());
 
       if (!specificEnt) {
@@ -1867,18 +1867,18 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
       if (atLimit) {
         rv = NS_ERROR_NOT_AVAILABLE;
       } else {
-        RefPtr<nsHttpConnection> newTunnel;
-        connTCP->CreateTunnelStream(trans, getter_AddRefs(newTunnel));
+        RefPtr<HttpConnectionBase> newTunnel;
+        conn->CreateTunnelStream(trans, getter_AddRefs(newTunnel));
 
         ent->InsertIntoActiveConns(newTunnel);
         trans->SetConnection(nullptr);
-        newTunnel->SetInSpdyTunnel();
+        newTunnel->SetInTunnel();
         rv = DispatchTransaction(ent, trans, newTunnel);
         // need to undo the bypass for transaction reset for proxy
         trans->MakeNonRestartable();
       }
     } else {
-      rv = DispatchTransaction(ent, trans, connTCP);
+      rv = DispatchTransaction(ent, trans, conn);
     }
   } else {
     if (!ent->AllowHttp2()) {
@@ -3429,6 +3429,7 @@ ConnectionEntry* nsHttpConnectionMgr::GetOrCreateConnectionEntry(
   *aIsWildcard = false;
 
   // step 1
+  LOG(("GetOrCreateConnectionEntry step 1"));
   ConnectionEntry* specificEnt = mCT.GetWeak(specificCI->HashKey());
   if (specificEnt && specificEnt->AvailableForDispatchNow()) {
     if (aAvailableForDispatchNow) {
@@ -3462,7 +3463,9 @@ ConnectionEntry* nsHttpConnectionMgr::GetOrCreateConnectionEntry(
   }
 
   // step 2
-  if (!prohibitWildCard && aNoHttp3) {
+  LOG(("GetOrCreateConnectionEntry step 2 prohibitWildCard=%d, aNoHttp3=%d",
+       prohibitWildCard, aNoHttp3));
+  if (!prohibitWildCard) {
     RefPtr<nsHttpConnectionInfo> wildCardProxyCI;
     DebugOnly<nsresult> rv =
         specificCI->CreateWildCard(getter_AddRefs(wildCardProxyCI));
@@ -3478,6 +3481,7 @@ ConnectionEntry* nsHttpConnectionMgr::GetOrCreateConnectionEntry(
   }
 
   // step 3
+  LOG(("GetOrCreateConnectionEntry step 3"));
   if (!specificEnt) {
     RefPtr<nsHttpConnectionInfo> clone(specificCI->Clone());
     specificEnt = new ConnectionEntry(clone);
@@ -3718,10 +3722,10 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
   ConnectionEntry* ent = mCT.GetWeak(specificCI->HashKey());
   LOG(
       ("nsHttpConnectionMgr::MakeConnEntryWildCard conn %p using ent %p (spdy "
-       "%d)\n",
-       proxyConn, ent, ent ? ent->mUsingSpdy : 0));
+       "%d, h3=%d)\n",
+       proxyConn, ent, ent ? ent->mUsingSpdy : 0, ent ? ent->IsHttp3() : 0));
 
-  if (!ent || !ent->mUsingSpdy) {
+  if (!ent || (!ent->mUsingSpdy && !ent->IsHttp3())) {
     return;
   }
 
@@ -3730,9 +3734,14 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
       GetOrCreateConnectionEntry(wildCardCI, true, false, false, &isWildcard);
   if (wcEnt == ent) {
     // nothing to do!
+    LOG(("nothing to do "));
     return;
   }
-  wcEnt->mUsingSpdy = true;
+  if (ent->mUsingSpdy) {
+    wcEnt->mUsingSpdy = true;
+  } else {
+    MOZ_ASSERT(wcEnt->IsHttp3());
+  }
 
   LOG(
       ("nsHttpConnectionMgr::MakeConnEntryWildCard ent %p "

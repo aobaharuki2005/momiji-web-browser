@@ -462,12 +462,13 @@ class BaseHTTPProxy extends BaseNodeServer {
 // HTTP1 Proxy
 
 export class NodeProxyFilter {
-  constructor(type, host, port, flags, pathTemplate) {
+  constructor(type, host, port, flags, pathTemplate, auth) {
     this._type = type;
     this._host = host;
     this._port = port;
     this._flags = flags;
     this._pathTemplate = pathTemplate;
+    this._auth = auth;
     this.QueryInterface = ChromeUtils.generateQI(["nsIProtocolProxyFilter"]);
   }
   applyFilter(uri, pi, cb) {
@@ -480,7 +481,7 @@ export class NodeProxyFilter {
           this._host,
           this._port,
           this._pathTemplate,
-          "",
+          this._auth,
           "",
           this._flags,
           1000,

@@ -1102,6 +1102,8 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
       mCaps |= NS_HTTP_DISALLOW_SPDY;
     }
     // Upgrades cannot use HTTP/3.
+    // TODO: When mUpgradeProtocolCallback is not null, we should allow HTTP/3
+    // for connect-udp.
     mCaps |= NS_HTTP_DISALLOW_HTTP3;
     // Because NS_HTTP_STICKY_CONNECTION breaks HTTPS RR fallabck mecnahism, we
     // can not use HTTPS RR for upgrade requests.

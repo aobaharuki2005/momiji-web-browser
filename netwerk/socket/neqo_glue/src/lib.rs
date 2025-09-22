@@ -351,6 +351,7 @@ impl NeqoHttp3Conn {
         qlog_dir: &nsACString,
         provider_flags: u32,
         idle_timeout: u32,
+        pmtud_enabled: bool,
         socket: Option<i64>,
     ) -> Result<RefPtr<Self>, nsresult> {
         // Nss init.
@@ -431,7 +432,7 @@ impl NeqoHttp3Conn {
             .pmtud_iface_mtu(cfg!(not(target_os = "openbsd")))
             // MLKEM support is configured further below. By default, disable it.
             .mlkem(false)
-            .datagram_size(1500);
+            .datagram_size(1500).pmtud(pmtud_enabled);
 
         // Set a short timeout when fuzzing.
         #[cfg(feature = "fuzzing")]
@@ -740,6 +741,7 @@ pub extern "C" fn neqo_http3conn_new(
     provider_flags: u32,
     idle_timeout: u32,
     socket: i64,
+    pmtud_enabled: bool,
     result: &mut *const NeqoHttp3Conn,
 ) -> nsresult {
     *result = ptr::null_mut();
@@ -758,6 +760,7 @@ pub extern "C" fn neqo_http3conn_new(
         qlog_dir,
         provider_flags,
         idle_timeout,
+        pmtud_enabled,
         Some(socket),
     ) {
         Ok(http3_conn) => {
@@ -802,6 +805,7 @@ pub extern "C" fn neqo_http3conn_new_use_nspr_for_io(
         qlog_dir,
         provider_flags,
         idle_timeout,
+        false,
         None,
     ) {
         Ok(http3_conn) => {

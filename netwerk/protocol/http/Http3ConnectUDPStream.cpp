@@ -9,6 +9,7 @@
 #include "Http3ConnectUDPStream.h"
 #include "HttpConnectionUDP.h"
 #include "Http3Session.h"
+#include "mozilla/net/UriTemplate.h"
 #include "nsIPipe.h"
 #include "nsIOService.h"
 #include "nsHttpHandler.h"
@@ -78,6 +79,7 @@ void Http3ConnectUDPStream::OnDatagramReceived(nsTArray<uint8_t>&& aData) {
 bool Http3ConnectUDPStream::OnActivated() {
   LOG(("Http3ConnectUDPStream::OnActivated %p", this));
   mSession->FinishTunnelSetup(mTransaction);
+  mTransaction->OnProxyConnectComplete(200);
   return false;
 }
 
@@ -91,24 +93,32 @@ void Http3ConnectUDPStream::OnProcessDatagram() {
 }
 
 nsresult Http3ConnectUDPStream::TryActivating() {
-  LOG(("Http3ConnectUDPStream::TryActivating [this=%p]", this));
   nsProxyInfo* info = mTransaction->ConnectionInfo()->ProxyInfo();
   if (!info) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsAutoCString auth;
-  nsresult rv =
-      nsHttpHandler::GenerateHostPort(info->Host(), info->Port(), auth);
+  RefPtr<UriTemplateWrapper> builder;
+  UriTemplateWrapper::Init(info->PathTemplate(), getter_AddRefs(builder));
+  if (!builder) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsresult rv = builder->Set("target_host"_ns,
+                             mTransaction->ConnectionInfo()->GetOrigin());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = builder->Set("target_port"_ns,
+                    mTransaction->ConnectionInfo()->OriginPort());
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  nsPrintfCString path(info->PathTemplate().get(),
-                       mTransaction->ConnectionInfo()->Origin(),
-                       mTransaction->ConnectionInfo()->OriginPort());
-  LOG(("Http3ConnectUDPStream::TryActivating [auth=%s path=%s]", auth.get(),
-       path.get()));
+  nsCString path;
+  builder->Build(&path);
+  LOG(("Http3ConnectUDPStream::TryActivating [host=%s path=%s]",
+       info->Host().get(), path.get()));
   return mSession->TryActivating(""_ns, ""_ns, info->Host(), path,
                                  mFlatHttpRequestHeaders, &mStreamId, this);
 }

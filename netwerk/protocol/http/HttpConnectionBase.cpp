@@ -124,5 +124,39 @@ void HttpConnectionBase::RecordConnectionAddressType() {
   mAddressTypeReported = true;
 }
 
+void HttpConnectionBase::ChangeState(HttpConnectionState newState) {
+  LOG(("HttpConnectionBase::ChangeState %d -> %d [this=%p]", mState, newState,
+       this));
+  mState = newState;
+}
+
+nsresult HttpConnectionBase::CheckTunnelIsNeeded(
+    nsAHttpTransaction* aTransaction) {
+  switch (mState) {
+    case HttpConnectionState::UNINITIALIZED: {
+      // This is is called first time. Check if we need a tunnel.
+      if (!aTransaction->ConnectionInfo()->UsingConnect()) {
+        ChangeState(HttpConnectionState::REQUEST);
+        return NS_OK;
+      }
+      ChangeState(HttpConnectionState::SETTING_UP_TUNNEL);
+    }
+      [[fallthrough]];
+    case HttpConnectionState::SETTING_UP_TUNNEL: {
+      // When a HttpConnectionBase is in this state that means that an
+      // authentication was needed and we are resending a CONNECT
+      // request. This request will include authentication headers.
+      nsresult rv = SetupProxyConnectStream();
+      if (NS_FAILED(rv)) {
+        ChangeState(HttpConnectionState::UNINITIALIZED);
+      }
+      return rv;
+    }
+    case HttpConnectionState::REQUEST:
+      return NS_OK;
+  }
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla

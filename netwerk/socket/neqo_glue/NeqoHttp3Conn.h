@@ -34,12 +34,12 @@ class NeqoHttp3Conn final {
                        bool aVersionNegotiation, bool aWebTransport,
                        const nsACString& aQlogDir, uint32_t aProviderFlags,
                        uint32_t aIdleTimeout, int64_t socket,
-                       NeqoHttp3Conn** aConn) {
+                       bool aPMTUDEnabled, NeqoHttp3Conn** aConn) {
     return neqo_http3conn_new(
         &aOrigin, &aAlpn, &aLocalAddr, &aRemoteAddr, aMaxTableSize,
         aMaxBlockedStreams, aMaxData, aMaxStreamData, aVersionNegotiation,
         aWebTransport, &aQlogDir, aProviderFlags, aIdleTimeout, socket,
-        (const mozilla::net::NeqoHttp3Conn**)aConn);
+        aPMTUDEnabled, (const mozilla::net::NeqoHttp3Conn**)aConn);
   }
 
   void Close(uint64_t aError) { neqo_http3conn_close(this, aError); }

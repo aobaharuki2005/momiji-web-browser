@@ -120,6 +120,7 @@ UNIFIED_SOURCES += [
     "Http2StreamTunnel.cpp",
     "Http2WebTransportSession.cpp",
     "Http2WebTransportStream.cpp",
+    "Http3ConnectUDPStream.cpp",
     "Http3Session.cpp",
     "Http3Stream.cpp",
     "Http3WebTransportSession.cpp",

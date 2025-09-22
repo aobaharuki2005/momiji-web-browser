@@ -105,16 +105,27 @@ void nsHttpConnectionInfo::Init(const nsACString& host, int32_t port,
   mIPv6Disabled = false;
   mHasIPHintAddress = false;
 
-  mUsingHttpsProxy = (proxyInfo && proxyInfo->IsHTTPS());
+  mUsingHttpsProxy =
+      (proxyInfo && (proxyInfo->IsHTTPS() || proxyInfo->IsConnectTCP() ||
+                     proxyInfo->IsConnectUDP()));
   mUsingHttpProxy = mUsingHttpsProxy || (proxyInfo && proxyInfo->IsHTTP());
 
   if (mUsingHttpProxy) {
-    mUsingConnect = mEndToEndSSL;  // SSL always uses CONNECT
-    uint32_t resolveFlags = 0;
-    if (NS_SUCCEEDED(mProxyInfo->GetResolveFlags(&resolveFlags)) &&
-        resolveFlags & nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL) {
-      mUsingConnect = true;
+    mUsingConnect =
+        mEndToEndSSL || proxyInfo->IsConnectTCP() || proxyInfo->IsConnectUDP();
+    if (!mUsingConnect) {
+      uint32_t resolveFlags = 0;
+      if (NS_SUCCEEDED(mProxyInfo->GetResolveFlags(&resolveFlags)) &&
+          resolveFlags & nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL) {
+        mUsingConnect = true;
+      }
     }
+  }
+
+  // Force HTTP/3 for connect-udp for now.
+  if (proxyInfo && proxyInfo->IsConnectUDP()) {
+    mIsHttp3 = true;
+    mNPNToken = "h3"_ns;
   }
 
   SetOriginServer(host, port);

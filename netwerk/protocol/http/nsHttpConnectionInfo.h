@@ -264,6 +264,10 @@ class nsHttpConnectionInfo final : public ARefBase {
   // https:// or ws://)
   bool UsingConnect() const { return mUsingConnect; }
 
+  bool UsingConnectUDP() const {
+    return mProxyInfo ? mProxyInfo->IsConnectUDP() : false;
+  }
+
   // Returns true when origin/proxy is an RFC1918 literal.
   bool HostIsLocalIPLiteral() const;
 

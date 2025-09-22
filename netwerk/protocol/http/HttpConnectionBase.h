@@ -136,7 +136,6 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   [[nodiscard]] virtual nsresult ForceSend() = 0;
   [[nodiscard]] virtual nsresult ForceRecv() = 0;
   virtual HttpVersion Version() = 0;
-  virtual bool IsProxyConnectInProgress() = 0;
   virtual bool LastTransactionExpectedNoContent() = 0;
   virtual void SetLastTransactionExpectedNoContent(bool) = 0;
   virtual int64_t BytesWritten() = 0;  // includes TLS
@@ -172,6 +171,13 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   void RecordConnectionCloseTelemetry(nsresult aReason);
   void RecordConnectionAddressType();
 
+  bool IsProxyConnectInProgress() { return mState == SETTING_UP_TUNNEL; }
+
+  virtual nsresult CreateTunnelStream(nsAHttpTransaction* httpTransaction,
+                                      HttpConnectionBase** aHttpConnection,
+                                      bool aIsExtendedCONNECT = false) = 0;
+  virtual void SetInTunnel() {};
+
  protected:
   // The capabailities associated with the most recent transaction
   uint32_t mTransactionCaps{0};
@@ -201,6 +207,18 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   ConnectionCloseReason mCloseReason = ConnectionCloseReason::UNSET;
 
   bool mAddressTypeReported{false};
+
+  // Tunnel retated functions:
+  enum HttpConnectionState {
+    UNINITIALIZED,
+    SETTING_UP_TUNNEL,
+    REQUEST,
+  } mState{HttpConnectionState::UNINITIALIZED};
+  void ChangeState(HttpConnectionState newState);
+  bool TunnelSetupInProgress() { return mState == SETTING_UP_TUNNEL; }
+  virtual void SetTunnelSetupDone() {}
+  virtual nsresult SetupProxyConnectStream() { return NS_OK; }
+  nsresult CheckTunnelIsNeeded(nsAHttpTransaction* aTransaction);
 };
 
 #define NS_DECL_HTTPCONNECTIONBASE                                             \
@@ -227,7 +245,6 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   [[nodiscard]] nsresult ForceSend() override;                                 \
   [[nodiscard]] nsresult ForceRecv() override;                                 \
   HttpVersion Version() override;                                              \
-  bool IsProxyConnectInProgress() override;                                    \
   bool LastTransactionExpectedNoContent() override;                            \
   void SetLastTransactionExpectedNoContent(bool val) override;                 \
   bool IsPersistent() override;                                                \

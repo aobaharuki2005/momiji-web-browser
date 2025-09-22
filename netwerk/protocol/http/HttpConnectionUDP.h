@@ -64,6 +64,11 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   [[nodiscard]] nsresult Init(nsHttpConnectionInfo* info,
                               nsIDNSRecord* dnsRecord, nsresult status,
                               nsIInterfaceRequestor* callbacks, uint32_t caps);
+  [[nodiscard]] nsresult InitWithSocket(nsHttpConnectionInfo* info,
+                                        nsIUDPSocket* aSocket,
+                                        NetAddr aPeerAddr,
+                                        nsIInterfaceRequestor* callbacks,
+                                        uint32_t caps);
 
   friend class HttpConnectionUDPForceIO;
 
@@ -89,10 +94,24 @@ class HttpConnectionUDP final : public HttpConnectionBase,
 
   Http3Stats GetStats();
 
+  void ResetTransaction(nsHttpTransaction* aHttpTransaction);
+
+  void HandleTunnelResponse(nsHttpTransaction* aHttpTransaction,
+                            uint16_t responseStatus, bool* reset);
+
+  nsresult CreateTunnelStream(nsAHttpTransaction* httpTransaction,
+                              HttpConnectionBase** aHttpConnection,
+                              bool aIsExtendedCONNECT = false) override;
+
  private:
+  nsresult InitCommon(nsIUDPSocket* aSocket, const NetAddr& aPeerAddr,
+                      nsIInterfaceRequestor* callbacks, uint32_t caps,
+                      bool isInTunnel);
   [[nodiscard]] nsresult OnTransactionDone(nsresult reason);
   nsresult RecvData();
   nsresult SendData();
+  already_AddRefed<nsIInputStream> CreateProxyConnectStream(
+      nsAHttpTransaction* trans);
 
  private:
   RefPtr<nsHttpHandler> mHttpHandler;  // keep gHttpHandler alive
@@ -126,6 +145,8 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   // Http3
   RefPtr<Http3Session> mHttp3Session;
   nsCString mAlpnToken;
+  bool mIsInTunnel = false;
+  nsTArray<RefPtr<nsHttpTransaction>> mQueuedTransaction;
 };
 
 }  // namespace net

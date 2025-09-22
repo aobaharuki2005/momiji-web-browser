@@ -403,7 +403,8 @@ void nsHttpTransaction::OnPendingQueueInserted(
   }
 
   // Don't create mHttp3BackupTimer if HTTPS RR is in play.
-  if (mConnInfo->IsHttp3() && !mOrigConnInfo && !mConnInfo->GetWebTransport()) {
+  if (mConnInfo->IsHttp3() && !mOrigConnInfo && !mConnInfo->GetWebTransport() &&
+      !mConnInfo->UsingConnectUDP()) {
     // Backup timer should only be created once.
     if (!mHttp3BackupTimerCreated) {
       CreateAndStartTimer(mHttp3BackupTimer, this,
@@ -3343,7 +3344,8 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
       mConnInfo->CloneAndAdoptHTTPSSVCRecord(svcbRecord);
   // Don't fallback until we support WebTransport over HTTP/2.
   // TODO: implement fallback in bug 1874102.
-  bool needFastFallback = newInfo->IsHttp3() && !newInfo->GetWebTransport();
+  bool needFastFallback = newInfo->IsHttp3() && !newInfo->GetWebTransport() &&
+                          !newInfo->UsingConnectUDP();
   bool foundInPendingQ = gHttpHandler->ConnMgr()->RemoveTransFromConnEntry(
       this, mHashKeyOfConnectionEntry);
 
