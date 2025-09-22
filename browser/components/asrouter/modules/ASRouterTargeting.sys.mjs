@@ -54,6 +54,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/asrouter/ASRouterPreferences.sys.mjs",
   AttributionCode:
     "moz-src:///browser/components/attribution/AttributionCode.sys.mjs",
+  BackupService: "resource:///modules/backup/BackupService.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",
@@ -418,6 +419,22 @@ export const QueryCache = {
       null,
       FRECENT_SITES_UPDATE_INTERVAL,
       ClientID
+    ),
+    backupsInfo: new CachedTargetingGetter(
+      "findBackupsInWellKnownLocations",
+      null,
+      FRECENT_SITES_UPDATE_INTERVAL,
+      {
+        async findBackupsInWellKnownLocations() {
+          let bs;
+          try {
+            bs = lazy.BackupService.get();
+          } catch {
+            bs = lazy.BackupService.init();
+          }
+          return bs.findBackupsInWellKnownLocations();
+        },
+      }
     ),
   },
 };
@@ -1278,6 +1295,10 @@ const TargetingGetters = {
 
   get buildId() {
     return parseInt(AppConstants.MOZ_BUILDID, 10);
+  },
+
+  get backupsInfo() {
+    return QueryCache.getters.backupsInfo.get().catch(() => null);
   },
 };
 

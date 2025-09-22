@@ -16,6 +16,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [attachedFxAOAuthClients](#attachedfxaoauthclients)
 * [attributionData](#attributiondata)
 * [backgroundTaskName](#backgroundtaskname)
+* [backupsInfo](#backupsinfo)
 * [blockedCountByType](#blockedcountbytype)
 * [browserIsSelected](#browserisselected)
 * [browserSettings](#browsersettings)
@@ -1151,3 +1152,23 @@ Returns the stable profile group ID used for data reporting.
 ### `currentProfileId`
 
 The integer-valued identifier of the current selectable profile, as reported by `SelectableProfileService`, converted to a string.
+
+### `backupsInfo`
+
+Provides information about the backups a user has in the default directory.
+
+#### Definition
+
+```ts
+declare const backupsInfo: {
+  // True if exactly one backup was found.
+  found: boolean;
+
+  // True if multiple backups were found.
+  multipleBackupsFound: boolean;
+
+  // Absolute path to the selected backup to restore when `found` is true.
+  // Null when no single file is selected (none or multiple).
+  backupFileToRestore: string | null;
+};
+```

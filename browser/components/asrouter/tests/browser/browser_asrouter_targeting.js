@@ -2335,3 +2335,33 @@ add_task(async function test_newtabAddonVersion() {
     "should select correct item when filtering by newtabAddonVersion"
   );
 });
+
+add_task(async function check_backupsInfo() {
+  const sandbox = sinon.createSandbox();
+  registerCleanupFunction(() => sandbox.restore());
+
+  const testBackupResponse = {
+    found: true,
+    backupFileToRestore: "/tmp/profile-backup.jsonlz4",
+    multipleBackupsFound: false,
+  };
+
+  const stub = sandbox
+    .stub(QueryCache.getters.backupsInfo, "get")
+    .resolves(testBackupResponse);
+
+  Assert.deepEqual(
+    await ASRouterTargeting.Environment.backupsInfo,
+    testBackupResponse,
+    "Should return structured backup info from the cached getter"
+  );
+
+  const message = { id: "foo", targeting: "backupsInfo.found" };
+  is(
+    await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
+    message,
+    "Should select message when a backup was found"
+  );
+
+  Assert.ok(stub.called, "backupsInfo getter was called");
+});
