@@ -40,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat.Type.systemBars
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -169,6 +171,17 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
 
                 val bottomSheet = findViewById<View?>(materialR.id.design_bottom_sheet)
                 if (Config.channel.isNightlyOrDebug) {
+                    bottomSheet?.let {
+                        ViewCompat.setOnApplyWindowInsetsListener(it) { view, insets ->
+                            view.setPadding(
+                                0,
+                                insets.getInsets(systemBars()).top,
+                                0,
+                                insets.getInsets(systemBars()).bottom,
+                            )
+                            insets
+                        }
+                    }
                     bottomSheet?.setBackgroundResource(R.drawable.bottom_sheet_with_top_rounded_corners)
 
                     // https://bugzilla.mozilla.org/show_bug.cgi?id=1982004
