@@ -870,10 +870,6 @@ export class FormAutofillParent extends JSWindowActorParent {
     // from the new address.
     let newRecord = {};
     if (mergeableFields.length) {
-      // TODO: This is only temporarily, should be removed after Bug 1836438 is fixed
-      if (mergeableFields.includes("name")) {
-        mergeableFields.push("given-name", "additional-name", "family-name");
-      }
       mergeableFields.forEach(f => {
         if (f in newAddress.record) {
           newRecord[f] = newAddress.record[f];
