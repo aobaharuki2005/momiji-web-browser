@@ -963,7 +963,7 @@ nsresult Http3Session::ProcessEvents() {
 
             rv = stream->WriteSegments();
 
-            LOG(("rv=%x", rv));
+            LOG(("rv=%x", static_cast<uint32_t>(rv)));
 
             if (ASpdySession::SoftStreamError(rv) || stream->Done()) {
               LOG3(
