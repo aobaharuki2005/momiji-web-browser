@@ -3322,10 +3322,12 @@ void nsWindow::RecomputeBounds(MayChangeCsdMargin aMayChangeCsdMargin) {
       IsTopLevelWidget() && mSizeMode != nsSizeMode_Fullscreen && !mUndecorated;
   const auto toplevelBounds = GetBounds(toplevel);
 
-  // The frameBounds should always really include the toplevel bounds, but when
-  // opening multiple windows in quick succession on X11 they might not (see bug
-  // 1988787). This prevents having a really small window in such case.
-  mBounds = frameBounds.Union(toplevelBounds);
+  mBounds = frameBounds;
+  // The frameBounds should always really be as wide as the toplevel bounds, but
+  // when opening multiple windows in quick succession on X11 they might not
+  // (see bug 1988787). This prevents having a really small window in such case.
+  mBounds.width = std::max(mBounds.width, toplevelBounds.width);
+  mBounds.height = std::max(mBounds.height, toplevelBounds.height);
 
   // NOTE(emilio): This is a bit hacky. We try to do our best to get the right
   // margin at all times, but due to how the configure and size-allocate and
