@@ -191,7 +191,9 @@ add_task(async function test_restore_from_backup() {
     );
 
     restoreFromBackup.chooseButtonEl.click();
+
     await filePickerShownPromise;
+    restoreFromBackup.backupFileToRestore = mockBackupFilePath;
 
     await infoPromise;
     // Set mock file info
@@ -212,6 +214,10 @@ add_task(async function test_restore_from_backup() {
     Assert.ok(
       restoreFromBackup.confirmButtonEl,
       "Confirm button should be found"
+    );
+    Assert.ok(
+      !restoreFromBackup.confirmButtonEl.disabled,
+      "Confirm button should not be disabled"
     );
 
     await restoreFromBackup.updateComplete;
