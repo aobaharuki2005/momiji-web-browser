@@ -117,7 +117,54 @@ enum class EchExtensionStatus {
   kReal         // A 'real' ECH Extension was sent
 };
 
-class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
+// An abstract layer for testing.
+class Http3SessionBase {
+ public:
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+  virtual nsresult TryActivating(const nsACString& aMethod,
+                                 const nsACString& aScheme,
+                                 const nsACString& aAuthorityHeader,
+                                 const nsACString& aPath,
+                                 const nsACString& aHeaders,
+                                 uint64_t* aStreamId,
+                                 Http3StreamBase* aStream) = 0;
+  virtual void CloseSendingSide(uint64_t aStreamId) = 0;
+  virtual void SendHTTPDatagram(uint64_t aStreamId, nsTArray<uint8_t>& aData,
+                                uint64_t aTrackingId) = 0;
+  virtual nsresult SendPriorityUpdateFrame(uint64_t aStreamId,
+                                           uint8_t aPriorityUrgency,
+                                           bool aPriorityIncremental) = 0;
+  virtual void ConnectSlowConsumer(Http3StreamBase* stream) = 0;
+
+  virtual nsresult SendRequestBody(uint64_t aStreamId, const char* buf,
+                                   uint32_t count, uint32_t* countRead) = 0;
+  virtual nsresult ReadResponseData(uint64_t aStreamId, char* aBuf,
+                                    uint32_t aCount, uint32_t* aCountWritten,
+                                    bool* aFin) = 0;
+  virtual void FinishTunnelSetup(nsAHttpTransaction* aTransaction) = 0;
+
+  // For WebTransport
+  virtual void CloseWebTransportConn() = 0;
+  virtual void StreamHasDataToWrite(Http3StreamBase* aStream) = 0;
+  virtual nsresult CloseWebTransport(uint64_t aSessionId, uint32_t aError,
+                                     const nsACString& aMessage) = 0;
+  virtual void SendDatagram(Http3WebTransportSession* aSession,
+                            nsTArray<uint8_t>& aData, uint64_t aTrackingId) = 0;
+  virtual uint64_t MaxDatagramSize(uint64_t aSessionId) = 0;
+  virtual nsresult TryActivatingWebTransportStream(
+      uint64_t* aStreamId, Http3StreamBase* aStream) = 0;
+  virtual void ResetWebTransportStream(Http3WebTransportStream* aStream,
+                                       uint64_t aErrorCode) = 0;
+  virtual void StreamStopSending(Http3WebTransportStream* aStream,
+                                 uint8_t aErrorCode) = 0;
+  virtual void SetSendOrder(Http3StreamBase* aStream,
+                            Maybe<int64_t> aSendOrder) = 0;
+};
+
+class Http3Session final : public Http3SessionBase,
+                           public nsAHttpTransaction,
+                           public nsAHttpConnection {
  public:
   NS_INLINE_DECL_STATIC_IID(NS_HTTP3SESSION_IID)
 
@@ -161,19 +208,20 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   nsresult TryActivating(const nsACString& aMethod, const nsACString& aScheme,
                          const nsACString& aAuthorityHeader,
                          const nsACString& aPath, const nsACString& aHeaders,
-                         uint64_t* aStreamId, Http3StreamBase* aStream);
+                         uint64_t* aStreamId,
+                         Http3StreamBase* aStream) override;
   // The folowing functions are used by Http3Stream:
-  void CloseSendingSide(uint64_t aStreamId);
+  void CloseSendingSide(uint64_t aStreamId) override;
   nsresult SendRequestBody(uint64_t aStreamId, const char* buf, uint32_t count,
-                           uint32_t* countRead);
+                           uint32_t* countRead) override;
   nsresult ReadResponseHeaders(uint64_t aStreamId,
                                nsTArray<uint8_t>& aResponseHeaders, bool* aFin);
   nsresult ReadResponseData(uint64_t aStreamId, char* aBuf, uint32_t aCount,
-                            uint32_t* aCountWritten, bool* aFin);
+                            uint32_t* aCountWritten, bool* aFin) override;
 
   // The folowing functions are used by Http3WebTransportSession:
   nsresult CloseWebTransport(uint64_t aSessionId, uint32_t aError,
-                             const nsACString& aMessage);
+                             const nsACString& aMessage) override;
   nsresult CreateWebTransportStream(uint64_t aSessionId,
                                     WebTransportStreamType aStreamType,
                                     uint64_t* aStreamId);
@@ -209,27 +257,33 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   void DoSetEchConfig(const nsACString& aEchConfig);
 
   nsresult SendPriorityUpdateFrame(uint64_t aStreamId, uint8_t aPriorityUrgency,
-                                   bool aPriorityIncremental);
+                                   bool aPriorityIncremental) override;
 
-  void ConnectSlowConsumer(Http3StreamBase* stream);
+  void ConnectSlowConsumer(Http3StreamBase* stream) override;
 
   nsresult TryActivatingWebTransportStream(uint64_t* aStreamId,
-                                           Http3StreamBase* aStream);
+                                           Http3StreamBase* aStream) override;
   void CloseWebTransportStream(Http3WebTransportStream* aStream,
                                nsresult aResult);
-  void StreamHasDataToWrite(Http3StreamBase* aStream);
+  void StreamHasDataToWrite(Http3StreamBase* aStream) override;
   void ResetWebTransportStream(Http3WebTransportStream* aStream,
-                               uint64_t aErrorCode);
-  void StreamStopSending(Http3WebTransportStream* aStream, uint8_t aErrorCode);
+                               uint64_t aErrorCode) override;
+  void StreamStopSending(Http3WebTransportStream* aStream,
+                         uint8_t aErrorCode) override;
 
   void SendDatagram(Http3WebTransportSession* aSession,
-                    nsTArray<uint8_t>& aData, uint64_t aTrackingId);
+                    nsTArray<uint8_t>& aData, uint64_t aTrackingId) override;
+  void SendHTTPDatagram(uint64_t aStreamId, nsTArray<uint8_t>& aData,
+                        uint64_t aTrackingId) override;
 
-  uint64_t MaxDatagramSize(uint64_t aSessionId);
+  uint64_t MaxDatagramSize(uint64_t aSessionId) override;
 
-  void SetSendOrder(Http3StreamBase* aStream, Maybe<int64_t> aSendOrder);
+  void SetSendOrder(Http3StreamBase* aStream,
+                    Maybe<int64_t> aSendOrder) override;
 
-  void CloseWebTransportConn();
+  void CloseWebTransportConn() override;
+
+  void FinishTunnelSetup(nsAHttpTransaction* aTransaction) override;
 
   Http3Stats GetStats();
 

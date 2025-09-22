@@ -9,6 +9,7 @@
 #include "Http3Stream.h"
 #include "Http3StreamBase.h"
 #include "Http3WebTransportSession.h"
+#include "Http3ConnectUDPStream.h"
 #include "Http3WebTransportStream.h"
 #include "HttpConnectionUDP.h"
 #include "HttpLog.h"

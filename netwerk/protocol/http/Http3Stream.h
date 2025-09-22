@@ -36,6 +36,7 @@ class Http3Stream final : public nsAHttpSegmentReader,
     return nullptr;
   }
   Http3Stream* GetHttp3Stream() override { return this; }
+  Http3ConnectUDPStream* GetHttp3ConnectUDPStream() override { return nullptr; }
 
   nsresult TryActivating();
 
