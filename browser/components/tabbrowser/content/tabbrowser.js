@@ -2756,6 +2756,10 @@
 
     /**
      * Loads a tab with a default null principal unless specified
+     *
+     * @param {string} aURI
+     * @param {object} [params]
+     *   Options from `Tabbrowser.addTab`.
      */
     addWebTab(aURI, params = {}) {
       if (!params.triggeringPrincipal) {
@@ -2772,6 +2776,12 @@
       return this.addTab(aURI, params);
     }
 
+    /**
+     * @param {MozTabbrowserTab} tab
+     * @returns {void}
+     *   New tab will be the `Tabbrowser.selectedTab` or the subject of a
+     *   notification on the `browser-open-newtab-start` topic.
+     */
     addAdjacentNewTab(tab) {
       Services.obs.notifyObservers(
         {
@@ -2787,6 +2797,29 @@
         },
         "browser-open-newtab-start"
       );
+    }
+
+    /**
+     * Creates a tab directly after `tab`.
+     *
+     * @param {MozTabbrowserTab} adjacentTab
+     * @param {string} uriString
+     * @param {object} [options]
+     *   Options from `Tabbrowser.addTab`.
+     */
+    addAdjacentTab(adjacentTab, uriString, options = {}) {
+      // If the caller opted out of tab group membership but `tab` is in a
+      // tab group, insert the tab after `tab`'s group. Otherwise, insert the
+      // new tab right after `tab`.
+      const tabIndex =
+        !options.tabGroup && adjacentTab.group
+          ? adjacentTab.group.tabs.at(-1)._tPos + 1
+          : adjacentTab._tPos + 1;
+
+      return this.addTab(uriString, {
+        ...options,
+        tabIndex,
+      });
     }
 
     /**

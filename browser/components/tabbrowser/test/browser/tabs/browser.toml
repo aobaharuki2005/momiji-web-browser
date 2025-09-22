@@ -600,6 +600,8 @@ tags = "vertical-tabs"
 
 ["browser_tabs_isActive.js"]
 
+["browser_tabs_openURI_after_current.js"]
+
 ["browser_tabs_owner.js"]
 
 ["browser_tabswitch_contextmenu.js"]
