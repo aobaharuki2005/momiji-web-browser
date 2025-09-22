@@ -538,7 +538,7 @@ const char* Realm::getLocale() const {
 
 js::DateTimeInfo* Realm::getDateTimeInfo() {
 #if JS_HAS_INTL_API
-  if (RefPtr<TimeZoneString> timeZone = behaviors_.timeZone()) {
+  if (RefPtr<TimeZoneString> timeZone = behaviors_.timeZoneOverride()) {
     if (!dateTimeInfo_) {
       AutoEnterOOMUnsafeRegion oomUnsafe;
 
@@ -556,12 +556,12 @@ js::DateTimeInfo* Realm::getDateTimeInfo() {
   return nullptr;
 }
 
-void Realm::setTimeZone(const char* timeZone) {
+void Realm::setTimeZoneOverride(const char* timeZone) {
   // Clear any jitcode in the runtime, because compiled code doesn't handle
   // updates to a realm's time zone override.
   ReleaseAllJITCode(runtime_->gcContext());
 
-  behaviors_.setTimeZoneCopyZ(timeZone);
+  behaviors_.setTimeZoneOverride(timeZone);
 }
 
 void ObjectRealm::addSizeOfExcludingThis(

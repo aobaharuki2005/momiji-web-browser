@@ -1804,11 +1804,12 @@ JS::RealmBehaviors& JS::RealmBehaviors::setLocaleOverride(const char* locale) {
   return *this;
 }
 
-JS::RealmBehaviors& JS::RealmBehaviors::setTimeZoneCopyZ(const char* timeZone) {
+JS::RealmBehaviors& JS::RealmBehaviors::setTimeZoneOverride(
+    const char* timeZone) {
   if (timeZone) {
-    timeZone_ = CopyStringZ<JS::TimeZoneString>(timeZone);
+    timeZoneOverride_ = CopyStringZ<JS::TimeZoneString>(timeZone);
   } else {
-    timeZone_ = nullptr;
+    timeZoneOverride_ = nullptr;
   }
   return *this;
 }
@@ -1826,7 +1827,7 @@ void JS::SetRealmLocaleOverride(Realm* realm, const char* locale) {
 }
 
 void JS::SetRealmTimezoneOverride(Realm* realm, const char* timezone) {
-  realm->setTimeZone(timezone);
+  realm->setTimeZoneOverride(timezone);
 }
 
 void JS::SetRealmNonLive(Realm* realm) { realm->setNonLive(); }

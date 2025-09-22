@@ -7429,7 +7429,7 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
       if (!timeZone) {
         return false;
       }
-      behaviors.setTimeZoneCopyZ(timeZone.get());
+      behaviors.setTimeZoneOverride(timeZone.get());
     }
 
     if (!JS_GetProperty(cx, opts, "alwaysUseFdlibm", &v)) {

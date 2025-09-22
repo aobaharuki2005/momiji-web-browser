@@ -134,7 +134,7 @@ JS::RealmOptions WorkletGlobalScope::CreateRealmOptions() const {
 
   if (ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC)) {
     nsCString timeZone = nsRFPService::GetSpoofedJSTimeZone();
-    options.behaviors().setTimeZoneCopyZ(timeZone.get());
+    options.behaviors().setTimeZoneOverride(timeZone.get());
   }
   options.creationOptions().setAlwaysUseFdlibm(
       ShouldResistFingerprinting(RFPTarget::JSMathFdlibm));

@@ -294,6 +294,14 @@ class JS_PUBLIC_API RealmBehaviors {
     return *this;
   }
 
+  // Change the realm's current locale to a different value than the system
+  // default locale. The locale must be a valid BCP-47 locale identifier which
+  // is supported by ICU otherwise this option will be ignored and the
+  // last-ditch locale "en-GB" will be used!
+  //
+  // Any Unicode extension sequences are ignored.
+  //
+  // https://w3c.github.io/webdriver-bidi/#command-emulation-setLocaleOverride
   RefPtr<LocaleString> localeOverride() const { return localeOverride_; }
   RealmBehaviors& setLocaleOverride(const char* locale);
 
@@ -301,12 +309,14 @@ class JS_PUBLIC_API RealmBehaviors {
   // default time zone. The time zone must be a valid IANA time zone identifier,
   // otherwise this option will be ignored and the system default time zone will
   // be used!
-  RefPtr<TimeZoneString> timeZone() const { return timeZone_; }
-  RealmBehaviors& setTimeZoneCopyZ(const char* timeZone);
+  //
+  // https://w3c.github.io/webdriver-bidi/#command-emulation-setTimezoneOverride
+  RefPtr<TimeZoneString> timeZoneOverride() const { return timeZoneOverride_; }
+  RealmBehaviors& setTimeZoneOverride(const char* timeZone);
 
  private:
   RefPtr<LocaleString> localeOverride_;
-  RefPtr<TimeZoneString> timeZone_;
+  RefPtr<TimeZoneString> timeZoneOverride_;
   mozilla::Maybe<RTPCallerTypeToken> rtpCallerType;
   bool discardSource_ = false;
   bool clampAndJitterTime_ = true;
