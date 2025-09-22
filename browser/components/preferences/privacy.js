@@ -1301,172 +1301,6 @@ Preferences.addSetting({
   },
 });
 
-Preferences.addSetting({
-  id: "httpsOnlyEnabled",
-  pref: "dom.security.https_only_mode",
-});
-Preferences.addSetting({
-  id: "httpsOnlyEnabledPBM",
-  pref: "dom.security.https_only_mode_pbm",
-});
-Preferences.addSetting({
-  id: "httpsOnlyRadioGroup",
-  deps: ["httpsOnlyEnabled", "httpsOnlyEnabledPBM"],
-  get: (_value, deps) => {
-    if (deps.httpsOnlyEnabled.value) {
-      return "enabled";
-    }
-    if (deps.httpsOnlyEnabledPBM.value) {
-      return "privateOnly";
-    }
-    return "disabled";
-  },
-  set: (value, deps) => {
-    if (value == "enabled") {
-      deps.httpsOnlyEnabled.value = true;
-      deps.httpsOnlyEnabledPBM.value = false;
-    } else if (value == "privateOnly") {
-      deps.httpsOnlyEnabled.value = false;
-      deps.httpsOnlyEnabledPBM.value = true;
-    } else if (value == "disabled") {
-      deps.httpsOnlyEnabled.value = false;
-      deps.httpsOnlyEnabledPBM.value = false;
-    }
-  },
-  disabled: deps => {
-    return deps.httpsOnlyEnabled.locked || deps.httpsOnlyEnabledPBM.locked;
-  },
-});
-Preferences.addSetting({
-  id: "httpsFirstEnabled",
-  pref: "dom.security.https_first",
-});
-Preferences.addSetting({
-  id: "httpsFirstEnabledPBM",
-  pref: "dom.security.https_first_pbm",
-});
-Preferences.addSetting({
-  id: "httpsOnlyExceptionButton",
-  deps: [
-    "httpsOnlyEnabled",
-    "httpsOnlyEnabledPBM",
-    "httpsFirstEnabled",
-    "httpsFirstEnabledPBM",
-  ],
-  disabled: deps => {
-    return (
-      !deps.httpsOnlyEnabled.value &&
-      !deps.httpsOnlyEnabledPBM.value &&
-      !deps.httpsFirstEnabled.value &&
-      !deps.httpsFirstEnabledPBM.value
-    );
-  },
-  onUserClick: () => {
-    gPrivacyPane.showHttpsOnlyModeExceptions();
-  },
-});
-
-Preferences.addSetting({
-  id: "enableSafeBrowsingPhishing",
-  pref: "browser.safebrowsing.phishing.enabled",
-});
-Preferences.addSetting({
-  id: "enableSafeBrowsingMalware",
-  pref: "browser.safebrowsing.malware.enabled",
-});
-Preferences.addSetting({
-  id: "enableSafeBrowsing",
-  deps: ["enableSafeBrowsingPhishing", "enableSafeBrowsingMalware"],
-  get: (_value, deps) => {
-    return (
-      deps.enableSafeBrowsingPhishing.value &&
-      deps.enableSafeBrowsingMalware.value
-    );
-  },
-  set: (value, deps) => {
-    deps.enableSafeBrowsingPhishing.value = value;
-    deps.enableSafeBrowsingMalware.value = value;
-  },
-  disabled: deps => {
-    return (
-      deps.enableSafeBrowsingPhishing.locked ||
-      deps.enableSafeBrowsingMalware.locked
-    );
-  },
-});
-Preferences.addSetting({
-  id: "blockDownloads",
-  pref: "browser.safebrowsing.downloads.enabled",
-  deps: ["enableSafeBrowsing"],
-  disabled: (deps, self) => {
-    return !deps.enableSafeBrowsing.value || self.locked;
-  },
-});
-Preferences.addSetting({
-  id: "malwareTable",
-  pref: "urlclassifier.malwareTable",
-});
-Preferences.addSetting({
-  id: "blockUncommonDownloads",
-  pref: "browser.safebrowsing.downloads.remote.block_uncommon",
-});
-Preferences.addSetting({
-  id: "blockUnwantedDownloads",
-  pref: "browser.safebrowsing.downloads.remote.block_potentially_unwanted",
-});
-Preferences.addSetting({
-  id: "blockUncommonUnwanted",
-  deps: [
-    "enableSafeBrowsing",
-    "blockDownloads",
-    "blockUncommonDownloads",
-    "blockUnwantedDownloads",
-  ],
-  get: (_value, deps) => {
-    return (
-      deps.blockUncommonDownloads.value && deps.blockUnwantedDownloads.value
-    );
-  },
-  set: (value, deps) => {
-    deps.blockUncommonDownloads.value = value;
-    deps.blockUnwantedDownloads.value = value;
-
-    let malwareTable = Preferences.get("urlclassifier.malwareTable");
-    let malware = malwareTable.value
-      .split(",")
-      .filter(
-        x =>
-          x !== "goog-unwanted-proto" &&
-          x !== "goog-unwanted-shavar" &&
-          x !== "moztest-unwanted-simple"
-      );
-
-    if (value) {
-      if (malware.includes("goog-malware-shavar")) {
-        malware.push("goog-unwanted-shavar");
-      } else {
-        malware.push("goog-unwanted-proto");
-      }
-      malware.push("moztest-unwanted-simple");
-    }
-
-    // sort alphabetically to keep the pref consistent
-    malware.sort();
-    malwareTable.value = malware.join(",");
-
-    // Force an update after changing the malware table.
-    listManager.forceUpdates(malwareTable.value);
-  },
-  disabled: deps => {
-    return (
-      !deps.enableSafeBrowsing.value ||
-      !deps.blockDownloads.value ||
-      deps.blockUncommonDownloads.locked ||
-      deps.blockUnwantedDownloads.locked
-    );
-  },
-});
-
 function setEventListener(aId, aEventType, aCallback) {
   document
     .getElementById(aId)
@@ -1671,6 +1505,83 @@ var gPrivacyPane = {
 
     document.getElementById("certEnableThirdPartyToggleBox").hidden =
       !canConfigureThirdPartyCerts;
+  },
+
+  syncFromHttpsOnlyPref() {
+    let httpsOnlyOnPref = Services.prefs.getBoolPref(
+      "dom.security.https_only_mode"
+    );
+    let httpsOnlyOnPBMPref = Services.prefs.getBoolPref(
+      "dom.security.https_only_mode_pbm"
+    );
+    let httpsFirstOnPref = Services.prefs.getBoolPref(
+      "dom.security.https_first"
+    );
+    let httpsFirstOnPBMPref = Services.prefs.getBoolPref(
+      "dom.security.https_first_pbm"
+    );
+    let httpsOnlyRadioGroup = document.getElementById("httpsOnlyRadioGroup");
+    let httpsOnlyExceptionButton = document.getElementById(
+      "httpsOnlyExceptionButton"
+    );
+
+    if (httpsOnlyOnPref) {
+      httpsOnlyRadioGroup.value = "enabled";
+    } else if (httpsOnlyOnPBMPref) {
+      httpsOnlyRadioGroup.value = "privateOnly";
+    } else {
+      httpsOnlyRadioGroup.value = "disabled";
+    }
+
+    httpsOnlyExceptionButton.disabled =
+      !httpsOnlyOnPref &&
+      !httpsFirstOnPref &&
+      !httpsOnlyOnPBMPref &&
+      !httpsFirstOnPBMPref;
+
+    if (
+      Services.prefs.prefIsLocked("dom.security.https_only_mode") ||
+      Services.prefs.prefIsLocked("dom.security.https_only_mode_pbm")
+    ) {
+      httpsOnlyRadioGroup.disabled = true;
+    }
+  },
+
+  syncToHttpsOnlyPref() {
+    let value = document.getElementById("httpsOnlyRadioGroup").value;
+    Services.prefs.setBoolPref(
+      "dom.security.https_only_mode_pbm",
+      value == "privateOnly"
+    );
+    Services.prefs.setBoolPref(
+      "dom.security.https_only_mode",
+      value == "enabled"
+    );
+  },
+
+  /**
+   * Init HTTPS-Only mode and corresponding prefs
+   */
+  initHttpsOnly() {
+    // Set radio-value based on the pref value
+    this.syncFromHttpsOnlyPref();
+
+    // Create event listener for when the user clicks
+    // on one of the radio buttons
+    setEventListener("httpsOnlyRadioGroup", "change", this.syncToHttpsOnlyPref);
+    // Update radio-value when the pref changes
+    Preferences.get("dom.security.https_only_mode").on("change", () =>
+      this.syncFromHttpsOnlyPref()
+    );
+    Preferences.get("dom.security.https_only_mode_pbm").on("change", () =>
+      this.syncFromHttpsOnlyPref()
+    );
+    Preferences.get("dom.security.https_first").on("change", () =>
+      this.syncFromHttpsOnlyPref()
+    );
+    Preferences.get("dom.security.https_first_pbm").on("change", () =>
+      this.syncFromHttpsOnlyPref()
+    );
   },
 
   get dnsOverHttpsResolvers() {
@@ -2067,8 +1978,6 @@ var gPrivacyPane = {
     if (Services.prefs.getBoolPref("privacy.ui.status_card", false)) {
       initSettingGroup("securityPrivacyStatus");
     }
-    initSettingGroup("httpsOnly");
-    initSettingGroup("browsingProtection");
 
     this.initNonTechnicalPrivacySection();
 
@@ -2160,6 +2069,11 @@ var gPrivacyPane = {
       gPrivacyPane.showCookieExceptions
     );
     setEventListener(
+      "httpsOnlyExceptionButton",
+      "command",
+      gPrivacyPane.showHttpsOnlyModeExceptions
+    );
+    setEventListener(
       "dohExceptionsButton",
       "command",
       gPrivacyPane.showDoHExceptions
@@ -2209,6 +2123,8 @@ var gPrivacyPane = {
     this._initOSAuthentication();
 
     this.initListenersForExtensionControllingPasswordManager();
+
+    this._initSafeBrowsing();
 
     setEventListener(
       "autoplaySettingsButton",
@@ -2404,6 +2320,9 @@ var gPrivacyPane = {
       "change",
       gPrivacyPane.maybeNotifyUserToReload
     );
+
+    /* init HTTPS-Only mode */
+    this.initHttpsOnly();
 
     this.initDoH();
 
@@ -4337,6 +4256,112 @@ var gPrivacyPane = {
 
     // don't override the preference value
     return undefined;
+  },
+
+  _initSafeBrowsing() {
+    let enableSafeBrowsing = document.getElementById("enableSafeBrowsing");
+    let blockDownloads = document.getElementById("blockDownloads");
+    let blockUncommonUnwanted = document.getElementById(
+      "blockUncommonUnwanted"
+    );
+
+    let safeBrowsingPhishingPref = Preferences.get(
+      "browser.safebrowsing.phishing.enabled"
+    );
+    let safeBrowsingMalwarePref = Preferences.get(
+      "browser.safebrowsing.malware.enabled"
+    );
+
+    let blockDownloadsPref = Preferences.get(
+      "browser.safebrowsing.downloads.enabled"
+    );
+    let malwareTable = Preferences.get("urlclassifier.malwareTable");
+
+    let blockUnwantedPref = Preferences.get(
+      "browser.safebrowsing.downloads.remote.block_potentially_unwanted"
+    );
+    let blockUncommonPref = Preferences.get(
+      "browser.safebrowsing.downloads.remote.block_uncommon"
+    );
+
+    enableSafeBrowsing.addEventListener("command", function () {
+      safeBrowsingPhishingPref.value = enableSafeBrowsing.checked;
+      safeBrowsingMalwarePref.value = enableSafeBrowsing.checked;
+
+      blockDownloads.disabled =
+        !enableSafeBrowsing.checked || blockDownloadsPref.locked;
+      blockUncommonUnwanted.disabled =
+        !blockDownloads.checked ||
+        !enableSafeBrowsing.checked ||
+        blockUnwantedPref.locked ||
+        blockUncommonPref.locked;
+    });
+
+    blockDownloads.addEventListener("command", function () {
+      blockDownloadsPref.value = blockDownloads.checked;
+      blockUncommonUnwanted.disabled =
+        !blockDownloads.checked ||
+        blockUnwantedPref.locked ||
+        blockUncommonPref.locked;
+    });
+
+    blockUncommonUnwanted.addEventListener("command", function () {
+      blockUnwantedPref.value = blockUncommonUnwanted.checked;
+      blockUncommonPref.value = blockUncommonUnwanted.checked;
+
+      let malware = malwareTable.value
+        .split(",")
+        .filter(
+          x =>
+            x !== "goog-unwanted-proto" &&
+            x !== "goog-unwanted-shavar" &&
+            x !== "moztest-unwanted-simple"
+        );
+
+      if (blockUncommonUnwanted.checked) {
+        if (malware.includes("goog-malware-shavar")) {
+          malware.push("goog-unwanted-shavar");
+        } else {
+          malware.push("goog-unwanted-proto");
+        }
+
+        malware.push("moztest-unwanted-simple");
+      }
+
+      // sort alphabetically to keep the pref consistent
+      malware.sort();
+
+      malwareTable.value = malware.join(",");
+
+      // Force an update after changing the malware table.
+      listManager.forceUpdates(malwareTable.value);
+    });
+
+    // set initial values
+
+    enableSafeBrowsing.checked =
+      safeBrowsingPhishingPref.value && safeBrowsingMalwarePref.value;
+    if (!enableSafeBrowsing.checked) {
+      blockDownloads.setAttribute("disabled", "true");
+      blockUncommonUnwanted.setAttribute("disabled", "true");
+    }
+
+    blockDownloads.checked = blockDownloadsPref.value;
+    if (!blockDownloadsPref.value) {
+      blockUncommonUnwanted.setAttribute("disabled", "true");
+    }
+    blockUncommonUnwanted.checked =
+      blockUnwantedPref.value && blockUncommonPref.value;
+
+    if (safeBrowsingPhishingPref.locked || safeBrowsingMalwarePref.locked) {
+      enableSafeBrowsing.disabled = true;
+    }
+    if (blockDownloadsPref.locked) {
+      blockDownloads.disabled = true;
+    }
+    if (blockUnwantedPref.locked || blockUncommonPref.locked) {
+      blockUncommonUnwanted.disabled = true;
+    }
   },
 
   /**

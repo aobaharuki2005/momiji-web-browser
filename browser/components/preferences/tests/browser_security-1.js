@@ -20,20 +20,6 @@ registerCleanupFunction(function () {
   );
 });
 
-function waitForSettingChange(setting) {
-  return new Promise(resolve => {
-    setting.on("change", function handler() {
-      setting.off("change", handler);
-      resolve();
-    });
-  });
-}
-
-async function waitForSettingControlChange(control) {
-  await waitForSettingChange(control.setting);
-  await new Promise(resolve => requestAnimationFrame(resolve));
-}
-
 // This test only opens the Preferences once, and then reloads the page
 // each time that it wants to test various preference combinations. We
 // only use one tab (instead of opening/closing for each test) for all
@@ -79,13 +65,12 @@ add_task(async function () {
 
     // scroll the checkbox into the viewport and click checkbox
     checkbox.scrollIntoView();
-    let update = waitForSettingControlChange(checkbox.control);
     EventUtils.synthesizeMouseAtCenter(
-      checkbox.inputEl,
+      checkbox,
       {},
       gBrowser.selectedBrowser.contentWindow
     );
-    await update;
+
     // check that both settings are now turned on or off
     is(
       Services.prefs.getBoolPref("browser.safebrowsing.phishing.enabled"),
@@ -102,12 +87,12 @@ add_task(async function () {
     checked = checkbox.checked;
     if (blockDownloads) {
       is(
-        blockDownloads.disabled,
+        blockDownloads.hasAttribute("disabled"),
         !checked,
         "block downloads checkbox is set correctly"
       );
       is(
-        blockUncommon.disabled,
+        blockUncommon.hasAttribute("disabled"),
         !checked || !blockDownloads.checked,
         "block uncommon checkbox is set correctly"
       );

@@ -1588,9 +1588,7 @@ space-alert-under-5gb-message2 = <strong>{ -brand-short-name } is running out of
 
 httpsonly-header = HTTPS-Only Mode
 
-httpsonly-label =
-    .aria-label = { httpsonly-header }
-    .description = Only allows secure connections to websites. { -brand-short-name } will ask before connecting insecurely.
+httpsonly-description3 = Only allows secure connections to websites. { -brand-short-name } will ask before connecting insecurely.
 
 httpsonly-learn-more2 = How HTTPS-Only works
 

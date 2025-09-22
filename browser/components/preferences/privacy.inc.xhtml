@@ -1095,9 +1095,25 @@
 </hbox>
 
 <!-- addons, forgery (phishing) UI Security -->
-<groupbox data-category="panePrivacy" hidden="true">
+<groupbox id="browsingProtectionGroup" data-category="panePrivacy" hidden="true">
   <label><html:h2 data-l10n-id="security-browsing-protection"/></label>
-  <html:setting-group groupid="browsingProtection"></html:setting-group>
+  <hbox align = "center">
+    <checkbox id="enableSafeBrowsing"
+              data-l10n-id="security-enable-safe-browsing"
+              class="tail-with-learn-more"/>
+    <html:a is="moz-support-link"
+            id="enableSafeBrowsingLearnMore"
+            class="learnMore"
+            data-l10n-id="security-enable-safe-browsing-link"
+            support-page="phishing-malware"
+    />
+  </hbox>
+  <vbox class="indent">
+    <checkbox id="blockDownloads"
+              data-l10n-id="security-block-downloads"/>
+    <checkbox id="blockUncommonUnwanted"
+              data-l10n-id="security-block-uncommon-software"/>
+  </vbox>
 </groupbox>
 
 <!-- Certificates -->
@@ -1165,10 +1181,41 @@
 </groupbox>
 
 <!-- HTTPS-ONLY Mode -->
-
-<groupbox data-category="panePrivacy" hidden="true">
+<groupbox id="httpsOnlyBox" data-category="panePrivacy" hidden="true">
   <label><html:h2 data-l10n-id="httpsonly-header"/></label>
-  <html:setting-group groupid="httpsOnly"/>
+  <vbox data-subcategory="httpsonly" flex="1">
+    <description id="httpsOnlyDescription" class="description-deemphasized" data-l10n-id="httpsonly-description3"/>
+    <html:a is="moz-support-link"
+            id="httpsOnlyLearnMore"
+            class="learnMore"
+            data-l10n-id="httpsonly-learn-more2"
+            support-page="https-only-prefs"
+    />
+  </vbox>
+  <hbox>
+    <html:moz-radio-group id="httpsOnlyRadioGroup" data-category="panePrivacy" style="flex: 1;">
+      <html:moz-radio id="httpsOnlyRadioEnabled"
+                      data-l10n-id="httpsonly-radio-enabled"
+                      value="enabled"></html:moz-radio>
+      <html:moz-radio id="httpsOnlyRadioEnabledPBM"
+                      data-l10n-id="httpsonly-radio-enabled-pbm"
+                      value="privateOnly"></html:moz-radio>
+      <html:moz-radio id="httpsOnlyRadioDisabled"
+                      data-l10n-id="httpsonly-radio-disabled3"
+                      value="disabled"
+                      support-page="connection-upgrades"></html:moz-radio>
+    </html:moz-radio-group>
+    <vbox>
+      <button id="httpsOnlyExceptionButton" is="highlightable-button" class="accessory-button" disabled="true"
+        data-l10n-id="sitedata-cookies-exceptions" search-l10n-ids="
+                      permissions-address,
+                      permissions-allow.label,
+                      permissions-remove.label,
+                      permissions-remove-all.label,
+                      permissions-exceptions-https-only-desc2,
+                    " />
+    </vbox>
+  </hbox>
 </groupbox>
 
 <!-- DoH -->

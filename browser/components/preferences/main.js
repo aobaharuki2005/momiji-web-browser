@@ -819,63 +819,6 @@ let SETTINGS_CONFIG = {
       },
     ],
   },
-  httpsOnly: {
-    items: [
-      {
-        id: "httpsOnlyRadioGroup",
-        control: "moz-radio-group",
-        l10nId: "httpsonly-label",
-        supportPage: "https-only-prefs",
-        options: [
-          {
-            id: "httpsOnlyRadioEnabled",
-            value: "enabled",
-            l10nId: "httpsonly-radio-enabled",
-          },
-          {
-            id: "httpsOnlyRadioEnabledPBM",
-            value: "privateOnly",
-            l10nId: "httpsonly-radio-enabled-pbm",
-          },
-          {
-            id: "httpsOnlyRadioDisabled",
-            value: "disabled",
-            l10nId: "httpsonly-radio-disabled3",
-            supportPage: "connection-upgrades",
-          },
-        ],
-      },
-      {
-        id: "httpsOnlyExceptionButton",
-        l10nId: "sitedata-cookies-exceptions",
-        control: "moz-box-button",
-        controlAttrs: {
-          "search-l10n-ids":
-            "permissions-address,permissions-allow.label,permissions-remove.label,permissions-remove-all.label,permissions-exceptions-https-only-desc2",
-        },
-      },
-    ],
-  },
-  browsingProtection: {
-    items: [
-      {
-        id: "enableSafeBrowsing",
-        l10nId: "security-enable-safe-browsing",
-        supportPage: "phishing-malware",
-        control: "moz-checkbox",
-        items: [
-          {
-            id: "blockDownloads",
-            l10nId: "security-block-downloads",
-          },
-          {
-            id: "blockUncommonUnwanted",
-            l10nId: "security-block-uncommon-software",
-          },
-        ],
-      },
-    ],
-  },
   nonTechnicalPrivacy: {
     l10nId: "non-technical-privacy-label",
     items: [
