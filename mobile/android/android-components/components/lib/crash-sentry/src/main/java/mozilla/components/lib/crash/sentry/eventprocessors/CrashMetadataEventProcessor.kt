@@ -8,7 +8,7 @@ import io.sentry.EventProcessor
 import io.sentry.Hint
 import io.sentry.SentryEvent
 import mozilla.components.lib.crash.Crash
-import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.lib.crash.RuntimeTag
 
 /**
  * This [EventProcessor] will retain a reference to the [Crash] that has been most recently reported,
@@ -20,7 +20,7 @@ class CrashMetadataEventProcessor : EventProcessor {
 
     override fun process(event: SentryEvent, hint: Hint): SentryEvent {
         crashToProcess?.let {
-            it.runtimeTags[CrashReporter.RELEASE_RUNTIME_TAG]?.let { crashRelease ->
+            it.runtimeTags[RuntimeTag.RELEASE]?.let { crashRelease ->
                 event.release = crashRelease
             }
         }
