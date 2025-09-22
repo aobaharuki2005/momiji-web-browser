@@ -893,9 +893,9 @@ bool NativeLayerWayland::Map(WaylandSurfaceLock* aParentWaylandSurfaceLock) {
   if (auto* external = AsNativeLayerWaylandExternal()) {
     if (RefPtr surface = external->GetSurface()) {
       if (auto* surfaceYUV = surface->GetAsDMABufSurfaceYUV()) {
-        mSurface->SetColorRepresentationLocked(surfaceLock,
-                                               surfaceYUV->GetYUVColorSpace(),
-                                               surfaceYUV->IsFullRange());
+        mSurface->SetColorRepresentationLocked(
+            surfaceLock, surfaceYUV->GetYUVColorSpace(),
+            surfaceYUV->IsFullRange(), surfaceYUV->GetWPChromaLocation());
       }
     }
   }
