@@ -1781,10 +1781,12 @@ parent:
 
     async HistoryGo(MaybeDiscardedBrowsingContext aContext, int32_t aOffset,
                     uint64_t aHistoryEpoch, bool aRequireUserInteraction,
-                    bool aUserActivation) returns(int32_t? requestedIndex);
+                    bool aUserActivation, bool aCheckForCancelation)
+      returns(int32_t? requestedIndex);
 
     async NavigationTraverse(MaybeDiscardedBrowsingContext aContext, nsID aKey,
-                           uint64_t aHistoryEpoch, bool aUserActivation)
+                             uint64_t aHistoryEpoch, bool aUserActivation, 
+                             bool aCheckForCancelation)
       returns(nsresult result);
 
     async BlobURLDataRequest(nsCString aBlobURL,

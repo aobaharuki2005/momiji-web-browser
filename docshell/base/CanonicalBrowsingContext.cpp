@@ -1549,9 +1549,13 @@ void CanonicalBrowsingContext::RemoveFromSessionHistory(const nsID& aChangeID) {
   }
 }
 
+// https://html.spec.whatwg.org/#apply-the-history-step
+// This might not seem to be #apply-the-history-step, but it is in fact exactly
+// what it is.
 Maybe<int32_t> CanonicalBrowsingContext::HistoryGo(
     int32_t aOffset, uint64_t aHistoryEpoch, bool aRequireUserInteraction,
-    bool aUserActivation, Maybe<ContentParentId> aContentId,
+    bool aUserActivation, bool aCheckForCancelation,
+    Maybe<ContentParentId> aContentId,
     std::function<void(nsresult)>&& aResolver) {
   if (aRequireUserInteraction && aOffset != -1 && aOffset != 1) {
     NS_ERROR(
@@ -1621,7 +1625,8 @@ Maybe<int32_t> CanonicalBrowsingContext::HistoryGo(
   }
   int32_t requestedIndex = shistory->GetRequestedIndex();
   RefPtr traversable = Top();
-  nsSHistory::LoadURIs(loadResults, aResolver, traversable);
+  nsSHistory::LoadURIs(loadResults, aCheckForCancelation, aResolver,
+                       traversable);
   return Some(requestedIndex);
 }
 
@@ -1629,7 +1634,7 @@ Maybe<int32_t> CanonicalBrowsingContext::HistoryGo(
 // Sub-steps for step 12
 void CanonicalBrowsingContext::NavigationTraverse(
     const nsID& aKey, uint64_t aHistoryEpoch, bool aUserActivation,
-    Maybe<ContentParentId> aContentId,
+    bool aCheckForCancelation, Maybe<ContentParentId> aContentId,
     std::function<void(nsresult)>&& aResolver) {
   MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug, "Traverse navigation to {}",
               aKey.ToString().get());
@@ -1678,8 +1683,8 @@ void CanonicalBrowsingContext::NavigationTraverse(
   MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug, "Performing traversal by {}",
               offset);
 
-  HistoryGo(offset, aHistoryEpoch, false, aUserActivation, aContentId,
-            std::move(aResolver));
+  HistoryGo(offset, aHistoryEpoch, false, aUserActivation, aCheckForCancelation,
+            aContentId, std::move(aResolver));
 }
 
 JSObject* CanonicalBrowsingContext::WrapObject(
