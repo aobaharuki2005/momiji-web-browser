@@ -134,6 +134,21 @@ export class Translator {
   }
 
   /**
+   * Returns true if the given language pair matches this translator, otherwise false.
+   *
+   * @param {LanguagePair} languagePair
+   * @returns {boolean}
+   */
+  matchesLanguagePair(languagePair) {
+    return (
+      languagePair.sourceLanguage === this.#languagePair.sourceLanguage &&
+      languagePair.targetLanguage === this.#languagePair.targetLanguage &&
+      languagePair.sourceVariant === this.#languagePair.sourceVariant &&
+      languagePair.targetVariant === this.#languagePair.targetVariant
+    );
+  }
+
+  /**
    * Creates a new translation port if the current one is closed.
    *
    * @returns {Promise<void>} - Whether the Translator is ready to translate.
@@ -288,6 +303,19 @@ class PassthroughTranslator {
       );
     }
     this.#language = languagePair.sourceLanguage;
+  }
+
+  /**
+   * Returns true if the given language pair matches this translator, otherwise false.
+   *
+   * @param {LanguagePair} languagePair
+   * @returns {boolean}
+   */
+  matchesLanguagePair(languagePair) {
+    return (
+      languagePair.sourceLanguage === this.#language &&
+      languagePair.targetLanguage === this.#language
+    );
   }
 
   /**
