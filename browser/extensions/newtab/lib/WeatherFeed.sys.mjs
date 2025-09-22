@@ -7,7 +7,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   PersistentCache: "resource://newtab/lib/PersistentCache.sys.mjs",
-  Region: "resource://gre/modules/Region.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "MerinoClient", () => {
@@ -36,8 +35,6 @@ const MERINO_CLIENT_KEY = "HNT_WEATHER_FEED";
 const PREF_WEATHER_QUERY = "weather.query";
 const PREF_SHOW_WEATHER = "showWeather";
 const PREF_SYSTEM_SHOW_WEATHER = "system.showWeather";
-const PREF_REGION_OPTIN_WEATHER_CONFIG =
-  "discoverystream.optIn-region-weather-config";
 
 /**
  * A feature that periodically fetches weather suggestions from Merino for HNT.
@@ -238,24 +235,9 @@ export class WeatherFeed {
     }
   }
 
-  async checkOptInRegion() {
-    const regionConfig =
-      this.store.getState().Prefs.values[PREF_REGION_OPTIN_WEATHER_CONFIG] ??
-      "";
-
-    const optInRegions = regionConfig.split(",").map(region => region.trim());
-    const currentRegion = await lazy.Region.home;
-    const optIn = this.isEnabled() && optInRegions.includes(currentRegion);
-
-    this.store.dispatch(ac.SetPref("system.showWeatherOptIn", optIn));
-
-    return optIn;
-  }
-
   async onAction(action) {
     switch (action.type) {
       case at.INIT:
-        await this.checkOptInRegion();
         if (this.isEnabled()) {
           await this.init();
         }
@@ -270,13 +252,6 @@ export class WeatherFeed {
         }
         break;
       case at.PREF_CHANGED:
-        if (
-          action.data.name ===
-            "browser.newtabpage.activity-stream.discoverystream.optIn-region-weather-config" ||
-          action.data.name === "system.showWeather"
-        ) {
-          await this.checkOptInRegion();
-        }
         await this.onPrefChangedAction(action);
         break;
       case at.WEATHER_LOCATION_SEARCH_UPDATE:
