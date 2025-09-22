@@ -531,29 +531,27 @@ async function doSuggestedIndexTest({
   let results = [];
   for (let i = 0; i < resultCount; i++) {
     results.push(
-      new UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.URL,
-        UrlbarUtils.RESULT_SOURCE.HISTORY,
-        {
+      new UrlbarResult({
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        payload: {
           url: "http://example.com/" + i,
-        }
-      )
+        },
+      })
     );
   }
 
   // Make the suggested-index results.
   for (let suggestedIndex of suggestedIndexes) {
     results.push(
-      Object.assign(
-        new UrlbarResult(
-          UrlbarUtils.RESULT_TYPE.URL,
-          UrlbarUtils.RESULT_SOURCE.HISTORY,
-          {
-            url: "http://example.com/si " + suggestedIndex,
-          }
-        ),
-        { suggestedIndex }
-      )
+      new UrlbarResult({
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        suggestedIndex,
+        payload: {
+          url: "http://example.com/si " + suggestedIndex,
+        },
+      })
     );
   }
 

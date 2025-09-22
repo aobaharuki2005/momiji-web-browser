@@ -463,19 +463,15 @@ export class UrlbarProviderQuickSuggest extends UrlbarProvider {
       payload.shouldShowUrl = true;
     }
 
-    return Object.assign(
-      new lazy.UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.URL,
-        UrlbarUtils.RESULT_SOURCE.SEARCH,
-        ...lazy.UrlbarResult.payloadAndSimpleHighlights(
-          queryContext.tokens,
-          payload
-        )
+    return new lazy.UrlbarResult({
+      type: UrlbarUtils.RESULT_TYPE.URL,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      isBestMatch: !!suggestion.is_top_pick,
+      ...lazy.UrlbarResult.payloadAndSimpleHighlights(
+        queryContext.tokens,
+        payload
       ),
-      {
-        isBestMatch: !!suggestion.is_top_pick,
-      }
-    );
+    });
   }
 
   /**

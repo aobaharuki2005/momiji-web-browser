@@ -118,10 +118,10 @@ export class UrlbarProviderRecentSearches extends UrlbarProvider {
     }
 
     for (let result of results) {
-      let res = new lazy.UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.SEARCH,
-        UrlbarUtils.RESULT_SOURCE.HISTORY,
-        {
+      let res = new lazy.UrlbarResult({
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        payload: {
           engine: engine.name,
           suggestion: result.value,
           isBlockable: true,
@@ -129,8 +129,8 @@ export class UrlbarProviderRecentSearches extends UrlbarProvider {
           helpUrl:
             Services.urlFormatter.formatURLPref("app.support.baseURL") +
             "awesome-bar-result-menu",
-        }
-      );
+        },
+      });
       addCallback(this, res);
     }
   }

@@ -114,15 +114,15 @@ export class UrlbarProviderGlobalActions extends UrlbarProvider {
       payload.engine = searchModeEngine;
     }
 
-    let result = new lazy.UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.DYNAMIC,
-      UrlbarUtils.RESULT_SOURCE.ACTIONS,
-      payload
-    );
-    result.suggestedIndex =
-      queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.TABS
-        ? SUGGESTED_INDEX_TABS_MODE
-        : SUGGESTED_INDEX;
+    let result = new lazy.UrlbarResult({
+      type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
+      source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
+      suggestedIndex:
+        queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.TABS
+          ? SUGGESTED_INDEX_TABS_MODE
+          : SUGGESTED_INDEX,
+      payload,
+    });
     addCallback(this, result);
   }
 

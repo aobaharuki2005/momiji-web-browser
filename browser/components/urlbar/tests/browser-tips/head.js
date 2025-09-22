@@ -579,10 +579,10 @@ function makeTipResult({
   descriptionL10n = undefined,
   descriptionLearnMoreTopic = undefined,
 }) {
-  return new UrlbarResult(
-    UrlbarUtils.RESULT_TYPE.TIP,
-    UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-    {
+  return new UrlbarResult({
+    type: UrlbarUtils.RESULT_TYPE.TIP,
+    source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    payload: {
       helpUrl,
       descriptionL10n,
       descriptionLearnMoreTopic,
@@ -594,8 +594,8 @@ function makeTipResult({
           l10n: { id: "urlbar-search-tips-confirm" },
         },
       ],
-    }
-  );
+    },
+  });
 }
 
 /**

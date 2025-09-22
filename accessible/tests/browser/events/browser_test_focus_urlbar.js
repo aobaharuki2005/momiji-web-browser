@@ -331,16 +331,16 @@ async function runTests() {
 // with the main test.
 async function runTipTests() {
   let matches = [
-    new UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.URL,
-      UrlbarUtils.RESULT_SOURCE.HISTORY,
+    new UrlbarResult({
+      type: UrlbarUtils.RESULT_TYPE.URL,
+      source: UrlbarUtils.RESULT_SOURCE.HISTORY,
       // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-      { url: "http://mozilla.org/a" }
-    ),
-    new UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.TIP,
-      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      {
+      payload: { url: "http://mozilla.org/a" },
+    }),
+    new UrlbarResult({
+      type: UrlbarUtils.RESULT_TYPE.TIP,
+      source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      payload: {
         // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         helpUrl: "http://example.com/",
         type: "test",
@@ -352,20 +352,20 @@ async function runTipTests() {
             l10n: { id: "urlbar-search-tips-confirm" },
           },
         ],
-      }
-    ),
-    new UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.URL,
-      UrlbarUtils.RESULT_SOURCE.HISTORY,
+      },
+    }),
+    new UrlbarResult({
+      type: UrlbarUtils.RESULT_TYPE.URL,
+      source: UrlbarUtils.RESULT_SOURCE.HISTORY,
       // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-      { url: "http://mozilla.org/b" }
-    ),
-    new UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.URL,
-      UrlbarUtils.RESULT_SOURCE.HISTORY,
+      payload: { url: "http://mozilla.org/b" },
+    }),
+    new UrlbarResult({
+      type: UrlbarUtils.RESULT_TYPE.URL,
+      source: UrlbarUtils.RESULT_SOURCE.HISTORY,
       // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-      { url: "http://mozilla.org/c" }
-    ),
+      payload: { url: "http://mozilla.org/c" },
+    }),
   ];
 
   // Ensure the tip appears in the expected position.

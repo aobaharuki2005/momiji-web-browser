@@ -204,7 +204,7 @@ export class YelpSuggestions extends SuggestProvider {
       bottomTextL10n: { id: "firefox-suggest-yelp-bottom-text" },
       iconBlob: suggestion.icon_blob,
     };
-    let highlights = {};
+    let payloadHighlights = {};
 
     if (
       lazy.UrlbarPrefs.get("yelpServiceResultDistinction") &&
@@ -221,18 +221,16 @@ export class YelpSuggestions extends SuggestProvider {
       };
     } else {
       payload.title = title;
-      highlights.title = titleHighlights;
+      payloadHighlights.title = titleHighlights;
     }
 
-    return Object.assign(
-      new lazy.UrlbarResult(
-        lazy.UrlbarUtils.RESULT_TYPE.URL,
-        lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
-        payload,
-        highlights
-      ),
-      resultProperties
-    );
+    return new lazy.UrlbarResult({
+      type: lazy.UrlbarUtils.RESULT_TYPE.URL,
+      source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
+      ...resultProperties,
+      payload,
+      payloadHighlights,
+    });
   }
 
   /**

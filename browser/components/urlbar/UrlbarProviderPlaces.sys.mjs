@@ -311,9 +311,9 @@ function makeUrlbarResult(tokens, info) {
     switch (action.type) {
       case "searchengine":
         // Return a form history result.
-        return new lazy.UrlbarResult(
-          UrlbarUtils.RESULT_TYPE.SEARCH,
-          UrlbarUtils.RESULT_SOURCE.HISTORY,
+        return new lazy.UrlbarResult({
+          type: UrlbarUtils.RESULT_TYPE.SEARCH,
+          source: UrlbarUtils.RESULT_SOURCE.HISTORY,
           ...lazy.UrlbarResult.payloadAndSimpleHighlights(tokens, {
             engine: action.params.engineName,
             isBlockable: true,
@@ -327,28 +327,30 @@ function makeUrlbarResult(tokens, info) {
             ],
             lowerCaseSuggestion:
               action.params.searchSuggestion.toLocaleLowerCase(),
-          })
-        );
-      case "switchtab": {
-        let payload = lazy.UrlbarResult.payloadAndSimpleHighlights(tokens, {
-          url: [action.params.url, UrlbarUtils.HIGHLIGHT.TYPED],
-          title: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
-          icon: info.icon,
-          userContextId: info.userContextId,
-          lastVisit: info.lastVisit,
-          tabGroup: info.tabGroup,
-          frecency: info.frecency,
+          }),
         });
-        if (lazy.UrlbarPrefs.get("secondaryActions.switchToTab")) {
-          payload[0].action = UrlbarUtils.createTabSwitchSecondaryAction(
-            info.userContextId
-          );
-        }
-        return new lazy.UrlbarResult(
-          UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-          UrlbarUtils.RESULT_SOURCE.TABS,
-          ...payload
+      case "switchtab": {
+        let payloadAndHighlights = lazy.UrlbarResult.payloadAndSimpleHighlights(
+          tokens,
+          {
+            url: [action.params.url, UrlbarUtils.HIGHLIGHT.TYPED],
+            title: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
+            icon: info.icon,
+            userContextId: info.userContextId,
+            lastVisit: info.lastVisit,
+            tabGroup: info.tabGroup,
+            frecency: info.frecency,
+          }
         );
+        if (lazy.UrlbarPrefs.get("secondaryActions.switchToTab")) {
+          payloadAndHighlights.payload.action =
+            UrlbarUtils.createTabSwitchSecondaryAction(info.userContextId);
+        }
+        return new lazy.UrlbarResult({
+          type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+          source: UrlbarUtils.RESULT_SOURCE.TABS,
+          ...payloadAndHighlights,
+        });
       }
       default:
         console.error(`Unexpected action type: ${action.type}`);
@@ -398,8 +400,8 @@ function makeUrlbarResult(tokens, info) {
     });
   }
 
-  return new lazy.UrlbarResult(
-    UrlbarUtils.RESULT_TYPE.URL,
+  return new lazy.UrlbarResult({
+    type: UrlbarUtils.RESULT_TYPE.URL,
     source,
     ...lazy.UrlbarResult.payloadAndSimpleHighlights(tokens, {
       url: [info.url, UrlbarUtils.HIGHLIGHT.TYPED],
@@ -411,8 +413,8 @@ function makeUrlbarResult(tokens, info) {
       helpUrl,
       lastVisit: info.lastVisit,
       frecency: info.frecency,
-    })
-  );
+    }),
+  });
 }
 
 const MATCH_TYPE = {

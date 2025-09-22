@@ -43,14 +43,14 @@ export class UrlbarProviderActionsSearchMode extends UrlbarProvider {
     let input = queryContext.trimmedLowerCaseSearchString;
     let results = await lazy.ActionsProviderQuickActions.getActions(input);
     results.forEach(resultKey => {
-      let result = new lazy.UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.DYNAMIC,
-        UrlbarUtils.RESULT_SOURCE.ACTIONS,
-        {
+      let result = new lazy.UrlbarResult({
+        type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
+        source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
+        payload: {
           key: resultKey,
           dynamicType: DYNAMIC_TYPE_NAME,
-        }
-      );
+        },
+      });
       addCallback(this, result);
     });
   }

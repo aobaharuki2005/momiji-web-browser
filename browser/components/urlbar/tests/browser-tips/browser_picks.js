@@ -149,10 +149,10 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
 }
 
 function makeTipResult({ buttonUrl, helpUrl }) {
-  return new UrlbarResult(
-    UrlbarUtils.RESULT_TYPE.TIP,
-    UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-    {
+  return new UrlbarResult({
+    type: UrlbarUtils.RESULT_TYPE.TIP,
+    source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    payload: {
       type: "test",
       titleL10n: { id: "urlbar-search-tips-confirm" },
       buttons: [
@@ -165,6 +165,6 @@ function makeTipResult({ buttonUrl, helpUrl }) {
       helpL10n: {
         id: "urlbar-result-menu-tip-get-help",
       },
-    }
-  );
+    },
+  });
 }

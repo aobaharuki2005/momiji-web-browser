@@ -565,17 +565,15 @@ add_task(async function highlighting() {
    */
   class TestHighlightProvider extends TestProvider {
     startQuery(context, addCallback) {
-      let result = Object.assign(
-        new UrlbarResult(
-          UrlbarUtils.RESULT_TYPE.DYNAMIC,
-          UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-          ...UrlbarResult.payloadAndSimpleHighlights(context.tokens, {
-            dynamicType: DYNAMIC_TYPE_NAME,
-            text: ["Test title", UrlbarUtils.HIGHLIGHT.TYPED],
-          })
-        ),
-        { suggestedIndex: 1 }
-      );
+      let result = new UrlbarResult({
+        type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        suggestedIndex: 1,
+        ...UrlbarResult.payloadAndSimpleHighlights(context.tokens, {
+          dynamicType: DYNAMIC_TYPE_NAME,
+          text: ["Test title", UrlbarUtils.HIGHLIGHT.TYPED],
+        }),
+      });
       addCallback(this, result);
     }
 
@@ -925,16 +923,14 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
   constructor() {
     super({
       results: [
-        Object.assign(
-          new UrlbarResult(
-            UrlbarUtils.RESULT_TYPE.DYNAMIC,
-            UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-            {
-              dynamicType: DYNAMIC_TYPE_NAME,
-            }
-          ),
-          { suggestedIndex: 1 }
-        ),
+        new UrlbarResult({
+          type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
+          source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+          suggestedIndex: 1,
+          payload: {
+            dynamicType: DYNAMIC_TYPE_NAME,
+          },
+        }),
       ],
     });
   }

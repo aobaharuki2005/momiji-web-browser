@@ -1513,11 +1513,11 @@ function makeHistoryResults(count) {
   let results = [];
   for (let i = 0; i < count; i++) {
     results.push(
-      new UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.URL,
-        UrlbarUtils.RESULT_SOURCE.HISTORY,
-        { url: "http://example.com/" + i }
-      )
+      new UrlbarResult({
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        payload: { url: "http://example.com/" + i },
+      })
     );
   }
   return results;
@@ -1527,16 +1527,16 @@ function makeRemoteSuggestionResults(count) {
   let results = [];
   for (let i = 0; i < count; i++) {
     results.push(
-      new UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.SEARCH,
-        UrlbarUtils.RESULT_SOURCE.SEARCH,
-        {
+      new UrlbarResult({
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        payload: {
           engine: "test",
           query: "test",
           suggestion: "test " + i,
           lowerCaseSuggestion: "test " + i,
-        }
-      )
+        },
+      })
     );
   }
   return results;
@@ -1546,15 +1546,15 @@ function makeFormHistoryResults(count) {
   let results = [];
   for (let i = 0; i < count; i++) {
     results.push(
-      new UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.SEARCH,
-        UrlbarUtils.RESULT_SOURCE.HISTORY,
-        {
+      new UrlbarResult({
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        payload: {
           engine: "test",
           suggestion: "test " + i,
           lowerCaseSuggestion: "test " + i,
-        }
-      )
+        },
+      })
     );
   }
   return results;

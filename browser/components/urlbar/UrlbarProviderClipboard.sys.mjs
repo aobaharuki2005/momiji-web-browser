@@ -109,9 +109,9 @@ export class UrlbarProviderClipboard extends UrlbarProvider {
 
   async startQuery(queryContext, addCallback) {
     // If the query was started, isActive should have cached a url already.
-    let result = new lazy.UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.URL,
-      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    let result = new lazy.UrlbarResult({
+      type: UrlbarUtils.RESULT_TYPE.URL,
+      source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         fallbackTitle: [
           UrlbarUtils.prepareUrlForDisplay(this.#previousClipboard.value, {
@@ -122,8 +122,8 @@ export class UrlbarProviderClipboard extends UrlbarProvider {
         url: [this.#previousClipboard.value, UrlbarUtils.HIGHLIGHT.NONE],
         icon: "chrome://global/skin/icons/clipboard.svg",
         isBlockable: true,
-      })
-    );
+      }),
+    });
 
     addCallback(this, result);
   }

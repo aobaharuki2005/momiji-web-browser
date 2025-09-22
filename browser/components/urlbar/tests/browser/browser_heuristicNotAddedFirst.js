@@ -16,15 +16,15 @@ add_task(async function slowHeuristicSelected() {
   // provider and the one below have a high priority so that only they are used
   // during the test.
   let engine = await Services.search.getDefault();
-  let heuristicResult = new UrlbarResult(
-    UrlbarUtils.RESULT_TYPE.SEARCH,
-    UrlbarUtils.RESULT_SOURCE.SEARCH,
-    {
+  let heuristicResult = new UrlbarResult({
+    type: UrlbarUtils.RESULT_TYPE.SEARCH,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    heuristic: true,
+    payload: {
       suggestion: "test",
       engine: engine.name,
-    }
-  );
-  heuristicResult.heuristic = true;
+    },
+  });
   let heuristicProvider = new UrlbarTestUtils.TestProvider({
     results: [heuristicResult],
     name: "heuristicProvider",
@@ -74,15 +74,15 @@ add_task(async function oneOffRemainsSelected() {
   // provider and the one below have a high priority so that only they are used
   // during the test.
   let engine = await Services.search.getDefault();
-  let heuristicResult = new UrlbarResult(
-    UrlbarUtils.RESULT_TYPE.SEARCH,
-    UrlbarUtils.RESULT_SOURCE.SEARCH,
-    {
+  let heuristicResult = new UrlbarResult({
+    type: UrlbarUtils.RESULT_TYPE.SEARCH,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    heuristic: true,
+    payload: {
       suggestion: "test",
       engine: engine.name,
-    }
-  );
-  heuristicResult.heuristic = true;
+    },
+  });
   let heuristicProvider = new UrlbarTestUtils.TestProvider({
     results: [heuristicResult],
     name: "heuristicProvider",
@@ -144,10 +144,10 @@ add_task(async function oneOffRemainsSelected() {
 });
 
 function makeTipResult() {
-  return new UrlbarResult(
-    UrlbarUtils.RESULT_TYPE.TIP,
-    UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-    {
+  return new UrlbarResult({
+    type: UrlbarUtils.RESULT_TYPE.TIP,
+    source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    payload: {
       helpUrl: "http://example.com/",
       type: "test",
       titleL10n: { id: "urlbar-search-tips-confirm" },
@@ -157,6 +157,6 @@ function makeTipResult() {
           l10n: { id: "urlbar-search-tips-confirm" },
         },
       ],
-    }
-  );
+    },
+  });
 }
