@@ -578,6 +578,12 @@
   <string name="onboarding_redesign_continue_button">ສືບຕໍ່</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_redesign_title" tools:ignore="BrandUsage">ຊ່ວຍພວກເຮົາພັດທະນາ Firefox</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_redesign_opt_out_checkbox" tools:ignore="BrandUsage">ແບ່ງປັນວິທີທີ່ທ່ານຄົ້ນພົບ Firefox, ແລະ ທີ່ທ່ານໃຊ້ມັນ, ກັບຄູ່ຮ່ວມການຕະຫຼາດຂອງ Mozilla. ຂໍ້ມູນນີ້ບໍ່ເຄີຍຖືກຂາຍ.</string>
+  <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
+  <string name="onboarding_marketing_redesign_learn_more">ພວກເຮົາໃຊ້ຂໍ້ມູນແນວໃດ</string>
+  <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
+  <string name="onboarding_marketing_redesign_positive_button">ຢືນຢັນ​</string>
   <!-- Set to default browser onboarding redesign title. -->
   <string name="onboarding_redesign_set_default_browser_title">ໄດ້ຮັບການປົກປ້ອງການຕິດຕາມອັດຕະໂນມັດໂດຍຄ່າເລີ່ມຕົ້ນ</string>
   <!-- Set to default browser onboarding redesign body. -->
@@ -796,6 +802,8 @@
   <string name="preferences_customize">ການປັບແຕ່ງ</string>
   <!-- Preference description for banner about signing in -->
   <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Sync ແທັບ, ບຸກມາກ, ລະຫັດຜ່ານ ແລະ ອື່ນໆຂອງທ່ານ.</string>
+  <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
+  <string name="preferences_sign_in_description">ຊິ້ງແຖບ, ບຸກມາກ, ລະຫັດຜ່ານ ແລະ ອື່ນໆອີກ.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">ບັນຊີ Mozilla</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1037,6 +1045,8 @@
   <string name="alternative_app_icon_group_solid_colors">ສີແຂງ</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">ຊັ້ນສີ</string>
+  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_other">ອື່ນໆ</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">ປ່ຽນໄອຄອນແອັບບໍ?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
@@ -1157,12 +1167,26 @@
   <string name="exceptions_empty_message_learn_more_link">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
   <!-- Preference switch for usage and technical data collection -->
   <string name="preference_usage_data_2">ສົ່ງຂໍ້ມູນດ້ານເຕັກນິກ ແລະ ການໂຕ້ຕອບ</string>
+  <!-- Preference switch for usage and technical learn more link in new compose -->
+  <string name="preference_usage_data_learn_more_2">ສຶກສາເພີ່ມເຕີມກ່ຽວກັບຂໍ້ມູນດ້ານເຕັກນິກ</string>
   <!-- Preference description for marketing data collection. Note: The words "Firefox" should NOT be translated -->
   <string name="preferences_usage_data_description_1" tools:ignore="BrandUsage">ຂໍ້​ມູນ​ກ່ຽວ​ກັບ​ອຸ​ປະ​ກອນ​ຂອງ​ທ່ານ, ການ​ຕັ້ງ​ຄ່າ​ຮາດ​ແວ, ແລະ​ ການ​ນໍາ​ໃຊ້​ຊ່ວຍ​ໃຫ້​ພວກ​ເຮົາ​ປັບ​ປຸງ​ຄຸນ​ສົມ​ບັດ Firefox, ປະ​ສິດ​ທິ​ພາບ, ແລະ ​ຄວາມ​ຫມັ້ນ​ຄົງ.</string>
   <!-- Preference switch for daily usage ping data collection -->
   <string name="preferences_daily_usage_ping_title">ping ການນໍາໃຊ້ປະຈໍາວັນ</string>
   <string name="preferences_daily_usage_ping_description">ນີ້ຊ່ວຍໃຫ້ Mozilla ຄາດຄະເນຜູ້ໃຊ້ງານທີ່ມີການເຄື່ອນໄຫວ.</string>
   <string name="preferences_daily_usage_ping_learn_more">ສຶກສາເພີ່ມເຕີມກ່ຽວກັບການໃຊ້ ping ປະຈໍາວັນ</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">ສົ່ງລາຍງານແລ້ວ</string>
+  <!-- Text for sumo link to learn more about crash reports in data collection screen -->
+  <string name="preferences_crashes_learn_more">ສຶກສາເພີ່ມເຕີມກ່ຽວກັບລາຍງານການຂັດຂ້ອງ</string>
+  <!-- Title Headers for data collection settings screen -->
+  <string name="crash_reports_data_category">ລາຍງານຂໍ້ຂັດຂ້ອງ</string>
+  <string name="usage_data_category">ຂໍ້ມູນການນໍາໃຊ້</string>
+  <string name="studies_data_category">ການສຶກສາ</string>
+  <string name="technical_data_category">ຂໍ້ມູນດ້ານເຕັກນິກ</string>
+  <string name="crash_reporting_description">ບົດລາຍງານການຂັດຂ້ອງອະນຸຍາດໃຫ້ພວກເຮົາວິນິດໄສ ແລະ ແກ້ໄຂບັນຫາກັບຕົວທ່ອງເວັບ. ບົດລາຍງານອາດຈະປະກອບມີຂໍ້ມູນສ່ວນຕົວ ຫຼື ຂໍ້ມູນທີ່ລະອຽດອ່ອນ.</string>
+  <!-- Section title for campaign measurement in data collections screen -->
+  <string name="preferences_marketing_data_title">ການວັດແທກແຄມເປນ</string>
   <!-- Preference switch for campaign measurement data (marketing data) collection -->
   <string name="preferences_marketing_data_2">ຂໍ້ມູນການວັດແທກແຄມເປນ</string>
   <!--
@@ -1182,6 +1206,8 @@
     Header of the Sync and save your data preference view
   -->
   <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">ຊິງຄ໌ແລະບັນທຶກຂໍ້ມູນ</string>
+  <!-- Header of the Sign in preference view -->
+  <string name="preferences_sign_in">ເຂົ້າສູ່ລະບົບ</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">ເຂົ້າສູ່ລະບົບເພື່ອເຊື່ອມຕໍ່ຄືນໃຫມ່</string>
   <!-- Preference for removing FxA account -->
@@ -1200,6 +1226,18 @@
   <string name="preference_top_toolbar">ເທິງ</string>
   <!-- Preference for using bottom toolbar -->
   <string name="preference_bottom_toolbar">ລຸ່ມ</string>
+  <!-- Preference for using simple toolbar -->
+  <string name="preference_simple_toolbar">ງ່າຍດາຍ</string>
+  <!-- Preference for using expanded toolbar -->
+  <string name="preference_expanded_toolbar">ຂະຫຍາຍ</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">ແຖບທີ່ຢູ່ຕ້ອງຢູ່ເທິງສຸດເມື່ອແຖບແຖບຖືກສະແດງ.</string>
+  <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">ເລືອກໄອຄອນແອັບ</string>
   <!--
     Theme Preferences
 
@@ -1212,6 +1250,12 @@
   <string name="preference_auto_battery_theme">ຕັ້ງໂດຍຕົວປະຢັດແບດເຕີລີ່</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">ຕາມຊຸດຕົກແຕ່ງອຸປະກອນ</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">ສະແດງແຖບ</string>
   <!--
     Gestures Preferences
 
@@ -1312,6 +1356,8 @@
   <string name="close_tabs_after_one_month">ຫຼັງຈາກໜຶ່ງເດືອນ</string>
   <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
   <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">ປິດແຖບເປີດອັດຕະໂນມັດ</string>
+  <!-- Content description (not visible, for screen readers etc.): Close tab button -->
+  <string name="tab_manager_close_tabs">ປິດ</string>
   <!--
     Opening screen
 
@@ -1361,6 +1407,13 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
   <!--
+    Sessions
+
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">ແຖບປົກກະຕິເປີດ: %1$s. ແຕະເພື່ອສະຫຼັບແຖບ.</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1370,6 +1423,18 @@
     The %1$s will be replaced by the number of opened synced tabs
   -->
   <string name="tabs_header_synced_tabs_counter_title">ແຖບທີ່ຊິ້ງແລ້ວເປີດຢູ່: %1$s. ແຕະເພື່ອສະຫຼັບແຖບ.</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">ສ່ວນຕົວ</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">ແທັບ</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">Sync</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
+  <string name="tab_manager_floating_action_button_new_normal_tab">ແທັບໃຫມ່</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
+  <string name="tab_manager_floating_action_button_new_private_tab">ແທັບສ່ວນຕົວໃຫມ່</string>
+  <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
+  <string name="tab_manager_floating_action_button_sync_tabs">ແຖບ Sync</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">ເພີ່ມແທັບ</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1392,8 +1457,16 @@
   <string name="tab_tray_menu_item_close">ປິດແທັບທັງຫມົດ</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">ບຸກມາກ</string>
+  <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_bookmark_content_description">ບຸກມາກແຖບທີ່ເລືອກ</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">ປິດ</string>
+  <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_close_content_description">ປິດແຖບທີ່ເລືອກ</string>
+  <!-- Text shown in the multiselect menu for sharing selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_share">ແບ່ງປັນ</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_collection">ເພີ່ມໃສ່ຄໍເລັກຊັນ</string>
   <!-- Content description for tabs tray multiselect share button -->
   <string name="tab_tray_multiselect_share_content_description">ແບ່ງປັນແທັບທີ່ເລືອກໄວ້</string>
   <!-- Content description for tabs tray multiselect menu -->
@@ -1464,6 +1537,8 @@
     %1$d is the number of items deleted.
   -->
   <string name="download_delete_multiple_items_snackbar_2">ລຶບລາຍການແລ້ວ: %1$d</string>
+  <!-- Title for the dialog that prompts the user to choose an app for downloading a file. -->
+  <string name="download_app_dialog_title">ດາວໂຫຼດໄຟລ໌ດ້ວຍ:</string>
   <!-- Text for the snackbar to confirm that a single download item has been removed. %1$s is the name of the download item. -->
   <string name="download_delete_single_item_snackbar_2">ລຶບ “%1$s” ແລ້ວ</string>
   <!-- Text for the snackbar to confirm that downloads are in progress. -->
@@ -1508,6 +1583,16 @@
   <string name="download_navigate_back_description">ນຳທາງຍ້ອນກັບ</string>
   <!-- Content description for the toolbar back button while searching the downloads -->
   <string name="download_close_search_description">ກັບຄືນ ແລະ ປິດການຊອກຫາ</string>
+  <!--
+    Content description for the search bar clear text button on the downloads screen
+
+    Content description for pause action button on the downloads screen
+  -->
+  <string name="download_pause_action">ຢຸດ</string>
+  <!-- Content description for resume action button on the downloads screen -->
+  <string name="download_resume_action">ດຳເນີນການຕໍ່</string>
+  <!-- Content description for retry download action button on the downloads screen -->
+  <string name="download_retry_action">ລອງໃຫມ່ອີກເທື່ອຫນຶ່ງ</string>
   <string name="download_clear_search_description">ລົບລ້າງ</string>
   <!-- Text for the button to share the download URL -->
   <string name="download_share_url">ແບ່ງປັນ URL</string>
@@ -1535,8 +1620,31 @@
   <string name="download_time_period_last_30_days">30 ມື້ທີ່ຜ່ານມາ</string>
   <!-- Text for the header that groups the downloads older than other groups -->
   <string name="download_time_period_older">ເກົ່າກວ່າ</string>
+  <!-- Description of an in progress download item, displayed in the downloads list when the download has just started. -->
+  <string name="download_item_in_progress_description_preparing">ກຳລັງກະກຽມການດາວໂຫຼດ…</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the download time remaining is known.
+    %1$s is the current file size that has been downloaded.
+    %2$s is the total size of the downloaded file.
+    %3$s is the amount of time remaining to complete the download.
+  -->
+  <string name="download_item_in_progress_description_2">%1$s / %2$s • ໃນ %3$s.</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the estimated download time remaining is still being calculated.
+    %1$s is the current file size that has been downloaded.
+    %2$s is the total size of the downloaded file.
+  -->
+  <string name="download_item_in_progress_description_pending">%1$s / %2$s • ລໍຖ້າຢູ່</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list.
+    %1$s is the current file size that has been downloaded.
+    %2$s is the total size of the downloaded file.
+  -->
+  <string name="download_item_paused_description">%1$s / %2$s • ຢຸດຊົ່ວຄາວ</string>
   <!-- Text to indicate that a download has failed to download. -->
   <string name="download_item_status_failed">ການດາວໂຫຼດລົ້ມເຫລວ</string>
+  <!-- Text for the snackbar action button to view failed download details. -->
+  <string name="download_failed_snackbar_action_details">ລາຍລະອຽດ</string>
   <!-- Placeholder text to indicate that users can use the search bar to search for a download. -->
   <string name="download_search_placeholder">ຄົ້ນຫາການດາວໂຫຼດ</string>
   <!-- Text to indicate that no downloads match the search query. -->
@@ -2751,6 +2859,77 @@
   <string name="delete_language_all_languages_file_dialog_title">ລຶບທຸກພາສາ (%1$s) ບໍ?</string>
   <!-- Additional information for the dialog used by the translations feature to confirm deleting all languages file. %1$s is the name of the app (for example "Firefox"). -->
   <string name="delete_language_all_languages_file_dialog_message">ຖ້າທ່ານລຶບທຸກພາສາ, %1$s ຈະດາວໂຫຼດບາງພາສາໃສ່ແຄດຂອງທ່ານເມື່ອທ່ານແປ.</string>
+  <!--
+    Text for displaying the total number of trackers blocked in the protection panel.
+    %d is a placeholder for the number of trackers blocked.
+  -->
+  <string name="protection_panel_num_trackers_blocked">ບລັອກຕົວຕິດຕາມ: %d</string>
+  <!-- Text for when no trackers have been blocked. -->
+  <string name="protection_panel_no_trackers_blocked">ບໍ່ພົບຕົວຕິດຕາມ</string>
+  <!--
+    Text for displaying the total number of trackers blocked in the trackers blocked panel.
+    %d is a placeholder for the number of trackers blocked.
+  -->
+  <string name="trackers_blocked_panel_total_num_trackers_blocked">ບລັອກຕົວຕິດຕາມ: %d</string>
+  <!--
+    Text for displaying the number of trackers blocked for a specific tracker category in the trackers blocked panel.
+    %s is a placeholder for the name of the tracker category.
+    %d is a placeholder for the number of trackers blocked.
+  -->
+  <string name="trackers_blocked_panel_categorical_num_trackers_blocked">%s: %d</string>
+  <!--
+    Description text for a dialog confirming whether the user wants to delete all data for current site.
+    %s is a placeholder for the base domain of website.
+  -->
+  <string name="clear_site_data_dialog_description"><![CDATA[ການລຶບຄຸກກີ້ ແລະ ຂໍ້ມູນເວັບໄຊສຳລັບ <b>%s</b> ອາດຈະເຮັດໃຫ້ທ່ານອອກຈາກລະບົບເວັບໄຊ ແລະ ລຶບລ້າງກະຕ່າຊື້ເຄື່ອງ.]]></string>
+  <!-- Button text on the clear site data dialog to allow users to confirm they wish to clear the site data. -->
+  <string name="clear_site_data_dialog_positive_button_text">ລົບລ້າງ</string>
+  <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
+  <string name="clear_site_data_dialog_negative_button_text">ຍົກເລີກ</string>
+  <!-- Snackbar title shown when the site data has been cleared. -->
+  <string name="clear_site_data_snackbar" moz:removedIn="144" tools:ignore="UnusedResources">ລຶບຄຸກກີ້ ແລະ ຂໍ້ມູນເວັບໄຊອອກ</string>
+  <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
+  <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">ເພີ່ມໃສ່ແຖບທີ່ເຄື່ອນໄຫວ</string>
+  <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
+  <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">ເພີ່ມໃສ່ແຖບທີ່ບໍ່ເຄື່ອນໄຫວ</string>
+  <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
+  <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">ເພີ່ມໃສ່ແຖບສ່ວນຕົວ</string>
+  <!--
+    Microsurvey
+
+    Prompt view
+
+    The microsurvey prompt title. Note: The word "Firefox" should NOT be translated
+  -->
+  <string name="micro_survey_prompt_title" tools:ignore="BrandUsage,UnusedResources">ຊ່ວຍພວກເຮົາເຮັດໃຫ້ Firefox ດີຂຶ້ນ. ມັນໃຊ້ເວລາພຽງແຕ່ນາທີ.</string>
+  <!-- The continue button label -->
+  <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">ສືບຕໍ່</string>
+  <!--
+    Survey view
+
+    The survey header
+  -->
+  <string name="micro_survey_survey_header_2">ກະລຸນາເຮັດສໍາຫຼວດ</string>
+  <!-- The privacy notice link -->
+  <string name="micro_survey_privacy_notice_2">ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ</string>
+  <!-- The submit button label text -->
+  <string name="micro_survey_submit_button_label">ສົ່ງ</string>
+  <!-- The survey completion header -->
+  <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">ສໍາ​ເລັດ​ການ​ສໍາ​ຫຼວດ​</string>
+  <!-- The survey completion confirmation text -->
+  <string name="micro_survey_feedback_confirmation">ຂໍ​ຂອບ​ໃຈ​ສໍາ​ລັບ​ຄໍາ​ຄຶດ​ຄໍາ​ເຫັນ​ຂອງ​ທ່ານ​!</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_1" tools:ignore="UnusedResources">ພໍໃຈຫຼາຍ</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_2" tools:ignore="UnusedResources">ພໍໃຈ</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_3" tools:ignore="UnusedResources">ເປັນກາງ</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_4" tools:ignore="UnusedResources">ບໍ່ພໍໃຈ</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_5" tools:ignore="UnusedResources">ບໍ່ພໍໃຈຫຼາຍ</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_6" tools:ignore="UnusedResources">ຂ້ອຍບໍ່ໃຊ້ມັນ</string>
   <!-- Option for likert scale. Note: The word "Firefox" should NOT be translated. -->
   <string name="likert_scale_option_7" tools:ignore="BrandUsage,UnusedResources">ຂ້ອຍບໍ່ໃຊ້ການຄົ້ນຫາໃນ Firefox</string>
   <!-- Text shown in prompt for search microsurvey. Note: The word "Firefox" should NOT be translated. -->
