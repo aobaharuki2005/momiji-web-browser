@@ -37,6 +37,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.FolderUploadPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.Popup
+import mozilla.components.concept.engine.prompt.PromptRequest.Redirect
 import mozilla.components.concept.engine.prompt.PromptRequest.Repost
 import mozilla.components.concept.engine.prompt.PromptRequest.SaveCreditCard
 import mozilla.components.concept.engine.prompt.PromptRequest.SaveLoginPrompt
@@ -623,7 +624,7 @@ class PromptFeature private constructor(
         // Some requests are handle with intents
         session.content.promptRequests.lastOrNull()?.let { promptRequest ->
             if (session.content.permissionRequestsList.isNotEmpty()) {
-                val value: Any? = if (promptRequest is Popup) false else null
+                val value: Any? = if (promptRequest is Popup || promptRequest is Redirect) false else null
                 onCancel(session.id, promptRequest.uid, value)
             } else {
                 processPromptRequest(promptRequest, session)
@@ -727,6 +728,11 @@ class PromptFeature private constructor(
                     promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
                     it.onDeny()
                 }
+                is Redirect -> {
+                    val shouldNotShowMoreDialogs = value as Boolean
+                    promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
+                    it.onDeny()
+                }
 
                 is Dismissible -> {
                     if (it is SelectLoginPrompt) {
@@ -765,6 +771,11 @@ class PromptFeature private constructor(
                 is MenuChoice -> it.onConfirm(value as Choice)
                 is BeforeUnload -> it.onLeave()
                 is Popup -> {
+                    val shouldNotShowMoreDialogs = value as Boolean
+                    promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
+                    it.onAllow()
+                }
+                is Redirect -> {
                     val shouldNotShowMoreDialogs = value as Boolean
                     promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
                     it.onAllow()
@@ -1078,6 +1089,23 @@ class PromptFeature private constructor(
                 )
             }
 
+            is Redirect -> {
+                val title = container.getString(R.string.mozac_feature_prompts_redirect_dialog_title)
+                val positiveLabel = container.getString(R.string.mozac_feature_prompts_allow)
+                val negativeLabel = container.getString(R.string.mozac_feature_prompts_deny)
+
+                ConfirmDialogFragment.newInstance(
+                    sessionId = session.id,
+                    promptRequest.uid,
+                    title = title,
+                    message = promptRequest.targetUri,
+                    positiveButtonText = positiveLabel,
+                    negativeButtonText = negativeLabel,
+                    hasShownManyDialogs = promptAbuserDetector.areDialogsBeingAbused(),
+                    shouldDismissOnLoad = true,
+                )
+            }
+
             is BeforeUnload -> {
                 val title =
                     container.getString(R.string.mozac_feature_prompt_before_unload_dialog_title)
@@ -1295,7 +1323,7 @@ class PromptFeature private constructor(
             is PromptRequest.IdentityCredential.PrivacyPolicy,
             -> true
 
-            is Alert, is TextPrompt, is Confirm, is Repost, is Popup, is FolderUploadPrompt,
+            is Alert, is TextPrompt, is Confirm, is Repost, is Popup, is FolderUploadPrompt, is Redirect,
             -> promptAbuserDetector.shouldShowMoreDialogs
         }
     }

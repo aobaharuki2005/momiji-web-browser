@@ -158,6 +158,8 @@ open class BaseSessionTest(
         const val INTERACTIVE_WIDGET_HTML_PATH = "/assets/www/interactive-widget.html"
         const val INTERACTIVE_WIDGET_OVERLAYS_CONTENT_HTML_PATH = "/assets/www/interactive-widget-overlays-content.html"
         const val VIEW_TRANSITION_SNAPSHOT_SIZE = "/assets/www/view-transition-snapshot-size.html"
+        const val FRAMEBUSTING_CHILD_URI = "https://example.org/tests/junit/framebusting_child.html"
+        const val FRAMEBUSTING_PARENT_URI = "https://example.net/tests/junit/framebusting_parent.html"
 
         const val TEST_ENDPOINT = GeckoSessionTestRule.TEST_ENDPOINT
         const val TEST_HOST = GeckoSessionTestRule.TEST_HOST

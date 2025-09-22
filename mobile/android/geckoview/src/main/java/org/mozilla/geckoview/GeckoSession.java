@@ -6144,6 +6144,43 @@ public class GeckoSession {
       }
     }
 
+    /**
+     * RedirectPrompt contains the information necessary to represent a redirect blocking request.
+     */
+    class RedirectPrompt extends BasePrompt {
+      /** The target URI for the redirect; may be null. */
+      public final @Nullable String targetUri;
+
+      /**
+       * Constructor for RedirectPrompt with the given target URI.
+       *
+       * @param id Unique identifier for this prompt.
+       * @param targetUri The target URI for the redirect; may be null.
+       * @param observer Observer to notify when the prompt is completed.
+       */
+      protected RedirectPrompt(
+          @NonNull final String id,
+          @Nullable final String targetUri,
+          @NonNull final Observer observer) {
+        super(id, null, observer);
+        this.targetUri = targetUri;
+      }
+
+      /**
+       * Confirms the prompt and either allows or blocks the redirect.
+       *
+       * @param response An {@link AllowOrDeny} specifying whether to allow or deny the redirect.
+       * @return A {@link PromptResponse} which can be used to complete the {@link GeckoResult}
+       *     associated with this prompt.
+       */
+      @UiThread
+      public @NonNull PromptResponse confirm(@NonNull final AllowOrDeny response) {
+        final boolean res = AllowOrDeny.ALLOW == response;
+        ensureResult().putBoolean("response", res);
+        return super.confirm();
+      }
+    }
+
     /** SharePrompt contains the information necessary to represent a (v1) WebShare request. */
     class SharePrompt extends BasePrompt {
       /** Share result type definitions for share operation outcomes. */
@@ -6479,6 +6516,21 @@ public class GeckoSession {
     @UiThread
     default @Nullable GeckoResult<PromptResponse> onPopupPrompt(
         @NonNull final GeckoSession session, @NonNull final PopupPrompt prompt) {
+      return null;
+    }
+
+    /**
+     * Display a redirect request prompt; this occurs when a third-party frame attempts to redirect
+     * the top-level window in a way that doesn't appear to be the result of user input.
+     *
+     * @param session GeckoSession that triggered the prompt.
+     * @param prompt The {@link RedirectPrompt} that describes the prompt.
+     * @return A {@link GeckoResult} resolving to a {@link PromptResponse} which includes all
+     *     necessary information to resolve the prompt.
+     */
+    @UiThread
+    default @Nullable GeckoResult<PromptResponse> onRedirectPrompt(
+        @NonNull final GeckoSession session, @NonNull final RedirectPrompt prompt) {
       return null;
     }
 

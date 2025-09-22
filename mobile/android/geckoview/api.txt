@@ -1590,6 +1590,7 @@ package org.mozilla.geckoview {
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onLoginSave(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSaveOption>);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onLoginSelect(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSelectOption>);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onPopupPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.PopupPrompt);
+    method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onRedirectPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.RedirectPrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onRepostConfirmPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.RepostConfirmPrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onRequestCertificate(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.CertificateRequest);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onSelectIdentityCredentialAccount(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt);
@@ -1854,6 +1855,12 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PromptDelegate.PromptResponse {
+  }
+
+  public static class GeckoSession.PromptDelegate.RedirectPrompt extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor protected RedirectPrompt(@NonNull String, @Nullable String, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
+    method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull AllowOrDeny);
+    field @Nullable public final String targetUri;
   }
 
   public static class GeckoSession.PromptDelegate.RepostConfirmPrompt extends GeckoSession.PromptDelegate.BasePrompt {

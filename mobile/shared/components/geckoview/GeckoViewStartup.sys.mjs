@@ -68,6 +68,7 @@ const JSWINDOWACTORS = {
         "mozshowdropdown-sourcetouch": {},
         MozOpenDateTimePicker: {},
         DOMPopupBlocked: { capture: false, mozSystemGroup: true },
+        DOMRedirectBlocked: { capture: false, mozSystemGroup: true },
       },
     },
     allFrames: true,
