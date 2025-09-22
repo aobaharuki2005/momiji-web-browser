@@ -251,29 +251,6 @@ function maybeGetByL10nId(l10nId, doc = document) {
 }
 
 /**
- * Provide a uniform way to log actions. This abuses the Error stack to get the callers
- * of the action. This should help in test debugging.
- */
-function logAction(...params) {
-  const error = new Error();
-  const stackLines = error.stack.split("\n");
-  const actionName = stackLines[1]?.split("@")[0] ?? "";
-  const taskFileLocation = stackLines[2]?.split("@")[1] ?? "";
-  if (taskFileLocation.includes("head.js")) {
-    // Only log actions that were done at the test level.
-    return;
-  }
-
-  info(`Action: ${actionName}(${params.join(", ")})`);
-  info(
-    `Source: ${taskFileLocation.replace(
-      "chrome://mochitests/content/browser/",
-      ""
-    )}`
-  );
-}
-
-/**
  * Returns true if Full-Page Translations is currently active, otherwise false.
  *
  * @returns {boolean}
