@@ -1646,6 +1646,12 @@ nsresult nsTreeBodyFrame::RowCountChanged(int32_t aIndex, int32_t aCount) {
     }
   }
 
+  int32_t lastPageTopRow = std::max(0, mRowCount - mPageLength);
+  if (mTopRowIndex > lastPageTopRow) {
+    mTopRowIndex = lastPageTopRow;
+    needsInvalidation = true;
+  }
+
   FullScrollbarsUpdate(needsInvalidation);
   return NS_OK;
 }
