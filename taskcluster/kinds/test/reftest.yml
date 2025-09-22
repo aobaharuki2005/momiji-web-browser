@@ -242,7 +242,7 @@ reftest:
                     default: []
             no-fission:
                 by-test-platform:
-                    android-em.*/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: ['trunk']
                     linux1804-64(-qr)?/debug: ['mozilla-central']
                     linux1804-64(-shippable)?(-qr)?/opt: ['mozilla-central']
                     linux1804-64-asan(-qr)?/opt: ['mozilla-central']
@@ -253,7 +253,7 @@ reftest:
                     default: []
             geckoview-no-fission-no-ship:
                 by-test-platform:
-                    android-em.*/debug-isolated-process: []
+                    android-em.*/debug-isolated-process: ['trunk']
                     android-em.*: built-projects
                     default: []
             no-gpu-process:
@@ -296,7 +296,7 @@ reftest:
                     default: default
             default:
                 by-test-platform:
-                    android-em.*/debug-isolated-process: 1
+                    android-em.*/debug-isolated-process: 2
                     default: default
 
 reftest-qr:

@@ -88,7 +88,7 @@ task-defaults:
                     default: 2
             default:
                 by-test-platform:
-                    android-em.*/debug-isolated-process: 1
+                    android-em.*/debug-isolated-process: 2
                     default: default
     mozharness:
         requires-signed-builds:
@@ -158,7 +158,7 @@ tasks:
                         macosx.*64(-shippable)?(-qr)?/.*: ['trunk']
                         windows11-64-24h2(-shippable)?(-qr)?/.*: ['trunk']
                         linux.*64-ccov(-qr)?/opt: ['mozilla-central']
-                        android-em.*/debug-isolated-process: []
+                        android-em.*/debug-isolated-process: ['trunk']
                         android-em.*: ['trunk']
                         default: []
                 socketprocess_networking:
@@ -202,18 +202,18 @@ tasks:
                         default: []
                 geckoview-fission-isolate-high-value:
                     by-test-platform:
-                        android-em.*/debug-isolated-process: []
+                        android-em.*/debug-isolated-process: ['trunk']
                         android-em.*: built-projects
                         default: []
                 geckoview-no-fission-no-ship:
                     by-test-platform:
-                        android-em.*/debug-isolated-process: []
+                        android-em.*/debug-isolated-process: ['trunk']
                         android-em.*: built-projects
                         default: []
                 inc-origin-init: []
                 default:
                     by-test-platform:
-                        android-em.*/debug-isolated-process: []
+                        android-em.*/debug-isolated-process: ['trunk']
                         android.*: built-projects
                         default: built-projects
         chunks:
@@ -1011,7 +1011,7 @@ tasks:
                 default:
                     by-test-platform:
                         .*-ccov.*: 2
-                        android-em.*/debug-isolated-process: 1
+                        android-em.*/debug-isolated-process: 2
                         android-em.*: 1
                         android-hw.*: 1
                         default: default
