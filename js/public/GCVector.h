@@ -136,7 +136,7 @@ class GCVector {
   template <typename T2, size_t MinInlineCapacity2, typename AllocPolicy2>
   [[nodiscard]] bool appendAll(
       GCVector<T2, MinInlineCapacity2, AllocPolicy2>&& aU) {
-    return vector.appendAll(aU.begin(), aU.end());
+    return vector.appendAll(std::move(aU.vector));
   }
 
   [[nodiscard]] bool appendN(const T& val, size_t count) {

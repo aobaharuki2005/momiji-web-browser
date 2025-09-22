@@ -1,5 +1,7 @@
 // Check we get the semantics right when registering the same target multiple
-// times.
+// times and when unregister tokens die before the registry.
+
+gczeal(0);
 
 let vs = [];
 let r = new FinalizationRegistry(v => vs.push(v));
