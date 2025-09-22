@@ -87,6 +87,7 @@
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include "GMPProcessParent.h"
 #  include "nsMacUtilsImpl.h"
+#  include "mozilla/gfx/GPUProcessHost.h"
 #endif
 
 #include "mozilla/ipc/UtilityProcessHost.h"
@@ -1838,6 +1839,9 @@ bool GeckoChildProcessHost::StartMacSandbox(int aArgc, char** aArgv,
       break;
     case GeckoProcessType_Utility:
       sandboxType = ipc::UtilityProcessHost::GetMacSandboxType();
+      break;
+    case GeckoProcessType_GPU:
+      sandboxType = gfx::GPUProcessHost::GetMacSandboxType();
       break;
     default:
       return true;
