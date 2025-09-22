@@ -3195,6 +3195,13 @@ void nsHttpTransaction::OnProxyConnectComplete(int32_t aResponseCode) {
        aResponseCode));
 
   mProxyConnectResponseCode = aResponseCode;
+
+  if (mConnInfo->IsHttp3() && mProxyConnectResponseCode == 200 &&
+      !mHttp3TunnelFallbackTimerCreated) {
+    mHttp3TunnelFallbackTimerCreated = true;
+    CreateAndStartTimer(mHttp3TunnelFallbackTimer, this,
+                        StaticPrefs::network_http_http3_inner_fallback_delay());
+  }
 }
 
 int32_t nsHttpTransaction::GetProxyConnectResponseCode() {
@@ -3409,6 +3416,11 @@ void nsHttpTransaction::MaybeCancelFallbackTimer() {
     mHttp3BackupTimer->Cancel();
     mHttp3BackupTimer = nullptr;
   }
+
+  if (mHttp3TunnelFallbackTimer) {
+    mHttp3TunnelFallbackTimer->Cancel();
+    mHttp3TunnelFallbackTimer = nullptr;
+  }
 }
 
 void nsHttpTransaction::OnBackupConnectionReady(bool aTriggeredByHTTPSRR) {
@@ -3508,6 +3520,24 @@ void nsHttpTransaction::OnHttp3BackupTimer() {
                          std::move(callback));
 }
 
+void nsHttpTransaction::OnHttp3TunnelFallbackTimer() {
+  LOG(("nsHttpTransaction::OnHttp3TunnelFallbackTimer [%p]", this));
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  mHttp3TunnelFallbackTimer = nullptr;
+
+  // Don't disturb the HTTPS RR fallback mechanism.
+  if (mOrigConnInfo) {
+    return;
+  }
+
+  DisableHttp3(false);
+
+  if (mConnection) {
+    mConnection->CloseTransaction(this, NS_ERROR_NET_RESET);
+  }
+}
+
 void nsHttpTransaction::OnFastFallbackTimer() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("nsHttpTransaction::OnFastFallbackTimer [%p] mConnected=%d", this,
@@ -3595,6 +3625,8 @@ nsHttpTransaction::Notify(nsITimer* aTimer) {
     OnFastFallbackTimer();
   } else if (aTimer == mHttp3BackupTimer) {
     OnHttp3BackupTimer();
+  } else if (aTimer == mHttp3TunnelFallbackTimer) {
+    OnHttp3TunnelFallbackTimer();
   }
 
   return NS_OK;

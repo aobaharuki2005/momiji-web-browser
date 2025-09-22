@@ -109,3 +109,31 @@ sequenceDiagram
     Http3Session (inner)->>Http3Stream (inner): WriteSegments()
     Http3Stream (inner)->>nsHttpTransaction: WriteSegmentsAgain()
 ```
+
+## Fallback Mechanism
+This section describes the fallback mechanism for establishing proxy connections when using HTTP/3. The process is divided into two layers: the outer connection (between the browser and the proxy) and the inner connection (between the browser and the target server through the proxy).
+
+### Outer Connection
+
+ - The browser first attempts to establish this connection using HTTP/3.
+ - If the HTTP/3 attempt fails, the connection falls back to HTTP/2 or HTTP/1.
+
+Current implementation:
+ - The fallback logic is implemented in nsHttpTransaction (subject to future changes under the Happy Eyeballs project).
+  - When a transaction is inserted into the pending queue:
+    - A HTTP/3 backup timer is started.
+    - An attempt to establish an HTTP/3 connection to the proxy is initiated.
+ - If the backup timer fires before the HTTP/3 connection succeeds, a TCP connection to the proxy server is created.
+ - If the TCP connection succeeds while HTTP/3 is still pending, we fall back to the TCP-based connection.
+ - At this point, the connection info of the inner connection is also updated to disable HTTP/3, since the we do not support CONNECT-UDP over HTTP/2 or HTTP/1.
+
+### Inner Connection
+Even if the outer connection is established with HTTP/3, the inner connection may still need to fall back.
+
+Current implementation:
+- This fallback logic is also implemented in nsHttpTransaction.
+- Once the proxy responds with 200 OK to the initial connect-udp setup, a HTTP/3 fallback timer for the inner connection is started.
+- If the fallback timer fires:
+  - HTTP/3 for the inner connection is disabled.
+  - The ongoing HTTP/3 inner connection is closed.
+- The inner connection falls back to HTTP/2 or HTTP/1 using a standard HTTP CONNECT tunnel.

@@ -15185,6 +15185,13 @@
   value: 100
   mirror: always
 
+# Delay in milliseconds before falling back the proxy’s inner connection
+# from HTTP/3 to HTTP/2/1 after receiving 200 OK.
+- name: network.http.http3.inner_fallback_delay
+  type: RelaxedAtomicUint32
+  value: 3000
+  mirror: always
+
 # The global half open sockets allowed for creating a backup connection.
 - name: network.http.http3.parallel_fallback_conn_limit
   type: RelaxedAtomicUint32
