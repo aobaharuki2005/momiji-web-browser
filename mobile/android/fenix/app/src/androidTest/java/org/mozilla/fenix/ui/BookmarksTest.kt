@@ -93,10 +93,14 @@ class BookmarksTest : TestSetup() {
     fun editBookmarksNameAndUrlTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
-        browserScreen {
-            createBookmark(composeTestRule, defaultWebPage.url)
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
-        }.editBookmarkPage(composeTestRule) {
+        }.bookmarkPage {
+            verifySnackBarText("Saved in “Bookmarks”")
+            clickSnackbarButton(composeTestRule, "EDIT")
+        }
+        composeBookmarksMenu(composeTestRule) {
             verifyEditBookmarksView()
             changeBookmarkTitle(testBookmark.title)
             changeBookmarkUrl(testBookmark.url)
@@ -323,6 +327,7 @@ class BookmarksTest : TestSetup() {
         }.openThreeDotMenu {
         }.openBookmarksMenu(composeTestRule) {
             verifyFolderTitle(bookmarkFolderName)
+            verifyBookmarkFolderDescription(numberOfBookmarksInFolder = "1")
             selectFolder(bookmarkFolderName)
             verifyBookmarkedURL(defaultWebPage.url.toString())
         }
