@@ -572,6 +572,18 @@
   <string name="onboarding_redesign_tou_body_three_link_text">პარამეტრების მართვა</string>
   <!-- Terms of use (ToU) onboarding page continue button label. -->
   <string name="onboarding_redesign_tou_agree_and_continue_button_label">განაგრძეთ</string>
+  <!-- Onboarding header for the toolbar selection card. -->
+  <string name="onboarding_redesign_customize_toolbar_title">სად განთავსდეს მისამართების ზოლი?</string>
+  <!-- Onboarding label for 'Continue' button. -->
+  <string name="onboarding_redesign_continue_button">განაგრძეთ</string>
+  <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_redesign_title" tools:ignore="BrandUsage">დაგვეხმარეთ, გავავრცელოთ Firefox</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_redesign_opt_out_checkbox" tools:ignore="BrandUsage">გაუზიარეთ Mozilla-ს მოკავშირე სამსახურებს გავრცელების საკითხებში, როგორ აღმოაჩინეთ Firefox და იყენებთ თუ არა. ეს მონაცემები არასდროს გაიყიდება.</string>
+  <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
+  <string name="onboarding_marketing_redesign_learn_more">როგორ ვიყენებთ მონაცემებს</string>
+  <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
+  <string name="onboarding_marketing_redesign_positive_button">თანხმობა</string>
   <!-- Set to default browser onboarding redesign title. -->
   <string name="onboarding_redesign_set_default_browser_title">თვალთვალისგან თავისთავადი დაცვა ნაგულისხმევად</string>
   <!-- Set to default browser onboarding redesign body. -->
@@ -790,6 +802,8 @@
   <string name="preferences_customize">მორგება</string>
   <!-- Preference description for banner about signing in -->
   <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">შედით ანგარიშზე, რომ დაასინქრონოთ თქვენი ჩანართები, სანიშნები, პაროლები და სხვ.</string>
+  <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
+  <string name="preferences_sign_in_description">დაასინქრონეთ ჩანართები, სანიშნები, პაროლები და ა. შ.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Mozilla-ანგარიში</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1192,6 +1206,8 @@
     Header of the Sync and save your data preference view
   -->
   <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">დაასინქრონეთ და გადაინახეთ თქვენი მონაცემები</string>
+  <!-- Header of the Sign in preference view -->
+  <string name="preferences_sign_in">შესვლა</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">შესვლა ხელახლა დასაკავშირებლად</string>
   <!-- Preference for removing FxA account -->
@@ -1340,6 +1356,8 @@
   <string name="close_tabs_after_one_month">ერთი თვის შემდეგ</string>
   <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
   <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">გახსნილი ჩანართების თვითდახურვა</string>
+  <!-- Content description (not visible, for screen readers etc.): Close tab button -->
+  <string name="tab_manager_close_tabs">დახურვა</string>
   <!--
     Opening screen
 
@@ -1770,6 +1788,14 @@
   <string name="bookmark_add_folder">საქაღალდის დამატება</string>
   <!-- Snackbar title that confirms a bookmark was saved into a folder. %s is the name of the folder the bookmark was saved into. -->
   <string name="bookmark_saved_in_folder_snackbar">შეინახავს „%s“</string>
+  <!-- Snackbar title describing failure to add a new folder -->
+  <string name="bookmark_error_add_folder">ვერ დაემატა საქაღალდე</string>
+  <!-- Snackbar title describing failure to edit an existing folder -->
+  <string name="bookmark_error_edit_folder">ვერ ჩასწორდა საქაღალდე</string>
+  <!-- Snackbar title describing failure to select a new parent folder for a bookmark or folder -->
+  <string name="bookmark_error_select_folder">ვერ შეიცვალა ზედა საქაღალდე</string>
+  <!-- Snackbar title describing failure to edit a bookmark -->
+  <string name="bookmark_error_edit_bookmark">ვერ ჩასწორდა სანიშნი</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
   <string name="edit_bookmark_snackbar_action">ჩასწორება</string>
   <!-- Bookmark menu move button -->
@@ -2071,6 +2097,8 @@
   <string name="sync_sign_in">დასინქ. შესვლა</string>
   <!-- An option from the three dot menu to sync and save data -->
   <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">დასინქ. და შენახვა</string>
+  <!-- An option from the three dot menu to sign in -->
+  <string name="sync_menu_sign_in">შესვლა</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">ყველა მოწყობილობაზე გაგზავნა</string>
   <!-- An option from the share dialog to reconnect to sync -->
@@ -2997,6 +3025,11 @@
     Title text displayed in the tabs tray when a tab has been unused for 14 days.
   -->
   <string name="inactive_tabs_title">უქმი ჩანართები</string>
+  <!--
+    Text displayed in the tabs tray, indicating the number of inactive tabs.
+    %d is the number of inactive tabs.
+  -->
+  <string name="inactive_tabs_num_items">ჩანაწერი: %d</string>
   <!-- Content description for closing all inactive tabs -->
   <string name="inactive_tabs_delete_all">ყველა უქმი ჩანართის დახურვა</string>
   <!-- Content description for expanding the inactive tabs section. -->
