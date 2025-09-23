@@ -71,7 +71,6 @@
           set: [
             [PREF_ONE, true],
             [PREF_TWO, false],
-            ["settings.revamp.design", true],
           ],
         });
         Preferences.addAll([
@@ -113,6 +112,89 @@
           item2.config.id,
           SETTING_TWO,
           "Second setting-control id is correct"
+        );
+      });
+
+      add_task(async function testSettingGroupCallbacks() {
+        const PREF_ONE = "test.settings-group.first";
+        const SETTING_ONE = "setting-first";
+        const SETTING_TWO = "setting-second";
+
+        let clickCallbacks = [];
+        let changeCallbacks = [];
+
+        await SpecialPowers.pushPrefEnv({
+          set: [[PREF_ONE, true]],
+        });
+        Preferences.addAll([{ id: PREF_ONE, type: "bool" }]);
+        Preferences.addSetting({
+          id: SETTING_ONE,
+          pref: PREF_ONE,
+          onUserClick(_, __, setting) {
+            clickCallbacks.push(setting.id);
+          },
+          onUserChange(_, __, setting) {
+            changeCallbacks.push(setting.id);
+          },
+        });
+        Preferences.addSetting({
+          id: SETTING_TWO,
+          onUserClick(_, __, setting) {
+            clickCallbacks.push(setting.id);
+          },
+        });
+        let config = {
+          l10nId: GROUP_L10N_ID,
+          items: [
+            {
+              l10nId: LABEL_L10N_ID,
+              id: SETTING_ONE,
+            },
+            {
+              l10nId: LABEL_L10N_ID,
+              id: SETTING_TWO,
+              control: "moz-box-button",
+            },
+          ],
+        };
+
+        let result = await renderTemplate(config);
+        let group = result.querySelector("setting-group");
+        let fieldset = group.children[0];
+        let [item1, item2] = fieldset.children;
+
+        is(
+          item1.controlEl.localName,
+          "moz-checkbox",
+          "First setting control renders a moz-checkbox."
+        );
+        is(
+          item2.controlEl.localName,
+          "moz-box-button",
+          "First setting control renders a moz-box-button."
+        );
+
+        let settingOne = Preferences.getSetting(SETTING_ONE);
+        let settingChanged = waitForSettingChange(settingOne);
+        synthesizeMouseAtCenter(item1.controlEl, {});
+        await settingChanged;
+
+        is(
+          clickCallbacks.length,
+          0,
+          "onUserClick is not called when clicking on moz-checkbox."
+        );
+        is(
+          changeCallbacks.length,
+          1,
+          "onUserChange called when clicking on moz-checkbox."
+        );
+
+        synthesizeMouseAtCenter(item2.controlEl, {});
+        is(
+          clickCallbacks.length,
+          1,
+          "onUserClick is called when clicking on moz-box-button."
         );
       });
     </script>

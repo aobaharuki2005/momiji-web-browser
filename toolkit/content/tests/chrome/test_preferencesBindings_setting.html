@@ -124,6 +124,37 @@
         is(inputValue, 9, "Callback set inputValue to 9");
       });
 
+      add_task(async function testPrefSettingOnUserClick() {
+        const PREF_ID = "test.setting.click";
+        const SETTING_ID = "testSettingOnUserClick";
+        await SpecialPowers.pushPrefEnv({
+          set: [[PREF_ID, false]],
+        });
+
+        let clickValue;
+        Preferences.add({
+          id: PREF_ID,
+          type: "bool",
+        });
+        Preferences.addSetting({
+          id: SETTING_ID,
+          pref: PREF_ID,
+          onUserClick: event => {
+            clickValue = event.detail.value;
+          },
+        });
+
+        let setting = Preferences.getSetting(SETTING_ID);
+        ok(setting, "Got a setting object");
+
+        ok(!clickValue, "onUserClick callback has not fired.");
+
+        let testEvent = new CustomEvent("click", { detail: { value: true } });
+        setting.userClick(testEvent);
+
+        is(clickValue, true, "Callback set clickValue to true.");
+      });
+
       add_task(async function testPrefSettingVisible() {
         const PREF_ID = "test.setting.visible";
         const SETTING_ID = "testSettingVisible";

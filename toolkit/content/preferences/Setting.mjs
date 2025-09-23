@@ -169,7 +169,7 @@ export class Setting extends EventEmitter {
 
   userClick(event) {
     if (this.config.onUserClick) {
-      this.config.onUserClick(event);
+      this.config.onUserClick(event, this.deps, this);
     }
   }
 
