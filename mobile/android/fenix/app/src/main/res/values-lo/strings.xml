@@ -1636,11 +1636,21 @@
   -->
   <string name="download_item_in_progress_description_pending">%1$s / %2$s • ລໍຖ້າຢູ່</string>
   <!--
+    Description of an in progress download item, displayed in the downloads list when the total download size is unknown. This results in the estimated download time remaining to be unknown also.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_in_progress_description_unknown_total_size">%1$s • ເວລາທີ່ບໍ່ຮູ້ຈັກ</string>
+  <!--
     Description of a paused download item, displayed in the downloads list.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_paused_description">%1$s / %2$s • ຢຸດຊົ່ວຄາວ</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list when the total download size is unknown.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_paused_description_unknown_total_size">%1$s • ຢຸດຊົ່ວຄາວ</string>
   <!-- Text to indicate that a download has failed to download. -->
   <string name="download_item_status_failed">ການດາວໂຫຼດລົ້ມເຫລວ</string>
   <!-- Text for the snackbar action button to view failed download details. -->
@@ -1691,6 +1701,16 @@
   <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">ລາຍງານຂອງທ່ານຖືກສົ່ງໄປແລ້ວ</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">ປິດ</string>
+  <!--
+    These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
+
+    Broken site reason text for site doesn’t load
+  -->
+  <string name="webcompat_reporter_reason_load">ເວັບໄຊບໍ່ໂຫຼດ</string>
+  <!-- Broken site reason text for site is slow -->
+  <string name="webcompat_reporter_reason_slow2">ເວັບໄຊຊ້າ</string>
+  <!-- Broken site reason text for video isn’t playing or loading -->
+  <string name="webcompat_reporter_reason_media2">ວິດີໂອບໍ່ໄດ້ຫຼິ້ນ ຫຼື ໂຫຼດ</string>
   <!-- Broken site reason text for something else -->
   <string name="webcompat_reporter_reason_other">ບາງສິ່ງບາງຢ່າງອື່ນ</string>
   <!--
@@ -1737,6 +1757,8 @@
   <string name="bookmark_menu_copy_button">ສຳເນົາ</string>
   <!-- Bookmark overflow menu share button -->
   <string name="bookmark_menu_share_button">ແບ່ງປັນ</string>
+  <!-- Bookmark overflow menu select all bookmarks -->
+  <string name="bookmark_menu_select_all_bookmarks">ເລືອກ​ທັງ​ຫມົດ</string>
   <!-- Bookmark overflow menu open in new tab button -->
   <string name="bookmark_menu_open_in_new_tab_button">ເປີດໃນແທັບໃຫມ່</string>
   <!-- Bookmark overflow menu open in private tab button -->

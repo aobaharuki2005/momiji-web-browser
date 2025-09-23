@@ -1793,7 +1793,7 @@
   <!-- Snackbar title describing failure to edit an existing folder -->
   <string name="bookmark_error_edit_folder">No se pudo editar la carpeta</string>
   <!-- Snackbar title describing failure to select a new parent folder for a bookmark or folder -->
-  <string name="bookmark_error_select_folder">No se pudo cambiar la carpeta padre</string>
+  <string name="bookmark_error_select_folder">No se pudo cambiar la carpeta principal</string>
   <!-- Snackbar title describing failure to edit a bookmark -->
   <string name="bookmark_error_edit_bookmark">No se pudo editar el marcador</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
