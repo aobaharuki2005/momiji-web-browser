@@ -1941,7 +1941,6 @@ class XPCShellTests:
             self.appPath = options.get("msixAppPath")
             self.xrePath = options.get("msixXrePath")
             self.app_binary = options.get("msix_app_binary")
-            self.threadCount = 2
             self.xpcshell = None
 
         self.testCount = 0
