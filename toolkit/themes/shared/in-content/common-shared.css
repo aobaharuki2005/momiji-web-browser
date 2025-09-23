@@ -957,7 +957,7 @@ xul|treechildren::-moz-tree-image(selected) {
 .message-bar-content > .message-bar-button {
   background-color: var(--grey-90-a10);
   border: none;
-  border-radius: 2px;
+  border-radius: var(--border-radius-xsmall);
   height: 24px;
   margin-inline-start: 8px;
   padding: 0 8px;

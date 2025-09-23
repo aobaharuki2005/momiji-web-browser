@@ -328,7 +328,7 @@ a,
   &:focus-visible {
     outline: var(--focus-outline);
     outline-offset: var(--link-focus-outline-offset);
-    border-radius: 1px;
+    border-radius: var(--border-radius-xsmall);
   }
 }
 
