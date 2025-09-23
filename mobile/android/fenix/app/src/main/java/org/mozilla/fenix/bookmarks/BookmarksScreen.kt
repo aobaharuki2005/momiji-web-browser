@@ -93,8 +93,8 @@ import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
+import mozilla.components.compose.base.button.FilledButton
 import mozilla.components.compose.base.button.FloatingActionButton
-import mozilla.components.compose.base.button.PrimaryButton
 import mozilla.components.compose.base.button.TextButton
 import mozilla.components.compose.base.menu.DropdownMenu
 import mozilla.components.compose.base.menu.MenuItem
@@ -1018,7 +1018,7 @@ private fun EmptyList(
                 textAlign = TextAlign.Center,
             )
             if (state is EmptyListState.NotAuthenticated) {
-                PrimaryButton(
+                FilledButton(
                     text = stringResource(R.string.bookmark_empty_list_guest_cta),
                     onClick = { dispatcher(SignIntoSyncClicked) },
                     modifier = Modifier

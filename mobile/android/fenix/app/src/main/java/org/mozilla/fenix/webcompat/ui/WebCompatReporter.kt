@@ -44,7 +44,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.Dropdown
-import mozilla.components.compose.base.button.PrimaryButton
+import mozilla.components.compose.base.button.FilledButton
 import mozilla.components.compose.base.button.TextButton
 import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.modifier.thenConditional
@@ -218,7 +218,7 @@ fun WebCompatReporter(
 
                     Spacer(modifier = Modifier.width(10.dp))
 
-                    PrimaryButton(
+                    FilledButton(
                         text = stringResource(id = R.string.webcompat_reporter_send),
                         modifier = Modifier
                             .wrapContentSize()

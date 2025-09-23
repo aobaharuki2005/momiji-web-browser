@@ -25,7 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
-import mozilla.components.compose.base.button.PrimaryButton
+import mozilla.components.compose.base.button.FilledButton
 import mozilla.components.compose.base.button.TextButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.LinkText
@@ -151,7 +151,7 @@ private fun BottomSheetContent(
 
         Spacer(Modifier.size(34.dp))
 
-        PrimaryButton(
+        FilledButton(
             modifier = Modifier.fillMaxWidth(),
             text = stringResource(R.string.terms_of_use_prompt_accept),
         ) {

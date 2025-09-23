@@ -17,7 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
-import mozilla.components.compose.base.button.PrimaryButton
+import mozilla.components.compose.base.button.FilledButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
@@ -43,7 +43,7 @@ internal fun PrivateTabsLockedPage(onUnlockClicked: () -> Unit) {
             style = FirefoxTheme.typography.body1,
         )
 
-        PrimaryButton(
+        FilledButton(
             onClick = onUnlockClicked,
             icon = painterResource(id = R.drawable.ic_lock),
             text = stringResource(id = R.string.pbm_authentication_unlock),

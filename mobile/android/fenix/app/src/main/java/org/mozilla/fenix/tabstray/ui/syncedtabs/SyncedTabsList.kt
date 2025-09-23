@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
-import mozilla.components.compose.base.button.PrimaryButton
+import mozilla.components.compose.base.button.FilledButton
 import mozilla.components.compose.base.modifier.dashedBorder
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import org.mozilla.fenix.R
@@ -249,7 +249,7 @@ private fun SyncedTabsErrorItem(
             errorButton?.let {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                PrimaryButton(
+                FilledButton(
                     text = it.buttonText,
                     modifier = Modifier.fillMaxWidth(),
                     icon = painterResource(R.drawable.ic_sign_in),

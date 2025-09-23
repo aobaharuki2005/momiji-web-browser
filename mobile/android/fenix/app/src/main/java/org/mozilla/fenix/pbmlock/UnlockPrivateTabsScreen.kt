@@ -26,7 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import mozilla.components.compose.base.button.PrimaryButton
+import mozilla.components.compose.base.button.FilledButton
 import mozilla.components.compose.base.button.TextButton
 import mozilla.components.compose.base.utils.getResolvedAttrResId
 import org.mozilla.fenix.R
@@ -131,7 +131,7 @@ private fun Footer(onUnlockClicked: () -> Unit, onLeaveClicked: () -> Unit, show
             .padding(horizontal = 16.dp)
             .fillMaxWidth(fillWidthFraction),
     ) {
-        PrimaryButton(
+        FilledButton(
             text = stringResource(id = R.string.pbm_authentication_unlock),
             modifier = Modifier.fillMaxWidth(),
             onClick = onUnlockClicked,

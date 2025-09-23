@@ -30,8 +30,8 @@ import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.Dropdown
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.DestructiveButton
-import mozilla.components.compose.base.button.PrimaryButton
-import mozilla.components.compose.base.button.SecondaryButton
+import mozilla.components.compose.base.button.FilledButton
+import mozilla.components.compose.base.button.OutlinedButton
 import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.textfield.TextField
 import mozilla.components.compose.base.textfield.TextFieldColors
@@ -179,7 +179,7 @@ private fun FormButtons(store: AddressStore) {
 
         Spacer(Modifier.weight(1f))
 
-        SecondaryButton(
+        OutlinedButton(
             text = stringResource(R.string.addresses_cancel_button),
             modifier = Modifier.testTag(EditAddressTestTag.CANCEL_BUTTON),
         ) {
@@ -188,7 +188,7 @@ private fun FormButtons(store: AddressStore) {
 
         Spacer(Modifier.width(8.dp))
 
-        PrimaryButton(
+        FilledButton(
             text = stringResource(R.string.addresses_save_button),
             modifier = Modifier.testTag(EditAddressTestTag.SAVE_BUTTON),
         ) {
