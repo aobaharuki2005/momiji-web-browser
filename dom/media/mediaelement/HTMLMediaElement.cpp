@@ -70,6 +70,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/AudioTrack.h"
 #include "mozilla/dom/AudioTrackList.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
@@ -5083,7 +5084,40 @@ void HTMLMediaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
     // content, since we always do that for touchstart.
     case eTouchMove:
     case eTouchEnd:
-    case eTouchStart:
+    case eTouchStart: {
+      // We stop the propagation (both at the capture and the bubbling phase)
+      // when the original target is the part of the ControlBar or the
+      // ClickToPlay button.
+      if (ShadowRoot* shadowRoot = GetShadowRoot()) {
+        nsINode* node =
+            nsINode::FromEventTargetOrNull(aVisitor.mEvent->mOriginalTarget);
+        const bool trap = [&] {
+          if (node->SubtreeRoot() != shadowRoot) {
+            return false;
+          }
+
+          for (auto* node : node->InclusiveAncestorsOfType<Element>()) {
+            auto* id = node->GetID();
+            if (!id) {
+              continue;
+            }
+            if (id == nsGkAtoms::clickToPlay || id == nsGkAtoms::controlBar) {
+              return true;
+            }
+          }
+          return false;
+        }();
+
+        if (trap) {
+          aVisitor.mCanHandle = false;
+        } else {
+          nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+        }
+        return;
+      }
+      nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+      return;
+    }
     case ePointerDown:
     case ePointerUp:
     case ePointerClick:

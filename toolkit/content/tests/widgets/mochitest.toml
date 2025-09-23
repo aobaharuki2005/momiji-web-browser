@@ -129,6 +129,8 @@ skip-if = [
   "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11'", # Bug 1804621
 ]
 
+["test_videocontrols_touch_events_on_controlBar_and_playButton.html"]
+
 ["test_videocontrols_video_direction.html"]
 skip-if = [
   "os == 'win'",
