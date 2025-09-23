@@ -1125,7 +1125,7 @@ html {
 }
 .onboardingContainer .main-content {
   background-color: var(--background-color-canvas);
-  border-radius: 20px;
+  border-radius: var(--border-radius-large);
   box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
@@ -1208,7 +1208,7 @@ html {
 }
 .onboardingContainer .screen[pos=center].with-video .main-content {
   background-color: var(--mr-welcome-background-color);
-  border-radius: 8px;
+  border-radius: var(--border-radius-medium);
   box-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
   padding: 44px 85px 20px;
 }
@@ -1277,7 +1277,7 @@ html {
 }
 .onboardingContainer .screen[pos=center].addons-picker .main-content {
   background-color: var(--background-color-canvas);
-  border-radius: 8px;
+  border-radius: var(--border-radius-medium);
   box-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
   overflow: hidden;
 }
@@ -1370,7 +1370,7 @@ html {
   display: flex;
   border: 1px solid var(--in-content-border-color);
   box-shadow: 0 1px 2px 0 var(--in-content-border-color);
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
   margin: 5px auto;
   text-align: start;
 }
@@ -1403,7 +1403,7 @@ html {
   height: 1em;
   border: 3px solid var(--button-text-color-primary);
   border-bottom-color: transparent;
-  border-radius: 50%;
+  border-radius: var(--border-radius-circle);
   box-sizing: border-box;
   animation: rotation 1s linear infinite;
   justify-self: center;
@@ -1469,7 +1469,7 @@ html {
   box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
   width: 800px;
   height: 550px;
-  border-radius: 8px;
+  border-radius: var(--border-radius-medium);
   inset: 0;
   margin: auto;
   pointer-events: none;
@@ -1518,7 +1518,7 @@ html {
   padding-block: 100px 0;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content {
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
   overflow: hidden;
   padding-inline: 35px 20px;
   padding-block: 120px 0;
@@ -1528,7 +1528,7 @@ html {
   padding-bottom: 48px;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content:dir(rtl) {
-  border-radius: 8px 0 0 8px;
+  border-radius: var(--border-radius-medium) 0 0 var(--border-radius-medium);
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .legal-paragraph {
   text-align: start;
@@ -1652,7 +1652,7 @@ html {
   height: 1em;
   border: 3px solid var(--button-text-color-primary);
   border-bottom-color: transparent;
-  border-radius: 50%;
+  border-radius: var(--border-radius-circle);
   box-sizing: border-box;
   animation: rotation 1s linear infinite;
   justify-self: center;
@@ -1727,7 +1727,7 @@ html {
 }
 .onboardingContainer .screen[pos=split] .section-secondary {
   --mr-secondary-position: center center / auto 350px;
-  border-radius: 8px 0 0 8px;
+  border-radius: var(--border-radius-medium) 0 0 var(--border-radius-medium);
   margin: auto 0 auto auto;
   display: flex;
   align-items: center;
@@ -1736,7 +1736,7 @@ html {
   position: relative;
 }
 .onboardingContainer .screen[pos=split] .section-secondary:dir(rtl) {
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
   margin: auto;
   margin-inline-end: 0;
 }
@@ -1826,23 +1826,23 @@ html {
   .onboardingContainer .screen[pos=split][reverse-split] .section-main {
     margin: auto;
     margin-inline-end: 0;
-    border-radius: 8px 0 0 8px;
+    border-radius: var(--border-radius-medium) 0 0 var(--border-radius-medium);
   }
   .onboardingContainer .screen[pos=split][reverse-split] .section-main .main-content {
     border-radius: inherit;
   }
   .onboardingContainer .screen[pos=split][reverse-split] .section-main:dir(rtl) {
-    border-radius: 0 8px 8px 0;
+    border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
     margin: auto;
     margin-inline-end: 0;
   }
   .onboardingContainer .screen[pos=split][reverse-split] .section-secondary {
     margin: auto;
     margin-inline-start: 0;
-    border-radius: 0 8px 8px 0;
+    border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
   }
   .onboardingContainer .screen[pos=split][reverse-split] .section-secondary:dir(rtl) {
-    border-radius: 8px 0 0 8px;
+    border-radius: var(--border-radius-medium) 0 0 var(--border-radius-medium);
     margin: auto;
     margin-inline-start: 0;
   }
@@ -1856,23 +1856,23 @@ html {
 .onboardingContainer .screen[pos=split]:where([no-rdm=true])[reverse-split] .section-main {
   margin: auto;
   margin-inline-end: 0;
-  border-radius: 8px 0 0 8px;
+  border-radius: var(--border-radius-medium) 0 0 var(--border-radius-medium);
 }
 .onboardingContainer .screen[pos=split]:where([no-rdm=true])[reverse-split] .section-main .main-content {
   border-radius: inherit;
 }
 .onboardingContainer .screen[pos=split]:where([no-rdm=true])[reverse-split] .section-main:dir(rtl) {
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
   margin: auto;
   margin-inline-end: 0;
 }
 .onboardingContainer .screen[pos=split]:where([no-rdm=true])[reverse-split] .section-secondary {
   margin: auto;
   margin-inline-start: 0;
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
 }
 .onboardingContainer .screen[pos=split]:where([no-rdm=true])[reverse-split] .section-secondary:dir(rtl) {
-  border-radius: 8px 0 0 8px;
+  border-radius: var(--border-radius-medium) 0 0 var(--border-radius-medium);
   margin: auto;
   margin-inline-start: 0;
 }
@@ -1954,7 +1954,7 @@ html {
   flex-direction: row;
   border: 1px solid var(--in-content-border-color);
   box-shadow: 0 1px 2px 0 var(--in-content-border-color);
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
   margin-block: 0 16px;
   text-align: start;
   padding: 16px;
@@ -2044,7 +2044,7 @@ html {
   height: 1em;
   border: 3px solid var(--button-text-color-primary);
   border-bottom-color: transparent;
-  border-radius: 50%;
+  border-radius: var(--border-radius-circle);
   box-sizing: border-box;
   animation: rotation 1s linear infinite;
   justify-self: center;
@@ -2134,25 +2134,25 @@ html {
     flex-direction: column;
   }
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm]))[reverse-split] .section-secondary {
-    border-radius: 8px 8px 0 0;
+    border-radius: var(--border-radius-medium) var(--border-radius-medium) 0 0;
     margin: auto;
     margin-bottom: 0;
   }
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm]))[reverse-split] .section-secondary:dir(rtl) {
     margin: auto;
     margin-bottom: 0;
-    border-radius: 8px 8px 0 0;
+    border-radius: var(--border-radius-medium) var(--border-radius-medium) 0 0;
   }
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm]))[reverse-split] .section-main {
     height: auto;
     margin: auto;
     margin-top: 0;
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 0 var(--border-radius-medium) var(--border-radius-medium);
   }
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm]))[reverse-split] .section-main:dir(rtl) {
     margin: auto;
     margin-top: 0;
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 0 var(--border-radius-medium) var(--border-radius-medium);
   }
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-secondary,
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main {
@@ -2161,7 +2161,7 @@ html {
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-secondary {
     --mr-secondary-background-position-y: top;
     --mr-secondary-position: center var(--mr-secondary-background-position-y) / 75%;
-    border-radius: 8px 8px 0 0;
+    border-radius: var(--border-radius-medium) var(--border-radius-medium) 0 0;
     margin: auto;
     margin-bottom: 0;
     height: 100px;
@@ -2182,7 +2182,7 @@ html {
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-secondary:dir(rtl) {
     margin: auto;
     margin-bottom: 0;
-    border-radius: 8px 8px 0 0;
+    border-radius: var(--border-radius-medium) var(--border-radius-medium) 0 0;
   }
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-secondary.with-secondary-section-hidden {
     display: none;
@@ -2209,13 +2209,13 @@ html {
   }
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main[hide-secondary-section=responsive] .main-content {
     padding: 50px 0 0;
-    border-radius: 8px;
+    border-radius: var(--border-radius-medium);
   }
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main[hide-secondary-section=responsive] .main-content:dir(rtl) {
-    border-radius: 8px;
+    border-radius: var(--border-radius-medium);
   }
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main .main-content {
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 0 var(--border-radius-medium) var(--border-radius-medium);
     padding: 30px 0 0;
   }
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main .main-content .main-content-inner {
@@ -2278,7 +2278,7 @@ html {
     margin-top: 0;
   }
   .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main:dir(rtl) .main-content {
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 0 var(--border-radius-medium) var(--border-radius-medium);
   }
   .onboardingContainer .screen[pos=split][no-rdm] {
     width: 800px;
@@ -2289,23 +2289,23 @@ html {
   .onboardingContainer .screen[pos=split][no-rdm][reverse-split] .section-main {
     margin: auto;
     margin-inline-end: 0;
-    border-radius: 8px 0 0 8px;
+    border-radius: var(--border-radius-medium) 0 0 var(--border-radius-medium);
   }
   .onboardingContainer .screen[pos=split][no-rdm][reverse-split] .section-main .main-content {
     border-radius: inherit;
   }
   .onboardingContainer .screen[pos=split][no-rdm][reverse-split] .section-main:dir(rtl) {
-    border-radius: 0 8px 8px 0;
+    border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
     margin: auto;
     margin-inline-end: 0;
   }
   .onboardingContainer .screen[pos=split][no-rdm][reverse-split] .section-secondary {
     margin: auto;
     margin-inline-start: 0;
-    border-radius: 0 8px 8px 0;
+    border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
   }
   .onboardingContainer .screen[pos=split][no-rdm][reverse-split] .section-secondary:dir(rtl) {
-    border-radius: 8px 0 0 8px;
+    border-radius: var(--border-radius-medium) 0 0 var(--border-radius-medium);
     margin: auto;
     margin-inline-start: 0;
   }
@@ -2321,25 +2321,25 @@ html {
   flex-direction: column;
 }
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm]))[reverse-split] .section-secondary {
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--border-radius-medium) var(--border-radius-medium) 0 0;
   margin: auto;
   margin-bottom: 0;
 }
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm]))[reverse-split] .section-secondary:dir(rtl) {
   margin: auto;
   margin-bottom: 0;
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--border-radius-medium) var(--border-radius-medium) 0 0;
 }
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm]))[reverse-split] .section-main {
   height: auto;
   margin: auto;
   margin-top: 0;
-  border-radius: 0 0 8px 8px;
+  border-radius: 0 0 var(--border-radius-medium) var(--border-radius-medium);
 }
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm]))[reverse-split] .section-main:dir(rtl) {
   margin: auto;
   margin-top: 0;
-  border-radius: 0 0 8px 8px;
+  border-radius: 0 0 var(--border-radius-medium) var(--border-radius-medium);
 }
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-secondary,
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main {
@@ -2348,7 +2348,7 @@ html {
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-secondary {
   --mr-secondary-background-position-y: top;
   --mr-secondary-position: center var(--mr-secondary-background-position-y) / 75%;
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--border-radius-medium) var(--border-radius-medium) 0 0;
   margin: auto;
   margin-bottom: 0;
   height: 100px;
@@ -2369,7 +2369,7 @@ html {
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-secondary:dir(rtl) {
   margin: auto;
   margin-bottom: 0;
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--border-radius-medium) var(--border-radius-medium) 0 0;
 }
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-secondary.with-secondary-section-hidden {
   display: none;
@@ -2396,13 +2396,13 @@ html {
 }
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main[hide-secondary-section=responsive] .main-content {
   padding: 50px 0 0;
-  border-radius: 8px;
+  border-radius: var(--border-radius-medium);
 }
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main[hide-secondary-section=responsive] .main-content:dir(rtl) {
-  border-radius: 8px;
+  border-radius: var(--border-radius-medium);
 }
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main .main-content {
-  border-radius: 0 0 8px 8px;
+  border-radius: 0 0 var(--border-radius-medium) var(--border-radius-medium);
   padding: 30px 0 0;
 }
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main .main-content .main-content-inner {
@@ -2465,7 +2465,7 @@ html {
   margin-top: 0;
 }
 [narrow] .onboardingContainer .screen[pos=split]:where(:not([no-rdm])) .section-main:dir(rtl) .main-content {
-  border-radius: 0 0 8px 8px;
+  border-radius: 0 0 var(--border-radius-medium) var(--border-radius-medium);
 }
 [narrow] .onboardingContainer .screen[pos=split][no-rdm] {
   width: 800px;
@@ -2476,23 +2476,23 @@ html {
 [narrow] .onboardingContainer .screen[pos=split][no-rdm][reverse-split] .section-main {
   margin: auto;
   margin-inline-end: 0;
-  border-radius: 8px 0 0 8px;
+  border-radius: var(--border-radius-medium) 0 0 var(--border-radius-medium);
 }
 [narrow] .onboardingContainer .screen[pos=split][no-rdm][reverse-split] .section-main .main-content {
   border-radius: inherit;
 }
 [narrow] .onboardingContainer .screen[pos=split][no-rdm][reverse-split] .section-main:dir(rtl) {
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
   margin: auto;
   margin-inline-end: 0;
 }
 [narrow] .onboardingContainer .screen[pos=split][no-rdm][reverse-split] .section-secondary {
   margin: auto;
   margin-inline-start: 0;
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
 }
 [narrow] .onboardingContainer .screen[pos=split][no-rdm][reverse-split] .section-secondary:dir(rtl) {
-  border-radius: 8px 0 0 8px;
+  border-radius: var(--border-radius-medium) 0 0 var(--border-radius-medium);
   margin: auto;
   margin-inline-start: 0;
 }
@@ -2537,7 +2537,7 @@ html {
 }
 .onboardingContainer .rtamo-theme-icon {
   max-height: 30px;
-  border-radius: 2px;
+  border-radius: var(--border-radius-xsmall);
   margin-bottom: 10px;
   margin-top: 24px;
 }
@@ -2692,7 +2692,7 @@ html {
   transition: var(--transition);
 }
 .onboardingContainer .tiles-single-select-section:hover, .onboardingContainer .tiles-single-select-section:active, .onboardingContainer .tiles-single-select-section:focus-within {
-  border-radius: 8px;
+  border-radius: var(--border-radius-medium);
   outline: 2px solid var(--button-background-color-primary);
 }
 .onboardingContainer .tiles-single-select-section.single-select, .onboardingContainer .tiles-single-select-section.theme {
@@ -2729,7 +2729,7 @@ html {
 }
 .onboardingContainer .tiles-single-select-section.single-select .select-item .flair, .onboardingContainer .tiles-single-select-section.theme .select-item .flair {
   height: 18px;
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
   background-color: #9059FF;
   color: #FFF;
   padding: 2px 8px;
@@ -2762,7 +2762,7 @@ html {
   padding: 0;
   min-width: 50px;
   box-shadow: none;
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
   cursor: pointer;
   z-index: 0;
 }
@@ -2774,7 +2774,7 @@ html {
   background-size: cover;
   width: 40px;
   height: 40px;
-  border-radius: 5px;
+  border-radius: var(--border-radius-small);
   z-index: -1;
 }
 .onboardingContainer .tiles-single-select-section .select-item .icon:dir(rtl) {
@@ -2811,7 +2811,7 @@ html {
 }
 .onboardingContainer .tiles-container.info:hover, .onboardingContainer .tiles-container.info:focus {
   background-color: rgba(217, 217, 227, 0.3);
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
 }
 .onboardingContainer .tiles-delayed {
   animation: fadein 0.4s;
@@ -2980,7 +2980,7 @@ html {
   margin-inline: 1em;
 }
 .onboardingContainer #content-tiles-container {
-  --tiles-container-border-radius: 8px;
+  --tiles-container-border-radius: var(--border-radius-medium);
   margin: 24px 48px;
 }
 .onboardingContainer #content-tiles-container .content-tile {
@@ -3049,7 +3049,7 @@ html {
   background-color: var(--picker-background-color);
   border: 1px solid var(--picker-border-color);
   padding: 8px 12px;
-  border-radius: 100px;
+  border-radius: var(--border-radius-circle);
   user-select: none;
 }
 .onboardingContainer #content-tiles-container .content-tile .multi-select-container.picker .checkbox-container:has(input:checked) {
@@ -3075,7 +3075,7 @@ html {
   outline-offset: 4px;
 }
 .onboardingContainer #content-tiles-container .content-tile .multi-select-container.picker .checkbox-container .picker-icon {
-  border-radius: 100%;
+  border-radius: var(--border-radius-circle);
   width: 27px;
   height: 27px;
   display: flex;
@@ -3241,7 +3241,7 @@ html {
   margin-inline-end: 4px;
   margin-inline-start: 4px;
   background: var(--grey-subtitle-1);
-  border-radius: 5px;
+  border-radius: var(--border-radius-small);
   border: 3px solid var(--button-text-color);
   opacity: 0.35;
   box-sizing: inherit;
@@ -3409,7 +3409,7 @@ html {
 .onboardingContainer .screen-1 .yellow-circle {
   width: 165px;
   height: 165px;
-  border-radius: 50%;
+  border-radius: var(--border-radius-circle);
   transform: translate(230%, -5%);
   background: #952BB9;
   transition-delay: -0.2s;
@@ -3481,7 +3481,7 @@ html {
 .onboardingContainer .screen-2 .yellow-circle {
   width: 165px;
   height: 165px;
-  border-radius: 50%;
+  border-radius: var(--border-radius-circle);
   transform: translate(160%, 130%);
   background: #E7258C;
 }
