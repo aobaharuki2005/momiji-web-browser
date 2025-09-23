@@ -124,7 +124,7 @@ def add_upstream_signing_resources(config, jobs):
             task_type = "scriptworker"
         job["worker"].setdefault("upstream-artifacts", []).append(
             {
-                "paths": list(upstream_files),
+                "paths": sorted(upstream_files),
                 "taskId": {"task-reference": task_ref},
                 "taskType": task_type,
                 "formats": [],  # Not for signing
