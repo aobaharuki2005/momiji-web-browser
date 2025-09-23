@@ -5,6 +5,8 @@
 package org.mozilla.fenix.crashes
 
 import mozilla.components.lib.crash.RuntimeTagProvider
+import mozilla.components.lib.crash.runtimetagproviders.ExperimentData
+import mozilla.components.lib.crash.runtimetagproviders.ExperimentDataProvider
 import mozilla.components.service.nimbus.NimbusApi
 
 /**
@@ -13,14 +15,15 @@ import mozilla.components.service.nimbus.NimbusApi
  *
  * @param nimbusApi the [NimbusApi] to use to get the active experiments
  */
-class NimbusExperimentsRuntimeTagProvider(
+class NimbusExperimentDataProvider(
     private val nimbusApi: Lazy<NimbusApi>,
-) : RuntimeTagProvider {
+) : ExperimentDataProvider {
 
-    override fun invoke(): Map<String, String> {
-        val activeExperiments = nimbusApi.value.getActiveExperiments()
-        return activeExperiments.associate { experiment ->
-            experiment.slug to experiment.branchSlug
+    override fun getExperimentData(): ExperimentData {
+        val data = nimbusApi.value.getActiveExperiments().associate {
+            it.slug to it.branchSlug
         }
+
+        return ExperimentData(data)
     }
 }

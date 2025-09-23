@@ -12,6 +12,7 @@ import android.os.Build
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.runtimetagproviders.BuildRuntimeTagProvider
 import mozilla.components.lib.crash.runtimetagproviders.EnvironmentRuntimeProvider
+import mozilla.components.lib.crash.runtimetagproviders.ExperimentDataRuntimeTagProvider
 import mozilla.components.lib.crash.runtimetagproviders.VersionInfoProvider
 import mozilla.components.lib.crash.sentry.SentryService
 import mozilla.components.lib.crash.sentry.eventprocessors.CrashMetadataEventProcessor
@@ -37,7 +38,7 @@ import org.mozilla.fenix.components.metrics.InstallReferrerMetricsService
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.MetricsStorage
 import org.mozilla.fenix.crashes.CrashFactCollector
-import org.mozilla.fenix.crashes.NimbusExperimentsRuntimeTagProvider
+import org.mozilla.fenix.crashes.NimbusExperimentDataProvider
 import org.mozilla.fenix.crashes.ReleaseRuntimeTagProvider
 import org.mozilla.fenix.crashes.crashReportOption
 import org.mozilla.fenix.ext.settings
@@ -142,8 +143,10 @@ class Analytics(
                 ReleaseRuntimeTagProvider(),
                 BuildRuntimeTagProvider(context.versionInfoProvider),
                 EnvironmentRuntimeProvider(),
-                NimbusExperimentsRuntimeTagProvider(
-                    nimbusApi = lazyMonitored { nimbusComponents.sdk },
+                ExperimentDataRuntimeTagProvider(
+                    NimbusExperimentDataProvider(
+                        nimbusApi = lazyMonitored { nimbusComponents.sdk },
+                    ),
                 ),
             ),
         )

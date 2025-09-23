@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.annotation.StringDef
 import mozilla.components.concept.base.crash.Breadcrumb
+import mozilla.components.lib.crash.runtimetagproviders.ExperimentData
 import mozilla.components.support.utils.ext.getParcelableArrayListCompat
 import mozilla.components.support.utils.ext.getSerializableCompat
 import org.json.JSONArray
@@ -116,6 +117,13 @@ sealed class Crash {
      * Convenience accessor to get the value from the VERSION_CODE RuntimeTag.
      */
     val versionCode: String get() = runtimeTags[RuntimeTag.VERSION_CODE] ?: "N/A"
+
+    /**
+     * Convenience accessor to get the experiment data from the EXPERIMENT_DATA RuntimeTag.
+     */
+    val experimentData: ExperimentData? get() = runtimeTags[RuntimeTag.EXPERIMENT_DATA]?.let {
+        ExperimentData.fromJsonString(it)
+    }
 
     /**
      * Convenience accessor to get the timestamp, in seconds as a string.
@@ -369,4 +377,5 @@ object RuntimeTag {
     const val VERSION_CODE = "version_code"
     const val VERSION_NAME = "version_name"
     const val GECKOVIEW_VERSION = "geckoview_version"
+    const val EXPERIMENT_DATA = "experiment_data"
 }

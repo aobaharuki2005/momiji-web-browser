@@ -7,6 +7,7 @@ package mozilla.components.lib.crash.sentry.eventprocessors
 import io.sentry.SentryEvent
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.RuntimeTag
+import mozilla.components.lib.crash.runtimetagproviders.ExperimentData
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -56,6 +57,12 @@ class CrashMetadataEventProcessorTest {
         val actualRelease = "136.0.1"
         val processor = CrashMetadataEventProcessor()
 
+        val experimentData = ExperimentData(
+            mapOf(
+                "use-unit-test" to "branch-test",
+            ),
+        )
+
         processor.crashToProcess = Crash.NativeCodeCrash(
             timestamp = System.currentTimeMillis(),
             minidumpPath = null,
@@ -75,6 +82,7 @@ class CrashMetadataEventProcessorTest {
                 RuntimeTag.VERSION_CODE to "version_code",
                 RuntimeTag.VERSION_NAME to "version_name",
                 RuntimeTag.GECKOVIEW_VERSION to "geckoview_version",
+                RuntimeTag.EXPERIMENT_DATA to experimentData.asJsonString(),
             ),
         )
         val result = processor.process(event, mock())
@@ -88,5 +96,6 @@ class CrashMetadataEventProcessorTest {
         assertEquals("as_version", event.getTag("ac.as.build_version"))
         assertEquals("glean_version", event.getTag("ac.glean.build_version"))
         assertEquals("locale", event.getTag("user.locale"))
+        assertEquals("branch-test", event.getTag("experiment.use-unit-test"))
     }
 }

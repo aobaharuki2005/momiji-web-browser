@@ -5,6 +5,7 @@
 package org.mozilla.fenix.crashes
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.lib.crash.runtimetagproviders.ExperimentData
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -13,10 +14,10 @@ import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
 import org.mozilla.fenix.nimbus.TestNimbusApi
 
 @RunWith(AndroidJUnit4::class)
-class NimbusExperimentsRuntimeTagProviderTest {
+class NimbusExperimentDataProviderTest {
 
     private val fakeNimbusApi = FakeNimbusApi()
-    private val runtimeTagProvider = NimbusExperimentsRuntimeTagProvider(lazy { fakeNimbusApi })
+    private val runtimeTagProvider = NimbusExperimentDataProvider(lazy { fakeNimbusApi })
 
     @Test
     fun `GIVEN active experiments, then the experiments are converted to runtime tags map`() {
@@ -27,16 +28,19 @@ class NimbusExperimentsRuntimeTagProviderTest {
             createActiveExperiment(slug = "experiment-03", branchSlug = "variant-1"),
         )
 
-        val tags = runtimeTagProvider.invoke()
-        // then the tags are represented as a map
-        assertEquals(
-            "Runtime tags should contain all active experiments",
+        val data = runtimeTagProvider.getExperimentData()
+        val expected = ExperimentData(
             mapOf(
                 "experiment-01" to "control",
                 "experiment-02" to "treatment",
                 "experiment-03" to "variant-1",
             ),
-            tags,
+        )
+
+        assertEquals(
+            "Runtime tags should contain all active experiments",
+            expected,
+            data,
         )
     }
 
