@@ -554,9 +554,14 @@ struct nsCSSRendering {
       mozilla::Side aStartBevelSide, nscoord aStartBevelOffset,
       mozilla::Side aEndBevelSide, nscoord aEndBevelOffset);
 
-  // NOTE: pt, dirtyRect, lineSize, ascent, offset in the following
-  //       structs are non-rounded device pixels, not app units.
+  // NOTE: pt, dirtyRect, lineSize, ascent, offset, trimStart and trimEnd in
+  //       the following structs are non-rounded device pixels, not app units.
   struct DecorationRectParams {
+    // Checks if either start or end trim value is negative.
+    // In that situation, text decoration will extend past the edges of the
+    // text.
+    bool HasNegativeTrim() const { return trimLeft < 0.0 || trimRight < 0.0; }
+
     // The width [length] and the height [thickness] of the decoration
     // line. This is a "logical" size in textRun orientation, so that
     // for a vertical textrun, width will actually be a physical height;
@@ -589,6 +594,11 @@ struct nsCSSRendering {
     // The style of the decoration line
     mozilla::StyleTextDecorationStyle style =
         mozilla::StyleTextDecorationStyle::None;
+    // Trim start/end values for this decoration.
+    // The caller must ensure that the start/end values are translated to
+    // left/right in the line-relative direction.
+    Float trimLeft = 0.0f;
+    Float trimRight = 0.0f;
     bool vertical = false;
     bool sidewaysLeft = false;
     gfxTextRun::Range glyphRange;
