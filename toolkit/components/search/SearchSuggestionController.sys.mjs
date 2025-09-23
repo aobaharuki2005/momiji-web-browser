@@ -7,6 +7,11 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const DEFAULT_FORM_HISTORY_PARAM = "searchbar-history";
 const HTTP_OK = 200;
 const REMOTE_TIMEOUT_DEFAULT = 500;
+// If this value is updated, the labels for  the
+// `search.suggestions.ohttp.request_counter` metric should also be updated.
+const MAX_OHTTP_FAILURES_BEFORE_FALLBACK = 5;
+// Minimum of 2 hours once the fallback is activated.
+const MIN_DURATION_FOR_FALLBACK_MS = 2 * 60 * 60 * 1000;
 
 const lazy = XPCOMUtils.declareLazy({
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
@@ -251,6 +256,12 @@ export class SearchSuggestionController {
   }
 
   /**
+   * The maximum number of OHTTP failures before we'll fallback to direct HTTP.
+   */
+  static MAX_OHTTP_FAILURES_BEFORE_FALLBACK =
+    MAX_OHTTP_FAILURES_BEFORE_FALLBACK;
+
+  /**
    * The maximum number of local form history results to return. This limit is
    * only enforced if remote results are also returned.
    *
@@ -437,6 +448,19 @@ export class SearchSuggestionController {
   #merino;
 
   /**
+   * @type {number}
+   *   The count of failed OHTTP requests.
+   */
+  #ohttpFailedRequestCount = 0;
+
+  /**
+   * @type {?number}
+   *   The fractional number of milliseconds from process startup, see
+   *   ChromeUtils.now(). Exposed for tests.
+   */
+  _ohttpLastFailureTimeMs;
+
+  /**
    * Fetches search suggestions from the form history.
    *
    * @param {SuggestionRequestContext} context
@@ -471,12 +495,12 @@ export class SearchSuggestionController {
    *   True if OHTTP was used for the suggestion request.
    */
   #reportTelemetryForEngine(context, usedOHTTP) {
-    let category = usedOHTTP
-      ? Glean.searchSuggestionsOhttp
-      : Glean.searchSuggestions;
     // If the timer id has been reset, then we have already handled telemetry.
     // This might occur in the context of an abort or or cancel.
     if (context.gleanTimerId) {
+      let category = usedOHTTP
+        ? Glean.searchSuggestionsOhttp
+        : Glean.searchSuggestions;
       let engineId = context.engine.isConfigEngine
         ? context.engine.id
         : "other";
@@ -487,13 +511,28 @@ export class SearchSuggestionController {
         category.latency[engineId].stopAndAccumulate(context.gleanTimerId);
       }
       context.gleanTimerId = 0;
-      if (context.engine.isConfigEngine) {
+
+      if (usedOHTTP) {
         if (context.aborted) {
-          category.abortedRequests[context.engine.id].add();
+          Glean.searchSuggestionsOhttp.requestCounter
+            .get(engineId, "aborted")
+            .add(1);
         } else if (context.errorWasReceived) {
-          category.failedRequests[context.engine.id].add();
+          Glean.searchSuggestionsOhttp.requestCounter
+            .get(engineId, "failed" + this.#ohttpFailedRequestCount)
+            .add(1);
         } else {
-          category.successfulRequests[context.engine.id].add();
+          Glean.searchSuggestionsOhttp.requestCounter
+            .get(engineId, "success")
+            .add(1);
+        }
+      } else if (context.engine.isConfigEngine) {
+        if (context.aborted) {
+          Glean.searchSuggestions.abortedRequests[context.engine.id].add();
+        } else if (context.errorWasReceived) {
+          Glean.searchSuggestions.failedRequests[context.engine.id].add();
+        } else {
+          Glean.searchSuggestions.successfulRequests[context.engine.id].add();
         }
       }
     }
@@ -524,7 +563,21 @@ export class SearchSuggestionController {
       lazy.MerinoClient.hasOHTTPPrefs &&
       context.engine.id == SearchSuggestionController.oHTTPEngineId
     ) {
-      return this.#fetchRemoteObliviousHTTP(context, submission);
+      let expiredLastFailure =
+        ChromeUtils.now() - this._ohttpLastFailureTimeMs >
+        MIN_DURATION_FOR_FALLBACK_MS;
+      if (
+        this.#ohttpFailedRequestCount < MAX_OHTTP_FAILURES_BEFORE_FALLBACK ||
+        expiredLastFailure
+      ) {
+        if (expiredLastFailure) {
+          this.#ohttpFailedRequestCount = 0;
+        }
+        return this.#fetchRemoteObliviousHTTP(context, submission);
+      }
+      lazy.logConsole.debug(
+        "Maximum failures reached, falling back to direct HTTP"
+      );
     }
     return this.#fetchRemoteNormalHTTP(context, submission);
   }
@@ -683,14 +736,27 @@ export class SearchSuggestionController {
       },
     });
 
-    this.#reportTelemetryForEngine(context, true);
     if (!this.#context || context != this.#context || context.aborted) {
+      this.#reportTelemetryForEngine(context, true);
       return "Got OHTTP response after the request was cancelled";
     }
 
-    if (!merinoSuggestions) {
-      return "An error occurred see the MerinoClient for details.";
+    // The last fetch status covers errors as well as "no_suggestions". Currently
+    // Merino will return no suggestions if it receives an error response from
+    // the search engine, hence we have to handle that case here as well.
+    // The suggestions list here is different from the search engine suggestions
+    // which are live within the specific provider record within `merinoSuggestions`.
+    if (this.#merino.lastFetchStatus != "success") {
+      this.#context.errorWasReceived = true;
+      this.#ohttpFailedRequestCount++;
+      this.#reportTelemetryForEngine(context, true);
+      this._ohttpLastFailureTimeMs = ChromeUtils.now();
+      return "No suggestions received from Merino, the search engine probably failed to respond";
     }
+
+    this.#reportTelemetryForEngine(context, true);
+    this.#ohttpFailedRequestCount = 0;
+    this._ohttpLastFailureTimeMs = undefined;
 
     return new Promise(resolve => {
       this.#onRemoteLoaded(
