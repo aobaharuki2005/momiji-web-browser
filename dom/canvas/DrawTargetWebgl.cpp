@@ -1775,6 +1775,10 @@ void DrawTargetWebgl::PushDeviceSpaceClipRects(const IntRect* aRects,
 }
 
 void DrawTargetWebgl::PopClip() {
+  if (mClipStack.empty()) {
+    return;
+  }
+
   mClipChanged = true;
   mRefreshClipState = true;
   mSkia->PopClip();
