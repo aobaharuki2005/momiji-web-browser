@@ -187,8 +187,8 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
    *        any space you want for border/padding in the desired size you
    *        return.
    */
-  virtual nsresult Place(DrawTarget* aDrawTarget, const PlaceFlags& aFlags,
-                         ReflowOutput& aDesiredSize);
+  virtual void Place(DrawTarget* aDrawTarget, const PlaceFlags& aFlags,
+                     ReflowOutput& aDesiredSize);
 
   // helper to re-sync the automatic data in our children and notify our parent
   // to reflow us when changes (e.g., append/insert/remove) happen in our child
@@ -211,8 +211,8 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
    * (typically invalid markup) was encountered during reflow. Parameters are
    * the same as Place().
    */
-  nsresult PlaceAsMrow(DrawTarget* aDrawTarget, const PlaceFlags& aFlags,
-                       ReflowOutput& aDesiredSize);
+  void PlaceAsMrow(DrawTarget* aDrawTarget, const PlaceFlags& aFlags,
+                   ReflowOutput& aDesiredSize);
 
   /*
    * Helper to call ReportErrorToConsole for parse errors involving
@@ -359,12 +359,6 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
   // overflows, the frame bounds, and mBoundingMetrics to set and store the
   // overflow.
   void GatherAndStoreOverflow(ReflowOutput* aMetrics);
-
-  /**
-   * Call DidReflow() if the NS_FRAME_IN_REFLOW frame bit is set on aFirst
-   * and all its next siblings. The method does nothing if aFirst == nullptr.
-   */
-  static void DidReflowChildren(nsIFrame* aFirst);
 
   /**
    * Recompute mIntrinsicISize if it's not already up to date.
