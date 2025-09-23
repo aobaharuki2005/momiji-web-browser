@@ -604,10 +604,6 @@ web-platform-tests-wdspec:
                     - linux64-geckodriver
                     - linux64-minidump-stackwalk
                     - linux64-fix-stacks
-                linux.*32.*:
-                    - linux32-geckodriver
-                    - linux64-minidump-stackwalk
-                    - linux64-fix-stacks
                 macosx.*-64.*:
                     - macosx64-geckodriver
                     - macosx64-minidump-stackwalk
@@ -782,10 +778,6 @@ test-verify-wpt:
             by-test-platform:
                 linux.*64.*:
                     - linux64-geckodriver
-                    - linux64-minidump-stackwalk
-                    - linux64-fix-stacks
-                linux.*32.*:
-                    - linux32-geckodriver
                     - linux64-minidump-stackwalk
                     - linux64-fix-stacks
                 macosx.*-64.*:
