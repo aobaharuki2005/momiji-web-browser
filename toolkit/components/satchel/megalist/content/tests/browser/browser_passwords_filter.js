@@ -46,7 +46,8 @@ async function checkSearchResults(expectedCount, megalist) {
   return await BrowserTestUtils.waitForCondition(() => {
     const passwordsList = megalist.querySelector(".passwords-list");
     return (
-      passwordsList?.querySelectorAll("password-card").length === expectedCount
+      passwordsList?.shadowRoot.querySelectorAll(".item").length ===
+      expectedCount
     );
   }, "Search count incorrect");
 }
@@ -68,7 +69,7 @@ add_task(async function test_filter_passwords() {
     })
   );
   const megalist = await openPasswordsSidebar();
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
   info("Toggle showing only alerts");
   const alertsRenderedPromise = getAlertsRenderedPromise(megalist);
 
@@ -94,7 +95,7 @@ add_task(async function test_filter_passwords() {
     trigger: "toolbar",
     option_name: "list_state_all",
   });
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
 
   LoginTestUtils.clearData();
   SidebarController.hide();
@@ -106,7 +107,7 @@ add_task(async function test_filter_passwords_after_sidebar_closed() {
   await addMockPasswords();
   info("Adding breached login");
   await Services.logins.addLoginAsync(BREACHED_LOGIN);
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
   info("Toggle showing only alerts");
   const alertsRenderedPromise = getAlertsRenderedPromise(megalist);
 
@@ -122,7 +123,7 @@ add_task(async function test_filter_passwords_after_sidebar_closed() {
   SidebarController.hide();
   info("Show sidebar.");
   await SidebarController.show("viewCPMSidebar");
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
   info("All saved logins are displayed.");
 
   LoginTestUtils.clearData();
@@ -137,7 +138,7 @@ add_task(async function test_filter_passwords_while_editing() {
 
   const megalist = await openPasswordsSidebar();
   await addMockPasswords();
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
 
   info("Filter password using search input");
   const searchInput = megalist.querySelector(".search");
@@ -146,7 +147,8 @@ add_task(async function test_filter_passwords_while_editing() {
   await checkSearchResults(1, megalist);
 
   info("Ensure editing login with a filter works");
-  const passwordCard = megalist.querySelector("password-card");
+  let list = megalist.querySelector(".passwords-list");
+  const passwordCard = list.shadowRoot.querySelector(".item password-card");
   await waitForReauth(() => passwordCard.editBtn.click());
   await BrowserTestUtils.waitForCondition(
     () => megalist.querySelector("login-form"),
@@ -183,8 +185,10 @@ add_task(async function test_filter_passwords_while_editing() {
 
   await waitForNotification(megalist, "update-login-success");
   await checkSearchResults(1, megalist);
-  const updatedPasswordCard = megalist.querySelector("password-card");
-
+  list = megalist.querySelector(".passwords-list");
+  const updatedPasswordCard = list.shadowRoot.querySelector(
+    ".item password-card"
+  );
   await BrowserTestUtils.waitForCondition(
     () => updatedPasswordCard.usernameLine.value === newUsername,
     "Username not updated."
@@ -207,7 +211,7 @@ add_task(async function test_filter_passwords_and_update_login() {
   }
   await addMockPasswords();
   const megalist = await openPasswordsSidebar();
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
 
   info("Filter password using search input");
   const searchInput = megalist.querySelector(".search");
@@ -216,7 +220,8 @@ add_task(async function test_filter_passwords_and_update_login() {
   await checkSearchResults(1, megalist);
 
   info("Ensure editing login with a filter works");
-  const passwordCard = megalist.querySelector("password-card");
+  let list = megalist.querySelector(".passwords-list");
+  const passwordCard = list.shadowRoot.querySelector(".item password-card");
   await waitForReauth(() => passwordCard.editBtn.click());
   await BrowserTestUtils.waitForCondition(
     () => megalist.querySelector("login-form"),
@@ -237,7 +242,10 @@ add_task(async function test_filter_passwords_and_update_login() {
   saveButton.buttonEl.click();
 
   await waitForNotification(megalist, "update-login-success");
-  const updatedPasswordCard = megalist.querySelector("password-card");
+  list = megalist.querySelector(".passwords-list");
+  const updatedPasswordCard = list.shadowRoot.querySelector(
+    ".item password-card"
+  );
   info("Check that the login has a new username and password");
   await BrowserTestUtils.waitForCondition(
     () => updatedPasswordCard.usernameLine.value === newUsername,
@@ -273,7 +281,7 @@ add_task(async function test_filter_passwords_with_urls() {
     `Saving login: ${newLogin.username}, ${newLogin.password}, ${newLogin.origin}`
   );
   await LoginTestUtils.addLogin(newLogin);
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
 
   const searchInput = megalist.querySelector(".search");
   searchInput.value = newLogin.origin;

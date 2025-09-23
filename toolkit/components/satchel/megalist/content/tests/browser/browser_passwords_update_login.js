@@ -26,9 +26,10 @@ add_task(async function test_update_login_success() {
   await LoginTestUtils.addLogin(login);
 
   const megalist = await openPasswordsSidebar();
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
 
-  const passwordCard = megalist.querySelector("password-card");
+  let list = megalist.querySelector(".passwords-list");
+  const passwordCard = list.shadowRoot.querySelector(".item password-card");
   await waitForReauth(() => passwordCard.editBtn.click());
   let events = Glean.contextualManager.recordsInteraction.testGetValue();
   assertCPMGleanEvent(events[0], {
@@ -60,8 +61,11 @@ add_task(async function test_update_login_success() {
     notification_detail: "update_login_success",
     action_type: "dismiss",
   });
-  await checkAllLoginsRendered(megalist);
-  const updatedPasswordCard = megalist.querySelector("password-card");
+  await checkAllLoginsUpdated(megalist);
+  list = megalist.querySelector(".passwords-list");
+  const updatedPasswordCard = list.container.querySelector(
+    ".item password-card"
+  );
 
   await BrowserTestUtils.waitForCondition(
     () => updatedPasswordCard.usernameLine.value === newUsername,
@@ -98,9 +102,10 @@ add_task(async function test_update_login_duplicate() {
   }
 
   const megalist = await openPasswordsSidebar();
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
 
-  const passwordCard = megalist.querySelector("password-card");
+  const list = megalist.querySelector(".passwords-list");
+  const passwordCard = list.shadowRoot.querySelector(".item password-card");
   await waitForReauth(() => passwordCard.editBtn.click());
   await BrowserTestUtils.waitForCondition(
     () => megalist.querySelector("login-form"),
@@ -142,9 +147,10 @@ add_task(async function test_update_login_discard_changes() {
   await LoginTestUtils.addLogin(login);
 
   const megalist = await openPasswordsSidebar();
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
 
-  const passwordCard = megalist.querySelector("password-card");
+  const list = megalist.querySelector(".passwords-list");
+  const passwordCard = list.shadowRoot.querySelector(".item password-card");
   await waitForReauth(() => passwordCard.editBtn.click());
   await BrowserTestUtils.waitForCondition(
     () => megalist.querySelector("login-form"),
@@ -198,7 +204,7 @@ add_task(async function test_update_login_discard_changes() {
     },
     1
   );
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
   ok(true, "List view of logins is shown again");
 
   info("Try closing sidebar while editing a login");
@@ -251,9 +257,10 @@ add_task(async function test_update_login_without_changes() {
   await LoginTestUtils.addLogin(login);
 
   const megalist = await openPasswordsSidebar();
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
 
-  const passwordCard = megalist.querySelector("password-card");
+  const list = megalist.querySelector(".passwords-list");
+  const passwordCard = list.shadowRoot.querySelector(".item password-card");
   await waitForReauth(() => passwordCard.editBtn.click());
   await BrowserTestUtils.waitForCondition(
     () => megalist.querySelector("login-form"),
@@ -268,7 +275,7 @@ add_task(async function test_update_login_without_changes() {
   cancelButton.buttonEl.click();
   await ensureNoNotifications(megalist, "discard-changes");
 
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
   ok(true, "List view of logins is shown again");
 
   info("Try closing sidebar while editing a login");
@@ -304,9 +311,10 @@ add_task(async function test_update_login_username_notification() {
   await LoginTestUtils.addLogin(login);
 
   const megalist = await openPasswordsSidebar();
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
 
-  const passwordCard = megalist.querySelector("password-card");
+  const list = megalist.querySelector(".passwords-list");
+  const passwordCard = list.shadowRoot.querySelector(".item password-card");
   await waitForReauth(() => passwordCard.editBtn.click());
 
   await BrowserTestUtils.waitForCondition(

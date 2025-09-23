@@ -40,14 +40,18 @@ add_task(async function test_breached_origin_alert() {
   info("Adding a login with a breached origin.");
   await Services.logins.addLoginAsync(BREACHED_LOGIN);
   const megalist = await openPasswordsSidebar();
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
 
-  const passwordCards = Array.from(megalist.querySelectorAll("password-card"));
-  const breachedPasswordCard = passwordCards.find(
-    passwordCard => passwordCard.origin.href === BREACHED_LOGIN.origin
-  );
-  const viewAlertsButton =
-    breachedPasswordCard.shadowRoot.querySelector(".view-alert-button");
+  const list = megalist.querySelector(".passwords-list");
+  const items = Array.from(list.shadowRoot.querySelectorAll(".item"));
+  const breachedPasswordCard = items.find(i => {
+    const passwordCard = i.querySelector("password-card");
+    return passwordCard.origin.href === BREACHED_LOGIN.origin;
+  });
+  const viewAlertsButton = breachedPasswordCard
+    .querySelector("password-card")
+    .shadowRoot.querySelector(".view-alert-button");
+
   info("Click on view alerts.");
   viewAlertsButton.click();
 
@@ -81,14 +85,17 @@ add_task(async function test_no_username_alert() {
   info("Adding a login with no username.");
   await Services.logins.addLoginAsync({ ...TEST_LOGIN_1, username: "" });
   const megalist = await openPasswordsSidebar();
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
 
-  const passwordCards = Array.from(megalist.querySelectorAll("password-card"));
-  const breachedPasswordCard = passwordCards.find(
-    passwordCard => passwordCard.origin.href === TEST_LOGIN_1.origin
-  );
-  const viewAlertsButton =
-    breachedPasswordCard.shadowRoot.querySelector(".view-alert-button");
+  const list = megalist.querySelector(".passwords-list");
+  const items = Array.from(list.shadowRoot.querySelectorAll(".item"));
+  const breachedPasswordCard = items.find(i => {
+    const passwordCard = i.querySelector("password-card");
+    return passwordCard.origin.href === TEST_LOGIN_1.origin;
+  });
+  const viewAlertsButton = breachedPasswordCard
+    .querySelector("password-card")
+    .shadowRoot.querySelector(".view-alert-button");
 
   info("Click on view alerts.");
   viewAlertsButton.click();
@@ -127,14 +134,17 @@ add_task(async function test_vulnerable_password_alert() {
   info("Adding a login with a vulnerable password.");
   await Services.logins.addLoginAsync(BREACHED_LOGIN);
   const megalist = await openPasswordsSidebar();
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
 
-  const passwordCards = Array.from(megalist.querySelectorAll("password-card"));
-  const breachedPasswordCard = passwordCards.find(
-    passwordCard => passwordCard.origin.href === BREACHED_LOGIN.origin
-  );
-  const viewAlertsButton =
-    breachedPasswordCard.shadowRoot.querySelector(".view-alert-button");
+  const list = megalist.querySelector(".passwords-list");
+  const items = Array.from(list.shadowRoot.querySelectorAll(".item"));
+  const breachedPasswordCard = items.find(i => {
+    const passwordCard = i.querySelector("password-card");
+    return passwordCard.origin.href === BREACHED_LOGIN.origin;
+  });
+  const viewAlertsButton = breachedPasswordCard
+    .querySelector("password-card")
+    .shadowRoot.querySelector(".view-alert-button");
   info("Click on view alerts.");
   viewAlertsButton.click();
   const notifMsgBar = await checkNotificationAndTelemetry(

@@ -138,17 +138,15 @@ async function openPasswordsSidebar(aWindow = window) {
   return megalist;
 }
 
-async function checkAllLoginsRendered(megalist) {
+async function checkAllLoginsUpdated(megalist) {
   info("Check that all logins are rendered.");
   const logins = await Services.logins.getAllLogins();
   await BrowserTestUtils.waitForCondition(() => {
     const passwordsList = megalist.querySelector(".passwords-list");
-    return (
-      passwordsList?.querySelectorAll("password-card").length === logins.length
-    );
-  }, "Password cards failed to render");
+    return passwordsList?.items.length === logins.length;
+  }, "Logins not updated");
 
-  ok(true, `${logins.length} password cards are rendered.`);
+  ok(true, `${logins.length} logins updated in list.`);
 }
 
 async function addLocalOriginLogin() {

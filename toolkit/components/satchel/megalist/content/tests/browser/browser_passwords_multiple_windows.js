@@ -21,13 +21,14 @@ add_task(async function test_notification_is_only_shown_in_triggered_window() {
   await LoginTestUtils.addLogin(login);
 
   const megalist = await openPasswordsSidebar();
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
 
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: false });
   const megalistNewWindow = await openPasswordsSidebar(win);
-  await checkAllLoginsRendered(megalistNewWindow);
+  await checkAllLoginsUpdated(megalistNewWindow);
 
-  const passwordCard = megalist.querySelector("password-card");
+  let list = megalist.querySelector(".passwords-list");
+  let passwordCard = list.shadowRoot.querySelector(".item password-card");
   await waitForReauth(() => passwordCard.editBtn.click());
   await BrowserTestUtils.waitForCondition(
     () => megalist.querySelector("login-form"),

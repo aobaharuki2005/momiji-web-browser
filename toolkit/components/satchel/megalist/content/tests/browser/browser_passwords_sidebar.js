@@ -27,7 +27,7 @@ const EXPECTED_PASSWORD_CARD_VALUES = [
 
 function checkPasswordCardFields(megalist) {
   const list = megalist.querySelector(".passwords-list");
-  const cards = list.querySelectorAll("password-card");
+  const cards = list.container.querySelectorAll(".item password-card");
 
   for (let i = 0; i < EXPECTED_PASSWORD_CARD_VALUES.length; i++) {
     const card = cards[i];
@@ -113,7 +113,7 @@ add_setup(async function () {
 add_task(async function test_passwords_sidebar() {
   await addMockPasswords();
   const megalist = await openPasswordsSidebar();
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
 
   info("Check correct initial login info is rendered.");
   checkPasswordCardFields(megalist);
@@ -129,9 +129,10 @@ add_task(async function test_login_line_commands() {
 
   await addLocalOriginLogin();
   const passwordsSidebar = await openPasswordsSidebar();
-  await checkAllLoginsRendered(passwordsSidebar);
+  await checkAllLoginsUpdated(passwordsSidebar);
   const list = passwordsSidebar.querySelector(".passwords-list");
-  const card = list.querySelector("password-card");
+  const item = list.container.querySelector(".item");
+  const card = item.querySelector("password-card");
   const expectedPasswordCard = {
     originLine: { value: "about:preferences#privacy" },
     usernameLine: { value: "john" },
@@ -236,7 +237,7 @@ add_task(async function test_passwords_menu_external_links() {
 
   await addMockPasswords();
   const passwordsSidebar = await openPasswordsSidebar();
-  await checkAllLoginsRendered(passwordsSidebar);
+  await checkAllLoginsUpdated(passwordsSidebar);
   await waitForSnapshots();
   const menu = passwordsSidebar.querySelector("panel-list");
   const menuButton = passwordsSidebar.querySelector("#more-options-menubutton");
@@ -333,10 +334,11 @@ add_task(async function test_passwords_visibility_when_view_shown() {
   await LoginTestUtils.addLogin(login);
 
   let megalist = await openPasswordsSidebar();
-  await checkAllLoginsRendered(megalist);
+  await checkAllLoginsUpdated(megalist);
 
   info("Test that reopening the sidebar should have password concealed.");
-  let passwordCard = megalist.querySelector("password-card");
+  let list = megalist.querySelector(".passwords-list");
+  let passwordCard = list.shadowRoot.querySelector(".item password-card");
   await waitForReauth(async () => {
     return await waitForPasswordReveal(passwordCard.passwordLine);
   });
@@ -349,8 +351,9 @@ add_task(async function test_passwords_visibility_when_view_shown() {
 
   info("Open sidebar and check visibility of password field");
   megalist = await openPasswordsSidebar();
-  await checkAllLoginsRendered(megalist);
-  passwordCard = megalist.querySelector("password-card");
+  await checkAllLoginsUpdated(megalist);
+  list = megalist.querySelector(".passwords-list");
+  passwordCard = list.shadowRoot.querySelector(".item password-card");
   await waitForPasswordConceal(passwordCard.passwordLine.loginLine);
   ok(true, "Password is hidden.");
 
@@ -359,8 +362,9 @@ add_task(async function test_passwords_visibility_when_view_shown() {
   );
   await SidebarController.show("viewBookmarksSidebar");
   megalist = await openPasswordsSidebar();
-  await checkAllLoginsRendered(megalist);
-  passwordCard = megalist.querySelector("password-card");
+  await checkAllLoginsUpdated(megalist);
+  list = megalist.querySelector(".passwords-list");
+  passwordCard = list.shadowRoot.querySelector(".item password-card");
   await waitForPasswordConceal(passwordCard.passwordLine.loginLine);
   ok(true, "Password is hidden.");
 
