@@ -19,7 +19,7 @@ add_task(async function test_error_visibility_heuristic() {
     set: [[SCHEDULED_BACKUPS_ENABLED_PREF, true]],
   });
 
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let settings = browser.contentDocument.querySelector("backup-settings");
     let sandbox = sinon.createSandbox();
 

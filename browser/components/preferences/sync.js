@@ -19,6 +19,8 @@ const FXA_LOGIN_FAILED = 2;
 const SYNC_DISCONNECTED = 0;
 const SYNC_CONNECTED = 1;
 
+const BACKUP_UI_ENABLED_PREF = "browser.backup.preferences.ui.enabled";
+
 var gSyncPane = {
   get page() {
     return document.getElementById("weavePrefsDeck").selectedIndex;
@@ -37,12 +39,17 @@ var gSyncPane = {
       .getElementById("weavePrefsDeck")
       .removeAttribute("data-hidden-from-search");
 
-    if (
-      Services.prefs.getBoolPref("browser.backup.preferences.ui.enabled", false)
-    ) {
-      let backupGroup = document.getElementById("dataBackupGroup");
-      backupGroup.removeAttribute("data-hidden-from-search");
+    if (Services.prefs.getBoolPref(BACKUP_UI_ENABLED_PREF, false)) {
+      document
+        .getElementById("dataBackupGroup")
+        .removeAttribute("data-hidden-from-search");
     }
+
+    Services.prefs.addObserver(
+      BACKUP_UI_ENABLED_PREF,
+      this.updateBackupUIVisibility
+    );
+    this.updateBackupUIVisibility();
 
     // If the Service hasn't finished initializing, wait for it.
     let xps = Cc["@mozilla.org/weave/service;1"].getService(
@@ -62,6 +69,10 @@ var gSyncPane = {
       window.removeEventListener("unload", onUnload);
       try {
         Services.obs.removeObserver(onReady, "weave:service:ready");
+        Services.prefs.removeObserver(
+          BACKUP_UI_ENABLED_PREF,
+          this.updateBackupUIVisibility
+        );
       } catch (e) {}
     };
 
@@ -291,6 +302,19 @@ var gSyncPane = {
       syncConfiguredEl.hidden = true;
       syncNotConfiguredEl.hidden = false;
     }
+  },
+
+  updateBackupUIVisibility() {
+    const isBackupUIEnabled = Services.prefs.getBoolPref(
+      BACKUP_UI_ENABLED_PREF,
+      false
+    );
+
+    let dataBackupGroupEl = document.getElementById("dataBackupGroup");
+    let backupGroupHeaderEl = document.getElementById("backupCategory");
+
+    dataBackupGroupEl.hidden = !isBackupUIEnabled;
+    backupGroupHeaderEl.hidden = !isBackupUIEnabled;
   },
 
   async _chooseWhatToSync(isSyncConfigured, why = null) {
