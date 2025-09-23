@@ -84,7 +84,7 @@
       - service-worker
       - startup-geckoview
 
-- kind: test
+- kind: browsertime
   test_platform: &perf-platforms
       - android-em-14-x86_64-shippable-qr/opt
       - linux1804-64-shippable-qr/opt

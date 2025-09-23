@@ -142,6 +142,7 @@ def get_test_platforms(
 
 
 PREFIX_BY_KIND = {
+    "browsertime": {"browsertime"},
     "mochitest": {"mochitest"},
     "reftest": {"crashtest", "jsreftest", "reftest"},
 }

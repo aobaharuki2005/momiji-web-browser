@@ -209,6 +209,17 @@ See the :doc:`test kind documentation <kinds/test>` for more info.
    kinds/test
 
 
+browsertime
+-----------
+
+See the :doc:`test kind documentation <kinds/test>` for more info.
+
+.. toctree::
+   :hidden:
+
+   kinds/test
+
+
 test
 ----
 

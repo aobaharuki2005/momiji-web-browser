@@ -21,24 +21,8 @@ transforms:
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
-# Each stanza in a file pointed to by 'jobs-from' describes a particular test
-# suite or sub-suite. These are processed through the transformations described
-# above to produce a bunch of tasks. See the schema in
-# `taskcluster/gecko_taskgraph/transforms/test/__init__.py` for a description of the fields
-# used in these files.
-
 # Adding a new test type or running tests on a new platform? Be sure to review
 # https://wiki.mozilla.org/Sheriffing/Job_Visibility_Policy
-
-tasks-from:
-    - awsy.yml
-    - compiled.yml
-    - firefox-ui.yml
-    - marionette.yml
-    - misc.yml
-    - talos.yml
-    - web-platform.yml
-    - xpcshell.yml
 
 task-defaults:
     attributes:
@@ -93,3 +77,7 @@ task-defaults:
                 default:
                     - linux64-minidump-stackwalk
                     - linux64-fix-stacks
+
+tasks-from:
+    - desktop.yml
+    - mobile.yml
