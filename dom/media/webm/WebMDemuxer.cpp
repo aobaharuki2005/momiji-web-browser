@@ -439,8 +439,8 @@ nsresult WebMDemuxer::ReadMetadata() {
           FloorDefaultDurationToTimecodeScale(context, track);
       nsresult rv = SetVideoCodecInfo(context, track);
       if (NS_FAILED(rv)) {
-        WEBM_DEBUG("Set video codec info error, ignoring track");
-        continue;
+        WEBM_DEBUG("Set video codec info error");
+        return rv;
       }
       mInfo.mVideo.mColorPrimaries = gfxUtils::CicpToColorPrimaries(
           static_cast<gfx::CICP::ColourPrimaries>(params.primaries),
@@ -531,13 +531,6 @@ nsresult WebMDemuxer::ReadMetadata() {
                    params.rate, params.channels);
         return NS_ERROR_DOM_MEDIA_METADATA_ERR;
       }
-      params.rate = rate;
-
-      nsresult rv = SetAudioCodecInfo(context, track, params);
-      if (NS_FAILED(rv)) {
-        WEBM_DEBUG("Set audio codec info error, ignoring track");
-        continue;
-      }
 
       mAudioTrack = track;
       mHasAudio = true;
@@ -546,6 +539,12 @@ nsresult WebMDemuxer::ReadMetadata() {
       mSeekPreroll = params.seek_preroll;
       mInfo.mAudio.mRate = rate;
       mInfo.mAudio.mChannels = params.channels;
+
+      nsresult rv = SetAudioCodecInfo(context, track, params);
+      if (NS_FAILED(rv)) {
+        WEBM_DEBUG("Set audio codec info error");
+        return rv;
+      }
 
       uint64_t duration = 0;
       r = nestegg_duration(context, &duration);
@@ -561,11 +560,6 @@ nsresult WebMDemuxer::ReadMetadata() {
         mCrypto.AddInitData(u"webm"_ns, mInfo.mAudio.mCrypto.mKeyId);
       }
     }
-  }
-
-  if (!mHasVideo && !mHasAudio) {
-    WEBM_DEBUG("No supported track!");
-    return NS_ERROR_DOM_MEDIA_METADATA_ERR;
   }
   WEBM_DEBUG("Read metadata OK");
   return NS_OK;
