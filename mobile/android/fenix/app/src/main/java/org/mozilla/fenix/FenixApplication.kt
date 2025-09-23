@@ -114,6 +114,7 @@ import org.mozilla.fenix.utils.isLargeScreenSize
 import org.mozilla.fenix.wallpapers.Wallpaper
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToLong
+import mozilla.components.support.AppServicesInitializer.Config as AppServicesConfig
 
 private const val RAM_THRESHOLD_MEGABYTES = 1024
 private const val BYTES_TO_MEGABYTES_CONVERSION = 1024.0 * 1024.0
@@ -551,7 +552,9 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
      */
     private fun beginSetupMegazord() {
         // Rust components must be initialized at the very beginning, before any other Rust call, ...
-        AppServicesInitializer.init(components.analytics.crashReporter)
+        AppServicesInitializer.init(
+            AppServicesConfig(components.analytics.crashReporter),
+        )
     }
 
     @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
