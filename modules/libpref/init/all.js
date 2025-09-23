@@ -1787,11 +1787,7 @@ pref("extensions.browser_style_mv3.same_as_mv2", false);
 
 // If set to true, browser.cookies.set() will throw exceptions if the cookie is
 // invalid. Otherwise, a warning message will be shown in the console.
-#ifdef NIGHTLY_BUILD
 pref("extensions.cookie.rejectWhenInvalid", true);
-#else
-pref("extensions.cookie.rejectWhenInvalid", false);
-#endif
 
 // Experimental Inference API
 pref("extensions.ml.enabled", true);
