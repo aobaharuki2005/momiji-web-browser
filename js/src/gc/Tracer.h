@@ -240,6 +240,7 @@ template <typename T>
 void BufferHolder<T>::trace(JSTracer* trc) {
   if (buffer) {
     TraceBufferRoot(trc, zone, &buffer, "BufferHolder buffer");
+    JS::GCPolicy<T>::trace(trc, buffer, "BufferHolder data");
   }
 }
 

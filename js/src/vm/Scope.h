@@ -718,7 +718,7 @@ class FunctionScope : public Scope {
     explicit RuntimeData(size_t length) { PoisonNames(this, length); }
     RuntimeData() = delete;
 
-    void trace(JSTracer* trc);
+    inline void trace(JSTracer* trc);
   };
 
   using ParserData = ParserScopeData<SlotInfo>;
@@ -1019,7 +1019,7 @@ class ModuleScope : public Scope {
     explicit RuntimeData(size_t length);
     RuntimeData() = delete;
 
-    void trace(JSTracer* trc);
+    inline void trace(JSTracer* trc);
   };
 
   using ParserData = ParserScopeData<SlotInfo>;
@@ -1080,7 +1080,7 @@ class WasmInstanceScope : public Scope {
     explicit RuntimeData(size_t length);
     RuntimeData() = delete;
 
-    void trace(JSTracer* trc);
+    inline void trace(JSTracer* trc);
   };
 
   using ParserData = ParserScopeData<SlotInfo>;
