@@ -629,6 +629,9 @@ VectorImage::GetFrame(uint32_t aWhichFrame, uint32_t aFlags) {
   if (!width.IsLength() || !height.IsLength()) {
     // The SVG is lacking a definite size for its width or height, so we do not
     // know how big of a surface to generate. Hence, we just bail.
+    NS_WARNING(
+        "VectorImage::GetFrame called on image without an intrinsic width or "
+        "height");
     return nullptr;
   }
 
