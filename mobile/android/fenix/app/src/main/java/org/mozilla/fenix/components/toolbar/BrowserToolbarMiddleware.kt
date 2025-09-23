@@ -387,10 +387,7 @@ class BrowserToolbarMiddleware(
             }
 
             is OriginClicked -> {
-                when (environment?.navController?.currentDestination?.id) {
-                    R.id.browserFragment -> Events.searchBarTapped.record(Events.SearchBarTappedExtra("BROWSER"))
-                    R.id.homeFragment -> Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME"))
-                }
+                Events.searchBarTapped.record(Events.SearchBarTappedExtra("BROWSER"))
 
                 val selectedTab = browserStore.state.selectedTab ?: return
                 val searchTerms = selectedTab.content.searchTerms

@@ -59,6 +59,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -82,6 +83,7 @@ import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.helpers.FenixGleanTestRule
 import org.mozilla.fenix.home.toolbar.BrowserToolbarMiddleware.HomeToolbarAction
 import org.mozilla.fenix.home.toolbar.DisplayActions.FakeClicked
 import org.mozilla.fenix.home.toolbar.DisplayActions.MenuClicked
@@ -101,6 +103,9 @@ import mozilla.components.ui.tabcounter.R as tabcounterR
 class BrowserToolbarMiddlewareTest {
     @get:Rule
     val mainLooperRule = MainLooperTestRule()
+
+    @get:Rule
+    val gleanRule = FenixGleanTestRule(testContext)
 
     private val appState: AppState = mockk(relaxed = true) {
         every { orientation } returns Portrait
@@ -251,6 +256,16 @@ class BrowserToolbarMiddlewareTest {
 
         val originConfiguration = toolbarStore.state.displayState.pageOrigin
         assertEquals(expectedConfiguration, originConfiguration)
+    }
+
+    @Test
+    fun `WHEN clicking on the URL THEN record telemetry`() {
+        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
+        val toolbarStore = buildStore(middleware)
+
+        toolbarStore.dispatch(toolbarStore.state.displayState.pageOrigin.onClick as BrowserToolbarAction)
+
+        assertEquals("HOME", Events.searchBarTapped.testGetValue()?.last()?.extra?.get("source"))
     }
 
     @Test

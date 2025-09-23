@@ -697,25 +697,13 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN in the browser sceen WHEN clicking on the URL THEN record telemetry`() {
-        every { navController.currentDestination?.id } returns R.id.browserFragment
+    fun `WHEN clicking on the URL THEN record telemetry`() {
         val middleware = buildMiddleware()
         val toolbarStore = buildStore(middleware, navController = navController)
 
         toolbarStore.dispatch(toolbarStore.state.displayState.pageOrigin.onClick as BrowserToolbarAction)
 
         assertEquals("BROWSER", Events.searchBarTapped.testGetValue()?.last()?.extra?.get("source"))
-    }
-
-    @Test
-    fun `GIVEN in the home sceen WHEN clicking on the URL THEN record telemetry`() {
-        every { navController.currentDestination?.id } returns R.id.homeFragment
-        val middleware = buildMiddleware()
-        val toolbarStore = buildStore(middleware, navController = navController)
-
-        toolbarStore.dispatch(toolbarStore.state.displayState.pageOrigin.onClick as BrowserToolbarAction)
-
-        assertEquals("HOME", Events.searchBarTapped.testGetValue()?.last()?.extra?.get("source"))
     }
 
     @Test
