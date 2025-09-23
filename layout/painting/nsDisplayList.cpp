@@ -5605,7 +5605,9 @@ bool nsDisplayFixedPosition::ShouldGetFixedAnimationId() {
          nsLayoutUtils::ScrollIdForRootScrollFrame(mFrame->PresContext()) ==
              GetScrollTargetId();
 #else
-  return false;
+  return HasDynamicToolbar() &&
+         (nsLayoutUtils::ScrollIdForRootScrollFrame(mFrame->PresContext()) ==
+          GetScrollTargetId());
 #endif
 }
 

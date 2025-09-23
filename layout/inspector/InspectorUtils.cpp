@@ -7,6 +7,7 @@
 #include "mozilla/dom/InspectorUtils.h"
 
 #include "ChildIterator.h"
+#include "Units.h"
 #include "gfxTextRun.h"
 #include "inLayoutUtils.h"
 #include "mozilla/ArrayUtils.h"
@@ -1308,7 +1309,7 @@ void InspectorUtils::ReplaceBlockRuleBodyTextInStylesheet(
 
 void InspectorUtils::SetVerticalClipping(GlobalObject&,
                                          BrowsingContext* aContext,
-                                         mozilla::ScreenIntCoord aOffset) {
+                                         mozilla::CSSCoord aOffset) {
   MOZ_ASSERT(XRE_IsParentProcess());
   if (!aContext) {
     return;
@@ -1323,17 +1324,23 @@ void InspectorUtils::SetVerticalClipping(GlobalObject&,
   if (!parent) {
     return;
   }
-  parent->DynamicToolbarOffsetChanged(aOffset);
+  const LayoutDeviceToCSSScale scale = parent->GetLayoutDeviceToCSSScale();
+  const mozilla::LayoutDeviceCoord layoutOffset = aOffset / scale;
+  const mozilla::ScreenCoord screenOffset = ViewAs<ScreenPixel>(
+      layoutOffset, PixelCastJustification::LayoutDeviceIsScreenForBounds);
+  const mozilla::ScreenIntCoord offset = screenOffset.Rounded();
+  parent->DynamicToolbarOffsetChanged(offset);
 
   RefPtr<nsIWidget> widget = canonical->GetParentProcessWidgetContaining();
   if (!widget) {
     return;
   }
-  widget->DynamicToolbarOffsetChanged(aOffset);
+  widget->DynamicToolbarOffsetChanged(offset);
 }
 
-void InspectorUtils::SetDynamicToolbarMaxHeight(
-    GlobalObject&, BrowsingContext* aContext, mozilla::ScreenIntCoord aHeight) {
+void InspectorUtils::SetDynamicToolbarMaxHeight(GlobalObject&,
+                                                BrowsingContext* aContext,
+                                                mozilla::CSSCoord aHeight) {
   MOZ_ASSERT(XRE_IsParentProcess());
   if (!aContext) {
     return;
@@ -1349,7 +1356,12 @@ void InspectorUtils::SetDynamicToolbarMaxHeight(
     return;
   }
 
-  parent->DynamicToolbarMaxHeightChanged(aHeight);
+  const LayoutDeviceToCSSScale scale = parent->GetLayoutDeviceToCSSScale();
+  const mozilla::LayoutDeviceCoord layoutOffset = aHeight / scale;
+  const mozilla::ScreenCoord screenOffset = ViewAs<ScreenPixel>(
+      layoutOffset, PixelCastJustification::LayoutDeviceIsScreenForBounds);
+  const mozilla::ScreenIntCoord height = screenOffset.Rounded();
+  parent->DynamicToolbarMaxHeightChanged(height);
 }
 
 uint16_t InspectorUtils::GetGridContainerType(GlobalObject&,
