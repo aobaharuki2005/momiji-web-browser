@@ -11,63 +11,66 @@
 //    what key to press,
 //    modifers,
 //    expected input box value after keypress,
-//    is the popup open,
-//    is a suggestion selected in the popup,
-//    expect ruleview-changed,
-//    expect grid-line-names-updated and popup to be closed and reopened,
+//    flags:
+//      - is the popup open,
+//      - is a suggestion selected in the popup,
+//      - expect ruleview-changed,
+//      - expect grid-line-names-updated and popup to be closed and reopened,
 //  ]
 
-const OPEN = true,
-  SELECTED = true,
-  CHANGE = true,
-  SUBMIT_PROPERTY_NAME = true;
+const NONE = 0;
+const OPEN = 1;
+const SELECTED = 2;
+const CHANGE = 4;
+const SUBMIT_PROPERTY_NAME = 8;
+
 const changeTestData = [
-  ["c", {}, "col1-start", OPEN, SELECTED, CHANGE],
-  ["o", {}, "col1-start", OPEN, SELECTED, CHANGE],
-  ["l", {}, "col1-start", OPEN, SELECTED, CHANGE],
-  ["VK_DOWN", {}, "col2-start", OPEN, SELECTED, CHANGE],
-  ["VK_RIGHT", {}, "col2-start", !OPEN, !SELECTED, !CHANGE],
+  ["c", {}, "col1-start", OPEN | SELECTED | CHANGE],
+  ["o", {}, "col1-start", OPEN | SELECTED | CHANGE],
+  ["l", {}, "col1-start", OPEN | SELECTED | CHANGE],
+  ["VK_DOWN", {}, "col2-start", OPEN | SELECTED | CHANGE],
+  ["VK_RIGHT", {}, "col2-start", NONE],
 ];
 
 // Creates a new CSS property value.
 // Checks that grid-area autocompletes column and row names.
 const newAreaTestData = [
-  ["g", {}, "gap", OPEN, SELECTED, !CHANGE],
-  ["VK_DOWN", {}, "grid", OPEN, SELECTED, !CHANGE],
-  ["VK_DOWN", {}, "grid-area", OPEN, SELECTED, !CHANGE],
+  ["g", {}, "gap", OPEN | SELECTED],
+  ["VK_DOWN", {}, "grid", OPEN | SELECTED],
+  ["VK_DOWN", {}, "grid-area", OPEN | SELECTED],
   // When hitting Tab, the popup on the property name gets closed and the one on the
   // property value opens (with the grid area names), without auto-selecting an item.
-  ["VK_TAB", {}, "", OPEN, !SELECTED, !CHANGE, SUBMIT_PROPERTY_NAME],
-  ["c", {}, "col1-start", OPEN, SELECTED, CHANGE],
-  ["VK_BACK_SPACE", {}, "c", !OPEN, !SELECTED, CHANGE],
-  ["VK_BACK_SPACE", {}, "", OPEN, !SELECTED, CHANGE],
-  ["r", {}, "revert", OPEN, SELECTED, CHANGE],
-  ["VK_DOWN", {}, "revert-layer", OPEN, SELECTED, CHANGE],
-  ["VK_DOWN", {}, "row1-start", OPEN, SELECTED, CHANGE],
-  ["r", {}, "rr", !OPEN, !SELECTED, CHANGE],
-  ["VK_BACK_SPACE", {}, "r", !OPEN, !SELECTED, CHANGE],
-  ["o", {}, "row1-start", OPEN, SELECTED, CHANGE],
-  ["VK_TAB", {}, "", !OPEN, !SELECTED, CHANGE],
+  ["VK_TAB", {}, "", OPEN | SUBMIT_PROPERTY_NAME],
+  ["c", {}, "col1-start", OPEN | SELECTED | CHANGE],
+  ["VK_BACK_SPACE", {}, "c", CHANGE],
+  ["VK_BACK_SPACE", {}, "", OPEN | CHANGE],
+  ["r", {}, "revert", OPEN | SELECTED | CHANGE],
+  ["VK_DOWN", {}, "revert-layer", OPEN | SELECTED | CHANGE],
+  ["VK_DOWN", {}, "row1-start", OPEN | SELECTED | CHANGE],
+  ["r", {}, "rr", CHANGE],
+  ["VK_BACK_SPACE", {}, "r", CHANGE],
+  ["o", {}, "row1-start", OPEN | SELECTED | CHANGE],
+  ["VK_TAB", {}, "", CHANGE],
 ];
 
 // Creates a new CSS property value.
 // Checks that grid-row only autocompletes row names.
 const newRowTestData = [
-  ["g", {}, "gap", OPEN, SELECTED, !CHANGE],
-  ["r", {}, "grid", OPEN, SELECTED, !CHANGE],
-  ["i", {}, "grid", OPEN, SELECTED, !CHANGE],
-  ["d", {}, "grid", OPEN, SELECTED, !CHANGE],
-  ["-", {}, "grid-area", OPEN, SELECTED, !CHANGE],
-  ["r", {}, "grid-row", OPEN, SELECTED, !CHANGE],
+  ["g", {}, "gap", OPEN | SELECTED],
+  ["r", {}, "grid", OPEN | SELECTED],
+  ["i", {}, "grid", OPEN | SELECTED],
+  ["d", {}, "grid", OPEN | SELECTED],
+  ["-", {}, "grid-area", OPEN | SELECTED],
+  ["r", {}, "grid-row", OPEN | SELECTED],
   // When hitting Tab, the popup on the property name gets closed and the one on the
   // property value opens (with the grid area names), without auto-selecting an item.
-  ["VK_TAB", {}, "", OPEN, !SELECTED, !CHANGE, SUBMIT_PROPERTY_NAME],
-  ["c", {}, "c", !OPEN, !SELECTED, CHANGE],
-  ["VK_BACK_SPACE", {}, "", OPEN, !SELECTED, CHANGE],
-  ["r", {}, "revert", OPEN, SELECTED, CHANGE],
-  ["VK_DOWN", {}, "revert-layer", OPEN, SELECTED, CHANGE],
-  ["VK_DOWN", {}, "row1-start", OPEN, SELECTED, CHANGE],
-  ["VK_TAB", {}, "", !OPEN, !SELECTED, CHANGE],
+  ["VK_TAB", {}, "", OPEN | SUBMIT_PROPERTY_NAME],
+  ["c", {}, "c", CHANGE],
+  ["VK_BACK_SPACE", {}, "", OPEN | CHANGE],
+  ["r", {}, "revert", OPEN | SELECTED | CHANGE],
+  ["VK_DOWN", {}, "revert-layer", OPEN | SELECTED | CHANGE],
+  ["VK_DOWN", {}, "row1-start", OPEN | SELECTED | CHANGE],
+  ["VK_TAB", {}, "", CHANGE],
 ];
 
 const TEST_URL = URL_ROOT + "doc_grid_names.html";
@@ -147,10 +150,15 @@ async function runChangePropertyAutocompletionTest(
 }
 
 async function testCompletion(
-  [key, modifiers, completion, open, selected, change, submitPropertyName],
+  [key, modifiers, completion, flags],
   editor,
   view
 ) {
+  const open = !!(flags & OPEN);
+  const selected = !!(flags & SELECTED);
+  const change = !!(flags & CHANGE);
+  const submitPropertyName = !!(flags & SUBMIT_PROPERTY_NAME);
+
   info(
     `Pressing key "${key}", expecting "${completion}", popup opened: ${open}, item selected: ${selected}`
   );
