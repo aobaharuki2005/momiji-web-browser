@@ -8,6 +8,7 @@ import {
   ECPublicKey,
   RSAPublicKey,
 } from "./vendor/pkijs.js";
+import { hexToIpv6Repr, b64ToPEM } from "./components/utils.mjs";
 
 const getTimeZone = () => {
   let timeZone = new Date().toString().match(/\(([A-Za-z\s].*)\)/);
@@ -156,14 +157,7 @@ const getSubjectAltNames = (x509, criticalExtensions) => {
             ];
           } else if (address.length === 32) {
             // ipv6
-            return [
-              strings.san[type],
-              address
-                .toLowerCase()
-                .match(/.{1,4}/g)
-                .join(":")
-                .replace(/\b:?(?:0+:?){2,}/, "::"),
-            ];
+            return [strings.san[type], hexToIpv6Repr(address)];
           }
           return [strings.san[type], "Unknown IP address"];
 
@@ -440,11 +434,6 @@ const getMicrosoftCryptographicExtensions = (x509, criticalExtensions) => {
   );
 
   return msCrypto;
-};
-
-const b64ToPEM = string => {
-  let wrapped = string.match(/.{1,64}/g).join("\r\n");
-  return `-----BEGIN CERTIFICATE-----\r\n${wrapped}\r\n-----END CERTIFICATE-----\r\n`;
 };
 
 export const parse = async certificate => {
