@@ -658,6 +658,41 @@ Preferences.addSetting({
   },
 });
 
+// Performance settings
+Preferences.addSetting({
+  id: "contentProcessCount",
+  pref: "dom.ipc.processCount",
+});
+Preferences.addSetting({
+  id: "allowHWAccel",
+  pref: "layers.acceleration.disabled",
+  deps: ["useRecommendedPerformanceSettings"],
+  visible({ useRecommendedPerformanceSettings }) {
+    return !useRecommendedPerformanceSettings.value;
+  },
+});
+Preferences.addSetting({
+  id: "useRecommendedPerformanceSettings",
+  pref: "browser.preferences.defaultPerformanceSettings.enabled",
+  deps: ["contentProcessCount", "allowHWAccel"],
+  get(val, { allowHWAccel, contentProcessCount }) {
+    if (
+      allowHWAccel.value != allowHWAccel.pref.defaultValue ||
+      contentProcessCount.value != contentProcessCount.pref.defaultValue
+    ) {
+      return false;
+    }
+    return val;
+  },
+  set(val, { allowHWAccel, contentProcessCount }) {
+    if (val) {
+      contentProcessCount.value = contentProcessCount.pref.defaultValue;
+      allowHWAccel.value = allowHWAccel.pref.defaultValue;
+    }
+    return val;
+  },
+});
+
 /**
  * @type {Record<string, PreferencesSettingsConfig>} SettingConfig
  */
@@ -916,6 +951,19 @@ let SETTINGS_CONFIG = {
       },
     ],
   },
+  performance: {
+    items: [
+      {
+        id: "useRecommendedPerformanceSettings",
+        l10nId: "performance-use-recommended-settings-checkbox",
+        supportPage: "performance",
+      },
+      {
+        id: "allowHWAccel",
+        l10nId: "performance-allow-hw-accel",
+      },
+    ],
+  },
 };
 
 /**
@@ -1054,17 +1102,6 @@ var gMainPane = {
     }
 
     this.initBrowserContainers();
-    this.buildContentProcessCountMenuList();
-
-    this.updateDefaultPerformanceSettingsPref();
-
-    let defaultPerformancePref = Preferences.get(
-      "browser.preferences.defaultPerformanceSettings.enabled"
-    );
-    defaultPerformancePref.on("change", () => {
-      this.updatePerformanceSettingsBox({ duringChangeEvent: true });
-    });
-    this.updatePerformanceSettingsBox({ duringChangeEvent: false });
     this.displayUseSystemLocale();
     this.updateProxySettingsUI();
     initializeProxyUI(gMainPane);
@@ -1085,6 +1122,7 @@ var gMainPane = {
     initSettingGroup("downloads");
     initSettingGroup("browsing");
     initSettingGroup("zoom");
+    initSettingGroup("performance");
 
     if (AppConstants.platform == "win") {
       // Functionality for "Show tabs in taskbar" on Windows 7 and up.
@@ -1236,10 +1274,6 @@ var gMainPane = {
       gMainPane.updateColorsButton.bind(gMainPane)
     );
     gMainPane.updateColorsButton();
-    Preferences.get("layers.acceleration.disabled").on(
-      "change",
-      gMainPane.updateHardwareAcceleration.bind(gMainPane)
-    );
     setEventListener(
       "connectionSettings",
       "command",
@@ -2858,10 +2892,6 @@ var gMainPane = {
     gotoPref("containers");
   },
 
-  updateHardwareAcceleration() {
-    // Placeholder for restart on change
-  },
-
   // FONTS
 
   /**
@@ -3055,77 +3085,6 @@ var gMainPane = {
       return 1;
     }
     return 0;
-  },
-
-  updateDefaultPerformanceSettingsPref() {
-    let defaultPerformancePref = Preferences.get(
-      "browser.preferences.defaultPerformanceSettings.enabled"
-    );
-    let processCountPref = Preferences.get("dom.ipc.processCount");
-    let accelerationPref = Preferences.get("layers.acceleration.disabled");
-    if (
-      processCountPref.value != processCountPref.defaultValue ||
-      accelerationPref.value != accelerationPref.defaultValue
-    ) {
-      defaultPerformancePref.value = false;
-    }
-  },
-
-  updatePerformanceSettingsBox() {
-    let defaultPerformancePref = Preferences.get(
-      "browser.preferences.defaultPerformanceSettings.enabled"
-    );
-    let performanceSettings = document.getElementById("performanceSettings");
-    let processCountPref = Preferences.get("dom.ipc.processCount");
-    if (defaultPerformancePref.value) {
-      let accelerationPref = Preferences.get("layers.acceleration.disabled");
-      // Unset the value so process count will be decided by the platform.
-      processCountPref.value = processCountPref.defaultValue;
-      accelerationPref.value = accelerationPref.defaultValue;
-      performanceSettings.hidden = true;
-    } else {
-      performanceSettings.hidden = false;
-    }
-  },
-
-  buildContentProcessCountMenuList() {
-    if (Services.appinfo.fissionAutostart) {
-      document.getElementById("limitContentProcess").hidden = true;
-      document.getElementById("contentProcessCount").hidden = true;
-      document.getElementById("contentProcessCountEnabledDescription").hidden =
-        true;
-      document.getElementById("contentProcessCountDisabledDescription").hidden =
-        true;
-      return;
-    }
-    if (Services.appinfo.browserTabsRemoteAutostart) {
-      let processCountPref = Preferences.get("dom.ipc.processCount");
-      let defaultProcessCount = processCountPref.defaultValue;
-
-      let contentProcessCount =
-        document.querySelector(`#contentProcessCount > menupopup >
-                                menuitem[value="${defaultProcessCount}"]`);
-
-      document.l10n.setAttributes(
-        contentProcessCount,
-        "performance-default-content-process-count",
-        { num: defaultProcessCount }
-      );
-
-      document.getElementById("limitContentProcess").disabled = false;
-      document.getElementById("contentProcessCount").disabled = false;
-      document.getElementById("contentProcessCountEnabledDescription").hidden =
-        false;
-      document.getElementById("contentProcessCountDisabledDescription").hidden =
-        true;
-    } else {
-      document.getElementById("limitContentProcess").disabled = true;
-      document.getElementById("contentProcessCount").disabled = true;
-      document.getElementById("contentProcessCountEnabledDescription").hidden =
-        true;
-      document.getElementById("contentProcessCountDisabledDescription").hidden =
-        false;
-    }
   },
 
   _minUpdatePrefDisableTime: 1000,

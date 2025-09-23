@@ -157,8 +157,6 @@ support-files = ["empty_pdf_file.pdf"]
 
 ["browser_performance.js"]
 
-["browser_performance_content_process_limit.js"]
-
 ["browser_performance_e10srollout.js"]
 
 ["browser_performance_non_e10s.js"]
