@@ -112,9 +112,7 @@ internal fun TabsTrayFab(
                         hoveredElevation = 0.dp,
                     )
                 }
-                if (isSyncing) {
-                    iconModifier = Modifier.animateRotation()
-                }
+                iconModifier = Modifier.animateRotation(animate = isSyncing)
             }
         }
 
