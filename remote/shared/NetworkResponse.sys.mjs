@@ -166,7 +166,8 @@ export class NetworkResponse {
         encoding: responseContent.encoding,
         getDecodedResponseBody: async () =>
           lazy.NetworkUtils.decodeResponseChunks(responseContent.encodedData, {
-            charset: responseContent.contentCharset,
+            // Should always attempt to decode as UTF-8.
+            charset: "UTF-8",
             compressionEncodings: responseContent.compressionEncodings,
             encodedBodySize: responseContent.encodedBodySize,
             encoding: responseContent.encoding,
