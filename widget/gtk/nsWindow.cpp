@@ -999,11 +999,6 @@ bool nsWindow::DrawsToCSDTitlebar() const {
   return mGtkWindowDecoration == GTK_DECORATION_CLIENT && mDrawInTitlebar;
 }
 
-GdkPoint nsWindow::GetCsdOffsetInGdkCoords() {
-  return DevicePixelsToGdkPointRoundDown(
-      LayoutDeviceIntPoint(mCsdMargin.top, mCsdMargin.left));
-}
-
 void nsWindow::ApplySizeConstraints() {
   if (!mShell) {
     return;
@@ -3282,10 +3277,10 @@ void nsWindow::RecomputeBounds(MayChangeCsdMargin aMayChangeCsdMargin) {
       // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/4820
       // Bug 1775017 Gtk < 3.24.35 returns scaled values for
       // override redirected window on X11.
-      return LayoutDeviceIntRect(b.x, b.y, b.width, b.height);
+      return LayoutDeviceRect(b.x, b.y, b.width, b.height);
     }
 #endif
-    auto result = GdkRectToDevicePixels(b);
+    auto result = GdkRectToFloatDevicePixels(b);
 #ifdef MOZ_X11
     if (isX11 && gtk_check_version(3, 24, 50)) {
       if (auto border = GetXWindowBorder(aWin)) {
@@ -3307,12 +3302,12 @@ void nsWindow::RecomputeBounds(MayChangeCsdMargin aMayChangeCsdMargin) {
       // event size, to avoid spurious resizes on e.g. sizemode changes.
       gdk_window_get_geometry(aWin, nullptr, nullptr, &b.width, &b.height);
       gdk_window_get_origin(aWin, &b.x, &b.y);
-      return GdkRectToDevicePixels(b);
+      return GdkRectToFloatDevicePixels(b);
     }
     gdk_window_get_position(aWin, &b.x, &b.y);
     b.width = gdk_window_get_width(aWin);
     b.height = gdk_window_get_height(aWin);
-    return GdkRectToDevicePixels(b);
+    return GdkRectToFloatDevicePixels(b);
   };
 
   const auto oldBounds = mBounds;
@@ -3322,47 +3317,49 @@ void nsWindow::RecomputeBounds(MayChangeCsdMargin aMayChangeCsdMargin) {
       IsTopLevelWidget() && mSizeMode != nsSizeMode_Fullscreen && !mUndecorated;
   const auto toplevelBounds = GetBounds(toplevel);
 
-  mBounds = frameBounds;
-  // The frameBounds should always really be as wide as the toplevel bounds, but
-  // when opening multiple windows in quick succession on X11 they might not
-  // (see bug 1988787). This prevents having a really small window in such case.
-  mBounds.width = std::max(mBounds.width, toplevelBounds.width);
-  mBounds.height = std::max(mBounds.height, toplevelBounds.height);
+  mBounds = [&] {
+    auto bounds = frameBounds;
+    // The frameBounds should always really be as wide as the toplevel bounds,
+    // but when opening multiple windows in quick succession on X11 they might
+    // not (see bug 1988787). This prevents having a really small window in such
+    // case.
+    bounds.width = std::max(bounds.width, toplevelBounds.width);
+    bounds.height = std::max(bounds.height, toplevelBounds.height);
+    return LayoutDeviceIntRect::Round(bounds);
+  }();
 
-  // NOTE(emilio): This is a bit hacky. We try to do our best to get the right
-  // margin at all times, but due to how the configure and size-allocate and
-  // such events are sent async, we might not always have an updated mGdkWindow
-  // position.
-  mCsdMargin = [&] {
-    if (!decorated || !ToplevelUsesCSD()) {
-      return LayoutDeviceIntMargin{};
-    }
-    if (mayChangeCsdMargin && mGdkWindow) {
-      auto gdkWindowBounds = GetBounds(mGdkWindow);
-      if (gdkWindowBounds.X() >= 0 && gdkWindowBounds.Y() >= 0 &&
-          gdkWindowBounds.Width() > 1 && gdkWindowBounds.Height() > 1) {
-        return LayoutDeviceIntRect(LayoutDeviceIntPoint(),
-                                   toplevelBounds.Size()) -
-               gdkWindowBounds;
+  if (!decorated) {
+    mClientMargin = {};
+  } else if (mayChangeCsdMargin) {
+    const auto clientRectRelativeToFrame = [&] {
+      auto topLevelBoundsRelativeToFrame = toplevelBounds;
+      topLevelBoundsRelativeToFrame -= frameBounds.TopLeft();
+      if (!mGdkWindow) {
+        return topLevelBoundsRelativeToFrame;
       }
-    }
-    // Don't change it. It might have not changed at all, or if it has, we'll
-    // get a better margin once we get relevant size-allocate callbacks.
-    return mCsdMargin;
-  }();
+      auto gdkWindowBounds = GetBounds(mGdkWindow);
+      if (gdkWindowBounds.X() < 0 || gdkWindowBounds.Y() < 0 ||
+          gdkWindowBounds.Width() <= 1 || gdkWindowBounds.Height() <= 1) {
+        // If we don't have gdkwindow bounds, assume we take the whole toplevel.
+        return topLevelBoundsRelativeToFrame;
+      }
+      // gdkWindowBounds is relative to topLevelBounds already.
+      return gdkWindowBounds + topLevelBoundsRelativeToFrame.TopLeft();
+    }();
 
-  mClientMargin = [&] {
-    if (!decorated) {
-      return LayoutDeviceIntMargin{};
-    }
-    if (mayChangeCsdMargin) {
-      const auto systemMargin = mBounds - toplevelBounds;
-      return systemMargin + mCsdMargin;
-    }
-    // Same as above, wait for the window state to be complete.
-    return mClientMargin;
-  }();
-  mClientMargin.EnsureAtLeast(LayoutDeviceIntMargin());
+    // This is a bit tricky. For fractional scaling, we want the size and
+    // position to be rounded independently, to match the compositor scale,
+    // which is not the behavior of LayoutDeviceIntRect::Round (which rounds the
+    // edges instead). See bug 1849092.
+    const LayoutDeviceIntRect roundedClientRect(
+        LayoutDeviceIntPoint::Round(clientRectRelativeToFrame.TopLeft()),
+        LayoutDeviceIntSize::Round(clientRectRelativeToFrame.Size()));
+    mClientMargin =
+        LayoutDeviceIntRect(LayoutDeviceIntPoint(), mBounds.Size()) -
+        roundedClientRect;
+  } else {
+    // Assume the client margin remains the same.
+  }
 
   if (IsPopup()) {
     // Popup windows not be moved by the window manager, and so any change in
@@ -9120,10 +9117,15 @@ LayoutDeviceIntMargin nsWindow::GtkBorderToDevicePixels(
 }
 
 LayoutDeviceIntRect nsWindow::GdkRectToDevicePixels(const GdkRectangle& aRect) {
+  return LayoutDeviceIntRect::Round(GdkRectToFloatDevicePixels(aRect));
+}
+
+LayoutDeviceRect nsWindow::GdkRectToFloatDevicePixels(
+    const GdkRectangle& aRect) {
   double scale = FractionalScaleFactor();
-  return LayoutDeviceIntRect::RoundIn(
-      (float)(aRect.x * scale), (float)(aRect.y * scale),
-      (float)(aRect.width * scale), (float)(aRect.height * scale));
+  return LayoutDeviceRect((float)(aRect.x * scale), (float)(aRect.y * scale),
+                          (float)(aRect.width * scale),
+                          (float)(aRect.height * scale));
 }
 
 nsresult nsWindow::SynthesizeNativeMouseEvent(
