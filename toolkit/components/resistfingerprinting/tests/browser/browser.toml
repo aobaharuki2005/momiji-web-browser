@@ -71,3 +71,5 @@ support-files = ["file_pdf.pdf"]
 ["browser_worker_granular_overrides.js"]
 
 ["browser_worker_overrides.js"]
+
+["browser_resistfingerprinting_readpixels.js"]
