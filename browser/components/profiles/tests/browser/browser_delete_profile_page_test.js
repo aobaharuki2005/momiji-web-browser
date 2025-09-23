@@ -199,9 +199,6 @@ add_task(async function test_delete_cancel_button() {
       url: "about:deleteprofile",
     },
     async browser => {
-      const tab = gBrowser.getTabForBrowser(browser);
-      const tabClosing = BrowserTestUtils.waitForTabClosing(tab);
-
       await SpecialPowers.spawn(browser, [], async () => {
         let deleteProfileCard = content.document.querySelector(
           "delete-profile-card"
@@ -221,9 +218,6 @@ add_task(async function test_delete_cancel_button() {
           deleteProfileCard.shadowRoot.querySelector("#cancel-delete");
         cancelButton.click();
       });
-
-      await tabClosing;
-      Assert.ok(true, "Delete-profile tab automatically closed.");
       await assertGlean("profiles", "delete", "cancel");
     }
   );

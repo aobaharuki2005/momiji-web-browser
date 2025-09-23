@@ -256,6 +256,21 @@ export class ProfilesParent extends JSWindowActorParent {
     return tab;
   }
 
+  actorCreated() {
+    let favicon = this.tab.iconImage;
+    favicon.classList.add("profiles-tab");
+  }
+
+  didDestroy() {
+    const gBrowser = this.browsingContext.topChromeWindow?.gBrowser;
+    if (!gBrowser) {
+      // If gBrowser doesn't exist, then we've closed the tab so we can just return
+      return;
+    }
+    let favicon = this.tab.iconImage;
+    favicon.classList.remove("profiles-tab");
+  }
+
   async #getProfileContent(isDark) {
     await SelectableProfileService.init();
     let currentProfile = SelectableProfileService.currentProfile;

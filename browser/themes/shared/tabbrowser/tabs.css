@@ -529,6 +529,11 @@
   &[busy] {
     display: none;
   }
+
+  &.profiles-tab {
+    fill: var(--toolbar-bgcolor);
+    stroke: var(--toolbar-color);
+  }
 }
 
 .tab-sharing-icon-overlay,
