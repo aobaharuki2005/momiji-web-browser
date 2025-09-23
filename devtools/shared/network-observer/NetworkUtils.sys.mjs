@@ -824,7 +824,7 @@ function setEventAsAvailable(resource, networkEvents) {
  * Helper to decode the content of a response object built by a
  * NetworkResponseListener.
  *
- * @param {Array<TypedArray>}
+ * @param {Array<TypedArray>} chunks
  *     Array of response chunks read via NetUtil.readInputStream.
  * @param {object} options
  * @param {string} options.charset
@@ -877,6 +877,7 @@ async function decodeResponseChunks(chunks, options) {
     );
   }
 
+  decodedContent = lazy.NetworkHelper.convertToUnicode(decodedContent, charset);
   if (encoding === "base64") {
     try {
       decodedContent = btoa(decodedContent);
@@ -890,20 +891,7 @@ async function decodeResponseChunks(chunks, options) {
   return decodedContent;
 }
 
-function decodeUncompressedStream(stream, length, charset) {
-  if (charset) {
-    const cis = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(
-      Ci.nsIConverterInputStream
-    );
-
-    cis.init(stream, charset, length, 0);
-    const str = {};
-    cis.readString(-1, str);
-    cis.close();
-
-    return str.value;
-  }
-
+function decodeUncompressedStream(stream, length) {
   const sis = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
     Ci.nsIScriptableInputStream
   );
@@ -911,7 +899,7 @@ function decodeUncompressedStream(stream, length, charset) {
   return sis.readBytes(length);
 }
 
-async function decodeCompressedStream(stream, length, encodings, charset) {
+async function decodeCompressedStream(stream, length, encodings) {
   const listener = Cc["@mozilla.org/network/stream-loader;1"].createInstance(
     Ci.nsIStreamLoader
   );
@@ -950,8 +938,7 @@ async function decodeCompressedStream(stream, length, encodings, charset) {
   converter.onDataAvailable(null, stream, 0, length);
   converter.onStopRequest(null, null, null);
 
-  const result = await onDecodingComplete;
-  return lazy.NetworkHelper.convertToUnicode(result, charset);
+  return onDecodingComplete;
 }
 
 /**
