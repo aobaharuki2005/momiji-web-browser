@@ -1780,7 +1780,8 @@ https://firefox-source-docs.mozilla.org/contributing/vcs/mercurial_bundles.html
         # Include try in our search to allow pulling from a specific push.
         pushheads = [
             (
-                self._artifact_job.candidate_trees + [self._artifact_job.try_tree],
+                self._artifact_job.candidate_trees
+                + [self._artifact_job.job_configuration.try_tree],
                 revision,
             )
         ]
