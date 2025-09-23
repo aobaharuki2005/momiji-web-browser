@@ -312,14 +312,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   // Add Sec-Fetch-Storage-Access headers based on cookie partitioning
   void AddStorageAccessHeadersToRequest();
 
- public:
-  // returns whether this channel is a retry after receiving the
-  // "Activate-Storage-Access"-header for a request that is eligable for
-  // unpartitioned cookies. Therefore needs to have still valid
-  // storage-permission granted. Public to be accible from AntiTrackingUtils.
-  bool StorageAccessReloadedChannel();
-
- private:
   // We might synchronously or asynchronously call BeginConnect,
   // which includes DNS prefetch and speculative connection, according to
   // whether an async tracker lookup is required. If the tracker lookup
@@ -716,8 +708,7 @@ class nsHttpChannel final : public HttpBaseChannel,
     // transaction is created.
     (uint32_t, HTTPSSVCTelemetryReported, 1),
     (uint32_t, EchConfigUsed, 1),
-    (uint32_t, AuthRedirectedChannel, 1),
-    (uint32_t, StorageAccessReloadChannel, 1)
+    (uint32_t, AuthRedirectedChannel, 1)
   ))
   // clang-format on
   enum CachedContentValidity : uint8_t { Unset = 0, Invalid = 1, Valid = 2 };
