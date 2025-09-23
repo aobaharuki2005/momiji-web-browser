@@ -6,6 +6,7 @@ package org.mozilla.fenix.crashes
 
 import android.view.ViewGroup.MarginLayoutParams
 import androidx.annotation.VisibleForTesting
+import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
@@ -25,6 +26,8 @@ import mozilla.components.lib.state.ext.flow
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.ext.getBottomToolbarHeight
+import org.mozilla.fenix.ext.getTopToolbarHeight
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -32,6 +35,7 @@ import org.mozilla.fenix.utils.Settings
  *
  * Note that you have to call `integration.viewProvider` to set the provider that will provide
  *
+ * @param fragment [Fragment] used to organize fragment dependent operations.
  * @param browserStore [BrowserStore] observed for any changes related to [EngineState.crashed].
  * @param appStore [AppStore] that tracks all content crashes in the current app session until the user
  * decides to either send or dismiss all crash reports.
@@ -61,6 +65,7 @@ import org.mozilla.fenix.utils.Settings
 
 @Suppress("LongParameterList")
 class CrashContentIntegration(
+    private val fragment: Fragment,
     private val browserStore: BrowserStore,
     private val appStore: AppStore,
     private val toolbar: ScrollableToolbar,
@@ -135,8 +140,12 @@ class CrashContentIntegration(
     internal fun updateVerticalMargins() = crashReporterView?.apply {
         with(layoutParams as MarginLayoutParams) {
             // TabStrip and navBar are not used in custom tabs
-            topMargin = settings.getTopToolbarHeight(includeTabStripIfAvailable = customTabSessionId == null)
-            bottomMargin = settings.getBottomToolbarHeight(includeNavBarIfEnabled = customTabSessionId == null)
+            topMargin = fragment.getTopToolbarHeight(
+                includeTabStripIfAvailable = customTabSessionId == null,
+            )
+            bottomMargin = fragment.getBottomToolbarHeight(
+                includeNavBarIfEnabled = customTabSessionId == null,
+            )
         }
     }
 }
