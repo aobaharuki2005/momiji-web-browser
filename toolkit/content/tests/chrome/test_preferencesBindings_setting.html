@@ -337,6 +337,69 @@
         setting.userChange("foo");
         is(_onUserChangeValue, DEP_VALUE, "onUserChange() is passed deps");
       });
+
+      // Validate that settings can depend on one another, and that the order
+      // they are added in doesn't matter for defining dependencies.
+      add_task(async function testCircularDeps() {
+        const FIRST_PREF = "test.settings-group.first";
+        const FIRST_SETTING = "first-setting";
+
+        const SECOND_PREF = "test.settings-group.second";
+        const SECOND_SETTING = "second-setting";
+
+        await SpecialPowers.pushPrefEnv({
+          set: [
+            [FIRST_PREF, true],
+            [SECOND_PREF, true],
+          ],
+        });
+        Preferences.addAll([
+          { id: FIRST_PREF, type: "bool" },
+          { id: SECOND_PREF, type: "bool" },
+        ]);
+        Preferences.addSetting({
+          id: FIRST_SETTING,
+          pref: FIRST_PREF,
+          deps: [SECOND_SETTING],
+          visible: deps => deps[SECOND_SETTING].value,
+        });
+        Preferences.addSetting({
+          id: SECOND_SETTING,
+          pref: SECOND_PREF,
+          deps: [FIRST_SETTING],
+          visible: deps => deps[FIRST_SETTING].value,
+        });
+
+        let firstSetting = Preferences.getSetting(FIRST_SETTING);
+        let secondSetting = Preferences.getSetting(SECOND_SETTING);
+
+        ok(firstSetting.visible, "First setting is visible");
+        ok(secondSetting.visible, "Second setting is visible");
+
+        let settingChanged = waitForSettingChange(secondSetting);
+        Services.prefs.setBoolPref(SECOND_PREF, false);
+        await settingChanged;
+
+        ok(!firstSetting.visible, "First setting is no longer visible.");
+
+        settingChanged = waitForSettingChange(secondSetting);
+        Services.prefs.setBoolPref(FIRST_PREF, false);
+        await settingChanged;
+
+        ok(!secondSetting.visible, "Second setting is no longer visible.");
+
+        // Validate the console output to ensure we haven't cause infinite recursion.
+        let consoleOutput = Services.console.getMessageArray();
+        let recursionErrors = consoleOutput.filter(
+          item =>
+            item instanceof Ci.nsIScriptError &&
+            item.message.includes("InternalError: too much recursion")
+        );
+        ok(
+          !recursionErrors.length,
+          "Circular dependencies don't produce any console errors."
+        );
+      });
     </script>
   </head>
   <body>

@@ -63,10 +63,7 @@ export class Setting extends EventEmitter {
     this.id = id;
     this.config = config;
     this.pref = config.pref && Preferences.get(config.pref);
-
-    for (const setting of Object.values(this.deps)) {
-      setting.on("change", this.onChange);
-    }
+    this._emitting = false;
 
     this.controllingExtensionInfo = {
       ...this.config.controllingExtensionInfo,
@@ -84,7 +81,12 @@ export class Setting extends EventEmitter {
   }
 
   onChange = () => {
+    if (this._emitting) {
+      return;
+    }
+    this._emitting = true;
     this.emit("change");
+    this._emitting = false;
   };
 
   /**
@@ -110,6 +112,11 @@ export class Setting extends EventEmitter {
       }
     }
     this._deps = deps;
+
+    for (const setting of Object.values(this._deps)) {
+      setting.on("change", this.onChange);
+    }
+
     return this._deps;
   }
 
