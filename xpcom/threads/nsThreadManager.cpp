@@ -606,6 +606,9 @@ nsThreadManager::NewNamedThread(
     nsIThread** aResult) {
   // Note: can be called from arbitrary threads
 
+  AUTO_PROFILER_MARKER_TEXT("NewThread", OTHER,
+                            MarkerOptions(MarkerStack::Capture()), aName);
+
   TimeStamp startTime = TimeStamp::Now();
 
   RefPtr<ThreadEventQueue> queue =
@@ -621,11 +624,6 @@ nsThreadManager::NewNamedThread(
     return rv;
   }
 
-  PROFILER_MARKER_TEXT(
-      "NewThread", OTHER,
-      MarkerOptions(MarkerStack::Capture(),
-                    MarkerTiming::IntervalUntilNowFrom(startTime)),
-      aName);
   if (!NS_IsMainThread()) {
     PROFILER_MARKER_TEXT(
         "NewThread (non-main thread)", OTHER,
