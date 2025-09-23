@@ -235,9 +235,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "-framework CoreMedia",
         "-framework IOKit",
         "-weak_framework ScreenCaptureKit",
-        "-F%s" % CONFIG["MACOS_PRIVATE_FRAMEWORKS_DIR"],
-        "-framework CoreUI",
-        "-framework CoreSymbolication",
         "cups",
     ]
     USE_LIBS += [
