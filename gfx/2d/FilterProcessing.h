@@ -10,13 +10,16 @@
 #include "2D.h"
 #include "Filters.h"
 
-namespace mozilla {
-namespace gfx {
+namespace mozilla::gfx {
 
-const ptrdiff_t B8G8R8A8_COMPONENT_BYTEOFFSET_B = 0;
-const ptrdiff_t B8G8R8A8_COMPONENT_BYTEOFFSET_G = 1;
-const ptrdiff_t B8G8R8A8_COMPONENT_BYTEOFFSET_R = 2;
-const ptrdiff_t B8G8R8A8_COMPONENT_BYTEOFFSET_A = 3;
+const ptrdiff_t B8G8R8A8_COMPONENT_BYTEOFFSET_B =
+    static_cast<ptrdiff_t>(mozilla::gfx::SurfaceFormatBit::OS_B) / 8;
+const ptrdiff_t B8G8R8A8_COMPONENT_BYTEOFFSET_G =
+    static_cast<ptrdiff_t>(mozilla::gfx::SurfaceFormatBit::OS_G) / 8;
+const ptrdiff_t B8G8R8A8_COMPONENT_BYTEOFFSET_R =
+    static_cast<ptrdiff_t>(mozilla::gfx::SurfaceFormatBit::OS_R) / 8;
+const ptrdiff_t B8G8R8A8_COMPONENT_BYTEOFFSET_A =
+    static_cast<ptrdiff_t>(mozilla::gfx::SurfaceFormatBit::OS_A) / 8;
 
 class FilterProcessing {
  public:
@@ -160,7 +163,6 @@ static inline unsigned umin(unsigned a, unsigned b) {
   return a - ((a - b) & -(a > b));
 }
 
-}  // namespace gfx
-}  // namespace mozilla
+}  // namespace mozilla::gfx
 
 #endif  // _MOZILLA_GFX_FILTERPROCESSING_H_
