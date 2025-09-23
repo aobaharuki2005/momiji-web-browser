@@ -14,11 +14,13 @@
 //    is the popup open,
 //    is a suggestion selected in the popup,
 //    expect ruleview-changed,
+//    expect grid-line-names-updated and popup to be closed and reopened,
 //  ]
 
 const OPEN = true,
   SELECTED = true,
-  CHANGE = true;
+  CHANGE = true,
+  SUBMIT_PROPERTY_NAME = true;
 const changeTestData = [
   ["c", {}, "col1-start", OPEN, SELECTED, CHANGE],
   ["o", {}, "col1-start", OPEN, SELECTED, CHANGE],
@@ -33,8 +35,9 @@ const newAreaTestData = [
   ["g", {}, "gap", OPEN, SELECTED, !CHANGE],
   ["VK_DOWN", {}, "grid", OPEN, SELECTED, !CHANGE],
   ["VK_DOWN", {}, "grid-area", OPEN, SELECTED, !CHANGE],
-  ["VK_TAB", {}, "", !OPEN, !SELECTED, !CHANGE],
-  "grid-line-names-updated",
+  // When hitting Tab, the popup on the property name gets closed and the one on the
+  // property value opens (with the grid area names), without auto-selecting an item.
+  ["VK_TAB", {}, "", OPEN, !SELECTED, !CHANGE, SUBMIT_PROPERTY_NAME],
   ["c", {}, "col1-start", OPEN, SELECTED, CHANGE],
   ["VK_BACK_SPACE", {}, "c", !OPEN, !SELECTED, CHANGE],
   ["VK_BACK_SPACE", {}, "", OPEN, !SELECTED, CHANGE],
@@ -56,8 +59,9 @@ const newRowTestData = [
   ["d", {}, "grid", OPEN, SELECTED, !CHANGE],
   ["-", {}, "grid-area", OPEN, SELECTED, !CHANGE],
   ["r", {}, "grid-row", OPEN, SELECTED, !CHANGE],
-  ["VK_TAB", {}, "", !OPEN, !SELECTED, !CHANGE],
-  "grid-line-names-updated",
+  // When hitting Tab, the popup on the property name gets closed and the one on the
+  // property value opens (with the grid area names), without auto-selecting an item.
+  ["VK_TAB", {}, "", OPEN, !SELECTED, !CHANGE, SUBMIT_PROPERTY_NAME],
   ["c", {}, "c", !OPEN, !SELECTED, CHANGE],
   ["VK_BACK_SPACE", {}, "", OPEN, !SELECTED, CHANGE],
   ["r", {}, "revert", OPEN, SELECTED, CHANGE],
@@ -109,14 +113,9 @@ async function runNewPropertyAutocompletionTest(
   info("Focusing the css property editable field");
   const ruleEditor = getRuleViewRuleEditor(view, 0);
   const editor = await focusNewRuleViewProperty(ruleEditor);
-  const gridLineNamesUpdated = inspector.once("grid-line-names-updated");
 
   info("Starting to test for css property completion");
   for (const data of testData) {
-    if (data == "grid-line-names-updated") {
-      await gridLineNamesUpdated;
-      continue;
-    }
     await testCompletion(data, editor, view);
   }
 }
@@ -148,44 +147,55 @@ async function runChangePropertyAutocompletionTest(
 }
 
 async function testCompletion(
-  [key, modifiers, completion, open, selected, change],
+  [key, modifiers, completion, open, selected, change, submitPropertyName],
   editor,
   view
 ) {
-  info("Pressing key " + key);
-  info("Expecting " + completion);
-  info("Is popup opened: " + open);
-  info("Is item selected: " + selected);
+  info(
+    `Pressing key "${key}", expecting "${completion}", popup opened: ${open}, item selected: ${selected}`
+  );
 
-  let onDone;
+  const promises = [];
+
   if (change) {
     // If the key triggers a ruleview-changed, wait for that event, it will
     // always be the last to be triggered and tells us when the preview has
     // been done.
-    onDone = view.once("ruleview-changed");
-  } else {
-    // Otherwise, expect an after-suggest event (except if the popup gets
-    // closed).
-    onDone =
-      key !== "VK_RIGHT" && key !== "VK_BACK_SPACE"
-        ? editor.once("after-suggest")
-        : null;
+    promises.push(view.once("ruleview-changed"));
+  } else if (key !== "VK_RIGHT" && key !== "VK_BACK_SPACE") {
+    // Otherwise, expect an after-suggest event (except if the autocomplete gets dismissed).
+    promises.push(editor.once("after-suggest"));
   }
 
-  // Also listening for popup opened/closed events if needed.
-  const popupEvent = open ? "popup-opened" : "popup-closed";
-  const onPopupEvent =
-    editor.popup.isOpen !== open ? once(editor.popup, popupEvent) : null;
+  // If the key submits the property name, the popup gets closed, the editor for the
+  // property value is created and the popup (with the grid line names) is opened.
+  if (submitPropertyName) {
+    promises.push(
+      // So we need to listen for the popup being closed…
+      editor.popup.once("popup-closed"),
+      // … and opened again
+      editor.popup.once("popup-opened"),
+      // and check that the grid line names were updated
+      view.inspector.once("grid-line-names-updated")
+    );
+  } else if (editor.popup.isOpen !== open) {
+    // if the key does not submit the property name, we only want to wait for popup
+    // events if the current state of the popup is different from the one that is
+    // expected after
+    promises.push(editor.popup.once(open ? "popup-opened" : "popup-closed"));
+  }
 
-  info("Synthesizing key " + key + ", modifiers: " + Object.keys(modifiers));
+  info(
+    `Synthesizing key "${key}", modifiers: ${JSON.stringify(Object.keys(modifiers))}`
+  );
 
   EventUtils.synthesizeKey(key, modifiers, view.styleWindow);
 
   // Flush the debounce for the preview text.
   view.debounce.flush();
 
-  await onDone;
-  await onPopupEvent;
+  // Wait for all the events
+  await Promise.all(promises);
 
   // The key might have been a TAB or shift-TAB, in which case the editor will
   // be a new one
