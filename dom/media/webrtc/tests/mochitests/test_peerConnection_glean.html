@@ -222,6 +222,34 @@
       });
     },
 
+    async function checkDtlsKEA() {
+      // Currently, ssl_grp_ec_curve25519 is the default option (ECDH)
+          const pc1 = new RTCPeerConnection();
+          const pc2 = new RTCPeerConnection();
+          await gleanResetTestValues();
+          // SSL Handshake Key Exchange Algorithm (null=0, rsa=1, dh=2, ecdh=4, ecdh_hybrid=8)
+          let keyExchangeValue = await GleanTest.webrtcdtls.keyExchangeAlgorithm.testGetValue() || 0;
+          is(keyExchangeValue, 0, "Expected no keyExchange distribution defined");
+
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          pc1.addTrack(stream.getTracks()[0]);
+
+          await connect(pc1, pc2, 32000, "DTLS connected", true, true);
+          // This telemetry happens on STS/socket process
+          await gleanFlushChildren();
+
+          let count1_0 = (await GleanTest.webrtcdtls.keyExchangeAlgorithm.testGetValue()).values["0"] || 0;
+          let count1_1 = (await GleanTest.webrtcdtls.keyExchangeAlgorithm.testGetValue()).values["1"] || 0;
+          let count1_2 = (await GleanTest.webrtcdtls.keyExchangeAlgorithm.testGetValue()).values["2"] || 0;
+          let count1_4 = (await GleanTest.webrtcdtls.keyExchangeAlgorithm.testGetValue()).values["4"] || 0;
+          let count1_8 = (await GleanTest.webrtcdtls.keyExchangeAlgorithm.testGetValue()).values["8"] || 0;
+          is(count1_0, 0, "Expected 0 connections using NULL");
+          is(count1_1, 0, "Expected 0 connections using RSA");
+          is(count1_2, 0, "Expected 0 connections using DH");
+          is(count1_4, 2, "Expected 2 connections using ECDH");
+          is(count1_8, 0, "Expected 0 connections using ECDH Hybrid");
+    },
+
     async function checkRTCRtpSenderCount() {
       const pc = new RTCPeerConnection();
       const oldCount = await GleanTest.rtcrtpsender.count.testGetValue() ?? 0;
