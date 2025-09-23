@@ -19,7 +19,7 @@ export function createEditor(config = { cm6: false }) {
   }
 
   return new SourceEditor({
-    mode: SourceEditor.modes.js,
+    mode: SourceEditor.modes.javascript,
     foldGutter: features.codeFolding,
     enableCodeFolding: features.codeFolding,
     readOnly: true,

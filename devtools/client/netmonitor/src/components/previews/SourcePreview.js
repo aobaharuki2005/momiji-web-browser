@@ -22,8 +22,8 @@ const { div } = dom;
 class SourcePreview extends Component {
   static get propTypes() {
     return {
-      // Source editor syntax highlight mode, which is a mime type defined in CodeMirror
-      mode: PropTypes.string,
+      // Source editor syntax highlight mimeType, which is a mime type defined in CodeMirror
+      mimeType: PropTypes.string,
       // Source editor content
       text: PropTypes.string,
       // Search result text to select
@@ -35,24 +35,24 @@ class SourcePreview extends Component {
   }
 
   componentDidMount() {
-    const { mode, text } = this.props;
-    this.loadEditor(mode, text);
+    const { mimeType, text } = this.props;
+    this.loadEditor(mimeType, text);
   }
 
   shouldComponentUpdate(nextProps) {
     return (
-      nextProps.mode !== this.props.mode ||
+      nextProps.mimeType !== this.props.mimeType ||
       nextProps.text !== this.props.text ||
       nextProps.targetSearchResult !== this.props.targetSearchResult
     );
   }
 
   componentDidUpdate(prevProps) {
-    const { mode, targetSearchResult, text } = this.props;
+    const { mimeType, targetSearchResult, text } = this.props;
 
     if (prevProps.text !== text) {
       // When updating from editor to editor
-      this.updateEditor(mode, text);
+      this.updateEditor(mimeType, text);
     } else if (prevProps.targetSearchResult !== targetSearchResult) {
       this.findSearchResult();
     }
@@ -62,7 +62,12 @@ class SourcePreview extends Component {
     this.unloadEditor();
   }
 
-  loadEditor(mode, text) {
+  getSourceEditorModeForMimetype(mimeType) {
+    const lang = mimeType.split("/")[1];
+    return Editor.modes[lang];
+  }
+
+  loadEditor(mimeType, text) {
     this.editor = new Editor({
       lineNumbers: true,
       lineWrapping: false,
@@ -82,13 +87,14 @@ class SourcePreview extends Component {
       // to avoid UI blocking. (rendering source code -> drawing syntax highlight)
       this.editorSetModeTimeout = setTimeout(() => {
         this.editorSetModeTimeout = null;
+        const mode = this.getSourceEditorModeForMimetype(mimeType);
         this.editor.setMode(mode);
         this.findSearchResult();
       });
     });
   }
 
-  updateEditor(mode, text) {
+  updateEditor(mimeType, text) {
     // Reset the existed 'mode' attribute in order to make setText() process faster
     // to prevent drawing unnecessary syntax highlight.
     if (this?.editor?.hasCodeMirror) {
@@ -105,6 +111,7 @@ class SourcePreview extends Component {
     // to avoid UI blocking. (rendering source code -> drawing syntax highlight)
     this.editorSetModeTimeout = setTimeout(() => {
       this.editorSetModeTimeout = null;
+      const mode = this.getSourceEditorModeForMimetype(mimeType);
       this.editor.setMode(mode);
       this.findSearchResult();
     });

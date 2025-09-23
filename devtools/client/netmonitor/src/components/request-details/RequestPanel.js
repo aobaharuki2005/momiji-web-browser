@@ -256,7 +256,7 @@ class RequestPanel extends Component {
       component = SourcePreview;
       componentProps = {
         text: postData,
-        mode: mimeType?.replace(/;.+/, ""),
+        mimeType: mimeType?.replace(/;.+/, ""),
         targetSearchResult,
       };
       requestPayloadLabel = REQUEST_POST_PAYLOAD;
