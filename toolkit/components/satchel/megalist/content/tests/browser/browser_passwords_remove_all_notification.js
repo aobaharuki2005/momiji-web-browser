@@ -43,7 +43,7 @@ add_task(async function test_passwords_remove_all_notification() {
   info("Check that notification is shown when user removes all passwords.");
   const megalist = await openPasswordsSidebar();
   await addMockPasswords();
-  await checkAllLoginsUpdated(megalist);
+  await checkAllLoginsRendered(megalist);
   await BrowserTestUtils.waitForCondition(
     () => megalist.querySelector(".second-row"),
     "Second row failed to render"
@@ -76,7 +76,7 @@ add_task(async function test_remove_all_passwords_checkbox() {
   info("Check that passwords are not removed when prompt checkbox is checked");
   const megalist = await openPasswordsSidebar();
   await addMockPasswords();
-  await checkAllLoginsUpdated(megalist);
+  await checkAllLoginsRendered(megalist);
   await BrowserTestUtils.waitForCondition(
     () => megalist.querySelector(".second-row"),
     "Second row failed to render"

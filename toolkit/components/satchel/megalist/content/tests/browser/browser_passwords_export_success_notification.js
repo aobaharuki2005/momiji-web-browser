@@ -84,7 +84,7 @@ add_task(async function test_passwords_export_notification() {
   }
   const megalist = await openPasswordsSidebar();
   await addMockPasswords();
-  await checkAllLoginsUpdated(megalist);
+  await checkAllLoginsRendered(megalist);
   await BrowserTestUtils.waitForCondition(
     () => megalist.querySelector(".second-row"),
     "Second row failed to render"

@@ -17,14 +17,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
 import "chrome://global/content/elements/moz-button.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
-import { PasswordCard } from "chrome://global/content/megalist/components/password-card/password-card.mjs";
+import "chrome://global/content/megalist/components/password-card/password-card.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/megalist/components/login-form/login-form.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/megalist/components/notification-message-bar/notification-message-bar.mjs";
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://global/content/megalist/components/virtual-passwords-list/virtual-passwords-list.mjs";
-
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/sidebar/sidebar-panel-header.mjs";
 
@@ -376,10 +373,8 @@ export class MegalistAlpha extends MozLitElement {
     }
   }
 
-  heightCalculator = items =>
-    items.reduce((sum, item) => sum + PasswordCard.getItemHeight(item), 0);
-
-  itemTemplate = ({ origin: displayOrigin, username, password }, index) => {
+  // TODO: This should be passed to virtualized list with an explicit height.
+  renderListItem({ origin: displayOrigin, username, password }, index) {
     return html` <password-card
       @keydown=${e => {
         if (e.shiftKey && e.key === "Tab") {
@@ -412,54 +407,35 @@ export class MegalistAlpha extends MozLitElement {
       }}
     >
     </password-card>`;
-  };
+  }
 
+  // TODO: Temporary. Should be rendered by the virtualized list.
   renderList() {
     return this.records.length
       ? html`
-          <virtual-passwords-list
+          <div
             class="passwords-list"
             role="listbox"
             tabindex="0"
             data-l10n-id="contextual-manager-passwords-list-label"
             @keydown=${e => {
-              // Handle up/down arrow key navigation between password cards.
-              if (e.key !== "ArrowUp" && e.key !== "ArrowDown") {
-                return;
-              }
+              if (e.key === "ArrowDown") {
+                const active = this.shadowRoot.activeElement;
+                const passwordsList = e.currentTarget;
 
-              const passwordsList = e.currentTarget;
-
-              let active = this.shadowRoot.activeElement;
-              let cardToFocus;
-              if (active === passwordsList) {
-                if (e.key === "ArrowDown") {
-                  cardToFocus = passwordsList.querySelector("password-card");
+                if (active === passwordsList) {
+                  e.preventDefault();
+                  this.shadowRoot
+                    .querySelector("password-card")
+                    .originLine.focus();
                 }
-              } else {
-                const cards = Array.from(
-                  passwordsList.querySelectorAll("password-card")
-                );
-                const currentIndex = cards.findIndex(card => card === active);
-                let nextIndex =
-                  e.key === "ArrowUp" ? currentIndex - 1 : currentIndex + 1;
-                if (nextIndex < 0 || nextIndex >= cards.length) {
-                  return;
-                }
-                cardToFocus = cards[nextIndex];
-              }
-
-              if (cardToFocus) {
-                e.preventDefault();
-                cardToFocus.focusByKeyEvent(e);
               }
             }}
-            .items=${this.records}
-            .itemHeightEstimate=${PasswordCard.DEFAULT_PASSWORD_CARD_HEIGHT}
-            .heightCalculator=${this.heightCalculator}
-            .template=${this.itemTemplate}
           >
-          </virtual-passwords-list>
+            ${this.records.map((record, index) =>
+              this.renderListItem(record, index)
+            )}
+          </div>
         `
       : this.renderEmptyState();
   }
@@ -829,27 +805,15 @@ export class MegalistAlpha extends MozLitElement {
   }
 
   async #scrollPasswordCardIntoView(guid) {
-    this.viewMode = VIEW_MODES.LIST;
-
     const matchingRecordIndex = this.records.findIndex(
       record => record.origin.guid === guid
     );
-    if (matchingRecordIndex === -1) {
-      return;
-    }
-
-    const virtualList = this.shadowRoot.querySelector("virtual-passwords-list");
-
-    // This ensures the virtual list create the item
-    virtualList.activeIndex = matchingRecordIndex;
-
-    const sublist = virtualList.getSubListForItem(matchingRecordIndex);
-    await this.getUpdateComplete;
-    await Promise.all([sublist.updateComplete, virtualList.updateComplete]);
-
-    const passwordCard = virtualList.getItem(matchingRecordIndex);
-    passwordCard?.scrollIntoView({ block: "center" });
-    passwordCard?.originLine.focus();
+    this.viewMode = VIEW_MODES.LIST;
+    await this.getUpdateComplete();
+    const passwordCard =
+      this.shadowRoot.querySelectorAll("password-card")[matchingRecordIndex];
+    passwordCard.scrollIntoView({ block: "center" });
+    passwordCard.originLine.focus();
   }
 
   renderNotification() {

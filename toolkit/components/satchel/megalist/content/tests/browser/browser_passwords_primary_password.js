@@ -100,7 +100,7 @@ add_task(async function test_primary_password_authentication_causes_refresh() {
   info(
     "Authentication in aboutlogins should cause megalist to render all logins."
   );
-  await checkAllLoginsUpdated(megalist);
+  await checkAllLoginsRendered(megalist);
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   SidebarController.hide();

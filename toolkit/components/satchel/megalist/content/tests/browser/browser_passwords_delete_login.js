@@ -23,10 +23,9 @@ add_task(async function test_delete_login_success() {
   info("Three logins added in total.");
 
   const megalist = await openPasswordsSidebar();
-  await checkAllLoginsUpdated(megalist);
+  await checkAllLoginsRendered(megalist);
 
-  const list = megalist.querySelector(".passwords-list");
-  const passwordCard = list.shadowRoot.querySelector(".item password-card");
+  const passwordCard = megalist.querySelector("password-card");
   await waitForReauth(() => passwordCard.editBtn.click());
   await BrowserTestUtils.waitForCondition(
     () => megalist.querySelector("login-form"),
@@ -64,12 +63,8 @@ add_task(async function test_delete_login_success() {
     change_type: "remove",
   });
 
-  await checkAllLoginsUpdated(megalist);
+  await checkAllLoginsRendered(megalist);
 
-  const passwordsList = megalist.querySelector(".passwords-list");
-  const passwordCards = passwordsList.container.querySelectorAll(
-    ".item password-card"
-  );
-  const numPasswords = passwordCards.length;
+  const numPasswords = megalist.querySelectorAll("password-card").length;
   is(numPasswords, 2, "One login was successfully deleted.");
 });

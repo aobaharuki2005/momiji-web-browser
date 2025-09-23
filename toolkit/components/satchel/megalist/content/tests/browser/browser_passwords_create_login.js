@@ -107,7 +107,7 @@ add_task(async function test_add_login_success() {
     "add-login-success"
   );
 
-  await checkAllLoginsUpdated(megalist);
+  await checkAllLoginsRendered(megalist);
 
   checkNotificationInteractionTelemetry(notifMsgBar, "primary-action", {
     notification_detail: "add_login_success",
@@ -201,7 +201,7 @@ add_task(async function test_view_login_command() {
     megalist,
     "add-login-success"
   );
-  await checkAllLoginsUpdated(megalist);
+  await checkAllLoginsRendered(megalist);
   const scrollPromise = getScrollPromise(megalist);
   checkNotificationInteractionTelemetry(notifMsgBar, "primary-action", {
     notification_detail: "add_login_success",
@@ -228,7 +228,7 @@ add_task(async function test_passwords_add_password_empty_state() {
   });
   addLogin(megalist, TEST_LOGIN_1);
   const notifMsgBar = await waitForNotification(megalist, "add-login-success");
-  await checkAllLoginsUpdated(megalist);
+  await checkAllLoginsRendered(megalist);
   checkNotificationInteractionTelemetry(notifMsgBar, "primary-action", {
     notification_detail: "add_login_success",
     action_type: "nav_record",

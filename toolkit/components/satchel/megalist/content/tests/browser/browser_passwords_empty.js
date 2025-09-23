@@ -21,7 +21,7 @@ add_task(async function test_passwords_empty_state() {
 
   info("Test empty search results");
   await addMockPasswords();
-  await checkAllLoginsUpdated(megalist);
+  await checkAllLoginsRendered(megalist);
   const searchInput = megalist.querySelector(".search");
   searchInput.value = "hello";
   searchInput.dispatchEvent(new Event("input"));
