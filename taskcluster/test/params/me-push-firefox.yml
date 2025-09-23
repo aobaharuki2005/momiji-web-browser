@@ -7963,7 +7963,6 @@ release_partner_config:
         locales:
           - zh-CN
         platforms:
-          - linux-shippable
           - linux64-shippable
           - macosx64-shippable
         upload_to_candidates: 'true'

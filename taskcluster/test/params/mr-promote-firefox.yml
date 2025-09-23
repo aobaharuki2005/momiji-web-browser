@@ -2045,7 +2045,6 @@ release_partner_config:
           - en-US
           - zh-CN
         platforms:
-          - linux-shippable
           - linux64-shippable
           - macosx64-shippable
         upload_to_candidates: 'true'
@@ -2265,7 +2264,7 @@ release_partner_config:
           - de
           - en-US
         platforms:
-          - linux-shippable
+          - linux64-shippable
           - macosx64-shippable
           - win32-shippable
           - win64-shippable
@@ -2277,7 +2276,7 @@ release_partner_config:
           - de
           - en-US
         platforms:
-          - linux-shippable
+          - linux64-shippable
           - macosx64-shippable
           - win32-shippable
           - win64-shippable
@@ -2288,7 +2287,7 @@ release_partner_config:
           - de
           - en-US
         platforms:
-          - linux-shippable
+          - linux64-shippable
           - macosx64-shippable
           - win32-shippable
           - win64-shippable
@@ -2336,7 +2335,7 @@ release_partner_config:
           - de
           - en-US
         platforms:
-          - linux-shippable
+          - linux64-shippable
           - macosx64-shippable
           - win32-shippable
           - win64-shippable
@@ -2347,7 +2346,7 @@ release_partner_config:
           - de
           - en-US
         platforms:
-          - linux-shippable
+          - linux64-shippable
           - macosx64-shippable
           - win32-shippable
           - win64-shippable
@@ -2359,7 +2358,7 @@ release_partner_config:
           - de
           - en-US
         platforms:
-          - linux-shippable
+          - linux64-shippable
           - macosx64-shippable
           - win32-shippable
           - win64-shippable
@@ -2370,7 +2369,7 @@ release_partner_config:
           - de
           - en-US
         platforms:
-          - linux-shippable
+          - linux64-shippable
           - macosx64-shippable
           - win32-shippable
           - win64-shippable
@@ -2382,7 +2381,7 @@ release_partner_config:
           - de
           - en-US
         platforms:
-          - linux-shippable
+          - linux64-shippable
           - macosx64-shippable
           - win32-shippable
           - win64-shippable
