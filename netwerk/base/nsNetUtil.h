@@ -1195,6 +1195,33 @@ bool IsPrivateNetworkAccess(
 bool IsLocalHostAccess(const nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
                        const nsILoadInfo::IPAddressSpace aTargetIPAddressSpace);
 
+enum ActivateStorageAccessVariant {
+  // The server's response instructs the user agent to activate storage access
+  // before continuing with the load of the resource. (This is only relevant
+  // when loading a new document)
+  //     Activate-Storage-Access: load
+  Load,
+  // The server's response instructs the user agent to activate storage access,
+  // then retry the request. The "allowed-origin" parameter allowlists the
+  // request's origin.
+  //     Activate-Storage-Access: retry; allowed-origin="https://foo.bar"
+  RetryOrigin,
+  // Same as above, but using a wildcard instead of explicitly naming the
+  // request's origin.
+  //     Activate-Storage-Access: retry; allowed-origin=*
+  RetryAny,
+};
+
+struct ActivateStorageAccess {
+  ActivateStorageAccessVariant variant;
+  // string from allowed-origin in case ActivateOrigin of ActivateOrigin-Variant
+  // above
+  nsCString origin;
+};
+
+Result<ActivateStorageAccess, nsresult> ParseActivateStorageAccess(
+    const nsACString& aActivateStorageAcess);
+
 }  // namespace net
 }  // namespace mozilla
 

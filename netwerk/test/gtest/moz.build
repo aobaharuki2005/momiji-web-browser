@@ -36,6 +36,7 @@ UNIFIED_SOURCES += [
     "TestSocketTransportService.cpp",
     "TestSSLTokensCache.cpp",
     "TestStandardURL.cpp",
+    "TestStorageAccessHeader.cpp",
     "TestUDPSocket.cpp",
     "TestURIMutator.cpp",
     "TestUriTemplate.cpp",

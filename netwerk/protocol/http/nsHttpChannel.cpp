@@ -613,6 +613,10 @@ void nsHttpChannel::AddStorageAccessHeadersToRequest() {
   }
 }
 
+bool nsHttpChannel::StorageAccessReloadedChannel() {
+  return LoadStorageAccessReloadChannel();
+}
+
 nsresult nsHttpChannel::PrepareToConnect() {
   LOG(("nsHttpChannel::PrepareToConnect [this=%p]\n", this));
 
@@ -8504,6 +8508,28 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
     // the response head may be null if the transaction was cancelled.  in
     // which case we just need to call OnStartRequest/OnStopRequest.
     if (mResponseHead) {
+      if (AntiTrackingUtils::ProcessStorageAccessHeadersShouldRetry(this)) {
+        // force reload. Doom cache to avoid redirect loop
+        if (mCacheEntry) {
+          mCacheEntry->AsyncDoom(nullptr);
+        }
+
+        auto storeAllowStorageAccess = [&](nsIChannel* aRedirectedChannel) {
+          RefPtr<nsHttpChannel> httpChan = do_QueryObject(aRedirectedChannel);
+          if (httpChan) {
+            httpChan->StoreStorageAccessReloadChannel(true);
+          }
+        };
+
+        rv = StartRedirectChannelToURI(mURI,
+                                       nsIChannelEventSink::REDIRECT_INTERNAL,
+                                       storeAllowStorageAccess);
+        if (NS_FAILED(rv)) {
+          Cancel(rv);
+          return CallOnStartRequest();
+        }
+        return NS_OK;
+      }
       return ProcessResponse(connInfo);
     }
 
