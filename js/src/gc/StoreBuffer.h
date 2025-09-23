@@ -63,13 +63,6 @@ static const size_t LifoAllocBlockSize = 8 * 1024;
 class StoreBuffer {
   friend class mozilla::ReentrancyGuard;
 
-  /* The size at which a block is about to overflow for the generic buffer. */
-  static const size_t GenericBufferLowAvailableThreshold =
-      LifoAllocBlockSize / 2;
-
-  /* The size at which other store buffers are about to overflow. */
-  static const size_t BufferOverflowThresholdBytes = 128 * 1024;
-
   enum class PutResult { OK, AboutToOverflow };
 
   /*
@@ -82,15 +75,13 @@ class StoreBuffer {
     /* The canonical set of stores. */
     using StoreSet = HashSet<T, typename T::Hasher, SystemAllocPolicy>;
     StoreSet stores_;
+    size_t maxEntries_ = 0;
 
     /*
      * A one element cache in front of the canonical set to speed up
      * temporary instances of HeapPtr.
      */
     T last_ = T();
-
-    /* Maximum number of entries before we request a minor GC. */
-    const static size_t MaxEntries = BufferOverflowThresholdBytes / sizeof(T);
 
     MonoTypeBuffer() = default;
 
@@ -99,6 +90,8 @@ class StoreBuffer {
 
     inline MonoTypeBuffer(MonoTypeBuffer&& other);
     inline MonoTypeBuffer& operator=(MonoTypeBuffer&& other);
+
+    void init(size_t entryCount);
 
     bool isEmpty() const;
     void clear();
@@ -130,7 +123,7 @@ class StoreBuffer {
       }
       last_ = T();
 
-      if (stores_.count() > MaxEntries) {
+      if (stores_.count() >= maxEntries_) {
         return PutResult::AboutToOverflow;
       }
 
@@ -145,6 +138,7 @@ class StoreBuffer {
 
   struct WholeCellBuffer {
     UniquePtr<LifoAlloc> storage_;
+    size_t maxSize_ = 0;
     ArenaCellSet* sweepHead_ = nullptr;
     const Cell* last_ = nullptr;
 
@@ -156,14 +150,13 @@ class StoreBuffer {
     inline WholeCellBuffer(WholeCellBuffer&& other);
     inline WholeCellBuffer& operator=(WholeCellBuffer&& other);
 
-    [[nodiscard]] bool init();
+    [[nodiscard]] bool init(size_t entryCount);
 
     bool isEmpty() const;
     void clear();
 
     bool isAboutToOverflow() const {
-      return !storage_->isEmpty() &&
-             storage_->used() > BufferOverflowThresholdBytes;
+      return !storage_->isEmpty() && storage_->used() >= maxSize_;
     }
 
     void trace(TenuringTracer& mover, StoreBuffer* owner);
@@ -181,6 +174,7 @@ class StoreBuffer {
 
   struct GenericBuffer {
     UniquePtr<LifoAlloc> storage_;
+    size_t maxSize_ = 0;
 
     GenericBuffer() = default;
 
@@ -190,14 +184,13 @@ class StoreBuffer {
     inline GenericBuffer(GenericBuffer&& other);
     inline GenericBuffer& operator=(GenericBuffer&& other);
 
-    [[nodiscard]] bool init();
+    [[nodiscard]] bool init(size_t entryCount);
 
     bool isEmpty() const;
     void clear();
 
     bool isAboutToOverflow() const {
-      return !storage_->isEmpty() && storage_->availableInCurrentChunk() <
-                                         GenericBufferLowAvailableThreshold;
+      return !storage_->isEmpty() && storage_->used() >= maxSize_;
     }
 
     /* Trace all generic edges. */
@@ -454,6 +447,7 @@ class StoreBuffer {
 
   JSRuntime* runtime_;
   Nursery& nursery_;
+  size_t entryCount_;
 
   bool aboutToOverflow_;
   bool enabled_;

@@ -31,7 +31,9 @@ ArenaCellSet::ArenaCellSet(Arena* arena)
 
 template <typename T>
 StoreBuffer::MonoTypeBuffer<T>::MonoTypeBuffer(MonoTypeBuffer&& other)
-    : stores_(std::move(other.stores_)), last_(std::move(other.last_)) {
+    : stores_(std::move(other.stores_)),
+      maxEntries_(other.maxEntries_),
+      last_(std::move(other.last_)) {
   other.clear();
 }
 template <typename T>
@@ -42,6 +44,12 @@ StoreBuffer::MonoTypeBuffer<T>& StoreBuffer::MonoTypeBuffer<T>::operator=(
     new (this) MonoTypeBuffer(std::move(other));
   }
   return *this;
+}
+
+template <typename T>
+void StoreBuffer::MonoTypeBuffer<T>::init(size_t entryCount) {
+  MOZ_ASSERT(entryCount != 0);
+  maxEntries_ = entryCount;
 }
 
 template <typename T>
@@ -63,6 +71,7 @@ size_t StoreBuffer::MonoTypeBuffer<T>::sizeOfExcludingThis(
 
 StoreBuffer::WholeCellBuffer::WholeCellBuffer(WholeCellBuffer&& other)
     : storage_(std::move(other.storage_)),
+      maxSize_(other.maxSize_),
       sweepHead_(other.sweepHead_),
       last_(other.last_) {
   other.sweepHead_ = nullptr;
@@ -77,8 +86,12 @@ StoreBuffer::WholeCellBuffer& StoreBuffer::WholeCellBuffer::operator=(
   return *this;
 }
 
-bool StoreBuffer::WholeCellBuffer::init() {
+bool StoreBuffer::WholeCellBuffer::init(size_t entryCount) {
   MOZ_ASSERT(!sweepHead_);
+
+  MOZ_ASSERT(entryCount);
+  maxSize_ = entryCount * sizeof(ArenaCellSet);
+
   if (!storage_) {
     storage_ = MakeUnique<LifoAlloc>(LifoAllocBlockSize, js::MallocArena);
     if (!storage_) {
@@ -144,7 +157,7 @@ size_t StoreBuffer::WholeCellBuffer::sizeOfExcludingThis(
 }
 
 StoreBuffer::GenericBuffer::GenericBuffer(GenericBuffer&& other)
-    : storage_(std::move(other.storage_)) {}
+    : storage_(std::move(other.storage_)), maxSize_(other.maxSize_) {}
 StoreBuffer::GenericBuffer& StoreBuffer::GenericBuffer::operator=(
     GenericBuffer&& other) {
   if (&other != this) {
@@ -169,12 +182,19 @@ size_t StoreBuffer::GenericBuffer::sizeOfExcludingThis(
   return storage_ ? storage_->sizeOfIncludingThis(mallocSizeOf) : 0;
 }
 
-bool StoreBuffer::GenericBuffer::init() {
+bool StoreBuffer::GenericBuffer::init(size_t entryCount) {
+  MOZ_ASSERT(entryCount != 0);
+  maxSize_ = entryCount * (sizeof(BufferableRef) + sizeof(void*));
+
   if (!storage_) {
     storage_ = MakeUnique<LifoAlloc>(LifoAllocBlockSize, js::MallocArena);
+    if (!storage_) {
+      return false;
+    }
   }
+
   clear();
-  return bool(storage_);
+  return true;
 }
 
 void StoreBuffer::GenericBuffer::trace(JSTracer* trc, StoreBuffer* owner) {
@@ -194,6 +214,7 @@ void StoreBuffer::GenericBuffer::trace(JSTracer* trc, StoreBuffer* owner) {
 StoreBuffer::StoreBuffer(JSRuntime* rt)
     : runtime_(rt),
       nursery_(rt->gc.nursery()),
+      entryCount_(rt->gc.tunables.storeBufferEntries()),
       aboutToOverflow_(false),
       enabled_(false),
       mayHavePointersToDeadCells_(false)
@@ -202,6 +223,7 @@ StoreBuffer::StoreBuffer(JSRuntime* rt)
       mEntered(false)
 #endif
 {
+  MOZ_ASSERT(entryCount_ != 0);
 }
 
 StoreBuffer::StoreBuffer(StoreBuffer&& other)
@@ -216,6 +238,7 @@ StoreBuffer::StoreBuffer(StoreBuffer&& other)
       bufferGeneric(std::move(other.bufferGeneric)),
       runtime_(other.runtime_),
       nursery_(other.nursery_),
+      entryCount_(other.entryCount_),
       aboutToOverflow_(other.aboutToOverflow_),
       enabled_(other.enabled_),
       mayHavePointersToDeadCells_(other.mayHavePointersToDeadCells_)
@@ -224,6 +247,7 @@ StoreBuffer::StoreBuffer(StoreBuffer&& other)
       mEntered(other.mEntered)
 #endif
 {
+  MOZ_ASSERT(entryCount_ != 0);
   MOZ_ASSERT(enabled_);
   MOZ_ASSERT(!mEntered);
   other.disable();
@@ -269,7 +293,23 @@ bool StoreBuffer::enable() {
 
   checkEmpty();
 
-  if (!bufferWholeCell.init() || !bufferGeneric.init()) {
+  // The entry counts for the individual buffers are scaled based on the initial
+  // entryCount parameter passed to the constructor.
+  MOZ_ASSERT(entryCount_ != 0);
+  size_t defaultEntryCount = entryCount_;
+  size_t slotsEntryCount = std::max(defaultEntryCount / 2, size_t(1));
+  size_t wholeCellEntryCount = std::max(defaultEntryCount / 10, size_t(1));
+  size_t genericEntryCount = std::max(defaultEntryCount / 4, size_t(1));
+
+  bufferVal.init(defaultEntryCount);
+  bufStrCell.init(defaultEntryCount);
+  bufBigIntCell.init(defaultEntryCount);
+  bufGetterSetterCell.init(defaultEntryCount);
+  bufObjCell.init(defaultEntryCount);
+  bufferSlot.init(slotsEntryCount);
+  bufferWasmAnyRef.init(defaultEntryCount);
+  if (!bufferWholeCell.init(wholeCellEntryCount) ||
+      !bufferGeneric.init(genericEntryCount)) {
     return false;
   }
 

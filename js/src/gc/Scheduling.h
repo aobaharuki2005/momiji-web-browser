@@ -507,7 +507,13 @@
    */                                                                          \
   _(JSGC_NURSERY_MAX_TIME_GOAL_MS, mozilla::TimeDuration,                      \
     nurseryMaxTimeGoalMS, ConvertMillis, NoCheck,                              \
-    mozilla::TimeDuration::FromMilliseconds(4))
+    mozilla::TimeDuration::FromMilliseconds(4))                                \
+                                                                               \
+  /*                                                                           \
+   * JSGC_STORE_BUFFER_ENTRIES                                                 \
+   */                                                                          \
+  _(JSGC_STORE_BUFFER_ENTRIES, size_t, storeBufferEntries, ConvertSize,        \
+    CheckNonZero, 16384)
 
 namespace js {
 

@@ -508,6 +508,11 @@ typedef enum JSGCParamKey {
    * Pref: javascript.options.mem.nursery_max_time_goal_ms
    */
   JSGC_NURSERY_MAX_TIME_GOAL_MS = 57,
+
+  /*
+   * Sets the size of the store buffers used for generational GC.
+   */
+  JSGC_STORE_BUFFER_ENTRIES = 58,
 } JSGCParamKey;
 
 /*
