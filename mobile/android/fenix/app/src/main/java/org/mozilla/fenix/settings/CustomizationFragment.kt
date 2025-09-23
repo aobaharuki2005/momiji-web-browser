@@ -20,13 +20,12 @@ import org.mozilla.fenix.GleanMetrics.PullToRefreshInBrowser
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
+import org.mozilla.fenix.ext.isTallWindow
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.view.addToRadioGroup
-
-private const val TALL_SCREEN_HEIGHT_DP = 480
 
 /**
  * Lets the user customize the UI.
@@ -186,10 +185,6 @@ class CustomizationFragment : PreferenceFragmentCompat() {
             setupToolbarLayout()
             true
         }
-    }
-
-    internal fun isTallWindow(): Boolean {
-        return resources.configuration.screenHeightDp > TALL_SCREEN_HEIGHT_DP
     }
 
     private fun setupToolbarLayout() {

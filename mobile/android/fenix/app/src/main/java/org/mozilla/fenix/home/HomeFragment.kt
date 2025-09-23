@@ -97,6 +97,8 @@ import org.mozilla.fenix.compose.utils.KeyboardState
 import org.mozilla.fenix.compose.utils.keyboardAsState
 import org.mozilla.fenix.databinding.FragmentHomeBinding
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getBottomToolbarHeight
+import org.mozilla.fenix.ext.getTopToolbarHeight
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.isToolbarAtBottom
 import org.mozilla.fenix.ext.nav
@@ -640,7 +642,7 @@ class HomeFragment : Fragment() {
 
     private fun buildToolbarStore(activity: HomeActivity) = HomeToolbarStoreBuilder.build(
         context = activity,
-        lifecycleOwner = this,
+        fragment = this,
         navController = findNavController(),
         appStore = requireContext().components.appStore,
         browserStore = requireContext().components.core.store,
@@ -978,8 +980,8 @@ class HomeFragment : Fragment() {
 
                     LaunchedEffect(isInPortrait, keyboardState) {
                         updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                            topMargin = settings().getTopToolbarHeight()
-                            bottomMargin = settings().getBottomToolbarHeight(keyboardState == KeyboardState.Closed)
+                            topMargin = getTopToolbarHeight()
+                            bottomMargin = getBottomToolbarHeight(keyboardState == KeyboardState.Closed)
                         }
                     }
 

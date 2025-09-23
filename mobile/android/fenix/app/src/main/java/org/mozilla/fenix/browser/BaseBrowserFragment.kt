@@ -189,7 +189,6 @@ import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.components.toolbar.interactor.DefaultBrowserToolbarInteractor
-import org.mozilla.fenix.components.toolbar.isTallWindow
 import org.mozilla.fenix.compose.core.Action
 import org.mozilla.fenix.compose.snackbar.DefaultSnackbarFactory
 import org.mozilla.fenix.compose.snackbar.Snackbar
@@ -203,8 +202,11 @@ import org.mozilla.fenix.downloads.dialog.createDownloadAppDialog
 import org.mozilla.fenix.ext.accessibilityManager
 import org.mozilla.fenix.ext.breadcrumb
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getBottomToolbarHeight
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.getTopToolbarHeight
 import org.mozilla.fenix.ext.hideToolbar
+import org.mozilla.fenix.ext.isTallWindow
 import org.mozilla.fenix.ext.isToolbarAtBottom
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateWithBreadcrumb
@@ -878,7 +880,7 @@ abstract class BaseBrowserFragment :
             )
         }
 
-        val bottomToolbarHeight = context.settings().getBottomToolbarHeight(
+        val bottomToolbarHeight = getBottomToolbarHeight(
             includeNavBarIfEnabled = customTabSessionId == null,
         )
 
@@ -1123,6 +1125,7 @@ abstract class BaseBrowserFragment :
 
         crashContentIntegration.set(
             feature = CrashContentIntegration(
+                fragment = this,
                 browserStore = requireComponents.core.store,
                 appStore = requireComponents.appStore,
                 toolbar = browserToolbarView,
@@ -1294,7 +1297,7 @@ abstract class BaseBrowserFragment :
         )
 
         initializeEngineView(
-            topToolbarHeight = context.settings().getTopToolbarHeight(
+            topToolbarHeight = getTopToolbarHeight(
                 includeTabStripIfAvailable = customTabSessionId == null,
             ),
             bottomToolbarHeight = bottomToolbarHeight,
@@ -1367,8 +1370,7 @@ abstract class BaseBrowserFragment :
         FirefoxTheme {
             TabStrip(
                 // Show action buttons only if the navigation bar (which has the same buttons) is not showing.
-                showActionButtons = context?.settings()?.shouldUseExpandedToolbar != true ||
-                        context?.isTallWindow() == false,
+                showActionButtons = context?.settings()?.shouldUseExpandedToolbar != true || !isTallWindow(),
                 onAddTabClick = {
                     if (activity.settings().enableHomepageAsNewTab) {
                         requireComponents.useCases.fenixBrowserUseCases.addNewHomepageTab(
@@ -1428,7 +1430,7 @@ abstract class BaseBrowserFragment :
         readerModeController: ReaderModeController,
     ) = BrowserToolbarStoreBuilder.build(
         activity = activity,
-        lifecycleOwner = this,
+        fragment = this,
         navController = findNavController(),
         appStore = activity.components.appStore,
         browserStore = activity.components.core.store,
@@ -2020,7 +2022,7 @@ abstract class BaseBrowserFragment :
         val currentTab = requireComponents.core.store.state.findCustomTabOrSelectedTab(customTabSessionId)
         if (currentTab?.content?.isPdf == true) return
         if (findInPageIntegration.get()?.isFeatureActive == true) return
-        val toolbarHeights = view?.let { probeToolbarHeights(it) } ?: return
+        val toolbarHeights = view?.let { probeToolbarHeights() } ?: return
 
         context?.also {
             if (isToolbarDynamic(it)) {
@@ -2038,15 +2040,14 @@ abstract class BaseBrowserFragment :
     /**
      * Get an instant reading of the top toolbar height and the bottom toolbar height.
      */
-    private fun probeToolbarHeights(rootView: View): Pair<Int, Int> {
-        val context = rootView.context
+    private fun probeToolbarHeights(): Pair<Int, Int> {
         // Avoid any change for scenarios where the toolbar is not shown
         if (fullScreenFeature.get()?.isFullScreen == true) return 0 to 0
 
-        val topToolbarHeight = context.settings().getTopToolbarHeight(
+        val topToolbarHeight = getTopToolbarHeight(
             includeTabStripIfAvailable = customTabSessionId == null,
         )
-        val bottomToolbarHeight = context.settings().getBottomToolbarHeight(
+        val bottomToolbarHeight = getBottomToolbarHeight(
             includeNavBarIfEnabled = customTabSessionId == null,
         )
 
@@ -2330,10 +2331,10 @@ abstract class BaseBrowserFragment :
     internal fun reinitializeEngineView() {
         val isFullscreen = fullScreenFeature.get()?.isFullScreen == true
         val shouldToolbarsBeHidden = isFullscreen || !webAppToolbarShouldBeVisible
-        val topToolbarHeight = requireContext().settings().getTopToolbarHeight(
+        val topToolbarHeight = getTopToolbarHeight(
             includeTabStripIfAvailable = customTabSessionId == null,
         )
-        val bottomToolbarHeight = requireContext().settings().getBottomToolbarHeight(
+        val bottomToolbarHeight = getBottomToolbarHeight(
             includeNavBarIfEnabled = customTabSessionId == null,
         )
 

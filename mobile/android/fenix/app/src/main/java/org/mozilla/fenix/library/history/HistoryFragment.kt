@@ -732,7 +732,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
             EnvironmentRehydrated(
                 BrowserToolbarEnvironment(
                     context = requireContext(),
-                    viewLifecycleOwner = viewLifecycleOwner,
+                    fragment = this,
                     navController = findNavController(),
                     browsingModeManager = (requireActivity() as HomeActivity).browsingModeManager,
                 ),
