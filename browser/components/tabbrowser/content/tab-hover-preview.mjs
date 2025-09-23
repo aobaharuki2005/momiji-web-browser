@@ -192,9 +192,6 @@ class TabPanel extends Panel {
   /** @type {DOMElement|null} */
   #thumbnailElement;
 
-  /** @type {MutationObserver} */
-  #tabObserver;
-
   constructor(panel, panelSet) {
     super();
 
@@ -217,23 +214,12 @@ class TabPanel extends Panel {
 
     this.#tab = null;
     this.#thumbnailElement = null;
-
-    // Observe changes to this tab's DOM, and
-    // update the preview if the tab title changes
-    this.#tabObserver = new this.win.MutationObserver(
-      (mutationList, _observer) => {
-        for (const mutation of mutationList) {
-          if (mutation.attributeName === "label") {
-            this.#updatePreview();
-          }
-        }
-      }
-    );
   }
 
   handleEvent(e) {
     switch (e.type) {
       case "popupshowing":
+      case "TabAttrModified":
         this.#updatePreview();
         break;
       case "TabSelect":
@@ -244,9 +230,6 @@ class TabPanel extends Panel {
 
   activate(tab) {
     this.#tab = tab;
-    this.#tabObserver.observe(this.#tab, {
-      attributes: true,
-    });
 
     // Calling `moveToAnchor` in advance of the call to `openPopup` ensures
     // that race conditions can be avoided in cases where the user hovers
@@ -273,6 +256,7 @@ class TabPanel extends Panel {
     });
     this.win.addEventListener("TabSelect", this);
     this.panelElement.addEventListener("popupshowing", this);
+    this.#tab.addEventListener("TabAttrModified", this);
   }
 
   deactivate(leavingTab = null) {
@@ -287,8 +271,8 @@ class TabPanel extends Panel {
       });
       return;
     }
+    this.#tab?.removeEventListener("TabAttrModified", this);
     this.#tab = null;
-    this.#tabObserver.disconnect();
     this.#thumbnailElement = null;
     this.panelElement.removeEventListener("popupshowing", this);
     this.win.removeEventListener("TabSelect", this);
@@ -484,6 +468,16 @@ class TabGroupPanel extends Panel {
   /** @type {number | null} */
   #deactivateTimer;
 
+  static PANEL_UPDATE_EVENTS = [
+    "TabAttrModified",
+    "TabClose",
+    "TabGrouped",
+    "TabMove",
+    "TabOpen",
+    "TabSelect",
+    "TabUngrouped",
+  ];
+
   constructor(panel, panelSet) {
     super();
 
@@ -538,6 +532,10 @@ class TabGroupPanel extends Panel {
 
     if (this.#group) {
       this.#group.hoverPreviewPanelActive = false;
+
+      for (let event of TabGroupPanel.PANEL_UPDATE_EVENTS) {
+        this.#group.removeEventListener(event, this);
+      }
     }
 
     this.panelElement.hidePopup();
@@ -556,6 +554,10 @@ class TabGroupPanel extends Panel {
     this.panelElement.addEventListener("command", this);
 
     this.#group.hoverPreviewPanelActive = true;
+
+    for (let event of TabGroupPanel.PANEL_UPDATE_EVENTS) {
+      this.#group.addEventListener(event, this);
+    }
 
     this.panelElement.openPopup(this.#popupTarget, this.popupOptions);
 
@@ -585,10 +587,10 @@ class TabGroupPanel extends Panel {
   handleEvent(event) {
     if (event.type == "command") {
       this.win.gBrowser.selectedTab = event.target.tab;
-    }
-
-    if (event.type == "mouseout" && event.target == this.panelElement) {
+    } else if (event.type == "mouseout" && event.target == this.panelElement) {
       this.deactivate();
+    } else if (TabGroupPanel.PANEL_UPDATE_EVENTS.includes(event.type)) {
+      this.#updatePanelContents();
     }
   }
 

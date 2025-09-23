@@ -521,6 +521,7 @@ add_task(async function tabContentChangeTests() {
   const tabUrl =
     "data:text/html,<html><head><title>Original Tab Title</title></head><body>Hello</body></html>";
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl);
+  const newTitle = "New Tab Title";
 
   await openTabPreview(tab);
   Assert.equal(
@@ -529,18 +530,19 @@ add_task(async function tabContentChangeTests() {
     "Preview of tab shows original tab title"
   );
 
-  tab.setAttribute("label", "New Tab Title");
-
-  await BrowserTestUtils.waitForCondition(() => {
-    return (
-      previewPanel.querySelector(".tab-preview-title").innerText ===
-      "New Tab Title"
-    );
-  });
+  let tabRenameEvent = BrowserTestUtils.waitForEvent(tab, "TabAttrModified");
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [newTitle],
+    async newTitleInContentProcess => {
+      content.document.title = newTitleInContentProcess;
+    }
+  );
+  await tabRenameEvent;
 
   Assert.equal(
     previewPanel.querySelector(".tab-preview-title").innerText,
-    "New Tab Title",
+    newTitle,
     "Preview of tab shows new tab title"
   );
 
@@ -776,6 +778,144 @@ add_task(async function moveBetweenTabGroupsTests() {
 
   await removeTabGroup(group1);
   await removeTabGroup(group2);
+  await resetState();
+});
+
+add_task(async function tabGroupPanelUpdatesTests() {
+  const groupedTab = await addTabTo(gBrowser, "about:robots");
+  const group = gBrowser.addTabGroup([groupedTab]);
+  group.collapsed = true;
+
+  const previewPanel = window.document.getElementById(
+    TAB_GROUP_PREVIEW_PANEL_ID
+  );
+
+  await openGroupPreview(group);
+  Assert.equal(previewPanel.children.length, 1, "Panel has one tab");
+  Assert.equal(
+    previewPanel.children[0].tab,
+    groupedTab,
+    "Menuitem is associated with the correct tab"
+  );
+
+  info(
+    "Test that changes to the document title cause the panel tab's title to change"
+  );
+  let tabRenameEvent = BrowserTestUtils.waitForEvent(
+    groupedTab,
+    "TabAttrModified"
+  );
+  let newTitle = "Extremely cool and good website title";
+  await SpecialPowers.spawn(
+    groupedTab.linkedBrowser,
+    [newTitle],
+    async newTitleInContentProcess => {
+      content.document.title = newTitleInContentProcess;
+    }
+  );
+  await tabRenameEvent;
+  Assert.equal(
+    previewPanel.children[0].label,
+    newTitle,
+    "Panel menuitem has updated label"
+  );
+
+  info("Test that adding a tab to the group adds the tab to the group's panel");
+  let TabOpenEvent = BrowserTestUtils.waitForEvent(group, "TabOpen");
+  let newTab = await addTabTo(gBrowser, "about:robots", { tabGroup: group });
+  await TabOpenEvent;
+
+  Assert.equal(
+    previewPanel.children.length,
+    2,
+    "Panel has two tabs after tab open"
+  );
+  Assert.equal(
+    previewPanel.children[1].tab,
+    newTab,
+    "New menuitem is associated with the new tab"
+  );
+
+  info(
+    "Test that closing a tab within the group removes the tab from the group's panel"
+  );
+  let TabCloseEvent = BrowserTestUtils.waitForEvent(group, "TabClose");
+  BrowserTestUtils.removeTab(newTab);
+  await TabCloseEvent;
+
+  Assert.equal(
+    previewPanel.children.length,
+    1,
+    "Panel has one tab after tab close"
+  );
+  Assert.equal(
+    previewPanel.children[0].tab,
+    groupedTab,
+    "Menuitem is associated with the original tab"
+  );
+
+  info(
+    "Test that moving a tab into the group adds the tab to the group's panel"
+  );
+  newTab = await addTabTo(gBrowser, "about:robots");
+
+  let tabGroupedEvent = BrowserTestUtils.waitForEvent(group, "TabGrouped");
+  gBrowser.moveTabToGroup(newTab, group);
+  await tabGroupedEvent;
+
+  Assert.equal(previewPanel.children.length, 2, "Panel has two tabs");
+  Assert.equal(
+    previewPanel.children[1].tab,
+    newTab,
+    "Newly grouped tab is associated with the second menuitem"
+  );
+
+  info("Test that moving tabs within the group updates the panel");
+  let tabMoveEvent = BrowserTestUtils.waitForEvent(group, "TabMove");
+  let tabToMove = group.tabs[1];
+  gBrowser.moveTabTo(tabToMove, { tabIndex: tabToMove._tPos - 1 });
+  await tabMoveEvent;
+
+  Assert.equal(
+    previewPanel.children[0].tab,
+    newTab,
+    "New tab has moved to first position in the preview panel"
+  );
+  Assert.equal(
+    previewPanel.children[1].tab,
+    groupedTab,
+    "Original tab has moved to second position in the preview panel"
+  );
+
+  info(
+    "Test that selecting a tab within the tab group updates the active tab in the group's panel"
+  );
+  let tabToSelect = group.tabs[1];
+  let tabSelectEvent = BrowserTestUtils.waitForEvent(tabToSelect, "TabSelect");
+  gBrowser.selectedTab = tabToSelect;
+  await tabSelectEvent;
+
+  Assert.ok(
+    previewPanel.children[1].classList.contains("active-tab"),
+    "Selected tab has the active tab class set"
+  );
+
+  info(
+    "Test that removing a tab from the group removes the tab from the group's panel"
+  );
+  let tabUngroupedEvent = BrowserTestUtils.waitForEvent(group, "TabUngrouped");
+  gBrowser.ungroupTab(newTab);
+  await tabUngroupedEvent;
+
+  Assert.equal(previewPanel.children.length, 1, "Panel has one tab");
+  Assert.equal(
+    previewPanel.children[0].tab,
+    groupedTab,
+    "Tab in the panel is the original tab"
+  );
+
+  BrowserTestUtils.removeTab(newTab);
+  await removeTabGroup(group);
   await resetState();
 });
 
