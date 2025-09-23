@@ -32,7 +32,7 @@ object HomeToolbarStoreBuilder {
      * Build the [BrowserToolbarStore] used in the home screen.
      *
      * @param context [Context] used for various system interactions.
-     * @param fragment [Fragment] as a [LifecycleOwner] to used to organize lifecycle dependent operations.
+     * @param lifecycleOwner [Fragment] as a [LifecycleOwner] to used to organize lifecycle dependent operations.
      * @param navController [NavController] to use for navigating to other in-app destinations.
      * @param appStore [AppStore] to sync from.
      * @param browserStore [BrowserStore] to sync from.
@@ -40,12 +40,12 @@ object HomeToolbarStoreBuilder {
      */
     fun build(
         context: Context,
-        fragment: Fragment,
+        lifecycleOwner: Fragment,
         navController: NavController,
         appStore: AppStore,
         browserStore: BrowserStore,
         browsingModeManager: BrowsingModeManager,
-    ) = StoreProvider.get(fragment) {
+    ) = StoreProvider.get(lifecycleOwner) {
         BrowserToolbarStore(
             initialState = BrowserToolbarState(),
             middleware = listOf(
@@ -55,7 +55,6 @@ object HomeToolbarStoreBuilder {
                     browserStore = browserStore,
                     clipboard = context.components.clipboardHandler,
                     useCases = context.components.useCases,
-                    fragment = fragment,
                 ),
                 BrowserToolbarSearchMiddleware(
                     appStore = appStore,
@@ -71,14 +70,14 @@ object HomeToolbarStoreBuilder {
             EnvironmentRehydrated(
                 BrowserToolbarEnvironment(
                     context = context,
-                    fragment = fragment,
+                    viewLifecycleOwner = lifecycleOwner.viewLifecycleOwner,
                     navController = navController,
                     browsingModeManager = browsingModeManager,
                 ),
             ),
         )
 
-        fragment.viewLifecycleOwner.lifecycle.addObserver(
+        lifecycleOwner.viewLifecycleOwner.lifecycle.addObserver(
             object : DefaultLifecycleObserver {
                 override fun onDestroy(owner: LifecycleOwner) {
                     it.dispatch(EnvironmentCleared)

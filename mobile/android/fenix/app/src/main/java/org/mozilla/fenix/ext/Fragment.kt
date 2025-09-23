@@ -33,7 +33,6 @@ import org.mozilla.fenix.NavHostActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.toolbar.ToolbarContainerView
-import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.navigation.DefaultNavControllerProvider
 import org.mozilla.fenix.navigation.NavControllerProvider
 import org.mozilla.fenix.utils.isLargeScreenSize
@@ -227,93 +226,6 @@ fun Fragment.isLargeWindow(): Boolean {
  */
 fun Fragment.isLargeScreenSize(): Boolean {
     return requireContext().isLargeScreenSize()
-}
-
-private const val TALL_SCREEN_HEIGHT_DP = 480
-private const val WIDE_SCREEN_WIDTH_DP = 600
-
-/**
- * Helper function to determine whether the app's current window height
- * is at least more than [TALL_SCREEN_HEIGHT_DP].
- *
- * This is useful when navigation bar should only be enabled on
- * taller screens (e.g., to avoid crowding content vertically).
- *
- * @return true if the window height size is more than [TALL_SCREEN_HEIGHT_DP].
- */
-fun Fragment.isTallWindow(): Boolean {
-    return resources.configuration.screenHeightDp > TALL_SCREEN_HEIGHT_DP
-}
-
-/**
- * Helper function to determine whether the app's current window width
- * is at least more than [WIDE_SCREEN_WIDTH_DP].
- *
- * This is useful when navigation bar should only be enabled on
- * wider screens (e.g., to avoid crowding content horizontally).
- *
- * @return true if the window width size is more than [WIDE_SCREEN_WIDTH_DP].
- */
-fun Fragment.isWideWindow(): Boolean {
-    return resources.configuration.screenWidthDp > WIDE_SCREEN_WIDTH_DP
-}
-
-/**
- * Returns the height of the bottom toolbar.
- *
- * The bottom toolbar can consist of:
- *  - a combination of address bar, navigation bar & a microsurvey.
- *  - be absent.
- *
- * @param includeNavBarIfEnabled If true and the navigation bar feature is enabled it's height
- * will be included in the calculation.
- */
-fun Fragment.getBottomToolbarHeight(includeNavBarIfEnabled: Boolean = true): Int {
-    val settings = requireComponents.settings
-
-    val isMicrosurveyEnabled = settings.shouldShowMicrosurveyPrompt
-    val isToolbarAtBottom = settings.toolbarPosition == ToolbarPosition.BOTTOM
-
-    val microsurveyHeight = if (isMicrosurveyEnabled) {
-        pixelSizeFor(R.dimen.browser_microsurvey_height)
-    } else {
-        0
-    }
-
-    val toolbarHeight = if (isToolbarAtBottom) {
-        settings.browserToolbarHeight
-    } else {
-        0
-    }
-
-    val navBarHeight =
-        if (includeNavBarIfEnabled && settings.shouldUseExpandedToolbar && isTallWindow()) {
-        pixelSizeFor(R.dimen.browser_navbar_height)
-    } else {
-        0
-    }
-
-    return microsurveyHeight + toolbarHeight + navBarHeight
-}
-
-/**
- * Returns the height of the top toolbar.
- *
- * @param includeTabStripIfAvailable If true and the tab strip feature is enabled it's height
- * will be included in the calculation.
- */
-fun Fragment.getTopToolbarHeight(includeTabStripIfAvailable: Boolean = true): Int {
-    val settings = requireComponents.settings
-    val isToolbarAtTop = settings.toolbarPosition == ToolbarPosition.TOP
-    val toolbarHeight = settings.browserToolbarHeight
-
-    return if (includeTabStripIfAvailable && settings.isTabStripEnabled) {
-        toolbarHeight + pixelSizeFor(R.dimen.tab_strip_height)
-    } else if (isToolbarAtTop) {
-        toolbarHeight
-    } else {
-        0
-    }
 }
 
 /**

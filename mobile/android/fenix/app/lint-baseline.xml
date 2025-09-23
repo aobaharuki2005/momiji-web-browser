@@ -15,6 +15,28 @@
     <issue
         id="NoStaticMocking"
         message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        mockkStatic(*objects)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/test/java/org/mozilla/fenix/browser/BaseBrowserFragmentTest.kt"
+            line="754"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;unmockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        unmockkStatic(*objects)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/test/java/org/mozilla/fenix/browser/BaseBrowserFragmentTest.kt"
+            line="757"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
         errorLine1="        mockkStatic(&quot;org.mozilla.fenix.ext.FragmentKt&quot;)"
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -1132,6 +1154,17 @@
             file="src/main/java/org/mozilla/fenix/components/appstate/AppStoreReducer.kt"
             line="85"
             column="47"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        context?.isTallWindow() == false,"
+        errorLine2="                                 ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/browser/BaseBrowserFragment.kt"
+            line="1362"
+            column="34"/>
     </issue>
 
     <issue

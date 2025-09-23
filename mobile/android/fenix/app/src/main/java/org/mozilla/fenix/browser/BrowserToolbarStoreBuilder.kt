@@ -45,7 +45,7 @@ object BrowserToolbarStoreBuilder {
      * Build the [BrowserToolbarStore] used in the browser screen.
      *
      * @param activity [AppCompatActivity] hosting the toolbar.
-     * @param fragment [Fragment] as a [LifecycleOwner] to used to organize lifecycle dependent operations.
+     * @param lifecycleOwner [Fragment] as a [LifecycleOwner] to used to organize lifecycle dependent operations.
      * @param navController [NavController] to use for navigating to other in-app destinations.
      * @param appStore [AppStore] to sync from.
      * @param browserScreenStore [BrowserScreenStore] used for integration with other browser screen functionalities.
@@ -61,7 +61,7 @@ object BrowserToolbarStoreBuilder {
     @Suppress("LongParameterList", "LongMethod")
     fun build(
         activity: AppCompatActivity,
-        fragment: Fragment,
+        lifecycleOwner: Fragment,
         navController: NavController,
         appStore: AppStore,
         browserScreenStore: BrowserScreenStore,
@@ -73,7 +73,7 @@ object BrowserToolbarStoreBuilder {
         readerModeController: ReaderModeController,
         settings: Settings,
         customTabSession: CustomTabSessionState? = null,
-    ) = StoreProvider.get(fragment) {
+    ) = StoreProvider.get(lifecycleOwner) {
         BrowserToolbarStore(
             initialState = BrowserToolbarState(
                 displayState = DisplayState(
@@ -133,7 +133,7 @@ object BrowserToolbarStoreBuilder {
                 when (customTabSession) {
                     null -> BrowserToolbarEnvironment(
                         context = activity,
-                        fragment = fragment,
+                        viewLifecycleOwner = lifecycleOwner.viewLifecycleOwner,
                         navController = navController,
                         browsingModeManager = browsingModeManager,
                         browserAnimator = browserAnimator,
@@ -142,7 +142,7 @@ object BrowserToolbarStoreBuilder {
                     )
                     else -> CustomTabToolbarEnvironment(
                         context = activity,
-                        viewLifecycleOwner = fragment.viewLifecycleOwner,
+                        viewLifecycleOwner = lifecycleOwner.viewLifecycleOwner,
                         navController = navController,
                         closeTabDelegate = { activity.finishAndRemoveTask() },
                     )
@@ -150,7 +150,7 @@ object BrowserToolbarStoreBuilder {
             ),
         )
 
-        fragment.viewLifecycleOwner.lifecycle.addObserver(
+        lifecycleOwner.viewLifecycleOwner.lifecycle.addObserver(
             object : DefaultLifecycleObserver {
                 override fun onDestroy(owner: LifecycleOwner) {
                     it.dispatch(EnvironmentCleared)

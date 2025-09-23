@@ -4,12 +4,12 @@
 
 package org.mozilla.fenix.components.toolbar
 
+import android.content.Context
 import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Lifecycle.State.RESUMED
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -119,8 +119,6 @@ import org.mozilla.fenix.components.toolbar.TabCounterInteractions.AddNewTab
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.CloseCurrentTab
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.TabCounterClicked
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.TabCounterLongClicked
-import org.mozilla.fenix.ext.isTallWindow
-import org.mozilla.fenix.ext.isWideWindow
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.nimbus.FxNimbus
@@ -133,6 +131,9 @@ import mozilla.components.browser.toolbar.R as toolbarR
 import mozilla.components.lib.state.Action as MVIAction
 import mozilla.components.ui.icons.R as iconsR
 import mozilla.components.ui.tabcounter.R as tabcounterR
+
+private const val TALL_SCREEN_HEIGHT_DP = 480
+private const val LARGE_SCREEN_WIDTH_DP = 600
 
 @VisibleForTesting
 internal sealed class DisplayActions : BrowserToolbarEvent {
@@ -177,6 +178,34 @@ internal sealed class PageEndActionsInteractions : BrowserToolbarEvent {
 }
 
 /**
+ * Helper function to determine whether the app's current window height
+ * is at least more than [TALL_SCREEN_HEIGHT_DP].
+ *
+ * This is useful when navigation bar should only be enabled on
+ * taller screens (e.g., to avoid crowding content vertically).
+ *
+ * @return true if the window height size is more than [TALL_SCREEN_HEIGHT_DP].
+ */
+@VisibleForTesting
+internal fun Context.isTallWindow(): Boolean {
+    return resources.configuration.screenHeightDp > TALL_SCREEN_HEIGHT_DP
+}
+
+/**
+ * Helper function to determine whether the app's current window height
+ * is at least more than [TALL_SCREEN_HEIGHT_DP].
+ *
+ * This is useful when navigation bar should only be enabled on
+ * taller screens (e.g., to avoid crowding content vertically).
+ *
+ * @return true if the window height size is more than [TALL_SCREEN_HEIGHT_DP].
+ */
+@VisibleForTesting
+internal fun Context.isWideWindow(): Boolean {
+    return resources.configuration.screenWidthDp > LARGE_SCREEN_WIDTH_DP
+}
+
+/**
  * [Middleware] responsible for configuring and handling interactions with the composable toolbar.
  *
  * @param appStore [AppStore] allowing to integrate with other features of the applications.
@@ -193,7 +222,6 @@ internal sealed class PageEndActionsInteractions : BrowserToolbarEvent {
  * @param settings [Settings] for accessing user preferences.
  * @param sessionUseCases [SessionUseCases] for interacting with the current session.
  * @param bookmarksStorage [BookmarksStorage] to read and write bookmark data related to the current site.
- * @param ioDispatcher [CoroutineDispatcher] to use for IO operations.
  */
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 class BrowserToolbarMiddleware(
@@ -210,7 +238,6 @@ class BrowserToolbarMiddleware(
     private val settings: Settings,
     private val sessionUseCases: SessionUseCases = SessionUseCases(browserStore),
     private val bookmarksStorage: BookmarksStorage,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : Middleware<BrowserToolbarState, BrowserToolbarAction> {
     @VisibleForTesting
     internal var environment: BrowserToolbarEnvironment? = null
@@ -239,7 +266,7 @@ class BrowserToolbarMiddleware(
                 updateCurrentPageOrigin(context)
                 updateEndBrowserActions(context)
                 updateEndPageActions(context)
-                environment?.fragment?.viewLifecycleOwner?.lifecycleScope?.launch {
+                environment?.viewLifecycleOwner?.lifecycleScope?.launch {
                     updateNavigationActions(context)
                 }
 
@@ -510,7 +537,7 @@ class BrowserToolbarMiddleware(
                 val selectedTab = browserStore.state.selectedTab
 
                 selectedTab?.let {
-                    environment?.fragment?.viewLifecycleOwner?.lifecycleScope?.launch(ioDispatcher) {
+                    environment?.viewLifecycleOwner?.lifecycleScope?.launch(Dispatchers.IO) {
                         val parentGuid = settings.lastSavedFolderCache.getGuid() ?: BookmarkRoot.Mobile.id
                         val parentNode = bookmarksStorage.getBookmark(parentGuid).getOrNull()
                         val guidToEdit = useCases.bookmarksUseCases.addBookmark(
@@ -535,8 +562,8 @@ class BrowserToolbarMiddleware(
             is EditBookmarkClicked -> runWithinEnvironment {
                 val selectedTab = browserStore.state.selectedTab ?: return
 
-                environment?.fragment?.viewLifecycleOwner?.lifecycleScope?.launch(Dispatchers.Main) {
-                    val guidToEdit: String? = withContext(ioDispatcher) {
+                environment?.viewLifecycleOwner?.lifecycleScope?.launch(Dispatchers.Main) {
+                    val guidToEdit: String? = withContext(Dispatchers.IO) {
                       bookmarksStorage
                           .getBookmarksWithUrl(selectedTab.content.url)
                           .getOrDefault(listOf())
@@ -601,8 +628,8 @@ class BrowserToolbarMiddleware(
 
     private fun onSiteInfoClicked() {
         val tab = browserStore.state.selectedTab ?: return
-        val scope = environment?.fragment?.viewLifecycleOwner?.lifecycleScope ?: return
-        scope.launch(ioDispatcher) {
+        val scope = environment?.viewLifecycleOwner?.lifecycleScope ?: return
+        scope.launch(Dispatchers.IO) {
             val sitePermissions: SitePermissions? = tab.content.url.getOrigin()?.let { origin ->
                 permissionsStorage.findSitePermissionsBy(origin, private = tab.content.private)
             }
@@ -697,7 +724,8 @@ class BrowserToolbarMiddleware(
     )
 
     private fun buildStartBrowserActions(): List<Action> {
-        val isWideScreen = environment?.fragment?.isWideWindow() == true
+        val environment = environment ?: return emptyList()
+        val isWideScreen = environment.context.isWideWindow()
 
         return listOf(
             ToolbarActionConfig(ToolbarAction.Back) { isWideScreen },
@@ -711,7 +739,7 @@ class BrowserToolbarMiddleware(
     }
 
     private fun buildEndPageActions(): List<Action> {
-        val isWideScreen = environment?.fragment?.isWideWindow() == true
+        val isWideScreen = environment?.context?.isWideWindow() == true
 
         return listOf(
             ToolbarActionConfig(ToolbarAction.ReaderMode) {
@@ -732,10 +760,10 @@ class BrowserToolbarMiddleware(
     }
 
     private fun buildEndBrowserActions(): List<Action> {
-        val isWideOrShortScreen = environment?.fragment?.isWideWindow() == true ||
-                environment?.fragment?.isTallWindow() == false
+        val isWideOrShortScreen = environment?.context?.isWideWindow() == true ||
+                environment?.context?.isTallWindow() == false
         val isExpandedAndTallScreen = settings.shouldUseExpandedToolbar &&
-                environment?.fragment?.isTallWindow() == true
+                environment?.context?.isTallWindow() == true
 
         return listOf(
             ToolbarActionConfig(ToolbarAction.NewTab) {
@@ -757,7 +785,7 @@ class BrowserToolbarMiddleware(
 
     private fun buildNavigationActions(isBookmarked: Boolean): List<Action> {
         val isExpandedAndTallScreen = settings.shouldUseExpandedToolbar &&
-                environment?.fragment?.isTallWindow() == true
+                environment?.context?.isTallWindow() == true
 
         return listOf(
             ToolbarActionConfig(ToolbarAction.Bookmark) {
@@ -780,7 +808,7 @@ class BrowserToolbarMiddleware(
     private suspend fun updateNavigationActions(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
         val url = browserStore.state.selectedTab?.content?.url
         val isBookmarked = if (url != null) {
-            withContext(ioDispatcher) {
+            withContext(Dispatchers.IO) {
                 bookmarksStorage.getBookmarksWithUrl(url).getOrDefault(listOf()).isNotEmpty()
             }
         } else {
@@ -898,7 +926,7 @@ class BrowserToolbarMiddleware(
 
     private fun updateCurrentPageOrigin(
         context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
-    ) = environment?.fragment?.viewLifecycleOwner?.lifecycleScope?.launch {
+    ) = environment?.viewLifecycleOwner?.lifecycleScope?.launch {
         val url = browserStore.state.selectedTab?.content?.url?.let {
             it.applyRegistrableDomainSpan(publicSuffixList)
         }
@@ -1013,7 +1041,7 @@ class BrowserToolbarMiddleware(
 
     private inline fun <S : State, A : MVIAction> Store<S, A>.observeWhileActive(
         crossinline observe: suspend (Flow<S>.() -> Unit),
-    ): Job? = environment?.fragment?.viewLifecycleOwner?.run {
+    ): Job? = environment?.viewLifecycleOwner?.run {
         lifecycleScope.launch {
             repeatOnLifecycle(RESUMED) {
                 flow().observe()

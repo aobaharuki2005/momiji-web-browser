@@ -6,11 +6,9 @@ package org.mozilla.fenix.crashes
 
 import android.content.res.Configuration
 import android.view.ViewGroup.MarginLayoutParams
-import androidx.fragment.app.Fragment
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
@@ -31,8 +29,6 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.OrientationMode
-import org.mozilla.fenix.ext.getBottomToolbarHeight
-import org.mozilla.fenix.ext.getTopToolbarHeight
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(AndroidJUnit4::class)
@@ -44,9 +40,7 @@ class CrashContentIntegrationTest {
     private lateinit var browserStore: BrowserStore
     private lateinit var appStore: AppStore
     private lateinit var settings: Settings
-    private lateinit var fragment: Fragment
 
-    @Suppress("NoStaticMocking") // https://bugzilla.mozilla.org/show_bug.cgi?id=1988538
     @Before
     fun setup() {
         browserStore = BrowserStore(
@@ -58,13 +52,10 @@ class CrashContentIntegrationTest {
             ),
         )
         appStore = AppStore()
-        settings = mockk(relaxed = true)
-        fragment = mockk(relaxed = true)
-
-        mockkStatic(Fragment::getBottomToolbarHeight)
-        mockkStatic(Fragment::getTopToolbarHeight)
-        every { fragment.getBottomToolbarHeight(any()) } returns 100
-        every { fragment.getTopToolbarHeight(any()) } returns 100
+        settings = mockk {
+            every { getBottomToolbarHeight(any()) } returns 100
+            every { getTopToolbarHeight(any()) } returns 100
+        }
     }
 
     @Test
@@ -78,7 +69,6 @@ class CrashContentIntegrationTest {
         }
         val components: Components = mockk()
         val integration = CrashContentIntegration(
-            fragment = fragment,
             browserStore = browserStore,
             appStore = appStore,
             toolbar = toolbar,
@@ -111,7 +101,6 @@ class CrashContentIntegrationTest {
             every { layoutParams } returns crashReporterLayoutParams
         }
         val integration = CrashContentIntegration(
-            fragment = fragment,
             browserStore = browserStore,
             appStore = appStore,
             toolbar = mockk(),
@@ -137,7 +126,6 @@ class CrashContentIntegrationTest {
         }
         val integration = spyk(
             CrashContentIntegration(
-                fragment = fragment,
                 browserStore = browserStore,
                 appStore = appStore,
                 toolbar = mockk(),
@@ -164,7 +152,6 @@ class CrashContentIntegrationTest {
         }
         val integration = spyk(
             CrashContentIntegration(
-                fragment = fragment,
                 browserStore = browserStore,
                 appStore = appStore,
                 toolbar = mockk(),
@@ -200,7 +187,6 @@ class CrashContentIntegrationTest {
         }
         val components: Components = mockk()
         val integration = CrashContentIntegration(
-            fragment = fragment,
             browserStore = browserStore,
             appStore = appStore,
             toolbar = toolbar,

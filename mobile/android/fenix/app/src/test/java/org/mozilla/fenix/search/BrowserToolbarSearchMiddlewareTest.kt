@@ -5,7 +5,6 @@
 package org.mozilla.fenix.search
 
 import android.os.Looper
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle.State.RESUMED
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
@@ -46,7 +45,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -113,15 +111,6 @@ class BrowserToolbarSearchMiddlewareTest {
         every { navigate(any<Int>()) } just Runs
     }
     val browsingModeManager: BrowsingModeManager = mockk()
-    private lateinit var fragment: Fragment
-
-    @Before
-    fun setup() {
-        fragment = spyk(Fragment()).apply {
-            every { context } returns testContext
-        }
-        every { fragment.getViewLifecycleOwner() } returns lifecycleOwner
-    }
 
     @Test
     fun `GIVEN an environment was already set WHEN it is cleared THEN reset it to null`() {
@@ -865,17 +854,19 @@ class BrowserToolbarSearchMiddlewareTest {
         browserStore: BrowserStore = this.browserStore,
         components: Components = this.components,
         settings: Settings = this.settings,
+        lifecycleOwner: LifecycleOwner = this.lifecycleOwner,
         navController: NavController = this.navController,
         browsingModeManager: BrowsingModeManager = this.browsingModeManager,
     ): Pair<BrowserToolbarSearchMiddleware, BrowserToolbarStore> {
         val middleware = buildMiddleware(appStore, browserStore, components, settings)
-        val store = buildStore(middleware, navController, browsingModeManager)
+        val store = buildStore(middleware, lifecycleOwner, navController, browsingModeManager)
 
         return middleware to store
     }
 
     private fun buildStore(
         middleware: BrowserToolbarSearchMiddleware = buildMiddleware(),
+        lifecycleOwner: LifecycleOwner = this.lifecycleOwner,
         navController: NavController = this.navController,
         browsingModeManager: BrowsingModeManager = this.browsingModeManager,
     ) = BrowserToolbarStore(
@@ -884,7 +875,7 @@ class BrowserToolbarSearchMiddlewareTest {
             it.dispatch(
                 EnvironmentRehydrated(
                     BrowserToolbarEnvironment(
-                        testContext, fragment, navController, browsingModeManager,
+                        testContext, lifecycleOwner, navController, browsingModeManager,
                     ),
                 ),
             )
