@@ -198,6 +198,17 @@ See the :doc:`test kind documentation <kinds/test>` for more info.
    kinds/test
 
 
+reftest
+-------
+
+See the :doc:`test kind documentation <kinds/test>` for more info.
+
+.. toctree::
+   :hidden:
+
+   kinds/test
+
+
 test
 ----
 

@@ -38,7 +38,6 @@ tasks-from:
     - firefox-ui.yml
     - marionette.yml
     - misc.yml
-    - reftest.yml
     - talos.yml
     - web-platform.yml
     - xpcshell.yml

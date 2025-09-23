@@ -59,8 +59,8 @@ def test_try_chooser(app, queue: multiprocessing.Queue):
     expected_output = [
         b"""<title>Try Chooser Enhanced</title>""",
         b"""<input class="filter" type="checkbox" id=windows name="build" value='{"build_platform": ["windows"]}' onchange="console.log('checkbox onchange triggered');apply();">""",  # noqa
-        b"""<input class="filter" type="checkbox" id=mochitest-browser-chrome name="test,mochitest" value='{"unittest_suite": ["mochitest-browser-chrome"]}' onchange="console.log('checkbox onchange triggered');apply();">""",  # noqa
-        b"""<input class="filter" type="checkbox" id=xpcshell name="test,mochitest" value='{"unittest_suite": ["xpcshell"]}' onchange="console.log('checkbox onchange triggered');apply();">""",  # noqa
+        b"""<input class="filter" type="checkbox" id=mochitest-browser-chrome name="test,mochitest,reftest" value='{"unittest_suite": ["mochitest-browser-chrome"]}' onchange="console.log('checkbox onchange triggered');apply();">""",  # noqa
+        b"""<input class="filter" type="checkbox" id=xpcshell name="test,mochitest,reftest" value='{"unittest_suite": ["xpcshell"]}' onchange="console.log('checkbox onchange triggered');apply();">""",  # noqa
     ]
 
     for expected in expected_output:
