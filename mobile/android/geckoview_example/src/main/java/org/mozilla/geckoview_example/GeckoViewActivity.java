@@ -25,7 +25,9 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -335,6 +337,24 @@ class WebExtensionManager
                           resolved.badgeText,
                           resolved.badgeTextColor,
                           resolved.badgeBackgroundColor));
+                })
+            .exceptionally(
+                throwable -> {
+                  Bitmap errorIcon = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888);
+                  Canvas canvas = new Canvas(errorIcon);
+                  Paint paint = new Paint();
+                  paint.setColor(Color.RED);
+                  paint.setStyle(Paint.Style.FILL);
+                  canvas.drawRect(0f, 0f, 64f, 64f, paint);
+
+                  extensionDelegate.onActionButton(
+                      new ActionButton(
+                          errorIcon,
+                          resolved.badgeText,
+                          resolved.badgeTextColor,
+                          resolved.badgeBackgroundColor));
+
+                  return null;
                 });
       }
     } else {
