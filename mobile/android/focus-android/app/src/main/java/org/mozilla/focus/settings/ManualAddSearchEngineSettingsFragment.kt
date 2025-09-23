@@ -40,6 +40,8 @@ import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.search.ManualAddSearchEnginePreference
+import org.mozilla.focus.settings.ManualAddSearchEngineSettingsFragment.Companion.SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS
+import org.mozilla.focus.settings.ManualAddSearchEngineSettingsFragment.Companion.VALID_RESPONSE_CODE_UPPER_BOUND
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.ViewUtils
@@ -180,6 +182,21 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         private const val DISABLED_ALPHA = 0.5f
         private const val LOADING_INDICATOR_DELAY: Long = 1000
 
+        /**
+         * Checks if a given search query URL is valid.
+         *
+         * A URL is considered valid if the network request is successful and returns a status code
+         * less than [VALID_RESPONSE_CODE_UPPER_BOUND] (typically meaning a success or redirect, but not an error).
+         *
+         * @param client The [Client] to use for making the network request.
+         * @param query The search query URL string to validate.
+         *              This string should contain "%s" as a placeholder for the search term.
+         * @return `true` if the search query URL is valid, `false` otherwise (e.g., malformed URL, network error, etc).
+         *
+         * @see URLStringUtils.toNormalizedURL
+         * @see SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS
+         * @see VALID_RESPONSE_CODE_UPPER_BOUND
+         */
         @WorkerThread
         @JvmStatic
         fun isValidSearchQueryURL(client: Client, query: String): Boolean {

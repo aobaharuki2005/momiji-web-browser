@@ -128,6 +128,15 @@ class AddToHomescreenDialogFragment : DialogFragment() {
         private const val BLOCKING_ENABLED = "blocking_enabled"
         private const val REQUEST_DESKTOP = "request_desktop"
 
+        /**
+         * Creates a new instance of [AddToHomescreenDialogFragment].
+         *
+         * @param url The URL of the website to add to the homescreen.
+         * @param title The initial title for the homescreen shortcut.
+         * @param blockingEnabled Whether content blocking is enabled for this site.
+         * @param requestDesktop Whether the desktop version of the site should be requested.
+         * @return A new instance of [AddToHomescreenDialogFragment].
+         */
         fun newInstance(
             url: String,
             title: String,

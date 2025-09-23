@@ -80,6 +80,11 @@ class UrlInputFragment :
 
         private const val ANIMATION_DURATION = 200
 
+        /**
+         * Creates a new [UrlInputFragment] that does not yet have an associated session.
+         *
+         * @return A new [UrlInputFragment] instance.
+         */
         @JvmStatic
         fun createWithoutSession(): UrlInputFragment {
             val arguments = Bundle()
@@ -90,6 +95,12 @@ class UrlInputFragment :
             return fragment
         }
 
+        /**
+         * Creates a new [UrlInputFragment] that has a session associated with it.
+         *
+         * @param tabId The id of the tab that should be displayed.
+         * @return A new [UrlInputFragment] instance.
+         */
         @JvmStatic
         fun createWithTab(
             tabId: String,

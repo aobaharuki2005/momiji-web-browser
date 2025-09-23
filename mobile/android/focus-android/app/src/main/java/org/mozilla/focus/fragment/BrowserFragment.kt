@@ -1117,6 +1117,13 @@ class BrowserFragment :
 
         private const val REQUEST_KEY_DOWNLOAD_PERMISSIONS = "downloadFeature"
         private const val REQUEST_KEY_PROMPT_PERMISSIONS = "promptFeature"
+
+        /**
+         * Creates a new [BrowserFragment] instance for the given tab ID.
+         *
+         * @param tabId The ID of the tab to create the fragment for.
+         * @return A new [BrowserFragment] instance.
+         */
         fun createForTab(tabId: String): BrowserFragment {
             val fragment = BrowserFragment()
             fragment.arguments = Bundle().apply {

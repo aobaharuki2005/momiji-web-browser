@@ -75,6 +75,13 @@ class VisibilityLifeCycleCallback(private val context: Context) : ActivityLifecy
                 ?.finishAndRemoveTaskIfInBackground()
         }
 
+        /**
+         * Checks if the application is currently in the background.
+         * The application is considered in the background if there are no activities in the started state.
+         *
+         * @param context The context used to access the application and its VisibilityLifeCycleCallback.
+         * @return True if the application is in the background, false otherwise.
+         */
         fun isInBackground(context: Context): Boolean {
             return (context.applicationContext as FocusApplication)
                 .visibilityLifeCycleCallback?.activitiesInStartedState == 0
