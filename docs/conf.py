@@ -73,6 +73,7 @@ js_source_path = [
     "../browser/components/migration/content",
     "../browser/components/mozcachedohttp",
     "../browser/components/mozcachedohttp/actors",
+    "../browser/components/taskbartabs",
     "../browser/components/uitour",
     "../browser/components/urlbar",
     "../js/xpconnect/loader",
