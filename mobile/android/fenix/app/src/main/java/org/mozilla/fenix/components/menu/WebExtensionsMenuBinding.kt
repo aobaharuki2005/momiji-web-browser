@@ -123,6 +123,10 @@ class WebExtensionsMenuBinding(
             globalAction.copyWithOverride(it)
         } ?: globalAction
 
+        if (isPageAction && action.enabled != true) {
+            return null
+        }
+
         val title = action.title ?: return null
 
         val loadIcon = action.loadIcon?.invoke(iconSize)
