@@ -3446,6 +3446,8 @@ name = "ipcclientcerts"
 version = "0.1.0"
 dependencies = [
  "byteorder",
+ "env_logger",
+ "log",
  "pkcs11-bindings",
  "rsclientcerts",
 ]
@@ -5324,7 +5326,9 @@ name = "pkcs11testmodule-static"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "env_logger",
  "libcrux-p256",
+ "log",
  "mozilla-central-workspace-hack",
  "num-bigint",
  "num-integer",
@@ -5874,6 +5878,7 @@ version = "0.1.0"
 dependencies = [
  "byteorder",
  "digest",
+ "env_logger",
  "gecko-profiler",
  "pkcs11-bindings",
  "rand",
