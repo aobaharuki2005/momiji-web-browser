@@ -48,7 +48,7 @@ fun TranslationToolbar(
             .fillMaxWidth()
             .height(40.dp)
             .clip(shape),
-        color = AcornTheme.colors.layer1.copy(alpha = 0.87f),
+        color = AcornTheme.colors.layer1.copy(alpha = 0.9f),
     ) {
         Row(
             modifier = Modifier
