@@ -1334,14 +1334,14 @@ class PromptFeature private constructor(
      * @returns true if a select prompt was dismissed, otherwise false.
      */
     @VisibleForTesting
-    fun dismissSelectPrompts(): Boolean {
-        var result = false
+    internal fun dismissSelectPrompts(): Boolean {
+        var dismissed = false
 
         (activePromptRequest as? SelectLoginPrompt)?.let { selectLoginPrompt ->
             loginPicker?.let { loginPicker ->
                 if (loginDelegate.loginPickerView?.isPromptDisplayed == true) {
                     loginPicker.dismissCurrentLoginSelect(selectLoginPrompt)
-                    result = true
+                    dismissed = true
                 }
             }
 
@@ -1350,7 +1350,7 @@ class PromptFeature private constructor(
                     strongPasswordPromptViewListener.dismissCurrentSuggestStrongPassword(
                         selectLoginPrompt,
                     )
-                    result = true
+                    dismissed = true
                 }
             }
         }
@@ -1359,7 +1359,7 @@ class PromptFeature private constructor(
             creditCardPicker?.let { creditCardPicker ->
                 if (creditCardDelegate.creditCardPickerView?.isPromptDisplayed == true) {
                     creditCardPicker.dismissSelectCreditCardRequest(selectCreditCardPrompt)
-                    result = true
+                    dismissed = true
                 }
             }
         }
@@ -1368,12 +1368,16 @@ class PromptFeature private constructor(
             addressPicker?.let { addressPicker ->
                 if (addressDelegate.addressPickerView?.isPromptDisplayed == true) {
                     addressPicker.dismissSelectAddressRequest(selectAddressPrompt)
-                    result = true
+                    dismissed = true
                 }
             }
         }
 
-        return result
+        if (dismissed) {
+            activePromptRequest = null
+        }
+
+        return dismissed
     }
 
     /**
