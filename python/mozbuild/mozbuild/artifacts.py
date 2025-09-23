@@ -1190,6 +1190,7 @@ class Artifacts:
         cache_dir=".",
         hg=None,
         git=None,
+        jj=None,
         skip_cache=False,
         topsrcdir=None,
         download_tests=True,
@@ -1214,6 +1215,13 @@ class Artifacts:
         self._log = log
         self._hg = hg
         self._git = git
+        self._jj = jj
+        if self._jj:
+            self._git_root = subprocess.check_output(
+                [self._jj, "git", "root"], universal_newlines=True
+            ).strip()
+        else:
+            self._git_root = None
         self._cache_dir = cache_dir
         self._skip_cache = skip_cache
         self._topsrcdir = topsrcdir
@@ -1273,19 +1281,30 @@ class Artifacts:
         kwargs["universal_newlines"] = True
         return subprocess.check_output([self._hg] + list(args), **kwargs)
 
+    def check_git_output(self, cmd, *args, **kwargs):
+        env = os.environ.copy()
+        if self._git_root:
+            env["GIT_DIR"] = self._git_root
+        kwargs["universal_newlines"] = True
+        return subprocess.check_output([self._git] + cmd, *args, **kwargs, env=env)
+
+    def call_git(self, cmd, *args, **kwargs):
+        env = os.environ.copy()
+        if self._git_root:
+            env["GIT_DIR"] = self._git_root
+        return subprocess.call([self._git] + cmd, *args, **kwargs, env=env)
+
     @property
     @functools.cache
     def _is_git_cinnabar(self):
         if self._git:
             try:
-                metadata = subprocess.check_output(
+                metadata = self.check_git_output(
                     [
-                        self._git,
                         "rev-parse",
                         "--revs-only",
                         "refs/cinnabar/metadata",
                     ],
-                    universal_newlines=True,
                     cwd=self._topsrcdir,
                 )
                 return bool(metadata.strip())
@@ -1303,9 +1322,8 @@ class Artifacts:
             ("pure-cinnabar", "028d2077b6267f634c161a8a68e2feeee0cfb663"),
         ):
             if (
-                subprocess.call(
+                self.call_git(
                     [
-                        self._git,
                         "cat-file",
                         "-e",
                         f"{commit}^{{commit}}",
@@ -1407,22 +1425,19 @@ class Artifacts:
         return candidate_pushheads
 
     def _get_revisions_from_git(self):
-        rev_list = subprocess.check_output(
+        rev_list = self.check_git_output(
             [
-                self._git,
                 "rev-list",
                 "--topo-order",
                 f"--max-count={NUM_REVISIONS_TO_QUERY}",
                 "HEAD",
             ],
-            universal_newlines=True,
             cwd=self._topsrcdir,
         )
 
         if self._is_git_cinnabar:
-            hash_list = subprocess.check_output(
-                [self._git, "cinnabar", "git2hg"] + rev_list.splitlines(),
-                universal_newlines=True,
+            hash_list = self.check_git_output(
+                ["cinnabar", "git2hg"] + rev_list.splitlines(),
                 cwd=self._topsrcdir,
             )
         elif self._git_repo_kind == "firefox":
@@ -1721,10 +1736,9 @@ https://firefox-source-docs.mozilla.org/contributing/vcs/mercurial_bundles.html
                     "log", "--template", "{node}\n", "-r", revset, cwd=self._topsrcdir
                 ).strip()
             elif self._git:
-                revset = subprocess.check_output(
-                    [self._git, "rev-parse", "%s^{commit}" % revset],
+                revset = self.check_git_output(
+                    ["rev-parse", "%s^{commit}" % revset],
                     stderr=open(os.devnull, "w"),
-                    universal_newlines=True,
                     cwd=self._topsrcdir,
                 ).strip()
             else:
@@ -1740,9 +1754,8 @@ https://firefox-source-docs.mozilla.org/contributing/vcs/mercurial_bundles.html
 
         if revision is None and self._git:
             if self._is_git_cinnabar:
-                revision = subprocess.check_output(
-                    [self._git, "cinnabar", "git2hg", revset],
-                    universal_newlines=True,
+                revision = self.check_git_output(
+                    ["cinnabar", "git2hg", revset],
                     cwd=self._topsrcdir,
                 ).strip()
             elif self._git_repo_kind == "firefox":

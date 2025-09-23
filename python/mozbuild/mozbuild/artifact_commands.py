@@ -103,6 +103,10 @@ def _make_artifacts(
     if conditions.is_git(command_context) or conditions.is_jj(command_context):
         git = command_context.substs["GIT"]
 
+    jj = None
+    if conditions.is_jj(command_context):
+        jj = command_context.substs["JJ"]
+
     # If we're building Thunderbird, we should be checking for comm-central artifacts.
     topsrcdir = command_context.substs.get("commtopsrcdir", command_context.topsrcdir)
 
@@ -126,6 +130,7 @@ def _make_artifacts(
         skip_cache=skip_cache,
         hg=hg,
         git=git,
+        jj=jj,
         topsrcdir=topsrcdir,
         download_tests=download_tests,
         download_symbols=download_symbols,
