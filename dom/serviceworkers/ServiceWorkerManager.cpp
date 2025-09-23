@@ -208,6 +208,13 @@ nsresult PopulateRegistrationData(
 
   aData.navigationPreloadState() = aRegistration->GetNavigationPreloadState();
 
+  aData.numberOfAttemptedActivations() =
+      aRegistration->GetNumberOfAttemptedActivations();
+
+  aData.isBroken() = aRegistration->IsBroken();
+
+  aData.cacheAPIId() = aRegistration->GetCacheAPIId();
+
   MOZ_ASSERT(ServiceWorkerRegistrationDataIsValid(aData));
 
   return NS_OK;
