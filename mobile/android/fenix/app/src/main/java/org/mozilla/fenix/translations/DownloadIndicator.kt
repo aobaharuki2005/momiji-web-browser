@@ -4,6 +4,12 @@
 
 package org.mozilla.fenix.translations
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,8 +21,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.painter.Painter
@@ -29,10 +37,15 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.button.PrimaryButton
-import mozilla.components.compose.base.modifier.animateRotation
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.ui.icons.R as iconsR
+
+/**
+ * Animation duration in milliseconds.
+ * If it is set to a low number, the speed of the rotation will be higher.
+ */
+private const val ANIMATION_DURATION_MS = 2000
 
 /**
  * Icon for Download indicator.
@@ -51,7 +64,10 @@ fun DownloadIconIndicator(
 ) {
     Icon(
         painter = icon,
-        modifier = modifier.animateRotation(),
+        modifier = modifier.then(
+            Modifier
+                .rotate(rotationAnimation()),
+        ),
         contentDescription = contentDescription,
         tint = tint,
     )
@@ -119,10 +135,24 @@ fun DownloadIndicator(
         ),
         icon = icon,
         iconModifier = Modifier
-            .animateRotation()
+            .rotate(rotationAnimation())
             .size(ButtonDefaults.IconSize),
         onClick = {},
     )
+}
+
+@Composable
+internal fun rotationAnimation(): Float {
+    val infiniteTransition = rememberInfiniteTransition()
+    val angle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(ANIMATION_DURATION_MS, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+    )
+    return angle
 }
 
 @Composable

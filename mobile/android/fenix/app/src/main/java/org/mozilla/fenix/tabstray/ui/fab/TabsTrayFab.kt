@@ -8,14 +8,12 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -23,7 +21,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.button.ExtendedFloatingActionButton
 import mozilla.components.compose.base.button.FloatingActionButtonDefaults
-import mozilla.components.compose.base.modifier.animateRotation
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.Page
@@ -59,10 +56,6 @@ internal fun TabsTrayFab(
 ) {
     val state by tabsTrayStore.observeAsState(initialValue = tabsTrayStore.state) { it }
 
-    val isSyncing by tabsTrayStore.observeAsState(initialValue = tabsTrayStore.state.syncing) { state ->
-        state.syncing
-    }
-
     AnimatedVisibility(
         visible = state.mode is Mode.Normal,
     ) {
@@ -78,7 +71,6 @@ internal fun TabsTrayFab(
             M3FloatingActionButtonDefaults.elevation()
         }
         val onClick: () -> Unit
-        var iconModifier: Modifier = Modifier
         when (state.selectedPage) {
             Page.NormalTabs -> {
                 icon = iconsR.drawable.mozac_ic_plus_24
@@ -97,11 +89,7 @@ internal fun TabsTrayFab(
             Page.SyncedTabs -> {
                 icon = iconsR.drawable.mozac_ic_sync_24
                 contentDescription = stringResource(id = R.string.resync_button_content_description)
-                label = if (isSyncing) {
-                    stringResource(id = R.string.sync_syncing_in_progress)
-                } else {
-                    stringResource(id = R.string.tab_manager_floating_action_button_sync_tabs)
-                }
+                label = stringResource(id = R.string.tab_manager_floating_action_button_sync_tabs)
                 onClick = onSyncedTabsFabClicked
                 if (!isSignedIn) {
                     colors = FloatingActionButtonDefaults.colorsDisabled()
@@ -112,24 +100,19 @@ internal fun TabsTrayFab(
                         hoveredElevation = 0.dp,
                     )
                 }
-                iconModifier = Modifier.animateRotation(animate = isSyncing)
             }
         }
 
         ExtendedFloatingActionButton(
             label = label,
+            icon = icon,
+            contentDescription = contentDescription,
             onClick = onClick,
             modifier = modifier.testTag(TabsTrayTestTag.FAB),
             expanded = expanded,
             colors = colors,
             elevation = elevation,
-        ) {
-            Icon(
-                painter = painterResource(id = icon),
-                contentDescription = contentDescription,
-                modifier = iconModifier,
-            )
-        }
+        )
     }
 }
 

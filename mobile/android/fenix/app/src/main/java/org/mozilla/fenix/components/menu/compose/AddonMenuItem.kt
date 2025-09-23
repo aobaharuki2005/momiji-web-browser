@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
@@ -26,7 +27,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import mozilla.components.compose.base.modifier.animateRotation
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.displayName
 import mozilla.components.feature.addons.ui.summary
@@ -35,6 +35,7 @@ import org.mozilla.fenix.components.menu.MenuDialogTestTag.RECOMMENDED_ADDON_ITE
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.RECOMMENDED_ADDON_ITEM_TITLE
 import org.mozilla.fenix.compose.list.FaviconListItem
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.translations.rotationAnimation
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -101,7 +102,11 @@ internal fun AddonMenuItem(
             } else {
                 iconPainter
             },
-            iconButtonModifier = Modifier.animateRotation(isInstallAddonInProgress),
+            iconButtonModifier = if (isInstallAddonInProgress) {
+                Modifier.rotate(rotationAnimation())
+            } else {
+                Modifier
+            },
             iconDescription = iconDescription ?: stringResource(
                 R.string.browser_menu_extension_plus_icon_content_description_2,
                 label,
