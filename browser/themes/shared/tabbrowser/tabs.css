@@ -1160,7 +1160,7 @@
 
     tab-group:not([collapsed]) > .tabbrowser-tab:last-of-type > .tab-stack > .tab-background > &,
     tab-group[collapsed]:not([hasmultipletabs]) & {
-      inset-inline-end: 0;
+      inset-inline-end: calc(var(--tab-border-radius) / 2);
       border-start-end-radius: calc(var(--tab-group-line-thickness) / 2);
       border-end-end-radius: calc(var(--tab-group-line-thickness) / 2);
     }
