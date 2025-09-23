@@ -168,39 +168,15 @@ nsresult MatroskaDemuxer::SetAudioCodecInfo(
         aacCodecSpecificData.mEncoderDelayFrames = 0;
       }
 
-      // Calulate the media frame count.
-      // Media frame count = total count - delay - padding.
-      nestegg_packet* lastPacket;
-      int r = nestegg_read_last_packet(aContext, aTrackId, &lastPacket);
+      uint64_t frameCount;
+      int r = nestegg_read_total_frames_count(aContext, &frameCount);
       if (r == -1) {
         return NS_ERROR_FAILURE;
       }
-
-      RefPtr<NesteggPacketHolder> holder = new NesteggPacketHolder();
-      if (!holder->Init(lastPacket, 0 /* dummy */, aTrackId, false)) {
-        MKV_DEBUG("NesteggPacketHolder::Init: error for AAC");
-        return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
-      }
-
-      CheckedInt64 mediaFrameCount =
-          CheckedInt64(holder->Timestamp()) + holder->Duration();
-      mediaFrameCount *= mInfo.mAudio.mRate;
-      mediaFrameCount /= USECS_PER_S * AAC_SAMPLES_PER_FRAME;
-
-      CheckedInt64 discardPaddingFrames = holder->DiscardPaddingUs();
-      discardPaddingFrames *= mInfo.mAudio.mRate;
-      discardPaddingFrames /= USECS_PER_S * AAC_SAMPLES_PER_FRAME;
-
-      if (!mediaFrameCount.isValid() || !discardPaddingFrames.isValid() ||
-          mediaFrameCount.value() <
-              discardPaddingFrames.value() +
-                  aacCodecSpecificData.mEncoderDelayFrames) {
-        MKV_DEBUG("Invalid AAC audio frame count");
-        return NS_ERROR_DOM_MEDIA_METADATA_ERR;
-      }
-      mediaFrameCount -= (aacCodecSpecificData.mEncoderDelayFrames +
-                          discardPaddingFrames.value());
-      aacCodecSpecificData.mMediaFrameCount = mediaFrameCount.value();
+      aacCodecSpecificData.mMediaFrameCount = frameCount;
+      MKV_DEBUG("AAC stream in MKV container, media frames: %" PRIu64
+                ", delay frames : %" PRIu32,
+                frameCount, aacCodecSpecificData.mEncoderDelayFrames);
 
       // Get the codec specific data from the codec private.
       nsTArray<const unsigned char*> headers;
