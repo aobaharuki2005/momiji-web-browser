@@ -7,6 +7,7 @@ package mozilla.components.lib.crash.sentry.eventprocessors
 import io.sentry.SentryEvent
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.lib.crash.RuntimeTag
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -56,7 +57,7 @@ class CrashMetadataEventProcessorTest {
             processType = null,
             remoteType = null,
             breadcrumbs = arrayListOf(),
-            runtimeTags = mapOf(CrashReporter.RELEASE_RUNTIME_TAG to actualRelease),
+            runtimeTags = mapOf(RuntimeTag.RELEASE to actualRelease),
         )
         val result = processor.process(event, mock())
 

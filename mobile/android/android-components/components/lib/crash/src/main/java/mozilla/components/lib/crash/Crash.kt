@@ -249,3 +249,10 @@ interface RuntimeTagProvider {
      */
     operator fun invoke(): Map<String, String>
 }
+
+/**
+ * Namespace for RuntimeTag keys
+ */
+object RuntimeTag {
+    const val RELEASE = "release"
+}

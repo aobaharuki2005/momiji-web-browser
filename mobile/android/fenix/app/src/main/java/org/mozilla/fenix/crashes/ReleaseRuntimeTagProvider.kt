@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.crashes
 
-import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.lib.crash.RuntimeTag
 import mozilla.components.lib.crash.RuntimeTagProvider
 import org.mozilla.fenix.BuildConfig
 
@@ -13,6 +13,6 @@ import org.mozilla.fenix.BuildConfig
  */
 class ReleaseRuntimeTagProvider : RuntimeTagProvider {
     override fun invoke(): Map<String, String> {
-        return mapOf(CrashReporter.RELEASE_RUNTIME_TAG to BuildConfig.VERSION_NAME)
+        return mapOf(RuntimeTag.RELEASE to BuildConfig.VERSION_NAME)
     }
 }
