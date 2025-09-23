@@ -239,7 +239,6 @@ export class MerinoClient {
     // params.
 
     let details = { query, providers, timeoutMs, url: url.toString() };
-    this.#lazy.logger.debug("Fetch details", details);
 
     // If caching is enabled, generate the cache key for this request URL.
     let cacheKey;
@@ -253,7 +252,7 @@ export class MerinoClient {
         Date.now() < this.#cache.dateMs + this.#cachePeriodMs &&
         this.#cache.key == cacheKey
       ) {
-        this.#lazy.logger.debug("Fetch served from cache");
+        this.#lazy.logger.debug("Fetch served from cache", details);
         return this.#cache.suggestions;
       }
     }
@@ -283,6 +282,11 @@ export class MerinoClient {
       this.#sequenceNumber.toString()
     );
     this.#sequenceNumber++;
+
+    this.#lazy.logger.debug("Fetch details", {
+      ...details,
+      url: url.toString(),
+    });
 
     /** @type {(category: string) => void} */
     let recordResponse = category => {
