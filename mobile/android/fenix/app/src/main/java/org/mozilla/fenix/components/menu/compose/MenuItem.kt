@@ -206,6 +206,7 @@ internal fun MenuTextItem(
  *
  * @param label The label in the list item.
  * @param iconPainter [Painter] used to display an [Icon] before the list item.
+ * @param iconTint Tint color to be applied on the [Icon].
  * @param enabled Controls the enabled state of the list item. When `false`, the list item will not
  * be clickable.
  * @param badgeText WebExtension badge text.
@@ -217,6 +218,7 @@ internal fun MenuTextItem(
 internal fun WebExtensionMenuItem(
     label: String,
     iconPainter: Painter,
+    iconTint: Color? = null,
     enabled: Boolean?,
     badgeText: String?,
     index: Int = 0,
@@ -227,6 +229,7 @@ internal fun WebExtensionMenuItem(
         label = label,
         iconPainter = iconPainter,
         enabled = enabled == true,
+        iconTint = iconTint,
         onClick = onClick,
         modifier = Modifier
             .testTag(WEB_EXTENSION_ITEM)

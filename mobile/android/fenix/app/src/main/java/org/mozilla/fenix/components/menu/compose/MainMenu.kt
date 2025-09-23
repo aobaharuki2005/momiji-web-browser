@@ -876,6 +876,10 @@ private fun WebExtensionMenuItems(
                     BitmapPainter(image = icon.asImageBitmap())
                 }
                     ?: painterResource(iconsR.drawable.mozac_ic_web_extension_default_icon),
+                iconTint = when (webExtensionMenuItem.icon) {
+                    null -> FirefoxTheme.colors.iconPrimary
+                    else -> null
+                },
                 enabled = webExtensionMenuItem.enabled,
                 badgeText = webExtensionMenuItem.badgeText,
                 onClick = {
