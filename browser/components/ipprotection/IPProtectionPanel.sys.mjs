@@ -5,6 +5,8 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  CustomizableUI:
+    "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
   IPProtectionService:
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
   IPProtection: "resource:///modules/ipprotection/IPProtection.sys.mjs",
@@ -24,7 +26,7 @@ export class IPProtectionPanel {
   static CONTENT_TAGNAME = "ipprotection-content";
   static CUSTOM_ELEMENTS_SCRIPT =
     "chrome://browser/content/ipprotection/ipprotection-customelements.js";
-
+  static WIDGET_ID = "ipprotection-button";
   static PANEL_ID = "PanelUI-ipprotection";
   static TITLE_L10N_ID = "ipprotection-title";
 
@@ -242,6 +244,22 @@ export class IPProtectionPanel {
   }
 
   /**
+   * Open the IP Protection panel in the given window.
+   *
+   * @param {Window} window - which window to open the panel in.
+   * @returns {Promise<void>}
+   */
+  async open(window) {
+    if (!lazy.IPProtection.created || !window?.PanelUI) {
+      return;
+    }
+
+    let widget = lazy.CustomizableUI.getWidget(IPProtectionPanel.WIDGET_ID);
+    let anchor = widget.forWindow(window).anchor;
+    await window.PanelUI.showSubView(IPProtectionPanel.PANEL_ID, anchor);
+  }
+
+  /**
    * Close the containing panel popup.
    */
   close() {
@@ -261,7 +279,7 @@ export class IPProtectionPanel {
     this.close();
     let isSignedIn = await lazy.IPProtectionService.startLoginFlow(browser);
     if (isSignedIn) {
-      lazy.IPProtection.openPanel(window);
+      await this.open(window);
     }
   }
 

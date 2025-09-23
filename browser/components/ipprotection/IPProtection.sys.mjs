@@ -47,7 +47,7 @@ class IPProtectionWidget {
   static VARIANT_PREF = "browser.ipProtection.variant";
 
   #inited = false;
-  #created = false;
+  created = false;
   #panels = new WeakMap();
 
   constructor() {
@@ -63,7 +63,7 @@ class IPProtectionWidget {
       return;
     }
 
-    if (!this.#created) {
+    if (!this.created) {
       this.#createWidget();
     }
 
@@ -92,22 +92,6 @@ class IPProtectionWidget {
    */
   get isInitialized() {
     return this.#inited;
-  }
-
-  /**
-   * Opens the panel in the given window.
-   *
-   * @param {Window} window - which window to open the panel in.
-   * @returns {Promise<void>}
-   */
-  async openPanel(window) {
-    if (!this.#created || !window?.PanelUI) {
-      return;
-    }
-
-    let widget = lazy.CustomizableUI.getWidget(IPProtectionWidget.WIDGET_ID);
-    let anchor = widget.forWindow(window).anchor;
-    await window.PanelUI.showSubView(IPProtectionWidget.PANEL_ID, anchor);
   }
 
   /**
@@ -158,7 +142,7 @@ class IPProtectionWidget {
 
     this.#placeWidget();
 
-    this.#created = true;
+    this.created = true;
   }
 
   /**
@@ -193,12 +177,12 @@ class IPProtectionWidget {
    * can be recreated later.
    */
   #destroyWidget() {
-    if (!this.#created) {
+    if (!this.created) {
       return;
     }
     this.#destroyPanels();
     lazy.CustomizableUI.destroyWidget(IPProtectionWidget.WIDGET_ID);
-    this.#created = false;
+    this.created = false;
     if (this.readyTriggerIdleCallback) {
       lazy.cancelIdleCallback(this.readyTriggerIdleCallback);
     }
@@ -211,7 +195,7 @@ class IPProtectionWidget {
    * @returns {IPProtectionPanel}
    */
   getPanel(window) {
-    if (!this.#created || !window?.PanelUI) {
+    if (!this.created || !window?.PanelUI) {
       return null;
     }
 

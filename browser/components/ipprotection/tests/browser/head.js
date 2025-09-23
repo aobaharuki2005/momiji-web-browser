@@ -82,13 +82,12 @@ async function openPanel(state, win = window) {
     panel.setState(state);
   }
 
-  IPProtection.openPanel(win);
-
   let panelShownPromise = waitForPanelEvent(win.document, "popupshown");
   let panelInitPromise = BrowserTestUtils.waitForEvent(
     win.document,
     "IPProtection:Init"
   );
+  await panel.open(win);
   await Promise.all([panelShownPromise, panelInitPromise]);
 
   let panelView = PanelMultiView.getViewNode(
