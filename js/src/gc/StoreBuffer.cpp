@@ -15,20 +15,67 @@
 using namespace js;
 using namespace js::gc;
 
+ArenaCellSet ArenaCellSet::Empty;
+
+ArenaCellSet::ArenaCellSet(Arena* arena)
+    : arena(arena)
 #ifdef DEBUG
-void StoreBuffer::checkAccess() const {
-  // The GC runs tasks that may access the storebuffer in parallel and so must
-  // take a lock. The mutator may only access the storebuffer from the main
-  // thread.
-  if (runtime_->heapState() != JS::HeapState::Idle &&
-      runtime_->heapState() != JS::HeapState::MinorCollecting) {
-    MOZ_ASSERT(!CurrentThreadIsGCMarking());
-    runtime_->gc.assertCurrentThreadHasLockedStoreBuffer();
-  } else {
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
-  }
-}
+      ,
+      minorGCNumberAtCreation(
+          arena->zone()->runtimeFromMainThread()->gc.minorGCCount())
 #endif
+{
+  MOZ_ASSERT(arena);
+  MOZ_ASSERT(bits.isAllClear());
+}
+
+template <typename T>
+StoreBuffer::MonoTypeBuffer<T>::MonoTypeBuffer(MonoTypeBuffer&& other)
+    : stores_(std::move(other.stores_)), last_(std::move(other.last_)) {
+  other.clear();
+}
+template <typename T>
+StoreBuffer::MonoTypeBuffer<T>& StoreBuffer::MonoTypeBuffer<T>::operator=(
+    MonoTypeBuffer&& other) {
+  if (&other != this) {
+    this->~MonoTypeBuffer();
+    new (this) MonoTypeBuffer(std::move(other));
+  }
+  return *this;
+}
+
+template <typename T>
+bool StoreBuffer::MonoTypeBuffer<T>::isEmpty() const {
+  return last_ == T() && stores_.empty();
+}
+
+template <typename T>
+void StoreBuffer::MonoTypeBuffer<T>::clear() {
+  last_ = T();
+  stores_.clear();
+}
+
+template <typename T>
+size_t StoreBuffer::MonoTypeBuffer<T>::sizeOfExcludingThis(
+    mozilla::MallocSizeOf mallocSizeOf) {
+  return stores_.shallowSizeOfExcludingThis(mallocSizeOf);
+}
+
+StoreBuffer::WholeCellBuffer::WholeCellBuffer(WholeCellBuffer&& other)
+    : storage_(std::move(other.storage_)),
+      sweepHead_(other.sweepHead_),
+      last_(other.last_) {
+  other.sweepHead_ = nullptr;
+  other.last_ = nullptr;
+}
+StoreBuffer::WholeCellBuffer& StoreBuffer::WholeCellBuffer::operator=(
+    WholeCellBuffer&& other) {
+  if (&other != this) {
+    this->~WholeCellBuffer();
+    new (this) WholeCellBuffer(std::move(other));
+  }
+  return *this;
+}
 
 bool StoreBuffer::WholeCellBuffer::init() {
   MOZ_ASSERT(!sweepHead_);
@@ -46,6 +93,80 @@ bool StoreBuffer::WholeCellBuffer::init() {
 
   clear();
   return true;
+}
+
+bool StoreBuffer::WholeCellBuffer::isEmpty() const {
+  return !storage_ || storage_->isEmpty();
+}
+
+void StoreBuffer::WholeCellBuffer::clear() {
+  for (LifoAlloc::Enum e(*storage_); !e.empty();) {
+    ArenaCellSet* cellSet = e.read<ArenaCellSet>();
+    cellSet->arena->bufferedCells() = &ArenaCellSet::Empty;
+  }
+  sweepHead_ = nullptr;
+
+  if (storage_) {
+    storage_->used() ? storage_->releaseAll() : storage_->freeAll();
+  }
+
+  last_ = nullptr;
+}
+
+ArenaCellSet* StoreBuffer::WholeCellBuffer::allocateCellSet(Arena* arena) {
+  MOZ_ASSERT(arena->bufferedCells() == &ArenaCellSet::Empty);
+
+  Zone* zone = arena->zone();
+  JSRuntime* rt = zone->runtimeFromMainThread();
+  if (!rt->gc.nursery().isEnabled()) {
+    return nullptr;
+  }
+
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  auto* cells = storage_->new_<ArenaCellSet>(arena);
+  if (!cells) {
+    oomUnsafe.crash("Failed to allocate ArenaCellSet");
+  }
+
+  arena->bufferedCells() = cells;
+
+  if (isAboutToOverflow()) {
+    rt->gc.storeBuffer().setAboutToOverflow(
+        JS::GCReason::FULL_WHOLE_CELL_BUFFER);
+  }
+
+  return cells;
+}
+
+size_t StoreBuffer::WholeCellBuffer::sizeOfExcludingThis(
+    mozilla::MallocSizeOf mallocSizeOf) {
+  return storage_ ? storage_->sizeOfIncludingThis(mallocSizeOf) : 0;
+}
+
+StoreBuffer::GenericBuffer::GenericBuffer(GenericBuffer&& other)
+    : storage_(std::move(other.storage_)) {}
+StoreBuffer::GenericBuffer& StoreBuffer::GenericBuffer::operator=(
+    GenericBuffer&& other) {
+  if (&other != this) {
+    this->~GenericBuffer();
+    new (this) GenericBuffer(std::move(other));
+  }
+  return *this;
+}
+
+bool StoreBuffer::GenericBuffer::isEmpty() const {
+  return !storage_ || storage_->isEmpty();
+}
+
+void StoreBuffer::GenericBuffer::clear() {
+  if (storage_) {
+    storage_->used() ? storage_->releaseAll() : storage_->freeAll();
+  }
+}
+
+size_t StoreBuffer::GenericBuffer::sizeOfExcludingThis(
+    mozilla::MallocSizeOf mallocSizeOf) {
+  return storage_ ? storage_->sizeOfIncludingThis(mallocSizeOf) : 0;
 }
 
 bool StoreBuffer::GenericBuffer::init() {
@@ -116,6 +237,21 @@ StoreBuffer& StoreBuffer::operator=(StoreBuffer&& other) {
   return *this;
 }
 
+#ifdef DEBUG
+void StoreBuffer::checkAccess() const {
+  // The GC runs tasks that may access the storebuffer in parallel and so must
+  // take a lock. The mutator may only access the storebuffer from the main
+  // thread.
+  if (runtime_->heapState() != JS::HeapState::Idle &&
+      runtime_->heapState() != JS::HeapState::MinorCollecting) {
+    MOZ_ASSERT(!CurrentThreadIsGCMarking());
+    runtime_->gc.assertCurrentThreadHasLockedStoreBuffer();
+  } else {
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
+  }
+}
+#endif
+
 void StoreBuffer::checkEmpty() const { MOZ_ASSERT(isEmpty()); }
 
 bool StoreBuffer::isEmpty() const {
@@ -180,6 +316,28 @@ void StoreBuffer::setAboutToOverflow(JS::GCReason reason) {
   nursery_.requestMinorGC(reason);
 }
 
+void StoreBuffer::traceValues(TenuringTracer& mover) {
+  bufferVal.trace(mover, this);
+}
+void StoreBuffer::traceCells(TenuringTracer& mover) {
+  bufStrCell.trace(mover, this);
+  bufBigIntCell.trace(mover, this);
+  bufGetterSetterCell.trace(mover, this);
+  bufObjCell.trace(mover, this);
+}
+void StoreBuffer::traceSlots(TenuringTracer& mover) {
+  bufferSlot.trace(mover, this);
+}
+void StoreBuffer::traceWasmAnyRefs(TenuringTracer& mover) {
+  bufferWasmAnyRef.trace(mover, this);
+}
+void StoreBuffer::traceWholeCells(TenuringTracer& mover) {
+  bufferWholeCell.trace(mover, this);
+}
+void StoreBuffer::traceGenericEntries(JSTracer* trc) {
+  bufferGeneric.trace(trc, this);
+}
+
 void StoreBuffer::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                          JS::GCSizes* sizes) {
   sizes->storeBufferVals += bufferVal.sizeOfExcludingThis(mallocSizeOf);
@@ -196,62 +354,9 @@ void StoreBuffer::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
   sizes->storeBufferGenerics += bufferGeneric.sizeOfExcludingThis(mallocSizeOf);
 }
 
-ArenaCellSet ArenaCellSet::Empty;
-
-ArenaCellSet::ArenaCellSet(Arena* arena)
-    : arena(arena)
-#ifdef DEBUG
-      ,
-      minorGCNumberAtCreation(
-          arena->zone()->runtimeFromMainThread()->gc.minorGCCount())
-#endif
-{
-  MOZ_ASSERT(arena);
-  MOZ_ASSERT(bits.isAllClear());
-}
-
-ArenaCellSet* StoreBuffer::WholeCellBuffer::allocateCellSet(Arena* arena) {
-  MOZ_ASSERT(arena->bufferedCells() == &ArenaCellSet::Empty);
-
-  Zone* zone = arena->zone();
-  JSRuntime* rt = zone->runtimeFromMainThread();
-  if (!rt->gc.nursery().isEnabled()) {
-    return nullptr;
-  }
-
-  AutoEnterOOMUnsafeRegion oomUnsafe;
-  auto* cells = storage_->new_<ArenaCellSet>(arena);
-  if (!cells) {
-    oomUnsafe.crash("Failed to allocate ArenaCellSet");
-  }
-
-  arena->bufferedCells() = cells;
-
-  if (isAboutToOverflow()) {
-    rt->gc.storeBuffer().setAboutToOverflow(
-        JS::GCReason::FULL_WHOLE_CELL_BUFFER);
-  }
-
-  return cells;
-}
-
 void gc::CellHeaderPostWriteBarrier(JSObject** ptr, JSObject* prev,
                                     JSObject* next) {
   InternalBarrierMethods<JSObject*>::postBarrier(ptr, prev, next);
-}
-
-void StoreBuffer::WholeCellBuffer::clear() {
-  for (LifoAlloc::Enum e(*storage_); !e.empty();) {
-    ArenaCellSet* cellSet = e.read<ArenaCellSet>();
-    cellSet->arena->bufferedCells() = &ArenaCellSet::Empty;
-  }
-  sweepHead_ = nullptr;
-
-  if (storage_) {
-    storage_->used() ? storage_->releaseAll() : storage_->freeAll();
-  }
-
-  last_ = nullptr;
 }
 
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>;

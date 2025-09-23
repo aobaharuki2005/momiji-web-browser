@@ -26,6 +26,7 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/Uint8Clamped.h"
 
+#include "gc/BufferAllocator-inl.h"
 #include "gc/GCContext-inl.h"  // GCContext::removeCellMemory
 #include "gc/ObjectKind-inl.h"
 #include "vm/JSContext-inl.h"
