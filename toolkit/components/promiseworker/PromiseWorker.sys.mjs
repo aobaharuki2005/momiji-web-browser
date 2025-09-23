@@ -286,6 +286,7 @@ BasePromiseWorker.prototype = {
           // worker.
           deferred.reject(new WorkerError(data.fail));
         }
+        this._deferredJobs.delete(messageId);
         return;
       }
 
