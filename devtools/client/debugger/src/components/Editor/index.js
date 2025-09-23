@@ -11,7 +11,6 @@ import { connect } from "devtools/client/shared/vendor/react-redux";
 
 import { getLineText, isLineBlackboxed } from "./../../utils/source";
 import { createLocation } from "./../../utils/location";
-import { markerTypes } from "../../constants";
 import { asSettled, isFulfilled, isRejected } from "../../utils/async-value";
 
 import {
@@ -274,7 +273,7 @@ class Editor extends PureComponent {
     if (shouldUpdateBreakableLines) {
       editor.setLineGutterMarkers([
         {
-          id: markerTypes.EMPTY_LINE_MARKER,
+          id: editor.markerTypes.EMPTY_LINE_MARKER,
           lineClassName: "empty-line",
           condition: line => {
             const lineNumber = fromEditorLine(selectedSource, line);
@@ -286,7 +285,7 @@ class Editor extends PureComponent {
 
     editor.setLineGutterMarkers([
       {
-        id: markerTypes.BLACKBOX_LINE_GUTTER_MARKER,
+        id: editor.markerTypes.BLACKBOX_LINE_GUTTER_MARKER,
         lineClassName: "blackboxed-line",
         condition: line => {
           const lineNumber = fromEditorLine(selectedSource, line);
@@ -306,7 +305,7 @@ class Editor extends PureComponent {
       (!prevState.editor && !!editor)
     ) {
       if (blackboxedRanges[selectedSource.url] == undefined) {
-        editor.removeLineContentMarker(markerTypes.BLACKBOX_LINE_MARKER);
+        editor.removeLineContentMarker(editor.markerTypes.BLACKBOX_LINE_MARKER);
         return;
       }
 
@@ -318,7 +317,7 @@ class Editor extends PureComponent {
       }
 
       editor.setLineContentMarker({
-        id: markerTypes.BLACKBOX_LINE_MARKER,
+        id: editor.markerTypes.BLACKBOX_LINE_MARKER,
         lineClassName: "blackboxed-line",
         // If the the whole source is blackboxed, lets just mark all positions.
         shouldMarkAllLines: !blackboxedRanges[selectedSource.url].length,
