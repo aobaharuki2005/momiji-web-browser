@@ -109,10 +109,6 @@ ChromeUtils.defineLazyGetter(lazy, "gDOMLocalization", function () {
   ]);
 });
 
-ChromeUtils.defineLazyGetter(lazy, "defaultParentDirPath", function () {
-  return Services.dirsvc.get("Docs", Ci.nsIFile).path;
-});
-
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "scheduledBackupsPref",
@@ -725,7 +721,10 @@ export class BackupService extends EventTarget {
    * @returns {string} The path of the default parent directory
    */
   static get DEFAULT_PARENT_DIR_PATH() {
-    return lazy.defaultParentDirPath;
+    return (
+      BackupService.oneDriveFolderPath?.path ||
+      Services.dirsvc.get("Docs", Ci.nsIFile).path
+    );
   }
 
   /**
@@ -3024,7 +3023,10 @@ export class BackupService extends EventTarget {
 
     const USING_DEFAULT_DIR_PATH =
       lazy.backupDirPref ==
-      PathUtils.join(lazy.defaultParentDirPath, BackupService.BACKUP_DIR_NAME);
+      PathUtils.join(
+        BackupService.DEFAULT_PARENT_DIR_PATH,
+        BackupService.BACKUP_DIR_NAME
+      );
     Glean.browserBackup.locationOnDevice.set(USING_DEFAULT_DIR_PATH ? 1 : 2);
 
     // Next, we'll measure the available disk space on the storage

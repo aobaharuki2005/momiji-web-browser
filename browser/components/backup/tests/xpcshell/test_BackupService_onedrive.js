@@ -114,6 +114,7 @@ function setupMockRegistryComponent() {
 add_task(async function runTests() {
   setupMockRegistryComponent();
 
+  const docsFolder = Services.dirsvc.get("Docs", Ci.nsIFile).path;
   for (let test of testSuites) {
     mockRegistry.setRegistryContents(test.registryMap);
     let personalFolder = BackupService.oneDriveFolderPath;
@@ -121,6 +122,12 @@ add_task(async function runTests() {
       personalFolder?.path || null,
       test.personalFolder,
       "got correct personal OneDrive root"
+    );
+
+    Assert.equal(
+      BackupService.DEFAULT_PARENT_DIR_PATH,
+      test.personalFolder ? test.personalFolder : docsFolder,
+      "BackupService.DEFAULT_PARENT_DIR_PATH reflects correct folder"
     );
   }
 
