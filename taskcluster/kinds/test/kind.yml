@@ -37,7 +37,6 @@ tasks-from:
     - marionette.yml
     - misc.yml
     - talos.yml
-    - web-platform.yml
     - xpcshell.yml
 
 task-defaults:
