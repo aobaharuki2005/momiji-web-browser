@@ -35,7 +35,7 @@ import mozilla.components.concept.base.crash.Breadcrumb as MozillaBreadcrumb
  * @param sendEventForNativeCrashes Allows configuring if native crashes should be submitted. Disabled by default.
  * @param sentryProjectUrl Base URL of the Sentry web interface pointing to the app/project.
  * @param sendCaughtExceptions Allows configuring if caught exceptions should be submitted. Enabled by default.
- * @param crashMetadataEventProcessor an [io.sentry.EventProcessor] to attach crash metadata to a crash report.
+ * @param autoInitializeSentry Initializes the Sentry SDK immediately on service creation.
  */
 class SentryService(
     private val applicationContext: Context,
@@ -45,7 +45,6 @@ class SentryService(
     private val sendEventForNativeCrashes: Boolean = false,
     private val sentryProjectUrl: String? = null,
     private val sendCaughtExceptions: Boolean = true,
-    private val crashMetadataEventProcessor: CrashMetadataEventProcessor? = null,
 ) : CrashReporterService {
 
     override val id: String = "new-sentry-instance"
@@ -54,6 +53,8 @@ class SentryService(
     @VisibleForTesting
     @GuardedBy("this")
     internal var isInitialized: Boolean = false
+
+    private val crashMetadataEventProcessor = CrashMetadataEventProcessor()
 
     override fun createCrashReportUrl(identifier: String): String? {
         return sentryProjectUrl?.let {
@@ -144,9 +145,7 @@ class SentryService(
             options.environment = environment
             options.addEventProcessor(RustCrashEventProcessor())
             options.addEventProcessor(AddMechanismEventProcessor())
-            crashMetadataEventProcessor?.also {
-                options.addEventProcessor(it)
-            }
+            options.addEventProcessor(crashMetadataEventProcessor)
         }
     }
 
@@ -166,7 +165,9 @@ class SentryService(
             Sentry.setLevel(level)
         }
 
-        crashMetadataEventProcessor?.crashToProcess = crash
+        crash?.let {
+            crashMetadataEventProcessor.crashToProcess = it
+        }
     }
 
     private fun SentryId.alsoClearBreadcrumbs(): String {
