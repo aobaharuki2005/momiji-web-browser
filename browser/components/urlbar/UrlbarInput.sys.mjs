@@ -315,6 +315,13 @@ export class UrlbarInput {
 
     this.editor.newlineHandling =
       Ci.nsIEditor.eNewlinesStripSurroundingWhitespace;
+
+    if (isAddressbar) {
+      let searchContainersPref = lazy.UrlbarPrefs.get(
+        "switchTabs.searchAllContainers"
+      );
+      Glean.urlbar.prefSwitchTabsSearchAllContainers.set(searchContainersPref);
+    }
   }
 
   #lazy = XPCOMUtils.declareLazy({
