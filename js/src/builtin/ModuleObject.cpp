@@ -218,26 +218,20 @@ static bool GetModuleType(JSContext* cx,
                           JS::ModuleType& moduleType) {
   for (const ImportAttribute& importAttribute : maybeAttributes) {
     if (importAttribute.key() == cx->names().type) {
-      int32_t result;
-      if (!js::CompareStrings(cx, cx->names().json, importAttribute.value(),
-                              &result)) {
+      Rooted<JSLinearString*> typeStr(
+          cx, importAttribute.value()->ensureLinear(cx));
+      if (!typeStr) {
         return false;
       }
-      if (result == 0) {
+
+      if (js::EqualStrings(typeStr, cx->names().json)) {
         moduleType = JS::ModuleType::JSON;
-        return true;
-      }
-
-      if (!js::CompareStrings(cx, cx->names().css, importAttribute.value(),
-                              &result)) {
-        return false;
-      }
-      if (result == 0) {
+      } else if (js::EqualStrings(typeStr, cx->names().css)) {
         moduleType = JS::ModuleType::CSS;
-        return true;
+      } else {
+        moduleType = JS::ModuleType::Unknown;
       }
 
-      moduleType = JS::ModuleType::Unknown;
       return true;
     }
   }
