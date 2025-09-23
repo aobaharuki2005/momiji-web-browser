@@ -4444,19 +4444,15 @@ static bool MimeTypeMatchesExpectedModuleType(
   aChannel->GetContentType(mimeType);
   NS_ConvertUTF8toUTF16 typeString(mimeType);
 
-  if (expectedModuleType == JS::ModuleType::JavaScript &&
-      nsContentUtils::IsJavascriptMIMEType(typeString)) {
-    return true;
-  }
-
-  if (expectedModuleType == JS::ModuleType::JSON &&
-      nsContentUtils::IsJsonMimeType(typeString)) {
-    return true;
-  }
-
-  if (expectedModuleType == JS::ModuleType::CSS &&
-      nsContentUtils::IsCssMimeType(typeString)) {
-    return true;
+  switch (expectedModuleType) {
+    case JS::ModuleType::JavaScript:
+      return nsContentUtils::IsJavascriptMIMEType(typeString);
+    case JS::ModuleType::JSON:
+      return nsContentUtils::IsJsonMimeType(typeString);
+    case JS::ModuleType::CSS:
+      return nsContentUtils::IsCssMimeType(typeString);
+    case JS::ModuleType::Unknown:
+      break;
   }
 
   return false;
