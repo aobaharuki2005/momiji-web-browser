@@ -2734,19 +2734,6 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel,
     return ShouldResistFingerprinting("Null Object", aTarget);
   }
 
-  bool isPBM = NS_UsePrivateBrowsing(aChannel);
-
-  if (MOZ_LOG_TEST(nsContentUtils::ResistFingerprintingLog(),
-                   mozilla::LogLevel::Debug)) {
-    nsCOMPtr<nsIURI> channelURI;
-    Unused << NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
-    nsAutoCString channelSpec;
-    channelURI->GetSpec(channelSpec);
-    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
-            ("Inside ShouldResistFingerprinting(nsIChannel*) for %s (PBM: %s)",
-             channelSpec.get(), isPBM ? "Yes" : "No"));
-  }
-
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   if (!loadInfo) {
     MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
@@ -2757,6 +2744,7 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel,
 
   // With this check, we can ensure that the prefs and target say yes, so only
   // an exemption would cause us to return false.
+  bool isPBM = NS_UsePrivateBrowsing(aChannel);
   if (!ShouldResistFingerprinting_("Positive return check", isPBM, aTarget)) {
     MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
             ("Inside ShouldResistFingerprinting(nsIChannel*)"
@@ -2797,26 +2785,29 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel,
       return true;
     }
 
+#if 0
+  if (loadInfo->GetExternalContentPolicyType() == ExtContentPolicy::TYPE_SUBDOCUMENT) {
+    nsCOMPtr<nsIURI> channelURI;
+    nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
     nsAutoCString channelSpec;
     channelURI->GetSpec(channelSpec);
 
-    if (contentType == ExtContentPolicy::TYPE_SUBDOCUMENT) {
-      MOZ_LOG_DEBUG_ONLY(
-          nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
-          ("Sub Document Type.  FinalChannelURI is %s, Loading Principal %s\n",
-           channelSpec.get(),
-           loadInfo->GetLoadingPrincipal()
-           ? loadInfo->GetLoadingPrincipal()->GetOrigin(loadingPrincipalSpec),
-           loadingPrincipalSpec.get() : "is NULL"));
+    if (!loadInfo->GetLoadingPrincipal()) {
+        MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+            ("Sub Document Type.  FinalChannelURI is %s, Loading Principal is NULL\n",
+                channelSpec.get()));
+
     } else {
-      MOZ_LOG_DEBUG_ONLY(
-          nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
-          ("Document Type.  FinalChannelURI is %s, Loading Principal %s\n",
-           channelSpec.get(),
-           loadInfo->GetLoadingPrincipal()
-           ? loadInfo->GetLoadingPrincipal()->GetOrigin(loadingPrincipalSpec),
-           loadingPrincipalSpec.get() : "is NULL"));
+        nsAutoCString loadingPrincipalSpec;
+        loadInfo->GetLoadingPrincipal()->GetOrigin(loadingPrincipalSpec);
+
+        MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+            ("Sub Document Type.  FinalChannelURI is %s, Loading Principal Origin is %s\n",
+                channelSpec.get(), loadingPrincipalSpec.get()));
     }
+  }
+
+#endif
 
     return ShouldResistFingerprinting_dangerous(
         channelURI, loadInfo->GetOriginAttributes(), "Internal Call", aTarget);
@@ -2842,12 +2833,6 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
   // With this check, we can ensure that the prefs and target say yes, so only
   // an exemption would cause us to return false.
   bool isPBM = aOriginAttributes.IsPrivateBrowsing();
-
-  MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
-          ("Inside ShouldResistFingerprinting_dangerous(nsIURI*,"
-           " OriginAttributes) and the URI is %s  (PBM: %s)",
-           aURI->GetSpecOrDefault().get(), isPBM ? "Yes" : "No"));
-
   if (!ShouldResistFingerprinting_("Positive return check", isPBM, aTarget)) {
     MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
             ("Inside ShouldResistFingerprinting_dangerous(nsIURI*,"
@@ -2903,17 +2888,6 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
   // With this check, we can ensure that the prefs and target say yes, so only
   // an exemption would cause us to return false.
   bool isPBM = originAttributes.IsPrivateBrowsing();
-
-  if (MOZ_LOG_TEST(nsContentUtils::ResistFingerprintingLog(),
-                   mozilla::LogLevel::Debug)) {
-    nsAutoCString origin;
-    aPrincipal->GetOrigin(origin);
-    MOZ_LOG(
-        nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
-        ("Inside ShouldResistFingerprinting(nsIPrincipal*) for %s (PBM: %s)",
-         origin.get(), isPBM ? "Yes" : "No"));
-  }
-
   if (!ShouldResistFingerprinting_("Positive return check", isPBM, aTarget)) {
     MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
             ("Inside ShouldResistFingerprinting(nsIPrincipal*) Positive return "
