@@ -54,6 +54,10 @@ import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.ViewUtils
 
+/**
+ * Custom exception used to trigger a crash in Focus.
+ * This can be triggered by typing "focus:crash" into the URL bar.
+ */
 class FocusCrashException : Exception()
 
 /**
@@ -349,6 +353,14 @@ class UrlInputFragment :
         )
     }
 
+    /**
+     * Handles the back button press.
+     *
+     * If the fragment is an overlay, it will animate and dismiss the fragment.
+     * Otherwise, it will allow the default back button behavior.
+     *
+     * @return True if the back button press was handled by this fragment, false otherwise.
+     */
     fun onBackPressed(): Boolean {
         if (isOverlay) {
             animateAndDismiss()

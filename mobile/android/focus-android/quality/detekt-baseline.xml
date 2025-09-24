@@ -5,7 +5,6 @@
     <ID>ForbiddenSuppress:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:BrowserFragment.kt$BrowserFragment$@Suppress("ComplexCondition", "LongMethod")</ID>
     <ID>ForbiddenSuppress:PromoteSearchWidgetDialogCompose.kt$@Suppress("LongMethod")</ID>
-    <ID>ForbiddenSuppress:UrlInputFragment.kt$UrlInputFragment$@Suppress("LongMethod")</ID>
     <ID>OutdatedDocumentation:AppAdapter.kt$AppAdapter : Adapter</ID>
     <ID>OutdatedDocumentation:AppReviewUtils.kt$AppReviewUtils$fun addAppOpenings(context: Context)</ID>
     <ID>OutdatedDocumentation:AppReviewUtils.kt$AppReviewUtils$fun showAppReview(activity: Activity)</ID>
@@ -163,7 +162,6 @@
     <ID>UndocumentedPublicClass:TabsPopup.kt$TabsPopup : PopupWindow</ID>
     <ID>UndocumentedPublicClass:TelemetryMiddleware.kt$TelemetryMiddleware : Middleware</ID>
     <ID>UndocumentedPublicClass:TrackingProtectionPanel.kt$TrackingProtectionPanel : BottomSheetDialog</ID>
-    <ID>UndocumentedPublicClass:UrlInputFragment.kt$FocusCrashException : Exception</ID>
     <ID>UndocumentedPublicClass:ViewUtils.kt$ViewUtils</ID>
     <ID>UndocumentedPublicClass:VoiceSearchActivity.kt$VoiceSearchActivity : BaseVoiceSearchActivity</ID>
     <ID>UndocumentedPublicFunction:AutocompleteDomainFormatter.kt$AutocompleteDomainFormatter$fun format(url: String): String</ID>
@@ -282,6 +280,5 @@
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun getSafeBrowsingURL(): String</ID>
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun openDefaultBrowserSumoPage(context: Context)</ID>
     <ID>UndocumentedPublicFunction:Theme.kt$fun Resources.Theme.resolveAttribute(attribute: Int): Int</ID>
-    <ID>UndocumentedPublicFunction:UrlInputFragment.kt$UrlInputFragment$fun onBackPressed(): Boolean</ID>
   </CurrentIssues>
 </SmellBaseline>
