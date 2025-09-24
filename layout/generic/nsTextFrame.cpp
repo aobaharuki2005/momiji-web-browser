@@ -3887,12 +3887,15 @@ static gfxFloat ComputeTabWidthAppUnits(const nsIFrame* aFrame) {
 
 // Walk backward from aIter to prior cluster starts (within the same textframe's
 // content) and return the first non-mark autospace class.
+//
+// @param aContentOffsetAtFrameStart the original content offset at the start of
+// the textframe.
 static Maybe<TextAutospace::CharClass> LastNonMarkCharClass(
-    gfxSkipCharsIterator& aIter, const gfxTextRun* aTextRun,
-    const CharacterDataBuffer& aBuffer) {
-  while (aIter.GetOriginalOffset() > 0) {
+    gfxSkipCharsIterator& aIter, int32_t aContentOffsetAtFrameStart,
+    const gfxTextRun* aTextRun, const CharacterDataBuffer& aBuffer) {
+  while (aIter.GetOriginalOffset() > aContentOffsetAtFrameStart) {
     aIter.AdvanceOriginal(-1);
-    FindClusterStart(aTextRun, 0, &aIter);
+    FindClusterStart(aTextRun, aContentOffsetAtFrameStart, &aIter);
     const char32_t ch = aBuffer.ScalarValueAt(aIter.GetOriginalOffset());
     auto cls = TextAutospace::GetCharClass(ch);
     if (cls != TextAutospace::CharClass::CombiningMark) {
@@ -3912,7 +3915,8 @@ static Maybe<TextAutospace::CharClass> LastNonMarkCharClassInFrame(
   gfxSkipCharsIterator iter = aFrame->EnsureTextRun(nsTextFrame::eInflated);
   iter.SetOriginalOffset(aFrame->GetContentEnd());
   Maybe<CharClass> prevClass =
-      LastNonMarkCharClass(iter, aFrame->GetTextRun(nsTextFrame::eInflated),
+      LastNonMarkCharClass(iter, aFrame->GetContentOffset(),
+                           aFrame->GetTextRun(nsTextFrame::eInflated),
                            aFrame->CharacterDataBuffer());
   if (prevClass) {
     return prevClass;
@@ -4066,7 +4070,8 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
       Maybe<CharClass> prevClass;
       if (aRange.start > 0) {
         gfxSkipCharsIterator iter = start;
-        prevClass = LastNonMarkCharClass(iter, mTextRun, mCharacterDataBuffer);
+        prevClass = LastNonMarkCharClass(iter, mFrame->GetContentOffset(),
+                                         mTextRun, mCharacterDataBuffer);
       }
       // If no class was found, we need to look at the preceding content (if
       // any) to see what it ended with.
