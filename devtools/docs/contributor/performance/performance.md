@@ -26,7 +26,7 @@ There are some peculiarities about DevTools architecture that are worth knowing 
 The default buffer size (9MB) is too small. If you don't increase it, you may easily miss data and only see last couple of seconds of your recording.
 To increase the buffer size, click on the profiler add-on icon, in the Firefox toolbar, and set it to 360MB, like this:
 
-  <img src="performance/profiler-buffer-size.png" alt="Profiler buffer size" style="width: 300px" />
+  <img src="images/profiler-buffer-size.png" alt="Profiler buffer size" style="width: 300px" />
 
 The other setting worth mentioning for DevTools debugging is the `Interval`
 The profiler records only samples, based on this `Interval`.
@@ -39,7 +39,7 @@ and the measured times will be even slower.
 When you are debugging tool front-ends (e.g. panels), always ensure you select the `Main Thread` line.
 It should have a light blue background like this:
 
-  <img src="performance/profiler-main-thread.png" alt="Select main process" style="width: 300px" />
+  <img src="images/profiler-main-thread.png" alt="Select main process" style="width: 300px" />
 
 Otherwise, the vast majority of DevTools backend (DevToolsServer, actors, ...) lives in content processes.
 So if you are debugging them, you should select one of the `Content` lines.
@@ -47,7 +47,7 @@ So if you are debugging them, you should select one of the `Content` lines.
 ### Most of the DevTools codebase is in Javascript
 
 In the call tree, it is easier to filter by `JS`, via this menu list:
-  <img src="performance/profiler-filter-js.png" alt="JS Filtering" style="width: 200px" />
+  <img src="images/profiler-filter-js.png" alt="JS Filtering" style="width: 200px" />
 
 But note that you may have to switch back to `Combined` in order to understand why some particular Javascript method is slow.
 
@@ -55,12 +55,12 @@ But note that you may have to switch back to `Combined` in order to understand w
 
   * `require`
     Helps highlighting the cost of module loading
-     ![modules](performance/profiler-filter-require.png)
+     ![modules](images/profiler-filter-require.png)
   * DevTools uses two kind of URLs:
     * `chrome://devtools/` for all panel documents. Filter with this to see the cost of all panel documents:
-      ![panels documents](performance/profiler-chrome-url.png)
+      ![panels documents](images/profiler-chrome-url.png)
     * `resource://devtools/` for all javascript modules. Filter with this to see the cost of all modules:
-      ![modules](performance/profiler-resource-url.png)
+      ![modules](images/profiler-resource-url.png)
 
 ### Record durations manually
 
@@ -93,7 +93,7 @@ window.performance.measure("my-function", "my-function-start");
 ```
 
 This marker will appear in the `Marker Chart` section in [profiler.firefox.com](https://profiler.firefox.com), in the `UserTiming` lines:
-  ![custom markers](performance/profiler-custom-markers.png)
+  ![custom markers](images/profiler-custom-markers.png)
 
 You can double click on it to make [profiler.firefox.com](https://profiler.firefox.com) display the record during this precise moment in time,
 and the call tree will only display what was executed during this measurement.
@@ -119,10 +119,10 @@ Then see if the call tree reports a significant difference:
 
 This [lazy loading of modules in netmonitor](https://bugzilla.mozilla.org/show_bug.cgi?id=1420289) is a good example.
 Without this patch, App.js was loading in 91ms and was loading MonitorPanel.js and StatisticsPanel.js as dependencies:
-  ![netmonitor without patch](performance/profiler-netmonitor-open.png)
+  ![netmonitor without patch](images/profiler-netmonitor-open.png)
 
 With the patch, App.js loads in 47ms and only loads MonitorPanel.js:
-  ![netmonitor with patch](performance/profiler-netmon-open-fixed.png)
+  ![netmonitor with patch](images/profiler-netmon-open-fixed.png)
 
 It highlights that:
  * we no longer load StatisticsPanel,
@@ -145,7 +145,7 @@ See [DAMP Performance tests](../tests/performance-tests-damp.md) for more inform
 
 Let's look at how to interpret an actual real-life [set of perfherder results](https://treeherder.mozilla.org/perf.html#/comparesubtest?originalProject=mozilla-central&newProject=try&newRevision=9bef6cb13c43bbce21d40ffaea595e082a4c28db&originalSignature=edaec66500db21d37602c99daa61ac983f21a6ac&newSignature=edaec66500db21d37602c99daa61ac983f21a6ac&showOnlyImportant=1&framework=1&selectedTimeRange=172800):
 
-![perfherder results](performance/perfherder-results.png)
+![perfherder results](images/perfherder-results.png)
 
 These results are related to [lazy loading of modules in netmonitor](https://bugzilla.mozilla.org/show_bug.cgi?id=1420289).
 It is interesting to see that this patch is a trade-off. It makes netmonitor opening significantly faster, by preventing loading many modules during its opening.

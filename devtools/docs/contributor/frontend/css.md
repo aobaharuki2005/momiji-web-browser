@@ -23,31 +23,7 @@ Make sure each file starts with the standard copyright header (see [License Boil
 
 CSS changes should generally be similar across platforms since they used a shared implementation, but there can still be differences worth checking out. Check major changes on Windows, OS X and Ubuntu.
 
-## Formatting
-
-We use 2-spaces indentation for the CSS.
-
-In general the formatting looks like this:
-
-```css
-selector,
-alternate-selector {
-  property: value;
-  other-property: other-value;
-}
-```
-<!--TODO: add examples for long shorthand properties, and multi-valued properties (background, font-family, ...)-->
-Also:
-
-* Omit units on 0 values.
- * Example: Use `margin: 0;`, not `margin: 0px;`.
-* Add a space after each comma, **except** within color functions.
- * Example: `linear-gradient(to bottom, black 1px, rgba(255,255,255,0.2) 1px)`.
-* Always add a space before ` !important`.
-* Assume `="true"` in attribute selectors.
- * Example: Use `option[checked]`, not `option[checked="true"]`.
-* Use longhand versions of properties so it's clear what you're changing.
- * Example: Use `border-color: red`, not `border: red;`.
+### Naming conventions
 
 Naming standards for class names:
 
