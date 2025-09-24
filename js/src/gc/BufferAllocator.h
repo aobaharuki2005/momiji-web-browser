@@ -491,7 +491,7 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
 #endif
 
  private:
-  void markNurseryOwnedAlloc(void* alloc, bool ownerWasTenured);
+  void markNurseryOwnedAlloc(void* alloc, bool nurseryOwned);
   friend class js::Nursery;
 
   void maybeMergeSweptData();
@@ -511,7 +511,7 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   bool allocNewSmallRegion(bool inGC);
   void traceSmallAlloc(JSTracer* trc, Cell* owner, void** allocp,
                        const char* name);
-  void markSmallNurseryOwnedBuffer(void* alloc, bool ownerWasTenured);
+  void markSmallNurseryOwnedBuffer(void* alloc, bool nurseryOwned);
   bool markSmallTenuredAlloc(void* alloc);
 
   // Medium allocation methods:
@@ -573,7 +573,7 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   void traceMediumAlloc(JSTracer* trc, Cell* owner, void** allocp,
                         const char* name);
   bool isMediumBufferNurseryOwned(void* alloc) const;
-  void markMediumNurseryOwnedBuffer(void* alloc, bool ownerWasTenured);
+  void markMediumNurseryOwnedBuffer(void* alloc, bool nurseryOwned);
   bool markMediumTenuredAlloc(void* alloc);
 
   // Determine whether a size class is for a small or medium allocation.
@@ -608,7 +608,7 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   void unregisterLarge(LargeBuffer* buffer, bool isSweeping, MaybeLock& lock);
   void traceLargeAlloc(JSTracer* trc, Cell* owner, void** allocp,
                        const char* name);
-  void markLargeNurseryOwnedBuffer(LargeBuffer* buffer, bool ownerWasTenured);
+  void markLargeNurseryOwnedBuffer(LargeBuffer* buffer, bool nurseryOwned);
   bool markLargeTenuredBuffer(LargeBuffer* buffer);
 
   // Lookup a large buffer by pointer in the map.
