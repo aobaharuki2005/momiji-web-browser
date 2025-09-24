@@ -610,7 +610,12 @@
      after the form autofill extension has initialized. -->
 <groupbox id="formAutofillGroupBox"
           data-category="panePrivacy"
-          data-subcategory="form-autofill" hidden="true"></groupbox>
+          data-subcategory="form-autofill" hidden="true">
+  <label><html:h2 data-l10n-id="autofill-payment-methods-title"/></label>
+  <html:setting-group groupid="payments"/>
+  <label><html:h2 data-l10n-id="autofill-addresses-title"/></label>
+  <html:setting-group groupid="addresses"/>
+</groupbox>
 
 <!-- History -->
 <groupbox id="historyGroup" data-category="panePrivacy" hidden="true">
