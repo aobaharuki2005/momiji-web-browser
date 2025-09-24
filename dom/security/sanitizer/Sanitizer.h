@@ -139,8 +139,8 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
   Maybe<sanitizer::ListSet<sanitizer::CanonicalName>> mRemoveAttributes;
 
   bool mComments = false;
-  // mDataAttributes always exists when mAttributes exists after canonincalization.
-  // It never exists at the same time as mRemoveAttributes.
+  // mDataAttributes always exists when mAttributes exists after
+  // canonincalization. It never exists at the same time as mRemoveAttributes.
   Maybe<bool> mDataAttributes;
 
   // Optimization: This sanitizer has a lazy default config. None
