@@ -263,10 +263,10 @@ private fun InactiveTabsAutoClosePrompt(
     Card(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
         shape = CardShape,
-        colors = CardDefaults.cardColors(containerColor = FirefoxTheme.colors.layer2),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
         border = BorderStroke(
             width = 1.dp,
-            color = FirefoxTheme.colors.borderPrimary,
+            color = MaterialTheme.colorScheme.outlineVariant,
         ),
     ) {
         Column(
@@ -280,7 +280,7 @@ private fun InactiveTabsAutoClosePrompt(
             ) {
                 Text(
                     text = stringResource(R.string.tab_tray_inactive_auto_close_title),
-                    color = FirefoxTheme.colors.textPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f),
                     style = FirefoxTheme.typography.headline8,
                 )
@@ -293,7 +293,7 @@ private fun InactiveTabsAutoClosePrompt(
                         painter = painterResource(iconsR.drawable.mozac_ic_cross_20),
                         contentDescription =
                         stringResource(R.string.tab_tray_inactive_auto_close_button_content_description),
-                        tint = FirefoxTheme.colors.iconPrimary,
+                        tint = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
@@ -303,7 +303,7 @@ private fun InactiveTabsAutoClosePrompt(
                     R.string.tab_tray_inactive_auto_close_body_2,
                     stringResource(R.string.app_name),
                 ),
-                color = FirefoxTheme.colors.textSecondary,
+                color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.fillMaxWidth(),
                 fontSize = 14.sp,
             )
@@ -320,7 +320,7 @@ private fun InactiveTabsAutoClosePrompt(
 @PreviewLightDark
 private fun InactiveTabsAutoClosePromptPreview() {
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Box(Modifier.background(MaterialTheme.colorScheme.surface)) {
             InactiveTabsAutoClosePrompt(
                 onDismissClick = {},
                 onEnableAutoCloseClick = {},
@@ -336,7 +336,7 @@ private fun InactiveTabsListPreview() {
     var showAutoClosePrompt by remember { mutableStateOf(true) }
 
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Box(Modifier.background(MaterialTheme.colorScheme.surface)) {
             InactiveTabsList(
                 inactiveTabs = generateFakeInactiveTabsList(),
                 expanded = expanded,
