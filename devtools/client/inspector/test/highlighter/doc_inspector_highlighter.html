@@ -30,11 +30,32 @@
       width: 0;
       height: 0;
     }
+
+    #pseudo::before {
+      content: "Animals:";
+      display: list-item;
+      width: 100px;
+      height: 50px;
+    }
+
+    #pseudo::before::marker {
+      content: "+";
+      color: tomato;
+    }
+
+    #pseudo::after {
+      content: "-";
+      color: gold;
+    }
     </style>
   </head>
   <body>
     <div id="simple-div">Gort! Klaatu barada nikto!</div>
     <div id="rotated-div"></div>
     <div id="widthHeightZero-div">Width &amp; height = 0</div>
+    <ul id="pseudo">
+      <li>Dogs</li>
+      <li>Cats</li>
+    </ul>
   </body>
 </html>
