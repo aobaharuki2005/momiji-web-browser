@@ -175,7 +175,8 @@ void nsTableRowGroupFrame::InitRepeatedFrame(
 }
 
 // Handle the child-traversal part of DisplayGenericTablePart
-static void DisplayRows(nsDisplayListBuilder* aBuilder, nsTableRowGroupFrame* aFrame,
+static void DisplayRows(nsDisplayListBuilder* aBuilder,
+                        nsTableRowGroupFrame* aFrame,
                         const nsDisplayListSet& aLists) {
   if (aFrame->HidesContent()) {
     return;
@@ -191,8 +192,8 @@ static void DisplayRows(nsDisplayListBuilder* aBuilder, nsTableRowGroupFrame* aF
   // in |f| then it's true for |f| itself.
   nsIFrame* kid = aBuilder->ShouldDescendIntoFrame(aFrame, true)
                       ? nullptr
-                      : aFrame->GetFirstRowContaining(aBuilder->GetVisibleRect().y,
-                                                 &overflowAbove);
+                      : aFrame->GetFirstRowContaining(
+                            aBuilder->GetVisibleRect().y, &overflowAbove);
 
   if (kid) {
     // have a cursor, use it
