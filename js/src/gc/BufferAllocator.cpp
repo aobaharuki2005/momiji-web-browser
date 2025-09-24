@@ -829,7 +829,7 @@ void BufferAllocator::markMediumNurseryOwnedBuffer(void* alloc,
     // minor collection.
     chunk->setNurseryOwned(alloc, false);
     size_t size = chunk->allocBytes(alloc);
-    updateHeapSize(size, false, false);
+    increaseHeapSize(size, false, false);
     return;
   }
 
@@ -858,7 +858,7 @@ void BufferAllocator::markLargeNurseryOwnedBuffer(LargeBuffer* buffer,
     buffer->allocatedDuringCollection = majorState != State::NotCollecting;
     largeTenuredAllocs.ref().pushBack(buffer);
     size_t usableSize = buffer->allocBytes();
-    updateHeapSize(usableSize, false, false);
+    increaseHeapSize(usableSize, false, false);
     return;
   }
 
@@ -2283,7 +2283,7 @@ void BufferAllocator::setAllocated(void* alloc, size_t bytes, bool nurseryOwned,
 
   if (!nurseryOwned) {
     bool checkThresholds = !inGC;
-    updateHeapSize(bytes, checkThresholds, false);
+    increaseHeapSize(bytes, checkThresholds, false);
   }
 
   MOZ_ASSERT(!chunk->isSmallBufferRegion(alloc));
@@ -2520,7 +2520,7 @@ bool BufferAllocator::sweepChunk(BufferChunk* chunk, SweepKind sweepKind,
 
   if (mallocHeapBytesFreed) {
     bool inMajorGC = sweepKind == SweepKind::Tenured;
-    zone->mallocHeapSize.removeBytes(mallocHeapBytesFreed, inMajorGC);
+    decreaseHeapSize(mallocHeapBytesFreed, inMajorGC);
   }
 
   if (freeStart == FirstMediumAllocOffset) {
@@ -2704,7 +2704,7 @@ void BufferAllocator::freeMedium(void* alloc) {
   if (!chunk->isNurseryOwned(alloc)) {
     bool updateRetained =
         majorState == State::Marking && !chunk->allocatedDuringCollection;
-    zone->mallocHeapSize.removeBytes(bytes, updateRetained);
+    decreaseHeapSize(bytes, updateRetained);
   }
 
   // TODO: Since the mark bits are atomic, it's probably OK to unmark even if
@@ -2946,7 +2946,7 @@ bool BufferAllocator::growMedium(void* alloc, size_t newBytes) {
   if (!chunk->isNurseryOwned(alloc)) {
     bool updateRetained =
         majorState == State::Marking && !chunk->allocatedDuringCollection;
-    updateHeapSize(extraBytes, true, updateRetained);
+    increaseHeapSize(extraBytes, true, updateRetained);
   }
 
   return true;
@@ -2980,7 +2980,7 @@ bool BufferAllocator::shrinkMedium(void* alloc, size_t newBytes) {
   if (!chunk->isNurseryOwned(alloc)) {
     bool updateRetained =
         majorState == State::Marking && !chunk->allocatedDuringCollection;
-    zone->mallocHeapSize.removeBytes(sizeChange, updateRetained);
+    decreaseHeapSize(sizeChange, updateRetained);
   }
 
   uintptr_t startOffset = uintptr_t(alloc) & ChunkMask;
@@ -3217,15 +3217,15 @@ void* BufferAllocator::allocLarge(size_t bytes, bool nurseryOwned, bool inGC) {
   // Update memory accounting and trigger an incremental slice if needed.
   if (!nurseryOwned) {
     bool checkThresholds = !inGC;
-    updateHeapSize(bytes, checkThresholds, false);
+    increaseHeapSize(bytes, checkThresholds, false);
   }
 
   MOZ_ASSERT(IsLargeAlloc(alloc));
   return alloc;
 }
 
-void BufferAllocator::updateHeapSize(size_t bytes, bool checkThresholds,
-                                     bool updateRetainedSize) {
+void BufferAllocator::increaseHeapSize(size_t bytes, bool checkThresholds,
+                                       bool updateRetainedSize) {
   // Update memory accounting and trigger an incremental slice if needed.
   // TODO: This will eventually be attributed to gcHeapSize.
   zone->mallocHeapSize.addBytes(bytes, updateRetainedSize);
@@ -3233,6 +3233,10 @@ void BufferAllocator::updateHeapSize(size_t bytes, bool checkThresholds,
     GCRuntime* gc = &zone->runtimeFromAnyThread()->gc;
     gc->maybeTriggerGCAfterMalloc(zone);
   }
+}
+
+void BufferAllocator::decreaseHeapSize(size_t bytes, bool updateRetainedSize) {
+  zone->mallocHeapSize.removeBytes(bytes, updateRetainedSize);
 }
 
 /* static */
@@ -3314,7 +3318,7 @@ bool BufferAllocator::shrinkLarge(LargeBuffer* buffer, size_t newBytes) {
   size_t shrinkBytes = oldBytes - newBytes;
 
   if (!buffer->isNurseryOwned) {
-    zone->mallocHeapSize.removeBytes(shrinkBytes, false);
+    decreaseHeapSize(shrinkBytes, false);
   }
 
   buffer->bytes = newBytes;
@@ -3348,7 +3352,7 @@ void BufferAllocator::unregisterLarge(LargeBuffer* buffer, bool isSweeping,
   lock.reset();
 
   if (!buffer->isNurseryOwned) {
-    zone->mallocHeapSize.removeBytes(buffer->bytes, isSweeping);
+    decreaseHeapSize(buffer->bytes, isSweeping);
   }
 }
 
