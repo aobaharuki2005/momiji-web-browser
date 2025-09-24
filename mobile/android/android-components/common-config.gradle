@@ -1,4 +1,19 @@
 android {
+    buildTypes {
+        release {
+            minifyEnabled = false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileSdk config.compileSdkVersion
+
+    defaultConfig {
+        minSdk config.minSdkVersion
+        targetSdk config.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
     lint {
         warningsAsErrors = true
         abortOnError = false

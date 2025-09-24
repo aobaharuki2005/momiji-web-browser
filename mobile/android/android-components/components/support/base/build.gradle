@@ -9,12 +9,6 @@ def generatedSrcDir = new File(layout.buildDirectory.get().asFile, "generated/co
 
 android {
     defaultConfig {
-        minSdkVersion = config.minSdkVersion
-        compileSdk = config.compileSdkVersion
-        targetSdkVersion = config.targetSdkVersion
-
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-
         def appServicesVersion = ApplicationServicesConfig.version
         if (gradle.hasProperty("localProperties.branchBuild.application-services.version")) {
             appServicesVersion = gradle["localProperties.branchBuild.application-services.version"]
@@ -27,13 +21,6 @@ android {
             buildConfigField("String", "VCS_HASH", "\"" + gradle.mozconfig.source_repo.MOZ_SOURCE_STAMP + "\"")
         } else {
             buildConfigField("String", "VCS_HASH", "\"\"")
-        }
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled = false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -127,6 +114,6 @@ afterEvaluate {
     }
 }
 
-apply from: '../../../android-lint.gradle'
+apply from: '../../../common-config.gradle'
 apply from: '../../../publish.gradle'
 ext.configurePublish(config.componentsGroupId, project.name, project.ext.description)
