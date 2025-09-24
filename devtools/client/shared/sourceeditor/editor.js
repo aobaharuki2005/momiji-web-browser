@@ -176,6 +176,7 @@ class Editor extends EventEmitter {
   markerTypes = {
     /* Line Markers */
     CONDITIONAL_BP_MARKER: "conditional-breakpoint-panel-marker",
+    TRACE_MARKER: "trace-panel-marker",
     DEBUG_LINE_MARKER: "debug-line-marker",
     LINE_EXCEPTION_MARKER: "line-exception-marker",
     HIGHLIGHT_LINE_MARKER: "highlight-line-marker",

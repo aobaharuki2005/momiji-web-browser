@@ -81,9 +81,9 @@ add_task(async function () {
     }
     return false;
   });
-  is(traces[0].textContent, "λ main simple1.js:1:16");
-  is(traces[1].textContent, "λ foo simple2.js:1:12");
-  is(traces[2].textContent, "λ bar simple2.js:3:4");
+  is(traces[0].textContent, "λ main simple1.js:1:17");
+  is(traces[1].textContent, "λ foo simple2.js:1:13");
+  is(traces[2].textContent, "λ bar simple2.js:3:5");
   ok(
     !findElement(dbg, "tracedLine"),
     "Before selecting any trace, no line is highlighted in CodeMirror"
@@ -104,6 +104,13 @@ add_task(async function () {
   ok(
     findElement(dbg, "tracedLine"),
     "When a trace is selected, the line is highlighted in CodeMirror"
+  );
+  const tracePanel = await waitFor(() => findElement(dbg, "tracePanel"));
+  ok(tracePanel, "The trace panel is shown on trace selection");
+  is(
+    tracePanel.querySelectorAll(".trace-item").length,
+    1,
+    "There is only one call to foo() reported in the trace panel"
   );
 
   // Naive sanity checks for inlines previews
@@ -274,7 +281,7 @@ add_task(async function () {
   });
 
   const doMutationTrace = traces[traces.length - 1];
-  is(doMutationTrace.textContent, "λ window.doMutation eval:2:32");
+  is(doMutationTrace.textContent, "λ window.doMutation eval:2:33");
 
   // Expand the call to doMutation in order to show the DOM Mutation in the tree
   doMutationTrace.querySelector(".arrow").click();

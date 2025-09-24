@@ -32,6 +32,7 @@ import {
   getSelectedTraceIndex,
   getShouldScrollToSelectedLocation,
   getShouldHighlightSelectedLocation,
+  getSelectedTraceLocation,
 } from "../../selectors/index";
 
 // Redux actions
@@ -45,6 +46,7 @@ import ColumnBreakpoints from "./ColumnBreakpoints";
 import DebugLine from "./DebugLine";
 import HighlightLine from "./HighlightLine";
 import ConditionalPanel from "./ConditionalPanel";
+import TracePanel from "./TracePanel";
 import InlinePreviews from "./InlinePreviews";
 import Exceptions from "./Exceptions";
 
@@ -727,6 +729,7 @@ class Editor extends PureComponent {
       highlightedLineRange,
       isOriginalSourceAndMapScopesEnabled,
       selectedSourceTextContent,
+      selectedTraceLocation,
     } = this.props;
     const { editor } = this.state;
 
@@ -743,6 +746,11 @@ class Editor extends PureComponent {
       React.Fragment,
       null,
       React.createElement(Breakpoints, { editor }),
+      selectedTraceLocation
+        ? React.createElement(TracePanel, {
+            editor,
+          })
+        : null,
       (isPaused || isTraceSelected) &&
         selectedSource.isOriginal &&
         !selectedSource.isPrettyPrinted &&
@@ -846,6 +854,7 @@ const mapStateToProps = state => {
       selectedSource?.isOriginal && isMapScopesEnabled(state),
     shouldScrollToSelectedLocation: getShouldScrollToSelectedLocation(state),
     shouldHighlightSelectedLocation: getShouldHighlightSelectedLocation(state),
+    selectedTraceLocation: getSelectedTraceLocation(state),
   };
 };
 

@@ -1935,6 +1935,7 @@ const selectors = {
   conditionalBreakpointInSecPane: ".breakpoint.is-conditional",
   logPointPanel: ".conditional-breakpoint-panel.log-point",
   logPointInSecPane: ".breakpoint.is-log",
+  tracePanel: ".trace-panel",
   searchField: ".search-field",
   blackbox: ".action.black-box",
   projectSearchSearchInput: ".project-text-search .search-field input",
