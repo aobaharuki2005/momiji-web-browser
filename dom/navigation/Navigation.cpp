@@ -252,6 +252,7 @@ void Navigation::UpdateCurrentEntry(
   // null.
   RefPtr event = NavigationCurrentEntryChangeEvent::Constructor(
       this, u"currententrychange"_ns, init);
+  event->SetTrusted(true);
   DispatchEvent(*event);
 }
 
@@ -375,6 +376,7 @@ void Navigation::UpdateEntriesForSameDocumentNavigation(
     init.mNavigationType.SetValue(aNavigationType);
     RefPtr event = NavigationCurrentEntryChangeEvent::Constructor(
         this, u"currententrychange"_ns, init);
+    event->SetTrusted(true);
     DispatchEvent(*event);
 
     for (const auto& entry : disposedEntries) {
