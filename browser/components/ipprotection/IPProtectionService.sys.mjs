@@ -61,7 +61,6 @@ class IPProtectionServiceSingleton extends EventTarget {
 
   isActive = false;
   activatedAt = null;
-  sessionLength = 0;
   isSignedIn = null;
   isEnrolled = null;
   isEligible = null;
