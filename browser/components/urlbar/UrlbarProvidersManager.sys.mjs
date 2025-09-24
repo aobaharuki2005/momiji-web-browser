@@ -153,13 +153,13 @@ var localProviderModules = [
     name: "UrlbarProviderRestrictKeywords",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderRestrictKeywords.sys.mjs",
-    supportedInputTypes: ["urlbar", "searchbar"],
+    supportedInputTypes: ["urlbar"],
   },
   {
     name: "UrlbarProviderRestrictKeywordsAutofill",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderRestrictKeywordsAutofill.sys.mjs",
-    supportedInputTypes: ["urlbar", "searchbar"],
+    supportedInputTypes: ["urlbar"],
   },
   {
     name: "UrlbarProviderSearchTips",
