@@ -66,6 +66,7 @@
 
 #include <algorithm>
 #include <utility>
+#include <iterator>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -422,35 +423,48 @@ class LinkedList {
   // reference to the list. Iterators stop when they reach the sentinel node.
   LinkedListElement<T> mSentinel;
 
- public:
-  template <typename Type, typename Element>
-  class Iterator {
-    Type mCurrent;
+  // Forward and reverse iterator implementation.
+  template <bool Const = false, bool Reverse = false>
+  class IteratorImpl {
+   private:
+    using elem_type = std::conditional_t<Const, ConstElementType, ElementType>;
+    elem_type mCurrent;
 
    public:
     using iterator_category = std::forward_iterator_tag;
-    using value_type = T;
+    using value_type = std::conditional_t<Const, ConstRawType, RawType>;
     using difference_type = std::ptrdiff_t;
-    using pointer = T*;
-    using reference = T&;
+    using pointer = value_type*;
+    using reference = value_type&;
 
-    explicit Iterator(Type aCurrent) : mCurrent(aCurrent) {}
+    explicit IteratorImpl(elem_type aCurrent) : mCurrent(aCurrent) {
+      MOZ_ASSERT(mCurrent);
+    }
 
-    Type operator*() const { return mCurrent; }
+    value_type operator*() const { return mCurrent->asT(); }
 
-    const Iterator& operator++() {
-      mCurrent = static_cast<Element>(mCurrent)->getNext();
+    const IteratorImpl& operator++() {
+      MOZ_ASSERT(!mCurrent->mIsSentinel);
+      mCurrent = Reverse ? mCurrent->mPrev : mCurrent->mNext;
       return *this;
     }
 
-    bool operator!=(const Iterator& aOther) const {
+    const IteratorImpl& operator--() {
+      // We allow decrementing end() to get the last element.
+      mCurrent = Reverse ? mCurrent->mNext : mCurrent->mPrev;
+      return *this;
+    }
+
+    bool operator==(const IteratorImpl& aOther) const {
+      return mCurrent == aOther.mCurrent;
+    }
+
+    bool operator!=(const IteratorImpl& aOther) const {
       return mCurrent != aOther.mCurrent;
     }
   };
 
-  using const_iterator = Iterator<ConstRawType, ConstElementType>;
-  using iterator = Iterator<RawType, ElementType>;
-
+ public:
   LinkedList() : mSentinel(LinkedListElement<T>::NodeKind::Sentinel) {}
 
   LinkedList(LinkedList<T>&& aOther) : mSentinel(std::move(aOther.mSentinel)) {}
@@ -473,6 +487,30 @@ class LinkedList {
     }
 #  endif
   }
+
+  using iterator = IteratorImpl<false, false>;
+  using const_iterator = IteratorImpl<true, false>;
+  using reverse_iterator = IteratorImpl<false, true>;
+  using const_reverse_iterator = IteratorImpl<true, true>;
+
+  // C++11 Iterator Support
+  iterator begin() { return iterator(mSentinel.mNext); }
+  const_iterator begin() const { return const_iterator(mSentinel.mNext); }
+  const_iterator cbegin() const { return begin(); }
+  iterator end() { return iterator(&mSentinel); }
+  const_iterator end() const { return const_iterator(&mSentinel); }
+  const_iterator cend() const { return end(); }
+
+  reverse_iterator rbegin() { return reverse_iterator(mSentinel.mPrev); }
+  const_reverse_iterator rbegin() const {
+    return const_reverse_iterator(mSentinel.mPrev);
+  }
+  const_reverse_iterator crbegin() const { return rbegin(); }
+  reverse_iterator rend() { return reverse_iterator(&mSentinel); }
+  const_reverse_iterator rend() const {
+    return const_reverse_iterator(&mSentinel);
+  }
+  const_reverse_iterator crend() const { return rend(); }
 
   /*
    * Add aElem to the front of the list.
@@ -594,24 +632,6 @@ class LinkedList {
    * Return the length of elements in the list.
    */
   size_t length() const { return std::distance(begin(), end()); }
-
-  /*
-   * Allow range-based iteration:
-   *
-   *     for (MyElementType* elt : myList) { ... }
-   */
-  Iterator<RawType, ElementType> begin() {
-    return Iterator<RawType, ElementType>(getFirst());
-  }
-  Iterator<ConstRawType, ConstElementType> begin() const {
-    return Iterator<ConstRawType, ConstElementType>(getFirst());
-  }
-  Iterator<RawType, ElementType> end() {
-    return Iterator<RawType, ElementType>(nullptr);
-  }
-  Iterator<ConstRawType, ConstElementType> end() const {
-    return Iterator<ConstRawType, ConstElementType>(nullptr);
-  }
 
   /*
    * Measures the memory consumption of the list excluding |this|.  Note that
