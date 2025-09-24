@@ -35,15 +35,11 @@ export class RealtimeSuggestProvider extends SuggestProvider {
     throw new Error("Trying to access the base class, must be overridden");
   }
 
-  getViewTemplateForDescriptionTop(_index) {
+  getViewTemplate(_result) {
     throw new Error("Trying to access the base class, must be overridden");
   }
 
-  getViewTemplateForDescriptionBottom(_index) {
-    throw new Error("Trying to access the base class, must be overridden");
-  }
-
-  getViewUpdateForValues(_values) {
+  getViewUpdate(_result) {
     throw new Error("Trying to access the base class, must be overridden");
   }
 
@@ -369,99 +365,6 @@ export class RealtimeSuggestProvider extends SuggestProvider {
     });
   }
 
-  getViewTemplate(result) {
-    let values = result.payload[this.merinoProvider]?.values;
-    if (!values) {
-      return null;
-    }
-
-    let hasMultipleValues = values.length > 1;
-    return {
-      name: "root",
-      overflowable: true,
-      attributes: {
-        selectable: hasMultipleValues ? null : "",
-      },
-      classList: ["urlbarView-realtime-root"],
-      children: values.map((_v, i) => ({
-        name: `item_${i}`,
-        tag: "span",
-        classList: ["urlbarView-realtime-item"],
-        attributes: {
-          selectable: !hasMultipleValues ? null : "",
-        },
-        children: [
-          // Create an image inside a container so that the image appears inset
-          // into a square. This is atypical because we normally use only an
-          // image and give it padding and a background color to achieve that
-          // effect, but that only works when the image size is fixed.
-          // Unfortunately Merino serves market icons of different sizes due to
-          // its reliance on a third-party API.
-          {
-            name: `image_container_${i}`,
-            tag: "span",
-            classList: ["urlbarView-realtime-image-container"],
-            children: [
-              {
-                name: `image_${i}`,
-                tag: "img",
-                classList: ["urlbarView-realtime-image"],
-              },
-            ],
-          },
-          {
-            tag: "span",
-            classList: ["urlbarView-realtime-description"],
-            children: [
-              {
-                tag: "div",
-                classList: ["urlbarView-realtime-description-top"],
-                children: this.getViewTemplateForDescriptionTop(i),
-              },
-              {
-                tag: "div",
-                classList: ["urlbarView-realtime-description-bottom"],
-                children: this.getViewTemplateForDescriptionBottom(i),
-              },
-            ],
-          },
-        ],
-      })),
-    };
-  }
-
-  getViewUpdate(result) {
-    let values = result.payload[this.merinoProvider]?.values;
-    if (!values) {
-      return null;
-    }
-
-    return mergeObjects(
-      Object.assign(
-        {
-          root: {
-            dataset: {
-              // This `url` or `query` will be used when there's only one value.
-              url: values[0].url,
-              query: values[0].query,
-            },
-          },
-        },
-        ...values.flatMap((v, i) => ({
-          [`item_${i}`]: {
-            dataset: {
-              // These `url` or `query`s will be used when there are multiple
-              // values.
-              url: v.url,
-              query: v.query,
-            },
-          },
-        }))
-      ),
-      this.getViewUpdateForValues(values)
-    );
-  }
-
   getResultCommands(result) {
     if (result.payload.source == "rust") {
       // The opt-in result should not have a result menu.
@@ -622,26 +525,4 @@ export class RealtimeSuggestProvider extends SuggestProvider {
         : nimbusValue;
     return Math.max(minLength, 0);
   }
-}
-
-function mergeObjects(dest, source) {
-  if (!source || typeof source != "object") {
-    return source;
-  }
-
-  if (Array.isArray(source)) {
-    if (!Array.isArray(dest)) {
-      dest = [];
-    }
-    dest.push(...source);
-    return dest;
-  }
-
-  if (!dest || typeof dest != "object") {
-    dest = {};
-  }
-  for (let [key, value] of Object.entries(source)) {
-    dest[key] = mergeObjects(dest[key], value);
-  }
-  return dest;
 }
