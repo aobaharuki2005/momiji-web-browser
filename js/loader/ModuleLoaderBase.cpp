@@ -1411,37 +1411,6 @@ void ModuleLoaderBase::AppendDynamicImport(ModuleLoadRequest* aRequest) {
   mDynamicImportRequests.AppendElement(aRequest);
 }
 
-void ModuleLoaderBase::FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
-                                                    nsresult aResult) {
-  AutoJSAPI jsapi;
-  MOZ_ASSERT(NS_FAILED(aResult));
-  if (!jsapi.Init(mGlobalObject)) {
-    return;
-  }
-
-  if (aRequest->mPayload.isUndefined()) {
-    // Import has already been completed.
-    return;
-  }
-
-  JSContext* cx = jsapi.cx();
-  Rooted<Value> payload(cx, aRequest->mPayload);
-
-  if (NS_FAILED(aResult) &&
-      aResult != NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
-    MOZ_ASSERT(!JS_IsExceptionPending(cx));
-    nsAutoCString url;
-    aRequest->mURI->GetSpec(url);
-    JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
-                              JSMSG_DYNAMIC_IMPORT_FAILED, url.get());
-    FinishLoadingImportedModuleFailedWithPendingException(cx, payload);
-  } else {
-    FinishLoadingImportedModuleFailed(cx, payload, UndefinedHandleValue);
-  }
-
-  aRequest->ClearImport();
-}
-
 ModuleLoaderBase::ModuleLoaderBase(ScriptLoaderInterface* aLoader,
                                    nsIGlobalObject* aGlobalObject)
     : mGlobalObject(aGlobalObject), mLoader(aLoader) {
@@ -1501,7 +1470,6 @@ bool ModuleLoaderBase::HasPendingDynamicImports() const {
   return !mDynamicImportRequests.isEmpty();
 }
 
-// TODO: Bug 1968890 : Update error handling for dynamic import
 void ModuleLoaderBase::CancelDynamicImport(ModuleLoadRequest* aRequest,
                                            nsresult aResult) {
   // aRequest may have already been unlinked by CC.
@@ -1512,12 +1480,7 @@ void ModuleLoaderBase::CancelDynamicImport(ModuleLoadRequest* aRequest,
     // If the ClearDynamicImport() has been called, then it should have been
     // removed from mDynamicImportRequests as well.
     MOZ_ASSERT(!aRequest->mPayload.isUndefined());
-
     aRequest->Cancel();
-    // FinishDynamicImport must happen exactly once for each dynamic import
-    // request. If the load is aborted we do it when we remove the request
-    // from mDynamicImportRequests.
-    FinishDynamicImportAndReject(aRequest, aResult);
   }
 }
 
