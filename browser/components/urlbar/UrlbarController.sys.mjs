@@ -833,6 +833,7 @@ class TelemetryEvent {
       "input",
       "keydown",
       "mousedown",
+      "paste",
       "tabswitch",
       "focus",
     ];
@@ -1479,6 +1480,8 @@ class TelemetryEvent {
       return lazy.UrlbarUtils.isPasteEvent(event) ? "pasted" : "typed";
     } else if (event.type == "drop") {
       return "dropped";
+    } else if (event.type == "paste") {
+      return "pasted";
     } else if (searchString) {
       return "typed";
     }
