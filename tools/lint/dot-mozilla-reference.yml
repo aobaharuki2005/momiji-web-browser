@@ -39,3 +39,4 @@ avoid-dot-mozilla-without-xdg:
         - toolkit/crashreporter/crash_helper_server/src/logging/env.rs
         - toolkit/moz.configure
         - toolkit/xre/nsXREDirProvider.cpp
+        - toolkit/tests/gtest/TestXREAppDir.cpp
