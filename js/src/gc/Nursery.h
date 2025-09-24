@@ -241,7 +241,6 @@ class Nursery {
   // should be freed at the end of a minor GC. Buffers are unregistered when
   // their owning objects are tenured.
   [[nodiscard]] bool registerMallocedBuffer(void* buffer, size_t nbytes);
-  void registerBuffer(void* buffer, size_t nbytes);
 
   // Mark a malloced buffer as no longer needing to be freed.
   inline void removeMallocedBuffer(void* buffer, size_t nbytes);
@@ -387,6 +386,7 @@ class Nursery {
   }
 
   inline void addMallocedBufferBytes(size_t nbytes);
+  inline void removeMallocedBufferBytes(size_t nbytes);
 
   mozilla::TimeStamp lastCollectionEndTime() const;
 

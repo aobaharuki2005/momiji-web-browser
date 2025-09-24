@@ -38,6 +38,12 @@ inline void js::Nursery::addMallocedBufferBytes(size_t nbytes) {
   }
 }
 
+inline void js::Nursery::removeMallocedBufferBytes(size_t nbytes) {
+  MOZ_ASSERT(nbytes > 0);
+  MOZ_ASSERT(toSpace.mallocedBufferBytes >= nbytes);
+  toSpace.mallocedBufferBytes -= nbytes;
+}
+
 inline bool js::Nursery::addStringBuffer(JSLinearString* s) {
   MOZ_ASSERT(IsInsideNursery(s));
   MOZ_ASSERT(isEnabled());
@@ -75,9 +81,8 @@ inline void js::Nursery::removeMallocedBuffer(void* buffer, size_t nbytes) {
   MOZ_ASSERT(!JS::RuntimeHeapIsMinorCollecting());
   MOZ_ASSERT(toSpace.mallocedBuffers.has(buffer));
   MOZ_ASSERT(nbytes > 0);
-  MOZ_ASSERT(toSpace.mallocedBufferBytes >= nbytes);
+  removeMallocedBufferBytes(nbytes);
   toSpace.mallocedBuffers.remove(buffer);
-  toSpace.mallocedBufferBytes -= nbytes;
 }
 
 void js::Nursery::removeMallocedBufferDuringMinorGC(void* buffer) {
@@ -93,8 +98,7 @@ inline void js::Nursery::removeExtensibleStringBuffer(JSLinearString* s,
 
   if (updateMallocBytes) {
     size_t nbytes = s->stringBuffer()->AllocationSize();
-    MOZ_ASSERT(toSpace.mallocedBufferBytes >= nbytes);
-    toSpace.mallocedBufferBytes -= nbytes;
+    removeMallocedBufferBytes(nbytes);
   }
 }
 

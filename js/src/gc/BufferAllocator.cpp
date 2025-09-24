@@ -823,13 +823,15 @@ void BufferAllocator::markMediumNurseryOwnedBuffer(void* alloc,
   MOZ_ASSERT(chunk->hasNurseryOwnedAllocs);
   MOZ_ASSERT(chunk->isAllocated(alloc));
   MOZ_ASSERT(chunk->isNurseryOwned(alloc));
+  MOZ_ASSERT(!chunk->isMarked(alloc));
+
+  size_t size = chunk->allocBytes(alloc);
+  increaseHeapSize(size, !ownerWasTenured, false, false);
 
   if (ownerWasTenured) {
     // Change the allocation to a tenured owned one. This prevents sweeping in a
     // minor collection.
     chunk->setNurseryOwned(alloc, false);
-    size_t size = chunk->allocBytes(alloc);
-    increaseHeapSize(size, false, false);
     return;
   }
 
@@ -853,12 +855,13 @@ void BufferAllocator::markLargeNurseryOwnedBuffer(LargeBuffer* buffer,
 
   largeNurseryAllocsToSweep.ref().remove(buffer);
 
+  size_t usableSize = buffer->allocBytes();
+  increaseHeapSize(usableSize, !ownerWasTenured, false, false);
+
   if (ownerWasTenured) {
     buffer->isNurseryOwned = false;
     buffer->allocatedDuringCollection = majorState != State::NotCollecting;
     largeTenuredAllocs.ref().pushBack(buffer);
-    size_t usableSize = buffer->allocBytes();
-    increaseHeapSize(usableSize, false, false);
     return;
   }
 
@@ -2281,10 +2284,8 @@ void BufferAllocator::setAllocated(void* alloc, size_t bytes, bool nurseryOwned,
 
   MOZ_ASSERT(!chunk->isMarked(alloc));
 
-  if (!nurseryOwned) {
-    bool checkThresholds = !inGC;
-    increaseHeapSize(bytes, checkThresholds, false);
-  }
+  bool checkThresholds = !inGC;
+  increaseHeapSize(bytes, nurseryOwned, checkThresholds, false);
 
   MOZ_ASSERT(!chunk->isSmallBufferRegion(alloc));
 }
@@ -2460,7 +2461,7 @@ bool BufferAllocator::sweepChunk(BufferChunk* chunk, SweepKind sweepKind,
 
   size_t freeStart = FirstMediumAllocOffset;
   bool sweptAny = false;
-  size_t mallocHeapBytesFreed = 0;
+  size_t tenuredBytesFreed = 0;
 
   // First sweep any small buffer regions.
   for (auto iter = chunk->smallRegionIter(); !iter.done(); iter.next()) {
@@ -2473,7 +2474,7 @@ bool BufferAllocator::sweepChunk(BufferChunk* chunk, SweepKind sweepKind,
       SetDeallocated(chunk, region, SmallRegionSize);
       PoisonAlloc(region, JS_SWEPT_TENURED_PATTERN, sizeof(SmallBufferRegion),
                   MemCheckKind::MakeUndefined);
-      mallocHeapBytesFreed += SmallRegionSize;
+      tenuredBytesFreed += SmallRegionSize;
       sweptAny = true;
     } else if (region->hasNurseryOwnedAllocs()) {
       hasNurseryOwnedAllocs = true;
@@ -2494,7 +2495,7 @@ bool BufferAllocator::sweepChunk(BufferChunk* chunk, SweepKind sweepKind,
     if (shouldSweep) {
       // Dead. Update allocated bitmap, metadata and heap size accounting.
       if (!nurseryOwned) {
-        mallocHeapBytesFreed += bytes;
+        tenuredBytesFreed += bytes;
       }
       SetDeallocated(chunk, alloc, bytes);
       PoisonAlloc(alloc, JS_SWEPT_TENURED_PATTERN, bytes,
@@ -2518,9 +2519,9 @@ bool BufferAllocator::sweepChunk(BufferChunk* chunk, SweepKind sweepKind,
     }
   }
 
-  if (mallocHeapBytesFreed) {
+  if (tenuredBytesFreed) {
     bool inMajorGC = sweepKind == SweepKind::Tenured;
-    decreaseHeapSize(mallocHeapBytesFreed, inMajorGC);
+    decreaseHeapSize(tenuredBytesFreed, false, inMajorGC);
   }
 
   if (freeStart == FirstMediumAllocOffset) {
@@ -2700,12 +2701,10 @@ void BufferAllocator::freeMedium(void* alloc) {
     return;  // We can't free if the chunk is currently being swept.
   }
 
-  // Update heap size for tenured owned allocations.
-  if (!chunk->isNurseryOwned(alloc)) {
-    bool updateRetained =
-        majorState == State::Marking && !chunk->allocatedDuringCollection;
-    decreaseHeapSize(bytes, updateRetained);
-  }
+  // Update heap size.
+  bool updateRetained =
+      majorState == State::Marking && !chunk->allocatedDuringCollection;
+  decreaseHeapSize(bytes, chunk->isNurseryOwned(alloc), updateRetained);
 
   // TODO: Since the mark bits are atomic, it's probably OK to unmark even if
   // the chunk is currently being swept. If we get lucky the memory will be
@@ -2943,11 +2942,10 @@ bool BufferAllocator::growMedium(void* alloc, size_t newBytes) {
   chunk->updateEndOffset(alloc, currentBytes, newBytes);
   MOZ_ASSERT(chunk->allocBytes(alloc) == newBytes);
 
-  if (!chunk->isNurseryOwned(alloc)) {
-    bool updateRetained =
-        majorState == State::Marking && !chunk->allocatedDuringCollection;
-    increaseHeapSize(extraBytes, true, updateRetained);
-  }
+  bool updateRetained =
+      majorState == State::Marking && !chunk->allocatedDuringCollection;
+  increaseHeapSize(extraBytes, chunk->isNurseryOwned(alloc), true,
+                   updateRetained);
 
   return true;
 }
@@ -2977,11 +2975,9 @@ bool BufferAllocator::shrinkMedium(void* alloc, size_t newBytes) {
   // Update allocation size.
   chunk->updateEndOffset(alloc, currentBytes, newBytes);
   MOZ_ASSERT(chunk->allocBytes(alloc) == newBytes);
-  if (!chunk->isNurseryOwned(alloc)) {
-    bool updateRetained =
-        majorState == State::Marking && !chunk->allocatedDuringCollection;
-    decreaseHeapSize(sizeChange, updateRetained);
-  }
+  bool updateRetained =
+      majorState == State::Marking && !chunk->allocatedDuringCollection;
+  decreaseHeapSize(sizeChange, chunk->isNurseryOwned(alloc), updateRetained);
 
   uintptr_t startOffset = uintptr_t(alloc) & ChunkMask;
   uintptr_t oldEndOffset = startOffset + currentBytes;
@@ -3215,28 +3211,37 @@ void* BufferAllocator::allocLarge(size_t bytes, bool nurseryOwned, bool inGC) {
   }
 
   // Update memory accounting and trigger an incremental slice if needed.
-  if (!nurseryOwned) {
-    bool checkThresholds = !inGC;
-    increaseHeapSize(bytes, checkThresholds, false);
-  }
+  bool checkThresholds = !inGC;
+  increaseHeapSize(bytes, nurseryOwned, checkThresholds, false);
 
   MOZ_ASSERT(IsLargeAlloc(alloc));
   return alloc;
 }
 
-void BufferAllocator::increaseHeapSize(size_t bytes, bool checkThresholds,
+void BufferAllocator::increaseHeapSize(size_t bytes, bool nurseryOwned,
+                                       bool checkThresholds,
                                        bool updateRetainedSize) {
   // Update memory accounting and trigger an incremental slice if needed.
   // TODO: This will eventually be attributed to gcHeapSize.
-  zone->mallocHeapSize.addBytes(bytes, updateRetainedSize);
-  if (checkThresholds) {
-    GCRuntime* gc = &zone->runtimeFromAnyThread()->gc;
-    gc->maybeTriggerGCAfterMalloc(zone);
+  GCRuntime* gc = &zone->runtimeFromAnyThread()->gc;
+  if (nurseryOwned) {
+    gc->nursery().addMallocedBufferBytes(bytes);
+  } else {
+    zone->mallocHeapSize.addBytes(bytes, updateRetainedSize);
+    if (checkThresholds) {
+      gc->maybeTriggerGCAfterMalloc(zone);
+    }
   }
 }
 
-void BufferAllocator::decreaseHeapSize(size_t bytes, bool updateRetainedSize) {
-  zone->mallocHeapSize.removeBytes(bytes, updateRetainedSize);
+void BufferAllocator::decreaseHeapSize(size_t bytes, bool nurseryOwned,
+                                       bool updateRetainedSize) {
+  if (nurseryOwned) {
+    GCRuntime* gc = &zone->runtimeFromAnyThread()->gc;
+    gc->nursery().removeMallocedBufferBytes(bytes);
+  } else {
+    zone->mallocHeapSize.removeBytes(bytes, updateRetainedSize);
+  }
 }
 
 /* static */
@@ -3317,9 +3322,7 @@ bool BufferAllocator::shrinkLarge(LargeBuffer* buffer, size_t newBytes) {
   MOZ_ASSERT(oldBytes > newBytes);
   size_t shrinkBytes = oldBytes - newBytes;
 
-  if (!buffer->isNurseryOwned) {
-    decreaseHeapSize(shrinkBytes, false);
-  }
+  decreaseHeapSize(shrinkBytes, buffer->isNurseryOwned, false);
 
   buffer->bytes = newBytes;
 
@@ -3351,8 +3354,8 @@ void BufferAllocator::unregisterLarge(LargeBuffer* buffer, bool isSweeping,
   // Drop the lock now we've updated the map.
   lock.reset();
 
-  if (!buffer->isNurseryOwned) {
-    decreaseHeapSize(buffer->bytes, isSweeping);
+  if (!buffer->isNurseryOwned || !isSweeping) {
+    decreaseHeapSize(buffer->bytes, buffer->isNurseryOwned, isSweeping);
   }
 }
 

@@ -616,9 +616,10 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   LargeBuffer* lookupLargeBuffer(void* alloc, MaybeLock& lock);
   bool needLockToAccessBufferMap() const;
 
-  void increaseHeapSize(size_t bytes, bool checkThresholds,
+  void increaseHeapSize(size_t bytes, bool nurseryOwned, bool checkThresholds,
                         bool updateRetainedSize);
-  void decreaseHeapSize(size_t bytes, bool updateRetainedSize);
+  void decreaseHeapSize(size_t bytes, bool nurseryOwned,
+                        bool updateRetainedSize);
 
   // Testing functions we allow access.
   friend void* TestAllocAligned(JS::Zone* zone, size_t bytes);
