@@ -118,8 +118,18 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
 
   const Kind mKind;
 
+  void SetErroredLoadingImports() {
+    MOZ_ASSERT(IsDynamicImport());
+    MOZ_ASSERT(IsFetching());
+    mErroredLoadingImports = true;
+  }
+
   // Type of module (JavaScript, JSON)
   const ModuleType mModuleType;
+
+  // A flag (for dynamic import) that indicates the module script is
+  // successfully fetched and compiled, but its dependencies are failed to load.
+  bool mErroredLoadingImports;
 
   // Pointer to the script loader, used to trigger actions when the module load
   // finishes.
