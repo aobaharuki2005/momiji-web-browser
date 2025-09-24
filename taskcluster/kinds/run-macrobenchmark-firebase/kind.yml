@@ -32,10 +32,14 @@ task-defaults:
         env:
             GOOGLE_APPLICATION_CREDENTIALS: '.firebase_token.json'
             ANDROID_SDK_ROOT: /builds/worker/fetches/android-sdk-linux
+            MOZ_PERFHERDER_UPLOAD: /builds/worker/build/perfherder-data-macrobenchmark.json
         artifacts:
             - name: public
               path: /builds/worker/artifacts
               type: directory
+            - name: public/build/perfherder-data-macrobenchmark.json
+              path: /builds/worker/build/perfherder-data-macrobenchmark.json
+              type: file
         retry-exit-status: [20]
     treeherder:
         kind: test
