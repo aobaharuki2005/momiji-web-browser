@@ -417,7 +417,10 @@ class LinkedList {
   using ElementType = LinkedListElement<T>*;
   using ConstElementType = const LinkedListElement<T>*;
 
-  LinkedListElement<T> sentinel;
+  // The sentinel node always closes the circle of the list, making it possible
+  // to add/remove elements directly from a LinkedListElement without having a
+  // reference to the list. Iterators stop when they reach the sentinel node.
+  LinkedListElement<T> mSentinel;
 
  public:
   template <typename Type, typename Element>
@@ -448,14 +451,14 @@ class LinkedList {
   using const_iterator = Iterator<ConstRawType, ConstElementType>;
   using iterator = Iterator<RawType, ElementType>;
 
-  LinkedList() : sentinel(LinkedListElement<T>::NodeKind::Sentinel) {}
+  LinkedList() : mSentinel(LinkedListElement<T>::NodeKind::Sentinel) {}
 
-  LinkedList(LinkedList<T>&& aOther) : sentinel(std::move(aOther.sentinel)) {}
+  LinkedList(LinkedList<T>&& aOther) : mSentinel(std::move(aOther.mSentinel)) {}
 
   LinkedList& operator=(LinkedList<T>&& aOther) {
     MOZ_ASSERT(isEmpty(),
                "Assigning to a non-empty list leaks elements in that list!");
-    sentinel = std::move(aOther.sentinel);
+    mSentinel = std::move(aOther.mSentinel);
     return *this;
   }
 
@@ -476,13 +479,13 @@ class LinkedList {
    */
   void insertFront(RawType aElem) {
     /* Bypass setNext()'s this->isInList() assertion. */
-    sentinel.setNextUnsafe(aElem);
+    mSentinel.setNextUnsafe(aElem);
   }
 
   /*
    * Add aElem to the back of the list.
    */
-  void insertBack(RawType aElem) { sentinel.setPreviousUnsafe(aElem); }
+  void insertBack(RawType aElem) { mSentinel.setPreviousUnsafe(aElem); }
 
   /*
    * Move all elements from another list to the back
@@ -492,7 +495,7 @@ class LinkedList {
     if (aOther.isEmpty()) {
       return;
     }
-    sentinel.transferBeforeUnsafe(**aOther.begin(), aOther.sentinel);
+    mSentinel.transferBeforeUnsafe(**aOther.begin(), aOther.mSentinel);
   }
 
   /*
@@ -518,12 +521,12 @@ class LinkedList {
     };
 
     auto& sourceBegin =
-        safeForward(aListFrom, *aListFrom.sentinel.mNext, aSourceStart);
+        safeForward(aListFrom, *aListFrom.mSentinel.mNext, aSourceStart);
     if (sourceBegin.mIsSentinel) {
       return;
     }
     auto& sourceEnd = safeForward(aListFrom, sourceBegin, aSourceLen);
-    auto& destination = safeForward(*this, *sentinel.mNext, aDestinationPos);
+    auto& destination = safeForward(*this, *mSentinel.mNext, aDestinationPos);
 
     destination.transferBeforeUnsafe(sourceBegin, sourceEnd);
   }
@@ -531,21 +534,21 @@ class LinkedList {
   /*
    * Get the first element of the list, or nullptr if the list is empty.
    */
-  RawType getFirst() { return sentinel.getNext(); }
-  ConstRawType getFirst() const { return sentinel.getNext(); }
+  RawType getFirst() { return mSentinel.getNext(); }
+  ConstRawType getFirst() const { return mSentinel.getNext(); }
 
   /*
    * Get the last element of the list, or nullptr if the list is empty.
    */
-  RawType getLast() { return sentinel.getPrevious(); }
-  ConstRawType getLast() const { return sentinel.getPrevious(); }
+  RawType getLast() { return mSentinel.getPrevious(); }
+  ConstRawType getLast() const { return mSentinel.getPrevious(); }
 
   /*
    * Get and remove the first element of the list.  If the list is empty,
    * return nullptr.
    */
   ClientType popFirst() {
-    ClientType ret = sentinel.getNext();
+    ClientType ret = mSentinel.getNext();
     if (ret) {
       static_cast<LinkedListElement<T>*>(RawType(ret))->remove();
     }
@@ -557,7 +560,7 @@ class LinkedList {
    * return nullptr.
    */
   ClientType popLast() {
-    ClientType ret = sentinel.getPrevious();
+    ClientType ret = mSentinel.getPrevious();
     if (ret) {
       static_cast<LinkedListElement<T>*>(RawType(ret))->remove();
     }
@@ -567,7 +570,7 @@ class LinkedList {
   /*
    * Return true if the list is empty, or false otherwise.
    */
-  bool isEmpty() const { return !sentinel.isInList(); }
+  bool isEmpty() const { return !mSentinel.isInList(); }
 
   /**
    * Returns whether the given element is in the list.
@@ -647,18 +650,18 @@ class LinkedList {
      * Check for cycles in the forward singly-linked list using the
      * tortoise/hare algorithm.
      */
-    for (slow = sentinel.mNext, fast1 = sentinel.mNext->mNext,
-        fast2 = sentinel.mNext->mNext->mNext;
-         slow != &sentinel && fast1 != &sentinel && fast2 != &sentinel;
+    for (slow = mSentinel.mNext, fast1 = mSentinel.mNext->mNext,
+        fast2 = mSentinel.mNext->mNext->mNext;
+         slow != &mSentinel && fast1 != &mSentinel && fast2 != &mSentinel;
          slow = slow->mNext, fast1 = fast2->mNext, fast2 = fast1->mNext) {
       MOZ_ASSERT(slow != fast1);
       MOZ_ASSERT(slow != fast2);
     }
 
     /* Check for cycles in the backward singly-linked list. */
-    for (slow = sentinel.mPrev, fast1 = sentinel.mPrev->mPrev,
-        fast2 = sentinel.mPrev->mPrev->mPrev;
-         slow != &sentinel && fast1 != &sentinel && fast2 != &sentinel;
+    for (slow = mSentinel.mPrev, fast1 = mSentinel.mPrev->mPrev,
+        fast2 = mSentinel.mPrev->mPrev->mPrev;
+         slow != &mSentinel && fast1 != &mSentinel && fast2 != &mSentinel;
          slow = slow->mPrev, fast1 = fast2->mPrev, fast2 = fast1->mPrev) {
       MOZ_ASSERT(slow != fast1);
       MOZ_ASSERT(slow != fast2);
@@ -668,21 +671,21 @@ class LinkedList {
      * Check that |sentinel| is the only node in the list with
      * mIsSentinel == true.
      */
-    for (const LinkedListElement<T>* elem = sentinel.mNext; elem != &sentinel;
+    for (const LinkedListElement<T>* elem = mSentinel.mNext; elem != &mSentinel;
          elem = elem->mNext) {
       MOZ_ASSERT(!elem->mIsSentinel);
     }
 
     /* Check that the mNext/mPrev pointers match up. */
-    const LinkedListElement<T>* prev = &sentinel;
-    const LinkedListElement<T>* cur = sentinel.mNext;
+    const LinkedListElement<T>* prev = &mSentinel;
+    const LinkedListElement<T>* cur = mSentinel.mNext;
     do {
       MOZ_ASSERT(cur->mPrev == prev);
       MOZ_ASSERT(prev->mNext == cur);
 
       prev = cur;
       cur = cur->mNext;
-    } while (cur != &sentinel);
+    } while (cur != &mSentinel);
 #  endif /* ifdef DEBUG */
   }
 
