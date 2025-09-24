@@ -91,7 +91,7 @@ class StoreBuffer {
     inline MonoTypeBuffer(MonoTypeBuffer&& other);
     inline MonoTypeBuffer& operator=(MonoTypeBuffer&& other);
 
-    void init(size_t entryCount);
+    void setSize(size_t entryCount);
 
     bool isEmpty() const;
     void clear();
@@ -150,7 +150,8 @@ class StoreBuffer {
     inline WholeCellBuffer(WholeCellBuffer&& other);
     inline WholeCellBuffer& operator=(WholeCellBuffer&& other);
 
-    [[nodiscard]] bool init(size_t entryCount);
+    [[nodiscard]] bool init();
+    void setSize(size_t entryCount);
 
     bool isEmpty() const;
     void clear();
@@ -184,7 +185,8 @@ class StoreBuffer {
     inline GenericBuffer(GenericBuffer&& other);
     inline GenericBuffer& operator=(GenericBuffer&& other);
 
-    [[nodiscard]] bool init(size_t entryCount);
+    [[nodiscard]] bool init();
+    void setSize(size_t entryCount);
 
     bool isEmpty() const;
     void clear();
@@ -448,6 +450,7 @@ class StoreBuffer {
   JSRuntime* runtime_;
   Nursery& nursery_;
   size_t entryCount_;
+  double entryScaling_;
 
   bool aboutToOverflow_;
   bool enabled_;
@@ -466,9 +469,10 @@ class StoreBuffer {
   StoreBuffer& operator=(StoreBuffer&& other);
 
   [[nodiscard]] bool enable();
-
   void disable();
   bool isEnabled() const { return enabled_; }
+
+  void updateSize();
 
   bool isEmpty() const;
   void clear();

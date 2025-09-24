@@ -390,6 +390,8 @@ class Nursery {
 
   mozilla::TimeStamp lastCollectionEndTime() const;
 
+  size_t capacity() const { return capacity_; }
+
  private:
   struct Space;
 
@@ -405,8 +407,6 @@ class Nursery {
   using ProfileDurations =
       mozilla::EnumeratedArray<ProfileKey, mozilla::TimeDuration,
                                size_t(ProfileKey::KeyCount)>;
-
-  size_t capacity() const { return capacity_; }
 
   // Total number of chunks and the capacity of the current nursery
   // space. Chunks will be lazily allocated and added to the chunks array up to

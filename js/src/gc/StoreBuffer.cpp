@@ -47,7 +47,7 @@ StoreBuffer::MonoTypeBuffer<T>& StoreBuffer::MonoTypeBuffer<T>::operator=(
 }
 
 template <typename T>
-void StoreBuffer::MonoTypeBuffer<T>::init(size_t entryCount) {
+void StoreBuffer::MonoTypeBuffer<T>::setSize(size_t entryCount) {
   MOZ_ASSERT(entryCount != 0);
   maxEntries_ = entryCount;
 }
@@ -86,11 +86,8 @@ StoreBuffer::WholeCellBuffer& StoreBuffer::WholeCellBuffer::operator=(
   return *this;
 }
 
-bool StoreBuffer::WholeCellBuffer::init(size_t entryCount) {
+bool StoreBuffer::WholeCellBuffer::init() {
   MOZ_ASSERT(!sweepHead_);
-
-  MOZ_ASSERT(entryCount);
-  maxSize_ = entryCount * sizeof(ArenaCellSet);
 
   if (!storage_) {
     storage_ = MakeUnique<LifoAlloc>(LifoAllocBlockSize, js::MallocArena);
@@ -106,6 +103,11 @@ bool StoreBuffer::WholeCellBuffer::init(size_t entryCount) {
 
   clear();
   return true;
+}
+
+void StoreBuffer::WholeCellBuffer::setSize(size_t entryCount) {
+  MOZ_ASSERT(entryCount);
+  maxSize_ = entryCount * sizeof(ArenaCellSet);
 }
 
 bool StoreBuffer::WholeCellBuffer::isEmpty() const {
@@ -182,10 +184,7 @@ size_t StoreBuffer::GenericBuffer::sizeOfExcludingThis(
   return storage_ ? storage_->sizeOfIncludingThis(mallocSizeOf) : 0;
 }
 
-bool StoreBuffer::GenericBuffer::init(size_t entryCount) {
-  MOZ_ASSERT(entryCount != 0);
-  maxSize_ = entryCount * (sizeof(BufferableRef) + sizeof(void*));
-
+bool StoreBuffer::GenericBuffer::init() {
   if (!storage_) {
     storage_ = MakeUnique<LifoAlloc>(LifoAllocBlockSize, js::MallocArena);
     if (!storage_) {
@@ -195,6 +194,11 @@ bool StoreBuffer::GenericBuffer::init(size_t entryCount) {
 
   clear();
   return true;
+}
+
+void StoreBuffer::GenericBuffer::setSize(size_t entryCount) {
+  MOZ_ASSERT(entryCount != 0);
+  maxSize_ = entryCount * (sizeof(BufferableRef) + sizeof(void*));
 }
 
 void StoreBuffer::GenericBuffer::trace(JSTracer* trc, StoreBuffer* owner) {
@@ -215,6 +219,7 @@ StoreBuffer::StoreBuffer(JSRuntime* rt)
     : runtime_(rt),
       nursery_(rt->gc.nursery()),
       entryCount_(rt->gc.tunables.storeBufferEntries()),
+      entryScaling_(rt->gc.tunables.storeBufferScaling()),
       aboutToOverflow_(false),
       enabled_(false),
       mayHavePointersToDeadCells_(false)
@@ -239,6 +244,7 @@ StoreBuffer::StoreBuffer(StoreBuffer&& other)
       runtime_(other.runtime_),
       nursery_(other.nursery_),
       entryCount_(other.entryCount_),
+      entryScaling_(other.entryScaling_),
       aboutToOverflow_(other.aboutToOverflow_),
       enabled_(other.enabled_),
       mayHavePointersToDeadCells_(other.mayHavePointersToDeadCells_)
@@ -292,29 +298,44 @@ bool StoreBuffer::enable() {
   }
 
   checkEmpty();
+  if (!bufferWholeCell.init() || !bufferGeneric.init()) {
+    return false;
+  }
 
+  updateSize();
+
+  enabled_ = true;
+  return true;
+}
+
+void StoreBuffer::updateSize() {
   // The entry counts for the individual buffers are scaled based on the initial
   // entryCount parameter passed to the constructor.
   MOZ_ASSERT(entryCount_ != 0);
-  size_t defaultEntryCount = entryCount_;
+  MOZ_ASSERT(entryScaling_ >= 0.0);
+
+  // Scale the entry count linearly based on the size of the nursery. The entry
+  // count parameter specifies the result at a nursery size of 16MB.
+  const double nurseryBaseSize = 16 * 1024 * 1024;
+  double nurserySizeRatio = double(nursery_.capacity()) / nurseryBaseSize;
+  double count =
+      ((nurserySizeRatio - 1.0) * entryScaling_ + 1.0) * double(entryCount_);
+  MOZ_ASSERT(count > 0.0);
+  size_t defaultEntryCount = std::max(size_t(count), size_t(1));
+
   size_t slotsEntryCount = std::max(defaultEntryCount / 2, size_t(1));
   size_t wholeCellEntryCount = std::max(defaultEntryCount / 10, size_t(1));
   size_t genericEntryCount = std::max(defaultEntryCount / 4, size_t(1));
 
-  bufferVal.init(defaultEntryCount);
-  bufStrCell.init(defaultEntryCount);
-  bufBigIntCell.init(defaultEntryCount);
-  bufGetterSetterCell.init(defaultEntryCount);
-  bufObjCell.init(defaultEntryCount);
-  bufferSlot.init(slotsEntryCount);
-  bufferWasmAnyRef.init(defaultEntryCount);
-  if (!bufferWholeCell.init(wholeCellEntryCount) ||
-      !bufferGeneric.init(genericEntryCount)) {
-    return false;
-  }
-
-  enabled_ = true;
-  return true;
+  bufferVal.setSize(defaultEntryCount);
+  bufStrCell.setSize(defaultEntryCount);
+  bufBigIntCell.setSize(defaultEntryCount);
+  bufGetterSetterCell.setSize(defaultEntryCount);
+  bufObjCell.setSize(defaultEntryCount);
+  bufferSlot.setSize(slotsEntryCount);
+  bufferWasmAnyRef.setSize(defaultEntryCount);
+  bufferWholeCell.setSize(wholeCellEntryCount);
+  bufferGeneric.setSize(genericEntryCount);
 }
 
 void StoreBuffer::disable() {

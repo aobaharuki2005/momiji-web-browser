@@ -511,8 +511,19 @@ typedef enum JSGCParamKey {
 
   /*
    * Sets the size of the store buffers used for generational GC.
+   *
+   * The JSGC_STORE_BUFFER_ENTRIES parameter sets the number of store buffer
+   * entries that will be used for a nursery size of 16MB. This is further
+   * scaled based on the actual nursery size and the JSGC_STORE_BUFFER_SCALING
+   * parameter according to the formula:
+   *
+   *    size
+   * ( (---- - 1) * JSGC_STORE_BUFFER_SCALING + 1 ) * JSGC_STORE_BUFFER_ENTRIES
+   *    16MB
+   *
    */
   JSGC_STORE_BUFFER_ENTRIES = 58,
+  JSGC_STORE_BUFFER_SCALING = 59,
 } JSGCParamKey;
 
 /*

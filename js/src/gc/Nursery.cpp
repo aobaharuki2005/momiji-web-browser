@@ -2396,17 +2396,22 @@ void js::Nursery::maybeResizeNursery(JS::GCOptions options,
   }
 #endif
 
-  decommitTask->join();
-
   size_t newCapacity =
       std::clamp(targetSize(options, reason), minSpaceSize(), maxSpaceSize());
 
   MOZ_ASSERT(roundSize(newCapacity) == newCapacity);
   MOZ_ASSERT(newCapacity >= SystemPageSize());
 
+  if (newCapacity == capacity()) {
+    return;
+  }
+
+  decommitTask->join();
+
   if (newCapacity > capacity()) {
     growAllocableSpace(newCapacity);
-  } else if (newCapacity < capacity()) {
+  } else {
+    MOZ_ASSERT(newCapacity < capacity());
     shrinkAllocableSpace(newCapacity);
   }
 
@@ -2414,6 +2419,9 @@ void js::Nursery::maybeResizeNursery(JS::GCOptions options,
   if (!decommitTask->isEmpty(lock)) {
     decommitTask->startOrRunIfIdle(lock);
   }
+
+  // The size of the store buffers depends on the nursery size.
+  gc->storeBuffer().updateSize();
 }
 
 static inline bool ClampDouble(double* value, double min, double max) {
