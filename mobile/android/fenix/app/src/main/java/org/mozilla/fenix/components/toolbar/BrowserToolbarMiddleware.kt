@@ -693,6 +693,10 @@ class BrowserToolbarMiddleware(
             ),
     )
 
+    /**
+     *  Devices wider than 600dp:
+     *   - The navigation buttons (forward, back, and refresh) are always shown on the left side of the address bar.
+     */
     private fun buildStartBrowserActions(): List<Action> {
         val isWideScreen = environment?.fragment?.isWideWindow() == true
 
@@ -707,6 +711,10 @@ class BrowserToolbarMiddleware(
         }
     }
 
+    /**
+     *  Devices wider than 600dp:
+     *   - The page action buttons (Share and Translate), which were removed from smaller devices, are shown again.
+     */
     private fun buildEndPageActions(): List<Action> {
         val isWideScreen = environment?.fragment?.isWideWindow() == true
 
@@ -752,6 +760,14 @@ class BrowserToolbarMiddleware(
         }
     }
 
+    /**
+     * - Devices taller than 480dp:
+     *   - The navigation bar is always shown (if the user enabled it).
+     *
+     * - Devices shorter than 480dp:
+     *   - The navigation bar is hidden (even if the user enabled it).
+     *   - The toolbar redesign customization option is also hidden.
+     */
     private fun buildNavigationActions(isBookmarked: Boolean): List<Action> {
         val isExpandedAndTallScreen = settings.shouldUseExpandedToolbar &&
                 environment?.fragment?.isTallWindow() == true

@@ -340,6 +340,14 @@ class BrowserToolbarMiddleware(
         )
     }
 
+    /**
+     * - Devices taller than 480dp:
+     *   - The navigation bar is always shown (if the user enabled it).
+     *
+     * - Devices shorter than 480dp:
+     *   - The navigation bar is hidden (even if the user enabled it).
+     *   - The toolbar redesign customization option is also hidden.
+     */
     private fun buildNavigationActions(): List<Action> {
         val environment = environment ?: return emptyList()
         val isExpandedAndTallScreen = environment.context.settings().shouldUseExpandedToolbar &&
