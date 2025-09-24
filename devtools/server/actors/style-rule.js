@@ -12,7 +12,6 @@ const {
 const {
   InspectorCSSParserWrapper,
 } = require("resource://devtools/shared/css/lexer.js");
-const TrackChangeEmitter = require("resource://devtools/server/actors/utils/track-change-emitter.js");
 const {
   getRuleText,
   getTextAtLineColumn,
@@ -1263,7 +1262,7 @@ class StyleRuleActor extends Actor {
         break;
     }
 
-    TrackChangeEmitter.trackChange(data);
+    this.pageStyle.inspector.targetActor.emit("track-css-change", data);
   }
 
   /**
@@ -1276,7 +1275,7 @@ class StyleRuleActor extends Actor {
    *        This rule's new selector.
    */
   logSelectorChange(oldSelector, newSelector) {
-    TrackChangeEmitter.trackChange({
+    this.pageStyle.inspector.targetActor.emit("track-css-change", {
       ...this.metadata,
       type: "selector-remove",
       add: null,
@@ -1284,7 +1283,7 @@ class StyleRuleActor extends Actor {
       selector: oldSelector,
     });
 
-    TrackChangeEmitter.trackChange({
+    this.pageStyle.inspector.targetActor.emit("track-css-change", {
       ...this.metadata,
       type: "selector-add",
       add: null,
