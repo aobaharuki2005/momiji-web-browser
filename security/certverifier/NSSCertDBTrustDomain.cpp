@@ -40,6 +40,7 @@
 #include "nsNSSCallbacks.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSCertificateDB.h"
+#include "nsNSSComponent.h"
 #include "nsNSSIOLayer.h"
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
@@ -797,10 +798,40 @@ Result NSSCertDBTrustDomain::CheckRevocationByCRLite(
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
           ("NSSCertDBTrustDomain::CheckRevocation: checking CRLite"));
 
-  // CRLite relies on timestamps from SCTs, so we need to check signatures on
-  // SCTs before calling into CRLite. The result only depends on the end entity
-  // certificate and the issuer SPKI, so it is path-independent and we only need
-  // to compute it once.
+  nsTArray<uint8_t> issuerSubjectPublicKeyInfoBytes;
+  issuerSubjectPublicKeyInfoBytes.AppendElements(
+      certID.issuerSubjectPublicKeyInfo.UnsafeGetData(),
+      certID.issuerSubjectPublicKeyInfo.GetLength());
+  nsTArray<uint8_t> serialNumberBytes;
+  serialNumberBytes.AppendElements(certID.serialNumber.UnsafeGetData(),
+                                   certID.serialNumber.GetLength());
+
+  nsTArray<RefPtr<nsICRLiteTimestamp>> timestamps;
+
+  // CRLite relies on timestamps from SCTs, so we should check signatures on
+  // SCTs before calling into CRLite. However, the risk of using unverified
+  // timestamps (particularly from embedded SCTs) is marginal, and if CT is
+  // disabled we will pass unverified timestamps from embedded SCTs to CRLite.
+  if (GetCertificateTransparencyMode() ==
+      CertVerifier::CertificateTransparencyMode::Disabled) {
+    size_t decodingErrors;
+    std::vector<SignedCertificateTimestamp> decodedSCTsFromExtension;
+    DecodeSCTs(GetSCTListFromCertificate(), decodedSCTsFromExtension,
+               decodingErrors);
+    Unused << decodingErrors;
+    for (const auto& sct : decodedSCTsFromExtension) {
+      timestamps.AppendElement(new CRLiteTimestamp(sct));
+    }
+
+    return CheckCRLite(issuerSubjectPublicKeyInfoBytes, serialNumberBytes,
+                       timestamps, crliteCoversCertificate);
+  }
+
+  // When CT is enabled, we verify the signatures on all available SCTs and
+  // cache the verification result in the trust domain so that it can be used
+  // for CT policy enforcement. The verification result only depends on the end
+  // entity certificate and the issuer SPKI, so it is path-independent and we
+  // only need to compute it once.
   if (mCTVerifyResult.isNothing()) {
     MOZ_ASSERT(mBuiltChain.Length() > 0);
 
@@ -828,15 +859,6 @@ Result NSSCertDBTrustDomain::CheckRevocationByCRLite(
     mCTVerifyResult.emplace(std::move(ctVerifyResult));
   }
 
-  nsTArray<uint8_t> issuerSubjectPublicKeyInfoBytes;
-  issuerSubjectPublicKeyInfoBytes.AppendElements(
-      certID.issuerSubjectPublicKeyInfo.UnsafeGetData(),
-      certID.issuerSubjectPublicKeyInfo.GetLength());
-  nsTArray<uint8_t> serialNumberBytes;
-  serialNumberBytes.AppendElements(certID.serialNumber.UnsafeGetData(),
-                                   certID.serialNumber.GetLength());
-
-  nsTArray<RefPtr<nsICRLiteTimestamp>> timestamps;
   if (mCTVerifyResult.isSome()) {
     for (const auto& sct : mCTVerifyResult->verifiedScts) {
       timestamps.AppendElement(new CRLiteTimestamp(sct));
