@@ -84,6 +84,53 @@ TEST_F(PeerConnectionCongestionControlTest, ReceiveOfferSetsCcfbFlag) {
   EXPECT_THAT(answer_str, Not(HasSubstr("transport-cc")));
 }
 
+TEST_F(PeerConnectionCongestionControlTest, NegotiatingCcfbRemovesTsn) {
+  SetFieldTrials("WebRTC-RFC8888CongestionControlFeedback/Enabled/");
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignalingForSdpOnly();
+  callee()->AddVideoTrack();
+  // Add transceivers to caller in order to accomodate reception
+  caller()->pc()->AddTransceiver(MediaType::VIDEO);
+  auto parameters = caller()->pc()->GetSenders()[0]->GetParameters();
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_THAT(WaitUntil([&] { return SignalingStateStable(); }, IsTrue()),
+              IsRtcOk());
+
+  std::vector<RtpHeaderExtensionCapability> negotiated_header_extensions =
+      caller()->pc()->GetTransceivers()[0]->GetNegotiatedHeaderExtensions();
+  EXPECT_THAT(
+      negotiated_header_extensions,
+      Not(Contains(
+          AllOf(Field("uri", &RtpHeaderExtensionCapability::uri,
+                      RtpExtension::kTransportSequenceNumberUri),
+                Not(Field("direction", &RtpHeaderExtensionCapability::direction,
+                          RtpTransceiverDirection::kStopped))))))
+      << " in caller negotiated header extensions";
+
+  parameters = caller()->pc()->GetSenders()[0]->GetParameters();
+  EXPECT_THAT(parameters.header_extensions,
+              Not(Contains(Field("uri", &RtpExtension::uri,
+                                 RtpExtension::kTransportSequenceNumberUri))))
+      << " in caller sender parameters";
+  parameters = caller()->pc()->GetReceivers()[0]->GetParameters();
+  EXPECT_THAT(parameters.header_extensions,
+              Not(Contains(Field("uri", &RtpExtension::uri,
+                                 RtpExtension::kTransportSequenceNumberUri))))
+      << " in caller receiver parameters";
+
+  parameters = callee()->pc()->GetSenders()[0]->GetParameters();
+  EXPECT_THAT(parameters.header_extensions,
+              Not(Contains(Field("uri", &RtpExtension::uri,
+                                 RtpExtension::kTransportSequenceNumberUri))))
+      << " in callee sender parameters";
+
+  parameters = callee()->pc()->GetReceivers()[0]->GetParameters();
+  EXPECT_THAT(parameters.header_extensions,
+              Not(Contains(Field("uri", &RtpExtension::uri,
+                                 RtpExtension::kTransportSequenceNumberUri))))
+      << " in callee receiver parameters";
+}
+
 TEST_F(PeerConnectionCongestionControlTest, CcfbGetsUsed) {
   SetFieldTrials("WebRTC-RFC8888CongestionControlFeedback/Enabled/");
   ASSERT_TRUE(CreatePeerConnectionWrappers());
@@ -133,8 +180,7 @@ TEST_F(PeerConnectionCongestionControlTest, TransportCcGetsUsed) {
   EXPECT_THAT(pc_internal->FeedbackAccordingToRfc8888CountForTesting(), Eq(0));
 }
 
-TEST_F(PeerConnectionCongestionControlTest,
-       DISABLED_CcfbGetsUsedCalleeToCaller) {
+TEST_F(PeerConnectionCongestionControlTest, CcfbGetsUsedCalleeToCaller) {
   SetFieldTrials("WebRTC-RFC8888CongestionControlFeedback/Enabled/");
   ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();

@@ -120,7 +120,7 @@ DataRate GetAvailableSendBitrate(
   return DataRate::BitsPerSec(*stats[0]->available_outgoing_bitrate);
 }
 
-TEST(L4STest, DISABLED_NegotiateAndUseCcfbIfEnabled) {
+TEST(L4STest, NegotiateAndUseCcfbIfEnabled) {
   PeerScenario s(*test_info_);
 
   PeerScenarioClient::Config config;
