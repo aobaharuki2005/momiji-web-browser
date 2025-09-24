@@ -88,10 +88,10 @@ namespace detail {
  */
 template <typename T>
 struct LinkedListElementTraits {
-  typedef T* RawType;
-  typedef const T* ConstRawType;
-  typedef T* ClientType;
-  typedef const T* ConstClientType;
+  using RawType = T*;
+  using ConstRawType = const T*;
+  using ClientType = T*;
+  using ConstClientType = const T*;
 
   // These static methods are called when an element is added to or removed from
   // a linked list. It can be used to keep track ownership in lists that are
@@ -109,10 +109,10 @@ struct LinkedListElementTraits {
 
 template <typename T>
 struct LinkedListElementTraits<RefPtr<T>> {
-  typedef T* RawType;
-  typedef const T* ConstRawType;
-  typedef RefPtr<T> ClientType;
-  typedef RefPtr<const T> ConstClientType;
+  using RawType = T*;
+  using ConstRawType = const T*;
+  using ClientType = RefPtr<T>;
+  using ConstClientType = RefPtr<const T>;
 
   static void enterList(LinkedListElement<RefPtr<T>>* elt) {
     elt->asT()->AddRef();
@@ -130,11 +130,11 @@ class LinkedList;
 
 template <typename T>
 class LinkedListElement {
-  typedef typename detail::LinkedListElementTraits<T> Traits;
-  typedef typename Traits::RawType RawType;
-  typedef typename Traits::ConstRawType ConstRawType;
-  typedef typename Traits::ClientType ClientType;
-  typedef typename Traits::ConstClientType ConstClientType;
+  using Traits = typename detail::LinkedListElementTraits<T>;
+  using RawType = typename Traits::RawType;
+  using ConstRawType = typename Traits::ConstRawType;
+  using ClientType = typename Traits::ClientType;
+  using ConstClientType = typename Traits::ConstClientType;
 
   /*
    * It's convenient that we return nullptr when getNext() or getPrevious()
@@ -718,8 +718,8 @@ template <typename T>
 inline void ImplCycleCollectionTraverse(
     nsCycleCollectionTraversalCallback& aCallback,
     LinkedList<RefPtr<T>>& aField, const char* aName, uint32_t aFlags = 0) {
-  typedef typename detail::LinkedListElementTraits<T> Traits;
-  typedef typename Traits::RawType RawType;
+  using Traits = typename detail::LinkedListElementTraits<T>;
+  using RawType = typename Traits::RawType;
   for (RawType element : aField) {
     // RefPtr is stored as a raw pointer in LinkedList.
     // So instead of creating a new RefPtr from the raw
