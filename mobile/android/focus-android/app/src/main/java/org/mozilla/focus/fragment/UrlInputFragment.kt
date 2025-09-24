@@ -17,9 +17,6 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.OneShotPreDrawListener
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.state.selector.findTab
@@ -56,7 +53,6 @@ import org.mozilla.focus.topsites.TopSitesOverlay
 import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.ViewUtils
-import kotlin.coroutines.CoroutineContext
 
 class FocusCrashException : Exception()
 
@@ -68,8 +64,7 @@ class FocusCrashException : Exception()
 @Suppress("LargeClass", "TooManyFunctions")
 class UrlInputFragment :
     BaseFragment(),
-    View.OnClickListener,
-    CoroutineScope {
+    View.OnClickListener {
     companion object {
         const val FRAGMENT_TAG = "url_input"
 
@@ -117,9 +112,6 @@ class UrlInputFragment :
         }
     }
 
-    private var job = Job()
-    override val coroutineContext: CoroutineContext
-        get() = job + Dispatchers.Main
     private val shippedDomainsProvider = ShippedDomainsProvider()
     private val customDomainsProvider = CustomDomainsProvider()
     private var _binding: FragmentUrlinputBinding? = null
@@ -153,10 +145,6 @@ class UrlInputFragment :
     override fun onResume() {
         super.onResume()
 
-        if (job.isCancelled) {
-            job = Job()
-        }
-
         activity?.let {
             shippedDomainsProvider.initialize(it.applicationContext)
             customDomainsProvider.initialize(it.applicationContext)
@@ -184,7 +172,6 @@ class UrlInputFragment :
     }
 
     override fun onPause() {
-        job.cancel()
         super.onPause()
         view?.hideKeyboard()
     }
