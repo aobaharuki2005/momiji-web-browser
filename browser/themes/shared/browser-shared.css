@@ -38,16 +38,17 @@ body {
 :root {
   --window-min-width: 500px;
   /* Vertical tabs need extra room in the nav bar for window controls,
-     drag space, and the sidebar button. */
-  --window-min-width-increase-for-vertical-tabs: calc(var(--window-controls-size) + 23px);
-  --window-controls-size: 138px;
+     drag space, and the sidebar button.
+     FIXME: Only the window controls' size should be platform-specific, we
+            should be able to share the rest. */
+  --window-min-width-increase-for-vertical-tabs: 161px;
   @media (-moz-platform: macos) {
-    --window-controls-size: 76px;
+    --window-min-width-increase-for-vertical-tabs: 99px;
   }
   @media (-moz-platform: linux) {
     /* FIXME: Use --titlebar-button-* variables to calculate the window
               controls' size. */
-    --window-controls-size: 115px;
+    --window-min-width-increase-for-vertical-tabs: 138px;
   }
 
   user-select: none;

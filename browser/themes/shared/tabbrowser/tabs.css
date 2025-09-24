@@ -945,7 +945,7 @@
 }
 
 #pinned-tabs-container[orient="horizontal"] {
-  max-width: max(80px, calc(100vw - var(--window-controls-size) - 300px /* Room for toolbar buttons, drag space, and unpinned tabs */));
+  max-width: 33vw;
 
   &:empty {
     display: none;
@@ -1666,8 +1666,12 @@ tab-group {
   }
 }
 
-#tabbrowser-arrowscrollbox[orient="horizontal"]::part(scrollbox) {
-  contain: inline-size;
+#tabbrowser-arrowscrollbox[orient="horizontal"] {
+  min-width: 20vw;
+
+  &::part(scrollbox) {
+    contain: inline-size;
+  }
 }
 
 /* Vertical tabs styling */
