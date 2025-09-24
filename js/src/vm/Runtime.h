@@ -55,7 +55,8 @@
 #include "vm/JSScript.h"
 #include "vm/Logging.h"
 #include "vm/OffThreadPromiseRuntimeState.h"  // js::OffThreadPromiseRuntimeState
-#include "vm/SharedScriptDataTableHolder.h"   // js::SharedScriptDataTableHolder
+#include "vm/RuntimeFuses.h"
+#include "vm/SharedScriptDataTableHolder.h"  // js::SharedScriptDataTableHolder
 #include "vm/Stack.h"
 #include "wasm/WasmTypeDecls.h"
 
@@ -296,31 +297,6 @@ class Metrics {
   }
   FOR_EACH_JS_METRIC(DECLARE_METRIC_HELPER)
 #undef DECLARE_METRIC_HELPER
-};
-
-class HasSeenObjectEmulateUndefinedFuse : public js::InvalidatingRuntimeFuse {
-  virtual const char* name() override {
-    return "HasSeenObjectEmulateUndefinedFuse";
-  }
-  virtual bool checkInvariant(JSContext* cx) override {
-    // Without traversing the GC heap I don't think it's possible to assert
-    // this invariant directly.
-    return true;
-  }
-
- public:
-  virtual void popFuse(JSContext* cx) override;
-};
-
-class HasSeenArrayExceedsInt32LengthFuse : public js::InvalidatingRuntimeFuse {
-  virtual const char* name() override {
-    return "HasSeenArrayExceedsInt32LengthFuse";
-  }
-
-  virtual bool checkInvariant(JSContext* cx) override { return true; }
-
- public:
-  virtual void popFuse(JSContext* cx) override;
 };
 
 }  // namespace js
@@ -1158,11 +1134,7 @@ struct JSRuntime {
   js::MainThreadData<JS::GlobalCreationCallback>
       shadowRealmGlobalCreationCallback;
 
-  js::MainThreadData<js::HasSeenObjectEmulateUndefinedFuse>
-      hasSeenObjectEmulateUndefinedFuse;
-
-  js::MainThreadData<js::HasSeenArrayExceedsInt32LengthFuse>
-      hasSeenArrayExceedsInt32LengthFuse;
+  js::MainThreadData<js::RuntimeFuses> runtimeFuses;
 };
 
 namespace js {

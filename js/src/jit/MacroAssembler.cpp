@@ -2694,6 +2694,17 @@ void MacroAssembler::loadRealmFuse(RealmFuses::FuseIndex index, Register dest) {
           dest);
 }
 
+void MacroAssembler::loadRuntimeFuse(RuntimeFuses::FuseIndex index,
+                                     Register dest) {
+  loadPtr(AbsoluteAddress(runtime()->addressOfRuntimeFuse(index)), dest);
+}
+
+void MacroAssembler::guardRuntimeFuse(RuntimeFuses::FuseIndex index,
+                                      Label* fail) {
+  AbsoluteAddress addr(runtime()->addressOfRuntimeFuse(index));
+  branchPtr(Assembler::NotEqual, addr, ImmWord(0), fail);
+}
+
 void MacroAssembler::switchToRealm(const void* realm, Register scratch) {
   MOZ_ASSERT(realm);
 

@@ -544,9 +544,8 @@ void MacroAssembler::branchIfObjectEmulatesUndefined(Register objReg,
 
   Label done;
 
-  loadPtr(
-      AbsoluteAddress(runtime()->addressOfHasSeenObjectEmulateUndefinedFuse()),
-      scratch);
+  loadRuntimeFuse(RuntimeFuses::FuseIndex::HasSeenObjectEmulateUndefinedFuse,
+                  scratch);
   branchPtr(Assembler::Equal, scratch, ImmPtr(nullptr), &done);
 
   loadObjClassUnsafe(objReg, scratch);

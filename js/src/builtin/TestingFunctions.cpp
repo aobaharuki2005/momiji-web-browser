@@ -129,6 +129,7 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseSlot_*
 #include "vm/ProxyObject.h"
 #include "vm/RealmFuses.h"
+#include "vm/RuntimeFuses.h"
 #include "vm/SavedStacks.h"
 #include "vm/ScopeKind.h"
 #include "vm/Stack.h"
@@ -9022,10 +9023,22 @@ static bool AssertRealmFuseInvariants(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool AssertRuntimeFuseInvariants(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  // Note: This will crash if any invariant isn't held, so it's sufficient to
+  // simply return true always.
+  cx->runtime()->runtimeFuses.ref().assertInvariants(cx);
+  args.rval().setUndefined();
+  return true;
+}
+
 static bool GetFuseState(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   cx->realm()->realmFuses.assertInvariants(cx);
+
+  cx->runtime()->runtimeFuses.ref().assertInvariants(cx);
 
   RootedObject returnObj(cx, JS_NewPlainObject(cx));
   if (!returnObj) {
@@ -9052,12 +9065,13 @@ static bool GetFuseState(JSContext* cx, unsigned argc, Value* vp) {
   FOR_EACH_REALM_FUSE(REALM_FUSE)
 #undef REALM_FUSE
 
-#define RUNTIME_FUSE(Name)                                                   \
+#define RUNTIME_FUSE(Name, LowerName)                                        \
   fuseObj = JS_NewPlainObject(cx);                                           \
   if (!fuseObj) {                                                            \
     return false;                                                            \
   }                                                                          \
-  intactValue.setBoolean(cx->runtime()->Name.ref().intact());                \
+  intactValue.setBoolean(                                                    \
+      cx->runtime()->runtimeFuses.ref().LowerName.intact());                 \
   if (!JS_DefineProperty(cx, fuseObj, "intact", intactValue,                 \
                          JSPROP_ENUMERATE)) {                                \
     return false;                                                            \
@@ -9066,8 +9080,7 @@ static bool GetFuseState(JSContext* cx, unsigned argc, Value* vp) {
     return false;                                                            \
   }
 
-  RUNTIME_FUSE(hasSeenObjectEmulateUndefinedFuse)
-  RUNTIME_FUSE(hasSeenArrayExceedsInt32LengthFuse)
+  FOR_EACH_RUNTIME_FUSE(RUNTIME_FUSE)
 #undef RUNTIME_FUSE
 
   args.rval().setObject(*returnObj);
@@ -9083,6 +9096,19 @@ static bool PopAllFusesInRealm(JSContext* cx, unsigned argc, Value* vp) {
 
 #define FUSE(Name, LowerName) realmFuses.LowerName.popFuse(cx, realmFuses);
   FOR_EACH_REALM_FUSE(FUSE)
+#undef FUSE
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool PopAllFusesInRuntime(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  RuntimeFuses& runtimeFuses = cx->runtime()->runtimeFuses.ref();
+
+#define FUSE(Name, LowerName) runtimeFuses.LowerName.popFuse(cx);
+  FOR_EACH_RUNTIME_FUSE(FUSE)
 #undef FUSE
 
   args.rval().setUndefined();
@@ -11039,6 +11065,11 @@ JS_FN_HELP("isSmallFunction", IsSmallFunction, 1, 0,
   " Runs the realm's fuse invariant checks -- these will crash on failure. "
   " Only available in fuzzing or debug builds, so usage should be guarded. "),
 
+  JS_FN_HELP("assertRuntimeFuseInvariants", AssertRuntimeFuseInvariants, 0, 0,
+  "assertRuntimeFuseInvariants()",
+  " Runs the runtime's fuse invariant checks -- these will crash on failure. "
+  " Only available in fuzzing or debug builds, so usage should be guarded. "),
+
     JS_FN_HELP("isCCW", IsCCW, 1, 0,
 "isCCW(object)",
 "  Return true if an object is a CCW."),
@@ -11046,6 +11077,10 @@ JS_FN_HELP("isSmallFunction", IsSmallFunction, 1, 0,
   JS_FN_HELP("popAllFusesInRealm", PopAllFusesInRealm, 0, 0,
   "popAllFusesInRealm()",
   " Pops all the fuses in the current realm"),
+
+  JS_FN_HELP("popAllFusesInRuntime", PopAllFusesInRuntime, 0, 0,
+  "popAllFusesInRuntime()",
+  " Pops all the fuses in the runtime"),
 
     JS_FN_HELP("getAllPrefNames", GetAllPrefNames, 0, 0,
 "getAllPrefNames()",

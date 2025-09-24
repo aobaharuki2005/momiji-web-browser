@@ -414,6 +414,7 @@ UNIFIED_SOURCES += [
     "vm/RegExpObject.cpp",
     "vm/RegExpStatics.cpp",
     "vm/Runtime.cpp",
+    "vm/RuntimeFuses.cpp",
     "vm/SavedStacks.cpp",
     "vm/Scope.cpp",
     "vm/SelfHosting.cpp",

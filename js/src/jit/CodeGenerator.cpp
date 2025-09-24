@@ -74,6 +74,7 @@
 #include "vm/MatchPairs.h"
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
+#include "vm/RuntimeFuses.h"
 #include "vm/StaticStrings.h"
 #include "vm/StringObject.h"
 #include "vm/StringType.h"
@@ -1231,9 +1232,8 @@ void CodeGenerator::emitOOLTestObject(Register objreg,
                                       Register scratch) {
   saveVolatile(scratch);
 #if defined(DEBUG) || defined(FUZZING)
-  masm.loadPtr(AbsoluteAddress(
-                   gen->runtime->addressOfHasSeenObjectEmulateUndefinedFuse()),
-               scratch);
+  masm.loadRuntimeFuse(
+      RuntimeFuses::FuseIndex::HasSeenObjectEmulateUndefinedFuse, scratch);
   using Fn = bool (*)(JSObject* obj, size_t fuseValue);
   masm.setupAlignedABICall();
   masm.passABIArg(objreg);
@@ -17145,7 +17145,8 @@ struct RuntimeFuseDependency final : public CompilationDependency {
   bool registerDependency(JSContext* cx,
                           const IonScriptKey& ionScript) override {
     MOZ_ASSERT(checkDependency(cx));
-    return (cx->runtime()->*FuseMember).ref().addFuseDependency(cx, ionScript);
+    return (cx->runtime()->runtimeFuses.ref().*FuseMember)
+        .addFuseDependency(cx, ionScript);
   }
 
   CompilationDependency* clone(TempAllocator& alloc) const override {
@@ -17153,7 +17154,7 @@ struct RuntimeFuseDependency final : public CompilationDependency {
   }
 
   bool checkDependency(JSContext* cx) const override {
-    return (cx->runtime()->*FuseMember).ref().intact();
+    return (cx->runtime()->runtimeFuses.ref().*FuseMember).intact();
   }
 
   HashNumber hash() const override { return mozilla::HashGeneric(type); }
@@ -17166,14 +17167,14 @@ struct RuntimeFuseDependency final : public CompilationDependency {
 
 bool CodeGenerator::addHasSeenObjectEmulateUndefinedFuseDependency() {
   using Dependency =
-      RuntimeFuseDependency<&JSRuntime::hasSeenObjectEmulateUndefinedFuse,
+      RuntimeFuseDependency<&RuntimeFuses::hasSeenObjectEmulateUndefinedFuse,
                             CompilationDependency::Type::EmulatesUndefined>;
   return mirGen().tracker.addDependency(alloc(), Dependency());
 }
 
 bool CodeGenerator::addHasSeenArrayExceedsInt32LengthFuseDependency() {
   using Dependency = RuntimeFuseDependency<
-      &JSRuntime::hasSeenArrayExceedsInt32LengthFuse,
+      &RuntimeFuses::hasSeenArrayExceedsInt32LengthFuse,
       CompilationDependency::Type::ArrayExceedsInt32Length>;
   return mirGen().tracker.addDependency(alloc(), Dependency());
 }
