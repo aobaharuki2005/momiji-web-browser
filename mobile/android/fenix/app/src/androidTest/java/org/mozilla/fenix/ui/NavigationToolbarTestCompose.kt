@@ -464,9 +464,7 @@ class NavigationToolbarTestCompose : TestSetup() {
             }.openSearchWithComposableToolbar(composeTestRule) {
             }.submitQueryWithComposableToolbar("test page 1") {
             }.goToHomescreenWithComposableToolbar(composeTestRule) {
-            }.togglePrivateBrowsingMode()
-
-            homeScreen {
+                togglePrivateBrowsingModeOnOff(composeTestRule)
             }.openSearchWithComposableToolbar(composeTestRule) {
             }.submitQueryWithComposableToolbar("test page 2") {
             }.openSearchWithComposableToolbar(composeTestRule) {
