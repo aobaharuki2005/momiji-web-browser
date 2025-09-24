@@ -785,7 +785,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Oanpasse</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">Meld jo oan om jo ljepblêden, blêdwizers, wachtwurden en mear te syngronisearjen.</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Meld jo oan om jo ljepblêden, blêdwizers, wachtwurden en mear te syngronisearjen.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Mozilla-account</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1187,7 +1187,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">Syngronisearje en jo gegevens bewarje</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Syngronisearje en jo gegevens bewarje</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Oanmelde om opnij te ferbinen</string>
   <!-- Preference for removing FxA account -->
@@ -2018,6 +2018,8 @@
   <string name="create_collection_tabs_saved_new_collection_2">Kolleksje bewarre</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
   <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">Ljepblêd bewarre!</string>
+  <!-- Text shown in snackbar when one tab has been saved in a collection -->
+  <string name="create_collection_tab_saved_2">Ljepblêd bewarre</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
   <string name="create_collection_close">Slute</string>
   <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator -->
@@ -2064,7 +2066,7 @@
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Oanmelde by Sync</string>
   <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data">Syngronisearje en gegevens bewarje</string>
+  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Syngronisearje en gegevens bewarje</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Ferstjoere nei alle apparaten</string>
   <!-- An option from the share dialog to reconnect to sync -->
@@ -2273,6 +2275,8 @@
     Text shown in snackbar when multiple tabs have been sent to device
   -->
   <string name="sync_sent_tabs_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Ljepblêden ferstjoerd!</string>
+  <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+  <string name="sync_sent_tabs_snackbar_2">Ljepblêden ferstjoerd</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
   <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Ljepblêd ferstjoerd!</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->

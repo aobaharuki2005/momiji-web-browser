@@ -785,7 +785,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Prilagodi</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">Prijavite se da sinhronizujete tabove, oznake, lozinke i još mnogo toga.</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Prijavite se da sinhronizujete tabove, oznake, lozinke i još mnogo toga.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Mozilla račun</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1187,7 +1187,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">Sinhronizujte i sačuvajte svoje podatke</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Sinhronizujte i sačuvajte svoje podatke</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Prijavite se radi ponovnog povezivanja</string>
   <!-- Preference for removing FxA account -->
@@ -2058,7 +2058,7 @@
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Prijavite se na Sync</string>
   <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data">Sinhroniziraj i sačuvaj podatke</string>
+  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Sinhroniziraj i sačuvaj podatke</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Pošalji na sve uređaje</string>
   <!-- An option from the share dialog to reconnect to sync -->

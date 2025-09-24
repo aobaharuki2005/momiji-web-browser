@@ -572,6 +572,10 @@
   <string name="onboarding_redesign_tou_body_three_link_text">Quản lý cài đặt</string>
   <!-- Terms of use (ToU) onboarding page continue button label. -->
   <string name="onboarding_redesign_tou_agree_and_continue_button_label">Tiếp tục</string>
+  <!-- Set to default browser onboarding redesign title. -->
+  <string name="onboarding_redesign_set_default_browser_title">Nhận trình chống theo dõi tự động theo mặc định</string>
+  <!-- Set to default browser onboarding redesign body. -->
+  <string name="onboarding_redesign_set_default_browser_body">Chỉ cần một cú nhấp có thể ngăn các công ty theo dõi lượt nhấp chuột của bạn.</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Giúp chúng tôi phát triển Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -785,7 +789,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Tùy biến</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">Đăng nhập để đồng bộ các thẻ, dấu trang, mật khẩu, v.v.</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Đăng nhập để đồng bộ các thẻ, dấu trang, mật khẩu, v.v.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Tài khoản Mozilla</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1187,7 +1191,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">Đồng bộ hóa và lưu dữ liệu của bạn</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Đồng bộ hóa và lưu dữ liệu của bạn</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Đăng nhập để kết nối lại</string>
   <!-- Preference for removing FxA account -->
@@ -2018,6 +2022,8 @@
   <string name="create_collection_tabs_saved_new_collection_2">Đã lưu bộ sưu tập</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
   <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">Đã lưu thẻ!</string>
+  <!-- Text shown in snackbar when one tab has been saved in a collection -->
+  <string name="create_collection_tab_saved_2">Đã lưu thẻ</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
   <string name="create_collection_close">Đóng</string>
   <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator -->
@@ -2064,7 +2070,7 @@
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Đăng nhập để đồng bộ hóa</string>
   <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data">Đồng bộ hóa và lưu dữ liệu</string>
+  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Đồng bộ hóa và lưu dữ liệu</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Gửi đến tất cả các thiết bị</string>
   <!-- An option from the share dialog to reconnect to sync -->
@@ -2273,6 +2279,8 @@
     Text shown in snackbar when multiple tabs have been sent to device
   -->
   <string name="sync_sent_tabs_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Đã gửi các thẻ!</string>
+  <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+  <string name="sync_sent_tabs_snackbar_2">Đã gửi các thẻ</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
   <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Đã gửi thẻ!</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->

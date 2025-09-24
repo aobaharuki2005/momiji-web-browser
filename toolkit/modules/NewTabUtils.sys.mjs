@@ -2356,7 +2356,7 @@ export var NewTabUtils = {
    * @returns {Number} utc_offset. Output is clamped if surfaceID is specified, and 0 if surfaceID present and not supported.
    */
   getUtcOffset(surfaceID) {
-    const surfaceRestrictions = { NEW_TAB_EN_US: { min: 7, max: 10 } }; // Inclusive hour ranges
+    const surfaceRestrictions = { NEW_TAB_EN_US: { min: 24 - 8, max: 24 - 4 } }; // Inclusive hour ranges UTC-8 (PST), UTC-4 (EDT)
     const restriction = surfaceID && surfaceRestrictions[surfaceID];
     if (surfaceID && !restriction) {
       // Missing restriction for the surface

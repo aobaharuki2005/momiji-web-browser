@@ -293,7 +293,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Ìsọditaraẹni</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">Wọlé láti so táàbù pọ̀, àwọn búkúmaakì, àwọn ọ̀rọ̀ ìpamọ́, àti díẹ̀ si.</string>
+  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Wọlé láti so táàbù pọ̀, àwọn búkúmaakì, àwọn ọ̀rọ̀ ìpamọ́, àti díẹ̀ si.</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
   <string name="preferences_account_sync_error">Tún darapọ̀ láti tún bẹ̀rẹ̀ ìṣiṣẹ́pọ̀ padà</string>
   <!-- Preference for language -->
@@ -426,7 +426,7 @@
 
     Header of the Sync and save your data preference view
   -->
-  <string name="preferences_sync_2">Ṣe ìṣepọ̀ kí o sì fi dátà rẹ pamọ́</string>
+  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Ṣe ìṣepọ̀ kí o sì fi dátà rẹ pamọ́</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Wọlé láti tún-un sopọ̀</string>
   <!-- Preference for removing FxA account -->

@@ -4,6 +4,26 @@
   <string name="mozac_feature_addons_permissions_one_site_description">Pristup podatcima za %1$s</string>
   <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->
   <string name="mozac_feature_addons_permissions_sites_in_domain_description">Pristup podatcima stranica na domeni %1$s</string>
+  <!--
+    When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
+    then we will show another collapsed entry saying "Access your data on another site".
+  -->
+  <string name="mozac_feature_addons_permissions_one_extra_site_description_2">Pristup tvojim podatcima na drugoj stranici</string>
+  <!--
+    When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
+    then we will show another collapsed entry saying "Access your data on other sites".
+  -->
+  <string name="mozac_feature_addons_permissions_extra_sites_description_2">Pristup tvojim podatcima na drugim stranicama</string>
+  <!--
+    When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+    then we will show another collapsed entry saying "Access your data on another domain.
+  -->
+  <string name="mozac_feature_addons_permissions_one_extra_domain_description_2">Pristup tvojim podatcima na drugoj domeni</string>
+  <!--
+    When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+    then we will show another collapsed entry saying "Access your data on other domains".
+  -->
+  <string name="mozac_feature_addons_permissions_extra_domains_description_plural_2">Pristup tvojim podatcima na drugim domenama</string>
   <!-- When an add-on requires access to domains, this entry is used to describe the total number of domains. Underneath it will be the list of all the domains. %1$d is the number of all the domains that will be shown to the user as required. -->
   <string name="mozac_feature_addons_permissions_all_domain_count_description" tools:ignore="PluralsCandidate">Pristupi svojim podacima za web stranice u %1$d domena</string>
   <!-- Content description for a permission item, for an installed add-on details page. %1$s will be replaced with the permission text name, %2$d will be replaced with the permission position in the list and %3$d will be replaced with the total number of permissions in the list.Taking as an example "Read and modify privacy settings" the whole text will read Read and modify privacy settings, 2 of 6. -->
@@ -62,6 +82,28 @@
   <string name="mozac_feature_addons_permissions_user_scripts_description">Dozvoli neprovjerenim skriptama trećih strana pristup tvojim podacima</string>
   <!-- Description for the "devtools" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_devtools_description">Proširi alate za razvojne programere za pristup podacima u otvorenim karticama</string>
+  <!-- Description for the "privacy" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_privacy_description_for_update">Čitanje i mijenjanje postavki privatnosti.</string>
+  <!-- Description for the "<all_urls>" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_all_urls_description_for_update">Pristup tvojim podacima za sve web stranice.</string>
+  <!-- Description for the "tabs" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_tabs_description_for_update">Pristup karticama preglednika.</string>
+  <!-- Description for the "webNavigation" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_web_navigation_description_for_update">Pristup aktivnostima preglednika tijekom korištenja navigacije.</string>
+  <!-- Description for the "bookmarks" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_bookmarks_description_for_update">Čitanje i uređivanje zabilješki.</string>
+  <!-- Description for the "browserSettings" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_browser_settings_description_for_update">Čitanje i mijenjanje postavki preglednika.</string>
+  <!-- Description for the "browsingData" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_browsing_data_description_for_update">Čišćenje nedavne povijesti pretraživanja, kolačića i povezanih podataka.</string>
+  <!-- Description for the "clipboardRead" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_clipboard_read_description_for_update">Dohvaćanje podataka iz međuspremnika.</string>
+  <!-- Description for the "clipboardWrite" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_clipboard_write_description_for_update">Unošenje podataka u međuspremnik.</string>
+  <!-- Description for the "declarativeNetRequest" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_declarative_net_request_description_for_update">Blokiranje sadržaja na svim stranicama.</string>
+  <!-- Description for the "declarativeNetRequestFeedback" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description_for_update">Čitanje tvoje povijesti pregledavanja.</string>
   <!-- The text shown when an extension requests the userScripts permission, near the usual description of the userScripts permission -->
   <string name="mozac_feature_addons_permissions_user_scripts_extra_warning">Neprovjerena skripta mogu predstavljati rizike za sigurnost i privatnost. Pokreći samo skripta iz proširenja ili izvora kojima vjeruješ.</string>
   <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
