@@ -1498,6 +1498,9 @@ topsites:
       is_pinned: &is_pinned
         description: Whether the topsite tile is pinned.
         type: boolean
+      visible_topsites: &visible_topsites
+        description: The quantity of visible topsites when event occurred
+        type: quantity
     send_in_pings:
       - newtab
 
@@ -1535,6 +1538,7 @@ topsites:
       is_sponsored: *is_sponsored
       position: *topsite_position
       is_pinned: *is_pinned
+      visible_topsites: *visible_topsites
     send_in_pings:
       - newtab
 

@@ -569,6 +569,7 @@ export class TelemetryFeed {
       source,
       advertiser: advertiser_name,
       tile_id,
+      visible_topsites,
     } = data;
     // Legacy telemetry expects 1-based tile positions.
     const legacyTelemetryPosition = position + 1;
@@ -578,8 +579,8 @@ export class TelemetryFeed {
     );
 
     let pingType;
-
     const session = this.sessions.get(au.getPortIdOfSender(action));
+
     if (type === "impression") {
       pingType = "topsites-impression";
       Glean.contextualServicesTopsites.impression[
@@ -592,6 +593,7 @@ export class TelemetryFeed {
           newtab_visit_id: session.session_id,
           is_sponsored: true,
           position,
+          visible_topsites,
         });
       }
     } else if (type === "click") {
@@ -606,6 +608,7 @@ export class TelemetryFeed {
           newtab_visit_id: session.session_id,
           is_sponsored: true,
           position,
+          visible_topsites,
         });
       }
     } else {
@@ -638,6 +641,7 @@ export class TelemetryFeed {
     if (!session) {
       return;
     }
+    const visible_topsites = action.data?.visible_topsites;
 
     switch (action.data?.type) {
       case "impression":
@@ -646,6 +650,7 @@ export class TelemetryFeed {
           is_sponsored: false,
           position: action.data.position,
           is_pinned: !!action.data.isPinned,
+          visible_topsites,
         });
         break;
 
@@ -655,6 +660,7 @@ export class TelemetryFeed {
           is_sponsored: false,
           position: action.data.position,
           is_pinned: !!action.data.isPinned,
+          visible_topsites,
         });
         break;
 

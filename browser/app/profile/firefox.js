@@ -781,9 +781,6 @@ pref("browser.urlbar.yelpRealtime.minKeywordLength", 0);
 
 pref("browser.altClickSave", false);
 
-// Enable logging downloads operations to the Console.
-pref("browser.download.loglevel", "Error");
-
 // Number of milliseconds to wait for the http headers (and thus
 // the Content-Disposition filename) before giving up and falling back to
 // picking a filename without that info in hand so that the user sees some
@@ -1050,6 +1047,7 @@ pref("browser.tabs.groups.smart.optin", false);
 pref("browser.tabs.dragDrop.createGroup.delayMS", 240);
 pref("browser.tabs.dragDrop.expandGroup.delayMS", 350);
 pref("browser.tabs.dragDrop.selectTab.delayMS", 350);
+pref("browser.tabs.dragDrop.pinInteractionCue.delayMS", 500);
 pref("browser.tabs.dragDrop.moveOverThresholdPercent", 80);
 
 pref("browser.tabs.firefox-view.logLevel", "Warn");

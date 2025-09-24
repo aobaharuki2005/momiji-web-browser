@@ -2780,6 +2780,7 @@
       dragData.animLastScreenPos = screen;
 
       this.#clearDragOverGroupingTimer();
+      this.#clearPinnedDropIndicatorTimer();
 
       let isPinned = draggedTab.pinned;
       let numPinned = gBrowser.pinnedTabCount;
@@ -3325,12 +3326,15 @@
         if (isVisible) {
           this.pinnedDropIndicator.setAttribute("interactive", "");
         } else if (!this.#pinnedDropIndicatorTimeout) {
+          let interactionDelay = Services.prefs.getIntPref(
+            "browser.tabs.dragDrop.pinInteractionCue.delayMS"
+          );
           this.#pinnedDropIndicatorTimeout = setTimeout(() => {
             if (this.#isMovingTab()) {
               this.pinnedDropIndicator.setAttribute("visible", "");
               this.pinnedDropIndicator.setAttribute("interactive", "");
             }
-          }, 350);
+          }, interactionDelay);
         }
       } else if (!inPinnedRange) {
         this.pinnedDropIndicator.removeAttribute("interactive");
@@ -3404,11 +3408,15 @@
       this.#resetPinnedDropIndicator();
     }
 
-    #resetPinnedDropIndicator() {
+    #clearPinnedDropIndicatorTimer() {
       if (this.#pinnedDropIndicatorTimeout) {
         clearTimeout(this.#pinnedDropIndicatorTimeout);
         this.#pinnedDropIndicatorTimeout = null;
       }
+    }
+
+    #resetPinnedDropIndicator() {
+      this.#clearPinnedDropIndicatorTimer();
       this.pinnedDropIndicator.removeAttribute("visible");
       this.pinnedDropIndicator.removeAttribute("interactive");
     }

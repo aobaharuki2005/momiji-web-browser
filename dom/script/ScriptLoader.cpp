@@ -2730,6 +2730,15 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
       hasFetchCountMin = false;
       break;
     }
+    case 1: {
+      hasSourceLengthMin = true;
+      hasFetchCountMin = true;
+      sourceLengthMin = 1024;
+      // fetchCountMin is optimized for speed in exchange for additional
+      // memory and cache use.
+      fetchCountMin = 2;
+      break;
+    }
     default:
     case 0: {
       hasSourceLengthMin = true;

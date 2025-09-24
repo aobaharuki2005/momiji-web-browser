@@ -14,7 +14,7 @@
 
 #include <stddef.h>
 
-static const PRTime kCTExpirationTime = INT64_C(1764241127000000);
+static const PRTime kCTExpirationTime = INT64_C(1764591038000000);
 
 namespace mozilla::ct {
 
@@ -218,7 +218,7 @@ const CTLogInfo kCTLogList[] = {
      "\xcd",
      91},
     {"Sectigo 'Sabre2025h2'", CTLogState::Admissible, CTLogFormat::RFC6962,
-     1701000000000,  // 2023-11-26T12:00:00Z
+     1758216000000,  // 2025-09-18T17:20:00Z
      3,              // operated by Sectigo
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x85\x13\x11\x2d\x7b\xf3\x93\x81\xe4"
@@ -238,7 +238,7 @@ const CTLogInfo kCTLogList[] = {
      "\x6f",
      91},
     {"Sectigo 'Mammoth2026h1'", CTLogState::Admissible, CTLogFormat::RFC6962,
-     1728925200000,  // 2024-10-14T17:00:00Z
+     1758216000000,  // 2025-09-18T17:20:00Z
      3,              // operated by Sectigo
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x9e\xcb\x0c\x8a\x51\xcc\x8a\xe2\x0b"
@@ -248,7 +248,7 @@ const CTLogInfo kCTLogList[] = {
      "\xc4",
      91},
     {"Sectigo 'Mammoth2026h2'", CTLogState::Admissible, CTLogFormat::RFC6962,
-     1728925200000,  // 2024-10-14T17:00:00Z
+     1758216000000,  // 2025-09-18T17:20:00Z
      3,              // operated by Sectigo
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xec\x83\x61\xf2\xd7\xb4\xbb\xe4\xe4"
@@ -258,7 +258,7 @@ const CTLogInfo kCTLogList[] = {
      "\xb6",
      91},
     {"Sectigo 'Sabre2026h1'", CTLogState::Admissible, CTLogFormat::RFC6962,
-     1728925200000,  // 2024-10-14T17:00:00Z
+     1758216000000,  // 2025-09-18T17:20:00Z
      3,              // operated by Sectigo
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x84\x26\xbc\x36\xbd\xd8\x8d\x3c\x87"
@@ -268,7 +268,7 @@ const CTLogInfo kCTLogList[] = {
      "\x60",
      91},
     {"Sectigo 'Sabre2026h2'", CTLogState::Admissible, CTLogFormat::RFC6962,
-     1728925200000,  // 2024-10-14T17:00:00Z
+     1758216000000,  // 2025-09-18T17:20:00Z
      3,              // operated by Sectigo
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xce\x35\xca\xec\x39\x07\x82\xda\x77"
@@ -328,7 +328,7 @@ const CTLogInfo kCTLogList[] = {
      "\xf2",
      91},
     {"Sectigo 'Tiger2025h2'", CTLogState::Admissible, CTLogFormat::RFC6962,
-     1752066000000,  // 2025-07-09T13:00:00Z
+     1758236400000,  // 2025-09-18T23:00:00Z
      3,              // operated by Sectigo
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x15\x49\x79\x91\xe0\x5b\x59\x57\x24"
@@ -338,7 +338,7 @@ const CTLogInfo kCTLogList[] = {
      "\xc6",
      91},
     {"Sectigo 'Tiger2026h1'", CTLogState::Admissible, CTLogFormat::RFC6962,
-     1752066000000,  // 2025-07-09T13:00:00Z
+     1758236400000,  // 2025-09-18T23:00:00Z
      3,              // operated by Sectigo
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xef\x77\x83\x27\x2b\x33\x0d\xbc\xec"
@@ -348,7 +348,7 @@ const CTLogInfo kCTLogList[] = {
      "\xc6",
      91},
     {"Sectigo 'Tiger2026h2'", CTLogState::Admissible, CTLogFormat::RFC6962,
-     1752066000000,  // 2025-07-09T13:00:00Z
+     1758236400000,  // 2025-09-18T23:00:00Z
      3,              // operated by Sectigo
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x7c\x91\x54\x0f\xf1\x51\x92\x89\xef"
@@ -358,7 +358,7 @@ const CTLogInfo kCTLogList[] = {
      "\x9c",
      91},
     {"Sectigo 'Tiger2027h1'", CTLogState::Admissible, CTLogFormat::RFC6962,
-     1752066000000,  // 2025-07-09T13:00:00Z
+     1758236400000,  // 2025-09-18T23:00:00Z
      3,              // operated by Sectigo
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x98\xc4\x28\x7e\x9b\x03\x8c\x25\x58"
@@ -368,7 +368,7 @@ const CTLogInfo kCTLogList[] = {
      "\x84",
      91},
     {"Sectigo 'Tiger2027h2'", CTLogState::Admissible, CTLogFormat::RFC6962,
-     1752066000000,  // 2025-07-09T13:00:00Z
+     1758236400000,  // 2025-09-18T23:00:00Z
      3,              // operated by Sectigo
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x6f\x40\x20\x91\xe9\xa1\xb0\xf9\x98"

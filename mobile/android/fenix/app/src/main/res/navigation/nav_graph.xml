@@ -873,7 +873,7 @@
     <fragment
         android:id="@+id/turnOnSyncFragment"
         android:name="org.mozilla.fenix.settings.account.TurnOnSyncFragment"
-        android:label="@string/preferences_sync_2"
+        android:label="@string/preferences_sign_in"
         tools:layout="@layout/fragment_turn_on_sync">
         <action
             android:id="@+id/action_turnOnSyncFragment_to_pairFragment"
@@ -886,7 +886,7 @@
     <fragment
         android:id="@+id/pairFragment"
         android:name="org.mozilla.fenix.settings.PairFragment"
-        android:label="@string/preferences_sync_2"
+        android:label="@string/preferences_sign_in"
         tools:layout="@layout/fragment_pair" >
         <argument
             android:name="entrypoint"

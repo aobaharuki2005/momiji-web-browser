@@ -11866,6 +11866,13 @@ NS_IMETHODIMP nsHttpChannel::SetResponseOverride(
     nsIReplacedHttpResponse* aReplacedHttpResponse) {
   mOverrideResponse = new nsMainThreadPtrHolder<nsIReplacedHttpResponse>(
       "nsIReplacedHttpResponse", aReplacedHttpResponse);
+
+  if (LoadRequireCORSPreflight()) {
+    // Bug 1986615, Bug 1940738, responses provided via setResponseOverride will
+    // be handled before the preflight can be sent, flag it as done.
+    StoreIsCorsPreflightDone(true);
+  }
+
   return NS_OK;
 }
 

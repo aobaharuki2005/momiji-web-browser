@@ -145,7 +145,7 @@ class MainMenuTest : TestSetup() {
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2284323
     @Test
-    fun openSyncAndSaveDataTest() {
+    fun openSignInTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {

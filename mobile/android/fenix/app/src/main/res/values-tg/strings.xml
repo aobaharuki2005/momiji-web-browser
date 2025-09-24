@@ -572,6 +572,18 @@
   <string name="onboarding_redesign_tou_body_three_link_text">Идоракунии танзимот</string>
   <!-- Terms of use (ToU) onboarding page continue button label. -->
   <string name="onboarding_redesign_tou_agree_and_continue_button_label">Идома додан</string>
+  <!-- Onboarding header for the toolbar selection card. -->
+  <string name="onboarding_redesign_customize_toolbar_title">Шумо дар куҷо мехоҳед, ки навори нишониро ҷойгир намоед?</string>
+  <!-- Onboarding label for 'Continue' button. -->
+  <string name="onboarding_redesign_continue_button">Идома додан</string>
+  <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_redesign_title" tools:ignore="BrandUsage">Ба мо барои инкишофи браузери «Firefox» кумак расонед</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_redesign_opt_out_checkbox" tools:ignore="BrandUsage">Ба шарикони технологияи бозоршиносии «Mozilla» хабар диҳед, ки шумо чӣ тавр браузери «Firefox»-ро пайдо кардед ва онро истифода мебаред. Ин маълумот ҳеҷ гоҳ фурӯхта намешавад.</string>
+  <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
+  <string name="onboarding_marketing_redesign_learn_more">Чӣ тавр мо маълумотро истифода мебарем</string>
+  <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
+  <string name="onboarding_marketing_redesign_positive_button">Тасдиқ кардан</string>
   <!-- Set to default browser onboarding redesign title. -->
   <string name="onboarding_redesign_set_default_browser_title">Истифодаи муҳофизати худкор аз пайгирӣ ба таври пешфарз</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
@@ -788,6 +800,8 @@
   <string name="preferences_customize">Фармоишдиҳӣ</string>
   <!-- Preference description for banner about signing in -->
   <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Барои ҳамоҳангсозии варақаҳо, хатбаракҳо, ниҳонвожаҳо ва чизҳои дигар, ворид шавед.</string>
+  <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
+  <string name="preferences_sign_in_description">Варақаҳо, хатбаракҳо, ниҳонвожаҳо ва бисёр чизҳои дигарро ҳамоҳанг созед.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Ҳисоби «Mozilla»</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1190,6 +1204,8 @@
     Header of the Sync and save your data preference view
   -->
   <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Ҳамоҳангсозӣ ва нигоҳ доштани маълумоти шумо</string>
+  <!-- Header of the Sign in preference view -->
+  <string name="preferences_sign_in">Ворид шудан</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Барои аз нав пайваст шудан ворид шавед</string>
   <!-- Preference for removing FxA account -->
@@ -1338,6 +1354,8 @@
   <string name="close_tabs_after_one_month">Пас аз як моҳ</string>
   <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
   <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Пӯшидани варақаҳои кушода ба таври худкор</string>
+  <!-- Content description (not visible, for screen readers etc.): Close tab button -->
+  <string name="tab_manager_close_tabs">Пӯшидан</string>
   <!--
     Opening screen
 
@@ -2069,6 +2087,8 @@
   <string name="sync_sign_in">Барои ҳамоҳангсозӣ ворид шавед</string>
   <!-- An option from the three dot menu to sync and save data -->
   <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Ҳамоҳангсозӣ ва нигоҳ доштани маълумот</string>
+  <!-- An option from the three dot menu to sign in -->
+  <string name="sync_menu_sign_in">Ворид шудан</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Фиристодан ба ҳамаи дастгоҳҳо</string>
   <!-- An option from the share dialog to reconnect to sync -->

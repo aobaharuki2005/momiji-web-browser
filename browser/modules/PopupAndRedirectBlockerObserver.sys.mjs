@@ -4,12 +4,6 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  SitePermissions: "resource:///modules/SitePermissions.sys.mjs",
-});
-
 export var PopupAndRedirectBlockerObserver = {
   /**
    * This is to check if we are currently in the process of appending a
@@ -144,6 +138,16 @@ export var PopupAndRedirectBlockerObserver = {
     const window = aEvent.originalTarget.ownerGlobal;
     const { gBrowser, document } = window;
 
+    // We get `uriHost` from the principal whenever possible and fall
+    // back to the `spec` for special pages without a host, e.g. "about:".
+    const browser = gBrowser.selectedBrowser;
+    const uriOrPrincipal = browser.isContentPrincipal
+      ? browser.contentPrincipal
+      : browser.currentURI;
+    const uriHost = uriOrPrincipal.asciiHost
+      ? uriOrPrincipal.displayHost
+      : uriOrPrincipal.spec;
+
     // "Allow pop-ups for site..."
     const blockedPopupAllowSite = document.getElementById(
       "blockedPopupAllowSite"
@@ -152,7 +156,7 @@ export var PopupAndRedirectBlockerObserver = {
     document.l10n.setAttributes(
       blockedPopupAllowSite,
       "popups-infobar-allow2",
-      { uriHost: gBrowser.currentURI.displayHost }
+      { uriHost }
     );
 
     // "Dont show this message when..."
@@ -346,20 +350,12 @@ export var PopupAndRedirectBlockerObserver = {
     const window = aEvent.originalTarget.ownerGlobal;
     const { gBrowser } = window;
 
-    const permission = Services.perms.testPermissionFromPrincipal(
-      gBrowser.contentPrincipal,
-      "popup"
-    );
-    if (permission == Services.perms.ALLOW_ACTION) {
-      throw new Error("Popups should not be allowed in this state");
-    }
-
     // The toggle should only be visible (and therefore clickable) if
     // popups are currently blocked.
-    lazy.SitePermissions.setForPrincipal(
+    Services.perms.addFromPrincipal(
       gBrowser.contentPrincipal,
       "popup",
-      lazy.SitePermissions.ALLOW
+      Services.perms.ALLOW_ACTION
     );
     gBrowser.getNotificationBox().removeCurrentNotification();
 

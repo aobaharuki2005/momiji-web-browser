@@ -573,11 +573,11 @@
   <!-- Terms of use (ToU) onboarding page continue button label. -->
   <string name="onboarding_redesign_tou_agree_and_continue_button_label">Continuar</string>
   <!-- Onboarding header for the toolbar selection card. -->
-  <string name="onboarding_redesign_customize_toolbar_title">¿Dónde quiere que esté la barra de direcciones?</string>
+  <string name="onboarding_redesign_customize_toolbar_title">¿Dónde querés que esté la barra de direcciones?</string>
   <!-- Onboarding label for 'Continue' button. -->
   <string name="onboarding_redesign_continue_button">Continuar</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_redesign_title" tools:ignore="BrandUsage">Ayúdanos a hacer crecer a Firefox</string>
+  <string name="onboarding_marketing_redesign_title" tools:ignore="BrandUsage">Ayudanos a hacer crecer a Firefox</string>
   <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_redesign_opt_out_checkbox" tools:ignore="BrandUsage">Compartí con los socios de marketing de Mozilla cómo descubriste Firefox y lo usás. Estos datos nunca serán vendidos.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
@@ -3029,7 +3029,7 @@
     Text displayed in the tabs tray, indicating the number of inactive tabs.
     %d is the number of inactive tabs.
   -->
-  <string name="inactive_tabs_num_items">Elementos: %d</string>
+  <string name="inactive_tabs_num_items">Ítems: %d</string>
   <!-- Content description for closing all inactive tabs -->
   <string name="inactive_tabs_delete_all">Cerrar todas las pestañas inactivas</string>
   <!-- Content description for expanding the inactive tabs section. -->
