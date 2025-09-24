@@ -92,11 +92,6 @@ struct ScratchDoubleScope2 : public AutoFloatRegisterScope {
       : AutoFloatRegisterScope(masm, ScratchDoubleReg2) {}
 };
 
-struct ScratchRegisterScope : public AutoRegisterScope {
-  explicit ScratchRegisterScope(MacroAssembler& masm)
-      : AutoRegisterScope(masm, ScratchRegister) {}
-};
-
 class MacroAssembler;
 
 static constexpr uint32_t ABIStackAlignment = 16;
@@ -448,9 +443,9 @@ class Assembler : public AssemblerShared,
     // - Return address has to be at the end of replaced block.
     // Short jump wouldn't be more efficient.
     // WriteLoad64Instructions will emit 6 instrs to load a addr.
-    Assembler::WriteLoad64Instructions(inst, ScratchRegister, (uint64_t)dest);
+    Assembler::WriteLoad64Instructions(inst, SavedScratchRegister, (uint64_t)dest);
     Instr jalr_ = JALR | (ra.code() << kRdShift) | (0x0 << kFunct3Shift) |
-                  (ScratchRegister.code() << kRs1Shift) | (0x0 << kImm12Shift);
+                  (SavedScratchRegister.code() << kRs1Shift) | (0x0 << kImm12Shift);
     *reinterpret_cast<Instr*>(inst + 6 * kInstrSize) = jalr_;
   }
   static void WriteLoad64Instructions(Instruction* inst0, Register reg,
@@ -589,6 +584,7 @@ class UseScratchRegisterScope {
   ~UseScratchRegisterScope();
 
   Register Acquire();
+  void Release(const Register& reg);
   bool hasAvailable() const;
   void Include(const GeneralRegisterSet& list) {
     *available_ = GeneralRegisterSet::Union(*available_, list);

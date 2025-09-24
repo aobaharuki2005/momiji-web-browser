@@ -3794,13 +3794,14 @@ void MacroAssembler::patchNearAddressMove(CodeLocationLabel loc,
 
 void MacroAssembler::patchNopToCall(uint8_t* call, uint8_t* target) {
   uint32_t* p = reinterpret_cast<uint32_t*>(call) - 7;
-  Assembler::WriteLoad64Instructions((Instruction*)p, ScratchRegister,
+  Assembler::WriteLoad64Instructions((Instruction*)p, SavedScratchRegister,
                                      (uint64_t)target);
   DEBUG_PRINTF("\tpatchNopToCall %" PRIu64 " %" PRIu64 "\n", (uint64_t)target,
                ExtractLoad64Value((Instruction*)p));
   MOZ_ASSERT(ExtractLoad64Value((Instruction*)p) == (uint64_t)target);
   Instr jalr_ = JALR | (ra.code() << kRdShift) | (0x0 << kFunct3Shift) |
-                (ScratchRegister.code() << kRs1Shift) | (0x0 << kImm12Shift);
+                (SavedScratchRegister.code() << kRs1Shift) |
+                (0x0 << kImm12Shift);
   *reinterpret_cast<Instr*>(p + 6) = jalr_;
 }
 void MacroAssembler::Pop(Register reg) {

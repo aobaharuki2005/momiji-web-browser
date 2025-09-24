@@ -37,10 +37,40 @@ enum LoadStoreSize {
 enum LoadStoreExtension { ZeroExtend = 0, SignExtend = 1 };
 enum JumpKind { LongJump = 0, ShortJump = 1 };
 enum FloatFormat { SingleFloat, DoubleFloat };
-class ScratchTagScope : public ScratchRegisterScope {
+class ScratchTagScope {
+  UseScratchRegisterScope temps_;
+  Register scratch_;
+  bool owned_;
+  mozilla::DebugOnly<bool> released_;
+
  public:
-  ScratchTagScope(MacroAssembler& masm, const ValueOperand&)
-      : ScratchRegisterScope(masm) {}
+  ScratchTagScope(Assembler& masm, const ValueOperand&)
+      : temps_(masm), owned_(true), released_(false) {
+    scratch_ = temps_.Acquire();
+  }
+
+  operator Register() {
+    MOZ_ASSERT(!released_);
+    return scratch_;
+  }
+
+  void release() {
+    MOZ_ASSERT(!released_);
+    released_ = true;
+    if (owned_) {
+      temps_.Release(scratch_);
+      owned_ = false;
+    }
+  }
+
+  void reacquire() {
+    MOZ_ASSERT(released_);
+    released_ = false;
+    if (!owned_) {
+      scratch_ = temps_.Acquire();
+      owned_ = true;
+    }
+  }
 };
 
 class ScratchTagScopeRelease {
