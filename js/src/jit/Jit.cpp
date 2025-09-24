@@ -57,6 +57,7 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
   nogc.emplace(cx);
 #endif
 
+  JSScript* script = state.script();
   size_t numActualArgs;
   bool constructing;
   size_t maxArgc;
@@ -64,6 +65,7 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
   JSObject* envChain;
   CalleeToken calleeToken;
 
+  unsigned numFormals = 0;
   if (state.isInvoke()) {
     const CallArgs& args = state.asInvoke()->args();
     numActualArgs = args.length();
@@ -74,16 +76,17 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
     }
 
     constructing = state.asInvoke()->constructing();
-
-    // Caller must construct |this| before invoking the function.
-    MOZ_ASSERT_IF(constructing,
-                  args.thisv().isObject() ||
-                      args.thisv().isMagic(JS_UNINITIALIZED_LEXICAL));
-
-    maxArgc = args.length();
-    maxArgv = args.array();
+    maxArgc = args.length() + 1;
+    maxArgv = args.array() - 1;  // -1 to include |this|
     envChain = nullptr;
     calleeToken = CalleeToToken(&args.callee().as<JSFunction>(), constructing);
+
+    numFormals = script->function()->nargs();
+    if (numFormals > numActualArgs) {
+#ifndef ENABLE_PORTABLE_BASELINE_INTERP
+      code = cx->runtime()->jitRuntime()->getArgumentsRectifier().value;
+#endif
+    }
   } else {
     numActualArgs = 0;
     constructing = false;
@@ -92,6 +95,10 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
     envChain = state.asExecute()->environmentChain();
     calleeToken = CalleeToToken(state.script());
   }
+
+  // Caller must construct |this| before invoking the function.
+  MOZ_ASSERT_IF(constructing, maxArgv[0].isObject() ||
+                                  maxArgv[0].isMagic(JS_UNINITIALIZED_LEXICAL));
 
   RootedValue result(cx, Int32Value(numActualArgs));
   {
@@ -115,10 +122,8 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
     if (!pbl::PortablebaselineInterpreterStackCheck(cx, state, numActualArgs)) {
       return EnterJitStatus::NotEntered;
     }
-    unsigned numFormals =
-        state.isInvoke() ? state.script()->function()->nargs() : 0;
     if (!pbl::PortableBaselineTrampoline(cx, maxArgc, maxArgv, numFormals,
-                                         calleeToken, envChain,
+                                         numActualArgs, calleeToken, envChain,
                                          result.address())) {
       return EnterJitStatus::Error;
     }
@@ -141,8 +146,8 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
   // Jit callers wrap primitive constructor return, except for derived
   // class constructors, which are forced to do it themselves.
   if (constructing && result.isPrimitive()) {
-    result = state.asInvoke()->args().thisv();
-    MOZ_ASSERT(result.isObject());
+    MOZ_ASSERT(maxArgv[0].isObject());
+    result = maxArgv[0];
   }
 
   state.setReturnValue(result);

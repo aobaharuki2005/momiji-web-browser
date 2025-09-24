@@ -263,21 +263,15 @@ void MacroAssembler::Push(FrameDescriptor descriptor) {
   Push(Imm32(descriptor.value()));
 }
 
-void MacroAssembler::makeFrameDescriptorForJitCall(FrameType type,
-                                                   Register argc, Register dest,
-                                                   bool hasInlineICScript) {
-  lshift32(Imm32(FrameDescriptor::NumActualArgsShift), argc, dest);
-  FrameDescriptor base(type, 0, hasInlineICScript);
-  if (base.value()) {
-    or32(Imm32(base.value()), dest);
-  }
-}
-
 void MacroAssembler::pushFrameDescriptorForJitCall(FrameType type,
                                                    Register argc,
                                                    Register scratch,
                                                    bool hasInlineICScript) {
-  makeFrameDescriptorForJitCall(type, argc, scratch, hasInlineICScript);
+  lshift32(Imm32(FrameDescriptor::NumActualArgsShift), argc, scratch);
+  FrameDescriptor base(type, 0, hasInlineICScript);
+  if (base.value()) {
+    or32(Imm32(base.value()), scratch);
+  }
   push(scratch);
 }
 

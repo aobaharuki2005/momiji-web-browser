@@ -99,8 +99,6 @@ struct EnterJitData {
   RootedValue result;
 
   bool constructing;
-
-  Value& thisv() const { return maxArgv[-1]; }
 };
 
 static JitExecStatus EnterBaseline(JSContext* cx, EnterJitData& data) {
@@ -130,8 +128,8 @@ static JitExecStatus EnterBaseline(JSContext* cx, EnterJitData& data) {
 
   // Caller must construct |this| before invoking the function.
   MOZ_ASSERT_IF(data.constructing,
-                data.thisv().isObject() ||
-                    data.thisv().isMagic(JS_UNINITIALIZED_LEXICAL));
+                data.maxArgv[0].isObject() ||
+                    data.maxArgv[0].isMagic(JS_UNINITIALIZED_LEXICAL));
 
   data.result.setInt32(data.numActualArgs);
   {
@@ -155,8 +153,8 @@ static JitExecStatus EnterBaseline(JSContext* cx, EnterJitData& data) {
   // class constructors, which are forced to do it themselves.
   if (!data.result.isMagic() && data.constructing &&
       data.result.isPrimitive()) {
-    MOZ_ASSERT(data.thisv().isObject());
-    data.result = data.thisv();
+    MOZ_ASSERT(data.maxArgv[0].isObject());
+    data.result = data.maxArgv[0];
   }
 
   // Release temporary buffer used for OSR into Ion.
@@ -186,8 +184,9 @@ JitExecStatus jit::EnterBaselineInterpreterAtBranch(JSContext* cx,
   if (fp->isFunctionFrame()) {
     data.constructing = fp->isConstructing();
     data.numActualArgs = fp->numActualArgs();
-    data.maxArgc = std::max(fp->numActualArgs(), fp->numFormalArgs());
-    data.maxArgv = fp->argv();
+    data.maxArgc = std::max(fp->numActualArgs(), fp->numFormalArgs()) +
+                   1;               // +1 = include |this|
+    data.maxArgv = fp->argv() - 1;  // -1 = include |this|
     data.envChain = nullptr;
     data.calleeToken = CalleeToToken(&fp->callee(), data.constructing);
   } else {
