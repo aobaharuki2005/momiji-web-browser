@@ -400,7 +400,7 @@ void nsWaylandDisplay::SetKeyboard(wl_keyboard* aKeyboard) {
 
 void nsWaylandDisplay::ClearKeyboard() {
   if (mKeyboard) {
-    wl_keyboard_destroy(mKeyboard);
+    wl_keyboard_release(mKeyboard);
     mKeyboard = nullptr;
     KeymapWrapper::ClearKeymap();
   }
