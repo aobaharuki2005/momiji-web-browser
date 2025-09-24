@@ -324,6 +324,13 @@ static void seat_handle_capabilities(void* data, struct wl_seat* seat,
   } else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD) && keyboard) {
     display->ClearKeyboard();
   }
+
+  wl_touch* touch = display->GetTouch();
+  if ((caps & WL_SEAT_CAPABILITY_TOUCH) && !touch) {
+    display->SetTouch(wl_seat_get_touch(seat));
+  } else if (!(caps & WL_SEAT_CAPABILITY_TOUCH) && touch) {
+    display->ClearTouch();
+  }
 }
 
 static void seat_handle_name(void* data, struct wl_seat* seat,
@@ -404,6 +411,40 @@ void nsWaylandDisplay::ClearKeyboard() {
     mKeyboard = nullptr;
     KeymapWrapper::ClearKeymap();
   }
+}
+
+static void touch_handle_down(void* data, struct wl_touch* touch,
+                              uint32_t serial, uint32_t time,
+                              struct wl_surface* surface, int32_t id,
+                              wl_fixed_t x, wl_fixed_t y) {
+  gLastSerial = serial;
+}
+
+static void touch_handle_up(void* data, struct wl_touch* touch, uint32_t serial,
+                            uint32_t time, int32_t id) {}
+
+static void touch_handle_motion(void* data, struct wl_touch* touch,
+                                uint32_t time, int32_t id, wl_fixed_t x,
+                                wl_fixed_t y) {}
+
+static void touch_handle_frame(void* data, struct wl_touch* touch) {}
+
+static void touch_handle_cancel(void* data, struct wl_touch* touch) {}
+
+static const struct wl_touch_listener touch_listener = {
+    touch_handle_down,  touch_handle_up,     touch_handle_motion,
+    touch_handle_frame, touch_handle_cancel,
+};
+
+void nsWaylandDisplay::SetTouch(wl_touch* aTouch) {
+  MOZ_ASSERT(aTouch);
+  MOZ_DIAGNOSTIC_ASSERT(!mTouch);
+  mTouch = aTouch;
+  wl_touch_add_listener(mTouch, &touch_listener, nullptr);
+}
+
+void nsWaylandDisplay::ClearTouch() {
+  MozClearPointer(mTouch, wl_touch_release);
 }
 
 void nsWaylandDisplay::SetCompositor(wl_compositor* aCompositor) {
