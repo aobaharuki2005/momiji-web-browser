@@ -38,8 +38,8 @@ class HasSeenArrayExceedsInt32LengthFuse final
   void popFuse(JSContext* cx) override;
 };
 
-#define FOR_EACH_RUNTIME_FUSE(FUSE)                                            \
-  FUSE(HasSeenObjectEmulateUndefinedFuse, hasSeenObjectEmulateUndefinedFuse)   \
+#define FOR_EACH_RUNTIME_FUSE(FUSE)                                          \
+  FUSE(HasSeenObjectEmulateUndefinedFuse, hasSeenObjectEmulateUndefinedFuse) \
   FUSE(HasSeenArrayExceedsInt32LengthFuse, hasSeenArrayExceedsInt32LengthFuse)
 
 struct RuntimeFuses {
