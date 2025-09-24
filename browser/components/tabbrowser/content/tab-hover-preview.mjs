@@ -42,16 +42,10 @@ export default class TabHoverPanelSet {
       "ui.popup.disable_autohide",
       false
     );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "_prefPreviewDelay",
-      "ui.tooltip.delay_ms"
-    );
 
     this.#win = win;
 
     this.panelOpener = new TabPreviewPanelTimedFunction(
-      this._prefPreviewDelay,
       ZERO_DELAY_ACTIVATION_TIME,
       this.#win
     );
@@ -125,11 +119,17 @@ export default class TabHoverPanelSet {
       return;
     }
 
-    if (this.#win.gBrowser.isTab(tabOrGroup) || !tabOrGroup) {
+    if (
+      this.tabPanel.panelElement.state == "open" &&
+      (this.#win.gBrowser.isTab(tabOrGroup) || !tabOrGroup)
+    ) {
       this.tabPanel.deactivate(tabOrGroup);
     }
 
-    if (this.#win.gBrowser.isTabGroup(tabOrGroup) || !tabOrGroup) {
+    if (
+      this.tabGroupPanel.panelElement.state == "open" &&
+      (this.#win.gBrowser.isTabGroup(tabOrGroup) || !tabOrGroup)
+    ) {
       this.tabGroupPanel.deactivate({ force });
     }
   }
@@ -639,9 +639,6 @@ class TabGroupPanel extends Panel {
  */
 class TabPreviewPanelTimedFunction {
   /** @type {number} */
-  #delay;
-
-  /** @type {number} */
   #zeroDelayTime;
 
   /** @type {Window} */
@@ -653,8 +650,13 @@ class TabPreviewPanelTimedFunction {
   /** @type {boolean} */
   #useZeroDelay;
 
-  constructor(delay, zeroDelayTime, win) {
-    this.#delay = delay;
+  constructor(zeroDelayTime, win) {
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_prefPreviewDelay",
+      "ui.tooltip.delay_ms"
+    );
+
     this.#zeroDelayTime = zeroDelayTime;
     this.#win = win;
 
@@ -675,7 +677,7 @@ class TabPreviewPanelTimedFunction {
         this.#timer = null;
         target();
       },
-      this.#useZeroDelay ? 0 : this.#delay
+      this.#useZeroDelay ? 0 : this._prefPreviewDelay
     );
   }
 
