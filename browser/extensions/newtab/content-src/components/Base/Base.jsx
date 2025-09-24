@@ -588,13 +588,24 @@ export class BaseContent extends React.PureComponent {
     const nimbusWidgetsEnabled = prefs.widgetsConfig?.enabled;
     const nimbusListsEnabled = prefs.widgetsConfig?.listsEnabled;
     const nimbusTimerEnabled = prefs.widgetsConfig?.timerEnabled;
+    const nimbusWidgetsTrainhopEnabled = prefs.trainhopConfig?.widgets?.enabled;
+    const nimbusListsTrainhopEnabled =
+      prefs.trainhopConfig?.widgets?.listsEnabled;
+    const nimbusTimerTrainhopEnabled =
+      prefs.trainhopConfig?.widgets?.timerEnabled;
 
     const mayHaveWidgets =
-      prefs["widgets.system.enabled"] || nimbusWidgetsEnabled;
+      prefs["widgets.system.enabled"] ||
+      nimbusWidgetsEnabled ||
+      nimbusWidgetsTrainhopEnabled;
     const mayHaveListsWidget =
-      prefs["widgets.system.lists.enabled"] || nimbusListsEnabled;
+      prefs["widgets.system.lists.enabled"] ||
+      nimbusListsEnabled ||
+      nimbusListsTrainhopEnabled;
     const mayHaveTimerWidget =
-      prefs["widgets.system.focusTimer.enabled"] || nimbusTimerEnabled;
+      prefs["widgets.system.focusTimer.enabled"] ||
+      nimbusTimerEnabled ||
+      nimbusTimerTrainhopEnabled;
 
     // These prefs set the initial values on the Customize panel toggle switches
     const enabledWidgets = {
