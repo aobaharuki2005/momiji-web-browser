@@ -123,6 +123,7 @@ test_description_schema = Schema(
             "variant",
             Any(
                 "default",
+                "large-legacy",
                 "large",
                 "large-noscratch",
                 "xlarge",

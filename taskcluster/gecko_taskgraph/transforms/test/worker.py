@@ -6,6 +6,7 @@ from taskgraph.transforms.base import TransformSequence
 
 # default worker types keyed by instance-size
 LINUX_WORKER_TYPES = {
+    "large-legacy": "t-linux-docker",
     "large": "t-linux-docker-amd",
     "large-noscratch": "t-linux-docker-noscratch-amd",
     "xlarge": "t-linux-docker-amd",

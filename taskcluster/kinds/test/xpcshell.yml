@@ -53,7 +53,10 @@ xpcshell:
         - inc-origin-init
     instance-size:
         by-variant:
-            conditioned_profile: large
+            conditioned_profile:
+                by-test-platform:
+                    linux.*: large-legacy
+                    default: large
             default: large-noscratch
     run-on-projects:
         by-variant:
