@@ -27,6 +27,7 @@ import {
 const ENABLED_PREF = "browser.ipProtection.enabled";
 const LOG_PREF = "browser.ipProtection.log";
 const VPN_ADDON_ID = "vpn@mozilla.com";
+const MAX_ERROR_HISTORY = 50;
 
 ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
   return console.createInstance({
@@ -627,6 +628,11 @@ class IPProtectionServiceSingleton extends EventTarget {
   #dispatchError(error, errorContext) {
     this.hasError = true;
     this.errors.push(error);
+
+    if (this.errors.length > MAX_ERROR_HISTORY) {
+      this.errors.splice(0, this.errors.length - MAX_ERROR_HISTORY);
+    }
+
     this.dispatchEvent(
       new CustomEvent("IPProtectionService:Error", {
         bubbles: true,
