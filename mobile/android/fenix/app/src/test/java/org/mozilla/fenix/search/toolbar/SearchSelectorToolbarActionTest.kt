@@ -4,9 +4,9 @@
 
 package org.mozilla.fenix.search.toolbar
 
+import android.graphics.Bitmap
 import android.graphics.Bitmap.Config.ARGB_8888
 import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.core.graphics.applyCanvas
@@ -16,7 +16,6 @@ import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.browser.state.search.SearchEngine
@@ -106,148 +105,130 @@ class SearchSelectorToolbarActionTest {
 
     @Test
     fun `GIVEN a binded search selector View WHEN a search engine is selected THEN update the icon`() {
-        mockkStatic("org.mozilla.fenix.search.toolbar.SearchSelectorToolbarActionKt") {
-            val searchEngineIcon: BitmapDrawable = mockk(relaxed = true)
-            every { any<SearchEngine>().getScaledIcon(any()) } returns searchEngineIcon
-            val selector = SearchSelectorToolbarAction(store, mockk(), mockk())
-            val view = spyk(SearchSelector(testContext))
+        val selector = SearchSelectorToolbarAction(store, mockk(), mockk())
+        val view = spyk(SearchSelector(testContext))
 
-            selector.bind(view)
-            store.dispatch(
-                SearchDefaultEngineSelected(
-                    engine = testSearchEngine,
-                    browsingMode = BrowsingMode.Normal,
-                    settings = mockk(relaxed = true),
+        selector.bind(view)
+        store.dispatch(
+            SearchDefaultEngineSelected(
+                engine = testSearchEngine,
+                browsingMode = BrowsingMode.Normal,
+                settings = mockk(relaxed = true),
+            ),
+        )
+        store.waitUntilIdle()
+
+        verify {
+            view.setIcon(
+                icon = any(),
+                contentDescription = testContext.getString(
+                    R.string.search_engine_selector_content_description,
+                    testSearchEngine.name,
                 ),
             )
-            store.waitUntilIdle()
-
-            verify { testSearchEngine.getScaledIcon(any()) }
-            verify {
-                view.setIcon(
-                    icon = searchEngineIcon,
-                    contentDescription = testContext.getString(
-                        R.string.search_engine_selector_content_description,
-                        testSearchEngine.name,
-                    ),
-                )
-            }
         }
     }
 
     @Test
     fun `GIVEN the same view is binded multiple times WHEN the search engine changes THEN update the icon only once`() {
         // This scenario with the same View binded multiple times can happen after a "invalidateActions" call.
-        mockkStatic("org.mozilla.fenix.search.toolbar.SearchSelectorToolbarActionKt") {
-            val searchEngineIcon: BitmapDrawable = mockk(relaxed = true)
-            every { any<SearchEngine>().getScaledIcon(any()) } returns searchEngineIcon
-            val selector = SearchSelectorToolbarAction(store, mockk(), mockk())
-            val view = spyk(SearchSelector(testContext))
+        val selector = SearchSelectorToolbarAction(store, mockk(), mockk())
+        val view = spyk(SearchSelector(testContext))
 
-            selector.bind(view)
-            selector.bind(view)
-            selector.bind(view)
-            store.dispatch(
-                SearchDefaultEngineSelected(
-                    engine = testSearchEngine,
-                    browsingMode = BrowsingMode.Private,
-                    settings = mockk(relaxed = true),
+        selector.bind(view)
+        selector.bind(view)
+        selector.bind(view)
+        store.dispatch(
+            SearchDefaultEngineSelected(
+                engine = testSearchEngine,
+                browsingMode = BrowsingMode.Private,
+                settings = mockk(relaxed = true),
+            ),
+        )
+        store.waitUntilIdle()
+
+        verify(exactly = 1) {
+            view.setIcon(
+                icon = any(),
+                contentDescription = testContext.getString(
+                    R.string.search_engine_selector_content_description,
+                    testSearchEngine.name,
                 ),
             )
-            store.waitUntilIdle()
-
-            verify { testSearchEngine.getScaledIcon(any()) }
-            verify(exactly = 1) {
-                view.setIcon(
-                    icon = searchEngineIcon,
-                    contentDescription = testContext.getString(
-                        R.string.search_engine_selector_content_description,
-                        testSearchEngine.name,
-                    ),
-                )
-            }
         }
     }
 
     @Test
     fun `GIVEN a binded search selector View WHEN a search engine is selected THEN update the icon only if a different search engine is selected`() {
-        mockkStatic("org.mozilla.fenix.search.toolbar.SearchSelectorToolbarActionKt") {
-            val searchEngineIcon: BitmapDrawable = mockk(relaxed = true)
-            every { any<SearchEngine>().getScaledIcon(any()) } returns searchEngineIcon
-            val selector = SearchSelectorToolbarAction(store, mockk(), mockk())
-            val view = spyk(SearchSelector(testContext))
+        val selector = SearchSelectorToolbarAction(store, mockk(), mockk())
+        val view = spyk(SearchSelector(testContext))
 
-            // Test an initial change
-            selector.bind(view)
-            store.dispatch(
-                SearchDefaultEngineSelected(
-                    engine = testSearchEngine,
-                    browsingMode = BrowsingMode.Normal,
-                    settings = mockk(relaxed = true),
+        // Test an initial change
+        selector.bind(view)
+        store.dispatch(
+            SearchDefaultEngineSelected(
+                engine = testSearchEngine,
+                browsingMode = BrowsingMode.Normal,
+                settings = mockk(relaxed = true),
+            ),
+        )
+        store.waitUntilIdle()
+        verify(exactly = 1) {
+            view.setIcon(
+                icon = any(),
+                contentDescription = testContext.getString(
+                    R.string.search_engine_selector_content_description,
+                    testSearchEngine.name,
                 ),
             )
-            store.waitUntilIdle()
-            verify(exactly = 1) { testSearchEngine.getScaledIcon(any()) }
-            verify(exactly = 1) {
-                view.setIcon(
-                    icon = searchEngineIcon,
-                    contentDescription = testContext.getString(
-                        R.string.search_engine_selector_content_description,
-                        testSearchEngine.name,
-                    ),
-                )
-            }
+        }
 
-            // Test the same search engine being selected
-            store.dispatch(
-                SearchDefaultEngineSelected(
-                    engine = testSearchEngine,
-                    browsingMode = BrowsingMode.Private,
-                    settings = mockk(relaxed = true),
+        // Test the same search engine being selected
+        store.dispatch(
+            SearchDefaultEngineSelected(
+                engine = testSearchEngine,
+                browsingMode = BrowsingMode.Private,
+                settings = mockk(relaxed = true),
+            ),
+        )
+        store.waitUntilIdle()
+        verify(exactly = 1) {
+            view.setIcon(
+                icon = any(),
+                contentDescription = testContext.getString(
+                    R.string.search_engine_selector_content_description,
+                    testSearchEngine.name,
                 ),
             )
-            store.waitUntilIdle()
-            verify(exactly = 1) { testSearchEngine.getScaledIcon(any()) }
-            verify(exactly = 1) {
-                view.setIcon(
-                    icon = searchEngineIcon,
-                    contentDescription = testContext.getString(
-                        R.string.search_engine_selector_content_description,
-                        testSearchEngine.name,
-                    ),
-                )
-            }
+        }
 
-            // Test another search engine being selected
-            val newSearchEngine = testSearchEngine.copy(
-                name = "NewSearchEngine",
-            )
-            store.dispatch(
-                SearchHistoryEngineSelected(
-                    engine = newSearchEngine,
+        // Test another search engine being selected
+        val newSearchEngine = testSearchEngine.copy(
+            name = "NewSearchEngine",
+        )
+        store.dispatch(
+            SearchHistoryEngineSelected(
+                engine = newSearchEngine,
+            ),
+        )
+        store.waitUntilIdle()
+        verify(exactly = 1) {
+            view.setIcon(
+                icon = any(),
+                contentDescription = testContext.getString(
+                    R.string.search_engine_selector_content_description,
+                    testSearchEngine.name,
                 ),
             )
-            store.waitUntilIdle()
-            verify(exactly = 1) { testSearchEngine.getScaledIcon(any()) }
-            verify(exactly = 1) { newSearchEngine.getScaledIcon(any()) }
-            verify(exactly = 1) {
-                view.setIcon(
-                    icon = searchEngineIcon,
-                    contentDescription = testContext.getString(
-                        R.string.search_engine_selector_content_description,
-                        testSearchEngine.name,
-                    ),
-                )
-            }
-            verify(exactly = 1) {
-                view.setIcon(
-                    icon = searchEngineIcon,
-                    contentDescription = testContext.getString(
-                        R.string.search_engine_selector_content_description,
-                        newSearchEngine.name,
-                    ),
-                )
-            }
+        }
+        verify(exactly = 1) {
+            view.setIcon(
+                icon = any(),
+                contentDescription = testContext.getString(
+                    R.string.search_engine_selector_content_description,
+                    newSearchEngine.name,
+                ),
+            )
         }
     }
 
@@ -303,7 +284,7 @@ private val testSearchFragmentState = EMPTY_SEARCH_FRAGMENT_STATE.copy(
 private val testSearchEngine = SearchEngine(
     id = UUID.randomUUID().toString(),
     name = "testSearchEngine",
-    icon = mockk(),
+    icon = Bitmap.createBitmap(10, 10, ARGB_8888),
     type = BUNDLED,
     resultUrls = listOf(
         "https://www.startpage.com/sp/search?q={searchTerms}",
