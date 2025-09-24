@@ -70,6 +70,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/URLQueryStringStripper.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/glean/DomMetrics.h"
 #include "nsIURIFixup.h"
 #include "nsIXULRuntime.h"
 
@@ -2192,6 +2193,18 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
 
       uint32_t appLinkLaunchType = aLoadState->GetAppLinkLaunchType();
       cp->SetAndroidAppLinkLaunchType(androidLoadIdentifier, appLinkLaunchType);
+
+      // Record timing for cold app link launches
+      constexpr uint32_t APPLINK_COLD = 1;
+      if (appLinkLaunchType == APPLINK_COLD) {
+        const TimeStamp processCreationTime = TimeStamp::ProcessCreation();
+        if (!processCreationTime.IsNull()) {
+          const TimeStamp loadUriTime = TimeStamp::Now();
+          const TimeDuration delta = loadUriTime - processCreationTime;
+          mozilla::glean::perf::cold_applink_process_launch_to_load_uri
+              .AccumulateRawDuration(delta);
+        }
+      }
 
       PROFILER_MARKER_FMT("BrowsingContext::LoadURI", NETWORK, {},
                           "android appLinkLaunchType {} URL {}",
