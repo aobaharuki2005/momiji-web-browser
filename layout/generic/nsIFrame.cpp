@@ -2797,13 +2797,13 @@ bool nsIFrame::ComputeOverflowClipRectRelativeToSelf(
     // NOTE(mats) We shouldn't be clipping at all in this dimension really,
     // but clipping in just one axis isn't supported by our GFX APIs so we
     // clip to our visual overflow rect instead.
-    nsRect o = InkOverflowRect();
+    nsRect o = InkOverflowRectRelativeToSelf();
     aOutRect.x = o.x;
     aOutRect.width = o.width;
   }
   if (MOZ_UNLIKELY(!aClipAxes.contains(PhysicalAxis::Vertical))) {
     // See the note above.
-    nsRect o = InkOverflowRect();
+    nsRect o = InkOverflowRectRelativeToSelf();
     aOutRect.y = o.y;
     aOutRect.height = o.height;
   }
