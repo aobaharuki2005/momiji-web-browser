@@ -785,6 +785,12 @@ nsresult ModuleLoaderBase::OnFetchComplete(ModuleLoadRequest* aRequest,
 }
 
 void ModuleLoaderBase::OnFetchSucceeded(ModuleLoadRequest* aRequest) {
+  // TODO, Bug 1990416: Align the loading descendants behavior of dynamic import
+  // According to the spec, dynamic import should trigger fetching of
+  // descendant modules in the JS engine. However, when the dynamic import’s
+  // module graph is loaded, ScriptLoaders move the request to a Loaded event
+  // queue and invoke ProcessDynamicImport. To account for this behavior,
+  // we perform the fetching of submodules in the host layer instead.
   if (aRequest->IsTopLevel() || aRequest->IsDynamicImport()) {
     StartFetchingModuleDependencies(aRequest);
   } else {
@@ -1238,7 +1244,7 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
 
   if (!result) {
     LOG(("ScriptLoadRequest (%p): LoadRequestedModules failed", aRequest));
-    OnLoadRequestedModulesRejected(aRequest, UndefinedHandleValue);
+    OnLoadRequestedModulesRejected(cx, aRequest, UndefinedHandleValue);
   }
 }
 
@@ -1292,23 +1298,50 @@ bool ModuleLoaderBase::OnLoadRequestedModulesRejected(
     JSContext* aCx, Handle<Value> aHostDefined, Handle<Value> aError) {
   auto* request = static_cast<ModuleLoadRequest*>(aHostDefined.toPrivate());
   MOZ_ASSERT(request);
-  return OnLoadRequestedModulesRejected(request, aError);
+  return OnLoadRequestedModulesRejected(aCx, request, aError);
 }
 
 // static
 bool ModuleLoaderBase::OnLoadRequestedModulesRejected(
-    ModuleLoadRequest* aRequest, Handle<Value> error) {
-  LOG(("ScriptLoadRequest (%p): LoadRequestedModules rejected", aRequest));
+    JSContext* aCx, ModuleLoadRequest* aRequest, Handle<Value> error) {
   ModuleScript* moduleScript = aRequest->mModuleScript;
-  // https://html.spec.whatwg.org/#fetch-the-descendants-of-and-link-a-module-script
-  // Step 7. Upon rejection of loadingPromise, run the following
-  //         steps:
-  // Step 7.1. If state.[[ErrorToRethrow]] is not null, set moduleScript's
-  //           error to rethrow to state.[[ErrorToRethrow]] and run
-  //           onComplete given moduleScript.
-  if (moduleScript && !error.isUndefined()) {
+
+  // TODO, Bug 1990416: Align the loading descendants behavior of dynamic import
+  if (aRequest->IsDynamicImport()) {
+    LOG(
+        ("ScriptLoadRequest (%p): LoadRequestedModules rejected for dynamic "
+         "import",
+         aRequest));
+    // https://tc39.es/ecma262/#sec-ContinueDynamicImport
+    // Step 4.a. Perform ! Call(promiseCapability.[[Reject]], undefined,
+    //   « reason »).
+    Rooted<Value> payload(aCx, aRequest->mPayload);
+    if (!error.isUndefined()) {
+      FinishLoadingImportedModuleFailed(aCx, payload, error);
+    } else {
+      nsAutoCString url;
+      aRequest->mURI->GetSpec(url);
+      JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
+                                JSMSG_DYNAMIC_IMPORT_FAILED, url.get());
+      FinishLoadingImportedModuleFailedWithPendingException(aCx, payload);
+    }
+  } else if (moduleScript && !error.isUndefined()) {
+    LOG(
+        ("ScriptLoadRequest (%p): LoadRequestedModules rejected: set error to "
+         "rethrow",
+         aRequest));
+    // https://html.spec.whatwg.org/#fetch-the-descendants-of-and-link-a-module-script
+    // Step 7. Upon rejection of loadingPromise, run the following
+    //         steps:
+    // Step 7.1. If state.[[ErrorToRethrow]] is not null, set moduleScript's
+    //           error to rethrow to state.[[ErrorToRethrow]] and run
+    //           onComplete given moduleScript.
     moduleScript->SetErrorToRethrow(error);
   } else {
+    LOG(
+        ("ScriptLoadRequest (%p): LoadRequestedModules rejected: set module "
+         "script to null",
+         aRequest));
     // Step 7.2. Otherwise, run onComplete given null.
     aRequest->mModuleScript = nullptr;
   }
@@ -1530,20 +1563,17 @@ void ModuleLoaderBase::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
   if (!jsapi.Init(GetGlobalObject())) {
     return;
   }
-
   JSContext* cx = jsapi.cx();
-  if (!aRequest->mModuleScript) {
-    FinishDynamicImportAndReject(aRequest, NS_ERROR_FAILURE);
+  MOZ_ASSERT(aRequest->IsDynamicImport());
+
+  if (aRequest->IsErrored()) {
+    LOG(("ScriptLoadRequest (%p): ProcessDynamicImport, request has an error",
+         aRequest));
+    // The error is already processed in OnLoadRequestedModulesRejected.
     return;
   }
 
-  if (aRequest->mModuleScript->HasParseError()) {
-    Rooted<Value> payload(cx, aRequest->mPayload);
-    Rooted<Value> error(cx, aRequest->mModuleScript->ParseError());
-    FinishLoadingImportedModuleFailed(cx, payload, error);
-    return;
-  }
-
+  LOG(("ScriptLoadRequest (%p): ProcessDynamicImport", aRequest));
   FinishLoadingImportedModule(cx, aRequest);
 }
 

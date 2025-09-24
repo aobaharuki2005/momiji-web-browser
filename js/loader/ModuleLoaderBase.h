@@ -549,7 +549,8 @@ class ModuleLoaderBase : public nsISupports {
                                              Handle<Value> aHostDefined,
                                              Handle<Value> aError);
   static bool OnLoadRequestedModulesResolved(ModuleLoadRequest* aRequest);
-  static bool OnLoadRequestedModulesRejected(ModuleLoadRequest* aRequest,
+  static bool OnLoadRequestedModulesRejected(JSContext* aCx,
+                                             ModuleLoadRequest* aRequest,
                                              Handle<Value> aError);
 
   /**
