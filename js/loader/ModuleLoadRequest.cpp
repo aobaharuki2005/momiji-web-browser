@@ -74,22 +74,6 @@ bool ModuleLoadRequest::IsErrored() const {
   return mModuleScript->HasParseError() || mModuleScript->HasErrorToRethrow();
 }
 
-void ModuleLoadRequest::Cancel() {
-  if (IsCanceled()) {
-    return;
-  }
-
-  if (IsFinished()) {
-    return;
-  }
-
-  ScriptLoadRequest::Cancel();
-
-  mModuleScript = nullptr;
-  mReferrerScript = nullptr;
-  mModuleRequestObj = nullptr;
-}
-
 void ModuleLoadRequest::SetReady() {
   MOZ_ASSERT(!IsFinished());
 

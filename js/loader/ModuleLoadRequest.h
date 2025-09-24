@@ -69,7 +69,7 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   nsIGlobalObject* GetGlobalObject();
 
   void SetReady() override;
-  void Cancel() override;
+  void Cancel() override { mLoader->Cancel(this); };
 
   void SetImport(Handle<JSScript*> aReferrerScript,
                  Handle<JSObject*> aModuleRequestObj, Handle<Value> aPayload);

@@ -4012,6 +4012,10 @@ nsresult ScriptLoader::OnStreamComplete(
   NS_ASSERTION(aRequest, "null request in stream complete handler");
   NS_ENSURE_TRUE(aRequest, NS_ERROR_FAILURE);
 
+  if (aRequest->IsCanceled()) {
+    return NS_BINDING_ABORTED;
+  }
+
   nsresult rv = VerifySRI(aRequest, aLoader, aSRIStatus, aSRIDataVerifier);
 
   if (NS_SUCCEEDED(rv)) {
@@ -4460,9 +4464,6 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
     return aStatus;
   }
 
-  if (aRequest->IsCanceled()) {
-    return NS_BINDING_ABORTED;
-  }
   MOZ_ASSERT(aRequest->IsFetching());
   CollectScriptTelemetry(aRequest);
 
