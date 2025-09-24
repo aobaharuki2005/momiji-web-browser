@@ -2092,3 +2092,23 @@ void AssemblerMIPSShared::decodeBranchInstAndSpew(InstImm branch) {
   }
 }
 #endif
+
+UseScratchRegisterScope::UseScratchRegisterScope(AssemblerMIPSShared& assembler)
+    : available_(assembler.GetScratchRegisterList()),
+      old_available_(*available_) {}
+
+UseScratchRegisterScope::~UseScratchRegisterScope() {
+  *available_ = old_available_;
+}
+
+Register UseScratchRegisterScope::Acquire() {
+  MOZ_ASSERT(available_ != nullptr);
+  MOZ_ASSERT(!available_->empty());
+  Register index = GeneralRegisterSet::FirstRegister(available_->bits());
+  available_->takeRegisterIndex(index);
+  return index;
+}
+
+bool UseScratchRegisterScope::hasAvailable() const {
+  return (available_->size()) != 0;
+}

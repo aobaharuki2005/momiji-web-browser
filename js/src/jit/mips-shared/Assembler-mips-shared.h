@@ -59,8 +59,7 @@ static constexpr Register sp{Registers::sp};
 static constexpr Register fp{Registers::fp};
 static constexpr Register ra{Registers::ra};
 
-static constexpr Register ScratchRegister = at;
-static constexpr Register SecondScratchReg = t8;
+static constexpr Register ScratchRegister = t9;
 
 // Helper classes for ScratchRegister usage. Asserts that only one piece
 // of code thinks it has exclusive ownership of each scratch register.
@@ -68,9 +67,26 @@ struct ScratchRegisterScope : public AutoRegisterScope {
   explicit ScratchRegisterScope(MacroAssembler& masm)
       : AutoRegisterScope(masm, ScratchRegister) {}
 };
-struct SecondScratchRegisterScope : public AutoRegisterScope {
-  explicit SecondScratchRegisterScope(MacroAssembler& masm)
-      : AutoRegisterScope(masm, SecondScratchReg) {}
+
+class AssemblerMIPSShared;
+
+class UseScratchRegisterScope {
+ public:
+  explicit UseScratchRegisterScope(AssemblerMIPSShared& assembler);
+  ~UseScratchRegisterScope();
+
+  Register Acquire();
+  bool hasAvailable() const;
+  void Include(const GeneralRegisterSet& list) {
+    *available_ = GeneralRegisterSet::Union(*available_, list);
+  }
+  void Exclude(const GeneralRegisterSet& list) {
+    *available_ = GeneralRegisterSet::Subtract(*available_, list);
+  }
+
+ private:
+  GeneralRegisterSet* available_;
+  GeneralRegisterSet old_available_;
 };
 
 // Use arg reg from EnterJIT function as OsrFrameReg.
@@ -820,7 +836,8 @@ class AssemblerMIPSShared : public AssemblerShared {
 #ifdef JS_JITSPEW
         printer(nullptr),
 #endif
-        isFinished(false) {
+        isFinished(false),
+        scratch_register_list_((1 << at.code()) | (1 << t8.code())) {
   }
 
   static Condition InvertCondition(Condition cond);
@@ -1284,6 +1301,14 @@ class AssemblerMIPSShared : public AssemblerShared {
   void verifyHeapAccessDisassembly(uint32_t begin, uint32_t end,
                                    const Disassembler::HeapAccess& heapAccess) {
     // Implement this if we implement a disassembler.
+  }
+
+ private:
+  GeneralRegisterSet scratch_register_list_;
+
+ public:
+  GeneralRegisterSet* GetScratchRegisterList() {
+    return &scratch_register_list_;
   }
 };  // AssemblerMIPSShared
 

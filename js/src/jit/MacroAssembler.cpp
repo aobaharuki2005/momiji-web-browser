@@ -5882,7 +5882,8 @@ static void MoveDataBlock(MacroAssembler& masm, Register base, int32_t from,
   static constexpr Register scratch = ABINonArgReg0;
   masm.push(scratch);
 #elif defined(JS_CODEGEN_MIPS64)
-  ScratchRegisterScope scratch(masm);
+  UseScratchRegisterScope temps(masm);
+  Register scratch = temps.Acquire();
 #elif defined(JS_CODEGEN_LOONG64)
   UseScratchRegisterScope temps(masm);
   Register scratch = temps.Acquire();
@@ -8174,7 +8175,8 @@ void MacroAssembler::debugAssertCanonicalInt32(Register r) {
     bind(&ok);
 #    elif defined(JS_CODEGEN_MIPS64)
     Label ok;
-    ScratchRegisterScope scratch(asMasm());
+    UseScratchRegisterScope temps(*this);
+    Register scratch = temps.Acquire();
     move32SignExtendToPtr(r, scratch);
     branchPtr(Assembler::Equal, r, scratch, &ok);
     breakpoint();
