@@ -102,7 +102,7 @@ add_task(async function () {
   let onRuleviewChanged = view.once("ruleview-changed");
   const onSuggest = editor.once("after-suggest");
 
-  const node = editor.popup._list.childNodes[editor.popup.selectedIndex];
+  const node = editor.popup.list.childNodes[editor.popup.selectedIndex];
   EventUtils.synthesizeMouseAtCenter(node, {}, editor.popup._window);
 
   view.debounce.flush();

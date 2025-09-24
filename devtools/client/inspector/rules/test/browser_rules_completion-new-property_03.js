@@ -42,7 +42,7 @@ async function runAutocompletionTest(toolbox, inspector, view) {
 
   editor.popup.selectedIndex = itemIndex;
 
-  const node = editor.popup._list.childNodes[itemIndex];
+  const node = editor.popup.list.childNodes[itemIndex];
   EventUtils.synthesizeMouseAtCenter(node, {}, editor.popup._window);
 
   is(editor.input.value, "background-color", "Correct value is autocompleted");
