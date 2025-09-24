@@ -502,7 +502,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     lazy.IPProtection.init();
 
     if (this.#inited && this.isSignedIn) {
-      this.#updateEnrollment();
+      await this.#updateEnrollment();
     }
   }
 
