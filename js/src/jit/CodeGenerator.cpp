@@ -17138,73 +17138,44 @@ static bool AddInlinedCompilations(JSContext* cx, HandleScript script,
   return true;
 }
 
-struct EmulatesUndefinedDependency final : public CompilationDependency {
-  explicit EmulatesUndefinedDependency()
-      : CompilationDependency(CompilationDependency::Type::EmulatesUndefined) {
-        };
+template <auto FuseMember, CompilationDependency::Type DepType>
+struct RuntimeFuseDependency final : public CompilationDependency {
+  explicit RuntimeFuseDependency() : CompilationDependency(DepType) {}
 
-  virtual HashNumber hash() const override {
-    return mozilla::HashGeneric(type);
-  }
-  virtual bool operator==(const CompilationDependency& dep) const override {
-    // Since the emulates undefined fuse is runtime wide, they are all equal
-    return dep.type == type;
-  }
-
-  virtual bool checkDependency(JSContext* cx) const override {
-    return cx->runtime()->hasSeenObjectEmulateUndefinedFuse.ref().intact();
-  }
-
-  virtual bool registerDependency(JSContext* cx,
-                                  const IonScriptKey& ionScript) override {
+  bool registerDependency(JSContext* cx,
+                          const IonScriptKey& ionScript) override {
     MOZ_ASSERT(checkDependency(cx));
-    return cx->runtime()
-        ->hasSeenObjectEmulateUndefinedFuse.ref()
-        .addFuseDependency(cx, ionScript);
+    return (cx->runtime()->*FuseMember).ref().addFuseDependency(cx, ionScript);
   }
 
-  virtual CompilationDependency* clone(TempAllocator& alloc) const override {
-    return new (alloc.fallible()) EmulatesUndefinedDependency();
+  CompilationDependency* clone(TempAllocator& alloc) const override {
+    return new (alloc.fallible()) RuntimeFuseDependency<FuseMember, DepType>();
   }
-};
 
-struct ArrayExceedsInt32LengthDependency final : public CompilationDependency {
-  explicit ArrayExceedsInt32LengthDependency()
-      : CompilationDependency(
-            CompilationDependency::Type::ArrayExceedsInt32Length) {};
-
-  virtual HashNumber hash() const override {
-    return mozilla::HashGeneric(type);
+  bool checkDependency(JSContext* cx) const override {
+    return (cx->runtime()->*FuseMember).ref().intact();
   }
-  virtual bool operator==(const CompilationDependency& dep) const override {
+
+  HashNumber hash() const override { return mozilla::HashGeneric(type); }
+
+  bool operator==(const CompilationDependency& dep) const override {
+    // Since this dependency is runtime wide, they are all equal.
     return dep.type == type;
-  }
-
-  virtual bool checkDependency(JSContext* cx) const override {
-    return cx->runtime()->hasSeenArrayExceedsInt32LengthFuse.ref().intact();
-  }
-
-  virtual bool registerDependency(JSContext* cx,
-                                  const IonScriptKey& ionScript) override {
-    MOZ_ASSERT(checkDependency(cx));
-    return cx->runtime()
-        ->hasSeenArrayExceedsInt32LengthFuse.ref()
-        .addFuseDependency(cx, ionScript);
-  }
-
-  virtual CompilationDependency* clone(TempAllocator& alloc) const override {
-    return new (alloc.fallible()) ArrayExceedsInt32LengthDependency();
   }
 };
 
 bool CodeGenerator::addHasSeenObjectEmulateUndefinedFuseDependency() {
-  EmulatesUndefinedDependency dep;
-  return mirGen().tracker.addDependency(alloc(), dep);
+  using Dependency =
+      RuntimeFuseDependency<&JSRuntime::hasSeenObjectEmulateUndefinedFuse,
+                            CompilationDependency::Type::EmulatesUndefined>;
+  return mirGen().tracker.addDependency(alloc(), Dependency());
 }
 
 bool CodeGenerator::addHasSeenArrayExceedsInt32LengthFuseDependency() {
-  ArrayExceedsInt32LengthDependency dep;
-  return mirGen().tracker.addDependency(alloc(), dep);
+  using Dependency = RuntimeFuseDependency<
+      &JSRuntime::hasSeenArrayExceedsInt32LengthFuse,
+      CompilationDependency::Type::ArrayExceedsInt32Length>;
+  return mirGen().tracker.addDependency(alloc(), Dependency());
 }
 
 bool CodeGenerator::link(JSContext* cx) {
