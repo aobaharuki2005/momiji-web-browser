@@ -15,13 +15,20 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_task(async function () {
+SimpleTest.requestCompleteLog();
+
+add_setup(async function setup() {
   // Ensure that XDG_CONFIG_HOME is there
   const xdgConfigHome = Services.env.get("XDG_CONFIG_HOME");
   Assert.greater(xdgConfigHome.length, 1, "XDG_CONFIG_HOME is defined");
 
   // If it is there, do actual testing
   sanityChecks();
+});
+
+add_task(async function () {
+  // Make sure we dont break others.
+  add_task(testFileAccessAllPlatforms); // eslint-disable-line no-undef
 
   // The linux only tests are the ones that can behave differently based on
   // existence of XDG_CONFIG_HOME
