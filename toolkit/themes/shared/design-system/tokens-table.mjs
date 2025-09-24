@@ -654,11 +654,15 @@ export const tokensTable = {
       },
       name: "--font-size-xxlarge",
     },
+    { value: "var(--font-size-xxlarge)", name: "--heading-font-size-xlarge" },
+    { value: "var(--font-size-xlarge)", name: "--heading-font-size-large" },
+    { value: "var(--font-size-large)", name: "--heading-font-size-medium" },
   ],
   "font-weight": [
     { value: "var(--font-weight-bold)", name: "--button-font-weight" },
     { value: "normal", name: "--font-weight" },
     { value: 600, name: "--font-weight-bold" },
+    { value: "var(--font-weight-bold)", name: "--heading-font-weight" },
   ],
   "icon-color": [
     { value: "currentColor", name: "--button-icon-fill" },
@@ -953,12 +957,6 @@ export const tokensTable = {
       },
       name: "--outline-color-error",
     },
-  ],
-  "heading-font": [
-    { value: "var(--font-size-xxlarge)", name: "--heading-font-size-xlarge" },
-    { value: "var(--font-size-xlarge)", name: "--heading-font-size-large" },
-    { value: "var(--font-size-large)", name: "--heading-font-size-medium" },
-    { value: "var(--font-weight-bold)", name: "--heading-font-weight" },
   ],
   "icon-size": [
     { value: "var(--icon-size-small)", name: "--icon-size" },
