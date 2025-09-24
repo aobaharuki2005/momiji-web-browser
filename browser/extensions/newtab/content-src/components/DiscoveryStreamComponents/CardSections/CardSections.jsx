@@ -46,6 +46,8 @@ const PREF_TRENDING_SEARCH_SYSTEM = "system.trendingSearch.enabled";
 const PREF_SEARCH_ENGINE = "trendingSearch.defaultSearchEngine";
 const PREF_TRENDING_SEARCH_VARIANT = "trendingSearch.variant";
 const PREF_DAILY_BRIEF_SECTIONID = "discoverystream.dailyBrief.sectionId";
+const PREF_SPOCS_STARTUPCACHE_ENABLED =
+  "discoverystream.spocs.startupCache.enabled";
 
 function getLayoutData(
   responsiveLayouts,
@@ -156,6 +158,8 @@ function CardSection({
   const { sectionPersonalization } = useSelector(
     state => state.DiscoveryStream
   );
+  const { isForStartupCache } = useSelector(state => state.App);
+
   const showTopics = prefs[PREF_TOPICS_ENABLED];
   const mayHaveSectionsCards = prefs[PREF_SECTIONS_CARDS_ENABLED];
   const mayHaveSectionsCardsThumbsUpDown =
@@ -164,6 +168,7 @@ function CardSection({
   const selectedTopics = prefs[PREF_TOPICS_SELECTED];
   const availableTopics = prefs[PREF_TOPICS_AVAILABLE];
   const refinedCardsLayout = prefs[PREF_REFINED_CARDS_ENABLED];
+  const spocsStartupCacheEnabled = prefs[PREF_SPOCS_STARTUPCACHE_ENABLED];
 
   const trendingEnabled =
     prefs[PREF_TRENDING_SEARCH] &&
@@ -356,7 +361,17 @@ function CardSection({
           );
 
           const { classNames, imageSizes } = layoutData;
-          if (!rec || rec.placeholder) {
+          // Render a placeholder card when:
+          // 1. No recommendation is available.
+          // 2. The item is flagged as a placeholder.
+          // 3. Spocs are loading for with spocs startup cache disabled.
+          if (
+            !rec ||
+            rec.placeholder ||
+            (rec.flight_id &&
+              !spocsStartupCacheEnabled &&
+              isForStartupCache.DiscoveryStream)
+          ) {
             return <PlaceholderDSCard key={`dscard-${index}`} />;
           }
 

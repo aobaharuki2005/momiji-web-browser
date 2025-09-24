@@ -12044,6 +12044,7 @@ const CardSections_PREF_TRENDING_SEARCH_SYSTEM = "system.trendingSearch.enabled"
 const CardSections_PREF_SEARCH_ENGINE = "trendingSearch.defaultSearchEngine";
 const CardSections_PREF_TRENDING_SEARCH_VARIANT = "trendingSearch.variant";
 const CardSections_PREF_DAILY_BRIEF_SECTIONID = "discoverystream.dailyBrief.sectionId";
+const CardSections_PREF_SPOCS_STARTUPCACHE_ENABLED = "discoverystream.spocs.startupCache.enabled";
 function getLayoutData(responsiveLayouts, index, refinedCardsLayout, sectionKey) {
   let layoutData = {
     classNames: [],
@@ -12131,6 +12132,9 @@ function CardSection({
   const {
     sectionPersonalization
   } = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.DiscoveryStream);
+  const {
+    isForStartupCache
+  } = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.App);
   const showTopics = prefs[CardSections_PREF_TOPICS_ENABLED];
   const mayHaveSectionsCards = prefs[CardSections_PREF_SECTIONS_CARDS_ENABLED];
   const mayHaveSectionsCardsThumbsUpDown = prefs[PREF_SECTIONS_CARDS_THUMBS_UP_DOWN_ENABLED];
@@ -12138,6 +12142,7 @@ function CardSection({
   const selectedTopics = prefs[CardSections_PREF_TOPICS_SELECTED];
   const availableTopics = prefs[CardSections_PREF_TOPICS_AVAILABLE];
   const refinedCardsLayout = prefs[PREF_REFINED_CARDS_ENABLED];
+  const spocsStartupCacheEnabled = prefs[CardSections_PREF_SPOCS_STARTUPCACHE_ENABLED];
   const trendingEnabled = prefs[CardSections_PREF_TRENDING_SEARCH] && prefs[CardSections_PREF_TRENDING_SEARCH_SYSTEM] && prefs[CardSections_PREF_SEARCH_ENGINE]?.toLowerCase() === "google";
   const trendingVariant = prefs[CardSections_PREF_TRENDING_SEARCH_VARIANT];
   const shouldShowTrendingSearch = trendingEnabled && trendingVariant === "b";
@@ -12288,7 +12293,11 @@ function CardSection({
       classNames,
       imageSizes
     } = layoutData;
-    if (!rec || rec.placeholder) {
+    // Render a placeholder card when:
+    // 1. No recommendation is available.
+    // 2. The item is flagged as a placeholder.
+    // 3. Spocs are loading for with spocs startup cache disabled.
+    if (!rec || rec.placeholder || rec.flight_id && !spocsStartupCacheEnabled && isForStartupCache.DiscoveryStream) {
       return /*#__PURE__*/external_React_default().createElement(PlaceholderDSCard, {
         key: `dscard-${index}`
       });
