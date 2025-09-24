@@ -225,6 +225,7 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: none
+  can_recover: true
   generate_lir: true
 
 - name: IsConstructing
@@ -2674,6 +2675,7 @@
   folds_to: custom
   # A function's environment is fixed.
   alias_set: none
+  can_recover: true
   generate_lir: true
 
 # Allocate a new BlockLexicalEnvironmentObject.
