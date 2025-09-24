@@ -8,7 +8,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b1e64049d586ffc49
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/rtc_base/win32.cc b/rtc_base/win32.cc
-index d7105fc66e..fce3e07650 100644
+index a50501750f..253e8770a1 100644
 --- a/rtc_base/win32.cc
 +++ b/rtc_base/win32.cc
 @@ -14,8 +14,8 @@
