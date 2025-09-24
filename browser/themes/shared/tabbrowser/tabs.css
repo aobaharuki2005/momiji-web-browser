@@ -146,6 +146,14 @@
   &[noshadowfortests] {
     --tab-selected-shadow: none;
   }
+
+  &[orient="horizontal"] {
+    --tab-group-label-highlight-radius: 2px;
+  }
+
+  &[orient="vertical"] {
+    --tab-group-label-highlight-radius: 4px;
+  }
 }
 
 #navigator-toolbox[movingtab] > #nav-bar {
@@ -1364,7 +1372,11 @@ tab-group {
 
 .tab-group-label-hover-highlight {
   tab-group[collapsed] & {
-    border-radius: var(--tab-border-radius);
+    /* Since effective border radius is the sum of border-radius and box-shadow
+     * spread radius, make sure that these values vary together in order to add
+     * up to --tab-border-radius.
+     */
+    border-radius: calc(var(--tab-border-radius) - var(--tab-group-label-highlight-radius));
 
     #tabbrowser-tabs[orient="horizontal"] & {
       padding-block: 4px;
@@ -1389,18 +1401,7 @@ tab-group {
   tab-group[collapsed]:not([movingtabgroup]) &:hover,
   tab-group[previewpanelactive] & {
     background-color: var(--tab-hover-background-color);
-
-    #tabbrowser-tabs[orient="horizontal"] & {
-      box-shadow: 0 0 0 2px var(--tab-hover-background-color);
-    }
-
-    #tabbrowser-tabs[orient="vertical"] & {
-      box-shadow: 0 0 0 3px var(--tab-hover-background-color);
-    }
-
-    #tabbrowser-tabs[orient="vertical"][expanded] & {
-      box-shadow: 0 0 0 4px var(--tab-hover-background-color);
-    }
+    box-shadow: 0 0 0 var(--tab-group-label-highlight-radius) var(--tab-hover-background-color);
   }
 }
 
@@ -1412,7 +1413,11 @@ tab-group {
   white-space: nowrap;
   overflow: hidden;
   text-shadow: none;
-  border-radius: var(--border-radius-small);
+  /* .tab-group-label-hover-highlight shadow surrounds the .tab-group-label; keep
+   * the border radius of the inside element 2px smaller so that these two elements
+   * look good when hovering over a collapsed tab group label.
+   */
+  border-radius: calc(var(--tab-border-radius) - 2px);
   line-height: calc(var(--tab-group-label-height) - var(--tab-group-line-thickness));
   min-height: var(--tab-group-label-height);
   min-width: var(--tab-group-label-height);
