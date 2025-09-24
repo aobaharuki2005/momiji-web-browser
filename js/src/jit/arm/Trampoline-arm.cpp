@@ -107,8 +107,6 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
 
   static_assert(OsrFrameReg == r3);
 
-  Assembler* aasm = &masm;
-
   // Save non-volatile registers. These must be saved by the trampoline,
   // rather than the JIT'd code, because they are scanned by the conservative
   // scanner.
@@ -138,67 +136,14 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   // Save stack pointer.
   masm.movePtr(sp, r11);
 
-  // Load the number of actual arguments into r10.
+ // Load the number of actual arguments into r10.
   masm.loadPtr(slot_vp, r10);
   masm.unboxInt32(Address(r10, 0), r10);
 
-  {
-    Label noNewTarget;
-    masm.branchTest32(Assembler::Zero, r9,
-                      Imm32(CalleeToken_FunctionConstructing), &noNewTarget);
-
-    masm.add32(Imm32(1), r1);
-
-    masm.bind(&noNewTarget);
-  }
-
-  // Guarantee stack alignment of Jit frames.
-  //
-  // This code moves the stack pointer to the location where it should be when
-  // we enter the Jit frame.  It moves the stack pointer such that we have
-  // enough space reserved for pushing the arguments, and the JitFrameLayout.
-  // The stack pointer is also aligned on the alignment expected by the Jit
-  // frames.
-  //
-  // At the end the register r4, is a pointer to the stack where the first
-  // argument is expected by the Jit frame.
-  //
-  aasm->as_sub(r4, sp, O2RegImmShift(r1, LSL, 3));  // r4 = sp - argc*8
-  aasm->as_bic(r4, r4, Imm8(JitStackAlignment - 1));
-  // r4 is now the aligned on the bottom of the list of arguments.
-  static_assert(
-      sizeof(JitFrameLayout) % JitStackAlignment == 0,
-      "No need to consider the JitFrameLayout for aligning the stack");
-  // sp' = ~(JitStackAlignment - 1) & (sp - argc * sizeof(Value))
-  masm.movePtr(r4, sp);
-
-  // Get a copy of the number of args to use as a decrement counter, also set
-  // the zero condition code.
-  aasm->as_mov(r5, O2Reg(r1), SetCC);
-
-  // Loop over arguments, copying them from an unknown buffer onto the Ion
-  // stack so they can be accessed from JIT'ed code.
-  {
-    Label header, footer;
-    // If there aren't any arguments, don't do anything.
-    aasm->as_b(&footer, Assembler::Zero);
-    // Get the top of the loop.
-    masm.bind(&header);
-    aasm->as_sub(r5, r5, Imm8(1), SetCC);
-    // We could be more awesome, and unroll this, using a loadm
-    // (particularly since the offset is effectively 0) but that seems more
-    // error prone, and complex.
-    // BIG FAT WARNING: this loads both r6 and r7.
-    aasm->as_extdtr(IsLoad, 64, true, PostIndex, r6,
-                    EDtrAddr(r2, EDtrOffImm(8)));
-    aasm->as_extdtr(IsStore, 64, true, PostIndex, r6,
-                    EDtrAddr(r4, EDtrOffImm(8)));
-    aasm->as_b(&header, Assembler::NonZero);
-    masm.bind(&footer);
-  }
-
-  // Push the callee token.
-  masm.push(r9);
+  Register argcReg = r1;
+  Register argvReg = r2;
+  Register calleeTokenReg = r9;
+  generateEnterJitShared(masm, argcReg, argvReg, calleeTokenReg, r4, r5, r6);
 
   // Push the frame descriptor.
   masm.pushFrameDescriptorForJitCall(FrameType::CppToJSJit, r10, r10);

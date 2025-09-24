@@ -202,55 +202,10 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   // Save stack pointer as baseline frame.
   masm.movePtr(StackPointer, FramePointer);
 
-  // Load the number of actual arguments into s3.
+  generateEnterJitShared(masm, reg_argc, reg_argv, reg_token, s1, s2, s3);
+
+  // Push the descriptor.
   masm.unboxInt32(Address(reg_vp, 0), s3);
-
-  /***************************************************************
-  Loop over argv vector, push arguments onto stack in reverse order
-  ***************************************************************/
-
-  // if we are constructing, that also needs to include newTarget
-  JitSpew(JitSpew_Codegen, "__Line__: %d", __LINE__);
-  {
-    Label noNewTarget;
-    masm.branchTest32(Assembler::Zero, reg_token,
-                      Imm32(CalleeToken_FunctionConstructing), &noNewTarget);
-
-    masm.add32(Imm32(1), reg_argc);
-
-    masm.bind(&noNewTarget);
-  }
-  JitSpew(JitSpew_Codegen, "__Line__: %d", __LINE__);
-  // Make stack aligned
-  masm.ma_and(s2, reg_argc, Imm32(1));
-  Label skip_sub_padding;
-  masm.ma_b(s2, zero, &skip_sub_padding, Assembler::Equal, ShortJump);
-  masm.ma_sub64(StackPointer, Imm32(static_cast<int32_t>(sizeof(Value))));
-  masm.bind(&skip_sub_padding);
-
-  masm.slli(s2, reg_argc, 3);  // Value* argv
-  masm.addPtr(reg_argv, s2);   // s2 = &argv[argc]
-  JitSpew(JitSpew_Codegen, "__Line__: %d", __LINE__);
-  // Loop over arguments, copying them from an unknown buffer onto the Ion
-  // stack so they can be accessed from JIT'ed code.
-  Label header, footer;
-  // If there aren't any arguments, don't do anything
-  masm.ma_b(s2, reg_argv, &footer, Assembler::BelowOrEqual, ShortJump);
-  {
-    masm.bind(&header);
-
-    masm.subPtr(Imm32(sizeof(Value)), s2);
-    masm.subPtr(Imm32(sizeof(Value)), StackPointer);
-
-    ValueOperand value = ValueOperand(s6);
-    masm.loadValue(Address(s2, 0), value);
-    masm.storeValue(value, Address(StackPointer, 0));
-
-    masm.ma_b(s2, reg_argv, &header, Assembler::Above, ShortJump);
-  }
-  masm.bind(&footer);
-  JitSpew(JitSpew_Codegen, "__Line__: %d", __LINE__);
-  masm.push(reg_token);
   masm.pushFrameDescriptorForJitCall(FrameType::CppToJSJit, s3, s3);
 
   CodeLabel returnLabel;
