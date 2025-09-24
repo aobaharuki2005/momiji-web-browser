@@ -1289,6 +1289,10 @@ void nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                                                    this);
   }
 
+  if (HidesContent()) {
+    return;
+  }
+
   // Our children won't have backgrounds so it doesn't matter where we put them.
   for (nsIFrame* f : mFrames) {
     BuildDisplayListForChild(aBuilder, f, aLists);

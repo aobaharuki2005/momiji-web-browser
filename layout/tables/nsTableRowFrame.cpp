@@ -529,7 +529,11 @@ void nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   DisplayOutline(aBuilder, aLists);
 
-  for (nsIFrame* kid : PrincipalChildList()) {
+  if (mFrames.IsEmpty() || HidesContent()) {
+    return;
+  }
+
+  for (nsIFrame* kid : mFrames) {
     BuildDisplayListForChild(aBuilder, kid, aLists);
   }
 }

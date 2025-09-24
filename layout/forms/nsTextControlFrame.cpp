@@ -1128,6 +1128,10 @@ void nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
+  if (HidesContent()) {
+    return;
+  }
+
   // Redirect all lists to the Content list so that nothing can escape, ie
   // opacity creating stacking contexts that then get sorted with stacking
   // contexts external to us.

@@ -4160,12 +4160,12 @@ static bool ShouldSkipFrame(nsDisplayListBuilder* aBuilder,
     return true;
   }
   // The placeholder frame should have the same content as the OOF frame.
-  if (aBuilder->GetSelectedFramesOnly() &&
-      (aFrame->IsLeaf() && !aFrame->IsSelected())) {
+  if (aBuilder->GetSelectedFramesOnly() && aFrame->IsLeaf() &&
+      !aFrame->IsSelected()) {
     return true;
   }
   static const nsFrameState skipFlags =
-      (NS_FRAME_TOO_DEEP_IN_FRAME_TREE | NS_FRAME_IS_NONDISPLAY);
+      NS_FRAME_TOO_DEEP_IN_FRAME_TREE | NS_FRAME_IS_NONDISPLAY;
   if (aFrame->HasAnyStateBits(skipFlags)) {
     return true;
   }
@@ -4182,6 +4182,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
                                         const nsDisplayListSet& aLists,
                                         DisplayChildFlags aFlags) {
   AutoCheckBuilder check(aBuilder);
+  MOZ_ASSERT(!HidesContent(), "Caller should check");
 #ifdef DEBUG
   DL_LOGV("BuildDisplayListForChild (%p) <", aChild);
   ScopeExit e(
@@ -4189,10 +4190,6 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
 #endif
 
   if (ShouldSkipFrame(aBuilder, aChild)) {
-    return;
-  }
-
-  if (HidesContent()) {
     return;
   }
 

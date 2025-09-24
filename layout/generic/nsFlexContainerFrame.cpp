@@ -2979,8 +2979,12 @@ nsresult nsFlexContainerFrame::GetFrameName(nsAString& aResult) const {
 void nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                             const nsDisplayListSet& aLists) {
   nsDisplayListCollection tempLists(aBuilder);
-
   DisplayBorderBackgroundOutline(aBuilder, tempLists);
+  if (HidesContent()) {
+    tempLists.MoveTo(aLists);
+    return;
+  }
+
   if (GetPrevInFlow()) {
     DisplayOverflowContainers(aBuilder, tempLists);
   }

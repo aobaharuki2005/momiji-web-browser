@@ -1200,8 +1200,10 @@ void nsTableFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  for (nsIFrame* kid : PrincipalChildList()) {
-    BuildDisplayListForChild(aBuilder, kid, lists);
+  if (!mFrames.IsEmpty() && !HidesContent()) {
+    for (nsIFrame* kid : mFrames) {
+      BuildDisplayListForChild(aBuilder, kid, lists);
+    }
   }
 
   tableBGs.MoveTo(aLists);
