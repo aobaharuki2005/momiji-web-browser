@@ -4159,7 +4159,6 @@ static bool ShouldSkipFrame(nsDisplayListBuilder* aBuilder,
       (!aFrame->IsTextFrame() && aFrame->IsLeaf())) {
     return true;
   }
-  // The placeholder frame should have the same content as the OOF frame.
   if (aBuilder->GetSelectedFramesOnly() && aFrame->IsLeaf() &&
       !aFrame->IsSelected()) {
     return true;
@@ -4189,16 +4188,15 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
       [aChild]() { DL_LOGV("> BuildDisplayListForChild (%p)", aChild); });
 #endif
 
-  if (ShouldSkipFrame(aBuilder, aChild)) {
-    return;
-  }
-
   nsIFrame* child = aChild;
   auto* placeholder = child->IsPlaceholderFrame()
                           ? static_cast<nsPlaceholderFrame*>(child)
                           : nullptr;
   nsIFrame* childOrOutOfFlow =
       placeholder ? placeholder->GetOutOfFlowFrame() : child;
+  if (ShouldSkipFrame(aBuilder, childOrOutOfFlow)) {
+    return;
+  }
 
   // If we're generating a display list for printing, include Link items for
   // frames that correspond to HTML link elements so that we can have active
