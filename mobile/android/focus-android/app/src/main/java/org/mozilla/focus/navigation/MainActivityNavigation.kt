@@ -27,6 +27,8 @@ import org.mozilla.focus.fragment.onboarding.OnboardingSecondFragment
 import org.mozilla.focus.fragment.onboarding.OnboardingStep
 import org.mozilla.focus.fragment.onboarding.OnboardingStorage
 import org.mozilla.focus.locale.screen.LanguageFragment
+import org.mozilla.focus.navigation.MainActivityNavigation.SessionWidgetPromoThresholds.FIFTH_CLEAR_SESSION_COUNT
+import org.mozilla.focus.navigation.MainActivityNavigation.SessionWidgetPromoThresholds.FIRST_CLEAR_SESSION_COUNT
 import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.nimbus.Onboarding
 import org.mozilla.focus.searchwidget.SearchWidgetUtils
@@ -115,7 +117,6 @@ class MainActivityNavigation(
      * Display the widget promo at first data clearing action and if it wasn't added after 5th Focus session
      * or display branded snackbar when widget promo is not shown.
      */
-    @Suppress("MagicNumber")
     private fun showPromoteSearchWidgetDialogOrBrandedSnackbar() {
         val onboardingFeature = FocusNimbus.features.onboarding
         val onboardingConfig = onboardingFeature.value()
@@ -125,7 +126,7 @@ class MainActivityNavigation(
 
         if (shouldShowPromoteSearchWidgetDialog(onboardingConfig) &&
             (
-                clearBrowsingSessions == 0 || clearBrowsingSessions == 4
+                clearBrowsingSessions == FIRST_CLEAR_SESSION_COUNT || clearBrowsingSessions == FIFTH_CLEAR_SESSION_COUNT
                 )
         ) {
             onboardingFeature.recordExposure()
@@ -308,5 +309,10 @@ class MainActivityNavigation(
                 SitePermissionOptionsFragment.FRAGMENT_TAG,
             )
             .commit()
+    }
+
+    private object SessionWidgetPromoThresholds {
+        const val FIRST_CLEAR_SESSION_COUNT = 0
+        const val FIFTH_CLEAR_SESSION_COUNT = 4
     }
 }
