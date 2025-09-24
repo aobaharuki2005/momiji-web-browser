@@ -120,7 +120,7 @@
       font: menu;
       margin: 0 2px;
       padding: 3px 6px;
-      border-radius: 3px;
+      border-radius: var(--border-radius-xsmall);
 
       &:hover,
       &[selected] {
