@@ -194,7 +194,7 @@ support-files = [
 ["test_searchSuggest_extraParams.js"]
 
 ["test_searchSuggest_ohttp.js"]
-# OHTTP experiment uses MerinoClient, and therefore not available elsewhere.
+# OHTTP experiment uses MerinoClient, and therefore not available elsewhere.
 skip-if = [
   "os == 'android'",
   "appname == 'thunderbird'",
@@ -203,6 +203,9 @@ skip-if = [
 ["test_searchSuggest_private.js"]
 
 ["test_searchSuggestionCountTelemetry.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+]
 
 ["test_searchTermFromResult.js"]
 
