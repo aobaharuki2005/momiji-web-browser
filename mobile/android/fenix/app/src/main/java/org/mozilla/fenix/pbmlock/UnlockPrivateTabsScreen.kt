@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,8 +59,8 @@ internal fun UnlockPrivateTabsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(FirefoxTheme.colors.layer1)
-            .padding(bottom = 24.dp),
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(bottom = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -143,6 +145,7 @@ private fun Footer(onUnlockClicked: () -> Unit, onLeaveClicked: () -> Unit, show
             TextButton(
                 text = stringResource(R.string.pbm_authentication_leave_private_tabs),
                 onClick = onLeaveClicked,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
             )
         }
     }
