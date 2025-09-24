@@ -50,7 +50,6 @@ import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingLocked
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.actualInactiveTabs
@@ -64,11 +63,8 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.navigation.DefaultNavControllerProvider
 import org.mozilla.fenix.navigation.NavControllerProvider
-import org.mozilla.fenix.pbmlock.NavigationOrigin
-import org.mozilla.fenix.pbmlock.observePrivateModeLock
 import org.mozilla.fenix.pbmlock.registerForVerification
 import org.mozilla.fenix.pbmlock.verifyUser
-import org.mozilla.fenix.settings.biometric.BiometricUtils
 import org.mozilla.fenix.settings.biometric.DefaultBiometricUtils
 import org.mozilla.fenix.settings.biometric.ext.isAuthenticatorAvailable
 import org.mozilla.fenix.settings.biometric.ext.isHardwareAvailable
@@ -216,6 +212,11 @@ class TabManagementFragment : DialogFragment() {
         savedInstanceState: Bundle?,
     ): View? = content {
         val page by tabsTrayStore.observeAsState(tabsTrayStore.state.selectedPage) { it.selectedPage }
+        val isPbmLocked by requireComponents.appStore
+            .observeAsState(initialValue = requireComponents.appStore.state.isPrivateScreenLocked) {
+                it.isPrivateScreenLocked
+            }
+
         snackbarHostState = remember { SnackbarHostState() }
 
         BackHandler {
@@ -254,13 +255,13 @@ class TabManagementFragment : DialogFragment() {
                 ),
                 snackbarHostState = snackbarHostState,
                 isSignedIn = requireContext().settings().signedInFxaAccount,
+                isPbmLocked = isPbmLocked,
                 shouldShowInactiveTabsAutoCloseDialog =
                     requireContext().settings()::shouldShowInactiveTabsAutoCloseDialog,
                 onTabPageClick = { page ->
                     onTabPageClick(
                         tabsTrayInteractor = tabManagerInteractor,
                         page = page,
-                        isPrivateScreenLocked = requireComponents.appStore.state.isPrivateScreenLocked,
                     )
                 },
                 onTabClose = { tab ->
@@ -368,6 +369,7 @@ class TabManagementFragment : DialogFragment() {
                 onOpenNewNormalTabClicked = tabManagerInteractor::onNormalTabsFabClicked,
                 onOpenNewPrivateTabClicked = tabManagerInteractor::onPrivateTabsFabClicked,
                 onSyncedTabsFabClicked = tabManagerInteractor::onSyncedTabsFabClicked,
+                onUnlockPbmClick = { verifyUser(fallbackVerification = verificationResultLauncher) },
             )
         }
     }
@@ -444,14 +446,6 @@ class TabManagementFragment : DialogFragment() {
 
         setFragmentResultListener(ShareFragment.RESULT_KEY) { _, _ ->
             dismissTabManager()
-        }
-
-        observePrivateModeLock(lockNormalMode = true) {
-            if (tabsTrayStore.state.selectedPage == Page.PrivateTabs) {
-                findNavController().navigate(
-                    NavGraphDirections.actionGlobalUnlockPrivateTabsFragment(NavigationOrigin.TABS_TRAY),
-                )
-            }
         }
     }
 
@@ -692,20 +686,10 @@ class TabManagementFragment : DialogFragment() {
 
     @VisibleForTesting
     internal fun onTabPageClick(
-        biometricUtils: BiometricUtils = DefaultBiometricUtils,
         tabsTrayInteractor: TabManagerInteractor,
         page: Page,
-        isPrivateScreenLocked: Boolean,
     ) {
-        if (page == Page.PrivateTabs && isPrivateScreenLocked) {
-            verifyUser(
-                biometricUtils = biometricUtils,
-                fallbackVerification = verificationResultLauncher,
-                onVerified = ::openPrivateTabsPage,
-            )
-        } else {
-            tabsTrayInteractor.onTabPageClicked(page)
-        }
+        tabsTrayInteractor.onTabPageClicked(page)
     }
 
     private fun openPrivateTabsPage() {

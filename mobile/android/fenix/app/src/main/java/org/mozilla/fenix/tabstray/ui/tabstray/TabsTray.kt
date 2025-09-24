@@ -76,6 +76,7 @@ private val ScaffoldFabOffsetCorrection = 4.dp
  * @param shouldShowTabAutoCloseBanner Whether the tab auto closer banner should be displayed.
  * @param shouldShowLockPbmBanner Whether the lock private browsing banner should be displayed.
  * @param isSignedIn Whether the user is signed into their Firefox account.
+ * @param isPbmLocked Whether the private browsing mode is currently locked.
  * @param snackbarHostState [SnackbarHostState] of this component to read and show [Snackbar]s accordingly.
  * @param modifier The [Modifier] used to style the container of the the Tabs Tray UI.
  * @param shouldShowInactiveTabsAutoCloseDialog Whether the inactive tabs auto close dialog should be displayed.
@@ -121,6 +122,7 @@ private val ScaffoldFabOffsetCorrection = 4.dp
  * @param onOpenNewNormalTabClicked Invoked when the fab is clicked in [Page.NormalTabs].
  * @param onOpenNewPrivateTabClicked Invoked when the fab is clicked in [Page.PrivateTabs].
  * @param onSyncedTabsFabClicked Invoked when the fab is clicked in [Page.SyncedTabs].
+ * @param onUnlockPbmClick Invoked when user clicks on the Unlock button.
  */
 @Suppress("LongMethod", "LongParameterList", "ComplexMethod")
 @Composable
@@ -131,6 +133,7 @@ fun TabsTray(
     shouldShowTabAutoCloseBanner: Boolean,
     shouldShowLockPbmBanner: Boolean,
     isSignedIn: Boolean,
+    isPbmLocked: Boolean,
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
     shouldShowInactiveTabsAutoCloseDialog: (Int) -> Boolean,
@@ -170,6 +173,7 @@ fun TabsTray(
     onOpenNewNormalTabClicked: () -> Unit,
     onOpenNewPrivateTabClicked: () -> Unit,
     onSyncedTabsFabClicked: () -> Unit,
+    onUnlockPbmClick: () -> Unit,
 ) {
     val tabsTrayState by tabsTrayStore.observeAsState(initialValue = tabsTrayStore.state) { it }
     val pagerState = rememberPagerState(
@@ -232,6 +236,7 @@ fun TabsTray(
         bottomBar = {
             TabManagerBottomAppBar(
                 tabsTrayStore = tabsTrayStore,
+                pbmLocked = isPbmLocked,
                 scrollBehavior = bottomAppBarScrollBehavior,
                 onTabSettingsClick = onTabSettingsClick,
                 onRecentlyClosedClick = onRecentlyClosedClick,
@@ -245,6 +250,7 @@ fun TabsTray(
                 expanded = bottomAppBarScrollBehavior.state.collapsedFraction == 0f,
                 modifier = Modifier.offset(y = ScaffoldFabOffsetCorrection),
                 isSignedIn = isSignedIn,
+                pbmLocked = isPbmLocked,
                 onOpenNewNormalTabClicked = onOpenNewNormalTabClicked,
                 onOpenNewPrivateTabClicked = onOpenNewPrivateTabClicked,
                 onSyncedTabsFabClicked = onSyncedTabsFabClicked,
@@ -298,10 +304,12 @@ fun TabsTray(
                         selectedTabId = tabsTrayState.selectedTabId,
                         selectionMode = tabsTrayState.mode,
                         displayTabsInGrid = displayTabsInGrid,
+                        privateTabsLocked = isPbmLocked,
                         onTabClose = onTabClose,
                         onTabClick = onTabClick,
                         onTabLongClick = onTabLongClick,
                         onMove = onMove,
+                        onUnlockPbmClick = onUnlockPbmClick,
                     )
                 }
 
@@ -385,6 +393,16 @@ private fun TabsTrayAutoCloseBannerPreview() {
     )
 }
 
+@PreviewLightDark
+@Composable
+private fun TabsTrayLockedPreview() {
+    TabsTrayPreviewRoot(
+        privateTabs = generateFakeTabsList(isPrivate = true),
+        selectedPage = Page.PrivateTabs,
+        isPbmLocked = true,
+    )
+}
+
 @Suppress("LongMethod")
 @Composable
 private fun TabsTrayPreviewRoot(
@@ -399,6 +417,7 @@ private fun TabsTrayPreviewRoot(
     inactiveTabsExpanded: Boolean = false,
     showInactiveTabsAutoCloseDialog: Boolean = false,
     showTabAutoCloseBanner: Boolean = false,
+    isPbmLocked: Boolean = false,
     isSignedIn: Boolean = true,
 ) {
     var showInactiveTabsAutoCloseDialogState by remember { mutableStateOf(showInactiveTabsAutoCloseDialog) }
@@ -430,6 +449,7 @@ private fun TabsTrayPreviewRoot(
             isSignedIn = isSignedIn,
             shouldShowInactiveTabsAutoCloseDialog = { true },
             shouldShowTabAutoCloseBanner = showTabAutoCloseBanner,
+            isPbmLocked = isPbmLocked,
             snackbarHostState = snackbarHostState,
             onTabPageClick = { page ->
                 tabsTrayStore.dispatch(TabsTrayAction.PageSelected(page))
@@ -554,6 +574,7 @@ private fun TabsTrayPreviewRoot(
                 val newSyncedTabList = tabsTrayStore.state.syncedTabs + generateFakeSyncedTabsList()
                 tabsTrayStore.dispatch(TabsTrayAction.UpdateSyncedTabs(newSyncedTabList))
             },
+            onUnlockPbmClick = {},
         )
     }
 }

@@ -40,6 +40,7 @@ import mozilla.components.ui.icons.R as iconsR
  * @param modifier The [Modifier] to be applied to this FAB.
  * @param expanded Controls the expansion state of this FAB. In an expanded state, the FAB will
  * show both the icon and text. In a collapsed state, the FAB will show only the icon.
+ * @param pbmLocked Whether the private browsing mode is currently locked.
  * @param onOpenNewNormalTabClicked Invoked when the fab is clicked in [Page.NormalTabs].
  * @param onOpenNewPrivateTabClicked Invoked when the fab is clicked in [Page.PrivateTabs].
  * @param onSyncedTabsFabClicked Invoked when the fab is clicked in [Page.SyncedTabs].
@@ -50,14 +51,16 @@ internal fun TabsTrayFab(
     isSignedIn: Boolean,
     modifier: Modifier = Modifier,
     expanded: Boolean = true,
+    pbmLocked: Boolean = false,
     onOpenNewNormalTabClicked: () -> Unit,
     onOpenNewPrivateTabClicked: () -> Unit,
     onSyncedTabsFabClicked: () -> Unit,
 ) {
     val state by tabsTrayStore.observeAsState(initialValue = tabsTrayStore.state) { it }
+    val privateTabsLocked = pbmLocked && state.selectedPage == Page.PrivateTabs
 
     AnimatedVisibility(
-        visible = state.mode is Mode.Normal,
+        visible = state.mode is Mode.Normal && !privateTabsLocked,
     ) {
         @DrawableRes val icon: Int
         val contentDescription: String
@@ -102,7 +105,6 @@ internal fun TabsTrayFab(
                 }
             }
         }
-
         ExtendedFloatingActionButton(
             label = label,
             icon = icon,
@@ -172,6 +174,7 @@ private fun TabsTrayFabPreview(
             tabsTrayStore = remember { TabsTrayStore(initialState = previewDataModel.state) },
             expanded = previewDataModel.expanded,
             isSignedIn = previewDataModel.isSignedIn,
+            pbmLocked = false,
             modifier = Modifier
                 .background(color = MaterialTheme.colorScheme.surfaceContainerHigh)
                 .padding(all = 16.dp),
