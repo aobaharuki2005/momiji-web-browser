@@ -567,6 +567,12 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     state.supportedMenuNotifications.contains(SupportedMenuNotifications.Downloads)
                                 }
 
+                                val isOpenInAppMenuHighlighted by appStore.observeAsState(
+                                    initialValue = false,
+                                ) { state ->
+                                    state.supportedMenuNotifications.contains(SupportedMenuNotifications.OpenInApp)
+                                }
+
                                 MainMenu(
                                     accessPoint = args.accesspoint,
                                     account = account,
@@ -583,6 +589,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     isPdf = isPdf,
                                     isPrivate = isPrivate,
                                     isReaderViewActive = isReaderViewActive,
+                                    isMoreMenuHighlighted = isOpenInAppMenuHighlighted,
                                     canGoBack = selectedTab?.content?.canGoBack ?: true,
                                     canGoForward = selectedTab?.content?.canGoForward ?: true,
                                     extensionsMenuItemDescription = extensionsMenuItemDescription,
@@ -698,6 +705,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                             hasExternalApp = appLinksRedirect?.hasExternalApp() ?: false,
                                             externalAppName = appLinksRedirect?.appName ?: "",
                                             isWebCompatReporterSupported = isWebCompatReporterSupported,
+                                            isOpenInAppMenuHighlighted = isOpenInAppMenuHighlighted,
                                             translationInfo = translationInfo,
                                             showShortcuts = settings.showTopSitesFeature,
                                             onWebCompatReporterClick = {

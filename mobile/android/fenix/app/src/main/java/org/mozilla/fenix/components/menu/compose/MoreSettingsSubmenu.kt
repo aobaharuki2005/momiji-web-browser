@@ -31,6 +31,7 @@ internal fun MoreSettingsSubmenu(
     isReaderViewActive: Boolean,
     isWebCompatReporterSupported: Boolean,
     isWebCompatEnabled: Boolean,
+    isOpenInAppMenuHighlighted: Boolean,
     translationInfo: TranslationInfo,
     showShortcuts: Boolean,
     onWebCompatReporterClick: () -> Unit,
@@ -93,6 +94,7 @@ internal fun MoreSettingsSubmenu(
                     stringResource(id = R.string.browser_menu_open_app_link)
                 },
                 beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_more_grid_24),
+                isBeforeIconHighlighted = isOpenInAppMenuHighlighted,
                 state = MenuItemState.ENABLED,
                 onClick = onOpenInAppMenuClick,
             )
@@ -189,6 +191,7 @@ private fun MoreSettingsSubmenuPreview() {
                     isReaderViewActive = false,
                     isWebCompatReporterSupported = true,
                     isWebCompatEnabled = true,
+                    isOpenInAppMenuHighlighted = false,
                     translationInfo = TranslationInfo(
                         isTranslationSupported = true,
                         isPdf = false,
@@ -227,6 +230,7 @@ private fun MoreSettingsSubmenuPrivatePreview() {
                     isReaderViewActive = false,
                     isWebCompatReporterSupported = true,
                     isWebCompatEnabled = true,
+                    isOpenInAppMenuHighlighted = true,
                     translationInfo = TranslationInfo(
                         isTranslationSupported = true,
                         isPdf = false,

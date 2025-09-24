@@ -11,7 +11,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
@@ -69,6 +68,7 @@ private val ROUNDED_CORNER_SHAPE = RoundedCornerShape(4.dp)
  * @param modifier [Modifier] to be applied to the layout.
  * @param labelModifier [Modifier] to be applied to the label.
  * @param beforeIconDescription Content description of the icon.
+ * @param isBeforeIconHighlighted Whether or not the menu item should be highlighted with a notification icon.
  * @param description An optional description text below the label.
  * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
  * @param stateDescription Extra content description about state to be added after the label
@@ -92,6 +92,7 @@ internal fun MenuItem(
     modifier: Modifier = Modifier,
     labelModifier: Modifier = Modifier,
     beforeIconDescription: String? = null,
+    isBeforeIconHighlighted: Boolean = false,
     description: String? = null,
     maxDescriptionLines: Int = 2,
     stateDescription: String = "",
@@ -103,7 +104,7 @@ internal fun MenuItem(
     afterIconDescription: String? = null,
     collectionItemInfo: CollectionItemInfo? = null,
     onAfterIconClick: (() -> Unit)? = null,
-    afterContent: (@Composable RowScope.() -> Unit)? = null,
+    afterContent: (@Composable () -> Unit)? = null,
 ) {
     val labelTextColor = getLabelTextColor(state = state)
     val descriptionTextColor = getDescriptionTextColor(state = descriptionState)
@@ -156,6 +157,7 @@ internal fun MenuItem(
         beforeIconPainter = beforeIconPainter,
         beforeIconDescription = beforeIconDescription,
         beforeIconTint = iconTint,
+        isBeforeIconHighlighted = isBeforeIconHighlighted,
         showDivider = showDivider,
         afterIconPainter = afterIconPainter,
         afterIconDescription = afterIconDescription,

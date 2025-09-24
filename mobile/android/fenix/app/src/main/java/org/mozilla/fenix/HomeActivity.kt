@@ -91,6 +91,7 @@ import org.mozilla.fenix.GleanMetrics.SplashScreen
 import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.addons.ExtensionsProcessDisabledBackgroundController
 import org.mozilla.fenix.addons.ExtensionsProcessDisabledForegroundController
+import org.mozilla.fenix.bindings.ExternalAppLinkStatusBinding
 import org.mozilla.fenix.bookmarks.DesktopFolders
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -240,6 +241,15 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             context = this,
             store = components.appStore,
             onReporting = ::showCrashReporter,
+        )
+    }
+
+    private val externalAppLinkStatusBinding by lazy {
+        ExternalAppLinkStatusBinding(
+            settings = settings(),
+            appLinksUseCases = components.useCases.appLinksUseCases,
+            browserStore = components.core.store,
+            appStore = components.appStore,
         )
     }
 
@@ -543,6 +553,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             ),
             downloadSnackbar,
             privateBrowsingLockFeature,
+            externalAppLinkStatusBinding,
         )
 
         if (!isCustomTabIntent(intent)) {
