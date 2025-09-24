@@ -182,7 +182,7 @@ add_task(async function toggle_off_on_shutdown() {
   Services.fog.testResetFOG();
   // Re-initialize to avoid breaking tests that follow
   cleanupService();
-  await lazy.IPProtectionService.init();
+  lazy.IPProtectionService.init();
   let widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.ok(
     BrowserTestUtils.isVisible(widget),

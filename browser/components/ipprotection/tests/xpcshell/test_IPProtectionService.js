@@ -33,7 +33,7 @@ add_setup(async function () {
   IPProtectionService.uninit();
 
   registerCleanupFunction(async () => {
-    await IPProtectionService.init();
+    IPProtectionService.init();
   });
 });
 
@@ -98,7 +98,7 @@ add_task(async function test_IPProtectionService_start() {
  * Tests that stopping the service gets stop events.
  */
 add_task(async function test_IPProtectionService_stop() {
-  await IPProtectionService.init();
+  IPProtectionService.init();
 
   // Simulate signing in to the account
   IPProtectionService.isActive = true;
@@ -131,7 +131,7 @@ add_task(async function test_IPProtectionService_stop() {
  * Tests that a signed in status sends a SignedIn event.
  */
 add_task(async function test_IPProtectionService_updateSignInStatus_signedIn() {
-  await IPProtectionService.init();
+  IPProtectionService.init();
 
   let sandbox = sinon.createSandbox();
   sandbox.stub(UIState, "get").returns({
@@ -161,7 +161,7 @@ add_task(async function test_IPProtectionService_updateSignInStatus_signedIn() {
  */
 add_task(
   async function test_IPProtectionService_updateSignInStatus_signedOut() {
-    await IPProtectionService.init();
+    IPProtectionService.init();
 
     IPProtectionService.isSignedIn = true;
 
@@ -198,7 +198,7 @@ add_task(
  */
 add_task(
   async function test_IPProtectionService_updateHasUpgradedStatus_has_vpn_linked() {
-    await IPProtectionService.init();
+    IPProtectionService.init();
 
     IPProtectionService.isSignedIn = true;
 
@@ -238,7 +238,7 @@ add_task(
  */
 add_task(
   async function test_IPProtectionService_updateHasUpgradedStatus_no_vpn_linked() {
-    await IPProtectionService.init();
+    IPProtectionService.init();
 
     IPProtectionService.isSignedIn = true;
 
@@ -274,7 +274,7 @@ add_task(
  */
 add_task(
   async function test_IPProtectionService_updateHasUpgradedStatus_signed_out() {
-    await IPProtectionService.init();
+    IPProtectionService.init();
 
     IPProtectionService.isSignedIn = true;
 

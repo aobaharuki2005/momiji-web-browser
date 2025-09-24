@@ -27,7 +27,6 @@ import {
 const ENABLED_PREF = "browser.ipProtection.enabled";
 const LOG_PREF = "browser.ipProtection.log";
 const VPN_ADDON_ID = "vpn@mozilla.com";
-const MAX_ERROR_HISTORY = 50;
 
 ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
   return console.createInstance({
@@ -62,6 +61,7 @@ class IPProtectionServiceSingleton extends EventTarget {
 
   isActive = false;
   activatedAt = null;
+  sessionLength = 0;
   isSignedIn = null;
   isEnrolled = null;
   isEligible = null;
@@ -94,14 +94,15 @@ class IPProtectionServiceSingleton extends EventTarget {
     }
     this.proxyManager = new lazy.IPPProxyManager(this.guardian);
 
-    this.#inited = true;
-    await this.#updateSignInStatus();
-    await this.#updateEligibility();
-    await this.#updateEnrollment(true /* onlyCached */);
+    this.#updateSignInStatus();
+    this.#updateEligibility();
+    this.#updateEnrollment(true /* onlyCached */);
 
     this.#addSignInStateObserver();
     this.addVPNAddonObserver();
     this.#addEligibilityListeners();
+
+    this.#inited = true;
   }
 
   /**
@@ -503,7 +504,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     lazy.IPProtection.init();
 
     if (this.#inited && this.isSignedIn) {
-      await this.#updateEnrollment();
+      this.#updateEnrollment();
     }
   }
 
@@ -590,9 +591,6 @@ class IPProtectionServiceSingleton extends EventTarget {
     if (this.#entitlement) {
       this.isEntitled = !!this.#entitlement.uid;
       this.hasUpgraded = this.#entitlement.subscribed;
-    } else {
-      this.isEntitled = false;
-      this.hasUpgraded = false;
     }
   }
 
@@ -626,11 +624,6 @@ class IPProtectionServiceSingleton extends EventTarget {
   #dispatchError(error, errorContext) {
     this.hasError = true;
     this.errors.push(error);
-
-    if (this.errors.length > MAX_ERROR_HISTORY) {
-      this.errors.splice(0, this.errors.length - MAX_ERROR_HISTORY);
-    }
-
     this.dispatchEvent(
       new CustomEvent("IPProtectionService:Error", {
         bubbles: true,

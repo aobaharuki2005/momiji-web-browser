@@ -251,7 +251,7 @@ add_setup(async function setupVPN() {
   setupService();
 
   await putServerInRemoteSettings(DEFAULT_SERVICE_STATUS.serverList);
-  await IPProtectionService.init();
+  IPProtectionService.init();
 
   if (DEFAULT_EXPERIMENT) {
     await setupExperiment();

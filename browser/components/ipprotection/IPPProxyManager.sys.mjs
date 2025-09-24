@@ -221,7 +221,7 @@ class IPPProxyManager {
       return null;
     }
 
-    if (level == "error" || this.#pass?.shouldRotate()) {
+    if (level == "error" || this.#pass.shouldRotate()) {
       // If this is a visible top-level error force a rotation
       return this.#rotateProxyPass();
     }

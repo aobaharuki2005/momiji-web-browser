@@ -62,13 +62,14 @@ class IPProtectionWidget {
     if (this.#inited) {
       return;
     }
-    this.#inited = true;
 
     if (!this.created) {
       this.#createWidget();
     }
 
     lazy.CustomizableUI.addListener(this);
+
+    this.#inited = true;
   }
 
   /**
