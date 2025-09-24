@@ -589,6 +589,9 @@ class IPProtectionServiceSingleton extends EventTarget {
     if (this.#entitlement) {
       this.isEntitled = !!this.#entitlement.uid;
       this.hasUpgraded = this.#entitlement.subscribed;
+    } else {
+      this.isEntitled = false;
+      this.hasUpgraded = false;
     }
   }
 
