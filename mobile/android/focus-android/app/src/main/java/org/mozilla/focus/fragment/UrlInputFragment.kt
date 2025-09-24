@@ -209,8 +209,19 @@ class UrlInputFragment :
         return binding.root
     }
 
-    @Suppress("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        setupTopSitesView()
+        setupSearchSuggestionsFragment()
+        observeSearchSuggestions()
+        observeAutocompleteSuggestions()
+        setupToolbarAndFeatures()
+        setupUiInteractions()
+        initializeViewStates()
+    }
+
+    private fun setupTopSitesView() {
         binding.topSites.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
@@ -219,32 +230,38 @@ class UrlInputFragment :
                 }
             }
         }
+    }
 
+    private fun setupSearchSuggestionsFragment() {
         childFragmentManager.beginTransaction()
             .replace(binding.searchViewContainer.id, SearchSuggestionsFragment.create())
             .commit()
+    }
 
+    private fun observeSearchSuggestions() {
         searchSuggestionsViewModel.selectedSearchSuggestion.observe(
             viewLifecycleOwner,
-        ) {
-            val isSuggestion = searchSuggestionsViewModel.searchQuery.value != it
-            it?.let {
-                if (searchSuggestionsViewModel.alwaysSearch) {
-                    onSearch(it, isSuggestion = false, alwaysSearch = true)
-                } else {
-                    onSearch(it, isSuggestion)
-                }
+        ) { suggestion ->
+            suggestion?.let {
+                val isActualSuggestion = searchSuggestionsViewModel.searchQuery.value != it
+                val alwaysSearchEnabled = searchSuggestionsViewModel.alwaysSearch
+                val finalIsSuggestion = if (alwaysSearchEnabled) false else isActualSuggestion
+                onSearch(it, isSuggestion = finalIsSuggestion, alwaysSearch = alwaysSearchEnabled)
                 searchSuggestionsViewModel.clearSearchSuggestion()
             }
         }
+    }
 
+    private fun observeAutocompleteSuggestions() {
         searchSuggestionsViewModel.autocompleteSuggestion.observe(viewLifecycleOwner) { text ->
             if (text != null) {
                 searchSuggestionsViewModel.clearAutocompleteSuggestion()
                 binding.browserToolbar.setSearchTerms(text)
             }
         }
+    }
 
+    private fun setupToolbarAndFeatures() {
         binding.browserToolbar.private = true
 
         toolbarIntegration.set(
@@ -271,15 +288,19 @@ class UrlInputFragment :
                 },
             ),
             owner = this,
-            view = view,
+            view = requireView(),
         )
+    }
 
+    private fun setupUiInteractions() {
         binding.dismissView.setOnClickListener(this)
 
         OneShotPreDrawListener.add(binding.urlInputContainerView) {
             animateFirstDraw()
         }
+    }
 
+    private fun initializeViewStates() {
         if (isOverlay) {
             binding.landingLayout.isVisible = false
         } else {
@@ -287,19 +308,16 @@ class UrlInputFragment :
                 requireContext(),
                 R.drawable.home_background,
             )
-
             binding.dismissView.isVisible = false
-
             binding.menuView.isVisible = true
         }
 
-        tab?.let { tab ->
-            binding.browserToolbar.url = if (tab.content.hasSearchTerms) {
-                tab.content.searchTerms
+        tab?.let { currentTab ->
+            binding.browserToolbar.url = if (currentTab.content.hasSearchTerms) {
+                currentTab.content.searchTerms
             } else {
-                tab.content.url
+                currentTab.content.url
             }
-
             binding.searchViewContainer.isVisible = false
             binding.menuView.isVisible = false
         }
@@ -352,7 +370,6 @@ class UrlInputFragment :
         super.onConfigurationChanged(newConfig)
 
         if (newConfig.orientation != Configuration.ORIENTATION_UNDEFINED) {
-            // Make sure we update the background for landscape / portrait orientations.
             binding.backgroundView.background = AppCompatResources.getDrawable(
                 requireContext(),
                 R.drawable.home_background,
