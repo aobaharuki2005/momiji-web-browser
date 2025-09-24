@@ -4,7 +4,6 @@
   <CurrentIssues>
     <ID>ForbiddenSuppress:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:BrowserFragment.kt$BrowserFragment$@Suppress("ComplexCondition", "LongMethod")</ID>
-    <ID>ForbiddenSuppress:BrowserMenuController.kt$BrowserMenuController$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:PromoteSearchWidgetDialogCompose.kt$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:UrlInputFragment.kt$UrlInputFragment$@Suppress("LongMethod")</ID>
     <ID>OutdatedDocumentation:AppAdapter.kt$AppAdapter : Adapter</ID>
@@ -39,7 +38,6 @@
     <ID>UndocumentedPublicClass:BaseSettingsFragment.kt$BaseSettingsFragment : PreferenceFragmentCompatMenuProvider</ID>
     <ID>UndocumentedPublicClass:BiometricAuthenticationFragment.kt$BiometricAuthenticationFragment$Companion</ID>
     <ID>UndocumentedPublicClass:BrowserFragment.kt$BrowserFragment$Companion</ID>
-    <ID>UndocumentedPublicClass:BrowserMenuController.kt$BrowserMenuController</ID>
     <ID>UndocumentedPublicClass:BrowserToolbarIntegration.kt$BrowserToolbarIntegration : LifecycleAwareFeature</ID>
     <ID>UndocumentedPublicClass:Config.kt$Config</ID>
     <ID>UndocumentedPublicClass:ConnectionDetailsPanel.kt$ConnectionDetailsPanel : BottomSheetDialog</ID>
@@ -51,7 +49,6 @@
     <ID>UndocumentedPublicClass:CookieBannerOption.kt$CookieBannerOption$CookieBannerRejectAll : CookieBannerOption</ID>
     <ID>UndocumentedPublicClass:CookieBannerRejectAllPreference.kt$CookieBannerRejectAllPreference : LearnMoreSwitchPreference</ID>
     <ID>UndocumentedPublicClass:CrashReporterFragment.kt$CrashReporterFragment : Fragment</ID>
-    <ID>UndocumentedPublicClass:CustomTabMenu.kt$CustomTabMenu : ToolbarMenu</ID>
     <ID>UndocumentedPublicClass:CustomTabsService.kt$CustomTabsService : AbstractCustomTabsService</ID>
     <ID>UndocumentedPublicClass:DebugFocusApplication.kt$DebugFocusApplication : FocusApplication</ID>
     <ID>UndocumentedPublicClass:DefaultBrowserPreference.kt$DefaultBrowserPreference : Preference</ID>
@@ -165,30 +162,6 @@
     <ID>UndocumentedPublicClass:TabViewHolder.kt$TabViewHolder : ViewHolder</ID>
     <ID>UndocumentedPublicClass:TabsPopup.kt$TabsPopup : PopupWindow</ID>
     <ID>UndocumentedPublicClass:TelemetryMiddleware.kt$TelemetryMiddleware : Middleware</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu$CustomTabItem</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu$Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.CustomTabItem$AddToHomeScreen : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.CustomTabItem$Back : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.CustomTabItem$FindInPage : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.CustomTabItem$Forward : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.CustomTabItem$OpenInApp : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.CustomTabItem$OpenInBrowser : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.CustomTabItem$Reload : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.CustomTabItem$RequestDesktop : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.CustomTabItem$Stop : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.Item$AddToHomeScreen : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.Item$AddToShortcuts : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.Item$Back : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.Item$FindInPage : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.Item$Forward : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.Item$OpenInApp : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.Item$Reload : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.Item$RemoveFromShortcuts : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.Item$RequestDesktop : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.Item$Settings : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.Item$Share : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.Item$Stop : Item</ID>
     <ID>UndocumentedPublicClass:TrackingProtectionPanel.kt$TrackingProtectionPanel : BottomSheetDialog</ID>
     <ID>UndocumentedPublicClass:UrlInputFragment.kt$FocusCrashException : Exception</ID>
     <ID>UndocumentedPublicClass:ViewUtils.kt$ViewUtils</ID>
@@ -202,7 +175,6 @@
     <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment$fun erase(shouldEraseAllTabs: Boolean = false)</ID>
     <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment$fun handleTabCrash(crash: Crash)</ID>
     <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment$fun showTrackingProtectionPanel()</ID>
-    <ID>UndocumentedPublicFunction:BrowserMenuController.kt$BrowserMenuController$fun handleMenuInteraction(item: ToolbarMenu.Item)</ID>
     <ID>UndocumentedPublicFunction:BrowsersCache.kt$BrowsersCache$@Synchronized fun all(context: Context): Browsers</ID>
     <ID>UndocumentedPublicFunction:ClientWrapper.kt$ClientWrapper$@Deprecated("Non-private Client usage should be prevented") fun unwrap(): Client</ID>
     <ID>UndocumentedPublicFunction:CookiesPreference.kt$CookiesPreference$fun updateSummary()</ID>
