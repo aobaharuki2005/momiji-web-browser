@@ -12552,9 +12552,11 @@ void nsDocShell::MaybeFireTraverseHistory(nsDocShellLoadState* aLoadState) {
     return;
   }
 
+  nsCOMPtr activeURI = mActiveEntry->GetURIOrInheritedForAboutBlank();
+  nsCOMPtr<nsIURI> loadingURI = aLoadState->GetLoadingSessionHistoryInfo()
+                                    ->mInfo.GetURIOrInheritedForAboutBlank();
   if (NS_FAILED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
-          mActiveEntry->GetURI(),
-          aLoadState->GetLoadingSessionHistoryInfo()->mInfo.GetURI(),
+          activeURI, loadingURI,
           /*reportError=*/true,
           /*fromPrivateWindow=*/false))) {
     return;

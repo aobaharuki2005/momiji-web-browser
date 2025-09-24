@@ -624,14 +624,13 @@ void nsSHistory::WalkContiguousEntriesInOrder(
   MOZ_ASSERT(aEntry);
   MOZ_ASSERT(SessionHistoryInParent());
 
-  nsCOMPtr<nsIURI> targetURI = aEntry->GetURI();
-
   // Walk backward to find the entries that have the same origin as the
   // input entry.
   nsCOMPtr<SessionHistoryEntry> entry = do_QueryInterface(aEntry);
   MOZ_ASSERT(entry);
+  nsCOMPtr<nsIURI> targetURI = entry->GetURIOrInheritedForAboutBlank();
   while (nsCOMPtr previousEntry = entry->getPrevious()) {
-    nsCOMPtr<nsIURI> uri = previousEntry->GetURI();
+    nsCOMPtr<nsIURI> uri = previousEntry->GetURIOrInheritedForAboutBlank();
     if (NS_FAILED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
             targetURI, uri, false, false))) {
       break;
@@ -641,7 +640,7 @@ void nsSHistory::WalkContiguousEntriesInOrder(
 
   bool shouldContinue = aCallback(entry);
   while (shouldContinue && (entry = entry->getNext())) {
-    nsCOMPtr<nsIURI> uri = entry->GetURI();
+    nsCOMPtr<nsIURI> uri = entry->GetURIOrInheritedForAboutBlank();
     if (NS_FAILED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
             targetURI, uri, false, false))) {
       break;

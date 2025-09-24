@@ -1541,6 +1541,22 @@ void SessionHistoryEntry::SetInfo(SessionHistoryInfo* aInfo) {
   mInfo = MakeUnique<SessionHistoryInfo>(*aInfo);
 }
 
+already_AddRefed<nsIURI> SessionHistoryInfo::GetURIOrInheritedForAboutBlank()
+    const {
+  if (mURI && NS_IsAboutBlankAllowQueryAndFragment(mURI)) {
+    auto* principal = GetPrincipalToInherit();
+    if (principal) {
+      return principal->GetURI();
+    }
+  }
+  return do_AddRef(mURI);
+}
+
+already_AddRefed<nsIURI> SessionHistoryEntry::GetURIOrInheritedForAboutBlank()
+    const {
+  return mInfo->GetURIOrInheritedForAboutBlank();
+}
+
 }  // namespace dom
 
 namespace ipc {

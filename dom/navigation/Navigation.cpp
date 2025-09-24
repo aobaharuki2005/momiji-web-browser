@@ -1879,8 +1879,10 @@ void Navigation::CreateNavigationActivationFrom(
     // navigation's relevant realm, whose session history entry is
     // previousEntryForActivation.
 
-    nsIURI* previousURI = aPreviousEntryForActivation->GetURI();
-    nsIURI* currentURI = currentEntry->SessionHistoryInfo()->GetURI();
+    nsCOMPtr previousURI =
+        aPreviousEntryForActivation->GetURIOrInheritedForAboutBlank();
+    nsCOMPtr currentURI =
+        currentEntry->SessionHistoryInfo()->GetURIOrInheritedForAboutBlank();
     if (NS_SUCCEEDED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
             currentURI, previousURI, false, false))) {
       oldEntry = MakeRefPtr<NavigationHistoryEntry>(

@@ -636,7 +636,6 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
   // gets it's entries list initialized to the contiguous entries ending in the
   // new entry.
   if (Navigation::IsAPIEnabled()) {
-    nsCOMPtr<nsIURI> targetURI = entry->GetURI();
     bool sessionHistoryLoad =
         existingLoadingInfo && existingLoadingInfo->mLoadIsFromSessionHistory;
 
@@ -673,7 +672,9 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
       }
     }
 
-    nsCOMPtr<nsIURI> uri = mActiveEntry ? mActiveEntry->GetURI() : nullptr;
+    nsCOMPtr<nsIURI> uri =
+        mActiveEntry ? mActiveEntry->GetURIOrInheritedForAboutBlank() : nullptr;
+    nsCOMPtr<nsIURI> targetURI = entry->GetURIOrInheritedForAboutBlank();
     bool sameOrigin =
         NS_SUCCEEDED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
             targetURI, uri, false, false));
@@ -708,7 +709,7 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
       int32_t index = 0;
       MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug,
                   "Preparing contiguous for {} ({}load))",
-                  targetURI->GetSpecOrDefault(),
+                  entry->Info().GetURI()->GetSpecOrDefault(),
                   sessionHistoryLoad ? "history " : "");
       for (const auto& entry : loadingInfo->mContiguousEntries) {
         MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug,

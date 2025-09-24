@@ -171,6 +171,8 @@ class SessionHistoryInfo {
 
   nsStructuredCloneContainer* GetNavigationState() const;
 
+  already_AddRefed<nsIURI> GetURIOrInheritedForAboutBlank() const;
+
  private:
   friend class SessionHistoryEntry;
   friend struct mozilla::ipc::IPDLParamTraits<SessionHistoryInfo>;
@@ -457,6 +459,8 @@ class SessionHistoryEntry : public nsISHEntry,
   static void RemoveLoadId(uint64_t aLoadId);
 
   const nsTArray<RefPtr<SessionHistoryEntry>>& Children() { return mChildren; }
+
+  already_AddRefed<nsIURI> GetURIOrInheritedForAboutBlank() const;
 
  private:
   friend struct LoadingSessionHistoryInfo;
