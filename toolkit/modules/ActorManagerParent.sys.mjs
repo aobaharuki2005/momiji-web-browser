@@ -681,7 +681,7 @@ if (AppConstants.platform != "android") {
         MozTogglePictureInPicture: { capture: true },
       },
     },
-
+    messageManagerGroups: ["browsers"],
     allFrames: true,
   };
 
@@ -692,7 +692,7 @@ if (AppConstants.platform != "android") {
     child: {
       esModuleURI: "resource://gre/actors/PictureInPictureChild.sys.mjs",
     },
-
+    messageManagerGroups: ["browsers", "pip-player"],
     allFrames: true,
   };
 
@@ -707,7 +707,7 @@ if (AppConstants.platform != "android") {
         contextmenu: { capture: true },
       },
     },
-
+    messageManagerGroups: ["browsers"],
     allFrames: true,
   };
 
