@@ -1,0 +1,13 @@
+[DEFAULT]
+
+["test_xdg_config_legacy_existing.py"]
+
+["test_xdg_config_legacy_forced.py"]
+
+["test_xdg_config_new.py"]
+
+["test_xdg_config_new_env.py"]
+
+["test_xdg_config_new_env_invalid.py"]
+
+["test_xdg_config_new_existing.py"]
