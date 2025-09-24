@@ -14,11 +14,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material.TopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -26,7 +28,6 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import org.mozilla.focus.R
@@ -102,7 +103,7 @@ abstract class BaseComposeFragment : Fragment() {
                             .background(colorResource(id = backgroundColorResource))
                             .padding(paddingValues),
                     ) {
-                        TopAppBar(
+                        FocusTopAppBar(
                             title = title,
                             modifier = Modifier,
                             onNavigateUpClick = onNavigateUp(),
@@ -122,8 +123,9 @@ abstract class BaseComposeFragment : Fragment() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopAppBar(
+private fun FocusTopAppBar(
     title: String,
     modifier: Modifier = Modifier,
     onNavigateUpClick: () -> Unit,
@@ -132,7 +134,6 @@ private fun TopAppBar(
         title = {
             Text(
                 text = title,
-                color = focusColors.toolbarColor,
             )
         },
         modifier = modifier,
@@ -143,11 +144,14 @@ private fun TopAppBar(
                 Icon(
                     painterResource(id = iconsR.drawable.mozac_ic_back_24),
                     stringResource(R.string.go_back),
-                    tint = focusColors.toolbarColor,
                 )
             }
         },
-        backgroundColor = colorResource(R.color.settings_background),
-        elevation = 0.dp,
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = colorResource(R.color.settings_background),
+            scrolledContainerColor = colorResource(R.color.settings_background),
+            navigationIconContentColor = focusColors.toolbarColor,
+            titleContentColor = focusColors.toolbarColor,
+        ),
     )
 }
