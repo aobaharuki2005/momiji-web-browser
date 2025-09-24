@@ -1950,7 +1950,7 @@ void FilterNodeTableTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
 }
 
 void FilterNodeTableTransferSoftware::FillLookupTableImpl(
-    std::vector<Float>& aTableValues, uint8_t aTable[256]) {
+    const std::vector<Float>& aTableValues, uint8_t aTable[256]) {
   uint32_t tvLength = aTableValues.size();
   if (tvLength < 2) {
     return;
@@ -1962,9 +1962,7 @@ void FilterNodeTableTransferSoftware::FillLookupTableImpl(
     Float v2 = aTableValues[std::min(k + 1, tvLength - 1)];
     int32_t val = int32_t(255 * (v1 + (i / 255.0f - k / float(tvLength - 1)) *
                                           (tvLength - 1) * (v2 - v1)));
-    val = std::min(255, val);
-    val = std::max(0, val);
-    aTable[i] = val;
+    aTable[i] = std::clamp(val, 0, 255);
   }
 }
 
@@ -2013,7 +2011,7 @@ void FilterNodeDiscreteTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
 }
 
 void FilterNodeDiscreteTransferSoftware::FillLookupTableImpl(
-    std::vector<Float>& aTableValues, uint8_t aTable[256]) {
+    const std::vector<Float>& aTableValues, uint8_t aTable[256]) {
   uint32_t tvLength = aTableValues.size();
   if (tvLength < 1) {
     return;
@@ -2024,9 +2022,7 @@ void FilterNodeDiscreteTransferSoftware::FillLookupTableImpl(
     k = std::min(k, tvLength - 1);
     Float v = aTableValues[k];
     int32_t val = NS_lround(255 * v);
-    val = std::min(255, val);
-    val = std::max(0, val);
-    aTable[i] = val;
+    aTable[i] = std::clamp(val, 0, 255);
   }
 }
 
@@ -2098,9 +2094,7 @@ void FilterNodeLinearTransferSoftware::FillLookupTableImpl(
     Float aSlope, Float aIntercept, uint8_t aTable[256]) {
   for (size_t i = 0; i < 256; i++) {
     int32_t val = NS_lround(aSlope * i + 255 * aIntercept);
-    val = std::min(255, val);
-    val = std::max(0, val);
-    aTable[i] = val;
+    aTable[i] = std::clamp(val, 0, 255);
   }
 }
 
@@ -2191,9 +2185,7 @@ void FilterNodeGammaTransferSoftware::FillLookupTableImpl(Float aAmplitude,
   for (size_t i = 0; i < 256; i++) {
     int32_t val =
         NS_lround(255 * (aAmplitude * pow(i / 255.0f, aExponent) + aOffset));
-    val = std::min(255, val);
-    val = std::max(0, val);
-    aTable[i] = val;
+    aTable[i] = std::clamp(val, 0, 255);
   }
 }
 
