@@ -2490,6 +2490,10 @@ UseScratchRegisterScope::UseScratchRegisterScope(Assembler& assembler)
     : available_(assembler.GetScratchRegisterList()),
       old_available_(*available_) {}
 
+UseScratchRegisterScope::UseScratchRegisterScope(Assembler* assembler)
+    : available_(assembler->GetScratchRegisterList()),
+      old_available_(*available_) {}
+
 UseScratchRegisterScope::~UseScratchRegisterScope() {
   *available_ = old_available_;
 }

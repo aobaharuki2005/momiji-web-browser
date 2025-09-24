@@ -443,9 +443,11 @@ class Assembler : public AssemblerShared,
     // - Return address has to be at the end of replaced block.
     // Short jump wouldn't be more efficient.
     // WriteLoad64Instructions will emit 6 instrs to load a addr.
-    Assembler::WriteLoad64Instructions(inst, SavedScratchRegister, (uint64_t)dest);
+    Assembler::WriteLoad64Instructions(inst, SavedScratchRegister,
+                                       (uint64_t)dest);
     Instr jalr_ = JALR | (ra.code() << kRdShift) | (0x0 << kFunct3Shift) |
-                  (SavedScratchRegister.code() << kRs1Shift) | (0x0 << kImm12Shift);
+                  (SavedScratchRegister.code() << kRs1Shift) |
+                  (0x0 << kImm12Shift);
     *reinterpret_cast<Instr*>(inst + 6 * kInstrSize) = jalr_;
   }
   static void WriteLoad64Instructions(Instruction* inst0, Register reg,
@@ -580,6 +582,7 @@ class BlockTrampolinePoolScope {
 
 class UseScratchRegisterScope {
  public:
+  explicit UseScratchRegisterScope(Assembler& assembler);
   explicit UseScratchRegisterScope(Assembler* assembler);
   ~UseScratchRegisterScope();
 

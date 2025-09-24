@@ -68,6 +68,7 @@ class AssemblerMIPSShared;
 class UseScratchRegisterScope {
  public:
   explicit UseScratchRegisterScope(AssemblerMIPSShared& assembler);
+  explicit UseScratchRegisterScope(AssemblerMIPSShared* assembler);
   ~UseScratchRegisterScope();
 
   Register Acquire();

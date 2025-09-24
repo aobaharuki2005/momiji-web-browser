@@ -5881,14 +5881,9 @@ static void MoveDataBlock(MacroAssembler& masm, Register base, int32_t from,
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_X86)
   static constexpr Register scratch = ABINonArgReg0;
   masm.push(scratch);
-#elif defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64) || \
+    defined(JS_CODEGEN_RISCV64)
   UseScratchRegisterScope temps(masm);
-  Register scratch = temps.Acquire();
-#elif defined(JS_CODEGEN_LOONG64)
-  UseScratchRegisterScope temps(masm);
-  Register scratch = temps.Acquire();
-#elif defined(JS_CODEGEN_RISCV64)
-  UseScratchRegisterScope temps(&masm);
   Register scratch = temps.Acquire();
 #elif !defined(JS_CODEGEN_NONE)
   const Register scratch = ScratchReg;
@@ -8173,25 +8168,10 @@ void MacroAssembler::debugAssertCanonicalInt32(Register r) {
     branchPtr(Assembler::BelowOrEqual, r, ImmWord(UINT32_MAX), &ok);
     breakpoint();
     bind(&ok);
-#    elif defined(JS_CODEGEN_MIPS64)
+#    elif defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64) || \
+        defined(JS_CODEGEN_RISCV64)
     Label ok;
     UseScratchRegisterScope temps(*this);
-    Register scratch = temps.Acquire();
-    move32SignExtendToPtr(r, scratch);
-    branchPtr(Assembler::Equal, r, scratch, &ok);
-    breakpoint();
-    bind(&ok);
-#    elif defined(JS_CODEGEN_LOONG64)
-    Label ok;
-    UseScratchRegisterScope temps(*this);
-    Register scratch = temps.Acquire();
-    move32SignExtendToPtr(r, scratch);
-    branchPtr(Assembler::Equal, r, scratch, &ok);
-    breakpoint();
-    bind(&ok);
-#    elif defined(JS_CODEGEN_RISCV64)
-    Label ok;
-    UseScratchRegisterScope temps(this);
     Register scratch = temps.Acquire();
     move32SignExtendToPtr(r, scratch);
     branchPtr(Assembler::Equal, r, scratch, &ok);

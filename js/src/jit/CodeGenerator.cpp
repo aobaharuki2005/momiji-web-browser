@@ -10243,11 +10243,8 @@ void CodeGenerator::visitWasmStackSwitchToSuspendable(
   const Register ScratchReg1 = ScratchReg;
 #  elif defined(JS_CODEGEN_ARM)
   const Register ScratchReg1 = ABINonArgReturnVolatileReg;
-#  elif defined(JS_CODEGEN_LOONG64)
+#  elif defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_RISCV64)
   UseScratchRegisterScope temps(masm);
-  const Register ScratchReg1 = temps.Acquire();
-#  elif defined(JS_CODEGEN_RISCV64)
-  UseScratchRegisterScope temps(&masm);
   const Register ScratchReg1 = temps.Acquire();
 #  else
 #    error "NYI: scratch register"
@@ -10395,11 +10392,8 @@ void CodeGenerator::visitWasmStackSwitchToMain(LWasmStackSwitchToMain* lir) {
   const Register ScratchReg1 = ScratchReg;
 #  elif defined(JS_CODEGEN_ARM)
   const Register ScratchReg1 = ABINonArgReturnVolatileReg;
-#  elif defined(JS_CODEGEN_LOONG64)
+#  elif defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_RISCV64)
   UseScratchRegisterScope temps(masm);
-  const Register ScratchReg1 = temps.Acquire();
-#  elif defined(JS_CODEGEN_RISCV64)
-  UseScratchRegisterScope temps(&masm);
   const Register ScratchReg1 = temps.Acquire();
 #  else
 #    error "NYI: scratch register"
@@ -10594,11 +10588,8 @@ void CodeGenerator::visitWasmStackContinueOnSuspendable(
   const Register ScratchReg1 = ScratchReg;
 #  elif defined(JS_CODEGEN_ARM)
   const Register ScratchReg1 = ABINonArgReturnVolatileReg;
-#  elif defined(JS_CODEGEN_LOONG64)
+#  elif defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_RISCV64)
   UseScratchRegisterScope temps(masm);
-  const Register ScratchReg1 = temps.Acquire();
-#  elif defined(JS_CODEGEN_RISCV64)
-  UseScratchRegisterScope temps(&masm);
   const Register ScratchReg1 = temps.Acquire();
 #  else
 #    error "NYI: scratch register"
