@@ -19,6 +19,9 @@
     /** @type {MutationObserver} */
     #tabChangeObserver;
 
+    /** @type {MozTabbrowserTab[]} */
+    #tabs = [];
+
     /**
      * @returns {boolean}
      */
@@ -63,6 +66,7 @@
     disconnectedCallback() {
       this.#tabChangeObserver?.disconnect();
       this.ownerGlobal.removeEventListener("TabSelect", this);
+      this.#deactivate();
     }
 
     #observeTabChanges() {
@@ -95,6 +99,32 @@
     }
 
     /**
+     * Show all Split View tabs in the content area.
+     */
+    #activate() {
+      gBrowser.showSplitViewPanels(this.#tabs);
+      this.dispatchEvent(
+        new CustomEvent("TabSplitViewActivate", {
+          detail: { tabs: this.#tabs },
+          bubbles: true,
+        })
+      );
+    }
+
+    /**
+     * Remove Split View tabs from the content area.
+     */
+    #deactivate() {
+      gBrowser.hideSplitViewPanels(this.#tabs);
+      this.dispatchEvent(
+        new CustomEvent("TabSplitViewDeactivate", {
+          detail: { tabs: this.#tabs },
+          bubbles: true,
+        })
+      );
+    }
+
+    /**
      * add tabs to the split view wrapper
      *
      * @param {MozTabbrowserTab[]} tabs
@@ -111,7 +141,14 @@
                 tabIndex: gBrowser.tabs.at(-1)._tPos + 1,
                 selectTab: tab.selected,
               });
+        this.#tabs.push(tabToMove);
         gBrowser.moveTabToSplitView(tabToMove, this);
+        if (tab === gBrowser.selectedTab) {
+          this.hasActiveTab = true;
+        }
+      }
+      if (this.hasActiveTab) {
+        this.#activate();
       }
     }
 
@@ -134,6 +171,11 @@
      */
     on_TabSelect(event) {
       this.hasActiveTab = event.target.splitview === this;
+      if (this.hasActiveTab) {
+        this.#activate();
+      } else {
+        this.#deactivate();
+      }
     }
   }
 

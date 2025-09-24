@@ -17,6 +17,32 @@ registerCleanupFunction(async function () {
   });
 });
 
+async function addTabAndLoadBrowser() {
+  const tab = BrowserTestUtils.addTab(gBrowser, "https://example.com");
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  return tab;
+}
+
+async function checkSplitViewPanelVisible(tab, isVisible) {
+  const panel = document.getElementById(tab.linkedPanel);
+  await BrowserTestUtils.waitForMutationCondition(
+    panel,
+    { attributes: true },
+    () => panel.classList.contains("split-view-panel") == isVisible
+  );
+  if (isVisible) {
+    Assert.ok(
+      gBrowser.splitViewBrowsers.includes(tab.linkedBrowser),
+      "Split view panel is active."
+    );
+  } else {
+    Assert.ok(
+      !gBrowser.splitViewBrowsers.includes(tab.linkedBrowser),
+      "Split view panel is inactive."
+    );
+  }
+}
+
 add_task(async function test_splitViewCreateAndAddTabs() {
   let tab1 = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let tab2 = BrowserTestUtils.addTab(gBrowser, "about:blank");
@@ -81,4 +107,37 @@ add_task(async function test_splitViewCreateAndAddTabs() {
   // Remove split view and close tabs
   splitview.close();
   splitview2.close();
+});
+
+add_task(async function test_split_view_panels() {
+  const tab1 = await addTabAndLoadBrowser();
+  const tab2 = await addTabAndLoadBrowser();
+  const originalTab = gBrowser.selectedTab;
+  await BrowserTestUtils.switchTab(gBrowser, tab1);
+
+  info("Activate split view.");
+  const splitView = gBrowser.addTabSplitView([tab1, tab2]);
+  for (const tab of splitView.tabs) {
+    await checkSplitViewPanelVisible(tab, true);
+  }
+
+  info("Switch to a non-split view tab.");
+  await BrowserTestUtils.switchTab(gBrowser, originalTab);
+  for (const tab of splitView.tabs) {
+    await checkSplitViewPanelVisible(tab, false);
+  }
+
+  info("Switch back to a split view tab.");
+  await BrowserTestUtils.switchTab(gBrowser, tab1);
+  for (const tab of splitView.tabs) {
+    await checkSplitViewPanelVisible(tab, true);
+  }
+
+  info("Remove the split view, keeping tabs intact.");
+  splitView.unsplitTabs();
+  await checkSplitViewPanelVisible(tab1, false);
+  await checkSplitViewPanelVisible(tab2, false);
+
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
 });

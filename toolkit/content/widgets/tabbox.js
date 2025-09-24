@@ -256,6 +256,13 @@
   customElements.define("deck", MozDeck);
 
   class MozTabpanels extends MozDeck {
+    /**
+     * Panels that are currently within an active Split View.
+     *
+     * @type {string[]}
+     */
+    #splitViewPanels = [];
+
     constructor() {
       super();
       this._tabbox = null;
@@ -313,6 +320,46 @@
       }
 
       return tabElmFromIndex;
+    }
+
+    set splitViewPanels(newPanels) {
+      const oldPanels = this.#splitViewPanels;
+      for (const panel of oldPanels) {
+        this.removePanelFromSplitView(panel, false);
+      }
+      for (const [i, panel] of newPanels.entries()) {
+        const panelEl = document.getElementById(panel);
+        if (panelEl) {
+          panelEl.classList.add("split-view-panel");
+          panelEl.setAttribute("column", i);
+        }
+      }
+      this.#splitViewPanels = newPanels;
+    }
+
+    get splitViewPanels() {
+      return this.#splitViewPanels;
+    }
+
+    /**
+     * Remove split view attributes from a panel, and optionally remove it from
+     * the splitViewPanels array.
+     *
+     * @param {string} panel
+     * @param {boolean} [updateArray]
+     */
+    removePanelFromSplitView(panel, updateArray = true) {
+      const panelEl = document.getElementById(panel);
+      if (panelEl) {
+        panelEl.classList.remove("split-view-panel");
+        panelEl.removeAttribute("column");
+      }
+      if (updateArray) {
+        const index = this.#splitViewPanels.indexOf(panel);
+        if (index !== -1) {
+          this.#splitViewPanels.splice(index, 1);
+        }
+      }
     }
   }
 
