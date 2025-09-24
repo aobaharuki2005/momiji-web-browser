@@ -277,7 +277,15 @@ bool WindowContext::CanSet(FieldIndex<IDX_IsThirdPartyTrackingResourceWindow>,
 bool WindowContext::CanSet(FieldIndex<IDX_UsingStorageAccess>,
                            const bool& aUsingStorageAccess,
                            ContentParent* aSource) {
-  return CheckOnlyOwningProcessCanSet(aSource);
+  return XRE_IsParentProcess() || CheckOnlyOwningProcessCanSet(aSource);
+}
+
+void WindowContext::DidSet(FieldIndex<IDX_UsingStorageAccess>, bool aOldValue) {
+  if (!aOldValue && GetUsingStorageAccess() && XRE_IsContentProcess()) {
+    if (nsGlobalWindowInner* windowInner = GetInnerWindow()) {
+      windowInner->StorageAccessPermissionChanged(true);
+    }
+  }
 }
 
 bool WindowContext::CanSet(FieldIndex<IDX_ShouldResistFingerprinting>,
