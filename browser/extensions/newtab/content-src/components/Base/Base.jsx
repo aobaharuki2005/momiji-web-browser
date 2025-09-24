@@ -163,6 +163,16 @@ export class BaseContent extends React.PureComponent {
   componentDidUpdate(prevProps) {
     this.applyBodyClasses();
     const prefs = this.props.Prefs.values;
+
+    // Check if weather widget was re-enabled from customization menu
+    const wasWeatherDisabled = !prevProps.Prefs.values.showWeather;
+    const isWeatherEnabled = this.props.Prefs.values.showWeather;
+
+    if (wasWeatherDisabled && isWeatherEnabled) {
+      // If weather widget was enabled from customization menu, display opt-in dialog
+      this.props.dispatch(ac.SetPref("weather.optInDisplayed", true));
+    }
+
     const wallpapersEnabled = prefs["newtabWallpapers.enabled"];
     if (wallpapersEnabled) {
       // destructure current and previous props with fallbacks

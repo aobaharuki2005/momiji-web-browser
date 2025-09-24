@@ -211,6 +211,16 @@ export class _Weather extends React.PureComponent {
     );
   }
 
+  handleRejectOptIn = () => {
+    this.props.dispatch(ac.SetPref("weather.optInAccepted", false));
+    this.props.dispatch(ac.SetPref("weather.optInDisplayed", false));
+  };
+
+  handleAcceptOptIn = () => {
+    this.props.dispatch(ac.SetPref("weather.optInAccepted", true));
+    this.props.dispatch(ac.SetPref("weather.optInDisplayed", false));
+  };
+
   render() {
     // Check if weather should be rendered
     const isWeatherEnabled = this.props.Prefs.values["system.showWeather"];
@@ -243,6 +253,26 @@ export class _Weather extends React.PureComponent {
       .join(" ");
 
     const showDetailedView = Prefs.values["weather.display"] === "detailed";
+
+    const isOptInEnabled = Prefs.values["system.showWeatherOptIn"];
+    const optInDisplayed = Prefs.values["weather.optInDisplayed"];
+    const nimbusOptInDisplayed =
+      Prefs.values.trainhopConfig?.weather?.optInDisplayed;
+    const optInUserChoice = Prefs.values["weather.optInAccepted"];
+    const nimbusOptInUserChoice =
+      Prefs.values.trainhopConfig?.weather?.optInAccepted;
+
+    const optInPrompt = nimbusOptInDisplayed ?? optInDisplayed ?? false;
+    const userChoice = nimbusOptInUserChoice ?? optInUserChoice ?? false;
+    const isUserWeatherEnabled = Prefs.values.showWeather;
+
+    // Opt-in dialog should only show if:
+    // - weather enabled on customization menu
+    // - weather opt-in pref is enabled
+    // - opt-in prompt is enabled
+    // - user hasn't accepted the opt-in yet
+    const shouldShowOptInDialog =
+      isUserWeatherEnabled && isOptInEnabled && optInPrompt && !userChoice;
 
     // Note: The temperature units/display options will become secondary menu items
     const WEATHER_SOURCE_CONTEXT_MENU_OPTIONS = [
@@ -368,6 +398,31 @@ export class _Weather extends React.PureComponent {
               data-l10n-args='{"provider": "AccuWeather®"}'
             ></span>
           </span>
+
+          {shouldShowOptInDialog && (
+            <div className="weatherOptIn">
+              <dialog open={true}>
+                <span className="weatherOptInImg"></span>
+                <div className="weatherOptInContent">
+                  <h3>Do you want to see the weather for your location?</h3>
+                  <moz-button-group className="button-group">
+                    <moz-button
+                      size="small"
+                      type="default"
+                      label="Not now"
+                      onClick={this.handleRejectOptIn}
+                    />
+                    <moz-button
+                      size="small"
+                      type="default"
+                      label="Yes"
+                      onClick={this.handleAcceptOptIn}
+                    />
+                  </moz-button-group>
+                </div>
+              </dialog>
+            </div>
+          )}
         </div>
       );
     }
