@@ -131,7 +131,7 @@ static JitExecStatus EnterBaseline(JSContext* cx, EnterJitData& data) {
   // Caller must construct |this| before invoking the function.
   MOZ_ASSERT_IF(data.constructing,
                 data.thisv().isObject() ||
-                data.thisv().isMagic(JS_UNINITIALIZED_LEXICAL));
+                    data.thisv().isMagic(JS_UNINITIALIZED_LEXICAL));
 
   data.result.setInt32(data.numActualArgs);
   {

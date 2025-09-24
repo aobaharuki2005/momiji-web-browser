@@ -136,7 +136,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   // Save stack pointer.
   masm.movePtr(sp, r11);
 
- // Load the number of actual arguments into r10.
+  // Load the number of actual arguments into r10.
   masm.loadPtr(slot_vp, r10);
   masm.unboxInt32(Address(r10, 0), r10);
 

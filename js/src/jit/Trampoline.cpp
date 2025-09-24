@@ -392,4 +392,4 @@ void JitRuntime::generateEnterJitShared(MacroAssembler& masm, Register argcReg,
   // Push the callee token.
   masm.push(calleeTokenReg);
 }
-#endif // !JS_CODEGEN_ARM64
+#endif  // !JS_CODEGEN_ARM64

@@ -76,8 +76,9 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
     constructing = state.asInvoke()->constructing();
 
     // Caller must construct |this| before invoking the function.
-    MOZ_ASSERT_IF(constructing, args.thisv().isObject() ||
-                  args.thisv().isMagic(JS_UNINITIALIZED_LEXICAL));
+    MOZ_ASSERT_IF(constructing,
+                  args.thisv().isObject() ||
+                      args.thisv().isMagic(JS_UNINITIALIZED_LEXICAL));
 
     maxArgc = args.length();
     maxArgv = args.array();
@@ -91,7 +92,6 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
     envChain = state.asExecute()->environmentChain();
     calleeToken = CalleeToToken(state.script());
   }
-
 
   RootedValue result(cx, Int32Value(numActualArgs));
   {
@@ -115,10 +115,11 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
     if (!pbl::PortablebaselineInterpreterStackCheck(cx, state, numActualArgs)) {
       return EnterJitStatus::NotEntered;
     }
-     unsigned numFormals =
-         state.isInvoke() ? state.script()->function()->nargs() : 0;
-     if (!pbl::PortableBaselineTrampoline(cx, maxArgc, maxArgv, numFormals,
-                                         calleeToken, envChain, result.address())) {
+    unsigned numFormals =
+        state.isInvoke() ? state.script()->function()->nargs() : 0;
+    if (!pbl::PortableBaselineTrampoline(cx, maxArgc, maxArgv, numFormals,
+                                         calleeToken, envChain,
+                                         result.address())) {
       return EnterJitStatus::Error;
     }
 #endif  // ENABLE_PORTABLE_BASELINE_INTERP
