@@ -301,6 +301,7 @@ class ExistentLegacyXREAppDir_Generic : public BaseXREAppDir {
   void SetUp() override {
     BaseXREAppDir::SetUp();
     MkHomeSubdir(".mozilla", mMozDir);
+    MkHomeSubdir(".mozilla/firefox", mMozDir);
   }
   nsCString mMozDir;
 };
@@ -624,7 +625,7 @@ TEST_F(NonExistentLegacyXREAppDir_NoEnv, GetUserAppDataDirectory) {
 #elif defined(XP_MACOSX)
       nsCString(mAppSupport + "/Firefox"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla/firefox"_ns)
+      nsCString(mMockedHomeDir + "/.config/mozilla/firefox"_ns)
 #elif defined(XP_WIN)
       nsCString(mRoamingHome + "\\Mozilla\\Firefox"_ns)
 #endif
@@ -641,7 +642,7 @@ TEST_F(NonExistentLegacyXREAppDir_BadEnv, GetUserAppDataDirectory) {
 #elif defined(XP_MACOSX)
       nsCString(mAppSupport + "/Firefox"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla/firefox"_ns)
+      nsCString(mMockedHomeDir + "/.config/mozilla/firefox"_ns)
 #elif defined(XP_WIN)
       nsCString(mRoamingHome + "\\Mozilla\\Firefox"_ns)
 #endif
@@ -675,7 +676,7 @@ TEST_F(XDGXREAppDir_NoEnv, GetUserAppDataDirectory) {
 #elif defined(XP_MACOSX)
       nsCString(mAppSupport + "/Firefox"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla/firefox"_ns)
+      nsCString(mMockedHomeDir + "/.config/mozilla/firefox"_ns)
 #elif defined(XP_WIN)
       nsCString(mRoamingHome + "\\Mozilla\\Firefox"_ns)
 #endif
@@ -692,7 +693,7 @@ TEST_F(XDGXREAppDir_InvalidEnv, GetUserAppDataDirectory) {
 #elif defined(XP_MACOSX)
       nsCString(mAppSupport + "/Firefox"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla/firefox"_ns)
+      nsCString(mMockedHomeDir + "/.config/mozilla/firefox"_ns)
 #elif defined(XP_WIN)
       nsCString(mRoamingHome + "\\Mozilla\\Firefox"_ns)
 #endif
@@ -707,7 +708,7 @@ TEST_F(XDGXREAppDir_Env, GetUserAppDataDirectory) {
 #elif defined(XP_MACOSX)
       nsCString(mAppSupport + "/Firefox"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla/firefox"_ns)
+      nsCString(mMockedHomeDir + "/.xdgConfigDir/mozilla/firefox"_ns)
 #elif defined(XP_WIN)
       nsCString(mRoamingHome + "\\Mozilla\\Firefox"_ns)
 #endif
@@ -966,7 +967,7 @@ TEST_F(XDGXREAppDir_NoEnv, GetUserProfilesRootDir) {
 #elif defined(XP_MACOSX)
       nsCString(mAppSupport + "/Firefox/Profiles"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla/firefox"_ns)
+      nsCString(mMockedHomeDir + "/.config/mozilla/firefox"_ns)
 #elif defined(XP_WIN)
       nsCString(mRoamingHome + "\\Mozilla\\Firefox\\Profiles"_ns)
 #endif
@@ -981,7 +982,7 @@ TEST_F(XDGXREAppDir_InvalidEnv, GetUserProfilesRootDir) {
 #elif defined(XP_MACOSX)
       nsCString(mAppSupport + "/Firefox/Profiles"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla/firefox"_ns)
+      nsCString(mMockedHomeDir + "/.config/mozilla/firefox"_ns)
 #elif defined(XP_WIN)
       nsCString(mRoamingHome + "\\Mozilla\\Firefox\\Profiles"_ns)
 #endif
@@ -996,7 +997,7 @@ TEST_F(XDGXREAppDir_Env, GetUserProfilesRootDir) {
 #elif defined(XP_MACOSX)
       nsCString(mAppSupport + "/Firefox/Profiles"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla/firefox"_ns)
+      nsCString(mMockedHomeDir + "/.xdgConfigDir/mozilla/firefox"_ns)
 #elif defined(XP_WIN)
       nsCString(mRoamingHome + "\\Mozilla\\Firefox\\Profiles"_ns)
 #endif
@@ -1060,7 +1061,7 @@ TEST_F(NonExistentLegacyXREAppDir_NoEnv, GetDefaultUserProfileRoot) {
 #elif defined(XP_MACOSX)
       nsCString(mLibrary + "/Mozilla/Profiles"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla"_ns)
+      nsCString(mMockedHomeDir + "/.config/mozilla"_ns)
 #elif defined(XP_WIN)
       nsCString(mRoamingHome + "\\Mozilla\\Profiles"_ns)
 #endif
@@ -1077,7 +1078,7 @@ TEST_F(NonExistentLegacyXREAppDir_BadEnv, GetDefaultUserProfileRoot) {
 #elif defined(XP_MACOSX)
       nsCString(mLibrary + "/Mozilla/Profiles"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla"_ns)
+      nsCString(mMockedHomeDir + "/.config/mozilla"_ns)
 #elif defined(XP_WIN)
       nsCString(mRoamingHome + "\\Mozilla\\Profiles"_ns)
 #endif
@@ -1111,7 +1112,7 @@ TEST_F(XDGXREAppDir_NoEnv, GetDefaultUserProfileRoot) {
 #elif defined(XP_MACOSX)
       nsCString(mLibrary + "/Mozilla/Profiles"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla"_ns)
+      nsCString(mMockedHomeDir + "/.config/mozilla"_ns)
 #elif defined(XP_WIN)
       nsCString(mRoamingHome + "\\Mozilla\\Profiles"_ns)
 #endif
@@ -1128,7 +1129,7 @@ TEST_F(XDGXREAppDir_InvalidEnv, GetDefaultUserProfileRoot) {
 #elif defined(XP_MACOSX)
       nsCString(mLibrary + "/Mozilla/Profiles"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla"_ns)
+      nsCString(mMockedHomeDir + "/.config/mozilla"_ns)
 #elif defined(XP_WIN)
       nsCString(mRoamingHome + "\\Mozilla\\Profiles"_ns)
 #endif
@@ -1143,7 +1144,7 @@ TEST_F(XDGXREAppDir_Env, GetDefaultUserProfileRoot) {
 #elif defined(XP_MACOSX)
       nsCString(mLibrary + "/Mozilla/Profiles"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla"_ns)
+      nsCString(mMockedHomeDir + "/.xdgConfigDir/mozilla"_ns)
 #elif defined(XP_WIN)
       nsCString(mRoamingHome + "\\Mozilla\\Profiles"_ns)
 #endif
@@ -1207,7 +1208,7 @@ TEST_F(NonExistentLegacyXREAppDir_NoEnv, GetTempDefaultUserProfileRoot) {
 #elif defined(XP_MACOSX)
       nsCString(mAppCache + "/Mozilla/Profiles"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla"_ns)
+      nsCString(mMockedHomeDir + "/.config/mozilla"_ns)
 #elif defined(XP_WIN)
       nsCString(mLocalHome + "\\Mozilla\\Profiles"_ns)
 #endif
@@ -1224,7 +1225,7 @@ TEST_F(NonExistentLegacyXREAppDir_BadEnv, GetTempDefaultUserProfileRoot) {
 #elif defined(XP_MACOSX)
       nsCString(mAppCache + "/Mozilla/Profiles"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla"_ns)
+      nsCString(mMockedHomeDir + "/.config/mozilla"_ns)
 #elif defined(XP_WIN)
       nsCString(mLocalHome + "\\Mozilla\\Profiles"_ns)
 #endif
@@ -1258,7 +1259,7 @@ TEST_F(XDGXREAppDir_NoEnv, GetTempDefaultUserProfileRoot) {
 #elif defined(XP_MACOSX)
       nsCString(mAppCache + "/Mozilla/Profiles"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla"_ns)
+      nsCString(mMockedHomeDir + "/.config/mozilla"_ns)
 #elif defined(XP_WIN)
       nsCString(mLocalHome + "\\Mozilla\\Profiles"_ns)
 #endif
@@ -1275,7 +1276,7 @@ TEST_F(XDGXREAppDir_InvalidEnv, GetTempDefaultUserProfileRoot) {
 #elif defined(XP_MACOSX)
       nsCString(mAppCache + "/Mozilla/Profiles"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla"_ns)
+      nsCString(mMockedHomeDir + "/.config/mozilla"_ns)
 #elif defined(XP_WIN)
       nsCString(mLocalHome + "\\Mozilla\\Profiles"_ns)
 #endif
@@ -1290,7 +1291,7 @@ TEST_F(XDGXREAppDir_Env, GetTempDefaultUserProfileRoot) {
 #elif defined(XP_MACOSX)
       nsCString(mAppCache + "/Mozilla/Profiles"_ns)
 #elif defined(XP_UNIX)
-      nsCString(mMockedHomeDir + "/.mozilla"_ns)
+      nsCString(mMockedHomeDir + "/.xdgConfigDir/mozilla"_ns)
 #elif defined(XP_WIN)
       nsCString(mLocalHome + "\\Mozilla\\Profiles"_ns)
 #endif
