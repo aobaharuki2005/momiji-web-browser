@@ -10247,8 +10247,8 @@ void CodeGenerator::visitWasmStackSwitchToSuspendable(
   SecondScratchRegisterScope scratch2(masm);
   const Register ScratchReg1 = scratch2;
 #  elif defined(JS_CODEGEN_RISCV64)
-  ScratchRegisterScope scratch(masm);
-  const Register ScratchReg1 = scratch;
+  UseScratchRegisterScope temps(&masm);
+  const Register ScratchReg1 = temps.Acquire();
 #  else
 #    error "NYI: scratch register"
 #  endif
@@ -10399,8 +10399,8 @@ void CodeGenerator::visitWasmStackSwitchToMain(LWasmStackSwitchToMain* lir) {
   SecondScratchRegisterScope scratch2(masm);
   const Register ScratchReg1 = scratch2;
 #  elif defined(JS_CODEGEN_RISCV64)
-  ScratchRegisterScope scratch(masm);
-  const Register ScratchReg1 = scratch;
+  UseScratchRegisterScope temps(&masm);
+  const Register ScratchReg1 = temps.Acquire();
 #  else
 #    error "NYI: scratch register"
 #  endif
@@ -10598,8 +10598,8 @@ void CodeGenerator::visitWasmStackContinueOnSuspendable(
   SecondScratchRegisterScope scratch2(masm);
   const Register ScratchReg1 = scratch2;
 #  elif defined(JS_CODEGEN_RISCV64)
-  ScratchRegisterScope scratch(masm);
-  const Register ScratchReg1 = scratch;
+  UseScratchRegisterScope temps(&masm);
+  const Register ScratchReg1 = temps.Acquire();
 #  else
 #    error "NYI: scratch register"
 #  endif
