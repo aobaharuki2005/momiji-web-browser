@@ -11,10 +11,7 @@ support-files = [
   "browser_content_sandbox_fs_tests.js",
 ]
 test-directories = "/tmp/.xdg_config_home_test"
-environment = [
-  "XDG_CONFIG_HOME=/tmp/.xdg_config_home_test",
-  "MOZ_LEGACY_HOME=0",
-]
+environment = "XDG_CONFIG_HOME=/tmp/.xdg_config_home_test"
 
-["browser_content_sandbox_fs_xdg_xdgConfigHome.js"]
+["browser_content_sandbox_fs_xdg.js"]
 run-if = ["os == 'linux'"]
