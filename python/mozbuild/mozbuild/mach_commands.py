@@ -2556,6 +2556,12 @@ def repackage_deb(
     required=True,
     help="The product being shipped. Used to disambiguate beta/devedition etc.",
 )
+@CommandArgument(
+    "--extensions-dir",
+    type=str,
+    required=True,
+    help="Path to extensions.",
+)
 def repackage_deb_l10n(
     command_context,
     input_xpi_file,
@@ -2565,6 +2571,7 @@ def repackage_deb_l10n(
     build_number,
     templates,
     product,
+    extensions_dir,
 ):
     for input_file in (input_xpi_file, input_tar_file):
         if not os.path.exists(input_file):
@@ -2586,6 +2593,7 @@ def repackage_deb_l10n(
         version,
         build_number,
         product,
+        extensions_dir,
     )
 
 
