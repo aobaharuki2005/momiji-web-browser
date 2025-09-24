@@ -94,15 +94,14 @@ class IPProtectionServiceSingleton extends EventTarget {
     }
     this.proxyManager = new lazy.IPPProxyManager(this.guardian);
 
-    this.#updateSignInStatus();
-    this.#updateEligibility();
-    this.#updateEnrollment(true /* onlyCached */);
+    this.#inited = true;
+    await this.#updateSignInStatus();
+    await this.#updateEligibility();
+    await this.#updateEnrollment(true /* onlyCached */);
 
     this.#addSignInStateObserver();
     this.addVPNAddonObserver();
     this.#addEligibilityListeners();
-
-    this.#inited = true;
   }
 
   /**

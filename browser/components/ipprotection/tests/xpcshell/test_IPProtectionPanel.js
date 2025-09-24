@@ -39,7 +39,7 @@ add_setup(async function () {
   do_get_profile();
   await putServerInRemoteSettings();
 
-  IPProtectionService.init();
+  await IPProtectionService.init();
 
   registerCleanupFunction(async () => {
     IPProtectionService.uninit();
