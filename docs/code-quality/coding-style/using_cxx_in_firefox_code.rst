@@ -312,10 +312,6 @@ Alignment
   Some alignment utilities are defined in `mozilla/Alignment.h
   <https://searchfox.org/mozilla-central/source/mfbt/Alignment.h>`__.
 
-  .. caution::
-    ``MOZ_ALIGNOF`` and ``alignof`` don't have the same semantics. Be careful of what you
-    expect from them.
-
 ``[[deprecated]]``
   If we have deprecated code, we should be removing it rather than marking it as
   such. Marking things as ``[[deprecated]]`` also means the compiler will warn
