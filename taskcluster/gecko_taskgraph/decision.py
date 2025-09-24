@@ -42,7 +42,7 @@ from .util.taskgraph import find_decision_task, find_existing_tasks_from_previou
 
 logger = logging.getLogger(__name__)
 
-ARTIFACTS_DIR = "artifacts"
+ARTIFACTS_DIR = os.environ.get("MOZ_UPLOAD_DIR", "artifacts")
 
 # For each project, this gives a set of parameters specific to the project.
 # See `taskcluster/docs/parameters.rst` for information on parameters.
