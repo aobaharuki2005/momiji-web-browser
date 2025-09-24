@@ -43,15 +43,13 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   using SRIMetadata = mozilla::dom::SRIMetadata;
 
   enum class Kind {
-    // Top-level modules, not imported statically or dynamically..
+    // Top-level modules, not imported statically nor dynamically.
     TopLevel,
 
     // Modules imported statically with `import` declarations.
     StaticImport,
 
     // Modules imported dynamically with dynamic `import()`.
-    // This is actually also a top-level module, but this should be used for
-    // dynamic imports.
     DynamicImport,
   };
 
@@ -62,9 +60,9 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
                     LoadContextBase* aContext, Kind aKind,
                     ModuleLoaderBase* aLoader, ModuleLoadRequest* aRootModule);
 
-  bool IsTopLevel() const override { return mIsTopLevel; }
-
-  bool IsDynamicImport() const { return mIsDynamicImport; }
+  bool IsTopLevel() const override { return mKind == Kind::TopLevel; }
+  bool IsStaticImport() const { return mKind == Kind::StaticImport; }
+  bool IsDynamicImport() const { return mKind == Kind::DynamicImport; }
 
   bool IsErrored() const;
 
@@ -118,14 +116,10 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
     mReferrerPolicy = aReferrerPolicy;
   }
 
-  // Is this a request for a top level module script or an import?
-  const bool mIsTopLevel;
+  const Kind mKind;
 
   // Type of module (JavaScript, JSON)
   const ModuleType mModuleType;
-
-  // Is this the top level request for a dynamic module import?
-  const bool mIsDynamicImport;
 
   // Pointer to the script loader, used to trigger actions when the module load
   // finishes.

@@ -2701,7 +2701,7 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
     aRequest->MarkPassedConditionForCache();
 
     if (aRequest->IsModuleRequest() &&
-        !aRequest->AsModuleRequest()->IsTopLevel()) {
+        aRequest->AsModuleRequest()->IsStaticImport()) {
       MOZ_ASSERT(!aRequest->isInList());
       mCacheableDependencyModules.AppendElement(aRequest);
     }
@@ -2805,7 +2805,7 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
   aRequest->MarkPassedConditionForCache();
 
   if (aRequest->IsModuleRequest() &&
-      !aRequest->AsModuleRequest()->IsTopLevel()) {
+      aRequest->AsModuleRequest()->IsStaticImport()) {
     MOZ_ASSERT(!aRequest->isInList());
     mCacheableDependencyModules.AppendElement(aRequest);
   }
@@ -4263,7 +4263,6 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
   } else if (aRequest->IsModuleRequest()) {
     ModuleLoadRequest* modReq = aRequest->AsModuleRequest();
     if (modReq->IsDynamicImport()) {
-      MOZ_ASSERT(modReq->IsTopLevel());
       if (aRequest->isInList()) {
         modReq->CancelDynamicImport(aResult);
       }
@@ -4726,7 +4725,14 @@ void ScriptLoader::AddAsyncRequest(ScriptLoadRequest* aRequest) {
 
 void ScriptLoader::MaybeMoveToLoadedList(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsFinished());
-  MOZ_ASSERT(aRequest->IsTopLevel());
+
+  bool isDynamicImport = false;
+  if (aRequest->IsModuleRequest()) {
+    ModuleLoadRequest* modReq = aRequest->AsModuleRequest();
+    isDynamicImport = modReq->IsDynamicImport();
+  }
+
+  MOZ_ASSERT(aRequest->IsTopLevel() || isDynamicImport);
 
   // If it's async, move it to the loaded list.
   // aRequest->GetScriptLoadContext()->mInAsyncList really _should_ be in a
@@ -4738,8 +4744,7 @@ void ScriptLoader::MaybeMoveToLoadedList(ScriptLoadRequest* aRequest) {
       RefPtr<ScriptLoadRequest> req = mLoadingAsyncRequests.Steal(aRequest);
       mLoadedAsyncRequests.AppendElement(req);
     }
-  } else if (aRequest->IsModuleRequest() &&
-             aRequest->AsModuleRequest()->IsDynamicImport()) {
+  } else if (isDynamicImport) {
     // Process dynamic imports with async scripts.
     MOZ_ASSERT(!aRequest->isInList());
     mLoadedAsyncRequests.AppendElement(aRequest);
