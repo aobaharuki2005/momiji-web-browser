@@ -100,14 +100,9 @@ static constexpr FloatRegister ReturnFloat32Reg{FloatRegisters::f0,
 static constexpr FloatRegister ReturnDoubleReg = f0;
 static constexpr FloatRegister ReturnSimd128Reg = InvalidFloatReg;
 
-static constexpr Register ScratchRegister = s8;
-
-// Helper classes for ScratchRegister usage. Asserts that only one piece
-// of code thinks it has exclusive ownership of each scratch register.
-struct ScratchRegisterScope : public AutoRegisterScope {
-  explicit ScratchRegisterScope(MacroAssembler& masm)
-      : AutoRegisterScope(masm, ScratchRegister) {}
-};
+// Scratch register used for runtime call patching.
+// See MacroAssembler::patchNopToCall and MacroAssembler::PatchWrite_NearCall.
+static constexpr Register SavedScratchRegister = s8;
 
 static constexpr FloatRegister ScratchFloat32Reg{FloatRegisters::f23,
                                                  FloatRegisters::Single};
@@ -132,6 +127,7 @@ class UseScratchRegisterScope {
   ~UseScratchRegisterScope();
 
   Register Acquire();
+  void Release(const Register& reg);
   bool hasAvailable() const;
   void Include(const GeneralRegisterSet& list) {
     *available_ = GeneralRegisterSet::Union(*available_, list);

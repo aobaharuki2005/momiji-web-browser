@@ -2355,8 +2355,9 @@ void Assembler::PatchWrite_NearCall(CodeLocationLabel start,
   // - Jump has to be the same size because of PatchWrite_NearCallSize.
   // - Return address has to be at the end of replaced block.
   // Short jump wouldn't be more efficient.
-  Assembler::WriteLoad64Instructions(inst, ScratchRegister, (uint64_t)dest);
-  inst[3] = InstImm(op_jirl, BOffImm16(0), ScratchRegister, ra);
+  Assembler::WriteLoad64Instructions(inst, SavedScratchRegister,
+                                     (uint64_t)dest);
+  inst[3] = InstImm(op_jirl, BOffImm16(0), SavedScratchRegister, ra);
 }
 
 uint64_t Assembler::ExtractLoad64Value(Instruction* inst0) {
@@ -2499,6 +2500,13 @@ Register UseScratchRegisterScope::Acquire() {
   Register index = GeneralRegisterSet::FirstRegister(available_->bits());
   available_->takeRegisterIndex(index);
   return index;
+}
+
+void UseScratchRegisterScope::Release(const Register& reg) {
+  MOZ_ASSERT(available_ != nullptr);
+  MOZ_ASSERT(old_available_.hasRegisterIndex(reg));
+  MOZ_ASSERT(!available_->hasRegisterIndex(reg));
+  Include(GeneralRegisterSet(1 << reg.code()));
 }
 
 bool UseScratchRegisterScope::hasAvailable() const {

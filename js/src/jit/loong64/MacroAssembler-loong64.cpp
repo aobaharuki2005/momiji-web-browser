@@ -2971,8 +2971,9 @@ CodeOffset MacroAssembler::nopPatchableToCall() {
 
 void MacroAssembler::patchNopToCall(uint8_t* call, uint8_t* target) {
   Instruction* inst = (Instruction*)call - 4 /* four nops */;
-  Assembler::WriteLoad64Instructions(inst, ScratchRegister, (uint64_t)target);
-  inst[3] = InstImm(op_jirl, BOffImm16(0), ScratchRegister, ra);
+  Assembler::WriteLoad64Instructions(inst, SavedScratchRegister,
+                                     (uint64_t)target);
+  inst[3] = InstImm(op_jirl, BOffImm16(0), SavedScratchRegister, ra);
 }
 
 void MacroAssembler::patchCallToNop(uint8_t* call) {
@@ -3145,8 +3146,6 @@ void MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr,
                                              Register temp, Label* label) {
   MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
   MOZ_ASSERT(ptr != temp);
-  MOZ_ASSERT(ptr != ScratchRegister);  // Both may be used internally.
-  MOZ_ASSERT(temp != ScratchRegister);
   MOZ_ASSERT(temp != InvalidReg);
 
   ma_and(temp, ptr, Imm32(int32_t(~gc::ChunkMask)));

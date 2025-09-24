@@ -6197,11 +6197,16 @@ static void CollapseWasmFrameSlow(MacroAssembler& masm,
   masm.append(desc, CodeOffset(data.trampolineOffset));
 #else
 
-#  if defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
+#  if defined(JS_CODEGEN_MIPS64)
   // intermediate values in ra can break the unwinder.
   masm.mov(&data.trampoline, ScratchRegister);
   // thus, modify ra in only one instruction.
   masm.mov(ScratchRegister, tempForRA);
+#  elif defined(JS_CODEGEN_LOONG64)
+  // intermediate values in ra can break the unwinder.
+  masm.mov(&data.trampoline, SavedScratchRegister);
+  // thus, modify ra in only one instruction.
+  masm.mov(SavedScratchRegister, tempForRA);
 #  else
   masm.mov(&data.trampoline, tempForRA);
 #  endif
