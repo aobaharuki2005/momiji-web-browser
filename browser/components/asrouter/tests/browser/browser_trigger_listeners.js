@@ -414,10 +414,7 @@ add_task(async function test_formAutofillTrigger() {
       await SpecialPowers.spawn(browser, [], async () =>
         (
           await ContentTaskUtils.waitForCondition(
-            () =>
-              content.document.querySelector(
-                "#formAutofillGroupBox setting-group[groupid=payments] #savedPaymentsButton"
-              ),
+            () => content.document.querySelector("#creditCardAutofill button"),
             "Waiting for credit card manager button"
           )
         )?.click()

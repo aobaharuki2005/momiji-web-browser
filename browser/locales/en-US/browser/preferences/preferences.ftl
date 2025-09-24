@@ -1099,29 +1099,21 @@ autofill-creditcard-os-auth-dialog-caption = { -brand-full-name }
 
 ## Privacy section - Autofill
 
-autofill-payment-methods-title = Payment methods
-autofill-payment-methods-header =
-    .aria-label = Payment methods
-autofill-payment-methods-checkbox-message-2 =
-    .label = Save and autofill payment info
-    .accesskey = p
-autofill-payment-methods-manage-payments-button =
-    .label = Manage payment methods
-    .accesskey = m
-# This operation requires the user to authenticate with the operating system (device sign-in)
-autofill-reauth-payment-methods-checkbox-2 =
-    .label = Require device sign in to autofill and manage payments methods
-    .accesskey = o
-
-autofill-addresses-title = Addresses and more
-autofill-addresses-header =
-    .aria-label = Addresses and more
-autofill-addresses-checkbox-message =
-    .label = Save and autofill addresses
+pane-privacy-autofill-header = Autofill
+autofill-addresses-checkbox = Save and fill addresses
+    .accesskey = a
+autofill-saved-addresses-button = Saved addresses
     .accesskey = S
-autofill-addresses-manage-addresses-button =
-    .label = Manage addresses and more
-    .accesskey = M
+autofill-payment-methods-checkbox-message = Save and fill payment methods
+    .accesskey = m
+autofill-payment-methods-checkbox-submessage = Includes credit and debit cards
+    .accesskey = I
+autofill-saved-payment-methods-button = Saved payment methods
+    .accesskey = v
+
+# This operation requires the user to authenticate with the operating system (device sign-in)
+autofill-reauth-payment-methods-checkbox = Require device sign in to fill and manage payment methods
+    .accesskey = o
 
 ## Privacy Section - History
 

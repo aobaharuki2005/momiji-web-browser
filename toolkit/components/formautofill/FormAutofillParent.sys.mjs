@@ -204,7 +204,11 @@ export let FormAutofillStatus = {
       case "privacy-pane-loaded": {
         let formAutofillPreferences = new lazy.FormAutofillPreferences();
         let document = subject.document;
-        formAutofillPreferences.init(document);
+        let prefFragment = formAutofillPreferences.init(document);
+        let formAutofillGroupBox = document.getElementById(
+          "formAutofillGroupBox"
+        );
+        formAutofillGroupBox.appendChild(prefFragment);
         break;
       }
 
