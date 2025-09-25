@@ -127,7 +127,6 @@ export default [
       "toolkit/actors/**",
       "toolkit/components/**",
       "toolkit/modules/**",
-      "toolkit/mozapps/extensions/**",
       "toolkit/content/widgets/**",
     ],
     rules: {

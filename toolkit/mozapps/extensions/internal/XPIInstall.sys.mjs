@@ -1456,7 +1456,7 @@ class AddonInstall {
         this._callInstallListeners("onDownloadCancelled");
         this.removeTemporaryFile();
         break;
-      case AddonManager.STATE_POSTPONED:
+      case AddonManager.STATE_POSTPONED: {
         logger.debug(`Cancelling postponed install of ${this.addon.id}`);
         this.state = AddonManager.STATE_CANCELLED;
         this._cleanup();
@@ -1471,6 +1471,7 @@ class AddonInstall {
 
         this.unstageInstall(stagedAddon);
         break;
+      }
       default:
         throw new Error(
           "Cannot cancel install of " +
@@ -2176,11 +2177,12 @@ class AddonInstall {
       case "onDownloadCancelled":
       case "onDownloadFailed":
       case "onInstallCancelled":
-      case "onInstallFailed":
+      case "onInstallFailed": {
         let rej = Promise.reject(new Error(`Install failed: ${event}`));
         rej.catch(() => {});
         this._resolveInstallPromise(rej);
         break;
+      }
       case "onInstallEnded":
         this._resolveInstallPromise(
           Promise.resolve(this._startupPromise).then(() => args[0])
