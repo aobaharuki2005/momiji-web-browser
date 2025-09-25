@@ -3449,6 +3449,7 @@
         label.style.height = "";
         label.style.left = "";
         label.style.top = "";
+        label.style.maxWidth = "";
         label.removeAttribute("dragtarget");
       }
       let periphery = draggedTabDocument.getElementById(
