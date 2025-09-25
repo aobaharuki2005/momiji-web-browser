@@ -175,9 +175,9 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
   nsOverflowContinuationTracker tracker(aDelegatingFrame, true);
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame;
        kidFrame = kidFrame->GetNextSibling()) {
-    AnchorPosReferencedAnchors* referencedAnchors = nullptr;
+    AnchorPosReferenceData* anchorPosReferenceData = nullptr;
     if (kidFrame->HasAnchorPosReference()) {
-      referencedAnchors = kidFrame->SetOrUpdateDeletableProperty(
+      anchorPosReferenceData = kidFrame->SetOrUpdateDeletableProperty(
           nsIFrame::AnchorPosReferences());
     } else {
       kidFrame->RemoveProperty(nsIFrame::AnchorPosReferences());
@@ -185,9 +185,10 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
 
     bool kidNeedsReflow =
         reflowAll || kidFrame->IsSubtreeDirty() ||
-        FrameDependsOnContainer(
-            kidFrame, !!(aFlags & AbsPosReflowFlags::CBWidthChanged),
-            !!(aFlags & AbsPosReflowFlags::CBHeightChanged), referencedAnchors);
+        FrameDependsOnContainer(kidFrame,
+                                !!(aFlags & AbsPosReflowFlags::CBWidthChanged),
+                                !!(aFlags & AbsPosReflowFlags::CBHeightChanged),
+                                anchorPosReferenceData);
 
     if (kidFrame->IsSubtreeDirty()) {
       MaybeMarkAncestorsAsHavingDescendantDependentOnItsStaticPos(
@@ -246,7 +247,7 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
       nsReflowStatus kidStatus;
       ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowInput,
                           usedCbForKid, aFlags, kidFrame, kidStatus,
-                          aOverflowAreas, referencedAnchors);
+                          aOverflowAreas, anchorPosReferenceData);
       MOZ_ASSERT(!kidStatus.IsInlineBreakBefore(),
                  "ShouldAvoidBreakInside should prevent this from happening");
       nsIFrame* nextFrame = kidFrame->GetNextInFlow();
@@ -322,7 +323,7 @@ static inline bool IsFixedOffset(const AnchorResolvedInset& aInset) {
 
 bool nsAbsoluteContainingBlock::FrameDependsOnContainer(
     nsIFrame* f, bool aCBWidthChanged, bool aCBHeightChanged,
-    AnchorPosReferencedAnchors* aReferencedAnchors) {
+    AnchorPosReferenceData* anchorPosReferenceData) {
   const nsStylePosition* pos = f->StylePosition();
   // See if f's position might have changed because it depends on a
   // placeholder's position.
@@ -337,7 +338,7 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(
   const nsStyleMargin* margin = f->StyleMargin();
   WritingMode wm = f->GetWritingMode();
   const auto anchorResolutionParams =
-      AnchorPosResolutionParams::From(f, aReferencedAnchors);
+      AnchorPosResolutionParams::From(f, anchorPosReferenceData);
   if (wm.IsVertical() ? aCBHeightChanged : aCBWidthChanged) {
     // See if f's inline-size might have changed.
     // If margin-inline-start/end, padding-inline-start/end,
@@ -867,7 +868,7 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
     const ReflowInput& aReflowInput, const nsRect& aContainingBlock,
     AbsPosReflowFlags aFlags, nsIFrame* aKidFrame, nsReflowStatus& aStatus,
     OverflowAreas* aOverflowAreas,
-    AnchorPosReferencedAnchors* aReferencedAnchors) {
+    AnchorPosReferenceData* aAnchorPosReferenceData) {
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
 #ifdef DEBUG
@@ -958,7 +959,7 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
   ReflowInput kidReflowInput(
       aPresContext, parentReflowInput.refOr(aReflowInput), aKidFrame,
       LogicalSize(wm, availISize, availBSize), Some(logicalCBSize), initFlags,
-      {}, {}, aReferencedAnchors);
+      {}, {}, aAnchorPosReferenceData);
 
   if (nscoord kidAvailBSize = kidReflowInput.AvailableBSize();
       kidAvailBSize != NS_UNCONSTRAINEDSIZE) {
@@ -1011,7 +1012,8 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
     const auto* stylePos = aKidFrame->StylePosition();
     const auto anchorResolutionParams =
         AnchorPosOffsetResolutionParams::UseCBFrameSize(
-            AnchorPosResolutionParams::From(aKidFrame, aReferencedAnchors));
+            AnchorPosResolutionParams::From(aKidFrame,
+                                            aAnchorPosReferenceData));
     const bool iInsetAuto =
         stylePos
             ->GetAnchorResolvedInset(LogicalSide::IStart, outerWM,

@@ -1434,7 +1434,7 @@ class nsIFrame : public nsQueryFrame {
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(UsedMarginProperty, nsMargin)
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(UsedPaddingProperty, nsMargin)
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(AnchorPosReferences,
-                                      AnchorPosReferencedAnchors);
+                                      AnchorPosReferenceData);
 
   // This tracks the start and end page value for a frame.
   //
@@ -5931,8 +5931,8 @@ inline nsIFrame* nsFrameList::BackwardFrameTraversal::Prev(nsIFrame* aFrame) {
 }
 
 inline AnchorPosResolutionParams AnchorPosResolutionParams::From(
-    const nsIFrame* aFrame, AnchorPosReferencedAnchors* aReferencedAnchors) {
-  return {aFrame, aFrame->StyleDisplay()->mPosition, aReferencedAnchors};
+    const nsIFrame* aFrame, AnchorPosReferenceData* aAnchorPosReferenceData) {
+  return {aFrame, aFrame->StyleDisplay()->mPosition, aAnchorPosReferenceData};
 }
 
 #endif /* nsIFrame_h___ */
