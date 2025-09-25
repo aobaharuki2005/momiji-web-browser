@@ -255,7 +255,8 @@ def test_task_to_skip_if():
         "test-manifest", task_id, Kind.TOML, "test-path", False
     )
     assert (
-        skip_if == "os == 'win' && os_version == '11.26100' && arch == 'x86' && debug"
+        skip_if
+        == "os == 'win' && os_version == '11.26100' && processor == 'x86' && debug"
     )
 
     # Failed task on specific runtime on x86_64
@@ -294,7 +295,7 @@ def test_task_to_skip_if():
     )
     assert (
         skip_if
-        == "os == 'mac' && os_version == '10.15' && arch == 'x86_64' && debug && swgl"
+        == "os == 'mac' && os_version == '10.15' && processor == 'x86_64' && debug && swgl"
     )
 
     # Failed task on specific runtime on aarch64
@@ -402,7 +403,7 @@ def test_task_to_skip_if():
     skip_if = sf.task_to_skip_if(
         "test-manifest", task_id, Kind.TOML, "test-path", False
     )
-    assert skip_if == "os == 'linux' && os_version == '18.04' && arch == 'x86'"
+    assert skip_if == "os == 'linux' && os_version == '18.04' && processor == 'x86'"
 
     sf = Skipfails()
     task_id = "QFo2jGFvTKGVcoqHCBpMGw"
@@ -430,7 +431,7 @@ def test_task_to_skip_if():
     skip_if = sf.task_to_skip_if(
         "test-manifest", task_id, Kind.TOML, "test-path", False
     )
-    assert skip_if == "os == 'linux' && os_version == '18.04' && arch == 'x86'"
+    assert skip_if == "os == 'linux' && os_version == '18.04' && processor == 'x86'"
 
     # Only the test without variant failed
     sf = Skipfails()
@@ -463,7 +464,7 @@ def test_task_to_skip_if():
     )
     assert (
         skip_if
-        == "os == 'linux' && os_version == '18.04' && arch == 'x86' && opt && !xorigin"
+        == "os == 'linux' && os_version == '18.04' && processor == 'x86' && opt && !xorigin"
     )
 
     # Missing platform permutation for the task
@@ -491,7 +492,9 @@ def test_task_to_skip_if():
     skip_if = sf.task_to_skip_if(
         "test-manifest", task_id, Kind.TOML, "test-path", False
     )
-    assert skip_if == "os == 'linux' && os_version == '18.04' && arch == 'x86' && opt"
+    assert (
+        skip_if == "os == 'linux' && os_version == '18.04' && processor == 'x86' && opt"
+    )
 
     sf = Skipfails()
     task_id = "czj2mQwqQv6PwON5aijPJg"
@@ -519,7 +522,7 @@ def test_task_to_skip_if():
     )
     assert (
         skip_if
-        == "os == 'linux' && os_version == '18.04' && arch == 'x86' && opt && xorigin"
+        == "os == 'linux' && os_version == '18.04' && processor == 'x86' && opt && xorigin"
     )
 
     # Full fail with everal tasks
@@ -560,7 +563,7 @@ def test_task_to_skip_if():
     )
     assert (
         skip_if
-        == "os == 'linux' && os_version == '18.04' && arch == 'x86' && opt && xorigin"
+        == "os == 'linux' && os_version == '18.04' && processor == 'x86' && opt && xorigin"
     )
 
     task_id = "c_OXt3mESB-G-aElu0hoxg"
@@ -585,7 +588,9 @@ def test_task_to_skip_if():
     skip_if = sf.task_to_skip_if(
         "test-manifest", task_id, Kind.TOML, "test-path", False
     )
-    assert skip_if == "os == 'linux' && os_version == '18.04' && arch == 'x86' && opt"
+    assert (
+        skip_if == "os == 'linux' && os_version == '18.04' && processor == 'x86' && opt"
+    )
 
     task_id = "ShPeY1F8SY6Gm-1VSjsyUA"
     task_details = {
@@ -609,7 +614,7 @@ def test_task_to_skip_if():
     skip_if = sf.task_to_skip_if(
         "test-manifest", task_id, Kind.TOML, "test-path", False
     )
-    assert skip_if == "os == 'linux' && os_version == '18.04' && arch == 'x86'"
+    assert skip_if == "os == 'linux' && os_version == '18.04' && processor == 'x86'"
 
     # Multiple failed tasks allowing for optimized skip if
     sf = Skipfails()
@@ -649,7 +654,7 @@ def test_task_to_skip_if():
     )
     assert (
         skip_if
-        == "os == 'linux' && os_version == '18.04' && arch == 'x86' && debug && xorigin"
+        == "os == 'linux' && os_version == '18.04' && processor == 'x86' && debug && xorigin"
     )
 
     task_id = "ChOXnndsQQODAGpDqscbMg"
@@ -674,7 +679,10 @@ def test_task_to_skip_if():
     skip_if = sf.task_to_skip_if(
         "test-manifest", task_id, Kind.TOML, "test-path", False
     )
-    assert skip_if == "os == 'linux' && os_version == '18.04' && arch == 'x86' && debug"
+    assert (
+        skip_if
+        == "os == 'linux' && os_version == '18.04' && processor == 'x86' && debug"
+    )
 
     task_id = "caDMGUmnT7muCqNWj6w3nQ"
     task_details = {
@@ -698,7 +706,7 @@ def test_task_to_skip_if():
     skip_if = sf.task_to_skip_if(
         "test-manifest", task_id, Kind.TOML, "test-path", False
     )
-    assert skip_if == "os == 'linux' && os_version == '18.04' && arch == 'x86'"
+    assert skip_if == "os == 'linux' && os_version == '18.04' && processor == 'x86'"
 
 
 def test_task_to_skip_if_high_freq():
@@ -739,7 +747,8 @@ def test_task_to_skip_if_high_freq():
     # Skip whole platform with build type if there are at least 7 failures
     skip_if = sf.task_to_skip_if("test-manifest", task_id, Kind.TOML, "test-path", True)
     assert (
-        skip_if == "os == 'linux' && os_version == '22.04' && arch == 'x86_64' && debug"
+        skip_if
+        == "os == 'linux' && os_version == '22.04' && processor == 'x86_64' && debug"
     )
 
     # Same if we add failures to other build types
@@ -766,7 +775,7 @@ def test_task_to_skip_if_high_freq():
         assert skip_if is None
     # Skip whole platform if all build types failed 7 times or more
     skip_if = sf.task_to_skip_if("test-manifest", task_id, Kind.TOML, "test-path", True)
-    assert skip_if == "os == 'linux' && os_version == '22.04' && arch == 'x86_64'"
+    assert skip_if == "os == 'linux' && os_version == '22.04' && processor == 'x86_64'"
 
     # Only skip a specific test variant if it represents more than 75% of failures
     sf = Skipfails()
@@ -807,7 +816,7 @@ def test_task_to_skip_if_high_freq():
     skip_if = sf.task_to_skip_if("test-manifest", task_id, Kind.TOML, "test-path", True)
     assert (
         skip_if
-        == "os == 'linux' && os_version == '22.04' && arch == 'x86_64' && debug && swgl"
+        == "os == 'linux' && os_version == '22.04' && processor == 'x86_64' && debug && swgl"
     )
 
     # Skip only build type if there are less than 75% failures on a test variant
@@ -833,11 +842,12 @@ def test_task_to_skip_if_high_freq():
         )
         assert (
             skip_if
-            == "os == 'linux' && os_version == '22.04' && arch == 'x86_64' && debug && swgl"
+            == "os == 'linux' && os_version == '22.04' && processor == 'x86_64' && debug && swgl"
         )
     skip_if = sf.task_to_skip_if("test-manifest", task_id, Kind.TOML, "test-path", True)
     assert (
-        skip_if == "os == 'linux' && os_version == '22.04' && arch == 'x86_64' && debug"
+        skip_if
+        == "os == 'linux' && os_version == '22.04' && processor == 'x86_64' && debug"
     )
 
 
@@ -877,7 +887,8 @@ def test_task_to_skip_if_wpt():
     # function under test
     skip_if = sf.task_to_skip_if("test-manifest", task_id, Kind.WPT, "test-path", False)
     assert (
-        skip_if == 'os == "linux" and os_version == "18.04" and arch == "x86" and opt'
+        skip_if
+        == 'os == "linux" and os_version == "18.04" and processor == "x86" and opt'
     )
 
 
@@ -990,7 +1001,7 @@ def test_wpt_add_skip_if():
     anyjs = {}
     filename = "myfile.html"
     anyjs[filename] = False
-    skip_if = 'os == "linux" and arch == "x86" and not debug'
+    skip_if = 'os == "linux" and processor == "x86" and not debug'
     bug_reference = "Bug 123"
     disabled = "  disabled:\n"
     condition = "    if " + skip_if + ": " + bug_reference + "\n"
@@ -1041,7 +1052,7 @@ expected: [FAIL, PASS]
     assert manifest_str == manifest_expected4
     manifest_before5 = """[myfile.html]
   disabled:
-    if os == 'win' && os_version == '11.26100' && arch == '32' && debug: Bug 456
+    if os == 'win' && os_version == '11.26100' && processor == '32' && debug: Bug 456
 """
     anyjs[filename] = False
     manifest_str, additional_comment_ = sf.wpt_add_skip_if(
@@ -1086,7 +1097,7 @@ expected: [FAIL, PASS]
     assert manifest_str == manifest_expected7
     manifest_before8 = """[myfile.html]
   disabled:
-    if os == "linux" and os_version == "22.04" and arch == "x86_64" and debug and display == "wayland": Bug TBD
+    if os == "linux" and os_version == "22.04" and processor == "x86_64" and debug and display == "wayland": Bug TBD
   expected:
     if swgl and (os == "linux") and debug and not fission: [PASS, FAIL]
 
@@ -1098,7 +1109,7 @@ expected: [FAIL, PASS]
     manifest_expected8 = (
         """[myfile.html]
   disabled:
-    if os == "linux" and os_version == "22.04" and arch == "x86_64" and debug and display == "wayland": Bug TBD
+    if os == "linux" and os_version == "22.04" and processor == "x86_64" and debug and display == "wayland": Bug TBD
 """
         + condition
         + """  expected:
@@ -1109,7 +1120,7 @@ expected: [FAIL, PASS]
     assert manifest_str == manifest_expected8
     manifest_before9 = """[myfile.html]
   disabled:
-    if os == "linux" and os_version == "22.04" and arch == "x86_64" and debug and display == "wayland": Bug TBD
+    if os == "linux" and os_version == "22.04" and processor == "x86_64" and debug and display == "wayland": Bug TBD
 
 """
     anyjs[filename] = False
@@ -1119,7 +1130,7 @@ expected: [FAIL, PASS]
     manifest_expected9 = (
         """[myfile.html]
   disabled:
-    if os == "linux" and os_version == "22.04" and arch == "x86_64" and debug and display == "wayland": Bug TBD
+    if os == "linux" and os_version == "22.04" and processor == "x86_64" and debug and display == "wayland": Bug TBD
 """
         + condition
         + "\n"
@@ -1127,7 +1138,7 @@ expected: [FAIL, PASS]
     assert manifest_str == manifest_expected9
     manifest_before10 = """[myfile.html]
   disabled:
-    if os == "linux" and os_version == "22.04" and arch == "x86_64" and not debug and display == "wayland": Bug TBD
+    if os == "linux" and os_version == "22.04" and processor == "x86_64" and not debug and display == "wayland": Bug TBD
 
   [3P fetch: Cross site window setting HTTP cookies]
 """
@@ -1138,7 +1149,7 @@ expected: [FAIL, PASS]
     manifest_expected10 = (
         """[myfile.html]
   disabled:
-    if os == "linux" and os_version == "22.04" and arch == "x86_64" and not debug and display == "wayland": Bug TBD
+    if os == "linux" and os_version == "22.04" and processor == "x86_64" and not debug and display == "wayland": Bug TBD
 """
         + condition
         + """\n  [3P fetch: Cross site window setting HTTP cookies]
@@ -1565,7 +1576,7 @@ def test_reftest_skip_failure_reorder(capsys):
     manifest_fp.close()
     manifest_after_path = DATA_PATH.joinpath("reftest-reorder-after.list")
     manifest_after = open(manifest_after_path, encoding="utf-8").read()
-    sf = Skipfails(verbose=True, bugzilla="disable", implicit_vars=True, dry_run=False)
+    sf = Skipfails(verbose=True, bugzilla="disable", implicit_vars=True, dry_run=True)
     manifest = "testing/test/data/reftest-reorder.list"
     kind = Kind.LIST
     path = "fuzzy-if(cocoaWidget,0-80,0-76800) fuzzy-if(appleSilicon,0-80,0-76800) skip-if(Android) fuzzy-if(winWidget,0-63,0-76799) fuzzy-if(gtkWidget,0-70,0-2032) HTTP(..) == short.mp4.firstframe.html short.mp4.firstframe-ref.html"
@@ -1580,7 +1591,7 @@ def test_reftest_skip_failure_reorder(capsys):
     try_url = "https://treeherder.mozilla.org/jobs?repo=try&tier=1%2C2%2C3&revision=3e54b0b81de7d6a3e6a2c3408892ffd6430bc137&selectedTaskRun=BpoP8I2CRZekXUKoSIZjUQ.0"
     revision = "3e54b0b81de7d6a3e6a2c3408892ffd6430bc137"
     repo = "try"
-    meta_bug_id = 1971610
+    meta_bug_id = None
     task_details = {  # pre-cache task details
         "expires": "2024-01-09T16:05:56.825Z",
         "extra": {
