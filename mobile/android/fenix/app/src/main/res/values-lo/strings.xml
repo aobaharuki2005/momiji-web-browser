@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">ໄດ້ຮັບການປົກປ້ອງການຕິດຕາມອັດຕະໂນມັດໂດຍຄ່າເລີ່ມຕົ້ນ</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">ທໍ່ດຽວຊ່ວຍຢຸດບໍລິສັດທີ່ສອດແນມກ່ຽວກັບການຄລິກຂອງທ່ານ.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">ຊິ້ງຢູ່ທຸກບ່ອນທີ່ທ່ານໃຊ້ Firefox</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">ເອົາບຸກມາກ, ແຖບ ແລະ ລະຫັດຜ່ານຢູ່ໃນອຸປະກອນໃດກໍໄດ້. ທັງໝົດຖືກປ້ອງກັນດ້ວຍການເຂົ້າລະຫັດ.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">ເລີ່ມການຊິງຄ໌</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">ບໍ່ແມ່ນດຽວນີ້</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">ຊ່ວຍພວກເຮົາພັດທະນາ Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -711,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">ເປີດລີ້ງໃນແທັບສ່ວນຕົວ</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">ອະນຸຍາດໃຫ້ຖ່າຍຫນ້າຈໍໃນໂຫມດການທ່ອງເວັບແບບສ່ວນຕົວ</string>
+  <string name="preferences_allow_screenshots_in_private_mode">ອະນຸຍາດໃຫ້ຖ່າຍຫນ້າຈໍໃນໂຫມດການທ່ອງເວັບແບບສ່ວນຕົວ</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">ຖ້າຫາກວ່າໄດ້ອະນຸຍາດແລ້ວ, ແທັບສ່ວນໂຕຈະສະແດງໃຫ້ເຫັນເມື່ອເປີດຫລາຍແອັບ</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">ຖ້າຫາກວ່າໄດ້ອະນຸຍາດແລ້ວ, ແທັບສ່ວນໂຕຈະສະແດງໃຫ້ເຫັນເມື່ອເປີດຫລາຍແອັບ</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">ເພີ່ມທາງລັດການທ່ອງເວັບແບບສ່ວນຕົວ</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -721,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">ໃຊ້ການລັອກໜ້າຈໍເພື່ອເຊື່ອງແຖບໃນຜົນການຄົ້ນຫາສ່ວນຕົວ</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">ເບິ່ງແຖບທີ່ມີລາຍນິ້ວມື, PIN ຫຼື ການປົດລັອກດ້ວຍໜ້າຂອງທ່ານ.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">ເບິ່ງແຖບທີ່ມີລາຍນິ້ວມື, PIN ຫຼື ການປົດລັອກດ້ວຍໜ້າຂອງທ່ານ. ການເປີດອັນນີ້ຍັງປ້ອງກັນການຈັບພາບໜ້າຈໍ ແລະ ການແບ່ງປັນ.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">ເບິ່ງແຖບທີ່ມີລາຍນິ້ວມື, PIN ຫຼື ການປົດລັອກດ້ວຍໜ້າຂອງທ່ານ.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">ໂຕປິດກັ້ນ Cookie banner</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
@@ -1681,36 +1690,60 @@
     The title of the Web Compat Reporter feature. This is displayed in the top app bar.
   -->
   <string name="webcompat_reporter_screen_title">ລາຍງານເວັບໄຊທີ່ມີບັນຫາ</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">ບົດລາຍງານຂອງທ່ານຊ່ວຍໃຫ້ພວກເຮົາເຂົ້າໃຈ ແລະ ແກ້ໄຂບັນຫາໃນ %1$s ເພື່ອເຮັດໃຫ້ມັນດີຂຶ້ນສໍາລັບທຸກຄົນ. ສຶກສາເພີ່ມເຕີມ</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">ບົດລາຍງານຂອງທ່ານຊ່ວຍໃຫ້ພວກເຮົາເຂົ້າໃຈ ແລະ ແກ້ໄຂບັນຫາໃນ %1$s ເພື່ອເຮັດໃຫ້ມັນດີຂຶ້ນສໍາລັບທຸກຄົນ. %2$s</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
   <string name="webcompat_reporter_url_error_invalid">ກະລຸນາປ້ອນ URL ທີ່ຖືກຕ້ອງ</string>
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">ບັນຫາແມ່ນຫຍັງ?</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">ເລືອກເຫດຜົນ</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">ກະລຸນາເລືອກເຫດຜົນ</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">ອະທິບາຍບັນຫາ (ທາງເລືອກ)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
   <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">ສົ່ງຂໍ້ມູນເພີ່ມເຕີມ</string>
+  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
+  <string name="webcompat_reporter_add_more_info">ເພີ່ມຂໍ້ມູນເພີ່ມເຕີມ</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">ຍົກເລີກ</string>
   <!-- The button text for the send button to submit the provided form data. -->
   <string name="webcompat_reporter_send">ສົ່ງ</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
   <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">ລາຍງານຂອງທ່ານຖືກສົ່ງໄປແລ້ວ</string>
+  <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
+  <string name="webcompat_reporter_success_snackbar_text_2">ສົ່ງລາຍງານແລ້ວ</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">ປິດ</string>
+  <!-- Placeholder text for the description field to prompt the user on what they should type. -->
+  <string name="webcompat_reporter_problem_description_placeholder_text">ເກີດຫຍັງຂຶ້ນ? ສິ່ງທີ່ຄວນເກີດຂຶ້ນ?</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
     Broken site reason text for site doesn’t load
   -->
   <string name="webcompat_reporter_reason_load">ເວັບໄຊບໍ່ໂຫຼດ</string>
+  <!-- Broken site reason text for can’t pay, check out or shop -->
+  <string name="webcompat_reporter_reason_checkout">ບໍ່ສາມາດຈ່າຍເງິນ, ເຊັກເອົາ ຫຼື ຊື້ເຄື່ອງໄດ້</string>
   <!-- Broken site reason text for site is slow -->
   <string name="webcompat_reporter_reason_slow2">ເວັບໄຊຊ້າ</string>
   <!-- Broken site reason text for video isn’t playing or loading -->
   <string name="webcompat_reporter_reason_media2">ວິດີໂອບໍ່ໄດ້ຫຼິ້ນ ຫຼື ໂຫຼດ</string>
+  <!-- Broken site reason text for missing content -->
+  <string name="webcompat_reporter_reason_content2">ຂາດເນື້ອໃນ</string>
+  <!-- Broken site reason text for can’t sign in or register -->
+  <string name="webcompat_reporter_reason_account2">ບໍ່ສາມາດເຂົ້າສູ່ລະບົບ ຫຼື ລົງທະບຽນໄດ້</string>
+  <!-- Broken site reason text for site asked to turn off ad blocker -->
+  <string name="webcompat_reporter_reason_turn_off_adblocker">ເວັບໄຊຂໍໃຫ້ປິດຕົວບລັອກໂຄສະນາ</string>
+  <!-- Broken site reason text for browser isn’t supported or blocked -->
+  <string name="webcompat_reporter_reason_notsupported">ບຣາວເຊີບໍ່ຖືກຮອງຮັບ ຫຼື ຖືກບລັອກ</string>
   <!-- Broken site reason text for something else -->
   <string name="webcompat_reporter_reason_other">ບາງສິ່ງບາງຢ່າງອື່ນ</string>
   <!--
@@ -1725,12 +1758,29 @@
   <string name="tab_crash_close">ປິດແທັບ</string>
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">ກູ້ຄືນແທັບ</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s ຂັດຂ້ອງ. ສົ່ງລາຍງານບໍ?</string>
+  <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_title">ທ່ານມີລາຍງານການຂັດຂ້ອງທີ່ຍັງບໍ່ໄດ້ສົ່ງທີ່ກ່ຽວຂ້ອງກັບການຂັດຂ້ອງທີ່ຖືກສືບສວນ. ການສົ່ງມັນຈະຊ່ວຍໃຫ້ພວກເຮົາປັບປຸງ %1$s. ການປິດການແຈ້ງເຕືອນນີ້ຈະບໍ່ສົນໃຈລາຍງານນີ້.</string>
+  <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">ທ່ານມີລາຍງານການຂັດຂ້ອງທີ່ຍັງບໍ່ໄດ້ສົ່ງ (%1$d) ທີ່ກ່ຽວຂ້ອງກັບການຂັດຂ້ອງທີ່ກຳລັງຖືກກວດສອບ. ການສົ່ງພວກມັນຈະຊ່ວຍໃຫ້ພວກເຮົາປັບປຸງ %2$s. ການປິດການແຈ້ງເຕືອນນີ້ຈະບໍ່ສົນໃຈລາຍງານເຫຼົ່ານີ້.</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">ສົ່ງລາຍງານການຂັດຂ້ອງໂດຍອັດຕະໂນມັດ</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">ປິດ</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">ປິດ</string>
+  <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">ຢ່າສະແດງອີກ</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">ສົ່ງ</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">ສົ່ງລາຍງານການຂັດຂ້ອງ</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">ບົດລາຍງານການຂັດຂ້ອງຊ່ວຍພວກເຮົາໃນການວິນິດໄສ ແລະ ແກ້ໄຂບັນຫາກັບຕົວທ່ອງເວັບ. ບົດລາຍງານອາດຈະປະກອບມີຂໍ້ມູນສ່ວນຕົວ ຫຼື ຂໍ້ມູນທີ່ລະອຽດອ່ອນ. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+  <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
+  <string name="unsubmitted_crash_requested_by_devs_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
   <!--
     Bookmarks
 
@@ -1747,6 +1797,14 @@
   <string name="bookmark_add_folder">ເພີ່ມໂຟລເດີ</string>
   <!-- Snackbar title that confirms a bookmark was saved into a folder. %s is the name of the folder the bookmark was saved into. -->
   <string name="bookmark_saved_in_folder_snackbar">ບັນທຶກໄວ້ໃນ “%s”</string>
+  <!-- Snackbar title describing failure to add a new folder -->
+  <string name="bookmark_error_add_folder">ບໍ່ສາມາດເພີ່ມໂຟນເດີໄດ້</string>
+  <!-- Snackbar title describing failure to edit an existing folder -->
+  <string name="bookmark_error_edit_folder">ບໍ່ສາມາດແກ້ໄຂໂຟນເດີໄດ້</string>
+  <!-- Snackbar title describing failure to select a new parent folder for a bookmark or folder -->
+  <string name="bookmark_error_select_folder">ບໍ່ສາມາດປ່ຽນໂຟນເດີຫຼັກໄດ້</string>
+  <!-- Snackbar title describing failure to edit a bookmark -->
+  <string name="bookmark_error_edit_bookmark">ບໍ່ສາມາດແກ້ໄຂບຸກມາກໄດ້</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
   <string name="edit_bookmark_snackbar_action">ແກ້ໄຂ</string>
   <!-- Bookmark menu move button -->
@@ -1771,6 +1829,8 @@
   <string name="bookmark_menu_delete_button">ລຶບ</string>
   <!-- Bookmark overflow menu save button -->
   <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">ບັນທຶກ</string>
+  <!-- Accessibility label for sorting options -->
+  <string name="bookmark_sort_menu_content_desc">ຕົວເລືອກການຈັດຮຽງ</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">ຈັດຮຽງຕາມລຳດັບທີ່ກຳນົດເອງ</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1841,8 +1901,12 @@
   <string name="bookmark_search_button_content_description">ຊອກຫາບຸກມາກ</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">ເມນູລາຍການສຳລັບ %s</string>
+  <!-- Content description for the "close" button in bookmarks screen. -->
+  <string name="bookmark_close_button_content_description">ປິດບຸກມາກ</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">ບໍ່ທັນມີບຸກມາກເທື່ອ</string>
+  <!-- Bookmark screen folder description. %s is the count of bookmark folder children -->
+  <string name="bookmarks_folder_description">ບຸກມາກໃນໂຟນເດີ: %s</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
   <string name="bookmark_empty_list_guest_description">ບັນທຶກເວັບໄຊໃນຂະນະທີ່ທ່ານທ່ອງເວັບ. ເຂົ້າສູ່ລະບົບເພື່ອເອົາບຸກມາກຈາກອຸປະກອນອື່ນທີ່ຊິ້ງແລ້ວ.</string>
   <!-- Text for the button to navigate to sync authentication -->
@@ -2052,6 +2116,8 @@
   <string name="sync_add_new_device_learn_button">ຮຽນຮູ້ກ່ຽວກັບການສົ່ງແທັບ…</string>
   <!-- Text for the button to connect another device -->
   <string name="sync_add_new_device_connect_button">ເຊື່ອມຕໍ່ກັບອຸປະກອນອື່ນ…</string>
+  <!-- A message template for the shared link with a footer. %1$s is the shared link, %2$s is the app name (e.g. Firefox) and %3$s is a download link for the app. -->
+  <string name="sent_from_firefox_template" tools:ignore="UnusedResources">%1$s\n\nສົ່ງມາຈາກ %2$s 🦊 ລອງໃຊ້ໂປຣແກຣມທ່ອງເວັບມືຖື: %3$s</string>
   <!-- A short message template for the shared link with a footer. %1$s is the shared link, %2$s is the app name (e.g. Firefox) and %3$s is a download link for the app. -->
   <string name="sent_from_firefox_template_short" tools:ignore="UnusedResources">%1$s\n\nສົ່ງມາຈາກ %2$s 🦊 %3$s</string>
   <!--

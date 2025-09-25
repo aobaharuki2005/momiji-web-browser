@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">Cael diogelwch tracio awtomatig fel rhagosodiad</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Mae un tap yn helpu i atal cwmnïau rhag ysbïo ar eich cliciau.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Cysoni ym mhob man rydych chi\'n defnyddio Firefox</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Sicrhewch nodau tudalen, tabiau a chyfrineiriau ar unrhyw ddyfais. Pob un wedi\'i ddiogelu ag amgryptio.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Cychwyn cydweddu</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Nid nawr</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Helpwch ni i dyfu Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -711,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Agor dolen mewn tab preifat</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Caniatáu lluniau sgrin o fewn pori preifat</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Caniatáu lluniau sgrin o fewn pori preifat</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Os fydd yn cael ei ganiatáu, bydd tabiau preifat hefyd yn weladwy pan fydd sawl ap ar agor</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Os fydd yn cael ei ganiatáu, bydd tabiau preifat hefyd yn weladwy pan fydd sawl ap ar agor</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Ychwanegu llwybr byr pori preifat</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -721,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Defnyddiwch glo sgrin i guddio tabiau wrth bori\'n breifat</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Gweld tabiau gydag ôl bys, datgloi wyneb, neu PIN.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">Gweld tabiau gyda\'ch olion bysedd, PIN, neu ddatgloi wynebau. Mae troi hwn ymlaen hefyd yn atal cipio sgrin a rhannu.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Gweld tabiau gydag ôl bys, datgloi wyneb, neu PIN.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Rhwystrydd Baneri Cwcis</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->

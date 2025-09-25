@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">Protection contra-traciamento automatic predefinite</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Con un tocco tu pote impedir al companias de spiar tu clics.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Synchronisa ubicunque tu usa Firefox</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Recipe tu marcapaginas, schedas, e contrasignos sur ulle tu apparato. Totos protecte con cryptation.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Comenciar a synchronisar</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Non ora</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Adjuta nos a facer crescer Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -711,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Aperir ligamines in un scheda private</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Permitte instantaneos in navigation private</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Permitte instantaneos in navigation private</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Si permittite, le schedas private essera visibile anque quando plure applicationes es aperte</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Si permittite, le schedas private essera visibile anque quando plure applicationes es aperte</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Adder accesso directe de navigation private</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -721,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Usar le blocada de schermo pro celar le schedas in navigation private</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Vide le schedas con tu dactylogramma, tu PIN, o le disblocamento con tu facie.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">Vide le schedas disblocante per tu dactylogramma, PIN, o facie. Activar isto alsi impedi de capturar e compartir le schermo.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Vide le schedas con tu dactylogramma, tu PIN, o le disblocamento con tu facie.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Blocada de bandiera pro cookie</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->

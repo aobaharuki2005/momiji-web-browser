@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+<resources xmlns:tools="http://schemas.android.com/tools">
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">Pribado %s</string>
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
@@ -201,9 +201,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">i-Open ang mga link sa pribadong tab</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Tugoti ang mga screenshot sa private browsing</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Tugoti ang mga screenshot sa private browsing</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Kung naay pagtugot, makit-an ang mga private tab kung daghan apps ang giabrihan.</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Kung naay pagtugot, makit-an ang mga private tab kung daghan apps ang giabrihan.</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Dugang ug shortcut sa private browsing</string>
   <!-- Preference to override the Sync token server -->

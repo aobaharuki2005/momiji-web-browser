@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">기본적으로 자동 추적 보호 받기</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">한 번의 탭으로 기업이 여러분의 클릭을 염탐하는 것을 막을 수 있습니다.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Firefox를 사용하는 모든 곳에서 동기화</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">모든 기기에서 북마크, 탭 및 비밀번호를 사용하세요. 모두 암호화로 보호됩니다.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">동기화 시작</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">나중에</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Firefox를 성장시킬 수 있도록 도와주세요</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -711,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">링크를 사생활 보호 탭에서 열기</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">사생활 보호 모드에서 스크린샷 허용</string>
+  <string name="preferences_allow_screenshots_in_private_mode">사생활 보호 모드에서 스크린샷 허용</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">허용되는 경우, 여러 앱이 열려있을 때 사생활 보호 탭도 표시됨</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">허용되는 경우, 여러 앱이 열려있을 때 사생활 보호 탭도 표시됨</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">사생활 보호 모드 바로 가기 추가</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -721,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">사생활 보호 모드에서 탭을 숨기기 위해 화면 잠금 사용</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">지문, PIN 또는 얼굴인식 잠금 해제로 탭을 봅니다.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">지문, PIN 또는 얼굴인식 잠금 해제로 탭을 봅니다. 이 옵션을 켜면 화면 캡처 및 공유도 차단합니다.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">지문, PIN 또는 얼굴인식 잠금 해제로 탭을 봅니다.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">쿠키 배너 차단기</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->

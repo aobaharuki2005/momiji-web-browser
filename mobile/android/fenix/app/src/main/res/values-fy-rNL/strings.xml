@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">Untfang standert automatyske beskerming tsjin folgjen</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Mei ien tik foarkomme dat bedriuwen jo tikken bespionearje.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Syngronisearje oeral wêr’t jo Firefox brûke</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Untfang blêdwizers, ljepblêden en wachtwurden op elk apparaat. Alles befeilige mei fersifering.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Begjinne mei syngronisearjen</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">No net</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Help ús Firefox groeie te litten</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -711,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Keppelingen iepenje yn in priveeljepblêd</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Skermôfbyldingen meitsje yn priveenavigaasje tastean</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Skermôfbyldingen meitsje yn priveenavigaasje tastean</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Wannear tastien, binne priveeljepblêden ek sichtber wannear mear apps iepene binne</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Wannear tastien, binne priveeljepblêden ek sichtber wannear mear apps iepene binne</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Fluchkeppeling nei priveenavigaasje tafoegje</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -721,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Skermbeskoatteling brûke om ljepblêden yn priveenavigaasje te ferstopjen</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Ljepblêden mei jo fingerôfdruk, pinkoade of gesichtsûntskoatteling besjen.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">Besjoch ljepblêden mei jo fingerôfdruk, pinkoade of gesichtsûntskoatteling. As jo dit ynskeakelje, wurdt ek it fêstlizzen en dielen fan jo skermôfbyldingen foarkommen.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Ljepblêden mei jo fingerôfdruk, pinkoade of gesichtsûntskoatteling besjen.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Blokkearring fan cookiebanners</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
