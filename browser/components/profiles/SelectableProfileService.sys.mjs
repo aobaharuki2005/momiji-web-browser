@@ -268,6 +268,35 @@ class SelectableProfileServiceClass extends EventEmitter {
     return this.#isEnabled;
   }
 
+  #setOverlayIcon({ win }) {
+    if (!this.#badge || !("nsIWinTaskbar" in Ci)) {
+      return;
+    }
+
+    let iconController = null;
+    if (!TASKBAR_ICON_CONTROLLERS.has(win)) {
+      iconController = Cc["@mozilla.org/windows-taskbar;1"]
+        .getService(Ci.nsIWinTaskbar)
+        .getOverlayIconController(win.docShell);
+      TASKBAR_ICON_CONTROLLERS.set(win, iconController);
+    } else {
+      iconController = TASKBAR_ICON_CONTROLLERS.get(win);
+    }
+
+    if (this.#currentProfile.hasCustomAvatar) {
+      iconController?.setOverlayIcon(
+        this.#badge.image,
+        this.#badge.description
+      );
+    } else {
+      iconController?.setOverlayIcon(
+        this.#badge.image,
+        this.#badge.description,
+        this.#badge.iconPaintContext
+      );
+    }
+  }
+
   async #attemptFlushProfileService() {
     try {
       await this.#profileService.asyncFlush();
@@ -477,18 +506,7 @@ class SelectableProfileServiceClass extends EventEmitter {
     lazy.EveryWindow.registerCallback(
       this.#everyWindowCallbackId,
       window => {
-        if (this.#badge && "nsIWinTaskbar" in Ci) {
-          let iconController = Cc["@mozilla.org/windows-taskbar;1"]
-            .getService(Ci.nsIWinTaskbar)
-            .getOverlayIconController(window.docShell);
-          TASKBAR_ICON_CONTROLLERS.set(window, iconController);
-
-          iconController.setOverlayIcon(
-            this.#badge.image,
-            this.#badge.description,
-            this.#badge.iconPaintContext
-          );
-        }
+        this.#setOverlayIcon({ win: window });
 
         // Update the window title because the currentProfile, needed in the
         // .*-with-profile titles, didn't exist when the title was initially set.
@@ -518,15 +536,7 @@ class SelectableProfileServiceClass extends EventEmitter {
     switch (event.type) {
       case "activate": {
         this.#windowActivated.arm();
-        if ("nsIWinTaskbar" in Ci && this.#badge) {
-          let iconController = TASKBAR_ICON_CONTROLLERS.get(event.target);
-
-          iconController?.setOverlayIcon(
-            this.#badge.image,
-            this.#badge.description,
-            this.#badge.iconPaintContext
-          );
-        }
+        this.#setOverlayIcon({ win: event.target });
         break;
       }
     }
@@ -677,23 +687,7 @@ class SelectableProfileServiceClass extends EventEmitter {
             .setBadgeImage(this.#badge.image, this.#badge.iconPaintContext);
         } else if ("nsIWinTaskbar" in Ci) {
           for (let win of lazy.EveryWindow.readyWindows) {
-            let iconController = Cc["@mozilla.org/windows-taskbar;1"]
-              .getService(Ci.nsIWinTaskbar)
-              .getOverlayIconController(win.docShell);
-            TASKBAR_ICON_CONTROLLERS.set(win, iconController);
-
-            if (this.#currentProfile.hasCustomAvatar) {
-              iconController.setOverlayIcon(
-                this.#badge.image,
-                this.#badge.description
-              );
-            } else {
-              iconController.setOverlayIcon(
-                this.#badge.image,
-                this.#badge.description,
-                this.#badge.iconPaintContext
-              );
-            }
+            this.#setOverlayIcon({ win });
           }
         }
       } else if (count <= 1 && this.#badge) {
