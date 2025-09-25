@@ -131,8 +131,7 @@ void ScriptLoadContext::PrioritizeAsPreload(nsIChannel* aChannel) {
 }
 
 bool ScriptLoadContext::IsPreload() const {
-  if (mRequest->IsModuleRequest() &&
-      mRequest->AsModuleRequest()->IsStaticImport()) {
+  if (mRequest->IsModuleRequest() && !mRequest->IsTopLevel()) {
     JS::loader::ModuleLoadRequest* root =
         mRequest->AsModuleRequest()->GetRootModule();
     return root->GetScriptLoadContext()->IsPreload();

@@ -17,6 +17,7 @@
 #include "js/ContextOptions.h"        // JS::ContextOptionsRef
 #include "js/ErrorReport.h"           // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/Modules.h"  // JS::FinishLoadingImportedModule, JS::{G,S}etModuleResolveHook, JS::Get{ModulePrivate,ModuleScript,RequestedModule{s,Specifier,SourcePos}}, JS::SetModule{Load,Metadata}Hook
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetElement
 #include "js/SourceText.h"
@@ -281,6 +282,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(JSContext* aCx,
         JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
                                   JSMSG_DYNAMIC_IMPORT_FAILED, url.get());
       } else {
+        request->LoadFailed();
         loader->OnFetchFailed(request);
         return true;
       }
@@ -697,6 +699,8 @@ void ModuleLoaderBase::ResumeWaitingRequest(ModuleLoadRequest* aRequest,
                                             bool aSuccess) {
   if (aSuccess) {
     aRequest->ModuleLoaded();
+  } else {
+    aRequest->LoadFailed();
   }
 
   if (!aRequest->IsErrored()) {
@@ -785,13 +789,7 @@ nsresult ModuleLoaderBase::OnFetchComplete(ModuleLoadRequest* aRequest,
 }
 
 void ModuleLoaderBase::OnFetchSucceeded(ModuleLoadRequest* aRequest) {
-  // TODO, Bug 1990416: Align the loading descendants behavior of dynamic import
-  // According to the spec, dynamic import should trigger fetching of
-  // descendant modules in the JS engine. However, when the dynamic import’s
-  // module graph is loaded, ScriptLoaders move the request to a Loaded event
-  // queue and invoke ProcessDynamicImport. To account for this behavior,
-  // we perform the fetching of submodules in the host layer instead.
-  if (aRequest->IsTopLevel() || aRequest->IsDynamicImport()) {
+  if (aRequest->IsTopLevel()) {
     StartFetchingModuleDependencies(aRequest);
   } else {
     MOZ_ASSERT(!aRequest->IsDynamicImport());
@@ -809,11 +807,10 @@ void ModuleLoaderBase::OnFetchSucceeded(ModuleLoadRequest* aRequest) {
 
 void ModuleLoaderBase::OnFetchFailed(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsErrored());
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(mGlobalObject)) {
+  // For dynamic import, the error handling is done in ProcessDynamicImport
+  if (aRequest->IsDynamicImport()) {
     return;
   }
-  JSContext* cx = jsapi.cx();
 
   if (aRequest->IsTopLevel()) {
     // https://html.spec.whatwg.org/#fetch-the-descendants-of-and-link-a-module-script
@@ -826,99 +823,49 @@ void ModuleLoaderBase::OnFetchFailed(ModuleLoadRequest* aRequest) {
       LOG(("ScriptLoadRequest (%p): found parse error", aRequest));
       aRequest->mModuleScript->SetErrorToRethrow(parseError);
     }
-    DispatchModuleErrored(aRequest);
+  } else {
+    // The remaining case is static import.
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(mGlobalObject)) {
+      return;
+    }
+    JSContext* cx = jsapi.cx();
 
-    return;
-  }
+    MOZ_ASSERT(!aRequest->mPayload.isUndefined());
+    Rooted<Value> statePrivate(cx, aRequest->mPayload);
+    Rooted<Value> error(cx);
 
-  // The remaining case is static/dynamic import.
-  MOZ_ASSERT(aRequest->IsStaticImport() || aRequest->IsDynamicImport());
-  MOZ_ASSERT(!aRequest->mPayload.isUndefined());
-  Rooted<Value> payload(cx, aRequest->mPayload);
-
-  // https://html.spec.whatwg.org/#hostloadimportedmodule
-  //
-  // Step 14.2. If moduleScript is null, then set completion to Completion
-  //            Record { [[Type]]: throw, [[Value]]: a new TypeError,
-  //            [[Target]]: empty }.
-  if (!aRequest->mModuleScript) {
-    LOG(
-        ("ScriptLoadRequest (%p): FinishLoadingImportedModule: module script "
-         "is null",
-         aRequest));
-
-    // Impl note:
-    // For dynamic import, the TypeError will be pass to the rejected handler of
-    // the LoadRequestedModules from the dynamic import.
+    // https://html.spec.whatwg.org/#hostloadimportedmodule
     //
-    // For static import/top-level import, the TypeError will be ignore in the
-    // rejected handler of LoadRequestedModules (the state.[[ErrorToRethrow]]
-    // isn't set). So we don't actually create a TypeError for the these two
-    // cases.
-    if (aRequest->GetRootModule()->IsDynamicImport()) {
-      nsAutoCString url;
-      aRequest->mURI->GetSpec(url);
-      JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
-                                JSMSG_DYNAMIC_IMPORT_FAILED, url.get());
-      FinishLoadingImportedModuleFailedWithPendingException(cx, payload);
+    // Step 14.2. If moduleScript is null, then set completion to Completion
+    //            Record { [[Type]]: throw, [[Value]]: a new TypeError,
+    //            [[Target]]: empty }.
+    //
+    // Impl note:
+    // When moduleScript is null, the ScriptLoader will call onerror handler.
+    // So we don't actually create a TypeError for this.
+    if (!aRequest->mModuleScript) {
+      error = UndefinedValue();
     } else {
-      Rooted<Value> error(cx, UndefinedValue());
-      FinishLoadingImportedModuleFailed(cx, payload, error);
+      // Step 14.3. Otherwise, if moduleScript's parse error is not null, then:
+      //   1. Let parseError be moduleScript's parse error.
+      //   2. Set completion to Completion Record { [[Type]]: throw,
+      //      [[Value]]: parseError, [[Target]]: empty }.
+      //   3. If loadState is not undefined and loadState.[[ErrorToRethrow]]
+      //      is null, set loadState.[[ErrorToRethrow]] to parseError.
+      MOZ_ASSERT(aRequest->mModuleScript->HasParseError());
+      error = aRequest->mModuleScript->ParseError();
     }
 
-    aRequest->ModuleErrored();
+    LOG(("ScriptLoadRequest (%p): FinishLoadingImportedModuleFailed",
+         aRequest));
+    // Step 14.5. Perform FinishLoadingImportedModule(referrer, moduleRequest,
+    //            payload, completion).
+    MOZ_ASSERT(!statePrivate.isUndefined());
+    FinishLoadingImportedModuleFailed(cx, statePrivate, error);
+
     aRequest->ClearImport();
-    return;
   }
-
-  // Step 14.3. Otherwise, if moduleScript's parse error is not null, then:
-  //   1. Let parseError be moduleScript's parse error.
-  //   2. Set completion to Completion Record { [[Type]]: throw,
-  //      [[Value]]: parseError, [[Target]]: empty }.
-  //   3. If loadState is not undefined and loadState.[[ErrorToRethrow]]
-  //      is null, set loadState.[[ErrorToRethrow]] to parseError.
-  MOZ_ASSERT(aRequest->mModuleScript->HasParseError());
-  Rooted<Value> parseError(cx, aRequest->mModuleScript->ParseError());
-  LOG(
-      ("ScriptLoadRequest (%p): FinishLoadingImportedModule: found parse "
-       "error",
-       aRequest));
-  // Step 14.5. Perform FinishLoadingImportedModule(referrer, moduleRequest,
-  //            payload, completion).
-  FinishLoadingImportedModuleFailed(cx, payload, parseError);
-  aRequest->ModuleErrored();
-  aRequest->ClearImport();
-}
-
-void ModuleLoaderBase::Cancel(ModuleLoadRequest* aRequest) {
-  if (aRequest->IsFinished()) {
-    return;
-  }
-
-  aRequest->ScriptLoadRequest::Cancel();
-  aRequest->mModuleScript = nullptr;
-
-  if (aRequest->mPayload.isUndefined()) {
-    return;
-  }
-
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(mGlobalObject)) {
-    return;
-  }
-  JSContext* cx = jsapi.cx();
-
-  Rooted<Value> payload(cx, aRequest->mPayload);
-  Rooted<Value> error(cx, UndefinedValue());
-
-  LOG(
-      ("ScriptLoadRequest (%p): Canceled, calling "
-       "FinishLoadingImportedModuleFailed",
-       aRequest));
-
-  FinishLoadingImportedModuleFailed(cx, payload, error);
-  aRequest->ModuleErrored();
-  aRequest->ClearImport();
 }
 
 class ModuleErroredRunnable : public MicroTaskRunnable {
@@ -935,13 +882,7 @@ class ModuleErroredRunnable : public MicroTaskRunnable {
 };
 
 void ModuleLoaderBase::DispatchModuleErrored(ModuleLoadRequest* aRequest) {
-  if (aRequest->HasScriptLoadContext() &&
-      aRequest->GetScriptLoadContext()->mIsInline) {
-    // https://html.spec.whatwg.org/#prepare-the-script-element
-    // Step 32. If el does not have a src content attribute:
-    //   2. "module".3.1
-    //   Queue an element task on the networking task source given el to
-    //   perform the following steps:
+  if (aRequest->HasScriptLoadContext()) {
     CycleCollectedJSContext* context = CycleCollectedJSContext::Get();
     RefPtr<ModuleErroredRunnable> runnable =
         new ModuleErroredRunnable(aRequest);
@@ -1041,6 +982,7 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
       }
 
       moduleScript->SetParseError(error);
+      DispatchModuleErrored(aRequest);
       return NS_OK;
     }
 
@@ -1056,6 +998,7 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
         aRequest->mModuleScript = nullptr;
         return rv;
       }
+      DispatchModuleErrored(aRequest);
       return NS_OK;
     }
   }
@@ -1207,7 +1150,7 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
   ModuleScript* moduleScript = aRequest->mModuleScript;
   MOZ_ASSERT(moduleScript->ModuleRecord());
   MOZ_ASSERT(aRequest->IsFetching() || aRequest->IsCompiling());
-  MOZ_ASSERT(aRequest->IsTopLevel() || aRequest->IsDynamicImport());
+  MOZ_ASSERT(aRequest->IsTopLevel());
 
   AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.Init(mGlobalObject))) {
@@ -1275,7 +1218,7 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
 
   if (!result) {
     LOG(("ScriptLoadRequest (%p): LoadRequestedModules failed", aRequest));
-    OnLoadRequestedModulesRejected(cx, aRequest, UndefinedHandleValue);
+    OnLoadRequestedModulesRejected(aRequest, UndefinedHandleValue);
   }
 }
 
@@ -1329,51 +1272,23 @@ bool ModuleLoaderBase::OnLoadRequestedModulesRejected(
     JSContext* aCx, Handle<Value> aHostDefined, Handle<Value> aError) {
   auto* request = static_cast<ModuleLoadRequest*>(aHostDefined.toPrivate());
   MOZ_ASSERT(request);
-  return OnLoadRequestedModulesRejected(aCx, request, aError);
+  return OnLoadRequestedModulesRejected(request, aError);
 }
 
 // static
 bool ModuleLoaderBase::OnLoadRequestedModulesRejected(
-    JSContext* aCx, ModuleLoadRequest* aRequest, Handle<Value> error) {
+    ModuleLoadRequest* aRequest, Handle<Value> error) {
+  LOG(("ScriptLoadRequest (%p): LoadRequestedModules rejected", aRequest));
   ModuleScript* moduleScript = aRequest->mModuleScript;
-
-  // TODO, Bug 1990416: Align the loading descendants behavior of dynamic import
-  if (aRequest->IsDynamicImport()) {
-    LOG(
-        ("ScriptLoadRequest (%p): LoadRequestedModules rejected for dynamic "
-         "import",
-         aRequest));
-    // https://tc39.es/ecma262/#sec-ContinueDynamicImport
-    // Step 4.a. Perform ! Call(promiseCapability.[[Reject]], undefined,
-    //   « reason »).
-    Rooted<Value> payload(aCx, aRequest->mPayload);
-    if (!error.isUndefined()) {
-      FinishLoadingImportedModuleFailed(aCx, payload, error);
-    } else {
-      nsAutoCString url;
-      aRequest->mURI->GetSpec(url);
-      JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
-                                JSMSG_DYNAMIC_IMPORT_FAILED, url.get());
-      FinishLoadingImportedModuleFailedWithPendingException(aCx, payload);
-    }
-    aRequest->SetErroredLoadingImports();
-  } else if (moduleScript && !error.isUndefined()) {
-    LOG(
-        ("ScriptLoadRequest (%p): LoadRequestedModules rejected: set error to "
-         "rethrow",
-         aRequest));
-    // https://html.spec.whatwg.org/#fetch-the-descendants-of-and-link-a-module-script
-    // Step 7. Upon rejection of loadingPromise, run the following
-    //         steps:
-    // Step 7.1. If state.[[ErrorToRethrow]] is not null, set moduleScript's
-    //           error to rethrow to state.[[ErrorToRethrow]] and run
-    //           onComplete given moduleScript.
+  // https://html.spec.whatwg.org/#fetch-the-descendants-of-and-link-a-module-script
+  // Step 7. Upon rejection of loadingPromise, run the following
+  //         steps:
+  // Step 7.1. If state.[[ErrorToRethrow]] is not null, set moduleScript's
+  //           error to rethrow to state.[[ErrorToRethrow]] and run
+  //           onComplete given moduleScript.
+  if (moduleScript && !error.isUndefined()) {
     moduleScript->SetErrorToRethrow(error);
   } else {
-    LOG(
-        ("ScriptLoadRequest (%p): LoadRequestedModules rejected: set module "
-         "script to null",
-         aRequest));
     // Step 7.2. Otherwise, run onComplete given null.
     aRequest->mModuleScript = nullptr;
   }
@@ -1411,6 +1326,37 @@ void ModuleLoaderBase::AppendDynamicImport(ModuleLoadRequest* aRequest) {
   mDynamicImportRequests.AppendElement(aRequest);
 }
 
+void ModuleLoaderBase::FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
+                                                    nsresult aResult) {
+  AutoJSAPI jsapi;
+  MOZ_ASSERT(NS_FAILED(aResult));
+  if (!jsapi.Init(mGlobalObject)) {
+    return;
+  }
+
+  if (aRequest->mPayload.isUndefined()) {
+    // Import has already been completed.
+    return;
+  }
+
+  JSContext* cx = jsapi.cx();
+  Rooted<Value> payload(cx, aRequest->mPayload);
+
+  if (NS_FAILED(aResult) &&
+      aResult != NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
+    MOZ_ASSERT(!JS_IsExceptionPending(cx));
+    nsAutoCString url;
+    aRequest->mURI->GetSpec(url);
+    JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                              JSMSG_DYNAMIC_IMPORT_FAILED, url.get());
+    FinishLoadingImportedModuleFailedWithPendingException(cx, payload);
+  } else {
+    FinishLoadingImportedModuleFailed(cx, payload, UndefinedHandleValue);
+  }
+
+  aRequest->ClearImport();
+}
+
 ModuleLoaderBase::ModuleLoaderBase(ScriptLoaderInterface* aLoader,
                                    nsIGlobalObject* aGlobalObject)
     : mGlobalObject(aGlobalObject), mLoader(aLoader) {
@@ -1429,10 +1375,23 @@ ModuleLoaderBase::~ModuleLoaderBase() {
 void ModuleLoaderBase::CancelFetchingModules() {
   for (const auto& entry : mFetchingModules) {
     RefPtr<LoadingRequest> loadingRequest = entry.GetData();
+
+    // The compile task might not execute if the global is shutting down, while
+    // the root module is still awaiting the result of the compiling request.
+    // Therefore, we call OnFetchFailed to notify the root module of the
+    // failure.
+    bool isCompiling = loadingRequest->mRequest->IsCompiling();
+    if (isCompiling) {
+      OnFetchFailed(loadingRequest->mRequest);
+    }
+
     loadingRequest->mRequest->Cancel();
 
     for (const auto& request : loadingRequest->mWaiting) {
       request->Cancel();
+      if (isCompiling) {
+        OnFetchFailed(request);
+      }
     }
   }
 
@@ -1470,6 +1429,7 @@ bool ModuleLoaderBase::HasPendingDynamicImports() const {
   return !mDynamicImportRequests.isEmpty();
 }
 
+// TODO: Bug 1968890 : Update error handling for dynamic import
 void ModuleLoaderBase::CancelDynamicImport(ModuleLoadRequest* aRequest,
                                            nsresult aResult) {
   // aRequest may have already been unlinked by CC.
@@ -1480,7 +1440,12 @@ void ModuleLoaderBase::CancelDynamicImport(ModuleLoadRequest* aRequest,
     // If the ClearDynamicImport() has been called, then it should have been
     // removed from mDynamicImportRequests as well.
     MOZ_ASSERT(!aRequest->mPayload.isUndefined());
+
     aRequest->Cancel();
+    // FinishDynamicImport must happen exactly once for each dynamic import
+    // request. If the load is aborted we do it when we remove the request
+    // from mDynamicImportRequests.
+    FinishDynamicImportAndReject(aRequest, aResult);
   }
 }
 
@@ -1545,17 +1510,20 @@ void ModuleLoaderBase::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
   if (!jsapi.Init(GetGlobalObject())) {
     return;
   }
-  JSContext* cx = jsapi.cx();
-  MOZ_ASSERT(aRequest->IsDynamicImport());
 
-  if (aRequest->IsErrored()) {
-    LOG(("ScriptLoadRequest (%p): ProcessDynamicImport, request has an error",
-         aRequest));
-    // The error is already processed in OnLoadRequestedModulesRejected.
+  JSContext* cx = jsapi.cx();
+  if (!aRequest->mModuleScript) {
+    FinishDynamicImportAndReject(aRequest, NS_ERROR_FAILURE);
     return;
   }
 
-  LOG(("ScriptLoadRequest (%p): ProcessDynamicImport", aRequest));
+  if (aRequest->mModuleScript->HasParseError()) {
+    Rooted<Value> payload(cx, aRequest->mPayload);
+    Rooted<Value> error(cx, aRequest->mModuleScript->ParseError());
+    FinishLoadingImportedModuleFailed(cx, payload, error);
+    return;
+  }
+
   FinishLoadingImportedModule(cx, aRequest);
 }
 

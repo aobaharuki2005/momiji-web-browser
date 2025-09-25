@@ -53,9 +53,9 @@ ModuleLoadRequest::ModuleLoadRequest(
     ModuleLoadRequest* aRootModule)
     : ScriptLoadRequest(ScriptKind::eModule, aURI, aReferrerPolicy,
                         aFetchOptions, aIntegrity, aReferrer, aContext),
-      mKind(aKind),
+      mIsTopLevel(aKind == Kind::TopLevel || aKind == Kind::DynamicImport),
       mModuleType(aModuleType),
-      mErroredLoadingImports(false),
+      mIsDynamicImport(aKind == Kind::DynamicImport),
       mLoader(aLoader),
       mRootModule(aRootModule) {
   MOZ_ASSERT(mLoader);
@@ -66,12 +66,23 @@ nsIGlobalObject* ModuleLoadRequest::GetGlobalObject() {
 }
 
 bool ModuleLoadRequest::IsErrored() const {
-  if (!mModuleScript || mErroredLoadingImports) {
-    return true;
+  return !mModuleScript || mModuleScript->HasParseError();
+}
+
+void ModuleLoadRequest::Cancel() {
+  if (IsCanceled()) {
+    return;
   }
 
-  MOZ_ASSERT_IF(mModuleScript->HasErrorToRethrow(), !IsDynamicImport());
-  return mModuleScript->HasParseError() || mModuleScript->HasErrorToRethrow();
+  if (IsFinished()) {
+    return;
+  }
+
+  ScriptLoadRequest::Cancel();
+
+  mModuleScript = nullptr;
+  mReferrerScript = nullptr;
+  mModuleRequestObj = nullptr;
 }
 
 void ModuleLoadRequest::SetReady() {
@@ -97,6 +108,10 @@ void ModuleLoadRequest::ModuleLoaded() {
   MOZ_ASSERT(IsFetching() || IsPendingFetchingError());
 
   mModuleScript = mLoader->GetFetchedModule(ModuleMapKey(mURI, mModuleType));
+  if (IsErrored()) {
+    ModuleErrored();
+    return;
+  }
 }
 
 void ModuleLoadRequest::LoadFailed() {
@@ -126,7 +141,13 @@ void ModuleLoadRequest::ModuleErrored() {
   }
 
   MOZ_ASSERT(!IsFinished());
-  MOZ_ASSERT(IsErrored());
+
+  mozilla::DebugOnly<bool> hasRethrow =
+      mModuleScript && mModuleScript->HasErrorToRethrow();
+
+  // When LoadRequestedModules fails, we will set error to rethrow to the module
+  // script and call ModuleErrored().
+  MOZ_ASSERT(IsErrored() || hasRethrow);
 
   if (IsFinished()) {
     // Cancelling an outstanding import will error this request.
@@ -139,7 +160,7 @@ void ModuleLoadRequest::ModuleErrored() {
 
 void ModuleLoadRequest::LoadFinished() {
   RefPtr<ModuleLoadRequest> request(this);
-  if (IsDynamicImport()) {
+  if (IsTopLevel() && IsDynamicImport()) {
     mLoader->RemoveDynamicImport(request);
   }
 
