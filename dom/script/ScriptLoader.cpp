@@ -223,6 +223,7 @@ ScriptLoader::ScriptLoader(Document* aDocument)
       StaticPrefs::dom_script_loader_navigation_cache()) {
     mCache = SharedScriptCache::Get();
     RegisterToCache();
+    LOG(("ScriptLoader (%p): Using in-memory cache.", this));
   }
 #endif
 
@@ -1179,6 +1180,8 @@ void ScriptLoader::TryUseCache(ScriptLoadRequest* aRequest,
   aRequest->mNetworkMetadata = cacheResult.mNetworkMetadata;
 
   aRequest->CacheEntryFound(cacheResult.mCompleteValue);
+  LOG(("ScriptLoader (%p): Found in-memory cache for %s.", this,
+       aRequest->mURI->GetSpecOrDefault().get()));
   return;
 }
 
@@ -3218,10 +3221,14 @@ void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest,
   if (cacheBehavior == CacheBehavior::Insert) {
     auto loadData = MakeRefPtr<ScriptLoadData>(this, aRequest);
     mCache->Insert(*loadData);
+    LOG(("ScriptLoader (%p): Inserting in-memory cache for %s.", this,
+         aRequest->mURI->GetSpecOrDefault().get()));
   } else {
     MOZ_ASSERT(cacheBehavior == CacheBehavior::Evict);
     ScriptHashKey key(this, aRequest);
     mCache->Evict(key);
+    LOG(("ScriptLoader (%p): Evicting in-memory cache for %s.", this,
+         aRequest->mURI->GetSpecOrDefault().get()));
   }
 }
 
