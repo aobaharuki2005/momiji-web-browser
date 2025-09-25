@@ -121,7 +121,10 @@ export class ContextMenuChild extends JSWindowActorChild {
                   },
                   this.contentWindow
                 );
-                media.dispatchEvent(event);
+                this.contentWindow.windowUtils.dispatchEventToChromeOnly(
+                  media,
+                  event
+                );
                 break;
               }
             }
