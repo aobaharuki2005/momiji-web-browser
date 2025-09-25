@@ -45,7 +45,7 @@ registerCleanupFunction(() => {
 const gRegistry = new TaskbarTabsRegistry();
 const gWindowManager = new TaskbarTabsWindowManager();
 
-const BASE_URL = "https://telemetry.example.org";
+const BASE_URL = "https://example.org";
 const PARSED_URL = Services.io.newURI(BASE_URL);
 
 add_task(async function testInstallAndUninstallMetric() {
@@ -136,6 +136,66 @@ add_task(async function testActivateWhenWindowOpened() {
   ]);
 
   gRegistry.removeTaskbarTab(taskbarTab.id);
+});
+
+add_task(async function testMoveToTaskbarLowLevelMetric() {
+  Services.fog.testResetFOG();
+  const taskbarTab = gRegistry.findOrCreateTaskbarTab(PARSED_URL, 0);
+  is(
+    Glean.webApp.moveToTaskbar.testGetValue(),
+    null,
+    "Should start with no events"
+  );
+
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    BASE_URL,
+    false,
+    true
+  );
+  const win = await gWindowManager.replaceTabWithWindow(taskbarTab, tab);
+
+  const snapshot = Glean.webApp.moveToTaskbar.testGetValue();
+  is(snapshot.length, 1, "Should have recorded an event on replacement");
+
+  await BrowserTestUtils.closeWindow(win);
+  gRegistry.removeTaskbarTab(taskbarTab.id);
+});
+
+add_task(async function testMoveToTaskbarHighLevelMetric() {
+  // moveTabIntoTaskbarTab is implemented in the TaskbarTabs module itself, so
+  // we need to stub out system interaction.
+  const sandbox = sinon.createSandbox();
+  sandbox.stub(TaskbarTabsPin, "pinTaskbarTab");
+  sandbox.stub(TaskbarTabsPin, "unpinTaskbarTab");
+  const { TaskbarTabs } = ChromeUtils.importESModule(
+    "resource:///modules/taskbartabs/TaskbarTabs.sys.mjs"
+  );
+
+  Services.fog.testResetFOG();
+  is(
+    Glean.webApp.moveToTaskbar.testGetValue(),
+    null,
+    "Should start with no events"
+  );
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URL);
+  let win = (await TaskbarTabs.moveTabIntoTaskbarTab(tab)).window;
+
+  let snapshot = Glean.webApp.moveToTaskbar.testGetValue();
+  is(snapshot.length, 1, "Should have recorded an event on replacement");
+  await BrowserTestUtils.closeWindow(win);
+
+  // Do it a second time to make sure it isn't connected to creation.
+  tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URL);
+  win = (await TaskbarTabs.moveTabIntoTaskbarTab(tab)).window;
+
+  snapshot = Glean.webApp.moveToTaskbar.testGetValue();
+  is(snapshot.length, 2, "Should have recorded an event on replacement");
+  await BrowserTestUtils.closeWindow(win);
+
+  await TaskbarTabs.resetForTests();
+  sandbox.restore();
 });
 
 add_task(async function testEjectMetric() {
