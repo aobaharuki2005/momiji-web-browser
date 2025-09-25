@@ -157,8 +157,6 @@ for (const type of [
   "DISCOVERY_STREAM_TOPICS_LOADING",
   "DISCOVERY_STREAM_USER_EVENT",
   "DOWNLOAD_CHANGED",
-  "FAKESPOT_CTA_CLICK",
-  "FAKESPOT_DISMISS",
   "FAKE_FOCUS_SEARCH",
   "FILL_SEARCH_TERM",
   "FOLLOW_SECTION",
@@ -654,8 +652,6 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 const PREF_AD_SIZE_MEDIUM_RECTANGLE = "newtabAdSize.mediumRectangle";
 const PREF_AD_SIZE_BILLBOARD = "newtabAdSize.billboard";
 const PREF_AD_SIZE_LEADERBOARD = "newtabAdSize.leaderboard";
-const PREF_CONTEXTUAL_CONTENT_SELECTED_FEED = "discoverystream.contextualContent.selectedFeed";
-const PREF_CONTEXTUAL_CONTENT_FEEDS = "discoverystream.contextualContent.feeds";
 const PREF_SECTIONS_ENABLED = "discoverystream.sections.enabled";
 const PREF_SPOC_PLACEMENTS = "discoverystream.placements.spocs";
 const PREF_SPOC_COUNTS = "discoverystream.placements.spocs.counts";
@@ -758,7 +754,6 @@ class DiscoveryStreamAdminUI extends (external_React_default()).PureComponent {
     this.resetBlocks = this.resetBlocks.bind(this);
     this.refreshInferredPersonalization = this.refreshInferredPersonalization.bind(this);
     this.refreshTopicSelectionCache = this.refreshTopicSelectionCache.bind(this);
-    this.toggleTBRFeed = this.toggleTBRFeed.bind(this);
     this.handleSectionsToggle = this.handleSectionsToggle.bind(this);
     this.toggleIABBanners = this.toggleIABBanners.bind(this);
     this.state = {
@@ -816,11 +811,6 @@ class DiscoveryStreamAdminUI extends (external_React_default()).PureComponent {
   }
   showPlaceholder() {
     this.dispatchSimpleAction(actionTypes.DISCOVERY_STREAM_DEV_SHOW_PLACEHOLDER);
-  }
-  toggleTBRFeed(e) {
-    const feed = e.target.value;
-    const selectedFeed = PREF_CONTEXTUAL_CONTENT_SELECTED_FEED;
-    this.props.dispatch(actionCreators.SetPref(selectedFeed, feed));
   }
   idleDaily() {
     this.dispatchSimpleAction(actionTypes.DISCOVERY_STREAM_DEV_IDLE_DAILY);
@@ -1087,9 +1077,7 @@ class DiscoveryStreamAdminUI extends (external_React_default()).PureComponent {
       layout
     } = this.props.state.DiscoveryStream;
     const personalized = this.props.otherPrefs["discoverystream.personalization.enabled"];
-    const selectedFeed = this.props.otherPrefs[PREF_CONTEXTUAL_CONTENT_SELECTED_FEED];
     const sectionsEnabled = this.props.otherPrefs[PREF_SECTIONS_ENABLED];
-    const TBRFeeds = this.props.otherPrefs[PREF_CONTEXTUAL_CONTENT_FEEDS].split(",").map(s => s.trim()).filter(item => item);
 
     // Prefs for IAB Banners
     const mediumRectangleEnabled = this.props.otherPrefs[PREF_AD_SIZE_MEDIUM_RECTANGLE];
@@ -1126,14 +1114,7 @@ class DiscoveryStreamAdminUI extends (external_React_default()).PureComponent {
     }, "Refresh Topic selection count"), /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("button", {
       className: "button",
       onClick: this.showPlaceholder
-    }, "Show Placeholder Cards"), " ", /*#__PURE__*/external_React_default().createElement("select", {
-      className: "button",
-      onChange: this.toggleTBRFeed,
-      value: selectedFeed
-    }, TBRFeeds.map(feed => /*#__PURE__*/external_React_default().createElement("option", {
-      key: feed,
-      value: feed
-    }, feed))), /*#__PURE__*/external_React_default().createElement("div", {
+    }, "Show Placeholder Cards"), " ", /*#__PURE__*/external_React_default().createElement("div", {
       className: "toggle-wrapper"
     }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
       id: "sections-toggle",
@@ -1869,7 +1850,6 @@ const LinkMenuOptions = {
         format: site.format,
         ...(site.flight_id ? { flight_id: site.flight_id } : {}),
         is_pocket_card: site.type === "CardGrid",
-        is_list_card: site.is_list_card,
         ...(site.section
           ? {
               section: site.section,
@@ -1925,7 +1905,6 @@ const LinkMenuOptions = {
         position: pos,
         ...(site.sponsored_tile_id ? { tile_id: site.sponsored_tile_id } : {}),
         is_pocket_card: site.type === "CardGrid",
-        is_list_card: site.is_list_card,
         ...(site.format ? { format: site.format } : {}),
         ...(site.section
           ? {
@@ -2165,29 +2144,6 @@ const LinkMenuOptions = {
       data: { url: site.url },
     }),
   }),
-  FakespotDismiss: () => ({
-    id: "newtab-menu-dismiss",
-    action: actionCreators.OnlyToMain({
-      type: actionTypes.SET_PREF,
-      data: {
-        name: "discoverystream.contextualContent.fakespot.enabled",
-        value: false,
-      },
-    }),
-    impression: actionCreators.OnlyToMain({
-      type: actionTypes.FAKESPOT_DISMISS,
-    }),
-  }),
-  AboutFakespot: site => ({
-    id: "newtab-menu-about-fakespot",
-    action: actionCreators.OnlyToMain({
-      type: actionTypes.OPEN_LINK,
-      data: { url: site.url },
-    }),
-    impression: actionCreators.OnlyToMain({
-      type: actionTypes.OPEN_ABOUT_FAKESPOT,
-    }),
-  }),
   SectionBlock: ({
     sectionPersonalization,
     sectionKey,
@@ -2411,7 +2367,6 @@ class _LinkMenu extends (external_React_default()).PureComponent {
                 fetchTimestamp,
                 firstVisibleTimestamp,
                 format,
-                is_list_card,
                 is_section_followed,
                 received_rank,
                 recommendation_id,
@@ -2430,7 +2385,6 @@ class _LinkMenu extends (external_React_default()).PureComponent {
                 fetchTimestamp,
                 firstVisibleTimestamp,
                 format,
-                is_list_card,
                 received_rank,
                 recommendation_id,
                 recommended_at,
@@ -2620,7 +2574,6 @@ class _DSLinkMenu extends (external_React_default()).PureComponent {
         recommended_at: this.props.recommended_at,
         received_rank: this.props.received_rank,
         topic: this.props.topic,
-        is_list_card: this.props.is_list_card,
         position: index,
         ...(this.props.format ? {
           format: this.props.format
@@ -2997,9 +2950,6 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
     const {
       props
     } = this;
-    const {
-      isFakespot
-    } = props;
     const cards = props.rows;
     if (this.props.flightId) {
       this.props.dispatch(actionCreators.OnlyToMain({
@@ -3028,54 +2978,41 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
       }
     }
     if (this._needsImpressionStats(cards)) {
-      if (isFakespot) {
-        props.dispatch(actionCreators.DiscoveryStreamImpressionStats({
-          source: props.source.toUpperCase(),
-          window_inner_width: window.innerWidth,
-          window_inner_height: window.innerHeight,
-          tiles: cards.map(link => ({
-            id: link.id,
-            type: "fakespot",
-            category: link.category
-          }))
-        }));
-      } else {
-        props.dispatch(actionCreators.DiscoveryStreamImpressionStats({
-          source: props.source.toUpperCase(),
-          window_inner_width: window.innerWidth,
-          window_inner_height: window.innerHeight,
-          tiles: cards.map(link => ({
-            id: link.id,
-            pos: link.pos,
-            type: props.flightId ? "spoc" : "organic",
-            ...(link.shim ? {
-              shim: link.shim
-            } : {}),
-            recommendation_id: link.recommendation_id,
-            fetchTimestamp: link.fetchTimestamp,
-            corpus_item_id: link.corpus_item_id,
-            scheduled_corpus_item_id: link.scheduled_corpus_item_id,
-            recommended_at: link.recommended_at,
-            received_rank: link.received_rank,
-            topic: link.topic,
-            features: link.features,
-            is_list_card: link.is_list_card,
-            ...(link.format ? {
-              format: link.format
-            } : {
-              format: getActiveCardSize(window.innerWidth, link.class_names, link.section, link.flightId)
-            }),
-            ...(link.section ? {
-              section: link.section,
-              section_position: link.section_position,
-              is_section_followed: link.is_section_followed,
-              layout_name: link.sectionLayoutName
-            } : {})
-          })),
-          firstVisibleTimestamp: props.firstVisibleTimestamp
-        }));
-        this.impressionCardGuids = cards.map(link => link.id);
-      }
+      props.dispatch(actionCreators.DiscoveryStreamImpressionStats({
+        source: props.source.toUpperCase(),
+        window_inner_width: window.innerWidth,
+        window_inner_height: window.innerHeight,
+        tiles: cards.map(link => ({
+          id: link.id,
+          pos: link.pos,
+          type: props.flightId ? "spoc" : "organic",
+          ...(link.shim ? {
+            shim: link.shim
+          } : {}),
+          recommendation_id: link.recommendation_id,
+          fetchTimestamp: link.fetchTimestamp,
+          corpus_item_id: link.corpus_item_id,
+          scheduled_corpus_item_id: link.scheduled_corpus_item_id,
+          recommended_at: link.recommended_at,
+          received_rank: link.received_rank,
+          topic: link.topic,
+          features: link.features,
+          is_list_card: link.is_list_card,
+          ...(link.format ? {
+            format: link.format
+          } : {
+            format: getActiveCardSize(window.innerWidth, link.class_names, link.section, link.flightId)
+          }),
+          ...(link.section ? {
+            section: link.section,
+            section_position: link.section_position,
+            is_section_followed: link.is_section_followed,
+            layout_name: link.sectionLayoutName
+          } : {})
+        })),
+        firstVisibleTimestamp: props.firstVisibleTimestamp
+      }));
+      this.impressionCardGuids = cards.map(link => link.id);
     }
   }
 
@@ -3639,7 +3576,6 @@ const DefaultMeta = ({
   mayHaveThumbsUpDown,
   onThumbsUpClick,
   onThumbsDownClick,
-  isListCard,
   state,
   format,
   topic,
@@ -3648,7 +3584,7 @@ const DefaultMeta = ({
   icon_src,
   refinedCardsLayout
 }) => {
-  const shouldHaveThumbs = !isListCard && format !== "rectangle" && mayHaveSectionsCards && mayHaveThumbsUpDown;
+  const shouldHaveThumbs = format !== "rectangle" && mayHaveSectionsCards && mayHaveThumbsUpDown;
   const shouldHaveFooterSection = isSectionsCard && (shouldHaveThumbs || showTopics);
   return /*#__PURE__*/external_React_default().createElement("div", {
     className: "meta"
@@ -3668,7 +3604,7 @@ const DefaultMeta = ({
     className: "excerpt clamp"
   }, "Sponsored content supports our mission to build a better web.") : excerpt && /*#__PURE__*/external_React_default().createElement("p", {
     className: "excerpt clamp"
-  }, excerpt)), !isListCard && format !== "rectangle" && !mayHaveSectionsCards && mayHaveThumbsUpDown && !refinedCardsLayout && /*#__PURE__*/external_React_default().createElement(DSThumbsUpDownButtons, {
+  }, excerpt)), format !== "rectangle" && !mayHaveSectionsCards && mayHaveThumbsUpDown && !refinedCardsLayout && /*#__PURE__*/external_React_default().createElement(DSThumbsUpDownButtons, {
     onThumbsDownClick: onThumbsDownClick,
     onThumbsUpClick: onThumbsUpClick,
     sponsor: sponsor,
@@ -3837,7 +3773,6 @@ class _DSCard extends (external_React_default()).PureComponent {
             features: this.props.features,
             matches_selected_topic: matchesSelectedTopic,
             selected_topics: this.props.selectedTopics,
-            is_list_card: this.props.isListCard,
             ...(this.props.format ? {
               format: this.props.format
             } : {
@@ -3866,7 +3801,6 @@ class _DSCard extends (external_React_default()).PureComponent {
             recommendation_id: this.props.recommendation_id,
             topic: this.props.topic,
             selected_topics: this.props.selectedTopics,
-            is_list_card: this.props.isListCard,
             ...(this.props.format ? {
               format: this.props.format
             } : {
@@ -4167,7 +4101,6 @@ class _DSCard extends (external_React_default()).PureComponent {
       isRecentSave,
       DiscoveryStream,
       Prefs,
-      isListCard,
       isFakespot,
       mayHaveSectionsCards,
       format
@@ -4196,7 +4129,7 @@ class _DSCard extends (external_React_default()).PureComponent {
         }));
       }
       return /*#__PURE__*/external_React_default().createElement("div", {
-        className: `ds-card placeholder ${placeholderClassName} ${isListCard ? "list-card-placeholder" : ""} ${refinedCardsClassName}`,
+        className: `ds-card placeholder ${placeholderClassName} ${refinedCardsClassName}`,
         ref: this.setPlaceholderRef
       }, placeholderElements);
     }
@@ -4232,8 +4165,6 @@ class _DSCard extends (external_React_default()).PureComponent {
     const ctaButtonClassName = ctaButtonEnabled ? `ds-card-cta-button` : ``;
     const compactImagesClassName = compactImages ? `ds-card-compact-image` : ``;
     const imageGradientClassName = imageGradient ? `ds-card-image-gradient` : ``;
-    const listCardClassName = isListCard ? `list-feed-card` : ``;
-    const fakespotClassName = isFakespot ? `fakespot` : ``;
     const sectionsCardsClassName = [mayHaveSectionsCards ? `sections-card-ui` : ``, this.props.sectionsClassNames].join(" ");
     const titleLinesName = `ds-card-title-lines-${titleLines}`;
     const descLinesClassName = `ds-card-desc-lines-${descLines}`;
@@ -4245,15 +4176,11 @@ class _DSCard extends (external_React_default()).PureComponent {
     });
     if (isMediumRectangle) {
       images = this.renderImage();
-    } else if (isListCard) {
-      images = this.renderImage({
-        sizes: this.listCardImageSizes
-      });
     } else if (sectionsEnabled) {
       images = this.renderSectionCardImages();
     }
     return /*#__PURE__*/external_React_default().createElement("article", {
-      className: `ds-card ${listCardClassName} ${fakespotClassName} ${sectionsCardsClassName} ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName} ${spocFormatClassName} ${ctaButtonClassName} ${ctaButtonVariantClassName} ${refinedCardsClassName}`,
+      className: `ds-card ${sectionsCardsClassName} ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName} ${spocFormatClassName} ${ctaButtonClassName} ${ctaButtonVariantClassName} ${refinedCardsClassName}`,
       ref: this.setContextMenuButtonHostRef,
       "data-position-one": this.props["data-position-one"],
       "data-position-two": this.props["data-position-one"],
@@ -4266,7 +4193,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       url: this.props.url,
       title: this.props.title,
       isSponsored: !!this.props.flightId
-    }, this.props.showTopics && !this.props.mayHaveSectionsCards && this.props.topic && !isListCard && !refinedCardsLayout && /*#__PURE__*/external_React_default().createElement("span", {
+    }, this.props.showTopics && !this.props.mayHaveSectionsCards && this.props.topic && !refinedCardsLayout && /*#__PURE__*/external_React_default().createElement("span", {
       className: "ds-card-topic",
       "data-l10n-id": `newtab-topic-label-${this.props.topic}`
     }), /*#__PURE__*/external_React_default().createElement("div", {
@@ -4287,11 +4214,9 @@ class _DSCard extends (external_React_default()).PureComponent {
         received_rank: this.props.received_rank,
         topic: this.props.topic,
         features: this.props.features,
-        is_list_card: isListCard,
         ...(format ? {
           format
         } : {}),
-        isFakespot,
         category: this.props.category,
         ...(this.props.section ? {
           section: this.props.section,
@@ -4334,9 +4259,8 @@ class _DSCard extends (external_React_default()).PureComponent {
       onThumbsUpClick: this.onThumbsUpClick,
       onThumbsDownClick: this.onThumbsDownClick,
       state: this.state,
-      isListCard: isListCard,
       showTopics: !refinedCardsLayout && this.props.showTopics,
-      isSectionsCard: this.props.mayHaveSectionsCards && this.props.topic && !isListCard,
+      isSectionsCard: this.props.mayHaveSectionsCards && this.props.topic,
       format: format,
       topic: this.props.topic,
       icon_src: faviconSrc,
@@ -4369,7 +4293,6 @@ class _DSCard extends (external_React_default()).PureComponent {
       scheduled_corpus_item_id: this.props.scheduled_corpus_item_id,
       recommended_at: this.props.recommended_at,
       received_rank: this.props.received_rank,
-      is_list_card: this.props.isListCard,
       section: this.props.section,
       section_position: this.props.sectionPosition,
       is_section_followed: this.props.sectionFollowed,
@@ -4601,151 +4524,6 @@ _TopicsWidget.defaultProps = {
 const TopicsWidget = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   DiscoveryStream: state.DiscoveryStream
 }))(_TopicsWidget);
-;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/ListFeed/ListFeed.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-
-
-
-
-const PREF_LISTFEED_TITLE = "discoverystream.contextualContent.listFeedTitle";
-const PREF_FAKESPOT_CATEGROY = "discoverystream.contextualContent.fakespot.defaultCategoryTitle";
-const PREF_FAKESPOT_FOOTER = "discoverystream.contextualContent.fakespot.footerCopy";
-const PREF_FAKESPOT_CTA_COPY = "discoverystream.contextualContent.fakespot.ctaCopy";
-const PREF_FAKESPOT_CTA_URL = "discoverystream.contextualContent.fakespot.ctaUrl";
-const ListFeed_PREF_CONTEXTUAL_CONTENT_SELECTED_FEED = "discoverystream.contextualContent.selectedFeed";
-function ListFeed({
-  type,
-  firstVisibleTimestamp,
-  recs,
-  categories,
-  dispatch
-}) {
-  const [selectedFakespotFeed, setSelectedFakespotFeed] = (0,external_React_namespaceObject.useState)("");
-  const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
-  const listFeedTitle = prefs[PREF_LISTFEED_TITLE];
-  const categoryTitle = prefs[PREF_FAKESPOT_CATEGROY];
-  const footerCopy = prefs[PREF_FAKESPOT_FOOTER];
-  const ctaCopy = prefs[PREF_FAKESPOT_CTA_COPY];
-  const ctaUrl = prefs[PREF_FAKESPOT_CTA_URL];
-  const isFakespot = prefs[ListFeed_PREF_CONTEXTUAL_CONTENT_SELECTED_FEED] === "fakespot";
-  // Todo: need to remove ads while using default recommendations, remove this line once API has been updated.
-  let listFeedRecs = selectedFakespotFeed ? recs.filter(rec => rec.category === selectedFakespotFeed) : recs;
-  function handleCtaClick() {
-    dispatch(actionCreators.OnlyToMain({
-      type: "FAKESPOT_CTA_CLICK"
-    }));
-  }
-  function handleChange(e) {
-    setSelectedFakespotFeed(e.target.value);
-    dispatch(actionCreators.DiscoveryStreamUserEvent({
-      event: "FAKESPOT_CATEGORY",
-      value: {
-        category: e.target.value || ""
-      }
-    }));
-  }
-  const contextMenuOptions = ["FakespotDismiss", "AboutFakespot"];
-  const {
-    length: listLength
-  } = listFeedRecs;
-  // determine if the list should take up all availible height or not
-  const fullList = listLength >= 5;
-  return listLength > 0 && /*#__PURE__*/external_React_default().createElement("div", {
-    className: `list-feed ${fullList ? "full-height" : ""} ${listLength > 2 ? "span-2" : "span-1"}`
-  }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: "list-feed-inner-wrapper"
-  }, isFakespot ? /*#__PURE__*/external_React_default().createElement("div", {
-    className: "fakespot-heading"
-  }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: "dropdown-wrapper"
-  }, /*#__PURE__*/external_React_default().createElement("select", {
-    className: "fakespot-dropdown",
-    name: "fakespot-categories",
-    value: selectedFakespotFeed,
-    onChange: handleChange
-  }, /*#__PURE__*/external_React_default().createElement("option", {
-    value: ""
-  }, categoryTitle || "Holiday Gift Guide"), categories.map(category => /*#__PURE__*/external_React_default().createElement("option", {
-    key: category,
-    value: category
-  }, category))), /*#__PURE__*/external_React_default().createElement("div", {
-    className: "context-menu-wrapper"
-  }, /*#__PURE__*/external_React_default().createElement(ContextMenuButton, null, /*#__PURE__*/external_React_default().createElement(LinkMenu, {
-    dispatch: dispatch,
-    options: contextMenuOptions,
-    shouldSendImpressionStats: true,
-    site: {
-      url: "https://www.fakespot.com"
-    }
-  })))), /*#__PURE__*/external_React_default().createElement("p", {
-    className: "fakespot-desc"
-  }, listFeedTitle)) : /*#__PURE__*/external_React_default().createElement("h1", {
-    className: "list-feed-title",
-    id: "list-feed-title"
-  }, /*#__PURE__*/external_React_default().createElement("span", {
-    className: "icon icon-newsfeed"
-  }), listFeedTitle), /*#__PURE__*/external_React_default().createElement("div", {
-    className: "list-feed-content",
-    role: "menu",
-    "aria-labelledby": "list-feed-title"
-  }, listFeedRecs.slice(0, 5).map((rec, index) => {
-    if (!rec || rec.placeholder) {
-      return /*#__PURE__*/external_React_default().createElement(DSCard, {
-        key: `list-card-${index}`,
-        placeholder: true,
-        isListCard: true
-      });
-    }
-    return /*#__PURE__*/external_React_default().createElement(DSCard, {
-      key: `list-card-${index}`,
-      pos: index,
-      flightId: rec.flight_id,
-      image_src: rec.image_src,
-      raw_image_src: rec.raw_image_src,
-      word_count: rec.word_count,
-      time_to_read: rec.time_to_read,
-      title: rec.title,
-      topic: rec.topic,
-      excerpt: rec.excerpt,
-      url: rec.url,
-      id: rec.id,
-      shim: rec.shim,
-      type: type,
-      context: rec.context,
-      sponsor: rec.sponsor,
-      sponsored_by_override: rec.sponsored_by_override,
-      dispatch: dispatch,
-      source: rec.domain,
-      publisher: rec.publisher,
-      pocket_id: rec.pocket_id,
-      context_type: rec.context_type,
-      bookmarkGuid: rec.bookmarkGuid,
-      firstVisibleTimestamp: firstVisibleTimestamp,
-      corpus_item_id: rec.corpus_item_id,
-      scheduled_corpus_item_id: rec.scheduled_corpus_item_id,
-      recommended_at: rec.recommended_at,
-      received_rank: rec.received_rank,
-      isListCard: true,
-      isFakespot: isFakespot,
-      category: rec.category
-    });
-  }), isFakespot && /*#__PURE__*/external_React_default().createElement("div", {
-    className: "fakespot-footer"
-  }, /*#__PURE__*/external_React_default().createElement("p", null, footerCopy), /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
-    className: "fakespot-cta",
-    url: ctaUrl,
-    referrer: "",
-    onLinkClick: handleCtaClick,
-    dispatch: dispatch
-  }, ctaCopy)))));
-}
-
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/AdBannerContextMenu/AdBannerContextMenu.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -5347,16 +5125,12 @@ function TrendingSearches() {
 
 
 
-
 const PREF_SECTIONS_CARDS_ENABLED = "discoverystream.sections.cards.enabled";
 const PREF_THUMBS_UP_DOWN_ENABLED = "discoverystream.thumbsUpDown.enabled";
 const PREF_TOPICS_ENABLED = "discoverystream.topicLabels.enabled";
 const PREF_TOPICS_SELECTED = "discoverystream.topicSelection.selectedTopics";
 const PREF_TOPICS_AVAILABLE = "discoverystream.topicSelection.topics";
 const PREF_SPOCS_STARTUPCACHE_ENABLED = "discoverystream.spocs.startupCache.enabled";
-const PREF_LIST_FEED_ENABLED = "discoverystream.contextualContent.enabled";
-const PREF_LIST_FEED_SELECTED_FEED = "discoverystream.contextualContent.selectedFeed";
-const PREF_FAKESPOT_ENABLED = "discoverystream.contextualContent.fakespot.enabled";
 const PREF_BILLBOARD_ENABLED = "newtabAdSize.billboard";
 const PREF_BILLBOARD_POSITION = "newtabAdSize.billboard.position";
 const PREF_LEADERBOARD_ENABLED = "newtabAdSize.leaderboard";
@@ -5427,15 +5201,11 @@ class _CardGrid extends (external_React_default()).PureComponent {
     const selectedTopics = prefs[PREF_TOPICS_SELECTED];
     const availableTopics = prefs[PREF_TOPICS_AVAILABLE];
     const spocsStartupCacheEnabled = prefs[PREF_SPOCS_STARTUPCACHE_ENABLED];
-    const listFeedEnabled = prefs[PREF_LIST_FEED_ENABLED];
-    const listFeedSelectedFeed = prefs[PREF_LIST_FEED_SELECTED_FEED];
     const billboardEnabled = prefs[PREF_BILLBOARD_ENABLED];
     const leaderboardEnabled = prefs[PREF_LEADERBOARD_ENABLED];
     const trendingEnabled = prefs[PREF_TRENDING_SEARCH] && prefs[PREF_TRENDING_SEARCH_SYSTEM] && prefs[PREF_SEARCH_ENGINE]?.toLowerCase() === "google";
     const trendingVariant = prefs[PREF_TRENDING_SEARCH_VARIANT];
-
-    // filter out recs that should be in ListFeed
-    const recs = this.props.data.recommendations.filter(item => !item.feedName).slice(0, items);
+    const recs = this.props.data.recommendations.slice(0, items);
     const cards = [];
     for (let index = 0; index < items; index++) {
       const rec = recs[index];
@@ -5515,14 +5285,6 @@ class _CardGrid extends (external_React_default()).PureComponent {
         }
       }
     }
-    if (listFeedEnabled) {
-      const isFakespot = listFeedSelectedFeed === "fakespot";
-      const fakespotEnabled = prefs[PREF_FAKESPOT_ENABLED];
-      if (!isFakespot || isFakespot && fakespotEnabled) {
-        // Place the list feed as the 3rd element in the card grid
-        cards.splice(2, 1, this.renderListFeed(this.props.data.recommendations, listFeedSelectedFeed));
-      }
-    }
     if (trendingEnabled && trendingVariant === "b") {
       const firstSpocPosition = this.props.spocPositions[0]?.index;
       // double check that a spoc/mrec is actually in the index it should be in
@@ -5585,24 +5347,6 @@ class _CardGrid extends (external_React_default()).PureComponent {
     return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, cards?.length > 0 && /*#__PURE__*/external_React_default().createElement("div", {
       className: gridClassName
     }, cards));
-  }
-  renderListFeed(recommendations, selectedFeed) {
-    const recs = recommendations.filter(item => item.feedName === selectedFeed);
-    const isFakespot = selectedFeed === "fakespot";
-    // remove duplicates from category list
-    const categories = [...new Set(recs.map(({
-      category
-    }) => category))];
-    const listFeed = /*#__PURE__*/external_React_default().createElement(ListFeed
-    // only display recs that match selectedFeed for ListFeed
-    , {
-      recs: recs,
-      categories: isFakespot ? categories : [],
-      firstVisibleTimestamp: this.props.firstVisibleTimestamp,
-      type: this.props.type,
-      dispatch: this.props.dispatch
-    });
-    return listFeed;
   }
   renderGridClassName() {
     const {

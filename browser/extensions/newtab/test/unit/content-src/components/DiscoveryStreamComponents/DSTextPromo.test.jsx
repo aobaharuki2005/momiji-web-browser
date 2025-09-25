@@ -84,7 +84,6 @@ describe("<DSTextPromo>", () => {
         card_type: undefined,
         position: 0,
         is_pocket_card: false,
-        is_list_card: undefined,
       },
     ]);
 

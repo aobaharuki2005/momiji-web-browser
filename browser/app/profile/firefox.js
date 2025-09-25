@@ -1998,11 +1998,6 @@ pref("browser.newtabpage.activity-stream.discoverystream.topicLabels.region-topi
 pref("browser.newtabpage.activity-stream.discoverystream.topicSelection.locale-topics-config", "en-US, en-GB, en-CA");
 pref("browser.newtabpage.activity-stream.discoverystream.topicLabels.locale-topic-label-config", "en-US, en-GB, en-CA");
 
-// List of locales that get contextual content by default
-pref("browser.newtabpage.activity-stream.discoverystream.contextualContent.locale-content-config", "en-US,en-GB,en-CA,de");
-// List of regions that get contextual content by default- TODO: update once development is closer to being finished
-pref("browser.newtabpage.activity-stream.discoverystream.contextualContent.region-content-config", "");
-
 // List of locales that get section layout by default
 pref("browser.newtabpage.activity-stream.discoverystream.sections.locale-content-config", "en-US,en-CA");
 // List of regions that get section layout by default
