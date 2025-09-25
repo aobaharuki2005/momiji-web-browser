@@ -10,15 +10,20 @@ import "chrome://browser/content/sidebar/sidebar-panel-header.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   SmartAssistEngine:
     "moz-src:///browser/components/genai/SmartAssistEngine.sys.mjs",
 });
+
+const FULL_PAGE_URL = "chrome://browser/content/genai/smartAssistPage.html";
 
 export class SmartAssist extends MozLitElement {
   static properties = {
     userPrompt: { type: String },
     aiResponse: { type: String },
     conversationState: { type: Array },
+    mode: { type: String }, // "tab" | "sidebar"
+    overrideNewTab: { type: Boolean },
   };
 
   constructor() {
@@ -29,10 +34,17 @@ export class SmartAssist extends MozLitElement {
     this.conversationState = [
       { role: "system", content: "You are a helpful assistant" },
     ];
+    this.mode = "sidebar";
+    this.overrideNewTab = Services.prefs.getBoolPref(
+      "browser.ml.smartAssist.overrideNewTab"
+    );
   }
 
   connectedCallback() {
     super.connectedCallback();
+    if (this.mode === "sidebar" && this.overrideNewTab) {
+      this._applyNewTabOverride(true);
+    }
   }
 
   /**
@@ -60,6 +72,29 @@ export class SmartAssist extends MozLitElement {
     this._updateConversationState({ role: "assistant", content: resp });
   };
 
+  /**
+   * Mock Functionality to open full page UX
+   */
+  _applyNewTabOverride(enable) {
+    try {
+      enable
+        ? (lazy.AboutNewTab.newTabURL = FULL_PAGE_URL)
+        : lazy.AboutNewTab.resetNewTabURL();
+    } catch (e) {
+      console.error("Failed to toggle new tab override:", e);
+    }
+  }
+
+  _onToggleFullPage(e) {
+    const isChecked = e.target.checked;
+    Services.prefs.setBoolPref(
+      "browser.ml.smartAssist.overrideNewTab",
+      isChecked
+    );
+    this.overrideNewTab = isChecked;
+    this._applyNewTabOverride(isChecked);
+  }
+
   render() {
     return html`
       <link
@@ -67,11 +102,14 @@ export class SmartAssist extends MozLitElement {
         href="chrome://browser/content/genai/content/smart-assist.css"
       />
       <div>
-        <sidebar-panel-header
-          data-l10n-id="genai-smart-assist-sidebar-title"
-          data-l10n-attrs="heading"
-          view="viewGenaiSmartAssistSidebar"
-        ></sidebar-panel-header>
+        ${this.mode === "sidebar"
+          ? html` <sidebar-panel-header
+              data-l10n-id="genai-smart-assist-sidebar-title"
+              data-l10n-attrs="heading"
+              view="viewGenaiSmartAssistSidebar"
+            ></sidebar-panel-header>`
+          : ""}
+
         <div class="wrapper">
           <div>
             ${this.conversationState
@@ -96,6 +134,17 @@ export class SmartAssist extends MozLitElement {
           >
             Submit
           </moz-button>
+
+          ${this.mode === "sidebar"
+            ? html`<div class="footer">
+                <moz-checkbox
+                  type="checkbox"
+                  label="Mock Full Page Experience"
+                  @change=${e => this._onToggleFullPage(e)}
+                  ?checked=${this.overrideNewTab}
+                ></moz-checkbox>
+              </div>`
+            : ""}
         </div>
       </div>
     `;

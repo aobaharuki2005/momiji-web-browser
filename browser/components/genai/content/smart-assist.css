@@ -9,6 +9,7 @@
 .prompt-textarea {
   columns: 3;
   width: 100%;
+  margin-block-end: var(--space-medium);
 }
 
 .message {
@@ -29,4 +30,10 @@
   --message-assistant-bg-light: var(--color-gray-20);
   --message-assistant-bg-dark: var(--color-gray-70);
   background-color: light-dark(var(--message-assistant-bg-light), var(--message-assistant-bg-dark));
+}
+
+.footer {
+  margin-block-start: var(--space-medium);
+  display: flex;
+  justify-content: flex-end;
 }
