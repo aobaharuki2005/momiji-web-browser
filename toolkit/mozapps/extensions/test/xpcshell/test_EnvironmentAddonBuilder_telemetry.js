@@ -206,7 +206,7 @@ function checkEnvironmentAddonBuilderData(
   }
 
   // Check "theme" structure.
-  if (Object.keys(data.addons.theme).length !== 0) {
+  if (data.addons.theme) {
     checkTheme(data.addons.theme);
   }
 

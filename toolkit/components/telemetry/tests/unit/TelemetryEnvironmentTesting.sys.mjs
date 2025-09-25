@@ -1124,7 +1124,7 @@ export var TelemetryEnvironmentTesting = {
     }
 
     // Check "theme" structure.
-    if (Object.keys(data.addons.theme).length !== 0) {
+    if (data.addons.theme) {
       this.checkTheme(data.addons.theme);
     }
 

@@ -5095,7 +5095,13 @@ export class EnvironmentAddonBuilder {
       ([id, { type, ...rest }]) => ({ id, addonType: type, ...rest })
     );
     Glean.addons.activeAddons.set(activeAddonsGlean);
-    Glean.addons.theme.set(addons.theme);
+    // On android builds theme add-ons are not supported, and so
+    // if _getActiveTheme returned an empty object we do not set
+    // the Glean.addons.theme object metric (given that setting it
+    // to null is not a valid value for a Glean object metric).
+    if (addons.theme) {
+      Glean.addons.theme.set(addons.theme);
+    }
     Glean.addons.activeGMPlugins.set(
       Object.entries(addons.activeGMPlugins).map(([id, value]) => ({
         id,
@@ -5211,7 +5217,7 @@ export class EnvironmentAddonBuilder {
     // Request themes, asynchronously.
     let { addons: themes } = await AddonManager.getActiveAddons(["theme"]);
 
-    let activeTheme = {};
+    let activeTheme = null;
     // We only store information about the active theme.
     let theme = themes.find(themeAddon => themeAddon.isActive);
     if (theme) {
