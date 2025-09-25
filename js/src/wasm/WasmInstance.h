@@ -238,7 +238,7 @@ class alignas(16) Instance {
   // The data must be the last field.  Globals for the module start here
   // and are inline in this structure.  16-byte alignment is required for SIMD
   // data.
-  MOZ_ALIGNED_DECL(16, char data_);
+  alignas(16) char data_;
 
   // Internal helpers:
   FuncDefInstanceData* funcDefInstanceData(uint32_t funcIndex) const;

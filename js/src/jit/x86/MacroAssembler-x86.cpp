@@ -6,7 +6,6 @@
 
 #include "jit/x86/MacroAssembler-x86.h"
 
-#include "mozilla/Alignment.h"
 #include "mozilla/Casting.h"
 
 #include "jit/AtomicOp.h"
