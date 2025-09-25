@@ -18,10 +18,7 @@ import {
   getBreakableLinesForSourceActors,
   isSourceActorWithSourceMap,
 } from "./source-actors";
-import {
-  getSourceTextContentForLocation,
-  getSourceTextContentForSource,
-} from "./sources-content";
+import { getSourceTextContent } from "./sources-content";
 
 export function hasSource(state, id) {
   return state.sources.mutableSources.has(id);
@@ -243,17 +240,19 @@ export function isSourceWithMap(state, id) {
   return actors.some(actor => isSourceActorWithSourceMap(state, actor.id));
 }
 
-export function canPrettyPrintSource(state, source, sourceActor) {
+export function canPrettyPrintSource(state, location) {
+  const sourceId = location.source.id;
+  const source = getSource(state, sourceId);
   if (
     !source ||
     source.isPrettyPrinted ||
     source.isOriginal ||
-    (prefs.clientSourceMapsEnabled && isSourceWithMap(state, source.id))
+    (prefs.clientSourceMapsEnabled && isSourceWithMap(state, sourceId))
   ) {
     return false;
   }
 
-  const content = getSourceTextContentForSource(state, source, sourceActor);
+  const content = getSourceTextContent(state, location);
   const sourceContent = content && isFulfilled(content) ? content.value : null;
 
   if (
@@ -284,7 +283,7 @@ export function getPrettyPrintMessage(state, location) {
     return L10N.getStr("sourceFooter.prettyPrint.hasSourceMapMessage");
   }
 
-  const content = getSourceTextContentForLocation(state, location);
+  const content = getSourceTextContent(state, location);
 
   const sourceContent = content && isFulfilled(content) ? content.value : null;
   if (!sourceContent) {

@@ -7,7 +7,7 @@ import {
   getPaneCollapse,
   getQuickOpenEnabled,
   getSource,
-  getSourceTextContentForLocation,
+  getSourceTextContent,
   getIgnoreListSourceUrls,
   getSourceByURL,
   getBreakpointsForSource,
@@ -215,7 +215,7 @@ export function setSearchOptions(searchKey, searchOptions) {
 
 export function copyToClipboard(location) {
   return ({ getState }) => {
-    const content = getSourceTextContentForLocation(getState(), location);
+    const content = getSourceTextContent(getState(), location);
     if (content && isFulfilled(content) && content.value.type === "text") {
       copyToTheClipboard(content.value.value);
     }

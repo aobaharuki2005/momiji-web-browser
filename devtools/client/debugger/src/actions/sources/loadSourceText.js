@@ -4,7 +4,7 @@
 
 import { PROMISE } from "../utils/middleware/promise";
 import {
-  getSourceTextContentForSource,
+  getSourceTextContent,
   getSettledSourceTextContent,
   getSourcesEpoch,
   getBreakpointsForSource,
@@ -173,10 +173,12 @@ export const loadGeneratedSourceText = memoizeableAction(
         return null;
       }
 
-      const sourceTextContent = getSourceTextContentForSource(
+      const sourceTextContent = getSourceTextContent(
         getState(),
-        sourceActor.sourceObject,
-        sourceActor
+        createLocation({
+          source: sourceActor.sourceObject,
+          sourceActor,
+        })
       );
 
       if (!sourceTextContent || sourceTextContent.state === "pending") {
@@ -210,9 +212,11 @@ export const loadOriginalSourceText = memoizeableAction(
         return null;
       }
 
-      const sourceTextContent = getSourceTextContentForSource(
+      const sourceTextContent = getSourceTextContent(
         getState(),
-        source
+        createLocation({
+          source,
+        })
       );
       if (!sourceTextContent || sourceTextContent.state === "pending") {
         return sourceTextContent;

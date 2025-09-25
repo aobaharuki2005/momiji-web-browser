@@ -39,8 +39,8 @@ add_task(async function () {
 
   is(
     footerButton.textContent,
-    "bundle file",
-    "The source map button now reports the pretty printed file as bundle file (as we don't support toggling source map before reloading the page)"
+    "original file",
+    "The source map button now reports the pretty printed file as original file"
   );
   ok(
     !footerButton.classList.contains("disabled"),

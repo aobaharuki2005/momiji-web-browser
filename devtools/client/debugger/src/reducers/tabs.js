@@ -6,12 +6,7 @@
  * Tabs reducer
  */
 
-import { prefs } from "../utils/prefs";
-
-export function initialTabState({
-  urls = [],
-  prettyPrintedURLs = new Set(),
-} = {}) {
+export function initialTabState({ urls = [], prettyPrintedURLs = [] } = {}) {
   return {
     // List of source URL's which should be automatically opened in a tab.
     // This array will be stored as-is in the persisted async storage.
@@ -26,12 +21,6 @@ export function initialTabState({
     // Set<String>
     // (converted into Array in the asyncStorage)
     prettyPrintedURLs,
-
-    // Similar but opposite of prettyPrintedURLs.
-    // List of sources which pretty printing has been manually disabled
-    // or are not considered minified when auto-pretty printing is enabled
-    // Set<String>
-    prettyPrintedDisabledURLs: new Set(),
 
     // List of sources for which tabs should be currently displayed.
     // This is transient data, specific to the current document and at this precise time.
@@ -87,20 +76,9 @@ function update(state = initialTabState(), action) {
  * Allow unregistering pretty printed source earlier than source unregistering.
  */
 function removePrettyPrintedSource(state, source) {
-  const generatedSourceURL = source.isPrettyPrinted
-    ? source.generatedSource.url
-    : source.url;
   const prettyPrintedURLs = new Set(state.prettyPrintedURLs);
-  prettyPrintedURLs.delete(generatedSourceURL);
-
-  let prettyPrintedDisabledURLs = state.prettyPrintedDisabledURLs;
-  // When auto-pretty printing is enabled, record sources which have been manually disabled
-  if (prefs.autoPrettyPrint) {
-    prettyPrintedDisabledURLs = new Set(prettyPrintedDisabledURLs);
-    prettyPrintedDisabledURLs.add(generatedSourceURL);
-  }
-
-  return { ...state, prettyPrintedURLs, prettyPrintedDisabledURLs };
+  prettyPrintedURLs.delete(source.generatedSource.url);
+  return { ...state, prettyPrintedURLs };
 }
 
 /**
@@ -118,8 +96,7 @@ function removePrettyPrintedSource(state, source) {
  * @return {Object} Modified state object
  */
 function updateTabsWithNewActiveSource(state, sources, forceAdding = false) {
-  let { urls, openedSources, prettyPrintedURLs, prettyPrintedDisabledURLs } =
-    state;
+  let { urls, openedSources, prettyPrintedURLs } = state;
   for (let source of sources) {
     // When we are adding a pretty printed source, we don't add a new tab.
     // We  only ensure the tab for the minimized/generated source is opened.
@@ -133,7 +110,6 @@ function updateTabsWithNewActiveSource(state, sources, forceAdding = false) {
         prettyPrintedURLs = new Set(prettyPrintedURLs);
       }
       prettyPrintedURLs.add(source.url);
-      prettyPrintedDisabledURLs.delete(source.url);
     }
 
     const { url } = source;
@@ -191,16 +167,9 @@ function updateTabsWithNewActiveSource(state, sources, forceAdding = false) {
   if (
     openedSources != state.openedSources ||
     urls != state.urls ||
-    prettyPrintedURLs != state.prettyPrintedURLs ||
-    prettyPrintedDisabledURLs != state.prettyPrintedDisabledURLs
+    prettyPrintedURLs != state.prettyPrintedURLs
   ) {
-    return {
-      ...state,
-      urls,
-      openedSources,
-      prettyPrintedURLs,
-      prettyPrintedDisabledURLs,
-    };
+    return { ...state, urls, openedSources, prettyPrintedURLs };
   }
   return state;
 }

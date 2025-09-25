@@ -10,7 +10,7 @@ import { connect } from "devtools/client/shared/vendor/react-redux";
 import {
   getVisibleSelectedFrame,
   getPauseReason,
-  getSourceTextContentForLocation,
+  getSourceTextContent,
   getCurrentThread,
   getViewport,
   getSelectedTraceLocation,
@@ -169,7 +169,7 @@ const mapStateToProps = state => {
     return {};
   }
 
-  const sourceTextContent = getSourceTextContentForLocation(state, location);
+  const sourceTextContent = getSourceTextContent(state, location);
   if (!isDocumentReady(location, sourceTextContent)) {
     return {};
   }

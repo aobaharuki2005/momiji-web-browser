@@ -255,10 +255,7 @@ class SourceFooter extends PureComponent {
     if (!this.props.isSourceActorWithSourceMap) {
       return L10N.getStr("sourceFooter.sourceMapButton.sourceNotMapped");
     }
-    if (
-      this.props.selectedLocation.source.isOriginal &&
-      !this.props.selectedLocation.source.isPrettyPrinted
-    ) {
+    if (this.props.selectedLocation.source.isOriginal) {
       return L10N.getStr("sourceFooter.sourceMapButton.isOriginalSource");
     }
     return L10N.getStr("sourceFooter.sourceMapButton.isBundleSource");
@@ -436,8 +433,7 @@ const mapStateToProps = state => {
     // `mappedSource` will be null while loading, we need another way to know when it is done computing
     !mappedSource &&
     isSelectedMappedSourceLoading(state) &&
-    !sourceMapError &&
-    !selectedSource?.isPrettyPrinted;
+    !sourceMapError;
 
   return {
     selectedSource,
@@ -457,11 +453,7 @@ const mapStateToProps = state => {
     ),
     endPanelCollapsed: getPaneCollapse(state, "end"),
     canPrettyPrint: selectedLocation
-      ? canPrettyPrintSource(
-          state,
-          selectedSource,
-          selectedLocation.sourceActor
-        )
+      ? canPrettyPrintSource(state, selectedLocation)
       : false,
     prettyPrintMessage: selectedLocation
       ? getPrettyPrintMessage(state, selectedLocation)

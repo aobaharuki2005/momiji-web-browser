@@ -1917,8 +1917,6 @@ const selectors = {
   sourceTreeThreads: '.sources-list .tree-node[aria-level="1"]',
   sourceTreeGroups: '.sources-list .tree-node[aria-level="2"]',
   sourceTreeFiles: ".sources-list .tree-node[data-expandable=false]",
-  sourceTreeFilesElement: i =>
-    `.sources-list .tree-node[data-expandable=false]:nth-child(${i})`,
   threadSourceTree: i => `.threads-list .sources-pane:nth-child(${i})`,
   sourceDirectoryLabel: i => `.sources-list .tree-node:nth-child(${i}) .label`,
   resultItems: ".result-list .result-item",

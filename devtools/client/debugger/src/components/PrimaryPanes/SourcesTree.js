@@ -19,6 +19,7 @@ const MenuButton = require("resource://devtools/client/shared/components/menu/Me
 const MenuItem = require("resource://devtools/client/shared/components/menu/MenuItem.js");
 const MenuList = require("resource://devtools/client/shared/components/menu/MenuList.js");
 import { prefs } from "../../utils/prefs";
+import { createLocation } from "../../utils/location";
 
 // Selectors
 import {
@@ -68,7 +69,7 @@ class SourcesTree extends Component {
       focusItem: PropTypes.func.isRequired,
       focused: PropTypes.object,
       projectRoot: PropTypes.string.isRequired,
-      selectSource: PropTypes.func.isRequired,
+      selectMayBePrettyPrintedLocation: PropTypes.func.isRequired,
       setExpandedState: PropTypes.func.isRequired,
       rootItems: PropTypes.array.isRequired,
       clearProjectDirectoryRoot: PropTypes.func.isRequired,
@@ -106,10 +107,12 @@ class SourcesTree extends Component {
   }
 
   selectSourceItem = item => {
-    // Note that when the source is pretty printed, `item.source` still refers to the minified source.
-    // `mayBeSelectMappedSource` function within selectSource/selectLocation action will handle this edgecase
-    // and ensure selecting the pretty printed source, if relevant.
-    this.props.selectSource(item.source, item.sourceActor);
+    // Use a dedicated selection method to handle edgecases around pretty printed sources
+    // When a source is pretty printed, the `item.source` still refers to the minified source,
+    // whereas we expect to open the pretty printed version (if it exists).
+    this.props.selectMayBePrettyPrintedLocation(
+      createLocation({ source: item.source, sourceActor: item.sourceActor })
+    );
   };
 
   onFocus = item => {
@@ -444,7 +447,7 @@ const mapStateToProps = state => {
 };
 
 export default connect(mapStateToProps, {
-  selectSource: actions.selectSource,
+  selectMayBePrettyPrintedLocation: actions.selectMayBePrettyPrintedLocation,
   setExpandedState: actions.setExpandedState,
   focusItem: actions.focusItem,
   clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot,
