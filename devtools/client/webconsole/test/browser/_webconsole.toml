@@ -193,7 +193,6 @@ support-files = [
 ]
 prefs = [
   "javascript.options.experimental.explicit_resource_management=true", # This pref has to be set before the process starts
-  "javascript.options.experimental.temporal=true", # This pref has to be set before the process starts
 ]
 
 ["browser_webconsole_allow_mixedcontent_securityerrors.js"]
@@ -676,7 +675,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_webconsole_telemetry_reverse_search.js"]
 
 ["browser_webconsole_temporal.js"]
-skip-if = ["!nightly_build"] # Bug 1912511
 
 ["browser_webconsole_time_methods.js"]
 
