@@ -95,8 +95,7 @@ export class BaseContent extends React.PureComponent {
     this.updateWallpaper = this.updateWallpaper.bind(this);
     this.prefersDarkQuery = null;
     this.handleColorModeChange = this.handleColorModeChange.bind(this);
-    this.shouldDisplayTopicSelectionModal =
-      this.shouldDisplayTopicSelectionModal.bind(this);
+    this.onVisible = this.onVisible.bind(this);
     this.toggleDownloadHighlight = this.toggleDownloadHighlight.bind(this);
     this.handleDismissDownloadHighlight =
       this.handleDismissDownloadHighlight.bind(this);
@@ -119,6 +118,11 @@ export class BaseContent extends React.PureComponent {
     }
   }
 
+  onVisible() {
+    this.setFirstVisibleTimestamp();
+    this.shouldDisplayTopicSelectionModal();
+  }
+
   componentDidMount() {
     this.applyBodyClasses();
     global.addEventListener("scroll", this.onWindowScroll);
@@ -126,13 +130,11 @@ export class BaseContent extends React.PureComponent {
     const prefs = this.props.Prefs.values;
     const wallpapersEnabled = prefs["newtabWallpapers.enabled"];
     if (this.props.document.visibilityState === VISIBLE) {
-      this.setFirstVisibleTimestamp();
-      this.shouldDisplayTopicSelectionModal();
+      this.onVisible();
     } else {
       this._onVisibilityChange = () => {
         if (this.props.document.visibilityState === VISIBLE) {
-          this.setFirstVisibleTimestamp();
-          this.shouldDisplayTopicSelectionModal();
+          this.onVisible();
           this.props.document.removeEventListener(
             VISIBILITY_CHANGE_EVENT,
             this._onVisibilityChange
