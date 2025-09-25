@@ -7,7 +7,6 @@
 DIRS += [
     "data-leak-blocker",
     "formautofill",
-    "ipp-activator",
     "webcompat",
     "pictureinpicture",
     "search-detection",
