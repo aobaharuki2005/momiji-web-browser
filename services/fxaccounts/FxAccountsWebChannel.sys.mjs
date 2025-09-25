@@ -381,7 +381,7 @@ FxAccountsWebChannel.prototype = {
           sendingContext
         );
         break;
-      case COMMAND_FXA_STATUS:
+      case COMMAND_FXA_STATUS: {
         log.debug("fxa_status received");
         const service = data && data.service;
         const isPairing = data && data.isPairing;
@@ -397,11 +397,12 @@ FxAccountsWebChannel.prototype = {
             this._channel.send(response, sendingContext);
           });
         break;
+      }
       case COMMAND_PAIR_HEARTBEAT:
       case COMMAND_PAIR_SUPP_METADATA:
       case COMMAND_PAIR_AUTHORIZE:
       case COMMAND_PAIR_DECLINE:
-      case COMMAND_PAIR_COMPLETE:
+      case COMMAND_PAIR_COMPLETE: {
         log.debug(`Pairing command ${command} received`);
         const { channel_id: channelId } = data;
         delete data.channel_id;
@@ -421,6 +422,7 @@ FxAccountsWebChannel.prototype = {
           );
         });
         break;
+      }
       default: {
         let errorMessage = "Unrecognized FxAccountsWebChannel command";
         log.warn(errorMessage, command);
