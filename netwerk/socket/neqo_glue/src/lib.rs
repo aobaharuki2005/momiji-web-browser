@@ -1051,6 +1051,14 @@ pub extern "C" fn neqo_http3conn_process_output_and_send(
                             break;
                         }
                     }
+                    Err(e) if e.raw_os_error() == Some(libc::EIO) && dg.num_datagrams() > 1 => {
+                        // See following resources for details:
+                        // - <https://github.com/quinn-rs/quinn/blob/93b6d01605147b9763ee1b1b381a6feb9fcd454e/quinn-udp/src/unix.rs#L345-L349>
+                        // - <https://bugzilla.mozilla.org/show_bug.cgi?id=1989895>
+                        //
+                        // Ideally one would retry at the quinn-udp layer, see <https://github.com/quinn-rs/quinn/issues/2399>.
+                        qdebug!("Failed to send datagram batch size {} with error {e}. Missing GSO support? Socket will set max_gso_segments to 1. QUIC layer will retry.", dg.num_datagrams());
+                    }
                     Err(e) => {
                         qwarn!("failed to send datagram: {}", e);
                         return ProcessOutputAndSendResult {
