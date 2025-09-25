@@ -76,10 +76,14 @@ private fun PermissionOptionsListComposablePreview() {
 }
 
 /**
- * Displays a list of Site Permission Options
+ * Displays a list of Site Permission Options.
  *
- * @param optionsListItems The list of Site Permission Options items to be displayed.
- * @param state the current Option
+ * @param optionsListItems The list of [SitePermissionOptionListItem] to be displayed.
+ * @param state The current selected option's preference key ID.
+ * @param permissionLabel The label for the site permission (e.g., "Camera", "Location").
+ * @param goToPhoneSettings A callback function to navigate to the phone's settings screen.
+ * @param componentPermissionBlockedByAndroidVisibility A boolean indicating whether the
+ * "permission blocked by Android" component should be visible.
  */
 @Composable
 fun OptionsPermissionList(

@@ -65,7 +65,7 @@ class LanguageStorage(private val context: Context) {
     /**
      * Saves the current selected language tag
      *
-     * @property languageTag the tag of the language
+     * @param languageTag the tag of the language
      */
     fun saveCurrentLanguageInSharePref(languageTag: String) {
         sharedPref.edit {

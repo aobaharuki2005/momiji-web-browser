@@ -2,18 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>OutdatedDocumentation:AppAdapter.kt$AppAdapter : Adapter</ID>
-    <ID>OutdatedDocumentation:AppReviewUtils.kt$AppReviewUtils$fun addAppOpenings(context: Context)</ID>
-    <ID>OutdatedDocumentation:AppReviewUtils.kt$AppReviewUtils$fun showAppReview(activity: Activity)</ID>
-    <ID>OutdatedDocumentation:AppState.kt$AppState : State</ID>
-    <ID>OutdatedDocumentation:AppState.kt$Screen</ID>
-    <ID>OutdatedDocumentation:AppState.kt$Screen$Locked : Screen</ID>
-    <ID>OutdatedDocumentation:DefaultTopSitesStorage.kt$DefaultTopSitesStorage : TopSitesStorageObservable</ID>
-    <ID>OutdatedDocumentation:Language.kt$Language</ID>
-    <ID>OutdatedDocumentation:LanguageListItem.kt$LanguageListItem</ID>
-    <ID>OutdatedDocumentation:LanguageStorage.kt$LanguageStorage$fun saveCurrentLanguageInSharePref(languageTag: String)</ID>
-    <ID>OutdatedDocumentation:PrivateNotificationFeature.kt$PrivateNotificationFeature : LifecycleAwareFeature</ID>
-    <ID>OutdatedDocumentation:SitePermissionOptionsFragmentCompose.kt$@Composable fun OptionsPermissionList( optionsListItems: List&lt;SitePermissionOptionListItem&gt;, state: MutableState&lt;Int&gt;, permissionLabel: String?, goToPhoneSettings: () -&gt; Unit, componentPermissionBlockedByAndroidVisibility: Boolean, )</ID>
+    <ID>UndocumentedPublicClass:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment$Companion</ID>
     <ID>UndocumentedPublicClass:AdvancedSettingsFragment.kt$AdvancedSettingsFragment : BaseSettingsFragmentOnSharedPreferenceChangeListener</ID>
     <ID>UndocumentedPublicClass:AppAction.kt$AppAction$NavigateUp : AppAction</ID>
     <ID>UndocumentedPublicClass:AppAction.kt$AppAction$OpenSettings : AppAction</ID>
