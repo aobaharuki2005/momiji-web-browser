@@ -137,53 +137,10 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   // Save stack pointer as baseline frame.
   masm.movePtr(StackPointer, FramePointer);
 
-  // Load the number of actual arguments into s3.
+  generateEnterJitShared(masm, reg_argc, reg_argv, reg_token, s0, s1, s2);
+
+  // Push the descriptor.
   masm.unboxInt32(Address(reg_vp, 0), s3);
-
-  /***************************************************************
-  Loop over argv vector, push arguments onto stack in reverse order
-  ***************************************************************/
-
-  // if we are constructing, that also needs to include newTarget
-  {
-    Label noNewTarget;
-    masm.branchTest32(Assembler::Zero, reg_token,
-                      Imm32(CalleeToken_FunctionConstructing), &noNewTarget);
-
-    masm.add32(Imm32(1), reg_argc);
-
-    masm.bind(&noNewTarget);
-  }
-
-  // Make stack algined
-  masm.ma_and(s0, reg_argc, Imm32(1));
-  masm.ma_sub_d(s1, zero, Imm32(sizeof(Value)));
-  masm.as_maskeqz(s1, s1, s0);
-  masm.as_add_d(StackPointer, StackPointer, s1);
-
-  masm.as_slli_d(s0, reg_argc, 3);  // Value* argv
-  masm.addPtr(reg_argv, s0);        // s0 = &argv[argc]
-
-  // Loop over arguments, copying them from an unknown buffer onto the Ion
-  // stack so they can be accessed from JIT'ed code.
-  Label header, footer;
-  // If there aren't any arguments, don't do anything
-  masm.ma_b(s0, reg_argv, &footer, Assembler::BelowOrEqual, ShortJump);
-  {
-    masm.bind(&header);
-
-    masm.subPtr(Imm32(sizeof(Value)), s0);
-    masm.subPtr(Imm32(sizeof(Value)), StackPointer);
-
-    ValueOperand value = ValueOperand(s6);
-    masm.loadValue(Address(s0, 0), value);
-    masm.storeValue(value, Address(StackPointer, 0));
-
-    masm.ma_b(s0, reg_argv, &header, Assembler::Above, ShortJump);
-  }
-  masm.bind(&footer);
-
-  masm.push(reg_token);
   masm.pushFrameDescriptorForJitCall(FrameType::CppToJSJit, s3, s3);
 
   CodeLabel returnLabel;

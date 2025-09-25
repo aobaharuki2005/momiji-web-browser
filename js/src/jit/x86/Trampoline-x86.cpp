@@ -70,87 +70,25 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   masm.push(esi);
   masm.push(edi);
 
-  // Load the number of values to be copied (argc) into eax
-  masm.loadPtr(Address(ebp, ARG_ARGC), eax);
+  Register reg_argc = eax;
+  masm.loadPtr(Address(ebp, ARG_ARGC), reg_argc);
 
-  // If we are constructing, that also needs to include newTarget
-  {
-    Label noNewTarget;
-    masm.loadPtr(Address(ebp, ARG_CALLEETOKEN), edx);
-    masm.branchTest32(Assembler::Zero, edx,
-                      Imm32(CalleeToken_FunctionConstructing), &noNewTarget);
+  Register reg_argv = ebx;
+  masm.loadPtr(Address(ebp, ARG_ARGV), reg_argv);
 
-    masm.addl(Imm32(1), eax);
+  Register reg_token = edx;
+  masm.loadPtr(Address(ebp, ARG_CALLEETOKEN), reg_token);
 
-    masm.bind(&noNewTarget);
-  }
+  generateEnterJitShared(masm, reg_argc, reg_argv, reg_token, ecx, esi, edi);
 
-  // eax <- 8*numValues, eax is now the offset betwen argv and the last value.
-  masm.shll(Imm32(3), eax);
-
-  // Guarantee stack alignment of Jit frames.
-  //
-  // This code compensates for the offset created by the copy of the vector of
-  // arguments, such that the jit frame will be aligned once the return
-  // address is pushed on the stack.
-  //
-  // In the computation of the offset, we omit the size of the JitFrameLayout
-  // which is pushed on the stack, as the JitFrameLayout size is a multiple of
-  // the JitStackAlignment.
-  masm.movl(esp, ecx);
-  masm.subl(eax, ecx);
-  static_assert(
-      sizeof(JitFrameLayout) % JitStackAlignment == 0,
-      "No need to consider the JitFrameLayout for aligning the stack");
-
-  // ecx = ecx & 15, holds alignment.
-  masm.andl(Imm32(JitStackAlignment - 1), ecx);
-  masm.subl(ecx, esp);
-
-  /***************************************************************
-  Loop over argv vector, push arguments onto stack in reverse order
-  ***************************************************************/
-
-  // ebx = argv   --argv pointer is in ebp + 16
-  masm.loadPtr(Address(ebp, ARG_ARGV), ebx);
-
-  // eax = argv[8(argc)]  --eax now points one value past the last argument
-  masm.addl(ebx, eax);
-
-  // while (eax > ebx)  --while still looping through arguments
-  {
-    Label header, footer;
-    masm.bind(&header);
-
-    masm.cmp32(eax, ebx);
-    masm.j(Assembler::BelowOrEqual, &footer);
-
-    // eax -= 8  --move to previous argument
-    masm.subl(Imm32(8), eax);
-
-    // Push what eax points to on stack, a Value is 2 words
-    masm.push(Operand(eax, 4));
-    masm.push(Operand(eax, 0));
-
-    masm.jmp(&header);
-    masm.bind(&footer);
-  }
-
-  // Load the number of actual arguments.  |result| is used to store the
-  // actual number of arguments without adding an extra argument to the enter
-  // JIT.
+  // Push the descriptor.
   masm.mov(Operand(ebp, ARG_RESULT), eax);
   masm.unboxInt32(Address(eax, 0x0), eax);
-
-  // Push the callee token.
-  masm.push(Operand(ebp, ARG_CALLEETOKEN));
+  masm.pushFrameDescriptorForJitCall(FrameType::CppToJSJit, eax, eax);
 
   // Load the InterpreterFrame address into the OsrFrameReg.
   // This address is also used for setting the constructing bit on all paths.
   masm.loadPtr(Address(ebp, ARG_STACKFRAME), OsrFrameReg);
-
-  // Push the descriptor.
-  masm.pushFrameDescriptorForJitCall(FrameType::CppToJSJit, eax, eax);
 
   CodeLabel returnLabel;
   Label oomReturnLabel;

@@ -92,7 +92,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   static_assert(OsrFrameReg == IntArgReg3);
 
 #if defined(_WIN64)
-  const Address token = Address(rbp, 16 + ShadowStackSpace);
+  const Operand token = Operand(rbp, 16 + ShadowStackSpace);
   const Operand scopeChain = Operand(rbp, 24 + ShadowStackSpace);
   const Operand numStackValuesAddr = Operand(rbp, 32 + ShadowStackSpace);
   const Operand result = Operand(rbp, 40 + ShadowStackSpace);
@@ -136,78 +136,18 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   masm.vmovdqa(xmm15, Operand(rsp, offsetof(EnterJITStackEntry::XMM, xmm15)));
 #endif
 
-  // Save arguments passed in registers needed after function call.
+  // Push address of return value.
   masm.push(result);
 
   // End of pushes reflected in EnterJITStackEntry, i.e. EnterJITStackEntry
   // starts at this rsp.
 
-  // Remember number of bytes occupied by argument vector
-  masm.mov(reg_argc, r13);
-
-  // if we are constructing, that also needs to include newTarget
-  {
-    Label noNewTarget;
-    masm.branchTest32(Assembler::Zero, token,
-                      Imm32(CalleeToken_FunctionConstructing), &noNewTarget);
-
-    masm.addq(Imm32(1), r13);
-
-    masm.bind(&noNewTarget);
-  }
-
-  masm.shll(Imm32(3), r13);  // r13 = argc * sizeof(Value)
-  static_assert(sizeof(Value) == 1 << 3, "Constant is baked in assembly code");
-
-  // Guarantee stack alignment of Jit frames.
-  //
-  // This code compensates for the offset created by the copy of the vector of
-  // arguments, such that the jit frame will be aligned once the return
-  // address is pushed on the stack.
-  //
-  // In the computation of the offset, we omit the size of the JitFrameLayout
-  // which is pushed on the stack, as the JitFrameLayout size is a multiple of
-  // the JitStackAlignment.
-  masm.mov(rsp, r12);
-  masm.subq(r13, r12);
-  static_assert(
-      sizeof(JitFrameLayout) % JitStackAlignment == 0,
-      "No need to consider the JitFrameLayout for aligning the stack");
-  masm.andl(Imm32(JitStackAlignment - 1), r12);
-  masm.subq(r12, rsp);
-
-  /***************************************************************
-  Loop over argv vector, push arguments onto stack in reverse order
-  ***************************************************************/
-
-  // r13 still stores the number of bytes in the argument vector.
-  masm.addq(reg_argv, r13);  // r13 points above last argument or newTarget
-
-  // while r13 > rdx, push arguments.
-  {
-    Label header, footer;
-    masm.bind(&header);
-
-    masm.cmpPtr(r13, reg_argv);
-    masm.j(AssemblerX86Shared::BelowOrEqual, &footer);
-
-    masm.subq(Imm32(8), r13);
-    masm.push(Operand(r13, 0));
-    masm.jmp(&header);
-
-    masm.bind(&footer);
-  }
-
-  // Load the number of actual arguments.  |result| is used to store the
-  // actual number of arguments without adding an extra argument to the enter
-  // JIT.
-  masm.movq(result, reg_argc);
-  masm.unboxInt32(Operand(reg_argc, 0), reg_argc);
-
-  // Push the callee token.
-  masm.push(token);
+  masm.movq(token, r12);
+  generateEnterJitShared(masm, reg_argc, reg_argv, r12, r13, r14, r15);
 
   // Push the descriptor.
+  masm.movq(result, reg_argc);
+  masm.unboxInt32(Operand(reg_argc, 0), reg_argc);
   masm.pushFrameDescriptorForJitCall(FrameType::CppToJSJit, reg_argc, reg_argc);
 
   CodeLabel returnLabel;
