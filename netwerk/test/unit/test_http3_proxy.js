@@ -7,7 +7,15 @@
 /* import-globals-from head_cache.js */
 /* import-globals-from head_cookies.js */
 /* import-globals-from head_channels.js */
-/* import-globals-from head_servers.js */
+
+const {
+  Http3ProxyFilter,
+  with_node_servers,
+  NodeHTTPServer,
+  NodeHTTPSServer,
+  NodeHTTP2Server,
+  NodeHTTP2ProxyServer,
+} = ChromeUtils.importESModule("resource://testing-common/NodeServer.sys.mjs");
 
 function makeChan(uri) {
   let chan = NetUtil.newChannel({
@@ -27,9 +35,11 @@ function channelOpenPromise(chan, flags) {
   });
 }
 
+let pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
 let proxyHost;
 let proxyPort;
 let proxyAuth;
+let proxyFilter;
 
 /**
  * Sets up proxy filter to MASQUE H3 proxy
@@ -39,29 +49,32 @@ add_setup(async function setup() {
   Services.prefs.setBoolPref("network.dns.disableIPv6", true);
   Services.prefs.setIntPref("network.webtransport.datagram_size", 1500);
   Services.prefs.setCharPref("network.dns.localDomains", "foo.example.com");
+  Services.prefs.setIntPref("network.http.http3.max_gso_segments", 1); // TODO: fix underflow
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
+  addCertFromFile(certdb, "proxy-ca.pem", "CTu,u,u");
 
   proxyHost = "foo.example.com";
-  proxyPort = Services.env.get("MOZHTTP3_PORT_MASQUE");
+  proxyPort = await create_masque_proxy_server();
   proxyAuth = "";
+
+  Assert.notEqual(proxyPort, null);
+  Assert.notEqual(proxyPort, "");
 
   // A dummy request to make sure AltSvcCache::mStorage is ready.
   let chan = makeChan(`https://localhost`);
   await channelOpenPromise(chan, CL_EXPECT_FAILURE);
 
-  const pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
-  let filter = new NodeProxyFilter(
-    "connect-udp",
+  proxyFilter = new Http3ProxyFilter(
     proxyHost,
     proxyPort,
     0,
     "/.well-known/masque/udp/{target_host}/{target_port}/",
     proxyAuth
   );
-  pps.registerFilter(filter, 10);
+  pps.registerFilter(proxyFilter, 10);
 
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
@@ -148,7 +161,7 @@ add_task(async function test_http_connect_auth_failure() {
       let chan = makeChan(
         `${server.protocol()}://alt1.example.com:${server.port()}/auth-required`
       );
-      let [req, buf] = await channelOpenPromise(
+      let [req] = await channelOpenPromise(
         chan,
         CL_IGNORE_CL | CL_ALLOW_UNKNOWN_CL
       );
@@ -166,11 +179,7 @@ add_task(async function test_http_connect_auth_failure() {
  */
 add_task(async function test_http_connect_large_data() {
   await with_node_servers(
-    [
-      // NodeHTTPServer, // TODO: this one hangs.
-      NodeHTTPSServer,
-      NodeHTTP2Server,
-    ],
+    [NodeHTTPServer, NodeHTTPSServer, NodeHTTP2Server],
     async server => {
       info(
         `Testing large data transfer with ${server.constructor.name} server`
@@ -205,7 +214,7 @@ add_task(async function test_http_connect_large_data() {
 add_task(async function test_http_connect_connection_refused() {
   // Test connecting to a port that's definitely not in use
   let chan = makeChan(`http://alt1.example.com:667/refused`);
-  let [req, buf] = await channelOpenPromise(chan, CL_EXPECT_FAILURE);
+  let [req] = await channelOpenPromise(chan, CL_EXPECT_FAILURE);
 
   // Should fail to establish tunnel connection
   Assert.notEqual(req.status, Cr.NS_OK);
@@ -218,7 +227,7 @@ add_task(async function test_http_connect_connection_refused() {
  */
 add_task(async function test_http_connect_invalid_host() {
   let chan = makeChan(`http://nonexistent.invalid.example/test`);
-  let [req, buf] = await channelOpenPromise(chan, CL_EXPECT_FAILURE);
+  let [req] = await channelOpenPromise(chan, CL_EXPECT_FAILURE);
 
   // Should fail DNS resolution for invalid hostname
   Assert.notEqual(req.status, Cr.NS_OK);
@@ -292,7 +301,7 @@ add_task(async function test_http_connect_stream_closure() {
     let chan = makeChan(
       `${server.protocol()}://alt1.example.com:${server.port()}/close`
     );
-    let [req, buf] = await channelOpenPromise(chan, CL_EXPECT_FAILURE);
+    let [req] = await channelOpenPromise(chan, CL_EXPECT_FAILURE);
 
     // Should handle connection closure gracefully
     Assert.notEqual(req.status, Cr.NS_OK);
@@ -308,7 +317,7 @@ add_task(async function test_http_connect_stream_closure() {
  */
 add_task(async function test_connect_udp() {
   let h3Port = Services.env.get("MOZHTTP3_PORT");
-  console.log(`h3Port = ${h3Port}`);
+  info(`h3Port = ${h3Port}`);
 
   let server = new NodeHTTPSServer();
   await server.start(h3Port);
@@ -323,12 +332,147 @@ add_task(async function test_connect_udp() {
 
   {
     let chan = makeChan(`https://alt1.example.com:${h3Port}/no_body`);
-    let [req, buf] = await channelOpenPromise(
+    let [req] = await channelOpenPromise(
       chan,
       CL_IGNORE_CL | CL_ALLOW_UNKNOWN_CL
     );
     Assert.equal(req.protocolVersion, "h3");
     Assert.equal(req.status, Cr.NS_OK);
     Assert.equal(req.responseStatus, 200);
+  }
+});
+
+add_task(async function test_http_connect_fallback() {
+  pps.unregisterFilter(proxyFilter);
+
+  Services.prefs.setCharPref(
+    "network.http.http3.alt-svc-mapping-for-testing",
+    ""
+  );
+
+  let proxyPort = Services.env.get("MOZHTTP3_PORT_NO_RESPONSE");
+  let proxy = new NodeHTTP2ProxyServer();
+  await proxy.startWithoutProxyFilter(proxyPort);
+  Assert.equal(proxyPort, proxy.port());
+  dump(`proxy port=${proxy.port()}\n`);
+
+  let server = new NodeHTTP2Server();
+  await server.start();
+
+  // Register multiple endpoints
+  await server.registerPathHandler("/concurrent1", (req, resp) => {
+    resp.writeHead(200);
+    resp.end("response1");
+  });
+  await server.registerPathHandler("/concurrent2", (req, resp) => {
+    resp.writeHead(200);
+    resp.end("response2");
+  });
+  await server.registerPathHandler("/concurrent3", (req, resp) => {
+    resp.writeHead(200);
+    resp.end("response3");
+  });
+
+  let filter = new Http3ProxyFilter(
+    proxyHost,
+    proxy.port(),
+    0,
+    "/.well-known/masque/udp/{target_host}/{target_port}/",
+    proxyAuth
+  );
+  pps.registerFilter(filter, 10);
+
+  registerCleanupFunction(async () => {
+    await proxy.stop();
+    await server.stop();
+  });
+
+  // Create multiple concurrent requests through the tunnel
+  const promises = [];
+  for (let i = 1; i <= 3; i++) {
+    let chan = makeChan(
+      `${server.protocol()}://alt1.example.com:${server.port()}/concurrent${i}`
+    );
+    promises.push(channelOpenPromise(chan, CL_IGNORE_CL | CL_ALLOW_UNKNOWN_CL));
+  }
+
+  const results = await Promise.all(promises);
+
+  // Verify all requests succeeded with correct responses
+  for (let i = 0; i < 3; i++) {
+    const [req, buf] = results[i];
+    Assert.equal(req.status, Cr.NS_OK);
+    Assert.equal(buf, `response${i + 1}`);
+  }
+
+  let h3Port = server.port();
+  console.log(`h3Port = ${h3Port}`);
+
+  Services.prefs.setCharPref(
+    "network.http.http3.alt-svc-mapping-for-testing",
+    `alt1.example.com;h3=:${h3Port}`
+  );
+
+  let chan = makeChan(`https://alt1.example.com:${h3Port}/concurrent1`);
+  let [req] = await channelOpenPromise(
+    chan,
+    CL_IGNORE_CL | CL_ALLOW_UNKNOWN_CL
+  );
+  Assert.equal(req.status, Cr.NS_OK);
+  Assert.equal(req.responseStatus, 200);
+
+  await proxy.stop();
+  pps.unregisterFilter(filter);
+  await server.stop();
+});
+
+add_task(async function test_inner_connection_fallback() {
+  let h3Port = Services.env.get("MOZHTTP3_PORT_NO_RESPONSE");
+  console.log(`h3Port = ${h3Port}`);
+
+  // Register the connect-udp proxy.
+  pps.registerFilter(proxyFilter, 10);
+
+  let server = new NodeHTTPSServer();
+  await server.start(h3Port);
+
+  // Register multiple endpoints
+  await server.registerPathHandler("/concurrent1", (req, resp) => {
+    resp.writeHead(200);
+    resp.end("fallback1");
+  });
+  await server.registerPathHandler("/concurrent2", (req, resp) => {
+    resp.writeHead(200);
+    resp.end("fallback2");
+  });
+  await server.registerPathHandler("/concurrent3", (req, resp) => {
+    resp.writeHead(200);
+    resp.end("fallback3");
+  });
+  registerCleanupFunction(async () => {
+    await server.stop();
+  });
+
+  Services.prefs.setCharPref(
+    "network.http.http3.alt-svc-mapping-for-testing",
+    `alt1.example.com;h3=:${h3Port}`
+  );
+
+  // Create multiple concurrent requests through the tunnel
+  const promises = [];
+  for (let i = 1; i <= 3; i++) {
+    let chan = makeChan(
+      `${server.protocol()}://alt1.example.com:${h3Port}/concurrent${i}`
+    );
+    promises.push(channelOpenPromise(chan, CL_IGNORE_CL | CL_ALLOW_UNKNOWN_CL));
+  }
+
+  const results = await Promise.all(promises);
+
+  // Verify all requests succeeded with correct responses
+  for (let i = 0; i < 3; i++) {
+    const [req, buf] = results[i];
+    Assert.equal(req.status, Cr.NS_OK);
+    Assert.equal(buf, `fallback${i + 1}`);
   }
 });

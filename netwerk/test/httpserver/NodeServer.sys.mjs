@@ -1095,6 +1095,9 @@ export class HTTP3Server {
   port() {
     return this._port;
   }
+  masque_proxy_port() {
+    return this._masque_proxy_port;
+  }
   domain() {
     return `localhost`;
   }
@@ -1125,6 +1128,7 @@ export class HTTP3Server {
       // Extract the ports as an array of numbers
       let ports = match.slice(1, 7).map(Number);
       this._port = ports[0];
+      this._masque_proxy_port = ports[5];
       return ports[0];
     }
 

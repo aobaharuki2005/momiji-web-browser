@@ -1230,10 +1230,9 @@ impl HttpServer for Http3ConnectProxyServer {
 
                     let socket = {
                         let s =
-                            socket2::Socket::new(socket2::Domain::IPV6, socket2::Type::DGRAM, None)
+                            socket2::Socket::new(socket2::Domain::IPV4, socket2::Type::DGRAM, None)
                                 .unwrap();
-                        s.set_only_v6(false).unwrap(); // MacOS uses IPv6 only by default. Override it.
-                        s.bind(&"[::]:0".parse::<SocketAddr>().unwrap().into())
+                        s.bind(&"0.0.0.0:0".parse::<SocketAddr>().unwrap().into())
                             .unwrap();
                         let s: std::net::UdpSocket = s.into();
                         s.connect((actual_host, target_port)).unwrap();
