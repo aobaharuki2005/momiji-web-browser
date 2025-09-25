@@ -126,7 +126,6 @@ const NEWTAB_PING_PREFS = {
 const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
 const TOPIC_SELECTION_SELECTED_TOPICS_PREF =
   "browser.newtabpage.activity-stream.discoverystream.topicSelection.selectedTopics";
-
 export class TelemetryFeed {
   constructor() {
     this.sessions = new Map();
@@ -898,9 +897,13 @@ export class TelemetryFeed {
           topic,
         } = action.data.value ?? {};
 
+        const is145AndUp =
+          Services.vc.compare(AppConstants.MOZ_APP_VERSION, "145.0a1") >= 0;
+
         const gleanData = {
           tile_id,
-          position: action_position,
+          // Bug 1990626 - Remove version check after 145 has shipped
+          ...(is145AndUp ? { position: action_position } : {}),
           // We conditionally add in a few props.
           ...(corpus_item_id ? { corpus_item_id } : {}),
           ...(scheduled_corpus_item_id ? { scheduled_corpus_item_id } : {}),
