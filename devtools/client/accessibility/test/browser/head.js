@@ -84,10 +84,17 @@ const EXPANDABLE_PROPS = ["actions", "states", "attributes"];
  * Add a new test tab in the browser and load the given url.
  * @param {String} url
  *        The url to be loaded in the new tab
+ * @param {Object} options
+ * @param {Boolean} options.waitUntilDocumentAccessibleInState
+ *        Whether we should wait for the state to have the document accessible.
+ *        Defaults to true.
  * @return a promise that resolves to the tab object when
  *        the url is loaded
  */
-async function addTestTab(url) {
+async function addTestTab(
+  url,
+  { waitUntilDocumentAccessibleInState = true } = {}
+) {
   info("Adding a new test tab with URL: '" + url + "'");
 
   const tab = await addTab(url);
@@ -98,13 +105,14 @@ async function addTestTab(url) {
 
   win.focus();
 
-  await waitUntilState(
-    store,
-    state =>
-      state.accessibles.size === 1 &&
-      state.details.accessible &&
-      state.details.accessible.role === "document"
-  );
+  if (waitUntilDocumentAccessibleInState) {
+    await waitUntilState(
+      store,
+      state =>
+        state.accessibles.size === 1 &&
+        state.details.accessible?.role === "document"
+    );
+  }
 
   return {
     tab,
