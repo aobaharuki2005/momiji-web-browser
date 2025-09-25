@@ -1189,6 +1189,21 @@ void ScriptLoader::TryUseCache(ScriptLoadRequest* aRequest,
   return;
 }
 
+void ScriptLoader::StoreCacheInfo(LoadedScript* aLoadedScript,
+                                  ScriptLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->mCacheInfo);
+  MOZ_ASSERT(!aRequest->SRIAndBytecode().empty());
+  MOZ_ASSERT(aRequest->SRIAndBytecode().length() == aRequest->GetSRILength());
+  MOZ_ASSERT(!aLoadedScript->mCacheInfo);
+  MOZ_ASSERT(aLoadedScript->mSRI.empty());
+
+  if (!aLoadedScript->mSRI.appendAll(aRequest->SRIAndBytecode())) {
+    return;
+  }
+
+  aLoadedScript->mCacheInfo = aRequest->mCacheInfo;
+}
+
 void ScriptLoader::EmulateNetworkEvents(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsStencil());
   MOZ_ASSERT(aRequest->mNetworkMetadata);
@@ -2725,15 +2740,29 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
   // The following conditions apply only to the disk cache.
 
   // We need the nsICacheInfoChannel to exist to be able to open the alternate
-  // data output stream. This pointer would only be non-null if the bytecode was
-  // activated at the time the channel got created in StartLoad.
-  if (!aRequest->HasDiskCacheReference()) {
-    LOG(
-        ("ScriptLoadRequest (%p): Bytecode-cache: Skip disk: "
-         "!HasDiskCacheReference",
-         aRequest));
-    aRequest->MarkSkippedDiskCaching();
-    return;
+  // data output stream.
+  if (aRequest->IsStencil()) {
+    // For in-memory cache, the pointer is cached in the LoadedScript,
+    // if the cache had never been saved.
+    if (!aRequest->getLoadedScript()->mCacheInfo) {
+      LOG(
+          ("ScriptLoadRequest (%p): Bytecode-cache: Skip disk: "
+           "!LoadedScript::mCacheInfo",
+           aRequest));
+      aRequest->MarkSkippedDiskCaching();
+      return;
+    }
+  } else {
+    // This pointer would only be non-null if the bytecode was
+    // activated at the time the channel got created in StartLoad.
+    if (!aRequest->HasDiskCacheReference()) {
+      LOG(
+          ("ScriptLoadRequest (%p): Bytecode-cache: Skip disk: "
+           "!HasDiskCacheReference",
+           aRequest));
+      aRequest->MarkSkippedDiskCaching();
+      return;
+    }
   }
 
   // Look at the preference to know which strategy (parameters) should be used
@@ -3267,6 +3296,9 @@ void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest,
 
   if (cacheBehavior == CacheBehavior::Insert) {
     auto loadData = MakeRefPtr<ScriptLoadData>(this, aRequest);
+    if (aRequest->HasDiskCacheReference()) {
+      StoreCacheInfo(aRequest->getLoadedScript(), aRequest);
+    }
     mCache->Insert(*loadData);
     LOG(("ScriptLoader (%p): Inserting in-memory cache for %s.", this,
          aRequest->mURI->GetSpecOrDefault().get()));
@@ -3615,22 +3647,36 @@ void ScriptLoader::UpdateCache() {
         // The bytecode encoding is performed only when there was no
         // bytecode stored in the necko cache.
         //
-        // The nsICacheInfoChannel is stored when this request receives
-        // a source text (See ScriptLoadHandler::OnStreamComplete), and also
-        // the SRI is calculated only in that case.
-        MOZ_ASSERT_IF(request->HasDiskCacheReference(),
-                      !request->SRIAndBytecode().empty());
+        // TODO: Move this to SharedScriptCache.
 
         if (request->IsMarkedForDiskCache()) {
-          MOZ_ASSERT(request->HasDiskCacheReference());
-          MOZ_ASSERT(request->SRIAndBytecode().length() ==
-                     request->GetSRILength());
+          if (request->HasDiskCacheReference()) {
+            // The nsICacheInfoChannel is stored when the this request
+            // receives a source text (See ScriptLoadHandler::OnStreamComplete),
+            // and also the SRI is calculated only in that case.
+            MOZ_ASSERT(request->SRIAndBytecode().length() ==
+                       request->GetSRILength());
 
-          EncodeBytecodeAndSave(aes.cx(), request, request->mCacheInfo,
-                                BytecodeMimeTypeFor(request),
-                                request->SRIAndBytecode(), stencil);
+            EncodeBytecodeAndSave(aes.cx(), request, request->mCacheInfo,
+                                  BytecodeMimeTypeFor(request),
+                                  request->SRIAndBytecode(), stencil);
 
-          request->DropBytecode();
+            request->DropBytecode();
+          } else if (request->getLoadedScript()->mCacheInfo) {
+            // The nsICacheInfoChannel is stored when the cached request
+            // received a source text (See ScriptLoadHandler::OnStreamComplete),
+            // and also the SRI is calculated and stored into the cache only in
+            // that case.
+            EncodeBytecodeAndSave(aes.cx(), request,
+                                  request->getLoadedScript()->mCacheInfo,
+                                  BytecodeMimeTypeFor(request),
+                                  request->getLoadedScript()->mSRI, stencil);
+
+            // The cached nsICacheInfoChannel can be used only once.
+            // We don't overwrite the bytecode cache.
+            request->getLoadedScript()->mCacheInfo = nullptr;
+            request->getLoadedScript()->mSRI.clear();
+          }
         }
       }
       request->DropDiskCacheReference();

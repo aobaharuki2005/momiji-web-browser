@@ -22,6 +22,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsICacheInfoChannel.h"  // nsICacheInfoChannel
 #include "nsIMemoryReporter.h"
 
 #include "jsapi.h"
@@ -283,6 +284,12 @@ class LoadedScript : public nsIMemoryReporter {
   TranscodeBuffer mScriptBytecode;
 
   RefPtr<Stencil> mStencil;
+
+  // The cache info channel used when saving the bytecode to the necko cache.
+  nsCOMPtr<nsICacheInfoChannel> mCacheInfo;
+
+  // The SRI data and the padding, used when saving the bytecode.
+  JS::TranscodeBuffer mSRI;
 };
 
 // Provide accessors for any classes `Derived` which is providing the
