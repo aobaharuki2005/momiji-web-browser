@@ -54,6 +54,9 @@ using namespace mozilla::gfx;
 extern "C" {
 CG_EXTERN void CGContextSetCTM(CGContextRef, CGAffineTransform);
 CG_EXTERN void CGContextSetBaseCTM(CGContextRef, CGAffineTransform);
+typedef CFTypeRef CUIRendererRef;
+void CUIDraw(CUIRendererRef r, CGRect rect, CGContextRef ctx,
+             CFDictionaryRef options, CFDictionaryRef* result);
 }
 
 // Workaround for NSCell control tint drawing

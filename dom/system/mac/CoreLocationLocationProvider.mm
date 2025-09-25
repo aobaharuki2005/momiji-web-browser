@@ -28,7 +28,10 @@
 
 using namespace mozilla;
 
-#define kDefaultAccuracy kCLLocationAccuracyNearestTenMeters
+MOZ_RUNINIT static const CLLocationAccuracy kHIGH_ACCURACY =
+    kCLLocationAccuracyBest;
+MOZ_RUNINIT static const CLLocationAccuracy kDEFAULT_ACCURACY =
+    kCLLocationAccuracyNearestTenMeters;
 
 @interface LocationDelegate : NSObject <CLLocationManagerDelegate> {
   CoreLocationLocationProvider* mProvider;
@@ -148,7 +151,7 @@ class CoreLocationObjects {
     mLocationDelegate = [[LocationDelegate alloc] init:aProvider];
     NS_ENSURE_TRUE(mLocationDelegate, NS_ERROR_NOT_AVAILABLE);
 
-    mLocationManager.desiredAccuracy = kDefaultAccuracy;
+    mLocationManager.desiredAccuracy = kDEFAULT_ACCURACY;
     mLocationManager.delegate = mLocationDelegate;
 
     return NS_OK;
@@ -224,7 +227,7 @@ CoreLocationLocationProvider::SetHighAccuracy(bool aEnable) {
   NS_ENSURE_STATE(mCLObjects);
 
   mCLObjects->mLocationManager.desiredAccuracy =
-      aEnable ? kCLLocationAccuracyBest : kDefaultAccuracy;
+      (aEnable ? kHIGH_ACCURACY : kDEFAULT_ACCURACY);
 
   return NS_OK;
 }
