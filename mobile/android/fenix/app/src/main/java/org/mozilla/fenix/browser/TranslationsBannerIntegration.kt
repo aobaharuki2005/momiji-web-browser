@@ -6,6 +6,7 @@ package org.mozilla.fenix.browser
 
 import android.view.View
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
@@ -24,6 +25,8 @@ import mozilla.components.lib.state.helpers.AbstractBinding
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.store.BrowserScreenState
 import org.mozilla.fenix.browser.store.BrowserScreenStore
+import org.mozilla.fenix.compose.utils.KeyboardState
+import org.mozilla.fenix.compose.utils.keyboardAsState
 import org.mozilla.fenix.databinding.FragmentBrowserBinding
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -113,19 +116,24 @@ class TranslationsBannerIntegration(
             it.pageTranslationStatus.toSelectedLanguage?.localizedDisplayName ?: ""
         }.value
 
-        FirefoxTheme {
-            TranslationToolbar(
-                label = stringResource(
-                    R.string.translation_toolbar_translated_from_and_to,
-                    sourceLanguage,
-                    targetLanguage,
-                ),
-                onExpand = onExpand,
-                onClose = {
-                    closeBrowserFlowScope()
-                    dismissBanner()
-                  },
-            )
+        val keyboardState by keyboardAsState()
+        val isKeyboardVisible = keyboardState == KeyboardState.Opened
+
+        if (!isKeyboardVisible) {
+            FirefoxTheme {
+                TranslationToolbar(
+                    label = stringResource(
+                        R.string.translation_toolbar_translated_from_and_to,
+                        sourceLanguage,
+                        targetLanguage,
+                    ),
+                    onExpand = onExpand,
+                    onClose = {
+                        closeBrowserFlowScope()
+                        dismissBanner()
+                    },
+                )
+            }
         }
     }
 
