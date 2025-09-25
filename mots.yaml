@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2025-09-17T20:16:14.295054+00:00'
+updated_at: '2025-09-23T23:04:15.488928+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1060,6 +1060,10 @@ people:
     bmo_id: 466874
     name: Scott
     nick: thecount
+  - &thinker
+    bmo_id: 427371
+    name: Thinker Li
+    nick: thinker
   - &timhuang
     bmo_id: 547199
     name: Tim Huang
@@ -3171,6 +3175,7 @@ modules:
     peers:
       - *stransky
       - *emilio
+      - *thinker
     machine_name: core_widget_gtk
 
   - name: 'Core: Widget - Headless'
@@ -4619,5 +4624,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: f4f4e890cf9118fd024b7944c7faf03147919273
-  export: c939e52f8a48999348561a32cc762b15856c70bc
+  config: 34850133dd60d111a521e20f79845f3a86106132
+  export: 51bf99560fa38ad343a714908b7d4b423028e058
