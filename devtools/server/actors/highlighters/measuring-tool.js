@@ -563,7 +563,7 @@ class MeasuringToolHighlighter {
     const { target, type } = event;
 
     switch (type) {
-      case "mousedown": {
+      case "mousedown":
         if (event.button || this._dragging) {
           return;
         }
@@ -575,7 +575,6 @@ class MeasuringToolHighlighter {
           this.handleMouseDownEvent(event);
         }
         break;
-      }
       case "mousemove":
         if (this._dragging && this._dragging.handler) {
           this.handleResizingMouseMoveEvent(event);

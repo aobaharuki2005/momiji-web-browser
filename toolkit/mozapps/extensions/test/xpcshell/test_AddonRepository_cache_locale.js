@@ -154,12 +154,11 @@ function promiseLocaleChanged(requestedLocale) {
     let localeObserver = {
       observe(aSubject, aTopic) {
         switch (aTopic) {
-          case REQ_LOC_CHANGE_EVENT: {
+          case REQ_LOC_CHANGE_EVENT:
             let reqLocs = Services.locale.requestedLocales;
             equal(reqLocs[0], requestedLocale);
             Services.obs.removeObserver(localeObserver, REQ_LOC_CHANGE_EVENT);
             resolve();
-          }
         }
       },
     };

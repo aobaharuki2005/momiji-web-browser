@@ -122,7 +122,7 @@ function manifestReducer(state = ManifestState(), action) {
         mustLoadManifest: false,
       });
 
-    case FETCH_MANIFEST_FAILURE: {
+    case FETCH_MANIFEST_FAILURE:
       const { error } = action;
       // If we add a redux middleware to log errors, we should move the
       // console.error below there.
@@ -132,9 +132,8 @@ function manifestReducer(state = ManifestState(), action) {
         isLoading: false,
         manifest: null,
       });
-    }
 
-    case FETCH_MANIFEST_SUCCESS: {
+    case FETCH_MANIFEST_SUCCESS:
       // NOTE: we don't get an error when the page does not have a manifest,
       // but a `null` value there.
       const { manifest } = action;
@@ -143,10 +142,10 @@ function manifestReducer(state = ManifestState(), action) {
         isLoading: false,
         manifest: manifest ? _processRawManifest(manifest) : null,
       });
-    }
 
     case RESET_MANIFEST:
-      return ManifestState();
+      const defaultState = ManifestState();
+      return defaultState;
 
     default:
       return state;

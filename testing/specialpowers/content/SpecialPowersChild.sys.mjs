@@ -251,12 +251,11 @@ export class SpecialPowersChild extends JSWindowActorChild {
         }
         break;
 
-      case "Spawn": {
+      case "Spawn":
         let { task, args, caller, taskId, imports } = message.data;
         return this._spawnTask(task, args, caller, taskId, imports);
-      }
 
-      case "EnsureFocus": {
+      case "EnsureFocus":
         // Ensure that the focus is in this child document. Returns a browsing
         // context of a child frame if a subframe should be focused or undefined
         // otherwise.
@@ -301,7 +300,6 @@ export class SpecialPowersChild extends JSWindowActorChild {
           });
         }
         break;
-      }
 
       case "Assert":
         {

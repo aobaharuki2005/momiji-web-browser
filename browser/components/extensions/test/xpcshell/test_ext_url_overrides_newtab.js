@@ -51,14 +51,13 @@ add_task(async function test_multiple_extensions_overriding_newtab_page() {
   function background() {
     browser.test.onMessage.addListener(async msg => {
       switch (msg) {
-        case "checkNewTabPage": {
+        case "checkNewTabPage":
           let newTabPage = await browser.browserSettings.newTabPageOverride.get(
             {}
           );
           browser.test.sendMessage("newTabPage", newTabPage);
           break;
-        }
-        case "trySet": {
+        case "trySet":
           let setResult = await browser.browserSettings.newTabPageOverride.set({
             value: "foo",
           });
@@ -68,8 +67,7 @@ add_task(async function test_multiple_extensions_overriding_newtab_page() {
           );
           browser.test.sendMessage("newTabPageSet");
           break;
-        }
-        case "tryClear": {
+        case "tryClear":
           let clearResult =
             await browser.browserSettings.newTabPageOverride.clear({});
           browser.test.assertFalse(
@@ -78,7 +76,6 @@ add_task(async function test_multiple_extensions_overriding_newtab_page() {
           );
           browser.test.sendMessage("newTabPageCleared");
           break;
-        }
       }
     });
   }

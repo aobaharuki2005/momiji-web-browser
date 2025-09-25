@@ -387,7 +387,7 @@ function messages(
 
   let newState;
   switch (action.type) {
-    case constants.MESSAGES_ADD: {
+    case constants.MESSAGES_ADD:
       // If the action holds more messages than the log limit, we can preemptively remove
       // messages that will never be rendered.
       const batchHasMoreMessagesThanLogLimit =
@@ -433,9 +433,8 @@ function messages(
       }
 
       return limitTopLevelMessageCount(newState, logLimit);
-    }
 
-    case constants.MESSAGES_CLEAR: {
+    case constants.MESSAGES_CLEAR:
       const frontsToRelease = [];
       for (const message of state.mutableMessagesById.values()) {
         // We want to minimize time spent in reducer as much as we can, so we're using
@@ -451,7 +450,6 @@ function messages(
         // `releaseActorsEnhancer` to release all of those backend actors.
         frontsToRelease,
       });
-    }
 
     case constants.PRIVATE_MESSAGES_CLEAR: {
       const removedIds = new Set();
@@ -505,7 +503,7 @@ function messages(
         disabledMessagesById: [...disabledMessagesById, ...action.ids],
       };
 
-    case constants.MESSAGE_OPEN: {
+    case constants.MESSAGE_OPEN:
       const openState = { ...state };
       openState.messagesUiById = [...messagesUiById, action.id];
       const currMessage = mutableMessagesById.get(action.id);
@@ -546,9 +544,8 @@ function messages(
         ];
       }
       return openState;
-    }
 
-    case constants.MESSAGE_CLOSE: {
+    case constants.MESSAGE_CLOSE:
       const closeState = { ...state };
       const messageId = action.id;
       const index = closeState.messagesUiById.indexOf(messageId);
@@ -586,7 +583,6 @@ function messages(
         );
       }
       return closeState;
-    }
 
     case constants.CSS_MESSAGE_ADD_MATCHING_ELEMENTS:
       return {
@@ -597,7 +593,7 @@ function messages(
         ),
       };
 
-    case constants.NETWORK_MESSAGES_UPDATE: {
+    case constants.NETWORK_MESSAGES_UPDATE:
       const updatedState = {
         ...state,
         networkMessagesUpdateById: {
@@ -629,7 +625,6 @@ function messages(
       }
 
       return updatedState;
-    }
 
     case UPDATE_REQUEST:
     case constants.NETWORK_UPDATES_REQUEST: {
@@ -664,7 +659,7 @@ function messages(
         frontsToRelease: [],
       };
 
-    case constants.GROUP_SIMILAR_MESSAGES_TOGGLE: {
+    case constants.GROUP_SIMILAR_MESSAGES_TOGGLE:
       // There's no warningGroups, and the pref was set to false,
       // we don't need to do anything.
       if (!prefsState.groupSimilar && state.warningGroupsById.size === 0) {
@@ -722,7 +717,6 @@ function messages(
         // timestamps.
         forceTimestampSort: !prefsState.groupSimilar,
       });
-    }
 
     case constants.MESSAGE_REMOVE:
       return removeMessagesFromState(

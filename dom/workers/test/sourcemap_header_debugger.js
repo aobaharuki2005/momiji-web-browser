@@ -11,7 +11,7 @@ addEventListener("message", function (event) {
   } catch {}
 
   switch (data.type) {
-    case "request-sourceMapURL": {
+    case "request-sourceMapURL":
       const dbg = new Debugger(global);
       const sourceMapURLs = dbg
         .findSources()
@@ -25,6 +25,5 @@ addEventListener("message", function (event) {
         })
       );
       break;
-    }
   }
 });

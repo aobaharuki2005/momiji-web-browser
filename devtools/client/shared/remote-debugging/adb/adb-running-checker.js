@@ -38,13 +38,12 @@ exports.check = async function check() {
     const runFSM = function runFSM(packetData) {
       dumpn("runFSM " + state);
       switch (state) {
-        case "start": {
+        case "start":
           const req = client.createRequest("host:version");
           socket.send(req);
           state = "wait-version";
           break;
-        }
-        case "wait-version": {
+        case "wait-version":
           // TODO: Actually check the version number to make sure the daemon
           //       supports the commands we want to use
           const { length, data } = client.unpackPacket(packetData);
@@ -58,7 +57,6 @@ exports.check = async function check() {
             finish(false);
           }
           break;
-        }
         default:
           dumpn("Unexpected State: " + state);
           finish(false);

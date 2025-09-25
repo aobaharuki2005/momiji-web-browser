@@ -98,14 +98,13 @@ function matchEvent(event, matchCriteria) {
 
   let acc = event.accessible;
   switch (typeof matchCriteria) {
-    case "string": {
+    case "string":
       let id = getAccessibleDOMNodeID(acc);
       if (id === matchCriteria) {
         EventsLogger.log(`Event matches DOMNode id: ${id}`);
         return true;
       }
       break;
-    }
     case "function":
       if (matchCriteria(event)) {
         EventsLogger.log(

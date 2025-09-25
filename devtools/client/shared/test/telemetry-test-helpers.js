@@ -92,7 +92,7 @@ class TelemetryHelpers {
         msg = key ? `${histId}["${key}"] correct.` : `${histId} correct.`;
         is(JSON.stringify(actual), JSON.stringify(expected), msg);
         break;
-      case "hasentries": {
+      case "hasentries":
         const hasEntry = Object.values(actual).some(num => num > 0);
         if (key) {
           ok(hasEntry, `${histId}["${key}"] has at least one entry.`);
@@ -100,8 +100,7 @@ class TelemetryHelpers {
           ok(hasEntry, `${histId} has at least one entry.`);
         }
         break;
-      }
-      case "scalar": {
+      case "scalar":
         const scalars = Services.telemetry.getSnapshotForScalars(
           "main",
           false
@@ -109,8 +108,7 @@ class TelemetryHelpers {
 
         is(scalars[histId], expected, `${histId} correct`);
         break;
-      }
-      case "keyedscalar": {
+      case "keyedscalar":
         const keyedScalars = Services.telemetry.getSnapshotForKeyedScalars(
           "main",
           false
@@ -120,7 +118,6 @@ class TelemetryHelpers {
         msg = key ? `${histId}["${key}"] correct.` : `${histId} correct.`;
         is(value, expected, msg);
         break;
-      }
     }
   }
 
@@ -224,7 +221,7 @@ class TelemetryHelpers {
 
     switch (snapshot.histogram_type) {
       case Services.telemetry.HISTOGRAM_EXPONENTIAL:
-      case Services.telemetry.HISTOGRAM_LINEAR: {
+      case Services.telemetry.HISTOGRAM_LINEAR:
         let total = 0;
         for (const val of Object.values(actual)) {
           total += val;
@@ -240,7 +237,6 @@ class TelemetryHelpers {
 
         dump(`checkTelemetry("${histId}", ${key}, null, "hasentries");\n`);
         break;
-      }
       case Services.telemetry.HISTOGRAM_BOOLEAN:
         actual = actual.toSource();
 

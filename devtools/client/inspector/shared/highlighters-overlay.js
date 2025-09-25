@@ -262,7 +262,7 @@ class HighlightersOverlay {
     switch (type) {
       // Log telemetry for showing the flexbox and grid highlighters.
       case TYPES.FLEXBOX:
-      case TYPES.GRID: {
+      case TYPES.GRID:
         const toolID = GLEAN_TOOL_IDS[type];
         if (toolID) {
           this.telemetry.toolOpened(toolID, this);
@@ -274,7 +274,6 @@ class HighlightersOverlay {
         }
 
         break;
-      }
     }
 
     // Set metadata necessary to restore the active highlighter upon page refresh.
@@ -371,7 +370,7 @@ class HighlightersOverlay {
     switch (type) {
       // Log telemetry for hiding the flexbox and grid highlighters.
       case TYPES.FLEXBOX:
-      case TYPES.GRID: {
+      case TYPES.GRID:
         const toolID = GLEAN_TOOL_IDS[type];
         const conditions = {
           [TYPES.FLEXBOX]: () => {
@@ -389,7 +388,6 @@ class HighlightersOverlay {
         }
 
         break;
-      }
     }
   }
 
@@ -1417,7 +1415,7 @@ class HighlightersOverlay {
     let editor;
 
     switch (type) {
-      case "shapesEditor": {
+      case "shapesEditor":
         const highlighter = await this.#getHighlighterTypeForNode(
           TYPES.SHAPES,
           node
@@ -1435,7 +1433,6 @@ class HighlightersOverlay {
         editor.on("show", this.onShapesHighlighterShown);
         editor.on("hide", this.onShapesHighlighterHidden);
         break;
-      }
       default:
         throw new Error(`Unsupported in-context editor '${name}'`);
     }

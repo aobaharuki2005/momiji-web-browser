@@ -58,7 +58,7 @@ async function setupManifests(modules) {
 
   switch (AppConstants.platform) {
     case "macosx":
-    case "linux": {
+    case "linux":
       let dirProvider = {
         getFile(property) {
           if (
@@ -80,9 +80,8 @@ async function setupManifests(modules) {
         await writeManifest(module);
       }
       break;
-    }
 
-    case "win": {
+    case "win":
       const REGKEY = String.raw`Software\Mozilla\PKCS11Modules`;
 
       let registry = new MockRegistry();
@@ -100,7 +99,6 @@ async function setupManifests(modules) {
         );
       }
       break;
-    }
 
     default:
       ok(
