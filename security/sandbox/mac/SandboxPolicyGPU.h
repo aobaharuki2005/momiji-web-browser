@@ -190,15 +190,6 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
                           "ggcs"
                           "bgcs"))))
 
-  (allow iokit-open-service
-         (iokit-registry-entry-class "IOAccelerator"
-                                     "IOSurfaceRoot"
-                                     "IOFramebuffer"
-                                     "AGPM"
-                                     "AppleGraphicsControl"
-                                     "AppleGraphicsPolicy")
-         (iokit-connection "AppleGraphicsDeviceControl"))
-
   (allow iokit-open
     (iokit-connection "IOAccelerator")
     (iokit-user-client-class "AppleIntelMEUserClient")
@@ -212,6 +203,7 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
     (iokit-user-client-class "IOHIDParamUserClient")
     (iokit-user-client-class "RootDomainUserClient")
     (iokit-user-client-class "AppleMGPUPowerControlClient")
+    (iokit-user-client-class "AppleGraphicsControlClient")
     (iokit-user-client-class "AppleGraphicsPolicyClient"))
 
   ; Fonts
