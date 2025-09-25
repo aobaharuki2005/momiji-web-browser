@@ -911,6 +911,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void PushFrameDescriptorForJitCall(FrameType type, Register argc,
                                             Register scratch,
                                             bool hasInlineICScript = false);
+  inline void makeFrameDescriptorForJitCall(FrameType type, Register argc,
+                                            Register dest,
+                                            bool hasInlineICScript = false);
 
   // Load the number of actual arguments from the frame's JitFrameLayout.
   inline void loadNumActualArgs(Register framePtr, Register dest);
