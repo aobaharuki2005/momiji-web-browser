@@ -783,6 +783,12 @@ class Dumper:
                 print(
                     "PERFHERDER_DATA: %s" % json.dumps(perfherder_data), file=sys.stderr
                 )
+                if "MOZ_AUTOMATION" in os.environ:
+                    upload_dir = Path(os.environ.get("UPLOAD_DIR"))
+                    upload_dir.mkdir(parents=True, exist_ok=True)
+                    upload_path = upload_dir / "perfherder-data-compiler-metrics.json"
+                    with upload_path.open("w", encoding="utf-8") as f:
+                        json.dump(perfherder_data, f)
 
         elapsed = time.time() - t_start
         print("Finished processing %s in %.2fs" % (file, elapsed), file=sys.stderr)
