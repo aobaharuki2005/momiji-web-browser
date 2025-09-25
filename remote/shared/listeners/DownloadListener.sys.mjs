@@ -26,9 +26,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * ```
  *
  * @fires download-started
- *    The DownloadListener emits the following events:
- *    - "download-started" when a download begins,
- *    - "download-stopped" when a download is stopped
+ *    The DownloadListener emits "download-started" events when a download begins,
  *    with the following object as payload:
  *      - {Download} download
  *            The Download object that started.
@@ -165,15 +163,6 @@ export class DownloadListener {
   #onDownloadChanged = download => {
     const state = this.#getDownloadState(download);
     this.#maybeEmitDownloadStarted(state, download);
-
-    // canceled + hasPartialData corresponds to a paused download.
-    const paused = download.canceled && download.hasPartialData;
-    if (!state.stopped && download.stopped && !paused) {
-      state.stopped = true;
-      this.emit("download-stopped", {
-        download,
-      });
-    }
   };
 
   /**
