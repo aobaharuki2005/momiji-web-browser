@@ -5569,7 +5569,16 @@
         } else {
           allTabsUnloaded = true;
           // all tabs are unloaded - show Firefox View if it's present, otherwise open a new tab
-          if (FirefoxViewHandler.tab || FirefoxViewHandler.button) {
+          // Firefox View counts as present if its tab is already open, or if the button
+          // is visible, so as to not do this in private browsing mode or if the user
+          // has removed the button from their toolbar (bug 1946432, bug 1989429)
+          let firefoxViewAvailable =
+            FirefoxViewHandler.tab &&
+            FirefoxViewHandler.button?.checkVisibility({
+              checkVisibilityCSS: true,
+              visibilityProperty: true,
+            });
+          if (firefoxViewAvailable) {
             FirefoxViewHandler.openTab("opentabs");
           } else {
             this.selectedTab = this.addTrustedTab(BROWSER_NEW_TAB_URL, {
