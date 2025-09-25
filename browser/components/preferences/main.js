@@ -375,6 +375,14 @@ Preferences.addSetting({
 });
 
 Preferences.addSetting({ id: "zoomPlaceholder" });
+Preferences.addSetting({
+  id: "containersPane",
+  onUserClick(e) {
+    e.preventDefault();
+    gotoPref("paneContainers2");
+  },
+});
+Preferences.addSetting({ id: "containersPlaceholder" });
 
 // Downloads
 /*
@@ -697,6 +705,19 @@ Preferences.addSetting({
  * @type {Record<string, PreferencesSettingsConfig>} SettingConfig
  */
 let SETTINGS_CONFIG = {
+  containers: {
+    // This section is marked as in progress for testing purposes
+    inProgress: true,
+    items: [
+      {
+        id: "containersPlaceholder",
+        control: "moz-message-bar",
+        controlAttrs: {
+          message: "Placeholder for updated containers",
+        },
+      },
+    ],
+  },
   zoom: {
     // This section is marked as in progress for testing purposes
     inProgress: true,
@@ -706,6 +727,13 @@ let SETTINGS_CONFIG = {
         control: "moz-message-bar",
         controlAttrs: {
           message: "Placeholder for updated zoom controls",
+        },
+      },
+      {
+        id: "containersPane",
+        control: "moz-button",
+        controlAttrs: {
+          label: "Manage container settings",
         },
       },
     ],

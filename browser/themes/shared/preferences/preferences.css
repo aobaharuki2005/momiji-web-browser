@@ -1488,3 +1488,22 @@ richlistitem .text-link:hover {
     font-size: var(--font-size-small);
   }
 }
+
+/* START SRD temp page header styles (bug 1948415) */
+.page-header {
+  gap: var(--space-small);
+  align-items: center;
+
+  &:not([hidden]) {
+    display: flex;
+  }
+
+  > h2 {
+    margin: 0;
+  }
+
+  > moz-button:first-of-type:dir(rtl) {
+    scale: -1 1;
+  }
+}
+/* END SRD temp page header styles (bug 1948415) */

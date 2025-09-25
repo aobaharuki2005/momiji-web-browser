@@ -165,6 +165,14 @@ function srdSectionEnabled(section) {
   return srdSectionPrefs.all || srdSectionPrefs[section];
 }
 
+const CONFIG_PANES = {
+  containers2: {
+    parent: "general",
+    l10nId: "containers-header",
+    groupIds: ["containers"],
+  },
+};
+
 var gLastCategory = { category: undefined, subcategory: undefined };
 const gXULDOMParser = new DOMParser();
 var gCategoryModules = new Map();
@@ -216,6 +224,20 @@ function init_all() {
   register_module("paneSearch", gSearchPane);
   register_module("panePrivacy", gPrivacyPane);
   register_module("paneContainers", gContainersPane);
+
+  for (let [subPane, config] of Object.entries(CONFIG_PANES)) {
+    subPane = friendlyPrefCategoryNameToInternalName(subPane);
+    let settingPane = document.createElement("setting-pane");
+    settingPane.name = subPane;
+    settingPane.config = config;
+    settingPane.isSubPane = config.parent;
+    document.getElementById("mainPrefPane").append(settingPane);
+    register_module(subPane, {
+      init() {
+        settingPane.init();
+      },
+    });
+  }
 
   if (Services.prefs.getBoolPref("browser.translations.newSettingsUI.enable")) {
     register_module("paneTranslations", gTranslationsPane);
