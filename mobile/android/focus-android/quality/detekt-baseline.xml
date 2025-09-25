@@ -4,7 +4,6 @@
   <CurrentIssues>
     <ID>ForbiddenSuppress:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:BrowserFragment.kt$BrowserFragment$@Suppress("ComplexCondition", "LongMethod")</ID>
-    <ID>ForbiddenSuppress:PromoteSearchWidgetDialogCompose.kt$@Suppress("LongMethod")</ID>
     <ID>OutdatedDocumentation:AppAdapter.kt$AppAdapter : Adapter</ID>
     <ID>OutdatedDocumentation:AppReviewUtils.kt$AppReviewUtils$fun addAppOpenings(context: Context)</ID>
     <ID>OutdatedDocumentation:AppReviewUtils.kt$AppReviewUtils$fun showAppReview(activity: Activity)</ID>
@@ -217,7 +216,6 @@
     <ID>UndocumentedPublicFunction:OnboardingInteractor.kt$OnboardingInteractor$fun onMakeFocusDefaultBrowserButtonClicked(activityResultLauncher: ActivityResultLauncher&lt;Intent&gt;)</ID>
     <ID>UndocumentedPublicFunction:Performance.kt$Performance$fun processIntentIfPerformanceTest(bundle: Bundle?, context: Context)</ID>
     <ID>UndocumentedPublicFunction:PreferenceSwitch.kt$PreferenceSwitch$fun onClickListener(listener: () -&gt; Unit)</ID>
-    <ID>UndocumentedPublicFunction:PromoteSearchWidgetDialogCompose.kt$@Suppress("LongMethod") @Composable fun PromoteSearchWidgetDialogCompose( onAddSearchWidgetButtonClick: () -&gt; Unit, onDismiss: () -&gt; Unit, )</ID>
     <ID>UndocumentedPublicFunction:RadioButtonPreference.kt$GroupableRadioButton$fun addToRadioGroup(radioButton: GroupableRadioButton)</ID>
     <ID>UndocumentedPublicFunction:RadioButtonPreference.kt$GroupableRadioButton$fun updateRadioValue(isChecked: Boolean)</ID>
     <ID>UndocumentedPublicFunction:RadioButtonPreference.kt$RadioButtonPreference$fun onClickListener(listener: (() -&gt; Unit))</ID>
