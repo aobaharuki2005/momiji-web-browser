@@ -1846,35 +1846,16 @@ pref("browser.newtabpage.activity-stream.showWeather", true);
 pref("browser.newtabpage.activity-stream.weather.query", "");
 pref("browser.newtabpage.activity-stream.weather.display", "simple");
 
-// Opt-in enabled for certain locales for newtab weather widget
-pref("browser.newtabpage.activity-stream.weather.optInDisplayed", false);
-
-// User choice made from weather opt-in dialog
-pref("browser.newtabpage.activity-stream.weather.optInAccepted", false);
-
-// If weather opt-in enabled and no selection has been made, show static weather widget
-pref("browser.newtabpage.activity-stream.weather.staticData.enabled", false);
-
 pref("browser.newtabpage.activity-stream.images.smart", true);
 
 // enable location search for newtab weather widget
 pref("browser.newtabpage.activity-stream.weather.locationSearchEnabled", true);
 
-// opt-in enabled for certain locales for newtab weather widget
-pref("browser.newtabpage.activity-stream.weather.optInDisplayed", false);
-
 // List of regions that get weather by default.
-pref("browser.newtabpage.activity-stream.discoverystream.region-weather-config", "US,CA,DE,GB,FR,ES,IT,CH,AT,BE,IE,NL,PL,CZ,SE,SG,HU,SK,FI,DK,NO,PT");
+pref("browser.newtabpage.activity-stream.discoverystream.region-weather-config", "US,CA");
 
 // List of locales that weather widget supports.
-pref("browser.newtabpage.activity-stream.discoverystream.locale-weather-config", "en-US,en-GB,en-CA,fr,de");
-
-// List of regions that will require opt-in to show weather widget
-pref("browser.newtabpage.activity-stream.discoverystream.optIn-region-weather-config", "DE,GB,FR,ES,IT,CH,AT,BE,IE,NL,PL,CZ,SE,SG,HU,SK,FI,DK,NO,PT");
-
-
-// List of locales that will require opt-in to show weather widget
-pref("browser.newtabpage.activity-stream.discoverystream.optIn-locale-weather-config", "fr,de");
+pref("browser.newtabpage.activity-stream.discoverystream.locale-weather-config", "en-US,en-GB,en-CA");
 
 // Promo card visibility
 pref("browser.newtabpage.activity-stream.discoverystream.promoCard.visible", true);

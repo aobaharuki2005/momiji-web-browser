@@ -39,7 +39,7 @@ user_pref("gfx.color_management.mode", 1);
 // Don't enable remote tiles on new-tab pages in xpcshell
 user_pref("browser.topsites.contile.enabled", false);
 // Don't pull weather data from the network
-user_pref("browser.newtabpage.activity-stream.discoverystream.region-weather-config", "");
+user_pref("browser.newtabpage.activity-stream.system.showWeather", false);
 // Don't pull wallpaper content from the network
 user_pref("browser.newtabpage.activity-stream.newtabWallpapers.enabled", false);
 // Don't pull sponsored Top Sites content from the network

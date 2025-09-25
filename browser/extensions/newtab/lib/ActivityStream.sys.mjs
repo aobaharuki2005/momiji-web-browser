@@ -64,10 +64,6 @@ const REGION_WEATHER_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.region-weather-config";
 const LOCALE_WEATHER_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.locale-weather-config";
-const REGION_OPTIN_WEATHER_CONFIG =
-  "browser.newtabpage.activity-stream.discoverystream.optIn-region-weather-config";
-const LOCALE_OPTIN_WEATHER_CONFIG =
-  "browser.newtabpage.activity-stream.discoverystream.optIn-locale-weather-config";
 
 const REGION_TOPICS_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.topicSelection.region-topics-config";
@@ -102,6 +98,29 @@ const LOCALE_SECTIONS_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.sections.locale-content-config";
 
 const BROWSER_URLBAR_PLACEHOLDERNAME = "browser.urlbar.placeholderName";
+
+export const WEATHER_OPTIN_REGIONS = [
+  "DE",
+  "GB",
+  "FR",
+  "ES",
+  "IT",
+  "CH",
+  "AT",
+  "BE",
+  "IE",
+  "NL",
+  "PL",
+  "CZ",
+  "SE",
+  "SG",
+  "HU",
+  "SK",
+  "FI",
+  "DK",
+  "NO",
+  "PT",
+];
 
 export function csvPrefHasValue(stringPrefName, value) {
   if (typeof stringPrefName !== "string") {
@@ -146,11 +165,8 @@ function showWeather({ geo, locale }) {
   );
 }
 
-function showWeatherOptIn({ geo, locale }) {
-  return (
-    csvPrefHasValue(REGION_OPTIN_WEATHER_CONFIG, geo) &&
-    csvPrefHasValue(LOCALE_OPTIN_WEATHER_CONFIG, locale)
-  );
+function showWeatherOptIn({ geo }) {
+  return WEATHER_OPTIN_REGIONS.includes(geo);
 }
 
 function showTopicsSelection({ geo, locale }) {
@@ -357,13 +373,6 @@ export const PREFS_CONFIG = new Map([
     {
       title: "Regions for weather opt-in.",
       value: "DE,GB,FR,ES,IT,CH,AT,BE,IE,NL,PL,CZ,SE,SG,HU,SK,FI,DK,NO,PT",
-    },
-  ],
-  [
-    "discoverystream.optIn-locale-weather-config",
-    {
-      title: "Locales for weather opt-in.",
-      value: "fr,de",
     },
   ],
   [

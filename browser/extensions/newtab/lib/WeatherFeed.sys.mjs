@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { WEATHER_OPTIN_REGIONS } from "./ActivityStream.sys.mjs";
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
@@ -36,8 +38,6 @@ const MERINO_CLIENT_KEY = "HNT_WEATHER_FEED";
 const PREF_WEATHER_QUERY = "weather.query";
 const PREF_SHOW_WEATHER = "showWeather";
 const PREF_SYSTEM_SHOW_WEATHER = "system.showWeather";
-const PREF_REGION_OPTIN_WEATHER_CONFIG =
-  "discoverystream.optIn-region-weather-config";
 
 /**
  * A feature that periodically fetches weather suggestions from Merino for HNT.
@@ -239,16 +239,10 @@ export class WeatherFeed {
   }
 
   async checkOptInRegion() {
-    const regionConfig =
-      this.store.getState().Prefs.values[PREF_REGION_OPTIN_WEATHER_CONFIG] ??
-      "";
-
-    const optInRegions = regionConfig.split(",").map(region => region.trim());
     const currentRegion = await lazy.Region.home;
-    const optIn = this.isEnabled() && optInRegions.includes(currentRegion);
-
+    const optIn =
+      this.isEnabled() && WEATHER_OPTIN_REGIONS.includes(currentRegion);
     this.store.dispatch(ac.SetPref("system.showWeatherOptIn", optIn));
-
     return optIn;
   }
 
@@ -270,11 +264,7 @@ export class WeatherFeed {
         }
         break;
       case at.PREF_CHANGED:
-        if (
-          action.data.name ===
-            "browser.newtabpage.activity-stream.discoverystream.optIn-region-weather-config" ||
-          action.data.name === "system.showWeather"
-        ) {
+        if (action.data.name === "system.showWeather") {
           await this.checkOptInRegion();
         }
         await this.onPrefChangedAction(action);
