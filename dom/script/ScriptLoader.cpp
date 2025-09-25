@@ -1182,6 +1182,10 @@ void ScriptLoader::TryUseCache(ScriptLoadRequest* aRequest,
   aRequest->CacheEntryFound(cacheResult.mCompleteValue);
   LOG(("ScriptLoader (%p): Found in-memory cache for %s.", this,
        aRequest->mURI->GetSpecOrDefault().get()));
+
+  if (cacheResult.mCompleteValue->mFetchCount < UINT8_MAX) {
+    cacheResult.mCompleteValue->mFetchCount++;
+  }
   return;
 }
 
