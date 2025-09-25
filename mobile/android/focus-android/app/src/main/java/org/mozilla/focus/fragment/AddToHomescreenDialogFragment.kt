@@ -33,7 +33,6 @@ import mozilla.components.ui.icons.R as iconsR
  */
 class AddToHomescreenDialogFragment : DialogFragment() {
 
-    @Suppress("LongMethod")
     override fun onCreateDialog(bundle: Bundle?): AlertDialog {
         AddToHomeScreen.dialogDisplayed.record(NoExtras())
         val url = requireArguments().getString(URL)!!
