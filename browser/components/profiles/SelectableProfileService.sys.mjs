@@ -1295,8 +1295,7 @@ class SelectableProfileServiceClass extends EventEmitter {
     });
     if (missing.length) {
       throw new Error(
-        "Unable to insertProfile due to missing keys: ",
-        missing.join(",")
+        `Unable to insertProfile due to missing keys: ${missing.join(",")}`
       );
     }
     const rows = await this.#connection.execute(
