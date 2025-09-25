@@ -50,7 +50,6 @@
 
 #include <algorithm>
 
-#include "AnchorPositioningUtils.h"
 #include "FrameProperties.h"
 #include "LayoutConstants.h"
 #include "Visibility.h"
@@ -1435,7 +1434,7 @@ class nsIFrame : public nsQueryFrame {
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(UsedMarginProperty, nsMargin)
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(UsedPaddingProperty, nsMargin)
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(AnchorPosReferences,
-                                      mozilla::AnchorPosReferenceData);
+                                      AnchorPosReferencedAnchors);
 
   // This tracks the start and end page value for a frame.
   //
@@ -5932,9 +5931,8 @@ inline nsIFrame* nsFrameList::BackwardFrameTraversal::Prev(nsIFrame* aFrame) {
 }
 
 inline AnchorPosResolutionParams AnchorPosResolutionParams::From(
-    const nsIFrame* aFrame,
-    mozilla::AnchorPosReferenceData* aAnchorPosReferenceData) {
-  return {aFrame, aFrame->StyleDisplay()->mPosition, aAnchorPosReferenceData};
+    const nsIFrame* aFrame, AnchorPosReferencedAnchors* aReferencedAnchors) {
+  return {aFrame, aFrame->StyleDisplay()->mPosition, aReferencedAnchors};
 }
 
 #endif /* nsIFrame_h___ */

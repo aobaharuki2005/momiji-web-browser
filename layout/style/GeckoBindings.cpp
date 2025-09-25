@@ -1870,7 +1870,7 @@ static nsIFrame* GetAnchorOf(const nsIFrame* aPositioned,
 
 static Maybe<AnchorPosInfo> GetAnchorPosRect(
     const nsIFrame* aPositioned, const nsAtom* aAnchorName, bool aCBRectIsvalid,
-    AnchorPosReferenceData* aReferenceData) {
+    AnchorPosReferencedAnchors* aReferencedAnchors) {
   if (!aPositioned) {
     return Nothing{};
   }
@@ -1885,8 +1885,8 @@ static Maybe<AnchorPosInfo> GetAnchorPosRect(
   const auto* containingBlock = aPositioned->GetParent();
 
   Maybe<AnchorPosResolutionData>* entry = nullptr;
-  if (aReferenceData) {
-    const auto result = aReferenceData->InsertOrModify(anchorName, true);
+  if (aReferencedAnchors) {
+    const auto result = aReferencedAnchors->InsertOrModify(anchorName, true);
     if (result.mAlreadyResolved) {
       MOZ_ASSERT(result.mEntry, "Entry exists but null?");
       return result.mEntry->map([&](const AnchorPosResolutionData& aData) {
@@ -1918,9 +1918,9 @@ bool Gecko_GetAnchorPosOffset(const AnchorPosOffsetResolutionParams* aParams,
   if (!aParams || !aParams->mBaseParams.mFrame) {
     return false;
   }
-  const auto info = GetAnchorPosRect(
-      aParams->mBaseParams.mFrame, aAnchorName, !aParams->mCBSize,
-      aParams->mBaseParams.mAnchorPosReferenceData);
+  const auto info = GetAnchorPosRect(aParams->mBaseParams.mFrame, aAnchorName,
+                                     !aParams->mCBSize,
+                                     aParams->mBaseParams.mReferencedAnchors);
   if (info.isNothing()) {
     return false;
   }
@@ -2010,9 +2010,9 @@ bool Gecko_GetAnchorPosSize(const AnchorPosResolutionParams* aParams,
   }
   const auto size = [&]() -> Maybe<nsSize> {
     Maybe<AnchorPosResolutionData>* entry = nullptr;
-    if (aParams->mAnchorPosReferenceData) {
+    if (aParams->mReferencedAnchors) {
       const auto result =
-          aParams->mAnchorPosReferenceData->InsertOrModify(anchorName, false);
+          aParams->mReferencedAnchors->InsertOrModify(anchorName, false);
       if (result.mAlreadyResolved) {
         MOZ_ASSERT(result.mEntry, "Entry exists but null?");
         return result.mEntry->map(

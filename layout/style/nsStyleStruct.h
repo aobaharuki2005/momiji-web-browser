@@ -44,7 +44,6 @@ namespace mozilla {
 class ComputedStyle;
 struct IntrinsicSize;
 struct ReflowInput;
-class AnchorPosReferenceData;
 
 }  // namespace mozilla
 
@@ -382,6 +381,52 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
 using AnchorResolvedMargin =
     mozilla::UniqueOrNonOwningPtr<const mozilla::StyleMargin>;
 
+// Resolved anchor positioning data.
+struct AnchorPosResolutionData {
+  // Size of the referenced anchor.
+  nsSize mSize;
+  // Origin of the referenced anchor, w.r.t. containing block at the time of
+  // resolution. Includes scroll offsets, for now.
+  // Nothing if the anchor did not resolve, or if the anchor was only referred
+  // to by its size.
+  mozilla::Maybe<nsPoint> mOrigin;
+};
+
+// Mapping from a referenced anchor to its resolution (If a valid anchor is
+// found).
+class AnchorPosReferencedAnchors {
+ private:
+  using Map =
+      nsTHashMap<RefPtr<const nsAtom>, mozilla::Maybe<AnchorPosResolutionData>>;
+
+ public:
+  using Value = mozilla::Maybe<AnchorPosResolutionData>;
+
+  AnchorPosReferencedAnchors() = default;
+  AnchorPosReferencedAnchors(const AnchorPosReferencedAnchors&) = delete;
+  AnchorPosReferencedAnchors(AnchorPosReferencedAnchors&&) = default;
+
+  AnchorPosReferencedAnchors& operator=(const AnchorPosReferencedAnchors&) =
+      delete;
+  AnchorPosReferencedAnchors& operator=(AnchorPosReferencedAnchors&&) = default;
+
+  struct Result {
+    bool mAlreadyResolved;
+    Value* mEntry;
+  };
+
+  Result InsertOrModify(const nsAtom* aAnchorName, bool aNeedOffset);
+  const Value* Lookup(const nsAtom* aAnchorName) const;
+
+  bool IsEmpty() const { return mMap.IsEmpty(); }
+
+  Map::const_iterator begin() const { return mMap.cbegin(); }
+  Map::const_iterator end() const { return mMap.cend(); }
+
+ private:
+  Map mMap;
+};
+
 // Base set of parameters required to resolve a reference to an anchor.
 struct AnchorPosResolutionParams {
   // Frame of the anchor positioned element.
@@ -389,15 +434,15 @@ struct AnchorPosResolutionParams {
   const nsIFrame* mFrame;
   // Position property of the element in question.
   mozilla::StylePositionProperty mPosition;
-  // Storage for anchor reference data. To be populated on abspos reflow,
-  // whenever the frame makes any anchor reference.
-  mozilla::AnchorPosReferenceData* const mAnchorPosReferenceData = nullptr;
+  // Storage for referenced anchors. To be populated on abspos reflow, whenever
+  // the frame makes any anchor reference.
+  AnchorPosReferencedAnchors* const mReferencedAnchors = nullptr;
 
   // Helper functions for creating anchor resolution parameters.
   // Defined in corresponding header files.
   static inline AnchorPosResolutionParams From(
       const nsIFrame* aFrame,
-      mozilla::AnchorPosReferenceData* aAnchorPosReferenceData = nullptr);
+      AnchorPosReferencedAnchors* aReferencedAnchors = nullptr);
   static inline AnchorPosResolutionParams From(const mozilla::ReflowInput* aRI);
   static inline AnchorPosResolutionParams From(
       const nsComputedDOMStyle* aComputedDOMStyle);
