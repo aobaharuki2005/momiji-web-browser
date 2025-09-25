@@ -3151,6 +3151,8 @@ void ScriptLoader::InstantiateClassicScriptFromCachedStencil(
     JS::Handle<JSScript*> aDebuggerIntroductionScript, ErrorResult& aRv) {
   CalculateCacheFlag(aRequest);
 
+  MOZ_ASSERT(aRequest->PassedConditionForMemoryCache());
+
   IsAlreadyCollecting isAlreadyCollecting = IsAlreadyCollecting::No;
   InstantiateStencil(aCx, aCompileOptions, aStencil, aScript,
                      aDebuggerPrivateValue, aDebuggerIntroductionScript, aRv,
@@ -3159,8 +3161,17 @@ void ScriptLoader::InstantiateClassicScriptFromCachedStencil(
   if (isAlreadyCollecting == IsAlreadyCollecting::Yes) {
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip: IsAlreadyCollecting",
          aRequest));
+
+    // NOTE: non-top-level modules are added to mCacheableDependencyModules
+    //       at the same time as MarkPassedConditionForMemoryCache.
+    //       Undo it here.
+    if (aRequest->IsModuleRequest() &&
+        !aRequest->AsModuleRequest()->IsTopLevel()) {
+      MOZ_ASSERT(aRequest->isInList());
+      mCacheableDependencyModules.Remove(aRequest);
+    }
+
     aRequest->MarkSkippedMemoryCaching();
-    // FIXME: Remove non-top-level modules from the mCacheableDependencyModules.
   }
 }
 
