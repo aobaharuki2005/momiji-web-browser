@@ -188,30 +188,70 @@ class ScriptLoadRequest : public nsISupports,
 
   void SetPendingFetchingError();
 
-  bool PassedConditionForCache() const {
-    return mCachingPlan == CachingPlan::PassedCondition ||
-           mCachingPlan == CachingPlan::MarkedForCache;
+  bool PassedConditionForDiskCache() const {
+    return mDiskCachingPlan == CachingPlan::PassedCondition ||
+           mDiskCachingPlan == CachingPlan::MarkedForCache;
   }
 
-  void MarkSkippedCaching() {
-    MOZ_ASSERT(mCachingPlan == CachingPlan::Uninitialized ||
-               mCachingPlan == CachingPlan::PassedCondition);
-    mCachingPlan = CachingPlan::Skipped;
+  bool PassedConditionForMemoryCache() const {
+    return mMemoryCachingPlan == CachingPlan::PassedCondition ||
+           mMemoryCachingPlan == CachingPlan::MarkedForCache;
   }
 
-  void MarkPassedConditionForCache() {
-    MOZ_ASSERT(mCachingPlan == CachingPlan::Uninitialized);
-    mCachingPlan = CachingPlan::PassedCondition;
+  bool PassedConditionForEitherCache() const {
+    return PassedConditionForDiskCache() || PassedConditionForMemoryCache();
   }
 
-  bool IsMarkedForCache() const {
-    return mCachingPlan == CachingPlan::MarkedForCache;
+  void MarkSkippedDiskCaching() {
+    MOZ_ASSERT(mDiskCachingPlan == CachingPlan::Uninitialized ||
+               mDiskCachingPlan == CachingPlan::PassedCondition);
+    mDiskCachingPlan = CachingPlan::Skipped;
+  }
+
+  void MarkSkippedMemoryCaching() {
+    MOZ_ASSERT(mMemoryCachingPlan == CachingPlan::Uninitialized ||
+               mMemoryCachingPlan == CachingPlan::PassedCondition);
+    mMemoryCachingPlan = CachingPlan::Skipped;
+  }
+
+  void MarkSkippedAllCaching() {
+    MarkSkippedDiskCaching();
+    MarkSkippedMemoryCaching();
+  }
+
+  void MarkPassedConditionForDiskCache() {
+    MOZ_ASSERT(mDiskCachingPlan == CachingPlan::Uninitialized);
+    mDiskCachingPlan = CachingPlan::PassedCondition;
+  }
+
+  void MarkPassedConditionForMemoryCache() {
+    MOZ_ASSERT(mMemoryCachingPlan == CachingPlan::Uninitialized);
+    mMemoryCachingPlan = CachingPlan::PassedCondition;
+  }
+
+  bool IsMarkedForDiskCache() const {
+    return mDiskCachingPlan == CachingPlan::MarkedForCache;
+  }
+
+  bool IsMarkedForMemoryCache() const {
+    return mMemoryCachingPlan == CachingPlan::MarkedForCache;
+  }
+
+  bool IsMarkedForEitherCache() const {
+    return IsMarkedForDiskCache() || IsMarkedForMemoryCache();
   }
 
  protected:
   void MarkForCache() {
-    MOZ_ASSERT(mCachingPlan == CachingPlan::PassedCondition);
-    mCachingPlan = CachingPlan::MarkedForCache;
+    MOZ_ASSERT(mDiskCachingPlan == CachingPlan::PassedCondition ||
+               mMemoryCachingPlan == CachingPlan::PassedCondition);
+
+    if (mDiskCachingPlan == CachingPlan::PassedCondition) {
+      mDiskCachingPlan = CachingPlan::MarkedForCache;
+    }
+    if (mMemoryCachingPlan == CachingPlan::PassedCondition) {
+      mMemoryCachingPlan = CachingPlan::MarkedForCache;
+    }
   }
 
  public:
@@ -275,7 +315,8 @@ class ScriptLoadRequest : public nsISupports,
     // e.g. mScriptForCache for script.
     MarkedForCache,
   };
-  CachingPlan mCachingPlan = CachingPlan::Uninitialized;
+  CachingPlan mDiskCachingPlan = CachingPlan::Uninitialized;
+  CachingPlan mMemoryCachingPlan = CachingPlan::Uninitialized;
 
   // The referrer policy used for the initial fetch and for fetching any
   // imported modules

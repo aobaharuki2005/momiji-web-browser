@@ -269,7 +269,7 @@ nsresult ModuleLoader::CompileJavaScriptModule(
       return NS_ERROR_FAILURE;
     }
 
-    if (aRequest->PassedConditionForCache()) {
+    if (aRequest->PassedConditionForEitherCache()) {
       bool alreadyStarted;
       if (!JS::StartCollectingDelazifications(aCx, aModuleOut, stencil,
                                               alreadyStarted)) {
@@ -318,7 +318,7 @@ nsresult ModuleLoader::CompileJavaScriptModule(
     return NS_ERROR_FAILURE;
   }
 
-  if (aRequest->PassedConditionForCache()) {
+  if (aRequest->PassedConditionForEitherCache()) {
     bool alreadyStarted;
     if (!JS::StartCollectingDelazifications(aCx, aModuleOut, stencil,
                                             alreadyStarted)) {
