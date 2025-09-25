@@ -435,6 +435,13 @@ namespace ChromeUtils {
   boolean isJSIdentifier(DOMString str);
 
   /**
+   * Given an URI string, replaces html whitespace with the relevant
+   * url-encoded characters, so that it can be used as part of a srcset without
+   * changing its meaning.
+   */
+  UTF8String encodeURIForSrcset(UTF8String uri);
+
+  /**
    * IF YOU ADD NEW METHODS HERE, MAKE SURE THEY ARE THREAD-SAFE.
    */
 };
