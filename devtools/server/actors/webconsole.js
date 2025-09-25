@@ -511,7 +511,7 @@ class WebConsoleActor extends Actor {
           }
           startedListeners.push(event);
           break;
-        case "NetworkActivity":
+        case "NetworkActivity": {
           // Workers don't support this message type
           if (isWorker) {
             break;
@@ -522,6 +522,7 @@ class WebConsoleActor extends Actor {
             "Instead use Watcher actor's watchResources and listen to NETWORK_EVENT resource";
           dump(errorMessage + "\n");
           throw new Error(errorMessage);
+        }
         case "FileActivity":
           // Workers don't support this message type
           if (isWorker) {

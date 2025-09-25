@@ -847,7 +847,7 @@ MarkupView.prototype = {
       // elements in the Markup view when a coresponding flex or grid highlighter is
       // shown or hidden for a node.
       case this.inspector.highlighters.TYPES.FLEXBOX:
-      case this.inspector.highlighters.TYPES.GRID:
+      case this.inspector.highlighters.TYPES.GRID: {
         const { nodeFront } = data;
         if (!nodeFront) {
           return;
@@ -874,6 +874,7 @@ MarkupView.prototype = {
           });
         }
         break;
+      }
     }
   },
 
