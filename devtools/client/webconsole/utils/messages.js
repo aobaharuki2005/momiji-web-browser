@@ -182,7 +182,7 @@ function transformConsoleAPICallResource(
       ];
       break;
     case "count":
-    case "countReset":
+    case "countReset": {
       // Chrome RDP doesn't have a special type for count.
       type = MESSAGE_TYPE.LOG;
       const { counter } = consoleMessageResource;
@@ -202,6 +202,7 @@ function transformConsoleAPICallResource(
         parameters = null;
       }
       break;
+    }
     case "timeStamp":
       type = MESSAGE_TYPE.NULL_MESSAGE;
       break;

@@ -644,7 +644,7 @@ class AccessibleWalkerActor extends Actor {
     }
 
     switch (event.eventType) {
-      case EVENT_STATE_CHANGE:
+      case EVENT_STATE_CHANGE: {
         const { state, isEnabled } = event.QueryInterface(
           Ci.nsIAccessibleStateChangeEvent
         );
@@ -662,6 +662,7 @@ class AccessibleWalkerActor extends Actor {
         }
 
         break;
+      }
       case EVENT_NAME_CHANGE:
         if (accessible) {
           events.emit(
