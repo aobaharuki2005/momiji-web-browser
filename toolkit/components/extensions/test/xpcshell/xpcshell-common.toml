@@ -190,7 +190,6 @@ skip-if = [
 ]
 
 ["test_ext_cookieBehaviors.js"]
-requesttimeoutfactor = 3 # deleteDatabase may take several minutes in slow environments, Android (bug 1896262)
 skip-if = [
   "appname == 'thunderbird'",
   "tsan", # Bug 1683730
