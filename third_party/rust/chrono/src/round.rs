@@ -109,11 +109,7 @@ pub trait DurationRound: Sized {
     type Err: std::error::Error;
 
     /// Error that can occur in rounding or truncating
-    #[cfg(all(not(feature = "std"), feature = "core-error"))]
-    type Err: core::error::Error;
-
-    /// Error that can occur in rounding or truncating
-    #[cfg(all(not(feature = "std"), not(feature = "core-error")))]
+    #[cfg(not(feature = "std"))]
     type Err: fmt::Debug + fmt::Display;
 
     /// Return a copy rounded by TimeDelta.
@@ -360,14 +356,6 @@ impl fmt::Display for RoundingError {
 
 #[cfg(feature = "std")]
 impl std::error::Error for RoundingError {
-    #[allow(deprecated)]
-    fn description(&self) -> &str {
-        "error from rounding or truncating with DurationRound"
-    }
-}
-
-#[cfg(all(not(feature = "std"), feature = "core-error"))]
-impl core::error::Error for RoundingError {
     #[allow(deprecated)]
     fn description(&self) -> &str {
         "error from rounding or truncating with DurationRound"

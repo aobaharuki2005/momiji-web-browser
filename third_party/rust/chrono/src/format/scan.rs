@@ -386,7 +386,8 @@ mod tests {
             let actual = comment_2822(test_in).map(|(s, _)| s);
             assert_eq!(
                 *expected, actual,
-                "{test_in:?} expected to produce {expected:?}, but produced {actual:?}."
+                "{:?} expected to produce {:?}, but produced {:?}.",
+                test_in, expected, actual
             );
         }
     }

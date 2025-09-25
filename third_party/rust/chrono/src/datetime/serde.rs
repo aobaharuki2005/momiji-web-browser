@@ -242,7 +242,11 @@ pub mod ts_nanoseconds {
         where
             E: de::Error,
         {
-            Ok(DateTime::from_timestamp_nanos(value))
+            DateTime::from_timestamp(
+                value.div_euclid(1_000_000_000),
+                (value.rem_euclid(1_000_000_000)) as u32,
+            )
+            .ok_or_else(|| invalid_ts(value))
         }
 
         /// Deserialize a timestamp in nanoseconds since the epoch
@@ -520,7 +524,11 @@ pub mod ts_microseconds {
         where
             E: de::Error,
         {
-            DateTime::from_timestamp_micros(value).ok_or_else(|| invalid_ts(value))
+            DateTime::from_timestamp(
+                value.div_euclid(1_000_000),
+                (value.rem_euclid(1_000_000) * 1000) as u32,
+            )
+            .ok_or_else(|| invalid_ts(value))
         }
 
         /// Deserialize a timestamp in milliseconds since the epoch
@@ -1056,7 +1064,7 @@ pub mod ts_seconds {
         where
             E: de::Error,
         {
-            DateTime::from_timestamp_secs(value).ok_or_else(|| invalid_ts(value))
+            DateTime::from_timestamp(value, 0).ok_or_else(|| invalid_ts(value))
         }
 
         /// Deserialize a timestamp in seconds since the epoch
@@ -1067,7 +1075,7 @@ pub mod ts_seconds {
             if value > i64::MAX as u64 {
                 Err(invalid_ts(value))
             } else {
-                DateTime::from_timestamp_secs(value as i64).ok_or_else(|| invalid_ts(value))
+                DateTime::from_timestamp(value as i64, 0).ok_or_else(|| invalid_ts(value))
             }
         }
     }

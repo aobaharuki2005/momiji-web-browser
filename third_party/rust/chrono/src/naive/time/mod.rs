@@ -1524,7 +1524,7 @@ impl fmt::Debug for NaiveTime {
         } else if nano % 1_000 == 0 {
             write!(f, ".{:06}", nano / 1_000)
         } else {
-            write!(f, ".{nano:09}")
+            write!(f, ".{:09}", nano)
         }
     }
 }

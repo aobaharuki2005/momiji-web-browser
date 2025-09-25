@@ -13,7 +13,8 @@
 edition = "2021"
 rust-version = "1.71"
 name = "windows-link"
-version = "0.2.0"
+version = "0.1.1"
+authors = ["Microsoft"]
 build = false
 autolib = false
 autobins = false
@@ -21,8 +22,7 @@ autoexamples = false
 autotests = false
 autobenches = false
 description = "Linking for Windows"
-readme = "README.md"
-categories = ["os::windows-apis"]
+readme = "readme.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/microsoft/windows-rs"
 
@@ -31,9 +31,14 @@ name = "windows_link"
 path = "src/lib.rs"
 
 [lints.rust]
-missing_unsafe_on_extern = "warn"
+missing_docs = "warn"
+unsafe_op_in_unsafe_fn = "warn"
+
+[lints.rust.rust_2018_idioms]
+level = "warn"
+priority = -1
 
 [lints.rust.unexpected_cfgs]
 level = "warn"
 priority = 0
-check-cfg = ["cfg(windows_raw_dylib, windows_slim_errors)"]
+check-cfg = ["cfg(windows_raw_dylib, windows_debugger_visualizer, windows_slim_errors)"]

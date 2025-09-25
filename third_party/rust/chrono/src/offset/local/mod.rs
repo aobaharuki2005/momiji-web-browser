@@ -28,9 +28,6 @@ mod inner;
 #[allow(unreachable_pub)]
 mod win_bindings;
 
-#[cfg(all(any(target_os = "android", target_env = "ohos", test), feature = "clock"))]
-mod tz_data;
-
 #[cfg(all(
     not(unix),
     not(windows),
@@ -59,7 +56,7 @@ mod inner {
 #[cfg(all(
     target_arch = "wasm32",
     feature = "wasmbind",
-    not(any(target_os = "emscripten", target_os = "wasi", target_os = "linux"))
+    not(any(target_os = "emscripten", target_os = "wasi"))
 ))]
 mod inner {
     use crate::{Datelike, FixedOffset, MappedLocalTime, NaiveDateTime, Timelike};
@@ -219,7 +216,7 @@ impl Transition {
 #[cfg(windows)]
 impl PartialOrd for Transition {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
+        Some(self.transition_utc.cmp(&other.transition_utc))
     }
 }
 
@@ -343,7 +340,8 @@ mod tests {
             // but there are only two sensible options.
             assert!(
                 timestr == "15:02:60" || timestr == "15:03:00",
-                "unexpected timestr {timestr:?}"
+                "unexpected timestr {:?}",
+                timestr
             );
         }
 
@@ -351,7 +349,8 @@ mod tests {
             let timestr = dt.time().to_string();
             assert!(
                 timestr == "15:02:03.234" || timestr == "15:02:04.234",
-                "unexpected timestr {timestr:?}"
+                "unexpected timestr {:?}",
+                timestr
             );
         }
     }

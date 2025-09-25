@@ -10,8 +10,6 @@
 
 //! Temporal quantification
 
-#[cfg(all(not(feature = "std"), feature = "core-error"))]
-use core::error::Error;
 use core::fmt;
 use core::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
 use core::time::Duration;
@@ -589,7 +587,7 @@ impl fmt::Display for TimeDelta {
         // but we need to print it anyway.
         let (abs, sign) = if self.secs < 0 { (-*self, "-") } else { (*self, "") };
 
-        write!(f, "{sign}P")?;
+        write!(f, "{}P", sign)?;
         // Plenty of ways to encode an empty string. `P0D` is short and not too strange.
         if abs.secs == 0 && abs.nanos == 0 {
             return f.write_str("0D");
@@ -610,7 +608,7 @@ impl fmt::Display for TimeDelta {
                 fraction_digits = div;
                 figures -= 1;
             }
-            f.write_fmt(format_args!(".{fraction_digits:0figures$}"))?;
+            f.write_fmt(format_args!(".{:01$}", fraction_digits, figures))?;
         }
         f.write_str("S")?;
         Ok(())
@@ -632,7 +630,7 @@ impl fmt::Display for OutOfRangeError {
     }
 }
 
-#[cfg(any(feature = "std", feature = "core-error"))]
+#[cfg(feature = "std")]
 impl Error for OutOfRangeError {
     #[allow(deprecated)]
     fn description(&self) -> &str {
