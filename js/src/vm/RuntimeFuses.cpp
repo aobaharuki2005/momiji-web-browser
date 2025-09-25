@@ -58,7 +58,5 @@ void js::HasSeenObjectEmulateUndefinedFuse::popFuse(JSContext* cx) {
 }
 
 void js::HasSeenArrayExceedsInt32LengthFuse::popFuse(JSContext* cx) {
-  if (intact()) {
-    js::InvalidatingRuntimeFuse::popFuse(cx);
-  }
+  js::InvalidatingRuntimeFuse::popFuse(cx);
 }
