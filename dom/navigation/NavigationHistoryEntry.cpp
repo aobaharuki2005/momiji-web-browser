@@ -124,7 +124,10 @@ void NavigationHistoryEntry::GetState(JSContext* aCx,
 }
 
 void NavigationHistoryEntry::SetState(nsStructuredCloneContainer* aState) {
-  mSHInfo->SetNavigationState(aState);
+  if (RefPtr<nsStructuredCloneContainer> state =
+          mSHInfo->GetNavigationState()) {
+    state->Copy(*aState);
+  }
 }
 
 bool NavigationHistoryEntry::IsSameEntry(
