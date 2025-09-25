@@ -4805,47 +4805,47 @@ AMRemoteSettings = {
  * whereas on Firefox for Android / GeckoView builds it is managed from the AMTelemetry singleton
  * defined in this same ES module.
  */
-export function EnvironmentAddonBuilder(environment) {
-  this._environment = environment;
+export class EnvironmentAddonBuilder {
+  // Used by TelemetryEnvironment to determine if it is still
+  // responsible for creating and managing the EnvironmentAddonBuilder
+  // instance as part of the legacy TelemetryEnvironment.
+  static isTelemetryEnvironmentEnabled = () =>
+    !lazy.AMTELEMETRY_ADDONS_BUILDER_ENABLED;
 
-  // The pending task blocks addon manager shutdown. It can either be the initial load
-  // or a change load.
-  this._pendingTask = null;
+  constructor(environment) {
+    this._environment = environment;
 
-  // Have we added an observer to listen for blocklist changes that still needs to be
-  // removed:
-  this._gmpProviderObserverAdded = false;
+    // The pending task blocks addon manager shutdown. It can either be the initial load
+    // or a change load.
+    this._pendingTask = null;
 
-  // Set to true once initial load is complete and we're watching for changes.
-  this._loaded = false;
+    // Have we added an observer to listen for blocklist changes that still needs to be
+    // removed:
+    this._gmpProviderObserverAdded = false;
 
-  // Set to true once the shutdown has been completed.
-  this._shutdownCompleted = false;
+    // Set to true once initial load is complete and we're watching for changes.
+    this._loaded = false;
 
-  // The state reported by the shutdown blocker if we hang shutdown.
-  this._shutdownState = "Initial";
+    // Set to true once the shutdown has been completed.
+    this._shutdownCompleted = false;
 
-  // Addons may contain partial or full data depending on whether the Addons DB
-  // has had a chance to load. Do we have full data yet?
-  this._addonsAreFull = false;
+    // The state reported by the shutdown blocker if we hang shutdown.
+    this._shutdownState = "Initial";
 
-  this._log = console.createInstance({
-    prefix: "EnvironmentAddonBuilder",
-    maxLogLevel: Services.prefs.getBoolPref(PREF_LOGGING_ENABLED)
-      ? "Debug"
-      : "Warn",
-  });
+    // Addons may contain partial or full data depending on whether the Addons DB
+    // has had a chance to load. Do we have full data yet?
+    this._addonsAreFull = false;
 
-  this._currentData = {};
-}
+    this._log = console.createInstance({
+      prefix: "EnvironmentAddonBuilder",
+      maxLogLevel: Services.prefs.getBoolPref(PREF_LOGGING_ENABLED)
+        ? "Debug"
+        : "Warn",
+    });
 
-// Used by TelemetryEnvironment to determine if it is still
-// responsible for creating and managing the EnvironmentAddonBuilder
-// instance as part of the legacy TelemetryEnvironment.
-EnvironmentAddonBuilder.isTelemetryEnvironmentEnabled = () =>
-  !lazy.AMTELEMETRY_ADDONS_BUILDER_ENABLED;
+    this._currentData = {};
+  }
 
-EnvironmentAddonBuilder.prototype = {
   /**
    * Returns a substring of the input string.
    *
@@ -4859,7 +4859,7 @@ EnvironmentAddonBuilder.prototype = {
       return null;
     }
     return aString.substring(0, aMaxLength);
-  },
+  }
 
   /**
    * Enforces the parameter to a boolean value.
@@ -4872,7 +4872,7 @@ EnvironmentAddonBuilder.prototype = {
       return null;
     }
     return Boolean(aValue);
-  },
+  }
 
   /**
    * Get the initial set of addons.
@@ -4911,14 +4911,14 @@ EnvironmentAddonBuilder.prototype = {
     })();
 
     return this._pendingTask;
-  },
+  }
 
   async uninit() {
     if (this._shutdownCompleted) {
       return;
     }
     await this._shutdownBlocker();
-  },
+  }
 
   /**
    * Register an addon listener and watch for changes.
@@ -4927,24 +4927,29 @@ EnvironmentAddonBuilder.prototype = {
     this._log.trace("watchForChanges");
     this._loaded = true;
     AddonManager.addAddonListener(this);
-  },
+  }
 
   // AddonListener
   onEnabled(addon) {
     this._onAddonChange(addon);
-  },
+  }
+
   onDisabled(addon) {
     this._onAddonChange(addon);
-  },
+  }
+
   onInstalled(addon) {
     this._onAddonChange(addon);
-  },
+  }
+
   onUninstalling(addon) {
     this._onAddonChange(addon);
-  },
+  }
+
   onUninstalled(addon) {
     this._onAddonChange(addon);
-  },
+  }
+
   onPropertyChanged(addon, propertiesChanged) {
     // Avoid to update the telemetry environment for onPropertyChanged
     // calls that we are not actually interested in (and quarantineIgnoredByApp
@@ -4955,13 +4960,36 @@ EnvironmentAddonBuilder.prototype = {
       return;
     }
     this._onAddonChange(addon);
-  },
-  _onEnvironmentChange(changeReason, oldEnvironment) {
-    this._environment?._onEnvironmentChange(changeReason, oldEnvironment);
-  },
+  }
+
+  // nsIObserver
+  observe(aSubject, aTopic) {
+    this._log.trace("observe - Topic " + aTopic);
+    if (aTopic == GMP_PROVIDER_REGISTERED_TOPIC) {
+      Services.obs.removeObserver(this, GMP_PROVIDER_REGISTERED_TOPIC);
+      this._gmpProviderObserverAdded = false;
+      let gmpPluginsPromise = this._getActiveGMPlugins();
+      gmpPluginsPromise.then(
+        gmpPlugins => {
+          let { addons } = this._currentEnvironment;
+          addons.activeGMPlugins = gmpPlugins;
+        },
+        err => {
+          this._log.error("blocklist observe: Error collecting plugins", err);
+        }
+      );
+    }
+  }
+
+  // Internal helper methods and getters.
   get _currentEnvironment() {
     return this._environment?._currentEnvironment ?? this._currentData;
-  },
+  }
+
+  _onEnvironmentChange(changeReason, oldEnvironment) {
+    this._environment?._onEnvironmentChange(changeReason, oldEnvironment);
+  }
+
   _onAddonChange(addon) {
     // On builds where this metric is also reported in the legacy telemetry main ping
     // as part of the TelemetryEnvironment, return earlier if the add-on is a non-system builtin
@@ -4982,26 +5010,7 @@ EnvironmentAddonBuilder.prototype = {
     }
     this._log.trace(`_onAddonChange ${addon?.id ? addon.id : ""}`);
     this._checkForChanges("addons-changed");
-  },
-
-  // nsIObserver
-  observe(aSubject, aTopic) {
-    this._log.trace("observe - Topic " + aTopic);
-    if (aTopic == GMP_PROVIDER_REGISTERED_TOPIC) {
-      Services.obs.removeObserver(this, GMP_PROVIDER_REGISTERED_TOPIC);
-      this._gmpProviderObserverAdded = false;
-      let gmpPluginsPromise = this._getActiveGMPlugins();
-      gmpPluginsPromise.then(
-        gmpPlugins => {
-          let { addons } = this._currentEnvironment;
-          addons.activeGMPlugins = gmpPlugins;
-        },
-        err => {
-          this._log.error("blocklist observe: Error collecting plugins", err);
-        }
-      );
-    }
-  },
+  }
 
   _checkForChanges(changeReason) {
     if (this._pendingTask) {
@@ -5027,7 +5036,7 @@ EnvironmentAddonBuilder.prototype = {
         this._log.error("_checkForChanges: Error collecting addons", err);
       }
     );
-  },
+  }
 
   async _shutdownBlocker() {
     if (this._loaded) {
@@ -5044,7 +5053,7 @@ EnvironmentAddonBuilder.prototype = {
     // available by the time profileBeforeChangeTelemetry is fired.
     await this._pendingTask;
     this._shutdownCompleted = true;
-  },
+  }
 
   /**
    * Collect the addon data for the environment.
@@ -5095,7 +5104,7 @@ EnvironmentAddonBuilder.prototype = {
     );
 
     return result;
-  },
+  }
 
   /**
    * Get the addon data in object form.
@@ -5192,7 +5201,7 @@ EnvironmentAddonBuilder.prototype = {
     }
 
     return activeAddons;
-  },
+  }
 
   /**
    * Get the currently active theme data in object form.
@@ -5238,7 +5247,7 @@ EnvironmentAddonBuilder.prototype = {
     }
 
     return activeTheme;
-  },
+  }
 
   /**
    * Get the GMPlugins data in object form.
@@ -5290,8 +5299,8 @@ EnvironmentAddonBuilder.prototype = {
     }
 
     return activeGMPlugins;
-  },
-};
+  }
+}
 
 /**
  * Listens to the AddonManager install and addon events and send telemetry events.
