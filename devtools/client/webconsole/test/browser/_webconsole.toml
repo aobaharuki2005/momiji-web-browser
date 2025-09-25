@@ -173,9 +173,6 @@ support-files = [
   "test-time-methods.html",
   "test-trackingprotection-securityerrors.html",
   "test-trackingprotection-securityerrors-thirdpartyonly.html",
-  "test-warning-groups.html",
-  "test-warning-group-csp.html",
-  "test-warning-group-csp.html^headers^",
   "test-websocket.html",
   "test-websocket.js",
   "test-worker-promise-error.html",
@@ -696,30 +693,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_webconsole_visibility_messages.js"]
 
 ["browser_webconsole_warn_about_replaced_api.js"]
-
-["browser_webconsole_warning_group_cookies.js"]
-
-["browser_webconsole_warning_group_csp.js"]
-
-["browser_webconsole_warning_group_enhanced_tracking_protection.js"]
-
-["browser_webconsole_warning_group_multiples.js"]
-
-["browser_webconsole_warning_group_storage_isolation.js"]
-skip-if = [
-  "os == 'linux' && os_version == '18.04' && processor == 'x86_64'", # Bug 1765369
-  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11'", # Bug 1765369
-  "os == 'mac' && os_version == '14.70' && processor == 'x86_64'", # Bug 1765369
-  "os == 'win' && os_version == '11.26100' && processor == 'x86_64'", # Bug 1765369
-]
-
-["browser_webconsole_warning_groups.js"]
-
-["browser_webconsole_warning_groups_filtering.js"]
-
-["browser_webconsole_warning_groups_outside_console_group.js"]
-
-["browser_webconsole_warning_groups_toggle.js"]
 
 ["browser_webconsole_wasm_errors.js"]
 
