@@ -188,9 +188,9 @@ class DeclarationBlock final {
   }
 
   bool GetPropertyTypedValue(const nsACString& aProperty,
-                             StylePropertyTypedValue& aTypedValue) const {
+                             StylePropertyTypedValueResult& aResult) const {
     return Servo_DeclarationBlock_GetPropertyTypedValue(mRaw, &aProperty,
-                                                        &aTypedValue);
+                                                        &aResult);
   }
 
   // Returns whether the property was removed.

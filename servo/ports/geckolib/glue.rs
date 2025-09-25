@@ -109,6 +109,7 @@ use style::invalidation::stylesheets::RuleChangeKind;
 use style::logical_geometry::{PhysicalAxis, PhysicalSide};
 use style::media_queries::MediaList;
 use style::parser::{Parse, ParserContext};
+use style::properties::declaration_block::PropertyTypedValue;
 #[cfg(feature = "gecko_debug")]
 use style::properties::LonghandIdSet;
 use style::properties::{
@@ -118,7 +119,6 @@ use style::properties::{
     PropertyDeclarationBlock, PropertyDeclarationId, PropertyDeclarationIdSet, PropertyId,
     ShorthandId, SourcePropertyDeclaration, StyleBuilder,
 };
-use style::properties::declaration_block::PropertyTypedValue;
 use style::properties_and_values::registry::{PropertyRegistration, PropertyRegistrationData};
 use style::properties_and_values::rule::Inherits as PropertyInherits;
 use style::rule_cache::RuleCacheConditions;
@@ -174,7 +174,7 @@ use style::values::specified::source_size_list::SourceSizeList;
 use style::values::specified::svg_path::PathCommand;
 use style::values::specified::{AbsoluteLength, NoCalcLength};
 use style::values::{specified, AtomIdent, CustomIdent, KeyframesName};
-use style_traits::{CssWriter, ParseError, ParsingMode, ToCss};
+use style_traits::{CssWriter, ParseError, ParsingMode, ToCss, TypedValue};
 use thin_vec::ThinVec as nsTArray;
 use to_shmem::SharedMemoryBuilder;
 
@@ -5301,19 +5301,57 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_GetPropertyIsImportant(
     })
 }
 
+/// A FFI-friendly counterpart to [`PropertyTypedValue`].
+///
+/// This type is returned across the Rust <-> C++ boundary. It mirrors
+/// [`PropertyTypedValue`], but with one important difference:
+///
+/// * Internally, [`PropertyTypedValue::Unsupported`] is just a marker.
+/// * Here, `PropertyTypedValueResult::Unsupported` carries a
+///   `Strong<LockedDeclarationBlock>`.
+/// This is mostly because `cbindgen` currently cannot generate right bindings
+/// for `Arc<Locked<PropertyDeclarationBlock>>` inside the Rust enum.
+#[repr(C)]
+pub enum PropertyTypedValueResult {
+    /// The property is not present in the declaration block.
+    None,
+
+    /// The property exists but cannot be expressed as a `TypedValue`.
+    ///
+    /// Used for shorthands and other unrepresentable cases. In this case, the
+    /// full declaration block is returned so that a corresponding
+    /// `CSSUnsupportedValue` object can be created and tied to the property.
+    Unsupported(Strong<LockedDeclarationBlock>),
+
+    /// The property was successfully reified into a `TypedValue`.
+    Typed(TypedValue),
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn Servo_DeclarationBlock_GetPropertyTypedValue(
     declarations: &LockedDeclarationBlock,
     property: &nsACString,
-    result: *mut PropertyTypedValue,
+    result: *mut PropertyTypedValueResult,
 ) -> bool {
     let property_id = get_property_id_from_property!(property, false);
 
-    let property_typed_value = read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
-        decls.property_value_to_typed(&property_id)
+    *result = read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
+        let property_typed_value = decls.property_value_to_typed(&property_id);
+
+        match property_typed_value {
+            PropertyTypedValue::None => PropertyTypedValueResult::None,
+
+            PropertyTypedValue::Unsupported => {
+                let global_style_data = &*GLOBAL_STYLE_DATA;
+                PropertyTypedValueResult::Unsupported(
+                    Arc::new(global_style_data.shared_lock.wrap(decls.clone())).into(),
+                )
+            },
+
+            PropertyTypedValue::Typed(typed_value) => PropertyTypedValueResult::Typed(typed_value),
+        }
     });
 
-    *result = property_typed_value;
     true
 }
 
@@ -8339,6 +8377,63 @@ pub unsafe extern "C" fn Servo_GetResolvedValue(
     };
 
     computed_or_resolved_value(style, prop, Some(&context), value)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_GetComputedTypedValue(
+    style: &ComputedValues,
+    property: &nsACString,
+    result: *mut PropertyTypedValueResult,
+) -> bool {
+    let property_id = get_property_id_from_property!(property, false);
+
+    let non_custom_property_id = match property_id.non_custom_id() {
+        Some(id) => id,
+        // XXX Handle custom properties here. Tracked in bug 1990426.
+        None => return false,
+    };
+
+    let property_typed_value = match non_custom_property_id.longhand_or_shorthand() {
+        Ok(longhand) => style
+            .computed_typed_value(longhand)
+            .map_or(PropertyTypedValue::Unsupported, PropertyTypedValue::Typed),
+        Err(_) => PropertyTypedValue::Unsupported,
+    };
+
+    *result = match property_typed_value {
+        PropertyTypedValue::None => PropertyTypedValueResult::None,
+
+        PropertyTypedValue::Unsupported => {
+            let global_style_data = &*GLOBAL_STYLE_DATA;
+
+            let mut block = PropertyDeclarationBlock::new();
+
+            match non_custom_property_id.longhand_or_shorthand() {
+                Ok(longhand) => {
+                    block.push(
+                        style.computed_or_resolved_declaration(longhand, None),
+                        Importance::Normal,
+                    );
+                },
+                Err(shorthand) => {
+                    for longhand in shorthand.longhands() {
+                        block.push(
+                            style.computed_or_resolved_declaration(longhand, None),
+                            Importance::Normal,
+                        );
+                    }
+                },
+            };
+
+            PropertyTypedValueResult::Unsupported(
+                Arc::new(global_style_data.shared_lock.wrap(block)).into(),
+            )
+        },
+
+        PropertyTypedValue::Typed(typed_value) => PropertyTypedValueResult::Typed(typed_value),
+    };
+
+    true
 }
 
 #[no_mangle]
