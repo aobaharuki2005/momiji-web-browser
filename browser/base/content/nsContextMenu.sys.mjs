@@ -3040,6 +3040,8 @@ export class nsContextMenu {
    *   The menuitem that should be badged.
    */
   async #setNewFeatureBadge(menuitem, shouldShow) {
+    menuitem.classList.toggle("badge-new", shouldShow);
+
     if (!shouldShow) {
       menuitem.removeAttribute("badge");
       return;
