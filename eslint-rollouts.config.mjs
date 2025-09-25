@@ -117,7 +117,6 @@ export default [
       "mobile/shared/actors/**",
       "mobile/shared/components/geckoview/GeckoViewStartup.sys.mjs",
       "mobile/shared/modules/geckoview/**",
-      "remote/**",
       "services/fxaccounts/**",
       "services/sync/**",
       "toolkit/actors/**",
