@@ -2,7 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>ForbiddenSuppress:BrowserFragment.kt$BrowserFragment$@Suppress("ComplexCondition", "LongMethod")</ID>
     <ID>OutdatedDocumentation:AppAdapter.kt$AppAdapter : Adapter</ID>
     <ID>OutdatedDocumentation:AppReviewUtils.kt$AppReviewUtils$fun addAppOpenings(context: Context)</ID>
     <ID>OutdatedDocumentation:AppReviewUtils.kt$AppReviewUtils$fun showAppReview(activity: Activity)</ID>
@@ -33,7 +32,6 @@
     <ID>UndocumentedPublicClass:BaseFragment.kt$BaseFragment : Fragment</ID>
     <ID>UndocumentedPublicClass:BaseSettingsFragment.kt$BaseSettingsFragment : PreferenceFragmentCompatMenuProvider</ID>
     <ID>UndocumentedPublicClass:BiometricAuthenticationFragment.kt$BiometricAuthenticationFragment$Companion</ID>
-    <ID>UndocumentedPublicClass:BrowserFragment.kt$BrowserFragment$Companion</ID>
     <ID>UndocumentedPublicClass:BrowserToolbarIntegration.kt$BrowserToolbarIntegration : LifecycleAwareFeature</ID>
     <ID>UndocumentedPublicClass:Config.kt$Config</ID>
     <ID>UndocumentedPublicClass:ConnectionDetailsPanel.kt$ConnectionDetailsPanel : BottomSheetDialog</ID>
@@ -166,10 +164,6 @@
     <ID>UndocumentedPublicFunction:AutocompleteListFragment.kt$AutocompleteListFragment.DomainListAdapter$fun refresh(context: Context, body: (() -&gt; Unit)? = null)</ID>
     <ID>UndocumentedPublicFunction:AutocompleteListFragment.kt$AutocompleteListFragment.DomainListAdapter$fun selection(): List&lt;String&gt;</ID>
     <ID>UndocumentedPublicFunction:BaseFragment.kt$BaseFragment$fun cancelAnimation()</ID>
-    <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment$fun crashReporterIsVisible(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment$fun erase(shouldEraseAllTabs: Boolean = false)</ID>
-    <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment$fun handleTabCrash(crash: Crash)</ID>
-    <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment$fun showTrackingProtectionPanel()</ID>
     <ID>UndocumentedPublicFunction:BrowsersCache.kt$BrowsersCache$@Synchronized fun all(context: Context): Browsers</ID>
     <ID>UndocumentedPublicFunction:ClientWrapper.kt$ClientWrapper$@Deprecated("Non-private Client usage should be prevented") fun unwrap(): Client</ID>
     <ID>UndocumentedPublicFunction:CookiesPreference.kt$CookiesPreference$fun updateSummary()</ID>
