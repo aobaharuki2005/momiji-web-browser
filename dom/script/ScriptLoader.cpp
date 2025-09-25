@@ -2718,11 +2718,6 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
       MOZ_ASSERT(!aRequest->isInList());
       mCacheableDependencyModules.AppendElement(aRequest);
     }
-
-    // TODO: Stencil's case should also calculate the disk cache flag.
-    if (aRequest->IsStencil()) {
-      return;
-    }
   } else {
     aRequest->MarkSkippedMemoryCaching();
   }
@@ -2796,8 +2791,12 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
   if (hasSourceLengthMin) {
     size_t sourceLength;
     size_t minLength;
-    MOZ_ASSERT(aRequest->IsTextSource());
-    sourceLength = aRequest->ReceivedScriptTextLength();
+    if (aRequest->IsStencil()) {
+      sourceLength = JS::GetScriptSourceLength(aRequest->GetStencil());
+    } else {
+      MOZ_ASSERT(aRequest->IsTextSource());
+      sourceLength = aRequest->ReceivedScriptTextLength();
+    }
     minLength = sourceLengthMin;
     if (sourceLength < minLength) {
       LOG(
@@ -2814,13 +2813,18 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
   // are going to be dropped soon.
   if (hasFetchCountMin) {
     uint32_t fetchCount = 0;
-    if (NS_FAILED(aRequest->mCacheInfo->GetCacheTokenFetchCount(&fetchCount))) {
-      LOG(
-          ("ScriptLoadRequest (%p): Bytecode-cache: Skip disk: Cannot get "
-           "fetchCount.",
-           aRequest));
-      aRequest->MarkSkippedDiskCaching();
-      return;
+    if (aRequest->IsStencil()) {
+      fetchCount = aRequest->mLoadedScript->mFetchCount;
+    } else {
+      if (NS_FAILED(
+              aRequest->mCacheInfo->GetCacheTokenFetchCount(&fetchCount))) {
+        LOG(
+            ("ScriptLoadRequest (%p): Bytecode-cache: Skip disk: Cannot get "
+             "fetchCount.",
+             aRequest));
+        aRequest->MarkSkippedDiskCaching();
+        return;
+      }
     }
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: fetchCount = %d.", aRequest,
          fetchCount));

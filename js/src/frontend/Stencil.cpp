@@ -6214,3 +6214,11 @@ bool JS::IsStencilCacheable(JS::Stencil* stencil) {
 
   return true;
 }
+
+JS_PUBLIC_API size_t JS::GetScriptSourceLength(JS::Stencil* stencil) {
+  const ScriptSource* source = stencil->getInitial()->source;
+  if (!source->hasSourceText()) {
+    return 0;
+  }
+  return source->length();
+}
