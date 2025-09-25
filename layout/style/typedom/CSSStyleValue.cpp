@@ -67,4 +67,8 @@ bool CSSStyleValue::IsCSSUnsupportedValue() const {
   return mValueType == ValueType::Unsupported;
 }
 
+bool CSSStyleValue::IsCSSKeywordValue() const {
+  return mValueType == ValueType::Keyword;
+}
+
 }  // namespace mozilla::dom

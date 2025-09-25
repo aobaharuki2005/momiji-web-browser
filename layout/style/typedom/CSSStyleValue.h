@@ -25,11 +25,12 @@ class ErrorResult;
 namespace dom {
 
 class GlobalObject;
+class CSSKeywordValue;
 class CSSUnsupportedValue;
 
 class CSSStyleValue : public nsISupports, public nsWrapperCache {
  public:
-  enum class ValueType { Uninitialized, Unsupported };
+  enum class ValueType { Uninitialized, Unsupported, Keyword };
 
   explicit CSSStyleValue(nsCOMPtr<nsISupports> aParent);
 
@@ -62,6 +63,11 @@ class CSSStyleValue : public nsISupports, public nsWrapperCache {
 
   // Defined in CSSUnsupportedValue.cpp
   CSSUnsupportedValue& GetAsCSSUnsupportedValue();
+
+  bool IsCSSKeywordValue() const;
+
+  // Defined in CSSKeywordValue.cpp
+  CSSKeywordValue& GetAsCSSKeywordValue();
 
  protected:
   virtual ~CSSStyleValue() = default;
