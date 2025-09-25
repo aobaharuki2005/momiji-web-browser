@@ -1128,6 +1128,17 @@
             "default": "unset"
           }
         }
+      },
+      "xxxlarge": {
+        "value": {
+          "brand": {
+            "default": "2.2rem",
+            "comment": "33px"
+          },
+          "platform": {
+            "default": "unset"
+          }
+        }
       }
     },
     "weight": {

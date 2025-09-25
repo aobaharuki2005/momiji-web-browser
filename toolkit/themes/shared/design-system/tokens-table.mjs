@@ -654,6 +654,13 @@ export const tokensTable = {
       },
       name: "--font-size-xxlarge",
     },
+    {
+      value: {
+        brand: { default: "2.2rem", comment: "33px" },
+        platform: { default: "unset" },
+      },
+      name: "--font-size-xxxlarge",
+    },
     { value: "var(--font-size-xxlarge)", name: "--heading-font-size-xlarge" },
     { value: "var(--font-size-xlarge)", name: "--heading-font-size-large" },
     { value: "var(--font-size-large)", name: "--heading-font-size-medium" },
@@ -1595,6 +1602,10 @@ export const variableLookupTable = {
   },
   "font-size-xxlarge": {
     brand: { default: "1.6rem", comment: "24px" },
+    platform: { default: "unset" },
+  },
+  "font-size-xxxlarge": {
+    brand: { default: "2.2rem", comment: "33px" },
     platform: { default: "unset" },
   },
   "font-weight": "normal",
