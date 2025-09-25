@@ -1299,14 +1299,20 @@ class SelectableProfileServiceClass extends EventEmitter {
         missing.join(",")
       );
     }
-    await this.#connection.execute(
-      `INSERT INTO Profiles VALUES (NULL, :path, :name, :avatar, :themeId, :themeFg, :themeBg);`,
+    const rows = await this.#connection.execute(
+      `INSERT INTO Profiles
+       VALUES (NULL, :path, :name, :avatar, :themeId, :themeFg, :themeBg)
+       RETURNING id;`,
       profileData
     );
+    const profileId = rows[0].getResultByName("id");
+    if (!profileId) {
+      throw new Error(`Unable to insertProfile with values: ${profileData}`);
+    }
 
     ProfilesDatastoreService.notify();
 
-    return this.getProfileByName(profileData.name);
+    return this.getProfile(profileId);
   }
 
   async deleteProfile(aProfile) {
