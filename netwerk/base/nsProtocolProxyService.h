@@ -200,6 +200,8 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    *        The proxy port number.
    * @param pathTemplate
    *        The PathTemplate.
+   * @param alpn
+   *        The alpn used for proxy connection.
    * @param username
    *        The username for the proxy (ASCII). May be "", but not null.
    * @param password
@@ -217,6 +219,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    */
   nsresult NewProxyInfo_Internal(const char* type, const nsACString& host,
                                  int32_t port, const nsACString& pathTemplate,
+                                 const nsACString& alpn,
                                  const nsACString& username,
                                  const nsACString& password,
                                  const nsACString& aProxyAuthorizationHeader,

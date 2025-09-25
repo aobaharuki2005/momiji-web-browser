@@ -3038,7 +3038,6 @@ dependencies = [
  "neqo-http3",
  "neqo-qpack",
  "neqo-transport",
- "socket2",
  "tokio",
 ]
 

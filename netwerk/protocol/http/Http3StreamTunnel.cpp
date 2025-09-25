@@ -143,12 +143,6 @@ Http3TransportLayer::InputStreamTunnel::AsyncWait(
     Unused << NS_DispatchToCurrentThread(NS_NewRunnableFunction(
         "InputStreamTunnel::CallOnSocketReady",
         [self{std::move(self)}]() { self->OnSocketReady(self->mCondition); }));
-  } else if (callback) {
-    RefPtr<Http3StreamTunnel> tunnel = mTransport->GetStream();
-    if (!tunnel) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    tunnel->HasDataToRead();
   }
 
   mCallback = callback;
@@ -209,7 +203,6 @@ Http3TransportLayer::OutputStreamTunnel::Write(const char* buf, uint32_t count,
     return NS_ERROR_UNEXPECTED;
   }
 
-  tunnel->HasDataToWrite();
   return tunnel->OnReadSegment(buf, count, countWritten);
 }
 
@@ -684,8 +677,6 @@ void Http3StreamTunnel::SetRequestDone() {
 void Http3StreamTunnel::HasDataToWrite() {
   mSession->StreamHasDataToWrite(this);
 }
-
-void Http3StreamTunnel::HasDataToRead() { mSession->ConnectSlowConsumer(this); }
 
 already_AddRefed<nsHttpConnection> Http3StreamTunnel::CreateHttpConnection(
     nsIInterfaceRequestor* aCallbacks, PRIntervalTime aRtt,

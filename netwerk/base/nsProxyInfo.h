@@ -38,6 +38,7 @@ class nsProxyInfo final : public nsIProxyInfo {
   const nsCString& Host() const { return mHost; }
   int32_t Port() const { return mPort; }
   const nsCString& PathTemplate() const { return mPathTemplate; }
+  const nsCString& Alpn() const { return mAlpn; }
   const char* Type() const { return mType; }
   uint32_t Flags() const { return mFlags; }
   const nsCString& Username() const { return mUsername; }
@@ -77,7 +78,7 @@ class nsProxyInfo final : public nsIProxyInfo {
               uint32_t aFlags, uint32_t aTimeout, uint32_t aResolveFlags,
               const nsACString& aProxyAuthorizationHeader,
               const nsACString& aConnectionIsolationKey,
-              const nsACString& aUriTemplate);
+              const nsACString& aUriTemplate, const nsACString& aAlpn);
 
   ~nsProxyInfo() { NS_IF_RELEASE(mNext); }
 
@@ -89,6 +90,7 @@ class nsProxyInfo final : public nsIProxyInfo {
   nsCString mConnectionIsolationKey;
   nsCString mSourceId;
   nsCString mPathTemplate;
+  nsCString mAlpn;
   int32_t mPort{-1};
   uint32_t mFlags{0};
   // We need to read on multiple threads, but don't need to sync on anything

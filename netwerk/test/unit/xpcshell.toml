@@ -852,13 +852,6 @@ skip-if = [
 run-sequentially = "http3server"
 skip-if = ["true"] # Will be reenabled in bug 1865394
 
-["test_http3_proxy.js"]
-run-sequentially = "node server exceptions dont replay well"
-skip-if = [
-  "os == 'android'",
-  "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix'", # Bug 1808049
-]
-
 ["test_http3_server.js"]
 run-sequentially = "node server exceptions dont replay well"
 skip-if = [
