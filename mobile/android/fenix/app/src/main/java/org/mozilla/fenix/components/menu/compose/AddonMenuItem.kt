@@ -101,11 +101,7 @@ internal fun AddonMenuItem(
             } else {
                 iconPainter
             },
-            iconButtonModifier = if (isInstallAddonInProgress) {
-                Modifier.animateRotation()
-            } else {
-                Modifier
-            },
+            iconButtonModifier = Modifier.animateRotation(isInstallAddonInProgress),
             iconDescription = iconDescription ?: stringResource(
                 R.string.browser_menu_extension_plus_icon_content_description_2,
                 label,
