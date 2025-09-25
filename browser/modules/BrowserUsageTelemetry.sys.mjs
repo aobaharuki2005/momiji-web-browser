@@ -686,7 +686,7 @@ export let BrowserUsageTelemetry = {
       case "unload":
         this._unregisterWindow(event.target);
         break;
-      case TAB_RESTORING_TOPIC:
+      case TAB_RESTORING_TOPIC: {
         // We're restoring a new tab from a previous or crashed session.
         // We don't want to track the URIs from these tabs, so let
         // |URICountListener| know about them.
@@ -696,6 +696,7 @@ export let BrowserUsageTelemetry = {
         const { loadedTabCount } = getOpenTabsAndWinsCounts();
         this._recordTabCounts({ loadedTabCount });
         break;
+      }
     }
   },
 
