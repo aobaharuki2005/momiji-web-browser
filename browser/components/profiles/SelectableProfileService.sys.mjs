@@ -1210,7 +1210,7 @@ class SelectableProfileServiceClass extends EventEmitter {
       avatar: this.#defaultAvatars[randomIndex],
       themeId: DEFAULT_THEME_ID,
       themeFg: isDark ? "rgb(255,255,255)" : "rgb(21,20,26)",
-      themeBg: isDark ? "rgb(28, 27, 34)" : "rgb(240, 240, 244)",
+      themeBg: isDark ? "rgb(28,27,34)" : "rgb(240,240,244)",
     };
 
     let path =
