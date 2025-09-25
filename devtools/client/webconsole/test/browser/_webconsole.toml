@@ -430,8 +430,6 @@ skip-if = [
 
 ["browser_webconsole_external_script_errors.js"]
 
-["browser_webconsole_file_uri.js"]
-
 ["browser_webconsole_filter_buttons_overflow.js"]
 
 ["browser_webconsole_filter_by_input.js"]
@@ -525,41 +523,6 @@ skip-if = [
 ["browser_webconsole_mime_css_blocked.js"]
 
 ["browser_webconsole_multiple_windows_and_tabs.js"]
-
-["browser_webconsole_network_attach.js"]
-
-["browser_webconsole_network_exceptions.js"]
-
-["browser_webconsole_network_message_close_on_escape.js"]
-
-["browser_webconsole_network_message_ctrl_click.js"]
-
-["browser_webconsole_network_messages_after_target_switching.js"]
-
-["browser_webconsole_network_messages_expand.js"]
-
-["browser_webconsole_network_messages_expand_before_updates.js"]
-
-["browser_webconsole_network_messages_html_preview.js"]
-
-["browser_webconsole_network_messages_openinnet.js"]
-
-["browser_webconsole_network_messages_resend_request.js"]
-
-["browser_webconsole_network_messages_stacktrace_console_initiated_request.js"]
-
-["browser_webconsole_network_messages_status_code.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_webconsole_network_requests_from_chrome.js"]
-skip-if = [
-  "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && debug && http3", # Bug 1829298
-  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && debug && http3", # Bug 1829298
-]
-
-["browser_webconsole_network_reset_filter.js"]
-
-["browser_webconsole_network_unicode.js"]
 
 ["browser_webconsole_nodes_highlight.js"]
 
