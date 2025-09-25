@@ -357,6 +357,7 @@ Function InstallDesktopLauncher
   CopyFiles /SILENT /FILESONLY "$INSTDIR\desktop-launcher\desktop-launcher.exe" "$DESKTOP\${BrandShortName}.exe"
   ${IfNot} ${Errors}
     WriteRegDWORD HKCU "Software\Mozilla\${BrandFullNameInternal}" DesktopLauncherAppInstalled 1
+    ${LogDesktopShortcut} "${BrandShortName}.exe"
   ${EndIf}
 FunctionEnd
 
