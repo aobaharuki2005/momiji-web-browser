@@ -122,7 +122,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   ARMRegister argv(reg_argv, 64);
   masm.Add(dest, sp, Operand(2 * sizeof(uintptr_t)));
   masm.Add(tmp_argc, argc, Operand(1));
-  masm.Sub(argv, argv, Operand(sizeof(Value))); // Point at `this`.
+  masm.Sub(argv, argv, Operand(sizeof(Value)));  // Point at `this`.
 
   Label argLoop;
   masm.bind(&argLoop);

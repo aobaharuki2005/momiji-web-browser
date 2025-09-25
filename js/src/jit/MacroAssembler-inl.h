@@ -264,8 +264,7 @@ void MacroAssembler::Push(FrameDescriptor descriptor) {
 }
 
 void MacroAssembler::makeFrameDescriptorForJitCall(FrameType type,
-                                                   Register argc,
-                                                   Register dest,
+                                                   Register argc, Register dest,
                                                    bool hasInlineICScript) {
   lshift32(Imm32(FrameDescriptor::NumActualArgsShift), argc, dest);
   FrameDescriptor base(type, 0, hasInlineICScript);
