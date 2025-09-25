@@ -2976,7 +2976,7 @@ export class nsContextMenu {
       );
       this.window.document.l10n.setAttributes(
         menuitem,
-        "main-context-menu-visual-search",
+        "main-context-menu-visual-search-2",
         {
           engine: visualSearchUrl.displayName || menuitem.engine.name,
         }
