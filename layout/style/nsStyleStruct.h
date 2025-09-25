@@ -392,9 +392,15 @@ struct AnchorPosResolutionData {
   mozilla::Maybe<nsPoint> mOrigin;
 };
 
-// Mapping from a referenced anchor to its resolution (If a valid anchor is
-// found).
-class AnchorPosReferencedAnchors {
+// Data required for an anchor positioned frame, including:
+// * If valid anchors are found,
+// * Cached offset/size resolution, if resolution was valid,
+// * TODO(dshin, bug 1968745): Compensating for scroll [1]
+// * TODO(dshin, bug 1987962): Default scroll shift [2]
+//
+// [1]: https://drafts.csswg.org/css-anchor-position-1/#compensate-for-scroll
+// [2]: https://drafts.csswg.org/css-anchor-position-1/#default-scroll-shift
+class AnchorPosReferenceData {
  private:
   using Map =
       nsTHashMap<RefPtr<const nsAtom>, mozilla::Maybe<AnchorPosResolutionData>>;
@@ -402,13 +408,12 @@ class AnchorPosReferencedAnchors {
  public:
   using Value = mozilla::Maybe<AnchorPosResolutionData>;
 
-  AnchorPosReferencedAnchors() = default;
-  AnchorPosReferencedAnchors(const AnchorPosReferencedAnchors&) = delete;
-  AnchorPosReferencedAnchors(AnchorPosReferencedAnchors&&) = default;
+  AnchorPosReferenceData() = default;
+  AnchorPosReferenceData(const AnchorPosReferenceData&) = delete;
+  AnchorPosReferenceData(AnchorPosReferenceData&&) = default;
 
-  AnchorPosReferencedAnchors& operator=(const AnchorPosReferencedAnchors&) =
-      delete;
-  AnchorPosReferencedAnchors& operator=(AnchorPosReferencedAnchors&&) = default;
+  AnchorPosReferenceData& operator=(const AnchorPosReferenceData&) = delete;
+  AnchorPosReferenceData& operator=(AnchorPosReferenceData&&) = default;
 
   struct Result {
     bool mAlreadyResolved;
@@ -434,15 +439,15 @@ struct AnchorPosResolutionParams {
   const nsIFrame* mFrame;
   // Position property of the element in question.
   mozilla::StylePositionProperty mPosition;
-  // Storage for referenced anchors. To be populated on abspos reflow, whenever
-  // the frame makes any anchor reference.
-  AnchorPosReferencedAnchors* const mReferencedAnchors = nullptr;
+  // Storage for anchor reference data. To be populated on abspos reflow,
+  // whenever the frame makes any anchor reference.
+  AnchorPosReferenceData* const mAnchorPosReferenceData = nullptr;
 
   // Helper functions for creating anchor resolution parameters.
   // Defined in corresponding header files.
   static inline AnchorPosResolutionParams From(
       const nsIFrame* aFrame,
-      AnchorPosReferencedAnchors* aReferencedAnchors = nullptr);
+      AnchorPosReferenceData* aAnchorPosReferenceData = nullptr);
   static inline AnchorPosResolutionParams From(const mozilla::ReflowInput* aRI);
   static inline AnchorPosResolutionParams From(
       const nsComputedDOMStyle* aComputedDOMStyle);

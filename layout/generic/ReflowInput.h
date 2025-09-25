@@ -70,7 +70,7 @@ struct SizeComputationInput {
   gfxContext* mRenderingContext;
 
   // Cache of referenced anchors for this computation.
-  AnchorPosReferencedAnchors* mReferencedAnchors = nullptr;
+  AnchorPosReferenceData* mAnchorPosReferenceData = nullptr;
 
   nsMargin ComputedPhysicalMargin() const {
     return mComputedMargin.GetPhysicalMargin(mWritingMode);
@@ -133,7 +133,7 @@ struct SizeComputationInput {
   // Callers using this constructor must call InitOffsets on their own.
   SizeComputationInput(
       nsIFrame* aFrame, gfxContext* aRenderingContext,
-      AnchorPosReferencedAnchors* aReferencedAnchors = nullptr);
+      AnchorPosReferenceData* aAnchorPosReferenceData = nullptr);
 
   SizeComputationInput(nsIFrame* aFrame, gfxContext* aRenderingContext,
                        WritingMode aContainingBlockWritingMode,
@@ -627,9 +627,9 @@ struct ReflowInput : public SizeComputationInput {
    *        call nsIFrame::ComputeSize() internally.
    * @param aComputeSizeFlags A set of flags used when we call
    *        nsIFrame::ComputeSize() internally.
-   * @param aReferencedAnchors A cache of referenced anchors to be populated (If
-   *        specified) for this reflowed frame. Should live for the lifetime of
-   *        this ReflowInput.
+   * @param aAnchorPosReferenceData A cache of referenced anchors to be
+   * populated (If specified) for this reflowed frame. Should live for the
+   * lifetime of this ReflowInput.
    */
   ReflowInput(nsPresContext* aPresContext,
               const ReflowInput& aParentReflowInput, nsIFrame* aFrame,
@@ -638,7 +638,7 @@ struct ReflowInput : public SizeComputationInput {
               InitFlags aFlags = {},
               const StyleSizeOverrides& aSizeOverrides = {},
               ComputeSizeFlags aComputeSizeFlags = {},
-              AnchorPosReferencedAnchors* aReferencedAnchors = nullptr);
+              AnchorPosReferenceData* aAnchorPosReferenceData = nullptr);
 
   /**
    * This method initializes various data members. It is automatically called by
@@ -975,7 +975,8 @@ struct ReflowInput : public SizeComputationInput {
 
 inline AnchorPosResolutionParams AnchorPosResolutionParams::From(
     const mozilla::ReflowInput* aRI) {
-  return {aRI->mFrame, aRI->mStyleDisplay->mPosition, aRI->mReferencedAnchors};
+  return {aRI->mFrame, aRI->mStyleDisplay->mPosition,
+          aRI->mAnchorPosReferenceData};
 }
 
 #endif  // mozilla_ReflowInput_h
