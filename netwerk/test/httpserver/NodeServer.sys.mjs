@@ -1116,14 +1116,14 @@ export class HTTP3Server {
 
     /* eslint-disable no-control-regex */
     const regex =
-      /HTTP3 server listening on ports (\d+), (\d+), (\d+), (\d+) and (\d+). EchConfig is @([\x00-\x7F]+)@/;
+      /HTTP3 server listening on ports (\d+), (\d+), (\d+), (\d+), (\d+) and (\d+). EchConfig is @([\x00-\x7F]+)@/;
 
     // Execute the regex on the input string
     let match = regex.exec(result.output);
 
     if (match) {
       // Extract the ports as an array of numbers
-      let ports = match.slice(1, 6).map(Number);
+      let ports = match.slice(1, 7).map(Number);
       this._port = ports[0];
       return ports[0];
     }
