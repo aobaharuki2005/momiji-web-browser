@@ -12,7 +12,6 @@
 #ifndef jit_MIR_wasm_h
 #define jit_MIR_wasm_h
 
-#include "mozilla/Array.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Vector.h"
 #ifdef JS_JITSPEW

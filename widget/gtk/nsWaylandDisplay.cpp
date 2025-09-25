@@ -11,7 +11,6 @@
 #include "base/task.h"            // for NewRunnableMethod, etc
 #include "mozilla/gfx/Logging.h"  // for gfxCriticalNote
 #include "mozilla/StaticMutex.h"
-#include "mozilla/Array.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/StaticPrefs_widget.h"
