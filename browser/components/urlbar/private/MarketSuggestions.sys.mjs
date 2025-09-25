@@ -49,114 +49,56 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
     return result;
   }
 
-  getViewTemplate(result) {
-    let hasMultipleValues = result.payload.polygon.values.length > 1;
-    return {
-      name: "root",
-      overflowable: true,
-      attributes: {
-        selectable: hasMultipleValues ? null : "",
-      },
-      children: result.payload.polygon.values.map((_v, i) => ({
-        name: `item_${i}`,
+  getViewTemplateForDescriptionTop(index) {
+    return [
+      {
+        name: `name_${index}`,
         tag: "span",
-        classList: ["urlbarView-market-item"],
-        attributes: {
-          selectable: !hasMultipleValues ? null : "",
-        },
-        children: [
-          // Create an image inside a container so that the image appears inset
-          // into a square. This is atypical because we normally use only an
-          // image and give it padding and a background color to achieve that
-          // effect, but that only works when the image size is fixed.
-          // Unfortunately Merino serves market icons of different sizes due to
-          // its reliance on a third-party API.
-          {
-            name: `image_container_${i}`,
-            tag: "span",
-            classList: ["urlbarView-market-image-container"],
-            children: [
-              {
-                name: `image_${i}`,
-                tag: "img",
-                classList: ["urlbarView-market-image"],
-              },
-            ],
-          },
-          {
-            tag: "span",
-            classList: ["urlbarView-market-description"],
-            children: [
-              {
-                tag: "div",
-                classList: ["urlbarView-market-description-top"],
-                children: [
-                  {
-                    name: `name_${i}`,
-                    tag: "span",
-                    classList: ["urlbarView-market-name"],
-                  },
-                  {
-                    name: `top_separator_${i}`,
-                    tag: "span",
-                    classList: ["urlbarView-market-description-separator"],
-                  },
-                  {
-                    name: `ticker_${i}`,
-                    tag: "span",
-                  },
-                ],
-              },
-              {
-                tag: "div",
-                classList: ["urlbarView-market-description-bottom"],
-                children: [
-                  {
-                    name: `todays_change_perc_${i}`,
-                    tag: "span",
-                    classList: ["urlbarView-market-todays-change-perc"],
-                  },
-                  {
-                    name: `bottom_separator_1_${i}`,
-                    tag: "span",
-                    classList: ["urlbarView-market-description-separator"],
-                  },
-                  {
-                    name: `last_price_${i}`,
-                    tag: "span",
-                    classList: ["urlbarView-market-last-price"],
-                  },
-                  {
-                    name: `bottom_separator_2_${i}`,
-                    tag: "span",
-                    classList: ["urlbarView-market-description-separator"],
-                  },
-                  {
-                    name: `exchange_${i}`,
-                    tag: "span",
-                    classList: ["urlbarView-market-exchange"],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      })),
-    };
+        classList: ["urlbarView-market-name"],
+      },
+      {
+        tag: "span",
+        classList: ["urlbarView-realtime-description-separator"],
+      },
+      {
+        name: `ticker_${index}`,
+        tag: "span",
+      },
+    ];
   }
 
-  getViewUpdate(result) {
-    return Object.fromEntries([
-      [
-        "root",
-        {
-          dataset: {
-            // This `query` will be used when there's only one value.
-            query: result.payload.polygon.values[0].query,
-          },
-        },
-      ],
-      ...result.payload.polygon.values.flatMap((v, i) => {
+  getViewTemplateForDescriptionBottom(index) {
+    return [
+      {
+        name: `todays_change_perc_${index}`,
+        tag: "span",
+        classList: ["urlbarView-market-todays-change-perc"],
+      },
+      {
+        tag: "span",
+        classList: ["urlbarView-realtime-description-separator"],
+      },
+      {
+        name: `last_price_${index}`,
+        tag: "span",
+        classList: ["urlbarView-market-last-price"],
+      },
+      {
+        tag: "span",
+        classList: ["urlbarView-realtime-description-separator"],
+      },
+      {
+        name: `exchange_${index}`,
+        tag: "span",
+        classList: ["urlbarView-market-exchange"],
+      },
+    ];
+  }
+
+  getViewUpdateForValues(values) {
+    return Object.assign(
+      {},
+      ...values.flatMap((v, i) => {
         let arrowImageUri;
         let changeDescription;
         let changePercent = parseFloat(v.todays_change_perc);
@@ -178,14 +120,10 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
           imageUri = arrowImageUri;
         }
 
-        return Object.entries({
+        return {
           [`item_${i}`]: {
             attributes: {
               change: changeDescription,
-            },
-            dataset: {
-              // These `query`s will be used when there are multiple values.
-              query: v.query,
             },
           },
           [`image_container_${i}`]: {
@@ -213,17 +151,8 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
           [`exchange_${i}`]: {
             textContent: v.exchange,
           },
-          [`top_separator_${i}`]: {
-            textContent: "·",
-          },
-          [`bottom_separator_1_${i}`]: {
-            textContent: "·",
-          },
-          [`bottom_separator_2_${i}`]: {
-            textContent: "·",
-          },
-        });
-      }),
-    ]);
+        };
+      })
+    );
   }
 }
