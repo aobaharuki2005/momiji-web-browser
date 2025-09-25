@@ -219,7 +219,12 @@ class ScriptLoadRequest : public nsISupports,
 
   mozilla::CORSMode CORSMode() const { return mFetchOptions->mCORSMode; }
 
-  void DropCacheReferences();
+  // Check the reference to the cache info channel, which is used by the disk
+  // cache.
+  bool HasDiskCacheReference() const { return !!mCacheInfo; }
+
+  // Drop the reference to the cache info channel.
+  void DropDiskCacheReference();
 
   bool HasLoadContext() const { return mLoadContext; }
   bool HasScriptLoadContext() const;

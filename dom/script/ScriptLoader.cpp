@@ -725,7 +725,7 @@ void ScriptLoader::PrepareCacheInfoChannel(nsIChannel* aChannel,
                                            ScriptLoadRequest* aRequest) {
   // To avoid decoding issues, the build-id is part of the bytecode MIME type
   // constant.
-  aRequest->mCacheInfo = nullptr;
+  aRequest->DropDiskCacheReference();
   nsCOMPtr<nsICacheInfoChannel> cic(do_QueryInterface(aChannel));
   if (cic && StaticPrefs::dom_script_loader_bytecode_cache_enabled()) {
     MOZ_ASSERT(!IsWebExtensionRequest(aRequest),
@@ -2718,7 +2718,7 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
   // We need the nsICacheInfoChannel to exist to be able to open the alternate
   // data output stream. This pointer would only be non-null if the bytecode was
   // activated at the time the channel got created in StartLoad.
-  if (!aRequest->mCacheInfo) {
+  if (!aRequest->HasDiskCacheReference()) {
     LOG(("ScriptLoadRequest (%p): Cannot cache anything (cacheInfo = %p)",
          aRequest, aRequest->mCacheInfo.get()));
     aRequest->MarkSkippedCaching();
@@ -3051,7 +3051,7 @@ void ScriptLoader::InstantiateClassicScriptFromMaybeEncodedSource(
 
     // We do not expect to be saving anything when we already have some
     // bytecode.
-    MOZ_ASSERT(!aRequest->mCacheInfo);
+    MOZ_ASSERT(!aRequest->HasDiskCacheReference());
     return;
   }
 
@@ -3278,7 +3278,7 @@ nsresult ScriptLoader::MaybePrepareForCacheAfterExecute(
   LOG(("ScriptLoadRequest (%p): Bytecode-cache: disabled (rv = %X)", aRequest,
        unsigned(aRv)));
   TRACE_FOR_TEST_NONE(aRequest, "scriptloader_no_encode");
-  aRequest->mCacheInfo = nullptr;
+  aRequest->DropDiskCacheReference();
   MOZ_ASSERT(IsAlreadyHandledForCachePreparation(aRequest));
 
   return aRv;
@@ -3287,7 +3287,7 @@ nsresult ScriptLoader::MaybePrepareForCacheAfterExecute(
 bool ScriptLoader::IsAlreadyHandledForCachePreparation(
     ScriptLoadRequest* aRequest) {
   MOZ_ASSERT_IF(aRequest->isInList(), mCachingQueue.Contains(aRequest));
-  return aRequest->isInList() || !aRequest->mCacheInfo;
+  return aRequest->isInList() || !aRequest->HasDiskCacheReference();
 }
 
 void ScriptLoader::MaybePrepareModuleForCacheBeforeExecute(
@@ -3466,7 +3466,7 @@ LoadedScript* ScriptLoader::GetActiveScript(JSContext* aCx) {
 }
 
 void ScriptLoader::RegisterForCache(ScriptLoadRequest* aRequest) {
-  MOZ_ASSERT_IF(!aRequest->IsStencil(), aRequest->mCacheInfo);
+  MOZ_ASSERT_IF(!aRequest->IsStencil(), aRequest->HasDiskCacheReference());
   MOZ_ASSERT(aRequest->IsMarkedForCache());
   MOZ_DIAGNOSTIC_ASSERT(!aRequest->isInList());
   mCachingQueue.AppendElement(aRequest);
@@ -3579,7 +3579,7 @@ void ScriptLoader::UpdateCache() {
         request->DropBytecode();
       }
     }
-    request->DropCacheReferences();
+    request->DropDiskCacheReference();
   }
 }
 
@@ -3728,7 +3728,7 @@ void ScriptLoader::GiveUpCaching() {
       }
     }
 
-    request->DropCacheReferences();
+    request->DropDiskCacheReference();
   }
 
   while (!mCacheableDependencyModules.isEmpty()) {
