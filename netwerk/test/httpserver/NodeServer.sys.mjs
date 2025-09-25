@@ -641,7 +641,10 @@ class HTTP2ProxyCode {
                 );
               } catch (e) {
                 // The channel may have been closed already.
-                if (e.message != "The stream has been destroyed") {
+                if (
+                  e.code !== "ERR_HTTP2_INVALID_STREAM" &&
+                  !e.message.includes("The stream has been destroyed")
+                ) {
                   throw e;
                 }
               }
@@ -673,17 +676,35 @@ class HTTP2ProxyCode {
       }
       if (headers[":method"] !== "CONNECT") {
         // Only accept CONNECT requests
-        stream.respond({ ":status": 405 });
+        try {
+          stream.respond({ ":status": 405 });
+        } catch (e) {
+          if (
+            e.code !== "ERR_HTTP2_INVALID_STREAM" &&
+            !e.message.includes("The stream has been destroyed")
+          ) {
+            throw e;
+          }
+        }
         stream.end();
         return;
       }
 
       const authorization_token = headers["proxy-authorization"];
       if (auth && !authorization_token) {
-        stream.respond({
-          ":status": 407,
-          "proxy-authenticate": "Basic realm='foo'",
-        });
+        try {
+          stream.respond({
+            ":status": 407,
+            "proxy-authenticate": "Basic realm='foo'",
+          });
+        } catch (e) {
+          if (
+            e.code !== "ERR_HTTP2_INVALID_STREAM" &&
+            !e.message.includes("The stream has been destroyed")
+          ) {
+            throw e;
+          }
+        }
         stream.end();
         return;
       }
@@ -695,7 +716,16 @@ class HTTP2ProxyCode {
         try {
           global.socketCounts[socket.remotePort] =
             (global.socketCounts[socket.remotePort] || 0) + 1;
-          stream.respond({ ":status": 200 });
+          try {
+            stream.respond({ ":status": 200 });
+          } catch (e) {
+            if (
+              e.code !== "ERR_HTTP2_INVALID_STREAM" &&
+              !e.message.includes("The stream has been destroyed")
+            ) {
+              throw e;
+            }
+          }
           socket.pipe(stream);
           stream.pipe(socket);
         } catch (exception) {
@@ -710,7 +740,16 @@ class HTTP2ProxyCode {
           // If we already sent headers when the socket connected
           // then sending the status again would throw.
           if (!stream.sentHeaders) {
-            stream.respond({ ":status": status });
+            try {
+              stream.respond({ ":status": status });
+            } catch (e) {
+              if (
+                e.code !== "ERR_HTTP2_INVALID_STREAM" &&
+                !e.message.includes("The stream has been destroyed")
+              ) {
+                throw e;
+              }
+            }
           }
           stream.end();
         } catch (exception) {
@@ -858,7 +897,16 @@ class NodeWebSocketHttp2ServerCode extends BaseNodeHTTPServerCode {
 
     global.h2Server.on("stream", (stream, headers) => {
       if (headers[":method"] === "CONNECT") {
-        stream.respond();
+        try {
+          stream.respond();
+        } catch (e) {
+          if (
+            e.code !== "ERR_HTTP2_INVALID_STREAM" &&
+            !e.message.includes("The stream has been destroyed")
+          ) {
+            throw e;
+          }
+        }
 
         const ws = new WS(null);
         stream.setNoDelay = () => {};
@@ -873,7 +921,16 @@ class NodeWebSocketHttp2ServerCode extends BaseNodeHTTPServerCode {
           ws.send("test");
         });
       } else {
-        stream.respond();
+        try {
+          stream.respond();
+        } catch (e) {
+          if (
+            e.code !== "ERR_HTTP2_INVALID_STREAM" &&
+            !e.message.includes("The stream has been destroyed")
+          ) {
+            throw e;
+          }
+        }
         stream.end("ok");
       }
     });
