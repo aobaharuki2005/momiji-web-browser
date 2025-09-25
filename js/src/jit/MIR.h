@@ -13,6 +13,7 @@
 #define jit_MIR_h
 
 #include "mozilla/Array.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/HashFunctions.h"
 #ifdef JS_JITSPEW
@@ -1141,7 +1142,7 @@ class MInstruction : public MDefinition, public InlineListNode<MInstruction> {
 
 template <size_t Arity>
 class MAryInstruction : public MInstruction {
-  mozilla::Array<MUse, Arity> operands_;
+  MOZ_NO_UNIQUE_ADDRESS mozilla::Array<MUse, Arity> operands_;
 
  protected:
   MUse* getUseFor(size_t index) final { return &operands_[index]; }
@@ -1777,8 +1778,8 @@ class MTableSwitch final : public MControlInstruction,
 
 template <size_t Arity, size_t Successors>
 class MAryControlInstruction : public MControlInstruction {
-  mozilla::Array<MUse, Arity> operands_;
-  mozilla::Array<MBasicBlock*, Successors> successors_;
+  MOZ_NO_UNIQUE_ADDRESS mozilla::Array<MUse, Arity> operands_;
+  MOZ_NO_UNIQUE_ADDRESS mozilla::Array<MBasicBlock*, Successors> successors_;
 
  protected:
   explicit MAryControlInstruction(Opcode op) : MControlInstruction(op) {}
@@ -1814,7 +1815,7 @@ class MAryControlInstruction : public MControlInstruction {
 
 template <size_t Successors>
 class MVariadicControlInstruction : public MVariadicT<MControlInstruction> {
-  mozilla::Array<MBasicBlock*, Successors> successors_;
+  MOZ_NO_UNIQUE_ADDRESS mozilla::Array<MBasicBlock*, Successors> successors_;
 
  protected:
   explicit MVariadicControlInstruction(Opcode op)
