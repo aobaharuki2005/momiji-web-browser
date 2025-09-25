@@ -119,7 +119,7 @@ class nsAbsoluteContainingBlock {
    */
   bool FrameDependsOnContainer(
       nsIFrame* aFrame, bool aCBWidthChanged, bool aCBHeightChanged,
-      AnchorPosReferenceData* aAnchorPosReferenceData = nullptr);
+      mozilla::AnchorPosReferenceData* aAnchorPosReferenceData = nullptr);
 
   /**
    * After an abspos child's size is known, this method can be used to
@@ -156,7 +156,7 @@ class nsAbsoluteContainingBlock {
       const ReflowInput& aReflowInput, const nsRect& aContainingBlockRect,
       AbsPosReflowFlags aFlags, nsIFrame* aKidFrame, nsReflowStatus& aStatus,
       mozilla::OverflowAreas* aOverflowAreas,
-      AnchorPosReferenceData* aAnchorPosReferenceData = nullptr);
+      mozilla::AnchorPosReferenceData* aAnchorPosReferenceData = nullptr);
 
   /**
    * Mark our absolute frames dirty.
