@@ -10,7 +10,6 @@
 
 #include "MainThreadUtils.h"
 #include "mozIDOMWindow.h"
-#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"

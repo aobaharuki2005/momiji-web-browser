@@ -17,7 +17,6 @@
 
 #include "ErrorList.h"
 #include "gtest/gtest.h"
-#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FixedBufferOutputStream.h"

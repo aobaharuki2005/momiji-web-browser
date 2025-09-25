@@ -14,7 +14,6 @@
 #include "nsDeviceContext.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/EventForwards.h"
 
 class nsIWidget;
