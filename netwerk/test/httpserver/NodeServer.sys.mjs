@@ -504,7 +504,6 @@ export class Http3ProxyFilter {
         this._host,
         this._port,
         this._pathTemplate,
-        "h3",
         this._auth,
         "",
         this._flags,

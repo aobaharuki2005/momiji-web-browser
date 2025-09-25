@@ -120,8 +120,10 @@ void nsHttpConnectionInfo::Init(const nsACString& host, int32_t port,
   }
 
   if (mUsingHttpsProxy) {
-    mProxyNPNToken = proxyInfo->Alpn();
-    mIsHttp3ProxyConnection = mProxyNPNToken.Equals("h3"_ns);
+    mIsHttp3ProxyConnection = "masque"_ns.Equals(proxyInfo->Type());
+    if (mIsHttp3ProxyConnection) {
+      mProxyNPNToken = "h3"_ns;
+    }
   }
 
   SetOriginServer(host, port);
