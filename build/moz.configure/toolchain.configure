@@ -233,7 +233,7 @@ with only_when(host_is_osx | target_is_osx):
     )
 
     def mac_sdk_min_version():
-        return "26.0"
+        return "15.5"
 
     @depends(
         "--with-macos-sdk",
@@ -297,6 +297,36 @@ with only_when(host_is_osx | target_is_osx):
         return sdk
 
     set_config("MACOS_SDK_DIR", macos_sdk)
+
+
+with only_when(target_is_osx):
+    with only_when(cross_compiling):
+        option(
+            "--with-macos-private-frameworks",
+            env="MACOS_PRIVATE_FRAMEWORKS_DIR",
+            nargs=1,
+            help="Location of private frameworks to use",
+        )
+
+        @depends_if("--with-macos-private-frameworks")
+        @imports(_from="os.path", _import="isdir")
+        def macos_private_frameworks(value):
+            if value and not isdir(value[0]):
+                die(
+                    "PrivateFrameworks not found not found in %s. When using "
+                    "--with-macos-private-frameworks, you must specify a valid "
+                    "directory",
+                    value[0],
+                )
+            return value[0]
+
+    @depends(macos_private_frameworks, macos_sdk)
+    def macos_private_frameworks(value, sdk):
+        if value:
+            return value
+        return os.path.join(sdk or "/", "System/Library/PrivateFrameworks")
+
+    set_config("MACOS_PRIVATE_FRAMEWORKS_DIR", macos_private_frameworks)
 
 
 with only_when(target_is_ios):

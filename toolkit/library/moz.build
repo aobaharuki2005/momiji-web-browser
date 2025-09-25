@@ -235,10 +235,9 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "-framework CoreMedia",
         "-framework IOKit",
         "-weak_framework ScreenCaptureKit",
-        # This works around bug 1988774 comment 13. _LocationEssentials doesn't
-        # exist on macOS <15.6, but on older systems the symbols provided by
-        # this framework that we use are provided by CoreLocation instead.
-        "-weak_framework _LocationEssentials",
+        "-F%s" % CONFIG["MACOS_PRIVATE_FRAMEWORKS_DIR"],
+        "-framework CoreUI",
+        "-framework CoreSymbolication",
         "cups",
     ]
     USE_LIBS += [
