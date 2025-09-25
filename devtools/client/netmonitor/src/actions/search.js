@@ -70,6 +70,19 @@ function search(connector, query) {
         return;
       }
 
+      // Ignore any request which have a now defunct target
+      // as we wouldn't be able to fetch any lazy data for them.
+      // Inconditionally allow searching for navigation request as it is bound to the previous target front
+      if (
+        request.innerWindowId &&
+        !request.isNavigationRequest &&
+        !connector.commands.watcherFront.getWindowGlobalTargetByInnerWindowId(
+          request.innerWindowId
+        )
+      ) {
+        continue;
+      }
+
       // Fetch all data for the resource.
       await loadResource(connector, request);
       if (canceled) {

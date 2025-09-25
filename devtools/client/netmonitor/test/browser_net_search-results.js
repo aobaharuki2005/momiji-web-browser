@@ -8,6 +8,8 @@
  * Search panel is visible and clicking matches shows them in the request details.
  */
 
+const { PluralForm } = require("resource://devtools/shared/plural-form.js");
+
 add_task(async function () {
   const { tab, monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
     requestCount: 1,
@@ -275,6 +277,74 @@ add_task(async function () {
 
   // test that the context menu entries are not available anymore:
   await checkResourceMenuNotAvailbale(secondResourceMatch, monitor);
+
+  await teardown(monitor);
+});
+
+add_task(async function searchWithRequestOnUnload() {
+  const { tab, monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
+    requestCount: 1,
+  });
+  info("Starting test... ");
+
+  const { document, store, windowRequire } = monitor.panelWin;
+
+  // Action should be processed synchronously in tests.
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  store.dispatch(Actions.batchEnable(false));
+
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [HTTPS_SEARCH_SJS + "?value=test1"],
+    function (url) {
+      content.addEventListener("unload", () => {
+        content.wrappedJSObject.get(url);
+      });
+    }
+  );
+
+  const SEARCH_STRING = "html_custom-get-page.html";
+
+  // reload tab, expect the html page and the unload request
+  const waitForEvents = waitForNetworkEvents(monitor, 2);
+  tab.linkedBrowser.reload();
+  await waitForEvents;
+
+  // Open the Search panel
+  await store.dispatch(Actions.openSearch());
+
+  // Fill Filter input with text and check displayed messages.
+  // The filter should be focused automatically.
+  typeInNetmonitor(SEARCH_STRING, monitor);
+  EventUtils.synthesizeKey("KEY_Enter");
+
+  // Wait until there are two resources rendered in the results
+  await waitForDOMIfNeeded(
+    document,
+    ".search-panel-content .treeRow.resourceRow",
+    1
+  );
+
+  // Wait until there are two resources rendered in the results
+  await waitForDOMIfNeeded(document, ".search-panel .status-bar-label");
+  const statusBar = document.querySelector(".search-panel .status-bar-label");
+  const matchingLines = PluralForm.get(
+    1,
+    L10N.getStr("netmonitor.search.status.labels.matchingLines")
+  ).replace("#1", 1);
+  const matchingFiles = PluralForm.get(
+    1,
+    L10N.getStr("netmonitor.search.status.labels.fileCount")
+  ).replace("#1", 1);
+  is(
+    statusBar.textContent,
+    L10N.getFormatStr(
+      "netmonitor.search.status.labels.done",
+      matchingLines,
+      matchingFiles
+    ),
+    "Search completed"
+  );
 
   await teardown(monitor);
 });
