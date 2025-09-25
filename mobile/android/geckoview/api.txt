@@ -2769,6 +2769,10 @@ package org.mozilla.geckoview {
     field public static final int ERROR_USER_CANCELED = -100;
   }
 
+  public static class WebExtension.InvalidMetaDataException extends RuntimeException {
+    ctor protected InvalidMetaDataException();
+  }
+
   @UiThread public static interface WebExtension.MessageDelegate {
     method @Nullable default public void onConnect(@NonNull WebExtension.Port);
     method @Nullable default public GeckoResult<Object> onMessage(@NonNull String, @NonNull Object, @NonNull WebExtension.MessageSender);
