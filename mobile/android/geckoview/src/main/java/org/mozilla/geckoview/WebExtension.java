@@ -156,11 +156,7 @@ public class WebExtension {
     flags = bundle.getInt("webExtensionFlags", 0);
     isBuiltIn = bundle.getBoolean("isBuiltIn", false);
     if (bundle.containsKey("metaData")) {
-      try {
-        metaData = new MetaData(bundle.getBundle("metaData"));
-      } catch (final Exception e) {
-        throw new InvalidMetaDataException(e, id);
-      }
+      metaData = new MetaData(bundle.getBundle("metaData"));
     } else {
       metaData = null;
     }
@@ -1587,24 +1583,6 @@ public class WebExtension {
     default GeckoResult<GeckoSession> onOpenPopup(
         final @NonNull WebExtension extension, final @NonNull Action action) {
       return null;
-    }
-  }
-
-  /**
-   * Exception thrown when GeckoView receives unexpected invalid WebExtension metadata from Gecko
-   * (e.g. when metadata properties in the bundle are not matching the type expected by GeckoView).
-   */
-  public static class InvalidMetaDataException extends RuntimeException {
-    /** For testing */
-    protected InvalidMetaDataException() {
-      super("InvalidMetaDataException");
-    }
-
-    /* package */ InvalidMetaDataException(
-        final @Nullable Throwable cause, final @Nullable String extensionId) {
-      super(
-          "InvalidMetaDataException" + (extensionId != null ? " for add-on id " + extensionId : ""),
-          cause);
     }
   }
 

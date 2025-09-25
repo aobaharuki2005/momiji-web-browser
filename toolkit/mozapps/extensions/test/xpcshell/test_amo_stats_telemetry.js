@@ -3,10 +3,6 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { AddonSettings } = ChromeUtils.importESModule(
-  "resource://gre/modules/addons/AddonSettings.sys.mjs"
-);
-
 const { TelemetryController } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryController.sys.mjs"
 );
@@ -21,24 +17,23 @@ AddonTestUtils.createAppInfo(
 );
 
 add_setup(async () => {
-  if (AppConstants.platform !== "android") {
-    // We need to set this pref to `true` in order to collect add-ons Telemetry
-    // data (which is considered extended data and disabled in CI).
-    const overridePreReleasePref =
-      "toolkit.telemetry.testing.overridePreRelease";
-    Services.prefs.setBoolPref(overridePreReleasePref, true);
-    await TelemetryController.testSetup();
+  // We need to set this pref to `true` in order to collect add-ons Telemetry
+  // data (which is considered extended data and disabled in CI).
+  const overridePreReleasePref = "toolkit.telemetry.testing.overridePreRelease";
+  let oldOverrideValue = Services.prefs.getBoolPref(
+    overridePreReleasePref,
+    false
+  );
+  Services.prefs.setBoolPref(overridePreReleasePref, true);
+  registerCleanupFunction(() => {
+    Services.prefs.setBoolPref(overridePreReleasePref, oldOverrideValue);
+  });
 
-    // Enable Application scope to ensure the active theme is installed
-    // on desktop builds (used to assert the related telemetry metrics).
-    let scopes = AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION;
-    Services.prefs.setIntPref("extensions.enabledScopes", scopes);
-  }
-  Services.fog.testResetFOG();
+  await TelemetryController.testSetup();
   await AddonTestUtils.promiseStartupManager();
 });
 
-async function installTestExtensions() {
+add_task(async function test_ping_payload_and_environment() {
   const extensions = [
     {
       id: "addons-telemetry@test-extension-1",
@@ -68,116 +63,42 @@ async function installTestExtensions() {
     await extension.startup();
   }
 
-  return {
-    extensions,
-    async uninstallTestExtensions() {
-      for (const extension of installedExtensions) {
-        await extension.unload();
-      }
-    },
-  };
-}
+  // Note: This returns null on Android because toolkit.telemetry.unified=false
+  // and there is no equivalent Glean telemetry to compare with (bug 1866520).
+  const { payload, environment } = TelemetryController.getCurrentPingData();
 
-add_task(async function test_amo_stats_glean_metrics() {
-  const { extensions, uninstallTestExtensions } = await installTestExtensions();
-
-  info("Verify Glean addons.activeAddons metric");
-  const gleanActiveAddons = Glean.addons.activeAddons.testGetValue();
-  for (const { id, version } of extensions) {
-    const entry = gleanActiveAddons.find(el => el.id === id);
-    Assert.ok(
-      entry,
-      `Expect addon ${id} to be found in the Glean addons.activeAddons metric`
-    );
-    Assert.equal(
-      entry.version,
-      version,
-      `Got expected addon ${id} version in Glean activeAddons metric`
-    );
+  // Important: `payload.info.addons` is being used for AMO usage stats.
+  Assert.ok("addons" in payload.info, "payload.info.addons is defined");
+  Assert.equal(
+    payload.info.addons,
+    extensions
+      .map(({ id, version }) => `${encodeURIComponent(id)}:${version}`)
+      .join(",")
+  );
+  Assert.ok(
+    "XPI" in payload.addonDetails,
+    "payload.addonDetails.XPI is defined"
+  );
+  for (const { id, name } of extensions) {
+    Assert.ok(id in payload.addonDetails.XPI);
+    Assert.equal(payload.addonDetails.XPI[id].name, name);
   }
 
-  if (AppConstants.platform === "android") {
-    const themes = await AddonManager.getAddonsByTypes(["theme"]);
-    // Sanity check.
-    Assert.deepEqual(
-      themes,
-      [],
-      "Expect no theme addons to be found while running on mobile builds"
-    );
-
-    const gleanActiveTheme = Glean.addons.theme.testGetValue();
-    Assert.deepEqual(
-      gleanActiveTheme,
-      null,
-      "Expect no theme metadata to be found on Android builds for Glean addons.theme"
-    );
-  } else {
-    const theme = await AddonManager.getAddonByID(
-      AddonSettings.DEFAULT_THEME_ID
-    );
-    const gleanActiveTheme = Glean.addons.theme.testGetValue();
-    Assert.deepEqual(
-      { id: gleanActiveTheme.id, version: gleanActiveTheme.version },
-      { id: theme.id, version: theme.version },
-      "Got the expected theme metadata set on Glean addons.theme"
-    );
+  const { addons } = environment;
+  Assert.ok(
+    "activeAddons" in addons,
+    "environment.addons.activeAddons is defined"
+  );
+  Assert.ok("theme" in addons, "environment.addons.theme is defined");
+  for (const { id } of extensions) {
+    Assert.ok(id in environment.addons.activeAddons);
   }
 
-  await uninstallTestExtensions();
+  for (const extension of installedExtensions) {
+    await extension.unload();
+  }
 });
 
-// TODO(Bug 1981822): remove the following test once we migrated away from using this data for
-// AMO stats.
-add_task(
-  { skip_if: () => AppConstants.platform === "android" },
-  async function test_amo_stats_legacy_telemetry() {
-    const { extensions, uninstallTestExtensions } =
-      await installTestExtensions();
-
-    const theme = await AddonManager.getAddonByID(
-      AddonSettings.DEFAULT_THEME_ID
-    );
-
-    info("Verify legacy telemetry");
-    // Note: This returns null on Android because toolkit.telemetry.unified=false
-    // and this is deprecated and the AMO usage stats to be migrated to Glean
-    // addons.activeAddons metric.
-    const { payload, environment } = TelemetryController.getCurrentPingData();
-
-    // Important: `payload.info.addons` is being used for AMO usage stats.
-    Assert.ok("addons" in payload.info, "payload.info.addons is defined");
-    Assert.equal(
-      payload.info.addons,
-      [...extensions, { id: theme.id, version: theme.version }]
-        .map(({ id, version }) => `${encodeURIComponent(id)}:${version}`)
-        .join(",")
-    );
-    Assert.ok(
-      "XPI" in payload.addonDetails,
-      "payload.addonDetails.XPI is defined"
-    );
-    for (const { id, name } of extensions) {
-      Assert.ok(id in payload.addonDetails.XPI);
-      Assert.equal(payload.addonDetails.XPI[id].name, name);
-    }
-
-    const { addons } = environment;
-    Assert.ok(
-      "activeAddons" in addons,
-      "environment.addons.activeAddons is defined"
-    );
-    Assert.ok("theme" in addons, "environment.addons.theme is defined");
-    for (const { id } of extensions) {
-      Assert.ok(id in environment.addons.activeAddons);
-    }
-
-    await uninstallTestExtensions();
-  }
-);
-
-add_task(
-  { skip_if: () => AppConstants.platform === "android" },
-  async function cleanup() {
-    await TelemetryController.testShutdown();
-  }
-);
+add_task(async function cleanup() {
+  await TelemetryController.testShutdown();
+});

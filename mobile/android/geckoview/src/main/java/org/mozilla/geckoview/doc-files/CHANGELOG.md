@@ -13,11 +13,6 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
-## v145
-- Added [`WebExtension.InvalidMetaDataException`][145.1]. ([bug 1981496]({{bugzilla}}1981496))
-
-[145.1]: {{javadoc_uri}}/WebExtension.InvalidMetaDataException.html
-
 ## v144
 - Added [`GeckoSession.flushSessionState()`][144.1] to immediately notify the registered [`GeckoSession.ProgressDelegate`][144.2] and [`GeckoSession.HistoryDelegate`][144.3] of the current session state.
 - Added [`GeckoRuntimeSettings.getIsolatedProcessEnabled`][144.4] and [`GeckoRuntimeSettings.Builder.isolatedProcessEnabled`][144.5] to control whether content service runs on isolated process or not.
@@ -1838,4 +1833,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 1c85439c0bcca243538e2a9d75f6f6e739ee6147
+[api-version]: 04d98a6fde27208879a043d92b188e6ddaf4210a
