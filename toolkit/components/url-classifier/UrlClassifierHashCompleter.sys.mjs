@@ -656,6 +656,8 @@ class HashCompleterRequestBase {
           this.request.url +
           ",payload= " +
           this.request.body +
+          ",response= " +
+          this.response +
           "\n"
       );
     }
@@ -1066,7 +1068,11 @@ class HashCompleterRequestV5 extends HashCompleterRequestBase {
 
   makeChannelURL() {
     let prefixSet = new Set();
-    this.requests.forEach(r => prefixSet.add(btoa(r.partialHash)));
+    // In V5, the prefix is sent using query parameters. We need to encode the
+    // prefixes to avoid issues with special characters.
+    this.requests.forEach(r =>
+      prefixSet.add(encodeURIComponent(btoa(r.partialHash)))
+    );
     let prefixArray = Array.from(prefixSet).sort();
 
     log("Build v5 gethash request URL with " + JSON.stringify(prefixArray));
