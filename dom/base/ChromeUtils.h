@@ -341,6 +341,9 @@ class ChromeUtils {
   static Nullable<bool> GetGlobalWindowCommandEnabled(GlobalObject&,
                                                       const nsACString& aName);
 
+  static void EncodeURIForSrcset(GlobalObject&, const nsACString& aIn,
+                                 nsACString& aOut);
+
 #ifdef MOZ_WMF_CDM
   static already_AddRefed<Promise> GetWMFContentDecryptionModuleInformation(
       GlobalObject& aGlobal, ErrorResult& aRv);

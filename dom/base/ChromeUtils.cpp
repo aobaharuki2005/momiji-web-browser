@@ -2717,4 +2717,30 @@ Nullable<bool> ChromeUtils::GetGlobalWindowCommandEnabled(
   return handler->IsCommandEnabled(aName, nullptr);
 }
 
+void ChromeUtils::EncodeURIForSrcset(GlobalObject&, const nsACString& aIn,
+                                     nsACString& aOut) {
+  const auto inputLen = aIn.Length();
+  if (!inputLen) {
+    return;
+  }
+  size_t start = 0;
+  while (true) {
+    auto idx = aIn.View().find_first_of(nsContentUtils::kHTMLWhitespace, start);
+    if (idx == std::string_view::npos) {
+      break;
+    }
+    aOut.Append(Substring(aIn, start, idx - start));
+    aOut.AppendPrintf("%%%x", aIn.CharAt(idx));
+    start = idx + 1;
+    if (start == inputLen) {
+      return;
+    }
+  }
+  if (start == 0) {
+    aOut.Assign(aIn);
+  } else {
+    aOut.Append(Substring(aIn, start));
+  }
+}
+
 }  // namespace mozilla::dom
