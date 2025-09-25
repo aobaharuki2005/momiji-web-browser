@@ -140,7 +140,7 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
 
   bool mComments = false;
   // mDataAttributes always exists when mAttributes exists after
-  // canonincalization. It never exists at the same time as mRemoveAttributes.
+  // canonicalization. It never exists at the same time as mRemoveAttributes.
   Maybe<bool> mDataAttributes;
 
   // Optimization: This sanitizer has a lazy default config. None
