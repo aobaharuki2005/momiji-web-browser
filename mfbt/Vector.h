@@ -17,7 +17,7 @@
 #include "mozilla/ArrayUtils.h"  // for PointerRangeSize
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/MulOverflowMask.h"
+#include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/OperatorNewExtensions.h"
@@ -87,7 +87,8 @@ inline size_t GrowEltsByDoubling(size_t aOldElts, size_t aIncr) {
      *
      * for a Vector doesn't overflow ptrdiff_t (see bug 510319).
      */
-    if (MOZ_UNLIKELY(aOldElts & MulOverflowMask<4 * EltSize>())) {
+    [[maybe_unused]] size_t tmp;
+    if (MOZ_UNLIKELY(__builtin_mul_overflow(aOldElts, 4 * EltSize, &tmp))) {
       return 0;
     }
 
@@ -108,8 +109,9 @@ inline size_t GrowEltsByDoubling(size_t aOldElts, size_t aIncr) {
 
   /* Did aOldElts + aIncr overflow?  Will newMinCap * EltSize rounded up to the
    * next power of two overflow PTRDIFF_MAX? */
+  [[maybe_unused]] size_t tmp;
   if (MOZ_UNLIKELY(newMinCap < aOldElts ||
-                   newMinCap & MulOverflowMask<4 * EltSize>())) {
+                   __builtin_mul_overflow(newMinCap, 4 * EltSize, &tmp))) {
     return 0;
   }
 

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Assertions.h"
-#include "mozilla/MulOverflowMask.h"
+#include "mozilla/Likely.h"
 #include "mozilla/ScopeExit.h"
 
 #include "builtin/ModuleObject.h"
@@ -254,12 +254,13 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
 
   [[nodiscard]] bool enlarge() {
     MOZ_ASSERT(header_ != nullptr);
-    if (bufferTotal_ & mozilla::MulOverflowMask<2>()) {
+    size_t newSize;
+
+    if (MOZ_UNLIKELY(__builtin_mul_overflow(bufferTotal_, 2, &newSize))) {
       ReportOutOfMemory(cx_);
       return false;
     }
 
-    size_t newSize = bufferTotal_ * 2;
     uint8_t* newBufferRaw = cx_->pod_calloc<uint8_t>(newSize);
     if (!newBufferRaw) {
       return false;

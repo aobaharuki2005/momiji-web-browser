@@ -11,7 +11,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
-#include "mozilla/MulOverflowMask.h"
+#include "mozilla/Likely.h"
 #include "mozilla/UniquePtr.h"
 
 #include <stdlib.h>
@@ -556,8 +556,7 @@ namespace js {
 template <typename T>
 [[nodiscard]] inline bool CalculateAllocSize(size_t numElems,
                                              size_t* bytesOut) {
-  *bytesOut = numElems * sizeof(T);
-  return (numElems & mozilla::MulOverflowMask<sizeof(T)>()) == 0;
+  return !__builtin_mul_overflow(numElems, sizeof(T), bytesOut);
 }
 
 /*
@@ -568,9 +567,9 @@ template <typename T>
 template <typename T, typename Extra>
 [[nodiscard]] inline bool CalculateAllocSizeWithExtra(size_t numExtra,
                                                       size_t* bytesOut) {
-  *bytesOut = sizeof(T) + numExtra * sizeof(Extra);
-  return (numExtra & mozilla::MulOverflowMask<sizeof(Extra)>()) == 0 &&
-         *bytesOut >= sizeof(T);
+  size_t tmp;
+  return !__builtin_mul_overflow(numExtra, sizeof(Extra), &tmp) &&
+         !__builtin_add_overflow(sizeof(T), tmp, bytesOut);
 }
 
 } /* namespace js */
@@ -626,7 +625,8 @@ template <class T>
 static MOZ_ALWAYS_INLINE T* js_pod_arena_realloc(arena_id_t arena, T* prior,
                                                  size_t oldSize,
                                                  size_t newSize) {
-  MOZ_ASSERT(!(oldSize & mozilla::MulOverflowMask<sizeof(T)>()));
+  [[maybe_unused]] size_t tmp;
+  MOZ_ASSERT(!__builtin_mul_overflow(oldSize, sizeof(T), &tmp));
   size_t bytes;
   if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(newSize, &bytes))) {
     return nullptr;

@@ -7,7 +7,6 @@
 // This is included first to ensure it doesn't implicitly depend on anything
 // else.
 #include "mozilla/BufferList.h"
-#include "mozilla/MulOverflowMask.h"
 
 // It would be nice if we could use the InfallibleAllocPolicy from mozalloc,
 // but MFBT cannot use mozalloc.
@@ -15,10 +14,11 @@ class InfallibleAllocPolicy {
  public:
   template <typename T>
   T* pod_malloc(size_t aNumElems) {
-    if (aNumElems & mozilla::MulOverflowMask<sizeof(T)>()) {
+    size_t size;
+    if (__builtin_mul_overflow(aNumElems, sizeof(T), &size)) {
       MOZ_CRASH("TestBufferList.cpp: overflow");
     }
-    T* rv = static_cast<T*>(malloc(aNumElems * sizeof(T)));
+    T* rv = static_cast<T*>(malloc(size));
     if (!rv) {
       MOZ_CRASH("TestBufferList.cpp: out of memory");
     }
