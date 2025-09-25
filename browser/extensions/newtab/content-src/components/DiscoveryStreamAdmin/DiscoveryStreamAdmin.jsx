@@ -11,6 +11,9 @@ import { SimpleHashRouter } from "./SimpleHashRouter";
 const PREF_AD_SIZE_MEDIUM_RECTANGLE = "newtabAdSize.mediumRectangle";
 const PREF_AD_SIZE_BILLBOARD = "newtabAdSize.billboard";
 const PREF_AD_SIZE_LEADERBOARD = "newtabAdSize.leaderboard";
+const PREF_CONTEXTUAL_CONTENT_SELECTED_FEED =
+  "discoverystream.contextualContent.selectedFeed";
+const PREF_CONTEXTUAL_CONTENT_FEEDS = "discoverystream.contextualContent.feeds";
 const PREF_SECTIONS_ENABLED = "discoverystream.sections.enabled";
 const PREF_SPOC_PLACEMENTS = "discoverystream.placements.spocs";
 const PREF_SPOC_COUNTS = "discoverystream.placements.spocs.counts";
@@ -148,6 +151,7 @@ export class DiscoveryStreamAdminUI extends React.PureComponent {
       this.refreshInferredPersonalization.bind(this);
     this.refreshTopicSelectionCache =
       this.refreshTopicSelectionCache.bind(this);
+    this.toggleTBRFeed = this.toggleTBRFeed.bind(this);
     this.handleSectionsToggle = this.handleSectionsToggle.bind(this);
     this.toggleIABBanners = this.toggleIABBanners.bind(this);
     this.state = {
@@ -226,6 +230,12 @@ export class DiscoveryStreamAdminUI extends React.PureComponent {
 
   showPlaceholder() {
     this.dispatchSimpleAction(at.DISCOVERY_STREAM_DEV_SHOW_PLACEHOLDER);
+  }
+
+  toggleTBRFeed(e) {
+    const feed = e.target.value;
+    const selectedFeed = PREF_CONTEXTUAL_CONTENT_SELECTED_FEED;
+    this.props.dispatch(ac.SetPref(selectedFeed, feed));
   }
 
   idleDaily() {
@@ -620,7 +630,14 @@ export class DiscoveryStreamAdminUI extends React.PureComponent {
     const { config, layout } = this.props.state.DiscoveryStream;
     const personalized =
       this.props.otherPrefs["discoverystream.personalization.enabled"];
+    const selectedFeed =
+      this.props.otherPrefs[PREF_CONTEXTUAL_CONTENT_SELECTED_FEED];
     const sectionsEnabled = this.props.otherPrefs[PREF_SECTIONS_ENABLED];
+    const TBRFeeds = this.props.otherPrefs[PREF_CONTEXTUAL_CONTENT_FEEDS].split(
+      ","
+    )
+      .map(s => s.trim())
+      .filter(item => item);
 
     // Prefs for IAB Banners
     const mediumRectangleEnabled =
@@ -671,6 +688,17 @@ export class DiscoveryStreamAdminUI extends React.PureComponent {
         <button className="button" onClick={this.showPlaceholder}>
           Show Placeholder Cards
         </button>{" "}
+        <select
+          className="button"
+          onChange={this.toggleTBRFeed}
+          value={selectedFeed}
+        >
+          {TBRFeeds.map(feed => (
+            <option key={feed} value={feed}>
+              {feed}
+            </option>
+          ))}
+        </select>
         <div className="toggle-wrapper">
           <moz-toggle
             id="sections-toggle"

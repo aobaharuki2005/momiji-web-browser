@@ -105,6 +105,7 @@ export const DefaultMeta = ({
   mayHaveThumbsUpDown,
   onThumbsUpClick,
   onThumbsDownClick,
+  isListCard,
   state,
   format,
   topic,
@@ -114,7 +115,10 @@ export const DefaultMeta = ({
   refinedCardsLayout,
 }) => {
   const shouldHaveThumbs =
-    format !== "rectangle" && mayHaveSectionsCards && mayHaveThumbsUpDown;
+    !isListCard &&
+    format !== "rectangle" &&
+    mayHaveSectionsCards &&
+    mayHaveThumbsUpDown;
   const shouldHaveFooterSection =
     isSectionsCard && (shouldHaveThumbs || showTopics);
 
@@ -145,7 +149,8 @@ export const DefaultMeta = ({
           excerpt && <p className="excerpt clamp">{excerpt}</p>
         )}
       </div>
-      {format !== "rectangle" &&
+      {!isListCard &&
+        format !== "rectangle" &&
         !mayHaveSectionsCards &&
         mayHaveThumbsUpDown &&
         !refinedCardsLayout && (
@@ -362,6 +367,7 @@ export class _DSCard extends React.PureComponent {
               features: this.props.features,
               matches_selected_topic: matchesSelectedTopic,
               selected_topics: this.props.selectedTopics,
+              is_list_card: this.props.isListCard,
               ...(this.props.format
                 ? { format: this.props.format }
                 : {
@@ -401,6 +407,7 @@ export class _DSCard extends React.PureComponent {
                 recommendation_id: this.props.recommendation_id,
                 topic: this.props.topic,
                 selected_topics: this.props.selectedTopics,
+                is_list_card: this.props.isListCard,
                 ...(this.props.format
                   ? { format: this.props.format }
                   : {
@@ -766,6 +773,7 @@ export class _DSCard extends React.PureComponent {
       isRecentSave,
       DiscoveryStream,
       Prefs,
+      isListCard,
       isFakespot,
       mayHaveSectionsCards,
       format,
@@ -798,7 +806,9 @@ export class _DSCard extends React.PureComponent {
       }
       return (
         <div
-          className={`ds-card placeholder ${placeholderClassName} ${refinedCardsClassName}`}
+          className={`ds-card placeholder ${placeholderClassName} ${
+            isListCard ? "list-card-placeholder" : ""
+          } ${refinedCardsClassName}`}
           ref={this.setPlaceholderRef}
         >
           {placeholderElements}
@@ -851,6 +861,8 @@ export class _DSCard extends React.PureComponent {
     const imageGradientClassName = imageGradient
       ? `ds-card-image-gradient`
       : ``;
+    const listCardClassName = isListCard ? `list-feed-card` : ``;
+    const fakespotClassName = isFakespot ? `fakespot` : ``;
     const sectionsCardsClassName = [
       mayHaveSectionsCards ? `sections-card-ui` : ``,
       this.props.sectionsClassNames,
@@ -864,13 +876,15 @@ export class _DSCard extends React.PureComponent {
     let images = this.renderImage({ sizes: this.standardCardImageSizes });
     if (isMediumRectangle) {
       images = this.renderImage();
+    } else if (isListCard) {
+      images = this.renderImage({ sizes: this.listCardImageSizes });
     } else if (sectionsEnabled) {
       images = this.renderSectionCardImages();
     }
 
     return (
       <article
-        className={`ds-card ${sectionsCardsClassName} ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName} ${spocFormatClassName} ${ctaButtonClassName} ${ctaButtonVariantClassName} ${refinedCardsClassName}`}
+        className={`ds-card ${listCardClassName} ${fakespotClassName} ${sectionsCardsClassName} ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName} ${spocFormatClassName} ${ctaButtonClassName} ${ctaButtonVariantClassName} ${refinedCardsClassName}`}
         ref={this.setContextMenuButtonHostRef}
         data-position-one={this.props["data-position-one"]}
         data-position-two={this.props["data-position-one"]}
@@ -888,6 +902,7 @@ export class _DSCard extends React.PureComponent {
           {this.props.showTopics &&
             !this.props.mayHaveSectionsCards &&
             this.props.topic &&
+            !isListCard &&
             !refinedCardsLayout && (
               <span
                 className="ds-card-topic"
@@ -912,7 +927,9 @@ export class _DSCard extends React.PureComponent {
                 received_rank: this.props.received_rank,
                 topic: this.props.topic,
                 features: this.props.features,
+                is_list_card: isListCard,
                 ...(format ? { format } : {}),
+                isFakespot,
                 category: this.props.category,
                 ...(this.props.section
                   ? {
@@ -961,9 +978,12 @@ export class _DSCard extends React.PureComponent {
               onThumbsUpClick={this.onThumbsUpClick}
               onThumbsDownClick={this.onThumbsDownClick}
               state={this.state}
+              isListCard={isListCard}
               showTopics={!refinedCardsLayout && this.props.showTopics}
               isSectionsCard={
-                this.props.mayHaveSectionsCards && this.props.topic
+                this.props.mayHaveSectionsCards &&
+                this.props.topic &&
+                !isListCard
               }
               format={format}
               topic={this.props.topic}
@@ -999,6 +1019,7 @@ export class _DSCard extends React.PureComponent {
                 scheduled_corpus_item_id={this.props.scheduled_corpus_item_id}
                 recommended_at={this.props.recommended_at}
                 received_rank={this.props.received_rank}
+                is_list_card={this.props.isListCard}
                 section={this.props.section}
                 section_position={this.props.sectionPosition}
                 is_section_followed={this.props.sectionFollowed}

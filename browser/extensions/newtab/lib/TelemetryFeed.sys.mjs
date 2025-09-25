@@ -780,6 +780,7 @@ export class TelemetryFeed {
           fetchTimestamp,
           firstVisibleTimestamp,
           format,
+          is_list_card,
           is_section_followed,
           layout_name,
           matches_selected_topic,
@@ -827,6 +828,7 @@ export class TelemetryFeed {
             matches_selected_topic,
             selected_topics,
             topic,
+            is_list_card,
             position: action.data.action_position,
             tile_id,
             event_source,
@@ -1794,6 +1796,7 @@ export class TelemetryFeed {
           ...(datum.format ? { format: datum.format } : {}),
           position: datum.position,
           tile_id: datum.id || datum.tile_id,
+          is_list_card: datum.is_list_card,
           ...(datum.section
             ? {
                 section: datum.section,
@@ -1872,49 +1875,56 @@ export class TelemetryFeed {
 
     tiles.forEach(tile => {
       // if the tile has a category it is a product tile from fakespot
-      const { corpus_item_id, scheduled_corpus_item_id } = tile;
-      const is_sponsored = tile.type === "spoc";
-      const gleanData = {
-        is_sponsored,
-        ...(tile.format ? { format: tile.format } : {}),
-        ...(tile.section
-          ? {
-              section: tile.section,
-              section_position: tile.section_position,
-              ...(this.sectionsPersonalizationEnabled
-                ? { is_section_followed: !!tile.is_section_followed }
-                : {}),
-              layout_name: tile.layout_name,
-            }
-          : {}),
-        position: tile.pos,
-        tile_id: tile.id,
-        topic: tile.topic,
-        selected_topics: tile.selectedTopics,
-        is_list_card: tile.is_list_card,
-        // We conditionally add in a few props.
-        ...(corpus_item_id ? { corpus_item_id } : {}),
-        ...(scheduled_corpus_item_id ? { scheduled_corpus_item_id } : {}),
-        ...(corpus_item_id || scheduled_corpus_item_id
-          ? {
-              received_rank: tile.received_rank,
-              recommended_at: tile.recommended_at,
-            }
-          : {
-              recommendation_id: tile.recommendation_id,
-            }),
-      };
-      Glean.pocket.impression.record({
-        ...this.redactNewTabPing(
-          this.redactPingFor143(gleanData),
-          is_sponsored
-        ),
-        newtab_visit_id: session.session_id,
-      });
-      if (this.privatePingEnabled) {
-        this.newtabContentPing.recordEvent("impression", gleanData);
+      if (tile.type === "fakespot") {
+        Glean.newtab.fakespotProductImpression.record({
+          newtab_visit_id: session.session_id,
+          product_id: tile.id,
+          category: tile.category,
+        });
+      } else {
+        const { corpus_item_id, scheduled_corpus_item_id } = tile;
+        const is_sponsored = tile.type === "spoc";
+        const gleanData = {
+          is_sponsored,
+          ...(tile.format ? { format: tile.format } : {}),
+          ...(tile.section
+            ? {
+                section: tile.section,
+                section_position: tile.section_position,
+                ...(this.sectionsPersonalizationEnabled
+                  ? { is_section_followed: !!tile.is_section_followed }
+                  : {}),
+                layout_name: tile.layout_name,
+              }
+            : {}),
+          position: tile.pos,
+          tile_id: tile.id,
+          topic: tile.topic,
+          selected_topics: tile.selectedTopics,
+          is_list_card: tile.is_list_card,
+          // We conditionally add in a few props.
+          ...(corpus_item_id ? { corpus_item_id } : {}),
+          ...(scheduled_corpus_item_id ? { scheduled_corpus_item_id } : {}),
+          ...(corpus_item_id || scheduled_corpus_item_id
+            ? {
+                received_rank: tile.received_rank,
+                recommended_at: tile.recommended_at,
+              }
+            : {
+                recommendation_id: tile.recommendation_id,
+              }),
+        };
+        Glean.pocket.impression.record({
+          ...this.redactNewTabPing(
+            this.redactPingFor143(gleanData),
+            is_sponsored
+          ),
+          newtab_visit_id: session.session_id,
+        });
+        if (this.privatePingEnabled) {
+          this.newtabContentPing.recordEvent("impression", gleanData);
+        }
       }
-
       if (tile.shim) {
         if (this.canSendUnifiedAdsSpocCallbacks) {
           // Send unified ads callback event
