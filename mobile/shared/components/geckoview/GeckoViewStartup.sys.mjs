@@ -359,7 +359,7 @@ export class GeckoViewStartup {
         }
         break;
       }
-      case "GeckoView:SetLocale":
+      case "GeckoView:SetLocale": {
         if (aData.requestedLocales) {
           Services.locale.requestedLocales = aData.requestedLocales;
         }
@@ -373,6 +373,7 @@ export class GeckoViewStartup {
           pls
         );
         break;
+      }
 
       case "GeckoView:StorageDelegate:Attached":
         InitLater(() => {
