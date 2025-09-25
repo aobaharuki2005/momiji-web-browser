@@ -231,9 +231,13 @@ test log.
 
 In addition to mochitest assertions, mochitest supports the
 [CommonJS standard assertions](http://wiki.commonjs.org/wiki/Unit_Testing/1.1),
-like [nodejs' assert module](https://nodejs.org/api/assert.html#assert) but
+like [Node.JS' Assert module](https://nodejs.org/api/assert.html#assert) but
 implemented in `Assert.sys.mjs`. These are auto-imported in the browser flavor, but
 need to be imported manually in other flavors.
+
+It is recommended to use `Assert` methods over `is`/`ok` functions, because
+they are better documented and easier to find.
+
 
 ### Helper functions
 
