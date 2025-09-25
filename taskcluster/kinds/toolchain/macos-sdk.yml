@@ -60,6 +60,19 @@ macosx64-sdk-15.5:
             - macosx64-sdk
             - MacOSX15.5.sdk
 
+macosx64-sdk-26.0:
+    description: "MacOSX26.0 SDK"
+    treeherder:
+        symbol: TM(sdk26.0)
+    run:
+        arguments:
+            - https://swcdn.apple.com/content/downloads/27/62/093-35114-A_AAH24ZZQB5/yn87ru9qe9225m8hwq2ic3hjy5yc5vw7h9/CLTools_macOSNMOS_SDK.pkg
+            - d3286bd6d4dff1b12f1d0dab4816719e605a1bfb76af84575deec37b25fc4462d4fc1258aa43b138a557c4f9304e06740441b101eb367a4b5bd77200b0708c71
+            - Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk
+        toolchain-artifact: project/gecko/mac-sdk/MacOSX26.0.sdk.tar.zst
+        toolchain-alias:
+            - MacOSX26.0.sdk
+
 ios-sdk-18.4:
     description: "iPhoneOS18.4 SDK"
     treeherder:
