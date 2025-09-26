@@ -22,7 +22,8 @@ NativeLayerRootRemoteMacSnapshotter::NativeLayerRootRemoteMacSnapshotter(
 bool NativeLayerRootRemoteMacSnapshotter::ReadbackPixels(
     const IntSize& aReadbackSize, SurfaceFormat aReadbackFormat,
     const Range<uint8_t>& aReadbackBuffer) {
-  return false;
+  return mLayerRoot->ReadbackPixels(aReadbackSize, aReadbackFormat,
+                                    aReadbackBuffer);
 }
 
 already_AddRefed<profiler_screenshots::RenderSource>

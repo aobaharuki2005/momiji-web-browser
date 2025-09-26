@@ -43,6 +43,8 @@ class NativeLayerRootRemoteMacChild final : public NativeLayerRoot {
   RefPtr<NativeLayerRemoteChild> GetRemoteChild() { return mRemoteChild; }
 
  protected:
+  friend class NativeLayerRootRemoteMacSnapshotter;
+
   virtual ~NativeLayerRootRemoteMacChild();
 
   RefPtr<NativeLayerRemoteChild> mRemoteChild;
@@ -51,6 +53,9 @@ class NativeLayerRootRemoteMacChild final : public NativeLayerRoot {
   NativeLayerRootSnapshotter* mWeakSnapshotter = nullptr;
 
   bool mNativeLayersChanged = false;
+
+  bool ReadbackPixels(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
+                      const Range<uint8_t>& aBuffer);
 };
 
 }  // namespace layers

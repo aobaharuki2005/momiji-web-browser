@@ -130,6 +130,33 @@ bool NativeLayerRootRemoteMacChild::CommitToScreen() {
   return true;
 }
 
+bool NativeLayerRootRemoteMacChild::ReadbackPixels(
+    const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
+    const Range<uint8_t>& aBuffer) {
+  // In this process we only have the pixels of the individual layers,
+  // but here we're asked to return the result of compositing all the
+  // layers together. Computing the composited result is currently
+  // only implemented in NativeLayerRootCA, which runs in the parent
+  // process, so we send a sync IPC message to the parent to ask for
+  // the composited result.
+  if (aFormat != gfx::SurfaceFormat::B8G8R8A8) {
+    return false;
+  }
+
+  ipc::Shmem pixels;
+  if (!mRemoteChild->SendRequestReadback(aSize, &pixels)) {
+    return false;
+  }
+
+  // Copy pixels into aBuffer.
+  // TODO: Figure out a more idiomatic way to do this.
+  auto byteCount = pixels.Size<uint8_t>();
+  MOZ_RELEASE_ASSERT(aBuffer.length() >= byteCount);
+  PodCopy(aBuffer.begin().get(), pixels.get<uint8_t>(), byteCount);
+
+  return true;
+}
+
 NativeLayerRootRemoteMacChild::NativeLayerRootRemoteMacChild()
     : mRemoteChild(MakeRefPtr<NativeLayerRemoteChild>()),
       mCommandQueue(MakeRefPtr<NativeLayerCommandQueue>()) {}
