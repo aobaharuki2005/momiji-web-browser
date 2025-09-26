@@ -80,7 +80,7 @@ LazyLogModule gDictionaryLog("CompressionDictionaries");
  * Reference to the DictionaryCache singleton. May be null.
  */
 StaticRefPtr<DictionaryCache> gDictionaryCache;
-nsCOMPtr<nsICacheStorage> DictionaryCache::sCacheStorage;
+StaticRefPtr<nsICacheStorage> DictionaryCache::sCacheStorage;
 
 // about:cache gets upset about entries that don't fit URL specs, so we need
 // to add the trailing '/' to GetPrePath()
@@ -770,14 +770,22 @@ nsresult DictionaryCache::Init() {
     if (!cacheStorageService) {
       return NS_ERROR_FAILURE;
     }
+    nsCOMPtr<nsICacheStorage> temp;
     nsresult rv = cacheStorageService->DiskCacheStorage(
-        nullptr, getter_AddRefs(sCacheStorage));  // Don't need a load context
+        nullptr, getter_AddRefs(temp));  // Don't need a load context
     if (NS_FAILED(rv)) {
       return rv;
     }
+    sCacheStorage = temp;
   }
   DICTIONARY_LOG(("Inited DictionaryCache %p", sCacheStorage.get()));
   return NS_OK;
+}
+
+// static
+void DictionaryCache::Shutdown() {
+  gDictionaryCache = nullptr;
+  sCacheStorage = nullptr;
 }
 
 nsresult DictionaryCache::AddEntry(nsIURI* aURI, const nsACString& aKey,
@@ -841,7 +849,7 @@ already_AddRefed<DictionaryCacheEntry> DictionaryCache::AddEntry(
                                                     // which cause allocations
             // Write the dirty entry we couldn't write before once
             // we get the hash
-            aDictEntry->WriteOnHash();
+            entry->WriteOnHash();
             return NS_OK;
           });
       // Since this is read asynchronously, we need to either add the entry
