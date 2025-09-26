@@ -92,10 +92,11 @@
     <ID>ForbiddenSuppress:LoginPickerView.kt$@Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:MainActivity.kt$MainActivity$@Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:ManifestDatabase.kt$ManifestDatabase.Companion$@Suppress("MagicNumber")</ID>
+    <ID>ForbiddenSuppress:MozillaSocorroService.kt$MozillaSocorroService$@Suppress("LongParameterList", "ComplexMethod")</ID>
     <ID>ForbiddenSuppress:MozillaSocorroService.kt$MozillaSocorroService$@Suppress("LongParameterList", "LongMethod", "ComplexMethod")</ID>
     <ID>ForbiddenSuppress:NestedGeckoView.kt$NestedGeckoView$@Suppress("ComplexMethod")</ID>
     <ID>ForbiddenSuppress:Origin.kt$@Suppress("LongMethod")</ID>
-    <ID>ForbiddenSuppress:Parser.kt$Parser$@Suppress("ComplexMethod", "LongMethod", "ThrowsCount")</ID>
+    <ID>ForbiddenSuppress:Parser.kt$Parser$@Suppress("ComplexMethod", "ThrowsCount")</ID>
     <ID>ForbiddenSuppress:Performance.kt$@SuppressWarnings("MagicNumber")</ID>
     <ID>ForbiddenSuppress:PermissionsDialogFragment.kt$PermissionsDialogFragment$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:PopupToMenuItemsMapper.kt$@Suppress("LongMethod")</ID>
@@ -129,9 +130,8 @@
     <ID>ForbiddenSuppress:TextField.kt$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:ThumbnailsMiddleware.kt$ThumbnailsMiddleware$@Suppress("ComplexMethod")</ID>
     <ID>ForbiddenSuppress:TimePickerDialogFragment.kt$TimePickerDialogFragment$@Suppress("ComplexMethod")</ID>
-    <ID>ForbiddenSuppress:ToolbarActivity.kt$ToolbarActivity$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:ToolbarActivity.kt$ToolbarActivity$@Suppress("MagicNumber")</ID>
-    <ID>ForbiddenSuppress:ToolbarActivity.kt$ToolbarActivity$@Suppress("TooGenericExceptionCaught", "LongMethod", "ComplexMethod")</ID>
+    <ID>ForbiddenSuppress:ToolbarActivity.kt$ToolbarActivity$@Suppress("TooGenericExceptionCaught", "ComplexMethod")</ID>
     <ID>ForbiddenSuppress:TopSiteDatabase.kt$Migrations$@Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:TranslationsMiddleware.kt$TranslationsMiddleware$@Suppress("LongMethod", "CyclomaticComplexMethod")</ID>
     <ID>ForbiddenSuppress:TranslationsStateReducer.kt$TranslationsStateReducer$@Suppress("LongMethod")</ID>

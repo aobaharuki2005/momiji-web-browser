@@ -101,7 +101,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private var refreshAction: BrowserToolbar.TwoStateButton? = null
     private var isTablet: Boolean = false
 
-    @Suppress("LongMethod")
     override fun initializeUI(view: View, tab: SessionState) {
         super.initializeUI(view, tab)
 

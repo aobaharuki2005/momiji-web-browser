@@ -140,7 +140,6 @@ class BrowserToolbarCFRPresenter(
     }
 
     @VisibleForTesting
-    @Suppress("LongMethod")
     internal fun showCookieBannersCFR() {
         CFRPopup(
             anchor = toolbar.findViewById(
@@ -201,7 +200,6 @@ class BrowserToolbarCFRPresenter(
     }
 
     @VisibleForTesting
-    @Suppress("LongMethod")
     internal fun showTabSwipeCFR() {
         CFRPopup(
             anchor = toolbar.findViewById(

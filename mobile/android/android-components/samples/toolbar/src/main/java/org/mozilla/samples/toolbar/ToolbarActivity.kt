@@ -497,7 +497,6 @@ class ToolbarActivity : AppCompatActivity() {
         }
     }
 
-    @Suppress("LongMethod")
     private fun setupComposeToolbar() {
         showToolbar(isCompose = true)
 
@@ -596,7 +595,7 @@ class ToolbarActivity : AppCompatActivity() {
 
     private var loading = MutableLiveData<Boolean>()
 
-    @Suppress("TooGenericExceptionCaught", "LongMethod", "ComplexMethod")
+    @Suppress("TooGenericExceptionCaught", "ComplexMethod")
     private fun simulateReload(view: UrlBoxProgressView? = null) {
         job?.cancel()
 

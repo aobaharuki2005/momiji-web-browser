@@ -283,7 +283,6 @@ class AddonsManagerAdapter(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    @Suppress("LongMethod")
     internal fun bindAddon(
         holder: AddonViewHolder,
         addon: Addon,

@@ -175,7 +175,7 @@ class MozillaSocorroService(
     internal fun createFormDataWriter(os: OutputStream, boundary: String, logger: Logger) =
         FormDataWriter(os, boundary, logger)
 
-    @Suppress("LongParameterList", "LongMethod", "ComplexMethod")
+    @Suppress("LongParameterList", "ComplexMethod")
     private fun sendCrashData(
         os: OutputStream,
         boundary: String,
