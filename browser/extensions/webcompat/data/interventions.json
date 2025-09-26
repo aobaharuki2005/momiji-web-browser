@@ -5315,6 +5315,21 @@
       }
     ]
   },
+  "1980629": {
+    "label": "truepicvision.com",
+    "bugs": {
+      "1980629": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://*.truepicvision.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["Chrome"]
+      }
+    ]
+  },
   "1982295": {
     "label": "hall.ssjj.cn",
     "bugs": {
