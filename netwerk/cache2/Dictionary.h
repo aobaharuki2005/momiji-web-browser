@@ -27,6 +27,10 @@ class nsIIOService;
 class nsILoadContextInfo;
 class nsITimer;
 
+// Version of metadata entries we expect
+static const uint32_t METADATA_DICTIONARY_VERSION = 1;
+#define META_DICTIONARY_PREFIX "dict:"_ns
+
 namespace mozilla {
 namespace net {
 
@@ -181,6 +185,10 @@ class DictionaryCache final {
   }
 
  private:
+  bool ParseMetaDataEntry(const char* key, const char* value, nsCString& uri,
+                          uint32_t& hitCount, uint32_t& lastHit,
+                          uint32_t& flags);
+
   // In-memory cache of dictionary entries.  HashMap, keyed by origin, of
   // Linked list (LRU order) of valid dictionaries for the origin.
   // We keep empty entries in there to avoid hitting the disk cache to find out
