@@ -142,8 +142,8 @@ class DummyHttpTransaction : public nsAHttpTransaction {
     if (pps) {
       nsCOMPtr<nsIProxyInfo> info;
       nsresult rv = pps->NewMASQUEProxyInfo(
-          nsCString(kProxyHost), -1, nsCString(kPathTemplate), "h3"_ns, ""_ns,
-          ""_ns, 0, 0, nullptr, getter_AddRefs(info));
+          nsCString(kProxyHost), -1, nsCString(kPathTemplate), ""_ns, ""_ns, 0,
+          0, nullptr, getter_AddRefs(info));
       if (NS_FAILED(rv)) {
         return;
       }

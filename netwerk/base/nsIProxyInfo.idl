@@ -30,8 +30,8 @@ interface nsIProxyInfo : nsISupports
    *   "https"    HTTP proxying over TLS connection to proxy
    *   "socks"    SOCKS v5 proxy
    *   "socks4"   SOCKS v4 proxy
-   *   "connect-tcp"
-   *   "connect-udp"
+   *   "masque"   Similar to an HTTPS proxy, but supports
+  *               "connect-udp" and/or "connect-tcp" with pathTemplate
    *   "direct"   no proxy
    *   "unknown"  unknown proxy (see nsIProtocolProxyService::resolve)
    *
@@ -94,17 +94,9 @@ interface nsIProxyInfo : nsISupports
   readonly attribute ACString connectionIsolationKey;
 
   /**
-   * Used when the type is "connect-tcp" or "connect-udp".
+   * Used when the type is "masque"
    */
   attribute AUTF8String pathTemplate;
-
-  /**
-   * Hint for which ALPN the proxy connection should use.
-   * Applicable only for proxy types connect-udp, HTTP, and HTTPS.
-   * When ALPN is set to "h3", Necko may fall back to "h2" or "h1"
-   * if establishing the proxy connection over h3 fails.
-   */
-  attribute AUTF8String alpn;
 
   /**
    * The following two constants can be used to compare against

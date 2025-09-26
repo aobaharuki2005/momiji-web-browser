@@ -201,16 +201,12 @@ interface nsIProtocolProxyService : nsISupports
                                       in nsIProxyInfo aFailoverProxy);
 
     /**
-     * Creates a new nsIProxyInfo instance for HTTPS proxy.
-     *
-     * If the provided aAlpn is "h3", the proxy info will support CONNECT-UDP.
-     * Otherwise, the proxy info represents a regular HTTPS proxy.
+     * Creates a new nsIProxyInfo instance for MASQUE proxy.
      *
      */
     nsIProxyInfo newMASQUEProxyInfo(in AUTF8String aHost,
                                     in long aPort,
                                     in AUTF8String aPathTemplate,
-                                    in AUTF8String aAlpn,
                                     in ACString aProxyAuthorizationHeader,
                                     in ACString aConnectionIsolationKey,
                                     in unsigned long aFlags,
