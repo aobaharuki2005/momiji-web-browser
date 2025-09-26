@@ -42,6 +42,7 @@ Var InstallType
 Var AddStartMenuSC
 Var AddTaskbarSC
 Var AddDesktopSC
+Var AddDesktopLauncher
 Var AddPrivateBrowsingSC
 Var InstallMaintenanceService
 Var InstallOptionalExtensions
@@ -643,11 +644,10 @@ Section "-Application" APP_IDX
     SetShellVarContext current
   ${EndIf}
 
-!ifdef DESKTOP_LAUNCHER_ENABLED
-  ; Entry point for installing launcher when Firefox is being installed
-  Call OnInstallDesktopLauncherHandler
-!else
-  ${If} $AddDesktopSC == 1
+  ${If} $AddDesktopLauncher == 1
+    ; Entry point for installing launcher when Firefox is being installed
+    Call OnInstallDesktopLauncherHandler
+  ${ElseIf} $AddDesktopSC == 1
     ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
       ShellLink::GetShortCutTarget "$DESKTOP\${BrandFullName}.lnk"
       Pop $0
@@ -662,10 +662,10 @@ Section "-Application" APP_IDX
       ${If} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
         ShellLink::SetShortCutDescription "$DESKTOP\${BrandShortName}.lnk" "$(BRIEF_APP_DESC)"
         ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandShortName}.lnk" \
-                                               "$INSTDIR"
+                                              "$INSTDIR"
         ${If} "$AppUserModelID" != ""
           ApplicationID::Set "$DESKTOP\${BrandShortName}.lnk" \
-                             "$AppUserModelID" "true"
+                            "$AppUserModelID" "true"
         ${EndIf}
         ${LogMsg} "Added Shortcut: $DESKTOP\${BrandShortName}.lnk"
       ${Else}
@@ -673,7 +673,6 @@ Section "-Application" APP_IDX
       ${EndIf}
     ${EndIf}
   ${EndIf}
-!endif
 
 !ifdef MOZ_OPTIONAL_EXTENSIONS
   ${If} ${FileExists} "$INSTDIR\distribution\optional-extensions"
