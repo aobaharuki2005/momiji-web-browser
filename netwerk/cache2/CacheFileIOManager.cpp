@@ -1872,7 +1872,7 @@ nsresult CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash* aHash,
   if (exists) {
     // If this file has been found evicted through the context file evictor
     // above for any of pinned or non-pinned state, these calls ensure we doom
-    // the handle ASAP we know the real pinning state after metadta has been
+    // the handle ASAP we know the real pinning state after metadata has been
     // parsed.  DoomFileInternal on the |handle| doesn't doom right now, since
     // the pinning state is unknown and we pass down a pinning restriction.
     if (evictedAsPinned) {
@@ -2512,6 +2512,11 @@ nsresult CacheFileIOManager::DoomFileInternal(
   }
 
   if (!aHandle->IsSpecialFile()) {
+    // Remove from Dictionary cache if this is a dictionary
+    if (!mDictionaryCache) {
+      //      mDictionaryCache = DictionaryCache::GetInstance();
+    }
+    //    mDictionaryCache->RemoveDictionaryFor(aHandle->mKey);
     CacheIndex::RemoveEntry(aHandle->Hash());
   }
 
@@ -2525,7 +2530,7 @@ nsresult CacheFileIOManager::DoomFileInternal(
           CacheFileUtils::ParseKey(aHandle->Key(), &idExtension, &url);
       MOZ_ASSERT(info);
       if (info) {
-        storageService->CacheFileDoomed(info, idExtension, url);
+        storageService->CacheFileDoomed(aHandle->mKey, info, idExtension, url);
       }
     }
   }
@@ -3515,7 +3520,8 @@ nsresult CacheFileIOManager::EvictByContextInternal(
       }
 
       // Filter by origin.
-      if (!origin.IsEmpty()) {
+      if (!origin.IsEmpty()) {  // XXX also look for dict:<origin>, or let that
+                                // be handled by Doom?  Probably Doom
         RefPtr<MozURL> url;
         rv = MozURL::Init(getter_AddRefs(url), uriSpec);
         if (NS_FAILED(rv)) {
