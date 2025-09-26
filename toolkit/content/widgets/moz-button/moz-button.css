@@ -9,6 +9,38 @@
   --button-alignment: center;
 }
 
+:host([type="split"]) {
+  display: flex;
+  justify-content: flex-start;
+  gap: var(--space-xxsmall);
+
+  button {
+    min-width: fit-content;
+  }
+
+  #main-button {
+    padding-inline-end: 0;
+  }
+
+  #chevron-button {
+    padding-inline-start: 0;
+  }
+
+  .button-background {
+    height: 100%;
+  }
+
+  #main-button .button-background {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  #chevron-button .button-background {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+  }
+}
+
 button {
   appearance: none;
   background: transparent;
