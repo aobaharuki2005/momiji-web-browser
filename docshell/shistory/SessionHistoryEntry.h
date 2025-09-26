@@ -170,6 +170,7 @@ class SessionHistoryInfo {
   const nsID& NavigationId() const { return mNavigationId; }
 
   nsStructuredCloneContainer* GetNavigationState() const;
+  void SetNavigationState(nsStructuredCloneContainer* aState);
 
   already_AddRefed<nsIURI> GetURIOrInheritedForAboutBlank() const;
 
