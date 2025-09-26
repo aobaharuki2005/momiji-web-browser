@@ -144,6 +144,7 @@ UNIFIED_SOURCES += [
     "testThreadingMutex.cpp",
     "testThreadingThread.cpp",
     "testToSignedOrUnsignedInteger.cpp",
+    "testTraceableFifoValue.cpp",
     "testTypedArrays.cpp",
     "testUbiNode.cpp",
     "testUncaughtSymbol.cpp",
