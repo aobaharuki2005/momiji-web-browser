@@ -1567,7 +1567,8 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
 
   LOG(("Changing Content-Encoding from %s to %s", contentEncoding.get(),
        newEncoding.get()));
-  rv = mResponseHead->SetHeader(nsHttp::Content_Encoding, newEncoding);
+  // Can't use SetHeader; we need to overwrite the current value
+  rv = mResponseHead->SetHeaderOverride(nsHttp::Content_Encoding, newEncoding);
 
   *aNewNextListener = do_AddRef(nextListener).take();
   return NS_OK;
