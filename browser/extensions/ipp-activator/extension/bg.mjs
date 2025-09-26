@@ -45,8 +45,8 @@ class IPPAddonActivator {
       }
 
       // IPP start event: initialize when service starts.
-      browser.ippActivator.onIPPActivated.addListener(enabled => {
-        if (enabled) {
+      browser.ippActivator.onIPPActivated.addListener(async () => {
+        if (await browser.ippActivator.isIPPActive()) {
           this.#init();
         } else {
           this.#uninit();
@@ -72,6 +72,13 @@ class IPPAddonActivator {
     }
 
     this.#unregisterListeners();
+
+    const ids = Array.from(this.#shownDomainByTab.keys());
+    await Promise.allSettled(
+      ids.map(id => browser.ippActivator.hideMessage(id))
+    );
+
+    this.#shownDomainByTab.clear();
 
     this.#initialized = false;
   }
