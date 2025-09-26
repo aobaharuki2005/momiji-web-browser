@@ -21,7 +21,6 @@
 #include "nsICancelable.h"
 #include "nsIChannel.h"
 #include "nsContentUtils.h"
-#include "mozilla/dom/Document.h"
 #include "nsIFile.h"
 #include "nsIHttpChannel.h"
 #include "nsIInputStream.h"
@@ -42,6 +41,8 @@
 #include "mozilla/Logging.h"
 
 #include "mozilla/Components.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/FlowMarkers.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SchedulerGroup.h"
@@ -644,6 +645,9 @@ void DictionaryOriginReader::Start(
   mCallback = aCallback;
   mCache = aCache;
 
+  AUTO_PROFILER_FLOW_MARKER("DictionaryOriginReader::Start", NETWORK,
+                            Flow::FromPointer(this));
+
   // The cache entry is for originattribute extension of
   // META_DICTIONARY_PREFIX, plus key of prepath
 
@@ -711,9 +715,14 @@ NS_IMETHODIMP DictionaryOriginReader::OnCacheEntryAvailable(
       (reader->mCallback)(true, nullptr);
     }
     mOrigin->mWaitingCacheRead.Clear();
+    AUTO_PROFILER_TERMINATING_FLOW_MARKER(
+        "DictionaryOriginReader::OnCacheEntryAvailable", NETWORK,
+        Flow::FromPointer(this));
     return NS_OK;
   }
 
+  AUTO_PROFILER_FLOW_MARKER("DictionaryOriginReader::VisitMetaData", NETWORK,
+                            Flow::FromPointer(this));
   mOrigin->SetCacheEntry(aCacheEntry);
   // There's no data in the cache entry, just metadata
   nsCOMPtr<nsICacheEntryMetaDataVisitor> metadata(mOrigin);
@@ -725,6 +734,9 @@ NS_IMETHODIMP DictionaryOriginReader::OnCacheEntryAvailable(
     reader->FinishMatch();
   }
   mOrigin->mWaitingCacheRead.Clear();
+  AUTO_PROFILER_TERMINATING_FLOW_MARKER(
+      "DictionaryOriginReader::OnCacheEntryAvailable", NETWORK,
+      Flow::FromPointer(this));
   return NS_OK;
 }
 
