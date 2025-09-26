@@ -2184,6 +2184,8 @@ toolbar#nav-bar {
         certutil = os.path.join(options.utilityPath, "certutil" + bin_suffix)
         pk12util = os.path.join(options.utilityPath, "pk12util" + bin_suffix)
         toolsEnv = env
+        if "browser.newtabpage.trainhopAddon.version=any" in options.extraPrefs:
+            toolsEnv["LD_LIBRARY_PATH"] = os.path.join(os.path.dirname(here), "bin")
         if mozinfo.info["asan"]:
             # Disable leak checking when running these tools
             toolsEnv["ASAN_OPTIONS"] = "detect_leaks=0"
