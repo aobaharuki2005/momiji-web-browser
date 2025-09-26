@@ -914,6 +914,7 @@ class AboutTranslations {
       languagePair: selectedLanguagePair,
       requestTranslationsPort,
       allowSameLanguage: true,
+      activeRequestCapacity: 1,
     });
 
     return true;

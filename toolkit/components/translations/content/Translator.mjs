@@ -79,16 +79,31 @@ export class Translator {
   #translationRequests = new Map();
 
   /**
+   * The limit to the count of active requests that this Translator can have at a given time.
+   * If a new request comes in when the Translator is already at capacity, then the oldest request
+   * will be cancelled and its promise resolved with null, to make room for the newest request.
+   *
+   * @type {number | null}
+   */
+  #activeRequestCapacity = null;
+
+  /**
    * The internal constructor for the Translator.
    * Use the asynchronous {@link Translator.create} function instead.
    *
    * @param {LanguagePair} languagePair
    * @param {RequestTranslationsPort} requestTranslationsPort
+   * @param {number | null} [activeRequestCapacity=null]
    * @param {object} [token]
    *
    * @throws {Error}
    */
-  constructor(languagePair, requestTranslationsPort, token) {
+  constructor(
+    languagePair,
+    requestTranslationsPort,
+    activeRequestCapacity = null,
+    token
+  ) {
     if (token !== Translator.#constructorToken) {
       throw new Error(
         "Translator constructor called: use async Translator.create() instead."
@@ -97,6 +112,7 @@ export class Translator {
 
     this.#languagePair = languagePair;
     this.#requestTranslationsPort = requestTranslationsPort;
+    this.#activeRequestCapacity = activeRequestCapacity;
   }
 
   /**
@@ -107,6 +123,10 @@ export class Translator {
    * @param {boolean} [params.allowSameLanguage=true]
    *  Whether a same-language pair is allowed, such as English to English.
    *  When allowed, this results in a simple passthrough as the translation.
+   * @param {number | null} [params.activeRequestCapacity=null]
+   *  The limit to the count of active requests that this Translator can have at a given time.
+   *  If a new request comes in when the Translator is already at capacity, then the oldest request
+   *  will be cancelled and its promise resolved with null, to make room for the newest request.
    * @param {RequestTranslationsPort} [params.requestTranslationsPort]
    *  A callback to request a new {@link MessagePort} for communication with the TranslationsEngine.
    *  For typical use cases, you can pass the {@link TranslationsParent.requestTranslationsPort} function.
@@ -120,6 +140,7 @@ export class Translator {
   static async create({
     languagePair,
     allowSameLanguage = true,
+    activeRequestCapacity = null,
     requestTranslationsPort,
   }) {
     if (languagePair.sourceLanguage === languagePair.targetLanguage) {
@@ -135,9 +156,16 @@ export class Translator {
       );
     }
 
+    if (activeRequestCapacity !== null && activeRequestCapacity <= 0) {
+      throw new Error(
+        `Attempt to create Translator with an invalid active request capacity: ${activeRequestCapacity}`
+      );
+    }
+
     const translator = new Translator(
       languagePair,
       requestTranslationsPort,
+      activeRequestCapacity,
       Translator.#constructorToken
     );
 
@@ -186,6 +214,8 @@ export class Translator {
     await this.#ready;
 
     const translationId = ++this.#translationId;
+
+    this.#maybeCancelOldestActiveRequest();
 
     const { promise, resolve, reject } = Promise.withResolvers();
 
@@ -286,6 +316,48 @@ export class Translator {
 
     this.#ready = promise;
     this.#port.postMessage({ type: "TranslationsPort:GetEngineStatusRequest" });
+  }
+
+  /**
+   * Cancels an active translation request that belongs to the given id.
+   *
+   * @param {number} translationId
+   * @returns {void}
+   */
+  #cancelTranslationRequest(translationId) {
+    const request = this.#translationRequests.get(translationId);
+
+    if (!request) {
+      return;
+    }
+
+    request.resolve(null);
+    this.#port?.postMessage({
+      type: "TranslationsPort:CancelSingleTranslation",
+      translationId,
+    });
+
+    this.#translationRequests.delete(translationId);
+  }
+
+  /**
+   * Cancels the oldest active translation request,
+   * only if this Translator is at its active request capacity.
+   */
+  #maybeCancelOldestActiveRequest() {
+    if (this.#activeRequestCapacity === null) {
+      // This Translator has no limit to active requests.
+      return;
+    }
+
+    if (this.#translationRequests.size < this.#activeRequestCapacity) {
+      // This Translator is not currently at capacity.
+      return;
+    }
+
+    // Since JS Map preserves insertion order, the oldest request will be the first key.
+    const oldestId = this.#translationRequests.keys().next().value;
+    this.#cancelTranslationRequest(oldestId);
   }
 }
 

@@ -2215,6 +2215,7 @@ var SelectTranslationsPanel = new (class {
       languagePair,
       requestTranslationsPort: this.#requestTranslationsPort,
       allowSameLanguage: true,
+      activeRequestCapacity: 1,
     });
 
     return translator;
