@@ -1552,6 +1552,10 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
           mode = 3;
         } else if (from.EqualsLiteral("zstd")) {
           mode = 4;
+        } else if (from.EqualsLiteral("dcb")) {
+          mode = 5;
+        } else if (from.EqualsLiteral("dcz")) {
+          mode = 6;
         }
         glean::http::content_encoding.AccumulateSingleSample(mode);
       }
