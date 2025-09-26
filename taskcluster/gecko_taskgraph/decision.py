@@ -322,10 +322,26 @@ def get_decision_parameters(graph_config, options):
         env_prefix=_get_env_prefix(graph_config),
     )
 
-    if head_git_rev := get_hg_revision_info(
-        GECKO, revision=parameters["head_rev"], info="extras.git_commit"
-    ):
-        parameters["head_git_rev"] = head_git_rev
+    # Set some vcs specific parameters
+    if parameters["repository_type"] == "hg":
+        if head_git_rev := get_hg_revision_info(
+            GECKO, revision=parameters["head_rev"], info="extras.git_commit"
+        ):
+            parameters["head_git_rev"] = head_git_rev
+
+        parameters["hg_branch"] = get_hg_revision_branch(
+            GECKO, revision=parameters["head_rev"]
+        )
+
+        parameters["files_changed"] = sorted(
+            get_changed_files(parameters["head_repository"], parameters["head_rev"])
+        )
+
+    elif parameters["repository_type"] == "git":
+        parameters["hg_branch"] = None
+        parameters["files_changed"] = repo.get_changed_files(
+            rev=parameters["head_rev"], base_rev=parameters["base_rev"]
+        )
 
     # Define default filter list, as most configurations shouldn't need
     # custom filters.
@@ -339,12 +355,6 @@ def get_decision_parameters(graph_config, options):
     parameters["version"] = get_version(product_dir)
     parameters["app_version"] = get_app_version(product_dir)
     parameters["message"] = try_syntax_from_message(commit_message)
-    parameters["hg_branch"] = get_hg_revision_branch(
-        GECKO, revision=parameters["head_rev"]
-    )
-    parameters["files_changed"] = sorted(
-        get_changed_files(parameters["head_repository"], parameters["head_rev"])
-    )
     parameters["next_version"] = None
     parameters["optimize_strategies"] = None
     parameters["optimize_target_tasks"] = True
