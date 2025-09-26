@@ -372,11 +372,11 @@ Finder.prototype = {
       aArgs,
       aArgs.useSubFrames ? false : aArgs.foundInThisFrame
     );
-    let matchCountPromise = this.requestMatchesCount(
-      aArgs.searchString,
-      aArgs.linksOnly,
-      aArgs.useSubFrames
-    );
+
+    let matchCountPromise = this.requestMatchesCount(aArgs.searchString, {
+      linksOnly: aArgs.linksOnly,
+      useSubFrames: aArgs.useSubFrames,
+    });
 
     let results = await Promise.all([highlightPromise, matchCountPromise]);
 
@@ -605,7 +605,7 @@ Finder.prototype = {
     return result;
   },
 
-  async requestMatchesCount(aWord, aLinksOnly, aUseSubFrames = true) {
+  async requestMatchesCount(aWord, optionalArgs) {
     if (
       this._lastFindResult == Ci.nsITypeAheadFind.FIND_NOTFOUND ||
       this.searchString == "" ||
@@ -623,10 +623,10 @@ Finder.prototype = {
     let params = {
       caseSensitive: this._fastFind.caseSensitive,
       entireWord: this._fastFind.entireWord,
-      linksOnly: aLinksOnly,
+      linksOnly: optionalArgs.linksOnly || false,
       matchDiacritics: this._fastFind.matchDiacritics,
       word: aWord,
-      useSubFrames: aUseSubFrames,
+      useSubFrames: optionalArgs.useSubFrames || false,
     };
     if (!this.iterator.continueRunning(params)) {
       this.iterator.stop();
@@ -638,7 +638,8 @@ Finder.prototype = {
         limit: this.matchesCountLimit,
         listener: this,
         useCache: true,
-        useSubFrames: aUseSubFrames,
+        useSubFrames: optionalArgs.useSubFrames || false,
+        contextRange: optionalArgs.contextRange || 0,
       })
     );
 
@@ -653,13 +654,22 @@ Finder.prototype = {
 
   // FinderIterator listener implementation
 
-  onIteratorRangeFound(range) {
+  onIteratorRangeFound(range, extra) {
     let result = this._currentMatchesCountResult;
     if (!result) {
       return;
     }
 
     ++result.total;
+
+    // Pull out the snippet that finderIterator attached
+    if (extra?.context) {
+      if (!result.snippets) {
+        result.snippets = [];
+      }
+      result.snippets.push(extra.context);
+    }
+
     if (!result._currentFound) {
       ++result.current;
       result._currentFound =
@@ -674,7 +684,10 @@ Finder.prototype = {
   onIteratorReset() {},
 
   onIteratorRestart({ word, linksOnly, useSubFrames }) {
-    this.requestMatchesCount(word, linksOnly, useSubFrames);
+    this.requestMatchesCount(word, {
+      linksOnly,
+      useSubFrames,
+    });
   },
 
   onIteratorStart() {
