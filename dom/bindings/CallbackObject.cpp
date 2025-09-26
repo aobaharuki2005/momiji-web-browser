@@ -360,6 +360,46 @@ CallSetup::CallSetup(CallbackObjectBase* aCallback, ErrorResult& aRv,
                     aExecutionReason, aRv);
 }
 
+CallSetup::CallSetup(JSObject* aCallbackGlobal,
+                     nsIGlobalObject* aIncumbentGlobal,
+                     JSObject* aCreationStack, ErrorResult& aRv,
+                     const char* aExecutionReason,
+                     CallbackObjectBase::ExceptionHandling aExceptionHandling,
+                     JS::Realm* aRealm)
+    : mCx(nullptr),
+      mRealm(aRealm),
+      mErrorResult(aRv),
+      mExceptionHandling(aExceptionHandling),
+      mIsMainThread(NS_IsMainThread()) {
+  MOZ_ASSERT_IF(aExceptionHandling == CallbackFunction::eReportExceptions ||
+                    aExceptionHandling == CallbackFunction::eRethrowExceptions,
+                !aRealm);
+
+  CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
+  if (ccjs) {
+    ccjs->EnterMicroTask();
+  }
+
+  MOZ_RELEASE_ASSERT(aCallbackGlobal);
+  nsIGlobalObject* globalObject = GetActiveGlobalObjectForCall(
+      aCallbackGlobal, mIsMainThread, /*aIsJSImplementedWebIDL=*/false, aRv);
+  if (!globalObject) {
+    MOZ_ASSERT(aRv.Failed());
+    return;
+  }
+
+  // Initial Validation Pass
+  if (!CheckBeforeExecution(globalObject, aCallbackGlobal,
+                            /*aIsJSImplementedWebIDL=*/false, aRv)) {
+    return;
+  }
+
+  // Start the execution setup -- if it succeeds, this will set mCx
+  SetupForExecution(globalObject, aIncumbentGlobal, aCallbackGlobal,
+                    aCallbackGlobal, aCreationStack,
+                    /*aWebIDLCallerPrincipal=*/nullptr, aExecutionReason, aRv);
+}
+
 bool CallSetup::ShouldRethrowException(JS::Handle<JS::Value> aException) {
   if (mExceptionHandling == CallbackObjectBase::eRethrowExceptions) {
     MOZ_ASSERT(!mRealm);
