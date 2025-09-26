@@ -5396,6 +5396,21 @@
       }
     ]
   },
+  "1989975": {
+    "label": "idp.infocert.it",
+    "bugs": {
+      "1989975": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://idp.infocert.it/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
   "1990193": {
     "label": "zeit.werkheim.de",
     "bugs": {
