@@ -51,6 +51,8 @@
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/net/URLPatternGlue.h"
+#include "mozilla/net/urlpattern_glue.h"
 
 #include "LoadContextInfo.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -171,31 +173,24 @@ bool DictionaryCacheEntry::Match(const nsACString& aFilePath,
         mMatchDest.IndexOf(
             dom::InternalRequest::MapContentPolicyTypeToRequestDestination(
                 aType)) != mMatchDest.NoIndex) {
-      // XXX remove this when we get URLPattern
-      // XXX temp: handle https://site/foo* or https://site/foo?query=*, or
-      // https://site/foo/*, etc
-      if (mPattern.Last() == '*' && aFilePath.Length() >= mPattern.Length()) {
-        // XXX not efficient, but this is throw-away code
-        nsAutoCString partial(aFilePath);
-        partial.Truncate(mPattern.Length() - 1);
-        nsAutoCString pattern(mPattern);
-        pattern.Truncate(mPattern.Length() - 1);
-        if (partial.Equals(pattern)) {
-          aLongest = mPattern.Length();
-          DICTIONARY_LOG(("Match: %s (longest %u)",
-                          PromiseFlatCString(mURI).get(), aLongest));
-          return true;
-        }
+      UrlpPattern pattern;
+      UrlpOptions options;
+      const nsCString base("https://foo.com/"_ns);
+      if (!urlp_parse_pattern_from_string(&mPattern, &base, options,
+                                          &pattern)) {
+        DICTIONARY_LOG(
+            ("Failed to parse dictionary pattern %s", mPattern.get()));
         return false;
-        // XXX handle https://site/foo/* (
-      } else if (mPattern.Equals(aFilePath)) {
-        if (mHash.IsEmpty()) {
-          return false;
-        }
+      }
+
+      UrlpInput input = net::CreateUrlpInput(aFilePath);
+      bool result = net::UrlpPatternTest(pattern, input, Some(base));
+      DICTIONARY_LOG(("URLPattern result was %d", result));
+      if (result) {
         aLongest = mPattern.Length();
         DICTIONARY_LOG(("Match: %s (longest %u)", mURI.get(), aLongest));
-        return true;
       }
+      return result;
     } else {
       DICTIONARY_LOG(("   Failed on matchDest"));
     }
