@@ -8257,6 +8257,7 @@ var gCSSProperties = {
     domProp: "textEmphasisColor",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
+    applies_to_marker: true,
     prerequisites: { color: "black" },
     initial_values: ["currentColor", "black", "rgb(0,0,0)"],
     other_values: ["red", "rgba(255,255,255,0.5)", "transparent"],
@@ -8275,6 +8276,7 @@ var gCSSProperties = {
     domProp: "textEmphasisPosition",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
+    applies_to_marker: true,
     initial_values: ["auto"],
     other_values: [
       "over right",
@@ -8306,6 +8308,7 @@ var gCSSProperties = {
     domProp: "textEmphasisStyle",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
+    applies_to_marker: true,
     initial_values: ["none"],
     other_values: [
       "filled",
