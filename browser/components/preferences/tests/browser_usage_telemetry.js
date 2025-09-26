@@ -159,13 +159,17 @@ add_task(async function testSettingGroupTelemetry() {
 
       let picker = doc.getElementById("test-picker");
       let secondItem = doc.getElementById("test-picker-dark");
-      EventUtils.synthesizeMouseAtCenter(secondItem, {}, win);
+      AccessibilityUtils.setEnv({
+        mustHaveAccessibleRule: false,
+      });
+      EventUtils.synthesizeMouseAtCenter(secondItem.itemEl, {}, win);
 
       // Ensure the selected state of the picker updated.
       await picker.updateComplete;
 
       // Navigate to the second picker item and select it via keyboard.
       EventUtils.synthesizeKey("KEY_ArrowRight", {}, win);
+      AccessibilityUtils.resetEnv();
 
       // Check that telemetry appeared:
       const { TelemetryTestUtils } = ChromeUtils.importESModule(
