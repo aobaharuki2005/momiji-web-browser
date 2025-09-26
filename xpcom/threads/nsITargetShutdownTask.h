@@ -8,12 +8,17 @@
 #define XPCOM_THREADS_NSITARGETSHUTDOWNTASK_H_
 
 #include "nsISupports.h"
-#include "nsIEventTarget.h"
 #include "nsThreadUtils.h"
+
+class nsIRunnable;
 
 #define NS_ITARGETSHUTDOWNTASK_IID \
   {0xb08647aa, 0xcfb5, 0x4630, {0x8e, 0x26, 0x9a, 0xbe, 0xb3, 0x3f, 0x08, 0x40}}
 
+// A task to be run on an event target when it begins shutting down.
+//
+// See `nsIEventTarget::RegisterShutdownTask` in `nsIEventTarget.idl`
+// for more documentation.
 class NS_NO_VTABLE nsITargetShutdownTask : public nsISupports {
  public:
   NS_INLINE_DECL_STATIC_IID(NS_ITARGETSHUTDOWNTASK_IID)
