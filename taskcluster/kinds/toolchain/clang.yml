@@ -250,6 +250,7 @@ linux64-clang-19:
             - android-x64-libunwind-19
             - linux64-aarch64-compiler-rt-19
             - linux64-x64-compiler-rt-19
+            - linux64-x86-compiler-rt-19
             - macosx64-aarch64-compiler-rt-19
             - macosx64-x64-compiler-rt-19
             - wasm32-wasi-compiler-rt-19
@@ -311,6 +312,7 @@ linux64-aarch64-clang-19:
             - android-x64-libunwind-19
             - linux64-aarch64-compiler-rt-19
             - linux64-x64-compiler-rt-19
+            - linux64-x86-compiler-rt-19
             - macosx64-aarch64-compiler-rt-19
             - macosx64-x64-compiler-rt-19
             - wasm32-wasi-compiler-rt-19
@@ -432,6 +434,7 @@ macosx64-clang-19:
             - android-x64-libunwind-19
             - linux64-aarch64-compiler-rt-19
             - linux64-x64-compiler-rt-19
+            - linux64-x86-compiler-rt-19
             - macosx64-aarch64-compiler-rt-19
             - macosx64-x64-compiler-rt-19
             - wasm32-wasi-compiler-rt-19
@@ -551,6 +554,7 @@ macosx64-aarch64-clang-19:
             - android-x64-libunwind-19
             - linux64-aarch64-compiler-rt-19
             - linux64-x64-compiler-rt-19
+            - linux64-x86-compiler-rt-19
             - macosx64-aarch64-compiler-rt-19
             - macosx64-x64-compiler-rt-19
             - wasm32-wasi-compiler-rt-19
@@ -673,6 +677,7 @@ win64-clang-19:
             - android-x64-libunwind-19
             - linux64-aarch64-compiler-rt-19
             - linux64-x64-compiler-rt-19
+            - linux64-x86-compiler-rt-19
             - macosx64-aarch64-compiler-rt-19
             - macosx64-x64-compiler-rt-19
             - wasm32-wasi-compiler-rt-19
@@ -737,6 +742,7 @@ win64-aarch64-clang-19:
             - android-x64-libunwind-19
             - linux64-aarch64-compiler-rt-19
             - linux64-x64-compiler-rt-19
+            - linux64-x86-compiler-rt-19
             - macosx64-aarch64-compiler-rt-19
             - macosx64-x64-compiler-rt-19
             - wasm32-wasi-compiler-rt-19
@@ -881,6 +887,7 @@ linux64-clang-20:
             - android-x64-libunwind-20
             - linux64-aarch64-compiler-rt-20
             - linux64-x64-compiler-rt-20
+            - linux64-x86-compiler-rt-20
             - macosx64-aarch64-compiler-rt-20
             - macosx64-x64-compiler-rt-20
             - wasm32-wasi-compiler-rt-20
@@ -938,6 +945,7 @@ linux64-aarch64-clang-20:
             - android-x64-libunwind-20
             - linux64-aarch64-compiler-rt-20
             - linux64-x64-compiler-rt-20
+            - linux64-x86-compiler-rt-20
             - macosx64-aarch64-compiler-rt-20
             - macosx64-x64-compiler-rt-20
             - wasm32-wasi-compiler-rt-20
@@ -1053,6 +1061,7 @@ macosx64-clang-20:
             - android-x64-libunwind-20
             - linux64-aarch64-compiler-rt-20
             - linux64-x64-compiler-rt-20
+            - linux64-x86-compiler-rt-20
             - macosx64-aarch64-compiler-rt-20
             - macosx64-x64-compiler-rt-20
             - wasm32-wasi-compiler-rt-20
@@ -1168,6 +1177,7 @@ macosx64-aarch64-clang-20:
             - android-x64-libunwind-20
             - linux64-aarch64-compiler-rt-20
             - linux64-x64-compiler-rt-20
+            - linux64-x86-compiler-rt-20
             - macosx64-aarch64-compiler-rt-20
             - macosx64-x64-compiler-rt-20
             - wasm32-wasi-compiler-rt-20
@@ -1284,6 +1294,7 @@ win64-clang-20:
             - android-x64-libunwind-20
             - linux64-aarch64-compiler-rt-20
             - linux64-x64-compiler-rt-20
+            - linux64-x86-compiler-rt-20
             - macosx64-aarch64-compiler-rt-20
             - macosx64-x64-compiler-rt-20
             - wasm32-wasi-compiler-rt-20
@@ -1344,6 +1355,7 @@ win64-aarch64-clang-20:
             - android-x64-libunwind-20
             - linux64-aarch64-compiler-rt-20
             - linux64-x64-compiler-rt-20
+            - linux64-x86-compiler-rt-20
             - macosx64-aarch64-compiler-rt-20
             - macosx64-x64-compiler-rt-20
             - wasm32-wasi-compiler-rt-20
@@ -1516,6 +1528,7 @@ linux64-clang-trunk:
             - android-x64-libunwind-trunk
             - linux64-aarch64-compiler-rt-trunk
             - linux64-x64-compiler-rt-trunk
+            - linux64-x86-compiler-rt-trunk
             - macosx64-aarch64-compiler-rt-trunk
             - macosx64-x64-compiler-rt-trunk
             - wasm32-wasi-compiler-rt-trunk
@@ -1579,6 +1592,7 @@ linux64-aarch64-clang-trunk:
             - android-x64-libunwind-trunk
             - linux64-aarch64-compiler-rt-trunk
             - linux64-x64-compiler-rt-trunk
+            - linux64-x86-compiler-rt-trunk
             - macosx64-aarch64-compiler-rt-trunk
             - macosx64-x64-compiler-rt-trunk
             - wasm32-wasi-compiler-rt-trunk
@@ -1706,6 +1720,7 @@ macosx64-clang-trunk:
             - android-x64-libunwind-trunk
             - linux64-aarch64-compiler-rt-trunk
             - linux64-x64-compiler-rt-trunk
+            - linux64-x86-compiler-rt-trunk
             - macosx64-aarch64-compiler-rt-trunk
             - macosx64-x64-compiler-rt-trunk
             - wasm32-wasi-compiler-rt-trunk
@@ -1831,6 +1846,7 @@ macosx64-aarch64-clang-trunk:
             - android-x64-libunwind-trunk
             - linux64-aarch64-compiler-rt-trunk
             - linux64-x64-compiler-rt-trunk
+            - linux64-x86-compiler-rt-trunk
             - macosx64-aarch64-compiler-rt-trunk
             - macosx64-x64-compiler-rt-trunk
             - wasm32-wasi-compiler-rt-trunk
@@ -1957,6 +1973,7 @@ win64-clang-trunk:
             - android-x64-libunwind-trunk
             - linux64-aarch64-compiler-rt-trunk
             - linux64-x64-compiler-rt-trunk
+            - linux64-x86-compiler-rt-trunk
             - macosx64-aarch64-compiler-rt-trunk
             - macosx64-x64-compiler-rt-trunk
             - wasm32-wasi-compiler-rt-trunk
@@ -2023,6 +2040,7 @@ win64-aarch64-clang-trunk:
             - android-x64-libunwind-trunk
             - linux64-aarch64-compiler-rt-trunk
             - linux64-x64-compiler-rt-trunk
+            - linux64-x86-compiler-rt-trunk
             - macosx64-aarch64-compiler-rt-trunk
             - macosx64-x64-compiler-rt-trunk
             - wasm32-wasi-compiler-rt-trunk

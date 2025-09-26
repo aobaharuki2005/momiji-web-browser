@@ -26,6 +26,31 @@ task-defaults:
         chain-of-trust: true
 
 tasks:
+    linux32/opt:
+        attributes:
+            build_platform: linux32
+            build_type: opt
+        treeherder:
+            platform: linux32/opt
+        worker-type: b-linux-gcp
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: /builds/worker/workspace/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/linux32.py
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang
+                - linux64-dump_syms
+                - linux64-nasm
+                - sysroot-i686-linux-gnu
     linux64/opt:
         attributes:
             build_platform: linux64
