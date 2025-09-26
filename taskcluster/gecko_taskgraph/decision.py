@@ -35,7 +35,7 @@ from .files_changed import get_changed_files
 from .parameters import get_app_version, get_version
 from .util.backstop import ANDROID_PERFTEST_BACKSTOP_INDEX, BACKSTOP_INDEX, is_backstop
 from .util.bugbug import push_schedules
-from .util.hg import get_hg_commit_message, get_hg_revision_branch, get_hg_revision_info
+from .util.hg import get_hg_revision_branch, get_hg_revision_info
 from .util.partials import populate_release_history
 from .util.taskcluster import insert_index
 from .util.taskgraph import find_decision_task, find_existing_tasks_from_previous_kinds
@@ -299,10 +299,14 @@ def get_decision_parameters(graph_config, options):
         if n in options
     }
 
-    commit_message = get_hg_commit_message(os.path.join(GECKO, product_dir))
-
     repo_path = os.getcwd()
     repo = get_repository(repo_path)
+
+    try:
+        commit_message = repo.get_commit_message()
+    except UnicodeDecodeError:
+        commit_message = ""
+
     parameters["base_ref"] = _determine_more_accurate_base_ref(
         repo,
         candidate_base_ref=options.get("base_ref"),
