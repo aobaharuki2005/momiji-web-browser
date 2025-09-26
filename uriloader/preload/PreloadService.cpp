@@ -93,13 +93,6 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
   integrity =
       aLinkElement->HasAttr(nsGkAtoms::integrity) ? integrity : VoidString();
 
-  // rel=compression-dictionary fetches default to "anonymous" if no
-  // crossorigin=foo parameter is given
-  if (rel.LowerCaseEqualsASCII("compression-dictionary") &&
-      crossOrigin.IsEmpty()) {
-    crossOrigin = u"anonymous"_ns;
-  }
-
   nsAutoString nonce;
   if (nsString* cspNonce =
           static_cast<nsString*>(aLinkElement->GetProperty(nsGkAtoms::nonce))) {
@@ -114,7 +107,7 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
     aLinkElement->GetType(type);
   }
 
-  auto result = PreloadOrCoalesce(uri, url, aPolicyType, as, rel, type, charset,
+  auto result = PreloadOrCoalesce(uri, url, aPolicyType, as, type, charset,
                                   srcset, sizes, nonce, integrity, crossOrigin,
                                   referrerPolicy, fetchPriority,
                                   /* aFromHeader = */ false, 0);
@@ -130,9 +123,9 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
 
 void PreloadService::PreloadLinkHeader(
     nsIURI* aURI, const nsAString& aURL, nsContentPolicyType aPolicyType,
-    const nsAString& aAs, const nsAString& aRel, const nsAString& aType,
-    const nsAString& aNonce, const nsAString& aIntegrity,
-    const nsAString& aSrcset, const nsAString& aSizes, const nsAString& aCORS,
+    const nsAString& aAs, const nsAString& aType, const nsAString& aNonce,
+    const nsAString& aIntegrity, const nsAString& aSrcset,
+    const nsAString& aSizes, const nsAString& aCORS,
     const nsAString& aReferrerPolicy, uint64_t aEarlyHintPreloaderId,
     const nsAString& aFetchPriority) {
   if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
@@ -140,17 +133,10 @@ void PreloadService::PreloadLinkHeader(
     return;
   }
 
-  // rel=compression-dictionary fetches default to "anonymous" if no
-  // crossorigin=foo parameter is given
-
-  PreloadOrCoalesce(
-      aURI, aURL, aPolicyType, aAs, aRel, aType, u""_ns, aSrcset, aSizes,
-      aNonce, aIntegrity,
-      aRel.LowerCaseEqualsASCII("compression-dictionary") && aCORS.IsEmpty()
-          ? u"anonymous"_ns
-          : aCORS,
-      aReferrerPolicy, aFetchPriority,
-      /* aFromHeader = */ true, aEarlyHintPreloaderId);
+  PreloadOrCoalesce(aURI, aURL, aPolicyType, aAs, aType, u""_ns, aSrcset,
+                    aSizes, aNonce, aIntegrity, aCORS, aReferrerPolicy,
+                    aFetchPriority,
+                    /* aFromHeader = */ true, aEarlyHintPreloaderId);
 }
 
 // The mapping is specified as implementation-defined, see step 15 of
@@ -181,9 +167,8 @@ class SupportsPriorityValueFor {
 
 PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
     nsIURI* aURI, const nsAString& aURL, nsContentPolicyType aPolicyType,
-    const nsAString& aAs, const nsAString& aRel, const nsAString& aType,
-    const nsAString& aCharset, const nsAString& aSrcset,
-    const nsAString& aSizes, const nsAString& aNonce,
+    const nsAString& aAs, const nsAString& aType, const nsAString& aCharset,
+    const nsAString& aSrcset, const nsAString& aSizes, const nsAString& aNonce,
     const nsAString& aIntegrity, const nsAString& aCORS,
     const nsAString& aReferrerPolicy, const nsAString& aFetchPriority,
     bool aFromHeader, uint64_t aEarlyHintPreloaderId) {
@@ -215,10 +200,6 @@ PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
     preloadKey = PreloadHashKey::CreateAsFont(
         uri, dom::Element::StringToCORSMode(aCORS));
   } else if (aAs.LowerCaseEqualsASCII("fetch")) {
-    preloadKey = PreloadHashKey::CreateAsFetch(
-        uri, dom::Element::StringToCORSMode(aCORS));
-  } else if (aRel.LowerCaseEqualsASCII("compression-dictionary")) {
-    // compression-dictionary doesn't specify an 'as=' value
     preloadKey = PreloadHashKey::CreateAsFetch(
         uri, dom::Element::StringToCORSMode(aCORS));
   } else {
@@ -259,8 +240,7 @@ PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
   } else if (aAs.LowerCaseEqualsASCII("font")) {
     PreloadFont(uri, aCORS, aReferrerPolicy, aEarlyHintPreloaderId,
                 aFetchPriority);
-  } else if (aAs.LowerCaseEqualsASCII("fetch") ||
-             aRel.LowerCaseEqualsASCII("compression-dictionary")) {
+  } else if (aAs.LowerCaseEqualsASCII("fetch")) {
     PreloadFetch(uri, aCORS, aReferrerPolicy, aEarlyHintPreloaderId,
                  aFetchPriority);
   }

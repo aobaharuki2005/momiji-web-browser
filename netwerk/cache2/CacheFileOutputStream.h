@@ -9,7 +9,6 @@
 #include "nsISeekableStream.h"
 #include "nsCOMPtr.h"
 #include "CacheFileChunk.h"
-#include "Dictionary.h"
 
 namespace mozilla {
 namespace net {
@@ -40,8 +39,6 @@ class CacheFileOutputStream : public nsIAsyncOutputStream,
   void NotifyCloseListener();
   bool IsAlternativeData() const { return mAlternativeData; };
 
-  void SetDictionary(DictionaryCacheEntry* aDict) { mDict = aDict; }
-
   // Memory reporting
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
@@ -65,7 +62,6 @@ class CacheFileOutputStream : public nsIAsyncOutputStream,
   nsCOMPtr<nsIOutputStreamCallback> mCallback;
   uint32_t mCallbackFlags;
   nsCOMPtr<nsIEventTarget> mCallbackTarget;
-  RefPtr<DictionaryCacheEntry> mDict;
 };
 
 }  // namespace net

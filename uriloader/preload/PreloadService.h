@@ -74,10 +74,9 @@ class PreloadService {
   // AsyncOpen.
   void PreloadLinkHeader(nsIURI* aURI, const nsAString& aURL,
                          nsContentPolicyType aPolicyType, const nsAString& aAs,
-                         const nsAString& aRel, const nsAString& aType,
-                         const nsAString& aNonce, const nsAString& aIntegrity,
-                         const nsAString& aSrcset, const nsAString& aSizes,
-                         const nsAString& aCORS,
+                         const nsAString& aType, const nsAString& aNonce,
+                         const nsAString& aIntegrity, const nsAString& aSrcset,
+                         const nsAString& aSizes, const nsAString& aCORS,
                          const nsAString& aReferrerPolicy,
                          uint64_t aEarlyHintPreloaderId,
                          const nsAString& aFetchPriority);
@@ -120,12 +119,12 @@ class PreloadService {
 
   PreloadOrCoalesceResult PreloadOrCoalesce(
       nsIURI* aURI, const nsAString& aURL, nsContentPolicyType aPolicyType,
-      const nsAString& aAs, const nsAString& aRel, const nsAString& aType,
-      const nsAString& aCharset, const nsAString& aSrcset,
-      const nsAString& aSizes, const nsAString& aNonce,
-      const nsAString& aIntegrity, const nsAString& aCORS,
-      const nsAString& aReferrerPolicy, const nsAString& aFetchPriority,
-      bool aFromHeader, uint64_t aEarlyHintPreloaderId);
+      const nsAString& aAs, const nsAString& aType, const nsAString& aCharset,
+      const nsAString& aSrcset, const nsAString& aSizes,
+      const nsAString& aNonce, const nsAString& aIntegrity,
+      const nsAString& aCORS, const nsAString& aReferrerPolicy,
+      const nsAString& aFetchPriority, bool aFromHeader,
+      uint64_t aEarlyHintPreloaderId);
 
  private:
   nsRefPtrHashtable<PreloadHashKey, PreloaderBase> mPreloads;
