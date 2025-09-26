@@ -46,11 +46,14 @@
 
       ok(confirmButton, "Restore button should be found");
 
-      restoreFromBackup.backupFileToRestore = "/Some/User/Documents/Firefox Backup/backup.html";
+      restoreFromBackup.backupServiceState = {
+        ...restoreFromBackup.backupServiceState,
+        backupFileToRestore: "/Some/User/Documents/Firefox Backup/backup.html"
+      };
       await restoreFromBackup.updateComplete;
 
       let content = document.getElementById("content");
-      let promise = BrowserTestUtils.waitForEvent(content, "restoreFromBackupConfirm");
+      let promise = BrowserTestUtils.waitForEvent(content, "BackupUI:RestoreFromBackupFile");
 
       confirmButton.click();
 
@@ -80,7 +83,7 @@
     /**
      * Tests that pressing the choose button will dispatch the expected events.
      */
-     add_task(async function test_choose() {
+    add_task(async function test_choose() {
       let restoreFromBackup = document.getElementById("test-restore-from-backup");
 
       ok(restoreFromBackup.chooseButtonEl, "Choose button should be found");
@@ -95,33 +98,41 @@
     });
 
     /**
-     * Tests that changing backup files will dispatch the expected events.
+     * Tests that selecting a backup file from the filepicker will dispatch the expected events.
      */
-     add_task(async function test_restore() {
+    add_task(async function test_new_file_selected() {
       let restoreFromBackup = document.getElementById("test-restore-from-backup");
 
       let content = document.getElementById("content");
-      let promise = BrowserTestUtils.waitForEvent(content, "getBackupFileInfo");
+      let promise = BrowserTestUtils.waitForEvent(content, "BackupUI:GetBackupFileInfo");
 
-      restoreFromBackup.backupFileToRestore = "/Some/User/Documents/Firefox Backup/backup-default.html";
-      await restoreFromBackup.updateComplete;
+      let selectEvent = new CustomEvent("BackupUI:SelectNewFilepickerPath", {
+        detail: {
+          path: "/Some/User/Documents/Firefox Backup/backup-default.html",
+          iconURL: "chrome://global/skin/icons/document.svg"
+        }
+      });
+      restoreFromBackup.dispatchEvent(selectEvent);
 
       await promise;
-      ok(true, "Detected event after changing files to restore");
+      ok(true, "Detected event after new file is selected");
     });
 
     /**
      * Tests that the password input will shown when a file is encrypted.
      */
-     add_task(async function test_show_password() {
+    add_task(async function test_show_password() {
       let restoreFromBackup = document.getElementById("test-restore-from-backup");
 
       ok(!restoreFromBackup.passwordInput, "Password input should not be present");
 
       let date = new Date();
-      restoreFromBackup.backupFileInfo = {
-        date,
-        isEncrypted: true,
+      restoreFromBackup.backupServiceState = {
+        ...restoreFromBackup.backupServiceState,
+        backupFileInfo: {
+          date,
+          isEncrypted: true,
+        }
       };
 
       await restoreFromBackup.updateComplete;
@@ -135,15 +146,18 @@
     add_task(async function test_incorrect_password_error_condition() {
       let restoreFromBackup = document.getElementById("test-restore-from-backup");
 
-      is(restoreFromBackup.recoveryErrorCode, undefined, "Recovery error code should be undefined");
+      is(restoreFromBackup.backupServiceState.recoveryErrorCode, 0, "Recovery error code should be 0");
       ok(!restoreFromBackup.isIncorrectPassword, "Error message should not be displayed");
       ok(!restoreFromBackup.errorMessageEl, "No error message should be displayed");
 
-      restoreFromBackup.recoveryErrorCode = ERRORS.UNAUTHORIZED;
+      restoreFromBackup.backupServiceState = {
+        ...restoreFromBackup.backupServiceState,
+        recoveryErrorCode: ERRORS.UNAUTHORIZED
+      };
 
       await restoreFromBackup.updateComplete;
 
-      is(restoreFromBackup.recoveryErrorCode, ERRORS.UNAUTHORIZED, "Recovery error code should be set");
+      is(restoreFromBackup.backupServiceState.recoveryErrorCode, ERRORS.UNAUTHORIZED, "Recovery error code should be set");
       ok(restoreFromBackup.isIncorrectPassword, "Error message should be displayed");
       ok(!restoreFromBackup.errorMessageEl, "No top level error message should be displayed");
     });
@@ -151,16 +165,19 @@
     /**
      * Tests that a top level error message is displayed if there is an error restoring from backup.
      */
-     add_task(async function test_error_condition() {
+    add_task(async function test_error_condition() {
       let restoreFromBackup = document.getElementById("test-restore-from-backup");
 
       ok(!restoreFromBackup.errorMessageEl, "No error message should be displayed");
 
-      restoreFromBackup.recoveryErrorCode = ERRORS.CORRUPTED_ARCHIVE;
+      restoreFromBackup.backupServiceState = {
+        ...restoreFromBackup.backupServiceState,
+        recoveryErrorCode: ERRORS.CORRUPTED_ARCHIVE
+      };
 
       await restoreFromBackup.updateComplete;
 
-      is(restoreFromBackup.recoveryErrorCode, ERRORS.CORRUPTED_ARCHIVE, "Recovery error code should be set");
+      is(restoreFromBackup.backupServiceState.recoveryErrorCode, ERRORS.CORRUPTED_ARCHIVE, "Recovery error code should be set");
       ok(restoreFromBackup.errorMessageEl, "Error message should be displayed");
     });
   </script>

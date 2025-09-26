@@ -617,11 +617,14 @@ export class BackupService extends EventTarget {
   }
 
   /**
-   * True if a recovery is currently in progress.
+   * Sets the recovery error code and updates the state.
    *
-   * @type {boolean}
+   * @param {number} errorCode - The error code to set
    */
-  #recoveryInProgress = false;
+  setRecoveryError(errorCode) {
+    this.#_state.recoveryErrorCode = errorCode;
+    this.stateUpdate();
+  }
 
   /**
    * An object holding the current state of the BackupService instance, for
@@ -643,6 +646,8 @@ export class BackupService extends EventTarget {
     lastBackupDate: null,
     lastBackupFileName: "",
     supportBaseLink: Services.urlFormatter.formatURLPref("app.support.baseURL"),
+    recoveryInProgress: false,
+    recoveryErrorCode: 0,
   };
 
   /**
@@ -2542,13 +2547,15 @@ export class BackupService extends EventTarget {
     profileRootPath = null
   ) {
     // No concurrent recoveries.
-    if (this.#recoveryInProgress) {
+    if (this.#_state.recoveryInProgress) {
       lazy.logConsole.warn("Recovery attempt already in progress");
       return null;
     }
 
     try {
-      this.#recoveryInProgress = true;
+      this.#_state.recoveryInProgress = true;
+      this.#_state.recoveryErrorCode = 0;
+      this.stateUpdate();
       const RECOVERY_FILE_DEST_PATH = PathUtils.join(
         profilePath,
         BackupService.PROFILE_FOLDER_NAME,
@@ -2618,7 +2625,8 @@ export class BackupService extends EventTarget {
         }
       }
     } finally {
-      this.#recoveryInProgress = false;
+      this.#_state.recoveryInProgress = false;
+      this.stateUpdate();
     }
   }
 
@@ -3621,6 +3629,7 @@ export class BackupService extends EventTarget {
       isEncrypted,
       date: archiveJSON?.meta?.date,
     };
+    this.#_state.backupFileToRestore = backupFilePath;
     this.stateUpdate();
   }
 

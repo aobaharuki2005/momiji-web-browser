@@ -151,7 +151,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6);
 /* harmony import */ var _LanguageSwitcher__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7);
 /* harmony import */ var _SubmenuButton__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(12);
-/* harmony import */ var _lib_addUtmParams_mjs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(23);
+/* harmony import */ var _lib_addUtmParams_mjs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(24);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -2251,9 +2251,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _ActionChecklist__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(21);
 /* harmony import */ var _EmbeddedBrowser__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(22);
 /* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(3);
+/* harmony import */ var _EmbeddedBackupRestore__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(23);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -2479,6 +2481,11 @@ const ContentTiles = props => {
     }), tile.type === "embedded_browser" && tile.data?.url && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_EmbeddedBrowser__WEBPACK_IMPORTED_MODULE_8__.EmbeddedBrowser, {
       url: tile.data.url,
       style: tile.data.style
+    }), tile.type === "backup_restore" && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_EmbeddedBackupRestore__WEBPACK_IMPORTED_MODULE_10__.EmbeddedBackupRestore, {
+      handleAction: props.handleAction,
+      content: {
+        tiles: tile
+      }
     })) : null);
   };
   const renderContentTiles = () => {
@@ -3432,6 +3439,30 @@ const EmbeddedBrowserInner = ({
 
 /***/ }),
 /* 23 */
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   EmbeddedBackupRestore: () => (/* binding */ EmbeddedBackupRestore)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+const EmbeddedBackupRestore = () => {
+  const ref = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)();
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("restore-from-backup", {
+    aboutWelcomeEmbedded: "true",
+    labelFontWeight: "600",
+    ref: ref
+  });
+};
+
+/***/ }),
+/* 24 */
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);

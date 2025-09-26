@@ -29,9 +29,7 @@ export default class BackupSettings extends MozLitElement {
 
   static properties = {
     backupServiceState: { type: Object },
-    recoveryErrorCode: { type: Number },
     backupErrorCode: { type: Number },
-    recoveryInProgress: { type: Boolean },
     _enableEncryptionTypeAttr: { type: String },
   };
 
@@ -85,10 +83,10 @@ export default class BackupSettings extends MozLitElement {
       lastBackupFileName: "",
       supportBaseLink: "",
       backupInProgress: false,
+      recoveryInProgress: false,
+      recoveryErrorCode: 0,
     };
-    this.recoveryInProgress = false;
     this.backupErrorCode = this.#readBackupErrorPref();
-    this.recoveryErrorCode = 0;
     this._enableEncryptionTypeAttr = "";
   }
 
@@ -103,7 +101,6 @@ export default class BackupSettings extends MozLitElement {
     );
 
     this.addEventListener("dialogCancel", this);
-    this.addEventListener("getBackupFileInfo", this);
     this.addEventListener("restoreFromBackupConfirm", this);
     this.addEventListener("restoreFromBackupChooseFile", this);
   }
@@ -150,17 +147,6 @@ export default class BackupSettings extends MozLitElement {
           new CustomEvent("BackupUI:RestoreFromBackupChooseFile", {
             bubbles: true,
             composed: true,
-          })
-        );
-        break;
-      case "getBackupFileInfo":
-        this.dispatchEvent(
-          new CustomEvent("BackupUI:GetBackupFileInfo", {
-            bubbles: true,
-            composed: true,
-            detail: {
-              backupFile: event.detail.backupFile,
-            },
           })
         );
         break;
@@ -251,16 +237,8 @@ export default class BackupSettings extends MozLitElement {
   }
 
   restoreFromBackupDialogTemplate() {
-    let { backupFilePath, backupFileToRestore, backupFileInfo } =
-      this.backupServiceState;
     return html`<dialog id="restore-from-backup-dialog">
-      <restore-from-backup
-        .backupFilePath=${backupFilePath}
-        .backupFileToRestore=${backupFileToRestore}
-        .backupFileInfo=${backupFileInfo}
-        .recoveryInProgress=${this.recoveryInProgress}
-        .recoveryErrorCode=${this.recoveryErrorCode}
-      ></restore-from-backup>
+      <restore-from-backup></restore-from-backup>
     </dialog>`;
   }
 

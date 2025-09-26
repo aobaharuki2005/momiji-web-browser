@@ -3,6 +3,7 @@ import { shallow, mount } from "enzyme";
 import { ContentTiles } from "content-src/components/ContentTiles";
 import { ActionChecklist } from "content-src/components/ActionChecklist";
 import { MobileDownloads } from "content-src/components/MobileDownloads";
+import { EmbeddedBackupRestore } from "content-src/components/EmbeddedBackupRestore";
 import { AboutWelcomeUtils } from "content-src/lib/aboutwelcome-utils.mjs";
 import { GlobalOverrider } from "asrouter/tests/unit/utils";
 
@@ -72,6 +73,12 @@ describe("ContentTiles component", () => {
 
   const TEST_CONTENT = {
     tiles: [CHECKLIST_TILE, MOBILE_TILE],
+  };
+
+  const EMBEDDED_BACKUP_RESTORE_TILE = {
+    type: "backup_restore",
+    title: "Tile Title",
+    subtitle: "Tile Subtitle",
   };
 
   beforeEach(() => {
@@ -257,6 +264,29 @@ describe("ContentTiles component", () => {
       },
     });
     assert.equal(mobileDownloads.prop("handleAction"), handleAction);
+  });
+
+  it("should render EmbeddedBackupRestore for 'backup_restore' tile type", () => {
+    const TEST_CONTENT_WITH_EMBEDDED_BACKUP_RESTORE = {
+      tiles: [EMBEDDED_BACKUP_RESTORE_TILE],
+    };
+
+    const backupWrapper = mount(
+      <ContentTiles
+        content={TEST_CONTENT_WITH_EMBEDDED_BACKUP_RESTORE}
+        handleAction={handleAction}
+        activeMultiSelect={null}
+        setActiveMultiSelect={setActiveMultiSelect}
+      />
+    );
+
+    const embeddedBackupRestore = backupWrapper.find(EmbeddedBackupRestore);
+    assert.ok(
+      embeddedBackupRestore.exists(),
+      "EmbeddedBackupRestore component should be rendered"
+    );
+
+    backupWrapper.unmount();
   });
 
   it("should handle a single tile object", () => {

@@ -240,7 +240,7 @@ let JSWINDOWACTORS = {
         "BackupUI:EditBackupLocation": { wantUntrusted: true },
       },
     },
-    matches: ["about:preferences*", "about:settings*"],
+    matches: ["about:preferences*", "about:settings*", "about:welcome*"],
     enablePreference: "browser.backup.preferences.ui.enabled",
   },
 
