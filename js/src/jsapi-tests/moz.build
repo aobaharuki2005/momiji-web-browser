@@ -48,6 +48,7 @@ UNIFIED_SOURCES += [
     "testException.cpp",
     "testExecuteInJSMEnvironment.cpp",
     "testExternalStrings.cpp",
+    "testFifo.cpp",
     "testFindSCCs.cpp",
     "testForceLexicalInitialization.cpp",
     "testForOfIterator.cpp",
