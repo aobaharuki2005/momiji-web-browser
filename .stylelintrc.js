@@ -394,6 +394,18 @@ module.exports = {
         // Stylelint does not support negating the file glob within an overrides section,
         // so these rules get re-enabled for some devtools files in the section below
         "devtools/**",
+        // FXR is no longer maintained and is not expected to use design tokens
+        "browser/fxr/**",
+        // Android does not use design tokens
+        "mobile/android/**",
+        // Docs do not use design tokens
+        "docs/**",
+        // UA Widgets should not use design tokens
+        "toolkit/themes/shared/media/pipToggle.css",
+        "toolkit/themes/shared/media/videocontrols.css",
+        "toolkit/content/widgets/datetimebox.css",
+        "toolkit/content/widgets/marquee.css",
+        "toolkit/themes/shared/media/textrecognition.css",
       ],
       rules: {
         "stylelint-plugin-mozilla/use-border-radius-tokens": false,
