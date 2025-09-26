@@ -136,10 +136,9 @@ bool EditorInlineStyle::IsRepresentedBy(const nsIContent& aContent) const {
     return !mAttribute || element.HasAttr(mAttribute);
   }
   // Special case for linking or naming an <a> element.
-  if ((mHTMLProperty == nsGkAtoms::href &&
-       HTMLEditUtils::IsHyperlinkElement(element)) ||
+  if ((mHTMLProperty == nsGkAtoms::href && HTMLEditUtils::IsLink(&element)) ||
       (mHTMLProperty == nsGkAtoms::name &&
-       HTMLEditUtils::IsNamedAnchorElement(element))) {
+       HTMLEditUtils::IsNamedAnchor(&element))) {
     return true;
   }
   // If the style is font size, it's also represented by <big> or <small>.

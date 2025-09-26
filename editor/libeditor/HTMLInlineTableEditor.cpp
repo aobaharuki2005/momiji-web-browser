@@ -38,7 +38,7 @@ NS_IMETHODIMP HTMLEditor::GetIsInlineTableEditingActive(bool* aIsActive) {
 }
 
 nsresult HTMLEditor::ShowInlineTableEditingUIInternal(Element& aCellElement) {
-  if (NS_WARN_IF(!HTMLEditUtils::IsTableCellElement(aCellElement))) {
+  if (NS_WARN_IF(!HTMLEditUtils::IsTableCell(&aCellElement))) {
     return NS_OK;
   }
 
@@ -219,9 +219,8 @@ nsresult HTMLEditor::DoInlineTableEditingAction(const Element& aElement) {
 
   if (NS_WARN_IF(!mInlineEditedCell) ||
       NS_WARN_IF(!mInlineEditedCell->IsInComposedDoc()) ||
-      NS_WARN_IF(!mInlineEditedCell->GetParent()) ||
       NS_WARN_IF(
-          !HTMLEditUtils::IsTableRowElement(*mInlineEditedCell->GetParent()))) {
+          !HTMLEditUtils::IsTableRow(mInlineEditedCell->GetParentNode()))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -277,7 +276,7 @@ nsresult HTMLEditor::DoInlineTableEditingAction(const Element& aElement) {
     for (nsIContent* maybeNextCellElement = mInlineEditedCell->GetNextSibling();
          maybeNextCellElement;
          maybeNextCellElement = maybeNextCellElement->GetNextSibling()) {
-      if (HTMLEditUtils::IsTableCellElement(*maybeNextCellElement)) {
+      if (HTMLEditUtils::IsTableCell(maybeNextCellElement)) {
         nextCellElement = maybeNextCellElement->AsElement();
         break;
       }

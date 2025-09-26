@@ -804,7 +804,7 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
       "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::z_index) "
       "failed, but ignored");
 
-  if (!HTMLEditUtils::IsImageElement(*styledElement)) {
+  if (!HTMLEditUtils::IsImage(styledElement)) {
     // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
     // by the caller because of MOZ_CAN_RUN_SCRIPT method.
     rv = CSSEditUtils::RemoveCSSPropertyWithTransaction(

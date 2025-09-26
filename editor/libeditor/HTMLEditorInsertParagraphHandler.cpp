@@ -368,7 +368,7 @@ HTMLEditor::AutoInsertParagraphHandler::Run() {
     return EditActionResult::HandledResult();
   }
 
-  if (HTMLEditUtils::IsHeadingElement(*editableBlockElement)) {
+  if (HTMLEditUtils::IsHeader(*editableBlockElement)) {
     Result<InsertParagraphResult, nsresult>
         insertParagraphInHeadingElementResult =
             HandleInHeadingElement(*editableBlockElement, pointToInsert);
@@ -1304,7 +1304,7 @@ HTMLEditor::AutoInsertParagraphHandler::GetBetterPointToSplitParagraph(
                  candidatePointToSplit.GetContainerOrContainerParentElement();
              container && container != commonAncestor;
              container = container->GetParentElement()) {
-          if (!HTMLEditUtils::IsHyperlinkElement(*container)) {
+          if (!HTMLEditUtils::IsLink(container)) {
             continue;
           }
           // Found link should be only in right node.  So, we shouldn't split
@@ -1348,7 +1348,7 @@ HTMLEditor::AutoInsertParagraphHandler::GetBetterPointToSplitParagraph(
                candidatePointToSplit.GetContainerOrContainerParentElement();
            container && container != commonAncestor;
            container = container->GetParentElement()) {
-        if (!HTMLEditUtils::IsHyperlinkElement(*container)) {
+        if (!HTMLEditUtils::IsLink(container)) {
           continue;
         }
         // Found link should be only in left node.  So, we shouldn't split it.
@@ -1843,7 +1843,7 @@ Element* HTMLEditor::AutoInsertParagraphHandler::
 Result<InsertParagraphResult, nsresult>
 HTMLEditor::AutoInsertParagraphHandler::HandleInListItemElement(
     Element& aListItemElement, const EditorDOMPoint& aPointToSplit) {
-  MOZ_ASSERT(HTMLEditUtils::IsListItemElement(aListItemElement));
+  MOZ_ASSERT(HTMLEditUtils::IsListItem(&aListItemElement));
 
   // If aListItemElement is empty, then we want to outdent its content.
   if (&mEditingHost != aListItemElement.GetParentElement() &&
@@ -1881,14 +1881,13 @@ HTMLEditor::AutoInsertParagraphHandler::HandleInListItemElement(
     }
 
     auto afterLeftListElement = EditorDOMPoint::After(leftListElement);
-    if (MOZ_UNLIKELY(!afterLeftListElement.IsInContentNode())) {
+    if (MOZ_UNLIKELY(!afterLeftListElement.IsSet())) {
       return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
 
     // If aListItemElement is in an invalid sub-list element, move it into
     // the grand parent list element in order to outdent.
-    if (HTMLEditUtils::IsListElement(
-            *afterLeftListElement.ContainerAs<nsIContent>())) {
+    if (HTMLEditUtils::IsAnyListElement(afterLeftListElement.GetContainer())) {
       Result<MoveNodeResult, nsresult> moveListItemElementResult =
           mHTMLEditor.MoveNodeWithTransaction(aListItemElement,
                                               afterLeftListElement);

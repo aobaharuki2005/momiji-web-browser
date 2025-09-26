@@ -344,8 +344,7 @@ nsresult HTMLEditorEventListener::HandleSecondaryMouseButtonDown(
 
   // Select entire element clicked on if NOT within an existing selection
   //   and not the entire body, or table-related elements
-  if (eventTargetElement &&
-      HTMLEditUtils::IsImageElement(*eventTargetElement)) {
+  if (HTMLEditUtils::IsImage(eventTargetElement)) {
     // MOZ_KnownLive(eventTargetElement): Guaranteed by eventTarget.
     DebugOnly<nsresult> rvIgnored =
         aHTMLEditor.SelectElement(MOZ_KnownLive(eventTargetElement));

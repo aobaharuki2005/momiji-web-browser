@@ -1880,7 +1880,7 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
 
   // Make sure it's not a table element.  If so, cancel the operation
   // (translation: users cannot backspace or delete across table cells)
-  if (HTMLEditUtils::IsAnyTableElementExceptColumnElement(aOtherBlockElement)) {
+  if (HTMLEditUtils::IsAnyTableElement(&aOtherBlockElement)) {
     return false;
   }
 
@@ -2513,8 +2513,7 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
 
   // Make sure it's not a table element.  If so, cancel the operation
   // (translation: users cannot backspace or delete across table cells)
-  if (HTMLEditUtils::IsAnyTableElementExceptColumnElement(
-          aCurrentBlockElement)) {
+  if (HTMLEditUtils::IsAnyTableElement(&aCurrentBlockElement)) {
     return false;
   }
 
@@ -3256,8 +3255,8 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
       HTMLEditUtils::CanContentsBeJoined(*mLeftContent, *mRightContent) &&
       // XXX What's special about these three types of block?
       (mLeftContent->IsHTMLElement(nsGkAtoms::p) ||
-       HTMLEditUtils::IsListItemElement(*mLeftContent) ||
-       HTMLEditUtils::IsHeadingElement(*mLeftContent))) {
+       HTMLEditUtils::IsListItem(mLeftContent) ||
+       HTMLEditUtils::IsHeader(*mLeftContent))) {
     mMode = Mode::JoinBlocksInSameParent;
     return true;
   }
@@ -3993,8 +3992,7 @@ Result<Element*, nsresult> HTMLEditor::AutoDeleteRangesHandler::
                !aScanResult.ElementPtr()->IsAnyOfHTMLElements(
                    nsGkAtoms::body, nsGkAtoms::head, nsGkAtoms::html) &&
                // Don't cross table elements
-               !HTMLEditUtils::IsAnyTableElementExceptColumnElement(
-                   *aScanResult.ElementPtr());
+               !HTMLEditUtils::IsAnyTableElement(aScanResult.ElementPtr());
       };
 
   const WSScanResult prevVisibleThing =
@@ -4829,8 +4827,7 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
     // If we reach editing host, there is no parent blocks which can be removed.
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
-  if (HTMLEditUtils::IsTableCellOrCaptionElement(
-          *prevVisibleThing.ElementPtr())) {
+  if (HTMLEditUtils::IsTableCellOrCaption(*prevVisibleThing.ElementPtr())) {
     // If we reach a <td>, <th> or <caption>, we shouldn't remove it even
     // becomes empty because removing such element changes the structure of
     // the <table>.
@@ -5361,9 +5358,8 @@ Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     return false;
   }
 
-  if (HTMLEditUtils::IsAnyTableElementExceptColumnElement(*mLeftBlockElement) ||
-      HTMLEditUtils::IsAnyTableElementExceptColumnElement(
-          *mRightBlockElement)) {
+  if (HTMLEditUtils::IsAnyTableElement(mLeftBlockElement) ||
+      HTMLEditUtils::IsAnyTableElement(mRightBlockElement)) {
     // Do not try to merge table elements, cancel the deletion.
     mCanJoinBlocks = false;
     return false;
@@ -5377,8 +5373,8 @@ Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   }
 
   // Joining a list item to its parent is a NOP.
-  if (HTMLEditUtils::IsListElement(*mLeftBlockElement) &&
-      HTMLEditUtils::IsListItemElement(*mRightBlockElement) &&
+  if (HTMLEditUtils::IsAnyListElement(mLeftBlockElement) &&
+      HTMLEditUtils::IsListItem(mRightBlockElement) &&
       mRightBlockElement->GetParentNode() == mLeftBlockElement) {
     mCanJoinBlocks = false;
     return true;
@@ -5386,8 +5382,8 @@ Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
 
   // Special rule here: if we are trying to join list items, and they are in
   // different lists, join the lists instead.
-  if (HTMLEditUtils::IsListItemElement(*mLeftBlockElement) &&
-      HTMLEditUtils::IsListItemElement(*mRightBlockElement)) {
+  if (HTMLEditUtils::IsListItem(mLeftBlockElement) &&
+      HTMLEditUtils::IsListItem(mRightBlockElement)) {
     // XXX leftListElement and/or rightListElement may be not list elements.
     Element* leftListElement = mLeftBlockElement->GetParentElement();
     Element* rightListElement = mRightBlockElement->GetParentElement();
@@ -6832,8 +6828,7 @@ Result<DeleteRangeResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         HTMLEditor& aHTMLEditor, nsIContent& aContent) {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
 
-  if (!HTMLEditUtils::IsAnyTableElementExceptTableElementAndColumElement(
-          aContent)) {
+  if (!HTMLEditUtils::IsAnyTableElementButNotTable(&aContent)) {
     nsCOMPtr<nsINode> parentNode = aContent.GetParentNode();
     if (NS_WARN_IF(!parentNode)) {
       return Err(NS_ERROR_FAILURE);
@@ -6885,7 +6880,7 @@ Result<DeleteRangeResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   // handle first cell/caption and end cell/caption at the deleting range. They
   // should be handled by upper level because we may need to delete unnecessary
   // new empty inline ancestors in the cells/captions.
-  if (!HTMLEditUtils::IsTableCellOrCaptionElement(aContent) ||
+  if (!HTMLEditUtils::IsTableCellOrCaption(aContent) ||
       aContent.GetChildCount()) {
     return DeleteRangeResult(EditorDOMRange(EditorDOMPoint(&aContent, 0u),
                                             EditorDOMPoint::AtEndOf(aContent)),
@@ -6990,14 +6985,13 @@ Element* HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
   //     should be able to take "known empty element" for avoiding same checks.
   while (editableBlockElement &&
          HTMLEditUtils::IsRemovableFromParentNode(*editableBlockElement) &&
-         !HTMLEditUtils::IsAnyTableElementExceptColumnElement(
-             *editableBlockElement) &&
+         !HTMLEditUtils::IsAnyTableElement(editableBlockElement) &&
          HTMLEditUtils::IsEmptyNode(*editableBlockElement)) {
     // If the removable empty list item is a child of editing host list element,
     // we should not delete it.
-    if (HTMLEditUtils::IsListItemElement(*editableBlockElement)) {
+    if (HTMLEditUtils::IsListItem(editableBlockElement)) {
       Element* const parentElement = editableBlockElement->GetParentElement();
-      if (parentElement && HTMLEditUtils::IsListElement(*parentElement) &&
+      if (parentElement && HTMLEditUtils::IsAnyListElement(parentElement) &&
           !HTMLEditUtils::IsRemovableFromParentNode(*parentElement) &&
           HTMLEditUtils::IsEmptyNode(*parentElement)) {
         break;
@@ -7103,8 +7097,7 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
     MaybeInsertBRElementBeforeEmptyListItemElement(HTMLEditor& aHTMLEditor) {
   MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement);
   MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement->GetParentElement());
-  MOZ_ASSERT(
-      HTMLEditUtils::IsListItemElement(*mEmptyInclusiveAncestorBlockElement));
+  MOZ_ASSERT(HTMLEditUtils::IsListItem(mEmptyInclusiveAncestorBlockElement));
 
   // If the found empty block is a list item element and its grand parent
   // (i.e., parent of list element) is NOT a list element, insert <br>
@@ -7122,11 +7115,10 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
 
   const EditorDOMPoint atParentOfEmptyListItem(
       mEmptyInclusiveAncestorBlockElement->GetParentElement());
-  if (NS_WARN_IF(!atParentOfEmptyListItem.IsInContentNode())) {
+  if (NS_WARN_IF(!atParentOfEmptyListItem.IsSet())) {
     return Err(NS_ERROR_FAILURE);
   }
-  if (HTMLEditUtils::IsListElement(
-          *atParentOfEmptyListItem.ContainerAs<nsIContent>())) {
+  if (HTMLEditUtils::IsAnyListElement(atParentOfEmptyListItem.GetContainer())) {
     return CreateLineBreakResult::NotHandled();
   }
   Result<CreateLineBreakResult, nsresult> insertBRElementResultOrError =
@@ -7251,8 +7243,7 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::Run(
 
   auto caretPointOrError = [&]() MOZ_CAN_RUN_SCRIPT MOZ_NEVER_INLINE_DEBUG
       -> Result<CaretPoint, nsresult> {
-    if (HTMLEditUtils::IsListItemElement(
-            *mEmptyInclusiveAncestorBlockElement)) {
+    if (HTMLEditUtils::IsListItem(mEmptyInclusiveAncestorBlockElement)) {
       Result<CreateLineBreakResult, nsresult> insertBRElementResultOrError =
           MaybeInsertBRElementBeforeEmptyListItemElement(aHTMLEditor);
       if (MOZ_UNLIKELY(insertBRElementResultOrError.isErr())) {
@@ -7288,7 +7279,7 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::Run(
   EditorDOMPoint pointToPutCaret =
       caretPointOrError.unwrap().UnwrapCaretPoint();
   const bool unwrapAncestorBlocks =
-      !HTMLEditUtils::IsListItemElement(*mEmptyInclusiveAncestorBlockElement) &&
+      !HTMLEditUtils::IsListItem(mEmptyInclusiveAncestorBlockElement) &&
       pointToPutCaret.GetContainer() ==
           mEmptyInclusiveAncestorBlockElement->GetParentNode();
   EditorDOMPoint atEmptyInclusiveAncestorBlockElement(
@@ -7372,12 +7363,12 @@ Result<DeleteRangeResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         HTMLEditor& aHTMLEditor) {
   // If we're deleting sublist element and it's the last list item of its parent
   // list, we should replace it with a list element.
-  if (!HTMLEditUtils::IsListElement(mEmptyInclusiveAncestorBlockElement)) {
+  if (!HTMLEditUtils::IsAnyListElement(mEmptyInclusiveAncestorBlockElement)) {
     return DeleteRangeResult::IgnoredResult();
   }
   const RefPtr<Element> parentElement =
       mEmptyInclusiveAncestorBlockElement->GetParentElement();
-  if (!HTMLEditUtils::IsListElement(parentElement) ||
+  if (!parentElement || !HTMLEditUtils::IsAnyListElement(parentElement) ||
       !HTMLEditUtils::IsEmptyNode(
           *parentElement,
           {EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
@@ -7489,7 +7480,7 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
   // empty, we should make the list has only one empty list item element.
   if (const Element* maybeListElement =
           HTMLEditUtils::GetElementIfOnlyOneSelected(aRangeToDelete)) {
-    if (HTMLEditUtils::IsListElement(*maybeListElement) &&
+    if (HTMLEditUtils::IsAnyListElement(maybeListElement) &&
         !HTMLEditUtils::IsEmptyAnyListElement(*maybeListElement)) {
       EditorRawDOMRange range =
           HTMLEditUtils::GetRangeSelectingAllContentInAllListItems<
@@ -7526,8 +7517,8 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
       }
       // We want to keep looking up.  But stop if we are crossing table
       // element boundaries, or if we hit the root.
-      if (HTMLEditUtils::IsAnyTableElementExceptColumnElement(
-              *backwardScanFromStartResult.GetContent()) ||
+      if (HTMLEditUtils::IsAnyTableElement(
+              backwardScanFromStartResult.GetContent()) ||
           backwardScanFromStartResult.GetContent() ==
               closestBlockAncestorOrInlineEditingHost ||
           backwardScanFromStartResult.GetContent() == closestEditingHost) {
@@ -7535,8 +7526,8 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
       }
       // Don't cross list element boundary because we don't want to delete list
       // element at start position unless it's empty.
-      if (HTMLEditUtils::IsListElement(
-              *backwardScanFromStartResult.GetContent()) &&
+      if (HTMLEditUtils::IsAnyListElement(
+              backwardScanFromStartResult.GetContent()) &&
           !HTMLEditUtils::IsEmptyAnyListElement(
               *backwardScanFromStartResult.ElementPtr())) {
         break;
@@ -7591,8 +7582,8 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
         MOZ_ASSERT(forwardScanFromEndResult.ContentIsElement());
         // We want to keep looking up.  But stop if we are crossing table
         // element boundaries, or if we hit the root.
-        if (HTMLEditUtils::IsAnyTableElementExceptColumnElement(
-                *forwardScanFromEndResult.GetContent()) ||
+        if (HTMLEditUtils::IsAnyTableElement(
+                forwardScanFromEndResult.GetContent()) ||
             forwardScanFromEndResult.GetContent() ==
                 closestBlockAncestorOrInlineEditingHost) {
           break;
@@ -7763,7 +7754,7 @@ EditorRawDOMRange HTMLEditor::AutoDeleteRangesHandler::
       if (aRangeToDelete.StartRef().GetContainer() == maybeList) {
         break;
       }
-      if (HTMLEditUtils::IsListElement(*maybeList) &&
+      if (HTMLEditUtils::IsAnyListElement(maybeList) &&
           HTMLEditUtils::IsEmptyAnyListElement(*maybeList->AsElement())) {
         deepestStartPointOfStartList.Set(maybeList);
       }
@@ -7776,7 +7767,7 @@ EditorRawDOMRange HTMLEditor::AutoDeleteRangesHandler::
       if (aRangeToDelete.EndRef().GetContainer() == maybeList) {
         break;
       }
-      if (HTMLEditUtils::IsListElement(*maybeList) &&
+      if (HTMLEditUtils::IsAnyListElement(maybeList) &&
           HTMLEditUtils::IsEmptyAnyListElement(*maybeList->AsElement())) {
         deepestEndPointOfEndList.SetAfter(maybeList);
       }
