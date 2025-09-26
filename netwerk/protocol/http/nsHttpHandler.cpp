@@ -649,6 +649,8 @@ nsresult nsHttpHandler::InitConnectionMgr() {
                         mBeConservativeForProxy);
 }
 
+// We're using RequestOverride because this can get called when these are
+// set by Fetch from the old request
 nsresult nsHttpHandler::AddStandardRequestHeaders(
     nsHttpRequestHead* request, bool isSecure,
     ExtContentPolicyType aContentPolicyType, bool aShouldResistFingerprinting) {
@@ -714,6 +716,20 @@ nsresult nsHttpHandler::AddStandardRequestHeaders(
     if (NS_FAILED(rv)) return rv;
   }
   return NS_OK;
+}
+
+nsresult nsHttpHandler::AddEncodingHeaders(nsHttpRequestHead* request,
+                                           bool isSecure, nsIURI* aURI) {
+  // Add the "Accept-Encoding" header and any dictionary headers
+  nsresult rv;
+  if (isSecure) {
+    rv = request->SetHeader(nsHttp::Accept_Encoding, mHttpsAcceptEncodings,
+                            false, nsHttpHeaderArray::eVarietyRequestOverride);
+  } else {
+    rv = request->SetHeader(nsHttp::Accept_Encoding, mHttpAcceptEncodings,
+                            false, nsHttpHeaderArray::eVarietyRequestOverride);
+  }
+  return rv;
 }
 
 nsresult nsHttpHandler::AddConnectionHeader(nsHttpRequestHead* request,
