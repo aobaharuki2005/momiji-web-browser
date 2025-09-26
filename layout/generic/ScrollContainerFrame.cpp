@@ -94,6 +94,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsNodeInfoManager.h"
 #include "nsPresContext.h"
+#include "nsPresContextInlines.h"
 #include "nsRefreshDriver.h"
 #include "nsScrollbarFrame.h"
 #include "nsSliderFrame.h"
@@ -5961,17 +5962,13 @@ void ScrollContainerFrame::PostOverflowEvent() {
 }
 
 nsIFrame* ScrollContainerFrame::GetFrameForStyle() const {
-  nsIFrame* styleFrame = nullptr;
   if (mIsRoot) {
-    if (const Element* rootElement =
-            PresContext()->Document()->GetRootElement()) {
-      styleFrame = rootElement->GetPrimaryFrame();
+    if (auto* rootFrame =
+            PresContext()->FrameConstructor()->GetRootElementStyleFrame()) {
+      return rootFrame;
     }
-  } else {
-    styleFrame = const_cast<ScrollContainerFrame*>(this);
   }
-
-  return styleFrame;
+  return const_cast<ScrollContainerFrame*>(this);
 }
 
 bool ScrollContainerFrame::NeedsScrollSnap() const {

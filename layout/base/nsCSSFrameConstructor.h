@@ -339,12 +339,10 @@ class nsCSSFrameConstructor final : public nsFrameManager {
    */
   nsContainerFrame* GetContentInsertionFrameFor(nsIContent* aContent);
 
-  // GetInitialContainingBlock() is deprecated in favor of
-  // GetRootElementFrame(); nsIFrame* GetInitialContainingBlock() { return
-  // mRootElementFrame; } This returns the outermost frame for the root element
+  // This returns the outermost frame for the root element.
   nsContainerFrame* GetRootElementFrame() { return mRootElementFrame; }
   // This returns the frame for the root element that does not
-  // have a psuedo-element style
+  // have a pseudo-element style
   nsIFrame* GetRootElementStyleFrame() { return mRootElementStyleFrame; }
   nsPageSequenceFrame* GetPageSequenceFrame() { return mPageSequenceFrame; }
   // Returns the outermost canvas frame. There's usually one per document, but
