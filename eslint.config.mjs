@@ -415,6 +415,15 @@ let config = [
     ...mozilla.configs["flat/valid-jsdoc"],
   },
   {
+    name: "rollout-no-browser-refs-in-toolkit",
+    files: ["toolkit/**"],
+    ignores: ["toolkit/**/test/**", "toolkit/**/tests/**"],
+    plugins: { mozilla },
+    rules: {
+      "mozilla/no-browser-refs-in-toolkit": "error",
+    },
+  },
+  {
     name: "no-newtab-refs-outside-newtab",
     files: ["**/*.mjs", "**/*.js", "**/*.sys.mjs"],
     ignores: [
