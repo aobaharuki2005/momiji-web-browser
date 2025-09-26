@@ -21,7 +21,9 @@ internal class GeckoWebNotificationDelegate(
         )
         MainScope().launch {
             val succeeded = deferred.await()
-            if (!succeeded) {
+            if (succeeded) {
+                webNotification.show()
+            } else {
                 webNotification.dismiss()
             }
         }

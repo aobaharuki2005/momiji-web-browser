@@ -146,8 +146,16 @@ nsresult NotificationParent::HandleAlertTopic(AlertTopic aTopic) {
   if (aTopic == AlertTopic::Show) {
     if (!mResolver) {
 #ifdef ANDROID
-      // XXX: This can happen as we resolve showNotification() immediately on
-      // Android for now and a mock service may still call this.
+      // XXX: This can happen as alertshow happens asynchronously on Android as
+      // we go through GeckoView.
+      //
+      // For example, if two same-tagged notifications are requested at the same
+      // time, the first one will be canceled but can still fire alertshow,
+      // while the second one will also fire one, and the handler for the second
+      // one would get both.
+      //
+      // We may want to reintroduce UUID for such asynchronous case, but for now
+      // it's very edge case and can be ignored.
       return NS_OK;
 #else
       MOZ_ASSERT_UNREACHABLE("Are we getting double show events?");
@@ -277,14 +285,6 @@ nsresult NotificationParent::Show() {
   RefPtr<NotificationObserver> observer = new NotificationObserver(
       mArgs.mScope, principal, IPCNotification(mId, options), *this);
   MOZ_TRY(ShowAlertWithCleanup(alert, observer));
-
-#ifdef ANDROID
-  // XXX: the Android nsIAlertsService is broken and doesn't send alertshow
-  // properly, so we call it here manually.
-  // (This now fires onshow event regardless of the actual result, but it should
-  // be better than the previous behavior that did not do anything at all)
-  observer->Observe(nullptr, "alertshow", nullptr);
-#endif
 
   return NS_OK;
 }
