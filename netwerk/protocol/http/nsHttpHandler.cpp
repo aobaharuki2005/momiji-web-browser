@@ -665,9 +665,8 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
     // XXX This would require that AddAcceptAndDictionaryHeaders be effectively
     // async, perhaps by passing a lambda to call AddAcceptAndDictionaryHeaders
     // and then unblock the request
-    aDict =
-        mDictionaryCache ? mDictionaryCache->GetDictionaryFor(aURI) : nullptr;
-    if (aDict) {
+    if (StaticPrefs::network_http_dictionaries_enable() &&
+        (aDict = mDictionaryCache->GetDictionaryFor(aURI))) {
       rv = aRequest->SetHeader(nsHttp::Accept_Encoding,
                                mDictionaryAcceptEncodings, false,
                                nsHttpHeaderArray::eVarietyRequestOverride);
