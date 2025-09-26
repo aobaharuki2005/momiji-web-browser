@@ -46,43 +46,81 @@ async function maybeSetupConfig() {
 }
 
 /**
+ * @typedef {object} RegionLocaleDetails
+ * @property {string[]} [regions]
+ *   The regions where the search engine should be available. Regions are typically
+ *   displayed as lower case. If no regions are specified, it is assumed that
+ *   any region will match.
+ * @property {string[]} [locales]
+ *   The locales where the search engine should be available. If no locales are
+ *   specified, it is assumed that any locales will match.
+ */
+
+/**
+ * @typedef {object} DeploymentDetails
+ *   Where the search engine should be deployed to.
+ *
+ *   If neither included nor excluded are specified, the search engine should
+ *   not be available anywhere.
+ *
+ *   If excluded is specified and included is not specified, the search engine
+ *   should be available everywhere.
+ *
+ * @property {RegionLocaleDetails[]} [included]
+ *   Where the search engine should be available.
+ * @property {RegionLocaleDetails[]} [excluded]
+ *   Where the search engine should not be available.
+ */
+
+/**
+ * @typedef {object} EngineRuleDetails
+ * @property {string} domain
+ *   The expected domain of the search URL.
+ * @property {string} telemetryId
+ *   The expected telemetry ID of the search engine. This is deprecated, but
+ *   we still test it.
+ * @property {string} [partnerCode]
+ *   The expected partner code property of the search engine.
+ * @property {string} [searchUrlCode]
+ *   The expected parameter name and value for the partner code in the search URL.
+ * @property {string} [suggestUrlCode]
+ *   Expected parameter name and value within the suggestion URL, e.g. for checking
+ *   regional parameters.
+ * @property {string[]} [aliases]
+ *   The expected aliases for the search engine.
+ * @property {string[]} [required_aliases]
+ *   Required aliases for the search engine. These aliases must be associated
+ *   with the engine, but additional aliases may also be supplied.
+ * @property {boolean} [noSuggestionsURL]
+ *   Set to true when there are no suggestions available for this search engine.
+ */
+
+/**
+ * @typedef {object} SearchConfigTestDetails
+ *   Details for the search configuration tests for a single engine.
+ * @property {string} identifier
+ *   The identifier for the search engine under test.
+ * @property {boolean} [identifierExactMatch]
+ *   When true, use an exact match for the identifier and when false, use a
+ *   startsWith comparison.
+ * @property {string[]} [aliases]
+ *   The expected aliases for the search engine.
+ * @property {DeploymentDetails} default
+ *   Details of where the engine should be listed as default.
+ * @property {DeploymentDetails} available
+ *   Details of where the engine should be listed as available.
+ * @property {string} [suggestionUrlBase]
+ *   The base URL for search suggestion lookup.
+ * @property {boolean} [noSuggestionsURL]
+ *   Set to true when there are no suggestions available for this search engine.
+ * @property {(EngineRuleDetails & DeploymentDetails)[]} details
+ *   Specific details of the test for checking URL details and telemetry information.
+ */
+
+/**
  * This class implements the test harness for search configuration tests.
  * These tests are designed to ensure that the correct search engines are
  * loaded for the various region/locale configurations.
- *
- * The configuration for each test is represented by an object having the
- * following properties:
- *
- * - identifier (string)
- *   The identifier for the search engine under test.
- * - default (object)
- *   An inclusion/exclusion configuration (see below) to detail when this engine
- *   should be listed as default.
- *
- * The inclusion/exclusion configuration is represented as an object having the
- * following properties:
- *
- * - included (array)
- *   An optional array of region/locale pairs.
- * - excluded (array)
- *   An optional array of region/locale pairs.
- *
- * If the object is empty, the engine is assumed not to be part of any locale/region
- * pair.
- * If the object has `excluded` but not `included`, then the engine is assumed to
- * be part of every locale/region pair except for where it matches the exclusions.
- *
- * The region/locale pairs are represented as an object having the following
- * properties:
- *
- * - region (array)
- *   An array of two-letter region codes.
- * - locale (object)
- *   A locale object which may consist of:
- *   - matches (array)
- *     An array of locale strings which should exactly match the locale.
- *   - startsWith (array)
- *     An array of locale strings which the locale should start with.
  */
 class SearchConfigTest {
   /**
@@ -91,11 +129,16 @@ class SearchConfigTest {
   #engineSelector;
 
   /**
-   * @param {object} config
-   *   The initial configuration for this test, see above.
+   * @type {SearchConfigTestDetails}
    */
-  constructor(config = {}) {
-    this._config = config;
+  #testDetails;
+
+  /**
+   * @param {SearchConfigTestDetails} testDetails
+   *   The initial configuration for this test.
+   */
+  constructor(testDetails) {
+    this.#testDetails = testDetails;
   }
 
   /**
@@ -263,20 +306,20 @@ class SearchConfigTest {
    *   The two-letter region code.
    * @param {string} locale
    *   The two-letter locale code.
-   * @param {string} section
-   *   The section of the configuration to check.
+   * @param {"default" | "available"} section
+   *   The section of the test to check.
    * @returns {boolean}
    *   Returns true if the engine is expected to be present, false otherwise.
    */
   _assertEngineRules(engines, region, locale, section) {
     const infoString = `region: "${region}" locale: "${locale}"`;
-    const config = this._config[section];
-    const hasIncluded = "included" in config;
-    const hasExcluded = "excluded" in config;
+    const testSection = this.#testDetails[section];
+    const hasIncluded = "included" in testSection;
+    const hasExcluded = "excluded" in testSection;
     const identifierIncluded = !!this._findEngine(
       engines,
-      this._config.identifier,
-      this._config.identifierExactMatch ?? false
+      this.#testDetails.identifier,
+      this.#testDetails.identifierExactMatch ?? false
     );
 
     // If there's not included/excluded, then this shouldn't be the default anywhere.
@@ -289,15 +332,17 @@ class SearchConfigTest {
       return false;
     }
 
-    // If there's no included section, we assume the engine is default everywhere
-    // and we should apply the exclusions instead.
+    // If there's no included section and no excluded, then we assume the
+    // engine is not available anywhere. If there's no included section, but an
+    // exluded section we assume it is available everywhere apart from the
+    // exclusions.
     let included =
       hasIncluded &&
-      this._localeRegionInSection(config.included, region, locale);
+      this._localeRegionInSection(testSection.included, region, locale);
 
     let excluded =
       hasExcluded &&
-      this._localeRegionInSection(config.excluded, region, locale);
+      this._localeRegionInSection(testSection.excluded, region, locale);
     if (
       (included && (!hasExcluded || !excluded)) ||
       (!hasIncluded && hasExcluded && !excluded)
@@ -367,7 +412,7 @@ class SearchConfigTest {
    *   The current visible engines.
    */
   _assertEngineDetails(region, locale, engines) {
-    const details = this._config.details.filter(value => {
+    const details = this.#testDetails.details.filter(value => {
       const included = this._localeRegionInSection(
         value.included,
         region,
@@ -386,15 +431,15 @@ class SearchConfigTest {
 
     const engine = this._findEngine(
       engines,
-      this._config.identifier,
-      this._config.identifierExactMatch ?? false
+      this.#testDetails.identifier,
+      this.#testDetails.identifierExactMatch ?? false
     );
     this.assertOk(engine, "Should have an engine present");
 
-    if (this._config.aliases) {
+    if (this.#testDetails.aliases) {
       this.assertDeepEqual(
         engine.aliases,
-        this._config.aliases,
+        this.#testDetails.aliases,
         "Should have the correct aliases for the engine"
       );
     }
@@ -459,12 +504,12 @@ class SearchConfigTest {
     );
 
     submission = engine.getSubmission("test", URLTYPE_SUGGEST_JSON);
-    if (this._config.noSuggestionsURL || rules.noSuggestionsURL) {
+    if (this.#testDetails.noSuggestionsURL || rules.noSuggestionsURL) {
       this.assertOk(!submission, "Should not have a submission url");
-    } else if (this._config.suggestionUrlBase) {
+    } else if (this.#testDetails.suggestionUrlBase) {
       this.assertEqual(
         submission.uri.prePath + submission.uri.filePath,
-        this._config.suggestionUrlBase,
+        this.#testDetails.suggestionUrlBase,
         `Should have the correct domain for type: ${URLTYPE_SUGGEST_JSON} ${location}.`
       );
       this.assertOk(
