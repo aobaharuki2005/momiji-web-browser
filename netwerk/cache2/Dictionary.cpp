@@ -232,53 +232,56 @@ nsresult DictionaryCacheEntry::Prefetch(nsILoadContextInfo* aLoadContextInfo,
     // users of it, we'll hold onto that data since we have outstanding requests
     // for it.  Probably we shouldn't allow new requests to use this data (and
     // the WPTs assume we shouldn't).
-    if (!mDictionaryDataComplete) {
-      // We haven't requested it yet from the Cache and don't have it in memory
-      // already.
-      // We can't use sCacheStorage because we need the correct LoadContextInfo
-      nsCOMPtr<nsICacheStorageService> cacheStorageService(
-          components::CacheStorage::Service());
-      if (!cacheStorageService) {
-        aShouldSuspend = false;
-        return NS_ERROR_FAILURE;
-      }
-      nsCOMPtr<nsICacheStorage> cacheStorage;
-      nsresult rv = cacheStorageService->DiskCacheStorage(
-          aLoadContextInfo, getter_AddRefs(cacheStorage));
-      if (NS_FAILED(rv)) {
-        aShouldSuspend = false;
-        return NS_ERROR_FAILURE;
-      }
-      // If the file isn't available in the cache, AsyncOpenURIString()
-      // will synchronously make a callback to OnCacheEntryAvailable() with
-      // nullptr.  We can key off that to fail Prefetch(), and also to
-      // remove ourselves from the origin.
-      if (NS_FAILED(cacheStorage->AsyncOpenURIString(
-              mURI, ""_ns,
-              nsICacheStorage::OPEN_READONLY |
-                  nsICacheStorage::OPEN_COMPLETE_ONLY |
-                  nsICacheStorage::CHECK_MULTITHREADED,
-              this)) ||
-          mNotCached) {
-        // For some reason the cache no longer has this entry; fail Prefetch
-        // and also remove this from our origin
-        aShouldSuspend = false;
-        // Remove from origin
-        if (mOrigin) {
-          mOrigin->RemoveEntry(this);
-          mOrigin = nullptr;
-        }
-        return NS_ERROR_FAILURE;
-      }
-      mWaitingPrefetch.AppendElement(aFunc);
-      DICTIONARY_LOG(("Started Prefetch for %s, anonymous=%d", mURI.get(),
-                      aLoadContextInfo->IsAnonymous()));
-      aShouldSuspend = true;
+    if (mDictionaryDataComplete) {
+      DICTIONARY_LOG(
+          ("Prefetch for %s - already have data in memory (%u users)",
+           mURI.get(), mUsers));
+      aShouldSuspend = false;
       return NS_OK;
     }
-    DICTIONARY_LOG(("Prefetch for %s - already have data in memory (%u users)",
-                    mURI.get(), mUsers));
-    aShouldSuspend = false;
+
+    // We haven't requested it yet from the Cache and don't have it in memory
+    // already.
+    // We can't use sCacheStorage because we need the correct LoadContextInfo
+    nsCOMPtr<nsICacheStorageService> cacheStorageService(
+        components::CacheStorage::Service());
+    if (!cacheStorageService) {
+      aShouldSuspend = false;
+      return NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsICacheStorage> cacheStorage;
+    nsresult rv = cacheStorageService->DiskCacheStorage(
+        aLoadContextInfo, getter_AddRefs(cacheStorage));
+    if (NS_FAILED(rv)) {
+      aShouldSuspend = false;
+      return NS_ERROR_FAILURE;
+    }
+    // If the file isn't available in the cache, AsyncOpenURIString()
+    // will synchronously make a callback to OnCacheEntryAvailable() with
+    // nullptr.  We can key off that to fail Prefetch(), and also to
+    // remove ourselves from the origin.
+    if (NS_FAILED(cacheStorage->AsyncOpenURIString(
+            mURI, ""_ns,
+            nsICacheStorage::OPEN_READONLY |
+                nsICacheStorage::OPEN_COMPLETE_ONLY |
+                nsICacheStorage::CHECK_MULTITHREADED,
+            this)) ||
+        mNotCached) {
+      DICTIONARY_LOG(("AsyncOpenURIString failed for %s", mURI.get()));
+      // For some reason the cache no longer has this entry; fail Prefetch
+      // and also remove this from our origin
+      aShouldSuspend = false;
+      // Remove from origin
+      if (mOrigin) {
+        mOrigin->RemoveEntry(this);
+        mOrigin = nullptr;
+      }
+      return NS_ERROR_FAILURE;
+    }
+    mWaitingPrefetch.AppendElement(aFunc);
+    DICTIONARY_LOG(("Started Prefetch for %s, anonymous=%d", mURI.get(),
+                    aLoadContextInfo->IsAnonymous()));
+    aShouldSuspend = true;
     return NS_OK;
   }
   DICTIONARY_LOG(("Prefetch for %s - already waiting", mURI.get()));
