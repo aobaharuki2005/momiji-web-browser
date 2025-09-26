@@ -96,6 +96,14 @@ struct AnchorPositioningUtils {
       const nsIFrame* aAbsoluteContainingBlock, const nsIFrame* aAnchor,
       bool aCBRectIsvalid,
       Maybe<AnchorPosResolutionData>* aReferencedAnchorsEntry);
+
+  /**
+   * Adjust the containing block rect for the 'position-area' property.
+   * https://drafts.csswg.org/css-anchor-position-1/#position-area
+   */
+  static nsRect AdjustAbsoluteContainingBlockRectForPositionArea(
+      nsIFrame* aPositionedFrame, nsIFrame* aContainingBlock,
+      const nsRect& aCBRect, AnchorPosReferenceData* aAnchorPosReferenceData);
 };
 
 }  // namespace mozilla

@@ -435,6 +435,8 @@ bool ComputedStyle::HasAnchorPosReference() const {
   if (pos->mPositionAnchor.IsIdent()) {
     // Short circuit if there's a default anchor defined, even if
     // it may not end up being referenced.
+    // If this early return is removed, we'll need to handle mPositionArea
+    // explicitly.
     return true;
   }
 
