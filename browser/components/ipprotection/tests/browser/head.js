@@ -9,7 +9,7 @@ const { IPProtection, IPProtectionWidget } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPProtection.sys.mjs"
 );
 
-const { IPProtectionService } = ChromeUtils.importESModule(
+const { IPProtectionService, IPProtectionStates } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPProtectionService.sys.mjs"
 );
 

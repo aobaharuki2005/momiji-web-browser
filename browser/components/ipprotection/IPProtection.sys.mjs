@@ -15,20 +15,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/ipprotection/IPProtectionPanel.sys.mjs",
   IPProtectionService:
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
+  IPProtectionStates:
+    "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
   requestIdleCallback: "resource://gre/modules/Timer.sys.mjs",
   cancelIdleCallback: "resource://gre/modules/Timer.sys.mjs",
 });
 
 const FXA_WIDGET_ID = "fxa-toolbar-menu-button";
 const EXT_WIDGET_ID = "unified-extensions-button";
-
-const REGISTERED_EVENTS = [
-  "IPProtectionService:Started",
-  "IPProtectionService:Stopped",
-  "IPProtectionService:Error",
-  "IPProtectionService:SignedIn",
-  "IPProtectionService:SignedOut",
-];
 
 /**
  * IPProtectionWidget is the class for the singleton IPProtection.
@@ -273,9 +267,10 @@ class IPProtectionWidget {
    * @param {XULElement} toolbaritem - the widget toolbaritem.
    */
   #onCreated(toolbaritem) {
-    let isActive = lazy.IPProtectionService.isActive;
+    let state = lazy.IPProtectionService.state;
+    let isActive = state === lazy.IPProtectionStates.ACTIVE;
     let isError =
-      lazy.IPProtectionService.hasError &&
+      state === lazy.IPProtectionStates.ERROR &&
       lazy.IPProtectionService.errors.includes(ERRORS.GENERIC);
     this.updateIconStatus(toolbaritem, {
       isActive,
@@ -286,15 +281,17 @@ class IPProtectionWidget {
       this.sendReadyTrigger
     );
 
-    for (const evt of REGISTERED_EVENTS) {
-      lazy.IPProtectionService.addEventListener(evt, this.handleEvent);
-    }
+    lazy.IPProtectionService.addEventListener(
+      "IPProtectionService:StateChanged",
+      this.handleEvent
+    );
   }
 
   #onDestroyed() {
-    for (const evt of REGISTERED_EVENTS) {
-      lazy.IPProtectionService.removeEventListener(evt, this.handleEvent);
-    }
+    lazy.IPProtectionService.removeEventListener(
+      "IPProtectionService:StateChanged",
+      this.handleEvent
+    );
   }
 
   async onWidgetRemoved(widgetId) {
@@ -322,19 +319,12 @@ class IPProtectionWidget {
   }
 
   #handleEvent(event) {
-    if (
-      event.type == "IPProtectionService:Started" ||
-      event.type == "IPProtectionService:Stopped" ||
-      event.type == "IPProtectionService:Error" ||
-      event.type == "IPProtectionService:SignedIn" ||
-      event.type == "IPProtectionService:SignedOut"
-    ) {
+    if (event.type == "IPProtectionService:StateChanged") {
+      let state = lazy.IPProtectionService.state;
       let status = {
-        isActive:
-          lazy.IPProtectionService.isSignedIn &&
-          lazy.IPProtectionService.isActive,
+        isActive: state === lazy.IPProtectionStates.ACTIVE,
         isError:
-          lazy.IPProtectionService.hasError &&
+          state === lazy.IPProtectionStates.ERROR &&
           lazy.IPProtectionService.errors.includes(ERRORS.GENERIC),
       };
 

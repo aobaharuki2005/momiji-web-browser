@@ -31,7 +31,11 @@ DEFAULT_EXPERIMENT = null;
  */
 add_task(async function test_IPProtectionService_updateEligibility() {
   let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
-  Assert.ok(IPProtectionService.isEligible, "Should be in the experiment");
+  Assert.equal(
+    IPProtectionService.state,
+    IPProtectionStates.UNAUTHENTICATED,
+    "Should be in the experiment"
+  );
   let buttonOn = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.ok(
     BrowserTestUtils.isVisible(buttonOn),
@@ -43,7 +47,11 @@ add_task(async function test_IPProtectionService_updateEligibility() {
     enabled: true,
     variant: "control",
   });
-  Assert.ok(!IPProtectionService.isEligible, "Should not be in the experiment");
+  Assert.notStrictEqual(
+    IPProtectionService.state,
+    IPProtectionStates.UNAUTHENTICATED,
+    "Should not be in the experiment"
+  );
   let buttonOff = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.ok(
     !buttonOff,
@@ -95,11 +103,24 @@ add_task(async function test_IPProtectionService_enroll() {
     isSignedIn: true,
   });
 
-  await IPProtectionService.updateSignInStatus();
+  await IPProtectionService.updateState();
+  Assert.equal(
+    IPProtectionService.state,
+    IPProtectionStates.ENROLLING,
+    "User should now be enrolling"
+  );
+
+  setupService({
+    isEnrolled: true,
+  });
   await openPanel();
   await IPProtectionService.enrolling;
 
-  Assert.ok(IPProtectionService.isEnrolled, "User should now be enrolled");
+  Assert.equal(
+    IPProtectionService.state,
+    IPProtectionStates.READY,
+    "User should now be enrolled"
+  );
 
   cleanupService();
   await cleanupAlpha();
@@ -124,11 +145,18 @@ add_task(
 
     await waitForWidgetAdded();
 
+    setupService({
+      isEnrolled: true,
+    });
     let content = await openPanel();
 
     await IPProtectionService.enrolling;
 
-    Assert.ok(IPProtectionService.isEnrolled, "User should now be enrolled");
+    Assert.equal(
+      IPProtectionService.state,
+      IPProtectionStates.READY,
+      "User should now be enrolled"
+    );
 
     // User is already signed in so the toggle should be available.
     Assert.ok(
@@ -159,14 +187,15 @@ add_task(
 
     await waitForWidgetAdded();
 
-    await IPProtectionService.updateSignInStatus();
-
+    setupService({
+      isEnrolled: true,
+    });
     await openPanel();
     await IPProtectionService.enrolling;
 
     Assert.equal(
-      IPProtectionService.isEntitled,
-      true,
+      IPProtectionService.state,
+      IPProtectionStates.READY,
       "Entitlement set the user as entitled"
     );
 
@@ -191,8 +220,8 @@ add_task(async function test_IPProtectionService_updateEntitlement() {
   await waitForWidgetAdded();
 
   Assert.equal(
-    IPProtectionService.isEntitled,
-    true,
+    IPProtectionService.state,
+    IPProtectionStates.READY,
     "Entitlement set the user as entitled"
   );
 
@@ -239,7 +268,7 @@ add_task(async function test_IPProtectionService_pass_errors() {
 
   let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
 
-  await IPProtectionService.updateSignInStatus();
+  await IPProtectionService.updateState();
 
   let content = await openPanel();
 
@@ -248,14 +277,16 @@ add_task(async function test_IPProtectionService_pass_errors() {
     { childList: true, subtree: true },
     () => content.shadowRoot.querySelector("ipprotection-message-bar")
   );
-  // Mock a failure
-  IPProtectionService.proxyManager.reset();
 
   content.connectionToggleEl.click();
 
-  Assert.ok(!IPProtectionService.isActive, "Proxy is not active");
-
   await messageBarLoadedPromise;
+
+  Assert.equal(
+    IPProtectionService.state,
+    IPProtectionStates.ERROR,
+    "Proxy is not active"
+  );
 
   let messageBar = content.shadowRoot.querySelector("ipprotection-message-bar");
 
@@ -296,25 +327,29 @@ add_task(async function test_IPProtectionService_retry_errors() {
   });
   let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
 
-  await IPProtectionService.updateSignInStatus();
+  await IPProtectionService.updateState();
 
   let content = await openPanel();
 
   // Mock a failure
-  IPProtectionService.isEnrolled = false;
-  IPProtectionService.hasError = true;
+  IPProtectionService.resetAccount();
+  await IPProtectionService.setErrorState();
 
   let startedEventPromise = BrowserTestUtils.waitForEvent(
     IPProtectionService,
-    "IPProtectionService:Started"
+    "IPProtectionService:StateChanged",
+    false,
+    () => !!IPProtectionService.activatedAt
   );
   content.connectionToggleEl.click();
 
   await startedEventPromise;
 
-  Assert.ok(IPProtectionService.isActive, "Proxy is active");
-  Assert.ok(IPProtectionService.isEnrolled, "User is now enrolled");
-  Assert.ok(!IPProtectionService.hasError, "There is no longer an error");
+  Assert.equal(
+    IPProtectionService.state,
+    IPProtectionStates.ACTIVE,
+    "Proxy is active"
+  );
 
   IPProtectionService.stop();
 
@@ -333,7 +368,7 @@ add_task(async function test_IPProtectionService_stop_on_signout() {
   });
   let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
 
-  await IPProtectionService.updateSignInStatus();
+  await IPProtectionService.updateState();
 
   let content = await openPanel();
 
@@ -348,26 +383,38 @@ add_task(async function test_IPProtectionService_stop_on_signout() {
 
   let startedEventPromise = BrowserTestUtils.waitForEvent(
     IPProtectionService,
-    "IPProtectionService:Started"
+    "IPProtectionService:StateChanged",
+    false,
+    () => !!IPProtectionService.activatedAt
   );
   content.connectionToggleEl.click();
 
   await startedEventPromise;
 
-  Assert.ok(IPProtectionService.isActive, "Proxy is active");
+  Assert.equal(
+    IPProtectionService.state,
+    IPProtectionStates.ACTIVE,
+    "Proxy is active"
+  );
 
   let vpnOffPromise = BrowserTestUtils.waitForEvent(
     IPProtectionService,
-    "IPProtectionService:Stopped"
+    "IPProtectionService:StateChanged",
+    false,
+    () => !IPProtectionService.activatedAt
   );
 
   setupService({
     isSignedIn: false,
   });
-  let signedOut = IPProtectionService.updateSignInStatus();
+  let signedOut = IPProtectionService.updateState();
   await Promise.all([signedOut, vpnOffPromise]);
 
-  Assert.ok(!IPProtectionService.isActive, "Proxy has stopped");
+  Assert.notStrictEqual(
+    IPProtectionService.state,
+    IPProtectionStates.ACTIVE,
+    "Proxy has stopped"
+  );
 
   await closePanel();
   await cleanupAlpha();
@@ -398,13 +445,17 @@ add_task(async function test_IPProtectionService_reload() {
   });
   let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
 
-  IPProtectionService.isSignedIn = false;
-  await IPProtectionService.updateSignInStatus();
+  setupService({
+    isEnrolled: true,
+  });
 
   let content = await openPanel();
-
-  Assert.ok(IPProtectionService.isEnrolled, "User should be enrolled");
-  Assert.equal(IPProtectionService.isEntitled, true, "User should be entitled");
+  await IPProtectionService.enrolling;
+  Assert.equal(
+    IPProtectionService.state,
+    IPProtectionStates.READY,
+    "Proxy is ready"
+  );
 
   Assert.ok(
     BrowserTestUtils.isVisible(content),
@@ -419,13 +470,21 @@ add_task(async function test_IPProtectionService_reload() {
   content.connectionToggleEl.click();
   await tabReloaded;
 
-  Assert.ok(IPProtectionService.isActive, "Proxy is active");
+  Assert.equal(
+    IPProtectionService.state,
+    IPProtectionStates.ACTIVE,
+    "Proxy is active"
+  );
 
   tabReloaded = waitForTabReloaded(gBrowser.selectedTab);
   content.connectionToggleEl.click();
   await tabReloaded;
 
-  Assert.ok(!IPProtectionService.isActive, "Proxy is not active");
+  Assert.notStrictEqual(
+    IPProtectionService.state,
+    IPProtectionStates.ACTIVE,
+    "Proxy is not active"
+  );
 
   await closePanel();
   await cleanupAlpha();
@@ -436,6 +495,7 @@ add_task(async function test_IPProtectionService_reload() {
  * Tests the add-on manager interaction
  */
 add_task(async function test_IPProtectionService_addon() {
+  let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
   let widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
   let prevPosition = CustomizableUI.getPlacementOfWidget(
     IPProtectionWidget.WIDGET_ID
@@ -446,7 +506,20 @@ add_task(async function test_IPProtectionService_addon() {
     "IP-Protection toolbaritem is enabled"
   );
 
-  IPProtectionService.hasUpgraded = true;
+  setupService({
+    isEnrolled: true,
+    isSignedIn: true,
+    entitlement: {
+      status: 200,
+      error: undefined,
+      entitlement: {
+        subscribed: true, // hasUpgraded=true
+        uid: 42,
+        created_at: "2023-01-01T12:00:00.000Z",
+      },
+    },
+  });
+  await IPProtectionService.updateState();
 
   const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
@@ -480,7 +553,8 @@ add_task(async function test_IPProtectionService_addon() {
 
   await extension.unload();
 
-  IPProtectionService.hasUpgraded = false;
+  cleanupService(); // hasUpgraded=false
+  await IPProtectionService.updateState();
 
   const extension2 = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
@@ -500,6 +574,7 @@ add_task(async function test_IPProtectionService_addon() {
   );
 
   await extension2.unload();
+  await cleanupAlpha();
 });
 
 /**
@@ -507,10 +582,14 @@ add_task(async function test_IPProtectionService_addon() {
  */
 add_task(async function test_IPProtectionService_exposure() {
   Services.telemetry.clearEvents();
+  NimbusFeatures.ipProtection._didSendExposureEvent = false;
 
   let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
 
   await cleanupAlpha();
+
+  // Reset to allow sending another exposure event.
+  NimbusFeatures.ipProtection._didSendExposureEvent = false;
 
   let cleanupControl = await setupExperiment({
     enabled: true,

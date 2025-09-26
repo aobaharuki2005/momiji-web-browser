@@ -37,98 +37,140 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
 });
 
 /**
+ * @typedef {object} IPProtectionStates
+ *  List of the possible states of the IPProtectionService.
+ * @property {string} UNINITIALIZED
+ *  The service has not been initialized yet.
+ * @property {string} UNAVAILABLE
+ *  The user is not eligible (via nimbus) or still not signed in. No UI is available.
+ * @property {string} UNAUTHENTICATED
+ *  The user is signed out but eligible (via nimbus). The panel should show the login view.
+ * @property {string} ENROLLING
+ *  The user is signed in and eligible (via nimbus). The UI should show the main view,
+ *  but not allow activation until enrollment has finished.
+ * @property {string} READY
+ *  Ready to be activated.
+ * @property {string} ACTIVE
+ *  Proxy is active.
+ * @property {string} ERROR
+ *  Error
+ */
+export const IPProtectionStates = Object.freeze({
+  UNINITIALIZED: "uninitialized",
+  UNAVAILABLE: "unavailable",
+  UNAUTHENTICATED: "unauthenticated",
+  ENROLLING: "enrolling",
+  READY: "ready",
+  ACTIVE: "active",
+  ERROR: "error",
+});
+
+/**
  * A singleton service that manages proxy integration and backend functionality.
  *
- * It exposes init and uninit for app startup.
- *
- * @fires event:"IPProtectionService:Started"
- *  When the proxy has started and includes the timestamp of when
- *  it was activated as `detail.activatedAt`.
- * @fires event:"IPProtectionService:Stopped"
- *  When the proxy is stopped
- * @fires event:"IPProtectionService:SignedIn"
- *  When user signs into their account
- * @fires event:"IPProtectionService:SignedOut"
- *  When user signs out of their account
- * @fires event:"IPProtectionService:UpdateHasUpgraded"
- *  When the hasUpgraded property is updated.
- *  True if the user upgraded to a Mozilla VPN subscription.
- * @fires event:"IPProtectionService:Error"
- *  When there has been an error
+ * @fires event:"IPProtectionService:StateChanged"
+ *  When the proxy state machine changes state. Check the `state` attribute to
+ *  know the current state.
  */
 class IPProtectionServiceSingleton extends EventTarget {
   static WIDGET_ID = "ipprotection-button";
   static PANEL_ID = "PanelUI-ipprotection";
 
-  isActive = false;
-  activatedAt = null;
-  isSignedIn = null;
-  isEnrolled = null;
-  isEligible = null;
-  hasUpgraded = null;
-  hasError = null;
+  #state = IPProtectionStates.UNINITIALIZED;
+
+  // Prevents multiple `#updateState()` executions at once.
+  #updating = false;
 
   errors = [];
   enrolling = null;
+  signedIn = null;
 
   guardian = null;
+  proxyManager = null;
+
   #entitlement = null;
-  #inited = false;
+  #activatedAt = false;
+
+  /**
+   * Returns the state of the service. See the description of the state
+   * machine.
+   *
+   * @returns {string} - the current state from IPProtectionStates.
+   */
+  get state() {
+    return this.#state;
+  }
+
+  /**
+   * Checks if a user has upgraded.
+   *
+   * @returns {boolean}
+   */
+  get hasUpgraded() {
+    return this.#entitlement?.subscribed;
+  }
+
+  /**
+   * Checks if the proxy is active and was activated.
+   *
+   * @returns {Date}
+   */
+  get activatedAt() {
+    return this.proxyManager?.active && this.#activatedAt;
+  }
 
   constructor() {
     super();
 
     this.guardian = new lazy.GuardianClient();
 
-    this.updateEnabled = this.#updateEnabled.bind(this);
-    this.updateSignInStatus = this.#updateSignInStatus.bind(this);
-    this.updateEligibility = this.#updateEligibility.bind(this);
+    this.updateState = this.#updateState.bind(this);
+    this.setState = this.#setState.bind(this);
+    this.setErrorState = this.#setErrorState.bind(this);
   }
 
   /**
    * Setups the IPProtectionService if enabled.
    */
   async init() {
-    if (this.#inited || !this.featureEnabled) {
+    if (this.#state !== IPProtectionStates.UNINITIALIZED) {
       return;
     }
     this.proxyManager = new lazy.IPPProxyManager(this.guardian);
 
-    this.#inited = true;
-    await this.#updateSignInStatus();
-    await this.#updateEligibility();
-    await this.#updateEnrollment(true /* onlyCached */);
-
     this.#addSignInStateObserver();
     this.addVPNAddonObserver();
     this.#addEligibilityListeners();
+
+    await this.#updateState();
   }
 
   /**
    * Removes the IPProtectionService and IPProtection widget.
    */
   uninit() {
+    if (this.#state === IPProtectionStates.UNINITIALIZED) {
+      return;
+    }
+
     lazy.IPProtection.uninit();
 
-    this.removeSignInStateObserver();
+    this.#removeSignInStateObserver();
     this.removeVPNAddonObserver();
 
-    if (this.isActive) {
+    if (this.#state === IPProtectionStates.ACTIVE) {
       this.stop(false);
     }
     this.proxyManager?.destroy();
 
     this.#removeEligibilityListeners();
 
-    this.resetAccount();
-    this.isSignedIn = null;
-    this.isEligible = null;
-    this.hasError = null;
-
+    this.#entitlement = null;
     this.errors = [];
     this.enrolling = null;
+    this.signedIn = null;
 
-    this.#inited = false;
+    this.#setState(IPProtectionStates.UNINITIALIZED);
   }
 
   /**
@@ -141,40 +183,22 @@ class IPProtectionServiceSingleton extends EventTarget {
     // Wait for enrollment to finish.
     await this.enrolling;
 
-    // Retry enrollment if the previous attempt failed.
-    if (this.hasError && !this.isEnrolled) {
-      await this.#updateEnrollment();
+    // Retry getting state if the previous attempt failed.
+    if (this.#state === IPProtectionStates.ERROR) {
+      await this.#updateState();
     }
 
-    // Retry getting entitlement if the previous attempt failed.
-    if (this.hasError && !this.isEntitled) {
-      await this.#updateEntitlement();
-    }
-
-    if (
-      !this.isSignedIn ||
-      !this.isEnrolled ||
-      !this.isEntitled ||
-      this.isActive
-    ) {
-      lazy.logConsole.info("Proxy: Error");
-      lazy.logConsole.debug("Could not start:", {
-        isSignedIn: this.isSignedIn,
-        isEnrolled: this.isEnrolled,
-        isEntitled: this.isEntitled,
-        isActive: this.isActive,
-      });
-      this.#dispatchError(ERRORS.GENERIC);
+    if (this.#state !== IPProtectionStates.READY) {
+      this.#setErrorState(ERRORS.GENERIC);
       return;
     }
-    this.hasError = false;
     this.errors = [];
 
     let started;
     try {
       started = await this.proxyManager.start();
     } catch (error) {
-      this.#dispatchError(ERRORS.GENERIC, error);
+      this.#setErrorState(ERRORS.GENERIC, error);
     }
 
     // Proxy failed to start but no error was given.
@@ -182,18 +206,10 @@ class IPProtectionServiceSingleton extends EventTarget {
       return;
     }
 
-    this.isActive = true;
-    this.activatedAt = ChromeUtils.now();
+    this.#activatedAt = ChromeUtils.now();
 
-    this.dispatchEvent(
-      new CustomEvent("IPProtectionService:Started", {
-        bubbles: true,
-        composed: true,
-        detail: {
-          activatedAt: this.activatedAt,
-        },
-      })
-    );
+    this.#setState(IPProtectionStates.ACTIVE);
+
     Glean.ipprotection.toggled.record({
       userAction,
       enabled: true,
@@ -211,9 +227,13 @@ class IPProtectionServiceSingleton extends EventTarget {
    * True if started by user action, false if system action
    */
   async stop(userAction = true) {
+    if (!this.proxyManager?.active) {
+      return;
+    }
+
     let deactivatedAt = ChromeUtils.now();
-    let sessionLength = deactivatedAt - this.activatedAt;
-    this.activatedAt = null;
+    let sessionLength = deactivatedAt - this.#activatedAt;
+    this.#activatedAt = null;
 
     Glean.ipprotection.toggled.record({
       userAction,
@@ -222,7 +242,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     });
 
     await this.proxyManager.stop();
-    this.isActive = false;
+    this.#setState(IPProtectionStates.READY);
 
     this.dispatchEvent(
       new CustomEvent("IPProtectionService:Stopped", {
@@ -252,12 +272,7 @@ class IPProtectionServiceSingleton extends EventTarget {
    * @returns {Promise<void>}
    */
   async maybeEnroll() {
-    if (
-      !this.isSignedIn ||
-      !this.isEligible ||
-      this.isEnrolled ||
-      this.enrolling
-    ) {
+    if (this.#state !== IPProtectionStates.ENROLLING) {
       return null;
     }
     return this.#enroll();
@@ -267,10 +282,12 @@ class IPProtectionServiceSingleton extends EventTarget {
    * Reset the statuses that are set based on a FxA account.
    */
   resetAccount() {
-    this.isEnrolled = null;
-    this.isEntitled = null;
-    this.hasUpgraded = null;
+    this.signedIn = null;
     this.#entitlement = null;
+    if (this.proxyManager?.active) {
+      this.stop(false);
+    }
+    this.proxyManager.reset();
   }
 
   /**
@@ -278,9 +295,10 @@ class IPProtectionServiceSingleton extends EventTarget {
    *
    * @returns {boolean}
    */
-  #isSignedIn() {
+  get isSignedIn() {
     let { status } = lazy.UIState.get();
-    return status == lazy.UIState.STATUS_SIGNED_IN;
+    this.signedIn = status == lazy.UIState.STATUS_SIGNED_IN;
+    return this.signedIn;
   }
 
   /**
@@ -290,19 +308,11 @@ class IPProtectionServiceSingleton extends EventTarget {
    * @returns {Promise<boolean>}
    */
   async #isEnrolled(onlyCached) {
-    if (!this.isSignedIn) {
-      return false;
-    }
-
     let isEnrolled;
     try {
       isEnrolled = await this.guardian.isLinkedToGuardian(onlyCached);
     } catch (error) {
-      this.#dispatchError(error?.message);
-    }
-
-    if (isEnrolled) {
-      lazy.logConsole.info("Account: Linked");
+      this.#setErrorState(error?.message);
     }
 
     return isEnrolled;
@@ -313,67 +323,41 @@ class IPProtectionServiceSingleton extends EventTarget {
    *
    * @returns {boolean}
    */
-  #isEligible() {
+  get isEligible() {
     let inExperiment = lazy.NimbusFeatures.ipProtection.getEnrollmentMetadata();
     let isEligible = inExperiment?.branch && inExperiment.branch !== "control";
 
     if (inExperiment) {
-      lazy.NimbusFeatures.ipProtection.recordExposureEvent();
-    }
-
-    if (isEligible) {
-      lazy.logConsole.info("Device: Eligible");
+      lazy.NimbusFeatures.ipProtection.recordExposureEvent({
+        once: true,
+      });
     }
 
     return isEligible;
   }
 
-  /**
-   * Checks whether the feature pref is enabled and
-   * will init or uninit the IPProtectionService instance.
-   */
-  #updateEnabled() {
-    if (this.featureEnabled) {
-      this.init();
-    } else {
-      this.uninit();
-    }
-  }
-
   #addEligibilityListeners() {
-    lazy.NimbusFeatures.ipProtection.onUpdate(this.updateEligibility);
+    lazy.NimbusFeatures.ipProtection.onUpdate(this.updateState);
   }
 
   #removeEligibilityListeners() {
-    lazy.NimbusFeatures.ipProtection.offUpdate(this.updateEligibility);
+    lazy.NimbusFeatures.ipProtection.offUpdate(this.updateState);
   }
 
   /**
-   * Dispatches "IPProtectionService:UpdateHasUpgraded" to pass the
-   * `hasUpgraded` status. By default, pass the current value of
-   * `hasUpgraded`. Otherwise, if `refetchEntitlement` is true,
-   * get the most up to date entitlement status and set
-   * `hasUpgraded` based on whether the user's Mozilla account is
-   * linked to Mozilla VPN.
+   * Clear the current entitlement and requests a state update to dispatch
+   * the current hasUpgraded status.
    *
-   * @param {boolean} refetchEntitlement
-   *  True to refetch entitlement details.
-   *  Else use the current entitlement status.
+   * @returns {Promise<void>}
    */
-  async updateHasUpgradedStatus(refetchEntitlement = false) {
-    if (refetchEntitlement) {
-      await this.#updateEntitlement();
+  async refetchEntitlement() {
+    let prevState = this.#state;
+    this.#entitlement = null;
+    await this.#updateState();
+    // hasUpgraded might not change the state.
+    if (prevState === this.#state) {
+      this.#stateChanged(this.#state, prevState);
     }
-
-    this.dispatchEvent(
-      new CustomEvent("IPProtectionService:UpdateHasUpgraded", {
-        bubbles: true,
-        composed: true,
-        detail: {
-          hasUpgraded: this.hasUpgraded,
-        },
-      })
-    );
   }
 
   /**
@@ -388,7 +372,11 @@ class IPProtectionServiceSingleton extends EventTarget {
       ]),
 
       observe() {
-        manager.updateSignInStatus();
+        let { status } = lazy.UIState.get();
+        let signedIn = status == lazy.UIState.STATUS_SIGNED_IN;
+        if (signedIn !== manager.signedIn) {
+          manager.updateState();
+        }
       },
     };
 
@@ -398,7 +386,7 @@ class IPProtectionServiceSingleton extends EventTarget {
   /**
    * Removes the FxA sign-in state observer
    */
-  removeSignInStateObserver() {
+  #removeSignInStateObserver() {
     if (this.fxaObserver) {
       Services.obs.removeObserver(this.fxaObserver, lazy.UIState.ON_UPDATE);
       this.fxaObserver = null;
@@ -435,119 +423,12 @@ class IPProtectionServiceSingleton extends EventTarget {
   }
 
   /**
-   * Updates the `isSignedIn` property based on the UIState status.
-   *
-   * Will update if the new user is enrolled
-   * or clear enrollment.
-   *
-   * Dispatch events when the sign-in state changes:
-   *  - "IPProtectionService:SignedIn"
-   *  - "IPProtectionService:SignedOut"
-   */
-  async #updateSignInStatus() {
-    let isSignedIn = this.#isSignedIn();
-
-    if (this.isSignedIn == isSignedIn) {
-      return;
-    }
-
-    this.isSignedIn = isSignedIn;
-
-    if (!this.#inited) {
-      return;
-    }
-
-    if (this.isSignedIn) {
-      lazy.logConsole.info("Account: Signed In");
-      this.dispatchEvent(
-        new CustomEvent("IPProtectionService:SignedIn", {
-          bubbles: true,
-          composed: true,
-        })
-      );
-      await this.#updateEnrollment();
-      await this.updateHasUpgradedStatus();
-    } else {
-      lazy.logConsole.info("Account: Signed Out");
-      this.dispatchEvent(
-        new CustomEvent("IPProtectionService:SignedOut", {
-          bubbles: true,
-          composed: true,
-        })
-      );
-      if (this.isActive) {
-        this.stop();
-      }
-      this.proxyManager.reset();
-      this.resetAccount();
-      this.updateHasUpgradedStatus();
-    }
-  }
-
-  /**
-   * Checks if a device is enrolled in an experiment that
-   * allow using the VPN and if so adds the widget.
-   *
-   * If a user is signed in, checks if they are or can be
-   * enrolled.
-   *
-   * @returns {Promise<void>}
-   */
-  async #updateEligibility() {
-    this.isEligible = this.#isEligible();
-
-    if (!this.isEligible) {
-      return;
-    }
-
-    lazy.IPProtection.init();
-
-    if (this.#inited && this.isSignedIn) {
-      await this.#updateEnrollment();
-      // Need to trigger this.enrolling if needed
-      await this.maybeEnroll();
-    }
-  }
-
-  /**
-   * Checks if a users FxA account has been enrolled to use the proxy and
-   * updates the enrolled pref.
-   *
-   * If no user is signed in, the enrolled pref will set to false.
-   *
-   * If the user is already enrolled and is entitled to use the VPN, the widget will be shown.
-   *
-   * @param { boolean } onlyCached - if true only the cached clients will be checked.
-   * @returns {Promise<void>}
-   */
-  async #updateEnrollment(onlyCached = false) {
-    this.isEnrolled = await this.#isEnrolled(onlyCached);
-
-    if (!this.isEnrolled) {
-      return;
-    }
-
-    await this.#updateEntitlement();
-    if (this.isEntitled) {
-      lazy.IPProtection.init();
-    }
-  }
-
-  /**
-   * Enrolls a users FxA account to use the proxy if they are eligible and not already
-   * enrolled then updates the enrollment status.
-   *
-   * If successful, updates the enrollment status and entitlement.
+   * Enrolls a users FxA account to use the proxy and updates the state.
    *
    * @returns {Promise<void>}
    */
   async #enroll() {
-    let { isSignedIn, isEnrolled, isEligible } = this;
-    if (!isSignedIn) {
-      return null;
-    }
-
-    if (isEnrolled || !isEligible) {
+    if (this.#state !== IPProtectionStates.ENROLLING) {
       return null;
     }
 
@@ -565,17 +446,15 @@ class IPProtectionServiceSingleton extends EventTarget {
           ok ? "Enrolled" : "Enrollment Failed"
         );
 
-        this.isEnrolled = !!ok;
-
         if (!ok) {
-          this.#dispatchError(enrollment?.error || ERRORS.GENERIC);
+          this.#setErrorState(enrollment?.error || ERRORS.GENERIC);
           return null;
         }
 
-        return this.#updateEntitlement();
+        return this.#updateState();
       })
       .catch(error => {
-        this.#dispatchError(error?.message);
+        this.#setErrorState(error?.message);
       })
       .finally(() => {
         this.enrolling = null;
@@ -585,32 +464,23 @@ class IPProtectionServiceSingleton extends EventTarget {
   }
 
   /**
-   * Update the entitlement and hasUpgraded statues.
-   */
-  async #updateEntitlement() {
-    this.#entitlement = await this.#getEntitlement();
-    if (this.#entitlement) {
-      this.isEntitled = !!this.#entitlement.uid;
-      this.hasUpgraded = this.#entitlement.subscribed;
-    } else {
-      this.isEntitled = false;
-      this.hasUpgraded = false;
-    }
-  }
-
-  /**
    * Gets the entitlement information for the user.
-   *
-   * @returns {Promise<Entitlement|null>} - The entitlement object or null if not entitled.
    */
   async #getEntitlement() {
+    if (this.#entitlement) {
+      return this.#entitlement;
+    }
+
     let { status, entitlement, error } = await this.guardian.fetchUserInfo();
     lazy.logConsole.debug("Entitlement:", { status, entitlement, error });
 
     if (error || !entitlement || status != 200) {
-      this.#dispatchError(error || `Status: ${status}`);
+      this.#setErrorState(error || `Status: ${status}`);
       return null;
     }
+
+    // Entitlement is set until the user changes or it is cleared to check subscription status.
+    this.#entitlement = entitlement;
 
     return entitlement;
   }
@@ -620,28 +490,144 @@ class IPProtectionServiceSingleton extends EventTarget {
   }
 
   /**
+   * Request to update the current state.
+   *
+   * Updates will be queued if another update is in progress.
+   */
+  async #updateState() {
+    // Wait for any current updates to finish.
+    await this.#updating;
+
+    // Start a new update
+    this.#updating = this.#checkState();
+    let newState = await this.#updating;
+    this.#updating = false;
+
+    this.#setState(newState);
+  }
+
+  /**
+   * Checks observed statuses or with Guardian to get the current state.
+   *
+   * @returns {Promise<IPProtectionStates>}
+   */
+  async #checkState() {
+    // The IPP feature is disabled.
+    if (!this.featureEnabled) {
+      return IPProtectionStates.UNINITIALIZED;
+    }
+
+    // For non authenticated users, we can check if they are eligible (the UI
+    // is shown and they have to login) or we don't know yet their current
+    // enroll state (no UI is shown).
+    let signedIn = this.isSignedIn;
+    let eligible = this.isEligible;
+    if (!signedIn) {
+      return !eligible
+        ? IPProtectionStates.UNAVAILABLE
+        : IPProtectionStates.UNAUTHENTICATED;
+    }
+
+    // The connection is already active.
+    if (this.proxyManager?.active) {
+      return IPProtectionStates.ACTIVE;
+    }
+
+    // The proxy can be started if the current entitlement is valid.
+    if (this.#entitlement?.uid) {
+      return IPProtectionStates.READY;
+    }
+
+    // The following are remote authentication checks and should be avoided
+    // whenever possible.
+
+    // Check if the current account is enrolled with Guardian.
+    let enrolled = await this.#isEnrolled(
+      this.#state !== IPProtectionStates.ENROLLING /*onlyCached*/
+    );
+    if (!enrolled) {
+      return !eligible
+        ? IPProtectionStates.UNAVAILABLE
+        : IPProtectionStates.ENROLLING;
+    }
+
+    // Check if the current account can get an entitlement.
+    let entitled = await this.#getEntitlement();
+    if (!entitled && !eligible) {
+      return IPProtectionStates.UNAVAILABLE;
+    }
+
+    // The proxy can be activated.
+    return IPProtectionStates.READY;
+  }
+
+  /**
+   * Sets the current state and triggers the state change event if needed.
+   *
+   * @param {IPProtectionStates} newState
+   */
+  #setState(newState) {
+    if (newState === this.#state) {
+      return;
+    }
+
+    let prevState = this.#state;
+    this.#state = newState;
+
+    this.#stateChanged(newState, prevState);
+  }
+
+  /**
+   * Handles side effects of a state change and dispatches the StateChanged event.
+   *
+   * @param {IPProtectionStates} state
+   * @param {IPProtectionStates} prevState
+   */
+  #stateChanged(state, prevState) {
+    // Reset stored account information and stop the proxy,
+    // if the account is no longer available.
+    if (
+      (this.#entitlement && state === IPProtectionStates.UNAVAILABLE) ||
+      state === IPProtectionStates.UNAUTHENTICATED
+    ) {
+      this.resetAccount();
+    }
+
+    // Add the IPProtection widget if needed.
+    if (
+      !lazy.IPProtection.isInitialized &&
+      state !== IPProtectionStates.UNINITIALIZED &&
+      state !== IPProtectionStates.UNAVAILABLE
+    ) {
+      lazy.IPProtection.init();
+    }
+
+    this.dispatchEvent(
+      new CustomEvent("IPProtectionService:StateChanged", {
+        bubbles: true,
+        composed: true,
+        detail: {
+          state,
+          prevState,
+        },
+      })
+    );
+  }
+
+  /**
    * Helper to dispatch error messages.
    *
    * @param {string} error - the error message to send.
    * @param {string} [errorContext] - the error message to log.
    */
-  #dispatchError(error, errorContext) {
-    this.hasError = true;
+  #setErrorState(error, errorContext) {
     this.errors.push(error);
 
     if (this.errors.length > MAX_ERROR_HISTORY) {
       this.errors.splice(0, this.errors.length - MAX_ERROR_HISTORY);
     }
 
-    this.dispatchEvent(
-      new CustomEvent("IPProtectionService:Error", {
-        bubbles: true,
-        composed: true,
-        detail: {
-          error,
-        },
-      })
-    );
+    this.#setState(IPProtectionStates.ERROR);
     lazy.logConsole.error(errorContext || error);
   }
 }
@@ -653,7 +639,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "featureEnabled",
   ENABLED_PREF,
   false,
-  IPProtectionService.updateEnabled
+  (_pref, _oldVal, featureEnabled) => {
+    if (featureEnabled) {
+      IPProtectionService.init();
+    } else {
+      IPProtectionService.uninit();
+    }
+  }
 );
 
 export { IPProtectionService };

@@ -73,13 +73,10 @@ add_task(async function toolbar_icon_status() {
     isSignedIn: true,
     isEnrolled: true,
   });
-  IPProtectionService.isEnrolled = true;
-  IPProtectionService.isEntitled = true;
-  content.state.isSignedOut = false;
+  await IPProtectionService.updateState();
   await putServerInRemoteSettings();
   content.requestUpdate();
   await content.updateComplete;
-  lazy.IPProtectionService.isSignedIn = true;
 
   Assert.ok(content, "Panel content should be present");
   let toggle = content.connectionToggleEl;
@@ -87,7 +84,9 @@ add_task(async function toolbar_icon_status() {
 
   let vpnOnPromise = BrowserTestUtils.waitForEvent(
     lazy.IPProtectionService,
-    "IPProtectionService:Started"
+    "IPProtectionService:StateChanged",
+    false,
+    () => !!IPProtectionService.activatedAt
   );
   // Toggle the VPN on
   toggle.click();
@@ -109,8 +108,6 @@ add_task(async function toolbar_icon_status() {
   );
 
   cleanupService();
-  IPProtectionService.isEnrolled = false;
-  IPProtectionService.isEntitled = false;
 
   // Close the panel
   let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
@@ -126,17 +123,15 @@ add_task(async function toolbar_icon_status_new_window() {
     isSignedIn: true,
     isEnrolled: true,
   });
-  // Mock signing in
-  IPProtectionService.isSignedIn = false;
-  await IPProtectionService.updateSignInStatus();
+  await IPProtectionService.updateState();
 
-  let content = await openPanel({
-    isSignedIn: true,
-  });
+  let content = await openPanel();
 
   let vpnOnPromise = BrowserTestUtils.waitForEvent(
     lazy.IPProtectionService,
-    "IPProtectionService:Started"
+    "IPProtectionService:StateChanged",
+    false,
+    () => !!IPProtectionService.activatedAt
   );
   // Toggle the VPN on
   content.connectionToggleEl.click();
