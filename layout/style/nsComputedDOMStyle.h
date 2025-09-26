@@ -410,8 +410,7 @@ already_AddRefed<nsComputedDOMStyle> NS_NewComputedDOMStyle(
 inline AnchorPosResolutionParams AnchorPosResolutionParams::From(
     const nsComputedDOMStyle* aComputedDOMStyle) {
   return {aComputedDOMStyle->mOuterFrame,
-          aComputedDOMStyle->StyleDisplay()->mPosition,
-          aComputedDOMStyle->StylePosition()->mPositionArea};
+          aComputedDOMStyle->StyleDisplay()->mPosition};
 }
 
 #endif /* nsComputedDOMStyle_h__ */
