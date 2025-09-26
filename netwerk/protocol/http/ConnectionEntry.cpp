@@ -927,42 +927,14 @@ Http3ConnectionStatsParams ConnectionEntry::GetHttp3ConnectionStatsData() {
 }
 
 void ConnectionEntry::LogConnections() {
-  if (!mConnInfo->IsHttp3() && !mConnInfo->IsHttp3ProxyConnection()) {
-    LOG(("active urgent conns ["));
-    for (HttpConnectionBase* conn : mActiveConns) {
-      RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
-      MOZ_ASSERT(connTCP);
-      if (connTCP->IsUrgentStartPreferred()) {
-        LOG(("  %p", conn));
-      }
-    }
-    LOG(("] active regular conns ["));
-    for (HttpConnectionBase* conn : mActiveConns) {
-      RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
-      MOZ_ASSERT(connTCP);
-      if (!connTCP->IsUrgentStartPreferred()) {
-        LOG(("  %p", conn));
-      }
-    }
+  LOG(("active conns ["));
+  for (HttpConnectionBase* conn : mActiveConns) {
+    LOG(("  %p", conn));
+  }
 
-    LOG(("] idle urgent conns ["));
-    for (nsHttpConnection* conn : mIdleConns) {
-      if (conn->IsUrgentStartPreferred()) {
-        LOG(("  %p", conn));
-      }
-    }
-    LOG(("] idle regular conns ["));
-    for (nsHttpConnection* conn : mIdleConns) {
-      if (!conn->IsUrgentStartPreferred()) {
-        LOG(("  %p", conn));
-      }
-    }
-  } else {
-    LOG(("active conns ["));
-    for (HttpConnectionBase* conn : mActiveConns) {
-      LOG(("  %p", conn));
-    }
-    MOZ_ASSERT(mIdleConns.Length() == 0);
+  LOG(("] idle conns ["));
+  for (nsHttpConnection* conn : mIdleConns) {
+    LOG(("  %p", conn));
   }
   LOG(("]"));
 }

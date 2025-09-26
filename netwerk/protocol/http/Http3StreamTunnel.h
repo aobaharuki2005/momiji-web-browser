@@ -109,6 +109,7 @@ class Http3StreamTunnel final : public Http3Stream {
   void CleanupStream(nsresult aReason);
   void SetRequestDone();
   void HasDataToWrite();
+  void HasDataToRead();
 
   [[nodiscard]] nsresult ReadSegments() override;
   [[nodiscard]] nsresult WriteSegments() override;
