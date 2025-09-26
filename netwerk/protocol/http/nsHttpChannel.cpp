@@ -113,6 +113,7 @@
 #include "nsISocketProvider.h"
 #include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/net/Predictor.h"
+#include "mozilla/net/SFVService.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/NullPrincipal.h"
 #include "CacheControlParser.h"
@@ -5899,10 +5900,48 @@ nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
   rv = entry->SetMetaDataElement("original-response-headers", head.get());
   if (NS_FAILED(rv)) return rv;
 
+  // If this is being marked as a dictionary, add it to the list
+  self->ParseDictionary(entry, responseHead);
+
   // Indicate we have successfully finished setting metadata on the cache entry.
   rv = entry->MetaDataReady();
 
   return rv;
+}
+
+bool nsHttpChannel::ParseDictionary(nsICacheEntry* aEntry,
+                                    nsHttpResponseHead* aResponseHead) {
+  nsAutoCString val;
+  if (NS_SUCCEEDED(aResponseHead->GetHeader(nsHttp::Use_As_Dictionary, val))) {
+    nsAutoCStringN<128> matchVal;
+    nsAutoCStringN<64> matchIdVal;
+    nsTArray<nsCString> matchDestItems;
+    nsAutoCString typeVal;
+
+    if (!NS_ParseUseAsDictionary(val, matchVal, matchIdVal, matchDestItems,
+                                 typeVal)) {
+      return false;
+    }
+
+    nsCString key;
+    nsresult rv;
+    if (NS_FAILED(rv = aEntry->GetKey(key))) {
+      return false;
+    }
+    nsCString hash;
+    // Available now for use
+    RefPtr<DictionaryCache> dicts(DictionaryCache::GetInstance());
+    LOG(
+        ("Adding DictionaryCache entry for %s: key %s, matchval %s, id=%s, "
+         "type=%s",
+         mURI->GetSpecOrDefault().get(), key.get(), matchVal.get(),
+         matchIdVal.get(), typeVal.get()));
+    dicts->AddEntry(mURI, key, matchVal, matchIdVal, Some(hash),
+                    getter_AddRefs(mDict));
+    mDict->InUse();
+    return true;
+  }
+  return false;
 }
 
 nsresult nsHttpChannel::AddCacheEntryHeaders(nsICacheEntry* entry) {

@@ -412,6 +412,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   void CloseCacheEntry(bool doomOnFailure);
   [[nodiscard]] nsresult InitCacheEntry();
   void UpdateInhibitPersistentCachingFlag();
+  bool ParseDictionary(nsICacheEntry* aEntry,
+                       nsHttpResponseHead* aResponseHead);
   [[nodiscard]] nsresult AddCacheEntryHeaders(nsICacheEntry* entry);
   [[nodiscard]] nsresult FinalizeCacheEntry();
   [[nodiscard]] nsresult InstallCacheListener(int64_t offset = 0);
