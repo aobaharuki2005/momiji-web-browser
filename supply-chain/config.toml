@@ -179,6 +179,10 @@ audit-as-crates-io = false
 [policy.mp4parse_capi]
 audit-as-crates-io = false
 
+[policy.mtu]
+audit-as-crates-io = true
+notes = "This is a first-party crate which is also published to crates.io, but since <https://github.com/mozilla/neqo/pull/2897> part of <https://github.com/mozilla/neqo>."
+
 [policy.naga]
 audit-as-crates-io = true
 notes = "Part of the wgpu repository, pinned as the rest of wgpu crates."
