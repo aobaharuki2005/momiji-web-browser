@@ -8,7 +8,8 @@ let nowObj = new Date();
  * Normalizes a Date to midnight.
  *
  * @param {Date} inputDate
- * @return normalized Date
+ * @returns {Date}
+ *   The normalized date.
  */
 function toMidnight(inputDate) {
   let date = new Date(inputDate);
@@ -22,12 +23,12 @@ function toMidnight(inputDate) {
 /**
  * Adds a test URI visit to the database.
  *
- * @param aURI
- *        The URI to add a visit for.
- * @param aTime
- *        Reference "now" time.
- * @param aDayOffset
- *        number of days to add, pass a negative value to subtract them.
+ * @param {nsIURI} aURI
+ *   The URI to add a visit for.
+ * @param {Date} aTime
+ *   Reference "now" time.
+ * @param {number} aDayOffset
+ *   The number of days to add, pass a negative value to subtract them.
  */
 async function addNormalizedVisit(aURI, aTime, aDayOffset) {
   let dateObj = toMidnight(aTime);

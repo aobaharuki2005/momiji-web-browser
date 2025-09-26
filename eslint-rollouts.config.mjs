@@ -290,7 +290,6 @@ export default [
       "toolkit/components/passwordmgr/**",
       "toolkit/components/pdfjs/**",
       "toolkit/components/pictureinpicture/**",
-      "toolkit/components/places/tests/**",
       "toolkit/components/printing/content/**",
       "toolkit/components/processtools/tests/browser/browser_test_powerMetrics.js",
       "toolkit/components/promiseworker/worker/PromiseWorker.template.worker.js",

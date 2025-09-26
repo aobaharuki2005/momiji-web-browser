@@ -277,6 +277,7 @@ function compareArrayToResult(aArray, aRoot) {
  * result set.  It can accept either a queryData object or an array of queryData
  * objects.  If it gets an array, it only compares the first object in the array
  * to see if it is in the result set.
+ *
  * @returns {nsINavHistoryResultNode}: Either the node, if found, or null.
  *          If input is an array, returns a result only for the first node.
  *          To compare entire array, use the function above.
