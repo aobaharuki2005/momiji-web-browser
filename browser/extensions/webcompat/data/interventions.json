@@ -2335,7 +2335,7 @@
     "interventions": [
       {
         "platforms": ["desktop"],
-        "ua_string": ["add_Chrome"]
+        "ua_string": ["Safari_with_FxQuantum"]
       }
     ]
   },
@@ -2616,7 +2616,7 @@
       },
       {
         "platforms": ["linux", "mac"],
-        "ua_string": ["Safari"]
+        "ua_string": ["add_Safari"]
       }
     ]
   },

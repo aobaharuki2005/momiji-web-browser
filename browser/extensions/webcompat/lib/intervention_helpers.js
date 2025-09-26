@@ -278,7 +278,15 @@ var InterventionHelpers = {
       }
       return `${head}${fx}${major - 1}${tail.slice(major.toString().length)}`;
     },
+    add_Safari: (ua, config) => {
+      config.withFirefox = true;
+      return UAHelpers.safari(config);
+    },
     Safari: (ua, config) => {
+      return UAHelpers.safari(config);
+    },
+    Safari_with_FxQuantum: (ua, config) => {
+      config.withFxQuantum = true;
       return UAHelpers.safari(config);
     },
   },
