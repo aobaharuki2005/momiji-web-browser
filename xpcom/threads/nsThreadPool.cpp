@@ -494,13 +494,23 @@ nsThreadPool::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) {
 }
 
 NS_IMETHODIMP
-nsThreadPool::RegisterShutdownTask(nsITargetShutdownTask*) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+nsThreadPool::RegisterShutdownTask(nsITargetShutdownTask* aTask) {
+  NS_ENSURE_ARG(aTask);
+  MutexAutoLock lock(mMutex);
+  if (mShutdown) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  return mShutdownTasks.AddTask(aTask);
 }
 
 NS_IMETHODIMP
-nsThreadPool::UnregisterShutdownTask(nsITargetShutdownTask*) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+nsThreadPool::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
+  NS_ENSURE_ARG(aTask);
+  MutexAutoLock lock(mMutex);
+  if (mShutdown) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  return mShutdownTasks.RemoveTask(aTask);
 }
 
 NS_IMETHODIMP_(bool)
@@ -531,6 +541,28 @@ nsThreadPool::ShutdownWithTimeout(int32_t aTimeoutMs) {
     if (mShutdown) {
       return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
     }
+
+    // If we have any shutdown tasks, queue a task to ensure they're triggered
+    // before we block new thread creation.
+    if (!mShutdownTasks.IsEmpty()) {
+      PutEvent(
+          NS_NewRunnableFunction("nsThreadPool ShutdownTasks",
+                                 [tasks = mShutdownTasks.Extract()] {
+                                   for (nsITargetShutdownTask* task : tasks) {
+                                     task->TargetShutdown();
+                                   }
+                                 }),
+          NS_DISPATCH_NORMAL, lock);
+    }
+
+    // NOTE: We do this after adding ShutdownTasks, as no new threads can be
+    // started after `mShutdown` is set.
+    //
+    // FIXME: It might make sense to avoid changing thread creation and shutdown
+    // behaviour until all threads have gone idle, and we are no longer
+    // accepting events. This would unfortunately be fiddly without changing
+    // nsThreadPool to use bare PRThreads instead of nsThread due to the need to
+    // join each thread.
     name = mName;
     mShutdown = true;
     mIsAPoolThreadFree = false;
