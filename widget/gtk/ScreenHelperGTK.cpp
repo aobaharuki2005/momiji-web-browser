@@ -558,8 +558,6 @@ void ScreenGetterGtk::Finish() {
 }
 
 RefPtr<Screen> ScreenHelperGTK::GetScreenForWindow(nsWindow* aWindow) {
-  LOG_SCREEN("GetScreenForWindow() [%p]", aWindow);
-
   static auto s_gdk_display_get_monitor_at_window =
       (GdkMonitor * (*)(GdkDisplay*, GdkWindow*))
           dlsym(RTLD_DEFAULT, "gdk_display_get_monitor_at_window");
@@ -585,8 +583,15 @@ RefPtr<Screen> ScreenHelperGTK::GetScreenForWindow(nsWindow* aWindow) {
   int index = -1;
   while (GdkMonitor* m = GdkDisplayGetMonitor(display, ++index)) {
     if (m == monitor) {
-      return ScreenManager::GetSingleton().CurrentScreenList().SafeElementAt(
-          index);
+      RefPtr<Screen> screen =
+          ScreenManager::GetSingleton().CurrentScreenList().SafeElementAt(
+              index);
+#ifdef MOZ_LOGGING
+      auto rect = screen->GetRect();
+      LOG_SCREEN("GetScreenForWindow() [%p] [%d] screen [%d, %d] -> [%d x %d]",
+                 aWindow, index, rect.x, rect.y, rect.width, rect.height);
+#endif
+      return screen.forget();
     }
   }
 
