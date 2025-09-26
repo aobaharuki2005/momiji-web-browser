@@ -502,4 +502,10 @@ interface nsIHttpChannel : nsIIdentChannel
      * request such as `method` or `body` as late as possible.
      */
     [must_use] attribute boolean requestObserversCalled;
+
+    /**
+     * Used to indicate that user agent was overridden or override was reset
+     * and user agent on the channel is outdated.
+     */
+    [noscript, must_use] attribute boolean isUserAgentHeaderOutdated;
 };

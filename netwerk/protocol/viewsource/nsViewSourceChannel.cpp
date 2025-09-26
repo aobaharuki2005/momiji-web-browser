@@ -1017,6 +1017,18 @@ nsViewSourceChannel::SetRequestContextID(uint64_t rcid) {
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::GetIsUserAgentHeaderOutdated(bool* aValue) {
+  return !mHttpChannel ? NS_ERROR_NULL_POINTER
+                       : mHttpChannel->GetIsUserAgentHeaderOutdated(aValue);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetIsUserAgentHeaderOutdated(bool aValue) {
+  return !mHttpChannel ? NS_ERROR_NULL_POINTER
+                       : mHttpChannel->SetIsUserAgentHeaderOutdated(aValue);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::GetIsMainDocumentChannel(bool* aValue) {
   return !mHttpChannel ? NS_ERROR_NULL_POINTER
                        : mHttpChannel->GetIsMainDocumentChannel(aValue);

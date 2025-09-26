@@ -2359,6 +2359,19 @@ HttpBaseChannel::SetIsMainDocumentChannel(bool aValue) {
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::GetIsUserAgentHeaderOutdated(bool* aValue) {
+  NS_ENSURE_ARG_POINTER(aValue);
+  *aValue = LoadIsUserAgentHeaderOutdated();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetIsUserAgentHeaderOutdated(bool aValue) {
+  StoreIsUserAgentHeaderOutdated(aValue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetProtocolVersion(nsACString& aProtocolVersion) {
   // Try to use ALPN if available and if it is not for a proxy, i.e if an
   // https proxy was not used or if https proxy was used but the connection to

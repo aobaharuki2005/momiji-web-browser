@@ -371,6 +371,16 @@ ObliviousHttpChannel::SetRequestContextID(uint64_t rcID) {
 }
 
 NS_IMETHODIMP
+ObliviousHttpChannel::GetIsUserAgentHeaderOutdated(bool* aValue) {
+  return mInnerChannel->GetIsUserAgentHeaderOutdated(aValue);
+}
+
+NS_IMETHODIMP
+ObliviousHttpChannel::SetIsUserAgentHeaderOutdated(bool aValue) {
+  return mInnerChannel->SetIsUserAgentHeaderOutdated(aValue);
+}
+
+NS_IMETHODIMP
 ObliviousHttpChannel::GetProtocolVersion(nsACString& aProtocolVersion) {
   return mInnerChannel->GetProtocolVersion(aProtocolVersion);
 }

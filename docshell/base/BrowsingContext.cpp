@@ -3415,6 +3415,13 @@ void BrowsingContext::DidSet(FieldIndex<IDX_UserAgentOverride>) {
     if (shell) {
       shell->ClearCachedUserAgent();
     }
+
+    if (nsCOMPtr<Document> doc = aContext->GetExtantDocument()) {
+      if (nsCOMPtr<nsIHttpChannel> httpChannel =
+              do_QueryInterface(doc->GetChannel())) {
+        Unused << httpChannel->SetIsUserAgentHeaderOutdated(true);
+      }
+    }
   });
 }
 

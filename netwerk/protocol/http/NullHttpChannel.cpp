@@ -276,6 +276,16 @@ NullHttpChannel::GetEncodedBodySize(uint64_t* aEncodedBodySize) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+NullHttpChannel::GetIsUserAgentHeaderOutdated(bool* aValue) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::SetIsUserAgentHeaderOutdated(bool aValue) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void NullHttpChannel::SetSource(
     mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource) {}
 
