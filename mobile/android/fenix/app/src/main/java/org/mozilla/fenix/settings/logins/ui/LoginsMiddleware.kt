@@ -31,6 +31,7 @@ import org.mozilla.fenix.settings.SupportUtils
  * @param openTab Invoked when opening a tab when a login url is clicked.
  * @param ioDispatcher Coroutine dispatcher for IO operations.
  * @param clipboardManager For copying logins URLs.
+ * @param refreshLoginsList Invoked to refresh the logins list.
  */
 @Suppress("LongParameterList")
 internal class LoginsMiddleware(
@@ -41,6 +42,7 @@ internal class LoginsMiddleware(
     private val openTab: (url: String, openInNewTab: Boolean) -> Unit,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val clipboardManager: ClipboardManager?,
+    private val refreshLoginsList: Store<LoginsState, LoginsAction>.() -> Unit = { dispatch(Init) },
 ) : Middleware<LoginsState, LoginsAction> {
 
     private val scope = CoroutineScope(ioDispatcher)
@@ -55,7 +57,7 @@ internal class LoginsMiddleware(
         next(action)
 
         when (action) {
-            is LoginsListAppeared -> {
+            Init -> {
                 context.store.loadLoginsList()
             }
             is SearchLogins -> {
@@ -97,7 +99,7 @@ internal class LoginsMiddleware(
                 openTab(action.url, true)
             }
             is LoginsDetailBackClicked -> {
-                handleLoginsDetailsBackPressed()
+                context.store.handleLoginsDetailsBackPressed()
             }
             is DetailLoginAction.CopyUsernameClicked -> {
                 handleUsernameClicked(action.username)
@@ -120,12 +122,10 @@ internal class LoginsMiddleware(
             is EditLoginAction.SaveEditClicked -> {
                 context.store.handleEditLogin(loginItem = action.login)
             }
-            is UnlockScreenAction.LeaveTapped -> exitLogins()
-            is UnlockScreenAction.UnlockTapped,
-            is LifecycleAction.OnResume,
-            is BiometricAuthenticationAction.Started,
-            is BiometricAuthenticationAction.Succeeded,
-            is BiometricAuthenticationAction.Failed,
+            is BiometricAuthenticationAction.AuthenticationSucceeded,
+            is BiometricAuthenticationAction.AuthenticationInProgress,
+            is BiometricAuthenticationAction.AuthenticationFailed,
+            is PinVerificationAction,
             is LoginsLoaded,
             is EditLoginAction.UsernameChanged,
             is EditLoginAction.PasswordChanged,
@@ -133,10 +133,10 @@ internal class LoginsMiddleware(
             is AddLoginAction.HostChanged,
             is AddLoginAction.UsernameChanged,
             is AddLoginAction.PasswordChanged,
+            is BiometricAuthenticationDialogAction,
             is DetailLoginMenuAction.DeleteLoginMenuItemClicked,
             is LoginDeletionDialogAction.CancelTapped,
             is ViewDisposed,
-            is LifecycleAction.OnPause,
             -> Unit
         }
     }
@@ -209,7 +209,9 @@ internal class LoginsMiddleware(
             }
         }
 
-    private fun handleLoginsDetailsBackPressed() = scope.launch {
+    private fun Store<LoginsState, LoginsAction>.handleLoginsDetailsBackPressed() = scope.launch {
+        refreshLoginsList()
+
         withContext(Dispatchers.Main) {
             getNavController().navigate(LoginsDestinations.LIST)
         }

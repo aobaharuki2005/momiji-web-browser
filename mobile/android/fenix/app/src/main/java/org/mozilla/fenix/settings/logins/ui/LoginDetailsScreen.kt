@@ -85,26 +85,33 @@ internal fun LoginDetailsScreen(store: LoginsStore) {
             )
         },
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Spacer(modifier = Modifier.height(FirefoxTheme.layout.space.static200))
-            LoginDetailsUrl(store = store, url = detailState.login.url)
-            Spacer(modifier = Modifier.height(8.dp))
-            LoginDetailsUsername(
-                store = store,
-                snackbarHostState = snackbarHostState,
-                username = detailState.login.username,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            LoginDetailsPassword(
-                store = store,
-                snackbarHostState = snackbarHostState,
-                password = detailState.login.password,
-            )
+
+        if (state.biometricAuthenticationDialogState.shouldShow) {
+            BiometricAuthenticationDialog(store = store)
+        }
+
+        if (state.biometricAuthenticationState == BiometricAuthenticationState.Authorized) {
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(modifier = Modifier.height(FirefoxTheme.layout.space.static200))
+                LoginDetailsUrl(store = store, url = detailState.login.url)
+                Spacer(modifier = Modifier.height(8.dp))
+                LoginDetailsUsername(
+                    store = store,
+                    snackbarHostState = snackbarHostState,
+                    username = detailState.login.username,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LoginDetailsPassword(
+                    store = store,
+                    snackbarHostState = snackbarHostState,
+                    password = detailState.login.password,
+                )
+            }
         }
     }
 }
