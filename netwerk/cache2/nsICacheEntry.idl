@@ -60,6 +60,11 @@ interface nsICacheEntry : nsISupports
   readonly attribute boolean persistent;
 
   /**
+   * Get if the cache file is READY
+   */
+  readonly attribute boolean ready;
+
+  /**
    * Get the number of times the cache entry has been opened.
    */
   readonly attribute uint32_t  fetchCount;

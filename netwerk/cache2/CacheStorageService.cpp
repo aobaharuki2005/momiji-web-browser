@@ -1606,6 +1606,13 @@ nsresult CacheStorageService::AddStorageEntry(
         StaticPrefs::network_cache_bug1708673()) {
       return NS_ERROR_CACHE_KEY_NOT_FOUND;
     }
+    if (entryExists && (aFlags & nsICacheStorage::OPEN_COMPLETE_ONLY)) {
+      bool ready = false;
+      entry->GetReady(&ready);
+      if (!ready) {
+        return NS_ERROR_CACHE_KEY_NOT_FOUND;
+      }
+    }
 
     bool replace = aFlags & nsICacheStorage::OPEN_TRUNCATE;
 
