@@ -9936,7 +9936,7 @@ impl PropDef {
                 .to_css(&mut CssWriter::new(&mut syntax))
                 .unwrap();
         };
-        let initial_value = property_registration.data.initial_value.to_css_nscstring();
+        let initial_value = property_registration.data.initial_value.to_css_cssstring();
         PropDef {
             name,
             syntax,
