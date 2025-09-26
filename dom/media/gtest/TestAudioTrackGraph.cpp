@@ -3400,13 +3400,16 @@ TEST(TestAudioTrackGraph, EmptyProcessingInterval)
   (void)WaitFor(destroyPromise).unwrap()[0];
 }
 
+#ifndef ANDROID  // Workaround for bug 1987870 making GTEST_SKIP() ineffective.
 TEST(TestAudioTrackGraph, DefaultOutputDeviceIDTracking)
 {
-#ifdef ANDROID
+#  if 0  // Bug 1987870, see above.
+#    ifdef ANDROID
   GTEST_SKIP() << "On Android CubebDeviceEnumerator, not the cubeb backend, "
                   "handles device enumeration, exposing only a single input "
                   "and output device. Both with devid 0.";
-#endif
+#    endif
+#  endif
   MockCubeb* cubeb = new MockCubeb(MockCubeb::RunningMode::Manual);
   AddDevices(cubeb, 1, CUBEB_DEVICE_TYPE_INPUT);
   AddDevices(cubeb, 2, CUBEB_DEVICE_TYPE_OUTPUT);
@@ -3513,6 +3516,7 @@ TEST(TestAudioTrackGraph, DefaultOutputDeviceIDTracking)
   // destroy our cubeb.
   (void)WaitFor(destroyPromise).unwrap()[0];
 }
+#endif
 
 #undef Invoke
 #undef DispatchFunction
