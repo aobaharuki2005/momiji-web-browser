@@ -7,6 +7,7 @@ loader: taskgraph.loader.transform:loader
 transforms:
     - taskgraph.transforms.from_deps
     - gecko_taskgraph.transforms.upload_symbols
+    - gecko_taskgraph.transforms.copy_cached_dep
     - gecko_taskgraph.transforms.job
     - gecko_taskgraph.transforms.task
 
@@ -20,8 +21,6 @@ tasks:
             with-attributes:
                 dxc-crash-symbols: [true]
                 enable-full-crashsymbols: [true]
-        if-dependencies:
-            - toolchain
         worker-type: b-linux-amd
         worker:
             docker-image: {in-tree: "lint"}
