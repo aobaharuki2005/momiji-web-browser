@@ -3065,6 +3065,18 @@ export var UpdateChecker = function (
     } else {
       updateURL = Services.prefs.getCharPref(PREF_EM_UPDATE_URL);
     }
+  } else {
+    // Ensure that add-ons from the China repack can update (bug 1990806).
+    const UPDATE_URL_CN_OLD =
+      "https://addons.firefox.com.cn/chinaedition/addons/updates.json";
+    const UPDATE_URL_CN_NEW =
+      "https://archive.mozilla.org/pub/cn_pack/addons.json";
+    if (updateURL.startsWith(UPDATE_URL_CN_OLD)) {
+      logger.warn(
+        `update_url changed for add-on ${aAddon.id} version ${aAddon.version}, from ${updateURL} to ${UPDATE_URL_CN_NEW}`
+      );
+      updateURL = UPDATE_URL_CN_NEW;
+    }
   }
 
   const UPDATE_TYPE_COMPATIBILITY = 32;
