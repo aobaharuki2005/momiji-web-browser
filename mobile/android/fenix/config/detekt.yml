@@ -624,12 +624,12 @@ style:
       - '1000' # millis in second
     ignoreHashCodeFunction: true
     ignorePropertyDeclaration: true # Enabled for Compose in https://github.com/mozilla-mobile/android-components/issues/11864
-    ignoreLocalVariableDeclaration: true
+    ignoreLocalVariableDeclaration: true # (Default: false) Enabled in https://bugzilla.mozilla.org/show_bug.cgi?id=1987018
     ignoreConstantDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
     ignoreAnnotation: false
     ignoreNamedArgument: true
-    ignoreEnums: true
+    ignoreEnums: true # (Default: false) Enabled in https://bugzilla.mozilla.org/show_bug.cgi?id=1987018
     ignoreRanges: false
     ignoreExtensionFunctions: true
   MandatoryBracesLoops:
