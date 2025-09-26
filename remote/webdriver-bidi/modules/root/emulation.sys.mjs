@@ -69,7 +69,6 @@ const SCREEN_ORIENTATION_VALUES_LISTS = {
 };
 
 class EmulationModule extends RootBiDiModule {
-  #originalUserAgents;
   /**
    * Create a new module instance.
    *
@@ -78,15 +77,9 @@ class EmulationModule extends RootBiDiModule {
    */
   constructor(messageHandler) {
     super(messageHandler);
-
-    // The map between browsing context ids and original user agents
-    // to restore when resetting the override.
-    this.#originalUserAgents = new Map();
   }
 
-  destroy() {
-    this.#originalUserAgents = null;
-  }
+  destroy() {}
 
   /**
    * Used as an argument for emulation.setGeolocationOverride command
@@ -1022,7 +1015,6 @@ class EmulationModule extends RootBiDiModule {
       await this.messageHandler.updateSessionData(sessionDataItems);
     }
 
-    const commands = [];
     for (const navigable of navigables) {
       const [overridePerContext, overridePerUserContext, overrideGlobal] =
         this.#findExistingOverrideForContext("user-agent-override", navigable);
@@ -1052,12 +1044,8 @@ class EmulationModule extends RootBiDiModule {
         continue;
       }
 
-      commands.push(
-        this._setUserAgentOverride({ context: navigable, userAgent })
-      );
+      this._setUserAgentOverride({ context: navigable, userAgent });
     }
-
-    await Promise.all(commands);
   }
 
   /**
@@ -1159,32 +1147,14 @@ class EmulationModule extends RootBiDiModule {
    *     User agent string which has to override
    *     the browser user agent.
    */
-  async _setUserAgentOverride(options) {
-    const { context } = options;
-    let { userAgent } = options;
-
-    // TODO: Bug 1705326. Remove this workaround when the platform API
-    // can reset the override properly.
-    const contextId = lazy.TabManager.getIdForBrowsingContext(context);
-    if (userAgent === "") {
-      if (this.#originalUserAgents.has(contextId)) {
-        userAgent = this.#originalUserAgents.get(contextId);
-        this.#originalUserAgents.delete(contextId);
-      }
-    } else if (!this.#originalUserAgents.has(contextId)) {
-      const originalUserAgent = await this._forwardToWindowGlobal(
-        "_getUserAgent",
-        context.id,
-        {},
-        { retryOnAbort: true }
-      );
-
-      this.#originalUserAgents.set(contextId, originalUserAgent);
-    }
+  _setUserAgentOverride(options) {
+    const { context, userAgent } = options;
 
     try {
       context.customUserAgent = userAgent;
     } catch (e) {
+      const contextId = lazy.TabManager.getIdForBrowsingContext(context);
+
       lazy.logger.warn(
         `Failed to override user agent for context with id: ${contextId} (${e.message})`
       );

@@ -18,13 +18,6 @@ class EmulationModule extends WindowGlobalBiDiModule {
   _applySessionData() {}
 
   /**
-   * Get the user agent value.
-   */
-  async _getUserAgent() {
-    return this.messageHandler.window.navigator.userAgent;
-  }
-
-  /**
    * Set the geolocation override to the navigable.
    *
    * @param {object=} params
