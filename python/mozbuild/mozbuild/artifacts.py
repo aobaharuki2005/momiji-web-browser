@@ -1218,7 +1218,7 @@ class Artifacts:
         self._jj = jj
         if self._jj:
             self._git_root = subprocess.check_output(
-                [self._jj, "git", "root"], universal_newlines=True
+                [self._jj, "git", "root"], universal_newlines=True, cwd=topsrcdir
             ).strip()
         else:
             self._git_root = None
