@@ -188,6 +188,9 @@ BackgroundEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aRunnable,
 
 NS_IMETHODIMP
 BackgroundEventTarget::RegisterShutdownTask(nsITargetShutdownTask* aTask) {
+  MOZ_ASSERT_UNREACHABLE(
+      "If we start to hand out direct access to"
+      "BackgroundEventTarget, we probably want to implement this.");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
