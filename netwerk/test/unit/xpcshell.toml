@@ -1156,6 +1156,8 @@ skip-if = ["socketprocess_networking"] # Bug 1614708
 skip-if = [
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && opt",
   "os == 'win' && os_version == '11.26100' && processor == 'x86' && opt",
+  "os == 'win' && os_version == '11.2009' && processor == 'x86_64' && opt", # Bug 1866777
+  "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1866777
 ]
 
 ["test_range_requests.js"]
