@@ -62,7 +62,8 @@ class BrotliWrapper {
       return false;
     }
     // XXX Wait for dictionary to be read into RAM!!
-    if (NS_SUCCEEDED(httpchannel->GetDictionary(getter_AddRefs(mDictionary))) &&
+    if (NS_SUCCEEDED(httpchannel->GetDecompressDictionary(
+            getter_AddRefs(mDictionary))) &&
         mDictionary) {
       size_t length = mDictionary->GetDictionary().length();
       DICTIONARY_LOG(("Brotli: dictionary %zu bytes", length));
@@ -111,8 +112,8 @@ class ZstdWrapper {
       nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aRequest));
       if (httpchannel) {
         // XXX Wait for dictionary to be read into RAM!!
-        if (NS_FAILED(
-                httpchannel->GetDictionary(getter_AddRefs(mDictionary))) ||
+        if (NS_FAILED(httpchannel->GetDecompressDictionary(
+                getter_AddRefs(mDictionary))) ||
             !mDictionary) {
           return;
         }
@@ -368,7 +369,7 @@ nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsresult aStatus) {
     RefPtr<DictionaryCacheEntry> dict;
     nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(request));
     if (httpchannel) {
-      httpchannel->SetDictionary(nullptr);
+      httpchannel->SetDecompressDictionary(nullptr);
     }
     // paranoia
     mBrotli = nullptr;
