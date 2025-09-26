@@ -2007,8 +2007,8 @@
     },
     "interventions": [
       {
-        "platforms": ["desktop"],
-        "ua_string": ["add_Chrome"]
+        "platforms": ["all"],
+        "ua_string": ["Chrome"]
       }
     ]
   },
