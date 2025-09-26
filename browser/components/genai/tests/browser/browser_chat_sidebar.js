@@ -321,3 +321,34 @@ add_task(async function test_keyboard_shortcut() {
     "Already opened"
   );
 });
+
+/**
+ * Check Picture in Picture actors are not attached in sidebar chatbot
+ */
+add_task(async function test_pip_actor_not_chat_sidebar() {
+  await BrowserTestUtils.withNewTab("about:blank", async browser => {
+    const wgp = browser.browsingContext.currentWindowGlobal;
+    const actor = wgp.getActor("PictureInPicture");
+    Assert.ok(actor, "PiP actor is attached in the tab content");
+
+    await SidebarController.show("viewGenaiChatSidebar");
+
+    const chatbotBrowser = await TestUtils.waitForCondition(() => {
+      const { document } = SidebarController.browser.contentWindow;
+      const chatbotBrowserContainer =
+        document.getElementById("browser-container");
+      return chatbotBrowserContainer.querySelector("browser");
+    }, "Chatbot <browser> is loaded in the sidebar");
+
+    Assert.throws(
+      () =>
+        chatbotBrowser.browsingContext.currentWindowGlobal.getActor(
+          "PictureInPicture"
+        ),
+      /doesn't match message manager group/i,
+      "Getting PiP actor in sidebar chatbot should throw"
+    );
+
+    await SidebarController.hide();
+  });
+});
