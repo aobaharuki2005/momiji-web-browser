@@ -116,8 +116,7 @@ class Navigation final : public DOMEventTargetHelper {
 
   MOZ_CAN_RUN_SCRIPT bool FirePushReplaceReloadNavigateEvent(
       JSContext* aCx, NavigationType aNavigationType, nsIURI* aDestinationURL,
-      bool aIsSameDocument, bool aIsSync,
-      Maybe<UserNavigationInvolvement> aUserInvolvement,
+      bool aIsSameDocument, Maybe<UserNavigationInvolvement> aUserInvolvement,
       Element* aSourceElement, already_AddRefed<FormData> aFormDataEntryList,
       nsIStructuredCloneContainer* aNavigationAPIState,
       nsIStructuredCloneContainer* aClassicHistoryAPIState);
@@ -132,6 +131,9 @@ class Navigation final : public DOMEventTargetHelper {
       bool aFocusChangedDuringOngoingNavigation);
 
   bool HasOngoingNavigateEvent() const;
+
+  MOZ_CAN_RUN_SCRIPT
+  void InnerInformAboutAbortingNavigation(JSContext* aCx);
 
   MOZ_CAN_RUN_SCRIPT
   void AbortOngoingNavigation(

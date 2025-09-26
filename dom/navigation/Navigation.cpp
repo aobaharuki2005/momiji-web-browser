@@ -941,22 +941,15 @@ bool Navigation::FireTraverseNavigateEvent(
 // https://html.spec.whatwg.org/#fire-a-push/replace/reload-navigate-event
 bool Navigation::FirePushReplaceReloadNavigateEvent(
     JSContext* aCx, NavigationType aNavigationType, nsIURI* aDestinationURL,
-    bool aIsSameDocument, bool aIsSync,
-    Maybe<UserNavigationInvolvement> aUserInvolvement, Element* aSourceElement,
-    already_AddRefed<FormData> aFormDataEntryList,
+    bool aIsSameDocument, Maybe<UserNavigationInvolvement> aUserInvolvement,
+    Element* aSourceElement, already_AddRefed<FormData> aFormDataEntryList,
     nsIStructuredCloneContainer* aNavigationAPIState,
     nsIStructuredCloneContainer* aClassicHistoryAPIState) {
   // To not unnecessarily create an event that's never used, step 1 and step 2
   // in #fire-a-push/replace/reload-navigate-event have been moved to after step
   // 25 in #inner-navigate-event-firing-algorithm in our implementation.
 
-  // This is currently not how spec handles this.
-  // See https://github.com/whatwg/html/issues/11184
-  if (aIsSync) {
-    while (HasOngoingNavigateEvent()) {
-      AbortOngoingNavigation(aCx);
-    }
-  }
+  InnerInformAboutAbortingNavigation(aCx);
 
   // Step 3 to step 7
   RefPtr<NavigationDestination> destination =
@@ -1621,6 +1614,16 @@ void Navigation::PromoteUpcomingAPIMethodTrackerToOngoing(
       navigation->mUpcomingTraverseAPIMethodTrackers.Contains(*key));
 
   navigation->mUpcomingTraverseAPIMethodTrackers.Remove(*key);
+}
+
+// https://html.spec.whatwg.org/#inform-the-navigation-api-about-aborting-navigation
+void Navigation::InnerInformAboutAbortingNavigation(JSContext* aCx) {
+  // As per https://github.com/whatwg/html/issues/11579, we should abort all
+  // ongoing navigate events within "inform the navigation API about aborting
+  // navigation".
+  while (HasOngoingNavigateEvent()) {
+    AbortOngoingNavigation(aCx);
+  }
 }
 
 // https://html.spec.whatwg.org/#abort-the-ongoing-navigation

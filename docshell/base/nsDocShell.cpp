@@ -3970,8 +3970,7 @@ nsresult nsDocShell::ReloadNavigable(
     if (navigation &&
         !navigation->FirePushReplaceReloadNavigateEvent(
             *aCx, NavigationType::Reload, destinationURL,
-            /* aIsSameDocument */ false, /* aIsSync */ false,
-            Some(aUserInvolvement),
+            /* aIsSameDocument */ false, Some(aUserInvolvement),
             /* aSourceElement*/ nullptr, /* aFormDataEntryList */ nullptr,
             destinationNavigationAPIState,
             /* aClassiCHistoryAPIState */ nullptr)) {
@@ -8955,7 +8954,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
         // Step 4
         bool shouldContinue = navigation->FirePushReplaceReloadNavigateEvent(
             jsapi.cx(), aLoadState->GetNavigationType(), newURI,
-            /* aIsSameDocument */ true, /* aIsSync */ true,
+            /* aIsSameDocument */ true,
             Some(aLoadState->UserNavigationInvolvement()), sourceElement,
             /* aFormDataEntryList */ nullptr,
             /* aNavigationAPIState */ destinationNavigationAPIState,
@@ -9721,7 +9720,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
           // Step 21.4
           bool shouldContinue = navigation->FirePushReplaceReloadNavigateEvent(
               jsapi.cx(), aLoadState->GetNavigationType(), destinationURL,
-              /* aIsSameDocument */ false, /* aIsSync */ false,
+              /* aIsSameDocument */ false,
               Some(aLoadState->UserNavigationInvolvement()), sourceElement,
               formData.forget(), navigationAPIStateForFiring,
               /* aClassicHistoryAPIState */ nullptr);
@@ -11835,7 +11834,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
       bool shouldContinue = navigation->FirePushReplaceReloadNavigateEvent(
           aCx, aReplace ? NavigationType::Replace : NavigationType::Push,
           newURI,
-          /* aIsSameDocument */ true, /* aIsSync */ true,
+          /* aIsSameDocument */ true,
           /* aUserInvolvement */ Nothing(),
           /* aSourceElement */ nullptr, /* aFormDataEntryList */ nullptr,
           /* aNavigationAPIState */ nullptr, scContainer);
@@ -14509,18 +14508,14 @@ void nsDocShell::InformNavigationAPIAboutAbortingNavigation() {
     return;
   }
 
-  // Step 3
-  if (!navigation->HasOngoingNavigateEvent()) {
-    return;
-  }
-
   AutoJSAPI jsapi;
   if (!jsapi.Init(navigation->GetOwnerGlobal())) {
     return;
   }
 
-  // Step 4
-  navigation->AbortOngoingNavigation(jsapi.cx());
+  // Steps 3 & 4
+  // See https://github.com/whatwg/html/issues/11579
+  navigation->InnerInformAboutAbortingNavigation(jsapi.cx());
 }
 
 // https://html.spec.whatwg.org/#inform-the-navigation-api-about-child-navigable-destruction
