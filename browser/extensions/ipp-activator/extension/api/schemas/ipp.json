@@ -116,15 +116,7 @@
         "parameters": [
           {
             "name": "listener",
-            "type": "function",
-            "parameters": [
-              {
-                "name": "details",
-                "type": "object",
-                "optional": true,
-                "properties": {}
-              }
-            ]
+            "type": "function"
           }
         ]
       },
