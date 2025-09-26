@@ -20,7 +20,7 @@ pub use conic::*;
 #[repr(u8)]
 #[derive(Copy, Clone, Debug)]
 pub enum GradientKind {
-    #[allow(unused)] Linear = 0,
+    Linear = 0,
     Radial = 1,
     Conic = 2,
 }

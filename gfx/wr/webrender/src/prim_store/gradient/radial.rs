@@ -341,7 +341,7 @@ impl InternablePrimitive for RadialGradient {
         PrimitiveInstanceKind::RadialGradient {
             data_handle,
             visible_tiles_range: GradientTileRange::empty(),
-            cached: true,
+            use_legacy_path: true,
         }
     }
 }

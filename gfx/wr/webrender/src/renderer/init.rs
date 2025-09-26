@@ -209,6 +209,7 @@ pub struct WebRenderOptions {
     pub enable_debugger: bool,
 
     /// Use a more precise method for sampling gradients.
+    pub precise_linear_gradients: bool,
     pub precise_radial_gradients: bool,
     pub precise_conic_gradients: bool,
 }
@@ -284,6 +285,7 @@ impl Default for WebRenderOptions {
             low_quality_pinch_zoom: false,
             max_shared_surface_size: 2048,
             enable_debugger: true,
+            precise_linear_gradients: false,
             precise_radial_gradients: false,
             precise_conic_gradients: false,
         }
@@ -582,6 +584,7 @@ pub fn create_webrender_instance(
         low_quality_pinch_zoom: options.low_quality_pinch_zoom,
         max_shared_surface_size: options.max_shared_surface_size,
         enable_dithering: options.enable_dithering,
+        precise_linear_gradients: options.precise_linear_gradients,
         precise_radial_gradients: options.precise_radial_gradients,
         precise_conic_gradients: options.precise_conic_gradients,
     };
