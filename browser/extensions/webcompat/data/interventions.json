@@ -2243,9 +2243,7 @@
     "interventions": [
       {
         "platforms": ["all"],
-        "content_scripts": {
-          "js": ["bug1898934-tza.red-prevent-unsupported-message.js"]
-        }
+        "ua_string": ["change_Firefox_to_FireFox"]
       }
     ]
   },
