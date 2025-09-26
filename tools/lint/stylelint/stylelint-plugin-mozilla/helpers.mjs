@@ -128,6 +128,7 @@ export const containsColorFunction = value => {
  * Looks to see if a value is included in our token var() array.
  *
  * @param {string} value some CSS declaration to match
+ * @param {string} tokenCSS the token to match against
  * @returns {boolean}
  */
 export const isToken = (value, tokenCSS) => tokenCSS.includes(value);
