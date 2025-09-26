@@ -21,6 +21,10 @@ ChromeUtils.defineESModuleGetters(this, {
   updateAppInfo: "resource://testing-common/AppInfo.sys.mjs",
 });
 
+/**
+ * @import {AppProvidedConfigEngine} from "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs"
+ */
+
 const GLOBAL_SCOPE = this;
 const TEST_DEBUG = Services.env.get("TEST_DEBUG");
 
@@ -83,6 +87,9 @@ async function maybeSetupConfig() {
  *   The expected partner code property of the search engine.
  * @property {string} [searchUrlCode]
  *   The expected parameter name and value for the partner code in the search URL.
+ * @property {string} [searchUrlParamNotInQuery]
+ *   When specified, this parameter should not be included in the query part of
+ *   the search URL.
  * @property {string} [suggestUrlCode]
  *   Expected parameter name and value within the suggestion URL, e.g. for checking
  *   regional parameters.
@@ -203,6 +210,14 @@ class SearchConfigTest {
     }
   }
 
+  /**
+   * Processes the configuration to get the search engines for the specified
+   * region/locale.
+   *
+   * @param {string} region
+   * @param {string} locale
+   * @returns {Promise<{engines: AppProvidedConfigEngine[], appDefaultEngineId: string}>}
+   */
   async _getEngines(region, locale) {
     let configs = await this.#engineSelector.fetchEngineConfiguration({
       locale,
@@ -217,7 +232,7 @@ class SearchConfigTest {
   }
 
   /**
-   * @returns {Set} the list of regions for the tests to run with.
+   * @returns {Set<?string>} the list of regions for the tests to run with.
    */
   get _regions() {
     // TODO: The legacy configuration worked with null as an unknown region,
@@ -227,7 +242,10 @@ class SearchConfigTest {
     if (TEST_DEBUG) {
       return new Set(["by", "cn", "kz", "us", "ru", "tr", null]);
     }
-    return [...Services.intl.getAvailableLocaleDisplayNames("region"), null];
+    return new Set([
+      ...Services.intl.getAvailableLocaleDisplayNames("region"),
+      null,
+    ]);
   }
 
   /**
@@ -253,10 +271,10 @@ class SearchConfigTest {
   }
 
   /**
-   * Determines if a locale/region pair match a section of the configuration.
+   * Determines if a locale/region pair matches a section of the test details.
    *
-   * @param {object} section
-   *   The configuration section to match against.
+   * @param {RegionLocaleDetails[]} section
+   *   The region/locale details to match against.
    * @param {string} region
    *   The two-letter region code.
    * @param {string} locale
@@ -280,13 +298,13 @@ class SearchConfigTest {
   /**
    * Helper function to find an engine from within a list.
    *
-   * @param {Array} engines
+   * @param {AppProvidedConfigEngine[]} engines
    *   The list of engines to check.
    * @param {string} identifier
    *   The identifier to look for in the list.
    * @param {boolean} exactMatch
    *   Whether to use an exactMatch for the identifier.
-   * @returns {Engine}
+   * @returns {AppProvidedConfigEngine}
    *   Returns the engine if found, null otherwise.
    */
   _findEngine(engines, identifier, exactMatch) {
@@ -298,9 +316,10 @@ class SearchConfigTest {
   }
 
   /**
-   * Asserts whether the engines rules defined in the configuration are met.
+   * Asserts whether the engines rules in the test section are met for the
+   * associated engine.
    *
-   * @param {Array} engines
+   * @param {AppProvidedConfigEngine[]} engines
    *   The list of engines to check.
    * @param {string} region
    *   The two-letter region code.
@@ -370,7 +389,11 @@ class SearchConfigTest {
    */
   _assertDefaultEngines(region, locale) {
     this._assertEngineRules(
-      [Services.search.appDefaultEngine],
+      [
+        /** @type {AppProvidedConfigEngine} */ (
+          Services.search.appDefaultEngine
+        ),
+      ],
       region,
       locale,
       "default"
@@ -378,7 +401,11 @@ class SearchConfigTest {
     // At the moment, this uses the same section as the normal default, as
     // we don't set this differently for any region/locale.
     this._assertEngineRules(
-      [Services.search.appPrivateDefaultEngine],
+      [
+        /** @type {AppProvidedConfigEngine} */ (
+          Services.search.appPrivateDefaultEngine
+        ),
+      ],
       region,
       locale,
       "default"
@@ -392,7 +419,7 @@ class SearchConfigTest {
    *   The two-letter region code.
    * @param {string} locale
    *   The two-letter locale code.
-   * @param {Array} engines
+   * @param {AppProvidedConfigEngine[]} engines
    *   The current visible engines.
    * @returns {boolean}
    *   Returns true if the engine is expected to be present, false otherwise.
@@ -408,7 +435,7 @@ class SearchConfigTest {
    *   The two-letter region code.
    * @param {string} locale
    *   The two-letter locale code.
-   * @param {Array} engines
+   * @param {AppProvidedConfigEngine[]} engines
    *   The current visible engines.
    */
   _assertEngineDetails(region, locale, engines) {
@@ -484,9 +511,9 @@ class SearchConfigTest {
    *
    * @param {string} location
    *   Debug string with locale + region information.
-   * @param {object} engine
+   * @param {AppProvidedConfigEngine} engine
    *   The engine being tested.
-   * @param {object} rules
+   * @param {EngineRuleDetails & DeploymentDetails} rules
    *   Rules to test.
    */
   _assertCorrectDomains(location, engine, rules) {
@@ -524,9 +551,9 @@ class SearchConfigTest {
    *
    * @param {string} location
    *   Debug string with locale + region information.
-   * @param {object} engine
+   * @param {AppProvidedConfigEngine} engine
    *   The engine being tested.
-   * @param {object} rule
+   * @param {EngineRuleDetails & DeploymentDetails} rule
    *   Rules to test.
    */
   _assertCorrectUrlCode(location, engine, rule) {
@@ -537,11 +564,11 @@ class SearchConfigTest {
         `Expected "${rule.searchUrlCode}" in search url "${submission.uri.spec}"`
       );
     }
-    if (rule.searchUrlCodeNotInQuery) {
+    if (rule.searchUrlParamNotInQuery) {
       const submission = engine.getSubmission("test", URLTYPE_SEARCH_HTML);
       this.assertOk(
-        submission.uri.query.includes(rule.searchUrlCodeNotInQuery),
-        `Expected "${rule.searchUrlCodeNotInQuery}" in search url "${submission.uri.spec}"`
+        !submission.uri.query.includes(rule.searchUrlParamNotInQuery),
+        `Expected "${rule.searchUrlParamNotInQuery}" should not be in search url "${submission.uri.spec}"`
       );
     }
     if (rule.suggestUrlCode) {

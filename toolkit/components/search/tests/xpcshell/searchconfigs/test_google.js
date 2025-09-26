@@ -66,6 +66,7 @@ const test = new SearchConfigTest({
       domain: "google.com",
       telemetryId: "google-com-nocodes",
       partnerCode: "",
+      searchUrlParamNotInQuery: "client",
     },
   ],
 });
