@@ -522,7 +522,8 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
       BasePrincipal::CreateContentPrincipal(trackingURI,
                                             loadInfo->GetOriginAttributes());
 
-  if (IsThirdPartyChannel(aChannel)) {
+  bool isThirdParty = IsThirdPartyChannel(aChannel);
+  if (isThirdParty) {
     nsAutoCString targetOrigin;
     nsAutoCString trackingOrigin;
     if (NS_FAILED(targetPrincipal->GetOriginNoSuffix(targetOrigin)) ||
@@ -639,10 +640,33 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
     }
   }
 
-  bool isThirdParty = false;
-  rv = framePrincipal->IsThirdPartyURI(trackingURI, &isThirdParty);
-  if (NS_FAILED(rv) || isThirdParty) {
-    return nsILoadInfo::DisabledStoragePermission;
+  if (isThirdParty) {
+    if (RefPtr<net::nsHttpChannel> httpChannel = do_QueryObject(aChannel)) {
+      // Determine whether we are in ABA or AB case, erroring on AB side
+      bool isAB = true;
+      rv = targetPrincipal->IsThirdPartyURI(trackingURI, &isAB);
+      if (NS_FAILED(rv)) {
+        return nsILoadInfo::NoStoragePermission;
+      }
+      if (isAB) {
+        // Third party resource, that could potentially have storage access
+        // Sending "Sec-Fetch-Storage-Access: none"
+        return nsILoadInfo::DisabledStoragePermission;
+      } else {
+        if (httpChannel->StorageAccessReloadedChannel()) {
+          // The server sent a retry response after we sent the "inactive"
+          // activate storage-access
+          // Sending "Sec-Fetch-Storage-Access: active"
+          return nsILoadInfo::HasStoragePermission;
+        } else {
+          // The site could has implicit storage-access due to ABA scenario.
+          // Let the server know that replying with "retry" will lead to us
+          // reloading the channel with storage-access enabled.
+          // Sending "Sec-Fetch-Storage-Access: inactive"
+          return nsILoadInfo::InactiveStoragePermission;
+        }
+      }
+    }
   }
 
   return nsILoadInfo::NoStoragePermission;
