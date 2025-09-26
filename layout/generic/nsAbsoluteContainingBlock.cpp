@@ -11,6 +11,7 @@
 
 #include "nsAbsoluteContainingBlock.h"
 
+#include "AnchorPositioningUtils.h"
 #include "mozilla/CSSAlignUtils.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ReflowInput.h"
@@ -198,6 +199,13 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
     const nsRect usedCbForKid = [&] {
       if (isGrid) {
         return nsGridContainerFrame::GridItemCB(kidFrame);
+      }
+
+      if (!kidFrame->StylePosition()->mPositionArea.IsNone()) {
+        return AnchorPositioningUtils::
+            AdjustAbsoluteContainingBlockRectForPositionArea(
+                kidFrame, aDelegatingFrame, aContainingBlock,
+                anchorPosReferenceData);
       }
 
       if (ViewportFrame* viewport = do_QueryFrame(aDelegatingFrame)) {

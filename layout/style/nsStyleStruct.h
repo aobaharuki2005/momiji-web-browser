@@ -389,6 +389,8 @@ struct AnchorPosResolutionParams {
   const nsIFrame* mFrame;
   // Position property of the element in question.
   mozilla::StylePositionProperty mPosition;
+  // position-area property of the element in question.
+  mozilla::StylePositionArea mPositionArea;
   // Storage for anchor reference data. To be populated on abspos reflow,
   // whenever the frame makes any anchor reference.
   mozilla::AnchorPosReferenceData* const mAnchorPosReferenceData = nullptr;
@@ -805,6 +807,12 @@ struct AnchorResolvedInsetHelper {
       const mozilla::StyleInset& aValue, mozilla::Side aSide,
       const AnchorPosOffsetResolutionParams& aParams) {
     if (!aValue.HasAnchorPositioningFunction()) {
+      // If `position-area` is used "Any auto inset properties resolve to 0":
+      // https://drafts.csswg.org/css-anchor-position-1/#valdef-position-area-position-area
+      if (aValue.IsAuto() && !aParams.mBaseParams.mPositionArea.IsNone()) {
+        return AnchorResolvedInset::UniquelyOwning(
+            new mozilla::StyleInset(mozilla::LengthPercentage::Zero()));
+      }
       return AnchorResolvedInset::NonOwning(&aValue);
     }
     return ResolveAnchor(aValue, mozilla::ToStylePhysicalSide(aSide), aParams);
