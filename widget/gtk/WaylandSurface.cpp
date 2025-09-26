@@ -493,10 +493,12 @@ bool WaylandSurface::MapLocked(const WaylandSurfaceLock& aProofOfLock,
   MOZ_DIAGNOSTIC_ASSERT(!mSurface && !mSubsurface, "Already mapped?");
 
   if (aParentWLSurface) {
+    LOGWAYLAND(" parent wl_surface [%p]", aParentWLSurface);
     mParentSurface = aParentWLSurface;
   } else {
     MOZ_DIAGNOSTIC_ASSERT(!mParentSurface, "Already mapped?");
     mParent = aParentWaylandSurfaceLock->GetWaylandSurface();
+    LOGWAYLAND(" parent WaylandSurface [%p]", mParent.get());
     MOZ_DIAGNOSTIC_ASSERT(mParent->IsMapped(), "Parent surface is not mapped?");
     mParentSurface = mParent->mSurface;
   }
@@ -527,6 +529,8 @@ bool WaylandSurface::MapLocked(const WaylandSurfaceLock& aProofOfLock,
   }
   wl_subsurface_set_position(mSubsurface, mSubsurfacePosition.x,
                              mSubsurfacePosition.y);
+  LOGWAYLAND(" subsurface position [%d,%d]", (int)mSubsurfacePosition.x,
+             (int)mSubsurfacePosition.y);
 
   if (aUseReadyToDrawCallback) {
     mReadyToDrawFrameCallback = wl_surface_frame(mParentSurface);

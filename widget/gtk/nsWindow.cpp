@@ -585,14 +585,16 @@ void nsWindow::DispatchDeactivateEvent() {
 }
 
 void nsWindow::DispatchResized() {
-  LOG("nsWindow::DispatchResized() size [%d, %d]", (int)(mBounds.width),
-      (int)(mBounds.height));
-
   if (mIsDestroyed) {
     return;
   }
 
   auto clientSize = GetClientSize();
+
+  LOG("nsWindow::DispatchResized() size [%d, %d] client size [%d, %d]",
+      (int)(mBounds.width), (int)(mBounds.height), (int)clientSize.width,
+      (int)clientSize.height);
+
   // Check mBounds size
   if (mCompositorSession &&
       !wr::WindowSizeSanityCheck(mBounds.width, mBounds.height)) {
@@ -1127,10 +1129,11 @@ void nsWindow::ResizeInt(const Maybe<LayoutDeviceIntPoint>& aMove,
 }
 
 void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
-  LOG("nsWindow::Resize %f %f\n", aWidth, aHeight);
-
   double scale =
       BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
+  LOG("nsWindow::Resize %f x %f (scaled %f x %f)", aWidth, aHeight,
+      scale * aWidth, scale * aHeight);
+
   auto size = LayoutDeviceIntSize::Round(scale * aWidth, scale * aHeight);
 
   ResizeInt(Nothing(), size);
@@ -1138,13 +1141,15 @@ void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
 
 void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
                       bool aRepaint) {
-  LOG("nsWindow::Resize [%f,%f] -> [%f x %f] repaint %d\n", aX, aY, aWidth,
-      aHeight, aRepaint);
-
   double scale =
       BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
   auto size = LayoutDeviceIntSize::Round(scale * aWidth, scale * aHeight);
   auto topLeft = LayoutDeviceIntPoint::Round(scale * aX, scale * aY);
+
+  LOG("nsWindow::Resize [%f,%f] -> [%f x %f] scaled [%f,%f] -> [%f x %f] "
+      "repaint %d\n",
+      aX, aY, aWidth, aHeight, scale * aX, scale * aY, scale * aWidth,
+      scale * aHeight, aRepaint);
 
   ResizeInt(Some(topLeft), size);
 }
@@ -4119,9 +4124,9 @@ gboolean nsWindow::OnShellConfigureEvent(GdkEventConfigure* aEvent) {
   //   coordinates are root coordinates.
 
 #ifdef MOZ_LOGGING
-  int scale = mGdkWindow ? gdk_window_get_scale_factor(mGdkWindow) : -1;
-  LOG("configure event %d,%d -> %d x %d direct mGdkWindow scale %d "
-      "(scaled size %d x %d)\n",
+  auto scale = FractionalScaleFactor();
+  LOG("nsWindow::OnShellConfigureEvent() [%d,%d] -> [%d x %d] scale %f "
+      "(scaled size %f x %f)\n",
       aEvent->x, aEvent->y, aEvent->width, aEvent->height, scale,
       aEvent->width * scale, aEvent->height * scale);
 #endif
@@ -4134,7 +4139,7 @@ gboolean nsWindow::OnShellConfigureEvent(GdkEventConfigure* aEvent) {
   // OnScaleEvent event. Skip that for toplevel windows only.
   if (mGdkWindow && IsTopLevelWidget() &&
       mCeiledScaleFactor != gdk_window_get_scale_factor(mGdkWindow)) {
-    LOG("  scale factor changed to %d,return early",
+    LOG("  scale factor changed to %d, return early",
         gdk_window_get_scale_factor(mGdkWindow));
     return FALSE;
   }
@@ -4144,8 +4149,12 @@ gboolean nsWindow::OnShellConfigureEvent(GdkEventConfigure* aEvent) {
 }
 
 void nsWindow::OnContainerSizeAllocate(GtkAllocation* aAllocation) {
-  LOG("nsWindow::OnContainerSizeAllocate %d,%d -> %d x %d\n", aAllocation->x,
-      aAllocation->y, aAllocation->width, aAllocation->height);
+  LOG("nsWindow::OnContainerSizeAllocate [%d,%d] -> [%d x %d] scaled[%f] [%f x "
+      "%f]",
+      aAllocation->x, aAllocation->y, aAllocation->width, aAllocation->height,
+      FractionalScaleFactor(), aAllocation->width * FractionalScaleFactor(),
+      aAllocation->height * FractionalScaleFactor());
+
   mHasReceivedSizeAllocate = true;
   if (!mGdkWindow) {
     return;
