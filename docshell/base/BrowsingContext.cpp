@@ -2415,6 +2415,8 @@ void BrowsingContext::Navigate(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
                                ErrorResult& aRv,
                                NavigationHistoryBehavior aHistoryHandling,
                                bool aShouldNotForceReplaceInOnLoad) {
+  MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug, "Navigate to {} as {}", *aURI,
+              aHistoryHandling);
   CallerType callerType = aSubjectPrincipal.IsSystemPrincipal()
                               ? CallerType::System
                               : CallerType::NonSystem;
@@ -2433,9 +2435,25 @@ void BrowsingContext::Navigate(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
 
   loadState->SetShouldNotForceReplaceInOnLoad(aShouldNotForceReplaceInOnLoad);
 
-  // The steps 12 and 13 of #navigate are handled later in
-  // nsDocShell::InternalLoad().
-  if (aHistoryHandling == NavigationHistoryBehavior::Replace) {
+  // Step 12
+  NavigationHistoryBehavior historyHandling = aHistoryHandling;
+  if (aHistoryHandling == NavigationHistoryBehavior::Auto) {
+    if (auto* document = GetExtantDocument()) {
+      bool equals = false;
+      aURI->Equals(document->GetDocumentURI(), &equals);
+      if (equals && document->GetPrincipal()) {
+        document->GetPrincipal()->Equals(&aSubjectPrincipal, &equals);
+      }
+      if (equals) {
+        historyHandling = NavigationHistoryBehavior::Replace;
+      } else {
+        historyHandling = NavigationHistoryBehavior::Push;
+      }
+    }
+  }
+
+  // Step 13 of #navigate are handled later in nsDocShell::InternalLoad().
+  if (historyHandling == NavigationHistoryBehavior::Replace) {
     loadState->SetLoadType(LOAD_STOP_CONTENT_AND_REPLACE);
   } else {
     loadState->SetLoadType(LOAD_STOP_CONTENT);

@@ -258,4 +258,16 @@ struct fmt::formatter<mozilla::dom::NavigationType, char>
   }
 };
 
+template <>
+struct fmt::formatter<mozilla::dom::NavigationHistoryBehavior, char>
+    : public formatter<nsLiteralCString> {
+  template <typename FmtContext>
+  constexpr auto format(
+      const mozilla::dom::NavigationHistoryBehavior& aNavigationHistoryBehavior,
+      FmtContext& aCtx) const {
+    return formatter<nsLiteralCString>::format(
+        mozilla::dom::GetEnumString(aNavigationHistoryBehavior), aCtx);
+  }
+};
+
 #endif  // mozilla_dom_Navigation_h___
