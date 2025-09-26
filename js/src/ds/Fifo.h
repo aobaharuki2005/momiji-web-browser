@@ -26,8 +26,7 @@ namespace js {
 // AllocPolicy:
 //  - see "Allocation policies" in AllocPolicy.h
 template <typename T, size_t MinInlineCapacity = 0,
-          class AllocPolicy = TempAllocPolicy,
-          template <typename, size_t, class> class VectorType = Vector>
+          class AllocPolicy = TempAllocPolicy>
 class Fifo {
   static_assert(MinInlineCapacity % 2 == 0, "MinInlineCapacity must be even!");
 
@@ -40,8 +39,8 @@ class Fifo {
   // Invariant 2: Entries within |front_| are sorted from younger to older.
   // Invariant 3: Entries within |rear_| are sorted from older to younger.
   // Invariant 4: If the |Fifo| is not empty, then |front_| is not empty.
-  VectorType<T, MinInlineCapacity / 2, AllocPolicy> front_;
-  VectorType<T, MinInlineCapacity / 2, AllocPolicy> rear_;
+  Vector<T, MinInlineCapacity / 2, AllocPolicy> front_;
+  Vector<T, MinInlineCapacity / 2, AllocPolicy> rear_;
 
  private:
   // Maintain invariants after adding or removing entries.
@@ -126,13 +125,6 @@ class Fifo {
     }
     fixup();
     return true;
-  }
-
-  // Construct a T in-place at the front of the queue,
-  // making it the next to be popped off.
-  template <typename... Args>
-  [[nodiscard]] bool emplaceFront(Args&&... args) {
-    return front_.emplaceBack(std::forward<Args>(args)...);
   }
 
   // Access the element at the front of the queue.
