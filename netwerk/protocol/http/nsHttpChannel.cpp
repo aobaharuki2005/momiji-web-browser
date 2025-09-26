@@ -150,9 +150,6 @@
 #  include "mozilla/StaticPrefs_fuzzing.h"
 #endif
 
-// TODO replace in later patch
-#define LOG_DICTIONARIES(x) LOG(x)
-
 namespace mozilla {
 
 using namespace dom;
@@ -5968,7 +5965,7 @@ bool nsHttpChannel::ParseDictionary(nsICacheEntry* aEntry,
     nsCString hash;
     // Available now for use
     RefPtr<DictionaryCache> dicts(DictionaryCache::GetInstance());
-    LOG(
+    LOG_DICTIONARIES(
         ("Adding DictionaryCache entry for %s: key %s, matchval %s, id=%s, "
          "type=%s",
          mURI->GetSpecOrDefault().get(), key.get(), matchVal.get(),
@@ -6120,8 +6117,8 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
   // before the content process gets to see it
   nsAutoCString contentEncoding;
   Unused << mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
-  LOG(("Content-Encoding for %p: %s", this,
-       PromiseFlatCString(contentEncoding).get()));
+  LOG_DICTIONARIES(
+      ("Content-Encoding for %p: %s", this, contentEncoding.get()));
   if (!dictionary.IsEmpty() || contentEncoding.Equals("dcb") ||
       contentEncoding.Equals("dcz")) {
     nsCOMPtr<nsIStreamListener> listener;
@@ -6133,12 +6130,13 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
       return rv;
     }
     if (listener) {
-      LOG(("Installed nsHTTPCompressConv %p before tee", listener.get()));
+      LOG_DICTIONARIES(
+          ("Installed nsHTTPCompressConv %p before tee", listener.get()));
       mListener = listener;
       mCompressListener = listener;
       StoreHasAppliedConversion(true);
     } else
-      LOG(("Didn't install decompressor before tee"));
+      LOG_DICTIONARIES(("Didn't install decompressor before tee"));
   }
 
   // XXX telemetry as to how often we get dcb/dcz
