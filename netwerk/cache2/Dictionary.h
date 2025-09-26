@@ -69,12 +69,9 @@ class DictionaryCacheEntry final
   // Start reading the cache entry into memory and call completion
   // function when done
   bool Prefetch(nsILoadContextInfo* aLoadContextInfo,
-                const std::function<nsresult()>& aFunc);
+                const std::function<void()>& aFunc);
 
-  const nsACString& GetHash() const {
-    MOZ_ASSERT(NS_IsMainThread());
-    return mHash;
-  }
+  const nsACString& GetHash() const { return mHash; }
 
   void SetHash(const nsACString& aHash) {
     MOZ_ASSERT(NS_IsMainThread());
@@ -177,7 +174,9 @@ class DictionaryCache final {
   nsresult RemoveEntry(nsIURI* aURI, const nsACString& aKey);
 
   // return an entry
-  already_AddRefed<DictionaryCacheEntry> GetDictionaryFor(nsIURI* aURI);
+  void GetDictionaryFor(
+      nsIURI* aURI,
+      const std::function<nsresult(DictionaryCacheEntry*)>& aCallback);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     // XXX

@@ -545,33 +545,37 @@ nsresult nsHttpChannel::Init(nsIURI* uri, uint32_t caps, nsProxyInfo* proxyInfo,
                              uint64_t channelId, nsILoadInfo* aLoadInfo) {
   nsresult rv = HttpBaseChannel::Init(uri, caps, proxyInfo, proxyResolveFlags,
                                       proxyURI, channelId, aLoadInfo);
-  if (NS_FAILED(rv)) return rv;
-  rv = gHttpHandler->AddAcceptAndDictionaryHeaders(uri, &mRequestHead,
-                                                   IsHTTPS(), mDict);
-  if (NS_FAILED(rv)) return rv;
-  if (mDict) {
-    // mDict is set if we added Available-Dictionary
-    mDict->InUse();
-    mUsingDictionary = true;
-    mShouldSuspendForDictionary = mDict->Prefetch(
-        GetLoadContextInfo(this), [self = RefPtr<nsHttpChannel>(this)]() {
-          // this is called when the prefetch is complete to
-          // un-Suspend the channel
-          MOZ_ASSERT(self->mDict->DictionaryReady());
-          if (self->mSuspendedForDictionary) {
-            LOG(
-                ("nsHttpChannel::Init [this=%p] Resuming channel suspended for "
-                 "Dictionary",
-                 self.get()));
-            self->mSuspendedForDictionary = false;
-            self->Resume();
-          }
-          return NS_OK;
-        });
-  }
-
   LOG1(("nsHttpChannel::Init [this=%p]\n", this));
 
+  if (NS_FAILED(rv)) return rv;
+  // This may be async; the dictionary headers may need to fetch an origin
+  // dictionary cache entry from disk before adding the headers.  We can
+  // continue with channel creation, and just block on this being done later
+  rv = gHttpHandler->AddAcceptAndDictionaryHeaders(
+      uri, &mRequestHead, IsHTTPS(),
+      [self = RefPtr(this)](DictionaryCacheEntry* aDict) {
+        self->mDict = aDict;
+        if (self->mDict) {
+          // mDict is set if we added Available-Dictionary
+          self->mDict->InUse();
+          self->mUsingDictionary = true;
+          self->mShouldSuspendForDictionary =
+              self->mDict->Prefetch(GetLoadContextInfo(self), [self]() {
+                // this is called when the prefetch is complete to
+                // un-Suspend the channel
+                MOZ_ASSERT(self->mDict->DictionaryReady());
+                if (self->mSuspendedForDictionary) {
+                  LOG(
+                      ("nsHttpChannel::Init [this=%p] Resuming channel "
+                       "suspended for "
+                       "Dictionary",
+                       self.get()));
+                  self->mSuspendedForDictionary = false;
+                  self->Resume();
+                }
+              });
+        }
+      });
   return rv;
 }
 
@@ -1981,15 +1985,6 @@ nsresult nsHttpChannel::SetupChannelForTransaction() {
         MOZ_ASSERT(NS_SUCCEEDED(rv));
       }
     }
-  } else {
-    // If we add a Range header, Accept-Encoding needs to be set to
-    // "identity" and any http additions to the headers aren't allowed to
-    // override that, so we don't try.  Section 4.5 step 8.19 and 8.20 of
-    // HTTP-network-or-cache fetch
-    // https://fetch.spec.whatwg.org/#http-network-or-cache-fetch
-    rv = mHttpHandler->AddAcceptAndDictionaryHeaders(
-        mURI, &mRequestHead, mURI->SchemeIs("https"), mDict);
-    if (NS_FAILED(rv)) return rv;
   }
 
   // See bug #466080. Transfer LOAD_ANONYMOUS flag to socket-layer.
