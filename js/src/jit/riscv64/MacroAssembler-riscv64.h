@@ -776,9 +776,6 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
   }
 
   void moveIfZero(Register dst, Register src, Register cond) {
-    UseScratchRegisterScope temps(this);
-    Register scratch = temps.Acquire();
-    MOZ_ASSERT(dst != scratch && cond != scratch);
     Label done;
     ma_branch(&done, NotEqual, cond, zero);
     mv(dst, src);
@@ -786,9 +783,6 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
   }
 
   void moveIfNotZero(Register dst, Register src, Register cond) {
-    UseScratchRegisterScope temps(this);
-    Register scratch = temps.Acquire();
-    MOZ_ASSERT(dst != scratch && cond != scratch);
     Label done;
     ma_branch(&done, Equal, cond, zero);
     mv(dst, src);
