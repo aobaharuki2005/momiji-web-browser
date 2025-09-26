@@ -909,11 +909,12 @@ class AboutTranslations {
     this.#translator?.destroy();
 
     const selectedLanguagePair = this.#getSelectedLanguagePair();
-    this.#translator = await Translator.create(
-      selectedLanguagePair,
+
+    this.#translator = await Translator.create({
+      languagePair: selectedLanguagePair,
       requestTranslationsPort,
-      /* allowSameLanguage */ true
-    );
+      allowSameLanguage: true,
+    });
 
     return true;
   }
