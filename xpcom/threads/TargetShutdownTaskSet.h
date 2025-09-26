@@ -27,7 +27,8 @@ class TargetShutdownTaskSet {
 
   // Add a task to the set and keep it owned. The caller can forget it if
   // it is not interested in being ever able to remove it.
-  // Returns NS_ERROR_UNEXPECTED if the task is already in a TargetShutdownTaskSet.
+  // Returns NS_ERROR_UNEXPECTED if the task is already in a
+  // TargetShutdownTaskSet.
   nsresult AddTask(nsITargetShutdownTask* aTask) {
     MOZ_ASSERT(aTask);
     MOZ_ASSERT(!mShutdownTasksTaken);
