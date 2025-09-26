@@ -55,6 +55,7 @@ ModuleLoadRequest::ModuleLoadRequest(
                         aFetchOptions, aIntegrity, aReferrer, aContext),
       mKind(aKind),
       mModuleType(aModuleType),
+      mErroredLoadingImports(false),
       mLoader(aLoader),
       mRootModule(aRootModule) {
   MOZ_ASSERT(mLoader);
@@ -65,7 +66,12 @@ nsIGlobalObject* ModuleLoadRequest::GetGlobalObject() {
 }
 
 bool ModuleLoadRequest::IsErrored() const {
-  return !mModuleScript || mModuleScript->HasParseError();
+  if (!mModuleScript || mErroredLoadingImports) {
+    return true;
+  }
+
+  MOZ_ASSERT_IF(mModuleScript->HasErrorToRethrow(), !IsDynamicImport());
+  return mModuleScript->HasParseError() || mModuleScript->HasErrorToRethrow();
 }
 
 void ModuleLoadRequest::Cancel() {
@@ -136,13 +142,7 @@ void ModuleLoadRequest::ModuleErrored() {
   }
 
   MOZ_ASSERT(!IsFinished());
-
-  mozilla::DebugOnly<bool> hasRethrow =
-      mModuleScript && mModuleScript->HasErrorToRethrow();
-
-  // When LoadRequestedModules fails, we will set error to rethrow to the module
-  // script and call ModuleErrored().
-  MOZ_ASSERT(IsErrored() || hasRethrow);
+  MOZ_ASSERT(IsErrored());
 
   if (IsFinished()) {
     // Cancelling an outstanding import will error this request.

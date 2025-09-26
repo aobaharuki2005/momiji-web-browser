@@ -1325,6 +1325,7 @@ bool ModuleLoaderBase::OnLoadRequestedModulesRejected(
                                 JSMSG_DYNAMIC_IMPORT_FAILED, url.get());
       FinishLoadingImportedModuleFailedWithPendingException(aCx, payload);
     }
+    aRequest->SetErroredLoadingImports();
   } else if (moduleScript && !error.isUndefined()) {
     LOG(
         ("ScriptLoadRequest (%p): LoadRequestedModules rejected: set error to "
