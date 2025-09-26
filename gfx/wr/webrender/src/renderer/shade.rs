@@ -874,7 +874,11 @@ impl Shaders {
         let ps_quad_gradient = loader.create_shader(
             ShaderKind::Primitive,
             "ps_quad_gradient",
-            &[],
+            if options.enable_dithering {
+               &[DITHERING_FEATURE]
+            } else {
+               &[]
+            },
             &shader_list,
         )?;
 

@@ -5,6 +5,7 @@
 /// This shader renders any kind of css gradents in a color or alpha target.
 
 #include ps_quad
+#include dithering
 
 #define PI 3.141592653589793
 
@@ -147,14 +148,6 @@ void pattern_vertex(PrimitiveInfo info) {
 
 #ifdef WR_FRAGMENT_SHADER
 
-// TODO: hook up dithering. To do this:
-// - Move the dithering code into its own file so that we can import
-//   it here with a bunch of code and varyings we don't want.
-// - Add a version of this shader in shade.rs with WR_FEATURE_DITHERING
-vec4 dither(vec4 color) {
-    return color;
-}
-
 // From https://math.stackexchange.com/questions/1098487/atan2-faster-approximation
 float approx_atan2(float y, float x) {
     vec2 a = abs(vec2(x, y));
@@ -281,8 +274,7 @@ vec4 sample_gradient_stops_tree(float offset) {
     int color_pair_address = colors_addr + index - 1;
     vec4 color_pair[2] = fetch_from_gpu_buffer_2f(color_pair_address);
 
-    // Interpolate and apply dithering.
-    return dither(mix(color_pair[0], color_pair[1], factor));
+    return mix(color_pair[0], color_pair[1], factor);
 }
 
 // A fast path for sampling no more than two gradient stops.
@@ -362,7 +354,7 @@ vec4 pattern_fragment(vec4 color) {
         color *= sample_gradient_stops_tree(offset);
     }
 
-    return color;
+    return dither(color);
 }
 
 #if defined(SWGL_DRAW_SPAN)
