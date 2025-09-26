@@ -377,11 +377,27 @@ perf:
     type: timing_distribution
     time_unit: millisecond
     description: |
-      The duration from cold process launch to load URI for an android applink.
+      The duration from cold process launch to load URI for an android cold applink.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1990344
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1990344
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - android-probes@mozilla.com
+    expires: never
+
+  cold_applink_main_to_load_uri:
+    type: timing_distribution
+    time_unit: millisecond
+    description: |
+      The duration from StartupTimeline::MAIN to load URI for an android cold applink.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1991160
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1991160
     data_sensitivity:
       - technical
     notification_emails:
