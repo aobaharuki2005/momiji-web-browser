@@ -859,7 +859,7 @@ nsresult DictionaryCache::RemoveEntry(nsIURI* aURI, const nsACString& aKey) {
   if (NS_FAILED(GetDictPath(aURI, prepath))) {
     return NS_ERROR_FAILURE;
   }
-  DICTIONARY_LOG(("Dictionary RemoveEntry for %s : %s", prepath.get(),
+  DICTIONARY_LOG(("DictionaryCache::RemoveEntry for %s : %s", prepath.get(),
                   PromiseFlatCString(aKey).get()));
   if (auto origin = mDictionaryCache.Lookup(prepath)) {
     return origin.Data()->RemoveEntry(aKey);
@@ -1182,6 +1182,7 @@ nsresult DictionaryOrigin::RemoveEntry(const nsACString& aKey) {
     if (dict->GetURI().Equals(aKey)) {
       // Ensure it doesn't disappear on us
       RefPtr<DictionaryCacheEntry> hold(dict);
+      DICTIONARY_LOG(("Removing %p", dict.get()));
       mEntries.RemoveElement(dict);
       if (mEntry) {
         hold->RemoveEntry(mEntry);
@@ -1189,10 +1190,6 @@ nsresult DictionaryOrigin::RemoveEntry(const nsACString& aKey) {
         // We don't have the cache entry yet.  Defer the removal from
         // the entry until we do
         mPendingRemove.AppendElement(hold);
-      }
-      if (MOZ_UNLIKELY(
-              MOZ_LOG_TEST(gDictionaryLog, mozilla::LogLevel::Debug))) {
-        DumpEntries();
       }
       return NS_OK;
     }
@@ -1203,12 +1200,9 @@ nsresult DictionaryOrigin::RemoveEntry(const nsACString& aKey) {
     if (dict->GetURI().Equals(aKey)) {
       // Ensure it doesn't disappear on us
       RefPtr<DictionaryCacheEntry> hold(dict);
+      DICTIONARY_LOG(("Removing %p", dict.get()));
       mPendingEntries.RemoveElement(dict);
       hold->RemoveEntry(mEntry);
-      if (MOZ_UNLIKELY(
-              MOZ_LOG_TEST(gDictionaryLog, mozilla::LogLevel::Debug))) {
-        DumpEntries();
-      }
       return NS_OK;
     }
   }
@@ -1222,6 +1216,10 @@ void DictionaryOrigin::FinishAddEntry(DictionaryCacheEntry* aEntry) {
     // have an equivalent match length (and dest)
     mEntries.InsertElementAt(0, aEntry);
   }
+  DICTIONARY_LOG(("FinishAddEntry(%s)", aEntry->mURI.get()));
+  if (MOZ_UNLIKELY(MOZ_LOG_TEST(gDictionaryLog, mozilla::LogLevel::Debug))) {
+    DumpEntries();
+  }
 }
 
 void DictionaryOrigin::RemoveEntry(DictionaryCacheEntry* aEntry) {
@@ -1231,6 +1229,31 @@ void DictionaryOrigin::RemoveEntry(DictionaryCacheEntry* aEntry) {
   }
   if (MOZ_UNLIKELY(MOZ_LOG_TEST(gDictionaryLog, mozilla::LogLevel::Debug))) {
     DumpEntries();
+  }
+}
+
+void DictionaryOrigin::DumpEntries() {
+  DICTIONARY_LOG(("*** Origin %s ***", mOrigin.get()));
+  for (const auto& dict : mEntries) {
+    DICTIONARY_LOG(
+        ("* %s: pattern %s, id %s, match-dest[0]: %s, hash: %s, expiration: "
+         "%u",
+         dict->mURI.get(), dict->mPattern.get(), dict->mId.get(),
+         dict->mMatchDest.IsEmpty()
+             ? ""
+             : dom::GetEnumString(dict->mMatchDest[0]).get(),
+         dict->mHash.get(), dict->mExpiration));
+  }
+  DICTIONARY_LOG(("*** Pending ***"));
+  for (const auto& dict : mPendingEntries) {
+    DICTIONARY_LOG(
+        ("* %s: pattern %s, id %s, match-dest[0]: %s, hash: %s, expiration: "
+         "%u",
+         dict->mURI.get(), dict->mPattern.get(), dict->mId.get(),
+         dict->mMatchDest.IsEmpty()
+             ? ""
+             : dom::GetEnumString(dict->mMatchDest[0]).get(),
+         dict->mHash.get(), dict->mExpiration));
   }
 }
 
