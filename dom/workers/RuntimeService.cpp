@@ -524,10 +524,12 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION bool ContentSecurityPolicyAllows(
   nsAutoJSString scriptSample;
   if (aKind == JS::RuntimeCode::JS) {
     ErrorResult error;
+    // FIXME(Bug 1990732): Need to pass a principal here to skip TT enforcement
+    // when this code is run from a WebExtension content script.
     bool areArgumentsTrusted = TrustedTypeUtils::
         AreArgumentsTrustedForEnsureCSPDoesNotBlockStringCompilation(
             aCx, aCodeString, aCompilationType, aParameterStrings, aBodyString,
-            aParameterArgs, aBodyArg, error);
+            aParameterArgs, aBodyArg, nullptr, error);
     if (error.MaybeSetPendingException(aCx)) {
       return false;
     }

@@ -10540,7 +10540,9 @@ void Document::Close(ErrorResult& rv) {
 }
 
 void Document::WriteCommon(const Sequence<OwningTrustedHTMLOrString>& aText,
-                           bool aNewlineTerminate, mozilla::ErrorResult& rv) {
+                           bool aNewlineTerminate,
+                           nsIPrincipal* aSubjectPrincipal,
+                           mozilla::ErrorResult& rv) {
   bool isTrusted = true;
   auto getAsString =
       [&isTrusted](const OwningTrustedHTMLOrString& aTrustedHTMLOrString) {
@@ -10554,7 +10556,7 @@ void Document::WriteCommon(const Sequence<OwningTrustedHTMLOrString>& aText,
   // Fast path the common case
   if (aText.Length() == 1) {
     WriteCommon(*getAsString(aText[0]), aNewlineTerminate,
-                aText[0].IsTrustedHTML(), rv);
+                aText[0].IsTrustedHTML(), aSubjectPrincipal, rv);
   } else {
     // XXXbz it would be nice if we could pass all the strings to the parser
     // without having to do all this copying and then ask it to start
@@ -10563,12 +10565,13 @@ void Document::WriteCommon(const Sequence<OwningTrustedHTMLOrString>& aText,
     for (size_t i = 0; i < aText.Length(); ++i) {
       text.Append(*getAsString(aText[i]));
     }
-    WriteCommon(text, aNewlineTerminate, isTrusted, rv);
+    WriteCommon(text, aNewlineTerminate, isTrusted, aSubjectPrincipal, rv);
   }
 }
 
 void Document::WriteCommon(const nsAString& aText, bool aNewlineTerminate,
-                           bool aIsTrusted, ErrorResult& aRv) {
+                           bool aIsTrusted, nsIPrincipal* aSubjectPrincipal,
+                           ErrorResult& aRv) {
 #ifdef DEBUG
   {
     // Assert that we do not use or accidentally introduce doc.write()
@@ -10606,7 +10609,8 @@ void Document::WriteCommon(const nsAString& aText, bool aNewlineTerminate,
     compliantString =
         TrustedTypeUtils::GetTrustedTypesCompliantStringForTrustedHTML(
             aText, aNewlineTerminate ? sinkWriteLn : sinkWrite,
-            kTrustedTypesOnlySinkGroup, *this, compliantStringHolder, aRv);
+            kTrustedTypesOnlySinkGroup, *this, aSubjectPrincipal,
+            compliantStringHolder, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -10696,13 +10700,13 @@ void Document::WriteCommon(const nsAString& aText, bool aNewlineTerminate,
 }
 
 void Document::Write(const Sequence<OwningTrustedHTMLOrString>& aText,
-                     ErrorResult& rv) {
-  WriteCommon(aText, false, rv);
+                     nsIPrincipal* aSubjectPrincipal, ErrorResult& rv) {
+  WriteCommon(aText, false, aSubjectPrincipal, rv);
 }
 
 void Document::Writeln(const Sequence<OwningTrustedHTMLOrString>& aText,
-                       ErrorResult& rv) {
-  WriteCommon(aText, true, rv);
+                       nsIPrincipal* aSubjectPrincipal, ErrorResult& rv) {
+  WriteCommon(aText, true, aSubjectPrincipal, rv);
 }
 
 void* Document::GenerateParserKey(void) {

@@ -656,7 +656,7 @@ void WorkerGlobalScope::SetOnerror(OnErrorEventHandlerNonNull* aHandler) {
 
 void WorkerGlobalScope::ImportScripts(
     JSContext* aCx, const Sequence<OwningTrustedScriptURLOrString>& aScriptURLs,
-    ErrorResult& aRv) {
+    nsIPrincipal* aSubjectPrincipal, ErrorResult& aRv) {
   AssertIsOnWorkerThread();
 
   UniquePtr<SerializedStackHolder> stack;
@@ -673,7 +673,7 @@ void WorkerGlobalScope::ImportScripts(
       const nsAString* compliantString =
           TrustedTypeUtils::GetTrustedTypesCompliantString(
               scriptURL, sink, kTrustedTypesOnlySinkGroup, *pinnedGlobal,
-              nullptr, compliantStringHolder, aRv);
+              aSubjectPrincipal, compliantStringHolder, aRv);
       if (aRv.Failed()) {
         return;
       }

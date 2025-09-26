@@ -10506,6 +10506,14 @@ nsresult nsDocShell::PerformTrustedTypesPreNavigationCheck(
     return NS_OK;
   }
 
+  // Exempt web extension content scripts from trusted types policies defined by
+  // the page in which they are running.
+  if (auto principal = BasePrincipal::Cast(aLoadState->TriggeringPrincipal())) {
+    if (principal->ContentScriptAddonPolicyCore()) {
+      return NS_OK;
+    }
+  }
+
   // If disposion is enforce for require-trusted-types-for, then we return
   // errors in order to block navigation. If it's report-only, errors are
   // ignored and the URL is unchanged.
