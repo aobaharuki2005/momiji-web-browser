@@ -374,7 +374,7 @@ CookieObserver::Observe(nsISupports* aSubject, const char* aTopic,
 void MaybeInitializeCookieProcessingGuard(
     nsHttpChannel* aChannel, CookieServiceParent::CookieProcessingGuard& aGuard,
     RefPtr<CookieObserver>& aCookieObserver,
-    RefPtr<HttpChannelParent>& aHttpChannelParent) {
+    RefPtr<HttpChannelParent>& aHttpChannelParent, uint32_t aHttpStatus) {
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(aChannel, parentChannel);
   aHttpChannelParent = do_QueryObject(parentChannel);
@@ -394,6 +394,13 @@ void MaybeInitializeCookieProcessingGuard(
   CookieServiceParent* cookieServiceParent =
       static_cast<CookieServiceParent*>(csParent);
   if (!cookieServiceParent) {
+    return;
+  }
+
+  // on redirect we don't want to use processing guard
+  // because it will prevent cookies from being set in the
+  // content process that originated the request
+  if (nsHttpChannel::IsRedirectStatus(aHttpStatus)) {
     return;
   }
 
@@ -1236,8 +1243,8 @@ nsresult nsHttpChannel::HandleOverrideResponse() {
     RefPtr<CookieObserver> cookieObserver;
 
     CookieServiceParent::CookieProcessingGuard cookieProcessingGuard;
-    MaybeInitializeCookieProcessingGuard(this, cookieProcessingGuard,
-                                         cookieObserver, httpParent);
+    MaybeInitializeCookieProcessingGuard(
+        this, cookieProcessingGuard, cookieObserver, httpParent, statusCode);
 
     // Handle Set-Cookie headers as if the response was from networking.
     CookieVisitor cookieVisitor(mResponseHead.get());
@@ -2974,7 +2981,8 @@ nsresult nsHttpChannel::ContinueProcessResponse1(
         // called, we shouldn't call SetCookieHeaders.
 
         MaybeInitializeCookieProcessingGuard(this, cookieProcessingGuard,
-                                             cookieObserver, httpParent);
+                                             cookieObserver, httpParent,
+                                             httpStatus);
       }
 
       CookieVisitor cookieVisitor(mResponseHead.get());
