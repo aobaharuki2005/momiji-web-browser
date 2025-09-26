@@ -179,17 +179,7 @@ MOZ_ReportAssertionFailure(const char* aStr, const char* aFilename,
  * should use MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE because it has extra
  * asserts.
  */
-#if defined(__clang__) || defined(__GNUC__)
-#  define MOZ_ASSUME_UNREACHABLE_MARKER() __builtin_unreachable()
-#elif defined(_MSC_VER)
-#  define MOZ_ASSUME_UNREACHABLE_MARKER() __assume(0)
-#else
-#  ifdef __cplusplus
-#    define MOZ_ASSUME_UNREACHABLE_MARKER() ::abort()
-#  else
-#    define MOZ_ASSUME_UNREACHABLE_MARKER() abort()
-#  endif
-#endif
+#define MOZ_ASSUME_UNREACHABLE_MARKER() __builtin_unreachable()
 
 /**
  * MOZ_REALLY_CRASH is used in the implementation of MOZ_CRASH().  You should
@@ -821,5 +811,7 @@ static inline T MakeCompilerAssumeUnreachableFakeValue() {
 }
 }  // namespace mozilla
 #endif  // __cplusplus
+
+#undef MOZ_GET_PID
 
 #endif /* mozilla_Assertions_h */
