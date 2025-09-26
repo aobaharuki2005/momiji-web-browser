@@ -103,7 +103,7 @@ add_task(async function () {
   const onSuggest = editor.once("after-suggest");
 
   const node = editor.popup.list.childNodes[editor.popup.selectedIndex];
-  EventUtils.synthesizeMouseAtCenter(node, {}, editor.popup._window);
+  EventUtils.synthesizeMouseAtCenter(node, {}, node.ownerGlobal);
 
   view.debounce.flush();
   await onSuggest;
