@@ -11556,7 +11556,6 @@ interface nsISearchEngine extends nsISupports {
   readonly name: string;
   readonly id: string;
   readonly telemetryId: string;
-  readonly identifier: string;
   readonly loadPath: string;
   readonly isAppProvided: boolean;
   readonly isConfigEngine: boolean;

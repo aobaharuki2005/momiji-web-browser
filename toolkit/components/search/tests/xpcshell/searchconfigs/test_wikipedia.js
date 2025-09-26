@@ -4,7 +4,7 @@
 "use strict";
 
 const testConfiguration = {
-  identifier: "wikipedia",
+  identifierStartsWith: "wikipedia",
   default: {
     // Not default anywhere.
   },

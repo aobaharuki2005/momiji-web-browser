@@ -15,7 +15,7 @@ const DOMAIN_LOCALES = {
 };
 
 const test = new SearchConfigTest({
-  identifier: "ebay",
+  identifierStartsWith: "ebay",
   aliases: ["@ebay"],
   default: {
     // Not included anywhere.

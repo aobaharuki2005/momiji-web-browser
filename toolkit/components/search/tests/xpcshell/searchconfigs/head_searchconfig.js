@@ -105,11 +105,13 @@ async function maybeSetupConfig() {
 /**
  * @typedef {object} SearchConfigTestDetails
  *   Details for the search configuration tests for a single engine.
- * @property {string} identifier
- *   The identifier for the search engine under test.
- * @property {boolean} [identifierExactMatch]
- *   When true, use an exact match for the identifier and when false, use a
- *   startsWith comparison.
+ * @property {string} [identifier]
+ *   The identifier for the search engine under test. If not specified then
+ *   `identifierStartsWith` must be specified.
+ * @property {string} [identifierStartsWith]
+ *   The prefix of the identifier of the search engine under test. This is used
+ *   for search engines that have different set ups per locale/region and have
+ *   different identifiers as a result, e.g. wikipedia, eBay.
  * @property {string[]} [aliases]
  *   The expected aliases for the search engine.
  * @property {DeploymentDetails} default
@@ -300,18 +302,16 @@ class SearchConfigTest {
    *
    * @param {AppProvidedConfigEngine[]} engines
    *   The list of engines to check.
-   * @param {string} identifier
-   *   The identifier to look for in the list.
-   * @param {boolean} exactMatch
-   *   Whether to use an exactMatch for the identifier.
+   * @param {SearchConfigTestDetails} testDetails
+   *   The details of the test.
    * @returns {AppProvidedConfigEngine}
    *   Returns the engine if found, null otherwise.
    */
-  _findEngine(engines, identifier, exactMatch) {
+  _findEngine(engines, testDetails) {
     return engines.find(engine =>
-      exactMatch
-        ? engine.identifier == identifier
-        : engine.identifier.startsWith(identifier)
+      testDetails.identifier
+        ? engine.id == testDetails.identifier
+        : engine.id.startsWith(testDetails.identifierStartsWith)
     );
   }
 
@@ -335,11 +335,7 @@ class SearchConfigTest {
     const testSection = this.#testDetails[section];
     const hasIncluded = "included" in testSection;
     const hasExcluded = "excluded" in testSection;
-    const identifierIncluded = !!this._findEngine(
-      engines,
-      this.#testDetails.identifier,
-      this.#testDetails.identifierExactMatch ?? false
-    );
+    const identifierIncluded = !!this._findEngine(engines, this.#testDetails);
 
     // If there's not included/excluded, then this shouldn't be the default anywhere.
     if (section == "default" && !hasIncluded && !hasExcluded) {
@@ -456,11 +452,7 @@ class SearchConfigTest {
       `Should have just one details section for region: ${region} locale: ${locale}`
     );
 
-    const engine = this._findEngine(
-      engines,
-      this.#testDetails.identifier,
-      this.#testDetails.identifierExactMatch ?? false
-    );
+    const engine = this._findEngine(engines, this.#testDetails);
     this.assertOk(engine, "Should have an engine present");
 
     if (this.#testDetails.aliases) {

@@ -129,10 +129,7 @@ add_task(
         testData.locale
       );
 
-      Assert.ok(
-        engines[0].identifier.startsWith("google"),
-        "Should have the correct engine"
-      );
+      Assert.equal(engines[0].id, "google", "Should have the correct engine");
 
       const submission = engines[0].getSubmission("test", URLTYPE_SEARCH_HTML);
       Assert.ok(
@@ -187,10 +184,7 @@ async function assertEnterpriseParameter(useEmptyPolicy) {
       testData.locale
     );
 
-    Assert.ok(
-      engines[0].identifier.startsWith("google"),
-      "Should have the correct engine"
-    );
+    Assert.equal(engines[0].id, "google", "Should have the correct engine");
 
     const submission = engines[0].getSubmission("test", URLTYPE_SEARCH_HTML);
     Assert.ok(

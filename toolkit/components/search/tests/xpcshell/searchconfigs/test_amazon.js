@@ -4,7 +4,7 @@
 "use strict";
 
 const test = new SearchConfigTest({
-  identifier: "amazon",
+  identifier: "amazondotcom-us",
   default: {
     // Not default anywhere.
   },
