@@ -68,6 +68,7 @@ LazyLogModule gDictionaryLog("CompressionDictionaries");
  * Reference to the DictionaryCache singleton. May be null.
  */
 StaticRefPtr<DictionaryCache> gDictionaryCache;
+nsCOMPtr<nsICacheStorage> DictionaryCache::sCacheStorage;
 
 DictionaryCacheEntry::DictionaryCacheEntry(const nsACString& aURI,
                                            const nsACString& aPattern,
@@ -149,6 +150,7 @@ bool DictionaryCacheEntry::Prefetch(nsILoadContextInfo* aLoadContextInfo,
     if (mDictionaryData.empty()) {
       // We haven't requested it yet from the Cache and don't have it in memory
       // already
+      // We can't use sCacheStorage because we need the correct LoadContextInfo
       nsCOMPtr<nsICacheStorageService> cacheStorageService(
           components::CacheStorage::Service());
       if (!cacheStorageService) {
@@ -250,6 +252,8 @@ DictionaryCacheEntry::OnDataAvailable(nsIRequest* request,
                                       nsIInputStream* aInputStream,
                                       uint64_t aOffset, uint32_t aCount) {
   uint32_t n;
+  DICTIONARY_LOG(
+      ("DictionaryCacheEntry %s OnDataAvailable %u", mURI.get(), aCount));
   return aInputStream->ReadSegments(&DictionaryCacheEntry::ReadCacheData, this,
                                     aCount, &n);
 }
@@ -271,6 +275,10 @@ DictionaryCacheEntry::OnStopRequest(nsIRequest* request, nsresult result) {
   if (NS_SUCCEEDED(result)) {
     FinishFile();
   } else {
+    // XXX
+    // This is problematic - we requested with dcb/dcz, but can't actually
+    // decode them. Probably we should re-request without dcb/dcz, and also nuke
+    // the entry
     // XXX
   }
   return NS_OK;
@@ -319,6 +327,54 @@ DictionaryCacheEntry::OnCacheEntryAvailable(nsICacheEntry* entry, bool isNew,
   return NS_OK;
 }
 
+//----------------------------------------------------------------------------------
+
+class DictionaryOriginReader final : public nsICacheEntryOpenCallback {
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSICACHEENTRYOPENCALLBACK
+
+  DictionaryOriginReader() {}
+
+  // Note: don't do this in constructor, since we may call mCallback and
+  // the release the self-reference
+  void Init(nsACString& aURI,
+            const std::function<nsresult(DictionaryCacheEntry*)>& aCallback) {
+    mCallback = aCallback;
+    mSelf = this;  // keep this alive until we call aCallback
+    DictionaryCache::sCacheStorage->AsyncOpenURIString(
+        aURI, ""_ns, nsICacheStorage::OPEN_READONLY, this);
+  }
+
+ private:
+  ~DictionaryOriginReader() {}
+
+  std::function<nsresult(DictionaryCacheEntry*)> mCallback;
+  RefPtr<DictionaryOriginReader> mSelf;
+};
+
+NS_IMPL_ISUPPORTS(DictionaryOriginReader, nsICacheEntryOpenCallback)
+
+NS_IMETHODIMP DictionaryOriginReader::OnCacheEntryCheck(nsICacheEntry* entry,
+                                                        uint32_t* result) {
+  *result = nsICacheEntryOpenCallback::ENTRY_WANTED;
+  DICTIONARY_LOG(
+      ("DictionaryOriginReader::OnCacheEntryCheck this=%p for entry %p", this,
+       entry));
+  return NS_OK;
+}
+
+NS_IMETHODIMP DictionaryOriginReader::OnCacheEntryAvailable(
+    nsICacheEntry* entry, bool isNew, nsresult result) {
+  MOZ_ASSERT(NS_IsMainThread(), "Got cache entry off main thread!");
+  DICTIONARY_LOG(
+      ("Dictionary::OnCacheEntryAvailable this=%p for entry %p", this, entry));
+  // XXX
+
+  (mCallback)(nullptr);
+  mSelf = nullptr;  // this will delete 'this'
+  return NS_OK;
+}
+
 // static
 already_AddRefed<DictionaryCache> DictionaryCache::GetInstance() {
   if (!gDictionaryCache) {
@@ -328,7 +384,20 @@ already_AddRefed<DictionaryCache> DictionaryCache::GetInstance() {
   return do_AddRef(gDictionaryCache);
 }
 
-nsresult DictionaryCache::Init() { return NS_OK; }
+nsresult DictionaryCache::Init() {
+  nsCOMPtr<nsICacheStorageService> cacheStorageService(
+      components::CacheStorage::Service());
+  if (!cacheStorageService) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = cacheStorageService->DiskCacheStorage(
+      nullptr, getter_AddRefs(sCacheStorage));  // Don't need a load context
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  DICTIONARY_LOG(("Inited DictionaryCache %p", sCacheStorage.get()));
+  return NS_OK;
+}
 
 nsresult DictionaryCache::AddEntry(nsIURI* aURI, const nsACString& aKey,
                                    const nsACString& aPattern,
@@ -457,18 +526,19 @@ void DictionaryCache::GetDictionaryFor(
   }
   // We don't have an entry at all.  We need to check if there's an
   // entry on disk for <origin>, unless we know we have all entries
-  // in the memory cache.  For now, assume we have all entries, so a
-  // miss means no dictionaries.
+  // in the memory cache.
 
-  // XXX handle unknown origins by checking the disk cache.  This means
-  // the lookup will have to be async (or return that we need to look
-  // it up in the caller
-  // Maybe pass in a lambda for completion when we have the origin
-  // If we know ALL origins with dictionaries in the cache and all dictionaries
-  // for each origin (i.e. if this isn't a cache, but an in-memory index),
-  // then this can be synchronous
+  // Handle unknown origins by checking the disk cache
+  if (!sCacheStorage) {  // in case we have no disk storage
+    return;
+  }
 
-  (aCallback)(nullptr);
+  // To keep track of the callback, we need a new object to get the
+  // OnCacheEntryAvailable can resolve the callback.  It will keep a reference
+  // to itself until it call aCallback after the cache read has resolved
+  nsCString key("dict:"_ns + prepath);
+  RefPtr<DictionaryOriginReader> reader = new DictionaryOriginReader();
+  reader->Init(key, aCallback);
 }
 
 static void MakeMetadataEntry() {

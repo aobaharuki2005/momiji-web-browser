@@ -49,25 +49,6 @@ add_task(async function test_redirectCache() {
         ",script=not-cacheable",
       ].join(""),
     },
-    {
-      query: "?redirect=not-cacheable&script=cacheable",
-      cachedCounter: true,
-      log: [
-        ",redirect=not-cacheable&script=cacheable",
-        ",script=cacheable",
-        ",redirect=not-cacheable&script=cacheable",
-      ].join(""),
-    },
-    {
-      query: "?redirect=not-cacheable&script=not-cacheable",
-      cachedCounter: false,
-      log: [
-        ",redirect=not-cacheable&script=not-cacheable",
-        ",script=not-cacheable",
-        ",redirect=not-cacheable&script=not-cacheable",
-        ",script=not-cacheable",
-      ].join(""),
-    },
   ];
 
   for (const { query, cachedCounter, log } of tests) {

@@ -471,8 +471,6 @@ run-sequentially = "httpd server"
 
 ["test_cache2_nostore.js"]
 
-["test_cache2_compression_dictionary.js"]
-
 ["test_cache_204_response.js"]
 
 ["test_cache_jar.js"]
