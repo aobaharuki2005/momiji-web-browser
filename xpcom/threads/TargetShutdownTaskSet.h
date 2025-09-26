@@ -7,9 +7,8 @@
 #ifndef XPCOM_THREADS_TARGETSHUTDOWNTASKSET_H_
 #define XPCOM_THREADS_TARGETSHUTDOWNTASKSET_H_
 
-#include <random>
+#include "mozilla/LinkedList.h"
 #include "nsITargetShutdownTask.h"
-#include "nsTArray.h"
 
 class nsIRunnable;
 
@@ -19,7 +18,8 @@ class nsIRunnable;
 
 class TargetShutdownTaskSet {
  public:
-  using TasksArray = nsTArray<nsCOMPtr<nsITargetShutdownTask>>;
+  using TasksList = mozilla::LinkedList<RefPtr<nsITargetShutdownTask>>;
+  using TasksArray = AutoTArray<nsCOMPtr<nsITargetShutdownTask>, 8>;
 
   TargetShutdownTaskSet() = default;
   TargetShutdownTaskSet(TargetShutdownTaskSet&& aOther) = default;
@@ -27,14 +27,17 @@ class TargetShutdownTaskSet {
 
   // Add a task to the set and keep it owned. The caller can forget it if
   // it is not interested in being ever able to remove it.
-  // Returns always NS_OK to not scan the array for Contains in release builds.
-  // Note that we assert if a task is added twice or late (i.e. after Extract
-  // was called).
+  // Returns NS_ERROR_UNEXPECTED if the task is already in a TargetShutdownTaskSet.
   nsresult AddTask(nsITargetShutdownTask* aTask) {
     MOZ_ASSERT(aTask);
     MOZ_ASSERT(!mShutdownTasksTaken);
-    MOZ_ASSERT(!mShutdownTasks.Contains(aTask));
-    mShutdownTasks.AppendElement(aTask);
+    if (aTask->isInList()) {
+      MOZ_ASSERT_UNREACHABLE(
+          "A shutdown task can only be registered to one target.");
+      return NS_ERROR_UNEXPECTED;
+    }
+    mShutdownTasks.insertBack(aTask);
+    ++mShutdownTaskCount;
     return NS_OK;
   }
 
@@ -44,34 +47,38 @@ class TargetShutdownTaskSet {
   // it was found.
   nsresult RemoveTask(nsITargetShutdownTask* aTask) {
     MOZ_ASSERT(aTask);
-    // We search from the end as longer-living shutdown tasks will most
-    // likely be at the beginning of our array. Note that in case Extract was
-    // called already, we'll just not find it and return NS_ERROR_UNEXPECTED.
-    TasksArray::index_type idx = mShutdownTasks.LastIndexOf(aTask);
-    if (idx != TasksArray::NoIndex) {
-      mShutdownTasks.RemoveElementAt(idx);
-      return NS_OK;
+    if (!aTask->isInList()) {
+      return NS_ERROR_UNEXPECTED;
     }
-    return NS_ERROR_UNEXPECTED;
+    aTask->removeFrom(mShutdownTasks);
+    --mShutdownTaskCount;
+    return NS_OK;
   }
 
   // Returns an array with owning pointers of all tasks. This must be called
   // only once. It's the caller's duty to decide how to run them.
-  TasksArray Extract() {
+  inline TasksArray Extract() {
     MOZ_ASSERT(!mShutdownTasksTaken);
-    TasksArray ret = std::move(mShutdownTasks);
+    TasksArray ret;
+    ret.SetCapacity(mShutdownTaskCount);
+    while (!mShutdownTasks.isEmpty()) {
+      auto task = mShutdownTasks.popFirst();
+      ret.AppendElement(std::move(task));
+    }
+    mShutdownTaskCount = 0;
 #ifdef DEBUG
     mShutdownTasksTaken = true;
 #endif
     return ret;
   }
 
-  bool IsEmpty() { return mShutdownTasks.IsEmpty(); }
+  bool IsEmpty() { return mShutdownTasks.isEmpty(); }
 
-  ~TargetShutdownTaskSet() { MOZ_ASSERT(mShutdownTasks.IsEmpty()); }
+  ~TargetShutdownTaskSet() { MOZ_ASSERT(mShutdownTasks.isEmpty()); }
 
  private:
-  TasksArray mShutdownTasks;
+  TasksList mShutdownTasks;
+  uint32_t mShutdownTaskCount{0};
 #ifdef DEBUG
   bool mShutdownTasksTaken{false};
 #endif
