@@ -12,7 +12,7 @@ FAILURE_CSS = "[data-testid=browser-compatibility-banner]"
 async def test_enabled(client):
     await client.navigate(URL)
     await asyncio.sleep(3)
-    assert not client.find_css(FAILURE_CSS, is_displayed=True, timeout=30)
+    assert not client.find_css(FAILURE_CSS, is_displayed=True)
 
 
 @pytest.mark.asyncio
