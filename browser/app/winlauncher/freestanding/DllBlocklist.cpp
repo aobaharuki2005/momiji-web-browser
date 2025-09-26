@@ -6,7 +6,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/BinarySearch.h"
 #include "mozilla/NativeNt.h"
 #include "mozilla/Types.h"
 #include "mozilla/WindowsDllBlocklist.h"
