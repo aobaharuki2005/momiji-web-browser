@@ -1109,9 +1109,7 @@ export class TelemetryFeed {
         newtabCategory = "enabled";
         if (
           lazy.AboutNewTab.newTabURLOverridden &&
-          ((Object.hasOwn(lazy.ExtensionUtils, "isExtensionUrl") &&
-            !lazy.ExtensionUtils.isExtensionUrl(lazy.AboutNewTab.newTabURL)) ||
-            !lazy.AboutNewTab.newTabURL.startsWith("moz-extension://"))
+          !lazy.ExtensionUtils.isExtensionUrl(lazy.AboutNewTab.newTabURL)
         ) {
           value.newtab_url_category = await this._classifySite(
             lazy.AboutNewTab.newTabURL
@@ -1135,9 +1133,7 @@ export class TelemetryFeed {
         !["about:home", "about:blank", BLANK_HOMEPAGE_URL].includes(
           homePageURL
         ) &&
-        ((Object.hasOwn(lazy.ExtensionUtils, "isExtensionUrl") &&
-          !lazy.ExtensionUtils.isExtensionUrl(homePageURL)) ||
-          !homePageURL.startsWith("moz-extension://"))
+        !lazy.ExtensionUtils.isExtensionUrl(homePageURL)
       ) {
         value.home_url_category = await this._classifySite(homePageURL);
         homeAffected = true;
