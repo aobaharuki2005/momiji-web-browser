@@ -119,8 +119,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   [[nodiscard]] nsresult AddAcceptAndDictionaryHeaders(
       nsIURI* aURI, ExtContentPolicyType aType, nsHttpRequestHead* aRequest,
-      bool aSecure,
-      const std::function<bool(DictionaryCacheEntry*)>& aCallback);
+      bool aSecure, bool& aAsync,
+      const std::function<bool(bool, DictionaryCacheEntry*)>& aCallback);
   [[nodiscard]] nsresult AddStandardRequestHeaders(
       nsHttpRequestHead*, nsIURI* aURI, ExtContentPolicyType aContentPolicyType,
       bool aShouldResistFingerprinting);
