@@ -51,6 +51,10 @@ function Widgets() {
     }
   }
 
+  if (!(listsEnabled || timerEnabled)) {
+    return null;
+  }
+
   return (
     <div className="widgets-wrapper">
       <div className="widgets-container">
