@@ -26,7 +26,8 @@ namespace js {
 // AllocPolicy:
 //  - see "Allocation policies" in AllocPolicy.h
 template <typename T, size_t MinInlineCapacity = 0,
-          class AllocPolicy = TempAllocPolicy>
+          class AllocPolicy = TempAllocPolicy,
+          template <typename, size_t, class> class VectorType = Vector>
 class Fifo {
   static_assert(MinInlineCapacity % 2 == 0, "MinInlineCapacity must be even!");
 
@@ -39,8 +40,8 @@ class Fifo {
   // Invariant 2: Entries within |front_| are sorted from younger to older.
   // Invariant 3: Entries within |rear_| are sorted from older to younger.
   // Invariant 4: If the |Fifo| is not empty, then |front_| is not empty.
-  Vector<T, MinInlineCapacity / 2, AllocPolicy> front_;
-  Vector<T, MinInlineCapacity / 2, AllocPolicy> rear_;
+  VectorType<T, MinInlineCapacity / 2, AllocPolicy> front_;
+  VectorType<T, MinInlineCapacity / 2, AllocPolicy> rear_;
 
  private:
   // Maintain invariants after adding or removing entries.
