@@ -120,6 +120,11 @@
             }],
           ],
         }],
+        ['target_arch == "arm64" and moz_have_arm_sve2 != 1 and build_with_mozilla == 1', {
+          'defines' :[
+            'LIBYUV_DISABLE_SVE',
+          ]
+        }],
       ], #conditions
       'defines': [
         'LIBYUV_DISABLE_SME',
@@ -159,17 +164,6 @@
             'dependencies': [
                  ':libyuv_sve',
             ],
-            'defines' :[
-              'LIBYUV_SVE',
-            ]
-          }],
-          ['target_arch == "arm64" and moz_have_arm_sve2 == 1 and build_with_mozilla == 1', {
-            'dependencies': [
-                 ':libyuv_sve',
-            ],
-            'defines' :[
-              'LIBYUV_SVE',
-            ]
           }],
         ], #conditions
       },
