@@ -213,8 +213,10 @@ class TabPanel extends Panel {
   handleEvent(e) {
     switch (e.type) {
       case "popupshowing":
-      case "TabAttrModified":
         this.#updatePreview();
+        break;
+      case "TabAttrModified":
+        this.#updatePreview(e.target);
         break;
       case "TabSelect":
         this.deactivate();
@@ -377,7 +379,11 @@ class TabPanel extends Panel {
       : "";
   }
 
-  #updatePreview() {
+  #updatePreview(tab = null) {
+    if (tab) {
+      this.#tab = tab;
+    }
+
     this.panelElement.querySelector(".tab-preview-title").textContent =
       this.#displayTitle;
     this.panelElement.querySelector(".tab-preview-uri").textContent =
