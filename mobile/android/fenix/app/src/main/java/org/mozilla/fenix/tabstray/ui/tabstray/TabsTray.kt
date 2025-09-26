@@ -124,7 +124,7 @@ private val ScaffoldFabOffsetCorrection = 4.dp
  * @param onSyncedTabsFabClicked Invoked when the fab is clicked in [Page.SyncedTabs].
  * @param onUnlockPbmClick Invoked when user clicks on the Unlock button.
  */
-@Suppress("LongMethod", "LongParameterList", "ComplexMethod")
+@Suppress("LongMethod", "LongParameterList")
 @Composable
 fun TabsTray(
     tabsTrayStore: TabsTrayStore,

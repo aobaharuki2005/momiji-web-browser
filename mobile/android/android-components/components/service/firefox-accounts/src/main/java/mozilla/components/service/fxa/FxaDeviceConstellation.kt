@@ -63,7 +63,6 @@ class FxaDeviceConstellation(
         None,
     }
 
-    @Suppress("ComplexMethod")
     @Throws(FxaPanicException::class)
     override suspend fun finalizeDevice(
         authType: AuthType,

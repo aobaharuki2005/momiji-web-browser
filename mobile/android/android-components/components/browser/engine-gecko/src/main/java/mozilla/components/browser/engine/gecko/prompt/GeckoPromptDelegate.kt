@@ -532,7 +532,6 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         return geckoResult
     }
 
-    @Suppress("ComplexMethod")
     override fun onDateTimePrompt(
         session: GeckoSession,
         prompt: PromptDelegate.DateTimePrompt,

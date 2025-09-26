@@ -457,7 +457,6 @@ class GleanCrashReporterService(
      * could happen, for instance, if the application crashed again before the file could be
      * processed.
      */
-    @Suppress("ComplexMethod")
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun parseCrashFile() {
         try {

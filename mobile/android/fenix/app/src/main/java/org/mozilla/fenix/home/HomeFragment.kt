@@ -844,7 +844,7 @@ class HomeFragment : Fragment() {
         binding.homeAppBar.setExpanded(true)
     }
 
-    @Suppress("LongMethod", "ComplexMethod")
+    @Suppress("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         // DO NOT ADD ANYTHING ABOVE THIS getProfilerTime CALL!
         val profilerStartTime = requireComponents.core.engine.profiler?.getProfilerTime()

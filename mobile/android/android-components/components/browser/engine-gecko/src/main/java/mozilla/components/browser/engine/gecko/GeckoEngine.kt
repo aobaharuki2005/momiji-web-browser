@@ -1705,7 +1705,6 @@ class GeckoEngine(
         }
     }
 
-    @Suppress("ComplexMethod")
     internal fun ContentBlockingController.LogEntry.BlockingData.getLoadedCategory(): TrackingCategory {
         val socialTrackingProtectionEnabled = settings.trackingProtectionPolicy?.strictSocialTrackingProtection
             ?: false

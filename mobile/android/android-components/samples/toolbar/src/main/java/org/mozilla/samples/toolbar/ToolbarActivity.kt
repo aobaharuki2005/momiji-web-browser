@@ -595,7 +595,7 @@ class ToolbarActivity : AppCompatActivity() {
 
     private var loading = MutableLiveData<Boolean>()
 
-    @Suppress("TooGenericExceptionCaught", "ComplexMethod")
+    @Suppress("TooGenericExceptionCaught")
     private fun simulateReload(view: UrlBoxProgressView? = null) {
         job?.cancel()
 

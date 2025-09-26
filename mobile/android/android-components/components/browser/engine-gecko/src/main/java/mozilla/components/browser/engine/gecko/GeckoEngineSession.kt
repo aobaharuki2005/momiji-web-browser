@@ -870,7 +870,6 @@ class GeckoEngineSession(
     /**
      * NavigationDelegate implementation for forwarding callbacks to observers of the session.
      */
-    @Suppress("ComplexMethod")
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {
         override fun onLocationChange(
             session: GeckoSession,
@@ -1133,7 +1132,6 @@ class GeckoEngineSession(
         }
     }
 
-    @Suppress("ComplexMethod")
     internal fun createHistoryDelegate() = object : GeckoSession.HistoryDelegate {
         @SuppressWarnings("ReturnCount")
         override fun onVisited(
@@ -1236,7 +1234,7 @@ class GeckoEngineSession(
         }
     }
 
-    @Suppress("ComplexMethod", "NestedBlockDepth")
+    @Suppress("NestedBlockDepth")
     internal fun createContentDelegate() = object : GeckoSession.ContentDelegate {
         override fun onCookieBannerDetected(session: GeckoSession) {
             notifyObservers { onCookieBannerChange(CookieBannerHandlingStatus.DETECTED) }
@@ -1518,7 +1516,6 @@ class GeckoEngineSession(
         }
     }
 
-    @Suppress("ComplexMethod")
     fun handleLongClick(elementSrc: String?, elementType: Int, uri: String? = null, title: String? = null): HitResult? {
         return when (elementType) {
             GeckoSession.ContentDelegate.ContextElement.TYPE_AUDIO ->
@@ -1598,7 +1595,6 @@ class GeckoEngineSession(
         /**
          * Provides an ErrorType corresponding to the error code provided.
          */
-        @Suppress("ComplexMethod")
         internal fun geckoErrorToErrorType(errorCode: Int) =
             when (errorCode) {
                 WebRequestError.ERROR_UNKNOWN -> ErrorType.UNKNOWN

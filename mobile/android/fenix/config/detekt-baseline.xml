@@ -49,7 +49,7 @@
     <ID>ForbiddenSuppress:DownloadUIStore.kt$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:DownloadsScreen.kt$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:EditBookmarkFragment.kt$EditBookmarkFragment$@Suppress("LongMethod")</ID>
-    <ID>ForbiddenSuppress:ExternalAppBrowserFragment.kt$ExternalAppBrowserFragment$@Suppress("LongMethod", "ComplexMethod")</ID>
+    <ID>ForbiddenSuppress:ExternalAppBrowserFragment.kt$ExternalAppBrowserFragment$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:FakeHomepagePreview.kt$FakeHomepagePreview$@Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:FenixApplication.kt$FenixApplication$@Suppress("ComplexMethod")</ID>
     <ID>ForbiddenSuppress:FenixApplication.kt$FenixApplication$@Suppress("ComplexMethod", "LongMethod")</ID>
@@ -62,11 +62,11 @@
     <ID>ForbiddenSuppress:HomeActivity.kt$HomeActivity$@Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:HomeActivity.kt$HomeActivity$@SuppressWarnings("TooManyFunctions", "LargeClass", "LongMethod")</ID>
     <ID>ForbiddenSuppress:HomeDeepLinkIntentProcessor.kt$HomeDeepLinkIntentProcessor$@Suppress("ComplexMethod")</ID>
-    <ID>ForbiddenSuppress:HomeFragment.kt$HomeFragment$@Suppress("LongMethod", "ComplexMethod")</ID>
+    <ID>ForbiddenSuppress:HomeFragment.kt$HomeFragment$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:HomeFragment.kt$HomeFragment$@Suppress("LongMethod", "CyclomaticComplexMethod")</ID>
     <ID>ForbiddenSuppress:HomeMenu.kt$HomeMenu$@Suppress("ComplexMethod")</ID>
     <ID>ForbiddenSuppress:HomeMenu.kt$HomeMenu$@Suppress("LargeClass", "LongMethod")</ID>
-    <ID>ForbiddenSuppress:HomeMenuView.kt$HomeMenuView$@Suppress("LongMethod", "ComplexMethod")</ID>
+    <ID>ForbiddenSuppress:HomeMenuView.kt$HomeMenuView$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:Homepage.kt$@Suppress("LongMethod", "CyclomaticComplexMethod")</ID>
     <ID>ForbiddenSuppress:InfoCard.kt$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:InstalledAddonDetailsFragment.kt$InstalledAddonDetailsFragment$@SuppressWarnings("LongMethod")</ID>
@@ -131,7 +131,7 @@
     <ID>ForbiddenSuppress:TabStrip.kt$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:TabTools.kt$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:TabsTray.kt$@Suppress("LongMethod")</ID>
-    <ID>ForbiddenSuppress:TabsTray.kt$@Suppress("LongMethod", "LongParameterList", "ComplexMethod")</ID>
+    <ID>ForbiddenSuppress:TabsTray.kt$@Suppress("LongMethod", "LongParameterList")</ID>
     <ID>ForbiddenSuppress:TabsTray.kt$@Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:TabsTrayBanner.kt$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:TabsTrayBanner.kt$@Suppress("LongMethod", "LongParameterList")</ID>
@@ -757,7 +757,7 @@
     <ID>UndocumentedPublicFunction:NavController.kt$fun NavController.navigateSafe( @IdRes resId: Int, directions: NavDirections, )</ID>
     <ID>UndocumentedPublicFunction:NimbusBranchesView.kt$NimbusBranchesView$fun update(state: NimbusBranchesState)</ID>
     <ID>UndocumentedPublicFunction:PasswordRevealHelper.kt$fun togglePasswordReveal(passwordText: TextView, revealPasswordButton: ImageButton)</ID>
-    <ID>UndocumentedPublicFunction:PhoneFeature.kt$PhoneFeature$@Suppress("ComplexMethod") fun getActionLabel( context: Context, sitePermissions: SitePermissions? = null, settings: Settings? = null, ): String</ID>
+    <ID>UndocumentedPublicFunction:PhoneFeature.kt$PhoneFeature$fun getActionLabel( context: Context, sitePermissions: SitePermissions? = null, settings: Settings? = null, ): String</ID>
     <ID>UndocumentedPublicFunction:PhoneFeature.kt$PhoneFeature$fun getAction(settings: Settings): SitePermissionsRules.Action</ID>
     <ID>UndocumentedPublicFunction:PhoneFeature.kt$PhoneFeature$fun getLabel(context: Context): String</ID>
     <ID>UndocumentedPublicFunction:PhoneFeature.kt$PhoneFeature$fun getStatus( sitePermissions: SitePermissions? = null, settings: Settings? = null, ): SitePermissions.Status</ID>
