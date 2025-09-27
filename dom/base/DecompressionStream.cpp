@@ -222,8 +222,10 @@ class ZLibDecompressionStreamAlgorithms : public DecompressionStreamAlgorithms {
           return;
       }
 
-      // At this point we either exhausted the input or the output buffer
-      MOZ_ASSERT(!mZStream.avail_in || !mZStream.avail_out);
+      // At this point we either exhausted the input or the output buffer, or
+      // met the stream end.
+      MOZ_ASSERT(!mZStream.avail_in || !mZStream.avail_out ||
+                 mObservedStreamEnd);
 
       size_t written = kBufferSize - mZStream.avail_out;
       if (!written) {
