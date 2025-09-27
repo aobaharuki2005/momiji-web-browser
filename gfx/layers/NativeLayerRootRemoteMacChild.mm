@@ -5,6 +5,7 @@
 
 #include "mozilla/layers/NativeLayerRemoteMac.h"
 #include "mozilla/layers/NativeLayerRootRemoteMacChild.h"
+#include "mozilla/layers/NativeLayerRootRemoteMacSnapshotter.h"
 #include "mozilla/layers/SurfacePool.h"
 
 namespace mozilla {
@@ -67,6 +68,19 @@ void NativeLayerRootRemoteMacChild::SetLayers(
   mNativeLayersChanged = true;
   mNativeLayers.Clear();
   mNativeLayers.AppendElements(layers);
+}
+
+UniquePtr<NativeLayerRootSnapshotter>
+NativeLayerRootRemoteMacChild::CreateSnapshotter() {
+  MOZ_RELEASE_ASSERT(!mWeakSnapshotter,
+                     "No NativeLayerRootSnapshotter for this NativeLayerRoot "
+                     "should exist when this is called");
+
+  auto cr = NativeLayerRootRemoteMacSnapshotter::Create(this);
+  if (cr) {
+    mWeakSnapshotter = cr.get();
+  }
+  return cr;
 }
 
 void NativeLayerRootRemoteMacChild::PrepareForCommit() {
