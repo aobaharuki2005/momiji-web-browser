@@ -69,12 +69,14 @@ struct CommandChangedSurface {
 };
 
 // This protocol allows a NativeLayerRoot implementation on the GPU
-// to send layer commands to the parent process.
+// to send layer commands to the parent process. It also allows the
+// GPU to request readback, which the parent will send as a Shmem.
 [NeedsOtherPid, ParentProc=Parent, ChildProc=GPU]
-async protocol PNativeLayerRemote
+sync protocol PNativeLayerRemote
 {
 parent:
   async CommitNativeLayerCommands(NativeLayerCommand[] commands);
+  sync RequestReadback(IntSize size) returns (Shmem pixels);
 };
 
 } // layers
