@@ -13,6 +13,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ServoStyleConsts.h"
+#include "mozilla/dom/CSSKeywordValue.h"
 #include "mozilla/dom/CSSStyleValue.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/StylePropertyMapReadOnlyBinding.h"
@@ -135,7 +136,14 @@ void StylePropertyMapReadOnly::Get(const nsACString& aProperty,
 
   // XXX Consider switch on result.tag
   if (result.IsTyped()) {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    auto typedValue = result.AsTyped();
+
+    MOZ_ASSERT(typedValue.IsKeyword());
+    auto value = typedValue.AsKeyword();
+
+    auto keywordValue = MakeRefPtr<CSSKeywordValue>(mParent, value);
+
+    aRetVal.SetAsCSSStyleValue() = std::move(keywordValue);
     return;
   }
 

@@ -18,11 +18,8 @@ CSSUnsupportedValue::CSSUnsupportedValue(nsCOMPtr<nsISupports> aParent,
       mProperty(aProperty),
       mDeclarations(std::move(aDeclarations)) {}
 
-nsCString CSSUnsupportedValue::GetValue() const {
-  nsCString value;
-  mDeclarations->GetPropertyValue(mProperty, value);
-
-  return value;
+void CSSUnsupportedValue::GetValue(nsACString& aRetVal) const {
+  mDeclarations->GetPropertyValue(mProperty, aRetVal);
 }
 
 CSSUnsupportedValue& CSSStyleValue::GetAsCSSUnsupportedValue() {

@@ -10,6 +10,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/CSSKeywordValue.h"
 #include "mozilla/dom/CSSStyleValue.h"
 #include "mozilla/dom/StylePropertyMapBinding.h"
 #include "nsCOMPtr.h"
@@ -52,14 +53,21 @@ void StylePropertyMap::Set(
 
   CSSStyleValue& styleValue = styleValueOrString.GetAsCSSStyleValue();
 
-  if (!styleValue.IsCSSUnsupportedValue()) {
+  nsAutoCString value;
+
+  if (styleValue.IsCSSUnsupportedValue()) {
+    CSSUnsupportedValue& unsupportedValue =
+        styleValue.GetAsCSSUnsupportedValue();
+
+    unsupportedValue.GetValue(value);
+  } else if (styleValue.IsCSSKeywordValue()) {
+    CSSKeywordValue& keywordValue = styleValue.GetAsCSSKeywordValue();
+
+    keywordValue.GetValue(value);
+  } else {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return;
   }
-
-  CSSUnsupportedValue& unsupportedValue = styleValue.GetAsCSSUnsupportedValue();
-
-  const nsCString value = unsupportedValue.GetValue();
 
   // Step 6.
 
