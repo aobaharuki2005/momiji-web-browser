@@ -93,8 +93,9 @@ class LogModule {
   _(startup)              /* engine startup logging */                       \
   _(teleporting)          /* Shape Teleporting */                            \
   _(selfHosted)           /* self-hosted script logging */                   \
-  JITSPEW_CHANNEL_LIST(_) /* A module for each JitSpew channel. */           \
-  _(gc)                   /* The garbage collector */
+  _(gc)                   /* The garbage collector */                        \
+  _(mtq)                  /* MicroTask queue */                              \
+  JITSPEW_CHANNEL_LIST(_) /* A module for each JitSpew channel. */
 
 // Declare Log modules
 #define DECLARE_MODULE(X) inline constexpr LogModule X##Module(#X);

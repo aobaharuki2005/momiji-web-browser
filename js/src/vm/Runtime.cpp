@@ -37,6 +37,7 @@
 #include "js/Wrapper.h"
 #include "js/WrapperCallbacks.h"
 #include "vm/DateTime.h"
+#include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 #include "vm/PromiseObject.h"  // js::PromiseObject
