@@ -238,13 +238,13 @@ class CallbackObjectBase {
   JS::TenuredHeap<JSObject*> mIncumbentJSGlobal;
 };
 
+/**
+ * A class that performs whatever setup we need to safely make a
+ * call while this class is on the stack, After the constructor
+ * returns, the call is safe to make if GetContext() returns
+ * non-null.
+ */
 class MOZ_STACK_CLASS CallSetup {
-  /**
-   * A class that performs whatever setup we need to safely make a
-   * call while this class is on the stack, After the constructor
-   * returns, the call is safe to make if GetContext() returns
-   * non-null.
-   */
  public:
   // If aExceptionHandling == eRethrowContentExceptions then aRealm
   // needs to be set to the realm in which exceptions will be rethrown.
@@ -270,6 +270,24 @@ class MOZ_STACK_CLASS CallSetup {
   CallSetup(const CallSetup&) = delete;
 
   bool ShouldRethrowException(JS::Handle<JS::Value> aException);
+
+  static nsIGlobalObject* GetActiveGlobalObjectForCall(
+      JSObject* callbackOrGlobal, bool aIsMainThread,
+      bool aIsJSImplementedWebIDL, ErrorResult& aRv);
+
+  static bool CheckBeforeExecution(nsIGlobalObject* aGlobalObject,
+                                   JSObject* aCallbackOrGlobal,
+                                   bool aIsJSImplementedWebIDL,
+                                   ErrorResult& aRv);
+
+  // Perform the final setup work. If this succeeds, mCx is set and we are able
+  // to run the callback with the appropriate environment.
+  void SetupForExecution(nsIGlobalObject* aGlobalObject,
+                         nsIGlobalObject* aIncumbentGlobal,
+                         JSObject* aCallbackOrGlobal, JSObject* aCallbackGlobal,
+                         JSObject* aCreationStack,
+                         nsIPrincipal* aWebIDLCallerPrincipal,
+                         const char* aExecutionReason, ErrorResult& aRv);
 
   // Members which can go away whenever
   JSContext* mCx;
