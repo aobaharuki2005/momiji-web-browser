@@ -398,9 +398,25 @@ extern JS_PUBLIC_API bool SetSettledPromiseIsHandled(JSContext* cx,
 /**
  * Returns a js::SavedFrame linked list of the stack that lead to the given
  * Promise's allocation.
+ *
+ * The promise parameter here should be an unwrapped promise.
  */
 extern JS_PUBLIC_API JSObject* GetPromiseAllocationSite(
     JS::HandleObject promise);
+
+/**
+ * A more flexible version of the above: Handles the cases where
+ * 1. maybePromise is wrapped
+ * 2. maybePromise is null
+ * 3. maybePromise isn't actually a promise.
+ *
+ * Returns js::SavedFrame if the passed argument is a
+ * wrapped promise (that's not a dead object wrapper) and it
+ * has an allocation site.
+ */
+extern JS_PUBLIC_API JSObject*
+MaybeGetPromiseAllocationSiteFromPossiblyWrappedPromise(
+    JS::HandleObject maybePromise);
 
 extern JS_PUBLIC_API JSObject* GetPromiseResolutionSite(
     JS::HandleObject promise);

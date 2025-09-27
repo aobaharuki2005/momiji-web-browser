@@ -576,6 +576,26 @@ bool JSRuntime::getHostDefinedData(JSContext* cx,
   return cx->jobQueue->getHostDefinedData(cx, data);
 }
 
+JS_PUBLIC_API JSObject*
+JS::MaybeGetPromiseAllocationSiteFromPossiblyWrappedPromise(
+    HandleObject promise) {
+  if (!promise) {
+    return nullptr;
+  }
+
+  JSObject* unwrappedPromise = promise;
+  // While the job object is guaranteed to be unwrapped, the promise
+  // might be wrapped. See the comments in EnqueuePromiseReactionJob in
+  // builtin/Promise.cpp for details.
+  if (IsWrapper(promise)) {
+    unwrappedPromise = UncheckedUnwrap(promise);
+  }
+  if (unwrappedPromise->is<PromiseObject>()) {
+    return unwrappedPromise->as<PromiseObject>().allocationSite();
+  }
+  return nullptr;
+}
+
 bool JSRuntime::enqueuePromiseJob(JSContext* cx, HandleFunction job,
                                   HandleObject promise,
                                   HandleObject hostDefinedData) {
@@ -583,23 +603,14 @@ bool JSRuntime::enqueuePromiseJob(JSContext* cx, HandleFunction job,
              "Must select a JobQueue implementation using JS::JobQueue "
              "or js::UseInternalJobQueues before using Promises");
 
-  RootedObject allocationSite(cx);
   if (promise) {
 #ifdef DEBUG
     AssertSameCompartment(job, promise);
 #endif
-
-    RootedObject unwrappedPromise(cx, promise);
-    // While the job object is guaranteed to be unwrapped, the promise
-    // might be wrapped. See the comments in EnqueuePromiseReactionJob in
-    // builtin/Promise.cpp for details.
-    if (IsWrapper(promise)) {
-      unwrappedPromise = UncheckedUnwrap(promise);
-    }
-    if (unwrappedPromise->is<PromiseObject>()) {
-      allocationSite = JS::GetPromiseAllocationSite(unwrappedPromise);
-    }
   }
+
+  RootedObject allocationSite(
+      cx, JS::MaybeGetPromiseAllocationSiteFromPossiblyWrappedPromise(promise));
   return cx->jobQueue->enqueuePromiseJob(cx, promise, job, allocationSite,
                                          hostDefinedData);
 }
