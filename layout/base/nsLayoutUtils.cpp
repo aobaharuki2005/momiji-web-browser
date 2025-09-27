@@ -939,6 +939,11 @@ nsIFrame* nsLayoutUtils::GetPageFrame(nsIFrame* aFrame) {
 }
 
 /* static */
+const nsIFrame* nsLayoutUtils::GetPageFrame(const nsIFrame* aFrame) {
+  return GetClosestFrameOfType(aFrame, LayoutFrameType::Page);
+}
+
+/* static */
 nsIFrame* nsLayoutUtils::GetStyleFrame(nsIFrame* aPrimaryFrame) {
   MOZ_ASSERT(aPrimaryFrame);
   if (const nsTableWrapperFrame* const table = do_QueryFrame(aPrimaryFrame)) {
@@ -9994,4 +9999,40 @@ CSSSize nsLayoutUtils::ExpandHeightForDynamicToolbar(
 nsSize nsLayoutUtils::ExpandHeightForDynamicToolbar(
     const nsPresContext* aPresContext, const nsSize& aSize) {
   return ExpandHeightForDynamicToolbarImpl(aPresContext, aSize);
+}
+
+nsRect nsLayoutUtils::GetCombinedFragmentRects(const nsIFrame* aFrame,
+                                               bool aRelativeToSelf) {
+  bool isPaginated = aFrame->PresContext()->IsPaginated();
+
+  // Lazy getter for aFrame's page-frame ancestor, if any.
+  Maybe<const nsIFrame*> maybePageFrame;
+  auto currPageFrame = [=, &maybePageFrame]() -> const nsIFrame* {
+    MOZ_ASSERT(isPaginated);
+    if (!maybePageFrame) {
+      maybePageFrame.emplace(nsLayoutUtils::GetPageFrame(aFrame));
+    }
+    return maybePageFrame.ref();
+  };
+
+  // A continuation is considered "on the same page" if the context is not
+  // paginated, or if it has the same page-frame ancestor.
+  auto onSamePage = [=](const nsIFrame* aContinuation) -> bool {
+    return !isPaginated ||
+           nsLayoutUtils::GetPageFrame(aContinuation) == currPageFrame();
+  };
+
+  // Collect rects from our continuations (limited to those that are on the
+  // same page if the context is paginated).
+  nsRect rect = aFrame->GetRectRelativeToSelf();
+  for (const nsIFrame* f = aFrame->GetNextContinuation(); f && onSamePage(f);
+       f = f->GetNextContinuation()) {
+    rect = rect.Union(f->GetRectRelativeToSelf() + f->GetOffsetTo(aFrame));
+  }
+  for (const nsIFrame* f = aFrame->GetPrevContinuation(); f && onSamePage(f);
+       f = f->GetPrevContinuation()) {
+    rect = rect.Union(f->GetRectRelativeToSelf() + f->GetOffsetTo(aFrame));
+  }
+
+  return aRelativeToSelf ? rect : rect + aFrame->GetPosition();
 }

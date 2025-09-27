@@ -324,6 +324,7 @@ class nsLayoutUtils {
    *         such ancestor exists
    */
   static nsIFrame* GetPageFrame(nsIFrame* aFrame);
+  static const nsIFrame* GetPageFrame(const nsIFrame* aFrame);
 
   /**
    * Given a frame which is the primary frame for an element,
@@ -3169,6 +3170,18 @@ class nsLayoutUtils {
    * Note: Must only be called from the main thread.
    */
   static void RecomputeSmoothScrollDefault();
+
+  /**
+   * Get the union of the rects of aFrame and its continuations (but not if the
+   * context is paginated and they're on a different page, as it doesn't make
+   * sense to "merge" their rects in that case).
+   *
+   * @param aFrame The target frame whose combined fragments are wanted.
+   * @param aRelativeToSelf If true, return rect relative to aFrame's origin;
+   *                        if false, return rect in aFrame's parent's space.
+   */
+  static nsRect GetCombinedFragmentRects(const nsIFrame* aFrame,
+                                         bool aRelativeToSelf = true);
 
  private:
   /**

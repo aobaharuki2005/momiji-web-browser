@@ -432,7 +432,8 @@ Maybe<AnchorPosInfo> AnchorPositioningUtils::GetAnchorPosRect(
     Maybe<AnchorPosResolutionData>* aReferencedAnchorsEntry) {
   auto rect = [&]() -> Maybe<nsRect> {
     if (aCBRectIsvalid) {
-      const nsRect result = aAnchor->GetRectRelativeToSelf();
+      const nsRect result =
+          nsLayoutUtils::GetCombinedFragmentRects(aAnchor, true);
       const auto offset = aAnchor->GetOffsetTo(aAbsoluteContainingBlock);
       // Easy, just use the existing function.
       return Some(result + offset);
@@ -450,12 +451,13 @@ Maybe<AnchorPosInfo> AnchorPositioningUtils::GetAnchorPosRect(
 
     if (aAnchor == containerChild) {
       // Anchor is the direct child of anchor's CBWM.
-      return Some(aAnchor->GetRect());
+      return Some(nsLayoutUtils::GetCombinedFragmentRects(aAnchor, false));
     }
 
     // TODO(dshin): Already traversed up to find `containerChild`, and we're
     // going to do it again here, which feels a little wasteful.
-    const nsRect rectToContainerChild = aAnchor->GetRectRelativeToSelf();
+    const nsRect rectToContainerChild =
+        nsLayoutUtils::GetCombinedFragmentRects(aAnchor, true);
     const auto offset = aAnchor->GetOffsetTo(containerChild);
     return Some(rectToContainerChild + offset + containerChild->GetPosition());
   }();

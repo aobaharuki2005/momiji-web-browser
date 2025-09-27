@@ -2024,7 +2024,7 @@ bool Gecko_GetAnchorPosSize(const AnchorPosResolutionParams* aParams,
     if (!anchor) {
       return Nothing{};
     }
-    const auto size = anchor->GetSize();
+    const auto size = nsLayoutUtils::GetCombinedFragmentRects(anchor).Size();
     if (entry) {
       *entry = Some(AnchorPosResolutionData{size, Nothing{}});
     }
