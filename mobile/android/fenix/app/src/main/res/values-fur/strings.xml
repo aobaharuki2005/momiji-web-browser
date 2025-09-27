@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">Protezion da lis spiis automatiche tant che impostazion predefinide</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Cuntune tocjade tu piedis impedî aes aziendis di spiâ i tiei clics.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Sincronize dapardut là che tu dopris Firefox</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Oten segnelibris, schedis e passwords su ducj i dispositîfs. Ducj i tiei dâts a son protets cu la criptografie.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Scomence la sincronizazion</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">No cumò</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Judinus a fâ cressi Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -720,6 +728,8 @@
   <string name="preferences_https_only_title">Modalitât dome-HTTPS</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Dopre il bloc dal schermi par platâ lis schedis te navigazion privade</string>
+  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
+  <string name="preferences_pbm_lock_screen_summary_3">Viôt lis schedis cul sbloc cul impront, cul PIN o cu la muse. Ativant cheste funzion nol sarà pussibil nancje caturâ o condividi il schermi.</string>
   <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Visualize lis schedis cun impront, PIN o sbloc cu la muse.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Bloc strissons pai cookies</string>
@@ -1766,6 +1776,8 @@
   <string name="unsubmitted_crash_dialog_positive_button_2">MANDE</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Invie segnalazion</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Lis segnalazions di colàs nus judin a diagnosticâ e risolvi problemis cul navigadôr. Lis segnalazion a podaressin includi dâts personâi o sensibii. %s</string>
   <string name="unsubmitted_crash_dialog_learn_more">Plui informazions</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Plui informazions</string>
@@ -2368,6 +2380,8 @@
     Title for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection
   -->
   <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">Disativâ pardabon lis corezions?</string>
+  <!-- Message for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">Cheste impostazion e jude a comedâ la plui part dai problemis comuns cui sîts. Se tu le disativis, al è pussibil che cualchi sît nol funzioni e che %1$s nol rivi a judâti a risolvi chescj problemis.</string>
   <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
   <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Disative corezions</string>
   <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
@@ -3810,7 +3824,7 @@
   -->
   <string name="review_prompt_pre_prompt_header">Ce pensistu di %1$s?</string>
   <!-- Label for a button negatively rating the user's experience with the app -->
-  <string name="review_prompt_negative_button">O ai problemis</string>
+  <string name="review_prompt_negative_button">No mi cjati</string>
   <!-- Label for a button positively rating the user's experience with the app -->
   <string name="review_prompt_positive_button">Al è maraveôs!</string>
   <!-- Title for a prompt asking the user to rate the app on Google Play Store. %1$s is the name of the app (for example "Firefox"). -->
@@ -3834,4 +3848,19 @@
     %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
   -->
   <string name="terms_of_use_prompt_message_1">O vin introdot lis %2$s di %1$s e inzornât la nestre %3$s.</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">Ti sbruntìn a leilis e a acetâlis. %1$s.</string>
+  <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
+  <string name="terms_of_use_prompt_link_terms_of_use">cundizions di utilizazion</string>
+  <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
+  <string name="terms_of_use_prompt_link_privacy_notice">informative su la riservatece</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">Plui informazions</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">Acete</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">Visimi plui indevant</string>
 </resources>

@@ -588,6 +588,8 @@
   <string name="onboarding_redesign_set_default_browser_title">Otomatik izlenme koruması her an yanınızda</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Şirketlerin tıklamalarınızı gözetlemesini tek dokunuşla durdurabilirsiniz.</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Yer imlerinize, sekmelerinize ve parolalarınıza istediğiniz cihazdan ulaşın. Tüm bilgileriniz şifrelenerek korunur.</string>
   <!-- Sync onboarding redesign positive button text. -->
   <string name="onboarding_redesign_sync_positive_button">Eşitlemeyi başlat</string>
   <!-- Sync onboarding redesign negative button text. -->

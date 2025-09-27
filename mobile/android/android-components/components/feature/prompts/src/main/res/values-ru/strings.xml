@@ -52,6 +52,8 @@
   <string name="mozac_feature_prompts_deny">Не разрешать</string>
   <!-- Text of the title of a dialog when a page is requesting to open a new window. -->
   <string name="mozac_feature_prompts_popup_dialog_title">Разрешить открытие этого сайта?</string>
+  <!-- Text of the title of a dialog when a third-party redirect is blocked. -->
+  <string name="mozac_feature_prompts_redirect_dialog_title">Разрешить перенаправление на этот сайт?</string>
   <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
   <string name="mozac_feature_prompt_before_unload_dialog_title">Вы уверены?</string>
   <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
