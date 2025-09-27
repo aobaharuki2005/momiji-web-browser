@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/NativeLayerRootRemoteMacParent.h"
+#include "xpcpublic.h"
 
 namespace mozilla {
 namespace layers {
@@ -81,6 +82,37 @@ NativeLayerRootRemoteMacParent::RecvCommitNativeLayerCommands(
 
   mRealNativeLayerRoot->CommitToScreen();
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult NativeLayerRootRemoteMacParent::RecvRequestReadback(
+    IntSize aSize, Shmem* const aPixels) {
+  if (!xpc::IsInAutomation()) {
+    return IPC_FAIL(this, "Should only be called from automation.");
+  }
+
+  // Actually do a snapshot on mRealNativeLayerRoot.
+  // TODO: we'll probably have to handle higher bit depth formats at some point
+  // with the upcoming HDR work, but for now assume B8G8R8A8.
+  auto readbackFormat = gfx::SurfaceFormat::B8G8R8A8;
+  size_t readbackSize =
+      aSize.width * aSize.height * gfx::BytesPerPixel(readbackFormat);
+  Shmem buffer;
+  if (!AllocShmem(readbackSize, &buffer)) {
+    return IPC_FAIL(this, "Can't allocate shmem.");
+  }
+
+  auto snapshotter = mRealNativeLayerRoot->CreateSnapshotter();
+  if (!snapshotter) {
+    return IPC_FAIL(this, "Can't create parent-side snapshotter.");
+  }
+
+  if (!snapshotter->ReadbackPixels(aSize, readbackFormat,
+                                   buffer.Range<uint8_t>())) {
+    return IPC_FAIL(this, "Failed readback.");
+  }
+
+  *aPixels = buffer;
   return IPC_OK();
 }
 
