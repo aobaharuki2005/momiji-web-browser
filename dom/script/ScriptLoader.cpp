@@ -2729,7 +2729,7 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
     aRequest->MarkPassedConditionForMemoryCache();
 
     if (aRequest->IsModuleRequest() &&
-        aRequest->AsModuleRequest()->IsStaticImport()) {
+        !aRequest->AsModuleRequest()->IsTopLevel()) {
       MOZ_ASSERT(!aRequest->isInList());
       mCacheableDependencyModules.AppendElement(aRequest);
     }
@@ -2870,7 +2870,7 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
   aRequest->MarkPassedConditionForDiskCache();
 
   if (aRequest->IsModuleRequest() &&
-      aRequest->AsModuleRequest()->IsStaticImport()) {
+      !aRequest->AsModuleRequest()->IsTopLevel()) {
     MOZ_ASSERT(!aRequest->isInList());
     mCacheableDependencyModules.AppendElement(aRequest);
   }
@@ -4135,10 +4135,6 @@ nsresult ScriptLoader::OnStreamComplete(
   NS_ASSERTION(aRequest, "null request in stream complete handler");
   NS_ENSURE_TRUE(aRequest, NS_ERROR_FAILURE);
 
-  if (aRequest->IsCanceled()) {
-    return NS_BINDING_ABORTED;
-  }
-
   nsresult rv = VerifySRI(aRequest, aLoader, aSRIStatus, aSRIDataVerifier);
 
   if (NS_SUCCEEDED(rv)) {
@@ -4347,35 +4343,26 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
     mDocument->AddBlockedNodeByClassifier(cont);
   }
 
-  bool wasHandled = false;
-
-  // A ModuleLoadRequest will be stored either in mDeferRequests or
-  // mLoadingAsyncRequests, but the onerror handler should be triggered later in
-  // ProcessRequests, so we handle ModuleLoadRequest before mDeferRequestrs and
-  // mLoadingAsyncRequests.
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(!aRequest->GetScriptLoadContext()->mIsInline);
-    wasHandled = true;
+    aRequest->AsModuleRequest()->OnFetchComplete(aResult);
+  }
 
-    ModuleLoadRequest* modReq = aRequest->AsModuleRequest();
-    modReq->OnFetchComplete(aResult);
-
-    MOZ_ASSERT(modReq->IsErrored());
-  } else if (aRequest->GetScriptLoadContext()->mInDeferList) {
-    wasHandled = true;
+  if (aRequest->GetScriptLoadContext()->mInDeferList) {
+    MOZ_ASSERT_IF(aRequest->IsModuleRequest(),
+                  aRequest->AsModuleRequest()->IsTopLevel());
     if (aRequest->isInList()) {
       RefPtr<ScriptLoadRequest> req = mDeferRequests.Steal(aRequest);
       FireScriptAvailable(aResult, req);
     }
   } else if (aRequest->GetScriptLoadContext()->mInAsyncList) {
-    wasHandled = true;
+    MOZ_ASSERT_IF(aRequest->IsModuleRequest(),
+                  aRequest->AsModuleRequest()->IsTopLevel());
     if (aRequest->isInList()) {
       RefPtr<ScriptLoadRequest> req = mLoadingAsyncRequests.Steal(aRequest);
       FireScriptAvailable(aResult, req);
     }
-  }
-
-  if (aRequest->GetScriptLoadContext()->mIsNonAsyncScriptInserted) {
+  } else if (aRequest->GetScriptLoadContext()->mIsNonAsyncScriptInserted) {
     if (aRequest->isInList()) {
       RefPtr<ScriptLoadRequest> req =
           mNonAsyncExternalScriptInsertedRequests.Steal(aRequest);
@@ -4387,12 +4374,26 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
       FireScriptAvailable(aResult, req);
     }
   } else if (aRequest->GetScriptLoadContext()->IsPreload()) {
+    if (aRequest->IsModuleRequest()) {
+      aRequest->Cancel();
+    }
     if (aRequest->IsTopLevel()) {
       // Request may already have been removed by
       // CancelAndClearScriptLoadRequests.
       mPreloads.RemoveElement(aRequest, PreloadRequestComparator());
     }
     MOZ_ASSERT(!aRequest->isInList());
+  } else if (aRequest->IsModuleRequest()) {
+    ModuleLoadRequest* modReq = aRequest->AsModuleRequest();
+    if (modReq->IsDynamicImport()) {
+      MOZ_ASSERT(modReq->IsTopLevel());
+      if (aRequest->isInList()) {
+        modReq->CancelDynamicImport(aResult);
+      }
+    } else {
+      MOZ_ASSERT(!modReq->isInList());
+      modReq->Cancel();
+    }
   } else if (mParserBlockingRequest == aRequest) {
     MOZ_ASSERT(!aRequest->isInList());
     mParserBlockingRequest = nullptr;
@@ -4409,7 +4410,7 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
     FireScriptAvailable(aResult, aRequest);
     ContinueParserAsync(aRequest);
     mCurrentParserInsertedScript = oldParserInsertedScript;
-  } else if (!wasHandled) {
+  } else {
     // This happens for blocking requests cancelled by ParsingComplete().
     // Ignore cancellation status for link-preload requests, as cancellation can
     // be omitted for them when SRI is stronger on consumer tags.
@@ -4587,6 +4588,9 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
     return aStatus;
   }
 
+  if (aRequest->IsCanceled()) {
+    return NS_BINDING_ABORTED;
+  }
   MOZ_ASSERT(aRequest->IsFetching());
   CollectScriptTelemetry(aRequest);
 
@@ -4845,14 +4849,7 @@ void ScriptLoader::AddAsyncRequest(ScriptLoadRequest* aRequest) {
 
 void ScriptLoader::MaybeMoveToLoadedList(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsFinished());
-
-  bool isDynamicImport = false;
-  if (aRequest->IsModuleRequest()) {
-    ModuleLoadRequest* modReq = aRequest->AsModuleRequest();
-    isDynamicImport = modReq->IsDynamicImport();
-  }
-
-  MOZ_ASSERT(aRequest->IsTopLevel() || isDynamicImport);
+  MOZ_ASSERT(aRequest->IsTopLevel());
 
   // If it's async, move it to the loaded list.
   // aRequest->GetScriptLoadContext()->mInAsyncList really _should_ be in a
@@ -4864,7 +4861,8 @@ void ScriptLoader::MaybeMoveToLoadedList(ScriptLoadRequest* aRequest) {
       RefPtr<ScriptLoadRequest> req = mLoadingAsyncRequests.Steal(aRequest);
       mLoadedAsyncRequests.AppendElement(req);
     }
-  } else if (isDynamicImport) {
+  } else if (aRequest->IsModuleRequest() &&
+             aRequest->AsModuleRequest()->IsDynamicImport()) {
     // Process dynamic imports with async scripts.
     MOZ_ASSERT(!aRequest->isInList());
     mLoadedAsyncRequests.AppendElement(aRequest);

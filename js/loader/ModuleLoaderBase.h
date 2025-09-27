@@ -549,9 +549,22 @@ class ModuleLoaderBase : public nsISupports {
                                              Handle<Value> aHostDefined,
                                              Handle<Value> aError);
   static bool OnLoadRequestedModulesResolved(ModuleLoadRequest* aRequest);
-  static bool OnLoadRequestedModulesRejected(JSContext* aCx,
-                                             ModuleLoadRequest* aRequest,
+  static bool OnLoadRequestedModulesRejected(ModuleLoadRequest* aRequest,
                                              Handle<Value> aError);
+
+  /**
+   * Shorthand Wrapper for JSAPI FinishDynamicImport function for the reject
+   * case where we do not have `aEvaluationPromise`. As there is no evaluation
+   * Promise, JS::FinishDynamicImport will always reject.
+   *
+   * @param aRequest
+   *        The module load request for the dynamic module.
+   * @param aResult
+   *        The result of running ModuleEvaluate -- If this is successful, then
+   *        we can await the associated EvaluationPromise.
+   */
+  void FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
+                                    nsresult aResult);
 
   void RemoveDynamicImport(ModuleLoadRequest* aRequest);
 
@@ -560,7 +573,6 @@ class ModuleLoaderBase : public nsISupports {
 
   void OnFetchSucceeded(ModuleLoadRequest* aRequest);
   void OnFetchFailed(ModuleLoadRequest* aRequest);
-  void Cancel(ModuleLoadRequest* aRequest);
 
   // The slot stored in ImportMetaResolve function.
   enum class ImportMetaSlots : uint32_t { ModulePrivateSlot = 0, SlotCount };
