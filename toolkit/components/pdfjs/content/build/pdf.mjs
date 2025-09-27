@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.224
- * pdfjsBuild = 4eeabcb70
+ * pdfjsVersion = 5.4.272
+ * pdfjsBuild = ec4f616d2
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -343,12 +343,12 @@ function getVerbosityLevel() {
 }
 function info(msg) {
   if (verbosity >= VerbosityLevel.INFOS) {
-    console.log(`Info: ${msg}`);
+    console.info(`Info: ${msg}`);
   }
 }
 function warn(msg) {
   if (verbosity >= VerbosityLevel.WARNINGS) {
-    console.log(`Warning: ${msg}`);
+    console.warn(`Warning: ${msg}`);
   }
 }
 function unreachable(msg) {
@@ -3487,6 +3487,8 @@ class AnnotationEditorUIManager {
           editor.editComment();
         } else if (mustEnterInEditMode) {
           editor.enterInEditMode();
+        } else {
+          editor.focus();
         }
       } else {
         editor.unselect();
@@ -3591,14 +3593,12 @@ class AnnotationEditorUIManager {
       }
     }
   }
-  getEditors(pageIndex) {
-    const editors = [];
+  *getEditors(pageIndex) {
     for (const editor of this.#allEditors.values()) {
       if (editor.pageIndex === pageIndex) {
-        editors.push(editor);
+        yield editor;
       }
     }
-    return editors;
   }
   getEditor(id) {
     return this.#allEditors.get(id);
@@ -4401,6 +4401,11 @@ class Comment {
     }
     return this.#render(button, true);
   }
+  focusButton() {
+    setTimeout(() => {
+      (this.#commentStandaloneButton ?? this.#commentToolbarButton)?.focus();
+    }, 0);
+  }
   onUpdatedColor() {
     if (!this.#commentStandaloneButton) {
       return;
@@ -4466,6 +4471,7 @@ class Comment {
     comment.ariaHasPopup = "dialog";
     if (isStandalone) {
       comment.ariaControls = "commentPopup";
+      comment.setAttribute("data-l10n-id", "pdfjs-show-comment-button");
     } else {
       comment.ariaControlsElements = [this.#editor._uiManager.getCommentDialogElement()];
       comment.setAttribute("data-l10n-id", "pdfjs-editor-edit-comment-button");
@@ -4812,7 +4818,6 @@ class AnnotationEditor {
   #disabled = false;
   #dragPointerId = null;
   #dragPointerType = "";
-  #keepAspectRatio = false;
   #resizersDiv = null;
   #lastPointerCoords = null;
   #savedDimensions = null;
@@ -5242,36 +5247,16 @@ class AnnotationEditor {
     } = this;
     return [pageWidth * parentScale, pageHeight * parentScale];
   }
-  setDims(width, height) {
-    const [parentWidth, parentHeight] = this.parentDimensions;
+  setDims() {
     const {
-      style
-    } = this.div;
-    style.width = `${(100 * width / parentWidth).toFixed(2)}%`;
-    if (!this.#keepAspectRatio) {
-      style.height = `${(100 * height / parentHeight).toFixed(2)}%`;
-    }
-  }
-  fixDims() {
-    const {
-      style
-    } = this.div;
-    const {
-      height,
-      width
-    } = style;
-    const widthPercent = width.endsWith("%");
-    const heightPercent = !this.#keepAspectRatio && height.endsWith("%");
-    if (widthPercent && heightPercent) {
-      return;
-    }
-    const [parentWidth, parentHeight] = this.parentDimensions;
-    if (!widthPercent) {
-      style.width = `${(100 * parseFloat(width) / parentWidth).toFixed(2)}%`;
-    }
-    if (!this.#keepAspectRatio && !heightPercent) {
-      style.height = `${(100 * parseFloat(height) / parentHeight).toFixed(2)}%`;
-    }
+      div: {
+        style
+      },
+      width,
+      height
+    } = this;
+    style.width = `${(100 * width).toFixed(2)}%`;
+    style.height = `${(100 * height).toFixed(2)}%`;
   }
   getInitialTranslation() {
     return [0, 0];
@@ -5356,8 +5341,7 @@ class AnnotationEditor {
     this.height = height;
     this.x = x;
     this.y = y;
-    const [parentWidth, parentHeight] = this.parentDimensions;
-    this.setDims(parentWidth * width, parentHeight * height);
+    this.setDims();
     this.fixAndSetPosition();
     this._onResized();
   }
@@ -5487,7 +5471,7 @@ class AnnotationEditor {
     this.height = newHeight;
     this.x = newX;
     this.y = newY;
-    this.setDims(parentWidth * newWidth, parentHeight * newHeight);
+    this.setDims();
     this.fixAndSetPosition();
     this._onResizing();
   }
@@ -5575,6 +5559,9 @@ class AnnotationEditor {
   hasAltTextData() {
     return this.#altText?.hasData() ?? false;
   }
+  focusCommentButton() {
+    this.#comment?.focusButton();
+  }
   addCommentButton() {
     return this.#comment ||= new Comment(this);
   }
@@ -5647,6 +5634,9 @@ class AnnotationEditor {
   }
   get hasEditedComment() {
     return this.#comment?.hasBeenEdited();
+  }
+  get hasDeletedComment() {
+    return this.#comment?.isDeleted();
   }
   get hasComment() {
     return !!this.#comment && !this.#comment.isEmpty() && !this.#comment.isDeleted();
@@ -5768,7 +5758,7 @@ class AnnotationEditor {
     this.y = centerY - newTransfCenterPoint[1];
     this.width = newWidth;
     this.height = newHeight;
-    this.setDims(parentWidth * newWidth, parentHeight * newHeight);
+    this.setDims();
     this.fixAndSetPosition();
     this._onResizing();
   }
@@ -6115,6 +6105,13 @@ class AnnotationEditor {
   get commentButtonPosition() {
     return this._uiManager.direction === "ltr" ? [1, 0] : [0, 0];
   }
+  get commentButtonPositionInPage() {
+    const {
+      commentButtonPosition: [posX, posY]
+    } = this;
+    const [blX, blY, trX, trY] = this.getPDFRect();
+    return [AnnotationEditor._round(blX + (trX - blX) * posX), AnnotationEditor._round(blY + (trY - blY) * (1 - posY))];
+  }
   get commentButtonColor() {
     return this._uiManager.makeCommentColor(this.getNonHCMColor(), this.opacity);
   }
@@ -6259,6 +6256,13 @@ class AnnotationEditor {
     this._editToolbar?.show();
     this.#altText?.toggleAltTextBadge(false);
   }
+  focus() {
+    if (this.div && !this.div.contains(document.activeElement)) {
+      setTimeout(() => this.div?.focus({
+        preventScroll: true
+      }), 0);
+    }
+  }
   unselect() {
     if (!this.isSelected) {
       return;
@@ -6320,15 +6324,6 @@ class AnnotationEditor {
     } else {
       this.parent.setActiveEditor(null);
     }
-  }
-  setAspectRatio(width, height) {
-    this.#keepAspectRatio = true;
-    const aspectRatio = width / height;
-    const {
-      style
-    } = this.div;
-    style.aspectRatio = aspectRatio;
-    style.height = "auto";
   }
   static get MIN_SIZE() {
     return 16;
@@ -6652,9 +6647,21 @@ class AnnotationStorage {
   get editorStats() {
     let stats = null;
     const typeToEditor = new Map();
+    let numberOfEditedComments = 0;
+    let numberOfDeletedComments = 0;
     for (const value of this.#storage.values()) {
       if (!(value instanceof AnnotationEditor)) {
+        if (value.popup.deleted) {
+          numberOfDeletedComments += 1;
+        } else if (value.popup) {
+          numberOfEditedComments += 1;
+        }
         continue;
+      }
+      if (value.isCommentDeleted) {
+        numberOfDeletedComments += 1;
+      } else if (value.hasEditedComment) {
+        numberOfEditedComments += 1;
       }
       const editorStats = value.telemetryFinalData;
       if (!editorStats) {
@@ -6681,6 +6688,16 @@ class AnnotationStorage {
         counters.set(val, count + 1);
       }
     }
+    if (numberOfDeletedComments > 0 || numberOfEditedComments > 0) {
+      stats ||= Object.create(null);
+      stats.comments = {
+        deleted: numberOfDeletedComments,
+        edited: numberOfEditedComments
+      };
+    }
+    if (!stats) {
+      return null;
+    }
     for (const [type, editor] of typeToEditor) {
       stats[type] = editor.computeTelemetryFinalData(stats[type]);
     }
@@ -6696,6 +6713,9 @@ class AnnotationStorage {
       return true;
     }
     return false;
+  }
+  getEditor(annotationId) {
+    return this.#editorsMap?.get(annotationId) || null;
   }
   get modifiedIds() {
     if (this.#modifiedIds) {
@@ -6869,12 +6889,17 @@ class FontLoader {
   }
 }
 class FontFaceObject {
-  constructor(translatedData, inspectFont = null) {
+  #fontData;
+  constructor(translatedData, inspectFont = null, extra, charProcOperatorList) {
     this.compiledGlyphs = Object.create(null);
-    for (const i in translatedData) {
-      this[i] = translatedData[i];
-    }
+    this.#fontData = translatedData;
     this._inspectFont = inspectFont;
+    if (extra) {
+      Object.assign(this, extra);
+    }
+    if (charProcOperatorList) {
+      this.charProcOperatorList = charProcOperatorList;
+    }
   }
   createNativeFontFace() {
     if (!this.data || this.disableFontFace) {
@@ -6929,6 +6954,78 @@ class FontFaceObject {
       objs.delete(objId);
     }
     return this.compiledGlyphs[character] = path;
+  }
+  get black() {
+    return this.#fontData.black;
+  }
+  get bold() {
+    return this.#fontData.bold;
+  }
+  get disableFontFace() {
+    return this.#fontData.disableFontFace ?? false;
+  }
+  get fontExtraProperties() {
+    return this.#fontData.fontExtraProperties ?? false;
+  }
+  get isInvalidPDFjsFont() {
+    return this.#fontData.isInvalidPDFjsFont;
+  }
+  get isType3Font() {
+    return this.#fontData.isType3Font;
+  }
+  get italic() {
+    return this.#fontData.italic;
+  }
+  get missingFile() {
+    return this.#fontData.missingFile;
+  }
+  get remeasure() {
+    return this.#fontData.remeasure;
+  }
+  get vertical() {
+    return this.#fontData.vertical;
+  }
+  get ascent() {
+    return this.#fontData.ascent;
+  }
+  get defaultWidth() {
+    return this.#fontData.defaultWidth;
+  }
+  get descent() {
+    return this.#fontData.descent;
+  }
+  get bbox() {
+    return this.#fontData.bbox;
+  }
+  get fontMatrix() {
+    return this.#fontData.fontMatrix;
+  }
+  get fallbackName() {
+    return this.#fontData.fallbackName;
+  }
+  get loadedName() {
+    return this.#fontData.loadedName;
+  }
+  get mimetype() {
+    return this.#fontData.mimetype;
+  }
+  get name() {
+    return this.#fontData.name;
+  }
+  get data() {
+    return this.#fontData.data;
+  }
+  clearData() {
+    this.#fontData.clearData();
+  }
+  get cssFontInfo() {
+    return this.#fontData.cssFontInfo;
+  }
+  get systemFontInfo() {
+    return this.#fontData.systemFontInfo;
+  }
+  get defaultVMetrics() {
+    return this.#fontData.defaultVMetrics;
   }
 }
 
@@ -11125,6 +11222,456 @@ class DOMFilterFactory extends BaseFilterFactory {
   }
 }
 
+;// ./src/shared/obj-bin-transform.js
+
+class CssFontInfo {
+  #buffer;
+  #view;
+  #decoder;
+  static strings = ["fontFamily", "fontWeight", "italicAngle"];
+  static write(info) {
+    const encoder = new TextEncoder();
+    const encodedStrings = {};
+    let stringsLength = 0;
+    for (const prop of CssFontInfo.strings) {
+      const encoded = encoder.encode(info[prop]);
+      encodedStrings[prop] = encoded;
+      stringsLength += 4 + encoded.length;
+    }
+    const buffer = new ArrayBuffer(stringsLength);
+    const data = new Uint8Array(buffer);
+    const view = new DataView(buffer);
+    let offset = 0;
+    for (const prop of CssFontInfo.strings) {
+      const encoded = encodedStrings[prop];
+      const length = encoded.length;
+      view.setUint32(offset, length);
+      data.set(encoded, offset + 4);
+      offset += 4 + length;
+    }
+    assert(offset === buffer.byteLength, "CssFontInfo.write: Buffer overflow");
+    return buffer;
+  }
+  constructor(buffer) {
+    this.#buffer = buffer;
+    this.#view = new DataView(this.#buffer);
+    this.#decoder = new TextDecoder();
+  }
+  #readString(index) {
+    assert(index < CssFontInfo.strings.length, "Invalid string index");
+    let offset = 0;
+    for (let i = 0; i < index; i++) {
+      offset += this.#view.getUint32(offset) + 4;
+    }
+    const length = this.#view.getUint32(offset);
+    return this.#decoder.decode(new Uint8Array(this.#buffer, offset + 4, length));
+  }
+  get fontFamily() {
+    return this.#readString(0);
+  }
+  get fontWeight() {
+    return this.#readString(1);
+  }
+  get italicAngle() {
+    return this.#readString(2);
+  }
+}
+class SystemFontInfo {
+  #buffer;
+  #view;
+  #decoder;
+  static strings = ["css", "loadedName", "baseFontName", "src"];
+  static write(info) {
+    const encoder = new TextEncoder();
+    const encodedStrings = {};
+    let stringsLength = 0;
+    for (const prop of SystemFontInfo.strings) {
+      const encoded = encoder.encode(info[prop]);
+      encodedStrings[prop] = encoded;
+      stringsLength += 4 + encoded.length;
+    }
+    stringsLength += 4;
+    let encodedStyleStyle,
+      encodedStyleWeight,
+      lengthEstimate = 1 + stringsLength;
+    if (info.style) {
+      encodedStyleStyle = encoder.encode(info.style.style);
+      encodedStyleWeight = encoder.encode(info.style.weight);
+      lengthEstimate += 4 + encodedStyleStyle.length + 4 + encodedStyleWeight.length;
+    }
+    const buffer = new ArrayBuffer(lengthEstimate);
+    const data = new Uint8Array(buffer);
+    const view = new DataView(buffer);
+    let offset = 0;
+    view.setUint8(offset++, info.guessFallback ? 1 : 0);
+    view.setUint32(offset, 0);
+    offset += 4;
+    stringsLength = 0;
+    for (const prop of SystemFontInfo.strings) {
+      const encoded = encodedStrings[prop];
+      const length = encoded.length;
+      stringsLength += 4 + length;
+      view.setUint32(offset, length);
+      data.set(encoded, offset + 4);
+      offset += 4 + length;
+    }
+    view.setUint32(offset - stringsLength - 4, stringsLength);
+    if (info.style) {
+      view.setUint32(offset, encodedStyleStyle.length);
+      data.set(encodedStyleStyle, offset + 4);
+      offset += 4 + encodedStyleStyle.length;
+      view.setUint32(offset, encodedStyleWeight.length);
+      data.set(encodedStyleWeight, offset + 4);
+      offset += 4 + encodedStyleWeight.length;
+    }
+    assert(offset <= buffer.byteLength, "SubstitionInfo.write: Buffer overflow");
+    return buffer.transferToFixedLength(offset);
+  }
+  constructor(buffer) {
+    this.#buffer = buffer;
+    this.#view = new DataView(this.#buffer);
+    this.#decoder = new TextDecoder();
+  }
+  get guessFallback() {
+    return this.#view.getUint8(0) !== 0;
+  }
+  #readString(index) {
+    assert(index < SystemFontInfo.strings.length, "Invalid string index");
+    let offset = 5;
+    for (let i = 0; i < index; i++) {
+      offset += this.#view.getUint32(offset) + 4;
+    }
+    const length = this.#view.getUint32(offset);
+    return this.#decoder.decode(new Uint8Array(this.#buffer, offset + 4, length));
+  }
+  get css() {
+    return this.#readString(0);
+  }
+  get loadedName() {
+    return this.#readString(1);
+  }
+  get baseFontName() {
+    return this.#readString(2);
+  }
+  get src() {
+    return this.#readString(3);
+  }
+  get style() {
+    let offset = 1;
+    offset += 4 + this.#view.getUint32(offset);
+    const styleLength = this.#view.getUint32(offset);
+    const style = this.#decoder.decode(new Uint8Array(this.#buffer, offset + 4, styleLength));
+    offset += 4 + styleLength;
+    const weightLength = this.#view.getUint32(offset);
+    const weight = this.#decoder.decode(new Uint8Array(this.#buffer, offset + 4, weightLength));
+    return {
+      style,
+      weight
+    };
+  }
+}
+class FontInfo {
+  static bools = ["black", "bold", "disableFontFace", "fontExtraProperties", "isInvalidPDFjsFont", "isType3Font", "italic", "missingFile", "remeasure", "vertical"];
+  static numbers = ["ascent", "defaultWidth", "descent"];
+  static strings = ["fallbackName", "loadedName", "mimetype", "name"];
+  static #OFFSET_NUMBERS = Math.ceil(this.bools.length * 2 / 8);
+  static #OFFSET_BBOX = this.#OFFSET_NUMBERS + this.numbers.length * 8;
+  static #OFFSET_FONT_MATRIX = this.#OFFSET_BBOX + 1 + 2 * 4;
+  static #OFFSET_DEFAULT_VMETRICS = this.#OFFSET_FONT_MATRIX + 1 + 8 * 6;
+  static #OFFSET_STRINGS = this.#OFFSET_DEFAULT_VMETRICS + 1 + 2 * 3;
+  #buffer;
+  #decoder;
+  #view;
+  constructor({
+    data,
+    extra
+  }) {
+    this.#buffer = data;
+    this.#decoder = new TextDecoder();
+    this.#view = new DataView(this.#buffer);
+    if (extra) {
+      Object.assign(this, extra);
+    }
+  }
+  #readBoolean(index) {
+    assert(index < FontInfo.bools.length, "Invalid boolean index");
+    const byteOffset = Math.floor(index / 4);
+    const bitOffset = index * 2 % 8;
+    const value = this.#view.getUint8(byteOffset) >> bitOffset & 0x03;
+    return value === 0x00 ? undefined : value === 0x02;
+  }
+  get black() {
+    return this.#readBoolean(0);
+  }
+  get bold() {
+    return this.#readBoolean(1);
+  }
+  get disableFontFace() {
+    return this.#readBoolean(2);
+  }
+  get fontExtraProperties() {
+    return this.#readBoolean(3);
+  }
+  get isInvalidPDFjsFont() {
+    return this.#readBoolean(4);
+  }
+  get isType3Font() {
+    return this.#readBoolean(5);
+  }
+  get italic() {
+    return this.#readBoolean(6);
+  }
+  get missingFile() {
+    return this.#readBoolean(7);
+  }
+  get remeasure() {
+    return this.#readBoolean(8);
+  }
+  get vertical() {
+    return this.#readBoolean(9);
+  }
+  #readNumber(index) {
+    assert(index < FontInfo.numbers.length, "Invalid number index");
+    return this.#view.getFloat64(FontInfo.#OFFSET_NUMBERS + index * 8);
+  }
+  get ascent() {
+    return this.#readNumber(0);
+  }
+  get defaultWidth() {
+    return this.#readNumber(1);
+  }
+  get descent() {
+    return this.#readNumber(2);
+  }
+  get bbox() {
+    let offset = FontInfo.#OFFSET_BBOX;
+    const numCoords = this.#view.getUint8(offset);
+    if (numCoords === 0) {
+      return undefined;
+    }
+    offset += 1;
+    const bbox = [];
+    for (let i = 0; i < 4; i++) {
+      bbox.push(this.#view.getInt16(offset, true));
+      offset += 2;
+    }
+    return bbox;
+  }
+  get fontMatrix() {
+    let offset = FontInfo.#OFFSET_FONT_MATRIX;
+    const numPoints = this.#view.getUint8(offset);
+    if (numPoints === 0) {
+      return undefined;
+    }
+    offset += 1;
+    const fontMatrix = [];
+    for (let i = 0; i < 6; i++) {
+      fontMatrix.push(this.#view.getFloat64(offset, true));
+      offset += 8;
+    }
+    return fontMatrix;
+  }
+  get defaultVMetrics() {
+    let offset = FontInfo.#OFFSET_DEFAULT_VMETRICS;
+    const numMetrics = this.#view.getUint8(offset);
+    if (numMetrics === 0) {
+      return undefined;
+    }
+    offset += 1;
+    const defaultVMetrics = [];
+    for (let i = 0; i < 3; i++) {
+      defaultVMetrics.push(this.#view.getInt16(offset, true));
+      offset += 2;
+    }
+    return defaultVMetrics;
+  }
+  #readString(index) {
+    assert(index < FontInfo.strings.length, "Invalid string index");
+    let offset = FontInfo.#OFFSET_STRINGS + 4;
+    for (let i = 0; i < index; i++) {
+      offset += this.#view.getUint32(offset) + 4;
+    }
+    const length = this.#view.getUint32(offset);
+    const stringData = new Uint8Array(length);
+    stringData.set(new Uint8Array(this.#buffer, offset + 4, length));
+    return this.#decoder.decode(stringData);
+  }
+  get fallbackName() {
+    return this.#readString(0);
+  }
+  get loadedName() {
+    return this.#readString(1);
+  }
+  get mimetype() {
+    return this.#readString(2);
+  }
+  get name() {
+    return this.#readString(3);
+  }
+  get data() {
+    let offset = FontInfo.#OFFSET_STRINGS;
+    const stringsLength = this.#view.getUint32(offset);
+    offset += 4 + stringsLength;
+    const systemFontInfoLength = this.#view.getUint32(offset);
+    offset += 4 + systemFontInfoLength;
+    const cssFontInfoLength = this.#view.getUint32(offset);
+    offset += 4 + cssFontInfoLength;
+    const length = this.#view.getUint32(offset);
+    if (length === 0) {
+      return undefined;
+    }
+    return new Uint8Array(this.#buffer, offset + 4, length);
+  }
+  clearData() {
+    let offset = FontInfo.#OFFSET_STRINGS;
+    const stringsLength = this.#view.getUint32(offset);
+    offset += 4 + stringsLength;
+    const systemFontInfoLength = this.#view.getUint32(offset);
+    offset += 4 + systemFontInfoLength;
+    const cssFontInfoLength = this.#view.getUint32(offset);
+    offset += 4 + cssFontInfoLength;
+    const length = this.#view.getUint32(offset);
+    const data = new Uint8Array(this.#buffer, offset + 4, length);
+    data.fill(0);
+    this.#view.setUint32(offset, 0);
+  }
+  get cssFontInfo() {
+    let offset = FontInfo.#OFFSET_STRINGS;
+    const stringsLength = this.#view.getUint32(offset);
+    offset += 4 + stringsLength;
+    const systemFontInfoLength = this.#view.getUint32(offset);
+    offset += 4 + systemFontInfoLength;
+    const cssFontInfoLength = this.#view.getUint32(offset);
+    if (cssFontInfoLength === 0) {
+      return null;
+    }
+    const cssFontInfoData = new Uint8Array(cssFontInfoLength);
+    cssFontInfoData.set(new Uint8Array(this.#buffer, offset + 4, cssFontInfoLength));
+    return new CssFontInfo(cssFontInfoData.buffer);
+  }
+  get systemFontInfo() {
+    let offset = FontInfo.#OFFSET_STRINGS;
+    const stringsLength = this.#view.getUint32(offset);
+    offset += 4 + stringsLength;
+    const systemFontInfoLength = this.#view.getUint32(offset);
+    if (systemFontInfoLength === 0) {
+      return null;
+    }
+    const systemFontInfoData = new Uint8Array(systemFontInfoLength);
+    systemFontInfoData.set(new Uint8Array(this.#buffer, offset + 4, systemFontInfoLength));
+    return new SystemFontInfo(systemFontInfoData.buffer);
+  }
+  static write(font) {
+    const systemFontInfoBuffer = font.systemFontInfo ? SystemFontInfo.write(font.systemFontInfo) : null;
+    const cssFontInfoBuffer = font.cssFontInfo ? CssFontInfo.write(font.cssFontInfo) : null;
+    const encoder = new TextEncoder();
+    const encodedStrings = {};
+    let stringsLength = 0;
+    for (const prop of FontInfo.strings) {
+      encodedStrings[prop] = encoder.encode(font[prop]);
+      stringsLength += 4 + encodedStrings[prop].length;
+    }
+    const lengthEstimate = FontInfo.#OFFSET_STRINGS + 4 + stringsLength + 4 + (systemFontInfoBuffer ? systemFontInfoBuffer.byteLength : 0) + 4 + (cssFontInfoBuffer ? cssFontInfoBuffer.byteLength : 0) + 4 + (font.data ? font.data.length : 0);
+    const buffer = new ArrayBuffer(lengthEstimate);
+    const data = new Uint8Array(buffer);
+    const view = new DataView(buffer);
+    let offset = 0;
+    const numBools = FontInfo.bools.length;
+    let boolByte = 0,
+      boolBit = 0;
+    for (let i = 0; i < numBools; i++) {
+      const value = font[FontInfo.bools[i]];
+      const bits = value === undefined ? 0x00 : value ? 0x02 : 0x01;
+      boolByte |= bits << boolBit;
+      boolBit += 2;
+      if (boolBit === 8 || i === numBools - 1) {
+        view.setUint8(offset++, boolByte);
+        boolByte = 0;
+        boolBit = 0;
+      }
+    }
+    assert(offset === FontInfo.#OFFSET_NUMBERS, "FontInfo.write: Boolean properties offset mismatch");
+    for (const prop of FontInfo.numbers) {
+      view.setFloat64(offset, font[prop]);
+      offset += 8;
+    }
+    assert(offset === FontInfo.#OFFSET_BBOX, "FontInfo.write: Number properties offset mismatch");
+    if (font.bbox) {
+      view.setUint8(offset++, 4);
+      for (const coord of font.bbox) {
+        view.setInt16(offset, coord, true);
+        offset += 2;
+      }
+    } else {
+      view.setUint8(offset++, 0);
+      offset += 2 * 4;
+    }
+    assert(offset === FontInfo.#OFFSET_FONT_MATRIX, "FontInfo.write: BBox properties offset mismatch");
+    if (font.fontMatrix) {
+      view.setUint8(offset++, 6);
+      for (const point of font.fontMatrix) {
+        view.setFloat64(offset, point, true);
+        offset += 8;
+      }
+    } else {
+      view.setUint8(offset++, 0);
+      offset += 8 * 6;
+    }
+    assert(offset === FontInfo.#OFFSET_DEFAULT_VMETRICS, "FontInfo.write: FontMatrix properties offset mismatch");
+    if (font.defaultVMetrics) {
+      view.setUint8(offset++, 1);
+      for (const metric of font.defaultVMetrics) {
+        view.setInt16(offset, metric, true);
+        offset += 2;
+      }
+    } else {
+      view.setUint8(offset++, 0);
+      offset += 3 * 2;
+    }
+    assert(offset === FontInfo.#OFFSET_STRINGS, "FontInfo.write: DefaultVMetrics properties offset mismatch");
+    view.setUint32(FontInfo.#OFFSET_STRINGS, 0);
+    offset += 4;
+    for (const prop of FontInfo.strings) {
+      const encoded = encodedStrings[prop];
+      const length = encoded.length;
+      view.setUint32(offset, length);
+      data.set(encoded, offset + 4);
+      offset += 4 + length;
+    }
+    view.setUint32(FontInfo.#OFFSET_STRINGS, offset - FontInfo.#OFFSET_STRINGS - 4);
+    if (!systemFontInfoBuffer) {
+      view.setUint32(offset, 0);
+      offset += 4;
+    } else {
+      const length = systemFontInfoBuffer.byteLength;
+      view.setUint32(offset, length);
+      assert(offset + 4 + length <= buffer.byteLength, "FontInfo.write: Buffer overflow at systemFontInfo");
+      data.set(new Uint8Array(systemFontInfoBuffer), offset + 4);
+      offset += 4 + length;
+    }
+    if (!cssFontInfoBuffer) {
+      view.setUint32(offset, 0);
+      offset += 4;
+    } else {
+      const length = cssFontInfoBuffer.byteLength;
+      view.setUint32(offset, length);
+      assert(offset + 4 + length <= buffer.byteLength, "FontInfo.write: Buffer overflow at cssFontInfo");
+      data.set(new Uint8Array(cssFontInfoBuffer), offset + 4);
+      offset += 4 + length;
+    }
+    if (font.data === undefined) {
+      view.setUint32(offset, 0);
+      offset += 4;
+    } else {
+      view.setUint32(offset, font.data.length);
+      data.set(font.data, offset + 4);
+      offset += 4 + font.data.length;
+    }
+    assert(offset <= buffer.byteLength, "FontInfo.write: Buffer overflow");
+    return buffer.transferToFixedLength(offset);
+  }
+}
+
 ;// ./src/display/worker_options.js
 class GlobalWorkerOptions {
   static #port = null;
@@ -12144,6 +12691,7 @@ class TextLayer {
 
 
 
+
 const RENDERING_CANCELLED_TIMEOUT = 100;
 function getDocument(src = {}) {
   const task = new PDFDocumentLoadingTask();
@@ -12213,7 +12761,7 @@ function getDocument(src = {}) {
   }
   const docParams = {
     docId,
-    apiVersion: "5.4.224",
+    apiVersion: "5.4.272",
     data,
     password,
     disableAutoFetch,
@@ -13366,13 +13914,14 @@ class WorkerTransport {
             this.commonObjs.resolve(id, exportedError);
             break;
           }
+          const fontData = new FontInfo(exportedData);
           const inspectFont = this._params.pdfBug && globalThis.FontInspector?.enabled ? (font, url) => globalThis.FontInspector.fontAdded(font, url) : null;
-          const font = new FontFaceObject(exportedData, inspectFont);
+          const font = new FontFaceObject(fontData, inspectFont, exportedData.extra, exportedData.charProcOperatorList);
           this.fontLoader.bind(font).catch(() => messageHandler.sendWithPromise("FontFallback", {
             id
           })).finally(() => {
             if (!font.fontExtraProperties && font.data) {
-              font.data = null;
+              font.clearData();
             }
             this.commonObjs.resolve(id, font);
           });
@@ -13789,8 +14338,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "5.4.224";
-const build = "4eeabcb70";
+const version = "5.4.272";
+const build = "ec4f616d2";
 
 ;// ./src/display/editor/color_picker.js
 
@@ -14279,14 +14828,29 @@ class AnnotationElement {
     return this.data.isEditable;
   }
   get hasPopupData() {
-    return AnnotationElement._hasPopupData(this.data);
+    return AnnotationElement._hasPopupData(this.data) || this.enableComment && !!this.commentText;
+  }
+  get commentData() {
+    const {
+      data
+    } = this;
+    const editor = this.annotationStorage?.getEditor(data.id);
+    if (editor) {
+      return editor.getData();
+    }
+    return data;
   }
   get hasCommentButton() {
     return this.enableComment && this.hasPopupElement;
   }
   get commentButtonPosition() {
+    const editor = this.annotationStorage?.getEditor(this.data.id);
+    if (editor) {
+      return editor.commentButtonPositionInPage;
+    }
     const {
       quadPoints,
+      inkLists,
       rect
     } = this.data;
     let maxX = -Infinity;
@@ -14301,6 +14865,21 @@ class AnnotationElement {
         }
       }
       return [maxX, maxY];
+    }
+    if (inkLists?.length >= 1) {
+      for (const inkList of inkLists) {
+        for (let i = 0, ii = inkList.length; i < ii; i += 2) {
+          if (inkList[i + 1] > maxY) {
+            maxY = inkList[i + 1];
+            maxX = inkList[i];
+          } else if (inkList[i + 1] === maxY) {
+            maxX = Math.max(maxX, inkList[i]);
+          }
+        }
+      }
+      if (maxX !== Infinity) {
+        return [maxX, maxY];
+      }
     }
     if (rect) {
       return [rect[2], rect[3]];
@@ -14701,9 +15280,6 @@ class AnnotationElement {
     this.container.style.clipPath = `url(#${id})`;
   }
   _createPopup(popupData = null) {
-    if (this.parent._commentManager) {
-      return;
-    }
     const {
       data
     } = this;
@@ -14734,10 +15310,15 @@ class AnnotationElement {
       parent: this.parent,
       elements: [this]
     });
-    this.parent.div.append(popup.render());
+    if (!this.parent._commentManager) {
+      this.parent.div.append(popup.render());
+    }
   }
   get hasPopupElement() {
     return !!(this.#popupElement || this.popup || this.data.popupRef);
+  }
+  get extraPopupElement() {
+    return this.#popupElement;
   }
   render() {
     unreachable("Abstract method `AnnotationElement.render` called");
@@ -16085,11 +16666,10 @@ class PopupElement {
     this.#commentManager = commentManager;
     this.#firstElement = elements[0];
     this.#dateObj = PDFDateString.toDateObject(modificationDate);
+    this.trigger = elements.flatMap(e => e.getElementsToTriggerPopup());
     if (commentManager) {
-      this.#popupAbortController = new AbortController();
-      this.#renderCommentButton();
+      this.renderCommentButton();
     } else {
-      this.trigger = elements.flatMap(e => e.getElementsToTriggerPopup());
       this.#addEventListeners();
       this.#container.hidden = true;
       if (open) {
@@ -16109,10 +16689,10 @@ class PopupElement {
       element.addEventListener("click", this.#boundToggle, {
         signal
       });
-      element.addEventListener("mouseenter", this.#boundShow, {
+      element.addEventListener("pointerenter", this.#boundShow, {
         signal
       });
-      element.addEventListener("mouseleave", this.#boundHide, {
+      element.addEventListener("pointerleave", this.#boundHide, {
         signal
       });
       element.classList.add("popupTriggerArea");
@@ -16130,7 +16710,7 @@ class PopupElement {
     }
     this.#commentButtonPosition = element._normalizePoint(element.commentButtonPosition);
   }
-  #renderCommentButton() {
+  renderCommentButton() {
     if (this.#commentButton) {
       return;
     }
@@ -16140,55 +16720,97 @@ class PopupElement {
     if (!this.#commentButtonPosition) {
       return;
     }
-    const button = this.#commentButton = document.createElement("button");
-    button.className = "annotationCommentButton";
-    const parentContainer = this.#firstElement.container;
-    button.style.zIndex = parentContainer.style.zIndex + 1;
-    button.tabIndex = 0;
-    button.ariaHasPopup = "dialog";
-    button.ariaControls = "commentPopup";
     const {
       signal
-    } = this.#popupAbortController;
-    button.addEventListener("keydown", this.#boundKeyDown, {
-      signal
-    });
-    button.addEventListener("click", () => {
-      this.#commentManager.toggleCommentPopup(this, true);
-    }, {
-      signal
-    });
-    button.addEventListener("pointerenter", () => {
-      this.#commentManager.toggleCommentPopup(this, false, true);
-    }, {
-      signal
-    });
-    button.addEventListener("pointerleave", () => {
+    } = this.#popupAbortController = new AbortController();
+    const hasOwnButton = !!this.#firstElement.extraPopupElement;
+    const togglePopup = () => {
+      this.#commentManager.toggleCommentPopup(this, true, undefined, !hasOwnButton);
+    };
+    const showPopup = () => {
+      this.#commentManager.toggleCommentPopup(this, false, true, !hasOwnButton);
+    };
+    const hidePopup = () => {
       this.#commentManager.toggleCommentPopup(this, false, false);
-    }, {
-      signal
-    });
+    };
+    if (!hasOwnButton) {
+      const button = this.#commentButton = document.createElement("button");
+      button.className = "annotationCommentButton";
+      const parentContainer = this.#firstElement.container;
+      button.style.zIndex = parentContainer.style.zIndex + 1;
+      button.tabIndex = 0;
+      button.ariaHasPopup = "dialog";
+      button.ariaControls = "commentPopup";
+      button.setAttribute("data-l10n-id", "pdfjs-show-comment-button");
+      this.#updateColor();
+      this.#updateCommentButtonPosition();
+      button.addEventListener("keydown", this.#boundKeyDown, {
+        signal
+      });
+      button.addEventListener("click", togglePopup, {
+        signal
+      });
+      button.addEventListener("pointerenter", showPopup, {
+        signal
+      });
+      button.addEventListener("pointerleave", hidePopup, {
+        signal
+      });
+      parentContainer.after(button);
+    } else {
+      this.#commentButton = this.#firstElement.container;
+      for (const element of this.trigger) {
+        element.ariaHasPopup = "dialog";
+        element.ariaControls = "commentPopup";
+        element.addEventListener("keydown", this.#boundKeyDown, {
+          signal
+        });
+        element.addEventListener("click", togglePopup, {
+          signal
+        });
+        element.addEventListener("pointerenter", showPopup, {
+          signal
+        });
+        element.addEventListener("pointerleave", hidePopup, {
+          signal
+        });
+        element.classList.add("popupTriggerArea");
+      }
+    }
+  }
+  #updateCommentButtonPosition() {
+    if (this.#firstElement.extraPopupElement) {
+      return;
+    }
+    this.renderCommentButton();
+    const [x, y] = this.#commentButtonPosition;
     const {
       style
-    } = button;
-    style.left = `calc(${this.#commentButtonPosition[0]}%)`;
-    style.top = `calc(${this.#commentButtonPosition[1]}% - var(--comment-button-dim))`;
-    if (this.commentButtonColor) {
-      style.backgroundColor = this.commentButtonColor;
+    } = this.#commentButton;
+    style.left = `calc(${x}%)`;
+    style.top = `calc(${y}% - var(--comment-button-dim))`;
+  }
+  #updateColor() {
+    if (this.#firstElement.extraPopupElement) {
+      return;
     }
-    parentContainer.after(button);
+    this.renderCommentButton();
+    this.#commentButton.style.backgroundColor = this.commentButtonColor || "";
   }
   get commentButtonColor() {
     const {
-      data: {
-        color,
-        opacity
-      }
-    } = this.#firstElement;
+      color,
+      opacity
+    } = this.#firstElement.commentData;
     if (!color) {
       return null;
     }
     return this.#parent._commentManager.makeCommentColor(color, opacity);
+  }
+  focusCommentButton() {
+    setTimeout(() => {
+      this.#commentButton?.focus();
+    }, 0);
   }
   getData() {
     const {
@@ -16197,7 +16819,7 @@ class PopupElement {
       opacity,
       creationDate,
       modificationDate
-    } = this.#firstElement.data;
+    } = this.#firstElement.commentData;
     return {
       contentsObj: {
         str: this.comment
@@ -16401,7 +17023,22 @@ class PopupElement {
     deleted
   }) {
     if (this.#commentManager) {
-      this.#commentText = deleted ? null : popup.text;
+      if (deleted) {
+        this.remove();
+        this.#commentText = null;
+      } else if (popup) {
+        if (popup.deleted) {
+          this.remove();
+        } else {
+          this.#updateColor();
+          this.#commentText = popup.text;
+        }
+      }
+      if (rect) {
+        this.#commentButtonPosition = null;
+        this.#setCommentButtonPosition();
+        this.#updateCommentButtonPosition();
+      }
       return;
     }
     if (deleted || popup?.deleted) {
@@ -16416,7 +17053,7 @@ class PopupElement {
     if (rect) {
       this.#position = null;
     }
-    if (popup) {
+    if (popup && popup.text) {
       this.#richText = this.#makePopupContent(popup.text);
       this.#dateObj = PDFDateString.toDateObject(popup.date);
       this.#contentsObj = null;
@@ -16886,33 +17523,6 @@ class InkAnnotationElement extends AnnotationElement {
   addHighlightArea() {
     this.container.classList.add("highlightArea");
   }
-  get commentButtonPosition() {
-    const {
-      inkLists,
-      rect
-    } = this.data;
-    if (inkLists?.length >= 1) {
-      let maxX = -Infinity;
-      let maxY = -Infinity;
-      for (const inkList of inkLists) {
-        for (let i = 0, ii = inkList.length; i < ii; i += 2) {
-          if (inkList[i + 1] > maxY) {
-            maxY = inkList[i + 1];
-            maxX = inkList[i];
-          } else if (inkList[i + 1] === maxY) {
-            maxX = Math.max(maxX, inkList[i]);
-          }
-        }
-      }
-      if (maxX !== Infinity) {
-        return [maxX, maxY];
-      }
-    }
-    if (rect) {
-      return [rect[2], rect[3]];
-    }
-    return null;
-  }
 }
 class HighlightAnnotationElement extends AnnotationElement {
   constructor(parameters) {
@@ -17207,6 +17817,7 @@ class AnnotationLayer {
         rendered.style.visibility = "hidden";
       }
       await this.#appendElement(rendered, data.id, elementParams.elements);
+      element.extraPopupElement?.popup?.renderCommentButton();
       if (element._isEditable) {
         this.#editableAnnotations.set(element.data.id, element);
         this._annotationEditorUIManager?.renderAnnotationElement(element);
@@ -17925,13 +18536,12 @@ class FreeTextEditor extends AnnotationEditor {
       div.append(line ? document.createTextNode(line) : document.createElement("br"));
       content.append(div);
     }
-    const params = {
-      rect: this.getPDFRect()
-    };
-    params.popup = this.hasEditedComment ? this.comment : {
-      text: this.#content
-    };
-    annotation.updateEdited(params);
+    annotation.updateEdited({
+      rect: this.getPDFRect(),
+      popup: this._uiManager.hasCommentManager() || this.hasEditedComment ? this.comment : {
+        text: this.#content
+      }
+    });
     return content;
   }
   resetAnnotationElement(annotation) {
@@ -18741,10 +19351,12 @@ class HighlightEditor extends AnnotationEditor {
     const outlinerForOutline = new HighlightOutliner(this.#boxes, 0.0025, 0.001, this._uiManager.direction === "ltr");
     this.#focusOutlines = outlinerForOutline.getOutlines();
     const {
-      firstPoint,
+      firstPoint
+    } = this.#highlightOutlines;
+    this.#firstPoint = [(firstPoint[0] - this.x) / this.width, (firstPoint[1] - this.y) / this.height];
+    const {
       lastPoint
     } = this.#focusOutlines;
-    this.#firstPoint = [(firstPoint[0] - this.x) / this.width, (firstPoint[1] - this.y) / this.height];
     this.#lastPoint = [(lastPoint[0] - this.x) / this.width, (lastPoint[1] - this.y) / this.height];
   }
   #createFreeOutlines({
@@ -18823,10 +19435,12 @@ class HighlightEditor extends AnnotationEditor {
         }
     }
     const {
-      firstPoint,
+      firstPoint
+    } = highlightOutlines;
+    this.#firstPoint = [(firstPoint[0] - x) / width, (firstPoint[1] - y) / height];
+    const {
       lastPoint
     } = this.#focusOutlines;
-    this.#firstPoint = [(firstPoint[0] - x) / width, (firstPoint[1] - y) / height];
     this.#lastPoint = [(lastPoint[0] - x) / width, (lastPoint[1] - y) / height];
   }
   static initialize(l10n, uiManager) {
@@ -18994,8 +19608,7 @@ class HighlightEditor extends AnnotationEditor {
       highlightOutlines: this.#highlightOutlines.getNewOutline(thickness / 2)
     });
     this.fixAndSetPosition();
-    const [parentWidth, parentHeight] = this.parentDimensions;
-    this.setDims(this.width * parentWidth, this.height * parentHeight);
+    this.setDims(this.width, this.height);
   }
   #cleanDrawLayer() {
     if (this.#id === null || !this.parent) {
@@ -19098,8 +19711,7 @@ class HighlightEditor extends AnnotationEditor {
     highlightDiv.setAttribute("aria-hidden", "true");
     highlightDiv.className = "internal";
     highlightDiv.style.clipPath = this.#clipPathId;
-    const [parentWidth, parentHeight] = this.parentDimensions;
-    this.setDims(this.width * parentWidth, this.height * parentHeight);
+    this.setDims(this.width, this.height);
     bindEvents(this, this.#highlightDiv, ["pointerover", "pointerleave"]);
     this.enableEditing();
     return div;
@@ -19494,13 +20106,10 @@ class HighlightEditor extends AnnotationEditor {
       annotation.hide();
       return null;
     }
-    const params = {
-      rect: this.getPDFRect()
-    };
-    if (this.hasEditedComment) {
-      params.popup = this.comment;
-    }
-    annotation.updateEdited(params);
+    annotation.updateEdited({
+      rect: this.getPDFRect(),
+      popup: this.comment
+    });
     return null;
   }
   static canCreateNewEmptyEditor() {
@@ -19842,8 +20451,7 @@ class DrawingEditor extends AnnotationEditor {
     [this.x, this.y, this.width, this.height] = this.#convertToParentSpace(bbox);
     if (this.div) {
       this.fixAndSetPosition();
-      const [parentWidth, parentHeight] = this.parentDimensions;
-      this.setDims(this.width * parentWidth, this.height * parentHeight);
+      this.setDims();
     }
     this._onResized();
   }
@@ -19922,8 +20530,7 @@ class DrawingEditor extends AnnotationEditor {
     div.append(drawDiv);
     drawDiv.setAttribute("aria-hidden", "true");
     drawDiv.className = "internal";
-    const [parentWidth, parentHeight] = this.parentDimensions;
-    this.setDims(this.width * parentWidth, this.height * parentHeight);
+    this.setDims();
     this._uiManager.addShouldRescale(this);
     this.disableEditing();
     if (this._isCopy) {
@@ -21039,15 +21646,12 @@ class InkEditor extends DrawingEditor {
       points,
       rect
     } = this.serializeDraw(false);
-    const params = {
+    annotation.updateEdited({
       rect,
       thickness: this._drawingOptions["stroke-width"],
-      points
-    };
-    if (this.hasEditedComment) {
-      params.popup = this.comment;
-    }
-    annotation.updateEdited(params);
+      points,
+      popup: this.comment
+    });
     return null;
   }
 }
@@ -21918,7 +22522,6 @@ class SignatureEditor extends DrawingEditor {
       drawOutlines: outline,
       drawingOptions
     });
-    const [parentWidth, parentHeight] = this.parentDimensions;
     const [, pageHeight] = this.pageDimensions;
     let newHeight = heightInPage / pageHeight;
     newHeight = newHeight >= 1 ? 0.5 : newHeight;
@@ -21928,7 +22531,7 @@ class SignatureEditor extends DrawingEditor {
       this.width = 0.9;
     }
     this.height = newHeight;
-    this.setDims(parentWidth * this.width, parentHeight * this.height);
+    this.setDims();
     this.x = savedX;
     this.y = savedY;
     this.center();
@@ -22373,14 +22976,13 @@ class StampEditor extends AnnotationEditor {
       width *= factor;
       height *= factor;
     }
-    const [parentWidth, parentHeight] = this.parentDimensions;
-    this.setDims(width * parentWidth / pageWidth, height * parentHeight / pageHeight);
     this._uiManager.enableWaiting(false);
     const canvas = this.#canvas = document.createElement("canvas");
     canvas.setAttribute("role", "img");
     this.addContainer(canvas);
     this.width = width / pageWidth;
     this.height = height / pageHeight;
+    this.setDims();
     if (this._initialOptions?.isCentered) {
       this.center();
     } else {
@@ -22737,13 +23339,10 @@ class StampEditor extends AnnotationEditor {
       annotation.hide();
       return null;
     }
-    const params = {
-      rect: this.getPDFRect()
-    };
-    if (this.hasEditedComment) {
-      params.popup = this.comment;
-    }
-    annotation.updateEdited(params);
+    annotation.updateEdited({
+      rect: this.getPDFRect(),
+      popup: this.comment
+    });
     return null;
   }
 }
@@ -22844,8 +23443,13 @@ class AnnotationEditorLayer {
     const {
       classList
     } = this.div;
-    for (const editorType of AnnotationEditorLayer.#editorTypes.values()) {
-      classList.toggle(`${editorType._type}Editing`, mode === editorType._editorType);
+    if (mode === AnnotationEditorType.POPUP) {
+      classList.toggle("commentEditing", true);
+    } else {
+      classList.toggle("commentEditing", false);
+      for (const editorType of AnnotationEditorLayer.#editorTypes.values()) {
+        classList.toggle(`${editorType._type}Editing`, mode === editorType._editorType);
+      }
     }
     this.div.hidden = false;
   }
@@ -22870,6 +23474,9 @@ class AnnotationEditorLayer {
   toggleAnnotationLayerPointerEvents(enabled = false) {
     this.#annotationLayer?.div.classList.toggle("disabled", !enabled);
   }
+  get #allEditorsIterator() {
+    return this.#editors.size !== 0 ? this.#editors.values() : this.#uiManager.getEditors(this.pageIndex);
+  }
   async enable() {
     this.#isEnabling = true;
     this.div.tabIndex = 0;
@@ -22877,7 +23484,7 @@ class AnnotationEditorLayer {
     this.#textLayerDblClickAC?.abort();
     this.#textLayerDblClickAC = null;
     const annotationElementIds = new Set();
-    for (const editor of this.#editors.values()) {
+    for (const editor of this.#allEditorsIterator) {
       editor.enableEditing();
       editor.show(true);
       if (editor.annotationElementId) {
@@ -22964,7 +23571,7 @@ class AnnotationEditorLayer {
     }
     const changedAnnotations = new Map();
     const resetAnnotations = new Map();
-    for (const editor of this.#editors.values()) {
+    for (const editor of this.#allEditorsIterator) {
       editor.disableEditing();
       if (!editor.annotationElementId) {
         continue;

@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.224
- * pdfjsBuild = 4eeabcb70
+ * pdfjsVersion = 5.4.272
+ * pdfjsBuild = ec4f616d2
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -683,7 +683,7 @@ const defaultOptions = {
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
   commentLearnMoreUrl: {
-    value: "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/pdf-comment",
+    value: "https://support.mozilla.org/%LOCALE%/kb/view-pdf-files-firefox-or-choose-another-viewer#w_add-a-comment-to-a-pdf",
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
   cursorToolOnLoad: {
@@ -1485,7 +1485,7 @@ class BasePreferences {
     annotationEditorMode: 0,
     annotationMode: 2,
     capCanvasAreaFactor: 200,
-    commentLearnMoreUrl: "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/pdf-comment",
+    commentLearnMoreUrl: "https://support.mozilla.org/%LOCALE%/kb/view-pdf-files-firefox-or-choose-another-viewer#w_add-a-comment-to-a-pdf",
     cursorToolOnLoad: 0,
     defaultZoomDelay: 400,
     defaultZoomValue: "",
@@ -3304,15 +3304,17 @@ class CommentManager {
   #dialog;
   #popup;
   #sidebar;
-  constructor(commentDialog, sidebar, eventBus, linkService, overlayManager, ltr) {
+  static #hasForcedColors = null;
+  constructor(commentDialog, sidebar, eventBus, linkService, overlayManager, ltr, hasForcedColors) {
     const dateFormat = new Intl.DateTimeFormat(undefined, {
       dateStyle: "long"
     });
     this.dialogElement = commentDialog.dialog;
-    this.#dialog = new CommentDialog(commentDialog, overlayManager);
-    this.#popup = new CommentPopup(dateFormat, ltr, this.dialogElement);
-    this.#sidebar = new CommentSidebar(sidebar, eventBus, linkService, this.#popup, dateFormat);
+    this.#dialog = new CommentDialog(commentDialog, overlayManager, eventBus, ltr);
+    this.#popup = new CommentPopup(eventBus, dateFormat, ltr, this.dialogElement);
+    this.#sidebar = new CommentSidebar(sidebar, eventBus, linkService, this.#popup, dateFormat, ltr);
     this.#popup.sidebar = this.#sidebar;
+    CommentManager.#hasForcedColors = hasForcedColors;
   }
   setSidebarUiManager(uiManager) {
     this.#sidebar.setUIManager(uiManager);
@@ -3335,11 +3337,11 @@ class CommentManager {
   updateComment(annotation) {
     this.#sidebar.updateComment(annotation);
   }
-  toggleCommentPopup(editor, isSelected, visibility) {
+  toggleCommentPopup(editor, isSelected, visibility, isEditable) {
     if (isSelected) {
       this.selectComment(editor.uid);
     }
-    this.#popup.toggle(editor, isSelected, visibility);
+    this.#popup.toggle(editor, isSelected, visibility, isEditable);
   }
   destroyPopup() {
     this.#popup.destroy();
@@ -3354,7 +3356,7 @@ class CommentManager {
     return CommentManager._makeCommentColor(color, opacity);
   }
   static _makeCommentColor(color, opacity) {
-    return findContrastColor(applyOpacity(...color, opacity ?? 1), CSSConstants.commentForegroundColor);
+    return this.#hasForcedColors ? null : findContrastColor(applyOpacity(...color, opacity ?? 1), CSSConstants.commentForegroundColor);
   }
   destroy() {
     this.#dialog.destroy();
@@ -3364,6 +3366,7 @@ class CommentManager {
 }
 class CommentSidebar {
   #annotations = null;
+  #eventBus;
   #boundCommentClick = this.#commentClick.bind(this);
   #boundCommentKeydown = this.#commentKeydown.bind(this);
   #sidebar;
@@ -3378,15 +3381,21 @@ class CommentSidebar {
   #elementsToAnnotations = null;
   #idsToElements = null;
   #uiManager = null;
+  #minWidth = 0;
+  #maxWidth = 0;
+  #initialWidth = 0;
+  #width = 0;
+  #ltr;
   constructor({
     learnMoreUrl,
     sidebar,
+    sidebarResizer,
     commentsList,
     commentCount,
     sidebarTitle,
     closeButton,
     commentToolbarButton
-  }, eventBus, linkService, popup, dateFormat) {
+  }, eventBus, linkService, popup, dateFormat, ltr) {
     this.#sidebar = sidebar;
     this.#sidebarTitle = sidebarTitle;
     this.#commentsList = commentsList;
@@ -3396,6 +3405,13 @@ class CommentSidebar {
     this.#closeButton = closeButton;
     this.#popup = popup;
     this.#dateFormat = dateFormat;
+    this.#ltr = ltr;
+    this.#eventBus = eventBus;
+    const style = window.getComputedStyle(sidebar);
+    this.#minWidth = parseFloat(style.getPropertyValue("--sidebar-min-width"));
+    this.#maxWidth = parseFloat(style.getPropertyValue("--sidebar-max-width"));
+    this.#initialWidth = this.#width = parseFloat(style.getPropertyValue("--sidebar-width"));
+    this.#makeSidebarResizable(sidebarResizer);
     closeButton.addEventListener("click", () => {
       eventBus.dispatch("switchannotationeditormode", {
         source: this,
@@ -3414,6 +3430,69 @@ class CommentSidebar {
     commentToolbarButton.addEventListener("keydown", keyDownCallback);
     sidebar.addEventListener("keydown", keyDownCallback);
     this.#sidebar.hidden = true;
+  }
+  #makeSidebarResizable(resizer) {
+    let pointerMoveAC;
+    const cancelResize = () => {
+      this.#width = MathClamp(this.#width, this.#minWidth, this.#maxWidth);
+      this.#sidebar.classList.remove("resizing");
+      pointerMoveAC?.abort();
+      pointerMoveAC = null;
+    };
+    resizer.addEventListener("pointerdown", e => {
+      if (pointerMoveAC) {
+        cancelResize();
+        return;
+      }
+      const {
+        clientX
+      } = e;
+      stopEvent(e);
+      let prevX = clientX;
+      pointerMoveAC = new AbortController();
+      const {
+        signal
+      } = pointerMoveAC;
+      const sign = this.#ltr ? -1 : 1;
+      const sidebar = this.#sidebar;
+      const sidebarStyle = sidebar.style;
+      sidebar.classList.add("resizing");
+      const parentStyle = sidebar.parentElement.style;
+      parentStyle.minWidth = 0;
+      window.addEventListener("contextmenu", noContextMenu, {
+        signal
+      });
+      window.addEventListener("pointermove", ev => {
+        if (!pointerMoveAC) {
+          return;
+        }
+        stopEvent(ev);
+        const {
+          clientX: x
+        } = ev;
+        const newWidth = this.#width += sign * (x - prevX);
+        prevX = x;
+        if (newWidth > this.#maxWidth || newWidth < this.#minWidth) {
+          return;
+        }
+        sidebarStyle.width = `${newWidth.toFixed(3)}px`;
+        parentStyle.insetInlineStart = `${(this.#initialWidth - newWidth).toFixed(3)}px`;
+      }, {
+        signal,
+        capture: true
+      });
+      window.addEventListener("blur", cancelResize, {
+        signal
+      });
+      window.addEventListener("pointerup", ev => {
+        if (pointerMoveAC) {
+          cancelResize();
+          stopEvent(ev);
+        }
+      }, {
+        signal
+      });
+    });
   }
   setUIManager(uiManager) {
     this.#uiManager = uiManager;
@@ -3434,6 +3513,15 @@ class CommentSidebar {
       this.#setCommentsCount();
     }
     this.#sidebar.hidden = false;
+    this.#eventBus.dispatch("reporttelemetry", {
+      source: this,
+      details: {
+        type: "commentSidebar",
+        data: {
+          numberOfAnnotations: annotations.length
+        }
+      }
+    });
   }
   hide() {
     this.#sidebar.hidden = true;
@@ -3691,6 +3779,14 @@ class CommentSidebar {
     }
   }
   #sortComments(a, b) {
+    const dateA = PDFDateString.toDateObject(a.modificationDate || a.creationDate);
+    const dateB = PDFDateString.toDateObject(b.modificationDate || b.creationDate);
+    if (dateA !== dateB) {
+      if (dateA !== null && dateB !== null) {
+        return dateB - dateA;
+      }
+      return dateA !== null ? -1 : 1;
+    }
     if (a.pageIndex !== b.pageIndex) {
       return a.pageIndex - b.pageIndex;
     }
@@ -3723,6 +3819,8 @@ class CommentDialog {
   #prevDragY = 0;
   #dialogX = 0;
   #dialogY = 0;
+  #isLTR;
+  #eventBus;
   constructor({
     dialog,
     toolbar,
@@ -3730,12 +3828,14 @@ class CommentDialog {
     textInput,
     cancelButton,
     saveButton
-  }, overlayManager) {
+  }, overlayManager, eventBus, ltr) {
     this.#dialog = dialog;
     this.#textInput = textInput;
     this.#overlayManager = overlayManager;
+    this.#eventBus = eventBus;
     this.#saveButton = saveButton;
     this.#title = title;
+    this.#isLTR = ltr;
     const finishBound = this.#finish.bind(this);
     dialog.addEventListener("close", finishBound);
     dialog.addEventListener("contextmenu", e => {
@@ -3770,6 +3870,10 @@ class CommentDialog {
       const {
         signal
       } = pointerMoveAC;
+      const {
+        innerHeight,
+        innerWidth
+      } = window;
       dialog.classList.add("dragging");
       window.addEventListener("pointermove", ev => {
         if (!pointerMoveAC) {
@@ -3779,7 +3883,7 @@ class CommentDialog {
           clientX: x,
           clientY: y
         } = ev;
-        this.#setPosition(this.#dialogX + x - this.#prevDragX, this.#dialogY + y - this.#prevDragY);
+        this.#setPosition(this.#dialogX + (x - this.#prevDragX) / innerWidth, this.#dialogY + (y - this.#prevDragY) / innerHeight);
         this.#prevDragX = x;
         this.#prevDragY = y;
         stopEvent(ev);
@@ -3824,12 +3928,51 @@ class CommentDialog {
     this.#commentText = str || "";
     const textInput = this.#textInput;
     textInput.value = this.#previousText = this.#commentText;
-    this.#title.setAttribute("data-l10n-id", str ? "pdfjs-editor-edit-comment-dialog-title-when-editing" : "pdfjs-editor-edit-comment-dialog-title-when-adding");
+    if (str) {
+      this.#title.setAttribute("data-l10n-id", "pdfjs-editor-edit-comment-dialog-title-when-editing");
+      this.#saveButton.setAttribute("data-l10n-id", "pdfjs-editor-edit-comment-dialog-save-button-when-editing");
+    } else {
+      this.#title.setAttribute("data-l10n-id", "pdfjs-editor-edit-comment-dialog-title-when-adding");
+      this.#saveButton.setAttribute("data-l10n-id", "pdfjs-editor-edit-comment-dialog-save-button-when-adding");
+    }
     if (options?.height) {
       textInput.style.height = `${options.height}px`;
     }
     this.#uiManager?.removeEditListeners();
     this.#saveButton.disabled = true;
+    const parentDimensions = options?.parentDimensions;
+    const {
+      innerHeight,
+      innerWidth
+    } = window;
+    if (editor.hasDefaultPopupPosition()) {
+      const {
+        dialogWidth,
+        dialogHeight
+      } = this._dialogDimensions;
+      if (parentDimensions) {
+        if (this.#isLTR && posX + dialogWidth > Math.min(parentDimensions.x + parentDimensions.width, innerWidth)) {
+          const buttonWidth = this.#editor.commentButtonWidth;
+          posX -= dialogWidth - buttonWidth * parentDimensions.width;
+        } else if (!this.#isLTR) {
+          const buttonWidth = this.#editor.commentButtonWidth * parentDimensions.width;
+          if (posX - dialogWidth < Math.max(0, parentDimensions.x)) {
+            posX = Math.max(0, posX);
+          } else {
+            posX -= dialogWidth - buttonWidth;
+          }
+        }
+      }
+      const height = Math.max(dialogHeight, options?.height || 0);
+      if (posY + height > innerHeight) {
+        posY = innerHeight - height;
+      }
+      if (posY < 0) {
+        posY = 0;
+      }
+    }
+    posX /= innerWidth;
+    posY /= innerHeight;
     this.#setPosition(posX, posY);
     await this.#overlayManager.open(this.#dialog);
     textInput.focus();
@@ -3838,16 +3981,22 @@ class CommentDialog {
     this.#editor.comment = this.#textInput.value;
     this.#finish();
   }
-  get _dialogWidth() {
+  get _dialogDimensions() {
     const dialog = this.#dialog;
     const {
       style
     } = dialog;
     style.opacity = "0";
     style.display = "block";
-    const width = dialog.getBoundingClientRect().width;
+    const {
+      width,
+      height
+    } = dialog.getBoundingClientRect();
     style.opacity = style.display = "";
-    return shadow(this, "_dialogWidth", width);
+    return shadow(this, "_dialogDimensions", {
+      dialogWidth: width,
+      dialogHeight: height
+    });
   }
   #setPosition(x, y) {
     this.#dialogX = x;
@@ -3855,23 +4004,40 @@ class CommentDialog {
     const {
       style
     } = this.#dialog;
-    style.left = `${x}px`;
-    style.top = `${y}px`;
+    style.left = `${100 * x}%`;
+    style.top = `${100 * y}%`;
   }
   #finish() {
+    if (!this.#editor) {
+      return;
+    }
+    const edited = this.#textInput.value !== this.#commentText;
+    this.#eventBus.dispatch("reporttelemetry", {
+      source: this,
+      details: {
+        type: "comment",
+        data: {
+          edited
+        }
+      }
+    });
+    this.#editor?.focusCommentButton();
+    this.#editor = null;
     this.#textInput.value = this.#previousText = this.#commentText = "";
     this.#overlayManager.closeIfActive(this.#dialog);
     this.#textInput.style.height = "";
     this.#uiManager?.addEditListeners();
     this.#uiManager = null;
-    this.#editor = null;
   }
   destroy() {
     this.#uiManager = null;
+    this.#editor = null;
     this.#finish();
   }
 }
 class CommentPopup {
+  #buttonsContainer = null;
+  #eventBus;
   #commentDialog;
   #dateFormat;
   #editor = null;
@@ -3886,7 +4052,8 @@ class CommentPopup {
   #previousFocusedElement = null;
   #selected = false;
   #visible = false;
-  constructor(dateFormat, ltr, commentDialog) {
+  constructor(eventBus, dateFormat, ltr, commentDialog) {
+    this.#eventBus = eventBus;
     this.#dateFormat = dateFormat;
     this.#isLTR = ltr;
     this.#commentDialog = commentDialog;
@@ -3930,7 +4097,7 @@ class CommentPopup {
     top.className = "commentPopupTop";
     const time = this.#time = document.createElement("time");
     time.className = "commentPopupTime";
-    const buttons = document.createElement("div");
+    const buttons = this.#buttonsContainer = document.createElement("div");
     buttons.className = "commentPopupButtons";
     const edit = document.createElement("button");
     edit.classList.add("commentPopupEdit", "toolbarButton");
@@ -3958,6 +4125,15 @@ class CommentPopup {
     delLabel.setAttribute("data-l10n-id", "pdfjs-editor-delete-comment-popup-button-label");
     del.append(delLabel);
     del.addEventListener("click", () => {
+      this.#eventBus.dispatch("reporttelemetry", {
+        source: this,
+        details: {
+          type: "comment",
+          data: {
+            deleted: true
+          }
+        }
+      });
       this.#editor.comment = null;
       this.destroy();
     });
@@ -4052,7 +4228,7 @@ class CommentPopup {
     this.#text.replaceChildren();
     this.sidebar.selectComment(null);
   }
-  toggle(editor, isSelected, visibility = undefined) {
+  toggle(editor, isSelected, visibility = undefined, isEditable = true) {
     if (!editor) {
       this.destroy();
       return;
@@ -4077,6 +4253,7 @@ class CommentPopup {
       });
     }
     const container = this.#createPopup();
+    this.#buttonsContainer.classList.toggle("hidden", !isEditable);
     container.classList.toggle("hidden", false);
     container.classList.toggle("selected", isSelected);
     this.#selected = isSelected;
@@ -4117,7 +4294,7 @@ class CommentPopup {
       setTimeout(() => container.focus(), 0);
     }
   }
-  #setPosition(x, y, correctPosition = true) {
+  #setPosition(x, y, correctPosition) {
     if (!correctPosition) {
       this.#editor.commentPopupPosition = [x, y];
     } else {
@@ -11225,7 +11402,7 @@ class PDFViewer {
   #textLayerMode = TextLayerMode.ENABLE;
   #viewerAlert = null;
   constructor(options) {
-    const viewerVersion = "5.4.224";
+    const viewerVersion = "5.4.272";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -14621,7 +14798,8 @@ const PDFViewerApplication = {
     const container = appConfig.mainContainer,
       viewer = appConfig.viewerContainer;
     const annotationEditorMode = AppOptions.get("annotationEditorMode");
-    const pageColors = AppOptions.get("forcePageColors") || window.matchMedia("(forced-colors: active)").matches ? {
+    const hasForcedColors = AppOptions.get("forcePageColors") || window.matchMedia("(forced-colors: active)").matches;
+    const pageColors = hasForcedColors ? {
       background: AppOptions.get("pageColorsBackground"),
       foreground: AppOptions.get("pageColorsForeground")
     } : null;
@@ -14639,12 +14817,13 @@ const PDFViewerApplication = {
     const commentManager = AppOptions.get("enableComment") && appConfig.editCommentDialog ? new CommentManager(appConfig.editCommentDialog, {
       learnMoreUrl: AppOptions.get("commentLearnMoreUrl"),
       sidebar: appConfig.annotationEditorParams?.editorCommentsSidebar || null,
+      sidebarResizer: appConfig.annotationEditorParams?.editorCommentsSidebarResizer || null,
       commentsList: appConfig.annotationEditorParams?.editorCommentsSidebarList || null,
       commentCount: appConfig.annotationEditorParams?.editorCommentsSidebarCount || null,
       sidebarTitle: appConfig.annotationEditorParams?.editorCommentsSidebarTitle || null,
       closeButton: appConfig.annotationEditorParams?.editorCommentsSidebarCloseButton || null,
       commentToolbarButton: appConfig.toolbar?.editorCommentButton || null
-    }, eventBus, linkService, overlayManager, ltr) : null;
+    }, eventBus, linkService, overlayManager, ltr, hasForcedColors) : null;
     const enableHWA = AppOptions.get("enableHWA"),
       maxCanvasPixels = AppOptions.get("maxCanvasPixels"),
       maxCanvasDim = AppOptions.get("maxCanvasDim"),
@@ -15088,12 +15267,13 @@ const PDFViewerApplication = {
       await this.pdfScriptingManager.dispatchDidSave();
       this._saveInProgress = false;
     }
-    if (this._hasAnnotationEditors) {
+    const editorStats = this.pdfDocument?.annotationStorage.editorStats;
+    if (editorStats) {
       this.externalServices.reportTelemetry({
         type: "editing",
         data: {
           type: "save",
-          stats: this.pdfDocument?.annotationStorage.editorStats
+          stats: editorStats
         }
       });
     }
@@ -16549,6 +16729,7 @@ function getViewerConfiguration() {
       editorCommentsSidebarTitle: document.getElementById("editorCommentsSidebarTitle"),
       editorCommentsSidebarCloseButton: document.getElementById("editorCommentsSidebarCloseButton"),
       editorCommentsSidebarList: document.getElementById("editorCommentsSidebarList"),
+      editorCommentsSidebarResizer: document.getElementById("editorCommentsSidebarResizer"),
       editorFreeTextFontSize: document.getElementById("editorFreeTextFontSize"),
       editorFreeTextColor: document.getElementById("editorFreeTextColor"),
       editorInkColor: document.getElementById("editorInkColor"),

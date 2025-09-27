@@ -310,7 +310,7 @@
     --radio-border-color:ButtonText;
     --radio-checked-border-color:ButtonText;
 
-    --button-secondary-bg-color:HighlightText;
+    --button-secondary-bg-color:ButtonFace;
     --button-secondary-fg-color:ButtonText;
     --button-secondary-border-color:ButtonText;
     --button-secondary-active-bg-color:HighlightText;
@@ -323,7 +323,7 @@
     --button-secondary-disabled-border-color:GrayText;
 
     --button-primary-bg-color:ButtonText;
-    --button-primary-fg-color:HighlightText;
+    --button-primary-fg-color:ButtonFace;
     --button-primary-border-color:ButtonText;
     --button-primary-active-bg-color:SelectedItem;
     --button-primary-active-fg-color:HighlightText;
@@ -336,7 +336,7 @@
     --button-primary-disabled-border-color:GrayText;
     --button-disabled-opacity:1;
 
-    --input-text-bg-color:HighlightText;
+    --input-text-bg-color:Field;
     --input-text-fg-color:FieldText;
   }
 
@@ -2531,7 +2531,8 @@
   min-width:200px;
   position:absolute;
   padding:8px 16px 16px;
-  margin:0;
+  margin-left:0;
+  margin-top:0;
   box-sizing:border-box;
 
   border-radius:8px;
@@ -2547,11 +2548,6 @@
     flex-direction:column;
     align-items:flex-start;
     gap:4px;
-
-    *:focus-visible{
-      outline:2px solid var(--comment-focus-outline-color);
-      outline-offset:0;
-    }
 
     #commentManagerToolbar{
       width:100%;
@@ -2598,15 +2594,15 @@
     --comment-button-focus-outline-color:light-dark(#0062fa, #00cadb);
 
     @media screen and (forced-colors: active){
-      --comment-button-bg:Canvas;
+      --comment-button-bg:ButtonFace;
       --comment-button-fg:ButtonText;
-      --comment-button-hover-bg:Canvas;
-      --comment-button-hover-fg:Highlight;
-      --comment-button-active-bg:Canvas;
-      --comment-button-active-fg:Highlight;
+      --comment-button-hover-bg:SelectedItemText;
+      --comment-button-hover-fg:SelectedItem;
+      --comment-button-active-bg:SelectedItemText;
+      --comment-button-active-fg:SelectedItem;
       --comment-button-border-color:ButtonBorder;
       --comment-button-active-border-color:ButtonBorder;
-      --comment-button-hover-border-color:Highlight;
+      --comment-button-hover-border-color:SelectedItem;
       --comment-button-box-shadow:none;
       --comment-button-focus-outline-color:CanvasText;
       --comment-button-selected-bg:ButtonBorder;
@@ -2724,9 +2720,9 @@
   @media screen and (forced-colors: active){
     --comment-date-fg-color:CanvasText;
     --comment-bg-color:Canvas;
-    --comment-hover-bg-color:SelectedItemText;
+    --comment-hover-bg-color:Canvas;
     --comment-hover-filter:none;
-    --comment-active-bg-color:SelectedItemText;
+    --comment-active-bg-color:Canvas;
     --comment-active-filter:none;
     --comment-border-color:CanvasText;
     --comment-fg-color:CanvasText;
@@ -2735,7 +2731,7 @@
     --comment-indicator-focus-fg-color:CanvasText;
     --comment-indicator-hover-fg-color:CanvasText;
     --comment-indicator-selected-fg-color:SelectedItem;
-    --button-comment-bg:HighlightText;
+    --button-comment-bg:ButtonFace;
     --button-comment-color:ButtonText;
     --button-comment-active-bg:ButtonText;
     --button-comment-active-color:HighlightText;
@@ -2747,10 +2743,7 @@
 
 #editorCommentsSidebar{
   display:flex;
-  width:239px;
   height:auto;
-  min-width:180px;
-  max-width:632px;
   padding-bottom:16px;
   flex-direction:column;
   align-items:flex-start;
@@ -2836,7 +2829,7 @@
   }
 
   #editorCommentsSidebarListContainer{
-    overflow:scroll;
+    overflow:auto;
     width:100%;
 
     #editorCommentsSidebarList{
@@ -2844,8 +2837,6 @@
       width:auto;
       padding:4px 16px;
       gap:10px;
-      flex:1 0 0;
-      align-self:stretch;
       align-items:flex-start;
       flex-direction:column;
       list-style-type:none;
@@ -4527,6 +4518,11 @@
     rgb(251 251 254 / 0.1)
   );
   --sidebar-box-shadow:0 0.25px 0.75px light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.2)), 0 2px 6px 0 light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.4));
+  --sidebar-border-radius:8px;
+  --sidebar-padding:5px;
+  --sidebar-min-width:180px;
+  --sidebar-max-width:632px;
+  --sidebar-width:239px;
 
   @media screen and (forced-colors: active){
     --sidebar-bg-color:Canvas;
@@ -4534,11 +4530,33 @@
     --sidebar-box-shadow:none;
   }
 
-  border-radius:8px;
+  border-radius:var(--sidebar-border-radius);
   box-shadow:var(--sidebar-box-shadow);
   border:1px solid var(--sidebar-border-color);
   background-color:var(--sidebar-bg-color);
   inset-block-start:calc(100% + var(--doorhanger-height) - 2px);
+  padding-block:var(--sidebar-padding);
+  width:var(--sidebar-width);
+  min-width:var(--sidebar-min-width);
+  max-width:var(--sidebar-max-width);
+
+  .sidebarResizer{
+    width:4px;
+    background-color:transparent;
+    forced-color-adjust:none;
+    cursor:ew-resize;
+    position:absolute;
+    inset-block:calc(var(--sidebar-padding) + var(--sidebar-border-radius));
+  }
+
+  &.resizing{
+    cursor:ew-resize;
+    user-select:none;
+
+    :not(.sidebarResizer){
+      pointer-events:none;
+    }
+  }
 }
 
 :root{
@@ -5749,7 +5767,6 @@ dialog :link{
   }
 
   .menuContainer{
-    width:100%;
     height:auto;
     max-height:calc(
       var(--viewer-container-height) - var(--toolbar-height) -
