@@ -9,7 +9,7 @@ prefs = ["dom.text_fragments.enabled=true"]
 
 ["browser_scroll-to-text-fragment-from-context-menu.js"]
 skip-if = [
-  "os == 'mac' && os_version == '15.00' && arch == 'aarch64' && opt", # Bug 1983146
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64' && opt", # Bug 1983146
 ]
 
 ["browser_scroll-to-text-fragment-from-window-open.js"]
