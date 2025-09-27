@@ -1625,7 +1625,8 @@ inline size_t Vector<T, N, AP>::sizeOfIncludingThis(
 
 template <typename T, size_t N, class AP>
 inline void Vector<T, N, AP>::swap(Vector& aOther) {
-  static_assert(N == 0, "still need to implement this for N != 0");
+  static_assert(N == 0,
+                "still need to implement this for N != 0 (Bug 1987683)");
 
   // This only works when inline storage is always empty.
   if (!usingInlineStorage() && aOther.usingInlineStorage()) {
