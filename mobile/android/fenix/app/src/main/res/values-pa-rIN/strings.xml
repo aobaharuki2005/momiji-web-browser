@@ -695,17 +695,16 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">ਲਿੰਕ ਨੂੰ ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਵਿੱਚ ਸਕਰੀਨਸ਼ਾਟ ਮਨਜ਼ੂਰ ਕਰੋ</string>
+  <string name="preferences_allow_screenshots_in_private_mode">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਵਿੱਚ ਸਕਰੀਨਸ਼ਾਟ ਮਨਜ਼ੂਰ ਕਰੋ</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">ਜੇ ਇਜਾਜ਼ਤ ਦਿੱਤੀ ਤਾਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਉਦੋਂ ਵੀ ਦਿਖਾਈ ਦੇਣਗੀਆਂ, ਜਦੋਂ ਕਈ ਐਪਾਂ ਖੁੱਲ੍ਹੀਆਂ ਹੁੰਦੀਆਂ ਹਨ</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">ਜੇ ਇਜਾਜ਼ਤ ਦਿੱਤੀ ਤਾਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਉਦੋਂ ਵੀ ਦਿਖਾਈ ਦੇਣਗੀਆਂ, ਜਦੋਂ ਕਈ ਐਪਾਂ ਖੁੱਲ੍ਹੀਆਂ ਹੁੰਦੀਆਂ ਹਨ</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
   <string name="preferences_https_only_title">ਸਿਰਫ਼-HTTPS ਢੰਗ</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਵਿੱਚ ਟੈਬਾਂ ਨੂੰ ਓਹਲੇ ਕਰਨ ਲਈ ਸਕਰੀਨ ਲਾਕ ਦੀ ਵਰਤੋਂ ਕਰੋ</string>
-  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">ਟੈਬਾਂ ਨੂੰ ਆਪਣੇ ਫਿੰਗਰਪਰਿੰਟ, ਪਿੰਨ ਜਾਂ ਫੇਸ ਅਣ-ਲਾਕ ਨਾਲ ਵੇਖੋ।</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">ਟੈਬਾਂ ਨੂੰ ਆਪਣੇ ਫਿੰਗਰਪਰਿੰਟ, ਪਿੰਨ ਜਾਂ ਫੇਸ ਅਣ-ਲਾਕ ਨਾਲ ਵੇਖੋ।</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">ਕੂਕੀ ਬੈਨਰ ਰੋਕੂ</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->

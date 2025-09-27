@@ -630,17 +630,16 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Grapi i lijami nta na scheda privata</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Pirmetti di fari schirmati nnâ navicazzioni privata</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Pirmetti di fari schirmati nnâ navicazzioni privata</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Si u pirmetti, i schedi privati sunnu visìbbili macari quannu ài autri applicazzioni graputi</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Si u pirmetti, i schedi privati sunnu visìbbili macari quannu ài autri applicazzioni graputi</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Junci accurzu di navicazzioni privata</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
   <string name="preferences_https_only_title">Mudalità sulu HTTPS</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Usa u bloccu dû schirmu p’ammucciari i schedi dâ navicazzioni privata</string>
-  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Vidi i schedi câ to urma diggitali, cû còdici o câ facci.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Vidi i schedi câ to urma diggitali, cû còdici o câ facci.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Bloccu dî banneri dî viscotta</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->

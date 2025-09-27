@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">Holen Sie sich standardmäßig automatischen Tracking-Schutz</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Ein Fingertipp verhindert, dass Unternehmen Ihre Klicks ausspionieren.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Synchronisieren Sie überall dort, wo Sie Firefox nutzen</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Holen Sie sich Lesezeichen, Tabs und Passwörter auf jedes Gerät. Alles durch Verschlüsselung geschützt.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Mit Synchronisierung beginnen</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Nicht jetzt</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Helfen Sie uns dabei, Firefox bekannter zu machen</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -711,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Links in privatem Tab öffnen</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Bildschirmfotos im privaten Modus zulassen</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Bildschirmfotos im privaten Modus zulassen</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Wenn erlaubt, sind auch private Tabs sichtbar, wenn mehrere Apps geöffnet sind</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Wenn erlaubt, sind auch private Tabs sichtbar, wenn mehrere Apps geöffnet sind</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Verknüpfung zum privaten Modus hinzufügen</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -721,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Bildschirmsperre verwenden, um Tabs im privaten Modus auszublenden</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Zeigen Sie Tabs mit Ihrem Fingerabdruck, PIN oder Entsperren per Gesicht an.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">Zeigen Sie Tabs mit Ihrem Fingerabdruck, PIN oder Entsperren per Gesicht an. Das Aktivieren dieser Option verhindert auch, dass Bildschirmfotos aufgenommen und weitergegeben werden.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Zeigen Sie Tabs mit Ihrem Fingerabdruck, PIN oder Entsperren per Gesicht an.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Cookie-Banner-Blocker</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->

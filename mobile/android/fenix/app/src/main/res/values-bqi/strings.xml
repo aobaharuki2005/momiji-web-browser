@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">و جۊر پؽش فرز ز زفت وابیڌن رڌ جۊری خوتکار بئره مند بۊین</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">ی لمس ساڌه جلاو جاسۊسی شرکتا ز کبلیکا ایسا ن اگره.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">هوم گوم کردن من هر جایی ک Firefox ن و کار اگیرین</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">نشووکا، بلگه یل وو رزما ن من هر دسگایی بگیرین. پوی وا رزم ناهاڌن زفت ابۊن.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">ناهاڌن پا هوم گوم کردن</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">سکو ن</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">منه روشد Firefox و ایما هیاری بڌین</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -711,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">گۊشیڌن لینگ من ی بلگه سیخومی</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">هشتن گرؽڌن شؽوات ز بلگه من هالت سیخومی</string>
+  <string name="preferences_allow_screenshots_in_private_mode">هشتن گرؽڌن شؽوات ز بلگه من هالت سیخومی</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">ٱر هیشتین، مجال گۊشیڌن چند تا برنومه، بلگه یل سیخومی ن ترین بنیرین</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">ٱر هیشتین، مجال گۊشیڌن چند تا برنومه، بلگه یل سیخومی ن ترین بنیرین</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">ٱووردن ر نهنگ گشت سیخومی</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -721,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">و کار گرؽڌن چفت بلگه سی بؽڌار کردن بلگه یل من گشتن سیخومی</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">بلگه یل ن وا جا کلکی، رزم یا گۊشیڌن وا ری بنیرین.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">وا جا کلک، پین یا تشخیس ری، بلگه یل ن بنیرین. رۊشن کردن ای گۊزینه، ز زفت کردن وو یک رسۊوی بلگه گۊشی هم جلاوگری اکونه.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">بلگه یل ن وا جا کلکی، رزم یا گۊشیڌن وا ری بنیرین.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">مسدۊد کوݩ بنر کۊکی</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->

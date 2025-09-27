@@ -572,8 +572,30 @@
   <string name="onboarding_redesign_tou_body_three_link_text">Hallitse asetuksia</string>
   <!-- Terms of use (ToU) onboarding page continue button label. -->
   <string name="onboarding_redesign_tou_agree_and_continue_button_label">Jatka</string>
+  <!-- Onboarding header for the toolbar selection card. -->
+  <string name="onboarding_redesign_customize_toolbar_title">Minne haluat osoiterivin?</string>
+  <!-- Onboarding label for 'Continue' button. -->
+  <string name="onboarding_redesign_continue_button">Jatka</string>
+  <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_redesign_title" tools:ignore="BrandUsage">Auta meitä kasvattamaan Firefoxia</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_redesign_opt_out_checkbox" tools:ignore="BrandUsage">Jaa Mozillan markkinointikumppaneiden kanssa, miten löysit Firefoxin ja kuinka käytät sitä. Näitä tietoja ei koskaan myydä.</string>
+  <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
+  <string name="onboarding_marketing_redesign_learn_more">Kuinka käytämme tietoja</string>
+  <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
+  <string name="onboarding_marketing_redesign_positive_button">Vahvista</string>
   <!-- Set to default browser onboarding redesign title. -->
   <string name="onboarding_redesign_set_default_browser_title">Automaattinen suojaus seurantaa vastaan oletuksena</string>
+  <!-- Set to default browser onboarding redesign body. -->
+  <string name="onboarding_redesign_set_default_browser_body">Yksi napautus auttaa estämään yrityksiä vakoilemasta napsautuksiasi.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Synkronoi kaikkialla missä käytät Firefoxia</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Hanki kirjanmerkit, välilehdet ja salasanat millä tahansa laitteella. Kaikki suojattu salauksella.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Aloita synkronointi</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Ei nyt</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Auta meitä kasvattamaan Firefoxia</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -697,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Avaa linkit yksityisessä välilehdessä</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Salli kuvakaappaukset yksityisen selauksen tilassa</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Salli kuvakaappaukset yksityisen selauksen tilassa</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Jos sallittu, yksityiset välilehdet ovat näkyvissä kun useita sovelluksia on avoinna</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Jos sallittu, yksityiset välilehdet ovat näkyvissä kun useita sovelluksia on avoinna</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Lisää yksityisen selauksen pikakuvake</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -707,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Käytä näytön lukitusta piilottaaksesi välilehdet yksityisessä selailussa</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Näytä välilehdet sormenjäljellä, PIN-koodilla tai kasvojentunnistuksella.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">Näytä välilehdet sormenjäljellä, PIN-koodilla tai kasvojentunnistuksella. Tämän ottaminen käyttöön estää myös kuvakaappausten ottamisen ja jakamisen.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Näytä välilehdet sormenjäljellä, PIN-koodilla tai kasvojentunnistuksella.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Evästeilmoitusten esto</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
@@ -788,6 +811,8 @@
   <string name="preferences_customize">Mukauta</string>
   <!-- Preference description for banner about signing in -->
   <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Kirjaudu sisään synkronoidaksesi välilehtesi, kirjanmerkkisi, salasanasi ja muita tietoja.</string>
+  <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
+  <string name="preferences_sign_in_description">Synkronoi välilehdet, kirjanmerkit, salasanat ja paljon muuta.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Mozilla-tili</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1190,6 +1215,8 @@
     Header of the Sync and save your data preference view
   -->
   <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Synkronoi ja tallenna tietosi</string>
+  <!-- Header of the Sign in preference view -->
+  <string name="preferences_sign_in">Kirjaudu sisään</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Kirjaudu yhdistääksesi uudelleen</string>
   <!-- Preference for removing FxA account -->
@@ -1338,6 +1365,8 @@
   <string name="close_tabs_after_one_month">Yhden kuukauden jälkeen</string>
   <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
   <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Sulje automaattisesti avoimet välilehdet</string>
+  <!-- Content description (not visible, for screen readers etc.): Close tab button -->
+  <string name="tab_manager_close_tabs">Sulje</string>
   <!--
     Opening screen
 
@@ -1768,6 +1797,14 @@
   <string name="bookmark_add_folder">Lisää kansio</string>
   <!-- Snackbar title that confirms a bookmark was saved into a folder. %s is the name of the folder the bookmark was saved into. -->
   <string name="bookmark_saved_in_folder_snackbar">Tallennettu kansioon “%s”</string>
+  <!-- Snackbar title describing failure to add a new folder -->
+  <string name="bookmark_error_add_folder">Kansiota ei voitu lisätä</string>
+  <!-- Snackbar title describing failure to edit an existing folder -->
+  <string name="bookmark_error_edit_folder">Kansiota ei voitu muokata</string>
+  <!-- Snackbar title describing failure to select a new parent folder for a bookmark or folder -->
+  <string name="bookmark_error_select_folder">Ylätason kansion vaihtaminen epäonnistui</string>
+  <!-- Snackbar title describing failure to edit a bookmark -->
+  <string name="bookmark_error_edit_bookmark">Kirjanmerkin muokkaaminen epäonnistui</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
   <string name="edit_bookmark_snackbar_action">MUOKKAA</string>
   <!-- Bookmark menu move button -->
@@ -2069,6 +2106,8 @@
   <string name="sync_sign_in">Kirjaudu sisään Synciin</string>
   <!-- An option from the three dot menu to sync and save data -->
   <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Synkronoi ja tallenna tiedot</string>
+  <!-- An option from the three dot menu to sign in -->
+  <string name="sync_menu_sign_in">Kirjaudu sisään</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Lähetä kaikkiin laitteisiin</string>
   <!-- An option from the share dialog to reconnect to sync -->
@@ -2995,6 +3034,11 @@
     Title text displayed in the tabs tray when a tab has been unused for 14 days.
   -->
   <string name="inactive_tabs_title">Passiiviset välilehdet</string>
+  <!--
+    Text displayed in the tabs tray, indicating the number of inactive tabs.
+    %d is the number of inactive tabs.
+  -->
+  <string name="inactive_tabs_num_items">Välilehtiä: %d</string>
   <!-- Content description for closing all inactive tabs -->
   <string name="inactive_tabs_delete_all">Sulje kaikki passiiviset välilehdet</string>
   <!-- Content description for expanding the inactive tabs section. -->

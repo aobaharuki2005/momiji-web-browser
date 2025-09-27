@@ -44,6 +44,8 @@
   <string name="tab_tray_close_multiselect_content_description">از حالت چند انتخابی خارج شوید</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">ذخیره‌سازی زبانه‌های انتخاب شده داخل مجموعه</string>
+  <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
+  <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">ورود</string>
   <!--
     Home - Bookmarks
 
@@ -293,6 +295,8 @@
   <string name="browser_menu_bookmark_this_page_2">نشانک‌گذاری صفحه</string>
   <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
   <string name="browser_menu_edit_bookmark">ویرایش نشانک</string>
+  <!-- Browser menu label that the saves the currently visited page as a PDF -->
+  <string name="browser_menu_save_as_pdf_2">ذخیره به صورت PDF</string>
   <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
   <string name="browser_menu_translate_page_2">ترجمه صفحه</string>
   <!-- Browser menu label for navigating to the Web Compat Reporter feature, which provides users the ability to send bug reports for broken sites. -->
@@ -306,6 +310,8 @@
     %1$s is the name of the app (for example "Firefox").
   -->
   <string name="browser_menu_delete_browsing_data_on_quit">خروج از %1$s</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">اطلاعات بیشتر</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -486,6 +492,12 @@
   <string name="onboarding_term_of_service_line_three" tools:ignore="BrandUsage">برای کمک به بهبود مرورگر، Firefox داده‌های تشخیصی و تعاملات را به Mozilla ارسال می‌کند. %1$s</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
   <string name="onboarding_term_of_service_line_three_link_text">مدیریت</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_three. -->
+  <string name="onboarding_redesign_tou_body_three_link_text">مدیریت تنظیمات</string>
+  <!-- Terms of use (ToU) onboarding page continue button label. -->
+  <string name="onboarding_redesign_tou_agree_and_continue_button_label">ادامه</string>
+  <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
+  <string name="onboarding_marketing_redesign_positive_button">تایید</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">به ما در رشد Firefox کمک کنید</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -607,17 +619,16 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">بازکردن پیوند در زبانهٔ خصوصی</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">اجازهٔ نماگرفت در حالت خصوصی</string>
+  <string name="preferences_allow_screenshots_in_private_mode">اجازهٔ نماگرفت در حالت خصوصی</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">در صورت اجازه، هنگام باز شدن چندین برنامه، زبانه‌های خصوصی نیز قابل مشاهده خواهند بود</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">در صورت اجازه، هنگام باز شدن چندین برنامه، زبانه‌های خصوصی نیز قابل مشاهده خواهند بود</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">افزودن میان‌بر مرور خصوصی</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
   <string name="preferences_https_only_title">حالت فقط-Https</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">استفاده از قفل صفحه برای پنهان کردن زبانه‌ها در مرور خصوصی</string>
-  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">زبانه‌ها را با اثر انگشت، پین یا بازگشایی با چهره مشاهده‌ کنید.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">زبانه‌ها را با اثر انگشت، پین یا بازگشایی با چهره مشاهده‌ کنید.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">مسدودکننده برنمای کلوچک</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
@@ -760,6 +771,8 @@
   <string name="preferences_open_links_in_apps_ask">پرسش پیش از گشودن</string>
   <!-- Preference for open links in third party apps never open in apps option -->
   <string name="preferences_open_links_in_apps_never">هرگز</string>
+  <!-- Preference for downloads -->
+  <string name="preferences_downloads">بارگیری‌ها</string>
   <!-- Preference for enabling gecko engine logs -->
   <string name="preferences_enable_gecko_logs">به کار انداختن گزارش‌ها گکو</string>
   <!-- Message to indicate users that we are quitting the application to apply the changes -->
@@ -784,6 +797,10 @@
   <string name="addons_permissions_allow_for_all_sites_subtitle">اگر به این افزونه اعتماد دارید، می‌توانید به آن در هر وبگاه‌ی اجازه دسترسی بدهید.</string>
   <!-- The text shown when an extension does not require permissions -->
   <string name="addons_does_not_require_permissions">این افزونه نیازی به مجوز ندارد.</string>
+  <!-- The description of data collection permissions listed in the addon's permissions screen.  %1$s is a formatted list of permissions. -->
+  <string name="addons_permissions_required_data_collection_description_2">این افزونه به گفته توسعه‌دهنده، داده‌های زیر را جمع‌آوری می‌کند: %1$s</string>
+  <!-- The description of the "none" data collection permission, when the extension doesn't collect anything according to the developer. -->
+  <string name="addons_permissions_none_required_data_collection_description">توسعه‌دهنده اعلام کرده است که این افزونه نیازی به جمع‌آوری داده ندارد.</string>
   <!--
     Add-on Preferences
 
@@ -1020,6 +1037,8 @@
     Header of the Sync and save your data preference view
   -->
   <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">همگام‌سازی و ذخیرهٔ داده‌های شما</string>
+  <!-- Header of the Sign in preference view -->
+  <string name="preferences_sign_in">ورود</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">برای اتصال مجدد وارد شوید</string>
   <!-- Preference for removing FxA account -->
@@ -1152,6 +1171,8 @@
   <string name="close_tabs_after_one_month">بعد از یک ماه</string>
   <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
   <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">بستن خودکار زبانه‌های باز</string>
+  <!-- Content description (not visible, for screen readers etc.): Close tab button -->
+  <string name="tab_manager_close_tabs">بستن</string>
   <!--
     Opening screen
 
@@ -1216,6 +1237,10 @@
   <string name="tabs_header_normal_tabs_title">زبانه‌ها</string>
   <!-- Text for the tabs header synced tabs -->
   <string name="tabs_header_synced_tabs_title">همگام‌سازی</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
+  <string name="tab_manager_floating_action_button_new_normal_tab">زبانه جدید</string>
+  <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
+  <string name="tab_manager_floating_action_button_new_private_tab">زبانه خصوصی جدید</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">افزودن زبانه</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1240,6 +1265,10 @@
   <string name="tab_tray_multiselect_menu_item_bookmark">نشانک‌گذاری</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">بستن</string>
+  <!-- Text shown in the multiselect menu for sharing selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_share">هم‌رسانی</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_collection">افزودن به مجموعه</string>
   <!-- Content description for tabs tray multiselect share button -->
   <string name="tab_tray_multiselect_share_content_description">هم‌رسانی زبانه‌های انتخاب شده</string>
   <!-- Content description for tabs tray multiselect menu -->
@@ -1778,6 +1807,8 @@
   <string name="sync_sign_in">برای همگام‌سازی وارد شوید</string>
   <!-- An option from the three dot menu to sync and save data -->
   <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">همگام‌سازی و ذخیرهٔ داده‌ها</string>
+  <!-- An option from the three dot menu to sign in -->
+  <string name="sync_menu_sign_in">ورود</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">ارسال به همه دستگاه‌ها</string>
   <!-- An option from the share dialog to reconnect to sync -->
@@ -1901,6 +1932,8 @@
   <string name="preference_accessibility_text_size_summary">متن را در وبگاه‌ها بزرگتر یا کوچکتر کنید</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">اندازه قلم</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">اندازه قلم خودکار</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -3389,4 +3422,6 @@
   <string name="private_tab_cfr_negative">خیر، متشکرم</string>
   <!-- Positive button text for the contextual feature recommendation (CFR) enabling screen lock for private tabs -->
   <string name="private_tab_cfr_positive">قفل کردن زبانه‌ها</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">بیشتر بدانید</string>
 </resources>

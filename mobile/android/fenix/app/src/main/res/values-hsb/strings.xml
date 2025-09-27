@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">Wobstarajće sej awtomatiski přesćěhowanski \u0020škit po standardźe</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Jedyn dótk pomha, předewzaća při tym haćić, waše kliki wuskušować.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Synchronizujće wšudźe, hdźež Firefox wužiwaće</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Wobstarajće sej zapołožki, rajtarki a hesła na kóždym graće. Wšě ze zaklučowanjom škitane.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Synchronizaciju započeć</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Nic nětko</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Pomhajće nam, Firefox rosć dać</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -711,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Wotkazy w priwatnym rajtarku wočinić</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Fota wobrazowki w priwatnym modusu dowolić</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Fota wobrazowki w priwatnym modusu dowolić</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Jeli dowolene, budu priwatne rajtarki tež widźomne, hdyž wjacore nałoženja su wočinjene</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Jeli dowolene, budu priwatne rajtarki tež widźomne, hdyž wjacore nałoženja su wočinjene</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Zwjazanje za priwatny modus přidać</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -721,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Wužiwajće zawěru wobrazowki, zo byšće rajtarki w priwatnym modusu schował</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Pokazajće rajtarki ze swojim porstowym wotćišćom, PIN abo wobličowym wotewrjenjom.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">Wobhladajće sej rajtarki ze swojim porstowym wotćišćom, PIN abo wotewrjenjom přez wobličo. Hdyž to zmóžnjeće, so fotam wobrazowki a dźělenju zadźěwa.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Pokazajće rajtarki ze swojim porstowym wotćišćom, PIN abo wobličowym wotewrjenjom.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Blokowak plackowych chorhojow</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->

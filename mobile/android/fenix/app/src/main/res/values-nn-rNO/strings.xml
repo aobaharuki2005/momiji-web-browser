@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">Få automatisk sporingsvern som standard</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Eitt trykk hindrar selskap i å spionere på klikka dine.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Synkroniser alle stadar der du brukar Firefox</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Få bokmerke, faner og passord på kva som helst eining. Alt er verna med kryptering.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Start synkronisering</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Ikkje no</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Hjelp oss med å utvikle Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -711,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Opne lenker i ei privat fane</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Tillat å ta skjermbilde i privat nettlesing</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Tillat å ta skjermbilde i privat nettlesing</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Dersom tillate, vil private faner òg vere synlege når fleire appar er opne</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Dersom tillate, vil private faner òg vere synlege når fleire appar er opne</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Legg til snarveg for privat nettlesing</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -721,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Bruk skjermlås for å skjule faner i privat nettlesing</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Vis faner med fingeravtrykk, PIN-kode eller ansiktslås.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">Vis faner med fingeravtrykk, PIN-kode eller ansiktsgjenkjenning. Når dette er slått på, blir også skjermopptak og deling hindra.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Vis faner med fingeravtrykk, PIN-kode eller ansiktslås.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Blokkering av infokapselbanner</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->

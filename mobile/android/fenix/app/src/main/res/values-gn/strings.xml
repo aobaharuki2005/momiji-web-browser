@@ -30,6 +30,8 @@
   <string name="no_private_tabs_description">Ne rendaykekuéra ñemiguáva ojehecháta ápe.</string>
   <!-- The header text displayed on the private tabs page when no private tabs are open -->
   <string name="tab_manager_empty_private_tabs_page_header">Ñeikundaha ñemi</string>
+  <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
+  <string name="tab_manager_empty_private_tabs_page_description">%1$s naimandu’amo’ãi ne rembiasakue térã kookiere, hákatu oñeñongatúta techaukaha pyahu.</string>
   <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
   <string name="tab_manager_empty_normal_tabs_page_header">Emoheñói tendayke pyahu eheka ñepyrũ hag̃ua</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
@@ -586,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">Ereko ñemo’ã ijeheguíva tapykuehoha ypyguáva rovake</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Peteĩ jepoko nepytyvõta emboyke hag̃ua mba’apohaguasu ohecháva nde jekutu.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Embojuehe eiporuhágui Firefox</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Eike techaukaha, tendayke ha ñe’ẽñemíme oimeraẽ mba’e’okágui. Oñemoã papapy ndive.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Eñepyrũ embojuehe</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Ani ko’ág̃a</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Orepytyvõ Firefox oiko porãve hag̃ua</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -709,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Embojuruja juajuha tendayke ñemíme</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Emoneĩ mba’erechaha japyhy kundaha ñemíme</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Emoneĩ mba’erechaha japyhy kundaha ñemíme</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Oñemoneĩrõ, umi tendayke ñemigua ojehecháta oĩ vove heta tembiporu’i ijurujáva</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Oñemoneĩrõ, umi tendayke ñemigua ojehecháta oĩ vove heta tembiporu’i ijurujáva</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Embojuaju jeike pya’eha tendayke ñemiguáre</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -719,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Eiporu mba’erechaha jokoha eñomi hag̃ua tendayke ñeikundaha ñemiguápe</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Ehecha tendayke ne kuã hũ ndive, PIN térã tovara’ãnga joko’oha.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">Ehecha tendayke ne kuã hũme, PIN térã tovara’ãnga rupi. Embojurujávo kóva emboyke jejapyhy ha mba’erechaha jeporu oñondive.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Ehecha tendayke ne kuã hũ ndive, PIN térã tovara’ãnga joko’oha.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Ejoko Banner kookie rehegua</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
@@ -1765,6 +1776,8 @@
   <string name="unsubmitted_crash_dialog_positive_button_2">MONDO</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Emondo marandu javygua</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Umi marandu jejavygua ñanepytyvõ jaikuaa ha ñamyatyrõ apañuái kundahára ndive. Ikatu oike mba’ekuaarã nderehegua térã ehayhúva. %s</string>
   <string name="unsubmitted_crash_dialog_learn_more">Eikuaave</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Eikuaave</string>

@@ -601,9 +601,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Digeriñ an ereoù en un ivinell brevez</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Aotren an tapadennoù-skramm er merdeiñ prevez</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Aotren an tapadennoù-skramm er merdeiñ prevez</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Mard eo aotreet, an ivinelloù prevez a vo hewel pa vo meur a arload digor</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Mard eo aotreet, an ivinelloù prevez a vo hewel pa vo meur a arload digor</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Ouzhpennañ ur verradenn merdeiñ prevez</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->

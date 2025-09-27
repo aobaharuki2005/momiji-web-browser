@@ -701,17 +701,16 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Odpri povezave v zasebnem zavihku</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Dovoli zajemanje posnetkov zaslona v zasebnem brskanju</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Dovoli zajemanje posnetkov zaslona v zasebnem brskanju</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Če je dovoljeno, bodo zasebni zavihki vidni tudi, ko je odprtih več aplikacij</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Če je dovoljeno, bodo zasebni zavihki vidni tudi, ko je odprtih več aplikacij</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Dodaj bližnjico zasebnega brskanja</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
   <string name="preferences_https_only_title">Način \"samo HTTPS\"</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Uporabite zaklepanje zaslona za skrivanje zavihkov v zasebnem brskanju</string>
-  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Oglejte si zavihke s prstnim odtisom, PIN ali odklepanjem z obrazom.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Oglejte si zavihke s prstnim odtisom, PIN ali odklepanjem z obrazom.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Zavračanje pasic s piškotki</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->

@@ -695,17 +695,16 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Відкривати посилання у приватній вкладці</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Дозволити знімки екрана у приватному перегляді</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Дозволити знімки екрана у приватному перегляді</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Якщо дозволено, приватні вкладки також будуть видимі, коли відкрито декілька програм</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Якщо дозволено, приватні вкладки також будуть видимі, коли відкрито декілька програм</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Додати ярлик приватного перегляду</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
   <string name="preferences_https_only_title">HTTPS-режим</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Використовувати блокування екрана, щоб приховати вкладки в приватному перегляді</string>
-  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Переглядайте вкладки, розблокувавши доступ відбитком пальця, PIN-кодом або обличчям.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Переглядайте вкладки, розблокувавши доступ відбитком пальця, PIN-кодом або обличчям.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Блокувальник банерів файлів cookie</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->

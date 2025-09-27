@@ -586,6 +586,16 @@
   <string name="onboarding_marketing_redesign_positive_button">Тасдиқ кардан</string>
   <!-- Set to default browser onboarding redesign title. -->
   <string name="onboarding_redesign_set_default_browser_title">Истифодаи муҳофизати худкор аз пайгирӣ ба таври пешфарз</string>
+  <!-- Set to default browser onboarding redesign body. -->
+  <string name="onboarding_redesign_set_default_browser_body">Танҳо як пахш кофӣ аст, то ширкатҳо натавонанд амалҳои шуморо дар онлайн назорат ё ҷосусӣ кунанд.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Дар ҳамаи ҷойҳое, ки шумо аз «Firefox» истифода мебаред, ҳамоҳанг созед</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Дар ҳар гуна дастгоҳ хатбаракҳо, варақаҳо ва ниҳонвожаҳои худро ба даст оред. Ҳамаи онҳо бо низоми рамзгузорӣ ҳифз карда шудаанд.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Оғози ҳамоҳангсозӣ</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Ҳоло не</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Ба мо барои инкишофи браузери «Firefox» кумак расонед</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -709,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Кушодани пайвандҳо дар варақаи хусусӣ</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Иҷозат додани аксҳои экран ҳангоми тамошобинии хусусӣ</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Иҷозат додани аксҳои экран ҳангоми тамошобинии хусусӣ</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Агар иҷозат дода шавад, варақаҳои хусусӣ низ ҳангоми кушода будани якчанд барнома намоён мешаванд</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Агар иҷозат дода шавад, варақаҳои хусусӣ низ ҳангоми кушода будани якчанд барнома намоён мешаванд</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Илова кардани миёнбури тамошобинии хусусӣ</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -719,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Истифода аз қулфи экран барои пинҳон кардани варақаҳо дар реҷаи «Тамошобинии хусусӣ»</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Намоиш додани варақаҳо ба воситаи нақши ангуштони шумо, рамзи «PIN» ё чеҳраи ташхиси корбар.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">Варақаҳоро ба воситаи нақши ангуштони худ, рамзи «PIN» ё чеҳраи ташхиси корбар бинед. Фаъолсозии ин имкон сабти экран ва мубодилаи онро низ пешгирӣ мекунад.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Намоиш додани варақаҳо ба воситаи нақши ангуштони шумо, рамзи «PIN» ё чеҳраи ташхиси корбар.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Манъкунандаи баннери куки</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
@@ -1786,6 +1797,14 @@
   <string name="bookmark_add_folder">Илова кардани ҷузвдон</string>
   <!-- Snackbar title that confirms a bookmark was saved into a folder. %s is the name of the folder the bookmark was saved into. -->
   <string name="bookmark_saved_in_folder_snackbar">Дар «%s» нигоҳ дошта шуд</string>
+  <!-- Snackbar title describing failure to add a new folder -->
+  <string name="bookmark_error_add_folder">Ҷузвдон илова карда нашуд</string>
+  <!-- Snackbar title describing failure to edit an existing folder -->
+  <string name="bookmark_error_edit_folder">Ҷузвдон таҳрир карда нашуд</string>
+  <!-- Snackbar title describing failure to select a new parent folder for a bookmark or folder -->
+  <string name="bookmark_error_select_folder">Ҷузвдони асосӣ иваз карда нашуд</string>
+  <!-- Snackbar title describing failure to edit a bookmark -->
+  <string name="bookmark_error_edit_bookmark">Хатбарак таҳрир карда нашуд</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
   <string name="edit_bookmark_snackbar_action">ТАҲРИР КАРДАН</string>
   <!-- Bookmark menu move button -->
@@ -3015,6 +3034,11 @@
     Title text displayed in the tabs tray when a tab has been unused for 14 days.
   -->
   <string name="inactive_tabs_title">Варақаҳои ғайрифаъол</string>
+  <!--
+    Text displayed in the tabs tray, indicating the number of inactive tabs.
+    %d is the number of inactive tabs.
+  -->
+  <string name="inactive_tabs_num_items">Шумораи унсурҳо: %d</string>
   <!-- Content description for closing all inactive tabs -->
   <string name="inactive_tabs_delete_all">Пӯшидани ҳамаи варақаҳои ғайрифаъол</string>
   <!-- Content description for expanding the inactive tabs section. -->
