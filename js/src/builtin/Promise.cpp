@@ -685,53 +685,90 @@ static bool AbruptRejectPromise(JSContext* cx, CallArgs& args,
                              capability.reject());
 }
 
-class MicroTaskEntry : public NativeObject {
- protected:
-  enum Slots {
-    // Shared slots:
-    Promise = 0,      // see comment in PromiseReactionRecord
-    HostDefinedData,  // See comment in PromiseReactionRecord
+enum ReactionRecordSlots {
+  // This is the promise-like object that gets resolved with the result of this
+  // reaction, if any. If this reaction record was created with .then or .catch,
+  // this is the promise that .then or .catch returned.
+  //
+  // The spec says that a PromiseReaction record has a [[Capability]] field
+  // whose value is either undefined or a PromiseCapability record, but we just
+  // store the PromiseCapability's fields directly in this object. This is the
+  // capability's [[Promise]] field; its [[Resolve]] and [[Reject]] fields are
+  // stored in ReactionRecordSlot_Resolve and ReactionRecordSlot_Reject.
+  //
+  // This can be 'null' in reaction records created for a few situations:
+  //
+  // - When you resolve one promise to another. When you pass a promise P1 to
+  //   the 'fulfill' function of a promise P2, so that resolving P1 resolves P2
+  //   in the same way, P1 gets a reaction record with the
+  //   REACTION_FLAG_DEFAULT_RESOLVING_HANDLER flag set and whose
+  //   ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
+  //   slot holds P2.
+  //
+  // - When you await a promise. When an async function or generator awaits a
+  //   value V, then the await expression generates an internal promise P,
+  //   resolves it to V, and then gives P a reaction record with the
+  //   REACTION_FLAG_ASYNC_FUNCTION or REACTION_FLAG_ASYNC_GENERATOR flag set
+  //   and whose
+  //   ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
+  //   slot holds the generator object. (Typically V is a promise, so resolving
+  //   P to V gives V a REACTION_FLAGS_DEFAULT_RESOLVING_HANDLER reaction record
+  //   as described above.)
+  //
+  // - When JS::AddPromiseReactions{,IgnoringUnhandledRejection} cause the
+  //   reaction to be created.  (These functions act as if they had created a
+  //   promise to invoke the appropriate provided reaction function, without
+  //   actually allocating a promise for them.)
+  ReactionRecordSlot_Promise = 0,
 
-    // Only needed for microtask jobs
-    AllocationStack,
-    HostDefinedGlobalRepresentative,
-    SlotCount,
-  };
+  // The [[Handler]] field(s) of a PromiseReaction record. We create a
+  // single reaction record for fulfillment and rejection, therefore our
+  // PromiseReaction implementation needs two [[Handler]] fields.
+  //
+  // The slot value is either a callable object, an integer constant from
+  // the |PromiseHandler| enum, or null. If the value is null, either the
+  // REACTION_FLAG_DEBUGGER_DUMMY or the
+  // REACTION_FLAG_DEFAULT_RESOLVING_HANDLER flag must be set.
+  //
+  // After setting the target state for a PromiseReaction, the slot of the
+  // no longer used handler gets reused to store the argument of the active
+  // handler.
+  ReactionRecordSlot_OnFulfilled,
+  ReactionRecordSlot_OnRejectedArg = ReactionRecordSlot_OnFulfilled,
+  ReactionRecordSlot_OnRejected,
+  ReactionRecordSlot_OnFulfilledArg = ReactionRecordSlot_OnRejected,
 
- public:
-  JSObject* promise() const {
-    return getFixedSlot(Slots::Promise).toObjectOrNull();
-  }
+  // The functions to resolve or reject the promise. Matches the
+  // [[Capability]].[[Resolve]] and [[Capability]].[[Reject]] fields from
+  // the spec.
+  //
+  // The slot values are either callable objects or null, but the latter
+  // case is only allowed if the promise is either a built-in Promise object
+  // or null.
+  ReactionRecordSlot_Resolve,
+  ReactionRecordSlot_Reject,
 
-  void setPromise(JSObject* obj) {
-    setFixedSlot(Slots::Promise, ObjectOrNullValue(obj));
-  }
+  // The host defined data for this reaction record. Can be null.
+  // See step 5 in https://html.spec.whatwg.org/#hostmakejobcallback
+  ReactionRecordSlot_HostDefinedData,
 
-  Value getHostDefinedData() const {
-    return getFixedSlot(Slots::HostDefinedData);
-  }
+  // Bitmask of the REACTION_FLAG values.
+  ReactionRecordSlot_Flags,
 
-  void setHostDefinedData(const Value& val) {
-    setFixedSlot(Slots::HostDefinedData, val);
-  }
+  // Additional slot to store extra data for specific reaction record types.
+  //
+  // - When the REACTION_FLAG_ASYNC_FUNCTION flag is set, this slot stores
+  //   the (internal) generator object for this promise reaction.
+  // - When the REACTION_FLAG_ASYNC_GENERATOR flag is set, this slot stores
+  //   the async generator object for this promise reaction.
+  // - When the REACTION_FLAG_DEFAULT_RESOLVING_HANDLER flag is set, this
+  //   slot stores the promise to resolve when conceptually "calling" the
+  //   OnFulfilled or OnRejected handlers.
+  // - When the REACTION_FLAG_ASYNC_FROM_SYNC_ITERATOR is set, this slot stores
+  //   the async-from-sync iterator object.
+  ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
 
-  JSObject* allocationStack() const {
-    return getFixedSlot(Slots::AllocationStack).toObjectOrNull();
-  }
-
-  void setAllocationStack(JSObject* stack) {
-    setFixedSlot(Slots::AllocationStack, ObjectOrNullValue(stack));
-  }
-
-  JSObject* hostDefinedGlobalRepresentative() const {
-    Value v = getFixedSlot(Slots::HostDefinedGlobalRepresentative);
-    return v.isObjectOrNull() ? v.toObjectOrNull() : nullptr;
-  }
-
-  void setHostDefinedGlobalRepresentative(JSObject* global) {
-    setFixedSlot(Slots::HostDefinedGlobalRepresentative,
-                 ObjectOrNullValue(global));
-  }
+  ReactionRecordSlots,
 };
 
 /**
@@ -740,7 +777,7 @@ class MicroTaskEntry : public NativeObject {
  * PromiseReaction Records
  * https://tc39.es/ecma262/#sec-promisereaction-records
  */
-class PromiseReactionRecord : public MicroTaskEntry {
+class PromiseReactionRecord : public NativeObject {
   // If this flag is set, this reaction record is already enqueued to the
   // job queue, and the spec's [[Type]] field is represented by
   // REACTION_FLAG_FULFILLED flag.
@@ -756,17 +793,17 @@ class PromiseReactionRecord : public MicroTaskEntry {
 
   // If this flag is set, this reaction record is created for resolving
   // one promise P1 to another promise P2, and
-  // Slot::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator slot
+  // ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator slot
   // holds P2.
   static constexpr uint32_t REACTION_FLAG_DEFAULT_RESOLVING_HANDLER = 0x4;
 
   // If this flag is set, this reaction record is created for async function
-  // and Slot::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
+  // and ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
   // slot holds internal generator object of the async function.
   static constexpr uint32_t REACTION_FLAG_ASYNC_FUNCTION = 0x8;
 
   // If this flag is set, this reaction record is created for async generator
-  // and Slot::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
+  // and ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
   // slot holds the async generator object of the async generator.
   static constexpr uint32_t REACTION_FLAG_ASYNC_GENERATOR = 0x10;
 
@@ -784,109 +821,10 @@ class PromiseReactionRecord : public MicroTaskEntry {
 
   // If this flag is set, this reaction record is created for async-from-sync
   // iterators and
-  // Slot::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator slot
+  // ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator slot
   // holds the async-from-sync iterator object.
   static constexpr uint32_t REACTION_FLAG_ASYNC_FROM_SYNC_ITERATOR = 0x80;
 
- public:
-  enum Slots {
-    // This is the promise-like object that gets resolved with the result of
-    // this reaction, if any. If this reaction record was created with .then or
-    // .catch, this is the promise that .then or .catch returned.
-    //
-    // The spec says that a PromiseReaction record has a [[Capability]] field
-    // whose value is either undefined or a PromiseCapability record, but we
-    // just store the PromiseCapability's fields directly in this object. This
-    // is the
-    // capability's [[Promise]] field; its [[Resolve]] and [[Reject]] fields are
-    // stored in Slot::Resolve and Slot::Reject.
-    //
-    // This can be 'null' in reaction records created for a few situations:
-    //
-    // - When you resolve one promise to another. When you pass a promise P1 to
-    //   the 'fulfill' function of a promise P2, so that resolving P1 resolves
-    //   P2 in the same way, P1 gets a reaction record with the
-    //   REACTION_FLAG_DEFAULT_RESOLVING_HANDLER flag set and whose
-    //   Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
-    //   slot holds P2.
-    //
-    // - When you await a promise. When an async function or generator awaits a
-    //   value V, then the await expression generates an internal promise P,
-    //   resolves it to V, and then gives P a reaction record with the
-    //   REACTION_FLAG_ASYNC_FUNCTION or REACTION_FLAG_ASYNC_GENERATOR flag set
-    //   and whose Slot::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
-    //   slot holds the generator object. (Typically V is a promise, so
-    //   resolving P to V gives V a REACTION_FLAGS_DEFAULT_RESOLVING_HANDLER
-    //   reaction
-    //   record as described above.)
-    //
-    // - When JS::AddPromiseReactions{,IgnoringUnhandledRejection} cause the
-    //   reaction to be created. (These functions act as if they had created a
-    //   promise to invoke the appropriate provided reaction function, without
-    //   actually allocating a promise for them.)
-    Promise = MicroTaskEntry::Slots::Promise,
-
-    // The host defined data for this reaction record. Can be null.
-    // See step 5 in https://html.spec.whatwg.org/#hostmakejobcallback
-    HostDefinedData = MicroTaskEntry::Slots::HostDefinedData,
-
-    // < Invisibly here are the microtask job slots from the parent class
-    // MicroTask. >
-
-    // A slot holding an object from the realm where we need to execute
-    // the reaction job. This may be a CCW. We don't store the global
-    // of the realm directly because wrappers to globals can change
-    // globals, which breaks code.
-    EnqueueGlobalRepresentative = MicroTaskEntry::Slots::SlotCount,
-
-    // The [[Handler]] field(s) of a PromiseReaction record. We create a
-    // single reaction record for fulfillment and rejection, therefore our
-    // PromiseReaction implementation needs two [[Handler]] fields.
-    //
-    // The slot value is either a callable object, an integer constant from
-    // the |PromiseHandler| enum, or null. If the value is null, either the
-    // REACTION_FLAG_DEBUGGER_DUMMY or the
-    // REACTION_FLAG_DEFAULT_RESOLVING_HANDLER flag must be set.
-    //
-    // After setting the target state for a PromiseReaction, the slot of the
-    // no longer used handler gets reused to store the argument of the active
-    // handler.
-    OnFulfilled,
-    OnRejectedArg = OnFulfilled,
-    OnRejected,
-    OnFulfilledArg = OnRejected,
-
-    // The functions to resolve or reject the promise. Matches the
-    // [[Capability]].[[Resolve]] and [[Capability]].[[Reject]] fields from
-    // the spec.
-    //
-    // The slot values are either callable objects or null, but the latter
-    // case is only allowed if the promise is either a built-in Promise object
-    // or null.
-    Resolve,
-    Reject,
-
-    // Bitmask of the REACTION_FLAG values.
-    Flags,
-
-    // Additional slot to store extra data for specific reaction record types.
-    //
-    // - When the REACTION_FLAG_ASYNC_FUNCTION flag is set, this slot stores
-    //   the (internal) generator object for this promise reaction.
-    // - When the REACTION_FLAG_ASYNC_GENERATOR flag is set, this slot stores
-    //   the async generator object for this promise reaction.
-    // - When the REACTION_FLAG_DEFAULT_RESOLVING_HANDLER flag is set, this
-    //   slot stores the promise to resolve when conceptually "calling" the
-    //   OnFulfilled or OnRejected handlers.
-    // - When the REACTION_FLAG_ASYNC_FROM_SYNC_ITERATOR is set, this slot
-    // stores
-    //   the async-from-sync iterator object.
-    GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
-
-    SlotCount,
-  };
-
- private:
   template <typename KnownF, typename UnknownF>
   static void forEachReactionFlag(uint32_t flags, KnownF known,
                                   UnknownF unknown);
@@ -895,25 +833,34 @@ class PromiseReactionRecord : public MicroTaskEntry {
     int32_t flags = this->flags();
     MOZ_ASSERT(flags == 0, "Can't modify with non-default flags");
     flags |= flag;
-    setFixedSlot(Slots::Flags, Int32Value(flags));
+    setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
   }
 
   uint32_t handlerSlot() {
     MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
-    return targetState() == JS::PromiseState::Fulfilled ? Slots::OnFulfilled
-                                                        : Slots::OnRejected;
+    return targetState() == JS::PromiseState::Fulfilled
+               ? ReactionRecordSlot_OnFulfilled
+               : ReactionRecordSlot_OnRejected;
   }
 
   uint32_t handlerArgSlot() {
     MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
-    return targetState() == JS::PromiseState::Fulfilled ? Slots::OnFulfilledArg
-                                                        : Slots::OnRejectedArg;
+    return targetState() == JS::PromiseState::Fulfilled
+               ? ReactionRecordSlot_OnFulfilledArg
+               : ReactionRecordSlot_OnRejectedArg;
   }
 
  public:
   static const JSClass class_;
 
-  int32_t flags() const { return getFixedSlot(Slots::Flags).toInt32(); }
+  JSObject* promise() const {
+    return getFixedSlot(ReactionRecordSlot_Promise).toObjectOrNull();
+  }
+
+  int32_t flags() const {
+    return getFixedSlot(ReactionRecordSlot_Flags).toInt32();
+  }
+
   JS::PromiseState targetState() const {
     int32_t flags = this->flags();
     if (!(flags & REACTION_FLAG_RESOLVED)) {
@@ -933,7 +880,7 @@ class PromiseReactionRecord : public MicroTaskEntry {
       flags |= REACTION_FLAG_FULFILLED;
     }
 
-    setFixedSlot(Slots::Flags, Int32Value(flags));
+    setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
     setFixedSlot(handlerArgSlot(), arg);
   }
 
@@ -949,8 +896,9 @@ class PromiseReactionRecord : public MicroTaskEntry {
 
   void setIsDefaultResolvingHandler(PromiseObject* promiseToResolve) {
     setFlagOnInitialState(REACTION_FLAG_DEFAULT_RESOLVING_HANDLER);
-    setFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
-                 ObjectValue(*promiseToResolve));
+    setFixedSlot(
+        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
+        ObjectValue(*promiseToResolve));
   }
   bool isDefaultResolvingHandler() const {
     int32_t flags = this->flags();
@@ -958,16 +906,16 @@ class PromiseReactionRecord : public MicroTaskEntry {
   }
   PromiseObject* defaultResolvingPromise() {
     MOZ_ASSERT(isDefaultResolvingHandler());
-    const Value& promiseToResolve =
-        getFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
+    const Value& promiseToResolve = getFixedSlot(
+        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
     return &promiseToResolve.toObject().as<PromiseObject>();
   }
 
   void setIsAsyncFunction(AsyncFunctionGeneratorObject* genObj) {
-    MOZ_ASSERT(realm() == genObj->nonCCWRealm());
     setFlagOnInitialState(REACTION_FLAG_ASYNC_FUNCTION);
-    setFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
-                 ObjectValue(*genObj));
+    setFixedSlot(
+        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
+        ObjectValue(*genObj));
   }
   bool isAsyncFunction() const {
     int32_t flags = this->flags();
@@ -975,18 +923,16 @@ class PromiseReactionRecord : public MicroTaskEntry {
   }
   AsyncFunctionGeneratorObject* asyncFunctionGenerator() {
     MOZ_ASSERT(isAsyncFunction());
-    const Value& generator =
-        getFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
-    AsyncFunctionGeneratorObject* res =
-        &generator.toObject().as<AsyncFunctionGeneratorObject>();
-    MOZ_RELEASE_ASSERT(realm() == res->realm());
-    return res;
+    const Value& generator = getFixedSlot(
+        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
+    return &generator.toObject().as<AsyncFunctionGeneratorObject>();
   }
 
   void setIsAsyncGenerator(AsyncGeneratorObject* generator) {
     setFlagOnInitialState(REACTION_FLAG_ASYNC_GENERATOR);
-    setFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
-                 ObjectValue(*generator));
+    setFixedSlot(
+        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
+        ObjectValue(*generator));
   }
   bool isAsyncGenerator() const {
     int32_t flags = this->flags();
@@ -994,15 +940,16 @@ class PromiseReactionRecord : public MicroTaskEntry {
   }
   AsyncGeneratorObject* asyncGenerator() {
     MOZ_ASSERT(isAsyncGenerator());
-    const Value& generator =
-        getFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
+    const Value& generator = getFixedSlot(
+        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
     return &generator.toObject().as<AsyncGeneratorObject>();
   }
 
   void setIsAsyncFromSyncIterator(AsyncFromSyncIteratorObject* iterator) {
     setFlagOnInitialState(REACTION_FLAG_ASYNC_FROM_SYNC_ITERATOR);
-    setFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
-                 ObjectValue(*iterator));
+    setFixedSlot(
+        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
+        ObjectValue(*iterator));
   }
   bool isAsyncFromSyncIterator() const {
     int32_t flags = this->flags();
@@ -1010,8 +957,8 @@ class PromiseReactionRecord : public MicroTaskEntry {
   }
   AsyncFromSyncIteratorObject* asyncFromSyncIterator() {
     MOZ_ASSERT(isAsyncFromSyncIterator());
-    const Value& iterator =
-        getFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
+    const Value& iterator = getFixedSlot(
+        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
     return &iterator.toObject().as<AsyncFromSyncIteratorObject>();
   }
 
@@ -1033,16 +980,10 @@ class PromiseReactionRecord : public MicroTaskEntry {
   }
 
   JSObject* getAndClearHostDefinedData() {
-    JSObject* obj = getFixedSlot(Slots::HostDefinedData).toObjectOrNull();
-    setFixedSlot(Slots::HostDefinedData, UndefinedValue());
+    JSObject* obj =
+        getFixedSlot(ReactionRecordSlot_HostDefinedData).toObjectOrNull();
+    setFixedSlot(ReactionRecordSlot_HostDefinedData, UndefinedValue());
     return obj;
-  }
-
-  JSObject* enqueueGlobalRepresentative() const {
-    return getFixedSlot(Slots::EnqueueGlobalRepresentative).toObjectOrNull();
-  }
-  void setEnqueueGlobalRepresentative(JSObject* obj) {
-    setFixedSlot(Slots::EnqueueGlobalRepresentative, ObjectOrNullValue(obj));
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
@@ -1052,79 +993,8 @@ class PromiseReactionRecord : public MicroTaskEntry {
 
 const JSClass PromiseReactionRecord::class_ = {
     "PromiseReactionRecord",
-    JSCLASS_HAS_RESERVED_SLOTS(Slots::SlotCount),
+    JSCLASS_HAS_RESERVED_SLOTS(ReactionRecordSlots),
 };
-
-class ThenableJob : public MicroTaskEntry {
- protected:
-  enum Slots {
-    // These slots come directoy after the MicroTaskEntry slots.
-    Thenable = MicroTaskEntry::Slots::SlotCount,
-    Then,
-    Callback,
-    SlotCount
-  };
-
- public:
-  static const JSClass class_;
-
-  enum TargetFunction : int32_t {
-    PromiseResolveThenableJob,
-    PromiseResolveBuiltinThenableJob
-  };
-
-  Value thenable() const { return getFixedSlot(Slots::Thenable); }
-
-  void setThenable(const Value& val) { setFixedSlot(Slots::Thenable, val); }
-
-  JSObject* then() const { return getFixedSlot(Slots::Then).toObjectOrNull(); }
-
-  void setThen(JSObject* obj) {
-    setFixedSlot(Slots::Then, ObjectOrNullValue(obj));
-  }
-
-  TargetFunction targetFunction() const {
-    return static_cast<TargetFunction>(getFixedSlot(Slots::Callback).toInt32());
-  }
-  void setTargetFunction(TargetFunction target) {
-    setFixedSlot(Slots::Callback, JS::Int32Value(static_cast<int32_t>(target)));
-  }
-};
-
-const JSClass ThenableJob::class_ = {
-    "ThenableJob",
-    JSCLASS_HAS_RESERVED_SLOTS(ThenableJob::SlotCount),
-};
-
-ThenableJob* NewThenableJob(JSContext* cx, ThenableJob::TargetFunction target,
-                            HandleObject promise, HandleValue thenable,
-                            HandleObject then, HandleObject hostDefinedData) {
-  // MG:XXX: Boy isn't it silly that we have to root here, only to get the
-  // allocation site...
-  RootedObject stack(
-      cx, JS::MaybeGetPromiseAllocationSiteFromPossiblyWrappedPromise(promise));
-  if (!cx->compartment()->wrap(cx, &stack)) {
-    return nullptr;
-  }
-
-  // MG:XXX: Wrapping needs to be delegated to callers I think.
-  RootedObject hostDefined(cx, hostDefinedData);
-  if (!cx->compartment()->wrap(cx, &hostDefined)) {
-    return nullptr;
-  }
-  auto* job = NewBuiltinClassInstance<ThenableJob>(cx);
-  if (!job) {
-    return nullptr;
-  }
-  job->setPromise(promise);
-  job->setThen(then);
-  job->setThenable(thenable);
-  job->setTargetFunction(target);
-  job->setHostDefinedData(ObjectOrNullValue(hostDefined));
-  job->setAllocationStack(stack);
-
-  return job;
-}
 
 static void AddPromiseFlags(PromiseObject& promise, int32_t flag) {
   int32_t flags = promise.flags();
@@ -1677,17 +1547,6 @@ static bool ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool EnqueueJob(JSContext* cx, JS::MicroTask&& job) {
-  MOZ_ASSERT(cx->realm());
-
-  // Only check if we need to use the debug queue when we're not on main thread.
-  if (MOZ_UNLIKELY(!cx->runtime()->isMainRuntime() &&
-                   cx->jobQueue->useDebugQueue(cx->global()))) {
-    return cx->microTaskQueues->enqueueDebugMicroTask(cx, std::move(job));
-  }
-  return cx->microTaskQueues->enqueueRegularMicroTask(cx, std::move(job));
-}
-
 static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -1802,23 +1661,29 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp);
     RootedField<JSObject*, 4> handlerObj(roots, &handler.toObject());
     ar2.emplace(cx, handlerObj);
 
-    // This is wrapped here because it may be a cross comaprtment
-    // reference, and so should be wrapped to be stored on the job function.
-    // (it's also important because this indicates to PromiseReactionJob
-    // that it needs to switch realms).
+    // We need to wrap the reaction to store it on the job function.
     if (!cx->compartment()->wrap(cx, &reactionVal)) {
       return false;
     }
   }
 
+  // NewPromiseReactionJob
+  // Step 1. Let job be a new Job Abstract Closure with no parameters that
+  //         captures reaction and argument and performs the following steps
+  //         when called:
+  Handle<PropertyName*> funName = cx->names().empty_;
+  RootedField<JSFunction*, 5> job(
+      roots,
+      NewNativeFunction(cx, PromiseReactionJob, 0, funName,
+                        gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
+  if (!job) {
+    return false;
+  }
+
+  job->setExtendedSlot(ReactionJobSlot_ReactionRecord, reactionVal);
+
   // When using JS::AddPromiseReactions{,IgnoringUnHandledRejection}, no actual
   // promise is created, so we might not have one here.
-  //
-  // Bug 1977691: This comment needs updating; I don't think
-  // JS::AddPromiseReactions happens without a promise anymore, _however_ async
-  // functions may not have a promise.
-  //
-  //
   // Additionally, we might have an object here that isn't an instance of
   // Promise. This can happen if content overrides the value of
   // Promise[@@species] (or invokes Promise#then on a Promise subclass
@@ -1850,72 +1715,6 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp);
     }
   }
 
-  // NewPromiseReactionJob
-  // Step 1 (reordered). Let job be a new Job Abstract Closure with no
-  //                     parameters that captures reaction and argument
-  //                     and performs the following steps when called:
-  if (JS::Prefs::use_js_microtask_queue()) {
-    MOZ_ASSERT(reactionVal.isObject());
-
-    // Get a representative object for this global: We will use this later
-    // to extract the target global for execution. We don't store the global
-    // directly because CCWs to globals can change identity.
-    //
-    // So instead we simply store Object.prototype from the target global,
-    // an object which always exists.
-    RootedObject globalRepresentative(cx, &cx->global()->getObjectPrototype());
-
-    // PromiseReactionJob job will use the existence of a CCW as a signal
-    // to change to the reactionVal's realm for execution. I believe
-    // this is the right thing to do. As a result however we don't actually
-    // need to track the global. We simply allow PromiseReactionJob to
-    // do the right thing. We will need to enqueue a CCW however
-    {
-      AutoRealm ar(cx, reaction);
-
-      RootedObject stack(
-          cx,
-          JS::MaybeGetPromiseAllocationSiteFromPossiblyWrappedPromise(promise));
-      if (!cx->compartment()->wrap(cx, &stack)) {
-        return false;
-      }
-      reaction->setAllocationStack(stack);
-
-      if (!reaction->getHostDefinedData().isObject()) {
-        // We do need to still provide an incumbentGlobal here
-        // MG:XXX: I'm pretty sure this can be appreciably more elegant later.
-        RootedObject hostGlobal(cx);
-        if (!cx->jobQueue->getHostDefinedGlobal(cx, &hostGlobal)) {
-          return false;
-        }
-
-        if (hostGlobal) {
-          MOZ_ASSERT(hostGlobal->is<GlobalObject>());
-          // Recycle the root -- we store the prototype for the same
-          // reason as EnqueueGlobalRepresentative.
-          hostGlobal = &hostGlobal->as<GlobalObject>().getObjectPrototype();
-        }
-
-        if (!cx->compartment()->wrap(cx, &hostGlobal)) {
-          return false;
-        }
-        reaction->setHostDefinedGlobalRepresentative(hostGlobal);
-      }
-
-      if (!cx->compartment()->wrap(cx, &globalRepresentative)) {
-        return false;
-      }
-      reaction->setEnqueueGlobalRepresentative(globalRepresentative);
-    }
-
-    if (!cx->compartment()->wrap(cx, &reactionVal)) {
-      return false;
-    }
-
-    // HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
-    return EnqueueJob(cx, std::move(reactionVal.get()));
-  }
-
   RootedField<JSObject*, 7> hostDefinedData(roots);
   if (JSObject* hostDefined = reaction->getAndClearHostDefinedData()) {
     hostDefined = CheckedUnwrapStatic(hostDefined);
@@ -1929,17 +1728,7 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp);
     hostDefinedData = hostDefined;
   }
 
-  Handle<PropertyName*> funName = cx->names().empty_;
-  RootedField<JSFunction*, 5> job(
-      roots,
-      NewNativeFunction(cx, PromiseReactionJob, 0, funName,
-                        gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
-  if (!job) {
-    return false;
-  }
-
-  job->setExtendedSlot(ReactionJobSlot_ReactionRecord, reactionVal);
-
+  // HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
   return cx->runtime()->enqueuePromiseJob(cx, job, promise, hostDefinedData);
 }
 
@@ -2454,13 +2243,12 @@ static bool ForEachReaction(JSContext* cx, HandleValue reactionsVal, F f) {
   RootedObject callee(cx);
   if (resolutionMode == ResolveMode) {
     callee =
-        reaction->getFixedSlot(PromiseReactionRecord::Resolve).toObjectOrNull();
+        reaction->getFixedSlot(ReactionRecordSlot_Resolve).toObjectOrNull();
 
     return CallPromiseResolveFunction(cx, callee, handlerResult, promiseObj);
   }
 
-  callee =
-      reaction->getFixedSlot(PromiseReactionRecord::Reject).toObjectOrNull();
+  callee = reaction->getFixedSlot(ReactionRecordSlot_Reject).toObjectOrNull();
 
   return CallPromiseRejectFunction(cx, callee, handlerResult, promiseObj,
                                    unwrappedRejectionStack,
@@ -2514,8 +2302,17 @@ static bool ForEachReaction(JSContext* cx, HandleValue reactionsVal, F f) {
  * JSFunction object, with all information required for the job's
  * execution stored in in a reaction record in its first extended slot.
  */
-static bool PromiseReactionJob(JSContext* cx, HandleObject reactionObjIn) {
-  RootedObject reactionObj(cx, reactionObjIn);
+static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  RootedFunction job(cx, &args.callee().as<JSFunction>());
+
+  // Promise reactions don't return any value.
+  args.rval().setUndefined();
+
+  RootedObject reactionObj(
+      cx, &job->getExtendedSlot(ReactionJobSlot_ReactionRecord).toObject());
+
   // To ensure that the embedding ends up with the right entry global, we're
   // guaranteeing that the reaction job function gets created in the same
   // compartment as the handler function. That's not necessarily the global
@@ -2523,9 +2320,6 @@ static bool PromiseReactionJob(JSContext* cx, HandleObject reactionObjIn) {
   // We can find the triggering global via the job's reaction record. To go
   // back, we check if the reaction is a wrapper and if so, unwrap it and
   // enter its compartment.
-  //
-  // MG:XXX: I think that when we switch over to using the JS microtask
-  // queue exclusively there's some cleanup around realm handling possible.
   mozilla::Maybe<AutoRealm> ar;
   if (!IsProxy(reactionObj)) {
     MOZ_RELEASE_ASSERT(reactionObj->is<PromiseReactionRecord>());
@@ -2547,8 +2341,6 @@ static bool PromiseReactionJob(JSContext* cx, HandleObject reactionObjIn) {
     return DefaultResolvingPromiseReactionJob(cx, reaction);
   }
   if (reaction->isAsyncFunction()) {
-    MOZ_RELEASE_ASSERT(reaction->asyncFunctionGenerator()->realm() ==
-                       cx->realm());
     return AsyncFunctionPromiseReactionJob(cx, reaction);
   }
   if (reaction->isAsyncGenerator()) {
@@ -2659,30 +2451,16 @@ static bool PromiseReactionJob(JSContext* cx, HandleObject reactionObjIn) {
   RootedObject callee(cx);
   if (resolutionMode == ResolveMode) {
     callee =
-        reaction->getFixedSlot(PromiseReactionRecord::Resolve).toObjectOrNull();
+        reaction->getFixedSlot(ReactionRecordSlot_Resolve).toObjectOrNull();
 
     return CallPromiseResolveFunction(cx, callee, handlerResult, promiseObj);
   }
 
-  callee =
-      reaction->getFixedSlot(PromiseReactionRecord::Reject).toObjectOrNull();
+  callee = reaction->getFixedSlot(ReactionRecordSlot_Reject).toObjectOrNull();
 
   return CallPromiseRejectFunction(cx, callee, handlerResult, promiseObj,
                                    unwrappedRejectionStack,
                                    reaction->unhandledRejectionBehavior());
-}
-
-static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  RootedFunction job(cx, &args.callee().as<JSFunction>());
-
-  // Promise reactions don't return any value.
-  args.rval().setUndefined();
-
-  RootedObject reactionObj(
-      cx, &job->getExtendedSlot(ReactionJobSlot_ReactionRecord).toObject());
-  return PromiseReactionJob(cx, reactionObj);
 }
 
 /**
@@ -2696,9 +2474,20 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp) {
  * A PromiseResolveThenableJob is set as the native function of an extended
  * JSFunction object, with all information required for the job's
  * execution stored in the function's extended slots.
+ *
+ * Usage of the function's extended slots is described in the ThenableJobSlots
+ * enum.
  */
-static bool PromiseResolveThenableJob(JSContext* cx, HandleObject promise,
-                                      HandleValue thenable, HandleObject then) {
+static bool PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  RootedFunction job(cx, &args.callee().as<JSFunction>());
+  RootedObject promise(
+      cx, &job->getExtendedSlot(ThenableJobSlot_Promise).toObject());
+  RootedValue thenable(cx, job->getExtendedSlot(ThenableJobSlot_Thenable));
+  RootedValue then(cx, job->getExtendedSlot(ThenableJobSlot_Handler));
+  MOZ_ASSERT(then.isObject());
+
   // Step 1.a. Let resolvingFunctions be
   //           CreateResolvingFunctions(promiseToResolve).
   RootedObject resolveFn(cx);
@@ -2717,7 +2506,7 @@ static bool PromiseResolveThenableJob(JSContext* cx, HandleObject promise,
 
   // In difference to the usual pattern, we return immediately on success.
   RootedValue rval(cx);
-  if (Call(cx, thenable, then, args2, &rval)) {
+  if (Call(cx, then, thenable, args2, &rval)) {
     // Step 1.d. Return Completion(thenCallResult).
     return true;
   }
@@ -2735,23 +2524,6 @@ static bool PromiseResolveThenableJob(JSContext* cx, HandleObject promise,
   // Step 1.c.ii. Return Completion(status).
   RootedValue rejectVal(cx, ObjectValue(*rejectFn));
   return Call(cx, rejectVal, UndefinedHandleValue, rval, &rval);
-}
-
-/*
- * Usage of the function's extended slots is described in the ThenableJobSlots
- * enum.
- */
-static bool PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  RootedFunction job(cx, &args.callee().as<JSFunction>());
-  RootedObject promise(
-      cx, &job->getExtendedSlot(ThenableJobSlot_Promise).toObject());
-  RootedValue thenable(cx, job->getExtendedSlot(ThenableJobSlot_Thenable));
-  RootedObject then(cx,
-                    &job->getExtendedSlot(ThenableJobSlot_Handler).toObject());
-
-  return PromiseResolveThenableJob(cx, promise, thenable, then);
 }
 
 [[nodiscard]] static bool OriginalPromiseThenWithoutSettleHandlers(
@@ -2777,9 +2549,18 @@ static bool PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp) {
  * Usage of the function's extended slots is described in the ThenableJobSlots
  * enum.
  */
-static bool PromiseResolveBuiltinThenableJob(JSContext* cx,
-                                             HandleObject promise,
-                                             HandleObject thenable) {
+static bool PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc,
+                                             Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  RootedFunction job(cx, &args.callee().as<JSFunction>());
+  RootedObject promise(
+      cx, &job->getExtendedSlot(ThenableJobSlot_Promise).toObject());
+  RootedObject thenable(
+      cx, &job->getExtendedSlot(ThenableJobSlot_Thenable).toObject());
+  // The handler slot is not used for builtin `then`.
+  MOZ_ASSERT(job->getExtendedSlot(ThenableJobSlot_Handler).isUndefined());
+
   cx->check(promise, thenable);
   MOZ_ASSERT(promise->is<PromiseObject>());
   MOZ_ASSERT(thenable->is<PromiseObject>());
@@ -2822,21 +2603,6 @@ static bool PromiseResolveBuiltinThenableJob(JSContext* cx,
   // Step 1.c.ii. Return Completion(status).
   return RejectPromiseInternal(cx, promise.as<PromiseObject>(), exception,
                                stack);
-}
-
-static bool PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc,
-                                             Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  RootedFunction job(cx, &args.callee().as<JSFunction>());
-  RootedObject promise(
-      cx, &job->getExtendedSlot(ThenableJobSlot_Promise).toObject());
-  RootedObject thenable(
-      cx, &job->getExtendedSlot(ThenableJobSlot_Thenable).toObject());
-  // The handler slot is not used for builtin `then`.
-  MOZ_ASSERT(job->getExtendedSlot(ThenableJobSlot_Handler).isUndefined());
-
-  return PromiseResolveBuiltinThenableJob(cx, promise, thenable);
 }
 
 /**
@@ -2897,42 +2663,6 @@ static bool PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc,
     return false;
   }
 
-  // At this point the promise is guaranteed to be wrapped into the job's
-  // compartment.
-  RootedObject promise(cx, &promiseToResolve.toObject());
-
-  if (JS::Prefs::use_js_microtask_queue()) {
-    RootedObject hostDefinedGlobalRepresentative(cx);
-    {
-      RootedObject hostDefinedGlobal(cx);
-      if (!cx->jobQueue->getHostDefinedGlobal(cx, &hostDefinedGlobal)) {
-        return false;
-      }
-
-      MOZ_ASSERT_IF(hostDefinedGlobal, hostDefinedGlobal->is<GlobalObject>());
-      if (hostDefinedGlobal) {
-        hostDefinedGlobalRepresentative =
-            &hostDefinedGlobal->as<GlobalObject>().getObjectPrototype();
-      }
-    }
-
-    // Wrap the representative.
-    if (!cx->compartment()->wrap(cx, &hostDefinedGlobalRepresentative)) {
-      return false;
-    }
-
-    ThenableJob* thenableJob =
-        NewThenableJob(cx, ThenableJob::PromiseResolveThenableJob, promise,
-                       thenable, then, HostDefinedDataIsOptimizedOut);
-    if (!thenableJob) {
-      return false;
-    }
-
-    thenableJob->setHostDefinedGlobalRepresentative(
-        hostDefinedGlobalRepresentative);
-    return EnqueueJob(cx, ObjectValue(*thenableJob));
-  }
-
   // Step 1. Let job be a new Job Abstract Closure with no parameters that
   //         captures promiseToResolve, thenable, and then and performs the
   //         following steps when called:
@@ -2949,6 +2679,10 @@ static bool PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc,
   job->setExtendedSlot(ThenableJobSlot_Promise, promiseToResolve);
   job->setExtendedSlot(ThenableJobSlot_Thenable, thenable);
   job->setExtendedSlot(ThenableJobSlot_Handler, ObjectValue(*then));
+
+  // At this point the promise is guaranteed to be wrapped into the job's
+  // compartment.
+  RootedObject promise(cx, &promiseToResolve.toObject());
 
   // Step X. HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
   return cx->runtime()->enqueuePromiseJob(cx, job, promise,
@@ -2973,25 +2707,6 @@ static bool PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc,
   cx->check(promiseToResolve, thenable);
   MOZ_ASSERT(promiseToResolve->is<PromiseObject>());
   MOZ_ASSERT(thenable->is<PromiseObject>());
-
-  if (JS::Prefs::use_js_microtask_queue()) {
-    // Step 1. Let job be a new Job Abstract Closure with no parameters that
-
-    Rooted<JSObject*> hostDefinedData(cx);
-    if (!cx->runtime()->getHostDefinedData(cx, &hostDefinedData)) {
-      return false;
-    }
-
-    RootedValue thenableValue(cx, ObjectValue(*thenable));
-    ThenableJob* thenableJob = NewThenableJob(
-        cx, ThenableJob::PromiseResolveBuiltinThenableJob, promiseToResolve,
-        thenableValue, nullptr, hostDefinedData);
-    if (!thenableJob) {
-      return false;
-    }
-
-    return EnqueueJob(cx, ObjectValue(*thenableJob));
-  }
 
   // Step 1. Let job be a new Job Abstract Closure with no parameters that
   //         captures promiseToResolve, thenable, and then and performs the
@@ -5659,18 +5374,18 @@ static PromiseReactionRecord* NewReactionRecord(
 
   // See comments for ReactionRecordSlots for the relation between
   // spec record fields and PromiseReactionRecord slots.
-  reaction->setFixedSlot(PromiseReactionRecord::Promise,
+  reaction->setFixedSlot(ReactionRecordSlot_Promise,
                          ObjectOrNullValue(resultCapability.promise()));
   // We set [[Type]] in EnqueuePromiseReactionJob, by calling
   // setTargetStateAndHandlerArg.
-  reaction->setFixedSlot(PromiseReactionRecord::Flags, Int32Value(0));
-  reaction->setFixedSlot(PromiseReactionRecord::OnFulfilled, onFulfilled);
-  reaction->setFixedSlot(PromiseReactionRecord::OnRejected, onRejected);
-  reaction->setFixedSlot(PromiseReactionRecord::Resolve,
+  reaction->setFixedSlot(ReactionRecordSlot_Flags, Int32Value(0));
+  reaction->setFixedSlot(ReactionRecordSlot_OnFulfilled, onFulfilled);
+  reaction->setFixedSlot(ReactionRecordSlot_OnRejected, onRejected);
+  reaction->setFixedSlot(ReactionRecordSlot_Resolve,
                          ObjectOrNullValue(resultCapability.resolve()));
-  reaction->setFixedSlot(PromiseReactionRecord::Reject,
+  reaction->setFixedSlot(ReactionRecordSlot_Reject,
                          ObjectOrNullValue(resultCapability.reject()));
-  reaction->setFixedSlot(PromiseReactionRecord::HostDefinedData,
+  reaction->setFixedSlot(ReactionRecordSlot_HostDefinedData,
                          ObjectOrNullValue(hostDefinedData));
 
   return reaction;
@@ -6151,8 +5866,6 @@ template <typename T>
     JSContext* cx, Handle<AsyncFunctionGeneratorObject*> genObj,
     HandleValue value) {
   auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
-    MOZ_ASSERT(genObj->realm() == reaction->realm());
-    MOZ_ASSERT(genObj->realm() == cx->realm());
     reaction->setIsAsyncFunction(genObj);
   };
   if (!InternalAwait(cx, value, nullptr,
@@ -7035,12 +6748,12 @@ bool PromiseObject::forEachReactionRecord(
       RootedObject reject(cx);
       RootedObject result(cx, reaction->promise());
 
-      Value v = reaction->getFixedSlot(PromiseReactionRecord::OnFulfilled);
+      Value v = reaction->getFixedSlot(ReactionRecordSlot_OnFulfilled);
       if (v.isObject()) {
         resolve = &v.toObject();
       }
 
-      v = reaction->getFixedSlot(PromiseReactionRecord::OnRejected);
+      v = reaction->getFixedSlot(ReactionRecordSlot_OnRejected);
       if (v.isObject()) {
         reject = &v.toObject();
       }
@@ -7278,12 +6991,12 @@ void PromiseReactionRecord::dumpOwnFields(js::JSONPrinter& json) const {
   if (targetState() == JS::PromiseState::Fulfilled) {
     {
       js::GenericPrinter& out = json.beginStringProperty("onFulfilled");
-      getFixedSlot(OnFulfilled).dumpStringContent(out);
+      getFixedSlot(ReactionRecordSlot_OnFulfilled).dumpStringContent(out);
       json.endStringProperty();
     }
     {
       js::GenericPrinter& out = json.beginStringProperty("onFulfilledArg");
-      getFixedSlot(OnFulfilledArg).dumpStringContent(out);
+      getFixedSlot(ReactionRecordSlot_OnFulfilledArg).dumpStringContent(out);
       json.endStringProperty();
     }
   }
@@ -7291,31 +7004,31 @@ void PromiseReactionRecord::dumpOwnFields(js::JSONPrinter& json) const {
   if (targetState() == JS::PromiseState::Rejected) {
     {
       js::GenericPrinter& out = json.beginStringProperty("onRejected");
-      getFixedSlot(OnRejected).dumpStringContent(out);
+      getFixedSlot(ReactionRecordSlot_OnRejected).dumpStringContent(out);
       json.endStringProperty();
     }
     {
       js::GenericPrinter& out = json.beginStringProperty("onRejectedArg");
-      getFixedSlot(OnRejectedArg).dumpStringContent(out);
+      getFixedSlot(ReactionRecordSlot_OnRejectedArg).dumpStringContent(out);
       json.endStringProperty();
     }
   }
 
-  if (!getFixedSlot(Resolve).isNull()) {
+  if (!getFixedSlot(ReactionRecordSlot_Resolve).isNull()) {
     js::GenericPrinter& out = json.beginStringProperty("resolve");
-    getFixedSlot(Resolve).dumpStringContent(out);
+    getFixedSlot(ReactionRecordSlot_Resolve).dumpStringContent(out);
     json.endStringProperty();
   }
 
-  if (!getFixedSlot(Reject).isNull()) {
+  if (!getFixedSlot(ReactionRecordSlot_Reject).isNull()) {
     js::GenericPrinter& out = json.beginStringProperty("reject");
-    getFixedSlot(Reject).dumpStringContent(out);
+    getFixedSlot(ReactionRecordSlot_Reject).dumpStringContent(out);
     json.endStringProperty();
   }
 
   {
     js::GenericPrinter& out = json.beginStringProperty("hostDefinedData");
-    getFixedSlot(HostDefinedData).dumpStringContent(out);
+    getFixedSlot(ReactionRecordSlot_HostDefinedData).dumpStringContent(out);
     json.endStringProperty();
   }
 
@@ -7327,21 +7040,24 @@ void PromiseReactionRecord::dumpOwnFields(js::JSONPrinter& json) const {
 
   if (isDefaultResolvingHandler()) {
     js::GenericPrinter& out = json.beginStringProperty("promiseToResolve");
-    getFixedSlot(GeneratorOrPromiseToResolveOrAsyncFromSyncIterator)
+    getFixedSlot(
+        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator)
         .dumpStringContent(out);
     json.endStringProperty();
   }
 
   if (isAsyncFunction()) {
     js::GenericPrinter& out = json.beginStringProperty("generator");
-    getFixedSlot(GeneratorOrPromiseToResolveOrAsyncFromSyncIterator)
+    getFixedSlot(
+        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator)
         .dumpStringContent(out);
     json.endStringProperty();
   }
 
   if (isAsyncGenerator()) {
     js::GenericPrinter& out = json.beginStringProperty("generator");
-    getFixedSlot(GeneratorOrPromiseToResolveOrAsyncFromSyncIterator)
+    getFixedSlot(
+        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator)
         .dumpStringContent(out);
     json.endStringProperty();
   }
@@ -7621,191 +7337,6 @@ void PromiseObject::dumpOwnStringContent(js::GenericPrinter& out) const {}
   resolved.set(promise->value());
 
   return true;
-}
-
-JS_PUBLIC_API bool JS::RunJSMicroTask(JSContext* cx, Handle<MicroTask> entry) {
-#ifdef DEBUG
-  MOZ_ASSERT(entry.isObject());
-  JSObject* global = JS::GetExecutionGlobalFromJSMicroTask(entry);
-  MOZ_ASSERT(global == cx->global());
-#endif
-
-  RootedObject task(cx, &entry.toObject());
-  MOZ_ASSERT(!JS_IsDeadWrapper(task));
-
-  RootedObject unwrappedTask(cx, UncheckedUnwrap(&entry.toObject()));
-  MOZ_ASSERT(unwrappedTask);
-
-  if (unwrappedTask->is<PromiseReactionRecord>()) {
-    // Note: We don't store a callback for promise reaction records because they
-    // always call back into PromiseReactionJob.
-    //
-    // Note: We pass the (maybe)wrapped task here since PromiseReactionJob will
-    // decide what realm to be in based on the wrapper if it exists.
-    return PromiseReactionJob(cx, task);
-  }
-
-  if (unwrappedTask->is<ThenableJob>()) {
-    ThenableJob* job = &unwrappedTask->as<ThenableJob>();
-    ThenableJob::TargetFunction target = job->targetFunction();
-
-    // MG:XXX: Note: Because we don't care about the result of these values
-    // after the call, do these really have to be rooted (I don't think so?)
-    RootedTuple<JSObject*, Value, JSObject*, JSObject*> roots(cx);
-    RootedField<JSObject*, 0> promise(roots, job->promise());
-    RootedField<Value, 1> thenable(roots, job->thenable());
-
-    switch (target) {
-      case ThenableJob::PromiseResolveThenableJob: {
-        // MG:XXX: Unify naming: is it `then` or `handler` make up your mind.
-        RootedField<JSObject*, 3> then(roots, job->then());
-        return PromiseResolveThenableJob(cx, promise, thenable, then);
-      }
-      case ThenableJob::PromiseResolveBuiltinThenableJob: {
-        RootedField<JSObject*, 2> thenableObj(roots,
-                                              &job->thenable().toObject());
-        return PromiseResolveBuiltinThenableJob(cx, promise, thenableObj);
-      }
-    }
-    MOZ_CRASH("Corrupted Target Function");
-    return false;
-  }
-
-  MOZ_CRASH("Unknown Job type");
-  return false;
-}
-
-template <>
-inline bool JSObject::is<MicroTaskEntry>() const {
-  return is<ThenableJob>() || is<PromiseReactionRecord>();
-}
-
-JS_PUBLIC_API JSObject* JS::MaybeGetHostDefinedDataFromJSMicroTask(
-    const MicroTask& entry) {
-  if (!entry.isObject()) {
-    return nullptr;
-  }
-  MOZ_ASSERT(!JS_IsDeadWrapper(&entry.toObject()));
-  JSObject* task = CheckedUnwrapStatic(&entry.toObject());
-  if (!task) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(task->is<MicroTaskEntry>());
-  JSObject* maybeHostDefined =
-      task->as<MicroTaskEntry>().getHostDefinedData().toObjectOrNull();
-
-  if (!maybeHostDefined) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(!JS_IsDeadWrapper(maybeHostDefined));
-  return CheckedUnwrapStatic(maybeHostDefined);
-}
-
-JS_PUBLIC_API JSObject* JS::MaybeGetAllocationSiteFromJSMicroTask(
-    const MicroTask& entry) {
-  if (!entry.isObject()) {
-    return nullptr;
-  }
-  JSObject* task = UncheckedUnwrap(&entry.toObject());
-  MOZ_ASSERT(task);
-  if (JS_IsDeadWrapper(task)) {
-    return nullptr;
-  };
-
-  MOZ_ASSERT(task->is<MicroTaskEntry>());
-  JSObject* maybeWrappedStack = task->as<MicroTaskEntry>().allocationStack();
-
-  // If the stack is in a compartment which has gone away, best we
-  // can do is return nullptr.
-  if (!maybeWrappedStack || JS_IsDeadWrapper(maybeWrappedStack)) {
-    return nullptr;
-  }
-
-  JSObject* unwrapped = UncheckedUnwrap(maybeWrappedStack);
-  MOZ_ASSERT(unwrapped->is<SavedFrame>());
-  return unwrapped;
-}
-
-JS_PUBLIC_API JSObject* JS::MaybeGetHostDefinedGlobalFromJSMicroTask(
-    const MicroTask& entry) {
-  if (!entry.isObject()) {
-    return nullptr;
-  }
-  JSObject* task = UncheckedUnwrap(&entry.toObject());
-  MOZ_ASSERT(task->is<MicroTaskEntry>());
-
-  JSObject* maybeWrappedHostDefinedRepresentative =
-      task->as<MicroTaskEntry>().hostDefinedGlobalRepresentative();
-
-  if (maybeWrappedHostDefinedRepresentative) {
-    return &UncheckedUnwrap(maybeWrappedHostDefinedRepresentative)
-                ->nonCCWGlobal();
-  }
-
-  return nullptr;
-}
-
-JS_PUBLIC_API JSObject* JS::GetExecutionGlobalFromJSMicroTask(
-    const MicroTask& entry) {
-  MOZ_RELEASE_ASSERT(entry.isObject(), "Only use on JSMicroTasks");
-
-  JSObject* unwrapped = UncheckedUnwrap(&entry.toObject());
-  if (unwrapped->is<PromiseReactionRecord>()) {
-    // Use the stored equeue representative (which may need to be unwrapped)
-    JSObject* enqueueGlobalRepresentative =
-        unwrapped->as<PromiseReactionRecord>().enqueueGlobalRepresentative();
-    JSObject* unwrappedRepresentative =
-        UncheckedUnwrap(enqueueGlobalRepresentative);
-
-    // We shouldn't lose the representative object as the global should remain
-    // alive while this job is pending; the global should be entrained because
-    // it will either be the global of the PromiseReactionRecord (which)
-    // should have been kept alive by being in the queue or rooted, or
-    // it should be the global of the handler function, which should
-    // be entrained by the PromiseReactionRecord.
-    MOZ_RELEASE_ASSERT(!JS_IsDeadWrapper(unwrappedRepresentative));
-
-    return &unwrappedRepresentative->nonCCWGlobal();
-  }
-
-  // Thenable jobs are allocated in the right realm+global and so we
-  // can just use nonCCWGlobal;
-  if (unwrapped->is<ThenableJob>()) {
-    return &unwrapped->nonCCWGlobal();
-  }
-
-  MOZ_CRASH("Somehow we lost the execution global");
-}
-
-JS_PUBLIC_API JSObject* JS::MaybeGetPromiseFromJSMicroTask(
-    const MicroTask& entry) {
-  MOZ_RELEASE_ASSERT(entry.isObject(), "Only use on JSMicroTasks");
-
-  JSObject* unwrapped = UncheckedUnwrap(&entry.toObject());
-
-  // We don't expect to ever lose the record a job points to.
-  MOZ_RELEASE_ASSERT(!JS_IsDeadWrapper(unwrapped));
-
-  if (unwrapped->is<MicroTaskEntry>()) {
-    return unwrapped->as<MicroTaskEntry>().promise();
-  }
-  return nullptr;
-}
-
-JS_PUBLIC_API bool JS::IsJSMicroTask(Handle<JS::Value> hv) {
-  if (!hv.isObject()) {
-    return false;
-  }
-
-  JSObject* unwrapped = UncheckedUnwrap(&hv.toObject());
-
-  // On the off chance someone hands us a dead wrapper.
-  if (JS_IsDeadWrapper(unwrapped)) {
-    return false;
-  }
-  return unwrapped->is<MicroTaskEntry>();
 }
 
 JS::AutoDebuggerJobQueueInterruption::AutoDebuggerJobQueueInterruption()

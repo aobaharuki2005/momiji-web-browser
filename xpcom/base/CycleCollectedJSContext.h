@@ -16,7 +16,6 @@
 #include "mozilla/dom/Promise.h"
 #include "js/GCVector.h"
 #include "js/Promise.h"
-#include "js/friend/MicroTask.h"
 
 #include "nsCOMPtr.h"
 #include "nsRefPtrHashtable.h"
@@ -105,26 +104,6 @@ class SuppressedMicroTasks : public MicroTaskRunnable {
   std::deque<RefPtr<MicroTaskRunnable>> mSuppressedMicroTaskRunnables;
 };
 
-class SuppressedMicroTaskList final : public MicroTaskRunnable {
- public:
-  SuppressedMicroTaskList() = delete;
-  explicit SuppressedMicroTaskList(CycleCollectedJSContext* aContext);
-
-  virtual bool Suppressed() override;
-  virtual void Run(AutoSlowOperation& aso) override {
-    // Does nothing; the only action occurs as part of the
-    // call to Suppressed().
-  }
-
-  CycleCollectedJSContext* mContext = nullptr;
-  uint64_t mSuppressionGeneration = 0;
-  JS::PersistentRooted<JS::GCVector<JS::MicroTask>>
-      mSuppressedMicroTaskRunnables;
-
- private:
-  ~SuppressedMicroTaskList();
-};
-
 // Support for JS FinalizationRegistry objects, which allow a JS callback to be
 // registered that is called when objects die.
 //
@@ -159,15 +138,9 @@ class FinalizationRegistryCleanup {
   JS::PersistentRooted<CallbackVector> mCallbacks;
 };
 
-bool EnqueueMicroTask(JSContext* aCx,
-                      already_AddRefed<MicroTaskRunnable> aRunnable);
-bool EnqueueDebugMicroTask(JSContext* aCx,
-                           already_AddRefed<MicroTaskRunnable> aRunnable);
-
-class CycleCollectedJSContext : dom::PerThreadAtomCache, public JS::JobQueue {
+class CycleCollectedJSContext : dom::PerThreadAtomCache, private JS::JobQueue {
   friend class CycleCollectedJSRuntime;
   friend class SuppressedMicroTasks;
-  friend class SuppressedMicroTaskList;
 
  protected:
   CycleCollectedJSContext();
@@ -341,12 +314,6 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, public JS::JobQueue {
   bool getHostDefinedData(JSContext* cx,
                           JS::MutableHandle<JSObject*> aData) const override;
 
-  // Fills in the JS Object used to represent the current incumbent global.
-  // Used when running MicroTasks which don't have host-defined data as
-  // they will still need an incumbent global.
-  bool getHostDefinedGlobal(JSContext* cx,
-                            JS::MutableHandle<JSObject*>) const override;
-
   bool enqueuePromiseJob(JSContext* cx, JS::Handle<JSObject*> promise,
                          JS::Handle<JSObject*> job,
                          JS::Handle<JSObject*> allocationSite,
@@ -390,9 +357,6 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, public JS::JobQueue {
   std::deque<RefPtr<MicroTaskRunnable>> mPendingMicroTaskRunnables;
   std::deque<RefPtr<MicroTaskRunnable>> mDebuggerMicroTaskQueue;
   RefPtr<SuppressedMicroTasks> mSuppressedMicroTasks;
-
-  RefPtr<SuppressedMicroTaskList> mSuppressedMicroTaskList;
-
   uint64_t mSuppressionGeneration;
 
  protected:
