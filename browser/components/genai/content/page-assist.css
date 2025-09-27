@@ -6,10 +6,11 @@
   padding: var(--space-large);
 }
 
-.ai-response {
-  white-space: pre-wrap;
+.prompt-textarea {
+  columns: 3;
+  width: 100%;
 }
 
-#input.find-input {
-  --input-background-icon: url(chrome://global/skin/icons/search-glass.svg);
+.ai-response {
+  white-space: pre-wrap;
 }

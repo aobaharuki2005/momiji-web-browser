@@ -445,13 +445,9 @@ FinderParent.prototype = {
     });
   },
 
-  requestMatchesCount(aSearchString, optionalArgs) {
+  requestMatchesCount(aSearchString, aLinksOnly) {
     let list = this.gatherBrowsingContexts(this.browsingContext);
-    let args = {
-      searchString: aSearchString,
-      linksOnly: optionalArgs.linksOnly,
-      contextRange: optionalArgs.contextRange || 0,
-    };
+    let args = { searchString: aSearchString, linksOnly: aLinksOnly };
 
     args.useSubFrames = this.needSubFrameSearch(list);
 
@@ -513,7 +509,6 @@ FinderParent.prototype = {
         let current = 0;
         let total = 0;
         let limit = 0;
-        let allSnippets = [];
         for (let response of responses) {
           // A null response can happen if another search was started
           // and this one became invalid.
@@ -532,22 +527,11 @@ FinderParent.prototype = {
           }
           total += response.total;
           limit = response.limit;
-
-          // Collect snippets from each response
-          if (response.snippets && Array.isArray(response.snippets)) {
-            allSnippets.push(...response.snippets);
-          }
         }
 
         if (sendNotification) {
           this.callListeners("onMatchesCountResult", [
-            {
-              searchString: options.args.searchString,
-              current,
-              total,
-              limit,
-              snippets: allSnippets,
-            },
+            { searchString: options.args.searchString, current, total, limit },
           ]);
         }
       }
