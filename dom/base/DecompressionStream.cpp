@@ -201,10 +201,6 @@ class ZLibDecompressionStreamAlgorithms : public DecompressionStreamAlgorithms {
           // after stream end.
           // Note that additional calls for inflate() immediately emits
           // Z_STREAM_END after this point.
-          if (mZStream.avail_in > 0) {
-            aRv.ThrowTypeError("Unexpected input after the end of stream");
-            return;
-          }
           mObservedStreamEnd = true;
           break;
         case Z_OK:
@@ -255,15 +251,6 @@ class ZLibDecompressionStreamAlgorithms : public DecompressionStreamAlgorithms {
     // * inflate() should normally be called until it returns Z_STREAM_END or an
     // error.
 
-    if (aFlush == Flush::Yes && !mObservedStreamEnd) {
-      // Step 2 of
-      // https://wicg.github.io/compression/#decompress-flush-and-enqueue
-      // If the end of the compressed input has not been reached, then throw a
-      // TypeError.
-      aRv.ThrowTypeError("The input is ended without reaching the stream end");
-      return;
-    }
-
     // Step 5: For each Uint8Array array, enqueue array in ds's transform.
     for (const auto& view : array) {
       JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*view));
@@ -271,6 +258,22 @@ class ZLibDecompressionStreamAlgorithms : public DecompressionStreamAlgorithms {
       if (aRv.Failed()) {
         return;
       }
+    }
+
+    // Step 6: If the end of the compressed input has been reached, and ds's
+    // context has not fully consumed chunk, then throw a TypeError.
+    if (mObservedStreamEnd && mZStream.avail_in > 0) {
+      aRv.ThrowTypeError("Unexpected input after the end of stream");
+      return;
+    }
+
+    // Step 3 of
+    // https://wicg.github.io/compression/#decompress-flush-and-enqueue
+    // If the end of the compressed input has not been reached, then throw a
+    // TypeError.
+    if (aFlush == Flush::Yes && !mObservedStreamEnd) {
+      aRv.ThrowTypeError("The input is ended without reaching the stream end");
+      return;
     }
   }
 
@@ -345,7 +348,7 @@ class ZstdDecompressionStreamAlgorithms : public DecompressionStreamAlgorithms {
 
     JS::RootedVector<JSObject*> array(aCx);
 
-    while (inBuffer.pos < inBuffer.size) {
+    while (inBuffer.pos < inBuffer.size && !mObservedStreamEnd) {
       UniquePtr<uint8_t[], JS::FreePolicy> buffer(
           static_cast<uint8_t*>(JS_malloc(aCx, kBufferSize)));
       if (!buffer) {
@@ -366,10 +369,6 @@ class ZstdDecompressionStreamAlgorithms : public DecompressionStreamAlgorithms {
 
       if (rv == 0) {
         mObservedStreamEnd = true;
-        if (inBuffer.pos < inBuffer.size) {
-          aRv.ThrowTypeError("Unexpected input after the end of stream");
-          return;
-        }
       }
 
       // Step 3: If buffer is empty, return.
@@ -391,15 +390,6 @@ class ZstdDecompressionStreamAlgorithms : public DecompressionStreamAlgorithms {
       }
     }
 
-    if (aFlush == Flush::Yes && !mObservedStreamEnd) {
-      // Step 2 of
-      // https://wicg.github.io/compression/#decompress-flush-and-enqueue
-      // If the end of the compressed input has not been reached, then throw a
-      // TypeError.
-      aRv.ThrowTypeError("The input is ended without reaching the stream end");
-      return;
-    }
-
     // Step 5: For each Uint8Array array, enqueue array in ds's transform.
     for (const auto& view : array) {
       JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*view));
@@ -407,6 +397,22 @@ class ZstdDecompressionStreamAlgorithms : public DecompressionStreamAlgorithms {
       if (aRv.Failed()) {
         return;
       }
+    }
+
+    // Step 6: If the end of the compressed input has been reached, and ds's
+    // context has not fully consumed chunk, then throw a TypeError.
+    if (mObservedStreamEnd && inBuffer.pos < inBuffer.size) {
+      aRv.ThrowTypeError("Unexpected input after the end of stream");
+      return;
+    }
+
+    // Step 3 of
+    // https://wicg.github.io/compression/#decompress-flush-and-enqueue
+    // If the end of the compressed input has not been reached, then throw a
+    // TypeError.
+    if (aFlush == Flush::Yes && !mObservedStreamEnd) {
+      aRv.ThrowTypeError("The input is ended without reaching the stream end");
+      return;
     }
   }
 
