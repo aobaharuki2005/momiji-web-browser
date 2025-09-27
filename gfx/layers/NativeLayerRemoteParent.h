@@ -14,9 +14,6 @@ class NativeLayerRemoteParent : public PNativeLayerRemoteParent {
  public:
   virtual mozilla::ipc::IPCResult RecvCommitNativeLayerCommands(
       nsTArray<mozilla::layers::NativeLayerCommand>&& aCommands) = 0;
-
-  virtual mozilla::ipc::IPCResult RecvRequestReadback(IntSize aSize,
-                                                      Shmem* const aPixels) = 0;
 };
 
 }  // namespace layers

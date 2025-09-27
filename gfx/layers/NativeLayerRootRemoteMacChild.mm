@@ -5,7 +5,6 @@
 
 #include "mozilla/layers/NativeLayerRemoteMac.h"
 #include "mozilla/layers/NativeLayerRootRemoteMacChild.h"
-#include "mozilla/layers/NativeLayerRootRemoteMacSnapshotter.h"
 #include "mozilla/layers/SurfacePool.h"
 
 namespace mozilla {
@@ -70,19 +69,6 @@ void NativeLayerRootRemoteMacChild::SetLayers(
   mNativeLayers.AppendElements(layers);
 }
 
-UniquePtr<NativeLayerRootSnapshotter>
-NativeLayerRootRemoteMacChild::CreateSnapshotter() {
-  MOZ_RELEASE_ASSERT(!mWeakSnapshotter,
-                     "No NativeLayerRootSnapshotter for this NativeLayerRoot "
-                     "should exist when this is called");
-
-  auto cr = NativeLayerRootRemoteMacSnapshotter::Create(this);
-  if (cr) {
-    mWeakSnapshotter = cr.get();
-  }
-  return cr;
-}
-
 void NativeLayerRootRemoteMacChild::PrepareForCommit() {
   // Intentionally ignored.
 }
@@ -127,33 +113,6 @@ bool NativeLayerRootRemoteMacChild::CommitToScreen() {
     MOZ_ASSERT(mRemoteChild);
     mRemoteChild->SendCommitNativeLayerCommands(commands);
   }
-  return true;
-}
-
-bool NativeLayerRootRemoteMacChild::ReadbackPixels(
-    const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
-    const Range<uint8_t>& aBuffer) {
-  // In this process we only have the pixels of the individual layers,
-  // but here we're asked to return the result of compositing all the
-  // layers together. Computing the composited result is currently
-  // only implemented in NativeLayerRootCA, which runs in the parent
-  // process, so we send a sync IPC message to the parent to ask for
-  // the composited result.
-  if (aFormat != gfx::SurfaceFormat::B8G8R8A8) {
-    return false;
-  }
-
-  ipc::Shmem pixels;
-  if (!mRemoteChild->SendRequestReadback(aSize, &pixels)) {
-    return false;
-  }
-
-  // Copy pixels into aBuffer.
-  // TODO: Figure out a more idiomatic way to do this.
-  auto byteCount = pixels.Size<uint8_t>();
-  MOZ_RELEASE_ASSERT(aBuffer.length() >= byteCount);
-  PodCopy(aBuffer.begin().get(), pixels.get<uint8_t>(), byteCount);
-
   return true;
 }
 
