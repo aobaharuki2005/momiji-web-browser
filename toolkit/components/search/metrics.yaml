@@ -806,54 +806,38 @@ search.suggestions.ohttp:
       - fx-search-telemetry@mozilla.com
     expires: never
 
-  successful_requests:
-    type: labeled_counter
+  request_counter:
+    type: dual_labeled_counter
     description: >
-      Counts the number of successful search suggestion fetches per search
-      engine. Only records config engines using their short IDs
-      ('id', not 'identifier') as labels.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fx-search-telemetry@mozilla.com
-    expires: 153
+      Counts the number of search suggestion requests for OHTTP.
+    dual_labels:
+      key:
+        description: >
+          Only records config engines using their short IDs ('id', not
+          'identifier') as labels. Non-configuration engines have the id
+          recorded as "other".
+      category:
+        description: >
+          The result of the request.
 
-  aborted_requests:
-    type: labeled_counter
-    description: >
-      Counts the number of aborted search suggestion fetches per search
-      engine. Only records config engines using their short IDs
-      ('id', not 'identifier') as labels.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fx-search-telemetry@mozilla.com
-    expires: 153
+          Failed requests are counted according to the number of failures. The first
+          failure will be added to the `failed1` bucket, the second to `failed2` and
+          so on.
 
-  failed_requests:
-    type: labeled_counter
-    description: >
-      Counts the number of failed search suggestion fetches per search
-      engine. Only records config engines using their short IDs
-      ('id', not 'identifier') as labels.
+          After the 5th failure, the client will fallback to direct HTTP, which is
+          reported separately.
+        labels:
+          - success
+          - aborted
+          - failed1
+          - failed2
+          - failed3
+          - failed4
+          - failed5
     bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1986019
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1957950
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1987911
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1986019
     data_sensitivity:
       - interaction
     notification_emails:

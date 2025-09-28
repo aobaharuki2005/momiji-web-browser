@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">Protezione antitracciamento automatica per impostazione predefinita</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Con un tocco puoi impedire alle aziende di spiare i tuoi clic.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Sincronizza ovunque usi Firefox</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Accedi a segnalibri, schede e password su ogni dispositivo. Tutti i tuoi dati sono al sicuro grazie alla crittografia.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Avvia la sincronizzazione</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Non adesso</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Aiutaci a far crescere Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -711,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Apri i link in una scheda anonima</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Consenti screenshot in navigazione anonima</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Consenti screenshot in navigazione anonima</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Se consentito, le schede anonime saranno visibili anche quando sono aperte più app</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Se consentito, le schede anonime saranno visibili anche quando sono aperte più app</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Aggiungi scorciatoia navigazione anonima</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -721,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Utilizza il blocco dello schermo per nascondere le schede in navigazione anonima</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Visualizza le schede con impronta digitale, PIN o sblocco con il volto.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">Accedi alle schede tramite impronta digitale, PIN o riconoscimento facciale. Attivando questa funzione si blocca anche la cattura e la condivisione dello schermo.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Visualizza le schede con impronta digitale, PIN o sblocco con il volto.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Blocco banner per i cookie</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
@@ -3838,7 +3847,7 @@
     %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
     %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
   -->
-  <string name="terms_of_use_prompt_message_1">Abbiamo introdotto le %1$s di %2$s e aggiornato la nostra %3$s.\u0020</string>
+  <string name="terms_of_use_prompt_message_1">Abbiamo introdotto le %2$s di %1$s e aggiornato la nostra %3$s.\u0020</string>
   <!--
     Second part of the terms of use pop up prompt
     %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use

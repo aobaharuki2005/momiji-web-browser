@@ -119,7 +119,9 @@ async function success_test(testOhttp) {
 
   if (testOhttp) {
     Assert.equal(
-      Glean.searchSuggestionsOhttp.successfulRequests.workingAppEngine.testGetValue(),
+      Glean.searchSuggestionsOhttp.requestCounter
+        .get(workingAppEngine.id, "success")
+        .testGetValue(),
       5,
       "Successful OHTTP request counter is correctly updated"
     );
@@ -173,12 +175,16 @@ async function abort_test(testOhttp) {
 
   if (testOhttp) {
     Assert.equal(
-      Glean.searchSuggestionsOhttp.successfulRequests.workingAppEngine.testGetValue(),
+      Glean.searchSuggestionsOhttp.requestCounter
+        .get(workingAppEngine.id, "success")
+        .testGetValue(),
       6, // 1 new + 5 from the previous test.
       "Successful OHTTP request counter is correctly updated"
     );
     Assert.equal(
-      Glean.searchSuggestionsOhttp.abortedRequests.workingAppEngine.testGetValue(),
+      Glean.searchSuggestionsOhttp.requestCounter
+        .get(workingAppEngine.id, "aborted")
+        .testGetValue(),
       4,
       "Aborted OHTTP request counter is correctly updated"
     );
@@ -206,7 +212,7 @@ add_task(async function test_abort() {
   SearchSuggestionController.oHTTPEngineId = "not-matching";
 });
 
-async function nonConfig_test() {
+async function nonConfig_test(testOhttp) {
   let controller = new SearchSuggestionController();
   let result = await controller.fetch({
     searchString: "mo",
@@ -215,16 +221,21 @@ async function nonConfig_test() {
   });
   Assert.equal(result.remote.length, 3);
 
-  Assert.equal(
-    Glean.searchSuggestionsOhttp.successfulRequests.openSearchEngine.testGetValue(),
-    null,
-    "No telemetry is recorded for non-config-engine"
-  );
-  Assert.equal(
-    Glean.searchSuggestions.successfulRequests.openSearchEngine.testGetValue(),
-    null,
-    "No telemetry is recorded for non-config-engine"
-  );
+  if (testOhttp) {
+    Assert.equal(
+      Glean.searchSuggestionsOhttp.requestCounter
+        .get("other", "success")
+        .testGetValue(),
+      1,
+      "Telemetry is recorded for non-config-engines for oHTTP"
+    );
+  } else {
+    Assert.equal(
+      Glean.searchSuggestions.successfulRequests.openSearchEngine.testGetValue(),
+      null,
+      "No telemetry is recorded for non-config-engine"
+    );
+  }
 }
 
 add_task(async function test_nonConfig() {
@@ -257,9 +268,25 @@ async function error_test(testOhttp) {
 
   if (testOhttp) {
     Assert.equal(
-      Glean.searchSuggestionsOhttp.failedRequests.failingAppEngine.testGetValue(),
-      3,
-      "Failed OHTTP request counter is correctly updated"
+      Glean.searchSuggestionsOhttp.requestCounter
+        .get(failingAppEngine.id, "failed1")
+        .testGetValue(),
+      1,
+      "Failed1 has been updated for OHTTP request counter"
+    );
+    Assert.equal(
+      Glean.searchSuggestionsOhttp.requestCounter
+        .get(failingAppEngine.id, "failed2")
+        .testGetValue(),
+      1,
+      "Failed2 has been updated for OHTTP request counter"
+    );
+    Assert.equal(
+      Glean.searchSuggestionsOhttp.requestCounter
+        .get(failingAppEngine.id, "failed3")
+        .testGetValue(),
+      1,
+      "Failed3 has been updated for OHTTP request counter"
     );
   } else {
     Assert.equal(
@@ -287,9 +314,7 @@ add_task(async function test_error() {
     };
   });
 
-  // TODO: This currently fails as we don't have proper error handling in place.
-  // This will be investigated in bug 1986019.
-  // await error_test(true);
+  await error_test(true);
 
   SearchSuggestionController.oHTTPEngineId = "not-matching";
 });

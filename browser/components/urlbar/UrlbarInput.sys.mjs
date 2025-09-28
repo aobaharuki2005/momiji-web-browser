@@ -5646,7 +5646,7 @@ class AddSearchEngineHelper {
       "search-one-offs-add-engine-menu"
     );
     if (engine.icon) {
-      elt.setAttribute("image", encodeURI(engine.icon));
+      elt.setAttribute("image", ChromeUtils.encodeURIForSrcset(engine.icon));
     }
     let popup = this.input.document.createXULElement("menupopup");
     elt.appendChild(popup);

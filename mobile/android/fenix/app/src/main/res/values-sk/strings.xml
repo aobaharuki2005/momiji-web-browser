@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">Získajte automatickú ochranu pred sledovaním ako predvolené nastavenie</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Jedno ťuknutie pomôže zabrániť spoločnostiam špehovať vaše kliknutia.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Synchronizujte všade, kde používate Firefox</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Získajte záložky, karty a heslá na akomkoľvek zariadení. Všetko chránené šifrovaním.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Spustiť synchronizáciu</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Teraz nie</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Pomôžte nám rozšíriť Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -711,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Otvárať odkazy na súkromných kartách</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Povoliť tvorbu snímok obrazovky v súkromnom prehliadaní</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Povoliť tvorbu snímok obrazovky v súkromnom prehliadaní</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Ak je to povolené, súkromné karty sa zobrazia aj vtedy, ak je otvorených viac aplikácií</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Ak je to povolené, súkromné karty sa zobrazia aj vtedy, ak je otvorených viac aplikácií</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Pridať odkaz na súkromné prehliadanie</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -721,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Používať zámok obrazovky na skrytie kariet v súkromnom prehliadaní</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Karty zobrazíte pomocou odtlačku prsta, PIN kódu alebo odomknutia tvárou.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">Zobrazujte si karty pomocou odtlačku prsta, PIN kódu alebo odomknutia tvárou. Zapnutím tejto funkcie tiež zabránite snímaniu a zdieľaniu obrazovky.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Karty zobrazíte pomocou odtlačku prsta, PIN kódu alebo odomknutia tvárou.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Blokovanie bannerov k súborom cookie</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->

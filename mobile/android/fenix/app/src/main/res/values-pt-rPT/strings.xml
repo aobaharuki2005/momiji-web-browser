@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">Obtenha uma proteção automática contra a monitorização por predefinição</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Um toque ajuda a impedir que as empresas espiem os seus cliques.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Sincronize onde quer que utilize o Firefox</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Obtenha marcadores, separadores e palavras-passe em qualquer dispositivo. Tudo protegido com encriptação.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Iniciar sincronização</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Agora não</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Ajude o Firefox a crescer</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -711,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Abrir ligações num separador privado</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Permitir capturas de ecrã na navegação privada</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Permitir capturas de ecrã na navegação privada</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Se permitido, os separadores privados também ficarão visíveis quando várias aplicações estiverem abertas</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Se permitido, os separadores privados também ficarão visíveis quando várias aplicações estiverem abertas</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Adicionar um atalho de navegação privada</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -721,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Utilize o bloqueio de ecrã para ocultar separadores na navegação privada</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Veja separadores com a sua impressão digital, PIN ou desbloqueio facial.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">Veja separadores com a sua impressão digital, PIN ou desbloqueio face. Ativar isso também impede a captura de ecrã e a partilha.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Veja separadores com a sua impressão digital, PIN ou desbloqueio facial.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Bloqueador de faixas de cookies</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->

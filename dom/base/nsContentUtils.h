@@ -848,6 +848,7 @@ class nsContentUtils {
    * HTML 4.01 also lists U+200B (zero-width space).
    */
   static bool IsHTMLWhitespace(char16_t aChar);
+  static constexpr std::string_view kHTMLWhitespace{"\x09\x0a\x0c\x0d\x20"};
 
   /*
    * Returns whether the character is an HTML whitespace (see IsHTMLWhitespace)

@@ -29,6 +29,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.toColorInt
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat.Type.ime
+import androidx.core.view.inputmethod.EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -68,6 +69,7 @@ internal fun InlineAutocompleteTextField(
     query: String,
     hint: String,
     showQueryAsPreselected: Boolean,
+    usePrivateModeQueries: Boolean,
     autocompleteProviders: List<AutocompleteProvider>,
     modifier: Modifier = Modifier,
     onUrlEdit: (String) -> Unit = {},
@@ -141,6 +143,10 @@ internal fun InlineAutocompleteTextField(
                 imeOptions = EditorInfo.IME_ACTION_GO or
                     EditorInfo.IME_FLAG_NO_EXTRACT_UI or
                     EditorInfo.IME_FLAG_NO_FULLSCREEN
+                imeOptions = when (usePrivateModeQueries) {
+                    true -> imeOptions or IME_FLAG_NO_PERSONALIZED_LEARNING
+                    false -> imeOptions and (IME_FLAG_NO_PERSONALIZED_LEARNING.inv())
+                }
                 inputType = TYPE_CLASS_TEXT or TYPE_TEXT_VARIATION_URI
                 setLines(1)
                 gravity = Gravity.CENTER_VERTICAL
@@ -314,6 +320,7 @@ private fun BrowserEditToolbarPreview() {
         query = "http://www.mozilla.org",
         hint = "",
         showQueryAsPreselected = false,
+        usePrivateModeQueries = false,
         autocompleteProviders = emptyList(),
     )
 }

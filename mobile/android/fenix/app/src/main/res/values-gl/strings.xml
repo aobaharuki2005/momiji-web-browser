@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">Obtén protección contra o seguimento automático de forma predeterminada</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Un toque axuda a evitar que as empresas espien os teus clics.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Sincroniza onde uses Firefox</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Obtén marcadores, pestanas e contrasinais en calquera dispositivo. Todo protexido con cifrado.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Comezar a sincronización</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Agora non</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Axúdanos a facer crecer Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -711,9 +719,9 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">Abrir ligazóns nunha lapela privada</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">Permitir capturas de pantalla na navegación privada</string>
+  <string name="preferences_allow_screenshots_in_private_mode">Permitir capturas de pantalla na navegación privada</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">Se se permite, as lapelas privadas tamén serán visíbeis ao estaren abertas varias aplicacións</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Se se permite, as lapelas privadas tamén serán visíbeis ao estaren abertas varias aplicacións</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Engadir atallo de navegación privada</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -721,7 +729,8 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Usa o bloqueo da pantalla para ocultar as pestanas na navegación privada</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">Ver as pestanas coa túa pegada dixital, PIN ou desbloqueo facial.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">Consulta as pestanas coa túa impresión dixital, PIN ou desbloqueo facial. Activar esta opción tamén impide a captura de pantalla e a compartición.</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Ver as pestanas coa túa pegada dixital, PIN ou desbloqueo facial.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Bloqueador de aviso de cookies</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->

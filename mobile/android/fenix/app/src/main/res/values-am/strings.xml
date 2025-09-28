@@ -614,17 +614,16 @@
   <!-- Preference for opening links in a private tab -->
   <string name="preferences_open_links_in_a_private_tab">አገናኞችን በግል ትር ውስጥ ክፈት</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
-  <string name="preferences_allow_screenshots_in_private_mode" tools:ignore="UnusedResources" moz:removedIn="144">በግል አሰሳ ውስጥ ቅጽበታዊ ገጽ እይታዎችን ፍቀድ</string>
+  <string name="preferences_allow_screenshots_in_private_mode">በግል አሰሳ ውስጥ ቅጽበታዊ ገጽ እይታዎችን ፍቀድ</string>
   <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-  <string name="preferences_screenshots_in_private_mode_disclaimer" tools:ignore="UnusedResources" moz:removedIn="144">ከተፈቀደ፣ ብዙ መተግበሪያዎች ሲከፈቱ የግል ትሮችም ይታያሉ</string>
+  <string name="preferences_screenshots_in_private_mode_disclaimer">ከተፈቀደ፣ ብዙ መተግበሪያዎች ሲከፈቱ የግል ትሮችም ይታያሉ</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">የግል አሰሳ አቋራጭ ያክሉ</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
   <string name="preferences_https_only_title">HTTPS-ብቻ ሁነታ</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">በግል አሰሳ ውስጥ ትሮችን ለመደበቅ የማያ ገጽ መቆለፊያን ይጠቀሙ</string>
-  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_2">በጣት አሻራ፣ ፒን ወይም በመልክ መክፈቻ ትሮችን ይመልከቱ።</string>
+  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">በጣት አሻራ፣ ፒን ወይም በመልክ መክፈቻ ትሮችን ይመልከቱ።</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">የኩኪ ባነር ማገጃ</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
