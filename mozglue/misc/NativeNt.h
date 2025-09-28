@@ -1635,7 +1635,7 @@ class RtlAllocPolicy {
   template <typename T>
   T* maybe_pod_calloc(size_t aNumElems) {
     size_t size;
-    if (MOZ_UNLIKELY(__builtin_mul_overflow(aNumElems sizeof(T), &size))) {
+    if (MOZ_UNLIKELY(__builtin_mul_overflow(aNumElems, sizeof(T), &size))) {
       return nullptr;
     }
 
