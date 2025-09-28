@@ -1947,6 +1947,10 @@
   <string name="clear_permissions_on_all_sites">ລົບລ້າງສິດສຳລັບທຸກເວັບໄຊທ</string>
   <!-- Preference for altering video and audio autoplay for all websites -->
   <string name="preference_browser_feature_autoplay">ເປີດອັດຕະໂນມັດ</string>
+  <!-- Preference for local device access for all websites -->
+  <string name="preference_browser_feature_local_device_access">ແອັບອຸປະກອນ ແລະ ການບໍລິການ</string>
+  <!-- Preference for local network access for all websites -->
+  <string name="preference_browser_feature_local_network_access">ອຸປະກອນເຄືອຂ່າຍທ້ອງຖິ່ນ</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">ກ້ອງຖ່າຍຮູບ</string>
   <!-- Preference for altering the microphone access for all websites -->
@@ -2003,6 +2007,10 @@
   <string name="studies_on">ເປີດ</string>
   <!-- Summary of studies data on quit preference if it is set to off -->
   <string name="studies_off">ປິດ</string>
+  <!-- Toggle if desktop site is turned on -->
+  <string name="browser_feature_desktop_site_on">ເປີດ</string>
+  <!-- Toggle if desktop site is turned off -->
+  <string name="browser_feature_desktop_site_off">ປິດ</string>
   <!-- Category header of a preference that allows a user to alter settings related to web permissions. -->
   <string name="preferences_category_permissions">ການອະນຸຍາດ</string>
   <!-- Category header of a preference that allows a user to alter settings related to web content. -->
@@ -2047,6 +2055,8 @@
   <string name="create_collection_tabs_saved_new_collection" tools:ignore="UnusedResources" moz:removedIn="144">ບັນທຶກຄໍເລັກຊັນແລ້ວ!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
   <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">ບັນທຶກແທັບແລ້ວ!</string>
+  <!-- Text shown in snackbar when one tab has been saved in a collection -->
+  <string name="create_collection_tab_saved_2">ບັນທຶກແຖບແລ້ວ</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
   <string name="create_collection_close">ປິດ</string>
   <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator -->

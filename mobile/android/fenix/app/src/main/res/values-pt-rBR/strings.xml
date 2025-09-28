@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">Tenha proteção automática contra rastreamento por padrão</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Um único toque ajuda a impedir que empresas espionem sua atividade.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Sincronize em todo lugar onde usa o Firefox</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Tenha favoritos, abas e senhas em qualquer dispositivo. Tudo protegido com criptografia.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Iniciar sincronização</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Agora não</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Ajude-nos a expandir o Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -720,6 +728,8 @@
   <string name="preferences_https_only_title">Modo somente HTTPS</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Usar o bloqueio de tela para ocultar abas na navegação privativa</string>
+  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
+  <string name="preferences_pbm_lock_screen_summary_3">Veja abas com desbloqueio de impressão digital, PIN ou reconhecimento facial. Ativar isso também impede captura e compartilhamento de tela.</string>
   <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Para ver abas, desbloqueie com impressão digital, reconhecimento facial ou PIN.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Bloqueador de avisos de cookies</string>
