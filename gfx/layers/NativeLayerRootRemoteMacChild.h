@@ -31,6 +31,7 @@ class NativeLayerRootRemoteMacChild final : public NativeLayerRoot {
   void AppendLayer(NativeLayer* aLayer) override;
   void RemoveLayer(NativeLayer* aLayer) override;
   void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) override;
+  UniquePtr<NativeLayerRootSnapshotter> CreateSnapshotter() override;
 
   // Called before any layer content changes.
   void PrepareForCommit() override;
@@ -47,6 +48,7 @@ class NativeLayerRootRemoteMacChild final : public NativeLayerRoot {
   RefPtr<NativeLayerRemoteChild> mRemoteChild;
   RefPtr<NativeLayerCommandQueue> mCommandQueue;
   nsTArray<RefPtr<NativeLayer>> mNativeLayers;
+  NativeLayerRootSnapshotter* mWeakSnapshotter = nullptr;
 
   bool mNativeLayersChanged = false;
 };
