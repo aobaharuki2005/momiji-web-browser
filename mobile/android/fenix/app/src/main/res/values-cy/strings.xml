@@ -589,9 +589,9 @@
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Mae un tap yn helpu i atal cwmnïau rhag ysbïo ar eich cliciau.</string>
   <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
-  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Cysoni ym mhob man rydych chi\'n defnyddio Firefox</string>
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Cydweddu ym mhob man rydych chi\'n defnyddio Firefox</string>
   <!-- Sync onboarding redesign body. -->
-  <string name="onboarding_redesign_sync_body">Sicrhewch nodau tudalen, tabiau a chyfrineiriau ar unrhyw ddyfais. Pob un wedi\'i ddiogelu ag amgryptio.</string>
+  <string name="onboarding_redesign_sync_body">Cael nodau tudalen, tabiau a chyfrineiriau ar unrhyw ddyfais. Pob un wedi\'i ddiogelu ag amgryptio.</string>
   <!-- Sync onboarding redesign positive button text. -->
   <string name="onboarding_redesign_sync_positive_button">Cychwyn cydweddu</string>
   <!-- Sync onboarding redesign negative button text. -->
@@ -729,7 +729,7 @@
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Defnyddiwch glo sgrin i guddio tabiau wrth bori\'n breifat</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_3">Gweld tabiau gyda\'ch olion bysedd, PIN, neu ddatgloi wynebau. Mae troi hwn ymlaen hefyd yn atal cipio sgrin a rhannu.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">Gweld tabiau gyda\'ch bys brintiau, PIN, neu ddatgloi wyneb. Mae troi hwn ymlaen hefyd yn atal cipio sgrin a rhannu.</string>
   <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Gweld tabiau gydag ôl bys, datgloi wyneb, neu PIN.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Rhwystrydd Baneri Cwcis</string>
@@ -812,7 +812,7 @@
   <!-- Preference description for banner about signing in -->
   <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Mewngofnodwch i gydweddu tabiau, nodau tudalen, cyfrineiriau, a rhagor.</string>
   <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
-  <string name="preferences_sign_in_description">Cysoni tabiau, nodau tudalen, cyfrineiriau, a mwy.</string>
+  <string name="preferences_sign_in_description">Cydweddu tabiau, nodau tudalen, cyfrineiriau, a rhagor.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Cyfrif Mozilla</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
