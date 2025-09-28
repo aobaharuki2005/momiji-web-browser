@@ -1449,8 +1449,7 @@ bool DXGITextureHostD3D11::SupportsExternalCompositing(
     return true;
   }
   // XXX Add P010 and P016 support.
-  if (GetFormat() == gfx::SurfaceFormat::NV12 ||
-      GetFormat() == gfx::SurfaceFormat::P010) {
+  if (GetFormat() == gfx::SurfaceFormat::NV12) {
     if ((mFlags & TextureFlags::SOFTWARE_DECODED_VIDEO) &&
         (gfx::gfxVars::UseWebRenderDCompVideoSwOverlayWin())) {
       return true;

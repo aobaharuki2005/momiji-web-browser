@@ -10,7 +10,6 @@
 #include <functional>
 
 #include "mozilla/UniquePtr.h"
-#include "mozilla/gfx/Types.h"
 
 struct AVFrame;
 struct AVBufferRef;
@@ -28,9 +27,7 @@ struct FFmpegLibWrapper;
 class D3D11TextureWrapper final {
  public:
   D3D11TextureWrapper(AVFrame* aAVFrame, FFmpegLibWrapper* aLib,
-                      ID3D11Texture2D* aTexture,
-                      const gfx::SurfaceFormat aFormat,
-                      const unsigned int aArrayIdx,
+                      ID3D11Texture2D* aTexture, unsigned int aArrayIdx,
                       std::function<void()>&& aReleaseMethod);
   D3D11TextureWrapper(D3D11TextureWrapper&& aWrapper) = delete;
   D3D11TextureWrapper(const D3D11TextureWrapper&& aWrapper) = delete;
@@ -38,15 +35,14 @@ class D3D11TextureWrapper final {
   ~D3D11TextureWrapper();
 
   ID3D11Texture2D* GetTexture() const { return mTexture; }
-
-  const gfx::SurfaceFormat mFormat;
-  const unsigned int mArrayIdx;
-  const std::function<void()> mReleaseMethod;
+  unsigned int GetArrayIdx() const { return mArrayIdx; }
 
  private:
   FFmpegLibWrapper* mLib;
   ID3D11Texture2D* mTexture;
   AVBufferRef* mHWAVBuffer;
+  const unsigned int mArrayIdx;
+  const std::function<void()> mReleaseMethod;
 };
 
 }  // namespace mozilla

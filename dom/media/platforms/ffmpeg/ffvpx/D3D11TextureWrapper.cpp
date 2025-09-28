@@ -25,14 +25,12 @@ namespace mozilla {
 D3D11TextureWrapper::D3D11TextureWrapper(AVFrame* aAVFrame,
                                          FFmpegLibWrapper* aLib,
                                          ID3D11Texture2D* aTexture,
-                                         const gfx::SurfaceFormat aFormat,
-                                         const unsigned int aArrayIdx,
+                                         unsigned int aArrayIdx,
                                          std::function<void()>&& aReleaseMethod)
-    : mFormat(aFormat),
+    : mLib(aLib),
+      mTexture(aTexture),
       mArrayIdx(aArrayIdx),
-      mReleaseMethod(std::move(aReleaseMethod)),
-      mLib(aLib),
-      mTexture(aTexture) {
+      mReleaseMethod(std::move(aReleaseMethod)) {
   MOZ_ASSERT(XRE_IsGPUProcess());
   MOZ_ASSERT(gfx::gfxVars::HwDecodedVideoZeroCopy());
   MOZ_ASSERT(mLib);

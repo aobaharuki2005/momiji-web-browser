@@ -2295,20 +2295,6 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageD3D11(
     return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, msg);
   }
 
-  D3D11_TEXTURE2D_DESC desc;
-  texture->GetDesc(&desc);
-
-  auto format = [&]() {
-    if (desc.Format == DXGI_FORMAT_P010) {
-      return gfx::SurfaceFormat::P010;
-    }
-    if (desc.Format == DXGI_FORMAT_P016) {
-      return gfx::SurfaceFormat::P016;
-    }
-    MOZ_ASSERT(desc.Format == DXGI_FORMAT_NV12);
-    return gfx::SurfaceFormat::NV12;
-  }();
-
   RefPtr<Image> image;
   gfx::IntRect pictureRegion =
       mInfo.ScaledImageRect(mFrame->width, mFrame->height);
@@ -2320,7 +2306,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageD3D11(
                 mNumOfHWTexturesInUse.load());
     hr = mDXVA2Manager->WrapTextureWithImage(
         new D3D11TextureWrapper(
-            mFrame, mLib, texture, format, index,
+            mFrame, mLib, texture, index,
             [self = RefPtr<FFmpegVideoDecoder>(this), this]() {
               MOZ_ASSERT(mNumOfHWTexturesInUse > 0);
               mNumOfHWTexturesInUse--;
