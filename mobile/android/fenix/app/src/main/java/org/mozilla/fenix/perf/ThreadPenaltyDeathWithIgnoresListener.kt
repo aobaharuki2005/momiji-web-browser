@@ -15,6 +15,7 @@ import mozilla.components.support.utils.ManufacturerChecker
 private const val FCQN_EDM_STORAGE_PROVIDER_BASE = "com.android.server.enterprise.storage.EdmStorageProviderBase"
 private const val IDS_CONTROLLER_CLASS = "android.app.IdsController"
 private const val INSTRUMENTED_HOOKS_CLASS = "com.android.tools.deploy.instrument.InstrumentationHooks"
+private const val ACTIVITY_MANAGER_SERVICE_CLASS = "com.android.server.am.ActivityManagerService"
 
 /**
  * A [StrictMode.OnThreadViolationListener] that recreates
@@ -50,8 +51,9 @@ class ThreadPenaltyDeathWithIgnoresListener(
 
     private fun shouldViolationBeIgnored(violation: Violation): Boolean =
         isSamsungLgEdmStorageProviderStartupViolation(violation) ||
-            containsInstrumentedHooksClass(violation) ||
-            isSamsungIdsController(violation)
+                containsInstrumentedHooksClass(violation) ||
+                isSamsungIdsController(violation) ||
+                isFinishAttachApplication(violation)
 
     private fun isSamsungIdsController(violation: Violation): Boolean {
         // See https://bugzilla.mozilla.org/show_bug.cgi?id=1806469
@@ -83,6 +85,16 @@ class ThreadPenaltyDeathWithIgnoresListener(
         // code may ignore them. I think it's okay - we keep this code simple and if it was a serious
         // issue, we'd catch it on other manufacturers.
         return violation.stackTrace.any { it.className == FCQN_EDM_STORAGE_PROVIDER_BASE }
+    }
+
+    private fun isFinishAttachApplication(violation: Violation): Boolean {
+        // On recent Android versions, the epilogue of [ActivityThread.handleBindApplication]
+        // makes a Binder call that looks up settings from disk. This happens as we return
+        // from our [Application.onCreate] method.
+        return violation.stackTrace.any {
+            it.className == ACTIVITY_MANAGER_SERVICE_CLASS &&
+                    it.methodName == "finishAttachApplication"
+        }
     }
 
     private fun containsInstrumentedHooksClass(violation: Violation): Boolean {
