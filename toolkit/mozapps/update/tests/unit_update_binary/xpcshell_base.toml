@@ -197,6 +197,7 @@ reason = "Windows only test"
 ["marStageFailurePartialZucchini.js"]
 
 ["marStageSuccessComplete.js"]
+run-sequentially = ["os == 'linux'"] # frequent fail in parallel on Linux
 skip-if = [
   "os == 'mac' && os_version == '11.20' && arch == 'aarch64'", # Bug 1871787
 ]

@@ -11,6 +11,7 @@ prefs = [
 ["test_TelemetryLockCount.js"]
 
 ["test_command_line_handler.js"]
+run-sequentially = ["os == 'mac'"] # frequent fail in parallel on Mac
 
 ["test_create_profile.js"]
 

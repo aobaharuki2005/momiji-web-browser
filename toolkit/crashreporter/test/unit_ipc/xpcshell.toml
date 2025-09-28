@@ -1,5 +1,4 @@
 [DEFAULT]
-run-sequentially = ["true"] # very high failure rate in parallel
 head = ""
 skip-if = ["os == 'android'"]
 support-files = [

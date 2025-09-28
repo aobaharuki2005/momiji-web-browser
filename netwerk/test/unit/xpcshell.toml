@@ -87,7 +87,6 @@ skip-if = [
   "os == 'win' && os_version == '11.26100' && processor == 'x86'", # Bug 1760081
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64'", # Bug 1760081
 ]
-run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_alt-data_stream.js"]
 
@@ -531,6 +530,10 @@ skip-if = ["os == 'win' && os_version == '11.26100' && processor == 'x86_64' && 
 ["test_cookiejars_safebrowsing.js"]
 
 ["test_cookies_async_failure.js"]
+run-sequentially = [
+  "os == 'mac'", # frequent timeouts in parallel on Mac
+  "os == 'linux'", # frequent timeouts in parallel on Linux
+]
 
 ["test_cookies_chips_purge_crash.js"]
 
@@ -1208,6 +1211,10 @@ prefs = ["network.xhr.block_sync_system_requests=false"] # Bug 721336
 ["test_referrer_policy.js"]
 
 ["test_remove_invalid_first_party_partitioned_cookie.js"]
+run-sequentially = [
+  "os == 'win'", # frequent parallel fail on Windows
+  "os == 'android'", # frequent parallel fail on Android
+]
 
 ["test_reopen.js"]
 
@@ -1335,7 +1342,6 @@ firefox-appdir = "browser"
 
 ["test_trr.js"]
 head = "head_channels.js head_cache.js head_cookies.js head_trr.js head_http3.js trr_common.js"
-run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_trr_additional_section.js"]
 run-sequentially = ["true"] # node server exceptions dont replay well

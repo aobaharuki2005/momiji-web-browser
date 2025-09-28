@@ -44,6 +44,7 @@ run-sequentially = ["true"] # Uses global profile directory `DefProfRt`
 skip-if = ["os == 'android'"] # MultiInstanceLock doesn't work on Android
 
 ["test_backgroundtask_shouldprocessupdates.js"]
+run-sequentially = ["true"] # perma-fail in parallel
 
 ["test_backgroundtask_simultaneous_instances.js"]
 

@@ -24,13 +24,13 @@ run-if = ["os == 'linux'"]
 run-if = ["os == 'linux'"]
 
 ["test_autoconfig_no_sandbox.js"]
-run-sequentially = ["true"] # very high failure rate in parallel
+run-sequentially = ["true"] # fails more than 50% of the time in parallel
 skip-if = [
   "os == 'android' && android_version == '34' && processor == 'x86_64' && debug && !fission", # Bug 1982954
 ]
 
 ["test_autoconfig_nonascii.js"]
-run-sequentially = ["true"] # very high failure rate in parallel
+run-sequentially = ["true"] # fails 70% of the time in parallel
 skip-if = [
   "os == 'android' && android_version == '34' && processor == 'x86_64' && debug && !fission", # Bug 1982954
 ]

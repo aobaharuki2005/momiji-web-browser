@@ -181,6 +181,7 @@ prefs = ["network.allow_raw_sockets_in_content_processes=true"]
 prefs = ["network.allow_raw_sockets_in_content_processes=true"]
 
 ["test_predictor_wrap.js"]
+run-sequentially = ["os == 'mac'"] # frequent timeouts on Mac in parallel
 
 ["test_progress_wrap.js"]
 prefs = ["network.allow_raw_sockets_in_content_processes=true"]

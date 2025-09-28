@@ -47,6 +47,7 @@ skip-if = ["os == 'android'"] # Bug 1545439
 ["test_ext_background_early_quit.js"]
 
 ["test_ext_background_early_shutdown.js"]
+run-sequentially = ["os == 'mac'"] # frequent fail in parallel on Mac
 skip-if = ["isolated_process"] # Bug 1709961
 
 ["test_ext_background_empty.js"]
@@ -138,7 +139,6 @@ skip-if = ["tsan"] # Bug 1683730
 ["test_ext_contentscript_create_iframe.js"]
 
 ["test_ext_contentscript_csp.js"]
-run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_ext_contentscript_css.js"]
 
@@ -228,6 +228,7 @@ skip-if = [
 ["test_ext_dnr_across_redirects.js"]
 
 ["test_ext_dnr_allowAllRequests.js"]
+run-sequentially = ["os == 'mac'"] # frequent timeouts in parallel on Mac
 
 ["test_ext_dnr_api.js"]
 
@@ -237,6 +238,7 @@ skip-if = [
 skip-if = ["os == 'android'"] # Android: downloads.download goes through the embedder app instead of Gecko, and cannot be intercepted.
 
 ["test_ext_dnr_dynamic_rules.js"]
+run-sequentially = ["os == 'mac'"] # frequent timeouts in parallel on Mac
 
 ["test_ext_dnr_file_access.js"]
 
@@ -274,6 +276,7 @@ requesttimeoutfactor = 4 # Prevent TV job failures on Android builds.
 ["test_ext_dnr_update_static_rules.js"]
 
 ["test_ext_dnr_urlFilter.js"]
+run-sequentially = ["os == 'mac'"] # frequent timeouts in parallel on Mac
 
 ["test_ext_dnr_webrequest.js"]
 
@@ -407,6 +410,10 @@ skip-if = ["appname == 'thunderbird'"]
 skip-if = ["appname == 'thunderbird'"]
 
 ["test_ext_permissions_api.js"]
+run-sequentially = [
+  "os == 'mac'", # frequent parallel fail on Mac
+  "os == 'linux'", # frequent parallel fail on Linux
+]
 skip-if = [
   "appname == 'thunderbird'",
   "os == 'android'", # Bug 1350559
@@ -511,12 +518,10 @@ skip-if = ["os == 'android' && debug"]
 ["test_ext_schema.js"]
 
 ["test_ext_script_filenames.js"]
-run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_ext_scripting_contentScripts.js"]
 
 ["test_ext_scripting_contentScripts_css.js"]
-run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_ext_scripting_contentScripts_file.js"]
 
@@ -621,10 +626,8 @@ skip-if = ["os == 'android'"] # Themes aren't supported on android.
 skip-if = ["true"] # Too frequent intermittent failures
 
 ["test_ext_userScripts.js"]
-run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_ext_userScripts_exports.js"]
-run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_ext_userScripts_mv3_availability.js"]
 
@@ -706,12 +709,10 @@ skip-if = ["os == 'android'"] # bug 1848398 - style cache miss on Android.
 skip-if = ["appname == 'thunderbird'"]
 
 ["test_ext_webSocket.js"]
-run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_ext_xhr_capabilities.js"]
 
 ["test_ext_xhr_cors.js"]
-run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_extensionUtils.js"]
 

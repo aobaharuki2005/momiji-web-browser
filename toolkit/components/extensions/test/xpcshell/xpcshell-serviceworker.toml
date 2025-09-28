@@ -43,7 +43,6 @@ skip-if = [
 ["test_ext_scripting_contentScripts.js"]
 
 ["test_ext_scripting_contentScripts_css.js"]
-run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_ext_scripting_contentScripts_file.js"]
 
