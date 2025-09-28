@@ -12,7 +12,7 @@
 #include "mozilla/Span.h"
 
 #include <array>
-#include <climit>
+#include <climits>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
