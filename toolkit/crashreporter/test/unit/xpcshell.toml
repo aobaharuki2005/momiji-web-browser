@@ -34,12 +34,12 @@ reason = "Test covering macOS-specific crash type"
 ["test_crash_heap_corruption.js"]
 run-if = ["os == 'win'"]
 reason = "Test covering Windows-specific crash type"
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_crash_modules.js"]
 run-if = ["os == 'win'"]
 reason = "Test covering Windows-specific module handling"
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_crash_modules_linux.js"]
 run-if = ["os == 'linux'"]
@@ -119,7 +119,7 @@ skip-if = [
 ]
 
 ["test_crashreporter_crash.js"]
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_crashreporter_omnijar_loading.js"]
 
@@ -128,7 +128,7 @@ run-sequentially = "very high failure rate in parallel"
 ["test_kill.js"]
 
 ["test_oom_annotation.js"]
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_override_exception_handler.js"]
 run-if = ["os == 'win'"]

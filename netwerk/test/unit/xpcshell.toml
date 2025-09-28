@@ -87,17 +87,17 @@ skip-if = [
   "os == 'win' && os_version == '11.26100' && processor == 'x86'", # Bug 1760081
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64'", # Bug 1760081
 ]
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_alt-data_stream.js"]
 
 ["test_alt-data_too_big.js"]
 
 ["test_altsvc.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_altsvc_http3.js"]
-run-sequentially = "http3server"
+run-sequentially = ["true"] # http3server
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
   "os == 'android' && android_version == '34' && processor == 'x86_64'",
@@ -337,7 +337,7 @@ run-if = ["os != 'win'"] # skip because 0.0.0.0 is invalid in windows platform
 ["test_bug1940663.js"]
 
 ["test_bug1948203.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 run-if = ["!socketprocess_networking"] # Bug 1960490
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'", # Bug 1622901
@@ -464,10 +464,10 @@ skip-if = ["appname == 'thunderbird'"] # bug 1760097
 ["test_cache2-33-clear-base-domain.js"]
 
 ["test_cache2_clear_with_principal.js"]
-run-sequentially = "httpd server"
+run-sequentially = ["true"] # httpd server
 
 ["test_cache2_clear_with_usercontext_oa.js"]
-run-sequentially = "httpd server"
+run-sequentially = ["true"] # httpd server
 
 ["test_cache2_nostore.js"]
 
@@ -478,12 +478,12 @@ run-sequentially = "httpd server"
 ["test_cacheflags.js"]
 
 ["test_captive_portal_service.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_cert_info.js"]
 
 ["test_cert_verification_failure.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_channel_close.js"]
 
@@ -501,7 +501,7 @@ skip-if = [
 ]
 
 ["test_coaleasing_h2_and_h3_connection.js"]
-run-sequentially = "http3server"
+run-sequentially = ["true"] # http3server
 skip-if = ["os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix"] # Bug 1808049
 
 ["test_compareURIs.js"]
@@ -559,7 +559,7 @@ skip-if = [
 ["test_cookies_upgrade_10.js"]
 
 ["test_cors_preflight_dns_cache.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 run-if = ["!socketprocess_networking"] # can't read DNS cache syncly from socket process
 prefs = ["content.cors.use_triggering_principal=true"] # See bug 1982916.
 
@@ -593,7 +593,7 @@ skip-if = ["verify"]
 ["test_dns_proxy_bypass.js"]
 
 ["test_dns_retry.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 run-if = ["os != 'mac'"] # server on a local ipv6 is not started on mac
 skip-if = [
   "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && socketprocess_networking", # Bug 1760106
@@ -609,7 +609,7 @@ skip-if = [
 ["test_dooh.js"]
 head = "head_channels.js head_cache.js head_cookies.js head_trr.js head_http3.js trr_common.js"
 run-if = ["!socketprocess_networking"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_doomentry.js"]
 
@@ -618,7 +618,7 @@ run-sequentially = "node server exceptions dont replay well"
 ["test_early_hint_listener.js"]
 
 ["test_early_hint_listener_http2.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_ech_grease.js"]
 firefox-appdir = "browser"
@@ -648,7 +648,7 @@ run-if = ["os == 'linux'"]
 ["test_gre_resources.js"]
 
 ["test_h2proxy_connection_limit.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_head.js"]
 
@@ -659,7 +659,7 @@ run-sequentially = "node server exceptions dont replay well"
 ["test_header_Accept-Language_case.js"]
 
 ["test_header_Server_Timing.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_headers.js"]
 
@@ -679,7 +679,7 @@ skip-if = [
 ["test_http1-proxy.js"]
 
 ["test_http2-proxy-failing.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'", # Bug 1881334
   "os == 'win' && os_version == '11.26100' && processor == 'x86'", # Bug 1881334
@@ -687,25 +687,25 @@ skip-if = [
 ]
 
 ["test_http2-proxy.js"]
-run-sequentially = "one http2 node proxy is used for all tests, this test is using global session counter"
+run-sequentially = ["true"] # one http2 node proxy is used for all tests, this test is using global session counter
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
   "os == 'android' && android_version == '34' && processor == 'x86_64'",
 ]
 
 ["test_http2.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 head = "head_channels.js head_cache.js head_cookies.js head_trr.js head_http3.js http2_test_common.js"
 
 ["test_http2_proxy_concurrent_stream.js"]
 skip-if = ["os == 'android'"]
 
 ["test_http2_with_proxy.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 head = "head_channels.js head_cache.js head_cookies.js head_trr.js head_http3.js http2_test_common.js"
 
 ["test_http3.js"]
-run-sequentially = "http3server"
+run-sequentially = ["true"] # http3server
 skip-if = [
   "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'", # Bug 1807931
@@ -722,7 +722,7 @@ skip-if = [
 ]
 
 ["test_http3_421.js"]
-run-sequentially = "http3server"
+run-sequentially = ["true"] # http3server
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
   "os == 'android' && android_version == '34' && processor == 'x86_64'",
@@ -732,7 +732,7 @@ skip-if = [
 ]
 
 ["test_http3_alt_svc.js"]
-run-sequentially = "http3server"
+run-sequentially = ["true"] # http3server
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
   "os == 'android' && android_version == '34' && processor == 'x86_64'",
@@ -740,7 +740,7 @@ skip-if = [
 ]
 
 ["test_http3_coalescing.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 run-if = ["!socketprocess_networking"]
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
@@ -753,7 +753,7 @@ skip-if = [
 ]
 
 ["test_http3_direct_proxy.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'", # Bug 1808049
@@ -762,7 +762,7 @@ skip-if = [
 ]
 
 ["test_http3_dns_retry.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
   "os == 'android' && android_version == '34' && processor == 'x86_64'",
@@ -772,7 +772,7 @@ skip-if = [
 ]
 
 ["test_http3_early_hint_listener.js"]
-run-sequentially = "http3server"
+run-sequentially = ["true"] # http3server
 skip-if = [
   "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'", # Bug 1808049
@@ -781,11 +781,11 @@ skip-if = [
 ]
 
 ["test_http3_error_before_connect.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = ["os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix"] # Bug 1807931
 
 ["test_http3_fast_fallback.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'",
   "os == 'win' && os_version == '11.26100' && processor == 'x86'",
@@ -793,7 +793,7 @@ skip-if = [
 ]
 
 ["test_http3_fatal_stream_error.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
   "os == 'android' && android_version == '34' && processor == 'x86_64'",
@@ -810,7 +810,7 @@ skip-if = [
 ]
 
 ["test_http3_large_post.js"]
-run-sequentially = "http3server"
+run-sequentially = ["true"] # http3server
 skip-if = [
   "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'",
@@ -819,7 +819,7 @@ skip-if = [
 ]
 
 ["test_http3_network_change.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 run-if = ["!socketprocess_networking"]
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
@@ -830,7 +830,7 @@ skip-if = [
 ]
 
 ["test_http3_perf.js"]
-run-sequentially = "http3server"
+run-sequentially = ["true"] # http3server
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
   "os == 'android' && android_version == '34' && processor == 'x86_64'",
@@ -840,7 +840,7 @@ skip-if = [
 ]
 
 ["test_http3_prio_disabled.js"]
-run-sequentially = "http3server"
+run-sequentially = ["true"] # http3server
 skip-if = [
   "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'", # Bug 1807931
@@ -849,18 +849,18 @@ skip-if = [
 ]
 
 ["test_http3_prio_enabled.js"]
-run-sequentially = "http3server"
+run-sequentially = ["true"] # http3server
 skip-if = ["true"] # Will be reenabled in bug 1865394
 
 ["test_http3_proxy.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android'",
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix'", # Bug 1808049
 ]
 
 ["test_http3_server.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
   "os == 'android' && android_version == '34' && processor == 'x86_64'",
@@ -869,10 +869,10 @@ skip-if = [
 ]
 
 ["test_http3_server_not_existing.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_http3_timings.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
   "os == 'android' && android_version == '34' && processor == 'x86_64'",
@@ -882,7 +882,7 @@ skip-if = [
 ]
 
 ["test_http3_trans_close.js"]
-run-sequentially = "http3server"
+run-sequentially = ["true"] # http3server
 skip-if = [
   "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'", # Bug 1807931
@@ -891,7 +891,7 @@ skip-if = [
 ]
 
 ["test_http3_version1.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'",
@@ -900,7 +900,7 @@ skip-if = [
 ]
 
 ["test_http3_with_third_party_roots.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
   "os == 'android' && android_version == '34' && processor == 'x86_64'",
@@ -928,25 +928,25 @@ skip-if = [
 ["test_httpcancel.js"]
 
 ["test_https_rr_ech_prefs.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_https_rr_sorted_alpn.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_httpssvc_ech_with_alpn.js"]
 skip-if = ["os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix"] # Bug 1808048
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_httpssvc_https_upgrade.js"]
 
 ["test_httpssvc_iphint.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_httpssvc_priority.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_httpssvc_retry_with_ech.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'", # Bug 1622901
   "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1622901
@@ -956,7 +956,7 @@ skip-if = [
 ]
 
 ["test_httpssvc_retry_without_ech.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = ["os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix"] # Bug 1808048
 
 ["test_httpsuspend.js"]
@@ -972,7 +972,7 @@ skip-if = ["os == 'win' && os_version == '11.26100' && processor == 'x86_64' && 
 ["test_idnservice.js"]
 
 ["test_immutable.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_inhibit_caching.js"]
 
@@ -1035,7 +1035,7 @@ skip-if = [
 ["test_network_connectivity_service.js"]
 
 ["test_networking_over_socket_process.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 run-if = ["socketprocess_networking"]
 skip-if = ["os == 'android' && android_version == '24' && processor == 'x86_64'"]
 
@@ -1106,7 +1106,7 @@ skip-if = [
 ["test_progress.js"]
 
 ["test_progress_no_proxy_and_proxy.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'",
@@ -1140,7 +1140,7 @@ skip-if = [
 ]
 
 ["test_proxy_cancel.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_proxy_pac.js"]
 
@@ -1218,7 +1218,7 @@ prefs = ["network.xhr.block_sync_system_requests=false"] # Bug 721336
 ["test_resumable_truncate.js"]
 
 ["test_retry_0rtt.js"]
-run-sequentially = "tlsserver uses fixed port"
+run-sequentially = ["true"] # tlsserver uses fixed port
 skip-if = ["os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix"] # Bug 1808048
 
 ["test_safeoutputstream.js"]
@@ -1303,7 +1303,7 @@ skip-if = ["os == 'win' && os_version == '11.26100' && processor == 'x86_64' && 
 ["test_tldservice_nextsubdomain.js"]
 
 ["test_tls13_disabled.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix", # Bug 1808048
@@ -1335,27 +1335,27 @@ firefox-appdir = "browser"
 
 ["test_trr.js"]
 head = "head_channels.js head_cache.js head_cookies.js head_trr.js head_http3.js trr_common.js"
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_trr_additional_section.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_trr_af_fallback.js"]
 
 ["test_trr_blocklist.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_trr_cancel.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_trr_case_sensitivity.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_trr_cname_chain.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_trr_confirmation.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 run-if = ["!socketprocess_networking"] # confirmation state isn't passed cross-process
 skip-if = ["appname == 'thunderbird'"] # bug 1760097
 
@@ -1372,12 +1372,12 @@ skip-if = [
 ]
 
 ["test_trr_extended_error.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_trr_flags.js"]
 
 ["test_trr_https_fallback.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
   "os == 'android' && android_version == '34' && processor == 'x86_64'",
@@ -1387,7 +1387,7 @@ skip-if = [
 ]
 
 ["test_trr_https_rr_with_cname.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
   "os == 'android' && android_version == '34' && processor == 'x86_64'",
@@ -1397,7 +1397,7 @@ skip-if = [
 ]
 
 ["test_trr_httpssvc.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_trr_idle_time.js"]
 run-if = ["!socketprocess_networking"] # killing connections on socket process is async.
@@ -1406,7 +1406,7 @@ skip-if = [
 ]
 
 ["test_trr_nat64.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_trr_noPrefetch.js"]
 
@@ -1425,7 +1425,7 @@ run-if = ["!socketprocess_networking"]
 
 ["test_trr_with_proxy.js"]
 head = "head_channels.js head_cache.js head_cookies.js head_trr.js trr_common.js"
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && ccov && !fission && socketprocess_networking", # Bug 1808233
   "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && !fission && socketprocess_networking", # Bug 1808233
@@ -1445,30 +1445,30 @@ skip-if = ["os == 'mac' && os_version == '15.30' && arch == 'aarch64'"] # Bug 17
 ["test_uri_mutator.js"]
 
 ["test_use_httpssvc.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_verify_traffic.js"]
 
 ["test_websocket_500k.js"]
 skip-if = ["verify"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_websocket_fails.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_websocket_fails_2.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_websocket_offline.js"]
 
 ["test_websocket_server.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_websocket_server_multiclient.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_websocket_with_h3_active.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android' && android_version == '34' && processor == 'x86_64'", # Bug 1982955
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix'", # Bug 1808049

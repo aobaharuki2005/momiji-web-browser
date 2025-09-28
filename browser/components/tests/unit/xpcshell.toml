@@ -27,7 +27,7 @@ skip-if = [
 ["test_browserGlue_migration_reset_tracking_table.js"]
 
 ["test_distribution.js"]
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_distribution_cachedexistence.js"]
 

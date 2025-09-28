@@ -6,4 +6,4 @@ run-if = ["false"]
 # to shutdown the server can be reproduced easily when testing locally
 # than something we actually need to run in CI.
 ["test_node_execute_loop.js"]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well

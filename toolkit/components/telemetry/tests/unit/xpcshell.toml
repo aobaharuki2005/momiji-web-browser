@@ -74,7 +74,7 @@ skip-if = [
   "os == 'win' && msix", # https://bugzilla.mozilla.org/show_bug.cgi?id=1807929
 ]
 tags = "addons"
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_TelemetryEnvironment_search.js"]
 skip-if = [
@@ -130,7 +130,7 @@ skip-if = ["artifact"] # See bug 1945662.
 
 ["test_UserInteraction_annotations.js"]
 # BHR is disabled on tsan, asan and outside of Nightly.
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 skip-if = [
   "debug",
   "asan",

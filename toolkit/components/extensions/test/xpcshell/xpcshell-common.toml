@@ -106,7 +106,7 @@ skip-if = [
   "appname == 'thunderbird'",
   "os == 'android'", # CP service is disabled on Android
 ]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_ext_captivePortal_url.js"]
 # As with test_captive_portal_service.js, we use the same limits here.
@@ -114,7 +114,7 @@ skip-if = [
   "appname == 'thunderbird'",
   "os == 'android'", # CP service is disabled on Android,
 ]
-run-sequentially = "node server exceptions dont replay well"
+run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_ext_content_security_policy.js"]
 skip-if = ["os == 'win'"] # Bug 1762638
@@ -138,7 +138,7 @@ skip-if = ["tsan"] # Bug 1683730
 ["test_ext_contentscript_create_iframe.js"]
 
 ["test_ext_contentscript_csp.js"]
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_ext_contentscript_css.js"]
 
@@ -461,7 +461,7 @@ skip-if = [
 
 ["test_ext_proxy_socks.js"]
 skip-if = ["socketprocess_networking"]
-run-sequentially = "TCPServerSocket fails otherwise"
+run-sequentially = ["true"] # TCPServerSocket fails otherwise
 
 ["test_ext_proxy_speculative.js"]
 
@@ -511,12 +511,12 @@ skip-if = ["os == 'android' && debug"]
 ["test_ext_schema.js"]
 
 ["test_ext_script_filenames.js"]
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_ext_scripting_contentScripts.js"]
 
 ["test_ext_scripting_contentScripts_css.js"]
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_ext_scripting_contentScripts_file.js"]
 
@@ -621,10 +621,10 @@ skip-if = ["os == 'android'"] # Themes aren't supported on android.
 skip-if = ["true"] # Too frequent intermittent failures
 
 ["test_ext_userScripts.js"]
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_ext_userScripts_exports.js"]
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_ext_userScripts_mv3_availability.js"]
 
@@ -706,12 +706,12 @@ skip-if = ["os == 'android'"] # bug 1848398 - style cache miss on Android.
 skip-if = ["appname == 'thunderbird'"]
 
 ["test_ext_webSocket.js"]
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_ext_xhr_capabilities.js"]
 
 ["test_ext_xhr_cors.js"]
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_extensionUtils.js"]
 

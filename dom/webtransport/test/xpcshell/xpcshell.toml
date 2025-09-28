@@ -18,7 +18,7 @@ skip-if = [
 ]
 
 ["test_simple_conn.js"]
-run-sequentially = "http3server"
+run-sequentially = ["true"] # http3server
 skip-if = [
   "os == 'android' && android_version == '34' && processor == 'x86_64' && debug", # Bug 1982953
   "os == 'android' && android_version == '34' && processor == 'x86_64' && opt", # Bug 1982953
@@ -27,7 +27,7 @@ skip-if = [
 ]
 
 ["test_simple_stream.js"]
-run-sequentially = "http3server"
+run-sequentially = ["true"] # http3server
 skip-if = [
   "os == 'android' && android_version == '34' && processor == 'x86_64' && debug", # Bug 1982953
   "os == 'android' && android_version == '34' && processor == 'x86_64' && opt", # Bug 1982953

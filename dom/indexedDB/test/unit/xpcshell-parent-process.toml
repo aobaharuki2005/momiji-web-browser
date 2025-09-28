@@ -117,7 +117,7 @@ skip-if = [
 ]
 
 ["test_transaction_durability.js"]
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_unexpectedDirectory.js"]
 

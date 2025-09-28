@@ -8,11 +8,11 @@ support-files = [
 ]
 
 ["test_app_rep.js"]
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_app_rep_maclinux.js"]
 skip-if = ["os == 'win'"]
-run-sequentially = "very high failure rate in parallel"
+run-sequentially = ["true"] # very high failure rate in parallel
 
 ["test_app_rep_windows.js"]
 run-if = ["os == 'win'"]

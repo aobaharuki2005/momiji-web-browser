@@ -388,7 +388,7 @@ tags = "webextensions"
 
 ["test_upgrade.js"]
 head = "head_addons.js head_compat.js"
-run-sequentially = "Uses global XCurProcD dir."
+run-sequentially = ["true"] # Uses global XCurProcD dir.
 
 ["test_upgrade_incompatible.js"]
 
