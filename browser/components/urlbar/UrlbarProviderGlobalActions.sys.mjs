@@ -57,16 +57,12 @@ export class UrlbarProviderGlobalActions extends UrlbarProvider {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;
   }
 
-  #controller;
-  async isActive(_queryContext, controller) {
-    let isActive =
+  async isActive() {
+    return (
       (lazy.UrlbarPrefs.get(SCOTCH_BONNET_PREF) ||
         lazy.UrlbarPrefs.get(ACTIONS_PREF)) &&
-      lazy.UrlbarPrefs.get(QUICK_ACTIONS_PREF);
-    if (isActive) {
-      this.#controller = controller;
-    }
-    return isActive;
+      lazy.UrlbarPrefs.get(QUICK_ACTIONS_PREF)
+    );
   }
 
   async startQuery(queryContext, addCallback) {
@@ -74,7 +70,7 @@ export class UrlbarProviderGlobalActions extends UrlbarProvider {
     let searchModeEngine = "";
 
     for (let provider of globalActionsProviders) {
-      if (provider.isActive(queryContext, this.#controller)) {
+      if (provider.isActive(queryContext)) {
         for (let action of (await provider.queryActions(queryContext)) || []) {
           if (action.engine && !searchModeEngine) {
             searchModeEngine = action.engine;
@@ -87,7 +83,6 @@ export class UrlbarProviderGlobalActions extends UrlbarProvider {
         }
       }
     }
-    this.#controller = null;
 
     if (!actionsResults.length) {
       return;
