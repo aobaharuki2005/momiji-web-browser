@@ -208,13 +208,20 @@ const CookieCleaner = {
 
   deleteByHost(aHost, aOriginAttributes) {
     return new Promise(aResolve => {
-      // Compression dictionaries are https only
-      let httpsURI = Services.io.newURI("https://" + aHost);
-      Services.cache2.clearOriginDictionary(httpsURI);
       Services.cookies.removeCookiesFromExactHost(
         aHost,
         JSON.stringify(aOriginAttributes)
       );
+      // Compression dictionaries are https only
+      // Note that IPV6 urls require [...], but aPrincipal.host (passed
+      // to this) doesn't include the [].
+      if (aHost.includes(":") && aHost[0] != "[") {
+        aHost = "https://[" + aHost + "]";
+      } else {
+        aHost = "https://" + aHost;
+      }
+      let httpsURI = Services.io.newURI(aHost);
+      Services.cache2.clearOriginDictionary(httpsURI);
       aResolve();
     });
   },
