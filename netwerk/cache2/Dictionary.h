@@ -235,7 +235,7 @@ class DictionaryOrigin : public nsICacheEntryMetaDataVisitor {
   DictionaryOrigin(const nsACString& aOrigin, nsICacheEntry* aEntry)
       : mOrigin(aOrigin), mEntry(aEntry) {}
 
-  void SetCacheEntry(nsICacheEntry* aEntry) { mEntry = aEntry; }
+  void SetCacheEntry(nsICacheEntry* aEntry);
   void Write(DictionaryCacheEntry* aDictEntry);
   already_AddRefed<DictionaryCacheEntry> AddEntry(
       DictionaryCacheEntry* aDictEntry, bool aNewEntry);
@@ -254,6 +254,8 @@ class DictionaryOrigin : public nsICacheEntryMetaDataVisitor {
   // Dictionaries currently being received.  Once these get a Hash, move to
   // mEntries
   DictCacheList mPendingEntries;
+  // Write out all entries once we have a cacheentry
+  bool mDeferredWrites{false};
 };
 
 class DictionaryOriginReader;

@@ -60,9 +60,9 @@ interface nsICacheEntry : nsISupports
   readonly attribute boolean persistent;
 
   /**
-   * Get if the cache file is READY
+   * Get if the cache file is READY or REVALIDATING
    */
-  readonly attribute boolean ready;
+  readonly attribute boolean readyOrRevalidating;
 
   /**
    * Get the number of times the cache entry has been opened.
