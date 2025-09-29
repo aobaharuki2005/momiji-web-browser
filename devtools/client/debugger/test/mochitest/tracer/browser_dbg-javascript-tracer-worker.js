@@ -6,8 +6,6 @@
 
 "use strict";
 add_task(async function testTracingWorker() {
-  await pushPref("devtools.debugger.features.javascript-tracing", true);
-
   // We have to enable worker targets and disable this pref to have functional tracing for workers
   await pushPref("dom.worker.console.dispatch_events_to_main_thread", false);
 

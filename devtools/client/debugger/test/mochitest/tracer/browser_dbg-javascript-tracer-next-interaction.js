@@ -7,8 +7,6 @@
 "use strict";
 
 add_task(async function testTracingOnNextInteraction() {
-  await pushPref("devtools.debugger.features.javascript-tracing", true);
-
   // Cover tracing only on next user interaction
   const jsCode = `function foo() {}; window.addEventListener("mousedown", function onmousedown(){}, { capture: true }); window.onclick = function onclick() {};`;
   const dbg = await initDebuggerWithAbsoluteURL(

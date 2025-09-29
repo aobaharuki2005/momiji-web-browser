@@ -7,8 +7,6 @@
 "use strict";
 
 add_task(async function testTracingOnNextLoad() {
-  await pushPref("devtools.debugger.features.javascript-tracing", true);
-
   // Cover tracing function argument values
   const jsCode = `function foo() {}; function bar() {}; foo(); dump("plop\\n")`;
   const dbg = await initDebuggerWithAbsoluteURL(

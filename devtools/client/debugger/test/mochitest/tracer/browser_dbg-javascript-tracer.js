@@ -7,9 +7,6 @@
 "use strict";
 
 add_task(async function () {
-  // This is preffed off for now, so ensure turning it on
-  await pushPref("devtools.debugger.features.javascript-tracing", true);
-
   const dbg = await initDebugger("doc-scripts.html");
 
   // This test covers the Web Console, whereas it is no longer the default output

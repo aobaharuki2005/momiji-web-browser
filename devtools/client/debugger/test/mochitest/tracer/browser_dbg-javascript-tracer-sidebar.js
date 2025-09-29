@@ -7,9 +7,6 @@
 "use strict";
 
 add_task(async function () {
-  // This is preffed off for now, so ensure turning it on
-  await pushPref("devtools.debugger.features.javascript-tracing", true);
-
   const dbg = await initDebugger("doc-scripts.html");
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {

@@ -7,8 +7,6 @@
 "use strict";
 
 add_task(async function testTracingFunctionReturn() {
-  await pushPref("devtools.debugger.features.javascript-tracing", true);
-
   const jsCode = `async function foo() { nullReturn(); falseReturn(); await new Promise(r => setTimeout(r, 0)); return bar(); }; function nullReturn() { return null; } function falseReturn() { return false; } function bar() { return 42; }; function throwingFunction() { throw new Error("the exception") }`;
   const dbg = await initDebuggerWithAbsoluteURL(
     "data:text/html," +

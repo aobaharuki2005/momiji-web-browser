@@ -6,8 +6,6 @@
 
 "use strict";
 add_task(async function testTracingValues() {
-  await pushPref("devtools.debugger.features.javascript-tracing", true);
-
   // Cover tracing function argument values
   const jsCode = `function foo() { bar(1, ["array"], { attribute: 3 }, BigInt(4), Infinity, Symbol("6"), "7"); }; function bar(a, b, c) {}`;
   const dbg = await initDebuggerWithAbsoluteURL(

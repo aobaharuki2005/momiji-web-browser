@@ -15,9 +15,6 @@ const TEST_URL = `data:text/html,test-page<script>${encodeURIComponent(
 )}</script>`;
 
 add_task(async function () {
-  // This is preffed off for now, so ensure turning it on
-  await pushPref("devtools.debugger.features.javascript-tracing", true);
-
   const dbg = await initDebuggerWithAbsoluteURL(TEST_URL);
 
   info("Force the log method to be the debugger sidebar");
