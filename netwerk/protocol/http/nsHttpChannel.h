@@ -735,7 +735,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   MOZ_ATOMIC_BITFIELDS(mAtomicBitfields6, 32, (
     // True if network request gets to OnStart before we get a response from the cache
     (uint32_t, NetworkWonRace, 1),
-    // Valid values are CachedContentValid
+    // Valid values are CachedContentValidity::Unset/Invalid/Valid
     (uint32_t, CachedContentIsValid, 2),
     // Only set to true when we receive an HTTPSSVC record before the
     // transaction is created.
