@@ -4239,12 +4239,22 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
                 dom::HTMLLabelElement::FromNode(mContent)) {
           rel.AppendTarget(mDoc, labelEl->GetControl());
         }
-      } else if (data.mType == RelationType::DETAILS ||
-                 data.mType == RelationType::CONTROLLER_FOR) {
-        // We need to use RelationByType for details because it might include
-        // popovertarget. Nothing exposes an implicit reverse details
-        // relation, so using RelationByType here is fine.
-        //
+      } else if (data.mType == RelationType::DETAILS) {
+        if (relAtom == nsGkAtoms::aria_details) {
+          rel.AppendIter(
+              new AssociatedElementsIterator(mDoc, mContent, relAtom));
+        } else if (relAtom == nsGkAtoms::commandfor) {
+          if (LocalAccessible* target = GetCommandForDetailsRelation()) {
+            rel.AppendTarget(target);
+          }
+        } else if (relAtom == nsGkAtoms::popovertarget) {
+          if (LocalAccessible* target = GetPopoverTargetDetailsRelation()) {
+            rel.AppendTarget(target);
+          }
+        } else {
+          MOZ_ASSERT_UNREACHABLE("Unknown details relAtom");
+        }
+      } else if (data.mType == RelationType::CONTROLLER_FOR) {
         // We need to use RelationByType for controls because it might include
         // failed aria-owned relocations or it may be an output element.
         // Nothing exposes an implicit reverse controls relation, so using
