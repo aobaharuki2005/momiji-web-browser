@@ -22,7 +22,13 @@ task-defaults:
         path: '/builds/worker/workspace/obj-build/gradle/build/mobile/android/{source_project_name}/app/outputs/apk/{gradle_build}/{gradle_build_type}/{fileName}'
     attributes:
         build_platform: android
-
+    worker:
+        artifacts:
+            - path: /builds/worker/perfherder-data-apk-size.json
+              name: public/build/perfherder-data-apk-size.json
+              type: file
+        env:
+            MOZ_PERFHERDER_UPLOAD: /builds/worker/perfherder-data-apk-size.json
 
 tasks:
     focus-debug:
