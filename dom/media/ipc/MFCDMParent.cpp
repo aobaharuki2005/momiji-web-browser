@@ -894,7 +894,8 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
   }
 
   // HWDRM is blocked by gfx downloadable blocklist.
-  if (isHardwareDecryption && !gfx::gfxVars::UseWMFHWDWM()) {
+  if (isHardwareDecryption && gfx::gfxVars::IsInitialized() &&
+      !gfx::gfxVars::UseWMFHWDWM()) {
     MFCDM_PARENT_SLOG("Block HWDRM for %s",
                       NS_ConvertUTF16toUTF8(aKeySystem).get());
     return;
