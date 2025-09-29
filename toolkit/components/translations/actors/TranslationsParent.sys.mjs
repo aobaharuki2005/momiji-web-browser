@@ -2545,7 +2545,7 @@ export class TranslationsParent extends JSWindowActorParent {
       // Attempt to get a local copy of the translator. Most likely this will be a 404.
       try {
         const response = await fetch(
-          "chrome://global/content/translations/bergamot-translator.wasm"
+          "chrome://global/content/translations/bergamot-translator.wasm.zst"
         );
         const arrayBuffer = response.arrayBuffer();
         lazy.console.log(`Using a local copy of Bergamot.`);
