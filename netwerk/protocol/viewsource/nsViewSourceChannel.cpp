@@ -1224,6 +1224,19 @@ nsViewSourceChannel::AsyncOnChannelRedirect(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsViewSourceChannel::GetDictionary(
+    mozilla::net::DictionaryCacheEntry** aDictionary) {
+  *aDictionary = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetDictionary(
+    mozilla::net::DictionaryCacheEntry* aDictionary) {
+  return NS_OK;
+}
+
 // nsIInterfaceRequestor
 
 NS_IMETHODIMP

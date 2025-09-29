@@ -360,6 +360,15 @@ bool HttpTransactionChild::CanSendODAToContentProcessDirectly(
     return false;
   }
 
+#ifdef DEBUG
+  nsAutoCString encoding;
+  nsresult rv = aHead->GetHeader(nsHttp::Content_Encoding, encoding);
+  if (NS_FAILED(rv)) {
+    return true;
+  }
+  MOZ_ASSERT(encoding != "dcb"_ns && encoding != "dcz"_ns);
+#endif
+
   return true;
 }
 

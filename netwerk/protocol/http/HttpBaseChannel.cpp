@@ -375,6 +375,13 @@ nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
   rv = mRequestHead.SetHeader(nsHttp::Host, hostLine);
   if (NS_FAILED(rv)) return rv;
 
+  rv = gHttpHandler->AddAcceptAndDictionaryHeaders(aURI, &mRequestHead, isHTTPS,
+                                                   mDict);
+  if (NS_FAILED(rv)) return rv;
+  if (mDict) {
+    mDict->InUse();
+  }
+
   // Override the Accept header if a specific MediaDocument kind is forced.
   ExtContentPolicy contentPolicyType =
       mLoadInfo->GetExternalContentPolicyType();
@@ -394,7 +401,7 @@ nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
   }
 
   rv = gHttpHandler->AddStandardRequestHeaders(
-      &mRequestHead, isHTTPS, aURI, contentPolicyType,
+      &mRequestHead, aURI, contentPolicyType,
       nsContentUtils::ShouldResistFingerprinting(this,
                                                  RFPTarget::HttpUserAgent));
   if (NS_FAILED(rv)) return rv;
@@ -1471,6 +1478,23 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
 
   LOG(("HttpBaseChannel::DoApplyContentConversions [this=%p]\n", this));
 
+#ifdef DEBUG
+  {
+    nsAutoCString contentEncoding;
+    nsresult rv =
+        mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
+    if (NS_SUCCEEDED(rv) && !contentEncoding.IsEmpty()) {
+      nsAutoCString newEncoding;
+      char* cePtr = contentEncoding.BeginWriting();
+      while (char* val = nsCRT::strtok(cePtr, HTTP_LWS ",", &cePtr)) {
+        if (strcmp(val, "dcb") == 0 || strcmp(val, "dcz") == 0) {
+          MOZ_ASSERT(LoadApplyConversion() && !LoadHasAppliedConversion());
+        }
+      }
+    }
+  }
+#endif
+
   if (!LoadApplyConversion()) {
     LOG(("not applying conversion per ApplyConversion\n"));
     return NS_OK;
@@ -1501,12 +1525,12 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
   // being a stack with the last converter created being the first one
   // to accept the raw network data.
 
+  nsAutoCString newEncoding;
   char* cePtr = contentEncoding.BeginWriting();
   uint32_t count = 0;
   while (char* val = nsCRT::strtok(cePtr, HTTP_LWS ",", &cePtr)) {
     if (++count > 16) {
-      // That's ridiculous. We only understand 2 different ones :)
-      // but for compatibility with old code, we will just carry on without
+      // For compatibility with old code, we will just carry on without
       // removing the encodings
       LOG(("Too many Content-Encodings. Ignoring remainder.\n"));
       break;
@@ -1542,8 +1566,15 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
       nextListener = converter;
     } else {
       if (val) LOG(("Unknown content encoding '%s', ignoring\n", val));
+      // leave it in content-encoding if we didn't decompress it, though if
+      // there are following decoders, this will just be wrong, and we
+      // should error out.  Or maybe error out on any unknown encoding
+      newEncoding += val;
     }
   }
+
+  rv = mResponseHead->SetHeader(nsHttp::Content_Encoding, newEncoding);
+
   *aNewNextListener = do_AddRef(nextListener).take();
   return NS_OK;
 }
