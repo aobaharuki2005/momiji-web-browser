@@ -4125,11 +4125,13 @@ gboolean nsWindow::OnShellConfigureEvent(GdkEventConfigure* aEvent) {
   //   coordinates are root coordinates.
 
 #ifdef MOZ_LOGGING
-  auto scale = FractionalScaleFactor();
-  LOG("nsWindow::OnShellConfigureEvent() [%d,%d] -> [%d x %d] scale %.2f "
-      "(scaled size %.2f x %.2f)\n",
-      aEvent->x, aEvent->y, aEvent->width, aEvent->height, scale,
-      aEvent->width * scale, aEvent->height * scale);
+  if (LOG_ENABLED()) {
+    auto scale = FractionalScaleFactor();
+    LOG("nsWindow::OnShellConfigureEvent() [%d,%d] -> [%d x %d] scale %.2f "
+        "(scaled size %.2f x %.2f)\n",
+        aEvent->x, aEvent->y, aEvent->width, aEvent->height, scale,
+        aEvent->width * scale, aEvent->height * scale);
+  }
 #endif
 
   if (mPendingConfigures > 0) {
