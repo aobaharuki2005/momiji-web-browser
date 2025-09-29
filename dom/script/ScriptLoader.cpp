@@ -2869,7 +2869,8 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
        aRequest));
   aRequest->MarkPassedConditionForDiskCache();
 
-  if (aRequest->IsModuleRequest() &&
+  if (!aRequest->PassedConditionForMemoryCache() &&
+      aRequest->IsModuleRequest() &&
       !aRequest->AsModuleRequest()->IsTopLevel()) {
     MOZ_ASSERT(!aRequest->isInList());
     mCacheableDependencyModules.AppendElement(aRequest);
