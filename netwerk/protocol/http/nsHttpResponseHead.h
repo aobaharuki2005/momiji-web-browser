@@ -72,6 +72,8 @@ class nsHttpResponseHead {
 
   [[nodiscard]] nsresult SetHeader(const nsACString& h, const nsACString& v,
                                    bool m = false);
+  [[nodiscard]] nsresult SetHeaderOverride(const nsHttpAtom& h,
+                                           const nsACString& v);
   [[nodiscard]] nsresult SetHeader(const nsHttpAtom& h, const nsACString& v,
                                    bool m = false);
   [[nodiscard]] nsresult GetHeader(const nsHttpAtom& h, nsACString& v) const;
