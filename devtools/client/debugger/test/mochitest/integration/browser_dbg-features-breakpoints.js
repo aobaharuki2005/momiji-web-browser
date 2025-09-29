@@ -9,7 +9,7 @@
  */
 
 const testServer = createVersionizedHttpTestServer(
-  "examples/sourcemaps-reload-uncompressed"
+  "../examples/sourcemaps-reload-uncompressed"
 );
 const TEST_URL = testServer.urlFor("index.html");
 

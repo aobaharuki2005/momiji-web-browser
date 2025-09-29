@@ -3,7 +3,6 @@ tags = "devtools"
 subsuite = "devtools"
 support-files = [
   "examples/*",
-  "integration-tests/*",
   "head.js",
   "shared-head.js",
   "!/devtools/client/framework/browser-toolbox/test/helpers-browser-toolbox.js",
@@ -192,32 +191,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 
 ["browser_dbg-extension-inspectedWindow-debugger-statement.js"]
 
-["browser_dbg-features-asm.js"]
-
-["browser_dbg-features-breakable-lines.js"]
-
-["browser_dbg-features-breakable-positions.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_dbg-features-breakpoints.js"]
-
-["browser_dbg-features-browser-toolbox-source-tree.js"]
-skip-if = [
-  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && asan", # Bug 1591064
-  "os == 'mac' && os_version == '14.70' && processor == 'x86_64'", # Bug 1781499
-  "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && asan", # Bug 1591064
-]
-
-["browser_dbg-features-source-text-content.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_dbg-features-source-tree.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_dbg-features-tabs.js"]
-
-["browser_dbg-features-wasm.js"]
-
 ["browser_dbg-fission-frame-breakpoint.js"]
 
 ["browser_dbg-fission-frame-pause-exceptions.js"]
@@ -255,9 +228,3 @@ skip-if = [
 ]
 
 ["browser_dbg-inline-script-offset.js"]
-
-["browser_dbg-inspector-integration.js"]
-
-["browser_dbg-integration-reloading-compressed-sourcemaps.js"]
-
-["browser_dbg-integration-reloading-uncompressed-sourcemaps.js"]
