@@ -2763,29 +2763,11 @@ bool nsIFrame::ComputeOverflowClipRectRelativeToSelf(
   // non-'visible' value for blocks in a paginated context).
   // We allow 'clip' to apply to any kind of frame. This is required by
   // comboboxes which make their display text (an inline frame) have clipping.
-  const auto* disp = StyleDisplay();
   MOZ_ASSERT(!aClipAxes.isEmpty());
-  MOZ_ASSERT(ShouldApplyOverflowClipping(disp) == aClipAxes);
+  MOZ_ASSERT(ShouldApplyOverflowClipping(StyleDisplay()) == aClipAxes);
   // Only deflate the padding if we clip to the content-box in that axis.
-  auto wm = GetWritingMode();
-  bool cbH = (wm.IsVertical() ? disp->mOverflowClipBoxBlock
-                              : disp->mOverflowClipBoxInline) ==
-             StyleOverflowClipBox::ContentBox;
-  bool cbV = (wm.IsVertical() ? disp->mOverflowClipBoxInline
-                              : disp->mOverflowClipBoxBlock) ==
-             StyleOverflowClipBox::ContentBox;
-
-  nsMargin boxMargin = -GetUsedPadding();
-  if (!cbH) {
-    boxMargin.left = boxMargin.right = nscoord(0);
-  }
-  if (!cbV) {
-    boxMargin.top = boxMargin.bottom = nscoord(0);
-  }
-
+  nsMargin boxMargin = -GetUsedBorder();
   auto clipMargin = OverflowClipMargin(aClipAxes);
-
-  boxMargin -= GetUsedBorder();
   boxMargin += nsMargin(clipMargin.height, clipMargin.width, clipMargin.height,
                         clipMargin.width);
   boxMargin.ApplySkipSides(GetSkipSides());
