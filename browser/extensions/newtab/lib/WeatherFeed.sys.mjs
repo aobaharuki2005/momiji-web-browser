@@ -309,7 +309,7 @@ export class WeatherFeed {
       case at.WEATHER_LOCATION_SEARCH_UPDATE:
         await this.fetchLocationAutocomplete();
         break;
-      case at.WEATHER_LOCATION_DATA_UPDATE: {
+      case at.WEATHER_LOCATION_DATA_UPDATE:
         // check that data is formatted correctly before adding to cache
         if (action.data.city) {
           await this.cache.set("locationData", {
@@ -319,11 +319,7 @@ export class WeatherFeed {
           });
           this.locationData = action.data;
         }
-
-        // Remove static weather data once location has been set
-        this.store.dispatch(ac.SetPref("weather.staticData.enabled", false));
         break;
-      }
       case at.WEATHER_USER_OPT_IN_LOCATION: {
         const detectedLocation = await this.fetchLocationByIP();
 
