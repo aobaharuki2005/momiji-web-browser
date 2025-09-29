@@ -47,7 +47,7 @@
            let es;
            function openSseConnection() {
              return new Promise(resolve => {
-               es = new EventSource("sjs_sse-test-server.sjs");
+               es = new EventSource("http://mochi.test:8888/browser/devtools/client/netmonitor/test/sjs_sse-test-server.sjs");
                es.onmessage = function() {
                  es.close();
                  resolve();

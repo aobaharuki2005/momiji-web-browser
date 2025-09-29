@@ -48,7 +48,7 @@ const REQUESTS_WITH_MEDIA_AND_FLASH = REQUESTS_WITH_MEDIA.concat([
 const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS =
   REQUESTS_WITH_MEDIA_AND_FLASH.concat([
     /* Use new WebSocket() to mock native websocket request, then "Upgrade" will be added */
-    { url: WS_URL + "sjs_content-type-test-server.sjs?fmt=ws", ws: true },
+    { url: WS_WS_CONTENT_TYPE_SJS + "?fmt=ws", ws: true },
   ]);
 
 const EXPECTED_REQUESTS = [

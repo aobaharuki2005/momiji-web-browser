@@ -7,7 +7,8 @@
 // web sockets on the main or worker threads.
 
 const TOP_FILE_NAME = "html_websocket-test-page.html";
-const TOP_URL = HTTPS_EXAMPLE_URL + TOP_FILE_NAME;
+const HTTPS_EXAMPLE_URL_WITH_SUB_FOLDER = HTTPS_EXAMPLE_URL + "websockets/";
+const TOP_URL = HTTPS_EXAMPLE_URL_WITH_SUB_FOLDER + TOP_FILE_NAME;
 const WORKER_FILE_NAME = "js_websocket-worker-test.js";
 
 const EXPECTED_REQUESTS = {
@@ -28,9 +29,9 @@ const EXPECTED_REQUESTS = {
       { file: TOP_FILE_NAME, line: 3 },
     ],
   },
-  [HTTPS_EXAMPLE_URL + WORKER_FILE_NAME]: {
+  [HTTPS_EXAMPLE_URL_WITH_SUB_FOLDER + WORKER_FILE_NAME]: {
     method: "GET",
-    url: HTTPS_EXAMPLE_URL + WORKER_FILE_NAME,
+    url: HTTPS_EXAMPLE_URL_WITH_SUB_FOLDER + WORKER_FILE_NAME,
     causeType: "script",
     causeUri: TOP_URL,
     stack: [{ file: TOP_URL, line: 9 }],
@@ -43,7 +44,7 @@ const EXPECTED_REQUESTS = {
     stack: [
       {
         fn: "openWorkerSocket",
-        file: HTTPS_EXAMPLE_URL + WORKER_FILE_NAME,
+        file: HTTPS_EXAMPLE_URL_WITH_SUB_FOLDER + WORKER_FILE_NAME,
         line: 5,
       },
       { file: WORKER_FILE_NAME, line: 2 },

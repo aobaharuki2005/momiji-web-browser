@@ -48,7 +48,7 @@ function shallowEqual(obj1, obj2) {
 
 add_task(async function () {
   const { tab, monitor } = await initNetMonitor(
-    "http://mochi.test:8888/browser/devtools/client/netmonitor/test/html_ws-sse-test-page.html",
+    "http://mochi.test:8888/browser/devtools/client/netmonitor/test/websockets/html_ws-sse-test-page.html",
     {
       requestCount: 1,
     }

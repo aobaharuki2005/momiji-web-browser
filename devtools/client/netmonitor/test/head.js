@@ -66,10 +66,10 @@ const HTTPS_EXAMPLE_ORG_URL =
 so we must sepecify the port explicitly */
 const WS_URL = "ws://127.0.0.1:8888/browser/devtools/client/netmonitor/test/";
 const WS_HTTP_URL =
-  "http://127.0.0.1:8888/browser/devtools/client/netmonitor/test/";
+  "http://127.0.0.1:8888/browser/devtools/client/netmonitor/test/websockets/";
 
 const WS_BASE_URL =
-  "http://mochi.test:8888/browser/devtools/client/netmonitor/test/";
+  "http://mochi.test:8888/browser/devtools/client/netmonitor/test/websockets/";
 const WS_PAGE_URL = WS_BASE_URL + "html_ws-test-page.html";
 const WS_PAGE_EARLY_CONNECTION_URL =
   WS_BASE_URL + "html_ws-early-connection-page.html";
