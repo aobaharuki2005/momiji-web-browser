@@ -302,30 +302,47 @@ static CanonicalElementWithAttributes CanonicalizeElementWithAttributes(
   if (aElement.IsSanitizerElementNamespaceWithAttributes()) {
     auto& elem = aElement.GetAsSanitizerElementNamespaceWithAttributes();
 
-    // Step 2.1. For each attribute in element["attributes"]:
+    // Step 2.1. If element["attributes"] exists:
     if (elem.mAttributes.WasPassed()) {
+      // Step 2.1.1. Let attributes be « ».
       ListSet<CanonicalName> attributes;
+
+      // Step 2.1.2. For each attribute of element["attributes"]:
       for (const auto& attribute : elem.mAttributes.Value()) {
-        // Step 2.1.1. Append the result of canonicalize a sanitizer attribute
-        // with attribute to result["attributes"].
+        // Step 2.1.2.1. Append the result of canonicalize a sanitizer attribute
+        // with attribute to attributes.
         attributes.Insert(CanonicalizeAttribute(attribute));
       }
+
+      // Step 2.1.3. Set result["attributes"] to attributes.
       result.mAttributes = Some(std::move(attributes));
     }
 
-    // Step 2.2. For each attribute in element["removeAttributes"]:
+    // Step 2.2. If element["attributes"] exists:
     if (elem.mRemoveAttributes.WasPassed()) {
+      // Step 2.2.1. Let attributes be « ».
       ListSet<CanonicalName> attributes;
+
+      // Step 2.2.2. For each attribute of element["removeAttributes"]:
       for (const auto& attribute : elem.mRemoveAttributes.Value()) {
-        // Step 2.2.1. Append the result of canonicalize a sanitizer attribute
-        // with attribute to result["removeAttributes"].
+        // Step 2.2.2.1. Append the result of canonicalize a sanitizer attribute
+        // with attribute to attributes.
         attributes.Insert(CanonicalizeAttribute(attribute));
       }
+
+      // Step 2.2.3. Set result["removeAttributes"] to attributes.
       result.mRemoveAttributes = Some(std::move(attributes));
     }
   }
 
-  // Step 3. Return result.
+  // Step 3. If neither result["attributes"] nor
+  // result["removeAttributes"] exist:
+  if (!result.mAttributes && !result.mRemoveAttributes) {
+    // Step 3.1. Set result["removeAttributes"] to « ».
+    result.mRemoveAttributes = Some(ListSet<CanonicalName>());
+  }
+
+  // Step 4. Return result.
   return result;
 }
 
