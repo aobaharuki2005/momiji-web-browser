@@ -668,16 +668,6 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
                  aCallback](DictionaryCacheEntry* aDict) {
             nsresult rv;
             if (aDict) {
-              rv = aRequest->SetHeader(
-                  nsHttp::Accept_Encoding, self->mDictionaryAcceptEncodings,
-                  false, nsHttpHeaderArray::eVarietyRequestOverride);
-              if (NS_FAILED(rv)) {
-                (aCallback)(nullptr);
-                return rv;
-              }
-              LOG_DICTIONARIES(("Setting Accept-Encoding: %s",
-                                self->mDictionaryAcceptEncodings.get()));
-
               nsAutoCStringN<64> encodedHash =
                   ":"_ns + aDict->GetHash() + ":"_ns;
 
@@ -715,6 +705,9 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
                     return rv;
                   }
                 }
+                return aRequest->SetHeader(
+                    nsHttp::Accept_Encoding, self->mDictionaryAcceptEncodings,
+                    false, nsHttpHeaderArray::eVarietyRequestOverride);
               }
               return NS_OK;
             }

@@ -1095,10 +1095,9 @@ nsresult CacheEntry::GetOnStopTime(uint64_t* aTime) {
   return mFile->GetOnStopTime(aTime);
 }
 
-nsresult CacheEntry::GetReady(bool* aReady) {
+nsresult CacheEntry::GetReadyOrRevalidating(bool* aReady) {
   mozilla::MutexAutoLock lock(mLock);
-  // XXX REVALIDATING?
-  *aReady = mState == READY;
+  *aReady = (mState == READY || mState == REVALIDATING);
   return NS_OK;
 }
 
