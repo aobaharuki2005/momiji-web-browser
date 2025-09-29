@@ -1048,8 +1048,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   LocalAccessible* GetCommandForDetailsRelation() const;
 
   LocalAccessible* GetPopoverTargetDetailsRelation() const;
-
-  LocalAccessible* GetAnchorPositionTargetDetailsRelation() const;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

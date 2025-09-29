@@ -464,27 +464,6 @@ void DocAccessible::QueueCacheUpdateForDependentRelations(
     }
     QueueCacheUpdate(relatedAcc, CacheDomain::Relations);
   }
-
-  if (nsIFrame* anchorFrame = nsCoreUtils::GetAnchorForPositionedFrame(
-          mPresShell, aAcc->GetFrame())) {
-    // If this accessible is anchored, retrieve the anchor and update its
-    // relations.
-    if (LocalAccessible* anchorAcc = GetAccessible(anchorFrame->GetContent())) {
-      if (!mInsertedAccessibles.Contains(anchorAcc)) {
-        QueueCacheUpdate(anchorAcc, CacheDomain::Relations);
-      }
-    }
-  }
-
-  if (nsIFrame* positionedFrame = nsCoreUtils::GetPositionedFrameForAnchor(
-          mPresShell, aAcc->GetFrame())) {
-    // If this accessible is an anchor, retrieve the positioned frame and
-    // refresh the cache on all its anchors.
-    if (LocalAccessible* targetAcc =
-            GetAccessible(positionedFrame->GetContent())) {
-      RefreshAnchorRelationCacheForTarget(targetAcc);
-    }
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3181,27 +3160,4 @@ bool DocAccessible::ProcessAnchorJump() {
   // We've processed this anchor jump now. Clear it so it isn't processed again.
   mAnchorJumpElm = nullptr;
   return true;
-}
-
-void DocAccessible::RefreshAnchorRelationCacheForTarget(
-    LocalAccessible* aTarget) {
-  nsIFrame* frame = aTarget->GetFrame();
-  if (!frame || !frame->HasProperty(nsIFrame::AnchorPosReferences())) {
-    return;
-  }
-
-  AnchorPosReferenceData* referencedAnchors =
-      frame->GetProperty(nsIFrame::AnchorPosReferences());
-  for (auto& entry : *referencedAnchors) {
-    const auto& anchorName = entry.GetKey();
-    if (const nsIFrame* anchorFrame =
-            mPresShell->GetAnchorPosAnchor(anchorName, frame)) {
-      if (LocalAccessible* anchorAcc =
-              GetAccessible(anchorFrame->GetContent())) {
-        if (!mInsertedAccessibles.Contains(anchorAcc)) {
-          QueueCacheUpdate(anchorAcc, CacheDomain::Relations);
-        }
-      }
-    }
-  }
 }

@@ -30,7 +30,6 @@
 #include "mozilla/a11y/Role.h"
 #include "RootAccessible.h"
 #include "States.h"
-#include "TextLeafAccessible.h"
 #include "TextLeafRange.h"
 #include "TextRange.h"
 #include "HTMLElementAccessibles.h"
@@ -1505,15 +1504,9 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     mDoc->QueueCacheUpdate(this, CacheDomain::Value);
   }
 
-  if (aAttribute == nsGkAtoms::aria_details) {
-    mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
-    // If an aria-details attribute is added or removed from an anchored
-    // accessible, it will change the validity of its anchor's relation.
-    mDoc->RefreshAnchorRelationCacheForTarget(this);
-  }
-
   if (aAttribute == nsGkAtoms::aria_controls ||
       aAttribute == nsGkAtoms::aria_flowto ||
+      aAttribute == nsGkAtoms::aria_details ||
       aAttribute == nsGkAtoms::aria_errormessage) {
     mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
   }
@@ -2200,69 +2193,6 @@ LocalAccessible* LocalAccessible::GetPopoverTargetDetailsRelation() const {
   return targetAcc;
 }
 
-LocalAccessible* LocalAccessible::GetAnchorPositionTargetDetailsRelation()
-    const {
-  nsIFrame* positionedFrame = nsCoreUtils::GetPositionedFrameForAnchor(
-      mDoc->PresShellPtr(), GetFrame());
-  if (!positionedFrame) {
-    return nullptr;
-  }
-
-  if (!nsCoreUtils::GetAnchorForPositionedFrame(mDoc->PresShellPtr(),
-                                                positionedFrame)) {
-    // There is no reciprocal, 1:1, anchor for this positioned frame.
-    return nullptr;
-  }
-
-  LocalAccessible* targetAcc =
-      mDoc->GetAccessible(positionedFrame->GetContent());
-
-  if (!targetAcc) {
-    return nullptr;
-  }
-
-  if (targetAcc->Role() == roles::TOOLTIP) {
-    // A tooltip is never a valid target for details relation.
-    return nullptr;
-  }
-
-  AssociatedElementsIterator describedby(mDoc, GetContent(),
-                                         nsGkAtoms::aria_describedby);
-  while (LocalAccessible* target = describedby.Next()) {
-    if (target == targetAcc) {
-      // An explicit description relation exists, so we don't want to create a
-      // details relation.
-      return nullptr;
-    }
-  }
-
-  AssociatedElementsIterator labelledby(mDoc, GetContent(),
-                                        nsGkAtoms::aria_labelledby);
-  while (LocalAccessible* target = labelledby.Next()) {
-    if (target == targetAcc) {
-      // An explicit label relation exists, so we don't want to create a details
-      // relation.
-      return nullptr;
-    }
-  }
-
-  dom::Element* anchorEl = targetAcc->Elm();
-  if (anchorEl && anchorEl->HasAttr(nsGkAtoms::aria_details)) {
-    // If the anchor has an explicit aria-details attribute, then we don't want
-    // to create a details relation.
-    return nullptr;
-  }
-
-  dom::Element* targetEl = Elm();
-  if (targetEl && targetEl->HasAttr(nsGkAtoms::aria_details)) {
-    // If the target has an explicit aria-details attribute, then we don't want
-    // to create a details relation.
-    return nullptr;
-  }
-
-  return targetAcc;
-}
-
 Relation LocalAccessible::RelationByType(RelationType aType) const {
   if (!HasOwnContent()) return Relation();
 
@@ -2578,12 +2508,6 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
       if (LocalAccessible* target = GetPopoverTargetDetailsRelation()) {
         return Relation(target);
       }
-      if (LocalAccessible* target = GetAnchorPositionTargetDetailsRelation()) {
-        if (nsAccUtils::IsValidDetailsTargetForAnchor(target, this)) {
-          return Relation(target);
-        }
-      }
-
       return Relation();
     }
 
@@ -2614,21 +2538,6 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
           rel.AppendTarget(invoker);
         }
       }
-
-      // Check early if the accessible is a tooltip. If so, it can never be a
-      // valid target for an anchor's details relation.
-      if (Role() != roles::TOOLTIP) {
-        if (nsIFrame* anchorFrame = nsCoreUtils::GetAnchorForPositionedFrame(
-                mDoc->PresShellPtr(), GetFrame())) {
-          LocalAccessible* anchorAcc =
-              mDoc->GetAccessible(anchorFrame->GetContent());
-          if (anchorAcc->GetAnchorPositionTargetDetailsRelation() == this &&
-              nsAccUtils::IsValidDetailsTargetForAnchor(this, anchorAcc)) {
-            rel.AppendTarget(anchorAcc);
-          }
-        }
-      }
-
       return rel;
     }
 
@@ -4245,27 +4154,12 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
                 dom::HTMLLabelElement::FromNode(mContent)) {
           rel.AppendTarget(mDoc, labelEl->GetControl());
         }
-      } else if (data.mType == RelationType::DETAILS) {
-        if (relAtom == nsGkAtoms::aria_details) {
-          rel.AppendIter(
-              new AssociatedElementsIterator(mDoc, mContent, relAtom));
-        } else if (relAtom == nsGkAtoms::commandfor) {
-          if (LocalAccessible* target = GetCommandForDetailsRelation()) {
-            rel.AppendTarget(target);
-          }
-        } else if (relAtom == nsGkAtoms::popovertarget) {
-          if (LocalAccessible* target = GetPopoverTargetDetailsRelation()) {
-            rel.AppendTarget(target);
-          }
-        } else if (relAtom == nsGkAtoms::target) {
-          if (LocalAccessible* target =
-                  GetAnchorPositionTargetDetailsRelation()) {
-            rel.AppendTarget(target);
-          }
-        } else {
-          MOZ_ASSERT_UNREACHABLE("Unknown details relAtom");
-        }
-      } else if (data.mType == RelationType::CONTROLLER_FOR) {
+      } else if (data.mType == RelationType::DETAILS ||
+                 data.mType == RelationType::CONTROLLER_FOR) {
+        // We need to use RelationByType for details because it might include
+        // popovertarget. Nothing exposes an implicit reverse details
+        // relation, so using RelationByType here is fine.
+        //
         // We need to use RelationByType for controls because it might include
         // failed aria-owned relocations or it may be an output element.
         // Nothing exposes an implicit reverse controls relation, so using
@@ -4442,22 +4336,6 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
       // CacheDomain::Style covers both display and opacity, so if
       // either property has changed, send an update for the entire domain.
       mDoc->QueueCacheUpdate(this, CacheDomain::Style);
-    }
-
-    if (mOldComputedStyle->StyleDisplay()->mAnchorName !=
-        newStyle->StyleDisplay()->mAnchorName) {
-      // Anchor name changes can affect the result of
-      // details relations.
-      mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
-    }
-
-    if (mOldComputedStyle->MaybeAnchorPosReferencesDiffer(newStyle)) {
-      // Refresh the cache for details on current target (ie. the old style)
-      mDoc->RefreshAnchorRelationCacheForTarget(this);
-      // Refresh the cache for details on new target asynchronously after the
-      // next layout tick for new style.
-      mDoc->Controller()->ScheduleNotification<DocAccessible>(
-          mDoc, &DocAccessible::RefreshAnchorRelationCacheForTarget, this);
     }
 
     nsAutoCString oldPosition, newPosition;
