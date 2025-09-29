@@ -1125,7 +1125,6 @@ abstract class BaseBrowserFragment :
 
         crashContentIntegration.set(
             feature = CrashContentIntegration(
-                fragment = this,
                 browserStore = requireComponents.core.store,
                 appStore = requireComponents.appStore,
                 toolbar = browserToolbarView,
@@ -1133,6 +1132,16 @@ abstract class BaseBrowserFragment :
                 settings = context.settings(),
                 navController = findNavController(),
                 customTabSessionId = customTabSessionId,
+                getTopToolbarHeightValue = { includeTabStrip ->
+                    this.getTopToolbarHeight(
+                        includeTabStrip,
+                    )
+                },
+                getBottomToolbarHeightValue = { includeNavBar ->
+                    this.getBottomToolbarHeight(
+                        includeNavBar,
+                    )
+                },
             ).apply {
                 viewProvider = {
                     view.findViewById(R.id.crash_reporter_view)

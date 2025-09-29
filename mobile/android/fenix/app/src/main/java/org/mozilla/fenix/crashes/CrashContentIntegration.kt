@@ -6,7 +6,6 @@ package org.mozilla.fenix.crashes
 
 import android.view.ViewGroup.MarginLayoutParams
 import androidx.annotation.VisibleForTesting
-import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -28,8 +27,6 @@ import mozilla.components.lib.state.ext.flow
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
-import org.mozilla.fenix.ext.getBottomToolbarHeight
-import org.mozilla.fenix.ext.getTopToolbarHeight
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -37,7 +34,6 @@ import org.mozilla.fenix.utils.Settings
  *
  * Note that you have to call `integration.viewProvider` to set the provider that will provide
  *
- * @param fragment [Fragment] used to organize fragment dependent operations.
  * @param browserStore [BrowserStore] observed for any changes related to [EngineState.crashed].
  * @param appStore [AppStore] that tracks all content crashes in the current app session until the user
  * decides to either send or dismiss all crash reports.
@@ -48,15 +44,21 @@ import org.mozilla.fenix.utils.Settings
  * @param customTabSessionId [String] Id of the tab or custom tab which should be observed for [EngineState.crashed]
  * depending on which the [CrashContentView] provided by [viewProvider] will be shown or hidden.
  * @param dispatcher The [CoroutineDispatcher] to use for launching coroutines. Defaults to [Dispatchers.Main].
+ * @param getTopToolbarHeightValue Function to provide the top toolbar height.
+ * @param getBottomToolbarHeightValue Function to provide the bottom toolbar height.
  *
  * Sample usage:
  *
  * ```kotlin
- * class MyFragment {
+ * class MyFragment : Fragment() {
  *
  *   override fun onCreateView(view: View, savedInstanceState: Bundle) {
  *      //...
- *      val integration = CrashContentIntegration(...)
+ *      val integration = CrashContentIntegration(
+ *          // ... other params ...
+ *          getTopToolbarHeightValue = { includeTabStrip -> this.getTopToolbarHeight(includeTabStrip) },
+ *          getBottomToolbarHeightValue = { includeNavBar -> this.getBottomToolbarHeight(includeNavBar) }
+ *      )
  *
  *      // set the view provider. it will be automatically cleared when the lifecycle gets to the
  *      // `STOPPED` state
@@ -68,7 +70,6 @@ import org.mozilla.fenix.utils.Settings
 
 @Suppress("LongParameterList")
 class CrashContentIntegration(
-    private val fragment: Fragment,
     private val browserStore: BrowserStore,
     private val appStore: AppStore,
     private val toolbar: ScrollableToolbar,
@@ -77,6 +78,8 @@ class CrashContentIntegration(
     private val navController: NavController,
     private val customTabSessionId: String?,
     private val dispatcher: CoroutineDispatcher = Dispatchers.Main,
+    private val getTopToolbarHeightValue: (includeTabStripIfAvailable: Boolean) -> Int,
+    private val getBottomToolbarHeightValue: (includeNavBarIfEnabled: Boolean) -> Int,
 ) : LifecycleAwareFeature {
 
     /**
@@ -142,12 +145,8 @@ class CrashContentIntegration(
     internal fun updateVerticalMargins() = crashReporterView?.apply {
         with(layoutParams as MarginLayoutParams) {
             // TabStrip and navBar are not used in custom tabs
-            topMargin = fragment.getTopToolbarHeight(
-                includeTabStripIfAvailable = customTabSessionId == null,
-            )
-            bottomMargin = fragment.getBottomToolbarHeight(
-                includeNavBarIfEnabled = customTabSessionId == null,
-            )
+            topMargin = getTopToolbarHeightValue(customTabSessionId == null)
+            bottomMargin = getBottomToolbarHeightValue(customTabSessionId == null)
         }
     }
 }
