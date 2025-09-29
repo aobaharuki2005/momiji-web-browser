@@ -207,6 +207,9 @@ fun TabsTray(
                 onExitSelectModeClick = {
                     tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
                 },
+                onThreeDotMenuShown = {
+                    tabsTrayStore.dispatch(TabsTrayAction.ThreeDotMenuShown)
+                },
             )
         }
 

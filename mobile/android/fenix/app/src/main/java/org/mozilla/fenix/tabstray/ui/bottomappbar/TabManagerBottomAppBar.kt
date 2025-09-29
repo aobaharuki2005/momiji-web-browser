@@ -90,7 +90,10 @@ internal fun TabManagerBottomAppBar(
         BottomAppBar(
             actions = {
                 IconButton(
-                    onClick = { showBottomAppBarMenu = true },
+                    onClick = {
+                        tabsTrayStore.dispatch(TabsTrayAction.ThreeDotMenuShown)
+                        showBottomAppBarMenu = true
+                    },
                     modifier = Modifier.testTag(TabsTrayTestTag.THREE_DOT_BUTTON),
                 ) {
                     Icon(
