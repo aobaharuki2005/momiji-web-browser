@@ -656,51 +656,75 @@ nsresult nsHttpHandler::InitConnectionMgr() {
 // set by Fetch from the old request
 nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
     nsIURI* aURI, nsHttpRequestHead* aRequest, bool aSecure,
-    RefPtr<DictionaryCacheEntry>& aDict) {
+    const std::function<void(DictionaryCacheEntry*)>& aCallback) {
   LOG(("Adding Dictionary headers"));
-  nsresult rv;
+  nsresult rv = NS_OK;
   // Add the "Accept-Encoding" header and possibly Dictionary headers
   if (aSecure) {
     // The dictionary info may require us to check the cache.
     // XXX This would require that AddAcceptAndDictionaryHeaders be effectively
     // async, perhaps by passing a lambda to call AddAcceptAndDictionaryHeaders
     // and then unblock the request
-    if (StaticPrefs::network_http_dictionaries_enable() &&
-        (aDict = mDictionaryCache->GetDictionaryFor(aURI))) {
-      rv = aRequest->SetHeader(nsHttp::Accept_Encoding,
-                               mDictionaryAcceptEncodings, false,
-                               nsHttpHeaderArray::eVarietyRequestOverride);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      LOG(("Setting Accept-Encoding: %s", mDictionaryAcceptEncodings.get()));
+    if (StaticPrefs::network_http_dictionaries_enable()) {
+      mDictionaryCache->GetDictionaryFor(
+          aURI, [self = RefPtr(this), aRequest,
+                 aCallback](DictionaryCacheEntry* aDict) {
+            nsresult rv;
+            if (aDict) {
+              rv = aRequest->SetHeader(
+                  nsHttp::Accept_Encoding, self->mDictionaryAcceptEncodings,
+                  false, nsHttpHeaderArray::eVarietyRequestOverride);
+              if (NS_FAILED(rv)) {
+                (aCallback)(nullptr);
+                return rv;
+              }
+              LOG_DICTIONARIES(("Setting Accept-Encoding: %s",
+                                self->mDictionaryAcceptEncodings.get()));
 
-      nsAutoCStringN<64> encodedHash = ":"_ns + aDict->GetHash() + ":"_ns;
+              nsAutoCStringN<64> encodedHash =
+                  ":"_ns + aDict->GetHash() + ":"_ns;
 
-      LOG(("Setting Available-Dictionary: %s", encodedHash.get()));
-      rv = aRequest->SetHeader(nsHttp::Available_Dictionary, encodedHash, false,
-                               nsHttpHeaderArray::eVarietyRequestOverride);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      if (!aDict->GetId().IsEmpty()) {
-        rv = aRequest->SetHeader(nsHttp::Dictionary_Id, aDict->GetId(), false,
-                                 nsHttpHeaderArray::eVarietyRequestOverride);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-        LOG(("Setting Dictionary-Id: %s", aDict->GetId().get()));
-      }
-      // Need to retain access to the dictionary until the request completes.
-      // Note that this includes if the dictionary we offered gets replaced
-      // by another request while we're waiting for a response; in that case we
-      // need to read in a copy of the dictionary into memory before overwriting
-      // it and store in dict temporarily.
-      aRequest->SetDictionary(aDict);
+              LOG_DICTIONARIES(
+                  ("Setting Available-Dictionary: %s", encodedHash.get()));
+              rv = aRequest->SetHeader(
+                  nsHttp::Available_Dictionary, encodedHash, false,
+                  nsHttpHeaderArray::eVarietyRequestOverride);
+              if (NS_FAILED(rv)) {
+                (aCallback)(nullptr);
+                return rv;
+              }
+              if (!aDict->GetId().IsEmpty()) {
+                rv = aRequest->SetHeader(
+                    nsHttp::Dictionary_Id, aDict->GetId(), false,
+                    nsHttpHeaderArray::eVarietyRequestOverride);
+                if (NS_FAILED(rv)) {
+                  (aCallback)(nullptr);
+                  return rv;
+                }
+                LOG_DICTIONARIES(
+                    ("Setting Dictionary-Id: %s", aDict->GetId().get()));
+              }
+              // Need to retain access to the dictionary until the request
+              // completes. Note that this includes if the dictionary we offered
+              // gets replaced by another request while we're waiting for a
+              // response; in that case we need to read in a copy of the
+              // dictionary into memory before overwriting it and store in dict
+              // temporarily.
+              aRequest->SetDictionary(aDict);
+              (aCallback)(aDict);
+              return NS_OK;
+            }
+            rv = aRequest->SetHeader(
+                nsHttp::Accept_Encoding, self->mHttpsAcceptEncodings, false,
+                nsHttpHeaderArray::eVarietyRequestOverride);
+            (aCallback)(nullptr);
+            return rv;
+          });
     } else {
       rv = aRequest->SetHeader(nsHttp::Accept_Encoding, mHttpsAcceptEncodings,
                                false,
                                nsHttpHeaderArray::eVarietyRequestOverride);
+      (aCallback)(nullptr);
     }
   } else {
     // We need to not override a previous setting of 'identity' (for range
@@ -712,6 +736,7 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
                                false,
                                nsHttpHeaderArray::eVarietyRequestOverride);
     }
+    (aCallback)(nullptr);
   }
 
   return rv;
