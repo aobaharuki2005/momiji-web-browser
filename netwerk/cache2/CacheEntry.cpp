@@ -266,6 +266,12 @@ nsresult CacheEntry::HashingKey(const nsACString& aStorageID,
   return HashingKey(aStorageID, aEnhanceID, spec, aResult);
 }
 
+// The hash key (which is also the filename) is:
+// A[~B]:C
+// Where A is the storage ID ([O<oa>,][a,][p,]), B is the optional 'id',
+// and C is the URI  'oa' are the OriginAttributes in suffix form
+// (i.e. |^key=value&key2=value2|)
+
 // static
 nsresult CacheEntry::HashingKey(const nsACString& aStorageID,
                                 const nsACString& aEnhanceID,

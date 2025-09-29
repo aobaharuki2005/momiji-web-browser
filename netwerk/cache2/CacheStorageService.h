@@ -41,6 +41,7 @@ class CacheStorageService;
 class CacheStorage;
 class CacheEntry;
 class CacheEntryHandle;
+class CacheEntryTable;
 
 class CacheMemoryConsumer {
  private:
@@ -73,11 +74,22 @@ class CacheMemoryConsumer {
   void DoMemoryReport(uint32_t aCurrentSize);
 };
 
+using GlobalEntryTables = nsClassHashtable<nsCStringHashKey, CacheEntryTable>;
+class WalkMemoryCacheRunnable;
+
+namespace CacheStorageServiceInternal {
+class WalkMemoryCacheRunnable;
+class WalkDiskCacheRunnable;
+}  // namespace CacheStorageServiceInternal
+
 class CacheStorageService final : public nsICacheStorageService,
                                   public nsIMemoryReporter,
                                   public nsITimerCallback,
                                   public nsICacheTesting,
                                   public nsINamed {
+  friend class CacheStorageServiceInternal::WalkMemoryCacheRunnable;
+  friend class CacheStorageServiceInternal::WalkDiskCacheRunnable;
+
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICACHESTORAGESERVICE
@@ -99,7 +111,7 @@ class CacheStorageService final : public nsICacheStorageService,
   static bool IsRunning() { return sSelf && !sSelf->mShutdown; }
   static bool IsOnManagementThread();
   already_AddRefed<nsIEventTarget> Thread() const;
-  mozilla::Mutex& Lock() { return mLock; }
+  mozilla::Mutex& Lock() { return sLock; }
 
   // Tracks entries that may be forced valid in a pruned hashtable.
   struct ForcedValidData {
@@ -144,6 +156,16 @@ class CacheStorageService final : public nsICacheStorageService,
  private:
   virtual ~CacheStorageService();
   void ShutdownBackground();
+
+  /**
+   * Keeps tables of entries.  There is one entries table for each distinct load
+   * context type.  The distinction is based on following load context info
+   * states: <isPrivate|isAnon|inIsolatedMozBrowser> which builds a mapping
+   * key.
+   *
+   * Thread-safe to access, protected by the service mutex.
+   */
+  static GlobalEntryTables* sGlobalEntryTables MOZ_GUARDED_BY(sLock);
 
  private:
   // The following methods may only be called on the management
@@ -322,7 +344,7 @@ class CacheStorageService final : public nsICacheStorageService,
 
   static CacheStorageService* sSelf;
 
-  mozilla::Mutex mLock MOZ_UNANNOTATED{"CacheStorageService.mLock"};
+  static mozilla::Mutex sLock;
   mozilla::Mutex mForcedValidEntriesLock{
       "CacheStorageService.mForcedValidEntriesLock"};
 
