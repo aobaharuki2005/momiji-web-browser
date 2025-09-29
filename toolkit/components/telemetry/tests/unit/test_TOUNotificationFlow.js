@@ -674,3 +674,150 @@ add_task(
     sinon.restore();
   }
 );
+
+add_task(
+  async function test_canUpload_unblocked_by_tou_accepted_and_uploadEnabled() {
+    TelemetryReportingPolicy.reset();
+
+    registerCleanupFunction(() => {
+      Services.prefs.clearUserPref(
+        TelemetryUtils.Preferences.BypassNotification
+      );
+      Services.prefs.clearUserPref("datareporting.healthreport.uploadEnabled");
+      Services.prefs.clearUserPref("termsofuse.acceptedDate");
+      Services.prefs.clearUserPref("termsofuse.acceptedVersion");
+      TelemetryReportingPolicy.reset();
+    });
+
+    Services.prefs.setBoolPref(
+      TelemetryUtils.Preferences.BypassNotification,
+      false
+    );
+
+    // This is true by default for most users
+    Services.prefs.setBoolPref(
+      "datareporting.healthreport.uploadEnabled",
+      true
+    );
+
+    Assert.ok(
+      !TelemetryReportingPolicy.canUpload(),
+      "Before accepting TOU legacy upload is blocked"
+    );
+
+    Assert.ok(
+      !Services.prefs.getIntPref(
+        "datareporting.policy.dataSubmissionPolicyAcceptedVersion",
+        0
+      ),
+      "Legacy policy flow accepted version not set"
+    );
+
+    Assert.ok(
+      !Services.prefs.getBoolPref(
+        "datareporting.policy.dataSubmissionPolicyNotifiedDate",
+        0
+      ),
+      "Legacy policy flow accepted date not set"
+    );
+
+    Services.prefs.setStringPref("termsofuse.acceptedDate", String(Date.now()));
+    Services.prefs.setIntPref(
+      "termsofuse.acceptedVersion",
+      Services.prefs.getIntPref(TOU_CURRENT_VERSION_PREF)
+    );
+
+    Assert.ok(
+      TelemetryReportingPolicy.userHasAcceptedTOU(),
+      "TOU acceptance is recorded"
+    );
+
+    Assert.ok(TelemetryReportingPolicy.canUpload(), "Legacy upload allowed");
+
+    Services.prefs.setBoolPref(
+      "datareporting.healthreport.uploadEnabled",
+      false
+    );
+
+    Assert.ok(
+      !TelemetryReportingPolicy.canUpload(),
+      "Legacy upload blocked when user opts out of sharing interaction data"
+    );
+  }
+);
+
+add_task(async function test_canUpload_allowed_when_both_bypass_prefs_true() {
+  TelemetryReportingPolicy.reset();
+
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref(TelemetryUtils.Preferences.BypassNotification);
+    Services.prefs.clearUserPref("termsofuse.bypassNotification");
+    TelemetryReportingPolicy.reset();
+  });
+
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.BypassNotification,
+    true
+  );
+  Services.prefs.setBoolPref("termsofuse.bypassNotification", true);
+
+  Assert.ok(
+    TelemetryReportingPolicy.canUpload(),
+    "Upload allowed when both legacy and TOU notification flows are bypassed"
+  );
+
+  Services.prefs.setBoolPref("termsofuse.bypassNotification", false);
+
+  Assert.ok(
+    !TelemetryReportingPolicy.canUpload(),
+    "Upload blocked when only one bypass is true and no other allow path conditions are met"
+  );
+});
+
+add_task(
+  async function test_canUpload_allowed_when_tou_bypass_and_legacy_notified() {
+    TelemetryReportingPolicy.reset();
+
+    registerCleanupFunction(() => {
+      Services.prefs.clearUserPref(
+        TelemetryUtils.Preferences.BypassNotification
+      );
+      Services.prefs.clearUserPref("termsofuse.bypassNotification");
+      Services.prefs.clearUserPref(
+        "datareporting.policy.dataSubmissionPolicyNotifiedDate"
+      );
+      Services.prefs.clearUserPref("datareporting.healthreport.uploadEnabled");
+      TelemetryReportingPolicy.reset();
+    });
+
+    Services.prefs.setBoolPref("termsofuse.bypassNotification", true);
+    Services.prefs.setBoolPref(
+      TelemetryUtils.Preferences.BypassNotification,
+      false
+    );
+    Services.prefs.setStringPref(
+      "datareporting.policy.dataSubmissionPolicyNotifiedDate",
+      String(Date.now())
+    );
+    // This is true by default for most users
+    Services.prefs.setBoolPref(
+      "datareporting.healthreport.uploadEnabled",
+      true
+    );
+
+    Assert.ok(
+      TelemetryReportingPolicy.canUpload(),
+      "Upload allowed when TOU bypass is true, legacy bypass is false, and legacy policy has been notified with upload enabled"
+    );
+
+    Services.prefs.setBoolPref(
+      "datareporting.healthreport.uploadEnabled",
+      false
+    );
+
+    Assert.ok(
+      !TelemetryReportingPolicy.canUpload(),
+      "Upload blocked when user opts out of sharing interaction data"
+    );
+  }
+);
