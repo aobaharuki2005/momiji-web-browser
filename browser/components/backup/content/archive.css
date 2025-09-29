@@ -25,11 +25,18 @@ img {
   width: 80px;
   height: 80px;
   align-self: center;
+  margin-block-end: 0.75rem;
 }
 
 h1 {
   text-align: center;
   font-weight: 600;
+  margin-block: 1rem;
+}
+
+h2 {
+  font-size: 15px;
+  font-weight: 400;
 }
 
 strong {
@@ -43,6 +50,8 @@ a {
 dl {
   border: 1px solid #cfcfd8;
   border-radius: 8px;
+  font-size: 14px;
+  margin-block: 0.75rem;
   padding: 0.5rem 1rem;
 
   & > * {
@@ -68,10 +77,19 @@ dd {
   border-radius: 4px;
   padding: 0.5rem;
   clear: inline-start;
+  margin-block: 0.5rem;
+}
+
+ol {
+  font-size: 17px;
+  font-weight: 600;
+  list-style-position: inside;
+  padding-inline-start: 0;
+  margin-block: 0.75rem;
 }
 
 ol > li {
-  margin-block: 1.5rem;
+  margin-block: 1rem;
 }
 
 a.button-link {
@@ -80,9 +98,9 @@ a.button-link {
   border: 1px solid transparent;
   border-radius: 4px;
   background-color: #0060df;
-  font-size: inherit;
+  font-size: 13px;
   margin-inline-start: 0.75rem;
-  padding: 0.25rem 1rem;
+  padding: 0.5rem 1rem;
   text-decoration: none;
 
   &:hover {

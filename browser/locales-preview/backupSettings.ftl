@@ -237,14 +237,21 @@ backup-file-creation-date-label = Created:
 #   $date (Datetime) - The date the backup was created
 backup-file-creation-date-value = { DATETIME($date, timeStyle: "short") }, { DATETIME($date, dateStyle: "short") }
 
-backup-file-how-to-restore-header = How to restore your data:
-backup-file-moz-browser-restore-step-1 = Go to Settings > Backup
-backup-file-moz-browser-restore-step-2 = Under “Restore”, click “Choose backup file”
+backup-file-how-to-restore-header = How to restore:
+
+# The ☰ character is intended as a visual icon representing the Firefox
+# application menu.
+backup-file-moz-browser-restore-step-1 = Open the application menu ☰ and go to Settings > Sync
+backup-file-moz-browser-restore-step-2 = Click “Choose backup file” and select this file
 backup-file-moz-browser-restore-step-3 = Restart { -brand-short-name } when asked
 
-backup-file-other-browser-restore-step-1 = Download and install { -brand-short-name }:
-backup-file-download-moz-browser-button = Download { -brand-short-name }
-backup-file-other-browser-restore-step-2 = Open { -brand-short-name } and restore your backup
+backup-file-other-browser-restore-step-1 = Download and install { -brand-short-name }
+backup-file-download-moz-browser-button = Download
+# The ☰ character is intended as a visual icon representing the Firefox
+# application menu.
+backup-file-other-browser-restore-step-2 = Start { -brand-short-name }, open the application menu ☰ and go to Settings > Sync
+backup-file-other-browser-restore-step-3 = Click “Choose backup file” and select this file
+backup-file-other-browser-restore-step-4 = Restart { -brand-short-name } when asked
 
 ## These strings are used in the about:restore and about:welcome pages
 ## These pages guide the user on browser startup to help them restore a backup
