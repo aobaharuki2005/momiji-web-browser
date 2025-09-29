@@ -95,15 +95,16 @@ export class WeatherFeed {
    * This thin wrapper around the fetch call makes it easier for us to write
    * automated tests that simulate responses.
    */
-  async fetchHelper(retries = 3) {
+  async fetchHelper(retries = 3, queryOverride = null) {
     this.restartFetchTimer();
     const weatherQuery = this.store.getState().Prefs.values[PREF_WEATHER_QUERY];
     let suggestions = [];
     let retry = 0;
+    const query = queryOverride ?? weatherQuery ?? "";
     while (retry++ < retries && suggestions.length === 0) {
       try {
         suggestions = await this.merino.fetch({
-          query: weatherQuery || "",
+          query,
           providers: MERINO_PROVIDER,
           timeoutMs: 7000,
           otherParams: {
@@ -118,6 +119,7 @@ export class WeatherFeed {
 
     // results from the API or empty array if null
     this.suggestions = suggestions ?? [];
+    return this.suggestions;
   }
 
   async fetch() {
@@ -222,6 +224,41 @@ export class WeatherFeed {
     }
   }
 
+  async fetchLocationByIP() {
+    if (!this.merino) {
+      this.merino = await this.MerinoClient(MERINO_CLIENT_KEY);
+    }
+
+    // First we fetch the forecast through user's IP Address
+    // which is done by not adding in a query parameter, but keeping the "weather" request_type.
+    // This method is mentioned in the AccuWeather docs:
+    // https://apidev.accuweather.com/developers/locationsAPIguide#IPAddress
+    try {
+      const ipLocation = await this.fetchHelper(3, "");
+
+      const ipData = ipLocation?.[0];
+
+      // Second, we use the city name that came from the IP look up to get the normalized merino response
+      // For context, the IP lookup response does not have the complete response data we need
+      const locationData = await this.merino.fetch({
+        query: ipData.city_name,
+        providers: MERINO_PROVIDER,
+        timeoutMs: 7000,
+        otherParams: {
+          request_type: "location",
+          source: "newtab",
+        },
+      });
+
+      const response = locationData?.[0]?.locations?.[0];
+      return response;
+      // return response
+    } catch (err) {
+      console.error("WeatherFeed failed to look up IP");
+      return null;
+    }
+  }
+
   async onPrefChangedAction(action) {
     switch (action.data.name) {
       case PREF_WEATHER_QUERY:
@@ -283,6 +320,31 @@ export class WeatherFeed {
           this.locationData = action.data;
         }
         break;
+      case at.WEATHER_USER_OPT_IN_LOCATION: {
+        const detectedLocation = await this.fetchLocationByIP();
+
+        if (detectedLocation) {
+          // Build the payload exactly like manual search does
+          this.store.dispatch(
+            ac.BroadcastToContent({
+              type: at.WEATHER_LOCATION_DATA_UPDATE,
+              data: {
+                city: detectedLocation.localized_name,
+                adminName: detectedLocation.administrative_area,
+                country: detectedLocation.country,
+              },
+            })
+          );
+
+          // Use the AccuWeather key (canonical ID)
+          if (detectedLocation.key) {
+            this.store.dispatch(
+              ac.SetPref("weather.query", detectedLocation.key)
+            );
+          }
+        }
+        break;
+      }
     }
   }
 }

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { connect } from "react-redux";
+import { connect, batch } from "react-redux";
 import { LinkMenu } from "content-src/components/LinkMenu/LinkMenu";
 import { LocationSearch } from "content-src/components/Weather/LocationSearch";
 import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
@@ -217,8 +217,16 @@ export class _Weather extends React.PureComponent {
   };
 
   handleAcceptOptIn = () => {
-    this.props.dispatch(ac.SetPref("weather.optInAccepted", true));
-    this.props.dispatch(ac.SetPref("weather.optInDisplayed", false));
+    batch(() => {
+      this.props.dispatch(ac.SetPref("weather.optInAccepted", true));
+      this.props.dispatch(ac.SetPref("weather.optInDisplayed", false));
+      this.props.dispatch(
+        ac.BroadcastToContent({
+          type: at.WEATHER_SEARCH_ACTIVE,
+          data: true,
+        })
+      );
+    });
   };
 
   render() {
