@@ -8055,7 +8055,8 @@ QuotaManager::GetOriginInfosWithZeroUsage() const {
 }
 
 void QuotaManager::ClearOrigins(
-    const OriginInfosNestedTraversable& aDoomedOriginInfos) {
+    const OriginInfosNestedTraversable& aDoomedOriginInfos,
+    const Maybe<size_t>& aMaxOriginsToClear) {
   AssertIsOnIOThread();
 
   // If we are in shutdown, we could break off early from clearing origins.
@@ -8094,6 +8095,10 @@ void QuotaManager::ClearOrigins(
     DeleteOriginDirectory(originMetadata);
 
     clearedOrigins.AppendElement(std::move(originMetadata));
+
+    if (aMaxOriginsToClear && clearedOrigins.Length() >= *aMaxOriginsToClear) {
+      break;
+    }
   }
 
   {
