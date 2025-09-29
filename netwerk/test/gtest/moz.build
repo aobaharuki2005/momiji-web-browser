@@ -41,6 +41,7 @@ UNIFIED_SOURCES += [
     "TestURIMutator.cpp",
     "TestUriTemplate.cpp",
     "TestURLPatternGlue.cpp",
+    "TestUseAsDictionary.cpp",
     "TestWebTransportFlowControl.cpp",
 ]
 
