@@ -877,6 +877,9 @@ pref("browser.search.visualSearch.featureGate", true);
 // Feature gate for ohttp based suggestions.
 pref("browser.search.suggest.ohttp.featureGate", false);
 
+// User preference to enable/disable ohttp based suggestions.
+pref("browser.search.suggest.ohttp.enabled", true);
+
 // Spin the cursor while the page is loading
 pref("browser.spin_cursor_while_busy", false);
 

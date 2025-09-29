@@ -79,6 +79,7 @@ add_setup(async function () {
     "https://example.com/relay"
   );
   Services.prefs.setBoolPref("browser.search.suggest.ohttp.featureGate", true);
+  Services.prefs.setBoolPref("browser.search.suggest.ohttp.enabled", true);
 
   sinon.stub(ObliviousHTTP, "getOHTTPConfig").resolves({});
   sinon.stub(ObliviousHTTP, "ohttpRequest").callsFake(() => {

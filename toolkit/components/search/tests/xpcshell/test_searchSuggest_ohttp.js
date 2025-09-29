@@ -54,6 +54,7 @@ add_setup(async function () {
     "https://example.com/relay"
   );
   Services.prefs.setBoolPref("browser.search.suggest.ohttp.featureGate", true);
+  Services.prefs.setBoolPref("browser.search.suggest.ohttp.enabled", true);
 
   SearchTestUtils.setRemoteSettingsConfig(CONFIG);
   await Services.search.init();
@@ -64,6 +65,26 @@ add_setup(async function () {
 
   sinon.stub(ObliviousHTTP, "getOHTTPConfig").resolves({});
   sinon.stub(ObliviousHTTP, "ohttpRequest").callsFake(() => {});
+});
+
+add_task(async function test_preference_enabled_telemetry() {
+  // The search service was initialised in add_setup after
+  // `browser.search.suggest.ohttp.enabled` was set to true, so Glean should
+  // have recorded the correct value here.
+  Assert.ok(
+    Glean.searchSuggestionsOhttp.enabled.testGetValue(),
+    "Should have recorded the enabled preference on init"
+  );
+
+  Services.prefs.setBoolPref("browser.search.suggest.ohttp.enabled", false);
+
+  Assert.ok(
+    !Glean.searchSuggestionsOhttp.enabled.testGetValue(),
+    "Should have recorded the enabled preference after toggling it"
+  );
+
+  // Reset back to true for the rest of the tests.
+  Services.prefs.setBoolPref("browser.search.suggest.ohttp.enabled", true);
 });
 
 add_task(async function simple_remote_results_merino() {
@@ -331,11 +352,34 @@ add_task(async function simple_remote_results_merino_third_party() {
   SearchSuggestionController.oHTTPEngineId = configEngine.id;
 });
 
-add_task(async function test_merino_not_used_when_ohttp_prefs_not_set() {
-  // Clear the preferences, so that OHTTP isn't enabled.
-  Services.prefs.setCharPref("browser.urlbar.merino.ohttpConfigURL", "");
-  Services.prefs.setCharPref("browser.urlbar.merino.ohttpRelayURL", "");
+async function testUsesOHttp() {
+  ObliviousHTTP.ohttpRequest.resetHistory();
 
+  const suggestions = ["Mozilla", "modern", "mom"];
+
+  // Now do the actual request.
+  let controller = new SearchSuggestionController();
+  let result = await controller.fetch({
+    searchString: "mo",
+    inPrivateBrowsing: false,
+    engine: Services.search.defaultEngine,
+  });
+  Assert.equal(
+    ObliviousHTTP.ohttpRequest.callCount,
+    1,
+    "Should have requested via OHTTP once"
+  );
+
+  Assert.equal(result.term, "mo", "Should have the term matching the query");
+  Assert.equal(result.local.length, 0, "Should have no local suggestions");
+  Assert.deepEqual(
+    result.remote.map(r => r.value),
+    suggestions,
+    "Should have the expected remote suggestions"
+  );
+}
+
+async function testUsesDirectHTTP(message) {
   ObliviousHTTP.ohttpRequest.resetHistory();
 
   // Now do the actual request
@@ -345,6 +389,8 @@ add_task(async function test_merino_not_used_when_ohttp_prefs_not_set() {
     inPrivateBrowsing: false,
     engine: Services.search.defaultEngine,
   });
+  Assert.equal(ObliviousHTTP.ohttpRequest.callCount, 0, message);
+
   Assert.equal(result.term, "mo", "Should have the term matching the query");
   Assert.equal(result.local.length, 0, "Should have no local suggestions");
   Assert.deepEqual(
@@ -352,14 +398,69 @@ add_task(async function test_merino_not_used_when_ohttp_prefs_not_set() {
     ["Mozilla", "modern", "mom"],
     "Should have no remote suggestions"
   );
+}
 
-  Assert.equal(
-    ObliviousHTTP.ohttpRequest.callCount,
-    0,
-    "Should not have requested via OHTTP"
+add_task(async function test_merino_not_used_when_ohttp_feature_turned_off() {
+  // These should already be set, but we'll set them here again for completeness
+  // and clarity within this sub-test.
+  Services.prefs.setBoolPref("browser.search.suggest.ohttp.featureGate", true);
+  Services.prefs.setBoolPref("browser.search.suggest.ohttp.enabled", true);
+  Services.prefs.setCharPref(
+    "browser.urlbar.merino.ohttpConfigURL",
+    "https://example.com/config"
+  );
+  Services.prefs.setCharPref(
+    "browser.urlbar.merino.ohttpRelayURL",
+    "https://example.com/relay"
   );
 
-  Services.search.defaultEngine.wrappedJSObject.Submission;
+  // With everything set, we should be using OHTTP.
+  await testUsesOHttp();
+
+  // Test turning off the feature gate.
+  Services.prefs.setBoolPref("browser.search.suggest.ohttp.featureGate", false);
+
+  await testUsesDirectHTTP(
+    "Should not have requested via OHTTP when featureGate is false"
+  );
+
+  // Now the OHTTP preference
+  Services.prefs.setBoolPref("browser.search.suggest.ohttp.featureGate", true);
+
+  // Test we've re-enabled everything, just in case.
+  await testUsesOHttp();
+
+  Services.prefs.setBoolPref("browser.search.suggest.ohttp.enabled", false);
+
+  await testUsesDirectHTTP(
+    "Should not have requested via OHTTP when enabled is false"
+  );
+
+  // Now the relay preferences.
+  Services.prefs.setBoolPref("browser.search.suggest.ohttp.enabled", true);
+
+  // Test we've re-enabled everything, just in case.
+  await testUsesOHttp();
+
+  Services.prefs.clearUserPref("browser.urlbar.merino.ohttpConfigURL");
+
+  await testUsesDirectHTTP(
+    "Should not have requested via OHTTP when ohttpConfigURL is not defined"
+  );
+
+  Services.prefs.setCharPref(
+    "browser.urlbar.merino.ohttpConfigURL",
+    "https://example.com/config"
+  );
+
+  // Test we've re-enabled everything in-between, just in case.
+  await testUsesOHttp();
+
+  Services.prefs.clearUserPref("browser.urlbar.merino.ohttpRelayURL");
+
+  await testUsesDirectHTTP(
+    "Should not have requested via OHTTP when ohttpRelayURL is not defined"
+  );
 });
 
 function assertLatencyCollection(engine, shouldRecord) {
