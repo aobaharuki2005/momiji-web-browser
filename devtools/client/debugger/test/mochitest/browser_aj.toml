@@ -16,7 +16,6 @@ support-files = [
 ]
 prefs = [
  "dom.ipc.processPrelaunch.enabled=false", # Disable randomly spawning processes during tests. After enabling windowless service workers, a process spawning will trigger an update of the service workers list which can fail the test if it occurs during shutdown (unhandled promise rejection).
- "devtools.debugger.features.javascript-tracing=true", # This pref has to be set before the process starts
  "javascript.options.experimental.explicit_resource_management=true", # This pref has to be set before the process starts
 ]
 
@@ -262,33 +261,3 @@ skip-if = [
 ["browser_dbg-integration-reloading-compressed-sourcemaps.js"]
 
 ["browser_dbg-integration-reloading-uncompressed-sourcemaps.js"]
-
-["browser_dbg-javascript-tracer-function-returns.js"]
-
-["browser_dbg-javascript-tracer-next-interaction.js"]
-
-["browser_dbg-javascript-tracer-next-load.js"]
-
-["browser_dbg-javascript-tracer-sidebar-panel.js"]
-
-["browser_dbg-javascript-tracer-sidebar-toggle.js"]
-
-["browser_dbg-javascript-tracer-sidebar-values-search.js"]
-
-["browser_dbg-javascript-tracer-sidebar.js"]
-skip-if = [
-  "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && opt && a11y_checks", # Bug 1924435
-  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && opt && a11y_checks", # Bug 1924435
-]
-
-["browser_dbg-javascript-tracer-values-preview.js"]
-skip-if = [
-  "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && opt && a11y_checks", # Bug The tracer tree isn't yet accessible
-  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && opt && a11y_checks", # Bug The tracer tree isn't yet accessible
-]
-
-["browser_dbg-javascript-tracer-values.js"]
-
-["browser_dbg-javascript-tracer-worker.js"]
-
-["browser_dbg-javascript-tracer.js"]
