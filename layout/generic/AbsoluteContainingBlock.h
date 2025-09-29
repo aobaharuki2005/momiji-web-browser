@@ -147,13 +147,14 @@ class AbsoluteContainingBlock {
                                      LogicalMargin& aMargin,
                                      LogicalMargin& aOffsets);
 
-  void ReflowAbsoluteFrame(
-      nsIFrame* aDelegatingFrame, nsPresContext* aPresContext,
-      const ReflowInput& aReflowInput,
-      const nsRect& aOriginalContainingBlockRect, AbsPosReflowFlags aFlags,
-      nsIFrame* aKidFrame, nsReflowStatus& aStatus,
-      OverflowAreas* aOverflowAreas,
-      AnchorPosReferenceData* aAnchorPosReferenceData);
+  void ReflowAbsoluteFrame(nsIFrame* aDelegatingFrame,
+                           nsPresContext* aPresContext,
+                           const ReflowInput& aReflowInput,
+                           const nsRect& aOriginalContainingBlockRect,
+                           AbsPosReflowFlags aFlags, nsIFrame* aKidFrame,
+                           nsReflowStatus& aStatus,
+                           OverflowAreas* aOverflowAreas,
+                           AnchorPosReferenceData* aAnchorPosReferenceData);
 
   /**
    * Mark our absolute frames dirty.
