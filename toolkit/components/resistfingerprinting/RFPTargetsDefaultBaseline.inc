@@ -3,10 +3,4 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-// #ifdef NIGHTLY_BUILD is supported as a preprocessor macro.
-// If any others are needed, update extract_rfp_targets.py
-
-#ifdef NIGHTLY_BUILD
-DESKTOP_DEFAULT(ScreenAvailToResolution)
-DESKTOP_DEFAULT(MaxTouchPointsCollapse)
-#endif
+// So far, just a placeholder file.
