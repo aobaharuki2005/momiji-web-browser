@@ -2081,6 +2081,10 @@ pocket:
           If click belongs in a section, the numeric position of the section
         type: string
       is_section_followed: *is_section_followed
+      content_redacted:
+        description: >
+          Are content details sent separately in the newtab_content ping
+        type: boolean
     send_in_pings:
       - newtab
 
