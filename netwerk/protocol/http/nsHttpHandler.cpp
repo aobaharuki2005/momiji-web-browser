@@ -27,6 +27,7 @@
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
 #include "mozilla/AppShutdown.h"
+#include "mozilla/Base64.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "mozilla/Printf.h"
@@ -653,58 +654,72 @@ nsresult nsHttpHandler::InitConnectionMgr() {
 
 // We're using RequestOverride because this can get called when these are
 // set by Fetch from the old request
-// only call if we're https!
 nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
-    nsIURI* aURI, nsHttpRequestHead* aRequest) {
+    nsIURI* aURI, nsHttpRequestHead* aRequest, bool aSecure,
+    RefPtr<DictionaryCacheEntry>& aDict) {
   LOG(("Adding Dictionary headers"));
   nsresult rv;
-  // The dictionary info may require us to check the cache.
-  // XXX This would require that AddAcceptAndDictionaryHeaders be effectively
-  // async, perhaps by passing a lambda in.
-  RefPtr<DictionaryCacheEntry> dict =
-      mDictionaryCache ? mDictionaryCache->GetDictionaryFor(aURI) : nullptr;
-  if (dict) {
-    rv =
-        aRequest->SetHeader(nsHttp::Accept_Encoding, mDictionaryAcceptEncodings,
-                            false, nsHttpHeaderArray::eVarietyRequestOverride);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    LOG(("Setting Accept-Encoding: %s",
-         PromiseFlatCString(mDictionaryAcceptEncodings).get()));
-
-    LOG(("Setting Available-Dictionary: %s",
-         PromiseFlatCString(dict->GetHash()).get()));
-    rv = aRequest->SetHeader(nsHttp::Available_Dictionary, dict->GetHash(),
-                             false, nsHttpHeaderArray::eVarietyRequestOverride);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    if (!dict->GetId().IsEmpty()) {
-      rv = aRequest->SetHeader(nsHttp::Dictionary_Id, dict->GetId(), false,
+  // Add the "Accept-Encoding" header and possibly Dictionary headers
+  if (aSecure) {
+    // The dictionary info may require us to check the cache.
+    // XXX This would require that AddAcceptAndDictionaryHeaders be effectively
+    // async, perhaps by passing a lambda to call AddAcceptAndDictionaryHeaders
+    // and then unblock the request
+    aDict =
+        mDictionaryCache ? mDictionaryCache->GetDictionaryFor(aURI) : nullptr;
+    if (aDict) {
+      rv = aRequest->SetHeader(nsHttp::Accept_Encoding,
+                               mDictionaryAcceptEncodings, false,
                                nsHttpHeaderArray::eVarietyRequestOverride);
       if (NS_FAILED(rv)) {
         return rv;
       }
-      LOG(("Setting Dictionary-Id: %s",
-           PromiseFlatCString(dict->GetId()).get()));
+      LOG(("Setting Accept-Encoding: %s", mDictionaryAcceptEncodings.get()));
+
+      nsAutoCStringN<64> encodedHash = ":"_ns + aDict->GetHash() + ":"_ns;
+
+      LOG(("Setting Available-Dictionary: %s", encodedHash.get()));
+      rv = aRequest->SetHeader(nsHttp::Available_Dictionary, encodedHash, false,
+                               nsHttpHeaderArray::eVarietyRequestOverride);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      if (!aDict->GetId().IsEmpty()) {
+        rv = aRequest->SetHeader(nsHttp::Dictionary_Id, aDict->GetId(), false,
+                                 nsHttpHeaderArray::eVarietyRequestOverride);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        LOG(("Setting Dictionary-Id: %s", aDict->GetId().get()));
+      }
+      // Need to retain access to the dictionary until the request completes.
+      // Note that this includes if the dictionary we offered gets replaced
+      // by another request while we're waiting for a response; in that case we
+      // need to read in a copy of the dictionary into memory before overwriting
+      // it and store in dict temporarily.
+      aRequest->SetDictionary(aDict);
+    } else {
+      rv = aRequest->SetHeader(nsHttp::Accept_Encoding, mHttpsAcceptEncodings,
+                               false,
+                               nsHttpHeaderArray::eVarietyRequestOverride);
     }
-    // Need to retain access to the dictionary until the request completes.
-    // Note that this includes if the dictionary we offered gets replaced
-    // by another request while we're waiting for a response; in that case we
-    // need to read in a copy of the dictionary into memory before overwriting
-    // it and store in dict temporarily.
-    dict->InUse();
-    aRequest->SetDictionary(dict);
   } else {
-    rv = aRequest->SetHeader(nsHttp::Accept_Encoding, mHttpsAcceptEncodings,
-                             false, nsHttpHeaderArray::eVarietyRequestOverride);
+    // We need to not override a previous setting of 'identity' (for range
+    // requests)
+    nsAutoCString encoding;
+    Unused << aRequest->GetHeader(nsHttp::Accept_Encoding, encoding);
+    if (!encoding.EqualsLiteral("identity")) {
+      rv = aRequest->SetHeader(nsHttp::Accept_Encoding, mHttpAcceptEncodings,
+                               false,
+                               nsHttpHeaderArray::eVarietyRequestOverride);
+    }
   }
+
   return rv;
 }
 
 nsresult nsHttpHandler::AddStandardRequestHeaders(
-    nsHttpRequestHead* request, bool isSecure, nsIURI* aURI,
+    nsHttpRequestHead* request, nsIURI* aURI,
     ExtContentPolicyType aContentPolicyType, bool aShouldResistFingerprinting) {
   nsresult rv;
 
@@ -751,15 +766,6 @@ nsresult nsHttpHandler::AddStandardRequestHeaders(
     if (NS_FAILED(rv)) return rv;
   }
 
-  // Add the "Accept-Encoding" header
-  if (isSecure) {
-    rv = AddAcceptAndDictionaryHeaders(aURI, request);
-  } else {
-    rv = request->SetHeader(nsHttp::Accept_Encoding, mHttpAcceptEncodings,
-                            false, nsHttpHeaderArray::eVarietyRequestDefault);
-  }
-  if (NS_FAILED(rv)) return rv;
-
   // add the "Send Hint" header
   if (mSafeHintEnabled || sParentalControlsEnabled) {
     rv = request->SetHeader(nsHttp::Prefer, "safe"_ns, false,
@@ -767,19 +773,6 @@ nsresult nsHttpHandler::AddStandardRequestHeaders(
     if (NS_FAILED(rv)) return rv;
   }
   return NS_OK;
-}
-
-nsresult nsHttpHandler::AddEncodingHeaders(nsHttpRequestHead* request,
-                                           bool isSecure, nsIURI* aURI) {
-  // Add the "Accept-Encoding" header and any dictionary headers
-  nsresult rv;
-  if (isSecure) {
-    rv = AddAcceptAndDictionaryHeaders(aURI, request);
-  } else {
-    rv = request->SetHeader(nsHttp::Accept_Encoding, mHttpAcceptEncodings,
-                            false, nsHttpHeaderArray::eVarietyRequestOverride);
-  }
-  return rv;
 }
 
 nsresult nsHttpHandler::AddConnectionHeader(nsHttpRequestHead* request,
@@ -807,8 +800,10 @@ bool nsHttpHandler::IsAcceptableEncoding(const char* enc, bool isSecure) {
   // continuing bad behavior.. so limit it to known x-* patterns
   bool rv;
   if (isSecure) {
-    rv = nsHttp::FindToken(mHttpsAcceptEncodings.get(), enc, HTTP_LWS ",") !=
-         nullptr;
+    // Should be a superset of mAcceptEncodings (unless someone messes with
+    // prefs)
+    rv = nsHttp::FindToken(mDictionaryAcceptEncodings.get(), enc,
+                           HTTP_LWS ",") != nullptr;
   } else {
     rv = nsHttp::FindToken(mHttpAcceptEncodings.get(), enc, HTTP_LWS ",") !=
          nullptr;
@@ -1487,22 +1482,25 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     }
   }
 
-  if (PREF_CHANGED(HTTP_PREF("accept-encoding.secure"))) {
+  if (PREF_CHANGED(HTTP_PREF("accept-encoding.secure")) ||
+      PREF_CHANGED(HTTP_PREF("accept-encoding.dictionary"))) {
     nsAutoCString acceptEncodings;
     rv = Preferences::GetCString(HTTP_PREF("accept-encoding.secure"),
                                  acceptEncodings);
     if (NS_SUCCEEDED(rv)) {
       rv = SetAcceptEncodings(acceptEncodings.get(), true, false);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
-  }
 
-  if (PREF_CHANGED(HTTP_PREF("accept-encoding.dictionary"))) {
-    nsAutoCString acceptDictionaryEncodings;
-    rv = Preferences::GetCString(HTTP_PREF("accept-encoding.dictionary"),
-                                 acceptDictionaryEncodings);
-    if (NS_SUCCEEDED(rv)) {
-      rv = SetAcceptEncodings(acceptDictionaryEncodings.get(), true, true);
+      // Since dictionary encodings are dependent on both accept-encoding.secure
+      // and accept-encoding.dictionary, update both if either changes (which is
+      // quite rare, so there's no real perf hit)
+      nsAutoCString acceptDictionaryEncodings;
+      rv = Preferences::GetCString(HTTP_PREF("accept-encoding.dictionary"),
+                                   acceptDictionaryEncodings);
+      if (NS_SUCCEEDED(rv) && !acceptDictionaryEncodings.IsEmpty()) {
+        acceptEncodings.Append(", "_ns);
+        acceptEncodings.Append(acceptDictionaryEncodings);
+        rv = SetAcceptEncodings(acceptEncodings.get(), true, true);
+      }
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
