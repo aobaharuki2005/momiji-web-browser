@@ -768,11 +768,19 @@ FxAccountsWebChannelHelpers.prototype = {
    */
   isPrivateBrowsingMode(sendingContext) {
     if (!sendingContext) {
-      log.error("Unable to check for private browsing mode, assuming true");
+      log.error(
+        "Unable to check for private browsing mode (no sending context), assuming true"
+      );
       return true;
     }
 
     let browser = sendingContext.browsingContext.top.embedderElement;
+    if (!browser) {
+      log.error(
+        "Unable to check for private browsing mode (no browser), assuming true"
+      );
+      return true;
+    }
     const isPrivateBrowsing =
       this._privateBrowsingUtils.isBrowserPrivate(browser);
     return isPrivateBrowsing;
