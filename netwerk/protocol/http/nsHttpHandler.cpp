@@ -694,6 +694,8 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
                 return rv;
               }
               if (!aDict->GetId().IsEmpty()) {
+                LOG_DICTIONARIES(("Setting Dictionary-Id: %s",
+                                  PromiseFlatCString(aDict->GetId()).get()));
                 rv = aRequest->SetHeader(
                     nsHttp::Dictionary_Id, aDict->GetId(), false,
                     nsHttpHeaderArray::eVarietyRequestOverride);
@@ -701,8 +703,6 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
                   (aCallback)(nullptr);
                   return rv;
                 }
-                LOG_DICTIONARIES(
-                    ("Setting Dictionary-Id: %s", aDict->GetId().get()));
               }
               // Need to retain access to the dictionary until the request
               // completes. Note that this includes if the dictionary we offered

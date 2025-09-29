@@ -847,14 +847,14 @@ NullHttpChannel::GetRenderBlocking(bool* aRenderBlocking) {
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetDictionary(
+NullHttpChannel::GetDecompressDictionary(
     mozilla::net::DictionaryCacheEntry** aDictionary) {
   *aDictionary = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetDictionary(
+NullHttpChannel::SetDecompressDictionary(
     mozilla::net::DictionaryCacheEntry* aDictionary) {
   return NS_OK;
 }
