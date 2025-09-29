@@ -174,7 +174,6 @@ void AbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
   const bool cbWidthChanged = aFlags.contains(AbsPosReflowFlag::CBWidthChanged);
   const bool cbHeightChanged =
       aFlags.contains(AbsPosReflowFlag::CBHeightChanged);
-  const bool isGrid = aFlags.contains(AbsPosReflowFlag::IsGridContainerCB);
   nsOverflowContinuationTracker tracker(aDelegatingFrame, true);
   for (nsIFrame* kidFrame : mAbsoluteFrames) {
     AnchorPosReferenceData* anchorPosReferenceData = nullptr;
@@ -189,35 +188,10 @@ void AbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
         reflowAll || kidFrame->IsSubtreeDirty() ||
         FrameDependsOnContainer(kidFrame, cbWidthChanged, cbHeightChanged,
                                 anchorPosReferenceData);
-
     if (kidFrame->IsSubtreeDirty()) {
       MaybeMarkAncestorsAsHavingDescendantDependentOnItsStaticPos(
           kidFrame, aDelegatingFrame);
     }
-
-    const nsRect usedCbForKid = [&] {
-      if (isGrid) {
-        return nsGridContainerFrame::GridItemCB(kidFrame);
-      }
-
-      if (!kidFrame->StylePosition()->mPositionArea.IsNone()) {
-        return AnchorPositioningUtils::
-            AdjustAbsoluteContainingBlockRectForPositionArea(
-                kidFrame, aDelegatingFrame, aContainingBlock,
-                anchorPosReferenceData);
-      }
-
-      if (ViewportFrame* viewport = do_QueryFrame(aDelegatingFrame)) {
-        if (!IsSnapshotContainingBlock(kidFrame)) {
-          return viewport->GetContainingBlockAdjustedForScrollbars(
-              aReflowInput);
-        }
-        return dom::ViewTransition::SnapshotContainingBlockRect(
-            viewport->PresContext());
-      }
-      return aContainingBlock;
-    }();
-
     const nscoord availBSize = aReflowInput.AvailableBSize();
     const WritingMode containerWM = aReflowInput.GetWritingMode();
     if (!kidNeedsReflow && availBSize != NS_UNCONSTRAINEDSIZE) {
@@ -233,13 +207,13 @@ void AbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
         kidNeedsReflow = true;
       } else {
         nscoord kidBEnd =
-            kidFrame->GetLogicalRect(usedCbForKid.Size()).BEnd(kidWM);
+            kidFrame->GetLogicalRect(aContainingBlock.Size()).BEnd(kidWM);
         nscoord kidOverflowBEnd =
             LogicalRect(containerWM,
                         // Use ...RelativeToSelf to ignore transforms
                         kidFrame->ScrollableOverflowRectRelativeToSelf() +
                             kidFrame->GetPosition(),
-                        usedCbForKid.Size())
+                        aContainingBlock.Size())
                 .BEnd(containerWM);
         NS_ASSERTION(kidOverflowBEnd >= kidBEnd,
                      "overflow area should be at least as large as frame rect");
@@ -253,7 +227,7 @@ void AbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
       // Reflow the frame
       nsReflowStatus kidStatus;
       ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowInput,
-                          usedCbForKid, aFlags, kidFrame, kidStatus,
+                          aContainingBlock, aFlags, kidFrame, kidStatus,
                           aOverflowAreas, anchorPosReferenceData);
       MOZ_ASSERT(!kidStatus.IsInlineBreakBefore(),
                  "ShouldAvoidBreakInside should prevent this from happening");
@@ -870,7 +844,7 @@ void AbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
 
 void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     nsIFrame* aDelegatingFrame, nsPresContext* aPresContext,
-    const ReflowInput& aReflowInput, const nsRect& aContainingBlock,
+    const ReflowInput& aReflowInput, const nsRect& aOriginalContainingBlockRect,
     AbsPosReflowFlags aFlags, nsIFrame* aKidFrame, nsReflowStatus& aStatus,
     OverflowAreas* aOverflowAreas,
     AnchorPosReferenceData* aAnchorPosReferenceData) {
@@ -896,8 +870,34 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
   AutoNoisyIndenter indent(nsBlockFrame::gNoisy);
 #endif  // DEBUG
 
+  const bool isGrid = aFlags.contains(AbsPosReflowFlag::IsGridContainerCB);
+  const auto* stylePos = aKidFrame->StylePosition();
+  const nsRect usedCb = [&] {
+    if (isGrid) {
+      // TODO(emilio): how does position-area interact with grid?
+      return nsGridContainerFrame::GridItemCB(aKidFrame);
+    }
+
+    if (!stylePos->mPositionArea.IsNone()) {
+      return AnchorPositioningUtils::
+          AdjustAbsoluteContainingBlockRectForPositionArea(
+              aKidFrame, aDelegatingFrame, aOriginalContainingBlockRect,
+              aAnchorPosReferenceData);
+    }
+
+    if (ViewportFrame* viewport = do_QueryFrame(aDelegatingFrame)) {
+      if (!IsSnapshotContainingBlock(aKidFrame)) {
+        return viewport->GetContainingBlockAdjustedForScrollbars(
+            aReflowInput);
+      }
+      return dom::ViewTransition::SnapshotContainingBlockRect(
+          viewport->PresContext());
+    }
+    return aOriginalContainingBlockRect;
+  }();
+
   WritingMode wm = aKidFrame->GetWritingMode();
-  LogicalSize logicalCBSize(wm, aContainingBlock.Size());
+  LogicalSize logicalCBSize(wm, usedCb.Size());
   nscoord availISize = logicalCBSize.ISize(wm);
 
   ReflowInput::InitFlags initFlags;
@@ -930,7 +930,7 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       // Don't split things below the fold. (Ideally we shouldn't *have*
       // anything totally below the fold, but we can't position frames
       // across next-in-flow breaks yet.
-      (aKidFrame->GetLogicalRect(aContainingBlock.Size()).BStart(wm) <=
+      (aKidFrame->GetLogicalRect(usedCb.Size()).BStart(wm) <=
        aReflowInput.AvailableBSize());
 
   // Get the border values
@@ -1037,7 +1037,7 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
             ->GetAnchorResolvedInset(LogicalSide::BEnd, outerWM,
                                      anchorResolutionParams)
             ->IsAuto();
-    const LogicalSize logicalCBSizeOuterWM(outerWM, aContainingBlock.Size());
+    const LogicalSize logicalCBSizeOuterWM(outerWM, usedCb.Size());
     const LogicalSize kidMarginBox{
         outerWM, margin.IStartEnd(outerWM) + kidSize.ISize(outerWM),
         margin.BStartEnd(outerWM) + kidSize.BSize(outerWM)};
@@ -1087,10 +1087,8 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
         outerWM, logicalCBSize.GetPhysicalSize(wm) +
                      border.Size(outerWM).GetPhysicalSize(outerWM));
 
-    // Offset the frame rect by the given origin of the absolute containing
-    // block.
-    r.x += aContainingBlock.x;
-    r.y += aContainingBlock.y;
+    // Offset the frame rect by the given origin of the absolute CB.
+    r += usedCb.TopLeft();
 
     aKidFrame->SetRect(r);
 
@@ -1098,8 +1096,8 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     if (view) {
       // Size and position the view and set its opacity, visibility, content
       // transparency, and clip
-      nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
-                                                 kidDesiredSize.InkOverflow());
+      nsContainerFrame::SyncFrameViewAfterReflow(
+          aPresContext, aKidFrame, view, kidDesiredSize.InkOverflow());
     } else {
       nsContainerFrame::PositionChildViews(aKidFrame);
     }
