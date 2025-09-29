@@ -232,7 +232,7 @@ AssemblerLOONG64::DoubleCondition AssemblerLOONG64::InvertCondition(
   }
 }
 
-AssemblerLOONG64::Condition AssemblerLOONG64::SwapCmdOperandsCondition(
+AssemblerLOONG64::Condition AssemblerLOONG64::InvertCmpCondition(
     Condition cond) {
   switch (cond) {
     case Equal:
@@ -243,9 +243,9 @@ AssemblerLOONG64::Condition AssemblerLOONG64::SwapCmdOperandsCondition(
     case LessThanOrEqual:
       return GreaterThanOrEqual;
     case GreaterThan:
-      return LessThan;
-    case GreaterThanOrEqual:
       return LessThanOrEqual;
+    case GreaterThanOrEqual:
+      return LessThan;
     case Above:
       return Below;
     case AboveOrEqual:
