@@ -28,9 +28,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * They need to be decompressed before they can be loaded into the WASM memory.
  *
  * @param {Blob} blob
+ * @param {boolean} isMocked - Whether the TranslationsEngine payload is mocked for testing.
  * @returns {ArrayBuffer}
  */
-async function decompressFromZstdBlob(blob) {
+async function decompressFromZstdBlob(blob, isMocked) {
+  if (isMocked) {
+    return new ArrayBuffer();
+  }
+
   /* global DecompressionStream */
   const decompressionStream = new DecompressionStream("zstd");
   const buffer = await new Response(
@@ -191,12 +196,13 @@ export class TranslationsEngineChild extends JSProcessActorChild {
       }
     );
 
-    const wasmPromise = decompressFromZstdBlob(payload.bergamotWasmBlob).then(
-      buffer => {
-        payload.bergamotWasmArrayBuffer = buffer;
-        payload.bergamotWasmBlob = null;
-      }
-    );
+    const wasmPromise = decompressFromZstdBlob(
+      payload.bergamotWasmBlob,
+      payload.isMocked
+    ).then(buffer => {
+      payload.bergamotWasmArrayBuffer = buffer;
+      payload.bergamotWasmBlob = null;
+    });
 
     payload.translationModelPayloads = await Promise.all(
       payload.translationModelPayloads.map(async modelPayload => {
@@ -204,7 +210,10 @@ export class TranslationsEngineChild extends JSProcessActorChild {
 
         await Promise.all(
           entries.map(async entry => {
-            entry.buffer = await decompressFromZstdBlob(entry.blob);
+            entry.buffer = await decompressFromZstdBlob(
+              entry.blob,
+              payload.isMocked
+            );
             entry.blob = null;
           })
         );

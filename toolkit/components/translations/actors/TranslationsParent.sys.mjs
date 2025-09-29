@@ -1704,6 +1704,7 @@ export class TranslationsParent extends JSWindowActorParent {
 
     return {
       bergamotWasmBlob,
+      bergamotWasmArrayBuffer: null,
       translationModelPayloads,
       isMocked: TranslationsParent.#isTranslationsEngineMocked,
     };

@@ -1250,7 +1250,7 @@ async function createFileSystemRemoteSettings(languagePairs) {
 
   const download = async record => {
     const recordPath = normalizePathForOS(
-      `${artifactDirectory}/${record.name}`
+      `${artifactDirectory}/${record.name}.zst`
     );
 
     if (!(await pathExists(recordPath))) {
@@ -1867,8 +1867,8 @@ function createRecordsForLanguagePair(fromLang, toLang, splitVocab = false) {
     records.push({
       id: crypto.randomUUID(),
       name,
-      fromLang,
-      toLang,
+      sourceLanguage: fromLang,
+      targetLanguage: toLang,
       fileType,
       version: TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION_MAX + ".0",
       last_modified: Date.now(),

@@ -3,37 +3,37 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 translations.inference:
-    description: The bergamot-translator WASM artifact (version 3.0)
+    description: The bergamot-translator WASM artifact (version 4.0)
     fetch:
-        artifact-name: bergamot-translator
+        artifact-name: bergamot-translator.zst
         type: static-url
-        url: https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-wasm/05082c31-aee8-4249-9e01-c1865afd7520.wasm
-        sha256: a3a89d9ad0a4ed8f27bf3e403701b23f5709816f6376438503f2fa5b0182c2dc
-        size: 4960506
+        url: https://storage.googleapis.com/moz-fx-translations-data--303e-prod-translations-data/wasm/bergamot-translator.wasm.zst
+        sha256: 327fcfc7b7e9d95f6fa0844ebf899cfc05469872ef02d3aef5783182839a6255
+        size: 1211955
 
 translations.esen.lex:
-    description: The Spanish to English translation lex artifact (version 1.0)
+    description: The Spanish to English translation lex artifact (version 3.0)
     fetch:
-        artifact-name: lex.50.50.esen.s2t.bin
+        artifact-name: lex.50.50.esen.s2t.bin.zst
         type: static-url
-        url: https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-models/54c5d8e2-3900-4a31-860e-8a18f7d028b5.bin
-        sha256: f11a2c23ef85ab1fee1c412b908d69bc20d66fd59faa8f7da5a5f0347eddf969
-        size: 3860888
+        url: https://storage.googleapis.com/moz-fx-translations-data--303e-prod-translations-data/models/es-en/test_student_preemption_None/exported/lex.50.50.esen.s2t.bin.zst
+        sha256: 165bb333501d93cb7fe04b958c87f07863f301f4a0e41634906b1b4ad9c03214
+        size: 1531056
 
 translations.esen.model:
-    description: The Spanish to English translation model artifact (version 1.0)
+    description: The Spanish to English translation model artifact (version 3.0)
     fetch:
-        artifact-name: model.esen.intgemm.alphas.bin
+        artifact-name: model.esen.intgemm.alphas.bin.zst
         type: static-url
-        url: https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-models/9ee26e91-9b52-44ba-8d30-c0230dd587b2.bin
-        sha256: 4b6b7f451094aaa447d012658af158ffc708fc8842dde2f871a58404f5457fe0
-        size: 17140755
+        url: https://storage.googleapis.com/moz-fx-translations-data--303e-prod-translations-data/models/es-en/test_student_preemption_None/exported/model.esen.intgemm.alphas.bin.zst
+        sha256: fbd3e63219604b93c4d7d98bf045f6239b4a8175d540a9e6b2964acd25c469a7
+        size: 13112493
 
 translations.esen.vocab:
-    description: The Spanish to English translation vocab artifact (version 1.0)
+    description: The Spanish to English translation vocab artifact (version 3.0)
     fetch:
-        artifact-name: vocab.esen.spm
+        artifact-name: vocab.esen.spm.zst
         type: static-url
-        url: https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-models/cab5e093-7b55-47ea-a247-9747cc0109e3.spm
-        sha256: 909b1eea1face0d7f90a474fe29a8c0fef8d104b6e41e65616f864c964ba8845
-        size: 825463
+        url: https://storage.googleapis.com/moz-fx-translations-data--303e-prod-translations-data/models/es-en/test_student_preemption_None/exported/vocab.esen.spm.zst
+        sha256: aac1f48284c4ca74b7f21a9363049315eeb9074c1e6ed4bf8f58e6600315e35f
+        size: 351725
