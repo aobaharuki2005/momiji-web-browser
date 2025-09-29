@@ -1177,15 +1177,12 @@ history-clear-button =
 
 sitedata-header = Cookies and Site Data
 
-sitedata-label =
-     .aria-label = { sitedata-header }
-
 sitedata-total-size-calculating = Calculating site data and cache size…
 
 # Variables:
 #   $value (number) - Value of the unit (for example: 4.6, 500)
 #   $unit (string) - Name of the unit (for example: "bytes", "KB")
-sitedata-total-size2 = Your stored cookies, history, site data, and cache are currently using <strong>{ $value } { $unit }</strong> of disk space.
+sitedata-total-size = Your stored cookies, site data, and cache are currently using { $value } { $unit } of disk space.
 
 sitedata-learn-more = Learn more
 
@@ -1193,8 +1190,7 @@ sitedata-delete-on-close =
     .label = Delete cookies and site data when { -brand-short-name } is closed
     .accesskey = c
 
-sitedata-delete-on-close-private-browsing3 =
-    .message = Based on your history settings, { -brand-short-name } deletes cookies and site data from your session when you close the browser.
+sitedata-delete-on-close-private-browsing2 = Based on your history settings, { -brand-short-name } deletes cookies and site data from your session when you close the browser.
 
 sitedata-option-block-cross-site-trackers =
     .label = Cross-site trackers
@@ -1209,21 +1205,17 @@ sitedata-option-block-all-cross-site-cookies =
 sitedata-option-block-all =
     .label = All cookies (will cause websites to break)
 
-sitedata-clear2 =
-    .label = Clear browsing data
+sitedata-clear =
+    .label = Clear Data…
     .accesskey = l
 
-sitedata-settings2 =
-    .label = Manage browsing data
+sitedata-settings =
+    .label = Manage Data…
     .accesskey = M
 
 sitedata-cookies-exceptions =
     .label = Manage Exceptions…
-
-sitedata-cookies-exceptions2 =
-    .label = Manage exceptions
     .accesskey = x
-    .description = You can specify which websites are always or never allowed to use cookies and site data.
 
 ## Privacy Section - Cookie Banner Blocking
 

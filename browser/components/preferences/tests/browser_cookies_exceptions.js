@@ -537,14 +537,7 @@ async function runTest(test, getObservances) {
   let promiseSubDialogLoaded = promiseLoadSubDialog(
     "chrome://browser/content/preferences/dialogs/permissions.xhtml"
   );
-
-  let cookieExceptionsButton = doc.getElementById("cookieExceptions");
-  cookieExceptionsButton.scrollIntoView();
-  await EventUtils.synthesizeMouseAtCenter(
-    cookieExceptionsButton,
-    {},
-    doc.ownerGlobal
-  );
+  doc.getElementById("cookieExceptions").doCommand();
 
   let win = await promiseSubDialogLoaded;
 
