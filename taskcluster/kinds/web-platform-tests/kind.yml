@@ -415,7 +415,10 @@ tasks:
                 - --exclude-tag=canvas
                 - --exclude-tag=webcodecs
                 - --timeout-multiplier=5.0
-        worker-type: default
+        worker-type:
+            by-test-platform:
+                .*windows.*: win11-64-24h2-webgpu
+                default: default
 
     web-platform-tests-webgpu-long:
         description: "Web platform WebGPU test run (long tests)"
@@ -477,7 +480,10 @@ tasks:
                 - --skip-implementation-status=not-implementing
                 - --backlog
                 - --timeout-multiplier=5.0
-        worker-type: default
+        worker-type:
+            by-test-platform:
+                .*windows.*: win11-64-24h2-webgpu
+                default: default
 
     web-platform-tests-webgpu-backlog-long:
         description: "Web platform WebGPU test run (backlog, long tests)"
