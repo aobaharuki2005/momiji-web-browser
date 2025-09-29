@@ -63,6 +63,7 @@ import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarte
 import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.ext.isTallWindow
+import org.mozilla.fenix.ext.isWideWindow
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragmentDirections
@@ -316,15 +317,18 @@ class BrowserToolbarMiddleware(
     }
 
     private fun buildEndBrowserActions(): List<Action> {
-        val environment = environment ?: return emptyList()
-        val isExpandedAndTallScreen = environment.context.settings().shouldUseExpandedToolbar &&
-                environment.fragment.isTallWindow()
+        val isWideWindow = environment?.fragment?.isWideWindow() == true
+        val isTallWindow = environment?.fragment?.isTallWindow() == true
+        val tabStripEnabled = environment?.context?.settings()?.isTabStripEnabled == true
+        val shouldUseExpandedToolbar = environment?.context?.settings()?.shouldUseExpandedToolbar == true
 
         return listOf(
             HomeToolbarActionConfig(HomeToolbarAction.TabCounter) {
-                !environment.context.settings().isTabStripEnabled && !isExpandedAndTallScreen
+                !tabStripEnabled && (!shouldUseExpandedToolbar || !isTallWindow || isWideWindow)
             },
-            HomeToolbarActionConfig(HomeToolbarAction.Menu) { !isExpandedAndTallScreen },
+            HomeToolbarActionConfig(HomeToolbarAction.Menu) {
+                !shouldUseExpandedToolbar || !isTallWindow || isWideWindow
+            },
         ).filter { config ->
             config.isVisible()
         }.map { config ->
@@ -347,18 +351,33 @@ class BrowserToolbarMiddleware(
      * - Devices shorter than 480dp:
      *   - The navigation bar is hidden (even if the user enabled it).
      *   - The toolbar redesign customization option is also hidden.
+     *
+     *   Devices wider than 600dp:
+     *   - The navigation bar is hidden. (even If user enabled it)
+     *   - The toolbar redesign customization option is also hidden.
      */
     private fun buildNavigationActions(): List<Action> {
         val environment = environment ?: return emptyList()
-        val isExpandedAndTallScreen = environment.context.settings().shouldUseExpandedToolbar &&
-                environment.fragment.isTallWindow()
+        val isWideWindow = environment.fragment.isWideWindow()
+        val isTallWindow = environment.fragment.isTallWindow()
+        val shouldUseExpandedToolbar = environment.context.settings().shouldUseExpandedToolbar
 
         return listOf(
-            HomeToolbarActionConfig(HomeToolbarAction.FakeBookmark) { isExpandedAndTallScreen },
-            HomeToolbarActionConfig(HomeToolbarAction.FakeShare) { isExpandedAndTallScreen },
-            HomeToolbarActionConfig(HomeToolbarAction.NewTab) { isExpandedAndTallScreen },
-            HomeToolbarActionConfig(HomeToolbarAction.TabCounter) { isExpandedAndTallScreen },
-            HomeToolbarActionConfig(HomeToolbarAction.Menu) { isExpandedAndTallScreen },
+            HomeToolbarActionConfig(HomeToolbarAction.FakeBookmark) {
+                shouldUseExpandedToolbar && isTallWindow && !isWideWindow
+            },
+            HomeToolbarActionConfig(HomeToolbarAction.FakeShare) {
+                shouldUseExpandedToolbar && isTallWindow && !isWideWindow
+            },
+            HomeToolbarActionConfig(HomeToolbarAction.NewTab) {
+                shouldUseExpandedToolbar && isTallWindow && !isWideWindow
+            },
+            HomeToolbarActionConfig(HomeToolbarAction.TabCounter) {
+                shouldUseExpandedToolbar && isTallWindow && !isWideWindow
+            },
+            HomeToolbarActionConfig(HomeToolbarAction.Menu) {
+                shouldUseExpandedToolbar && isTallWindow && !isWideWindow
+            },
         ).filter { config ->
             config.isVisible()
         }.map { config ->

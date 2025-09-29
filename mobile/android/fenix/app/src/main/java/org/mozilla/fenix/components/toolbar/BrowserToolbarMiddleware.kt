@@ -737,26 +737,28 @@ class BrowserToolbarMiddleware(
     }
 
     private fun buildEndBrowserActions(): List<Action> {
-        val isWideOrShortScreen = environment?.fragment?.isWideWindow() == true ||
-                environment?.fragment?.isTallWindow() == false
-        val isExpandedAndTallScreen = settings.shouldUseExpandedToolbar &&
-                environment?.fragment?.isTallWindow() == true
+        val isWideWindow = environment?.fragment?.isWideWindow() == true
+        val isTallWindow = environment?.fragment?.isTallWindow() == true
+        val tabStripEnabled = settings.isTabStripEnabled
+        val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
 
-        return listOf(
+        val configs = listOf(
             ToolbarActionConfig(ToolbarAction.NewTab) {
-                !settings.isTabStripEnabled && !isExpandedAndTallScreen
+                !tabStripEnabled && (!shouldUseExpandedToolbar || !isTallWindow || isWideWindow)
             },
             ToolbarActionConfig(ToolbarAction.TabCounter) {
-                !settings.isTabStripEnabled && !isExpandedAndTallScreen
+                !tabStripEnabled && (!shouldUseExpandedToolbar || !isTallWindow || isWideWindow)
             },
             ToolbarActionConfig(ToolbarAction.Share) {
-                isWideOrShortScreen && settings.isTabStripEnabled && !isExpandedAndTallScreen
+                tabStripEnabled && isWideWindow && (!shouldUseExpandedToolbar || !isTallWindow)
             },
-            ToolbarActionConfig(ToolbarAction.Menu) { !isExpandedAndTallScreen },
-        ).filter { config ->
-            config.isVisible()
-        }.map { config ->
-            buildAction(config.action)
+            ToolbarActionConfig(ToolbarAction.Menu) {
+                !shouldUseExpandedToolbar || !isTallWindow || isWideWindow
+            },
+        )
+
+        return configs.mapNotNull { config ->
+            config.takeIf { it.isVisible() }?.let { buildAction(it.action) }
         }
     }
 
@@ -767,22 +769,28 @@ class BrowserToolbarMiddleware(
      * - Devices shorter than 480dp:
      *   - The navigation bar is hidden (even if the user enabled it).
      *   - The toolbar redesign customization option is also hidden.
+     *
+     *   Devices wider than 600dp:
+     *   - The navigation bar is hidden. (even If user enabled it)
+     *   - The toolbar redesign customization option is also hidden.
      */
     private fun buildNavigationActions(isBookmarked: Boolean): List<Action> {
-        val isExpandedAndTallScreen = settings.shouldUseExpandedToolbar &&
-                environment?.fragment?.isTallWindow() == true
+        val environment = environment ?: return emptyList()
+        val isWideWindow = environment.fragment.isWideWindow()
+        val isTallWindow = environment.fragment.isTallWindow()
+        val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
 
         return listOf(
             ToolbarActionConfig(ToolbarAction.Bookmark) {
-                isExpandedAndTallScreen && !isBookmarked
+                shouldUseExpandedToolbar && isTallWindow && !isWideWindow && !isBookmarked
             },
             ToolbarActionConfig(ToolbarAction.EditBookmark) {
-                isExpandedAndTallScreen && isBookmarked
+                shouldUseExpandedToolbar && isTallWindow && !isWideWindow && isBookmarked
             },
-            ToolbarActionConfig(ToolbarAction.Share) { isExpandedAndTallScreen },
-            ToolbarActionConfig(ToolbarAction.NewTab) { isExpandedAndTallScreen },
-            ToolbarActionConfig(ToolbarAction.TabCounter) { isExpandedAndTallScreen },
-            ToolbarActionConfig(ToolbarAction.Menu) { isExpandedAndTallScreen },
+            ToolbarActionConfig(ToolbarAction.Share) { shouldUseExpandedToolbar && isTallWindow && !isWideWindow },
+            ToolbarActionConfig(ToolbarAction.NewTab) { shouldUseExpandedToolbar && isTallWindow && !isWideWindow },
+            ToolbarActionConfig(ToolbarAction.TabCounter) { shouldUseExpandedToolbar && isTallWindow && !isWideWindow },
+            ToolbarActionConfig(ToolbarAction.Menu) { shouldUseExpandedToolbar && isTallWindow && !isWideWindow },
         ).filter { config ->
             config.isVisible()
         }.map { config ->

@@ -180,11 +180,7 @@ class BrowserToolbarMiddlewareTest {
     @get:Rule
     val gleanRule = FenixGleanTestRule(testContext)
 
-    private val appState: AppState = mockk(relaxed = true)
     private val searchEngine: SearchEngine = fakeSearchState().customSearchEngines.first()
-    private val appStore: AppStore = mockk(relaxed = true) {
-        every { state } returns appState
-    }
     private val browserScreenState: BrowserScreenState = mockk(relaxed = true)
     private val browserScreenStore: BrowserScreenStore = mockk(relaxed = true) {
         every { state } returns browserScreenState
@@ -218,12 +214,14 @@ class BrowserToolbarMiddlewareTest {
     private val trackingProtectionUseCases: TrackingProtectionUseCases = mockk()
     private val publicSuffixList = PublicSuffixList(testContext)
     private val bookmarksStorage: BookmarksStorage = mockk()
+    private lateinit var appStore: AppStore
     private lateinit var configuration: Configuration
     private lateinit var fragment: Fragment
     private lateinit var mockContext: Context
 
     @Before
     fun setup() {
+        appStore = spyk(AppStore())
         coEvery { bookmarksStorage.getBookmarksWithUrl(any()) } returns Result.success(listOf(mockk()))
         mockContext = mockk(relaxed = true) {
             every { settings() } returns settings
@@ -1544,6 +1542,11 @@ class BrowserToolbarMiddlewareTest {
     fun `GIVEN on a small width with tabstrip is enabled and not using the extended layout THEN don't show a share button as browser end action`() {
         every { settings.shouldUseExpandedToolbar } returns false
         every { settings.isTabStripEnabled } returns true
+        configuration = Configuration().apply {
+            screenHeightDp = 400
+            screenWidthDp = 500
+        }
+        every { mockContext.resources.configuration } returns configuration
         val browserScreenStore = buildBrowserScreenStore()
         val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
         val toolbarStore = buildStore(
@@ -1555,6 +1558,44 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(1, toolbarStore.state.displayState.browserActionsEnd.size)
         val toolbarButton = toolbarStore.state.displayState.browserActionsEnd[0]
         assertNotEquals(expectedShareButton(), toolbarButton)
+    }
+
+    @Test
+    fun `GIVEN expanded toolbar with tabstrip and tall window WHEN changing to short window THEN show menu`() = runTest {
+        every { settings.isTabStripEnabled } returns true
+        every { settings.shouldUseExpandedToolbar } returns true
+        configuration = Configuration().apply {
+            screenHeightDp = 500
+            screenWidthDp = 300
+        }
+        every { mockContext.resources.configuration } returns configuration
+        val browserScreenStore = buildBrowserScreenStore()
+        val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
+        val toolbarStore = buildStore(
+            middleware,
+            browsingModeManager = browsingModeManager,
+            navController = navController,
+        )
+        mainLooperRule.idle()
+        var navigationActions = toolbarStore.state.displayState.navigationActions
+        assertEquals(5, navigationActions.size)
+        var toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
+        assertEquals(0, toolbarBrowserActions.size)
+
+        configuration = Configuration().apply {
+            screenHeightDp = 300
+            screenWidthDp = 500
+        }
+        every { mockContext.resources.configuration } returns configuration
+        appStore.dispatch(AppAction.OrientationChange(Portrait)).joinBlocking()
+        mainLooperRule.idle()
+
+        navigationActions = toolbarStore.state.displayState.navigationActions
+        assertEquals(0, navigationActions.size)
+        toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
+        assertEquals(1, toolbarBrowserActions.size)
+        val menuButton = toolbarBrowserActions[0] as ActionButtonRes
+        assertEquals(expectedMenuButton(), menuButton)
     }
 
     @Test

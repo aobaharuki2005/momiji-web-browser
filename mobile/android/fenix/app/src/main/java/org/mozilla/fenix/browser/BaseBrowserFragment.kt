@@ -208,6 +208,7 @@ import org.mozilla.fenix.ext.getTopToolbarHeight
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.isTallWindow
 import org.mozilla.fenix.ext.isToolbarAtBottom
+import org.mozilla.fenix.ext.isWideWindow
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateWithBreadcrumb
 import org.mozilla.fenix.ext.pixelSizeFor
@@ -1379,7 +1380,8 @@ abstract class BaseBrowserFragment :
         FirefoxTheme {
             TabStrip(
                 // Show action buttons only if the navigation bar (which has the same buttons) is not showing.
-                showActionButtons = context?.settings()?.shouldUseExpandedToolbar != true || !isTallWindow(),
+                showActionButtons =
+                    context?.settings()?.shouldUseExpandedToolbar == false || !isTallWindow() || isWideWindow(),
                 onAddTabClick = {
                     if (activity.settings().enableHomepageAsNewTab) {
                         requireComponents.useCases.fenixBrowserUseCases.addNewHomepageTab(
