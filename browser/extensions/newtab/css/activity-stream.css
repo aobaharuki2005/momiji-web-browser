@@ -2929,6 +2929,12 @@ main section {
 .weatherCard:hover ~ .weatherSponsorText, .weatherCard:focus-within ~ .weatherSponsorText {
   visibility: visible;
 }
+.weatherCard:has(.staticWeatherInfo):hover {
+  box-shadow: none;
+}
+.weatherCard:has(.staticWeatherInfo):hover ~ .weatherSponsorText {
+  visibility: hidden;
+}
 .weatherCard:focus-within {
   overflow: visible;
 }
@@ -3076,6 +3082,18 @@ dialog::after {
 }
 .weatherInfoLink:focus-visible ~ .weatherButtonContextMenuWrapper::after {
   background-color: transparent;
+}
+
+.weatherInfoLink.staticWeatherInfo .weatherIcon {
+  filter: opacity(60%);
+}
+.weatherInfoLink.staticWeatherInfo .weatherText {
+  color: var(--text-color-disabled);
+}
+.weatherInfoLink.staticWeatherInfo:hover, .weatherInfoLink.staticWeatherInfo:active {
+  box-shadow: none;
+  cursor: default;
+  background-color: var(--newtab-weather-background-color);
 }
 
 .weatherButtonContextMenuWrapper {

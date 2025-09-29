@@ -242,6 +242,16 @@
     }
   }
 
+  &:has(.staticWeatherInfo) {
+    &:hover {
+      box-shadow: none;
+
+      ~ .weatherSponsorText {
+        visibility: hidden;
+      }
+    }
+  }
+
   &:focus-within {
     overflow: visible;
   }
@@ -413,6 +423,23 @@ dialog::after {
         background-color: transparent
       }
     }
+  }
+}
+
+.weatherInfoLink.staticWeatherInfo {
+  .weatherIcon {
+    filter: opacity(60%);
+  }
+
+  .weatherText {
+    color: var(--text-color-disabled)
+  }
+
+  &:hover,
+  &:active {
+    box-shadow: none;
+    cursor: default;
+    background-color: var(--newtab-weather-background-color);
   }
 }
 
