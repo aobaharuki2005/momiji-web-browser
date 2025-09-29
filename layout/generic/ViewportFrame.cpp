@@ -27,8 +27,6 @@
 
 using namespace mozilla;
 
-using AbsPosReflowFlags = nsAbsoluteContainingBlock::AbsPosReflowFlags;
-
 // ScrollContainerFrame can create two other wrap lists for scrollbars and such.
 static constexpr uint16_t kFirstTopLayerIndex = 2;
 enum class TopLayerIndex : uint16_t {
@@ -502,8 +500,10 @@ void ViewportFrame::Reflow(nsPresContext* aPresContext,
     // We will take them into account in nsAbsoluteContainingBlock::Reflow(),
     // for kid frames other than ::-moz-snapshot-containing-block.
     const nsRect cb(nsPoint(), reflowInput.ComputedPhysicalSize());
-    // XXX could be optimized
-    AbsPosReflowFlags flags = AbsPosReflowFlags::CBWidthAndHeightChanged;
+    // XXX: To optimize the performance, set the flags only when the CB width or
+    // height actually changes.
+    AbsPosReflowFlags flags{AbsPosReflowFlag::CBWidthChanged,
+                            AbsPosReflowFlag::CBHeightChanged};
     GetAbsoluteContainingBlock()->Reflow(this, aPresContext, reflowInput,
                                          aStatus, cb, flags,
                                          /* aOverflowAreas = */ nullptr);

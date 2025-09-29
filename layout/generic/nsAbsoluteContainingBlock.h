@@ -12,12 +12,21 @@
 #ifndef nsAbsoluteContainingBlock_h___
 #define nsAbsoluteContainingBlock_h___
 
-#include "mozilla/TypedEnumBits.h"
 #include "nsFrameList.h"
 #include "nsIFrame.h"
 
 class nsContainerFrame;
 class nsPresContext;
+
+namespace mozilla {
+enum class AbsPosReflowFlag : uint8_t {
+  ConstrainHeight,
+  CBWidthChanged,
+  CBHeightChanged,
+  IsGridContainerCB,
+};
+using AbsPosReflowFlags = EnumSet<AbsPosReflowFlag>;
+}  // namespace mozilla
 
 /**
  * This class contains the logic for being an absolute containing block.  This
@@ -65,14 +74,6 @@ class nsAbsoluteContainingBlock {
                     nsFrameList&& aFrameList);
   void RemoveFrame(mozilla::FrameDestroyContext&, mozilla::FrameChildListID,
                    nsIFrame*);
-
-  enum class AbsPosReflowFlags {
-    ConstrainHeight = 0x1,
-    CBWidthChanged = 0x2,
-    CBHeightChanged = 0x4,
-    CBWidthAndHeightChanged = CBWidthChanged | CBHeightChanged,
-    IsGridContainerCB = 0x8,
-  };
 
   /**
    * Called by the delegating frame after it has done its reflow first. This
@@ -175,8 +176,4 @@ class nsAbsoluteContainingBlock {
 #endif
 };
 
-namespace mozilla {
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(
-    nsAbsoluteContainingBlock::AbsPosReflowFlags)
-}
 #endif /* nsnsAbsoluteContainingBlock_h___ */
