@@ -1804,11 +1804,15 @@ export class BackupService extends EventTarget {
       AppConstants.MOZ_UPDATE_CHANNEL
     );
 
-    let supportLinkHref =
-      Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "recover-from-backup";
+    let supportURI = new URL(
+      "firefox-backup",
+      Services.urlFormatter.formatURLPref("app.support.baseURL")
+    );
+    supportURI.searchParams.set("utm_medium", "firefox-desktop");
+    supportURI.searchParams.set("utm_source", "html-backup");
+
     let supportLink = templateDOM.querySelector("#support-link");
-    supportLink.href = supportLinkHref;
+    supportLink.href = supportURI.href;
 
     // Now insert the logo as a dataURL, since we want the single-file backup
     // archive to be entirely self-contained.
