@@ -1330,7 +1330,7 @@ nsresult nsHttpChannel::Connect() {
   // Step 8.18 of HTTP-network-or-cache fetch
   // https://fetch.spec.whatwg.org/#http-network-or-cache-fetch
   nsAutoCString rangeVal;
-  if (NS_SUCCEEDED(GetRequestHeader("Range"_ns, rangeVal))) {
+  if (NS_SUCCEEDED(mRequestHead.GetHeader(nsHttp::Range, rangeVal))) {
     SetRequestHeader("Accept-Encoding"_ns, "identity"_ns, true);
   }
 
@@ -1953,6 +1953,15 @@ nsresult nsHttpChannel::SetupChannelForTransaction() {
         MOZ_ASSERT(NS_SUCCEEDED(rv));
       }
     }
+  } else {
+    // If we add a Range header, Accept-Encoding needs to be set to
+    // "identity" and any http additions to the headers aren't allowed to
+    // override that, so we don't try.  Section 4.5 step 8.19 and 8.20 of
+    // HTTP-network-or-cache fetch
+    // https://fetch.spec.whatwg.org/#http-network-or-cache-fetch
+    rv = mHttpHandler->AddEncodingHeaders(&mRequestHead,
+                                          mURI->SchemeIs("https"), mURI);
+    if (NS_FAILED(rv)) return rv;
   }
 
   // See bug #466080. Transfer LOAD_ANONYMOUS flag to socket-layer.
