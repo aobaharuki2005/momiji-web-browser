@@ -319,12 +319,6 @@ add_task(async function test_connect_udp() {
   let h3Port = Services.env.get("MOZHTTP3_PORT");
   info(`h3Port = ${h3Port}`);
 
-  let server = new NodeHTTPSServer();
-  await server.start(h3Port);
-  registerCleanupFunction(async () => {
-    await server.stop();
-  });
-
   Services.prefs.setCharPref(
     "network.http.http3.alt-svc-mapping-for-testing",
     `alt1.example.com;h3=:${h3Port}`
