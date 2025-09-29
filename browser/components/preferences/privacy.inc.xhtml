@@ -395,66 +395,9 @@
   <html:setting-group groupid="nonTechnicalPrivacy"/>
 </groupbox>
 
-<!-- Site Data -->
 <groupbox id="siteDataGroup" data-category="panePrivacy" hidden="true" aria-describedby="totalSiteDataSize">
   <label><html:h2 data-l10n-id="sitedata-header"/></label>
-
-  <hbox data-subcategory="sitedata" align="baseline">
-    <vbox flex="1">
-      <description class="description-with-side-element description-deemphasized" flex="1">
-        <html:span id="totalSiteDataSize"></html:span>
-        <html:a is="moz-support-link"
-                id="siteDataLearnMoreLink"
-                data-l10n-id="sitedata-learn-more"
-                support-page="storage-permissions"
-        />
-      </description>
-      <hbox flex="1" id="deleteOnCloseNote" class="info-box-container smaller-font-size">
-        <hbox class="info-icon-container">
-          <html:img class="info-icon"></html:img>
-        </hbox>
-        <description flex="1" data-l10n-id="sitedata-delete-on-close-private-browsing2" />
-      </hbox>
-      <hbox id="keepRow"
-            align="center">
-        <checkbox id="deleteOnClose"
-                  data-l10n-id="sitedata-delete-on-close"
-                  flex="1" />
-      </hbox>
-    </vbox>
-    <vbox align="end">
-      <button id="clearSiteDataButton"
-          is="highlightable-button"
-          class="accessory-button"
-          search-l10n-ids="clear-site-data-cookies-empty.label, clear-site-data-cache-empty.label"
-          data-l10n-id="sitedata-clear"/>
-      <button id="siteDataSettings"
-              is="highlightable-button"
-              class="accessory-button"
-              data-l10n-id="sitedata-settings"
-              search-l10n-ids="
-                site-data-settings-window.title,
-                site-data-column-host.label,
-                site-data-column-cookies.label,
-                site-data-column-storage.label,
-                site-data-settings-description,
-                site-data-remove-all.label,
-              "/>
-      <button id="cookieExceptions"
-              is="highlightable-button"
-              class="accessory-button"
-              data-l10n-id="sitedata-cookies-exceptions"
-              preference="pref.privacy.disable_button.cookie_exceptions"
-              search-l10n-ids="
-                permissions-address,
-                permissions-block.label,
-                permissions-allow.label,
-                permissions-remove.label,
-                permissions-remove-all.label,
-                permissions-exceptions-cookie-desc,
-              " />
-    </vbox>
-  </hbox>
+  <html:setting-group groupid="cookiesAndSiteData"/>
 </groupbox>
 
 <!-- Cookie Banner Handling -->
