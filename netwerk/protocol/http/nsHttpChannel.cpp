@@ -5935,7 +5935,9 @@ nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
   if (NS_FAILED(rv)) return rv;
 
   // If this is being marked as a dictionary, add it to the list
-  self->ParseDictionary(entry, responseHead);
+  if (StaticPrefs::network_http_dictionaries_enable() && self->IsHTTPS()) {
+    self->ParseDictionary(entry, responseHead);
+  }
 
   // Indicate we have successfully finished setting metadata on the cache entry.
   rv = entry->MetaDataReady();
