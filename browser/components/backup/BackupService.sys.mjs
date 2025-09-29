@@ -1185,7 +1185,7 @@ export class BackupService extends EventTarget {
     // If all else fails, this is the download link we'll put into the rendered
     // template.
     const ULTIMATE_FALLBACK_DOWNLOAD_URL =
-      "https://www.mozilla.org/firefox/download/thanks/?s=direct&utm_medium=firefox-desktop&utm_source=backup&utm_campaign=firefox-backup-2024&utm_content=control";
+      "https://www.firefox.com/?utm_medium=firefox-desktop&utm_source=html-backup";
     const FALLBACK_DOWNLOAD_URL = Services.prefs.getStringPref(
       `browser.backup.template.fallback-download.${updateChannel}`,
       ULTIMATE_FALLBACK_DOWNLOAD_URL
