@@ -570,6 +570,8 @@ add_task(async function test_addonsWatch_NotInterestingChange() {
   const THEME_ID = "tel-theme@tests.mozilla.org";
   // "dictionary" type should be in addon.activeAddons.
   const DICT_ID = "tel-dict@tests.mozilla.org";
+  // "locale" type should be in addon.activeAddons.
+  const LOCALE_ID = "tel-langpack@tests.mozilla.org";
 
   let receivedNotification = false;
   let deferred = Promise.withResolvers();
@@ -599,6 +601,7 @@ add_task(async function test_addonsWatch_NotInterestingChange() {
     type: "plugin",
   });
 
+  // "dictionary" type.
   fakeProvider.addAddon({
     id: DICT_ID,
     name: "Fake dictionary",
@@ -614,12 +617,12 @@ add_task(async function test_addonsWatch_NotInterestingChange() {
     type: "theme",
   });
 
-  // "dictionary" type.
+  // "langpack" type.
   fakeProvider.addAddon({
-    id: THEME_ID,
-    name: "Fake theme",
+    id: LOCALE_ID,
+    name: "Fake langpack",
     version: "1",
-    type: "theme",
+    type: "locale",
   });
 
   await deferred.promise;
@@ -638,6 +641,11 @@ add_task(async function test_addonsWatch_NotInterestingChange() {
     true,
     "Dictionaries should appear in active addons."
   );
+  Assert.equal(
+    !!Glean.addons.activeAddons.testGetValue()?.find(it => it.id === LOCALE_ID),
+    true,
+    "Langpacks should appear in active addons."
+  );
 
   AddonManagerPrivate.unregisterProvider(fakeProvider);
 
@@ -645,30 +653,6 @@ add_task(async function test_addonsWatch_NotInterestingChange() {
 });
 
 add_task(async function test_addons() {
-  const ADDON_ID = "tel-restartless-webext@tests.mozilla.org";
-  const ADDON_INSTALL_DATE = truncateToDays(Date.now());
-  const EXPECTED_ADDON_DATA = {
-    blocklisted: false,
-    description: "A restartless addon which gets enabled without a reboot.",
-    name: "XPI Telemetry Restartless Test",
-    userDisabled: false,
-    appDisabled: false,
-    version: "1.0",
-    scope: AddonManager.SCOPE_PROFILE,
-    type: "extension",
-    foreignInstall: false,
-    hasBinaryComponents: false,
-    installDay: ADDON_INSTALL_DATE,
-    updateDay: ADDON_INSTALL_DATE,
-    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
-    isSystem: false,
-    isWebExtension: true,
-    multiprocessCompatible: true,
-    quarantineIgnoredByUser: false,
-    // quarantineIgnoredByApp expected to be true because
-    // the test addon is signed as privileged (see signedState).
-    quarantineIgnoredByApp: true,
-  };
   const SYSTEM_ADDON_ID = "tel-system-xpi@tests.mozilla.org";
   const EXPECTED_SYSTEM_ADDON_DATA = {
     blocklisted: false,
@@ -728,18 +712,6 @@ add_task(async function test_addons() {
     });
 
   // Install an add-on so we have some data.
-  // TODO: do we need both this and the other webextension?
-  let testExtension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
-    manifest: {
-      name: EXPECTED_ADDON_DATA.name,
-      description: EXPECTED_ADDON_DATA.description,
-      version: EXPECTED_ADDON_DATA.version,
-      browser_specific_settings: { gecko: { id: ADDON_ID } },
-    },
-  });
-  await testExtension.startup();
-
   let webextension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
@@ -763,20 +735,6 @@ add_task(async function test_addons() {
     expectBrokenAddons: false,
     partialAddonsRecords: false,
   });
-
-  // Check addon data.
-  Assert.ok(
-    ADDON_ID in data.addons.activeAddons,
-    "We must have one active addon."
-  );
-  let targetAddon = data.addons.activeAddons[ADDON_ID];
-  for (let f in EXPECTED_ADDON_DATA) {
-    Assert.equal(
-      targetAddon[f],
-      EXPECTED_ADDON_DATA[f],
-      f + " must have the correct value."
-    );
-  }
 
   // Check system add-on data.
   Assert.ok(
@@ -807,7 +765,6 @@ add_task(async function test_addons() {
   }
 
   await webextension.unload();
-  await testExtension.unload();
 });
 
 add_task(async function test_signedAddon() {
