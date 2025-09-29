@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+  <!-- Short description for the locationInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_locationInfo_short_description">lokasyon</string>
   <!-- The version on of add-on. -->
   <string name="mozac_feature_addons_version">Bersyon</string>
+  <!-- The author of an add-on. -->
+  <string name="mozac_feature_addons_author">Tagsulat</string>
   <!-- The developer website (Homepage) of the add-on. -->
   <string name="mozac_feature_addons_home_page">Homepage</string>
+  <!-- The rating of the add-on. -->
+  <string name="mozac_feature_addons_rating">Grado</string>
   <!-- The settings of the add-on. -->
   <string name="mozac_feature_addons_settings">Mga setting</string>
   <!-- Indicates the add-on is enabled. -->
@@ -14,6 +20,8 @@
   <string name="mozac_feature_addons_details">Detalyado</string>
   <!-- This is a button to remove (i.e. uninstall) an add-on. -->
   <string name="mozac_feature_addons_remove">Ginkuha</string>
+  <!-- This is a button to report an add-on. -->
+  <string name="mozac_feature_addons_report">Ibalita</string>
   <!-- This is a button to add (install) an add-on . -->
   <string name="mozac_feature_addons_permissions_dialog_add">Idugang</string>
   <!-- This is a button to cancel the add-on installation . -->
