@@ -651,7 +651,7 @@ bool HttpChannelParent::DoAsyncOpen(
 
   MOZ_ASSERT(!mBgParent);
   MOZ_ASSERT(mPromise.IsEmpty());
-  // Wait for HttpBackgroundChannel to continue the async open procedure.
+  // Wait for HttpBackgrounChannel to continue the async open procedure.
   ++mAsyncOpenBarrier;
   RefPtr<HttpChannelParent> self = this;
   WaitForBgParent(mChannel->ChannelId())

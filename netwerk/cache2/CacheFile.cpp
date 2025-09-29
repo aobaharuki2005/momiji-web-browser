@@ -290,14 +290,6 @@ nsresult CacheFile::Init(const nsACString& aKey, bool aCreateNew,
   return NS_OK;
 }
 
-void CacheFile::SetDictionary(DictionaryCacheEntry* aDict) {
-  CacheFileAutoLock lock(this);
-  mDict = aDict;
-  if (OutputStreamExists(false)) {
-    mOutput->SetDictionary(aDict);
-  }
-}
-
 void CacheFile::Key(nsACString& aKey) {
   CacheFileAutoLock lock(this);
   aKey = mKey;
@@ -490,11 +482,6 @@ nsresult CacheFile::OnFileOpened(CacheFileHandle* aHandle, nsresult aResult) {
          this, static_cast<uint32_t>(aResult), aHandle));
 
     mOpeningFile = false;
-
-    if (mDict && OutputStreamExists(false)) {
-      mOutput->SetDictionary(mDict);
-      // leave mDict set for hash accumulation
-    }
 
     autoDoom.mListener.swap(mDoomAfterOpenListener);
 
@@ -910,10 +897,6 @@ nsresult CacheFile::OpenOutputStream(CacheOutputCloseListener* aCloseListener,
       ("CacheFile::OpenOutputStream() - Creating new output stream %p "
        "[this=%p]",
        mOutput, this));
-
-  if (mDict) {
-    mOutput->SetDictionary(mDict);
-  }
 
   mDataAccessed = true;
   *_retval = do_AddRef(mOutput).take();
@@ -2122,13 +2105,7 @@ void CacheFile::RemoveOutput(CacheFileOutputStream* aOutput, nsresult aStatus) {
     return;
   }
 
-  // This is to finalize the Hash calculation
-  if (mDict) {
-    mDict->FinishHash();
-    mDict = nullptr;
-  }
-
-  mOutput = nullptr;  // XXX should this be after NotifyCloseListener?
+  mOutput = nullptr;
 
   // Cancel all queued chunk and update listeners that cannot be satisfied
   NotifyListenersAboutOutputRemoval();

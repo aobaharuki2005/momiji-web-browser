@@ -20,7 +20,6 @@
 #include "nsString.h"
 #include "nsTHashtable.h"
 #include "prio.h"
-#include "Dictionary.h"
 
 // #define DEBUG_HANDLES 1
 #if !defined(MOZ_WIDGET_ANDROID)
@@ -481,9 +480,6 @@ class CacheFileIOManager final : public nsITimerCallback, public nsINamed {
   size_t SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const;
 
   static StaticRefPtr<CacheFileIOManager> gInstance;
-
-  // Pointer to DictionaryCache singleton
-  RefPtr<DictionaryCache> mDictionaryCache;
 
   TimeStamp mStartTime;
   // Set true on the IO thread, CLOSE level as part of the internal shutdown
