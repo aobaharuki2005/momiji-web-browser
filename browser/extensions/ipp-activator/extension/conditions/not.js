@@ -2,8 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import ConditionBase from "./base.mjs";
+/* global ConditionBase */
 
+/**
+ * NOT condition
+ */
 class ConditionNot extends ConditionBase {
   #condition;
 
@@ -22,9 +25,8 @@ class ConditionNot extends ConditionBase {
     if (!this.#condition) {
       return true;
     }
-
     return !this.#condition.check();
   }
 }
 
-export default ConditionNot;
+globalThis.ConditionNot = ConditionNot;

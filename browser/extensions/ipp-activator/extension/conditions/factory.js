@@ -2,23 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import ConditionAnd from "./and.mjs";
-import ConditionOr from "./or.mjs";
-import ConditionTest from "./test.mjs";
-import ConditionCookie from "./cookie.mjs";
-import ConditionNot from "./not.mjs";
-import ConditionUrl from "./url.mjs";
-
 const CONDITIONS_MAP = {
-  and: ConditionAnd,
-  test: ConditionTest,
-  or: ConditionOr,
-  cookie: ConditionCookie,
-  not: ConditionNot,
-  url: ConditionUrl,
+  and: globalThis.ConditionAnd,
+  test: globalThis.ConditionTest,
+  or: globalThis.ConditionOr,
+  cookie: globalThis.ConditionCookie,
+  not: globalThis.ConditionNot,
+  url: globalThis.ConditionUrl,
 };
 
-export class ConditionFactory {
+/**
+ * The condition factory creates a set of conditions based on the breakages
+ */
+class ConditionFactory {
   #storage = {};
   #context = {};
 
@@ -32,11 +28,8 @@ export class ConditionFactory {
     }
 
     const factory = new ConditionFactory(context);
-
     const condition = await factory.create(conditionDesc);
-
     await condition.init();
-
     return condition.check();
   }
 
@@ -60,3 +53,5 @@ export class ConditionFactory {
     return this.#context;
   }
 }
+
+globalThis.ConditionFactory = ConditionFactory;

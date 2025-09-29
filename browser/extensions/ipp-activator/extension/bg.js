@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global browser */
+/* global browser, ConditionFactory */
 
-import { ConditionFactory } from "./conditions/factory.mjs";
-
+/**
+ * The main class for the IPP activator add-on.
+ */
 class IPPAddonActivator {
   #initialized = false;
 
