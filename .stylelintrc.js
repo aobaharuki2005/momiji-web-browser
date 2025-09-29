@@ -406,6 +406,10 @@ module.exports = {
         "toolkit/content/widgets/datetimebox.css",
         "toolkit/content/widgets/marquee.css",
         "toolkit/themes/shared/media/textrecognition.css",
+        // The contents of backup/content/archive.css are injected as inline CSS
+        // into the HTML backup archive files that exist on a user's file system
+        // and can be opened in any browser.
+        "browser/components/backup/content/archive.css",
       ],
       rules: {
         "stylelint-plugin-mozilla/use-border-radius-tokens": false,

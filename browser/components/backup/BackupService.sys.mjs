@@ -1824,26 +1824,26 @@ export class BackupService extends EventTarget {
     let logoNode = templateDOM.querySelector("#logo");
     logoNode.src = logoDataURL;
 
-    let encStateNode = templateDOM.querySelector("#encryption-state");
+    let encStateNode = templateDOM.querySelector("#encryption-state-value");
     lazy.gDOMLocalization.setAttributes(
       encStateNode,
       isEncrypted
-        ? "backup-file-encryption-state-encrypted"
-        : "backup-file-encryption-state-not-encrypted"
+        ? "backup-file-encryption-state-value-encrypted"
+        : "backup-file-encryption-state-value-not-encrypted"
     );
 
-    let lastBackedUpNode = templateDOM.querySelector("#last-backed-up");
-    lazy.gDOMLocalization.setArgs(lastBackedUpNode, {
+    let createdDateNode = templateDOM.querySelector("#creation-date-value");
+    lazy.gDOMLocalization.setArgs(createdDateNode, {
       // It's very unlikely that backupMetadata.date isn't a valid Date string,
       // but if it _is_, then Fluent will cause us to crash in debug builds.
       // We fallback to the current date if all else fails.
       date: new Date(backupMetadata.date).getTime() || new Date().getTime(),
     });
 
-    let creationDeviceNode = templateDOM.querySelector("#creation-device");
-    lazy.gDOMLocalization.setArgs(creationDeviceNode, {
-      machineName: backupMetadata.machineName,
-    });
+    let creationDeviceNode = templateDOM.querySelector(
+      "#creation-device-value"
+    );
+    creationDeviceNode.textContent = backupMetadata.machineName;
 
     try {
       await lazy.gDOMLocalization.translateFragment(
