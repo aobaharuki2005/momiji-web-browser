@@ -421,8 +421,15 @@ class nsHttpChannel final : public HttpBaseChannel,
                        bool aModified);
   [[nodiscard]] nsresult AddCacheEntryHeaders(nsICacheEntry* entry,
                                               bool aModified);
+  [[nodiscard]] nsresult ProcessVaryCacheEntryHeaders(nsICacheEntry* entry,
+                                                      const nsHttpAtom* aAtom);
+  [[nodiscard]] nsresult ModifiedCacheEntryHeaders(nsICacheEntry* entry,
+                                                   const nsHttpAtom& aAtom);
   [[nodiscard]] nsresult FinalizeCacheEntry();
   [[nodiscard]] nsresult InstallCacheListener(int64_t offset = 0);
+  [[nodiscard]] nsresult DoInstallCacheListener(bool aIsDictionaryCompressed,
+                                                nsACString* aDictionary,
+                                                int64_t offset = 0);
   void MaybeInvalidateCacheEntryForSubsequentGet();
   void AsyncOnExamineCachedResponse();
 

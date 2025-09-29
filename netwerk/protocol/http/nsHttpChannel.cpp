@@ -3461,6 +3461,7 @@ void nsHttpChannel::UpdateCacheDisposition(bool aSuccessfulReval,
   ReportHttpResponseVersion(mResponseHead->Version());
 }
 
+// Only used for redirects (3XX responses)
 nsresult nsHttpChannel::ContinueProcessResponse4(nsresult rv) {
   bool doNotRender = DoNotRender3xxBody(rv);
 
@@ -3546,20 +3547,48 @@ nsresult nsHttpChannel::ContinueProcessNormal(nsresult rv) {
     if (NS_FAILED(rv)) CloseCacheEntry(true);
   }
 
-  // We need to do this before CallonStartRequest, since this can modify
-  // the Content-Encoding to remove dcb/dcz (and perhaps others), and
-  // CallOnStartRequest() sends this to the content process.
+  // We may need to install the cache listener before CallonStartRequest,
+  // since InstallCacheListener can modify the Content-Encoding to remove
+  // dcb/dcz (and perhaps others), and CallOnStartRequest() sends the
+  // Content-Encoding to the content process.  If this doesn't install a
+  // listener (because this isn't a dictionary or dictionary-compressed),
+  // call it after CallOnStartRequest so that we save the compressed data
+  // in the cache, and run the decompressor in the content process.
+  bool isDictionaryCompressed = false;
+  nsAutoCString contentEncoding;
+  Unused << mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
+  // Note: doesn't handle dcb, gzip or gzip, dcb (etc)
+  if (contentEncoding.Equals("dcb") || contentEncoding.Equals("dcz")) {
+    isDictionaryCompressed = true;
+  }
 
-  // Install cache listener if we still have a cache entry open
   if (mCacheEntry && !LoadCacheEntryIsReadOnly()) {
-    rv = InstallCacheListener();
-    if (NS_FAILED(rv)) return rv;
+    // XXX We may want to consider recompressing any dcb/dcz files to save space
+    // and improve hitrate.  Downside is CPU use, complexity and perhaps delay,
+    // maybe.
+    nsAutoCString dictionary;
+    if (StaticPrefs::network_http_dictionaries_enable() && IsHTTPS()) {
+      Unused << mResponseHead->GetHeader(nsHttp::Use_As_Dictionary, dictionary);
+      if (!dictionary.IsEmpty()) {
+        if (!ParseDictionary(mCacheEntry, mResponseHead.get(), true)) {
+          LOG_DICTIONARIES(("Failed to parse use-as-dictionary"));
+        } else {
+          MOZ_ASSERT(mDictSaving);
+
+          // We need to record the hash as we save it
+          mCacheEntry->SetDictionary(mDictSaving);
+        }
+      }
+    }
+
+    if (isDictionaryCompressed || mDictSaving) {
+      LOG(("Decompressing before saving into cache [channel=%p]", this));
+      rv = DoInstallCacheListener(isDictionaryCompressed, &dictionary, 0);
+    }
   } else {
-    // We may still need to decompress in the parent if it's dcb or dcz
-    nsAutoCString contentEncoding;
-    Unused << mResponseHead->GetHeader(nsHttp::Content_Encoding,
-                                       contentEncoding);
-    if (contentEncoding.Equals("dcb") || contentEncoding.Equals("dcz")) {
+    if (isDictionaryCompressed) {
+      // We still need to decompress in the parent if it's dcb or dcz even if
+      // not saving to the cache
       LOG_DICTIONARIES(
           ("Removing Content-Encoding %s for %p", contentEncoding.get(), this));
       nsCOMPtr<nsIStreamListener> listener;
@@ -3581,7 +3610,7 @@ nsresult nsHttpChannel::ContinueProcessNormal(nsresult rv) {
         LOG_DICTIONARIES(("Didn't install decompressor without cache tee"));
       }
     }
-  }
+  }  // else we'll call InstallCacheListener after CallOnStartRequest
 
   // Check that the server sent us what we were asking for
   if (LoadResuming()) {
@@ -3624,6 +3653,15 @@ nsresult nsHttpChannel::ContinueProcessNormal(nsresult rv) {
   rv = CallOnStartRequest();
   if (NS_FAILED(rv)) return rv;
 
+  // If we didn't install cache listeners to decompress above
+  // install the cache listener now (so they'll get compressed data)
+  if (!isDictionaryCompressed && !mDictSaving) {
+    // install cache listener if we still have a cache entry open
+    if (mCacheEntry && !LoadCacheEntryIsReadOnly()) {
+      rv = InstallCacheListener();
+      if (NS_FAILED(rv)) return rv;
+    }
+  }
   return NS_OK;
 }
 
@@ -5890,8 +5928,9 @@ nsresult nsHttpChannel::InitCacheEntry() {
   // mark this weakly framed until a response body is seen
   mCacheEntry->SetMetaDataElement("strongly-framed", "0");
 
-  // We'll store the cache headers in InstallCacheListener, since it may modify
-  // them
+  rv = AddCacheEntryHeaders(mCacheEntry, false);
+  if (NS_FAILED(rv)) return rv;
+
   StoreInitedCacheEntry(true);
 
   // Don't perform the check when writing (doesn't make sense)
@@ -5951,66 +5990,8 @@ nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
   rv = StoreAuthorizationMetaData(entry, requestHead);
   if (NS_FAILED(rv)) return rv;
 
-  // Iterate over the headers listed in the Vary response header, and
-  // store the value of the corresponding request header so we can verify
-  // that it has not varied when we try to re-use the cached response at
-  // a later time.  Take care to store "Cookie" headers only as hashes
-  // due to security considerations and the fact that they can be pretty
-  // large (bug 468426). We take care of "Vary: cookie" in ResponseWouldVary.
-  //
-  // NOTE: if "Vary: accept, cookie", then we will store the "accept" header
-  // in the cache.  we could try to avoid needlessly storing the "accept"
-  // header in this case, but it doesn't seem worth the extra code to perform
-  // the check.
-  {
-    nsAutoCString buf, metaKey;
-    Unused << responseHead->GetHeader(nsHttp::Vary, buf);
-
-    constexpr auto prefix = "request-"_ns;
-
-    for (const nsACString& token :
-         nsCCharSeparatedTokenizer(buf, NS_HTTP_HEADER_SEP).ToRange()) {
-      LOG(
-          ("nsHttpChannel::AddCacheEntryHeaders [this=%p] "
-           "processing %s",
-           self, nsPromiseFlatCString(token).get()));
-      if (!token.EqualsLiteral("*")) {
-        nsHttpAtom atom = nsHttp::ResolveAtom(token);
-        nsAutoCString val;
-        nsAutoCString hash;
-        if (NS_SUCCEEDED(requestHead->GetHeader(atom, val))) {
-          // If cookie-header, store a hash of the value
-          if (atom == nsHttp::Cookie) {
-            LOG(
-                ("nsHttpChannel::AddCacheEntryHeaders [this=%p] "
-                 "cookie-value %s",
-                 self, val.get()));
-            rv = Hash(val.get(), hash);
-            // If hash failed, store a string not very likely
-            // to be the result of subsequent hashes
-            if (NS_FAILED(rv)) {
-              val = "<hash failed>"_ns;
-            } else {
-              val = hash;
-            }
-
-            LOG(("   hashed to %s\n", val.get()));
-          }
-
-          // build cache meta data key and set meta data element...
-          metaKey = prefix + token;
-          entry->SetMetaDataElement(metaKey.get(), val.get());
-        } else {
-          LOG(
-              ("nsHttpChannel::AddCacheEntryHeaders [this=%p] "
-               "clearing metadata for %s",
-               self, nsPromiseFlatCString(token).get()));
-          metaKey = prefix + token;
-          entry->SetMetaDataElement(metaKey.get(), nullptr);
-        }
-      }
-    }
-  }
+  rv = self->ProcessVaryCacheEntryHeaders(entry, nullptr);
+  if (NS_FAILED(rv)) return rv;
 
   // Store the received HTTP head with the cache entry as an element of
   // the meta data.
@@ -6026,6 +6007,92 @@ nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
   // Indicate we have successfully finished setting metadata on the cache entry.
   rv = entry->MetaDataReady();
 
+  return rv;
+}
+
+nsresult nsHttpChannel::AddCacheEntryHeaders(nsICacheEntry* entry,
+                                             bool aModified) {
+  return DoAddCacheEntryHeaders(this, entry, &mRequestHead, mResponseHead.get(),
+                                mSecurityInfo, aModified);
+}
+
+nsresult nsHttpChannel::ProcessVaryCacheEntryHeaders(nsICacheEntry* entry,
+                                                     const nsHttpAtom* aAtom) {
+  nsresult rv = NS_OK;
+
+  // Iterate over the headers listed in the Vary response header, and
+  // store the value of the corresponding request header so we can verify
+  // that it has not varied when we try to re-use the cached response at
+  // a later time.  Take care to store "Cookie" headers only as hashes
+  // due to security considerations and the fact that they can be pretty
+  // large (bug 468426). We take care of "Vary: cookie" in ResponseWouldVary.
+  //
+  // NOTE: if "Vary: accept, cookie", then we will store the "accept" header
+  // in the cache.  we could try to avoid needlessly storing the "accept"
+  // header in this case, but it doesn't seem worth the extra code to perform
+  // the check.
+  {
+    nsAutoCString buf, metaKey;
+    Unused << mResponseHead->GetHeader(nsHttp::Vary, buf);
+
+    constexpr auto prefix = "request-"_ns;
+
+    for (const nsACString& token :
+         nsCCharSeparatedTokenizer(buf, NS_HTTP_HEADER_SEP).ToRange()) {
+      LOG(
+          ("nsHttpChannel::ProcessVaryCacheEntryHeaders [this=%p] "
+           "processing %s",
+           this, nsPromiseFlatCString(token).get()));
+      if (!token.EqualsLiteral("*")) {
+        nsHttpAtom atom = nsHttp::ResolveAtom(token);
+        if (!aAtom || atom == *aAtom) {
+          nsAutoCString val;
+          nsAutoCString hash;
+          if (NS_SUCCEEDED(mRequestHead.GetHeader(atom, val))) {
+            // If cookie-header, store a hash of the value
+            if (atom == nsHttp::Cookie) {
+              LOG(
+                  ("nsHttpChannel::ProcessVaryCacheEntryHeaders [this=%p] "
+                   "cookie-value %s",
+                   this, val.get()));
+              rv = Hash(val.get(), hash);
+              // If hash failed, store a string not very likely
+              // to be the result of subsequent hashes
+              if (NS_FAILED(rv)) {
+                val = "<hash failed>"_ns;
+              } else {
+                val = hash;
+              }
+
+              LOG(("   hashed to %s\n", val.get()));
+            }
+
+            // build cache meta data key and set meta data element...
+            metaKey = prefix + token;
+            entry->SetMetaDataElement(metaKey.get(), val.get());
+          } else {
+            LOG(
+                ("nsHttpChannel::ProcessVaryCacheEntryHeaders [this=%p] "
+                 "clearing metadata for %s",
+                 this, nsPromiseFlatCString(token).get()));
+            metaKey = prefix + token;
+            entry->SetMetaDataElement(metaKey.get(), nullptr);
+          }
+        }
+      }
+    }
+  }
+  return rv;
+}
+
+nsresult nsHttpChannel::ModifiedCacheEntryHeaders(nsICacheEntry* entry,
+                                                  const nsHttpAtom& aAtom) {
+  nsresult rv = ProcessVaryCacheEntryHeaders(entry, &aAtom);
+  if (NS_SUCCEEDED(rv)) {
+    // Indicate we have successfully finished setting metadata on the cache
+    // entry.
+    rv = entry->MetaDataReady();
+  }
   return rv;
 }
 
@@ -6084,12 +6151,6 @@ bool nsHttpChannel::ParseDictionary(nsICacheEntry* aEntry,
   return true;  // succeeded, no use-as-dictionary
 }
 
-nsresult nsHttpChannel::AddCacheEntryHeaders(nsICacheEntry* entry,
-                                             bool aModified) {
-  return DoAddCacheEntryHeaders(this, entry, &mRequestHead, mResponseHead.get(),
-                                mSecurityInfo, aModified);
-}
-
 inline void GetAuthType(const char* challenge, nsCString& authType) {
   const char* p;
 
@@ -6137,9 +6198,19 @@ nsresult nsHttpChannel::FinalizeCacheEntry() {
   return NS_OK;
 }
 
-// Open an output stream to the cache entry and insert a listener tee into
-// the chain of response listeners.
 nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
+  return DoInstallCacheListener(false, nullptr, offset);
+}
+
+// Open an output stream to the cache entry and insert a listener tee into
+// the chain of response listeners, so the data will go the cache and the
+// normal listener chain, which often will eventually include a
+// decompressor. If the Content-Encoding is dcb or dcz, we'll include a
+// decompressor *before* the tee, so the cache will see decompressed data
+// (we can't decompress dcb/dcz when reading from the cache).
+nsresult nsHttpChannel::DoInstallCacheListener(bool aIsDictionaryCompressed,
+                                               nsACString* aDictionary,
+                                               int64_t offset) {
   nsresult rv;
 
   LOG(("Preparing to write data into the cache [uri=%s]\n", mSpec.get()));
@@ -6149,24 +6220,6 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
              mRaceCacheWithNetwork);
   MOZ_ASSERT(mListener);
 
-  // XXX We may want to consider recompressing any dcb/dcz files to save space
-  // and improve hitrate.  Downside is CPU use, complexity and perhaps delay,
-  // maybe.
-  nsAutoCString dictionary;
-  if (StaticPrefs::network_http_dictionaries_enable() && IsHTTPS()) {
-    Unused << mResponseHead->GetHeader(nsHttp::Use_As_Dictionary, dictionary);
-    if (!dictionary.IsEmpty()) {
-      // If this is being marked as a dictionary, add it to the list
-      if (!ParseDictionary(mCacheEntry, mResponseHead.get(), true)) {
-        LOG_DICTIONARIES(("Failed to parse use-as-dictionary"));
-      } else {
-        MOZ_ASSERT(mDictSaving);
-      }
-    }
-
-    // We need to record the hash as we save it
-    mCacheEntry->SetDictionary(mDictSaving);
-  }
   LOG(("Trading cache input stream for output stream [channel=%p]", this));
 
   // We must close the input stream first because cache entries do not
@@ -6178,10 +6231,6 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
   if (predictedSize != -1) {
     predictedSize -= offset;
   }
-
-  nsCOMPtr<nsIStreamListenerTee> tee =
-      do_CreateInstance(kStreamListenerTeeCID, &rv);
-  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIOutputStream> out;
   rv =
@@ -6218,6 +6267,10 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
     if (NS_FAILED(rv)) return rv;
 #endif
 
+  nsCOMPtr<nsIStreamListenerTee> tee =
+      do_CreateInstance(kStreamListenerTeeCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
   rv = tee->Init(mListener, out, nullptr);
   LOG(("nsHttpChannel::InstallCacheListener sync tee %p rv=%" PRIx32, tee.get(),
        static_cast<uint32_t>(rv)));
@@ -6234,52 +6287,49 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
   // before the content process gets to see it
   // XXX We could recompress this with e.g. gzip to save space and improve
   // hitrate, at the cost of some CPU.
-  nsAutoCString contentEncoding;
-  Unused << mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
-  LOG_DICTIONARIES(
-      ("Content-Encoding for %p: %s", this, contentEncoding.get()));
-  if (!dictionary.IsEmpty() || contentEncoding.Equals("dcb") ||
-      contentEncoding.Equals("dcz")) {
-    if (!contentEncoding.IsEmpty()) {
-      LOG_DICTIONARIES(
-          ("Removing Content-Encoding %s for %p", contentEncoding.get(), this));
-      nsCOMPtr<nsIStreamListener> listener;
-      // otherwise we won't convert in the parent process
-      SetApplyConversion(true);
-      rv = DoApplyContentConversions(mListener, getter_AddRefs(listener),
-                                     nullptr);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      if (listener) {
-        LOG_DICTIONARIES(
-            ("Installed nsHTTPCompressConv %p before tee", listener.get()));
-        mListener = listener;
-        mCompressListener = listener;
-        StoreHasAppliedConversion(true);
-
-      } else {
-        LOG_DICTIONARIES(("Didn't install decompressor before tee"));
-      }
+  bool removedEncoding = false;
+  // Note: this doesn't handle cases like "dcb, gzip" or (worse?) "gzip, dcb".
+  // We could in theory handle them.
+  if (aDictionary || aIsDictionaryCompressed) {
+    nsCOMPtr<nsIStreamListener> listener;
+    // otherwise we won't convert in the parent process
+    SetApplyConversion(true);
+    rv =
+        DoApplyContentConversions(mListener, getter_AddRefs(listener), nullptr);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
-    // Remove Available-Dictionary from Vary header if present if we
-    // decompressed and changed the content type.  This avoids us refusing to
-    // match on a future load, for example if this dictionary was decoded from
-    // an earlier version using a dictionary (i.e. the update jquery to new
-    // version using the old version as a dictionary; no future load will use
-    // that old version).
-    // XXX It would be slightly more efficient to remove all at once
-    // instead of sequentially by passing an array of strings
-    RemoveFromVary(mResponseHead.get(), "available-dictionary"_ns);
-    RemoveFromVary(mResponseHead.get(), "accept-encoding"_ns);
+    if (listener) {
+      LOG_DICTIONARIES(
+          ("Installed nsHTTPCompressConv %p before tee", listener.get()));
+      mListener = listener;
+      mCompressListener = listener;
+      StoreHasAppliedConversion(true);
+      removedEncoding = true;
+    } else {
+      LOG_DICTIONARIES(("Didn't install decompressor before tee"));
+    }
+    if (removedEncoding) {
+      // Remove Available-Dictionary from Vary header if present if we
+      // decompressed and changed the content type.  This avoids us refusing to
+      // match on a future load, for example if this dictionary was decoded from
+      // an earlier version using a dictionary (i.e. the update jquery to new
+      // version using the old version as a dictionary; no future load will use
+      // that old version).
+      // XXX It would be slightly more efficient to remove all at once
+      // instead of sequentially by passing an array of strings
+      RemoveFromVary(mResponseHead.get(), "available-dictionary"_ns);
+      RemoveFromVary(mResponseHead.get(), "accept-encoding"_ns);
+    }
   }
 
-  // Must add these after adding possible decompressors, since that may modify
-  // Content-Encoding
-  rv = AddCacheEntryHeaders(mCacheEntry, true);
-  if (NS_FAILED(rv)) {
-    mCacheEntry->AsyncDoom(nullptr);
-    return rv;
+  if (removedEncoding) {
+    // After decompressors, we modified Content-Encoding
+    rv = ModifiedCacheEntryHeaders(mCacheEntry, nsHttp::Content_Encoding);
+    if (NS_FAILED(rv)) {
+      mCacheEntry->AsyncDoom(nullptr);
+      return rv;
+    }
   }
   return NS_OK;
 }
