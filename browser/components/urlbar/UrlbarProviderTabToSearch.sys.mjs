@@ -124,7 +124,7 @@ export class UrlbarProviderTabToSearch extends UrlbarProvider {
    *
    * @param {UrlbarQueryContext} queryContext The query context object
    */
-  async isActive(queryContext) {
+  async isActive(queryContext, controller) {
     return (
       queryContext.searchString &&
       queryContext.tokens.length == 1 &&
@@ -133,8 +133,8 @@ export class UrlbarProviderTabToSearch extends UrlbarProvider {
       !(
         (await this.queryInstance
           .getProvider(lazy.UrlbarProviderGlobalActions.name)
-          ?.isActive()) &&
-        lazy.ActionsProviderContextualSearch.isActive(queryContext)
+          ?.isActive(queryContext, controller)) &&
+        lazy.ActionsProviderContextualSearch.isActive(queryContext, controller)
       )
     );
   }
