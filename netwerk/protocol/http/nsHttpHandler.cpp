@@ -679,7 +679,7 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
               rv = aRequest->SetHeader(
                   nsHttp::Accept_Encoding, self->mHttpsAcceptEncodings, false,
                   nsHttpHeaderArray::eVarietyRequestOverride);
-              (aCallback)(false, nullptr);
+              (aCallback)(aNeedsResume, nullptr);
               return rv;
             }
 

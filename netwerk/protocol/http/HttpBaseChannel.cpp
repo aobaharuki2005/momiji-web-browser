@@ -1517,10 +1517,9 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
   // being a stack with the last converter created being the first one
   // to accept the raw network data.
 
-  nsAutoCString newEncoding;
   char* cePtr = contentEncoding.BeginWriting();
   uint32_t count = 0;
-  bool removed_encoding = false;
+  bool remove_encodings = false;
   while (char* val = nsCRT::strtok(cePtr, HTTP_LWS ",", &cePtr)) {
     if (++count > 16) {
       // For compatibility with old code, we will just carry on without
@@ -1561,30 +1560,34 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
         glean::http::content_encoding.AccumulateSingleSample(mode);
       }
       if (from.EqualsLiteral("dcb") || from.EqualsLiteral("dcz")) {
-        removed_encoding = true;
+        MOZ_ASSERT(XRE_IsParentProcess());
+        remove_encodings = true;
       }
       nextListener = converter;
     } else {
-      if (val) LOG(("Unknown content encoding '%s', ignoring\n", val));
-      // leave it in content-encoding if we didn't decompress it, though if
-      // there are following decoders, this will just be wrong, and we
-      // should error out.  Or maybe error out on any unknown encoding
-      newEncoding += val;
+      if (val) {
+        LOG(("Unknown content encoding '%s'\n", val));
+      }
+      // we *should* return NS_ERROR_UNEXPECTED here, but that will break sites
+      // that use things like content-encoding: x-gzip, x-gzip (or any other
+      // weird encoding)
     }
   }
 
   // dcb and dcz encodings are removed when it's decompressed (always in
   // the parent process).  However, in theory you could have
   // Content-Encoding: dcb,gzip
-  // in which case we should pass it down to the content process as
-  // Content-Encoding: gzip
-  // This of course would be silly, but supported by the spec
-  if (removed_encoding) {
-    LOG(("Changing Content-Encoding from %s to %s", contentEncoding.get(),
-         newEncoding.get()));
+  // in which case we could pass it down to the content process as
+  // Content-Encoding: gzip.   We won't do that; we'll remove all compressors
+  // if we need to remove any.
+  // This double compression of course is silly, but supported by the spec.
+  if (remove_encodings) {
+    // if we have dcb or dcz, all content-encodings in the header should
+    // be removed as we're decompressing before the tee in the parent
+    // process
+    LOG(("Changing Content-Encoding from '%s' to ''", contentEncoding.get()));
     // Can't use SetHeader; we need to overwrite the current value
-    rv =
-        mResponseHead->SetHeaderOverride(nsHttp::Content_Encoding, newEncoding);
+    rv = mResponseHead->SetHeaderOverride(nsHttp::Content_Encoding, ""_ns);
   }
   *aNewNextListener = do_AddRef(nextListener).take();
   return NS_OK;
