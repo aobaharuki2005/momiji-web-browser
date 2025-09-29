@@ -924,11 +924,13 @@ bool Sanitizer::AllowElement(
   }
 
   // Step 3. Otherwise:
-  // Step 3.1. If element["attributes"] or element["removeAttributes"] exists:
-  if (element.mAttributes || element.mRemoveAttributes) {
+  // Step 3.1. If element["attributes"] exists or element["removeAttributes"]
+  // with default « » is not empty:
+  if (element.mAttributes ||
+      (element.mRemoveAttributes && !element.mRemoveAttributes->IsEmpty())) {
     // Step 3.1.1. The user agent may report a warning to the console that this
     // operation is not supported.
-    LogLocalizedString("SanitizerAllowElementIgnroed", {},
+    LogLocalizedString("SanitizerAllowElementIgnored", {},
                        nsIScriptError::warningFlag);
 
     // Step 3.1.2. Return false.
