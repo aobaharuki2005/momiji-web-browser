@@ -1224,19 +1224,6 @@ nsViewSourceChannel::AsyncOnChannelRedirect(
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsViewSourceChannel::GetDecompressDictionary(
-    mozilla::net::DictionaryCacheEntry** aDictionary) {
-  *aDictionary = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsViewSourceChannel::SetDecompressDictionary(
-    mozilla::net::DictionaryCacheEntry* aDictionary) {
-  return NS_OK;
-}
-
 // nsIInterfaceRequestor
 
 NS_IMETHODIMP

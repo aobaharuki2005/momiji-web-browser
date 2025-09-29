@@ -21,7 +21,6 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
-#include "mozilla/net/Dictionary.h"
 
 #include "nsIHttpProtocolHandler.h"
 #include "nsIObserver.h"
@@ -117,12 +116,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   static already_AddRefed<nsHttpHandler> GetInstance();
 
-  [[nodiscard]] nsresult AddAcceptAndDictionaryHeaders(
-      nsIURI* aURI, ExtContentPolicyType aType, nsHttpRequestHead* aRequest,
-      bool aSecure, bool& aAsync,
-      const std::function<bool(bool, DictionaryCacheEntry*)>& aCallback);
   [[nodiscard]] nsresult AddStandardRequestHeaders(
-      nsHttpRequestHead*, nsIURI* aURI, bool aIsHTTPS,
+      nsHttpRequestHead*, bool isSecure,
       ExtContentPolicyType aContentPolicyType,
       bool aShouldResistFingerprinting);
   [[nodiscard]] nsresult AddConnectionHeader(nsHttpRequestHead*, uint32_t caps);
@@ -531,8 +526,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   void PrefsChanged(const char* pref);
 
   [[nodiscard]] nsresult SetAcceptLanguages();
-  [[nodiscard]] nsresult SetAcceptEncodings(const char*, bool aIsSecure,
-                                            bool aDictionary);
+  [[nodiscard]] nsresult SetAcceptEncodings(const char*, bool mIsSecure);
 
   [[nodiscard]] nsresult InitConnectionMgr();
 
@@ -568,9 +562,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   RefPtr<HttpConnectionMgrShell> mConnMgr;
 
   UniquePtr<AltSvcCache> mAltSvcCache;
-
-  // Pointer to DictionaryCache singleton
-  RefPtr<DictionaryCache> mDictionaryCache;
 
   //
   // prefs
@@ -632,7 +623,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   nsCString mAcceptLanguages;
   nsCString mHttpAcceptEncodings;
   nsCString mHttpsAcceptEncodings;
-  nsCString mDictionaryAcceptEncodings;
 
   nsCString mDefaultSocketType;
 

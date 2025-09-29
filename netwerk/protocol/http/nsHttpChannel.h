@@ -205,11 +205,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_IMETHOD SetResponseStatus(uint32_t aStatus,
                                const nsACString& aStatusText) override;
 
-  NS_IMETHOD GetDecompressDictionary(
-      DictionaryCacheEntry** aDictionary) override;
-  NS_IMETHOD SetDecompressDictionary(
-      DictionaryCacheEntry* aDictionary) override;
-
   void SetWarningReporter(HttpChannelSecurityWarningReporter* aReporter);
   HttpChannelSecurityWarningReporter* GetWarningReporter();
 
@@ -417,17 +412,9 @@ class nsHttpChannel final : public HttpBaseChannel,
   void CloseCacheEntry(bool doomOnFailure);
   [[nodiscard]] nsresult InitCacheEntry();
   void UpdateInhibitPersistentCachingFlag();
-  bool ParseDictionary(nsICacheEntry* aEntry, nsHttpResponseHead* aResponseHead,
-                       bool aModified);
-  [[nodiscard]] nsresult AddCacheEntryHeaders(nsICacheEntry* entry,
-                                              bool aModified);
-  [[nodiscard]] nsresult UpdateCacheEntryHeaders(nsICacheEntry* entry,
-                                                 const nsHttpAtom* aAtom);
+  [[nodiscard]] nsresult AddCacheEntryHeaders(nsICacheEntry* entry);
   [[nodiscard]] nsresult FinalizeCacheEntry();
   [[nodiscard]] nsresult InstallCacheListener(int64_t offset = 0);
-  [[nodiscard]] nsresult DoInstallCacheListener(bool aIsDictionaryCompressed,
-                                                nsACString* aDictionary,
-                                                int64_t offset = 0);
   void MaybeInvalidateCacheEntryForSubsequentGet();
   void AsyncOnExamineCachedResponse();
 
@@ -567,16 +554,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   // BeginConnect(), so save the nsChannelClassifier here to keep the
   // state of whether tracking protection is enabled or not.
   RefPtr<nsChannelClassifier> mChannelClassifier;
-
-  // Dictionary entry for the entry being used to decompress this stream
-  // (i.e. we added Dictionary-Available to the request).
-  RefPtr<DictionaryCacheEntry> mDictDecompress;
-  // This is for channels we're going to use a dictionaries in the future
-  // (i.e. ResponseHeaders has Use-As-Dictionary)
-  RefPtr<DictionaryCacheEntry> mDictSaving;
-  // Note that in the case of using a file to be a dictionary for future
-  // versions of itself, these may have the same URI (but likely different
-  // hashes).
 
   // Proxy release all members above on main thread.
   void ReleaseMainThreadOnlyReferences();
@@ -733,7 +710,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   MOZ_ATOMIC_BITFIELDS(mAtomicBitfields6, 32, (
     // True if network request gets to OnStart before we get a response from the cache
     (uint32_t, NetworkWonRace, 1),
-    // Valid values are CachedContentValidity::Unset/Invalid/Valid
+    // Valid values are CachedContentValid
     (uint32_t, CachedContentIsValid, 2),
     // Only set to true when we receive an HTTPSSVC record before the
     // transaction is created.
@@ -902,10 +879,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   // Track if we are waiting for OnPermissionPromptResult callback
   // Used to handle cancellation while suspended waiting for LNA permission
   bool mWaitingForLNAPermission{false};
-
-  bool mUsingDictionary{false};  // we added Available-Dictionary
-  bool mShouldSuspendForDictionary{false};
-  bool mSuspendedForDictionary{false};
 
  protected:
   virtual void DoNotifyListenerCleanup() override;
