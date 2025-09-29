@@ -50,24 +50,33 @@ private val IconButtonHeight = 48.dp
 
 @Composable
 internal fun AddLoginScreen(store: LoginsStore) {
+    val state by store.observeAsState(store.state) { it }
+
     Scaffold(
         topBar = {
             AddLoginTopBar(store)
         },
         containerColor = FirefoxTheme.colors.layer1,
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Spacer(modifier = Modifier.height(FirefoxTheme.layout.space.static200))
-            AddLoginHost(store = store)
-            Spacer(modifier = Modifier.height(8.dp))
-            AddLoginUsername(store = store)
-            Spacer(modifier = Modifier.height(8.dp))
-            AddLoginPassword(store = store)
+
+        if (state.biometricAuthenticationDialogState.shouldShow) {
+            BiometricAuthenticationDialog(store = store)
+        }
+
+        if (state.biometricAuthenticationState == BiometricAuthenticationState.Authorized) {
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(modifier = Modifier.height(FirefoxTheme.layout.space.static200))
+                AddLoginHost(store = store)
+                Spacer(modifier = Modifier.height(8.dp))
+                AddLoginUsername(store = store)
+                Spacer(modifier = Modifier.height(8.dp))
+                AddLoginPassword(store = store)
+            }
         }
     }
 }

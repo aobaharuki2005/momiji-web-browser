@@ -26,4 +26,8 @@ internal class LoginsStore(
     initialState = initialState,
     reducer = reducer,
     middleware = middleware,
-)
+) {
+    init {
+        dispatch(Init)
+    }
+}
