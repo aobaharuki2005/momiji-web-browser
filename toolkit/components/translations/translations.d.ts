@@ -212,7 +212,8 @@ interface RemoteSettingsClient {
  * A single language model file.
  */
 interface LanguageTranslationModelFile {
-  buffer: ArrayBuffer;
+  blob: Blob | null;
+  buffer?: ArrayBuffer;
   record: TranslationModelRecord;
 }
 
@@ -259,7 +260,8 @@ type LanguageTranslationModelFilesAligned = {
  * and so the engine will be mocked.
  */
 interface TranslationsEnginePayload {
-  bergamotWasmArrayBuffer: ArrayBuffer;
+  bergamotWasmBlob: Blob | null;
+  bergamotWasmArrayBuffer?: ArrayBuffer;
   translationModelPayloads: TranslationModelPayload[];
   isMocked: boolean;
 }

@@ -1641,9 +1641,8 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   static async getTranslationsEnginePayload(languagePair) {
     const wasmStartTime = ChromeUtils.now();
-    const bergamotWasmArrayBufferPromise =
-      TranslationsParent.#getBergamotWasmArrayBuffer();
-    bergamotWasmArrayBufferPromise
+    const bergamotWasmBlobPromise = TranslationsParent.#getBergamotWasmBlob();
+    bergamotWasmBlobPromise
       .then(() => {
         ChromeUtils.addProfilerMarker(
           "TranslationsParent",
@@ -1701,10 +1700,10 @@ export class TranslationsParent extends JSWindowActorParent {
       "Loading translation model files"
     );
 
-    const bergamotWasmArrayBuffer = await bergamotWasmArrayBufferPromise;
+    const bergamotWasmBlob = await bergamotWasmBlobPromise;
 
     return {
-      bergamotWasmArrayBuffer,
+      bergamotWasmBlob,
       translationModelPayloads,
       isMocked: TranslationsParent.#isTranslationsEngineMocked,
     };
@@ -2552,17 +2551,20 @@ export class TranslationsParent extends JSWindowActorParent {
    * 2. Uncomment the .wasm file in: toolkit/components/translations/jar.mn
    * 3. Run: ./mach build
    * 4. Run: ./mach run
+   *
+   * @returns {Promise<Blob | null>}
    */
-  static async #maybeFetchLocalBergamotWasmArrayBuffer() {
+  static async #maybeFetchLocalBergamotWasmBlob() {
     if (TranslationsParent.#lookForLocalWasmBuild) {
       // Attempt to get a local copy of the translator. Most likely this will be a 404.
       try {
         const response = await fetch(
           "chrome://global/content/translations/bergamot-translator.wasm.zst"
         );
-        const arrayBuffer = response.arrayBuffer();
+
         lazy.console.log(`Using a local copy of Bergamot.`);
-        return arrayBuffer;
+
+        return response.blob();
       } catch {
         // Only attempt to fetch once, if it fails don't try again.
         TranslationsParent.#lookForLocalWasmBuild = false;
@@ -2578,14 +2580,14 @@ export class TranslationsParent extends JSWindowActorParent {
    * https://github.com/mozilla/bergamot-translator/
    */
   /**
-   * @returns {Promise<ArrayBuffer>}
+   * @returns {Promise<Blob>}
    */
-  static async #getBergamotWasmArrayBuffer() {
+  static async #getBergamotWasmBlob() {
     const start = Date.now();
     const client = TranslationsParent.#getTranslationsWasmRemoteClient();
 
     const localCopy =
-      await TranslationsParent.#maybeFetchLocalBergamotWasmArrayBuffer();
+      await TranslationsParent.#maybeFetchLocalBergamotWasmBlob();
     if (localCopy) {
       return localCopy;
     }
@@ -2654,17 +2656,18 @@ export class TranslationsParent extends JSWindowActorParent {
     try {
       await chaosModeError(1 / 3);
 
-      /** @type {{buffer: ArrayBuffer}} */
-      const { buffer } = await client.attachments.download(
+      const payload = await client.attachments.download(
         await TranslationsParent.#bergamotWasmRecord
       );
+
+      const blob = payload.blob ?? new Blob([payload.buffer]);
 
       const duration = Date.now() - start;
       lazy.console.log(
         `"bergamot-translator" wasm binary loaded in ${duration / 1000} seconds`
       );
 
-      return buffer;
+      return blob;
     } catch (error) {
       TranslationsParent.#bergamotWasmRecord = null;
       throw error;
@@ -2760,7 +2763,7 @@ export class TranslationsParent extends JSWindowActorParent {
     }
 
     queue.push({
-      download: () => TranslationsParent.#getBergamotWasmArrayBuffer(),
+      download: () => TranslationsParent.#getBergamotWasmBlob(),
     });
 
     return downloadManager(queue);
@@ -3070,11 +3073,11 @@ export class TranslationsParent extends JSWindowActorParent {
 
         await chaosMode(1 / 3);
 
-        /** @type {{buffer: ArrayBuffer }} */
-        const { buffer } = await client.attachments.download(record);
+        const payload = await client.attachments.download(record);
+        const blob = payload.blob ?? new Blob([payload.buffer]);
 
         languageModelFiles[record.fileType] = {
-          buffer,
+          blob,
           record,
         };
 

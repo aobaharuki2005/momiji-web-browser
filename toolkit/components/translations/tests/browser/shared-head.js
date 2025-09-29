@@ -1261,8 +1261,11 @@ async function createFileSystemRemoteSettings(languagePairs) {
       `);
     }
 
+    const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    file.initWithPath(recordPath);
+
     return {
-      buffer: (await IOUtils.read(recordPath)).buffer,
+      blob: await File.createFromNsIFile(file),
     };
   };
 
