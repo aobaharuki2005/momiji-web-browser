@@ -16641,7 +16641,7 @@
 # Whether only bounces that access storage should be considered trackers.
 - name: privacy.bounceTrackingProtection.requireStatefulBounces
   type: bool
-  value: @IS_NOT_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # To be used in automated test environments to enable observer messages.
