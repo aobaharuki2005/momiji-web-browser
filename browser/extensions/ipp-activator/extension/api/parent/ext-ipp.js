@@ -34,6 +34,7 @@ this.ippActivator = class extends ExtensionAPI {
           name: "ippActivator.onIPPActivated",
           register: fire => {
             const topics = [
+              "IPProtectionService:StateChanged",
               "IPProtectionService:Started",
               "IPProtectionService:Stopped",
               "IPProtectionService:SignedOut",
@@ -81,7 +82,11 @@ this.ippActivator = class extends ExtensionAPI {
           }
         },
         isIPPActive() {
-          return lazy.IPProtectionService.isActive;
+          if ("state" in lazy.IPProtectionService) {
+            return lazy.IPProtectionService.state === "active";
+          }
+
+          return !!lazy.IPProtectionService.isActive;
         },
         getDynamicTabBreakages() {
           try {
@@ -238,7 +243,7 @@ this.ippActivator = class extends ExtensionAPI {
                   topic === "nsPref:changed" &&
                   data === PREF_DYNAMIC_TAB_BREAKAGES
                 ) {
-                  fire.async({});
+                  fire.async();
                 }
               },
             };
@@ -260,7 +265,7 @@ this.ippActivator = class extends ExtensionAPI {
                   topic === "nsPref:changed" &&
                   data === PREF_DYNAMIC_WEBREQUEST_BREAKAGES
                 ) {
-                  fire.async({});
+                  fire.async();
                 }
               },
             };
