@@ -55,7 +55,7 @@ using namespace mozilla;
 namespace mozilla {
 namespace net {
 
-static LazyLogModule gDictionaryLog("CompressionDictionaries");
+LazyLogModule gDictionaryLog("CompressionDictionaries");
 
 #define DICTIONARY_LOG(args) \
   MOZ_LOG(gDictionaryLog, mozilla::LogLevel::Debug, args)
@@ -116,6 +116,46 @@ bool DictionaryCacheEntry::Match(const nsACString& aFilePath,
 void DictionaryCacheEntry::Prefetch() {
   // Start reading the cache entry into memory
   // XXX
+}
+
+void DictionaryCacheEntry::AccumulateHash(const char* aBuf, int32_t aCount) {
+  if (!mCrypto) {
+    // If mCrypto is null, and mDictionaryData is set, we've already got the
+    // data for this dictionary.
+    if (!mDictionaryData.empty()) {
+      DICTIONARY_LOG(("%p: Trying to rewrite to Dictionary uri %s, pattern %s",
+                      this, PromiseFlatCString(mURI).get(),
+                      PromiseFlatCString(mPattern).get()));
+      return;
+    }
+    nsresult rv;
+    mCrypto = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+    rv = mCrypto->Init(nsICryptoHash::SHA256);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Cache InitCrypto failed");
+  }
+  mCrypto->Update(reinterpret_cast<const uint8_t*>(aBuf), aCount);
+  DICTIONARY_LOG(("Accumulate Hash %p: %d bytes, total %zu", this, aCount,
+                  mDictionaryData.length()));
+}
+
+void DictionaryCacheEntry::AccumulateFile(const char* aBuf, int32_t aCount) {
+  AccumulateHash(aBuf, aCount);  // error?
+  Unused << mDictionaryData.append(aBuf, aCount);
+  DICTIONARY_LOG(("Accumulate %p: %d bytes, total %zu", this, aCount,
+                  mDictionaryData.length()));
+}
+
+void DictionaryCacheEntry::FinishFile() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mCrypto) {
+    DICTIONARY_LOG(("Hash was %s", mHash.get()));
+    mCrypto->Finish(true, mHash);
+    DICTIONARY_LOG(("Set dictionary hash for %p to %s", this, mHash.get()));
+    mCrypto = nullptr;
+  }
 }
 
 // static
