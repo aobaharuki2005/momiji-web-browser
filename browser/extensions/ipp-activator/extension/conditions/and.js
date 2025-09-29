@@ -2,9 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import ConditionBase from "./base.mjs";
+/* global ConditionBase */
 
-class ConditionOr extends ConditionBase {
+/**
+ * AND condition
+ */
+class ConditionAnd extends ConditionBase {
   #conditions;
 
   constructor(factory, desc) {
@@ -21,12 +24,12 @@ class ConditionOr extends ConditionBase {
 
   check() {
     for (const c of this.#conditions) {
-      if (c.check()) {
-        return true;
+      if (!c.check()) {
+        return false;
       }
     }
-    return false;
+    return true;
   }
 }
 
-export default ConditionOr;
+globalThis.ConditionAnd = ConditionAnd;

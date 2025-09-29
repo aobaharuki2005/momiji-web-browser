@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global browser */
+/* global browser, ConditionBase */
 
-import ConditionBase from "./base.mjs";
-
+/**
+ * COOKIE condition
+ */
 class ConditionCookie extends ConditionBase {
   static STORAGE_KEY = "cookies-";
 
@@ -67,4 +68,4 @@ class ConditionCookie extends ConditionBase {
   }
 }
 
-export default ConditionCookie;
+globalThis.ConditionCookie = ConditionCookie;
