@@ -5,7 +5,6 @@
 package mozilla.components.compose.browser.toolbar
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -100,19 +99,15 @@ fun BrowserDisplayToolbar(
         modifier = Modifier
             .background(color = AcornTheme.colors.layer1)
             .fillMaxWidth()
+            .padding(
+                horizontal = when (isSmallWidthScreen) {
+                    true -> NO_TOOLBAR_PADDING_DP.dp
+                    else -> LARGE_TOOLBAR_PADDING_DP.dp
+                },
+            )
             .semantics { testTagsAsResourceId = true },
-    ) {
+        ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = when (isSmallWidthScreen) {
-                        true -> NO_TOOLBAR_PADDING_DP.dp
-                        else -> LARGE_TOOLBAR_PADDING_DP.dp
-                    },
-                    vertical = 8.dp,
-                )
-                .height(48.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (browserActionsStart.isNotEmpty()) {
@@ -122,111 +117,67 @@ fun BrowserDisplayToolbar(
                 )
             }
 
-            Box(
-                modifier = Modifier.weight(1f),
-            ) {
-                // This is just for showing the URL background.
-                // The page actions and URL will be placed on top with a potential x offset.
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(
-                            start = when {
-                                (isSmallWidthScreen && pageActionsStart.isNotEmpty()) ||
-                                    browserActionsStart.isEmpty() -> TOOLBAR_PADDING_DP.dp
-                                else -> NO_TOOLBAR_PADDING_DP.dp
-                            },
-                            end = when {
-                                (isSmallWidthScreen && pageActionsEnd.isNotEmpty()) ||
-                                    browserActionsEnd.isEmpty() -> TOOLBAR_PADDING_DP.dp
-                                else -> NO_TOOLBAR_PADDING_DP.dp
-                            },
-                        )
-                        .background(
-                            color = AcornTheme.colors.layer3,
-                            shape = RoundedCornerShape(90.dp),
-                        )
-                        .height(48.dp)
-                        .fillMaxWidth(),
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(
-                        // Force the URL extend a bit under page actions to ensure showing more characters.
-                        when (isSmallWidthScreen) {
-                            true -> TOOLBAR_PADDING_DP.dp.unaryMinus()
+            Row(
+                modifier = Modifier
+                    .padding(
+                        start = when (browserActionsStart.isEmpty()) {
+                            true -> TOOLBAR_PADDING_DP.dp
                             false -> NO_TOOLBAR_PADDING_DP.dp
                         },
-                    ),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (pageActionsStart.isNotEmpty()) {
-                        val areBrowserActionsEmpty = browserActionsStart.isEmpty() && browserActionsEnd.isEmpty()
-                        ActionContainer(
-                            actions = pageActionsStart,
-                            onInteraction = onInteraction,
-                            modifier = Modifier.padding(
-                                start = when {
-                                    (isSmallWidthScreen && pageOrigin.url.isNullOrEmpty()) ||
-                                    (isSmallWidthScreen && areBrowserActionsEmpty) ||
-                                        (!isSmallWidthScreen && browserActionsStart.isEmpty()) -> TOOLBAR_PADDING_DP.dp
-                                    else -> NO_TOOLBAR_PADDING_DP.dp
-                                },
-                            ),
-                        )
-                    }
-
-                    Origin(
-                        hint = pageOrigin.hint,
-                        modifier = Modifier
-                            .height(56.dp)
-                            .weight(1f)
-                            .padding(
-                                start = when {
-                                    // These first two conditions apply to the scenario of showing the search selector
-                                    isSmallWidthScreen && pageOrigin.url.isNullOrEmpty() -> TOOLBAR_PADDING_DP.dp
-                                    pageOrigin.url.isNullOrEmpty() -> NO_TOOLBAR_PADDING_DP.dp
-
-                                    browserActionsStart.isEmpty() && pageActionsStart.isEmpty() ->
-                                        TOOLBAR_PADDING_DP.dp * 2
-                                    pageActionsStart.isEmpty() -> TOOLBAR_PADDING_DP.dp
-                                    else -> NO_TOOLBAR_PADDING_DP.dp
-                                },
-                                end = when {
-                                    // These first two conditions apply to the scenario of showing the search selector
-                                    isSmallWidthScreen && pageOrigin.url.isNullOrEmpty() -> TOOLBAR_PADDING_DP.dp
-                                    pageOrigin.url.isNullOrEmpty() -> NO_TOOLBAR_PADDING_DP.dp
-
-                                    pageActionsEnd.isEmpty() && browserActionsEnd.isEmpty() -> TOOLBAR_PADDING_DP.dp * 2
-                                    pageActionsEnd.isEmpty() -> TOOLBAR_PADDING_DP.dp
-                                    else -> NO_TOOLBAR_PADDING_DP.dp
-                                },
-                            )
-                            .testTag(ADDRESSBAR_URL_BOX),
-                        url = pageOrigin.url,
-                        title = pageOrigin.title,
-                        textGravity = pageOrigin.textGravity,
-                        contextualMenuOptions = pageOrigin.contextualMenuOptions,
-                        onClick = pageOrigin.onClick,
-                        onLongClick = pageOrigin.onLongClick,
+                        top = TOOLBAR_PADDING_DP.dp,
+                        end = when (browserActionsEnd.isEmpty()) {
+                            true -> TOOLBAR_PADDING_DP.dp
+                            false -> NO_TOOLBAR_PADDING_DP.dp
+                        },
+                        bottom = TOOLBAR_PADDING_DP.dp,
+                    )
+                    .height(48.dp)
+                    .background(
+                        color = AcornTheme.colors.layer3,
+                        shape = RoundedCornerShape(90.dp),
+                    )
+                    .padding(
+                        start = when (pageActionsStart.isEmpty()) {
+                            true -> TOOLBAR_PADDING_DP.dp
+                            false -> NO_TOOLBAR_PADDING_DP.dp
+                        },
+                        top = NO_TOOLBAR_PADDING_DP.dp,
+                        end = when (pageActionsEnd.isEmpty()) {
+                            true -> TOOLBAR_PADDING_DP.dp
+                            false -> NO_TOOLBAR_PADDING_DP.dp
+                        },
+                        bottom = NO_TOOLBAR_PADDING_DP.dp,
+                    )
+                    .weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (pageActionsStart.isNotEmpty()) {
+                    ActionContainer(
+                        actions = pageActionsStart,
                         onInteraction = onInteraction,
                     )
+                }
 
-                    if (pageActionsEnd.isNotEmpty()) {
-                        val areBrowserActionsEmpty = browserActionsStart.isEmpty() && browserActionsEnd.isEmpty()
-                        ActionContainer(
-                            actions = pageActionsEnd,
-                            onInteraction = onInteraction,
-                            modifier = Modifier.padding(
-                                end = when {
-                                    (isSmallWidthScreen && pageOrigin.url.isNullOrEmpty()) ||
-                                    (isSmallWidthScreen && areBrowserActionsEmpty) ||
-                                        (!isSmallWidthScreen && browserActionsEnd.isEmpty()) -> TOOLBAR_PADDING_DP.dp
-                                    else -> NO_TOOLBAR_PADDING_DP.dp
-                                },
-                            ),
-                        )
-                    }
+                Origin(
+                    hint = pageOrigin.hint,
+                    modifier = Modifier
+                        .height(56.dp)
+                        .weight(1f)
+                        .testTag(ADDRESSBAR_URL_BOX),
+                    url = pageOrigin.url,
+                    title = pageOrigin.title,
+                    textGravity = pageOrigin.textGravity,
+                    contextualMenuOptions = pageOrigin.contextualMenuOptions,
+                    onClick = pageOrigin.onClick,
+                    onLongClick = pageOrigin.onLongClick,
+                    onInteraction = onInteraction,
+                )
+
+                if (pageActionsEnd.isNotEmpty()) {
+                    ActionContainer(
+                        actions = pageActionsEnd,
+                        onInteraction = onInteraction,
+                    )
                 }
             }
 
