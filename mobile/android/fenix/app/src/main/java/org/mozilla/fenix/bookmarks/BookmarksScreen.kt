@@ -569,19 +569,12 @@ private fun BookmarksList(
     }
 }
 
-@Suppress("LongMethod")
 @Composable
 private fun BookmarksListTopBar(
     store: BookmarksStore,
 ) {
     val selectedItems by store.observeAsState(store.state.selectedItems) { it.selectedItems }
     val recursiveCount by store.observeAsState(store.state.recursiveSelectedCount) { it.recursiveSelectedCount }
-    val isCurrentFolderMobileRoot by store.observeAsState(store.state.currentFolder.isMobileRoot) {
-        store.state.currentFolder.isMobileRoot
-    }
-    val isCurrentFolderDesktopRoot by store.observeAsState(store.state.currentFolder.isDesktopRoot) {
-        store.state.currentFolder.isDesktopRoot
-    }
     val folderTitle by store.observeAsState(store.state.currentFolder.title) { store.state.currentFolder.title }
     var showMenu by remember { mutableStateOf(false) }
     val showSortMenu by store.observeAsState(store.state.sortMenuShown) { it.sortMenuShown }
@@ -635,135 +628,209 @@ private fun BookmarksListTopBar(
                 }
             },
             actions = {
-                when {
-                    selectedItems.isEmpty() -> {
-                        Box {
-                            IconButton(onClick = {
-                                store.dispatch(BookmarksListMenuAction.SortMenu.SortMenuButtonClicked)
-                            }) {
-                                Icon(
-                                    painter = painterResource(iconsR.drawable.mozac_ic_filter),
-                                    contentDescription = stringResource(
-                                        R.string.bookmark_sort_menu_content_desc,
-                                    ),
-                                    tint = iconColor,
-                                )
-                            }
-
-                            BookmarkSortOverflowMenu(
-                                showMenu = showSortMenu,
-                                onDismissRequest = {
-                                    store.dispatch(BookmarksListMenuAction.SortMenu.SortMenuDismissed)
-                                },
-                                store = store,
-                            )
-                        }
-
-                        if (isCurrentFolderDesktopRoot) {
-                            Unit
-                        } else {
-                            IconButton(onClick = { store.dispatch(AddFolderClicked) }) {
-                                Icon(
-                                    painter = painterResource(iconsR.drawable.mozac_ic_folder_add_24),
-                                    contentDescription = stringResource(
-                                        R.string.bookmark_add_new_folder_button_content_description,
-                                    ),
-                                    tint = iconColor,
-                                )
-                            }
-                        }
-
-                        if (!isCurrentFolderMobileRoot) {
-                            IconButton(onClick = { store.dispatch(CloseClicked) }) {
-                                Icon(
-                                    painter = painterResource(iconsR.drawable.mozac_ic_cross_24),
-                                    contentDescription = stringResource(
-                                        R.string.bookmark_close_button_content_description,
-                                    ),
-                                    tint = FirefoxTheme.colors.iconPrimary,
-                                )
-                            }
-                        }
-                    }
-                    selectedItems.any { it is BookmarkItem.Folder } -> {
-                        IconButton(onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.MoveClicked) }) {
-                            Icon(
-                                painter = painterResource(iconsR.drawable.mozac_ic_folder_arrow_right_24),
-                                contentDescription = stringResource(R.string.bookmark_menu_move_button),
-                                tint = iconColor,
-                            )
-                        }
-
-                        IconButton(onClick = {
-                            store.dispatch(BookmarksListMenuAction.MultiSelect.DeleteClicked)
-                        }) {
-                            Icon(
-                                painter = painterResource(iconsR.drawable.mozac_ic_delete_24),
-                                contentDescription = stringResource(R.string.bookmark_menu_delete_button),
-                                tint = iconColor,
-                            )
-                        }
-
-                        Box {
-                            IconButton(onClick = { showMenu = true }) {
-                                Icon(
-                                    painter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
-                                    contentDescription = stringResource(
-                                        R.string.content_description_menu,
-                                    ),
-                                    tint = iconColor,
-                                )
-                            }
-
-                            FolderListOverflowMenu(
-                                showFolderMenu = showMenu,
-                                onDismissRequest = { showMenu = false },
-                                store = store,
-                            )
-                        }
-                    }
-                    else -> {
-                        if (selectedItems.size == 1) {
-                            IconButton(onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.EditClicked) }) {
-                                Icon(
-                                    painter = painterResource(iconsR.drawable.mozac_ic_edit_24),
-                                    contentDescription = stringResource(R.string.bookmark_menu_edit_button),
-                                    tint = iconColor,
-                                )
-                            }
-                        }
-                        IconButton(onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.MoveClicked) }) {
-                            Icon(
-                                painter = painterResource(iconsR.drawable.mozac_ic_folder_arrow_right_24),
-                                contentDescription = stringResource(R.string.bookmark_menu_move_button),
-                                tint = iconColor,
-                            )
-                        }
-                        Box {
-                            IconButton(onClick = { showMenu = true }) {
-                                Icon(
-                                    painter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
-                                    contentDescription = stringResource(
-                                        R.string.content_description_menu,
-                                    ),
-                                    tint = iconColor,
-                                )
-                            }
-
-                            BookmarkListOverflowMenu(
-                                showMenu = showMenu,
-                                onDismissRequest = { showMenu = false },
-                                store = store,
-                            )
-                        }
-                    }
-                }
+                BookmarksListTopBarActions(
+                    selectedItems = selectedItems,
+                    store = store,
+                    iconColor = iconColor,
+                    showSortMenu = showSortMenu,
+                    showMenu = showMenu,
+                    onShowMenuChanged = { showMenu = it },
+                )
             },
             windowInsets = WindowInsets(
                 top = 0.dp,
                 bottom = 0.dp,
             ),
         )
+    }
+}
+
+@Composable
+private fun BookmarksListTopBarActions(
+    selectedItems: List<BookmarkItem>,
+    store: BookmarksStore,
+    iconColor: Color,
+    showSortMenu: Boolean,
+    showMenu: Boolean,
+    onShowMenuChanged: (Boolean) -> Unit,
+) {
+    val isCurrentFolderDesktopRoot by store.observeAsState(store.state.currentFolder.isDesktopRoot) {
+        store.state.currentFolder.isDesktopRoot
+    }
+    val isCurrentFolderMobileRoot by store.observeAsState(store.state.currentFolder.isMobileRoot) {
+        store.state.currentFolder.isMobileRoot
+    }
+    when {
+        selectedItems.isEmpty() -> BookmarksListTopBarActionsNoSelection(
+            store = store,
+            iconColor = iconColor,
+            showSortMenu = showSortMenu,
+            isCurrentFolderDesktopRoot = isCurrentFolderDesktopRoot,
+            isCurrentFolderMobileRoot = isCurrentFolderMobileRoot,
+        )
+
+        selectedItems.any { it is BookmarkItem.Folder } -> BookmarksListTopBarActionsFolderSelections(
+            store = store,
+            iconColor = iconColor,
+            onShowMenuChanged = onShowMenuChanged,
+            showMenu = showMenu,
+        )
+
+        else -> BookmarksListTopBarActionsSelections(
+            selectedItems = selectedItems,
+            store = store,
+            iconColor = iconColor,
+            onShowMenuChanged = onShowMenuChanged,
+            showMenu = showMenu,
+        )
+    }
+}
+
+@Composable
+private fun BookmarksListTopBarActionsSelections(
+    selectedItems: List<BookmarkItem>,
+    store: BookmarksStore,
+    iconColor: Color,
+    onShowMenuChanged: (Boolean) -> Unit,
+    showMenu: Boolean,
+) {
+    if (selectedItems.size == 1) {
+        IconButton(onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.EditClicked) }) {
+            Icon(
+                painter = painterResource(iconsR.drawable.mozac_ic_edit_24),
+                contentDescription = stringResource(R.string.bookmark_menu_edit_button),
+                tint = iconColor,
+            )
+        }
+    }
+    IconButton(onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.MoveClicked) }) {
+        Icon(
+            painter = painterResource(iconsR.drawable.mozac_ic_folder_arrow_right_24),
+            contentDescription = stringResource(R.string.bookmark_menu_move_button),
+            tint = iconColor,
+        )
+    }
+    Box {
+        IconButton(onClick = { onShowMenuChanged(true) }) {
+            Icon(
+                painter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
+                contentDescription = stringResource(
+                    R.string.content_description_menu,
+                ),
+                tint = iconColor,
+            )
+        }
+
+        BookmarkListOverflowMenu(
+            showMenu = showMenu,
+            onDismissRequest = { onShowMenuChanged(false) },
+            store = store,
+        )
+    }
+}
+
+@Composable
+private fun BookmarksListTopBarActionsFolderSelections(
+    store: BookmarksStore,
+    iconColor: Color,
+    onShowMenuChanged: (Boolean) -> Unit,
+    showMenu: Boolean,
+) {
+    IconButton(onClick = { store.dispatch(BookmarksListMenuAction.MultiSelect.MoveClicked) }) {
+        Icon(
+            painter = painterResource(iconsR.drawable.mozac_ic_folder_arrow_right_24),
+            contentDescription = stringResource(R.string.bookmark_menu_move_button),
+            tint = iconColor,
+        )
+    }
+
+    IconButton(
+        onClick = {
+            store.dispatch(BookmarksListMenuAction.MultiSelect.DeleteClicked)
+        },
+    ) {
+        Icon(
+            painter = painterResource(iconsR.drawable.mozac_ic_delete_24),
+            contentDescription = stringResource(R.string.bookmark_menu_delete_button),
+            tint = iconColor,
+        )
+    }
+
+    Box {
+        IconButton(onClick = { onShowMenuChanged(true) }) {
+            Icon(
+                painter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
+                contentDescription = stringResource(
+                    R.string.content_description_menu,
+                ),
+                tint = iconColor,
+            )
+        }
+
+        FolderListOverflowMenu(
+            showFolderMenu = showMenu,
+            onDismissRequest = { onShowMenuChanged(false) },
+            store = store,
+        )
+    }
+}
+
+@Composable
+private fun BookmarksListTopBarActionsNoSelection(
+    store: BookmarksStore,
+    iconColor: Color,
+    showSortMenu: Boolean,
+    isCurrentFolderDesktopRoot: Boolean,
+    isCurrentFolderMobileRoot: Boolean,
+) {
+    Box {
+        IconButton(
+            onClick = {
+                store.dispatch(BookmarksListMenuAction.SortMenu.SortMenuButtonClicked)
+            },
+        ) {
+            Icon(
+                painter = painterResource(iconsR.drawable.mozac_ic_filter),
+                contentDescription = stringResource(
+                    R.string.bookmark_sort_menu_content_desc,
+                ),
+                tint = iconColor,
+            )
+        }
+
+        BookmarkSortOverflowMenu(
+            showMenu = showSortMenu,
+            onDismissRequest = {
+                store.dispatch(BookmarksListMenuAction.SortMenu.SortMenuDismissed)
+            },
+            store = store,
+        )
+    }
+
+    if (isCurrentFolderDesktopRoot) {
+        Unit
+    } else {
+        IconButton(onClick = { store.dispatch(AddFolderClicked) }) {
+            Icon(
+                painter = painterResource(iconsR.drawable.mozac_ic_folder_add_24),
+                contentDescription = stringResource(
+                    R.string.bookmark_add_new_folder_button_content_description,
+                ),
+                tint = iconColor,
+            )
+        }
+    }
+
+    if (!isCurrentFolderMobileRoot) {
+        IconButton(onClick = { store.dispatch(CloseClicked) }) {
+            Icon(
+                painter = painterResource(iconsR.drawable.mozac_ic_cross_24),
+                contentDescription = stringResource(
+                    R.string.bookmark_close_button_content_description,
+                ),
+                tint = FirefoxTheme.colors.iconPrimary,
+            )
+        }
     }
 }
 

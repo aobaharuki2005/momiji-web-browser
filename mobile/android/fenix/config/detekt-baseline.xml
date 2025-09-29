@@ -16,7 +16,6 @@
     <ID>ForbiddenSuppress:BookmarksMiddleware.kt$BookmarksMiddleware$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:BookmarksMiddleware.kt$BookmarksMiddleware$@Suppress("LongMethod", "ComplexMethod")</ID>
     <ID>ForbiddenSuppress:BookmarksReducer.kt$@Suppress("LongMethod")</ID>
-    <ID>ForbiddenSuppress:BookmarksScreen.kt$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:BookmarksScreen.kt$@Suppress("LongMethod", "ComplexMethod")</ID>
     <ID>ForbiddenSuppress:BookmarksTelemetryMiddleware.kt$BookmarksTelemetryMiddleware$@Suppress("LongMethod", "ComplexMethod")</ID>
     <ID>ForbiddenSuppress:BrowserFragment.kt$BrowserFragment$@Suppress("LongMethod")</ID>
