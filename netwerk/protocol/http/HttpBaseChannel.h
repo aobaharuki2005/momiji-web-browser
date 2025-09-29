@@ -874,6 +874,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
   nsIRequest::TRRMode mEffectiveTRRMode = nsIRequest::TRR_DEFAULT_MODE;
   TRRSkippedReason mTRRSkipReason = TRRSkippedReason::TRR_UNSET;
 
+  // Dictionary entry - retain while we're saving the data, and while we're
+  // fetching data possibly encoded with the entry
+  RefPtr<DictionaryCacheEntry> mDict;
+
  public:
   void SetEarlyHints(
       nsTArray<mozilla::net::EarlyHintConnectArgs>&& aEarlyHints);

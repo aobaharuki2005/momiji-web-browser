@@ -3384,6 +3384,7 @@ nsresult CacheFileIOManager::EvictByContext(
   LOG(("CacheFileIOManager::EvictByContext() [loadContextInfo=%p]",
        aLoadContextInfo));
 
+  // XXX evict dictionary data from memory cache
   nsresult rv;
   RefPtr<CacheFileIOManager> ioMan = gInstance;
 
