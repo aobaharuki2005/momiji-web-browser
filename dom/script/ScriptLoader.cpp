@@ -3345,7 +3345,6 @@ nsresult ScriptLoader::MaybePrepareForCacheAfterExecute(
         !aRequest->IsStencil(),
         aRequest->GetSRILength() == aRequest->SRIAndBytecode().length());
     RegisterForCache(aRequest);
-    MOZ_ASSERT(IsAlreadyHandledForCachePreparation(aRequest));
 
     return aRv;
   }
@@ -3354,15 +3353,8 @@ nsresult ScriptLoader::MaybePrepareForCacheAfterExecute(
        unsigned(aRv)));
   TRACE_FOR_TEST_NONE(aRequest, "scriptloader_no_encode");
   aRequest->DropDiskCacheReference();
-  MOZ_ASSERT(IsAlreadyHandledForCachePreparation(aRequest));
 
   return aRv;
-}
-
-bool ScriptLoader::IsAlreadyHandledForCachePreparation(
-    ScriptLoadRequest* aRequest) {
-  MOZ_ASSERT_IF(aRequest->isInList(), mCachingQueue.Contains(aRequest));
-  return aRequest->isInList() || !aRequest->HasDiskCacheReference();
 }
 
 void ScriptLoader::MaybePrepareModuleForCacheBeforeExecute(
@@ -3391,8 +3383,15 @@ void ScriptLoader::MaybePrepareModuleForCacheBeforeExecute(
 
 nsresult ScriptLoader::MaybePrepareModuleForCacheAfterExecute(
     ModuleLoadRequest* aRequest, nsresult aRv) {
-  if (IsAlreadyHandledForCachePreparation(aRequest)) {
-    // This module is imported multiple times and already handled.
+  MOZ_ASSERT(aRequest->IsTopLevel());
+
+  if (aRequest->isInList()) {
+    // Top-level modules are part of lists only while loading, or
+    // after queued for cache.
+    // NOTE: Non-top-level modules are part of mCacheableDependencyModules
+    //       after it's loaded.
+    //
+    // This filters out modules which is already queued for cache.
     return aRv;
   }
 
@@ -3410,9 +3409,7 @@ nsresult ScriptLoader::MaybePrepareModuleForCacheAfterExecute(
 
     mCacheableDependencyModules.Remove(dep);
 
-    if (!IsAlreadyHandledForCachePreparation(dep)) {
-      aRv = MaybePrepareForCacheAfterExecute(dep, aRv);
-    }
+    aRv = MaybePrepareForCacheAfterExecute(dep, aRv);
   }
 
   return aRv;
