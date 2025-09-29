@@ -5465,8 +5465,12 @@ void LIRGenerator::visitLoadFixedSlotAndUnbox(MLoadFixedSlotAndUnbox* ins) {
     define(lir, ins);
     assignSafepoint(lir, ins);
   } else {
+    LInt64Definition temp0 = ins->type() == MIRType::Double
+                                 ? tempInt64()
+                                 : LInt64Definition::BogusTemp();
+
     LLoadFixedSlotAndUnbox* lir =
-        new (alloc()) LLoadFixedSlotAndUnbox(useRegisterAtStart(obj));
+        new (alloc()) LLoadFixedSlotAndUnbox(useRegisterAtStart(obj), temp0);
     if (ins->fallible()) {
       assignSnapshot(lir, ins->bailoutKind());
     }
@@ -5487,8 +5491,11 @@ void LIRGenerator::visitLoadDynamicSlotAndUnbox(MLoadDynamicSlotAndUnbox* ins) {
     define(lir, ins);
     assignSafepoint(lir, ins);
   } else {
-    auto* lir =
-        new (alloc()) LLoadDynamicSlotAndUnbox(useRegisterAtStart(slots));
+    LInt64Definition temp0 = ins->type() == MIRType::Double
+                                 ? tempInt64()
+                                 : LInt64Definition::BogusTemp();
+    auto* lir = new (alloc())
+        LLoadDynamicSlotAndUnbox(useRegisterAtStart(slots), temp0);
     if (ins->fallible()) {
       assignSnapshot(lir, ins->bailoutKind());
     }
@@ -5502,8 +5509,12 @@ void LIRGenerator::visitLoadElementAndUnbox(MLoadElementAndUnbox* ins) {
   MOZ_ASSERT(elements->type() == MIRType::Elements);
   MOZ_ASSERT(index->type() == MIRType::Int32);
 
-  auto* lir = new (alloc())
-      LLoadElementAndUnbox(useRegister(elements), useRegisterOrConstant(index));
+  LInt64Definition temp0 = ins->type() == MIRType::Double
+                               ? tempInt64()
+                               : LInt64Definition::BogusTemp();
+
+  auto* lir = new (alloc()) LLoadElementAndUnbox(
+      useRegister(elements), useRegisterOrConstant(index), temp0);
   if (ins->fallible()) {
     assignSnapshot(lir, ins->bailoutKind());
   }
