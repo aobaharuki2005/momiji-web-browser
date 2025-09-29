@@ -16,6 +16,7 @@
 #include "nsIObserver.h"
 #include "nsIStreamListener.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Vector.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/TimeStamp.h"
@@ -65,8 +66,8 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
 
   // Start reading the cache entry into memory and call completion
   // function when done
-  bool Prefetch(nsILoadContextInfo* aLoadContextInfo,
-                const std::function<void()>& aFunc);
+  nsresult Prefetch(nsILoadContextInfo* aLoadContextInfo, bool& aShouldSuspend,
+                    const std::function<void()>& aFunc);
 
   const nsACString& GetHash() const { return mHash; }
 
