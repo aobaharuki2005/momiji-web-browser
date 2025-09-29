@@ -256,21 +256,6 @@ export class ProfilesParent extends JSWindowActorParent {
     return tab;
   }
 
-  actorCreated() {
-    let favicon = this.tab.iconImage;
-    favicon.classList.add("profiles-tab");
-  }
-
-  didDestroy() {
-    const gBrowser = this.browsingContext.topChromeWindow?.gBrowser;
-    if (!gBrowser) {
-      // If gBrowser doesn't exist, then we've closed the tab so we can just return
-      return;
-    }
-    let favicon = this.tab.iconImage;
-    favicon.classList.remove("profiles-tab");
-  }
-
   async #getProfileContent(isDark) {
     await SelectableProfileService.init();
     let currentProfile = SelectableProfileService.currentProfile;
@@ -462,7 +447,7 @@ export class ProfilesParent extends JSWindowActorParent {
         // The enable theme promise resolves after the
         // "lightweight-theme-styling-update" observer so we know the profile
         // theme is up to date at this point.
-        return SelectableProfileService.currentProfile.theme;
+        return SelectableProfileService.currentProfile.toContentSafeObject();
       }
       case "Profiles:CloseProfileTab": {
         if (source === "about:editprofile") {

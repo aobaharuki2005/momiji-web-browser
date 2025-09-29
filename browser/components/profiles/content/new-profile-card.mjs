@@ -32,20 +32,14 @@ export class NewProfileCard extends EditProfileCard {
       this.maybeRedirectExistingProfile(profileCreated);
     }
 
-    this.profile = currentProfile;
+    this.setProfile(currentProfile);
     this.profiles = profiles;
     this.themes = themes;
-
-    if (this.profile.hasCustomAvatar) {
-      super.createAvatarURL();
-    }
 
     await Promise.all([
       this.setInitialInput(),
       this.setRandomTheme(isInAutomation),
     ]);
-
-    super.setFavicon();
   }
 
   /**
