@@ -2131,7 +2131,7 @@ void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
 
 void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
                                        Address boundsCheckLimit, Label* label) {
-  branchPtr(InvertCondition(cond), boundsCheckLimit, index.reg, label);
+  branchPtr(SwapCmdOperandsCondition(cond), boundsCheckLimit, index.reg, label);
   if (JitOptions.spectreIndexMasking) {
     csel(ARMRegister(index.reg, 64), vixl::xzr, ARMRegister(index.reg, 64),
          cond);

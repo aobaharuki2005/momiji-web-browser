@@ -985,7 +985,7 @@ class AssemblerLOONG64 : public AssemblerShared {
   static DoubleCondition InvertCondition(DoubleCondition cond);
   // This is changing the condition codes for cmp a, b to the same codes for cmp
   // b, a.
-  static Condition InvertCmpCondition(Condition cond);
+  static Condition SwapCmdOperandsCondition(Condition cond);
 
   // As opposed to x86/x64 version, the data relocation has to be executed
   // before to recover the pointer, and not after.
