@@ -8,8 +8,10 @@ import android.view.ViewGroup.MarginLayoutParams
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
@@ -45,6 +47,7 @@ import org.mozilla.fenix.utils.Settings
  * @param navController [NavController] used to navigate to other parts of the app.
  * @param customTabSessionId [String] Id of the tab or custom tab which should be observed for [EngineState.crashed]
  * depending on which the [CrashContentView] provided by [viewProvider] will be shown or hidden.
+ * @param dispatcher The [CoroutineDispatcher] to use for launching coroutines. Defaults to [Dispatchers.Main].
  *
  * Sample usage:
  *
@@ -73,6 +76,7 @@ class CrashContentIntegration(
     private val settings: Settings,
     private val navController: NavController,
     private val customTabSessionId: String?,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) : LifecycleAwareFeature {
 
     /**
@@ -81,53 +85,51 @@ class CrashContentIntegration(
      */
     internal var viewProvider: (() -> CrashContentView)? = null
 
-    @VisibleForTesting
-    lateinit var scope: CoroutineScope
+    private lateinit var scope: CoroutineScope
     private val crashReporterView: CrashContentView?
         get() = viewProvider?.invoke()
 
     override fun start() {
-        scope = MainScope().apply {
-            launch {
-                browserStore.flow()
-                    .mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(customTabSessionId) }
-                    .distinctUntilChangedBy { tab -> tab.engineState.crashed }
-                    .collect { tab ->
-                        if (tab.engineState.crashed) {
-                            toolbar.expand()
+        scope = CoroutineScope(dispatcher + SupervisorJob())
+        scope.launch {
+            browserStore.flow()
+                .mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(customTabSessionId) }
+                .distinctUntilChangedBy { tab -> tab.engineState.crashed }
+                .collect { tab ->
+                    if (tab.engineState.crashed) {
+                        toolbar.expand()
 
-                            crashReporterView?.apply {
-                                val controller = CrashReporterController(
-                                    sessionId = tab.id,
-                                    currentNumberOfTabs = if (tab.content.private) {
-                                        browserStore.state.privateTabs.size
-                                    } else {
-                                        browserStore.state.normalTabs.size
-                                    },
-                                    components = components,
-                                    settings = settings,
-                                    navController = navController,
-                                    appStore = appStore,
-                                )
+                        crashReporterView?.apply {
+                            val controller = CrashReporterController(
+                                sessionId = tab.id,
+                                currentNumberOfTabs = if (tab.content.private) {
+                                    browserStore.state.privateTabs.size
+                                } else {
+                                    browserStore.state.normalTabs.size
+                                },
+                                components = components,
+                                settings = settings,
+                                navController = navController,
+                                appStore = appStore,
+                            )
 
-                                show(controller)
+                            show(controller)
 
-                                updateVerticalMargins()
-                            }
-                        } else {
-                            crashReporterView?.hide()
+                            updateVerticalMargins()
                         }
+                    } else {
+                        crashReporterView?.hide()
                     }
-            }
+                }
+        }
 
-            launch {
-                appStore.flow()
-                    .distinctUntilChangedBy { it.orientation }
-                    .map { it.orientation }
-                    .collect {
-                        updateVerticalMargins()
-                    }
-            }
+        scope.launch {
+            appStore.flow()
+                .distinctUntilChangedBy { it.orientation }
+                .map { it.orientation }
+                .collect {
+                    updateVerticalMargins()
+                }
         }
     }
 
