@@ -93,19 +93,33 @@ td[data-d3-cell="value"] > svg {
   background-color: var(--background-color-box);
 }
 
-.histogram .boxes rect {
+.histogram .boxes rect,
+.timeline .events circle {
   fill: var(--color-accent-primary);
 }
 
-.histogram .boxes .hovered rect {
+.histogram .boxes .hovered rect,
+.timeline .events .hovered circle,
+.timeline .events .selected circle {
   fill: var(--color-accent-primary-hover);
 }
 
-.histogram .boxes text {
+.histogram .boxes text,
+.timeline text {
   fill: var(--text-color);
 }
 
 .histogram .tick *,
 .histogram .domain {
   fill: var(--text-color);
+}
+
+.timeline line {
+  stroke: var(--text-color);
+}
+
+svg.timeline,
+pre.withChart {
+  max-width: 500px;
+  overflow: scroll;
 }
