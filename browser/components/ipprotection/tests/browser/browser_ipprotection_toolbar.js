@@ -157,6 +157,8 @@ add_task(async function toolbar_icon_status_new_window() {
   await BrowserTestUtils.closeWindow(newWindow);
 
   await setPanelState();
+  // Clear userEnabled pref to avoid breaking tests
+  Services.prefs.clearUserPref("browser.ipProtection.userEnabled");
   cleanupService();
 });
 

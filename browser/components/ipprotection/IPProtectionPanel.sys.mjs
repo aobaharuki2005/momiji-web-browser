@@ -344,8 +344,10 @@ export class IPProtectionPanel {
       this.close();
     } else if (event.type == "IPProtection:UserEnable") {
       this.#startProxy();
+      Services.prefs.setBoolPref("browser.ipProtection.userEnabled", true);
     } else if (event.type == "IPProtection:UserDisable") {
       this.#stopProxy();
+      Services.prefs.setBoolPref("browser.ipProtection.userEnabled", false);
     } else if (event.type == "IPProtection:ShowHelpPage") {
       this.showHelpPage();
     } else if (event.type == "IPProtection:ClickUpgrade") {

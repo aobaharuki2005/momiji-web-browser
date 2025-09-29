@@ -175,6 +175,9 @@ add_task(async function toggle_off_on_shutdown() {
     "Should have positive duration"
   );
 
+  // Clear userEnabled pref to avoid breaking tests
+  Services.prefs.clearUserPref("browser.ipProtection.userEnabled");
+
   Services.fog.testResetFOG();
   // Re-initialize to avoid breaking tests that follow
   cleanupService();

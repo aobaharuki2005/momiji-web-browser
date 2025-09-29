@@ -243,6 +243,11 @@ add_task(async function test_ipprotection_events_on_toggle() {
 
   await enableEventPromise;
   Assert.ok("Enable event was found after clicking the toggle");
+  let userEnabledPref = Services.prefs.getBoolPref(
+    "browser.ipProtection.userEnabled",
+    false
+  );
+  Assert.equal(userEnabledPref, true, "userEnabled pref should be set to true");
 
   let disableEventPromise = BrowserTestUtils.waitForEvent(
     window,
@@ -252,6 +257,15 @@ add_task(async function test_ipprotection_events_on_toggle() {
 
   await disableEventPromise;
   Assert.ok("Disable event was found after clicking the toggle");
+  userEnabledPref = Services.prefs.getBoolPref(
+    "browser.ipProtection.userEnabled",
+    true
+  );
+  Assert.equal(
+    userEnabledPref,
+    false,
+    "userEnabled pref should be set to false"
+  );
 
   // Close the panel
   let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
