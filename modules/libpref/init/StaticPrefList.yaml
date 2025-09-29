@@ -15692,6 +15692,12 @@
   value: false
   mirror: always
 
+# Enable HTTP Compression Dictionary support
+- name: network.http.dictionaries.enable
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
