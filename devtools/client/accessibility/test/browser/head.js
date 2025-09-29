@@ -449,9 +449,10 @@ async function checkToolbarState(doc, activeToolbarFilters) {
  * @param  {Object} expected    Expected states of the simulation components:
  * @param  {Boolean} expected.buttonActive
  * @param  {Array<Number>} expected.checkedOptionIndices
+ * @param  {Array<Number>} expected.colorMatrix
  */
 async function checkSimulationState(doc, toolboxDoc, expected) {
-  const { buttonActive, checkedOptionIndices } = expected;
+  const { buttonActive, checkedOptionIndices, colorMatrix } = expected;
 
   // Check simulation menu button state
   await waitFor(
@@ -482,6 +483,19 @@ async function checkSimulationState(doc, toolboxDoc, expected) {
       );
     });
   }
+
+  const docShellColorMatrix = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => content.window.docShell.getColorMatrix()
+  );
+  Assert.deepEqual(
+    // The values we get from getColorMatrix have higher precisions than what is defined
+    // in the simulation matrix in the accessibility panel
+    docShellColorMatrix.map(v => v.toFixed(6)),
+    colorMatrix,
+    `docShell color matrix has expected value`
+  );
 }
 
 /**

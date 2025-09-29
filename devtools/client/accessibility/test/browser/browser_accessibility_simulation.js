@@ -20,6 +20,10 @@ const TEST_URI = `<html>
   </body>
 </html>`;
 
+const {
+  simulation,
+} = require("resource://devtools/server/actors/accessibility/constants.js");
+
 /**
  * Test data has the format of:
  * {
@@ -35,6 +39,7 @@ const tests = [
     expected: {
       simulation: {
         buttonActive: false,
+        colorMatrix: [],
       },
     },
   },
@@ -47,6 +52,7 @@ const tests = [
       simulation: {
         buttonActive: false,
         checkedOptionIndices: [0],
+        colorMatrix: [],
       },
     },
   },
@@ -59,6 +65,7 @@ const tests = [
       simulation: {
         buttonActive: true,
         checkedOptionIndices: [2],
+        colorMatrix: simulation.COLOR_TRANSFORMATION_MATRICES.DEUTERANOPIA,
       },
     },
   },
@@ -71,6 +78,22 @@ const tests = [
       simulation: {
         buttonActive: true,
         checkedOptionIndices: [2],
+        colorMatrix: simulation.COLOR_TRANSFORMATION_MATRICES.DEUTERANOPIA,
+      },
+    },
+  },
+  {
+    desc: "Reloading the page preserves the previously selected option.",
+    setup: async ({ panel }) => {
+      const onReloaded = panel.once("reloaded");
+      panel.accessibilityProxy.commands.targetCommand.reloadTopLevelTarget();
+      await onReloaded;
+    },
+    expected: {
+      simulation: {
+        buttonActive: true,
+        checkedOptionIndices: [2],
+        colorMatrix: simulation.COLOR_TRANSFORMATION_MATRICES.DEUTERANOPIA,
       },
     },
   },
@@ -83,6 +106,7 @@ const tests = [
       simulation: {
         buttonActive: false,
         checkedOptionIndices: [0],
+        colorMatrix: simulation.COLOR_TRANSFORMATION_MATRICES.NONE,
       },
     },
   },
