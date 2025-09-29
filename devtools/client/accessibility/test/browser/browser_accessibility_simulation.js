@@ -40,8 +40,8 @@ const tests = [
   },
   {
     desc: "Clicking the menu button shows the menu with No Simulation selected.",
-    setup: async ({ doc }) => {
-      await openSimulationMenu(doc);
+    setup: async ({ doc, toolbox }) => {
+      await openSimulationMenu(doc, toolbox.doc);
     },
     expected: {
       simulation: {
@@ -52,8 +52,8 @@ const tests = [
   },
   {
     desc: "Selecting an option renders the menu button active and closes the menu.",
-    setup: async ({ doc }) => {
-      await toggleSimulationOption(doc, 2);
+    setup: async ({ toolbox }) => {
+      await toggleSimulationOption(toolbox.doc, 2);
     },
     expected: {
       simulation: {
@@ -64,8 +64,8 @@ const tests = [
   },
   {
     desc: "Reopening the menu preserves the previously selected option.",
-    setup: async ({ doc }) => {
-      await openSimulationMenu(doc);
+    setup: async ({ doc, toolbox }) => {
+      await openSimulationMenu(doc, toolbox.doc);
     },
     expected: {
       simulation: {
@@ -76,8 +76,8 @@ const tests = [
   },
   {
     desc: "Unselecting the option renders the button inactive and closes the menu.",
-    setup: async ({ doc }) => {
-      await toggleSimulationOption(doc, 2);
+    setup: async ({ toolbox }) => {
+      await toggleSimulationOption(toolbox.doc, 2);
     },
     expected: {
       simulation: {

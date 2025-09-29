@@ -26,7 +26,8 @@ const {
   PREF_KEYS,
 } = require("resource://devtools/client/accessibility/constants.js");
 
-const SIMULATION_MENU_BUTTON_ID = "#simulation-menu-button";
+const SIMULATION_MENU_BUTTON_ID = "simulation-menu-button";
+const SIMULATION_MENU_ID = "simulation-menu-button-menu";
 const TREE_FILTERS_MENU_ID = "accessibility-tree-filters-menu";
 const PREFS_MENU_ID = "accessibility-tree-filters-prefs-menu";
 
@@ -444,26 +445,32 @@ async function checkToolbarState(doc, activeToolbarFilters) {
 /**
  * Check the state of the simulation button and menu components.
  * @param  {Object} doc         Panel document.
+ * @param  {Object} toolboxDoc  Toolbox document.
  * @param  {Object} expected    Expected states of the simulation components:
- *                              menuVisible, buttonActive, checkedOptionIndices (Optional)
+ * @param  {Boolean} expected.buttonActive
+ * @param  {Array<Number>} expected.checkedOptionIndices
  */
-async function checkSimulationState(doc, expected) {
+async function checkSimulationState(doc, toolboxDoc, expected) {
   const { buttonActive, checkedOptionIndices } = expected;
-  const simulationMenuOptions = doc
-    .querySelector(SIMULATION_MENU_BUTTON_ID + "-menu")
-    .querySelectorAll(".menuitem");
 
   // Check simulation menu button state
-  is(
-    doc.querySelector(SIMULATION_MENU_BUTTON_ID).className,
-    `devtools-button toolbar-menu-button simulation${
-      buttonActive ? " active" : ""
-    }`,
+  await waitFor(
+    () =>
+      doc
+        .getElementById(SIMULATION_MENU_BUTTON_ID)
+        .classList.contains("active") === buttonActive
+  );
+  ok(
+    true,
     `Simulation menu button contains ${buttonActive ? "active" : "base"} class.`
   );
 
   // Check simulation menu options states, if specified
   if (checkedOptionIndices) {
+    const simulationMenuOptions = toolboxDoc
+      .getElementById(SIMULATION_MENU_ID)
+      .querySelectorAll(".menuitem");
+
     simulationMenuOptions.forEach((menuListItem, index) => {
       const isChecked = checkedOptionIndices.includes(index);
       const button = menuListItem.firstChild;
@@ -626,20 +633,46 @@ async function toggleMenuItem(doc, toolboxDoc, menuId, menuItemIndex) {
   );
 }
 
-async function openSimulationMenu(doc) {
-  doc.querySelector(SIMULATION_MENU_BUTTON_ID).click();
+/**
+ * Open the simulation menu.
+ *
+ * @param {document} doc
+ *        panel document.
+ * @param {document} toolboxDoc
+ *        toolbox document.
+ */
+async function openSimulationMenu(doc, toolboxDoc) {
+  doc.getElementById(SIMULATION_MENU_BUTTON_ID).click();
 
   await BrowserTestUtils.waitForCondition(() =>
-    doc
-      .querySelector(SIMULATION_MENU_BUTTON_ID + "-menu")
+    toolboxDoc
+      .getElementById(SIMULATION_MENU_ID)
       .classList.contains("tooltip-visible")
   );
 }
 
-async function toggleSimulationOption(doc, optionIndex) {
-  const simulationMenu = doc.querySelector(SIMULATION_MENU_BUTTON_ID + "-menu");
-  simulationMenu.querySelectorAll(".menuitem")[optionIndex].firstChild.click();
+/**
+ * Toggle an option in the the simulation menu.
+ *
+ * @param {document} toolboxDoc
+ *        toolbox document.
+ * @param {Number}
+ *        index of the option in the menu
+ */
+async function toggleSimulationOption(toolboxDoc, optionIndex) {
+  const simulationMenu = toolboxDoc.getElementById(SIMULATION_MENU_ID);
+  const menuItemButton =
+    simulationMenu.querySelectorAll(".menuitem")[optionIndex].firstChild;
+  const previousAriaCheckedValue = menuItemButton.getAttribute("aria-checked");
+  menuItemButton.click();
 
+  // wait for the button state to be updated
+  await waitFor(
+    () =>
+      menuItemButton.getAttribute("aria-checked") !== previousAriaCheckedValue
+  );
+
+  // wait for the menu to be hidden
   await BrowserTestUtils.waitForCondition(
     () => !simulationMenu.classList.contains("tooltip-visible")
   );
@@ -733,7 +766,7 @@ async function runA11yPanelTests(tests, env) {
     }
 
     if (simulation) {
-      await checkSimulationState(env.doc, simulation);
+      await checkSimulationState(env.doc, env.toolbox.doc, simulation);
     }
   }
 }
