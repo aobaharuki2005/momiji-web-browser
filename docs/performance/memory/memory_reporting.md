@@ -40,30 +40,36 @@ Sometimes counter-based reporters are unavoidable, particularly when writing mem
 
 Imagine a simple string class with the following data fields:
 
+```c++
 class MyString
 {
   private:
-    char \*mBuffer;    // heap-allocated
-    size\_t mLen;
+    char *mBuffer;    // heap-allocated
+    size_t mLen;
 
   // ... methods ...
 }
+```
 
 Here are what the measurement functions (yes, functions) should look like for this class.
 
-size\_t MyString::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+```c++
+size_t MyString::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(mBuffer);
 }
-size\_t MyString::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+size_t MyString::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
+```
 
 (Note that `SizeOfExcludingThis` and `SizeOfIncludingThis` aren't overrides of methods on a global base class that is common to all reporters. These names are just a convention that is commonly followed. That said, note that for some classes these methods may be virtual.)
 [mfbt/MemoryReporting.h](http://dxr.mozilla.org/mozilla-central/source/mfbt/MemoryReporting.h) defines `mozilla::MallocSizeOf` as follows:
 
-typedef size\_t (\*MallocSizeOf)(const void\* p);
+```c++
+typedef size_t (*MallocSizeOf)(const void* p);
+```
 
 Functions with this signature measure the size of `p` by asking the heap allocator how big it is (via `moz_malloc_usable_size`).
 All this is probably not what you'd expect, but the above functions have the following crucial features.
@@ -80,28 +86,30 @@ Some other things to note.
 
 And here's how you'd write a memory reporter if there was a single global `MyString` object.
 
-MyString \*gMyString;
+```c++
+MyString *gMyString;
 
-class MyStringReporter MOZ\_FINAL : public nsIMemoryReporter
+class MyStringReporter MOZ_FINAL : public nsIMemoryReporter
 {
-  MOZ\_DEFINE\_MALLOC\_SIZE\_OF(MallocSizeOf)
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
 public:
-  NS\_DECL\_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-  NS\_METHOD
-  CollectReports(nsIHandleReportCallback\* aHandleReport, nsISupports\* aData)
+  NS_METHOD
+  CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData)
   {
     // BTW: If gMyString wasn't a pointer, you'd use
     // |gMyString.SizeOfExcludingThis(MallocSizeOf)| instead.
-    return MOZ\_COLLECT\_REPORT(
-      "explicit/mystring", KIND\_HEAP, UNITS\_BYTES,
-      gMyString->SizeOfIncludingThis(MallocSizeOf),
+    return MOZ_COLLECT_REPORT(
+      "explicit/mystring", KIND_HEAP, UNITS_BYTES,
+      gMyString-&gt;SizeOfIncludingThis(MallocSizeOf),
       "Memory used for MyString.");
   }
 };
 
-NS\_IMPL\_ISUPPORTS1(MyStringReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS1(MyStringReporter, nsIMemoryReporter)
+```
 
 Note that `MOZ_DEFINE_MALLOC_SIZE_OF` defines a function of type `mozilla::MallocSizeOf` that is specific to this memory reporter (and will be identified as such in DMD's output). And `MOZ_COLLECT_REPORT` is a macro that makes things a bit shorter.
 
@@ -109,16 +117,17 @@ Note that `MOZ_DEFINE_MALLOC_SIZE_OF` defines a function of type `mozilla::Mallo
 
 Things are a little trickier when inheritance is involved. An example:
 
+```c++
 class B
 {
   virtual foo() { ... }
 
-  virtual size\_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+  virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   {
     return ... // measure things pointed to by B-specific fields
   }
 
-  virtual size\_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
@@ -130,20 +139,21 @@ class D : public B
 {
   virtual foo() { ... }
 
-  virtual size\_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const override
+  virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const override
   {
-    size\_t n = B::SizeOfExcludingThis(aMallocSizeOf);
+    size_t n = B::SizeOfExcludingThis(aMallocSizeOf);
     n += ...  // measure things pointed to by D-specific fields
     return n;
   }
 
-  virtual size\_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const override
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
   // data members
 };
+```
 
 Things to note about `SizeOfExcludingThis` when it is virtual.
 
@@ -164,28 +174,32 @@ Sometimes you may need variations on the above forms. For example, if you have a
 
 Sometimes you might want to split the measurements of an object into two or more numbers, e.g. because you want to show them separately in about:memory. In this case it's often clearer to _increment_ the numbers rather than _assigning_ to them, especially if you're measuring multiple entities and summing their measurements. For example:
 
+```c++
 void FooBar::AddSizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
-                                    size\_t \*aFooSizeOut, size\_t\* aBarSizeOut) const
+                                    size_t *aFooSizeOut, size_t* aBarSizeOut) const
  {
-     \*aFooSizeOut += ...;
-     \*aBarSizeOut += ...;
+     *aFooSizeOut += ...;
+     *aBarSizeOut += ...;
  }
+```
 
 Alternatively, you could create a struct:
 
+```c++
 struct FooBarSizes
 {
-  size\_t mFoo;
-  size\_t mBar;
+  size_t mFoo;
+  size_t mBar;
   FooBarSizes() { mozilla::PodZero(this); }
 }
 
 void FooBar::AddSizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
-                                    FooBarSizes\* aSizes) const
+                                    FooBarSizes* aSizes) const
 {
   aSizes->mFoo += ...;
   aSizes->mBar += ...;
 }
+```
 
 Note the `Add` prefix that makes this incrementing behaviour clear. Obviously, if you increment you have to zero the values at some point. When using a struct, its constructor is the obvious place for this.
 
@@ -199,11 +213,13 @@ It's important that no memory is measured twice; this can lead to strange result
 
 It's easy to get confused as to whether you should use `SizeOfIncludingThis` or `SizeOfExcludingThis`. A good rule of thumb: if you're calling the method via a pointer, you usually want the former, otherwise you want the latter. For example:
 
+```c++
 foo->SizeOfIncludingThis()  // yes
 foo.SizeOfExcludingThis()   // yes
 
 foo.SizeOfIncludingThis()   // no
 foo->SizeOfExcludingThis()  // no
+```
 
 Sometimes memory reporters are stand-alone objects, like the `MyStringReporter` example above. But often you'll have a singleton object that needs measuring, in which case it is usually better not to have a separate reporter object, but instead for the singleton object to implement `nsIMemoryReporter`, and thus measure and report its own memory consumption. There are many such examples in the code, such as `nsCategoryManager`.
 
