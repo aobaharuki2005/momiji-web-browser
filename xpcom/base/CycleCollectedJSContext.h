@@ -314,6 +314,12 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, private JS::JobQueue {
   bool getHostDefinedData(JSContext* cx,
                           JS::MutableHandle<JSObject*> aData) const override;
 
+  // Fills in the JS Object used to represent the current incumbent global.
+  // Used when running MicroTasks which don't have host-defined data as
+  // they will still need an incumbent global.
+  bool getHostDefinedGlobal(JSContext* cx,
+                            JS::MutableHandle<JSObject*>) const override;
+
   bool enqueuePromiseJob(JSContext* cx, JS::Handle<JSObject*> promise,
                          JS::Handle<JSObject*> job,
                          JS::Handle<JSObject*> allocationSite,

@@ -313,6 +313,17 @@ static const JSClass sHostDefinedDataClass = {
         JSCLASS_FOREGROUND_FINALIZE,
     &sHostDefinedData};
 
+bool CycleCollectedJSContext::getHostDefinedGlobal(
+    JSContext* aCx, JS::MutableHandle<JSObject*> out) const {
+  nsIGlobalObject* global = mozilla::dom::GetIncumbentGlobal();
+  if (!global) {
+    return true;
+  }
+
+  out.set(global->GetGlobalJSObject());
+  return true;
+}
+
 bool CycleCollectedJSContext::getHostDefinedData(
     JSContext* aCx, JS::MutableHandle<JSObject*> aData) const {
   nsIGlobalObject* global = mozilla::dom::GetIncumbentGlobal();
