@@ -28,6 +28,7 @@ ROOT_PATH = (DIR_PATH / "../../../..").resolve()
 
 MOZ_YAML_PATH = DIR_PATH / "moz.yaml"
 FINAL_JS_PATH = DIR_PATH / "bergamot-translator.js"
+PATCHES_PATH = DIR_PATH / "patches"
 
 THIRD_PARTY_PATH = DIR_PATH / "thirdparty"
 REPO_PATH = THIRD_PARTY_PATH / "translations"
@@ -233,6 +234,14 @@ def write_final_bergamot_js_file():
 
         logger.info(f"Writing out final Bergamot file: {FINAL_JS_PATH}")
         shutil.move(temp_path, FINAL_JS_PATH)
+
+    if PATCHES_PATH.exists():
+        for patch_file in PATCHES_PATH.iterdir():
+            if patch_file.is_file() and patch_file.suffix == ".diff":
+                logger.info(f"Applying patch: {patch_file.name}")
+                subprocess.check_call(
+                    ["git", "apply", "--reject", str(patch_file)], cwd=DIR_PATH
+                )
 
 
 def compress_wasm_file():
