@@ -9,7 +9,7 @@
  * object that is a containing block for them
  */
 
-#include "nsAbsoluteContainingBlock.h"
+#include "mozilla/AbsoluteContainingBlock.h"
 
 #include "AnchorPositioningUtils.h"
 #include "mozilla/CSSAlignUtils.h"

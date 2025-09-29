@@ -15,6 +15,7 @@
 
 #include "fmt/format.h"
 #include "gfxContext.h"
+#include "mozilla/AbsoluteContainingBlock.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Baseline.h"
 #include "mozilla/CSSAlignUtils.h"
@@ -27,7 +28,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/Grid.h"
 #include "mozilla/dom/GridBinding.h"
-#include "nsAbsoluteContainingBlock.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
 #include "nsFieldSetFrame.h"

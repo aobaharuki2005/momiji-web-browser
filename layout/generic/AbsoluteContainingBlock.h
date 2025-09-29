@@ -9,8 +9,8 @@
  * object that is a containing block for them
  */
 
-#ifndef nsAbsoluteContainingBlock_h___
-#define nsAbsoluteContainingBlock_h___
+#ifndef LAYOUT_GENERIC_ABSOLUTE_CONTAINING_BLOCK_H_
+#define LAYOUT_GENERIC_ABSOLUTE_CONTAINING_BLOCK_H_
 
 #include "nsFrameList.h"
 #include "nsIFrame.h"
@@ -171,4 +171,4 @@ class AbsoluteContainingBlock {
 
 }  // namespace mozilla
 
-#endif /* nsnsAbsoluteContainingBlock_h___ */
+#endif /* LAYOUT_GENERIC_ABSOLUTE_CONTAINING_BLOCK_H_ */

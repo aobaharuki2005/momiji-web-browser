@@ -10,6 +10,7 @@
 
 #include <algorithm>
 
+#include "mozilla/AbsoluteContainingBlock.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
@@ -19,7 +20,6 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/widget/InitData.h"
-#include "nsAbsoluteContainingBlock.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
 #include "nsBlockFrame.h"
