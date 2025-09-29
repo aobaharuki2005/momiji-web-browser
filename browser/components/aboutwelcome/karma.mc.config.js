@@ -146,12 +146,6 @@ module.exports = function (config) {
               functions: 75,
               branches: 37.5,
             },
-            "content-src/components/MRColorways.jsx": {
-              statements: 76.09,
-              lines: 75,
-              functions: 76.92,
-              branches: 74.07,
-            },
             "content-src/components/MobileDownloads.jsx": {
               branches: 56.25,
             },
