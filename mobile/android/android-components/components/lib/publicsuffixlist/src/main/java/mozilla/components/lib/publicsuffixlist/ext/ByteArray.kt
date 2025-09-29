@@ -45,7 +45,6 @@ internal fun ByteArray.binarySearch(labels: List<ByteArray>, labelIndex: Int): S
 
             // Compare the bytes. Note that the file stores UTF-8 encoded bytes, so we must compare the
             // unsigned bytes.
-            @Suppress("EXPERIMENTAL_API_USAGE")
             compareResult = (byte0.toUByte() - byte1.toUByte()).toInt()
             if (compareResult != 0) {
                 break
