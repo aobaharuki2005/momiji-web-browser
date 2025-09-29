@@ -77,6 +77,10 @@ class AnchorPosReferenceData {
   Map mMap;
 };
 
+struct StylePositionArea;
+struct StylePositionTryFallbacksTryTactic;
+class WritingMode;
+
 /**
  * AnchorPositioningUtils is a namespace class used for various anchor
  * positioning helper functions that are useful in multiple places.
@@ -103,7 +107,9 @@ struct AnchorPositioningUtils {
    */
   static nsRect AdjustAbsoluteContainingBlockRectForPositionArea(
       nsIFrame* aPositionedFrame, nsIFrame* aContainingBlock,
-      const nsRect& aCBRect, AnchorPosReferenceData* aAnchorPosReferenceData);
+      const nsRect& aCBRect, AnchorPosReferenceData* aAnchorPosReferenceData,
+      const StylePositionArea& aPositionArea,
+      const StylePositionTryFallbacksTryTactic* aFallbackTactic);
 };
 
 }  // namespace mozilla
