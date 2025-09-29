@@ -96,7 +96,22 @@ add_task(async function test_amo_stats_glean_metrics() {
     );
   }
 
-  if (AppConstants.platform !== "android") {
+  if (AppConstants.platform === "android") {
+    const themes = await AddonManager.getAddonsByTypes(["theme"]);
+    // Sanity check.
+    Assert.deepEqual(
+      themes,
+      [],
+      "Expect no theme addons to be found while running on mobile builds"
+    );
+
+    const gleanActiveTheme = Glean.addons.theme.testGetValue();
+    Assert.deepEqual(
+      gleanActiveTheme,
+      null,
+      "Expect no theme metadata to be found on Android builds for Glean addons.theme"
+    );
+  } else {
     const theme = await AddonManager.getAddonByID(
       AddonSettings.DEFAULT_THEME_ID
     );
@@ -107,9 +122,6 @@ add_task(async function test_amo_stats_glean_metrics() {
       "Got the expected theme metadata set on Glean addons.theme"
     );
   }
-
-  // TODO on mobile builds Glean.addons.theme is an empty object instead of null/undefined,
-  // should we change that to ensure to not set it at all?
 
   await uninstallTestExtensions();
 });
