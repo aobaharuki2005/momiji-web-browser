@@ -983,6 +983,12 @@ class WorkerJSContext final : public mozilla::CycleCollectedJSContext {
     return NS_OK;
   }
 
+  virtual bool useDebugQueue(JSObject* global) const override {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    return !(IsWorkerGlobal(global) || IsShadowRealmGlobal(global));
+  }
+
   virtual void DispatchToMicroTask(
       already_AddRefed<MicroTaskRunnable> aRunnable) override {
     RefPtr<MicroTaskRunnable> runnable(aRunnable);

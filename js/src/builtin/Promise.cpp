@@ -1677,6 +1677,17 @@ static bool ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool EnqueueJob(JSContext* cx, JS::MicroTask&& job) {
+  MOZ_ASSERT(cx->realm());
+
+  // Only check if we need to use the debug queue when we're not on main thread.
+  if (MOZ_UNLIKELY(!cx->runtime()->isMainRuntime() &&
+                   cx->jobQueue->useDebugQueue(cx->global()))) {
+    return cx->microTaskQueues->enqueueDebugMicroTask(cx, std::move(job));
+  }
+  return cx->microTaskQueues->enqueueRegularMicroTask(cx, std::move(job));
+}
+
 static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -1902,8 +1913,7 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp);
     }
 
     // HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
-    return cx->microTaskQueues->enqueueRegularMicroTask(
-        cx, std::move(reactionVal.get()));
+    return EnqueueJob(cx, std::move(reactionVal.get()));
   }
 
   RootedField<JSObject*, 7> hostDefinedData(roots);
@@ -2920,8 +2930,7 @@ static bool PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc,
 
     thenableJob->setHostDefinedGlobalRepresentative(
         hostDefinedGlobalRepresentative);
-    return cx->microTaskQueues->enqueueRegularMicroTask(
-        cx, ObjectValue(*thenableJob));
+    return EnqueueJob(cx, ObjectValue(*thenableJob));
   }
 
   // Step 1. Let job be a new Job Abstract Closure with no parameters that
@@ -2981,8 +2990,7 @@ static bool PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc,
       return false;
     }
 
-    return cx->microTaskQueues->enqueueRegularMicroTask(
-        cx, ObjectValue(*thenableJob));
+    return EnqueueJob(cx, ObjectValue(*thenableJob));
   }
 
   // Step 1. Let job be a new Job Abstract Closure with no parameters that
