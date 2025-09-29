@@ -119,7 +119,6 @@ class nsLineLink;
 template <typename Link, bool>
 class GenericLineListIterator;
 using LineListIterator = GenericLineListIterator<nsLineLink, false>;
-class nsAbsoluteContainingBlock;
 class nsContainerFrame;
 class nsPlaceholderFrame;
 class nsStyleChangeList;
@@ -138,6 +137,7 @@ enum class PeekOffsetOption : uint16_t;
 enum class PseudoStyleType : uint8_t;
 enum class TableSelectionMode : uint32_t;
 
+class AbsoluteContainingBlock;
 class AnchorPosReferenceData;
 class EffectSet;
 class LazyLogModule;
@@ -4679,7 +4679,7 @@ class nsIFrame : public nsQueryFrame {
     return !!(mState & NS_FRAME_HAS_ABSPOS_CHILDREN);
   }
   bool HasAbsolutelyPositionedChildren() const;
-  nsAbsoluteContainingBlock* GetAbsoluteContainingBlock() const;
+  mozilla::AbsoluteContainingBlock* GetAbsoluteContainingBlock() const;
   void MarkAsAbsoluteContainingBlock();
   void MarkAsNotAbsoluteContainingBlock();
   // Child frame types override this function to select their own child list

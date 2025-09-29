@@ -26,7 +26,6 @@ enum class AbsPosReflowFlag : uint8_t {
   IsGridContainerCB,
 };
 using AbsPosReflowFlags = EnumSet<AbsPosReflowFlag>;
-}  // namespace mozilla
 
 /**
  * This class contains the logic for being an absolute containing block.  This
@@ -42,38 +41,32 @@ using AbsPosReflowFlags = EnumSet<AbsPosReflowFlag>;
  * All functions include as the first argument the frame that is delegating
  * the request.
  */
-class nsAbsoluteContainingBlock {
-  using ReflowInput = mozilla::ReflowInput;
-
+class AbsoluteContainingBlock {
  public:
-  explicit nsAbsoluteContainingBlock(mozilla::FrameChildListID aChildListID)
+  explicit AbsoluteContainingBlock(FrameChildListID aChildListID)
 #ifdef DEBUG
       : mChildListID(aChildListID)
 #endif
   {
-    MOZ_ASSERT(mChildListID == mozilla::FrameChildListID::Absolute ||
-                   mChildListID == mozilla::FrameChildListID::Fixed,
+    MOZ_ASSERT(mChildListID == FrameChildListID::Absolute ||
+                   mChildListID == FrameChildListID::Fixed,
                "should either represent position:fixed or absolute content");
   }
 
   const nsFrameList& GetChildList() const { return mAbsoluteFrames; }
-  void AppendChildList(nsTArray<mozilla::FrameChildList>* aLists,
-                       mozilla::FrameChildListID aListID) const {
+  void AppendChildList(nsTArray<FrameChildList>* aLists,
+                       FrameChildListID aListID) const {
     NS_ASSERTION(aListID == mChildListID, "wrong list ID");
     GetChildList().AppendIfNonempty(aLists, aListID);
   }
 
-  void SetInitialChildList(nsIFrame* aDelegatingFrame,
-                           mozilla::FrameChildListID aListID,
+  void SetInitialChildList(nsIFrame* aDelegatingFrame, FrameChildListID aListID,
                            nsFrameList&& aChildList);
-  void AppendFrames(nsIFrame* aDelegatingFrame,
-                    mozilla::FrameChildListID aListID,
+  void AppendFrames(nsIFrame* aDelegatingFrame, FrameChildListID aListID,
                     nsFrameList&& aFrameList);
-  void InsertFrames(nsIFrame* aDelegatingFrame,
-                    mozilla::FrameChildListID aListID, nsIFrame* aPrevFrame,
-                    nsFrameList&& aFrameList);
-  void RemoveFrame(mozilla::FrameDestroyContext&, mozilla::FrameChildListID,
-                   nsIFrame*);
+  void InsertFrames(nsIFrame* aDelegatingFrame, FrameChildListID aListID,
+                    nsIFrame* aPrevFrame, nsFrameList&& aFrameList);
+  void RemoveFrame(FrameDestroyContext&, FrameChildListID, nsIFrame*);
 
   /**
    * Called by the delegating frame after it has done its reflow first. This
@@ -94,7 +87,7 @@ class nsAbsoluteContainingBlock {
   void Reflow(nsContainerFrame* aDelegatingFrame, nsPresContext* aPresContext,
               const ReflowInput& aReflowInput, nsReflowStatus& aReflowStatus,
               const nsRect& aContainingBlock, AbsPosReflowFlags aFlags,
-              mozilla::OverflowAreas* aOverflowAreas);
+              OverflowAreas* aOverflowAreas);
 
   using DestroyContext = nsIFrame::DestroyContext;
   void DestroyFrames(DestroyContext&);
@@ -120,7 +113,7 @@ class nsAbsoluteContainingBlock {
    */
   bool FrameDependsOnContainer(
       nsIFrame* aFrame, bool aCBWidthChanged, bool aCBHeightChanged,
-      mozilla::AnchorPosReferenceData* aAnchorPosReferenceData = nullptr);
+      AnchorPosReferenceData* aAnchorPosReferenceData = nullptr);
 
   /**
    * After an abspos child's size is known, this method can be used to
@@ -133,10 +126,10 @@ class nsAbsoluteContainingBlock {
    */
   void ResolveSizeDependentOffsets(nsPresContext* aPresContext,
                                    ReflowInput& aKidReflowInput,
-                                   const mozilla::LogicalSize& aKidSize,
-                                   const mozilla::LogicalMargin& aMargin,
-                                   mozilla::LogicalMargin* aOffsets,
-                                   mozilla::LogicalSize* aLogicalCBSize);
+                                   const LogicalSize& aKidSize,
+                                   const LogicalMargin& aMargin,
+                                   LogicalMargin* aOffsets,
+                                   LogicalSize* aLogicalCBSize);
 
   /**
    * For frames that have intrinsic block sizes, since we want to use the
@@ -147,17 +140,17 @@ class nsAbsoluteContainingBlock {
    * the position is overconstrained)
    */
   void ResolveAutoMarginsAfterLayout(ReflowInput& aKidReflowInput,
-                                     const mozilla::LogicalSize* aLogicalCBSize,
-                                     const mozilla::LogicalSize& aKidSize,
-                                     mozilla::LogicalMargin& aMargin,
-                                     mozilla::LogicalMargin& aOffsets);
+                                     const LogicalSize* aLogicalCBSize,
+                                     const LogicalSize& aKidSize,
+                                     LogicalMargin& aMargin,
+                                     LogicalMargin& aOffsets);
 
   void ReflowAbsoluteFrame(
       nsIFrame* aDelegatingFrame, nsPresContext* aPresContext,
       const ReflowInput& aReflowInput, const nsRect& aContainingBlockRect,
       AbsPosReflowFlags aFlags, nsIFrame* aKidFrame, nsReflowStatus& aStatus,
-      mozilla::OverflowAreas* aOverflowAreas,
-      mozilla::AnchorPosReferenceData* aAnchorPosReferenceData = nullptr);
+      OverflowAreas* aOverflowAreas,
+      AnchorPosReferenceData* aAnchorPosReferenceData = nullptr);
 
   /**
    * Mark our absolute frames dirty.
@@ -171,9 +164,11 @@ class nsAbsoluteContainingBlock {
   nsFrameList mAbsoluteFrames;  // additional named child list
 
 #ifdef DEBUG
-  mozilla::FrameChildListID const
-      mChildListID;  // FrameChildListID::Fixed or FrameChildListID::Absolute
+  // FrameChildListID::Fixed or FrameChildListID::Absolute
+  FrameChildListID const mChildListID;
 #endif
 };
+
+}  // namespace mozilla
 
 #endif /* nsnsAbsoluteContainingBlock_h___ */

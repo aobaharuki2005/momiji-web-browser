@@ -832,7 +832,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
   if (aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
     // If the frame has an intrinsic block-size, we resolve its 'auto' margins
     // after doing layout, since we need to know the frame's block size. See
-    // nsAbsoluteContainingBlock::ResolveAutoMarginsAfterLayout().
+    // AbsoluteContainingBlock::ResolveAutoMarginsAfterLayout().
     //
     // Since the size of the frame doesn't change, we could modify the below
     // computation to compute the margin correctly without doing a full reflow,

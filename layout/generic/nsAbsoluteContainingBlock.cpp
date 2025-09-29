@@ -45,9 +45,9 @@ static void PrettyUC(nscoord aSize, char* aBuf, int aBufSize) {
 
 using namespace mozilla;
 
-void nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame* aDelegatingFrame,
-                                                    FrameChildListID aListID,
-                                                    nsFrameList&& aChildList) {
+void AbsoluteContainingBlock::SetInitialChildList(nsIFrame* aDelegatingFrame,
+                                                  FrameChildListID aListID,
+                                                  nsFrameList&& aChildList) {
   MOZ_ASSERT(mChildListID == aListID, "unexpected child list name");
 #ifdef DEBUG
   nsIFrame::VerifyDirtyBitSet(aChildList);
@@ -58,9 +58,9 @@ void nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame* aDelegatingFrame,
   mAbsoluteFrames = std::move(aChildList);
 }
 
-void nsAbsoluteContainingBlock::AppendFrames(nsIFrame* aDelegatingFrame,
-                                             FrameChildListID aListID,
-                                             nsFrameList&& aFrameList) {
+void AbsoluteContainingBlock::AppendFrames(nsIFrame* aDelegatingFrame,
+                                           FrameChildListID aListID,
+                                           nsFrameList&& aFrameList) {
   NS_ASSERTION(mChildListID == aListID, "unexpected child list");
 
   // Append the frames to our list of absolutely positioned frames
@@ -75,10 +75,10 @@ void nsAbsoluteContainingBlock::AppendFrames(nsIFrame* aDelegatingFrame,
       aDelegatingFrame, IntrinsicDirty::None, NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
-void nsAbsoluteContainingBlock::InsertFrames(nsIFrame* aDelegatingFrame,
-                                             FrameChildListID aListID,
-                                             nsIFrame* aPrevFrame,
-                                             nsFrameList&& aFrameList) {
+void AbsoluteContainingBlock::InsertFrames(nsIFrame* aDelegatingFrame,
+                                           FrameChildListID aListID,
+                                           nsIFrame* aPrevFrame,
+                                           nsFrameList&& aFrameList) {
   NS_ASSERTION(mChildListID == aListID, "unexpected child list");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == aDelegatingFrame,
                "inserting after sibling frame with different parent");
@@ -94,9 +94,9 @@ void nsAbsoluteContainingBlock::InsertFrames(nsIFrame* aDelegatingFrame,
       aDelegatingFrame, IntrinsicDirty::None, NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
-void nsAbsoluteContainingBlock::RemoveFrame(FrameDestroyContext& aContext,
-                                            FrameChildListID aListID,
-                                            nsIFrame* aOldFrame) {
+void AbsoluteContainingBlock::RemoveFrame(FrameDestroyContext& aContext,
+                                          FrameChildListID aListID,
+                                          nsIFrame* aOldFrame) {
   NS_ASSERTION(mChildListID == aListID, "unexpected child list");
   if (nsIFrame* nif = aOldFrame->GetNextInFlow()) {
     nif->GetParent()->DeleteNextInFlowChild(aContext, nif, false);
@@ -154,13 +154,13 @@ static bool IsSnapshotContainingBlock(const nsIFrame* aFrame) {
          PseudoStyleType::mozSnapshotContainingBlock;
 }
 
-void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
-                                       nsPresContext* aPresContext,
-                                       const ReflowInput& aReflowInput,
-                                       nsReflowStatus& aReflowStatus,
-                                       const nsRect& aContainingBlock,
-                                       AbsPosReflowFlags aFlags,
-                                       OverflowAreas* aOverflowAreas) {
+void AbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
+                                     nsPresContext* aPresContext,
+                                     const ReflowInput& aReflowInput,
+                                     nsReflowStatus& aReflowStatus,
+                                     const nsRect& aContainingBlock,
+                                     AbsPosReflowFlags aFlags,
+                                     OverflowAreas* aOverflowAreas) {
   // PageContentFrame replicates fixed pos children so we really don't want
   // them contributing to overflow areas because that means we'll create new
   // pages ad infinitum if one of them overflows the page.
@@ -271,7 +271,7 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
         // Add it as an overflow container.
         // XXXfr This is a hack to fix some of our printing dataloss.
         // See bug 154892. Not sure how to do it "right" yet; probably want
-        // to keep continuations within an nsAbsoluteContainingBlock eventually.
+        // to keep continuations within an AbsoluteContainingBlock eventually.
         tracker.Insert(nextFrame, kidStatus);
         reflowStatus.MergeCompletionStatusFrom(kidStatus);
       } else if (nextFrame) {
@@ -330,7 +330,7 @@ static inline bool IsFixedOffset(const AnchorResolvedInset& aInset) {
   return aInset->ConvertsToLength();
 }
 
-bool nsAbsoluteContainingBlock::FrameDependsOnContainer(
+bool AbsoluteContainingBlock::FrameDependsOnContainer(
     nsIFrame* f, bool aCBWidthChanged, bool aCBHeightChanged,
     AnchorPosReferenceData* anchorPosReferenceData) {
   const nsStylePosition* pos = f->StylePosition();
@@ -460,19 +460,17 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(
   return false;
 }
 
-void nsAbsoluteContainingBlock::DestroyFrames(DestroyContext& aContext) {
+void AbsoluteContainingBlock::DestroyFrames(DestroyContext& aContext) {
   mAbsoluteFrames.DestroyFrames(aContext);
 }
 
-void nsAbsoluteContainingBlock::MarkSizeDependentFramesDirty() {
+void AbsoluteContainingBlock::MarkSizeDependentFramesDirty() {
   DoMarkFramesDirty(false);
 }
 
-void nsAbsoluteContainingBlock::MarkAllFramesDirty() {
-  DoMarkFramesDirty(true);
-}
+void AbsoluteContainingBlock::MarkAllFramesDirty() { DoMarkFramesDirty(true); }
 
-void nsAbsoluteContainingBlock::DoMarkFramesDirty(bool aMarkAllDirty) {
+void AbsoluteContainingBlock::DoMarkFramesDirty(bool aMarkAllDirty) {
   for (nsIFrame* kidFrame : mAbsoluteFrames) {
     if (aMarkAllDirty) {
       kidFrame->MarkSubtreeDirty();
@@ -722,7 +720,7 @@ static nscoord OffsetToAlignedStaticPos(
   return offset;
 }
 
-void nsAbsoluteContainingBlock::ResolveSizeDependentOffsets(
+void AbsoluteContainingBlock::ResolveSizeDependentOffsets(
     nsPresContext* aPresContext, ReflowInput& aKidReflowInput,
     const LogicalSize& aKidSize, const LogicalMargin& aMargin,
     LogicalMargin* aOffsets, LogicalSize* aLogicalCBSize) {
@@ -800,7 +798,7 @@ void nsAbsoluteContainingBlock::ResolveSizeDependentOffsets(
   }
 }
 
-void nsAbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
+void AbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
     ReflowInput& aKidReflowInput, const LogicalSize* aLogicalCBSize,
     const LogicalSize& aKidSize, LogicalMargin& aMargin,
     LogicalMargin& aOffsets) {
@@ -872,7 +870,7 @@ void nsAbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
 // mChildListID == FrameChildListID::Fixed, the height is unconstrained.
 // since we don't allow replicated frames to split.
 
-void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
+void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     nsIFrame* aDelegatingFrame, nsPresContext* aPresContext,
     const ReflowInput& aReflowInput, const nsRect& aContainingBlock,
     AbsPosReflowFlags aFlags, nsIFrame* aKidFrame, nsReflowStatus& aStatus,

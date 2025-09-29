@@ -1748,7 +1748,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   // our real new size. This also happens to be more efficient.
   WritingMode parentWM = aMetrics.GetWritingMode();
   if (HasAbsolutelyPositionedChildren()) {
-    nsAbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
+    AbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
     bool haveInterrupt = aPresContext->HasPendingInterrupt();
     if (aReflowInput.WillReflowAgainForClearance() || haveInterrupt) {
       // Make sure that when we reflow again we'll actually reflow all the abs
@@ -1767,7 +1767,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
         // their existing overflow areas, which is usually a side effect of this
         // reflow.
         //
-        // TODO(emilio): nsAbsoluteContainingBlock::Reflow already checks for
+        // TODO(emilio): AbsoluteContainingBlock::Reflow already checks for
         // interrupt, can we just rely on it and unconditionally take the else
         // branch below? That's a bit more subtle / risky, since I don't see
         // what would reflow them in that case if they depended on our size.
@@ -1789,7 +1789,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       // changed.
 
       // XXX "width" and "height" in this block will become ISize and BSize
-      // when nsAbsoluteContainingBlock is logicalized
+      // when AbsoluteContainingBlock is logicalized
       bool cbWidthChanged = aMetrics.Width() != oldSize.width;
       bool isRoot = !GetContent()->GetParent();
       // If isRoot and we have auto height, then we are the initial

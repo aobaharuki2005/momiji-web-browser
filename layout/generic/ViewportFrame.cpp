@@ -497,7 +497,7 @@ void ViewportFrame::Reflow(nsPresContext* aPresContext,
     // size and dynamic toolbar into account because
     // ::-moz-snapshot-containing-block should include those areas.
     //
-    // We will take them into account in nsAbsoluteContainingBlock::Reflow(),
+    // We will take them into account in AbsoluteContainingBlock::Reflow(),
     // for kid frames other than ::-moz-snapshot-containing-block.
     const nsRect cb(nsPoint(), reflowInput.ComputedPhysicalSize());
     // XXX: To optimize the performance, set the flags only when the CB width or

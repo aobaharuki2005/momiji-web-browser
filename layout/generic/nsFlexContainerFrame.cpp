@@ -1371,7 +1371,7 @@ StyleAlignFlags nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
              "We should've converted 'stretch' to the fallback alignment!");
   MOZ_ASSERT(alignment != StyleAlignFlags::FLEX_START &&
                  alignment != StyleAlignFlags::FLEX_END,
-             "nsAbsoluteContainingBlock doesn't know how to handle "
+             "AbsoluteContainingBlock doesn't know how to handle "
              "flex-relative axis for flex containers!");
 
   return (alignment | alignmentFlags);

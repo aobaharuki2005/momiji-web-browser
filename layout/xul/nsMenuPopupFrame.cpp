@@ -644,7 +644,7 @@ void nsMenuPopupFrame::LayoutPopup(nsPresContext* aPresContext,
                          aStatus);
   }
 
-  // Set our size, since nsAbsoluteContainingBlock won't.
+  // Set our size, since AbsoluteContainingBlock won't.
   SetRect(constraints.mUsedRect);
 
   nsView* view = GetView();

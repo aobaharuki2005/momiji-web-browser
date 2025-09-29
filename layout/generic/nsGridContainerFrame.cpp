@@ -8272,7 +8272,7 @@ void nsGridContainerFrame::ReflowInFlowChild(
                              cb.BSize(wm) - consumedGridAreaBSize);
     }
     applyItemSelfAlignment(LogicalAxis::Inline, cb.ISize(wm));
-  }  // else, nsAbsoluteContainingBlock.cpp will handle align/justify-self.
+  }  // else, AbsoluteContainingBlock.cpp will handle align/justify-self.
 
   FinishReflowChild(aChild, pc, childSize, &childRI, childWM, childPos,
                     aContainerSize, ReflowChildFlags::ApplyRelativePositioning);
@@ -9351,7 +9351,7 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aGridRI,
         GridArea& area = aGridRI.mAbsPosItems[i].mArea;
         LogicalRect itemCB =
             aGridRI.ContainingBlockForAbsPos(area, gridOrigin, gridCB);
-        // nsAbsoluteContainingBlock::Reflow uses physical coordinates.
+        // AbsoluteContainingBlock::Reflow uses physical coordinates.
         nsRect* cb = child->GetProperty(GridItemContainingBlockRect());
         if (!cb) {
           cb = new nsRect;
@@ -9361,7 +9361,7 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aGridRI,
         ++i;
       }
       // We pass a dummy rect as CB because each child has its own CB rect.
-      // The IsGridContainerCB flag tells nsAbsoluteContainingBlock::Reflow to
+      // The IsGridContainerCB flag tells AbsoluteContainingBlock::Reflow to
       // use those instead.
       nsRect dummyRect;
       // XXX: To optimize the performance, set the flags only when the CB width

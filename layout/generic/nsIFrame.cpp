@@ -252,17 +252,17 @@ mozilla::LazyLogModule nsIFrame::sFrameLogModule("frame");
 #endif
 
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(AbsoluteContainingBlockProperty,
-                                    nsAbsoluteContainingBlock)
+                                    AbsoluteContainingBlock)
 
 bool nsIFrame::HasAbsolutelyPositionedChildren() const {
   return IsAbsoluteContainer() &&
          GetAbsoluteContainingBlock()->HasAbsoluteFrames();
 }
 
-nsAbsoluteContainingBlock* nsIFrame::GetAbsoluteContainingBlock() const {
+AbsoluteContainingBlock* nsIFrame::GetAbsoluteContainingBlock() const {
   NS_ASSERTION(IsAbsoluteContainer(),
                "The frame is not marked as an abspos container correctly");
-  nsAbsoluteContainingBlock* absCB =
+  AbsoluteContainingBlock* absCB =
       GetProperty(AbsoluteContainingBlockProperty());
   NS_ASSERTION(absCB,
                "The frame is marked as an abspos container but doesn't have "
@@ -278,7 +278,7 @@ void nsIFrame::MarkAsAbsoluteContainingBlock() {
                "Already has NS_FRAME_HAS_ABSPOS_CHILDREN state bit?");
   AddStateBits(NS_FRAME_HAS_ABSPOS_CHILDREN);
   SetProperty(AbsoluteContainingBlockProperty(),
-              new nsAbsoluteContainingBlock(GetAbsoluteListID()));
+              new AbsoluteContainingBlock(GetAbsoluteListID()));
 }
 
 void nsIFrame::MarkAsNotAbsoluteContainingBlock() {
@@ -7462,7 +7462,7 @@ void nsIFrame::ReflowAbsoluteFrames(nsPresContext* aPresContext,
                                     const ReflowInput& aReflowInput,
                                     nsReflowStatus& aStatus) {
   if (HasAbsolutelyPositionedChildren()) {
-    nsAbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
+    AbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
 
     // Let the absolutely positioned container reflow any absolutely positioned
     // child frames that need to be reflowed
