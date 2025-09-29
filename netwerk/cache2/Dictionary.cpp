@@ -40,13 +40,14 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/glean/NetwerkMetrics.h"
 
+#include "mozilla/net/MozURL.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
+#include "mozilla/net/NeckoChild.h"
 
 #include "LoadContextInfo.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "SerializedLoadContext.h"
-#include "mozilla/net/NeckoChild.h"
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -727,6 +728,26 @@ nsresult DictionaryCache::RemoveEntry(nsIURI* aURI, const nsACString& aKey) {
     return origin.Data()->RemoveEntry(aKey);
   }
   return NS_ERROR_FAILURE;
+}
+
+void DictionaryCache::Clear() {
+  // There may be active Prefetch()es running, note, and active
+  // fetches using dictionaries.  They will stay alive until the
+  // channels using them go away.
+  mDictionaryCache.Clear();
+}
+
+// Remove a dictionary if it exists for the key given
+void DictionaryCache::RemoveDictionaryFor(const nsACString& aKey) {
+  RefPtr<MozURL> url;
+  nsresult rv = MozURL::Init(getter_AddRefs(url), aKey);
+  if (NS_SUCCEEDED(rv)) {
+    nsDependentCSubstring prepath = url->PrePath();
+
+    if (auto origin = mDictionaryCache.Lookup(prepath)) {
+      origin.Data()->RemoveEntry(aKey);
+    }
+  }
 }
 
 // Return an entry via a callback (async).
