@@ -1427,7 +1427,17 @@ messaging_experiments:
       "fxms_message_12",
       "fxms_message_13",
       "fxms_message_14",
-      "fxms_message_15"
+      "fxms_message_15",
+      "fxms_message_16",
+      "fxms_message_17",
+      "fxms_message_18",
+      "fxms_message_19",
+      "fxms_message_20",
+      "fxms_message_21",
+      "fxms_message_22",
+      "fxms_message_23",
+      "fxms_message_24",
+      "fxms_message_25"
     ]
     methods: ["reach"]
     release_channel_collection: opt-out
