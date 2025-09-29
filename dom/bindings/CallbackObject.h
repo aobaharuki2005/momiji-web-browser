@@ -236,71 +236,70 @@ class CallbackObjectBase {
   // here.
   nsCOMPtr<nsIGlobalObject> mIncumbentGlobal;
   JS::TenuredHeap<JSObject*> mIncumbentJSGlobal;
+};
 
-  class MOZ_STACK_CLASS CallSetup {
-    /**
-     * A class that performs whatever setup we need to safely make a
-     * call while this class is on the stack, After the constructor
-     * returns, the call is safe to make if GetContext() returns
-     * non-null.
-     */
-   public:
-    // If aExceptionHandling == eRethrowContentExceptions then aRealm
-    // needs to be set to the realm in which exceptions will be rethrown.
-    //
-    // If aExceptionHandling == eRethrowExceptions then aRealm may be set
-    // to the realm in which exceptions will be rethrown.  In that case
-    // they will only be rethrown if that realm's principal subsumes the
-    // principal of our (unwrapped) callback.
-    CallSetup(CallbackObjectBase* aCallback, ErrorResult& aRv,
-              const char* aExecutionReason,
-              ExceptionHandling aExceptionHandling, JS::Realm* aRealm = nullptr,
-              bool aIsJSImplementedWebIDL = false);
-    MOZ_CAN_RUN_SCRIPT ~CallSetup();
+class MOZ_STACK_CLASS CallSetup {
+  /**
+   * A class that performs whatever setup we need to safely make a
+   * call while this class is on the stack, After the constructor
+   * returns, the call is safe to make if GetContext() returns
+   * non-null.
+   */
+ public:
+  // If aExceptionHandling == eRethrowContentExceptions then aRealm
+  // needs to be set to the realm in which exceptions will be rethrown.
+  //
+  // If aExceptionHandling == eRethrowExceptions then aRealm may be set
+  // to the realm in which exceptions will be rethrown.  In that case
+  // they will only be rethrown if that realm's principal subsumes the
+  // principal of our (unwrapped) callback.
+  CallSetup(CallbackObjectBase* aCallback, ErrorResult& aRv,
+            const char* aExecutionReason,
+            CallbackObjectBase::ExceptionHandling aExceptionHandling,
+            JS::Realm* aRealm = nullptr, bool aIsJSImplementedWebIDL = false);
+  MOZ_CAN_RUN_SCRIPT ~CallSetup();
 
-    JSContext* GetContext() const { return mCx; }
+  JSContext* GetContext() const { return mCx; }
 
-    // Safe to call this after the constructor has run without throwing on the
-    // ErrorResult it was handed.
-    BindingCallContext& GetCallContext() { return *mCallContext; }
+  // Safe to call this after the constructor has run without throwing on the
+  // ErrorResult it was handed.
+  BindingCallContext& GetCallContext() { return *mCallContext; }
 
-   private:
-    // We better not get copy-constructed
-    CallSetup(const CallSetup&) = delete;
+ private:
+  // We better not get copy-constructed
+  CallSetup(const CallSetup&) = delete;
 
-    bool ShouldRethrowException(JS::Handle<JS::Value> aException);
+  bool ShouldRethrowException(JS::Handle<JS::Value> aException);
 
-    // Members which can go away whenever
-    JSContext* mCx;
+  // Members which can go away whenever
+  JSContext* mCx;
 
-    // Caller's realm. This will only have a sensible value if
-    // mExceptionHandling == eRethrowContentExceptions.
-    JS::Realm* mRealm;
+  // Caller's realm. This will only have a sensible value if
+  // mExceptionHandling == eRethrowContentExceptions.
+  JS::Realm* mRealm;
 
-    // And now members whose construction/destruction order we need to control.
-    Maybe<AutoEntryScript> mAutoEntryScript;
-    Maybe<AutoIncumbentScript> mAutoIncumbentScript;
+  // And now members whose construction/destruction order we need to control.
+  Maybe<AutoEntryScript> mAutoEntryScript;
+  Maybe<AutoIncumbentScript> mAutoIncumbentScript;
 
-    Maybe<JS::Rooted<JSObject*>> mRootedCallable;
+  Maybe<JS::Rooted<JSObject*>> mRootedCallable;
+  Maybe<JS::AutoSetAsyncStackForNewCalls> mAsyncStackSetter;
 
-    Maybe<JS::AutoSetAsyncStackForNewCalls> mAsyncStackSetter;
+  // Can't construct a JSAutoRealm without a JSContext either.  Also,
+  // Put mAr after mAutoEntryScript so that we exit the realm before we
+  // pop the script settings stack. Though in practice we'll often manually
+  // order those two things.
+  Maybe<JSAutoRealm> mAr;
 
-    // Can't construct a JSAutoRealm without a JSContext either.  Also,
-    // Put mAr after mAutoEntryScript so that we exit the realm before we
-    // pop the script settings stack. Though in practice we'll often manually
-    // order those two things.
-    Maybe<JSAutoRealm> mAr;
+  // Our BindingCallContext.  This is a Maybe so we can avoid constructing it
+  // until after we have a JSContext to construct it with.
+  Maybe<BindingCallContext> mCallContext;
 
-    // Our BindingCallContext.  This is a Maybe so we can avoid constructing it
-    // until after we have a JSContext to construct it with.
-    Maybe<BindingCallContext> mCallContext;
-
-    // An ErrorResult to possibly re-throw exceptions on and whether
-    // we should re-throw them.
-    ErrorResult& mErrorResult;
-    const ExceptionHandling mExceptionHandling;
-    const bool mIsMainThread;
-  };
+  // An ErrorResult to possibly re-throw exceptions on and whether
+  // we should re-throw them.
+  ErrorResult& mErrorResult;
+  const CallbackObjectBase::ExceptionHandling mExceptionHandling;
+  const bool mIsMainThread;
 };
 
 class CallbackObject : public nsISupports,
