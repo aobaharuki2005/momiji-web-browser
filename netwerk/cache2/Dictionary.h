@@ -152,14 +152,20 @@ class DictionaryCacheEntry final
 
 using DictCacheList = AutoCleanLinkedList<RefPtr<DictionaryCacheEntry>>;
 
+class DictionaryOriginReader;
+
 // singleton class
 class DictionaryCache final {
  private:
-  DictionaryCache() {};
+  DictionaryCache() { Init(); };
   ~DictionaryCache() {};
 
+  friend class DictionaryOriginReader;
+  friend class DictionaryCacheEntry;
+
  public:
-  NS_INLINE_DECL_REFCOUNTING(DictionaryCache)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DictionaryCache)
+
   static already_AddRefed<DictionaryCache> GetInstance();
 
   nsresult Init();
@@ -187,6 +193,8 @@ class DictionaryCache final {
   bool ParseMetaDataEntry(const char* key, const char* value, nsCString& uri,
                           uint32_t& hitCount, uint32_t& lastHit,
                           uint32_t& flags);
+
+  static nsCOMPtr<nsICacheStorage> sCacheStorage;
 
   // In-memory cache of dictionary entries.  HashMap, keyed by origin, of
   // Linked list (LRU order) of valid dictionaries for the origin.
