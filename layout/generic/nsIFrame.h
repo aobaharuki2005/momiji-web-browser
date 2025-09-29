@@ -50,7 +50,6 @@
 
 #include <algorithm>
 
-#include "AnchorPositioningUtils.h"
 #include "FrameProperties.h"
 #include "LayoutConstants.h"
 #include "Visibility.h"
@@ -139,6 +138,7 @@ enum class PeekOffsetOption : uint16_t;
 enum class PseudoStyleType : uint8_t;
 enum class TableSelectionMode : uint32_t;
 
+class AnchorPosReferenceData;
 class EffectSet;
 class LazyLogModule;
 class nsDisplayItem;
@@ -150,6 +150,8 @@ class ScrollContainerFrame;
 class ServoRestyleState;
 class WidgetGUIEvent;
 class WidgetMouseEvent;
+
+void DeleteAnchorPosReferenceData(AnchorPosReferenceData*);
 
 struct PeekOffsetStruct;
 
@@ -1434,8 +1436,9 @@ class nsIFrame : public nsQueryFrame {
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(UsedMarginProperty, nsMargin)
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(UsedPaddingProperty, nsMargin)
-  NS_DECLARE_FRAME_PROPERTY_DELETABLE(AnchorPosReferences,
-                                      mozilla::AnchorPosReferenceData);
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(AnchorPosReferences,
+                                      mozilla::AnchorPosReferenceData,
+                                      mozilla::DeleteAnchorPosReferenceData);
 
   // This tracks the start and end page value for a frame.
   //

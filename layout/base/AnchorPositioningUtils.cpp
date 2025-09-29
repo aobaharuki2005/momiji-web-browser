@@ -758,4 +758,9 @@ nsRect AnchorPositioningUtils::AdjustAbsoluteContainingBlockRectForPositionArea(
   return res;
 }
 
+// Out of line to avoid having to include AnchorPosReferenceData from nsIFrame.h
+void DeleteAnchorPosReferenceData(AnchorPosReferenceData* aData) {
+  delete aData;
+}
+
 }  // namespace mozilla
