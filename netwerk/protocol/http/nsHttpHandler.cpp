@@ -656,7 +656,8 @@ nsresult nsHttpHandler::InitConnectionMgr() {
 // set by Fetch from the old request
 nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
     nsIURI* aURI, ExtContentPolicyType aType, nsHttpRequestHead* aRequest,
-    bool aSecure, const std::function<bool(DictionaryCacheEntry*)>& aCallback) {
+    bool aSecure, bool& aAsync,
+    const std::function<bool(bool, DictionaryCacheEntry*)>& aCallback) {
   LOG(("Adding Dictionary headers"));
   nsresult rv = NS_OK;
   // Add the "Accept-Encoding" header and possibly Dictionary headers
@@ -664,9 +665,9 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
     // The dictionary info may require us to check the cache.
     if (StaticPrefs::network_http_dictionaries_enable()) {
       mDictionaryCache->GetDictionaryFor(
-          aURI, aType,
-          [self = RefPtr(this), aRequest,
-           aCallback](DictionaryCacheEntry* aDict) {
+          aURI, aType, aAsync,
+          [self = RefPtr(this), aRequest, aCallback](
+              bool aNeedsResume, DictionaryCacheEntry* aDict) {
             nsresult rv;
             if (aDict) {
               nsAutoCStringN<64> encodedHash =
@@ -688,7 +689,7 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
               // DictionaryCache hasn't been updated to remove the entry yet (or
               // any other thing that were to desynchronize the DictionaryCache
               // with the actual cache.
-              if ((aCallback)(aDict)) {
+              if ((aCallback)(aNeedsResume, aDict)) {
                 LOG_DICTIONARIES(
                     ("Setting Available-Dictionary: %s", encodedHash.get()));
                 rv = aRequest->SetHeader(
@@ -715,14 +716,15 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
             rv = aRequest->SetHeader(
                 nsHttp::Accept_Encoding, self->mHttpsAcceptEncodings, false,
                 nsHttpHeaderArray::eVarietyRequestOverride);
-            (aCallback)(nullptr);
+            (aCallback)(false, nullptr);
             return rv;
           });
     } else {
       rv = aRequest->SetHeader(nsHttp::Accept_Encoding, mHttpsAcceptEncodings,
                                false,
                                nsHttpHeaderArray::eVarietyRequestOverride);
-      (aCallback)(nullptr);
+      aAsync = false;
+      (aCallback)(false, nullptr);
     }
   } else {
     // We need to not override a previous setting of 'identity' (for range
@@ -734,9 +736,9 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
                                false,
                                nsHttpHeaderArray::eVarietyRequestOverride);
     }
-    (aCallback)(nullptr);
+    aAsync = false;
+    (aCallback)(false, nullptr);
   }
-
   return rv;
 }
 

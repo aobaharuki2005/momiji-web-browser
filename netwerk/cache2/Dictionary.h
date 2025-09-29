@@ -60,6 +60,7 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
   DictionaryCacheEntry(const char* aKey);
   DictionaryCacheEntry(const nsACString& aKey, const nsACString& aPattern,
                        nsTArray<nsCString>& aMatchDest, const nsACString& aId,
+                       uint32_t aExpiration = 0,
                        const Maybe<nsCString>& aHash = Nothing());
 
   static void ConvertMatchDestToEnumArray(
@@ -71,7 +72,7 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
 
   // returns true if the pattern for the dictionary matches the path given
   bool Match(const nsACString& aFilePath, ExtContentPolicyType aType,
-             uint32_t& aLongest);
+             uint32_t aNow, uint32_t& aLongest);
 
   // This will fail if the cache entry is no longer available.
   // Start reading the cache entry into memory and call completion
@@ -174,12 +175,14 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
   void UnblockAddEntry(DictionaryOrigin* aOrigin);
 
  private:
-  nsCString mURI;  // URI (without ref) for the dictionary
+  // URI (without ref) for the dictionary
+  nsCString mURI;
+  // Expiration time, or 0 for none (default)
+  uint32_t mExpiration{0};
+
   nsCString mPattern;
   nsCString mId;  // max length 1024
   nsTArray<dom::RequestDestination> mMatchDest;
-  // XXX add type
-
   // dcb and dcz use type 'raw'.  We're allowed to ignore types we don't
   // understand, so we can fail to record a dictionary with type != 'raw'
   //  nsCString mType;
@@ -227,7 +230,32 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
 // memory for rarely used origins.  We could have a limit for dictionaries, and
 // above that switch to partial caching and empty entries for origins without.
 
-// XXX Clear all dictionaries when cookies are cleared for a site
+class DictionaryCache;
+
+class DictionaryOriginReader final : public nsICacheEntryOpenCallback,
+                                     public nsIStreamListener {
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSICACHEENTRYOPENCALLBACK
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+
+  DictionaryOriginReader() {}
+
+  void Start(
+      DictionaryOrigin* aOrigin, nsACString& aKey, nsIURI* aURI,
+      ExtContentPolicyType aType, DictionaryCache* aCache,
+      const std::function<nsresult(bool, DictionaryCacheEntry*)>& aCallback);
+  void FinishMatch();
+
+ private:
+  ~DictionaryOriginReader() {}
+
+  RefPtr<DictionaryOrigin> mOrigin;
+  nsCOMPtr<nsIURI> mURI;
+  ExtContentPolicyType mType;
+  std::function<nsresult(bool, DictionaryCacheEntry*)> mCallback;
+  RefPtr<DictionaryCache> mCache;
+};
 
 // using DictCacheList = AutoCleanLinkedList<RefPtr<DictionaryCacheEntry>>;
 using DictCacheList = nsTArray<RefPtr<DictionaryCacheEntry>>;
@@ -236,6 +264,7 @@ using DictCacheList = nsTArray<RefPtr<DictionaryCacheEntry>>;
 // add this: public LinkedListElement<RefPtr<DictionaryOrigin>>,
 class DictionaryOrigin : public nsICacheEntryMetaDataVisitor {
   friend class DictionaryCache;
+  friend class DictionaryOriginReader;
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -245,7 +274,7 @@ class DictionaryOrigin : public nsICacheEntryMetaDataVisitor {
       : mOrigin(aOrigin), mEntry(aEntry) {}
 
   void SetCacheEntry(nsICacheEntry* aEntry);
-  void Write(DictionaryCacheEntry* aDictEntry);
+  nsresult Write(DictionaryCacheEntry* aDictEntry);
   already_AddRefed<DictionaryCacheEntry> AddEntry(
       DictionaryCacheEntry* aDictEntry, bool aNewEntry);
   nsresult RemoveEntry(const nsACString& aKey);
@@ -264,11 +293,15 @@ class DictionaryOrigin : public nsICacheEntryMetaDataVisitor {
   // Dictionaries currently being received.  Once these get a Hash, move to
   // mEntries
   DictCacheList mPendingEntries;
+  // Dictionaries removed from mEntries but waiting to be removed from the
+  // Cache metadata
+  DictCacheList mPendingRemove;
   // Write out all entries once we have a cacheentry
   bool mDeferredWrites{false};
-};
 
-class DictionaryOriginReader;
+  // readers that are waiting for this origin's metadata to be read
+  nsTArray<RefPtr<DictionaryOriginReader>> mWaitingCacheRead;
+};
 
 // singleton class
 class DictionaryCache final {
@@ -292,7 +325,8 @@ class DictionaryCache final {
   nsresult AddEntry(nsIURI* aURI, const nsACString& aKey,
                     const nsACString& aPattern, nsTArray<nsCString>& aMatchDest,
                     const nsACString& aId, const Maybe<nsCString>& aHash,
-                    bool aNewEntry, DictionaryCacheEntry** aDictEntry);
+                    bool aNewEntry, uint32_t aExpiration,
+                    DictionaryCacheEntry** aDictEntry);
 
   already_AddRefed<DictionaryCacheEntry> AddEntry(
       nsIURI* aURI, bool aNewEntry, DictionaryCacheEntry* aDictEntry);
@@ -312,8 +346,8 @@ class DictionaryCache final {
 
   // return an entry
   void GetDictionaryFor(
-      nsIURI* aURI, ExtContentPolicyType aType,
-      const std::function<nsresult(DictionaryCacheEntry*)>& aCallback);
+      nsIURI* aURI, ExtContentPolicyType aType, bool& aAsync,
+      const std::function<nsresult(bool, DictionaryCacheEntry*)>& aCallback);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     // XXX

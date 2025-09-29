@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <algorithm>
+#include <stdlib.h>
 
 #include "Dictionary.h"
 
@@ -89,15 +90,24 @@ static nsresult GetDictPath(nsIURI* aURI, nsACString& aPrePath) {
   return NS_OK;
 }
 
-DictionaryCacheEntry::DictionaryCacheEntry(const char* aKey) { mURI = aKey; }
+DictionaryCacheEntry::DictionaryCacheEntry(const char* aKey) {
+  mURI = aKey;
+  DICTIONARY_LOG(("Created DictionaryCacheEntry %p, uri=%s", this, aKey));
+}
 
 DictionaryCacheEntry::DictionaryCacheEntry(const nsACString& aURI,
                                            const nsACString& aPattern,
                                            nsTArray<nsCString>& aMatchDest,
                                            const nsACString& aId,
+                                           uint32_t aExpiration,
                                            const Maybe<nsCString>& aHash)
-    : mURI(aURI), mPattern(aPattern), mId(aId) {
+    : mURI(aURI), mExpiration(aExpiration), mPattern(aPattern), mId(aId) {
   ConvertMatchDestToEnumArray(aMatchDest, mMatchDest);
+  DICTIONARY_LOG(
+      ("Created DictionaryCacheEntry %p, uri=%s, pattern=%s, id=%s, "
+       "expiration=%u",
+       this, PromiseFlatCString(aURI).get(), PromiseFlatCString(aPattern).get(),
+       PromiseFlatCString(aId).get(), aExpiration));
   if (aHash) {
     mHash = aHash.value();
   }
@@ -135,9 +145,11 @@ void DictionaryCacheEntry::ConvertMatchDestToCStringArray(
   aMatchDest.SwapElements(temp);
 }
 
-// returns true if the pattern for the dictionary matches the path given
+// Returns true if the pattern for the dictionary matches the path given.
+// Note: we need to verify that this entry has not expired due to 2.2.1 of
+// https://datatracker.ietf.org/doc/draft-ietf-httpbis-compression-dictionary/
 bool DictionaryCacheEntry::Match(const nsACString& aFilePath,
-                                 ExtContentPolicyType aType,
+                                 ExtContentPolicyType aType, uint32_t aNow,
                                  uint32_t& aLongest) {
   if (mHash.IsEmpty()) {
     // We don't have the file yet
@@ -149,9 +161,11 @@ bool DictionaryCacheEntry::Match(const nsACString& aFilePath,
     return false;
   }
   // Not worth checking if we wouldn't use it
-  DICTIONARY_LOG(("Match: %s to %s, %s", PromiseFlatCString(aFilePath).get(),
-                  mPattern.get(), NS_CP_ContentTypeName(aType)));
-  if (mPattern.Length() > aLongest) {
+  DICTIONARY_LOG(("Match: %p   %s to %s, %s (now=%u, expiration=%u)", this,
+                  PromiseFlatCString(aFilePath).get(), mPattern.get(),
+                  NS_CP_ContentTypeName(aType), aNow, mExpiration));
+  if ((mExpiration == 0 || aNow < mExpiration) &&
+      mPattern.Length() > aLongest) {
     // Need to match using match-dest, if it exists
     if (mMatchDest.IsEmpty() ||
         mMatchDest.IndexOf(
@@ -182,7 +196,12 @@ bool DictionaryCacheEntry::Match(const nsACString& aFilePath,
         DICTIONARY_LOG(("Match: %s (longest %u)", mURI.get(), aLongest));
         return true;
       }
+    } else {
+      DICTIONARY_LOG(("   Failed on matchDest"));
     }
+  } else {
+    DICTIONARY_LOG(
+        ("   Failed due to expiration: %u vs %u", aNow, mExpiration));
   }
   return false;
 }
@@ -316,7 +335,10 @@ void DictionaryCacheEntry::FinishHash() {
     if (mOrigin) {
       DICTIONARY_LOG(("Write on hash"));
       // This will also move us from mPendingEntries to mEntries
-      mOrigin->Write(this);
+      if (NS_FAILED(mOrigin->Write(this))) {
+        mOrigin->RemoveEntry(this);
+        return;
+      }
       if (!mBlocked) {
         mOrigin->FinishAddEntry(this);
       }
@@ -338,7 +360,8 @@ static const uint32_t METADATA_VERSION = 1;
 // ** match-dest CString list, terminated by empty string
 // *** CString: Match-dest
 // ** CString: Id
-// ** CString: type
+// ** uint32 as a CString: expiration. If missing, 0 (none)
+// ** CString: type -- defaults to 'raw' if missing
 // We store strings with a delimiter, and use escapes for delimiters or escape
 // characters in the source strings.
 //
@@ -379,6 +402,10 @@ void DictionaryCacheEntry::MakeMetadataEntry(nsCString& aNewValue) {
   }
   // List of match-dest values is terminated by an empty string
   EscapeMetadataString(""_ns, aNewValue);
+  // Expiration time, as a CString
+  nsAutoCStringN<12> expiration;
+  expiration = nsPrintfCString("%u", mExpiration);
+  EscapeMetadataString(expiration, aNewValue);
   // We don't store type, since we only support type 'raw'  We can support
   // type in the future by considering missing type as raw without changing the
   // format
@@ -444,7 +471,12 @@ bool DictionaryCacheEntry::ParseMetadata(const char* aSrc) {
       }
     }
   } while (!temp.IsEmpty());
-  // XXX type
+  if (*aSrc == '|') {
+    char* newSrc;
+    mExpiration = strtoul(++aSrc, &newSrc, 10);
+    aSrc = newSrc;
+  }  // else leave default of 0
+  // XXX type - we assume and only support 'raw', may be missing
   aSrc = GetEncodedString(aSrc, temp);
 
   DICTIONARY_LOG(
@@ -602,31 +634,26 @@ DictionaryCacheEntry::OnCacheEntryAvailable(nsICacheEntry* entry, bool isNew,
 
 //----------------------------------------------------------------------------------
 
-class DictionaryOriginReader final : public nsICacheEntryOpenCallback,
-                                     public nsIStreamListener {
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSICACHEENTRYOPENCALLBACK
-  NS_DECL_NSIREQUESTOBSERVER
-  NS_DECL_NSISTREAMLISTENER
+// Read the metadata for an Origin and parse it, creating DictionaryCacheEntrys
+// as needed. If aType is TYPE_OTHER, there is no Match() to do
+void DictionaryOriginReader::Start(
+    DictionaryOrigin* aOrigin, nsACString& aKey, nsIURI* aURI,
+    ExtContentPolicyType aType, DictionaryCache* aCache,
+    const std::function<nsresult(bool, DictionaryCacheEntry*)>& aCallback) {
+  mOrigin = aOrigin;
+  mURI = aURI;
+  mType = aType;
+  mCallback = aCallback;
+  mCache = aCache;
 
-  DictionaryOriginReader() {}
+  // The cache entry is for originattribute extension of
+  // META_DICTIONARY_PREFIX, plus key of prepath
 
-  // If aOrigin is nullptr, we're just reading; if it's set then we're adding
-  // a Dictionary to a maybe-existing Origin and we need to create it if it
-  // doesn't exist yet.
-  void Start(DictionaryOrigin* aOrigin, nsACString& aKey, nsIURI* aURI,
-             ExtContentPolicyType aType, DictionaryCache* aCache,
-             const std::function<nsresult(DictionaryCacheEntry*)>& aCallback) {
-    mOrigin = aOrigin;
-    mURI = aURI;
-    mType = aType;
-    mCallback = aCallback;
-    mCache = aCache;
-    mSelf = this;  // keep this alive until we call aCallback
-
-    // The cache entry is for originattribute extension of
-    // META_DICTIONARY_PREFIX, plus key of prepath
-
+  // This also keeps this alive until we get the callback.  We must do this
+  // BEFORE we call AsyncOpenURIString, or we may get a callback to
+  // OnCacheEntryAvailable before we can do this
+  mOrigin->mWaitingCacheRead.AppendElement(this);
+  if (mOrigin->mWaitingCacheRead.Length() == 1) {  // was empty
     DICTIONARY_LOG(("DictionaryOriginReader::Start(%s): %p",
                     PromiseFlatCString(aKey).get(), this));
     DictionaryCache::sCacheStorage->AsyncOpenURIString(
@@ -637,18 +664,23 @@ class DictionaryOriginReader final : public nsICacheEntryOpenCallback,
             : nsICacheStorage::OPEN_READONLY | nsICacheStorage::OPEN_SECRETLY |
                   nsICacheStorage::CHECK_MULTITHREADED,
         this);
+    // This one will get the direct callback to do Match()
   }
+  // Else we already have a read for this cache entry pending, just wait
+  // for that
+}
 
- private:
-  ~DictionaryOriginReader() {}
-
-  RefPtr<DictionaryOrigin> mOrigin;
-  nsCOMPtr<nsIURI> mURI;
-  ExtContentPolicyType mType;
-  std::function<nsresult(DictionaryCacheEntry*)> mCallback;
-  RefPtr<DictionaryCache> mCache;
-  RefPtr<DictionaryOriginReader> mSelf;
-};
+void DictionaryOriginReader::FinishMatch() {
+  RefPtr<DictionaryCacheEntry> result;
+  // Don't Match if this was a call from AddEntry()
+  if (mType != ExtContentPolicy::TYPE_OTHER) {
+    nsCString path;
+    mURI->GetPathQueryRef(path);
+    result = mOrigin->Match(path, mType);
+  }
+  DICTIONARY_LOG(("Done with reading origin for %p", mOrigin.get()));
+  (mCallback)(true, result);
+}
 
 NS_IMPL_ISUPPORTS(DictionaryOriginReader, nsICacheEntryOpenCallback,
                   nsIStreamListener)
@@ -677,47 +709,24 @@ NS_IMETHODIMP DictionaryOriginReader::OnCacheEntryAvailable(
 
   if (!aCacheEntry) {
     // Didn't have any dictionaries for this origin, and must have been readonly
-    (mCallback)(nullptr);
+    for (auto& reader : mOrigin->mWaitingCacheRead) {
+      (reader->mCallback)(true, nullptr);
+    }
+    mOrigin->mWaitingCacheRead.Clear();
     return NS_OK;
   }
 
-  // If we have an mOrigin, then it's already been created and inserted
-  if (mOrigin) {
-    mOrigin->SetCacheEntry(aCacheEntry);
-    // There's no data in the cache entry, just metadata
-    nsCOMPtr<nsICacheEntryMetaDataVisitor> metadata(mOrigin);
-    aCacheEntry->VisitMetaData(metadata);
+  mOrigin->SetCacheEntry(aCacheEntry);
+  // There's no data in the cache entry, just metadata
+  nsCOMPtr<nsICacheEntryMetaDataVisitor> metadata(mOrigin);
+  aCacheEntry->VisitMetaData(metadata);
 
-    // We only have mOrigin if we're creating it in AddEntry(), so no
-    // need to Match()
-    (mCallback)(nullptr);
-    mSelf = nullptr;  // this will delete 'this'
-    return NS_OK;
+  // This list is the only thing keeping us alive
+  RefPtr<DictionaryOriginReader> safety(this);
+  for (auto& reader : mOrigin->mWaitingCacheRead) {
+    reader->FinishMatch();
   }
-
-  nsCString prepath;
-  if (NS_FAILED(GetDictPath(mURI, prepath))) {
-    (mCallback)(nullptr);
-    return NS_ERROR_FAILURE;
-  }
-  // Add the Origin to the hash in DictionaryCache
-  Unused << mCache->mDictionaryCache.WithEntryHandle(
-      prepath, [&](auto&& entry) {
-        auto& origin = entry.OrInsertWith(
-            [&] { return new DictionaryOrigin(prepath, aCacheEntry); });
-
-        // There's no data in the cache entry, just metadata
-        nsCOMPtr<nsICacheEntryMetaDataVisitor> metadata(origin);
-        aCacheEntry->VisitMetaData(metadata);
-
-        nsCString path;
-        mURI->GetPathQueryRef(path);
-        RefPtr<DictionaryCacheEntry> result = origin->Match(path, mType);
-
-        (mCallback)(result);
-        mSelf = nullptr;  // this will delete 'this'
-        return NS_OK;
-      });
+  mOrigin->mWaitingCacheRead.Clear();
   return NS_OK;
 }
 
@@ -778,13 +787,18 @@ nsresult DictionaryCache::AddEntry(nsIURI* aURI, const nsACString& aKey,
                                    nsTArray<nsCString>& aMatchDest,
                                    const nsACString& aId,
                                    const Maybe<nsCString>& aHash,
-                                   bool aNewEntry,
+                                   bool aNewEntry, uint32_t aExpiration,
                                    DictionaryCacheEntry** aDictEntry) {
   // Note that normally we're getting an entry in and until all the data
   // has been received, we can't use it.  The Hash being null is a flag
   // that it's not yet valid.
-  RefPtr<DictionaryCacheEntry> dict =
-      new DictionaryCacheEntry(aKey, aPattern, aMatchDest, aId, aHash);
+  DICTIONARY_LOG(("AddEntry for %s, pattern %s, id %s, expiration %u",
+                  PromiseFlatCString(aKey).get(),
+                  PromiseFlatCString(aPattern).get(),
+                  PromiseFlatCString(aId).get(), aExpiration));
+  // Note that we don't know if there's an entry for this key in the origin
+  RefPtr<DictionaryCacheEntry> dict = new DictionaryCacheEntry(
+      aKey, aPattern, aMatchDest, aId, aExpiration, aHash);
   dict = AddEntry(aURI, aNewEntry, dict);
   if (dict) {
     *aDictEntry = do_AddRef(dict).take();
@@ -805,6 +819,8 @@ already_AddRefed<DictionaryCacheEntry> DictionaryCache::AddEntry(
   if (NS_FAILED(GetDictPath(aURI, prepath))) {
     return nullptr;
   }
+  DICTIONARY_LOG(
+      ("AddEntry: %s, %d, %p", prepath.get(), aNewEntry, aDictEntry));
   // create for the origin if it doesn't exist
   RefPtr<DictionaryCacheEntry> newEntry;
   Unused << mDictionaryCache.WithEntryHandle(prepath, [&](auto&& entry) {
@@ -823,17 +839,21 @@ already_AddRefed<DictionaryCacheEntry> DictionaryCache::AddEntry(
       reader->Start(
           origin, prepath, aURI, ExtContentPolicy::TYPE_OTHER, this,
           [entry = RefPtr(aDictEntry)](
-              DictionaryCacheEntry*
-                  aDict) {  // XXX avoid so many lambdas which cause allocations
+              bool, DictionaryCacheEntry* aDict) {  // XXX avoid so many lambdas
+                                                    // which cause allocations
             // Write the dirty entry we couldn't write before once
             // we get the hash
             aDictEntry->WriteOnHash();
             return NS_OK;
           });
+      // Since this is read asynchronously, we need to either add the entry
+      // async once the read is done and it's populated, or we have to handle
+      // collisions on the read
       return origin;
     });
 
     newEntry = origin->AddEntry(aDictEntry, aNewEntry);
+    DICTIONARY_LOG(("AddEntry: added %s", prepath.get()));
     return NS_OK;
   });
   return newEntry.forget();
@@ -954,35 +974,48 @@ void DictionaryCache::RemoveAllDictionaries() {
 // Once we have a DictionaryOrigin (in-memory or parsed), scan it for matches.
 // If it's not in the cache, return nullptr via callback.
 void DictionaryCache::GetDictionaryFor(
-    nsIURI* aURI, ExtContentPolicyType aType,
-    const std::function<nsresult(DictionaryCacheEntry*)>& aCallback) {
+    nsIURI* aURI, ExtContentPolicyType aType, bool& aAsync,
+    const std::function<nsresult(bool, DictionaryCacheEntry*)>& aCallback) {
+  aAsync = false;
   // Note: IETF 2.2.3 Multiple Matching Directories
   // We need to return match-dest matches first
   // If no match-dest, then the longest match
   nsCString prepath;
   if (NS_FAILED(GetDictPath(aURI, prepath))) {
-    (aCallback)(nullptr);
+    (aCallback)(false, nullptr);
     return;
   }
-  if (auto origin = mDictionaryCache.Lookup(prepath)) {
-    // Find the longest match
-    nsCString path;
-    RefPtr<DictionaryCacheEntry> result;
+  // Match immediately if we've already created the origin and read any
+  // metadata
+  if (auto existing = mDictionaryCache.Lookup(prepath)) {
+    if (existing.Data()->mWaitingCacheRead.IsEmpty()) {
+      // Find the longest match
+      nsCString path;
+      RefPtr<DictionaryCacheEntry> result;
 
-    aURI->GetPathQueryRef(path);
-    DICTIONARY_LOG(("GetDictionaryFor(%s %s)", prepath.get(), path.get()));
+      aURI->GetPathQueryRef(path);
+      DICTIONARY_LOG(("GetDictionaryFor(%s %s)", prepath.get(), path.get()));
 
-    result = origin.Data()->Match(path, aType);
-    (aCallback)(result);
+      result = existing.Data()->Match(path, aType);
+      (aCallback)(false, result);
+    } else {
+      DICTIONARY_LOG(
+          ("GetDictionaryFor(%s): Waiting for metadata read to match",
+           prepath.get()));
+      // Wait for the metadata read to complete
+      RefPtr<DictionaryOriginReader> reader = new DictionaryOriginReader();
+      reader->Start(existing.Data(), prepath, aURI, aType, this, aCallback);
+      aAsync = true;
+    }
     return;
   }
-  // We don't have an entry at all.  We need to check if there's an
-  // entry on disk for <origin>, unless we know we have all entries
-  // in the memory cache.
+  // We don't have an entry at all.  We need to check if there's an entry
+  // on disk for <origin>, unless we know we have all entries in the memory
+  // cache.
 
   // Handle unknown origins by checking the disk cache
   if (!sCacheStorage) {
-    (aCallback)(nullptr);  // in case we have no disk storage
+    (aCallback)(false, nullptr);  // in case we have no disk storage
     return;
   }
 
@@ -997,41 +1030,56 @@ void DictionaryCache::GetDictionaryFor(
           sCacheStorage->Exists(prepathURI, META_DICTIONARY_PREFIX, &exists)) &&
       exists) {
     // To keep track of the callback, we need a new object to get the
-    // OnCacheEntryAvailable can resolve the callback.  It will keep a reference
-    // to itself until it call aCallback after the cache read has resolved
+    // OnCacheEntryAvailable can resolve the callback.
     DICTIONARY_LOG(("Reading %s for dictionary entries", prepath.get()));
+    RefPtr<DictionaryOrigin> origin = new DictionaryOrigin(prepath, nullptr);
+    // Add the origin to the list; we'll immediately start a reader which
+    // will set mWaitingCacheRead, so future GetDictionaryFor() calls
+    // will wait for the metadata to be read before doing Match()
+    mDictionaryCache.InsertOrUpdate(prepath, origin);
+
     RefPtr<DictionaryOriginReader> reader = new DictionaryOriginReader();
     // After Start(), if we drop this ref reader will kill itself on
     // completion; it holds a self-ref
-    reader->Start(nullptr, prepath, aURI, aType, this, aCallback);
-  } else {
-    // No dictionaries for origin
-    (aCallback)(nullptr);
+    reader->Start(origin, prepath, aURI, aType, this, aCallback);
+    aAsync = true;
+    return;
   }
+  // No dictionaries for origin
+  (aCallback)(false, nullptr);
 }
+
 //-----------------------------------------------------------------------------
 // DictionaryOrigin
 //-----------------------------------------------------------------------------
 NS_IMPL_ISUPPORTS(DictionaryOrigin, nsICacheEntryMetaDataVisitor)
 
-void DictionaryOrigin::Write(DictionaryCacheEntry* aDictEntry) {
+nsresult DictionaryOrigin::Write(DictionaryCacheEntry* aDictEntry) {
   DICTIONARY_LOG(("DictionaryOrigin::Write %s %p", mOrigin.get(), aDictEntry));
   if (mEntry) {
-    aDictEntry->Write(mEntry);
-  } else {
-    // Write it once DictionaryOriginReader creates the entry
-    mDeferredWrites = true;
+    return aDictEntry->Write(mEntry);
   }
+  // Write it once DictionaryOriginReader creates the entry
+  mDeferredWrites = true;
+  return NS_OK;
 }
 
 void DictionaryOrigin::SetCacheEntry(nsICacheEntry* aEntry) {
   mEntry = aEntry;
   if (mDeferredWrites) {
     for (auto& entry : mEntries) {
-      Write(entry);
+      if (NS_FAILED(Write(entry))) {
+        RemoveEntry(entry);
+      }
     }
   }
   mDeferredWrites = false;
+  // Handle removes that were pending
+  for (auto& remove : mPendingRemove) {
+    DICTIONARY_LOG(("Pending RemoveEntry for %s", remove->mURI.get()));
+    remove->RemoveEntry(mEntry);
+  }
+  mPendingRemove.Clear();
 }
 
 already_AddRefed<DictionaryCacheEntry> DictionaryOrigin::AddEntry(
@@ -1140,7 +1188,13 @@ nsresult DictionaryOrigin::RemoveEntry(const nsACString& aKey) {
       // Ensure it doesn't disappear on us
       RefPtr<DictionaryCacheEntry> hold(dict);
       mEntries.RemoveElement(dict);
-      hold->RemoveEntry(mEntry);
+      if (mEntry) {
+        hold->RemoveEntry(mEntry);
+      } else {
+        // We don't have the cache entry yet.  Defer the removal from
+        // the entry until we do
+        mPendingRemove.AppendElement(hold);
+      }
       if (MOZ_UNLIKELY(
               MOZ_LOG_TEST(gDictionaryLog, mozilla::LogLevel::Debug))) {
         DumpEntries();
@@ -1196,9 +1250,10 @@ DictionaryCacheEntry* DictionaryOrigin::Match(const nsACString& aPath,
                                               ExtContentPolicyType aType) {
   uint32_t longest = 0;
   DictionaryCacheEntry* result = nullptr;
+  uint32_t now = mozilla::net::NowInSeconds();
 
   for (const auto& dict : mEntries) {
-    if (dict->Match(aPath, aType, longest)) {
+    if (dict->Match(aPath, aType, now, longest)) {
       result = dict;
     }
   }
@@ -1221,9 +1276,20 @@ nsresult DictionaryOrigin::OnMetaDataElement(const char* asciiKey,
   DICTIONARY_LOG(("DictionaryOrigin::OnMetaDataElement %s %s",
                   asciiKey ? asciiKey : "", asciiValue));
 
+  // If we already have an entry for this key (pending or in the list),
+  // don't override it
+  for (auto& entry : mEntries) {
+    if (entry->GetURI().Equals(asciiKey)) {
+      return NS_OK;
+    }
+  }
+  for (auto& entry : mPendingEntries) {
+    if (entry->GetURI().Equals(asciiKey)) {
+      return NS_OK;
+    }
+  }
   RefPtr<DictionaryCacheEntry> entry = new DictionaryCacheEntry(asciiKey);
   if (entry->ParseMetadata(asciiValue)) {
-    // XXX Check for duplicates?
     mEntries.AppendElement(entry);
   }
   return NS_OK;
