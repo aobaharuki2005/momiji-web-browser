@@ -14,6 +14,7 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.browser.state.action.CrashAction
@@ -156,6 +157,7 @@ class CrashContentIntegrationTest {
         verify { integration.updateVerticalMargins() }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class) // advanceUntilIdle
     @Test
     fun `GIVEN integration was stopped and then restarted WHEN orientation state changes THEN margins are updated`() {
         val crashReporterLayoutParams: MarginLayoutParams = mockk(relaxed = true)

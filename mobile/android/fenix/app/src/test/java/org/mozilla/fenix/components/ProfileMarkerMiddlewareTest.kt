@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.base.profiler.Profiler
@@ -18,6 +19,7 @@ class ProfileMarkerMiddlewareTest {
     data object SState : State
     data class AAction(val arg: String = "") : Action
 
+    @OptIn(ExperimentalCoroutinesApi::class) // advanceUntilIdle
     @Test
     fun `profile marker middleware creates markers for every action dispatched to store`() = runTest {
         val captured = mutableListOf<Pair<String, String?>>()

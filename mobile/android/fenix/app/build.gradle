@@ -544,10 +544,6 @@ nimbus {
             ? gradle.getProperty('localProperties.autoPublish.application-services.dir') : null
 }
 
-tasks.withType(KotlinCompile).configureEach {
-    kotlinOptions.freeCompilerArgs += "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
-}
-
 dependencies {
     // We pick up JNA transitively by way of Glean, which is currently on version 5.14.0.
     // However, we need to force version 5.17.0 due to Google Play's 16KB page size requirement.

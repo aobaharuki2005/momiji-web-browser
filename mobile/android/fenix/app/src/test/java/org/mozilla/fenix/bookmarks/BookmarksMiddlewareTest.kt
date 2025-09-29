@@ -9,6 +9,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import mozilla.appservices.places.BookmarkRoot
@@ -429,6 +430,7 @@ class BookmarksMiddlewareTest {
         assertNull(store.state.bookmarksAddFolderState)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class) // advanceUntilIdle
     @Test
     fun `GIVEN current screen is add folder and new folder title is empty WHEN back is clicked THEN navigate back to the previous tree and don't save anything`() = runTestOnMain {
         val middleware = buildMiddleware()
@@ -827,6 +829,7 @@ class BookmarksMiddlewareTest {
         assertEquals(bookmarkCount, store.state.bookmarksSelectFolderState?.folders?.count())
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class) // advanceUntilIdle
     @Test
     fun `GIVEN selected folder WHEN OpenInNormalTabsClicked THEN urls opened as normal tabs`() = runTest {
         val bookmarkFolder = BookmarkItem.Folder(title = "folder", guid = "1234", position = 0u)
@@ -849,6 +852,7 @@ class BookmarksMiddlewareTest {
         assertTrue(trayShown)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class) // advanceUntilIdle
     @Test
     fun `GIVEN selected folder WHEN OpenInPrivateTabsClicked THEN urls opened as private tabs`() = runTest {
         val bookmarkFolder = BookmarkItem.Folder(title = "folder", guid = "1234", position = 0u)
