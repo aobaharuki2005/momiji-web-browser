@@ -59,7 +59,7 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  DictionaryCacheEntry(const char* aKey);
+  explicit DictionaryCacheEntry(const char* aKey);
   DictionaryCacheEntry(const nsACString& aKey, const nsACString& aPattern,
                        nsTArray<nsCString>& aMatchDest, const nsACString& aId,
                        uint32_t aExpiration = 0,
@@ -324,6 +324,7 @@ class DictionaryCache final {
   static already_AddRefed<DictionaryCache> GetInstance();
 
   nsresult Init();
+  static void Shutdown();
 
   nsresult AddEntry(nsIURI* aURI, const nsACString& aKey,
                     const nsACString& aPattern, nsTArray<nsCString>& aMatchDest,
@@ -358,7 +359,7 @@ class DictionaryCache final {
   }
 
  private:
-  static nsCOMPtr<nsICacheStorage> sCacheStorage;
+  static StaticRefPtr<nsICacheStorage> sCacheStorage;
 
   // In-memory cache of dictionary entries.  HashMap, keyed by origin, of
   // Linked list (LRU order) of valid dictionaries for the origin.

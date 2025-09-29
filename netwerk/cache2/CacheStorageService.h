@@ -19,6 +19,7 @@
 #include "nsProxyRelease.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/AtomicBitfields.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
@@ -111,7 +112,7 @@ class CacheStorageService final : public nsICacheStorageService,
   static bool IsRunning() { return sSelf && !sSelf->mShutdown; }
   static bool IsOnManagementThread();
   already_AddRefed<nsIEventTarget> Thread() const;
-  mozilla::Mutex& Lock() { return sLock; }
+  StaticMutex& Lock() { return sLock; }
 
   // Tracks entries that may be forced valid in a pruned hashtable.
   struct ForcedValidData {
@@ -346,7 +347,7 @@ class CacheStorageService final : public nsICacheStorageService,
 
   static CacheStorageService* sSelf;
 
-  static mozilla::Mutex sLock;
+  static StaticMutex sLock;
   mozilla::Mutex mForcedValidEntriesLock{
       "CacheStorageService.mForcedValidEntriesLock"};
 

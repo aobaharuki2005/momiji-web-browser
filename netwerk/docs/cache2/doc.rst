@@ -628,7 +628,6 @@ Future optimizations:
 - Compressing dictionary-encoded files with zstd in the cache
 --  Trades CPU use for hitrate
 -- Perhaps only above some size
-- Preemptively reading dict:<origin> entries into memory in the background
-  at startup
+- Preemptively reading dict:<origin> entries into memory in the background at startup
 -- Up to some limit
 - LRU-ing dict:<origin> entries and dropping old ones from memory
