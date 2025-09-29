@@ -505,8 +505,8 @@ nsHttpChannel::~nsHttpChannel() {
     gHttpHandler->RemoveHttpChannel(mChannelId);
   }
 
-  if (mDict && mUsingDictionary) {
-    mDict->UseCompleted();
+  if (mDictDecompress && mUsingDictionary) {
+    mDictDecompress->UseCompleted();
   }
 }
 
@@ -554,16 +554,19 @@ nsresult nsHttpChannel::Init(nsIURI* uri, uint32_t caps, nsProxyInfo* proxyInfo,
   rv = gHttpHandler->AddAcceptAndDictionaryHeaders(
       uri, &mRequestHead, IsHTTPS(),
       [self = RefPtr(this)](DictionaryCacheEntry* aDict) {
-        self->mDict = aDict;
-        if (self->mDict) {
-          // mDict is set if we added Available-Dictionary
-          self->mDict->InUse();
+        self->mDictDecompress = aDict;
+        if (self->mDictDecompress) {
+          LOG_DICTIONARIES(
+              ("Added dictionary header for %p, DirectoryCacheEntry %p",
+               self.get(), aDict));
+          // mDictDecompress is set if we added Available-Dictionary
+          self->mDictDecompress->InUse();
           self->mUsingDictionary = true;
-          self->mShouldSuspendForDictionary =
-              self->mDict->Prefetch(GetLoadContextInfo(self), [self]() {
+          self->mShouldSuspendForDictionary = self->mDictDecompress->Prefetch(
+              GetLoadContextInfo(self), [self]() {
                 // this is called when the prefetch is complete to
                 // un-Suspend the channel
-                MOZ_ASSERT(self->mDict->DictionaryReady());
+                MOZ_ASSERT(self->mDictDecompress->DictionaryReady());
                 if (self->mSuspendedForDictionary) {
                   LOG(
                       ("nsHttpChannel::Init [this=%p] Resuming channel "
@@ -3524,6 +3527,16 @@ nsresult nsHttpChannel::ContinueProcessNormal(nsresult rv) {
   if (mCacheEntry) {
     rv = InitCacheEntry();
     if (NS_FAILED(rv)) CloseCacheEntry(true);
+  }
+
+  // We need to do this before CallonStartRequest, since this can modify
+  // the Content-Encoding to remove dcb/dcz (and perhaps others), and
+  // CallOnStartRequest() sends this to the content process.
+
+  // Install cache listener if we still have a cache entry open
+  if (mCacheEntry && !LoadCacheEntryIsReadOnly()) {
+    rv = InstallCacheListener();
+    if (NS_FAILED(rv)) return rv;
   } else {
     // We may still need to decompress in the parent if it's dcb or dcz
     nsAutoCString contentEncoding;
@@ -3552,6 +3565,7 @@ nsresult nsHttpChannel::ContinueProcessNormal(nsresult rv) {
       }
     }
   }
+
   // Check that the server sent us what we were asking for
   if (LoadResuming()) {
     // Create an entity id from the response
@@ -3580,24 +3594,14 @@ nsresult nsHttpChannel::ContinueProcessNormal(nsresult rv) {
 
   // If we don't have the entire dictionary yet, Suspend() the channel
   // until the dictionary is in-memory.
-  if (mDict && mUsingDictionary && mShouldSuspendForDictionary &&
-      !mDict->DictionaryReady()) {
+  if (mDictDecompress && mUsingDictionary && mShouldSuspendForDictionary &&
+      !mDictDecompress->DictionaryReady()) {
     LOG(
         ("nsHttpChannel::ContinueProcessNormal [this=%p] Suspending the "
          "transaction, waiting for dictionary",
          this));
     Suspend();
     mSuspendedForDictionary = true;
-  }
-
-  // We need to do this before CallonStartRequest, since this can modify
-  // the Content-Encoding to remove dcb/dcz (and perhaps others), and
-  // CallOnStartRequest() sends this to the content process.
-
-  // Install cache listener if we still have a cache entry open
-  if (mCacheEntry && !LoadCacheEntryIsReadOnly()) {
-    rv = InstallCacheListener();
-    if (NS_FAILED(rv)) return rv;
   }
 
   rv = CallOnStartRequest();
@@ -4468,7 +4472,7 @@ nsresult nsHttpChannel::ProcessNotModified(
   rv = UpdateExpirationTime();
   if (NS_FAILED(rv)) return rv;
 
-  rv = AddCacheEntryHeaders(mCacheEntry);
+  rv = AddCacheEntryHeaders(mCacheEntry, false);
   if (NS_FAILED(rv)) return rv;
 
   // notify observers interested in looking at a reponse that has been
@@ -5836,9 +5840,8 @@ nsresult nsHttpChannel::InitCacheEntry() {
   // mark this weakly framed until a response body is seen
   mCacheEntry->SetMetaDataElement("strongly-framed", "0");
 
-  rv = AddCacheEntryHeaders(mCacheEntry);
-  if (NS_FAILED(rv)) return rv;
-
+  // We'll store the cache headers in InstallCacheListener, since it may modify
+  // them
   StoreInitedCacheEntry(true);
 
   // Don't perform the check when writing (doesn't make sense)
@@ -5872,7 +5875,8 @@ void nsHttpChannel::UpdateInhibitPersistentCachingFlag() {
 nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
                                 nsHttpRequestHead* requestHead,
                                 nsHttpResponseHead* responseHead,
-                                nsITransportSecurityInfo* securityInfo) {
+                                nsITransportSecurityInfo* securityInfo,
+                                bool aModified) {
   nsresult rv;
 
   LOG(("nsHttpChannel::AddCacheEntryHeaders [this=%p] begin", self));
@@ -5880,6 +5884,11 @@ nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
   if (securityInfo) {
     entry->SetSecurityInfo(securityInfo);
   }
+
+  // Note: if aModified == false, then we're processing a 304 Not Modified,
+  // and we *shouldn't* have any change to the Dictionary (and won't be
+  // replacing the DictionaryEntry, though if the Match/Match-dest/Id/Type
+  // changed, we may need to rewrite it. XXX?
 
   // Store the HTTP request method with the cache entry so we can distinguish
   // for example GET and HEAD responses.
@@ -5966,7 +5975,10 @@ nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
 
   // If this is being marked as a dictionary, add it to the list
   if (StaticPrefs::network_http_dictionaries_enable() && self->IsHTTPS()) {
-    self->ParseDictionary(entry, responseHead);
+    if (!self->ParseDictionary(entry, responseHead, aModified)) {
+      LOG_DICTIONARIES(
+          ("Failed to parse use-as-dictionary from %s", head.get()));
+    }
   }
 
   // Indicate we have successfully finished setting metadata on the cache entry.
@@ -5976,7 +5988,8 @@ nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
 }
 
 bool nsHttpChannel::ParseDictionary(nsICacheEntry* aEntry,
-                                    nsHttpResponseHead* aResponseHead) {
+                                    nsHttpResponseHead* aResponseHead,
+                                    bool aModified) {
   nsAutoCString val;
   if (NS_SUCCEEDED(aResponseHead->GetHeader(nsHttp::Use_As_Dictionary, val))) {
     nsAutoCStringN<128> matchVal;
@@ -5994,6 +6007,7 @@ bool nsHttpChannel::ParseDictionary(nsICacheEntry* aEntry,
     if (NS_FAILED(rv = aEntry->GetKey(key))) {
       return false;
     }
+
     nsCString hash;
     // Available now for use
     RefPtr<DictionaryCache> dicts(DictionaryCache::GetInstance());
@@ -6002,16 +6016,30 @@ bool nsHttpChannel::ParseDictionary(nsICacheEntry* aEntry,
          "type=%s",
          mURI->GetSpecOrDefault().get(), key.get(), matchVal.get(),
          matchIdVal.get(), typeVal.get()));
-    dicts->AddEntry(mURI, key, matchVal, matchIdVal, Some(hash),
-                    getter_AddRefs(mDict));
+    dicts->AddEntry(mURI, key, matchVal, matchIdVal, Some(hash), aModified,
+                    getter_AddRefs(mDictSaving));
+    // If this was 304 Not Modified, then we don't need the dictionary data
+    // (though we may update the dictionary entry if the match/id/etc changed).
+    // If this is 304, mDictSaving will be cleared by AddEntry.
+    if (mDictSaving) {
+      if (mDictSaving->ShouldSuspendUntilCacheRead()) {
+        LOG_DICTIONARIES(("Suspending %p to wait for cache read", this));
+        mTransactionPump->Suspend();
+        mDictSaving->CallbackOnCacheRead([self = RefPtr(this)]() {
+          LOG_DICTIONARIES(("Resuming %p after cache read", self.get()));
+          self->Resume();
+        });
+      }
+    }
     return true;
   }
-  return false;
+  return true;  // succeeded, no use-as-dictionary
 }
 
-nsresult nsHttpChannel::AddCacheEntryHeaders(nsICacheEntry* entry) {
+nsresult nsHttpChannel::AddCacheEntryHeaders(nsICacheEntry* entry,
+                                             bool aModified) {
   return DoAddCacheEntryHeaders(this, entry, &mRequestHead, mResponseHead.get(),
-                                mSecurityInfo);
+                                mSecurityInfo, aModified);
 }
 
 inline void GetAuthType(const char* challenge, nsCString& authType) {
@@ -6077,10 +6105,19 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
   // and improve hitrate.  Downside is CPU use, complexity and perhaps delay,
   // maybe.
   nsAutoCString dictionary;
-  Unused << mResponseHead->GetHeader(nsHttp::Use_As_Dictionary, dictionary);
-  if (!dictionary.IsEmpty()) {
+  if (StaticPrefs::network_http_dictionaries_enable() && IsHTTPS()) {
+    Unused << mResponseHead->GetHeader(nsHttp::Use_As_Dictionary, dictionary);
+    if (!dictionary.IsEmpty()) {
+      // If this is being marked as a dictionary, add it to the list
+      if (!ParseDictionary(mCacheEntry, mResponseHead.get(), true)) {
+        LOG_DICTIONARIES(("Failed to parse use-as-dictionary"));
+      } else {
+        MOZ_ASSERT(mDictSaving);
+      }
+    }
+
     // We need to record the hash as we save it
-    mCacheEntry->SetDictionary(mDict);
+    mCacheEntry->SetDictionary(mDictSaving);
   }
   LOG(("Trading cache input stream for output stream [channel=%p]", this));
 
@@ -6093,6 +6130,10 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
   if (predictedSize != -1) {
     predictedSize -= offset;
   }
+
+  nsCOMPtr<nsIStreamListenerTee> tee =
+      do_CreateInstance(kStreamListenerTeeCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIOutputStream> out;
   rv =
@@ -6129,10 +6170,6 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
     if (NS_FAILED(rv)) return rv;
 #endif
 
-  nsCOMPtr<nsIStreamListenerTee> tee =
-      do_CreateInstance(kStreamListenerTeeCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
   rv = tee->Init(mListener, out, nullptr);
   LOG(("nsHttpChannel::InstallCacheListener sync tee %p rv=%" PRIx32, tee.get(),
        static_cast<uint32_t>(rv)));
@@ -6153,7 +6190,8 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
       ("Content-Encoding for %p: %s", this, contentEncoding.get()));
   if (!dictionary.IsEmpty() || contentEncoding.Equals("dcb") ||
       contentEncoding.Equals("dcz")) {
-    LOG_DICTIONARIES(("Removing Content-Encoding for %p", this));
+    LOG_DICTIONARIES(
+        ("Removing Content-Encoding %s for %p", contentEncoding.get(), this));
     nsCOMPtr<nsIStreamListener> listener;
     // otherwise we won't convert in the parent process
     SetApplyConversion(true);
@@ -6170,6 +6208,14 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
       StoreHasAppliedConversion(true);
     } else
       LOG_DICTIONARIES(("Didn't install decompressor before tee"));
+  }
+
+  // Must add these after adding possible decompressors, since that may modify
+  // Content-Encoding
+  rv = AddCacheEntryHeaders(mCacheEntry, true);
+  if (NS_FAILED(rv)) {
+    mCacheEntry->AsyncDoom(nullptr);
+    return rv;
   }
 
   // XXX telemetry as to how often we get dcb/dcz
@@ -7787,19 +7833,24 @@ nsHttpChannel::GetEncodedBodySize(uint64_t* aEncodedBodySize) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::GetDictionary(DictionaryCacheEntry** aDictionary) {
-  *aDictionary = do_AddRef(mDict).take();
+nsHttpChannel::GetDecompressDictionary(DictionaryCacheEntry** aDictionary) {
+  *aDictionary = do_AddRef(mDictDecompress).take();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpChannel::SetDictionary(DictionaryCacheEntry* aDictionary) {
-  if (mDict && mUsingDictionary) {
-    mDict->UseCompleted();
+nsHttpChannel::SetDecompressDictionary(DictionaryCacheEntry* aDictionary) {
+  if (!aDictionary) {
+    if (mDictDecompress && mUsingDictionary) {
+      mDictDecompress->UseCompleted();
+    }
     mUsingDictionary = false;
+  } else {
+    MOZ_ASSERT(!mDictDecompress);
+    aDictionary->InUse();
+    mUsingDictionary = true;
   }
-  mDict = aDictionary;
-  // We're only setting InUse() if we are using it for Available-Dictionary
+  mDictDecompress = aDictionary;
   return NS_OK;
 }
 
