@@ -605,47 +605,11 @@ const external_ReactRedux_namespaceObject = ReactRedux;
 ;// CONCATENATED MODULE: external "React"
 const external_React_namespaceObject = React;
 var external_React_default = /*#__PURE__*/__webpack_require__.n(external_React_namespaceObject);
-;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamAdmin/SimpleHashRouter.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-class SimpleHashRouter extends (external_React_default()).PureComponent {
-  constructor(props) {
-    super(props);
-    this.onHashChange = this.onHashChange.bind(this);
-    this.state = {
-      hash: globalThis.location.hash
-    };
-  }
-  onHashChange() {
-    this.setState({
-      hash: globalThis.location.hash
-    });
-  }
-  componentWillMount() {
-    globalThis.addEventListener("hashchange", this.onHashChange);
-  }
-  componentWillUnmount() {
-    globalThis.removeEventListener("hashchange", this.onHashChange);
-  }
-  render() {
-    const [, ...routes] = this.state.hash.split("-");
-    return /*#__PURE__*/external_React_default().cloneElement(this.props.children, {
-      location: {
-        hash: this.state.hash,
-        routes
-      }
-    });
-  }
-}
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamAdmin/DiscoveryStreamAdmin.jsx
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 
 
 
@@ -1219,65 +1183,36 @@ class DiscoveryStreamAdminInner extends (external_React_default()).PureComponent
     }))));
   }
 }
-class CollapseToggle extends (external_React_default()).PureComponent {
-  constructor(props) {
-    super(props);
-    this.onCollapseToggle = this.onCollapseToggle.bind(this);
-    this.state = {
-      collapsed: false
-    };
-  }
-  get renderAdmin() {
-    const {
-      props
-    } = this;
-    return props.location.hash && props.location.hash.startsWith("#devtools");
-  }
-  onCollapseToggle(e) {
-    e.preventDefault();
-    this.setState(state => ({
-      collapsed: !state.collapsed
-    }));
-  }
-  setBodyClass() {
-    if (this.renderAdmin && !this.state.collapsed) {
-      globalThis.document.body.classList.add("no-scroll");
-    } else {
+function CollapseToggle(props) {
+  const {
+    devtoolsCollapsed
+  } = props;
+  const label = `${devtoolsCollapsed ? "Expand" : "Collapse"} devtools`;
+  (0,external_React_namespaceObject.useEffect)(() => {
+    // Set or remove body class depending on devtoolsCollapsed state
+    if (devtoolsCollapsed) {
       globalThis.document.body.classList.remove("no-scroll");
+    } else {
+      globalThis.document.body.classList.add("no-scroll");
     }
-  }
-  componentDidMount() {
-    this.setBodyClass();
-  }
-  componentDidUpdate() {
-    this.setBodyClass();
-  }
-  componentWillUnmount() {
-    globalThis.document.body.classList.remove("no-scroll");
-  }
-  render() {
-    const {
-      props
-    } = this;
-    const {
-      renderAdmin
-    } = this;
-    const isCollapsed = this.state.collapsed || !renderAdmin;
-    const label = `${isCollapsed ? "Expand" : "Collapse"} devtools`;
-    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("a", {
-      href: "#devtools",
-      title: label,
-      "aria-label": label,
-      className: `discoverystream-admin-toggle ${isCollapsed ? "collapsed" : "expanded"}`,
-      onClick: this.renderAdmin ? this.onCollapseToggle : null
-    }, /*#__PURE__*/external_React_default().createElement("span", {
-      className: "icon icon-devtools"
-    })), renderAdmin ? /*#__PURE__*/external_React_default().createElement(DiscoveryStreamAdminInner, _extends({}, props, {
-      collapsed: this.state.collapsed
-    })) : null);
-  }
+
+    // Cleanup on unmount
+    return () => {
+      globalThis.document.body.classList.remove("no-scroll");
+    };
+  }, [devtoolsCollapsed]);
+  return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("a", {
+    href: devtoolsCollapsed ? "#devtools" : "#",
+    title: label,
+    "aria-label": label,
+    className: `discoverystream-admin-toggle ${devtoolsCollapsed ? "expanded" : "collapsed"}`
+  }, /*#__PURE__*/external_React_default().createElement("span", {
+    className: "icon icon-devtools"
+  })), !devtoolsCollapsed ? /*#__PURE__*/external_React_default().createElement(DiscoveryStreamAdminInner, _extends({}, props, {
+    collapsed: devtoolsCollapsed
+  })) : null);
 }
-const _DiscoveryStreamAdmin = props => /*#__PURE__*/external_React_default().createElement(SimpleHashRouter, null, /*#__PURE__*/external_React_default().createElement(CollapseToggle, props));
+const _DiscoveryStreamAdmin = props => /*#__PURE__*/external_React_default().createElement(CollapseToggle, props);
 const DiscoveryStreamAdmin = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Sections: state.Sections,
   DiscoveryStream: state.DiscoveryStream,
@@ -16358,36 +16293,37 @@ function Base_debounce(func, wait) {
     func.apply(this, args);
   };
 }
-class _Base extends (external_React_default()).PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      message: {}
+function WithDsAdmin(props) {
+  const {
+    hash = globalThis?.location?.hash || ""
+  } = props;
+  const [devtoolsCollapsed, setDevtoolsCollapsed] = (0,external_React_namespaceObject.useState)(!hash.startsWith("#devtools"));
+  (0,external_React_namespaceObject.useEffect)(() => {
+    const onHashChange = () => {
+      const h = globalThis?.location?.hash || "";
+      setDevtoolsCollapsed(!h.startsWith("#devtools"));
     };
-    this.notifyContent = this.notifyContent.bind(this);
+
+    // run once in case hash changed before mount
+    onHashChange();
+    globalThis?.addEventListener("hashchange", onHashChange);
+    return () => globalThis?.removeEventListener("hashchange", onHashChange);
+  }, []);
+  return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement(DiscoveryStreamAdmin, {
+    devtoolsCollapsed: devtoolsCollapsed
+  }), devtoolsCollapsed ? /*#__PURE__*/external_React_default().createElement(BaseContent, props) : null);
+}
+function _Base(props) {
+  const isDevtoolsEnabled = props.Prefs.values["asrouter.devtoolsEnabled"];
+  const {
+    App
+  } = props;
+  if (!App.initialized) {
+    return null;
   }
-  notifyContent(state) {
-    this.setState(state);
-  }
-  render() {
-    const {
-      props
-    } = this;
-    const {
-      App
-    } = props;
-    const isDevtoolsEnabled = props.Prefs.values["asrouter.devtoolsEnabled"];
-    if (!App.initialized) {
-      return null;
-    }
-    return /*#__PURE__*/external_React_default().createElement(ErrorBoundary, {
-      className: "base-content-fallback"
-    }, /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement(BaseContent, Base_extends({}, this.props, {
-      adminContent: this.state
-    })), isDevtoolsEnabled ? /*#__PURE__*/external_React_default().createElement(DiscoveryStreamAdmin, {
-      notifyContent: this.notifyContent
-    }) : null));
-  }
+  return /*#__PURE__*/external_React_default().createElement(ErrorBoundary, {
+    className: "base-content-fallback"
+  }, isDevtoolsEnabled ? /*#__PURE__*/external_React_default().createElement(WithDsAdmin, props) : /*#__PURE__*/external_React_default().createElement(BaseContent, props));
 }
 class BaseContent extends (external_React_default()).PureComponent {
   constructor(props) {

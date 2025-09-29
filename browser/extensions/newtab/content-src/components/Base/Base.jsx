@@ -9,7 +9,7 @@ import { connect } from "react-redux";
 import { DiscoveryStreamBase } from "content-src/components/DiscoveryStreamBase/DiscoveryStreamBase";
 import { ErrorBoundary } from "content-src/components/ErrorBoundary/ErrorBoundary";
 import { CustomizeMenu } from "content-src/components/CustomizeMenu/CustomizeMenu";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Search } from "content-src/components/Search/Search";
 import { Sections } from "content-src/components/Sections/Sections";
 import { Logo } from "content-src/components/Logo/Logo";
@@ -47,39 +47,51 @@ function debounce(func, wait) {
   };
 }
 
-export class _Base extends React.PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      message: {},
+export function WithDsAdmin(props) {
+  const { hash = globalThis?.location?.hash || "" } = props;
+
+  const [devtoolsCollapsed, setDevtoolsCollapsed] = useState(
+    !hash.startsWith("#devtools")
+  );
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const h = globalThis?.location?.hash || "";
+      setDevtoolsCollapsed(!h.startsWith("#devtools"));
     };
-    this.notifyContent = this.notifyContent.bind(this);
+
+    // run once in case hash changed before mount
+    onHashChange();
+
+    globalThis?.addEventListener("hashchange", onHashChange);
+    return () => globalThis?.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  return (
+    <>
+      <DiscoveryStreamAdmin devtoolsCollapsed={devtoolsCollapsed} />
+      {devtoolsCollapsed ? <BaseContent {...props} /> : null}
+    </>
+  );
+}
+
+export function _Base(props) {
+  const isDevtoolsEnabled = props.Prefs.values["asrouter.devtoolsEnabled"];
+  const { App } = props;
+
+  if (!App.initialized) {
+    return null;
   }
 
-  notifyContent(state) {
-    this.setState(state);
-  }
-
-  render() {
-    const { props } = this;
-    const { App } = props;
-    const isDevtoolsEnabled = props.Prefs.values["asrouter.devtoolsEnabled"];
-
-    if (!App.initialized) {
-      return null;
-    }
-
-    return (
-      <ErrorBoundary className="base-content-fallback">
-        <React.Fragment>
-          <BaseContent {...this.props} adminContent={this.state} />
-          {isDevtoolsEnabled ? (
-            <DiscoveryStreamAdmin notifyContent={this.notifyContent} />
-          ) : null}
-        </React.Fragment>
-      </ErrorBoundary>
-    );
-  }
+  return (
+    <ErrorBoundary className="base-content-fallback">
+      {isDevtoolsEnabled ? (
+        <WithDsAdmin {...props} />
+      ) : (
+        <BaseContent {...props} />
+      )}
+    </ErrorBoundary>
+  );
 }
 
 export class BaseContent extends React.PureComponent {
