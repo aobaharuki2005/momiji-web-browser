@@ -9,8 +9,10 @@ UNIFIED_SOURCES += [
     "TestContentUtils.cpp",
     "TestMimeType.cpp",
     "TestParser.cpp",
+    "TestPlainTextSerializer.cpp",
     "TestScheduler.cpp",
     "TestTextDirective.cpp",
+    "TestXMLSerializerNoBreakLink.cpp",
     "TestXPathGenerator.cpp",
 ]
 
