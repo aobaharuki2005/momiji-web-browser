@@ -415,10 +415,7 @@ tasks:
                 - --exclude-tag=canvas
                 - --exclude-tag=webcodecs
                 - --timeout-multiplier=5.0
-        worker-type:
-            by-test-platform:
-                .*-wayland.*: t-linux-wayland-vm
-                default: default
+        worker-type: default
 
     web-platform-tests-webgpu-long:
         description: "Web platform WebGPU test run (long tests)"
@@ -480,10 +477,7 @@ tasks:
                 - --skip-implementation-status=not-implementing
                 - --backlog
                 - --timeout-multiplier=5.0
-        worker-type:
-            by-test-platform:
-                .*-wayland.*: t-linux-wayland-vm
-                default: default
+        worker-type: default
 
     web-platform-tests-webgpu-backlog-long:
         description: "Web platform WebGPU test run (backlog, long tests)"
