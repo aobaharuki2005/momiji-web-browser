@@ -260,111 +260,67 @@ void InternalRequest::SetInterceptionContentPolicyType(
 }
 
 /* static */
+/* static */
 RequestDestination InternalRequest::MapContentPolicyTypeToRequestDestination(
     nsContentPolicyType aContentPolicyType) {
+  return MapContentPolicyTypeToRequestDestination(
+      nsContentUtils::InternalContentPolicyTypeToExternal(aContentPolicyType));
+}
+
+/* static */
+RequestDestination InternalRequest::MapContentPolicyTypeToRequestDestination(
+    ExtContentPolicyType aContentPolicyType) {
   switch (aContentPolicyType) {
-    case nsIContentPolicy::TYPE_OTHER:
+    case ExtContentPolicyType::TYPE_INVALID:
+    case ExtContentPolicyType::TYPE_OTHER:
       return RequestDestination::_empty;
-    case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
-    case nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD:
-    case nsIContentPolicy::TYPE_INTERNAL_MODULE:
-    case nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD:
-    case nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER:
-    case nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS:
-    case nsIContentPolicy::TYPE_INTERNAL_CHROMEUTILS_COMPILED_SCRIPT:
-    case nsIContentPolicy::TYPE_INTERNAL_FRAME_MESSAGEMANAGER_SCRIPT:
-    case nsIContentPolicy::TYPE_SCRIPT:
+    case ExtContentPolicyType::TYPE_SCRIPT:
       return RequestDestination::Script;
-    case nsIContentPolicy::TYPE_INTERNAL_WORKER:
-    case nsIContentPolicy::TYPE_INTERNAL_WORKER_STATIC_MODULE:
-      return RequestDestination::Worker;
-    case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
-      return RequestDestination::Sharedworker;
-    case nsIContentPolicy::TYPE_IMAGESET:
-    case nsIContentPolicy::TYPE_INTERNAL_IMAGE:
-    case nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD:
-    case nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON:
-    case nsIContentPolicy::TYPE_IMAGE:
+    case ExtContentPolicyType::TYPE_IMAGE:
       return RequestDestination::Image;
-    case nsIContentPolicy::TYPE_STYLESHEET:
-    case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET:
-    case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD:
+    case ExtContentPolicyType::TYPE_STYLESHEET:
       return RequestDestination::Style;
-    case nsIContentPolicy::TYPE_OBJECT:
-    case nsIContentPolicy::TYPE_INTERNAL_OBJECT:
+    case ExtContentPolicyType::TYPE_OBJECT:
       return RequestDestination::Object;
-    case nsIContentPolicy::TYPE_INTERNAL_EMBED:
-      return RequestDestination::Embed;
-    case nsIContentPolicy::TYPE_DOCUMENT:
+    case ExtContentPolicyType::TYPE_DOCUMENT:
       return RequestDestination::Document;
-    case nsIContentPolicy::TYPE_SUBDOCUMENT:
-    case nsIContentPolicy::TYPE_INTERNAL_IFRAME:
+    case ExtContentPolicyType::TYPE_SUBDOCUMENT:
       return RequestDestination::Iframe;
-    case nsIContentPolicy::TYPE_INTERNAL_FRAME:
-      return RequestDestination::Frame;
-    case nsIContentPolicy::TYPE_PING:
+    case ExtContentPolicyType::TYPE_PING:
+    case ExtContentPolicyType::TYPE_XMLHTTPREQUEST:
+    case ExtContentPolicyType::TYPE_DTD:
       return RequestDestination::_empty;
-    case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
-    case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST_ASYNC:
-    case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST_SYNC:
-      return RequestDestination::_empty;
-    case nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE:
-      return RequestDestination::_empty;
-    case nsIContentPolicy::TYPE_DTD:
-    case nsIContentPolicy::TYPE_INTERNAL_DTD:
-    case nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD:
-      return RequestDestination::_empty;
-    case nsIContentPolicy::TYPE_FONT:
-    case nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD:
-    case nsIContentPolicy::TYPE_UA_FONT:
+    case ExtContentPolicyType::TYPE_FONT:
       return RequestDestination::Font;
-    case nsIContentPolicy::TYPE_MEDIA:
+    case ExtContentPolicyType::TYPE_MEDIA:
+    case ExtContentPolicyType::TYPE_WEBSOCKET:
       return RequestDestination::_empty;
-    case nsIContentPolicy::TYPE_INTERNAL_AUDIO:
-      return RequestDestination::Audio;
-    case nsIContentPolicy::TYPE_INTERNAL_VIDEO:
-      return RequestDestination::Video;
-    case nsIContentPolicy::TYPE_INTERNAL_TRACK:
-      return RequestDestination::Track;
-    case nsIContentPolicy::TYPE_WEBSOCKET:
-      return RequestDestination::_empty;
-    case nsIContentPolicy::TYPE_CSP_REPORT:
+    case ExtContentPolicyType::TYPE_CSP_REPORT:
       return RequestDestination::Report;
-    case nsIContentPolicy::TYPE_XSLT:
+    case ExtContentPolicyType::TYPE_XSLT:
       return RequestDestination::Xslt;
-    case nsIContentPolicy::TYPE_BEACON:
+    case ExtContentPolicyType::TYPE_BEACON:
+    case ExtContentPolicyType::TYPE_FETCH:
       return RequestDestination::_empty;
-    case nsIContentPolicy::TYPE_FETCH:
-    case nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD:
-      return RequestDestination::_empty;
-    case nsIContentPolicy::TYPE_WEB_MANIFEST:
-      return RequestDestination::Manifest;
-    case nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD:
-      return RequestDestination::_empty;
-    case nsIContentPolicy::TYPE_SPECULATIVE:
-      return RequestDestination::_empty;
-    case nsIContentPolicy::TYPE_INTERNAL_AUDIOWORKLET:
-      return RequestDestination::Audioworklet;
-    case nsIContentPolicy::TYPE_INTERNAL_PAINTWORKLET:
-      return RequestDestination::Paintworklet;
-    case nsIContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA:
-      return RequestDestination::_empty;
-    case nsIContentPolicy::TYPE_WEB_IDENTITY:
-      return RequestDestination::_empty;
-    case nsIContentPolicy::TYPE_WEB_TRANSPORT:
-      return RequestDestination::_empty;
-    case nsIContentPolicy::TYPE_INTERNAL_EXTERNAL_RESOURCE:
+    case ExtContentPolicyType::TYPE_IMAGESET:
       return RequestDestination::Image;
-    case nsIContentPolicy::TYPE_JSON:
-    case nsIContentPolicy::TYPE_INTERNAL_JSON_PRELOAD:
+    case ExtContentPolicyType::TYPE_WEB_MANIFEST:
+      return RequestDestination::Manifest;
+    case ExtContentPolicyType::TYPE_SAVEAS_DOWNLOAD:
+    case ExtContentPolicyType::TYPE_SPECULATIVE:
+      return RequestDestination::_empty;
+    case ExtContentPolicyType::TYPE_UA_FONT:
+      return RequestDestination::Font;
+    case ExtContentPolicyType::TYPE_PROXIED_WEBRTC_MEDIA:
+    case ExtContentPolicyType::TYPE_WEB_IDENTITY:
+    case ExtContentPolicyType::TYPE_WEB_TRANSPORT:
+      return RequestDestination::_empty;
+    case ExtContentPolicyType::TYPE_JSON:
       return RequestDestination::Json;
-    case nsIContentPolicy::TYPE_INVALID:
-    case nsIContentPolicy::TYPE_END:
-      break;
       // Do not add default: so that compilers can catch the missing case.
   }
 
-  MOZ_ASSERT(false, "Unhandled nsContentPolicyType value");
+  MOZ_ASSERT(false, "Unhandled ExContentPolicyType value");
   return RequestDestination::_empty;
 }
 

@@ -8,6 +8,8 @@
 #include "Dictionary.h"
 
 #include "CacheFileUtils.h"
+#include "nsAttrValue.h"
+#include "nsContentPolicyUtils.h"
 #include "nsString.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIAsyncInputStream.h"
@@ -54,6 +56,7 @@
 #include "SerializedLoadContext.h"
 
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/InternalRequest.h"
 #include "mozilla/ClearOnShutdown.h"
 
 #include "ReferrerInfo.h"
@@ -90,9 +93,11 @@ DictionaryCacheEntry::DictionaryCacheEntry(const char* aKey) { mURI = aKey; }
 
 DictionaryCacheEntry::DictionaryCacheEntry(const nsACString& aURI,
                                            const nsACString& aPattern,
+                                           nsTArray<nsCString>& aMatchDest,
                                            const nsACString& aId,
                                            const Maybe<nsCString>& aHash)
     : mURI(aURI), mPattern(aPattern), mId(aId) {
+  ConvertMatchDestToEnumArray(aMatchDest, mMatchDest);
   if (aHash) {
     mHash = aHash.value();
   }
@@ -101,8 +106,38 @@ DictionaryCacheEntry::DictionaryCacheEntry(const nsACString& aURI,
 NS_IMPL_ISUPPORTS(DictionaryCacheEntry, nsICacheEntryOpenCallback,
                   nsIStreamListener)
 
+// Convert string MatchDest array to enum array
+// static
+void DictionaryCacheEntry::ConvertMatchDestToEnumArray(
+    const nsTArray<nsCString>& aMatchDest,
+    nsTArray<dom::RequestDestination>& aMatchEnums) {
+  AutoTArray<dom::RequestDestination, 3> temp;
+  for (auto& string : aMatchDest) {
+    dom::RequestDestination dest =
+        dom::StringToEnum<dom::RequestDestination>(string).valueOr(
+            dom::RequestDestination::_empty);
+    if (dest != dom::RequestDestination::_empty) {
+      temp.AppendElement(dest);
+    }
+  }
+  aMatchEnums.SwapElements(temp);
+}
+
+// Convert enum MatchDest array to string array
+// static
+void DictionaryCacheEntry::ConvertMatchDestToCStringArray(
+    const nsTArray<dom::RequestDestination>& aMatchEnums,
+    nsTArray<nsCString>& aMatchDest) {
+  AutoTArray<nsCString, 3> temp;
+  for (auto& value : aMatchEnums) {
+    temp.AppendElement(dom::GetEnumString(value));
+  }
+  aMatchDest.SwapElements(temp);
+}
+
 // returns true if the pattern for the dictionary matches the path given
 bool DictionaryCacheEntry::Match(const nsACString& aFilePath,
+                                 ExtContentPolicyType aType,
                                  uint32_t& aLongest) {
   if (mHash.IsEmpty()) {
     // We don't have the file yet
@@ -114,34 +149,39 @@ bool DictionaryCacheEntry::Match(const nsACString& aFilePath,
     return false;
   }
   // Not worth checking if we wouldn't use it
-  // XXX Check match-dest
+  DICTIONARY_LOG(("Match: %s to %s, %s", PromiseFlatCString(aFilePath).get(),
+                  mPattern.get(), NS_CP_ContentTypeName(aType)));
   if (mPattern.Length() > aLongest) {
-    DICTIONARY_LOG(("Match: %s to %s", PromiseFlatCString(aFilePath).get(),
-                    PromiseFlatCString(mPattern).get()));
-    // XXX remove this when we get URLPattern
-    // XXX temp: handle https://site/foo* or https://site/foo?query=*, or
-    // https://site/foo/*, etc
-    if (mPattern.Last() == '*' && aFilePath.Length() >= mPattern.Length()) {
-      // XXX not efficient, but this is throw-away code
-      nsAutoCString partial(aFilePath);
-      partial.Truncate(mPattern.Length() - 1);
-      nsAutoCString pattern(mPattern);
-      pattern.Truncate(mPattern.Length() - 1);
-      if (partial.Equals(pattern)) {
+    // Need to match using match-dest, if it exists
+    if (mMatchDest.IsEmpty() ||
+        mMatchDest.IndexOf(
+            dom::InternalRequest::MapContentPolicyTypeToRequestDestination(
+                aType)) != mMatchDest.NoIndex) {
+      // XXX remove this when we get URLPattern
+      // XXX temp: handle https://site/foo* or https://site/foo?query=*, or
+      // https://site/foo/*, etc
+      if (mPattern.Last() == '*' && aFilePath.Length() >= mPattern.Length()) {
+        // XXX not efficient, but this is throw-away code
+        nsAutoCString partial(aFilePath);
+        partial.Truncate(mPattern.Length() - 1);
+        nsAutoCString pattern(mPattern);
+        pattern.Truncate(mPattern.Length() - 1);
+        if (partial.Equals(pattern)) {
+          aLongest = mPattern.Length();
+          DICTIONARY_LOG(("Match: %s (longest %u)",
+                          PromiseFlatCString(mURI).get(), aLongest));
+          return true;
+        }
+        return false;
+        // XXX handle https://site/foo/* (
+      } else if (mPattern.Equals(aFilePath)) {
+        if (mHash.IsEmpty()) {
+          return false;
+        }
         aLongest = mPattern.Length();
         DICTIONARY_LOG(("Match: %s (longest %u)", mURI.get(), aLongest));
         return true;
       }
-      return false;
-      // XXX handle https://site/foo/* (
-    } else if (mPattern.Equals(aFilePath)) {
-      if (mHash.IsEmpty()) {
-        return false;
-      }
-      aLongest = mPattern.Length();
-      DICTIONARY_LOG(
-          ("Match: %s (longest %u)", PromiseFlatCString(mURI).get(), aLongest));
-      return true;
     }
   }
   return false;
@@ -284,16 +324,18 @@ void DictionaryCacheEntry::FinishHash() {
   }
 }
 
+// Version of metadata entries we expect
+static const uint32_t METADATA_VERSION = 1;
+
 // Metadata format:
-// * XXX What key should these be under?
-// * uint16_t version
-// * uint16_t flags ?
+// |version|hash|pattern|[matchdest|]*||id|expiration|type
 //
 // * Entries:
-// ** CString: URI -- the key
+// ** CString: URI -- the key, not in the entry
+// ** CString: Version (1)
 // ** CString: Hash
 // ** CString: Pattern
-// ** match-dest list, terminated by empty string
+// ** match-dest CString list, terminated by empty string
 // *** CString: Match-dest
 // ** CString: Id
 // ** CString: type
@@ -328,11 +370,14 @@ static void EscapeMetadataString(const nsACString& aInput, nsCString& aOutput) {
 }
 
 void DictionaryCacheEntry::MakeMetadataEntry(nsCString& aNewValue) {
-  EscapeMetadataString(mHash, aNewValue);
+  aNewValue.AppendLiteral("|"), aNewValue.AppendInt(METADATA_VERSION),
+      EscapeMetadataString(mHash, aNewValue);
   EscapeMetadataString(mPattern, aNewValue);
   EscapeMetadataString(mId, aNewValue);
+  for (auto& dest : mMatchDest) {
+    EscapeMetadataString(dom::GetEnumString(dest), aNewValue);
+  }
   // List of match-dest values is terminated by an empty string
-  // XXX add match-dest support
   EscapeMetadataString(""_ns, aNewValue);
   // We don't store type, since we only support type 'raw'  We can support
   // type in the future by considering missing type as raw without changing the
@@ -356,6 +401,11 @@ nsresult DictionaryCacheEntry::RemoveEntry(nsICacheEntry* aCacheEntry) {
 static const char* GetEncodedString(const char* aSrc, nsACString& aOutput) {
   // scan the input string and build the output, handling escapes
   aOutput.Truncate();
+  MOZ_ASSERT(*aSrc == '|' || *aSrc == 0);
+  if (!aSrc || *aSrc != '|') {
+    return aSrc;
+  }
+  aSrc++;
   while (*aSrc) {
     if (*aSrc == '|') {
       break;
@@ -370,8 +420,14 @@ static const char* GetEncodedString(const char* aSrc, nsACString& aOutput) {
 
 // Parse metadata from DictionaryOrigin
 bool DictionaryCacheEntry::ParseMetadata(const char* aSrc) {
-  MOZ_ASSERT(*aSrc == '|');
-  aSrc++;
+  // Using mHash as a temp for version
+  aSrc = GetEncodedString(aSrc, mHash);
+  const char* tmp = mHash.get();
+  uint32_t version = atoi(tmp);
+  if (version != METADATA_VERSION) {
+    return false;
+  }
+  aSrc = GetEncodedString(aSrc, mHash);
   aSrc = GetEncodedString(aSrc, mHash);
   aSrc = GetEncodedString(aSrc, mPattern);
   aSrc = GetEncodedString(aSrc, mId);
@@ -380,16 +436,22 @@ bool DictionaryCacheEntry::ParseMetadata(const char* aSrc) {
   do {
     aSrc = GetEncodedString(aSrc, temp);
     if (!temp.IsEmpty()) {
-      // XXX store match-dest
+      dom::RequestDestination dest =
+          dom::StringToEnum<dom::RequestDestination>(temp).valueOr(
+              dom::RequestDestination::_empty);
+      if (dest != dom::RequestDestination::_empty) {
+        mMatchDest.AppendElement(dest);
+      }
     }
   } while (!temp.IsEmpty());
   // XXX type
   aSrc = GetEncodedString(aSrc, temp);
 
-  DICTIONARY_LOG(("Parse entry %s: |%s| %s id=%s",
-                  PromiseFlatCString(mURI).get(),
-                  PromiseFlatCString(mHash).get(),
-                  PromiseFlatCString(mPattern).get(), mId.get()));
+  DICTIONARY_LOG(
+      ("Parse entry %s: |%s| %s match-dest[0]=%s id=%s", mURI.get(),
+       mHash.get(), mPattern.get(),
+       mMatchDest.Length() > 0 ? dom::GetEnumString(mMatchDest[0]).get() : "",
+       mId.get()));
   return true;
 }
 
@@ -553,10 +615,11 @@ class DictionaryOriginReader final : public nsICacheEntryOpenCallback,
   // a Dictionary to a maybe-existing Origin and we need to create it if it
   // doesn't exist yet.
   void Start(DictionaryOrigin* aOrigin, nsACString& aKey, nsIURI* aURI,
-             DictionaryCache* aCache,
+             ExtContentPolicyType aType, DictionaryCache* aCache,
              const std::function<nsresult(DictionaryCacheEntry*)>& aCallback) {
     mOrigin = aOrigin;
     mURI = aURI;
+    mType = aType;
     mCallback = aCallback;
     mCache = aCache;
     mSelf = this;  // keep this alive until we call aCallback
@@ -581,6 +644,7 @@ class DictionaryOriginReader final : public nsICacheEntryOpenCallback,
 
   RefPtr<DictionaryOrigin> mOrigin;
   nsCOMPtr<nsIURI> mURI;
+  ExtContentPolicyType mType;
   std::function<nsresult(DictionaryCacheEntry*)> mCallback;
   RefPtr<DictionaryCache> mCache;
   RefPtr<DictionaryOriginReader> mSelf;
@@ -648,7 +712,7 @@ NS_IMETHODIMP DictionaryOriginReader::OnCacheEntryAvailable(
 
         nsCString path;
         mURI->GetPathQueryRef(path);
-        RefPtr<DictionaryCacheEntry> result = origin->Match(path);
+        RefPtr<DictionaryCacheEntry> result = origin->Match(path, mType);
 
         (mCallback)(result);
         mSelf = nullptr;  // this will delete 'this'
@@ -711,6 +775,7 @@ nsresult DictionaryCache::Init() {
 
 nsresult DictionaryCache::AddEntry(nsIURI* aURI, const nsACString& aKey,
                                    const nsACString& aPattern,
+                                   nsTArray<nsCString>& aMatchDest,
                                    const nsACString& aId,
                                    const Maybe<nsCString>& aHash,
                                    bool aNewEntry,
@@ -719,7 +784,7 @@ nsresult DictionaryCache::AddEntry(nsIURI* aURI, const nsACString& aKey,
   // has been received, we can't use it.  The Hash being null is a flag
   // that it's not yet valid.
   RefPtr<DictionaryCacheEntry> dict =
-      new DictionaryCacheEntry(aKey, aPattern, aId, aHash);
+      new DictionaryCacheEntry(aKey, aPattern, aMatchDest, aId, aHash);
   dict = AddEntry(aURI, aNewEntry, dict);
   if (dict) {
     *aDictEntry = do_AddRef(dict).take();
@@ -754,8 +819,9 @@ already_AddRefed<DictionaryCacheEntry> DictionaryCache::AddEntry(
 
       // Open (and parse metadata) or create
       RefPtr<DictionaryOriginReader> reader = new DictionaryOriginReader();
+      // the type is irrelevant; we won't be calling Match()
       reader->Start(
-          origin, prepath, aURI, this,
+          origin, prepath, aURI, ExtContentPolicy::TYPE_OTHER, this,
           [entry = RefPtr(aDictEntry)](
               DictionaryCacheEntry*
                   aDict) {  // XXX avoid so many lambdas which cause allocations
@@ -888,7 +954,7 @@ void DictionaryCache::RemoveAllDictionaries() {
 // Once we have a DictionaryOrigin (in-memory or parsed), scan it for matches.
 // If it's not in the cache, return nullptr via callback.
 void DictionaryCache::GetDictionaryFor(
-    nsIURI* aURI,
+    nsIURI* aURI, ExtContentPolicyType aType,
     const std::function<nsresult(DictionaryCacheEntry*)>& aCallback) {
   // Note: IETF 2.2.3 Multiple Matching Directories
   // We need to return match-dest matches first
@@ -906,7 +972,7 @@ void DictionaryCache::GetDictionaryFor(
     aURI->GetPathQueryRef(path);
     DICTIONARY_LOG(("GetDictionaryFor(%s %s)", prepath.get(), path.get()));
 
-    result = origin.Data()->Match(path);
+    result = origin.Data()->Match(path, aType);
     (aCallback)(result);
     return;
   }
@@ -937,7 +1003,7 @@ void DictionaryCache::GetDictionaryFor(
     RefPtr<DictionaryOriginReader> reader = new DictionaryOriginReader();
     // After Start(), if we drop this ref reader will kill itself on
     // completion; it holds a self-ref
-    reader->Start(nullptr, prepath, aURI, this, aCallback);
+    reader->Start(nullptr, prepath, aURI, aType, this, aCallback);
   } else {
     // No dictionaries for origin
     (aCallback)(nullptr);
@@ -1126,12 +1192,13 @@ void DictionaryOrigin::Clear() {
 }
 
 // caller will throw this into a RefPtr
-DictionaryCacheEntry* DictionaryOrigin::Match(const nsACString& aPath) {
+DictionaryCacheEntry* DictionaryOrigin::Match(const nsACString& aPath,
+                                              ExtContentPolicyType aType) {
   uint32_t longest = 0;
   DictionaryCacheEntry* result = nullptr;
 
   for (const auto& dict : mEntries) {
-    if (dict->Match(aPath, longest)) {
+    if (dict->Match(aPath, aType, longest)) {
       result = dict;
     }
   }

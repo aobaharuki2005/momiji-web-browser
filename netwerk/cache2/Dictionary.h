@@ -19,6 +19,7 @@
 #include "mozilla/Vector.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "mozilla/dom/RequestBinding.h"
 #include "mozilla/TimeStamp.h"
 #include "nsTHashMap.h"
 #include "nsHashKeys.h"
@@ -58,11 +59,19 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
 
   DictionaryCacheEntry(const char* aKey);
   DictionaryCacheEntry(const nsACString& aKey, const nsACString& aPattern,
-                       const nsACString& aId,
+                       nsTArray<nsCString>& aMatchDest, const nsACString& aId,
                        const Maybe<nsCString>& aHash = Nothing());
 
+  static void ConvertMatchDestToEnumArray(
+      const nsTArray<nsCString>& aMatchDest,
+      nsTArray<dom::RequestDestination>& aMatchEnums);
+  static void ConvertMatchDestToCStringArray(
+      const nsTArray<dom::RequestDestination>& aMatchEnums,
+      nsTArray<nsCString>& aMatchDest);
+
   // returns true if the pattern for the dictionary matches the path given
-  bool Match(const nsACString& aFilePath, uint32_t& aLongest);
+  bool Match(const nsACString& aFilePath, ExtContentPolicyType aType,
+             uint32_t& aLongest);
 
   // This will fail if the cache entry is no longer available.
   // Start reading the cache entry into memory and call completion
@@ -168,8 +177,8 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
   nsCString mURI;  // URI (without ref) for the dictionary
   nsCString mPattern;
   nsCString mId;  // max length 1024
-                  // XXX add list of match-dest values
-                  // XXX add type
+  nsTArray<dom::RequestDestination> mMatchDest;
+  // XXX add type
 
   // dcb and dcz use type 'raw'.  We're allowed to ignore types we don't
   // understand, so we can fail to record a dictionary with type != 'raw'
@@ -241,7 +250,8 @@ class DictionaryOrigin : public nsICacheEntryMetaDataVisitor {
       DictionaryCacheEntry* aDictEntry, bool aNewEntry);
   nsresult RemoveEntry(const nsACString& aKey);
   void RemoveEntry(DictionaryCacheEntry* aEntry);
-  DictionaryCacheEntry* Match(const nsACString& path);
+  DictionaryCacheEntry* Match(const nsACString& path,
+                              ExtContentPolicyType aType);
   void FinishAddEntry(DictionaryCacheEntry* aEntry);
   void Clear();
 
@@ -280,9 +290,9 @@ class DictionaryCache final {
   nsresult Init();
 
   nsresult AddEntry(nsIURI* aURI, const nsACString& aKey,
-                    const nsACString& aPattern, const nsACString& aId,
-                    const Maybe<nsCString>& aHash, bool aNewEntry,
-                    DictionaryCacheEntry** aDictEntry);
+                    const nsACString& aPattern, nsTArray<nsCString>& aMatchDest,
+                    const nsACString& aId, const Maybe<nsCString>& aHash,
+                    bool aNewEntry, DictionaryCacheEntry** aDictEntry);
 
   already_AddRefed<DictionaryCacheEntry> AddEntry(
       nsIURI* aURI, bool aNewEntry, DictionaryCacheEntry* aDictEntry);
@@ -302,7 +312,7 @@ class DictionaryCache final {
 
   // return an entry
   void GetDictionaryFor(
-      nsIURI* aURI,
+      nsIURI* aURI, ExtContentPolicyType aType,
       const std::function<nsresult(DictionaryCacheEntry*)>& aCallback);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
