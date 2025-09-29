@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -45,8 +46,6 @@ import mozilla.components.ui.icons.R as iconsR
 private const val NO_TOOLBAR_PADDING_DP = 0
 private const val TOOLBAR_PADDING_DP = 8
 private const val LARGE_TOOLBAR_PADDING_DP = 24
-private const val MINIMUM_PROGRESS_BAR_STATE = 1
-private const val MAXIMUM_PROGRESS_BAR_STATE = 99
 
 /**
  * Sub-component of the [BrowserToolbar] responsible for displaying the URL and related
@@ -86,10 +85,6 @@ fun BrowserDisplayToolbar(
     browserActionsEnd: List<Action> = emptyList(),
     onInteraction: (BrowserToolbarEvent) -> Unit,
 ) {
-    val isProgressBarShown = remember(progressBarConfig) {
-        progressBarConfig != null &&
-            progressBarConfig.progress in MINIMUM_PROGRESS_BAR_STATE..MAXIMUM_PROGRESS_BAR_STATE
-    }
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val isSmallWidthScreen = remember(windowSizeClass) {
         windowSizeClass.minWidthDp < WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND
@@ -189,21 +184,20 @@ fun BrowserDisplayToolbar(
             }
         }
 
+        HorizontalDivider(
+            modifier = Modifier.align(
+                when (gravity) {
+                    Top -> Alignment.BottomCenter
+                    Bottom -> Alignment.TopCenter
+                },
+            ),
+        )
+
         if (progressBarConfig != null) {
             AnimatedProgressBar(
                 progress = progressBarConfig.progress,
                 color = progressBarConfig.color,
-                modifier = Modifier.align(
-                    when (gravity) {
-                        Top -> Alignment.BottomCenter
-                        Bottom -> Alignment.TopCenter
-                    },
-                ),
-            )
-        }
-
-        if (!isProgressBarShown) {
-            HorizontalDivider(
+                trackColor = Color.Transparent,
                 modifier = Modifier.align(
                     when (gravity) {
                         Top -> Alignment.BottomCenter
