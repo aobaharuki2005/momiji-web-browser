@@ -458,7 +458,6 @@ export const RecommendedPreferences = {
 
   observe(subject, topic) {
     if (topic === "quit-application") {
-      Services.obs.removeObserver(this, "quit-application");
       this.restoreAllPreferences();
     }
   },
@@ -468,6 +467,9 @@ export const RecommendedPreferences = {
    */
   restoreAllPreferences() {
     this.restorePreferences(this.alteredPrefs);
+    if (this.isInitialized) {
+      Services.obs.removeObserver(this, "quit-application");
+    }
     this.isInitialized = false;
   },
 
