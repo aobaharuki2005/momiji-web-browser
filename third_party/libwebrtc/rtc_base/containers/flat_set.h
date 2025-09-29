@@ -17,7 +17,10 @@
 #include <vector>
 
 #include "rtc_base/containers/flat_tree.h"  // IWYU pragma: export
-#include "rtc_base/containers/identity.h"  // Mozilla: remove when fixing Bug 1980501
+
+#if __cplusplus < 202002
+#  include "rtc_base/containers/identity.h"  // Mozilla: remove when fixing Bug 1980501
+#endif
 
 namespace webrtc {
 
