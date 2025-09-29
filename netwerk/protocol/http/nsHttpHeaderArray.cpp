@@ -284,10 +284,12 @@ nsresult nsHttpHeaderArray::GetOriginalHeader(const nsHttpAtom& aHeader,
 
       MOZ_ASSERT((entry.variety == eVarietyResponseNetOriginalAndResponse) ||
                      (entry.variety == eVarietyResponseNetOriginal) ||
-                     (entry.variety == eVarietyResponse),
+                     (entry.variety == eVarietyResponse) ||
+                     (entry.variety == eVarietyResponseOverride),
                  "This must be a response header.");
       index++;
-      if (entry.variety == eVarietyResponse) {
+      if (entry.variety == eVarietyResponse ||
+          entry.variety == eVarietyResponseOverride) {
         continue;
       }
 
