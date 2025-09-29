@@ -1,4 +1,4 @@
-tl;dr: You should read this document before writing a memory reporter. And please ask nnethercote to co-review any memory reporter patch.
+tl;dr: You should read this document before writing a memory reporter. And please ask Andrew McCreight (mccr8) to co-review any memory reporter patch.
 
 Mozilla code has infrastructure that lets different parts of the code report on their memory usage. This is most obviously used in about:memory and telemetry. This document describes things that you should know when writing a memory reporter.
 
