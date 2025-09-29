@@ -119,17 +119,11 @@ export default class TabHoverPanelSet {
       return;
     }
 
-    if (
-      this.tabPanel.panelElement.state == "open" &&
-      (this.#win.gBrowser.isTab(tabOrGroup) || !tabOrGroup)
-    ) {
+    if (this.#win.gBrowser.isTab(tabOrGroup) || !tabOrGroup) {
       this.tabPanel.deactivate(tabOrGroup);
     }
 
-    if (
-      (this.tabGroupPanel.panelElement.state == "open") &
-      (this.#win.gBrowser.isTabGroup(tabOrGroup) || !tabOrGroup)
-    ) {
+    if (this.#win.gBrowser.isTabGroup(tabOrGroup) || !tabOrGroup) {
       this.tabGroupPanel.deactivate({ force });
     }
   }
@@ -222,9 +216,7 @@ class TabPanel extends Panel {
         this.#updatePreview();
         break;
       case "TabAttrModified":
-        if (e.target == this.#tab) {
-          this.#updatePreview(e.target);
-        }
+        this.#updatePreview(e.target);
         break;
       case "TabSelect":
         this.deactivate();
@@ -260,7 +252,7 @@ class TabPanel extends Panel {
     });
     this.win.addEventListener("TabSelect", this);
     this.panelElement.addEventListener("popupshowing", this);
-    this.win.addEventListener("TabAttrModified", this);
+    this.#tab.addEventListener("TabAttrModified", this);
   }
 
   deactivate(leavingTab = null) {
@@ -275,7 +267,7 @@ class TabPanel extends Panel {
       });
       return;
     }
-    this.win.removeEventListener("TabAttrModified", this);
+    this.#tab?.removeEventListener("TabAttrModified", this);
     this.#tab = null;
     this.#thumbnailElement = null;
     this.panelElement.removeEventListener("popupshowing", this);
@@ -542,7 +534,7 @@ class TabGroupPanel extends Panel {
       this.#group.hoverPreviewPanelActive = false;
 
       for (let event of TabGroupPanel.PANEL_UPDATE_EVENTS) {
-        this.win.removeEventListener(event, this);
+        this.#group.removeEventListener(event, this);
       }
     }
 
@@ -564,7 +556,7 @@ class TabGroupPanel extends Panel {
     this.#group.hoverPreviewPanelActive = true;
 
     for (let event of TabGroupPanel.PANEL_UPDATE_EVENTS) {
-      this.win.addEventListener(event, this);
+      this.#group.addEventListener(event, this);
     }
 
     this.panelElement.openPopup(this.#popupTarget, this.popupOptions);
@@ -597,10 +589,7 @@ class TabGroupPanel extends Panel {
       this.win.gBrowser.selectedTab = event.target.tab;
     } else if (event.type == "mouseout" && event.target == this.panelElement) {
       this.deactivate();
-    } else if (
-      TabGroupPanel.PANEL_UPDATE_EVENTS.includes(event.type) &&
-      this.#group?.contains(event.target)
-    ) {
+    } else if (TabGroupPanel.PANEL_UPDATE_EVENTS.includes(event.type)) {
       this.#updatePanelContents();
     }
   }
