@@ -20,7 +20,9 @@ class nsPresContext;
 
 namespace mozilla {
 enum class AbsPosReflowFlag : uint8_t {
-  ConstrainHeight,
+  // Allow the children in the absolute containing block to fragment. Without
+  // this flag, the children will be monolithic.
+  AllowFragmentation,
   CBWidthChanged,
   CBHeightChanged,
   IsGridContainerCB,

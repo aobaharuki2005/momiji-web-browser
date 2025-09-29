@@ -1802,7 +1802,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
 
       nsRect containingBlock(nsPoint(0, 0),
                              containingBlockSize.GetPhysicalSize(parentWM));
-      AbsPosReflowFlags flags{AbsPosReflowFlag::ConstrainHeight};
+      AbsPosReflowFlags flags{AbsPosReflowFlag::AllowFragmentation};
       if (cbWidthChanged) {
         flags += AbsPosReflowFlag::CBWidthChanged;
       }

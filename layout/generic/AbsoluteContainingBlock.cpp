@@ -916,11 +916,11 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     }
   }
 
-  bool constrainBSize =
+  const bool kidFrameMaySplit =
       (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) &&
 
       // Don't split if told not to (e.g. for fixed frames)
-      aFlags.contains(AbsPosReflowFlag::ConstrainHeight) &&
+      aFlags.contains(AbsPosReflowFlag::AllowFragmentation) &&
 
       // XXX we don't handle splitting frames for inline absolute containing
       // blocks yet
@@ -939,7 +939,7 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
   const WritingMode outerWM = aReflowInput.GetWritingMode();
   const LogicalMargin border = aDelegatingFrame->GetLogicalUsedBorder(outerWM);
 
-  const nscoord availBSize = constrainBSize
+  const nscoord availBSize = kidFrameMaySplit
                                  ? aReflowInput.AvailableBSize() -
                                        border.ConvertTo(wm, outerWM).BStart(wm)
                                  : NS_UNCONSTRAINEDSIZE;

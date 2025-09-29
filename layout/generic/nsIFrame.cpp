@@ -7480,7 +7480,7 @@ void nsIFrame::ReflowAbsoluteFrames(nsPresContext* aPresContext,
     nsRect containingBlock(0, 0, containingBlockWidth, containingBlockHeight);
     // XXX: To optimize the performance, set the flags only when the CB width or
     // height actually changes.
-    AbsPosReflowFlags flags{AbsPosReflowFlag::ConstrainHeight,
+    AbsPosReflowFlags flags{AbsPosReflowFlag::AllowFragmentation,
                             AbsPosReflowFlag::CBWidthChanged,
                             AbsPosReflowFlag::CBHeightChanged};
     absoluteContainer->Reflow(container, aPresContext, aReflowInput, aStatus,
