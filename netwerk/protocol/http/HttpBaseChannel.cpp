@@ -394,7 +394,7 @@ nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
   }
 
   rv = gHttpHandler->AddStandardRequestHeaders(
-      &mRequestHead, isHTTPS, contentPolicyType,
+      &mRequestHead, isHTTPS, aURI, contentPolicyType,
       nsContentUtils::ShouldResistFingerprinting(this,
                                                  RFPTarget::HttpUserAgent));
   if (NS_FAILED(rv)) return rv;
