@@ -28,6 +28,7 @@
 #include "js/MemoryMetrics.h"
 #include "js/SourceText.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_OUT_OF_MEMORY
+#include "js/friend/MicroTask.h"
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
@@ -39,6 +40,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/ThreadEventQueue.h"
@@ -5605,12 +5607,24 @@ void WorkerPrivate::EnterDebuggerEventLoop() {
     {
       MutexAutoLock lock(mMutex);
 
-      std::deque<RefPtr<MicroTaskRunnable>>& debuggerMtQueue =
-          ccjscx->GetDebuggerMicroTaskQueue();
-      while (mControlQueue.IsEmpty() &&
-             !(debuggerRunnablesPending = !mDebuggerQueue.IsEmpty()) &&
-             debuggerMtQueue.empty()) {
-        WaitForWorkerEvents();
+      if (StaticPrefs::javascript_options_use_js_microtask_queue()) {
+        // When JS microtask queue is enabled, check for debugger microtasks
+        // directly from the JS engine
+        while (mControlQueue.IsEmpty() &&
+               !(debuggerRunnablesPending = !mDebuggerQueue.IsEmpty()) &&
+               !JS::HasDebuggerMicroTasks(cx)) {
+          WaitForWorkerEvents();
+        }
+      } else {
+        // Legacy path: check the debugger microtask queue in
+        // CycleCollectedJSContext
+        std::deque<RefPtr<MicroTaskRunnable>>& debuggerMtQueue =
+            ccjscx->GetDebuggerMicroTaskQueue();
+        while (mControlQueue.IsEmpty() &&
+               !(debuggerRunnablesPending = !mDebuggerQueue.IsEmpty()) &&
+               debuggerMtQueue.empty()) {
+          WaitForWorkerEvents();
+        }
       }
 
       ProcessAllControlRunnablesLocked();
