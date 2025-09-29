@@ -28,9 +28,3 @@
 
 # Keep code generated from Glean Metrics
 -keep class org.mozilla.fenix.GleanMetrics.** {  *; }
-
--dontwarn java.beans.BeanInfo
--dontwarn java.beans.FeatureDescriptor
--dontwarn java.beans.IntrospectionException
--dontwarn java.beans.Introspector
--dontwarn java.beans.PropertyDescriptor

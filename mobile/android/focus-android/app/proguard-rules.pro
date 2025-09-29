@@ -29,16 +29,6 @@
 -keep class mozilla.appservices.** { *; }
 
 ####################################################################################################
-# snakeyaml
-####################################################################################################
-
--dontwarn java.beans.PropertyDescriptor
--dontwarn java.beans.Introspector
--dontwarn java.beans.BeanInfo
--dontwarn java.beans.IntrospectionException
--dontwarn java.beans.FeatureDescriptor
-
-####################################################################################################
 # REMOVE all Log messages except warnings and errors
 ####################################################################################################
 -assumenosideeffects class android.util.Log {
