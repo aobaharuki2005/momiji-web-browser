@@ -415,6 +415,12 @@ class DocAccessible : public HyperTextAccessible,
   void AttrElementWillChange(dom::Element* aElement, nsAtom* aAttr);
   void AttrElementChanged(dom::Element* aElement, nsAtom* aAttr);
 
+  /**
+   * Given an accessible, check if it is anchored to other frames, and
+   * refresh the cache on each of those frames' accessibles.
+   */
+  void RefreshAnchorRelationCacheForTarget(LocalAccessible* aTarget);
+
  protected:
   virtual ~DocAccessible();
 

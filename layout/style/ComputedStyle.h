@@ -196,6 +196,8 @@ class ComputedStyle {
 
   bool HasAnchorPosReference() const;
 
+  bool MaybeAnchorPosReferencesDiffer(const ComputedStyle* aOther) const;
+
   ComputedStyle* GetCachedInheritingAnonBoxStyle(
       PseudoStyleType aPseudoType) const {
     MOZ_ASSERT(PseudoStyle::IsInheritingAnonBox(aPseudoType));
