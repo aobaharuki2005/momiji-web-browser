@@ -11,12 +11,6 @@ android {
     namespace = 'mozilla.components.support.ktx'
 }
 
-tasks.withType(KotlinCompile).configureEach {
-    kotlinOptions.freeCompilerArgs += [
-        "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi" // flatMapConcat
-    ]
-}
-
 dependencies {
     implementation project(':components:lib-publicsuffixlist')
     implementation project(':components:support-base')
