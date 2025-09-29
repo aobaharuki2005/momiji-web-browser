@@ -3087,6 +3087,12 @@ void DocAccessible::MaybeHandleChangeToHiddenNameOrDescription(
     if (HasAccessible(content)) {
       // This node isn't hidden. Events for name/description dependents will be
       // fired elsewhere.
+      // ... but we do need to handle firing an event for text value changes on
+      // meters, since inner meter text is never rendered by layout.
+      if (content->IsHTMLElement(nsGkAtoms::meter)) {
+        FireDelayedEvent(nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE,
+                         GetAccessible(content));
+      }
       break;
     }
     nsAtom* id = content->GetID();
