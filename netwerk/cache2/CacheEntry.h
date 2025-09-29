@@ -105,6 +105,8 @@ class CacheEntry final : public nsIRunnable,
                                       nsIInputStream** _retval);
   nsresult GetLoadContextInfo(nsILoadContextInfo** aInfo);
 
+  nsresult SetDictionary(DictionaryCacheEntry* aDict);
+
  public:
   uint32_t GetMetadataMemoryConsumption();
   nsCString const& GetStorageID() const { return mStorageID; }
@@ -130,8 +132,6 @@ class CacheEntry final : public nsIRunnable,
   void SetRegistered(bool aRegistered);
 
   TimeStamp const& LoadStart() const { return mLoadStart; }
-
-  void SetDictionary(DictionaryCacheEntry* aDict) { mDict = aDict; }
 
   enum EPurge {
     PURGE_DATA_ONLY_DISK_BACKED,
@@ -546,6 +546,9 @@ class CacheEntryHandle final : public nsICacheEntry {
   NS_IMETHOD GetLoadContextInfo(
       nsILoadContextInfo** aLoadContextInfo) override {
     return mEntry->GetLoadContextInfo(aLoadContextInfo);
+  }
+  NS_IMETHOD SetDictionary(DictionaryCacheEntry* aDict) override {
+    return mEntry->SetDictionary(aDict);
   }
 
   // Specific implementation:
