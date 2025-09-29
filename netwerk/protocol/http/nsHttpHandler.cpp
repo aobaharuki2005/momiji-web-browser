@@ -749,7 +749,7 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
 }
 
 nsresult nsHttpHandler::AddStandardRequestHeaders(
-    nsHttpRequestHead* request, nsIURI* aURI,
+    nsHttpRequestHead* request, nsIURI* aURI, bool aIsHTTPS,
     ExtContentPolicyType aContentPolicyType, bool aShouldResistFingerprinting) {
   nsresult rv;
 
@@ -801,6 +801,14 @@ nsresult nsHttpHandler::AddStandardRequestHeaders(
     rv = request->SetHeader(nsHttp::Prefer, "safe"_ns, false,
                             nsHttpHeaderArray::eVarietyRequestDefault);
     if (NS_FAILED(rv)) return rv;
+  }
+
+  if (aIsHTTPS) {
+    rv = request->SetHeader(nsHttp::Accept_Encoding, mHttpsAcceptEncodings,
+                            false, nsHttpHeaderArray::eVarietyRequestDefault);
+  } else {
+    rv = request->SetHeader(nsHttp::Accept_Encoding, mHttpAcceptEncodings,
+                            false, nsHttpHeaderArray::eVarietyRequestDefault);
   }
   return NS_OK;
 }

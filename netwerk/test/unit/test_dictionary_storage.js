@@ -592,6 +592,8 @@ add_task(async function test_too_long_dictionary_url() {
   [req, data] = await channelOpenPromise(chan);
 
   try {
+    // we're just looking to see if it throws
+    // eslint-disable-next-line no-unused-vars
     let headerValue = req.getRequestHeader("Available-Dictionary");
     Assert.ok(false, "Too-long dictionary was offered in Available-Dictionary");
   } catch (e) {
