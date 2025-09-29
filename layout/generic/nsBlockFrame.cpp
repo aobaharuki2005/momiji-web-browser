@@ -1771,8 +1771,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
         // interrupt, can we just rely on it and unconditionally take the else
         // branch below? That's a bit more subtle / risky, since I don't see
         // what would reflow them in that case if they depended on our size.
-        for (nsIFrame* kid = absoluteContainer->GetChildList().FirstChild();
-             kid; kid = kid->GetNextSibling()) {
+        for (nsIFrame* kid : absoluteContainer->GetChildList()) {
           ConsiderChildOverflow(aMetrics.mOverflowAreas, kid);
         }
       }

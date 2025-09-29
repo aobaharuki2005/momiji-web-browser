@@ -175,10 +175,8 @@ void AbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
   const bool cbHeightChanged =
       aFlags.contains(AbsPosReflowFlag::CBHeightChanged);
   const bool isGrid = aFlags.contains(AbsPosReflowFlag::IsGridContainerCB);
-  nsIFrame* kidFrame;
   nsOverflowContinuationTracker tracker(aDelegatingFrame, true);
-  for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame;
-       kidFrame = kidFrame->GetNextSibling()) {
+  for (nsIFrame* kidFrame : mAbsoluteFrames) {
     AnchorPosReferenceData* anchorPosReferenceData = nullptr;
     if (kidFrame->HasAnchorPosReference()) {
       anchorPosReferenceData = kidFrame->SetOrUpdateDeletableProperty(
