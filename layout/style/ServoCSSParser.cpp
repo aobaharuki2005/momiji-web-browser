@@ -107,5 +107,5 @@ already_AddRefed<URLExtraData> ServoCSSParser::GetURLExtraData(
 /* static */ ServoCSSParser::ParsingEnvironment
 ServoCSSParser::GetParsingEnvironment(Document* aDocument) {
   return {GetURLExtraData(aDocument), aDocument->GetCompatibilityMode(),
-          aDocument->CSSLoader()};
+          aDocument->GetCSSLoader()};
 }

@@ -592,7 +592,7 @@ static bool SetProp(StyleLockedDeclarationBlock* aDecls, Document* aDoc,
       aDecls, aProp, &aValue,
       /* is_important = */ false, aDoc->DefaultStyleAttrURLData(),
       StyleParsingMode::DEFAULT, eCompatibility_FullStandards,
-      aDoc->CSSLoader(), StyleCssRuleType::Style, {});
+      aDoc->GetCSSLoader(), StyleCssRuleType::Style, {});
 }
 
 static bool SetProp(StyleLockedDeclarationBlock* aDecls, Document*,

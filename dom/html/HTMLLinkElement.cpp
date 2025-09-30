@@ -508,7 +508,10 @@ void HTMLLinkElement::
   }
 
   if (linkTypes & eMODULE_PRELOAD) {
-    ScriptLoader* scriptLoader = OwnerDoc()->ScriptLoader();
+    ScriptLoader* scriptLoader = OwnerDoc()->GetScriptLoader();
+    if (!scriptLoader) {
+      return;
+    }
     ModuleLoader* moduleLoader = scriptLoader->GetModuleLoader();
 
     if (!moduleLoader) {

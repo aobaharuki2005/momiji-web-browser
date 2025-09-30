@@ -82,7 +82,9 @@ void FontFaceSetDocumentImpl::Initialize() {
     CheckLoadingFinished();
   }
 
-  mDocument->CSSLoader()->AddObserver(this);
+  if (mDocument->GetCSSLoader()) {
+    mDocument->GetCSSLoader()->AddObserver(this);
+  }
 
   mStandardFontLoadPrincipal = MakeRefPtr<gfxFontSrcPrincipal>(
       mDocument->NodePrincipal(), mDocument->PartitionedPrincipal());
@@ -91,11 +93,11 @@ void FontFaceSetDocumentImpl::Initialize() {
 void FontFaceSetDocumentImpl::Destroy() {
   RemoveDOMContentLoadedListener();
 
-  if (mDocument && mDocument->CSSLoader()) {
+  if (mDocument && mDocument->GetCSSLoader()) {
     // We're null checking CSSLoader() since FontFaceSetImpl::Disconnect() might
     // be being called during unlink, at which time the loader may already have
     // been unlinked from the document.
-    mDocument->CSSLoader()->RemoveObserver(this);
+    mDocument->GetCSSLoader()->RemoveObserver(this);
   }
 
   mRuleFaces.Clear();
@@ -712,7 +714,8 @@ bool FontFaceSetDocumentImpl::MightHavePendingFontLoads() {
 
   // And we also wait for any CSS style sheets to finish loading, as their
   // styles might cause new fonts to load.
-  if (mDocument->CSSLoader()->HasPendingLoads()) {
+  if (mDocument->GetCSSLoader() &&
+      mDocument->GetCSSLoader()->HasPendingLoads()) {
     return true;
   }
 
