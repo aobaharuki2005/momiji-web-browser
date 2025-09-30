@@ -457,4 +457,34 @@ bool ComputedStyle::HasAnchorPosReference() const {
          });
 }
 
+// XXX: This is a broad-stroke method to return true if the referenced anchors
+// in two computed style may differ. Since we do not get the actual anchor
+// names, we do not know if the difference is just a position/size/margin change
+// or if indeed the anchors changed. So we will get false positives here, hence
+// "maybe".
+bool ComputedStyle::MaybeAnchorPosReferencesDiffer(
+    const ComputedStyle* aOther) const {
+  if (!HasAnchorPosReference() || !aOther->HasAnchorPosReference()) {
+    return true;
+  }
+
+  const auto* pos = StylePosition();
+  const auto* otherPos = aOther->StylePosition();
+  if (pos->mOffset != otherPos->mOffset || pos->mWidth != otherPos->mWidth ||
+      pos->mHeight != otherPos->mHeight ||
+      pos->mMinWidth != otherPos->mMinWidth ||
+      pos->mMinHeight != otherPos->mMinHeight ||
+      pos->mMaxWidth != otherPos->mMaxWidth ||
+      pos->mMaxHeight != otherPos->mMaxHeight ||
+      pos->mPositionAnchor != otherPos->mPositionAnchor) {
+    return true;
+  }
+
+  if (StyleMargin()->mMargin != aOther->StyleMargin()->mMargin) {
+    return true;
+  }
+
+  return false;
+}
+
 }  // namespace mozilla

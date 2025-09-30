@@ -91,6 +91,8 @@ static constexpr RelationData kRelationTypeAtoms[] = {
      RelationType::DETAILS_FOR},
     {nsGkAtoms::popovertarget, nullptr, RelationType::DETAILS,
      RelationType::DETAILS_FOR},
+    {nsGkAtoms::target, nullptr, RelationType::DETAILS,
+     RelationType::DETAILS_FOR},
     {nsGkAtoms::aria_errormessage, nullptr, RelationType::ERRORMSG,
      RelationType::ERRORMSG_FOR},
 };

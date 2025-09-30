@@ -1505,9 +1505,15 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     mDoc->QueueCacheUpdate(this, CacheDomain::Value);
   }
 
+  if (aAttribute == nsGkAtoms::aria_details) {
+    mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
+    // If an aria-details attribute is added or removed from an anchored
+    // accessible, it will change the validity of its anchor's relation.
+    mDoc->RefreshAnchorRelationCacheForTarget(this);
+  }
+
   if (aAttribute == nsGkAtoms::aria_controls ||
       aAttribute == nsGkAtoms::aria_flowto ||
-      aAttribute == nsGkAtoms::aria_details ||
       aAttribute == nsGkAtoms::aria_errormessage) {
     mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
   }
@@ -4251,6 +4257,11 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
           if (LocalAccessible* target = GetPopoverTargetDetailsRelation()) {
             rel.AppendTarget(target);
           }
+        } else if (relAtom == nsGkAtoms::target) {
+          if (LocalAccessible* target =
+                  GetAnchorPositionTargetDetailsRelation()) {
+            rel.AppendTarget(target);
+          }
         } else {
           MOZ_ASSERT_UNREACHABLE("Unknown details relAtom");
         }
@@ -4431,6 +4442,22 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
       // CacheDomain::Style covers both display and opacity, so if
       // either property has changed, send an update for the entire domain.
       mDoc->QueueCacheUpdate(this, CacheDomain::Style);
+    }
+
+    if (mOldComputedStyle->StyleDisplay()->mAnchorName !=
+        newStyle->StyleDisplay()->mAnchorName) {
+      // Anchor name changes can affect the result of
+      // details relations.
+      mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
+    }
+
+    if (mOldComputedStyle->MaybeAnchorPosReferencesDiffer(newStyle)) {
+      // Refresh the cache for details on current target (ie. the old style)
+      mDoc->RefreshAnchorRelationCacheForTarget(this);
+      // Refresh the cache for details on new target asynchronously after the
+      // next layout tick for new style.
+      mDoc->Controller()->ScheduleNotification<DocAccessible>(
+          mDoc, &DocAccessible::RefreshAnchorRelationCacheForTarget, this);
     }
 
     nsAutoCString oldPosition, newPosition;

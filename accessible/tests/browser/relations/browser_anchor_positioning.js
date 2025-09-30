@@ -127,7 +127,7 @@ addAccessibleTask(
 
     await testNoDetailsRelations(btn2, target2);
   },
-  { chrome: true, topLevel: false }
+  { chrome: true, topLevel: true }
 );
 
 /**
@@ -162,7 +162,7 @@ addAccessibleTask(
 
     await testDetailsRelations(siblingBtn, siblingTarget);
   },
-  { chrome: true, topLevel: false }
+  { chrome: true, topLevel: true }
 );
 
 /**
@@ -218,7 +218,7 @@ addAccessibleTask(
       await testDetailsRelations(ownerBtn, ownedTarget);
     }
   },
-  { chrome: true, topLevel: false }
+  { chrome: true, topLevel: true }
 );
 
 /**
@@ -357,7 +357,7 @@ addAccessibleTask(
     await invokeSetAttributeAndTick(browser, "multiAnchor-btn1", "hidden");
     await testNoDetailsRelations(multiAnchorBtn2, multiAnchorTarget);
   },
-  { chrome: true, topLevel: false }
+  { chrome: true, topLevel: true }
 );
 
 /**
@@ -387,7 +387,7 @@ addAccessibleTask(
     const tooltipTarget = findAccessibleChildByID(docAcc, "tooltip-target");
     await testNoDetailsRelations(btn, tooltipTarget);
   },
-  { chrome: true, topLevel: false }
+  { chrome: true, topLevel: true }
 );
 
 /**
@@ -509,7 +509,7 @@ addAccessibleTask(
     );
     await testDetailsRelations(btnTargetsetdetails, targetTargetsetdetails);
   },
-  { chrome: true, topLevel: false }
+  { chrome: true, topLevel: true }
 );
 
 /**
@@ -565,5 +565,5 @@ addAccessibleTask(
     );
     await testNoDetailsRelations(anchor1, target);
   },
-  { chrome: true, topLevel: false }
+  { chrome: true, topLevel: true }
 );

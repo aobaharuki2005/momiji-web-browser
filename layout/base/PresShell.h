@@ -774,6 +774,11 @@ class PresShell final : public nsStubDocumentObserver,
   }
 
   inline void RemoveAnchorPosPositioned(nsIFrame* aFrame) {
+#ifdef ACCESSIBILITY
+    if (nsAccessibilityService* accService = GetAccService()) {
+      accService->NotifyAnchorPositionedRemoved(this, aFrame);
+    }
+#endif
     mAnchorPosPositioned.RemoveElement(aFrame);
   }
 
