@@ -11971,12 +11971,6 @@
     value: true
     mirror: always
 
-# Use IsTypeSupportedEx for PlayReady
--   name: media.eme.playready.istypesupportedex
-    type: RelaxedAtomicBool
-    value: true
-    mirror: always
-
 # Enable Widevine experiment DRM for EME
 -   name: media.eme.widevine.experiment.enabled
     type: RelaxedAtomicBool

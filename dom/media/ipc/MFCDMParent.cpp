@@ -699,8 +699,7 @@ static bool FactorySupports(ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
 
   // PlayReady doesn't implement IsTypeSupported properly, so it requires us to
   // use another way to check the capabilities.
-  if (IsPlayReadyKeySystemAndSupported(aKeySystem) &&
-      StaticPrefs::media_eme_playready_istypesupportedex()) {
+  if (IsPlayReadyKeySystemAndSupported(aKeySystem)) {
     ComPtr<IMFExtendedDRMTypeSupport> spDrmTypeSupport;
     {
       auto mediaEngineClassFactory = sMediaEngineClassFactory.Lock();
@@ -792,32 +791,28 @@ static MF_MEDIA_ENGINE_CANPLAY RunHDCPSupportCheck(
   nsTextFormatter::ssprintf(contentType, kFmt,
                             getHDCPPolicyValue(aMinHdcpVersion));
   MOZ_ASSERT(!contentType.IsEmpty());
-  if (StaticPrefs::media_eme_playready_istypesupportedex()) {
-    ComPtr<IMFExtendedDRMTypeSupport> spDrmTypeSupport;
-    {
-      auto mediaEngineClassFactory = sMediaEngineClassFactory.Lock();
-      HRESULT rv = (*mediaEngineClassFactory).As(&spDrmTypeSupport);
-      if (FAILED(rv)) {
-        MFCDM_PARENT_SLOG("Failed to get IMFExtendedDRMTypeSupport!");
-        return MF_MEDIA_ENGINE_CANPLAY_NOT_SUPPORTED;
-      }
+  ComPtr<IMFExtendedDRMTypeSupport> spDrmTypeSupport;
+  {
+    auto mediaEngineClassFactory = sMediaEngineClassFactory.Lock();
+    HRESULT rv = (*mediaEngineClassFactory).As(&spDrmTypeSupport);
+    if (FAILED(rv)) {
+      MFCDM_PARENT_SLOG("Failed to get IMFExtendedDRMTypeSupport!");
+      return MF_MEDIA_ENGINE_CANPLAY_NOT_SUPPORTED;
     }
-    // Remove clearlead postfix if needed.
-    nsCString keySystemWithoutPostfix =
-        NS_ConvertUTF16toUTF8(MapKeySystem(aKeySystem));
-    BSTR keySystem = CreateBSTRFromConstChar(keySystemWithoutPostfix.get());
-    MF_MEDIA_ENGINE_CANPLAY canPlay;
-    spDrmTypeSupport->IsTypeSupportedEx(SysAllocString(contentType.get()),
-                                        keySystem, &canPlay);
-    MFCDM_PARENT_SLOG(
-        "IsTypeSupportedEx for HDCP, canplay=%d (key-system=%ls, "
-        "content-type=%s)",
-        static_cast<int32_t>(canPlay), keySystem,
-        NS_ConvertUTF16toUTF8(contentType).get());
-    return canPlay;
   }
-  // HDCP support can only be checked via IsTypeSupportedEx.
-  return MF_MEDIA_ENGINE_CANPLAY_NOT_SUPPORTED;
+  // Remove clearlead postfix if needed.
+  nsCString keySystemWithoutPostfix =
+      NS_ConvertUTF16toUTF8(MapKeySystem(aKeySystem));
+  BSTR keySystem = CreateBSTRFromConstChar(keySystemWithoutPostfix.get());
+  MF_MEDIA_ENGINE_CANPLAY canPlay;
+  spDrmTypeSupport->IsTypeSupportedEx(SysAllocString(contentType.get()),
+                                      keySystem, &canPlay);
+  MFCDM_PARENT_SLOG(
+      "IsTypeSupportedEx for HDCP, canplay=%d (key-system=%ls, "
+      "content-type=%s)",
+      static_cast<int32_t>(canPlay), keySystem,
+      NS_ConvertUTF16toUTF8(contentType).get());
+  return canPlay;
 }
 
 // Only one HDCP check should run at a time; otherwise, the request response
