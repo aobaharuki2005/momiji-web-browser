@@ -2123,7 +2123,8 @@ void CacheFile::RemoveOutput(CacheFileOutputStream* aOutput, nsresult aStatus) {
 
   // This is to finalize the Hash calculation
   if (mDict) {
-    mDict->FinishFile();
+    mDict->FinishHash();
+    mDict = nullptr;
   }
 
   mOutput = nullptr;  // XXX should this be after NotifyCloseListener?

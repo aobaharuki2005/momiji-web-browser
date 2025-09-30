@@ -25,7 +25,6 @@
 class nsICacheStorage;
 class nsIIOService;
 class nsILoadContextInfo;
-class nsITimer;
 
 // Version of metadata entries we expect
 static const uint32_t METADATA_DICTIONARY_VERSION = 1;
@@ -33,6 +32,8 @@ static const uint32_t METADATA_DICTIONARY_VERSION = 1;
 
 namespace mozilla {
 namespace net {
+
+class DictionaryOrigin;
 
 // Outstanding requests that offer this dictionary will hold a reference to it.
 // If it's replaced (or removed) during the request, we would a) read the data
@@ -43,15 +44,10 @@ namespace net {
 //
 // When creating an entry from incoming data, we'll create it with no hash
 // initially until the full data has arrived, then update the Hash.
-class DictionaryCacheEntry final
-    : public LinkedListElement<RefPtr<DictionaryCacheEntry>>,
-      public nsICacheEntryOpenCallback,
-      public nsIStreamListener {
+class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
+                                   public nsIStreamListener {
  private:
-  ~DictionaryCacheEntry() {
-    MOZ_ASSERT(mUsers == 0);
-    MOZ_ASSERT(!isInList());
-  }
+  ~DictionaryCacheEntry() { MOZ_ASSERT(mUsers == 0); }
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -59,6 +55,7 @@ class DictionaryCacheEntry final
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
+  DictionaryCacheEntry(const char* aKey);
   DictionaryCacheEntry(const nsACString& aKey, const nsACString& aPattern,
                        const nsACString& aId,
                        const Maybe<nsCString>& aHash = Nothing());
@@ -73,16 +70,43 @@ class DictionaryCacheEntry final
 
   const nsACString& GetHash() const { return mHash; }
 
+  bool HasHash() {
+    // Hard to statically check since we're called from lambdas in
+    // GetDictionaryFor
+    return !mHash.IsEmpty();
+  }
+
   void SetHash(const nsACString& aHash) {
     MOZ_ASSERT(NS_IsMainThread());
     mHash = aHash;
   }
+
+  void WriteOnHash(DictionaryOrigin* aOrigin);
 
   const nsCString& GetId() const { return mId; }
 
   // keep track of requests that may need the data
   void InUse();
   void UseCompleted();
+  bool IsReading() const { return mUsers > 0 && !mWaitingPrefetch.IsEmpty(); }
+
+  void SetReplacement(DictionaryCacheEntry* aEntry, DictionaryOrigin* aOrigin) {
+    mReplacement = aEntry;
+    mOrigin = aOrigin;
+    if (mReplacement) {
+      mReplacement->mShouldSuspend = true;
+      mReplacement->mBlocked = true;
+    }
+  }
+
+  bool ShouldSuspendUntilCacheRead() const { return mShouldSuspend; }
+
+  // aFunc is called when we have finished reading a dictionary from the
+  // cache, or we have no users waiting for cache data (cancelled, etc)
+  void CallbackOnCacheRead(const std::function<void()>& aFunc) {
+    // the reasons to call back are identical to Prefetch()
+    mWaitingPrefetch.AppendElement(aFunc);
+  }
 
   const nsACString& GetURI() const { return mURI; }
 
@@ -96,10 +120,9 @@ class DictionaryCacheEntry final
 
   const Vector<uint8_t>& GetDictionary() const { return mDictionaryData; }
 
+  // Accumulate a hash while saving a file being received to the cache
   void AccumulateHash(const char* aBuf, int32_t aCount);
-  void AccumulateFile(const char* aBuf, int32_t aCount);
-
-  void FinishFile();
+  void FinishHash();
 
   // return a pointer to the data and length
   uint8_t* DictionaryData(size_t* aLength) const {
@@ -118,10 +141,32 @@ class DictionaryCacheEntry final
                                 const char* aFromSegment, uint32_t aToOffset,
                                 uint32_t aCount, uint32_t* aWriteCount);
 
+  void MakeMetadataEntry(nsCString& aNewValue);
+
+  nsresult Write(nsICacheEntry* aEntry);
+
+  nsresult RemoveEntry(nsICacheEntry* aCacheEntry);
+
+  // Parse metadata from DictionaryOrigin
+  bool ParseMetadata(const char* aSrc);
+
+  void CopyFrom(DictionaryCacheEntry* aOther) {
+    mURI = aOther->mURI;
+    mPattern = aOther->mPattern;
+    mId = aOther->mId;
+    // XXX match-dest
+    // XXX type
+  }
+
+  void UnblockAddEntry(DictionaryOrigin* aOrigin);
+
  private:
   nsCString mURI;  // URI (without ref) for the dictionary
   nsCString mPattern;
   nsCString mId;  // max length 1024
+                  // XXX add list of match-dest values
+                  // XXX add type
+
   // dcb and dcz use type 'raw'.  We're allowed to ignore types we don't
   // understand, so we can fail to record a dictionary with type != 'raw'
   //  nsCString mType;
@@ -138,6 +183,24 @@ class DictionaryCacheEntry final
 
   // call these when prefetch is complete
   nsTArray<std::function<void()>> mWaitingPrefetch;
+
+  // If we need to Write() an entry before we know the hash, remember the origin
+  // here (creates a temporary cycle). Clear on StopRequest
+  RefPtr<DictionaryOrigin> mOrigin;
+  // Don't store origin for write if we've already received OnStopRequest
+  bool mStopReceived{false};
+
+  // If set, a new entry wants to replace us, and we have active decoding users.
+  // When we finish reading data into this entry for decoding, do 2 things:
+  // Remove our entry from origin->mEntries (so no future requests find this,
+  // and un-Suspend the new channel so it can start saving data into the cache.
+  RefPtr<DictionaryCacheEntry> mReplacement;
+
+  // We should suspend until the ond entry has been read
+  bool mShouldSuspend{false};
+
+  // We're blocked from taking over for the old entry for now
+  bool mBlocked{false};
 };
 
 // XXX Do we want to pre-read dictionaries into RAM at startup (lazily)?
@@ -150,21 +213,54 @@ class DictionaryCacheEntry final
 
 // XXX Clear all dictionaries when cookies are cleared for a site
 
-using DictCacheList = AutoCleanLinkedList<RefPtr<DictionaryCacheEntry>>;
+// using DictCacheList = AutoCleanLinkedList<RefPtr<DictionaryCacheEntry>>;
+using DictCacheList = nsTArray<RefPtr<DictionaryCacheEntry>>;
+
+// XXX if we want to have a parallel LRU list for pushing origins out of memory,
+// add this: public LinkedListElement<RefPtr<DictionaryOrigin>>,
+class DictionaryOrigin : public nsICacheEntryMetaDataVisitor {
+  friend class DictionaryCache;
+
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSICACHEENTRYMETADATAVISITOR
+
+  DictionaryOrigin(const nsACString& aOrigin, nsICacheEntry* aEntry)
+      : mOrigin(aOrigin), mEntry(aEntry) {}
+
+  void SetCacheEntry(nsICacheEntry* aEntry) { mEntry = aEntry; }
+  void Write(DictionaryCacheEntry* aDictEntry);
+  already_AddRefed<DictionaryCacheEntry> AddEntry(
+      DictionaryCacheEntry* aDictEntry, bool aNewEntry);
+  nsresult RemoveEntry(const nsACString& aKey);
+  void RemoveEntry(DictionaryCacheEntry* aEntry);
+  DictionaryCacheEntry* Match(const nsACString& path);
+  void FinishAddEntry(DictionaryCacheEntry* aEntry);
+
+ private:
+  virtual ~DictionaryOrigin() {}
+
+  nsCString mOrigin;
+  nsCOMPtr<nsICacheEntry> mEntry;
+  DictCacheList mEntries;
+  // Dictionaries currently being received.  Once these get a Hash, move to
+  // mEntries
+  DictCacheList mPendingEntries;
+};
 
 class DictionaryOriginReader;
 
 // singleton class
 class DictionaryCache final {
  private:
-  DictionaryCache() { Init(); };
-  ~DictionaryCache() {};
+  DictionaryCache() { Init(); }
+  ~DictionaryCache() {}
 
   friend class DictionaryOriginReader;
   friend class DictionaryCacheEntry;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DictionaryCache)
+  NS_INLINE_DECL_REFCOUNTING(DictionaryCache)
 
   static already_AddRefed<DictionaryCache> GetInstance();
 
@@ -172,10 +268,11 @@ class DictionaryCache final {
 
   nsresult AddEntry(nsIURI* aURI, const nsACString& aKey,
                     const nsACString& aPattern, const nsACString& aId,
-                    const Maybe<nsCString>& aHash,
+                    const Maybe<nsCString>& aHash, bool aNewEntry,
                     DictionaryCacheEntry** aDictEntry);
 
-  nsresult AddEntry(nsIURI* aURI, DictionaryCacheEntry* aDictEntry);
+  already_AddRefed<DictionaryCacheEntry> AddEntry(
+      nsIURI* aURI, bool aNewEntry, DictionaryCacheEntry* aDictEntry);
 
   nsresult RemoveEntry(nsIURI* aURI, const nsACString& aKey);
 
@@ -190,10 +287,6 @@ class DictionaryCache final {
   }
 
  private:
-  bool ParseMetaDataEntry(const char* key, const char* value, nsCString& uri,
-                          uint32_t& hitCount, uint32_t& lastHit,
-                          uint32_t& flags);
-
   static nsCOMPtr<nsICacheStorage> sCacheStorage;
 
   // In-memory cache of dictionary entries.  HashMap, keyed by origin, of
@@ -202,7 +295,7 @@ class DictionaryCache final {
   // if there are dictionaries for an origin.
   // Static assertions fire if we try to have a LinkedList directly in an
   // nsTHashMap
-  nsTHashMap<nsCStringHashKey, UniquePtr<DictCacheList>> mDictionaryCache;
+  nsTHashMap<nsCStringHashKey, RefPtr<DictionaryOrigin>> mDictionaryCache;
 };
 
 }  // namespace net
