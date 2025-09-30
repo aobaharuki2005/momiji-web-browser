@@ -1294,7 +1294,7 @@ CanvasRenderingContext2D::ColorStyleCacheEntry
 CanvasRenderingContext2D::ParseColorSlow(const nsACString& aString) {
   ColorStyleCacheEntry result{nsCString(aString)};
   Document* document = mCanvasElement ? mCanvasElement->OwnerDoc() : nullptr;
-  css::Loader* loader = document ? document->CSSLoader() : nullptr;
+  css::Loader* loader = document ? document->GetCSSLoader() : nullptr;
 
   PresShell* presShell = GetPresShell();
   ServoStyleSet* set = presShell ? presShell->StyleSet() : nullptr;
@@ -2794,7 +2794,7 @@ static already_AddRefed<StyleLockedDeclarationBlock> CreateDeclarationForServo(
     Document* aDocument) {
   ServoCSSParser::ParsingEnvironment env{aDocument->DefaultStyleAttrURLData(),
                                          aDocument->GetCompatibilityMode(),
-                                         aDocument->CSSLoader()};
+                                         aDocument->GetCSSLoader()};
   RefPtr<StyleLockedDeclarationBlock> servoDeclarations =
       ServoCSSParser::ParseProperty(aProperty, aPropertyValue, env,
                                     StyleParsingMode::DEFAULT);

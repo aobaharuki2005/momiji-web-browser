@@ -102,8 +102,8 @@ static bool IsAsciiCompatible(const Encoding* aEncoding) {
 nsresult NS_NewHTMLDocument(Document** aInstancePtrResult,
                             nsIPrincipal* aPrincipal,
                             nsIPrincipal* aPartitionedPrincipal,
-                            bool aLoadedAsData) {
-  RefPtr<nsHTMLDocument> doc = new nsHTMLDocument();
+                            mozilla::dom::LoadedAsData aLoadedAsData) {
+  RefPtr<nsHTMLDocument> doc = new nsHTMLDocument(aLoadedAsData);
 
   nsresult rv = doc->Init(aPrincipal, aPartitionedPrincipal);
 
@@ -112,14 +112,15 @@ nsresult NS_NewHTMLDocument(Document** aInstancePtrResult,
     return rv;
   }
 
-  doc->SetLoadedAsData(aLoadedAsData, /* aConsiderForMemoryReporting */ true);
+  doc->SetLoadedAsData(aLoadedAsData != mozilla::dom::LoadedAsData::No,
+                       /* aConsiderForMemoryReporting */ true);
   doc.forget(aInstancePtrResult);
 
   return NS_OK;
 }
 
-nsHTMLDocument::nsHTMLDocument()
-    : Document("text/html"),
+nsHTMLDocument::nsHTMLDocument(mozilla::dom::LoadedAsData aLoadedAsData)
+    : Document("text/html", aLoadedAsData),
       mContentListHolder(nullptr),
       mNumForms(0),
       mLoadFlags(0),
@@ -145,7 +146,9 @@ nsresult nsHTMLDocument::Init(nsIPrincipal* aPrincipal,
 
   // Now reset the compatibility mode of the CSSLoader
   // to match our compat mode.
-  CSSLoader()->SetCompatibilityMode(mCompatMode);
+  if (mCSSLoader) {
+    mCSSLoader->SetCompatibilityMode(mCompatMode);
+  }
 
   return NS_OK;
 }
@@ -730,7 +733,9 @@ nsresult nsHTMLDocument::Clone(dom::NodeInfo* aNodeInfo,
   NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
                "Can't import this document into another document!");
 
-  RefPtr<nsHTMLDocument> clone = new nsHTMLDocument();
+  // TODO: Disable styling when not needed.
+  RefPtr<nsHTMLDocument> clone =
+      new nsHTMLDocument(LoadedAsData::AsDataWithStyling);
   nsresult rv = CloneDocHelper(clone.get());
   NS_ENSURE_SUCCESS(rv, rv);
 

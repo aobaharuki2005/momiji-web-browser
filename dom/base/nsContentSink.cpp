@@ -163,7 +163,7 @@ nsresult nsContentSink::Init(Document* aDoc, nsIURI* aURI,
 
   mDocumentURI = aURI;
   mDocShell = do_QueryInterface(aContainer);
-  mScriptLoader = mDocument->ScriptLoader();
+  mScriptLoader = mDocument->GetScriptLoader();
 
   if (!mRunsToCompletion) {
     if (mDocShell) {
@@ -176,7 +176,7 @@ nsresult nsContentSink::Init(Document* aDoc, nsIURI* aURI,
     ProcessHTTPHeaders(aChannel);
   }
 
-  mCSSLoader = aDoc->CSSLoader();
+  mCSSLoader = aDoc->GetCSSLoader();
 
   mNodeInfoManager = aDoc->NodeInfoManager();
 
@@ -218,11 +218,13 @@ nsContentSink::StyleSheetLoaded(StyleSheet* aSheet, bool aWasDeferred,
     ScrollToRef();
   }
 
-  mScriptLoader->RemoveParserBlockingScriptExecutionBlocker();
+  if (mScriptLoader) {
+    mScriptLoader->RemoveParserBlockingScriptExecutionBlocker();
 
-  if (loadedAllSheets &&
-      mDocument->GetReadyStateEnum() >= Document::READYSTATE_INTERACTIVE) {
-    mScriptLoader->DeferCheckpointReached();
+    if (loadedAllSheets &&
+        mDocument->GetReadyStateEnum() >= Document::READYSTATE_INTERACTIVE) {
+      mScriptLoader->DeferCheckpointReached();
+    }
   }
 
   return NS_OK;
@@ -323,7 +325,8 @@ nsresult nsContentSink::ProcessLinkFromHeader(const net::LinkHeader& aHeader,
     }
 
     if ((linkTypes & LinkStyle::eMODULE_PRELOAD) &&
-        mDocument->ScriptLoader()->GetModuleLoader()) {
+        mDocument->GetScriptLoader() &&
+        mDocument->GetScriptLoader()->GetModuleLoader()) {
       PreloadModule(aHeader.mHref, aHeader.mAs, aHeader.mMedia, aHeader.mNonce,
                     aHeader.mIntegrity, aHeader.mCrossOrigin,
                     aHeader.mReferrerPolicy, aEarlyHintPreloaderId,
@@ -348,6 +351,9 @@ nsresult nsContentSink::ProcessStyleLinkFromHeader(
     const nsAString& aIntegrity, const nsAString& aType,
     const nsAString& aMedia, const nsAString& aReferrerPolicy,
     const nsAString& aFetchPriority) {
+  if (!mCSSLoader) {
+    return NS_OK;
+  }
   if (aAlternate && aTitle.IsEmpty()) {
     // alternates must have title return without error, for now
     return NS_OK;
@@ -407,7 +413,9 @@ nsresult nsContentSink::ProcessStyleLinkFromHeader(
 
   if (loadResultOrErr.inspect().ShouldBlock() && !mRunsToCompletion) {
     ++mPendingSheetCount;
-    mScriptLoader->AddParserBlockingScriptExecutionBlocker();
+    if (mScriptLoader) {
+      mScriptLoader->AddParserBlockingScriptExecutionBlocker();
+    }
   }
 
   return NS_OK;
@@ -473,7 +481,11 @@ void nsContentSink::PreloadModule(
     const nsAString& aNonce, const nsAString& aIntegrity,
     const nsAString& aCORS, const nsAString& aReferrerPolicy,
     uint64_t aEarlyHintPreloaderId, const nsAString& aFetchPriority) {
-  ModuleLoader* moduleLoader = mDocument->ScriptLoader()->GetModuleLoader();
+  dom::ScriptLoader* scriptLoader = mDocument->GetScriptLoader();
+  if (!scriptLoader) {
+    return;
+  }
+  ModuleLoader* moduleLoader = scriptLoader->GetModuleLoader();
 
   if (!StaticPrefs::network_modulepreload()) {
     // Keep behavior from https://phabricator.services.mozilla.com/D149371,
@@ -882,7 +894,7 @@ void nsContentSink::DropParserAndPerfHint(void) {
 }
 
 bool nsContentSink::IsScriptExecutingImpl() {
-  return !!mScriptLoader->GetCurrentScript();
+  return mScriptLoader && mScriptLoader->GetCurrentScript();
 }
 
 void nsContentSink::ContinueParsingDocumentAfterCurrentScriptImpl() {

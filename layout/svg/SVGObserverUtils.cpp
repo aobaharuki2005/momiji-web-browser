@@ -1114,7 +1114,9 @@ void SVGMaskObserverList::ResolveImage(uint32_t aIndex) {
   const_cast<StyleImage&>(image).ResolveImage(*doc, nullptr);
   if (imgRequestProxy* req = image.GetImageRequest()) {
     // FIXME(emilio): What disassociates this request?
-    doc->StyleImageLoader()->AssociateRequestToFrame(req, mFrame);
+    if (css::ImageLoader* loader = doc->GetStyleImageLoader()) {
+      loader->AssociateRequestToFrame(req, mFrame);
+    }
   }
 }
 

@@ -1262,8 +1262,8 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
     changed = Servo_DeclarationBlock_SetPropertyById(
         &EnsureDeclarationBlock(), propertyID, &value, false,
         &EnsureExtraData(), StyleParsingMode::ALLOW_UNITLESS_LENGTH,
-        doc->GetCompatibilityMode(), doc->CSSLoader(), StyleCssRuleType::Style,
-        {});
+        doc->GetCompatibilityMode(), doc->GetCSSLoader(),
+        StyleCssRuleType::Style, {});
 
     // TODO(emilio): If we want to record these from CSSOM more generally, we
     // can pass the document use counters down the FFI call. For now manually

@@ -677,12 +677,18 @@ already_AddRefed<dom::Promise> StyleSheet::Replace(const nsACString& aText,
     return promise.forget();
   }
 
+  if (!mConstructorDocument || !mConstructorDocument->GetCSSLoader()) {
+    promise->MaybeRejectWithNotAllowedError(
+        "Must not use this on documents loaded as data.");
+    return promise.forget();
+  }
+
   // 3. Disallow modifications until finished.
   SetModificationDisallowed(true);
 
   // TODO(emilio, 1642227): Should constructable stylesheets notify global
   // observers (i.e., set mMustNotify to true)?
-  auto* loader = mConstructorDocument->CSSLoader();
+  auto* loader = mConstructorDocument->GetCSSLoader();
   auto loadData = MakeRefPtr<css::SheetLoadData>(
       loader, /* aURI = */ nullptr, this, css::SyncLoad::No,
       css::Loader::UseSystemPrincipal::No, css::StylePreloadKind::None,
@@ -725,9 +731,14 @@ void StyleSheet::ReplaceSync(const nsACString& aText, ErrorResult& aRv) {
         "Can only be called on modifiable style sheets");
   }
 
+  if (!mConstructorDocument->GetCSSLoader()) {
+    return aRv.ThrowNotAllowedError(
+        "Must not use this on documents loaded as data");
+  }
+
   // 3. Parse aText into rules.
   // 4. If rules contain @imports, skip them and continue parsing.
-  auto* loader = mConstructorDocument->CSSLoader();
+  auto* loader = mConstructorDocument->GetCSSLoader();
   RefPtr<const StyleStylesheetContents> rawContent =
       Servo_StyleSheet_FromUTF8Bytes(
           loader, this,
@@ -1339,9 +1350,12 @@ void StyleSheet::ReparseSheet(const nsACString& aInput, ErrorResult& aRv) {
   // kills the document
   RefPtr<css::Loader> loader;
   if (Document* doc = GetAssociatedDocument()) {
-    loader = doc->CSSLoader();
-    NS_ASSERTION(loader, "Document with no CSS loader!");
-  } else {
+    loader = doc->GetCSSLoader();
+    MOZ_ASSERT(loader,
+               "Should not come here without a CSS loader, i.e. in the "
+               "loadedAsData case");
+  }
+  if (!loader) {
     loader = new css::Loader;
   }
 
