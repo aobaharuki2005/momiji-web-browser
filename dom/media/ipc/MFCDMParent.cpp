@@ -588,6 +588,8 @@ HRESULT MFCDMParent::LoadFactory(
     return S_OK;
   }
 
+  // The following path is used for testing, loading a clearkey lib. Widevine
+  // support will be soon removed.
   HMODULE handle = LoadLibraryW(libraryName);
   if (!handle) {
     MFCDM_PARENT_SLOG("Failed to load library %ls! (error=%lx)", libraryName,
@@ -629,6 +631,12 @@ HRESULT MFCDMParent::LoadFactory(
   ComPtr<IInspectable> pInspectable;
   MFCDM_RETURN_IF_FAILED(pFactory->ActivateInstance(&pInspectable));
   MFCDM_RETURN_IF_FAILED(pInspectable.As(&cdmFactory));
+  {
+    auto mediaEngineClassFactory = sMediaEngineClassFactory.Lock();
+    if (!*mediaEngineClassFactory) {
+      *mediaEngineClassFactory = pInspectable;
+    }
+  }
   aFactoryOut.Swap(cdmFactory);
   MFCDM_PARENT_SLOG("Created factory for %s from external library!",
                     NS_ConvertUTF16toUTF8(aKeySystem).get());
