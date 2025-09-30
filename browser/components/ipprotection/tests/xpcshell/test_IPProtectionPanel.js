@@ -13,6 +13,9 @@ const { IPProtectionService, IPProtectionStates } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPProtectionService.sys.mjs"
 );
 
+/**
+ * A class that mocks the IP Protection panel.
+ */
 class FakeIPProtectionPanelElement {
   constructor() {
     this.state = {

@@ -29,6 +29,9 @@ import "chrome://browser/content/ipprotection/ipprotection-signedout.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/elements/moz-toggle.mjs";
 
+/**
+ * Custom element that implements a message bar and status card for IP protection.
+ */
 export default class IPProtectionContentElement extends MozLitElement {
   static queries = {
     headerEl: "ipprotection-header",

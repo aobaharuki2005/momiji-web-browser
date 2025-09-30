@@ -17,6 +17,10 @@ const hasYielded = async asyncReplaceDirective => {
   return asyncReplaceDirective;
 };
 
+/**
+ * A directive that produces a live updating l10n args object with the duration
+ * since the given timestamp in milliseconds.
+ */
 class TimerDirective extends AsyncDirective {
   render(timeConnectedSince) {
     return until(
@@ -28,7 +32,10 @@ class TimerDirective extends AsyncDirective {
    * Returns a generator that yields a l10n args object with the current connection time
    * every second.
    *
+   * @param {number} timeConnectedSince
+   *   The time in milliseconds
    * @returns {AsyncGenerator<string>}
+   * @yields {string}
    */
   async *currentTime(timeConnectedSince) {
     while (true) {

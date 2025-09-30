@@ -31,6 +31,7 @@ if (Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT) {
  */
 export class GuardianClient {
   /**
+   * @param {typeof gConfig} [config]
    */
   constructor(config = gConfig) {
     this.guardianEndpoint = config.guardianEndpoint;
