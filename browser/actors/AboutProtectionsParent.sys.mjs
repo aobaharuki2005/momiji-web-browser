@@ -367,7 +367,7 @@ export class AboutProtectionsParent extends JSWindowActorParent {
       case "OpenSyncPreferences":
         win.openTrustedLinkIn("about:preferences#sync", "tab");
         break;
-      case "FetchContentBlockingEvents": {
+      case "FetchContentBlockingEvents":
         let dataToSend = {};
         let displayNames = new Services.intl.DisplayNames(undefined, {
           type: "weekday",
@@ -413,7 +413,6 @@ export class AboutProtectionsParent extends JSWindowActorParent {
         dataToSend.sumEvents = sumEvents;
 
         return dataToSend;
-      }
 
       case "FetchMonitorData":
         return this.getMonitorData();
@@ -426,7 +425,8 @@ export class AboutProtectionsParent extends JSWindowActorParent {
         break;
 
       case "GetShowProxyCard":
-        return await this.shouldShowProxyCard();
+        let card = await this.shouldShowProxyCard();
+        return card;
 
       case "RecordEntryPoint":
         entrypoint = aMessage.data.entrypoint;

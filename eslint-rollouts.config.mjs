@@ -106,6 +106,23 @@ export default [
     },
   },
   {
+    // Bug 1881270 - Gradually roll-out no-case-declarations to more areas.
+    name: "rollout-no-case-declarations",
+    files: [
+      "browser/actors/**",
+      "browser/base/content/**",
+      "browser/components/**",
+      "browser/extensions/newtab/**",
+      "toolkit/actors/**",
+      "toolkit/components/**",
+      "toolkit/modules/**",
+      "toolkit/content/widgets/**",
+    ],
+    rules: {
+      "no-case-declarations": "warn",
+    },
+  },
+  {
     // Bug 1881268 - Gradually roll-out no-constant-condition to more areas.
     name: "rollout-no-constant-condition",
     files: [

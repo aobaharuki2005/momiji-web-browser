@@ -27,11 +27,10 @@ onmessage = function(e) {
     case "info":
       parent.postMessage(e.data, "*");
       break;
-    default: {
+    default:
       let iframe = document.querySelector("iframe");
       iframe.contentWindow.postMessage(e.data, "*");
       break;
-    }
   }
 };
 

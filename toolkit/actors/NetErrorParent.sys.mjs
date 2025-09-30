@@ -213,7 +213,7 @@ export class NetErrorParent extends EscapablePageParent {
         Services.prefs.clearUserPref("security.enterprise_roots.enabled");
         Services.prefs.clearUserPref("security.enterprise_roots.auto-enabled");
         break;
-      case "Browser:ResetSSLPreferences": {
+      case "Browser:ResetSSLPreferences":
         let prefSSLImpact = PREF_SSL_IMPACT_ROOTS.reduce((prefs, root) => {
           return prefs.concat(Services.prefs.getChildList(root));
         }, []);
@@ -222,17 +222,15 @@ export class NetErrorParent extends EscapablePageParent {
         }
         this.browser.reload();
         break;
-      }
       case "Browser:SSLErrorGoBack":
         this.leaveErrorPage(this.browser);
         break;
-      case "GetChangedCertPrefs": {
+      case "GetChangedCertPrefs":
         let hasChangedCertPrefs = this.hasChangedCertPrefs();
         this.sendAsyncMessage("HasChangedCertPrefs", {
           hasChangedCertPrefs,
         });
         break;
-      }
       case "DisplayOfflineSupportPage":
         this.displayOfflineSupportPage(message.data.supportPageSlug);
         break;
@@ -256,7 +254,7 @@ export class NetErrorParent extends EscapablePageParent {
           }
         }
         break;
-      case "Browser:AddTRRExcludedDomain": {
+      case "Browser:AddTRRExcludedDomain":
         let domain = message.data.hostname;
         let excludedDomains = Services.prefs.getStringPref(
           "network.trr.excluded-domains"
@@ -267,8 +265,7 @@ export class NetErrorParent extends EscapablePageParent {
           excludedDomains
         );
         break;
-      }
-      case "OpenTRRPreferences": {
+      case "OpenTRRPreferences":
         let browser = this.browsingContext.top.embedderElement;
         if (!browser) {
           break;
@@ -277,7 +274,6 @@ export class NetErrorParent extends EscapablePageParent {
         let win = browser.ownerGlobal;
         win.openPreferences("privacy-doh");
         break;
-      }
     }
   }
 }
