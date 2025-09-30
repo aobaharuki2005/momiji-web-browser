@@ -1058,12 +1058,13 @@ EnvironmentCache.prototype = {
         // the session was restored.
         this._updateDefaultBrowser();
         break;
-      case PREF_CHANGED_TOPIC:
+      case PREF_CHANGED_TOPIC: {
         let options = this._watchedPrefs.get(aData);
         if (options && !options.requiresRestart) {
           this._onPrefChanged(aData);
         }
         break;
+      }
       case AUTO_UPDATE_PREF_CHANGE_TOPIC:
         this._currentEnvironment.settings.update.autoDownload = aData == "true";
         Glean.updateSettings.autoDownload.set(

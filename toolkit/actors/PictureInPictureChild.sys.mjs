@@ -393,7 +393,7 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
     }
 
     switch (data) {
-      case TOGGLE_FIRST_SEEN_PREF:
+      case TOGGLE_FIRST_SEEN_PREF: {
         const firstSeenSeconds = Services.prefs.getIntPref(
           TOGGLE_FIRST_SEEN_PREF
         );
@@ -402,6 +402,7 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
         }
         this.changeToIconIfDurationEnd(firstSeenSeconds);
         break;
+      }
     }
   }
 
@@ -2677,7 +2678,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
           this.videoWrapper.setCurrentTime(video, newval >= 0 ? newval : 0);
           break;
         case "rightArrow": /* Seek forward 5 seconds */
-        case "accel-rightArrow" /* Seek forward 10% */:
+        case "accel-rightArrow" /* Seek forward 10% */: {
           if (
             this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.SEEK) ||
             (isVideoStreaming &&
@@ -2696,6 +2697,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
           let selectedTime = newval <= maxtime ? newval : maxtime;
           this.videoWrapper.setCurrentTime(video, selectedTime);
           break;
+        }
         case "home" /* Seek to beginning */:
           if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
             return;
@@ -2704,7 +2706,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
             this.videoWrapper.setCurrentTime(video, 0);
           }
           break;
-        case "end" /* Seek to end */:
+        case "end" /* Seek to end */: {
           if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
             return;
           }
@@ -2717,6 +2719,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
             this.videoWrapper.setCurrentTime(video, duration);
           }
           break;
+        }
         default:
       }
     } catch (e) {

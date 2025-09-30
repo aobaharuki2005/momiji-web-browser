@@ -582,7 +582,7 @@ class ChromeActions {
         case "number":
           currentPrefs[key] = Services.prefs.getIntPref(prefName, prefValue);
           break;
-        case "string":
+        case "string": {
           // The URL contains some dynamic values (%VERSION%, ...), so we need to
           // format it.
           const str = Services.prefs.getStringPref(prefName, prefValue);
@@ -591,6 +591,7 @@ class ChromeActions {
               ? Services.urlFormatter.formatURLPref(prefName)
               : str;
           break;
+        }
       }
     }
 
