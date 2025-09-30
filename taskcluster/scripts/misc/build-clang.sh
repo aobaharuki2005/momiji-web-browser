@@ -25,7 +25,7 @@ case "$CONFIGS" in
   echo echo 10.12 >> $ORIGPWD/bin/sw_vers
   chmod +x $ORIGPWD/bin/sw_vers
   # these variables are used in build-clang.py
-  export OSX_SYSROOT=$(ls -d $MOZ_FETCHES_DIR/MacOSX1*.sdk)
+  export OSX_SYSROOT=$(ls -d $MOZ_FETCHES_DIR/MacOSX*.sdk)
   export PATH=$PATH:$ORIGPWD/bin
   ;;
 *win64*)
