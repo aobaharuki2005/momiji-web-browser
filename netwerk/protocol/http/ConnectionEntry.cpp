@@ -15,7 +15,6 @@
 #include "ConnectionEntry.h"
 #include "HttpConnectionUDP.h"
 #include "nsQueryObject.h"
-#include "mozilla/ChaosMode.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "nsHttpHandler.h"
 #include "mozilla/net/neqo_glue_ffi_generated.h"

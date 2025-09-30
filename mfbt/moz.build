@@ -155,7 +155,6 @@ if CONFIG["OS_ARCH"] == "WASI":
 
 UNIFIED_SOURCES += [
     "Assertions.cpp",
-    "ChaosMode.cpp",
     "double-conversion/double-conversion/bignum-dtoa.cc",
     "double-conversion/double-conversion/bignum.cc",
     "double-conversion/double-conversion/cached-powers.cc",
