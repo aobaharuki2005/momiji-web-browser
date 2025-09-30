@@ -469,9 +469,9 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
   // later save the bytecode on the cache entry.
   if (NS_SUCCEEDED(rv) && mRequest->IsSource() &&
       StaticPrefs::dom_script_loader_bytecode_cache_enabled()) {
-    mRequest->mCacheInfo = do_QueryInterface(channelRequest);
+    mRequest->getLoadedScript()->mCacheInfo = do_QueryInterface(channelRequest);
     LOG(("ScriptLoadRequest (%p): nsICacheInfoChannel = %p", mRequest.get(),
-         mRequest->mCacheInfo.get()));
+         mRequest->getLoadedScript()->mCacheInfo.get()));
   }
 
   // we have to mediate and use mRequest.
@@ -480,7 +480,7 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
 
   // In case of failure, clear the mCacheInfoChannel to avoid keeping it alive.
   if (NS_FAILED(rv)) {
-    mRequest->DropDiskCacheReference();
+    mRequest->getLoadedScript()->DropDiskCacheReference();
   }
 
   return rv;

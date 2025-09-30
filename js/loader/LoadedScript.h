@@ -269,6 +269,13 @@ class LoadedScript : public nsIMemoryReporter {
     mStencil = aStencil;
   }
 
+  // Check the reference to the cache info channel, which is used by the disk
+  // cache.
+  bool HasDiskCacheReference() const { return !!mCacheInfo; }
+
+  // Drop the reference to the cache info channel.
+  void DropDiskCacheReference() { mCacheInfo = nullptr; }
+
  public:
   // Fields.
 
@@ -316,6 +323,10 @@ class LoadedScript : public nsIMemoryReporter {
   RefPtr<Stencil> mStencil;
 
   // The cache info channel used when saving the bytecode to the necko cache.
+  //
+  // This field is populated if the cache is enabled and this is either
+  // IsTextSource() or IsCachedStencil(), and it's cleared after saving the
+  // bytecode (Thus, used only once).
   nsCOMPtr<nsICacheInfoChannel> mCacheInfo;
 
   // The SRI data and the padding, used when saving the bytecode.

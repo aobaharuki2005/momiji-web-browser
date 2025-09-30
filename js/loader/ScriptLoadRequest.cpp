@@ -20,7 +20,6 @@
 
 #include "ModuleLoadRequest.h"
 #include "nsContentUtils.h"
-#include "nsICacheInfoChannel.h"
 #include "nsIClassOfService.h"
 #include "nsISupportsPriority.h"
 
@@ -75,14 +74,12 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptLoadRequest)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptLoadRequest)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchOptions, mOriginPrincipal, mBaseURL,
-                                  mLoadedScript, mCacheInfo, mLoadContext)
+                                  mLoadedScript, mLoadContext)
   tmp->mScriptForCache = nullptr;
-  tmp->DropDiskCacheReference();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions, mCacheInfo, mLoadContext,
-                                    mLoadedScript)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions, mLoadContext, mLoadedScript)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ScriptLoadRequest)
@@ -124,8 +121,6 @@ void ScriptLoadRequest::Cancel() {
     GetScriptLoadContext()->MaybeCancelOffThreadScript();
   }
 }
-
-void ScriptLoadRequest::DropDiskCacheReference() { mCacheInfo = nullptr; }
 
 bool ScriptLoadRequest::HasScriptLoadContext() const {
   return HasLoadContext() && mLoadContext->IsWindowContext();
