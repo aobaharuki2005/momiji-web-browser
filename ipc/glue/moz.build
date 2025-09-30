@@ -55,6 +55,7 @@ EXPORTS.mozilla.ipc += [
     "RustMessageUtils.h",
     "ScopedPort.h",
     "SerializedStructuredCloneBuffer.h",
+    "SerializeToBytesUtil.h",
     "SharedMemoryCursor.h",
     "SharedMemoryHandle.h",
     "SharedMemoryMapping.h",
