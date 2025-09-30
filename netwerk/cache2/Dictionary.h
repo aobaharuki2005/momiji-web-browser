@@ -83,7 +83,9 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
     mHash = aHash;
   }
 
-  void WriteOnHash(DictionaryOrigin* aOrigin);
+  void WriteOnHash();
+
+  void SetOrigin(DictionaryOrigin* aOrigin) { mOrigin = aOrigin; }
 
   const nsCString& GetId() const { return mId; }
 
@@ -241,6 +243,7 @@ class DictionaryOrigin : public nsICacheEntryMetaDataVisitor {
   void RemoveEntry(DictionaryCacheEntry* aEntry);
   DictionaryCacheEntry* Match(const nsACString& path);
   void FinishAddEntry(DictionaryCacheEntry* aEntry);
+  void Clear();
 
  private:
   virtual ~DictionaryOrigin() {}
@@ -268,7 +271,7 @@ class DictionaryCache final {
   friend class DictionaryCacheEntry;
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(DictionaryCache)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DictionaryCache)
 
   static already_AddRefed<DictionaryCache> GetInstance();
 
@@ -282,10 +285,15 @@ class DictionaryCache final {
   already_AddRefed<DictionaryCacheEntry> AddEntry(
       nsIURI* aURI, bool aNewEntry, DictionaryCacheEntry* aDictEntry);
 
+  static void RemoveDictionaryFor(const nsACString& aKey);
+
   // Remove a dictionary if it exists for the key given
-  void RemoveDictionaryFor(const nsACString& aKey);
+  void RemoveDictionary(const nsACString& aKey);
 
   nsresult RemoveEntry(nsIURI* aURI, const nsACString& aKey);
+
+  static void RemoveDictionaries(nsIURI* aURI);
+  static void RemoveAllDictionaries();
 
   // Clears all ports at host
   void Clear();

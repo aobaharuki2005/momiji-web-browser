@@ -747,7 +747,8 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
                             bool aPinned);
 
   // Remove entry from index. The entry should be present in index.
-  static nsresult RemoveEntry(const SHA1Sum::Hash* aHash);
+  static nsresult RemoveEntry(const SHA1Sum::Hash* aHash,
+                              const nsACString& aKey);
 
   // Update some information in entry. The entry MUST be present in index and
   // MUST be initialized. Call to AddEntry() or EnsureEntryExists() and to
