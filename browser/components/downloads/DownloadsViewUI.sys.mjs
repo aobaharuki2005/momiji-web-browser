@@ -1102,12 +1102,12 @@ DownloadsViewUI.DownloadElementShell.prototype = {
         return this.download.target.exists;
 
       case "downloadsCmd_show":
-      case "downloadsCmd_deleteFile":
+      case "downloadsCmd_deleteFile": {
         let { target } = this.download;
         return (
           !this.download.deleted && (target.exists || target.partFileExists)
         );
-
+      }
       case "downloadsCmd_delete":
       case "cmd_delete":
         // We don't want in-progress downloads to be removed accidentally.

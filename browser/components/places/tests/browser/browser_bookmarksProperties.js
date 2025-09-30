@@ -119,7 +119,7 @@ gTests.push({
               .getElementById("bookmarkpropertiesdialog")
               .cancelDialog();
             break;
-          case "popupshown":
+          case "popupshown": {
             tagsField.popup.removeEventListener("popupshown", this, true);
             // In case this test fails the window will close, the test will fail
             // since we didn't set _cleanShutdown.
@@ -140,6 +140,7 @@ gTests.push({
             richlistbox.focus();
             EventUtils.synthesizeKey("VK_RETURN", {}, self.window);
             break;
+          }
           default:
             Assert.ok(false, "unknown event: " + aEvent.type);
         }
@@ -247,7 +248,7 @@ gTests.push({
               .getElementById("bookmarkpropertiesdialog")
               .cancelDialog();
             break;
-          case "popupshown":
+          case "popupshown": {
             tagsField.popup.removeEventListener("popupshown", this, true);
             // In case this test fails the window will close, the test will fail
             // since we didn't set _cleanShutdown.
@@ -268,6 +269,7 @@ gTests.push({
             richlistbox.focus();
             EventUtils.synthesizeKey("VK_ESCAPE", {}, self.window);
             break;
+          }
           default:
             Assert.ok(false, "unknown event: " + aEvent.type);
         }

@@ -2067,34 +2067,38 @@ function addMenuitems(items, popup) {
         popup.appendChild(document.createXULElement("menuseparator"));
         break;
       case "menu":
-        let menu = document.createXULElement("menu");
-        menu.className = "fxms-multi-stage-menu";
-        translateMenuitem(item, menu);
-        if (item.id) {
-          menu.value = item.id;
+        {
+          let menu = document.createXULElement("menu");
+          menu.className = "fxms-multi-stage-menu";
+          translateMenuitem(item, menu);
+          if (item.id) {
+            menu.value = item.id;
+          }
+          if (item.icon) {
+            menu.classList.add("menu-iconic");
+            menu.setAttribute("image", item.icon);
+          }
+          popup.appendChild(menu);
+          let submenuPopup = document.createXULElement("menupopup");
+          menu.appendChild(submenuPopup);
+          addMenuitems(item.submenu, submenuPopup);
+          break;
         }
-        if (item.icon) {
-          menu.classList.add("menu-iconic");
-          menu.setAttribute("image", item.icon);
-        }
-        popup.appendChild(menu);
-        let submenuPopup = document.createXULElement("menupopup");
-        menu.appendChild(submenuPopup);
-        addMenuitems(item.submenu, submenuPopup);
-        break;
       case "action":
-        let menuitem = document.createXULElement("menuitem");
-        translateMenuitem(item, menuitem);
-        menuitem.config = item;
-        if (item.id) {
-          menuitem.value = item.id;
+        {
+          let menuitem = document.createXULElement("menuitem");
+          translateMenuitem(item, menuitem);
+          menuitem.config = item;
+          if (item.id) {
+            menuitem.value = item.id;
+          }
+          if (item.icon) {
+            menuitem.classList.add("menuitem-iconic");
+            menuitem.setAttribute("image", item.icon);
+          }
+          popup.appendChild(menuitem);
+          break;
         }
-        if (item.icon) {
-          menuitem.classList.add("menuitem-iconic");
-          menuitem.setAttribute("image", item.icon);
-        }
-        popup.appendChild(menuitem);
-        break;
     }
   }
 }
