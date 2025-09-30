@@ -118,9 +118,23 @@ class LoadedScript : public nsIMemoryReporter {
   // Type of data this instance holds, which is either provided by the nsChannel
   // or retrieved from the cache.
   enum class DataType : uint8_t {
+    // This script haven't yet received the data.
     eUnknown,
+
+    // This script is received as a plain text from the channel.
+    // mScriptData holds the text source, and mStencil holds the compiled
+    // stencil.
+    // mScriptBytecode holds the SRI.
     eTextSource,
+
+    // This script is received as a bytecode from the channel.
+    // mScriptBytecode holds the SRI and the bytecode, and mStencil holds the
+    // decoded stencil.
     eBytecode,
+
+    // This script is cached from the previous load.
+    // mStencil holds the cached stencil, and mSRI holds the SRI.
+    // mScriptData and mScriptBytecode are unused.
     eCachedStencil
   };
 
@@ -155,10 +169,10 @@ class LoadedScript : public nsIMemoryReporter {
     mDataType = DataType::eBytecode;
   }
 
-  void SetCachedStencil(already_AddRefed<Stencil> aStencil) {
+  void ConvertToCachedStencil() {
+    MOZ_ASSERT(HasStencil());
     SetUnknownDataType();
     mDataType = DataType::eCachedStencil;
-    mStencil = aStencil;
   }
 
   bool IsUTF16Text() const {
@@ -241,15 +255,25 @@ class LoadedScript : public nsIMemoryReporter {
     mScriptBytecode.clearAndFree();
   }
 
+  bool HasStencil() const { return mStencil; }
+
   Stencil* GetStencil() const {
-    MOZ_ASSERT(IsCachedStencil());
+    MOZ_ASSERT(!IsUnknownDataType());
+    MOZ_ASSERT(HasStencil());
     return mStencil;
+  }
+
+  void SetStencil(Stencil* aStencil) {
+    MOZ_ASSERT(aStencil);
+    MOZ_ASSERT(!HasStencil());
+    mStencil = aStencil;
   }
 
  public:
   // Fields.
 
   // Determine whether the mScriptData or mScriptBytecode is used.
+  // See DataType description for more info.
   DataType mDataType;
 
   // The consumer-defined number of times that this loaded script is used.
@@ -288,6 +312,7 @@ class LoadedScript : public nsIMemoryReporter {
   // or, if compression is enabled, ScriptBytecodeCompressedDataLayout.
   TranscodeBuffer mScriptBytecode;
 
+  // Holds the stencil for the script.  This field is used in all DataType.
   RefPtr<Stencil> mStencil;
 
   // The cache info channel used when saving the bytecode to the necko cache.
@@ -337,9 +362,7 @@ class LoadedScriptDelegate {
 
   void SetBytecode() { GetLoadedScript()->SetBytecode(); }
 
-  void SetCachedStencil(already_AddRefed<Stencil> aStencil) {
-    GetLoadedScript()->SetCachedStencil(std::move(aStencil));
-  }
+  void ConvertToCachedStencil() { GetLoadedScript()->ConvertToCachedStencil(); }
 
   bool IsUTF16Text() const { return GetLoadedScript()->IsUTF16Text(); }
   bool IsUTF8Text() const { return GetLoadedScript()->IsUTF8Text(); }
@@ -390,7 +413,11 @@ class LoadedScriptDelegate {
 
   void DropBytecode() { GetLoadedScript()->DropBytecode(); }
 
+  bool HasStencil() const { return GetLoadedScript()->HasStencil(); }
   Stencil* GetStencil() const { return GetLoadedScript()->GetStencil(); }
+  void SetStencil(Stencil* aStencil) {
+    GetLoadedScript()->SetStencil(aStencil);
+  }
 };
 
 class ClassicScript final : public LoadedScript {
