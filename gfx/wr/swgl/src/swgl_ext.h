@@ -1847,74 +1847,77 @@ static bool commitRadialGradient(sampler2D sampler, int address, float size,
 //    It is updated by this function.
 //  - (in/out) initialOffset is the offset of the stop at initalOffset.
 //    It is updated by this function.
-static int32_t findGradientStopPair(float offset, float* stops, int32_t numStops,
-                                    int32_t& initialIndex, float& initialOffset,
-                                    float& prevOffset, float& nextOffset) {
-    int32_t index = initialIndex;
+static int32_t findGradientStopPair(float offset, float* stops,
+                                    int32_t numStops, int32_t& initialIndex,
+                                    float& initialOffset, float& prevOffset,
+                                    float& nextOffset) {
+  int32_t index = initialIndex;
 
-    // Walk forward or backward depending on where the target offset is relative
-    // to the initial offset.
-    if (offset >= initialOffset) {
-        // Walk the gradient stops forward
-        float next = stops[initialIndex];
-        float prev = stops[max(initialIndex - 1, 0)];
-        while (index < numStops) {
-            if (next > offset) {
-                break;
-            }
+  // Walk forward or backward depending on where the target offset is relative
+  // to the initial offset.
+  if (offset >= initialOffset) {
+    // Walk the gradient stops forward
+    float next = stops[initialIndex];
+    float prev = stops[max(initialIndex - 1, 0)];
+    while (index < numStops) {
+      if (next > offset) {
+        break;
+      }
 
-            index += 1;
-            prev = next;
-            next = stops[index];
-        }
-
-        // We wither:
-        //  - Walked 1 stop past the one we are looking for, so we need to
-        //    adjust the index by decrementing it.
-        //  - Walked past the last stop so the index is out of bounds. We
-        //    don't *have* to decrement it since we are going to clamp it
-        //    at the end of the function but doing it does not break the
-        //    logic either.
-        index -= 1;
-
-        prevOffset = prev;
-        nextOffset = next;
-    } else {
-        // Walk back.
-        float next = stops[initialIndex];
-        float prev = stops[min(initialIndex + 1, numStops - 1)];
-        while (index > 0) {
-            if (next < offset) {
-                break;
-            }
-
-            index -= 1;
-            prev = next;
-            next = stops[index];
-        }
-
-        // Since we are walking backwards, prev and next are swapped.
-        prevOffset = next;
-        nextOffset = prev;
+      index += 1;
+      prev = next;
+      next = stops[index];
     }
 
-    index = clamp(index, 0, numStops - 2);
+    // We wither:
+    //  - Walked 1 stop past the one we are looking for, so we need to
+    //    adjust the index by decrementing it.
+    //  - Walked past the last stop so the index is out of bounds. We
+    //    don't *have* to decrement it since we are going to clamp it
+    //    at the end of the function but doing it does not break the
+    //    logic either.
+    index -= 1;
 
-    initialIndex = index;
-    initialOffset = prevOffset;
+    prevOffset = prev;
+    nextOffset = next;
+  } else {
+    // Walk back.
+    float next = stops[initialIndex];
+    float prev = stops[min(initialIndex + 1, numStops - 1)];
+    while (index > 0) {
+      if (next < offset) {
+        break;
+      }
 
-    return index;
+      index -= 1;
+      prev = next;
+      next = stops[index];
+    }
+
+    // Since we are walking backwards, prev and next are swapped.
+    prevOffset = next;
+    nextOffset = prev;
+  }
+
+  index = clamp(index, 0, numStops - 2);
+
+  initialIndex = index;
+  initialOffset = prevOffset;
+
+  return index;
 }
 
 // Samples an entire span of a radial gradient.
 template <bool BLEND>
-static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress, int colorsAddress, float stopCount,
+static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
+                                          int colorsAddress, float stopCount,
                                           bool repeat, vec2 pos, float radius,
                                           uint32_t* buf, int span) {
   assert(sampler->format == TextureFormat::RGBA32F);
   // Stop offsets are expected to be stored just after the colors.
   assert(colorsAddress >= 0 && colorsAddress < offsetsAddress);
-  assert(offsetsAddress >= 0 && offsetsAddress + (stopCount + 3) / 4 < int(sampler->height * sampler->stride));
+  assert(offsetsAddress >= 0 && offsetsAddress + (stopCount + 3) / 4 <
+                                    int(sampler->height * sampler->stride));
   float* stopOffsets = (float*)&sampler->buf[offsetsAddress];
   Float* stopColors = (Float*)&sampler->buf[colorsAddress];
   // clang-format off
@@ -2027,9 +2030,9 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
     } else {
       // Otherwise, we're inside the valid part of the gradient table.
 
-      stopIndex = findGradientStopPair(offset.x, stopOffsets, stopCount,
-                                       initialIndex, initialOffset,
-                                       prevOffset, nextOffset);
+      stopIndex =
+          findGradientStopPair(offset.x, stopOffsets, stopCount, initialIndex,
+                               initialOffset, prevOffset, nextOffset);
       if (t >= middleT) {
         intercept = startRadius + nextOffset;
       } else {
@@ -2075,7 +2078,7 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
     // Subtract off the color difference of the beginning of the current span
     // from the beginning of the gradient.
     Float colorF =
-        minColorF - deltaColorF * (startRadius + prevOffset); // TODO
+        minColorF - deltaColorF * (startRadius + prevOffset);  // TODO
     // Finally, walk over the span accumulating the position dot product and
     // getting its sqrt as an offset into the color ramp. Since we're already
     // in BGRA format and scaled to 255, we just need to round to an integer
@@ -2084,11 +2087,10 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
       Float offsetG = fastSqrt<false>(dotPos);
       commit_blend_span<BLEND>(
           buf,
-          combine(
-              packRGBA8(round_pixel(colorF + deltaColorF * offsetG.x, 1),
-                        round_pixel(colorF + deltaColorF * offsetG.y, 1)),
-              packRGBA8(round_pixel(colorF + deltaColorF * offsetG.z, 1),
-                        round_pixel(colorF + deltaColorF * offsetG.w, 1))));
+          combine(packRGBA8(round_pixel(colorF + deltaColorF * offsetG.x, 1),
+                            round_pixel(colorF + deltaColorF * offsetG.y, 1)),
+                  packRGBA8(round_pixel(colorF + deltaColorF * offsetG.z, 1),
+                            round_pixel(colorF + deltaColorF * offsetG.w, 1))));
       dotPos += dotPosDelta;
       dotPosDelta += deltaDelta2;
     }
@@ -2109,13 +2111,11 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
       Float offsetG = fastSqrt<false>(dotPos);
       commit_blend_span<BLEND>(
           buf,
-          combine(
-              packRGBA8(round_pixel(colorF + deltaColorF * offsetG.x, 1),
-                        round_pixel(colorF + deltaColorF * offsetG.y, 1)),
-              packRGBA8(round_pixel(colorF + deltaColorF * offsetG.z, 1),
-                        round_pixel(colorF + deltaColorF * offsetG.w, 1))),
-          remainder
-      );
+          combine(packRGBA8(round_pixel(colorF + deltaColorF * offsetG.x, 1),
+                            round_pixel(colorF + deltaColorF * offsetG.y, 1)),
+                  packRGBA8(round_pixel(colorF + deltaColorF * offsetG.z, 1),
+                            round_pixel(colorF + deltaColorF * offsetG.w, 1))),
+          remainder);
 
       buf += remainder;
       t += remainder;
@@ -2155,30 +2155,24 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
 // swglcommitLinearGradient, but given a varying 2D position scaled to
 // gradient-space and a radius at which the distance from the origin maps to the
 // start of the gradient table.
-#define swgl_commitRadialGradientFromStopsRGBA8(sampler, offsetsAddress,       \
-                                                colorsAddress, size, repeat,   \
-                                                pos, radius)                   \
-  do {                                                                         \
-    bool drawn = false;                                                        \
-    if (blend_key) {                                                           \
-      drawn =                                                                  \
-          commitRadialGradientFromStops<true>(sampler, offsetsAddress,         \
-                                              colorsAddress, size, repeat,     \
-                                              pos, radius, swgl_OutRGBA8,      \
-                                              swgl_SpanLength);                \
-    } else {                                                                   \
-      drawn =                                                                  \
-          commitRadialGradientFromStops<false>(sampler, offsetsAddress,        \
-                                               colorsAddress, size, repeat,    \
-                                               pos, radius, swgl_OutRGBA8,     \
-                                               swgl_SpanLength);               \
-    }                                                                          \
-    if (drawn) {                                                               \
-      swgl_OutRGBA8 += swgl_SpanLength;                                        \
-      swgl_SpanLength = 0;                                                     \
-    }                                                                          \
+#define swgl_commitRadialGradientFromStopsRGBA8(                             \
+    sampler, offsetsAddress, colorsAddress, size, repeat, pos, radius)       \
+  do {                                                                       \
+    bool drawn = false;                                                      \
+    if (blend_key) {                                                         \
+      drawn = commitRadialGradientFromStops<true>(                           \
+          sampler, offsetsAddress, colorsAddress, size, repeat, pos, radius, \
+          swgl_OutRGBA8, swgl_SpanLength);                                   \
+    } else {                                                                 \
+      drawn = commitRadialGradientFromStops<false>(                          \
+          sampler, offsetsAddress, colorsAddress, size, repeat, pos, radius, \
+          swgl_OutRGBA8, swgl_SpanLength);                                   \
+    }                                                                        \
+    if (drawn) {                                                             \
+      swgl_OutRGBA8 += swgl_SpanLength;                                      \
+      swgl_SpanLength = 0;                                                   \
+    }                                                                        \
   } while (0)
-
 
 // Extension to set a clip mask image to be sampled during blending. The offset
 // specifies the positioning of the clip mask image relative to the viewport

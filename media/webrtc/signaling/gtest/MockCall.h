@@ -82,8 +82,8 @@ class MockAudioReceiveStream : public webrtc::AudioReceiveStreamInterface {
   void SetRtcpMode(webrtc::RtcpMode mode) override {}
 
   virtual void SetDepacketizerToDecoderFrameTransformer(
-      webrtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
-      override {
+      webrtc::scoped_refptr<webrtc::FrameTransformerInterface>
+          frame_transformer) override {
     MOZ_CRASH(
         "Unimplemented after webrtc.org e2561e17e2 removed the Reconfigure "
         "method.");
@@ -171,8 +171,8 @@ class MockVideoReceiveStream : public webrtc::VideoReceiveStreamInterface {
                              frame_decryptor) override {}
 
   void SetDepacketizerToDecoderFrameTransformer(
-      webrtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
-      override {}
+      webrtc::scoped_refptr<webrtc::FrameTransformerInterface>
+          frame_transformer) override {}
 
   RecordingState SetAndGetRecordingState(RecordingState state,
                                          bool generate_key_frame) override {
