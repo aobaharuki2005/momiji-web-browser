@@ -700,7 +700,7 @@ export const ASRouterTriggerListeners = new Map([
 
       observe(aSubject, aTopic) {
         switch (aTopic) {
-          case "SiteProtection:ContentBlockingEvent": {
+          case "SiteProtection:ContentBlockingEvent":
             const { browser, host, event } = aSubject.wrappedJSObject;
             if (this._events.filter(e => (e & event) === e).length) {
               this._triggerHandler(browser, {
@@ -715,7 +715,6 @@ export const ASRouterTriggerListeners = new Map([
               });
             }
             break;
-          }
           case "SiteProtection:ContentBlockingMilestone":
             if (this._events.includes(aSubject.wrappedJSObject.event)) {
               this._triggerHandler(
@@ -781,7 +780,7 @@ export const ASRouterTriggerListeners = new Map([
 
       observe(aSubject, aTopic) {
         switch (aTopic) {
-          case "captive-portal-login-success": {
+          case "captive-portal-login-success":
             const browser = Services.wm.getMostRecentBrowserWindow();
             // The check is here rather than in init because some
             // folks leave their browsers running for a long time,
@@ -794,7 +793,6 @@ export const ASRouterTriggerListeners = new Map([
               });
             }
             break;
-          }
         }
       },
 
@@ -829,7 +827,7 @@ export const ASRouterTriggerListeners = new Map([
 
       observe(aSubject, aTopic, aData) {
         switch (aTopic) {
-          case "nsPref:changed": {
+          case "nsPref:changed":
             const browser = Services.wm.getMostRecentBrowserWindow();
             if (browser && this._observedPrefs.includes(aData)) {
               this._triggerHandler(browser.gBrowser.selectedBrowser, {
@@ -840,7 +838,6 @@ export const ASRouterTriggerListeners = new Map([
               });
             }
             break;
-          }
         }
       },
 
@@ -1204,7 +1201,7 @@ export const ASRouterTriggerListeners = new Map([
             lastWakeTime: this._lastWakeTime,
           });
           switch (topic) {
-            case "idle": {
+            case "idle":
               const now = Date.now();
               // If the idle notification is within 1 second of the last wake
               // notification, ignore it. We do this to avoid counting time the
@@ -1216,7 +1213,6 @@ export const ASRouterTriggerListeners = new Map([
                 this._idleSince = now - subject.idleTime;
               }
               break;
-            }
             case "active":
               // Trigger when user returns from being idle.
               if (this._isVisible) {

@@ -1297,7 +1297,7 @@ var PrintSettingsViewProxy = {
         return paperId && this.availablePaperSizes[paperId];
       }
 
-      case "marginPresets": {
+      case "marginPresets":
         let paperWrapper = this.get(target, "currentPaper");
         return {
           none: PrintEventHandler.getMarginPresets("none", paperWrapper),
@@ -1305,7 +1305,6 @@ var PrintSettingsViewProxy = {
           default: PrintEventHandler.getMarginPresets("default", paperWrapper),
           custom: PrintEventHandler.getMarginPresets("custom", paperWrapper),
         };
-      }
 
       case "marginOptions": {
         let allMarginPresets = this.get(target, "marginPresets");
@@ -1324,7 +1323,7 @@ var PrintSettingsViewProxy = {
         return marginsEnabled;
       }
 
-      case "margins": {
+      case "margins":
         let marginSettings = {
           marginTop: target.marginTop,
           marginLeft: target.marginLeft,
@@ -1364,7 +1363,6 @@ var PrintSettingsViewProxy = {
 
         // Fall back to custom for other values
         return "custom";
-      }
 
       case "defaultMargins":
         return PrintEventHandler.getMarginPresets(
@@ -1441,7 +1439,7 @@ var PrintSettingsViewProxy = {
 
   set(target, name, value) {
     switch (name) {
-      case "margins": {
+      case "margins":
         if (!["default", "minimum", "none", "custom"].includes(value)) {
           logger.warn("Unexpected margin preset name: ", value);
           value = "default";
@@ -1457,7 +1455,6 @@ var PrintSettingsViewProxy = {
         target.honorPageRuleMargins = value == "default";
         target.ignoreUnwriteableMargins = value == "none";
         break;
-      }
 
       case "paperId": {
         let paperId = value;
@@ -1535,7 +1532,7 @@ var PrintSettingsViewProxy = {
       case "customMarginTop":
       case "customMarginBottom":
       case "customMarginLeft":
-      case "customMarginRight": {
+      case "customMarginRight":
         let customMarginName = "margin" + name.substring(12);
         this.set(
           target,
@@ -1545,7 +1542,6 @@ var PrintSettingsViewProxy = {
           })
         );
         break;
-      }
 
       case "sourceVersion":
         this._sourceVersion = value;

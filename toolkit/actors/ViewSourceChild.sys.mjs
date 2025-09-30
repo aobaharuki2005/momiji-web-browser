@@ -23,13 +23,12 @@ export class ViewSourceChild extends JSWindowActorChild {
           data.baseURI
         );
         break;
-      case "ViewSource:GetSelection": {
+      case "ViewSource:GetSelection":
         let selectionDetails;
         try {
           selectionDetails = this.getSelection(this.document.ownerGlobal);
         } catch (e) {}
         return selectionDetails;
-      }
     }
 
     return undefined;

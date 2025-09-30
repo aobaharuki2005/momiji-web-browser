@@ -87,7 +87,7 @@
                 }
                 this._disabledItemClicked = false;
                 break;
-              case "mousemove": {
+              case "mousemove":
                 if (Date.now() - this.mLastMoveTime <= 30) {
                   return;
                 }
@@ -110,7 +110,6 @@
 
                 this.mLastMoveTime = Date.now();
                 break;
-              }
             }
           },
         };
