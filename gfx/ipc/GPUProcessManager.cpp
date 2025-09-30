@@ -392,9 +392,11 @@ nsresult GPUProcessManager::EnsureGPUReady(
 
       if (!mProcess->WaitForLaunch()) {
         // If this fails, we should have fired OnProcessLaunchComplete and
-        // removed the process.
-        MOZ_ASSERT(!mProcess && !mGPUChild);
-        return NS_ERROR_FAILURE;
+        // removed the process. The algorithm either allows us another attempt
+        // or it will have disabled the GPU process.
+        MOZ_ASSERT(!mProcess);
+        MOZ_ASSERT(!mGPUChild);
+        continue;
       }
     }
 
@@ -574,8 +576,25 @@ GPUProcessManager::CreateUiCompositorController(nsBaseWidget* aWidget,
 void GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost) {
   MOZ_ASSERT(mProcess && mProcess == aHost);
 
+  // By definition, the process failing to launch is an unstable attempt. While
+  // we did not get to the point where we are using the features, we should just
+  // follow the same fallback procedure.
   if (!mProcess->IsConnected()) {
-    DisableGPUProcess("Failed to connect GPU process");
+    ++mUnstableProcessAttempts;
+    mozilla::glean::gpu_process::unstable_launch_attempts.Set(
+        mUnstableProcessAttempts);
+    if (mUnstableProcessAttempts >
+        uint32_t(StaticPrefs::layers_gpu_process_max_restarts())) {
+      char disableMessage[64];
+      SprintfLiteral(disableMessage,
+                     "Failed to connect GPU process after %d attempts",
+                     mTotalProcessAttempts);
+      if (!MaybeDisableGPUProcess(disableMessage, /* aAllowRestart */ true)) {
+        // Fallback wants the GPU process. Reset our counter.
+        MOZ_DIAGNOSTIC_ASSERT(gfxConfig::IsEnabled(Feature::GPU_PROCESS));
+        mUnstableProcessAttempts = 0;
+      }
+    }
     return;
   }
 
