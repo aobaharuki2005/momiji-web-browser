@@ -319,6 +319,14 @@ class InterceptedHttpChannel final
   void DoNotifyListenerCleanup() override;
 
   void DoAsyncAbort(nsresult aStatus) override;
+
+  NS_IMETHOD GetDictionary(DictionaryCacheEntry** aDictionary) override {
+    *aDictionary = nullptr;
+    return NS_OK;
+  }
+  NS_IMETHOD SetDictionary(DictionaryCacheEntry* aDictionary) override {
+    return NS_OK;
+  }
 };
 
 }  // namespace mozilla::net
