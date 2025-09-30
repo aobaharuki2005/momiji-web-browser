@@ -253,7 +253,10 @@ class DictionaryOriginReader;
 // singleton class
 class DictionaryCache final {
  private:
-  DictionaryCache() { Init(); }
+  DictionaryCache() {
+    nsresult rv = Init();
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  }
   ~DictionaryCache() {}
 
   friend class DictionaryOriginReader;
@@ -274,7 +277,13 @@ class DictionaryCache final {
   already_AddRefed<DictionaryCacheEntry> AddEntry(
       nsIURI* aURI, bool aNewEntry, DictionaryCacheEntry* aDictEntry);
 
+  // Remove a dictionary if it exists for the key given
+  void RemoveDictionaryFor(const nsACString& aKey);
+
   nsresult RemoveEntry(nsIURI* aURI, const nsACString& aKey);
+
+  // Clears all ports at host
+  void Clear();
 
   // return an entry
   void GetDictionaryFor(
