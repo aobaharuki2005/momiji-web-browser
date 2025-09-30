@@ -577,6 +577,8 @@ tags = "vertical-tabs"
 
 ["browser_tab_splitview.js"]
 
+["browser_tab_splitview_keyboard_focus.js"]
+
 ["browser_tab_tooltips.js"]
 tags = "vertical-tabs"
 skip-if = [

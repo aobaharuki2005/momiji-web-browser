@@ -1051,9 +1051,15 @@
   margin-inline: var(--space-small);
   width: 100%;
   padding: var(--space-xsmall);
+  border-radius: var(--tab-border-radius);
 
   tab-split-view-wrapper[hasactivetab] > & {
     background-color: var(--tab-hover-background-color);
+
+    @media (forced-colors) {
+      border: 1px solid SelectedItem;
+      background: ButtonFace;
+    }
   }
 
   > .tabbrowser-tab {
@@ -1090,12 +1096,19 @@
   }
 
   tab-split-view-wrapper:not([hasactivetab]) & {
+    outline: var(--tab-outline);
+    outline-offset: var(--tab-outline-offset);
+
     &:hover {
       background-color: var(--tab-hover-background-color);
       outline-color: var(--tab-hover-outline-color);
     }
 
     .tabbrowser-tab {
+      .tab-background {
+        outline-color: transparent;
+      }
+
       &:hover .tab-background {
         background-color: transparent;
         outline-color: transparent;
