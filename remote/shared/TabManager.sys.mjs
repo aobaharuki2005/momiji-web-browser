@@ -161,9 +161,9 @@ class TabManagerClass {
    * Create a new tab.
    *
    * @param {object} options
-   * @param {boolean=} options.inBackground
-   *     Set to `false` if the new tab should be focused (selected). Defaults to
-   *     `true`. `true` value is not properly supported on Android, additional
+   * @param {boolean=} options.focus
+   *     Set to true if the new tab should be focused (selected). Defaults to
+   *     false. `false` value is not properly supported on Android, additional
    *     focus of previously selected tab is required after initial navigation.
    * @param {Tab=} options.referenceTab
    *     The reference tab after which the new tab will be added. If no
@@ -178,7 +178,7 @@ class TabManagerClass {
    */
   async addTab(options = {}) {
     let {
-      inBackground = true,
+      focus = false,
       referenceTab = null,
       userContextId = null,
       window = Services.wm.getMostRecentBrowserWindow(),
@@ -197,18 +197,17 @@ class TabManagerClass {
 
     const tabBrowser = this.getTabBrowser(window);
 
-    // Bug 1991149: When opening a new tab in the background,
-    // focus the URL bar to avoid focus issues on Linux
-    // when the Firefox window is fully in the background.
-    const focusUrlBar = inBackground;
-
-    return await tabBrowser.addTab("about:blank", {
-      focusUrlBar,
-      inBackground,
+    const tab = await tabBrowser.addTab("about:blank", {
       tabIndex,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       userContextId: lazy.UserContextManager.getInternalIdById(userContextId),
     });
+
+    if (focus) {
+      await this.selectTab(tab);
+    }
+
+    return tab;
   }
 
   /**

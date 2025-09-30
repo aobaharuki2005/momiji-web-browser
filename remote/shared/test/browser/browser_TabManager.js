@@ -36,24 +36,20 @@ add_task(async function test_addTab_focus() {
 
   let newTab1, newTab2, newTab3;
   try {
-    newTab1 = await TabManager.addTab({ inBackground: false });
+    newTab1 = await TabManager.addTab({ focus: true });
 
     ok(gBrowser.tabs.includes(newTab1), "A new tab was created");
     is(gBrowser.tabs.length, tabsCount + 1);
-    is(
-      gBrowser.selectedTab,
-      newTab1,
-      "Tab added with inBackground: false is selected"
-    );
+    is(gBrowser.selectedTab, newTab1, "Tab added with focus: true is selected");
 
-    newTab2 = await TabManager.addTab({ inBackground: true });
+    newTab2 = await TabManager.addTab({ focus: false });
 
     ok(gBrowser.tabs.includes(newTab2), "A new tab was created");
     is(gBrowser.tabs.length, tabsCount + 2);
     is(
       gBrowser.selectedTab,
       newTab1,
-      "Tab added with inBackground: true is not selected"
+      "Tab added with focus: false is not selected"
     );
 
     newTab3 = await TabManager.addTab();
@@ -63,7 +59,7 @@ add_task(async function test_addTab_focus() {
     is(
       gBrowser.selectedTab,
       newTab1,
-      "Tab added with no inBackground parameter is not selected (defaults to true)"
+      "Tab added with no focus parameter is not selected (defaults to false)"
     );
   } finally {
     gBrowser.removeTab(newTab1);
