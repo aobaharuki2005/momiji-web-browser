@@ -141,6 +141,9 @@ struct MemoryUsage {
   // The amount of memory lost due to rounding allocation sizes up to the
   // nearest page.  AKA internal fragmentation.
   size_t mFragmentationBytes = 0;
+
+  // The amount of memory allocated from PHC.
+  size_t mAllocatedBytes = 0;
 };
 
 MOZ_JEMALLOC_API void PHCMemoryUsage(MemoryUsage& aMemoryUsage);

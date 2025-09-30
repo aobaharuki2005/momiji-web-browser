@@ -112,7 +112,6 @@
 #include "mozjemalloc.h"
 #include "FdPrintf.h"
 #include "Mutex.h"
-#include "mozilla/Array.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
@@ -156,6 +155,13 @@ class InfallibleAllocPolicy {
     void* p = MozJemalloc::malloc(sizeof(T));
     AbortOnFailure(p);
     return new (p) T;
+  }
+
+  template <class T>
+  static T* new_(size_t n) {
+    void* p = MozJemalloc::malloc(sizeof(T) * n);
+    AbortOnFailure(p);
+    return new (p) T[n];
   }
 };
 
@@ -248,6 +254,49 @@ void StackTrace::Fill() {
 #define PHC_LOGGING 0
 
 static void Log(const char* fmt, ...);
+
+//---------------------------------------------------------------------------
+// Array implementation
+//---------------------------------------------------------------------------
+
+// Unlike mfbt/Array.h this array has a dynamic size, but unlike a vector its
+// size is set explicitly rather than grown as needed.
+template <typename T>
+class PHCArray {
+ private:
+  size_t mCapacity = 0;
+  T* mArray = nullptr;
+
+ public:
+  PHCArray() {}
+
+  PHCArray(size_t aCapacity) : mCapacity(aCapacity) {
+    mArray = InfallibleAllocPolicy::new_<T>(aCapacity);
+  }
+  ~PHCArray() {
+    for (size_t i = 0; i < mCapacity; i++) {
+      mArray[i].~T();
+    }
+    MozJemalloc::free(mArray);
+  }
+
+  const T& operator[](size_t aIndex) const {
+    MOZ_ASSERT(aIndex < mCapacity);
+    return mArray[aIndex];
+  }
+  T& operator[](size_t aIndex) {
+    MOZ_ASSERT(aIndex < mCapacity);
+    return mArray[aIndex];
+  }
+
+  T* begin() { return mArray; }
+  const T* begin() const { return mArray; }
+  const T* end() const { return &mArray[mCapacity]; }
+
+  size_t SizeOfExcludingThis() {
+    return MozJemalloc::malloc_usable_size(mArray);
+  }
+};
 
 //---------------------------------------------------------------------------
 // Global state
@@ -655,28 +704,20 @@ class PHC {
     return page.UsableSize();
   }
 
-  // The total fragmentation in PHC
-  size_t FragmentationBytes() MOZ_EXCLUDES(mMutex) {
+  void GetMemoryUsage(phc::MemoryUsage& aInfo) MOZ_EXCLUDES(mMutex) {
     MutexAutoLock lock(mMutex);
 
-    size_t sum = 0;
-    for (const auto& page : mAllocPages) {
-      sum += page.FragmentationBytes();
-    }
-    return sum;
-  }
-
-  // Used by the memory reporter to count usable space of in-use allocations.
-  size_t AllocatedBytes() MOZ_EXCLUDES(mMutex) {
-    MutexAutoLock lock(mMutex);
-
-    size_t allocated = 0;
+    aInfo = phc::MemoryUsage();
     for (const auto& page : mAllocPages) {
       if (page.IsPageInUse()) {
-        allocated += page.UsableSize();
+        aInfo.mAllocatedBytes += page.UsableSize();
+        aInfo.mFragmentationBytes += page.FragmentationBytes();
       }
     }
-    return allocated;
+
+    // We know `this` is heap allocated.
+    aInfo.mMetadataBytes = MozJemalloc::malloc_usable_size(this) +
+                           mAllocPages.SizeOfExcludingThis();
   }
 
   void SetPageInUse(uintptr_t aIndex, const Maybe<arena_id_t>& aArenaId,
@@ -1253,7 +1294,8 @@ class PHC {
   static PHC_THREAD_LOCAL(Delay) tlsLastDelay;
 
   // Using mfbt/Array.h makes MOZ_GUARDED_BY more reliable than a C array.
-  Array<AllocPageInfo, kNumAllocPages> mAllocPages MOZ_GUARDED_BY(mMutex);
+  PHCArray<AllocPageInfo> mAllocPages MOZ_GUARDED_BY(mMutex) =
+      PHCArray<AllocPageInfo>(kNumAllocPages);
 
  public:
   Delay GetAvgAllocDelay() MOZ_REQUIRES(mMutex) { return mAvgAllocDelay; }
@@ -1894,10 +1936,6 @@ size_t PHC::PtrUsableSize(usable_ptr_t aPtr) MOZ_EXCLUDES(mMutex) {
   return PageUsableSize(index);
 }
 
-static size_t metadata_size() {
-  return MozJemalloc::malloc_usable_size(PHC::sPHC);
-}
-
 inline void MozJemallocPHC::jemalloc_stats_internal(
     jemalloc_stats_t* aStats, jemalloc_bin_stats_t* aBinStats) {
   MozJemalloc::jemalloc_stats_internal(aStats, aBinStats);
@@ -1915,7 +1953,9 @@ inline void MozJemallocPHC::jemalloc_stats_internal(
 
   aStats->allocated -= kAllPagesJemallocSize;
 
-  aStats->allocated += PHC::sPHC->AllocatedBytes();
+  phc::MemoryUsage mem_info;
+  PHC::sPHC->GetMemoryUsage(mem_info);
+  aStats->allocated += mem_info.mAllocatedBytes;
 
   // guards is the gap between `allocated` and `mapped`. In some ways this
   // almost fits into aStats->wasted since it feels like wasted memory. However
@@ -1930,9 +1970,8 @@ inline void MozJemallocPHC::jemalloc_stats_internal(
   // mozjemalloc as `allocated`. Move them into `bookkeeping`.
   // They're also reported under explicit/heap-overhead/phc/fragmentation in
   // about:memory.
-  size_t bookkeeping = metadata_size();
-  aStats->allocated -= bookkeeping;
-  aStats->bookkeeping += bookkeeping;
+  aStats->allocated -= mem_info.mMetadataBytes;
+  aStats->bookkeeping += mem_info.mMetadataBytes;
 }
 
 inline void MozJemallocPHC::jemalloc_stats_lite(jemalloc_stats_lite_t* aStats) {
@@ -2075,16 +2114,9 @@ bool IsPHCEnabledOnCurrentThread() {
 }
 
 void PHCMemoryUsage(MemoryUsage& aMemoryUsage) {
-  if (!maybe_init()) {
-    aMemoryUsage = MemoryUsage();
-    return;
-  }
-
-  aMemoryUsage.mMetadataBytes = metadata_size();
+  aMemoryUsage = MemoryUsage();
   if (PHC::sPHC) {
-    aMemoryUsage.mFragmentationBytes = PHC::sPHC->FragmentationBytes();
-  } else {
-    aMemoryUsage.mFragmentationBytes = 0;
+    PHC::sPHC->GetMemoryUsage(aMemoryUsage);
   }
 }
 
