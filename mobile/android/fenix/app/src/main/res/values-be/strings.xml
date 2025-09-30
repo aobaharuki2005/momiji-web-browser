@@ -2659,6 +2659,8 @@
   <string name="download_language_file_dialog_positive_button_text_all_languages">Сцягнуць і перакласці</string>
   <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to cancel the action and not perform a download of the language file. -->
   <string name="download_language_file_dialog_negative_button_text">Скасаваць</string>
+  <!-- Title text for the protection panel permissions section. -->
+  <string name="protection_panel_permissions_title">Дазволы</string>
   <!--
     Debug drawer
 
