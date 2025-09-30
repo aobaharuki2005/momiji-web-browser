@@ -15,7 +15,6 @@
 #include "js/Equality.h"
 #include "js/StructuredClone.h"
 #include "js/Value.h"
-#include "mozilla/Casting.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MacroForEach.h"
