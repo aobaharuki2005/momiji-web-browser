@@ -587,7 +587,7 @@ class BrowsingContextModule extends RootBiDiModule {
    */
   async create(options = {}) {
     const {
-      background = false,
+      background: inBackground = false,
       referenceContext: referenceContextId = null,
       type: typeHint,
       userContext: userContextId = null,
@@ -601,8 +601,8 @@ class BrowsingContextModule extends RootBiDiModule {
     }
 
     lazy.assert.boolean(
-      background,
-      lazy.pprint`Expected "background" to be a boolean, got ${background}`
+      inBackground,
+      lazy.pprint`Expected "background" to be a boolean, got ${inBackground}`
     );
 
     let referenceContext = null;
@@ -688,7 +688,7 @@ class BrowsingContextModule extends RootBiDiModule {
     switch (type) {
       case "window": {
         const newWindow = await lazy.windowManager.openBrowserWindow({
-          focus: !background,
+          focus: !inBackground,
           userContextId: userContext,
         });
         browser = lazy.TabManager.getTabBrowser(newWindow).selectedBrowser;
@@ -705,7 +705,7 @@ class BrowsingContextModule extends RootBiDiModule {
           window = lazy.TabManager.getWindowForTab(referenceTab);
         }
 
-        if (!background && !lazy.AppInfo.isAndroid) {
+        if (!inBackground && !lazy.AppInfo.isAndroid) {
           // When opening a new foreground tab we need to wait until the
           // "document.visibilityState" of the currently selected tab in this
           // window is marked as "hidden".
@@ -721,7 +721,7 @@ class BrowsingContextModule extends RootBiDiModule {
         }
 
         const tab = await lazy.TabManager.addTab({
-          focus: !background,
+          inBackground,
           referenceTab,
           userContextId: userContext,
         });
@@ -759,7 +759,7 @@ class BrowsingContextModule extends RootBiDiModule {
     // and we have to wait until is fully loaded.
     // TODO: Bug 1845559. This workaround can be removed,
     // when the API to create a tab for Android supports the background option.
-    if (lazy.AppInfo.isAndroid && background) {
+    if (lazy.AppInfo.isAndroid && inBackground) {
       await lazy.windowManager.focusWindow(previousWindow);
       await lazy.TabManager.selectTab(previousTab);
     }

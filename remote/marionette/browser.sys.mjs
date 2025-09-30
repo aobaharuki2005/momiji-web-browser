@@ -229,31 +229,16 @@ browser.Context = class {
    * Open a new tab in the currently selected chrome window.
    */
   async openTab(focus = false) {
-    let tab = null;
-
-    // Bug 1795841 - For Firefox the TabManager cannot be used yet. As such
-    // handle opening a tab differently for Android.
-    if (lazy.AppInfo.isAndroid) {
-      tab = await lazy.TabManager.addTab({ focus, window: this.window });
-    } else if (lazy.AppInfo.isFirefox) {
-      const opened = new lazy.EventPromise(this.window, "TabOpen");
-      this.window.BrowserCommands.openTab({ url: "about:blank" });
-      await opened;
-
-      tab = this.tabBrowser.selectedTab;
-
-      // The new tab is always selected by default. If focus is not wanted,
-      // the previously tab needs to be selected again.
-      if (!focus) {
-        await lazy.TabManager.selectTab(this.tab);
-      }
-    } else {
-      throw new lazy.error.UnsupportedOperationError(
-        `openTab() not supported for ${lazy.AppInfo.name}`
-      );
+    if (lazy.AppInfo.isAndroid || lazy.AppInfo.isFirefox) {
+      return lazy.TabManager.addTab({
+        inBackground: !focus,
+        window: this.window,
+      });
     }
 
-    return tab;
+    throw new lazy.error.UnsupportedOperationError(
+      `openTab() not supported for ${lazy.AppInfo.name}`
+    );
   }
 
   /**
