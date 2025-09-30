@@ -2275,7 +2275,8 @@ std::pair<bool, arena_chunk_t*> arena_t::PurgeInfo::UpdatePagesAndCounts() {
   mArena.mNumFresh -= num_fresh;
   mArena.mStats.committed -=
       mDirtyLen - num_madvised - num_decommitted - num_fresh;
-  mPurgeStats.pages += mDirtyNPages;
+  mPurgeStats.pages_dirty += mDirtyNPages;
+  mPurgeStats.pages_total += mDirtyLen;
   mPurgeStats.system_calls++;
 
   // Note that this code can't update the dirty run hint.  There may be other
