@@ -85,7 +85,7 @@ add_task(async function test_autofill_enters_search_mode_it_en_locales() {
   ]);
 
   for (const [keywords, token] of keywordsToToken) {
-    let searchMode = UrlbarUtils.searchModeForToken(token);
+    let searchMode = gURLBar.searchModeForToken(token);
     let italianKeyword = `${keywords[0]} `;
     let englishKeyword = `${keywords[1]} `;
 

@@ -738,33 +738,6 @@ export var UrlbarUtils = {
   },
 
   /**
-   * Returns a search mode object if a token should enter search mode when
-   * typed. This does not handle engine aliases.
-   *
-   * @param {Values<typeof lazy.UrlbarTokenizer.RESTRICT>} token
-   *   A restriction token to convert to search mode.
-   * @returns {object}
-   *   A search mode object. Null if search mode should not be entered. See
-   *   setSearchMode documentation for details.
-   */
-  searchModeForToken(token) {
-    if (token == lazy.UrlbarTokenizer.RESTRICT.SEARCH) {
-      return {
-        engineName: lazy.UrlbarSearchUtils.getDefaultEngine(this.isPrivate)
-          ?.name,
-      };
-    }
-
-    let mode = this.LOCAL_SEARCH_MODES.find(m => m.restrict == token);
-    if (!mode) {
-      return null;
-    }
-
-    // Return a copy so callers don't modify the object in LOCAL_SEARCH_MODES.
-    return { ...mode };
-  },
-
-  /**
    * Tries to initiate a speculative connection to a given url.
    *
    * Note: This is not infallible, if a speculative connection cannot be

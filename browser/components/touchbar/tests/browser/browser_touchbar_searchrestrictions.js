@@ -43,7 +43,7 @@ async function searchAndCheckState({ input, token }) {
   if (Object.values(UrlbarTokenizer.RESTRICT).includes(input[0])) {
     input = input.slice(1).trimStart();
   }
-  let searchMode = UrlbarUtils.searchModeForToken(token);
+  let searchMode = gURLBar.searchModeForToken(token);
   let expectedValue = searchMode ? input : `${token} ${input}`;
   TouchBarHelper.insertRestrictionInUrlbar(token);
 

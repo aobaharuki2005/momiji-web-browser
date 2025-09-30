@@ -71,7 +71,7 @@ add_task(async function test_autofill_enters_search_mode() {
   ]);
 
   for (const [keyword, token] of keywordToToken) {
-    let searchMode = UrlbarUtils.searchModeForToken(token);
+    let searchMode = gURLBar.searchModeForToken(token);
     let searchString = `${keyword} `;
 
     info("Test full keyword");
