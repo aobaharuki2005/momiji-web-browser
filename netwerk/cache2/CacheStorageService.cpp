@@ -1628,7 +1628,9 @@ nsresult CacheStorageService::AddStorageEntry(
     }
     if (entryExists && (aFlags & nsICacheStorage::OPEN_COMPLETE_ONLY)) {
       bool ready = false;
-      entry->GetReady(&ready);
+      // We're looking for complete files, even if they're being revalidated
+      // (for dictionaries)
+      entry->GetReadyOrRevalidating(&ready);
       if (!ready) {
         return NS_ERROR_CACHE_KEY_NOT_FOUND;
       }
