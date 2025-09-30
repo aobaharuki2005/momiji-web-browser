@@ -505,7 +505,7 @@ nsHttpChannel::~nsHttpChannel() {
     gHttpHandler->RemoveHttpChannel(mChannelId);
   }
 
-  if (mDict) {
+  if (mDict && mUsingDictionary) {
     mDict->UseCompleted();
   }
 }
@@ -546,6 +546,29 @@ nsresult nsHttpChannel::Init(nsIURI* uri, uint32_t caps, nsProxyInfo* proxyInfo,
   nsresult rv = HttpBaseChannel::Init(uri, caps, proxyInfo, proxyResolveFlags,
                                       proxyURI, channelId, aLoadInfo);
   if (NS_FAILED(rv)) return rv;
+  rv = gHttpHandler->AddAcceptAndDictionaryHeaders(uri, &mRequestHead,
+                                                   IsHTTPS(), mDict);
+  if (NS_FAILED(rv)) return rv;
+  if (mDict) {
+    // mDict is set if we added Available-Dictionary
+    mDict->InUse();
+    mUsingDictionary = true;
+    mShouldSuspendForDictionary = mDict->Prefetch(
+        GetLoadContextInfo(this), [self = RefPtr<nsHttpChannel>(this)]() {
+          // this is called when the prefetch is complete to
+          // un-Suspend the channel
+          MOZ_ASSERT(self->mDict->DictionaryReady());
+          if (self->mSuspendedForDictionary) {
+            LOG(
+                ("nsHttpChannel::Init [this=%p] Resuming channel suspended for "
+                 "Dictionary",
+                 self.get()));
+            self->mSuspendedForDictionary = false;
+            self->Resume();
+          }
+          return NS_OK;
+        });
+  }
 
   LOG1(("nsHttpChannel::Init [this=%p]\n", this));
 
@@ -3560,6 +3583,18 @@ nsresult nsHttpChannel::ContinueProcessNormal(nsresult rv) {
     }
   }
 
+  // If we don't have the entire dictionary yet, Suspend() the channel
+  // until the dictionary is in-memory.
+  if (mDict && mUsingDictionary && mShouldSuspendForDictionary &&
+      !mDict->DictionaryReady()) {
+    LOG(
+        ("nsHttpChannel::ContinueProcessNormal [this=%p] Suspending the "
+         "transaction, waiting for dictionary",
+         this));
+    Suspend();
+    mSuspendedForDictionary = true;
+  }
+
   // We need to do this before CallonStartRequest, since this can modify
   // the Content-Encoding to remove dcb/dcz (and perhaps others), and
   // CallOnStartRequest() sends this to the content process.
@@ -5974,7 +6009,6 @@ bool nsHttpChannel::ParseDictionary(nsICacheEntry* aEntry,
          matchIdVal.get(), typeVal.get()));
     dicts->AddEntry(mURI, key, matchVal, matchIdVal, Some(hash),
                     getter_AddRefs(mDict));
-    mDict->InUse();
     return true;
   }
   return false;
@@ -6050,6 +6084,7 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
   nsAutoCString dictionary;
   Unused << mResponseHead->GetHeader(nsHttp::Use_As_Dictionary, dictionary);
   if (!dictionary.IsEmpty()) {
+    // We need to record the hash as we save it
     mCacheEntry->SetDictionary(mDict);
   }
   LOG(("Trading cache input stream for output stream [channel=%p]", this));
@@ -7763,13 +7798,12 @@ nsHttpChannel::GetDictionary(DictionaryCacheEntry** aDictionary) {
 
 NS_IMETHODIMP
 nsHttpChannel::SetDictionary(DictionaryCacheEntry* aDictionary) {
-  if (mDict) {
+  if (mDict && mUsingDictionary) {
     mDict->UseCompleted();
+    mUsingDictionary = false;
   }
   mDict = aDictionary;
-  if (aDictionary) {
-    aDictionary->InUse();
-  }
+  // We're only setting InUse() if we are using it for Available-Dictionary
   return NS_OK;
 }
 

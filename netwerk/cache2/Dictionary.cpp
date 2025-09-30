@@ -8,7 +8,10 @@
 #include "Dictionary.h"
 
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsIAsyncInputStream.h"
+#include "nsICacheStorageService.h"
 #include "nsICacheStorage.h"
+#include "nsICacheEntry.h"
 #include "nsICachingChannel.h"
 #include "nsICancelable.h"
 #include "nsIChannel.h"
@@ -23,6 +26,7 @@
 #include "nsIObserverService.h"
 #include "nsITimer.h"
 #include "nsIURI.h"
+#include "nsInputStreamPump.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStreamUtils.h"
@@ -75,6 +79,9 @@ DictionaryCacheEntry::DictionaryCacheEntry(const nsACString& aURI,
   }
 }
 
+NS_IMPL_ISUPPORTS(DictionaryCacheEntry, nsICacheEntryOpenCallback,
+                  nsIStreamListener)
+
 // returns true if the pattern for the dictionary matches the path given
 bool DictionaryCacheEntry::Match(const nsACString& aFilePath,
                                  uint32_t& aLongest) {
@@ -113,21 +120,83 @@ bool DictionaryCacheEntry::Match(const nsACString& aFilePath,
   return false;
 }
 
-void DictionaryCacheEntry::Prefetch() {
-  // Start reading the cache entry into memory
-  // XXX
+void DictionaryCacheEntry::InUse() {
+  mUsers++;
+  DICTIONARY_LOG(("Dictionary users for %s -- %u Users", mURI.get(), mUsers));
+}
+
+void DictionaryCacheEntry::UseCompleted() {
+  MOZ_ASSERT(mUsers > 0);
+  mUsers--;
+  // Purge mDictionaryData
+  if (mUsers == 0) {  // XXX perhaps we should hold it for a bit longer?
+    DICTIONARY_LOG(("Clearing Dictionary data for %s", mURI.get()));
+    mDictionaryData.clear();
+    mDictionaryDataComplete = false;
+  } else {
+    DICTIONARY_LOG(("Not clearing Dictionary data for %s -- %u Users",
+                    mURI.get(), mUsers));
+  }
+}
+
+// returns aShouldSuspend=true if we should suspend to wait for the prefetch
+bool DictionaryCacheEntry::Prefetch(nsILoadContextInfo* aLoadContextInfo,
+                                    const std::function<nsresult()>& aFunc) {
+  DICTIONARY_LOG(("Prefetch for %s", mURI.get()));
+  // Start reading the cache entry into memory and call completion
+  // function when done
+  if (mWaitingPrefetch.IsEmpty()) {
+    if (mDictionaryData.empty()) {
+      // We haven't requested it yet from the Cache and don't have it in memory
+      // already
+      nsCOMPtr<nsICacheStorageService> cacheStorageService(
+          components::CacheStorage::Service());
+      if (!cacheStorageService) {
+        return false;
+      }
+      nsCOMPtr<nsICacheStorage> cacheStorage;
+      nsresult rv = cacheStorageService->DiskCacheStorage(
+          aLoadContextInfo, getter_AddRefs(cacheStorage));
+      if (NS_FAILED(rv)) {
+        return false;
+      }
+      // Add before we schedule!
+      mWaitingPrefetch.AppendElement(aFunc);
+      cacheStorage->AsyncOpenURIString(mURI, ""_ns,
+                                       nsICacheStorage::OPEN_READONLY, this);
+      DICTIONARY_LOG(
+          ("Started Prefetch for %s", PromiseFlatCString(mURI).get()));
+      return true;
+    }
+    DICTIONARY_LOG(("Prefetch for %s - already have data in memory (%u users)",
+                    mURI.get(), mUsers));
+    return false;
+  }
+  DICTIONARY_LOG(("Prefetch for %s - already waiting", mURI.get()));
+  return true;
 }
 
 void DictionaryCacheEntry::AccumulateHash(const char* aBuf, int32_t aCount) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mHash.IsEmpty()) {
+    if (!mDictionaryData.empty()) {
+      // We have data from the cache.... but if we change the hash there will
+      // be problems
+      // XXX dragons here
+      return;
+    }
+    // accumulating a new hash when we have an existing?
+    // XXX probably kill the hash when we get an overwrite; tricky, need to
+    // handle loading the old one into ram to decompress the new one.  Also,
+    // what if the old one is being used for multiple requests, one of which
+    // is an overwrite?   This is an edge case not discussed in the spec - we
+    // could separate out a structure for in-flight requests where the data
+    // would be used from, so the Entry could be overwritten as needed
+    return;  // XXX
+  }
   if (!mCrypto) {
     // If mCrypto is null, and mDictionaryData is set, we've already got the
     // data for this dictionary.
-    if (!mDictionaryData.empty()) {
-      DICTIONARY_LOG(("%p: Trying to rewrite to Dictionary uri %s, pattern %s",
-                      this, PromiseFlatCString(mURI).get(),
-                      PromiseFlatCString(mPattern).get()));
-      return;
-    }
     nsresult rv;
     mCrypto = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -156,6 +225,98 @@ void DictionaryCacheEntry::FinishFile() {
     DICTIONARY_LOG(("Set dictionary hash for %p to %s", this, mHash.get()));
     mCrypto = nullptr;
   }
+  mDictionaryDataComplete = true;
+  DICTIONARY_LOG(("Unsuspending %zu channels, Dictionary len %zu",
+                  mWaitingPrefetch.Length(), mDictionaryData.length()));
+  // if we suspended, un-suspend the channel(s)
+  for (auto& lambda : mWaitingPrefetch) {
+    (lambda)();
+  }
+  mWaitingPrefetch.Clear();
+}
+
+//-----------------------------------------------------------------------------
+// nsIStreamListener implementation
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+DictionaryCacheEntry::OnStartRequest(nsIRequest* request) {
+  DICTIONARY_LOG(("DictionaryCacheEntry %s OnStartRequest", mURI.get()));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DictionaryCacheEntry::OnDataAvailable(nsIRequest* request,
+                                      nsIInputStream* aInputStream,
+                                      uint64_t aOffset, uint32_t aCount) {
+  uint32_t n;
+  return aInputStream->ReadSegments(&DictionaryCacheEntry::ReadCacheData, this,
+                                    aCount, &n);
+}
+
+/* static */
+nsresult DictionaryCacheEntry::ReadCacheData(
+    nsIInputStream* aInStream, void* aClosure, const char* aFromSegment,
+    uint32_t aToOffset, uint32_t aCount, uint32_t* aWriteCount) {
+  DictionaryCacheEntry* self = static_cast<DictionaryCacheEntry*>(aClosure);
+
+  self->AccumulateFile(aFromSegment, aCount);
+  *aWriteCount = aCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DictionaryCacheEntry::OnStopRequest(nsIRequest* request, nsresult result) {
+  DICTIONARY_LOG(("DictionaryCacheEntry %s OnStopRequest", mURI.get()));
+  if (NS_SUCCEEDED(result)) {
+    FinishFile();
+  } else {
+    // XXX
+  }
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsICacheEntryOpenCallback implementation
+//-----------------------------------------------------------------------------
+// Note: we don't care if the entry is stale since we're not loading it; we're
+// just saying with have this specific set of bits with this hash available
+// to use as a dictionary.
+
+NS_IMETHODIMP
+DictionaryCacheEntry::OnCacheEntryCheck(nsICacheEntry* aEntry,
+                                        uint32_t* result) {
+  DICTIONARY_LOG(("OnCacheEntryCheck %s", mURI.get()));
+  *result = nsICacheEntryOpenCallback::ENTRY_WANTED;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DictionaryCacheEntry::OnCacheEntryAvailable(nsICacheEntry* entry, bool isNew,
+                                            nsresult status) {
+  DICTIONARY_LOG(("OnCacheEntryAvailable %s, result %u",
+                  PromiseFlatCString(mURI).get(), (uint32_t)status));
+  if (entry) {
+    nsCOMPtr<nsIInputStream> stream;
+    entry->OpenInputStream(0, getter_AddRefs(stream));
+    if (!stream) {
+      return NS_OK;
+    }
+
+    RefPtr<nsInputStreamPump> pump;
+    nsresult rv = nsInputStreamPump::Create(getter_AddRefs(pump), stream);
+    if (NS_FAILED(rv)) {
+      return NS_OK;  // just ignore
+    }
+
+    rv = pump->AsyncRead(this);
+    if (NS_FAILED(rv)) {
+      return NS_OK;  // just ignore
+    }
+    DICTIONARY_LOG(("Waiting for data"));
+  }
+
+  return NS_OK;
 }
 
 // static
@@ -186,14 +347,19 @@ nsresult DictionaryCache::AddEntry(nsIURI* aURI, const nsACString& aKey,
     auto& list = entry.OrInsertWith([&] { return new DictCacheList; });
 
     for (const auto& dict : *list) {
+      // We replace on the URI being the same (not id, which is just an
+      // arbitrary extra id sent back to the server)
       if (dict->GetURI().Equals(aKey)) {
-        // We're overwriting an existing entry.  It might be the same, of
-        // course
-        DICTIONARY_LOG(("Reusing dictionary for %s: %p",
+        // We're overwriting an existing entry, probably with a new hash.  It
+        // might be the same, of course.
+        // If there are outstanding requests using this entry, we need
+        // to keep it alive for the users until they're done, but not use
+        // it for any new requests.  Remove the existing entry from the list
+        // and replace with a new one; existing requests will have a ref to it.
+        DICTIONARY_LOG(("Replacing dictionary for %s: %p",
                         PromiseFlatCString(dict->GetURI()).get(), dict));
-        dict->Clear();
-        *aDictEntry = do_AddRef(dict).take();
-        return NS_OK;
+        dict->remove();
+        break;
       }
     }
     // New entry
@@ -273,7 +439,7 @@ already_AddRefed<DictionaryCacheEntry> DictionaryCache::GetDictionaryFor(
     aURI->GetPathQueryRef(path);
 
     for (const auto& dict : *(origin->get())) {
-      if (dict->Valid() && dict->Match(path, longest)) {
+      if (dict->Match(path, longest)) {
         result = dict;
       }
     }
