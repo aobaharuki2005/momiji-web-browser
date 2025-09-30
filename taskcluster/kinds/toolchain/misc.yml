@@ -47,15 +47,16 @@ linux64-cctools-port:
     run:
         script: build-cctools-port.sh
         resources:
-            - taskcluster/scripts/misc/cctools.patch
+            - taskcluster/scripts/misc/libtapi.patch
         toolchain-artifact: public/build/cctools.tar.zst
     fetches:
         toolchain:
             - linux64-clang-toolchain
-            - linux64-toolchain-sysroot
+            - linux64-toolchain-sysroot-gcc10
         fetch:
             - cctools-port
             - libtapi
+            - libdispatch
             - ldid
 
 linux64-hfsplus:
