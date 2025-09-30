@@ -3,10 +3,6 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { AddonSettings } = ChromeUtils.importESModule(
-  "resource://gre/modules/addons/AddonSettings.sys.mjs"
-);
-
 const { TelemetryController } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryController.sys.mjs"
 );
@@ -34,8 +30,22 @@ add_setup(async () => {
     let scopes = AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION;
     Services.prefs.setIntPref("extensions.enabledScopes", scopes);
   }
+
   Services.fog.testResetFOG();
   await AddonTestUtils.promiseStartupManager();
+
+  // In Firefox Desktop DevEdition builds the default theme is expected to
+  // be the firefox-compact-dark@mozilla.org, but the dark theme would be
+  // installed by logic that isn't going to be executed in the minimal
+  // xpcshell test environment and so here we force enable the default theme
+  // (which is installed by disabled) to let this test to run across all builds
+  // included the DevEdition beta builds.
+  if (AppConstants.MOZ_DEV_EDITION) {
+    const defaultTheme = await AddonManager.getAddonByID(
+      "default-theme@mozilla.org"
+    );
+    await defaultTheme.enable();
+  }
 });
 
 async function installTestExtensions() {
@@ -112,9 +122,7 @@ add_task(async function test_amo_stats_glean_metrics() {
       "Expect no theme metadata to be found on Android builds for Glean addons.theme"
     );
   } else {
-    const theme = await AddonManager.getAddonByID(
-      AddonSettings.DEFAULT_THEME_ID
-    );
+    const theme = await AddonManager.getAddonByID("default-theme@mozilla.org");
     const gleanActiveTheme = Glean.addons.theme.testGetValue();
     Assert.deepEqual(
       { id: gleanActiveTheme.id, version: gleanActiveTheme.version },
@@ -134,9 +142,7 @@ add_task(
     const { extensions, uninstallTestExtensions } =
       await installTestExtensions();
 
-    const theme = await AddonManager.getAddonByID(
-      AddonSettings.DEFAULT_THEME_ID
-    );
+    const theme = await AddonManager.getAddonByID("default-theme@mozilla.org");
 
     info("Verify legacy telemetry");
     // Note: This returns null on Android because toolkit.telemetry.unified=false
