@@ -1482,6 +1482,11 @@ void DrawTargetSkia::MaskSurface(const Pattern& aSource, SourceSurface* aMask,
                                  Point aOffset, const DrawOptions& aOptions) {
   Maybe<MutexAutoLock> lock;
   sk_sp<SkImage> maskImage = GetSkImageForSurface(aMask, &lock);
+  if (!maskImage) {
+    gfxDebug() << "Failed get Skia mask image for MaskSurface";
+    return;
+  }
+
   SkMatrix maskOffset = SkMatrix::Translate(
       PointToSkPoint(aOffset + Point(aMask->GetRect().TopLeft())));
   sk_sp<SkShader> maskShader = maskImage->makeShader(
