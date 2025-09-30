@@ -860,7 +860,6 @@ MFCDMParent::GetAllKeySystemsCapabilities() {
         if (keySystem.second == SecureLevel::Hardware) {
           flags += CapabilitesFlag::HarewareDecryption;
         }
-        flags += CapabilitesFlag::NeedHDCPCheck;
         if (RequireClearLead(keySystem.first)) {
           flags += CapabilitesFlag::NeedClearLeadCheck;
         }
@@ -919,14 +918,6 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
       MFCDM_PARENT_SLOG(
           "Return cached capabilities for %s (hardwareDecryption=%d)",
           NS_ConvertUTF16toUTF8(aKeySystem).get(), isHardwareDecryption);
-      if (capabilities.isHDCP22Compatible().isNothing() &&
-          aFlags.contains(CapabilitesFlag::NeedHDCPCheck)) {
-        const bool rv = IsHDCPVersionSupported(factory, aKeySystem,
-                                               dom::HDCPVersion::_2_2) == NS_OK;
-        MFCDM_PARENT_SLOG(
-            "Check HDCP 2.2 compatible (%d) for the cached capabilites", rv);
-        capabilities.isHDCP22Compatible() = Some(rv);
-      }
       aCapabilitiesOut = capabilities;
       return;
     }
@@ -1110,16 +1101,6 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
       c->encryptionSchemes().AppendElement(CryptoScheme::Cenc);
       MFCDM_PARENT_SLOG("%s: +audio:%s", __func__, codec.get());
     }
-  }
-
-  // Only perform HDCP if necessary, "The hdcp query (item 4) has a
-  // computationally expensive first invocation cost". See
-  // https://learn.microsoft.com/en-us/windows/win32/api/mfmediaengine/nf-mfmediaengine-imfextendeddrmtypesupport-istypesupportedex
-  if (aFlags.contains(CapabilitesFlag::NeedHDCPCheck) &&
-      IsHDCPVersionSupported(factory, aKeySystem, dom::HDCPVersion::_2_2) ==
-          NS_OK) {
-    MFCDM_PARENT_SLOG("Capabilites is compatible with HDCP 2.2");
-    aCapabilitiesOut.isHDCP22Compatible() = Some(true);
   }
 
   // TODO: don't hardcode

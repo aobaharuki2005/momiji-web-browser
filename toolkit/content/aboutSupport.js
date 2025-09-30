@@ -1136,9 +1136,8 @@ var snapshotFormatters = {
         $.new("td", cdmInfo.keySystemName),
         $.new("td", getVideoRobustness(rvArray)),
         $.new("td", getAudioRobustness(rvArray)),
-        $.new("td", getCapabilities(rvArray), null, { colspan: "4" }),
+        $.new("td", getCapabilities(rvArray), null, { colspan: "5" }),
         $.new("td", cdmInfo.clearlead ? "Yes" : "No"),
-        $.new("td", cdmInfo.isHDCP22Compatible ? "Yes" : "No"),
       ]);
     }
 
