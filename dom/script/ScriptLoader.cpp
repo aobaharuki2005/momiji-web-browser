@@ -1153,11 +1153,21 @@ void ScriptLoader::TryUseCache(ScriptLoadRequest* aRequest,
                                ScriptLoadRequestType aRequestType) {
   if (aRequestType == ScriptLoadRequestType::Inline) {
     aRequest->NoCacheEntryFound();
+    LOG(
+        ("ScriptLoader (%p): Created LoadedScript (%p) for "
+         "ScriptLoadRequest(%p) %s.",
+         this, aRequest->getLoadedScript(), aRequest,
+         aRequest->mURI->GetSpecOrDefault().get()));
     return;
   }
 
   if (!mCache) {
     aRequest->NoCacheEntryFound();
+    LOG(
+        ("ScriptLoader (%p): Created LoadedScript (%p) for "
+         "ScriptLoadRequest(%p) %s.",
+         this, aRequest->getLoadedScript(), aRequest,
+         aRequest->mURI->GetSpecOrDefault().get()));
     return;
   }
 
@@ -1165,6 +1175,11 @@ void ScriptLoader::TryUseCache(ScriptLoadRequest* aRequest,
   auto cacheResult = mCache->Lookup(*this, key, /* aSyncLoad = */ true);
   if (cacheResult.mState != CachedSubResourceState::Complete) {
     aRequest->NoCacheEntryFound();
+    LOG(
+        ("ScriptLoader (%p): Created LoadedScript (%p) for "
+         "ScriptLoadRequest(%p) %s.",
+         this, aRequest->getLoadedScript(), aRequest,
+         aRequest->mURI->GetSpecOrDefault().get()));
     return;
   }
 
@@ -1173,6 +1188,11 @@ void ScriptLoader::TryUseCache(ScriptLoadRequest* aRequest,
     //       LookupPreloadRequest call.
     if (NS_FAILED(CheckContentPolicy(aElement, aNonce, aRequest))) {
       aRequest->NoCacheEntryFound();
+      LOG(
+          ("ScriptLoader (%p): Created LoadedScript (%p) for "
+           "ScriptLoadRequest(%p) %s.",
+           this, aRequest->getLoadedScript(), aRequest,
+           aRequest->mURI->GetSpecOrDefault().get()));
       return;
     }
   }
@@ -1180,7 +1200,10 @@ void ScriptLoader::TryUseCache(ScriptLoadRequest* aRequest,
   aRequest->mNetworkMetadata = cacheResult.mNetworkMetadata;
 
   aRequest->CacheEntryFound(cacheResult.mCompleteValue);
-  LOG(("ScriptLoader (%p): Found in-memory cache for %s.", this,
+  LOG(
+      ("ScriptLoader (%p): Found in-memory cache LoadedScript (%p) for "
+       "ScriptLoadRequest(%p) %s.",
+       this, aRequest->getLoadedScript(), aRequest,
        aRequest->mURI->GetSpecOrDefault().get()));
 
   if (cacheResult.mCompleteValue->mFetchCount < UINT8_MAX) {
@@ -3724,7 +3747,8 @@ void ScriptLoader::EncodeBytecodeAndSave(
 
   JS::TranscodeBuffer SRIAndBytecode;
   if (!SRIAndBytecode.appendAll(aSRI)) {
-    LOG(("ScriptLoadRequest (%p): Cannot allocate buffer", aRequest));
+    LOG(("LoadedScript (%p): Cannot allocate buffer",
+         aRequest->getLoadedScript()));
     return;
   }
 
@@ -3735,7 +3759,8 @@ void ScriptLoader::EncodeBytecodeAndSave(
     // We don't care the error and just give up encoding.
     JS_ClearPendingException(aCx);
 
-    LOG(("ScriptLoadRequest (%p): Cannot serialize bytecode", aRequest));
+    LOG(("LoadedScript (%p): Cannot serialize bytecode",
+         aRequest->getLoadedScript()));
     return;
   }
 
@@ -3747,9 +3772,9 @@ void ScriptLoader::EncodeBytecodeAndSave(
 
   if (compressedBytecode.length() >= UINT32_MAX) {
     LOG(
-        ("ScriptLoadRequest (%p): Bytecode cache is too large to be decoded "
+        ("LoadedScript (%p): Bytecode cache is too large to be decoded "
          "correctly.",
-         aRequest));
+         aRequest->getLoadedScript()));
     return;
   }
 
@@ -3762,25 +3787,27 @@ void ScriptLoader::EncodeBytecodeAndSave(
       getter_AddRefs(output));
   if (NS_FAILED(rv)) {
     LOG(
-        ("ScriptLoadRequest (%p): Cannot open bytecode cache (rv = %X, output "
+        ("LoadedScript (%p): Cannot open bytecode cache (rv = %X, output "
          "= %p)",
-         aRequest, unsigned(rv), output.get()));
+         aRequest->getLoadedScript(), unsigned(rv), output.get()));
     return;
   }
   MOZ_ASSERT(output);
 
   auto closeOutStream = mozilla::MakeScopeExit([&]() {
     rv = output->CloseWithStatus(rv);
-    LOG(("ScriptLoadRequest (%p): Closing (rv = %X)", aRequest, unsigned(rv)));
+    LOG(("LoadedScript (%p): Closing (rv = %X)", aRequest->getLoadedScript(),
+         unsigned(rv)));
   });
 
   uint32_t n;
   rv = output->Write(reinterpret_cast<char*>(compressedBytecode.begin()),
                      compressedBytecode.length(), &n);
   LOG(
-      ("ScriptLoadRequest (%p): Write bytecode cache (rv = %X, length = %u, "
+      ("LoadedScript (%p): Write bytecode cache (rv = %X, length = %u, "
        "written = %u)",
-       aRequest, unsigned(rv), unsigned(compressedBytecode.length()), n));
+       aRequest->getLoadedScript(), unsigned(rv),
+       unsigned(compressedBytecode.length()), n));
   if (NS_FAILED(rv)) {
     return;
   }
