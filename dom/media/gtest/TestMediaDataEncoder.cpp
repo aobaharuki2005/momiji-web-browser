@@ -391,7 +391,7 @@ static void H264EncodesTest(Usage aUsage,
     RefPtr<MediaDataEncoder> e = CreateH264Encoder(
         aUsage, EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
         aFrameSource.GetSize(), ScalabilityMode::None, aSpecific);
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
     MediaDataEncoder::EncodedData output =
         GET_OR_RETURN_ON_ERROR(Encode(e, 1UL, aFrameSource));
     EXPECT_EQ(output.Length(), 1UL);
@@ -403,7 +403,7 @@ static void H264EncodesTest(Usage aUsage,
     e = CreateH264Encoder(
         aUsage, EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
         aFrameSource.GetSize(), ScalabilityMode::None, aSpecific);
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
     output = GET_OR_RETURN_ON_ERROR(Encode(e, NUM_FRAMES, aFrameSource));
     if (aUsage == Usage::Realtime && kImageSize4K <= aFrameSource.GetSize()) {
       // Realtime encoding may drop frames for large frame sizes.
@@ -484,7 +484,7 @@ static void H264EncodeBatchTest(
     RefPtr<MediaDataEncoder> e = CreateH264Encoder(
         aUsage, EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
         aFrameSource.GetSize(), ScalabilityMode::None, aSpecific);
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
 
     constexpr size_t batchSize = 6;
     MediaDataEncoder::EncodedData output = GET_OR_RETURN_ON_ERROR(
@@ -567,7 +567,7 @@ static void H264EncodeAfterDrainTest(
         aUsage, EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
         aFrameSource.GetSize(), ScalabilityMode::None, aSpecific);
 
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
 
     MediaDataEncoder::EncodedData output =
         GET_OR_RETURN_ON_ERROR(Encode(e, NUM_FRAMES, aFrameSource));
@@ -612,7 +612,7 @@ static void H264InterleavedEncodeAndDrainTest(
         aUsage, EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
         aFrameSource.GetSize(), ScalabilityMode::None, aSpecific);
 
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
 
     MediaDataEncoder::EncodedData output;
     for (size_t i = 0; i < NUM_FRAMES; i++) {
@@ -654,7 +654,7 @@ TEST_F(MediaDataEncoderTest, H264InterleavedEncodeAndDrainAVCCRealtime) {
 TEST_F(MediaDataEncoderTest, H264Duration) {
   RUN_IF_SUPPORTED(CodecType::H264, [this]() {
     RefPtr<MediaDataEncoder> e = CreateH264Encoder();
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
     MediaDataEncoder::EncodedData output =
         GET_OR_RETURN_ON_ERROR(Encode(e, NUM_FRAMES, mData));
     EXPECT_EQ(output.Length(), NUM_FRAMES);
@@ -695,7 +695,7 @@ TEST_F(MediaDataEncoderTest, H264AVCC) {
         Usage::Record,
         EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
         kImageSize, ScalabilityMode::None, AsVariant(kH264SpecificAVCC));
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
     MediaDataEncoder::EncodedData output =
         GET_OR_RETURN_ON_ERROR(Encode(e, NUM_FRAMES, mData));
     EXPECT_EQ(output.Length(), NUM_FRAMES);
@@ -788,7 +788,7 @@ TEST_F(MediaDataEncoderTest, VP8Encodes) {
   RUN_IF_SUPPORTED(CodecType::VP8, [this]() {
     // Encode one VPX frame.
     RefPtr<MediaDataEncoder> e = CreateVP8Encoder();
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
     MediaDataEncoder::EncodedData output =
         GET_OR_RETURN_ON_ERROR(Encode(e, 1UL, mData));
     EXPECT_EQ(output.Length(), 1UL);
@@ -803,7 +803,7 @@ TEST_F(MediaDataEncoderTest, VP8Encodes) {
 
     // Encode multiple VPX frames.
     e = CreateVP8Encoder();
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
     output = GET_OR_RETURN_ON_ERROR(Encode(e, NUM_FRAMES, mData));
     EXPECT_EQ(output.Length(), NUM_FRAMES);
     for (auto frame : output) {
@@ -822,7 +822,7 @@ TEST_F(MediaDataEncoderTest, VP8Encodes) {
 TEST_F(MediaDataEncoderTest, VP8Duration) {
   RUN_IF_SUPPORTED(CodecType::VP8, [this]() {
     RefPtr<MediaDataEncoder> e = CreateVP8Encoder();
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
     MediaDataEncoder::EncodedData output =
         GET_OR_RETURN_ON_ERROR(Encode(e, NUM_FRAMES, mData));
     EXPECT_EQ(output.Length(), NUM_FRAMES);
@@ -837,7 +837,7 @@ TEST_F(MediaDataEncoderTest, VP8Duration) {
 TEST_F(MediaDataEncoderTest, VP8EncodeAfterDrain) {
   RUN_IF_SUPPORTED(CodecType::VP8, [this]() {
     RefPtr<MediaDataEncoder> e = CreateVP8Encoder();
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
 
     MediaDataEncoder::EncodedData output =
         GET_OR_RETURN_ON_ERROR(Encode(e, NUM_FRAMES, mData));
@@ -882,7 +882,7 @@ TEST_F(MediaDataEncoderTest, VP8EncodeWithScalabilityModeL1T2) {
         Usage::Realtime,
         EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
         kImageSize, ScalabilityMode::L1T2, AsVariant(specific));
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
 
     const nsTArray<uint8_t> pattern({0, 1});
     MediaDataEncoder::EncodedData output =
@@ -915,7 +915,7 @@ TEST_F(MediaDataEncoderTest, VP8EncodeWithScalabilityModeL1T3) {
         Usage::Realtime,
         EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
         kImageSize, ScalabilityMode::L1T3, AsVariant(specific));
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
 
     const nsTArray<uint8_t> pattern({0, 2, 1, 2});
     MediaDataEncoder::EncodedData output =
@@ -964,7 +964,7 @@ TEST_F(MediaDataEncoderTest, VP9Inits) {
 TEST_F(MediaDataEncoderTest, VP9Encodes) {
   RUN_IF_SUPPORTED(CodecType::VP9, [this]() {
     RefPtr<MediaDataEncoder> e = CreateVP9Encoder();
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
     MediaDataEncoder::EncodedData output =
         GET_OR_RETURN_ON_ERROR(Encode(e, 1UL, mData));
     EXPECT_EQ(output.Length(), 1UL);
@@ -978,7 +978,7 @@ TEST_F(MediaDataEncoderTest, VP9Encodes) {
     WaitForShutdown(e);
 
     e = CreateVP9Encoder();
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
     output = GET_OR_RETURN_ON_ERROR(Encode(e, NUM_FRAMES, mData));
     EXPECT_EQ(output.Length(), NUM_FRAMES);
     for (auto frame : output) {
@@ -997,7 +997,7 @@ TEST_F(MediaDataEncoderTest, VP9Encodes) {
 TEST_F(MediaDataEncoderTest, VP9Duration) {
   RUN_IF_SUPPORTED(CodecType::VP9, [this]() {
     RefPtr<MediaDataEncoder> e = CreateVP9Encoder();
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
     MediaDataEncoder::EncodedData output =
         GET_OR_RETURN_ON_ERROR(Encode(e, NUM_FRAMES, mData));
     EXPECT_EQ(output.Length(), NUM_FRAMES);
@@ -1012,7 +1012,7 @@ TEST_F(MediaDataEncoderTest, VP9Duration) {
 TEST_F(MediaDataEncoderTest, VP9EncodeAfterDrain) {
   RUN_IF_SUPPORTED(CodecType::VP9, [this]() {
     RefPtr<MediaDataEncoder> e = CreateVP9Encoder();
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
 
     MediaDataEncoder::EncodedData output =
         GET_OR_RETURN_ON_ERROR(Encode(e, NUM_FRAMES, mData));
@@ -1061,7 +1061,7 @@ TEST_F(MediaDataEncoderTest, VP9EncodeWithScalabilityModeL1T2) {
         Usage::Realtime,
         EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
         kImageSize, ScalabilityMode::L1T2, AsVariant(specific));
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
 
     const nsTArray<uint8_t> pattern({0, 1});
     MediaDataEncoder::EncodedData output =
@@ -1098,7 +1098,7 @@ TEST_F(MediaDataEncoderTest, VP9EncodeWithScalabilityModeL1T3) {
         Usage::Realtime,
         EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
         kImageSize, ScalabilityMode::L1T3, AsVariant(specific));
-    EnsureInit(e);
+    EXPECT_TRUE(EnsureInit(e));
 
     const nsTArray<uint8_t> pattern({0, 2, 1, 2});
     MediaDataEncoder::EncodedData output =
