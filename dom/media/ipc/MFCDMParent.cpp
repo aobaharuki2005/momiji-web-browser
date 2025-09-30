@@ -1475,8 +1475,8 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetStatusForPolicy(
   RefPtr<HDCPPromise::Private> p = new HDCPPromise::Private(__func__);
   Unused << backgroundTaskQueue->Dispatch(NS_NewRunnableFunction(
       __func__, [self = RefPtr<MFCDMParent>(this), this, aMinHdcpVersion, p] {
-        auto rv = IsHDCPVersionSupported(mKeySystem, aMinHdcpVersion,
-                                         mManagerThread);
+        auto rv =
+            IsHDCPVersionSupported(mKeySystem, aMinHdcpVersion, mManagerThread);
         if (IsBeingProfiledOrLogEnabled()) {
           nsPrintfCString msg("HDCP version=%u, support=%s",
                               static_cast<uint8_t>(aMinHdcpVersion),
