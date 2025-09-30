@@ -340,60 +340,6 @@ static Delay CheckProbability(int64_t aProb) {
   return RoundUpPow2(std::clamp(aProb, int64_t(2), int64_t(0x80000000)));
 }
 
-// Maps a pointer to a PHC-specific structure:
-// - Nothing
-// - A guard page (it is unspecified which one)
-// - An allocation page (with an index < kNumAllocPages)
-//
-// The standard way of handling a PtrKind is to check IsNothing(), and if that
-// fails, to check IsGuardPage(), and if that fails, to call AllocPage().
-class PtrKind {
- private:
-  enum class Tag : uint8_t {
-    Nothing,
-    GuardPage,
-    AllocPage,
-  };
-
-  Tag mTag;
-  uintptr_t mIndex;  // Only used if mTag == Tag::AllocPage.
-
- public:
-  // Detect what a pointer points to. This constructor must be fast because it
-  // is called for every call to free(), realloc(), malloc_usable_size(), and
-  // jemalloc_ptr_info().
-  PtrKind(const void* aPtr, const uint8_t* aPagesStart,
-          const uint8_t* aPagesLimit) {
-    if (!(aPagesStart <= aPtr && aPtr < aPagesLimit)) {
-      mTag = Tag::Nothing;
-    } else {
-      uintptr_t offset = static_cast<const uint8_t*>(aPtr) - aPagesStart;
-      uintptr_t allPageIndex = offset / kPageSize;
-      MOZ_ASSERT(allPageIndex < kNumAllPages);
-      if (allPageIndex & 1) {
-        // Odd-indexed pages are allocation pages.
-        uintptr_t allocPageIndex = allPageIndex / 2;
-        MOZ_ASSERT(allocPageIndex < kNumAllocPages);
-        mTag = Tag::AllocPage;
-        mIndex = allocPageIndex;
-      } else {
-        // Even-numbered pages are guard pages.
-        mTag = Tag::GuardPage;
-      }
-    }
-  }
-
-  bool IsNothing() const { return mTag == Tag::Nothing; }
-  bool IsGuardPage() const { return mTag == Tag::GuardPage; }
-
-  // This should only be called after IsNothing() and IsGuardPage() have been
-  // checked and failed.
-  uintptr_t AllocPageIndex() const {
-    MOZ_RELEASE_ASSERT(mTag == Tag::AllocPage);
-    return mIndex;
-  }
-};
-
 // On MacOS, the first __thread/thread_local access calls malloc, which leads
 // to an infinite loop. So we use pthread-based TLS instead, which somehow
 // doesn't have this problem.
@@ -628,12 +574,6 @@ class PHCRegion {
 
   constexpr PHCRegion() {}
 
-  class PtrKind PtrKind(const void* aPtr) {
-    MOZ_ASSERT(mPagesStart != nullptr && mPagesLimit != nullptr);
-    class PtrKind pk(aPtr, mPagesStart, mPagesLimit);
-    return pk;
-  }
-
   bool IsInFirstGuardPage(const void* aPtr) {
     MOZ_ASSERT(mPagesStart != nullptr && mPagesLimit != nullptr);
     return mPagesStart <= aPtr && aPtr < mPagesStart + kPageSize;
@@ -648,7 +588,16 @@ class PHCRegion {
     // pages.
     return mPagesStart + (2 * aIndex + 1) * kPageSize;
   }
+
+  MOZ_ALWAYS_INLINE bool WithinBounds(const void* aPtr) const {
+    MOZ_ASSERT(mPagesStart && mPagesLimit);
+    return aPtr >= mPagesStart && aPtr < mPagesLimit;
+  }
+
+  const uint8_t* PagesStart() const { return mPagesStart; }
 };
+
+class PtrKind;
 
 // Shared, mutable global state.  Many fields are protected by sMutex; functions
 // that access those feilds should take a PHCLock as proof that mMutex is held.
@@ -683,6 +632,8 @@ class PHC {
   }
 
   uint64_t Random64() MOZ_REQUIRES(mMutex) { return mRNG.next(); }
+
+  PtrKind GetPtrKind(const void* aPtr);
 
   // Get the address of the allocation page referred to via an index. Used
   // when checking pointers against page boundaries.
@@ -1326,6 +1277,64 @@ class PHC {
   static PHC* sPHC;
 };
 
+// Maps a pointer to a PHC-specific structure:
+// - A guard page (it is unspecified which one)
+// - An allocation page (with an index < kNumAllocPages)
+//
+// PtrKind should only be used on pointers that are within PHC's virtual address
+// range.  Callers should usually check sRegion.WithinBounds() first, if
+// successful then PHC::GetPtrKind() can be used safely.
+//
+// The standard way of handling a PtrKind is to check sRegion.WithinBounds()
+// first, and if that succeeds, to call GetPtrKind and check IsGuardPage(), and
+// if that fails, then this is a PHC pointer.
+class PtrKind {
+ private:
+  enum class Tag : uint8_t {
+    GuardPage,
+    AllocPage,
+  };
+
+  Tag mTag;
+  uintptr_t mIndex;  // Only used if mTag == Tag::AllocPage.
+
+ protected:
+  // Detect what a pointer points to. This constructor must be fast because it
+  // is called for every call to free(), realloc(), malloc_usable_size(), and
+  // jemalloc_ptr_info().
+  PtrKind(const void* aPtr, const uint8_t* aPagesStart) {
+    uintptr_t offset = static_cast<const uint8_t*>(aPtr) - aPagesStart;
+    uintptr_t allPageIndex = offset / kPageSize;
+
+    MOZ_ASSERT(allPageIndex < kNumAllPages);
+    if (allPageIndex & 1) {
+      // Odd-indexed pages are allocation pages.
+      uintptr_t allocPageIndex = allPageIndex / 2;
+      MOZ_ASSERT(allocPageIndex < kNumAllocPages);
+      mTag = Tag::AllocPage;
+      mIndex = allocPageIndex;
+    } else {
+      // Even-numbered pages are guard pages.
+      mTag = Tag::GuardPage;
+    }
+  }
+  friend PtrKind PHC::GetPtrKind(const void* aPtr);
+
+ public:
+  bool IsGuardPage() const { return mTag == Tag::GuardPage; }
+
+  // This should only be called after IsGuardPage() has returned false.
+  uintptr_t AllocPageIndex() const {
+    MOZ_RELEASE_ASSERT(mTag == Tag::AllocPage);
+    return mIndex;
+  }
+};
+
+PtrKind PHC::GetPtrKind(const void* aPtr) {
+  MOZ_ASSERT(sRegion.WithinBounds(aPtr));
+  return PtrKind(aPtr, sRegion.PagesStart());
+}
+
 // These globals are read together and hardly ever written.  They should be on
 // the same cache line.  They should be in a different cache line to data that
 // is manipulated often (sMutex and mNow are members of sPHC for that reason) so
@@ -1629,8 +1638,7 @@ MOZ_ALWAYS_INLINE static bool FastIsPHCPtr(const void* aPtr) {
     return false;
   }
 
-  PtrKind pk = PHC::sRegion.PtrKind(aPtr);
-  return !pk.IsNothing();
+  return PHC::sRegion.WithinBounds(aPtr);
 }
 
 // This function handles both realloc and moz_arena_realloc.
@@ -1669,7 +1677,7 @@ MOZ_ALWAYS_INLINE static Maybe<void*> MaybePageRealloc(
     return Some(PageMalloc(aArenaId, aNewSize));
   }
 
-  if (!FastIsPHCPtr(aOldPtr)) {
+  if (MOZ_UNLIKELY(!FastIsPHCPtr(aOldPtr))) {
     // A normal-to-normal transition.
     return Nothing();
   }
@@ -1679,8 +1687,7 @@ MOZ_ALWAYS_INLINE static Maybe<void*> MaybePageRealloc(
 
 Maybe<void*> PHC::PageRealloc(const Maybe<arena_id_t>& aArenaId, void* aOldPtr,
                               size_t aNewSize) MOZ_EXCLUDES(mMutex) {
-  PtrKind pk = sRegion.PtrKind(aOldPtr);
-  MOZ_ASSERT(!pk.IsNothing());
+  PtrKind pk = GetPtrKind(aOldPtr);
 
   if (pk.IsGuardPage()) {
     CrashOnGuardPage(aOldPtr);
@@ -1775,8 +1782,8 @@ inline void* MozJemallocPHC::realloc(void* aOldPtr, size_t aNewSize) {
 
 void PHC::PageFree(const Maybe<arena_id_t>& aArenaId, void* aPtr)
     MOZ_EXCLUDES(mMutex) {
-  PtrKind pk = sRegion.PtrKind(aPtr);
-  MOZ_ASSERT(!pk.IsNothing());
+  PtrKind pk = GetPtrKind(aPtr);
+
   if (pk.IsGuardPage()) {
     PHC::CrashOnGuardPage(aPtr);
   }
@@ -1856,7 +1863,7 @@ inline void* MozJemallocPHC::memalign(size_t aAlignment, size_t aReqSize) {
 }
 
 inline size_t MozJemallocPHC::malloc_usable_size(usable_ptr_t aPtr) {
-  if (!FastIsPHCPtr(aPtr)) {
+  if (MOZ_LIKELY(!FastIsPHCPtr(aPtr))) {
     // Not a page allocation. Measure it normally.
     return MozJemalloc::malloc_usable_size(aPtr);
   }
@@ -1865,7 +1872,8 @@ inline size_t MozJemallocPHC::malloc_usable_size(usable_ptr_t aPtr) {
 }
 
 size_t PHC::PtrUsableSize(usable_ptr_t aPtr) MOZ_EXCLUDES(mMutex) {
-  PtrKind pk = sRegion.PtrKind(aPtr);
+  PtrKind pk = GetPtrKind(aPtr);
+
   if (pk.IsGuardPage()) {
     CrashOnGuardPage(const_cast<void*>(aPtr));
   }
@@ -1933,7 +1941,7 @@ inline void MozJemallocPHC::jemalloc_stats_lite(jemalloc_stats_lite_t* aStats) {
 
 inline void MozJemallocPHC::jemalloc_ptr_info(const void* aPtr,
                                               jemalloc_ptr_info_t* aInfo) {
-  if (!FastIsPHCPtr(aPtr)) {
+  if (MOZ_LIKELY(!FastIsPHCPtr(aPtr))) {
     // Not a page allocation.
     MozJemalloc::jemalloc_ptr_info(aPtr, aInfo);
     return;
@@ -1947,7 +1955,8 @@ void PHC::PagePtrInfo(const void* aPtr, jemalloc_ptr_info_t* aInfo)
   // We need to implement this properly, because various code locations do
   // things like checking that allocations are in the expected arena.
 
-  PtrKind pk = sRegion.PtrKind(aPtr);
+  PtrKind pk = GetPtrKind(aPtr);
+
   if (pk.IsGuardPage()) {
     // Treat a guard page as unknown because there's no better alternative.
     *aInfo = {TagUnknown, nullptr, 0, 0};
@@ -1995,8 +2004,7 @@ inline void* MozJemallocPHC::moz_arena_memalign(arena_id_t aArenaId,
 }
 
 bool PHC::IsPHCAllocation(const void* aPtr, mozilla::phc::AddrInfo* aOut) {
-  PtrKind pk = sRegion.PtrKind(aPtr);
-  MOZ_ASSERT(!pk.IsNothing());
+  PtrKind pk = GetPtrKind(aPtr);
 
   bool isGuardPage = false;
   if (pk.IsGuardPage()) {
@@ -2009,12 +2017,12 @@ bool PHC::IsPHCAllocation(const void* aPtr, mozilla::phc::AddrInfo* aOut) {
       }
 
       // Get the allocation page preceding this guard page.
-      pk = sRegion.PtrKind(static_cast<const uint8_t*>(aPtr) - kPageSize);
+      pk = GetPtrKind(static_cast<const uint8_t*>(aPtr) - kPageSize);
 
     } else {
       // The address is in the upper half of a guard page, so it's probably an
       // underflow. Get the allocation page following this guard page.
-      pk = sRegion.PtrKind(static_cast<const uint8_t*>(aPtr) + kPageSize);
+      pk = GetPtrKind(static_cast<const uint8_t*>(aPtr) + kPageSize);
     }
 
     // Make a note of the fact that we hit a guard page.
@@ -2043,7 +2051,7 @@ bool PHC::IsPHCAllocation(const void* aPtr, mozilla::phc::AddrInfo* aOut) {
 namespace mozilla::phc {
 
 bool IsPHCAllocation(const void* aPtr, AddrInfo* aOut) {
-  if (!FastIsPHCPtr(aPtr)) {
+  if (MOZ_LIKELY(!FastIsPHCPtr(aPtr))) {
     return false;
   }
 
