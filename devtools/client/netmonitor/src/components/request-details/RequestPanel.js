@@ -189,7 +189,7 @@ class RequestPanel extends Component {
   render() {
     const { request, targetSearchResult } = this.props;
     const { filterText, rawRequestPayloadDisplayed } = this.state;
-    const { formDataSections, mimeType, requestPostData } = request;
+    const { formDataSections, mimeType, requestPostData, url } = request;
     const postData = requestPostData ? requestPostData.postData?.text : null;
 
     if ((!formDataSections || formDataSections.length === 0) && !postData) {
@@ -212,6 +212,7 @@ class RequestPanel extends Component {
         filterText,
         targetSearchResult,
         defaultSelectFirstNode: false,
+        url,
       };
       requestPayloadLabel = REQUEST_FORM_DATA;
       hasFormattedDisplay = true;
@@ -242,6 +243,7 @@ class RequestPanel extends Component {
             filterText,
             targetSearchResult,
             defaultSelectFirstNode: false,
+            url,
           };
           requestPayloadLabel = JSON_SCOPE_NAME;
           hasFormattedDisplay = true;
@@ -258,6 +260,7 @@ class RequestPanel extends Component {
         text: postData,
         mimeType: mimeType?.replace(/;.+/, ""),
         targetSearchResult,
+        url,
       };
       requestPayloadLabel = REQUEST_POST_PAYLOAD;
     }
