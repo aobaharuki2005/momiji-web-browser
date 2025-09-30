@@ -143,7 +143,8 @@ const getSubjectAltNames = (x509, criticalExtensions) => {
             strings.san[type],
             parseSubsidiary(san.altNames[index].value.typesAndValues).dn,
           ];
-        case 7: // ip address
+        case 7: {
+          // ip address
           let address = san.altNames[index].value.valueBlock.valueHex;
 
           if (address.length === 8) {
@@ -160,7 +161,7 @@ const getSubjectAltNames = (x509, criticalExtensions) => {
             return [strings.san[type], hexToIpv6Repr(address)];
           }
           return [strings.san[type], "Unknown IP address"];
-
+        }
         default:
           return [strings.san[type], san.altNames[index].value];
       }

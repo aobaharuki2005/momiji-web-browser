@@ -1133,7 +1133,7 @@ var Impl = {
           Glean.startupIo.write.windowVisible.set(counters[1]);
         }
         break;
-      case "sessionstore-windows-restored":
+      case "sessionstore-windows-restored": {
         this.removeObserver("sessionstore-windows-restored");
         // Check whether debugger was attached during startup
         let debugService = Cc["@mozilla.org/xpcom/debug;1"].getService(
@@ -1142,6 +1142,7 @@ var Impl = {
         gWasDebuggerAttached = debugService.isDebuggerAttached;
         this.gatherStartup();
         break;
+      }
       case "idle-daily":
         // Enqueue to main-thread, otherwise components may be inited by the
         // idle-daily category and miss the gather-telemetry notification.
@@ -1153,7 +1154,7 @@ var Impl = {
         });
         break;
 
-      case "application-background":
+      case "application-background": {
         if (AppConstants.platform !== "android") {
           break;
         }
@@ -1184,6 +1185,7 @@ var Impl = {
           options
         );
         break;
+      }
       case "user-interaction-active":
         this._onActiveTick(true);
         break;

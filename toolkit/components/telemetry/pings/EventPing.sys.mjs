@@ -105,7 +105,7 @@ export var TelemetryEventPing = {
 
   observe(aSubject, aTopic) {
     switch (aTopic) {
-      case EVENT_LIMIT_REACHED_TOPIC:
+      case EVENT_LIMIT_REACHED_TOPIC: {
         this._log.trace("event limit reached");
         let now = Utils.monotonicNow();
         if (now - this._lastSendTime < this.maxFrequency) {
@@ -120,6 +120,7 @@ export var TelemetryEventPing = {
           this._submitPing(this.Reason.MAX);
         }
         break;
+      }
     }
   },
 

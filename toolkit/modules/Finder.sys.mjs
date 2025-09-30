@@ -556,13 +556,14 @@ Finder.prototype = {
           );
         }
         break;
-      case aEvent.DOM_VK_TAB:
+      case aEvent.DOM_VK_TAB: {
         let direction = Services.focus.MOVEFOCUS_FORWARD;
         if (aEvent.shiftKey) {
           direction = Services.focus.MOVEFOCUS_BACKWARD;
         }
         Services.focus.moveFocus(this._getWindow(), null, direction, 0);
         break;
+      }
       case aEvent.DOM_VK_PAGE_UP:
         controller.scrollPage(false);
         break;
