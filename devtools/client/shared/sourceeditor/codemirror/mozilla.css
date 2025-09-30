@@ -112,9 +112,9 @@
 }
 
 /* Search highlight style
- * cm-searching is used in Style Editor, and cm-highlight in Debugger */
+ * cm-searching is used in Style Editor, cm-highlight in Debugger and searchMatch in Netmonitor */
 .cm-searching,
-.cm-highlight {
+.cm-highlight, .cm-editor .cm-searchMatch {
   border-bottom: 1px solid var(--theme-contrast-border);
   /* Use the translucent yellow background, because we want the text selection
      background (CodeMirror-selected) to show through this. */
@@ -377,7 +377,7 @@
 }
 
 /* CodeMirror matchhighlight styling */
-.cm-matchhighlight, .cm-selectionMatch {
+.cm-matchhighlight, .cm-searchMatch-selected {
   outline: 1px solid var(--theme-contrast-border);
   border-radius: 2px;
   /* Override cm6 inline */
@@ -451,6 +451,12 @@
 /* This makes sure we use the font-family set for devtools */
 .cm-editor .cm-scroller {
   font-family: unset;
+}
+
+/* Remove the default selection match background, as search results might have the
+.cm-selectionMatch class after the current search term has been removed, these should not be styled`` */
+.cm-editor .cm-selectionMatch {
+  background-color: transparent;
 }
 
 .cm-editor .cm-selectionBackground {
@@ -548,4 +554,27 @@
   100% {
     background-color: transparent;
   }
+}
+
+.cm-editor .cm-panels {
+  background-color: var(--theme-toolbar-background);
+  color: var(--theme-body-color);
+}
+
+.cm-editor .cm-panels-top {
+  border-color: var(--theme-splitter-color);
+}
+
+/* Default search panel */
+.cm-search .cm-textfield {
+  width: 100%;
+  font-size: inherit;
+  background-color: transparent;
+  border-color: var(--theme-splitter-color);
+  margin: 0 !important;
+}
+
+/* Hide all other elements of the search except the text input */
+.cm-search .cm-button, .cm-search label, .cm-search button[name="close"] {
+  display: none;
 }

@@ -72,6 +72,8 @@ class SourcePreview extends Component {
       cm6: true,
       lineNumbers: true,
       lineWrapping: false,
+      disableSearchAddon: false,
+      useSearchAddonPanel: true,
       mode: null, // Disable auto syntax detection, but then we set the mode later
       readOnly: true,
       theme: "mozilla",

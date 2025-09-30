@@ -273,8 +273,13 @@ class Editor extends EventEmitter {
       autocompleteOpts: {},
       // Expect a CssProperties object (see devtools/client/fronts/css-properties.js)
       cssProperties: null,
-      // Set to true to prevent the search addon to be activated.
+      // Set to `true` to prevent the search addon to be activated.
       disableSearchAddon: false,
+      // When the search addon is activated (i.e disableSearchAddon == false),
+      // `useSearchAddonPanel` determines if the default search panel for the search addon should be used.
+      // Set to `false` when a custom search panel is used.
+      // Note: This can probably be removed when Bug 1941575 is fixed, and custom search panel is used everywhere
+      useSearchAddonPanel: true,
       maxHighlightLength: 1000,
       // Disable codeMirror setTimeout-based cursor blinking (will be replaced by a CSS animation)
       cursorBlinkRate: 0,
@@ -739,7 +744,7 @@ class Editor extends EventEmitter {
         placeholder,
       },
       codemirrorState: { EditorState, Compartment, Prec },
-      codemirrorSearch: { highlightSelectionMatches },
+      codemirrorSearch: { search, searchKeymap, highlightSelectionMatches },
       codemirrorLanguage: {
         syntaxTreeAvailable,
         indentUnit,
@@ -844,6 +849,13 @@ class Editor extends EventEmitter {
       // keep last so other extension take precedence
       codemirror.minimalSetup,
     ];
+
+    if (!this.config.disableSearchAddon && this.config.useSearchAddonPanel) {
+      this.config.keyMap = this.config.keyMap
+        ? [...this.config.keyMap, ...searchKeymap]
+        : [...searchKeymap];
+      extensions.push(search({ top: true }));
+    }
 
     if (this.config.placeholder) {
       extensions.push(placeholder(this.config.placeholder));
