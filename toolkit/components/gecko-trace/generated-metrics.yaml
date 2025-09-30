@@ -13,7 +13,7 @@ $tags:
   - "Toolkit :: Gecko Trace"
 
 gecko_trace:
-  traces:
+  traces_data:
     type: object
     description: >
       Represents the telemetry traces data collected during browser operation. This data

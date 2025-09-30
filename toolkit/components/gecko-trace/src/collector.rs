@@ -144,8 +144,8 @@ impl Drop for TraceCollector {
 }
 
 fn report_in_glean(traces: ExportTraceServiceRequest, reason: &str) {
-    firefox_on_glean::metrics::gecko_trace::traces.set(traces.into());
-    firefox_on_glean::pings::traces.submit(Some(reason));
+    firefox_on_glean::metrics::gecko_trace::traces_data.set(traces.into());
+    firefox_on_glean::pings::gecko_trace.submit(Some(reason));
 }
 
 pub struct TraceCollectorConfig {

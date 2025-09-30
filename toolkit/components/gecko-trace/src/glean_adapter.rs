@@ -19,13 +19,13 @@ use crate::proto::opentelemetry::proto::trace::v1::{span, ResourceSpans, ScopeSp
 
 mod fog_object {
     pub use firefox_on_glean::metrics::gecko_trace::{
-        TracesObject as Traces, TracesObjectItemResourceSpansItem as ResourceSpans,
-        TracesObjectItemResourceSpansItemItemResourceObject as Resource,
-        TracesObjectItemResourceSpansItemItemResourceObjectItemAttributesObject as ResourceAttributes,
-        TracesObjectItemResourceSpansItemItemScopeSpansItem as ScopeSpans,
-        TracesObjectItemResourceSpansItemItemScopeSpansItemItemScopeObject as InstrumentationScope,
-        TracesObjectItemResourceSpansItemItemScopeSpansItemItemSpansItem as Span,
-        TracesObjectItemResourceSpansItemItemScopeSpansItemItemSpansItemItemEventsItem as SpanEvent,
+        TracesDataObject as TracesData, TracesDataObjectItemResourceSpansItem as ResourceSpans,
+        TracesDataObjectItemResourceSpansItemItemResourceObject as Resource,
+        TracesDataObjectItemResourceSpansItemItemResourceObjectItemAttributesObject as ResourceAttributes,
+        TracesDataObjectItemResourceSpansItemItemScopeSpansItem as ScopeSpans,
+        TracesDataObjectItemResourceSpansItemItemScopeSpansItemItemScopeObject as InstrumentationScope,
+        TracesDataObjectItemResourceSpansItemItemScopeSpansItemItemSpansItem as Span,
+        TracesDataObjectItemResourceSpansItemItemScopeSpansItemItemSpansItemItemEventsItem as SpanEvent,
     };
 }
 
@@ -35,7 +35,7 @@ include!(mozbuild::objdir_path!(
     "toolkit/components/gecko-trace/src/generated/glean_adapter.rs"
 ));
 
-impl From<ExportTraceServiceRequest> for fog_object::Traces {
+impl From<ExportTraceServiceRequest> for fog_object::TracesData {
     fn from(value: ExportTraceServiceRequest) -> Self {
         let ExportTraceServiceRequest { resource_spans } = value;
 
