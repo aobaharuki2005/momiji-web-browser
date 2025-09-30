@@ -210,19 +210,19 @@ already_AddRefed<MediaDataEncoder> CreateVideoEncoder(
     return nullptr;
   }
 
+  const EncoderConfig config(
+      aCodec, aSize, aUsage, aFormat, FRAME_RATE /* FPS */,
+      KEYFRAME_INTERVAL /* keyframe interval */, BIT_RATE /* bitrate */, 0, 0,
+      BIT_RATE_MODE, HardwarePreference::None /* hardware preference */,
+      aScalabilityMode, aSpecific);
+  if (f->Supports(config).isEmpty()) {
+    return nullptr;
+  }
+
   const RefPtr<TaskQueue> taskQueue(
       TaskQueue::Create(GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER),
                         "TestMediaDataEncoder"));
-
-  RefPtr<MediaDataEncoder> e;
-  const HardwarePreference pref = HardwarePreference::None;
-  e = f->CreateEncoder(
-      EncoderConfig(aCodec, aSize, aUsage, aFormat, FRAME_RATE /* FPS */,
-                    KEYFRAME_INTERVAL /* keyframe interval */,
-                    BIT_RATE /* bitrate */, 0, 0, BIT_RATE_MODE, pref,
-                    aScalabilityMode, aSpecific),
-      taskQueue);
-
+  RefPtr<MediaDataEncoder> e = f->CreateEncoder(config, taskQueue);
   return e.forget();
 }
 
