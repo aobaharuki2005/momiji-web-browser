@@ -43,8 +43,8 @@ list of acceptable features is given below:
      - Clang
      -
    * - Current minimal requirement
-     - 8.1
-     - 8.0
+     - 10
+     - 17
      -
    * - Feature
      - GCC
