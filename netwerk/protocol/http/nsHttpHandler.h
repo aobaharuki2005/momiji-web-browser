@@ -119,7 +119,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   [[nodiscard]] nsresult AddAcceptAndDictionaryHeaders(
       nsIURI* aURI, nsHttpRequestHead* aRequest, bool aSecure,
-      RefPtr<DictionaryCacheEntry>& aDict);
+      const std::function<void(DictionaryCacheEntry*)>& aCallback);
   [[nodiscard]] nsresult AddStandardRequestHeaders(
       nsHttpRequestHead*, nsIURI* aURI, ExtContentPolicyType aContentPolicyType,
       bool aShouldResistFingerprinting);
