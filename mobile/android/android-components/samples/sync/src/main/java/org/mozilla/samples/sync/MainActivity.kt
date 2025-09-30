@@ -9,6 +9,7 @@ import android.text.method.ScrollingMovementMethod
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -47,11 +48,12 @@ import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.toAuthType
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
+import mozilla.components.support.AppServicesInitializer
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
+import mozilla.components.support.ktx.android.view.setupPersistentInsets
 import mozilla.components.support.rusthttp.RustHttpConfig
-import mozilla.components.support.rustlog.RustLog
 import org.mozilla.samples.sync.databinding.ActivityMainBinding
 
 /**
@@ -120,13 +122,14 @@ class MainActivity :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        enableEdgeToEdge()
+        window.setupPersistentInsets()
 
-        RustLog.enable()
+        AppServicesInitializer.init(AppServicesInitializer.Config(null))
         RustHttpConfig.setClient(lazy { HttpURLConnectionClient() })
 
         Log.addSink(AndroidLogSink())
-
-        setContentView(binding.root)
 
         findViewById<View>(R.id.buttonSignIn).setOnClickListener {
             lifecycleScope.launch {
