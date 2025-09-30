@@ -2176,6 +2176,9 @@ static constexpr js::gc::AllocKind GetArrayBufferGCObjectKind(size_t numSlots) {
   if (numSlots <= 4) {
     return js::gc::AllocKind::ARRAYBUFFER4;
   }
+  if (numSlots <= 6) {
+    return js::gc::AllocKind::ARRAYBUFFER6;
+  }
   if (numSlots <= 8) {
     return js::gc::AllocKind::ARRAYBUFFER8;
   }
@@ -2189,6 +2192,7 @@ template <class ArrayBufferType>
 static ArrayBufferType* NewArrayBufferObject(JSContext* cx, HandleObject proto_,
                                              gc::AllocKind allocKind) {
   MOZ_ASSERT(allocKind == gc::AllocKind::ARRAYBUFFER4 ||
+             allocKind == gc::AllocKind::ARRAYBUFFER6 ||
              allocKind == gc::AllocKind::ARRAYBUFFER8 ||
              allocKind == gc::AllocKind::ARRAYBUFFER12 ||
              allocKind == gc::AllocKind::ARRAYBUFFER16);

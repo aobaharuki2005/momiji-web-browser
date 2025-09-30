@@ -280,7 +280,7 @@ constexpr uint32_t gc::slotsToAllocKindBytes[] = {
     // correspond to.
     // clang-format off
     /*  0 */ sizeof(JSObject_Slots0), sizeof(JSObject_Slots2), sizeof(JSObject_Slots2), sizeof(JSObject_Slots4),
-    /*  4 */ sizeof(JSObject_Slots4), sizeof(JSObject_Slots8), sizeof(JSObject_Slots8), sizeof(JSObject_Slots8),
+    /*  4 */ sizeof(JSObject_Slots4), sizeof(JSObject_Slots6), sizeof(JSObject_Slots6), sizeof(JSObject_Slots8),
     /*  8 */ sizeof(JSObject_Slots8), sizeof(JSObject_Slots12), sizeof(JSObject_Slots12), sizeof(JSObject_Slots12),
     /* 12 */ sizeof(JSObject_Slots12), sizeof(JSObject_Slots16), sizeof(JSObject_Slots16), sizeof(JSObject_Slots16),
     /* 16 */ sizeof(JSObject_Slots16)
