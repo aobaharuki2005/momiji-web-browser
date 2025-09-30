@@ -3494,7 +3494,8 @@ class Document : public nsINode,
   // https://html.spec.whatwg.org/multipage/popover.html#hide-popover-algorithm
   MOZ_CAN_RUN_SCRIPT void HidePopover(Element& popover,
                                       bool aFocusPreviousElement,
-                                      bool aFireEvents, ErrorResult& aRv);
+                                      bool aFireEvents, Element* aSource,
+                                      ErrorResult& aRv);
 
   // Returns a list of all the elements in the Document's top layer whose
   // popover attribute is in the auto state.
