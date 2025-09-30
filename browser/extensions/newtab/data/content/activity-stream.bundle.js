@@ -16956,8 +16956,6 @@ const external_Redux_namespaceObject = Redux;
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-env mozilla/remote-page */
-
 
 // We disable import checking here as redux is installed via the npm packages
 // at the newtab level, rather than in the top-level package.json.

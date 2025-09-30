@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint-disable import/no-unassigned-import */
-/* eslint-env mozilla/remote-page */
 
 import {
   getCSSClass,
