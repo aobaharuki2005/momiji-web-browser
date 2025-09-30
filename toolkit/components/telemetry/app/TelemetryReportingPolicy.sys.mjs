@@ -748,11 +748,19 @@ var TelemetryReportingPolicyImpl = {
   },
 
   /**
-   * Check if we are allowed to upload data. In order to submit data both these conditions
-   * should be true:
-   * - The data submission preference should be true.
-   * - The datachoices infobar should have been displayed.
+   * Check if we are allowed to upload data.
+   * Prerequisite: data submission is enabled (this.dataSubmissionEnabled).
    *
+   * In order to submit data, at least ONE of these conditions should be true:
+   *  1. The TOU flow is bypassed via a pref or Nimbus variable AND the legacy
+   *     notification flow bypass pref is set, so users bypass BOTH flows.
+   *  2. The TOU flow is bypassed via a pref or Nimbus variable and the legacy
+   *     notification flow bypass pref is NOT set, so has been been shown the
+   *     legacy flow (the data submission pref should be true and the
+   *     datachoices infobar should have been displayed).
+   *  3. The user has accepted the Terms of Use AND the user has opted-in to
+   *     sharing technical interaction data (the upload enabled pref should be
+   *     true).
    * @return {Boolean} True if we are allowed to upload data, false otherwise.
    */
   canUpload() {
@@ -762,13 +770,31 @@ var TelemetryReportingPolicyImpl = {
       return false;
     }
 
-    // Submission is enabled. We enable upload if user is notified or we need to bypass
-    // the policy.
-    const bypassNotification = Services.prefs.getBoolPref(
+    const bypassLegacyFlow = Services.prefs.getBoolPref(
       TelemetryUtils.Preferences.BypassNotification,
       false
     );
-    return this.isUserNotifiedOfCurrentPolicy || bypassNotification;
+    // TOU flow is bypassed if the Nimbus preonboarding feature is disabled
+    // (disabled by default for Linux via the fallback
+    // browser.preonboarding.enabled pref) or if the explicit bypass pref is
+    // set.
+    const bypassTOUFlow =
+      Services.prefs.getBoolPref(TOU_BYPASS_NOTIFICATION_PREF, false) ||
+      !this._nimbusVariables.enabled;
+    const allowInteractionData = Services.prefs.getBoolPref(
+      "datareporting.healthreport.uploadEnabled",
+      false
+    );
+
+    // Condition 1
+    const canUploadBypassLegacyAndTOU = bypassLegacyFlow && bypassTOUFlow;
+    // Condition 2
+    const canUploadLegacy =
+      bypassTOUFlow && !bypassLegacyFlow && this.isUserNotifiedOfCurrentPolicy;
+    // Condition 3
+    const canUploadTOU = this.hasUserAcceptedCurrentTOU && allowInteractionData;
+
+    return canUploadBypassLegacyAndTOU || canUploadLegacy || canUploadTOU;
   },
 
   isFirstRun() {
