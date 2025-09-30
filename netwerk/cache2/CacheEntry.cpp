@@ -266,12 +266,6 @@ nsresult CacheEntry::HashingKey(const nsACString& aStorageID,
   return HashingKey(aStorageID, aEnhanceID, spec, aResult);
 }
 
-// The hash key (which is also the filename) is:
-// A[~B]:C
-// Where A is the storage ID ([O<oa>,][a,][p,]), B is the optional 'id',
-// and C is the URI  'oa' are the OriginAttributes in suffix form
-// (i.e. |^key=value&key2=value2|)
-
 // static
 nsresult CacheEntry::HashingKey(const nsACString& aStorageID,
                                 const nsACString& aEnhanceID,
@@ -292,12 +286,6 @@ nsresult CacheEntry::HashingKey(const nsACString& aStorageID,
   aResult.Append(':');
   aResult.Append(aURISpec);
 
-  return NS_OK;
-}
-
-nsresult CacheEntry::SetDictionary(DictionaryCacheEntry* aDict) {
-  mDict = aDict;
-  mFile->SetDictionary(aDict);
   return NS_OK;
 }
 
@@ -1093,12 +1081,6 @@ nsresult CacheEntry::GetOnStartTime(uint64_t* aTime) {
 nsresult CacheEntry::GetOnStopTime(uint64_t* aTime) {
   NS_ENSURE_SUCCESS(mFileStatus, NS_ERROR_NOT_AVAILABLE);
   return mFile->GetOnStopTime(aTime);
-}
-
-nsresult CacheEntry::GetReadyOrRevalidating(bool* aReady) {
-  mozilla::MutexAutoLock lock(mLock);
-  *aReady = (mState == READY || mState == REVALIDATING);
-  return NS_OK;
 }
 
 nsresult CacheEntry::SetNetworkTimes(uint64_t aOnStartTime,
