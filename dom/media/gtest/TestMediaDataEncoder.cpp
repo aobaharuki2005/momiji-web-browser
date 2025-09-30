@@ -84,8 +84,6 @@ MOZ_RUNINIT const H264Specific kH264SpecificAVCC(H264_PROFILE_BASE,
 class MediaDataEncoderTest : public testing::Test {
  protected:
   void SetUp() override {
-    Preferences::SetBool("media.ffmpeg.encoder.enabled", true);
-    Preferences::SetInt("logging.FFmpegVideo", 5);
     mData.Init(kImageSize);
     mData4K.Init(kImageSize4K);
   }
