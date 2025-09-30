@@ -154,6 +154,7 @@ enum DeclarationOrigin {
   "user-agent",
   "pres-hints",
   "style-attribute",
+  "position-fallback",
   "animations",
   "transitions",
   "smil",

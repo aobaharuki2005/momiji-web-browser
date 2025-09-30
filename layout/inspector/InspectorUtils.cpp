@@ -424,6 +424,8 @@ static void GetCSSRulesFromComputedValues(
             return DeclarationOrigin::User;
           case StyleMatchingDeclarationBlockOrigin::UserAgent:
             return DeclarationOrigin::User_agent;
+          case StyleMatchingDeclarationBlockOrigin::PositionFallback:
+            return DeclarationOrigin::Position_fallback;
           case StyleMatchingDeclarationBlockOrigin::Animations:
             return DeclarationOrigin::Animations;
           case StyleMatchingDeclarationBlockOrigin::Transitions:

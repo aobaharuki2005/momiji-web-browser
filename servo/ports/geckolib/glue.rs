@@ -4713,6 +4713,7 @@ pub enum MatchingDeclarationBlockOrigin {
     User,
     Author,
     PresHints,
+    PositionFallback,
     Animations,
     Transitions,
     SMIL,
@@ -4758,6 +4759,7 @@ pub extern "C" fn Servo_ComputedValues_GetMatchingDeclarations(
             CascadeLevel::AuthorNormal { .. } | CascadeLevel::AuthorImportant { .. } => {
                 MatchingDeclarationBlockOrigin::Author
             },
+            CascadeLevel::PositionFallback => MatchingDeclarationBlockOrigin::PositionFallback,
             CascadeLevel::PresHints => MatchingDeclarationBlockOrigin::PresHints,
             CascadeLevel::Animations => MatchingDeclarationBlockOrigin::Animations,
             CascadeLevel::Transitions => MatchingDeclarationBlockOrigin::Transitions,
