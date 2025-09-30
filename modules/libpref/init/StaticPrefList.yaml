@@ -4364,8 +4364,8 @@
   value: false
   mirror: always
 
-# Cache stencil across navigation
-- name: dom.script_loader.navigation_cache
+# For testing purposes only: Cache stencil across navigation
+- name: dom.script_loader.experimental.navigation_cache
   type: bool
   value: false
   mirror: always

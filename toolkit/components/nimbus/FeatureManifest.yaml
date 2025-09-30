@@ -4342,7 +4342,7 @@ scriptloader:
       type: boolean
       setPref:
         branch: user
-        pref: "dom.script_loader.navigation_cache"
+        pref: "dom.script_loader.experimental.navigation_cache"
 
 raceCacheWithNetwork:
   description: Prefs to toggle the race cache with network.
