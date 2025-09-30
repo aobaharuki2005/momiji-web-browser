@@ -12,4 +12,7 @@
   overscroll-behavior: none;
   margin: 0;
   padding: 0;
+  /* See bug 1991745 for the ignore below */
+  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-border-color-tokens */
+  border: 0;
 }
