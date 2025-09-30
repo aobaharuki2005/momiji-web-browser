@@ -29,8 +29,7 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
   explicit HTMLDialogElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
       : nsGenericHTMLElement(std::move(aNodeInfo)),
-        mPreviouslyFocusedElement(nullptr),
-        mRequestCloseSourceElement(nullptr) {}
+        mPreviouslyFocusedElement(nullptr) {}
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLDialogElement, dialog)
 
@@ -73,26 +72,11 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
   void UnbindFromTree(UnbindContext&) override;
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void Close(
-      const mozilla::dom::Optional<nsAString>& aReturnValue) {
-    return Close(nullptr, aReturnValue);
-  }
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Close(
-      Element* aSource, const mozilla::dom::Optional<nsAString>& aReturnValue);
+      const mozilla::dom::Optional<nsAString>& aReturnValue);
   MOZ_CAN_RUN_SCRIPT void RequestClose(
-      const mozilla::dom::Optional<nsAString>& aReturnValue) {
-    RequestClose(nullptr, aReturnValue);
-  }
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void RequestClose(
-      Element* aSource, const mozilla::dom::Optional<nsAString>& aReturnValue);
-
-  RefPtr<Element> GetRequestCloseSourceElement();
-
+      const mozilla::dom::Optional<nsAString>& aReturnValue);
   MOZ_CAN_RUN_SCRIPT void Show(ErrorResult& aError);
-
-  MOZ_CAN_RUN_SCRIPT void ShowModal(Element* aSource, ErrorResult& aError);
-  MOZ_CAN_RUN_SCRIPT void ShowModal(ErrorResult& aError) {
-    return ShowModal(nullptr, aError);
-  }
+  MOZ_CAN_RUN_SCRIPT void ShowModal(ErrorResult& aError);
 
   void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                     const nsAttrValue* aValue, const nsAttrValue* aOldValue,
@@ -126,7 +110,7 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
   void AddToTopLayerIfNeeded();
   void RemoveFromTopLayerIfNeeded();
   void StorePreviouslyFocusedElement();
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void QueueToggleEventTask(Element* aSource);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void QueueToggleEventTask();
   void SetDialogCloseWatcherIfNeeded();
   void SetCloseWatcherEnabledState();
 
@@ -134,8 +118,6 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
   void CleanupSteps();
 
   nsWeakPtr mPreviouslyFocusedElement;
-
-  nsWeakPtr mRequestCloseSourceElement;
 
   RefPtr<AsyncEventDispatcher> mToggleEventDispatcher;
 

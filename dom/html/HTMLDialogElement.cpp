@@ -48,16 +48,12 @@ class DialogCloseWatcherListener : public nsIDOMEventListener {
     mDialog = do_GetWeakReference(aDialog);
   }
 
-  // https://html.spec.whatwg.org/#set-the-dialog-close-watcher
   NS_IMETHODIMP HandleEvent(Event* aEvent) override {
     RefPtr<nsINode> node = do_QueryReferent(mDialog);
     if (HTMLDialogElement* dialog = HTMLDialogElement::FromNodeOrNull(node)) {
       nsAutoString eventType;
       aEvent->GetType(eventType);
       if (eventType.EqualsLiteral("cancel")) {
-        // 3. - cancelAction given canPreventClose being to return the result of
-        // firing an event named cancel at dialog, with the cancelable attribute
-        // initialized to canPreventClose.
         bool defaultAction = true;
         auto cancelable =
             aEvent->Cancelable() ? Cancelable::eYes : Cancelable::eNo;
@@ -68,13 +64,9 @@ class DialogCloseWatcherListener : public nsIDOMEventListener {
           aEvent->PreventDefault();
         }
       } else if (eventType.EqualsLiteral("close")) {
-        // 3. - closeAction being to close the dialog given dialog, dialog's
-        // request close return value, and dialog's request close source
-        // element.
         Optional<nsAString> retValue;
         dialog->GetRequestCloseReturnValue(retValue);
-        RefPtr<Element> source = dialog->GetRequestCloseSourceElement();
-        dialog->Close(source, retValue);
+        dialog->Close(retValue);
       }
     }
     return NS_OK;
@@ -145,7 +137,7 @@ bool HTMLDialogElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 // https://html.spec.whatwg.org/#dom-dialog-close
 // https://html.spec.whatwg.org/#close-the-dialog
 void HTMLDialogElement::Close(
-    Element* aSource, const mozilla::dom::Optional<nsAString>& aReturnValue) {
+    const mozilla::dom::Optional<nsAString>& aReturnValue) {
   // 1. If subject does not have an open attribute, then return.
   if (!Open()) {
     return;
@@ -154,7 +146,7 @@ void HTMLDialogElement::Close(
   // 2. Fire an event named beforetoggle, using ToggleEvent, with the oldState
   // attribute initialized to "open", the newState attribute initialized to
   // "closed", and the source attribute initialized to source at subject.
-  FireToggleEvent(u"open"_ns, u"closed"_ns, u"beforetoggle"_ns, aSource);
+  FireToggleEvent(u"open"_ns, u"closed"_ns, u"beforetoggle"_ns);
 
   // 3. If subject does not have an open attribute, then return.
   if (!Open()) {
@@ -163,7 +155,7 @@ void HTMLDialogElement::Close(
 
   // 4. Queue a dialog toggle event task given subject, "open", "closed", and
   // source.
-  QueueToggleEventTask(aSource);
+  QueueToggleEventTask();
 
   // 5. Remove subject's open attribute.
   SetOpen(false, IgnoreErrors());
@@ -184,7 +176,7 @@ void HTMLDialogElement::Close(
   ClearRequestCloseReturnValue();
 
   // 11. Set subject's request close source element to null.
-  mRequestCloseSourceElement = nullptr;
+  // TODO(keithamus) Source element?
 
   MOZ_ASSERT(!OwnerDoc()->DialogIsInOpenDialogsList(*this),
              "Dialog should not being in Open Dialog List");
@@ -218,8 +210,9 @@ void HTMLDialogElement::Close(
 // https://html.spec.whatwg.org/#dom-dialog-requestclose
 // https://html.spec.whatwg.org/#dialog-request-close
 void HTMLDialogElement::RequestClose(
-    Element* aSource, const mozilla::dom::Optional<nsAString>& aReturnValue) {
+    const mozilla::dom::Optional<nsAString>& aReturnValue) {
   RefPtr closeWatcher = mCloseWatcher;
+
   // 1. If subject does not have an open attribute, then return.
   if (!Open()) {
     return;
@@ -250,7 +243,7 @@ void HTMLDialogElement::RequestClose(
   }
 
   // 6. Set subject's request close source element to source.
-  mRequestCloseSourceElement = do_GetWeakReference(aSource);
+  // TODO(keithamus): Source Element?
 
   // 7. Request to close subject's close watcher with false.
   if (StaticPrefs::dom_closewatcher_enabled()) {
@@ -267,10 +260,6 @@ void HTMLDialogElement::RequestClose(
     // this:
     SetCloseWatcherEnabledState();
   }
-}
-
-RefPtr<Element> HTMLDialogElement::GetRequestCloseSourceElement() {
-  return do_QueryReferent(mRequestCloseSourceElement);
 }
 
 // https://html.spec.whatwg.org/#dom-dialog-show
@@ -292,7 +281,7 @@ void HTMLDialogElement::Show(ErrorResult& aError) {
   // with the cancelable attribute initialized to true, the oldState attribute
   // initialized to "closed", and the newState attribute initialized to "open"
   // at this is false, then return.
-  if (FireToggleEvent(u"closed"_ns, u"open"_ns, u"beforetoggle"_ns, nullptr)) {
+  if (FireToggleEvent(u"closed"_ns, u"open"_ns, u"beforetoggle"_ns)) {
     return;
   }
 
@@ -302,7 +291,7 @@ void HTMLDialogElement::Show(ErrorResult& aError) {
   }
 
   // 5. Queue a dialog toggle event task given this, "closed", and "open".
-  QueueToggleEventTask(nullptr);
+  QueueToggleEventTask();
 
   // 6. Add an open attribute to this, whose value is the empty string.
   SetOpen(true, IgnoreErrors());
@@ -419,7 +408,7 @@ void HTMLDialogElement::UnbindFromTree(UnbindContext& aContext) {
 }
 
 // https://html.spec.whatwg.org/#show-a-modal-dialog
-void HTMLDialogElement::ShowModal(Element* aSource, ErrorResult& aError) {
+void HTMLDialogElement::ShowModal(ErrorResult& aError) {
   // 1. If subject has an open attribute and is modal of subject is true, then
   // return.
   if (Open()) {
@@ -457,7 +446,7 @@ void HTMLDialogElement::ShowModal(Element* aSource, ErrorResult& aError) {
   // ToggleEvent, with the cancelable attribute initialized to true, the
   // oldState attribute initialized to "closed", and the newState attribute
   // initialized to "open" at subject is false, then return.
-  if (FireToggleEvent(u"closed"_ns, u"open"_ns, u"beforetoggle"_ns, aSource)) {
+  if (FireToggleEvent(u"closed"_ns, u"open"_ns, u"beforetoggle"_ns)) {
     return;
   }
 
@@ -469,7 +458,7 @@ void HTMLDialogElement::ShowModal(Element* aSource, ErrorResult& aError) {
   }
 
   // 10. Queue a dialog toggle event task given subject, "closed", and "open".
-  QueueToggleEventTask(aSource);
+  QueueToggleEventTask();
 
   // 11. Add an open attribute to subject, whose value is the empty string.
   SetOpen(true, aError);
@@ -624,8 +613,7 @@ void HTMLDialogElement::RunCancelDialogSteps() {
   if (defaultAction) {
     Optional<nsAString> retValue;
     GetRequestCloseReturnValue(retValue);
-    RefPtr<Element> source = GetRequestCloseSourceElement();
-    Close(source, retValue);
+    Close(retValue);
   }
 }
 
@@ -655,23 +643,23 @@ bool HTMLDialogElement::HandleCommandInternal(Element* aSource,
       }
     }
     if (aCommand == Command::Close) {
-      Close(aSource, retValueOpt);
+      Close(retValueOpt);
     } else {
       MOZ_ASSERT(aCommand == Command::RequestClose);
-      RequestClose(aSource, retValueOpt);
+      RequestClose(retValueOpt);
     }
     return true;
   }
 
   if (IsInComposedDoc() && !Open() && aCommand == Command::ShowModal) {
-    ShowModal(aSource, aRv);
+    ShowModal(aRv);
     return true;
   }
 
   return false;
 }
 
-void HTMLDialogElement::QueueToggleEventTask(Element* aSource) {
+void HTMLDialogElement::QueueToggleEventTask() {
   nsAutoString oldState;
   auto newState = Open() ? u"closed"_ns : u"open"_ns;
   if (mToggleEventDispatcher) {
@@ -682,8 +670,8 @@ void HTMLDialogElement::QueueToggleEventTask(Element* aSource) {
   } else {
     oldState.Assign(Open() ? u"open"_ns : u"closed"_ns);
   }
-  RefPtr<ToggleEvent> toggleEvent = CreateToggleEvent(
-      u"toggle"_ns, oldState, newState, Cancelable::eNo, aSource);
+  RefPtr<ToggleEvent> toggleEvent =
+      CreateToggleEvent(u"toggle"_ns, oldState, newState, Cancelable::eNo);
   mToggleEventDispatcher = new AsyncEventDispatcher(this, toggleEvent.forget());
   mToggleEventDispatcher->PostDOMEvent();
 }
