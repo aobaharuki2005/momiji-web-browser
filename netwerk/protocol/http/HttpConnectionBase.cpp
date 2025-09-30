@@ -23,6 +23,7 @@
 #include "nsIClassOfService.h"
 #include "nsIOService.h"
 #include "nsISocketTransport.h"
+#include "ConnectionEntry.h"
 
 namespace mozilla {
 namespace net {
@@ -156,6 +157,14 @@ nsresult HttpConnectionBase::CheckTunnelIsNeeded(
       return NS_OK;
   }
   return NS_OK;
+}
+
+void HttpConnectionBase::SetOwner(ConnectionEntry* aEntry) {
+  mOwnerEntry = aEntry;
+}
+
+ConnectionEntry* HttpConnectionBase::OwnerEntry() const {
+  return mOwnerEntry.get();
 }
 
 }  // namespace net

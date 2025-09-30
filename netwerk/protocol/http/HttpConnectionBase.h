@@ -18,6 +18,7 @@
 #include "HttpTrafficAnalyzer.h"
 
 #include "mozilla/net/DNS.h"
+#include "mozilla/WeakPtr.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIInterfaceRequestor.h"
@@ -29,6 +30,7 @@ class nsITLSSocketControl;
 namespace mozilla {
 namespace net {
 
+class ConnectionEntry;
 class nsHttpHandler;
 class ASpdySession;
 class WebTransportSessionBase;
@@ -179,11 +181,17 @@ class HttpConnectionBase : public nsSupportsWeakReference {
                                       bool aIsExtendedCONNECT = false) = 0;
   virtual void SetInTunnel() {};
 
+  void SetOwner(ConnectionEntry* aEntry);
+  ConnectionEntry* OwnerEntry() const;
+
  protected:
   // The capabailities associated with the most recent transaction
   uint32_t mTransactionCaps{0};
 
   RefPtr<nsHttpConnectionInfo> mConnInfo;
+  // Set when this connection is added to the active connections list,
+  // cleared when it is removed.
+  WeakPtr<ConnectionEntry> mOwnerEntry;
 
   bool mExperienced{false};
   // Used to track whether this connection is serving the first request.

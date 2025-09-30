@@ -2548,25 +2548,18 @@ void nsHttpConnectionMgr::OnMsgReclaimConnection(HttpConnectionBase* conn) {
 
   if (NS_SUCCEEDED(ent->RemoveActiveConnection(conn)) ||
       NS_SUCCEEDED(ent->RemovePendingConnection(conn))) {
-  } else if (!connTCP || connTCP->EverUsedSpdy()) {
-    LOG(("HttpConnectionBase %p not found in its connection entry, try ^anon",
+  } else {
+    LOG(
+        ("HttpConnectionBase %p not found in its connection entry, try "
+         "OwnerEntry",
          conn));
-    // repeat for flipped anon flag as we share connection entries for spdy
-    // connections.
-    RefPtr<nsHttpConnectionInfo> anonInvertedCI(ci->Clone());
-    anonInvertedCI->SetAnonymous(!ci->GetAnonymous());
-
-    ConnectionEntry* ent = mCT.GetWeak(anonInvertedCI->HashKey());
-    if (ent) {
-      if (NS_SUCCEEDED(ent->RemoveActiveConnection(conn))) {
-      } else {
-        LOG(
-            ("HttpConnectionBase %p could not be removed from its entry's "
-             "active list",
-             conn));
-      }
+    RefPtr<ConnectionEntry> entry = conn->OwnerEntry();
+    if (entry) {
+      entry->RemoveActiveConnection(conn);
     }
   }
+
+  MOZ_ASSERT(conn->OwnerEntry() == nullptr);
 
   if (connTCP && connTCP->CanReuse()) {
     LOG(("  adding connection to idle list\n"));
