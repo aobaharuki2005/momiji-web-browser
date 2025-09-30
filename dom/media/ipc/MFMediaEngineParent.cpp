@@ -306,6 +306,15 @@ void MFMediaEngineParent::NotifyError(MF_MEDIA_ENGINE_ERR aError,
       if (aResult == MSPR_E_NO_DECRYPTOR_AVAILABLE) {
         NotifyDisableHWDRM();
       }
+      // https://learn.microsoft.com/en-us/windows/win32/api/mfmediaengine/nf-mfmediaengine-imfextendeddrmtypesupport-istypesupportedex
+      // This error indicates an invalid HDCP status, which should be hidden
+      // from users to allow playback to continue. The CDM will later notifies
+      // of the key status change to `output-restricted`, so the web application
+      // can be aware of it.
+      if (aResult == MF_E_POLICY_UNSUPPORTED) {
+        LOG("Ignore MF_E_POLICY_UNSUPPORTED, not a real decode error!");
+        return;
+      }
 #endif
       Unused << SendNotifyError(error);
       return;
