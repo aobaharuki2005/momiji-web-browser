@@ -1502,7 +1502,7 @@ networking:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1848542
     notification_emails:
       - vgosu@mozilla.com
-    expires: 146
+    expires: 156
 
   residual_cache_folder_removal:
     type: labeled_counter
@@ -1511,11 +1511,13 @@ networking:
       that wasn't purged at shutdown
     bugs:
       - https://bugzilla.mozilla.org/1848542
+      - https://bugzilla.mozilla.org/1989190
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1848542
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1989190
     notification_emails:
       - vgosu@mozilla.com
-    expires: 146
+    expires: 156
     labels:
       - success
       - failure
