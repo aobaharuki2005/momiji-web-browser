@@ -487,7 +487,7 @@ partial interface Window {
   [Replaceable, Throws] readonly attribute long   scrollMaxX;
   [Replaceable, Throws] readonly attribute long   scrollMaxY;
 
-  [Throws, Deprecated=FullscreenAttribute] attribute boolean fullScreen;
+  [Throws] attribute boolean fullScreen;
 
   undefined                 updateCommands(DOMString action);
 
