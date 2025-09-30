@@ -12967,6 +12967,21 @@
   value: 262144
   mirror: always
 
+# The maximum desired size of PHC, This includes allocations and excludes
+# metadata. PHC allocations are "oversized" to the system page size.
+- name: memory.phc.size_kb
+  type: uint32_t
+#ifdef EARLY_BETA_OR_EARLIER
+  value: 16 * 1024
+#else
+# Before Bug 1867191 PHC used aproximately 1.1MB since it was set to a round
+# number of 256 pages.  To keep the size the same we now specify this
+# strange total size, but will follow-up with a more sensible maximum in
+# the future.
+  value: 1024 + 128
+#endif
+  mirror: always
+
 # Tell mozjemalloc and the TaskController to use lazy purge.
 - name: memory.lazypurge.enable
   type: bool
