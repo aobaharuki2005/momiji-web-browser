@@ -1586,9 +1586,7 @@ bool arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
     } else if (chunk->mPageMap[run_ind + i].bits & CHUNK_MAP_MADVISED) {
       mStats.committed++;
       mNumMAdvised--;
-    }
-
-    if (chunk->mPageMap[run_ind + i].bits & CHUNK_MAP_FRESH) {
+    } else if (chunk->mPageMap[run_ind + i].bits & CHUNK_MAP_FRESH) {
       mStats.committed++;
       mNumFresh--;
     }
