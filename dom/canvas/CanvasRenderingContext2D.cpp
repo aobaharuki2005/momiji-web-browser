@@ -973,16 +973,14 @@ class AdjustedTarget {
 
 void CanvasPattern::SetTransform(const DOMMatrix2DInit& aInit,
                                  ErrorResult& aError) {
-  RefPtr<DOMMatrixReadOnly> matrix =
-      DOMMatrixReadOnly::FromMatrix(GetParentObject(), aInit, aError);
+  Matrix matrix2D(DOMMatrixReadOnly::ToValidatedMatrixDouble(aInit, aError));
   if (aError.Failed()) {
     return;
   }
-  const auto* matrix2D = matrix->GetInternal2D();
-  if (!matrix2D->IsFinite()) {
+  if (!matrix2D.IsFinite()) {
     return;
   }
-  mTransform = Matrix(*matrix2D);
+  mTransform = Matrix(matrix2D);
 }
 
 void CanvasGradient::AddColorStop(float aOffset, const nsACString& aColorstr,
@@ -2474,11 +2472,9 @@ void CanvasRenderingContext2D::SetTransform(const DOMMatrix2DInit& aInit,
   if (HasErrorState(aError)) {
     return;
   }
-  RefPtr<DOMMatrixReadOnly> matrix =
-      DOMMatrixReadOnly::FromMatrix(GetParentObject(), aInit, aError);
+  Matrix matrix2D(DOMMatrixReadOnly::ToValidatedMatrixDouble(aInit, aError));
   if (!aError.Failed()) {
-    Matrix newMatrix = Matrix(*(matrix->GetInternal2D()));
-    SetTransformInternal(newMatrix);
+    SetTransformInternal(matrix2D);
   }
 }
 

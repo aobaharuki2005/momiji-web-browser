@@ -142,17 +142,15 @@ void DOMSVGTransform::SetMatrix(const DOMMatrix2DInit& aMatrix,
     aRv.ThrowNoModificationAllowedError("Animated values cannot be set");
     return;
   }
-  RefPtr<DOMMatrixReadOnly> matrix =
-      DOMMatrixReadOnly::FromMatrix(GetParentObject(), aMatrix, aRv);
+  auto matrix2D = DOMMatrixReadOnly::ToValidatedMatrixDouble(aMatrix, aRv);
   if (aRv.Failed()) {
     return;
   }
-  const gfxMatrix* matrix2D = matrix->GetInternal2D();
-  if (!matrix2D->IsFinite()) {
+  if (!matrix2D.IsFinite()) {
     aRv.ThrowTypeError<MSG_NOT_FINITE>("Matrix setter");
     return;
   }
-  SetMatrix(*matrix2D);
+  SetMatrix(matrix2D);
 }
 
 void DOMSVGTransform::SetTranslate(float tx, float ty, ErrorResult& aRv) {
