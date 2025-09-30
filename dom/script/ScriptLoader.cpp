@@ -1212,18 +1212,6 @@ void ScriptLoader::TryUseCache(ScriptLoadRequest* aRequest,
   return;
 }
 
-void ScriptLoader::StoreCacheInfo(LoadedScript* aLoadedScript,
-                                  ScriptLoadRequest* aRequest) {
-  MOZ_ASSERT(aRequest->getLoadedScript()->HasDiskCacheReference());
-  MOZ_ASSERT(!aRequest->SRIAndBytecode().empty());
-  MOZ_ASSERT(aRequest->SRIAndBytecode().length() == aRequest->GetSRILength());
-  MOZ_ASSERT(aLoadedScript->mSRI.empty());
-
-  if (!aLoadedScript->mSRI.appendAll(aRequest->SRIAndBytecode())) {
-    return;
-  }
-}
-
 void ScriptLoader::EmulateNetworkEvents(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsCachedStencil());
   MOZ_ASSERT(aRequest->mNetworkMetadata);
@@ -3304,9 +3292,6 @@ void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest) {
 
   if (cacheBehavior == CacheBehavior::Insert) {
     auto loadData = MakeRefPtr<ScriptLoadData>(this, aRequest);
-    if (aRequest->getLoadedScript()->HasDiskCacheReference()) {
-      StoreCacheInfo(aRequest->getLoadedScript(), aRequest);
-    }
     mCache->Insert(*loadData);
     LOG(("ScriptLoader (%p): Inserting in-memory cache for %s.", this,
          aRequest->mURI->GetSpecOrDefault().get()));
@@ -3657,38 +3642,25 @@ void ScriptLoader::UpdateCache() {
 
         if (request->IsMarkedForDiskCache() &&
             request->getLoadedScript()->HasDiskCacheReference()) {
-          if (request->getLoadedScript()->mSRI.empty()) {
-            // This is not a cached stencil.
-            //
-            // The nsICacheInfoChannel is stored when the this request
-            // receives a source text (See ScriptLoadHandler::OnStreamComplete),
-            // and also the SRI is calculated only in that case.
-            MOZ_ASSERT(request->SRIAndBytecode().length() ==
-                       request->GetSRILength());
+          // If this is not a cached stencil, the nsICacheInfoChannel is stored
+          // when the this request receives a source text
+          // (See ScriptLoadHandler::OnStreamComplete),
+          // and also the SRI is calculated only in that case.
+          //
+          // If this is cached stencil, The nsICacheInfoChannel is stored when
+          // the cached request received a source text
+          // (See ScriptLoadHandler::OnStreamComplete),
+          // and also the SRI is calculated and stored into the cache only in
+          // that case.
+          EncodeBytecodeAndSave(
+              aes.cx(), request, request->getLoadedScript()->mCacheInfo,
+              BytecodeMimeTypeFor(request), request->SRIAndBytecode(), stencil);
 
-            EncodeBytecodeAndSave(aes.cx(), request,
-                                  request->getLoadedScript()->mCacheInfo,
-                                  BytecodeMimeTypeFor(request),
-                                  request->SRIAndBytecode(), stencil);
+          // Even if this is cached stencil, the cached nsICacheInfoChannel can
+          // be used only once. We don't overwrite the bytecode cache.
+          request->getLoadedScript()->DropDiskCacheReference();
 
-            request->DropBytecode();
-          } else {
-            // This is cached stencil.
-            //
-            // The nsICacheInfoChannel is stored when the cached request
-            // received a source text (See ScriptLoadHandler::OnStreamComplete),
-            // and also the SRI is calculated and stored into the cache only in
-            // that case.
-            EncodeBytecodeAndSave(aes.cx(), request,
-                                  request->getLoadedScript()->mCacheInfo,
-                                  BytecodeMimeTypeFor(request),
-                                  request->getLoadedScript()->mSRI, stencil);
-
-            // The cached nsICacheInfoChannel can be used only once.
-            // We don't overwrite the bytecode cache.
-            request->getLoadedScript()->DropDiskCacheReference();
-            request->getLoadedScript()->mSRI.clear();
-          }
+          request->DropBytecode();
         }
       }
       request->getLoadedScript()->DropDiskCacheReference();
