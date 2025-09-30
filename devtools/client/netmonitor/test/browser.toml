@@ -252,22 +252,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 
 ["browser_net_file_uri.js"]
 
-["browser_net_filter-01.js"]
-
-["browser_net_filter-02.js"]
-
-["browser_net_filter-03.js"]
-
-["browser_net_filter-04.js"]
-
-["browser_net_filter-autocomplete.js"]
-
-["browser_net_filter-flags.js"]
-
-["browser_net_filter-sts-search.js"]
-
-["browser_net_filter-value-preserved.js"]
-
 ["browser_net_fission_switch_target.js"]
 
 ["browser_net_fonts.js"]
