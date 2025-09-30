@@ -15,8 +15,6 @@ kind-dependencies:
     - generate-baseline-profile-firebase
 
 task-defaults:
-    attributes:
-        retrigger: true
     fetches:
         toolchain:
             - linux64-android-sdk-linux-repack
