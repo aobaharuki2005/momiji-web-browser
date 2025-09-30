@@ -1762,7 +1762,6 @@ fuzzy(0-1,0-123) == 978911-1.svg 978911-1-ref.svg
 == 987680-1.html 987680-1-ref.html
 # Fuzzy on WR due to alpha blending
 fuzzy(0-1,0-1473) == 991046-1.html 991046-1-ref.html
-pref(layout.css.overflow-clip-box.enabled,true) fuzzy(0-2,0-845) == 992447.html 992447-ref.html
 == 1003425-1.html 1003425-1-ref.html
 == 1003425-2.html 1003425-2-ref.html
 == 1005405-1.html 1005405-1-ref.html
