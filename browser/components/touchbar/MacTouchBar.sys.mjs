@@ -442,7 +442,7 @@ export class TouchBarHelper {
 
   observe(subject, topic, data) {
     switch (topic) {
-      case "touchbar-location-change":
+      case "touchbar-location-change": {
         let updatedInputs = ["Back", "Forward"];
         gBuiltInInputs.Back.disabled =
           !TouchBarHelper.window.gBrowser.canGoBack;
@@ -458,6 +458,7 @@ export class TouchBarHelper {
         }
         this._updateTouchBarInputs(...updatedInputs);
         break;
+      }
       case "fullscreen-painted":
         if (TouchBarHelper.window.document.fullscreenElement) {
           gBuiltInInputs.OpenLocation.title = "touchbar-fullscreen-exit";

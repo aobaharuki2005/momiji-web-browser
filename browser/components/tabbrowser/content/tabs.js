@@ -242,13 +242,14 @@
 
     handleEvent(aEvent) {
       switch (aEvent.type) {
-        case "mouseout":
+        case "mouseout": {
           // If the "related target" (the node to which the pointer went) is not
           // a child of the current document, the mouse just left the window.
           let relatedTarget = aEvent.relatedTarget;
           if (relatedTarget && relatedTarget.ownerDocument == document) {
             break;
           }
+        }
         // fall through
         case "mousemove":
           if (
@@ -261,13 +262,14 @@
         case "mouseleave":
           this.previewPanel?.deactivate();
           break;
-        default:
+        default: {
           let methodName = `on_${aEvent.type}`;
           if (methodName in this) {
             this[methodName](aEvent);
           } else {
             throw new Error(`Unexpected event ${aEvent.type}`);
           }
+        }
       }
     }
 
@@ -1096,7 +1098,7 @@
 
     observe(aSubject, aTopic) {
       switch (aTopic) {
-        case "nsPref:changed":
+        case "nsPref:changed": {
           // This is has to deal with changes in
           // privacy.userContext.enabled and
           // privacy.userContext.newTabContainerOnLeftClick.enabled.
@@ -1163,6 +1165,7 @@
           }
 
           break;
+        }
       }
     }
 
