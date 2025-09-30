@@ -1112,7 +1112,7 @@ var gXPInstallObserver = {
         case "removed":
           cancelInstallation();
           break;
-        case "shown":
+        case "shown": {
           let addonList = document.getElementById(
             "addon-install-confirmation-content"
           );
@@ -1147,6 +1147,7 @@ var gXPInstallObserver = {
             addonList.appendChild(container);
           }
           break;
+        }
       }
     };
 

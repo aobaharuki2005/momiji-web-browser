@@ -673,7 +673,7 @@ var ctrlTab = {
           }
         }
         break;
-      case "TabSelect":
+      case "TabSelect": {
         this.attachTab(event.target, 0);
         // If the previous tab was hidden (e.g. Firefox View), remove it from
         // the list when it's deselected.
@@ -682,6 +682,7 @@ var ctrlTab = {
           this.detachTab(previousTab);
         }
         break;
+      }
       case "TabOpen":
         this.attachTab(event.target, 1);
         break;

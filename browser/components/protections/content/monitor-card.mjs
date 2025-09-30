@@ -80,7 +80,7 @@ export default class MonitorClass {
       case "monitor-stored-emails-link":
         this.doc.sendTelemetryEvent("clickMtrReportLink", "stored_emails");
         break;
-      case "monitor-known-breaches-link":
+      case "monitor-known-breaches-link": {
         const knownBreaches = this.doc.querySelector(
           "span[data-type='known-breaches']"
         );
@@ -98,7 +98,8 @@ export default class MonitorClass {
           );
         }
         break;
-      case "monitor-exposed-passwords-link":
+      }
+      case "monitor-exposed-passwords-link": {
         const exposedPasswords = this.doc.querySelector(
           "span[data-type='exposed-passwords']"
         );
@@ -120,6 +121,7 @@ export default class MonitorClass {
           );
         }
         break;
+      }
     }
   }
 

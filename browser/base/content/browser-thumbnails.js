@@ -67,12 +67,13 @@ var gBrowserThumbnails = {
 
   handleEvent: function Thumbnails_handleEvent(aEvent) {
     switch (aEvent.type) {
-      case "scroll":
+      case "scroll": {
         let browser = aEvent.currentTarget;
         if (this._timeouts.has(browser)) {
           this._delayedCapture(browser);
         }
         break;
+      }
       case "TabSelect":
         this._delayedCapture(aEvent.target.linkedBrowser);
         break;
