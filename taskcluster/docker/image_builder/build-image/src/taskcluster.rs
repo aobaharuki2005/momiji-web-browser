@@ -12,7 +12,9 @@ pub struct TaskCluster {
 impl TaskCluster {
     pub fn from_env() -> Result<Self> {
         let root_url = if let Ok(proxy_url) = std::env::var("TASKCLUSTER_PROXY_URL") {
-            proxy_url.parse().context("Couldn't parse TASKCLUSTER_PROXY_URL.")?
+            proxy_url
+                .parse()
+                .context("Couldn't parse TASKCLUSTER_PROXY_URL.")?
         } else {
             std::env::var("TASKCLUSTER_ROOT_URL")
                 .context("TASKCLUSTER_ROOT_URL not set.")
@@ -63,7 +65,10 @@ mod test {
     #[test]
     fn test_from_env_proxy_url() {
         env::set_var("TASKCLUSTER_PROXY_URL", "http://taskcluster");
-        env::set_var("TASKCLUSTER_ROOT_URL", "https://firefox-ci-tc.services.mozilla.com");
+        env::set_var(
+            "TASKCLUSTER_ROOT_URL",
+            "https://firefox-ci-tc.services.mozilla.com",
+        );
 
         let cluster = super::TaskCluster::from_env().unwrap();
         assert_eq!(cluster.root_url.as_str(), "http://taskcluster/");
@@ -75,10 +80,16 @@ mod test {
     #[test]
     fn test_from_env_fallback_to_root_url() {
         env::remove_var("TASKCLUSTER_PROXY_URL");
-        env::set_var("TASKCLUSTER_ROOT_URL", "https://firefox-ci-tc.services.mozilla.com");
+        env::set_var(
+            "TASKCLUSTER_ROOT_URL",
+            "https://firefox-ci-tc.services.mozilla.com",
+        );
 
         let cluster = super::TaskCluster::from_env().unwrap();
-        assert_eq!(cluster.root_url.as_str(), "https://firefox-ci-tc.services.mozilla.com/");
+        assert_eq!(
+            cluster.root_url.as_str(),
+            "https://firefox-ci-tc.services.mozilla.com/"
+        );
 
         env::remove_var("TASKCLUSTER_ROOT_URL");
     }

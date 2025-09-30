@@ -8,12 +8,12 @@
 extern crate app_units;
 extern crate bincode;
 extern crate euclid;
-extern crate rustc_hash;
 extern crate gecko_profiler;
 extern crate gleam;
 extern crate nsstring;
 extern crate num_cpus;
 extern crate rayon;
+extern crate rustc_hash;
 extern crate swgl;
 extern crate thin_vec;
 extern crate tracy_rs;

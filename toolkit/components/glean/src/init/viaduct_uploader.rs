@@ -6,7 +6,7 @@ use glean::net::{CapablePingUploadRequest, PingUploadRequest, PingUploader, Uplo
 use once_cell::sync::OnceCell;
 use std::sync::Once;
 use url::Url;
-use viaduct::{ViaductError::*, Request};
+use viaduct::{Request, ViaductError::*};
 
 extern "C" {
     fn FOG_TooLateToSend() -> bool;
@@ -68,7 +68,9 @@ impl PingUploader for ViaductUploader {
         match result {
             Ok(result) => result,
             Err(ViaductUploaderError::Viaduct(ve)) => match ve {
-                NonTlsUrl | UrlError(_) | BackendAlreadyInitialized => UploadResult::unrecoverable_failure(),
+                NonTlsUrl | UrlError(_) | BackendAlreadyInitialized => {
+                    UploadResult::unrecoverable_failure()
+                }
                 RequestHeaderError(_)
                 | BackendError(_)
                 | NetworkError(_)
