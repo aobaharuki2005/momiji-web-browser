@@ -130,11 +130,6 @@ ALLOWED_DESPITE_PREFIX = {
     "unicode-ident",  # Impractical to require icu_properties at this time
     "unicode-normalization",  # Exception until bug 1986265 is fixed.
     "unicode-width",  # icu_properties has the raw data but not the algorithm
-    "unic-char-property",  # Until https://github.com/denoland/rust-urlpattern/pull/67 is fixed
-    "unic-char-range",  # Until https://github.com/denoland/rust-urlpattern/pull/67 is fixed
-    "unic-common",  # Until https://github.com/denoland/rust-urlpattern/pull/67 is fixed
-    "unic-ucd-ident",  # Until https://github.com/denoland/rust-urlpattern/pull/67 is fixed
-    "unic-ucd-version",  # Until https://github.com/denoland/rust-urlpattern/pull/67 is fixed
     "unic-langid",  # We want to migrate to icu_locale eventually
     "unic-langid-ffi",  # FFI for previous
     "unic-langid-impl",  # Implementation detail of unic-langid
