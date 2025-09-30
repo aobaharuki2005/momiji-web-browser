@@ -163,6 +163,15 @@ class InfallibleAllocPolicy {
     AbortOnFailure(p);
     return new (p) T[n];
   }
+
+  // Realloc for arrays, because we don't know the original size we can't
+  // initialize the elements past that size.  The caller must do that.
+  template <class T>
+  static T* realloc(T* aOldArray, size_t n) {
+    void* p = MozJemalloc::realloc(aOldArray, sizeof(T) * n);
+    AbortOnFailure(p);
+    return reinterpret_cast<T*>(p);
+  }
 };
 
 //---------------------------------------------------------------------------
@@ -299,6 +308,19 @@ class PHCArray {
   }
 
   size_t Capacity() const { return mCapacity; }
+
+  void GrowTo(size_t aNewCapacity) {
+    MOZ_ASSERT(aNewCapacity > mCapacity);
+    if (mCapacity == 0) {
+      Init(aNewCapacity);
+      return;
+    }
+    mArray = InfallibleAllocPolicy::realloc<T>(mArray, aNewCapacity);
+    for (size_t i = mCapacity; i < aNewCapacity; i++) {
+      new (&mArray[i]) T();
+    }
+    mCapacity = aNewCapacity;
+  }
 
   size_t SizeOfExcludingThis() {
     return MozJemalloc::malloc_usable_size(mArray);
@@ -670,21 +692,40 @@ class PHC {
     // see phc_init(), and if PHC is default-on it'll start marking allocations
     // and we must setup the delay.  However once XPCOM starts it'll call
     // SetState() which will re-initialise the RNG and allocation delay.
-    MutexAutoLock lock(mMutex);
-
-    ForceSetNewAllocDelay(Rnd64ToDelay(mAvgFirstAllocDelay, Random64()));
 
 #ifdef EARLY_BETA_OR_EARLIER
-    mAllocPages.Init(kPageSize == 4096 ? 4096 : 1024);
+    Resize(16 * 1024 * 1024);
 #else
-    // This will use between 82KiB and 1.1MiB per process (depending on how many
-    // objects are currently allocated).  We will tune this in the future.
-    mAllocPages.Init(kPageSize == 4096 ? 256 : 64);
+    // Before Bug 1867191 PHC used no more than approximately 1.1MB when it was
+    // set to a round number of 256 pages.  To keep the size the same we now
+    // specify this strange total size, but will follow-up with a more sensible
+    // maximum in the future.
+    Resize((1024 + 128) * 1024);
 #endif
-    MOZ_ASSERT(NumAllPages() < kPhcVirtualReservation / kPageSize);
 
-    for (uintptr_t i = 0; i < NumAllocPages(); i++) {
-      AppendPageToFreeList(i);
+    {
+      MutexAutoLock lock(mMutex);
+      ForceSetNewAllocDelay(Rnd64ToDelay(mAvgFirstAllocDelay, Random64()));
+    }
+  }
+
+  void Resize(size_t aSizeBytes) {
+    // -1 since the last page in the virtual address space must be a guard page.
+    size_t max_pages = (kPhcVirtualReservation / kPageSize / 2) - 1;
+    size_t size_pages = aSizeBytes / kPageSize;
+    size_pages = std::min(size_pages, max_pages);
+
+    MutexAutoLock lock(mMutex);
+
+    size_t old_size_pages = NumAllocPages();
+    if (size_pages > old_size_pages) {
+      Log("Growing PHC storage from %zu to %zu\n", old_size_pages, size_pages);
+      mAllocPages.GrowTo(size_pages);
+      for (size_t i = old_size_pages; i < size_pages; i++) {
+        AppendPageToFreeList(i);
+      }
+    } else if (size_pages < old_size_pages) {
+      Log("Shrink requested and ignored.");
     }
   }
 
@@ -2159,6 +2200,12 @@ void PHCMemoryUsage(MemoryUsage& aMemoryUsage) {
   aMemoryUsage = MemoryUsage();
   if (PHC::sPHC) {
     PHC::sPHC->GetMemoryUsage(aMemoryUsage);
+  }
+}
+
+void SetPHCSize(size_t aSizeBytes) {
+  if (PHC::sPHC) {
+    PHC::sPHC->Resize(aSizeBytes);
   }
 }
 

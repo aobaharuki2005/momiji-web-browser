@@ -465,3 +465,59 @@ TEST(PHC, TestBounds)
   ReleaseVector(allocations);
 }
 #endif
+
+size_t GetNumSlotsTotal() {
+  mozilla::phc::PHCStats stats;
+  GetPHCStats(stats);
+  return stats.mSlotsAllocated + stats.mSlotsFreed + stats.mSlotsUnused;
+}
+
+#ifndef ANDROID
+TEST(PHC, TestPHCGrow)
+{
+  size_t batch_1_num = GetNumAvailable();
+  mozilla::phc::DisablePHCOnCurrentThread();
+  std::vector<uint8_t*> batch_1(batch_1_num);
+  mozilla::phc::ReenablePHCOnCurrentThread();
+  TestExhaustion(batch_1);
+
+  size_t total_before = GetNumSlotsTotal();
+  size_t requested = total_before + 1024;
+  mozilla::phc::SetPHCSize(requested * kPageSize);
+
+  ASSERT_TRUE(GetNumSlotsTotal() == requested);
+
+  size_t batch_2_num = GetNumAvailable();
+  ASSERT_TRUE(!!batch_2_num);
+  ASSERT_TRUE(batch_2_num == 1024ul);
+  mozilla::phc::DisablePHCOnCurrentThread();
+  std::vector<uint8_t*> batch_2(batch_2_num);
+  mozilla::phc::ReenablePHCOnCurrentThread();
+  TestExhaustion(batch_2);
+
+  ReleaseVector(batch_1);
+  ReleaseVector(batch_2);
+}
+#endif
+
+TEST(PHC, TestPHCLimit)
+{
+  // Test the virtual address limit compiled into PHC.
+
+  size_t start = GetNumSlotsTotal();
+  mozilla::phc::SetPHCSize(SIZE_MAX);
+
+  ASSERT_TRUE(GetNumSlotsTotal() > start);
+
+  // This needs to match the limit compiled into phc
+  // (see kPhcVirtualReservation)
+  size_t limit =
+#ifdef HAVE_64BIT_BUILD
+      1024 * 1024 * 1024;
+#else
+      2 * 1024 * 1024;
+#endif
+  ASSERT_TRUE(GetNumSlotsTotal() == limit / kPageSize / 2 - 1);
+
+  mozilla::phc::SetPHCSize(start);
+}

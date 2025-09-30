@@ -129,6 +129,10 @@ enum PHCState {
 
 MOZ_JEMALLOC_API void SetPHCState(PHCState aState);
 
+// Set the maximum allowed memory usage of PHC, including fragmentation and
+// metadata.
+MOZ_JEMALLOC_API void SetPHCSize(size_t aNumPHCBytes);
+
 MOZ_JEMALLOC_API void SetPHCProbabilities(int64_t aAvgDelayFirst,
                                           int64_t aAvgDelayNormal,
                                           int64_t aAvgDelayPageReuse);
