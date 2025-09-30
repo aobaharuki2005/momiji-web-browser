@@ -295,6 +295,12 @@ nsresult CacheEntry::HashingKey(const nsACString& aStorageID,
   return NS_OK;
 }
 
+nsresult CacheEntry::SetDictionary(DictionaryCacheEntry* aDict) {
+  mDict = aDict;
+  mFile->SetDictionary(aDict);
+  return NS_OK;
+}
+
 void CacheEntry::AsyncOpen(nsICacheEntryOpenCallback* aCallback,
                            uint32_t aFlags) {
   bool readonly = aFlags & nsICacheStorage::OPEN_READONLY;

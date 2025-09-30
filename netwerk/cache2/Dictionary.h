@@ -89,6 +89,17 @@ class DictionaryCacheEntry final
 
   const Vector<uint8_t>& GetDictionary() const { return mDictionaryData; }
 
+  void AccumulateHash(const char* aBuf, int32_t aCount);
+  void AccumulateFile(const char* aBuf, int32_t aCount);
+
+  void FinishFile();
+
+  // return a pointer to the data and length
+  uint8_t* DictionaryData(size_t* aLength) const {
+    *aLength = mDictionaryData.length();
+    return (uint8_t*)mDictionaryData.begin();
+  }
+
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     // XXX
     return mallocSizeOf(this);
@@ -107,6 +118,7 @@ class DictionaryCacheEntry final
   uint32_t mUsers{0};  // active requests using this entry
   // in-memory copy of the entry to use to decompress incoming data
   Vector<uint8_t> mDictionaryData;
+  bool mDictionaryDataComplete{false};
 
   // for accumulating SHA-256 hash values for dictionaries
   nsCOMPtr<nsICryptoHash> mCrypto;
