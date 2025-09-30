@@ -843,3 +843,19 @@ search.suggestions.ohttp:
     notification_emails:
       - fx-search-telemetry@mozilla.com
     expires: 153
+
+  enabled:
+    type: boolean
+    description: |
+      Reflects the value of the user's browser.search.suggest.ohttp.enabled
+      preference. This does not reflect the value of the featureGate preference.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1991473
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1991473
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: never
+    lifetime: application

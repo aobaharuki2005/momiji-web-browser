@@ -56,6 +56,7 @@ add_setup(async function () {
     "https://example.com/relay"
   );
   Services.prefs.setBoolPref("browser.search.suggest.ohttp.featureGate", true);
+  Services.prefs.setBoolPref("browser.search.suggest.ohttp.enabled", true);
 
   SearchTestUtils.setRemoteSettingsConfig(CONFIG);
   await Services.search.init();
