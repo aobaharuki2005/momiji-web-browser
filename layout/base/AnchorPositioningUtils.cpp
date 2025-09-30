@@ -568,6 +568,74 @@ static void FlipInAxis(StylePositionArea& aArea, PhysicalAxis aAxis) {
   aArea.second = FlipInAxis(aArea.second, aAxis);
 }
 
+static void FlipStartsAndEnds(StylePositionArea& aArea, WritingMode aWM) {
+  auto flipAxes = [](StylePositionAreaKeyword aKw,
+                     WritingMode aWM) -> StylePositionAreaKeyword {
+    auto bits = SpanAndSelfWM(aKw);
+    auto stripped = StripSpanAndSelfWMFlags(aKw);
+    // If stripped value is a physical side, convert it to a logical side.
+    Maybe<LogicalSide> logicalSide;
+    switch (stripped) {
+      case StylePositionAreaKeyword::Top:
+        logicalSide = Some(aWM.LogicalSideForPhysicalSide(Side::eSideTop));
+        break;
+      case StylePositionAreaKeyword::Bottom:
+        logicalSide = Some(aWM.LogicalSideForPhysicalSide(Side::eSideBottom));
+        break;
+      case StylePositionAreaKeyword::Left:
+        logicalSide = Some(aWM.LogicalSideForPhysicalSide(Side::eSideLeft));
+        break;
+      case StylePositionAreaKeyword::Right:
+        logicalSide = Some(aWM.LogicalSideForPhysicalSide(Side::eSideRight));
+        break;
+      case StylePositionAreaKeyword::Center:
+      case StylePositionAreaKeyword::SpanAll:
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("expected a physical positon-area");
+        break;
+    }
+    if (logicalSide) {
+      // Swap inline/block axes and convert back to physical side.
+      mozilla::Side side;
+      switch (*logicalSide) {
+        case LogicalSide::IStart:
+          side = aWM.PhysicalSide(LogicalSide::BStart);
+          break;
+        case LogicalSide::IEnd:
+          side = aWM.PhysicalSide(LogicalSide::BEnd);
+          break;
+        case LogicalSide::BStart:
+          side = aWM.PhysicalSide(LogicalSide::IStart);
+          break;
+        case LogicalSide::BEnd:
+          side = aWM.PhysicalSide(LogicalSide::IEnd);
+          break;
+      }
+      switch (side) {
+        case eSideTop:
+          stripped = StylePositionAreaKeyword::Top;
+          break;
+        case eSideBottom:
+          stripped = StylePositionAreaKeyword::Bottom;
+          break;
+        case eSideLeft:
+          stripped = StylePositionAreaKeyword::Left;
+          break;
+        case eSideRight:
+          stripped = StylePositionAreaKeyword::Right;
+          break;
+      }
+    }
+    return StylePositionAreaKeyword(uint8_t(stripped) | bits);
+  };
+
+  aArea.first = flipAxes(aArea.first, aWM);
+  aArea.second = flipAxes(aArea.second, aWM);
+
+  std::swap(aArea.first, aArea.second);
+}
+
 static void ApplyFallbackTactic(
     StylePositionArea& aPhysicalArea,
     StylePositionTryFallbacksTryTacticKeyword aTactic, WritingMode aWM) {
@@ -576,12 +644,12 @@ static void ApplyFallbackTactic(
       return;
     case StylePositionTryFallbacksTryTacticKeyword::FlipBlock:
       FlipInAxis(aPhysicalArea, aWM.PhysicalAxis(LogicalAxis::Block));
-      break;
+      return;
     case StylePositionTryFallbacksTryTacticKeyword::FlipInline:
       FlipInAxis(aPhysicalArea, aWM.PhysicalAxis(LogicalAxis::Inline));
-      break;
+      return;
     case StylePositionTryFallbacksTryTacticKeyword::FlipStart:
-      // TODO(bug 1991333): Flip across the diagonal.
+      FlipStartsAndEnds(aPhysicalArea, aWM);
       return;
   }
 }
