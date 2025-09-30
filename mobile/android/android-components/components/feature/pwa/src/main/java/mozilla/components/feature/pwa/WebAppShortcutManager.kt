@@ -146,8 +146,13 @@ class WebAppShortcutManager(
         val icon = if (manifest != null && manifest.hasLargeIcons()) {
             buildIconFromManifest(manifest)
         } else {
-            session.content.icon?.let { IconCompat.createWithBitmap(it) }
+            session.content.icon?.takeUnless { it.isRecycled }?.let {
+                val bitmapCopy =
+                    it.copy(it.config ?: android.graphics.Bitmap.Config.ARGB_8888, false)
+                IconCompat.createWithBitmap(bitmapCopy)
+            }
         }
+
         icon?.let {
             builder.setIcon(it)
         }
@@ -172,22 +177,34 @@ class WebAppShortcutManager(
         val shortLabel = manifest.shortName ?: manifest.name
         storage.saveManifest(manifest)
 
-        return ShortcutInfoCompat.Builder(context, manifest.startUrl)
+        val builder = ShortcutInfoCompat.Builder(context, manifest.startUrl)
             .setLongLabel(manifest.name)
             .setShortLabel(shortLabel.ifBlank { fallbackLabel })
-            .setIcon(buildIconFromManifest(manifest))
             .setIntent(shortcutIntent)
-            .build()
+
+        buildIconFromManifest(manifest)?.let {
+            builder.setIcon(it)
+        }
+
+        return builder.build()
     }
 
     @VisibleForTesting
-    internal suspend fun buildIconFromManifest(manifest: WebAppManifest): IconCompat {
+    internal suspend fun buildIconFromManifest(manifest: WebAppManifest): IconCompat? {
         val request = manifest.toIconRequest()
         val icon = icons.loadIcon(request).await()
+
+        if (icon.bitmap.isRecycled) {
+            return null
+        }
+
+        // Create a copy to prevent the icon from being recycled by the cache after we use it.
+        val bitmapCopy = icon.bitmap.copy(icon.bitmap.config ?: android.graphics.Bitmap.Config.ARGB_8888, false)
+
         return if (icon.maskable) {
-            IconCompat.createWithAdaptiveBitmap(icon.bitmap)
+            IconCompat.createWithAdaptiveBitmap(bitmapCopy)
         } else {
-            IconCompat.createWithBitmap(icon.bitmap)
+            IconCompat.createWithBitmap(bitmapCopy)
         }
     }
 
