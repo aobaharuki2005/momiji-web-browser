@@ -4557,18 +4557,27 @@ class HTMLMediaElement::TitleChangeObserver final : public nsIObserver {
   }
 
   void Subscribe() {
-    nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
-    if (observerService) {
-      observerService->AddObserver(this, "document-title-changed", false);
+    if (!mIsSubscribed) {
+      nsCOMPtr<nsIObserverService> observerService =
+          mozilla::services::GetObserverService();
+      if (observerService) {
+        if (NS_WARN_IF(NS_FAILED(observerService->AddObserver(
+                this, "document-title-changed", false)))) {
+          return;
+        }
+        mIsSubscribed = true;
+      }
     }
   }
 
   void Unsubscribe() {
-    nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
-    if (observerService) {
-      observerService->RemoveObserver(this, "document-title-changed");
+    if (mIsSubscribed) {
+      mIsSubscribed = false;
+      nsCOMPtr<nsIObserverService> observerService =
+          mozilla::services::GetObserverService();
+      if (observerService) {
+        observerService->RemoveObserver(this, "document-title-changed");
+      }
     }
   }
 
@@ -4576,6 +4585,7 @@ class HTMLMediaElement::TitleChangeObserver final : public nsIObserver {
   ~TitleChangeObserver() = default;
 
   WeakPtr<HTMLMediaElement> mElement;
+  bool mIsSubscribed{false};
 };
 
 NS_IMPL_ISUPPORTS(HTMLMediaElement::TitleChangeObserver, nsIObserver)
