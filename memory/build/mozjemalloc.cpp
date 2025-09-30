@@ -1914,7 +1914,16 @@ ArenaPurgeResult arena_t::Purge(PurgeCondition aCond, PurgeStats& aStats) {
     // means it may return before the arena meets its dirty page count target,
     // the return value is used by the caller to call Purge() again where it
     // will take the next chunk with dirty pages.
-    chunk = mChunksDirty.Last();
+    if (mSpare && mSpare->mNumDirty && !mSpare->mIsPurging) {
+      // If the spare chunk has dirty pages then try to purge these first.
+      //
+      // They're unlikely to be used in the near future because the spare chunk
+      // is only used if there's no run in mRunsAvail suitable.  mRunsAvail
+      // never contains runs from the spare chunk.
+      chunk = mSpare;
+    } else {
+      chunk = mChunksDirty.Last();
+    }
     if (!chunk) {
       // There are chunks with dirty pages (because mNumDirty > 0 above) but
       // they're not in mChunksDirty.  That can happen if they're busy being
