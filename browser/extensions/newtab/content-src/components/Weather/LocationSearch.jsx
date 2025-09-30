@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React, { useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector, batch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 
 function LocationSearch({ outerClassName }) {
@@ -16,17 +16,10 @@ function LocationSearch({ outerClassName }) {
     state => state.Weather.locationSearchString
   );
 
-  const prefs = useSelector(state => state.Prefs.values);
-
-  const showWeatherOptIn = prefs["system.showWeatherOptIn"];
-  const optInAccepted = prefs["weather.optInAccepted"];
-
   const [userInput, setUserInput] = useState(locationSearchString || "");
   const inputRef = useRef(null);
 
   const dispatch = useDispatch();
-
-  const canUseUserLocation = showWeatherOptIn && optInAccepted;
 
   useEffect(() => {
     if (selectedLocation) {
@@ -55,33 +48,9 @@ function LocationSearch({ outerClassName }) {
     inputRef?.current?.focus();
   }, [inputRef]);
 
-  function handleOptInLocation() {
-    batch(() => {
-      dispatch(
-        ac.AlsoToMain({
-          type: at.WEATHER_USER_OPT_IN_LOCATION,
-        })
-      );
-
-      dispatch(
-        ac.BroadcastToContent({
-          type: at.WEATHER_SEARCH_ACTIVE,
-          data: false,
-        })
-      );
-    });
-  }
-
   function handleChange(event) {
     const { value } = event.target;
     setUserInput(value);
-
-    // If a user from a location listed optIn-region-weather-config pref selects Yes from the opt-in dialog,
-    // a persistent value of "Use my location" will show up when focussed on the Input element
-    if (value === "Use my location") {
-      handleOptInLocation();
-      return;
-    }
 
     // if the user input contains less than three characters and suggestedLocations is not an empty array,
     // reset suggestedLocations to [] so there aren't incorrect items in the datalist
@@ -147,11 +116,6 @@ function LocationSearch({ outerClassName }) {
           onClick={handleCloseSearch}
         />
         <datalist id="merino-location-list">
-          {canUseUserLocation && (
-            <option value="Use my location" selected={true}>
-              Use my location
-            </option>
-          )}
           {(suggestedLocations || []).map(merinoLocation => (
             <option value={merinoLocation.key} key={merinoLocation.key}>
               {merinoLocation.localized_name},{" "}

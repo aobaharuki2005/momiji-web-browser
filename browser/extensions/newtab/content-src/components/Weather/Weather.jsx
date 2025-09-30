@@ -221,9 +221,8 @@ export class _Weather extends React.PureComponent {
       this.props.dispatch(ac.SetPref("weather.optInAccepted", true));
       this.props.dispatch(ac.SetPref("weather.optInDisplayed", false));
       this.props.dispatch(
-        ac.BroadcastToContent({
-          type: at.WEATHER_SEARCH_ACTIVE,
-          data: true,
+        ac.AlsoToMain({
+          type: at.WEATHER_USER_OPT_IN_LOCATION,
         })
       );
     });
@@ -288,8 +287,8 @@ export class _Weather extends React.PureComponent {
 
     // Show static weather data only if:
     // - weather is enabled on customization menu
-    // weather opt-in pref is enabled
-    // static weather data is enabled
+    // - weather opt-in pref is enabled
+    // - static weather data is enabled
     const showStaticData =
       isUserWeatherEnabled && isOptInEnabled && staticDataEnabled;
 
