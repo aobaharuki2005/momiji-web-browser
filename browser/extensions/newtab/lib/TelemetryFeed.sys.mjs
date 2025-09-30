@@ -897,12 +897,16 @@ export class TelemetryFeed {
           topic,
         } = action.data.value ?? {};
 
+        /**
+         * @backward-compat { version 145 }
+         *
+         * Bug 1990626 - Train-hop Compat Fix (Missing metrics.yaml key)
+         */
         const is145AndUp =
           Services.vc.compare(AppConstants.MOZ_APP_VERSION, "145.0a1") >= 0;
 
         const gleanData = {
           tile_id,
-          // Bug 1990626 - Remove version check after 145 has shipped
           ...(is145AndUp ? { position: action_position } : {}),
           // We conditionally add in a few props.
           ...(corpus_item_id ? { corpus_item_id } : {}),
@@ -1817,8 +1821,28 @@ export class TelemetryFeed {
                 recommendation_id: datum.recommendation_id,
               }),
         };
+
+        /**
+         * @backward-compat { version 145 }
+         *
+         * Bug 1991132 - Train-hop Compat Fix (Missing metrics.yaml key)
+         * Optimization: This logic should be moved back to its previous position inside the  Glean.pocket.dismiss.record() function
+         */
+        const possiblyRedactedNewTabPing = this.redactNewTabPing(
+          gleanData,
+          gleanData.is_sponsored
+        );
+
+        const is143_144 =
+          Services.vc.compare(AppConstants.MOZ_APP_VERSION, "143.0a1") >= 0 &&
+          Services.vc.compare(AppConstants.MOZ_APP_VERSION, "145.0a1") < 0;
+
+        if (is143_144) {
+          delete possiblyRedactedNewTabPing.content_redacted;
+        }
+
         Glean.pocket.dismiss.record({
-          ...this.redactNewTabPing(gleanData, gleanData.is_sponsored),
+          possiblyRedactedNewTabPing,
           newtab_visit_id: session.session_id,
         });
         if (this.privatePingEnabled) {
