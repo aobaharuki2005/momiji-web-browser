@@ -109,7 +109,6 @@
     #lastGroup;
     connectedCallback() {
       this.#updateOnTabGrouped();
-      this.#updateOnTabSplit();
       this.#lastGroup = this.group;
 
       this.initialize();
@@ -117,7 +116,6 @@
 
     disconnectedCallback() {
       this.#updateOnTabUngrouped();
-      this.#updateOnTabUnsplit();
     }
 
     initialize() {
@@ -766,33 +764,6 @@
         // given tab is "2 of 7" in the group, for example.
         this.removeAttribute("aria-posinset");
         this.removeAttribute("aria-setsize");
-      }
-    }
-
-    #updateOnTabSplit() {
-      if (this.splitview) {
-        this.setAttribute("aria-level", 2);
-
-        // Add "Split view" to label if tab is within a split view
-        let splitViewLabel = gBrowser.tabLocalization.formatValueSync(
-          "tabbrowser-tab-label-tab-split-view"
-        );
-        this.setAttribute(
-          "aria-label",
-          `${this.getAttribute("label")}, ${splitViewLabel}`
-        );
-      }
-    }
-
-    #updateOnTabUnsplit() {
-      if (this.splitview) {
-        this.setAttribute("aria-level", 1);
-        // `posinset` and `setsize` only need to be set explicitly
-        // on split view tabs so that a11y tools can tell users that a
-        // given tab is "1 of 2" in the split view, for example.
-        this.removeAttribute("aria-posinset");
-        this.removeAttribute("aria-setsize");
-        this.removeAttribute("aria-label");
       }
     }
   }

@@ -6569,7 +6569,7 @@
       }
 
       this.#handleTabMove(aTab, () =>
-        aSplitViewWrapper.container.appendChild(aTab)
+        aSplitViewWrapper.wrapper.appendChild(aTab)
       );
       this.removeFromMultiSelectedTabs(aTab);
       this.tabContainer._notifyBackgroundTab(aTab);
@@ -7469,6 +7469,7 @@
       }
 
       // Add a line to the tooltip with additional tab context (e.g. container
+      // membership, tab group membership) when applicable.
       let containerName = tab.userContextId
         ? ContextualIdentityService.getUserContextLabel(tab.userContextId)
         : "";
