@@ -181,7 +181,6 @@ button,
 input::placeholder,
 input::-moz-text-control-editing-root,
 input::-moz-text-control-preview {
-  overflow-clip-box: padding-box content-box;
   scrollbar-width: none;
   resize: none;
   word-wrap: normal;

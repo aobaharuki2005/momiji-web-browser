@@ -660,20 +660,22 @@ void nsTextControlFrame::ReflowTextControlChild(
   const LogicalSize paddingBoxSize = contentBoxSize + parentPadding.Size(wm);
   const LogicalSize borderBoxSize =
       paddingBoxSize + aReflowInput.ComputedLogicalBorder(wm).Size(wm);
-  LogicalSize availSize = paddingBoxSize;
-  availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-
+  const bool singleLine = IsSingleLineTextControl();
   const bool isButtonBox = IsButtonBox(aKid);
-
+  LogicalSize availSize =
+      !isButtonBox && singleLine ? contentBoxSize : paddingBoxSize;
+  availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
   ReflowInput kidReflowInput(aPresContext, aReflowInput, aKid, availSize,
                              Nothing(), ReflowInput::InitFlag::CallerWillInit);
 
   // Override padding with our computed padding in case we got it from theming
   // or percentage, if we're not the button box.
   auto overridePadding = isButtonBox ? Nothing() : Some(parentPadding);
-  if (!isButtonBox && aButtonBoxISize) {
+  if (!isButtonBox && singleLine) {
     // Button box respects inline-end-padding, so we don't need to.
-    overridePadding->IEnd(outerWM) = 0;
+    // inline-padding is not propagated to the scroller for single-line text
+    // controls.
+    overridePadding->IStart(outerWM) = overridePadding->IEnd(outerWM) = 0;
   }
 
   // We want to let our button box fill the frame in the block axis, up to the
@@ -697,6 +699,9 @@ void nsTextControlFrame::ReflowTextControlChild(
     // actually "inherits" that padding and manages it on behalf of the parent.
     position.B(wm) = border.BStart(wm);
     position.I(wm) = border.IStart(wm);
+    if (singleLine) {
+      position.I(wm) += parentPadding.IStart(wm);
+    }
 
     // Set computed width and computed height for the child (the button box is
     // the only exception, which has an auto size).
