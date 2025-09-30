@@ -777,7 +777,10 @@ static bool FactorySupports(ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
 
 static nsresult IsHDCPVersionSupported(
     ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
-    const nsString& aKeySystem, const dom::HDCPVersion& aMinHdcpVersion) {
+    const nsString& aKeySystem, const dom::HDCPVersion& aMinHdcpVersion,
+    nsISerialEventTarget* aManagerThread) {
+  MOZ_ASSERT(!aManagerThread->IsOnCurrentThread(),
+             "Should not block the manager thread!");
   nsresult rv = NS_OK;
   // Codec doesn't matter when querying the HDCP policy, so use H264.
   if (!FactorySupports(aFactory, aKeySystem, nsCString("avc1"),
@@ -1404,16 +1407,34 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetStatusForPolicy(
     const dom::HDCPVersion& aMinHdcpVersion,
     GetStatusForPolicyResolver&& aResolver) {
   ASSERT_CDM_ACCESS_READ_ONLY_ON_MANAGER_THREAD();
-  auto rv = IsHDCPVersionSupported(mFactory, mKeySystem, aMinHdcpVersion);
-  if (IsBeingProfiledOrLogEnabled()) {
-    nsPrintfCString msg("HDCP version=%u, support=%s",
-                        static_cast<uint8_t>(aMinHdcpVersion),
-                        rv == NS_OK ? "true" : "false");
-    MFCDM_PARENT_LOG("%s", msg.get());
-    PROFILER_MARKER_TEXT("MFCDMParent::RecvGetStatusForPolicy", MEDIA_PLAYBACK,
-                         {}, msg);
+  nsCOMPtr<nsISerialEventTarget> backgroundTaskQueue;
+  if (NS_FAILED(NS_CreateBackgroundTaskQueue(
+          __func__, getter_AddRefs(backgroundTaskQueue)))) {
+    MFCDM_PARENT_LOG("Failed to create a background task queue");
+    aResolver(NS_ERROR_FAILURE);
+    return IPC_OK();
   }
-  aResolver(rv);
+  using HDCPPromise = MozPromise<nsresult, nsresult, /* IsExclusive = */ true>;
+  RefPtr<HDCPPromise::Private> p = new HDCPPromise::Private(__func__);
+  Unused << backgroundTaskQueue->Dispatch(NS_NewRunnableFunction(
+      __func__, [self = RefPtr<MFCDMParent>(this), this, aMinHdcpVersion, p] {
+        auto rv = IsHDCPVersionSupported(mFactory, mKeySystem, aMinHdcpVersion,
+                                         mManagerThread);
+        if (IsBeingProfiledOrLogEnabled()) {
+          nsPrintfCString msg("HDCP version=%u, support=%s",
+                              static_cast<uint8_t>(aMinHdcpVersion),
+                              rv == NS_OK ? "true" : "false");
+          MFCDM_PARENT_LOG("%s", msg.get());
+          PROFILER_MARKER_TEXT("MFCDMParent::RecvGetStatusForPolicy",
+                               MEDIA_PLAYBACK, {}, msg);
+        }
+        p->Resolve(rv, __func__);
+      }));
+  p->Then(mManagerThread, __func__,
+          [resolver = aResolver](HDCPPromise::ResolveOrRejectValue&& aRv) {
+            MOZ_ASSERT(aRv.IsResolve());
+            resolver(aRv.ResolveValue());
+          });
   return IPC_OK();
 }
 
