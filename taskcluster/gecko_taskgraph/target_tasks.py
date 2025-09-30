@@ -1063,7 +1063,12 @@ def target_tasks_searchfox(full_task_graph, parameters, graph_config):
         else:
             # Find the earlier expiration time of existing tasks
             taskdef = get_task_definition(task["taskId"])
-            task_graph = get_artifact(task["taskId"], "public/task-graph.json")
+            try:
+                task_graph = get_artifact(task["taskId"], "public/task-graph.json")
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code != 404:
+                    raise
+                task_graph = None
             if task_graph:
                 base_time = parse_time(taskdef["created"])
                 first_expiry = min(
