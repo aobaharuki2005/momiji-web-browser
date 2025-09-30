@@ -145,6 +145,22 @@ class ChoiceDialogFragmentTest {
     }
 
     @Test
+    fun `Will show a single choise separator item`() {
+        val choices = arrayOf(separator)
+
+        val fragment = spy(newInstance(choices, "sessionId", "uid", false, SINGLE_CHOICE_DIALOG_TYPE))
+
+        doReturn(appCompatContext).`when`(fragment).requireContext()
+
+        val adapter = getAdapterFrom(fragment)
+        val holder = adapter.onCreateViewHolder(LinearLayout(testContext), TYPE_MENU_SEPARATOR)
+        adapter.bindViewHolder(holder, 0)
+
+        assertEquals(1, adapter.itemCount)
+        assertNotNull(holder.itemView)
+    }
+
+    @Test
     fun `Will show a menu choice item`() {
         val choices = arrayOf(item)
 
@@ -287,6 +303,22 @@ class ChoiceDialogFragmentTest {
         assertEquals("item1", (groupHolder.labelView as TextView).text)
         assertEquals("sub-item1", holder.labelView.text.trim())
         assertEquals(true, holder.labelView.isChecked)
+    }
+
+    @Test
+    fun `Will show a multiple choice separator item`() {
+        val choices = arrayOf(separator)
+
+        val fragment = spy(newInstance(choices, "sessionId", "uid", true, MULTIPLE_CHOICE_DIALOG_TYPE))
+
+        doReturn(appCompatContext).`when`(fragment).requireContext()
+
+        val adapter = getAdapterFrom(fragment)
+        val holder = adapter.onCreateViewHolder(LinearLayout(testContext), TYPE_MENU_SEPARATOR)
+        adapter.bindViewHolder(holder, 0)
+
+        assertEquals(1, adapter.itemCount)
+        assertNotNull(holder.itemView)
     }
 
     @Test
