@@ -777,6 +777,10 @@ class PresShell final : public nsStubDocumentObserver,
     mAnchorPosPositioned.RemoveElement(aFrame);
   }
 
+  const nsTArray<nsIFrame*>& GetAnchorPosPositioned() const {
+    return mAnchorPosPositioned;
+  }
+
 #ifdef MOZ_REFLOW_PERF
   void DumpReflows();
   void CountReflows(const char* aName, nsIFrame* aFrame);

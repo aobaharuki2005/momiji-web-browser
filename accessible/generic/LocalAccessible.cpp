@@ -30,6 +30,7 @@
 #include "mozilla/a11y/Role.h"
 #include "RootAccessible.h"
 #include "States.h"
+#include "TextLeafAccessible.h"
 #include "TextLeafRange.h"
 #include "TextRange.h"
 #include "HTMLElementAccessibles.h"
@@ -2193,6 +2194,69 @@ LocalAccessible* LocalAccessible::GetPopoverTargetDetailsRelation() const {
   return targetAcc;
 }
 
+LocalAccessible* LocalAccessible::GetAnchorPositionTargetDetailsRelation()
+    const {
+  nsIFrame* positionedFrame = nsCoreUtils::GetPositionedFrameForAnchor(
+      mDoc->PresShellPtr(), GetFrame());
+  if (!positionedFrame) {
+    return nullptr;
+  }
+
+  if (!nsCoreUtils::GetAnchorForPositionedFrame(mDoc->PresShellPtr(),
+                                                positionedFrame)) {
+    // There is no reciprocal, 1:1, anchor for this positioned frame.
+    return nullptr;
+  }
+
+  LocalAccessible* targetAcc =
+      mDoc->GetAccessible(positionedFrame->GetContent());
+
+  if (!targetAcc) {
+    return nullptr;
+  }
+
+  if (targetAcc->Role() == roles::TOOLTIP) {
+    // A tooltip is never a valid target for details relation.
+    return nullptr;
+  }
+
+  AssociatedElementsIterator describedby(mDoc, GetContent(),
+                                         nsGkAtoms::aria_describedby);
+  while (LocalAccessible* target = describedby.Next()) {
+    if (target == targetAcc) {
+      // An explicit description relation exists, so we don't want to create a
+      // details relation.
+      return nullptr;
+    }
+  }
+
+  AssociatedElementsIterator labelledby(mDoc, GetContent(),
+                                        nsGkAtoms::aria_labelledby);
+  while (LocalAccessible* target = labelledby.Next()) {
+    if (target == targetAcc) {
+      // An explicit label relation exists, so we don't want to create a details
+      // relation.
+      return nullptr;
+    }
+  }
+
+  dom::Element* anchorEl = targetAcc->Elm();
+  if (anchorEl && anchorEl->HasAttr(nsGkAtoms::aria_details)) {
+    // If the anchor has an explicit aria-details attribute, then we don't want
+    // to create a details relation.
+    return nullptr;
+  }
+
+  dom::Element* targetEl = Elm();
+  if (targetEl && targetEl->HasAttr(nsGkAtoms::aria_details)) {
+    // If the target has an explicit aria-details attribute, then we don't want
+    // to create a details relation.
+    return nullptr;
+  }
+
+  return targetAcc;
+}
+
 Relation LocalAccessible::RelationByType(RelationType aType) const {
   if (!HasOwnContent()) return Relation();
 
@@ -2508,6 +2572,12 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
       if (LocalAccessible* target = GetPopoverTargetDetailsRelation()) {
         return Relation(target);
       }
+      if (LocalAccessible* target = GetAnchorPositionTargetDetailsRelation()) {
+        if (nsAccUtils::IsValidDetailsTargetForAnchor(target, this)) {
+          return Relation(target);
+        }
+      }
+
       return Relation();
     }
 
@@ -2538,6 +2608,21 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
           rel.AppendTarget(invoker);
         }
       }
+
+      // Check early if the accessible is a tooltip. If so, it can never be a
+      // valid target for an anchor's details relation.
+      if (Role() != roles::TOOLTIP) {
+        if (nsIFrame* anchorFrame = nsCoreUtils::GetAnchorForPositionedFrame(
+                mDoc->PresShellPtr(), GetFrame())) {
+          LocalAccessible* anchorAcc =
+              mDoc->GetAccessible(anchorFrame->GetContent());
+          if (anchorAcc->GetAnchorPositionTargetDetailsRelation() == this &&
+              nsAccUtils::IsValidDetailsTargetForAnchor(this, anchorAcc)) {
+            rel.AppendTarget(anchorAcc);
+          }
+        }
+      }
+
       return rel;
     }
 
