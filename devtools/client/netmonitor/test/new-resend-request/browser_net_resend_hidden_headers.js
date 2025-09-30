@@ -33,7 +33,7 @@ add_task(async function () {
     method: "GET",
     headers: requestHeaders,
     cause: {
-      loadingDocumentUri: "http://example.com",
+      loadingDocumentUri: "https://example.com",
       stacktraceAvailable: true,
       type: "xhr",
     },

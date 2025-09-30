@@ -35,14 +35,14 @@ add_task(async function () {
     headers: [
       { name: "Host", value: "fakehost.example.com" },
       { name: "User-Agent", value: "Testzilla" },
-      { name: "Referer", value: "http://example.com/referrer" },
+      { name: "Referer", value: "https://example.com/referrer" },
       { name: "Accept", value: "application/jarda" },
       { name: "Accept-Encoding", value: "compress, identity, funcoding" },
       { name: "Accept-Language", value: "cs-CZ" },
     ],
     body: "Hello",
     cause: {
-      loadingDocumentUri: "http://example.com",
+      loadingDocumentUri: "https://example.com",
       stacktraceAvailable: true,
       type: "xhr",
     },
