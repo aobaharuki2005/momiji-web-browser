@@ -40,6 +40,10 @@ impl From<ExportTraceServiceRequest> for fog_object::Traces {
         let ExportTraceServiceRequest { resource_spans } = value;
 
         Self {
+            // Version identifier used by the ETL backend to determine data compatibility.
+            // The backend will drop traces with unknown or outdated versions to prevent
+            // parsing errors from schema changes.
+            version: Some("0.1".to_owned()),
             resource_spans: resource_spans
                 .into_iter()
                 .map(fog_object::ResourceSpans::from)

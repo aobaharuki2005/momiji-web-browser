@@ -42,10 +42,13 @@ gecko_trace:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1930954
     expires: never
-    version: 0.1
+    # This is currently not transmitted over telemetry and thus useless for us
+    # version: 0.1
     structure:
       type: object
       properties:
+        version:
+          type: string
         resource_spans:
           type: array
           items:
