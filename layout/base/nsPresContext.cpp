@@ -1347,9 +1347,7 @@ void nsPresContext::SetImageAnimationMode(uint16_t aMode) {
   if (mPresShell) {
     dom::Document* doc = mPresShell->GetDocument();
     if (doc) {
-      if (css::ImageLoader* loader = doc->GetStyleImageLoader()) {
-        loader->SetAnimationMode(aMode);
-      }
+      doc->StyleImageLoader()->SetAnimationMode(aMode);
 
       Element* rootElement = doc->GetRootElement();
       if (rootElement) {

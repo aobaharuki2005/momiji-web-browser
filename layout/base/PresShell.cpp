@@ -2220,9 +2220,7 @@ void PresShell::SetIgnoreFrameDestruction(bool aIgnore) {
   if (mDocument) {
     // We need to tell the ImageLoader to drop all its references to frames
     // because they're about to go away and it won't get notifications of that.
-    if (css::ImageLoader* loader = mDocument->GetStyleImageLoader()) {
-      loader->ClearFrames(mPresContext);
-    }
+    mDocument->StyleImageLoader()->ClearFrames(mPresContext);
   }
   mIgnoreFrameDestruction = aIgnore;
 }
@@ -2235,9 +2233,7 @@ void PresShell::NotifyDestroyingFrame(nsIFrame* aFrame) {
 
   if (!mIgnoreFrameDestruction) {
     if (aFrame->HasImageRequest()) {
-      if (css::ImageLoader* loader = mDocument->GetStyleImageLoader()) {
-        loader->DropRequestsForFrame(aFrame);
-      }
+      mDocument->StyleImageLoader()->DropRequestsForFrame(aFrame);
     }
 
     mFrameConstructor->NotifyDestroyingFrame(aFrame);

@@ -1288,12 +1288,8 @@ nsDOMWindowUtils::GetParsedStyleSheets(uint32_t* aSheets) {
   if (!doc) {
     return NS_ERROR_UNEXPECTED;
   }
-  css::Loader* cssLoader = doc->GetCSSLoader();
-  if (cssLoader) {
-    *aSheets = cssLoader->ParsedSheetCount();
-  } else {
-    *aSheets = 0;
-  }
+
+  *aSheets = doc->CSSLoader()->ParsedSheetCount();
   return NS_OK;
 }
 

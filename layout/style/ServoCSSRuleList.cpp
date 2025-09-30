@@ -210,7 +210,7 @@ nsresult ServoCSSRuleList::InsertRule(const nsACString& aRule,
   // StyleSheet::ReparseSheet just mints a new loader, but that'd be wrong in
   // this case I think, since such a load will bypass CSP checks.
   if (Document* doc = mStyleSheet->GetAssociatedDocument()) {
-    loader = doc->GetCSSLoader();
+    loader = doc->CSSLoader();
   }
   auto containingState = css::Rule::ContainingRuleState::From(mParentRule);
   StyleCssRuleType type;

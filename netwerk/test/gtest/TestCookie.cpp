@@ -126,15 +126,14 @@ void GetACookieNoHttp(nsICookieService* aCookieService, const char* aSpec,
   MOZ_RELEASE_ASSERT(principal);
 
   nsCOMPtr<mozilla::dom::Document> document;
-  nsresult rv =
-      NS_NewDOMDocument(getter_AddRefs(document),
-                        u""_ns,   // aNamespaceURI
-                        u""_ns,   // aQualifiedName
-                        nullptr,  // aDoctype
-                        uri, uri, principal,
-                        mozilla::dom::LoadedAsData::No,  // aLoadedAsData
-                        nullptr,                         // aEventObject
-                        DocumentFlavor::HTML);
+  nsresult rv = NS_NewDOMDocument(getter_AddRefs(document),
+                                  u""_ns,   // aNamespaceURI
+                                  u""_ns,   // aQualifiedName
+                                  nullptr,  // aDoctype
+                                  uri, uri, principal,
+                                  false,    // aLoadedAsData
+                                  nullptr,  // aEventObject
+                                  DocumentFlavor::HTML);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 
   nsAutoString cookie;

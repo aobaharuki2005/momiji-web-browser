@@ -19,8 +19,7 @@ namespace mozilla::dom {
 
 class XMLDocument : public Document {
  public:
-  XMLDocument(const char* aContentType,
-              mozilla::dom::LoadedAsData aLoadedAsData);
+  explicit XMLDocument(const char* aContentType = "application/xml");
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(XMLDocument, Document)
 
@@ -64,7 +63,7 @@ class XMLDocument : public Document {
                              JS::Handle<JSObject*> aGivenProto) override;
 
   friend nsresult(::NS_NewXMLDocument)(Document**, nsIPrincipal*, nsIPrincipal*,
-                                       mozilla::dom::LoadedAsData, bool);
+                                       bool, bool);
 
   // mChannelIsPending indicates whether we're currently asynchronously loading
   // data from mChannel.  It's set to true when we first find out about the

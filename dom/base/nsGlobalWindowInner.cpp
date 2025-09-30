@@ -7628,7 +7628,7 @@ JS::loader::ModuleLoaderBase* nsGlobalWindowInner::GetModuleLoader(
     return nullptr;
   }
 
-  ScriptLoader* loader = document->GetScriptLoader();
+  ScriptLoader* loader = document->ScriptLoader();
   if (!loader) {
     return nullptr;
   }
