@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+import hashlib
 from os.path import dirname
 from pathlib import Path
 
@@ -16,7 +17,7 @@ TEMPLATES = THIS_DIR / "templates"
 
 @memoize
 def get_deps():
-    # Any imported python module is added as a dep automatically,
+    # Any imported python module is added as a dependency automatically,
     # so we only need the templates.
     return {
         *[str(p) for p in TEMPLATES.iterdir()],
@@ -32,7 +33,14 @@ def generate_cpp_events(output_fd, *inputs):
     template = _jinja2_env().get_template("GeckoTraceEvents.h.jinja2")
     output_fd.write(
         template.render(
-            events=events, enabled=config.substs.get("GECKO_TRACE_ENABLE", False)
+            events=events,
+            enabled=config.substs.get("GECKO_TRACE_ENABLE", False),
+            # Generate a unique hash to prevent include guard conflicts when
+            # multiple event files are generated and included together (e.g., in gtests).
+            # This ensures each generated header has a distinct include guard.
+            input_hash=hashlib.sha256("".join(inputs).encode())
+            .hexdigest()
+            .upper()[:15],
         )
     )
 

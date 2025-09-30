@@ -22,7 +22,7 @@ class SpanEvent {
   virtual ~SpanEvent() = default;
 
   /**
-   * Iterate over all key-value pairs in this event.
+   * Iterate overall key-value pairs in this event.
    *
    * Calls the provided callback function for each attribute set in this event
    * instance. The iteration includes attributes from parent classes if this

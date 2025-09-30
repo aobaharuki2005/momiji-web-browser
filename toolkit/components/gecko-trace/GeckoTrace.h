@@ -7,9 +7,6 @@
 
 #include "mozilla/Logging.h"
 
-#include <memory>
-#include <string_view>
-
 #include "mozilla/GeckoTraceEvents.h"
 
 #define GECKO_TRACE_SCOPE(component, span_name)                  \
