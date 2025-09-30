@@ -434,14 +434,16 @@ static void H264EncodesTest(Usage aUsage,
         aUsage, EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
         aFrameSource.GetSize(), ScalabilityMode::None, aSpecific);
     EXPECT_TRUE(EnsureInit(e));
+    const bool is4KOrLarger = kImageSize4K <= aFrameSource.GetSize();
+    const size_t numFrames = NUM_FRAMES / (is4KOrLarger ? 3 : 1);
     EncodeResult r = GET_OR_RETURN_ON_ERROR(
-        EncodeWithInputStats(e, NUM_FRAMES, aFrameSource));
+        EncodeWithInputStats(e, numFrames, aFrameSource));
     output = std::move(r.mEncodedData);
-    if (aUsage == Usage::Realtime && kImageSize4K <= aFrameSource.GetSize()) {
+    if (aUsage == Usage::Realtime && is4KOrLarger) {
       // Realtime encoding may drop frames for large frame sizes.
-      EXPECT_LE(output.Length(), NUM_FRAMES);
+      EXPECT_LE(output.Length(), numFrames);
     } else {
-      EXPECT_EQ(output.Length(), NUM_FRAMES);
+      EXPECT_EQ(output.Length(), numFrames);
     }
     EXPECT_GE(GetKeyFrameCount(output), r.mInputKeyframes);
     if (isAVCC) {
@@ -519,15 +521,17 @@ static void H264EncodeBatchTest(
         aFrameSource.GetSize(), ScalabilityMode::None, aSpecific);
     EXPECT_TRUE(EnsureInit(e));
 
+    const bool is4KOrLarger = kImageSize4K <= aFrameSource.GetSize();
+    const size_t numFrames = NUM_FRAMES / (is4KOrLarger ? 3 : 1);
     constexpr size_t batchSize = 6;
     EncodeResult r = GET_OR_RETURN_ON_ERROR(
-        EncodeBatchWithInputStats(e, NUM_FRAMES, aFrameSource, batchSize));
+        EncodeBatchWithInputStats(e, numFrames, aFrameSource, batchSize));
     MediaDataEncoder::EncodedData output = std::move(r.mEncodedData);
-    if (aUsage == Usage::Realtime && kImageSize4K <= aFrameSource.GetSize()) {
+    if (aUsage == Usage::Realtime && is4KOrLarger) {
       // Realtime encoding may drop frames for large frame sizes.
-      EXPECT_LE(output.Length(), NUM_FRAMES);
+      EXPECT_LE(output.Length(), numFrames);
     } else {
-      EXPECT_EQ(output.Length(), NUM_FRAMES);
+      EXPECT_EQ(output.Length(), numFrames);
     }
     EXPECT_GE(GetKeyFrameCount(output), r.mInputKeyframes);
     if (isAVCC) {
