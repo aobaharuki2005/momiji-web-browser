@@ -266,21 +266,36 @@ static Result<MediaDataEncoder::EncodedData, MediaResult> Drain(
   return output;
 }
 
-static Result<MediaDataEncoder::EncodedData, MediaResult> Encode(
+struct EncodeResult {
+  MediaDataEncoder::EncodedData mEncodedData;
+  size_t mInputKeyframes = 0;
+};
+static Result<EncodeResult, MediaResult> EncodeWithInputStats(
     const RefPtr<MediaDataEncoder>& aEncoder, const size_t aNumFrames,
     MediaDataEncoderTest::FrameSource& aSource) {
   MOZ_RELEASE_ASSERT(aEncoder);
 
+  size_t inputKeyframes = 0;
   MediaDataEncoder::EncodedData output;
   for (size_t i = 0; i < aNumFrames; i++) {
     RefPtr<MediaData> frame = aSource.GetFrame(i);
+    if (frame->mKeyframe) {
+      inputKeyframes++;
+    }
     output.AppendElements(MOZ_TRY(WaitFor(aEncoder->Encode(frame))));
   }
   output.AppendElements(std::move(MOZ_TRY(Drain(aEncoder))));
-  return output;
+  return EncodeResult{std::move(output), inputKeyframes};
 }
 
-static Result<MediaDataEncoder::EncodedData, MediaResult> EncodeBatch(
+static Result<MediaDataEncoder::EncodedData, MediaResult> Encode(
+    const RefPtr<MediaDataEncoder>& aEncoder, const size_t aNumFrames,
+    MediaDataEncoderTest::FrameSource& aSource) {
+  EncodeResult r = MOZ_TRY(EncodeWithInputStats(aEncoder, aNumFrames, aSource));
+  return std::move(r.mEncodedData);
+}
+
+static Result<EncodeResult, MediaResult> EncodeBatchWithInputStats(
     const RefPtr<MediaDataEncoder>& aEncoder, const size_t aTotalNumFrames,
     MediaDataEncoderTest::FrameSource& aSource, const size_t aBatchSize) {
   if (aBatchSize == 0 || aTotalNumFrames == 0) {
@@ -289,10 +304,15 @@ static Result<MediaDataEncoder::EncodedData, MediaResult> EncodeBatch(
         "Batch size and total number of frames must be greater than 0"));
   }
 
+  size_t inputKeyframes = 0;
   MediaDataEncoder::EncodedData output;
   nsTArray<RefPtr<MediaData>> frames;
   for (size_t i = 0; i < aTotalNumFrames; i++) {
-    frames.AppendElement(aSource.GetFrame(i));
+    RefPtr<MediaData> frame = aSource.GetFrame(i);
+    frames.AppendElement(frame);
+    if (frame->mKeyframe) {
+      inputKeyframes++;
+    }
     if (frames.Length() == aBatchSize || i == aTotalNumFrames - 1) {
       nsTArray<RefPtr<MediaData>> batch = std::move(frames);
       output.AppendElements(
@@ -302,7 +322,18 @@ static Result<MediaDataEncoder::EncodedData, MediaResult> EncodeBatch(
   MOZ_RELEASE_ASSERT(frames.IsEmpty());
 
   output.AppendElements(std::move(MOZ_TRY(Drain(aEncoder))));
-  return output;
+  return EncodeResult{std::move(output), inputKeyframes};
+}
+
+template <typename T>
+size_t GetKeyFrameCount(const T& aData) {
+  size_t count = 0;
+  for (auto sample : aData) {
+    if (sample->mKeyframe) {
+      count++;
+    }
+  }
+  return count;
 }
 
 Result<uint8_t, nsresult> GetNALUSize(const mozilla::MediaRawData* aSample) {
@@ -398,19 +429,23 @@ static void H264EncodesTest(Usage aUsage,
     EXPECT_TRUE(isAVCC ? AnnexB::IsAVCC(output[0])
                        : AnnexB::IsAnnexB(output[0]));
     WaitForShutdown(e);
+    output.Clear();
 
     // Encode multiple frames and output in AnnexB/AVCC format.
     e = CreateH264Encoder(
         aUsage, EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
         aFrameSource.GetSize(), ScalabilityMode::None, aSpecific);
     EXPECT_TRUE(EnsureInit(e));
-    output = GET_OR_RETURN_ON_ERROR(Encode(e, NUM_FRAMES, aFrameSource));
+    EncodeResult r = GET_OR_RETURN_ON_ERROR(
+        EncodeWithInputStats(e, NUM_FRAMES, aFrameSource));
+    output = std::move(r.mEncodedData);
     if (aUsage == Usage::Realtime && kImageSize4K <= aFrameSource.GetSize()) {
       // Realtime encoding may drop frames for large frame sizes.
       EXPECT_LE(output.Length(), NUM_FRAMES);
     } else {
       EXPECT_EQ(output.Length(), NUM_FRAMES);
     }
+    EXPECT_GE(GetKeyFrameCount(output), r.mInputKeyframes);
     if (isAVCC) {
       uint8_t naluSize = GetNALUSize(output[0]).unwrapOr(0);
       EXPECT_GT(naluSize, 0);
@@ -487,14 +522,16 @@ static void H264EncodeBatchTest(
     EXPECT_TRUE(EnsureInit(e));
 
     constexpr size_t batchSize = 6;
-    MediaDataEncoder::EncodedData output = GET_OR_RETURN_ON_ERROR(
-        EncodeBatch(e, NUM_FRAMES, aFrameSource, batchSize));
+    EncodeResult r = GET_OR_RETURN_ON_ERROR(
+        EncodeBatchWithInputStats(e, NUM_FRAMES, aFrameSource, batchSize));
+    MediaDataEncoder::EncodedData output = std::move(r.mEncodedData);
     if (aUsage == Usage::Realtime && kImageSize4K <= aFrameSource.GetSize()) {
       // Realtime encoding may drop frames for large frame sizes.
       EXPECT_LE(output.Length(), NUM_FRAMES);
     } else {
       EXPECT_EQ(output.Length(), NUM_FRAMES);
     }
+    EXPECT_GE(GetKeyFrameCount(output), r.mInputKeyframes);
     if (isAVCC) {
       uint8_t naluSize = GetNALUSize(output[0]).unwrapOr(0);
       EXPECT_GT(naluSize, 0);
