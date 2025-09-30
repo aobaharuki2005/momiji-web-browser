@@ -483,9 +483,10 @@ class SelectableProfileServiceClass extends EventEmitter {
       return;
     }
 
-    try {
-      Services.obs.removeObserver(this, "lightweight-theme-styling-update");
-    } catch (e) {}
+    Services.obs.removeObserver(
+      this.themeObserver,
+      "lightweight-theme-styling-update"
+    );
 
     lazy.NimbusFeatures.selectableProfiles.offUpdate(this.onNimbusUpdate);
 
