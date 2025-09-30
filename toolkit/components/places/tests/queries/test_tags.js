@@ -610,6 +610,10 @@ function queryURI(aQuery, aQueryOpts) {
 /**
  * Ensures that the arrays contain the same elements and, optionally, in the
  * same order.
+ *
+ * @param {*[]} aArr1
+ * @param {*[]} aArr2
+ * @param {boolean} aIsOrdered
  */
 function setsAreEqual(aArr1, aArr2, aIsOrdered) {
   Assert.equal(aArr1.length, aArr2.length);

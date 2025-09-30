@@ -3,9 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * PlacesSemanticHistoryManager manages the semantic.sqlite database and provides helper
- * methods for initializing, querying, and updating semantic data.
- *
  * This module handles embeddings-based semantic search capabilities using the
  * Places database and an ML engine for vector operations.
  */
@@ -49,6 +46,10 @@ const ONE_MiB = 1024 * 1024;
 // minimum title length threshold; Usage len(title || description) > MIN_TITLE_LENGTH
 const MIN_TITLE_LENGTH = 4;
 
+/**
+ * PlacesSemanticHistoryManager manages the semantic.sqlite database and provides helper
+ * methods for initializing, querying, and updating semantic data.
+ */
 class PlacesSemanticHistoryManager {
   #promiseConn;
   #engine = undefined;

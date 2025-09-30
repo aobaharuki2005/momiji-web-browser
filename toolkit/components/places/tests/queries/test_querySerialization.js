@@ -514,6 +514,7 @@ function cartProd(aSequences, aCallback) {
  *   An array from which to choose elements, aSet.length > 0.
  * @param {number} aHowMany
  *   The number of elements to choose, > 0 and <= aSet.length.
+ * @param {number[]} aCallback
  * @returns {number}
  *   The total number of sets chosen.
  */

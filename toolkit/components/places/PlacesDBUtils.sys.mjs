@@ -933,6 +933,8 @@ export var PlacesDBUtils = {
        *
        * @typedef {object} ExpirationWrappedJSObject
        * @property {function(): Promise<number>} getPagesLimit
+       *   A function that returns the maximum number of pages that should be
+       *   retained.
        */
 
       // This has to be type cast because wrappedJSObject is an object.

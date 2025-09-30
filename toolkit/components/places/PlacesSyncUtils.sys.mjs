@@ -726,6 +726,9 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
   /**
    * Converts a Places GUID to a Sync record ID. Record IDs are identical to
    * Places GUIDs for all items except roots.
+   *
+   * @param {string} guid
+   * @returns {string}
    */
   guidToRecordId(guid) {
     return lazy.ROOT_GUID_TO_RECORD_ID[guid] || guid;
@@ -733,6 +736,9 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
 
   /**
    * Converts a Sync record ID to a Places GUID.
+   *
+   * @param {string} recordId
+   * @returns {string}
    */
   recordIdToGuid(recordId) {
     return lazy.ROOT_RECORD_ID_TO_GUID[recordId] || recordId;
@@ -742,6 +748,9 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
    * Fetches the record IDs for a folder's children, ordered by their position
    * within the folder.
    * Used only be tests - but that includes tps, so it lives here.
+   *
+   * @param {string} parentRecordId
+   * @returns {Promise<string[]>}
    */
   fetchChildRecordIds(parentRecordId) {
     lazy.PlacesUtils.SYNC_BOOKMARK_VALIDATORS.recordId(parentRecordId);
@@ -757,12 +766,15 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
   },
 
   /**
-   * Migrates an array of `{ recordId, modified }` tuples from the old JSON-based
-   * tracker to the new sync change counter. `modified` is when the change was
-   * added to the old tracker, in milliseconds.
+   * Migrates an array of tuples from the old JSON-based tracker to the new sync
+   * change counter.
    *
    * Sync calls this method before the first bookmark sync after the Places
    * schema migration.
+   *
+   * @param {{recordId: string, modified: number}[]} entries
+   *   `recordId` is the record identifier. `modified` is when the change was
+   *   added to the old tracker, in milliseconds.
    */
   migrateOldTrackerEntries(entries) {
     return lazy.PlacesUtils.withConnectionWrapper(
@@ -1067,6 +1079,8 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
    *
    * See the comment above `BookmarksStore::deletePending` for the details on
    * why delete works the way it does.
+   *
+   * @param {string[]} recordIds
    */
   remove(recordIds) {
     if (!recordIds.length) {
@@ -1184,6 +1198,8 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
    *    children, used to determine child order.
    *  - folder ("query"): The tag folder name, if this is a tag query.
    *  - index ("separator"): The separator's position within its parent.
+   *
+   * @param {string} recordId
    */
   async fetch(recordId) {
     let guid = BookmarkSyncUtils.recordIdToGuid(recordId);
@@ -1237,6 +1253,8 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
 
   /**
    * Returns the sync change counter increment for a change source constant.
+   *
+   * @param {string} source
    */
   determineSyncChangeDelta(source) {
     // Don't bump the change counter when applying changes made by Sync, to
@@ -1246,6 +1264,8 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
 
   /**
    * Returns the sync status for a new item inserted by a change source.
+   *
+   * @param {string} source
    */
   determineInitialSyncStatus(source) {
     if (source == lazy.PlacesUtils.bookmarks.SOURCES.SYNC) {
@@ -1300,6 +1320,10 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
    * Returns `0` if no sensible timestamp could be found.
    * Otherwise, returns the earliest sensible timestamp between `existingMillis`
    * and `serverMillis`.
+   *
+   * @param {number} existingMillis
+   * @param {number} serverMillis
+   * @param {number} [lowerBound]
    */
   ratchetTimestampBackwards(
     existingMillis,
@@ -1987,6 +2011,9 @@ var deleteSyncedAtom = async function (bookmarkItem) {
  * we write tombstones if a new item is deleted after an interrupted sync. (For
  * example, if a "NEW" record is uploaded or reconciled, then the app is closed
  * before Sync calls `pushChanges`).
+ *
+ * @param {OpenedConnection} db
+ * @param {object} changeRecords
  */
 function markChangesAsSyncing(db, changeRecords) {
   let unsyncedGuids = [];
@@ -2018,6 +2045,8 @@ function markChangesAsSyncing(db, changeRecords) {
 /**
  * Removes tombstones for successfully synced items.
  *
+ * @param {OpenedConnection} db
+ * @param {string[]} guids
  * @returns {Promise}
  */
 var removeTombstones = function (db, guids) {
@@ -2033,6 +2062,8 @@ var removeTombstones = function (db, guids) {
  * Removes tombstones for successfully synced items where the specified GUID
  * exists in *both* the bookmarks and tombstones tables.
  *
+ * @param {OpenedConnection} db
+ * @param {string[]} guids
  * @returns {Promise}
  */
 var removeUndeletedTombstones = function (db, guids) {

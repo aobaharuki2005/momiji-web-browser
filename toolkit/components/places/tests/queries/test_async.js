@@ -140,6 +140,9 @@ Test.prototype = {
    * the state change and ensures that it has been observed the given number
    * of times.  See checkState for parameter explanations.
    *
+   * @param {string} aState
+   * @param {number} aExpectedMin
+   * @param {number} aExpectedMax
    * @returns {number}
    *   The number of times aState has been observed, including the new observation.
    */

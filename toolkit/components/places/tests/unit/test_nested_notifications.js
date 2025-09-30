@@ -128,6 +128,9 @@ function notifyPlacesEvent(guid) {
   ]);
 }
 
+/**
+ * An observer which stores an array of the notifications received.
+ */
 class Observer {
   constructor() {
     this.notifications = [];

@@ -132,6 +132,7 @@ function DBConn(aForceNewConnection) {
 /**
  * Reads data from the provided inputstream.
  *
+ * @param {nsIInputStream} aStream
  * @returns {number[]}
  *   An array of bytes.
  */
@@ -724,6 +725,8 @@ function checkBookmarkObject(info) {
 
 /**
  * Reads foreign_count value for a given url.
+ *
+ * @param {string|nsIURI} url
  */
 async function foreign_count(url) {
   if (url instanceof Ci.nsIURI) {
@@ -755,6 +758,10 @@ function sortBy(array, prop) {
 
 /**
  * Asynchronously compares contents from 2 favicon urls.
+ *
+ * @param {string|nsIURI} icon1
+ * @param {string|nsIURI} icon2
+ * @param {string} msg
  */
 async function compareFavicons(icon1, icon2, msg) {
   icon1 = new URL(icon1 instanceof Ci.nsIURI ? icon1.spec : icon1);

@@ -30,11 +30,12 @@ function createPlacesSemanticHistoryManager(options = {}) {
   );
 }
 
+/**
+ * Mock engine that simulates an ML embedding engine.
+ */
 class MockMLEngine {
   #entries;
   /**
-   * Mock engine that simulates an ML embedding engine.
-   *
    * @param {Array} entries - Array of entries with title and vector properties.
    */
   constructor(entries = []) {

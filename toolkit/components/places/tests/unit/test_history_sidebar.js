@@ -136,6 +136,8 @@ add_task(async function task_fill_history() {
 /**
  * Bug 485703 - Hide date containers not containing additional entries compared
  *              to previous ones.
+ *
+ * @param {number} aOffset
  */
 function check_visit(aOffset) {
   let root = openRootForResultType(
@@ -344,6 +346,8 @@ add_task(async function test_RESULTS_AS_SITE_QUERY() {
 
 /**
  * Checks that queries grouped by date do liveupdate correctly.
+ *
+ * @param {nsINavHistoryQueryOptions.ResultType} aResultType
  */
 async function test_date_liveupdate(aResultType) {
   let midnight = toMidnight(nowObj);

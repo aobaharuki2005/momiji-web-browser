@@ -164,6 +164,10 @@ ChromeUtils.defineLazyGetter(lazy, "logger", function () {
   return PlacesUtils.getLogger({ prefix: "Transactions" });
 });
 
+/**
+ * Keeps track of the history of transactions, including their redo and undo
+ * points.
+ */
 class TransactionsHistoryArray extends Array {
   constructor() {
     super();
@@ -303,6 +307,9 @@ ChromeUtils.defineLazyGetter(
 export var PlacesTransactions = {
   /**
    * @see Batches in the module documentation.
+   *
+   * @param {object[]} transactionsToBatch
+   * @param {string} batchName
    */
   batch(transactionsToBatch, batchName) {
     if (!Array.isArray(transactionsToBatch) || !transactionsToBatch.length) {
@@ -460,6 +467,8 @@ export var PlacesTransactions = {
  *
  * In other words: Enqueuer.enqueue(aFunc1); Enqueuer.enqueue(aFunc2) is roughly
  * the same as asyncFunc1.then(asyncFunc2).
+ *
+ * @param {string} name
  */
 function Enqueuer(name) {
   this._promise = Promise.resolve();
@@ -672,6 +681,9 @@ var TransactionsManager = {
  *     consumers.
  * (2) It keeps each transaction implementation to what is about, bypassing
  *     all this bureaucracy while still validating input appropriately.
+ *
+ * @param {string[]} [requiredProps]
+ * @param {string[]} [optionalProps]
  */
 function DefineTransaction(requiredProps = [], optionalProps = []) {
   for (let prop of [...requiredProps, ...optionalProps]) {
@@ -680,7 +692,10 @@ function DefineTransaction(requiredProps = [], optionalProps = []) {
     }
   }
 
-  /** @this {{ execute: Function }} */
+  /**
+   * @this {{ execute: Function }}
+   * @param {object} input
+   */
   let ctor = function (input) {
     // We want to support both syntaxes:
     // let t = new PlacesTransactions.NewBookmark(),

@@ -114,6 +114,8 @@ async function checkObservers(expectPromises, expectedData) {
 
 /**
  * Run after every test cases.
+ *
+ * @param {string} file
  */
 async function teardown(file) {
   // On restore failed, file may not exist, so wrap in try-catch.

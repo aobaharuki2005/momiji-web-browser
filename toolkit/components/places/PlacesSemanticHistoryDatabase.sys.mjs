@@ -37,6 +37,9 @@ const MAX_WASTED_SPACE_PERC = 0.6;
 // Maximum number of _chunksNN tables in sqlite-vec.
 const MAX_CHUNKS_TABLES = 100;
 
+/**
+ * Handles the database connection, reading and writing for semantic history.
+ */
 export class PlacesSemanticHistoryDatabase {
   #asyncShutdownBlocker;
   #conn;
