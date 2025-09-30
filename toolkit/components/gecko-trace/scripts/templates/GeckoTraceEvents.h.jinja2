@@ -21,7 +21,7 @@
   {%- elif attr.type == 'string' -%}
     std::string_view
   {%- elif attr.type == 'array' -%}
-    mozilla::Span<{{ cpp_type({'type': attr.items}) }}>
+    mozilla::Span<const {{ cpp_type({'type': attr["items"].type}) }}>
   {%- else -%}
    {% raise "Unsupported attribute type: %s" % attr.type %}
   {%- endif -%}

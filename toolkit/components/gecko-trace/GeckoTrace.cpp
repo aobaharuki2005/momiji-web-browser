@@ -95,11 +95,20 @@ class OTelSpanAdapter final : public Span {
                            bool(string_view, otel::common::AttributeValue)>
                                callback) const noexcept override {
         return mEvent.ForEachKeyValue(
-            [&](string_view aName, const AttributeValue& aAttr) {
-              return aAttr.match(
+            [&](string_view aName, const AttributeValue& aValue) {
+              return aValue.match(
                   [&](bool aBool) { return callback(aName, aBool); },
                   [&](int64_t aInt) { return callback(aName, aInt); },
-                  [&](string_view aStr) { return callback(aName, aStr); });
+                  [&](string_view aStr) { return callback(aName, aStr); },
+                  [&](mozilla::Span<const bool> aBoolSpan) {
+                    return callback(aName, aBoolSpan);
+                  },
+                  [&](mozilla::Span<const int64_t> aIntSpan) {
+                    return callback(aName, aIntSpan);
+                  },
+                  [&](mozilla::Span<const string_view> aStringSpan) {
+                    return callback(aName, aStringSpan);
+                  });
             });
       }
 
