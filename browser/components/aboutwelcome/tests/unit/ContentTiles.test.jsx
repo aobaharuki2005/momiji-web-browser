@@ -90,6 +90,7 @@ describe("ContentTiles component", () => {
     globals.set({
       AWSendToDeviceEmailsSupported: () => Promise.resolve(),
     });
+    globals.set({ AWSendToParent: sandbox.stub() });
     wrapper = shallow(
       <ContentTiles
         content={TEST_CONTENT}
