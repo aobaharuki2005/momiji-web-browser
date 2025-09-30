@@ -3713,6 +3713,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 4) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_context_id_fn_constructor_contextidcomponent_new (expected: 4, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mInitContextId.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -3760,6 +3764,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_context_id_fn_method_contextidcomponent_force_rotation (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -3787,6 +3795,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_context_id_fn_method_contextidcomponent_request (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -3824,6 +3836,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_context_id_fn_method_contextidcomponent_unset_callback (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -3878,6 +3894,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_filter_adult_fn_method_filteradultcomponent_contains (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -3917,6 +3937,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_relevancy_fn_func_score (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mInterestVector.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -3956,6 +3980,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_relevancy_fn_constructor_relevancystore_new (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mDbPath.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -3995,6 +4023,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 3) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_relevancy_fn_method_relevancystore_bandit_init (expected: 3, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4033,6 +4065,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 3) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_relevancy_fn_method_relevancystore_bandit_select (expected: 3, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4078,6 +4114,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 4) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_relevancy_fn_method_relevancystore_bandit_update (expected: 4, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4118,6 +4158,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_relevancy_fn_method_relevancystore_close (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4143,6 +4187,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_relevancy_fn_method_relevancystore_ensure_interest_data_populated (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4171,6 +4219,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 3) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_relevancy_fn_method_relevancystore_get_bandit_data (expected: 3, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4215,6 +4267,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_relevancy_fn_method_relevancystore_ingest (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4252,6 +4308,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_relevancy_fn_method_relevancystore_interrupt (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4278,6 +4338,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_relevancy_fn_method_relevancystore_user_interest_vector (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4311,6 +4375,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_remote_settings_fn_constructor_remotesettings_new (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mRemoteSettingsConfig.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4345,6 +4413,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 3) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path (expected: 3, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4381,6 +4453,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_remote_settings_fn_method_remotesettings_get_records (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4415,6 +4491,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_remote_settings_fn_method_remotesettings_get_records_since (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4453,6 +4533,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_remote_settings_fn_method_remotesettingsclient_collection_name (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4487,6 +4571,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_remote_settings_fn_method_remotesettingsclient_get_attachment (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4526,6 +4614,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_remote_settings_fn_method_remotesettingsclient_get_records (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4565,6 +4657,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_remote_settings_fn_method_remotesettingsclient_get_records_map (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4602,6 +4698,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_remote_settings_fn_method_remotesettingsclient_shutdown (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4627,6 +4727,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_remote_settings_fn_method_remotesettingsclient_sync (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4654,6 +4758,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_remote_settings_fn_constructor_remotesettingsservice_new (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mStorageDir.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4693,6 +4801,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_remote_settings_fn_method_remotesettingsservice_make_client (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4731,6 +4843,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_remote_settings_fn_method_remotesettingsservice_sync (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4764,6 +4880,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_remote_settings_fn_method_remotesettingsservice_update_config (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4821,6 +4941,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_search_fn_method_searchengineselector_clear_search_config (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4848,6 +4972,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_search_fn_method_searchengineselector_filter_engine_configuration (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4886,6 +5014,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_search_fn_method_searchengineselector_set_config_overrides (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4917,6 +5049,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_search_fn_method_searchengineselector_set_search_config (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4949,6 +5085,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 3) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_search_fn_method_searchengineselector_use_remote_settings_server (expected: 3, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -4986,6 +5126,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_func_raw_suggestion_url_matches (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mRawUrl.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5025,6 +5169,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_constructor_suggeststore_new (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mPath.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5063,6 +5211,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_any_dismissed_suggestions (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5095,6 +5247,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_clear (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5120,6 +5276,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_clear_dismissed_suggestions (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5146,6 +5306,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_dismiss_by_key (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5177,6 +5341,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_dismiss_by_suggestion (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5208,6 +5376,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_dismiss_suggestion (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5240,6 +5412,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_fetch_geoname_alternates (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5281,6 +5457,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 4) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_fetch_geonames (expected: 4, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5329,6 +5509,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_fetch_global_config (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5363,6 +5547,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_fetch_provider_config (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5402,6 +5590,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_ingest (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5440,6 +5632,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_interrupt (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5472,6 +5668,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_is_dismissed_by_key (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5511,6 +5711,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_is_dismissed_by_suggestion (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5550,6 +5754,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_query (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5589,6 +5797,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststore_query_with_metrics (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5654,6 +5866,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststorebuilder_build (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5688,6 +5904,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststorebuilder_cache_path (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5727,6 +5947,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststorebuilder_data_path (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5767,6 +5991,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 3) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststorebuilder_load_extension (expected: 3, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5811,6 +6039,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststorebuilder_remote_settings_bucket_name (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5850,6 +6082,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststorebuilder_remote_settings_server (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5889,6 +6125,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_suggest_fn_method_suggeststorebuilder_remote_settings_service (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5929,6 +6169,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 3) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_remotecommandstore_add_remote_command (expected: 3, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -5975,6 +6219,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 4) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_remotecommandstore_add_remote_command_at (expected: 4, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6023,6 +6271,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_remotecommandstore_get_unsent_commands (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6058,6 +6310,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 3) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_remotecommandstore_remove_remote_command (expected: 3, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6102,6 +6358,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_remotecommandstore_set_pending_command_sent (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6140,6 +6400,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsbridgedengine_apply (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6174,6 +6438,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsbridgedengine_ensure_current_sync_id (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6212,6 +6480,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsbridgedengine_last_sync (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6245,6 +6517,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsbridgedengine_prepare_for_sync (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6275,6 +6551,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsbridgedengine_reset (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6301,6 +6581,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsbridgedengine_reset_sync_id (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6334,6 +6618,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsbridgedengine_set_last_sync (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6366,6 +6654,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 3) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsbridgedengine_set_uploaded (expected: 3, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6402,6 +6694,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsbridgedengine_store_incoming (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6432,6 +6728,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsbridgedengine_sync_finished (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6458,6 +6758,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsbridgedengine_sync_id (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6490,6 +6794,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsbridgedengine_sync_started (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6515,6 +6823,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsbridgedengine_wipe (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6541,6 +6853,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_constructor_tabsstore_new (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mPath.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6574,6 +6890,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsstore_bridged_engine (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6606,6 +6926,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsstore_close_connection (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6632,6 +6956,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsstore_get_all (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6665,6 +6993,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsstore_new_remote_command_store (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6697,6 +7029,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsstore_register_with_sync_manager (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6723,6 +7059,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tabs_fn_method_tabsstore_set_local_tabs (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6755,6 +7095,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 3) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tracing_support_fn_func_register_event_sink (expected: 3, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mTarget.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6791,6 +7135,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tracing_support_fn_func_register_min_level_event_sink (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mLevel.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6821,6 +7169,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_tracing_support_fn_func_unregister_event_sink (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mTarget.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6884,6 +7236,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_viaduct_fn_func_init_backend (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mBackend.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6963,6 +7319,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragebridgedengine_apply (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -6997,6 +7357,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragebridgedengine_ensure_current_sync_id (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7035,6 +7399,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragebridgedengine_last_sync (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7068,6 +7436,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragebridgedengine_prepare_for_sync (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7098,6 +7470,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragebridgedengine_reset (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7124,6 +7500,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragebridgedengine_reset_sync_id (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7157,6 +7537,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragebridgedengine_set_last_sync (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7189,6 +7573,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 3) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragebridgedengine_set_uploaded (expected: 3, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7225,6 +7613,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragebridgedengine_store_incoming (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7255,6 +7647,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragebridgedengine_sync_finished (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7281,6 +7677,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragebridgedengine_sync_id (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7313,6 +7713,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragebridgedengine_sync_started (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7338,6 +7742,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragebridgedengine_wipe (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7364,6 +7772,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_constructor_webextstoragestore_new (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mPath.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7397,6 +7809,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragestore_bridged_engine (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7431,6 +7847,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragestore_clear (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7468,6 +7888,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragestore_close (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7496,6 +7920,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 3) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragestore_get (expected: 3, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7541,6 +7969,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 3) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragestore_get_bytes_in_use (expected: 3, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7585,6 +8017,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragestore_get_keys (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7623,6 +8059,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragestore_get_synced_changes (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7658,6 +8098,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 3) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragestore_remove (expected: 3, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -7703,6 +8147,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 3) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_webext_storage_fn_method_webextstoragestore_set (expected: 3, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -8350,6 +8798,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_clone_interface (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mInt.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -8383,6 +8835,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_create_async_test_trait_interface (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mValue.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -8416,6 +8872,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_create_test_trait_interface (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mValue.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -8449,6 +8909,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_func_with_default (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mArg.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -8481,6 +8945,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_func_with_error (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mInput.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -8506,6 +8974,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_func_with_flat_error (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mInput.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -8532,6 +9004,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_func_with_multi_word_arg (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mTheArgument.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -8916,6 +9392,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_invoke_test_callback_interface_get_value (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mCbi.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -8948,6 +9428,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_invoke_test_callback_interface_noop (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mCbi.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -8974,6 +9458,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_invoke_test_callback_interface_set_value (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mCbi.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9006,6 +9494,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_invoke_test_callback_interface_throw_if_equal (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mCbi.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9044,6 +9536,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_invoke_test_trait_interface_get_value (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mInt.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9076,6 +9572,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_invoke_test_trait_interface_noop (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mInt.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9102,6 +9602,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_invoke_test_trait_interface_set_value (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mInt.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9134,6 +9638,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_invoke_test_trait_interface_throw_if_equal (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mInt.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9172,6 +9680,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_bool (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9205,6 +9717,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_complex_compound (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9238,6 +9754,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_complex_enum (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mEn.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9271,6 +9791,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_complex_rec (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mRec.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9304,6 +9828,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_custom_type (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mHandle.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9337,6 +9865,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_enum_no_data (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mEn.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9370,6 +9902,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_enum_with_data (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mEn.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9403,6 +9939,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_f32 (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9436,6 +9976,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_f64 (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9469,6 +10013,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_hash_map (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9502,6 +10050,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_i16 (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9535,6 +10087,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_i32 (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9568,6 +10124,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_i64 (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9601,6 +10161,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_i8 (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9634,6 +10198,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_option (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9667,6 +10235,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_simple_rec (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mRec.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9700,6 +10272,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_string (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9733,6 +10309,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_time_interval_ms (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mTime.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9766,6 +10346,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_time_interval_sec_dbl (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mTime.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9799,6 +10383,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_time_interval_sec_flt (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mTime.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9832,6 +10420,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_u16 (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9865,6 +10457,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_u32 (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9898,6 +10494,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_u64 (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9931,6 +10531,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_u8 (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9964,6 +10568,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_url (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUrl.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -9997,6 +10605,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_roundtrip_vec (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10040,6 +10652,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 11) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_sum_with_many_types (expected: 11, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mA.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10123,6 +10739,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_func_swap_test_interfaces (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mInterfaces.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10175,6 +10795,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_constructor_testinterface_new (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mValue.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10208,6 +10832,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_method_testinterface_get_value (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10241,6 +10869,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_method_testinterface_ref_count (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10274,6 +10906,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_constructor_asyncinterface_new (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mName.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10538,6 +11174,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_method_complexmethods_method_with_default (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10577,6 +11217,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_method_complexmethods_method_with_multi_word_arg (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10614,6 +11258,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_method_testtraitinterface_noop (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10640,6 +11288,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_method_testtraitinterface_get_value (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10673,6 +11325,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_method_testtraitinterface_set_value (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10705,6 +11361,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 2) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_fn_method_testtraitinterface_throw_if_equal (expected: 2, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mUniffiPtr.LowerReciever(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10743,6 +11403,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_collision_fn_func_invoke_collision_callback (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mCb.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10776,6 +11440,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_external_types_fn_func_roundtrip_ext_custom_type (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mCustom.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10809,6 +11477,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_external_types_fn_func_roundtrip_ext_enum (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mEn.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10842,6 +11514,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_external_types_fn_func_roundtrip_ext_interface (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mInt.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
@@ -10875,6 +11551,10 @@ private:
 
 public:
   void LowerRustArgs(const dom::Sequence<dom::OwningUniFFIScaffoldingValue>& aArgs, ErrorResult& aError) override {
+    if (aArgs.Length() < 1) {
+      aError.ThrowUnknownError(nsPrintfCString("LowerRustArgs: Incorrect argument length for uniffi_uniffi_bindings_tests_external_types_fn_func_roundtrip_ext_record (expected: 1, actual: %zu)", aArgs.Length()));
+      return;
+    }
     mRec.Lower(aArgs[0], aError);
     if (aError.Failed()) {
       return;
