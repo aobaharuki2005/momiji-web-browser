@@ -1439,3 +1439,46 @@ add_task(async function replace_global_with_global_and_record_impressions() {
   InfoBar._activeInfobar = null;
   InfoBar._universalInfobars = [];
 });
+
+add_task(async function dismiss_on_any_pref_in_array_change() {
+  const PREF1 = "messaging-system-action.dismissOnChange.array.one";
+  const PREF2 = "messaging-system-action.dismissOnChange.array.two";
+
+  const browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+  const message = {
+    id: "TEST_DISMISS_ON_ANY_PREF_IN_ARRAY",
+    content: {
+      type: "global",
+      text: "array pref change",
+      dismissable: true,
+      buttons: [],
+      dismissOnPrefChange: [PREF1, PREF2],
+    },
+  };
+
+  const dispatch = sinon.stub();
+  const infobar = await InfoBar.showInfoBarMessage(browser, message, dispatch);
+
+  // ignore initial impression
+  dispatch.resetHistory();
+
+  Services.prefs.setBoolPref(PREF2, true);
+
+  await BrowserTestUtils.waitForCondition(
+    () => !infobar.notification,
+    "Infobar dismissed when pref in the array changes"
+  );
+
+  Assert.ok(
+    dispatch.calledWith(
+      sinon.match({
+        type: "INFOBAR_TELEMETRY",
+        data: sinon.match.has("event", "DISMISSED"),
+      })
+    ),
+    "DISMISSED telemetry sent on array pref change"
+  );
+
+  Services.prefs.clearUserPref(PREF1);
+  Services.prefs.clearUserPref(PREF2);
+});
