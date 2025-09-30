@@ -132,6 +132,7 @@
     <ID>ForbiddenSuppress:TabsTray.kt$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:TabsTray.kt$@Suppress("LongMethod", "LongParameterList")</ID>
     <ID>ForbiddenSuppress:TabsTray.kt$@Suppress("MagicNumber")</ID>
+    <ID>ForbiddenSuppress:TabsTrayBanner.kt$@Suppress("DEPRECATION", "LongMethod")</ID>
     <ID>ForbiddenSuppress:TabsTrayBanner.kt$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:TabsTrayBanner.kt$@Suppress("LongMethod", "LongParameterList")</ID>
     <ID>ForbiddenSuppress:TabsTrayBanner.kt$@Suppress("LongParameterList", "LongMethod")</ID>

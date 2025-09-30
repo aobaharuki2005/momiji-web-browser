@@ -256,7 +256,7 @@ private data class TabPageBannerConfig(
     val selectedPage: Page,
 )
 
-@Suppress("LongMethod")
+@Suppress("DEPRECATION", "LongMethod")
 @Composable
 private fun TabPageBanner(
     config: TabPageBannerConfig,

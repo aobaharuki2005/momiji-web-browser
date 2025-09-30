@@ -214,7 +214,7 @@ fun TabsTrayBanner(
  * @param onTabPageIndicatorClicked Invoked when the user clicks on a tab page button. Passes along the
  * [Page] that was clicked.
  */
-@Suppress("LongMethod")
+@Suppress("DEPRECATION", "LongMethod")
 @Composable
 private fun TabPageBanner(
     selectedPage: Page,
