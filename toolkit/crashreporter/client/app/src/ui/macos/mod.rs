@@ -864,7 +864,7 @@ impl ViewRenderer {
         }
 
         match &style.visible {
-            Property::Static(ref v) => {
+            Property::Static(v) => {
                 unsafe { view.setHidden_((!v).into()) };
             }
             Property::Binding(b) => {
