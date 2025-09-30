@@ -543,9 +543,9 @@ void nsHttpChannel::ReleaseMainThreadOnlyReferences() {
 nsresult nsHttpChannel::Init(nsIURI* uri, uint32_t caps, nsProxyInfo* proxyInfo,
                              uint32_t proxyResolveFlags, nsIURI* proxyURI,
                              uint64_t channelId, nsILoadInfo* aLoadInfo) {
+  LOG1(("nsHttpChannel::Init [this=%p]\n", this));
   nsresult rv = HttpBaseChannel::Init(uri, caps, proxyInfo, proxyResolveFlags,
                                       proxyURI, channelId, aLoadInfo);
-  LOG1(("nsHttpChannel::Init [this=%p]\n", this));
 
   return rv;
 }
@@ -629,6 +629,64 @@ bool nsHttpChannel::StorageAccessReloadedChannel() {
 
 nsresult nsHttpChannel::PrepareToConnect() {
   LOG(("nsHttpChannel::PrepareToConnect [this=%p]\n", this));
+
+  // This may be async; the dictionary headers may need to fetch an origin
+  // dictionary cache entry from disk before adding the headers.  We can
+  // continue with channel creation, and just block on this being done later
+  bool async;
+  AUTO_PROFILER_FLOW_MARKER("nsHttpHandler::AddAcceptAndDictionaryHeaders",
+                            NETWORK, Flow::FromPointer(this));
+  nsresult rv = gHttpHandler->AddAcceptAndDictionaryHeaders(
+      mURI, mLoadInfo->GetExternalContentPolicyType(), &mRequestHead, IsHTTPS(),
+      async,
+      [self = RefPtr(this)](bool aNeedsResume, DictionaryCacheEntry* aDict) {
+        self->mDictDecompress = aDict;
+        if (aNeedsResume) {
+          LOG_DICTIONARIES(("Resuming after getting Dictionary headers"));
+          self->Resume();
+        }
+        if (self->mDictDecompress) {
+          LOG_DICTIONARIES(
+              ("Added dictionary header for %p, DirectoryCacheEntry %p",
+               self.get(), aDict));
+          AUTO_PROFILER_FLOW_MARKER(
+              "nsHttpHandler::AddAcceptAndDictionaryHeaders Add "
+              "Available-Dictionary",
+              NETWORK, Flow::FromPointer(self));
+          // mDictDecompress is set if we added Available-Dictionary
+          self->mDictDecompress->InUse();
+          self->mUsingDictionary = true;
+          PROFILER_MARKER("Dictionary Prefetch", NETWORK,
+                          MarkerTiming::IntervalStart(), FlowMarker,
+                          Flow::FromPointer(self));
+          return NS_SUCCEEDED(self->mDictDecompress->Prefetch(
+              GetLoadContextInfo(self), self->mShouldSuspendForDictionary,
+              [self]() {
+                // this is called when the prefetch is complete to
+                // un-Suspend the channel
+                MOZ_ASSERT(self->mDictDecompress->DictionaryReady());
+                if (self->mSuspendedForDictionary) {
+                  LOG(
+                      ("nsHttpChannel::SetupChannelForTransaction [this=%p] "
+                       "Resuming channel "
+                       "suspended for Dictionary",
+                       self.get()));
+                  self->mSuspendedForDictionary = false;
+                  self->Resume();
+                }
+                PROFILER_MARKER("Dictionary Prefetch", NETWORK,
+                                MarkerTiming::IntervalEnd(), FlowMarker,
+                                Flow::FromPointer(self));
+              }));
+        }
+        return true;
+      });
+  if (NS_FAILED(rv)) return rv;
+  if (async) {
+    // we'll continue later if GetDictionaryFor is still reading
+    LOG_DICTIONARIES(("Suspending to get Dictionary headers"));
+    Suspend();
+  }
 
   // notify "http-on-modify-request-before-cookies" observers
   gHttpHandler->OnModifyRequestBeforeCookies(this);
@@ -1958,52 +2016,6 @@ nsresult nsHttpChannel::SetupChannelForTransaction() {
                                     Substring(++slash, end));
         MOZ_ASSERT(NS_SUCCEEDED(rv));
       }
-    }
-  } else {
-    // This may be async; the dictionary headers may need to fetch an origin
-    // dictionary cache entry from disk before adding the headers.  We can
-    // continue with channel creation, and just block on this being done later
-    bool async;
-    rv = gHttpHandler->AddAcceptAndDictionaryHeaders(
-        mURI, mLoadInfo->GetExternalContentPolicyType(), &mRequestHead,
-        IsHTTPS(), async,
-        [self = RefPtr(this)](bool aNeedsResume, DictionaryCacheEntry* aDict) {
-          self->mDictDecompress = aDict;
-          if (aNeedsResume) {
-            LOG_DICTIONARIES(("Resuming after getting Dictionary headers"));
-            self->Resume();
-          }
-          if (self->mDictDecompress) {
-            LOG_DICTIONARIES(
-                ("Added dictionary header for %p, DirectoryCacheEntry %p",
-                 self.get(), aDict));
-            // mDictDecompress is set if we added Available-Dictionary
-            self->mDictDecompress->InUse();
-            self->mUsingDictionary = true;
-            return NS_SUCCEEDED(self->mDictDecompress->Prefetch(
-                GetLoadContextInfo(self), self->mShouldSuspendForDictionary,
-                [self]() {
-                  // this is called when the prefetch is complete to
-                  // un-Suspend the channel
-                  MOZ_ASSERT(self->mDictDecompress->DictionaryReady());
-                  if (self->mSuspendedForDictionary) {
-                    LOG(
-                        ("nsHttpChannel::SetupChannelForTransaction [this=%p] "
-                         "Resuming channel "
-                         "suspended for Dictionary",
-                         self.get()));
-                    self->mSuspendedForDictionary = false;
-                    self->Resume();
-                  }
-                }));
-          }
-          return true;
-        });
-    if (NS_FAILED(rv)) return rv;
-    if (async) {
-      // we'll continue later if GetDictionaryFor is still reading
-      LOG_DICTIONARIES(("Suspending to get Dictionary headers"));
-      Suspend();
     }
   }
 
