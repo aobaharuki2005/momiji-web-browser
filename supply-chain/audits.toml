@@ -3070,6 +3070,11 @@ who = "Mark Hammond <mhammond@skippinet.com.au>"
 criteria = "safe-to-deploy"
 delta = "0.1.61 -> 0.1.63"
 
+[[audits.iana-time-zone]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.1.63 -> 0.1.64"
+
 [[audits.icu_calendar]]
 who = "André Bargull <andre.bargull@gmail.com>"
 criteria = "safe-to-deploy"
