@@ -545,11 +545,11 @@ nsresult ModuleLoaderBase::StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
   // NOTE: The LoadedScript::mDataType field used by the IsStencil call can be
   //       modified asynchronously after the StartFetch call.
   //       In order to avoid the race condition, cache the value here.
-  bool isStencil = aRequest->IsStencil();
+  bool isCachedStencil = aRequest->IsCachedStencil();
 
-  MOZ_ASSERT_IF(isStencil, aRestart == RestartRequest::No);
+  MOZ_ASSERT_IF(isCachedStencil, aRestart == RestartRequest::No);
 
-  if (!isStencil) {
+  if (!isCachedStencil) {
     aRequest->SetUnknownDataType();
   }
 
@@ -584,7 +584,7 @@ nsresult ModuleLoaderBase::StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
   rv = StartFetch(aRequest);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (isStencil) {
+  if (isCachedStencil) {
     MOZ_ASSERT(
         IsModuleFetched(ModuleMapKey(aRequest->mURI, aRequest->mModuleType)));
     return NS_OK;

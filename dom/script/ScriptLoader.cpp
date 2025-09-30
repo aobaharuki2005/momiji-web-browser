@@ -636,7 +636,7 @@ static nsSecurityFlags CORSModeToSecurityFlags(CORSMode aCORSMode) {
 nsresult ScriptLoader::StartClassicLoad(
     ScriptLoadRequest* aRequest,
     const Maybe<nsAutoString>& aCharsetForPreload) {
-  if (aRequest->IsStencil()) {
+  if (aRequest->IsCachedStencil()) {
     EmulateNetworkEvents(aRequest);
     return NS_OK;
   }
@@ -1205,7 +1205,7 @@ void ScriptLoader::StoreCacheInfo(LoadedScript* aLoadedScript,
 }
 
 void ScriptLoader::EmulateNetworkEvents(ScriptLoadRequest* aRequest) {
-  MOZ_ASSERT(aRequest->IsStencil());
+  MOZ_ASSERT(aRequest->IsCachedStencil());
   MOZ_ASSERT(aRequest->mNetworkMetadata);
 
   nsIScriptElement* element = aRequest->GetScriptLoadContext()->mScriptElement;
@@ -1430,7 +1430,7 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
       return block;
     }
 
-    if (request->IsStencil()) {
+    if (request->IsCachedStencil()) {
       // https://html.spec.whatwg.org/#prepare-the-script-element
       //
       // Step 33. If el's type is "classic" and el has a src attribute, or el's
@@ -1881,7 +1881,7 @@ nsresult ScriptLoader::CompileOffThreadOrProcessRequest(
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
                "Processing requests when running scripts is unsafe.");
 
-  if (!aRequest->IsStencil() &&
+  if (!aRequest->IsCachedStencil() &&
       !aRequest->GetScriptLoadContext()->mCompileOrDecodeTask &&
       !aRequest->GetScriptLoadContext()->CompileStarted()) {
     bool couldCompile = false;
@@ -2741,7 +2741,7 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
 
   // We need the nsICacheInfoChannel to exist to be able to open the alternate
   // data output stream.
-  if (aRequest->IsStencil()) {
+  if (aRequest->IsCachedStencil()) {
     // For in-memory cache, the pointer is cached in the LoadedScript,
     // if the cache had never been saved.
     if (!aRequest->getLoadedScript()->mCacheInfo) {
@@ -2820,7 +2820,7 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
   if (hasSourceLengthMin) {
     size_t sourceLength;
     size_t minLength;
-    if (aRequest->IsStencil()) {
+    if (aRequest->IsCachedStencil()) {
       sourceLength = JS::GetScriptSourceLength(aRequest->GetStencil());
     } else {
       MOZ_ASSERT(aRequest->IsTextSource());
@@ -2842,7 +2842,7 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
   // are going to be dropped soon.
   if (hasFetchCountMin) {
     uint32_t fetchCount = 0;
-    if (aRequest->IsStencil()) {
+    if (aRequest->IsCachedStencil()) {
       fetchCount = aRequest->mLoadedScript->mFetchCount;
     } else {
       if (NS_FAILED(
@@ -3214,7 +3214,7 @@ void ScriptLoader::InstantiateClassicScriptFromAny(
     ScriptLoadRequest* aRequest, JS::MutableHandle<JSScript*> aScript,
     JS::Handle<JS::Value> aDebuggerPrivateValue,
     JS::Handle<JSScript*> aDebuggerIntroductionScript, ErrorResult& aRv) {
-  if (aRequest->IsStencil()) {
+  if (aRequest->IsCachedStencil()) {
     RefPtr<JS::Stencil> stencil = aRequest->GetStencil();
     InstantiateClassicScriptFromCachedStencil(
         aCx, aCompileOptions, aRequest, stencil, aScript, aDebuggerPrivateValue,
@@ -3293,7 +3293,7 @@ void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest,
     cacheBehavior = CacheBehavior::Evict;
   }
 
-  aRequest->SetStencil(aStencil.forget());
+  aRequest->SetCachedStencil(aStencil.forget());
 
   if (cacheBehavior == CacheBehavior::Insert) {
     auto loadData = MakeRefPtr<ScriptLoadData>(this, aRequest);
@@ -3343,7 +3343,7 @@ nsresult ScriptLoader::MaybePrepareForCacheAfterExecute(
     // NOTE: This assertion will fail once we start encoding more data after the
     //       first encode.
     MOZ_ASSERT_IF(
-        !aRequest->IsStencil(),
+        !aRequest->IsCachedStencil(),
         aRequest->GetSRILength() == aRequest->SRIAndBytecode().length());
     RegisterForCache(aRequest);
 
@@ -3438,7 +3438,7 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
   }
 #endif
 
-  if (aRequest->IsStencil()) {
+  if (aRequest->IsCachedStencil()) {
 #ifdef DEBUG
     // A request with cache might not have mBaseURL.
     if (aRequest->mBaseURL) {
@@ -3640,7 +3640,8 @@ void ScriptLoader::UpdateCache() {
     stencil = FinishCollectingDelazifications(aes.cx(), request);
     if (mCache) {
       if (stencil) {
-        MOZ_ASSERT_IF(request->IsStencil(), stencil == request->GetStencil());
+        MOZ_ASSERT_IF(request->IsCachedStencil(),
+                      stencil == request->GetStencil());
 
         // The bytecode encoding is performed only when there was no
         // bytecode stored in the necko cache.

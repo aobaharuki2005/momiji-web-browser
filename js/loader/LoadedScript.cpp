@@ -49,7 +49,7 @@ LoadedScript::LoadedScript(ScriptKind aKind,
 }
 
 LoadedScript::LoadedScript(const LoadedScript& aOther)
-    : mDataType(DataType::eStencil),
+    : mDataType(DataType::eCachedStencil),
       mKind(aOther.mKind),
       mReferrerPolicy(aOther.mReferrerPolicy),
       mBytecodeOffset(0),
@@ -62,7 +62,7 @@ LoadedScript::LoadedScript(const LoadedScript& aOther)
   MOZ_ASSERT(mURI);
   // NOTE: This is only for the stencil case.
   //       The script text and the bytecode are not reflected.
-  MOZ_DIAGNOSTIC_ASSERT(aOther.mDataType == DataType::eStencil);
+  MOZ_DIAGNOSTIC_ASSERT(aOther.mDataType == DataType::eCachedStencil);
   MOZ_DIAGNOSTIC_ASSERT(mStencil);
   MOZ_ASSERT(!mScriptData);
   MOZ_ASSERT(mScriptBytecode.empty());
@@ -291,13 +291,13 @@ ModuleScript::ModuleScript(const LoadedScript& aOther) : LoadedScript(aOther) {
 already_AddRefed<ModuleScript> ModuleScript::FromCache(
     const LoadedScript& aScript) {
   MOZ_DIAGNOSTIC_ASSERT(aScript.IsModuleScript());
-  MOZ_DIAGNOSTIC_ASSERT(aScript.IsStencil());
+  MOZ_DIAGNOSTIC_ASSERT(aScript.IsCachedStencil());
 
   return mozilla::MakeRefPtr<ModuleScript>(aScript).forget();
 }
 
 already_AddRefed<LoadedScript> ModuleScript::ToCache() {
-  MOZ_DIAGNOSTIC_ASSERT(IsStencil());
+  MOZ_DIAGNOSTIC_ASSERT(IsCachedStencil());
   MOZ_DIAGNOSTIC_ASSERT(!HasParseError());
   MOZ_DIAGNOSTIC_ASSERT(!HasErrorToRethrow());
 
