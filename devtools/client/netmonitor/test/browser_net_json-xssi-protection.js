@@ -23,43 +23,45 @@ add_task(async function () {
   await performRequests(monitor, tab, 1);
 
   const wait = waitForDOM(document, "#response-panel .data-header");
-  const waitForRawView = waitForDOM(document, "#response-panel .cm-content", 1);
-  const waitForRawToggleOn = waitUntil(
-    () =>
-      document.querySelector("#response-panel #raw-response-checkbox")?.checked
+  const waitForRawView = waitForDOM(
+    document,
+    "#response-panel .CodeMirror-code",
+    1
   );
 
   store.dispatch(Actions.toggleNetworkDetails());
   info("Opening response panel");
   clickOnSidebarTab(document, "response");
 
-  await Promise.all([wait, waitForRawView, waitForRawToggleOn]);
+  await Promise.all([wait, waitForRawView]);
 
   info(
     "making sure response panel defaults to raw view and correctly displays payload"
   );
-  const codeLines = document.querySelector("#response-panel .cm-content");
+  const codeLines = document.querySelector("#response-panel .CodeMirror-code");
   const firstLine = codeLines.firstChild;
+  const firstLineText = firstLine.querySelector("pre.CodeMirror-line span");
   is(
-    firstLine.textContent,
+    firstLineText.textContent,
     ")]}'",
     "XSSI protection sequence should be visibly in raw view"
   );
-
   info("making sure XSSI notification box is not present in raw view");
   let notification = document.querySelector(
     '.network-monitor #response-panel .notification[data-key="xssi-string-removed-info-box"]'
   );
   ok(!notification, "notification should not be present in raw view");
 
-  info("switching to props view");
   const waitForPropsView = waitForDOM(
     document,
     "#response-panel .properties-view",
     1
   );
+
+  info("switching to props view");
   const tabpanel = document.querySelector("#response-panel");
-  clickElement(tabpanel.querySelector("#raw-response-checkbox"), monitor);
+  const rawResponseToggle = tabpanel.querySelector("#raw-response-checkbox");
+  clickElement(rawResponseToggle, monitor);
   await waitForPropsView;
 
   is(

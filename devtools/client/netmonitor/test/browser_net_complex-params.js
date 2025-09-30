@@ -146,7 +146,7 @@ async function testRequestWithFormattedView(
     "The request params box should be displayed."
   );
   Assert.strictEqual(
-    tabpanel.querySelector(".cm-content"),
+    tabpanel.querySelector(".CodeMirror-code"),
     null,
     "The request post data editor should not be displayed."
   );
@@ -172,7 +172,7 @@ async function testRequestWithFormattedView(
   );
 
   // Toggle the raw data display. This should hide the formatted display.
-  waitForContent = waitForDOM(document, "#request-panel .cm-content");
+  waitForContent = waitForDOM(document, "#request-panel .CodeMirror-code");
   let rawDataToggle = document.querySelector(
     "#request-panel .raw-data-toggle-input .devtools-checkbox-toggle"
   );
@@ -197,7 +197,7 @@ async function testRequestWithFormattedView(
     "The formatted display should be hidden."
   );
   is(
-    tabpanel.querySelector(".cm-content") !== null,
+    tabpanel.querySelector(".CodeMirror-code") !== null,
     true,
     "The raw payload data display is shown."
   );
@@ -236,7 +236,10 @@ async function testRequestWithOnlyRawDataView(
 
   // Wait for header and CodeMirror editor to be displayed
   const wait = waitForDOM(document, "#request-panel .data-header");
-  const waitForContent = waitForDOM(document, "#request-panel .cm-content");
+  const waitForContent = waitForDOM(
+    document,
+    "#request-panel .CodeMirror-code"
+  );
   EventUtils.sendMouseEvent({ type: "mousedown" }, requestListItem);
   await Promise.all([wait, waitForContent]);
 
@@ -259,7 +262,7 @@ async function testRequestWithOnlyRawDataView(
     "The formatted display should be hidden."
   );
   is(
-    tabpanel.querySelector(".cm-content") !== null,
+    tabpanel.querySelector(".CodeMirror-code") !== null,
     true,
     "The raw payload data display is shown."
   );
@@ -298,7 +301,7 @@ async function testRequestWithoutRequestData(monitor, requestListItem) {
     "The formatted display should be hidden."
   );
   is(
-    tabpanel.querySelector(".cm-content") === null,
+    tabpanel.querySelector(".CodeMirror-code") === null,
     true,
     "The raw payload data display should be hidden."
   );

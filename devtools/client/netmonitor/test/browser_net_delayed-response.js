@@ -155,7 +155,10 @@ add_task(async function () {
   );
 
   info("Open the response panel and wait for the response content");
-  waitForResponsePanel = waitForDOM(document, "#response-panel .cm-content");
+  waitForResponsePanel = waitForDOM(
+    document,
+    "#response-panel .CodeMirror-code"
+  );
   clickOnSidebarTab(document, "response");
   await waitForResponsePanel;
 

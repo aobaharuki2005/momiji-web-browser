@@ -33,7 +33,10 @@ add_task(async function () {
 
   await onResponsePanelReady;
 
-  const codeMirrorReady = waitForDOM(document, "#response-panel .cm-content");
+  const codeMirrorReady = waitForDOM(
+    document,
+    "#response-panel .CodeMirror-code"
+  );
 
   const header = document.querySelector(
     "#response-panel .raw-data-toggle-input .devtools-checkbox-toggle"
@@ -55,7 +58,7 @@ add_task(async function () {
     "The response error header doesn't have the intended visibility."
   );
   is(
-    tabpanel.querySelector(".cm-content") === null,
+    tabpanel.querySelector(".CodeMirror-code") === null,
     false,
     "The response editor has the intended visibility."
   );

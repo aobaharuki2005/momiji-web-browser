@@ -47,7 +47,7 @@ add_task(async function () {
     }
   );
 
-  const wait = waitForDOM(document, "#response-panel .cm-content");
+  const wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   store.dispatch(Actions.toggleNetworkDetails());
   clickOnSidebarTab(document, "response");
   await wait;
@@ -77,7 +77,7 @@ add_task(async function () {
     "The response json view doesn't have the intended visibility."
   );
   is(
-    tabpanel.querySelector(".cm-content") === null,
+    tabpanel.querySelector(".CodeMirror-code") === null,
     false,
     "The response editor has the intended visibility."
   );

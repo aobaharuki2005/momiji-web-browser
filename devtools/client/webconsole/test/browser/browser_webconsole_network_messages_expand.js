@@ -164,7 +164,7 @@ async function testRequest(messageNode) {
   const requestPanel = messageNode.querySelector("#request-panel");
   await waitForSourceEditor(requestPanel);
   const requestContent = requestPanel.querySelector(
-    ".panel-container .cm-editor"
+    ".panel-container .CodeMirror"
   );
   ok(requestContent, "Request content is available");
   ok(
@@ -184,7 +184,7 @@ async function testResponse(messageNode) {
   const responsePanel = messageNode.querySelector("#response-panel");
   await waitForSourceEditor(responsePanel);
   const responseContent = messageNode.querySelector(
-    "#response-panel .editor-row-container .cm-editor"
+    "#response-panel .editor-row-container .CodeMirror"
   );
   ok(responseContent, "Response content is available");
   ok(responseContent.textContent, "Response text is available");
@@ -241,7 +241,7 @@ async function waitForPayloadReady(hud) {
 
 async function waitForSourceEditor(panel) {
   return waitUntil(() => {
-    return !!panel.querySelector(".cm-editor");
+    return !!panel.querySelector(".CodeMirror");
   });
 }
 

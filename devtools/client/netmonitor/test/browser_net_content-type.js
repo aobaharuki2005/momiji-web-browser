@@ -181,7 +181,7 @@ add_task(async function () {
         "The response json view doesn't display"
       );
       is(
-        tabpanel.querySelector(".cm-content") === null,
+        tabpanel.querySelector(".CodeMirror-code") === null,
         box !== "textarea",
         "The response editor doesn't display"
       );

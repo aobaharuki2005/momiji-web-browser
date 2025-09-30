@@ -104,8 +104,8 @@ add_task(async function () {
     monitor,
     matches[4],
     "#response-panel",
-    ".cm-content",
-    ".cm-line",
+    ".CodeMirror-code",
+    ".CodeMirror-activeline",
     [SEARCH_STRING]
   );
   await checkSearchResult(
@@ -160,8 +160,8 @@ add_task(async function () {
     monitor,
     matches[11],
     "#response-panel",
-    ".cm-content",
-    ".cm-line",
+    ".CodeMirror-code",
+    ".CodeMirror-activeline",
     [SEARCH_STRING]
   );
 

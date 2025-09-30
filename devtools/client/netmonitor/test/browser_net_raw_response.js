@@ -143,7 +143,7 @@ function getRawResponseToggle(doc) {
 }
 
 function getRawResponseCodeMirrorElement(doc) {
-  return doc.querySelector("#response-panel .cm-editor");
+  return doc.querySelector("#response-panel .CodeMirror");
 }
 
 function getHtmlPreviewElement(doc) {

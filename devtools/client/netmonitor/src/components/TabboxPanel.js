@@ -109,11 +109,6 @@ class TabboxPanel extends Component {
   closeOnEsc(event) {
     if (event.key == "Escape") {
       event.preventDefault();
-      // Don't take focus when the keyboard shortcut is triggered in a CodeMirror instance,
-      // so the CodeMirror search UI is closed.
-      if (event.target.closest(".cm-search")) {
-        return;
-      }
       this.props.openNetworkDetails(false);
     }
   }

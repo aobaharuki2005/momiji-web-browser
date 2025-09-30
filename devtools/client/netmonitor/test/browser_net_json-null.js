@@ -66,7 +66,10 @@ add_task(async function () {
     "The first json property value was incorrect."
   );
 
-  const onCodeMirrorReady = waitForDOM(document, "#response-panel .cm-content");
+  const onCodeMirrorReady = waitForDOM(
+    document,
+    "#response-panel .CodeMirror-code"
+  );
 
   const rawResponseToggle = document.querySelector(
     "#response-panel .raw-data-toggle-input .devtools-checkbox-toggle"
@@ -97,7 +100,7 @@ add_task(async function () {
       "The response json view has the intended visibility."
     );
     is(
-      panel.querySelector(".cm-content") === null,
+      panel.querySelector(".CodeMirror-code") === null,
       false,
       "The response editor has the intended visibility."
     );
@@ -126,13 +129,16 @@ add_task(async function () {
   // Execute requests.
   await performRequests(monitor, tab, 1);
 
-  const onCodeMirrorReady = waitForDOM(document, "#response-panel .cm-content");
+  const onCodeMirrorReady = waitForDOM(
+    document,
+    "#response-panel .CodeMirror-code"
+  );
 
   store.dispatch(Actions.toggleNetworkDetails());
   clickOnSidebarTab(document, "response");
   const [codeMirrorCodeEl] = await onCodeMirrorReady;
   is(
-    codeMirrorCodeEl.querySelector(".cm-line").textContent,
+    codeMirrorCodeEl.querySelector("pre.CodeMirror-line span").textContent,
     "null",
     "root null JSON object is displayed in a CodeMirror editor"
   );

@@ -196,7 +196,7 @@ async function testRequest(messageNode) {
   const requestPanel = messageNode.querySelector("#request-panel");
   await waitForSourceEditor(requestPanel);
   const requestContent = requestPanel.querySelector(
-    ".panel-container .cm-content"
+    ".panel-container .CodeMirror"
   );
   ok(requestContent, "Request content is available");
   ok(
@@ -232,7 +232,7 @@ async function testResponse(messageNode) {
   }
   await waitForSourceEditor(responsePanel);
   const responseContent = messageNode.querySelector(
-    "#response-panel .editor-row-container .cm-content"
+    "#response-panel .editor-row-container .CodeMirror"
   );
   ok(responseContent, "Response content is available");
   ok(responseContent.textContent, "Response text is available");
@@ -300,7 +300,7 @@ async function testSecurity(messageNode) {
 
 async function waitForSourceEditor(panel) {
   return waitUntil(() => {
-    return !!panel.querySelector(".cm-content");
+    return !!panel.querySelector(".CodeMirror");
   });
 }
 

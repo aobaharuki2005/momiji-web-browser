@@ -61,7 +61,7 @@ add_task(async function () {
   clickOnSidebarTab(document, "response");
   await wait;
 
-  wait = waitForDOM(document, "#response-panel .cm-content");
+  wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   const payloadHeader = document.querySelector(
     "#response-panel .raw-data-toggle-input .devtools-checkbox-toggle"
   );
@@ -74,10 +74,10 @@ add_task(async function () {
   );
 
   info("Check that search input can be displayed");
-  getCMEditor(monitor).focus();
+  document.querySelector(".CodeMirror").CodeMirror.focus();
   synthesizeKeyShortcut("CmdOrCtrl+F");
   const searchInput = await waitFor(() =>
-    document.querySelector(".cm-editor .cm-search input.cm-textfield")
+    document.querySelector(".CodeMirror input[type=search]")
   );
   Assert.equal(
     searchInput.ownerDocument.activeElement,

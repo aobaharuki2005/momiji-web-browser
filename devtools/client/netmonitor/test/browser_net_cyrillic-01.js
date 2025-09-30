@@ -49,7 +49,7 @@ add_task(async function () {
     document.querySelectorAll(".request-list-item")[0]
   );
   await wait;
-  wait = waitForDOM(document, "#response-panel .cm-content");
+  wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   clickOnSidebarTab(document, "response");
   await wait;
 
