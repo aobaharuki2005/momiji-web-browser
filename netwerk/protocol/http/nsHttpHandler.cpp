@@ -674,13 +674,10 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
           aURI, aType, aAsync,
           [self = RefPtr(this), aRequest, aCallback](
               bool aNeedsResume, DictionaryCacheEntry* aDict) {
-            nsresult rv;
             if (!aDict) {
-              rv = aRequest->SetHeader(
-                  nsHttp::Accept_Encoding, self->mHttpsAcceptEncodings, false,
-                  nsHttpHeaderArray::eVarietyRequestOverride);
-              (aCallback)(false, nullptr);
-              return rv;
+              // Accept-Encoding was already set in AddStandardHeaders
+              (aCallback)(aNeedsResume, nullptr);
+              return NS_OK;
             }
 
             nsAutoCStringN<64> encodedHash = ":"_ns + aDict->GetHash() + ":"_ns;
@@ -704,7 +701,7 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
             if ((aCallback)(aNeedsResume, aDict)) {
               LOG_DICTIONARIES(
                   ("Setting Available-Dictionary: %s", encodedHash.get()));
-              rv = aRequest->SetHeader(
+              nsresult rv = aRequest->SetHeader(
                   nsHttp::Available_Dictionary, encodedHash, false,
                   nsHttpHeaderArray::eVarietyRequestOverride);
               if (NS_FAILED(rv)) {
@@ -727,21 +724,9 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
             return NS_OK;
           });
     } else {
-      rv = aRequest->SetHeader(nsHttp::Accept_Encoding, mHttpsAcceptEncodings,
-                               false,
-                               nsHttpHeaderArray::eVarietyRequestOverride);
       aAsync = false;
     }
   } else {
-    // We need to not override a previous setting of 'identity' (for range
-    // requests)
-    nsAutoCString encoding;
-    Unused << aRequest->GetHeader(nsHttp::Accept_Encoding, encoding);
-    if (!encoding.EqualsLiteral("identity")) {
-      rv = aRequest->SetHeader(nsHttp::Accept_Encoding, mHttpAcceptEncodings,
-                               false,
-                               nsHttpHeaderArray::eVarietyRequestOverride);
-    }
     aAsync = false;
   }
   // guard may call aCallback here
