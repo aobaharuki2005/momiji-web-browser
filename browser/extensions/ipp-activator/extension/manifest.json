@@ -11,8 +11,17 @@
     }
   },
   "background": {
-    "scripts": ["bg.mjs"],
-    "type": "module",
+    "scripts": [
+      "conditions/base.js",
+      "conditions/and.js",
+      "conditions/or.js",
+      "conditions/not.js",
+      "conditions/test.js",
+      "conditions/cookie.js",
+      "conditions/url.js",
+      "conditions/factory.js",
+      "bg.js"
+    ],
     "persistent": true
   },
   "experiment_apis": {

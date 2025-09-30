@@ -588,6 +588,10 @@
   <string name="onboarding_redesign_set_default_browser_title">Λάβετε αυτόματη προστασία από καταγραφή από προεπιλογή</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Ένα πάτημα εμποδίζει τις εταιρείες να κατασκοπεύουν τα κλικ σας.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Έναρξη συγχρονισμού</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Όχι τώρα</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Βοηθήστε μας να αναπτύξουμε το Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->

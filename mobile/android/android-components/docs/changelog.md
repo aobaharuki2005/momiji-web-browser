@@ -5,6 +5,8 @@ permalink: /changelog/
 ---
 
 # 144.0 (In Development)
+* **support-ktx**
+  * 🚒 Bug fixed [Bug 1987065](https://bugzilla.mozilla.org/show_bug.cgi?id=1987065). Added back the API checks for `Window.setupPersistentInsets` and `ImeInsetsSynchronizer.setup` as on Android <13 the insets framework is not reliable.
 * **feature-customtabs**
   * 🚒 Bug fixed [Bug 1983103](https://bugzilla.mozilla.org/show_bug.cgi?id=1983103). Fixed issues with system status bars not being correctly themed for custom tabs and PWAs when used on devices with edge-to-edge enabled.
 * **support-ktx**

@@ -52,6 +52,8 @@
   <string name="mozac_feature_prompts_deny">ਇਨਕਾਰ ਕਰੋ</string>
   <!-- Text of the title of a dialog when a page is requesting to open a new window. -->
   <string name="mozac_feature_prompts_popup_dialog_title">ਇਸ ਸਾਈਟ ਨੂੰ ਖੋਲ੍ਹਣ ਦੀ ਮਨਜ਼ੂਰੀ ਦੇਣੀ ਹੈ?</string>
+  <!-- Text of the title of a dialog when a third-party redirect is blocked. -->
+  <string name="mozac_feature_prompts_redirect_dialog_title">ਇਸ ਸਾਈਟ ਲਈ ਰੀ-ਡਾਇਰੈਕਟ ਕਰਨਾ ਹੈ?</string>
   <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
   <string name="mozac_feature_prompt_before_unload_dialog_title">ਕੀ ਤੁਸੀਂ ਚਾਹੁੰਦੇ ਹੋ?</string>
   <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->

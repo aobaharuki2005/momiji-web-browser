@@ -2,14 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import ConditionBase from "./base.mjs";
+/* global ConditionBase */
 
+/**
+ * Simple condition for testing
+ */
 class ConditionTest extends ConditionBase {
   #ret;
 
   constructor(factory, desc) {
     super(factory, desc);
-
     this.#ret = desc.ret;
   }
 
@@ -18,4 +20,4 @@ class ConditionTest extends ConditionBase {
   }
 }
 
-export default ConditionTest;
+globalThis.ConditionTest = ConditionTest;
