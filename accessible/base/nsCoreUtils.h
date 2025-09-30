@@ -367,7 +367,8 @@ class nsCoreUtils {
    * Return the CSS positioned frame for the given anchor frame, or null if:
    * 1. there is none,
    * 2. the anchor has more than one positioned frame,
-   * 3. or, there is one or more positioned frame using this anchor for sizing/margin only.
+   * 3. or, there is one or more positioned frame using this anchor for
+   * sizing/margin only.
    */
   static nsIFrame* GetPositionedFrameForAnchor(const PresShell* aPresShell,
                                                const nsIFrame* aAnchorFrame);
