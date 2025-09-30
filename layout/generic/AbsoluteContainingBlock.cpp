@@ -154,9 +154,6 @@ static bool IsSnapshotContainingBlock(const nsIFrame* aFrame) {
          PseudoStyleType::mozSnapshotContainingBlock;
 }
 
-// The last successful fallback index, if present.
-NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(LastSuccessfulPositionFallback, uint32_t);
-
 void AbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
                                      nsPresContext* aPresContext,
                                      const ReflowInput& aReflowInput,
@@ -882,13 +879,14 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
   // makes a difference with a default anchor... Generalize it?
   if (aAnchorPosReferenceData) {
     bool found = false;
-    uint32_t index =
-        aKidFrame->GetProperty(LastSuccessfulPositionFallback(), &found);
+    uint32_t index = aKidFrame->GetProperty(
+        nsIFrame::LastSuccessfulPositionFallback(), &found);
     if (found) {
       if (index >= fallbacks.Length()) {
-        // The fallback list changed, re-start the search.
-        // TODO(emilio, bug 1987957): Detect changes more reliably.
-        aKidFrame->RemoveProperty(LastSuccessfulPositionFallback());
+        // This should not happen, because we remove the frame property if the
+        // fallback list changes.
+        MOZ_ASSERT_UNREACHABLE("invalid LastSuccessfulPositionFallback");
+        aKidFrame->RemoveProperty(nsIFrame::LastSuccessfulPositionFallback());
       } else {
         currentFallbackIndex.emplace(index);
       }
@@ -1168,7 +1166,7 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
   } while (true);
 
   if (currentFallbackIndex) {
-    aKidFrame->SetProperty(LastSuccessfulPositionFallback(),
+    aKidFrame->SetProperty(nsIFrame::LastSuccessfulPositionFallback(),
                            *currentFallbackIndex);
   }
 

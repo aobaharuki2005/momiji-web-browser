@@ -1440,6 +1440,10 @@ class nsIFrame : public nsQueryFrame {
                                       mozilla::AnchorPosReferenceData,
                                       mozilla::DeleteAnchorPosReferenceData);
 
+  // The last successful position-try-fallbacks index, if present.
+  NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(LastSuccessfulPositionFallback,
+                                        uint32_t);
+
   // This tracks the start and end page value for a frame.
   //
   // https://www.w3.org/TR/css-page-3/#using-named-pages
