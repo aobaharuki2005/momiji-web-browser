@@ -24,11 +24,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(NavigationDestination)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NavigationDestination::NavigationDestination(nsIGlobalObject* aGlobal,
-                                             nsIURI* aURI,
-                                             NavigationHistoryEntry* aEntry,
-                                             nsStructuredCloneContainer* aState,
-                                             bool aIsSameDocument)
+NavigationDestination::NavigationDestination(
+    nsIGlobalObject* aGlobal, nsIURI* aURI, NavigationHistoryEntry* aEntry,
+    nsIStructuredCloneContainer* aState, bool aIsSameDocument)
     : mGlobal(aGlobal),
       mURL(aURI),
       mEntry(aEntry),

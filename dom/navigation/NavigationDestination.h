@@ -31,7 +31,7 @@ class NavigationDestination final : public nsISupports, public nsWrapperCache {
 
   NavigationDestination(nsIGlobalObject* aGlobal, nsIURI* aURI,
                         NavigationHistoryEntry* aEntry,
-                        nsStructuredCloneContainer* aState,
+                        nsIStructuredCloneContainer* aState,
                         bool aIsSameDocument);
 
   void GetUrl(nsString& aURL) const;
@@ -61,7 +61,7 @@ class NavigationDestination final : public nsISupports, public nsWrapperCache {
   RefPtr<NavigationHistoryEntry> mEntry;
 
   // https://html.spec.whatwg.org/#concept-navigationdestination-state
-  RefPtr<nsStructuredCloneContainer> mState;
+  RefPtr<nsIStructuredCloneContainer> mState;
 
   // https://html.spec.whatwg.org/#concept-navigationdestination-samedocument
   bool mIsSameDocument = false;
