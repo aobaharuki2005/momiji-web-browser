@@ -148,6 +148,10 @@ impl<'a> RequestBuilder<'a> {
         cmd.args(["--backgroundtask", "crashreporterNetworkBackend"]);
         cmd.arg(url);
         cmd.arg(user_agent());
+        // Disable crash reporting in the background task. We don't want a crash in the background
+        // task to launch another crash reporter flow. See bugs 1991491/1987145.
+        cmd.env("MOZ_CRASHREPORTER_DISABLE", "1")
+            .env_remove("MOZ_CRASHREPORTER");
 
         let mut file = TempRequestFile::new()?;
         serde_json::to_writer(&mut *file, self)?;
