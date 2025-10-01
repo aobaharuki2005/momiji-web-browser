@@ -5,6 +5,7 @@
 package org.mozilla.fenix.termsofuse.store
 
 import io.mockk.mockk
+import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import mozilla.components.lib.state.MiddlewareContext
@@ -50,6 +51,7 @@ class TermsOfUsePromptPreferencesMiddlewareTest {
         assertFalse(settings.hasClickedTermOfUsePromptLink)
         assertFalse(settings.hasClickedTermOfUsePromptRemindMeLater)
         assertFalse(settings.lastTermsOfUsePromptTimeInMillis > 0)
+        assertEquals(0, settings.termsOfUsePromptDisplayedCount)
     }
 
     @Test
@@ -67,6 +69,7 @@ class TermsOfUsePromptPreferencesMiddlewareTest {
         assertFalse(settings.hasClickedTermOfUsePromptLink)
         assertTrue(settings.hasClickedTermOfUsePromptRemindMeLater)
         assertFalse(settings.lastTermsOfUsePromptTimeInMillis > 0)
+        assertEquals(0, settings.termsOfUsePromptDisplayedCount)
     }
 
     @Test
@@ -84,6 +87,7 @@ class TermsOfUsePromptPreferencesMiddlewareTest {
         assertFalse(settings.hasClickedTermOfUsePromptLink)
         assertFalse(settings.hasClickedTermOfUsePromptRemindMeLater)
         assertFalse(settings.lastTermsOfUsePromptTimeInMillis > 0)
+        assertEquals(0, settings.termsOfUsePromptDisplayedCount)
     }
 
     @Test
@@ -101,6 +105,7 @@ class TermsOfUsePromptPreferencesMiddlewareTest {
         assertFalse(settings.hasClickedTermOfUsePromptLink)
         assertFalse(settings.hasClickedTermOfUsePromptRemindMeLater)
         assertTrue(settings.lastTermsOfUsePromptTimeInMillis > 0)
+        assertEquals(0, settings.termsOfUsePromptDisplayedCount)
     }
 
     @Test
@@ -118,6 +123,7 @@ class TermsOfUsePromptPreferencesMiddlewareTest {
         assertTrue(settings.hasClickedTermOfUsePromptLink)
         assertFalse(settings.hasClickedTermOfUsePromptRemindMeLater)
         assertFalse(settings.lastTermsOfUsePromptTimeInMillis > 0)
+        assertEquals(0, settings.termsOfUsePromptDisplayedCount)
     }
 
     @Test
@@ -135,6 +141,7 @@ class TermsOfUsePromptPreferencesMiddlewareTest {
         assertTrue(settings.hasClickedTermOfUsePromptLink)
         assertFalse(settings.hasClickedTermOfUsePromptRemindMeLater)
         assertFalse(settings.lastTermsOfUsePromptTimeInMillis > 0)
+        assertEquals(0, settings.termsOfUsePromptDisplayedCount)
     }
 
     @Test
@@ -152,23 +159,25 @@ class TermsOfUsePromptPreferencesMiddlewareTest {
         assertTrue(settings.hasClickedTermOfUsePromptLink)
         assertFalse(settings.hasClickedTermOfUsePromptRemindMeLater)
         assertFalse(settings.lastTermsOfUsePromptTimeInMillis > 0)
+        assertEquals(0, settings.termsOfUsePromptDisplayedCount)
     }
 
     @Test
-    fun `WHEN action is noop THEN the repository preferences are not updated`() {
-        assertNoOpAction(TermsOfUsePromptAction.OnImpression(Surface.HOMEPAGE_NEW_TAB))
-    }
-
-    private fun assertNoOpAction(action: TermsOfUsePromptAction) {
+    fun `WHEN the OnImpression action is received THEN the expected preference is updated`() {
         assertAllPrefsDefault()
 
         middleware.invoke(
             context = context,
             next = {},
-            action = action,
+            action = TermsOfUsePromptAction.OnImpression(Surface.HOMEPAGE_NEW_TAB),
         )
 
-        assertAllPrefsDefault()
+        assertFalse(settings.hasAcceptedTermsOfService)
+        assertFalse(settings.hasPostponedAcceptingTermsOfUse)
+        assertFalse(settings.hasClickedTermOfUsePromptLink)
+        assertFalse(settings.hasClickedTermOfUsePromptRemindMeLater)
+        assertFalse(settings.lastTermsOfUsePromptTimeInMillis > 0)
+        assertEquals(1, settings.termsOfUsePromptDisplayedCount)
     }
 
     private fun assertAllPrefsDefault() {
@@ -177,5 +186,6 @@ class TermsOfUsePromptPreferencesMiddlewareTest {
         assertFalse(settings.hasClickedTermOfUsePromptLink)
         assertFalse(settings.hasClickedTermOfUsePromptRemindMeLater)
         assertFalse(settings.lastTermsOfUsePromptTimeInMillis > 0)
+        assertEquals(0, settings.termsOfUsePromptDisplayedCount)
     }
 }

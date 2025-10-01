@@ -604,6 +604,19 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * The maximum number of times the Terms of Use prompt should be displayed.
+     */
+    var termsOfUseMaxDisplayCount = FxNimbus.features.termsOfUsePrompt.value().maxDisplayCount
+
+    /**
+     * The total number of times the Terms of Use prompt has been displayed.
+     */
+    var termsOfUsePromptDisplayedCount by intPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_terms_prompt_displayed_count),
+        default = 0,
+    )
+
+    /**
      * Timestamp in milliseconds when the terms of use prompt was last shown to the user.
      * A value of 0L indicates that the prompt has never been shown.
      */
