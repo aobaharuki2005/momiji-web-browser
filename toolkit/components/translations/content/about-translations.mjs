@@ -239,7 +239,7 @@ class AboutTranslations {
 
     if (orientationChanged) {
       document.dispatchEvent(
-        new CustomEvent("AboutTranslations:PageOrientationChanged", {
+        new CustomEvent("AboutTranslationsTest:PageOrientationChanged", {
           detail: { orientation: this.#pageOrientation },
         })
       );
@@ -555,7 +555,7 @@ class AboutTranslations {
 
     if (previousDetectedLanguage !== detectedLanguage) {
       document.dispatchEvent(
-        new CustomEvent("AboutTranslations:DetectedLanguageUpdated", {
+        new CustomEvent("AboutTranslationsTest:DetectedLanguageUpdated", {
           detail: { language: detectedLanguage },
         })
       );
@@ -653,7 +653,7 @@ class AboutTranslations {
 
     swapLanguagesButton.disabled = true;
     document.dispatchEvent(
-      new CustomEvent("AboutTranslations:SwapLanguagesButtonDisabled")
+      new CustomEvent("AboutTranslationsTest:SwapLanguagesButtonDisabled")
     );
   }
 
@@ -668,7 +668,7 @@ class AboutTranslations {
 
     swapLanguagesButton.disabled = false;
     document.dispatchEvent(
-      new CustomEvent("AboutTranslations:SwapLanguagesButtonEnabled")
+      new CustomEvent("AboutTranslationsTest:SwapLanguagesButtonEnabled")
     );
   }
 
@@ -782,7 +782,7 @@ class AboutTranslations {
 
     if (!value) {
       document.dispatchEvent(
-        new CustomEvent("AboutTranslations:ClearTargetText")
+        new CustomEvent("AboutTranslationsTest:ClearTargetText")
       );
     }
 
@@ -830,7 +830,7 @@ class AboutTranslations {
     );
 
     document.dispatchEvent(
-      new CustomEvent("AboutTranslations:ShowTranslatingPlaceholder")
+      new CustomEvent("AboutTranslationsTest:ShowTranslatingPlaceholder")
     );
   }
 
@@ -927,7 +927,7 @@ class AboutTranslations {
     window.location.hash = params;
 
     document.dispatchEvent(
-      new CustomEvent("AboutTranslations:URLUpdatedFromUI", {
+      new CustomEvent("AboutTranslationsTest:URLUpdatedFromUI", {
         detail: { sourceLanguage, targetLanguage, sourceText },
       })
     );
@@ -1066,7 +1066,7 @@ class AboutTranslations {
         }
 
         document.dispatchEvent(
-          new CustomEvent("AboutTranslations:TranslationRequested", {
+          new CustomEvent("AboutTranslationsTest:TranslationRequested", {
             detail: { translationId },
           })
         );
@@ -1094,7 +1094,7 @@ class AboutTranslations {
         this.#setTargetText(translatedText);
         this.#updateSwapLanguagesButtonEnabledState();
         document.dispatchEvent(
-          new CustomEvent("AboutTranslations:TranslationComplete", {
+          new CustomEvent("AboutTranslationsTest:TranslationComplete", {
             detail: { translationId },
           })
         );
@@ -1203,7 +1203,7 @@ class AboutTranslations {
       Math.abs(ratioDelta) > changeThreshold
     ) {
       document.dispatchEvent(
-        new CustomEvent("AboutTranslations:TextAreaHeightsChanged", {
+        new CustomEvent("AboutTranslationsTest:TextAreaHeightsChanged", {
           detail: {
             textAreaHeights: ratioDelta < 0 ? "decreased" : "increased",
           },

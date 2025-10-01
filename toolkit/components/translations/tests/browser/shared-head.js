@@ -2773,7 +2773,7 @@ class AboutTranslationsTestUtils {
      * @type {string}
      */
     static DetectedLanguageUpdated =
-      "AboutTranslations:DetectedLanguageUpdated";
+      "AboutTranslationsTest:DetectedLanguageUpdated";
 
     /**
      * Event fired when the swap-languages button becomes disabled.
@@ -2781,7 +2781,7 @@ class AboutTranslationsTestUtils {
      * @type {string}
      */
     static SwapLanguagesButtonDisabled =
-      "AboutTranslations:SwapLanguagesButtonDisabled";
+      "AboutTranslationsTest:SwapLanguagesButtonDisabled";
 
     /**
      * Event fired when the swap-languages button becomes enabled.
@@ -2789,7 +2789,7 @@ class AboutTranslationsTestUtils {
      * @type {string}
      */
     static SwapLanguagesButtonEnabled =
-      "AboutTranslations:SwapLanguagesButtonEnabled";
+      "AboutTranslationsTest:SwapLanguagesButtonEnabled";
 
     /**
      * Event fired when the translating placeholder message is shown.
@@ -2797,49 +2797,51 @@ class AboutTranslationsTestUtils {
      * @type {string}
      */
     static ShowTranslatingPlaceholder =
-      "AboutTranslations:ShowTranslatingPlaceholder";
+      "AboutTranslationsTest:ShowTranslatingPlaceholder";
 
     /**
      * Event fired after the URL has been updated from UI interactions.
      *
      * @type {string}
      */
-    static URLUpdatedFromUI = "AboutTranslations:URLUpdatedFromUI";
+    static URLUpdatedFromUI = "AboutTranslationsTest:URLUpdatedFromUI";
 
     /**
      * Event fired when a translation is requested.
      *
      * @type {string}
      */
-    static TranslationRequested = "AboutTranslations:TranslationRequested";
+    static TranslationRequested = "AboutTranslationsTest:TranslationRequested";
 
     /**
      * Event fired when a translation completes.
      *
      * @type {string}
      */
-    static TranslationComplete = "AboutTranslations:TranslationComplete";
+    static TranslationComplete = "AboutTranslationsTest:TranslationComplete";
 
     /**
      * Event fired when the page layout changes.
      *
      * @type {string}
      */
-    static PageOrientationChanged = "AboutTranslations:PageOrientationChanged";
+    static PageOrientationChanged =
+      "AboutTranslationsTest:PageOrientationChanged";
 
     /**
      * Event fired when the source/target textarea heights change.
      *
      * @type {string}
      */
-    static TextAreaHeightsChanged = "AboutTranslations:TextAreaHeightsChanged";
+    static TextAreaHeightsChanged =
+      "AboutTranslationsTest:TextAreaHeightsChanged";
 
     /**
      * Event fired when the target text is cleared programmatically.
      *
      * @type {string}
      */
-    static ClearTargetText = "AboutTranslations:ClearTargetText";
+    static ClearTargetText = "AboutTranslationsTest:ClearTargetText";
   };
 
   /**
