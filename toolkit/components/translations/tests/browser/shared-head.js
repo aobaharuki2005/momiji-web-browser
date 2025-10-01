@@ -3169,6 +3169,9 @@ class AboutTranslationsTestUtils {
    * @returns {Promise<void>}
    */
   async assertEvents({ expected = [], unexpected = [] } = {}, callback) {
+    // This helps the test visually render at each step without significantly slowing test speed.
+    await doubleRaf(document);
+
     try {
       const expectedEventWaiters = Object.fromEntries(
         expected.map(([eventName]) => [eventName, this.waitForEvent(eventName)])
@@ -3211,6 +3214,9 @@ class AboutTranslationsTestUtils {
     } catch (error) {
       AboutTranslationsTestUtils.#reportTestFailure(error);
     }
+
+    // This helps the test visually render at each step without significantly slowing test speed.
+    await doubleRaf(document);
   }
 
   /**
@@ -3227,6 +3233,9 @@ class AboutTranslationsTestUtils {
     showsPlaceholder,
     scriptDirection,
   } = {}) {
+    // This helps the test visually render at each step without significantly slowing test speed.
+    await doubleRaf(document);
+
     let pageResult = {};
     try {
       pageResult = await this.#runInPage(
@@ -3292,6 +3301,9 @@ class AboutTranslationsTestUtils {
     showsPlaceholder,
     scriptDirection,
   } = {}) {
+    // This helps the test visually render at each step without significantly slowing test speed.
+    await doubleRaf(document);
+
     let pageResult = {};
     try {
       pageResult = await this.#runInPage(
@@ -3357,6 +3369,9 @@ class AboutTranslationsTestUtils {
     options,
     detectedLanguage,
   } = {}) {
+    // This helps the test visually render at each step without significantly slowing test speed.
+    await doubleRaf(document);
+
     let pageResult = {};
     try {
       pageResult = await this.#runInPage(selectors => {
@@ -3427,6 +3442,9 @@ class AboutTranslationsTestUtils {
    * @returns {Promise<void>}
    */
   async assertTargetLanguageSelector({ value, options } = {}) {
+    // This helps the test visually render at each step without significantly slowing test speed.
+    await doubleRaf(document);
+
     let pageResult = {};
     try {
       pageResult = await this.#runInPage(
@@ -3488,6 +3506,9 @@ class AboutTranslationsTestUtils {
     defaultValue,
     language,
   } = {}) {
+    // This helps the test visually render at each step without significantly slowing test speed.
+    await doubleRaf(document);
+
     if (language !== undefined && defaultValue) {
       throw new Error(
         "assertDetectLanguageOption: `language` and `defaultValue: true` are mutually exclusive."
@@ -3568,6 +3589,9 @@ class AboutTranslationsTestUtils {
    * @returns {Promise<void>}
    */
   async assertSwapLanguagesButton({ enabled } = {}) {
+    // This helps the test visually render at each step without significantly slowing test speed.
+    await doubleRaf(document);
+
     let pageResult = {};
     try {
       pageResult = await this.#runInPage(
@@ -3602,6 +3626,9 @@ class AboutTranslationsTestUtils {
    * @returns {Promise<void>}
    */
   async assertTranslatingPlaceholder() {
+    // This helps the test visually render at each step without significantly slowing test speed.
+    await doubleRaf(document);
+
     let actualValue;
     try {
       actualValue = await this.#runInPage(selectors => {
@@ -3637,6 +3664,9 @@ class AboutTranslationsTestUtils {
     targetLanguage,
     sourceText,
   }) {
+    // This helps the test visually render at each step without significantly slowing test speed.
+    await doubleRaf(document);
+
     if (sourceLanguage !== undefined && detectedLanguage !== undefined) {
       throw new Error(
         "assertTranslatedText: sourceLanguage and detectedLanguage are mutually exclusive assertion options."
@@ -3694,6 +3724,9 @@ class AboutTranslationsTestUtils {
     targetLanguage = "",
     sourceText = "",
   } = {}) {
+    // This helps the test visually render at each step without significantly slowing test speed.
+    await doubleRaf(document);
+
     try {
       // First verify that the UI controls contain the expected values.
       await this.assertSourceLanguageSelector({ value: sourceLanguage });
@@ -3787,6 +3820,9 @@ class AboutTranslationsTestUtils {
     unsupportedInfoMessage = false,
     languageLoadErrorMessage = false,
   } = {}) {
+    // This helps the test visually render at each step without significantly slowing test speed.
+    await doubleRaf(document);
+
     try {
       const visibilityMap = await this.#runInPage(selectors => {
         const { document, window } = content;
