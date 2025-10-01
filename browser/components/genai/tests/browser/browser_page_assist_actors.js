@@ -42,9 +42,11 @@ function assertCommonPageData(pageData) {
   );
 }
 
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("browser.ml.pageAssist.enabled");
+registerCleanupFunction(async () => {
   // Ensure sidebar is hidden after each test:
+  try {
+    await SpecialPowers.popPrefEnv(); // undo any pushPrefEnv from this test
+  } catch {}
   if (!document.getElementById("sidebar-box").hidden) {
     info(
       `Sidebar ${SidebarController.currentID} was left open, closing it in cleanup function`
@@ -130,8 +132,8 @@ add_task(async function test_page_assist_sidebar_integration() {
 
     // 2) Grab controls and assert initial enabled state.
     const shadowRoot = sidebarEl.shadowRoot;
-    const textarea = shadowRoot.querySelector(".prompt-textarea");
-    const submitBtn = shadowRoot.querySelector("#submit-user-prompt-btn");
+    const textarea = shadowRoot.querySelector("page-assists-input");
+    const submitBtn = shadowRoot.querySelector("page-assists-input");
     Assert.ok(textarea, "Prompt textarea should exist");
     Assert.ok(submitBtn, "Submit button should exist");
 

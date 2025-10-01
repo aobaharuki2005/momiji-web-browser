@@ -500,10 +500,9 @@
         return;
       }
 
-      this.browser.finder.requestMatchesCount(
-        this._findField.value,
-        this.findMode == this.FIND_LINKS
-      );
+      this.browser.finder.requestMatchesCount(this._findField.value, {
+        linksOnly: this.findMode == this.FIND_LINKS,
+      });
     }
 
     /**

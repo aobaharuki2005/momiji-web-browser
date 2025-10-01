@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html } from "chrome://global/content/vendor/lit.all.mjs";
+import { html, ifDefined } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
@@ -14,6 +14,37 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AboutReaderParent: "resource:///actors/AboutReaderParent.sys.mjs",
 });
 
+import MozInputText from "chrome://global/content/elements/moz-input-text.mjs";
+
+export class PageAssistInput extends MozInputText {
+  static properties = {
+    class: { type: String, reflect: true },
+  };
+
+  inputTemplate() {
+    return html`
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/genai/content/page-assist.css"
+      />
+      <input
+        id="input"
+        class=${"with-icon " + ifDefined(this.class)}
+        name=${this.name}
+        .value=${this.value || ""}
+        ?disabled=${this.disabled || this.parentDisabled}
+        accesskey=${ifDefined(this.accessKey)}
+        placeholder=${ifDefined(this.placeholder)}
+        aria-label=${ifDefined(this.ariaLabel ?? undefined)}
+        aria-describedby="description"
+        @input=${this.handleInput}
+        @change=${this.redispatchEvent}
+      />
+    `;
+  }
+}
+customElements.define("page-assists-input", PageAssistInput);
+
 export class PageAssist extends MozLitElement {
   _progressListener = null;
   _onTabSelect = null;
@@ -24,6 +55,10 @@ export class PageAssist extends MozLitElement {
     userPrompt: { type: String },
     aiResponse: { type: String },
     isCurrentPageReaderable: { type: Boolean },
+    matchCountQty: { type: Number },
+    currentMatchIndex: { type: Number },
+    highlightAll: { type: Boolean },
+    snippets: { type: Array },
   };
 
   constructor() {
@@ -31,6 +66,10 @@ export class PageAssist extends MozLitElement {
     this.userPrompt = "";
     this.aiResponse = "";
     this.isCurrentPageReaderable = true;
+    this.matchCountQty = 0;
+    this.currentMatchIndex = 0;
+    this.highlightAll = true;
+    this.snippets = [];
   }
 
   get _browserWin() {
@@ -45,16 +84,51 @@ export class PageAssist extends MozLitElement {
     this._attachReaderModeListener();
     this._initURLChange();
     this._onUnload = () => this._cleanup();
+    this._setupFinder();
     this.ownerGlobal.addEventListener("unload", this._onUnload, { once: true });
   }
 
   disconnectedCallback() {
+    // Clean up finder listener
+    if (this.browser && this.browser.finder) {
+      this.browser.finder.removeResultListener(this);
+    }
+
     if (this._onUnload) {
       this.ownerGlobal.removeEventListener("unload", this._onUnload);
       this._onUnload = null;
     }
     this._cleanup();
     super.disconnectedCallback();
+  }
+
+  _setupFinder() {
+    const gBrowser = this._gBrowser;
+
+    if (!gBrowser) {
+      console.warn("No gBrowser found.");
+      return;
+    }
+
+    const selected = gBrowser.selectedBrowser;
+
+    // If already attached to this browser, skip
+    if (this.browser === selected) {
+      return;
+    }
+
+    // Clean up old listener if needed
+    if (this.browser && this.browser.finder) {
+      this.browser.finder.removeResultListener(this);
+    }
+
+    this.browser = selected;
+
+    if (this.browser && this.browser.finder) {
+      this.browser.finder.addResultListener(this);
+    } else {
+      console.warn("PageAssist: no finder on selected browser.");
+    }
   }
 
   _cleanup() {
@@ -114,6 +188,7 @@ export class PageAssist extends MozLitElement {
     }
 
     this._onTabSelect = () => {
+      this._setupFinder();
       const browser = gBrowser.selectedBrowser;
       this.isCurrentPageReaderable = !!browser?.isArticle;
     };
@@ -161,10 +236,65 @@ export class PageAssist extends MozLitElement {
     return await actor.fetchPageData();
   }
 
+  _clearFinder() {
+    if (this.browser?.finder) {
+      this.browser.finder.removeSelection();
+      this.browser.finder.highlight(false, "", false);
+    }
+    this.matchCountQty = 0;
+    this.currentMatchIndex = 0;
+    this.snippets = [];
+  }
+
   _handlePromptInput = e => {
     const value = e.target.value;
     this.userPrompt = value;
+
+    // If input is empty, clear values
+    if (!value) {
+      this._clearFinder();
+      return;
+    }
+
+    // Perform the search
+    this.browser.finder.fastFind(value, false, false);
+
+    if (this.highlightAll) {
+      // Todo this also needs to take contextRange.
+      this.browser.finder.highlight(true, value, false);
+    }
+
+    // Request match count - this method will trigger onMatchesCountResult callback
+    this.browser.finder.requestMatchesCount(value, {
+      linksOnly: false,
+      contextRange: 30,
+    });
   };
+
+  onMatchesCountResult(result) {
+    this.matchCountQty = result.total;
+    this.currentMatchIndex = result.current;
+    this.snippets = result.snippets || [];
+  }
+
+  // Abstract method need to be implemented or it will error
+  onHighlightFinished() {
+    // Noop.
+  }
+
+  // Finder result listener methods
+  onFindResult(result) {
+    switch (result.result) {
+      case Ci.nsITypeAheadFind.FIND_NOTFOUND:
+        this.matchCountQty = 0;
+        this.currentMatchIndex = 0;
+        this.snippets = [];
+        break;
+
+      default:
+        break;
+    }
+  }
 
   _handleSubmit = async () => {
     const pageData = await this._fetchPageData();
@@ -196,10 +326,13 @@ export class PageAssist extends MozLitElement {
             ? html`<div class="ai-response">${this.aiResponse}</div>`
             : ""}
           <div>
-            <textarea
-              class="prompt-textarea"
-              @input=${e => this._handlePromptInput(e)}
-            ></textarea>
+            <page-assists-input
+              class="find-input"
+              type="text"
+              placeholder="Find in page..."
+              .value=${this.userPrompt}
+              @input=${this._handlePromptInput}
+            ></page-assists-input>
             <moz-button
               id="submit-user-prompt-btn"
               type="primary"
@@ -208,6 +341,22 @@ export class PageAssist extends MozLitElement {
             >
               Submit
             </moz-button>
+          </div>
+
+          <div>
+            ${this.snippets.length
+              ? html`<div class="snippets">
+                  <h3>Snippets</h3>
+                  <ul>
+                    ${this.snippets.map(
+                      snippet =>
+                        html`<li>
+                          ${snippet.before}<b>${snippet.match}</b>${snippet.after}
+                        </li>`
+                    )}
+                  </ul>
+                </div>`
+              : ""}
           </div>
         </div>
       </div>
