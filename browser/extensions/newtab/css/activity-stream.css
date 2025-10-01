@@ -955,8 +955,16 @@ main section {
 }
 .top-site-outer .context-menu-button:focus-visible {
   background-color: var(--newtab-button-focus-background);
-  border-color: var(--newtab-button-focus-border);
+  outline: var(--focus-outline);
   opacity: 1;
+}
+.lightWallpaper .top-site-outer .context-menu-button:focus-visible::after, .darkWallpaper .top-site-outer .context-menu-button:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--border-radius-small);
+  outline: var(--focus-outline);
+  color-scheme: initial;
 }
 .top-site-outer .context-menu {
   inset-block-start: calc(var(--space-large) + var(--space-xlarge));
@@ -972,6 +980,10 @@ main section {
 }
 .top-site-outer .top-site-button:focus + div .context-menu-button {
   opacity: 1;
+}
+.lightWallpaper .top-site-outer .top-site-button:focus .tile, .darkWallpaper .top-site-outer .top-site-button:focus .tile {
+  outline: var(--focus-outline);
+  color-scheme: initial;
 }
 .top-site-outer .title {
   color: var(--newtab-contextual-text-primary-color);
