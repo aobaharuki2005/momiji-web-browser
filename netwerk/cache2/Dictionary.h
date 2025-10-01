@@ -19,6 +19,8 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/TimeStamp.h"
+#include "nsTHashMap.h"
+#include "nsHashKeys.h"
 
 class nsICacheStorage;
 class nsIIOService;
