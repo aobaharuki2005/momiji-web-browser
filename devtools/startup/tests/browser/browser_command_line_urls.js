@@ -7,8 +7,6 @@
  * Test command line processing of URLs meant to be intepreted by DevTools.
  */
 
-/* eslint-env browser */
-
 const { DevToolsStartup } = ChromeUtils.importESModule(
   "resource:///modules/DevToolsStartup.sys.mjs"
 );
