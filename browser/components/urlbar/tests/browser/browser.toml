@@ -91,7 +91,10 @@ tags = "persisted-search"
 
 ["browser_UrlbarInput_setURI.js"]
 https_first_disabled = true
-skip-if = ["os == 'mac' && os_version == '10.15' && processor == 'x86_64' && debug"] # Bug 1773790
+skip-if = [
+  "os == 'mac' && os_version == '10.15' && processor == 'x86_64' && debug",  # Bug 1773790
+  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && debug", # Bug 1773790
+]
 
 ["browser_UrlbarInput_tooltip.js"]
 
