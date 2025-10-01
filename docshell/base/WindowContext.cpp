@@ -625,9 +625,10 @@ bool WindowContext::HasValidTransientUserGestureActivation() {
 // https://html.spec.whatwg.org/#consume-user-activation
 bool WindowContext::ConsumeTransientUserGestureActivation() {
   MOZ_ASSERT(IsInProcess());
-  MOZ_ASSERT(IsCurrent());
-
   // 1. If W's navigable is null, then return.
+  if (!IsCurrent()) {
+    return false;
+  }
 
   if (!HasValidTransientUserGestureActivation()) {
     return false;
