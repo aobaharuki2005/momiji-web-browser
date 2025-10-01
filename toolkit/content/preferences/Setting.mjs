@@ -9,6 +9,7 @@ import {
 import { Preferences } from "chrome://global/content/preferences/Preferences.mjs";
 
 /** @import { type Preference } from "chrome://global/content/preferences/Preference.mjs" */
+/** @import { PreferencesSettingsConfig } from "chrome://global/content/preferences/Preferences.mjs" */
 
 const { EventEmitter } = ChromeUtils.importESModule(
   "resource://gre/modules/EventEmitter.sys.mjs"
@@ -27,7 +28,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * (keys) so that the dependencies of a setting can
  * be easily looked up by just their ID.
  *
- * @typedef {Record<string, any>} PreferenceSettingDepsMap
+ * @typedef {Record<string, Setting | undefined>} PreferenceSettingDepsMap
  */
 
 export class Setting extends EventEmitter {

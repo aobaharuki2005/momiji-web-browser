@@ -18,6 +18,7 @@ import {
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
 /** @import MozCheckbox from "../../../../../toolkit/content/widgets/moz-checkbox/moz-checkbox.mjs"*/
+/** @import { Setting } from "chrome://global/content/preferences/Setting.mjs"; */
 
 /**
  * A Lit directive that applies all properties of an object to a DOM element.
