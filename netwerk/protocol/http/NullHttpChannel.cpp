@@ -846,6 +846,19 @@ NullHttpChannel::GetRenderBlocking(bool* aRenderBlocking) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+NullHttpChannel::GetDictionary(
+    mozilla::net::DictionaryCacheEntry** aDictionary) {
+  *aDictionary = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::SetDictionary(
+    mozilla::net::DictionaryCacheEntry* aDictionary) {
+  return NS_OK;
+}
+
 #define IMPL_TIMING_ATTR(name)                                           \
   NS_IMETHODIMP                                                          \
   NullHttpChannel::Get##name##Time(PRTime* _retval) {                    \
