@@ -69,7 +69,7 @@
 using namespace mozilla::ipc;
 
 extern mozilla::LazyLogModule gAutoplayPermissionLog;
-extern mozilla::LazyLogModule gNavigationLog;
+extern mozilla::LazyLogModule gNavigationAPILog;
 extern mozilla::LazyLogModule gSHLog;
 extern mozilla::LazyLogModule gSHIPBFCacheLog;
 
@@ -639,13 +639,13 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     bool sessionHistoryLoad =
         existingLoadingInfo && existingLoadingInfo->mLoadIsFromSessionHistory;
 
-    MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug,
+    MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug,
                 "Determining navigation type from loadType={}",
                 aLoadState->LoadType());
     Maybe<NavigationType> navigationType =
         NavigationUtils::NavigationTypeFromLoadType(aLoadState->LoadType());
     if (!navigationType) {
-      MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug,
+      MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug,
                   "Failed to determine navigation type");
       return loadingInfo;
     }
@@ -705,14 +705,14 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
       loadingInfo->mContiguousEntries.AppendElement(entry->Info());
     }
 
-    if (MOZ_LOG_TEST(gNavigationLog, LogLevel::Debug)) {
+    if (MOZ_LOG_TEST(gNavigationAPILog, LogLevel::Debug)) {
       int32_t index = 0;
-      MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug,
+      MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug,
                   "Preparing contiguous for {} ({}load))",
                   entry->Info().GetURI()->GetSpecOrDefault(),
                   sessionHistoryLoad ? "history " : "");
       for (const auto& entry : loadingInfo->mContiguousEntries) {
-        MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug,
+        MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug,
                     "{}+- {} SHI {} {}\n   URL = {}",
                     (mActiveEntry && entry == mActiveEntry->Info()) ? ">" : " ",
                     index++, entry.NavigationKey().ToString().get(),
@@ -723,13 +723,14 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
 
     loadingInfo->mTriggeringEntry =
         mActiveEntry ? Some(mActiveEntry->Info()) : Nothing();
-    MOZ_LOG_FMT(gNavigationLog, LogLevel::Verbose, "Triggering entry was {}.",
+    MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Verbose,
+                "Triggering entry was {}.",
                 fmt::ptr(loadingInfo->mTriggeringEntry
                              .map([](auto& entry) { return &entry; })
                              .valueOr(nullptr)));
 
     loadingInfo->mTriggeringNavigationType = navigationType;
-    MOZ_LOG_FMT(gNavigationLog, LogLevel::Verbose,
+    MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Verbose,
                 "Triggering navigation type was {}.", *navigationType);
 
     [[maybe_unused]] auto pred = [&](auto& entry) {
@@ -1625,7 +1626,7 @@ void CanonicalBrowsingContext::NavigationTraverse(
     const nsID& aKey, uint64_t aHistoryEpoch, bool aUserActivation,
     bool aCheckForCancelation, Maybe<ContentParentId> aContentId,
     std::function<void(nsresult)>&& aResolver) {
-  MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug, "Traverse navigation to {}",
+  MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug, "Traverse navigation to {}",
               aKey.ToString().get());
   nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
   if (!shistory) {
@@ -1669,7 +1670,7 @@ void CanonicalBrowsingContext::NavigationTraverse(
   }
   int32_t offset = *targetIndex - *activeIndex;
 
-  MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug, "Performing traversal by {}",
+  MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug, "Performing traversal by {}",
               offset);
 
   HistoryGo(offset, aHistoryEpoch, false, aUserActivation, aCheckForCancelation,

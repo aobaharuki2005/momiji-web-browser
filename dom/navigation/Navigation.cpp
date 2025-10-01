@@ -42,10 +42,10 @@
 #include "nsNetUtil.h"
 #include "nsTHashtable.h"
 
-mozilla::LazyLogModule gNavigationLog("Navigation");
+mozilla::LazyLogModule gNavigationAPILog("NavigationAPI");
 
 #define LOG_FMT(format, ...) \
-  MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug, format, ##__VA_ARGS__);
+  MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug, format, ##__VA_ARGS__);
 
 namespace mozilla::dom {
 
@@ -215,7 +215,7 @@ already_AddRefed<NavigationHistoryEntry> Navigation::GetCurrentEntry() const {
     return nullptr;
   }
 
-  MOZ_LOG(gNavigationLog, LogLevel::Debug,
+  MOZ_LOG(gNavigationAPILog, LogLevel::Debug,
           ("Current Entry: %d; Amount of Entries: %d", int(*mCurrentEntryIndex),
            int(mEntries.Length())));
   MOZ_ASSERT(*mCurrentEntryIndex < mEntries.Length());
@@ -297,7 +297,7 @@ void Navigation::InitializeHistoryEntries(
   nsID key = aInitialSHInfo->NavigationKey();
   nsID id = aInitialSHInfo->NavigationId();
   MOZ_LOG(
-      gNavigationLog, LogLevel::Debug,
+      gNavigationAPILog, LogLevel::Debug,
       ("aInitialSHInfo: %s %s\n", key.ToString().get(), id.ToString().get()));
 }
 
@@ -309,7 +309,7 @@ void Navigation::UpdateEntriesForSameDocumentNavigation(
     return;
   }
 
-  MOZ_LOG(gNavigationLog, LogLevel::Debug,
+  MOZ_LOG(gNavigationAPILog, LogLevel::Debug,
           ("Updating entries for same-document navigation"));
 
   // Steps 2-7.
@@ -317,7 +317,7 @@ void Navigation::UpdateEntriesForSameDocumentNavigation(
   nsTArray<RefPtr<NavigationHistoryEntry>> disposedEntries;
   switch (aNavigationType) {
     case NavigationType::Traverse:
-      MOZ_LOG(gNavigationLog, LogLevel::Debug, ("Traverse navigation"));
+      MOZ_LOG(gNavigationAPILog, LogLevel::Debug, ("Traverse navigation"));
       mCurrentEntryIndex.reset();
       for (auto i = 0ul; i < mEntries.Length(); i++) {
         if (mEntries[i]->IsSameEntry(aDestinationSHE)) {
@@ -329,7 +329,7 @@ void Navigation::UpdateEntriesForSameDocumentNavigation(
       break;
 
     case NavigationType::Push:
-      MOZ_LOG(gNavigationLog, LogLevel::Debug, ("Push navigation"));
+      MOZ_LOG(gNavigationAPILog, LogLevel::Debug, ("Push navigation"));
       mCurrentEntryIndex =
           Some(mCurrentEntryIndex ? *mCurrentEntryIndex + 1 : 0);
       while (*mCurrentEntryIndex < mEntries.Length()) {
@@ -340,7 +340,7 @@ void Navigation::UpdateEntriesForSameDocumentNavigation(
       break;
 
     case NavigationType::Replace:
-      MOZ_LOG(gNavigationLog, LogLevel::Debug, ("Replace navigation"));
+      MOZ_LOG(gNavigationAPILog, LogLevel::Debug, ("Replace navigation"));
       if (!oldCurrentEntry) {
         MOZ_ASSERT(false, "FIXME");
         return;
@@ -479,7 +479,7 @@ Navigation::CreateSerializedStateAndMaybeSetEarlyErrorResult(
 void Navigation::Navigate(JSContext* aCx, const nsAString& aUrl,
                           const NavigationNavigateOptions& aOptions,
                           NavigationResult& aResult) {
-  MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug,
+  MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug,
               "Called navigation.navigate() with url = {}",
               NS_ConvertUTF16toUTF8(aUrl));
   // 4. Let document be this's relevant global object's associated Document.
@@ -715,7 +715,7 @@ void Navigation::PerformNavigationTraversal(JSContext* aCx, const nsID& aKey,
 // https://html.spec.whatwg.org/#dom-navigation-reload
 void Navigation::Reload(JSContext* aCx, const NavigationReloadOptions& aOptions,
                         NavigationResult& aResult) {
-  MOZ_LOG(gNavigationLog, LogLevel::Debug, ("Called navigation.reload()"));
+  MOZ_LOG(gNavigationAPILog, LogLevel::Debug, ("Called navigation.reload()"));
   // 1. Let document be this's relevant global object's associated Document.
   const RefPtr<Document> document = GetAssociatedDocument();
   if (!document) {
@@ -780,7 +780,7 @@ void Navigation::Reload(JSContext* aCx, const NavigationReloadOptions& aOptions,
 void Navigation::TraverseTo(JSContext* aCx, const nsAString& aKey,
                             const NavigationOptions& aOptions,
                             NavigationResult& aResult) {
-  MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug,
+  MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug,
               "Called navigation.traverseTo() with key = {}",
               NS_ConvertUTF16toUTF8(aKey).get());
 
@@ -817,7 +817,7 @@ void Navigation::TraverseTo(JSContext* aCx, const nsAString& aKey,
 // https://html.spec.whatwg.org/#dom-navigation-back
 void Navigation::Back(JSContext* aCx, const NavigationOptions& aOptions,
                       NavigationResult& aResult) {
-  MOZ_LOG(gNavigationLog, LogLevel::Debug, ("Called navigation.back()"));
+  MOZ_LOG(gNavigationAPILog, LogLevel::Debug, ("Called navigation.back()"));
   // 1. If this's current entry index is −1 or 0, then return an early error
   //    result for an "InvalidStateError" DOMException.
   if (mCurrentEntryIndex.isNothing() || *mCurrentEntryIndex == 0 ||
@@ -840,7 +840,7 @@ void Navigation::Back(JSContext* aCx, const NavigationOptions& aOptions,
 // https://html.spec.whatwg.org/#dom-navigation-forward
 void Navigation::Forward(JSContext* aCx, const NavigationOptions& aOptions,
                          NavigationResult& aResult) {
-  MOZ_LOG(gNavigationLog, LogLevel::Debug, ("Called navigation.forward()"));
+  MOZ_LOG(gNavigationAPILog, LogLevel::Debug, ("Called navigation.forward()"));
 
   // 1. If this's current entry index is −1 or is equal to this's entry list's
   //    size − 1, then return an early error result for an "InvalidStateError"
@@ -869,7 +869,7 @@ namespace {
 void LogEntry(NavigationHistoryEntry* aEntry, uint64_t aIndex, uint64_t aTotal,
               bool aIsCurrent) {
   if (!aEntry) {
-    MOZ_LOG(gNavigationLog, LogLevel::Debug,
+    MOZ_LOG(gNavigationAPILog, LogLevel::Debug,
             (" +- %d NHEntry null\n", int(aIndex)));
     return;
   }
@@ -877,14 +877,14 @@ void LogEntry(NavigationHistoryEntry* aEntry, uint64_t aIndex, uint64_t aTotal,
   nsString key, id;
   aEntry->GetKey(key);
   aEntry->GetId(id);
-  MOZ_LOG(gNavigationLog, LogLevel::Debug,
+  MOZ_LOG(gNavigationAPILog, LogLevel::Debug,
           ("%s+- %d NHEntry %p %s %s\n", aIsCurrent ? ">" : " ", int(aIndex),
            aEntry, NS_ConvertUTF16toUTF8(key).get(),
            NS_ConvertUTF16toUTF8(id).get()));
 
   nsAutoString url;
   aEntry->GetUrl(url);
-  MOZ_LOG(gNavigationLog, LogLevel::Debug,
+  MOZ_LOG(gNavigationAPILog, LogLevel::Debug,
           ("   URL = %s\n", NS_ConvertUTF16toUTF8(url).get()));
 }
 
@@ -1052,7 +1052,7 @@ static bool HasIdenticalFragment(nsIURI* aURI, nsIURI* aOtherURI) {
 
 static void LogEvent(Event* aEvent, NavigateEvent* aOngoingEvent,
                      const nsACString& aReason) {
-  if (!MOZ_LOG_TEST(gNavigationLog, LogLevel::Debug)) {
+  if (!MOZ_LOG_TEST(gNavigationAPILog, LogLevel::Debug)) {
     return;
   }
 
@@ -1761,11 +1761,11 @@ void Navigation::UpdateNeedsTraverse() {
 }
 
 void Navigation::LogHistory() const {
-  if (!MOZ_LOG_TEST(gNavigationLog, LogLevel::Debug)) {
+  if (!MOZ_LOG_TEST(gNavigationAPILog, LogLevel::Debug)) {
     return;
   }
 
-  MOZ_LOG(gNavigationLog, LogLevel::Debug,
+  MOZ_LOG(gNavigationAPILog, LogLevel::Debug,
           ("Navigation %p (current entry index: %d)\n", this,
            mCurrentEntryIndex ? int(*mCurrentEntryIndex) : -1));
   auto length = mEntries.Length();
@@ -1850,7 +1850,7 @@ void Navigation::CreateNavigationActivationFrom(
     NavigationType aNavigationType) {
   // Note: we do Step 7.1 at the end of method so we can both create and
   // initialize the activation at once.
-  MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug,
+  MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug,
               "Creating NavigationActivation for from={}, type={}",
               fmt::ptr(aPreviousEntryForActivation), aNavigationType);
   RefPtr currentEntry = GetCurrentEntry();
@@ -1870,7 +1870,8 @@ void Navigation::CreateNavigationActivationFrom(
   // to navigation's entry list[previousEntryIndex].
   RefPtr<NavigationHistoryEntry> oldEntry;
   if (possiblePreviousEntry != mEntries.end()) {
-    MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug, "Found previous entry at {}",
+    MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug,
+                "Found previous entry at {}",
                 fmt::ptr(possiblePreviousEntry->get()));
     oldEntry = *possiblePreviousEntry;
   } else if (aNavigationType == NavigationType::Replace &&
@@ -1892,8 +1893,8 @@ void Navigation::CreateNavigationActivationFrom(
             currentURI, previousURI, false, false))) {
       oldEntry = MakeRefPtr<NavigationHistoryEntry>(
           GetOwnerGlobal(), aPreviousEntryForActivation, -1);
-      MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug, "Created a new entry at {}",
-                  fmt::ptr(oldEntry.get()));
+      MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug,
+                  "Created a new entry at {}", fmt::ptr(oldEntry.get()));
     }
   }
 

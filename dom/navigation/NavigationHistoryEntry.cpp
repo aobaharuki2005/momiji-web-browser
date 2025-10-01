@@ -12,7 +12,7 @@
 #include "nsDocShell.h"
 #include "nsGlobalWindowInner.h"
 
-extern mozilla::LazyLogModule gNavigationLog;
+extern mozilla::LazyLogModule gNavigationAPILog;
 
 namespace mozilla::dom {
 

@@ -100,7 +100,7 @@ LazyLogModule gSHistoryLog("nsSHistory");
 #define LOG(format) MOZ_LOG(gSHistoryLog, mozilla::LogLevel::Debug, format)
 
 extern mozilla::LazyLogModule gPageCacheLog;
-extern mozilla::LazyLogModule gNavigationLog;
+extern mozilla::LazyLogModule gNavigationAPILog;
 extern mozilla::LazyLogModule gSHIPBFCacheLog;
 
 // This macro makes it easier to print a log message which includes a URI's

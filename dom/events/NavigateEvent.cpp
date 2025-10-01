@@ -16,10 +16,10 @@
 #include "nsDocShell.h"
 #include "nsGlobalWindowInner.h"
 
-extern mozilla::LazyLogModule gNavigationLog;
+extern mozilla::LazyLogModule gNavigationAPILog;
 
 #define LOG_FMT(format, ...) \
-  MOZ_LOG_FMT(gNavigationLog, LogLevel::Debug, format, ##__VA_ARGS__);
+  MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug, format, ##__VA_ARGS__);
 
 namespace mozilla::dom {
 
