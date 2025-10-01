@@ -4965,6 +4965,10 @@ void DrawTargetWebgl::Mask(const Pattern& aSource, const Pattern& aMask,
   }
   auto sourceColor = static_cast<const ColorPattern&>(aSource).mColor;
   auto maskPattern = static_cast<const SurfacePattern&>(aMask);
+  if (!maskPattern.mSurface) {
+    return;
+  }
+
   DrawRect(Rect(IntRect(IntPoint(), maskPattern.mSurface->GetSize())),
            maskPattern, aOptions, Some(sourceColor));
 }
