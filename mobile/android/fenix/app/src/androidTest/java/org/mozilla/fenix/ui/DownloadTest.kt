@@ -434,7 +434,7 @@ class DownloadTest : TestSetup() {
             verifyDownloadedFileExistsInDownloadsList(activityTestRule, "web_icon.png")
             clickDownloadItemMenuIcon(activityTestRule, "web_icon.png")
         }.shareDownloadedItem(activityTestRule, "web_icon.png") {
-            verifyAndroidShareLayout()
+            expandAndroidShareLayout("Gmail")
             clickSharingApp("Gmail", GMAIL_APP)
             assertNativeAppOpens(GMAIL_APP)
         }
