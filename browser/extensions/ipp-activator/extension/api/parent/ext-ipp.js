@@ -180,7 +180,7 @@ this.ippActivator = class extends ExtensionAPI {
             const browser = tab?.linkedBrowser;
             const win = browser?.ownerGlobal;
             if (!browser || !win || !win.gBrowser) {
-              return;
+              return Promise.resolve(false);
             }
 
             const nbox = win.gBrowser.getNotificationBox(browser);
@@ -215,22 +215,37 @@ this.ippActivator = class extends ExtensionAPI {
 
             const label = buildLabel(message);
 
-            const notification = await nbox.appendNotification(
-              id,
-              {
-                // If label is a string, pass it through; if it's a Node, the
-                // notification box will handle it as rich content.
-                label,
-                priority: nbox.PRIORITY_WARNING_HIGH,
-              },
-              []
-            );
+            // Promise that resolves when the notification is dismissed
+            let resolveDismiss;
+            const dismissedPromise = new Promise(resolve => {
+              resolveDismiss = resolve;
+            });
 
-            // Persist the notification until the user removes so it
-            // doesn't get removed on redirects.
-            notification.persistence = -1;
+            // Create the notification; set persistence when available
+            nbox
+              .appendNotification(
+                id,
+                {
+                  // If label is a string, pass it through; if it's a Node, the
+                  // notification box will handle it as rich content.
+                  label,
+                  priority: nbox.PRIORITY_WARNING_HIGH,
+                  eventCallback: param => {
+                    resolveDismiss(param === "dismissed");
+                  },
+                },
+                []
+              )
+              .then(notification => {
+                // Persist the notification until the user removes so it
+                // doesn't get removed on redirects.
+                notification.persistence = -1;
+              });
+
+            return dismissedPromise;
           } catch (e) {
             console.warn("Unable to show the message", e);
+            return Promise.resolve(false);
           }
         },
         onDynamicTabBreakagesUpdated: new ExtensionCommon.EventManager({
