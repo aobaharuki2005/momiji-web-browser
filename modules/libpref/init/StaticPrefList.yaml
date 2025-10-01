@@ -12234,7 +12234,7 @@
 # Matroska
 - name: media.mkv.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 - name: media.av1.use-dav1d
