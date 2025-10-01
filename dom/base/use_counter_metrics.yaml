@@ -108,7 +108,7 @@ use.counter:
     send_in_pings:
       - use-counters
 
-# Total of 2369 use counter metrics (excludes denominators).
+# Total of 2377 use counter metrics (excludes denominators).
 # Total of 355 'page' use counters.
 use.counter.page:
   svgsvgelement_getelementbyid:
@@ -14892,7 +14892,7 @@ use.counter.worker.service:
     send_in_pings:
       - use-counters
 
-# Total of 46 'deprecated operations (page)' use counters.
+# Total of 47 'deprecated operations (page)' use counters.
 use.counter.deprecated_ops.page:
   components:
     type: counter
@@ -15676,7 +15676,24 @@ use.counter.deprecated_ops.page:
     send_in_pings:
       - use-counters
 
-# Total of 46 'deprecated operations (document)' use counters.
+  fullscreen_attribute:
+    type: counter
+    description: >
+      Whether a page used FullscreenAttribute.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+# Total of 47 'deprecated operations (document)' use counters.
 use.counter.deprecated_ops.doc:
   components:
     type: counter
@@ -16460,7 +16477,24 @@ use.counter.deprecated_ops.doc:
     send_in_pings:
       - use-counters
 
-# Total of 704 'CSS (page)' use counters.
+  fullscreen_attribute:
+    type: counter
+    description: >
+      Whether a document used FullscreenAttribute.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+# Total of 707 'CSS (page)' use counters.
 use.counter.css.page:
   css_align_content:
     type: counter
@@ -18914,6 +18948,40 @@ use.counter.css.page:
     type: counter
     description: >
       Whether a page used the CSS property fill-rule.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_overflow_clip_box_block:
+    type: counter
+    description: >
+      Whether a page used the CSS property overflow-clip-box-block.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_overflow_clip_box_inline:
+    type: counter
+    description: >
+      Whether a page used the CSS property overflow-clip-box-inline.
       Compare against `use.counter.top_level_content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -23891,6 +23959,23 @@ use.counter.css.page:
     send_in_pings:
       - use-counters
 
+  css_overflow_clip_box:
+    type: counter
+    description: >
+      Whether a page used the CSS property overflow-clip-box.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
   css_overscroll_behavior:
     type: counter
     description: >
@@ -28430,7 +28515,7 @@ use.counter.css.page:
     send_in_pings:
       - use-counters
 
-# Total of 704 'CSS (document)' use counters.
+# Total of 707 'CSS (document)' use counters.
 use.counter.css.doc:
   css_align_content:
     type: counter
@@ -30884,6 +30969,40 @@ use.counter.css.doc:
     type: counter
     description: >
       Whether a document used the CSS property fill-rule.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_overflow_clip_box_block:
+    type: counter
+    description: >
+      Whether a document used the CSS property overflow-clip-box-block.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_overflow_clip_box_inline:
+    type: counter
+    description: >
+      Whether a document used the CSS property overflow-clip-box-inline.
       Compare against `use.counter.content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -35848,6 +35967,23 @@ use.counter.css.doc:
     type: counter
     description: >
       Whether a document used the CSS property overflow.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_overflow_clip_box:
+    type: counter
+    description: >
+      Whether a document used the CSS property overflow-clip-box.
       Compare against `use.counter.content_documents_destroyed`
       to calculate the rate.
     bugs:
