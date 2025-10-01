@@ -202,6 +202,11 @@ async function openAboutTranslations({
   // Now load the about:translations page, since the actor could be mocked.
   await loadNewPage(tab.linkedBrowser, "about:translations");
 
+  // Ensure the window always opens with a horizontal page layout.
+  // Divide everything by sqrt(2) to halve the overall content size.
+  await ensureWindowSize(window, 1600 * Math.SQRT1_2, 900 * Math.SQRT1_2);
+  FullZoom.setZoom(Math.SQRT1_2, tab.linkedBrowser);
+
   /**
    * @param {number} count - Count of the language pairs expected.
    */
@@ -2814,6 +2819,13 @@ class AboutTranslationsTestUtils {
      * @type {string}
      */
     static TranslationComplete = "AboutTranslations:TranslationComplete";
+
+    /**
+     * Event fired when the page layout changes.
+     *
+     * @type {string}
+     */
+    static PageOrientationChanged = "AboutTranslations:PageOrientationChanged";
 
     /**
      * Event fired when the source/target textarea heights change.

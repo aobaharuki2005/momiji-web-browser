@@ -95,6 +95,36 @@ class AboutTranslations {
   #readyPromiseWithResolvers = Promise.withResolvers();
 
   /**
+   * The orientation of the page's content.
+   *
+   * When the page orientation is horizontal the source and target text areas
+   * are displayed side by side with the source text area at the inline start
+   * and the target text area at the inline end.
+   *
+   * When the page orientation is vertical the source text area is displayed
+   * above the target text area, independent of locale bidirectionality.
+   *
+   * When the page orientation is vertical, each text area spans the full width
+   * of the content, and resizing the window width or changing the zoom level
+   * must trigger text-area resizing, where as resizing the text areas is not
+   * necessary for these scenarios when the page orientation is horizontal.
+   *
+   * @type {("vertical"|"horizontal")}
+   */
+  #pageOrientation = "horizontal";
+
+  /**
+   * A timeout id that gets set when a pending callback is scheduled
+   * to synchronize the heights of the source and target text areas.
+   *
+   * This helps ensure that we do not make repeated calls to this function
+   * that would cause unnecessary and excessive reflow.
+   *
+   * @type {number | null}
+   */
+  #synchronizeTextAreaHeightsTimeoutId = null;
+
+  /**
    * Constructs a new {@link AboutTranslations} instance.
    *
    * @param {boolean} isTranslationsEngineSupported
@@ -191,12 +221,41 @@ class AboutTranslations {
   }
 
   /**
+   * Sets the internal data member for which orientation the page is in.
+   *
+   * This information is important for performance regarding in which situations
+   * we need to dynamically resize the <textarea> elements on the page.
+   *
+   * @returns {boolean} True if the page orientation changed, otherwise false.
+   */
+  #updatePageOrientation() {
+    const orientationAtStart = this.#pageOrientation;
+
+    // Keep this value up to date with the media query rule in about-translations.css
+    this.#pageOrientation =
+      window.innerWidth > 1200 ? "horizontal" : "vertical";
+
+    const orientationChanged = orientationAtStart !== this.#pageOrientation;
+
+    if (orientationChanged) {
+      document.dispatchEvent(
+        new CustomEvent("AboutTranslations:PageOrientationChanged", {
+          detail: { orientation: this.#pageOrientation },
+        })
+      );
+    }
+
+    return orientationChanged;
+  }
+
+  /**
    * An async setup function to initialize the about:translations page.
    *
    * Performs all initialization steps and finally reveals the main UI.
    */
   async #setup() {
     this.#initializeEventListeners();
+    this.#updatePageOrientation();
 
     this.#translatingPlaceholderText = await document.l10n.formatValue(
       "about-translations-translating-message"
@@ -271,6 +330,8 @@ class AboutTranslations {
     sourceLanguageSelector.addEventListener("input", this);
     targetLanguageSelector.addEventListener("input", this);
     sourceTextArea.addEventListener("input", this);
+    window.addEventListener("resize", this);
+    window.visualViewport.addEventListener("resize", this);
   }
 
   /**
@@ -325,6 +386,21 @@ class AboutTranslations {
           id === sourceTextArea.id
         ) {
           this.#maybeRequestTranslation();
+        }
+
+        break;
+      }
+      case "resize": {
+        if (target === window || target === window.visualViewport) {
+          const orientationChanged = this.#updatePageOrientation();
+
+          if (orientationChanged) {
+            // The page orientation changed, so we need to update the text-area heights immediately.
+            this.#ensureTextAreaHeightsMatch({ scheduleCallback: false });
+          } else if (this.#pageOrientation === "vertical") {
+            // Otherwise we only need to eventually update the text-area heights in vertical orientation.
+            this.#ensureTextAreaHeightsMatch({ scheduleCallback: true });
+          }
         }
 
         break;
@@ -633,7 +709,7 @@ class AboutTranslations {
 
     this.#updateSourceScriptDirection();
     this.#updateTargetScriptDirection();
-    this.#synchronizeTextAreasToMaxContentHeight();
+    this.#ensureTextAreaHeightsMatch({ scheduleCallback: false });
 
     if (sourceTextArea.value) {
       this.#displayTranslatingPlaceholder();
@@ -693,7 +769,7 @@ class AboutTranslations {
     sourceTextArea.dispatchEvent(new Event("input"));
 
     this.#updateSourceScriptDirection();
-    this.#synchronizeTextAreasToMaxContentHeight();
+    this.#ensureTextAreaHeightsMatch({ scheduleCallback: false });
   }
 
   /**
@@ -711,7 +787,7 @@ class AboutTranslations {
     }
 
     this.#updateTargetScriptDirection();
-    this.#synchronizeTextAreasToMaxContentHeight();
+    this.#ensureTextAreaHeightsMatch({ scheduleCallback: false });
   }
 
   /**
@@ -955,7 +1031,7 @@ class AboutTranslations {
     onDebounce: async () => {
       try {
         this.#updateURLFromUI();
-        this.#synchronizeTextAreasToMaxContentHeight();
+        this.#ensureTextAreaHeightsMatch({ scheduleCallback: false });
 
         await this.#maybeUpdateDetectedSourceLanguage();
 
@@ -1047,10 +1123,58 @@ class AboutTranslations {
   });
 
   /**
+   * Ensures that the heights of the source and target text areas match by syncing
+   * them to the maximum height of either of their content.
+   *
+   * There are many situations in which this function needs to be called:
+   *   - Every time the source text is updated
+   *   - Every time a translation occurs
+   *   - Every time the window is resized
+   *   - Every time the zoom level is changed
+   *   - Etc.
+   *
+   * Some of these events happen infrequently, or are already debounced, such as
+   * each time a translation occurs. In these situations it is okay to synchronize
+   * the text-area heights immediately.
+   *
+   * Some of these events can trigger quite rapidly, such as resizing the window
+   * via click-and-drag semantics. In this case, a single callback should be scheduled
+   * to synchronize the text-area heights to prevent unnecessary and excessive reflow.
+   *
+   * @param {object} params
+   * @param {boolean} params.scheduleCallback
+   */
+  #ensureTextAreaHeightsMatch({ scheduleCallback }) {
+    if (scheduleCallback) {
+      if (this.#synchronizeTextAreaHeightsTimeoutId) {
+        // There is already a pending callback: no need to schedule another.
+        return;
+      }
+
+      this.#synchronizeTextAreaHeightsTimeoutId = setTimeout(
+        this.#synchronizeTextAreasToMaxContentHeight,
+        100
+      );
+
+      return;
+    }
+
+    this.#synchronizeTextAreasToMaxContentHeight();
+  }
+
+  /**
    * Calculates the heights of the content in both the source and target text areas,
    * then syncs them both to the maximum calculated content height among the two.
+   *
+   * This function is intentionally written as a lambda so that it can be passed
+   * as a callback without the need to explicitly bind `this` to the function object.
+   *
+   * Prefer calling #ensureTextAreaHeightsMatch to make it clear whether this function
+   * needs to run immediately, or is okay to be scheduled as a callback.
+   *
+   * @see {AboutTranslations#ensureTextAreaHeightsMatch}
    */
-  #synchronizeTextAreasToMaxContentHeight() {
+  #synchronizeTextAreasToMaxContentHeight = () => {
     const { sourceTextArea, targetTextArea } = this.elements;
 
     // This will be the same for both the source and target text areas.
@@ -1086,7 +1210,9 @@ class AboutTranslations {
         })
       );
     }
-  }
+
+    this.#synchronizeTextAreaHeightsTimeoutId = null;
+  };
 }
 
 /**

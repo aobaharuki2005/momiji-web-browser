@@ -49,7 +49,10 @@ add_task(async function test_about_translations_no_resize_for_small_input() {
         ],
         [AboutTranslationsTestUtils.Events.ShowTranslatingPlaceholder],
       ],
-      unexpected: [AboutTranslationsTestUtils.Events.TextAreaHeightsChanged],
+      unexpected: [
+        AboutTranslationsTestUtils.Events.PageOrientationChanged,
+        AboutTranslationsTestUtils.Events.TextAreaHeightsChanged,
+      ],
     },
     async () => {
       await aboutTranslationsTestUtils.setSourceLanguageSelectorValue("de");
@@ -114,6 +117,7 @@ add_task(async function test_about_translations_resize_by_input() {
           },
         ],
       ],
+      unexpected: [AboutTranslationsTestUtils.Events.PageOrientationChanged],
     },
     async () => {
       await aboutTranslationsTestUtils.setSourceLanguageSelectorValue("de");
@@ -141,6 +145,7 @@ add_task(async function test_about_translations_resize_by_input() {
           },
         ],
       ],
+      unexpected: [AboutTranslationsTestUtils.Events.PageOrientationChanged],
     },
     async () => {
       await aboutTranslationsTestUtils.resolveDownloads(1);
@@ -175,6 +180,7 @@ add_task(async function test_about_translations_resize_by_input() {
         ],
       ],
       unexpected: [
+        AboutTranslationsTestUtils.Events.PageOrientationChanged,
         AboutTranslationsTestUtils.Events.ShowTranslatingPlaceholder,
       ],
     },
@@ -206,6 +212,7 @@ add_task(async function test_about_translations_resize_by_input() {
       ],
       unexpected: [
         AboutTranslationsTestUtils.Events.TranslationRequested,
+        AboutTranslationsTestUtils.Events.PageOrientationChanged,
         AboutTranslationsTestUtils.Events.ShowTranslatingPlaceholder,
       ],
     },
