@@ -24,15 +24,17 @@ registerCleanupFunction(() => {
 });
 
 add_task(async function test_createOpenAIEngine_uses_prefs_and_static_fields() {
-  // Arrange known prefs
   Services.prefs.setStringPref(PREF_API_KEY, "test-key-123");
   Services.prefs.setStringPref(PREF_ENDPOINT, "https://example.test/v1");
   Services.prefs.setStringPref(PREF_MODEL, "gpt-fake");
 
   const sb = sinon.createSandbox();
   try {
-    // Stub _createEngine to capture options
-    const fakeEngine = { run: sb.stub().resolves({ finalOutput: "" }) };
+    const fakeEngine = {
+      runWithGenerator() {
+        throw new Error("not used");
+      },
+    };
     const stub = sb
       .stub(SmartAssistEngine, "_createEngine")
       .resolves(fakeEngine);
@@ -42,55 +44,76 @@ add_task(async function test_createOpenAIEngine_uses_prefs_and_static_fields() {
     Assert.strictEqual(
       engine,
       fakeEngine,
-      "Should return engine resolved by _createEngine"
+      "Should return engine from _createEngine"
     );
     Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
-    const passed = stub.firstCall.args[0];
-    Assert.equal(passed.apiKey, "test-key-123", "apiKey should come from pref");
+    const opts = stub.firstCall.args[0];
+    Assert.equal(opts.apiKey, "test-key-123", "apiKey should come from pref");
     Assert.equal(
-      passed.baseURL,
+      opts.baseURL,
       "https://example.test/v1",
       "baseURL should come from pref"
     );
-    Assert.equal(passed.modelId, "gpt-fake", "modelId should come from pref");
+    Assert.equal(opts.modelId, "gpt-fake", "modelId should come from pref");
   } finally {
     sb.restore();
   }
 });
 
-add_task(
-  async function test_fetchWithHistory_returns_finalOutput_and_forwards_args() {
-    const sb = sinon.createSandbox();
-    try {
-      let capturedArgs = null;
-      const fakeEngine = {
-        async run({ args }) {
-          capturedArgs = args;
-          return { finalOutput: "Hello from fake engine!" };
-        },
-      };
+add_task(async function test_fetchWithHistory_streams_and_forwards_args() {
+  const sb = sinon.createSandbox();
+  try {
+    let capturedArgs = null;
+    let capturedStreamOption = null;
 
-      sb.stub(SmartAssistEngine, "_createEngine").resolves(fakeEngine);
+    // Fake async generator that yields three text chunks and one empty (ignored)
+    const fakeEngine = {
+      runWithGenerator({ streamOptions, args }) {
+        capturedArgs = args;
+        capturedStreamOption = streamOptions;
+        async function* gen() {
+          yield { text: "Hello" };
+          yield { text: " from" };
+          yield { text: " fake engine!" };
+          yield {}; // ignored by SmartAssistEngine
+        }
+        return gen();
+      },
+    };
 
-      const messages = [
-        { role: "system", content: "You are helpful" },
-        { role: "user", content: "Hi there" },
-      ];
+    sb.stub(SmartAssistEngine, "_createEngine").resolves(fakeEngine);
 
-      const out = await SmartAssistEngine.fetchWithHistory(messages);
+    const messages = [
+      { role: "system", content: "You are helpful" },
+      { role: "user", content: "Hi there" },
+    ];
 
-      Assert.equal(out, "Hello from fake engine!", "Should return finalOutput");
-      Assert.deepEqual(
-        capturedArgs,
-        messages,
-        "Should forward messages unmodified as 'args' to engine.run()"
-      );
-    } finally {
-      sb.restore();
+    // Collect streamed output
+    let acc = "";
+    for await (const t of SmartAssistEngine.fetchWithHistory(messages)) {
+      acc += t;
     }
+
+    Assert.equal(
+      acc,
+      "Hello from fake engine!",
+      "Should concatenate streamed chunks"
+    );
+    Assert.deepEqual(
+      capturedArgs,
+      messages,
+      "Should forward messages as args to runWithGenerator()"
+    );
+    Assert.deepEqual(
+      capturedStreamOption.enabled,
+      true,
+      "Should enable streaming in runWithGenerator()"
+    );
+  } finally {
+    sb.restore();
   }
-);
+});
 
 add_task(
   async function test_fetchWithHistory_propagates_engine_creation_rejection() {
@@ -98,18 +121,59 @@ add_task(
     try {
       const err = new Error("creation failed (generic)");
       const stub = sb.stub(SmartAssistEngine, "_createEngine").rejects(err);
-
       const messages = [{ role: "user", content: "Hi" }];
 
+      // Must CONSUME the async generator to trigger the rejection
+      const consume = async () => {
+        for await (const _message of SmartAssistEngine.fetchWithHistory(
+          messages
+        )) {
+          void _message;
+        }
+      };
+
       await Assert.rejects(
-        SmartAssistEngine.fetchWithHistory(messages),
-        e => e === err, // exact error propagated
+        consume(),
+        e => e === err,
         "Should propagate the same error thrown by _createEngine"
       );
-
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
     } finally {
       sb.restore();
     }
   }
 );
+
+add_task(async function test_fetchWithHistory_propagates_stream_error() {
+  const sb = sinon.createSandbox();
+  try {
+    const fakeEngine = {
+      runWithGenerator() {
+        async function* gen() {
+          yield { text: "partial" };
+          throw new Error("engine stream boom");
+        }
+        return gen();
+      },
+    };
+    sb.stub(SmartAssistEngine, "_createEngine").resolves(fakeEngine);
+
+    const consume = async () => {
+      let acc = "";
+      for await (const t of SmartAssistEngine.fetchWithHistory([
+        { role: "user", content: "x" },
+      ])) {
+        acc += t;
+      }
+      return acc;
+    };
+
+    await Assert.rejects(
+      consume(),
+      e => /engine stream boom/.test(e.message),
+      "Should propagate errors thrown during streaming"
+    );
+  } finally {
+    sb.restore();
+  }
+});

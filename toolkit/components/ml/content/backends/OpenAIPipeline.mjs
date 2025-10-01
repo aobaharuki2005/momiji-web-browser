@@ -77,6 +77,142 @@ export class OpenAIPipeline {
     return new OpenAIPipeline(config, errorFactory);
   }
 
+  /**
+   * Sends progress updates to both the port and inference progress callback.
+   *
+   * @private
+   * @param {object} args - The arguments object
+   * @param {string} args.content - The text content to send in the progress update
+   * @param {string|null} args.requestId - Unique identifier for the request
+   * @param {Function|null} args.inferenceProgressCallback - Callback function to report inference progress
+   * @param {MessagePort|null} args.port - Port for posting messages to the caller
+   * @param {boolean} args.isDone - Whether this is the final progress update
+   */
+  #sendProgress(args) {
+    const { content, requestId, inferenceProgressCallback, port, isDone } =
+      args;
+    port?.postMessage({
+      text: content,
+      ...(isDone && { done: true, finalOutput: content }),
+      ok: true,
+    });
+
+    inferenceProgressCallback?.({
+      ok: true,
+      metadata: {
+        text: content,
+        requestId,
+        tokens: [],
+      },
+      type: Progress.ProgressType.INFERENCE,
+      statusText: isDone
+        ? Progress.ProgressStatusText.DONE
+        : Progress.ProgressStatusText.IN_PROGRESS,
+    });
+  }
+
+  /**
+   * Handles streaming response from the OpenAI API.
+   * Processes each chunk as it arrives and sends progress updates.
+   *
+   * @private
+   * @param {object} args - The arguments object
+   * @param {OpenAI} args.client - OpenAI client instance
+   * @param {object} args.completionParams - Parameters for the completion request
+   * @param {string|null} args.requestId - Unique identifier for the request
+   * @param {Function|null} args.inferenceProgressCallback - Callback function to report inference progress
+   * @param {MessagePort|null} args.port - Port for posting messages to the caller
+   * @returns {Promise<object>} Result object with done, finalOutput, ok, and metrics properties
+   */
+  async #handleStreamingResponse(args) {
+    const {
+      client,
+      completionParams,
+      requestId,
+      inferenceProgressCallback,
+      port,
+    } = args;
+    const stream = await client.chat.completions.create(completionParams);
+    let streamOutput = "";
+
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content || "";
+      if (content) {
+        streamOutput += content;
+        this.#sendProgress({
+          content,
+          requestId,
+          inferenceProgressCallback,
+          port,
+          isDone: false,
+        });
+      }
+    }
+
+    this.#sendProgress({
+      content: "",
+      requestId,
+      inferenceProgressCallback,
+      port,
+      isDone: true,
+    });
+
+    return {
+      finalOutput: streamOutput,
+      metrics: [],
+    };
+  }
+
+  /**
+   * Handles non-streaming response from the OpenAI API.
+   * Waits for the complete response and sends it as a single update.
+   *
+   * @private
+   * @param {object} args - The arguments object
+   * @param {OpenAI} args.client - OpenAI client instance
+   * @param {object} args.completionParams - Parameters for the completion request
+   * @param {string|null} args.requestId - Unique identifier for the request
+   * @param {Function|null} args.inferenceProgressCallback - Callback function to report inference progress
+   * @param {MessagePort|null} args.port - Port for posting messages to the caller
+   * @returns {Promise<object>} Result object with done, finalOutput, ok, and metrics properties
+   */
+  async #handleNonStreamingResponse(args) {
+    const {
+      client,
+      completionParams,
+      requestId,
+      inferenceProgressCallback,
+      port,
+    } = args;
+    const completion = await client.chat.completions.create(completionParams);
+    const output = completion.choices[0].message.content;
+
+    this.#sendProgress({
+      content: output,
+      requestId,
+      inferenceProgressCallback,
+      port,
+      isDone: true,
+    });
+
+    return {
+      finalOutput: output,
+      metrics: [],
+    };
+  }
+
+  /**
+   * Executes the OpenAI pipeline with the given request.
+   * Supports both streaming and non-streaming modes based on options configuration.
+   *
+   * @param {object} request - The request object containing the messages
+   * @param {Array} request.args - Array of message objects for the chat completion
+   * @param {string|null} [requestId=null] - Unique identifier for this request
+   * @param {Function|null} [inferenceProgressCallback=null] - Callback function to report progress during inference
+   * @param {MessagePort|null} [port=null] - Port for posting messages back to the caller
+   * @returns {Promise<object>} Result object containing completion status, output, and metrics
+   * @throws {Error} Throws backend error if the API request fails
+   */
   async run(
     request,
     requestId = null,
@@ -85,32 +221,32 @@ export class OpenAIPipeline {
   ) {
     lazy.console.debug("Running OpenAI pipeline");
     try {
-      const baseURL = this.#options.baseURL || "http://localhost:11434/v1";
+      const { baseURL, apiKey, modelId } = this.#options;
       const client = new OpenAIPipeline.OpenAILib.OpenAI({
-        baseURL,
-        apiKey: this.#options.apiKey || "ollama",
+        baseURL: baseURL ? baseURL : "http://localhost:11434/v1",
+        apiKey: apiKey || "ollama",
       });
+      const stream = request.streamOptions?.enabled || false;
 
-      const completion = await client.chat.completions.create({
-        model: this.#options.modelId,
+      const completionParams = {
+        model: modelId,
         messages: request.args,
-      });
+        stream,
+      };
 
-      const output = completion.choices[0].message.content;
-      port?.postMessage({ done: true, finalOutput: output, ok: true });
+      const args = {
+        client,
+        completionParams,
+        requestId,
+        inferenceProgressCallback,
+        port,
+      };
 
-      inferenceProgressCallback?.({
-        ok: true,
-        metadata: {
-          text: output,
-          requestId,
-          tokens: [],
-        },
-        type: Progress.ProgressType.INFERENCE,
-        statusText: Progress.ProgressStatusText.DONE,
-      });
+      if (stream) {
+        return await this.#handleStreamingResponse(args);
+      }
 
-      return { done: true, finalOutput: output, ok: true, metrics: [] };
+      return await this.#handleNonStreamingResponse(args);
     } catch (error) {
       const backendError = this.#errorFactory(error);
       port?.postMessage({ done: true, ok: false, error: backendError });

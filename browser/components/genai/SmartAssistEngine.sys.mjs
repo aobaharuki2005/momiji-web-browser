@@ -33,7 +33,6 @@ export const SmartAssistEngine = {
         modelId: Services.prefs.getStringPref("browser.ml.smartAssist.model"),
         modelRevision: "main",
         taskName: "text-generation",
-        // TODO need to add stream support - https://bugzilla.mozilla.org/show_bug.cgi?id=1990387
       });
 
       return engineInstance;
@@ -51,10 +50,16 @@ export const SmartAssistEngine = {
    * @returns {string} AI response
    */
 
-  async fetchWithHistory(messages) {
+  async *fetchWithHistory(messages) {
     const engineInstance = await this.createOpenAIEngine();
-    const resp = await engineInstance.run({ args: messages });
-
-    return resp.finalOutput;
+    // Use runWithGenerator to get streaming chunks directly
+    for await (const chunk of engineInstance.runWithGenerator({
+      streamOptions: { enabled: true },
+      args: messages,
+    })) {
+      if (chunk.text) {
+        yield chunk.text;
+      }
+    }
   },
 };

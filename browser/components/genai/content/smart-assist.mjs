@@ -64,12 +64,40 @@ export class SmartAssist extends MozLitElement {
   };
 
   _handleSubmit = async () => {
-    this._updateConversationState({ role: "user", content: this.userPrompt });
-    const resp = await lazy.SmartAssistEngine.fetchWithHistory(
-      this.conversationState
-    );
+    const formattedPrompt = (this.userPrompt || "").trim();
+    if (!formattedPrompt) {
+      return;
+    }
+
+    // Push user prompt
+    this._updateConversationState({ role: "user", content: formattedPrompt });
     this.userPrompt = "";
-    this._updateConversationState({ role: "assistant", content: resp });
+
+    // Create an empty assistant placeholder.
+    this._updateConversationState({ role: "assistant", content: "" });
+    const latestAssistantMessageIndex = this.conversationState.length - 1;
+
+    let acc = "";
+    try {
+      const stream = lazy.SmartAssistEngine.fetchWithHistory(
+        this.conversationState
+      );
+
+      for await (const chunk of stream) {
+        acc += chunk;
+        this.conversationState[latestAssistantMessageIndex] = {
+          ...this.conversationState[latestAssistantMessageIndex],
+          content: acc,
+        };
+        this.requestUpdate?.();
+      }
+    } catch (e) {
+      this.conversationState[latestAssistantMessageIndex] = {
+        role: "assistant",
+        content: `There was an error`,
+      };
+      this.requestUpdate?.();
+    }
   };
 
   /**
@@ -118,6 +146,9 @@ export class SmartAssist extends MozLitElement {
                 msg =>
                   html`<div class="message ${msg.role}">
                     <strong>${msg.role}:</strong> ${msg.content}
+                    ${msg.role === "assistant" && msg.content.length === 0
+                      ? html`<span>Thinking</span>`
+                      : ""}
                   </div>`
               )}
           </div>
