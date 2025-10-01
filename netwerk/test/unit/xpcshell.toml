@@ -468,6 +468,8 @@ run-sequentially = ["true"] # httpd server
 ["test_cache2_clear_with_usercontext_oa.js"]
 run-sequentially = ["true"] # httpd server
 
+["test_cache2_compression_dictionary.js"]
+
 ["test_cache2_nostore.js"]
 
 ["test_cache_204_response.js"]
@@ -567,6 +569,12 @@ run-if = ["!socketprocess_networking"] # can't read DNS cache syncly from socket
 prefs = ["content.cors.use_triggering_principal=true"] # See bug 1982916.
 
 ["test_data_protocol.js"]
+
+["test_dictionary_compression_dcb.js"]
+
+["test_dictionary_retrieval.js"]
+
+["test_dictionary_storage.js"]
 
 ["test_defaultURI.js"]
 
