@@ -92,8 +92,7 @@ static nsresult ReadPSIFile(const char* aPSIPath, PSIInfo& aResult) {
   }
 
   // Check PSI percentage values are in reasonable range (0-100)
-  if (aResult.some_avg10 > 100UL ||
-      aResult.some_avg60 > 100UL ||
+  if (aResult.some_avg10 > 100UL || aResult.some_avg60 > 100UL ||
       aResult.some_avg300 > 100UL) {
     return NS_ERROR_FAILURE;
   }
@@ -273,8 +272,8 @@ nsAvailableMemoryWatcher::Notify(nsITimer* aTimer) {
     return NS_ERROR_FAILURE;
   }
   bool isTesting = mIsTesting;
-  nsresult rv = mThread->Dispatch(
-      NS_NewRunnableFunction("MemoryPoller", [self = RefPtr{this}, isTesting]() {
+  nsresult rv = mThread->Dispatch(NS_NewRunnableFunction(
+      "MemoryPoller", [self = RefPtr{this}, isTesting]() {
         if (self->IsMemoryLow()) {
           self->HandleLowMemory();
         } else {
