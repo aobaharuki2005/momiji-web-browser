@@ -58,7 +58,6 @@
  * for forward compatibility.
  */
 #  define MOZ_HAVE_NEVER_INLINE __declspec(noinline)
-#  define MOZ_HAVE_NORETURN __declspec(noreturn)
 #elif defined(__clang__)
 /*
  * Per Clang documentation, "Note that marketing version numbers should not
@@ -72,12 +71,8 @@
 #  if __has_attribute(noinline)
 #    define MOZ_HAVE_NEVER_INLINE __attribute__((noinline))
 #  endif
-#  if __has_attribute(noreturn)
-#    define MOZ_HAVE_NORETURN __attribute__((noreturn))
-#  endif
 #elif defined(__GNUC__)
 #  define MOZ_HAVE_NEVER_INLINE __attribute__((noinline))
-#  define MOZ_HAVE_NORETURN __attribute__((noreturn))
 #  define MOZ_HAVE_NORETURN_PTR __attribute__((noreturn))
 #endif
 
@@ -165,27 +160,11 @@
 #  define MOZ_NEVER_INLINE_DEBUG /* don't inline in opt builds */
 #endif
 /*
- * MOZ_NORETURN, specified at the start of a function declaration, indicates
- * that the given function does not return.  (The function definition does not
- * need to be annotated.)
- *
- *   MOZ_NORETURN void abort(const char* msg);
- *
- * This modifier permits the compiler to optimize code assuming a call to such a
- * function will never return.  It also enables the compiler to avoid spurious
- * warnings about not initializing variables, or about any other seemingly-dodgy
- * operations performed after the function returns.
- *
- * There are two variants. The GCC version of NORETURN may be applied to a
- * function pointer, while for MSVC it may not.
+ * MOZ_HAVE_NORETURN_PTR is equivalent to [[noreturn]] but can be set on
+ * function pointers.
  *
  * This modifier does not affect the corresponding function's linking behavior.
  */
-#if defined(MOZ_HAVE_NORETURN)
-#  define MOZ_NORETURN MOZ_HAVE_NORETURN
-#else
-#  define MOZ_NORETURN /* no support */
-#endif
 #if defined(MOZ_HAVE_NORETURN_PTR)
 #  define MOZ_NORETURN_PTR MOZ_HAVE_NORETURN_PTR
 #else

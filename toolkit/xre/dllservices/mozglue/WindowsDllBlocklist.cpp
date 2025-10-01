@@ -553,7 +553,7 @@ static bool ShouldBlockThread(void* aStartAddress) {
 // case there's any magic there that we shouldn't skip.
 static DWORD WINAPI NopThreadProc(void* /* aThreadParam */) { return 0; }
 
-static MOZ_NORETURN void __fastcall patched_BaseThreadInitThunk(
+[[noreturn]] static void __fastcall patched_BaseThreadInitThunk(
     BOOL aIsInitialThread, void* aStartAddress, void* aThreadParam) {
   if (ShouldBlockThread(aStartAddress)) {
     aStartAddress = (void*)NopThreadProc;
