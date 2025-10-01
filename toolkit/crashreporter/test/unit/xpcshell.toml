@@ -47,6 +47,10 @@ reason = "Test covering Linux-specific module handling"
 
 ["test_crash_oom.js"]
 
+["test_crash_psi_annotation.js"]
+run-if = ["os == 'linux'"]
+reason = "Test covering Linux-specific PSI (Pressure Stall Information) annotation"
+
 ["test_crash_purevirtual.js"]
 
 ["test_crash_rust_panic.js"]
