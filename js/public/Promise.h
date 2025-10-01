@@ -57,6 +57,16 @@ class JS_PUBLIC_API JobQueue {
                                   JS::MutableHandle<JSObject*> data) const = 0;
 
   /**
+   * If the embedding has a host-defined global, return it. This is used when
+   * we are able to optimize out the host defined data, as the embedding may
+   * still require this when running jobs.
+   *
+   * In Gecko, this is used for dealing with the incumbent global.
+   */
+  virtual bool getHostDefinedGlobal(
+      JSContext* cx, JS::MutableHandle<JSObject*> data) const = 0;
+
+  /**
    * Enqueue a reaction job `job` for `promise`, which was allocated at
    * `allocationSite`. Provide `hostDefineData` as the host defined data for
    * the reaction job's execution.
