@@ -166,9 +166,6 @@ class alignas(16) Instance {
   // easily use a symbolic address.
   const JSClass* valueBoxClass_;
 
-  // Address of the JitRuntime's arguments rectifier trampoline
-  void* jsJitArgsRectifier_;
-
   // Address of the JitRuntime's exception handler trampoline
   void* jsJitExceptionHandler_;
 
@@ -348,9 +345,6 @@ class alignas(16) Instance {
   }
   static constexpr size_t sizeOfBaselineScratchWords() {
     return sizeof(baselineScratchWords_);
-  }
-  static constexpr size_t offsetOfJSJitArgsRectifier() {
-    return offsetof(Instance, jsJitArgsRectifier_);
   }
   static constexpr size_t offsetOfJSJitExceptionHandler() {
     return offsetof(Instance, jsJitExceptionHandler_);
