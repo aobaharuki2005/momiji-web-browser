@@ -1187,10 +1187,6 @@ void nsHtml5TreeOpExecutor::PreloadScript(
     const nsAString& aNonce, const nsAString& aFetchPriority,
     const nsAString& aIntegrity, dom::ReferrerPolicy aReferrerPolicy,
     bool aScriptFromHead, bool aAsync, bool aDefer, bool aLinkPreload) {
-  dom::ScriptLoader* loader = mDocument->GetScriptLoader();
-  if (!loader) {
-    return;
-  }
   nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYetAndMediaApplies(aURL, aMedia);
   if (!uri) {
     return;
@@ -1199,9 +1195,10 @@ void nsHtml5TreeOpExecutor::PreloadScript(
   if (mDocument->Preloads().PreloadExists(key)) {
     return;
   }
-  loader->PreloadURI(uri, aCharset, aType, aCrossOrigin, aNonce, aFetchPriority,
-                     aIntegrity, aScriptFromHead, aAsync, aDefer, aLinkPreload,
-                     GetPreloadReferrerPolicy(aReferrerPolicy), 0);
+  mDocument->ScriptLoader()->PreloadURI(
+      uri, aCharset, aType, aCrossOrigin, aNonce, aFetchPriority, aIntegrity,
+      aScriptFromHead, aAsync, aDefer, aLinkPreload,
+      GetPreloadReferrerPolicy(aReferrerPolicy), 0);
 }
 
 void nsHtml5TreeOpExecutor::PreloadStyle(

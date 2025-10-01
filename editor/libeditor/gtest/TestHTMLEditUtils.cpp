@@ -39,8 +39,8 @@ static already_AddRefed<Document> CreateHTMLDoc() {
                                         u""_ns,   // aQualifiedName
                                         nullptr,  // aDoctype
                                         uri, uri, principal,
-                                        LoadedAsData::No,  // aLoadedAsData
-                                        nullptr,           // aEventObject
+                                        false,    // aLoadedAsData
+                                        nullptr,  // aEventObject
                                         DocumentFlavor::HTML));
   MOZ_RELEASE_ASSERT(doc);
 

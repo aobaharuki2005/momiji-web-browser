@@ -1025,10 +1025,9 @@ static void CompareLayers(
 }
 
 static void AddAndRemoveImageAssociations(
-    ImageLoader* aImageLoader, nsIFrame* aFrame,
+    ImageLoader& aImageLoader, nsIFrame* aFrame,
     const nsStyleImageLayers* aOldLayers,
     const nsStyleImageLayers* aNewLayers) {
-  MOZ_ASSERT(aImageLoader);
   // If the old context had a background-image image, or mask-image image,
   // and new context does not have the same image, clear the image load
   // notifier (which keeps the image loading, if it still is) for the frame.
@@ -1039,12 +1038,12 @@ static void AddAndRemoveImageAssociations(
   // interval.)
   if (aOldLayers && aFrame->HasImageRequest()) {
     CompareLayers(aOldLayers, aNewLayers, [&](imgRequestProxy* aReq) {
-      aImageLoader->DisassociateRequestFromFrame(aReq, aFrame);
+      aImageLoader.DisassociateRequestFromFrame(aReq, aFrame);
     });
   }
 
   CompareLayers(aNewLayers, aOldLayers, [&](imgRequestProxy* aReq) {
-    aImageLoader->AssociateRequestToFrame(aReq, aFrame);
+    aImageLoader.AssociateRequestToFrame(aReq, aFrame);
   });
 }
 
@@ -1241,7 +1240,7 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   MaybeScheduleReflowSVGNonDisplayText(this);
 
   Document* doc = PresContext()->Document();
-  ImageLoader* loader = doc->GetStyleImageLoader();
+  ImageLoader* loader = doc->StyleImageLoader();
   // Continuing text frame doesn't initialize its continuation pointer before
   // reaching here for the first time, so we have to exclude text frames. This
   // doesn't affect correctness because text can't match selectors.
@@ -1266,12 +1265,12 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
       aOldComputedStyle ? &aOldComputedStyle->StyleBackground()->mImage
                         : nullptr;
   const nsStyleImageLayers* newLayers = &StyleBackground()->mImage;
-  AddAndRemoveImageAssociations(loader, this, oldLayers, newLayers);
+  AddAndRemoveImageAssociations(*loader, this, oldLayers, newLayers);
 
   oldLayers =
       aOldComputedStyle ? &aOldComputedStyle->StyleSVGReset()->mMask : nullptr;
   newLayers = &StyleSVGReset()->mMask;
-  AddAndRemoveImageAssociations(loader, this, oldLayers, newLayers);
+  AddAndRemoveImageAssociations(*loader, this, oldLayers, newLayers);
 
   const nsStyleDisplay* disp = StyleDisplay();
   bool handleStickyChange = false;
@@ -6133,10 +6132,7 @@ bool nsIFrame::AssociateImage(const StyleImage& aImage) {
   }
 
   mozilla::css::ImageLoader* loader =
-      PresContext()->Document()->GetStyleImageLoader();
-  if (!loader) {
-    return false;
-  }
+      PresContext()->Document()->StyleImageLoader();
 
   loader->AssociateRequestToFrame(req, this);
   return true;
@@ -6149,10 +6145,7 @@ void nsIFrame::DisassociateImage(const StyleImage& aImage) {
   }
 
   mozilla::css::ImageLoader* loader =
-      PresContext()->Document()->GetStyleImageLoader();
-  if (!loader) {
-    return;
-  }
+      PresContext()->Document()->StyleImageLoader();
 
   loader->DisassociateRequestFromFrame(req, this);
 }
