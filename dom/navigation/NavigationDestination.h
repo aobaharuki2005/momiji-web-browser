@@ -47,7 +47,7 @@ class NavigationDestination final : public nsISupports, public nsWrapperCache {
   nsIGlobalObject* GetParentObject();
 
   NavigationHistoryEntry* GetEntry() const;
-  nsIURI* GetURI() const;
+  nsIURI* GetURL() const;
 
  private:
   ~NavigationDestination() = default;

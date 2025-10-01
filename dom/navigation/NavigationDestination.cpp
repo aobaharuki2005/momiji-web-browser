@@ -108,6 +108,6 @@ NavigationHistoryEntry* NavigationDestination::GetEntry() const {
   return mEntry;
 }
 
-nsIURI* NavigationDestination::GetURI() const { return mURL; }
+nsIURI* NavigationDestination::GetURL() const { return mURL; }
 
 }  // namespace mozilla::dom

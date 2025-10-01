@@ -1072,7 +1072,7 @@ static void LogEvent(Event* aEvent, NavigateEvent* aOngoingEvent,
 
     if (RefPtr<NavigationDestination> destination =
             aOngoingEvent->Destination()) {
-      log.AppendElement(destination->GetURI()->GetSpecOrDefault());
+      log.AppendElement(destination->GetURL()->GetSpecOrDefault());
     }
 
     if (aOngoingEvent->HashChange()) {
@@ -1210,7 +1210,7 @@ bool Navigation::InnerFireNavigateEvent(
 
   // Step 9
   init.mCanIntercept = document &&
-                       document->CanRewriteURL(aDestination->GetURI()) &&
+                       document->CanRewriteURL(aDestination->GetURL()) &&
                        (aDestination->SameDocument() ||
                         aNavigationType != NavigationType::Traverse);
 
@@ -1256,8 +1256,8 @@ bool Navigation::InnerFireNavigateEvent(
 
   // step 22
   init.mHashChange = !aClassicHistoryAPIState && aDestination->SameDocument() &&
-                     EqualsExceptRef(aDestination->GetURI(), currentURL) &&
-                     !HasIdenticalFragment(aDestination->GetURI(), currentURL);
+                     EqualsExceptRef(aDestination->GetURL(), currentURL) &&
+                     !HasIdenticalFragment(aDestination->GetURL(), currentURL);
 
   // Step 23
   init.mUserInitiated = aUserInvolvement != UserNavigationInvolvement::None;
@@ -1360,10 +1360,10 @@ bool Navigation::InnerFireNavigateEvent(
         // Step 33.7
         if (nsDocShell* docShell = nsDocShell::Cast(document->GetDocShell())) {
           docShell->UpdateURLAndHistory(
-              document, aDestination->GetURI(), event->ClassicHistoryAPIState(),
+              document, aDestination->GetURL(), event->ClassicHistoryAPIState(),
               *NavigationUtils::NavigationHistoryBehavior(aNavigationType),
               document->GetDocumentURI(),
-              Equals(aDestination->GetURI(), document->GetDocumentURI()));
+              Equals(aDestination->GetURL(), document->GetDocumentURI()));
         }
         break;
       case NavigationType::Reload:
