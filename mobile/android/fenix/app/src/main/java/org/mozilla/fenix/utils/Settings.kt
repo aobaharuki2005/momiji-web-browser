@@ -46,6 +46,8 @@ import org.mozilla.fenix.components.settings.featureFlagPreference
 import org.mozilla.fenix.components.settings.lazyFeatureFlagPreference
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.debugsettings.addresses.SharedPrefsAddressesDebugLocalesRepository
+import org.mozilla.fenix.ext.TALL_SCREEN_HEIGHT_DP
+import org.mozilla.fenix.ext.WIDE_SCREEN_WIDTH_DP
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.pixelSizeFor
@@ -2455,7 +2457,17 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     val browserToolbarHeight: Int
         get() = appContext.pixelSizeFor(
             when (shouldUseComposableToolbar) {
-                true -> R.dimen.composable_browser_toolbar_height
+                true -> {
+                    val isTallWindow = appContext.resources.configuration.screenHeightDp > TALL_SCREEN_HEIGHT_DP
+                    val isWideWindow = appContext.resources.configuration.screenWidthDp > WIDE_SCREEN_WIDTH_DP
+                    when (
+                        toolbarPosition == ToolbarPosition.BOTTOM && shouldUseExpandedToolbar &&
+                                isTallWindow && !isWideWindow
+                    ) {
+                        true -> R.dimen.composable_browser_toolbar_height_small
+                        false -> R.dimen.composable_browser_toolbar_height
+                    }
+                }
                 false -> R.dimen.browser_toolbar_height
             },
         )

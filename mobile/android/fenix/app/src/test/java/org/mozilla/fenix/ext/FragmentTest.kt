@@ -19,6 +19,7 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import junit.framework.TestCase.assertEquals
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,7 +39,7 @@ class FragmentTest {
     private val navController: NavController = mockk(relaxed = true)
     private val mockOptions: NavOptions = mockk(relaxed = true)
     private val navControllerProvider: NavControllerProvider = mockk(relaxed = true)
-    private val settings: Settings = mockk(relaxed = true)
+    private val settings: Settings = spyk(Settings(testContext))
     private lateinit var mockContext: Context
     private lateinit var fragment: Fragment
 
@@ -54,10 +55,10 @@ class FragmentTest {
         every { navControllerProvider.getNavController(fragment) } returns navController
         every { navController.currentDestination } returns mockDestination
         every { mockDestination.id } returns mockId
-        every { settings.browserToolbarHeight } returns 64
         every { mockContext.resources.getDimensionPixelSize(R.dimen.tab_strip_height) } returns 56
         every { mockContext.resources.getDimensionPixelSize(R.dimen.browser_microsurvey_height) } returns 131
         every { mockContext.resources.getDimensionPixelSize(R.dimen.browser_navbar_height) } returns 60
+        every { mockContext.resources.getDimensionPixelSize(R.dimen.browser_navbar_height_small) } returns 48
     }
 
     @Test
@@ -82,45 +83,50 @@ class FragmentTest {
 
     @Test
     fun `GIVEN the top addressbar and tabstrip are shown WHEN getTopToolbarHeight THEN return their combined height`() {
+        every { settings.shouldUseComposableToolbar } returns false
         every { settings.isTabStripEnabled } returns true
         every { settings.toolbarPosition } returns ToolbarPosition.TOP
 
         val topToolbarHeight = fragment.getTopToolbarHeight()
 
-        assertEquals(120, topToolbarHeight)
+        assertEquals(112, topToolbarHeight)
     }
 
     @Test
     fun `GIVEN the top addressbar and tabstrip are shown WHEN getTopToolbarHeight with tabstrip excluded THEN return the addressbar height`() {
+        every { settings.shouldUseComposableToolbar } returns false
         every { settings.isTabStripEnabled } returns true
         every { settings.toolbarPosition } returns ToolbarPosition.TOP
 
         val topToolbarHeight = fragment.getTopToolbarHeight(includeTabStripIfAvailable = false)
 
-        assertEquals(64, topToolbarHeight)
+        assertEquals(56, topToolbarHeight)
     }
 
     @Test
     fun `GIVEN only the top addressbar shown WHEN getTopToolbarHeight with tabstrip included THEN return the addressbar height`() {
+        every { settings.shouldUseComposableToolbar } returns false
         every { settings.isTabStripEnabled } returns false
         every { settings.toolbarPosition } returns ToolbarPosition.TOP
 
         val topToolbarHeight = fragment.getTopToolbarHeight(includeTabStripIfAvailable = true)
 
-        assertEquals(64, topToolbarHeight)
+        assertEquals(56, topToolbarHeight)
     }
 
     @Test
     fun `GIVEN only the top addressbar shown WHEN getTopToolbarHeight THEN return the addressbar height`() {
+        every { settings.shouldUseComposableToolbar } returns false
         every { settings.toolbarPosition } returns ToolbarPosition.TOP
 
         val topToolbarHeight = fragment.getTopToolbarHeight()
 
-        assertEquals(64, topToolbarHeight)
+        assertEquals(56, topToolbarHeight)
     }
 
     @Test
     fun `GIVEN the top addressbar or tabstrip not shown WHEN getTopToolbarHeight THEN return 0`() {
+        every { settings.shouldUseComposableToolbar } returns false
         every { settings.isTabStripEnabled } returns false
         every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
 
@@ -137,7 +143,7 @@ class FragmentTest {
 
         val bottomToolbarHeight = fragment.getBottomToolbarHeight()
 
-        assertEquals(195, bottomToolbarHeight)
+        assertEquals(187, bottomToolbarHeight)
     }
 
     @Test
@@ -169,7 +175,7 @@ class FragmentTest {
 
         val bottomToolbarHeight = fragment.getBottomToolbarHeight()
 
-        assertEquals(64, bottomToolbarHeight)
+        assertEquals(56, bottomToolbarHeight)
     }
 
     @Test
@@ -198,11 +204,16 @@ class FragmentTest {
 
         val bottomToolbarHeight = fragment.getBottomToolbarHeight()
 
-        assertEquals(255, bottomToolbarHeight)
+        assertEquals(247, bottomToolbarHeight)
     }
 
     @Test
-    fun `GIVEN the address bar, navigation bar and the microsurvey are shown at bottom WHEN getBottomToolbarHeight with excluded navigation bar THEN returns the combined height minus navigation bar`() {
+    @Config(qualifiers = "h481dp") // navbar is only shown on screens taller than 480dp
+    fun `GIVEN the composable toolbar, navigation bar and the microsurvey are shown at bottom WHEN getBottomToolbarHeight with excluded navigation bar THEN returns the combined height minus navigation bar`() {
+        val configuration = Configuration().apply {
+            screenHeightDp = 481
+        }
+        every { mockContext.resources.configuration } returns configuration
         every { settings.shouldUseComposableToolbar } returns true
         every { settings.shouldShowMicrosurveyPrompt } returns true
         every { settings.shouldUseExpandedToolbar } returns true
@@ -210,7 +221,7 @@ class FragmentTest {
 
         val bottomToolbarHeight = fragment.getBottomToolbarHeight(includeNavBarIfEnabled = false)
 
-        assertEquals(195, bottomToolbarHeight)
+        assertEquals(187, bottomToolbarHeight)
     }
 
     @Test
@@ -227,7 +238,7 @@ class FragmentTest {
 
         val bottomToolbarHeight = fragment.getBottomToolbarHeight()
 
-        assertEquals(255, bottomToolbarHeight)
+        assertEquals(235, bottomToolbarHeight)
     }
 
     @Test
@@ -271,7 +282,7 @@ class FragmentTest {
 
         val bottomToolbarHeight = fragment.getBottomToolbarHeight()
 
-        assertEquals(124, bottomToolbarHeight)
+        assertEquals(116, bottomToolbarHeight)
     }
 
     @Test
@@ -283,7 +294,7 @@ class FragmentTest {
 
         val bottomToolbarHeight = fragment.getBottomToolbarHeight(includeNavBarIfEnabled = false)
 
-        assertEquals(64, bottomToolbarHeight)
+        assertEquals(56, bottomToolbarHeight)
     }
 
     @Test
@@ -300,7 +311,7 @@ class FragmentTest {
 
         val bottomToolbarHeight = fragment.getBottomToolbarHeight()
 
-        assertEquals(124, bottomToolbarHeight)
+        assertEquals(104, bottomToolbarHeight)
     }
 
     @Test

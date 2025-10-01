@@ -124,7 +124,10 @@ fun BrowserDisplayToolbar(
                             true -> TOOLBAR_PADDING_DP.dp
                             false -> NO_TOOLBAR_PADDING_DP.dp
                         },
-                        bottom = TOOLBAR_PADDING_DP.dp,
+                        bottom = when (gravity) {
+                            Top -> TOOLBAR_PADDING_DP
+                            Bottom -> if (browserActionsEnd.isEmpty()) NO_TOOLBAR_PADDING_DP else TOOLBAR_PADDING_DP
+                        }.dp,
                     )
                     .height(48.dp)
                     .background(

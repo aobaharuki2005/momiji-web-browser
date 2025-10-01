@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.utils
 
+import android.content.res.Configuration
 import androidx.core.content.edit
 import io.mockk.every
 import io.mockk.spyk
@@ -24,6 +25,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.nimbus.FakeNimbusEventStore
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
@@ -1041,9 +1043,63 @@ class SettingsTest {
     }
 
     @Test
-    fun `GIVEN composable toolbar is enabled WHEN querying the toolbar height THEN get the height of the composable toolbar`() {
+    fun `GIVEN top composable toolbar is enabled WHEN querying the toolbar height THEN get the height of the composable toolbar`() {
         val settings = spyk(settings)
         every { settings.shouldUseComposableToolbar } returns true
+        every { settings.toolbarPosition } returns ToolbarPosition.TOP
+
+        assertEquals(64, settings.browserToolbarHeight)
+    }
+
+    @Test
+    fun `GIVEN bottom composable toolbar is enabled and navigation bar is disabled WHEN querying the toolbar height THEN get the height of the composable toolbar`() {
+        val settings = spyk(settings)
+        every { settings.shouldUseComposableToolbar } returns true
+        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
+        every { settings.shouldUseExpandedToolbar } returns false
+
+        assertEquals(64, settings.browserToolbarHeight)
+    }
+
+    @Test fun `GIVEN bottom composable toolbar is enabled and navigation bar is enabled WHEN querying the toolbar height THEN get the height of the composable toolbar`() {
+        testContext.resources.configuration.apply {
+            screenHeightDp = 481
+            screenWidthDp = 599
+        }
+        val settings = spyk(settings)
+        every { settings.shouldUseComposableToolbar } returns true
+        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
+        every { settings.shouldUseExpandedToolbar } returns true
+
+        assertEquals(56, settings.browserToolbarHeight)
+    }
+
+    @Test
+    fun `GIVEN bottom composable toolbar is enabled and navigation bar is enabled but window is not tall enough WHEN querying the toolbar height THEN get the height of the composable toolbar`() {
+        testContext.resources.configuration.apply {
+            screenHeightDp = 479
+            screenWidthDp = 599
+        }
+        val settings = spyk(settings)
+
+        every { settings.shouldUseComposableToolbar } returns true
+        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
+        every { settings.shouldUseExpandedToolbar } returns true
+
+        assertEquals(64, settings.browserToolbarHeight)
+    }
+
+    @Test
+    fun `GIVEN bottom composable toolbar is enabled and navigation bar is enabled but window is too wide WHEN querying the toolbar height THEN get the height of the composable toolbar`() {
+        testContext.resources.configuration.apply {
+            screenHeightDp = 481
+            screenWidthDp = 601
+        }
+        val settings = spyk(settings)
+
+        every { settings.shouldUseComposableToolbar } returns true
+        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
+        every { settings.shouldUseExpandedToolbar } returns true
 
         assertEquals(64, settings.browserToolbarHeight)
     }

@@ -44,7 +44,7 @@ fun NavigationBar(
 ) {
     Box(
         modifier = Modifier
-            .height(60.dp)
+            .height(if (toolbarGravity == Top) 60.dp else 48.dp)
             .background(color = AcornTheme.colors.layer1)
             .pointerInput(Unit) {
                 awaitPointerEventScope {

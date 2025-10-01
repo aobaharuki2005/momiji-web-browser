@@ -229,8 +229,8 @@ fun Fragment.isLargeScreenSize(): Boolean {
     return requireContext().isLargeScreenSize()
 }
 
-private const val TALL_SCREEN_HEIGHT_DP = 480
-private const val WIDE_SCREEN_WIDTH_DP = 600
+internal const val TALL_SCREEN_HEIGHT_DP = 480
+internal const val WIDE_SCREEN_WIDTH_DP = 600
 
 /**
  * Helper function to determine whether the app's current window height
@@ -273,6 +273,7 @@ fun Fragment.getBottomToolbarHeight(includeNavBarIfEnabled: Boolean = true): Int
 
     val isMicrosurveyEnabled = settings.shouldShowMicrosurveyPrompt
     val isToolbarAtBottom = settings.toolbarPosition == ToolbarPosition.BOTTOM
+    val isNavBarEnabled = settings.shouldUseExpandedToolbar && isTallWindow() && !isWideWindow()
 
     val microsurveyHeight = if (isMicrosurveyEnabled) {
         pixelSizeFor(R.dimen.browser_microsurvey_height)
@@ -287,8 +288,14 @@ fun Fragment.getBottomToolbarHeight(includeNavBarIfEnabled: Boolean = true): Int
     }
 
     val navBarHeight =
-        if (includeNavBarIfEnabled && settings.shouldUseExpandedToolbar && isTallWindow()) {
-        pixelSizeFor(R.dimen.browser_navbar_height)
+        if (includeNavBarIfEnabled && isNavBarEnabled) {
+        pixelSizeFor(
+            if (settings.shouldUseComposableToolbar && isToolbarAtBottom) {
+                R.dimen.browser_navbar_height_small
+            } else {
+                R.dimen.browser_navbar_height
+            },
+        )
     } else {
         0
     }
