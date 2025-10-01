@@ -2057,7 +2057,8 @@ nsresult CacheStorageService::WalkStorageEntries(
   return event->Walk();
 }
 
-void CacheStorageService::CacheFileDoomed(nsILoadContextInfo* aLoadContextInfo,
+void CacheStorageService::CacheFileDoomed(const nsACString& aKey,
+                                          nsILoadContextInfo* aLoadContextInfo,
                                           const nsACString& aIdExtension,
                                           const nsACString& aURISpec) {
   nsAutoCString contextKey;
