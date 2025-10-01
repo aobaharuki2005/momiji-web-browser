@@ -9,6 +9,7 @@
         <item name="colorAccent">@color/accentBright</item>
         <item name="android:windowBackground">@color/modal_background</item>
         <item name="materialButtonOutlinedStyle">@style/Widget.App.Button.OutlinedButton</item>
+        <item name="popupMenuBackground">@color/modal_background</item>
 
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
         <item name="android:windowContentTransitions">true</item>
