@@ -3186,6 +3186,13 @@
   }
 }
 
+.page:has(.annotationEditorLayer.nonEditing)
+  .annotationLayer
+  .editorAnnotation{
+  position:absolute;
+  pointer-events:none;
+}
+
 #viewerContainer.pdfPresentationMode:fullscreen,
 .annotationEditorLayer.disabled{
   .noAltTextBadge{
@@ -4634,6 +4641,10 @@
 
       .structTree{
         contain:strict;
+      }
+
+      &.detailView{
+        image-rendering:pixelated;
       }
     }
   }
