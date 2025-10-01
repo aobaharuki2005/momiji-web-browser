@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "AvailableMemoryWatcher.h"
 #include "AvailableMemoryWatcherUtils.h"
+#include "mozilla/FileUtils.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/Unused.h"
@@ -14,8 +15,93 @@
 #include "nsITimer.h"
 #include "nsIThread.h"
 #include "nsMemoryPressure.h"
+#include "nsString.h"
+#include <cstring>
+#include <cstdio>
 
 namespace mozilla {
+
+/* PSIInfo struct holds parsed data from /proc/pressure/memory
+ *
+ * The values in /proc/pressure/memory are floating point numbers, but
+ * PSIInfo has integer members.
+ */
+struct PSIInfo {
+  unsigned long some_avg10 = 0;
+  unsigned long some_avg60 = 0;
+  unsigned long some_avg300 = 0;
+  unsigned long some_total = 0;
+  unsigned long full_avg10 = 0;
+  unsigned long full_avg60 = 0;
+  unsigned long full_avg300 = 0;
+  unsigned long full_total = 0;
+};
+
+// Read PSI (Pressure Stall Information) data from /proc/pressure/memory
+static nsresult ReadPSIFile(const char* aPSIPath, PSIInfo& aResult) {
+  ScopedCloseFile file(fopen(aPSIPath, "r"));
+  if (NS_WARN_IF(!file)) {
+    // PSI file not available (kernel doesn't support PSI)
+    return NS_ERROR_FAILURE;
+  }
+
+  char buff[256];
+  // Initialize all values to 0
+  aResult = {};
+
+  /* The PSI file format looks like this:
+   * some avg10=0.00 avg60=0.00 avg300=0.00 total=0
+   * full avg10=0.00 avg60=0.00 avg300=0.00 total=0
+   */
+  float avg10, avg60, avg300, total;
+  while ((fgets(buff, sizeof(buff), file.get())) != nullptr) {
+    // Skip empty lines (exactly one '\n' character)
+    if (strcmp(buff, "\n") == 0) {
+      continue;
+    }
+
+    if (strstr(buff, "some")) {
+      if (sscanf(buff, "some avg10=%f avg60=%f avg300=%f total=%f", &avg10,
+                 &avg60, &avg300, &total) != 4) {
+        return NS_ERROR_FAILURE;
+      }
+      if (avg10 < 0 || avg60 < 0 || avg300 < 0 || total < 0) {
+        return NS_ERROR_FAILURE;
+      }
+      aResult.some_avg10 = avg10;
+      aResult.some_avg60 = avg60;
+      aResult.some_avg300 = avg300;
+      aResult.some_total = total;
+    } else if (strstr(buff, "full")) {
+      if (sscanf(buff, "full avg10=%f avg60=%f avg300=%f total=%f", &avg10,
+                 &avg60, &avg300, &total) != 4) {
+        return NS_ERROR_FAILURE;
+      }
+      if (avg10 < 0 || avg60 < 0 || avg300 < 0 || total < 0) {
+        return NS_ERROR_FAILURE;
+      }
+      aResult.full_avg10 = avg10;
+      aResult.full_avg60 = avg60;
+      aResult.full_avg300 = avg300;
+      aResult.full_total = total;
+    } else {
+      // Unrecognized non-empty line
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // Check PSI percentage values are in reasonable range (0-100)
+  if (aResult.some_avg10 < 0UL || aResult.some_avg10 > 100UL ||
+      aResult.some_avg60 < 0UL || aResult.some_avg60 > 100UL ||
+      aResult.some_avg300 < 0UL || aResult.some_avg300 > 100UL) {
+    return NS_ERROR_FAILURE;
+  }
+  if (aResult.full_total < 0UL || aResult.some_total < 0UL) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
 
 // Linux has no native low memory detection. This class creates a timer that
 // polls for low memory and sends a low memory notification if it notices a
@@ -41,6 +127,7 @@ class nsAvailableMemoryWatcher final : public nsITimerCallback,
   void StopPolling(const MutexAutoLock&);
   void ShutDown();
   void UpdateCrashAnnotation(const MutexAutoLock&);
+  void UpdatePSIInfo(const MutexAutoLock&);
   static bool IsMemoryLow();
 
   nsCOMPtr<nsITimer> mTimer MOZ_GUARDED_BY(mMutex);
@@ -48,6 +135,7 @@ class nsAvailableMemoryWatcher final : public nsITimerCallback,
 
   bool mPolling MOZ_GUARDED_BY(mMutex);
   bool mUnderMemoryPressure MOZ_GUARDED_BY(mMutex);
+  PSIInfo mPSIInfo MOZ_GUARDED_BY(mMutex);
 
   // Polling interval to check for low memory. In high memory scenarios,
   // default to 5000 ms between each check.
@@ -62,8 +150,13 @@ class nsAvailableMemoryWatcher final : public nsITimerCallback,
 // /proc/meminfo path.
 static const char* kMeminfoPath = "/proc/meminfo";
 
+// Linux memory PSI (Pressure Stall Information) path
+static const char* kPSIPath = "/proc/pressure/memory";
+
 nsAvailableMemoryWatcher::nsAvailableMemoryWatcher()
-    : mPolling(false), mUnderMemoryPressure(false) {}
+    : mPolling(false),
+      mUnderMemoryPressure(false),
+      mPSIInfo{} {}
 
 nsresult nsAvailableMemoryWatcher::Init() {
   nsresult rv = nsAvailableMemoryWatcherBase::Init();
@@ -85,6 +178,7 @@ nsresult nsAvailableMemoryWatcher::Init() {
   mThread = thread;
 
   // Set the crash annotation to its initial state.
+  UpdatePSIInfo(lock);
   UpdateCrashAnnotation(lock);
 
   StartPolling(lock);
@@ -189,6 +283,7 @@ void nsAvailableMemoryWatcher::HandleLowMemory() {
   }
   if (!mUnderMemoryPressure) {
     mUnderMemoryPressure = true;
+    UpdatePSIInfo(lock);
     UpdateCrashAnnotation(lock);
     // Poll more frequently under memory pressure.
     StartPolling(lock);
@@ -209,6 +304,24 @@ void nsAvailableMemoryWatcher::UpdateCrashAnnotation(const MutexAutoLock&)
   CrashReporter::RecordAnnotationBool(
       CrashReporter::Annotation::LinuxUnderMemoryPressure,
       mUnderMemoryPressure);
+
+  // Record PSI (Pressure Stall Information) data from stored values
+  nsPrintfCString psiValues("%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu",
+                            mPSIInfo.some_avg10, mPSIInfo.some_avg60,
+                            mPSIInfo.some_avg300, mPSIInfo.some_total,
+                            mPSIInfo.full_avg10, mPSIInfo.full_avg60,
+                            mPSIInfo.full_avg300, mPSIInfo.full_total);
+
+  CrashReporter::RecordAnnotationNSCString(
+      CrashReporter::Annotation::LinuxMemoryPSI, psiValues);
+}
+
+void nsAvailableMemoryWatcher::UpdatePSIInfo(const MutexAutoLock&)
+    MOZ_REQUIRES(mMutex) {
+  nsresult rv = ReadPSIFile(kPSIPath, mPSIInfo);
+  if (NS_FAILED(rv)) {
+    mPSIInfo = {};
+  }
 }
 
 // If memory is not low, we may need to dispatch an
@@ -224,6 +337,7 @@ void nsAvailableMemoryWatcher::MaybeHandleHighMemory() {
     RecordTelemetryEventOnHighMemory(lock);
     NS_NotifyOfEventualMemoryPressure(MemoryPressureState::NoPressure);
     mUnderMemoryPressure = false;
+    UpdatePSIInfo(lock);
     UpdateCrashAnnotation(lock);
   }
   StartPolling(lock);
