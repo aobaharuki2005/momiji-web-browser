@@ -37,7 +37,6 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
@@ -61,12 +60,10 @@ import mozilla.components.lib.state.ext.observeAsState
 import mozilla.components.service.fxa.manager.AccountState.NotAuthenticated
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.util.dpToPx
-import mozilla.components.support.ktx.android.view.setNavigationBarColorCompat
 import mozilla.components.support.utils.ext.isLandscape
 import mozilla.components.support.utils.ext.top
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -151,16 +148,6 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
 
                 isPrivate = appStore.state.mode.isPrivate
 
-                if (!Config.channel.isNightlyOrDebug) {
-                    val navigationBarColor = if (isPrivate) {
-                        ContextCompat.getColor(context, R.color.fx_mobile_private_layer_color_3)
-                    } else {
-                        ContextCompat.getColor(context, R.color.fx_mobile_layer_color_3)
-                    }
-
-                    window?.setNavigationBarColorCompat(navigationBarColor)
-                }
-
                 if (isPrivate && args.accesspoint == MenuAccessPoint.Home) {
                     window?.setBackgroundDrawable(
                         Color.BLACK.toDrawable().mutate().apply {
@@ -170,33 +157,29 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                 }
 
                 val bottomSheet = findViewById<View?>(materialR.id.design_bottom_sheet)
-                if (Config.channel.isNightlyOrDebug) {
-                    bottomSheet?.let {
-                        ViewCompat.setOnApplyWindowInsetsListener(it) { view, insets ->
-                            view.setPadding(
-                                0,
-                                insets.getInsets(systemBars()).top,
-                                0,
-                                insets.getInsets(systemBars()).bottom,
-                            )
-                            insets
-                        }
+                bottomSheet?.let {
+                    ViewCompat.setOnApplyWindowInsetsListener(it) { view, insets ->
+                        view.setPadding(
+                            0,
+                            insets.getInsets(systemBars()).top,
+                            0,
+                            insets.getInsets(systemBars()).bottom,
+                        )
+                        insets
                     }
-                    bottomSheet?.setBackgroundResource(R.drawable.bottom_sheet_with_top_rounded_corners)
+                }
+                bottomSheet?.setBackgroundResource(R.drawable.bottom_sheet_with_top_rounded_corners)
 
-                    // https://bugzilla.mozilla.org/show_bug.cgi?id=1982004
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-                        bottomSheet?.let { sheet ->
-                            sheet.translationY = sheet.height * MenuAnimationConfig.START_OFFSET_RATIO
-                            sheet.animate()
-                                .translationY(0f)
-                                .setInterpolator(OvershootInterpolator())
-                                .setDuration(MenuAnimationConfig.DURATION)
-                                .start()
-                        }
+                // https://bugzilla.mozilla.org/show_bug.cgi?id=1982004
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                    bottomSheet?.let { sheet ->
+                        sheet.translationY = sheet.height * MenuAnimationConfig.START_OFFSET_RATIO
+                        sheet.animate()
+                            .translationY(0f)
+                            .setInterpolator(OvershootInterpolator())
+                            .setDuration(MenuAnimationConfig.DURATION)
+                            .start()
                     }
-                } else {
-                    bottomSheet?.setBackgroundResource(android.R.color.transparent)
                 }
 
                 bottomSheetBehavior = bottomSheet?.let {
