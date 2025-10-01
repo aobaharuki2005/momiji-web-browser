@@ -7,16 +7,13 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   GuardianClient: "resource:///modules/ipprotection/GuardianClient.sys.mjs",
+  IPPHelpers: "resource:///modules/ipprotection/IPProtectionHelpers.sys.mjs",
   IPPProxyManager: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
   UIState: "resource://services-sync/UIState.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
-  IPProtection: "resource:///modules/ipprotection/IPProtection.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
-  CustomizableUI:
-    "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
 });
 
 import {
@@ -26,7 +23,6 @@ import {
 
 const ENABLED_PREF = "browser.ipProtection.enabled";
 const LOG_PREF = "browser.ipProtection.log";
-const VPN_ADDON_ID = "vpn@mozilla.com";
 const MAX_ERROR_HISTORY = 50;
 
 ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
@@ -73,9 +69,6 @@ export const IPProtectionStates = Object.freeze({
  *  know the current state.
  */
 class IPProtectionServiceSingleton extends EventTarget {
-  static WIDGET_ID = "ipprotection-button";
-  static PANEL_ID = "PanelUI-ipprotection";
-
   #state = IPProtectionStates.UNINITIALIZED;
 
   // Prevents multiple `#updateState()` executions at once.
@@ -89,7 +82,8 @@ class IPProtectionServiceSingleton extends EventTarget {
   proxyManager = null;
 
   #entitlement = null;
-  #activatedAt = false;
+
+  #helpers = null;
 
   /**
    * Returns the state of the service. See the description of the state
@@ -111,12 +105,21 @@ class IPProtectionServiceSingleton extends EventTarget {
   }
 
   /**
+   * Checks if the service has an entitlement object
+   *
+   * @returns {boolean}
+   */
+  get hasEntitlement() {
+    return !!this.#entitlement;
+  }
+
+  /**
    * Checks if the proxy is active and was activated.
    *
    * @returns {Date}
    */
   get activatedAt() {
-    return this.proxyManager?.active && this.#activatedAt;
+    return this.proxyManager?.active && this.proxyManager?.activatedAt;
   }
 
   constructor() {
@@ -127,6 +130,8 @@ class IPProtectionServiceSingleton extends EventTarget {
     this.updateState = this.#updateState.bind(this);
     this.setState = this.#setState.bind(this);
     this.setErrorState = this.#setErrorState.bind(this);
+
+    this.#helpers = lazy.IPPHelpers;
   }
 
   /**
@@ -138,37 +143,30 @@ class IPProtectionServiceSingleton extends EventTarget {
     }
     this.proxyManager = new lazy.IPPProxyManager(this.guardian);
 
-    this.#addSignInStateObserver();
-    this.addVPNAddonObserver();
-    this.#addEligibilityListeners();
+    this.#helpers.forEach(helper => helper.init());
 
     await this.#updateState();
   }
 
   /**
-   * Removes the IPProtectionService and IPProtection widget.
+   * Removes the UI widget.
    */
   uninit() {
     if (this.#state === IPProtectionStates.UNINITIALIZED) {
       return;
     }
 
-    lazy.IPProtection.uninit();
-
-    this.#removeSignInStateObserver();
-    this.removeVPNAddonObserver();
-
     if (this.#state === IPProtectionStates.ACTIVE) {
       this.stop(false);
     }
     this.proxyManager?.destroy();
 
-    this.#removeEligibilityListeners();
-
     this.#entitlement = null;
     this.errors = [];
     this.enrolling = null;
     this.signedIn = null;
+
+    this.#helpers.forEach(helper => helper.uninit());
 
     this.#setState(IPProtectionStates.UNINITIALIZED);
   }
@@ -206,8 +204,6 @@ class IPProtectionServiceSingleton extends EventTarget {
       return;
     }
 
-    this.#activatedAt = ChromeUtils.now();
-
     this.#setState(IPProtectionStates.ACTIVE);
 
     Glean.ipprotection.toggled.record({
@@ -231,9 +227,7 @@ class IPProtectionServiceSingleton extends EventTarget {
       return;
     }
 
-    let deactivatedAt = ChromeUtils.now();
-    let sessionLength = deactivatedAt - this.#activatedAt;
-    this.#activatedAt = null;
+    const sessionLength = this.proxyManager.stop();
 
     Glean.ipprotection.toggled.record({
       userAction,
@@ -241,7 +235,6 @@ class IPProtectionServiceSingleton extends EventTarget {
       enabled: false,
     });
 
-    await this.proxyManager.stop();
     this.#setState(IPProtectionStates.READY);
 
     this.dispatchEvent(
@@ -336,14 +329,6 @@ class IPProtectionServiceSingleton extends EventTarget {
     return isEligible;
   }
 
-  #addEligibilityListeners() {
-    lazy.NimbusFeatures.ipProtection.onUpdate(this.updateState);
-  }
-
-  #removeEligibilityListeners() {
-    lazy.NimbusFeatures.ipProtection.offUpdate(this.updateState);
-  }
-
   /**
    * Clear the current entitlement and requests a state update to dispatch
    * the current hasUpgraded status.
@@ -357,68 +342,6 @@ class IPProtectionServiceSingleton extends EventTarget {
     // hasUpgraded might not change the state.
     if (prevState === this.#state) {
       this.#stateChanged(this.#state, prevState);
-    }
-  }
-
-  /**
-   * Adds an observer for the FxA sign-in state.
-   */
-  #addSignInStateObserver() {
-    let manager = this;
-    this.fxaObserver = {
-      QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIObserver,
-        Ci.nsISupportsWeakReference,
-      ]),
-
-      observe() {
-        let { status } = lazy.UIState.get();
-        let signedIn = status == lazy.UIState.STATUS_SIGNED_IN;
-        if (signedIn !== manager.signedIn) {
-          manager.updateState();
-        }
-      },
-    };
-
-    Services.obs.addObserver(this.fxaObserver, lazy.UIState.ON_UPDATE);
-  }
-
-  /**
-   * Removes the FxA sign-in state observer
-   */
-  #removeSignInStateObserver() {
-    if (this.fxaObserver) {
-      Services.obs.removeObserver(this.fxaObserver, lazy.UIState.ON_UPDATE);
-      this.fxaObserver = null;
-    }
-  }
-
-  /**
-   * Adds an observer to monitor the VPN add-on installation
-   */
-  addVPNAddonObserver() {
-    let service = this;
-    this.addonVPNListener = {
-      onInstallEnded(_install, addon) {
-        if (addon.id === VPN_ADDON_ID && service.hasUpgraded) {
-          // Place the widget in the customization palette.
-          lazy.CustomizableUI.removeWidgetFromArea(
-            IPProtectionServiceSingleton.WIDGET_ID
-          );
-          lazy.logConsole.info("VPN Extension: Installed");
-        }
-      },
-    };
-
-    lazy.AddonManager.addInstallListener(this.addonVPNListener);
-  }
-
-  /**
-   * Removes the VPN add-on installation observer
-   */
-  removeVPNAddonObserver() {
-    if (this.addonVPNListener) {
-      lazy.AddonManager.removeInstallListener(this.addonVPNListener);
     }
   }
 
@@ -584,24 +507,6 @@ class IPProtectionServiceSingleton extends EventTarget {
    * @param {IPProtectionStates} prevState
    */
   #stateChanged(state, prevState) {
-    // Reset stored account information and stop the proxy,
-    // if the account is no longer available.
-    if (
-      (this.#entitlement && state === IPProtectionStates.UNAVAILABLE) ||
-      state === IPProtectionStates.UNAUTHENTICATED
-    ) {
-      this.resetAccount();
-    }
-
-    // Add the IPProtection widget if needed.
-    if (
-      !lazy.IPProtection.isInitialized &&
-      state !== IPProtectionStates.UNINITIALIZED &&
-      state !== IPProtectionStates.UNAVAILABLE
-    ) {
-      lazy.IPProtection.init();
-    }
-
     this.dispatchEvent(
       new CustomEvent("IPProtectionService:StateChanged", {
         bubbles: true,

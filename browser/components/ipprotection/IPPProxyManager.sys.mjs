@@ -38,6 +38,11 @@ class IPPProxyManager {
   #networkErrorObserver = null;
   // If this is set, we're awaiting a proxy pass rotation
   #rotateProxyPassPromise = null;
+  #activatedAt = false;
+
+  get activatedAt() {
+    return this.#activatedAt;
+  }
 
   get guardian() {
     if (!this.#guardian) {
@@ -119,22 +124,26 @@ class IPPProxyManager {
 
     lazy.logConsole.info("Started");
 
+    if (this.active) {
+      this.#activatedAt = ChromeUtils.now();
+    }
+
     return this.active;
   }
 
   /**
-   * Stops the proxy connection and observers.
+   * Stops the proxy connection and observers. Returns the duration of the connection.
    *
-   * @returns {Promise<boolean>}
+   * @returns {int}
    */
-  async stop() {
+  stop() {
     this.#connection?.stop();
     this.networkErrorObserver.stop();
     this.#connection = null;
 
     lazy.logConsole.info("Stopped");
 
-    return true;
+    return ChromeUtils.now() - this.#activatedAt;
   }
 
   /**
