@@ -187,13 +187,11 @@ class ScriptLoadRequest : public nsISupports,
   void SetPendingFetchingError();
 
   bool PassedConditionForDiskCache() const {
-    return mDiskCachingPlan == CachingPlan::PassedCondition ||
-           mDiskCachingPlan == CachingPlan::MarkedForCache;
+    return mDiskCachingPlan == CachingPlan::PassedCondition;
   }
 
   bool PassedConditionForMemoryCache() const {
-    return mMemoryCachingPlan == CachingPlan::PassedCondition ||
-           mMemoryCachingPlan == CachingPlan::MarkedForCache;
+    return mMemoryCachingPlan == CachingPlan::PassedCondition;
   }
 
   bool PassedConditionForEitherCache() const {
@@ -225,30 +223,6 @@ class ScriptLoadRequest : public nsISupports,
   void MarkPassedConditionForMemoryCache() {
     MOZ_ASSERT(mMemoryCachingPlan == CachingPlan::Uninitialized);
     mMemoryCachingPlan = CachingPlan::PassedCondition;
-  }
-
-  bool IsMarkedForDiskCache() const {
-    return mDiskCachingPlan == CachingPlan::MarkedForCache;
-  }
-
-  bool IsMarkedForMemoryCache() const {
-    return mMemoryCachingPlan == CachingPlan::MarkedForCache;
-  }
-
-  bool IsMarkedForEitherCache() const {
-    return IsMarkedForDiskCache() || IsMarkedForMemoryCache();
-  }
-
-  void MarkForCache() {
-    MOZ_ASSERT(mDiskCachingPlan == CachingPlan::PassedCondition ||
-               mMemoryCachingPlan == CachingPlan::PassedCondition);
-
-    if (mDiskCachingPlan == CachingPlan::PassedCondition) {
-      mDiskCachingPlan = CachingPlan::MarkedForCache;
-    }
-    if (mMemoryCachingPlan == CachingPlan::PassedCondition) {
-      mMemoryCachingPlan = CachingPlan::MarkedForCache;
-    }
   }
 
  public:
@@ -298,9 +272,6 @@ class ScriptLoadRequest : public nsISupports,
 
     // This fits the condition for the caching (e.g. file size, fetch count).
     PassedCondition,
-
-    // This is marked for encoding.
-    MarkedForCache,
   };
   CachingPlan mDiskCachingPlan = CachingPlan::Uninitialized;
   CachingPlan mMemoryCachingPlan = CachingPlan::Uninitialized;
