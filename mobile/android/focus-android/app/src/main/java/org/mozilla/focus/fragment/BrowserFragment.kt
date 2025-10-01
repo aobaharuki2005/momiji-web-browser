@@ -536,6 +536,11 @@ class BrowserFragment :
             feature = SitePermissionsFeature(
                 context = requireContext(),
                 fragmentManager = parentFragmentManager,
+                promptsStyling = SitePermissionsFeature.PromptsStyling(
+                    gravity = Gravity.CENTER,
+                    positiveButtonBackgroundColor = R.color.contrastColor,
+                    positiveButtonTextColor = R.color.colorPrimary,
+                ),
                 onNeedToRequestPermissions = { permissions ->
                     if (SitePermissionOptionsStorage(requireContext()).isSitePermissionNotBlocked(permissions)) {
                         requestPermissionLauncher.launch(permissions)

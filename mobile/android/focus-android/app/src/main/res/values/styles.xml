@@ -2,11 +2,13 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <!-- This is the default color for activated controls(buttons) -->
         <item name="colorAccent">@color/accentBright</item>
+        <item name="android:windowBackground">@color/modal_background</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.App.Button.OutlinedButton</item>
 
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
         <item name="android:windowContentTransitions">true</item>
@@ -38,6 +40,10 @@
     </style>
 
     <style name="Theme.CrashActivityTheme" parent="Theme.AppCompat.NoActionBar">
+    </style>
+
+    <style name="Widget.App.Button.OutlinedButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textColor">@color/contrastColor</item>
     </style>
 
     <!-- Fade animation for theme switching -->
