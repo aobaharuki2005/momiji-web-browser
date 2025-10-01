@@ -115,7 +115,7 @@ nsresult PrototypeDocumentContentSink::Init(Document* aDoc, nsIURI* aURI,
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(mDocumentURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mScriptLoader = mDocument->GetScriptLoader();
+  mScriptLoader = mDocument->ScriptLoader();
 
   return NS_OK;
 }
@@ -152,10 +152,6 @@ nsISupports* PrototypeDocumentContentSink::GetTarget() {
 }
 
 bool PrototypeDocumentContentSink::IsScriptExecuting() {
-  if (!mScriptLoader) {
-    MOZ_ASSERT(false, "Can't load prototype docs as data");
-    return false;
-  }
   return !!mScriptLoader->GetCurrentScript();
 }
 

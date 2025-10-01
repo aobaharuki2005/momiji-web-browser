@@ -19,10 +19,7 @@ class SVGForeignObjectElement;
 
 class SVGDocument final : public XMLDocument {
  public:
-  explicit SVGDocument(LoadedAsData aLoadedAsData)
-      : XMLDocument("image/svg+xml", aLoadedAsData) {
-    mType = eSVG;
-  }
+  SVGDocument() : XMLDocument("image/svg+xml") { mType = eSVG; }
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };

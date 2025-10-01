@@ -259,12 +259,10 @@ void PreloadService::PreloadScript(
     const nsAString& aNonce, const nsAString& aFetchPriority,
     const nsAString& aIntegrity, bool aScriptFromHead,
     uint64_t aEarlyHintPreloaderId) {
-  if (ScriptLoader* scriptLoader = mDocument->GetScriptLoader()) {
-    scriptLoader->PreloadURI(
-        aURI, aCharset, aType, aCrossOrigin, aNonce, aFetchPriority, aIntegrity,
-        aScriptFromHead, false, false, true,
-        PreloadReferrerPolicy(aReferrerPolicy), aEarlyHintPreloaderId);
-  }
+  mDocument->ScriptLoader()->PreloadURI(
+      aURI, aCharset, aType, aCrossOrigin, aNonce, aFetchPriority, aIntegrity,
+      aScriptFromHead, false, false, true,
+      PreloadReferrerPolicy(aReferrerPolicy), aEarlyHintPreloaderId);
 }
 
 void PreloadService::PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,

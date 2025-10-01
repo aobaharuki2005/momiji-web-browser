@@ -53,8 +53,7 @@ nsresult NS_NewDOMDocument(Document** aInstancePtrResult,
                            const nsAString& aQualifiedName,
                            DocumentType* aDoctype, nsIURI* aDocumentURI,
                            nsIURI* aBaseURI, nsIPrincipal* aPrincipal,
-                           mozilla::dom::LoadedAsData aLoadedAsData,
-                           nsIGlobalObject* aEventObject,
+                           bool aLoadedAsData, nsIGlobalObject* aEventObject,
                            DocumentFlavor aFlavor) {
   // Note: can't require that aDocumentURI/aBaseURI/aPrincipal be non-null,
   // since at least one caller (XMLHttpRequest) doesn't have decent args to
@@ -68,15 +67,12 @@ nsresult NS_NewDOMDocument(Document** aInstancePtrResult,
   bool isHTML = false;
   bool isXHTML = false;
   if (aFlavor == DocumentFlavor::SVG) {
-    rv = NS_NewSVGDocument(getter_AddRefs(d), aPrincipal, aPrincipal,
-                           aLoadedAsData);
+    rv = NS_NewSVGDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
   } else if (aFlavor == DocumentFlavor::HTML) {
-    rv = NS_NewHTMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal,
-                            aLoadedAsData);
+    rv = NS_NewHTMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
     isHTML = true;
   } else if (aFlavor == DocumentFlavor::XML) {
-    rv = NS_NewXMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal,
-                           aLoadedAsData);
+    rv = NS_NewXMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
   } else if (aFlavor == DocumentFlavor::Plain) {
     rv = NS_NewXMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal,
                            aLoadedAsData, true);
@@ -94,28 +90,23 @@ nsresult NS_NewDOMDocument(Document** aInstancePtrResult,
         publicId.EqualsLiteral("-//W3C//DTD HTML 4.0//EN") ||
         publicId.EqualsLiteral("-//W3C//DTD HTML 4.0 Frameset//EN") ||
         publicId.EqualsLiteral("-//W3C//DTD HTML 4.0 Transitional//EN")) {
-      rv = NS_NewHTMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal,
-                              aLoadedAsData);
+      rv = NS_NewHTMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
       isHTML = true;
     } else if (publicId.EqualsLiteral("-//W3C//DTD XHTML 1.0 Strict//EN") ||
                publicId.EqualsLiteral(
                    "-//W3C//DTD XHTML 1.0 Transitional//EN") ||
                publicId.EqualsLiteral("-//W3C//DTD XHTML 1.0 Frameset//EN")) {
-      rv = NS_NewHTMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal,
-                              aLoadedAsData);
+      rv = NS_NewHTMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
       isHTML = true;
       isXHTML = true;
     } else if (publicId.EqualsLiteral("-//W3C//DTD SVG 1.1//EN")) {
-      rv = NS_NewSVGDocument(getter_AddRefs(d), aPrincipal, aPrincipal,
-                             aLoadedAsData);
+      rv = NS_NewSVGDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
     } else {
-      rv = NS_NewXMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal,
-                             aLoadedAsData);
+      rv = NS_NewXMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
     }
   } else {
     MOZ_ASSERT(aFlavor == DocumentFlavor::LegacyGuess);
-    rv = NS_NewXMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal,
-                           aLoadedAsData);
+    rv = NS_NewXMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
   }
 
   if (NS_FAILED(rv)) {
@@ -126,8 +117,7 @@ nsresult NS_NewDOMDocument(Document** aInstancePtrResult,
     d->SetCompatibilityMode(eCompatibility_FullStandards);
     d->AsHTMLDocument()->SetIsXHTML(isXHTML);
   }
-  d->SetLoadedAsData(aLoadedAsData != mozilla::dom::LoadedAsData::No,
-                     /* aConsiderForMemoryReporting */ true);
+  d->SetLoadedAsData(aLoadedAsData, /* aConsiderForMemoryReporting */ true);
   d->SetDocumentURI(aDocumentURI);
   d->SetBaseURI(aBaseURI);
 
@@ -184,9 +174,8 @@ nsresult NS_NewDOMDocument(Document** aInstancePtrResult,
 nsresult NS_NewXMLDocument(Document** aInstancePtrResult,
                            nsIPrincipal* aPrincipal,
                            nsIPrincipal* aPartitionedPrincipal,
-                           mozilla::dom::LoadedAsData aLoadedAsData,
-                           bool aIsPlainDocument) {
-  RefPtr<XMLDocument> doc = new XMLDocument("application/xml", aLoadedAsData);
+                           bool aLoadedAsData, bool aIsPlainDocument) {
+  RefPtr<XMLDocument> doc = new XMLDocument();
 
   nsresult rv = doc->Init(aPrincipal, aPartitionedPrincipal);
 
@@ -195,8 +184,7 @@ nsresult NS_NewXMLDocument(Document** aInstancePtrResult,
     return rv;
   }
 
-  doc->SetLoadedAsData(aLoadedAsData != mozilla::dom::LoadedAsData::No,
-                       /* aConsiderForMemoryReporting */ true);
+  doc->SetLoadedAsData(aLoadedAsData, /* aConsiderForMemoryReporting */ true);
   doc->mIsPlainDocument = aIsPlainDocument;
   doc.forget(aInstancePtrResult);
 
@@ -205,9 +193,8 @@ nsresult NS_NewXMLDocument(Document** aInstancePtrResult,
 
 namespace mozilla::dom {
 
-XMLDocument::XMLDocument(const char* aContentType,
-                         mozilla::dom::LoadedAsData aLoadedAsData)
-    : Document(aContentType, aLoadedAsData),
+XMLDocument::XMLDocument(const char* aContentType)
+    : Document(aContentType),
       mChannelIsPending(false),
       mIsPlainDocument(false),
       mSuppressParserErrorElement(false),
@@ -303,7 +290,7 @@ nsresult XMLDocument::StartDocumentLoad(
 void XMLDocument::EndLoad() {
   mChannelIsPending = false;
 
-  mSynchronousDOMContentLoaded = mLoadedAsData != LoadedAsData::No;
+  mSynchronousDOMContentLoaded = mLoadedAsData;
   Document::EndLoad();
   if (mSynchronousDOMContentLoaded) {
     mSynchronousDOMContentLoaded = false;
@@ -327,9 +314,7 @@ nsresult XMLDocument::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const {
   NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
                "Can't import this document into another document!");
 
-  // TODO: Disable styling when not needed.
-  RefPtr<XMLDocument> clone =
-      new XMLDocument("application/xml", LoadedAsData::AsDataWithStyling);
+  RefPtr<XMLDocument> clone = new XMLDocument();
   nsresult rv = CloneDocHelper(clone);
   NS_ENSURE_SUCCESS(rv, rv);
 

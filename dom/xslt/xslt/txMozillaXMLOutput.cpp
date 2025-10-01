@@ -216,7 +216,7 @@ nsresult txMozillaXMLOutput::endDocument(nsresult aResult) {
     MOZ_ASSERT(mDocument->GetReadyStateEnum() == Document::READYSTATE_LOADING,
                "Bad readyState");
     mDocument->SetReadyStateInternal(Document::READYSTATE_INTERACTIVE);
-    if (ScriptLoader* loader = mDocument->GetScriptLoader()) {
+    if (ScriptLoader* loader = mDocument->ScriptLoader()) {
       loader->ParsingComplete(false);
     }
   }
@@ -382,7 +382,7 @@ nsresult txMozillaXMLOutput::startDocument() {
   }
 
   if (mCreatingNewDocument) {
-    ScriptLoader* loader = mDocument->GetScriptLoader();
+    ScriptLoader* loader = mDocument->ScriptLoader();
     if (loader) {
       loader->BeginDeferringScripts();
     }
@@ -690,15 +690,13 @@ nsresult txMozillaXMLOutput::createResultDocument(const nsAString& aName,
                                                   bool aLoadedAsData) {
   // Create the document
   if (mOutputFormat.mMethod == eHTMLOutput) {
-    MOZ_TRY(NS_NewHTMLDocument(
-        getter_AddRefs(mDocument), nullptr, nullptr,
-        aLoadedAsData ? LoadedAsData::AsData : LoadedAsData::No));
+    MOZ_TRY(NS_NewHTMLDocument(getter_AddRefs(mDocument), nullptr, nullptr,
+                               aLoadedAsData));
   } else {
     // We should check the root name/namespace here and create the
     // appropriate document
-    MOZ_TRY(NS_NewXMLDocument(
-        getter_AddRefs(mDocument), nullptr, nullptr,
-        aLoadedAsData ? LoadedAsData::AsData : LoadedAsData::No));
+    MOZ_TRY(NS_NewXMLDocument(getter_AddRefs(mDocument), nullptr, nullptr,
+                              aLoadedAsData));
   }
   // This should really be handled by Document::BeginLoad
   MOZ_ASSERT(
@@ -760,14 +758,12 @@ nsresult txMozillaXMLOutput::createResultDocument(const nsAString& aName,
   }
 
   // Set up script loader of the result document.
-  ScriptLoader* loader = mDocument->GetScriptLoader();
-  if (loader) {
-    if (mNotifier) {
-      loader->AddObserver(mNotifier);
-    } else {
-      // Don't load scripts, we can't notify the caller when they're loaded.
-      loader->SetEnabled(false);
-    }
+  ScriptLoader* loader = mDocument->ScriptLoader();
+  if (mNotifier) {
+    loader->AddObserver(mNotifier);
+  } else {
+    // Don't load scripts, we can't notify the caller when they're loaded.
+    loader->SetEnabled(false);
   }
 
   if (mNotifier) {
@@ -924,15 +920,12 @@ void txTransformNotifier::SignalTransformEnd(nsresult aResult) {
   nsCOMPtr<nsIScriptLoaderObserver> kungFuDeathGrip(this);
 
   if (mDocument) {
-    if (dom::ScriptLoader* scriptLoader = mDocument->GetScriptLoader()) {
-      scriptLoader->DeferCheckpointReached();
-      scriptLoader->RemoveObserver(this);
-      // XXX Maybe we want to cancel script loads if NS_FAILED(rv)?
-    }
+    mDocument->ScriptLoader()->DeferCheckpointReached();
+    mDocument->ScriptLoader()->RemoveObserver(this);
+    // XXX Maybe we want to cancel script loads if NS_FAILED(rv)?
+
     if (NS_FAILED(aResult)) {
-      if (css::Loader* cssLoader = mDocument->GetCSSLoader()) {
-        cssLoader->Stop();
-      }
+      mDocument->CSSLoader()->Stop();
     }
   }
 
