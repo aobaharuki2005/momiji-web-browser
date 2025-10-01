@@ -163,6 +163,10 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, private JS::JobQueue {
  public:
   void ProcessStableStateQueue();
 
+  void ClearUncaughtRejectionObservers() {
+    mUncaughtRejectionObservers.Clear();
+  }
+
  private:
   void CleanupIDBTransactions(uint32_t aRecursionDepth);
 
