@@ -298,16 +298,17 @@ export class TaskbarTabsRegistry {
   /**
    * Searches for an existing Taskbar Tab matching the URL and Container.
    *
-   * @param {nsIURI} aUrl - The URL to match.
+   * @param {nsIURL} aUrl - The URL to match.
    * @param {number} aUserContextId - The container to match.
    * @returns {TaskbarTab|null} The matching Taskbar Tab, or null if none match.
    */
   findTaskbarTab(aUrl, aUserContextId) {
-    // Could be used in contexts reading from the command line, so validate
-    // input to guard against passing in strings.
-    if (!(aUrl instanceof Ci.nsIURI)) {
+    // Ensure that the caller uses the correct types. nsIURI alone isn't
+    // enough---we need to know that there's a hostname and that the structure
+    // is otherwise standard.
+    if (!(aUrl instanceof Ci.nsIURL)) {
       throw new TypeError(
-        "Invalid argument, `aUrl` should be instance of `nsIURI`"
+        "Invalid argument, `aUrl` should be instance of `nsIURL`"
       );
     }
     if (typeof aUserContextId !== "number") {
@@ -347,7 +348,7 @@ export class TaskbarTabsRegistry {
     }
 
     lazy.logConsole.info(
-      `No matching TaskbarTab found for URL ${aUrl.host} and container ${aUserContextId}.`
+      `No matching TaskbarTab found for URL ${aUrl.spec} and container ${aUserContextId}.`
     );
     return null;
   }

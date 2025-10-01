@@ -127,7 +127,11 @@ function initVisibilityChanges(aWindow, aElement) {
   let isTaskbarTabsEnabled = false;
 
   const shouldHide = aLocation =>
-    !(aLocation.scheme.startsWith("http") && isTaskbarTabsEnabled);
+    !(
+      aLocation instanceof Ci.nsIURL &&
+      aLocation.scheme.startsWith("http") &&
+      isTaskbarTabsEnabled
+    );
 
   aWindow.gBrowser.addProgressListener({
     onLocationChange(aWebProgress, aRequest, aLocation) {

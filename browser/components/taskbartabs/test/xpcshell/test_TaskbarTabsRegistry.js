@@ -245,13 +245,27 @@ add_task(async function test_guards_against_commandline_strings() {
 
   Assert.throws(
     () => registry.findTaskbarTab(invalidUrl, validUserContextId),
-    /Invalid argument, `aUrl` should be instance of `nsIURI`/,
+    /Invalid argument, `aUrl` should be instance of `nsIURL`/,
     "Should reject URLs provided as a string."
   );
   Assert.throws(
     () => registry.findTaskbarTab(validUrl, invalidUserContextId),
     /Invalid argument, `aUserContextId` should be type of `number`/,
     "Should reject userContextId provided as a string."
+  );
+});
+
+add_task(async function test_guards_against_non_urls() {
+  // about:blank is a URI, but not a URL.
+  const url = Services.io.newURI("about:blank");
+  const userContextId = 0;
+
+  const registry = new TaskbarTabsRegistry();
+
+  throws(
+    () => registry.findOrCreateTaskbarTab(url, userContextId),
+    /Invalid argument, `aUrl` should be instance of `nsIURL`/,
+    "Should reject URIs that are not URLs."
   );
 });
 
