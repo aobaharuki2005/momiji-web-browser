@@ -13823,15 +13823,20 @@ webcompatreporting:
     description: |
       Recorded when a user selects the Send button to submit webcompat report data.
     bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1932462
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1970744
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1932462
+      - https://phabricator.services.mozilla.com/D260373
     data_sensitivity:
       - interaction
     notification_emails:
       - twisniewski@mozilla.com
       - webcompat-reporting-tool-telemetry@mozilla.com
     expires: never
+    extra_keys:
+      sent_with_blocked_trackers:
+        description: >
+          Whether the user opted into including blocked tracker origins.
+        type: boolean
   send_more_info:
     type: event
     description: |

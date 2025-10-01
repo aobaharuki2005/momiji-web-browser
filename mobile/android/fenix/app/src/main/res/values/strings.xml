@@ -1554,6 +1554,10 @@
     <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Close</string>
     <!-- Placeholder text for the description field to prompt the user on what they should type. -->
     <string name="webcompat_reporter_problem_description_placeholder_text">What happened? What should have happened?</string>
+    <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
+    <string name="webcompat_reporter_etp_checkbox_text">Send URLs blocked by tracking protection</string>
+    <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page.-->
+    <string name="webcompat_reporter_etp_checkbox_description">Enhanced Tracking Protection may block trackers and scripts that some websites need to work properly.</string>
 
     <!-- These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site. -->
     <!-- Broken site reason text for site doesn’t load -->
