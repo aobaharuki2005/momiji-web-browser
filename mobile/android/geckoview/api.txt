@@ -979,6 +979,7 @@ package org.mozilla.geckoview {
     method public boolean getCookieBehaviorOptInPartitioning();
     method public boolean getCookieBehaviorOptInPartitioningPBM();
     method @Nullable public Class<? extends android.app.Service> getCrashHandler();
+    method @NonNull public String getCrliteChannel();
     method @Nullable public String getDefaultRecursiveResolverUri();
     method @Nullable public Boolean getDisableShip();
     method @Nullable public Float getDisplayDensityOverride();
@@ -1041,6 +1042,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings setConsoleOutputEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setCookieBehaviorOptInPartitioning(boolean);
     method @NonNull public GeckoRuntimeSettings setCookieBehaviorOptInPartitioningPBM(boolean);
+    method @NonNull public GeckoRuntimeSettings setCrliteChannel(@NonNull String);
     method @NonNull public GeckoRuntimeSettings setDefaultRecursiveResolverUri(@NonNull String);
     method @NonNull public GeckoRuntimeSettings setDohAutoselectEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setDoubleTapZoomingEnabled(boolean);

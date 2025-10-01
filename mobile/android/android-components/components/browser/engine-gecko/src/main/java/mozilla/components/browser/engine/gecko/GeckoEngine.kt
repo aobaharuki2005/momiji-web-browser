@@ -1655,6 +1655,10 @@ class GeckoEngine(
         override var lnaBlockingEnabled: Boolean
             get() = runtime.settings.lnaBlockingEnabled
             set(value) { runtime.settings.setLnaBlockingEnabled(value) }
+
+        override var crliteChannel: String?
+            get() = runtime.settings.crliteChannel
+            set(value) { value?.let { runtime.settings.setCrliteChannel(value) } }
     }.apply {
         defaultSettings?.let {
             this.javascriptEnabled = it.javascriptEnabled
@@ -1702,6 +1706,7 @@ class GeckoEngine(
             this.dohAutoselectEnabled = it.dohAutoselectEnabled
             this.bannedPorts = it.bannedPorts
             this.lnaBlockingEnabled = it.lnaBlockingEnabled
+            this.crliteChannel = it.crliteChannel
         }
     }
 

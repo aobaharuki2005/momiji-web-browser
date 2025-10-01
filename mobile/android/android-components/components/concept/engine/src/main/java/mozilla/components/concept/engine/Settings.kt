@@ -367,6 +367,11 @@ abstract class Settings {
      * Setting to control blocking of local network & local device (localhost) access
      */
     open var lnaBlockingEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control the CRLite certificate blocklist channel
+     */
+    open var crliteChannel: String? by UnsupportedSetting()
 }
 
 /**
@@ -440,6 +445,7 @@ data class DefaultSettings(
     override var dohAutoselectEnabled: Boolean = false,
     override var bannedPorts: String = "",
     override var lnaBlockingEnabled: Boolean = false,
+    override var crliteChannel: String? = null,
 ) : Settings() {
     override val desktopModeEnabled: Boolean
         get() = getDesktopMode()
