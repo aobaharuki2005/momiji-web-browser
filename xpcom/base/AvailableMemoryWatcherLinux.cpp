@@ -10,7 +10,6 @@
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/Unused.h"
 #include "nsAppRunner.h"
-#include "nsIAvailableMemoryWatcherTestingLinux.h"
 #include "nsIObserverService.h"
 #include "nsISupports.h"
 #include "nsITimer.h"
@@ -107,17 +106,14 @@ static nsresult ReadPSIFile(const char* aPSIPath, PSIInfo& aResult) {
 // Linux has no native low memory detection. This class creates a timer that
 // polls for low memory and sends a low memory notification if it notices a
 // memory pressure event.
-class nsAvailableMemoryWatcher final
-    : public nsITimerCallback,
-      public nsINamed,
-      public nsAvailableMemoryWatcherBase,
-      public nsIAvailableMemoryWatcherTestingLinux {
+class nsAvailableMemoryWatcher final : public nsITimerCallback,
+                                       public nsINamed,
+                                       public nsAvailableMemoryWatcherBase {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIOBSERVER
   NS_DECL_NSINAMED
-  NS_DECL_NSIAVAILABLEMEMORYWATCHERTESTINGLINUX
 
   nsresult Init() override;
   nsAvailableMemoryWatcher();
@@ -126,7 +122,7 @@ class nsAvailableMemoryWatcher final
   void MaybeHandleHighMemory();
 
  private:
-  ~nsAvailableMemoryWatcher();
+  ~nsAvailableMemoryWatcher() = default;
   void StartPolling(const MutexAutoLock&);
   void StopPolling(const MutexAutoLock&);
   void ShutDown();
@@ -140,12 +136,6 @@ class nsAvailableMemoryWatcher final
   bool mPolling MOZ_GUARDED_BY(mMutex);
   bool mUnderMemoryPressure MOZ_GUARDED_BY(mMutex);
   PSIInfo mPSIInfo MOZ_GUARDED_BY(mMutex);
-
-  // PSI file path - can be overridden for testing
-  nsCString mPSIPath MOZ_GUARDED_BY(mMutex);
-
-  // Flag to track if SetPSIPathForTesting has been called
-  bool mIsTesting MOZ_GUARDED_BY(mMutex);
 
   // Polling interval to check for low memory. In high memory scenarios,
   // default to 5000 ms between each check.
@@ -161,16 +151,12 @@ class nsAvailableMemoryWatcher final
 static const char* kMeminfoPath = "/proc/meminfo";
 
 // Linux memory PSI (Pressure Stall Information) path
-static const auto kPSIPath = "/proc/pressure/memory"_ns;
+static const char* kPSIPath = "/proc/pressure/memory";
 
 nsAvailableMemoryWatcher::nsAvailableMemoryWatcher()
     : mPolling(false),
       mUnderMemoryPressure(false),
-      mPSIInfo{},
-      mPSIPath(kPSIPath),
-      mIsTesting(false) {}
-
-nsAvailableMemoryWatcher::~nsAvailableMemoryWatcher() {}
+      mPSIInfo{} {}
 
 nsresult nsAvailableMemoryWatcher::Init() {
   nsresult rv = nsAvailableMemoryWatcherBase::Init();
@@ -212,8 +198,7 @@ already_AddRefed<nsAvailableMemoryWatcherBase> CreateAvailableMemoryWatcher() {
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAvailableMemoryWatcher,
                             nsAvailableMemoryWatcherBase, nsITimerCallback,
-                            nsIObserver, nsINamed,
-                            nsIAvailableMemoryWatcherTestingLinux);
+                            nsIObserver, nsINamed);
 
 void nsAvailableMemoryWatcher::StopPolling(const MutexAutoLock&)
     MOZ_REQUIRES(mMutex) {
@@ -282,17 +267,6 @@ nsAvailableMemoryWatcher::Notify(nsITimer* aTimer) {
         } else {
           self->MaybeHandleHighMemory();
         }
-        if (self->mIsTesting) {
-          NS_DispatchToMainThread(
-              NS_NewRunnableFunction("MemoryPollerSync", [self]() {
-                nsCOMPtr<nsIObserverService> observerService =
-                    mozilla::services::GetObserverService();
-                if (observerService) {
-                  observerService->NotifyObservers(
-                      nullptr, "memory-poller-sync", nullptr);
-                }
-              }));
-        }
       }));
 
   if NS_FAILED (rv) {
@@ -344,7 +318,7 @@ void nsAvailableMemoryWatcher::UpdateCrashAnnotation(const MutexAutoLock&)
 
 void nsAvailableMemoryWatcher::UpdatePSIInfo(const MutexAutoLock&)
     MOZ_REQUIRES(mMutex) {
-  nsresult rv = ReadPSIFile(mPSIPath.get(), mPSIInfo);
+  nsresult rv = ReadPSIFile(kPSIPath, mPSIInfo);
   if (NS_FAILED(rv)) {
     mPSIInfo = {};
   }
@@ -373,23 +347,19 @@ void nsAvailableMemoryWatcher::MaybeHandleHighMemory() {
 // on the new interval.
 void nsAvailableMemoryWatcher::StartPolling(const MutexAutoLock& aLock)
     MOZ_REQUIRES(mMutex) {
-  // Determine the effective polling interval up-front.
   uint32_t pollingInterval = mUnderMemoryPressure
                                  ? kLowMemoryPollingIntervalMS
                                  : kHighMemoryPollingIntervalMS;
-  // For tests, enforce a very small interval to speed up polling.
-  if (gIsGtest || mIsTesting) {
-    pollingInterval = 10;
-  }
-
   if (!mPolling) {
     // Restart the timer with the new interval if it has stopped.
-    if (NS_SUCCEEDED(mTimer->InitWithCallback(
-            this, pollingInterval, nsITimer::TYPE_REPEATING_SLACK))) {
+    // For testing, use a small polling interval.
+    if (NS_SUCCEEDED(
+            mTimer->InitWithCallback(this, gIsGtest ? 10 : pollingInterval,
+                                     nsITimer::TYPE_REPEATING_SLACK))) {
       mPolling = true;
     }
   } else {
-    mTimer->SetDelay(pollingInterval);
+    mTimer->SetDelay(gIsGtest ? 10 : pollingInterval);
   }
 }
 
@@ -420,14 +390,6 @@ nsAvailableMemoryWatcher::Observe(nsISupports* aSubject, const char* aTopic,
 
 NS_IMETHODIMP nsAvailableMemoryWatcher::GetName(nsACString& aName) {
   aName.AssignLiteral("nsAvailableMemoryWatcher");
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAvailableMemoryWatcher::SetPSIPathForTesting(
-    const nsACString& aPSIPath) {
-  MutexAutoLock lock(mMutex);
-  mPSIPath.Assign(aPSIPath);
-  mIsTesting = true;
   return NS_OK;
 }
 
