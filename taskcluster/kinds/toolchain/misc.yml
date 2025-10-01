@@ -230,7 +230,7 @@ macosx-custom-car:
         symbol: TM(custom-car)
         tier: 2
     worker:
-        max-run-time: 50000
+        max-run-time: 15000
     use-python: "3.11"
     run-on-projects: []
     run:
@@ -266,7 +266,7 @@ macosx-arm64-custom-car:
         symbol: TM(custom-car-arm)
         tier: 2
     worker:
-        max-run-time: 50000
+        max-run-time: 15000
     use-python: "3.11"
     run-on-projects: []
     run:
