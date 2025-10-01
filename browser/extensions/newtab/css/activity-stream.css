@@ -3037,9 +3037,6 @@ dialog::after {
 .weatherInfoLink:hover:active, .weatherButtonContextMenuWrapper:hover:active {
   background-color: var(--button-background-color-ghost-active);
 }
-.weatherInfoLink:focus-visible, .weatherButtonContextMenuWrapper:focus-visible {
-  outline: var(--focus-outline);
-}
 .lightWallpaper .weatherInfoLink, .darkWallpaper .weatherInfoLink, .lightWallpaper .weatherButtonContextMenuWrapper, .darkWallpaper .weatherButtonContextMenuWrapper {
   background-color: var(--newtab-weather-background-color);
 }
@@ -3079,6 +3076,8 @@ dialog::after {
 }
 .weatherInfoLink:focus-visible {
   border-radius: var(--border-radius-medium);
+  outline: var(--focus-outline);
+  z-index: 1;
 }
 .weatherInfoLink:focus-visible ~ .weatherButtonContextMenuWrapper::after {
   background-color: transparent;
@@ -3122,10 +3121,11 @@ dialog::after {
 .weatherButtonContextMenuWrapper:hover::after {
   background-color: transparent;
 }
-.weatherButtonContextMenuWrapper:focus-visible {
+.weatherButtonContextMenuWrapper:has(:focus-visible) {
   border-radius: var(--border-radius-medium);
+  outline: var(--focus-outline);
 }
-.weatherButtonContextMenuWrapper:focus-visible::after {
+.weatherButtonContextMenuWrapper:has(:focus-visible)::after {
   background-color: transparent;
 }
 
@@ -3143,6 +3143,9 @@ dialog::after {
   border: 0;
   appearance: none;
   min-width: var(--size-item-large);
+}
+.weatherButtonContextMenu:focus {
+  outline: none;
 }
 
 .weatherText {

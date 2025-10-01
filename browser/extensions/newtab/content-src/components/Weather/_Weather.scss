@@ -367,10 +367,6 @@ dialog::after {
     }
   }
 
-  &:focus-visible {
-    outline: var(--focus-outline);
-  }
-
   // Bug 1908010 - This overwrites the design system color because of a
   // known transparency issue with color-mix syntax when a wallpaper is set
   .lightWallpaper &,
@@ -417,6 +413,8 @@ dialog::after {
 
   &:focus-visible {
     border-radius: var(--border-radius-medium);
+    outline: var(--focus-outline);
+    z-index: 1;
 
     ~ .weatherButtonContextMenuWrapper {
       &::after {
@@ -473,8 +471,9 @@ dialog::after {
     }
   }
 
-  &:focus-visible {
+  &:has(:focus-visible) {
     border-radius: var(--border-radius-medium);
+    outline: var(--focus-outline);
 
     &::after {
       background-color: transparent
@@ -496,6 +495,10 @@ dialog::after {
   border: 0;
   appearance: none;
   min-width: var(--size-item-large);
+
+  &:focus {
+    outline: none;
+  }
 }
 
 .weatherText {
