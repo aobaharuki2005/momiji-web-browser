@@ -59,6 +59,11 @@ export const TaskbarTabs = new (class {
     return this.#registry.findOrCreateTaskbarTab(...args);
   }
 
+  async findTaskbarTab(...args) {
+    await this.#ready;
+    return this.#registry.findTaskbarTab(...args);
+  }
+
   /**
    * Moves an existing tab into a new Taskbar Tab window.
    *

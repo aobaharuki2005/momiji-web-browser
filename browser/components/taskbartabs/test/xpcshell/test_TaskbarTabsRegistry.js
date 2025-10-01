@@ -305,3 +305,38 @@ add_task(async function test_shortcutRelativePath_is_saved() {
     "Shortcut relative path should be saved"
   );
 });
+
+add_task(async function test_multiple_match_longest_prefix() {
+  const registry = new TaskbarTabsRegistry();
+
+  const uriWithPrefix = prefix =>
+    Services.io.newURI("https://example.com" + prefix);
+
+  const createWithScope = uri =>
+    registry.findOrCreateTaskbarTab(uri, 0, {
+      manifest: {
+        scope: uri.spec,
+      },
+    });
+  const find = prefix => registry.findTaskbarTab(uriWithPrefix(prefix), 0);
+
+  // Register them in an arbitrary order.
+  const ttAB = createWithScope(uriWithPrefix("/ab"));
+  const ttA = createWithScope(uriWithPrefix("/a"));
+  const ttABC = createWithScope(uriWithPrefix("/abc"));
+  const ttABCD = createWithScope(uriWithPrefix("/abc/d/"));
+
+  equal(find("/q"), null, "/q does not exist");
+  equal(find("/a").id, ttA.id, "/a matches /a");
+  equal(find("/az").id, ttA.id, "/a matches /az");
+
+  equal(find("/ab").id, ttAB.id, "/ab matches /ab");
+  equal(find("/abq").id, ttAB.id, "/abq matches /ab");
+
+  equal(find("/abc").id, ttABC.id, "/abc matches /abc");
+  equal(find("/abc/").id, ttABC.id, "/abc/ matches /abc");
+  equal(find("/abc/d").id, ttABC.id, "/abc/d matches /abc (not /abc/d/)");
+
+  equal(find("/abc/d/").id, ttABCD.id, "/abc/d/ matches /abc/d/");
+  equal(find("/abc/d/efgh").id, ttABCD.id, "/abc/d/efgh matches /abc/d/");
+});

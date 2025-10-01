@@ -39,7 +39,12 @@ async function getJsonSchema() {
 class TaskbarTab {
   // Unique identifier for the Taskbar Tab.
   #id;
-  // List of hosts associated with this Taskbar tab.
+  // List of scopes associated with this Taskbar Tab. A scope has a 'hostname'
+  // property, and a 'prefix' property. If a 'prefix' is set, then the path
+  // must literally start with that prefix; this matches the 'within scope'
+  // algorithm of the Web App Manifest specification.
+  //
+  // @type {{ hostname: string; [prefix]: string }[]}
   #scopes = [];
   // Container the Taskbar Tab is opened in when opened from the Taskbar.
   #userContextId;
@@ -237,10 +242,23 @@ export class TaskbarTabsRegistry {
       return taskbarTab;
     }
 
+    let scope = { hostname: aUrl.host };
+    if ("scope" in manifest) {
+      // Note: manifest.scope will not be set unless the start_url is
+      // within scope. As such, this scope always contains the start_url.
+      // If a manifest is used but there isn't a scope, it uses the parent
+      // of the start_url; e.g. '/a/b/c.html' --> '/a/b'.
+      const scopeUri = Services.io.newURI(manifest.scope);
+      scope = {
+        hostname: scopeUri.host,
+        prefix: scopeUri.filePath,
+      };
+    }
+
     let id = Services.uuid.generateUUID().toString().slice(1, -1);
     taskbarTab = new TaskbarTab({
       id,
-      scopes: [{ hostname: aUrl.host }],
+      scopes: [scope],
       userContextId: aUserContextId,
       name: manifest.name ?? generateName(aUrl),
       startUrl: manifest.start_url ?? aUrl.prePath,
@@ -299,18 +317,31 @@ export class TaskbarTabsRegistry {
     }
 
     for (const tt of this.#taskbarTabs) {
+      let bestPrefix = "";
       for (const scope of tt.scopes) {
-        if (aUrl.host === scope.hostname) {
-          if (aUserContextId !== tt.userContextId) {
-            lazy.logConsole.info(
-              `Matched TaskbarTab for URL ${aUrl.host} to ${scope.hostname}, but container ${aUserContextId} mismatched ${tt.userContextId}.`
-            );
-          } else {
-            lazy.logConsole.info(
-              `Matched TaskbarTab for URL ${aUrl.host} to ${scope.hostname} with container ${aUserContextId}.`
-            );
-            return tt;
+        if (aUrl.host !== scope.hostname) {
+          continue;
+        }
+        if ("prefix" in scope) {
+          if (scope.prefix.length < bestPrefix.length) {
+            // We've already found something better.
+            continue;
           }
+          if (!aUrl.filePath.startsWith(scope.prefix)) {
+            // This URL wouldn't be within scope.
+            continue;
+          }
+        }
+
+        if (aUserContextId !== tt.userContextId) {
+          lazy.logConsole.info(
+            `Matched TaskbarTab for URL ${aUrl.host} to ${scope.hostname}, but container ${aUserContextId} mismatched ${tt.userContextId}.`
+          );
+        } else {
+          lazy.logConsole.info(
+            `Matched TaskbarTab for URL ${aUrl.host} to ${scope.hostname} with container ${aUserContextId}.`
+          );
+          return tt;
         }
       }
     }
