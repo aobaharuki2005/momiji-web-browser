@@ -157,11 +157,6 @@ test-verify:
             - translations.esen.model
             - translations.esen.vocab
 
-    worker-type:
-        by-test-platform:
-            .*-wayland.*: t-linux-wayland-vm
-            default: default
-
 test-verify-gpu:
     description: "Extra verification of tests modified on this push on gpu instances"
     suite:
@@ -206,10 +201,6 @@ test-verify-gpu:
         extra-options:
             - --verify
             - --gpu-required
-    worker-type:
-        by-test-platform:
-            .*-wayland.*: t-linux-wayland-vm
-            default: default
 
 test-coverage:
     description: "Per-test coverage"
