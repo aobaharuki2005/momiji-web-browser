@@ -25,6 +25,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [creditCardsSaved](#creditcardssaved)
 * [currentDate](#currentdate)
 * [currentTabGroups](#currenttabgroups)
+* [currentTabInstalledAsWebApp](#currenttabinstalledaswebapp)
 * [currentProfileId](#currentprofileid)
 * [defaultPDFHandler](#defaultpdfhandler)
 * [devToolsOpenedCount](#devtoolsopenedcount)
@@ -666,6 +667,17 @@ Pref used by system administrators to disallow add-ons from installed altogether
 ```ts
 declare const xpinstallEnabled: boolean;
 ```
+
+### `currentTabInstalledAsWebApp`
+
+Returns whether the current tab has a matching Web App (Taskbar Tab) installed.
+
+#### Definition
+
+```ts
+declare const currentTabInstalledAsWebApp: Promise<boolean>;
+```
+
 ### `currentTabGroups`
 
 Returns the number of currently open tab groups.

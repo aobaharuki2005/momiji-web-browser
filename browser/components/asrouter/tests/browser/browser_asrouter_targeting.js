@@ -25,8 +25,11 @@ ChromeUtils.defineESModuleGetters(this, {
   QueryCache: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   ShellService: "moz-src:///browser/components/shell/ShellService.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
   Spotlight: "resource:///modules/asrouter/Spotlight.sys.mjs",
   TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
+  TaskbarTabs: "resource:///modules/taskbartabs/TaskbarTabs.sys.mjs",
+  TaskbarTabsPin: "resource:///modules/taskbartabs/TaskbarTabsPin.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetrySession: "resource://gre/modules/TelemetrySession.sys.mjs",
 });
@@ -964,6 +967,51 @@ add_task(async function check_xpinstall_enabled() {
   // flip to true, check targeting reflects that
   await pushPrefs(["xpinstall.enabled", true]);
   is(await ASRouterTargeting.Environment.xpinstallEnabled, true);
+});
+
+add_task(async function check_current_tab_installed_as_web_app() {
+  // By default, Taskbar Tabs will try and pin this to the taskbar, but we
+  // don't want to do that in this test.
+  const sandbox = sinon.createSandbox();
+  sandbox.stub(TaskbarTabsPin, "pinTaskbarTab");
+  sandbox.stub(TaskbarTabsPin, "unpinTaskbarTab");
+
+  const kUri = "https://example.com";
+
+  await BrowserTestUtils.withNewTab(kUri, async () => {
+    is(
+      await ASRouterTargeting.Environment.currentTabInstalledAsWebApp,
+      false,
+      "no taskbar tab exists yet"
+    );
+
+    const tt = await TaskbarTabs.findOrCreateTaskbarTab(
+      Services.io.newURI(kUri),
+      0
+    );
+    is(
+      await ASRouterTargeting.Environment.currentTabInstalledAsWebApp,
+      true,
+      "should be true when a Taskbar Tab exists for this tab"
+    );
+
+    await BrowserTestUtils.withNewTab("mochi.test:8888", async () => {
+      is(
+        await ASRouterTargeting.Environment.currentTabInstalledAsWebApp,
+        false,
+        "should be false even if a Taskbar Tab exists for a different tab"
+      );
+    });
+
+    await TaskbarTabs.removeTaskbarTab(tt.id);
+    is(
+      await ASRouterTargeting.Environment.currentTabInstalledAsWebApp,
+      false,
+      "should be false after removing the Taskbar Tab"
+    );
+  });
+
+  sandbox.restore();
 });
 
 add_task(async function check_pinned_tabs() {
