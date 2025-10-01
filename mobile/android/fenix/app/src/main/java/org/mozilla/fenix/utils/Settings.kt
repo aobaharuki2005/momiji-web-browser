@@ -2314,6 +2314,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates if the private browsing mode redesign is enabled.
+     */
+    var enablePrivateBrowsingModeRedesign by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_private_browsing_mode_redesign),
+        default = FeatureFlags.PRIVATE_BROWSING_MODE_REDESIGN,
+    )
+
+    /**
      * Indicates if the Unified Trust Panel is enabled.
      */
     var enableUnifiedTrustPanel by lazyFeatureFlagPreference(
