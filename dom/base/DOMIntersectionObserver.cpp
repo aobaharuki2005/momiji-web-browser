@@ -556,10 +556,9 @@ static Maybe<nsRect> ComputeTheIntersection(
 
     intersectionRect = intersectionRectRelativeToRoot.EdgeInclusiveIntersection(
         *aRemoteDocumentVisibleRect);
-  } else if (aTarget->HasAnyStateBits(NS_FRAME_IN_POPUP)) {
-    // Popups don't get clipped to the viewport, so avoid applying the root
-    // intersection rect, see bug 1991410.
-    intersectionRect = Some(intersectionRectRelativeToRoot);
+    if (intersectionRect.isNothing()) {
+      return Nothing();
+    }
   } else {
     intersectionRect =
         intersectionRectRelativeToRoot.EdgeInclusiveIntersection(aRootBounds);
