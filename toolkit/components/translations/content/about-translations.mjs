@@ -633,6 +633,7 @@ class AboutTranslations {
 
     this.#updateSourceScriptDirection();
     this.#updateTargetScriptDirection();
+    this.#synchronizeTextAreasToMaxContentHeight();
 
     if (sourceTextArea.value) {
       this.#displayTranslatingPlaceholder();
@@ -692,6 +693,7 @@ class AboutTranslations {
     sourceTextArea.dispatchEvent(new Event("input"));
 
     this.#updateSourceScriptDirection();
+    this.#synchronizeTextAreasToMaxContentHeight();
   }
 
   /**
@@ -709,6 +711,7 @@ class AboutTranslations {
     }
 
     this.#updateTargetScriptDirection();
+    this.#synchronizeTextAreasToMaxContentHeight();
   }
 
   /**
@@ -952,6 +955,7 @@ class AboutTranslations {
     onDebounce: async () => {
       try {
         this.#updateURLFromUI();
+        this.#synchronizeTextAreasToMaxContentHeight();
 
         await this.#maybeUpdateDetectedSourceLanguage();
 
@@ -1029,12 +1033,60 @@ class AboutTranslations {
     // Mark the events so that they show up in the Firefox Profiler. This makes it handy
     // to visualize the debouncing behavior.
     doEveryTime: () => {
-      this.#updateSourceScriptDirection();
+      const sourceText = this.#getSourceText();
       performance.mark(
-        `Translations: input changed to ${this.#getSourceText().length} code units.`
+        `Translations: input changed to ${sourceText.length} code units.`
       );
+
+      if (!sourceText) {
+        this.#setTargetText("");
+      }
+
+      this.#updateSourceScriptDirection();
     },
   });
+
+  /**
+   * Calculates the heights of the content in both the source and target text areas,
+   * then syncs them both to the maximum calculated content height among the two.
+   */
+  #synchronizeTextAreasToMaxContentHeight() {
+    const { sourceTextArea, targetTextArea } = this.elements;
+
+    // This will be the same for both the source and target text areas.
+    const textAreaRatioBefore =
+      parseFloat(sourceTextArea.style.height) / sourceTextArea.scrollWidth;
+
+    sourceTextArea.style.height = "auto";
+    targetTextArea.style.height = "auto";
+
+    const maxContentHeight = Math.ceil(
+      Math.max(sourceTextArea.scrollHeight, targetTextArea.scrollHeight)
+    );
+    const maxContentHeightPixels = `${maxContentHeight}px`;
+
+    sourceTextArea.style.height = maxContentHeightPixels;
+    targetTextArea.style.height = maxContentHeightPixels;
+
+    const textAreaRatioAfter = maxContentHeight / sourceTextArea.scrollWidth;
+    const ratioDelta = textAreaRatioAfter - textAreaRatioBefore;
+    const changeThreshold = 0.001;
+
+    if (
+      // The text-area heights were not 0px prior to growing.
+      textAreaRatioBefore > changeThreshold &&
+      // The text-area aspect ratio changed beyond typical floating-point error.
+      Math.abs(ratioDelta) > changeThreshold
+    ) {
+      document.dispatchEvent(
+        new CustomEvent("AboutTranslations:TextAreaHeightsChanged", {
+          detail: {
+            textAreaHeights: ratioDelta < 0 ? "decreased" : "increased",
+          },
+        })
+      );
+    }
+  }
 }
 
 /**

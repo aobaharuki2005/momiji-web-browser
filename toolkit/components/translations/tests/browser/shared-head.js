@@ -2816,6 +2816,13 @@ class AboutTranslationsTestUtils {
     static TranslationComplete = "AboutTranslations:TranslationComplete";
 
     /**
+     * Event fired when the source/target textarea heights change.
+     *
+     * @type {string}
+     */
+    static TextAreaHeightsChanged = "AboutTranslations:TextAreaHeightsChanged";
+
+    /**
      * Event fired when the target text is cleared programmatically.
      *
      * @type {string}
