@@ -412,6 +412,11 @@ class BrowserFragment :
                 components.store,
                 components.downloadsUseCases,
                 fragmentManager = childFragmentManager,
+                promptsStyling = DownloadsFeature.PromptsStyling(
+                    gravity = Gravity.CENTER,
+                    positiveButtonBackgroundColor = R.color.contrastColor,
+                    positiveButtonTextColor = R.color.colorPrimary,
+                ),
                 tabId = tabId,
                 downloadManager = FetchDownloadManager(
                     requireContext().applicationContext,
