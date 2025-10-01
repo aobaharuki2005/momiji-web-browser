@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
@@ -29,10 +30,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.ui.theme.focusColors
@@ -160,9 +159,7 @@ private fun LanguageRadioButton(
 private fun LanguageDisplayName(language: Language, onClick: (String) -> Unit) {
     Text(
         text = AnnotatedString(language.displayName!!),
-        style = TextStyle(
-            fontSize = 20.sp,
-        ),
+        style = MaterialTheme.typography.bodyLarge,
         modifier = Modifier
             .padding(10.dp)
             .clickable { onClick(language.tag) },
