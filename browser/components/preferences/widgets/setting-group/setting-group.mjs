@@ -5,9 +5,6 @@
 import { html, ifDefined } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
-/** @import { SettingControl } from "../setting-control/setting-control.mjs"; */
-/** @import {PreferencesSettingsConfig, Preferences} from "chrome://global/content/preferences/Preferences.mjs" */
-
 const CLICK_HANDLERS = new Set([
   "dialog-button",
   "moz-box-button",
@@ -17,24 +14,10 @@ const CLICK_HANDLERS = new Set([
 ]);
 
 export class SettingGroup extends MozLitElement {
-  /**
-   * @type {PreferencesSettingsConfig | undefined}
-   */
-  config;
-
-  /**
-   * @type {Preferences['getSetting'] | undefined}
-   */
-  getSetting;
-
-  /**
-   * @type {Array<SettingControl>}
-   */
-  controlEls;
-
   static properties = {
     config: { type: Object },
     groupId: { type: String },
+    // getSetting should be Preferences.getSetting from preferencesBindings.js
     getSetting: { type: Function },
   };
 
@@ -72,9 +55,6 @@ export class SettingGroup extends MozLitElement {
     control?.onClick(e);
   }
 
-  /**
-   * @param {PreferencesSettingsConfig} item
-   */
   itemTemplate(item) {
     let setting = this.getSetting(item.id);
     return html`<setting-control

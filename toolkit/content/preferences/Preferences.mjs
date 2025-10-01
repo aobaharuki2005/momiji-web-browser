@@ -6,13 +6,16 @@ import { AsyncSetting } from "chrome://global/content/preferences/AsyncSetting.m
 import { Preference } from "chrome://global/content/preferences/Preference.mjs";
 import { Setting } from "chrome://global/content/preferences/Setting.mjs";
 
-/** @import {PreferenceConfigInfo} from "chrome://global/content/preferences/Preference.mjs" */
-/** @import {PreferenceSettingDepsMap} from "chrome://global/content/preferences/Setting.mjs" */
+/**
+ * A map of Setting instances (values) along with their IDs
+ * (keys) so that the dependencies of a setting can
+ * be easily looked up by just their ID.
+ *
+ * @typedef {Record<string, Setting>} PreferenceSettingDepsMap
+ */
 
 /**
  * @callback PreferenceSettingVisibleFunction
- * @param {PreferenceSettingDepsMap} deps
- * @param {Setting} setting
  * @returns {boolean | string | undefined} If truthy shows the setting in the UI, or hides it if not
  */
 
@@ -22,7 +25,7 @@ import { Setting } from "chrome://global/content/preferences/Setting.mjs";
  * @callback PreferenceSettingGetter
  * @param {string | number} val - The value that was retrieved from the preferences backend
  * @param {PreferenceSettingDepsMap} deps
- * @param {Setting} setting
+ * @param {Setting} setting*
  * @returns {any} - The value to set onto the setting
  */
 
@@ -46,6 +49,7 @@ import { Setting } from "chrome://global/content/preferences/Setting.mjs";
 
 /**
  * @callback PreferencesSettingConfigDisabledFunction
+ * @param {string} val - The value/pressed/checked from the input of the control associated with the setting
  * @param {PreferenceSettingDepsMap} deps
  * @param {Setting} setting
  * @returns {boolean}

@@ -8,7 +8,6 @@
   ],
   "exclude": ["tests", "../../../toolkit/content/widgets/vendor"],
   "compilerOptions": {
-    "noImplicitAny": true,
     "checkJs": true,
     "plugins": [
       {

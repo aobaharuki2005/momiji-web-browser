@@ -98,7 +98,7 @@ export class AsyncSettingHandler {
   /** @type {Function} */
   #emitChange;
 
-  /** @type {import("./Setting.mjs").PreferenceSettingDepsMap} */
+  /** @type {Record<string, Setting>} */
   deps;
 
   /** @type {Setting} */
