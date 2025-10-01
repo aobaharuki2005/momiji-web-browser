@@ -113,6 +113,14 @@ class JS_PUBLIC_API JobQueue {
    */
   virtual bool isDrainingStopped() const = 0;
 
+  /*
+   * When enqueueing a job, should the job be enqueued in the debug queue
+   * rather than the regular queue?
+   */
+  virtual bool useDebugQueue(JS::Handle<JSObject*> global) const {
+    return false;
+  }
+
  protected:
   friend class AutoDebuggerJobQueueInterruption;
 
