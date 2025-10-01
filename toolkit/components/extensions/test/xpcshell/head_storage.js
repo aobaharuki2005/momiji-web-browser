@@ -788,7 +788,7 @@ async function check_storage_sync_getBytesInUse(area, expectQuota) {
   if (expectQuota) {
     await browser.test.assertRejects(
       impl.set({ x: value + "x" }),
-      /QuotaExceededError/,
+      "QuotaExceededError: storage.sync API call exceeded its quota limitations.",
       "Got a rejection with the expected error message"
     );
     // MAX_ITEMS
@@ -800,7 +800,7 @@ async function check_storage_sync_getBytesInUse(area, expectQuota) {
     await impl.set(ob); // should work.
     await browser.test.assertRejects(
       impl.set({ straw: "camel's back" }), // exceeds MAX_ITEMS
-      /QuotaExceededError/,
+      "QuotaExceededError: storage.sync API call exceeded its quota limitations.",
       "Got a rejection with the expected error message"
     );
     // QUOTA_BYTES is being already tested for the underlying StorageSyncService
