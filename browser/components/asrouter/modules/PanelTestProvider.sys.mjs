@@ -2012,6 +2012,212 @@ const MESSAGES = () => [
       id: "newtabFeatureCalloutCheck",
     },
   },
+  {
+    weight: 100,
+    id: "TEST_ADDRESS_BAR_MESSAGING_OPEN_NEW_TAB_TRY_NEW_WAY_GOOGLE",
+    groups: ["cfr"],
+    content: {
+      id: "TEST_ADDRESS_BAR_MESSAGING_OPEN_NEW_TAB_TRY_NEW_WAY_GOOGLE",
+      screens: [
+        {
+          id: "TRY_NEW_WAY_SCREEN_GOOGLE",
+          anchors: [
+            {
+              selector: ".urlbar-input-container",
+              arrow_width: "26.9",
+              no_open_on_anchor: true,
+              panel_position: {
+                offset_x: 60,
+                anchor_attachment: "bottomleft",
+                callout_attachment: "topleft",
+              },
+            },
+          ],
+          content: {
+            title: {
+              raw: {
+                $l10n: {
+                  id: "messaging-new-tab-title-try-new-way",
+                  text: "Try a new way to search",
+                  comment:
+                    "Title for a callout that introduces a new search experience in the address bar",
+                },
+              },
+              paddingInline: "0 40px",
+              fontSize: "0.85em",
+            },
+            width: "300px",
+            padding: 16,
+            position: "callout",
+            subtitle: {
+              raw: {
+                $l10n: {
+                  id: "messaging-new-tab-subtitle-try-new-way-google",
+                  text: "Type what you’re looking for in the address bar to get results from your history and from Google.com.",
+                  comment:
+                    "Subtitle for a callout that introduces a new search experience in the address bar (Google)",
+                },
+              },
+              textAlign: "start",
+              fontSize: "0.8em",
+              marginBlock: "-4px 0",
+            },
+            primary_button: {
+              label: {
+                raw: {
+                  $l10n: {
+                    id: "messaging-try-it-label",
+                    text: "Try it",
+                    comment:
+                      "Label for the button that dismisses a callout that introduces search suggestions in the address bar",
+                  },
+                },
+                paddingBlock: "4px",
+                paddingInline: "16px",
+              },
+              action: {
+                type: "FOCUS_URLBAR",
+                dismiss: true,
+              },
+            },
+            secondary_button: {
+              label: {
+                raw: {
+                  $l10n: {
+                    id: "messaging-no-thanks-label",
+                    text: "No thanks",
+                    comment:
+                      "Label for the button that dismisses a callout that introduces search suggestions in the address bar",
+                  },
+                },
+              },
+              action: {
+                dismiss: true,
+              },
+            },
+          },
+        },
+      ],
+    },
+    trigger: {
+      id: "defaultBrowserCheck",
+    },
+    template: "feature_callout",
+    frequency: {
+      custom: [
+        {
+          cap: 1,
+          period: 86400000 * 7,
+        },
+      ],
+      lifetime: 3,
+    },
+    targeting:
+      "source == 'newtab' && !isMajorUpgrade && !activeNotifications && userPrefs.cfrFeatures && previousSessionEnd && !hasActiveEnterprisePolicies",
+  },
+  {
+    weight: 100,
+    id: "TEST_ADDRESS_BAR_MESSAGING_OPEN_NEW_TAB_TIP_SAVE_STEP_GOOGLE",
+    groups: ["cfr"],
+    content: {
+      id: "TEST_ADDRESS_BAR_MESSAGING_OPEN_NEW_TAB_TIP_SAVE_STEP_GOOGLE",
+      screens: [
+        {
+          id: "TIP_SAVE_STEP_SCREEN_GOOGLE",
+          anchors: [
+            {
+              selector: ".urlbar-input-container",
+              arrow_width: "26.9",
+              no_open_on_anchor: true,
+              panel_position: {
+                offset_x: 60,
+                anchor_attachment: "bottomleft",
+                callout_attachment: "topleft",
+              },
+            },
+          ],
+          content: {
+            title: {
+              raw: {
+                $l10n: {
+                  id: "messaging-new-tab-title-tip-save-step",
+                  text: "Search here to save a step",
+                  comment:
+                    "Title for a callout that introduces search suggestions in the address bar",
+                },
+              },
+              paddingInline: "0 40px",
+              fontSize: "0.85em",
+            },
+            width: "300px",
+            padding: 16,
+            position: "callout",
+            subtitle: {
+              raw: {
+                $l10n: {
+                  id: "messaging-new-tab-subtitle-tip-save-step-google",
+                  text: "Firefox never tracks your searches. Type what you’re looking for in the address bar to get results from Google.",
+                  comment:
+                    "Subtitle for a callout that introduces search suggestions in the address bar (Google)",
+                },
+              },
+              textAlign: "start",
+              fontSize: "0.8em",
+              marginBlock: "-4px 0",
+            },
+            primary_button: {
+              label: {
+                raw: {
+                  $l10n: {
+                    id: "messaging-try-it-label",
+                    text: "Try it",
+                    comment:
+                      "Label for the button that dismisses a callout that introduces search suggestions in the address bar",
+                  },
+                },
+                paddingBlock: "4px",
+                paddingInline: "16px",
+              },
+              action: {
+                type: "FOCUS_URLBAR",
+                dismiss: true,
+              },
+            },
+            secondary_button: {
+              label: {
+                raw: {
+                  $l10n: {
+                    id: "messaging-no-thanks-label",
+                    text: "No thanks",
+                    comment:
+                      "Label for the button that dismisses a callout that introduces search suggestions in the address bar",
+                  },
+                },
+              },
+              action: {
+                dismiss: true,
+              },
+            },
+          },
+        },
+      ],
+    },
+    trigger: {
+      id: "defaultBrowserCheck",
+    },
+    template: "feature_callout",
+    frequency: {
+      custom: [
+        {
+          cap: 1,
+          period: 86400000 * 7,
+        },
+      ],
+      lifetime: 3,
+    },
+    targeting:
+      "source == 'newtab' && !isMajorUpgrade && !activeNotifications && userPrefs.cfrFeatures && previousSessionEnd && !hasActiveEnterprisePolicies",
+  },
 ];
 
 export const PanelTestProvider = {
