@@ -512,6 +512,10 @@ export class SearchService {
    * Test only - reset SearchService data. Ideally this should be replaced
    */
   reset() {
+    lazy.logConsole.debug("Resetting search service.");
+    if (this.#initializationStatus != "not initialized") {
+      Services.obs.removeObserver(this, lazy.Region.REGION_TOPIC);
+    }
     this.#initializationStatus = "not initialized";
     this.#initDeferredPromise = Promise.withResolvers();
     this.#startupExtensions = new Set();
@@ -3668,10 +3672,10 @@ export class SearchService {
 
     this._settings.removeObservers();
 
+    Services.obs.removeObserver(this, lazy.Region.REGION_TOPIC);
     Services.obs.removeObserver(this, lazy.SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
     Services.obs.removeObserver(this, TOPIC_LOCALES_CHANGE);
-    Services.obs.removeObserver(this, lazy.Region.REGION_TOPIC);
   }
 
   QueryInterface = ChromeUtils.generateQI([
