@@ -11462,19 +11462,20 @@ const PersonalizedCard = ({
 
 function FollowSectionButtonHighlight({
   arrowPosition,
-  position,
-  verticalPosition,
   dispatch,
-  handleDismiss,
+  feature,
   handleBlock,
-  feature
+  handleDismiss,
+  messageData,
+  position,
+  verticalPosition
 }) {
   const onDismiss = (0,external_React_namespaceObject.useCallback)(() => {
     handleDismiss();
     handleBlock();
   }, [handleDismiss, handleBlock]);
   return /*#__PURE__*/external_React_default().createElement("div", {
-    className: "follow-section-button-highlight"
+    className: `follow-section-button-highlight ${messageData.content?.darkModeDismiss ? "is-inverted-dark-dismiss-button" : ""}`
   }, /*#__PURE__*/external_React_default().createElement(FeatureHighlight, {
     position: position,
     arrowPosition: arrowPosition,
@@ -11483,17 +11484,28 @@ function FollowSectionButtonHighlight({
     dispatch: dispatch,
     message: /*#__PURE__*/external_React_default().createElement("div", {
       className: "follow-section-button-highlight-content"
-    }, /*#__PURE__*/external_React_default().createElement("img", {
-      src: "chrome://browser/content/asrouter/assets/smiling-fox-icon.svg",
-      width: "24",
-      height: "24",
+    }, /*#__PURE__*/external_React_default().createElement("picture", {
+      className: "follow-section-button-highlight-image"
+    }, /*#__PURE__*/external_React_default().createElement("source", {
+      srcSet: messageData.content?.darkModeImageURL || "chrome://newtab/content/data/content/assets/highlights/omc-newtab-follow.svg",
+      media: "(prefers-color-scheme: dark)"
+    }), /*#__PURE__*/external_React_default().createElement("source", {
+      srcSet: messageData.content?.imageURL || "chrome://newtab/content/data/content/assets/highlights/omc-newtab-follow.svg",
+      media: "(prefers-color-scheme: light)"
+    }), /*#__PURE__*/external_React_default().createElement("img", {
+      width: "320",
+      height: "195",
       alt: ""
-    }), /*#__PURE__*/external_React_default().createElement("div", {
+    })), /*#__PURE__*/external_React_default().createElement("div", {
       className: "follow-section-button-highlight-copy"
-    }, /*#__PURE__*/external_React_default().createElement("p", {
+    }, messageData.content?.cardTitle ? /*#__PURE__*/external_React_default().createElement("p", {
+      className: "title"
+    }, messageData.content.cardTitle) : /*#__PURE__*/external_React_default().createElement("p", {
       className: "title",
       "data-l10n-id": "newtab-section-follow-highlight-title"
-    }), /*#__PURE__*/external_React_default().createElement("p", {
+    }), messageData.content?.cardMessage ? /*#__PURE__*/external_React_default().createElement("p", {
+      className: "subtitle"
+    }, messageData.content.cardMessage) : /*#__PURE__*/external_React_default().createElement("p", {
       className: "subtitle",
       "data-l10n-id": "newtab-section-follow-highlight-subtitle"
     }))),
@@ -12203,7 +12215,8 @@ function CardSection({
     verticalPosition: "inset-block-center",
     position: "arrow-inline-start",
     dispatch: dispatch,
-    feature: "FEATURE_FOLLOW_SECTION_BUTTON"
+    feature: "FEATURE_FOLLOW_SECTION_BUTTON",
+    messageData: messageData
   })), !anySectionsFollowed && sectionPosition === 1 && shouldShowOMCHighlight(messageData, "FollowSectionButtonAltHighlight") && /*#__PURE__*/external_React_default().createElement(MessageWrapper, {
     dispatch: dispatch
   }, /*#__PURE__*/external_React_default().createElement(FollowSectionButtonHighlight, {

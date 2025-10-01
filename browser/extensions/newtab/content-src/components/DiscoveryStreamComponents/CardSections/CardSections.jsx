@@ -284,6 +284,7 @@ function CardSection({
                 position="arrow-inline-start"
                 dispatch={dispatch}
                 feature="FEATURE_FOLLOW_SECTION_BUTTON"
+                messageData={messageData}
               />
             </MessageWrapper>
           )}

@@ -8426,6 +8426,7 @@ dialog::after {
 
 .follow-section-button-highlight .feature-highlight-modal {
   padding: var(--space-large);
+  width: auto;
 }
 .follow-section-button-highlight .feature-highlight-modal p {
   margin: 0;
@@ -8436,6 +8437,16 @@ dialog::after {
 .follow-section-button-highlight .feature-highlight-modal .icon-dismiss {
   margin-block-start: 0;
   margin-inline-end: 0;
+}
+.follow-section-button-highlight .feature-highlight-modal > moz-button {
+  position: absolute;
+  inset-inline-end: var(--space-large);
+  inset-block-start: var(--space-large);
+}
+@media (prefers-color-scheme: dark) {
+  .follow-section-button-highlight.is-inverted-dark-dismiss-button .feature-highlight-modal > moz-button {
+    --button-icon-fill: var(--color-gray-70);
+  }
 }
 .follow-section-button-highlight .feature-highlight-modal.arrow-inline-start {
   inset-block-start: calc(100% + var(--space-large));
@@ -8468,6 +8479,7 @@ dialog::after {
 }
 .follow-section-button-highlight .follow-section-button-highlight-content {
   display: flex;
+  flex-direction: column;
   gap: var(--space-medium);
 }
 .follow-section-button-highlight .follow-section-button-highlight-copy {
