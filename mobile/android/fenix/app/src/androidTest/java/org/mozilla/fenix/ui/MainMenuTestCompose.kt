@@ -250,7 +250,9 @@ class MainMenuTestCompose : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
+            verifyPageContent(genericURL.content)
         }.openThreeDotMenu(composeTestRule) {
+            verifyTryRecommendedExtensionButton()
         }.openExtensionsFromMainMenu {
             verifyRecommendedAddonsViewFromRedesignedMainMenu(composeTestRule)
         }
