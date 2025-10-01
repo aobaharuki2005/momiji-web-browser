@@ -1321,7 +1321,8 @@
   --green-status-color: light-dark(var(--color-green-60), var(--color-green-20));
   --red-status-color: light-dark(var(--color-red-70), var(--color-red-40));
 
-  display: flex;
+  /* Remove the usual inner padding. Each item in the row will have its own. */
+  padding: 0;
 
   > .urlbarView-realtime-item {
     display: flex;
