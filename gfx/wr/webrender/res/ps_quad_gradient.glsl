@@ -380,7 +380,7 @@ void swgl_drawSpanRGBA8() {
     }
 
     vec2 pos = v_interpolated_data.xy;
-    float start_radius = v_flat_data.z;
+    float start_radius = v_flat_data.x;
     bool repeat = v_gradient_header.z != 0.0;
 
     swgl_commitRadialGradientFromStopsRGBA8(sGpuBufferF, offsets_addr, colors_addr,
