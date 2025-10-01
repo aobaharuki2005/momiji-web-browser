@@ -548,15 +548,15 @@ void HTMLDialogElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   MOZ_ASSERT(GetBoolAttr(nsGkAtoms::open) == isOpen);
   SetStates(ElementState::OPEN, isOpen);
 
-  // 3. If element's node document is not fully active, then return.
-  if (!OwnerDoc()->IsFullyActive()) {
-    return;
-  }
-
-  // 4. If value is null and oldValue is not null, then run the dialog cleanup
+  // 3. If value is null and oldValue is not null, then run the dialog cleanup
   // steps given element.
   if (!isOpen && wasOpen) {
     CleanupSteps();
+  }
+
+  // 4. If element's node document is not fully active, then return.
+  if (!OwnerDoc()->IsFullyActive()) {
+    return;
   }
 
   // 5. If element is not connected, then return.
