@@ -1911,7 +1911,7 @@ static int32_t findGradientStopPair(float offset, float* stops,
 template <bool BLEND>
 static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
                                           int colorsAddress, float stopCount,
-                                          bool repeat, vec2 pos, float radius,
+                                          bool repeat, vec2 pos, float startRadius,
                                           uint32_t* buf, int span) {
   assert(sampler->format == TextureFormat::RGBA32F);
   // Stop offsets are expected to be stored just after the colors.
@@ -1943,7 +1943,7 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
   vec2_scalar pos0 = {pos.x.x, pos.y.x};
   vec2_scalar delta = {pos.x.y - pos.x.x, pos.y.y - pos.y.x};
   float deltaDelta = dot(delta, delta);
-  if (!isfinite(deltaDelta) || !isfinite(radius)) {
+  if (!isfinite(deltaDelta) || !isfinite(startRadius)) {
     return false;
   }
   float invDelta, middleT, middleB;
@@ -1958,13 +1958,7 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
     middleT = float(span);
     middleB = 0.0f;
   }
-  // We only want search for merged gradients up to the minimum of either the
-  // mid-point or the span length. Cache those offsets here as they don't vary
-  // in the inner loop.
-  Float middleEndRadius = fastLength<true>(
-      pos0 + delta * (Float){middleT, float(span), 0.0f, 0.0f});
-  float middleRadius = span < middleT ? middleEndRadius.y : middleEndRadius.x;
-  float endRadius = middleEndRadius.y;
+
   // Convert delta to change in position per chunk.
   delta *= 4;
   deltaDelta *= 4 * 4;
@@ -1993,15 +1987,15 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
   float initialOffset = 2.0;
   for (int t = 0; t < span;) {
     // Compute the gradient table offset from the current position.
-    Float offset = fastSqrt<true>(dotPos) - radius;
-    float startRadius = radius;
+    Float offset = fastSqrt<true>(dotPos) - startRadius;
+    float adjustedStartRadius = startRadius;
     // If repeat is desired, we need to limit the offset to a fractional value.
     if (repeat) {
       // The non-repeating radius at which the gradient table actually starts,
-      // radius + floor(offset) = radius + (offset - fract(offset)).
-      startRadius += offset.x;
+      // startRadius + floor(offset) = startRadius + (offset - fract(offset)).
+      adjustedStartRadius += offset.x;
       offset = fract(offset);
-      startRadius -= offset.x;
+      adjustedStartRadius -= offset.x;
     }
 
     // We need to find the pair of gradient stops that affect the the current
@@ -2016,7 +2010,7 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
       // stop. Set the intercept to advance forward to the start of the gradient
       // table.
       if (t >= middleT) {
-        intercept = radius;
+        intercept = startRadius;
       }
     } else if (offset.x >= 1) {
       // If outside the outer radius of the gradient table, then use the last
@@ -2025,7 +2019,7 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
       // away from the gradient.
       stopIndex = stopCount - 1;
       if (t < middleT) {
-        intercept = radius + 1;
+        intercept = startRadius + 1;
       }
     } else {
       // Otherwise, we're inside the valid part of the gradient table.
@@ -2034,12 +2028,12 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
           findGradientStopPair(offset.x, stopOffsets, stopCount, initialIndex,
                                initialOffset, prevOffset, nextOffset);
       if (t >= middleT) {
-        intercept = startRadius + nextOffset;
+        intercept = adjustedStartRadius + nextOffset;
       } else {
-        intercept = startRadius + prevOffset;
+        intercept = adjustedStartRadius + prevOffset;
       }
     }
-    // Solve the quadratic for t to find where the merged gradient ends. If no
+    // Solve the quadratic for t to find where the current stop pair ends. If no
     // intercept is found, just go to the middle or end of the span.
     float endT = t >= middleT ? span : min(span, int(middleT));
     if (intercept >= 0) {
@@ -2058,7 +2052,7 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
     // Ensure that we are advancing by at least one pixel at each iteration.
     endT = max(endT, t + 1.0);
 
-    // Figure out how many chunks are actually inside the merged gradient.
+    // Figure out how many chunks are actually inside the gradient stop pair.
     int inside = int(endT - t) & ~3;
     // Convert start and end colors to BGRA and scale to 0..255 range.
     auto minColorF = stopColors[stopIndex].zyxw * 255.0f;
@@ -2078,7 +2072,7 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
     // Subtract off the color difference of the beginning of the current span
     // from the beginning of the gradient.
     Float colorF =
-        minColorF - deltaColorF * (startRadius + prevOffset);  // TODO
+        minColorF - deltaColorF * (adjustedStartRadius + prevOffset);
     // Finally, walk over the span accumulating the position dot product and
     // getting its sqrt as an offset into the color ramp. Since we're already
     // in BGRA format and scaled to 255, we just need to round to an integer
@@ -2156,16 +2150,16 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
 // gradient-space and a radius at which the distance from the origin maps to the
 // start of the gradient table.
 #define swgl_commitRadialGradientFromStopsRGBA8(                             \
-    sampler, offsetsAddress, colorsAddress, size, repeat, pos, radius)       \
+    sampler, offsetsAddress, colorsAddress, size, repeat, pos, startRadius)  \
   do {                                                                       \
     bool drawn = false;                                                      \
     if (blend_key) {                                                         \
       drawn = commitRadialGradientFromStops<true>(                           \
-          sampler, offsetsAddress, colorsAddress, size, repeat, pos, radius, \
+          sampler, offsetsAddress, colorsAddress, size, repeat, pos, startRadius, \
           swgl_OutRGBA8, swgl_SpanLength);                                   \
     } else {                                                                 \
       drawn = commitRadialGradientFromStops<false>(                          \
-          sampler, offsetsAddress, colorsAddress, size, repeat, pos, radius, \
+          sampler, offsetsAddress, colorsAddress, size, repeat, pos, startRadius, \
           swgl_OutRGBA8, swgl_SpanLength);                                   \
     }                                                                        \
     if (drawn) {                                                             \
