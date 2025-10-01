@@ -46,6 +46,10 @@ export const AboutNewTab = {
    * init - Initializes an instance of Activity Stream if one doesn't exist already.
    */
   init() {
+    if (this.initialized) {
+      return;
+    }
+
     Services.obs.addObserver(this, TOPIC_APP_QUIT);
     if (!AppConstants.RELEASE_OR_BETA) {
       XPCOMUtils.defineLazyPreferenceGetter(
