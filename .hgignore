@@ -106,9 +106,6 @@
 ^browser/components/asrouter/content-src/schemas/corpus/PanelTestProvider\.messages\.json
 ^browser/components/asrouter/content-src/schemas/corpus/PanelTestProvider_toast_notification\.messages\.json
 
-# Ignore Pocket component build and dev assets
-^browser/components/pocket/content/panels/css/main\.compiled\.css\.map
-
 # Ignore downloaded thirdparty build artifacts.
 ^toolkit/components/translations/bergamot-translator/thirdparty
 

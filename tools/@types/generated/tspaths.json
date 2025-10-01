@@ -206,6 +206,9 @@
       "chrome://global/content/certviewer/certviewer.mjs": [
         "toolkit/components/certviewer/content/certviewer.mjs"
       ],
+      "chrome://global/content/certviewer/components/utils.mjs": [
+        "toolkit/components/certviewer/content/components/utils.mjs"
+      ],
       "chrome://global/content/elements/browser-custom-element.mjs": [
         "toolkit/content/widgets/browser-custom-element.mjs"
       ],
@@ -265,6 +268,9 @@
       ],
       "chrome://global/content/megalist/components/password-card/password-card.mjs": [
         "toolkit/components/satchel/megalist/content/components/password-card/password-card.mjs"
+      ],
+      "chrome://global/content/megalist/components/virtual-passwords-list/virtual-passwords-list.mjs": [
+        "toolkit/components/satchel/megalist/content/components/virtual-passwords-list/virtual-passwords-list.mjs"
       ],
       "chrome://global/content/ml/BlockWords.sys.mjs": [
         "toolkit/components/ml/content/BlockWords.sys.mjs"
@@ -430,9 +436,6 @@
       ],
       "chrome://mochitests/content/chrome/toolkit/components/workerloader/tests/moduleD-circular.js": [
         "toolkit/components/workerloader/tests/moduleD-circular.js"
-      ],
-      "chrome://pocket/content/pktApi.sys.mjs": [
-        "browser/components/pocket/content/pktApi.sys.mjs"
       ],
       "chrome://remote/content/components/Marionette.sys.mjs": [
         "remote/components/Marionette.sys.mjs"
@@ -1243,6 +1246,9 @@
       ],
       "resource:///modules/ipprotection/IPPNetworkErrorObserver.sys.mjs": [
         "browser/components/ipprotection/IPPNetworkErrorObserver.sys.mjs"
+      ],
+      "resource:///modules/ipprotection/IPPProxyManager.sys.mjs": [
+        "browser/components/ipprotection/IPPProxyManager.sys.mjs"
       ],
       "resource:///modules/ipprotection/IPProtection.sys.mjs": [
         "browser/components/ipprotection/IPProtection.sys.mjs"
@@ -4583,9 +4589,6 @@
       "resource://devtools/server/actors/utils/style-utils.js": [
         "devtools/server/actors/utils/style-utils.js"
       ],
-      "resource://devtools/server/actors/utils/track-change-emitter.js": [
-        "devtools/server/actors/utils/track-change-emitter.js"
-      ],
       "resource://devtools/server/actors/utils/walker-search.js": [
         "devtools/server/actors/utils/walker-search.js"
       ],
@@ -6515,6 +6518,9 @@
       "resource://newtab/lib/InferredModel/FeatureModel.sys.mjs": [
         "browser/extensions/newtab/lib/InferredModel/FeatureModel.sys.mjs"
       ],
+      "resource://newtab/lib/InferredModel/GreedyContentRanker.mjs": [
+        "browser/extensions/newtab/lib/InferredModel/GreedyContentRanker.mjs"
+      ],
       "resource://newtab/lib/InferredModel/InferredConstants.sys.mjs": [
         "browser/extensions/newtab/lib/InferredModel/InferredConstants.sys.mjs"
       ],
@@ -7189,6 +7195,9 @@
       ],
       "resource://testing-common/NimbusTestUtils.sys.mjs": [
         "toolkit/components/nimbus/test/NimbusTestUtils.sys.mjs"
+      ],
+      "resource://testing-common/NodeServer.sys.mjs": [
+        "netwerk/test/httpserver/NodeServer.sys.mjs"
       ],
       "resource://testing-common/NormandyTestUtils.sys.mjs": [
         "toolkit/components/normandy/test/NormandyTestUtils.sys.mjs"

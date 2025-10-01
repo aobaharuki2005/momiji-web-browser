@@ -14,7 +14,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BinarySearch: "resource://gre/modules/BinarySearch.sys.mjs",
   PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  pktApi: "chrome://pocket/content/pktApi.sys.mjs",
 });
 
 let BrowserWindowTracker;
@@ -64,10 +63,6 @@ const ACTIVITY_STREAM_DEFAULT_RECENT = 5 * 24 * 60 * 60;
 // This value will be multiplied by the current window's devicePixelRatio.
 // If devicePixelRatio cannot be found, it will be multiplied by 2.
 const DEFAULT_SMALL_FAVICON_WIDTH = 16;
-
-const POCKET_UPDATE_TIME = 24 * 60 * 60 * 1000; // 1 day
-const POCKET_INACTIVE_TIME = 7 * 24 * 60 * 60 * 1000; // 1 week
-const PREF_POCKET_LATEST_SINCE = "extensions.pocket.settings.latestSince";
 
 /**
  * Calculate the MD5 hash for a string.
@@ -924,11 +919,6 @@ var ActivityStreamProvider = {
         link =>
           // eslint-disable-next-line no-async-promise-executor
           new Promise(async resolve => {
-            // Never add favicon data for pocket items
-            if (link.type === "pocket") {
-              resolve(link);
-              return;
-            }
             let iconData;
             try {
               let linkUri = Services.io.newURI(link.url);
@@ -954,86 +944,6 @@ var ActivityStreamProvider = {
           })
       )
     );
-  },
-
-  /**
-   * Helper function which makes the call to the Pocket API to fetch the user's
-   * saved Pocket items.
-   */
-  fetchSavedPocketItems(requestData) {
-    const latestSince =
-      Services.prefs.getStringPref(PREF_POCKET_LATEST_SINCE, 0) * 1000;
-
-    // Do not fetch Pocket items for users that have been inactive for too long, or are not logged in
-    if (
-      !lazy.pktApi.isUserLoggedIn() ||
-      Date.now() - latestSince > POCKET_INACTIVE_TIME
-    ) {
-      return Promise.resolve(null);
-    }
-
-    return new Promise((resolve, reject) => {
-      lazy.pktApi.retrieve(requestData, {
-        success(data) {
-          resolve(data);
-        },
-        error(error) {
-          reject(error);
-        },
-      });
-    });
-  },
-
-  /**
-   * Get the most recently Pocket-ed items from a user's Pocket list. See:
-   * https://getpocket.com/developer/docs/v3/retrieve for details
-   *
-   * @param {Object} aOptions
-   *   {int} numItems: The max number of pocket items to fetch
-   */
-  async getRecentlyPocketed(aOptions) {
-    const pocketSecondsAgo =
-      Math.floor(Date.now() / 1000) - ACTIVITY_STREAM_DEFAULT_RECENT;
-    const requestData = {
-      detailType: "complete",
-      count: aOptions.numItems,
-      since: pocketSecondsAgo,
-    };
-    let data;
-    try {
-      data = await this.fetchSavedPocketItems(requestData);
-      if (!data) {
-        return [];
-      }
-    } catch (e) {
-      console.error(e);
-      return [];
-    }
-    /* Extract relevant parts needed to show this card as a highlight:
-     * url, preview image, title, description, and the unique item_id
-     * necessary for Pocket to identify the item
-     */
-    let items = Object.values(data.list)
-      // status "0" means not archived or deleted
-      .filter(item => item.status === "0")
-      .map(item => ({
-        date_added: item.time_added * 1000,
-        description: item.excerpt,
-        preview_image_url: item.image && item.image.src,
-        title: item.resolved_title,
-        url: item.resolved_url,
-        pocket_id: item.item_id,
-        open_url: item.open_url,
-      }));
-
-    // Append the query param to let Pocket know this item came from highlights
-    for (let item of items) {
-      let url = new URL(item.open_url);
-      url.searchParams.append("src", "fx_new_tab");
-      item.open_url = url.href;
-    }
-
-    return this._processHighlights(items, aOptions, "pocket");
   },
 
   /**
@@ -1417,10 +1327,6 @@ var ActivityStreamProvider = {
  * A set of actions which influence what sites shown on the Activity Stream page
  */
 var ActivityStreamLinks = {
-  _savedPocketStories: null,
-  _pocketLastUpdated: 0,
-  _pocketLastLatest: 0,
-
   /**
    * Block a url
    *
@@ -1429,10 +1335,6 @@ var ActivityStreamLinks = {
    */
   blockURL(aLink) {
     BlockedLinks.block(aLink);
-    // If we're blocking a pocket item, invalidate the cache too
-    if (aLink.pocket_id) {
-      this._savedPocketStories = null;
-    }
   },
 
   onLinkBlocked(aLink) {
@@ -1488,7 +1390,6 @@ var ActivityStreamLinks = {
    * @param {Object} aOptions
    *   {bool} excludeBookmarks: Don't add bookmark items.
    *   {bool} excludeHistory: Don't add history items.
-   *   {bool} excludePocket: Don't add Pocket items.
    *   {bool} withFavicons: Add favicon data: URIs, when possible.
    *   {int}  numItems: Maximum number of (bookmark or history) items to return.
    *
@@ -1503,29 +1404,6 @@ var ActivityStreamLinks = {
       results.push(
         ...(await ActivityStreamProvider.getRecentBookmarks(aOptions))
       );
-    }
-
-    // Add the Pocket items if we need more and want them
-    if (aOptions.numItems - results.length > 0 && !aOptions.excludePocket) {
-      const latestSince = ~~Services.prefs.getStringPref(
-        PREF_POCKET_LATEST_SINCE,
-        0
-      );
-      // Invalidate the cache, get new stories, and update timestamps if:
-      //  1. we do not have saved to Pocket stories already cached OR
-      //  2. it has been too long since we last got Pocket stories OR
-      //  3. there has been a paged saved to pocket since we last got new stories
-      if (
-        !this._savedPocketStories ||
-        Date.now() - this._pocketLastUpdated > POCKET_UPDATE_TIME ||
-        this._pocketLastLatest < latestSince
-      ) {
-        this._savedPocketStories =
-          await ActivityStreamProvider.getRecentlyPocketed(aOptions);
-        this._pocketLastUpdated = Date.now();
-        this._pocketLastLatest = latestSince;
-      }
-      results.push(...this._savedPocketStories);
     }
 
     // Add in history if we need more and want them
