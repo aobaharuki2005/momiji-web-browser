@@ -11,7 +11,6 @@
 #include "ScriptLoadRequest.h"
 #include "ModuleLoaderBase.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/HoldDropJSObjects.h"
 #include "js/RootingAPI.h"
 #include "js/Value.h"
 #include "nsURIHashKey.h"
@@ -28,7 +27,11 @@ class ModuleLoaderBase;
 // multiple imports of the same module.
 
 class ModuleLoadRequest final : public ScriptLoadRequest {
-  ~ModuleLoadRequest();
+  ~ModuleLoadRequest() {
+    MOZ_ASSERT(!mReferrerScript);
+    MOZ_ASSERT(!mModuleRequestObj);
+    MOZ_ASSERT(mPayload.isUndefined());
+  }
 
   ModuleLoadRequest(const ModuleLoadRequest& aOther) = delete;
   ModuleLoadRequest(ModuleLoadRequest&& aOther) = delete;
@@ -84,6 +87,8 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
     }
     return mRootModule;
   }
+
+  void MarkModuleForCache() { MarkForCache(); }
 
   // Convenience methods to call into the module loader for this request.
 

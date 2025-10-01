@@ -710,12 +710,22 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   static nsCString& BytecodeMimeTypeFor(
       JS::loader::LoadedScript* aLoadedScript);
 
+  // Decide whether to encode bytecode for given script load request,
+  // and store the script into the request if necessary.
+  //
+  // This method must be called before executing the script.
+  void MaybePrepareForCacheBeforeExecute(ScriptLoadRequest* aRequest,
+                                         JS::Handle<JSScript*> aScript);
+
   // Queue the script load request for caching if we decided to cache it, or
   // cleanup the script load request fields otherwise.
   //
   // This method must be called after executing the script.
   nsresult MaybePrepareForCacheAfterExecute(ScriptLoadRequest* aRequest,
                                             nsresult aRv);
+
+  void MaybePrepareModuleForCacheBeforeExecute(
+      JSContext* aCx, ModuleLoadRequest* aRequest) override;
 
   // Queue the top-level module load request for caching if we decided to cache
   // it, or cleanup the module load request fields otherwise.
@@ -760,6 +770,12 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    *   - encode and save it to the necko cache
    */
   void UpdateCache();
+
+  /**
+   * Finish collecting the delazifications and return the stencil.
+   */
+  void FinishCollectingDelazifications(JSContext* aCx,
+                                       ScriptLoadRequest* aRequest);
 
   /**
    * Encode the stencils and save the bytecode to the necko cache.
