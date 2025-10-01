@@ -2048,11 +2048,11 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
         endT = min(endT, middleT);
       }
     }
-
     // Ensure that we are advancing by at least one pixel at each iteration.
-    endT = max(endT, t + 1.0);
+    endT = max(ceil(endT), t + 1.0);
 
-    // Figure out how many chunks are actually inside the gradient stop pair.
+    // Figure out how many pixels belonging to whole chunks are inside the gradient
+    // stop pair.
     int inside = int(endT - t) & ~3;
     // Convert start and end colors to BGRA and scale to 0..255 range.
     auto minColorF = stopColors[stopIndex].zyxw * 255.0f;
@@ -2114,9 +2114,37 @@ static bool commitRadialGradientFromStops(sampler2D sampler, int offsetsAddress,
       buf += remainder;
       t += remainder;
 
-      float f = float(remainder) * 0.25;
-      dotPos += dotPosDelta * f;
-      dotPosDelta += deltaDelta2 * f;
+      // dotPosDelta's members are monotonically increasing, so adjusting the step only
+      // requires undoing the factor of 4 and multiplying with the actual number of
+      // remainder pixels.
+      float partialDeltaDelta2 = deltaDelta2 * 0.25 * float(remainder);
+      dotPosDelta += partialDeltaDelta2;
+
+      // For dotPos, however, there is a compounding effect that makes the math trickier.
+      // For simplicity's sake we are just computing the the parameters for a single-pixel
+      // step and applying it remainder times.
+
+      // The deltaDelta2 for a single-pixel step (undoing the 4*4 factor we did earlier
+      // when making deltaDelta2 work for 4-pixels chunks).
+      float singlePxDeltaDelta2 = deltaDelta2 * 0.0625;
+      // The first single-pixel delta for dotPos (The difference between dotPos's first
+      // two lanes).
+      float dotPosDeltaFirst = dotPos.y - dotPos.x;
+      // For each 1-pixel step the delta is applied and monotonically increased by
+      // singleDeltaDelta2.
+      // TODO: This should be be Float pxOffsets(0.0f, 1.0f, 2.0f, 3.0f); but it does
+      // not compile in some configurations for some reason.
+      Float pxOffsets = Float(0.0f);
+      pxOffsets.y = 1.0;
+      pxOffsets.z = 2.0;
+      pxOffsets.w = 3.0;
+      Float partialDotPosDelta = Float(dotPosDeltaFirst) + Float(singlePxDeltaDelta2) * pxOffsets;
+
+      // Apply each single-pixel step.
+      for (int i = 0; i < remainder; ++i) {
+          dotPos += partialDotPosDelta;
+          partialDotPosDelta += singlePxDeltaDelta2;
+      }
     }
   }
   return true;
