@@ -15,13 +15,14 @@
  * Terminate this process in such a way that breakpad is triggered, if
  * at all possible.
  *
- * Note: [[noreturn]] seems to break crash stacks on ARM, so we don't
+ * Note: MOZ_NORETURN seems to break crash stacks on ARM, so we don't
  * use that annotation there.
  */
-extern "C"
+extern "C" MFBT_API
 #if !defined(__arm__)
-    [[noreturn]]
+    MOZ_NORETURN
 #endif
-    MFBT_API void mozalloc_abort(const char* const msg);
+    void
+    mozalloc_abort(const char* const msg);
 
 #endif /* ifndef mozilla_mozalloc_abort_h */
