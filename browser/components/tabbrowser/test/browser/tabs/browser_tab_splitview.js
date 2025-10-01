@@ -141,3 +141,39 @@ add_task(async function test_split_view_panels() {
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
 });
+
+add_task(async function test_split_view_preserves_multiple_pairings() {
+  info("Create four tabs for two split view pairings.");
+  const tab1 = await addTabAndLoadBrowser();
+  const tab2 = await addTabAndLoadBrowser();
+  const tab3 = await addTabAndLoadBrowser();
+  const tab4 = await addTabAndLoadBrowser();
+
+  info("Create two split views (Tab 1 + Tab 2) & (Tab 3 + Tab 4).");
+  const splitView1 = gBrowser.addTabSplitView([tab1, tab2]);
+  const splitView2 = gBrowser.addTabSplitView([tab3, tab4]);
+
+  info("Switch to Tab 1 to activate the first split view.");
+  await BrowserTestUtils.switchTab(gBrowser, tab1);
+  await checkSplitViewPanelVisible(tab1, true);
+  await checkSplitViewPanelVisible(tab2, true);
+  await checkSplitViewPanelVisible(tab3, false);
+  await checkSplitViewPanelVisible(tab4, false);
+
+  info("Switch to Tab 3 to activate the second split view.");
+  await BrowserTestUtils.switchTab(gBrowser, tab3);
+  await checkSplitViewPanelVisible(tab1, false);
+  await checkSplitViewPanelVisible(tab2, false);
+  await checkSplitViewPanelVisible(tab3, true);
+  await checkSplitViewPanelVisible(tab4, true);
+
+  info("Switch back to the first split view.");
+  await BrowserTestUtils.switchTab(gBrowser, tab1);
+  await checkSplitViewPanelVisible(tab1, true);
+  await checkSplitViewPanelVisible(tab2, true);
+  await checkSplitViewPanelVisible(tab3, false);
+  await checkSplitViewPanelVisible(tab4, false);
+
+  splitView1.close();
+  splitView2.close();
+});
