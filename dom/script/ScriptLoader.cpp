@@ -3322,12 +3322,12 @@ nsCString& ScriptLoader::BytecodeMimeTypeFor(
 }
 
 void ScriptLoader::MaybePrepareForCacheBeforeExecute(
-    ScriptLoadRequest* aRequest, JS::Handle<JSScript*> aScript) {
+    ScriptLoadRequest* aRequest) {
   if (!aRequest->PassedConditionForEitherCache()) {
     return;
   }
 
-  aRequest->MarkScriptForCache(aScript);
+  aRequest->MarkForCache();
 }
 
 nsresult ScriptLoader::MaybePrepareForCacheAfterExecute(
@@ -3367,7 +3367,7 @@ void ScriptLoader::MaybePrepareModuleForCacheBeforeExecute(
   }
 
   if (aRequest->PassedConditionForEitherCache()) {
-    aRequest->MarkModuleForCache();
+    aRequest->MarkForCache();
   }
 
   for (auto* r = mCacheableDependencyModules.getFirst(); r; r = r->getNext()) {
@@ -3379,7 +3379,7 @@ void ScriptLoader::MaybePrepareModuleForCacheBeforeExecute(
     }
     MOZ_ASSERT(!dep->IsMarkedForEitherCache());
 
-    dep->MarkModuleForCache();
+    dep->MarkForCache();
   }
 }
 
@@ -3498,7 +3498,7 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
                                   classicScriptValue, introductionScript, erv);
 
   if (!erv.Failed()) {
-    MaybePrepareForCacheBeforeExecute(aRequest, script);
+    MaybePrepareForCacheBeforeExecute(aRequest);
 
     {
       LOG(("ScriptLoadRequest (%p): Evaluate Script", aRequest));

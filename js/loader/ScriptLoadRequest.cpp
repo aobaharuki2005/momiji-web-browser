@@ -230,11 +230,6 @@ void ScriptLoadRequest::SetPendingFetchingError() {
   mState = State::PendingFetchingError;
 }
 
-void ScriptLoadRequest::MarkScriptForCache(JSScript* aScript) {
-  MOZ_ASSERT(!IsModuleRequest());
-  MarkForCache();
-}
-
 static bool IsInternalURIScheme(nsIURI* uri) {
   return uri->SchemeIs("moz-extension") || uri->SchemeIs("resource") ||
          uri->SchemeIs("moz-src") || uri->SchemeIs("chrome");
