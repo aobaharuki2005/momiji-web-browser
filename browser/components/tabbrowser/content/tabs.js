@@ -902,6 +902,12 @@
             tab.elementIndex = elementIndex++;
           });
           focusableItems.push(...visibleTabsInGroup);
+        } else if (child.tagName == "tab-split-view-wrapper") {
+          let visibleTabsInSplitView = child.tabs.filter(tab => tab.visible);
+          visibleTabsInSplitView.forEach(tab => {
+            tab.elementIndex = elementIndex++;
+          });
+          focusableItems.push(...visibleTabsInSplitView);
         }
       }
 

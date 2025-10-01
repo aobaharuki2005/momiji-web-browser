@@ -41,8 +41,6 @@
     }
 
     connectedCallback() {
-      this.#observeTabChanges();
-
       // Set up TabSelect listener, as this gets
       // removed in disconnectedCallback
       this.ownerGlobal.addEventListener("TabSelect", this);
@@ -58,9 +56,11 @@
 
       this.#containerElement = this.querySelector(".tab-split-view-container");
 
+      this.#observeTabChanges();
+
       // Mirroring MozTabbrowserTab
       this.#containerElement.container = gBrowser.tabContainer;
-      this.wrapper = this.#containerElement;
+      this.container = this.#containerElement;
     }
 
     disconnectedCallback() {
@@ -73,12 +73,25 @@
       if (!this.#tabChangeObserver) {
         this.#tabChangeObserver = new window.MutationObserver(() => {
           if (this.tabs.length) {
-            let hasActiveTab = this.tabs.some(tab => tab.selected);
-            this.hasActiveTab = hasActiveTab;
+            this.hasActiveTab = this.tabs.some(tab => tab.selected);
+            this.tabs.forEach((tab, index) => {
+              // Renumber tabs so that a11y tools can tell users that a given
+              // tab is "1 of 2" in the split view, for example.
+              tab.setAttribute("aria-posinset", index + 1);
+              tab.setAttribute("aria-setsize", this.tabs.length);
+            });
+          } else {
+            this.remove();
+          }
+
+          if (this.tabs.length < 2) {
+            this.unsplitTabs();
           }
         });
       }
-      this.#tabChangeObserver.observe(this, { childList: true });
+      this.#tabChangeObserver.observe(this.#containerElement, {
+        childList: true,
+      });
     }
 
     get splitViewId() {
@@ -163,7 +176,7 @@
      * Close all tabs in the split view wrapper and delete the split view.
      */
     close() {
-      gBrowser.removeSplitView(this);
+      gBrowser.removeTabs(this.#tabs);
     }
 
     /**
