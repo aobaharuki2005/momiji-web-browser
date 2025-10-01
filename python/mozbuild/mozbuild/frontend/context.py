@@ -563,6 +563,11 @@ class CompileFlags(TargetCompileFlags):
         self.flag_variables = (
             ("STL", context.config.substs.get("STL_FLAGS"), ("CXXFLAGS",)),
             (
+                "STL_HARDENING",
+                context.config.substs.get("STL_HARDENING_FLAGS"),
+                ("CXXFLAGS",),
+            ),
+            (
                 "VISIBILITY",
                 context.config.substs.get("VISIBILITY_FLAGS"),
                 ("CXXFLAGS", "CFLAGS"),
