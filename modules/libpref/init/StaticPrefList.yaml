@@ -10102,13 +10102,6 @@
   mirror: always
   rust: true
 
-# Perform intrinsic sizing of flexible grid tracks based on grid items that
-# span more than one track.
-- name: layout.css.grid-flex-spanning-items-intrinsic-sizing.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Enable the new multi-pass grid track sizing algorithm.
 # This features implements two aspects from the CSS Grid Level 2 spec:
 # 1. Percent-valued row track size re-resolution:
