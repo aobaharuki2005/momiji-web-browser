@@ -4804,7 +4804,7 @@
 # Enable Storage-Access-Headers
 - name: dom.storage_access.headers.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Forward-Declared Storage-access API.
