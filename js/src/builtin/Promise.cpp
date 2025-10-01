@@ -685,92 +685,6 @@ static bool AbruptRejectPromise(JSContext* cx, CallArgs& args,
                              capability.reject());
 }
 
-enum ReactionRecordSlots {
-  // This is the promise-like object that gets resolved with the result of this
-  // reaction, if any. If this reaction record was created with .then or .catch,
-  // this is the promise that .then or .catch returned.
-  //
-  // The spec says that a PromiseReaction record has a [[Capability]] field
-  // whose value is either undefined or a PromiseCapability record, but we just
-  // store the PromiseCapability's fields directly in this object. This is the
-  // capability's [[Promise]] field; its [[Resolve]] and [[Reject]] fields are
-  // stored in ReactionRecordSlot_Resolve and ReactionRecordSlot_Reject.
-  //
-  // This can be 'null' in reaction records created for a few situations:
-  //
-  // - When you resolve one promise to another. When you pass a promise P1 to
-  //   the 'fulfill' function of a promise P2, so that resolving P1 resolves P2
-  //   in the same way, P1 gets a reaction record with the
-  //   REACTION_FLAG_DEFAULT_RESOLVING_HANDLER flag set and whose
-  //   ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
-  //   slot holds P2.
-  //
-  // - When you await a promise. When an async function or generator awaits a
-  //   value V, then the await expression generates an internal promise P,
-  //   resolves it to V, and then gives P a reaction record with the
-  //   REACTION_FLAG_ASYNC_FUNCTION or REACTION_FLAG_ASYNC_GENERATOR flag set
-  //   and whose
-  //   ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
-  //   slot holds the generator object. (Typically V is a promise, so resolving
-  //   P to V gives V a REACTION_FLAGS_DEFAULT_RESOLVING_HANDLER reaction record
-  //   as described above.)
-  //
-  // - When JS::AddPromiseReactions{,IgnoringUnhandledRejection} cause the
-  //   reaction to be created.  (These functions act as if they had created a
-  //   promise to invoke the appropriate provided reaction function, without
-  //   actually allocating a promise for them.)
-  ReactionRecordSlot_Promise = 0,
-
-  // The [[Handler]] field(s) of a PromiseReaction record. We create a
-  // single reaction record for fulfillment and rejection, therefore our
-  // PromiseReaction implementation needs two [[Handler]] fields.
-  //
-  // The slot value is either a callable object, an integer constant from
-  // the |PromiseHandler| enum, or null. If the value is null, either the
-  // REACTION_FLAG_DEBUGGER_DUMMY or the
-  // REACTION_FLAG_DEFAULT_RESOLVING_HANDLER flag must be set.
-  //
-  // After setting the target state for a PromiseReaction, the slot of the
-  // no longer used handler gets reused to store the argument of the active
-  // handler.
-  ReactionRecordSlot_OnFulfilled,
-  ReactionRecordSlot_OnRejectedArg = ReactionRecordSlot_OnFulfilled,
-  ReactionRecordSlot_OnRejected,
-  ReactionRecordSlot_OnFulfilledArg = ReactionRecordSlot_OnRejected,
-
-  // The functions to resolve or reject the promise. Matches the
-  // [[Capability]].[[Resolve]] and [[Capability]].[[Reject]] fields from
-  // the spec.
-  //
-  // The slot values are either callable objects or null, but the latter
-  // case is only allowed if the promise is either a built-in Promise object
-  // or null.
-  ReactionRecordSlot_Resolve,
-  ReactionRecordSlot_Reject,
-
-  // The host defined data for this reaction record. Can be null.
-  // See step 5 in https://html.spec.whatwg.org/#hostmakejobcallback
-  ReactionRecordSlot_HostDefinedData,
-
-  // Bitmask of the REACTION_FLAG values.
-  ReactionRecordSlot_Flags,
-
-  // Additional slot to store extra data for specific reaction record types.
-  //
-  // - When the REACTION_FLAG_ASYNC_FUNCTION flag is set, this slot stores
-  //   the (internal) generator object for this promise reaction.
-  // - When the REACTION_FLAG_ASYNC_GENERATOR flag is set, this slot stores
-  //   the async generator object for this promise reaction.
-  // - When the REACTION_FLAG_DEFAULT_RESOLVING_HANDLER flag is set, this
-  //   slot stores the promise to resolve when conceptually "calling" the
-  //   OnFulfilled or OnRejected handlers.
-  // - When the REACTION_FLAG_ASYNC_FROM_SYNC_ITERATOR is set, this slot stores
-  //   the async-from-sync iterator object.
-  ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
-
-  ReactionRecordSlots,
-};
-
 /**
  * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
  *
@@ -793,17 +707,17 @@ class PromiseReactionRecord : public NativeObject {
 
   // If this flag is set, this reaction record is created for resolving
   // one promise P1 to another promise P2, and
-  // ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator slot
+  // Slot::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator slot
   // holds P2.
   static constexpr uint32_t REACTION_FLAG_DEFAULT_RESOLVING_HANDLER = 0x4;
 
   // If this flag is set, this reaction record is created for async function
-  // and ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
+  // and Slot::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
   // slot holds internal generator object of the async function.
   static constexpr uint32_t REACTION_FLAG_ASYNC_FUNCTION = 0x8;
 
   // If this flag is set, this reaction record is created for async generator
-  // and ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
+  // and Slot::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
   // slot holds the async generator object of the async generator.
   static constexpr uint32_t REACTION_FLAG_ASYNC_GENERATOR = 0x10;
 
@@ -821,10 +735,100 @@ class PromiseReactionRecord : public NativeObject {
 
   // If this flag is set, this reaction record is created for async-from-sync
   // iterators and
-  // ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator slot
+  // Slot::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator slot
   // holds the async-from-sync iterator object.
   static constexpr uint32_t REACTION_FLAG_ASYNC_FROM_SYNC_ITERATOR = 0x80;
 
+ public:
+  enum Slots {
+    // This is the promise-like object that gets resolved with the result of
+    // this reaction, if any. If this reaction record was created with .then or
+    // .catch, this is the promise that .then or .catch returned.
+    //
+    // The spec says that a PromiseReaction record has a [[Capability]] field
+    // whose value is either undefined or a PromiseCapability record, but we
+    // just store the PromiseCapability's fields directly in this object. This
+    // is the
+    // capability's [[Promise]] field; its [[Resolve]] and [[Reject]] fields are
+    // stored in Slot::Resolve and Slot::Reject.
+    //
+    // This can be 'null' in reaction records created for a few situations:
+    //
+    // - When you resolve one promise to another. When you pass a promise P1 to
+    //   the 'fulfill' function of a promise P2, so that resolving P1 resolves
+    //   P2 in the same way, P1 gets a reaction record with the
+    //   REACTION_FLAG_DEFAULT_RESOLVING_HANDLER flag set and whose
+    //   Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
+    //   slot holds P2.
+    //
+    // - When you await a promise. When an async function or generator awaits a
+    //   value V, then the await expression generates an internal promise P,
+    //   resolves it to V, and then gives P a reaction record with the
+    //   REACTION_FLAG_ASYNC_FUNCTION or REACTION_FLAG_ASYNC_GENERATOR flag set
+    //   and whose Slot::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator
+    //   slot holds the generator object. (Typically V is a promise, so
+    //   resolving P to V gives V a REACTION_FLAGS_DEFAULT_RESOLVING_HANDLER
+    //   reaction
+    //   record as described above.)
+    //
+    // - When JS::AddPromiseReactions{,IgnoringUnhandledRejection} cause the
+    //   reaction to be created. (These functions act as if they had created a
+    //   promise to invoke the appropriate provided reaction function, without
+    //   actually allocating a promise for them.)
+    Promise = 0,
+
+    // The [[Handler]] field(s) of a PromiseReaction record. We create a
+    // single reaction record for fulfillment and rejection, therefore our
+    // PromiseReaction implementation needs two [[Handler]] fields.
+    //
+    // The slot value is either a callable object, an integer constant from
+    // the |PromiseHandler| enum, or null. If the value is null, either the
+    // REACTION_FLAG_DEBUGGER_DUMMY or the
+    // REACTION_FLAG_DEFAULT_RESOLVING_HANDLER flag must be set.
+    //
+    // After setting the target state for a PromiseReaction, the slot of the
+    // no longer used handler gets reused to store the argument of the active
+    // handler.
+    OnFulfilled,
+    OnRejectedArg = OnFulfilled,
+    OnRejected,
+    OnFulfilledArg = OnRejected,
+
+    // The functions to resolve or reject the promise. Matches the
+    // [[Capability]].[[Resolve]] and [[Capability]].[[Reject]] fields from
+    // the spec.
+    //
+    // The slot values are either callable objects or null, but the latter
+    // case is only allowed if the promise is either a built-in Promise object
+    // or null.
+    Resolve,
+    Reject,
+
+    // The host defined data for this reaction record. Can be null.
+    // See step 5 in https://html.spec.whatwg.org/#hostmakejobcallback
+    HostDefinedData,
+
+    // Bitmask of the REACTION_FLAG values.
+    Flags,
+
+    // Additional slot to store extra data for specific reaction record types.
+    //
+    // - When the REACTION_FLAG_ASYNC_FUNCTION flag is set, this slot stores
+    //   the (internal) generator object for this promise reaction.
+    // - When the REACTION_FLAG_ASYNC_GENERATOR flag is set, this slot stores
+    //   the async generator object for this promise reaction.
+    // - When the REACTION_FLAG_DEFAULT_RESOLVING_HANDLER flag is set, this
+    //   slot stores the promise to resolve when conceptually "calling" the
+    //   OnFulfilled or OnRejected handlers.
+    // - When the REACTION_FLAG_ASYNC_FROM_SYNC_ITERATOR is set, this slot
+    // stores
+    //   the async-from-sync iterator object.
+    GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
+
+    SlotCount,
+  };
+
+ private:
   template <typename KnownF, typename UnknownF>
   static void forEachReactionFlag(uint32_t flags, KnownF known,
                                   UnknownF unknown);
@@ -833,33 +837,29 @@ class PromiseReactionRecord : public NativeObject {
     int32_t flags = this->flags();
     MOZ_ASSERT(flags == 0, "Can't modify with non-default flags");
     flags |= flag;
-    setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
+    setFixedSlot(Slots::Flags, Int32Value(flags));
   }
 
   uint32_t handlerSlot() {
     MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
-    return targetState() == JS::PromiseState::Fulfilled
-               ? ReactionRecordSlot_OnFulfilled
-               : ReactionRecordSlot_OnRejected;
+    return targetState() == JS::PromiseState::Fulfilled ? Slots::OnFulfilled
+                                                        : Slots::OnRejected;
   }
 
   uint32_t handlerArgSlot() {
     MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
-    return targetState() == JS::PromiseState::Fulfilled
-               ? ReactionRecordSlot_OnFulfilledArg
-               : ReactionRecordSlot_OnRejectedArg;
+    return targetState() == JS::PromiseState::Fulfilled ? Slots::OnFulfilledArg
+                                                        : Slots::OnRejectedArg;
   }
 
  public:
   static const JSClass class_;
 
   JSObject* promise() const {
-    return getFixedSlot(ReactionRecordSlot_Promise).toObjectOrNull();
+    return getFixedSlot(Slots::Promise).toObjectOrNull();
   }
 
-  int32_t flags() const {
-    return getFixedSlot(ReactionRecordSlot_Flags).toInt32();
-  }
+  int32_t flags() const { return getFixedSlot(Slots::Flags).toInt32(); }
 
   JS::PromiseState targetState() const {
     int32_t flags = this->flags();
@@ -880,7 +880,7 @@ class PromiseReactionRecord : public NativeObject {
       flags |= REACTION_FLAG_FULFILLED;
     }
 
-    setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
+    setFixedSlot(Slots::Flags, Int32Value(flags));
     setFixedSlot(handlerArgSlot(), arg);
   }
 
@@ -896,9 +896,8 @@ class PromiseReactionRecord : public NativeObject {
 
   void setIsDefaultResolvingHandler(PromiseObject* promiseToResolve) {
     setFlagOnInitialState(REACTION_FLAG_DEFAULT_RESOLVING_HANDLER);
-    setFixedSlot(
-        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
-        ObjectValue(*promiseToResolve));
+    setFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
+                 ObjectValue(*promiseToResolve));
   }
   bool isDefaultResolvingHandler() const {
     int32_t flags = this->flags();
@@ -906,16 +905,15 @@ class PromiseReactionRecord : public NativeObject {
   }
   PromiseObject* defaultResolvingPromise() {
     MOZ_ASSERT(isDefaultResolvingHandler());
-    const Value& promiseToResolve = getFixedSlot(
-        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
+    const Value& promiseToResolve =
+        getFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
     return &promiseToResolve.toObject().as<PromiseObject>();
   }
 
   void setIsAsyncFunction(AsyncFunctionGeneratorObject* genObj) {
     setFlagOnInitialState(REACTION_FLAG_ASYNC_FUNCTION);
-    setFixedSlot(
-        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
-        ObjectValue(*genObj));
+    setFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
+                 ObjectValue(*genObj));
   }
   bool isAsyncFunction() const {
     int32_t flags = this->flags();
@@ -923,16 +921,15 @@ class PromiseReactionRecord : public NativeObject {
   }
   AsyncFunctionGeneratorObject* asyncFunctionGenerator() {
     MOZ_ASSERT(isAsyncFunction());
-    const Value& generator = getFixedSlot(
-        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
+    const Value& generator =
+        getFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
     return &generator.toObject().as<AsyncFunctionGeneratorObject>();
   }
 
   void setIsAsyncGenerator(AsyncGeneratorObject* generator) {
     setFlagOnInitialState(REACTION_FLAG_ASYNC_GENERATOR);
-    setFixedSlot(
-        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
-        ObjectValue(*generator));
+    setFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
+                 ObjectValue(*generator));
   }
   bool isAsyncGenerator() const {
     int32_t flags = this->flags();
@@ -940,16 +937,15 @@ class PromiseReactionRecord : public NativeObject {
   }
   AsyncGeneratorObject* asyncGenerator() {
     MOZ_ASSERT(isAsyncGenerator());
-    const Value& generator = getFixedSlot(
-        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
+    const Value& generator =
+        getFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
     return &generator.toObject().as<AsyncGeneratorObject>();
   }
 
   void setIsAsyncFromSyncIterator(AsyncFromSyncIteratorObject* iterator) {
     setFlagOnInitialState(REACTION_FLAG_ASYNC_FROM_SYNC_ITERATOR);
-    setFixedSlot(
-        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
-        ObjectValue(*iterator));
+    setFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator,
+                 ObjectValue(*iterator));
   }
   bool isAsyncFromSyncIterator() const {
     int32_t flags = this->flags();
@@ -957,8 +953,8 @@ class PromiseReactionRecord : public NativeObject {
   }
   AsyncFromSyncIteratorObject* asyncFromSyncIterator() {
     MOZ_ASSERT(isAsyncFromSyncIterator());
-    const Value& iterator = getFixedSlot(
-        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
+    const Value& iterator =
+        getFixedSlot(Slots::GeneratorOrPromiseToResolveOrAsyncFromSyncIterator);
     return &iterator.toObject().as<AsyncFromSyncIteratorObject>();
   }
 
@@ -980,9 +976,8 @@ class PromiseReactionRecord : public NativeObject {
   }
 
   JSObject* getAndClearHostDefinedData() {
-    JSObject* obj =
-        getFixedSlot(ReactionRecordSlot_HostDefinedData).toObjectOrNull();
-    setFixedSlot(ReactionRecordSlot_HostDefinedData, UndefinedValue());
+    JSObject* obj = getFixedSlot(Slots::HostDefinedData).toObjectOrNull();
+    setFixedSlot(Slots::HostDefinedData, UndefinedValue());
     return obj;
   }
 
@@ -993,7 +988,7 @@ class PromiseReactionRecord : public NativeObject {
 
 const JSClass PromiseReactionRecord::class_ = {
     "PromiseReactionRecord",
-    JSCLASS_HAS_RESERVED_SLOTS(ReactionRecordSlots),
+    JSCLASS_HAS_RESERVED_SLOTS(Slots::SlotCount),
 };
 
 static void AddPromiseFlags(PromiseObject& promise, int32_t flag) {
@@ -2243,12 +2238,13 @@ static bool ForEachReaction(JSContext* cx, HandleValue reactionsVal, F f) {
   RootedObject callee(cx);
   if (resolutionMode == ResolveMode) {
     callee =
-        reaction->getFixedSlot(ReactionRecordSlot_Resolve).toObjectOrNull();
+        reaction->getFixedSlot(PromiseReactionRecord::Resolve).toObjectOrNull();
 
     return CallPromiseResolveFunction(cx, callee, handlerResult, promiseObj);
   }
 
-  callee = reaction->getFixedSlot(ReactionRecordSlot_Reject).toObjectOrNull();
+  callee =
+      reaction->getFixedSlot(PromiseReactionRecord::Reject).toObjectOrNull();
 
   return CallPromiseRejectFunction(cx, callee, handlerResult, promiseObj,
                                    unwrappedRejectionStack,
@@ -2451,12 +2447,13 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp) {
   RootedObject callee(cx);
   if (resolutionMode == ResolveMode) {
     callee =
-        reaction->getFixedSlot(ReactionRecordSlot_Resolve).toObjectOrNull();
+        reaction->getFixedSlot(PromiseReactionRecord::Resolve).toObjectOrNull();
 
     return CallPromiseResolveFunction(cx, callee, handlerResult, promiseObj);
   }
 
-  callee = reaction->getFixedSlot(ReactionRecordSlot_Reject).toObjectOrNull();
+  callee =
+      reaction->getFixedSlot(PromiseReactionRecord::Reject).toObjectOrNull();
 
   return CallPromiseRejectFunction(cx, callee, handlerResult, promiseObj,
                                    unwrappedRejectionStack,
@@ -5374,18 +5371,18 @@ static PromiseReactionRecord* NewReactionRecord(
 
   // See comments for ReactionRecordSlots for the relation between
   // spec record fields and PromiseReactionRecord slots.
-  reaction->setFixedSlot(ReactionRecordSlot_Promise,
+  reaction->setFixedSlot(PromiseReactionRecord::Promise,
                          ObjectOrNullValue(resultCapability.promise()));
   // We set [[Type]] in EnqueuePromiseReactionJob, by calling
   // setTargetStateAndHandlerArg.
-  reaction->setFixedSlot(ReactionRecordSlot_Flags, Int32Value(0));
-  reaction->setFixedSlot(ReactionRecordSlot_OnFulfilled, onFulfilled);
-  reaction->setFixedSlot(ReactionRecordSlot_OnRejected, onRejected);
-  reaction->setFixedSlot(ReactionRecordSlot_Resolve,
+  reaction->setFixedSlot(PromiseReactionRecord::Flags, Int32Value(0));
+  reaction->setFixedSlot(PromiseReactionRecord::OnFulfilled, onFulfilled);
+  reaction->setFixedSlot(PromiseReactionRecord::OnRejected, onRejected);
+  reaction->setFixedSlot(PromiseReactionRecord::Resolve,
                          ObjectOrNullValue(resultCapability.resolve()));
-  reaction->setFixedSlot(ReactionRecordSlot_Reject,
+  reaction->setFixedSlot(PromiseReactionRecord::Reject,
                          ObjectOrNullValue(resultCapability.reject()));
-  reaction->setFixedSlot(ReactionRecordSlot_HostDefinedData,
+  reaction->setFixedSlot(PromiseReactionRecord::HostDefinedData,
                          ObjectOrNullValue(hostDefinedData));
 
   return reaction;
@@ -6748,12 +6745,12 @@ bool PromiseObject::forEachReactionRecord(
       RootedObject reject(cx);
       RootedObject result(cx, reaction->promise());
 
-      Value v = reaction->getFixedSlot(ReactionRecordSlot_OnFulfilled);
+      Value v = reaction->getFixedSlot(PromiseReactionRecord::OnFulfilled);
       if (v.isObject()) {
         resolve = &v.toObject();
       }
 
-      v = reaction->getFixedSlot(ReactionRecordSlot_OnRejected);
+      v = reaction->getFixedSlot(PromiseReactionRecord::OnRejected);
       if (v.isObject()) {
         reject = &v.toObject();
       }
@@ -6991,12 +6988,12 @@ void PromiseReactionRecord::dumpOwnFields(js::JSONPrinter& json) const {
   if (targetState() == JS::PromiseState::Fulfilled) {
     {
       js::GenericPrinter& out = json.beginStringProperty("onFulfilled");
-      getFixedSlot(ReactionRecordSlot_OnFulfilled).dumpStringContent(out);
+      getFixedSlot(OnFulfilled).dumpStringContent(out);
       json.endStringProperty();
     }
     {
       js::GenericPrinter& out = json.beginStringProperty("onFulfilledArg");
-      getFixedSlot(ReactionRecordSlot_OnFulfilledArg).dumpStringContent(out);
+      getFixedSlot(OnFulfilledArg).dumpStringContent(out);
       json.endStringProperty();
     }
   }
@@ -7004,31 +7001,31 @@ void PromiseReactionRecord::dumpOwnFields(js::JSONPrinter& json) const {
   if (targetState() == JS::PromiseState::Rejected) {
     {
       js::GenericPrinter& out = json.beginStringProperty("onRejected");
-      getFixedSlot(ReactionRecordSlot_OnRejected).dumpStringContent(out);
+      getFixedSlot(OnRejected).dumpStringContent(out);
       json.endStringProperty();
     }
     {
       js::GenericPrinter& out = json.beginStringProperty("onRejectedArg");
-      getFixedSlot(ReactionRecordSlot_OnRejectedArg).dumpStringContent(out);
+      getFixedSlot(OnRejectedArg).dumpStringContent(out);
       json.endStringProperty();
     }
   }
 
-  if (!getFixedSlot(ReactionRecordSlot_Resolve).isNull()) {
+  if (!getFixedSlot(Resolve).isNull()) {
     js::GenericPrinter& out = json.beginStringProperty("resolve");
-    getFixedSlot(ReactionRecordSlot_Resolve).dumpStringContent(out);
+    getFixedSlot(Resolve).dumpStringContent(out);
     json.endStringProperty();
   }
 
-  if (!getFixedSlot(ReactionRecordSlot_Reject).isNull()) {
+  if (!getFixedSlot(Reject).isNull()) {
     js::GenericPrinter& out = json.beginStringProperty("reject");
-    getFixedSlot(ReactionRecordSlot_Reject).dumpStringContent(out);
+    getFixedSlot(Reject).dumpStringContent(out);
     json.endStringProperty();
   }
 
   {
     js::GenericPrinter& out = json.beginStringProperty("hostDefinedData");
-    getFixedSlot(ReactionRecordSlot_HostDefinedData).dumpStringContent(out);
+    getFixedSlot(HostDefinedData).dumpStringContent(out);
     json.endStringProperty();
   }
 
@@ -7040,24 +7037,21 @@ void PromiseReactionRecord::dumpOwnFields(js::JSONPrinter& json) const {
 
   if (isDefaultResolvingHandler()) {
     js::GenericPrinter& out = json.beginStringProperty("promiseToResolve");
-    getFixedSlot(
-        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator)
+    getFixedSlot(GeneratorOrPromiseToResolveOrAsyncFromSyncIterator)
         .dumpStringContent(out);
     json.endStringProperty();
   }
 
   if (isAsyncFunction()) {
     js::GenericPrinter& out = json.beginStringProperty("generator");
-    getFixedSlot(
-        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator)
+    getFixedSlot(GeneratorOrPromiseToResolveOrAsyncFromSyncIterator)
         .dumpStringContent(out);
     json.endStringProperty();
   }
 
   if (isAsyncGenerator()) {
     js::GenericPrinter& out = json.beginStringProperty("generator");
-    getFixedSlot(
-        ReactionRecordSlot_GeneratorOrPromiseToResolveOrAsyncFromSyncIterator)
+    getFixedSlot(GeneratorOrPromiseToResolveOrAsyncFromSyncIterator)
         .dumpStringContent(out);
     json.endStringProperty();
   }
