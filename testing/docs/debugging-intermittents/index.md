@@ -69,7 +69,7 @@ This will automatically upload profiles of failing tests.
 :::{hint}
 If you want to see a profile of a test that doesn’t fail (eg. to compare it with
 the profile of a failing run), an easy way to make it happen is to add a failure
-near the end of the test, eg. `ok(false, “force profile upload”);`.
+near the end of the test, eg. `ok(false, "force profile upload");`.
 :::
 
 Some test types do not support running the profiler with a parameter (such as

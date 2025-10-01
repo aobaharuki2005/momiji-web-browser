@@ -94,7 +94,7 @@ It's possible to get a profile also on try with `--env MOZ_PROFILER_STARTUP=1`:
 ```
 
 The profile will be uploaded in case of a failure only, so make sure to add
-something such as `ok(false, “force profile upload”);` in your test to force the
+something such as `ok(false, "force profile upload");` in your test to force the
 failure.
 
 
