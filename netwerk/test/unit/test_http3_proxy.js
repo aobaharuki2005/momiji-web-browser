@@ -38,6 +38,7 @@ function channelOpenPromise(chan, flags) {
 let pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
 let proxyHost;
 let proxyPort;
+let noResponsePort;
 let proxyAuth;
 let proxyFilter;
 
@@ -57,7 +58,8 @@ add_setup(async function setup() {
   addCertFromFile(certdb, "proxy-ca.pem", "CTu,u,u");
 
   proxyHost = "foo.example.com";
-  proxyPort = await create_masque_proxy_server();
+  ({ masqueProxyPort: proxyPort, noResponsePort } =
+    await create_masque_proxy_server());
   proxyAuth = "";
 
   Assert.notEqual(proxyPort, null);
@@ -344,7 +346,7 @@ add_task(async function test_http_connect_fallback() {
     ""
   );
 
-  let proxyPort = Services.env.get("MOZHTTP3_PORT_NO_RESPONSE");
+  let proxyPort = noResponsePort;
   let proxy = new NodeHTTP2ProxyServer();
   await proxy.startWithoutProxyFilter(proxyPort);
   Assert.equal(proxyPort, proxy.port());
@@ -422,7 +424,7 @@ add_task(async function test_http_connect_fallback() {
 
 add_task(async function test_inner_connection_fallback() {
   let h3Port = Services.env.get("MOZHTTP3_PORT_NO_RESPONSE");
-  console.log(`h3Port = ${h3Port}`);
+  info(`h3Port = ${h3Port}`);
 
   // Register the connect-udp proxy.
   pps.registerFilter(proxyFilter, 10);

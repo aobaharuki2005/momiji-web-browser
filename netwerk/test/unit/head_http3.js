@@ -24,7 +24,10 @@ async function create_h3_server() {
 }
 
 async function create_masque_proxy_server() {
-  return with_http3_server(server => server.masque_proxy_port());
+  return with_http3_server(server => ({
+    masqueProxyPort: server.masque_proxy_port(),
+    noResponsePort: server.no_response_port(),
+  }));
 }
 
 async function http3_setup_tests(http3version, reload) {
