@@ -46,6 +46,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteractio
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarMenu
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuDivider
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
@@ -607,7 +608,18 @@ class BrowserToolbarSearchMiddleware(
                         onClick = null,
                     ),
                 )
-                addAll(searchEngineShortcuts.toToolbarMenuItems(resources))
+                val searchEngines = searchEngineShortcuts.filter { it.type != APPLICATION }
+                if (searchEngines.isNotEmpty()) {
+                    addAll(searchEngines.toToolbarMenuItems(resources))
+                    add(BrowserToolbarMenuDivider)
+                }
+
+                val applicationSearchEngines = searchEngineShortcuts.filter { it.type == APPLICATION }
+                if (applicationSearchEngines.isNotEmpty()) {
+                    addAll(applicationSearchEngines.toToolbarMenuItems(resources))
+                    add(BrowserToolbarMenuDivider)
+                }
+
                 add(
                     BrowserToolbarMenuButton(
                         icon = MenuItemIconRes(iconsR.drawable.mozac_ic_settings_24),
