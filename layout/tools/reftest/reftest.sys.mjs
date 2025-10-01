@@ -1763,6 +1763,9 @@ function ResetRenderingState() {
 }
 
 async function RestoreChangedPreferences() {
+  // Restore any preferences set via SpecialPowers in a previous test.
+  await g.containingWindow.SpecialPowers.flushPrefEnv();
+
   if (!g.prefsToRestore.length) {
     return;
   }
