@@ -293,6 +293,7 @@ for (const type of [
   "WEATHER_LOCATION_SEARCH_UPDATE",
   "WEATHER_LOCATION_SUGGESTIONS_UPDATE",
   "WEATHER_OPEN_PROVIDER_URL",
+  "WEATHER_OPT_IN_PROMPT_SELECTION",
   "WEATHER_QUERY_UPDATE",
   "WEATHER_SEARCH_ACTIVE",
   "WEATHER_UPDATE",
@@ -11814,8 +11815,14 @@ class _Weather extends (external_React_default()).PureComponent {
     }));
   }
   handleRejectOptIn = () => {
-    this.props.dispatch(actionCreators.SetPref("weather.optInAccepted", false));
-    this.props.dispatch(actionCreators.SetPref("weather.optInDisplayed", false));
+    (0,external_ReactRedux_namespaceObject.batch)(() => {
+      this.props.dispatch(actionCreators.SetPref("weather.optInAccepted", false));
+      this.props.dispatch(actionCreators.SetPref("weather.optInDisplayed", false));
+      this.props.dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WEATHER_OPT_IN_PROMPT_SELECTION,
+        data: "rejected opt-in"
+      }));
+    });
   };
   handleAcceptOptIn = () => {
     (0,external_ReactRedux_namespaceObject.batch)(() => {
@@ -11823,6 +11830,10 @@ class _Weather extends (external_React_default()).PureComponent {
       this.props.dispatch(actionCreators.SetPref("weather.optInDisplayed", false));
       this.props.dispatch(actionCreators.AlsoToMain({
         type: actionTypes.WEATHER_USER_OPT_IN_LOCATION
+      }));
+      this.props.dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WEATHER_OPT_IN_PROMPT_SELECTION,
+        data: "accepted opt-in"
       }));
     });
   };

@@ -212,17 +212,34 @@ export class _Weather extends React.PureComponent {
   }
 
   handleRejectOptIn = () => {
-    this.props.dispatch(ac.SetPref("weather.optInAccepted", false));
-    this.props.dispatch(ac.SetPref("weather.optInDisplayed", false));
+    batch(() => {
+      this.props.dispatch(ac.SetPref("weather.optInAccepted", false));
+      this.props.dispatch(ac.SetPref("weather.optInDisplayed", false));
+
+      this.props.dispatch(
+        ac.AlsoToMain({
+          type: at.WEATHER_OPT_IN_PROMPT_SELECTION,
+          data: "rejected opt-in",
+        })
+      );
+    });
   };
 
   handleAcceptOptIn = () => {
     batch(() => {
       this.props.dispatch(ac.SetPref("weather.optInAccepted", true));
       this.props.dispatch(ac.SetPref("weather.optInDisplayed", false));
+
       this.props.dispatch(
         ac.AlsoToMain({
           type: at.WEATHER_USER_OPT_IN_LOCATION,
+        })
+      );
+
+      this.props.dispatch(
+        ac.AlsoToMain({
+          type: at.WEATHER_OPT_IN_PROMPT_SELECTION,
+          data: "accepted opt-in",
         })
       );
     });

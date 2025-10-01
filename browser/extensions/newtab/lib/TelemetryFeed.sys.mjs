@@ -1272,6 +1272,7 @@ export class TelemetryFeed {
       case at.WEATHER_LOAD_ERROR:
       case at.WEATHER_OPEN_PROVIDER_URL:
       case at.WEATHER_LOCATION_DATA_UPDATE:
+      case at.WEATHER_OPT_IN_PROMPT_SELECTION:
         this.handleWeatherUserEvent(action);
         break;
       case at.TOPIC_SELECTION_USER_OPEN:
@@ -1724,6 +1725,12 @@ export class TelemetryFeed {
       case "WEATHER_LOCATION_DATA_UPDATE":
         Glean.newtab.weatherLocationSelected.record({
           newtab_visit_id: session.session_id,
+        });
+        break;
+      case "WEATHER_OPT_IN_PROMPT_SELECTION":
+        Glean.newtab.weatherOptInSelection.record({
+          newtab_visit_id: session.session_id,
+          user_selection: action.data,
         });
         break;
       default:

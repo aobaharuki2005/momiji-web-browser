@@ -534,6 +534,28 @@ newtab:
       send_in_pings:
         - newtab
 
+  weather_opt_in_selection:
+      type: event
+      description: >
+        Recorded when a user answers the location opt-in prompt
+      bugs:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1989875
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1989875
+      data_sensitivity:
+        - interaction
+      notification_emails:
+        - rhamoui@mozilla.com
+      expires: never
+      extra_keys:
+        user_selection:
+          description: >
+           User's selection when interacting with weather opt-in.
+          type: string
+        newtab_visit_id: *newtab_visit_id
+      send_in_pings:
+        - newtab
+
   fakespot_dismiss:
     type: event
     description: >
