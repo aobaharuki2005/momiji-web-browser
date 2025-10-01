@@ -7,10 +7,11 @@
 #ifndef mozilla_ChaosMode_h
 #define mozilla_ChaosMode_h
 
-#include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/EnumSet.h"
 
-#include <cstdint>
+#include <stdint.h>
+#include <stdlib.h>
 
 namespace mozilla {
 
@@ -35,23 +36,25 @@ enum class ChaosFeature : uint32_t {
   Any = 0xffffffff,
 };
 
+namespace detail {
+extern MFBT_DATA Atomic<uint32_t, Relaxed> gChaosModeCounter;
+extern MFBT_DATA ChaosFeature gChaosFeatures;
+}  // namespace detail
+
 /**
  * When "chaos mode" is activated, code that makes implicitly nondeterministic
  * choices is encouraged to make random and extreme choices, to test more
  * code paths and uncover bugs.
  */
 class ChaosMode {
-  static inline Atomic<uint32_t, Relaxed> ChaosModeCounter{0};
-  static inline ChaosFeature ChaosFeatures = ChaosFeature::Any;
-
  public:
   static void SetChaosFeature(ChaosFeature aChaosFeature) {
-    ChaosFeatures = aChaosFeature;
+    detail::gChaosFeatures = aChaosFeature;
   }
 
   static bool isActive(ChaosFeature aFeature) {
-    return ChaosModeCounter > 0 &&
-           (uint32_t(ChaosFeatures) & uint32_t(aFeature));
+    return detail::gChaosModeCounter > 0 &&
+           (uint32_t(detail::gChaosFeatures) & uint32_t(aFeature));
   }
 
   /**
@@ -59,14 +62,14 @@ class ChaosMode {
    * calls to leaveChaosMode must be made in order to restore the original
    * chaos mode state.
    */
-  static void enterChaosMode() { ChaosModeCounter++; }
+  static void enterChaosMode() { detail::gChaosModeCounter++; }
 
   /**
    * Decrease the chaos mode activation level. See enterChaosMode().
    */
   static void leaveChaosMode() {
-    MOZ_ASSERT(ChaosModeCounter > 0);
-    ChaosModeCounter--;
+    MOZ_ASSERT(detail::gChaosModeCounter > 0);
+    detail::gChaosModeCounter--;
   }
 
   /**
