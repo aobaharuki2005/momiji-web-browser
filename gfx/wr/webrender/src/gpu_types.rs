@@ -16,7 +16,7 @@ use crate::renderer::{ShaderColorMode, GpuBufferAddress};
 use std::i32;
 use crate::util::{MatrixHelpers, TransformedRectKind};
 use glyph_rasterizer::SubpixelDirection;
-use crate::util::{ScaleOffset, pack_as_float};
+use crate::util::pack_as_float;
 
 
 // Contains type that must exactly match the same structures declared in GLSL.
@@ -279,27 +279,6 @@ pub struct PrimitiveInstanceData {
 const UV_TYPE_NORMALIZED: u32 = 0;
 /// Specifies that an RGB CompositeInstance or ScalingInstance's UV coordinates are not normalized.
 const UV_TYPE_UNNORMALIZED: u32 = 1;
-
-/// A GPU-friendly representation of the `ScaleOffset` type
-#[derive(Clone, Debug)]
-#[repr(C)]
-pub struct CompositorTransform {
-    pub sx: f32,
-    pub sy: f32,
-    pub tx: f32,
-    pub ty: f32,
-}
-
-impl From<ScaleOffset> for CompositorTransform {
-    fn from(scale_offset: ScaleOffset) -> Self {
-        CompositorTransform {
-            sx: scale_offset.scale.x,
-            sy: scale_offset.scale.y,
-            tx: scale_offset.offset.x,
-            ty: scale_offset.offset.y,
-        }
-    }
-}
 
 /// Vertex format for picture cache composite shader.
 /// When editing the members, update desc::COMPOSITE
