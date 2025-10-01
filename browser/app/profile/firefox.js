@@ -2717,24 +2717,6 @@ pref("browser.migrate.interactions.passwords", false);
 
 pref("browser.migrate.preferences-entrypoint.enabled", true);
 
-pref("extensions.pocket.api", "api.getpocket.com");
-pref("extensions.pocket.bffApi", "firefox-api-proxy.cdn.mozilla.net");
-pref("extensions.pocket.bffRecentSaves", true);
-pref("extensions.pocket.enabled", false);
-pref("extensions.pocket.oAuthConsumerKey", "40249-e88c401e1b1f2242d9e441c4");
-pref("extensions.pocket.oAuthConsumerKeyBff", "94110-6d5ff7a89d72c869766af0e0");
-pref("extensions.pocket.site", "getpocket.com");
-
-// Enable Pocket button home panel for non link pages.
-pref("extensions.pocket.showHome", true);
-
-// Control what version of the logged out doorhanger is displayed
-// Possibilities are: `control`, `control-one-button`, `variant_a`, `variant_b`, `variant_c`
-pref("extensions.pocket.loggedOutVariant", "control");
-
-// Just for the new Pocket panels, enables the email signup button.
-pref("extensions.pocket.refresh.emailButton.enabled", false);
-
 // "available"      - user can see feature offer.
 // "offered"        - we have offered feature to user and they have not yet made a decision.
 // "enabled"        - user opted in to the feature.
