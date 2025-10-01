@@ -468,12 +468,6 @@ const nsTArray<RefPtr<GfxDriverInfo>>& GfxInfo::GetGfxDriverInfo() {
         OperatingSystem::OSX, DeviceFamily::IntelWebRenderBlocked,
         nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
         "FEATURE_FAILURE_INTEL_GEN5_OR_OLDER");
-
-    // Intel HD3000 disabled due to bug 1661505
-    IMPLEMENT_MAC_DRIVER_BLOCKLIST(
-        OperatingSystem::OSX, DeviceFamily::IntelSandyBridge,
-        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-        "FEATURE_FAILURE_INTEL_MAC_HD3000_NO_WEBRENDER");
   }
   return *sDriverInfo;
 }
