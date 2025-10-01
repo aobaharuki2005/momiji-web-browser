@@ -257,6 +257,9 @@ support-files = ["browser_relay_utils.js"]
 ["browser_relay_telemetry.js"]
 support-files = ["browser_relay_utils.js"]
 
+["browser_relay_use.js"]
+support-files = ["browser_relay_utils.js"]
+
 ["browser_telemetry_SignUpFormRuleset.js"]
 
 ["browser_test_changeContentInputValue.js"]
