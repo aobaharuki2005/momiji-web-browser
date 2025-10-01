@@ -8544,12 +8544,13 @@ dialog::after {
   pointer-events: none;
 }
 .wallpaper-feature-highlight .feature-highlight .feature-highlight-modal > moz-button {
-  margin-inline-start: calc(-1 * var(--space-xlarge));
+  position: absolute;
+  inset-inline-end: var(--space-large);
+  inset-block-start: var(--space-large);
 }
 @media (prefers-color-scheme: dark) {
-  .wallpaper-feature-highlight .feature-highlight .feature-highlight-modal > moz-button {
-    --dark-icon-color: var(--color-gray-70);
-    background-color: var(--dark-icon-color);
+  .wallpaper-feature-highlight.is-inverted-dark-dismiss-button .feature-highlight-modal > moz-button {
+    --button-icon-fill: var(--color-gray-70);
   }
 }
 

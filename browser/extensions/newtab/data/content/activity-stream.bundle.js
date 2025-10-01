@@ -16213,7 +16213,7 @@ function WallpaperFeatureHighlight({
     messageData
   } = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Messages);
   return /*#__PURE__*/external_React_default().createElement("div", {
-    className: "wallpaper-feature-highlight"
+    className: `wallpaper-feature-highlight ${messageData.content?.darkModeDismiss ? "is-inverted-dark-dismiss-button" : ""}`
   }, /*#__PURE__*/external_React_default().createElement(FeatureHighlight, {
     position: position,
     "data-l10n-id": "feature-highlight-wallpaper",
@@ -16221,23 +16221,38 @@ function WallpaperFeatureHighlight({
     dispatch: dispatch,
     message: /*#__PURE__*/external_React_default().createElement("div", {
       className: "wallpaper-feature-highlight-content"
-    }, /*#__PURE__*/external_React_default().createElement("img", {
-      src: "chrome://newtab/content/data/content/assets/custom-wp-highlight.png",
-      alt: "",
+    }, /*#__PURE__*/external_React_default().createElement("picture", {
+      className: "follow-section-button-highlight-image"
+    }, /*#__PURE__*/external_React_default().createElement("source", {
+      srcSet: messageData.content?.darkModeImageURL || "chrome://newtab/content/data/content/assets/highlights/omc-newtab-wallpapers.svg",
+      media: "(prefers-color-scheme: dark)"
+    }), /*#__PURE__*/external_React_default().createElement("source", {
+      srcSet: messageData.content?.imageURL || "chrome://newtab/content/data/content/assets/highlights/omc-newtab-wallpapers.svg",
+      media: "(prefers-color-scheme: light)"
+    }), /*#__PURE__*/external_React_default().createElement("img", {
       width: "320",
-      height: "195"
-    }), /*#__PURE__*/external_React_default().createElement("p", {
+      height: "195",
+      alt: ""
+    })), messageData.content?.cardTitle ? /*#__PURE__*/external_React_default().createElement("p", {
+      className: "title"
+    }, messageData.content.cardTitle) : /*#__PURE__*/external_React_default().createElement("p", {
       className: "title",
-      "data-l10n-id": messageData.content.title
-    }), /*#__PURE__*/external_React_default().createElement("p", {
+      "data-l10n-id": messageData.content.title || "newtab-new-user-custom-wallpaper-title"
+    }), messageData.content?.cardMessage ? /*#__PURE__*/external_React_default().createElement("p", {
+      className: "subtitle"
+    }, messageData.content.cardMessage) : /*#__PURE__*/external_React_default().createElement("p", {
       className: "subtitle",
-      "data-l10n-id": messageData.content.subtitle
+      "data-l10n-id": messageData.content.subtitle || "newtab-new-user-custom-wallpaper-subtitle"
     }), /*#__PURE__*/external_React_default().createElement("span", {
       className: "button-wrapper"
-    }, /*#__PURE__*/external_React_default().createElement("moz-button", {
+    }, messageData.content?.cardCta ? /*#__PURE__*/external_React_default().createElement("moz-button", {
       type: "default",
       onClick: () => onToggleClick("open-customize-menu"),
-      "data-l10n-id": messageData.content.cta
+      label: messageData.content.cardCta
+    }) : /*#__PURE__*/external_React_default().createElement("moz-button", {
+      type: "default",
+      onClick: () => onToggleClick("open-customize-menu"),
+      "data-l10n-id": messageData.content.cta || "newtab-new-user-custom-wallpaper-cta"
     }))),
     toggle: /*#__PURE__*/external_React_default().createElement("div", {
       className: "icon icon-help"
