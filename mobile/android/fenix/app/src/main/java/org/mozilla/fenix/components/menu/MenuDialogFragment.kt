@@ -106,7 +106,6 @@ import org.mozilla.fenix.utils.enterSubmenu
 import org.mozilla.fenix.utils.exitMenu
 import org.mozilla.fenix.utils.exitSubmenu
 import org.mozilla.fenix.utils.lastSavedFolderCache
-import org.mozilla.fenix.utils.slideDown
 import org.mozilla.fenix.webcompat.DefaultWebCompatReporterMoreInfoSender
 import org.mozilla.fenix.webcompat.middleware.DefaultWebCompatReporterRetrievalService
 import org.mozilla.fenix.webcompat.middleware.WebCompatInfoDeserializer
@@ -582,19 +581,15 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     webExtensionMenuCount = webExtensionsCount,
                                     allWebExtensionsDisabled = allWebExtensionsDisabled,
                                     onMozillaAccountButtonClick = {
-                                        view?.slideDown {
-                                            store.dispatch(
-                                                MenuAction.Navigate.MozillaAccount(
-                                                    accountState = accountState,
-                                                    accesspoint = args.accesspoint,
-                                                ),
-                                            )
-                                        }
+                                        store.dispatch(
+                                            MenuAction.Navigate.MozillaAccount(
+                                                accountState = accountState,
+                                                accesspoint = args.accesspoint,
+                                            ),
+                                        )
                                     },
                                     onSettingsButtonClick = {
-                                        view?.slideDown {
-                                            store.dispatch(MenuAction.Navigate.Settings)
-                                        }
+                                        store.dispatch(MenuAction.Navigate.Settings)
                                     },
                                     onBookmarkPageMenuClick = {
                                         store.dispatch(MenuAction.AddBookmark)
@@ -635,24 +630,16 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                         isMoreMenuExpanded = !isMoreMenuExpanded
                                     },
                                     onBookmarksMenuClick = {
-                                        view?.slideDown {
-                                            store.dispatch(MenuAction.Navigate.Bookmarks)
-                                        }
+                                        store.dispatch(MenuAction.Navigate.Bookmarks)
                                     },
                                     onHistoryMenuClick = {
-                                        view?.slideDown {
-                                            store.dispatch(MenuAction.Navigate.History)
-                                        }
+                                        store.dispatch(MenuAction.Navigate.History)
                                     },
                                     onDownloadsMenuClick = {
-                                        view?.slideDown {
-                                            store.dispatch(MenuAction.Navigate.Downloads)
-                                        }
+                                        store.dispatch(MenuAction.Navigate.Downloads)
                                     },
                                     onPasswordsMenuClick = {
-                                        view?.slideDown {
-                                            store.dispatch(MenuAction.Navigate.Passwords)
-                                        }
+                                        store.dispatch(MenuAction.Navigate.Passwords)
                                     },
                                     onCustomizeReaderViewMenuClick = {
                                         store.dispatch(MenuAction.CustomizeReaderView)
@@ -733,13 +720,11 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                             addonInstallationInProgress = addonInstallationInProgress,
                                             recommendedAddons = recommendedAddons,
                                             onAddonClick = { addon ->
-                                                view?.slideDown {
-                                                    store.dispatch(
-                                                        MenuAction.Navigate.AddonDetails(
-                                                            addon = addon,
-                                                        ),
-                                                    )
-                                                }
+                                                store.dispatch(
+                                                    MenuAction.Navigate.AddonDetails(
+                                                        addon = addon,
+                                                    ),
+                                                )
                                             },
                                             onAddonSettingsClick = { addon ->
                                                 store.dispatch(
