@@ -87,7 +87,7 @@ androidx-test-orchestrator = "1.6.1"
 androidx-test-runner = "1.7.0"
 androidx-test-uiautomator = "2.3.0"
 junit4 = "4.13.2"
-junit5 = "5.13.4"
+junit6 = "6.0.0"
 leakcanary = "2.14"
 mockito = "5.20.0"
 mockk = "1.14.5"
@@ -248,7 +248,7 @@ androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidx-test-runner" }
 androidx-test-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "androidx-test-uiautomator" }
 junit4 = { group = "junit", name = "junit", version.ref = "junit4" }
-junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit5" }
+junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit6" }
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter" }
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
 junit-vintage = { group = "org.junit.vintage", name = "junit-vintage-engine" }
