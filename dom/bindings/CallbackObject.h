@@ -257,6 +257,14 @@ class MOZ_STACK_CLASS CallSetup {
             const char* aExecutionReason,
             CallbackObjectBase::ExceptionHandling aExceptionHandling,
             JS::Realm* aRealm = nullptr, bool aIsJSImplementedWebIDL = false);
+
+  CallSetup(JS::Handle<JSObject*> aCallbackGlobal,
+            nsIGlobalObject* aIncumbentGlobal,
+            JS::Handle<JSObject*> aCreationStack, ErrorResult& aRv,
+            const char* aExecutionReason,
+            CallbackObjectBase::ExceptionHandling aExceptionHandling,
+            JS::Realm* aRealm = nullptr);
+
   MOZ_CAN_RUN_SCRIPT ~CallSetup();
 
   JSContext* GetContext() const { return mCx; }
