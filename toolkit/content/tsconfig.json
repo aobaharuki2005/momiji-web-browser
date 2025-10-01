@@ -5,6 +5,7 @@
     "widgets/**/*.mjs",
     "./preferencesBindings.js"
   ],
+  "exclude": ["widgets/vendor/lit.all.mjs"],
   "compilerOptions": {
     "noImplicitAny": true,
     "checkJs": true,
