@@ -127,6 +127,13 @@ class Fifo {
     return true;
   }
 
+  // Construct a T in-place at the front of the queue,
+  // making it the next to be popped off.
+  template <typename... Args>
+  [[nodiscard]] bool emplaceFront(Args&&... args) {
+    return front_.emplaceBack(std::forward<Args>(args)...);
+  }
+
   // Access the element at the front of the queue.
   T& front() {
     MOZ_ASSERT(!empty());
