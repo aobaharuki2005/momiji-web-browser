@@ -205,7 +205,6 @@
 [focused]:not([suppress-focus-border]) > .urlbar-background,
 #searchbar:focus-within {
   outline: var(--focus-outline);
-  outline-offset: var(--focus-outline-inset);
 
   /* We used --focus-outline above to inherit its width and style properties,
      but we still want to use the theme's border-color.
