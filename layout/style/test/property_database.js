@@ -9048,6 +9048,7 @@ var gCSSProperties = {
     domProp: "hyphens",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
+    applies_to_marker: true,
     initial_values: ["manual"],
     other_values: ["none", "auto"],
     invalid_values: [],
