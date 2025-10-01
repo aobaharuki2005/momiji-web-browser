@@ -55,13 +55,6 @@ class WebExtensionPromptFeature(
 ) : LifecycleAwareFeature {
 
     /**
-     * (optional) callback invoked when an add-on was updated due to an interaction with a
-     * [WebExtensionPromptRequest].
-     * Won't be needed after https://bugzilla.mozilla.org/show_bug.cgi?id=1858484.
-     */
-    var onAddonChanged: (Addon) -> Unit = {}
-
-    /**
      * Whether or not an add-on installation is in progress.
      */
     private var isInstallationInProgress = false
