@@ -189,20 +189,19 @@ void CallbackObjectBase::GetDescription(nsACString& aOutString) {
   aOutString.Append(")");
 }
 
-CallbackObjectBase::CallSetup::CallSetup(CallbackObjectBase* aCallback,
-                                         ErrorResult& aRv,
-                                         const char* aExecutionReason,
-                                         ExceptionHandling aExceptionHandling,
-                                         JS::Realm* aRealm,
-                                         bool aIsJSImplementedWebIDL)
+CallSetup::CallSetup(CallbackObjectBase* aCallback, ErrorResult& aRv,
+                     const char* aExecutionReason,
+                     CallbackObjectBase::ExceptionHandling aExceptionHandling,
+                     JS::Realm* aRealm, bool aIsJSImplementedWebIDL)
     : mCx(nullptr),
       mRealm(aRealm),
       mErrorResult(aRv),
       mExceptionHandling(aExceptionHandling),
       mIsMainThread(NS_IsMainThread()) {
-  MOZ_ASSERT_IF(aExceptionHandling == eReportExceptions ||
-                    aExceptionHandling == eRethrowExceptions,
-                !aRealm);
+  MOZ_ASSERT_IF(
+      aExceptionHandling == CallbackObjectBase::eReportExceptions ||
+          aExceptionHandling == CallbackObjectBase::eRethrowExceptions,
+      !aRealm);
 
   CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
   if (ccjs) {
@@ -318,9 +317,8 @@ CallbackObjectBase::CallSetup::CallSetup(CallbackObjectBase* aCallback,
   mCallContext.emplace(cx, nullptr);
 }
 
-bool CallbackObjectBase::CallSetup::ShouldRethrowException(
-    JS::Handle<JS::Value> aException) {
-  if (mExceptionHandling == eRethrowExceptions) {
+bool CallSetup::ShouldRethrowException(JS::Handle<JS::Value> aException) {
+  if (mExceptionHandling == CallbackObjectBase::eRethrowExceptions) {
     MOZ_ASSERT(!mRealm);
     return true;
   }
@@ -339,7 +337,7 @@ bool CallbackObjectBase::CallSetup::ShouldRethrowException(
   return js::GetNonCCWObjectRealm(obj) == mRealm;
 }
 
-CallbackObjectBase::CallSetup::~CallSetup() {
+CallSetup::~CallSetup() {
   // To get our nesting right we have to destroy our JSAutoRealm first.
   // In particular, we want to do this before we try reporting any exceptions,
   // so we end up reporting them while in the realm of our entry point,
@@ -351,8 +349,9 @@ CallbackObjectBase::CallSetup::~CallSetup() {
   // were told to re-throw them.
   if (mCx) {
     bool needToDealWithException = mAutoEntryScript->HasException();
-    if ((mRealm && mExceptionHandling == eRethrowContentExceptions) ||
-        mExceptionHandling == eRethrowExceptions) {
+    if ((mRealm &&
+         mExceptionHandling == CallbackObjectBase::eRethrowContentExceptions) ||
+        mExceptionHandling == CallbackObjectBase::eRethrowExceptions) {
       mErrorResult.MightThrowJSException();
       if (needToDealWithException) {
         JS::Rooted<JS::Value> exn(mCx);
