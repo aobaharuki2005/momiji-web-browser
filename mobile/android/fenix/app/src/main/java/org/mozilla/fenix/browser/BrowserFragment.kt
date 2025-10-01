@@ -268,7 +268,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private fun initReaderModeUpdates(context: Context, view: View) {
         readerViewFeature.set(
-            feature = context.components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+            feature = context.components.strictMode.allowViolation(StrictMode::allowThreadDiskReads) {
                 ReaderViewFeature(
                     context = context,
                     engine = context.components.core.engine,
@@ -345,7 +345,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         (browserToolbarView as BrowserToolbarView).toolbar.addPageAction(readerModeAction)
 
         readerViewFeature.set(
-            feature = context.components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+            feature = context.components.strictMode.allowViolation(StrictMode::allowThreadDiskReads) {
                 ReaderViewFeature(
                     context = context,
                     engine = context.components.core.engine,

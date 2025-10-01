@@ -361,7 +361,7 @@ private fun skipOnboardingBeforeLaunch() {
     // As we are disabling the onboarding we need to initialize glean manually,
     // as it runs after the onboarding finishes
     Handler(Looper.getMainLooper()).post {
-        appContext.components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+        appContext.components.strictMode.allowViolation(StrictMode::allowThreadDiskReads) {
             initializeGlean(
                 applicationContext = appContext,
                 logger = Logger(),

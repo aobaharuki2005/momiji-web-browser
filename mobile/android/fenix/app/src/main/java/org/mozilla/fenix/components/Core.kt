@@ -615,7 +615,7 @@ class Core(
     val topSitesStorage by lazyMonitored {
         val defaultTopSites = mutableListOf<Pair<String, String>>()
 
-        strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+        strictMode.allowViolation(StrictMode::allowThreadDiskReads) {
             if (!context.settings().defaultTopSitesAdded) {
                 defaultTopSites.add(
                     Pair(

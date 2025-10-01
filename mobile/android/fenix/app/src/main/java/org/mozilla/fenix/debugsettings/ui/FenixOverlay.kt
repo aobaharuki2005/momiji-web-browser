@@ -108,11 +108,10 @@ fun FenixOverlay(
             ),
         ),
         loginsStorage = loginsStorage,
-        addressesDebugLocalesRepository = context.components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
-            SharedPrefsAddressesDebugLocalesRepository(
-                context,
-            )
-        },
+        addressesDebugLocalesRepository =
+            context.components.strictMode.allowViolation(StrictMode::allowThreadDiskReads) {
+                SharedPrefsAddressesDebugLocalesRepository(context)
+            },
         creditCardsAddressesStorage = context.components.core.autofillStorage,
         inactiveTabsEnabled = inactiveTabsEnabled,
     )

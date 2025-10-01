@@ -54,7 +54,7 @@ class IntentReceiverActivity : Activity() {
         }
 
         // StrictMode violation on certain devices such as Samsung
-        components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+        components.strictMode.allowViolation(StrictMode::allowThreadDiskReads) {
             super.onCreate(savedInstanceState)
         }
 
@@ -124,7 +124,7 @@ class IntentReceiverActivity : Activity() {
             )
         }
         // StrictMode violation on certain devices such as Samsung
-        components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+        components.strictMode.allowViolation(StrictMode::allowThreadDiskReads) {
             startActivity(intent)
         }
         finish() // must finish() after starting the other activity

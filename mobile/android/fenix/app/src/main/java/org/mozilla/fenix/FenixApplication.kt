@@ -234,7 +234,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
         run {
             // Make sure the engine is initialized and ready to use.
-            components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+            components.strictMode.allowViolation(StrictMode::allowThreadDiskReads) {
                 components.core.engine.warmUp()
             }
 
@@ -1034,7 +1034,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
             // There's a strict mode violation in A-Cs LocaleAwareApplication which
             // reads from shared prefs: https://github.com/mozilla-mobile/android-components/issues/8816
-            components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+            components.strictMode.allowViolation(StrictMode::allowThreadDiskReads) {
                 super.onConfigurationChanged(config)
             }
         } else {

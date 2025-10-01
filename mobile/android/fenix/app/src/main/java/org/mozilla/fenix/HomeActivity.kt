@@ -378,7 +378,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         MarkersFragmentLifecycleCallbacks.register(supportFragmentManager, components.core.engine)
 
         // There is disk read violations on some devices such as samsung and pixel for android 9/10
-        components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+        components.strictMode.allowViolation(StrictMode::allowThreadDiskReads) {
             // Browsing mode & theme setup should always be called before super.onCreate.
             browsingModeManager = createBrowsingModeManager(intent)
             setupTheme()
@@ -630,7 +630,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     ) {
         if (shouldShowSetAsDefaultPrompt && !isDefaultBrowser && isTheCorrectBuildVersion) {
             // This is to avoid disk read violations on some devices such as samsung and pixel for android 9/10
-            components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+            components.strictMode.allowViolation(StrictMode::allowThreadDiskReads) {
                 components.appStore.dispatch(AppAction.UpdateWasNativeDefaultBrowserPromptShown(true))
                 showSetDefaultBrowserPrompt()
                 Metrics.setAsDefaultBrowserNativePromptShown.record()
@@ -1292,7 +1292,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     }
 
     final override fun attachBaseContext(base: Context) {
-        base.components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+        base.components.strictMode.allowViolation(StrictMode::allowThreadDiskReads) {
             super.attachBaseContext(base)
         }
     }
@@ -1391,7 +1391,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
      */
     @VisibleForTesting
     internal fun shouldStartOnHome(intent: Intent? = this.intent): Boolean {
-        return components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+        return components.strictMode.allowViolation(StrictMode::allowThreadDiskReads) {
             // We only want to open on home when users tap the app,
             // we want to ignore other cases when the app gets open by users clicking on links.
             getSettings().shouldStartOnHome() && intent?.action == ACTION_MAIN
