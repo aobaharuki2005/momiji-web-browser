@@ -1520,6 +1520,7 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
   nsAutoCString newEncoding;
   char* cePtr = contentEncoding.BeginWriting();
   uint32_t count = 0;
+  bool removed_encoding = false;
   while (char* val = nsCRT::strtok(cePtr, HTTP_LWS ",", &cePtr)) {
     if (++count > 16) {
       // For compatibility with old code, we will just carry on without
@@ -1559,6 +1560,9 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
         }
         glean::http::content_encoding.AccumulateSingleSample(mode);
       }
+      if (from.EqualsLiteral("dcb") || from.EqualsLiteral("dcz")) {
+        removed_encoding = true;
+      }
       nextListener = converter;
     } else {
       if (val) LOG(("Unknown content encoding '%s', ignoring\n", val));
@@ -1569,11 +1573,19 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
     }
   }
 
-  LOG(("Changing Content-Encoding from %s to %s", contentEncoding.get(),
-       newEncoding.get()));
-  // Can't use SetHeader; we need to overwrite the current value
-  rv = mResponseHead->SetHeaderOverride(nsHttp::Content_Encoding, newEncoding);
-
+  // dcb and dcz encodings are removed when it's decompressed (always in
+  // the parent process).  However, in theory you could have
+  // Content-Encoding: dcb,gzip
+  // in which case we should pass it down to the content process as
+  // Content-Encoding: gzip
+  // This of course would be silly, but supported by the spec
+  if (removed_encoding) {
+    LOG(("Changing Content-Encoding from %s to %s", contentEncoding.get(),
+         newEncoding.get()));
+    // Can't use SetHeader; we need to overwrite the current value
+    rv =
+        mResponseHead->SetHeaderOverride(nsHttp::Content_Encoding, newEncoding);
+  }
   *aNewNextListener = do_AddRef(nextListener).take();
   return NS_OK;
 }
