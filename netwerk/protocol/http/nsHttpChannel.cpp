@@ -6002,23 +6002,7 @@ nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
   rv = StoreAuthorizationMetaData(entry, requestHead);
   if (NS_FAILED(rv)) return rv;
 
-  rv = self->ProcessVaryCacheEntryHeaders(entry, nullptr);
-  if (NS_FAILED(rv)) return rv;
-
-  // Store the received HTTP head with the cache entry as an element of
-  // the meta data.
-  nsAutoCString head;
-  responseHead->Flatten(head, true);
-  rv = entry->SetMetaDataElement("response-head", head.get());
-  if (NS_FAILED(rv)) return rv;
-  head.Truncate();
-  responseHead->FlattenNetworkOriginalHeaders(head);
-  rv = entry->SetMetaDataElement("original-response-headers", head.get());
-  if (NS_FAILED(rv)) return rv;
-
-  // Indicate we have successfully finished setting metadata on the cache entry.
-  rv = entry->MetaDataReady();
-
+  rv = self->UpdateCacheEntryHeaders(entry, nullptr);
   return rv;
 }
 
@@ -6028,8 +6012,8 @@ nsresult nsHttpChannel::AddCacheEntryHeaders(nsICacheEntry* entry,
                                 mSecurityInfo, aModified);
 }
 
-nsresult nsHttpChannel::ProcessVaryCacheEntryHeaders(nsICacheEntry* entry,
-                                                     const nsHttpAtom* aAtom) {
+nsresult nsHttpChannel::UpdateCacheEntryHeaders(nsICacheEntry* entry,
+                                                const nsHttpAtom* aAtom) {
   nsresult rv = NS_OK;
 
   // Iterate over the headers listed in the Vary response header, and
@@ -6094,18 +6078,23 @@ nsresult nsHttpChannel::ProcessVaryCacheEntryHeaders(nsICacheEntry* entry,
       }
     }
   }
-  return rv;
-}
-
-nsresult nsHttpChannel::ModifiedCacheEntryHeaders(nsICacheEntry* entry,
-                                                  const nsHttpAtom& aAtom) {
-  nsresult rv = ProcessVaryCacheEntryHeaders(entry, &aAtom);
-  if (NS_SUCCEEDED(rv)) {
-    // Indicate we have successfully finished setting metadata on the cache
-    // entry.
-    rv = entry->MetaDataReady();
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-  return rv;
+  // Store the received HTTP head with the cache entry as an element of
+  // the meta data.
+  nsAutoCString head;
+  mResponseHead->Flatten(head, true);
+  rv = entry->SetMetaDataElement("response-head", head.get());
+  if (NS_FAILED(rv)) return rv;
+  head.Truncate();
+  mResponseHead->FlattenNetworkOriginalHeaders(head);
+  rv = entry->SetMetaDataElement("original-response-headers", head.get());
+  if (NS_FAILED(rv)) return rv;
+
+  // Indicate we have successfully finished setting metadata on the cache
+  // entry.
+  return entry->MetaDataReady();
 }
 
 bool nsHttpChannel::ParseDictionary(nsICacheEntry* aEntry,
@@ -6219,7 +6208,10 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
 // normal listener chain, which often will eventually include a
 // decompressor. If the Content-Encoding is dcb or dcz, we'll include a
 // decompressor *before* the tee, so the cache will see decompressed data
-// (we can't decompress dcb/dcz when reading from the cache).
+// (we can't decompress dcb/dcz when reading from the cache).  Also, if an
+// entry is being used as a dictionary (Use-As-Dictionary), we want the data
+// to in the cache to be decompressed, so we should install a decompressor
+// before the tee as well.
 nsresult nsHttpChannel::DoInstallCacheListener(bool aIsDictionaryCompressed,
                                                nsACString* aDictionary,
                                                int64_t offset) {
@@ -6299,7 +6291,7 @@ nsresult nsHttpChannel::DoInstallCacheListener(bool aIsDictionaryCompressed,
   // before the content process gets to see it
   // XXX We could recompress this with e.g. gzip to save space and improve
   // hitrate, at the cost of some CPU.
-  bool removedEncoding = false;
+
   // Note: this doesn't handle cases like "dcb, gzip" or (worse?) "gzip, dcb".
   // We could in theory handle them.
   if (aDictionary || aIsDictionaryCompressed) {
@@ -6311,38 +6303,36 @@ nsresult nsHttpChannel::DoInstallCacheListener(bool aIsDictionaryCompressed,
     if (NS_FAILED(rv)) {
       return rv;
     }
+    // Remove Available-Dictionary from Vary header if present.  This
+    // avoids us refusing to match on a future load, for example if this
+    // dictionary was decoded from an earlier version using a dictionary
+    // (i.e. the update jquery to new version using the old version as a
+    // dictionary; no future load will use that old version).
+
+    // XXX It would be slightly more efficient to remove all at once
+    // instead of sequentially by passing an array of strings
+    RemoveFromVary(mResponseHead.get(), "available-dictionary"_ns);
+    RemoveFromVary(mResponseHead.get(), "accept-encoding"_ns);
+
     if (listener) {
       LOG_DICTIONARIES(
           ("Installed nsHTTPCompressConv %p before tee", listener.get()));
       mListener = listener;
       mCompressListener = listener;
       StoreHasAppliedConversion(true);
-      removedEncoding = true;
+
     } else {
       LOG_DICTIONARIES(("Didn't install decompressor before tee"));
     }
-    if (removedEncoding) {
-      // Remove Available-Dictionary from Vary header if present if we
-      // decompressed and changed the content type.  This avoids us refusing to
-      // match on a future load, for example if this dictionary was decoded from
-      // an earlier version using a dictionary (i.e. the update jquery to new
-      // version using the old version as a dictionary; no future load will use
-      // that old version).
-      // XXX It would be slightly more efficient to remove all at once
-      // instead of sequentially by passing an array of strings
-      RemoveFromVary(mResponseHead.get(), "available-dictionary"_ns);
-      RemoveFromVary(mResponseHead.get(), "accept-encoding"_ns);
-    }
-  }
-
-  if (removedEncoding) {
-    // After decompressors, we modified Content-Encoding
-    rv = ModifiedCacheEntryHeaders(mCacheEntry, nsHttp::Content_Encoding);
+    // We may have modified Content-Encoding; make sure cache metadata
+    // reflects that.  Pass nullptr so we pick up the Vary updates above
+    rv = UpdateCacheEntryHeaders(mCacheEntry, nullptr);
     if (NS_FAILED(rv)) {
       mCacheEntry->AsyncDoom(nullptr);
       return rv;
     }
   }
+
   return NS_OK;
 }
 
