@@ -9375,6 +9375,9 @@
   mirror: always
   do_not_use_directly: true
 
+# Use the JS microtask queue for Promise jobs and other microtasks.
+# DO NOT TURN THIS ON BY DEFAULT WITHOUT THE BUGS BLOCKING
+# BUG 1990841 being fixed (especially Bug 1990842).
 - name: javascript.options.use_js_microtask_queue
   type: RelaxedAtomicBool
   value: false
