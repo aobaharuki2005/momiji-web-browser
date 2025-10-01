@@ -780,7 +780,7 @@ var TelemetryReportingPolicyImpl = {
     // set.
     const bypassTOUFlow =
       Services.prefs.getBoolPref(TOU_BYPASS_NOTIFICATION_PREF, false) ||
-      this._nimbusVariables.enabled === false;
+      !this._nimbusVariables.enabled;
     const allowInteractionData = Services.prefs.getBoolPref(
       "datareporting.healthreport.uploadEnabled",
       false
