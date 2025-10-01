@@ -52,7 +52,7 @@ var localProviderModules = [
     name: "UrlbarProviderGlobalActions",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderGlobalActions.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedInputTypes: ["urlbar", "searchbar"],
   },
   {
     name: "UrlbarProviderAliasEngines",
@@ -183,7 +183,7 @@ var localProviderModules = [
     name: "UrlbarProviderTabToSearch",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderTabToSearch.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedInputTypes: ["urlbar", "searchbar"],
   },
   {
     name: "UrlbarProviderTokenAliasEngines",

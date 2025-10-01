@@ -481,8 +481,9 @@ export class UrlbarProviderInterventions extends UrlbarProvider {
    * with this provider, to save on resources.
    *
    * @param {UrlbarQueryContext} queryContext The query context object
+   * @param {UrlbarController} controller The current controller.
    */
-  async isActive(queryContext) {
+  async isActive(queryContext, controller) {
     if (
       !queryContext.searchString ||
       queryContext.searchString.length > UrlbarUtils.MAX_TEXT_LENGTH ||
@@ -493,7 +494,7 @@ export class UrlbarProviderInterventions extends UrlbarProvider {
       !Services.policies.isAllowed("urlbarinterventions") ||
       (await this.queryInstance
         .getProvider(lazy.UrlbarProviderGlobalActions.name)
-        ?.isActive())
+        ?.isActive(queryContext, controller))
     ) {
       return false;
     }
