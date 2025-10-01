@@ -118,10 +118,16 @@ internal fun Homepage(
             with(state) {
                 when (this) {
                     is HomepageState.Private -> {
-                        Box(modifier = Modifier.padding(horizontal = horizontalMargin)) {
-                            PrivateBrowsingDescription(
+                        if (privateModeRedesignEnabled) {
+                            PrivateBrowsingDescription2(
                                 onLearnMoreClick = interactor::onLearnMoreClicked,
                             )
+                        } else {
+                            Box(modifier = Modifier.padding(horizontal = horizontalMargin)) {
+                                PrivateBrowsingDescription(
+                                    onLearnMoreClick = interactor::onLearnMoreClicked,
+                                )
+                            }
                         }
                     }
 
@@ -532,6 +538,7 @@ private fun PrivateHomepagePreview() {
                     showHeader = false,
                     firstFrameDrawn = true,
                     isSearchInProgress = false,
+                    privateModeRedesignEnabled = false,
                 ),
                 interactor = FakeHomepagePreview.homepageInteractor,
                 onTopSitesItemBound = {},

@@ -54,11 +54,13 @@ internal sealed class HomepageState {
      * @property showHeader Whether to show the homepage header.
      * @property firstFrameDrawn Flag indicating whether the first frame of the homescreen has been drawn.
      * @property isSearchInProgress Whether search is currently active on the homepage.
+     * @property privateModeRedesignEnabled Whether private browsing mode redesign is enabled.
      */
     internal data class Private(
         override val showHeader: Boolean,
         override val firstFrameDrawn: Boolean = false,
         override val isSearchInProgress: Boolean,
+        val privateModeRedesignEnabled: Boolean,
     ) : HomepageState()
 
     /**
@@ -145,6 +147,7 @@ internal sealed class HomepageState {
                         showHeader = settings.showHomepageHeader,
                         firstFrameDrawn = firstFrameDrawn,
                         isSearchInProgress = searchState.isSearchActive,
+                        privateModeRedesignEnabled = settings.enablePrivateBrowsingModeRedesign,
                     )
                 } else {
                     Normal(
