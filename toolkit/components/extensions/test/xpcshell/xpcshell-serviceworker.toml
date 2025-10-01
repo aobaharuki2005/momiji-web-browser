@@ -43,6 +43,7 @@ skip-if = [
 ["test_ext_scripting_contentScripts.js"]
 
 ["test_ext_scripting_contentScripts_css.js"]
+run-sequentially = ["os == 'mac'"] # frequent timeouts in parallel on Mac
 
 ["test_ext_scripting_contentScripts_file.js"]
 
