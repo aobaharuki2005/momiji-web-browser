@@ -208,19 +208,19 @@ function testRemoveBinaryDataFromMultipartText(data) {
   const EXPECTED_WIN_RESULT = [
     '^"',
     boundary,
-    "^\u000A\u000A",
-    'Content-Disposition: form-data; name=\\"param1\\"',
-    "^\u000A\u000A^\u000A\u000A",
+    '^\u000A\u000A',
+    'Content-Disposition: form-data; name=^\\^"param1^\\^"',
+    '^\u000A\u000A^\u000A\u000A',
     "value1",
-    "^\u000A\u000A",
+    '^\u000A\u000A',
     boundary,
-    "^\u000A\u000A",
-    'Content-Disposition: form-data; name=\\"file\\"; filename=\\"filename.png\\"',
-    "^\u000A\u000A",
+    '^\u000A\u000A',
+    'Content-Disposition: form-data; name=^\\^"file^\\^"; filename=^\\^"filename.png^\\^"',
+    '^\u000A\u000A',
     "Content-Type: image/png",
-    "^\u000A\u000A^\u000A\u000A",
+    '^\u000A\u000A^\u000A\u000A',
     boundary + "--",
-    "^\u000A\u000A",
+    '^\u000A\u000A',
     '^"',
   ].join("");
 
@@ -365,7 +365,7 @@ function testEscapeStringWin() {
   const evilCommand = `query=evil\r\rcmd" /c timeout /t 3 & calc.exe\r\r`;
   is(
     CurlUtils.escapeStringWin(evilCommand),
-    '^\"query=evil^\n\n^\n\ncmd\\\" /c timeout /t 3 & calc.exe^\n\n^\n\n^\"',
+    '^\"query=evil^\n\n^\n\ncmd^\\^\" /c timeout /t 3 ^& calc.exe^\n\n^\n\n^\"',
     "The evil command is escaped properly"
   );
 }
