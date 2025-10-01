@@ -20,7 +20,6 @@ import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -1437,7 +1436,7 @@ class AbstractFetchDownloadServiceTest {
             state = download,
             foregroundServiceId = Random.nextInt(),
             status = DOWNLOADING,
-            job = CoroutineScope(IO).launch {
+            job = backgroundScope.launch {
                 @Suppress("ControlFlowWithEmptyBody")
                 while (true) { }
             },
@@ -1484,7 +1483,7 @@ class AbstractFetchDownloadServiceTest {
             state = inProgressDownload,
             foregroundServiceId = Random.nextInt(),
             status = DOWNLOADING,
-            job = CoroutineScope(IO).launch {
+            job = backgroundScope.launch {
                 @Suppress("ControlFlowWithEmptyBody")
                 while (true) { }
             },
@@ -1500,7 +1499,7 @@ class AbstractFetchDownloadServiceTest {
             state = pausedDownload,
             foregroundServiceId = Random.nextInt(),
             status = PAUSED,
-            job = CoroutineScope(IO).launch {
+            job = backgroundScope.launch {
                 @Suppress("ControlFlowWithEmptyBody")
                 while (true) { }
             },
@@ -1515,7 +1514,7 @@ class AbstractFetchDownloadServiceTest {
             state = initiatedDownload,
             foregroundServiceId = Random.nextInt(),
             status = INITIATED,
-            job = CoroutineScope(IO).launch {
+            job = backgroundScope.launch {
                 @Suppress("ControlFlowWithEmptyBody")
                 while (true) { }
             },
@@ -1530,7 +1529,7 @@ class AbstractFetchDownloadServiceTest {
             state = failedDownload,
             foregroundServiceId = Random.nextInt(),
             status = FAILED,
-            job = CoroutineScope(IO).launch {
+            job = backgroundScope.launch {
                 @Suppress("ControlFlowWithEmptyBody")
                 while (true) { }
             },
@@ -1565,7 +1564,7 @@ class AbstractFetchDownloadServiceTest {
             state = completedDownload,
             foregroundServiceId = Random.nextInt(),
             status = COMPLETED,
-            job = CoroutineScope(IO).launch {
+            job = backgroundScope.launch {
                 @Suppress("ControlFlowWithEmptyBody")
                 while (true) { }
             },
@@ -1581,7 +1580,7 @@ class AbstractFetchDownloadServiceTest {
             state = cancelledDownload,
             foregroundServiceId = Random.nextInt(),
             status = CANCELLED,
-            job = CoroutineScope(IO).launch {
+            job = backgroundScope.launch {
                 @Suppress("ControlFlowWithEmptyBody")
                 while (true) { }
             },
