@@ -202,7 +202,8 @@ nsresult nsHttpResponseHead::SetHeaderOverride(const nsHttpAtom& atom,
     return NS_ERROR_FAILURE;
   }
 
-  return mHeaders.SetHeaderFromNet(atom, ""_ns, val, true);
+  return mHeaders.SetHeader(atom, ""_ns, val, false,
+                            nsHttpHeaderArray::eVarietyResponseOverride);
 }
 
 nsresult nsHttpResponseHead::SetHeader_locked(const nsHttpAtom& atom,
