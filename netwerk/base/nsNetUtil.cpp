@@ -4051,7 +4051,7 @@ bool NS_ParseUseAsDictionary(const nsACString& aValue, nsACString& aMatch,
   // Note: match= is required
   // Use-As-Dictionary = %s"match" /
   //                     %il"match-dest" /
-  //                     %s"id" \
+  //                     %s"id" /
   //                     %t"type" ; case-sensitive
 
   nsCOMPtr<nsISFVService> sfv = GetSFVService();
