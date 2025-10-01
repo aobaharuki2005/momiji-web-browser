@@ -553,4 +553,30 @@ export var ToolbarContextMenu = {
     let id = this._getExtensionId(popup);
     await BrowserAddonUI.manageAddon(id, "browserAction");
   },
+
+  /**
+   * Hides the first visible menu separator if it would appear at the top of the
+   * toolbar context menu (i.e., when all preceding menu items are hidden). This
+   * prevents a separator from appearing at the top of the menu with no items above it.
+   *
+   * Fix for Bug 1955241.
+   *
+   * @param {Element} popup
+   *   The toolbar-context-menu element for a window.
+   */
+  hideLeadingSeparatorIfNeeded(popup) {
+    // Find the first non-hidden element in the menu
+    let firstVisibleElement = popup.firstElementChild;
+    while (firstVisibleElement && firstVisibleElement.hidden) {
+      firstVisibleElement = firstVisibleElement.nextElementSibling;
+    }
+
+    // If the first visible element is a separator, hide it
+    if (
+      firstVisibleElement &&
+      firstVisibleElement.localName === "menuseparator"
+    ) {
+      firstVisibleElement.hidden = true;
+    }
+  },
 };
