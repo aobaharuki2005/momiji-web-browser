@@ -8,7 +8,7 @@
   --breakpoint-active-color-hover: light-dark(rgba(44,187,15,.5), rgba(0,255,175,.7););
   --gutter-background-color: var(--theme-sidebar-background);
   --gutter-border-color: light-dark(var(--theme-splitter-color), var(--theme-toolbar-background));
-
+  --highlight-line-duration: 5000ms;
   &[forced-colors-active] {
     /* overriding variable in HCM so the border is actually visible (see Bug 1953376) */
     --gutter-border-color: var(--theme-splitter-color);
@@ -461,6 +461,7 @@
   /* We don't want forced colors on selection so we can adjust the colors as we want.
      This especially helps for the unfocused selected text */
   forced-color-adjust: none;
+  color: inherit;
 }
 
 .cm-editor .cm-line ::selection {
@@ -525,5 +526,26 @@
 
   .tok-punctuation {
     color: currentColor;
+  }
+}
+
+.highlight-line .CodeMirror-line,
+/* For CM6 */
+.cm-editor .cm-line.highlight-line {
+  animation-name: fade-highlight-out;
+  animation-duration: var(--highlight-line-duration);
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes fade-highlight-out {
+
+  0%,
+  30% {
+    /* We want to use a color with some transparency so text selection is visible through it */
+    background-color: var(--theme-contrast-background-alpha);
+  }
+  100% {
+    background-color: transparent;
   }
 }

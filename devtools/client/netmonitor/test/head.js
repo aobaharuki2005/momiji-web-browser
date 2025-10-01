@@ -1157,9 +1157,9 @@ async function selectIndexAndWaitForSourceEditor(monitor, index) {
     document.querySelectorAll(".request-list-item")[index]
   );
   // We may already be on the ResponseTab, so only select it if needed.
-  const editor = document.querySelector("#response-panel .CodeMirror-code");
+  const editor = document.querySelector("#response-panel .cm-content");
   if (!editor) {
-    const waitDOM = waitForDOM(document, "#response-panel .CodeMirror-code");
+    const waitDOM = waitForDOM(document, "#response-panel .cm-content");
     document.querySelector("#response-tab").click();
     await waitDOM;
   }
@@ -1181,12 +1181,15 @@ async function performRequests(monitor, tab, count) {
   await wait;
 }
 
+function getCMEditor(monitor) {
+  return monitor.panelWin.codeMirrorSourceEditorTestInstance;
+}
+
 /**
- * Helper function for retrieving `.CodeMirror` content
+ * Helper function for retrieving the editor content
  */
 function getCodeMirrorValue(monitor) {
-  const { document } = monitor.panelWin;
-  return document.querySelector(".CodeMirror")?.CodeMirror.getValue();
+  return getCMEditor(monitor).getText();
 }
 
 /**
