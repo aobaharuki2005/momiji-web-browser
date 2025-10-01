@@ -28,6 +28,8 @@ skip-if = [
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && asan", # Bug 1867132
 ]
 
+["browser_learn_more_link.js"]
+
 ["browser_parent_menuitems.js"]
 
 ["browser_prefers_contrast.js"]

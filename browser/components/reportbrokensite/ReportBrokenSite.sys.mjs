@@ -210,6 +210,12 @@ class ViewState {
     }
   }
 
+  get learnMoreLink() {
+    return this.#mainView.querySelector(
+      "#report-broken-site-popup-learn-more-link"
+    );
+  }
+
   get sendMoreInfoLink() {
     return this.#mainView.querySelector(
       "#report-broken-site-popup-send-more-info-link"
@@ -538,6 +544,13 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
       event.target.ownerGlobal.CustomizableUI.hidePanelForNode(event.target);
       await this.#openWebCompatTab(tabbrowser);
       state.reset();
+    });
+
+    state.learnMoreLink.addEventListener("click", async event => {
+      this.#recordGleanEvent("learnMore");
+      event.target.ownerGlobal.requestAnimationFrame(() => {
+        event.target.ownerGlobal.CustomizableUI.hidePanelForNode(event.target);
+      });
     });
   }
 

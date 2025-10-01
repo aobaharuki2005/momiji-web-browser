@@ -67,6 +67,7 @@ async function ensureExpectedTabOrder(
   if (expectBackButton) {
     order.push(".subviewbutton-back");
   }
+  order.push("#report-broken-site-popup-learn-more-link");
   order.push("#report-broken-site-popup-url"); // check that we've cycled back
   return ensureTabOrder(order);
 }

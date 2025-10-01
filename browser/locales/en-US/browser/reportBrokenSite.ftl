@@ -6,7 +6,8 @@ report-broken-site-mainview-title = Report broken site
 report-broken-site-panel-header =
   .label = Report broken site
   .title = Report broken site
-report-broken-site-panel-intro = Help make { -brand-product-name } better for everyone. { -vendor-short-name } uses the info you send to fix website problems.
+report-broken-site-panel-intro-text = Your report helps us understand and fix issues in { -brand-product-name } to make it better for everyone.
+report-broken-site-panel-learn-more-link = Learn more
 report-broken-site-panel-url = URL
 
 report-broken-site-panel-reason-label = What’s broken?
