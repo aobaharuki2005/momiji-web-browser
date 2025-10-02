@@ -1417,7 +1417,9 @@ export class BackupService extends EventTarget {
             this.#encState,
             manifest.meta
           ).finally(async () => {
-            await IOUtils.remove(compressedStagingPath);
+            await IOUtils.remove(compressedStagingPath, {
+              retryReadonly: true,
+            });
           });
 
           // Record the size of the complete single-file archive
@@ -1590,7 +1592,10 @@ export class BackupService extends EventTarget {
       // A pre-existing staging folder exists. A previous backup attempt must
       // have failed or been interrupted. We'll clear it out.
       lazy.logConsole.warn("A pre-existing staging folder exists. Clearing.");
-      await IOUtils.remove(stagingPath, { recursive: true });
+      await IOUtils.remove(stagingPath, {
+        recursive: true,
+        retryReadonly: true,
+      });
     }
     await IOUtils.makeDirectory(stagingPath);
 
@@ -2373,7 +2378,10 @@ export class BackupService extends EventTarget {
       );
     }
 
-    await IOUtils.remove(extractionDestPath, { ignoreAbsent: true });
+    await IOUtils.remove(extractionDestPath, {
+      ignoreAbsent: true,
+      retryReadonly: true,
+    });
 
     let archiveFile = await IOUtils.getFile(archivePath);
     let archiveStream = await this.createBinaryReadableStream(
@@ -2600,7 +2608,7 @@ export class BackupService extends EventTarget {
       // Now that we've decompressed it, reclaim some disk space by getting rid of
       // the ZIP file.
       try {
-        await IOUtils.remove(RECOVERY_FILE_DEST_PATH);
+        await IOUtils.remove(RECOVERY_FILE_DEST_PATH, { retryReadonly: true });
       } catch (_) {
         lazy.logConsole.warn("Could not remove ", RECOVERY_FILE_DEST_PATH);
       }
@@ -2914,7 +2922,10 @@ export class BackupService extends EventTarget {
         lazy.logConsole.debug(`Done post-recovery step for ${resourceKey}`);
       }
     } finally {
-      await IOUtils.remove(postRecoveryFile, { ignoreAbsent: true });
+      await IOUtils.remove(postRecoveryFile, {
+        ignoreAbsent: true,
+        retryReadonly: true,
+      });
       this.#postRecoveryResolver();
     }
   }
@@ -3234,7 +3245,10 @@ export class BackupService extends EventTarget {
     // It'd be pretty strange, but not impossible, for something else to have
     // gotten rid of the encryption state file at this point. We'll ignore it
     // if that's the case.
-    await IOUtils.remove(encStateFile, { ignoreAbsent: true });
+    await IOUtils.remove(encStateFile, {
+      ignoreAbsent: true,
+      retryReadonly: true,
+    });
 
     this.#encState = null;
     this.#_state.encryptionEnabled = false;
@@ -3908,7 +3922,7 @@ export class BackupService extends EventTarget {
           // folder. If not, delete that folder too.
           let children = await IOUtils.getChildren(lazy.backupDirPref);
           if (!children.length) {
-            await IOUtils.remove(lazy.backupDirPref);
+            await IOUtils.remove(lazy.backupDirPref, { retryReadony: true });
           }
         }
       }
