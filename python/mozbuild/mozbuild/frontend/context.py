@@ -564,7 +564,7 @@ class CompileFlags(TargetCompileFlags):
             ("STL", context.config.substs.get("STL_FLAGS"), ("CXXFLAGS",)),
             (
                 "STL_HARDENING",
-                context.config.substs.get("STL_HARDENING_FLAGS"),
+                context.config.substs.get("MOZ_STL_HARDENING_FLAGS"),
                 ("CXXFLAGS",),
             ),
             (
