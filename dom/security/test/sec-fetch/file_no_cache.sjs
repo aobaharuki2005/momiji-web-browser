@@ -2,7 +2,7 @@ const MESSAGE_PAGE = function (msg) {
   return `
 <html>
 <script type="text/javascript">
-onload = () => window.parent.postMessage({test : "${msg}"},"*");
+window.parent.postMessage({test : "${msg}"},"*");
 </script>
 <script>
   addEventListener("back", () => {

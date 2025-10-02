@@ -1391,7 +1391,6 @@ Document::Document(const char* aContentType)
       mHaveFiredTitleChange(false),
       mIsShowing(false),
       mVisible(true),
-      mIsCompletelyLoaded(false),
       mRemovedFromDocShell(false),
       // mAllowDNSPrefetch starts true, so that we can always reliably && it
       // with various values that might disable it.  Since we never prefetch
@@ -12573,8 +12572,6 @@ void Document::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
   if (auto* wgc = GetWindowGlobalChild()) {
     wgc->UnblockBFCacheFor(BFCacheStatus::PAGE_LOADING);
   }
-
-  mIsCompletelyLoaded = true;
 }
 
 static void DispatchFullscreenChange(Document& aDocument, nsINode* aTarget) {

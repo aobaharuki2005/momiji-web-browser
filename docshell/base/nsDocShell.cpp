@@ -72,7 +72,6 @@
 #include "mozilla/dom/Navigation.h"
 #include "mozilla/dom/NavigationBinding.h"
 #include "mozilla/dom/NavigationHistoryEntry.h"
-#include "mozilla/dom/NavigationUtils.h"
 #include "mozilla/dom/PerformanceNavigation.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/PolicyContainer.h"
@@ -8730,7 +8729,6 @@ struct SameDocumentNavigationState {
   bool mSameExceptHashes = false;
   bool mSecureUpgradeURI = false;
   bool mHistoryNavBetweenSameDoc = false;
-  bool mIdentical = false;
 };
 
 bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
@@ -8835,12 +8833,6 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
                                 &aState.mHistoryNavBetweenSameDoc);
     }
   }
-
-  // Two URIs are identical if they're same except hashes, they both have
-  // hashes, and their hashes are the same.
-  aState.mIdentical = aState.mSameExceptHashes &&
-                      (aState.mNewURIHasRef == aState.mCurrentURIHasRef) &&
-                      aState.mCurrentHash.Equals(aState.mNewHash);
 
   // A same document navigation happens when we navigate between two SHEntries
   // for the same document. We do a same document navigation under two
@@ -9389,8 +9381,10 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       // https://html.spec.whatwg.org/multipage/browsing-the-web.html#updating-the-document
       navigation->UpdateEntriesForSameDocumentNavigation(
           mActiveEntry.get(),
-          NavigationUtils::NavigationTypeFromLoadType(mLoadType).valueOr(
-              NavigationType::Push));
+          LOAD_TYPE_HAS_FLAGS(mLoadType, LOAD_FLAGS_REPLACE_HISTORY)
+              ? NavigationType::Replace
+          : aLoadState->LoadIsFromSessionHistory() ? NavigationType::Traverse
+                                                   : NavigationType::Push);
     }
 
     // Fire a hashchange event URIs differ, and only in their hashes.
@@ -9471,34 +9465,6 @@ uint32_t nsDocShell::GetLoadTypeForFormSubmission(
              : LOAD_LINK;
 }
 
-static void MaybeConvertToReplaceLoad(nsDocShellLoadState* aLoadState,
-                                      Document* aExtantDocument,
-                                      bool aIdenticalURI) {
-  if (!aExtantDocument) {
-    return;
-  }
-
-  bool convertToReplaceLoad = aLoadState->NeedsCompletelyLoadedDocument() &&
-                              !aExtantDocument->IsCompletelyLoaded();
-  if (const auto& historyBehavior = aLoadState->HistoryBehavior();
-      !convertToReplaceLoad && historyBehavior &&
-      *historyBehavior == NavigationHistoryBehavior::Auto) {
-    convertToReplaceLoad = aIdenticalURI;
-    if (convertToReplaceLoad && aExtantDocument->GetPrincipal()) {
-      aExtantDocument->GetPrincipal()->Equals(aLoadState->TriggeringPrincipal(),
-                                              &convertToReplaceLoad);
-    }
-  }
-
-  if (convertToReplaceLoad) {
-    MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug,
-                "Convert to replace when navigating from {} to {}",
-                *aExtantDocument->GetDocumentURI(), *aLoadState->URI());
-    aLoadState->SetLoadType(MaybeAddLoadFlags(
-        aLoadState->LoadType(), nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY));
-  }
-}
-
 // InternalLoad performs several of the steps from
 // https://html.spec.whatwg.org/#navigate.
 nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
@@ -9558,11 +9524,6 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   bool sameDocument =
       IsSameDocumentNavigation(aLoadState, sameDocumentNavigationState) &&
       !aLoadState->GetPendingRedirectedChannel();
-
-  if (mLoadType != LOAD_ERROR_PAGE) {
-    MaybeConvertToReplaceLoad(aLoadState, GetExtantDocument(),
-                              sameDocumentNavigationState.mIdentical);
-  }
 
   // Note: We do this check both here and in BrowsingContext::
   // LoadURI/InternalLoad, since document-specific sandbox flags are only
