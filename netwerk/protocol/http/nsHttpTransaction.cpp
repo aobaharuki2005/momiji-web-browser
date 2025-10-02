@@ -1881,18 +1881,13 @@ nsresult nsHttpTransaction::Restart() {
   // to the next
   mReuseOnRestart = false;
 
-  if (!mDoNotRemoveAltSvc && !mDontRetryWithDirectRoute) {
-    if (mConnInfo->IsHttp3ProxyConnection()) {
-      RefPtr<nsHttpConnectionInfo> ci =
-          mConnInfo->CreateConnectUDPFallbackConnInfo();
-      mConnInfo = ci;
-      RemoveAlternateServiceUsedHeader(mRequestHead);
-    } else if (!mConnInfo->GetRoutedHost().IsEmpty() || mConnInfo->IsHttp3()) {
-      RefPtr<nsHttpConnectionInfo> ci;
-      mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
-      mConnInfo = ci;
-      RemoveAlternateServiceUsedHeader(mRequestHead);
-    }
+  if (!mDoNotRemoveAltSvc &&
+      (!mConnInfo->GetRoutedHost().IsEmpty() || mConnInfo->IsHttp3()) &&
+      !mDontRetryWithDirectRoute) {
+    RefPtr<nsHttpConnectionInfo> ci;
+    mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
+    mConnInfo = ci;
+    RemoveAlternateServiceUsedHeader(mRequestHead);
   }
 
   // Reset mDoNotRemoveAltSvc for the next try.
@@ -3539,8 +3534,7 @@ void nsHttpTransaction::OnHttp3TunnelFallbackTimer() {
   }
 
   DisableHttp3(false);
-  // Setting this flag since DisableHttp3 is already called.
-  mDontRetryWithDirectRoute = true;
+
   if (mConnection) {
     mConnection->CloseTransaction(this, NS_ERROR_NET_RESET);
   }
@@ -3589,6 +3583,7 @@ void nsHttpTransaction::OnFastFallbackTimer() {
 void nsHttpTransaction::HandleFallback(
     nsHttpConnectionInfo* aFallbackConnInfo) {
   if (mConnection) {
+    MOZ_ASSERT(mActivated);
     // Close the transaction with NS_ERROR_NET_RESET, since we know doing this
     // will make transaction to be restarted.
     mConnection->CloseTransaction(this, NS_ERROR_NET_RESET);
