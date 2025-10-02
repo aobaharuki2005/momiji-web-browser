@@ -699,7 +699,16 @@ nsresult AntiTrackingUtils::ActivateStoragePermissionStateInParent(
     return NS_ERROR_FAILURE;
   }
 
+#ifdef DEBUG
+  // We are only allowed to transition from "Inactive" to "Has". Parent function
+  // should check this condition, but check here again to make extra sure.
+  nsILoadInfo::StoragePermissionState currentStorageAccess =
+      loadInfo->GetStoragePermission();
+  MOZ_ASSERT(currentStorageAccess == nsILoadInfo::InactiveStoragePermission);
+#endif
+
   // Allow accessing unpartitioned cookies
+  MOZ_TRY(loadInfo->SetStoragePermission(nsILoadInfo::HasStoragePermission));
   MOZ_TRY(wc->SetUsingStorageAccess(true));
 
   return NS_OK;
