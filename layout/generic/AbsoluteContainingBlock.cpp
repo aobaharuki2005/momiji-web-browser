@@ -835,6 +835,25 @@ void AbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
   }
 }
 
+struct MOZ_STACK_CLASS MOZ_RAII AutoFallbackStyleSetter {
+  AutoFallbackStyleSetter(nsIFrame* aFrame, ComputedStyle* aFallbackStyle)
+      : mFrame(aFrame) {
+    if (aFallbackStyle) {
+      mOldStyle = aFrame->SetComputedStyleWithoutNotification(aFallbackStyle);
+    }
+  }
+
+  ~AutoFallbackStyleSetter() {
+    if (mOldStyle) {
+      mFrame->SetComputedStyleWithoutNotification(std::move(mOldStyle));
+    }
+  }
+
+ private:
+  nsIFrame* const mFrame;
+  RefPtr<ComputedStyle> mOldStyle;
+};
+
 // XXX Optimize the case where it's a resize reflow and the absolutely
 // positioned child has the exact same size and position and skip the
 // reflow...
@@ -872,9 +891,8 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
 #endif  // DEBUG
 
   const bool isGrid = aFlags.contains(AbsPosReflowFlag::IsGridContainerCB);
-  const auto* stylePos = aKidFrame->StylePosition();
   // TODO(bug 1989059): position-try-order.
-  auto fallbacks = stylePos->mPositionTryFallbacks._0.AsSpan();
+  auto fallbacks = aKidFrame->StylePosition()->mPositionTryFallbacks._0.AsSpan();
   Maybe<uint32_t> currentFallbackIndex;
   // TODO(emilio): Right now fallback only applies to position-area, which only
   // makes a difference with a default anchor... Generalize it?
@@ -934,20 +952,18 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
   };
 
   do {
+    AutoFallbackStyleSetter fallback(aKidFrame, currentFallbackStyle);
     const nsRect usedCb = [&] {
       if (isGrid) {
         // TODO(emilio): how does position-area interact with grid?
         return nsGridContainerFrame::GridItemCB(aKidFrame);
       }
 
-      auto positionArea = stylePos->mPositionArea;
+      auto positionArea = aKidFrame->StylePosition()->mPositionArea;
       const StylePositionTryFallbacksTryTactic* tactic = nullptr;
       if (currentFallback) {
         if (currentFallback->IsIdentAndOrTactic()) {
           const auto& item = currentFallback->AsIdentAndOrTactic();
-          if (currentFallbackStyle) {
-            positionArea = currentFallbackStyle->StylePosition()->mPositionArea;
-          }
           tactic = &item.try_tactic;
         } else {
           MOZ_ASSERT(currentFallback->IsPositionArea());
