@@ -370,6 +370,14 @@ jobs:
           include-push-tasks: true
       when: []
 
+    - name: retrigger-perftests-autoland
+      job:
+          type: decision-task
+          treeherder-symbol: ret-perftest-auto
+          target-tasks-method: retrigger-perftests-autoland
+          include-push-tasks: true
+      when: []
+
     - name: scriptworker-canary
       job:
           type: trigger-action

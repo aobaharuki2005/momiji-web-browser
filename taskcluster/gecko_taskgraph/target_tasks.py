@@ -1553,6 +1553,32 @@ def target_tasks_perftest_autoland(full_task_graph, parameters, graph_config):
             yield name
 
 
+@register_target_task("retrigger-perftests-autoland")
+def retrigger_perftests_autoland_commits(full_task_graph, parameters, graph_config):
+    """
+    In this transform we are trying to do retrigger the following tasks 4 times every 20 commits in autoland:
+    - "perftest-android-hw-a55-aarch64-shippable-startup-fenix-cold-main-first-frame",
+    - "perftest-android-hw-a55-aarch64-shippable-startup-fenix-cold-view-nav-start",
+    - "perftest-android-hw-a55-aarch64-shippable-startup-fenix-homeview-startup",
+    - "perftest-android-hw-a55-aarch64-shippable-startup-fenix-newssite-applink-startup",
+    - "perftest-android-hw-a55-aarch64-shippable-startup-fenix-shopify-applink-startup",
+    - "perftest-android-hw-a55-aarch64-shippable-startup-fenix-tab-restore-shopify"
+    - "test-windows11-64-24h2-shippable/opt-browsertime-benchmark-firefox-speedometer3",
+    """
+    retrigger_count = 4
+    for name, task in full_task_graph.tasks.items():
+        if (
+            (
+                "perftest-android-hw-a55-aarch64-shippable-startup-fenix" in task.label
+                and "simple" not in task.label
+            )
+            or "test-windows11-64-24h2-shippable/opt-browsertime-benchmark-firefox-speedometer3"
+            in task.label
+        ):
+            task.attributes["task_duplicates"] = retrigger_count
+            yield name
+
+
 @register_target_task("eslint-build")
 def target_tasks_eslint_build(full_task_graph, parameters, graph_config):
     """Select the task to run additional ESLint rules which require a build."""
