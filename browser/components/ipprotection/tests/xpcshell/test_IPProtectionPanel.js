@@ -3,14 +3,14 @@ https://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { UIState } = ChromeUtils.importESModule(
-  "resource://services-sync/UIState.sys.mjs"
-);
 const { IPProtectionPanel } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPProtectionPanel.sys.mjs"
 );
 const { IPProtectionService, IPProtectionStates } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPProtectionService.sys.mjs"
+);
+const { IPPSignInWatcher } = ChromeUtils.importESModule(
+  "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs"
 );
 
 /**
@@ -131,9 +131,7 @@ add_task(async function test_updateState() {
  */
 add_task(async function test_IPProtectionPanel_signedIn() {
   let sandbox = sinon.createSandbox();
-  sandbox.stub(UIState, "get").returns({
-    status: UIState.STATUS_SIGNED_IN,
-  });
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => true);
   sandbox
     .stub(IPProtectionService.guardian, "isLinkedToGuardian")
     .resolves(true);
@@ -182,9 +180,7 @@ add_task(async function test_IPProtectionPanel_signedIn() {
  */
 add_task(async function test_IPProtectionPanel_signedOut() {
   let sandbox = sinon.createSandbox();
-  sandbox.stub(UIState, "get").returns({
-    status: UIState.STATUS_NOT_CONFIGURED,
-  });
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => false);
 
   let ipProtectionPanel = new IPProtectionPanel();
   let fakeElement = new FakeIPProtectionPanelElement();
@@ -227,9 +223,7 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
   fakeElement.isConnected = true;
 
   let sandbox = sinon.createSandbox();
-  sandbox.stub(UIState, "get").returns({
-    status: UIState.STATUS_SIGNED_IN,
-  });
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => true);
   sandbox
     .stub(IPProtectionService.guardian, "isLinkedToGuardian")
     .resolves(true);
