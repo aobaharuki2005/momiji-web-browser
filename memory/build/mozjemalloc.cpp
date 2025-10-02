@@ -2429,29 +2429,28 @@ arena_chunk_t* arena_t::DallocRun(arena_run_t* aRun, bool aDirty) {
     size = run_pages << gPageSize2Pow;
   }
 
-  // Mark pages as unallocated in the chunk map.
-  if (aDirty) {
-    for (size_t i = 0; i < run_pages; i++) {
-      MOZ_DIAGNOSTIC_ASSERT(
-          (chunk->mPageMap[run_ind + i].bits & CHUNK_MAP_DIRTY) == 0);
-      chunk->mPageMap[run_ind + i].bits = CHUNK_MAP_DIRTY;
-    }
+  // Mark pages as unallocated in the chunk map, at the same time clear all the
+  // page bits and size information, set the dirty bit if the pages are now
+  // dirty..
+  for (size_t i = 0; i < run_pages; i++) {
+    size_t& bits = chunk->mPageMap[run_ind + i].bits;
 
+    // No bits other than ALLOCATED or LARGE may be set.
+    MOZ_DIAGNOSTIC_ASSERT(
+        (bits & gPageSizeMask & ~(CHUNK_MAP_LARGE | CHUNK_MAP_ALLOCATED)) == 0);
+    bits = aDirty ? CHUNK_MAP_DIRTY : 0;
+  }
+
+  if (aDirty) {
     if (chunk->mNumDirty == 0 && !chunk->mIsPurging) {
       mChunksDirty.Insert(chunk);
     }
     chunk->mNumDirty += run_pages;
     mNumDirty += run_pages;
-  } else {
-    for (size_t i = 0; i < run_pages; i++) {
-      chunk->mPageMap[run_ind + i].bits &=
-          ~(CHUNK_MAP_LARGE | CHUNK_MAP_ALLOCATED);
-    }
   }
-  chunk->mPageMap[run_ind].bits =
-      size | (chunk->mPageMap[run_ind].bits & gPageSizeMask);
-  chunk->mPageMap[run_ind + run_pages - 1].bits =
-      size | (chunk->mPageMap[run_ind + run_pages - 1].bits & gPageSizeMask);
+
+  chunk->mPageMap[run_ind].bits |= size;
+  chunk->mPageMap[run_ind + run_pages - 1].bits |= size;
 
   run_ind = TryCoalesce(chunk, run_ind, run_pages, size);
 
