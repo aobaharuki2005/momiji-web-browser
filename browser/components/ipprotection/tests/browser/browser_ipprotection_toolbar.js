@@ -9,6 +9,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   IPProtectionService:
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
+  IPProtectionStates:
+    "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
 });
 
 /**
@@ -97,7 +99,9 @@ add_task(async function toolbar_icon_status() {
   );
   let vpnOffPromise = BrowserTestUtils.waitForEvent(
     lazy.IPProtectionService,
-    "IPProtectionService:Stopped"
+    "IPProtectionService:StateChanged",
+    false,
+    () => lazy.IPProtectionService.state === lazy.IPProtectionStates.READY
   );
   // Toggle the VPN off
   toggle.click();
@@ -174,7 +178,9 @@ add_task(async function customize_toolbar_remove_widget() {
 
   let stoppedEventPromise = BrowserTestUtils.waitForEvent(
     lazy.IPProtectionService,
-    "IPProtectionService:Stopped"
+    "IPProtectionService:StateChanged",
+    false,
+    () => lazy.IPProtectionService.state === lazy.IPProtectionStates.READY
   );
   CustomizableUI.removeWidgetFromArea(IPProtectionWidget.WIDGET_ID);
   // VPN should disconect when the toolbaritem is removed

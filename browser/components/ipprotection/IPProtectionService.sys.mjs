@@ -237,13 +237,6 @@ class IPProtectionServiceSingleton extends EventTarget {
 
     this.#setState(IPProtectionStates.READY);
 
-    this.dispatchEvent(
-      new CustomEvent("IPProtectionService:Stopped", {
-        bubbles: true,
-        composed: true,
-      })
-    );
-
     if (userAction) {
       this.reloadCurrentTab();
     }
