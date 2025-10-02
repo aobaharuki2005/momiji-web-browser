@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 import requests
 from redo import retry
 from taskgraph import create
-from taskgraph.target_tasks import register_target_task
+from taskgraph.target_tasks import filter_for_git_branch, register_target_task
 from taskgraph.util.attributes import attrmatch
 from taskgraph.util.parameterization import resolve_timestamps
 from taskgraph.util.taskcluster import (
@@ -28,6 +28,7 @@ from gecko_taskgraph.util.attributes import (
     is_try,
     match_run_on_hg_branches,
     match_run_on_projects,
+    match_run_on_repo_type,
 )
 from gecko_taskgraph.util.constants import TEST_KINDS
 from gecko_taskgraph.util.hg import find_hg_revision_push_info, get_hg_commit_message
@@ -98,6 +99,15 @@ def filter_out_cron(task, parameters):
     Filter out tasks that run via cron.
     """
     return not task.attributes.get("cron")
+
+
+def filter_for_repo_type(task, parameters):
+    """Filter tasks by repository type.
+
+    This filter is temporarily in-place to facilitate the hg.mozilla.org ->
+    Github migration."""
+    run_on_repo_types = set(task.attributes.get("run_on_repo_type", ["hg"]))
+    return match_run_on_repo_type(parameters["repository_type"], run_on_repo_types)
 
 
 def filter_for_project(task, parameters):
@@ -250,8 +260,10 @@ def standard_filter(task, parameters):
         filter_func(task, parameters)
         for filter_func in (
             filter_out_cron,
+            filter_for_repo_type,
             filter_for_project,
             filter_for_hg_branch,
+            filter_for_git_branch,
             filter_tests_without_manifests,
         )
     )

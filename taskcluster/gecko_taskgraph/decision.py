@@ -116,6 +116,10 @@ PER_PROJECT_PARAMETERS = {
     "toolchains": {
         "target_tasks_method": "mozilla_central_tasks",
     },
+    # git projects
+    "staging-firefox": {
+        "target_tasks_method": "default",
+    },
     # the default parameters are used for projects that do not match above.
     "default": {
         "target_tasks_method": "default",

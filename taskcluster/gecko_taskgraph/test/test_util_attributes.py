@@ -5,10 +5,14 @@
 
 import unittest
 
+import pytest
 from mozunit import main
 from taskgraph.util.attributes import attrmatch
 
-from gecko_taskgraph.util.attributes import match_run_on_projects
+from gecko_taskgraph.util.attributes import (
+    match_run_on_projects,
+    match_run_on_repo_type,
+)
 
 
 class Attrmatch(unittest.TestCase):
@@ -93,6 +97,20 @@ class MatchRunOnProjects(unittest.TestCase):
             match_run_on_projects("mozilla-release", ["release", "birch", "maple"])
         )
         self.assertTrue(match_run_on_projects("birch", ["birch", "trunk"]))
+
+
+@pytest.mark.parametrize(
+    "repo_type,run_on_repo_types,expected",
+    (
+        ("hg", ["hg"], True),
+        ("hg", [], False),
+        ("hg", ["all"], True),
+        ("git", ["git", "hg"], True),
+        ("git", ["hg"], False),
+    ),
+)
+def test_match_run_on_repo_type(repo_type, run_on_repo_types, expected):
+    assert match_run_on_repo_type(repo_type, run_on_repo_types) == expected
 
 
 if __name__ == "__main__":
