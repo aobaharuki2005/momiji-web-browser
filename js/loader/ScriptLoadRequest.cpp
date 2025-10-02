@@ -11,7 +11,6 @@
 #include "mozilla/dom/ScriptLoadContext.h"
 #include "mozilla/dom/WorkerLoadContext.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
@@ -70,20 +69,10 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ScriptLoadRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptLoadRequest)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptLoadRequest)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchOptions, mOriginPrincipal, mBaseURL,
-                                  mLoadedScript, mLoadContext)
-  tmp->mScriptForCache = nullptr;
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions, mLoadContext, mLoadedScript)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION(ScriptLoadRequest, mFetchOptions, mOriginPrincipal,
+                         mBaseURL, mLoadedScript, mLoadContext)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mScriptForCache)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 ScriptLoadRequest::ScriptLoadRequest(
@@ -108,7 +97,7 @@ ScriptLoadRequest::ScriptLoadRequest(
   }
 }
 
-ScriptLoadRequest::~ScriptLoadRequest() { DropJSObjects(this); }
+ScriptLoadRequest::~ScriptLoadRequest() {}
 
 void ScriptLoadRequest::SetReady() {
   MOZ_ASSERT(!IsFinished());
@@ -245,10 +234,7 @@ void ScriptLoadRequest::SetPendingFetchingError() {
 
 void ScriptLoadRequest::MarkScriptForCache(JSScript* aScript) {
   MOZ_ASSERT(!IsModuleRequest());
-  MOZ_ASSERT(!mScriptForCache);
   MarkForCache();
-  mScriptForCache = aScript;
-  HoldJSObjects(this);
 }
 
 static bool IsInternalURIScheme(nsIURI* uri) {

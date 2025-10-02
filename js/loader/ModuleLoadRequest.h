@@ -11,6 +11,7 @@
 #include "ScriptLoadRequest.h"
 #include "ModuleLoaderBase.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "js/RootingAPI.h"
 #include "js/Value.h"
 #include "nsURIHashKey.h"
@@ -27,11 +28,7 @@ class ModuleLoaderBase;
 // multiple imports of the same module.
 
 class ModuleLoadRequest final : public ScriptLoadRequest {
-  ~ModuleLoadRequest() {
-    MOZ_ASSERT(!mReferrerScript);
-    MOZ_ASSERT(!mModuleRequestObj);
-    MOZ_ASSERT(mPayload.isUndefined());
-  }
+  ~ModuleLoadRequest();
 
   ModuleLoadRequest(const ModuleLoadRequest& aOther) = delete;
   ModuleLoadRequest(ModuleLoadRequest&& aOther) = delete;
