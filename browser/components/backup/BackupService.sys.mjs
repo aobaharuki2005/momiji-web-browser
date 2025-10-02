@@ -34,6 +34,8 @@ const BACKUP_RETRY_LIMIT_PREF_NAME = "browser.backup.backup-retry-limit";
 const DISABLED_ON_IDLE_RETRY_PREF_NAME =
   "browser.backup.disabled-on-idle-backup-retry";
 const BACKUP_DEBUG_INFO_PREF_NAME = "browser.backup.backup-debug-info";
+const MAXIMUM_NUMBER_OF_UNREMOVABLE_STAGING_ITEMS_PREF_NAME =
+  "browser.backup.max-num-unremovable-staging-items";
 
 const SCHEMAS = Object.freeze({
   BACKUP_MANIFEST: 1,
@@ -169,6 +171,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "isRetryDisabledOnIdle",
   DISABLED_ON_IDLE_RETRY_PREF_NAME,
   false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "maximumNumberOfUnremovableStagingItems",
+  MAXIMUM_NUMBER_OF_UNREMOVABLE_STAGING_ITEMS_PREF_NAME,
+  5
 );
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -1578,7 +1587,9 @@ export class BackupService extends EventTarget {
 
   /**
    * Constructs the staging folder for the backup in the passed in backup
-   * folder. If a pre-existing staging folder exists, it will be cleared out.
+   * folder. If the backup (snapshots) folder isn't empty, it will be cleared
+   * out.  If that process fails to remove more than
+   * lazy.maximumNumberOfUnremovableStagingItems then the backup is aborted.
    *
    * @param {string} backupDirPath
    *   The path to the backup folder.
@@ -1586,19 +1597,71 @@ export class BackupService extends EventTarget {
    *   The path to the empty staging folder.
    */
   async #prepareStagingFolder(backupDirPath) {
-    let stagingPath = PathUtils.join(backupDirPath, "staging");
-    lazy.logConsole.debug("Checking for pre-existing staging folder");
-    if (await IOUtils.exists(stagingPath)) {
-      // A pre-existing staging folder exists. A previous backup attempt must
-      // have failed or been interrupted. We'll clear it out.
-      lazy.logConsole.warn("A pre-existing staging folder exists. Clearing.");
-      await IOUtils.remove(stagingPath, {
-        recursive: true,
-        retryReadonly: true,
-      });
+    lazy.logConsole.debug(`Clearing snapshot folder ${backupDirPath}`);
+    let numUnremovableStagingItems = 0;
+    let folder = await IOUtils.getFile(backupDirPath);
+    let folderEntries = folder.directoryEntries;
+    if (folderEntries) {
+      let unremovableContents = [];
+      for (let folderItem of folderEntries) {
+        try {
+          lazy.logConsole.debug(`Removing ${folderItem.path}`);
+          await IOUtils.remove(folderItem, {
+            recursive: true,
+            retryReadonly: true,
+          });
+        } catch (e) {
+          lazy.logConsole.warn(
+            `Failed to remove stale snapshot item ${folderItem.path}.  Exception: ${e}`
+          );
+          // Whatever the problem was with removing the snapshot dir contents
+          // (presumably a staging dir or archive), keep going until
+          // maximumNumberOfUnremovableStagingItems + 1 have failed to be
+          // removed, at which point we abandon the backup, in order to avoid
+          // filling drive space.
+          numUnremovableStagingItems++;
+          unremovableContents.push(folderItem.path);
+          if (
+            numUnremovableStagingItems >
+            lazy.maximumNumberOfUnremovableStagingItems
+          ) {
+            let error = new BackupError(
+              `Failed to remove ${numUnremovableStagingItems} items from ${backupDirPath}`,
+              ERRORS.FILE_SYSTEM_ERROR
+            );
+            error.stack = e.stack;
+            error.unremovableContents = unremovableContents;
+            throw error;
+          }
+        }
+      }
     }
-    await IOUtils.makeDirectory(stagingPath);
 
+    lazy.logConsole.debug(
+      `${numUnremovableStagingItems} unremovable staging items found.  Proceeding with backup.  Determining staging folder.`
+    );
+    let stagingPath;
+    for (let i = 0; i < lazy.maximumNumberOfUnremovableStagingItems + 1; i++) {
+      // Attempt to use "staging-i" as the name of the staging folder.
+      let potentialStagingPath = PathUtils.join(backupDirPath, "staging-" + i);
+      if (!(await IOUtils.exists(potentialStagingPath))) {
+        stagingPath = potentialStagingPath;
+        await IOUtils.makeDirectory(stagingPath);
+        break;
+      }
+    }
+
+    if (!stagingPath) {
+      // Should be impossible.  We determined there were no more than
+      // maximumNumberOfUnremovableStagingItems items but we then found
+      // maximumNumberOfUnremovableStagingItems + 1 staging folders.
+      throw new BackupError(
+        `Internal error in attempt to create staging folder`,
+        ERRORS.FILE_SYSTEM_ERROR
+      );
+    }
+
+    lazy.logConsole.debug(`Staging folder ${stagingPath} is prepared`);
     return stagingPath;
   }
 
@@ -2453,10 +2516,19 @@ export class BackupService extends EventTarget {
           existingBackupPath !== renamedBackupPath &&
           existingBackupPath.match(expectedFormatRegex)
         ) {
-          await IOUtils.remove(existingBackupPath, {
-            recursive: true,
-            retryReadonly: true,
-          });
+          try {
+            // If any copied source files were read-only then we need to remove
+            // read-only status from them to delete the staging folder.
+            await IOUtils.remove(existingBackupPath, {
+              recursive: true,
+              retryReadonly: true,
+            });
+          } catch (e) {
+            // Ignore any failures in removing staging items.
+            lazy.logConsole.debug(
+              `Failed to remove staging item ${existingBackupPath}. Exception ${e}`
+            );
+          }
         }
       }
       return renamedBackupPath;

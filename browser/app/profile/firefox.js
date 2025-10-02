@@ -3434,6 +3434,11 @@ pref("browser.backup.template.fallback-download.esr", " https://www.firefox.com/
 pref("browser.backup.errorCode", 0);
 pref("browser.backup.backup-retry-limit", 100);
 pref("browser.backup.disabled-on-idle-backup-retry", false);
+// Limit of number of unremovable staging directories and archives that are
+// permitted before backup will stop making additional backups.  Unremovable
+// staging directories/archives are ones that the file system prevents us from
+// removing for any reason.
+pref("browser.backup.max-num-unremovable-staging-items", 5);
 
 #ifdef NIGHTLY_BUILD
   // Pref to enable the new profiles

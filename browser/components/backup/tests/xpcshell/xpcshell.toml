@@ -20,7 +20,10 @@ prefs = [
 support-files = ["data/test_xulstore.json"]
 
 ["test_BackupService.js"]
-support-files = ["data/test_archive.template.html"]
+support-files = [
+  "data/test_archive.template.html",
+  "data/test_keep_file_open.worker.js"
+]
 
 ["test_BackupService_archive.js"]
 support-files = [

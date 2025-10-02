@@ -6,6 +6,9 @@ https://creativecommons.org/publicdomain/zero/1.0/ */
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
+const { BasePromiseWorker } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseWorker.sys.mjs"
+);
 const { JsonSchema } = ChromeUtils.importESModule(
   "resource://gre/modules/JsonSchema.sys.mjs"
 );
@@ -667,6 +670,162 @@ add_task(
 );
 
 /**
+ * Creates a unique file in the given folder and tells a worker to keep it
+ * open until we post a close message.  Checks that the folder is not
+ * removable as a result.
+ *
+ * @param {string} folderpath
+ * @returns {object} {{ path: string, worker: OpenFileWorker }}
+ */
+async function openUniqueFileInFolder(folderpath) {
+  let testFile = await IOUtils.createUniqueFile(folderpath, "openfile");
+  await IOUtils.writeUTF8(testFile, "");
+  Assert.ok(
+    await IOUtils.exists(testFile),
+    testFile + " should have been created"
+  );
+  // Use a worker to keep the testFile open.
+  const worker = new BasePromiseWorker(
+    "resource://test/data/test_keep_file_open.worker.js"
+  );
+  await worker.post("open", [testFile]);
+
+  await Assert.rejects(
+    IOUtils.remove(folderpath),
+    /NS_ERROR_FILE_DIR_NOT_EMPTY/,
+    "attempt to remove folder threw an exception"
+  );
+  Assert.ok(await IOUtils.exists(folderpath), "folder is not removable");
+  return { path: testFile, worker };
+}
+
+/**
+ * Stop the worker returned from openUniqueFileInFolder and close the file.
+ *
+ * @param {object} worker The worker returned by openUniqueFileInFolder
+ */
+async function closeTestFile(worker) {
+  await worker.post("close", []);
+}
+
+/**
+ * Run a backup and check that it either succeeded with a response or failed
+ * and returned null.
+ *
+ * @param {object}  backupService Instance of BackupService
+ * @param {string}  profilePath   Full path to profile folder
+ * @param {boolean} shouldSucceed Whether to expect success or failure
+ */
+async function checkBackup(backupService, profilePath, shouldSucceed) {
+  if (shouldSucceed) {
+    await backupService.createBackup({ profilePath }).then(result => {
+      Assert.ok(true, "createBackup did not throw an exception");
+      Assert.notEqual(
+        result,
+        null,
+        `createBackup should not have returned null`
+      );
+    });
+    await backupService.deleteLastBackup();
+    return;
+  }
+
+  await Assert.rejects(
+    backupService.createBackup({ profilePath }),
+    /Failed to remove/,
+    "createBackup threw correct exception"
+  );
+}
+
+/**
+ * Checks that browser.backup.max-num-unremovable-staging-items allows backups
+ * to succeed if the snapshots folder contains no more than that many
+ * unremovable items, and that it fails if there are more than that.
+ *
+ * @param {number} unremovableItemsLimit Max number of unremovable items that
+ *                                       backups can succeed with.
+ */
+async function checkBackupWithUnremovableItems(unremovableItemsLimit) {
+  Services.prefs.setIntPref(
+    "browser.backup.max-num-unremovable-staging-items",
+    unremovableItemsLimit
+  );
+  registerCleanupFunction(() =>
+    Services.prefs.clearUserPref(
+      "browser.backup.max-num-unremovable-staging-items"
+    )
+  );
+
+  let sandbox = sinon.createSandbox();
+
+  const TEST_UID = "ThisIsMyTestUID";
+  const TEST_EMAIL = "foxy@mozilla.org";
+
+  sandbox.stub(UIState, "get").returns({
+    status: UIState.STATUS_SIGNED_IN,
+    uid: TEST_UID,
+    email: TEST_EMAIL,
+  });
+  const backupService = new BackupService({});
+
+  let profilePath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "profileDir"
+  );
+  let snapshotsFolder = PathUtils.join(
+    profilePath,
+    BackupService.PROFILE_FOLDER_NAME,
+    BackupService.SNAPSHOTS_FOLDER_NAME
+  );
+
+  let openFileWorkers = [];
+  try {
+    for (let i = 0; i < unremovableItemsLimit + 1; i++) {
+      info(`Performing backup #${i}`);
+      await checkBackup(backupService, profilePath, true /* shouldSucceed */);
+
+      // Create and open a file so that the snapshots folder cannot be
+      // emptied.
+      openFileWorkers.push(await openUniqueFileInFolder(snapshotsFolder));
+    }
+
+    // We are now over the unremovableItemsLimit.
+    info(`Performing backup that should fail`);
+    await checkBackup(backupService, profilePath, false /* shouldSucceed */);
+  } finally {
+    await Promise.all(
+      openFileWorkers.map(async ofw => await closeTestFile(ofw.worker))
+    );
+    await Promise.all(
+      openFileWorkers.map(async ofw => await IOUtils.remove(ofw.path))
+    );
+    await IOUtils.remove(profilePath, { recursive: true });
+    sandbox.restore();
+  }
+}
+
+/**
+ * Tests that any non-read-only file deletion errors do not prevent backups
+ * until the browser.backup.max-num-unremovable-staging-items limit has been
+ * reached.
+ */
+add_task(
+  async function test_createBackup_robustToNonReadonlyFileSystemErrorsAllowOneNonReadonly() {
+    await checkBackupWithUnremovableItems(1);
+  }
+);
+
+/**
+ * Tests that browser.backup.max-num-unremovable-staging-items works for value
+ * 0.
+ */
+add_task(
+  async function test_createBackup_robustToNonReadonlyFileSystemErrors() {
+    await checkBackupWithUnremovableItems(0);
+  }
+);
+
+/**
  * Tests that if there's a post-recovery.json file in the profile directory
  * when checkForPostRecovery() is called, that it is processed, and the
  * postRecovery methods on the associated BackupResources are called with the
@@ -787,6 +946,6 @@ add_task(async function test__deleteLastBackup_file_does_not_exist() {
   // Now delete the file ourselves before we call deleteLastBackup,
   // so that it's missing from the disk.
   await testDeleteLastBackupHelper(async lastBackupFilePath => {
-    await IOUtils.remove(lastBackupFilePath);
+    await maybeRemovePath(lastBackupFilePath);
   });
 });
