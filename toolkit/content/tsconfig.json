@@ -6,6 +6,7 @@
     "./preferencesBindings.js"
   ],
   "compilerOptions": {
+    "noImplicitAny": true,
     "checkJs": true,
     "plugins": [
       {
