@@ -164,4 +164,7 @@ MOZ_JEMALLOC_API void GetPHCStats(PHCStats& aStats);
 }  // namespace phc
 }  // namespace mozilla
 
+// Initialise PHC (called from mozjemalloc's initialisation.
+void phc_init();
+
 #endif /* PHC_h */

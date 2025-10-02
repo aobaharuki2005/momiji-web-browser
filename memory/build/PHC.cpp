@@ -1445,8 +1445,7 @@ PtrKind PHC::GetPtrKind(const void* aPtr) {
 // These globals are read together and hardly ever written.  They should be on
 // the same cache line.  They should be in a different cache line to data that
 // is manipulated often (sMutex and mNow are members of sPHC for that reason) so
-// that this cache line can be shared amoung cores.  This makes a measurable
-// impact to calls to maybe_init()
+// that this cache line can be shared amoung cores.
 alignas(kCacheLineSize) PHCRegion PHC::sRegion;
 PHC* PHC::sPHC;
 
@@ -1484,13 +1483,19 @@ class AutoDisableOnCurrentThread {
 // dynamically (so we can guarantee their construction in this function) rather
 // than statically.  sRegion is allocated statically to avoid an extra
 // dereference.
-static bool phc_init() {
+//
+// If initialisation fails sPHC will be null.  Returning bool won't help the
+// caller as there's nothing they can do.
+void phc_init() {
+  // We must only initialise once.
+  MOZ_ASSERT(!PHC::sPHC);
+
   if (GetKernelPageSize() != kPageSize) {
-    return false;
+    return;
   }
 
   if (!PHC::sRegion.AllocVirtualAddresses()) {
-    return false;
+    return;
   }
 
   // sPHC is never freed. It lives for the life of the process.
@@ -1502,20 +1507,6 @@ static bool phc_init() {
   // in-depth details.
   pthread_atfork(PHC::prefork, PHC::postfork_parent, PHC::postfork_child);
 #endif
-
-  return true;
-}
-
-static inline bool maybe_init() {
-  // This runs on hot paths and we can save some memory accesses by using sPHC
-  // to test if we've already initialised PHC successfully.
-  if (MOZ_UNLIKELY(!PHC::sPHC)) {
-    // The lambda will only be called once and is thread safe.
-    static bool sInitSuccess = []() { return phc_init(); }();
-    return sInitSuccess;
-  }
-
-  return true;
 }
 
 //---------------------------------------------------------------------------
@@ -1526,7 +1517,7 @@ static inline bool maybe_init() {
 // should be inlined into the caller while the remainder of the tests that are
 // in MaybePageAlloc need not be inlined.
 static MOZ_ALWAYS_INLINE bool ShouldPageAllocHot(size_t aReqSize) {
-  if (MOZ_UNLIKELY(!maybe_init())) {
+  if (MOZ_UNLIKELY(!PHC::sPHC)) {
     return false;
   }
 
@@ -1741,7 +1732,7 @@ inline void* MozJemallocPHC::calloc(size_t aNum, size_t aReqSize) {
 }
 
 MOZ_ALWAYS_INLINE static bool FastIsPHCPtr(const void* aPtr) {
-  if (MOZ_UNLIKELY(!maybe_init())) {
+  if (MOZ_UNLIKELY(!PHC::sPHC)) {
     return false;
   }
 
@@ -2016,7 +2007,7 @@ inline void MozJemallocPHC::jemalloc_stats_internal(
     jemalloc_stats_t* aStats, jemalloc_bin_stats_t* aBinStats) {
   MozJemalloc::jemalloc_stats_internal(aStats, aBinStats);
 
-  if (!maybe_init()) {
+  if (!PHC::sPHC) {
     // If we're not initialised, then we're not using any additional memory and
     // have nothing to add to the report.
     return;
@@ -2210,7 +2201,7 @@ void SetPHCSize(size_t aSizeBytes) {
 }
 
 void GetPHCStats(PHCStats& aStats) {
-  if (!maybe_init()) {
+  if (!PHC::sPHC) {
     aStats = PHCStats();
     return;
   }
@@ -2221,7 +2212,7 @@ void GetPHCStats(PHCStats& aStats) {
 // Enable or Disable PHC at runtime.  If PHC is disabled it will still trap
 // bad uses of previous allocations, but won't track any new allocations.
 void SetPHCState(PHCState aState) {
-  if (!maybe_init()) {
+  if (!PHC::sPHC) {
     return;
   }
 
@@ -2230,7 +2221,7 @@ void SetPHCState(PHCState aState) {
 
 void SetPHCProbabilities(int64_t aAvgDelayFirst, int64_t aAvgDelayNormal,
                          int64_t aAvgDelayPageReuse) {
-  if (!maybe_init()) {
+  if (!PHC::sPHC) {
     return;
   }
 
