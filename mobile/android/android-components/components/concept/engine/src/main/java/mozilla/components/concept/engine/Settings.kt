@@ -345,7 +345,7 @@ abstract class Settings {
     /**
      * Setting to control how Certificate Transparency information is processed.
      */
-    open var certificateTransparencyMode: Int by UnsupportedSetting()
+    open var certificateTransparencyMode: Int? by UnsupportedSetting()
 
     /**
      * Setting to control whether post-quantum key exchange mechanisms are used
@@ -440,7 +440,7 @@ data class DefaultSettings(
     val getDesktopMode: () -> Boolean = { false },
     override var cookieBehaviorOptInPartitioning: Boolean = false,
     override var cookieBehaviorOptInPartitioningPBM: Boolean = false,
-    override var certificateTransparencyMode: Int = 0,
+    override var certificateTransparencyMode: Int? = null,
     override var postQuantumKeyExchangeEnabled: Boolean? = null,
     override var dohAutoselectEnabled: Boolean = false,
     override var bannedPorts: String = "",

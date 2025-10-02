@@ -718,26 +718,26 @@ class RuntimeSettingsTest : BaseSessionTest() {
         val geckoRuntimeSettings = sessionRule.runtime.settings
 
         assertThat(
-            "Certificate Transparency mode should default to 1",
-            geckoRuntimeSettings.certificateTransparencyMode,
-            equalTo(1),
-        )
-
-        geckoRuntimeSettings.setCertificateTransparencyMode(2)
-
-        assertThat(
-            "Certificate Transparency mode should be set to 2",
+            "Certificate Transparency mode should default to 2",
             geckoRuntimeSettings.certificateTransparencyMode,
             equalTo(2),
+        )
+
+        geckoRuntimeSettings.setCertificateTransparencyMode(0)
+
+        assertThat(
+            "Certificate Transparency mode should be set to 0",
+            geckoRuntimeSettings.certificateTransparencyMode,
+            equalTo(0),
         )
 
         val preference =
             (sessionRule.getPrefs("security.pki.certificate_transparency.mode").get(0)) as Int
 
         assertThat(
-            "Certificate Transparency mode pref should be set to 2",
+            "Certificate Transparency mode pref should be set to 0",
             preference,
-            equalTo(2),
+            equalTo(0),
         )
     }
 

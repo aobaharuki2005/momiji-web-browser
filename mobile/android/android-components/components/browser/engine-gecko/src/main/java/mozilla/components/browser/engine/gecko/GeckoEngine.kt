@@ -1636,9 +1636,9 @@ class GeckoEngine(
             get() = runtime.settings.cookieBehaviorOptInPartitioningPBM
             set(value) { runtime.settings.setCookieBehaviorOptInPartitioningPBM(value) }
 
-        override var certificateTransparencyMode: Int
-            get() = runtime.settings.certificateTransparencyMode
-            set(value) { runtime.settings.setCertificateTransparencyMode(value) }
+        override var certificateTransparencyMode: Int?
+            get() = runtime.settings.certificateTransparencyMode.or(2)
+            set(value) { value?.let { runtime.settings.setCertificateTransparencyMode(value) } }
 
         override var postQuantumKeyExchangeEnabled: Boolean?
             get() = runtime.settings.postQuantumKeyExchangeEnabled.or(false)

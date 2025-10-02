@@ -788,8 +788,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
       new Pref<Boolean>("network.cookie.cookieBehavior.optInPartitioning", false);
   /* package */ final Pref<Boolean> mCookieBehaviorOptInPartitioningPBM =
       new Pref<Boolean>("network.cookie.cookieBehavior.optInPartitioning.pbmode", false);
-  /* package */ final Pref<Integer> mCertificateTransparencyMode =
-      new Pref<Integer>("security.pki.certificate_transparency.mode", 1);
+  /* package */ final PrefWithoutDefault<Integer> mCertificateTransparencyMode =
+      new PrefWithoutDefault<Integer>("security.pki.certificate_transparency.mode");
   /* package */ final PrefWithoutDefault<Boolean> mPostQuantumKeyExchangeTLSEnabled =
       new PrefWithoutDefault<Boolean>("security.tls.enable_kyber");
   /* package */ final PrefWithoutDefault<Boolean> mPostQuantumKeyExchangeHttp3Enabled =
@@ -1237,7 +1237,9 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
    * @return What certificate transparency mode has been set.
    */
   public @NonNull int getCertificateTransparencyMode() {
-    return mCertificateTransparencyMode.get();
+    final Integer MODE_ENFORCE = 2;
+    final Integer certificateTransparencyMode = mCertificateTransparencyMode.get();
+    return certificateTransparencyMode != null ? certificateTransparencyMode : MODE_ENFORCE;
   }
 
   /**
