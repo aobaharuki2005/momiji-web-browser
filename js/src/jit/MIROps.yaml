@@ -3957,6 +3957,8 @@
   type_policy: none
   generate_lir: true
   lir_temps: 1
+  alias_set: none
+  guard: true
 
 - name: WasmExtendU32Index
   operands:
