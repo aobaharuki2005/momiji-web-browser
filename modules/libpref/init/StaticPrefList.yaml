@@ -15135,12 +15135,7 @@
 # Use NSPR for HTTP3 UDP IO
 - name: network.http.http3.use_nspr_for_io
   type: RelaxedAtomicBool
-#ifdef ANDROID
-  # Holding back on Android for now given <https://bugzilla.mozilla.org/show_bug.cgi?id=1987256>.
-  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
-#else
   value: false
-#endif
   mirror: always
   rust: true
 
@@ -15178,6 +15173,11 @@
   # Disable GSO on Windows.
   #
   # See https://bugzilla.mozilla.org/show_bug.cgi?id=1979279 for details.
+  value: 1
+#elif defined(ANDROID)
+  # Disable GSO on Android.
+  #
+  # See <https://bugzilla.mozilla.org/show_bug.cgi?id=1987256> for details.
   value: 1
 #else
   # Current industry standard. Likely worth tuning.
