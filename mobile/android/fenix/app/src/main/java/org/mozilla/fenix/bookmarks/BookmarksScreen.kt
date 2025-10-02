@@ -914,10 +914,8 @@ private fun SelectFolderScreen(
         topBar = {
             SelectFolderTopBar(
                 onBackClick = { store.dispatch(BackClicked) },
-                onNewFolderClick = if (showNewFolderButton) {
+                onNewFolderClick = showNewFolderButton.takeIf { it }?.let {
                     { store.dispatch(AddFolderClicked) }
-                } else {
-                    null
                 },
             )
         },
@@ -930,52 +928,66 @@ private fun SelectFolderScreen(
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            items(state?.folders ?: listOf()) { folder ->
-                if (folder.isDesktopRoot) {
-                    Row(
-                        modifier = Modifier
-                            .padding(start = folder.startPadding)
-                            .width(FirefoxTheme.layout.size.containerMaxWidth),
-                    ) {
-                        // We need to account for not having an icon
-                        Spacer(modifier = Modifier.width(56.dp))
-                        Text(
-                            text = folder.title,
-                            color = FirefoxTheme.colors.textAccent,
-                            style = FirefoxTheme.typography.headline8,
-                        )
-                    }
-                } else {
-                    val isSelected = folder.guid == state?.selectedGuid
-                    SelectableIconListItem(
-                        label = folder.title,
-                        isSelected = isSelected,
-                        beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
-                        modifier = Modifier
-                            .padding(start = folder.startPadding)
-                            .width(FirefoxTheme.layout.size.containerMaxWidth)
-                            .toggleable(
-                                value = isSelected,
-                                role = Role.RadioButton,
-                                onValueChange = { _ -> store.dispatch(SelectFolderAction.ItemClicked(folder)) },
-                            ),
-                    )
-                }
+            items(state?.folders.orEmpty()) { folder ->
+                FolderListItem(
+                    folder = folder,
+                    isSelected = folder.guid == state?.selectedGuid,
+                    onClick = { store.dispatch(SelectFolderAction.ItemClicked(folder)) },
+                )
             }
+
             if (showNewFolderButton) {
                 item {
-                    IconListItem(
-                        label = stringResource(R.string.bookmark_select_folder_new_folder_button_title),
-                        modifier = Modifier.width(FirefoxTheme.layout.size.containerMaxWidth),
-                        labelTextColor = FirefoxTheme.colors.textAccent,
-                        beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_add_24),
-                        beforeIconTint = FirefoxTheme.colors.textAccent,
-                        onClick = { store.dispatch(AddFolderClicked) },
-                    )
+                    NewFolderListItem { store.dispatch(AddFolderClicked) }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun FolderListItem(
+    folder: SelectFolderItem,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+    val modifier = Modifier
+        .padding(start = folder.startPadding)
+        .width(FirefoxTheme.layout.size.containerMaxWidth)
+
+    if (folder.isDesktopRoot) {
+        Row(modifier) {
+            Spacer(modifier = Modifier.width(56.dp))
+            Text(
+                text = folder.title,
+                color = FirefoxTheme.colors.textAccent,
+                style = FirefoxTheme.typography.headline8,
+            )
+        }
+    } else {
+        SelectableIconListItem(
+            label = folder.title,
+            isSelected = isSelected,
+            beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
+            modifier = modifier.toggleable(
+                value = isSelected,
+                role = Role.RadioButton,
+                onValueChange = { onClick() },
+            ),
+        )
+    }
+}
+
+@Composable
+private fun NewFolderListItem(onClick: () -> Unit) {
+    IconListItem(
+        label = stringResource(R.string.bookmark_select_folder_new_folder_button_title),
+        modifier = Modifier.width(FirefoxTheme.layout.size.containerMaxWidth),
+        labelTextColor = FirefoxTheme.colors.textAccent,
+        beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_add_24),
+        beforeIconTint = FirefoxTheme.colors.textAccent,
+        onClick = onClick,
+    )
 }
 
 @Composable
