@@ -26,6 +26,8 @@ private const val REVIEW_PROMPT_SHOWN_NIMBUS_EVENT_ID = "review_prompt_shown"
  * [Middleware] evaluating the triggers to show a review prompt.
  *
  * @param isReviewPromptFeatureEnabled If returns false disables the entire feature and prompt will never be shown.
+ * @param numberOfAppLaunches Returns number of app launches.
+ * @param isDefaultBrowser Returns true if app is set as the default system browser.
  * @param isTelemetryEnabled Returns true if the user allows sending technical and interaction telemetry.
  * @param createJexlHelper Returns a helper for evaluating JEXL expressions.
  * @param buildTriggerMainCriteria Builds a sequence of trigger's main criteria that all need to be true.
@@ -35,21 +37,20 @@ private const val REVIEW_PROMPT_SHOWN_NIMBUS_EVENT_ID = "review_prompt_shown"
  */
 class ReviewPromptMiddleware(
     private val isReviewPromptFeatureEnabled: () -> Boolean,
+    private val numberOfAppLaunches: () -> Int,
+    private val isDefaultBrowser: () -> Boolean,
     private val isTelemetryEnabled: () -> Boolean,
     private val createJexlHelper: () -> NimbusMessagingHelperInterface,
     private val buildTriggerMainCriteria: (NimbusMessagingHelperInterface) -> Sequence<Boolean> =
-        TiggerBuilder.mainCriteria(isReviewPromptFeatureEnabled),
+        TiggerBuilder::mainCriteria,
     private val buildTriggerSubCriteria: (NimbusMessagingHelperInterface) -> Sequence<Boolean> =
         TiggerBuilder::subCriteria,
     private val nimbusEventStore: NimbusEventStore,
 ) : Middleware<AppState, AppAction> {
 
     private object TiggerBuilder {
-        fun mainCriteria(
-            isReviewPromptEnabled: () -> Boolean,
-        ): (NimbusMessagingHelperInterface) -> Sequence<Boolean> = { jexlHelper ->
-            sequence {
-                yield(isReviewPromptEnabled())
+        fun mainCriteria(jexlHelper: NimbusMessagingHelperInterface): Sequence<Boolean> {
+            return sequence {
                 yield(hasNotBeenPromptedLastFourMonths(jexlHelper))
                 yield(usedAppOnAtLeastFourOfLastSevenDays(jexlHelper))
             }
@@ -87,6 +88,16 @@ class ReviewPromptMiddleware(
     private fun handleReviewPromptCheck(context: MiddlewareContext<AppState, AppAction>) {
         if (context.state.reviewPrompt != ReviewPromptState.Unknown) {
             // We only want to try to show it once to avoid unnecessary disk reads.
+            return
+        }
+
+        if (!isReviewPromptFeatureEnabled()) {
+            // Keep the simpler legacy behavior.
+            if (legacyReviewPromptTrigger(numberOfAppLaunches, isDefaultBrowser)) {
+                context.dispatch(ShowPlayStorePrompt)
+            } else {
+                context.dispatch(DoNotShowReviewPrompt)
+            }
             return
         }
 
@@ -157,4 +168,18 @@ internal fun usedAppOnAtLeastFourOfLastSevenDays(
     jexlHelper: NimbusMessagingHelperInterface,
 ): Boolean {
     return jexlHelper.evalJexlSafe("'app_opened'|eventCountNonZero('Days', 7) >= 4")
+}
+
+private const val NUMBER_OF_LAUNCHES_REQUIRED = 5
+
+/**
+ * Matches logic from ReviewPromptController.shouldShowPrompt, which has been deleted.
+ * Kept so we can fall back to it in case the custom review prompt is disabled with a kill-switch.
+ */
+@VisibleForTesting
+internal fun legacyReviewPromptTrigger(
+    numberOfAppLaunches: () -> Int,
+    isDefaultBrowser: () -> Boolean,
+): Boolean {
+    return isDefaultBrowser() && numberOfAppLaunches() >= NUMBER_OF_LAUNCHES_REQUIRED
 }
