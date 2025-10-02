@@ -364,6 +364,10 @@ newtab-wallpaper-celestial-eclipse-time-lapse = Lunar eclipse time lapse
 newtab-wallpaper-celestial-black-hole = Black hole galaxy illustration
 newtab-wallpaper-celestial-river = Satellite image of river
 
+## Firefox
+
+newtab-wallpaper-category-title-firefox = { -brand-product-name }
+
 
 # Variables
 #   $author_string (String) - The name of the creator of the photo.
