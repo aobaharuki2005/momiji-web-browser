@@ -65,13 +65,7 @@ export class SearchModeSwitcher {
 
   async #onPopupShowing() {
     await this.#buildSearchModeList();
-
     this.#input.view.close({ showFocusBorder: false });
-
-    // This moves the focus to the urlbar when the popup is closed.
-    this.#input.document.commandDispatcher.focusedElement =
-      this.#input.inputField;
-
     Glean.urlbarUnifiedsearchbutton.opened.add(1);
   }
 
@@ -145,6 +139,9 @@ export class SearchModeSwitcher {
       return;
     }
     if (event.type == "popuphiding") {
+      // This moves the focus to the urlbar when the popup is closed.
+      this.#input.document.commandDispatcher.focusedElement =
+        this.#input.inputField;
       this.#toolbarbutton.setAttribute("aria-expanded", "false");
       return;
     }
