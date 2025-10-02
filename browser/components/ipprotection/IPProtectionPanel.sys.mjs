@@ -12,7 +12,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   IPProtectionStates:
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
   IPProtection: "resource:///modules/ipprotection/IPProtection.sys.mjs",
-  IPPSignInWatcher: "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs",
 });
 
 import {
@@ -110,11 +109,14 @@ export class IPProtectionPanel {
   constructor(window, variant = "") {
     this.handleEvent = this.#handleEvent.bind(this);
 
-    let { activatedAt: protectionEnabledSince, hasUpgraded } =
-      lazy.IPProtectionService;
+    let {
+      isSignedIn,
+      activatedAt: protectionEnabledSince,
+      hasUpgraded,
+    } = lazy.IPProtectionService;
 
     this.state = {
-      isSignedOut: !lazy.IPPSignInWatcher.isSignedIn,
+      isSignedOut: !isSignedIn,
       isProtectionEnabled: !!protectionEnabledSince,
       protectionEnabledSince,
       location: {
@@ -357,6 +359,7 @@ export class IPProtectionPanel {
     } else if (event.type == "IPProtectionService:StateChanged") {
       let {
         state,
+        isSignedIn,
         activatedAt: protectionEnabledSince,
         hasUpgraded,
       } = lazy.IPProtectionService;
@@ -365,7 +368,7 @@ export class IPProtectionPanel {
         lazy.IPProtectionService.errors.includes(ERRORS.GENERIC);
 
       this.setState({
-        isSignedOut: !lazy.IPPSignInWatcher.isSignedIn,
+        isSignedOut: !isSignedIn,
         isProtectionEnabled: !!protectionEnabledSince,
         protectionEnabledSince,
         hasUpgraded,

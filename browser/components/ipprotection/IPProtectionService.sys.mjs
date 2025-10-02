@@ -10,7 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   GuardianClient: "resource:///modules/ipprotection/GuardianClient.sys.mjs",
   IPPHelpers: "resource:///modules/ipprotection/IPProtectionHelpers.sys.mjs",
   IPPProxyManager: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
-  IPPSignInWatcher: "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs",
+  UIState: "resource://services-sync/UIState.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
@@ -76,6 +76,7 @@ class IPProtectionServiceSingleton extends EventTarget {
 
   errors = [];
   enrolling = null;
+  signedIn = null;
 
   guardian = null;
   proxyManager = null;
@@ -142,7 +143,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     }
     this.proxyManager = new lazy.IPPProxyManager(this.guardian);
 
-    await Promise.allSettled(this.#helpers.map(helper => helper.init()));
+    this.#helpers.forEach(helper => helper.init());
 
     await this.#updateState();
   }
@@ -163,6 +164,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     this.#entitlement = null;
     this.errors = [];
     this.enrolling = null;
+    this.signedIn = null;
 
     this.#helpers.forEach(helper => helper.uninit());
 
@@ -266,11 +268,23 @@ class IPProtectionServiceSingleton extends EventTarget {
    * Reset the statuses that are set based on a FxA account.
    */
   resetAccount() {
+    this.signedIn = null;
     this.#entitlement = null;
     if (this.proxyManager?.active) {
       this.stop(false);
     }
     this.proxyManager.reset();
+  }
+
+  /**
+   * Checks if a user has signed in.
+   *
+   * @returns {boolean}
+   */
+  get isSignedIn() {
+    let { status } = lazy.UIState.get();
+    this.signedIn = status == lazy.UIState.STATUS_SIGNED_IN;
+    return this.signedIn;
   }
 
   /**
@@ -422,8 +436,9 @@ class IPProtectionServiceSingleton extends EventTarget {
     // For non authenticated users, we can check if they are eligible (the UI
     // is shown and they have to login) or we don't know yet their current
     // enroll state (no UI is shown).
+    let signedIn = this.isSignedIn;
     let eligible = this.isEligible;
-    if (!lazy.IPPSignInWatcher.isSignedIn) {
+    if (!signedIn) {
       return !eligible
         ? IPProtectionStates.UNAVAILABLE
         : IPProtectionStates.UNAUTHENTICATED;
