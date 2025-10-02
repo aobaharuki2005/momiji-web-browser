@@ -227,13 +227,24 @@ static CALayer* MakeOffscreenRootCALayer() {
 
 NativeLayerRootCA::NativeLayerRootCA(CALayer* aLayer)
     : mMutex("NativeLayerRootCA"),
-      mOnscreenRepresentation(aLayer),
-      mOffscreenRepresentation(MakeOffscreenRootCALayer()) {}
+      mOnscreenRootCALayer([aLayer retain]),
+      mOffscreenRootCALayer([MakeOffscreenRootCALayer() retain]) {}
 
 NativeLayerRootCA::~NativeLayerRootCA() {
   MOZ_RELEASE_ASSERT(
       mSublayers.IsEmpty(),
       "Please clear all layers before destroying the layer root.");
+
+  if (mMutatedOnscreenLayerStructure || mMutatedOffscreenLayerStructure) {
+    // Clear the root layer's sublayers. At this point the window is usually
+    // closed, so this transaction does not cause any screen updates.
+    AutoCATransaction transaction;
+    mOnscreenRootCALayer.sublayers = @[];
+    mOffscreenRootCALayer.sublayers = @[];
+  }
+
+  [mOnscreenRootCALayer release];
+  [mOffscreenRootCALayer release];
 }
 
 already_AddRefed<NativeLayer> NativeLayerRootCA::CreateLayer(
@@ -272,8 +283,7 @@ void NativeLayerRootCA::AppendLayer(NativeLayer* aLayer) {
   mSublayers.AppendElement(layerCA);
   layerCA->SetBackingScale(mBackingScale);
   layerCA->SetRootWindowIsFullscreen(mWindowIsFullscreen);
-  ForAllRepresentations(
-      [&](Representation& r) { r.mMutatedLayerStructure = true; });
+  SetMutatedLayerStructure();
 }
 
 void NativeLayerRootCA::RemoveLayer(NativeLayer* aLayer) {
@@ -283,8 +293,7 @@ void NativeLayerRootCA::RemoveLayer(NativeLayer* aLayer) {
   MOZ_RELEASE_ASSERT(layerCA);
 
   mSublayers.RemoveElement(layerCA);
-  ForAllRepresentations(
-      [&](Representation& r) { r.mMutatedLayerStructure = true; });
+  SetMutatedLayerStructure();
 }
 
 void NativeLayerRootCA::SetLayers(
@@ -309,8 +318,7 @@ void NativeLayerRootCA::SetLayers(
 
   if (layersCA != mSublayers) {
     mSublayers = std::move(layersCA);
-    ForAllRepresentations(
-        [&](Representation& r) { r.mMutatedLayerStructure = true; });
+    SetMutatedLayerStructure();
   }
 }
 
@@ -353,8 +361,10 @@ bool NativeLayerRootCA::CommitToScreen() {
       return false;
     }
 
-    mOnscreenRepresentation.Commit(WhichRepresentation::ONSCREEN, mSublayers,
-                                   mWindowIsFullscreen);
+    CommitRepresentation(WhichRepresentation::ONSCREEN, mOnscreenRootCALayer,
+                         mSublayers, mMutatedOnscreenLayerStructure,
+                         mWindowIsFullscreen);
+    mMutatedOnscreenLayerStructure = false;
 
     mCommitPending = false;
 
@@ -401,8 +411,7 @@ UniquePtr<NativeLayerRootSnapshotter> NativeLayerRootCA::CreateSnapshotter() {
                      "No NativeLayerRootSnapshotter for this NativeLayerRoot "
                      "should exist when this is called");
 
-  auto cr = NativeLayerRootSnapshotterCA::Create(
-      this, mOffscreenRepresentation.mRootCALayer);
+  auto cr = NativeLayerRootSnapshotterCA::Create(this, mOffscreenRootCALayer);
   if (cr) {
     mWeakSnapshotter = cr.get();
   }
@@ -423,35 +432,22 @@ void NativeLayerRootCA::OnNativeLayerRootSnapshotterDestroyed(
 
 void NativeLayerRootCA::CommitOffscreen() {
   MutexAutoLock lock(mMutex);
-  mOffscreenRepresentation.Commit(WhichRepresentation::OFFSCREEN, mSublayers,
-                                  mWindowIsFullscreen);
+  CommitRepresentation(WhichRepresentation::OFFSCREEN, mOffscreenRootCALayer,
+                       mSublayers, mMutatedOffscreenLayerStructure,
+                       mWindowIsFullscreen);
+  mMutatedOffscreenLayerStructure = false;
 }
 
-template <typename F>
-void NativeLayerRootCA::ForAllRepresentations(F aFn) {
-  aFn(mOnscreenRepresentation);
-  aFn(mOffscreenRepresentation);
+void NativeLayerRootCA::SetMutatedLayerStructure() {
+  mMutatedOnscreenLayerStructure = true;
+  mMutatedOffscreenLayerStructure = true;
 }
 
-NativeLayerRootCA::Representation::Representation(CALayer* aRootCALayer)
-    : mRootCALayer([aRootCALayer retain]) {}
-
-NativeLayerRootCA::Representation::~Representation() {
-  if (mMutatedLayerStructure) {
-    // Clear the root layer's sublayers. At this point the window is usually
-    // closed, so this transaction does not cause any screen updates.
-    AutoCATransaction transaction;
-    mRootCALayer.sublayers = @[];
-  }
-
-  [mRootCALayer release];
-}
-
-void NativeLayerRootCA::Representation::Commit(
-    WhichRepresentation aRepresentation,
+void NativeLayerRootCA::CommitRepresentation(
+    WhichRepresentation aRepresentation, CALayer* aRootCALayer,
     const nsTArray<RefPtr<NativeLayerCA>>& aSublayers,
-    bool aWindowIsFullscreen) {
-  bool mustRebuild = mMutatedLayerStructure;
+    bool aMutatedLayerStructure, bool aWindowIsFullscreen) {
+  bool mustRebuild = aMutatedLayerStructure;
   if (!mustRebuild) {
     // Check which type of update we need to do, if any.
     NativeLayerCA::UpdateType updateRequired = NativeLayerCA::UpdateType::None;
@@ -512,7 +508,7 @@ void NativeLayerRootCA::Representation::Commit(
     // short-circuit, because we don't want to call containsObject unless
     // absolutely necessary.
     mustRebuild =
-        mustRebuild || ![mRootCALayer.sublayers containsObject:caLayer];
+        mustRebuild || ![aRootCALayer.sublayers containsObject:caLayer];
   }
 
   if (mustRebuild) {
@@ -522,10 +518,8 @@ void NativeLayerRootCA::Representation::Commit(
     for (auto layer : sublayersWithExtent) {
       [sublayers addObject:layer->UnderlyingCALayer(aRepresentation)];
     }
-    mRootCALayer.sublayers = sublayers;
+    aRootCALayer.sublayers = sublayers;
   }
-
-  mMutatedLayerStructure = false;
 }
 
 #ifdef XP_MACOSX
