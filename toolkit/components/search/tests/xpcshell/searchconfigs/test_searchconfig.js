@@ -3,6 +3,13 @@
 
 "use strict";
 
+/**
+ * Tests to ensure the production search configuration is correctly set up for
+ * the search engines. These are, by default, run against the remote settings
+ * dumps in this repository. See `maybeSetupConfig` in the head file for testing
+ * against servers.
+ */
+
 // Wikipedia locale-to-domain mapping configuration
 const WIKIPEDIA_LOCALES_INFO = [
   [["af"]],
@@ -574,6 +581,67 @@ const test = new SearchConfigTest([
         domain: "www.ecosia.org",
         telemetryId: "ecosia",
         searchUrlCode: "tt=mzl",
+      },
+    ],
+  },
+  {
+    identifier: "google",
+    aliases: ["@google"],
+    default: {
+      // Included everywhere apart from the exclusions below. These are basically
+      // just excluding what Baidu includes.
+      excluded: [
+        {
+          regions: ["cn"],
+          locales: ["zh-CN"],
+        },
+      ],
+    },
+    available: {
+      excluded: [
+        // Should be available everywhere.
+      ],
+    },
+    details: [
+      {
+        included: [{ regions: ["us"] }],
+        domain: "google.com",
+        telemetryId:
+          SearchUtils.MODIFIED_APP_CHANNEL == "esr"
+            ? "google-b-1-e"
+            : "google-b-1-d",
+        searchUrlCode:
+          SearchUtils.MODIFIED_APP_CHANNEL == "esr"
+            ? "client=firefox-b-1-e"
+            : "client=firefox-b-1-d",
+        partnerCode:
+          SearchUtils.MODIFIED_APP_CHANNEL == "esr"
+            ? "firefox-b-1-e"
+            : "firefox-b-1-d",
+      },
+      {
+        excluded: [{ regions: ["us", "by", "kz", "ru", "tr"] }],
+        included: [{}],
+        domain: "google.com",
+        telemetryId:
+          SearchUtils.MODIFIED_APP_CHANNEL == "esr"
+            ? "google-b-e"
+            : "google-b-d",
+        searchUrlCode:
+          SearchUtils.MODIFIED_APP_CHANNEL == "esr"
+            ? "client=firefox-b-e"
+            : "client=firefox-b-d",
+        partnerCode:
+          SearchUtils.MODIFIED_APP_CHANNEL == "esr"
+            ? "firefox-b-e"
+            : "firefox-b-d",
+      },
+      {
+        included: [{ regions: ["by", "kz", "ru", "tr"] }],
+        domain: "google.com",
+        telemetryId: "google-com-nocodes",
+        partnerCode: "",
+        searchUrlParamNotInQuery: "client",
       },
     ],
   },

@@ -3,6 +3,10 @@
 
 "use strict";
 
+/**
+ * Additional tests against the search config for Google related items.
+ */
+
 ChromeUtils.defineESModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
@@ -11,70 +15,22 @@ const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
   "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
 );
 
-const test = new SearchConfigTest({
-  identifier: "google",
-  aliases: ["@google"],
-  default: {
-    // Included everywhere apart from the exclusions below. These are basically
-    // just excluding what Baidu includes.
-    excluded: [
-      {
-        regions: ["cn"],
-        locales: ["zh-CN"],
-      },
-    ],
-  },
-  available: {
-    excluded: [
-      // Should be available everywhere.
-    ],
-  },
-  details: [
-    {
-      included: [{ regions: ["us"] }],
-      domain: "google.com",
-      telemetryId:
-        SearchUtils.MODIFIED_APP_CHANNEL == "esr"
-          ? "google-b-1-e"
-          : "google-b-1-d",
-      searchUrlCode:
-        SearchUtils.MODIFIED_APP_CHANNEL == "esr"
-          ? "client=firefox-b-1-e"
-          : "client=firefox-b-1-d",
-      partnerCode:
-        SearchUtils.MODIFIED_APP_CHANNEL == "esr"
-          ? "firefox-b-1-e"
-          : "firefox-b-1-d",
-    },
-    {
-      excluded: [{ regions: ["us", "by", "kz", "ru", "tr"] }],
-      included: [{}],
-      domain: "google.com",
-      telemetryId:
-        SearchUtils.MODIFIED_APP_CHANNEL == "esr" ? "google-b-e" : "google-b-d",
-      searchUrlCode:
-        SearchUtils.MODIFIED_APP_CHANNEL == "esr"
-          ? "client=firefox-b-e"
-          : "client=firefox-b-d",
-      partnerCode:
-        SearchUtils.MODIFIED_APP_CHANNEL == "esr"
-          ? "firefox-b-e"
-          : "firefox-b-d",
-    },
-    {
-      included: [{ regions: ["by", "kz", "ru", "tr"] }],
-      domain: "google.com",
-      telemetryId: "google-com-nocodes",
-      partnerCode: "",
-      searchUrlParamNotInQuery: "client",
-    },
-  ],
-});
+let engineSelector;
 
 add_setup(async function () {
   sinon.spy(NimbusFeatures.searchConfiguration, "onUpdate");
   sinon.stub(NimbusFeatures.searchConfiguration, "ready").resolves();
-  await test.setup();
+
+  updateAppInfo({
+    name: "firefox",
+    ID: "xpcshell@tests.mozilla.org",
+    version: "42.0",
+    platformVersion: "42.0",
+  });
+
+  await maybeSetupConfig();
+
+  engineSelector = new SearchEngineSelector();
 
   // This is needed to make sure the search settings can be loaded
   // when the search service is initialized.
@@ -83,10 +39,6 @@ add_setup(async function () {
   registerCleanupFunction(async () => {
     sinon.restore();
   });
-});
-
-add_task(async function test_searchConfig_google() {
-  await test.run();
 });
 
 // We skip this test on ESR as on the ESR channel, we don't set up nimbus
@@ -110,6 +62,9 @@ add_task(
       },
     ];
 
+    // Call this once to cause ConfigSearchEngine to initialise `ParamPreferenceCache`.
+    await getEngines(engineSelector, "default", "default");
+
     Assert.ok(
       NimbusFeatures.searchConfiguration.onUpdate.called,
       "Should register an update listener for Nimbus experiments"
@@ -124,7 +79,8 @@ add_task(
 
     for (const testData of TEST_DATA) {
       info(`Checking region ${testData.region}, locale ${testData.locale}`);
-      const { engines } = await test._getEngines(
+      const { engines } = await getEngines(
+        engineSelector,
         testData.region,
         testData.locale
       );
@@ -179,7 +135,8 @@ async function assertEnterpriseParameter(useEmptyPolicy) {
 
   for (const testData of TEST_DATA) {
     info(`Checking region ${testData.region}, locale ${testData.locale}`);
-    const { engines } = await test._getEngines(
+    const { engines } = await getEngines(
+      engineSelector,
       testData.region,
       testData.locale
     );

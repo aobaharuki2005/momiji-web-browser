@@ -127,6 +127,28 @@ async function maybeSetupConfig() {
  */
 
 /**
+ * Processes the configuration to get the search engines for the specified
+ * region/locale.
+ *
+ * @param {SearchEngineSelector} engineSelector
+ * @param {string} region
+ * @param {string} locale
+ * @returns {Promise<{engines: AppProvidedConfigEngine[], appDefaultEngineId: string}>}
+ */
+async function getEngines(engineSelector, region, locale) {
+  let configs = await engineSelector.fetchEngineConfiguration({
+    locale,
+    region,
+    channel: SearchUtils.MODIFIED_APP_CHANNEL,
+  });
+
+  return {
+    engines: await SearchTestUtils.searchConfigToEngines(configs.engines),
+    appDefaultEngineId: configs.appDefaultEngineId,
+  };
+}
+
+/**
  * This class implements the test harness for search configuration tests.
  * These tests are designed to ensure that the correct search engines are
  * loaded for the various region/locale configurations.
@@ -143,14 +165,11 @@ class SearchConfigTest {
   #testDetails;
 
   /**
-   * @param {SearchConfigTestDetails|SearchConfigTestDetails[]} testDetails
-   *   The initial configuration for this test, or an array of configurations
-   *   for testing multiple engines efficiently.
+   * @param {SearchConfigTestDetails[]} testDetails
+   *   An array of configurations for testing multiple engines.
    */
   constructor(testDetails) {
-    this.#testDetails = Array.isArray(testDetails)
-      ? testDetails
-      : [testDetails];
+    this.#testDetails = testDetails;
   }
 
   /**
@@ -169,20 +188,6 @@ class SearchConfigTest {
 
     await maybeSetupConfig();
 
-    // Disable region checks.
-    Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
-
-    // Enable separatePrivateDefault testing. We test with this on, as we have
-    // separate tests for ensuring the normal = private when this is off.
-    Services.prefs.setBoolPref(
-      SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
-      true
-    );
-    Services.prefs.setBoolPref(
-      SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
-      true
-    );
-
     this.#engineSelector = new SearchEngineSelector();
   }
 
@@ -197,7 +202,8 @@ class SearchConfigTest {
     // when updating the requested/available locales.
     for (let region of regions) {
       for (let locale of locales) {
-        const { engines, appDefaultEngineId } = await this._getEngines(
+        const { engines, appDefaultEngineId } = await getEngines(
+          this.#engineSelector,
           region,
           locale
         );
@@ -226,40 +232,15 @@ class SearchConfigTest {
   }
 
   /**
-   * Processes the configuration to get the search engines for the specified
-   * region/locale.
-   *
-   * @param {string} region
-   * @param {string} locale
-   * @returns {Promise<{engines: AppProvidedConfigEngine[], appDefaultEngineId: string}>}
-   */
-  async _getEngines(region, locale) {
-    let configs = await this.#engineSelector.fetchEngineConfiguration({
-      locale,
-      region: region || "default",
-      channel: SearchUtils.MODIFIED_APP_CHANNEL,
-    });
-
-    return {
-      engines: await SearchTestUtils.searchConfigToEngines(configs.engines),
-      appDefaultEngineId: configs.appDefaultEngineId,
-    };
-  }
-
-  /**
    * @returns {Set<?string>} the list of regions for the tests to run with.
    */
   get _regions() {
-    // TODO: The legacy configuration worked with null as an unknown region,
-    // for the search engine selector, we expect "default" but apply the
-    // fallback in _getEngines. Once we remove the legacy configuration, we can
-    // simplify this.
     if (TEST_DEBUG) {
-      return new Set(["by", "cn", "kz", "us", "ru", "tr", null]);
+      return new Set(["by", "cn", "kz", "us", "ru", "tr", "default"]);
     }
     return new Set([
       ...Services.intl.getAvailableLocaleDisplayNames("region"),
-      null,
+      "default",
     ]);
   }
 
