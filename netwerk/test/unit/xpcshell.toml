@@ -26,6 +26,7 @@ support-files = [
   "trr_common.js",
   "test_http3_prio_helpers.js",
   "http2_test_common.js",
+  "http3_proxy_common.js",
 ]
 
 # dom.serviceWorkers.enabled is currently set to false in StaticPrefList.yaml
@@ -856,6 +857,15 @@ run-sequentially = ["true"] # http3server
 skip-if = ["true"] # Will be reenabled in bug 1865394
 
 ["test_http3_proxy.js"]
+head = "head_cookies.js head_channels.js head_cache.js head_http3.js http3_proxy_common.js"
+run-sequentially = ["true"] # node server exceptions dont replay well
+skip-if = [
+  "os == 'android'",
+  "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix'", # Bug 1808049
+]
+
+["test_http3_proxy_no_speculative.js"]
+head = "head_cookies.js head_channels.js head_cache.js head_http3.js http3_proxy_common.js"
 run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android'",
