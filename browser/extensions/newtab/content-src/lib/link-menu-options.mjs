@@ -331,6 +331,12 @@ export const LinkMenuOptions = {
       data: true,
     }),
   }),
+  DetectLocation: () => ({
+    id: "newtab-weather-menu-detect-my-location",
+    action: ac.AlsoToMain({
+      type: at.WEATHER_USER_OPT_IN_LOCATION,
+    }),
+  }),
   ChangeWeatherDisplaySimple: () => ({
     id: "newtab-weather-menu-change-weather-display-simple",
     action: ac.OnlyToMain({

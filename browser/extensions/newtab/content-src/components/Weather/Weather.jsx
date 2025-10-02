@@ -227,9 +227,6 @@ export class _Weather extends React.PureComponent {
 
   handleAcceptOptIn = () => {
     batch(() => {
-      this.props.dispatch(ac.SetPref("weather.optInAccepted", true));
-      this.props.dispatch(ac.SetPref("weather.optInDisplayed", false));
-
       this.props.dispatch(
         ac.AlsoToMain({
           type: at.WEATHER_USER_OPT_IN_LOCATION,
@@ -314,6 +311,7 @@ export class _Weather extends React.PureComponent {
       ...(Prefs.values["weather.locationSearchEnabled"]
         ? ["ChangeWeatherLocation"]
         : []),
+      ...(Prefs.values["system.showWeatherOptIn"] ? ["DetectLocation"] : []),
       ...(Prefs.values["weather.temperatureUnits"] === "f"
         ? ["ChangeTempUnitCelsius"]
         : ["ChangeTempUnitFahrenheit"]),
@@ -327,6 +325,7 @@ export class _Weather extends React.PureComponent {
       ...(Prefs.values["weather.locationSearchEnabled"]
         ? ["ChangeWeatherLocation"]
         : []),
+      ...(Prefs.values["system.showWeatherOptIn"] ? ["DetectLocation"] : []),
       "HideWeather",
       "OpenLearnMoreURL",
     ];

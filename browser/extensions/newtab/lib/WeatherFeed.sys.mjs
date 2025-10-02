@@ -325,10 +325,14 @@ export class WeatherFeed {
         break;
       }
       case at.WEATHER_USER_OPT_IN_LOCATION: {
+        this.store.dispatch(ac.SetPref("weather.optInAccepted", true));
+        this.store.dispatch(ac.SetPref("weather.optInDisplayed", false));
+
         const detectedLocation = await this.fetchLocationByIP();
 
         if (detectedLocation) {
           // Build the payload exactly like manual search does
+
           this.store.dispatch(
             ac.BroadcastToContent({
               type: at.WEATHER_LOCATION_DATA_UPDATE,
