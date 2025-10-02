@@ -63,6 +63,17 @@ enum class VideoLowPowerType {
   FailEnqueue,        // Enqueueing the video didn't work.
 };
 
+// The type of update needed to apply the pending changes to a NativeLayerCA
+// representation.
+//
+// Order is important. Each enum must fully encompass the work implied by the
+// previous enums.
+enum class NativeLayerCAUpdateType {
+  None,
+  OnlyVideo,
+  All,
+};
+
 // NativeLayerRootCA is the CoreAnimation implementation of the NativeLayerRoot
 // interface. A NativeLayerRootCA is created by the widget around an existing
 // CALayer with a call to CreateForCALayer - this CALayer is the root of the
@@ -170,6 +181,12 @@ class NativeLayerRootCA : public NativeLayerRoot {
                             bool aWindowIsFullscreen);
 
   void SetMutatedLayerStructure();
+
+  using UpdateType = NativeLayerCAUpdateType;
+  UpdateType GetMaxUpdateRequired(
+      WhichRepresentation aRepresentation,
+      const nsTArray<RefPtr<NativeLayerCA>>& aSublayers,
+      bool aMutatedLayerStructure) const;
 
   Mutex mMutex MOZ_UNANNOTATED;              // protects all other fields
   CALayer* mOnscreenRootCALayer = nullptr;   // strong
@@ -294,6 +311,8 @@ class NativeLayerCA : public NativeLayer {
 
  protected:
   friend class NativeLayerRootCA;
+  using UpdateType = NativeLayerCAUpdateType;
+  using WhichRepresentation = NativeLayerRootCA::WhichRepresentation;
 
   NativeLayerCA(const gfx::IntSize& aSize, bool aIsOpaque,
                 SurfacePoolHandleCA* aSurfacePoolHandle);
@@ -306,16 +325,9 @@ class NativeLayerCA : public NativeLayer {
   ~NativeLayerCA() override;
 
   // To be called by NativeLayerRootCA:
-  typedef NativeLayerRootCA::WhichRepresentation WhichRepresentation;
   CALayer* UnderlyingCALayer(WhichRepresentation aRepresentation);
 
-  enum class UpdateType {
-    None,       // Order is important. Each enum must fully encompass the
-    OnlyVideo,  // work implied by the previous enums.
-    All,
-  };
-
-  UpdateType HasUpdate(WhichRepresentation aRepresentation);
+  NativeLayerCAUpdateType HasUpdate(WhichRepresentation aRepresentation);
 
   // Apply pending updates to the underlaying CALayer. Sets *aMustRebuild to
   // true if the update requires changing which set of CALayers should be in the
