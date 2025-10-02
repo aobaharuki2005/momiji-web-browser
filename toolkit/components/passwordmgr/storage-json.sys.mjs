@@ -676,33 +676,7 @@ export class LoginManagerStorage_json {
       ) {
         remainingLogins.push(login);
       } else {
-        // Create the nsLoginInfo object which to emit
-        const loginInfo = Cc[
-          "@mozilla.org/login-manager/loginInfo;1"
-        ].createInstance(Ci.nsILoginInfo);
-        loginInfo.init(
-          login.hostname,
-          login.formSubmitURL,
-          login.httpRealm,
-          login.encryptedUsername,
-          login.encryptedPassword,
-          login.usernameField,
-          login.passwordField
-        );
-        // set nsILoginMetaInfo values
-        loginInfo.QueryInterface(Ci.nsILoginMetaInfo);
-        loginInfo.guid = login.guid;
-        loginInfo.timeCreated = login.timeCreated;
-        loginInfo.timeLastUsed = login.timeLastUsed;
-        loginInfo.timePasswordChanged = login.timePasswordChanged;
-        loginInfo.timesUsed = login.timesUsed;
-        loginInfo.syncCounter = login.syncCounter;
-        loginInfo.everSynced = login.everSynced;
-
-        // Any unknown fields along for the ride
-        loginInfo.unknownFields = login.encryptedUnknownFields;
-
-        removedLogins.push(loginInfo);
+        removedLogins.push(login);
         if (!fullyRemove && login?.everSynced) {
           // The login has been synced, so mark it as deleted.
           this.#incrementSyncCounter(login);

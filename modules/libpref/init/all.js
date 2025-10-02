@@ -3020,12 +3020,6 @@ pref("signon.firefoxRelay.terms_of_service_url", "https://www.mozilla.org/%LOCAL
 pref("signon.firefoxRelay.privacy_policy_url", "https://www.mozilla.org/%LOCALE%/privacy/subscription-services/");
 pref("signon.signupDetection.confidenceThreshold",     "0.75");
 
-#ifdef NIGHTLY_BUILD
-  pref("signon.rustMirror.enabled", true);
-#else
-  pref("signon.rustMirror.enabled", false);
-#endif
-
 // Satchel (Form Manager) prefs
 pref("browser.formfill.debug",            false);
 pref("browser.formfill.enable",           true);
