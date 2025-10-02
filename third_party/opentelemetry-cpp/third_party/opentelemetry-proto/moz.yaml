@@ -46,7 +46,10 @@ vendoring:
    - opentelemetry/proto/trace/v1/trace.pb.cc
    - opentelemetry/proto/trace/v1/trace.pb.h
 
-  update-actions:
+  patches:
+    - patches/add-lite_runtime-optimization-to-protos.patch
+
+  post-patch-actions:
     - action: run-script
       script: "{topsrcdir}/toolkit/components/protobuf/scripts/protoc_wrapper.py"
       cwd: "{topsrcdir}"
