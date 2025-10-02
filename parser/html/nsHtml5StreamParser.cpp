@@ -172,7 +172,11 @@ class nsHtml5LoadFlusher : public Runnable {
   explicit nsHtml5LoadFlusher(nsHtml5TreeOpExecutor* aExecutor)
       : Runnable("nsHtml5LoadFlusher"), mExecutor(aExecutor) {}
   NS_IMETHOD Run() override {
-    mExecutor->FlushSpeculativeLoads();
+    // If we're in sync XHR, do nothing. We'll flush the speculative loads
+    // after the flush ends.
+    if (!mExecutor->IsFlushing()) {
+      mExecutor->FlushSpeculativeLoads();
+    }
     return NS_OK;
   }
 };
