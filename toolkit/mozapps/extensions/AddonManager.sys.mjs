@@ -5342,7 +5342,6 @@ AMTelemetry = {
 
   // NOTE: used by AddonTestUtils.promiseShutdownManager to ensure
   // we can initialize it again in AddonTestUtils.promiseStartupManager.
-  // Also used by test_blocklist_statechange_telemetry.js.
   async uninit() {
     if (!this.telemetrySetupDone) {
       return;
