@@ -900,7 +900,12 @@ void HttpConnectionUDP::CloseTransaction(nsAHttpTransaction* trans,
        "]\n",
        this, trans, static_cast<uint32_t>(reason)));
 
-  MOZ_ASSERT(trans == mHttp3Session);
+  // CloseTransaction may be called by nsHttpTransaction when a fallback
+  // is needed. In this case, the transaction is still in mQueuedTransaction
+  // and the proxy connect is still in progress.
+  bool transInQueue = mQueuedTransaction.Contains(trans);
+  MOZ_ASSERT(trans == mHttp3Session ||
+             (transInQueue && IsProxyConnectInProgress()));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   if (NS_SUCCEEDED(reason) || (reason == NS_BASE_STREAM_CLOSED)) {
@@ -919,7 +924,7 @@ void HttpConnectionUDP::CloseTransaction(nsAHttpTransaction* trans,
   if (mHttp3Session) {
     // When proxy connnect failed, we call Http3Session::SetCleanShutdown to
     // force Http3Session to release this UDP connection.
-    mHttp3Session->SetCleanShutdown(aIsShutdown ||
+    mHttp3Session->SetCleanShutdown(aIsShutdown || transInQueue ||
                                     (mIsInTunnel && !mProxyConnectSucceeded));
     mHttp3Session->Close(reason);
     if (!mHttp3Session->IsClosed()) {
