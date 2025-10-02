@@ -7,6 +7,97 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
 });
 
+/* Check if an url has punicode encoded hostname */
+function isPunycode(origin) {
+  try {
+    return origin && new URL(origin).hostname.startsWith("xn--");
+  } catch (_) {
+    return false;
+  }
+}
+
+function recordIncompatibleFormats(runId, operation, loginInfo) {
+  if (isPunycode(loginInfo.origin)) {
+    Glean.pwmgr.rustIncompatibleLoginFormat.record({
+      run_id: runId,
+      issue: "nonAsciiOrigin",
+      operation,
+    });
+  }
+  if (isPunycode(loginInfo.formActionOrigin)) {
+    Glean.pwmgr.rustIncompatibleLoginFormat.record({
+      run_id: runId,
+      issue: "nonAsciiFormAction",
+      operation,
+    });
+  }
+
+  if (loginInfo.origin === ".") {
+    Glean.pwmgr.rustIncompatibleLoginFormat.record({
+      run_id: runId,
+      issue: "dotOrigin",
+      operation,
+    });
+  }
+
+  if (
+    loginInfo.username?.includes("\n") ||
+    loginInfo.username?.includes("\r")
+  ) {
+    Glean.pwmgr.rustIncompatibleLoginFormat.record({
+      run_id: runId,
+      issue: "usernameLineBreak",
+      operation,
+    });
+  }
+}
+
+function recordMirrorStatus(runId, operation, status, error = null) {
+  const poisoned = Services.prefs.getBoolPref(
+    "signon.rustMirror.poisoned",
+    false
+  );
+
+  let errorMessage = "";
+  if (error) {
+    errorMessage = error.message ?? String(error);
+  }
+
+  Glean.pwmgr.rustMirrorStatus.record({
+    run_id: runId,
+    operation,
+    status,
+    error_message: errorMessage,
+    poisoned,
+  });
+
+  if (status === "failure" && !poisoned) {
+    Services.prefs.setBoolPref("signon.rustMirror.poisoned", true);
+  }
+}
+
+function recordMigrationStatus(
+  runId,
+  duration,
+  numberOfLoginsToMigrate,
+  numberOfLoginsMigrated
+) {
+  Glean.pwmgr.rustMigrationStatus.record({
+    run_id: runId,
+    duration_ms: duration,
+    number_of_logins_to_migrate: numberOfLoginsToMigrate,
+    number_of_logins_migrated: numberOfLoginsMigrated,
+    had_errors: numberOfLoginsMigrated < numberOfLoginsToMigrate,
+  });
+}
+
+function recordMigrationFailure(runId, error) {
+  Glean.pwmgr.rustMigrationFailure.record({
+    run_id: runId,
+    error_message: error.message ?? String(error),
+  });
+}
+
 export class LoginManagerRustMirror {
   #logger = null;
   #jsonStorage = null;
@@ -69,6 +160,7 @@ export class LoginManagerRustMirror {
       this.#logger.log("Rust Mirror is enabled.");
     } catch (e) {
       this.#logger.error("Login migration failed", e);
+      recordMirrorStatus("migration-enable", "failure", e);
     }
   }
 
@@ -100,6 +192,7 @@ export class LoginManagerRustMirror {
       return;
     }
 
+    const runId = Services.uuid.generateUUID();
     let loginToModify;
     let newLoginData;
 
@@ -107,10 +200,13 @@ export class LoginManagerRustMirror {
       case "addLogin":
         this.#logger.log(`adding login ${subject.guid}...`);
         try {
+          recordIncompatibleFormats(runId, "add", subject);
           await this.#rustStorage.addLoginsAsync([subject]);
+          recordMirrorStatus(runId, "add", "success");
           this.#logger.log(`added login ${subject.guid}.`);
         } catch (e) {
           this.#logger.error("mirror-error:", e);
+          recordMirrorStatus(runId, "add", "failure", e);
         }
         break;
 
@@ -119,10 +215,13 @@ export class LoginManagerRustMirror {
         newLoginData = subject.queryElementAt(1, Ci.nsILoginInfo);
         this.#logger.log(`modifying login ${loginToModify.guid}...`);
         try {
+          recordIncompatibleFormats(runId, "modify", newLoginData);
           this.#rustStorage.modifyLogin(loginToModify, newLoginData);
+          recordMirrorStatus(runId, "modify", "success");
           this.#logger.log(`modified login ${loginToModify.guid}.`);
         } catch (e) {
           this.#logger.error("error: modifyLogin:", e);
+          recordMirrorStatus(runId, "modify", "failure", e);
         }
         break;
 
@@ -130,9 +229,11 @@ export class LoginManagerRustMirror {
         this.#logger.log(`removing login ${subject.guid}...`);
         try {
           this.#rustStorage.removeLogin(subject);
+          recordMirrorStatus(runId, "remove", "success");
           this.#logger.log(`removed login ${subject.guid}.`);
         } catch (e) {
           this.#logger.error("error: removeLogin:", e);
+          recordMirrorStatus(runId, "remove", "failure", e);
         }
         break;
 
@@ -140,9 +241,11 @@ export class LoginManagerRustMirror {
         this.#logger.log("removing all logins...");
         try {
           this.#rustStorage.removeAllLogins();
+          recordMirrorStatus(runId, "remove-all", "success");
           this.#logger.log("removed all logins.");
         } catch (e) {
           this.#logger.error("error: removeAllLogins:", e);
+          recordMirrorStatus(runId, "remove-all", "failure", e);
         }
         break;
 
@@ -188,15 +291,33 @@ export class LoginManagerRustMirror {
     // wait until loaded
     await this.#jsonStorage.initializationPromise;
 
+    const t0 = Date.now();
+    const runId = Services.uuid.generateUUID();
+    let numberOfLoginsToMigrate = 0;
+    let numberOfLoginsMigrated = 0;
+
     try {
       this.#rustStorage.removeAllLogins();
       this.#logger.log("Cleared existing Rust logins.");
 
+      Services.prefs.setBoolPref("signon.rustMirror.poisoned", false);
+
       const logins = await this.#jsonStorage.getAllLogins();
+      numberOfLoginsToMigrate = logins.length;
 
-      await this.#rustStorage.addLoginsAsync(logins, true);
+      const results = await this.#rustStorage.addLoginsAsync(logins, true);
+      for (const { error } of results) {
+        if (error) {
+          this.#logger.error("error during migration:", error.message);
+          recordMigrationFailure(runId, error);
+        } else {
+          numberOfLoginsMigrated += 1;
+        }
+      }
 
-      this.#logger.log(`Successfully migrated ${logins.length} logins.`);
+      this.#logger.log(
+        `Successfully migrated ${numberOfLoginsMigrated}/${numberOfLoginsToMigrate} logins.`
+      );
 
       // Migration complete, don't run again
       Services.prefs.setBoolPref("signon.rustMirror.migrationNeeded", false);
@@ -205,6 +326,13 @@ export class LoginManagerRustMirror {
     } catch (e) {
       this.#logger.error("migration error:", e);
     } finally {
+      const duration = Date.now() - t0;
+      recordMigrationStatus(
+        runId,
+        duration,
+        numberOfLoginsToMigrate,
+        numberOfLoginsMigrated
+      );
       this.#migrationInProgress = false;
     }
   }

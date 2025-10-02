@@ -134,14 +134,19 @@ class RustLoginsStoreAdapter {
     const loginEntriesWithMeta = loginInfos.map(loginInfoToLoginEntryWithMeta);
     const results = this.#store.addManyWithMeta(loginEntriesWithMeta);
 
-    // on continuous mode, return result objects, which could be either a login or an error
+    // on continuous mode, return result objects, which could be either a login
+    // or an error containing the error message
     if (continueOnDuplicates) {
-      return results
-        .filter(l => l instanceof BulkResultEntry.Success)
-        .map(({ login, message }) => ({
-          login: loginToLoginInfo(login),
-          error: { message },
-        }));
+      return results.map(l => {
+        if (l instanceof BulkResultEntry.Error) {
+          return {
+            error: { message: l.message },
+          };
+        }
+        return {
+          login: loginToLoginInfo(l.login),
+        };
+      });
     }
 
     // otherwise throw first error
