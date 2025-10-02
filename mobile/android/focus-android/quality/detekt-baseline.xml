@@ -108,6 +108,7 @@
     <ID>UndocumentedPublicClass:SearchWidgetUtils.kt$SearchWidgetUtils</ID>
     <ID>UndocumentedPublicClass:SecretSettingsFragment.kt$SecretSettingsFragment : BaseSettingsFragmentOnSharedPreferenceChangeListener</ID>
     <ID>UndocumentedPublicClass:SettingsFragment.kt$SettingsFragment : BaseSettingsFragment</ID>
+    <ID>UndocumentedPublicFunction:SitePermissionOptionsStorage.kt$SitePermissionOptionsStorage$fun getSitePermissionLabel(sitePermission: SitePermission): String</ID>
     <ID>UndocumentedPublicClass:SitePermission.kt$SitePermission : Parcelable</ID>
     <ID>UndocumentedPublicClass:SitePermissionOption.kt$AutoplayOption</ID>
     <ID>UndocumentedPublicClass:SitePermissionOption.kt$AutoplayOption$AllowAudioVideo : SitePermissionOption</ID>
@@ -219,33 +220,6 @@
     <ID>UndocumentedPublicFunction:SearchSuggestionsViewModel.kt$SearchSuggestionsViewModel$fun setSearchQuery(query: String)</ID>
     <ID>UndocumentedPublicFunction:SearchUtils.kt$SearchUtils$fun createSearchUrl(context: Context?, text: String): String</ID>
     <ID>UndocumentedPublicFunction:SecretSettingsUnlocker.kt$SecretSettingsUnlocker$fun increment()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun addSearchWidgetInstalled(count: Int)</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun getAppLaunchCount()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun getClearBrowsingSessions()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun getCurrentCookieBannerOptionFromSharePref(): CookieBannerOption</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun getHttpsOnlyMode(): Engine.HttpsOnlyMode</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun getTotalBlockedTrackersCount()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun hasAdvertisingBlocked()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun hasAnalyticsBlocked()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun hasRequestedDesktop()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun hasSocialBlocked()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun saveCurrentCookieBannerOptionInSharePref( cookieBannerOption: CookieBannerOption, )</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun setDefaultSearchEngineByName(name: String)</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldAutocompleteFromCustomDomainList()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldAutocompleteFromShippedDomainList()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldBlockAdTrackers()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldBlockAnalyticTrackers()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldBlockJavaScript(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldBlockOtherTrackers()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldBlockSocialTrackers()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldBlockWebFonts(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldEnableRemoteDebugging(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldShowSearchSuggestions(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldUseBiometrics(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldUseSecureMode(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun userHasDismissedNoSuggestionsMessage(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun userHasToggledSearchSuggestions(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:SitePermissionOptionsStorage.kt$SitePermissionOptionsStorage$fun getSitePermissionLabel(sitePermission: SitePermission): String</ID>
     <ID>UndocumentedPublicFunction:SitePermissionOptionsStorage.kt$SitePermissionOptionsStorage$fun getSitePermissionsSettingsRules()</ID>
     <ID>UndocumentedPublicFunction:SitePermissionOptionsStorage.kt$SitePermissionOptionsStorage$fun isAndroidPermissionGranted(sitePermission: SitePermission): Boolean</ID>
     <ID>UndocumentedPublicFunction:SitePermissionOptionsStorage.kt$SitePermissionOptionsStorage$fun isSitePermissionNotBlocked(permissionsList: Array&lt;String&gt;): Boolean</ID>
