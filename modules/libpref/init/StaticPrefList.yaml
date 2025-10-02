@@ -8087,7 +8087,7 @@
 - name: gfx.webrender.precise-radial-gradients
   type: bool
   rust: true
-  value: false
+  value: true
   mirror: once
 
 # Use a more precise method for sampling gradients when using SWGL.
