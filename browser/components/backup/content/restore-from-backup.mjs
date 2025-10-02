@@ -58,7 +58,7 @@ export default class RestoreFromBackup extends MozLitElement {
       supportBaseLink: "",
       backupInProgress: false,
       recoveryInProgress: false,
-      recoveryErrorCode: 0,
+      recoveryErrorCode: ERRORS.NONE,
     };
   }
 
@@ -88,6 +88,23 @@ export default class RestoreFromBackup extends MozLitElement {
       let { path, iconURL } = event.detail;
       this._fileIconURL = iconURL;
       this.getBackupFileInfo(path);
+    }
+  }
+
+  updated(changedProperties) {
+    if (changedProperties.has("backupServiceState")) {
+      // If we got a recovery error, recoveryInProgress should be false
+      const inProgress =
+        this.backupServiceState.recoveryInProgress &&
+        !this.backupServiceState.recoveryErrorCode;
+
+      this.dispatchEvent(
+        new CustomEvent("BackupUI:RecoveryProgress", {
+          bubbles: true,
+          composed: true,
+          detail: { recoveryInProgress: inProgress },
+        })
+      );
     }
   }
 
@@ -236,10 +253,10 @@ export default class RestoreFromBackup extends MozLitElement {
             <span
               id="backup-password-error"
               class="field-error"
-              data-l10n-id="restore-from-backup-error-incorrect-password"
+              data-l10n-id="backup-service-error-incorrect-password"
             >
               <a
-                id="restore-from-backup-incorrect-password-support-link"
+                id="backup-incorrect-password-support-link"
                 slot="support-link"
                 is="moz-support-link"
                 support-page="todo-backup"

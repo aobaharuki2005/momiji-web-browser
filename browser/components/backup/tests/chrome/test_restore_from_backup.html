@@ -146,7 +146,7 @@
     add_task(async function test_incorrect_password_error_condition() {
       let restoreFromBackup = document.getElementById("test-restore-from-backup");
 
-      is(restoreFromBackup.backupServiceState.recoveryErrorCode, 0, "Recovery error code should be 0");
+      is(restoreFromBackup.backupServiceState.recoveryErrorCode, ERRORS.NONE, "Recovery error code should be 0");
       ok(!restoreFromBackup.isIncorrectPassword, "Error message should not be displayed");
       ok(!restoreFromBackup.errorMessageEl, "No error message should be displayed");
 
@@ -179,6 +179,88 @@
 
       is(restoreFromBackup.backupServiceState.recoveryErrorCode, ERRORS.CORRUPTED_ARCHIVE, "Recovery error code should be set");
       ok(restoreFromBackup.errorMessageEl, "Error message should be displayed");
+    });
+
+    /**
+     * Tests that changes to backupServiceState emits BackupUI:RecoveryProgress,
+     * with the current progress state and progress is false when an error code is present.
+     */
+    add_task(async function test_recovery_state_updates() {
+      const content = document.getElementById("content");
+      let restoreFromBackup = document.getElementById("test-restore-from-backup");
+      content.appendChild(restoreFromBackup);
+
+      // Reset previous state changes
+      restoreFromBackup.backupServiceState = {
+        ...restoreFromBackup.backupServiceState,
+        recoveryInProgress: false,
+        recoveryErrorCode: ERRORS.NONE,
+      };
+      await restoreFromBackup.updateComplete;
+
+      // Helper to dispatch the BackupUI:RecoveryProgress event
+      async function sendState(testState) {
+        const promise = BrowserTestUtils.waitForEvent(
+          restoreFromBackup,
+          "BackupUI:RecoveryProgress"
+        );
+        restoreFromBackup.backupServiceState = {
+          ...restoreFromBackup.backupServiceState,
+          ...testState,
+        };
+        await restoreFromBackup.updateComplete;
+        return promise;
+      }
+
+      // Initial state
+      is(
+        restoreFromBackup.backupServiceState.recoveryInProgress,
+        false,
+        "Initial progress state is false"
+      );
+      is(restoreFromBackup.backupServiceState.recoveryErrorCode, ERRORS.NONE, "Initial error code should be 0");
+
+      // Backup in progress with no error
+      let event = await sendState({ recoveryInProgress: true });
+      is(event.detail?.recoveryInProgress, true, "'recoveryInProgress' is true");
+      is(restoreFromBackup.backupServiceState.recoveryInProgress, true, "State reflects in-progress");
+
+      // Backup not in progress
+      event = await sendState({ recoveryInProgress: false, recoveryErrorCode: 0 });
+      is(event.detail?.recoveryInProgress, false, "'recoveryInProgress' is false");
+      is(
+        restoreFromBackup.backupServiceState.recoveryInProgress,
+        false,
+        "State reflects not in-progress"
+      );
+
+      // Any error should clear progress
+      for (const code of [ERRORS.CORRUPTED_ARCHIVE, ERRORS.UNAUTHORIZED]) {
+        info(`Asserting recovery progress clears with error code: ${code}`);
+        event = await sendState({
+          recoveryInProgress: true,
+          recoveryErrorCode: ERRORS.NONE,
+        });
+        is(
+          restoreFromBackup.backupServiceState.recoveryInProgress,
+          true,
+          "State reflects in-progress"
+        );
+
+        // Add an error
+        event = await sendState({
+          recoveryInProgress: true,
+          recoveryErrorCode: code,
+        });
+        is(
+          event.detail?.recoveryInProgress,
+          false,
+          `Progress cleared for error ${code}`
+        );
+        // Clear state
+        await sendState({ recoveryInProgress: false, recoveryErrorCode: ERRORS.NONE });
+      }
+      restoreFromBackup.remove();
     });
   </script>
 </head>

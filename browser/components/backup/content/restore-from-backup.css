@@ -93,6 +93,10 @@
       font-weight: var(--label-font-weight, normal);
     }
 
+    & > #backup-password-error {
+      text-align: start;
+    }
+
     & > #backup-password-description {
       color: var(--text-color-deemphasized);
       font-size: var(--font-size-small);

@@ -2489,7 +2489,8 @@ const ContentTiles = props => {
       handleAction: props.handleAction,
       content: {
         tiles: tile
-      }
+      },
+      skipButton: props.content.skip_button
     })) : null);
   };
   const renderContentTiles = () => {
@@ -3452,14 +3453,20 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
+/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
 
-const EmbeddedBackupRestore = () => {
-  const ref = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)();
+
+const EmbeddedBackupRestore = ({
+  handleAction,
+  skipButton
+}) => {
+  const [recoveryInProgress, setRecoveryInProgress] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const ref = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     // Clear the pref used to target the restore screen so that users will not
     // automatically see it again the next time they visit about:welcome.
@@ -3473,11 +3480,39 @@ const EmbeddedBackupRestore = () => {
       }
     });
   }, []);
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("restore-from-backup", {
+  const onRecoveryProgressChange = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(e => {
+    setRecoveryInProgress(e.detail.recoveryInProgress);
+  }, []);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    const backupRef = ref.current;
+    if (backupRef.backupServiceState) {
+      setRecoveryInProgress(backupRef.backupServiceState.recoveryInProgress);
+    }
+    backupRef.addEventListener("BackupUI:RecoveryProgress", onRecoveryProgressChange);
+    return () => {
+      backupRef.removeEventListener("BackupUI:RecoveryProgress", onRecoveryProgressChange);
+    };
+  }, [onRecoveryProgressChange]);
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "embedded-backup-restore-container"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("restore-from-backup", {
     aboutWelcomeEmbedded: "true",
     labelFontWeight: "600",
     ref: ref
-  });
+  }), skipButton ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "action-buttons"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "secondary-cta"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__.Localized, {
+    text: skipButton.label
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    id: "secondary_button",
+    className: "secondary",
+    value: "skip_button",
+    disabled: recoveryInProgress,
+    "aria-busy": recoveryInProgress || undefined,
+    onClick: handleAction
+  })))) : null);
 };
 
 /***/ }),

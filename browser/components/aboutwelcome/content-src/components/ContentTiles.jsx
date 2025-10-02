@@ -302,6 +302,7 @@ export const ContentTiles = props => {
               <EmbeddedBackupRestore
                 handleAction={props.handleAction}
                 content={{ tiles: tile }}
+                skipButton={props.content.skip_button}
               />
             )}
           </div>
