@@ -938,8 +938,7 @@ export class MegalistAlpha extends MozLitElement {
 
   render() {
     const showToolbar =
-      this.viewMode === VIEW_MODES.ALERTS ||
-      (this.viewMode === VIEW_MODES.LIST && this.header?.value?.total > 0);
+      this.viewMode === VIEW_MODES.LIST && this.header?.value?.total > 0;
 
     return html`
       <link
