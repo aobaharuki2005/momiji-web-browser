@@ -729,41 +729,9 @@ async function perfTest({
 
 /**
  * Measures floating point value within epsilon tolerance
- *
- * @param {number[]} a
- * @param {number[]} b
- * @param {number} [epsilon]
- * @returns {boolean}
  */
-function isEqualWithTolerance(a, b, epsilon = 0.000001) {
-  return Math.abs(Math.abs(a) - Math.abs(b)) < epsilon;
-}
-
-/**
- * Asserts whether two float arrays are equal within epsilon tolerance.
- *
- * @param {number[] | ArrayBufferLike} a
- * @param {number[] | ArrayBufferLike} b
- * @param {string} message
- * @param {number} [epsilon]
- */
-function assertFloatArraysMatch(a, b, message, epsilon) {
-  const raise = () => {
-    // When logging errors, spread into a new array so that the logging is nice for
-    // ArrayBufferLike values. This makes it easy to see how arrays differ
-    console.log("a:", [...a]);
-    console.log("b:", [...b]);
-    throw new Error(message);
-  };
-  if (a.length !== b.length) {
-    raise();
-  }
-  for (let i = 0; i < a.length; i++) {
-    if (!isEqualWithTolerance(a[i], b[i], epsilon)) {
-      raise();
-    }
-  }
-  ok(true, message);
+function isEqualWithTolerance(A, B, epsilon = 0.000001) {
+  return Math.abs(Math.abs(A) - Math.abs(B)) < epsilon;
 }
 
 // Mock OpenAI Chat Completions server for mochitests
@@ -831,58 +799,4 @@ function startMockOpenAI({ echo = "This gets echoed." } = {}) {
 
 function stopMockOpenAI(server) {
   return new Promise(resolve => server.stop(resolve));
-}
-
-/**
- * Generates a numpy encoded float16 array to be used for generating static embeddings
- * test data.
- *
- * @param {number} vocabSize
- * @param {number} dimensions
- * @returns {{ numbers: Float16Array, encoding: Uint8Array }}
- */
-function generateFloat16Numpy(vocabSize, dimensions) {
-  const numbers = new Float16Array(vocabSize * dimensions);
-  // Build the data:
-  // [0.1, 0.2, 0.3, ..., 0.1 * vocabSize * dimensions]
-  for (let i = 0; i < vocabSize; i++) {
-    for (let j = 0; j < dimensions; j++) {
-      const index = i * dimensions + j;
-      numbers[index] = index / 10;
-    }
-  }
-  const magic = new Uint8Array([0x93, 78, 85, 77, 80, 89]); // \x93NUMPY
-  const version = new Uint8Array([1, 0]); // Version 1.0
-  let header = `{'descr': '<f2', 'fortran_order': False, 'shape': (${vocabSize},${dimensions}), }`;
-
-  // Pad header to 16-byte alignment
-  const preLength = magic.length + version.length + 2; // +2 for header length field
-  let padding = 16 - ((preLength + header.length + 1) % 16);
-  if (padding === 16) {
-    padding = 0;
-  }
-  header += " ".repeat(padding) + "\n";
-
-  const headerBytes = new TextEncoder().encode(header);
-
-  const headerLen = new Uint8Array(2);
-  new DataView(headerLen.buffer).setUint16(0, headerBytes.length, true);
-
-  const encoding = new Uint8Array(
-    preLength + headerBytes.length + numbers.byteLength
-  );
-
-  // Write everything out.
-  let offset = 0;
-  encoding.set(magic, offset);
-  offset += magic.length;
-  encoding.set(version, offset);
-  offset += version.length;
-  encoding.set(headerLen, offset);
-  offset += 2;
-  encoding.set(headerBytes, offset);
-  offset += headerBytes.length;
-  encoding.set(new Uint8Array(numbers.buffer), offset);
-
-  return { numbers, encoding };
 }

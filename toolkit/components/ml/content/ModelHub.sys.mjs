@@ -82,9 +82,7 @@ const NO_ETAG = "NO_ETAG";
  */
 class ForbiddenURLError extends Error {
   constructor(url, rejectionType) {
-    super(
-      `Forbidden URL: ${url} (${rejectionType}). Set MOZ_ALLOW_EXTERNAL_ML_HUB=1 to allow external URLs.`
-    );
+    super(`Forbidden URL: ${url} (${rejectionType})`);
     this.name = "ForbiddenURLError";
     this.url = url;
   }
@@ -1391,9 +1389,6 @@ export class ModelHub {
     this.reset = reset;
   }
 
-  /**
-   * @param {string} url
-   */
   allowedURL(url) {
     if (this.allowDenyList === null) {
       return { allowed: true, rejectionType: lazy.RejectionType.NONE };
