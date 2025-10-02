@@ -12,7 +12,6 @@ const {
   off,
   emit,
   count,
-  handler,
 } = require("resource://devtools/shared/event-emitter.js");
 
 const pass = message => ok(true, message);
@@ -253,100 +252,6 @@ const TESTS = {
 
     emit(target, "foo", "listener was called");
     emit(target, "done", "");
-  },
-
-  testAddListenerWithHandlerMethod() {
-    const target = { name: "target" };
-    const actual = [];
-    const listener = function (...args) {
-      equal(
-        this,
-        target,
-        "the contextual object is correct for function listener"
-      );
-      deepEqual(args, [10, 20, 30], "arguments are properly passed");
-    };
-
-    const object = {
-      name: "target",
-      [handler](type, ...rest) {
-        actual.push(type);
-        equal(
-          this,
-          object,
-          "the contextual object is correct for object listener"
-        );
-        deepEqual(rest, [10, 20, 30], "arguments are properly passed");
-      },
-    };
-
-    on(target, "foo", listener);
-    on(target, "bar", object);
-    on(target, "baz", object);
-
-    emit(target, "foo", 10, 20, 30);
-    emit(target, "bar", 10, 20, 30);
-    emit(target, "baz", 10, 20, 30);
-
-    deepEqual(
-      actual,
-      ["bar", "baz"],
-      "object's listener called in the expected order"
-    );
-  },
-
-  testRemoveListenerWithHandlerMethod() {
-    const target = {};
-    const actual = [];
-
-    const object = {
-      [handler]() {
-        actual.push(1);
-        on(target, "message", () => {
-          off(target, "message", object);
-          actual.push(2);
-        });
-      },
-    };
-
-    on(target, "message", object);
-
-    emit(target, "message");
-    deepEqual([1], actual, "first listener called");
-
-    emit(target, "message");
-    deepEqual([1, 1, 2], actual, "second listener called");
-
-    emit(target, "message");
-    deepEqual([1, 1, 2, 2, 2], actual, "first listener removed");
-  },
-
-  async testOnceListenerWithHandlerMethod() {
-    const target = { name: "target" };
-    const called = false;
-
-    const object = {
-      [handler](type, value) {
-        ok(!called, "listener called only once");
-        equal(type, "foo", "event type is properly passed");
-        equal(value, "bar", "correct argument was passed");
-        equal(
-          this,
-          object,
-          "the contextual object is correct for object listener"
-        );
-      },
-    };
-
-    const pFoo = once(target, "foo", object);
-
-    const pDone = once(target, "done");
-
-    emit(target, "foo", "bar");
-    emit(target, "foo", "baz");
-    emit(target, "done", "");
-
-    await Promise.all([pFoo, pDone]);
   },
 
   testCallingOffWithMoreThan3Args() {

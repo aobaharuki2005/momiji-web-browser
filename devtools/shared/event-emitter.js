@@ -4,13 +4,10 @@
 
 "use strict";
 
-const BAD_LISTENER =
-  "The event listener must be a function, or an object that has " +
-  "`EventEmitter.handler` Symbol.";
+const BAD_LISTENER = "The event listener must be a function.";
 
 const eventListeners = Symbol("EventEmitter/listeners");
 const onceOriginalListener = Symbol("EventEmitter/once-original-listener");
-const handler = Symbol("EventEmitter/event-handler");
 loader.lazyRequireGetter(this, "flags", "resource://devtools/shared/flags.js");
 
 class EventEmitter {
@@ -22,7 +19,7 @@ class EventEmitter {
    *    Event target object.
    * @param {String} type
    *    The type of event.
-   * @param {Function|Object} listener
+   * @param {Function} listener
    *    The listener that processes the event.
    * @param {Object} options
    * @param {AbortSignal} options.signal
@@ -31,7 +28,7 @@ class EventEmitter {
    *    A function that removes the listener when called.
    */
   static on(target, type, listener, { signal } = {}) {
-    if (typeof listener !== "function" && !isEventHandler(listener)) {
+    if (typeof listener !== "function") {
       throw new Error(BAD_LISTENER);
     }
 
@@ -71,7 +68,7 @@ class EventEmitter {
    *    The event target object.
    * @param {String} [type]
    *    The type of event.
-   * @param {Function|Object} [listener]
+   * @param {Function} [listener]
    *    The listener that processes the event.
    */
   static off(target, type, listener) {
@@ -140,7 +137,7 @@ class EventEmitter {
    *    Event target object.
    * @param {String} type
    *    The type of the event.
-   * @param {Function|Object} [listener]
+   * @param {Function} [listener]
    *    The listener that processes the event.
    * @param {Object} options
    * @param {AbortSignal} options.signal
@@ -158,16 +155,7 @@ class EventEmitter {
 
         let rv;
         if (listener) {
-          if (isEventHandler(listener)) {
-            // if the `listener` given is actually an object that handles the events
-            // using `EventEmitter.handler`, we want to call that function, passing also
-            // the event's type as first argument, and the `listener` (the object) as
-            // contextual object.
-            rv = listener[handler](type, first, ...rest);
-          } else {
-            // Otherwise we'll just call it
-            rv = listener.call(target, first, ...rest);
-          }
+          rv = listener.call(target, first, ...rest);
         }
 
         // We resolve the promise once the listener is called.
@@ -235,12 +223,7 @@ class EventEmitter {
       // event handler we're going to fire wasn't removed.
       if (listeners && listeners.has(listener)) {
         try {
-          let promise;
-          if (isEventHandler(listener)) {
-            promise = listener[handler](type, ...args);
-          } else {
-            promise = listener.apply(target, args);
-          }
+          const promise = listener.apply(target, args);
           if (async) {
             // Assert the name instead of `constructor != Promise` in order
             // to avoid cross compartment issues where Promise can be multiple.
@@ -306,10 +289,6 @@ class EventEmitter {
     return Object.defineProperties(target, descriptors);
   }
 
-  static get handler() {
-    return handler;
-  }
-
   on(...args) {
     return EventEmitter.on(this, ...args);
   }
@@ -346,9 +325,6 @@ class EventEmitter {
 }
 
 module.exports = EventEmitter;
-
-const isEventHandler = listener =>
-  listener && handler in listener && typeof listener[handler] === "function";
 
 const {
   getNthPathExcluding,
