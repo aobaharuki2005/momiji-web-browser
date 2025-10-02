@@ -28,6 +28,7 @@
         <item name="preferenceTheme">@style/PreferenceTheme</item>
         <item name="alertDialogStyle">@style/DialogStyle</item>
         <item name="alertDialogTheme">@style/DialogStyle</item>
+        <item name="materialAlertDialogTheme">@style/DialogStyle</item>
         <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>
         <item name="android:itemBackground">@color/menuBackground</item>
         <item name="android:itemTextAppearance">@style/ItemTextAppearance</item>
