@@ -32,6 +32,7 @@
 #include "nscore.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/CheckedArithmetic.h"
 #include "mozilla/FastBernoulliTrial.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/HashTable.h"
@@ -105,7 +106,7 @@ class InfallibleAllocPolicy {
   template <typename T>
   static T* maybe_pod_malloc(size_t aNumElems) {
     size_t size;
-    if (MOZ_UNLIKELY(__builtin_mul_overflow(aNumElems, sizeof(T), &size))) {
+    if (MOZ_UNLIKELY(!mozilla::SafeMul(aNumElems, sizeof(T), &size))) {
       return nullptr;
     }
     return (T*)gMallocTable.malloc(size);
@@ -119,7 +120,7 @@ class InfallibleAllocPolicy {
   template <typename T>
   static T* maybe_pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize) {
     size_t size;
-    if (MOZ_UNLIKELY(__builtin_mul_overflow(aNewSize, sizeof(T), &size))) {
+    if (MOZ_UNLIKELY(!mozilla::SafeMul(aNewSize, sizeof(T), &size))) {
       return nullptr;
     }
     return (T*)gMallocTable.realloc(aPtr, size);

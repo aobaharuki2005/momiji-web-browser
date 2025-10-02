@@ -41,6 +41,7 @@
 #if defined(__cplusplus)
 #  include "mozilla/fallible.h"
 #  include "mozilla/mozalloc_abort.h"
+#  include "mozilla/CheckedArithmetic.h"
 #  include "mozilla/Likely.h"
 #endif
 #include "mozilla/Attributes.h"
@@ -156,7 +157,7 @@ class InfallibleAllocPolicy {
   template <typename T>
   T* pod_malloc(size_t aNumElems) {
     size_t size;
-    if (MOZ_UNLIKELY(__builtin_mul_overflow(aNumElems, sizeof(T), &size))) {
+    if (MOZ_UNLIKELY(!mozilla::SafeMul(aNumElems, sizeof(T), &size))) {
       reportAllocOverflow();
     }
     return static_cast<T*>(moz_xmalloc(size));
@@ -170,7 +171,7 @@ class InfallibleAllocPolicy {
   template <typename T>
   T* pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize) {
     size_t size;
-    if (MOZ_UNLIKELY(__builtin_mul_overflow(aNewSize, sizeof(T), &size))) {
+    if (MOZ_UNLIKELY(!mozilla::SafeMul(aNewSize, sizeof(T), &size))) {
       reportAllocOverflow();
     }
     return static_cast<T*>(moz_xrealloc(aPtr, size));

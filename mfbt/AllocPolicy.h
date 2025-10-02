@@ -13,6 +13,7 @@
 #define mozilla_AllocPolicy_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/CheckedArithmetic.h"
 #include "mozilla/Likely.h"
 
 #include <cstddef>
@@ -77,7 +78,7 @@ class MallocAllocPolicy {
   template <typename T>
   T* maybe_pod_malloc(size_t aNumElems) {
     size_t size;
-    if (MOZ_UNLIKELY(__builtin_mul_overflow(aNumElems, sizeof(T), &size)))
+    if (MOZ_UNLIKELY(!mozilla::SafeMul(aNumElems, sizeof(T), &size)))
       return nullptr;
     return static_cast<T*>(malloc(size));
   }
@@ -90,7 +91,7 @@ class MallocAllocPolicy {
   template <typename T>
   T* maybe_pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize) {
     size_t size;
-    if (MOZ_UNLIKELY(__builtin_mul_overflow(aNewSize, sizeof(T), &size)))
+    if (MOZ_UNLIKELY(!mozilla::SafeMul(aNewSize, sizeof(T), &size)))
       return nullptr;
     return static_cast<T*>(realloc(aPtr, size));
   }

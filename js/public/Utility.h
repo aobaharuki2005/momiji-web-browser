@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CheckedArithmetic.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/Likely.h"
 #include "mozilla/UniquePtr.h"
@@ -556,7 +557,7 @@ namespace js {
 template <typename T>
 [[nodiscard]] inline bool CalculateAllocSize(size_t numElems,
                                              size_t* bytesOut) {
-  return !__builtin_mul_overflow(numElems, sizeof(T), bytesOut);
+  return mozilla::SafeMul(numElems, sizeof(T), bytesOut);
 }
 
 /*
@@ -568,8 +569,8 @@ template <typename T, typename Extra>
 [[nodiscard]] inline bool CalculateAllocSizeWithExtra(size_t numExtra,
                                                       size_t* bytesOut) {
   size_t tmp;
-  return !__builtin_mul_overflow(numExtra, sizeof(Extra), &tmp) &&
-         !__builtin_add_overflow(sizeof(T), tmp, bytesOut);
+  return mozilla::SafeMul(numExtra, sizeof(Extra), &tmp) &&
+         mozilla::SafeAdd(sizeof(T), tmp, bytesOut);
 }
 
 } /* namespace js */
@@ -626,7 +627,7 @@ static MOZ_ALWAYS_INLINE T* js_pod_arena_realloc(arena_id_t arena, T* prior,
                                                  size_t oldSize,
                                                  size_t newSize) {
   [[maybe_unused]] size_t tmp;
-  MOZ_ASSERT(!__builtin_mul_overflow(oldSize, sizeof(T), &tmp));
+  MOZ_ASSERT(mozilla::SafeMul(oldSize, sizeof(T), &tmp));
   size_t bytes;
   if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(newSize, &bytes))) {
     return nullptr;

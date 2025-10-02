@@ -11,6 +11,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CheckedArithmetic.h"
 #include "mozilla/IntegerTypeTraits.h"
 
 #include <cstdint>
@@ -548,16 +549,16 @@ class CheckedInt {
   constexpr CheckedInt<T> operator OP(const CheckedInt<T>& aLhs,   \
                                       const CheckedInt<T>& aRhs) { \
     auto result = T{};                                             \
-    if (FUN(aLhs.mValue, aRhs.mValue, &result)) {                  \
+    if (MOZ_UNLIKELY(!FUN(aLhs.mValue, aRhs.mValue, &result))) {   \
       static_assert(detail::IsInRange<T>(0),                       \
                     "Integer type can't represent 0");             \
       return CheckedInt<T>(T(0), false);                           \
     }                                                              \
     return CheckedInt<T>(result, aLhs.mIsValid && aRhs.mIsValid);  \
   }
-MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2(Add, +, __builtin_add_overflow)
-MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2(Sub, -, __builtin_sub_overflow)
-MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2(Mul, *, __builtin_mul_overflow)
+MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2(Add, +, SafeAdd)
+MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2(Sub, -, SafeSub)
+MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2(Mul, *, SafeMul)
 #undef MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2
 
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Div, /)

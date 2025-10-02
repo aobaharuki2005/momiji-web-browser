@@ -7,6 +7,7 @@
 #include "jit/CodeGenerator.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/CheckedArithmetic.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/EnumeratedArray.h"
@@ -60,7 +61,6 @@
 #include "js/ScalarType.h"       // js::Scalar::Type
 #include "proxy/DOMProxy.h"
 #include "proxy/ScriptedProxyHandler.h"
-#include "util/CheckedArithmetic.h"
 #include "util/DifferentialTesting.h"
 #include "util/Unicode.h"
 #include "vm/ArrayBufferViewObject.h"
@@ -15457,7 +15457,8 @@ void CodeGenerator::visitBoundsCheckRange(LBoundsCheckRange* lir) {
   if (lir->index()->isConstant()) {
     int32_t nmin, nmax;
     int32_t index = ToInt32(lir->index());
-    if (SafeAdd(index, min, &nmin) && SafeAdd(index, max, &nmax) && nmin >= 0) {
+    if (mozilla::SafeAdd(index, min, &nmin) &&
+        mozilla::SafeAdd(index, max, &nmax) && nmin >= 0) {
       if (length->isGeneralReg()) {
         bailoutCmpConstant(Assembler::BelowOrEqual, ToRegister(length), nmax);
       } else {
@@ -15488,7 +15489,7 @@ void CodeGenerator::visitBoundsCheckRange(LBoundsCheckRange* lir) {
 
     if (min != 0) {
       int32_t diff;
-      if (SafeSub(max, min, &diff)) {
+      if (mozilla::SafeSub(max, min, &diff)) {
         max = diff;
       } else {
         if (type == MIRType::Int32) {

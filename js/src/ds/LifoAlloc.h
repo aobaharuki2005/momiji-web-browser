@@ -8,6 +8,7 @@
 #define ds_LifoAlloc_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/CheckedArithmetic.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
@@ -1212,9 +1213,9 @@ class LifoAllocPolicy {
       return nullptr;
     }
     size_t oldLength;
-    [[maybe_unused]] bool overflows =
-        __builtin_mul_overflow(oldSize, sizeof(T), &oldLength);
-    MOZ_ASSERT(!overflows);
+    [[maybe_unused]] bool nooverflow =
+        mozilla::SafeMul(oldSize, sizeof(T), &oldLength);
+    MOZ_ASSERT(nooverflow);
     memcpy(n, p, std::min(oldLength, newSize * sizeof(T)));
     return n;
   }

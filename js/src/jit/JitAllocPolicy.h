@@ -9,6 +9,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CheckedArithmetic.h"
 #include "mozilla/Likely.h"
 #include "mozilla/OperatorNewExtensions.h"
 
@@ -103,9 +104,9 @@ class JitAllocPolicy {
       return n;
     }
     size_t oldLength;
-    [[maybe_unused]] bool overflows =
-        __builtin_mul_overflow(oldSize, sizeof(T), &oldLength);
-    MOZ_ASSERT(!overflows);
+    [[maybe_unused]] bool nooverflow =
+        mozilla::SafeMul(oldSize, sizeof(T), &oldLength);
+    MOZ_ASSERT(nooverflow);
     memcpy(n, p, std::min(oldLength, newSize * sizeof(T)));
     return n;
   }
