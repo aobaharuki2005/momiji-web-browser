@@ -40,8 +40,8 @@ class TermsOfUsePromptPreferencesMiddleware(
             is TermsOfUsePromptAction.OnPromptDismissed ->
                 repository.updateLastTermsOfUsePromptTimeInMillis()
 
-            // no-ops
-            is TermsOfUsePromptAction.OnImpression -> {}
+            is TermsOfUsePromptAction.OnImpression ->
+                repository.incrementTermsOfUsePromptDisplayedCount()
         }
 
         next(action)

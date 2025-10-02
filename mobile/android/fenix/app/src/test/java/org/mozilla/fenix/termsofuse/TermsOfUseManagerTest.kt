@@ -141,4 +141,42 @@ class TermsOfUseManagerTest {
 
         assertTrue(termsOfUseManager.shouldShowTermsOfUsePromptOnHomepage())
     }
+
+    @Test
+    fun `GIVEN other conditions satisfied WHEN prompt has not been displayed THEN shouldShowTermsOfUsePrompt returns true`() {
+        settings.hasAcceptedTermsOfService = false
+        settings.isTermsOfUsePromptEnabled = true
+        settings.hasPostponedAcceptingTermsOfUse = false
+        // Prompt display count configuration.
+        settings.termsOfUsePromptDisplayedCount = 0
+        settings.termsOfUseMaxDisplayCount = 2
+
+        termsOfUseManager.onStart()
+
+        assertTrue(termsOfUseManager.shouldShowTermsOfUsePrompt())
+    }
+
+    @Test
+    fun `GIVEN other conditions satisfied WHEN prompt has been displayed the maximum number of times THEN shouldShowTermsOfUsePrompt returns false`() {
+        settings.hasAcceptedTermsOfService = false
+        settings.isTermsOfUsePromptEnabled = true
+        settings.hasPostponedAcceptingTermsOfUse = false
+        // Prompt display count configuration.
+        settings.termsOfUsePromptDisplayedCount = 2
+        settings.termsOfUseMaxDisplayCount = 2
+
+        assertFalse(termsOfUseManager.shouldShowTermsOfUsePrompt())
+    }
+
+    @Test
+    fun `GIVEN other conditions satisfied WHEN prompt has been displayed more than the maximum number of times THEN shouldShowTermsOfUsePrompt returns false`() {
+        settings.hasAcceptedTermsOfService = false
+        settings.isTermsOfUsePromptEnabled = true
+        settings.hasPostponedAcceptingTermsOfUse = false
+        // Prompt display count configuration.
+        settings.termsOfUsePromptDisplayedCount = 3
+        settings.termsOfUseMaxDisplayCount = 2
+
+        assertFalse(termsOfUseManager.shouldShowTermsOfUsePrompt())
+    }
 }
