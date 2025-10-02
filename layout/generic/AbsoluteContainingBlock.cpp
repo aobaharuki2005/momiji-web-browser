@@ -950,17 +950,31 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     nscoord availISize = logicalCBSize.ISize(wm);
 
     ReflowInput::InitFlags initFlags;
-    if (aFlags.contains(AbsPosReflowFlag::IsGridContainerCB)) {
-      // When a grid container generates the abs.pos. CB for a *child* then
-      // the static position is determined via CSS Box Alignment within the
-      // abs.pos. CB (a grid area, i.e. a piece of the grid). In this scenario,
-      // due to the multiple coordinate spaces in play, we use a convenience
-      // flag to simply have the child's ReflowInput give it a static position
-      // at its abs.pos. CB origin, and then we'll align & offset it from there.
-      nsIFrame* placeholder = aKidFrame->GetPlaceholderFrame();
-      if (placeholder && placeholder->GetParent() == aDelegatingFrame) {
-        initFlags += ReflowInput::InitFlag::StaticPosIsCBOrigin;
+    const bool staticPosIsCBOrigin = [&] {
+      if (aFlags.contains(AbsPosReflowFlag::IsGridContainerCB)) {
+        // When a grid container generates the abs.pos. CB for a *child* then
+        // the static position is determined via CSS Box Alignment within the
+        // abs.pos. CB (a grid area, i.e. a piece of the grid). In this scenario,
+        // due to the multiple coordinate spaces in play, we use a convenience
+        // flag to simply have the child's ReflowInput give it a static position
+        // at its abs.pos. CB origin, and then we'll align & offset it from there.
+        nsIFrame* placeholder = aKidFrame->GetPlaceholderFrame();
+        if (placeholder && placeholder->GetParent() == aDelegatingFrame) {
+          return true;
+        }
       }
+      if (aKidFrame->IsMenuPopupFrame()) {
+        // Popups never use their static pos.
+        return true;
+      }
+      // TODO(emilio): Either reparent the top layer placeholder frames to the
+      // viewport, or return true here for top layer frames more generally (not
+      // only menupopups), see https://github.com/w3c/csswg-drafts/issues/8040.
+      return false;
+    }();
+
+    if (staticPosIsCBOrigin) {
+      initFlags += ReflowInput::InitFlag::StaticPosIsCBOrigin;
     }
 
     const bool kidFrameMaySplit =
