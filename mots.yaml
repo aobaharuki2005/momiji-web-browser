@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2025-09-23T23:04:15.488928+00:00'
+updated_at: '2025-10-01T15:21:04.336313+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3918,6 +3918,8 @@ modules:
           - *jswinarton
           - *sthompson
           - *sclements
+          - *kcochrane
+          - *jsudiaman
         machine_name: tabbed_browser
 
       - name: Windows Installer
@@ -4624,5 +4626,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 34850133dd60d111a521e20f79845f3a86106132
-  export: 51bf99560fa38ad343a714908b7d4b423028e058
+  config: 59f8d9db52cfab7a7f8df28d3c9619871dab8767
+  export: 5960043482fc6dcabb1e2d619ccfe53e6919a173
