@@ -38,6 +38,7 @@ export interface Modules {
   "chrome://global/content/ml/backends/ONNXPipeline.mjs": typeof import("chrome://global/content/ml/backends/ONNXPipeline.mjs"),
   "chrome://global/content/ml/backends/OpenAIPipeline.mjs": typeof import("chrome://global/content/ml/backends/OpenAIPipeline.mjs"),
   "chrome://global/content/ml/backends/Pipeline.mjs": typeof import("chrome://global/content/ml/backends/Pipeline.mjs"),
+  "chrome://global/content/ml/backends/StaticEmbeddingsPipeline.mjs": typeof import("chrome://global/content/ml/backends/StaticEmbeddingsPipeline.mjs"),
   "chrome://global/content/preferences/Preferences.mjs": typeof import("chrome://global/content/preferences/Preferences.mjs"),
   "chrome://global/content/translations/TranslationsTelemetry.sys.mjs": typeof import("chrome://global/content/translations/TranslationsTelemetry.sys.mjs"),
   "chrome://global/content/translations/TranslationsUtils.mjs": typeof import("chrome://global/content/translations/TranslationsUtils.mjs"),

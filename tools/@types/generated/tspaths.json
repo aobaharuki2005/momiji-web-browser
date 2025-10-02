@@ -308,6 +308,9 @@
       "chrome://global/content/ml/backends/Pipeline.mjs": [
         "toolkit/components/ml/content/backends/Pipeline.mjs"
       ],
+      "chrome://global/content/ml/backends/StaticEmbeddingsPipeline.mjs": [
+        "toolkit/components/ml/content/backends/StaticEmbeddingsPipeline.mjs"
+      ],
       "chrome://global/content/ml/openai-dev.mjs": [
         "toolkit/components/ml/vendor/openai/dist/openai-dev.mjs"
       ],
