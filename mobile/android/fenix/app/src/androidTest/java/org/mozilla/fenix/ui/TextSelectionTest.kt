@@ -133,6 +133,7 @@ class TextSelectionTest : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
+            verifyPageContent(genericURL.content)
             longClickPageObject(itemContainingText("content"))
             clickContextMenuItem("Private Search")
             mDevice.waitForIdle()
