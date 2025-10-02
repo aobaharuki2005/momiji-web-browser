@@ -25,6 +25,7 @@ export const TaskbarTabsPin = {
    * Pins the provided Taskbar Tab to the taskbar.
    *
    * @param {TaskbarTab} aTaskbarTab - A Taskbar Tab to pin to the taskbar.
+   * @param {TaskbarTabsRegistry} aRegistry - The registry to track pin resources with.
    * @returns {Promise} Resolves once finished.
    */
   async pinTaskbarTab(aTaskbarTab, aRegistry) {
@@ -51,6 +52,7 @@ export const TaskbarTabsPin = {
    * Unpins the provided Taskbar Tab from the taskbar.
    *
    * @param {TaskbarTab} aTaskbarTab - The Taskbar Tab to unpin from the taskbar.
+   * @param {TaskbarTabsRegistry} aRegistry - remove pinned resource tracking from.
    * @returns {Promise} Resolves once finished.
    */
   async unpinTaskbarTab(aTaskbarTab, aRegistry) {
@@ -121,6 +123,7 @@ async function createTaskbarIconFromFavicon(aTaskbarTab) {
  *
  * @param {TaskbarTab} aTaskbarTab - The Taskbar Tab to generate a shortcut for.
  * @param {nsIFile} aFileIcon - The icon file to use for the shortcut.
+ * @param {TaskbarTabsRegistry} aRegistry - The registry used to save the shortcut path.
  * @returns {Promise<string>} The path to the created shortcut.
  */
 async function createShortcut(aTaskbarTab, aFileIcon, aRegistry) {

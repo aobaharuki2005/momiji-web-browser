@@ -249,6 +249,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
 });
 
+/**
+ * Actor implementation for the profile about pages.
+ */
 export class ProfilesParent extends JSWindowActorParent {
   get tab() {
     const gBrowser = this.browsingContext.topChromeWindow.gBrowser;

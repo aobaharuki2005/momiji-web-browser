@@ -57,6 +57,9 @@ const COMMAND_LINE_ACTIVATE = "profiles-activate";
 
 const gSupportsBadging = "nsIMacDockSupport" in Ci || "nsIWinTaskbar" in Ci;
 
+/**
+ * Handles listening to the channel requests.
+ */
 class ChannelListener {
   #request = null;
   #imageListener = null;

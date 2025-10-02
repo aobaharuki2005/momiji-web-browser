@@ -171,6 +171,7 @@ export class SelectableProfile {
    * If the avatar is custom, the return value will be the path to the file on
    * disk.
    *
+   * @param {string|number} size
    * @returns {string} Path to the current avatar.
    */
   getAvatarPath(size) {

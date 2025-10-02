@@ -141,6 +141,8 @@ class TaskbarTab {
    * Always use TaskbarTabsRegistry.patchTaskbarTab instead. Aside
    * from calling into this, it notifies other objects (especially
    * the saver) about the change.
+   *
+   * @param {object} aPatch - An object with properties to change.
    */
   _applyPatch(aPatch) {
     if ("shortcutRelativePath" in aPatch) {
