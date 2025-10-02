@@ -15,6 +15,7 @@ const {
   addonIdToEngineId,
   engineIdToAddonId,
   stringifyForLog,
+  parseNpy,
 } = ChromeUtils.importESModule("chrome://global/content/ml/Utils.sys.mjs");
 
 /**
@@ -1329,4 +1330,63 @@ add_task(function test_stringifyForLog_top_level_bigint() {
     out === "9007199254740993" || out === '"9007199254740993"',
     "Top-level BigInt should stringify (quoted or not)"
   );
+});
+
+add_task(function test_npy_parsing() {
+  // # Generate some npy arrays with python:
+  // import numpy as np
+  // import io
+  // fib5 = [0, 1, 1, 2, 3]
+  // fib5_u8 = np.array(fib5, dtype=np.uint8)
+  // fib5_f16 = np.array(fib5, dtype=np.float16)
+  // fib5_f32 = np.array(fib5, dtype=np.float32)
+  // def to_npy_uint8array(arr: np.ndarray) -> str:
+  //     buf = io.BytesIO()
+  //     np.save(buf, arr)
+  //     b = buf.getvalue()
+  //     return "new Uint8Array([" + ", ".join(str(x) for x in b) + "])"
+  // npy_u8_5 = to_npy_uint8array(fib5_u8)
+  // npy_f16_5 = to_npy_uint8array(fib5_f16)
+  // npy_f32_5 = to_npy_uint8array(fib5_f32)
+  // npy_u8_5, npy_f16_5, npy_f32_5
+
+  // prettier-ignore
+  const u8 = new Uint8Array([147, 78, 85, 77, 80, 89, 1, 0, 118, 0, 123, 39, 100, 101, 115, 99, 114, 39, 58, 32, 39, 124, 117, 49, 39, 44, 32, 39, 102, 111, 114, 116, 114, 97, 110, 95, 111, 114, 100, 101, 114, 39, 58, 32, 70, 97, 108, 115, 101, 44, 32, 39, 115, 104, 97, 112, 101, 39, 58, 32, 40, 53, 44, 41, 44, 32, 125, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 10, 0, 1, 1, 2, 3])
+  // prettier-ignore
+  const fp16 = new Uint8Array([147, 78, 85, 77, 80, 89, 1, 0, 118, 0, 123, 39, 100, 101, 115, 99, 114, 39, 58, 32, 39, 60, 102, 50, 39, 44, 32, 39, 102, 111, 114, 116, 114, 97, 110, 95, 111, 114, 100, 101, 114, 39, 58, 32, 70, 97, 108, 115, 101, 44, 32, 39, 115, 104, 97, 112, 101, 39, 58, 32, 40, 53, 44, 41, 44, 32, 125, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 10, 0, 0, 0, 60, 0, 60, 0, 64, 0, 66])
+  // prettier-ignore
+  const fp32 = new Uint8Array([147, 78, 85, 77, 80, 89, 1, 0, 118, 0, 123, 39, 100, 101, 115, 99, 114, 39, 58, 32, 39, 60, 102, 52, 39, 44, 32, 39, 102, 111, 114, 116, 114, 97, 110, 95, 111, 114, 100, 101, 114, 39, 58, 32, 70, 97, 108, 115, 101, 44, 32, 39, 115, 104, 97, 112, 101, 39, 58, 32, 40, 53, 44, 41, 44, 32, 125, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 10, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 64, 0, 0, 64, 64])
+
+  const everyoneLovesSprintPlanning = [0, 1, 1, 2, 3];
+
+  const testCases = [
+    { name: "u8", npy: u8, expectedDtype: "u1" },
+    { name: "fp16", npy: fp16, expectedDtype: "f2" },
+    { name: "fp32", npy: fp32, expectedDtype: "f4" },
+  ];
+
+  for (const { name, npy, expectedDtype } of testCases) {
+    const { data, shape, dtype } = parseNpy(npy.buffer);
+    SimpleTest.isDeeply(
+      data,
+      everyoneLovesSprintPlanning,
+      `${name} encoding matches`
+    );
+    SimpleTest.isDeeply(shape, [5], `${name} shape matches`);
+    SimpleTest.isDeeply(dtype, expectedDtype, `${name} shape matches`);
+  }
+});
+
+/**
+ * Check that round tripping works for the numpy parsing, and the generation from
+ * test fixtures.
+ */
+add_task(function test_npy_fixture() {
+  const vocabSize = 3;
+  const dimensions = 4;
+  const { numbers, encoding } = generateFloat16Numpy(vocabSize, dimensions);
+  const { data, shape, dtype } = parseNpy(encoding.buffer);
+  SimpleTest.isDeeply(numbers, data, "Round tripping produces the same array");
+  SimpleTest.isDeeply(shape, [vocabSize, dimensions], "The shape is preserved");
+  is(dtype, "f2", "The datatype is correctly fp16");
 });

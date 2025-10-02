@@ -800,3 +800,57 @@ function startMockOpenAI({ echo = "This gets echoed." } = {}) {
 function stopMockOpenAI(server) {
   return new Promise(resolve => server.stop(resolve));
 }
+
+/**
+ * Generates a numpy encoded float16 array to be used for generating static embeddings
+ * test data.
+ *
+ * @param {number} vocabSize
+ * @param {number} dimensions
+ * @returns {{ numbers: Float16Array, encoding: Uint8Array }}
+ */
+function generateFloat16Numpy(vocabSize, dimensions) {
+  const numbers = new Float16Array(vocabSize * dimensions);
+  // Build the data:
+  // [0.1, 0.2, 0.3, ..., 0.1 * vocabSize * dimensions]
+  for (let i = 0; i < vocabSize; i++) {
+    for (let j = 0; j < dimensions; j++) {
+      const index = i * dimensions + j;
+      numbers[index] = index / 10;
+    }
+  }
+  const magic = new Uint8Array([0x93, 78, 85, 77, 80, 89]); // \x93NUMPY
+  const version = new Uint8Array([1, 0]); // Version 1.0
+  let header = `{'descr': '<f2', 'fortran_order': False, 'shape': (${vocabSize},${dimensions}), }`;
+
+  // Pad header to 16-byte alignment
+  const preLength = magic.length + version.length + 2; // +2 for header length field
+  let padding = 16 - ((preLength + header.length + 1) % 16);
+  if (padding === 16) {
+    padding = 0;
+  }
+  header += " ".repeat(padding) + "\n";
+
+  const headerBytes = new TextEncoder().encode(header);
+
+  const headerLen = new Uint8Array(2);
+  new DataView(headerLen.buffer).setUint16(0, headerBytes.length, true);
+
+  const encoding = new Uint8Array(
+    preLength + headerBytes.length + numbers.byteLength
+  );
+
+  // Write everything out.
+  let offset = 0;
+  encoding.set(magic, offset);
+  offset += magic.length;
+  encoding.set(version, offset);
+  offset += version.length;
+  encoding.set(headerLen, offset);
+  offset += 2;
+  encoding.set(headerBytes, offset);
+  offset += headerBytes.length;
+  encoding.set(new Uint8Array(numbers.buffer), offset);
+
+  return { numbers, encoding };
+}
