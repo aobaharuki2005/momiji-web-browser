@@ -790,6 +790,11 @@ void NativeLayerRootSnapshotterCA::UpdateSnapshot(const IntSize& aSize) {
 bool NativeLayerRootSnapshotterCA::ReadbackPixels(
     const IntSize& aReadbackSize, SurfaceFormat aReadbackFormat,
     const Range<uint8_t>& aReadbackBuffer) {
+  if (mDelegate->DoCustomReadbackForReftestsIfDesired(
+          aReadbackSize, aReadbackFormat, aReadbackBuffer)) {
+    return true;
+  }
+
   if (aReadbackFormat != SurfaceFormat::B8G8R8A8) {
     return false;
   }
