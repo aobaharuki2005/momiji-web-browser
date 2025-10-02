@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use repl_ng::Parameter;
-
 use crate::net;
 use crate::command;
 
@@ -40,12 +38,11 @@ impl Cli {
 
             let mut repl_cmd = repl_ng::Command::new(
                 desc.name,
-                |args, ctx: &mut Context| {
+                |_args, ctx: &mut Context| {
                     let cmd = ctx.cmd_list.get_mut(desc.name).unwrap();
-                    let mut ctx = command::CommandContext::new(
-                        args,
-                        &mut ctx.net,
-                    );
+                    let mut ctx = command::CommandContext {
+                        net: &mut ctx.net,
+                    };
                     let result = cmd.run(&mut ctx);
                     match result {
                         command::CommandOutput::Log(msg) => {
@@ -66,16 +63,6 @@ impl Cli {
 
             if let Some(alias) = desc.alias {
                 repl_cmd = repl_cmd.with_alias(alias);
-            }
-
-            for param_desc in desc.params {
-                let mut param = Parameter::new(param_desc.name);
-
-                if param_desc.is_required {
-                    param = param.set_required(true).unwrap();
-                }
-
-                repl_cmd = repl_cmd.with_parameter(param).expect("invalid param");
             }
 
             cmds.push(repl_cmd);
