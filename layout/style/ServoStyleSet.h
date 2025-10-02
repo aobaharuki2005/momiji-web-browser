@@ -262,6 +262,10 @@ class ServoStyleSet {
   // function after checking if it may have rules inside @starting-style.
   already_AddRefed<ComputedStyle> ResolveStartingStyle(dom::Element& aElement);
 
+  already_AddRefed<ComputedStyle> ResolvePositionTry(dom::Element& aElement,
+                                                     ComputedStyle& aStyle,
+                                                     nsAtom* aName);
+
   size_t SheetCount(Origin) const;
   StyleSheet* SheetAt(Origin, size_t aIndex) const;
 

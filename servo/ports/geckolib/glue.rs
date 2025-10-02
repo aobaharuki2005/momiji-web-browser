@@ -4383,6 +4383,30 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForPageContent(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn Servo_ComputedValues_GetForPositionTry(
+    raw_data: &PerDocumentStyleData,
+    style: &ComputedValues,
+    element: &RawGeckoElement,
+    name: *const nsAtom,
+) -> Strong<ComputedValues> {
+    debug_assert!(!name.is_null());
+    let global_style_data = &*GLOBAL_STYLE_DATA;
+    let guard = global_style_data.shared_lock.read();
+    let guards = StylesheetGuards::same(&guard);
+    let element = GeckoElement(element);
+    let data = raw_data.borrow();
+    Atom::with(name, |name| {
+        data.stylist.resolve_position_try(
+            style,
+            &guards,
+            element,
+            name,
+        )
+    })
+    .into()
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
     parent_style_or_null: Option<&ComputedValues>,
     pseudo: PseudoStyleType,

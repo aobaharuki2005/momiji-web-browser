@@ -26,6 +26,7 @@
 #include "nsIFrameInlines.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
+#include "nsPresContextInlines.h"
 
 #ifdef DEBUG
 #  include "nsBlockFrame.h"
@@ -894,6 +895,7 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
   }
   do {
     const StylePositionTryFallbacksItem* currentFallback = nullptr;
+    RefPtr<ComputedStyle> currentFallbackStyle;
     if (currentFallbackIndex) {
       currentFallback = &fallbacks[*currentFallbackIndex];
     }
@@ -907,11 +909,21 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       auto positionArea = stylePos->mPositionArea;
       const StylePositionTryFallbacksTryTactic* tactic = nullptr;
       if (currentFallback) {
-        if (currentFallback->IsPositionArea()) {
-          positionArea = currentFallback->AsPositionArea();
-        } else if (currentFallback->IsIdentAndOrTactic()) {
+        if (currentFallback->IsIdentAndOrTactic()) {
           const auto& item = currentFallback->AsIdentAndOrTactic();
+          if (!item.ident.AsAtom()->IsEmpty()) {
+            currentFallbackStyle = aPresContext->StyleSet()->ResolvePositionTry(
+                *aKidFrame->GetContent()->AsElement(), *aKidFrame->Style(),
+                item.ident.AsAtom());
+            if (currentFallbackStyle) {
+              positionArea =
+                  currentFallbackStyle->StylePosition()->mPositionArea;
+            }
+          }
           tactic = &item.try_tactic;
+        } else {
+          MOZ_ASSERT(currentFallback->IsPositionArea());
+          positionArea = currentFallback->AsPositionArea();
         }
       }
 
