@@ -25,14 +25,11 @@
 namespace mozilla {
 namespace layers {
 
-using gfx::DataSourceSurface;
 using gfx::IntPoint;
 using gfx::IntRect;
 using gfx::IntRegion;
 using gfx::IntSize;
 using gfx::Matrix4x4;
-using gfx::SurfaceFormat;
-using gl::GLContext;
 
 NativeLayerRemoteMac::NativeLayerRemoteMac(
     const IntSize& aSize, bool aIsOpaque,
