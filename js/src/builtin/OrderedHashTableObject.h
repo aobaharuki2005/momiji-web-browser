@@ -44,7 +44,6 @@
  *     void makeEmpty(Key*);
  */
 
-#include "mozilla/CheckedInt.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"

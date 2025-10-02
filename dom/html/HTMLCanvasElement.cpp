@@ -18,7 +18,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"

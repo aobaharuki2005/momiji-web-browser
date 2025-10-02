@@ -10,7 +10,6 @@
 #include <math.h>
 #include <string.h>
 
-#include "mozilla/CheckedInt.h"
 #include "NumericTools.h"
 
 #include "2D.h"

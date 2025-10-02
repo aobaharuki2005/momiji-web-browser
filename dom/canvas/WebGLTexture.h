@@ -16,7 +16,6 @@
 #include "WebGLStrongTypes.h"
 #include "WebGLTypes.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/dom/TypedArray.h"
 
 namespace mozilla {

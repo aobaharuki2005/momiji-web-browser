@@ -15,7 +15,6 @@
 #include "js/experimental/PCCountProfiling.h"  // JS::{Start,Stop}PCCountProfiling, JS::PurgePCCounts, JS::GetPCCountScript{Count,Summary,Contents}
 #include "mozilla/Base64.h"
 #include "mozilla/ChaosMode.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/InputTaskManager.h"
 #include "mozilla/Logging.h"

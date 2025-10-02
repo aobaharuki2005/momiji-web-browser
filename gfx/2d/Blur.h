@@ -10,7 +10,6 @@
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Types.h"
-#include "mozilla/CheckedInt.h"
 
 class SkSurface;
 
