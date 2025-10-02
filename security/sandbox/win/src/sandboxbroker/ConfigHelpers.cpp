@@ -10,6 +10,7 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/Vector.h"
+#include "nsExceptionHandler.h"
 #include "nsStringFwd.h"
 #include "nsUnicharUtils.h"
 #include "sandbox/win/src/policy_engine_opcodes.h"
@@ -195,6 +196,8 @@ void UserFontConfigHelper::AddRules(SizeTrackingConfig& aConfig) const {
       NS_WARNING("Failed to add specific user font policy rule.");
       LOG_W("Failed (ResultCode %d) to add read access to: %S", result, data);
       if (result == sandbox::SBOX_ERROR_NO_SPACE) {
+        CrashReporter::RecordAnnotationCString(
+            CrashReporter::Annotation::UserFontRulesExhausted, "inside");
         return;
       }
     }
@@ -210,6 +213,8 @@ void UserFontConfigHelper::AddRules(SizeTrackingConfig& aConfig) const {
       LOG_W("Failed (ResultCode %d) to add read access to: %S", result,
             fontPath.getW());
       if (result == sandbox::SBOX_ERROR_NO_SPACE) {
+        CrashReporter::RecordAnnotationCString(
+            CrashReporter::Annotation::UserFontRulesExhausted, "outside");
         return;
       }
     }

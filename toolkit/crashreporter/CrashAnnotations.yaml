@@ -1187,6 +1187,13 @@ useragent_locale:
   type: string
   scope: report
 
+UserFontRulesExhausted:
+  description: >
+    Set to "inside" if rules exhausted while adding fonts inside the user's dir,
+    set to "outside" if adding for fonts outside the user's dir.
+  type: string
+  scope: report
+
 UtilityProcessStatus:
   description: >
     Status of the Utility process, can be set to "Running" or "Destroyed"
