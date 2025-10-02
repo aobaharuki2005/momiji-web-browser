@@ -2,7 +2,7 @@
 support-files = [
   "head.js",
   "shared-head.js",
-  "translations-bencher-en.html",
+  "translations-bencher-es.html",
   "translations-test.mjs",
   "translations-tester-blank.html",
   "translations-tester-pdf-file.pdf",

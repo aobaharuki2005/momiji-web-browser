@@ -13,9 +13,9 @@
  */
 const perfMetadata = {
   owner: "Translations Team",
-  name: "Full-Page Translations BaseMemory Model",
+  name: "Full-Page Translation (Spanish to English)",
   description:
-    "Tests the performance of Full Page Translations with a base-memory-architecture model",
+    "Tests the speed of Full Page Translations using the Spanish-to-English model.",
   options: {
     default: {
       perfherder: true,
@@ -90,21 +90,20 @@ const perfMetadata = {
 };
 
 /**
- * Request a longer timeout for this test.
+ * Request 4x longer timeout for this test.
  */
-requestLongerTimeout(7);
+requestLongerTimeout(4);
 
 /**
- * Runs the translations benchmark tests with a base-memory-architecture model.
+ * Runs the translations benchmark tests from Spanish to English.
  */
-add_task(async function test_translations_performance_basememory() {
+add_task(async function test_translations_performance_es_en() {
   await TranslationsBencher.benchmarkTranslation({
-    page: ENGLISH_BENCHMARK_PAGE_URL,
-    sourceLanguage: "en",
-    targetLanguage: "ru",
-    architecture: "base-memory",
+    page: SPANISH_BENCHMARK_PAGE_URL,
+    sourceLanguage: "es",
+    targetLanguage: "en",
     speedBenchCount: 5,
     memoryBenchCount: 5,
-    memorySampleInterval: 50,
+    memorySampleInterval: 10,
   });
 });
