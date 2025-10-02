@@ -6019,7 +6019,8 @@ const ReportContent = spocs => {
     ref: radioGroupRef,
     id: "report-group",
     "data-l10n-id": "newtab-report-ads-why-reporting",
-    className: "report-ads-options"
+    className: "report-ads-options",
+    headingLevel: "3"
   }, /*#__PURE__*/external_React_default().createElement("moz-radio", {
     "data-l10n-id": "newtab-report-ads-reason-not-interested",
     value: "not_interested"
@@ -6034,7 +6035,8 @@ const ReportContent = spocs => {
     ref: radioGroupRef,
     id: "report-group",
     "data-l10n-id": "newtab-report-content-why-reporting-this",
-    className: "report-content-options"
+    className: "report-content-options",
+    headingLevel: "3"
   }, /*#__PURE__*/external_React_default().createElement("moz-radio", {
     "data-l10n-id": "newtab-report-content-wrong-category",
     value: "wrong_category"

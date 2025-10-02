@@ -52,6 +52,7 @@ export class SelectControlBaseElement extends MozLitElement {
     label: { type: String, fluent: true },
     name: { type: String },
     value: { type: String },
+    headingLevel: { type: Number },
   };
 
   static queries = {
@@ -293,6 +294,7 @@ export class SelectControlBaseElement extends MozLitElement {
         role=${this.type == "radio" ? "radiogroup" : "listbox"}
         ?disabled=${this.disabled}
         label=${this.label}
+        headinglevel=${this.headingLevel}
         exportparts="inputs, support-link"
         aria-orientation=${ifDefined(this.constructor.orientation)}
       >

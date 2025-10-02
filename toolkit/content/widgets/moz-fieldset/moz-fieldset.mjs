@@ -33,7 +33,7 @@ export default class MozFieldset extends MozLitElement {
     supportPage: { type: String, attribute: "support-page" },
     ariaLabel: { type: String, fluent: true, mapped: true },
     ariaOrientation: { type: String, mapped: true },
-    headingLevel: { type: Number },
+    headingLevel: { type: Number, reflect: true },
     disabled: { type: Boolean, reflect: true },
     iconSrc: { type: String },
   };
