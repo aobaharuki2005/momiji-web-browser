@@ -4354,6 +4354,22 @@ nsresult HTMLEditor::EnsureNoFollowingUnnecessaryLineBreak(
     return NS_OK;
   }
   if (unnecessaryLineBreak->IsHTMLBRElement()) {
+    // If the found unnecessary <br> is a preceding one of a mailcite which is a
+    // <span> styled as block, we need to preserve the <br> element for the
+    // serializer to cause a line break before the mailcite.
+    if (IsPlaintextMailComposer()) {
+      const WSScanResult nextThing =
+          WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
+              WSRunScanner::Scan::All,
+              unnecessaryLineBreak->After<EditorRawDOMPoint>(),
+              BlockInlineCheck::UseComputedDisplayOutsideStyle);
+      if (nextThing.ReachedOtherBlockElement() &&
+          HTMLEditUtils::IsMailCiteElement(*nextThing.ElementPtr()) &&
+          HTMLEditUtils::IsInlineContent(
+              *nextThing.ElementPtr(), BlockInlineCheck::UseHTMLDefaultStyle)) {
+        return NS_OK;
+      }
+    }
     // If the invisible break is a placeholder of ancestor inline elements, we
     // should not delete it to allow users to insert text with the format
     // specified by them.

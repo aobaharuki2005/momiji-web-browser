@@ -480,6 +480,9 @@ skip-if = [
 ["test_mailcite_backspace_at_end_of_inline_reply.html"]
 skip-if = ["xorigin"] # Testing internal API for comm-central
 
+["test_mailcite_keep_preceding_br_after_insert.html"]
+skip-if = ["xorigin"] # Testing internal API for comm-central
+
 ["test_mailcite_keep_trailing_br_after_delete.html"]
 skip-if = ["xorigin"] # Testing internal API for comm-central
 
