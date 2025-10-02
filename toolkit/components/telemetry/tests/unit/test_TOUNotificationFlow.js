@@ -756,6 +756,7 @@ add_task(async function test_canUpload_allowed_when_both_bypass_prefs_true() {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref(TelemetryUtils.Preferences.BypassNotification);
     Services.prefs.clearUserPref("termsofuse.bypassNotification");
+    Services.prefs.clearUserPref("browser.preonboarding.enabled");
     TelemetryReportingPolicy.reset();
   });
 
@@ -772,9 +773,15 @@ add_task(async function test_canUpload_allowed_when_both_bypass_prefs_true() {
 
   Services.prefs.setBoolPref("termsofuse.bypassNotification", false);
 
+  Services.prefs.setBoolPref("browser.preonboarding.enabled", true);
   Assert.ok(
     !TelemetryReportingPolicy.canUpload(),
     "Upload blocked when only one bypass is true and no other allow path conditions are met"
+  );
+  Services.prefs.setBoolPref("browser.preonboarding.enabled", false);
+  Assert.ok(
+    TelemetryReportingPolicy.canUpload(),
+    "Upload NOT blocked when only one bypass is true and no other allow path conditions are met"
   );
 });
 
