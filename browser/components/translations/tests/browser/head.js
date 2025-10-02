@@ -683,6 +683,7 @@ class TranslationsBencher {
    * @param {string} options.page - The URL of the page to test.
    * @param {string} options.sourceLanguage - The BCP-47 language tag for the source language.
    * @param {string} options.targetLanguage - The BCP-47 language tag for the target language.
+   * @param {("tiny"|"base-memory"|"base")} options.architecture - The architecture of the model.
    * @param {number} options.speedBenchCount - The number of speed-sampling runs to perform.
    * @param {number} options.memoryBenchCount - The number of memory-sampling runs to perform.
    * @param {number} [options.memorySampleInterval] - The interval in milliseconds between memory usage samples.
@@ -693,6 +694,7 @@ class TranslationsBencher {
     page,
     sourceLanguage,
     targetLanguage,
+    architecture,
     speedBenchCount,
     memoryBenchCount,
     memorySampleInterval = 10,
@@ -743,6 +745,7 @@ class TranslationsBencher {
       journal,
       sourceLanguage,
       targetLanguage,
+      architecture,
       memoryBenchCount,
       memorySampleInterval,
     });
@@ -752,6 +755,7 @@ class TranslationsBencher {
       journal,
       sourceLanguage,
       targetLanguage,
+      architecture,
       wordCount,
       tokenCount,
       speedBenchCount,
@@ -769,6 +773,7 @@ class TranslationsBencher {
    * @param {TranslationsBencher.Journal} options.journal - The shared metrics journal.
    * @param {string} options.sourceLanguage - The BCP-47 language tag for the source language.
    * @param {string} options.targetLanguage - The BCP-47 language tag for the target language.
+   * @param {("tiny"|"base-memory"|"base")} options.architecture - The architecture of the model.
    * @param {number} options.memoryBenchCount - The number of runs to perform for memory sampling.
    * @param {number} options.memorySampleInterval - The interval in milliseconds between memory samples.
    *
@@ -779,6 +784,7 @@ class TranslationsBencher {
     journal,
     sourceLanguage,
     targetLanguage,
+    architecture,
     memoryBenchCount,
     memorySampleInterval,
   }) {
@@ -790,6 +796,7 @@ class TranslationsBencher {
           { fromLang: sourceLanguage, toLang: "en" },
           { fromLang: "en", toLang: targetLanguage },
         ],
+        architecture,
         prefs: [["browser.translations.logLevel", "Error"]],
         contentEagerMode: true,
       });
@@ -894,6 +901,7 @@ class TranslationsBencher {
    * @param {TranslationsBencher.Journal} options.journal - The shared metrics journal.
    * @param {string} options.sourceLanguage - The BCP-47 language tag for the source language.
    * @param {string} options.targetLanguage - The BCP-47 language tag for the target language.
+   * @param {("tiny"|"base-memory"|"base")} options.architecture - The architecture of the model.
    * @param {number} options.wordCount - The total word count of the page.
    * @param {number} options.tokenCount - The total token count of the page.
    * @param {number} options.speedBenchCount - The number of runs to perform for speed sampling.
@@ -905,6 +913,7 @@ class TranslationsBencher {
     journal,
     sourceLanguage,
     targetLanguage,
+    architecture,
     wordCount,
     tokenCount,
     speedBenchCount,
@@ -917,6 +926,7 @@ class TranslationsBencher {
           { fromLang: sourceLanguage, toLang: "en" },
           { fromLang: "en", toLang: targetLanguage },
         ],
+        architecture,
         prefs: [["browser.translations.logLevel", "Error"]],
         contentEagerMode: true,
       });
