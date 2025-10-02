@@ -240,7 +240,7 @@ void NativeLayerRemoteMac::FlushDirtyLayerInfoToCommandQueue() {
       // Get the unique ID for this IOSurfaceRef, which only works
       // because kIOSurfaceIsGlobal was set to true when this
       // IOSurface was created.
-      auto surfaceRef = surfaceWithInvalidRegion->mSurface.get();
+      IOSurfaceRef surfaceRef = surfaceWithInvalidRegion->mSurface.get();
       surfaceID = IOSurfaceGetID(surfaceRef);
     }
 
