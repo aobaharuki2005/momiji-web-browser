@@ -4059,11 +4059,7 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
                                                        bool aIgnoreTabs) const {
   MOZ_ASSERT(IsInBounds(mStart, mLength, aRange), "Range out of bounds");
 
-  uint32_t index;
-  for (index = 0; index < aRange.Length(); ++index) {
-    aSpacing[index].mBefore = 0.0;
-    aSpacing[index].mAfter = 0.0;
-  }
+  std::memset(aSpacing, 0, aRange.Length() * sizeof(*aSpacing));
 
   if (mFrame->Style()->IsTextCombined()) {
     return;
