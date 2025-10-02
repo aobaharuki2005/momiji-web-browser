@@ -239,7 +239,6 @@ class ScriptLoadRequest : public nsISupports,
     return IsMarkedForDiskCache() || IsMarkedForMemoryCache();
   }
 
- protected:
   void MarkForCache() {
     MOZ_ASSERT(mDiskCachingPlan == CachingPlan::PassedCondition ||
                mMemoryCachingPlan == CachingPlan::PassedCondition);
@@ -253,8 +252,6 @@ class ScriptLoadRequest : public nsISupports,
   }
 
  public:
-  void MarkScriptForCache(JSScript* aScript);
-
   mozilla::CORSMode CORSMode() const { return mFetchOptions->mCORSMode; }
 
   bool HasLoadContext() const { return mLoadContext; }
