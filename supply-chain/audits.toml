@@ -3449,6 +3449,11 @@ who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "2.2.6 -> 2.7.1"
 
+[[audits.indexmap]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "2.8.0 -> 2.11.4"
+
 [[audits.inherent]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -7425,7 +7430,7 @@ end = "2026-07-04"
 criteria = "safe-to-deploy"
 user-id = 539 # Josh Stone (cuviper)
 start = "2020-01-15"
-end = "2024-05-05"
+end = "2026-09-30"
 
 [[trusted.inherent]]
 criteria = "safe-to-deploy"
