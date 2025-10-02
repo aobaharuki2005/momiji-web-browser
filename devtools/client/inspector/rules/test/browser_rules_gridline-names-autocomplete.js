@@ -211,6 +211,11 @@ async function testCompletion(
 
   info("Checking the state");
   if (completion !== null) {
+    try {
+      await waitFor(() => editor.input.value === completion);
+    } catch (e) {
+      // catch the exception so we'll get a nicer failure in the assertion below
+    }
     is(editor.input.value, completion, "Correct value is autocompleted");
   }
 
