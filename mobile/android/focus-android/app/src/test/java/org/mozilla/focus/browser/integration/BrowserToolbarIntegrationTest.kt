@@ -6,7 +6,6 @@ package org.mozilla.focus.browser.integration
 
 import android.view.View
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
@@ -82,7 +81,7 @@ class BrowserToolbarIntegrationTest {
                 onUrlLongClicked = { false },
                 eraseActionListener = {},
                 tabCounterListener = {},
-                coroutineScope = TestScope(testDispatcher),
+                coroutineDispatcher = testDispatcher,
             ),
         )
     }
