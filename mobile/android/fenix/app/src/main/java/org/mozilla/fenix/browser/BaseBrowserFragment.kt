@@ -2548,27 +2548,61 @@ abstract class BaseBrowserFragment :
     }
 
     private fun setupIMEInsetsHandling(view: View) {
-        ImeInsetsSynchronizer.setup(
-            targetView = view,
-            synchronizeViewWithIME = context?.settings()?.toolbarPosition == ToolbarPosition.BOTTOM,
-            onIMEAnimationStarted = { isKeyboardShowingUp, keyboardHeight ->
-                // If the keyboard is hiding have the engine view immediately expand to the entire height of the
-                // screen and ensure the toolbar is shown above keyboard before both would be animated down.
-                if (!isKeyboardShowingUp) {
-                    (view.layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin = 0
-                    view.requestLayout()
-                }
-            },
-            onIMEAnimationFinished = { isKeyboardShowingUp, keyboardHeight ->
-                // If the keyboard is showing up keep the engine view covering the entire height
-                // of the screen until the animation is finished to avoid reflowing the web content
-                // together with the keyboard animation in a short burst of updates.
-                if (isKeyboardShowingUp || keyboardHeight == 0) {
-                    (view.layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin = keyboardHeight
-                    view.requestLayout()
-                }
-            },
-        )
+        when (context?.settings()?.toolbarPosition) {
+            ToolbarPosition.BOTTOM -> {
+                val toolbar = listOf(
+                    _bottomToolbarContainerView?.toolbarContainerView,
+                    _browserToolbarView?.layout,
+                ).firstOrNull { it != null } ?: return
+
+                ImeInsetsSynchronizer.setup(
+                    targetView = toolbar,
+                    insetsSource = view,
+                    onIMEAnimationStarted = { isKeyboardShowingUp, keyboardHeight ->
+                        // If the keyboard is hiding have the engine view immediately expand to the entire height of the
+                        // screen and ensure the toolbar is shown above keyboard before both would be animated down.
+                        if (!isKeyboardShowingUp) {
+                            (view.layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin = 0
+                            (toolbar.layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin = keyboardHeight
+                            view.requestLayout()
+                        }
+                    },
+                    onIMEAnimationFinished = { isKeyboardShowingUp, keyboardHeight ->
+                        // If the keyboard is showing up keep the engine view covering the entire height
+                        // of the screen until the animation is finished to avoid reflowing the web content
+                        // together with the keyboard animation in a short burst of updates.
+                        if (isKeyboardShowingUp || keyboardHeight == 0) {
+                            (view.layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin = keyboardHeight
+                            (toolbar.layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin = 0
+                            view.requestLayout()
+                        }
+                    },
+                )
+            }
+
+            ToolbarPosition.TOP -> {
+                ImeInsetsSynchronizer.setup(
+                    targetView = view,
+                    synchronizeViewWithIME = false,
+                    onIMEAnimationStarted = { isKeyboardShowingUp, _ ->
+                        if (!isKeyboardShowingUp) {
+                            (view.layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin = 0
+                            view.requestLayout()
+                        }
+                    },
+                    onIMEAnimationFinished = { isKeyboardShowingUp, keyboardHeight ->
+                        if (isKeyboardShowingUp || keyboardHeight == 0) {
+                            (view.layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin = keyboardHeight
+                            view.requestLayout()
+                        }
+                    },
+                )
+            }
+
+            else -> {
+                // no-op
+            }
+        }
     }
 
     private fun openManageStorageSettings() {
