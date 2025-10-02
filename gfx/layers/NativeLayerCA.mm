@@ -1352,7 +1352,7 @@ void NativeLayerCA::SetSurfaceToPresent(CFTypeRefPtr<IOSurfaceRef> aSurfaceRef,
   });
 }
 
-NativeLayerCA::Representation::Representation()
+NativeLayerCARepresentation::NativeLayerCARepresentation()
     : mWrappingCALayerHasExtent(false),
       mMutatedPosition(true),
       mMutatedTransform(true),
@@ -1367,7 +1367,7 @@ NativeLayerCA::Representation::Representation()
       mMutatedSpecializeVideo(true),
       mMutatedIsDRM(true) {}
 
-NativeLayerCA::Representation::~Representation() {
+NativeLayerCARepresentation::~NativeLayerCARepresentation() {
   [mContentCALayer release];
   [mOpaquenessTintLayer release];
   [mWrappingCALayer release];
@@ -1425,7 +1425,7 @@ void NativeLayerCA::DiscardBackbuffers() {
   mSurfaceHandler->DiscardBackbuffers();
 }
 
-NativeLayerCA::Representation& NativeLayerCA::GetRepresentation(
+NativeLayerCARepresentation& NativeLayerCA::GetRepresentation(
     WhichRepresentation aRepresentation) {
   switch (aRepresentation) {
     case WhichRepresentation::ONSCREEN:
@@ -1557,7 +1557,7 @@ static NSString* NSStringForOSType(OSType type) {
   }
 }
 
-bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
+bool NativeLayerCARepresentation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
   MOZ_ASSERT(
       [mContentCALayer isKindOfClass:[AVSampleBufferDisplayLayer class]]);
   AVSampleBufferDisplayLayer* videoLayer =
@@ -1710,8 +1710,8 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
   return true;
 }
 
-bool NativeLayerCA::Representation::ApplyChanges(
-    NativeLayerCA::UpdateType aUpdate, const IntSize& aSize, bool aIsOpaque,
+bool NativeLayerCARepresentation::ApplyChanges(
+    UpdateType aUpdate, const IntSize& aSize, bool aIsOpaque,
     const IntPoint& aPosition, const Matrix4x4& aTransform,
     const IntRect& aDisplayRect, const Maybe<IntRect>& aClipRect,
     const Maybe<gfx::RoundedRect>& aRoundedClip, float aBackingScale,
@@ -1896,7 +1896,7 @@ bool NativeLayerCA::Representation::ApplyChanges(
   if (mMutatedBackingScale || mMutatedPosition || mMutatedDisplayRect ||
       mMutatedClipRect || mMutatedRoundedClipRect || mMutatedTransform ||
       mMutatedSurfaceIsFlipped || mMutatedSize || layerNeedsInitialization) {
-    Maybe<CGRect> scaledClipRect = CalculateClipGeometry(
+    Maybe<CGRect> scaledClipRect = NativeLayerCA::CalculateClipGeometry(
         aSize, aPosition, aTransform, aDisplayRect, aClipRect, aBackingScale);
 
     CGRect useClipRect;
@@ -2083,7 +2083,7 @@ bool NativeLayerCA::Representation::ApplyChanges(
   return true;
 }
 
-NativeLayerCA::UpdateType NativeLayerCA::Representation::HasUpdate(
+NativeLayerCA::UpdateType NativeLayerCARepresentation::HasUpdate(
     bool aIsVideo) {
   if (!mWrappingCALayer) {
     return UpdateType::All;
