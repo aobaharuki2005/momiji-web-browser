@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">თვალთვალისგან თავისთავადი დაცვა ნაგულისხმევად</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">ერთი შეხებით აირიდეთ კომპანიებისგან თვალთვალი ყოველი დაწკაპებისას.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">დაასინქრონეთ ყველგან, სადაც Firefox გიყენიათ</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">გადაიტანეთ სანიშნები, ჩანართები და პაროლები ნებისმიერ მოწყობილობაზე. ყველაფერი დაცული იქნება დაშიფვრით.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">დასინქ. დაწყება</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">ახლა არა</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">დაგვეხმარეთ, გავავრცელოთ Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -720,6 +728,8 @@
   <string name="preferences_https_only_title">მხოლოდ-HTTPS-რეჟიმი</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">ეკრანის ჩაკეტვით ჩანართების დამალვა პირადი თვალიერებისას</string>
+  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
+  <string name="preferences_pbm_lock_screen_summary_3">იხილეთ ჩანართები თითის ანაბეჭდით, PIN-კოდით ან სახის ამოცნობით. ამის ჩართვით ასევე შეიზღუდება ეკრანის გადაღება და გაზიარება.</string>
   <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">იხილეთ ჩანართები თითის ანაბეჭდით, სახის ამოცნობით ან PIN-კოდით.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">ფუნთუშის მოთხოვნების შემზღუდავი</string>
