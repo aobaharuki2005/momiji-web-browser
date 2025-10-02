@@ -30,7 +30,6 @@
 #endif
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Compiler.h"
 #include "mozilla/Fuzzing.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MacroArgs.h"

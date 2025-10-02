@@ -11,7 +11,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedArithmetic.h"
-#include "mozilla/Compiler.h"
 #include "mozilla/Likely.h"
 #include "mozilla/UniquePtr.h"
 
