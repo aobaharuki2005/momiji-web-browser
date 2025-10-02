@@ -121,7 +121,7 @@ mod render_task_cache;
 mod render_task;
 mod renderer;
 mod resource_cache;
-mod scene;
+pub mod scene;
 mod scene_builder_thread;
 mod scene_building;
 mod screen_capture;
