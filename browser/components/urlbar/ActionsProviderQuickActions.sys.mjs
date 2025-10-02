@@ -43,8 +43,9 @@ class ProviderQuickActions extends ActionsProvider {
     return "ActionsProviderQuickActions";
   }
 
-  isActive(queryContext) {
+  isActive(queryContext, controller) {
     return (
+      controller?.input.isAddressbar &&
       lazy.UrlbarPrefs.get(ENABLED_PREF) &&
       !queryContext.searchMode &&
       queryContext.trimmedSearchString.length < 50 &&
