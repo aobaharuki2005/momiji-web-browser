@@ -471,8 +471,10 @@ void NativeLayerRootCA::CommitRepresentation(
       bool allUpdatesSucceeded = std::all_of(
           aSublayers.begin(), aSublayers.end(),
           [=](const RefPtr<NativeLayerCA>& layer) {
+            bool ignoredMustRebuild = false;
             return layer->ApplyChanges(aRepresentation,
-                                       NativeLayerCA::UpdateType::OnlyVideo);
+                                       NativeLayerCA::UpdateType::OnlyVideo,
+                                       &ignoredMustRebuild);
           });
 
       if (allUpdatesSucceeded) {
@@ -488,8 +490,8 @@ void NativeLayerRootCA::CommitRepresentation(
   AutoCATransaction transaction;
   nsTArray<NativeLayerCA*> sublayersWithExtent;
   for (auto layer : aSublayers) {
-    mustRebuild |= layer->WillUpdateAffectLayers(aRepresentation);
-    layer->ApplyChanges(aRepresentation, NativeLayerCA::UpdateType::All);
+    layer->ApplyChanges(aRepresentation, NativeLayerCA::UpdateType::All,
+                        &mustRebuild);
     CALayer* caLayer = layer->UnderlyingCALayer(aRepresentation);
     if (!caLayer.masksToBounds || !CGRectIsEmpty(caLayer.bounds)) {
       // This layer has an extent. If it didn't before, we need to rebuild.
@@ -1490,7 +1492,8 @@ Maybe<CGRect> NativeLayerCA::CalculateClipGeometry(
 }
 
 bool NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation,
-                                 NativeLayerCA::UpdateType aUpdate) {
+                                 NativeLayerCA::UpdateType aUpdate,
+                                 bool* aMustRebuild) {
   MutexAutoLock lock(mMutex);
   CFTypeRefPtr<IOSurfaceRef> surface;
   IntSize size = mSize;
@@ -1510,11 +1513,14 @@ bool NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation,
     surface = mTextureHost->GetSurface()->GetIOSurfaceRef();
   }
 
-  return GetRepresentation(aRepresentation)
-      .ApplyChanges(aUpdate, size, mIsOpaque, mPosition, mTransform,
-                    displayRect, mClipRect, mRoundedClipRect, mBackingScale,
-                    surfaceIsFlipped, mSamplingFilter, mSpecializeVideo,
-                    surface, mColor, mIsDRM, IsVideo(lock));
+  auto& r = GetRepresentation(aRepresentation);
+  if (r.mMutatedSpecializeVideo || !r.UnderlyingCALayer()) {
+    *aMustRebuild = true;
+  }
+  return r.ApplyChanges(aUpdate, size, mIsOpaque, mPosition, mTransform,
+                        displayRect, mClipRect, mRoundedClipRect, mBackingScale,
+                        surfaceIsFlipped, mSamplingFilter, mSpecializeVideo,
+                        surface, mColor, mIsDRM, IsVideo(lock));
 }
 
 CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
@@ -2108,13 +2114,6 @@ NativeLayerCA::UpdateType NativeLayerCA::Representation::HasUpdate(
   }
 
   return UpdateType::None;
-}
-
-bool NativeLayerCA::WillUpdateAffectLayers(
-    WhichRepresentation aRepresentation) {
-  MutexAutoLock lock(mMutex);
-  auto& r = GetRepresentation(aRepresentation);
-  return r.mMutatedSpecializeVideo || !r.UnderlyingCALayer();
 }
 
 bool DownscaleTargetNLRS::DownscaleFrom(
