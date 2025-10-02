@@ -2598,6 +2598,7 @@ export class BackupService extends EventTarget {
       } catch (_) {
         lazy.logConsole.warn("Could not remove ", RECOVERY_FILE_DEST_PATH);
       }
+
       try {
         // We're using a try/finally here to clean up the temporary OSKeyStore.
         // We need to make sure that cleanup occurs _after_ the recovery has
@@ -2791,6 +2792,7 @@ export class BackupService extends EventTarget {
             `Failed to recover resource: ${resourceKey}`,
             e
           );
+          throw e;
         }
       }
 
