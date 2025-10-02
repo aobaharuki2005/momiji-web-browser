@@ -152,10 +152,16 @@ test-verify:
                     - linux64-hostutils
         fetch:
             - ort.jsep.wasm
-            - translations.inference
-            - translations.esen.lex
-            - translations.esen.model
-            - translations.esen.vocab
+            - tr8ns.inference
+            - tr8ns.T.enru.lex
+            - tr8ns.T.enru.model
+            - tr8ns.T.enru.vocab
+            - tr8ns.BM.enru.lex
+            - tr8ns.BM.enru.model
+            - tr8ns.BM.enru.vocab
+            - tr8ns.B.enru.lex
+            - tr8ns.B.enru.model
+            - tr8ns.B.enru.vocab
 
 test-verify-gpu:
     description: "Extra verification of tests modified on this push on gpu instances"

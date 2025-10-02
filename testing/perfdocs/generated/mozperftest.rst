@@ -114,11 +114,11 @@ browser/components/translations/tests/browser
 ---------------------------------------------
 Performance tests for Translations models on Firefox Desktop
 
-browser_translations_perf_es_en.js
-==================================
+browser_translations_perf_base.js
+=================================
 
 :owner: Translations Team
-:name: Full-Page Translation (Spanish to English)
+:name: Full-Page Translations Base Model
 :Default options:
 
 ::
@@ -130,7 +130,43 @@ browser_translations_perf_es_en.js
  --manifest-flavor browser-chrome
  --try-platform linux, mac, win
 
-**Tests the speed of Full Page Translations using the Spanish-to-English model.**
+**Tests the performance of Full Page Translations with a base-architecture model**
+
+browser_translations_perf_basememory.js
+=======================================
+
+:owner: Translations Team
+:name: Full-Page Translations BaseMemory Model
+:Default options:
+
+::
+
+ --perfherder
+ --perfherder-metrics name:engine-init-time,unit:ms,shouldAlert:True,lowerIsBetter:True, name:words-per-second,unit:WPS,shouldAlert:True,lowerIsBetter:False, name:tokens-per-second,unit:TPS,shouldAlert:True,lowerIsBetter:False, name:peak-parent-process-memory-usage,unit:MiB,shouldAlert:True,lowerIsBetter:True, name:stabilized-parent-process-memory-usage,unit:MiB,shouldAlert:True,lowerIsBetter:True, name:post-gc-parent-process-memory-usage,unit:MiB,shouldAlert:True,lowerIsBetter:True, name:peak-inference-process-memory-usage,unit:MiB,shouldAlert:True,lowerIsBetter:True, name:stabilized-inference-process-memory-usage,unit:MiB,shouldAlert:True,lowerIsBetter:True, name:post-gc-inference-process-memory-usage,unit:MiB,shouldAlert:True,lowerIsBetter:True, name:total-translation-time,unit:s,shouldAlert:True,lowerIsBetter:True
+ --verbose
+ --manifest perftest.toml
+ --manifest-flavor browser-chrome
+ --try-platform linux, mac, win
+
+**Tests the performance of Full Page Translations with a base-memory-architecture model**
+
+browser_translations_perf_tiny.js
+=================================
+
+:owner: Translations Team
+:name: Full-Page Translations Tiny Model
+:Default options:
+
+::
+
+ --perfherder
+ --perfherder-metrics name:engine-init-time,unit:ms,shouldAlert:True,lowerIsBetter:True, name:words-per-second,unit:WPS,shouldAlert:True,lowerIsBetter:False, name:tokens-per-second,unit:TPS,shouldAlert:True,lowerIsBetter:False, name:peak-parent-process-memory-usage,unit:MiB,shouldAlert:True,lowerIsBetter:True, name:stabilized-parent-process-memory-usage,unit:MiB,shouldAlert:True,lowerIsBetter:True, name:post-gc-parent-process-memory-usage,unit:MiB,shouldAlert:True,lowerIsBetter:True, name:peak-inference-process-memory-usage,unit:MiB,shouldAlert:True,lowerIsBetter:True, name:stabilized-inference-process-memory-usage,unit:MiB,shouldAlert:True,lowerIsBetter:True, name:post-gc-inference-process-memory-usage,unit:MiB,shouldAlert:True,lowerIsBetter:True, name:total-translation-time,unit:s,shouldAlert:True,lowerIsBetter:True
+ --verbose
+ --manifest perftest.toml
+ --manifest-flavor browser-chrome
+ --try-platform linux, mac, win
+
+**Tests the performance of Full Page Translations with a tiny-architecture model**
 
 
 dom/serviceworkers/test/performance
