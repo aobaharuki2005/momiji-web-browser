@@ -3912,6 +3912,11 @@ delta = "0.10.1 -> 0.10.1@git:37ad39de3382c2aad0758dab49ba545331a2257d"
 importable = false
 notes = "Minimal changes to enable vendoring the crate"
 
+[[audits.midir]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.10.1 -> 0.10.2"
+
 [[audits.minidump-common]]
 who = "Gabriele Svelto <gsvelto@mozilla.com>"
 criteria = "safe-to-deploy"
