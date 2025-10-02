@@ -203,32 +203,8 @@ NativeLayerRootCA::CreateForCALayer(CALayer* aLayer) {
   return layerRoot.forget();
 }
 
-// Returns an autoreleased CALayer* object.
-static CALayer* MakeOffscreenRootCALayer() {
-  // This layer should behave similarly to the backing layer of a flipped
-  // NSView. It will never be rendered on the screen and it will never be
-  // attached to an NSView's layer; instead, it will be the root layer of a
-  // "local" CAContext. Setting geometryFlipped to YES causes the orientation of
-  // descendant CALayers' contents (such as IOSurfaces) to be consistent with
-  // what happens in a layer subtree that is attached to a flipped NSView.
-  // Setting it to NO would cause the surfaces in individual leaf layers to
-  // render upside down (rather than just flipping the entire layer tree upside
-  // down).
-  AutoCATransaction transaction;
-  CALayer* layer = [CALayer layer];
-  layer.position = CGPointZero;
-  layer.bounds = CGRectZero;
-  layer.anchorPoint = CGPointZero;
-  layer.contentsGravity = kCAGravityTopLeft;
-  layer.masksToBounds = YES;
-  layer.geometryFlipped = YES;
-  return layer;
-}
-
 NativeLayerRootCA::NativeLayerRootCA(CALayer* aLayer)
-    : mMutex("NativeLayerRootCA"),
-      mOnscreenRootCALayer([aLayer retain]),
-      mOffscreenRootCALayer([MakeOffscreenRootCALayer() retain]) {}
+    : mMutex("NativeLayerRootCA"), mOnscreenRootCALayer([aLayer retain]) {}
 
 NativeLayerRootCA::~NativeLayerRootCA() {
   MOZ_RELEASE_ASSERT(
@@ -240,11 +216,9 @@ NativeLayerRootCA::~NativeLayerRootCA() {
     // closed, so this transaction does not cause any screen updates.
     AutoCATransaction transaction;
     mOnscreenRootCALayer.sublayers = @[];
-    mOffscreenRootCALayer.sublayers = @[];
   }
 
   [mOnscreenRootCALayer release];
-  [mOffscreenRootCALayer release];
 }
 
 already_AddRefed<NativeLayer> NativeLayerRootCA::CreateLayer(
@@ -408,7 +382,7 @@ UniquePtr<NativeLayerRootSnapshotter> NativeLayerRootCA::CreateSnapshotter() {
                      "No NativeLayerRootSnapshotter for this NativeLayerRoot "
                      "should exist when this is called");
 
-  auto cr = NativeLayerRootSnapshotterCA::Create(this, mOffscreenRootCALayer);
+  auto cr = NativeLayerRootSnapshotterCA::Create(this);
   if (cr) {
     mWeakSnapshotter = cr.get();
   }
@@ -427,11 +401,10 @@ void NativeLayerRootCA::OnNativeLayerRootSnapshotterDestroyed(
 }
 #endif
 
-void NativeLayerRootCA::CommitOffscreen() {
+void NativeLayerRootCA::CommitOffscreen(CALayer* aRootCALayer) {
   MutexAutoLock lock(mMutex);
-  CommitRepresentation(WhichRepresentation::OFFSCREEN, mOffscreenRootCALayer,
-                       mSublayers, mMutatedOffscreenLayerStructure,
-                       mWindowIsFullscreen);
+  CommitRepresentation(WhichRepresentation::OFFSCREEN, aRootCALayer, mSublayers,
+                       mMutatedOffscreenLayerStructure, mWindowIsFullscreen);
   mMutatedOffscreenLayerStructure = false;
 }
 
@@ -507,8 +480,7 @@ void NativeLayerRootCA::CommitRepresentation(
 
 #ifdef XP_MACOSX
 /* static */ UniquePtr<NativeLayerRootSnapshotterCA>
-NativeLayerRootSnapshotterCA::Create(NativeLayerRootCA* aLayerRoot,
-                                     CALayer* aRootCALayer) {
+NativeLayerRootSnapshotterCA::Create(NativeLayerRootCA* aLayerRoot) {
   if (NS_IsMainThread()) {
     // Disallow creating snapshotters on the main thread.
     // On the main thread, any explicit CATransaction / NSAnimationContext is
@@ -529,8 +501,7 @@ NativeLayerRootSnapshotterCA::Create(NativeLayerRootCA* aLayerRoot,
   }
 
   return UniquePtr<NativeLayerRootSnapshotterCA>(
-      new NativeLayerRootSnapshotterCA(aLayerRoot, std::move(gl),
-                                       aRootCALayer));
+      new NativeLayerRootSnapshotterCA(aLayerRoot, std::move(gl)));
 }
 #endif
 
@@ -694,19 +665,17 @@ VideoLowPowerType NativeLayerRootCA::CheckVideoLowPower(
 
 #ifdef XP_MACOSX
 NativeLayerRootSnapshotterCA::NativeLayerRootSnapshotterCA(
-    NativeLayerRootCA* aLayerRoot, RefPtr<GLContext>&& aGL,
-    CALayer* aRootCALayer)
-    : mLayerRoot(aLayerRoot), mGL(aGL) {
-  AutoCATransaction transaction;
-  mRenderer = [[CARenderer
-      rendererWithCGLContext:gl::GLContextCGL::Cast(mGL)->GetCGLContext()
-                     options:nil] retain];
-  mRenderer.layer = aRootCALayer;
-}
+    NativeLayerRootCA* aLayerRoot, RefPtr<GLContext>&& aGL)
+    : mLayerRoot(aLayerRoot), mGL(aGL) {}
 
 NativeLayerRootSnapshotterCA::~NativeLayerRootSnapshotterCA() {
   mLayerRoot->OnNativeLayerRootSnapshotterDestroyed(this);
-  [mRenderer release];
+
+  if (mRenderer) {
+    AutoCATransaction transaction;
+    mRenderer.layer.sublayers = @[];
+    [mRenderer release];
+  }
 }
 
 already_AddRefed<profiler_screenshots::RenderSource>
@@ -719,20 +688,44 @@ void NativeLayerRootSnapshotterCA::UpdateSnapshot(const IntSize& aSize) {
   CGRect bounds = CGRectMake(0, 0, aSize.width, aSize.height);
 
   {
-    // Set the correct bounds and scale on the renderer and its root layer.
+    // Lazily initialize our renderer, and set the correct bounds and scale
+    // on the renderer and its root layer.
+    AutoCATransaction transaction;
+    if (!mRenderer) {
+      mRenderer = [[CARenderer
+          rendererWithCGLContext:gl::GLContextCGL::Cast(mGL)->GetCGLContext()
+                         options:nil] retain];
+      // This layer should behave similarly to the backing layer of a flipped
+      // NSView. It will never be rendered on the screen and it will never be
+      // attached to an NSView's layer; instead, it will be the root layer of a
+      // "local" CAContext. Setting geometryFlipped to YES causes the
+      // orientation of descendant CALayers' contents (such as IOSurfaces) to be
+      // consistent with what happens in a layer subtree that is attached to a
+      // flipped NSView. Setting it to NO would cause the surfaces in individual
+      // leaf layers to render upside down (rather than just flipping the entire
+      // layer tree upside down).
+      AutoCATransaction transaction;
+      CALayer* layer = [CALayer layer];
+      layer.position = CGPointZero;
+      layer.anchorPoint = CGPointZero;
+      layer.contentsGravity = kCAGravityTopLeft;
+      layer.masksToBounds = YES;
+      layer.geometryFlipped = YES;
+      mRenderer.layer = layer;
+    }
+
     // CARenderer always renders at unit scale, i.e. the coordinates on the root
     // layer must map 1:1 to render target pixels. But the coordinates on our
     // content layers are in "points", where 1 point maps to 2 device pixels on
     // HiDPI. So in order to render at the full device pixel resolution, we set
     // a scale transform on the root offscreen layer.
-    AutoCATransaction transaction;
     mRenderer.layer.bounds = bounds;
     float scale = mLayerRoot->BackingScale();
     mRenderer.layer.sublayerTransform = CATransform3DMakeScale(scale, scale, 1);
     mRenderer.bounds = bounds;
   }
 
-  mLayerRoot->CommitOffscreen();
+  mLayerRoot->CommitOffscreen(mRenderer.layer);
 
   mGL->MakeCurrent();
 

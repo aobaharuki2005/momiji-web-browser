@@ -117,7 +117,7 @@ class NativeLayerRootCA : public NativeLayerRoot {
   // off-main-thread commits are suspended.
   bool CommitToScreen() override;
 
-  void CommitOffscreen();
+  void CommitOffscreen(CALayer* aRootCALayer);
 #ifdef XP_MACOSX
   void OnNativeLayerRootSnapshotterDestroyed(
       NativeLayerRootSnapshotterCA* aNativeLayerRootSnapshotter);
@@ -188,9 +188,8 @@ class NativeLayerRootCA : public NativeLayerRoot {
       const nsTArray<RefPtr<NativeLayerCA>>& aSublayers,
       bool aMutatedLayerStructure) const;
 
-  Mutex mMutex MOZ_UNANNOTATED;              // protects all other fields
-  CALayer* mOnscreenRootCALayer = nullptr;   // strong
-  CALayer* mOffscreenRootCALayer = nullptr;  // strong
+  Mutex mMutex MOZ_UNANNOTATED;             // protects all other fields
+  CALayer* mOnscreenRootCALayer = nullptr;  // strong
 #ifdef XP_MACOSX
   NativeLayerRootSnapshotterCA* mWeakSnapshotter = nullptr;
 #endif
@@ -229,7 +228,7 @@ class RenderSourceNLRS;
 class NativeLayerRootSnapshotterCA final : public NativeLayerRootSnapshotter {
  public:
   static UniquePtr<NativeLayerRootSnapshotterCA> Create(
-      NativeLayerRootCA* aLayerRoot, CALayer* aRootCALayer);
+      NativeLayerRootCA* aLayerRoot);
   virtual ~NativeLayerRootSnapshotterCA();
 
   bool ReadbackPixels(const gfx::IntSize& aReadbackSize,
@@ -244,8 +243,7 @@ class NativeLayerRootSnapshotterCA final : public NativeLayerRootSnapshotter {
 
  protected:
   NativeLayerRootSnapshotterCA(NativeLayerRootCA* aLayerRoot,
-                               RefPtr<gl::GLContext>&& aGL,
-                               CALayer* aRootCALayer);
+                               RefPtr<gl::GLContext>&& aGL);
   void UpdateSnapshot(const gfx::IntSize& aSize);
 
   RefPtr<NativeLayerRootCA> mLayerRoot;
