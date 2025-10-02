@@ -358,7 +358,6 @@ skip-if = [
 ]
 
 ["test_ext_runtime_getContexts.html"]
-skip-if = ["os == 'android'"] # Bug 1988445
 
 ["test_ext_script_filenames.html"]
 
