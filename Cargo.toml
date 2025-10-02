@@ -268,8 +268,6 @@ tabs = { git = "https://github.com/mozilla/application-services", rev = "f6f667f
 tracing-support = { git = "https://github.com/mozilla/application-services", rev = "f6f667f590ac15367fc37eb1ad3a6bdea4ffc526" }
 viaduct = { git = "https://github.com/mozilla/application-services", rev = "f6f667f590ac15367fc37eb1ad3a6bdea4ffc526" }
 webext-storage = { git = "https://github.com/mozilla/application-services", rev = "f6f667f590ac15367fc37eb1ad3a6bdea4ffc526" }
-logins = { git = "https://github.com/mozilla/application-services", rev = "f6f667f590ac15367fc37eb1ad3a6bdea4ffc526", features = ["keydb"] }
-init_rust_components = { git = "https://github.com/mozilla/application-services", rev = "f6f667f590ac15367fc37eb1ad3a6bdea4ffc526", features = ["keydb"] }
 
 # Patched version of zip 2.4.2 to allow for reading omnijars.
 zip = { path = "third_party/rust/zip" }
