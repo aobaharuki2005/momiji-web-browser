@@ -500,6 +500,11 @@ class TranslationsBencher {
    * @type {Record<string, {pageLanguage: string, tokenCount: number, wordCount: number}>}
    */
   static #PAGE_DATA = {
+    [ENGLISH_BENCHMARK_PAGE_URL]: {
+      pageLanguage: "en",
+      tokenCount: 12955,
+      wordCount: 9575,
+    },
     [SPANISH_BENCHMARK_PAGE_URL]: {
       pageLanguage: "es",
       tokenCount: 10966,
@@ -810,12 +815,8 @@ class TranslationsBencher {
         runInPage
       );
 
-      await FullPageTranslationsTestUtils.assertTranslationsButton(
-        { button: true, circleArrows: false, locale: false, icon: true },
-        "The button is available."
-      );
-
       await FullPageTranslationsTestUtils.openPanel({
+        openFromAppMenu: true,
         onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewIntro,
       });
 
@@ -935,12 +936,8 @@ class TranslationsBencher {
         runInPage
       );
 
-      await FullPageTranslationsTestUtils.assertTranslationsButton(
-        { button: true, circleArrows: false, locale: false, icon: true },
-        "The button is available."
-      );
-
       await FullPageTranslationsTestUtils.openPanel({
+        openFromAppMenu: true,
         onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewIntro,
       });
 
