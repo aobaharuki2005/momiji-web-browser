@@ -20,6 +20,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.externalPackage
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.APP_LINK_LAUNCH_TYPE_UNKNOWN
 import mozilla.components.feature.search.SearchUseCases
@@ -46,6 +47,7 @@ class TabIntentProcessor(
     private val tabsUseCases: TabsUseCases,
     private val newTabSearchUseCase: SearchUseCases.NewTabSearchUseCase,
     private val isPrivate: Boolean = false,
+    private val engine: Engine? = null,
 ) : IntentProcessor {
 
     private val logger = Logger("TabIntentProcessor")
@@ -60,7 +62,8 @@ class TabIntentProcessor(
             false
         } else {
             // Don't do app-link DNS warmup when DoH is enabled. See Bug 1929005.
-            warmupDNS(url.toNormalizedUrl())
+            warmupNativeDNS(url.toNormalizedUrl())
+            createSpeculativeConnection(url.toNormalizedUrl())
 
             val flags = computeLoadUrlFlags(intent)
 
@@ -87,7 +90,7 @@ class TabIntentProcessor(
     }
 
     @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage for DNS warmup in the background
-    private fun warmupDNS(normalizedUrl: String) {
+    private fun warmupNativeDNS(normalizedUrl: String) {
         GlobalScope.launch(IO) {
             try {
                 val url = URL(normalizedUrl)
@@ -96,6 +99,25 @@ class TabIntentProcessor(
                 logger.error("The normalized URL is malformed.")
             } catch (e: UnknownHostException) {
                 logger.error("The IP address of a host could not be determined.")
+            }
+        }
+    }
+
+     /**
+     * Creates a speculative connection to the given URL using the engine.
+     */
+    private fun createSpeculativeConnection(normalizedUrl: String) {
+        engine?.let { engineInstance ->
+            try {
+                engineInstance.speculativeConnect(normalizedUrl)
+            } catch (e: MalformedURLException) {
+                logger.error("Failed to create speculative connection: Invalid URL format - ${e.message}")
+            } catch (e: UnknownHostException) {
+                logger.error("Failed to create speculative connection: Unknown host - ${e.message}")
+            } catch (e: SecurityException) {
+                logger.error("Failed to create speculative connection: Security violation - ${e.message}")
+            } catch (e: IllegalStateException) {
+                logger.error("Failed to create speculative connection: Engine in invalid state - ${e.message}")
             }
         }
     }
@@ -138,6 +160,8 @@ class TabIntentProcessor(
     }
 
     private fun addNewTab(url: String, source: SessionState.Source) {
+        createSpeculativeConnection(url.toNormalizedUrl())
+
         tabsUseCases.addTab(
             url.toNormalizedUrl(),
             source = source,
