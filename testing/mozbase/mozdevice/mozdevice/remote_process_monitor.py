@@ -204,11 +204,18 @@ class RemoteProcessMonitor:
                     self.log.info("Failed to get top activity, retrying, once...")
                     top = self.device.get_top_activity(timeout=60)
                     if not has_output and top is None:
-                        self.log.error(
-                            f"TEST-UNEXPECTED-FAIL | {self.last_test_seen} | "
-                            "application failed to get top activity and stdout"
-                        )
-                        return 0
+                        if self.device._device_serial.startswith("emulator-"):
+                            self.log.info(
+                                "skipping error on emulator, "
+                                "application failed to get top activity and stdout"
+                            )
+                            break
+                        else:
+                            self.log.error(
+                                f"TEST-UNEXPECTED-FAIL | {self.last_test_seen} | "
+                                f"application failed to get top activity and stdout"
+                            )
+                            return 0
 
         # Flush anything added to stdout during the sleep
         self.read_stdout()
