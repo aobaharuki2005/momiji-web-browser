@@ -24,8 +24,7 @@
 use crate::lib::*;
 
 use self::private::{First, Second};
-use crate::de::{self, Deserializer, Expected, IntoDeserializer, SeqAccess, Visitor};
-use crate::private::size_hint;
+use crate::de::{self, size_hint, Deserializer, Expected, IntoDeserializer, SeqAccess, Visitor};
 use crate::ser;
 
 ////////////////////////////////////////////////////////////////////////////////

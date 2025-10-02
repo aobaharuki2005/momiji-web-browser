@@ -4,10 +4,11 @@ use crate::de::{
     Deserialize, Deserializer, EnumAccess, Error, MapAccess, SeqAccess, Unexpected, VariantAccess,
     Visitor,
 };
-use crate::private::{self, InPlaceSeed};
+
+use crate::seed::InPlaceSeed;
 
 #[cfg(any(feature = "std", feature = "alloc"))]
-use crate::private::size_hint;
+use crate::de::size_hint;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -79,9 +80,10 @@ impl<'de> Deserialize<'de> for bool {
 ////////////////////////////////////////////////////////////////////////////////
 
 macro_rules! impl_deserialize_num {
-    ($primitive:ident, $nonzero:ident, $deserialize:ident $($method:ident!($($val:ident : $visit:ident)*);)*) => {
+    ($primitive:ident, $nonzero:ident $(cfg($($cfg:tt)*))*, $deserialize:ident $($method:ident!($($val:ident : $visit:ident)*);)*) => {
         impl_deserialize_num!($primitive, $deserialize $($method!($($val : $visit)*);)*);
 
+        $(#[cfg($($cfg)*)])*
         impl<'de> Deserialize<'de> for num::$nonzero {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
@@ -226,12 +228,12 @@ macro_rules! num_as_copysign_self {
         where
             E: Error,
         {
-            #[cfg(not(feature = "std"))]
+            #[cfg(any(no_float_copysign, not(feature = "std")))]
             {
                 Ok(v as Self::Value)
             }
 
-            #[cfg(feature = "std")]
+            #[cfg(all(not(no_float_copysign), feature = "std"))]
             {
                 // Preserve sign of NaN. The `as` produces a nondeterministic sign.
                 let sign = if v.is_sign_positive() { 1.0 } else { -1.0 };
@@ -248,8 +250,13 @@ macro_rules! int_to_int {
         where
             E: Error,
         {
-            Self::Value::try_from(v as i64)
-                .map_err(|_| Error::invalid_value(Unexpected::Signed(v as i64), &self))
+            if Self::Value::min_value() as i64 <= v as i64
+                && v as i64 <= Self::Value::max_value() as i64
+            {
+                Ok(v as Self::Value)
+            } else {
+                Err(Error::invalid_value(Unexpected::Signed(v as i64), &self))
+            }
         }
     };
 
@@ -258,8 +265,10 @@ macro_rules! int_to_int {
         where
             E: Error,
         {
-            if let Ok(v) = $primitive::try_from(v as i64) {
-                if let Some(nonzero) = Self::Value::new(v) {
+            if $primitive::min_value() as i64 <= v as i64
+                && v as i64 <= $primitive::max_value() as i64
+            {
+                if let Some(nonzero) = Self::Value::new(v as $primitive) {
                     return Ok(nonzero);
                 }
             }
@@ -290,13 +299,11 @@ macro_rules! int_to_uint {
         where
             E: Error,
         {
-            if 0 <= v {
-                #[allow(irrefutable_let_patterns)]
-                if let Ok(v) = Self::Value::try_from(v as u64) {
-                    return Ok(v as Self::Value);
-                }
+            if 0 <= v && v as u64 <= Self::Value::max_value() as u64 {
+                Ok(v as Self::Value)
+            } else {
+                Err(Error::invalid_value(Unexpected::Signed(v as i64), &self))
             }
-            Err(Error::invalid_value(Unexpected::Signed(v as i64), &self))
         }
     };
 
@@ -305,12 +312,9 @@ macro_rules! int_to_uint {
         where
             E: Error,
         {
-            if 0 < v {
-                #[allow(irrefutable_let_patterns)]
-                if let Ok(v) = $primitive::try_from(v as u64) {
-                    if let Some(nonzero) = Self::Value::new(v) {
-                        return Ok(nonzero);
-                    }
+            if 0 < v && v as u64 <= $primitive::max_value() as u64 {
+                if let Some(nonzero) = Self::Value::new(v as $primitive) {
+                    return Ok(nonzero);
                 }
             }
             Err(Error::invalid_value(Unexpected::Signed(v as i64), &self))
@@ -340,8 +344,11 @@ macro_rules! uint_to_self {
         where
             E: Error,
         {
-            Self::Value::try_from(v as u64)
-                .map_err(|_| Error::invalid_value(Unexpected::Unsigned(v as u64), &self))
+            if v as u64 <= Self::Value::max_value() as u64 {
+                Ok(v as Self::Value)
+            } else {
+                Err(Error::invalid_value(Unexpected::Unsigned(v as u64), &self))
+            }
         }
     };
 
@@ -350,8 +357,8 @@ macro_rules! uint_to_self {
         where
             E: Error,
         {
-            if let Ok(v) = $primitive::try_from(v as u64) {
-                if let Some(nonzero) = Self::Value::new(v) {
+            if v as u64 <= $primitive::max_value() as u64 {
+                if let Some(nonzero) = Self::Value::new(v as $primitive) {
                     return Ok(nonzero);
                 }
             }
@@ -364,7 +371,7 @@ macro_rules! uint_to_self {
         where
             E: Error,
         {
-            if let Ok(v) = $primitive::try_from(v as u64) {
+            if v as u64 <= $primitive::MAX as u64 {
                 Ok(Saturating(v as $primitive))
             } else {
                 Ok(Saturating($primitive::MAX))
@@ -374,14 +381,14 @@ macro_rules! uint_to_self {
 }
 
 impl_deserialize_num! {
-    i8, NonZeroI8, deserialize_i8
+    i8, NonZeroI8 cfg(not(no_num_nonzero_signed)), deserialize_i8
     num_self!(i8:visit_i8);
     int_to_int!(i16:visit_i16 i32:visit_i32 i64:visit_i64);
     uint_to_self!(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
 impl_deserialize_num! {
-    i16, NonZeroI16, deserialize_i16
+    i16, NonZeroI16 cfg(not(no_num_nonzero_signed)), deserialize_i16
     num_self!(i16:visit_i16);
     num_as_self!(i8:visit_i8);
     int_to_int!(i32:visit_i32 i64:visit_i64);
@@ -389,7 +396,7 @@ impl_deserialize_num! {
 }
 
 impl_deserialize_num! {
-    i32, NonZeroI32, deserialize_i32
+    i32, NonZeroI32 cfg(not(no_num_nonzero_signed)), deserialize_i32
     num_self!(i32:visit_i32);
     num_as_self!(i8:visit_i8 i16:visit_i16);
     int_to_int!(i64:visit_i64);
@@ -397,14 +404,14 @@ impl_deserialize_num! {
 }
 
 impl_deserialize_num! {
-    i64, NonZeroI64, deserialize_i64
+    i64, NonZeroI64 cfg(not(no_num_nonzero_signed)), deserialize_i64
     num_self!(i64:visit_i64);
     num_as_self!(i8:visit_i8 i16:visit_i16 i32:visit_i32);
     uint_to_self!(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
 impl_deserialize_num! {
-    isize, NonZeroIsize, deserialize_i64
+    isize, NonZeroIsize cfg(not(no_num_nonzero_signed)), deserialize_i64
     num_as_self!(i8:visit_i8 i16:visit_i16);
     int_to_int!(i32:visit_i32 i64:visit_i64);
     uint_to_self!(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
@@ -469,7 +476,9 @@ macro_rules! num_128 {
         where
             E: Error,
         {
-            if v as i128 >= Self::Value::MIN as i128 && v as u128 <= Self::Value::MAX as u128 {
+            if v as i128 >= Self::Value::min_value() as i128
+                && v as u128 <= Self::Value::max_value() as u128
+            {
                 Ok(v as Self::Value)
             } else {
                 Err(Error::invalid_value(
@@ -485,7 +494,9 @@ macro_rules! num_128 {
         where
             E: Error,
         {
-            if v as i128 >= $primitive::MIN as i128 && v as u128 <= $primitive::MAX as u128 {
+            if v as i128 >= $primitive::min_value() as i128
+                && v as u128 <= $primitive::max_value() as u128
+            {
                 if let Some(nonzero) = Self::Value::new(v as $primitive) {
                     Ok(nonzero)
                 } else {
@@ -517,7 +528,7 @@ macro_rules! num_128 {
 }
 
 impl_deserialize_num! {
-    i128, NonZeroI128, deserialize_i128
+    i128, NonZeroI128 cfg(not(no_num_nonzero_signed)), deserialize_i128
     num_self!(i128:visit_i128);
     num_as_self!(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
     num_as_self!(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
@@ -2173,7 +2184,7 @@ impl<'de> Deserialize<'de> for Duration {
                             b"secs" => Ok(Field::Secs),
                             b"nanos" => Ok(Field::Nanos),
                             _ => {
-                                let value = private::string::from_utf8_lossy(value);
+                                let value = crate::__private::from_utf8_lossy(value);
                                 Err(Error::unknown_field(&*value, FIELDS))
                             }
                         }
@@ -2404,9 +2415,13 @@ impl<'de> Deserialize<'de> for SystemTime {
 
         const FIELDS: &[&str] = &["secs_since_epoch", "nanos_since_epoch"];
         let duration = tri!(deserializer.deserialize_struct("SystemTime", FIELDS, DurationVisitor));
-        UNIX_EPOCH
+        #[cfg(not(no_systemtime_checked_add))]
+        let ret = UNIX_EPOCH
             .checked_add(duration)
-            .ok_or_else(|| D::Error::custom("overflow deserializing SystemTime"))
+            .ok_or_else(|| D::Error::custom("overflow deserializing SystemTime"));
+        #[cfg(no_systemtime_checked_add)]
+        let ret = Ok(UNIX_EPOCH + duration);
+        ret
     }
 }
 
@@ -2464,7 +2479,6 @@ mod range {
     use crate::lib::*;
 
     use crate::de::{Deserialize, Deserializer, Error, MapAccess, SeqAccess, Visitor};
-    use crate::private;
 
     pub const FIELDS: &[&str] = &["start", "end"];
 
@@ -2510,7 +2524,7 @@ mod range {
                         b"start" => Ok(Field::Start),
                         b"end" => Ok(Field::End),
                         _ => {
-                            let value = private::string::from_utf8_lossy(value);
+                            let value = crate::__private::from_utf8_lossy(value);
                             Err(Error::unknown_field(&*value, FIELDS))
                         }
                     }
@@ -2623,7 +2637,6 @@ mod range_from {
     use crate::lib::*;
 
     use crate::de::{Deserialize, Deserializer, Error, MapAccess, SeqAccess, Visitor};
-    use crate::private;
 
     pub const FIELDS: &[&str] = &["start"];
 
@@ -2666,7 +2679,7 @@ mod range_from {
                     match value {
                         b"start" => Ok(Field::Start),
                         _ => {
-                            let value = private::string::from_utf8_lossy(value);
+                            let value = crate::__private::from_utf8_lossy(value);
                             Err(Error::unknown_field(&*value, FIELDS))
                         }
                     }
@@ -2762,7 +2775,6 @@ mod range_to {
     use crate::lib::*;
 
     use crate::de::{Deserialize, Deserializer, Error, MapAccess, SeqAccess, Visitor};
-    use crate::private;
 
     pub const FIELDS: &[&str] = &["end"];
 
@@ -2805,7 +2817,7 @@ mod range_to {
                     match value {
                         b"end" => Ok(Field::End),
                         _ => {
-                            let value = private::string::from_utf8_lossy(value);
+                            let value = crate::__private::from_utf8_lossy(value);
                             Err(Error::unknown_field(&*value, FIELDS))
                         }
                     }
@@ -2977,8 +2989,6 @@ where
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#[cfg(feature = "result")]
-#[cfg_attr(docsrs, doc(cfg(feature = "result")))]
 impl<'de, T, E> Deserialize<'de> for Result<T, E>
 where
     T: Deserialize<'de>,

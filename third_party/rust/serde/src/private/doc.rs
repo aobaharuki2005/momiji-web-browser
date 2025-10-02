@@ -8,7 +8,6 @@ use crate::ser;
 #[derive(Debug)]
 pub struct Error;
 
-#[cfg_attr(not(no_diagnostic_namespace), diagnostic::do_not_recommend)]
 impl ser::Error for Error {
     fn custom<T>(_: T) -> Self
     where
@@ -19,14 +18,12 @@ impl ser::Error for Error {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(not(no_diagnostic_namespace), diagnostic::do_not_recommend)]
 impl error::Error for Error {
     fn description(&self) -> &str {
         unimplemented!()
     }
 }
 
-#[cfg_attr(not(no_diagnostic_namespace), diagnostic::do_not_recommend)]
 impl Display for Error {
     fn fmt(&self, _: &mut fmt::Formatter) -> fmt::Result {
         unimplemented!()

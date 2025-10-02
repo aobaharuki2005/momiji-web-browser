@@ -139,12 +139,6 @@ macro_rules! declare_error_trait {
         /// type appropriate for a basic JSON data format.
         ///
         /// [example data format]: https://serde.rs/data-format.html
-        #[cfg_attr(
-            not(no_diagnostic_namespace),
-            diagnostic::on_unimplemented(
-                message = "the trait bound `{Self}: serde::ser::Error` is not satisfied",
-            )
-        )]
         pub trait Error: Sized $(+ $($supertrait)::+)* {
             /// Used when a [`Serialize`] implementation encounters any error
             /// while serializing a type.
@@ -224,9 +218,6 @@ declare_error_trait!(Error: Sized + Debug + Display);
 #[cfg_attr(
     not(no_diagnostic_namespace),
     diagnostic::on_unimplemented(
-        // Prevents `serde_core::ser::Serialize` appearing in the error message
-        // in projects with no direct dependency on serde_core.
-        message = "the trait bound `{Self}: serde::Serialize` is not satisfied",
         note = "for local types consider adding `#[derive(serde::Serialize)]` to your `{Self}` type",
         note = "for types from other crates check whether the crate offers a `serde` feature flag",
     )
@@ -346,12 +337,6 @@ pub trait Serialize {
 /// a basic JSON `Serializer`.
 ///
 /// [example data format]: https://serde.rs/data-format.html
-#[cfg_attr(
-    not(no_diagnostic_namespace),
-    diagnostic::on_unimplemented(
-        message = "the trait bound `{Self}: serde::Serializer` is not satisfied",
-    )
-)]
 pub trait Serializer: Sized {
     /// The output type produced by this `Serializer` during successful
     /// serialization. Most serializers that produce text or binary output
@@ -413,7 +398,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for bool {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -435,7 +420,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for i8 {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -457,7 +442,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for i16 {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -479,7 +464,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for i32 {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -497,7 +482,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for i64 {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -515,7 +500,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for i128 {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -542,7 +527,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for u8 {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -564,7 +549,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for u16 {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -586,7 +571,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for u32 {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -604,7 +589,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for u64 {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -622,7 +607,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for u128 {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -649,7 +634,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for f32 {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -667,7 +652,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for f64 {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -688,7 +673,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for char {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -706,7 +691,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for str {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -729,7 +714,7 @@ pub trait Serializer: Sized {
     ///
     /// ```edition2021
     /// # use serde::ser::{Serializer, SerializeSeq};
-    /// # use serde_core::__private::doc::Error;
+    /// # use serde::__private::doc::Error;
     /// #
     /// # struct MySerializer;
     /// #
@@ -745,7 +730,7 @@ pub trait Serializer: Sized {
     ///     seq.end()
     /// }
     /// #
-    /// #     serde_core::__serialize_unimplemented! {
+    /// #     serde::__serialize_unimplemented! {
     /// #         bool i8 i16 i32 i64 u8 u16 u32 u64 f32 f64 char str none some
     /// #         unit unit_struct unit_variant newtype_struct newtype_variant
     /// #         seq tuple tuple_struct tuple_variant map struct struct_variant
@@ -827,7 +812,7 @@ pub trait Serializer: Sized {
     /// ```edition2021
     /// # use serde::Serializer;
     /// #
-    /// # serde_core::__private_serialize!();
+    /// # serde::__private_serialize!();
     /// #
     /// impl Serialize for () {
     ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -1509,12 +1494,6 @@ pub trait Serializer: Sized {
 /// implementation of `SerializeSeq` for a basic JSON data format.
 ///
 /// [example data format]: https://serde.rs/data-format.html
-#[cfg_attr(
-    not(no_diagnostic_namespace),
-    diagnostic::on_unimplemented(
-        message = "the trait bound `{Self}: serde::ser::SerializeSeq` is not satisfied",
-    )
-)]
 pub trait SerializeSeq {
     /// Must match the `Ok` type of our `Serializer`.
     type Ok;
@@ -1615,12 +1594,6 @@ pub trait SerializeSeq {
 /// implementation of `SerializeTuple` for a basic JSON data format.
 ///
 /// [example data format]: https://serde.rs/data-format.html
-#[cfg_attr(
-    not(no_diagnostic_namespace),
-    diagnostic::on_unimplemented(
-        message = "the trait bound `{Self}: serde::ser::SerializeTuple` is not satisfied",
-    )
-)]
 pub trait SerializeTuple {
     /// Must match the `Ok` type of our `Serializer`.
     type Ok;
@@ -1666,12 +1639,6 @@ pub trait SerializeTuple {
 /// implementation of `SerializeTupleStruct` for a basic JSON data format.
 ///
 /// [example data format]: https://serde.rs/data-format.html
-#[cfg_attr(
-    not(no_diagnostic_namespace),
-    diagnostic::on_unimplemented(
-        message = "the trait bound `{Self}: serde::ser::SerializeTupleStruct` is not satisfied",
-    )
-)]
 pub trait SerializeTupleStruct {
     /// Must match the `Ok` type of our `Serializer`.
     type Ok;
@@ -1730,12 +1697,6 @@ pub trait SerializeTupleStruct {
 /// implementation of `SerializeTupleVariant` for a basic JSON data format.
 ///
 /// [example data format]: https://serde.rs/data-format.html
-#[cfg_attr(
-    not(no_diagnostic_namespace),
-    diagnostic::on_unimplemented(
-        message = "the trait bound `{Self}: serde::ser::SerializeTupleVariant` is not satisfied",
-    )
-)]
 pub trait SerializeTupleVariant {
     /// Must match the `Ok` type of our `Serializer`.
     type Ok;
@@ -1802,12 +1763,6 @@ pub trait SerializeTupleVariant {
 /// implementation of `SerializeMap` for a basic JSON data format.
 ///
 /// [example data format]: https://serde.rs/data-format.html
-#[cfg_attr(
-    not(no_diagnostic_namespace),
-    diagnostic::on_unimplemented(
-        message = "the trait bound `{Self}: serde::ser::SerializeMap` is not satisfied",
-    )
-)]
 pub trait SerializeMap {
     /// Must match the `Ok` type of our `Serializer`.
     type Ok;
@@ -1898,12 +1853,6 @@ pub trait SerializeMap {
 /// implementation of `SerializeStruct` for a basic JSON data format.
 ///
 /// [example data format]: https://serde.rs/data-format.html
-#[cfg_attr(
-    not(no_diagnostic_namespace),
-    diagnostic::on_unimplemented(
-        message = "the trait bound `{Self}: serde::ser::SerializeStruct` is not satisfied",
-    )
-)]
 pub trait SerializeStruct {
     /// Must match the `Ok` type of our `Serializer`.
     type Ok;
@@ -1968,12 +1917,6 @@ pub trait SerializeStruct {
 /// implementation of `SerializeStructVariant` for a basic JSON data format.
 ///
 /// [example data format]: https://serde.rs/data-format.html
-#[cfg_attr(
-    not(no_diagnostic_namespace),
-    diagnostic::on_unimplemented(
-        message = "the trait bound `{Self}: serde::ser::SerializeStructVariant` is not satisfied",
-    )
-)]
 pub trait SerializeStructVariant {
     /// Must match the `Ok` type of our `Serializer`.
     type Ok;

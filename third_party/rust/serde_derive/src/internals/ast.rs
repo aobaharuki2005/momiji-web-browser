@@ -1,7 +1,6 @@
 //! A Serde ast, parsed from the Syn ast and ready to generate Rust code.
 
 use crate::internals::{attr, check, Ctxt, Derive};
-use proc_macro2::Ident;
 use syn::punctuated::Punctuated;
 use syn::Token;
 
@@ -63,17 +62,13 @@ impl<'a> Container<'a> {
         cx: &Ctxt,
         item: &'a syn::DeriveInput,
         derive: Derive,
-        private: &Ident,
     ) -> Option<Container<'a>> {
         let attrs = attr::Container::from_ast(cx, item);
 
         let mut data = match &item.data {
-            syn::Data::Enum(data) => {
-                Data::Enum(enum_from_ast(cx, &data.variants, attrs.default(), private))
-            }
+            syn::Data::Enum(data) => Data::Enum(enum_from_ast(cx, &data.variants, attrs.default())),
             syn::Data::Struct(data) => {
-                let (style, fields) =
-                    struct_from_ast(cx, &data.fields, None, attrs.default(), private);
+                let (style, fields) = struct_from_ast(cx, &data.fields, None, attrs.default());
                 Data::Struct(style, fields)
             }
             syn::Data::Union(_) => {
@@ -134,19 +129,13 @@ fn enum_from_ast<'a>(
     cx: &Ctxt,
     variants: &'a Punctuated<syn::Variant, Token![,]>,
     container_default: &attr::Default,
-    private: &Ident,
 ) -> Vec<Variant<'a>> {
     let variants: Vec<Variant> = variants
         .iter()
         .map(|variant| {
             let attrs = attr::Variant::from_ast(cx, variant);
-            let (style, fields) = struct_from_ast(
-                cx,
-                &variant.fields,
-                Some(&attrs),
-                container_default,
-                private,
-            );
+            let (style, fields) =
+                struct_from_ast(cx, &variant.fields, Some(&attrs), container_default);
             Variant {
                 ident: variant.ident.clone(),
                 attrs,
@@ -176,20 +165,19 @@ fn struct_from_ast<'a>(
     fields: &'a syn::Fields,
     attrs: Option<&attr::Variant>,
     container_default: &attr::Default,
-    private: &Ident,
 ) -> (Style, Vec<Field<'a>>) {
     match fields {
         syn::Fields::Named(fields) => (
             Style::Struct,
-            fields_from_ast(cx, &fields.named, attrs, container_default, private),
+            fields_from_ast(cx, &fields.named, attrs, container_default),
         ),
         syn::Fields::Unnamed(fields) if fields.unnamed.len() == 1 => (
             Style::Newtype,
-            fields_from_ast(cx, &fields.unnamed, attrs, container_default, private),
+            fields_from_ast(cx, &fields.unnamed, attrs, container_default),
         ),
         syn::Fields::Unnamed(fields) => (
             Style::Tuple,
-            fields_from_ast(cx, &fields.unnamed, attrs, container_default, private),
+            fields_from_ast(cx, &fields.unnamed, attrs, container_default),
         ),
         syn::Fields::Unit => (Style::Unit, Vec::new()),
     }
@@ -200,7 +188,6 @@ fn fields_from_ast<'a>(
     fields: &'a Punctuated<syn::Field, Token![,]>,
     attrs: Option<&attr::Variant>,
     container_default: &attr::Default,
-    private: &Ident,
 ) -> Vec<Field<'a>> {
     fields
         .iter()
@@ -210,7 +197,7 @@ fn fields_from_ast<'a>(
                 Some(ident) => syn::Member::Named(ident.clone()),
                 None => syn::Member::Unnamed(i.into()),
             },
-            attrs: attr::Field::from_ast(cx, i, field, attrs, container_default, private),
+            attrs: attr::Field::from_ast(cx, i, field, attrs, container_default),
             ty: &field.ty,
             original: field,
         })
