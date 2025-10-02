@@ -5043,6 +5043,7 @@ export class EnvironmentAddonBuilder {
       AddonManager.removeAddonListener(this);
       if (this._gmpProviderObserverAdded) {
         Services.obs.removeObserver(this, GMP_PROVIDER_REGISTERED_TOPIC);
+        this._gmpProviderObserverAdded = false;
       }
     }
 
@@ -5342,6 +5343,7 @@ AMTelemetry = {
 
   // NOTE: used by AddonTestUtils.promiseShutdownManager to ensure
   // we can initialize it again in AddonTestUtils.promiseStartupManager.
+  // Also used by test_blocklist_statechange_telemetry.js.
   async uninit() {
     if (!this.telemetrySetupDone) {
       return;
