@@ -336,6 +336,7 @@ static const char* gExactCallbackPrefs[] = {
     "layout.css.dpi",
     "layout.css.letter-spacing.model",
     "layout.css.ruby.normalize-metrics-factor",
+    "layout.css.text-autospace.enabled",
     "layout.css.text-transform.uppercase-eszett.enabled",
     "privacy.trackingprotection.enabled",
     nullptr,
@@ -599,6 +600,7 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
 
   if (prefName.EqualsLiteral(
           "layout.css.text-transform.uppercase-eszett.enabled") ||
+      prefName.EqualsLiteral("layout.css.text-autospace.enabled") ||
       prefName.EqualsLiteral("layout.css.letter-spacing.model")) {
     changeHint |= NS_STYLE_HINT_REFLOW;
   }
