@@ -135,6 +135,8 @@ ALLOWED_DESPITE_PREFIX = {
     "unic-langid-impl",  # Implementation detail of unic-langid
 }
 
+SEEN_ALLOWED_DESPITE_PREFIX = set()
+
 PACKAGES_WE_ALWAYS_WANT_AN_OVERRIDE_OF = [
     "autocfg",
     "cmake",
@@ -148,6 +150,7 @@ def dont_want_package(name):
     if reason := PACKAGES_WE_DONT_WANT.get(name):
         return reason
     if name in ALLOWED_DESPITE_PREFIX:
+        SEEN_ALLOWED_DESPITE_PREFIX.add(name)
         return None
     for prefix, reason in PREFIXES_WE_DONT_WANT.items():
         if name.startswith(prefix):
@@ -686,6 +689,17 @@ license file's hash.
                     )
                     failed = True
                 grouped[package["name"]].append(package)
+
+            for name in ALLOWED_DESPITE_PREFIX:
+                if name not in SEEN_ALLOWED_DESPITE_PREFIX:
+                    self.log(
+                        logging.ERROR,
+                        "unused_allowed_despite_prefix",
+                        {"crate": name},
+                        "ALLOWED_DESPITE_PREFIX contains {crate}, "
+                        "but that crate is not actually used (anymore?).",
+                    )
+                    failed = True
 
             for name, packages in grouped.items():
                 # Allow to have crates of the same name when one depends on the other.
