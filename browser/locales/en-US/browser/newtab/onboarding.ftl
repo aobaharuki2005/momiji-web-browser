@@ -494,3 +494,17 @@ restored-from-backup-success-no-checklist-primary-button = Continue
 restored-from-backup-error-title = Hmm, there was a problem with your backup file.
 restored-from-backup-error-subtitle = If you have another { -brand-short-name } backup file, try restoring from that one. <a data-l10n-name="restore-problems">Still having problems?</a>
 restored-from-backup-error-primary-button = Close
+
+## Onboarding Personalization Screen
+## A screen shown to users during the onboarding process that asks them two qualifying questions about their use of the browser
+
+onboarding-personalization-title = Customize your { -brand-short-name } experience
+onboarding-personalization-subtitle = Answer a few questions and we’ll recommend features and extensions to enhance your use of { -brand-short-name }.
+onboarding-personalization-use-case-title = What will you use { -brand-short-name } for?
+onboarding-personalization-use-case-personal-option = Personal
+onboarding-personalization-use-case-school-option = School
+onboarding-personalization-use-case-work-option = Work
+onboarding-personalization-motivation-title = Which features of { -brand-short-name } are the most important to you?
+onboarding-personalization-motivation-privacy-option = Privacy and Security
+onboarding-personalization-motivation-productivity-option = Productivity
+onboarding-personalization-motivation-other-option = Other
