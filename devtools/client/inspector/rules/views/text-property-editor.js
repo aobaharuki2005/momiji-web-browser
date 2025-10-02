@@ -1909,11 +1909,6 @@ class TextPropertyEditor {
   }
 
   destroy() {
-    this.ruleView.off(
-      "draggable-preference-updated",
-      this.#onDraggablePreferenceChanged
-    );
-
     if (this.#colorSwatchSpans && this.#colorSwatchSpans.length) {
       for (const span of this.#colorSwatchSpans) {
         this.ruleView.tooltips.getTooltip("colorPicker").removeSwatch(span);
