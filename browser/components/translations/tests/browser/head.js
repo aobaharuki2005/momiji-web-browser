@@ -505,11 +505,6 @@ class TranslationsBencher {
       tokenCount: 12955,
       wordCount: 9575,
     },
-    [SPANISH_BENCHMARK_PAGE_URL]: {
-      pageLanguage: "es",
-      tokenCount: 10966,
-      wordCount: 6944,
-    },
   };
 
   /**

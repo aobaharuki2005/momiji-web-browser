@@ -5,5 +5,3 @@ support-files = [
   "!/toolkit/components/translations/tests/browser/translations-test.mjs",
 ]
 
-["browser_translations_perf_es_en.js"]
-disabled = "Disabled since we want to run this only as perftest, not in regular CI."
