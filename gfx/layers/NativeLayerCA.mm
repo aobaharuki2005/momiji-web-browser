@@ -485,41 +485,21 @@ void NativeLayerRootCA::CommitRepresentation(
   }
 
   // We're going to do a full update now, which requires a transaction. Update
-  // all of the sublayers. Afterwards, only continue processing the sublayers
-  // which have an extent.
+  // all of the sublayers. We collect all sublayers with non-zero extents into
+  // the sublayers array - layers which are completely clipped out will return
+  // null from UndelyingCALayer.
   AutoCATransaction transaction;
-  nsTArray<NativeLayerCA*> sublayersWithExtent;
-  for (auto layer : aSublayers) {
+  NSMutableArray<CALayer*>* sublayers =
+      [NSMutableArray arrayWithCapacity:aSublayers.Length()];
+  for (const auto& layer : aSublayers) {
     layer->ApplyChanges(aRepresentation, NativeLayerCA::UpdateType::All,
                         &mustRebuild);
-    CALayer* caLayer = layer->UnderlyingCALayer(aRepresentation);
-    if (!caLayer.masksToBounds || !CGRectIsEmpty(caLayer.bounds)) {
-      // This layer has an extent. If it didn't before, we need to rebuild.
-      mustRebuild |= !layer->HasExtent();
-      layer->SetHasExtent(true);
-      sublayersWithExtent.AppendElement(layer);
-    } else {
-      // This layer has no extent. If it did before, we need to rebuild.
-      mustRebuild |= layer->HasExtent();
-      layer->SetHasExtent(false);
+    if (CALayer* caLayer = layer->UnderlyingCALayer(aRepresentation)) {
+      [sublayers addObject:caLayer];
     }
-
-    // One other reason we may need to rebuild is if the caLayer is not part of
-    // the root layer's sublayers. This might happen if the caLayer was rebuilt.
-    // We construct this check in a way that maximizes the boolean
-    // short-circuit, because we don't want to call containsObject unless
-    // absolutely necessary.
-    mustRebuild =
-        mustRebuild || ![aRootCALayer.sublayers containsObject:caLayer];
   }
 
   if (mustRebuild) {
-    uint32_t sublayersCount = sublayersWithExtent.Length();
-    NSMutableArray<CALayer*>* sublayers =
-        [NSMutableArray arrayWithCapacity:sublayersCount];
-    for (auto layer : sublayersWithExtent) {
-      [sublayers addObject:layer->UnderlyingCALayer(aRepresentation)];
-    }
     aRootCALayer.sublayers = sublayers;
   }
 }
@@ -622,22 +602,25 @@ VideoLowPowerType NativeLayerRootCA::CheckVideoLowPower(
   // determine more detail.
 
   uint32_t videoLayerCount = 0;
-  NativeLayerCA* topLayer = nullptr;
+  DebugOnly<RefPtr<NativeLayerCA>> topLayer;
   CALayer* topCALayer = nil;
   CALayer* secondCALayer = nil;
   bool topLayerIsVideo = false;
 
   for (auto layer : mSublayers) {
     // Only layers with extent are contributing to our sublayers.
-    if (layer->HasExtent()) {
-      topLayer = layer;
-
-      secondCALayer = topCALayer;
-      topCALayer = topLayer->UnderlyingCALayer(WhichRepresentation::ONSCREEN);
-      topLayerIsVideo = topLayer->IsVideo(aProofOfLock);
-      if (topLayerIsVideo) {
+    CALayer* caLayer = layer->UnderlyingCALayer(WhichRepresentation::ONSCREEN);
+    if (caLayer) {
+      bool isVideo = layer->IsVideo(aProofOfLock);
+      if (isVideo) {
         ++videoLayerCount;
       }
+
+      secondCALayer = topCALayer;
+
+      topLayer = layer;
+      topCALayer = caLayer;
+      topLayerIsVideo = isVideo;
     }
   }
 
@@ -1369,7 +1352,8 @@ void NativeLayerCA::SetSurfaceToPresent(CFTypeRefPtr<IOSurfaceRef> aSurfaceRef,
 }
 
 NativeLayerCA::Representation::Representation()
-    : mMutatedPosition(true),
+    : mWrappingCALayerHasExtent(false),
+      mMutatedPosition(true),
       mMutatedTransform(true),
       mMutatedDisplayRect(true),
       mMutatedClipRect(true),
@@ -1514,13 +1498,19 @@ bool NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation,
   }
 
   auto& r = GetRepresentation(aRepresentation);
-  if (r.mMutatedSpecializeVideo || !r.UnderlyingCALayer()) {
+  if (r.mMutatedSpecializeVideo) {
     *aMustRebuild = true;
   }
-  return r.ApplyChanges(aUpdate, size, mIsOpaque, mPosition, mTransform,
-                        displayRect, mClipRect, mRoundedClipRect, mBackingScale,
-                        surfaceIsFlipped, mSamplingFilter, mSpecializeVideo,
-                        surface, mColor, mIsDRM, IsVideo(lock));
+  bool hadExtentBeforeUpdate = r.UnderlyingCALayer() != nullptr;
+  bool updateSucceeded = r.ApplyChanges(
+      aUpdate, size, mIsOpaque, mPosition, mTransform, displayRect, mClipRect,
+      mRoundedClipRect, mBackingScale, surfaceIsFlipped, mSamplingFilter,
+      mSpecializeVideo, surface, mColor, mIsDRM, IsVideo(lock));
+  bool hasExtentAfterUpdate = r.UnderlyingCALayer() != nullptr;
+  if (hasExtentAfterUpdate != hadExtentBeforeUpdate) {
+    *aMustRebuild = true;
+  }
+  return updateSucceeded;
 }
 
 CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
@@ -1919,6 +1909,8 @@ bool NativeLayerCA::Representation::ApplyChanges(
     mWrappingCALayer.bounds =
         CGRectMake(0, 0, useClipRect.size.width, useClipRect.size.height);
     mWrappingCALayer.masksToBounds = scaledClipRect.isSome();
+    mWrappingCALayerHasExtent =
+        scaledClipRect.isNothing() || !CGRectIsEmpty(useClipRect);
 
     // Default the clip rect for the rounded rect clip layer to be the
     // same as the wrapping layer clip. This ensures that if it's not used,

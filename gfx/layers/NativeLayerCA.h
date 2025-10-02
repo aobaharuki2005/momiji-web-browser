@@ -338,8 +338,6 @@ class NativeLayerCA : public NativeLayer {
 
   bool IsVideo(const MutexAutoLock& aProofOfLock);
   bool ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock);
-  bool HasExtent() const { return mHasExtent; }
-  void SetHasExtent(bool aHasExtent) { mHasExtent = aHasExtent; }
 
   // This function returns a CGRect if a clip should be applied to the layer.
   // If set, the CGRect has the scaled position of the clip relative to the
@@ -354,7 +352,10 @@ class NativeLayerCA : public NativeLayer {
     Representation();
     ~Representation();
 
-    CALayer* UnderlyingCALayer() { return mWrappingCALayer; }
+    // Returns null if the layer is currently completely clipped out.
+    CALayer* UnderlyingCALayer() {
+      return mWrappingCALayerHasExtent ? mWrappingCALayer : nullptr;
+    }
 
     bool EnqueueSurface(IOSurfaceRef aSurfaceRef);
 
@@ -397,6 +398,9 @@ class NativeLayerCA : public NativeLayer {
     bool mLogNextVideoSurface = false;
 #endif
 
+    bool mWrappingCALayerHasExtent : 1;
+
+    // These are all initialized to true by the constructor.
     bool mMutatedPosition : 1;
     bool mMutatedTransform : 1;
     bool mMutatedDisplayRect : 1;
@@ -409,6 +413,7 @@ class NativeLayerCA : public NativeLayer {
     bool mMutatedSamplingFilter : 1;
     bool mMutatedSpecializeVideo : 1;
     bool mMutatedIsDRM : 1;
+    // Don't forget to update the constructor when you add a field here.
   };
 
   Representation& GetRepresentation(WhichRepresentation aRepresentation);
@@ -441,7 +446,6 @@ class NativeLayerCA : public NativeLayer {
   const bool mIsOpaque = false;
   bool mRootWindowIsFullscreen = false;
   bool mSpecializeVideo = false;
-  bool mHasExtent = false;
   bool mIsDRM = false;
   bool mIsHDR = false;
 
