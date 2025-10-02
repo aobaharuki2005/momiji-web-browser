@@ -3453,6 +3453,9 @@ ConnectionEntry* nsHttpConnectionMgr::GetOrCreateConnectionEntry(
           ("GetOrCreateConnectionEntry is coalescing h2/3 an/onymous "
            "connections, ent=%p",
            invertedEnt));
+      if (aAvailableForDispatchNow) {
+        *aAvailableForDispatchNow = true;
+      }
       return invertedEnt;
     }
   }

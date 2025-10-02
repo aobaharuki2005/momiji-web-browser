@@ -788,6 +788,13 @@ skip-if = [
 run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = ["os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix"] # Bug 1807931
 
+["test_http3_fallback_anonymous_conn.js"]
+run-sequentially = ["true"] # node server exceptions dont replay well
+skip-if = [
+  "os == 'android'",
+  "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix'", # Bug 1808049
+]
+
 ["test_http3_fast_fallback.js"]
 run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
