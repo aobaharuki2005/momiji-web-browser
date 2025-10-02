@@ -358,8 +358,6 @@ export class DiscoveryStreamFeed {
     const nimbusConfig = this.store.getState().Prefs.values?.pocketConfig || {};
     const { region } = this.store.getState().Prefs.values;
 
-    this.setupSpocsCacheUpdateTime();
-
     const hideDescriptionsRegions = nimbusConfig.hideDescriptionsRegions
       ?.split(",")
       .map(s => s.trim());
@@ -529,31 +527,27 @@ export class DiscoveryStreamFeed {
   }
 
   get spocsCacheUpdateTime() {
-    if (this._spocsCacheUpdateTime) {
-      return this._spocsCacheUpdateTime;
+    if (this._spocsCacheUpdateTime === undefined) {
+      const spocsCacheTimeout =
+        this.store.getState().Prefs.values[PREF_SPOCS_CACHE_TIMEOUT];
+      const MAX_TIMEOUT = 30;
+      const MIN_TIMEOUT = 5;
+      // We do a bit of min max checking the configured value is between
+      // 5 and 30 minutes, to protect against unreasonable values.
+      if (
+        spocsCacheTimeout &&
+        spocsCacheTimeout <= MAX_TIMEOUT &&
+        spocsCacheTimeout >= MIN_TIMEOUT
+      ) {
+        // This value is in minutes, but we want ms.
+        this._spocsCacheUpdateTime = spocsCacheTimeout * 60 * 1000;
+      } else {
+        // The const is already in ms.
+        this._spocsCacheUpdateTime = SPOCS_FEEDS_UPDATE_TIME;
+      }
     }
-    this.setupSpocsCacheUpdateTime();
-    return this._spocsCacheUpdateTime;
-  }
 
-  setupSpocsCacheUpdateTime() {
-    const spocsCacheTimeout =
-      this.store.getState().Prefs.values[PREF_SPOCS_CACHE_TIMEOUT];
-    const MAX_TIMEOUT = 30;
-    const MIN_TIMEOUT = 5;
-    // We do a bit of min max checking the configured value is between
-    // 5 and 30 minutes, to protect against unreasonable values.
-    if (
-      spocsCacheTimeout &&
-      spocsCacheTimeout <= MAX_TIMEOUT &&
-      spocsCacheTimeout >= MIN_TIMEOUT
-    ) {
-      // This value is in minutes, but we want ms.
-      this._spocsCacheUpdateTime = spocsCacheTimeout * 60 * 1000;
-    } else {
-      // The const is already in ms.
-      this._spocsCacheUpdateTime = SPOCS_FEEDS_UPDATE_TIME;
-    }
+    return this._spocsCacheUpdateTime;
   }
 
   /**
@@ -572,6 +566,7 @@ export class DiscoveryStreamFeed {
     const EXPIRATION_TIME = isStartup
       ? STARTUP_CACHE_EXPIRE_TIME
       : updateTimePerComponent[key];
+
     switch (key) {
       case "spocs":
         return !spocs || !(Date.now() - spocs.lastUpdated < EXPIRATION_TIME);
@@ -590,6 +585,7 @@ export class DiscoveryStreamFeed {
   async _checkExpirationPerComponent() {
     const cachedData = (await this.cache.get()) || {};
     const { feeds } = cachedData;
+
     return {
       spocs: this.showSpocs && this.isExpired({ cachedData, key: "spocs" }),
       feeds:
@@ -599,14 +595,6 @@ export class DiscoveryStreamFeed {
             this.isExpired({ cachedData, key: "feed", url })
           )),
     };
-  }
-
-  /**
-   * Returns true if any data for the cached endpoints has expired or is missing.
-   */
-  async checkIfAnyCacheExpired() {
-    const expirationPerComponent = await this._checkExpirationPerComponent();
-    return expirationPerComponent.spocs || expirationPerComponent.feeds;
   }
 
   updatePlacements(sendUpdate, layout, isStartup = false) {
@@ -2615,6 +2603,20 @@ export class DiscoveryStreamFeed {
     );
   }
 
+  async onSystemTick() {
+    // Only refresh when enabled and after initial load has completed.
+    if (!this.config.enabled || !this.loaded) {
+      return;
+    }
+
+    const expirationPerComponent = await this._checkExpirationPerComponent();
+    if (expirationPerComponent.feeds || expirationPerComponent.spocs) {
+      await this.refreshAll({ updateOpenTabs: false });
+    }
+  }
+
+  async onTrainhopConfigChanged() {}
+
   async onPrefChangedAction(action) {
     switch (action.data.name) {
       case PREF_CONFIG:
@@ -2703,6 +2705,14 @@ export class DiscoveryStreamFeed {
         break;
       }
     }
+
+    if (action.data.name === "pocketConfig") {
+      await this.onPrefChange();
+      this.setupPrefs(false /* isStartup */);
+    }
+    if (action.data.name === "trainhopConfig") {
+      await this.onTrainhopConfigChanged(action);
+    }
   }
 
   async onAction(action) {
@@ -2728,14 +2738,7 @@ export class DiscoveryStreamFeed {
         break;
       case at.DISCOVERY_STREAM_DEV_SYSTEM_TICK:
       case at.SYSTEM_TICK:
-        // Only refresh if we loaded once in .enable()
-        if (
-          this.config.enabled &&
-          this.loaded &&
-          (await this.checkIfAnyCacheExpired())
-        ) {
-          await this.refreshAll({ updateOpenTabs: false });
-        }
+        await this.onSystemTick();
         break;
       case at.DISCOVERY_STREAM_DEV_SYNC_RS:
         lazy.RemoteSettings.pollChanges();
@@ -2968,10 +2971,6 @@ export class DiscoveryStreamFeed {
       }
       case at.PREF_CHANGED:
         await this.onPrefChangedAction(action);
-        if (action.data.name === "pocketConfig") {
-          await this.onPrefChange();
-          this.setupPrefs(false /* isStartup */);
-        }
         break;
       case at.TOPIC_SELECTION_IMPRESSION:
         this.topicSelectionImpressionEvent();

@@ -2651,7 +2651,7 @@ describe("DiscoveryStreamFeed", () => {
 
       await feed.onAction({ type: at.INIT });
 
-      sandbox.stub(feed, "checkIfAnyCacheExpired").resolves(false);
+      sandbox.stub(feed, "onSystemTick").resolves();
       sandbox.stub(feed, "refreshAll").resolves();
 
       await feed.onAction({ type: at.SYSTEM_TICK });
@@ -2664,7 +2664,6 @@ describe("DiscoveryStreamFeed", () => {
 
       await feed.onAction({ type: at.INIT });
 
-      sandbox.stub(feed, "checkIfAnyCacheExpired").resolves(true);
       sandbox.stub(feed, "refreshAll").resolves();
 
       await feed.onAction({ type: at.SYSTEM_TICK });
@@ -2677,7 +2676,6 @@ describe("DiscoveryStreamFeed", () => {
 
       await feed.onAction({ type: at.INIT });
 
-      sandbox.stub(feed, "checkIfAnyCacheExpired").resolves(true);
       sandbox.stub(feed, "refreshAll").resolves();
 
       await feed.onAction({ type: at.SYSTEM_TICK });
@@ -2755,7 +2753,6 @@ describe("DiscoveryStreamFeed", () => {
 
       await feed.onAction({ type: at.INIT });
 
-      sandbox.stub(feed, "checkIfAnyCacheExpired").resolves(true);
       sandbox.stub(feed, "refreshAll").resolves();
 
       await feed.onAction({ type: at.DISCOVERY_STREAM_DEV_SYSTEM_TICK });
@@ -2774,31 +2771,18 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#spocsCacheUpdateTime", () => {
-    it("should call setupSpocsCacheUpdateTime", () => {
+    it("should return default cache time", () => {
       const defaultCacheTime = 30 * 60 * 1000;
-      sandbox.spy(feed, "setupSpocsCacheUpdateTime");
       const cacheTime = feed.spocsCacheUpdateTime;
       assert.equal(feed._spocsCacheUpdateTime, defaultCacheTime);
       assert.equal(cacheTime, defaultCacheTime);
-      assert.calledOnce(feed.setupSpocsCacheUpdateTime);
     });
     it("should return _spocsCacheUpdateTime", () => {
-      sandbox.spy(feed, "setupSpocsCacheUpdateTime");
       const testCacheTime = 123;
       feed._spocsCacheUpdateTime = testCacheTime;
       const cacheTime = feed.spocsCacheUpdateTime;
-      // Ensure _spocsCacheUpdateTime was not changed.
       assert.equal(feed._spocsCacheUpdateTime, testCacheTime);
       assert.equal(cacheTime, testCacheTime);
-      assert.notCalled(feed.setupSpocsCacheUpdateTime);
-    });
-  });
-
-  describe("#setupSpocsCacheUpdateTime", () => {
-    it("should set _spocsCacheUpdateTime with default value", () => {
-      const defaultCacheTime = 30 * 60 * 1000;
-      feed.setupSpocsCacheUpdateTime();
-      assert.equal(feed._spocsCacheUpdateTime, defaultCacheTime);
     });
     it("should set _spocsCacheUpdateTime with min", () => {
       const defaultCacheTime = 30 * 60 * 1000;
@@ -2809,8 +2793,9 @@ describe("DiscoveryStreamFeed", () => {
           },
         },
       });
-      feed.setupSpocsCacheUpdateTime();
+      const cacheTime = feed.spocsCacheUpdateTime;
       assert.equal(feed._spocsCacheUpdateTime, defaultCacheTime);
+      assert.equal(cacheTime, defaultCacheTime);
     });
     it("should set _spocsCacheUpdateTime with max", () => {
       const defaultCacheTime = 30 * 60 * 1000;
@@ -2821,8 +2806,9 @@ describe("DiscoveryStreamFeed", () => {
           },
         },
       });
-      feed.setupSpocsCacheUpdateTime();
+      const cacheTime = feed.spocsCacheUpdateTime;
       assert.equal(feed._spocsCacheUpdateTime, defaultCacheTime);
+      assert.equal(cacheTime, defaultCacheTime);
     });
     it("should set _spocsCacheUpdateTime with spocsCacheTimeout", () => {
       feed.store.getState = () => ({
@@ -2832,8 +2818,9 @@ describe("DiscoveryStreamFeed", () => {
           },
         },
       });
-      feed.setupSpocsCacheUpdateTime();
+      const cacheTime = feed.spocsCacheUpdateTime;
       assert.equal(feed._spocsCacheUpdateTime, 20 * 60 * 1000);
+      assert.equal(cacheTime, 20 * 60 * 1000);
     });
   });
 
@@ -2873,7 +2860,7 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
-  describe("#checkIfAnyCacheExpired", () => {
+  describe("#_checkExpirationPerComponent", () => {
     let cache;
     beforeEach(() => {
       cache = {
@@ -2885,35 +2872,48 @@ describe("DiscoveryStreamFeed", () => {
     });
 
     it("should return false if nothing in the cache is expired", async () => {
-      const result = await feed.checkIfAnyCacheExpired();
-      assert.isFalse(result);
+      const results = await feed._checkExpirationPerComponent();
+      assert.isFalse(results.spocs);
+      assert.isFalse(results.feeds);
     });
     it("should return true if .spocs is missing", async () => {
       delete cache.spocs;
-      assert.isTrue(await feed.checkIfAnyCacheExpired());
-    });
-    it("should return true if .spocs is expired", async () => {
-      clock.tick(THIRTY_MINUTES + 1);
-      // Update other caches we aren't testing
-      cache.spocs.lastUpdated = Date.now();
-      cache.feeds["foo.com"].lastUpdate = Date.now();
 
-      assert.isTrue(await feed.checkIfAnyCacheExpired());
+      const results = await feed._checkExpirationPerComponent();
+      assert.isTrue(results.spocs);
+      assert.isFalse(results.feeds);
     });
-
     it("should return true if .feeds is missing", async () => {
       delete cache.feeds;
-      assert.isTrue(await feed.checkIfAnyCacheExpired());
+
+      const results = await feed._checkExpirationPerComponent();
+      assert.isFalse(results.spocs);
+      assert.isTrue(results.feeds);
+    });
+    it("should return true if spocs are expired", async () => {
+      clock.tick(THIRTY_MINUTES + 1);
+      // Update other caches we aren't testing
+      cache.feeds["foo.com"].lastUpdated = Date.now();
+
+      const results = await feed._checkExpirationPerComponent();
+      assert.isTrue(results.spocs);
+      assert.isFalse(results.feeds);
     });
     it("should return true if data for .feeds[url] is missing", async () => {
       cache.feeds["foo.com"] = null;
-      assert.isTrue(await feed.checkIfAnyCacheExpired());
+
+      const results = await feed._checkExpirationPerComponent();
+      assert.isFalse(results.spocs);
+      assert.isTrue(results.feeds);
     });
     it("should return true if data for .feeds[url] is expired", async () => {
       clock.tick(THIRTY_MINUTES + 1);
       // Update other caches we aren't testing
-      cache.spocs.lastUpdate = Date.now();
-      assert.isTrue(await feed.checkIfAnyCacheExpired());
+      cache.spocs.lastUpdated = Date.now();
+
+      const results = await feed._checkExpirationPerComponent();
+      assert.isFalse(results.spocs);
+      assert.isTrue(results.feeds);
     });
   });
 
