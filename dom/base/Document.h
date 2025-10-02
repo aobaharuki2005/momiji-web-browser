@@ -2676,11 +2676,19 @@ class Document : public nsINode,
    * called yet.
    */
   bool IsShowing() const { return mIsShowing; }
+
   /**
    * Return whether the document is currently visible (in the sense of
    * OnPageHide having been called and OnPageShow not yet having been called)
    */
   bool IsVisible() const { return mVisible; }
+
+  /**
+   * Return whether the document has completely finished loading, in the spec
+   * sense. We only store a bool though, whereas spec stores when loading
+   * finished. See https://html.spec.whatwg.org/#completely-loaded-time
+   */
+  bool IsCompletelyLoaded() const { return mIsCompletelyLoaded; }
 
   void SetSuppressedEventListener(EventListener* aListener);
 
@@ -4837,6 +4845,10 @@ class Document : public nsINode,
   // OnPageHide happens, and becomes true again when OnPageShow happens.  So
   // it's false only when we're in bfcache or unloaded.
   bool mVisible : 1;
+
+  // State for IsCompletelyLoaded. Starts off false and becomes true after
+  // pageshow has fired. Doesn't reset after that.
+  bool mIsCompletelyLoaded : 1;
 
   // True if our content viewer has been removed from the docshell
   // (it may still be displayed, but in zombie state). Form control data

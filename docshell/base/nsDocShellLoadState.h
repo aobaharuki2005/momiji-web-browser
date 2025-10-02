@@ -178,6 +178,16 @@ class nsDocShellLoadState final {
 
   void SetIsFormSubmission(bool aIsFormSubmission);
 
+  bool NeedsCompletelyLoadedDocument() const;
+
+  void SetNeedsCompletelyLoadedDocument(bool aNeedsCompletelyLoadedDocument);
+
+  mozilla::Maybe<mozilla::dom::NavigationHistoryBehavior> HistoryBehavior()
+      const;
+
+  void SetHistoryBehavior(
+      mozilla::dom::NavigationHistoryBehavior aHistoryBehavior);
+
   uint32_t LoadType() const;
 
   void SetLoadType(uint32_t aLoadType);
@@ -542,10 +552,6 @@ class nsDocShellLoadState final {
   // notified if applicable.
   bool mNotifiedBeforeUnloadListeners;
 
-  // If this attribute is true, navigations for subframes taking place inside of
-  // an onload handler will not be changed to replace loads.
-  bool mShouldNotForceReplaceInOnLoad;
-
   // Principal we're inheriting. If null, this means the principal should be
   // inherited from the current document. If set to NullPrincipal, the channel
   // will fill in principal information later in the load. See internal comments
@@ -584,6 +590,18 @@ class nsDocShellLoadState final {
   // If this attribute is true, then the load was initiated by a
   // form submission.
   bool mIsFormSubmission;
+
+  // If this attribute is true, navigations for subframes taking place inside of
+  // an onload handler will not be changed to replace loads.
+  bool mShouldNotForceReplaceInOnLoad;
+
+  // If this attribute is true, we need to check if the current document is
+  // completely loaded to determine if we should perform a push or replace load.
+  bool mNeedsCompletelyLoadedDocument;
+
+  // If this attribute is `Auto`, we should determine if this should be a push
+  // or replace load when actually loading.
+  mozilla::Maybe<mozilla::dom::NavigationHistoryBehavior> mHistoryBehavior;
 
   // Contains a load type as specified by the nsDocShellLoadTypes::load*
   // constants

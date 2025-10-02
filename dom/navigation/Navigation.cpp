@@ -564,7 +564,7 @@ void Navigation::Navigate(JSContext* aCx, const nsAString& aUrl,
   MOZ_DIAGNOSTIC_ASSERT(bc);
   bc->Navigate(urlRecord, *document->NodePrincipal(),
                /* per spec, error handling defaults to false */ IgnoreErrors(),
-               aOptions.mHistory, /* aShouldNotForceReplaceInOnLoad */ true);
+               aOptions.mHistory);
 
   // 13. If this's upcoming non-traverse API method tracker is apiMethodTracker,
   //     then:
