@@ -5,3 +5,13 @@
 
 // #ifdef NIGHTLY_BUILD is supported as a preprocessor macro.
 // If any others are needed, update extract_rfp_targets.py
+
+#ifdef NIGHTLY_BUILD
+DESKTOP_DEFAULT(ScreenAvailToResolution)
+DESKTOP_DEFAULT(MaxTouchPointsCollapse)
+#endif
+
+#ifdef NIGHTLY_BUILD
+ANDROID_DEFAULT(ScreenAvailToResolution)
+ANDROID_DEFAULT(MaxTouchPointsCollapse)
+#endif
