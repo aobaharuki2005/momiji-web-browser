@@ -10,12 +10,7 @@ interface nsIReferrerInfo;
 
 %{C++
 #include "GeckoProfiler.h"
-namespace mozilla::net {
-class DictionaryCacheEntry;
-}
 %}
-
-[ptr] native DictionaryCacheEntry(mozilla::net::DictionaryCacheEntry);
 
 native UniqueProfileChunkedBuffer(mozilla::UniquePtr<mozilla::ProfileChunkedBuffer>);
 
@@ -513,8 +508,4 @@ interface nsIHttpChannel : nsIIdentChannel
      * and user agent on the channel is outdated.
      */
     [noscript, must_use] attribute boolean isUserAgentHeaderOutdated;
-    /**
-     * Dictionary for decompression, if any
-     */
-    [noscript] attribute DictionaryCacheEntry decompressDictionary;
 };

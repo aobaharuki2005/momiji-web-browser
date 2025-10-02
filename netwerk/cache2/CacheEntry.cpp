@@ -295,12 +295,6 @@ nsresult CacheEntry::HashingKey(const nsACString& aStorageID,
   return NS_OK;
 }
 
-nsresult CacheEntry::SetDictionary(DictionaryCacheEntry* aDict) {
-  mDict = aDict;
-  mFile->SetDictionary(aDict);
-  return NS_OK;
-}
-
 void CacheEntry::AsyncOpen(nsICacheEntryOpenCallback* aCallback,
                            uint32_t aFlags) {
   bool readonly = aFlags & nsICacheStorage::OPEN_READONLY;
@@ -1093,12 +1087,6 @@ nsresult CacheEntry::GetOnStartTime(uint64_t* aTime) {
 nsresult CacheEntry::GetOnStopTime(uint64_t* aTime) {
   NS_ENSURE_SUCCESS(mFileStatus, NS_ERROR_NOT_AVAILABLE);
   return mFile->GetOnStopTime(aTime);
-}
-
-nsresult CacheEntry::GetReadyOrRevalidating(bool* aReady) {
-  mozilla::MutexAutoLock lock(mLock);
-  *aReady = (mState == READY || mState == REVALIDATING);
-  return NS_OK;
 }
 
 nsresult CacheEntry::SetNetworkTimes(uint64_t aOnStartTime,

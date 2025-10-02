@@ -660,8 +660,8 @@ void CacheFileContextEvictor::EvictEntries() {
       // this must be a new one. Skip it.
       LOG(
           ("CacheFileContextEvictor::EvictEntries() - Skipping entry since we "
-           "found an active handle. [handle=%p key=%s]",
-           handle.get(), handle->Key().get()));
+           "found an active handle. [handle=%p]",
+           handle.get()));
       continue;
     }
 
@@ -684,22 +684,20 @@ void CacheFileContextEvictor::EvictEntries() {
       continue;
     }
 
-    // Read metadata from the file synchronously
-    RefPtr<CacheFileMetadata> metadata = new CacheFileMetadata();
-    {
+    // Check whether we must filter by either base domain or by origin.
+    if (!mEntries[0]->mBaseDomain.IsEmpty() ||
+        !mEntries[0]->mOrigin.IsEmpty()) {
       // Get and read metadata for the entry
       nsCOMPtr<nsIFile> file;
       CacheFileIOManager::gInstance->GetFile(&hash, getter_AddRefs(file));
 
+      // Read metadata from the file synchronously
+      RefPtr<CacheFileMetadata> metadata = new CacheFileMetadata();
       rv = metadata->SyncReadMetadata(file);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         continue;
       }
-    }
 
-    // Check whether we must filter by either base domain or by origin.
-    if (!mEntries[0]->mBaseDomain.IsEmpty() ||
-        !mEntries[0]->mOrigin.IsEmpty()) {
       // Now get the context + enhance id + URL from the key.
       nsAutoCString uriSpec;
       RefPtr<nsILoadContextInfo> info =
@@ -822,7 +820,7 @@ void CacheFileContextEvictor::EvictEntries() {
 
     LOG(("CacheFileContextEvictor::EvictEntries - Removing entry."));
     file->Remove(false);
-    CacheIndex::RemoveEntry(&hash, metadata->GetKey());
+    CacheIndex::RemoveEntry(&hash);
   }
 
   MOZ_ASSERT_UNREACHABLE("We should never get here");

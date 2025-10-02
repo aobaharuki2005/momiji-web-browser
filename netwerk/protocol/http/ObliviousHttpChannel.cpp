@@ -880,15 +880,4 @@ NS_IMETHODIMP ObliviousHttpChannel::GetDocumentCharacterSet(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP ObliviousHttpChannel::GetDecompressDictionary(
-    DictionaryCacheEntry** aDictionary) {
-  *aDictionary = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP ObliviousHttpChannel::SetDecompressDictionary(
-    DictionaryCacheEntry* aDictionary) {
-  return NS_OK;
-}
-
 }  // namespace mozilla::net

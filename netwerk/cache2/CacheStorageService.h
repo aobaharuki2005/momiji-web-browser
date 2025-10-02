@@ -19,7 +19,6 @@
 #include "nsProxyRelease.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/StaticMutex.h"
 #include "mozilla/AtomicBitfields.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
@@ -112,7 +111,7 @@ class CacheStorageService final : public nsICacheStorageService,
   static bool IsRunning() { return sSelf && !sSelf->mShutdown; }
   static bool IsOnManagementThread();
   already_AddRefed<nsIEventTarget> Thread() const;
-  StaticMutex& Lock() { return sLock; }
+  mozilla::Mutex& Lock() { return sLock; }
 
   // Tracks entries that may be forced valid in a pruned hashtable.
   struct ForcedValidData {
@@ -286,11 +285,9 @@ class CacheStorageService final : public nsICacheStorageService,
   /**
    * CacheFileIOManager uses this method to notify CacheStorageService that
    * an active entry was removed. This method is called even if the entry
-   * removal was originated by CacheStorageService.  This also removes the entry
-   * from the DictionaryCache.
+   * removal was originated by CacheStorageService.
    */
-  void CacheFileDoomed(const nsACString& aKey,
-                       nsILoadContextInfo* aLoadContextInfo,
+  void CacheFileDoomed(nsILoadContextInfo* aLoadContextInfo,
                        const nsACString& aIdExtension,
                        const nsACString& aURISpec);
 
@@ -347,7 +344,7 @@ class CacheStorageService final : public nsICacheStorageService,
 
   static CacheStorageService* sSelf;
 
-  static StaticMutex sLock;
+  static mozilla::Mutex sLock;
   mozilla::Mutex mForcedValidEntriesLock{
       "CacheStorageService.mForcedValidEntriesLock"};
 

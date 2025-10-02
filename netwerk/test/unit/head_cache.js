@@ -4,7 +4,7 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-function evict_cache_entries(where, lci = null) {
+function evict_cache_entries(where) {
   var clearDisk = !where || where == "disk" || where == "all";
   var clearMem = !where || where == "memory" || where == "all";
 
@@ -12,14 +12,14 @@ function evict_cache_entries(where, lci = null) {
 
   if (clearMem) {
     storage = Services.cache2.memoryCacheStorage(
-      lci ? lci : Services.loadContextInfo.default
+      Services.loadContextInfo.default
     );
     storage.asyncEvictStorage(null);
   }
 
   if (clearDisk) {
     storage = Services.cache2.diskCacheStorage(
-      lci ? lci : Services.loadContextInfo.default
+      Services.loadContextInfo.default
     );
     storage.asyncEvictStorage(null);
   }
@@ -113,28 +113,15 @@ function get_device_entry_count(where, lci, continuation) {
   storage.asyncVisitStorage(visitor, false);
 }
 
-function asyncCheckCacheEntryPresence(
-  key,
-  where,
-  shouldExist,
-  lci,
-  continuation
-) {
+function asyncCheckCacheEntryPresence(key, where, shouldExist, continuation) {
   asyncOpenCacheEntry(
     key,
     where,
     Ci.nsICacheStorage.OPEN_READONLY,
-    lci,
+    null,
     function (status, entry) {
       if (shouldExist) {
-        dump(
-          "TEST-INFO | status: " +
-            status +
-            " checking cache key " +
-            key +
-            " exists @ " +
-            where
-        );
+        dump("TEST-INFO | checking cache key " + key + " exists @ " + where);
         Assert.equal(status, Cr.NS_OK);
         Assert.ok(!!entry);
       } else {
