@@ -11,7 +11,6 @@
 #include "mozilla/layers/NativeLayer.h"
 #include "mozilla/layers/NativeLayerCommandQueue.h"
 #include "mozilla/layers/NativeLayerMacSurfaceHandler.h"
-#include "mozilla/layers/NativeLayerRootRemoteMacChild.h"
 #include "nsRegion.h"
 
 namespace mozilla {
