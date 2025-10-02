@@ -403,10 +403,10 @@ using namespace mozilla::a11y;
 
 struct RoleDescrMap {
   NSString* role;
-  const nsString description;
+  const nsLiteralString description;
 };
 
-MOZ_RUNINIT static const RoleDescrMap sRoleDescrMap[] = {
+static constexpr RoleDescrMap sRoleDescrMap[] = {
     {@"AXApplicationAlert", u"alert"_ns},
     {@"AXApplicationAlertDialog", u"alertDialog"_ns},
     {@"AXApplicationDialog", u"dialog"_ns},
