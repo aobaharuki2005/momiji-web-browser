@@ -5691,6 +5691,32 @@ history:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
+  delete_snackbar_shown:
+    type: event
+    description: |
+      A delete snackbar was shown after one or more history items were deleted.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1991998
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D267124
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  delete_snackbar_undo_clicked:
+    type: event
+    description: |
+      The user clicked the undo button in a history delete snackbar.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1991998
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D267124
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
 
 recently_closed_tabs:
   opened:

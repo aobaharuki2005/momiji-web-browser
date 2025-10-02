@@ -261,11 +261,16 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         val browserStore = requireComponents.core.store
         val historyStorage = requireComponents.core.historyStorage
 
+        GleanHistory.deleteSnackbarShown.record(NoExtras())
+
         CoroutineScope(Dispatchers.Main).allowUndo(
             view = requireActivity().getRootView()!!,
             message = getMultiSelectSnackBarMessage(items),
             undoActionTitle = getString(R.string.snackbar_deleted_undo),
-            onCancel = { undo(appStore = appStore, items = items) },
+            onCancel = {
+                undo(appStore = appStore, items = items)
+                GleanHistory.deleteSnackbarUndoClicked.record(NoExtras())
+            },
             operation = {
                 delete(
                     browserStore = browserStore,
