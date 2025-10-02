@@ -9569,6 +9569,17 @@
   value: 20000
   mirror: once
 
+# How many additional attempts to launch the GPU process we try if we fail
+# during process launch, before any configuration is attempted.
+- name: layers.gpu-process.max_launch_attempts
+  type: RelaxedAtomicInt32
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  value: 2
+#else
+  value: 0
+#endif
+  mirror: always
+
 # How many unstable GPU process restarts we allow for a given configuration.
 - name: layers.gpu-process.max_restarts
   type: RelaxedAtomicInt32

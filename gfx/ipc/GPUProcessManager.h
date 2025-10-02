@@ -368,6 +368,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 
   uint32_t mUnstableProcessAttempts;
   uint32_t mTotalProcessAttempts;
+  uint32_t mLaunchProcessAttempts = 0;
   TimeStamp mProcessAttemptLastTime;
 
   nsTArray<RefPtr<RemoteCompositorSession>> mRemoteSessions;
