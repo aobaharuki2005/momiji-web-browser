@@ -42,6 +42,7 @@ module.exports = [
       "browser/themes/shared/notification-icons.css",
       "browser/themes/shared/search/searchbar.css",
       "browser/themes/shared/sidebar.css",
+      "browser/themes/shared/tabbrowser/content-area.css",
       "browser/themes/shared/tabbrowser/ctrlTab.css",
       "browser/themes/shared/tabbrowser/tabs.css",
       "browser/themes/shared/toolbarbuttons.css",
@@ -67,6 +68,10 @@ module.exports = [
       "toolkit/themes/shared/design-system/tokens-table.css",
       "toolkit/themes/shared/menu.css",
       "toolkit/themes/shared/popup.css",
+      "toolkit/components/certviewer/content/components/certificate-section.css",
+      "toolkit/content/widgets/infobar.css",
+      "toolkit/content/widgets/moz-box-common.css",
+      "toolkit/themes/shared/in-content/common-shared.css",
     ],
   },
   {

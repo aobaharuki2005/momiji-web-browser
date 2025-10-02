@@ -8,7 +8,7 @@ import {
   namespace,
   createTokenNamesArray,
   isValidTokenUsage,
-  dontUseRawColors,
+  usesRawColors,
   createAllowList,
   getLocalCustomProperties,
 } from "../helpers.mjs";
@@ -29,39 +29,49 @@ const meta = {
   fixable: false,
 };
 
-// Gather an array of `['--token-name']` and the ready css `['var(--token-name)']`
+// Gather an array of the ready css `['var(--token-name)']`
 const INCLUDE_CATEGORIES = ["border-color", "border", "outline"];
 
 const tokenCSS = createTokenNamesArray(INCLUDE_CATEGORIES);
 
 // Allowed border-color values in CSS
-const ALLOW_LIST = createAllowList(["transparent", "currentColor"]);
+const ALLOW_LIST = createAllowList([
+  "transparent",
+  "currentColor",
+  "auto",
+  "normal",
+  "none",
+]);
 
-const CSS_PROPERTIES = [
+const SHORTHAND_CSS_PROPERTIES = [
   "border",
-  "border-color",
-  "outline",
-  "outline-color",
   "border-top",
   "border-right",
   "border-bottom",
   "border-left",
+  "border-block",
+  "border-block-start",
+  "border-block-end",
+  "border-inline",
+  "border-inline-start",
+  "border-inline-end",
+  "outline",
+];
+
+const CSS_PROPERTIES = [
+  "border-color",
+  "outline-color",
   "border-top-color",
   "border-right-color",
   "border-bottom-color",
   "border-left-color",
-  "border-block",
   "border-block-color",
-  "border-block-start",
   "border-block-start-color",
-  "border-block-end",
   "border-block-end-color",
-  "border-inline",
   "border-inline-color",
-  "border-inline-start",
   "border-inline-start-color",
-  "border-inline-end",
   "border-inline-end-color",
+  ...SHORTHAND_CSS_PROPERTIES,
 ];
 
 const ruleFunction = primaryOption => {
@@ -70,6 +80,7 @@ const ruleFunction = primaryOption => {
       actual: primaryOption,
       possible: [true],
     });
+
     if (!validOptions) {
       return;
     }
@@ -92,7 +103,7 @@ const ruleFunction = primaryOption => {
           cssCustomProperties,
           ALLOW_LIST
         ) &&
-        !dontUseRawColors(declarations.value)
+        !usesRawColors(declarations.value)
       ) {
         return;
       }

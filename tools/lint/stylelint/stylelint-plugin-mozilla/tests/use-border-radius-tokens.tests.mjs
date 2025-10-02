@@ -165,6 +165,12 @@ testRule({
       description: "1000px value should be fixed to use design token.",
     },
     {
+      code: ".a { border-radius: 9999px; }",
+      fixed: ".a { border-radius: var(--border-radius-circle); }",
+      message: messages.rejected("9999px"),
+      description: "9999px value should be fixed to use design token.",
+    },
+    {
       code: ".a { border-radius: 4px; }",
       fixed: ".a { border-radius: var(--border-radius-small); }",
       message: messages.rejected("4px"),
