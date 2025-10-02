@@ -209,6 +209,40 @@ async function test_background_page_storage(testAreaName) {
       );
     }
 
+    // Regression test https://bugzilla.mozilla.org/show_bug.cgi?id=1989840
+    async function testDeeplyNestedObject(areaName) {
+      const obj = {};
+      let current = obj;
+      for (let i = 0; i < 127; i++) {
+        const next = {};
+        current.foo = next;
+        current = next;
+      }
+      let storage = browser.storage[areaName];
+      if (areaName == "sync") {
+        // TODO(bug 1990313)
+        // Storing a deeply nested object currently fails for the Rust sync storage, but not Kinto.
+        // Let's make sure it doesn't crash in any case.
+        let errorMessage = null;
+        try {
+          await storage.set(obj);
+        } catch (e) {
+          errorMessage = e.toString();
+          // The caller expects one storage event. To make sure that the event is
+          // fired, trigger a dummy change.
+          storage.set({ foo: "dummy" });
+        }
+        browser.test.assertTrue(
+          errorMessage === null ||
+            errorMessage.includes("An unexpected error occurred"),
+          `Invalid exception message when storing deeply nested object: ${errorMessage}`
+        );
+      } else {
+        // Storing a deeply nested object should succeed for non-sync engines.
+        await storage.set(obj);
+      }
+    }
+
     async function testFalseyValues(areaName) {
       let storage = browser.storage[areaName];
       const dataInitial = {
@@ -622,6 +656,13 @@ async function test_background_page_storage(testAreaName) {
           ["test-prop1", "test-prop2"],
           "getKeys() returns the correct keys"
         );
+        clearGlobalChanges();
+        await storage.clear();
+        await globalChanges;
+
+        clearGlobalChanges();
+        await testDeeplyNestedObject(areaName);
+        await globalChanges;
         clearGlobalChanges();
         await storage.clear();
         await globalChanges;
