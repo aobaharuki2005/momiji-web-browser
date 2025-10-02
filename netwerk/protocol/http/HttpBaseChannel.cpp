@@ -21,6 +21,7 @@
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/CompactPair.h"
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/InputStreamLengthHelper.h"
