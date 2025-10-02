@@ -87,6 +87,8 @@ open class BaseSessionTest(
         const val VIEWPORT_PATH = "/assets/www/viewport.html"
         const val IFRAME_REDIRECT_LOCAL = "/assets/www/iframe_redirect_local.html"
         const val IFRAME_REDIRECT_AUTOMATION = "/assets/www/iframe_redirect_automation.html"
+        const val IFRAME_SANDBOX_BLOCK = "/assets/www/iframe_sandbox_block.html"
+        const val IFRAME_SANDBOX_ALLOW = "/assets/www/iframe_sandbox_allow.html"
         const val AUTOPLAY_PATH = "/assets/www/autoplay.html"
         const val SIMPLE_SCROLL_TEST_PATH = "/assets/www/simple-scroll.html"
         const val SCROLL_TEST_PATH = "/assets/www/scroll.html"
