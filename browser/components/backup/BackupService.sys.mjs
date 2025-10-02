@@ -1393,7 +1393,12 @@ export class BackupService extends EventTarget {
             renamedStagingPath,
             backupDirPath
           ).finally(async () => {
-            await IOUtils.remove(renamedStagingPath, { recursive: true });
+            // retryReadonly is needed in case there were read only files in
+            // the profile.
+            await IOUtils.remove(renamedStagingPath, {
+              recursive: true,
+              retryReadonly: true,
+            });
           });
 
           currentStep = STEPS.CREATE_BACKUP_CREATE_ARCHIVE;
@@ -2442,6 +2447,7 @@ export class BackupService extends EventTarget {
         ) {
           await IOUtils.remove(existingBackupPath, {
             recursive: true,
+            retryReadonly: true,
           });
         }
       }
