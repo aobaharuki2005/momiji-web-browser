@@ -273,7 +273,7 @@ function CardSection({
         className={following ? "section-follow following" : "section-follow"}
       >
         {!anySectionsFollowed &&
-          sectionPosition === 1 &&
+          sectionPosition === 0 &&
           shouldShowOMCHighlight(
             messageData,
             "FollowSectionButtonHighlight"
@@ -289,7 +289,7 @@ function CardSection({
             </MessageWrapper>
           )}
         {!anySectionsFollowed &&
-          sectionPosition === 1 &&
+          sectionPosition === 0 &&
           shouldShowOMCHighlight(
             messageData,
             "FollowSectionButtonAltHighlight"
