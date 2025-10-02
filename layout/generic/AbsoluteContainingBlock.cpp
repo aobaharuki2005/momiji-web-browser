@@ -835,25 +835,6 @@ void AbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
   }
 }
 
-struct MOZ_STACK_CLASS MOZ_RAII AutoFallbackStyleSetter {
-  AutoFallbackStyleSetter(nsIFrame* aFrame, ComputedStyle* aFallbackStyle)
-      : mFrame(aFrame) {
-    if (aFallbackStyle) {
-      mOldStyle = aFrame->SetComputedStyleWithoutNotification(aFallbackStyle);
-    }
-  }
-
-  ~AutoFallbackStyleSetter() {
-    if (mOldStyle) {
-      mFrame->SetComputedStyleWithoutNotification(std::move(mOldStyle));
-    }
-  }
-
- private:
-  nsIFrame* const mFrame;
-  RefPtr<ComputedStyle> mOldStyle;
-};
-
 // XXX Optimize the case where it's a resize reflow and the absolutely
 // positioned child has the exact same size and position and skip the
 // reflow...
@@ -891,9 +872,9 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
 #endif  // DEBUG
 
   const bool isGrid = aFlags.contains(AbsPosReflowFlag::IsGridContainerCB);
+  const auto* stylePos = aKidFrame->StylePosition();
   // TODO(bug 1989059): position-try-order.
-  auto fallbacks =
-      aKidFrame->StylePosition()->mPositionTryFallbacks._0.AsSpan();
+  auto fallbacks = stylePos->mPositionTryFallbacks._0.AsSpan();
   Maybe<uint32_t> currentFallbackIndex;
   // TODO(emilio): Right now fallback only applies to position-area, which only
   // makes a difference with a default anchor... Generalize it?
@@ -912,59 +893,33 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       }
     }
   }
-  const StylePositionTryFallbacksItem* currentFallback = nullptr;
-  RefPtr<ComputedStyle> currentFallbackStyle;
-
-  auto TryAdvanceFallback = [&]() -> bool {
-    if (fallbacks.IsEmpty()) {
-      return false;
-    }
-    uint32_t nextFallbackIndex =
-        currentFallbackIndex ? *currentFallbackIndex + 1 : 0;
-    if (nextFallbackIndex >= fallbacks.Length()) {
-      return false;
-    }
-    const StylePositionTryFallbacksItem* nextFallback;
-    RefPtr<ComputedStyle> nextFallbackStyle;
-    while (true) {
-      nextFallback = &fallbacks[nextFallbackIndex];
-      if (nextFallback->IsIdentAndOrTactic()) {
-        auto* ident = nextFallback->AsIdentAndOrTactic().ident.AsAtom();
-        if (!ident->IsEmpty()) {
-          nextFallbackStyle = aPresContext->StyleSet()->ResolvePositionTry(
-              *aKidFrame->GetContent()->AsElement(), *aKidFrame->Style(),
-              ident);
-          if (!nextFallbackStyle) {
-            // No @position-try rule for this name was found, per spec we should
-            // skip it.
-            nextFallbackIndex++;
-            if (nextFallbackIndex >= fallbacks.Length()) {
-              return false;
-            }
-          }
-        }
-      }
-      break;
-    }
-    currentFallbackIndex = Some(nextFallbackIndex);
-    currentFallback = nextFallback;
-    currentFallbackStyle = std::move(nextFallbackStyle);
-    return true;
-  };
-
   do {
-    AutoFallbackStyleSetter fallback(aKidFrame, currentFallbackStyle);
+    const StylePositionTryFallbacksItem* currentFallback = nullptr;
+    RefPtr<ComputedStyle> currentFallbackStyle;
+    if (currentFallbackIndex) {
+      currentFallback = &fallbacks[*currentFallbackIndex];
+    }
+
     const nsRect usedCb = [&] {
       if (isGrid) {
         // TODO(emilio): how does position-area interact with grid?
         return nsGridContainerFrame::GridItemCB(aKidFrame);
       }
 
-      auto positionArea = aKidFrame->StylePosition()->mPositionArea;
+      auto positionArea = stylePos->mPositionArea;
       const StylePositionTryFallbacksTryTactic* tactic = nullptr;
       if (currentFallback) {
         if (currentFallback->IsIdentAndOrTactic()) {
           const auto& item = currentFallback->AsIdentAndOrTactic();
+          if (!item.ident.AsAtom()->IsEmpty()) {
+            currentFallbackStyle = aPresContext->StyleSet()->ResolvePositionTry(
+                *aKidFrame->GetContent()->AsElement(), *aKidFrame->Style(),
+                item.ident.AsAtom());
+            if (currentFallbackStyle) {
+              positionArea =
+                  currentFallbackStyle->StylePosition()->mPositionArea;
+            }
+          }
           tactic = &item.try_tactic;
         } else {
           MOZ_ASSERT(currentFallback->IsPositionArea());
@@ -1204,18 +1159,21 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
 
     aKidFrame->DidReflow(aPresContext, &kidReflowInput);
 
-    if (usedCb.Contains(aKidFrame->GetRect()) && aStatus.IsComplete()) {
-      // We don't overflow our CB, no further fallback needed.
-      break;
-    }
-
-    if (!TryAdvanceFallback()) {
-      // If there are no further fallbacks, we're done.
+    if (fallbacks.IsEmpty() ||
+        (currentFallbackIndex &&
+         *currentFallbackIndex >= fallbacks.Length() - 1) ||
+        (usedCb.Contains(aKidFrame->GetRect()) && aStatus.IsComplete())) {
+      // If there are no further fallbacks, or we don't overflow, we're done.
       break;
     }
 
     // Try with the next  fallback.
     aKidFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+    if (currentFallbackIndex) {
+      (*currentFallbackIndex)++;
+    } else {
+      currentFallbackIndex.emplace(0);
+    }
     aStatus.Reset();
   } while (true);
 
