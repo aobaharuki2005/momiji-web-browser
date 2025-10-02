@@ -68,7 +68,6 @@
     <ID>UndocumentedPublicClass:LanguageScreenStore.kt$LanguageScreenAction$UpdateLanguages : LanguageScreenAction</ID>
     <ID>UndocumentedPublicClass:LanguageScreenStore.kt$LanguageScreenStore : Store</ID>
     <ID>UndocumentedPublicClass:LanguageStorage.kt$LanguageStorage</ID>
-    <ID>UndocumentedPublicClass:LearnMoreSwitchPreference.kt$LearnMoreSwitchPreference : SwitchPreferenceCompat</ID>
     <ID>UndocumentedPublicClass:LocaleDescriptor.kt$LocaleDescriptor : Comparable</ID>
     <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity$AppOpenType</ID>
     <ID>UndocumentedPublicClass:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference : Preference</ID>
@@ -173,8 +172,6 @@
     <ID>UndocumentedPublicFunction:FocusTheme.kt$fun phoneDimensions()</ID>
     <ID>UndocumentedPublicFunction:FocusTheme.kt$fun tabletDimensions()</ID>
     <ID>UndocumentedPublicFunction:HomeMenu.kt$HomeMenu$fun getMenuBuilder(): BrowserMenuBuilder</ID>
-    <ID>UndocumentedPublicFunction:LearnMoreSwitchPreference.kt$LearnMoreSwitchPreference$abstract fun getLearnMoreUrl(): String</ID>
-    <ID>UndocumentedPublicFunction:LearnMoreSwitchPreference.kt$LearnMoreSwitchPreference$open fun getDescription(): String?</ID>
     <ID>UndocumentedPublicFunction:LocaleDescriptor.kt$LocaleDescriptor$fun getNativeName(): String?</ID>
     <ID>UndocumentedPublicFunction:LocaleDescriptor.kt$LocaleDescriptor$fun getTag(): String</ID>
     <ID>UndocumentedPublicFunction:LocaleFragmentCompose.kt$@Composable fun LanguageNameAndTagItem( language: Language, isSelected: Boolean, onClick: (String) -&gt; Unit, )</ID>

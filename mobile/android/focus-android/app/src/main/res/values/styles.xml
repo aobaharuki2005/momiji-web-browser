@@ -17,6 +17,7 @@
         <item name="bottomSheetDialogTheme">@style/AppBottomSheetDialogTheme</item>
         <item name="disabled">@color/disabled</item>
         <item name="destructive">@color/destructive</item>
+        <item name="switchStyle">@style/App.Widget.Switch</item>
 
         <!-- Use the same colors for both themes until light theme it will be implemented -->
         <item name="primaryText">@color/primaryText</item>
@@ -296,6 +297,10 @@
 
     <style name="AppModalStyle" parent="Widget.Design.BottomSheet.Modal">
         <item name="android:background">@color/modal_background</item>
+    </style>
+
+    <style name="App.Widget.Switch" parent="Widget.Material3.CompoundButton.Switch">
+        <item name="android:theme">@style/SwitchTheme</item>
     </style>
 
     <style name="SwitchTheme" parent="Theme.AppCompat.Light">
