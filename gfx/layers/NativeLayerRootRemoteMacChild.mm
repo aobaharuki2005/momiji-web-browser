@@ -5,6 +5,7 @@
 
 #include "mozilla/layers/NativeLayerRemoteMac.h"
 #include "mozilla/layers/NativeLayerRootRemoteMacChild.h"
+#include "mozilla/layers/NativeLayerRootRemoteMacSnapshotter.h"
 #include "mozilla/layers/SurfacePool.h"
 
 namespace mozilla {
@@ -51,8 +52,8 @@ void NativeLayerRootRemoteMacChild::SetLayers(
     const nsTArray<RefPtr<NativeLayer>>& aLayers) {
   // We don't create a command for this, because we don't care
   // about the layers until CommitToScreen().
-  nsTArray<RefPtr<NativeLayerRemoteMac>> layers(aLayers.Length());
-  for (const auto& layer : aLayers) {
+  nsTArray<RefPtr<NativeLayer>> layers(aLayers.Length());
+  for (auto& layer : aLayers) {
     RefPtr<NativeLayerRemoteMac> layerRemoteMac =
         layer->AsNativeLayerRemoteMac();
     MOZ_ASSERT(layerRemoteMac);
@@ -65,7 +66,6 @@ void NativeLayerRootRemoteMacChild::SetLayers(
   }
 
   mNativeLayersChanged = true;
-  mNativeLayersChangedForSnapshot = true;
   mNativeLayers.Clear();
   mNativeLayers.AppendElements(layers);
 }
@@ -76,18 +76,11 @@ NativeLayerRootRemoteMacChild::CreateSnapshotter() {
                      "No NativeLayerRootSnapshotter for this NativeLayerRoot "
                      "should exist when this is called");
 
-  auto cr = NativeLayerRootSnapshotterCA::Create(
-      MakeUnique<SnapshotterDelegate>(this));
+  auto cr = NativeLayerRootRemoteMacSnapshotter::Create(this);
   if (cr) {
     mWeakSnapshotter = cr.get();
   }
   return cr;
-}
-
-void NativeLayerRootRemoteMacChild::OnNativeLayerRootSnapshotterDestroyed(
-    NativeLayerRootSnapshotterCA* aNativeLayerRootSnapshotter) {
-  MOZ_RELEASE_ASSERT(mWeakSnapshotter == aNativeLayerRootSnapshotter);
-  mWeakSnapshotter = nullptr;
 }
 
 void NativeLayerRootRemoteMacChild::PrepareForCommit() {
@@ -103,8 +96,11 @@ bool NativeLayerRootRemoteMacChild::CommitToScreen() {
 
   // Iterate our layers to get the LayerInfo and ChangedSurface commands
   // into our shared command queue.
-  for (const auto& layer : mNativeLayers) {
-    layer->FlushDirtyLayerInfoToCommandQueue();
+  for (auto layer : mNativeLayers) {
+    RefPtr<NativeLayerRemoteMac> layerRemoteMac(
+        layer->AsNativeLayerRemoteMac());
+    MOZ_ASSERT(layerRemoteMac);
+    layerRemoteMac->FlushDirtyLayerInfoToCommandQueue();
   }
 
   if (mNativeLayersChanged) {
@@ -112,7 +108,7 @@ bool NativeLayerRootRemoteMacChild::CommitToScreen() {
     // command of this array filled with the IDs of everything
     // in mNativeLayers.
     nsTArray<uint64_t> setLayerIDs;
-    for (const auto& layer : mNativeLayers) {
+    for (auto layer : mNativeLayers) {
       auto ID = reinterpret_cast<uint64_t>(layer.get());
       setLayerIDs.AppendElement(ID);
     }
@@ -134,26 +130,7 @@ bool NativeLayerRootRemoteMacChild::CommitToScreen() {
   return true;
 }
 
-void NativeLayerRootRemoteMacChild::CommitForSnapshot(CALayer* aRootCALayer) {
-  [CATransaction begin];
-  [CATransaction setDisableActions:YES];  // disable cross-fade
-
-  NSMutableArray<CALayer*>* sublayers =
-      [NSMutableArray arrayWithCapacity:mNativeLayers.Length()];
-  for (const auto& layer : mNativeLayers) {
-    layer->UpdateSnapshotLayer();
-    if (CALayer* caLayer = layer->CALayerForSnapshot()) {
-      [sublayers addObject:caLayer];
-    }
-  }
-
-  aRootCALayer.sublayers = sublayers;
-  [CATransaction commit];
-
-  mNativeLayersChangedForSnapshot = false;
-}
-
-bool NativeLayerRootRemoteMacChild::ReadbackPixelsFromParent(
+bool NativeLayerRootRemoteMacChild::ReadbackPixels(
     const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
     const Range<uint8_t>& aBuffer) {
   // In this process we only have the pixels of the individual layers,
@@ -185,12 +162,6 @@ NativeLayerRootRemoteMacChild::NativeLayerRootRemoteMacChild()
       mCommandQueue(MakeRefPtr<NativeLayerCommandQueue>()) {}
 
 NativeLayerRootRemoteMacChild::~NativeLayerRootRemoteMacChild() {}
-
-NativeLayerRootRemoteMacChild::SnapshotterDelegate::SnapshotterDelegate(
-    NativeLayerRootRemoteMacChild* aLayerRoot)
-    : mLayerRoot(aLayerRoot) {}
-NativeLayerRootRemoteMacChild::SnapshotterDelegate::~SnapshotterDelegate() =
-    default;
 
 }  // namespace layers
 }  // namespace mozilla

@@ -11,7 +11,7 @@
 #include "mozilla/layers/NativeLayer.h"
 #include "mozilla/layers/NativeLayerCommandQueue.h"
 #include "mozilla/layers/NativeLayerMacSurfaceHandler.h"
-#include "NativeLayerCA.h"
+#include "mozilla/layers/NativeLayerRootRemoteMacChild.h"
 #include "nsRegion.h"
 
 namespace mozilla {
@@ -73,14 +73,10 @@ class NativeLayerRemoteMac final : public NativeLayer {
   // If dirty, add a CommandLayerInfo to the queue. Clear dirty flag.
   void FlushDirtyLayerInfoToCommandQueue();
 
-  void UpdateSnapshotLayer();
-  CALayer* CALayerForSnapshot();
-
  protected:
-  NativeLayerCARepresentation mSnapshotLayer;
   Maybe<NativeLayerMacSurfaceHandler> mSurfaceHandler;
   RefPtr<NativeLayerCommandQueue> mCommandQueue;
-  const Maybe<gfx::DeviceColor> mColor;
+  const gfx::DeviceColor mColor;
   const bool mIsOpaque = false;
 
   bool mDirtyLayerInfo = true;
