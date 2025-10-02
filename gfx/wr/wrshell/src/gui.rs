@@ -7,7 +7,7 @@ use webrender_api::{ColorF, DebugFlags};
 use webrender_api::debugger::{DebuggerMessage, ProfileCounterId, CompositorDebugInfo};
 use crate::{command, net};
 use std::mem;
-use std::collections::{HashMap, VecDeque};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::fs;
 
 const FONT_SIZE: f32 = 16.0;
@@ -272,9 +272,10 @@ impl Gui {
                 ApplicationEventKind::RunCommand(cmd_name) => {
                     match self.cmd_list.get_mut(&cmd_name) {
                         Some(cmd) => {
-                            let mut ctx = command::CommandContext {
-                                net: &mut self.net,
-                            };
+                            let mut ctx = command::CommandContext::new(
+                                BTreeMap::new(),
+                                &mut self.net,
+                            );
                             let output = cmd.run(&mut ctx);
 
                             match output {
