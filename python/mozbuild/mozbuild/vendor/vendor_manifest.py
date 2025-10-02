@@ -137,7 +137,6 @@ class VendorManifest(MozbuildObject):
                 os.path.dirname(self.yaml_file),
                 self.manifest["vendoring"]["vendor-directory"],
             )
-            self.run_vendoring_actions(revision, "post-patch-actions")
             return
 
         # ==========================================================
@@ -273,7 +272,7 @@ class VendorManifest(MozbuildObject):
             self.logInfo({}, "Skipping fetching upstream source.")
 
         self.logInfo({}, "Checking for update actions")
-        self.run_vendoring_actions(new_revision, "update-actions")
+        self.update_files(new_revision)
 
         if self.patch_mode == "check":
             self.import_local_patches(
@@ -699,14 +698,14 @@ class VendorManifest(MozbuildObject):
             "Version '{rev}' has changed {num} files.",
         )
 
-    def run_vendoring_actions(self, revision, actions_type="update-actions"):
-        if actions_type not in self.manifest["vendoring"]:
+    def update_files(self, revision):
+        if "update-actions" not in self.manifest["vendoring"]:
             return
 
-        for action in self.manifest["vendoring"][actions_type]:
-            if action["action"] == "copy-file":
-                src = self.get_full_path(action["from"])
-                dst = self.get_full_path(action["to"])
+        for update in self.manifest["vendoring"]["update-actions"]:
+            if update["action"] == "copy-file":
+                src = self.get_full_path(update["from"])
+                dst = self.get_full_path(update["to"])
 
                 self.logInfo(
                     {"s": src, "d": dst}, "action: copy-file src: {s} dst: {d}"
@@ -716,24 +715,24 @@ class VendorManifest(MozbuildObject):
                     contents = f.read()
                 with open(dst, "w") as f:
                     f.write(contents)
-            elif action["action"] == "vcs-add-remove-files":
-                directory = self.get_full_path(action["path"])
+            elif update["action"] == "vcs-add-remove-files":
+                directory = self.get_full_path(update["path"])
 
                 self.logInfo({"d": directory}, "action: vcs-add-remove-files dir: {d}")
 
                 self.repository.add_remove_files(directory)
-            elif action["action"] == "move-file":
-                src = self.get_full_path(action["from"])
-                dst = self.get_full_path(action["to"])
+            elif update["action"] == "move-file":
+                src = self.get_full_path(update["from"])
+                dst = self.get_full_path(update["to"])
 
                 self.logInfo(
                     {"s": src, "d": dst}, "action: move-file src: {s} dst: {d}"
                 )
 
                 shutil.move(src, dst)
-            elif action["action"] == "move-dir":
-                src = self.get_full_path(action["from"])
-                dst = self.get_full_path(action["to"])
+            elif update["action"] == "move-dir":
+                src = self.get_full_path(update["from"])
+                dst = self.get_full_path(update["to"])
 
                 self.logInfo(
                     {"src": src, "dst": dst}, "action: move-dir src: {src} dst: {dst}"
@@ -762,32 +761,32 @@ class VendorManifest(MozbuildObject):
                 copy_tree(src, dst)
                 shutil.rmtree(src)
 
-            elif action["action"] in ["replace-in-file", "replace-in-file-regex"]:
-                file = self.get_full_path(action["file"])
+            elif update["action"] in ["replace-in-file", "replace-in-file-regex"]:
+                file = self.get_full_path(update["file"])
 
                 self.logInfo({"file": file}, "action: replace-in-file file: {file}")
 
-                replacement = action["with"].replace("{revision}", revision)
+                replacement = update["with"].replace("{revision}", revision)
                 _replace_in_file(
                     file,
-                    action["pattern"],
+                    update["pattern"],
                     replacement,
-                    regex=action["action"] == "replace-in-file-regex",
+                    regex=update["action"] == "replace-in-file-regex",
                 )
-            elif action["action"] == "delete-path":
-                path = self.get_full_path(action["path"])
+            elif update["action"] == "delete-path":
+                path = self.get_full_path(update["path"])
                 self.logInfo({"path": path}, "action: delete-path path: {path}")
                 mozfile.remove(path)
-            elif action["action"] in ["run-script", "run-command"]:
-                if action["action"] == "run-script":
-                    command = self.get_full_path(action["script"], support_cwd=True)
+            elif update["action"] in ["run-script", "run-command"]:
+                if update["action"] == "run-script":
+                    command = self.get_full_path(update["script"], support_cwd=True)
                 else:
-                    command = action["command"]
+                    command = update["command"]
 
-                run_dir = self.get_full_path(action["cwd"], support_cwd=True)
+                run_dir = self.get_full_path(update["cwd"], support_cwd=True)
 
                 args = []
-                for a in action.get("args", []):
+                for a in update.get("args", []):
                     if a == "{revision}":
                         args.append(revision)
                     elif any(
@@ -809,7 +808,7 @@ class VendorManifest(MozbuildObject):
                         "command": command,
                         "run_dir": run_dir,
                         "args": args,
-                        "type": action["action"],
+                        "type": update["action"],
                     },
                     "action: {type} command: {command} working dir: {run_dir} args: {args}",
                 )

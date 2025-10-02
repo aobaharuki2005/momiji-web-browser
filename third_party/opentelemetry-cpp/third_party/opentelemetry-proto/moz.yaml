@@ -9,8 +9,8 @@ origin:
   description: OpenTelemetry protocol (OTLP) specification and Protobuf definitions
   url: https://opentelemetry.io/docs/specs/otlp/
 
-  release: v1.8.0 (2025-09-02T11:03:39-04:00).
-  revision: v1.8.0
+  release: identifier
+  revision: sha
 
   license: Apache-2.0
   license-file: LICENSE
@@ -46,10 +46,7 @@ vendoring:
    - opentelemetry/proto/trace/v1/trace.pb.cc
    - opentelemetry/proto/trace/v1/trace.pb.h
 
-  patches:
-    - patches/add-lite_runtime-optimization-to-protos.patch
-
-  post-patch-actions:
+  update-actions:
     - action: run-script
       script: "{topsrcdir}/toolkit/components/protobuf/scripts/protoc_wrapper.py"
       cwd: "{topsrcdir}"

@@ -14,8 +14,6 @@
 
 syntax = "proto3";
 
-option optimize_for = LITE_RUNTIME;
-
 package opentelemetry.proto.common.v1;
 
 option csharp_namespace = "OpenTelemetry.Proto.Common.V1";

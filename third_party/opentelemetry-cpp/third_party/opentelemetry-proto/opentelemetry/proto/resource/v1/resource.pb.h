@@ -25,9 +25,11 @@
 #include <google/protobuf/arenastring.h>
 #include <google/protobuf/generated_message_util.h>
 #include <google/protobuf/metadata_lite.h>
-#include <google/protobuf/message_lite.h>
+#include <google/protobuf/generated_message_reflection.h>
+#include <google/protobuf/message.h>
 #include <google/protobuf/repeated_field.h>  // IWYU pragma: export
 #include <google/protobuf/extension_set.h>  // IWYU pragma: export
+#include <google/protobuf/unknown_field_set.h>
 #include "opentelemetry/proto/common/v1/common.pb.h"
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
@@ -42,6 +44,7 @@ PROTOBUF_NAMESPACE_CLOSE
 struct TableStruct_opentelemetry_2fproto_2fresource_2fv1_2fresource_2eproto {
   static const uint32_t offsets[];
 };
+extern const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_opentelemetry_2fproto_2fresource_2fv1_2fresource_2eproto;
 namespace opentelemetry {
 namespace proto {
 namespace resource {
@@ -64,7 +67,7 @@ namespace v1 {
 // ===================================================================
 
 class Resource final :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:opentelemetry.proto.resource.v1.Resource) */ {
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:opentelemetry.proto.resource.v1.Resource) */ {
  public:
   inline Resource() : Resource(nullptr) {}
   ~Resource() override;
@@ -94,6 +97,15 @@ class Resource final :
     return *this;
   }
 
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
   static const Resource& default_instance() {
     return *internal_default_instance();
   }
@@ -131,9 +143,15 @@ class Resource final :
   Resource* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
     return CreateMaybeMessage<Resource>(arena);
   }
-  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
   void CopyFrom(const Resource& from);
-  void MergeFrom(const Resource& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const Resource& from) {
+    Resource::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
   bool IsInitialized() const final;
 
@@ -146,7 +164,7 @@ class Resource final :
   private:
   void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
   void SharedDtor();
-  void SetCachedSize(int size) const;
+  void SetCachedSize(int size) const final;
   void InternalSwap(Resource* other);
 
   private:
@@ -159,7 +177,10 @@ class Resource final :
                        bool is_message_owned = false);
   public:
 
-  std::string GetTypeName() const final;
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
 
   // nested types ----------------------------------------------------
 

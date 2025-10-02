@@ -119,39 +119,6 @@ def load_moz_yaml(filename, verify=True, require_license_file=True):
 
 def _schema_1():
     """Returns Voluptuous Schema object."""
-
-    actions_schema = All(
-        VendoringActions(),
-        [
-            {
-                Required("action"): In(
-                    [
-                        "copy-file",
-                        "move-file",
-                        "move-dir",
-                        "replace-in-file",
-                        "replace-in-file-regex",
-                        "run-script",
-                        "run-command",
-                        "delete-path",
-                        "vcs-add-remove-files",
-                    ],
-                    msg="Invalid action specified in vendoring-actions",
-                ),
-                "from": All(str, Length(min=1)),
-                "to": All(str, Length(min=1)),
-                "pattern": All(str, Length(min=1)),
-                "with": All(str, Length(min=1)),
-                "file": All(str, Length(min=1)),
-                "script": All(str, Length(min=1)),
-                "command": All(str, Length(min=1)),
-                "args": All([All(str, Length(min=1))]),
-                "cwd": All(str, Length(min=1)),
-                "path": All(str, Length(min=1)),
-            }
-        ],
-    )
-
     return Schema(
         {
             Required("schema"): "1",
@@ -234,8 +201,37 @@ def _schema_1():
                 "individual-files-default-upstream": str,
                 "individual-files-default-destination": All(str, Length(min=1)),
                 "individual-files-list": Unique([str]),
-                "update-actions": actions_schema,
-                "post-patch-actions": actions_schema,
+                "update-actions": All(
+                    UpdateActions(),
+                    [
+                        {
+                            Required("action"): In(
+                                [
+                                    "copy-file",
+                                    "move-file",
+                                    "move-dir",
+                                    "replace-in-file",
+                                    "replace-in-file-regex",
+                                    "run-script",
+                                    "run-command",
+                                    "delete-path",
+                                    "vcs-add-remove-files",
+                                ],
+                                msg="Invalid action specified in update-actions",
+                            ),
+                            "from": All(str, Length(min=1)),
+                            "to": All(str, Length(min=1)),
+                            "pattern": All(str, Length(min=1)),
+                            "with": All(str, Length(min=1)),
+                            "file": All(str, Length(min=1)),
+                            "script": All(str, Length(min=1)),
+                            "command": All(str, Length(min=1)),
+                            "args": All([All(str, Length(min=1))]),
+                            "cwd": All(str, Length(min=1)),
+                            "path": All(str, Length(min=1)),
+                        }
+                    ],
+                ),
             },
         }
     )
@@ -442,8 +438,8 @@ def _schema_1_transform(manifest):
     return manifest
 
 
-class VendoringActions:
-    """Voluptuous validator which verifies the vendoring actions(s) are valid."""
+class UpdateActions:
+    """Voluptuous validator which verifies the update actions(s) are valid."""
 
     def __call__(self, values):
         for v in values:
@@ -501,7 +497,7 @@ class VendoringActions:
         return values
 
     def __repr__(self):
-        return "VendoringActions"
+        return "UpdateActions"
 
 
 class UpdatebotTasks:
