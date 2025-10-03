@@ -59,6 +59,12 @@ class NativeLayerRootRemoteMacChild final : public NativeLayerRoot {
     virtual void UpdateSnapshotterLayers(CALayer* aRootCALayer) override {
       mLayerRoot->CommitForSnapshot(aRootCALayer);
     }
+    virtual bool DoCustomReadbackForReftestsIfDesired(
+        const gfx::IntSize& aReadbackSize, gfx::SurfaceFormat aReadbackFormat,
+        const Range<uint8_t>& aReadbackBuffer) override {
+      return mLayerRoot->ReadbackPixelsFromParent(
+          aReadbackSize, aReadbackFormat, aReadbackBuffer);
+    }
     virtual void OnSnapshotterDestroyed(
         NativeLayerRootSnapshotterCA* aSnapshotter) override {
       mLayerRoot->OnNativeLayerRootSnapshotterDestroyed(aSnapshotter);
@@ -74,8 +80,24 @@ class NativeLayerRootRemoteMacChild final : public NativeLayerRoot {
   bool mNativeLayersChanged = false;
   bool mNativeLayersChangedForSnapshot = false;
 
-  bool ReadbackPixels(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
-                      const Range<uint8_t>& aBuffer);
+  // Send a sync message to the parent to get the window pixels.
+  // Used for reftests.
+  //
+  // This is different from what we do for "window recorder" and
+  // "profiler screenshot" snapshotting, where we do the snapshotting
+  // within the GPU process, using CARenderer on a CALayer tree we
+  // construct within the GPU process.
+  //
+  // Here's why we have two different snapshotting paths:
+  // - Profiler screenshots and window recording care about minimal overhead
+  //   and need to minimize blocking on the GPU.
+  // - Reftests care about catching bugs, and don't need maximum performance.
+  //   By doing the readback in the parent, we can catch more bugs, for
+  //   example bugs in the IPC serialization of layer updates and how those
+  //   updates are applied on the parent side.
+  bool ReadbackPixelsFromParent(const gfx::IntSize& aSize,
+                                gfx::SurfaceFormat aFormat,
+                                const Range<uint8_t>& aBuffer);
 };
 
 }  // namespace layers

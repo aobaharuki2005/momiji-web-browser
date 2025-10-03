@@ -156,7 +156,7 @@ void NativeLayerRootRemoteMacChild::CommitForSnapshot(CALayer* aRootCALayer) {
   mNativeLayersChangedForSnapshot = false;
 }
 
-bool NativeLayerRootRemoteMacChild::ReadbackPixels(
+bool NativeLayerRootRemoteMacChild::ReadbackPixelsFromParent(
     const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
     const Range<uint8_t>& aBuffer) {
   // In this process we only have the pixels of the individual layers,

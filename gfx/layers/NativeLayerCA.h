@@ -77,6 +77,11 @@ class SnapshotterCADelegate {
   virtual ~SnapshotterCADelegate();
 
   virtual float BackingScale() const { return 1.0f; }
+  virtual bool DoCustomReadbackForReftestsIfDesired(
+      const gfx::IntSize& aReadbackSize, gfx::SurfaceFormat aReadbackFormat,
+      const Range<uint8_t>& aReadbackBuffer) {
+    return false;
+  }
   virtual void UpdateSnapshotterLayers(CALayer* aRootCALayer) = 0;
   virtual void OnSnapshotterDestroyed(
       NativeLayerRootSnapshotterCA* aSnapshotter) {}
