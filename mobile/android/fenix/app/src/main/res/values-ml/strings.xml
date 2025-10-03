@@ -527,6 +527,39 @@
   <string name="onboarding_term_of_service_line_three" tools:ignore="BrandUsage">അന്വേഷിയന്ത്രത്തിനെ മെച്ചപ്പെുടത്താൻ ഫയർഫോക്സു് മോസില്ലക്കു് നിദാനനിർണയനീയും ഇടപാടുനീയ ദത്ത അയയ്ക്കാരുണ്ടു്. %1$s</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
   <string name="onboarding_term_of_service_line_three_link_text">കൈകാര്യം ചെയ്യുക</string>
+  <!-- Terms of use (ToU) second subheader. -->
+  <string name="onboarding_redesign_tou_subheader_two">താനെ പിന്തുടൎച്ച പരിരക്ഷണം</string>
+  <!--
+    Terms of use (ToU) first body text. %1$s is replaced by an active link,
+    using onboarding_redesign_tou_body_one_link_text as text (“Firefox Terms of Use”).
+  -->
+  <string name="onboarding_redesign_tou_body_one">തുടരുന്നതിലൂടെ, താങ്ങൾ %1$s അംഗീകരിക്കുന്നു.</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_one. -->
+  <string name="onboarding_redesign_tou_body_one_link_text" tools:ignore="BrandUsage">Firefox ഉപയോഗനിബന്ധനകൾ</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_two. -->
+  <string name="onboarding_redesign_tou_body_two_link_text">സ്വകാര്യത അറിയിപ്പു്</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_three. -->
+  <string name="onboarding_redesign_tou_body_three_link_text">ക്രമീകരണങ്ങൾ നിയന്ത്രിക്കുക</string>
+  <!-- Terms of use (ToU) onboarding page continue button label. -->
+  <string name="onboarding_redesign_tou_agree_and_continue_button_label">തുടരുക</string>
+  <!-- Onboarding header for the toolbar selection card. -->
+  <string name="onboarding_redesign_customize_toolbar_title">താങ്ങൾക്കു വിലാസപ്പട്ട എവിടെയാണു വേണ്ടതു് ?</string>
+  <!-- Onboarding label for 'Continue' button. -->
+  <string name="onboarding_redesign_continue_button">തുടരുക</string>
+  <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_redesign_title" tools:ignore="BrandUsage">ഫയൎഫോക്സിനെ ഉയൎത്താൻ ഞങ്ങളെ സഹായിക്കുക</string>
+  <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
+  <string name="onboarding_marketing_redesign_positive_button">തീൎച്ചപ്പെടുത്തുക</string>
+  <!-- Set to default browser onboarding redesign title. -->
+  <string name="onboarding_redesign_set_default_browser_title">താനെ പിന്തുടൎച്ച പരിരക്ഷണം തനിമട്ടായി നേടൂ.\u0020</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">ഫയൎഫോക്സ് ഉപയോഗിക്കുന്നയെല്ലായിടത്തും സമന്വയിപ്പിക്കുക</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">ഏതുപകരണത്തിലും അടയാളക്കുറിപ്പുകളും ടാബുകളും ഒളിവാക്കുകളും നേടുക. എല്ലാം രൂപമാറ്റത്തിലൂടെ പരിരക്ഷിച്ചിരിക്കുന്നതു്.\u0020</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">സമന്വയിപ്പിക്കാൻ തുടങ്ങുക</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">ഇപ്പോഴല്ല</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">ഫയൎഫോക്സിനെ ഉയൎത്താൻ ഞങ്ങൾ സഹായിക്കുക</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
@@ -727,6 +760,8 @@
   <string name="preferences_customize">ഇച്ഛാനുസൃതമാക്കുക</string>
   <!-- Preference description for banner about signing in -->
   <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">ടാബുകളും അടയാളക്കുറിപ്പുകളും ഒളിവാക്കുകളും മറ്റും സമന്വയിപ്പിക്കാൻ പ്രവേശിക്കുക.</string>
+  <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
+  <string name="preferences_sign_in_description">അടയാളക്കുറിപ്പുകളും ഒളിവാക്കുകളും ടാബുകളും എന്നിവയും മറ്റും സമന്വയിപ്പിക്കുക.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">മോസില്ല അക്കൗണ്ട്</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -939,6 +974,8 @@
   <string name="restart_warning_dialog_title">പ്രയോഗയടയാളം മാറ്റണോ?</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">ഉടന്‍ വീണ്ടും തുടങ്ങുക</string>
+  <!-- Dialog button text for confirming the possible app restart and new icon selection -->
+  <string name="restart_warning_dialog_button_positive_2">അടയാളം മാറ്റുക</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">റദ്ദാക്കുക</string>
   <!--

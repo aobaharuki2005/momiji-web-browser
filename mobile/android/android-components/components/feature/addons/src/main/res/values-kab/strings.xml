@@ -200,6 +200,12 @@
   <string name="mozac_feature_addons_permissions_data_collection_browsingActivity_long_description">Bḍu armud n tunigin s uneflay n usiɣzef</string>
   <!-- Long description for the healthInfo data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_healthInfo_long_description">Bḍu talɣut n tezmert s uneflay n usiɣzef</string>
+  <!-- Long description for the locationInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_locationInfo_long_description">Bḍu talɣut n yideg s uneflay n usiɣzef</string>
+  <!-- Long description for the personalCommunications data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_personalCommunications_long_description">Bḍu taywalt tudmawant s uneflay n usiɣzef</string>
+  <!-- Long description for the searchTerms data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_searchTerms_long_description">Bḍu tiwtilin n unadi s uneflay n usiɣzef</string>
   <!-- Long description for the technicalAndInteraction data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_technicalAndInteraction_long_description">Bḍu isefka itiknikanen d yimyigawen s usiɣzef n uneflay</string>
   <!-- Long description for the websiteActivity data collection permission -->
@@ -224,6 +230,8 @@
   <string name="mozac_feature_addons_settings">Iɣewwaṛen</string>
   <!-- Indicates the add-on is enabled. -->
   <string name="mozac_feature_addons_settings_on">Yermed</string>
+  <!-- Indicates the add-on is allowed in private browsing mode. -->
+  <string name="mozac_feature_addons_settings_allow_in_private_browsing_2">Sireg asiɣzef ad yeddu deg tunigin tusligt</string>
   <!-- Indicates the add-on is allowed in private browsing mode. -->
   <string name="mozac_feature_addons_settings_run_in_private_browsing">Selkem di tunigin tusligt</string>
   <!-- This is displayed when the add-on is not allowed to run in private browsing. -->

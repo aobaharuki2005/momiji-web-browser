@@ -148,6 +148,8 @@
     then we will show another collapsed entry saying "Access your data on other sites.".
   -->
   <string name="mozac_feature_addons_permissions_extra_sites_description_for_update">മറ്റെ വെബ്ബിടങ്ങളിൽ താങ്ങളുടെ ഡാറ്റ ഉപയോഗിക്കുക.</string>
+  <!-- The text shown when an extension requests the userScripts permission, near the usual description of the userScripts permission -->
+  <string name="mozac_feature_addons_permissions_user_scripts_extra_warning">പരിശോധിച്ചുറപ്പിക്കാത്ത സ്ക്രിപ്റ്റുകൾ സുരക്ഷയും സ്വകാര്യതയും അപകടസാധ്യതകൾ സൃഷ്ടിക്കും. നിങ്ങൾ വിശ്വസിക്കുന്ന വിപുലീകരണങ്ങളിൽ നിന്നോ ഉറവിടങ്ങളിൽ നിന്നോ മാത്രം സ്ക്രിപ്റ്റുകൾ പ്രവർത്തിപ്പിക്കുക.</string>
   <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
   <string name="mozac_feature_addons_permissions_required_data_collection_description_2">ഈ വിപുലീകരണം ശേഖരിക്കുന്നത് ഇവയാണെന്ന് വികസിനാക്താവു് പറയുന്നു: %1$s</string>
   <!-- The sentence used when the developer of an extension has explicitly stated that they do not collect any data collection. -->
