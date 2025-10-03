@@ -225,7 +225,7 @@ layout:
         |mach try --preset layout -xq "linux64 'opt"|
     query:
         # Most mochitest + reftest + crashtest + wpt
-        - "!asan !tsan !jsreftest !shippable !webgl !condprof !media !webgpu 'mochitest | 'web-platform | 'crashtest | 'reftest"
+        - "!asan !tsan !jsreftest !shippable !webgl !condprof !media !webgpu !a11y-checks 'mochitest | 'web-platform | 'crashtest | 'reftest"
         # Style system unit tests
         - "'rusttests"
 
