@@ -13443,7 +13443,8 @@ uint32_t Document::LastScrollGeneration() const {
   return 0;
 }
 
-bool Document::HasBeenScrolledSince(const uint32_t& aLastScrollGeneration) const {
+bool Document::HasBeenScrolledSince(
+    const uint32_t& aLastScrollGeneration) const {
   if (nsPresContext* pc = GetPresContext()) {
     pc->HasBeenScrolledSince(aLastScrollGeneration);
   }
