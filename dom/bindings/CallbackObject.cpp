@@ -298,23 +298,31 @@ void CallSetup::SetupForExecution(nsIGlobalObject* aGlobalObject,
   mCallContext.emplace(cx, nullptr);
 }
 
-CallSetup::CallSetup(CallbackObjectBase* aCallback, ErrorResult& aRv,
-                     const char* aExecutionReason,
+// Private delegating constructor for common initialization
+CallSetup::CallSetup(ErrorResult& aRv,
                      CallbackObjectBase::ExceptionHandling aExceptionHandling,
-                     JS::Realm* aRealm, bool aIsJSImplementedWebIDL)
+                     JS::Realm* aRealm, bool aIsMainThread)
     : mCx(nullptr),
       mRealm(aRealm),
       mErrorResult(aRv),
       mExceptionHandling(aExceptionHandling),
-      mIsMainThread(NS_IsMainThread()) {
+      mIsMainThread(aIsMainThread) {
+  CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
+  MOZ_ASSERT(ccjs);
+  ccjs->EnterMicroTask();
+}
+
+CallSetup::CallSetup(CallbackObjectBase* aCallback, ErrorResult& aRv,
+                     const char* aExecutionReason,
+                     CallbackObjectBase::ExceptionHandling aExceptionHandling,
+                     JS::Realm* aRealm, bool aIsJSImplementedWebIDL)
+    : CallSetup(aRv, aExceptionHandling, aRealm, NS_IsMainThread()) {
   MOZ_ASSERT_IF(
       aExceptionHandling == CallbackObjectBase::eReportExceptions ||
           aExceptionHandling == CallbackObjectBase::eRethrowExceptions,
       !aRealm);
 
   CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
-  MOZ_ASSERT(ccjs);
-  ccjs->EnterMicroTask();
   JS::RootedTuple<JSObject*, JSObject*, JSObject*> roots(ccjs->RootingCx());
 
   // Compute the caller's subject principal (if necessary) early, before we
@@ -374,11 +382,7 @@ CallSetup::CallSetup(JS::Handle<JSObject*> aCallbackGlobal,
                      const char* aExecutionReason,
                      CallbackObjectBase::ExceptionHandling aExceptionHandling,
                      JS::Realm* aRealm)
-    : mCx(nullptr),
-      mRealm(aRealm),
-      mErrorResult(aRv),
-      mExceptionHandling(aExceptionHandling),
-      mIsMainThread(NS_IsMainThread()) {
+    : CallSetup(aRv, aExceptionHandling, aRealm, NS_IsMainThread()) {
   MOZ_ASSERT_IF(aExceptionHandling == CallbackFunction::eReportExceptions ||
                     aExceptionHandling == CallbackFunction::eRethrowExceptions,
                 !aRealm);
