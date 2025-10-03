@@ -702,6 +702,7 @@ var TelemetryReportingPolicyImpl = {
     this.shutdown();
     this._isFirstRun = undefined;
     this._ensureUserIsNotifiedPromise = undefined;
+    this._nimbusVariables = {};
     return this.setup();
   },
 
@@ -780,7 +781,9 @@ var TelemetryReportingPolicyImpl = {
     // set.
     const bypassTOUFlow =
       Services.prefs.getBoolPref(TOU_BYPASS_NOTIFICATION_PREF, false) ||
-      !this._nimbusVariables.enabled;
+      (!Services.prefs.getBoolPref("browser.preonboarding.enabled", false) &&
+        this._nimbusVariables?.enabled !== true) ||
+      this._nimbusVariables?.enabled === false;
     const allowInteractionData = Services.prefs.getBoolPref(
       "datareporting.healthreport.uploadEnabled",
       false
