@@ -892,7 +892,8 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
 
   const bool isGrid = aFlags.contains(AbsPosReflowFlag::IsGridContainerCB);
   // TODO(bug 1989059): position-try-order.
-  auto fallbacks = aKidFrame->StylePosition()->mPositionTryFallbacks._0.AsSpan();
+  auto fallbacks =
+      aKidFrame->StylePosition()->mPositionTryFallbacks._0.AsSpan();
   Maybe<uint32_t> currentFallbackIndex;
   const StylePositionTryFallbacksItem* currentFallback = nullptr;
   RefPtr<ComputedStyle> currentFallbackStyle;
