@@ -236,7 +236,9 @@ export class YelpSuggestions extends SuggestProvider {
   /**
    * @typedef {object} L10nItem
    * @property {Values<RESULT_MENU_COMMAND>} [name]
+   *   The name of the command.
    * @property {{id: string}} [l10n]
+   *   The id of the l10n string to use for the translation.
    */
 
   /**

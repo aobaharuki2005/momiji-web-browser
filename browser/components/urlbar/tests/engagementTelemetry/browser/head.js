@@ -513,6 +513,9 @@ async function expectNoConsoleErrors(task) {
  * @param {number} [embeddingSize] size of embeddings
  */
 async function doTestWithSemantic(results, task, embeddingSize = 16) {
+  /**
+   * A mock object that pretends to be an MLEngine.
+   */
   class MockMLEngine {
     async run(request) {
       const texts = request.args[0];

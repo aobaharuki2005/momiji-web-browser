@@ -39,6 +39,7 @@ export class UrlbarResult {
   /**
    * @typedef {object} Payload
    * @property {string} [qsSuggestion]
+   *   The suggestion text from quick suggest.
    */
 
   /**

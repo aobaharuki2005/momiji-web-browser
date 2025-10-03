@@ -70,10 +70,12 @@ class _MLSuggest {
   /**
    * Helper to wrap createEngine for testing purposes.
    *
+   * @param {object} options
+   *   Configuration options for the ML engine.
    * @returns {MLEngine}
    */
-  createEngine(args) {
-    return lazy.createEngine(args);
+  createEngine(options) {
+    return lazy.createEngine(options);
   }
 
   /**

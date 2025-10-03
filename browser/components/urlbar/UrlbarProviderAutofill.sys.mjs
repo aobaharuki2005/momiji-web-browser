@@ -296,7 +296,9 @@ const QUERY_URL_PREFIX_BOOKMARK = urlQuery(
  * @typedef AutofillData
  *
  * @property {UrlbarResult} result
+ *   The result entry.
  * @property {Query} instance
+ *   The query instance.
  */
 
 /**

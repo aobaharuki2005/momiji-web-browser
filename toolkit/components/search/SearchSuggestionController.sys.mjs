@@ -307,7 +307,9 @@ export class SearchSuggestionController {
   /**
    * @typedef {object} FetchResult
    * @property {string} term
+   *   The search term used for obtaining the suggestions.
    * @property {FormHistoryResultType} [formHistoryResults]
+   *   The results in a form history result object, used for `SearchSuggestions`.
    * @property {Array<SearchSuggestionEntry>} local
    *   Contains local search suggestions.
    * @property {Array<SearchSuggestionEntry>} remote

@@ -400,6 +400,8 @@ export class SearchModeSwitcher {
 
   /**
    * Adds local options to the popup.
+   *
+   * @param {Element} separator
    */
   async #buildLocalSearchModeList(separator) {
     if (!this.#input.isAddressbar) {
