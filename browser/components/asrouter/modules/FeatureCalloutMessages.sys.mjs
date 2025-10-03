@@ -1892,7 +1892,7 @@ const MESSAGES = () => {
       groups: [],
       profileScope: "single",
       targeting:
-        "'browser.profiles.profile-name.updated' | preferenceValue == true",
+        "'browser.profiles.profile-name.updated' | preferenceValue == true && userPrefs.cfrFeatures && localeLanguageCode == 'en'",
       trigger: {
         id: "preferenceObserver",
         params: ["browser.profiles.profile-name.updated"],
@@ -1900,6 +1900,7 @@ const MESSAGES = () => {
       frequency: {
         lifetime: 1,
       },
+      skip_in_tests: "it's not tested in automation",
       template: "feature_callout",
       content: {
         id: "NEW_PROFILE_APP_MENU_TOUR",
