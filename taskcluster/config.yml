@@ -524,6 +524,9 @@ task-priority:
 
 taskgraph:
     register: gecko_taskgraph:register
+    repositories:
+        gecko:
+            name: 'Mozilla Firefox'
 
 workers:
     aliases:

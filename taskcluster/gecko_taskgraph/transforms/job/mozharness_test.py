@@ -190,7 +190,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
     if not test["checkout"]:
         # Support vcs checkouts regardless of whether the task runs from
         # source or not in case it is needed on an interactive loaner.
-        support_vcs_checkout(config, job, taskdesc)
+        support_vcs_checkout(config, job, taskdesc, config.repo_configs)
 
     # If we have a source checkout, run mozharness from it instead of
     # downloading a zip file with the same content.
