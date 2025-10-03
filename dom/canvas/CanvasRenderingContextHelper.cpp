@@ -62,6 +62,7 @@ void CanvasRenderingContextHelper::ToBlob(
     }
   }
 
+  nsCString randomizationKeyStr = VoidCString();
   int32_t format = 0;
   auto imageSize = gfx::IntSize{elementSize.width, elementSize.height};
   UniquePtr<uint8_t[]> imageBuffer =
@@ -71,7 +72,7 @@ void CanvasRenderingContextHelper::ToBlob(
   aRv = ImageEncoder::ExtractDataAsync(
       aType, aEncodeOptions, aUsingCustomOptions, std::move(imageBuffer),
       format, CSSIntSize::FromUnknownSize(imageSize), aExtractionBehavior,
-      callback);
+      randomizationKeyStr, callback);
 }
 
 UniquePtr<uint8_t[]> CanvasRenderingContextHelper::GetImageBuffer(

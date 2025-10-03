@@ -1358,8 +1358,8 @@ UniquePtr<uint8_t[]> ClientWebGLContext::GetImageBuffer(
 NS_IMETHODIMP
 ClientWebGLContext::GetInputStream(
     const char* mimeType, const nsAString& encoderOptions,
-    mozilla::CanvasUtils::ImageExtraction spoofing,
-    nsIInputStream** out_stream) {
+    mozilla::CanvasUtils::ImageExtraction extractionBehavior,
+    const nsACString& randomizationKey, nsIInputStream** out_stream) {
   // Use GetSurfaceSnapshot() to make sure that appropriate y-flip gets applied
   gfxAlphaType any;
   RefPtr<gfx::SourceSurface> snapshot = GetSurfaceSnapshot(&any);
