@@ -15,7 +15,6 @@ from taskgraph.util.readonlydict import ReadOnlyDict
 from taskgraph.util.schema import Schema, resolve_keyed_by
 from taskgraph.util.taskcluster import (
     get_artifact_path,
-    get_artifact_url,
     get_index_url,
 )
 from taskgraph.util.templates import merge
@@ -321,9 +320,9 @@ def set_target(config, tasks):
                 )
                 task["mozharness"]["installer-url"] = installer_url
             else:
-                task["mozharness"]["installer-url"] = get_artifact_url(
-                    f'<{target["upstream-task"]}>', target["name"]
-                )
+                task["mozharness"][
+                    "installer-url"
+                ] = f"<{target['upstream-task']}/{target['name']}>"
         else:
             task["mozharness"]["build-artifact-name"] = get_artifact_path(task, target)
 
