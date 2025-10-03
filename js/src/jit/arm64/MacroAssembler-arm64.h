@@ -2151,6 +2151,10 @@ class ScratchTagScope {
   void reacquire() {
     MOZ_ASSERT(released_);
     released_ = false;
+    if (!owned_) {
+      scratch64_ = temps_.AcquireX();
+      owned_ = true;
+    }
   }
 };
 
