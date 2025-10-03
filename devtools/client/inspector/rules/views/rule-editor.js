@@ -632,9 +632,7 @@ RuleEditor.prototype = {
    */
   populate(reset) {
     // Clear out existing viewers.
-    while (this.selectorText.hasChildNodes()) {
-      this.selectorText.removeChild(this.selectorText.lastChild);
-    }
+    this.selectorText.replaceChildren();
 
     // If selector text comes from a css rule, highlight selectors that
     // actually match.  For custom selector text (such as for the 'element'
@@ -661,9 +659,7 @@ RuleEditor.prototype = {
         focusedElSelector = CssLogic.findCssSelector(this.doc.activeElement);
       }
 
-      while (this.propertyList.hasChildNodes()) {
-        this.propertyList.removeChild(this.propertyList.lastChild);
-      }
+      this.propertyList.replaceChildren();
     }
 
     for (const prop of this.rule.textProps) {
