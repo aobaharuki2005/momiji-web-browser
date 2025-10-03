@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2025-10-01T15:21:04.336313+00:00'
+updated_at: '2025-10-03T16:08:47.342777+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3017,6 +3017,7 @@ modules:
       - dom/webgpu/**/*
       - gfx/wgpu_bindings/**/*
       - taskcluster/kinds/toolchain-dxc-upload/kind.yml
+      - taskcluster/kinds/toolchain/dxc.yml
       - third_party/rust/naga/**/*
       - third_party/rust/wgpu-*/**/*
       - testing/web-platform/tests/webgpu/**/*
@@ -4626,5 +4627,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 59f8d9db52cfab7a7f8df28d3c9619871dab8767
-  export: 5960043482fc6dcabb1e2d619ccfe53e6919a173
+  config: e72ed229dd90927fbb8c7e8926f4a730351c990e
+  export: 22599ae6b8b0282ee14abeb998de1ff83c38c685
