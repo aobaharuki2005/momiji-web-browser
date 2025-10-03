@@ -24,6 +24,7 @@
 #include "nsPresContext.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
+#include "nsTArray.h"
 
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
@@ -51,7 +52,7 @@ class Area {
   bool HasFocus() const { return mHasFocus; }
 
   RefPtr<HTMLAreaElement> mArea;
-  UniquePtr<nscoord[]> mCoords;
+  nsTArray<nscoord> mCoords;
   int32_t mNumCoords;
   bool mHasFocus = false;
 };
@@ -90,7 +91,7 @@ void Area::ParseCoords(const nsAString& aSpec) {
      * Nothing in an empty list
      */
     mNumCoords = 0;
-    mCoords = nullptr;
+    mCoords.Clear();
     if (*cp == '\0') {
       free(cp);
       return;
@@ -176,11 +177,8 @@ void Area::ParseCoords(const nsAString& aSpec) {
     /*
      * Allocate space for the coordinate array.
      */
-    UniquePtr<nscoord[]> value_list = MakeUnique<nscoord[]>(cnt);
-    if (!value_list) {
-      free(cp);
-      return;
-    }
+    nsTArray<nscoord> value_list;
+    value_list.SetLength(cnt);
 
     /*
      * Second pass to copy integer values into list.
