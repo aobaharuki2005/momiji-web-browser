@@ -9385,7 +9385,7 @@
   # making this mirror: once, and set_spidermonkey_pref: startup is
   # broken: See Bug 1989094
   mirror: always
-  set_spidermonkey_pref: startup
+  set_spidermonkey_pref: always
 
 # Whether to use the off-thread script compilation and decoding.
 - name: javascript.options.parallel_parsing
