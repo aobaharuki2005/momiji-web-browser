@@ -209,6 +209,15 @@ void GPUProcessManager::NotifyBatteryInfo(
   }
 }
 
+void GPUProcessManager::MaybeCrashIfGpuProcessOnceStable() {
+  if (StaticPrefs::layers_gpu_process_allow_fallback_to_parent_AtStartup()) {
+    return;
+  }
+  MOZ_RELEASE_ASSERT(!gfxConfig::IsEnabled(Feature::GPU_PROCESS));
+  MOZ_RELEASE_ASSERT(!mProcessStableOnce,
+                     "Fallback to parent process not allowed!");
+}
+
 void GPUProcessManager::ResetProcessStable() {
   mTotalProcessAttempts++;
   mProcessStable = false;
@@ -333,6 +342,8 @@ bool GPUProcessManager::MaybeDisableGPUProcess(const char* aMessage,
     gfxCriticalNote << aMessage;
 
     gfxPlatform::DisableGPUProcess();
+
+    MaybeCrashIfGpuProcessOnceStable();
   }
 
   mozilla::glean::gpu_process::feature_status.Set(
@@ -936,6 +947,7 @@ void GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost) {
   // long enough, reset the counter so that we don't disable the process too
   // eagerly.
   if (IsProcessStable(TimeStamp::Now())) {
+    mProcessStableOnce = true;
     mUnstableProcessAttempts = 0;
   } else {
     mUnstableProcessAttempts++;

@@ -284,6 +284,11 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   bool FallbackFromAcceleration(wr::WebRenderError aError,
                                 const nsCString& aMsg);
 
+  // Crashes the parent process if we are disabling the GPU process and we
+  // ever once had a stable GPU process. This is to avoid fallback into the
+  // parent when we know the configuration allows for the GPU process.
+  void MaybeCrashIfGpuProcessOnceStable();
+
   void ResetProcessStable();
 
   // Returns true if the composting pocess is currently considered to be stable.
@@ -385,6 +390,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   GPUProcessHost* mProcess;
   uint64_t mProcessToken;
   bool mProcessStable;
+  bool mProcessStableOnce = false;
   Maybe<wr::WebRenderError> mLastError;
   Maybe<nsCString> mLastErrorMsg;
   GPUChild* mGPUChild;
