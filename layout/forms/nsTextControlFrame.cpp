@@ -437,12 +437,7 @@ nsresult nsTextControlFrame::CreateAnonymousContent(
 }
 
 bool nsTextControlFrame::ShouldInitializeEagerly() const {
-  // textareas are eagerly initialized.
-  if (!IsSingleLineTextControl()) {
-    return true;
-  }
-
-  // Also, input elements which have a cached selection should get eager
+  // Input elements which have a cached selection should get eager
   // editor initialization.
   TextControlElement* textControlElement = ControlElement();
   if (textControlElement->HasCachedSelection()) {
@@ -459,6 +454,7 @@ bool nsTextControlFrame::ShouldInitializeEagerly() const {
   // If text in the editor is being dragged, we need the editor to create
   // new source node for the drag session (TextEditor creates the text node
   // in the anonymous <div> element.
+  // XXX UpdateValueDisplay creates it now, is this needed?
   if (nsCOMPtr<nsIDragSession> dragSession =
           nsContentUtils::GetDragSession(PresContext())) {
     if (dragSession->IsDraggingTextInTextControl()) {
@@ -955,7 +951,9 @@ nsresult nsTextControlFrame::AttributeChanged(int32_t aNameSpaceID,
                                               nsAtom* aAttribute,
                                               AttrModType aModType) {
   if (aAttribute == nsGkAtoms::value && !mEditorHasBeenInitialized) {
-    UpdateValueDisplay(true);
+    if (IsSingleLineTextControl()) {
+      UpdateValueDisplay(true);
+    }
     return NS_OK;
   }
 
@@ -1055,10 +1053,6 @@ void nsTextControlFrame::SetInitialChildList(ChildListID aListID,
 nsresult nsTextControlFrame::UpdateValueDisplay(bool aNotify,
                                                 bool aBeforeEditorInit,
                                                 const nsAString* aValue) {
-  if (!IsSingleLineTextControl()) {  // textareas don't use this
-    return NS_OK;
-  }
-
   MOZ_ASSERT(mRootNode, "Must have a div content\n");
   MOZ_ASSERT(!mEditorHasBeenInitialized,
              "Do not call this after editor has been initialized");
