@@ -13,6 +13,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsColor.h"
 #include "nsContainerFrame.h"
+#include "nsTArray.h"
 
 class nsIContent;
 class nsPresContext;
@@ -121,15 +122,15 @@ class nsHTMLFramesetFrame final : public nsContainerFrame {
 
  protected:
   void Scale(nscoord aDesired, int32_t aNumIndicies, int32_t* aIndicies,
-             int32_t aNumItems, int32_t* aItems);
+             int32_t aNumItems, nsTArray<int32_t>& aItems);
 
   void CalculateRowCol(nsPresContext* aPresContext, nscoord aSize,
                        int32_t aNumSpecs, const nsFramesetSpec* aSpecs,
-                       nscoord* aValues);
+                       nsTArray<nscoord>& aValues);
 
   void GenerateRowCol(nsPresContext* aPresContext, nscoord aSize,
                       int32_t aNumSpecs, const nsFramesetSpec* aSpecs,
-                      nscoord* aValues, nsString& aNewAttr);
+                      const nsTArray<nscoord>& aValues, nsString& aNewAttr);
 
   virtual void GetDesiredSize(nsPresContext* aPresContext,
                               const ReflowInput& aReflowInput,
@@ -178,8 +179,8 @@ class nsHTMLFramesetFrame final : public nsContainerFrame {
   UniquePtr<nsFrameborder[]>
       mChildFrameborder;  // the frameborder attr of children
   UniquePtr<nsBorderColor[]> mChildBorderColors;
-  UniquePtr<nscoord[]> mRowSizes;  // currently computed row sizes
-  UniquePtr<nscoord[]> mColSizes;  // currently computed col sizes
+  nsTArray<nscoord> mRowSizes;  // currently computed row sizes
+  nsTArray<nscoord> mColSizes;  // currently computed col sizes
   mozilla::LayoutDeviceIntPoint mFirstDragPoint;
   int32_t mNumRows;
   int32_t mNumCols;

@@ -219,8 +219,10 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   static_assert(
       NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(nscoord),
       "Maximum value of mNumRows and mNumCols is NS_MAX_FRAMESET_SPEC_COUNT");
-  mRowSizes = MakeUnique<nscoord[]>(mNumRows);
-  mColSizes = MakeUnique<nscoord[]>(mNumCols);
+  mRowSizes.Clear();
+  mRowSizes.SetLength(mNumRows);
+  mColSizes.Clear();
+  mColSizes.SetLength(mNumCols);
 
   static_assert(
       NS_MAX_FRAMESET_SPEC_COUNT < INT32_MAX / NS_MAX_FRAMESET_SPEC_COUNT,
@@ -350,7 +352,7 @@ void nsHTMLFramesetFrame::SetInitialChildList(ChildListID aListID,
 // XXX should this try to allocate twips based on an even pixel boundary?
 void nsHTMLFramesetFrame::Scale(nscoord aDesired, int32_t aNumIndicies,
                                 int32_t* aIndicies, int32_t aNumItems,
-                                int32_t* aItems) {
+                                nsTArray<int32_t>& aItems) {
   int32_t actual = 0;
   // get the actual total
   for (int32_t i = 0; i < aNumIndicies; i++) {
@@ -398,7 +400,7 @@ void nsHTMLFramesetFrame::Scale(nscoord aDesired, int32_t aNumIndicies,
 void nsHTMLFramesetFrame::CalculateRowCol(nsPresContext* aPresContext,
                                           nscoord aSize, int32_t aNumSpecs,
                                           const nsFramesetSpec* aSpecs,
-                                          nscoord* aValues) {
+                                          nsTArray<nscoord>& aValues) {
   static_assert(NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(int32_t),
                 "aNumSpecs maximum value is NS_MAX_FRAMESET_SPEC_COUNT");
 
@@ -490,7 +492,8 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsPresContext* aPresContext,
 void nsHTMLFramesetFrame::GenerateRowCol(nsPresContext* aPresContext,
                                          nscoord aSize, int32_t aNumSpecs,
                                          const nsFramesetSpec* aSpecs,
-                                         nscoord* aValues, nsString& aNewAttr) {
+                                         const nsTArray<nscoord>& aValues,
+                                         nsString& aNewAttr) {
   for (int32_t i = 0; i < aNumSpecs; i++) {
     if (!aNewAttr.IsEmpty()) {
       aNewAttr.Append(char16_t(','));
@@ -813,8 +816,8 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
     return;
   }
 
-  CalculateRowCol(aPresContext, width, mNumCols, colSpecs, mColSizes.get());
-  CalculateRowCol(aPresContext, height, mNumRows, rowSpecs, mRowSizes.get());
+  CalculateRowCol(aPresContext, width, mNumCols, colSpecs, mColSizes);
+  CalculateRowCol(aPresContext, height, mNumRows, rowSpecs, mRowSizes);
 
   UniquePtr<bool[]> verBordersVis;  // vertical borders visibility
   UniquePtr<nscolor[]> verBorderColors;
@@ -1208,7 +1211,7 @@ void nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
       const nsFramesetSpec* colSpecs = nullptr;
       ourContent->GetColSpec(&mNumCols, &colSpecs);
       nsAutoString newColAttr;
-      GenerateRowCol(aPresContext, width, mNumCols, colSpecs, mColSizes.get(),
+      GenerateRowCol(aPresContext, width, mNumCols, colSpecs, mColSizes,
                      newColAttr);
       // Setting the attr will trigger a reflow
       mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::cols,
@@ -1234,7 +1237,7 @@ void nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
       const nsFramesetSpec* rowSpecs = nullptr;
       ourContent->GetRowSpec(&mNumRows, &rowSpecs);
       nsAutoString newRowAttr;
-      GenerateRowCol(aPresContext, height, mNumRows, rowSpecs, mRowSizes.get(),
+      GenerateRowCol(aPresContext, height, mNumRows, rowSpecs, mRowSizes,
                      newRowAttr);
       // Setting the attr will trigger a reflow
       mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::rows,
