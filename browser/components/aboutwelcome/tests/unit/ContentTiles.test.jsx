@@ -91,6 +91,14 @@ describe("ContentTiles component", () => {
       AWSendToDeviceEmailsSupported: () => Promise.resolve(),
     });
     globals.set({ AWSendToParent: sandbox.stub() });
+    globals.set({
+      AWSendToParent: sandbox.stub(),
+      AWFindBackupsInWellKnownLocations: sandbox.stub().resolves({
+        found: false,
+        multipleBackupsFound: false,
+        backupFileToRestore: null,
+      }),
+    });
     wrapper = shallow(
       <ContentTiles
         content={TEST_CONTENT}

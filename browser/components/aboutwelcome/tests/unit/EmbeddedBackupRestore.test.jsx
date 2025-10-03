@@ -12,6 +12,14 @@ describe("EmbeddedBackupRestore component", () => {
     sandbox = sinon.createSandbox();
     globals = new GlobalOverrider();
     globals.set({ AWSendToParent: sandbox.stub() });
+    globals.set({
+      AWSendToParent: sandbox.stub(),
+      AWFindBackupsInWellKnownLocations: sandbox.stub().resolves({
+        found: false,
+        multipleBackupsFound: false,
+        backupFileToRestore: null,
+      }),
+    });
   });
 
   afterEach(() => {
@@ -41,6 +49,18 @@ describe("EmbeddedBackupRestore component", () => {
       restoreFromBackupElement.prop("labelFontWeight"),
       "600",
       "labelFontWeight should be set to '600'"
+    );
+  });
+
+  it("calls AWFindBackupsInWellKnownLocations on mount", async () => {
+    wrapper = mount(<EmbeddedBackupRestore />);
+
+    // Ensure the effect runs before we assert.
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    assert.isTrue(
+      window.AWFindBackupsInWellKnownLocations.calledOnce,
+      "should call AWFindBackupsInWellKnownLocations exactly once on mount"
     );
   });
 });

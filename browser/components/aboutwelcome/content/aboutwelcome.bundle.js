@@ -3468,6 +3468,10 @@ const EmbeddedBackupRestore = ({
   const [recoveryInProgress, setRecoveryInProgress] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const ref = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    const loadRestore = async () => {
+      await window.AWFindBackupsInWellKnownLocations?.();
+    };
+    loadRestore();
     // Clear the pref used to target the restore screen so that users will not
     // automatically see it again the next time they visit about:welcome.
     _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.AboutWelcomeUtils.handleUserAction({

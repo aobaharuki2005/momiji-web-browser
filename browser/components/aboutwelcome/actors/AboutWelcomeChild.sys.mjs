@@ -140,6 +140,11 @@ export class AboutWelcomeChild extends JSWindowActorChild {
     Cu.exportFunction(this.AWGetUnhandledCampaignAction.bind(this), window, {
       defineAs: "AWGetUnhandledCampaignAction",
     });
+    Cu.exportFunction(
+      this.AWFindBackupsInWellKnownLocations.bind(this),
+      window,
+      { defineAs: "AWFindBackupsInWellKnownLocations" }
+    );
   }
 
   /**
@@ -188,6 +193,11 @@ export class AboutWelcomeChild extends JSWindowActorChild {
     return this.wrapPromise(
       this.sendQuery("AWPage:ADD_SCREEN_IMPRESSION", screen)
     );
+  }
+
+  AWFindBackupsInWellKnownLocations() {
+    // This return value will be used in https://bugzilla.mozilla.org/show_bug.cgi?id=1992157
+    return this.sendQueryAndCloneForContent("AWPage:BACKUP_FIND_WELL_KNOWN");
   }
 
   /**

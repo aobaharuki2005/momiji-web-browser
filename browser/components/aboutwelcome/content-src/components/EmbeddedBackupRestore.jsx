@@ -11,11 +11,17 @@ export const EmbeddedBackupRestore = ({ handleAction, skipButton }) => {
   const ref = useRef(null);
 
   useEffect(() => {
+    const loadRestore = async () => {
+      await window.AWFindBackupsInWellKnownLocations?.();
+    };
+    loadRestore();
     // Clear the pref used to target the restore screen so that users will not
     // automatically see it again the next time they visit about:welcome.
     AboutWelcomeUtils.handleUserAction({
       type: "SET_PREF",
-      data: { pref: { name: "showRestoreFromBackup", value: false } },
+      data: {
+        pref: { name: "showRestoreFromBackup", value: false },
+      },
     });
   }, []);
 
