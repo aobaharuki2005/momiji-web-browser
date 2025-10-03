@@ -451,22 +451,6 @@ bool nsTextControlFrame::ShouldInitializeEagerly() const {
     }
   }
 
-  // If text in the editor is being dragged, we need the editor to create
-  // new source node for the drag session (TextEditor creates the text node
-  // in the anonymous <div> element.
-  // XXX UpdateValueDisplay creates it now, is this needed?
-  if (nsCOMPtr<nsIDragSession> dragSession =
-          nsContentUtils::GetDragSession(PresContext())) {
-    if (dragSession->IsDraggingTextInTextControl()) {
-      nsCOMPtr<nsINode> sourceNode;
-      if (NS_SUCCEEDED(
-              dragSession->GetSourceNode(getter_AddRefs(sourceNode))) &&
-          sourceNode == textControlElement) {
-        return true;
-      }
-    }
-  }
-
   return false;
 }
 
