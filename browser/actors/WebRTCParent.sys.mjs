@@ -534,6 +534,18 @@ function prompt(aActor, aBrowser, aRequest) {
     }
   }
 
+  // If the request comes from a sidebar,
+  // the user already gave a persistent permission, skip showing a notification
+  // otherwise deny request.
+  if (isSidebar(aBrowser)) {
+    if (!aActor.checkRequestAllowed(aRequest, principal, aBrowser)) {
+      aActor.denyRequest(aRequest);
+      return;
+    }
+
+    return;
+  }
+
   // If the user has already denied access once in this tab,
   // deny again without even showing the notification icon.
   for (const type of requestTypes) {
@@ -1638,4 +1650,16 @@ function onCameraPromptShown(doc, isHandlingUserInput) {
   // Pass deviceId and mediaSource to make sure they're up to date,
   // matching the user selection.
   webrtcPreview?.startPreview({ deviceId, mediaSource: "camera" });
+}
+
+function isSidebar(browser) {
+  const sidebarBrowser =
+    browser.browsingContext?.topChromeWindow?.SidebarController?.browser;
+  if (!sidebarBrowser) {
+    return false;
+  }
+
+  const nestedBrowsers =
+    sidebarBrowser.contentDocument.querySelectorAll("browser");
+  return Array.from(nestedBrowsers).some(b => b === browser);
 }
