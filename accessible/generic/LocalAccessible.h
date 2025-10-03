@@ -445,6 +445,11 @@ class LocalAccessible : public nsISupports, public Accessible {
   virtual bool GetStringARIAAttr(nsAtom* aAttrName,
                                  nsAString& aAttrValue) const override;
 
+  virtual bool ARIAAttrValueIs(nsAtom* aAttrName,
+                               nsAtom* aAttrValue) const override;
+
+  virtual bool HasARIAAttr(nsAtom* aAttrName) const override;
+
   //////////////////////////////////////////////////////////////////////////////
   // Downcasting and types
 

@@ -2431,8 +2431,72 @@ bool RemoteAccessible::GetStringARIAAttr(nsAtom* aAttrName,
   if (RequestDomainsIfInactive(CacheDomain::ARIA)) {
     return false;
   }
+
+  if (aAttrName == nsGkAtoms::role) {
+    if (mCachedFields->GetAttribute(CacheKey::ARIARole, aAttrValue)) {
+      // Unknown, or multiple roles.
+      return true;
+    }
+
+    if (const nsRoleMapEntry* roleMap = ARIARoleMap()) {
+      if (roleMap->roleAtom != nsGkAtoms::_empty) {
+        // Non-empty rolemap, stringify it and return true.
+        roleMap->roleAtom->ToString(aAttrValue);
+        return true;
+      }
+    }
+  }
+
   if (auto attrs = GetCachedARIAAttributes()) {
     return attrs->GetAttribute(aAttrName, aAttrValue);
+  }
+
+  return false;
+}
+
+bool RemoteAccessible::ARIAAttrValueIs(nsAtom* aAttrName,
+                                       nsAtom* aAttrValue) const {
+  if (RequestDomainsIfInactive(CacheDomain::ARIA)) {
+    return false;
+  }
+
+  if (aAttrName == nsGkAtoms::role) {
+    nsAutoString roleStr;
+    if (mCachedFields->GetAttribute(CacheKey::ARIARole, roleStr)) {
+      return aAttrValue->Equals(roleStr);
+    }
+
+    if (const nsRoleMapEntry* roleMap = ARIARoleMap()) {
+      return roleMap->roleAtom == aAttrValue;
+    }
+  }
+
+  if (auto attrs = GetCachedARIAAttributes()) {
+    if (auto val = attrs->GetAttribute<RefPtr<nsAtom>>(aAttrName)) {
+      return *val == aAttrValue;
+    }
+  }
+
+  return false;
+}
+
+bool RemoteAccessible::HasARIAAttr(nsAtom* aAttrName) const {
+  if (RequestDomainsIfInactive(CacheDomain::ARIA)) {
+    return false;
+  }
+
+  if (aAttrName == nsGkAtoms::role) {
+    if (const nsRoleMapEntry* roleMap = ARIARoleMap()) {
+      if (roleMap->roleAtom != nsGkAtoms::_empty) {
+        return true;
+      }
+    }
+
+    return mCachedFields->HasAttribute(CacheKey::ARIARole);
+  }
+
+  if (auto attrs = GetCachedARIAAttributes()) {
+    return attrs->HasAttribute(aAttrName);
   }
 
   return false;

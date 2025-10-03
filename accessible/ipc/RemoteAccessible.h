@@ -236,6 +236,11 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
   virtual bool GetStringARIAAttr(nsAtom* aAttrName,
                                  nsAString& aAttrValue) const override;
 
+  virtual bool ARIAAttrValueIs(nsAtom* aAttrName,
+                               nsAtom* aAttrValue) const override;
+
+  virtual bool HasARIAAttr(nsAtom* aAttrName) const override;
+
   virtual void Language(nsAString& aLocale) override;
 
   //////////////////////////////////////////////////////////////////////////////

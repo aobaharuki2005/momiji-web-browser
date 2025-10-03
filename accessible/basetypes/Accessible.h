@@ -435,6 +435,10 @@ class Accessible {
   virtual bool GetStringARIAAttr(nsAtom* aAttrName,
                                  nsAString& aAttrValue) const = 0;
 
+  virtual bool ARIAAttrValueIs(nsAtom* aAttrName, nsAtom* aAttrValue) const = 0;
+
+  virtual bool HasARIAAttr(nsAtom* aAttrName) const = 0;
+
   /**
    * Get the relation of the given type.
    */

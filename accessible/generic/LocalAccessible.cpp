@@ -4655,3 +4655,17 @@ bool LocalAccessible::GetStringARIAAttr(nsAtom* aAttrName,
   }
   return false;
 }
+
+bool LocalAccessible::ARIAAttrValueIs(nsAtom* aAttrName,
+                                      nsAtom* aAttrValue) const {
+  if (dom::Element* elm = Elm()) {
+    return nsAccUtils::ARIAAttrValueIs(elm, aAttrName, aAttrValue,
+                                       eCaseMatters);
+  }
+  return false;
+}
+
+bool LocalAccessible::HasARIAAttr(nsAtom* aAttrName) const {
+  return mContent ? nsAccUtils::HasDefinedARIAToken(mContent, aAttrName)
+                  : false;
+}
