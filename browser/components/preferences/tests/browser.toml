@@ -284,6 +284,8 @@ skip-if = ["tsan"] # Bug 1678829
 
 ["browser_spotlight.js"]
 
+["browser_startup_browser_restore_session.js"]
+
 ["browser_statePartitioning_PBM_strings.js"]
 
 ["browser_statePartitioning_strings.js"]

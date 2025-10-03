@@ -27,8 +27,7 @@
   <label><html:h2 data-l10n-id="startup-header"/></label>
 
   <vbox id="startupPageBox">
-    <checkbox id="browserRestoreSession"
-              data-l10n-id="startup-restore-windows-and-tabs"/>
+    <html:setting-group groupid="startup"/>
 #ifdef XP_WIN
     <hbox id="windowsLaunchOnLoginBox" align="center" hidden="true">
       <checkbox id="windowsLaunchOnLogin"

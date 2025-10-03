@@ -214,6 +214,56 @@ if (AppConstants.MOZ_UPDATER) {
 }
 
 Preferences.addSetting({
+  id: "privateBrowsingAutoStart",
+  pref: "browser.privatebrowsing.autostart",
+});
+
+Preferences.addSetting({
+  /**
+   * The "Open previous windows and tabs" option on about:preferences page.
+   */
+  id: "browserRestoreSession",
+  pref: "browser.startup.page",
+  deps: ["privateBrowsingAutoStart"],
+  get:
+    /**
+     * Returns the value of the "Open previous windows and tabs" option based
+     * on the value of the browser.privatebrowsing.autostart pref.
+     *
+     * @param {number | undefined} value
+     * @returns {boolean}
+     */
+    value => {
+      const pbAutoStartPref = Preferences.get(
+        "browser.privatebrowsing.autostart"
+      );
+      let newValue = pbAutoStartPref.value
+        ? false
+        : value === gMainPane.STARTUP_PREF_RESTORE_SESSION;
+
+      return newValue;
+    },
+  set: checked => {
+    const startupPref = Preferences.get("browser.startup.page");
+    let newValue;
+
+    if (checked) {
+      // We need to restore the blank homepage setting in our other pref
+      if (startupPref.value === gMainPane.STARTUP_PREF_BLANK) {
+        HomePage.safeSet("about:blank");
+      }
+      newValue = gMainPane.STARTUP_PREF_RESTORE_SESSION;
+    } else {
+      newValue = gMainPane.STARTUP_PREF_HOMEPAGE;
+    }
+    return newValue;
+  },
+  disabled: deps => {
+    return deps.privateBrowsingAutoStart.value;
+  },
+});
+
+Preferences.addSetting({
   id: "useAutoScroll",
   pref: "general.autoScroll",
 });
@@ -715,6 +765,14 @@ let SETTINGS_CONFIG = {
         controlAttrs: {
           message: "Placeholder for updated containers",
         },
+      },
+    ],
+  },
+  startup: {
+    items: [
+      {
+        id: "browserRestoreSession",
+        l10nId: "startup-restore-windows-and-tabs",
       },
     ],
   },
@@ -1222,6 +1280,7 @@ var gMainPane = {
     initSettingGroup("browsing");
     initSettingGroup("zoom");
     initSettingGroup("performance");
+    initSettingGroup("startup");
 
     if (AppConstants.platform == "win") {
       // Functionality for "Show tabs in taskbar" on Windows 7 and up.
@@ -1304,11 +1363,6 @@ var gMainPane = {
     }
 
     // Startup pref
-    setEventListener(
-      "browserRestoreSession",
-      "command",
-      gMainPane.onBrowserRestoreSessionChange
-    );
     if (AppConstants.platform == "win") {
       setEventListener(
         "windowsLaunchOnLogin",
@@ -1327,21 +1381,6 @@ var gMainPane = {
         });
       }
     }
-    gMainPane.updateBrowserStartupUI =
-      gMainPane.updateBrowserStartupUI.bind(gMainPane);
-    Preferences.get("browser.privatebrowsing.autostart").on(
-      "change",
-      gMainPane.updateBrowserStartupUI
-    );
-    Preferences.get("browser.startup.page").on(
-      "change",
-      gMainPane.updateBrowserStartupUI
-    );
-    Preferences.get("browser.startup.homepage").on(
-      "change",
-      gMainPane.updateBrowserStartupUI
-    );
-    gMainPane.updateBrowserStartupUI();
 
     if (AppConstants.HAVE_SHELL_SERVICE) {
       setEventListener(
@@ -1831,26 +1870,6 @@ var gMainPane = {
     return undefined;
   },
 
-  /**
-   * Hide/show the "Show my windows and tabs from last time" option based
-   * on the value of the browser.privatebrowsing.autostart pref.
-   */
-  updateBrowserStartupUI() {
-    const pbAutoStartPref = Preferences.get(
-      "browser.privatebrowsing.autostart"
-    );
-    const startupPref = Preferences.get("browser.startup.page");
-
-    let newValue;
-    let checkbox = document.getElementById("browserRestoreSession");
-    checkbox.disabled = pbAutoStartPref.value || startupPref.locked;
-    newValue = pbAutoStartPref.value
-      ? false
-      : startupPref.value === this.STARTUP_PREF_RESTORE_SESSION;
-    if (checkbox.checked !== newValue) {
-      checkbox.checked = newValue;
-    }
-  },
   /**
    * Fetch the existing default zoom value, initialise and unhide
    * the preferences menu. This method also establishes a listener
@@ -2535,23 +2554,6 @@ var gMainPane = {
 
     let win = window.browsingContext.topChromeWindow;
     cps2.setGlobal(win.FullZoom.name, newZoom, nonPrivateLoadContext);
-  },
-
-  onBrowserRestoreSessionChange(event) {
-    const value = event.target.checked;
-    const startupPref = Preferences.get("browser.startup.page");
-    let newValue;
-
-    if (value) {
-      // We need to restore the blank homepage setting in our other pref
-      if (startupPref.value === this.STARTUP_PREF_BLANK) {
-        HomePage.safeSet("about:blank");
-      }
-      newValue = this.STARTUP_PREF_RESTORE_SESSION;
-    } else {
-      newValue = this.STARTUP_PREF_HOMEPAGE;
-    }
-    startupPref.value = newValue;
   },
 
   async onWindowsLaunchOnLoginChange(event) {
