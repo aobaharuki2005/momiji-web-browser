@@ -353,52 +353,49 @@ bool NativeLayerRootCA::AreOffMainThreadCommitsSuspended() {
 }
 
 bool NativeLayerRootCA::CommitToScreen() {
-  {
-    MutexAutoLock lock(mMutex);
+  MutexAutoLock lock(mMutex);
 
-    if (!NS_IsMainThread() && mOffMainThreadCommitsSuspended) {
-      mCommitPending = true;
-      return false;
+  if (!NS_IsMainThread() && mOffMainThreadCommitsSuspended) {
+    mCommitPending = true;
+    return false;
+  }
+
+  CommitRepresentation(WhichRepresentation::ONSCREEN, mOnscreenRootCALayer,
+                       mSublayers, mMutatedOnscreenLayerStructure,
+                       mWindowIsFullscreen);
+  mMutatedOnscreenLayerStructure = false;
+
+  mCommitPending = false;
+
+  if (StaticPrefs::gfx_webrender_debug_dump_native_layer_tree_to_file()) {
+    static uint32_t sFrameID = 0;
+    uint32_t frameID = sFrameID++;
+
+    NSString* dirPath =
+        [NSString stringWithFormat:@"%@/Desktop/nativelayerdumps-%d",
+                                   NSHomeDirectory(), getpid()];
+    if ([NSFileManager.defaultManager createDirectoryAtPath:dirPath
+                                withIntermediateDirectories:YES
+                                                 attributes:nil
+                                                      error:nullptr]) {
+      NSString* filename =
+          [NSString stringWithFormat:@"frame-%d.html", frameID];
+      NSString* filePath = [dirPath stringByAppendingPathComponent:filename];
+      DumpLayerTreeToFile([filePath UTF8String], lock);
+    } else {
+      NSLog(@"Failed to create directory %@", dirPath);
     }
+  }
 
-    CommitRepresentation(WhichRepresentation::ONSCREEN, mOnscreenRootCALayer,
-                         mSublayers, mMutatedOnscreenLayerStructure,
-                         mWindowIsFullscreen);
-    mMutatedOnscreenLayerStructure = false;
-
-    mCommitPending = false;
-
-    if (StaticPrefs::gfx_webrender_debug_dump_native_layer_tree_to_file()) {
-      static uint32_t sFrameID = 0;
-      uint32_t frameID = sFrameID++;
-
-      NSString* dirPath =
-          [NSString stringWithFormat:@"%@/Desktop/nativelayerdumps-%d",
-                                     NSHomeDirectory(), getpid()];
-      if ([NSFileManager.defaultManager createDirectoryAtPath:dirPath
-                                  withIntermediateDirectories:YES
-                                                   attributes:nil
-                                                        error:nullptr]) {
-        NSString* filename =
-            [NSString stringWithFormat:@"frame-%d.html", frameID];
-        NSString* filePath = [dirPath stringByAppendingPathComponent:filename];
-        DumpLayerTreeToFile([filePath UTF8String], lock);
-      } else {
-        NSLog(@"Failed to create directory %@", dirPath);
-      }
-    }
-
-    // Decide if we are going to emit telemetry about video low power on this
-    // commit.
-    static const int32_t TELEMETRY_COMMIT_PERIOD =
-        StaticPrefs::gfx_core_animation_low_power_telemetry_frames_AtStartup();
-    mTelemetryCommitCount =
-        (mTelemetryCommitCount + 1) % TELEMETRY_COMMIT_PERIOD;
-    if (mTelemetryCommitCount == 0) {
-      // Figure out if we are hitting video low power mode.
-      VideoLowPowerType videoLowPower = CheckVideoLowPower(lock);
-      EmitTelemetryForVideoLowPower(videoLowPower);
-    }
+  // Decide if we are going to emit telemetry about video low power on this
+  // commit.
+  static const int32_t TELEMETRY_COMMIT_PERIOD =
+      StaticPrefs::gfx_core_animation_low_power_telemetry_frames_AtStartup();
+  mTelemetryCommitCount = (mTelemetryCommitCount + 1) % TELEMETRY_COMMIT_PERIOD;
+  if (mTelemetryCommitCount == 0) {
+    // Figure out if we are hitting video low power mode.
+    VideoLowPowerType videoLowPower = CheckVideoLowPower(lock);
+    EmitTelemetryForVideoLowPower(videoLowPower);
   }
 
   return true;
