@@ -8475,9 +8475,13 @@ void nsCSSFrameConstructor::RecreateFramesForContent(
   MOZ_ASSERT(aContent->GetParentNode());
   const bool didReconstruct =
       ContentWillBeRemoved(aContent, REMOVE_FOR_RECONSTRUCTION);
-
-  if (!didReconstruct) {
-    if (aInsertionKind == InsertionKind::Async && aContent->IsElement()) {
+  if (didReconstruct) {
+    // If ContentWillBeRemoved triggered reconstruction, then we don't need to
+    // do anything else because the frames will already have been built.
+    return;
+  }
+  if (aContent->IsElement()) {
+    if (aInsertionKind == InsertionKind::Async) {
       // FIXME(emilio, bug 1397239): There's nothing removing the frame state
       // for elements that go away before we come back to the frame
       // constructor.
@@ -8487,14 +8491,16 @@ void nsCSSFrameConstructor::RecreateFramesForContent(
       // construction to apply to all elements first.
       RestyleManager()->PostRestyleEvent(aContent->AsElement(), RestyleHint{0},
                                          nsChangeHint_ReconstructFrame);
-    } else {
-      // Now, recreate the frames associated with this content object. If
-      // ContentWillBeRemoved triggered reconstruction, then we don't need to do
-      // this because the frames will already have been built.
-      ContentRangeInserted(aContent, aContent->GetNextSibling(),
-                           aInsertionKind);
+      return;
+    }
+    // If we're display: none, there's no point on trying to find an insertion
+    // point, we're done.
+    if (Servo_Element_IsDisplayNone(aContent->AsElement())) {
+      return;
     }
   }
+  // Now, recreate the frames associated with this content object.
+  ContentRangeInserted(aContent, aContent->GetNextSibling(), aInsertionKind);
 }
 
 bool nsCSSFrameConstructor::DestroyFramesFor(nsIContent* aContent) {
