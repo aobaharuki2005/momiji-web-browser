@@ -15,6 +15,7 @@ import androidx.core.view.ViewCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.INPUT_UNHANDLED
 import mozilla.components.concept.engine.InputResultDetail
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.support.test.any
@@ -50,7 +51,7 @@ class EngineViewScrollingBehaviorTest {
             type = ViewCompat.TYPE_TOUCH,
         )
         assertFalse(acceptsNestedScroll)
-        verify(behavior, never()).startNestedScroll(anyInt(), anyInt())
+        verify(behavior, never()).startNestedScroll(anyInt(), anyInt(), any())
 
         behavior.dynamicScrollView = mock()
         acceptsNestedScroll = behavior.onStartNestedScroll(
@@ -62,7 +63,7 @@ class EngineViewScrollingBehaviorTest {
             type = ViewCompat.TYPE_TOUCH,
         )
         assertTrue(acceptsNestedScroll)
-        verify(behavior).startNestedScroll(anyInt(), anyInt())
+        verify(behavior).startNestedScroll(anyInt(), anyInt(), any())
     }
 
     @Test
@@ -75,6 +76,7 @@ class EngineViewScrollingBehaviorTest {
         val acceptsNestedScroll = behavior.startNestedScroll(
             axes = ViewCompat.SCROLL_AXIS_VERTICAL,
             type = ViewCompat.TYPE_TOUCH,
+            view = mock(),
         )
 
         assertTrue(acceptsNestedScroll)
@@ -89,12 +91,14 @@ class EngineViewScrollingBehaviorTest {
         var acceptsNestedScroll = behavior.startNestedScroll(
             axes = ViewCompat.SCROLL_AXIS_VERTICAL,
             type = ViewCompat.TYPE_TOUCH,
+            view = mock(),
         )
         assertTrue(acceptsNestedScroll)
 
         acceptsNestedScroll = behavior.startNestedScroll(
             axes = ViewCompat.SCROLL_AXIS_HORIZONTAL,
             type = ViewCompat.TYPE_TOUCH,
+            view = mock(),
         )
         assertFalse(acceptsNestedScroll)
     }
@@ -114,6 +118,7 @@ class EngineViewScrollingBehaviorTest {
         val acceptsNestedScroll = behavior.startNestedScroll(
             axes = ViewCompat.SCROLL_AXIS_VERTICAL,
             type = ViewCompat.TYPE_TOUCH,
+            view = mock(),
         )
 
         verify(yTranslator).cancelInProgressTranslation()
@@ -165,7 +170,7 @@ class EngineViewScrollingBehaviorTest {
             type = inputType,
         )
 
-        verify(behavior).startNestedScroll(axes, inputType)
+        verify(behavior).startNestedScroll(axes, inputType, view)
     }
 
     @Test
@@ -465,6 +470,32 @@ class EngineViewScrollingBehaviorTest {
         behavior.forceCollapse(view)
 
         verify(yTranslator).collapseWithAnimation(view)
+    }
+
+    @Test
+    fun `Behavior will forceExpand when scrolling up and !shouldScroll if the touch was handled in the browser`() {
+        val behavior = spy(EngineViewScrollingBehavior(testContext, null, ViewPosition.BOTTOM))
+        val yTranslator: ViewYTranslator = mock()
+        behavior.yTranslator = yTranslator
+        behavior.initGesturesDetector(behavior.createGestureDetector())
+        val view: View = spy(View(testContext, null, 0))
+        behavior.dynamicScrollView = view
+        val engineView: EngineView = mock()
+        behavior.engineView = engineView
+        val handledTouchInput = InputResultDetail.newInstance().copy(INPUT_UNHANDLED)
+        doReturn(handledTouchInput).`when`(engineView).getInputResultDetail()
+
+        doReturn(100).`when`(view).height
+        doReturn(100f).`when`(view).translationY
+
+        val downEvent = TestUtils.getMotionEvent(ACTION_DOWN, 0f, 0f)
+        val moveEvent = TestUtils.getMotionEvent(ACTION_MOVE, 0f, 30f, downEvent)
+
+        behavior.onInterceptTouchEvent(mock(), mock(), downEvent)
+        behavior.onInterceptTouchEvent(mock(), mock(), moveEvent)
+
+        verify(behavior).tryToScrollVertically(-30f)
+        verify(yTranslator).forceExpandIfNotAlready(view, -30f)
     }
 
     @Test

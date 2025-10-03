@@ -96,7 +96,7 @@ class EngineViewScrollingBehavior(
         type: Int,
     ): Boolean {
         return if (dynamicScrollView != null) {
-            startNestedScroll(axes, type)
+            startNestedScroll(axes, type, child)
         } else {
             return false // not interested in subsequent scroll events
         }
@@ -172,6 +172,12 @@ class EngineViewScrollingBehavior(
         dynamicScrollView?.let { view ->
             if (shouldScroll && startedScroll) {
                 yTranslator.translate(view, distance)
+            } else if (engineView?.getInputResultDetail()?.isTouchHandlingUnknown() == false) {
+                // Force expand the view if the user scrolled up, it is not already expanded and
+                // an animation to expand it is not already in progress,
+                // otherwise the user could get stuck in a state where they cannot show the view
+                // See https://github.com/mozilla-mobile/android-components/issues/7101
+                yTranslator.forceExpandIfNotAlready(view, distance)
             }
         }
     }
@@ -204,12 +210,18 @@ class EngineViewScrollingBehavior(
         )
 
     @VisibleForTesting
-    internal fun startNestedScroll(axes: Int, type: Int): Boolean {
+    internal fun startNestedScroll(axes: Int, type: Int, view: View): Boolean {
         return if (shouldScroll && axes == ViewCompat.SCROLL_AXIS_VERTICAL) {
             startedScroll = true
             shouldSnapAfterScroll = type == ViewCompat.TYPE_TOUCH
             yTranslator.cancelInProgressTranslation()
             true
+        } else if (engineView?.getInputResultDetail()?.isTouchUnhandled() == true) {
+            // Force expand the view if event is unhandled, otherwise user could get stuck in a
+            // state where they cannot show the view
+            yTranslator.cancelInProgressTranslation()
+            yTranslator.expandWithAnimation(view)
+            false
         } else {
             false
         }
