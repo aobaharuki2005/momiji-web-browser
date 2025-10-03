@@ -13053,7 +13053,7 @@ function Lists({
   }, /*#__PURE__*/external_React_default().createElement("moz-reorderable-list", {
     ref: reorderListRef,
     itemSelector: "fieldset .task-type-tasks",
-    dragSelector: ".checkbox-wrapper"
+    dragSelector: ".checkbox-wrapper:has(.task-label)"
   }, /*#__PURE__*/external_React_default().createElement("fieldset", null, selectedList?.tasks.length >= 1 && selectedList.tasks.map((task, index) => /*#__PURE__*/external_React_default().createElement(ListItem, {
     type: TASK_TYPE.IN_PROGRESS,
     task: task,
@@ -13171,7 +13171,8 @@ function ListItem({
     key: task.id,
     onTransitionEnd: handleTransitionEnd
   }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: "checkbox-wrapper"
+    className: "checkbox-wrapper",
+    key: isEditing
   }, /*#__PURE__*/external_React_default().createElement("input", {
     type: "checkbox",
     onChange: handleCheckboxChange,

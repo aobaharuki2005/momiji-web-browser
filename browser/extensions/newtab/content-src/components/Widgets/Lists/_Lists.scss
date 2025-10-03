@@ -195,6 +195,7 @@
       max-width: 180px;
       border: none;
       border-radius: 0;
+      user-select: text;
 
       &:focus {
         outline: var(--focus-outline);

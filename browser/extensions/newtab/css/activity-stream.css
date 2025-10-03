@@ -4595,6 +4595,7 @@ dialog::after {
   max-width: 180px;
   border: none;
   border-radius: 0;
+  user-select: text;
 }
 .lists .task-item .edit-task:focus {
   outline: var(--focus-outline);
