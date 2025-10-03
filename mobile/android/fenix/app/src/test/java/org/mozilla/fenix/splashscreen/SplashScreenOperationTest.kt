@@ -215,7 +215,8 @@ class SplashScreenOperationTest {
         override val context: Context
             get() = testContext
 
-        override var globalUserParticipation: Boolean = true
+        override var experimentParticipation: Boolean = true
+        override var rolloutParticipation: Boolean = true
     }
 
     private fun buildStorage(
