@@ -1337,6 +1337,11 @@ bool ModuleLoaderBase::OnLoadRequestedModulesRejected(
     JSContext* aCx, ModuleLoadRequest* aRequest, Handle<Value> error) {
   ModuleScript* moduleScript = aRequest->mModuleScript;
 
+  if (aRequest->IsCanceled()) {
+    aRequest->Release();
+    return true;
+  }
+
   // TODO, Bug 1990416: Align the loading descendants behavior of dynamic import
   if (aRequest->IsDynamicImport()) {
     LOG(
