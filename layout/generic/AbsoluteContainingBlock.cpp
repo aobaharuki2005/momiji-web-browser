@@ -835,6 +835,25 @@ void AbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
   }
 }
 
+struct MOZ_STACK_CLASS MOZ_RAII AutoFallbackStyleSetter {
+  AutoFallbackStyleSetter(nsIFrame* aFrame, ComputedStyle* aFallbackStyle)
+      : mFrame(aFrame) {
+    if (aFallbackStyle) {
+      mOldStyle = aFrame->SetComputedStyleWithoutNotification(aFallbackStyle);
+    }
+  }
+
+  ~AutoFallbackStyleSetter() {
+    if (mOldStyle) {
+      mFrame->SetComputedStyleWithoutNotification(std::move(mOldStyle));
+    }
+  }
+
+ private:
+  nsIFrame* const mFrame;
+  RefPtr<ComputedStyle> mOldStyle;
+};
+
 // XXX Optimize the case where it's a resize reflow and the absolutely
 // positioned child has the exact same size and position and skip the
 // reflow...
@@ -872,43 +891,20 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
 #endif  // DEBUG
 
   const bool isGrid = aFlags.contains(AbsPosReflowFlag::IsGridContainerCB);
-  const auto* stylePos = aKidFrame->StylePosition();
   // TODO(bug 1989059): position-try-order.
-  auto fallbacks = stylePos->mPositionTryFallbacks._0.AsSpan();
+  auto fallbacks = aKidFrame->StylePosition()->mPositionTryFallbacks._0.AsSpan();
   Maybe<uint32_t> currentFallbackIndex;
-  // TODO(emilio): Right now fallback only applies to position-area, which only
-  // makes a difference with a default anchor... Generalize it?
-  if (aAnchorPosReferenceData) {
-    bool found = false;
-    uint32_t index = aKidFrame->GetProperty(
-        nsIFrame::LastSuccessfulPositionFallback(), &found);
-    if (found) {
-      if (index >= fallbacks.Length()) {
-        // This should not happen, because we remove the frame property if the
-        // fallback list changes.
-        MOZ_ASSERT_UNREACHABLE("invalid LastSuccessfulPositionFallback");
-        aKidFrame->RemoveProperty(nsIFrame::LastSuccessfulPositionFallback());
-      } else {
-        currentFallbackIndex.emplace(index);
-      }
-    }
-  }
   const StylePositionTryFallbacksItem* currentFallback = nullptr;
   RefPtr<ComputedStyle> currentFallbackStyle;
 
-  auto TryAdvanceFallback = [&]() -> bool {
-    if (fallbacks.IsEmpty()) {
-      return false;
-    }
-    uint32_t nextFallbackIndex =
-        currentFallbackIndex ? *currentFallbackIndex + 1 : 0;
-    if (nextFallbackIndex >= fallbacks.Length()) {
+  auto SeekFallbackTo = [&](uint32_t aIndex) -> bool {
+    if (aIndex >= fallbacks.Length()) {
       return false;
     }
     const StylePositionTryFallbacksItem* nextFallback;
     RefPtr<ComputedStyle> nextFallbackStyle;
     while (true) {
-      nextFallback = &fallbacks[nextFallbackIndex];
+      nextFallback = &fallbacks[aIndex];
       if (nextFallback->IsIdentAndOrTactic()) {
         auto* ident = nextFallback->AsIdentAndOrTactic().ident.AsAtom();
         if (!ident->IsEmpty()) {
@@ -918,8 +914,8 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
           if (!nextFallbackStyle) {
             // No @position-try rule for this name was found, per spec we should
             // skip it.
-            nextFallbackIndex++;
-            if (nextFallbackIndex >= fallbacks.Length()) {
+            aIndex++;
+            if (aIndex >= fallbacks.Length()) {
               return false;
             }
           }
@@ -927,27 +923,45 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       }
       break;
     }
-    currentFallbackIndex = Some(nextFallbackIndex);
+    currentFallbackIndex = Some(aIndex);
     currentFallback = nextFallback;
     currentFallbackStyle = std::move(nextFallbackStyle);
     return true;
   };
 
+  auto TryAdvanceFallback = [&]() -> bool {
+    if (fallbacks.IsEmpty()) {
+      return false;
+    }
+    uint32_t nextFallbackIndex =
+        currentFallbackIndex ? *currentFallbackIndex + 1 : 0;
+    return SeekFallbackTo(nextFallbackIndex);
+  };
+
+  // TODO(emilio): Right now fallback only applies to position-area, which only
+  // makes a difference with a default anchor... Generalize it?
+  if (aAnchorPosReferenceData) {
+    bool found = false;
+    uint32_t index = aKidFrame->GetProperty(
+        nsIFrame::LastSuccessfulPositionFallback(), &found);
+    if (found && !SeekFallbackTo(index)) {
+      aKidFrame->RemoveProperty(nsIFrame::LastSuccessfulPositionFallback());
+    }
+  }
+
   do {
+    AutoFallbackStyleSetter fallback(aKidFrame, currentFallbackStyle);
     const nsRect usedCb = [&] {
       if (isGrid) {
         // TODO(emilio): how does position-area interact with grid?
         return nsGridContainerFrame::GridItemCB(aKidFrame);
       }
 
-      auto positionArea = stylePos->mPositionArea;
+      auto positionArea = aKidFrame->StylePosition()->mPositionArea;
       const StylePositionTryFallbacksTryTactic* tactic = nullptr;
       if (currentFallback) {
         if (currentFallback->IsIdentAndOrTactic()) {
           const auto& item = currentFallback->AsIdentAndOrTactic();
-          if (currentFallbackStyle) {
-            positionArea = currentFallbackStyle->StylePosition()->mPositionArea;
-          }
           tactic = &item.try_tactic;
         } else {
           MOZ_ASSERT(currentFallback->IsPositionArea());

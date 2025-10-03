@@ -957,15 +957,16 @@ class nsIFrame : public nsQueryFrame {
   }
 
   /**
-   * SetComputedStyleWithoutNotification is for changes to the style
-   * context that should suppress style change processing, in other
-   * words, those that aren't really changes.  This generally means only
-   * changes that happen during frame construction.
+   * SetComputedStyleWithoutNotification is for changes to the style that should
+   * suppress style change processing, in other words, those that aren't really
+   * changes. This generally means only changes that happen during frame
+   * construction, or those that get handled out of band, like @position-try
+   * fallback.
+   * @return the old style.
    */
-  void SetComputedStyleWithoutNotification(ComputedStyle* aStyle) {
-    if (aStyle != mComputedStyle) {
-      mComputedStyle = aStyle;
-    }
+  RefPtr<ComputedStyle> SetComputedStyleWithoutNotification(
+      RefPtr<ComputedStyle> aStyle) {
+    return std::exchange(mComputedStyle, std::move(aStyle));
   }
 
  protected:
