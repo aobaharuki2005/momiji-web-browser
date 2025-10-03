@@ -53,9 +53,8 @@ ModuleLoadRequest::ModuleLoadRequest(
     ModuleLoadRequest* aRootModule)
     : ScriptLoadRequest(ScriptKind::eModule, aURI, aReferrerPolicy,
                         aFetchOptions, aIntegrity, aReferrer, aContext),
-      mIsTopLevel(aKind == Kind::TopLevel || aKind == Kind::DynamicImport),
+      mKind(aKind),
       mModuleType(aModuleType),
-      mIsDynamicImport(aKind == Kind::DynamicImport),
       mLoader(aLoader),
       mRootModule(aRootModule) {
   MOZ_ASSERT(mLoader);
@@ -168,7 +167,7 @@ void ModuleLoadRequest::ModuleErrored() {
 
 void ModuleLoadRequest::LoadFinished() {
   RefPtr<ModuleLoadRequest> request(this);
-  if (IsTopLevel() && IsDynamicImport()) {
+  if (IsDynamicImport()) {
     mLoader->RemoveDynamicImport(request);
   }
 

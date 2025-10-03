@@ -251,7 +251,7 @@ AddModuleThrowErrorRunnable::Run() {
 }
 
 void WorkletModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
-  if (!aRequest->IsTopLevel()) {
+  if (aRequest->IsStaticImport()) {
     return;
   }
 
