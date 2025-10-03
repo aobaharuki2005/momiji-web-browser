@@ -17,6 +17,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const FULL_PAGE_URL = "chrome://browser/content/genai/smartAssistPage.html";
 
+/**
+ * A custom element for managing the smart assistant sidebar.
+ */
 export class SmartAssist extends MozLitElement {
   static properties = {
     userPrompt: { type: String },
@@ -102,6 +105,9 @@ export class SmartAssist extends MozLitElement {
 
   /**
    * Mock Functionality to open full page UX
+   *
+   * @param {boolean} enable
+   *   Whether or not to override the new tab page.
    */
   _applyNewTabOverride(enable) {
     try {

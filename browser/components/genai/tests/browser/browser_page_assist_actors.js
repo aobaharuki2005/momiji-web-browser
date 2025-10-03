@@ -28,6 +28,7 @@ const TEST_LINK_URL_EN =
 /**
  * Helpers
  */
+
 function getPageAssistParentActor(browser) {
   return browser.browsingContext.currentWindowGlobal.getActor("PageAssist");
 }

@@ -16,6 +16,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 import MozInputText from "chrome://global/content/elements/moz-input-text.mjs";
 
+/**
+ * A custom element for managing the page assistant input.
+ */
 export class PageAssistInput extends MozInputText {
   static properties = {
     class: { type: String, reflect: true },
@@ -45,6 +48,9 @@ export class PageAssistInput extends MozInputText {
 }
 customElements.define("page-assists-input", PageAssistInput);
 
+/**
+ * A custom element for managing the page assistant sidebar.
+ */
 export class PageAssist extends MozLitElement {
   _progressListener = null;
   _onTabSelect = null;

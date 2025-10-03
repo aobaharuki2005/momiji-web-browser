@@ -470,10 +470,6 @@ export default [
       // Bug 1991124 - Re-enable for these files which regressed whilst
       // require-jsdoc was accidentally not enabled.
       "browser/components/backup/tests/xpcshell/test_PreferencesBackupResource.js",
-      "browser/components/genai/PageAssistChild.sys.mjs",
-      "browser/components/genai/content/page-assist.mjs",
-      "browser/components/genai/content/smart-assist.mjs",
-      "browser/components/genai/tests/browser/browser_page_assist_actors.js",
       "browser/components/mozcachedohttp/MozCachedOHTTPProtocolHandler.sys.mjs",
       "browser/components/security/unexpectedScriptLoad.js",
       "browser/components/webrtc/content/webrtc-preview/webrtc-preview.mjs",

@@ -8,6 +8,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Readerable: "resource://gre/modules/Readerable.sys.mjs",
 });
 
+/**
+ * Represents a child actor for getting page data from the browser.
+ */
 export class PageAssistChild extends JSWindowActorChild {
   async receiveMessage(message) {
     switch (message.name) {
