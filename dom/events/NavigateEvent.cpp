@@ -230,6 +230,9 @@ void NavigateEvent::InitNavigateEvent(const NavigateEventInit& aEventInitDict) {
   mInfo = aEventInitDict.mInfo;
   mHasUAVisualTransition = aEventInitDict.mHasUAVisualTransition;
   mSourceElement = aEventInitDict.mSourceElement;
+  if (RefPtr document = GetDocument()) {
+    mLastScrollGeneration = document->LastScrollGeneration();
+  }
 }
 
 void NavigateEvent::SetCanIntercept(bool aCanIntercept) {
@@ -412,8 +415,12 @@ static void ScrollToBeginningOfDocument(Document& aDocument) {
 }
 
 // https://html.spec.whatwg.org/#restore-scroll-position-data
-static void RestoreScrollPositionData(Document* aDocument) {
-  if (!aDocument || aDocument->HasBeenScrolled()) {
+static void RestoreScrollPositionData(Document* aDocument,
+                                      const uint32_t& aLastScrollGeneration) {
+  // 1. Let document be entry's document.
+  // 2. If document's has been scrolled by the user is true, then the user agent
+  // should return.
+  if (!aDocument || aDocument->HasBeenScrolledSince(aLastScrollGeneration)) {
     return;
   }
 
@@ -433,7 +440,7 @@ void NavigateEvent::ProcessScrollBehavior() {
   if (mNavigationType == NavigationType::Traverse ||
       mNavigationType == NavigationType::Reload) {
     RefPtr<Document> document = GetDocument();
-    RestoreScrollPositionData(document);
+    RestoreScrollPositionData(document, mLastScrollGeneration);
     return;
   }
 

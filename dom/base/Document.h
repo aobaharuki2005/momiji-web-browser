@@ -2724,12 +2724,13 @@ class Document : public nsINode,
   }
 
   /*
-   * Return if this document ever has been scrolled.
-   * We'd like this to be
-   * https://html.spec.whatwg.org/#has-been-scrolled-by-the-user, but better to
-   * check for any scroll than no scroll.
+   * Return if this document has been scrolled since the given last scroll
+   * generation.
+   *
+   * Similar to: https://html.spec.whatwg.org/#has-been-scrolled-by-the-user.
    */
-  bool HasBeenScrolled() const;
+  bool HasBeenScrolledSince(const uint32_t& aLastScrollGeneration) const;
+  uint32_t LastScrollGeneration() const;
 
   /**
    * Returns whether this document should perform image loads.

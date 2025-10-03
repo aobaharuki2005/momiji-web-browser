@@ -13435,13 +13435,17 @@ bool Document::IsActive() const {
          !GetBrowsingContext()->IsInBFCache();
 }
 
-bool Document::HasBeenScrolled() const {
-  nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(GetInnerWindow());
-  if (!window) {
-    return false;
+uint32_t Document::LastScrollGeneration() const {
+  if (nsPresContext* pc = GetPresContext()) {
+    pc->LastScrollGeneration();
   }
-  if (ScrollContainerFrame* frame = window->GetScrollContainerFrame()) {
-    return frame->HasBeenScrolled();
+
+  return 0;
+}
+
+bool Document::HasBeenScrolledSince(const uint32_t& aLastScrollGeneration) const {
+  if (nsPresContext* pc = GetPresContext()) {
+    pc->HasBeenScrolledSince(aLastScrollGeneration);
   }
 
   return false;

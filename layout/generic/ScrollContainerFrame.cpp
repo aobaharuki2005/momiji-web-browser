@@ -2688,6 +2688,12 @@ void ScrollContainerFrame::MarkEverScrolled() {
   // will return true from now on and MarkNotRecentlyScrolled() won't
   // have any effect.
   mHasBeenScrolled = true;
+
+  // PresContext should update the last scroll generation, for
+  // NavigateEvents to determine if the root scroller has moved.
+  if (mIsRoot) {
+    PresContext()->UpdateLastScrollGeneration();
+  }
 }
 
 void ScrollContainerFrame::MarkNotRecentlyScrolled() {
