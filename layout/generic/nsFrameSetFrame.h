@@ -176,9 +176,9 @@ class nsHTMLFramesetFrame final : public nsContainerFrame {
   nsHTMLFramesetFrame* mTopLevelFrameset;
   nsTArray<nsHTMLFramesetBorderFrame*> mVerBorders;  // vertical borders
   nsTArray<nsHTMLFramesetBorderFrame*> mHorBorders;  // horizontal borders
-  UniquePtr<nsFrameborder[]>
+  nsTArray<nsFrameborder>
       mChildFrameborder;  // the frameborder attr of children
-  UniquePtr<nsBorderColor[]> mChildBorderColors;
+  nsTArray<nsBorderColor> mChildBorderColors;
   nsTArray<nscoord> mRowSizes;  // currently computed row sizes
   nsTArray<nscoord> mColSizes;  // currently computed col sizes
   mozilla::LayoutDeviceIntPoint mFirstDragPoint;
@@ -188,6 +188,9 @@ class nsHTMLFramesetFrame final : public nsContainerFrame {
   int32_t mNonBlankChildCount;
   int32_t mEdgeVisibility;
   nsFrameborder mParentFrameborder;
+  // If this is true, then we've been Init()'d, but haven't been reflowed, so
+  // there's some extra work to do in the first reflow.
+  bool mNeedFirstReflowWork = false;
   nscolor mParentBorderColor;
   int32_t mParentBorderWidth;
   int32_t mPrevNeighborOrigSize;  // used during resize

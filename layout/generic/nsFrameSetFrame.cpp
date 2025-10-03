@@ -255,8 +255,11 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   static_assert(NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(nsBorderColor) /
                                                  NS_MAX_FRAMESET_SPEC_COUNT,
                 "Should not overflow numCells");
-  mChildFrameborder = MakeUnique<nsFrameborder[]>(numCells);
-  mChildBorderColors = MakeUnique<nsBorderColor[]>(numCells);
+  mNeedFirstReflowWork = true;
+  mChildFrameborder.Clear();
+  mChildFrameborder.SetLength(numCells);
+  mChildBorderColors.Clear();
+  mChildBorderColors.SetLength(numCells);
 
   // create the children frames; skip content which isn't <frameset> or <frame>
   mChildCount = 0;  // number of <frame> or <frameset> children
@@ -782,9 +785,12 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
   // that's allowed.  (Though it will only happen for misuse of frameset
   // that includes it within other content.)  So measure firstTime by
   // what we care about, which is whether we've processed the data we
-  // process below if firstTime is true.
-  MOZ_ASSERT(!mChildFrameborder == !mChildBorderColors);
-  bool firstTime = !!mChildFrameborder;
+  // process below if firstTime is true. We can't assert that IsEmpty()
+  // is the same for the 2 child arrays, because they can also end up
+  // empty in Init() if they hit an error state.
+  MOZ_ASSERT_IF(!mChildFrameborder.IsEmpty(), mNeedFirstReflowWork);
+  MOZ_ASSERT_IF(!mChildBorderColors.IsEmpty(), mNeedFirstReflowWork);
+  bool firstTime = mNeedFirstReflowWork;
 
   // subtract out the width of all of the potential borders. There are
   // only borders between <frame>s. There are none on the edges (e.g the
@@ -1043,8 +1049,9 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
       }
     }
 
-    mChildFrameborder.reset();
-    mChildBorderColors.reset();
+    mNeedFirstReflowWork = false;
+    mChildFrameborder.Clear();
+    mChildBorderColors.Clear();
   }
 
   mDrag.UnSet();
