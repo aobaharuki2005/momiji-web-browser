@@ -459,7 +459,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void Navigate(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv,
                 NavigationHistoryBehavior aHistoryHandling =
                     NavigationHistoryBehavior::Auto,
-                bool aNeedsCompletelyLoadedDocument = false);
+                bool aShouldNotForceReplaceInOnLoad = false);
 
   // Removes the root document for this BrowsingContext tree from the BFCache,
   // if it is cached, and returns true if it was.
