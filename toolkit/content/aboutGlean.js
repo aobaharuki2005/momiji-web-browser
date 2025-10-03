@@ -104,19 +104,34 @@ function camelToKebab(str) {
 // a use-case for sending it via about:glean.
 const GLEAN_BUILTIN_PINGS = ["metrics", "events", "baseline"];
 const NO_PING = "(don't submit any ping)";
-function refillPingNames() {
-  let select = document.getElementById("ping-names");
-  let pings = GLEAN_BUILTIN_PINGS.slice().concat(Object.keys(GleanPings));
 
-  pings.forEach(ping => {
-    let option = document.createElement("option");
-    option.textContent = camelToKebab(ping);
-    select.appendChild(option);
+function refillPingNames() {
+  const builtInGroup = document.getElementById("builtin-pings");
+  const customGroup = document.getElementById("custom-pings");
+
+  // Add built-in ping options to the dropdown.
+  GLEAN_BUILTIN_PINGS.forEach(id => {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = camelToKebab(id);
+    builtInGroup.appendChild(option);
   });
-  let option = document.createElement("option");
-  document.l10n.setAttributes(option, "about-glean-no-ping-label");
-  option.value = NO_PING;
-  select.appendChild(option);
+
+  // Add "(don't submit any ping)" as last built-in option in the dropdown.
+  const noPingOption = document.createElement("option");
+  noPingOption.value = NO_PING;
+  document.l10n.setAttributes(noPingOption, "about-glean-no-ping-label");
+  builtInGroup.appendChild(noPingOption);
+
+  // Add alpha sorted custom ping options to the dropdown.
+  Object.keys(GleanPings)
+    .map(id => ({ id, label: camelToKebab(id) }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+    .forEach(({ label }) => {
+      const option = document.createElement("option");
+      option.textContent = label;
+      customGroup.appendChild(option);
+    });
 }
 
 // If there's been a previous tag, use it.

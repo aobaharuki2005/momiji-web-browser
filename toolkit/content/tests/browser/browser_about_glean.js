@@ -376,3 +376,74 @@ add_task(async function test_about_glean_event_timeline() {
     });
   });
 });
+
+add_task(async function test_about_glean_ping_groups_and_none_label() {
+  await BrowserTestUtils.withNewTab("about:glean", async browser => {
+    await ContentTask.spawn(browser, null, async function () {
+      const { TestUtils } = ChromeUtils.importESModule(
+        "resource://testing-common/TestUtils.sys.mjs"
+      );
+      const { Assert } = ChromeUtils.importESModule(
+        "resource://testing-common/Assert.sys.mjs"
+      );
+
+      // Wait for the select and optgroups to exist and be populated.
+      await TestUtils.waitForCondition(() => {
+        const doc = content.document;
+        const select = doc.getElementById("ping-names");
+        const builtin = doc.getElementById("builtin-pings");
+        const custom = doc.getElementById("custom-pings");
+        return select && builtin && custom && builtin.children.length >= 1;
+      }, "Wait for ping select to be populated");
+
+      const doc = content.document;
+      const builtin = doc.getElementById("builtin-pings");
+      const custom = doc.getElementById("custom-pings");
+
+      // Built-in group should contain metrics/events/baseline and end with the localized 'none' option.
+      const builtinOptions = Array.from(builtin.children);
+      Assert.strictEqual(
+        builtinOptions.length,
+        4,
+        "Built-in group has 4 options (incl. none)"
+      );
+
+      Assert.equal(
+        builtinOptions[0].textContent,
+        "metrics",
+        "Built-ins include 'metrics'"
+      );
+
+      Assert.equal(
+        builtinOptions[1].textContent,
+        "events",
+        "Built-ins include 'events'"
+      );
+
+      Assert.equal(
+        builtinOptions[2].textContent,
+        "baseline",
+        "Built-ins include 'baseline'"
+      );
+
+      // Note - We're checking the value instead of textContent
+      // for the last built in option, as textContent may be localized.
+      Assert.equal(
+        builtinOptions[3].value,
+        "(don't submit any ping)",
+        "Built-ins include '(don't submit any ping)'"
+      );
+
+      // Custom group should be alphabetically sorted by displayed label.
+      const customLabels = Array.from(custom.children).map(o => o.textContent);
+      if (customLabels.length >= 2) {
+        const sorted = customLabels.slice().sort((a, b) => a.localeCompare(b));
+        Assert.deepEqual(
+          customLabels,
+          sorted,
+          "Custom ping options are alphabetically sorted"
+        );
+      }
+    });
+  });
+});

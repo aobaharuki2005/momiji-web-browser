@@ -64,6 +64,15 @@ about-glean-manual-testing =
   and in the <a data-l10n-name="glean-sdk-doc-link">{ glean-sdk-brand-name } documentation</a>,
   but, in short, to manually test that your instrumentation works, you should:
 
+## These labels are displayed to organize the different ping types within the dropdown.
+
+about-glean-ping-list-optgroup-built-in =
+  .label = Built-in Pings
+about-glean-ping-list-optgroup-custom =
+  .label = Custom Pings
+
+##
+
 # This message is an option in a dropdown filled with untranslated names of pings.
 about-glean-no-ping-label = (don’t submit any ping)
 # An in-line text input field precedes this string.
