@@ -79,34 +79,6 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(
     TextControlElement, nsGenericHTMLFormControlElementWithState)
 
 /*static*/
-bool TextControlElement::GetWrapPropertyEnum(
-    nsIContent* aContent, TextControlElement::nsHTMLTextWrap& aWrapProp) {
-  // soft is the default; "physical" defaults to soft as well because all other
-  // browsers treat it that way and there is no real reason to maintain physical
-  // and virtual as separate entities if no one else does.  Only hard and off
-  // do anything different.
-  aWrapProp = eHTMLTextWrap_Soft;  // the default
-
-  if (!aContent->IsHTMLElement()) {
-    return false;
-  }
-
-  static mozilla::dom::Element::AttrValuesArray strings[] = {
-      nsGkAtoms::HARD, nsGkAtoms::OFF, nullptr};
-  switch (aContent->AsElement()->FindAttrValueIn(
-      kNameSpaceID_None, nsGkAtoms::wrap, strings, eIgnoreCase)) {
-    case 0:
-      aWrapProp = eHTMLTextWrap_Hard;
-      break;
-    case 1:
-      aWrapProp = eHTMLTextWrap_Off;
-      break;
-  }
-
-  return true;
-}
-
-/*static*/
 already_AddRefed<TextControlElement>
 TextControlElement::GetTextControlElementFromEditingHost(nsIContent* aHost) {
   if (!aHost) {
@@ -1613,7 +1585,7 @@ nsresult TextControlState::BindToFrame(nsTextControlFrame* aFrame) {
   // binding to the frame.
   nsAutoString currentValue;
   if (mTextEditor) {
-    GetValue(currentValue, true, /* aForDisplay = */ false);
+    GetValue(currentValue, /* aForDisplay = */ false);
   }
 
   mBoundFrame = aFrame;
@@ -1781,7 +1753,7 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
   if (aValue) {
     defaultValue = *aValue;
   } else {
-    GetValue(defaultValue, true, /* aForDisplay = */ true);
+    GetValue(defaultValue, /* aForDisplay = */ true);
   }
 
   if (!mEditorInitialized) {
@@ -2099,7 +2071,7 @@ void TextControlState::SetSelectionRange(uint32_t aStart, uint32_t aEnd,
   if (!props.HasMaxLength()) {
     // A clone without a dirty value flag may not have a max length yet
     nsAutoString value;
-    GetValue(value, false, /* aForDisplay = */ true);
+    GetValue(value, /* aForDisplay = */ true);
     props.SetMaxLength(value.Length());
   }
 
@@ -2388,7 +2360,7 @@ void TextControlState::UnbindFromFrame(nsTextControlFrame* aFrame) {
   // We need to start storing the value outside of the editor if we're not
   // going to use it anymore, so retrieve it for now.
   nsAutoString value;
-  GetValue(value, true, /* aForDisplay = */ false);
+  GetValue(value, /* aForDisplay = */ false);
 
   if (mRestoringSelection) {
     mRestoringSelection->Revoke();
@@ -2489,8 +2461,7 @@ void TextControlState::UnbindFromFrame(nsTextControlFrame* aFrame) {
   }
 }
 
-void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap,
-                                bool aForDisplay) const {
+void TextControlState::GetValue(nsAString& aValue, bool aForDisplay) const {
   // While SetValue() is being called and requesting to commit composition to
   // IME, GetValue() may be called for appending text or something.  Then, we
   // need to return the latest aValue of SetValue() since the value hasn't
@@ -2507,7 +2478,7 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap,
 
   if (mTextEditor && mBoundFrame &&
       (mEditorInitialized || !IsSingleLineTextControl())) {
-    if (aIgnoreWrap && !mBoundFrame->CachedValue().IsVoid()) {
+    if (!mBoundFrame->CachedValue().IsVoid()) {
       aValue = mBoundFrame->CachedValue();
       MOZ_ASSERT(aValue.FindChar(u'\r') == -1);
       return;
@@ -2515,19 +2486,10 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap,
 
     aValue.Truncate();  // initialize out param
 
-    uint32_t flags = (nsIDocumentEncoder::OutputLFLineBreak |
-                      nsIDocumentEncoder::OutputPreformatted |
-                      nsIDocumentEncoder::OutputPersistNBSP |
-                      nsIDocumentEncoder::OutputBodyOnly);
-    if (!aIgnoreWrap) {
-      TextControlElement::nsHTMLTextWrap wrapProp;
-      if (mTextCtrlElement &&
-          TextControlElement::GetWrapPropertyEnum(mTextCtrlElement, wrapProp) &&
-          wrapProp == TextControlElement::eHTMLTextWrap_Hard) {
-        flags |= nsIDocumentEncoder::OutputWrap;
-      }
-    }
-
+    uint32_t flags = nsIDocumentEncoder::OutputLFLineBreak |
+                     nsIDocumentEncoder::OutputPreformatted |
+                     nsIDocumentEncoder::OutputPersistNBSP |
+                     nsIDocumentEncoder::OutputBodyOnly;
     // What follows is a bit of a hack.  The problem is that we could be in
     // this method because we're being destroyed for whatever reason while
     // script is executing.  If that happens, editor will run with the
@@ -2540,22 +2502,13 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap,
     // XXXbz if we could just get the textContent of our anonymous content (eg
     // if plaintext editor didn't create <br> nodes all over), we wouldn't need
     // this.
-    // XXX If mTextEditor has not been initialized yet, ComputeTextValue()
-    // anyway returns empty string. Is this always expected here?
     if (mEditorInitialized) {
       AutoNoJSAPI nojsapi;
-
       DebugOnly<nsresult> rv = mTextEditor->ComputeTextValue(flags, aValue);
       MOZ_ASSERT(aValue.FindChar(u'\r') == -1);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to get value");
     }
-    // Only when the result doesn't include line breaks caused by hard-wrap,
-    // mCacheValue should cache the value.
-    if (!(flags & nsIDocumentEncoder::OutputWrap)) {
-      mBoundFrame->CacheValue(aValue);
-    } else {
-      mBoundFrame->ClearCachedValue();
-    }
+    mBoundFrame->CacheValue(aValue);
   } else if (!mTextCtrlElement->ValueChanged() || mValue.IsVoid()) {
     // Use nsString to avoid copying string buffer at setting aValue.
     nsString value;
@@ -2571,7 +2524,7 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap,
 
 bool TextControlState::ValueEquals(const nsAString& aValue) const {
   nsAutoString value;
-  GetValue(value, true, /* aForDisplay = */ true);
+  GetValue(value, /* aForDisplay = */ true);
   return aValue.Equals(value);
 }
 
@@ -2634,8 +2587,7 @@ bool TextControlState::SetValue(const nsAString& aValue,
     // away.
     if (auto* input = HTMLInputElement::FromNode(mTextCtrlElement)) {
       if (input->LastValueChangeWasInteractive()) {
-        GetValue(mLastInteractiveValue, /* aIgnoreWrap = */ true,
-                 /* aForDisplay = */ true);
+        GetValue(mLastInteractiveValue, /* aForDisplay = */ true);
       }
     }
   }

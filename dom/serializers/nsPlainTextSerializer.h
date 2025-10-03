@@ -79,6 +79,9 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   NS_IMETHOD ForgetElementForPreformat(
       mozilla::dom::Element* aElement) override;
 
+  static void HardWrapString(nsAString& aString, uint32_t aWrapCols,
+                             int32_t flags);
+
  private:
   ~nsPlainTextSerializer();
 
@@ -87,9 +90,12 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
   void MaybeWrapAndOutputCompleteLines();
 
-  // @param aSoftLineBreak A soft line break is a space followed by a linebreak
-  // (cf. https://www.ietf.org/rfc/rfc3676.txt, section 4.2).
-  void EndLine(bool aSoftLineBreak, bool aBreakBySpace = false);
+  void EndHardBreakLine();
+  void ResetStateAfterLine() {
+    mInWhitespace = true;
+    mLineBreakDue = false;
+    mFloatingLines = -1;
+  }
 
   void EnsureVerticalSpace(int32_t noOfRows);
 
@@ -305,6 +311,12 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
     nsString mLineBreak;
   };
+
+  static void PerformWrapAndOutputCompleteLines(
+      const Settings& aSettings, CurrentLine& aLine, OutputManager& aOutput,
+      bool aUseLineBreaker, nsPlainTextSerializer* aSerializer);
+  static void AppendLineToOutput(const Settings& aSettings, CurrentLine& aLine,
+                                 OutputManager& aOutput);
 
   mozilla::Maybe<OutputManager> mOutputManager;
 
