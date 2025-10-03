@@ -276,6 +276,80 @@ class NativeLayerRootSnapshotterCA final : public NativeLayerRootSnapshotter {
 };
 #endif
 
+// Wraps one CALayer representation of NativeLayerCA.
+struct NativeLayerCARepresentation {
+  using UpdateType = NativeLayerCAUpdateType;
+
+  NativeLayerCARepresentation();
+  ~NativeLayerCARepresentation();
+
+  // Returns null if the layer is currently completely clipped out.
+  CALayer* UnderlyingCALayer() {
+    return mWrappingCALayerHasExtent ? mWrappingCALayer : nullptr;
+  }
+
+  bool EnqueueSurface(IOSurfaceRef aSurfaceRef);
+
+  // Applies buffered changes to the native CALayers. The contract with the
+  // caller is as follows: If any of these values have changed since the last
+  // call to ApplyChanges, mMutated[Field] needs to have been set to true
+  // before the call. If aUpdate is not All, then a partial update will be
+  // applied. In such a case, ApplyChanges may not make any changes that
+  // require a CATransacation, because no transaction will be created. In a
+  // a partial update, the return value will indicate if all the needed
+  // changes were able to be applied under these restrictions. A false return
+  // value indicates an All update is necessary.
+  bool ApplyChanges(NativeLayerCAUpdateType aUpdate, const gfx::IntSize& aSize,
+                    bool aIsOpaque, const gfx::IntPoint& aPosition,
+                    const gfx::Matrix4x4& aTransform,
+                    const gfx::IntRect& aDisplayRect,
+                    const Maybe<gfx::IntRect>& aClipRect,
+                    const Maybe<gfx::RoundedRect>& aRoundedClip,
+                    float aBackingScale, bool aSurfaceIsFlipped,
+                    gfx::SamplingFilter aSamplingFilter, bool aSpecializeVideo,
+                    CFTypeRefPtr<IOSurfaceRef> aFrontSurface,
+                    CFTypeRefPtr<CGColorRef> aColor, bool aIsDRM,
+                    bool aIsVideo);
+
+  // Return whether any aspects of this layer representation have been mutated
+  // since the last call to ApplyChanges, i.e. whether ApplyChanges needs to
+  // be called.
+  // This is used to optimize away a CATransaction commit if no layers have
+  // changed.
+  NativeLayerCAUpdateType HasUpdate(bool aIsVideo);
+
+  // Lazily initialized by first call to ApplyChanges. mWrappingLayer is the
+  // layer that applies the intersection of mDisplayRect and mClipRect (if
+  // set), and mContentCALayer is the layer that hosts the IOSurface. We do
+  // not share clip layers between consecutive NativeLayerCA objects with the
+  // same clip rect.
+  CALayer* mWrappingCALayer = nullptr;      // strong
+  CALayer* mRoundedClipCALayer = nullptr;   // strong
+  CALayer* mContentCALayer = nullptr;       // strong
+  CALayer* mOpaquenessTintLayer = nullptr;  // strong
+
+#ifdef NIGHTLY_BUILD
+  bool mLogNextVideoSurface = false;
+#endif
+
+  bool mWrappingCALayerHasExtent : 1;
+
+  // These are all initialized to true by the constructor.
+  bool mMutatedPosition : 1;
+  bool mMutatedTransform : 1;
+  bool mMutatedDisplayRect : 1;
+  bool mMutatedClipRect : 1;
+  bool mMutatedRoundedClipRect : 1;
+  bool mMutatedBackingScale : 1;
+  bool mMutatedSize : 1;
+  bool mMutatedSurfaceIsFlipped : 1;
+  bool mMutatedFrontSurface : 1;
+  bool mMutatedSamplingFilter : 1;
+  bool mMutatedSpecializeVideo : 1;
+  bool mMutatedIsDRM : 1;
+  // Don't forget to update the constructor when you add a field here.
+};
+
 // NativeLayerCA wraps a CALayer and lets you draw to it. It ensures that only
 // fully-drawn frames make their way to the screen, by maintaining a swap chain
 // of IOSurfaces.
@@ -330,8 +404,10 @@ class NativeLayerCA : public NativeLayer {
 
  protected:
   friend class NativeLayerRootCA;
+  friend struct NativeLayerCARepresentation;
   using UpdateType = NativeLayerCAUpdateType;
   using WhichRepresentation = NativeLayerRootCA::WhichRepresentation;
+  using Representation = NativeLayerCARepresentation;
 
   NativeLayerCA(const gfx::IntSize& aSize, bool aIsOpaque,
                 SurfacePoolHandleCA* aSurfacePoolHandle);
@@ -377,75 +453,6 @@ class NativeLayerCA : public NativeLayer {
       const gfx::IntSize& aSize, const gfx::IntPoint& aPosition,
       const gfx::Matrix4x4& aTransform, const gfx::IntRect& aDisplayRect,
       const Maybe<gfx::IntRect>& aClipRect, float aBackingScale);
-
-  // Wraps one CALayer representation of this NativeLayer.
-  struct Representation {
-    Representation();
-    ~Representation();
-
-    // Returns null if the layer is currently completely clipped out.
-    CALayer* UnderlyingCALayer() {
-      return mWrappingCALayerHasExtent ? mWrappingCALayer : nullptr;
-    }
-
-    bool EnqueueSurface(IOSurfaceRef aSurfaceRef);
-
-    // Applies buffered changes to the native CALayers. The contract with the
-    // caller is as follows: If any of these values have changed since the last
-    // call to ApplyChanges, mMutated[Field] needs to have been set to true
-    // before the call. If aUpdate is not All, then a partial update will be
-    // applied. In such a case, ApplyChanges may not make any changes that
-    // require a CATransacation, because no transaction will be created. In a
-    // a partial update, the return value will indicate if all the needed
-    // changes were able to be applied under these restrictions. A false return
-    // value indicates an All update is necessary.
-    bool ApplyChanges(
-        UpdateType aUpdate, const gfx::IntSize& aSize, bool aIsOpaque,
-        const gfx::IntPoint& aPosition, const gfx::Matrix4x4& aTransform,
-        const gfx::IntRect& aDisplayRect, const Maybe<gfx::IntRect>& aClipRect,
-        const Maybe<gfx::RoundedRect>& aRoundedClip, float aBackingScale,
-        bool aSurfaceIsFlipped, gfx::SamplingFilter aSamplingFilter,
-        bool aSpecializeVideo, CFTypeRefPtr<IOSurfaceRef> aFrontSurface,
-        CFTypeRefPtr<CGColorRef> aColor, bool aIsDRM, bool aIsVideo);
-
-    // Return whether any aspects of this layer representation have been mutated
-    // since the last call to ApplyChanges, i.e. whether ApplyChanges needs to
-    // be called.
-    // This is used to optimize away a CATransaction commit if no layers have
-    // changed.
-    UpdateType HasUpdate(bool aIsVideo);
-
-    // Lazily initialized by first call to ApplyChanges. mWrappingLayer is the
-    // layer that applies the intersection of mDisplayRect and mClipRect (if
-    // set), and mContentCALayer is the layer that hosts the IOSurface. We do
-    // not share clip layers between consecutive NativeLayerCA objects with the
-    // same clip rect.
-    CALayer* mWrappingCALayer = nullptr;      // strong
-    CALayer* mRoundedClipCALayer = nullptr;   // strong
-    CALayer* mContentCALayer = nullptr;       // strong
-    CALayer* mOpaquenessTintLayer = nullptr;  // strong
-
-#ifdef NIGHTLY_BUILD
-    bool mLogNextVideoSurface = false;
-#endif
-
-    bool mWrappingCALayerHasExtent : 1;
-
-    // These are all initialized to true by the constructor.
-    bool mMutatedPosition : 1;
-    bool mMutatedTransform : 1;
-    bool mMutatedDisplayRect : 1;
-    bool mMutatedClipRect : 1;
-    bool mMutatedRoundedClipRect : 1;
-    bool mMutatedBackingScale : 1;
-    bool mMutatedSize : 1;
-    bool mMutatedSurfaceIsFlipped : 1;
-    bool mMutatedFrontSurface : 1;
-    bool mMutatedSamplingFilter : 1;
-    bool mMutatedSpecializeVideo : 1;
-    bool mMutatedIsDRM : 1;
-    // Don't forget to update the constructor when you add a field here.
-  };
 
   Representation& GetRepresentation(WhichRepresentation aRepresentation);
   template <typename F>
