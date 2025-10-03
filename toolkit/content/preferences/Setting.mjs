@@ -31,6 +31,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * @typedef {Record<string, Setting | undefined>} PreferenceSettingDepsMap
  */
 
+/**
+ * @typedef {string | boolean | number} SettingValue
+ */
+
 export class Setting extends EventEmitter {
   /**
    * @type {Preference | undefined | null}
@@ -122,7 +126,7 @@ export class Setting extends EventEmitter {
   }
 
   /**
-   * @type {string | undefined}
+   * @type {SettingValue}
    */
   get value() {
     let prefVal = this.pref?.value;
@@ -133,7 +137,7 @@ export class Setting extends EventEmitter {
   }
 
   /**
-   * @param {string} val
+   * @param {SettingValue} val
    */
   set value(val) {
     let newVal = this.config.set ? this.config.set(val, this.deps, this) : val;

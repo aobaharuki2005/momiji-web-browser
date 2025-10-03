@@ -142,8 +142,11 @@ always-check-default =
     .label = Always check if { -brand-short-name } is your default browser
     .accesskey = y
 
-is-default = { -brand-short-name } is currently your default browser
-is-not-default = { -brand-short-name } is not your default browser
+is-default-browser =
+    .message = { -brand-short-name } is currently your default browser
+
+is-not-default-browser =
+    .message = { -brand-short-name } is not your default browser
 
 set-as-my-default-browser =
     .label = Make Default…

@@ -261,7 +261,6 @@ export class SettingControl extends MozLitElement {
   getControlPropertyMapping(config) {
     const props = this.getCommonPropertyMapping(config);
     props[".parentDisabled"] = this.parentDisabled;
-    props[".control"] = this;
     props["?disabled"] =
       this.setting.disabled ||
       this.setting.locked ||

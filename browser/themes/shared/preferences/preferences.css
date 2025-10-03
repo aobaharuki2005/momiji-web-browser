@@ -250,16 +250,6 @@ radio {
 
 /* General Pane */
 
-.is-default > #isNotDefaultPane,
-:not(.is-default) > #isDefaultPane {
-  visibility: hidden;
-}
-
-#isDefaultLabel,
-#isNotDefaultLabel {
-  font-weight: var(--font-weight-bold);
-}
-
 /* stylelint-disable-next-line media-query-no-invalid */
 @media not -moz-pref("browser.migrate.preferences-entrypoint.enabled") {
   #dataMigrationGroup {

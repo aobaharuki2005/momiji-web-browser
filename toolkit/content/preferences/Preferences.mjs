@@ -75,6 +75,8 @@ import { Setting } from "chrome://global/content/preferences/Setting.mjs";
 /**
  * @callback PreferencesSettingConfigOnUserClickFunction
  * @param {Event} event
+ * @param {PreferenceSettingDepsMap} deps
+ * @param {Setting} setting
  * @returns {void}
  */
 
