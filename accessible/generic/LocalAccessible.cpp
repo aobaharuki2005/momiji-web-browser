@@ -2030,19 +2030,6 @@ role LocalAccessible::ARIATransformRole(role aRole) const {
   return aRole;
 }
 
-role LocalAccessible::GetMinimumRole(role aRole) const {
-  if (aRole != roles::TEXT && aRole != roles::TEXT_CONTAINER &&
-      aRole != roles::SECTION) {
-    // This isn't a generic role, so aRole is specific enough.
-    return aRole;
-  }
-  dom::Element* el = Elm();
-  if (el && el->IsHTMLElement() && el->HasAttr(nsGkAtoms::popover)) {
-    return roles::GROUPING;
-  }
-  return aRole;
-}
-
 role LocalAccessible::NativeRole() const { return roles::NOTHING; }
 
 uint8_t LocalAccessible::ActionCount() const {
@@ -2725,6 +2712,11 @@ void LocalAccessible::ScrollToPoint(uint32_t aCoordinateType, int32_t aX,
 bool LocalAccessible::IsScrollable() const {
   const auto [scrollPosition, scrollRange] = mDoc->ComputeScrollData(this);
   return scrollRange.width > 0 || scrollRange.height > 0;
+}
+
+bool LocalAccessible::IsPopover() const {
+  dom::Element* el = Elm();
+  return el && el->IsHTMLElement() && el->HasAttr(nsGkAtoms::popover);
 }
 
 void LocalAccessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,

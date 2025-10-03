@@ -1557,6 +1557,10 @@ bool RemoteAccessible::IsScrollable() const {
   return mCachedFields && mCachedFields->HasAttribute(CacheKey::ScrollPosition);
 }
 
+bool RemoteAccessible::IsPopover() const {
+  return mCachedFields && mCachedFields->HasAttribute(CacheKey::PopupType);
+}
+
 #if !defined(XP_WIN)
 void RemoteAccessible::Announce(const nsString& aAnnouncement,
                                 uint16_t aPriority) {

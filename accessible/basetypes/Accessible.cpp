@@ -139,6 +139,19 @@ bool Accessible::HasStrongARIARole() const {
   return roleMapEntry && roleMapEntry->roleRule == kUseMapRole;
 }
 
+role Accessible::GetMinimumRole(role aRole) const {
+  if (aRole != roles::TEXT && aRole != roles::TEXT_CONTAINER &&
+      aRole != roles::SECTION) {
+    // This isn't a generic role, so aRole is specific enough.
+    return aRole;
+  }
+
+  if (IsPopover()) {
+    return roles::GROUPING;
+  }
+  return aRole;
+}
+
 bool Accessible::HasGenericType(AccGenericType aType) const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   return (mGenericTypes & aType) ||

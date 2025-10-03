@@ -651,6 +651,8 @@ class Accessible {
 
   bool IsProgress() const { return mType == eProgressType; }
 
+  virtual bool IsPopover() const = 0;
+
   bool IsRoot() const { return mType == eRootType; }
 
   bool IsPassword() const { return mType == eHTMLTextPasswordFieldType; }
@@ -816,6 +818,12 @@ class Accessible {
    * LocalAccessible and RemoteAccessible.
    */
   void ApplyImplicitState(uint64_t& aState) const;
+
+  /**
+   * Return the minimum role that should be used as a last resort if the element
+   * does not have a more specific role.
+   */
+  mozilla::a11y::role GetMinimumRole(mozilla::a11y::role aRole) const;
 
  private:
   static const uint8_t kTypeBits = 6;

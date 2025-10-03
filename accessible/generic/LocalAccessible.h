@@ -432,6 +432,8 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   virtual bool IsScrollable() const override;
 
+  virtual bool IsPopover() const override;
+
   /**
    * Get a pointer to accessibility interface for this node, which is specific
    * to the OS/accessibility toolkit we're running on.
@@ -864,12 +866,6 @@ class LocalAccessible : public nsISupports, public Accessible {
    * Return ARIA role (helper method).
    */
   mozilla::a11y::role ARIATransformRole(mozilla::a11y::role aRole) const;
-
-  /**
-   * Return the minimum role that should be used as a last resort if the element
-   * does not have a more specific role.
-   */
-  mozilla::a11y::role GetMinimumRole(mozilla::a11y::role aRole) const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Name helpers
