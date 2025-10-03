@@ -150,6 +150,9 @@ for (const type of [
   "DISCOVERY_STREAM_RETRY_FEED",
   "DISCOVERY_STREAM_SPOCS_CAPS",
   "DISCOVERY_STREAM_SPOCS_ENDPOINT",
+  "DISCOVERY_STREAM_SPOCS_ONDEMAND_LOAD",
+  "DISCOVERY_STREAM_SPOCS_ONDEMAND_RESET",
+  "DISCOVERY_STREAM_SPOCS_ONDEMAND_UPDATE",
   "DISCOVERY_STREAM_SPOCS_PLACEMENTS",
   "DISCOVERY_STREAM_SPOCS_UPDATE",
   "DISCOVERY_STREAM_SPOC_BLOCKED",
@@ -5382,7 +5385,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
     const cards = [];
     for (let index = 0; index < items; index++) {
       const rec = recs[index];
-      cards.push(topicsLoading || !rec || rec.placeholder || rec.flight_id && !spocsStartupCacheEnabled && this.props.App.isForStartupCache.DiscoveryStream ? /*#__PURE__*/external_React_default().createElement(PlaceholderDSCard, {
+      cards.push(topicsLoading || this.props.placeholder || !rec || rec.placeholder || rec.flight_id && !spocsStartupCacheEnabled && this.props.App.isForStartupCache.DiscoveryStream ? /*#__PURE__*/external_React_default().createElement(PlaceholderDSCard, {
         key: `dscard-${index}`
       }) : /*#__PURE__*/external_React_default().createElement(DSCard, {
         key: `dscard-${rec.id}`,
@@ -7406,6 +7409,11 @@ const INITIAL_STATE = {
     spocs: {
       spocs_endpoint: "",
       lastUpdated: null,
+      cacheUpdateTime: null,
+      onDemand: {
+        enabled: false,
+        loaded: false,
+      },
       data: {
         // "spocs": {title: "", context: "", items: [], personalized: false},
         // "placement1": {title: "", context: "", items: [], personalized: false},
@@ -8140,13 +8148,49 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
       };
     case actionTypes.DISCOVERY_STREAM_SPOCS_UPDATE:
       if (action.data) {
+        // If spocs have been loaded on this tab, we can ignore future updates.
+        // This should never be true on the main store, only content pages.
+        if (prevState.spocs.onDemand.loaded) {
+          return prevState;
+        }
         return {
           ...prevState,
           spocs: {
             ...prevState.spocs,
             lastUpdated: action.data.lastUpdated,
             data: action.data.spocs,
+            cacheUpdateTime: action.data.spocsCacheUpdateTime,
+            onDemand: {
+              enabled: action.data.spocsOnDemand,
+              loaded: false,
+            },
             loaded: true,
+          },
+        };
+      }
+      return prevState;
+    case actionTypes.DISCOVERY_STREAM_SPOCS_ONDEMAND_LOAD:
+      return {
+        ...prevState,
+        spocs: {
+          ...prevState.spocs,
+          onDemand: {
+            ...prevState.spocs.onDemand,
+            loaded: true,
+          },
+        },
+      };
+    case actionTypes.DISCOVERY_STREAM_SPOCS_ONDEMAND_RESET:
+      if (action.data) {
+        return {
+          ...prevState,
+          spocs: {
+            ...prevState.spocs,
+            cacheUpdateTime: action.data.spocsCacheUpdateTime,
+            onDemand: {
+              ...prevState.spocs.onDemand,
+              enabled: action.data.spocsOnDemand,
+            },
           },
         };
       }
@@ -12135,7 +12179,8 @@ function CardSection({
   ctaButtonVariant,
   ctaButtonSponsors,
   anySectionsFollowed,
-  showWeather
+  showWeather,
+  placeholder
 }) {
   const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
   const {
@@ -12229,9 +12274,14 @@ function CardSection({
       }
     }));
   }, [dispatch, sectionPersonalization, sectionKey, sectionPosition]);
-  const {
+  let {
     maxTile
   } = getMaxTiles(responsiveLayouts);
+  if (placeholder) {
+    // We need a number that divides evenly by 2, 3, and 4.
+    // So it can be displayed without orphans in grids with 2, 3, and 4 columns.
+    maxTile = 12;
+  }
   const displaySections = section.data.slice(0, maxTile);
   const isSectionEmpty = !displaySections?.length;
   const shouldShowLabels = sectionKey === "top_stories_section" && showTopics;
@@ -12310,7 +12360,7 @@ function CardSection({
     // 1. No recommendation is available.
     // 2. The item is flagged as a placeholder.
     // 3. Spocs are loading for with spocs startup cache disabled.
-    if (!rec || rec.placeholder || rec.flight_id && !spocsStartupCacheEnabled && isForStartupCache.DiscoveryStream) {
+    if (!rec || rec.placeholder || placeholder || rec.flight_id && !spocsStartupCacheEnabled && isForStartupCache.DiscoveryStream) {
       return /*#__PURE__*/external_React_default().createElement(PlaceholderDSCard, {
         key: `dscard-${index}`
       });
@@ -12377,7 +12427,8 @@ function CardSections({
   type,
   firstVisibleTimestamp,
   ctaButtonVariant,
-  ctaButtonSponsors
+  ctaButtonSponsors,
+  placeholder
 }) {
   const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
   const {
@@ -12404,7 +12455,20 @@ function CardSections({
 
   // Used to determine if we should show FollowSectionButtonHighlight
   const anySectionsFollowed = sectionPersonalization && Object.values(sectionPersonalization).some(section => section?.isFollowed);
-  let filteredSections = data.sections.filter(section => !sectionPersonalization[section.sectionKey]?.isBlocked);
+  let sectionsData = data.sections;
+  if (placeholder) {
+    // To clean up the placeholder state for sections if the whole section is loading still.
+    sectionsData = [{
+      ...sectionsData[0],
+      title: "",
+      subtitle: ""
+    }, {
+      ...sectionsData[1],
+      title: "",
+      subtitle: ""
+    }];
+  }
+  let filteredSections = sectionsData.filter(section => !sectionPersonalization[section.sectionKey]?.isBlocked);
   if (interestPickerEnabled && visibleSections.length) {
     filteredSections = visibleSections.reduce((acc, visibleSection) => {
       const found = filteredSections.find(({
@@ -12426,6 +12490,7 @@ function CardSections({
     ctaButtonVariant: ctaButtonVariant,
     ctaButtonSponsors: ctaButtonSponsors,
     anySectionsFollowed: anySectionsFollowed,
+    placeholder: placeholder,
     showWeather: weatherEnabled && weatherPlacement === "section" && sectionPosition === 0 && section.sectionKey === dailyBriefSectionId
   }));
 
@@ -14064,7 +14129,8 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
               type: component.type,
               firstVisibleTimestamp: this.props.firstVisibleTimestamp,
               ctaButtonSponsors: component.properties.ctaButtonSponsors,
-              ctaButtonVariant: component.properties.ctaButtonVariant
+              ctaButtonVariant: component.properties.ctaButtonVariant,
+              placeholder: this.props.placeholder
             });
           }
           return /*#__PURE__*/external_React_default().createElement(CardGrid, {
@@ -14083,7 +14149,8 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
             ctaButtonVariant: component.properties.ctaButtonVariant,
             hideDescriptions: this.props.DiscoveryStream.hideDescriptions,
             firstVisibleTimestamp: this.props.firstVisibleTimestamp,
-            spocPositions: component.spocs?.positions
+            spocPositions: component.spocs?.positions,
+            placeholder: this.props.placeholder
           });
         }
       case "HorizontalRule":
@@ -16384,7 +16451,8 @@ class BaseContent extends (external_React_default()).PureComponent {
       colorMode: "",
       fixedNavStyle: {},
       wallpaperTheme: "",
-      showDownloadHighlightOverride: null
+      showDownloadHighlightOverride: null,
+      visible: false
     };
   }
   setFirstVisibleTimestamp() {
@@ -16395,8 +16463,63 @@ class BaseContent extends (external_React_default()).PureComponent {
     }
   }
   onVisible() {
+    this.setState({
+      visible: true
+    });
     this.setFirstVisibleTimestamp();
     this.shouldDisplayTopicSelectionModal();
+    this.onVisibilityDispatch();
+  }
+  onVisibilityDispatch() {
+    const {
+      onDemand = {}
+    } = this.props.DiscoveryStream.spocs;
+
+    // We only need to dispatch this if:
+    // 1. onDemand is enabled,
+    // 2. onDemand spocs have not been loaded on this tab.
+    // 3. Spocs are expired.
+    if (onDemand.enabled && !onDemand.loaded && this.isSpocsOnDemandExpired) {
+      // This dispatches that spocs are expired and we need to update them.
+      this.props.dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.DISCOVERY_STREAM_SPOCS_ONDEMAND_UPDATE
+      }));
+    }
+  }
+  get isSpocsOnDemandExpired() {
+    const {
+      onDemand = {},
+      cacheUpdateTime,
+      lastUpdated
+    } = this.props.DiscoveryStream.spocs;
+
+    // We can bail early if:
+    // 1. onDemand is off,
+    // 2. onDemand spocs have been loaded on this tab.
+    if (!onDemand.enabled || onDemand.loaded) {
+      return false;
+    }
+    return Date.now() - lastUpdated >= cacheUpdateTime;
+  }
+  spocsOnDemandUpdated() {
+    const {
+      onDemand = {},
+      loaded
+    } = this.props.DiscoveryStream.spocs;
+
+    // We only need to fire this if:
+    // 1. Spoc data is loaded.
+    // 2. onDemand is enabled.
+    // 3. The component is visible (not preloaded tab).
+    // 4. onDemand spocs have not been loaded on this tab.
+    // 5. Spocs are not expired.
+    if (loaded && onDemand.enabled && this.state.visible && !onDemand.loaded && !this.isSpocsOnDemandExpired) {
+      // This dispatches that spocs have been loaded on this tab
+      // and we don't need to update them again for this tab.
+      this.props.dispatch(actionCreators.BroadcastToContent({
+        type: actionTypes.DISCOVERY_STREAM_SPOCS_ONDEMAND_LOAD
+      }));
+    }
   }
   componentDidMount() {
     this.applyBodyClasses();
@@ -16472,6 +16595,7 @@ class BaseContent extends (external_React_default()).PureComponent {
         this.updateWallpaper();
       }
     }
+    this.spocsOnDemandUpdated();
   }
   handleColorModeChange() {
     const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
@@ -16903,7 +17027,8 @@ class BaseContent extends (external_React_default()).PureComponent {
       className: "borderless-error"
     }, /*#__PURE__*/external_React_default().createElement(DiscoveryStreamBase, {
       locale: props.App.locale,
-      firstVisibleTimestamp: this.state.firstVisibleTimestamp
+      firstVisibleTimestamp: this.state.firstVisibleTimestamp,
+      placeholder: this.isSpocsOnDemandExpired
     })) : /*#__PURE__*/external_React_default().createElement(Sections_Sections, null)), /*#__PURE__*/external_React_default().createElement(ConfirmDialog, null), wallpapersEnabled && this.renderWallpaperAttribution()), /*#__PURE__*/external_React_default().createElement("aside", null, this.props.Notifications?.showNotifications && /*#__PURE__*/external_React_default().createElement(ErrorBoundary, null, /*#__PURE__*/external_React_default().createElement(Notifications_Notifications, {
       dispatch: this.props.dispatch
     }))), mayShowTopicSelection && pocketEnabled && /*#__PURE__*/external_React_default().createElement(TopicSelection, {

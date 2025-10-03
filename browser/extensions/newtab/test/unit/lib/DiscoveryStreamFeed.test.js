@@ -821,7 +821,12 @@ describe("DiscoveryStreamFeed", () => {
       await feed.loadSpocs(feed.store.dispatch);
 
       assert.notCalled(global.fetch);
-      assert.calledWith(feed.cache.set, "spocs", { lastUpdated: 0, spocs: {} });
+      assert.calledWith(feed.cache.set, "spocs", {
+        lastUpdated: 0,
+        spocs: {},
+        spocsOnDemand: undefined,
+        spocsCacheUpdateTime: 30 * 60 * 1000,
+      });
     });
     it("should fetch fresh spocs data if cache is empty", async () => {
       sandbox.stub(feed.cache, "get").returns(Promise.resolve());
@@ -833,6 +838,8 @@ describe("DiscoveryStreamFeed", () => {
       assert.calledWith(feed.cache.set, "spocs", {
         spocs: { placement: "data" },
         lastUpdated: 0,
+        spocsOnDemand: undefined,
+        spocsCacheUpdateTime: 30 * 60 * 1000,
       });
       assert.equal(
         feed.store.getState().DiscoveryStream.spocs.data.placement,
@@ -898,6 +905,8 @@ describe("DiscoveryStreamFeed", () => {
           },
         },
         lastUpdated: loadTimestamp,
+        spocsOnDemand: undefined,
+        spocsCacheUpdateTime: 30 * 60 * 1000,
       });
 
       assert.deepEqual(
@@ -2231,6 +2240,11 @@ describe("DiscoveryStreamFeed", () => {
             data,
           },
         },
+        Prefs: {
+          values: {
+            trainhopConfig: {},
+          },
+        },
       });
     });
 
@@ -2364,6 +2378,10 @@ describe("DiscoveryStreamFeed", () => {
     });
     it("should call dispatch if found a blocked spoc", async () => {
       Object.defineProperty(feed, "showSpocs", { get: () => true });
+      Object.defineProperty(feed, "spocsOnDemand", { get: () => false });
+      Object.defineProperty(feed, "spocsCacheUpdateTime", {
+        get: () => 30 * 60 * 1000,
+      });
 
       sandbox.spy(feed.store, "dispatch");
 
@@ -2394,6 +2412,10 @@ describe("DiscoveryStreamFeed", () => {
     });
     it("should dispatch a DISCOVERY_STREAM_SPOC_BLOCKED for a blocked spoc", async () => {
       Object.defineProperty(feed, "showSpocs", { get: () => true });
+      Object.defineProperty(feed, "spocsOnDemand", { get: () => false });
+      Object.defineProperty(feed, "spocsCacheUpdateTime", {
+        get: () => 30 * 60 * 1000,
+      });
       sandbox.spy(feed.store, "dispatch");
 
       await feed.onAction({
@@ -2679,7 +2701,10 @@ describe("DiscoveryStreamFeed", () => {
       sandbox.stub(feed, "refreshAll").resolves();
 
       await feed.onAction({ type: at.SYSTEM_TICK });
-      assert.calledWith(feed.refreshAll, { updateOpenTabs: false });
+      assert.calledWith(feed.refreshAll, {
+        updateOpenTabs: false,
+        isSystemTick: true,
+      });
     });
   });
 
@@ -2811,6 +2836,7 @@ describe("DiscoveryStreamFeed", () => {
       assert.equal(cacheTime, defaultCacheTime);
     });
     it("should set _spocsCacheUpdateTime with spocsCacheTimeout", () => {
+      const defaultCacheTime = 20 * 60 * 1000;
       feed.store.getState = () => ({
         Prefs: {
           values: {
@@ -2819,8 +2845,50 @@ describe("DiscoveryStreamFeed", () => {
         },
       });
       const cacheTime = feed.spocsCacheUpdateTime;
-      assert.equal(feed._spocsCacheUpdateTime, 20 * 60 * 1000);
-      assert.equal(cacheTime, 20 * 60 * 1000);
+      assert.equal(feed._spocsCacheUpdateTime, defaultCacheTime);
+      assert.equal(cacheTime, defaultCacheTime);
+    });
+    it("should set _spocsCacheUpdateTime with spocsCacheTimeout and onDemand", () => {
+      const defaultCacheTime = 4 * 60 * 1000;
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "discoverystream.spocs.onDemand": true,
+            "discoverystream.spocs.cacheTimeout": 4,
+          },
+        },
+      });
+      const cacheTime = feed.spocsCacheUpdateTime;
+      assert.equal(feed._spocsCacheUpdateTime, defaultCacheTime);
+      assert.equal(cacheTime, defaultCacheTime);
+    });
+    it("should set _spocsCacheUpdateTime with spocsCacheTimeout without max", () => {
+      const defaultCacheTime = 31 * 60 * 1000;
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "discoverystream.spocs.onDemand": true,
+            "discoverystream.spocs.cacheTimeout": 31,
+          },
+        },
+      });
+      const cacheTime = feed.spocsCacheUpdateTime;
+      assert.equal(feed._spocsCacheUpdateTime, defaultCacheTime);
+      assert.equal(cacheTime, defaultCacheTime);
+    });
+    it("should set _spocsCacheUpdateTime with spocsCacheTimeout without min", () => {
+      const defaultCacheTime = 1 * 60 * 1000;
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "discoverystream.spocs.onDemand": true,
+            "discoverystream.spocs.cacheTimeout": 1,
+          },
+        },
+      });
+      const cacheTime = feed.spocsCacheUpdateTime;
+      assert.equal(feed._spocsCacheUpdateTime, defaultCacheTime);
+      assert.equal(cacheTime, defaultCacheTime);
     });
   });
 
@@ -3273,6 +3341,8 @@ describe("DiscoveryStreamFeed", () => {
 
       const spocsTestResult = {
         lastUpdated: 1234,
+        spocsCacheUpdateTime: 1800000,
+        spocsOnDemand: undefined,
         spocs: {
           placement1: {
             personalized: true,

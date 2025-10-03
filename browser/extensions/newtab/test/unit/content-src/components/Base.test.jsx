@@ -79,7 +79,7 @@ describe("<BaseContent>", () => {
     App: { initialized: true },
     Prefs: { values: {} },
     Sections: [],
-    DiscoveryStream: { config: { enabled: false } },
+    DiscoveryStream: { config: { enabled: false }, spocs: {} },
     Weather: {},
     dispatch: () => {},
     document: {

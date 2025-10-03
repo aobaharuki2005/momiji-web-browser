@@ -1266,6 +1266,13 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "discoverystream.spocs.onDemand",
+    {
+      title: "Set sponsored content to only update cache when requested.",
+      value: false,
+    },
+  ],
+  [
     "discoverystream.spocs.cacheTimeout",
     {
       title: "Set sponsored content cache timeout in minutes.",

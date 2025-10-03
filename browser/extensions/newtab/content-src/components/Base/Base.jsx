@@ -119,6 +119,7 @@ export class BaseContent extends React.PureComponent {
       fixedNavStyle: {},
       wallpaperTheme: "",
       showDownloadHighlightOverride: null,
+      visible: false,
     };
   }
 
@@ -131,8 +132,70 @@ export class BaseContent extends React.PureComponent {
   }
 
   onVisible() {
+    this.setState({
+      visible: true,
+    });
     this.setFirstVisibleTimestamp();
     this.shouldDisplayTopicSelectionModal();
+    this.onVisibilityDispatch();
+  }
+
+  onVisibilityDispatch() {
+    const { onDemand = {} } = this.props.DiscoveryStream.spocs;
+
+    // We only need to dispatch this if:
+    // 1. onDemand is enabled,
+    // 2. onDemand spocs have not been loaded on this tab.
+    // 3. Spocs are expired.
+    if (onDemand.enabled && !onDemand.loaded && this.isSpocsOnDemandExpired) {
+      // This dispatches that spocs are expired and we need to update them.
+      this.props.dispatch(
+        ac.OnlyToMain({
+          type: at.DISCOVERY_STREAM_SPOCS_ONDEMAND_UPDATE,
+        })
+      );
+    }
+  }
+
+  get isSpocsOnDemandExpired() {
+    const {
+      onDemand = {},
+      cacheUpdateTime,
+      lastUpdated,
+    } = this.props.DiscoveryStream.spocs;
+
+    // We can bail early if:
+    // 1. onDemand is off,
+    // 2. onDemand spocs have been loaded on this tab.
+    if (!onDemand.enabled || onDemand.loaded) {
+      return false;
+    }
+
+    return Date.now() - lastUpdated >= cacheUpdateTime;
+  }
+
+  spocsOnDemandUpdated() {
+    const { onDemand = {}, loaded } = this.props.DiscoveryStream.spocs;
+
+    // We only need to fire this if:
+    // 1. Spoc data is loaded.
+    // 2. onDemand is enabled.
+    // 3. The component is visible (not preloaded tab).
+    // 4. onDemand spocs have not been loaded on this tab.
+    // 5. Spocs are not expired.
+    if (
+      loaded &&
+      onDemand.enabled &&
+      this.state.visible &&
+      !onDemand.loaded &&
+      !this.isSpocsOnDemandExpired
+    ) {
+      // This dispatches that spocs have been loaded on this tab
+      // and we don't need to update them again for this tab.
+      this.props.dispatch(
+        ac.BroadcastToContent({ type: at.DISCOVERY_STREAM_SPOCS_ONDEMAND_LOAD })
+      );
+    }
   }
 
   componentDidMount() {
@@ -222,6 +285,8 @@ export class BaseContent extends React.PureComponent {
         this.updateWallpaper();
       }
     }
+
+    this.spocsOnDemandUpdated();
   }
 
   handleColorModeChange() {
@@ -800,6 +865,7 @@ export class BaseContent extends React.PureComponent {
                   <DiscoveryStreamBase
                     locale={props.App.locale}
                     firstVisibleTimestamp={this.state.firstVisibleTimestamp}
+                    placeholder={this.isSpocsOnDemandExpired}
                   />
                 </ErrorBoundary>
               ) : (
