@@ -124,7 +124,11 @@ async function migrateEnrollmentsToSql() {
     lazy.ExperimentAPI.manager.store._jsonFile.data
   );
 
-  // Likewise, the set of all recipes is
+  // If there are no enrollments we can skip the rest of the migration.
+  if (enrollments.length === 0) {
+    return;
+  }
+
   const { recipes } =
     await lazy.ExperimentAPI._rsLoader.getRecipesFromAllCollections({
       trigger: "migration",
