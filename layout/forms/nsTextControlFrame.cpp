@@ -1035,7 +1035,6 @@ void nsTextControlFrame::SetInitialChildList(ChildListID aListID,
 }
 
 nsresult nsTextControlFrame::UpdateValueDisplay(bool aNotify,
-                                                bool aBeforeEditorInit,
                                                 const nsAString* aValue) {
   MOZ_ASSERT(mRootNode, "Must have a div content\n");
   MOZ_ASSERT(!mEditorHasBeenInitialized,
