@@ -21,6 +21,7 @@ import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.utils.BrowsersCache
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -35,6 +36,7 @@ import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
+import org.mozilla.fenix.crashes.StartupCrashCanary
 import org.mozilla.fenix.distributions.DefaultDistributionBrowserStoreProvider
 import org.mozilla.fenix.distributions.DistributionIdManager
 import org.mozilla.fenix.distributions.DistributionProviderChecker
@@ -84,6 +86,45 @@ class FenixApplicationTest {
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
         )
+    }
+
+    @Test
+    fun `GIVEN a startup crash canary THEN initialize is never called`() {
+        var called = false
+        val initialize = { called = true }
+
+        val canary = object : StartupCrashCanary {
+            override val startupCrashDetected: Boolean
+                get() = true
+
+            override suspend fun clearCanary() { TODO("Not yet implemented") }
+
+            override suspend fun createCanary() { TODO("Not yet implemented") }
+        }
+
+        val application = FenixApplication()
+        application.checkForStartupCrash(canary, initialize)
+
+        assertFalse(called)
+    }
+
+    @Test
+    fun `GIVEN no startup crash canary THEN initialize is called`() {
+        var called = false
+        val initialize = { called = true }
+        val canary = object : StartupCrashCanary {
+            override val startupCrashDetected: Boolean
+                get() = false
+
+            override suspend fun clearCanary() { TODO("Not yet implemented") }
+
+            override suspend fun createCanary() { TODO("Not yet implemented") }
+        }
+
+        val application = FenixApplication()
+        application.checkForStartupCrash(canary, initialize)
+
+        assertTrue(called)
     }
 
     @Test

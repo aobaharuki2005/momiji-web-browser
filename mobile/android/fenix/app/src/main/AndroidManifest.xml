@@ -490,7 +490,7 @@
 
         <activity
             android:name=".startupCrash.StartupCrashActivity"
-            android:exported="true"
+            android:exported="false"
             >
         </activity>
 
