@@ -52,8 +52,8 @@ void NativeLayerRootRemoteMacChild::SetLayers(
     const nsTArray<RefPtr<NativeLayer>>& aLayers) {
   // We don't create a command for this, because we don't care
   // about the layers until CommitToScreen().
-  nsTArray<RefPtr<NativeLayer>> layers(aLayers.Length());
-  for (auto& layer : aLayers) {
+  nsTArray<RefPtr<NativeLayerRemoteMac>> layers(aLayers.Length());
+  for (const auto& layer : aLayers) {
     RefPtr<NativeLayerRemoteMac> layerRemoteMac =
         layer->AsNativeLayerRemoteMac();
     MOZ_ASSERT(layerRemoteMac);
@@ -96,11 +96,8 @@ bool NativeLayerRootRemoteMacChild::CommitToScreen() {
 
   // Iterate our layers to get the LayerInfo and ChangedSurface commands
   // into our shared command queue.
-  for (auto layer : mNativeLayers) {
-    RefPtr<NativeLayerRemoteMac> layerRemoteMac(
-        layer->AsNativeLayerRemoteMac());
-    MOZ_ASSERT(layerRemoteMac);
-    layerRemoteMac->FlushDirtyLayerInfoToCommandQueue();
+  for (const auto& layer : mNativeLayers) {
+    layer->FlushDirtyLayerInfoToCommandQueue();
   }
 
   if (mNativeLayersChanged) {
@@ -108,7 +105,7 @@ bool NativeLayerRootRemoteMacChild::CommitToScreen() {
     // command of this array filled with the IDs of everything
     // in mNativeLayers.
     nsTArray<uint64_t> setLayerIDs;
-    for (auto layer : mNativeLayers) {
+    for (const auto& layer : mNativeLayers) {
       auto ID = reinterpret_cast<uint64_t>(layer.get());
       setLayerIDs.AppendElement(ID);
     }
