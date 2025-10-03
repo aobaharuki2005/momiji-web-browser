@@ -2455,11 +2455,8 @@ MarkupView.prototype = {
 
     if (container.node.inlineTextChild) {
       container.setExpanded(false);
-      // this container will do double duty as the container for the single
-      // text child.
-      while (container.children.firstChild) {
-        container.children.firstChild.remove();
-      }
+      // this container will do double duty as the container for the single text child.
+      container.children.replaceChildren();
 
       container.setInlineTextChild(container.node.inlineTextChild);
 
@@ -2469,9 +2466,7 @@ MarkupView.prototype = {
     }
 
     if (!container.hasChildren) {
-      while (container.children.firstChild) {
-        container.children.firstChild.remove();
-      }
+      container.children.replaceChildren();
       container.childrenDirty = false;
       container.setExpanded(false);
       return Promise.resolve(container);
@@ -2519,9 +2514,7 @@ MarkupView.prototype = {
           fragment.appendChild(childContainer.elt);
         }
 
-        while (container.children.firstChild) {
-          container.children.firstChild.remove();
-        }
+        container.children.replaceChildren();
 
         if (!children.hasFirst) {
           const topItem = this.buildMoreNodesButtonMarkup(container);
