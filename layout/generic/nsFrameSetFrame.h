@@ -121,8 +121,9 @@ class nsHTMLFramesetFrame final : public nsContainerFrame {
   void RecalculateBorderResize();
 
  protected:
-  void Scale(nscoord aDesired, int32_t aNumIndicies, int32_t* aIndicies,
-             int32_t aNumItems, nsTArray<int32_t>& aItems);
+  void Scale(nscoord aDesired, int32_t aNumIndicies,
+             const nsTArray<int32_t>& aIndicies, int32_t aNumItems,
+             nsTArray<int32_t>& aItems);
 
   void CalculateRowCol(nsPresContext* aPresContext, nscoord aSize,
                        int32_t aNumSpecs, const nsFramesetSpec* aSpecs,
