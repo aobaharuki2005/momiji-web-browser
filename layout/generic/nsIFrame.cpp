@@ -3430,7 +3430,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
   // one and the inner container items will be unclipped.
   ContainerItemType clipCapturedBy = ContainerItemType::None;
   if (capturedByViewTransition) {
-    clipCapturedBy = ContainerItemType::ViewTransitionCapture;
+    clipCapturedBy = isTransformed ? ContainerItemType::Transform
+                                   : ContainerItemType::ViewTransitionCapture;
   } else if (useFixedPosition) {
     clipCapturedBy = ContainerItemType::FixedPosition;
   } else if (isTransformed) {
@@ -3718,6 +3719,36 @@ void nsIFrame::BuildDisplayListForStackingContext(
     createdContainer = true;
   }
 
+  // We build nsDisplayViewTransitionCapture here, and then use
+  // nsDisplayTransform to wrap it, to make sure we create the correct transform
+  // for the captured element and its descendants. This is necessary to make
+  // sure our captured element doesn't become blurry when using scale()
+  // transform.
+  //
+  // So the display list looks like this:
+  //   nsDisplayTransform      // For the captured element if it is transformed
+  //     VTCapture             // For the captured element
+  //       ...
+  //       Other display items // For the descendants of the captured element
+  //       ...
+  //   ...
+  //
+  // We intentionally use nsDisplayTransform to wrap the VTCapture (so it's
+  // different from opacity display item) because nsDisplayTransform may push a
+  // reference frame which creates a new coordinate system in WR. So it's just
+  // like a separator between the VTCapture the outside, if it is transformed.
+  if (capturedByViewTransition) {
+    resultList.AppendNewToTop<nsDisplayViewTransitionCapture>(
+        aBuilder, this, &resultList, nullptr, false);
+    createdContainer = true;
+    MarkAsIsolated();
+    // We don't want the capture to be clipped, so we do this _after_ building
+    // the wrapping item.
+    if (clipCapturedBy == ContainerItemType::ViewTransitionCapture) {
+      clipState.Restore();
+    }
+  }
+
   // If we're going to apply a transformation and don't have preserve-3d set,
   // wrap everything in an nsDisplayTransform. If there's nothing in the list,
   // don't add anything.
@@ -3730,9 +3761,9 @@ void nsIFrame::BuildDisplayListForStackingContext(
   // We also traverse into sublists created by nsDisplayWrapList, so that we
   // find all the correct children.
   //
-  // We don't bother creating nsDisplayTransform and co for
-  // view-transition-captured elements.
-  if (isTransformed && !capturedByViewTransition) {
+  // We still need to create nsDisplayTransform to wrap the VT capture element
+  // to make sure WR renders it properly if it is transformed as well.
+  if (isTransformed) {
     if (extend3DContext) {
       // Install dummy nsDisplayTransform as a leaf containing
       // descendants not participating this 3D rendering context.
@@ -3929,18 +3960,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
         nsDisplayItem::ContainerASRType::AncestorOfContained, false);
     createdContainer = true;
     MarkAsIsolated();
-  }
-
-  if (capturedByViewTransition) {
-    resultList.AppendNewToTop<nsDisplayViewTransitionCapture>(
-        aBuilder, this, &resultList, nullptr, /* aIsRoot = */ false);
-    createdContainer = true;
-    MarkAsIsolated();
-    // We don't want the capture to be clipped, so we do this _after_ building
-    // the wrapping item.
-    if (clipCapturedBy == ContainerItemType::ViewTransitionCapture) {
-      clipState.Restore();
-    }
   }
 
   if (!isolated && localIsolationReasons != StackingContextBits::None) {
