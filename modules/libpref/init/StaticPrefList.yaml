@@ -17369,7 +17369,7 @@
 
 - name: security.tls.client_hello.send_p256_keyshare
   type: RelaxedAtomicBool
-  value: true
+  value: @IS_NOT_NIGHTLY_BUILD@
   mirror: always
   rust: true
 
