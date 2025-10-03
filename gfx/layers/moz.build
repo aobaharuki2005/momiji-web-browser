@@ -275,7 +275,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("cocoa", "uikit"):
         "NativeLayerRemoteMac.h",
         "NativeLayerRootRemoteMacChild.h",
         "NativeLayerRootRemoteMacParent.h",
-        "NativeLayerRootRemoteMacSnapshotter.h",
         "SurfacePoolCA.h",
     ]
     EXPORTS += [
@@ -288,7 +287,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("cocoa", "uikit"):
         "NativeLayerRemoteMac.mm",
         "NativeLayerRootRemoteMacChild.mm",
         "NativeLayerRootRemoteMacParent.mm",
-        "NativeLayerRootRemoteMacSnapshotter.mm",
         "SurfacePoolCA.mm",
     ]
     SOURCES += [
