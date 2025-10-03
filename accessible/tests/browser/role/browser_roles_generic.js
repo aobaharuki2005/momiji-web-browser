@@ -338,7 +338,7 @@ addAccessibleTask(
   <table role="application" id="application_table">application table
     <tr><td>hi</td></tr></table>
   <table role="aPPLICATIOn" id="application_table_mixed">application table
-    <tr><td>hi</td></tr></table>    
+    <tr><td>hi</td></tr></table>
   <table role="banner" id="banner_table">banner table
     <tr><td>hi</td></tr></table>
   <table role="bANNEr" id="banner_table_mixed">banner table
@@ -718,6 +718,38 @@ addAccessibleTask(
 
     await invokeSetAttribute(browser, "body", "role", "dIaLoG");
     await untilCacheIs(() => accDoc.role, ROLE_DIALOG, "Doc role is 'dialog'");
+  },
+  { chrome: true, topLevel: true }
+);
+
+/**
+ * Test re-parented list item's role gets recomputed.
+ */
+addAccessibleTask(
+  `<div role="list" id="aria-list">
+  </div>
+  <div role="listitem" id="aria-listitem">Bananas</div>`,
+  async function testListItemRelocation(browser, accDoc) {
+    is(
+      findAccessibleChildByID(accDoc, "aria-listitem").role,
+      ROLE_SECTION,
+      "List item in list should have section role"
+    );
+
+    let evt = waitForEvent(EVENT_INNER_REORDER, "aria-list");
+    await invokeSetAttribute(
+      browser,
+      "aria-list",
+      "aria-owns",
+      "aria-listitem"
+    );
+    await evt;
+
+    is(
+      findAccessibleChildByID(accDoc, "aria-listitem").role,
+      ROLE_LISTITEM,
+      "List item in list should have listitem role"
+    );
   },
   { chrome: true, topLevel: true }
 );

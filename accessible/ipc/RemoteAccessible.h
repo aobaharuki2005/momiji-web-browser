@@ -145,11 +145,11 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
   LocalAccessible* OuterDocOfRemoteBrowser() const;
 
   /**
-   * Get the role of the accessible we're proxying.
+   * Get the native role of the accessible we're proxying.
    */
-  virtual role Role() const override { return mRole; }
-
-  virtual role NativeRole() const override { return role::NOTHING; }
+  virtual mozilla::a11y::role NativeRole() const override {
+    return mNativeRole;
+  }
 
   /**
    * Return true if this is an embedded object.
@@ -436,7 +436,7 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
         mWrapper(0),
         mID(aID),
         mCachedFields(nullptr),
-        mRole(aRole) {
+        mNativeRole(aRole) {
     MOZ_COUNT_CTOR(RemoteAccessible);
   }
 
@@ -446,7 +446,7 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
         mWrapper(0),
         mID(0),
         mCachedFields(nullptr),
-        mRole(roles::DOCUMENT) {
+        mNativeRole(roles::DOCUMENT) {
     mGenericTypes = eDocument | eHyperText;
     MOZ_COUNT_CTOR(RemoteAccessible);
   }
@@ -535,7 +535,7 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
 
   // XXX DocAccessibleParent gets to change this to change the role of
   // documents.
-  role mRole : 27;
+  role mNativeRole : 27;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

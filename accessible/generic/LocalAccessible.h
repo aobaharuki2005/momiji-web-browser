@@ -167,11 +167,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   virtual void ApplyARIAState(uint64_t* aState) const;
 
   /**
-   * Return enumerated accessible role (see constants in Role.h).
-   */
-  virtual mozilla::a11y::role Role() const override;
-
-  /**
    * Return accessible role specified by ARIA (see constants in
    * roles).
    */

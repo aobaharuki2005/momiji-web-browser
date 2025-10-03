@@ -181,8 +181,6 @@ class Accessible {
 
   virtual Accessible* Parent() const = 0;
 
-  virtual role Role() const = 0;
-
   virtual role NativeRole() const = 0;
 
   /**
@@ -196,6 +194,11 @@ class Accessible {
   virtual uint32_t ChildCount() const = 0;
 
   virtual int32_t IndexInParent() const = 0;
+
+  /**
+   * Returns the accessible's calculated, final, role.
+   */
+  role Role() const;
 
   bool HasChildren() const { return !!FirstChild(); }
 
