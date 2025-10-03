@@ -355,7 +355,7 @@ void nsHTMLFramesetFrame::SetInitialChildList(ChildListID aListID,
 // XXX should this try to allocate twips based on an even pixel boundary?
 void nsHTMLFramesetFrame::Scale(nscoord aDesired, int32_t aNumIndicies,
                                 const nsTArray<int32_t>& aIndicies,
-                                int32_t aNumItems, nsTArray<int32_t>& aItems) {
+                                nsTArray<int32_t>& aItems) {
   int32_t actual = 0;
   // get the actual total
   for (int32_t i = 0; i < aNumIndicies; i++) {
@@ -386,7 +386,7 @@ void nsHTMLFramesetFrame::Scale(nscoord aDesired, int32_t aNumIndicies,
     int32_t unit = (aDesired > actual) ? 1 : -1;
     for (int32_t i = 0; (i < aNumIndicies) && (aDesired != actual); i++) {
       int32_t j = aIndicies[i];
-      if (j < aNumItems) {
+      if (CheckedInt<size_t>(j).value() < aItems.Length()) {
         aItems[j] += unit;
         actual += unit;
       }
@@ -406,6 +406,7 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsPresContext* aPresContext,
                                           nsTArray<nscoord>& aValues) {
   static_assert(NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(int32_t),
                 "aNumSpecs maximum value is NS_MAX_FRAMESET_SPEC_COUNT");
+  MOZ_ASSERT(CheckedInt<size_t>(aNumSpecs).value() == aValues.Length());
 
   int32_t fixedTotal = 0;
   int32_t numFixed = 0;
@@ -446,7 +447,7 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsPresContext* aPresContext,
   // aren't any percent or relative)
   if ((fixedTotal > aSize) ||
       ((fixedTotal < aSize) && (0 == numPercent) && (0 == numRelative))) {
-    Scale(aSize, numFixed, fixed, aNumSpecs, aValues);
+    Scale(aSize, numFixed, fixed, aValues);
     return;
   }
 
@@ -465,7 +466,7 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsPresContext* aPresContext,
   // aren't any relative)
   if ((percentTotal > percentMax) ||
       ((percentTotal < percentMax) && (0 == numRelative))) {
-    Scale(percentMax, numPercent, percent, aNumSpecs, aValues);
+    Scale(percentMax, numPercent, percent, aValues);
     return;
   }
 
@@ -482,7 +483,7 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsPresContext* aPresContext,
 
   // scale the relative sizes if they take up too much or too little
   if (relativeTotal != relativeMax) {
-    Scale(relativeMax, numRelative, relative, aNumSpecs, aValues);
+    Scale(relativeMax, numRelative, relative, aValues);
   }
 }
 
@@ -496,6 +497,8 @@ void nsHTMLFramesetFrame::GenerateRowCol(nsPresContext* aPresContext,
                                          const nsFramesetSpec* aSpecs,
                                          const nsTArray<nscoord>& aValues,
                                          nsString& aNewAttr) {
+  MOZ_ASSERT(CheckedInt<size_t>(aNumSpecs).value() == aValues.Length());
+
   for (int32_t i = 0; i < aNumSpecs; i++) {
     if (!aNewAttr.IsEmpty()) {
       aNewAttr.Append(char16_t(','));
