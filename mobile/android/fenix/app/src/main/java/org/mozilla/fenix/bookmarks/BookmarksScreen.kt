@@ -114,6 +114,8 @@ import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.lib.state.ext.observeAsState
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.R
 import org.mozilla.fenix.bookmarks.BookmarksTestTag.BOOKMARK_TOOLBAR
 import org.mozilla.fenix.bookmarks.BookmarksTestTag.EDIT_BOOKMARK_ITEM_TITLE_TEXT_FIELD
@@ -277,10 +279,14 @@ private fun BookmarksList(
         when (state.bookmarksSnackbarState) {
             BookmarksSnackbarState.None -> return@LaunchedEffect
             is BookmarksSnackbarState.UndoDeletion -> scope.launch {
+                BookmarksManagement.deleteSnackbarShown.record(NoExtras())
                 snackbarHostState.displaySnackbar(
                     message = snackbarMessage,
                     actionLabel = snackbarActionLabel,
-                    onActionPerformed = { store.dispatch(SnackbarAction.Undo) },
+                    onActionPerformed = {
+                        store.dispatch(SnackbarAction.Undo)
+                        BookmarksManagement.deleteSnackbarUndoClicked.record(NoExtras())
+                    },
                     onDismissPerformed = { store.dispatch(SnackbarAction.Dismissed) },
                 )
             }
