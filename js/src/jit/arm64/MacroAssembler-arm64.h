@@ -675,11 +675,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void jump(Register reg) { Br(ARMRegister(reg, 64)); }
   void jump(const Address& addr) {
     vixl::UseScratchRegisterScope temps(this);
-    MOZ_ASSERT(temps.IsAvailable(ScratchReg64));  // ip0
-    temps.Exclude(ScratchReg64);
-    MOZ_ASSERT(addr.base != ScratchReg64.asUnsized());
-    loadPtr(addr, ScratchReg64.asUnsized());
-    br(ScratchReg64);
+    const auto scratch = temps.AcquireX();
+    MOZ_ASSERT(addr.base != scratch.asUnsized());
+    loadPtr(addr, scratch.asUnsized());
+    br(scratch);
   }
 
   void align(int alignment) { armbuffer_.align(alignment); }
@@ -1273,13 +1272,12 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
 
   void retn(Imm32 n) {
     vixl::UseScratchRegisterScope temps(this);
-    MOZ_ASSERT(temps.IsAvailable(ScratchReg64));  // ip0
-    temps.Exclude(ScratchReg64);
-    // ip0 <- [sp]; sp += n; ret ip0
-    Ldr(ScratchReg64,
+    const auto scratch = temps.AcquireX();
+    // scratch <- [sp]; sp += n; ret scratch
+    Ldr(scratch,
         MemOperand(GetStackPointer64(), ptrdiff_t(n.value), vixl::PostIndex));
     syncStackPtr();  // SP is always used to transmit the stack between calls.
-    Ret(ScratchReg64);
+    Ret(scratch);
   }
 
   void j(Condition cond, Label* dest) { B(dest, cond); }
