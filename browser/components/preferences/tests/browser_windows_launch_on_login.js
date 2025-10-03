@@ -52,8 +52,18 @@ add_task(async function test_check_uncheck_checkbox() {
     let doc = gBrowser.contentDocument;
 
     let launchOnLoginCheckbox = doc.getElementById("windowsLaunchOnLogin");
+    let launchOnLoginControl = launchOnLoginCheckbox.parentElement;
+
+    ok(!launchOnLoginControl.hidden, "Autostart control is visible");
+
+    ok(
+      !launchOnLoginCheckbox.checked,
+      "Autostart checkbox NOT checked by default"
+    );
+
     launchOnLoginCheckbox.click();
-    ok(launchOnLoginCheckbox.checked, "Autostart checkbox checked");
+
+    ok(launchOnLoginCheckbox.checked, "Autostart checkbox checked after click");
 
     ok(
       wrk.hasValue(WindowsLaunchOnLogin.getLaunchOnLoginRegistryName()),

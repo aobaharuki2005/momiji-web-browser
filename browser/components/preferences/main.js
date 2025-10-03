@@ -54,6 +54,7 @@ const APP_ICON_ATTR_NAME = "appHandlerIcon";
 Preferences.addAll([
   // Startup
   { id: "browser.startup.page", type: "int" },
+  { id: "browser.startup.windowsLaunchOnLogin.enabled", type: "bool" },
   { id: "browser.privatebrowsing.autostart", type: "bool" },
 
   // Downloads
@@ -216,6 +217,139 @@ if (AppConstants.MOZ_UPDATER) {
 Preferences.addSetting({
   id: "privateBrowsingAutoStart",
   pref: "browser.privatebrowsing.autostart",
+});
+
+Preferences.addSetting({
+  id: "launchOnLoginApproved",
+  _getLaunchOnLoginApprovedCachedValue: true,
+  get() {
+    return this._getLaunchOnLoginApprovedCachedValue;
+  },
+  // Check for a launch on login registry key
+  // This accounts for if a user manually changes it in the registry
+  // Disabling in Task Manager works outside of just deleting the registry key
+  // in HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run
+  // but it is not possible to change it back to enabled as the disabled value is just a random
+  // hexadecimal number
+  async setup() {
+    if (AppConstants.platform !== "win") {
+      /**
+       * WindowsLaunchOnLogin isnt available if not on windows
+       * but this setup function still fires, so must prevent
+       * WindowsLaunchOnLogin.getLaunchOnLoginApproved
+       * below from executing unnecessarily.
+       */
+      return;
+    }
+    this._getLaunchOnLoginApprovedCachedValue =
+      await WindowsLaunchOnLogin.getLaunchOnLoginApproved();
+  },
+});
+
+Preferences.addSetting({
+  id: "windowsLaunchOnLoginEnabled",
+  pref: "browser.startup.windowsLaunchOnLogin.enabled",
+});
+
+Preferences.addSetting({
+  id: "windowsLaunchOnLogin",
+  deps: ["launchOnLoginApproved", "windowsLaunchOnLoginEnabled"],
+  _getLaunchOnLoginEnabledValue: false,
+  get startWithLastProfile() {
+    return Cc["@mozilla.org/toolkit/profile-service;1"].getService(
+      Ci.nsIToolkitProfileService
+    ).startWithLastProfile;
+  },
+  get() {
+    return this._getLaunchOnLoginEnabledValue;
+  },
+  async setup(emitChange) {
+    if (AppConstants.platform !== "win") {
+      /**
+       * WindowsLaunchOnLogin isnt available if not on windows
+       * but this setup function still fires, so must prevent
+       * WindowsLaunchOnLogin.getLaunchOnLoginEnabled
+       * below from executing unnecessarily.
+       */
+      return;
+    }
+
+    let getLaunchOnLoginEnabledValue;
+    if (!this.startWithLastProfile) {
+      getLaunchOnLoginEnabledValue = false;
+    } else {
+      getLaunchOnLoginEnabledValue =
+        await WindowsLaunchOnLogin.getLaunchOnLoginEnabled();
+    }
+    if (getLaunchOnLoginEnabledValue !== this._getLaunchOnLoginEnabledValue) {
+      this._getLaunchOnLoginEnabledValue = getLaunchOnLoginEnabledValue;
+      emitChange();
+    }
+  },
+  visible: ({ windowsLaunchOnLoginEnabled }) => {
+    let isVisible =
+      AppConstants.platform === "win" && windowsLaunchOnLoginEnabled.value;
+    if (isVisible) {
+      NimbusFeatures.windowsLaunchOnLogin.recordExposureEvent({
+        once: true,
+      });
+    }
+    return isVisible;
+  },
+  disabled({ launchOnLoginApproved }) {
+    return !this.startWithLastProfile || !launchOnLoginApproved.value;
+  },
+  onUserChange(checked) {
+    if (checked) {
+      // windowsLaunchOnLogin has been checked: create registry key or shortcut
+      // The shortcut is created with the same AUMID as Firefox itself. However,
+      // this is not set during browser tests and the fallback of checking the
+      // registry fails. As such we pass an arbitrary AUMID for the purpose
+      // of testing.
+      WindowsLaunchOnLogin.createLaunchOnLogin();
+      Services.prefs.setBoolPref(
+        "browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt",
+        true
+      );
+    } else {
+      // windowsLaunchOnLogin has been unchecked: delete registry key and shortcut
+      WindowsLaunchOnLogin.removeLaunchOnLogin();
+    }
+  },
+});
+
+Preferences.addSetting({
+  id: "windowsLaunchOnLoginDisabledProfileBox",
+  deps: ["windowsLaunchOnLoginEnabled"],
+  visible: ({ windowsLaunchOnLoginEnabled }) => {
+    if (AppConstants.platform !== "win") {
+      return false;
+    }
+    let startWithLastProfile = Cc[
+      "@mozilla.org/toolkit/profile-service;1"
+    ].getService(Ci.nsIToolkitProfileService).startWithLastProfile;
+
+    return !startWithLastProfile && windowsLaunchOnLoginEnabled.value;
+  },
+});
+
+Preferences.addSetting({
+  id: "windowsLaunchOnLoginDisabledBox",
+  deps: ["launchOnLoginApproved", "windowsLaunchOnLoginEnabled"],
+  visible: ({ launchOnLoginApproved, windowsLaunchOnLoginEnabled }) => {
+    if (AppConstants.platform !== "win") {
+      return false;
+    }
+    let startWithLastProfile = Cc[
+      "@mozilla.org/toolkit/profile-service;1"
+    ].getService(Ci.nsIToolkitProfileService).startWithLastProfile;
+
+    return (
+      startWithLastProfile &&
+      !launchOnLoginApproved.value &&
+      windowsLaunchOnLoginEnabled.value
+    );
+  },
 });
 
 Preferences.addSetting({
@@ -773,6 +907,32 @@ let SETTINGS_CONFIG = {
       {
         id: "browserRestoreSession",
         l10nId: "startup-restore-windows-and-tabs",
+      },
+      {
+        id: "windowsLaunchOnLogin",
+        l10nId: "windows-launch-on-login",
+      },
+      {
+        id: "windowsLaunchOnLoginDisabledBox",
+        control: "moz-box-item",
+        l10nId: "windows-launch-on-login-disabled",
+        options: [
+          {
+            control: "a",
+            controlAttrs: {
+              "data-l10n-name": "startup-link",
+              href: "ms-settings:startupapps",
+              _target: "self",
+            },
+          },
+        ],
+      },
+      {
+        id: "windowsLaunchOnLoginDisabledProfileBox",
+        control: "moz-message-bar",
+        controlAttrs: {
+          l10nId: "startup-windows-launch-on-login-profile-disabled",
+        },
       },
     ],
   },
@@ -1362,26 +1522,6 @@ var gMainPane = {
       });
     }
 
-    // Startup pref
-    if (AppConstants.platform == "win") {
-      setEventListener(
-        "windowsLaunchOnLogin",
-        "command",
-        gMainPane.onWindowsLaunchOnLoginChange
-      );
-      if (
-        Services.prefs.getBoolPref(
-          "browser.startup.windowsLaunchOnLogin.enabled",
-          false
-        )
-      ) {
-        document.getElementById("windowsLaunchOnLoginBox").hidden = false;
-        NimbusFeatures.windowsLaunchOnLogin.recordExposureEvent({
-          once: true,
-        });
-      }
-    }
-
     if (AppConstants.HAVE_SHELL_SERVICE) {
       setEventListener(
         "setDefaultButton",
@@ -1595,43 +1735,6 @@ var gMainPane = {
       }
 
       if (AppConstants.platform == "win") {
-        // Check for a launch on login registry key
-        // This accounts for if a user manually changes it in the registry
-        // Disabling in Task Manager works outside of just deleting the registry key
-        // in HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run
-        // but it is not possible to change it back to enabled as the disabled value is just a random
-        // hexadecimal number
-        let launchOnLoginCheckbox = document.getElementById(
-          "windowsLaunchOnLogin"
-        );
-
-        let startWithLastProfile = Cc[
-          "@mozilla.org/toolkit/profile-service;1"
-        ].getService(Ci.nsIToolkitProfileService).startWithLastProfile;
-
-        // Grey out the launch on login checkbox if startWithLastProfile is false
-        document.getElementById(
-          "windowsLaunchOnLoginDisabledProfileBox"
-        ).hidden = startWithLastProfile;
-        launchOnLoginCheckbox.disabled = !startWithLastProfile;
-
-        if (!startWithLastProfile) {
-          launchOnLoginCheckbox.checked = false;
-        } else {
-          WindowsLaunchOnLogin.getLaunchOnLoginEnabled().then(enabled => {
-            launchOnLoginCheckbox.checked = enabled;
-          });
-
-          WindowsLaunchOnLogin.getLaunchOnLoginApproved().then(
-            approvedByWindows => {
-              launchOnLoginCheckbox.disabled = !approvedByWindows;
-              document.getElementById(
-                "windowsLaunchOnLoginDisabledBox"
-              ).hidden = approvedByWindows;
-            }
-          );
-        }
-
         // On Windows, the Application Update setting is an installation-
         // specific preference, not a profile-specific one. Show a warning to
         // inform users of this.
@@ -2554,27 +2657,6 @@ var gMainPane = {
 
     let win = window.browsingContext.topChromeWindow;
     cps2.setGlobal(win.FullZoom.name, newZoom, nonPrivateLoadContext);
-  },
-
-  async onWindowsLaunchOnLoginChange(event) {
-    if (AppConstants.platform !== "win") {
-      return;
-    }
-    if (event.target.checked) {
-      // windowsLaunchOnLogin has been checked: create registry key or shortcut
-      // The shortcut is created with the same AUMID as Firefox itself. However,
-      // this is not set during browser tests and the fallback of checking the
-      // registry fails. As such we pass an arbitrary AUMID for the purpose
-      // of testing.
-      await WindowsLaunchOnLogin.createLaunchOnLogin();
-      Services.prefs.setBoolPref(
-        "browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt",
-        true
-      );
-    } else {
-      // windowsLaunchOnLogin has been unchecked: delete registry key and shortcut
-      await WindowsLaunchOnLogin.removeLaunchOnLogin();
-    }
   },
 
   // TABS
