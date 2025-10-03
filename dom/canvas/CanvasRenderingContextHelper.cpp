@@ -63,6 +63,11 @@ void CanvasRenderingContextHelper::ToBlob(
   }
 
   nsCString randomizationKeyStr = VoidCString();
+  if (aExtractionBehavior == CanvasUtils::ImageExtraction::EfficientRandomize) {
+    nsRFPService::GetFingerprintingRandomizationKeyAsString(
+        GetCookieJarSettings(), randomizationKeyStr);
+  }
+
   int32_t format = 0;
   auto imageSize = gfx::IntSize{elementSize.width, elementSize.height};
   UniquePtr<uint8_t[]> imageBuffer =
@@ -81,6 +86,14 @@ UniquePtr<uint8_t[]> CanvasRenderingContextHelper::GetImageBuffer(
   if (mCurrentContext) {
     return mCurrentContext->GetImageBuffer(aExtractionBehavior, aOutFormat,
                                            aOutImageSize);
+  }
+  return nullptr;
+}
+
+nsICookieJarSettings* CanvasRenderingContextHelper::GetCookieJarSettings()
+    const {
+  if (mCurrentContext) {
+    return mCurrentContext->GetCookieJarSettings();
   }
   return nullptr;
 }

@@ -1346,7 +1346,10 @@ nsresult nsRFPService::GetBrowsingSessionKey(
           RFPTarget::CanvasRandomization) &&
       !nsContentUtils::ShouldResistFingerprinting(
           "Checking the target activation globally without local context",
-          RFPTarget::WebGLRandomization)) {
+          RFPTarget::WebGLRandomization) &&
+      !nsContentUtils::ShouldResistFingerprinting(
+          "Checking the target activation globally without local context",
+          RFPTarget::EfficientCanvasRandomization)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -1448,7 +1451,9 @@ Maybe<nsTArray<uint8_t>> nsRFPService::GenerateKey(nsIChannel* aChannel) {
   if (!nsContentUtils::ShouldResistFingerprinting(
           aChannel, RFPTarget::CanvasRandomization) &&
       !nsContentUtils::ShouldResistFingerprinting(
-          aChannel, RFPTarget::WebGLRandomization)) {
+          aChannel, RFPTarget::WebGLRandomization) &&
+      !nsContentUtils::ShouldResistFingerprinting(
+          aChannel, RFPTarget::EfficientCanvasRandomization)) {
     return Nothing();
   }
   auto sessionKeyStr = sessionKey.ToString();
@@ -2817,6 +2822,65 @@ uint32_t nsRFPService::CollapseMaxTouchPoints(uint32_t aMaxTouchPoints) {
   // collapse them all to 5. A minority of devices (mostly desktop devices)
   // will report uncommon values like 2, 3, 8, etc
   return 5;
+}
+
+/* static */
+void nsRFPService::GetFingerprintingRandomizationKeyAsString(
+    nsICookieJarSettings* aCookieJarSettings,
+    nsACString& aRandomizationKeyStr) {
+  NS_ENSURE_TRUE_VOID(aCookieJarSettings);
+
+  nsTArray<uint8_t> randomizationKey(32);
+  nsresult rv =
+      aCookieJarSettings->GetFingerprintingRandomizationKey(randomizationKey);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  aRandomizationKeyStr.Assign(
+      reinterpret_cast<const char*>(randomizationKey.Elements()),
+      randomizationKey.Length());
+}
+
+/* static */
+nsresult nsRFPService::GenerateRandomizationKeyFromHash(
+    const nsACString& aRandomizationKeyStr, uint32_t aContentHash,
+    nsACString& aHex) {
+  MOZ_ASSERT(aHex.IsEmpty(), "aHex should be empty");
+
+  if (aRandomizationKeyStr.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  uint64_t k0 = *reinterpret_cast<const uint64_t*>(aRandomizationKeyStr.Data());
+  uint64_t k1 =
+      *reinterpret_cast<const uint64_t*>(aRandomizationKeyStr.Data() + 8);
+  mozilla::HashCodeScrambler hcs(k0, k1);
+  mozilla::HashNumber hashResult = hcs.scramble(aContentHash);
+
+  nsTArray<uint8_t> bufferKey(32);
+
+  uint64_t digest = static_cast<uint64_t>(hashResult) << 32 | aContentHash;
+  non_crypto::XorShift128PlusRNG rng(
+      digest,
+      *reinterpret_cast<const uint64_t*>(aRandomizationKeyStr.Data() + 16));
+
+  for (size_t i = 0; i < 4; ++i) {
+    uint64_t val = rng.next();
+    for (size_t j = 0; j < 8; ++j) {
+      uint8_t data = static_cast<uint8_t>((val >> (j * 8)) & 0xFF);
+      bufferKey.InsertElementAt((i * 8) + j, data);
+    }
+  }
+
+  non_crypto::XorShift128PlusRNG rng1(
+      *reinterpret_cast<uint64_t*>(bufferKey.Elements()),
+      *reinterpret_cast<uint64_t*>(bufferKey.Elements() + 8));
+
+  uint64_t rand = rng1.next();
+
+  aHex.AppendPrintf("%016" PRIX64, rand);
+  MOZ_ASSERT(aHex.Length() == 16, "Expected 16 hex characters");
+
+  return NS_OK;
 }
 
 /* static */

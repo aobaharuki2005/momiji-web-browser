@@ -383,6 +383,13 @@ ImageExtraction ImageExtractionResult(dom::HTMLCanvasElement* aCanvasElement,
     return ImageExtraction::Placeholder;
   }
 
+  if (ownerDoc->ShouldResistFingerprinting(
+          RFPTarget::EfficientCanvasRandomization) &&
+      GetCanvasExtractDataPermission(aPrincipal) !=
+          nsIPermissionManager::ALLOW_ACTION) {
+    return ImageExtraction::EfficientRandomize;
+  }
+
   if ((ownerDoc->ShouldResistFingerprinting(RFPTarget::CanvasRandomization) ||
        ownerDoc->ShouldResistFingerprinting(RFPTarget::WebGLRandomization)) &&
       GetCanvasExtractDataPermission(aPrincipal) !=

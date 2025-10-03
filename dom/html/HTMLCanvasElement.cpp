@@ -942,6 +942,11 @@ nsresult HTMLCanvasElement::ExtractData(JSContext* aCx,
   }
 
   nsCString randomizationKey = VoidCString();
+  if (extractionBehaviour == CanvasUtils::ImageExtraction::EfficientRandomize) {
+    nsRFPService::GetFingerprintingRandomizationKeyAsString(
+        GetCookieJarSettings(), randomizationKey);
+  }
+
   return ImageEncoder::ExtractData(aType, aOptions, GetSize(),
                                    extractionBehaviour, randomizationKey,
                                    mCurrentContext, mOffscreenDisplay, aStream);
