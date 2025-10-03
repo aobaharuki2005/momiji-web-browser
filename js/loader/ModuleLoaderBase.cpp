@@ -806,10 +806,11 @@ void ModuleLoaderBase::OnFetchSucceeded(ModuleLoadRequest* aRequest) {
 
 void ModuleLoaderBase::OnFetchFailed(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsErrored());
-  // For dynamic import, the error handling is done in ProcessDynamicImport
-  if (aRequest->IsDynamicImport()) {
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(mGlobalObject)) {
     return;
   }
+  JSContext* cx = jsapi.cx();
 
   if (aRequest->IsTopLevel()) {
     // https://html.spec.whatwg.org/#fetch-the-descendants-of-and-link-a-module-script
@@ -822,49 +823,65 @@ void ModuleLoaderBase::OnFetchFailed(ModuleLoadRequest* aRequest) {
       LOG(("ScriptLoadRequest (%p): found parse error", aRequest));
       aRequest->mModuleScript->SetErrorToRethrow(parseError);
     }
-  } else {
-    // The remaining case is static import.
-    AutoJSAPI jsapi;
-    if (!jsapi.Init(mGlobalObject)) {
-      return;
-    }
-    JSContext* cx = jsapi.cx();
 
-    MOZ_ASSERT(!aRequest->mPayload.isUndefined());
-    Rooted<Value> statePrivate(cx, aRequest->mPayload);
-    Rooted<Value> error(cx);
+    return;
+  }
 
-    // https://html.spec.whatwg.org/#hostloadimportedmodule
-    //
-    // Step 14.2. If moduleScript is null, then set completion to Completion
-    //            Record { [[Type]]: throw, [[Value]]: a new TypeError,
-    //            [[Target]]: empty }.
-    //
-    // Impl note:
-    // When moduleScript is null, the ScriptLoader will call onerror handler.
-    // So we don't actually create a TypeError for this.
-    if (!aRequest->mModuleScript) {
-      error = UndefinedValue();
-    } else {
-      // Step 14.3. Otherwise, if moduleScript's parse error is not null, then:
-      //   1. Let parseError be moduleScript's parse error.
-      //   2. Set completion to Completion Record { [[Type]]: throw,
-      //      [[Value]]: parseError, [[Target]]: empty }.
-      //   3. If loadState is not undefined and loadState.[[ErrorToRethrow]]
-      //      is null, set loadState.[[ErrorToRethrow]] to parseError.
-      MOZ_ASSERT(aRequest->mModuleScript->HasParseError());
-      error = aRequest->mModuleScript->ParseError();
-    }
+  // The remaining case is static/dynamic import.
+  MOZ_ASSERT(aRequest->IsStaticImport() || aRequest->IsDynamicImport());
+  MOZ_ASSERT(!aRequest->mPayload.isUndefined());
+  Rooted<Value> payload(cx, aRequest->mPayload);
 
-    LOG(("ScriptLoadRequest (%p): FinishLoadingImportedModuleFailed",
+  // https://html.spec.whatwg.org/#hostloadimportedmodule
+  //
+  // Step 14.2. If moduleScript is null, then set completion to Completion
+  //            Record { [[Type]]: throw, [[Value]]: a new TypeError,
+  //            [[Target]]: empty }.
+  if (!aRequest->mModuleScript) {
+    LOG(
+        ("ScriptLoadRequest (%p): FinishLoadingImportedModule: module script "
+         "is null",
          aRequest));
-    // Step 14.5. Perform FinishLoadingImportedModule(referrer, moduleRequest,
-    //            payload, completion).
-    MOZ_ASSERT(!statePrivate.isUndefined());
-    FinishLoadingImportedModuleFailed(cx, statePrivate, error);
+
+    // Impl note:
+    // For dynamic import, the TypeError will be pass to the rejected handler of
+    // the LoadRequestedModules from the dynamic import.
+    //
+    // For static import/top-level import, the TypeError will be ignore in the
+    // rejected handler of LoadRequestedModules (the state.[[ErrorToRethrow]]
+    // isn't set). So we don't actually create a TypeError for the these two
+    // cases.
+    if (aRequest->GetRootModule()->IsDynamicImport()) {
+      nsAutoCString url;
+      aRequest->mURI->GetSpec(url);
+      JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                                JSMSG_DYNAMIC_IMPORT_FAILED, url.get());
+      FinishLoadingImportedModuleFailedWithPendingException(cx, payload);
+    } else {
+      Rooted<Value> error(cx, UndefinedValue());
+      FinishLoadingImportedModuleFailed(cx, payload, error);
+    }
 
     aRequest->ClearImport();
+    return;
   }
+
+  // Step 14.3. Otherwise, if moduleScript's parse error is not null, then:
+  //   1. Let parseError be moduleScript's parse error.
+  //   2. Set completion to Completion Record { [[Type]]: throw,
+  //      [[Value]]: parseError, [[Target]]: empty }.
+  //   3. If loadState is not undefined and loadState.[[ErrorToRethrow]]
+  //      is null, set loadState.[[ErrorToRethrow]] to parseError.
+  MOZ_ASSERT(aRequest->mModuleScript->HasParseError());
+  Rooted<Value> parseError(cx, aRequest->mModuleScript->ParseError());
+  LOG(
+      ("ScriptLoadRequest (%p): FinishLoadingImportedModule: found parse "
+       "error",
+       aRequest));
+  // Step 14.5. Perform FinishLoadingImportedModule(referrer, moduleRequest,
+  //            payload, completion).
+  FinishLoadingImportedModuleFailed(cx, payload, parseError);
+  aRequest->ClearImport();
 }
 
 class ModuleErroredRunnable : public MicroTaskRunnable {
