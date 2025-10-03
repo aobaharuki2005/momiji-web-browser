@@ -158,22 +158,22 @@ class NativeLayerRootCA : public NativeLayerRoot {
   explicit NativeLayerRootCA(CALayer* aLayer);
   ~NativeLayerRootCA() override;
 
-  struct Representation {
-    explicit Representation(CALayer* aRootCALayer);
-    ~Representation();
-    void Commit(WhichRepresentation aRepresentation,
-                const nsTArray<RefPtr<NativeLayerCA>>& aSublayers,
-                bool aWindowIsFullscreen);
-    CALayer* mRootCALayer = nullptr;  // strong
-    bool mMutatedLayerStructure = false;
-  };
+  // Do a commit of the pending changes to the CALayers. This is used for both
+  // onscreen commits (modifying the CALayers attached to the NSView), and for
+  // "offscreen" commits.
+  // "Offscreen" commits are updating a separate copy of the CALayer tree for
+  // use with CARenderer by the snapshotter.
+  void CommitRepresentation(WhichRepresentation aRepresentation,
+                            CALayer* aRootCALayer,
+                            const nsTArray<RefPtr<NativeLayerCA>>& aSublayers,
+                            bool aMutatedLayerStructure,
+                            bool aWindowIsFullscreen);
 
-  template <typename F>
-  void ForAllRepresentations(F aFn);
+  void SetMutatedLayerStructure();
 
-  Mutex mMutex MOZ_UNANNOTATED;  // protects all other fields
-  Representation mOnscreenRepresentation;
-  Representation mOffscreenRepresentation;
+  Mutex mMutex MOZ_UNANNOTATED;              // protects all other fields
+  CALayer* mOnscreenRootCALayer = nullptr;   // strong
+  CALayer* mOffscreenRootCALayer = nullptr;  // strong
 #ifdef XP_MACOSX
   NativeLayerRootSnapshotterCA* mWeakSnapshotter = nullptr;
 #endif
@@ -196,6 +196,10 @@ class NativeLayerRootCA : public NativeLayerRoot {
   // Updated by the layer's view's window to match the fullscreen state
   // of that window.
   bool mWindowIsFullscreen = false;
+
+  // Whether mSublayers has changed since the last onscreen / offscreen commit.
+  bool mMutatedOnscreenLayerStructure = false;
+  bool mMutatedOffscreenLayerStructure = false;
 
   // How many times have we committed since the last time we emitted
   // telemetry?
