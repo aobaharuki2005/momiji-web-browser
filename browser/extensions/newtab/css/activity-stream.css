@@ -9438,7 +9438,7 @@ dialog::after {
   background-color: var(--background-color-canvas);
   border: 2px solid var(--border-color-card);
   color: var(--text-color);
-  padding: var(--space-xlarge);
+  padding: var(--space-xxlarge);
   border-radius: var(--border-radius-large);
   margin: var(--space-xlarge) 0;
   position: relative;
@@ -9479,7 +9479,7 @@ dialog::after {
 @media (max-width: 724px) {
   .personalized-card-wrapper .personalized-card-inner {
     grid-template-columns: 1fr;
-    gap: var(--space-small);
+    gap: var(--space-large);
   }
   .personalized-card-wrapper .personalized-card-inner img {
     justify-self: initial;
@@ -9503,11 +9503,14 @@ dialog::after {
     grid-row: 2;
     grid-column: 2/span 2;
   }
+  .personalized-card-wrapper .personalized-card-inner p {
+    width: 230px;
+  }
 }
 @media (min-width: 1122px) {
   .personalized-card-wrapper .personalized-card-inner {
-    grid-template-columns: 0.2fr 1fr 1fr 1fr;
-    gap: var(--space-small);
+    grid-template-columns: 0.2fr 1.2fr 0.8fr 1fr;
+    gap: var(--space-large);
   }
   .personalized-card-wrapper .personalized-card-inner img {
     width: 75px;
@@ -9538,7 +9541,7 @@ dialog::after {
 }
 @media (min-width: 1122px) and (max-width: 1390px) {
   .personalized-card-wrapper .personalized-card-inner {
-    gap: var(--space-small);
+    grid-template-columns: 0.2fr 1fr 1fr 1fr;
   }
   .personalized-card-wrapper .personalized-card-inner h2 {
     max-width: 200px;
