@@ -500,6 +500,9 @@ void nsMenuPopupFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
 
 nscoord nsMenuPopupFrame::IntrinsicISize(const IntrinsicSizeInput& aInput,
                                          IntrinsicISizeType aType) {
+  if (CanSkipLayout()) {
+    return 0;
+  }
   nscoord iSize = nsBlockFrame::IntrinsicISize(aInput, aType);
   if (!ShouldExpandToInflowParentOrAnchor()) {
     return iSize;
@@ -566,6 +569,18 @@ void nsMenuPopupFrame::EnsureActiveMenuListItemIsVisible() {
       ScrollFlags::ScrollOverflowHidden | ScrollFlags::ScrollFirstAncestorOnly);
 }
 
+bool nsMenuPopupFrame::CanSkipLayout() const {
+  // If the popup is not open, only do layout while showing or if we're a
+  // menulist.
+  //
+  // The later is needed because the SelectParent code wants to limit the height
+  // of the popup before opening it.
+  //
+  // TODO(emilio): We should consider adding a way to do that more reliably
+  // instead, but this preserves existing behavior.
+  return !IsVisibleOrShowing() && !IsMenuList();
+}
+
 void nsMenuPopupFrame::LayoutPopup(nsPresContext* aPresContext,
                                    ReflowOutput& aDesiredSize,
                                    const ReflowInput& aReflowInput,
@@ -577,21 +592,9 @@ void nsMenuPopupFrame::LayoutPopup(nsPresContext* aPresContext,
   SchedulePaint();
 
   const bool isOpen = IsOpen();
-  if (!isOpen) {
-    // If the popup is not open, only do layout while showing or if we're a
-    // menulist.
-    //
-    // This is needed because the SelectParent code wants to limit the height of
-    // the popup before opening it.
-    //
-    // TODO(emilio): We should consider adding a way to do that more reliably
-    // instead, but this preserves existing behavior.
-    const bool needsLayout = mPopupState == ePopupShowing ||
-                             mPopupState == ePopupPositioning || IsMenuList();
-    if (!needsLayout) {
-      RemoveStateBits(NS_FRAME_FIRST_REFLOW);
-      return;
-    }
+  if (CanSkipLayout()) {
+    RemoveStateBits(NS_FRAME_FIRST_REFLOW);
+    return;
   }
 
   // Do a first reflow, with all our content, in order to find our preferred
