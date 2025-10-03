@@ -75,7 +75,6 @@ enum class ImageExtraction {
   Unrestricted,
   Placeholder,
   Randomize,
-  EfficientRandomize,
 };
 
 // Returns whether the result of an image extraction should be replaced

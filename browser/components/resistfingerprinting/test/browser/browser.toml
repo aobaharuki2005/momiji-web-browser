@@ -11,8 +11,6 @@ support-files = [
   "file_workerNetInfo.js",
   "file_workerPerformance.js",
   "head.js",
-  "file_efficientcanvascompare_iframer.html",
-  "file_efficientcanvascompare_iframee.html",
   "file_canvascompare_aboutblank_iframee.html",
   "file_canvascompare_aboutblank_iframer.html",
   "file_canvascompare_aboutblank_popupmaker.html",
@@ -98,8 +96,6 @@ skip-if = [
   "os == 'mac' && os_version == '11.20' && arch == 'aarch64' && opt", # Bug 1775698
   "os == 'mac' && os_version == '15.30' && arch == 'aarch64' && opt", # Bug 1775698
 ]
-
-["browser_efficientcanvascompare_iframes.js"]
 
 ["browser_exslt_time_precision.js"]
 

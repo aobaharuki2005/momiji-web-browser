@@ -2293,7 +2293,7 @@ NS_IMETHODIMP
 CanvasRenderingContext2D::GetInputStream(
     const char* aMimeType, const nsAString& aEncoderOptions,
     mozilla::CanvasUtils::ImageExtraction aExtractionBehavior,
-    const nsACString& aRandomizationKey, nsIInputStream** aStream) {
+    nsIInputStream** aStream) {
   nsCString enccid("@mozilla.org/image/encoder;2?type=");
   enccid += aMimeType;
   nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(enccid.get());
@@ -2309,9 +2309,9 @@ CanvasRenderingContext2D::GetInputStream(
     return NS_ERROR_FAILURE;
   }
 
-  return ImageEncoder::GetInputStream(
-      imageSize.width, imageSize.height, imageBuffer.get(), format, encoder,
-      aEncoderOptions, aRandomizationKey, aStream);
+  return ImageEncoder::GetInputStream(imageSize.width, imageSize.height,
+                                      imageBuffer.get(), format, encoder,
+                                      aEncoderOptions, aStream);
 }
 
 already_AddRefed<mozilla::gfx::SourceSurface>
@@ -6531,14 +6531,14 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
   mBufferProvider->ReturnSnapshot(snapshot.forget());
 
   // Check for site-specific permission.
-  CanvasUtils::ImageExtraction extractionBehavior =
+  CanvasUtils::ImageExtraction permission =
       CanvasUtils::ImageExtraction::Unrestricted;
   if (mCanvasElement) {
-    extractionBehavior = CanvasUtils::ImageExtractionResult(mCanvasElement, aCx,
-                                                            &aSubjectPrincipal);
+    permission = CanvasUtils::ImageExtractionResult(mCanvasElement, aCx,
+                                                    &aSubjectPrincipal);
   } else if (mOffscreenCanvas) {
-    extractionBehavior = CanvasUtils::ImageExtractionResult(
-        mOffscreenCanvas, aCx, &aSubjectPrincipal);
+    permission = CanvasUtils::ImageExtractionResult(mOffscreenCanvas, aCx,
+                                                    &aSubjectPrincipal);
   }
 
   // Clone the data source surface if canvas randomization is enabled. We need
@@ -6547,7 +6547,7 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
   //
   // Note that we don't need to clone if we will use the place holder because
   // the place holder doesn't use actual image data.
-  if (extractionBehavior == CanvasUtils::ImageExtraction::Randomize) {
+  if (permission == CanvasUtils::ImageExtraction::Randomize) {
     if (readback) {
       readback = CreateDataSourceSurfaceByCloning(readback);
     }
@@ -6560,12 +6560,12 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
 
   do {
     uint8_t* randomData;
-    if (extractionBehavior == CanvasUtils::ImageExtraction::Placeholder) {
+    if (permission == CanvasUtils::ImageExtraction::Placeholder) {
       // Since we cannot call any GC-able functions (like requesting the RNG
       // service) after we call JS_GetUint8ClampedArrayData, we will
       // pre-generate the randomness required for GeneratePlaceholderCanvasData.
       randomData = TryToGenerateRandomDataForPlaceholderCanvasData();
-    } else if (extractionBehavior == CanvasUtils::ImageExtraction::Randomize) {
+    } else if (permission == CanvasUtils::ImageExtraction::Randomize) {
       // Apply the random noises if canvan randomization is enabled. We don't
       // need to calculate random noises if we are going to use the place
       // holder.
@@ -6582,7 +6582,7 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
     uint8_t* data = JS_GetUint8ClampedArrayData(darray, &isShared, nogc);
     MOZ_ASSERT(!isShared);  // Should not happen, data was created above
 
-    if (extractionBehavior == CanvasUtils::ImageExtraction::Placeholder) {
+    if (permission == CanvasUtils::ImageExtraction::Placeholder) {
       FillPlaceholderCanvas(randomData, len.value(), data);
       break;
     }

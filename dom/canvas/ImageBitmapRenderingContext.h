@@ -75,7 +75,7 @@ class ImageBitmapRenderingContext final
   NS_IMETHOD GetInputStream(
       const char* aMimeType, const nsAString& aEncoderOptions,
       mozilla::CanvasUtils::ImageExtraction aExtractionBehavior,
-      const nsACString& aRandomizationKey, nsIInputStream** aStream) override;
+      nsIInputStream** aStream) override;
 
   virtual already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(
       gfxAlphaType* aOutAlphaType) override;

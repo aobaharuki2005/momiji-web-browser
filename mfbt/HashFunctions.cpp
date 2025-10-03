@@ -13,9 +13,8 @@
 
 namespace mozilla {
 
-uint32_t HashBytes(const void* aBytes, size_t aLength,
-                   HashNumber startingHash) {
-  uint32_t hash = startingHash;
+uint32_t HashBytes(const void* aBytes, size_t aLength) {
+  uint32_t hash = 0;
   const char* b = reinterpret_cast<const char*>(aBytes);
 
   /* Walk word by word. */

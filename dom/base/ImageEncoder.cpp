@@ -152,7 +152,7 @@ class EncodingRunnable : public Runnable {
                    EncodingCompleteEvent* aEncodingCompleteEvent,
                    int32_t aFormat, const CSSIntSize aSize,
                    CanvasUtils::ImageExtraction aExtractionBehavior,
-                   const nsCString& aRandomizationKey, bool aUsingCustomOptions)
+                   bool aUsingCustomOptions)
       : Runnable("EncodingRunnable"),
         mType(aType),
         mOptions(aOptions),
@@ -163,23 +163,22 @@ class EncodingRunnable : public Runnable {
         mFormat(aFormat),
         mSize(aSize),
         mExtractionBehavior(aExtractionBehavior),
-        mRandomizationKey(aRandomizationKey),
         mUsingCustomOptions(aUsingCustomOptions) {}
 
   nsresult ProcessImageData(uint64_t* aImgSize, void** aImgData) {
     nsCOMPtr<nsIInputStream> stream;
     nsresult rv = ImageEncoder::ExtractDataInternal(
         mType, mOptions, mImageBuffer.get(), mFormat, mSize,
-        mExtractionBehavior, mRandomizationKey, mImage, nullptr, nullptr,
-        getter_AddRefs(stream), mEncoder);
+        mExtractionBehavior, mImage, nullptr, nullptr, getter_AddRefs(stream),
+        mEncoder);
 
     // If there are unrecognized custom parse options, we should fall back to
     // the default values for the encoder without any options at all.
     if (rv == NS_ERROR_INVALID_ARG && mUsingCustomOptions) {
       rv = ImageEncoder::ExtractDataInternal(
           mType, u""_ns, mImageBuffer.get(), mFormat, mSize,
-          mExtractionBehavior, mRandomizationKey, mImage, nullptr, nullptr,
-          getter_AddRefs(stream), mEncoder);
+          mExtractionBehavior, mImage, nullptr, nullptr, getter_AddRefs(stream),
+          mEncoder);
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -222,7 +221,6 @@ class EncodingRunnable : public Runnable {
   int32_t mFormat;
   const CSSIntSize mSize;
   CanvasUtils::ImageExtraction mExtractionBehavior;
-  nsCString mRandomizationKey;
   bool mUsingCustomOptions;
 };
 
@@ -230,7 +228,6 @@ class EncodingRunnable : public Runnable {
 nsresult ImageEncoder::ExtractData(
     nsAString& aType, const nsAString& aOptions, const CSSIntSize aSize,
     CanvasUtils::ImageExtraction aExtractionBehavior,
-    const nsCString& aRandomizationKey,
     nsICanvasRenderingContextInternal* aContext,
     OffscreenCanvasDisplayHelper* aOffscreenDisplay, nsIInputStream** aStream) {
   nsCOMPtr<imgIEncoder> encoder = ImageEncoder::GetImageEncoder(aType);
@@ -239,15 +236,14 @@ nsresult ImageEncoder::ExtractData(
   }
 
   return ExtractDataInternal(aType, aOptions, nullptr, 0, aSize,
-                             aExtractionBehavior, aRandomizationKey, nullptr,
-                             aContext, aOffscreenDisplay, aStream, encoder);
+                             aExtractionBehavior, nullptr, aContext,
+                             aOffscreenDisplay, aStream, encoder);
 }
 
 /* static */
 nsresult ImageEncoder::ExtractDataFromLayersImageAsync(
     nsAString& aType, const nsAString& aOptions, bool aUsingCustomOptions,
     layers::Image* aImage, CanvasUtils::ImageExtraction aExtractionBehavior,
-    const nsCString& aRandomizationKey,
     EncodeCompleteCallback* aEncodeCallback) {
   nsCOMPtr<imgIEncoder> encoder = ImageEncoder::GetImageEncoder(aType);
   if (!encoder) {
@@ -258,10 +254,10 @@ nsresult ImageEncoder::ExtractDataFromLayersImageAsync(
       new EncodingCompleteEvent(aEncodeCallback);
 
   CSSIntSize size = CSSIntSize::FromUnknownSize(aImage->GetSize());
-  nsCOMPtr<nsIRunnable> event = new EncodingRunnable(
-      aType, aOptions, nullptr, aImage, encoder, completeEvent,
-      imgIEncoder::INPUT_FORMAT_HOSTARGB, size, aExtractionBehavior,
-      VoidCString(), aUsingCustomOptions);
+  nsCOMPtr<nsIRunnable> event =
+      new EncodingRunnable(aType, aOptions, nullptr, aImage, encoder,
+                           completeEvent, imgIEncoder::INPUT_FORMAT_HOSTARGB,
+                           size, aExtractionBehavior, aUsingCustomOptions);
   return NS_DispatchBackgroundTask(event.forget());
 }
 
@@ -270,7 +266,6 @@ nsresult ImageEncoder::ExtractDataAsync(
     nsAString& aType, const nsAString& aOptions, bool aUsingCustomOptions,
     UniquePtr<uint8_t[]> aImageBuffer, int32_t aFormat, const CSSIntSize aSize,
     CanvasUtils::ImageExtraction aExtractionBehavior,
-    const nsCString& aRandomizationKey,
     EncodeCompleteCallback* aEncodeCallback) {
   nsCOMPtr<imgIEncoder> encoder = ImageEncoder::GetImageEncoder(aType);
   if (!encoder) {
@@ -282,8 +277,7 @@ nsresult ImageEncoder::ExtractDataAsync(
 
   nsCOMPtr<nsIRunnable> event = new EncodingRunnable(
       aType, aOptions, std::move(aImageBuffer), nullptr, encoder, completeEvent,
-      aFormat, aSize, aExtractionBehavior, aRandomizationKey,
-      aUsingCustomOptions);
+      aFormat, aSize, aExtractionBehavior, aUsingCustomOptions);
   return NS_DispatchBackgroundTask(event.forget());
 }
 
@@ -292,11 +286,10 @@ nsresult ImageEncoder::GetInputStream(int32_t aWidth, int32_t aHeight,
                                       uint8_t* aImageBuffer, int32_t aFormat,
                                       imgIEncoder* aEncoder,
                                       const nsAString& aEncoderOptions,
-                                      const nsACString& aRandomizationKey,
                                       nsIInputStream** aStream) {
-  nsresult rv = aEncoder->InitFromData(aImageBuffer, aWidth * aHeight * 4,
-                                       aWidth, aHeight, aWidth * 4, aFormat,
-                                       aEncoderOptions, aRandomizationKey);
+  nsresult rv =
+      aEncoder->InitFromData(aImageBuffer, aWidth * aHeight * 4, aWidth,
+                             aHeight, aWidth * 4, aFormat, aEncoderOptions);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<imgIEncoder> encoder(aEncoder);
@@ -308,8 +301,7 @@ nsresult ImageEncoder::GetInputStream(int32_t aWidth, int32_t aHeight,
 nsresult ImageEncoder::ExtractDataInternal(
     const nsAString& aType, const nsAString& aOptions, uint8_t* aImageBuffer,
     int32_t aFormat, const CSSIntSize aSize,
-    CanvasUtils::ImageExtraction aExtractionBehavior,
-    const nsCString& aRandomizationKey, layers::Image* aImage,
+    CanvasUtils::ImageExtraction aExtractionBehavior, layers::Image* aImage,
     nsICanvasRenderingContextInternal* aContext,
     OffscreenCanvasDisplayHelper* aOffscreenDisplay, nsIInputStream** aStream,
     imgIEncoder* aEncoder) {
@@ -352,8 +344,7 @@ nsresult ImageEncoder::ExtractDataInternal(
     }
     rv = aEncoder->InitFromData(map.mData, aSize.width * aSize.height * 4,
                                 aSize.width, aSize.height, aSize.width * 4,
-                                imgIEncoder::INPUT_FORMAT_HOSTARGB, aOptions,
-                                VoidCString());
+                                imgIEncoder::INPUT_FORMAT_HOSTARGB, aOptions);
     emptyCanvas->Unmap();
     if (NS_SUCCEEDED(rv)) {
       imgStream = aEncoder;
@@ -363,13 +354,13 @@ nsresult ImageEncoder::ExtractDataInternal(
       return NS_ERROR_INVALID_ARG;
     }
 
-    rv = ImageEncoder::GetInputStream(
-        aSize.width, aSize.height, aImageBuffer, aFormat, aEncoder, aOptions,
-        aRandomizationKey, getter_AddRefs(imgStream));
+    rv = ImageEncoder::GetInputStream(aSize.width, aSize.height, aImageBuffer,
+                                      aFormat, aEncoder, aOptions,
+                                      getter_AddRefs(imgStream));
   } else if (aContext) {
     NS_ConvertUTF16toUTF8 encoderType(aType);
     rv = aContext->GetInputStream(encoderType.get(), aOptions,
-                                  aExtractionBehavior, aRandomizationKey,
+                                  aExtractionBehavior,
                                   getter_AddRefs(imgStream));
   } else if (aOffscreenDisplay) {
     const NS_ConvertUTF16toUTF8 encoderType(aType);
@@ -396,8 +387,7 @@ nsresult ImageEncoder::ExtractDataInternal(
       auto size = data->GetSize();
       rv = aEncoder->InitFromData(map.mData, size.width * size.height * 4,
                                   size.width, size.height, size.width * 4,
-                                  imgIEncoder::INPUT_FORMAT_HOSTARGB, aOptions,
-                                  VoidCString());
+                                  imgIEncoder::INPUT_FORMAT_HOSTARGB, aOptions);
       data->Unmap();
     }
     if (NS_SUCCEEDED(rv)) {
@@ -427,10 +417,10 @@ nsresult ImageEncoder::ExtractDataInternal(
         return rv;
       }
 
-      rv = aEncoder->InitFromData(
-          data.Elements(), aSize.width * aSize.height * 4, aSize.width,
-          aSize.height, aSize.width * 4, imgIEncoder::INPUT_FORMAT_HOSTARGB,
-          aOptions, VoidCString());
+      rv = aEncoder->InitFromData(data.Elements(),
+                                  aSize.width * aSize.height * 4, aSize.width,
+                                  aSize.height, aSize.width * 4,
+                                  imgIEncoder::INPUT_FORMAT_HOSTARGB, aOptions);
     } else {
       if (BufferSizeFromDimensions(aSize.width, aSize.height, 4) == 0) {
         return NS_ERROR_INVALID_ARG;
@@ -447,8 +437,7 @@ nsresult ImageEncoder::ExtractDataInternal(
       auto size = dataSurface->GetSize();
       rv = aEncoder->InitFromData(map.mData, size.width * size.height * 4,
                                   size.width, size.height, size.width * 4,
-                                  imgIEncoder::INPUT_FORMAT_HOSTARGB, aOptions,
-                                  VoidCString());
+                                  imgIEncoder::INPUT_FORMAT_HOSTARGB, aOptions);
       dataSurface->Unmap();
     }
 

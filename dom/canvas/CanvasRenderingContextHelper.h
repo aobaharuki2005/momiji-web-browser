@@ -13,7 +13,6 @@
 #include "nsSize.h"
 
 class nsICanvasRenderingContextInternal;
-class nsICookieJarSettings;
 class nsIGlobalObject;
 
 namespace mozilla {
@@ -75,8 +74,6 @@ class CanvasRenderingContextHelper {
   virtual UniquePtr<uint8_t[]> GetImageBuffer(
       CanvasUtils::ImageExtraction aExtractionBehavior, int32_t* aOutFormat,
       gfx::IntSize* aOutImageSize);
-
-  nsICookieJarSettings* GetCookieJarSettings() const;
 
   already_AddRefed<nsISupports> GetOrCreateContext(
       JSContext* aCx, const nsAString& aContextId,

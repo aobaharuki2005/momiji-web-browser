@@ -502,7 +502,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   NS_IMETHOD GetInputStream(
       const char* aMimeType, const nsAString& aEncoderOptions,
       mozilla::CanvasUtils::ImageExtraction aExtractionBehavior,
-      const nsACString& aRandomizationKey, nsIInputStream** aStream) override;
+      nsIInputStream** aStream) override;
 
   already_AddRefed<mozilla::gfx::SourceSurface> GetOptimizedSnapshot(
       mozilla::gfx::DrawTarget* aTarget, gfxAlphaType* aOutAlphaType) override;

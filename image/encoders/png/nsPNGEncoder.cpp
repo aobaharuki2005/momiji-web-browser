@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageLogging.h"
-#include "mozilla/XorShift128PlusRNG.h"
 #include "nsCRT.h"
 #include "nsPNGEncoder.h"
 #include "nsStreamUtils.h"
@@ -26,13 +25,11 @@ NS_IMPL_ISUPPORTS(nsPNGEncoder, imgIEncoder, nsIInputStream,
 nsPNGEncoder::nsPNGEncoder()
     : mPNG(nullptr),
       mPNGinfo(nullptr),
-      mAddCustomMetadata(false),
       mIsAnimation(false),
       mFinished(false),
       mImageBuffer(nullptr),
       mImageBufferSize(0),
       mImageBufferUsed(0),
-      mImageBufferHash(0),
       mImageBufferReadPoint(0),
       mCallback(nullptr),
       mCallbackTarget(nullptr),
@@ -63,15 +60,9 @@ nsPNGEncoder::InitFromData(const uint8_t* aData,
                            uint32_t aLength,  // (unused, req'd by JS)
                            uint32_t aWidth, uint32_t aHeight, uint32_t aStride,
                            uint32_t aInputFormat,
-                           const nsAString& aOutputOptions,
-                           const nsACString& aRandomizationKey) {
+                           const nsAString& aOutputOptions) {
   NS_ENSURE_ARG(aData);
   nsresult rv;
-
-  MOZ_ASSERT_IF(aRandomizationKey.IsEmpty(), aRandomizationKey.IsVoid());
-  if (!aRandomizationKey.IsEmpty()) {
-    mAddCustomMetadata = true;
-  }
 
   rv = StartImageEncode(aWidth, aHeight, aInputFormat, aOutputOptions);
   if (!NS_SUCCEEDED(rv)) {
@@ -80,11 +71,6 @@ nsPNGEncoder::InitFromData(const uint8_t* aData,
 
   rv = AddImageFrame(aData, aLength, aWidth, aHeight, aStride, aInputFormat,
                      aOutputOptions);
-  if (!NS_SUCCEEDED(rv)) {
-    return rv;
-  }
-
-  rv = MaybeAddCustomMetadata(aRandomizationKey);
   if (!NS_SUCCEEDED(rv)) {
     return rv;
   }
@@ -362,37 +348,6 @@ nsPNGEncoder::EndImageEncode() {
   if (!mImageBuffer) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  return NS_OK;
-}
-
-nsresult nsPNGEncoder::MaybeAddCustomMetadata(
-    const nsACString& aRandomizationKey) {
-  MOZ_ASSERT_IF(mAddCustomMetadata, !aRandomizationKey.IsEmpty());
-
-  if (!mAddCustomMetadata) {
-    return NS_OK;
-  }
-
-  nsCString hex;
-  nsresult rv = nsRFPService::GenerateRandomizationKeyFromHash(
-      aRandomizationKey, mImageBufferHash, hex);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  png_size_t chunkLength = 16;
-  png_unknown_chunk chunk;
-  chunk.name[0] = 'd';
-  chunk.name[1] = 'e';
-  chunk.name[2] = 'B';
-  chunk.name[3] = 'G';
-  chunk.name[4] = '\0';
-
-  chunk.data = reinterpret_cast<png_byte*>(hex.BeginWriting());
-  chunk.size = chunkLength;
-  chunk.location = PNG_AFTER_IDAT;
-
-  png_set_unknown_chunks(mPNG, mPNGinfo, &chunk, 1);
-  png_set_unknown_chunk_location(mPNG, mPNGinfo, 0, PNG_AFTER_IDAT);
 
   return NS_OK;
 }
@@ -819,10 +774,6 @@ nsPNGEncoder::WriteCallback(png_structp png, png_bytep data, png_size_t size) {
       }
       that->mImageBuffer = newBuf;
     }
-  }
-
-  if (that->mAddCustomMetadata) {
-    that->mImageBufferHash = HashBytes(data, size, that->mImageBufferHash);
   }
 
   memcpy(&that->mImageBuffer[that->mImageBufferUsed], data, size);

@@ -355,7 +355,7 @@ mozilla::UniquePtr<uint8_t[]> CanvasContext::GetImageBuffer(
 NS_IMETHODIMP CanvasContext::GetInputStream(
     const char* aMimeType, const nsAString& aEncoderOptions,
     mozilla::CanvasUtils::ImageExtraction aExtractionBehavior,
-    const nsACString& aRandomizationKey, nsIInputStream** aStream) {
+    nsIInputStream** aStream) {
   gfxAlphaType any;
   RefPtr<gfx::SourceSurface> snapshot = GetSurfaceSnapshot(&any);
   if (!snapshot) {
