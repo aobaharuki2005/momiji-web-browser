@@ -15,7 +15,6 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
-import android.os.Process
 import android.os.StrictMode
 import android.text.format.DateUtils
 import android.util.AttributeSet
@@ -357,11 +356,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                     applicationContext,
                     StartupCrashActivity::class.java,
                 )
-            startupCrashIntent.flags = FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
+            startupCrashIntent.flags = FLAG_ACTIVITY_NEW_TASK
             startActivity(startupCrashIntent)
-            // We kill the process, because `finish` will cause `onDestroy` to run which would end up
-            // causing several components to be initialized and potentially cause the startup crash.
-            Process.killProcess(Process.myPid())
+            finish()
         } else {
             initialize(savedInstanceState)
         }

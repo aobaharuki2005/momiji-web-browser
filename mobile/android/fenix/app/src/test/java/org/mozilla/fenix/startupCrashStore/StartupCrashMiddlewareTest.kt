@@ -112,7 +112,7 @@ class StartupCrashMiddlewareTest {
         val middleware = StartupCrashMiddleware(
             settings = settings,
             crashReporter = crashReporter,
-            restartHandler = { called = true },
+            reinitializeHandler = { called = true },
             startupCrashCanaryCache = canaryRepo,
             currentTimeInMillis = currentTime,
             scope = scope,
