@@ -157,26 +157,17 @@ FormAutofillPreferences.prototype = {
     win.Preferences.addSetting({
       id: "requireOSAuthForPayments",
       visible: () => lazy.OSKeyStore.canReauth(),
-      _pendingValue: null,
-      get() {
-        return this._pendingValue ?? FormAutofillUtils.getOSAuthEnabled();
-      },
+      get: () => FormAutofillUtils.getOSAuthEnabled(),
       async set(checked) {
-        this._pendingValue = checked;
-        win.Preferences.getSetting("requireOSAuthForPayments").emit("change");
+        await FormAutofillPreferences.prototype.trySetOSAuthEnabled(
+          win,
+          checked
+        );
       },
       setup: emitChange => {
         Services.obs.addObserver(emitChange, "OSAuthEnabledChange");
         return () =>
           Services.obs.removeObserver(emitChange, "OSAuthEnabledChange");
-      },
-      async onUserChange(checked, _, setting) {
-        await FormAutofillPreferences.prototype.trySetOSAuthEnabled(
-          win,
-          checked
-        );
-        this._pendingValue = null;
-        setting.emit("change");
       },
     });
 
