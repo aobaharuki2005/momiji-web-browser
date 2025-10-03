@@ -25,6 +25,7 @@ toolkit.jar:
     content/global/ml/ThomSample.mjs                      (content/ThomSample.mjs)
     content/global/ml/backends/LlamaCppPipeline.mjs       (content/backends/LlamaCppPipeline.mjs)
     content/global/ml/backends/OpenAIPipeline.mjs         (content/backends/OpenAIPipeline.mjs)
+    content/global/ml/backends/StaticEmbeddingsPipeline.mjs (content/backends/StaticEmbeddingsPipeline.mjs)
     content/global/ml/openai.mjs                          (vendor/openai/dist/openai.mjs)
 #ifdef NIGHTLY_BUILD
     content/global/ml/ort.webgpu-dev.mjs        	        (vendor/ort.webgpu-dev.mjs)

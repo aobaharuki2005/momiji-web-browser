@@ -5,12 +5,16 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 /**
  * @typedef {object} Lazy
- * @typedef {import("../content/Utils.sys.mjs").ProgressAndStatusCallbackParams} ProgressAndStatusCallbackParams
- * @property {typeof console} console
- * @property {typeof import("../content/Utils.sys.mjs").getRuntimeWasmFilename} getRuntimeWasmFilename
- * @property {typeof import("../../../../services/settings/remote-settings.sys.mjs").RemoteSettings} RemoteSettings
- * @property {typeof import("../../translations/actors/TranslationsParent.sys.mjs").TranslationsParent} TranslationsParent
- * @typedef {import("../../translations").WasmRecord} WasmRecord
+ * @property {typeof import("resource://services-settings/remote-settings.sys.mjs").RemoteSettings} RemoteSettings
+ * @property {typeof import("resource://services-settings/Utils.sys.mjs").Utils} Utils
+ * @property {typeof import("resource://gre/actors/TranslationsParent.sys.mjs").TranslationsParent} TranslationsParent
+ * @property {typeof setTimeout} setTimeout
+ * @property {typeof clearTimeout} clearTimeout
+ * @property {typeof import("chrome://global/content/ml/ModelHub.sys.mjs").ModelHub} ModelHub
+ * @property {typeof import("chrome://global/content/ml/Utils.sys.mjs").Progress} Progress
+ * @property {typeof import("chrome://global/content/ml/Utils.sys.mjs").isAddonEngineId} isAddonEngineId
+ * @property {typeof import("chrome://global/content/ml/OPFS.sys.mjs").OPFS} OPFS
+ * @property {typeof import("chrome://global/content/ml/EngineProcess.sys.mjs").BACKENDS} BACKENDS
  */
 
 /** @type {Lazy} */
@@ -949,7 +953,7 @@ class ResponseOrChunkResolvers {
  *
  * @template Response
  */
-class MLEngine {
+export class MLEngine {
   /**
    * The cached engines.
    *

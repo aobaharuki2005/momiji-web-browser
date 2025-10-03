@@ -729,9 +729,41 @@ async function perfTest({
 
 /**
  * Measures floating point value within epsilon tolerance
+ *
+ * @param {number[]} a
+ * @param {number[]} b
+ * @param {number} [epsilon]
+ * @returns {boolean}
  */
-function isEqualWithTolerance(A, B, epsilon = 0.000001) {
-  return Math.abs(Math.abs(A) - Math.abs(B)) < epsilon;
+function isEqualWithTolerance(a, b, epsilon = 0.000001) {
+  return Math.abs(Math.abs(a) - Math.abs(b)) < epsilon;
+}
+
+/**
+ * Asserts whether two float arrays are equal within epsilon tolerance.
+ *
+ * @param {number[] | ArrayBufferLike} a
+ * @param {number[] | ArrayBufferLike} b
+ * @param {string} message
+ * @param {number} [epsilon]
+ */
+function assertFloatArraysMatch(a, b, message, epsilon) {
+  const raise = () => {
+    // When logging errors, spread into a new array so that the logging is nice for
+    // ArrayBufferLike values. This makes it easy to see how arrays differ
+    console.log("a:", [...a]);
+    console.log("b:", [...b]);
+    throw new Error(message);
+  };
+  if (a.length !== b.length) {
+    raise();
+  }
+  for (let i = 0; i < a.length; i++) {
+    if (!isEqualWithTolerance(a[i], b[i], epsilon)) {
+      raise();
+    }
+  }
+  ok(true, message);
 }
 
 // Mock OpenAI Chat Completions server for mochitests
@@ -853,4 +885,14 @@ function generateFloat16Numpy(vocabSize, dimensions) {
   encoding.set(new Uint8Array(numbers.buffer), offset);
 
   return { numbers, encoding };
+}
+
+/**
+ * @returns {Promise<string>}
+ */
+async function getMLEngineWorkerCode() {
+  const response = await fetch(
+    "chrome://global/content/ml/MLEngine.worker.mjs"
+  );
+  return response.text();
 }

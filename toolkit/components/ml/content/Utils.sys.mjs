@@ -186,7 +186,7 @@ export class ProgressAndStatusCallbackParams {
  * @param {string} config.file - filename
  * @param {string} config.rootUrl - root url of the model hub
  * @param {string} config.urlTemplate - url template of the model hub
- * @param {boolean} config.addDownloadParams - Whether to add a download query parameter.
+ * @param {boolean} [config.addDownloadParams] - Whether to add a download query parameter.
  * @returns {string} The full URL
  */
 export function createFileUrl({

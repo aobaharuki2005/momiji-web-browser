@@ -177,14 +177,12 @@ add_task(async function test_model_download_telemetry_success() {
   // Allow any url
   Services.env.set("MOZ_ALLOW_EXTERNAL_ML_HUB", "true");
 
-  const originalWorkerConfig = MLEngineParent.getWorkerConfig();
-
   // Mocking function used in the workers or child doesn't work.
   // So we are stubbing the code run by the worker.
   const workerCode = `
-  // Import the original worker code
+  // Inject the original worker code
 
-  importScripts("${originalWorkerConfig.url}");
+  ${await getMLEngineWorkerCode()}
 
   // Stub
   ChromeUtils.defineESModuleGetters(
@@ -247,7 +245,7 @@ add_task(async function test_model_download_telemetry_success() {
   let promiseStub = sinon
     .stub(MLEngineParent, "getWorkerConfig")
     .callsFake(function () {
-      return { url: blobURL, options: {} };
+      return { url: blobURL, options: { type: "module" } };
     });
 
   await IndexedDBCache.init({ reset: true });
@@ -301,14 +299,12 @@ add_task(async function test_model_download_telemetry_fail() {
   // Allow any url
   Services.env.set("MOZ_ALLOW_EXTERNAL_ML_HUB", "true");
 
-  const originalWorkerConfig = MLEngineParent.getWorkerConfig();
-
   // Mocking function used in the workers or child doesn't work.
   // So we are stubbing the code run by the worker.
   const workerCode = `
-  // Import the original worker code
+  // Inject the original worker code
 
-  importScripts("${originalWorkerConfig.url}");
+  ${await getMLEngineWorkerCode()}
 
   // Stub
   ChromeUtils.defineESModuleGetters(
@@ -371,7 +367,7 @@ add_task(async function test_model_download_telemetry_fail() {
   let promiseStub = sinon
     .stub(MLEngineParent, "getWorkerConfig")
     .callsFake(function () {
-      return { url: blobURL, options: {} };
+      return { url: blobURL, options: { type: "module" } };
     });
 
   await IndexedDBCache.init({ reset: true });
@@ -425,14 +421,12 @@ add_task(async function test_model_download_telemetry_mixed() {
   // Allow any url
   Services.env.set("MOZ_ALLOW_EXTERNAL_ML_HUB", "true");
 
-  const originalWorkerConfig = MLEngineParent.getWorkerConfig();
-
   // Mocking function used in the workers or child doesn't work.
   // So we are stubbing the code run by the worker.
   const workerCode = `
-  // Import the original worker code
+  // Inject the original worker code
 
-  importScripts("${originalWorkerConfig.url}");
+  ${await getMLEngineWorkerCode()}
 
   // Stub
   ChromeUtils.defineESModuleGetters(
@@ -495,7 +489,7 @@ add_task(async function test_model_download_telemetry_mixed() {
   let promiseStub = sinon
     .stub(MLEngineParent, "getWorkerConfig")
     .callsFake(function () {
-      return { url: blobURL, options: {} };
+      return { url: blobURL, options: { type: "module" } };
     });
 
   await createEngine({

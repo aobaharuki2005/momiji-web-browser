@@ -18,7 +18,7 @@ ChromeUtils.defineESModuleGetters(
 /**
  * The actual MLEngine lives here in a worker.
  */
-class MLEngineWorker {
+export class MLEngineWorker {
   #pipeline;
   #sessionId;
 
@@ -134,7 +134,19 @@ class MLEngineWorker {
     self.callMainThread = worker.callMainThread.bind(worker);
     self.addEventListener("message", msg => worker.handleMessage(msg));
     self.addEventListener("unhandledrejection", function (error) {
-      throw error.reason?.fail ?? error.reason;
+      const reason =
+        error?.reason?.fail ??
+        error?.reason ??
+        new Error("MLEngine.worker.mjs had an unhandled error.");
+
+      if (reason) {
+        // The PromiseWorker message passing doesn't properly expose the call stack of
+        // errors which makes it really hard to debug code. Log the error here to
+        // ensure that nice call stacks are preserved.
+        console.error("MLEngine.worker.mjs had an unhandled error.", reason);
+      }
+
+      throw reason;
     });
   }
 }

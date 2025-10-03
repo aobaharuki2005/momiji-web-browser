@@ -43,8 +43,6 @@ add_task(async function test_e2e_choose_backend_best_wllama() {
   // Allow any url
   Services.env.set("MOZ_ALLOW_EXTERNAL_ML_HUB", "true");
 
-  const originalWorkerConfig = MLEngineParent.getWorkerConfig();
-
   const backendData = new Uint8Array([10, 20, 30]);
 
   const expectedBackendData = JSON.stringify(backendData);
@@ -52,9 +50,9 @@ add_task(async function test_e2e_choose_backend_best_wllama() {
   // Mocking function used in the workers or child doesn't work.
   // So we are stubbing the code run by the worker.
   const workerCode = `
-  // Import the original worker code
+  // Inject the MLEngine.worker.mjs code
 
-  importScripts("${originalWorkerConfig.url}");
+  ${await getMLEngineWorkerCode()}
 
   // Stub
   ChromeUtils.defineESModuleGetters(
@@ -103,7 +101,7 @@ add_task(async function test_e2e_choose_backend_best_wllama() {
   let promiseStub = sinon
     .stub(MLEngineParent, "getWorkerConfig")
     .callsFake(function () {
-      return { url: blobURL, options: {} };
+      return { url: blobURL, options: { type: "module" } };
     });
 
   let wasmBufferStub = sinon
@@ -143,8 +141,6 @@ add_task(async function test_e2e_choose_backend_can_detect_failure() {
   // Allow any url
   Services.env.set("MOZ_ALLOW_EXTERNAL_ML_HUB", "true");
 
-  const originalWorkerConfig = MLEngineParent.getWorkerConfig();
-
   const backendData = new Uint8Array([10, 20, 30]);
 
   const expectedBackendData = JSON.stringify("data so no matches");
@@ -152,9 +148,9 @@ add_task(async function test_e2e_choose_backend_can_detect_failure() {
   // Mocking function used in the workers or child doesn't work.
   // So we are stubbing the code run by the worker.
   const workerCode = `
-  // Import the original worker code
+  // Inject the MLEngine.worker.mjs code
 
-  importScripts("${originalWorkerConfig.url}");
+  ${await getMLEngineWorkerCode()}
 
   // Stub
   ChromeUtils.defineESModuleGetters(
@@ -203,7 +199,7 @@ add_task(async function test_e2e_choose_backend_can_detect_failure() {
   let promiseStub = sinon
     .stub(MLEngineParent, "getWorkerConfig")
     .callsFake(function () {
-      return { url: blobURL, options: {} };
+      return { url: blobURL, options: { type: "module" } };
     });
 
   let wasmBufferStub = sinon
@@ -248,8 +244,6 @@ add_task(async function test_e2e_choose_backend_best_llamma_cpp() {
   // Allow any url
   Services.env.set("MOZ_ALLOW_EXTERNAL_ML_HUB", "true");
 
-  const originalWorkerConfig = MLEngineParent.getWorkerConfig();
-
   const backendData = new Uint8Array([10, 20, 30]);
 
   const expectedBackendData = JSON.stringify(null);
@@ -257,9 +251,9 @@ add_task(async function test_e2e_choose_backend_best_llamma_cpp() {
   // Mocking function used in the workers or child doesn't work.
   // So we are stubbing the code run by the worker.
   const workerCode = `
-  // Import the original worker code
+  // Inject the MLEngine.worker.mjs code
 
-  importScripts("${originalWorkerConfig.url}");
+  ${await getMLEngineWorkerCode()}
 
   // Stub
   ChromeUtils.defineESModuleGetters(
@@ -308,7 +302,7 @@ add_task(async function test_e2e_choose_backend_best_llamma_cpp() {
   let promiseStub = sinon
     .stub(MLEngineParent, "getWorkerConfig")
     .callsFake(function () {
-      return { url: blobURL, options: {} };
+      return { url: blobURL, options: { type: "module" } };
     });
 
   let wasmBufferStub = sinon
@@ -348,16 +342,14 @@ add_task(async function test_e2e_engine_can_be_cancelled() {
   // Allow any url
   Services.env.set("MOZ_ALLOW_EXTERNAL_ML_HUB", "true");
 
-  const originalWorkerConfig = MLEngineParent.getWorkerConfig();
-
   const backendData = new Uint8Array([10, 20, 30]);
 
   // Mocking function used in the workers or child doesn't work.
   // So we are stubbing the code run by the worker.
   const workerCode = `
-  // Import the original worker code
+  // Inject the MLEngine.worker.mjs code
 
-  importScripts("${originalWorkerConfig.url}");
+  ${await getMLEngineWorkerCode()}
 
   // Stub
   ChromeUtils.defineESModuleGetters(
@@ -410,7 +402,7 @@ add_task(async function test_e2e_engine_can_be_cancelled() {
   let promiseStub = sinon
     .stub(MLEngineParent, "getWorkerConfig")
     .callsFake(function () {
-      return { url: blobURL, options: {} };
+      return { url: blobURL, options: { type: "module" } };
     });
 
   let wasmBufferStub = sinon
@@ -459,16 +451,14 @@ add_task(async function test_e2e_engine_can_be_cancelled_after_fetch() {
   // Allow any url
   Services.env.set("MOZ_ALLOW_EXTERNAL_ML_HUB", "true");
 
-  const originalWorkerConfig = MLEngineParent.getWorkerConfig();
-
   const backendData = new Uint8Array([10, 20, 30]);
 
   // Mocking function used in the workers or child doesn't work.
   // So we are stubbing the code run by the worker.
   const workerCode = `
-  // Import the original worker code
+  // Inject the MLEngine.worker.mjs code
 
-  importScripts("${originalWorkerConfig.url}");
+  ${await getMLEngineWorkerCode()}
 
   // Stub
   ChromeUtils.defineESModuleGetters(
@@ -521,7 +511,7 @@ add_task(async function test_e2e_engine_can_be_cancelled_after_fetch() {
   let promiseStub = sinon
     .stub(MLEngineParent, "getWorkerConfig")
     .callsFake(function () {
-      return { url: blobURL, options: {} };
+      return { url: blobURL, options: { type: "module" } };
     });
 
   let wasmBufferStub = sinon
@@ -1193,6 +1183,7 @@ add_task(async function test_ml_engine_get_status() {
         processorRevision: "main",
         logLevel: "All",
         runtimeFilename: "ort-wasm-simd-threaded.jsep.wasm",
+        staticEmbeddingsOptions: null,
         device: null,
         dtype: "q8",
         numThreads: "NOT_COMPARED",
