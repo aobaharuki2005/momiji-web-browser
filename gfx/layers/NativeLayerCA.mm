@@ -382,7 +382,8 @@ UniquePtr<NativeLayerRootSnapshotter> NativeLayerRootCA::CreateSnapshotter() {
                      "No NativeLayerRootSnapshotter for this NativeLayerRoot "
                      "should exist when this is called");
 
-  auto cr = NativeLayerRootSnapshotterCA::Create(this);
+  auto cr = NativeLayerRootSnapshotterCA::Create(
+      MakeUnique<SnapshotterDelegate>(this));
   if (cr) {
     mWeakSnapshotter = cr.get();
   }
@@ -392,14 +393,12 @@ UniquePtr<NativeLayerRootSnapshotter> NativeLayerRootCA::CreateSnapshotter() {
 #endif
 }
 
-#ifdef XP_MACOSX
 void NativeLayerRootCA::OnNativeLayerRootSnapshotterDestroyed(
     NativeLayerRootSnapshotterCA* aNativeLayerRootSnapshotter) {
   MutexAutoLock lock(mMutex);
   MOZ_RELEASE_ASSERT(mWeakSnapshotter == aNativeLayerRootSnapshotter);
   mWeakSnapshotter = nullptr;
 }
-#endif
 
 void NativeLayerRootCA::CommitOffscreen(CALayer* aRootCALayer) {
   MutexAutoLock lock(mMutex);
@@ -478,9 +477,17 @@ void NativeLayerRootCA::CommitRepresentation(
   }
 }
 
+SnapshotterCADelegate::~SnapshotterCADelegate() = default;
+
+NativeLayerRootCA::SnapshotterDelegate::SnapshotterDelegate(
+    NativeLayerRootCA* aLayerRoot)
+    : mLayerRoot(aLayerRoot) {}
+NativeLayerRootCA::SnapshotterDelegate::~SnapshotterDelegate() = default;
+
 #ifdef XP_MACOSX
 /* static */ UniquePtr<NativeLayerRootSnapshotterCA>
-NativeLayerRootSnapshotterCA::Create(NativeLayerRootCA* aLayerRoot) {
+NativeLayerRootSnapshotterCA::Create(
+    UniquePtr<SnapshotterCADelegate>&& aDelegate) {
   if (NS_IsMainThread()) {
     // Disallow creating snapshotters on the main thread.
     // On the main thread, any explicit CATransaction / NSAnimationContext is
@@ -501,7 +508,7 @@ NativeLayerRootSnapshotterCA::Create(NativeLayerRootCA* aLayerRoot) {
   }
 
   return UniquePtr<NativeLayerRootSnapshotterCA>(
-      new NativeLayerRootSnapshotterCA(aLayerRoot, std::move(gl)));
+      new NativeLayerRootSnapshotterCA(std::move(aDelegate), std::move(gl)));
 }
 #endif
 
@@ -665,11 +672,11 @@ VideoLowPowerType NativeLayerRootCA::CheckVideoLowPower(
 
 #ifdef XP_MACOSX
 NativeLayerRootSnapshotterCA::NativeLayerRootSnapshotterCA(
-    NativeLayerRootCA* aLayerRoot, RefPtr<GLContext>&& aGL)
-    : mLayerRoot(aLayerRoot), mGL(aGL) {}
+    UniquePtr<SnapshotterCADelegate>&& aDelegate, RefPtr<GLContext>&& aGL)
+    : mDelegate(std::move(aDelegate)), mGL(aGL) {}
 
 NativeLayerRootSnapshotterCA::~NativeLayerRootSnapshotterCA() {
-  mLayerRoot->OnNativeLayerRootSnapshotterDestroyed(this);
+  mDelegate->OnSnapshotterDestroyed(this);
 
   if (mRenderer) {
     AutoCATransaction transaction;
@@ -720,12 +727,12 @@ void NativeLayerRootSnapshotterCA::UpdateSnapshot(const IntSize& aSize) {
     // HiDPI. So in order to render at the full device pixel resolution, we set
     // a scale transform on the root offscreen layer.
     mRenderer.layer.bounds = bounds;
-    float scale = mLayerRoot->BackingScale();
+    float scale = mDelegate->BackingScale();
     mRenderer.layer.sublayerTransform = CATransform3DMakeScale(scale, scale, 1);
     mRenderer.bounds = bounds;
   }
 
-  mLayerRoot->CommitOffscreen(mRenderer.layer);
+  mDelegate->UpdateSnapshotterLayers(mRenderer.layer);
 
   mGL->MakeCurrent();
 

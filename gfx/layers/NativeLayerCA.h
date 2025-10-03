@@ -43,9 +43,7 @@ class RenderMacIOSurfaceTextureHost;
 
 namespace layers {
 
-#ifdef XP_MACOSX
 class NativeLayerRootSnapshotterCA;
-#endif
 
 enum class VideoLowPowerType {
   // These must be kept synchronized with the telemetry histogram enums.
@@ -72,6 +70,16 @@ enum class NativeLayerCAUpdateType {
   None,
   OnlyVideo,
   All,
+};
+
+class SnapshotterCADelegate {
+ public:
+  virtual ~SnapshotterCADelegate();
+
+  virtual float BackingScale() const { return 1.0f; }
+  virtual void UpdateSnapshotterLayers(CALayer* aRootCALayer) = 0;
+  virtual void OnSnapshotterDestroyed(
+      NativeLayerRootSnapshotterCA* aSnapshotter) {}
 };
 
 // NativeLayerRootCA is the CoreAnimation implementation of the NativeLayerRoot
@@ -106,7 +114,7 @@ enum class NativeLayerCAUpdateType {
 // effect. To solve this problem, we build two CALayer representations, so that
 // one representation can stay inside the window and the other can stay attached
 // to the CARenderer.
-class NativeLayerRootCA : public NativeLayerRoot {
+class NativeLayerRootCA final : public NativeLayerRoot {
  public:
   static already_AddRefed<NativeLayerRootCA> CreateForCALayer(CALayer* aLayer);
 
@@ -118,10 +126,8 @@ class NativeLayerRootCA : public NativeLayerRoot {
   bool CommitToScreen() override;
 
   void CommitOffscreen(CALayer* aRootCALayer);
-#ifdef XP_MACOSX
   void OnNativeLayerRootSnapshotterDestroyed(
       NativeLayerRootSnapshotterCA* aNativeLayerRootSnapshotter);
-#endif
 
   // Enters a mode during which CommitToScreen(), when called on a non-main
   // thread, will not apply any updates to the CALayer tree.
@@ -188,11 +194,26 @@ class NativeLayerRootCA : public NativeLayerRoot {
       const nsTArray<RefPtr<NativeLayerCA>>& aSublayers,
       bool aMutatedLayerStructure) const;
 
+  // An implementation of SnapshotterCADelegate, backed by a NativeLayerRootCA.
+  struct SnapshotterDelegate final : public SnapshotterCADelegate {
+    explicit SnapshotterDelegate(NativeLayerRootCA* aLayerRoot);
+    virtual ~SnapshotterDelegate() override;
+    virtual float BackingScale() const override {
+      return mLayerRoot->BackingScale();
+    }
+    virtual void UpdateSnapshotterLayers(CALayer* aRootCALayer) override {
+      mLayerRoot->CommitOffscreen(aRootCALayer);
+    }
+    virtual void OnSnapshotterDestroyed(
+        NativeLayerRootSnapshotterCA* aSnapshotter) override {
+      mLayerRoot->OnNativeLayerRootSnapshotterDestroyed(aSnapshotter);
+    }
+    RefPtr<NativeLayerRootCA> mLayerRoot;
+  };
+
   Mutex mMutex MOZ_UNANNOTATED;             // protects all other fields
   CALayer* mOnscreenRootCALayer = nullptr;  // strong
-#ifdef XP_MACOSX
   NativeLayerRootSnapshotterCA* mWeakSnapshotter = nullptr;
-#endif
   nsTArray<RefPtr<NativeLayerCA>> mSublayers;  // in z-order
   float mBackingScale = 1.0f;
   bool mMutated = false;
@@ -228,7 +249,7 @@ class RenderSourceNLRS;
 class NativeLayerRootSnapshotterCA final : public NativeLayerRootSnapshotter {
  public:
   static UniquePtr<NativeLayerRootSnapshotterCA> Create(
-      NativeLayerRootCA* aLayerRoot);
+      UniquePtr<SnapshotterCADelegate>&& aDelegate);
   virtual ~NativeLayerRootSnapshotterCA();
 
   bool ReadbackPixels(const gfx::IntSize& aReadbackSize,
@@ -242,11 +263,11 @@ class NativeLayerRootSnapshotterCA final : public NativeLayerRootSnapshotter {
   CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) override;
 
  protected:
-  NativeLayerRootSnapshotterCA(NativeLayerRootCA* aLayerRoot,
+  NativeLayerRootSnapshotterCA(UniquePtr<SnapshotterCADelegate>&& aDelegate,
                                RefPtr<gl::GLContext>&& aGL);
   void UpdateSnapshot(const gfx::IntSize& aSize);
 
-  RefPtr<NativeLayerRootCA> mLayerRoot;
+  UniquePtr<SnapshotterCADelegate> mDelegate;
   RefPtr<gl::GLContext> mGL;
 
   // Can be null. Created and updated in UpdateSnapshot.
