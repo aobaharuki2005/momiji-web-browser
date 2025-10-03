@@ -68,6 +68,7 @@ const NO_LANGUAGE_URL = _url("translations-tester-no-tag.html");
 const PDF_TEST_PAGE_URL = _url("translations-tester-pdf-file.pdf");
 const SELECT_TEST_PAGE_URL = _url("translations-tester-select.html");
 const TEXT_CLEANING_URL = _url("translations-text-cleaning.html");
+const ENGLISH_BENCHMARK_PAGE_URL = _url("translations-bencher-en.html");
 const SPANISH_BENCHMARK_PAGE_URL = _url("translations-bencher-es.html");
 
 const SPANISH_PAGE_URL_DOT_ORG =
