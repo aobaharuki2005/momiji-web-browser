@@ -24,7 +24,6 @@
 #include "XiphExtradata.h"
 #include "gfx2DGlue.h"
 #include "gfxUtils.h"
-#include "mozilla/EndianUtils.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SharedThreadPool.h"

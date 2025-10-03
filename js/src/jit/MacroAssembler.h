@@ -7,7 +7,6 @@
 #ifndef jit_MacroAssembler_h
 #define jit_MacroAssembler_h
 
-#include "mozilla/EndianUtils.h"
 #include "mozilla/MacroForEach.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"

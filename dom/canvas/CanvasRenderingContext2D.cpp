@@ -33,7 +33,6 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/EndianUtils.h"
 #include "mozilla/FilterInstance.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/GeckoBindings.h"
