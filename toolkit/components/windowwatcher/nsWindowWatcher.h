@@ -71,6 +71,7 @@ class nsWindowWatcher : public nsIWindowWatcher,
    *  - the user gesture activation flag based on the parent document
    *  - the text directive user activation flag; this will consume the parent
    *    document's flag and OR's it with the user gesture activation flag.
+   * If `aIsWindowOpen` is true, history handling will be set to "auto".
    *
    * Currently, the returned load state is intended to be passed into
    * `OpenWindowInternal()`.
@@ -78,7 +79,7 @@ class nsWindowWatcher : public nsIWindowWatcher,
    * function.
    */
   static already_AddRefed<nsDocShellLoadState> CreateLoadState(
-      nsIURI* aUri, nsPIDOMWindowOuter* aParent);
+      nsIURI* aUri, nsPIDOMWindowOuter* aParent, bool aIsWindowOpen = false);
 
  protected:
   virtual ~nsWindowWatcher();

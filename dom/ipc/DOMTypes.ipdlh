@@ -64,6 +64,7 @@ using mozilla::dom::NotificationDirection from "mozilla/dom/NotificationBinding.
 using mozilla::dom::UserNavigationInvolvement from "mozilla/dom/UserNavigationInvolvement.h";
 using mozilla::net::ClassificationFlags from "nsIClassifiedChannel.h";
 using mozilla::dom::ForceMediaDocument from "mozilla/dom/LoadURIOptionsBinding.h";
+using mozilla::dom::NavigationHistoryBehavior from "mozilla/dom/NavigationBinding.h";
 
 namespace mozilla {
 namespace dom {
@@ -226,6 +227,10 @@ struct DocShellLoadStateInit
   bool TextDirectiveUserActivation;
   bool AllowFocusMove;
   bool IsFromProcessingFrameAttributes;
+  bool NeedsCompletelyLoadedDocument;
+  bool ShouldNotForceReplaceInOnLoad;
+  NavigationHistoryBehavior? HistoryBehavior;
+
   SchemelessInputType SchemelessInput;
   ForceMediaDocument forceMediaDocument;
   HTTPSUpgradeTelemetryType HttpsUpgradeTelemetry;
