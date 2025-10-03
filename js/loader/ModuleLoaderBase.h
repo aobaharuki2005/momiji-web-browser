@@ -553,20 +553,6 @@ class ModuleLoaderBase : public nsISupports {
                                              ModuleLoadRequest* aRequest,
                                              Handle<Value> aError);
 
-  /**
-   * Shorthand Wrapper for JSAPI FinishDynamicImport function for the reject
-   * case where we do not have `aEvaluationPromise`. As there is no evaluation
-   * Promise, JS::FinishDynamicImport will always reject.
-   *
-   * @param aRequest
-   *        The module load request for the dynamic module.
-   * @param aResult
-   *        The result of running ModuleEvaluate -- If this is successful, then
-   *        we can await the associated EvaluationPromise.
-   */
-  void FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
-                                    nsresult aResult);
-
   void RemoveDynamicImport(ModuleLoadRequest* aRequest);
 
   nsresult CreateModuleScript(ModuleLoadRequest* aRequest);
