@@ -1640,32 +1640,23 @@ tab-group {
 
   &::part(scrollbutton-up),
   &::part(scrollbutton-down) {
+    --arrowscrollbox-scrollicon-border-radius: var(--tab-border-radius);
+    --arrowscrollbox-scrollicon-hover-background-color: var(--toolbarbutton-hover-background);
+    --arrowscrollbox-scrollicon-active-background-color: var(--toolbarbutton-active-background);
+    --arrowscrollbox-scrollicon-padding: var(--toolbarbutton-inner-padding) 2px;
+
     appearance: none;
-    background-clip: padding-box;
-    border: 4px solid transparent;
-    border-radius: calc(var(--tab-border-radius) + 4px);
+    padding: 0 4px;
     fill: var(--toolbarbutton-icon-fill);
     margin: 0;
   }
 
   #navigator-toolbox:not(:hover) &:not([highlight])::part(scrollbutton-down) {
-    transition: 1s background-color ease-out;
+    --arrowscrollbox-scrollicon-transition: 1s background-color ease-out;
   }
 
   &[highlight]::part(scrollbutton-down) {
-    background-color: SelectedItem;
-  }
-
-  &:not([scrolledtostart])::part(scrollbutton-up):hover,
-  &:not([scrolledtoend])::part(scrollbutton-down):hover {
-    background-color: var(--toolbarbutton-hover-background);
-    color: inherit;
-  }
-
-  &:not([scrolledtostart])::part(scrollbutton-up):hover:active,
-  &:not([scrolledtoend])::part(scrollbutton-down):hover:active {
-    background-color: var(--toolbarbutton-active-background);
-    color: inherit;
+    --arrowscrollbox-scrollicon-background-color: SelectedItem;
   }
 
   &[scrolledtostart]::part(overflow-start-indicator),
