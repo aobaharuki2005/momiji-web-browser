@@ -316,8 +316,12 @@ class NativeLayerCA : public NativeLayer {
   };
 
   UpdateType HasUpdate(WhichRepresentation aRepresentation);
-  bool WillUpdateAffectLayers(WhichRepresentation aRepresentation);
-  bool ApplyChanges(WhichRepresentation aRepresentation, UpdateType aUpdate);
+
+  // Apply pending updates to the underlaying CALayer. Sets *aMustRebuild to
+  // true if the update requires changing which set of CALayers should be in the
+  // parent.
+  bool ApplyChanges(WhichRepresentation aRepresentation, UpdateType aUpdate,
+                    bool* aMustRebuild);
 
   void SetBackingScale(float aBackingScale);
 
