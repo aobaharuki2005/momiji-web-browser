@@ -44,6 +44,8 @@ class GeckoInstance:
         # and causing false-positive test failures. See bug 1176798, bug 1177018,
         # bug 1210465.
         "apz.content_response_timeout": 60000,
+        # Disable extension discovery
+        "browser.discovery.enabled": False,
         # Make sure error page is not shown for blank pages with 4xx or 5xx response code
         "browser.http.blank_page_with_error_response.enabled": True,
         # Disable CFR features for automated tests.
@@ -60,6 +62,8 @@ class GeckoInstance:
         "browser.region.network.url": "",
         # Don't pull Top Sites content from the network
         "browser.topsites.contile.enabled": False,
+        # Disable translations
+        "browser.translations.enable": False,
         # Disable UI tour
         "browser.uitour.enabled": False,
         # Disable captive portal
@@ -100,6 +104,9 @@ class GeckoInstance:
         # AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
         "extensions.autoDisableScopes": 0,
         "extensions.enabledScopes": 5,
+        # Disable form autofill for extensions and credit cards
+        "extensions.formautofill.addresses.enabled": False,
+        "extensions.formautofill.creditCards.enabled": False,
         # Disable metadata caching for installed add-ons by default
         "extensions.getAddons.cache.enabled": False,
         # Disable intalling any distribution add-ons
@@ -159,6 +166,7 @@ class GeckoInstance:
         "network.dns.native_https_query": False,
         # Privacy and Tracking Protection
         "privacy.trackingprotection.enabled": False,
+        "privacy.trackingprotection.pbmode.enabled": False,
         # Disable recommended automation prefs in CI
         "remote.prefs.recommended": False,
         # Don't do network connections for mitm priming
@@ -174,6 +182,9 @@ class GeckoInstance:
         # Disable password capture, so that tests that include forms aren"t
         # influenced by the presence of the persistent doorhanger notification
         "signon.rememberSignons": False,
+        # Disable alerts for credential issues
+        "signon.management.page.breach-alerts.enabled": False,
+        "signon.management.page.vulnerable-passwords.enabled": False,
         # Prevent starting into safe mode after application crashes
         # Do not show TOU new user modal which can interfere with tests
         "termsofuse.bypassNotification": True,

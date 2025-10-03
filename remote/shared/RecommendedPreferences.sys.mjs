@@ -108,6 +108,9 @@ const COMMON_PREFERENCES = new Map([
   // This can be removed once Firefox 69 and 68 ESR and are no longer supported.
   ["browser.contentblocking.introCount", 99],
 
+  // Disable extension discovery
+  ["browser.discovery.enabled", false],
+
   // Set global `dump` function to log strings to `stdout` for release builds as well.
   ["browser.dom.window.dump.enabled", true],
 
@@ -195,6 +198,9 @@ const COMMON_PREFERENCES = new Map([
   // Make sure Topsites doesn't hit the network to retrieve tiles from Contile.
   ["browser.topsites.contile.enabled", false],
 
+  // Disable translations
+  ["browser.translations.enable", false],
+
   // Disable first run splash page on Windows 10
   ["browser.usedOnWindows10.introURL", ""],
 
@@ -268,6 +274,10 @@ const COMMON_PREFERENCES = new Map([
   // Should be set in profile.
   ["extensions.autoDisableScopes", 0],
   ["extensions.enabledScopes", 5],
+
+  // Disable form autofill for extensions and credit cards
+  ["extensions.formautofill.addresses.enabled", false],
+  ["extensions.formautofill.creditCards.enabled", false],
 
   // Disable metadata caching for installed add-ons by default
   ["extensions.getAddons.cache.enabled", false],
@@ -351,6 +361,7 @@ const COMMON_PREFERENCES = new Map([
 
   // Privacy and Tracking Protection
   ["privacy.trackingprotection.enabled", false],
+  ["privacy.trackingprotection.pbmode.enabled", false],
 
   // Used to check if recommended preferences are applied
   ["remote.prefs.recommended.applied", true],
@@ -377,6 +388,10 @@ const COMMON_PREFERENCES = new Map([
   // Do not automatically fill sign-in forms with known usernames and
   // passwords
   ["signon.autofillForms", false],
+
+  // Disable alerts for credential issues
+  ["signon.management.page.breach-alerts.enabled", false],
+  ["signon.management.page.vulnerable-passwords.enabled", false],
 
   // Disable password capture, so that tests that include forms are not
   // influenced by the presence of the persistent doorhanger notification
