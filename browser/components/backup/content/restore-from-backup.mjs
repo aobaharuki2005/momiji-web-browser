@@ -81,17 +81,31 @@ export default class RestoreFromBackup extends MozLitElement {
     }
 
     this.addEventListener("BackupUI:SelectNewFilepickerPath", this);
+
+    // Resize the textarea when the window is resized
+    if (this.aboutWelcomeEmbedded) {
+      this._handleWindowResize = () => this.resizeTextarea();
+      window.addEventListener("resize", this._handleWindowResize);
+    }
   }
 
-  handleEvent(event) {
-    if (event.type == "BackupUI:SelectNewFilepickerPath") {
-      let { path, iconURL } = event.detail;
-      this._fileIconURL = iconURL;
-      this.getBackupFileInfo(path);
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._handleWindowResize) {
+      window.removeEventListener("resize", this._handleWindowResize);
+      this._handleWindowResize = null;
     }
   }
 
   updated(changedProperties) {
+    super.updated(changedProperties);
+
+    // Resize the textarea. This only runs once on initial render,
+    // and once each time one of our reactive properties is changed.
+    if (this.aboutWelcomeEmbedded) {
+      this.resizeTextarea();
+    }
+
     if (changedProperties.has("backupServiceState")) {
       // If we got a recovery error, recoveryInProgress should be false
       const inProgress =
@@ -105,6 +119,14 @@ export default class RestoreFromBackup extends MozLitElement {
           detail: { recoveryInProgress: inProgress },
         })
       );
+    }
+  }
+
+  handleEvent(event) {
+    if (event.type == "BackupUI:SelectNewFilepickerPath") {
+      let { path, iconURL } = event.detail;
+      this._fileIconURL = iconURL;
+      this.getBackupFileInfo(path);
     }
   }
 
@@ -165,6 +187,27 @@ export default class RestoreFromBackup extends MozLitElement {
     );
   }
 
+  handleTextareaResize() {
+    this.resizeTextarea();
+  }
+
+  /**
+   * Resizes the textarea to adjust to the size of the content within
+   */
+  resizeTextarea() {
+    const target = this.filePicker;
+    if (!target) {
+      return;
+    }
+
+    const hasValue = target.value && !!target.value.trim().length;
+
+    target.style.height = "auto";
+    if (hasValue) {
+      target.style.height = target.scrollHeight + "px";
+    }
+  }
+
   applyContentCustomizations() {
     if (this.aboutWelcomeEmbedded) {
       this.style.setProperty("--button-group-justify-content", "flex-start");
@@ -173,13 +216,12 @@ export default class RestoreFromBackup extends MozLitElement {
   }
 
   controlsTemplate() {
-    let iconURL = null;
-    if (this.backupServiceState?.backupFileToRestore) {
-      if (this.aboutWelcomeEmbedded) {
-        iconURL = this.#placeholderFileIconURL;
-      } else {
-        iconURL = this._fileIconURL || this.#placeholderFileIconURL;
-      }
+    let iconURL = this.#placeholderFileIconURL;
+    if (
+      this.backupServiceState?.backupFileToRestore &&
+      !this.aboutWelcomeEmbedded
+    ) {
+      iconURL = this._fileIconURL || this.#placeholderFileIconURL;
     }
     return html`
       <fieldset id="backup-restore-controls">
@@ -189,18 +231,11 @@ export default class RestoreFromBackup extends MozLitElement {
             for="backup-filepicker-input"
             data-l10n-id="restore-from-backup-filepicker-label"
           ></label>
-          <div id="backup-filepicker">
-            <input
-              id="backup-filepicker-input"
-              type="text"
-              readonly
-              .value=${this.backupServiceState?.backupFileToRestore
-                ? this.backupServiceState?.backupFileToRestore
-                : ""}
-              style=${styleMap(
-                iconURL ? { backgroundImage: `url(${iconURL})` } : {}
-              )}
-            />
+          <div
+            id="backup-filepicker"
+            class=${this.aboutWelcomeEmbedded ? "aw-embedded-filepicker" : ""}
+          >
+            ${this.inputTemplate(iconURL)}
             <moz-button
               id="backup-filepicker-button"
               @click=${this.handleChooseBackupFile}
@@ -226,6 +261,36 @@ export default class RestoreFromBackup extends MozLitElement {
             : null}
         </fieldset>
       </fieldset>
+    `;
+  }
+
+  inputTemplate(iconURL) {
+    const styles = styleMap(
+      iconURL ? { backgroundImage: `url(${iconURL})` } : {}
+    );
+    const backupFileName = this.backupServiceState?.backupFileToRestore || "";
+
+    if (this.aboutWelcomeEmbedded) {
+      return html`
+        <textarea
+          id="backup-filepicker-input"
+          rows="1"
+          readonly
+          .value=${backupFileName}
+          style=${styles}
+          @input=${this.handleTextareaResize}
+        ></textarea>
+      `;
+    }
+
+    return html`
+      <input
+        id="backup-filepicker-input"
+        type="text"
+        readonly
+        .value=${backupFileName}
+        style=${styles}
+      />
     `;
   }
 
