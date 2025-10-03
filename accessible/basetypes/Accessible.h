@@ -183,6 +183,8 @@ class Accessible {
 
   virtual role Role() const = 0;
 
+  virtual role NativeRole() const = 0;
+
   /**
    * Return child accessible at the given index.
    */
@@ -829,11 +831,28 @@ class Accessible {
    */
   mozilla::a11y::role GetMinimumRole(mozilla::a11y::role aRole) const;
 
+  /**
+   * Given a role and an accessible's state, parentage, and other attributes
+   * transform the role to reflect its correct aria role.
+   */
+  mozilla::a11y::role ARIATransformRole(mozilla::a11y::role aRole) const;
+
  private:
   static const uint8_t kTypeBits = 6;
   static const uint8_t kGenericTypesBits = 18;
 
   void StaticAsserts() const;
+
+  /*
+   * This function assumes that the current role is not valid. It searches for a
+   * fallback role in the role attribute string, and returns it. If there is no
+   * valid fallback role in the role attribute string, the function returns the
+   * native role. The aRolesToSkip parameter will cause the function to skip any
+   * roles found in the role attribute string when searching for the next valid
+   * role.
+   */
+  role FindNextValidARIARole(
+      std::initializer_list<nsStaticAtom*> aRolesToSkip) const;
 
  protected:
   uint32_t mType : kTypeBits;

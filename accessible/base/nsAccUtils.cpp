@@ -221,12 +221,12 @@ bool nsAccUtils::IsDOMAttrTrue(const LocalAccessible* aAccessible,
   return el && ARIAAttrValueIs(el, aAttr, nsGkAtoms::_true, eCaseMatters);
 }
 
-Accessible* nsAccUtils::TableFor(Accessible* aAcc) {
+Accessible* nsAccUtils::TableFor(const Accessible* aAcc) {
   if (!aAcc ||
       (!aAcc->IsTable() && !aAcc->IsTableRow() && !aAcc->IsTableCell())) {
     return nullptr;
   }
-  Accessible* table = aAcc;
+  Accessible* table = const_cast<Accessible*>(aAcc);
   for (; table && !table->IsTable(); table = table->Parent()) {
   }
   // We don't assert (table && table->IsTable()) here because

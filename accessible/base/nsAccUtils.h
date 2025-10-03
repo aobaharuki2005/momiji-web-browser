@@ -104,7 +104,7 @@ class nsAccUtils {
    */
   static HyperTextAccessible* GetTextContainer(nsINode* aNode);
 
-  static Accessible* TableFor(Accessible* aRow);
+  static Accessible* TableFor(const Accessible* aRow);
   static LocalAccessible* TableFor(LocalAccessible* aRow);
 
   static const LocalAccessible* TableFor(const LocalAccessible* aAcc) {

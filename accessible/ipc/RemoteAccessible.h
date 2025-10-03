@@ -149,6 +149,8 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
    */
   virtual role Role() const override { return mRole; }
 
+  virtual role NativeRole() const override { return role::NOTHING; }
+
   /**
    * Return true if this is an embedded object.
    */
