@@ -1453,7 +1453,7 @@ export class BackupService extends EventTarget {
             manifest.meta
           );
 
-          let nowSeconds = Math.floor(ChromeUtils.now() / 1000);
+          let nowSeconds = Math.floor(Date.now() / 1000);
           Services.prefs.setIntPref(
             LAST_BACKUP_TIMESTAMP_PREF_NAME,
             nowSeconds
@@ -1484,7 +1484,7 @@ export class BackupService extends EventTarget {
           Services.prefs.setStringPref(
             BACKUP_DEBUG_INFO_PREF_NAME,
             JSON.stringify({
-              lastBackupAttempt: Math.floor(ChromeUtils.now() / 1000),
+              lastBackupAttempt: Math.floor(Date.now() / 1000),
               errorCode: e instanceof BackupError ? e : ERRORS.UNKNOWN,
               lastRunStep: currentStep,
             })
@@ -3576,7 +3576,7 @@ export class BackupService extends EventTarget {
 
     if (lazy.scheduledBackupsPref) {
       lazy.logConsole.debug("Scheduled backups enabled.");
-      let now = Math.floor(ChromeUtils.now() / 1000);
+      let now = Math.floor(Date.now() / 1000);
       let lastBackupDate = this.#_state.lastBackupDate;
       if (lastBackupDate && lastBackupDate > now) {
         lazy.logConsole.error(
@@ -3625,7 +3625,7 @@ export class BackupService extends EventTarget {
    * into its own method to make it easier to stub out in tests.
    */
   createBackupOnIdleDispatch() {
-    let now = Math.floor(ChromeUtils.now() / 1000);
+    let now = Math.floor(Date.now() / 1000);
     let errorStateDebugInfo = Services.prefs.getStringPref(
       BACKUP_DEBUG_INFO_PREF_NAME,
       ""
