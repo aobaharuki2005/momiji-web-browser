@@ -552,10 +552,10 @@ tasks:
         virtualization: virtual
         fetches:
             fetch:
-                - translations.inference
-                - translations.esen.lex
-                - translations.esen.model
-                - translations.esen.vocab
+                - tr8ns.inference
+                - tr8ns.T.esen.lex
+                - tr8ns.T.esen.model
+                - tr8ns.T.esen.vocab
 
     mochitest-chrome:
         description: "Mochitest chrome run"
