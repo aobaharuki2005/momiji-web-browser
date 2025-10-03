@@ -10,7 +10,6 @@
 #define mozilla_DoublyLinkedList_h
 
 #include <algorithm>
-#include <iosfwd>
 #include <iterator>
 #include <type_traits>
 
