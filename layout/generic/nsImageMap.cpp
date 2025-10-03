@@ -53,14 +53,12 @@ class Area {
 
   RefPtr<HTMLAreaElement> mArea;
   nsTArray<nscoord> mCoords;
-  int32_t mNumCoords;
   bool mHasFocus = false;
 };
 
 Area::Area(HTMLAreaElement* aArea) : mArea(aArea) {
   MOZ_COUNT_CTOR(Area);
   MOZ_ASSERT(mArea, "How did that happen?");
-  mNumCoords = 0;
   mHasFocus = false;
 }
 
@@ -90,7 +88,6 @@ void Area::ParseCoords(const nsAString& aSpec) {
     /*
      * Nothing in an empty list
      */
-    mNumCoords = 0;
     mCoords.Clear();
     if (*cp == '\0') {
       free(cp);
@@ -209,7 +206,6 @@ void Area::ParseCoords(const nsAString& aSpec) {
       }
     }
 
-    mNumCoords = cnt;
     mCoords = std::move(value_list);
 
     free(cp);
@@ -271,7 +267,7 @@ void RectArea::ParseCoords(const nsAString& aSpec) {
 
   bool saneRect = true;
   int32_t flag = nsIScriptError::warningFlag;
-  if (mNumCoords >= 4) {
+  if (mCoords.Length() >= 4) {
     if (mCoords[0] > mCoords[2]) {
       // x-coords in reversed order
       nscoord x = mCoords[2];
@@ -288,7 +284,7 @@ void RectArea::ParseCoords(const nsAString& aSpec) {
       saneRect = false;
     }
 
-    if (mNumCoords > 4) {
+    if (mCoords.Length() > 4) {
       // Someone missed the concept of a rect here
       saneRect = false;
     }
@@ -303,7 +299,7 @@ void RectArea::ParseCoords(const nsAString& aSpec) {
 }
 
 bool RectArea::IsInside(nscoord x, nscoord y) const {
-  if (mNumCoords >= 4) {  // Note: > is for nav compatibility
+  if (mCoords.Length() >= 4) {  // Note: > is for nav compatibility
     nscoord x1 = mCoords[0];
     nscoord y1 = mCoords[1];
     nscoord x2 = mCoords[2];
@@ -320,7 +316,7 @@ bool RectArea::IsInside(nscoord x, nscoord y) const {
 void RectArea::DrawFocus(nsIFrame* aFrame, DrawTarget& aDrawTarget,
                          const ColorPattern& aColor,
                          const StrokeOptions& aStrokeOptions) {
-  if (mNumCoords < 4) {
+  if (mCoords.Length() < 4) {
     return;
   }
   nscoord x1 = nsPresContext::CSSPixelsToAppUnits(mCoords[0]);
@@ -336,7 +332,7 @@ void RectArea::DrawFocus(nsIFrame* aFrame, DrawTarget& aDrawTarget,
 }
 
 void RectArea::GetRect(nsIFrame* aFrame, nsRect& aRect) {
-  if (mNumCoords < 4) {
+  if (mCoords.Length() < 4) {
     return;
   }
   nscoord x1 = nsPresContext::CSSPixelsToAppUnits(mCoords[0]);
@@ -368,8 +364,8 @@ PolyArea::PolyArea(HTMLAreaElement* aArea) : Area(aArea) {}
 void PolyArea::ParseCoords(const nsAString& aSpec) {
   Area::ParseCoords(aSpec);
 
-  if (mNumCoords >= 2) {
-    if (mNumCoords & 1U) {
+  if (mCoords.Length() >= 2) {
+    if (mCoords.Length() & 1U) {
       logMessage(mArea, aSpec, nsIScriptError::warningFlag,
                  "ImageMapPolyOddNumberOfCoords");
     }
@@ -380,16 +376,16 @@ void PolyArea::ParseCoords(const nsAString& aSpec) {
 }
 
 bool PolyArea::IsInside(nscoord x, nscoord y) const {
-  if (mNumCoords >= 6) {
+  if (mCoords.Length() >= 6) {
     int32_t intersects = 0;
     nscoord wherex = x;
     nscoord wherey = y;
-    int32_t totalv = mNumCoords / 2;
-    int32_t totalc = totalv * 2;
+    size_t totalv = mCoords.Length() / 2;
+    size_t totalc = totalv * 2;
     nscoord xval = mCoords[totalc - 2];
     nscoord yval = mCoords[totalc - 1];
-    int32_t end = totalc;
-    int32_t pointer = 1;
+    size_t end = totalc;
+    size_t pointer = 1;
 
     if ((yval >= wherey) != (mCoords[pointer] >= wherey)) {
       if ((xval >= wherex) == (mCoords[0] >= wherex)) {
@@ -456,7 +452,7 @@ bool PolyArea::IsInside(nscoord x, nscoord y) const {
 void PolyArea::DrawFocus(nsIFrame* aFrame, DrawTarget& aDrawTarget,
                          const ColorPattern& aColor,
                          const StrokeOptions& aStrokeOptions) {
-  if (mNumCoords < 6) {
+  if (mCoords.Length() < 6) {
     return;
   }
   // Where possible, we want all horizontal and vertical lines to align on
@@ -468,7 +464,7 @@ void PolyArea::DrawFocus(nsIFrame* aFrame, DrawTarget& aDrawTarget,
   Point p1(pc->CSSPixelsToDevPixels(mCoords[0]),
            pc->CSSPixelsToDevPixels(mCoords[1]));
   Point p2, p1snapped, p2snapped;
-  for (int32_t i = 2; i < mNumCoords - 1; i += 2) {
+  for (size_t i = 2; i < mCoords.Length() - 1; i += 2) {
     p2.x = pc->CSSPixelsToDevPixels(mCoords[i]);
     p2.y = pc->CSSPixelsToDevPixels(mCoords[i + 1]);
     p1snapped = p1;
@@ -488,11 +484,11 @@ void PolyArea::DrawFocus(nsIFrame* aFrame, DrawTarget& aDrawTarget,
 }
 
 void PolyArea::GetRect(nsIFrame* aFrame, nsRect& aRect) {
-  if (mNumCoords >= 6) {
+  if (mCoords.Length() >= 6) {
     nscoord x1, x2, y1, y2, xtmp, ytmp;
     x1 = x2 = nsPresContext::CSSPixelsToAppUnits(mCoords[0]);
     y1 = y2 = nsPresContext::CSSPixelsToAppUnits(mCoords[1]);
-    for (int32_t i = 2; i < mNumCoords - 1; i += 2) {
+    for (size_t i = 2; i < mCoords.Length() - 1; i += 2) {
       xtmp = nsPresContext::CSSPixelsToAppUnits(mCoords[i]);
       ytmp = nsPresContext::CSSPixelsToAppUnits(mCoords[i + 1]);
       x1 = x1 < xtmp ? x1 : xtmp;
@@ -526,13 +522,13 @@ void CircleArea::ParseCoords(const nsAString& aSpec) {
 
   bool wrongNumberOfCoords = false;
   int32_t flag = nsIScriptError::warningFlag;
-  if (mNumCoords >= 3) {
+  if (mCoords.Length() >= 3) {
     if (mCoords[2] < 0) {
       logMessage(mArea, aSpec, nsIScriptError::errorFlag,
                  "ImageMapCircleNegativeRadius");
     }
 
-    if (mNumCoords > 3) {
+    if (mCoords.Length() > 3) {
       wrongNumberOfCoords = true;
     }
   } else {
@@ -547,7 +543,7 @@ void CircleArea::ParseCoords(const nsAString& aSpec) {
 
 bool CircleArea::IsInside(nscoord x, nscoord y) const {
   // Note: > is for nav compatibility
-  if (mNumCoords >= 3) {
+  if (mCoords.Length() >= 3) {
     nscoord x1 = mCoords[0];
     nscoord y1 = mCoords[1];
     nscoord radius = mCoords[2];
@@ -567,7 +563,7 @@ bool CircleArea::IsInside(nscoord x, nscoord y) const {
 void CircleArea::DrawFocus(nsIFrame* aFrame, DrawTarget& aDrawTarget,
                            const ColorPattern& aColor,
                            const StrokeOptions& aStrokeOptions) {
-  if (mNumCoords < 3) {
+  if (mCoords.Length() < 3) {
     return;
   }
   Point center(aFrame->PresContext()->CSSPixelsToDevPixels(mCoords[0]),
@@ -583,7 +579,7 @@ void CircleArea::DrawFocus(nsIFrame* aFrame, DrawTarget& aDrawTarget,
 }
 
 void CircleArea::GetRect(nsIFrame* aFrame, nsRect& aRect) {
-  if (mNumCoords < 3) {
+  if (mCoords.Length() < 3) {
     return;
   }
   nscoord x1 = nsPresContext::CSSPixelsToAppUnits(mCoords[0]);
