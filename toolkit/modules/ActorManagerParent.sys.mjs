@@ -452,6 +452,26 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
+  PageExtractor: {
+    parent: {
+      esModuleURI: "resource://gre/actors/PageExtractorParent.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource://gre/actors/PageExtractorChild.sys.mjs",
+      events: {
+        DOMContentLoaded: { createActor: false },
+      },
+    },
+    matches: [
+      "http://*/*",
+      "https://*/*",
+      "file:///*",
+      "moz-extension://*",
+      "data:text/html,*",
+    ],
+    messageManagerGroups: ["browsers"],
+  },
+
   PopupAndRedirectBlocking: {
     parent: {
       esModuleURI:
