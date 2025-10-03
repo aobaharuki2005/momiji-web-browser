@@ -1,11 +1,3 @@
-use std::{
-    convert::{TryFrom, TryInto},
-    mem,
-    os::raw::c_int,
-};
-
-use log::trace;
-
 use super::{
     err::secstatus_to_res,
     p11::{
@@ -20,6 +12,12 @@ use super::{
 use crate::{
     err::{Error, Res},
     hpke::Aead as AeadId,
+};
+use log::trace;
+use std::{
+    convert::{TryFrom, TryInto},
+    mem,
+    os::raw::c_int,
 };
 
 /// All the nonces are the same length.  Exploit that.
@@ -145,7 +143,7 @@ impl Aead {
                 aad.as_ptr(),
                 c_int_len(aad.len()),
                 ct.as_mut_ptr(),
-                &raw mut ct_len,
+                &mut ct_len,
                 c_int_len(ct.len()), // signed :(
                 tag.as_mut_ptr(),
                 c_int_len(tag.len()),
@@ -178,7 +176,7 @@ impl Aead {
                 aad.as_ptr(),
                 c_int_len(aad.len()),
                 pt.as_mut_ptr(),
-                &raw mut pt_len,
+                &mut pt_len,
                 c_int_len(pt.len()),                     // signed :(
                 ct.as_ptr().add(pt_expected).cast_mut(), // const cast :(
                 c_int_len(TAG_LEN),
