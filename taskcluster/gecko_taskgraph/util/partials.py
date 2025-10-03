@@ -283,6 +283,9 @@ def _populate_release_history(product, branch, partial_updates):
         url_pattern = history["fileUrls"][localtest]["completes"]["*"]
 
         for platform in history["platforms"]:
+            if platform not in FTP_PLATFORM_MAP:
+                # skip EOL platforms
+                continue
             if "alias" in history["platforms"][platform]:
                 continue
             if platform not in builds:
