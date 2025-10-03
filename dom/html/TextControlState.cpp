@@ -1720,24 +1720,7 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
     // Create an editor
     newTextEditor = new TextEditor();
     preDestroyer.Init(newTextEditor);
-
-    // Make sure we clear out the non-breaking space before we initialize the
-    // editor
-    nsresult rv = mBoundFrame->UpdateValueDisplay(true);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsTextControlFrame::UpdateValueDisplay() failed");
-      return rv;
-    }
   } else {
-    if (aValue || !mEditorInitialized) {
-      // Set the correct value in the root node
-      nsresult rv = mBoundFrame->UpdateValueDisplay(true, aValue);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("nsTextControlFrame::UpdateValueDisplay() failed");
-        return rv;
-      }
-    }
-
     newTextEditor = mTextEditor;  // just pretend that we have a new editor!
 
     // Don't lose application flags in the process.

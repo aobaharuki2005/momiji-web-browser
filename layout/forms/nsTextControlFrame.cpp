@@ -1034,8 +1034,7 @@ void nsTextControlFrame::SetInitialChildList(ChildListID aListID,
   }
 }
 
-nsresult nsTextControlFrame::UpdateValueDisplay(bool aNotify,
-                                                const nsAString* aValue) {
+nsresult nsTextControlFrame::UpdateValueDisplay(bool aNotify) {
   MOZ_ASSERT(mRootNode, "Must have a div content\n");
   MOZ_ASSERT(!mEditorHasBeenInitialized,
              "Do not call this after editor has been initialized");
@@ -1060,12 +1059,7 @@ nsresult nsTextControlFrame::UpdateValueDisplay(bool aNotify,
 
   // Get the current value of the textfield from the content.
   nsAutoString value;
-  if (aValue) {
-    value = *aValue;
-  } else {
-    ControlElement()->GetTextEditorValue(value);
-  }
-
+  ControlElement()->GetTextEditorValue(value);
   return textContent->SetText(value, aNotify);
 }
 
