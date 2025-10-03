@@ -232,15 +232,15 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   static_assert(NS_MAX_FRAMESET_SPEC_COUNT <
                     UINT_MAX / sizeof(nsHTMLFramesetBorderFrame*),
                 "Should not overflow nsHTMLFramesetBorderFrame");
-  mVerBorders = MakeUnique<nsHTMLFramesetBorderFrame*[]>(
-      mNumCols);  // 1 more than number of ver borders
+  mVerBorders.Clear();
+  mVerBorders.SetLength(mNumCols);  // 1 more than number of ver borders
 
   for (int verX = 0; verX < mNumCols; verX++) {
     mVerBorders[verX] = nullptr;
   }
 
-  mHorBorders = MakeUnique<nsHTMLFramesetBorderFrame*[]>(
-      mNumRows);  // 1 more than number of hor borders
+  mHorBorders.Clear();
+  mHorBorders.SetLength(mNumRows);  // 1 more than number of hor borders
 
   for (int horX = 0; horX < mNumRows; horX++) {
     mHorBorders[horX] = nullptr;
