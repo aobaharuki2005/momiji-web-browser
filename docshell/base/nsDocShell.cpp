@@ -5050,6 +5050,19 @@ nsresult nsDocShell::SetCurScrollPosEx(int32_t aCurHorizontalPos,
   return NS_OK;
 }
 
+void nsDocShell::RestoreScrollPosFromActiveSHE() {
+  nscoord bx = 0;
+  nscoord by = 0;
+  if ((mozilla::SessionHistoryInParent() ? !!mActiveEntry : !!mOSHE)) {
+    if (mozilla::SessionHistoryInParent()) {
+      mActiveEntry->GetScrollPosition(&bx, &by);
+    } else {
+      mOSHE->GetScrollPosition(&bx, &by);
+    }
+    SetCurScrollPosEx(bx, by);
+  }
+}
+
 void nsDocShell::SetScrollbarPreference(mozilla::ScrollbarPreference aPref) {
   if (mScrollbarPref == aPref) {
     return;

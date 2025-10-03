@@ -9,6 +9,7 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/AbortController.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/NavigateEventBinding.h"
 #include "mozilla/dom/Navigation.h"
@@ -424,8 +425,16 @@ static void RestoreScrollPositionData(Document* aDocument,
     return;
   }
 
-  // This will be implemented in Bug 1955947. Make sure to move this to
-  // `SessionHistoryEntry`/`SessionHistoryInfo`.
+  RefPtr<nsDocShell> docShell = nsDocShell::Cast(aDocument->GetDocShell());
+  if (!docShell) {
+    return;
+  }
+
+  // 3. The user agent should attempt to use entry's scroll position data to
+  // restore the scroll positions of entry's document's restorable scrollable
+  // regions. The user agent may continue to attempt to do so periodically,
+  // until document's has been scrolled by the user becomes true.
+  docShell->RestoreScrollPosFromActiveSHE();
 }
 
 // https://html.spec.whatwg.org/#process-scroll-behavior
