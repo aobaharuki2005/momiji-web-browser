@@ -307,8 +307,8 @@ struct NativeLayerCARepresentation {
                     const Maybe<gfx::RoundedRect>& aRoundedClip,
                     float aBackingScale, bool aSurfaceIsFlipped,
                     gfx::SamplingFilter aSamplingFilter, bool aSpecializeVideo,
-                    CFTypeRefPtr<IOSurfaceRef> aFrontSurface,
-                    CFTypeRefPtr<CGColorRef> aColor, bool aIsDRM,
+                    const CFTypeRefPtr<IOSurfaceRef>& aFrontSurface,
+                    const Maybe<gfx::DeviceColor>& aColor, bool aIsDRM,
                     bool aIsVideo);
 
   // Return whether any aspects of this layer representation have been mutated
@@ -477,10 +477,10 @@ class NativeLayerCA : public NativeLayer {
   gfx::IntSize mSize;
   Maybe<gfx::IntRect> mClipRect;
   Maybe<gfx::RoundedRect> mRoundedClipRect;
+  Maybe<gfx::DeviceColor> mColor;
   gfx::SamplingFilter mSamplingFilter = gfx::SamplingFilter::POINT;
   float mBackingScale = 1.0f;
   bool mSurfaceIsFlipped = false;
-  CFTypeRefPtr<CGColorRef> mColor;
   const bool mIsOpaque = false;
   bool mRootWindowIsFullscreen = false;
   bool mSpecializeVideo = false;

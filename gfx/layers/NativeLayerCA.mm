@@ -851,7 +851,7 @@ NativeLayerCA::NativeLayerCA(bool aIsOpaque)
 #endif
 }
 
-CGColorRef CGColorCreateForDeviceColor(gfx::DeviceColor aColor) {
+CGColorRef CGColorCreateForDeviceColor(const gfx::DeviceColor& aColor) {
   if (StaticPrefs::gfx_color_management_native_srgb()) {
     return CGColorCreateSRGB(aColor.r, aColor.g, aColor.b, aColor.a);
   }
@@ -860,9 +860,10 @@ CGColorRef CGColorCreateForDeviceColor(gfx::DeviceColor aColor) {
 }
 
 NativeLayerCA::NativeLayerCA(gfx::DeviceColor aColor)
-    : mMutex("NativeLayerCA"), mIsOpaque(aColor.a >= 1.0f) {
+    : mMutex("NativeLayerCA"),
+      mColor(Some(aColor)),
+      mIsOpaque(aColor.a >= 1.0f) {
   MOZ_ASSERT(aColor.a > 0.0f, "Can't handle a fully transparent backdrop.");
-  mColor.AssignUnderCreateRule(CGColorCreateForDeviceColor(aColor));
 }
 
 NativeLayerCA::NativeLayerCA(const IntSize& aSize, bool aIsOpaque)
@@ -1186,10 +1187,9 @@ void NativeLayerCA::DumpLayer(std::ostream& aOutputStream) {
   }
 
   if (mColor) {
-    const CGFloat* components = CGColorGetComponents(mColor.get());
-    aOutputStream << "background: rgb(" << components[0] * 255.0f << " "
-                  << components[1] * 255.0f << " " << components[2] * 255.0f
-                  << "); opacity: " << components[3] << "; ";
+    aOutputStream << "background: rgb(" << mColor->r * 255.0f << " "
+                  << mColor->g * 255.0f << " " << mColor->b * 255.0f
+                  << "); opacity: " << mColor->a << "; ";
 
     // That's all we need for color layers. We don't need to specify an image.
     aOutputStream << "\"/></div>\n";
@@ -1716,8 +1716,8 @@ bool NativeLayerCARepresentation::ApplyChanges(
     const IntRect& aDisplayRect, const Maybe<IntRect>& aClipRect,
     const Maybe<gfx::RoundedRect>& aRoundedClip, float aBackingScale,
     bool aSurfaceIsFlipped, gfx::SamplingFilter aSamplingFilter,
-    bool aSpecializeVideo, CFTypeRefPtr<IOSurfaceRef> aFrontSurface,
-    CFTypeRefPtr<CGColorRef> aColor, bool aIsDRM, bool aIsVideo) {
+    bool aSpecializeVideo, const CFTypeRefPtr<IOSurfaceRef>& aFrontSurface,
+    const Maybe<gfx::DeviceColor>& aColor, bool aIsDRM, bool aIsVideo) {
   // If we have an OnlyVideo update, handle it and early exit.
   if (aUpdate == UpdateType::OnlyVideo) {
     // If we don't have any updates to do, exit early with success. This is
@@ -1795,7 +1795,8 @@ bool NativeLayerCARepresentation::ApplyChanges(
     if (aColor) {
       // Color layers set a color on the clip layer and don't get a content
       // layer.
-      mRoundedClipCALayer.backgroundColor = aColor.get();
+      mRoundedClipCALayer.backgroundColor =
+          CGColorCreateForDeviceColor(*aColor);
     } else {
       if (aSpecializeVideo) {
 #ifdef NIGHTLY_BUILD
