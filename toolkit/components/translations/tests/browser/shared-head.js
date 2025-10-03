@@ -1220,7 +1220,7 @@ async function pathExists(path) {
  *
  * @returns {Promise<object>} - An object containing the removeMocks function and remoteClients.
  */
-async function createFileSystemRemoteSettings(languagePairs) {
+async function createFileSystemRemoteSettings(languagePairs, architecture) {
   const { removeMocks, remoteClients } = await createAndMockRemoteSettings({
     languagePairs,
     useMockedTranslator: false,
@@ -1255,12 +1255,14 @@ async function createFileSystemRemoteSettings(languagePairs) {
 
   const download = async record => {
     const recordPath = normalizePathForOS(
-      `${artifactDirectory}/${record.name}.zst`
+      record.name === "bergamot-translator"
+        ? `${artifactDirectory}/${record.name}.zst`
+        : `${artifactDirectory}/${architecture}.${record.name}.zst`
     );
 
     if (!(await pathExists(recordPath))) {
       throw new Error(`
-        The record ${record.name} was not found in ${artifactDirectory} specified by MOZ_FETCHES_DIR.
+        The record ${record.name} was not found in ${artifactDirectory} specified by MOZ_FETCHES_DIR at the expected path: ${recordPath}
         If you are running a Translations end-to-end test locally, you will need to download the required artifacts to MOZ_FETCHES_DIR.
         To configure MOZ_FETCHES_DIR to run Translations end-to-end tests locally, please run toolkit/components/translations/tests/scripts/download-translations-artifacts.py
       `);
@@ -1390,6 +1392,7 @@ async function loadTestPage({
   systemLocales = ["en"],
   appLocales,
   webLanguages,
+  architecture,
   contentEagerMode = false,
   win = window,
 }) {
@@ -1444,7 +1447,7 @@ async function loadTestPage({
     );
 
     const result = endToEndTest
-      ? await createFileSystemRemoteSettings(languagePairs)
+      ? await createFileSystemRemoteSettings(languagePairs, architecture)
       : await createAndMockRemoteSettings({
           languagePairs,
           autoDownloadFromRemoteSettings,
