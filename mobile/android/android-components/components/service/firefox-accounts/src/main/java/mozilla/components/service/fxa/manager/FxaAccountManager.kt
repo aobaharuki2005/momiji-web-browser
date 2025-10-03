@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -20,6 +21,7 @@ import mozilla.appservices.fxaclient.FxaState
 import mozilla.appservices.syncmanager.DeviceSettings
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.concept.sync.AccountEvent
 import mozilla.components.concept.sync.AccountEventsObserver
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthFlowError
@@ -115,6 +117,7 @@ open class FxaAccountManager(
 
     private val accountOnDisk by lazy { getStorageWrapper().account() }
     private val account by lazy { accountOnDisk.account() }
+    private val accountStateEventsObserver = AccountStateEventsObserver(this::queueEvent)
 
     // Note on threading: we use a single-threaded executor, so there's no concurrent access possible.
     // However, that executor doesn't guarantee that it'll always use the same thread, and so vars
@@ -149,6 +152,8 @@ open class FxaAccountManager(
     private var syncManager: SyncManager? = null
 
     init {
+        registerForAccountEvents(accountStateEventsObserver, ProcessLifecycleOwner.get(), false)
+
         syncConfig?.let {
             // Initialize sync manager with the passed-in config.
             require(syncConfig.supportedEngines.isNotEmpty()) {
@@ -425,6 +430,12 @@ open class FxaAccountManager(
             accountStateSideEffects(FxaState.Disconnected, Event.Account.Logout)
         }
         logger.debug("processQueue: finished")
+    }
+
+    internal fun queueEvent(event: Event) {
+        CoroutineScope(coroutineContext).launch {
+            processQueue(event)
+        }
     }
 
     private fun calcFxaEvent(event: Event): FxaEvent? = when (event) {
@@ -762,6 +773,28 @@ open class FxaAccountManager(
         SyncAuthInfoCache(context).clear()
         CoroutineScope(coroutineContext).launch {
             refreshProfile(true)
+        }
+    }
+}
+
+internal class AccountStateEventsObserver(
+    internal val queueEvent: (Event) -> Unit,
+) : AccountEventsObserver {
+    private val logger = Logger("FxA AccountStateEventsObserver")
+
+    override fun onEvents(events: List<AccountEvent>) {
+        for (event in events) {
+            when (event) {
+                AccountEvent.AccountAuthStateChanged -> {
+                    logger.info("Saw AccountAuthStateChanged")
+                    queueEvent(Event.Account.AuthenticationError("AccountAuthStateChanged event"))
+                }
+                AccountEvent.AccountDestroyed -> {
+                    logger.info("Saw AccountDestroyed")
+                    queueEvent(Event.Account.Logout)
+                }
+                else -> Unit
+            }
         }
     }
 }
