@@ -586,11 +586,14 @@ RefPtr<Screen> ScreenHelperGTK::GetScreenForWindow(nsWindow* aWindow) {
       RefPtr<Screen> screen =
           ScreenManager::GetSingleton().CurrentScreenList().SafeElementAt(
               index);
-#ifdef MOZ_LOGGING
-      auto rect = screen->GetRect();
-      LOG_SCREEN("GetScreenForWindow() [%p] [%d] screen [%d, %d] -> [%d x %d]",
-                 aWindow, index, rect.x, rect.y, rect.width, rect.height);
-#endif
+      if (!screen) {
+        LOG_SCREEN(
+            "GetScreenForWindow() [%p] [%d] found monitor %p but no screen",
+            aWindow, index, monitor);
+        return nullptr;
+      }
+      LOG_SCREEN("GetScreenForWindow() [%p] [%d] screen %s", aWindow, index,
+                 ToString(screen->GetRect()).c_str());
       return screen.forget();
     }
   }
