@@ -5,7 +5,6 @@
 
 #include "mozilla/layers/NativeLayerRemoteMac.h"
 #include "mozilla/layers/NativeLayerRootRemoteMacChild.h"
-#include "mozilla/layers/NativeLayerRootRemoteMacSnapshotter.h"
 #include "mozilla/layers/SurfacePool.h"
 
 namespace mozilla {
@@ -66,21 +65,32 @@ void NativeLayerRootRemoteMacChild::SetLayers(
   }
 
   mNativeLayersChanged = true;
+  mNativeLayersChangedForSnapshot = true;
   mNativeLayers.Clear();
   mNativeLayers.AppendElements(layers);
 }
 
 UniquePtr<NativeLayerRootSnapshotter>
 NativeLayerRootRemoteMacChild::CreateSnapshotter() {
+#ifdef XP_MACOSX
   MOZ_RELEASE_ASSERT(!mWeakSnapshotter,
                      "No NativeLayerRootSnapshotter for this NativeLayerRoot "
                      "should exist when this is called");
-
-  auto cr = NativeLayerRootRemoteMacSnapshotter::Create(this);
+  auto cr = NativeLayerRootSnapshotterCA::Create(
+      MakeUnique<SnapshotterDelegate>(this));
   if (cr) {
     mWeakSnapshotter = cr.get();
   }
   return cr;
+#else
+  return nullptr;
+#endif
+}
+
+void NativeLayerRootRemoteMacChild::OnNativeLayerRootSnapshotterDestroyed(
+    NativeLayerRootSnapshotterCA* aNativeLayerRootSnapshotter) {
+  MOZ_RELEASE_ASSERT(mWeakSnapshotter == aNativeLayerRootSnapshotter);
+  mWeakSnapshotter = nullptr;
 }
 
 void NativeLayerRootRemoteMacChild::PrepareForCommit() {
@@ -127,6 +137,25 @@ bool NativeLayerRootRemoteMacChild::CommitToScreen() {
   return true;
 }
 
+void NativeLayerRootRemoteMacChild::CommitForSnapshot(CALayer* aRootCALayer) {
+  [CATransaction begin];
+  [CATransaction setDisableActions:YES];  // disable cross-fade
+
+  NSMutableArray<CALayer*>* sublayers =
+      [NSMutableArray arrayWithCapacity:mNativeLayers.Length()];
+  for (const auto& layer : mNativeLayers) {
+    layer->UpdateSnapshotLayer();
+    if (CALayer* caLayer = layer->CALayerForSnapshot()) {
+      [sublayers addObject:caLayer];
+    }
+  }
+
+  aRootCALayer.sublayers = sublayers;
+  [CATransaction commit];
+
+  mNativeLayersChangedForSnapshot = false;
+}
+
 bool NativeLayerRootRemoteMacChild::ReadbackPixels(
     const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
     const Range<uint8_t>& aBuffer) {
@@ -159,6 +188,12 @@ NativeLayerRootRemoteMacChild::NativeLayerRootRemoteMacChild()
       mCommandQueue(MakeRefPtr<NativeLayerCommandQueue>()) {}
 
 NativeLayerRootRemoteMacChild::~NativeLayerRootRemoteMacChild() {}
+
+NativeLayerRootRemoteMacChild::SnapshotterDelegate::SnapshotterDelegate(
+    NativeLayerRootRemoteMacChild* aLayerRoot)
+    : mLayerRoot(aLayerRoot) {}
+NativeLayerRootRemoteMacChild::SnapshotterDelegate::~SnapshotterDelegate() =
+    default;
 
 }  // namespace layers
 }  // namespace mozilla

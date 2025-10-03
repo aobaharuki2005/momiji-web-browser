@@ -47,12 +47,32 @@ class NativeLayerRootRemoteMacChild final : public NativeLayerRoot {
 
   virtual ~NativeLayerRootRemoteMacChild();
 
+  void CommitForSnapshot(CALayer* aRootCALayer);
+  void OnNativeLayerRootSnapshotterDestroyed(
+      NativeLayerRootSnapshotterCA* aNativeLayerRootSnapshotter);
+
+  // An implementation of SnapshotterCADelegate, backed by a
+  // NativeLayerRootRemoteMacChild.
+  struct SnapshotterDelegate final : public SnapshotterCADelegate {
+    explicit SnapshotterDelegate(NativeLayerRootRemoteMacChild* aLayerRoot);
+    virtual ~SnapshotterDelegate() override;
+    virtual void UpdateSnapshotterLayers(CALayer* aRootCALayer) override {
+      mLayerRoot->CommitForSnapshot(aRootCALayer);
+    }
+    virtual void OnSnapshotterDestroyed(
+        NativeLayerRootSnapshotterCA* aSnapshotter) override {
+      mLayerRoot->OnNativeLayerRootSnapshotterDestroyed(aSnapshotter);
+    }
+    RefPtr<NativeLayerRootRemoteMacChild> mLayerRoot;
+  };
+
   RefPtr<NativeLayerRemoteChild> mRemoteChild;
   RefPtr<NativeLayerCommandQueue> mCommandQueue;
   nsTArray<RefPtr<NativeLayerRemoteMac>> mNativeLayers;
-  NativeLayerRootSnapshotter* mWeakSnapshotter = nullptr;
+  NativeLayerRootSnapshotterCA* mWeakSnapshotter = nullptr;
 
   bool mNativeLayersChanged = false;
+  bool mNativeLayersChangedForSnapshot = false;
 
   bool ReadbackPixels(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
                       const Range<uint8_t>& aBuffer);
