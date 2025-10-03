@@ -352,10 +352,9 @@ void nsHTMLFramesetFrame::Scale(nscoord aDesired, int32_t aNumIndicies,
                                 int32_t* aIndicies, int32_t aNumItems,
                                 int32_t* aItems) {
   int32_t actual = 0;
-  int32_t i, j;
   // get the actual total
-  for (i = 0; i < aNumIndicies; i++) {
-    j = aIndicies[i];
+  for (int32_t i = 0; i < aNumIndicies; i++) {
+    int32_t j = aIndicies[i];
     actual += aItems[j];
   }
 
@@ -363,8 +362,8 @@ void nsHTMLFramesetFrame::Scale(nscoord aDesired, int32_t aNumIndicies,
     float factor = (float)aDesired / (float)actual;
     actual = 0;
     // scale the items up or down
-    for (i = 0; i < aNumIndicies; i++) {
-      j = aIndicies[i];
+    for (int32_t i = 0; i < aNumIndicies; i++) {
+      int32_t j = aIndicies[i];
       aItems[j] = NSToCoordRound((float)aItems[j] * factor);
       actual += aItems[j];
     }
@@ -373,15 +372,15 @@ void nsHTMLFramesetFrame::Scale(nscoord aDesired, int32_t aNumIndicies,
     // somehow.  Distribute it equally.
     nscoord width = NSToCoordRound((float)aDesired / (float)aNumIndicies);
     actual = width * aNumIndicies;
-    for (i = 0; i < aNumIndicies; i++) {
+    for (int32_t i = 0; i < aNumIndicies; i++) {
       aItems[aIndicies[i]] = width;
     }
   }
 
   if (aNumIndicies > 0 && aDesired != actual) {
     int32_t unit = (aDesired > actual) ? 1 : -1;
-    for (i = 0; (i < aNumIndicies) && (aDesired != actual); i++) {
-      j = aIndicies[i];
+    for (int32_t i = 0; (i < aNumIndicies) && (aDesired != actual); i++) {
+      int32_t j = aIndicies[i];
       if (j < aNumItems) {
         aItems[j] += unit;
         actual += unit;
@@ -416,11 +415,9 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsPresContext* aPresContext,
     return;  // NS_ERROR_OUT_OF_MEMORY
   }
 
-  int32_t i, j;
-
   // initialize the fixed, percent, relative indices, allocate the fixed sizes
   // and zero the others
-  for (i = 0; i < aNumSpecs; i++) {
+  for (int32_t i = 0; i < aNumSpecs; i++) {
     aValues[i] = 0;
     switch (aSpecs[i].mUnit) {
       case eFramesetUnit_Fixed:
@@ -453,8 +450,8 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsPresContext* aPresContext,
   int32_t percentTotal = 0;
   // allocate the percentage sizes from what is left over from the fixed
   // allocation
-  for (i = 0; i < numPercent; i++) {
-    j = percent[i];
+  for (int32_t i = 0; i < numPercent; i++) {
+    int32_t j = percent[i];
     aValues[j] =
         NSToCoordRound((float)aSpecs[j].mValue * (float)aSize / 100.0f);
     percentTotal += aValues[j];
@@ -472,8 +469,8 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsPresContext* aPresContext,
   int32_t relativeTotal = 0;
   // allocate the relative sizes from what is left over from the percent
   // allocation
-  for (i = 0; i < numRelative; i++) {
-    j = relative[i];
+  for (int32_t i = 0; i < numRelative; i++) {
+    int32_t j = relative[i];
     aValues[j] = NSToCoordRound((float)aSpecs[j].mValue * (float)relativeMax /
                                 (float)relativeSums);
     relativeTotal += aValues[j];
@@ -494,9 +491,7 @@ void nsHTMLFramesetFrame::GenerateRowCol(nsPresContext* aPresContext,
                                          nscoord aSize, int32_t aNumSpecs,
                                          const nsFramesetSpec* aSpecs,
                                          nscoord* aValues, nsString& aNewAttr) {
-  int32_t i;
-
-  for (i = 0; i < aNumSpecs; i++) {
+  for (int32_t i = 0; i < aNumSpecs; i++) {
     if (!aNewAttr.IsEmpty()) {
       aNewAttr.Append(char16_t(','));
     }
