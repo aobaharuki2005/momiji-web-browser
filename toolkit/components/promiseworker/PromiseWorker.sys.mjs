@@ -458,6 +458,7 @@ BasePromiseWorker.prototype = {
  * An error that has been serialized by the worker.
  *
  * @class
+ * @param {object} data
  */
 function WorkerError(data) {
   this.data = data;

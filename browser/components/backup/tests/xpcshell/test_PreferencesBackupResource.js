@@ -275,6 +275,8 @@ add_task(async function test_backup_private_browsing() {
  * concerns over potential time skips in automation, we only check that the
  * timestamp is not more than a week before/after now (we would expect the
  * difference to be more like a few milliseconds).
+ *
+ * @param {string} prefsJsPath
  */
 async function checkPrefsJsHasValidRecoveryTime(prefsJsPath) {
   Assert.equal(

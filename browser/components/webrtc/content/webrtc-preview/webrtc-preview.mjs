@@ -7,6 +7,9 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
 window.MozXULElement?.insertFTLIfNeeded("browser/webrtc-preview.ftl");
 
+/**
+ * A class to handle a preview of a WebRTC stream.
+ */
 export class WebRTCPreview extends MozLitElement {
   static properties = {
     // The ID of the device to preview.

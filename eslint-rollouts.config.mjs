@@ -466,15 +466,6 @@ export default [
       "uriloader/**",
       "widget/tests/file*.js",
       "widget/tests/window_composition_text_querycontent.xhtml",
-
-      // Bug 1991124 - Re-enable for these files which regressed whilst
-      // require-jsdoc was accidentally not enabled.
-      "browser/components/backup/tests/xpcshell/test_PreferencesBackupResource.js",
-      "browser/components/mozcachedohttp/MozCachedOHTTPProtocolHandler.sys.mjs",
-      "browser/components/security/unexpectedScriptLoad.js",
-      "browser/components/webrtc/content/webrtc-preview/webrtc-preview.mjs",
-      "toolkit/components/promiseworker/PromiseWorker.sys.mjs",
-      "toolkit/modules/AppServicesTracing.sys.mjs",
     ],
     rules: mozilla.turnOff(mozilla.configs["flat/require-jsdoc"].rules),
   },
