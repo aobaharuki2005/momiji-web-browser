@@ -2370,12 +2370,18 @@
   <string name="preference_enhanced_tracking_protection_strict">Mbaretépe</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Tapykuehoha iporãvéva ñemo’ã rovake ha apopykuaave, hákatu ikatu heta tenda nomba’poporãi.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">Emoneĩ %1$s toku’e ijehegui tekotevẽva emboykekuaa hag̃ua ñanduti rogue jejavy guasu.</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Avei toku’e ijeheguiete umi oĩ’ỹva tekotevẽtéva apañuái’i ñemyatyrõrã ha toiko upe tembiapoitégui mba’e ojeporukuaáva.</string>
   <!--
     Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
 
     Title for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection
   -->
   <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">¿Añetehápe emboguese ko’ã ñemoĩporãha?</string>
+  <!-- Message for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">Ko ñemboheko oipytyvõ oñemyatyrõ hag̃ua mba’e ojehúva tendápe. Ojejokórõ, ikatu oĩ tenda ndoikóiva ha %1$s ndaikatumo’ãi oipytyvõ oñemyatyrõ hag̃ua apañuái.</string>
   <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
   <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Eipe’a myatyrõha</string>
   <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
