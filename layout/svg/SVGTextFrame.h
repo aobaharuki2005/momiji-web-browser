@@ -11,6 +11,7 @@
 #include "gfxRect.h"
 #include "gfxTextRun.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/PresShellForwards.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SVGContainerFrame.h"
@@ -610,9 +611,23 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
     return mCachedRanges[aWhichRange];
   }
 
+  // Return a reference to a PropertyProvider for the given textframe;
+  // the provider is cached by SVGTextFrame to avoid creating it afresh
+  // for repeated operations involving the same textframe.
+  nsTextFrame::PropertyProvider& PropertyProviderFor(nsTextFrame* aFrame) {
+    if (!mCachedProvider || aFrame != mCachedProvider->GetFrame()) {
+      mCachedProvider.reset();
+      mCachedProvider.emplace(aFrame,
+                              aFrame->EnsureTextRun(nsTextFrame::eInflated));
+    }
+    return mCachedProvider.ref();
+  }
+
  private:
   const nsTextFrame* mFrameForCachedRanges = nullptr;
   CachedMeasuredRange mCachedRanges[CachedRangeCount];
+
+  Maybe<nsTextFrame::PropertyProvider> mCachedProvider;
 };
 
 }  // namespace mozilla
