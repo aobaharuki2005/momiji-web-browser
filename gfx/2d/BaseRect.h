@@ -329,7 +329,7 @@ struct BaseRect {
       x = limit - aDx < x ? limit : x + aDx;
       width = (limit - aDx < x2 ? limit : x2 + aDx) - x;
     } else {
-      T limit = std::numeric_limits<T>::min();
+      T limit = std::numeric_limits<T>::lowest();
       x = limit - aDx > x ? limit : x + aDx;
       width = (limit - aDx > x2 ? limit : x2 + aDx) - x;
     }
@@ -341,7 +341,7 @@ struct BaseRect {
       y = limit - aDy < y ? limit : y + aDy;
       height = (limit - aDy < y2 ? limit : y2 + aDy) - y;
     } else {
-      T limit = std::numeric_limits<T>::min();
+      T limit = std::numeric_limits<T>::lowest();
       y = limit - aDy > y ? limit : y + aDy;
       height = (limit - aDy > y2 ? limit : y2 + aDy) - y;
     }
