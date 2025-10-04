@@ -117,8 +117,6 @@ html {
   --picker-focus-ring-color: var(--in-content-item-selected);
   --picker-checkbox-color: var(--in-content-item-selected);
   --picker-checkbox-hover-color: var(--picker-checkbox-color);
-  --picker-backup-flair-background: var(--color-blue-0);
-  --picker-backup-flair-color: var(--color-blue-50);
 
   @media (forced-colors: active) {
     --picker-background-color: ButtonFace;
@@ -1860,34 +1858,6 @@ html {
           right: 1px;
           top: -10px;
           line-height: 1;
-
-          &.centered {
-            /* stylelint-disable-next-line */
-            border-radius: 8px 8px 0 0;
-            background-color: var(--button-background-color-primary);
-            position: relative;
-            right: unset;
-            top: -6px;
-            line-height: 0.75;
-            width: 100%;
-            box-sizing: border-box;
-
-            &.backup {
-              /* stylelint-disable-next-line */
-              border-radius: 10px 10px 0 0;
-              background-color: var(--picker-backup-flair-background);
-              color: var(--picker-backup-flair-color);
-              top: -5px;
-
-              &.spacer {
-                background-color: transparent;
-              }
-            }
-          }
-
-          &.spacer {
-            background-color: transparent;
-          }
         }
 
         .icon {
@@ -1897,32 +1867,11 @@ html {
         .text {
           margin-block: 8px;
         }
-
-        .tile-list-container {
-          display: flex;
-          flex-direction: column;
-          margin-inline-start: 20px;
-
-          .tile-list-item {
-            display: flex;
-
-            &:last-child {
-              margin-block-end: 8px;
-            }
-          }
-
-          .tile-list-icon-wrapper {
-            padding-block-start: 10px;
-          }
-
-          .tile-list-text {
-            margin-inline-start: 8px;
-            margin-inline-end: 20px;
-            text-align: start;
-          }
-        }
       }
+
     }
+
+
 
     // single select and theme specific styles
     &.single-select, &.theme {
@@ -1951,19 +1900,6 @@ html {
       border-radius: var(--border-radius-small);
       cursor: pointer;
       z-index: 0;
-
-      &.backup {
-        cursor: unset;
-        width: 300px;
-
-        &:has(.selected) {
-          border: 2px solid var(--picker-backup-flair-color);
-        }
-
-        &:hover {
-          background-color: transparent;
-        }
-      }
 
       &:focus,
       &:active {
@@ -2599,14 +2535,6 @@ html {
 
     &.rtamo {
       margin-top: 24px;
-    }
-
-    &.slim {
-      padding: 0;
-    }
-
-    &.tile-button {
-      cursor: pointer;
     }
   }
 

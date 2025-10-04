@@ -5,8 +5,6 @@
 import React, { useEffect } from "react";
 
 import { Localized } from "./MSLocalized";
-import { TileButton } from "./TileButton";
-import { TileList } from "./TileList";
 import { AboutWelcomeUtils } from "../lib/aboutwelcome-utils.mjs";
 
 // This component was formerly "Themes" and continues to support theme
@@ -99,17 +97,14 @@ export const SingleSelect = ({
           {content.tiles.data.map(
             ({
               description,
-              inert,
               icon,
               id,
               label = "",
-              body = "",
               theme,
               tooltip,
               type = "",
               flair,
               style,
-              tilebutton,
             }) => {
               const value = id || theme;
               let inputName = "select-item";
@@ -158,9 +153,7 @@ export const SingleSelect = ({
                   >
                     {flair ? (
                       <Localized text={valOrObj(flair.text)}>
-                        <span
-                          className={`flair ${flair.centered ? "centered" : ""} ${flair.spacer ? "spacer" : ""} ${type}`}
-                        ></span>
+                        <span className="flair"></span>
                       </Localized>
                     ) : (
                       ""
@@ -172,7 +165,6 @@ export const SingleSelect = ({
                         name={inputName}
                         checked={selected}
                         className="sr-only input"
-                        disabled={inert}
                         onClick={e => handleClick(e)}
                       />
                     </Localized>
@@ -184,24 +176,8 @@ export const SingleSelect = ({
                       )}
                     />
                     <Localized text={label}>
-                      <div className="text label-text" />
+                      <div className="text" />
                     </Localized>
-                    {body.items ? (
-                      <TileList content={body} />
-                    ) : (
-                      <Localized text={body}>
-                        <div className="text body-text" />
-                      </Localized>
-                    )}
-                    {tilebutton ? (
-                      <TileButton
-                        content={tilebutton}
-                        handleAction={handleAction}
-                        inputName={inputName}
-                      />
-                    ) : (
-                      ""
-                    )}
                   </label>
                 </Localized>
               );
