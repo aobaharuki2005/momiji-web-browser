@@ -3478,6 +3478,8 @@ pref("browser.contextual-services.contextId.rust-component.enabled", true);
 pref("browser.ipProtection.enabled", false);
 pref("browser.ipProtection.userEnabled", false);
 pref("browser.ipProtection.variant", "");
+pref("browser.ipProtection.exceptionsMode", "all");
+pref("browser.ipProtection.domainExclusions", "");
 pref("browser.ipProtection.log", false);
 pref("browser.ipProtection.guardian.endpoint", "https://vpn.mozilla.org/");
 

@@ -8,6 +8,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   CustomizableUI:
     "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
+  IPPExceptionsManager:
+    "resource:///modules/ipprotection/IPPExceptionsManager.sys.mjs",
   IPProtection: "resource:///modules/ipprotection/IPProtection.sys.mjs",
   IPProtectionWidget: "resource:///modules/ipprotection/IPProtection.sys.mjs",
   IPProtectionService:
@@ -41,6 +43,7 @@ class UIHelper {
       this.handleEvent
     );
     lazy.IPProtection.uninit();
+    lazy.IPPExceptionsManager.uninit();
   }
 
   #handleEvent(_event) {
@@ -52,6 +55,7 @@ class UIHelper {
       state !== lazy.IPProtectionStates.UNAVAILABLE
     ) {
       lazy.IPProtection.init();
+      lazy.IPPExceptionsManager.init();
     }
   }
 }

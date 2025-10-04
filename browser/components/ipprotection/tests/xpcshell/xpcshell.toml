@@ -8,6 +8,8 @@ prefs = [
 
 ["test_GuardianClient.js"]
 
+["test_IPPExceptionsManager_exclusions.js"]
+
 ["test_IPProtection.js"]
 
 ["test_IPProtectionPanel.js"]
