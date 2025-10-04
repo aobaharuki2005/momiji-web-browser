@@ -7857,43 +7857,79 @@ end = "2024-05-03"
 criteria = "safe-to-deploy"
 user-id = 64539 # Kenny Kerr (kennykerr)
 start = "2021-01-15"
-end = "2025-01-30"
+end = "2026-10-02"
+
+[[trusted.windows-collections]]
+criteria = "safe-to-deploy"
+user-id = 64539 # Kenny Kerr (kennykerr)
+start = "2025-02-06"
+end = "2026-10-02"
 
 [[trusted.windows-core]]
 criteria = "safe-to-deploy"
 user-id = 64539 # Kenny Kerr (kennykerr)
 start = "2021-11-15"
-end = "2024-09-20"
+end = "2026-10-02"
+
+[[trusted.windows-future]]
+criteria = "safe-to-deploy"
+user-id = 64539 # Kenny Kerr (kennykerr)
+start = "2025-02-10"
+end = "2026-10-02"
 
 [[trusted.windows-implement]]
 criteria = "safe-to-deploy"
 user-id = 64539 # Kenny Kerr (kennykerr)
 start = "2022-01-27"
-end = "2025-07-29"
+end = "2026-10-02"
 
 [[trusted.windows-interface]]
 criteria = "safe-to-deploy"
 user-id = 64539 # Kenny Kerr (kennykerr)
 start = "2022-02-18"
-end = "2025-07-29"
+end = "2026-10-02"
+
+[[trusted.windows-link]]
+criteria = "safe-to-deploy"
+user-id = 64539 # Kenny Kerr (kennykerr)
+start = "2024-07-17"
+end = "2026-10-02"
+
+[[trusted.windows-numerics]]
+criteria = "safe-to-deploy"
+user-id = 64539 # Kenny Kerr (kennykerr)
+start = "2023-05-15"
+end = "2026-10-02"
 
 [[trusted.windows-result]]
 criteria = "safe-to-deploy"
 user-id = 64539 # Kenny Kerr (kennykerr)
 start = "2024-02-02"
-end = "2025-07-29"
+end = "2026-10-02"
 
 [[trusted.windows-strings]]
 criteria = "safe-to-deploy"
 user-id = 64539 # Kenny Kerr (kennykerr)
 start = "2024-02-02"
-end = "2025-07-29"
+end = "2026-10-02"
 
 [[trusted.windows-sys]]
 criteria = "safe-to-deploy"
 user-id = 64539 # Kenny Kerr (kennykerr)
 start = "2021-11-15"
-end = "2024-09-12"
+end = "2026-10-02"
+
+[[trusted.windows-targets]]
+criteria = "safe-to-deploy"
+user-id = 64539 # Kenny Kerr (kennykerr)
+start = "2022-09-09"
+end = "2026-10-02"
+
+[[trusted.windows-threading]]
+criteria = "safe-to-deploy"
+user-id = 64539 # Kenny Kerr (kennykerr)
+start = "2025-04-29"
+end = "2026-10-02"
 
 [[trusted.winnow]]
 criteria = "safe-to-deploy"
