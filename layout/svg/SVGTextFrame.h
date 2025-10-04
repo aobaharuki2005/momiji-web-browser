@@ -586,6 +586,33 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
    * lengthAdjust="spacingAndGlyphs".
    */
   float mLengthAdjustScaleFactor = 1.0f;
+
+ public:
+  struct CachedMeasuredRange {
+    Range mRange;
+    nscoord mAdvance;
+  };
+
+  void SetCurrentFrameForCaching(const nsTextFrame* aFrame) {
+    if (mFrameForCachedRanges != aFrame) {
+      PodArrayZero(mCachedRanges);
+      mFrameForCachedRanges = aFrame;
+    }
+  }
+
+  enum WhichRange {
+    Before,
+    After,
+    CachedRangeCount,
+  };
+
+  CachedMeasuredRange& CachedRange(WhichRange aWhichRange) {
+    return mCachedRanges[aWhichRange];
+  }
+
+ private:
+  const nsTextFrame* mFrameForCachedRanges = nullptr;
+  CachedMeasuredRange mCachedRanges[CachedRangeCount];
 };
 
 }  // namespace mozilla

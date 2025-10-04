@@ -409,15 +409,16 @@ struct TextRenderedRun {
    * paint it.  See the comments documenting the member variables below
    * for descriptions of the arguments.
    */
-  TextRenderedRun(nsTextFrame* aFrame, const gfxPoint& aPosition,
-                  float aLengthAdjustScaleFactor, double aRotate,
+  TextRenderedRun(nsTextFrame* aFrame, SVGTextFrame* aSVGTextFrame,
+                  const gfxPoint& aPosition, double aRotate,
                   float aFontSizeScaleFactor, nscoord aBaseline,
                   uint32_t aTextFrameContentOffset,
                   uint32_t aTextFrameContentLength,
                   uint32_t aTextElementCharIndex)
       : mFrame(aFrame),
+        mRoot(aSVGTextFrame),
         mPosition(aPosition),
-        mLengthAdjustScaleFactor(aLengthAdjustScaleFactor),
+        mLengthAdjustScaleFactor(mRoot->mLengthAdjustScaleFactor),
         mRotate(static_cast<float>(aRotate)),
         mFontSizeScaleFactor(aFontSizeScaleFactor),
         mBaseline(aBaseline),
@@ -660,6 +661,11 @@ struct TextRenderedRun {
    * The text frame that this rendered run lies within.
    */
   nsTextFrame* mFrame;
+
+  /**
+   * The SVGTextFrame to which our text frame belongs.
+   */
+  SVGTextFrame* mRoot;
 
   /**
    * The point in user space that the text is positioned at.
@@ -962,15 +968,63 @@ void TextRenderedRun::GetClipEdges(nscoord& aVisIStartEdge,
   // characters.
   Range frameRange = ConvertOriginalToSkipped(it, frameOffset, frameLength);
 
-  // Measure the advance width in the text run between the start of
-  // frame's content and the start of the rendered run's content,
-  nscoord startEdge = textRun->GetAdvanceWidth(
-      Range(frameRange.start, runRange.start), &provider);
+  // Get the advance of aRange, using the aCachedRange if available to
+  // accelerate textrun measurement.
+  auto MeasureUsingCache = [&](SVGTextFrame::CachedMeasuredRange& aCachedRange,
+                               const Range& aRange) -> nscoord {
+    if (aRange.Intersects(aCachedRange.mRange)) {
+      // Figure out the deltas between the cached range and the new one at the
+      // start and end edges.
+      Range startDelta, endDelta;
+      int startSign = 0, endSign = 0;
+      if (aRange.start < aCachedRange.mRange.start) {
+        // This range extends the cached range at the start.
+        startSign = 1;
+        startDelta = Range(aRange.start, aCachedRange.mRange.start);
+      } else if (aRange.start > aCachedRange.mRange.start) {
+        // This range trims the cached range at the start.
+        startSign = -1;
+        startDelta = Range(aCachedRange.mRange.start, aRange.start);
+      }
+      if (aRange.end > aCachedRange.mRange.end) {
+        // This range extends the cached range at the end.
+        endSign = 1;
+        endDelta = Range(aCachedRange.mRange.end, aRange.end);
+      } else if (aRange.end < aCachedRange.mRange.end) {
+        // This range trims the cached range at the end.
+        endSign = -1;
+        endDelta = Range(aRange.end, aCachedRange.mRange.end);
+      }
+      // If the total of the deltas is less than the length of aRange,
+      // it will be cheaper to measure them and adjust the cached advance
+      // instead of measuring the whole of aRange.
+      if (startDelta.Length() + endDelta.Length() < aRange.Length()) {
+        if (startSign) {
+          aCachedRange.mAdvance +=
+              startSign * textRun->GetAdvanceWidth(startDelta, &provider);
+        }
+        if (endSign) {
+          aCachedRange.mAdvance +=
+              endSign * textRun->GetAdvanceWidth(endDelta, &provider);
+        }
+      } else {
+        aCachedRange.mAdvance = textRun->GetAdvanceWidth(aRange, &provider);
+      }
+    } else {
+      // Just measure the range, and cache the result.
+      aCachedRange.mAdvance = textRun->GetAdvanceWidth(aRange, &provider);
+    }
+    aCachedRange.mRange = aRange;
+    return aCachedRange.mAdvance;
+  };
 
-  // and between the end of the rendered run's content and the end
-  // of the frame's content.
+  mRoot->SetCurrentFrameForCaching(mFrame);
+  nscoord startEdge =
+      MeasureUsingCache(mRoot->CachedRange(SVGTextFrame::WhichRange::Before),
+                        Range(frameRange.start, runRange.start));
   nscoord endEdge =
-      textRun->GetAdvanceWidth(Range(runRange.end, frameRange.end), &provider);
+      MeasureUsingCache(mRoot->CachedRange(SVGTextFrame::WhichRange::After),
+                        Range(runRange.end, frameRange.end));
 
   if (textRun->IsRightToLeft()) {
     aVisIStartEdge = endEdge;
@@ -1900,9 +1954,8 @@ TextRenderedRun TextRenderedRunIterator::Next() {
     }
   }
 
-  mCurrent = TextRenderedRun(frame, pt, Root()->mLengthAdjustScaleFactor,
-                             rotate, mFontSizeScaleFactor, baseline, offset,
-                             length, charIndex);
+  mCurrent = TextRenderedRun(frame, Root(), pt, rotate, mFontSizeScaleFactor,
+                             baseline, offset, length, charIndex);
   return mCurrent;
 }
 
@@ -5107,6 +5160,9 @@ void SVGTextFrame::DoReflow() {
     // will break that loop more convincingly at some point.
     RemoveStateBits(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
   }
+
+  // Forget any cached measurements of one of our children.
+  mFrameForCachedRanges = nullptr;
 
   nsPresContext* presContext = PresContext();
   nsIFrame* kid = PrincipalChildList().FirstChild();
