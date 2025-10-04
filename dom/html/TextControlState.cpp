@@ -2468,26 +2468,8 @@ void TextControlState::GetValue(nsAString& aValue, bool aForDisplay) const {
     }
 
     aValue.Truncate();  // initialize out param
-
-    uint32_t flags = nsIDocumentEncoder::OutputLFLineBreak |
-                     nsIDocumentEncoder::OutputPreformatted |
-                     nsIDocumentEncoder::OutputPersistNBSP |
-                     nsIDocumentEncoder::OutputBodyOnly;
-    // What follows is a bit of a hack.  The problem is that we could be in
-    // this method because we're being destroyed for whatever reason while
-    // script is executing.  If that happens, editor will run with the
-    // privileges of the executing script, which means it may not be able to
-    // access its own DOM nodes!  Let's try to deal with that by pushing a null
-    // JSContext on the JSContext stack to make it clear that we're native
-    // code.  Note that any script that's directly trying to access our value
-    // has to be going through some scriptable object to do that and that
-    // already does the relevant security checks.
-    // XXXbz if we could just get the textContent of our anonymous content (eg
-    // if plaintext editor didn't create <br> nodes all over), we wouldn't need
-    // this.
     if (mEditorInitialized) {
-      AutoNoJSAPI nojsapi;
-      DebugOnly<nsresult> rv = mTextEditor->ComputeTextValue(flags, aValue);
+      DebugOnly<nsresult> rv = mTextEditor->ComputeTextValue(aValue);
       MOZ_ASSERT(aValue.FindChar(u'\r') == -1);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to get value");
     }
@@ -2829,7 +2811,7 @@ bool TextControlState::SetValueWithTextEditor(
     IMEContentObserver* observer = GetIMEContentObserver();
     if (observer && observer->WasInitializedWith(*textEditor)) {
       nsAutoString currentValue;
-      textEditor->ComputeTextValue(0, currentValue);
+      textEditor->ComputeTextValue(currentValue);
       observer->OnTextControlValueChangedWhileNotObservable(currentValue);
     }
   }
