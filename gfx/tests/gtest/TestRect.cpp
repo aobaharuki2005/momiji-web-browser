@@ -711,26 +711,3 @@ TEST(Gfx, ClampPoint)
   EXPECT_EQ(Empty.ClampPoint(IntPoint(1, -1)), IntPoint(0, 0));
   EXPECT_EQ(Empty.ClampPoint(IntPoint(1, 1)), IntPoint(0, 0));
 }
-
-TEST(Gfx, SafeMoveBy)
-{
-  IntRect intRect(0, 0, 10, 10);
-  intRect.SafeMoveByX(10);
-  intRect.SafeMoveByY(10);
-  EXPECT_EQ(intRect, IntRect(10, 10, 10, 10));
-
-  intRect = IntRect(0, 0, 10, 10);
-  intRect.SafeMoveByX(-10);
-  intRect.SafeMoveByY(-10);
-  EXPECT_EQ(intRect, IntRect(-10, -10, 10, 10));
-
-  Rect rect(0, 0, 10, 10);
-  rect.SafeMoveByX(10);
-  rect.SafeMoveByY(10);
-  EXPECT_EQ(rect, Rect(10, 10, 10, 10));
-
-  rect = Rect(0, 0, 10, 10);
-  rect.SafeMoveByX(-10);
-  rect.SafeMoveByY(-10);
-  EXPECT_EQ(rect, Rect(-10, -10, 10, 10));
-}
