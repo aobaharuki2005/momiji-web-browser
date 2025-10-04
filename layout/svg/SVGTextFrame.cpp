@@ -409,13 +409,14 @@ struct TextRenderedRun {
    * paint it.  See the comments documenting the member variables below
    * for descriptions of the arguments.
    */
-  TextRenderedRun(nsTextFrame* aFrame, const gfxPoint& aPosition,
-                  float aLengthAdjustScaleFactor, double aRotate,
-                  float aFontSizeScaleFactor, nscoord aBaseline,
+  TextRenderedRun(nsTextFrame* aFrame, SVGTextFrame* aSVGTextFrame,
+                  const gfxPoint& aPosition, float aLengthAdjustScaleFactor,
+                  double aRotate, float aFontSizeScaleFactor, nscoord aBaseline,
                   uint32_t aTextFrameContentOffset,
                   uint32_t aTextFrameContentLength,
                   uint32_t aTextElementCharIndex)
       : mFrame(aFrame),
+        mRoot(aSVGTextFrame),
         mPosition(aPosition),
         mLengthAdjustScaleFactor(aLengthAdjustScaleFactor),
         mRotate(static_cast<float>(aRotate)),
@@ -660,6 +661,11 @@ struct TextRenderedRun {
    * The text frame that this rendered run lies within.
    */
   nsTextFrame* mFrame;
+
+  /**
+   * The SVGTextFrame to which our text frame belongs.
+   */
+  SVGTextFrame* mRoot;
 
   /**
    * The point in user space that the text is positioned at.
@@ -962,15 +968,43 @@ void TextRenderedRun::GetClipEdges(nscoord& aVisIStartEdge,
   // characters.
   Range frameRange = ConvertOriginalToSkipped(it, frameOffset, frameLength);
 
-  // Measure the advance width in the text run between the start of
-  // frame's content and the start of the rendered run's content,
-  nscoord startEdge = textRun->GetAdvanceWidth(
-      Range(frameRange.start, runRange.start), &provider);
+  // Get the advance of aRange, using the aCachedRange if available to
+  // accelerate textrun measurement.
+  auto MeasureUsingCache = [&](SVGTextFrame::CachedMeasuredRange& aCachedRange,
+                               const Range& aRange) -> nscoord {
+    if (aRange.Intersects(aCachedRange.mRange)) {
+      // We only need to measure the differences between the cached range and
+      // aRange.
+      // TODO: check whether this will in fact involve less measurement!
+      if (aRange.start < aCachedRange.mRange.start) {
+        aCachedRange.mAdvance += textRun->GetAdvanceWidth(
+            Range(aRange.start, aCachedRange.mRange.start), &provider);
+      } else if (aRange.start > aCachedRange.mRange.start) {
+        aCachedRange.mAdvance -= textRun->GetAdvanceWidth(
+            Range(aCachedRange.mRange.start, aRange.start), &provider);
+      }
+      if (aRange.end > aCachedRange.mRange.end) {
+        aCachedRange.mAdvance += textRun->GetAdvanceWidth(
+            Range(aCachedRange.mRange.end, aRange.end), &provider);
+      } else if (aRange.end < aCachedRange.mRange.end) {
+        aCachedRange.mAdvance -= textRun->GetAdvanceWidth(
+            Range(aRange.end, aCachedRange.mRange.end), &provider);
+      }
+    } else {
+      // Just measure the range, and cache the result.
+      aCachedRange.mAdvance = textRun->GetAdvanceWidth(aRange, &provider);
+    }
+    aCachedRange.mRange = aRange;
+    return aCachedRange.mAdvance;
+  };
 
-  // and between the end of the rendered run's content and the end
-  // of the frame's content.
+  mRoot->SetCurrentFrameForCaching(mFrame);
+  nscoord startEdge =
+      MeasureUsingCache(mRoot->CachedRange(SVGTextFrame::WhichRange::Before),
+                        Range(frameRange.start, runRange.start));
   nscoord endEdge =
-      textRun->GetAdvanceWidth(Range(runRange.end, frameRange.end), &provider);
+      MeasureUsingCache(mRoot->CachedRange(SVGTextFrame::WhichRange::After),
+                        Range(runRange.end, frameRange.end));
 
   if (textRun->IsRightToLeft()) {
     aVisIStartEdge = endEdge;
@@ -1900,9 +1934,9 @@ TextRenderedRun TextRenderedRunIterator::Next() {
     }
   }
 
-  mCurrent = TextRenderedRun(frame, pt, Root()->mLengthAdjustScaleFactor,
-                             rotate, mFontSizeScaleFactor, baseline, offset,
-                             length, charIndex);
+  mCurrent = TextRenderedRun(
+      frame, Root(), pt, Root()->mLengthAdjustScaleFactor, rotate,
+      mFontSizeScaleFactor, baseline, offset, length, charIndex);
   return mCurrent;
 }
 
@@ -5107,6 +5141,9 @@ void SVGTextFrame::DoReflow() {
     // will break that loop more convincingly at some point.
     RemoveStateBits(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
   }
+
+  // Forget any cached measurements of one of our children.
+  mFrameForCachedRanges = nullptr;
 
   nsPresContext* presContext = PresContext();
   nsIFrame* kid = PrincipalChildList().FirstChild();
