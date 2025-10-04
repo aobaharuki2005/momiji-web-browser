@@ -507,6 +507,8 @@
   <string name="onboarding_preferences_dialog_crash_reporting_description">Az összeomlás-jelentések lehetővé teszik számunkra, hogy diagnosztizáljuk és megoldjuk a böngészőhibákat. A jelentések személyes vagy bizalmas adatokat tartalmazhatnak.</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">További tudnivalók</string>
+  <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_body">Probléma adódott a %s megnyitásakor.\n\nAz összeomlás-jelentés küldése segít nekünk abban, hogy diagnosztizáljuk és megoldjuk a böngészőhibákat. A jelentések személyes vagy bizalmas adatokat tartalmazhatnak.</string>
   <!-- Button text to submit a startup crash report -->
   <string name="startup_crash_positive">Összeomlás-jelentés küldése</string>
   <!-- Button text to continue and not send a startup crash report -->
@@ -1444,9 +1446,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Előzmények törlése</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Előzmények törölve</string>
+  <string name="history_delete_multiple_items_snackbar">Előzmények törölve</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s törölve</string>
+  <string name="history_delete_single_item_snackbar">%1$s törölve</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Törlés</string>
   <!--

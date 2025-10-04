@@ -1517,9 +1517,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">删除历史记录</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">历史记录已删除</string>
+  <string name="history_delete_multiple_items_snackbar">历史记录已删除</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">已删除 %1$s</string>
+  <string name="history_delete_single_item_snackbar">已删除 %1$s</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">删除</string>
   <!--
@@ -2704,6 +2704,10 @@
   <string name="saved_login_hide_password">隐藏密码</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">解锁以查看保存的密码</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">解锁</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">离开</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">保护您保存的密码</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -3597,6 +3601,16 @@
   <string name="debug_drawer_add_new_address">为所选区域设置添加新地址</string>
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
   <string name="debug_drawer_delete_all_addresses">删除所有地址</string>
+  <!--
+    Debug drawer credit cards
+
+    The title of the credit cards feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_credit_cards_title">信用卡</string>
+  <!-- The title of the button in the debug drawer for adding a new credit card -->
+  <string name="debug_drawer_add_new_credit_card">添加新信用卡</string>
+  <!-- The title of the button for deleting in the debug drawer all addresses. -->
+  <string name="debug_drawer_delete_all_credit_cards">删除所有信用卡</string>
   <!--
     Debug drawer "contextual feature recommendation" (CFR) tools
 
