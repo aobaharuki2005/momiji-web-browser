@@ -112,9 +112,12 @@ class nsTextFrame : public nsIFrame {
   /**
    * An implementation of gfxTextRun::PropertyProvider that computes spacing and
    * hyphenation based on CSS properties for a text frame.
+   *
+   * nsTextFrame normally creates a PropertyProvider as a temporary object on
+   * on the stack, but this is not marked MOZ_STACK_CLASS because SVGTextFrame
+   * wants to cache an instance across multiple calls using the same textframe.
    */
-  class MOZ_STACK_CLASS PropertyProvider final
-      : public gfxTextRun::PropertyProvider {
+  class PropertyProvider final : public gfxTextRun::PropertyProvider {
     using HyphenType = gfxTextRun::HyphenType;
 
    public:

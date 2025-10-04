@@ -835,7 +835,6 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
       vertical ? -self.y : -self.x);
 
   gfxSkipCharsIterator it = mFrame->EnsureTextRun(nsTextFrame::eInflated);
-  gfxSkipCharsIterator start = it;
   gfxTextRun* textRun = mFrame->GetTextRun(nsTextFrame::eInflated);
 
   // Get the content range for this rendered run.
@@ -845,10 +844,7 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
     return r;
   }
 
-  // FIXME(heycam): We could create a single PropertyProvider for all
-  // TextRenderedRuns that correspond to the text frame, rather than recreate
-  // it each time here.
-  nsTextFrame::PropertyProvider provider(mFrame, start);
+  auto& provider = mRoot->PropertyProviderFor(mFrame);
 
   // Measure that range.
   gfxTextRun::Metrics metrics = textRun->MeasureText(
@@ -946,7 +942,7 @@ void TextRenderedRun::GetClipEdges(nscoord& aVisIStartEdge,
 
   gfxSkipCharsIterator it = mFrame->EnsureTextRun(nsTextFrame::eInflated);
   gfxTextRun* textRun = mFrame->GetTextRun(nsTextFrame::eInflated);
-  nsTextFrame::PropertyProvider provider(mFrame, it);
+  auto& provider = mRoot->PropertyProviderFor(mFrame);
 
   // Get the covered content offset/length for this rendered run in skipped
   // characters, since that is what GetAdvanceWidth expects.
@@ -1038,7 +1034,7 @@ void TextRenderedRun::GetClipEdges(nscoord& aVisIStartEdge,
 nscoord TextRenderedRun::GetAdvanceWidth() const {
   gfxSkipCharsIterator it = mFrame->EnsureTextRun(nsTextFrame::eInflated);
   gfxTextRun* textRun = mFrame->GetTextRun(nsTextFrame::eInflated);
-  nsTextFrame::PropertyProvider provider(mFrame, it);
+  auto& provider = mRoot->PropertyProviderFor(mFrame);
 
   Range range = ConvertOriginalToSkipped(it, mTextFrameContentOffset,
                                          mTextFrameContentLength);
@@ -1088,7 +1084,7 @@ int32_t TextRenderedRun::GetCharNumAtPosition(nsPresContext* aContext,
 
   gfxSkipCharsIterator it = mFrame->EnsureTextRun(nsTextFrame::eInflated);
   gfxTextRun* textRun = mFrame->GetTextRun(nsTextFrame::eInflated);
-  nsTextFrame::PropertyProvider provider(mFrame, it);
+  auto& provider = mRoot->PropertyProviderFor(mFrame);
 
   // Next check that the point lies horizontally within the left and right
   // edges of the text.
@@ -1787,6 +1783,11 @@ class TextRenderedRunIterator {
         mCurrent(First()) {}
 
   /**
+   * Ensure any cached PropertyProvider is cleared at the end of the iteration.
+   */
+  ~TextRenderedRunIterator() { mFrameIterator.Root()->ForgetCachedProvider(); }
+
+  /**
    * Returns the current TextRenderedRun.
    */
   TextRenderedRun Current() const { return mCurrent; }
@@ -2014,6 +2015,11 @@ class MOZ_STACK_CLASS CharIterator {
    */
   CharIterator(SVGTextFrame* aSVGTextFrame, CharacterFilter aFilter,
                nsIContent* aSubtree, bool aPostReflow = true);
+
+  /**
+   * Ensure any cached PropertyProvider is cleared at the end of the iteration.
+   */
+  ~CharIterator() { mFrameIterator.Root()->ForgetCachedProvider(); }
 
   /**
    * Returns whether the iterator is finished.
@@ -2374,10 +2380,7 @@ gfxFloat CharIterator::GetAdvance(nsPresContext* aContext) const {
   float cssPxPerDevPx =
       nsPresContext::AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
 
-  gfxSkipCharsIterator start =
-      TextFrame()->EnsureTextRun(nsTextFrame::eInflated);
-  nsTextFrame::PropertyProvider provider(TextFrame(), start);
-
+  auto& provider = mFrameIterator.Root()->PropertyProviderFor(TextFrame());
   uint32_t offset = mSkipCharsIterator.GetSkippedOffset();
   gfxFloat advance =
       mTextRun->GetAdvanceWidth(Range(offset, offset + 1), &provider);
@@ -3733,7 +3736,7 @@ float SVGTextFrame::GetSubStringLengthFastPath(nsIContent* aContent,
 
       gfxSkipCharsIterator it = frame->EnsureTextRun(nsTextFrame::eInflated);
       gfxTextRun* textRun = frame->GetTextRun(nsTextFrame::eInflated);
-      nsTextFrame::PropertyProvider provider(frame, it);
+      auto& provider = PropertyProviderFor(frame);
 
       Range range = ConvertOriginalToSkipped(it, offset, trimmedLength);
 
@@ -3801,7 +3804,7 @@ float SVGTextFrame::GetSubStringLengthSlowFallback(nsIContent* aContent,
       gfxSkipCharsIterator it =
           run.mFrame->EnsureTextRun(nsTextFrame::eInflated);
       gfxTextRun* textRun = run.mFrame->GetTextRun(nsTextFrame::eInflated);
-      nsTextFrame::PropertyProvider provider(run.mFrame, it);
+      auto& provider = PropertyProviderFor(run.mFrame);
 
       Range range = ConvertOriginalToSkipped(it, offset, length);
 
@@ -4356,7 +4359,7 @@ void SVGTextFrame::DetermineCharPositions(nsTArray<nsPoint>& aPositions) {
   for (nsTextFrame* frame = frit.Current(); frame; frame = frit.Next()) {
     gfxSkipCharsIterator it = frame->EnsureTextRun(nsTextFrame::eInflated);
     gfxTextRun* textRun = frame->GetTextRun(nsTextFrame::eInflated);
-    nsTextFrame::PropertyProvider provider(frame, it);
+    auto& provider = PropertyProviderFor(frame);
 
     // Reset the position to the new frame's position.
     position = frit.Position();
@@ -4410,6 +4413,10 @@ void SVGTextFrame::DetermineCharPositions(nsTArray<nsPoint>& aPositions) {
   for (uint32_t i = 0; i < frit.UndisplayedCharacters(); i++) {
     aPositions.AppendElement(position);
   }
+
+  // Clear any cached PropertyProvider, to avoid risk of re-using it after
+  // style changes or other mutations may have invalidated it.
+  ForgetCachedProvider();
 }
 
 /**
