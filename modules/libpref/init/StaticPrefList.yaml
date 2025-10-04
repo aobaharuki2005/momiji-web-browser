@@ -5547,6 +5547,17 @@
 #endif
   mirror: always
 
+# Is WebGPU allowed to run in the parent process? This should be false if
+# on a platform that supports the GPU process, else true.
+- name: dom.webgpu.allow-in-parent
+  type: bool
+#if defined(XP_WIN) || defined(ANDROID)
+  value: false
+#else
+  value: true
+#endif
+  mirror: once
+
 # Is support for the Web GPU API enabled on service workers?
 - name: dom.webgpu.service-workers.enabled
   type: RelaxedAtomicBool
