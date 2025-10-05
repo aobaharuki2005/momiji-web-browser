@@ -257,6 +257,12 @@ objc = { git = "https://github.com/glandium/rust-objc", rev = "4de89f5aa9851ceca
 # allocator-api2 + f95e3419ce41883904fcb2279b52aa35b5f04d76 + fdd92751afa7ce34408b677004b429d597e72c90
 allocator-api2 = { git = "https://github.com/glandium/allocator-api2", rev = "ad5f3d56a5a4519eff52af4ff85293431466ef5c" }
 
+# patch ohttp - app-services relies on a version yet to be released. However, even if a new version was released it
+# will have bumped the `toml` crate to a version which would cause dupes here. We should remove this and revert back
+# to a published version when we can upgrade both a-s and m-c to the same version.
+ohttp = { git = "https://github.com/martinthomson/ohttp.git", rev = "bf6a983845cc0b540effb3a615e92d914dfcfd0b" }
+bhttp = { git = "https://github.com/martinthomson/ohttp.git", rev = "bf6a983845cc0b540effb3a615e92d914dfcfd0b" }
+
 # application-services overrides to make updating them all simpler.
 context_id = { git = "https://github.com/mozilla/application-services", rev = "f6f667f590ac15367fc37eb1ad3a6bdea4ffc526" }
 error-support = { git = "https://github.com/mozilla/application-services", rev = "f6f667f590ac15367fc37eb1ad3a6bdea4ffc526" }

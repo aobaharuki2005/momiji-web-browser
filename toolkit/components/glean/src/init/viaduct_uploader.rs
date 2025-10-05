@@ -142,7 +142,7 @@ fn ohttp_upload(upload_request: PingUploadRequest) -> Result<UploadResult, Viadu
             .control()
             .status()
             .ok_or(ViaductUploaderError::Fatal)?;
-        Ok(UploadResult::http_status(res as i32))
+        Ok(UploadResult::http_status(res.code() as i32))
     } else {
         Ok(UploadResult::http_status(res.status as i32))
     }
