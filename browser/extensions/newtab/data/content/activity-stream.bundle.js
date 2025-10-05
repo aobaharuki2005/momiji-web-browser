@@ -7504,7 +7504,7 @@ const INITIAL_STATE = {
   InferredPersonalization: {
     initialized: false,
     lastUpdated: null,
-    inferredIntrests: {},
+    inferredInterests: {},
     coarseInferredInterests: {},
     coarsePrivateInferredInterests: {},
   },
@@ -13799,6 +13799,9 @@ function Widgets() {
     if (hasInteracted === false) {
       dispatch(actionCreators.SetPref(prefName, true));
     }
+  }
+  if (!(listsEnabled || timerEnabled)) {
+    return null;
   }
   return /*#__PURE__*/external_React_default().createElement("div", {
     className: "widgets-wrapper"

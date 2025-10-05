@@ -28,6 +28,8 @@ class ReviewPromptMiddlewareTest {
         middlewares = listOf(
             ReviewPromptMiddleware(
                 isReviewPromptFeatureEnabled = { true },
+                numberOfAppLaunches = { 5 },
+                isDefaultBrowser = { true },
                 isTelemetryEnabled = { isTelemetryEnabled },
                 createJexlHelper = {
                     object : NimbusMessagingHelperInterface {

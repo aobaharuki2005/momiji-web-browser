@@ -29,6 +29,11 @@ import {
   actionCreators as ac,
 } from "resource://newtab/common/Actions.mjs";
 
+import { scoreItemInferred } from "resource://newtab/lib/InferredModel/GreedyContentRanker.mjs";
+
+const LOCAL_POPULAR_RERANK = false; // default behavior for local re-ranking
+const LOCAL_WEIGHT = 1;
+const SERVER_WEIGHT = 1;
 const CACHE_KEY = "discovery_stream";
 const STARTUP_CACHE_EXPIRE_TIME = 7 * 24 * 60 * 60 * 1000; // 1 week
 const COMPONENT_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
@@ -218,6 +223,26 @@ export class DiscoveryStreamFeed {
     }
 
     return this._isContextualAds;
+  }
+
+  get doLocalInferredRerank() {
+    if (this._doLocalInferredRerank === undefined) {
+      const state = this.store.getState();
+
+      const inferredPersonalization =
+        state.Prefs.values[PREF_USER_INFERRED_PERSONALIZATION] &&
+        state.Prefs.values[PREF_SYSTEM_INFERRED_PERSONALIZATION];
+      const sectionsEnabled = state.Prefs.values[PREF_SECTIONS_ENABLED];
+
+      const systemPref = inferredPersonalization && sectionsEnabled;
+      const expPref =
+        state.Prefs.values.inferredPersonalizationConfig
+          ?.local_popular_today_rerank ?? LOCAL_POPULAR_RERANK;
+
+      // we do it if inferred is on and the experiment is on
+      this._doLocalInferredRerank = systemPref && expPref;
+    }
+    return this._doLocalInferredRerank;
   }
 
   get showSpocs() {
@@ -1588,15 +1613,42 @@ export class DiscoveryStreamFeed {
     const personalizedByType =
       type === "feed" ? recsPersonalized : spocsPersonalized;
     // If this is initialized, we are ready to go.
-    const personalized = this.store.getState().Personalization.initialized;
-
-    const data = (
-      await Promise.all(
-        items.map(item => this.scoreItem(item, personalizedByType))
+    let personalized = this.store.getState().Personalization.initialized;
+    let data = null;
+    if (type === "feed" && this.doLocalInferredRerank) {
+      // make a flag for this
+      const { inferredInterests = {} } =
+        this.store.getState().InferredPersonalization ?? {};
+      const weights = {
+        inferred_norm: Object.entries(inferredInterests).reduce(
+          (acc, [, v]) =>
+            Number.isFinite(v) && !Number.isInteger(v) ? acc + v : acc,
+          0
+        ),
+        local:
+          (this.store.getState().Prefs.values?.inferredPersonalizationConfig
+            ?.local_inferred_weight ?? LOCAL_WEIGHT) / 100,
+        server:
+          (this.store.getState().Prefs.values?.inferredPersonalizationConfig
+            ?.server_inferred_weight ?? SERVER_WEIGHT) / 100,
+      };
+      data = (
+        await Promise.all(
+          items.map(item => scoreItemInferred(item, inferredInterests, weights))
+        )
       )
-    )
-      // Sort by highest scores.
-      .sort(this.sortItem);
+        // Sort by highest scores.
+        .sort(this.sortItem);
+      personalized = true;
+    } else {
+      data = (
+        await Promise.all(
+          items.map(item => this.scoreItem(item, personalizedByType))
+        )
+      )
+        // Sort by highest scores.
+        .sort(this.sortItem);
+    }
 
     return { data, personalized };
   }
@@ -2585,6 +2637,7 @@ export class DiscoveryStreamFeed {
       case PREF_USER_INFERRED_PERSONALIZATION:
       case PREF_SYSTEM_INFERRED_PERSONALIZATION:
         this._isContextualAds = undefined;
+        this._doLocalInferredRerank = undefined;
         break;
       case PREF_SELECTED_TOPICS:
         this.store.dispatch(

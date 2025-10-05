@@ -52,6 +52,8 @@
   <string name="mozac_feature_prompts_deny">Ricusà</string>
   <!-- Text of the title of a dialog when a page is requesting to open a new window. -->
   <string name="mozac_feature_prompts_popup_dialog_title">Permette à stu situ l’apertura d’una finestra ?</string>
+  <!-- Text of the title of a dialog when a third-party redirect is blocked. -->
+  <string name="mozac_feature_prompts_redirect_dialog_title">Permette a ridirezzione versu stu situ\u00a0?</string>
   <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
   <string name="mozac_feature_prompt_before_unload_dialog_title">Cunfirmazione</string>
   <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
@@ -114,7 +116,7 @@
   <string name="mozac_feature_prompts_suggest_strong_password_updated_snackbar_title">Parolla d’intesa mudificata</string>
   <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
   <string name="mozac_feature_prompt_repost_title">Rimandà i dati à stu situ ?</string>
-  <string name="mozac_feature_prompt_repost_message">L’attualizazione di sta pagina puderia ripete azzioni recente, cum’è l’aviu d’un pagamentu o a publicazione d’un cummentu in doppiu.</string>
+  <string name="mozac_feature_prompt_repost_message">L’attualizazione di sta pagina puderia ripete azzioni recente, cum’è l’inviu d’un pagamentu o a publicazione d’un cummentu in doppiu.</string>
   <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
   <string name="mozac_feature_prompt_repost_positive_button_text">Rimandà i dati</string>
   <!-- Pressing this will dismiss the dialog and not refresh the webpage -->

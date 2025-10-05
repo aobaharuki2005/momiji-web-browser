@@ -588,6 +588,10 @@
   <string name="onboarding_redesign_set_default_browser_title">Λάβετε αυτόματη προστασία από καταγραφή από προεπιλογή</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Ένα πάτημα εμποδίζει τις εταιρείες να κατασκοπεύουν τα κλικ σας.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Συγχρονισμός όπου κι αν χρησιμοποιείτε το Firefox</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Πάρτε τους σελιδοδείκτες, τις καρτέλες και τους κωδικούς πρόσβασής σας σε κάθε συσκευή. Όλα προστατεύονται με κρυπτογράφηση.</string>
   <!-- Sync onboarding redesign positive button text. -->
   <string name="onboarding_redesign_sync_positive_button">Έναρξη συγχρονισμού</string>
   <!-- Sync onboarding redesign negative button text. -->
@@ -724,6 +728,8 @@
   <string name="preferences_https_only_title">Λειτουργία «Μόνο HTTPS»</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Χρήση κλειδώματος οθόνης για την απόκρυψη καρτελών στην ιδιωτική περιήγηση</string>
+  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
+  <string name="preferences_pbm_lock_screen_summary_3">Δείτε τις καρτέλες σας με το δακτυλικό σας αποτύπωμα, ένα PIN ή με αναγνώριση προσώπου. Η ενεργοποίηση αυτής της λειτουργίας εμποδίζει επίσης την καταγραφή και τον διαμοιρασμό οθόνης.</string>
   <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Εμφανίστε τις καρτέλες με δαχτυλικό αποτύπωμα, αναγνώριση προσώπου ή PIN.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Αποκλεισμός μηνυμάτων για cookie</string>

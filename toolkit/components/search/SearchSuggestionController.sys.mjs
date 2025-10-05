@@ -41,8 +41,12 @@ const lazy = XPCOMUtils.declareLazy({
     pref: "browser.search.suggest.timeout",
     default: REMOTE_TIMEOUT_DEFAULT,
   },
-  ohttpEnabled: {
+  ohttpFeatureGateEnabled: {
     pref: "browser.search.suggest.ohttp.featureGate",
+    default: false,
+  },
+  ohttpEnabled: {
+    pref: "browser.search.suggest.ohttp.enabled",
     default: false,
   },
 });
@@ -559,6 +563,7 @@ export class SearchSuggestionController {
     // Note: when we enable this for all engines, we need to make sure we have
     // the capability for POST submissions handled.
     if (
+      lazy.ohttpFeatureGateEnabled &&
       lazy.ohttpEnabled &&
       lazy.MerinoClient.hasOHTTPPrefs &&
       context.engine.id == SearchSuggestionController.oHTTPEngineId

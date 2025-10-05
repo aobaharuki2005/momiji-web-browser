@@ -99,6 +99,8 @@ const PREF_XPI_WEAK_SIGNATURES_ALLOWED =
 const PREF_SELECTED_THEME = "extensions.activeThemeID";
 
 const TOOLKIT_ID = "toolkit@mozilla.org";
+const TOPIC_GOING_OFFLINE = "network:offline-about-to-go-offline";
+const TOPIC_QUIT_GRANTED = "quit-application-granted";
 
 ChromeUtils.defineLazyGetter(lazy, "MOZ_UNSIGNED_SCOPES", () => {
   let result = 0;
@@ -2422,9 +2424,11 @@ var DownloadAddonInstall = class extends AddonInstall {
     }
   }
 
-  observe() {
-    // Network is going offline
-    this.cancel();
+  observe(_subject, topic, _data) {
+    if (topic == TOPIC_GOING_OFFLINE || topic == TOPIC_QUIT_GRANTED) {
+      // Network is going offline, or we're shutting down
+      this.cancel();
+    }
   }
 
   /**
@@ -2513,7 +2517,8 @@ var DownloadAddonInstall = class extends AddonInstall {
       }
       this.channel.asyncOpen(listener);
 
-      Services.obs.addObserver(this, "network:offline-about-to-go-offline");
+      Services.obs.addObserver(this, TOPIC_GOING_OFFLINE);
+      Services.obs.addObserver(this, TOPIC_QUIT_GRANTED);
     } catch (e) {
       logger.warn(
         "Failed to start download for addon " + this.sourceURI.spec,
@@ -2630,7 +2635,8 @@ var DownloadAddonInstall = class extends AddonInstall {
     this.stream.close();
     this.channel = null;
     this.badCerthandler = null;
-    Services.obs.removeObserver(this, "network:offline-about-to-go-offline");
+    Services.obs.removeObserver(this, TOPIC_GOING_OFFLINE);
+    Services.obs.removeObserver(this, TOPIC_QUIT_GRANTED);
 
     let crypto = this.crypto;
     this.crypto = null;

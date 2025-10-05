@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">Získat automatickou ochranu proti sledování</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Jedním klepnutím zastavíte společnosti, aby špehovaly vaše kliky.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Synchronizujte data všude, kde používáte Firefox</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Získejte záložky, panely a hesla na jakémkoli zařízení. Vše chráněno šifrováním.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Spustit synchronizaci</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Teď ne</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Pomozte nám rozvíjet Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -720,6 +728,8 @@
   <string name="preferences_https_only_title">Režim „pouze HTTPS“</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Používat zámek obrazovky pro skrytí panelů při anonymním prohlížení</string>
+  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
+  <string name="preferences_pbm_lock_screen_summary_3">Zobrazte si panely odemčení otiskem prstu, PINem nebo obličejem. Zapnutím této možnosti také zabráníte pořizování snímků obrazovky a jejich sdílení.</string>
   <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Panely zobrazíte pomocí otisku prstu, PIN kódu nebo odemčením tváří.\u0020</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Blokování lišt cookie</string>

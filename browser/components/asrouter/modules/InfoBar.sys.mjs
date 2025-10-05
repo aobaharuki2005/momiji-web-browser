@@ -34,8 +34,15 @@ class InfoBarNotification {
     this.infobarCallback = this.infobarCallback.bind(this);
     this.message = message;
     this.notification = null;
-    // If set, this is the pref to watch for changes to auto-dismiss the infobar.
-    this._dismissPref = message?.content?.dismissOnPrefChange || null;
+    const dismissPrefConfig = message?.content?.dismissOnPrefChange;
+    // If set, these are the prefs to watch for changes to auto-dismiss the infobar.
+    if (Array.isArray(dismissPrefConfig)) {
+      this._dismissPrefs = dismissPrefConfig;
+    } else if (dismissPrefConfig) {
+      this._dismissPrefs = [dismissPrefConfig];
+    } else {
+      this._dismissPrefs = [];
+    }
     this._prefObserver = null;
   }
 
@@ -397,11 +404,12 @@ class InfoBarNotification {
   }
 
   /**
-   * If content.dismissOnPrefChange is set, observe that pref and dismiss the
-   * infobar whenever it changes (including when it is set for the first time).
+   * If content.dismissOnPrefChange is set (string or array), observe those
+   * pref(s) and dismiss the infobar whenever any of them changes (including
+   * when it is set for the first time).
    */
   _maybeAttachPrefObserver() {
-    if (!this._dismissPref || this._prefObserver) {
+    if (!this._dismissPrefs?.length || this._prefObserver) {
       return;
     }
     // Weak observer to avoid leaks.
@@ -411,7 +419,7 @@ class InfoBarNotification {
         "nsISupportsWeakReference",
       ]),
       observe: (subject, topic, data) => {
-        if (topic === "nsPref:changed" && data === this._dismissPref) {
+        if (topic === "nsPref:changed" && this._dismissPrefs.includes(data)) {
           try {
             this.notification?.dismiss();
           } catch (e) {
@@ -421,27 +429,32 @@ class InfoBarNotification {
       },
     };
     try {
-      // Hold weak so we don't retain the infobar if something goes wrong.
-      Services.prefs.addObserver(this._dismissPref, this._prefObserver, true);
+      // Register each pref with a weak observer and ignore per-pref failures.
+      for (const pref of this._dismissPrefs) {
+        try {
+          Services.prefs.addObserver(pref, this._prefObserver, true);
+        } catch (_) {}
+      }
     } catch (e) {
       console.error(
-        `Failed to add prefs observer for ${this._dismissPref}:`,
+        "Failed to add prefs observer(s) for dismissOnPrefChange:",
         e
       );
     }
   }
 
   _removePrefObserver() {
-    if (!this._dismissPref || !this._prefObserver) {
+    if (!this._dismissPrefs?.length || !this._prefObserver) {
       return;
     }
-    try {
-      Services.prefs.removeObserver(this._dismissPref, this._prefObserver);
-    } catch (e) {
-      // Ignore remove errors as observer might already be gone during shutdown.
-    } finally {
-      this._prefObserver = null;
+    for (const pref of this._dismissPrefs) {
+      try {
+        Services.prefs.removeObserver(pref, this._prefObserver);
+      } catch (_) {
+        // Ignore as the observer might already be removed during shutdown/teardown.
+      }
     }
+    this._prefObserver = null;
   }
 
   /**
