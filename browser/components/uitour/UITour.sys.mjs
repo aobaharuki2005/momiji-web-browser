@@ -195,6 +195,12 @@ export var UITour = {
         },
       },
     ],
+    [
+      "profilesAppMenuButton",
+      {
+        query: "#appMenu-profiles-button",
+      },
+    ],
   ]),
 
   init() {

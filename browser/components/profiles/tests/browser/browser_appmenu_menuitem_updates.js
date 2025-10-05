@@ -35,6 +35,19 @@ add_task(async function test_appmenu_updates_on_edit() {
 
   SelectableProfileService.currentProfile.name = INITIAL_NAME;
   await promiseAppMenuOpened();
+
+  // Close the instructional callout, then resume the test.
+  await TestUtils.waitForCondition(() =>
+    document.querySelector("button.dismiss-button")
+  );
+  document.querySelector("button.dismiss-button").click();
+  await TestUtils.waitForCondition(
+    () => !document.querySelector("button.dismiss-button")
+  );
+  // The callout leaves some residue on the window which breaks the test. TODO fix.
+  delete window.React;
+  delete window.ReactDOM;
+
   let view = PanelMultiView.getViewNode(document, "appMenu-profiles-button");
   Assert.equal(view.label, INITIAL_NAME, "expected the initial name");
 
