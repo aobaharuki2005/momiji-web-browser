@@ -91,6 +91,37 @@ add_task(async function test_frame_fragment_navigations() {
   gBrowser.removeTab(tab);
 });
 
+add_task(async function test_mixed_fragment_navigations() {
+  let tab = BrowserTestUtils.addTab(gBrowser, EMPTY_FRAME_URL);
+  let browser = tab.linkedBrowser;
+  await promiseBrowserLoaded(browser);
+
+  let hashes = ["#frame1", "#frame2", "#frame3"];
+
+  await SpecialPowers.spawn(browser, [], async () => {
+    content.frames[0].history.pushState(null, "", "#frame1");
+    content.frames[0].history.pushState(null, "", "#frame2");
+    content.history.pushState(null, "", "#top");
+    content.frames[0].history.pushState(null, "", "#frame3");
+  });
+
+  let expectedUrls = [EMPTY_URL, ...hashes.map(hash => `${EMPTY_URL}${hash}`)];
+  await checkNavigationEntries(browser, expectedUrls, true);
+
+  await TabStateFlusher.flush(browser);
+  let { entries } = JSON.parse(ss.getTabState(tab));
+  is(entries.length, 5, "Got expected number of history entries");
+
+  await SessionStoreTestUtils.closeTab(tab);
+  tab = ss.undoCloseTab(window, 0);
+  await promiseTabRestored(tab);
+  browser = tab.linkedBrowser;
+
+  await checkNavigationEntries(browser, expectedUrls, true);
+
+  gBrowser.removeTab(tab);
+});
+
 add_task(async function test_toplevel_navigations() {
   let tab = BrowserTestUtils.addTab(gBrowser, EMPTY_URL);
   let browser = tab.linkedBrowser;
