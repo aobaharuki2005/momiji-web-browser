@@ -250,6 +250,8 @@ var TelemetryReportingPolicyImpl = {
   // reporting policy tab / infobar
   _notificationType: null,
 
+  _observerRegistered: false,
+
   get _log() {
     if (!this._logger) {
       this._logger = Log.repository.getLoggerWithMessagePrefix(
@@ -725,7 +727,10 @@ var TelemetryReportingPolicyImpl = {
     Services.prefs.addObserver(TOU_ACCEPTED_VERSION_PREF, this);
 
     // Add the event observers.
-    Services.obs.addObserver(this, "sessionstore-windows-restored");
+    if (!this._observerRegistered) {
+      Services.obs.addObserver(this, "sessionstore-windows-restored");
+      this._observerRegistered = true;
+    }
   },
 
   /**
@@ -743,7 +748,10 @@ var TelemetryReportingPolicyImpl = {
    * Detach the observers that were attached during setup.
    */
   _detachObservers() {
-    Services.obs.removeObserver(this, "sessionstore-windows-restored");
+    if (this._observerRegistered) {
+      Services.obs.removeObserver(this, "sessionstore-windows-restored");
+      this._observerRegistered = false;
+    }
     Services.prefs.removeObserver(TOU_ACCEPTED_DATE_PREF, this);
     Services.prefs.removeObserver(TOU_ACCEPTED_VERSION_PREF, this);
   },

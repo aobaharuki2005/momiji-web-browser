@@ -340,6 +340,8 @@ var Impl = {
   _newProfilePingSent: false,
   // Keep track of the active observers
   _observedTopics: new Set(),
+  _earlyObserversRegistered: false,
+  _delayedObserversRegistered: false,
 
   addObserver(aTopic) {
     Services.obs.addObserver(this, aTopic);
@@ -804,15 +806,18 @@ var Impl = {
    * chrome process.
    */
   attachEarlyObservers() {
-    this.addObserver("sessionstore-windows-restored");
-    if (AppConstants.platform === "android") {
-      this.addObserver("application-background");
-    }
-    this.addObserver("xul-window-visible");
+    if (!this._earlyObserversRegistered) {
+      this.addObserver("sessionstore-windows-restored");
+      if (AppConstants.platform === "android") {
+        this.addObserver("application-background");
+      }
+      this.addObserver("xul-window-visible");
 
-    // Attach the active-ticks related observers.
-    this.addObserver("user-interaction-active");
-    this.addObserver("user-interaction-inactive");
+      // Attach the active-ticks related observers.
+      this.addObserver("user-interaction-active");
+      this.addObserver("user-interaction-inactive");
+      this._earlyObserversRegistered = true;
+    }
   },
 
   /**
@@ -888,7 +893,10 @@ var Impl = {
           this._getSessionDataObject()
         );
 
-        this.addObserver("idle-daily");
+        if (!this._delayedObserversRegistered) {
+          this.addObserver("idle-daily");
+          this._delayedObserversRegistered = true;
+        }
         await Services.telemetry.gatherMemory();
 
         Services.telemetry.asyncFetchTelemetryData(function () {});
@@ -1063,6 +1071,8 @@ var Impl = {
         this._log.warn("uninstall - Failed to remove " + topic, e);
       }
     }
+    this._earlyObserversRegistered = false;
+    this._delayedObserversRegistered = false;
   },
 
   getPayload: function getPayload(reason, clearSubsession) {
