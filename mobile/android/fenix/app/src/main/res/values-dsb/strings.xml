@@ -1517,9 +1517,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Historiju wulašowaś</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Historija jo se wulašowała</string>
+  <string name="history_delete_multiple_items_snackbar">Historija jo se wulašowała</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s jo se wulašował</string>
+  <string name="history_delete_single_item_snackbar">%1$s jo se wulašował</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Lašowaś</string>
   <!--
@@ -2704,6 +2704,10 @@
   <string name="saved_login_hide_password">Gronidła schowaś</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">Za zwobraznjowanje wašych skłaźonych kreditowych gronidłow wótwóriś</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">Wótwóriś</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">Spušćiś</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">Zawěsććo swóje skłaźone gronidła</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -3597,6 +3601,16 @@
   <string name="debug_drawer_add_new_address">Nowu adresu za wubranu narodnu šemu pśidaś</string>
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
   <string name="debug_drawer_delete_all_addresses">Wšykne adrese lašowaś</string>
+  <!--
+    Debug drawer credit cards
+
+    The title of the credit cards feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_credit_cards_title">Kreditowe kórty</string>
+  <!-- The title of the button in the debug drawer for adding a new credit card -->
+  <string name="debug_drawer_add_new_credit_card">Nowu kreditowu kórtu pśidaś</string>
+  <!-- The title of the button for deleting in the debug drawer all addresses. -->
+  <string name="debug_drawer_delete_all_credit_cards">Wšykne kreditowe kórty lašowaś</string>
   <!--
     Debug drawer "contextual feature recommendation" (CFR) tools
 
