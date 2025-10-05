@@ -155,9 +155,9 @@ static gfx::IntSize CalculateDesiredSize(DesiredSizeInput aInput) {
     double scale = std::min(
         {scale_width, scale_height, scale_width_strict, scale_height_strict});
 
-    dst_width = AssertedCast<int32_t>(
+    dst_width = SaturatingCast<int32_t>(
         std::round(scale * AssertedCast<double>(inputWidth)));
-    dst_height = AssertedCast<int32_t>(
+    dst_height = SaturatingCast<int32_t>(
         std::round(scale * AssertedCast<double>(inputHeight)));
   }
 
