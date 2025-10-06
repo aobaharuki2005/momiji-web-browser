@@ -388,38 +388,42 @@ class CrashInfo:
             ):
                 command.append("--symbols-url=https://symbols.mozilla.org/")
 
-            with tempfile.TemporaryDirectory() as json_dir:
-                crash_id = os.path.basename(path)[:-4]
-                json_output = os.path.join(json_dir, f"{crash_id}.trace")
-                # Specify the kind of output
-                command.append(f"--cyborg={json_output}")
-                if self.brief_output:
-                    command.append("--brief")
+            crash_id = os.path.basename(path)[:-4]
+            json_dir = (
+                self.dump_save_path
+                if self.dump_save_path and os.path.isdir(self.dump_save_path)
+                else tempfile.gettempdir()
+            )
+            json_output = os.path.join(json_dir, f"{crash_id}.json")
+            # Specify the kind of output
+            command.append(f"--cyborg={json_output}")
+            if self.brief_output:
+                command.append("--brief")
 
-                # The minidump path and symbols_path values are positional and come last
-                # (in practice the CLI parsers are more permissive, but best not to
-                # unecessarily play with fire).
-                command.append(path)
+            # The minidump path and symbols_path values are positional and come last
+            # (in practice the CLI parsers are more permissive, but best not to
+            # unecessarily play with fire).
+            command.append(path)
 
-                if self.symbols_path:
-                    command.append(self.symbols_path)
+            if self.symbols_path:
+                command.append(self.symbols_path)
 
-                self.logger.info("Copy/paste: {}".format(" ".join(command)))
-                # run minidump-stackwalk
-                p = subprocess.Popen(
-                    command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                )
-                (out, err) = p.communicate()
-                retcode = p.returncode
-                if isinstance(out, bytes):
-                    out = out.decode()
-                if isinstance(err, bytes):
-                    err = err.decode()
+            self.logger.info("Copy/paste: {}".format(" ".join(command)))
+            # run minidump-stackwalk
+            p = subprocess.Popen(
+                command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            (out, err) = p.communicate()
+            retcode = p.returncode
+            if isinstance(out, bytes):
+                out = out.decode()
+            if isinstance(err, bytes):
+                err = err.decode()
 
-                if retcode == 0:
-                    processed_crash = self._process_json_output(json_output)
-                    signature = processed_crash.get("signature")
-                    pid = processed_crash.get("pid")
+            if retcode == 0:
+                processed_crash = self._process_json_output(json_output)
+                signature = processed_crash.get("signature")
+                pid = processed_crash.get("pid")
 
         elif not self.stackwalk_binary:
             errors.append(
