@@ -1542,6 +1542,7 @@ export class MLEngine {
           text: chunk.metadata.text,
           tokens: chunk.metadata.tokens,
           isPrompt: chunk.metadata.isPrompt,
+          toolCalls: chunk.metadata.toolCalls,
         };
         chunkPromise = responseChunkResolvers.getAndAdvanceChunkPromise();
       } else if (this.#port === null) {

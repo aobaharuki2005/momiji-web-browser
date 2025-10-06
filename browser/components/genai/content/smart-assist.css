@@ -18,6 +18,7 @@
   margin-bottom: var(--space-medium);
   padding: var(--space-medium);
   border-radius: var(--border-radius-small);
+  font-size: 14px;
 }
 
 .message.user {
@@ -36,4 +37,32 @@
   margin-block-start: var(--space-medium);
   display: flex;
   justify-content: flex-end;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.log-entries {
+  display: flex;
+  gap: var(--space-medium);
+  margin-block-end: var(--space-medium);
+  flex-direction: column;
+  font-size: 12px;
+}
+
+.log-title {
+  font-weight: bold;
+  font-size: var(--font-size-medium);
+  margin-block-end: var(--space-medium);
+  display: block;
+}
+
+.log-entry {
+  border: 1px solid currentColor;
+  padding: var(--space-medium);
+  border-radius: var(--border-radius-small);
+  overflow-wrap: break-word;
 }

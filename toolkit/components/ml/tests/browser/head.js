@@ -793,6 +793,224 @@ function startMockOpenAI({ echo = "This gets echoed." } = {}) {
     }
     info("bodyText: " + bodyText);
 
+    let body;
+    try {
+      body = JSON.parse(bodyText || "{}");
+    } catch (_) {
+      body = {};
+    }
+
+    const wantsStream = !!body.stream;
+    const tools = Array.isArray(body.tools) ? body.tools : [];
+    const askedForTools = tools.length;
+    const messages = Array.isArray(body.messages) ? body.messages : [];
+    const hasToolResult = messages.some(m => m && m.role === "tool");
+
+    // ---- SSE helpers (for streaming mode) ----
+    function startSSE() {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setHeader(
+        "Content-Type",
+        "text/event-stream; charset=utf-8",
+        false
+      );
+      response.setHeader("Cache-Control", "no-cache", false);
+      response.setHeader("Access-Control-Allow-Origin", "*", false);
+      response.processAsync();
+    }
+    function sendSSE(obj) {
+      const line = `data: ${JSON.stringify(obj)}\n\n`;
+      response.write(line);
+    }
+    function endSSE() {
+      response.write("data: [DONE]\n\n");
+      response.finish();
+    }
+
+    // ===========================
+    // STREAMING BRANCHES (SSE)
+    // ===========================
+    if (wantsStream && askedForTools && !hasToolResult) {
+      // First turn: stream partial tool_calls, then finish with "tool_calls"
+      startSSE();
+
+      // Partial 1: name/args prefix
+      sendSSE({
+        id: "chatcmpl-mock-tools-stream-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "qwen3:0.6b",
+        choices: [
+          {
+            index: 0,
+            delta: {
+              content: "",
+              tool_calls: [
+                {
+                  index: 0,
+                  id: "call_1",
+                  type: "function",
+                  function: { name: "search_", arguments: '{ "type": "ne' },
+                },
+              ],
+            },
+            finish_reason: null,
+          },
+        ],
+      });
+
+      // Partial 2: complete name/args
+      sendSSE({
+        id: "chatcmpl-mock-tools-stream-2",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "qwen3:0.6b",
+        choices: [
+          {
+            index: 0,
+            delta: {
+              content: "",
+              tool_calls: [
+                {
+                  index: 0,
+                  id: "call_1",
+                  type: "function",
+                  function: { name: "open_tabs", arguments: 'ws" }' },
+                },
+              ],
+            },
+            finish_reason: null,
+          },
+        ],
+      });
+
+      // Signal the turn ends with tool calls
+      sendSSE({
+        id: "chatcmpl-mock-tools-stream-3",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "qwen3:0.6b",
+        choices: [{ index: 0, delta: {}, finish_reason: "tool_calls" }],
+      });
+
+      endSSE();
+      return;
+    }
+
+    if (wantsStream && askedForTools && hasToolResult) {
+      // Second turn (after tool result): stream normal assistant text
+      startSSE();
+
+      sendSSE({
+        id: "chatcmpl-mock-tools-stream-4",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "qwen3:0.6b",
+        choices: [
+          {
+            index: 0,
+            delta: { content: "Here are the tabs " },
+            finish_reason: null,
+          },
+        ],
+      });
+
+      sendSSE({
+        id: "chatcmpl-mock-tools-stream-5",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "qwen3:0.6b",
+        choices: [
+          {
+            index: 0,
+            delta: { content: "I found for you." },
+            finish_reason: "stop",
+          },
+        ],
+      });
+
+      endSSE();
+      return;
+    }
+
+    // ===========================
+    // NON-STREAMING BRANCHES
+    // ===========================
+
+    // First turn w/ tools: return tool_calls message (finish_reason: tool_calls)
+    if (askedForTools && !hasToolResult) {
+      const payload = {
+        id: "chatcmpl-mock-tools-1",
+        object: "chat.completion",
+        created: Math.floor(Date.now() / 1000),
+        model: "qwen3:0.6b",
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: "assistant",
+              content: "",
+              tool_calls: [
+                {
+                  id: "call_1",
+                  type: "function",
+                  function: {
+                    name: "search_open_tabs",
+                    arguments: JSON.stringify({ type: "news" }),
+                  },
+                },
+              ],
+            },
+            finish_reason: "tool_calls",
+          },
+        ],
+        usage: { prompt_tokens: 10, completion_tokens: 0, total_tokens: 10 },
+        echo,
+      };
+
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setHeader(
+        "Content-Type",
+        "application/json; charset=utf-8",
+        false
+      );
+      response.setHeader("Access-Control-Allow-Origin", "*", false);
+      response.write(JSON.stringify(payload));
+      return;
+    }
+
+    // Second turn w/ tools (after tool result): normal assistant message
+    if (askedForTools && hasToolResult) {
+      const payload = {
+        id: "chatcmpl-mock-tools-2",
+        object: "chat.completion",
+        created: Math.floor(Date.now() / 1000),
+        model: "qwen3:0.6b",
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: "assistant",
+              content: "Here are the tabs I found for you.",
+            },
+            finish_reason: "stop",
+          },
+        ],
+        usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+        echo,
+      };
+
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setHeader(
+        "Content-Type",
+        "application/json; charset=utf-8",
+        false
+      );
+      response.setHeader("Access-Control-Allow-Origin", "*", false);
+      response.write(JSON.stringify(payload));
+      return;
+    }
+
     const payload = {
       id: "chatcmpl-mock-1",
       object: "chat.completion",

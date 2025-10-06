@@ -89,26 +89,93 @@ export class OpenAIPipeline {
    * @param {boolean} args.isDone - Whether this is the final progress update
    */
   #sendProgress(args) {
-    const { content, requestId, inferenceProgressCallback, port, isDone } =
-      args;
+    const {
+      content,
+      requestId,
+      inferenceProgressCallback,
+      port,
+      isDone,
+      toolCalls,
+    } = args;
     port?.postMessage({
       text: content,
+      ...(toolCalls ? { toolCalls } : {}),
       ...(isDone && { done: true, finalOutput: content }),
       ok: true,
     });
-
     inferenceProgressCallback?.({
       ok: true,
       metadata: {
         text: content,
         requestId,
         tokens: [],
+        ...(toolCalls ? { toolCalls } : {}),
       },
       type: Progress.ProgressType.INFERENCE,
       statusText: isDone
         ? Progress.ProgressStatusText.DONE
         : Progress.ProgressStatusText.IN_PROGRESS,
     });
+  }
+
+  /**
+   * Finalizes the tool calls by sorting them by index and returning an array of call objects.
+   *
+   * @param {map} acc
+   * @returns {Array}
+   */
+
+  #finalizeToolCalls(acc) {
+    // Convert Map entries ([index, call]) to an array
+    const entries = Array.from(acc.entries());
+    // Sort by the numeric index
+    entries.sort((a, b) => a[0] - b[0]);
+    // Return just the call objects (drop the index)
+    return entries.map(([_index, call]) => call);
+  }
+
+  /**
+   * Because we are streaming here, we may get multiple partial tool_calls deltas and need to merge them together.
+   * This helper does that by looking at the index property on each tool call fragment.
+   *
+   * @param {map} acc - Accumulated tool calls map
+   * @param {Array} deltas - New tool call fragments to merge
+   * @returns {map} Merged tool calls map
+   */
+  #mergeToolDeltas(acc, deltas) {
+    // If no deltas, return acc unchanged
+    if (!Array.isArray(deltas) || deltas.length === 0) {
+      return acc;
+    }
+
+    let next = new Map(acc); // shallow copy to keep immutability
+
+    for (const toolCall of deltas) {
+      const idx = toolCall.index ?? 0;
+      const existing = next.get(idx) || {
+        id: null,
+        type: "function",
+        function: { name: "", arguments: "" },
+      };
+      const nameFrag = toolCall.function?.name ?? "";
+      const argsFrag = toolCall.function?.arguments ?? "";
+
+      // Merge fragments into previous entry
+      const merged = {
+        id: toolCall.id ?? existing.id,
+        type: "function",
+        function: {
+          name: nameFrag
+            ? existing.function.name + nameFrag
+            : existing.function.name,
+          arguments: argsFrag
+            ? existing.function.arguments + argsFrag
+            : existing.function.arguments,
+        },
+      };
+      next.set(idx, merged);
+    }
+    return next;
   }
 
   /**
@@ -132,25 +199,55 @@ export class OpenAIPipeline {
       inferenceProgressCallback,
       port,
     } = args;
+
     const stream = await client.chat.completions.create(completionParams);
+
     let streamOutput = "";
+    let toolAcc = new Map();
+    let sawToolCallsFinish = false;
 
     for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content || "";
-      if (content) {
-        streamOutput += content;
+      const choice = chunk?.choices?.[0];
+      const delta = choice?.delta ?? {};
+
+      // Normal text tokens
+      if (delta.content) {
+        streamOutput += delta.content;
         this.#sendProgress({
-          content,
+          content: delta.content,
           requestId,
           inferenceProgressCallback,
           port,
           isDone: false,
         });
       }
+
+      if (Array.isArray(delta.tool_calls) && delta.tool_calls.length) {
+        toolAcc = this.#mergeToolDeltas(toolAcc, delta.tool_calls);
+      }
+
+      // If the model signals it wants tools now
+      if (choice?.finish_reason === "tool_calls") {
+        sawToolCallsFinish = true;
+        const toolCalls = this.#finalizeToolCalls(toolAcc);
+
+        // Emit the completed tool calls to the caller so they can execute them.
+        this.#sendProgress({
+          content: "", // no user-visible text here
+          requestId,
+          inferenceProgressCallback,
+          port,
+          isDone: false,
+          toolCalls,
+        });
+
+        // Typically end this assistant turn here.
+        break;
+      }
     }
 
+    // Final message: does not carry full content to avoid duplication
     this.#sendProgress({
-      content: "",
       requestId,
       inferenceProgressCallback,
       port,
@@ -160,6 +257,9 @@ export class OpenAIPipeline {
     return {
       finalOutput: streamOutput,
       metrics: [],
+      ...(sawToolCallsFinish
+        ? { toolCalls: this.#finalizeToolCalls(toolAcc) }
+        : {}),
     };
   }
 
@@ -184,8 +284,11 @@ export class OpenAIPipeline {
       inferenceProgressCallback,
       port,
     } = args;
+
     const completion = await client.chat.completions.create(completionParams);
-    const output = completion.choices[0].message.content;
+    const message = completion.choices[0].message;
+    const output = message.content || "";
+    const toolCalls = message.tool_calls || null;
 
     this.#sendProgress({
       content: output,
@@ -193,11 +296,13 @@ export class OpenAIPipeline {
       inferenceProgressCallback,
       port,
       isDone: true,
+      toolCalls,
     });
 
     return {
       finalOutput: output,
       metrics: [],
+      ...(toolCalls ? { toolCalls } : {}),
     };
   }
 
@@ -227,11 +332,13 @@ export class OpenAIPipeline {
         apiKey: apiKey || "ollama",
       });
       const stream = request.streamOptions?.enabled || false;
+      const tools = request.tools || [];
 
       const completionParams = {
         model: modelId,
         messages: request.args,
         stream,
+        tools,
       };
 
       const args = {
