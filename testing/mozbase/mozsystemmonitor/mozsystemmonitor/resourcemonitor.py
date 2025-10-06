@@ -636,15 +636,16 @@ class SystemResourceMonitor:
 
     @staticmethod
     def test_status(data):
-        """Record a test_status event with color based on status.
+        """Record a test_status/log/process_output event.
 
         Args:
-            data: Dictionary containing test_status data including:
+            data: Dictionary containing test_status/log/process_output data including:
+                  - "action": the action type
                   - "test": test name (optional)
-                  - "subtest": subtest name (optional)
-                  - "status" or "level": status ("PASS", "FAIL", "ERROR", "INFO", etc.)
+                  - "subtest": subtest name (optional, only for test_status/log)
+                  - "status" or "level": status for test_status/log
                   - "time": timestamp in milliseconds
-                  - "message": optional message
+                  - "message" or "data": optional message
         """
         if not SystemResourceMonitor.instance:
             return
@@ -652,35 +653,40 @@ class SystemResourceMonitor:
         time_sec = data["time"] / 1000
         timestamp = SystemResourceMonitor.instance.convert_to_monotonic_time(time_sec)
 
-        # Accept either "status" or "level" field
-        status = (data.get("status") or data.get("level")).upper()
+        action = data.get("action")
+        marker_data = {"type": "TestStatus"}
 
-        # Create marker data
-        marker_data = {
-            "type": "TestStatus",
-        }
+        if action == "process_output":
+            # Process output uses "output" as marker name
+            marker_name = "output"
+            message = data.get("data")
+        else:
+            # test_status and log actions
+            status = (data.get("status") or data.get("level")).upper()
+            marker_name = status
+
+            # Determine color based on status
+            if status == "PASS":
+                marker_data["color"] = "green"
+            elif status == "FAIL":
+                marker_data["color"] = "orange"
+            elif status == "ERROR":
+                marker_data["color"] = "red"
+
+            subtest = data.get("subtest")
+            if subtest:
+                marker_data["subtest"] = subtest
+
+            message = data.get("message")
 
         test_name = data.get("test")
         if test_name:
             marker_data["test"] = test_name
 
-        subtest = data.get("subtest")
-        if subtest:
-            marker_data["subtest"] = subtest
-
-        # Determine color based on status
-        if status == "PASS":
-            marker_data["color"] = "green"
-        elif status == "FAIL":
-            marker_data["color"] = "orange"
-        elif status == "ERROR":
-            marker_data["color"] = "red"
-
-        message = data.get("message")
         if message:
             marker_data["message"] = message
 
-        SystemResourceMonitor.record_event(status, timestamp, marker_data)
+        SystemResourceMonitor.record_event(marker_name, timestamp, marker_data)
 
     @contextmanager
     def phase(self, name):
