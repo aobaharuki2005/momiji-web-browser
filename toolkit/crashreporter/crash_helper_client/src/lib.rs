@@ -5,8 +5,8 @@
 use anyhow::{bail, Result};
 use crash_helper_common::{
     messages::{self},
-    AncillaryData, BreakpadString, IPCClientChannel, IPCConnector, IntoRawAncillaryData,
-    ProcessHandle, RawAncillaryData, INVALID_ANCILLARY_DATA,
+    AncillaryData, BreakpadString, IPCClientChannel, IPCConnector, ProcessHandle,
+    INVALID_ANCILLARY_DATA,
 };
 #[cfg(any(target_os = "android", target_os = "linux"))]
 use minidump_writer::minidump_writer::{AuxvType, DirectAuxvDumpInfo};
@@ -34,12 +34,13 @@ mod platform;
 pub struct CrashHelperClient {
     connector: IPCConnector,
     spawner_thread: Option<JoinHandle<Result<ProcessHandle>>>,
+    helper_process: Option<ProcessHandle>,
 }
 
 impl CrashHelperClient {
     fn set_crash_report_path(&mut self, path: OsString) -> Result<()> {
         let message = messages::SetCrashReportPath::new(path);
-        self.connector.send_message(message)?;
+        self.connector.send_message(&message)?;
         Ok(())
     }
 
@@ -56,36 +57,48 @@ impl CrashHelperClient {
                 bail!("The crash helper process failed to launch");
             };
 
-            self.connector.set_process(process_handle);
+            self.helper_process = Some(process_handle);
         }
 
-        let Ok(ancillary_data) = server_endpoint.into_ancillary() else {
+        if self.helper_process.is_none() {
+            bail!("The crash helper process is not available");
+        };
+
+        // The endpoint will be sent to the crash helper process (and essentially dup'd on unix),
+        // so we have to retain ownership of the server_endpoint using `as_ancillary()` until the
+        // message is sent.
+        let Ok(ancillary_data) = server_endpoint.as_ancillary(&self.helper_process) else {
             bail!("Could not convert the server IPC endpoint");
         };
 
         let message = messages::RegisterChildProcess::new(ancillary_data);
-        self.connector.send_message(message)?;
+        self.connector.send_message(&message)?;
+        // We use `into_ancillary()` because the returned fd will stay in this process (so we don't
+        // want to close it).
+        let Ok(ancillary_data) = client_endpoint.into_ancillary(/* dst_process */ &None) else {
+            bail!("Could not convert the local IPC endpoint");
+        };
 
-        Ok(client_endpoint.into_ancillary().unwrap())
+        Ok(ancillary_data)
     }
 
     #[cfg(any(target_os = "android", target_os = "linux"))]
     fn register_auxv_info(&mut self, pid: Pid, auxv_info: DirectAuxvDumpInfo) -> Result<()> {
         let message = messages::RegisterAuxvInfo::new(pid, auxv_info);
-        self.connector.send_message(message)?;
+        self.connector.send_message(&message)?;
         Ok(())
     }
 
     #[cfg(any(target_os = "android", target_os = "linux"))]
     fn unregister_auxv_info(&mut self, pid: Pid) -> Result<()> {
         let message = messages::UnregisterAuxvInfo::new(pid);
-        self.connector.send_message(message)?;
+        self.connector.send_message(&message)?;
         Ok(())
     }
 
     fn transfer_crash_report(&mut self, pid: Pid) -> Result<CrashReport> {
         let message = messages::TransferMinidump::new(pid);
-        self.connector.send_message(message)?;
+        self.connector.send_message(&message)?;
 
         // HACK: Workaround for a macOS-specific bug
         #[cfg(target_os = "macos")]
@@ -219,10 +232,10 @@ pub unsafe extern "C" fn set_crash_report_path(
 #[no_mangle]
 pub unsafe extern "C" fn register_child_ipc_channel(
     client: *mut CrashHelperClient,
-) -> RawAncillaryData {
+) -> AncillaryData {
     let client = client.as_mut().unwrap();
     if let Ok(client_endpoint) = client.register_child_process() {
-        client_endpoint.into_raw()
+        client_endpoint
     } else {
         INVALID_ANCILLARY_DATA
     }
@@ -298,7 +311,7 @@ pub unsafe fn report_external_exception(
     let server_addr = crash_helper_common::server_addr(main_process_pid);
     if let Ok(connector) = IPCConnector::connect(&server_addr) {
         let _ = connector
-            .send_message(message)
+            .send_message(&message)
             .and_then(|_| connector.recv_reply::<messages::WindowsErrorReportingMinidumpReply>());
     }
 }
@@ -376,7 +389,7 @@ pub unsafe extern "C" fn unregister_child_auxv_info(
 // signal/exception-safe. We will access this endpoint only from within the
 // exception handler with bare syscalls so we can leave the `IPCConnector`
 // object behind.
-static CHILD_IPC_ENDPOINT: OnceLock<Box<RawAncillaryData>> = OnceLock::new();
+static CHILD_IPC_ENDPOINT: OnceLock<Box<AncillaryData>> = OnceLock::new();
 static RENDEZVOUS_FAILED: AtomicBool = AtomicBool::new(false);
 
 /// Let a client rendez-vous with the crash helper process. This step ensures
@@ -389,8 +402,8 @@ static RENDEZVOUS_FAILED: AtomicBool = AtomicBool::new(false);
 /// a valid pipe handle (on Windows) or a valid file descriptor (on all other
 /// platforms).
 #[no_mangle]
-pub unsafe extern "C" fn crash_helper_rendezvous(client_endpoint: RawAncillaryData) {
-    let Ok(connector) = IPCConnector::from_raw_ancillary(client_endpoint) else {
+pub unsafe extern "C" fn crash_helper_rendezvous(client_endpoint: AncillaryData) {
+    let Ok(connector) = IPCConnector::from_ancillary(client_endpoint) else {
         RENDEZVOUS_FAILED.store(true, Ordering::Relaxed);
         return;
     };
@@ -400,7 +413,7 @@ pub unsafe extern "C" fn crash_helper_rendezvous(client_endpoint: RawAncillaryDa
             CrashHelperClient::prepare_for_minidump(message.crash_helper_pid);
             assert!(
                 CHILD_IPC_ENDPOINT
-                    .set(Box::new(connector.into_raw_ancillary().unwrap()))
+                    .set(Box::new(connector.into_ancillary(&None).unwrap()))
                     .is_ok(),
                 "The crash_helper_rendezvous() function must only be called once"
             );

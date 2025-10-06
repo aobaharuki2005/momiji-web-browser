@@ -77,7 +77,7 @@ impl IPCListener {
         // for the next iteration.
         self.listen()?;
 
-        IPCConnector::from_ancillary(connected_pipe)
+        IPCConnector::new(connected_pipe)
     }
 
     /// Serialize this listener into a string that can be passed on the

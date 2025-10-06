@@ -17,6 +17,7 @@ impl CrashHelperClient {
         Ok(CrashHelperClient {
             connector,
             spawner_thread: None,
+            helper_process: Some(()),
         })
     }
 

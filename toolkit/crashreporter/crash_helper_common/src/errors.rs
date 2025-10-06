@@ -40,9 +40,6 @@ pub enum IPCError {
     ParseError,
     #[error("Failed to duplicate clone handle")]
     CloneHandleFailed(#[source] std::io::Error),
-    #[cfg(target_os = "windows")]
-    #[error("Missing destination process handle")]
-    MissingProcessHandle,
 }
 
 #[derive(Debug, Error)]
