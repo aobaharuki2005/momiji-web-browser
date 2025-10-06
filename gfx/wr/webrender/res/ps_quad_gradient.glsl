@@ -383,8 +383,13 @@ void swgl_drawSpanRGBA8() {
     float start_radius = v_flat_data.x;
     bool repeat = v_gradient_header.z != 0.0;
 
+#ifdef WR_FEATURE_DITHERING
+    swgl_commitDitheredRadialGradientFromStopsRGBA8(sGpuBufferF, offsets_addr, colors_addr,
+                                            stop_count, repeat, pos, start_radius, gl_FragCoord);
+#else
     swgl_commitRadialGradientFromStopsRGBA8(sGpuBufferF, offsets_addr, colors_addr,
                                             stop_count, repeat, pos, start_radius);
+#endif
 }
 #endif
 
