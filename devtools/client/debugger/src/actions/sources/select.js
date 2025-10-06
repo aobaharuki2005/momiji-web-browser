@@ -28,7 +28,7 @@ import {
   getSelectedLocation,
   getShouldSelectOriginalLocation,
   canPrettyPrintSource,
-  getSourceTextContent,
+  getSourceTextContentForLocation,
   tabExists,
   hasSource,
   hasSourceActor,
@@ -312,7 +312,10 @@ export function selectLocation(
       return;
     }
 
-    const sourceTextContent = getSourceTextContent(getState(), location);
+    const sourceTextContent = getSourceTextContentForLocation(
+      getState(),
+      location
+    );
 
     if (
       keepContext &&
