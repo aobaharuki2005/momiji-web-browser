@@ -111,7 +111,6 @@ class SourcePreview extends Component {
       // scroll the editor to center the line
       // with the target search result
       if (this.editor) {
-        await this.editor.scrollTo(line, 0);
         await this.editor.setCursorAt(line, 0);
 
         // Highlight line

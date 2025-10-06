@@ -3628,11 +3628,13 @@ class Editor extends EventEmitter {
 
   /**
    * Move CodeMirror cursor to a given location.
+   * This will also scroll the editor to the specified position.
    * Used only for CM6
    * @param {Number} line
    * @param {Number} column
    */
-  setCursorAt(line, column) {
+  async setCursorAt(line, column) {
+    await this.scrollTo(line, column);
     const cm = editors.get(this);
     const { lines } = cm.state.doc;
     if (line > lines) {

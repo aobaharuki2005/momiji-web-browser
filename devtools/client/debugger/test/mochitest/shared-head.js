@@ -2365,7 +2365,6 @@ async function waitForCursorPosition(dbg, expectedLine) {
  * @returns {Promise}
  */
 async function setEditorCursorAt(dbg, line, column) {
-  scrollEditorIntoView(dbg, line, 0);
   const cursorSet = waitForCursorPosition(dbg, line);
   await getCMEditor(dbg).setCursorAt(line, column);
   return cursorSet;
