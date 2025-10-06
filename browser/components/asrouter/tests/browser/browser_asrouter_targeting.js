@@ -2413,28 +2413,3 @@ add_task(async function check_backupsInfo() {
 
   Assert.ok(stub.called, "backupsInfo getter was called");
 });
-
-add_task(async function check_isEncryptedBackup() {
-  const sandbox = sinon.createSandbox();
-  registerCleanupFunction(() => sandbox.restore());
-
-  is(
-    await ASRouterTargeting.Environment.isEncryptedBackup,
-    false,
-    "should return false if the pref is unset"
-  );
-
-  await pushPrefs(["messaging-system-action.backupChooser", "easy"]);
-  is(
-    await ASRouterTargeting.Environment.isEncryptedBackup,
-    false,
-    "should return false if the pref value is easy"
-  );
-
-  await pushPrefs(["messaging-system-action.backupChooser", "full"]);
-  is(
-    await ASRouterTargeting.Environment.isEncryptedBackup,
-    true,
-    "should return true if the pref value is full"
-  );
-});

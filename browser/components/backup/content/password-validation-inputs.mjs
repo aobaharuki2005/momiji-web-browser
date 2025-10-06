@@ -26,11 +26,6 @@ export default class PasswordValidationInputs extends MozLitElement {
      */
     _tooltipFocus: { type: Boolean, state: true },
     supportBaseLink: { type: String },
-    createPasswordLabelL10nId: {
-      type: String,
-      reflect: true,
-      attribute: "create-password-label-l10n-id",
-    },
   };
 
   static get queries() {
@@ -162,8 +157,7 @@ export default class PasswordValidationInputs extends MozLitElement {
             <div id="new-password-label-wrapper-span-input">
               <span
                 id="new-password-span"
-                data-l10n-id=${this.createPasswordLabelL10nId ||
-                "enable-backup-encryption-create-password-label"}
+                data-l10n-id="enable-backup-encryption-create-password-label"
               ></span>
               <input
                 type="password"

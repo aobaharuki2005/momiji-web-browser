@@ -92,7 +92,6 @@ Please note that some targeting attributes require stricter controls on the tele
 * [usesFirefoxSync](#usesfirefoxsync)
 * [xpinstallEnabled](#xpinstallenabled)
 * [totalSearches](#totalsearches)
-* [isEncryptedBackup](#isEncryptedBackup)
 
 ## Detailed usage
 
@@ -1185,7 +1184,3 @@ declare const backupsInfo: {
   backupFileToRestore: string | null;
 };
 ```
-
-### `isEncryptedBackup`
-
-Indicates whether a user has selected an encrypted or non-encrypted backup method during the spotlight onboarding flow. (Refers to the `messaging-system-action.backupChooser` pref.)

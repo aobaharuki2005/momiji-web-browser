@@ -3,8 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
-import { Localized, CONFIGURABLE_STYLES } from "./MSLocalized";
-import { AboutWelcomeUtils } from "../lib/aboutwelcome-utils.mjs";
+import { Localized } from "./MSLocalized";
 
 export const CTAParagraph = props => {
   const { content, handleAction } = props;
@@ -13,36 +12,27 @@ export const CTAParagraph = props => {
     return null;
   }
 
-  const onClick = React.useCallback(
-    event => {
-      handleAction(event);
-      event.preventDefault();
-    },
-    [handleAction]
-  );
-
   return (
-    <h2
-      className="cta-paragraph"
-      style={{
-        ...AboutWelcomeUtils.getValidStyle(content?.style, CONFIGURABLE_STYLES),
-      }}
-    >
+    <h2 className="cta-paragraph">
       <Localized text={content.text}>
         {content.text.string_name && typeof handleAction === "function" ? (
           <span
             data-l10n-id={content.text.string_id}
-            onClick={onClick}
+            onClick={handleAction}
             onKeyUp={event =>
-              ["Enter", " "].includes(event.key) ? onClick(event) : null
+              ["Enter", " "].includes(event.key) ? handleAction(event) : null
             }
             value="cta_paragraph"
+            tabIndex="0"
             role="link"
           >
             {" "}
             {/* <a> is valid here because of click and keyup handling. */}
             {/* <button> cannot be used due to fluent integration. <a> content is provided by fluent */}
-            <a data-l10n-name={content.text.string_name} tabIndex="0"></a>
+            {/* eslint-disable jsx-a11y/anchor-is-valid */}
+            <a href="" tabIndex="0" data-l10n-name={content.text.string_name}>
+              {" "}
+            </a>
           </span>
         ) : null}
       </Localized>

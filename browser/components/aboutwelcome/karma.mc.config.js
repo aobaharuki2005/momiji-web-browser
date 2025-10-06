@@ -129,12 +129,6 @@ module.exports = function (config) {
               functions: 0,
               branches: 0,
             },
-            "content-src/components/EmbeddedFxBackupOptIn.jsx": {
-              statements: 60,
-              lines: 60,
-              functions: 60,
-              branches: 60,
-            },
             "content-src/components/MSLocalized.jsx": {
               statements: 77.42,
               lines: 77.42,
@@ -160,7 +154,7 @@ module.exports = function (config) {
             },
             "content-src/components/MultiStageAboutWelcome.jsx": {
               statements: 78.06,
-              lines: 79,
+              lines: 79.89,
               functions: 73.17,
               branches: 61.74,
             },
@@ -177,27 +171,6 @@ module.exports = function (config) {
               lines: 60,
               functions: 60,
               branches: 30,
-            },
-            "content-src/components/TileButton.jsx": {
-              // TODO: This file will be covered in a followup by end-to-end tests of the backup component
-              statements: 0,
-              lines: 0,
-              functions: 0,
-              branches: 0,
-            },
-            "content-src/components/TileList.jsx": {
-              // This file will be covered in a followup by end-to-end tests of the backup component
-              statements: 0,
-              lines: 0,
-              functions: 0,
-              branches: 0,
-            },
-            "content-src/components/ConfirmationChecklist.jsx": {
-              // This file is will be covered in a followup by end-to-end tests of the backup component
-              statements: 0,
-              lines: 0,
-              functions: 0,
-              branches: 0,
             },
           },
         },

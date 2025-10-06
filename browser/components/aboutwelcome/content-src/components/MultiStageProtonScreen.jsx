@@ -245,7 +245,15 @@ export class ProtonScreen extends React.PureComponent {
     this.mainContentHeader.focus();
   }
 
-  getScreenClassName(includeNoodles, isVideoOnboarding, isAddonsPicker) {
+  getScreenClassName(
+    isFirstScreen,
+    isLastScreen,
+    includeNoodles,
+    isVideoOnboarding,
+    isAddonsPicker
+  ) {
+    const screenClass = `screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
+
     if (isVideoOnboarding) {
       return "with-video";
     }
@@ -254,14 +262,9 @@ export class ProtonScreen extends React.PureComponent {
       return "addons-picker";
     }
 
-    const screenClass = `screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
-    const dialogInitial =
-      this.props.isFirstScreen && this.props.previousOrder < 0
-        ? `dialog-initial`
-        : ``;
-    const dialogLast = this.props.isLastScreen ? `dialog-last` : ``;
-
-    return `${screenClass} ${dialogInitial} ${dialogLast} ${includeNoodles ? `with-noodles` : ``}`;
+    return `${isFirstScreen ? `dialog-initial` : ``} ${
+      isLastScreen ? `dialog-last` : ``
+    } ${includeNoodles ? `with-noodles` : ``} ${screenClass}`;
   }
 
   renderTitle({ title, title_logo }) {
@@ -587,6 +590,8 @@ export class ProtonScreen extends React.PureComponent {
       content,
       isRtamo,
       addonType,
+      isFirstScreen,
+      isLastScreen,
       isSingleScreen,
       forceHideStepsIndicator,
       ariaRole,
@@ -608,6 +613,8 @@ export class ProtonScreen extends React.PureComponent {
     // by checking if screen order is even or odd.
     const screenClassName = isCenterPosition
       ? this.getScreenClassName(
+          isFirstScreen,
+          isLastScreen,
           includeNoodles,
           content?.video_container,
           content.tiles?.type === "addons-picker"
