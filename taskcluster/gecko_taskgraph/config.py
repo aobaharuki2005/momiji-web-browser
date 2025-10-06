@@ -125,6 +125,8 @@ graph_config_schema = Schema(
                 Length(min=1),
             ),
         },
-        Required("expiration-policy"): optionally_keyed_by("project", {str: str}),
+        Required("expiration-policy"): optionally_keyed_by(
+            "project", "level", {str: str}
+        ),
     }
 )

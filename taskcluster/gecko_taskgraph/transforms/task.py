@@ -2135,12 +2135,19 @@ def set_task_and_artifact_expiry(config, jobs):
     now = datetime.datetime.utcnow()
     # We don't want any configuration leading to anything with an expiry longer
     # than 28 days on try.
-    cap = "28 days" if is_try(config.params) else None
+    cap = (
+        "28 days"
+        if is_try(config.params) and int(config.params["level"]) == 1
+        else None
+    )
     cap_from_now = fromNow(cap, now) if cap else None
     if cap:
-        for policy, expires in config.graph_config["expiration-policy"]["by-project"][
-            "try"
-        ].items():
+        expiration_policy = evaluate_keyed_by(
+            config.graph_config["expiration-policy"],
+            "task expiration",
+            {"project": config.params["project"], "level": config.params["level"]},
+        )
+        for policy, expires in expiration_policy.items():
             if fromNow(expires, now) > cap_from_now:
                 raise Exception(
                     f'expiration-policy "{policy}" is larger than {cap} '

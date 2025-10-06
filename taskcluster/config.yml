@@ -961,14 +961,14 @@ mac-signing:
                       - "/"  # The .app
 
 expiration-policy:
-    by-project:
-        try:
+    by-level:
+        '1':
             default: 28 days
             shortest: 7 days
             short: 14 days
             medium: 28 days
             long: 28 days
-        autoland:
+        '3':
             default: 1 year
             shortest: 14 days
             short: 3 months

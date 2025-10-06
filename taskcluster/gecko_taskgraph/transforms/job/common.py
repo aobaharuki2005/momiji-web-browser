@@ -215,6 +215,6 @@ def get_expiration(config, policy="default"):
     expires = evaluate_keyed_by(
         config.graph_config["expiration-policy"],
         "artifact expiration",
-        {"project": config.params["project"]},
+        {"project": config.params["project"], "level": config.params["level"]},
     )[policy]
     return expires
