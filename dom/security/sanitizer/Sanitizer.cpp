@@ -222,26 +222,20 @@ static CanonicalName CanonicalizeElement(const SanitizerElement& aElement) {
     return CanonicalName(nameAtom, nsGkAtoms::nsuri_xhtml);
   }
 
-  // Step 3. Assert: name is a dictionary and name["name"] exists.
+  // Step 3. Assert: name is a dictionary and both name["name"] and
+  // name["namespace"] exist.
   const auto& elem = GetAsSanitizerElementNamespace(aElement);
   MOZ_ASSERT(!elem.mName.IsVoid());
 
+  // Step 4. If name["namespace"] is the empty string, then set it to null.
   RefPtr<nsAtom> namespaceAtom;
-  // Step 4. Let namespace be name["namespace"] if it exists, otherwise
-  // defaultNamespace.
-  //
-  // Note: "namespace" always exists due to the WebIDL default value.
-  // https://github.com/WICG/sanitizer-api/issues/310
-  //
-  // Step 5. If namespace is the empty string, then set it to null.
-  // defaultNamespace.
   if (!elem.mNamespace.IsEmpty()) {
     namespaceAtom = NS_AtomizeMainThread(elem.mNamespace);
   }
 
-  // Step 6. Return «[
+  // Step 5. Return «[
   //  "name" → name["name"],
-  //  "namespace" → namespace
+  //  "namespace" → name["namespace"]
   //  )
   // ]».
   RefPtr<nsAtom> nameAtom = NS_AtomizeMainThread(elem.mName);
@@ -265,24 +259,20 @@ static CanonicalName CanonicalizeAttribute(
     return CanonicalName(nameAtom, nullptr);
   }
 
-  // Step 3. Assert: name is a dictionary and name["name"] exists.
+  // Step 3. Assert: name is a dictionary and both name["name"] and
+  // name["namespace"] exist.
   const auto& attr = aAttribute.GetAsSanitizerAttributeNamespace();
   MOZ_ASSERT(!attr.mName.IsVoid());
 
+  // Step 4. If name["namespace"] is the empty string, then set it to null.
   RefPtr<nsAtom> namespaceAtom;
-  // Step 4. Let namespace be name["namespace"] if it exists, otherwise
-  // defaultNamespace.
-  // https://github.com/WICG/sanitizer-api/issues/310
-
-  // Step 5. If namespace is the empty string, then set it to
-  // null.
   if (!attr.mNamespace.IsEmpty()) {
     namespaceAtom = NS_AtomizeMainThread(attr.mNamespace);
   }
 
-  // Step 6. Return «[
+  // Step 5. Return «[
   //  "name" → name["name"],
-  //  "namespace" → namespace,
+  //  "namespace" → name["namespace"],
   //  )
   // ]».
   RefPtr<nsAtom> nameAtom = NS_AtomizeMainThread(attr.mName);
