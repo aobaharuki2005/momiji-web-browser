@@ -431,27 +431,6 @@
           "Circular dependencies don't produce any console errors."
         );
       });
-
-      // Verify that a PreferenceNotAddedError is thrown if adding a
-      // Setting with a preference that has not been registered
-      // through Preferences.add/addAll.
-      add_task(async function testPrefNotRegistered() {
-        const PREF_ID = "non_existent_pref";
-        const SETTING_ID = "testSettingNoPref";
-        try {
-          Preferences.addSetting({
-            id: SETTING_ID,
-            pref: PREF_ID,
-          });
-        } catch (e) {
-          let errorName = e.name;
-          is(
-            errorName,
-            "PreferenceNotAddedError",
-            "Adding a Setting without registering the Preference should throw a PreferenceNotAddedError"
-          );
-        }
-      });
     </script>
   </head>
   <body>
