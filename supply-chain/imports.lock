@@ -268,15 +268,15 @@ user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
 [[publisher.glean]]
-version = "65.2.1"
-when = "2025-09-26"
+version = "65.2.2"
+when = "2025-10-02"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.glean-core]]
-version = "65.2.1"
-when = "2025-09-26"
+version = "65.2.2"
+when = "2025-10-02"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -630,8 +630,8 @@ user-login = "Amanieu"
 user-name = "Amanieu d'Antras"
 
 [[publisher.serde]]
-version = "1.0.219"
-when = "2025-03-09"
+version = "1.0.227"
+when = "2025-09-25"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -643,9 +643,16 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.serde_core]]
+version = "1.0.227"
+when = "2025-09-25"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
 [[publisher.serde_derive]]
-version = "1.0.219"
-when = "2025-03-09"
+version = "1.0.227"
+when = "2025-09-25"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -2744,51 +2751,6 @@ delta = "1.9.0 -> 1.10.0"
 who = "Ameer Ghani <inahga@divviup.org>"
 criteria = "safe-to-deploy"
 version = "1.12.1"
-
-[[audits.isrg.audits.serde]]
-who = "J.C. Jones <jc@divviup.org>"
-criteria = "safe-to-deploy"
-delta = "1.0.219 -> 1.0.224"
-
-[[audits.isrg.audits.serde]]
-who = "J.C. Jones <jc@divviup.org>"
-criteria = "safe-to-deploy"
-delta = "1.0.224 -> 1.0.225"
-
-[[audits.isrg.audits.serde]]
-who = "Tim Geoghegan <timg@divviup.org>"
-criteria = "safe-to-deploy"
-delta = "1.0.225 -> 1.0.226"
-
-[[audits.isrg.audits.serde_core]]
-who = "J.C. Jones <jc@divviup.org>"
-criteria = "safe-to-deploy"
-version = "1.0.224"
-
-[[audits.isrg.audits.serde_core]]
-who = "J.C. Jones <jc@divviup.org>"
-criteria = "safe-to-deploy"
-delta = "1.0.224 -> 1.0.225"
-
-[[audits.isrg.audits.serde_core]]
-who = "Tim Geoghegan <timg@divviup.org>"
-criteria = "safe-to-deploy"
-delta = "1.0.225 -> 1.0.226"
-
-[[audits.isrg.audits.serde_derive]]
-who = "J.C. Jones <jc@divviup.org>"
-criteria = "safe-to-deploy"
-delta = "1.0.219 -> 1.0.224"
-
-[[audits.isrg.audits.serde_derive]]
-who = "J.C. Jones <jc@divviup.org>"
-criteria = "safe-to-deploy"
-delta = "1.0.224 -> 1.0.225"
-
-[[audits.isrg.audits.serde_derive]]
-who = "Tim Geoghegan <timg@divviup.org>"
-criteria = "safe-to-deploy"
-delta = "1.0.225 -> 1.0.226"
 
 [[audits.isrg.audits.sha2]]
 who = "David Cook <dcook@divviup.org>"
