@@ -52,6 +52,8 @@
   <string name="mozac_feature_prompts_deny">Gdel</string>
   <!-- Text of the title of a dialog when a page is requesting to open a new window. -->
   <string name="mozac_feature_prompts_popup_dialog_title">Sireg asmel-a ad yeldi?</string>
+  <!-- Text of the title of a dialog when a third-party redirect is blocked. -->
+  <string name="mozac_feature_prompts_redirect_dialog_title">Sireg allus n uwelleh ɣer usmel-a?</string>
   <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
   <string name="mozac_feature_prompt_before_unload_dialog_title">S tidet?</string>
   <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
@@ -121,6 +123,8 @@
   <string name="mozac_feature_prompt_repost_negative_button_text">Sefsex</string>
   <!-- Strings show in a dialog that appear when user confirm folder upload -->
   <string name="mozac_feature_prompt_folder_upload_confirm_title">Sali ifuyla?</string>
+  <!-- Prompt message displayed when user selects a specific folder. %1$s is a folder / directory name. -->
+  <string name="mozac_feature_prompt_folder_upload_confirm_message">Ḍmen tumneḍ asmel-a seld ad tzedmeḍ seg “%1$s”.</string>
   <!-- Pressing this will dismiss the dialog and allow to upload folder -->
   <string name="mozac_feature_prompt_folder_upload_confirm_positive_button_text">Sali</string>
   <!-- Pressing this will dismiss the dialog and disallow to upload folder -->

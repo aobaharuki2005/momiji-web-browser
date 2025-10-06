@@ -3610,7 +3610,7 @@
   <!-- The title of the button in the debug drawer for adding a new credit card -->
   <string name="debug_drawer_add_new_credit_card">Добавяне на нова банкова карта</string>
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
-  <string name="debug_drawer_delete_all_credit_cards">Изтриване на всички банкови карти</string>
+  <string name="debug_drawer_delete_all_credit_cards">Изтриване на всички кредитни карти</string>
   <!--
     Debug drawer "contextual feature recommendation" (CFR) tools
 
