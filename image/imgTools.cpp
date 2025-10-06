@@ -441,7 +441,7 @@ static nsresult EncodeImageData(DataSourceSurface* aDataSurface,
   // Encode the bitmap
   nsresult rv = encoder->InitFromData(
       aMap.GetData(), dataLength, size.width, size.height, aMap.GetStride(),
-      imgIEncoder::INPUT_FORMAT_HOSTARGB, aOutputOptions);
+      imgIEncoder::INPUT_FORMAT_HOSTARGB, aOutputOptions, VoidCString());
   NS_ENSURE_SUCCESS(rv, rv);
 
   encoder.forget(aStream);

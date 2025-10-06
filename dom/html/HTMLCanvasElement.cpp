@@ -941,7 +941,9 @@ nsresult HTMLCanvasElement::ExtractData(JSContext* aCx,
     OwnerDoc()->RecordCanvasUsage(usage);
   }
 
-  return ImageEncoder::ExtractData(aType, aOptions, GetSize(), spoofing,
+  nsCString randomizationKey = VoidCString();
+  return ImageEncoder::ExtractData(aType, aOptions, GetSize(),
+                                   extractionBehaviour, randomizationKey,
                                    mCurrentContext, mOffscreenDisplay, aStream);
 }
 
