@@ -223,6 +223,9 @@ bool BaselineCompileTask::OffThreadBaselineCompilationAvailable(
   if (script->isDebuggee()) {
     return false;
   }
+  if (JS::Prefs::experimental_self_hosted_cache() && script->selfHosted()) {
+    return false;
+  }
   return CanUseExtraThreads();
 }
 
