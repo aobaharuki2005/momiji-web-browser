@@ -8,7 +8,6 @@
 #define PreXULSkeletonUI_h_
 
 #include <windows.h>
-#include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/Types.h"

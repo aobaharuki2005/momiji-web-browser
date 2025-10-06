@@ -20,6 +20,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BaseProfilerMarkers.h"
 #include "mozilla/CacheNtDllThunk.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/FStream.h"
 #include "mozilla/GetKnownFolderPath.h"
 #include "mozilla/HashFunctions.h"

@@ -29,7 +29,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ContentBlockingAllowList.h"
-#include "mozilla/EnumSet.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/MozPromise.h"

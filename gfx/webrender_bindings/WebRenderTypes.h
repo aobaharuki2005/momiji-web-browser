@@ -9,7 +9,6 @@
 
 #include "ImageTypes.h"
 #include "mozilla/webrender/webrender_ffi.h"
-#include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/Types.h"

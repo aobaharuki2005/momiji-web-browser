@@ -7,7 +7,6 @@
 #include "builtin/ModuleObject.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/EnumSet.h"
 #include "mozilla/ScopeExit.h"
 
 #include "builtin/Promise.h"
