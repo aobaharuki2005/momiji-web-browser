@@ -210,4 +210,31 @@ export const SmartAssistEngine = {
       convo = [...convo, assistantToolMsg, ...toolResultMessages];
     }
   },
+
+  /**
+   *
+   * @param {string} prompt
+   * @returns {string} "search" | "chat"
+   */
+  async getPromptIntent(prompt) {
+    // TODO : this is mock logic to determine if the user wants to search or chat
+    // We will eventually want to use a model to determine this intent
+    const searchKeywords = [
+      "search",
+      "find",
+      "look",
+      "query",
+      "locate",
+      "explore",
+    ];
+    const formattedPrompt = prompt.toLowerCase();
+
+    const intent = searchKeywords.some(keyword =>
+      formattedPrompt.includes(keyword)
+    )
+      ? "search"
+      : "chat";
+
+    return intent;
+  },
 };
