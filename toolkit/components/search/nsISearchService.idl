@@ -345,10 +345,14 @@ interface nsISearchService : nsISupports
    *        icon. This value may be overridden by an icon specified in the
    *        engine description file.
    *
+   * @param originAttributes [optional]
+            The origin attributes to use to load this manifest.
+   *
    * @throws NS_ERROR_FAILURE if the description file cannot be successfully
    *         loaded.
    */
-  Promise addOpenSearchEngine(in AString engineURL, in AString iconURL);
+  Promise addOpenSearchEngine(in AString engineURL, in AString iconURL,
+                              [optional] in jsval originAttributes);
 
   /**
    * Adds a new search engine defined by the user.

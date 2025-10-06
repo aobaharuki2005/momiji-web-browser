@@ -11625,7 +11625,7 @@ interface nsISearchService extends nsISupports, Enums<typeof nsISearchService_Op
   readonly hasSuccessfullyInitialized: boolean;
   runBackgroundChecks(): Promise<any>;
   resetToAppDefaultEngine(): void;
-  addOpenSearchEngine(engineURL: string, iconURL: string): Promise<any>;
+  addOpenSearchEngine(engineURL: string, iconURL: string, originAttributes?: any): Promise<any>;
   addUserEngine(formInfo: any): Promise<any>;
   addEnginesFromExtension(extension: any): Promise<any>;
   restoreDefaultEngines(): void;
