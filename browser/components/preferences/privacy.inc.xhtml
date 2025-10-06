@@ -1050,66 +1050,7 @@
 
 <!-- Certificates -->
 <groupbox id="certSelection" data-category="panePrivacy" hidden="true">
-  <label><html:h2 data-l10n-id="certs-header"/></label>
-  <hbox align="start">
-    <vbox data-subcategory="certs" flex="1">
-      <description id="certsDescription" class="description-deemphasized" data-l10n-id="certs-description"/>
-      <html:a is="moz-support-link"
-              class="learnMore"
-              support-page="secure-website-certificate"
-      />
-    </vbox>
-    <vbox align="end">
-      <button id="viewCertificatesButton"
-              is="highlightable-button"
-              class="accessory-button"
-              data-l10n-id="certs-view"
-              preference="security.disable_button.openCertManager"
-              search-l10n-ids="
-                certmgr-tab-mine.label,
-                certmgr-tab-people.label,
-                certmgr-tab-servers.label,
-                certmgr-tab-ca.label,
-                certmgr-mine,
-                certmgr-people,
-                certmgr-server,
-                certmgr-ca,
-                certmgr-cert-name.label,
-                certmgr-token-name.label,
-                certmgr-view.label,
-                certmgr-export.label,
-                certmgr-delete.label
-              "/>
-      <button id="viewSecurityDevicesButton"
-              is="highlightable-button"
-              class="accessory-button"
-              data-l10n-id="certs-devices"
-              preference="security.disable_button.openDeviceManager"
-              search-l10n-ids="
-                devmgr-window.title,
-                devmgr-devlist.label,
-                devmgr-header-details.label,
-                devmgr-header-value.label,
-                devmgr-button-login.label,
-                devmgr-button-logout.label,
-                devmgr-button-changepw.label,
-                devmgr-button-load.label,
-                devmgr-button-unload.label
-              "/>
-    </vbox>
-  </hbox>
-
-  <hbox id="certEnableThirdPartyToggleBox" align="center">
-    <checkbox id="certEnableThirdPartyToggle"
-              data-l10n-id="certs-thirdparty-toggle"
-              preference="security.enterprise_roots.enabled"
-              class="tail-with-learn-more"
-    />
-    <html:a is="moz-support-link"
-            class="learnMore"
-            support-page="automatically-trust-third-party-certificates"
-    />
-  </hbox>
+  <html:setting-group groupid="certificates"></html:setting-group>
 </groupbox>
 
 <!-- HTTPS-ONLY Mode -->
