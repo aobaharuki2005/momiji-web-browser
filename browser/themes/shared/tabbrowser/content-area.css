@@ -109,6 +109,11 @@
   min-height: 0;
 }
 
+.browserSidebarContainer {
+  position: absolute;
+  inset: 0;
+}
+
 .sidebar-browser-stack {
   flex: 1;
 }
@@ -125,6 +130,7 @@
   padding: 0;
   color-scheme: unset;
   background: var(--tabpanel-background-color);
+  display: flex;
 
   &[pendingpaint] {
     background-image: url("chrome://global/skin/icons/pendingpaint.png");
@@ -145,12 +151,33 @@
     -moz-user-focus: none !important;
   }
 
-  .split-view-panel[column="0"] {
-    grid-column: 1;
-  }
+  &[splitview] {
+    --panel-min-width: 140px;
 
-  .split-view-panel[column="1"] {
-    grid-column: 2;
+    .split-view-panel {
+      position: static;
+      flex: 1;
+      min-width: var(--panel-min-width);
+      max-width: calc(100% - var(--panel-min-width));
+    }
+
+    .split-view-panel[column="0"] {
+      order: 0;
+    }
+
+    .split-view-splitter {
+      order: 1;
+      flex: none;
+    }
+
+    .split-view-panel[column="1"] {
+      order: 2;
+    }
+
+    /* Panels with a custom width shouldn't grow. */
+    .split-view-panel[width] {
+      flex: none;
+    }
   }
 }
 

@@ -43,6 +43,14 @@ async function checkSplitViewPanelVisible(tab, isVisible) {
   }
 }
 
+function dragSplitter(deltaX, splitter) {
+  AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
+  EventUtils.synthesizeMouseAtCenter(splitter, { type: "mousedown" });
+  EventUtils.synthesizeMouse(splitter, deltaX, 0, { type: "mousemove" });
+  EventUtils.synthesizeMouse(splitter, 0, 0, { type: "mouseup" });
+  AccessibilityUtils.resetEnv();
+}
+
 add_task(async function test_splitViewCreateAndAddTabs() {
   let tab1 = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let tab2 = BrowserTestUtils.addTab(gBrowser, "about:blank");
@@ -176,4 +184,43 @@ add_task(async function test_split_view_preserves_multiple_pairings() {
 
   splitView1.close();
   splitView2.close();
+});
+
+add_task(async function test_resize_split_view_panels() {
+  const tab1 = await addTabAndLoadBrowser();
+  const tab2 = await addTabAndLoadBrowser();
+  await BrowserTestUtils.switchTab(gBrowser, tab1);
+
+  info("Activate split view.");
+  const splitView = gBrowser.addTabSplitView([tab1, tab2]);
+  const { tabpanels } = gBrowser;
+  await BrowserTestUtils.waitForMutationCondition(
+    tabpanels,
+    { childList: true },
+    () => tabpanels.querySelector(".split-view-splitter")
+  );
+  await BrowserTestUtils.waitForMutationCondition(
+    tabpanels.splitViewSplitter,
+    { attributes: true },
+    () => BrowserTestUtils.isVisible(tabpanels.splitViewSplitter)
+  );
+
+  info("Resize split view panels.");
+  const leftPanel = document.getElementById(tab1.linkedPanel);
+  const rightPanel = document.getElementById(tab2.linkedPanel);
+  const originalLeftWidth = leftPanel.getBoundingClientRect().width;
+  const originalRightWidth = rightPanel.getBoundingClientRect().width;
+  dragSplitter(-100, tabpanels.splitViewSplitter);
+  Assert.less(
+    leftPanel.getBoundingClientRect().width,
+    originalLeftWidth,
+    "Left panel is smaller."
+  );
+  Assert.greater(
+    rightPanel.getBoundingClientRect().width,
+    originalRightWidth,
+    "Right panel is larger."
+  );
+
+  splitView.close();
 });

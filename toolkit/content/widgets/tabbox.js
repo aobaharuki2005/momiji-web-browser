@@ -263,6 +263,13 @@
      */
     #splitViewPanels = [];
 
+    /**
+     * The splitter placed in between Split View panels.
+     *
+     * @type {XULElement}
+     */
+    #splitViewSplitter = null;
+
     constructor() {
       super();
       this._tabbox = null;
@@ -276,6 +283,17 @@
       }
 
       return (this._tabbox = this.closest("tabbox"));
+    }
+
+    get splitViewSplitter() {
+      if (!this.#splitViewSplitter) {
+        const splitter = document.createXULElement("splitter");
+        splitter.className = "split-view-splitter";
+        splitter.setAttribute("resizebefore", "sibling");
+        splitter.setAttribute("resizeafter", "none");
+        this.#splitViewSplitter = splitter;
+      }
+      return this.#splitViewSplitter;
     }
 
     /**
@@ -329,12 +347,11 @@
       }
       for (const [i, panel] of newPanels.entries()) {
         const panelEl = document.getElementById(panel);
-        if (panelEl) {
-          panelEl.classList.add("split-view-panel");
-          panelEl.setAttribute("column", i);
-        }
+        panelEl?.classList.add("split-view-panel");
+        panelEl?.setAttribute("column", i);
       }
       this.#splitViewPanels = newPanels;
+      this.#isSplitViewActive = !!newPanels.length;
     }
 
     get splitViewPanels() {
@@ -350,15 +367,24 @@
      */
     removePanelFromSplitView(panel, updateArray = true) {
       const panelEl = document.getElementById(panel);
-      if (panelEl) {
-        panelEl.classList.remove("split-view-panel");
-        panelEl.removeAttribute("column");
-      }
+      panelEl?.classList.remove("split-view-panel");
+      panelEl?.removeAttribute("column");
       if (updateArray) {
         const index = this.#splitViewPanels.indexOf(panel);
         if (index !== -1) {
           this.#splitViewPanels.splice(index, 1);
         }
+      }
+      this.#isSplitViewActive = !!this.#splitViewPanels.length;
+    }
+
+    set #isSplitViewActive(isActive) {
+      this.toggleAttribute("splitview", isActive);
+      this.splitViewSplitter.hidden = !isActive;
+      if (isActive) {
+        // Place splitter after first panel, so that it can be resized.
+        const firstPanel = document.getElementById(this.splitViewPanels[0]);
+        firstPanel?.after(this.#splitViewSplitter);
       }
     }
   }
