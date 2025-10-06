@@ -27,9 +27,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.ReviewPrompt
-import org.mozilla.fenix.components.ReviewPromptDisplayState.Displayed
-import org.mozilla.fenix.components.ReviewPromptDisplayState.NotDisplayed
-import org.mozilla.fenix.components.ReviewPromptDisplayState.Unknown
 import org.mozilla.fenix.helpers.FenixGleanTestRule
 import org.robolectric.RobolectricTestRunner
 import java.text.SimpleDateFormat
@@ -81,58 +78,35 @@ class PlayStoreReviewPromptControllerTest {
         }
 
     @Test
-    fun `WHEN review info contains 'isNoOp=false' THEN prompt was displayed`() {
-        val displayState = ReviewPromptDisplayState.from(createReviewInfoString("isNoOp=false"))
-
-        assertEquals(Displayed, displayState)
-    }
-
-    @Test
-    fun `WHEN review info contains 'isNoOp=true' THEN prompt wasn't displayed`() {
-        val displayState = ReviewPromptDisplayState.from(createReviewInfoString("isNoOp=true"))
-
-        assertEquals(NotDisplayed, displayState)
-    }
-
-    @Test
-    fun `WHEN review info doesn't contain 'isNoOp' THEN prompt display state is unknown`() {
-        val displayState = ReviewPromptDisplayState.from(createReviewInfoString())
-
-        assertEquals(Unknown, displayState)
-    }
-
-    private fun createReviewInfoString(optionalArg: String? = ""): String {
-        return "ReviewInfo{pendingIntent=PendingIntent{5b613b1: android.os.BinderProxy@46c8096}, $optionalArg}"
-    }
-
-    @Test
     fun reviewPromptWasDisplayed() {
-        testRecordReviewPromptEventRecordsTheExpectedData(Displayed, "true")
+        testRecordReviewPromptEventRecordsTheExpectedData("isNoOp=false", "true")
     }
 
     @Test
     fun reviewPromptWasNotDisplayed() {
-        testRecordReviewPromptEventRecordsTheExpectedData(NotDisplayed, "false")
+        testRecordReviewPromptEventRecordsTheExpectedData("isNoOp=true", "false")
     }
 
     @Test
     fun reviewPromptDisplayStateUnknown() {
-        testRecordReviewPromptEventRecordsTheExpectedData(Unknown, "error")
+        testRecordReviewPromptEventRecordsTheExpectedData(expected = "error")
     }
 
     private fun testRecordReviewPromptEventRecordsTheExpectedData(
-        promptDisplayState: ReviewPromptDisplayState,
-        promptWasDisplayed: String,
+        reviewInfoArg: String = "",
+        expected: String,
     ) {
         val numberOfAppLaunches = 1
+        val reviewInfoAsString =
+            "ReviewInfo{pendingIntent=PendingIntent{5b613b1: android.os.BinderProxy@46c8096}, $reviewInfoArg}"
         val datetime = Date(TEST_TIME_NOW)
         val formattedNowLocalDatetime = SIMPLE_DATE_FORMAT.format(datetime)
 
         assertNull(ReviewPrompt.promptAttempt.testGetValue())
-        recordReviewPromptEvent(promptDisplayState, numberOfAppLaunches, datetime)
+        recordReviewPromptEvent(reviewInfoAsString, numberOfAppLaunches, datetime)
 
         val reviewPromptData = ReviewPrompt.promptAttempt.testGetValue()!!.last().extra!!
-        assertEquals(promptWasDisplayed, reviewPromptData["prompt_was_displayed"])
+        assertEquals(expected, reviewPromptData["prompt_was_displayed"])
         assertEquals(numberOfAppLaunches, reviewPromptData["number_of_app_launches"]!!.toInt())
         assertEquals(formattedNowLocalDatetime, reviewPromptData["local_datetime"])
     }
