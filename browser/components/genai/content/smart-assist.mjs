@@ -29,7 +29,6 @@ export class SmartAssist extends MozLitElement {
     mode: { type: String }, // "tab" | "sidebar"
     overrideNewTab: { type: Boolean },
     showLog: { type: Boolean },
-    actionKey: { type: String }, // "chat" | "search"
   };
 
   constructor() {
@@ -46,20 +45,6 @@ export class SmartAssist extends MozLitElement {
     this.overrideNewTab = Services.prefs.getBoolPref(
       "browser.ml.smartAssist.overrideNewTab"
     );
-    this.actionKey = "chat";
-
-    this._actions = {
-      chat: {
-        label: "Submit",
-        icon: "chrome://global/skin/icons/arrow-right.svg",
-        run: this._actionChat,
-      },
-      search: {
-        label: "Search",
-        icon: "chrome://global/skin/icons/search-glass.svg",
-        run: this._actionSearch,
-      },
-    };
   }
 
   connectedCallback() {
@@ -85,28 +70,12 @@ export class SmartAssist extends MozLitElement {
     this.logState = [...this.logState, entryWithDate];
   };
 
-  _handlePromptInput = async e => {
+  _handlePromptInput = e => {
     const value = e.target.value;
     this.userPrompt = value;
-
-    // Determine intent based on keywords in the prompt
-    this.actionKey = await lazy.SmartAssistEngine.getPromptIntent(value);
   };
 
-  /**
-   * Returns the current action object based on the actionKey
-   */
-
-  get inputAction() {
-    return this._actions[this.actionKey];
-  }
-
-  _actionSearch = () => {
-    // TODO: Implement search functionality
-  };
-
-  _actionChat = async () => {
-    console.log("this", this);
+  _handleSubmit = async () => {
     const formattedPrompt = (this.userPrompt || "").trim();
     if (!formattedPrompt) {
       return;
@@ -157,7 +126,7 @@ export class SmartAssist extends MozLitElement {
    * Mock Functionality to open full page UX
    *
    * @param {boolean} enable
-   * Whether or not to override the new tab page.
+   *   Whether or not to override the new tab page.
    */
   _applyNewTabOverride(enable) {
     try {
@@ -254,14 +223,12 @@ export class SmartAssist extends MozLitElement {
             @input=${e => this._handlePromptInput(e)}
           ></textarea>
           <moz-button
-            iconSrc=${this.inputAction.icon}
             id="submit-user-prompt-btn"
             type="primary"
             size="small"
-            @click=${this.inputAction.run}
-            iconPosition="end"
+            @click=${this._handleSubmit}
           >
-            ${this.inputAction.label}
+            Submit
           </moz-button>
 
           <!-- Footer - New Tab Override -->
