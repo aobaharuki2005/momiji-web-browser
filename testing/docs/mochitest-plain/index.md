@@ -118,10 +118,9 @@ breakpoints or switch to the Netmonitor panel before starting the test.
 
 ## Debug using the Firefox Profiler
 
-Run the profiler locally with `--profiler`, and on try with
-`--env MOZ_PROFILER_STARTUP=1`. For the latter, only failures will generate
-and upload profiles, so make sure to add an assertion that fails the test you're
-interested in.
+Run the profiler with `--profiler` (both locally and on try). On try, only
+failures will generate and upload profiles, so make sure to add an assertion that
+fails the test you're interested in.
 
 ## Finding errors
 

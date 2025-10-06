@@ -44,7 +44,7 @@ if (
   Services.env.exists("MOZ_TEST_TIMEOUT_INTERVAL")
 ) {
   // Ignore the timer used to upload profiles of test timeouts when running
-  // the tests with --env MOZ_PROFILER_STARTUP=1.
+  // the tests with --profiler.
   ignoredTimers.push("upload_test_timeout_profile");
 }
 

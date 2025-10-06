@@ -59,9 +59,9 @@ To use it locally, add the parameter `--profiler` to your test command:
 ./mach test <path to test> --profiler
 ```
 
-To do it in a try build it's possible to use the environment variables:
+To do it in a try build it's possible to use the `--profiler` flag:
 ```
-./mach try fuzzy --env MOZ_PROFILER_STARTUP=1 <test directory>
+./mach try fuzzy --profiler <test directory>
 ```
 
 This will automatically upload profiles of failing tests.
