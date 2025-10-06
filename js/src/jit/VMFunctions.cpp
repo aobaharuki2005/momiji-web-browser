@@ -562,8 +562,8 @@ bool InvokeFromInterpreterStub(JSContext* cx,
   bool constructing = CalleeTokenIsConstructing(token);
   RootedFunction fun(cx, CalleeTokenToFunction(token));
 
-  // Ensure new.target immediately follows the actual arguments (the arguments
-  // rectifier added padding).
+  // Ensure new.target immediately follows the actual arguments (the JIT
+  // ABI passes `undefined` for missing formals).
   if (constructing && numActualArgs < fun->nargs()) {
     argv[1 + numActualArgs] = argv[1 + fun->nargs()];
   }
