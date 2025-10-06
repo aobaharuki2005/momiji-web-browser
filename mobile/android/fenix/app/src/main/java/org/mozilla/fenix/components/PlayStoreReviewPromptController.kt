@@ -9,7 +9,6 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
-import com.google.android.gms.tasks.Task
 import com.google.android.play.core.review.ReviewException
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManager
@@ -45,7 +44,7 @@ class PlayStoreReviewPromptController(
         logger.info("tryPromptReview in progress...")
         val request = withContext(Dispatchers.IO) { manager.requestReviewFlow() }
 
-        request.addOnCompleteListener(activity) { task ->
+        request.addOnCompleteListener { task ->
             val promptWasDisplayed: Boolean
 
             if (task.isSuccessful) {
@@ -58,7 +57,8 @@ class PlayStoreReviewPromptController(
             } else {
                 promptWasDisplayed = false
 
-                logger.warn("Failed to launch in-app review flow due to: ${task.reviewErrorCode}.")
+                @ReviewErrorCode val reviewErrorCode = (task.exception as ReviewException).errorCode
+                logger.warn("Failed to launch in-app review flow due to: $reviewErrorCode.")
             }
 
             if (!promptWasDisplayed) {
@@ -100,10 +100,6 @@ class PlayStoreReviewPromptController(
         logger.info("tryLaunchPlayStoreReview completed.")
     }
 }
-
-@ReviewErrorCode
-private val Task<ReviewInfo>.reviewErrorCode: Int
-    get() = (exception as ReviewException).errorCode
 
 private val ReviewInfo.promptDisplayState: ReviewPromptDisplayState
     get() {
