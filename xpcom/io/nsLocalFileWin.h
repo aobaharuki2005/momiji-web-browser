@@ -108,8 +108,15 @@ class nsLocalFile final : public nsILocalFileWin {
 
   nsresult CopyMove(nsIFile* aNewParentDir, const nsAString& aNewName,
                     uint32_t aOptions);
-  nsresult CopySingleFile(nsIFile* aSource, nsIFile* aDest,
-                          const nsAString& aNewName, uint32_t aOptions);
+  /**
+   * Moves or copies this file or directory as a single entity.
+   * @param aDest the destination directory
+   * @param aNewName optional new name
+   * @param aOptions CopyFileOption flags
+   */
+  nsresult MoveOrCopyAsSingleFileOrDir(nsIFile* aDest,
+                                       const nsAString& aNewName,
+                                       uint32_t aOptions);
 
   enum class TimeField { AccessedTime, ModifiedTime };
 

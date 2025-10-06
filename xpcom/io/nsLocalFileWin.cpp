@@ -1740,9 +1740,9 @@ static bool IsRemoteFilePath(LPCWSTR aPath, bool& aRemote) {
   return true;
 }
 
-nsresult nsLocalFile::CopySingleFile(nsIFile* aSourceFile, nsIFile* aDestParent,
-                                     const nsAString& aNewName,
-                                     uint32_t aOptions) {
+nsresult nsLocalFile::MoveOrCopyAsSingleFileOrDir(nsIFile* aDestParent,
+                                                  const nsAString& aNewName,
+                                                  uint32_t aOptions) {
   nsresult rv = NS_OK;
   nsAutoString filePath;
 
@@ -1762,19 +1762,19 @@ nsresult nsLocalFile::CopySingleFile(nsIFile* aSourceFile, nsIFile* aDestParent,
 
   if (aNewName.IsEmpty()) {
     nsAutoString aFileName;
-    aSourceFile->GetLeafName(aFileName);
+    GetLeafName(aFileName);
     destPath.Append(aFileName);
   } else {
     destPath.Append(aNewName);
   }
 
   if (aOptions & FollowSymlinks) {
-    rv = aSourceFile->GetTarget(filePath);
+    rv = GetTarget(filePath);
     if (filePath.IsEmpty()) {
-      rv = aSourceFile->GetPath(filePath);
+      rv = GetPath(filePath);
     }
   } else {
-    rv = aSourceFile->GetPath(filePath);
+    rv = GetPath(filePath);
   }
 
   if (NS_FAILED(rv)) {
@@ -1782,11 +1782,8 @@ nsresult nsLocalFile::CopySingleFile(nsIFile* aSourceFile, nsIFile* aDestParent,
   }
 
 #ifdef DEBUG
-  nsCOMPtr<nsILocalFileWin> srcWinFile = do_QueryInterface(aSourceFile);
-  MOZ_ASSERT(srcWinFile);
-
   bool srcUseDOSDevicePathSyntax;
-  srcWinFile->GetUseDOSDevicePathSyntax(&srcUseDOSDevicePathSyntax);
+  GetUseDOSDevicePathSyntax(&srcUseDOSDevicePathSyntax);
 
   nsCOMPtr<nsILocalFileWin> destWinFile = do_QueryInterface(aDestParent);
   MOZ_ASSERT(destWinFile);
@@ -1993,7 +1990,7 @@ nsresult nsLocalFile::CopyMove(nsIFile* aParentDir, const nsAString& aNewName,
     if (!aParentDir) {
       aOptions |= SkipNtfsAclReset;
     }
-    rv = CopySingleFile(this, newParentDir, aNewName, aOptions);
+    rv = MoveOrCopyAsSingleFileOrDir(newParentDir, aNewName, aOptions);
     done = NS_SUCCEEDED(rv);
     // If we are moving a directory and that fails, fallback on directory
     // enumeration.  See bug 231300 for details.
@@ -2247,7 +2244,7 @@ nsLocalFile::RenameTo(nsIFile* aNewParentDir, const nsAString& aNewName) {
     options |= SkipNtfsAclReset;
   }
   // Move single file, or move a directory
-  return CopySingleFile(this, targetParentDir, aNewName, options);
+  return MoveOrCopyAsSingleFileOrDir(targetParentDir, aNewName, options);
 }
 
 NS_IMETHODIMP
