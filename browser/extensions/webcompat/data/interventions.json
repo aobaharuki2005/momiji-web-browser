@@ -1719,21 +1719,6 @@
       }
     ]
   },
-  "1875540": {
-    "label": "allstate.com",
-    "bugs": {
-      "1875540": {
-        "issue": "unsupported-warning",
-        "matches": ["*://*.allstate.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "ua_string": ["Chrome"]
-      }
-    ]
-  },
   "1878024": {
     "label": "g1.globo.com",
     "bugs": {
