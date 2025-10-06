@@ -442,6 +442,14 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
 
   static Maybe<RFPTarget> TextToRFPTarget(const nsAString& aText);
 
+  static void GetFingerprintingRandomizationKeyAsString(
+      nsICookieJarSettings* aCookieJarSettings,
+      nsACString& aRandomizationKeyStr);
+
+  static nsresult GenerateRandomizationKeyFromHash(
+      const nsACString& aRandomizationKeyStr, uint32_t aContentHash,
+      nsACString& aHex);
+
  private:
   nsresult Init();
 
