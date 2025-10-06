@@ -301,6 +301,28 @@ inline void js::Nursery::unregisterTrailer(void* block) {
   fromSpace.trailersRemovedUsed_++;
 }
 
+inline void* js::Nursery::allocateBuffer(Zone* zone, js::gc::Cell* owner,
+                                         size_t nbytes, size_t maxNurserySize) {
+  MOZ_ASSERT(owner);
+  MOZ_ASSERT(zone == owner->zone());
+  MOZ_ASSERT(nbytes > 0);
+  MOZ_ASSERT(nbytes <= SIZE_MAX - gc::CellAlignBytes);
+  nbytes = RoundUp(nbytes, gc::CellAlignBytes);
+
+  if (!IsInsideNursery(owner)) {
+    return gc::AllocBuffer(zone, nbytes, false);
+  }
+
+  if (nbytes <= maxNurserySize) {
+    void* buffer = allocateInternalBuffer(zone, nbytes);
+    if (buffer) {
+      return buffer;
+    }
+  }
+
+  return gc::AllocBuffer(zone, nbytes, true);
+}
+
 namespace js {
 
 // The allocation methods below will not run the garbage collector. If the
@@ -328,18 +350,22 @@ static inline T* AllocNurseryOrMallocBuffer(JSContext* cx, gc::Cell* cell,
 }
 
 template <typename T>
-static inline T* AllocateCellBuffer(Nursery& nursery, JS::Zone* zone,
-                                    gc::Cell* cell, uint32_t count) {
+static inline T* AllocateCellBuffer(
+    Nursery& nursery, JS::Zone* zone, gc::Cell* cell, uint32_t count,
+    size_t maxNurserySize = Nursery::MaxNurseryBufferSize) {
   MOZ_ASSERT(zone == cell->zone());
 
   size_t nbytes = RoundUp(count * sizeof(T), sizeof(Value));
-  return static_cast<T*>(nursery.allocateBuffer(zone, cell, nbytes));
+  return static_cast<T*>(
+      nursery.allocateBuffer(zone, cell, nbytes, maxNurserySize));
 }
 
 template <typename T>
-static inline T* AllocateCellBuffer(JSContext* cx, gc::Cell* cell,
-                                    uint32_t count) {
-  T* buffer = AllocateCellBuffer<T>(cx->nursery(), cx->zone(), cell, count);
+static inline T* AllocateCellBuffer(
+    JSContext* cx, gc::Cell* cell, uint32_t count,
+    size_t maxNurserySize = Nursery::MaxNurseryBufferSize) {
+  T* buffer = AllocateCellBuffer<T>(cx->nursery(), cx->zone(), cell, count,
+                                    maxNurserySize);
   if (!buffer) {
     ReportOutOfMemory(cx);
     return nullptr;
@@ -368,25 +394,27 @@ static inline T* ReallocNurseryOrMallocBuffer(JSContext* cx, gc::Cell* cell,
 
 // If this returns null then the old buffer will be left alone.
 template <typename T>
-static inline T* ReallocateCellBuffer(Nursery& nursery, JS::Zone* zone,
-                                      gc::Cell* cell, T* oldBuffer,
-                                      uint32_t oldCount, uint32_t newCount) {
+static inline T* ReallocateCellBuffer(
+    Nursery& nursery, JS::Zone* zone, gc::Cell* cell, T* oldBuffer,
+    uint32_t oldCount, uint32_t newCount,
+    size_t maxNurserySize = Nursery::MaxNurseryBufferSize) {
   MOZ_ASSERT(zone == cell->zone());
 
   size_t oldBytes = RoundUp(oldCount * sizeof(T), sizeof(Value));
   size_t newBytes = RoundUp(newCount * sizeof(T), sizeof(Value));
 
-  return static_cast<T*>(
-      nursery.reallocateBuffer(zone, cell, oldBuffer, oldBytes, newBytes));
+  return static_cast<T*>(nursery.reallocateBuffer(
+      zone, cell, oldBuffer, oldBytes, newBytes, maxNurserySize));
 }
 
 // If this returns null then the old buffer will be left alone.
 template <typename T>
-static inline T* ReallocateCellBuffer(JSContext* cx, gc::Cell* cell,
-                                      T* oldBuffer, uint32_t oldCount,
-                                      uint32_t newCount) {
-  T* buffer = ReallocateCellBuffer<T>(cx->nursery(), cx->zone(), cell,
-                                      oldBuffer, oldCount, newCount);
+static inline T* ReallocateCellBuffer(
+    JSContext* cx, gc::Cell* cell, T* oldBuffer, uint32_t oldCount,
+    uint32_t newCount, size_t maxNurserySize = Nursery::MaxNurseryBufferSize) {
+  T* buffer =
+      ReallocateCellBuffer<T>(cx->nursery(), cx->zone(), cell, oldBuffer,
+                              oldCount, newCount, maxNurserySize);
   if (!buffer) {
     ReportOutOfMemory(cx);
   }
