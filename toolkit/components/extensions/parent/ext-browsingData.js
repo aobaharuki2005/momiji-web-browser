@@ -210,6 +210,27 @@ const clearLocalStorage = async function (options) {
       message: "Firefox does not support clearing localStorage with 'since'.",
     });
   }
+  const notifySessionStorage = function (hostname, cookieStoreId) {
+    if (hostname || cookieStoreId) {
+      const entry = Cc["@mozilla.org/clear-by-site-entry;1"].createInstance(
+        Ci.nsIClearBySiteEntry
+      );
+
+      //TODO: currently, passing cookieStoreId with empty hostname is not supported because
+      // CreateReversedDomain will reject empty string.
+      entry.schemelessSite = hostname || "";
+
+      entry.patternJSON = cookieStoreId
+        ? JSON.stringify(
+            getOriginAttributesPatternForCookieStoreId(cookieStoreId)
+          )
+        : "";
+
+      Services.obs.notifyObservers(entry, "browser:purge-sessionStorage");
+    } else {
+      Services.obs.notifyObservers(null, "browser:purge-sessionStorage");
+    }
+  };
 
   // The legacy LocalStorage implementation that will eventually be removed
   // depends on this observer notification.  Some other subsystems like
@@ -222,9 +243,12 @@ const clearLocalStorage = async function (options) {
         "extension:purge-localStorage",
         hostname
       );
+
+      notifySessionStorage(hostname, options.cookieStoreId);
     }
   } else {
     Services.obs.notifyObservers(null, "extension:purge-localStorage");
+    notifySessionStorage(null, options.cookieStoreId);
   }
 
   if (Services.domStorageManager.nextGenLocalStorageEnabled) {
