@@ -39,7 +39,7 @@ async function reformatExpectedWebCompatInfo(tab, overrides) {
   const atOverrides = overrides.antitracking;
   const blockList = atOverrides?.blockList ?? antitracking.blockList;
   const blockedOrigins =
-    atOverrides?.blockedOrigins ?? antitracking.blockedOrigins;
+    atOverrides?.blockedOrigins ?? antitracking.blockedOrigins ?? [];
   const hasMixedActiveContentBlocked =
     atOverrides?.hasMixedActiveContentBlocked ??
     antitracking.hasMixedActiveContentBlocked;

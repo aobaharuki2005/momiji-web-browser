@@ -94,6 +94,12 @@ class ViewState {
 
   static REASON_CHOICES_ID_PREFIX = "report-broken-site-popup-reason-";
 
+  get blockedTrackersCheckbox() {
+    return this.#mainView.querySelector(
+      "#report-broken-site-popup-blocked-trackers-checkbox"
+    );
+  }
+
   get reasonInput() {
     return this.#mainView.querySelector("#report-broken-site-popup-reason");
   }
@@ -159,6 +165,7 @@ class ViewState {
   reset() {
     this.currentTabWebcompatDetailsPromise = undefined;
     this.form.reset();
+    this.blockedTrackersCheckbox.checked = false;
 
     this.resetURLToCurrentTab();
   }
@@ -526,7 +533,9 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
         return;
       }
       const multiview = event.target.closest("panelmultiview");
-      this.#recordGleanEvent("send");
+      this.#recordGleanEvent("send", {
+        sent_with_blocked_trackers: !!state.blockedTrackersCheckbox.checked,
+      });
       await this.#sendReportAsGleanPing(state);
       multiview.showSubView("report-broken-site-popup-reportSentView");
       state.reset();
@@ -664,6 +673,7 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
   }
 
   async #sendReportAsGleanPing({
+    blockedTrackersCheckbox,
     currentTabWebcompatDetailsPromise,
     description,
     reason,
@@ -707,8 +717,7 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
     gGraphics.devicePixelRatio.set(devicePixelRatio);
 
     for (const [name, value] of Object.entries(antitracking)) {
-      // TODO: Blocked origins will be included in bug 1987781.
-      if (name !== "blockedOrigins" || Cu.isInAutomation) {
+      if (name !== "blockedOrigins" || blockedTrackersCheckbox.checked) {
         gAntitracking[name].set(value);
       }
     }

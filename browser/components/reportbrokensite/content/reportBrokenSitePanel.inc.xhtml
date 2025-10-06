@@ -95,7 +95,11 @@
     <html:textarea id="report-broken-site-popup-description"
                    form="report-broken-site-panel-form"
                    allow-arrow-navigation="true"
-                   rows="8"></html:textarea>
+                   rows="4"></html:textarea>
+    <vbox>
+      <checkbox id="report-broken-site-popup-blocked-trackers-checkbox" data-l10n-id="report-broken-site-panel-blocked-trackers-label" />
+      <html:p data-l10n-id="report-broken-site-panel-blocked-trackers-description"/>
+    </vbox>
     <hbox>
       <html:a id="report-broken-site-popup-send-more-info-link"
               href="#"

@@ -40,7 +40,7 @@ add_task(async function testSendButton() {
     description: "another test description",
     antitracking: {
       blockList: "strict",
-      blockedOrigins: ["https://trackertest.org"],
+      blockedOrigins: null,
       isPrivateBrowsing: true,
       hasTrackingContentBlocked: true,
       hasMixedActiveContentBlocked: true,

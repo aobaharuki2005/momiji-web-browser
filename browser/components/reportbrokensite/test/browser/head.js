@@ -418,6 +418,16 @@ class ReportBrokenSiteHelper {
     return this.mainView.querySelector(".subviewbutton-back");
   }
 
+  get blockedTrackersCheckbox() {
+    return this.getViewNode(
+      "report-broken-site-popup-blocked-trackers-checkbox"
+    );
+  }
+
+  set blockedTrackersCheckbox(checked) {
+    this.blockedTrackersCheckbox.checked = checked;
+  }
+
   get sendButton() {
     return this.getViewNode("report-broken-site-popup-send-button");
   }

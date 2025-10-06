@@ -55,6 +55,7 @@ async function ensureExpectedTabOrder(
     order.push("#report-broken-site-popup-reason");
   }
   order.push("#report-broken-site-popup-description");
+  order.push("#report-broken-site-popup-blocked-trackers-checkbox");
   if (expectSendMoreInfo) {
     order.push("#report-broken-site-popup-send-more-info-link");
   }
