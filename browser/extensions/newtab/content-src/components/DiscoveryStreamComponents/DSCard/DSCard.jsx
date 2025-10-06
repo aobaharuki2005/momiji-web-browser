@@ -263,7 +263,7 @@ export class _DSCard extends React.PureComponent {
       {
         mediaMatcher: "default",
         width: 296,
-        height: 148,
+        height: refinedCardsLayout ? 160 : 148,
       },
     ];
 

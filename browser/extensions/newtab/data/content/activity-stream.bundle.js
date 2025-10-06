@@ -3694,7 +3694,7 @@ class _DSCard extends (external_React_default()).PureComponent {
     this.standardCardImageSizes = [{
       mediaMatcher: "default",
       width: 296,
-      height: 148
+      height: refinedCardsLayout ? 160 : 148
     }];
     this.listCardImageSizes = [{
       mediaMatcher: "(min-width: 1122px)",
