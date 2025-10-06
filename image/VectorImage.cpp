@@ -1018,6 +1018,10 @@ imgIContainer::DecodeResult VectorImage::RequestDecodeWithResult(
 NS_IMETHODIMP
 VectorImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags,
                                   uint32_t aWhichFrame) {
+  if (mError) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Nothing to do for SVG images, though in theory we could rasterize to the
   // provided size ahead of time if we supported off-main-thread SVG
   // rasterization...

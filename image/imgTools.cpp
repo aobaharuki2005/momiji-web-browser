@@ -131,7 +131,14 @@ class ImageDecoderListener final : public nsIStreamListener,
     }
   }
 
-  virtual void OnLoadComplete(bool aLastPart) override {}
+  virtual void OnLoadComplete(bool aLastPart) override {
+    // ProgressTracker dispatches LOAD_COMPLETE as OnLoadComplete, but *our*
+    // observers need the Notify invocation for it.
+    if (mObserver) {
+      mObserver->Notify(nullptr, imgINotificationObserver::LOAD_COMPLETE,
+                        nullptr);
+    }
+  }
 
   // Other notifications are ignored.
   virtual void SetHasImage() override {}
