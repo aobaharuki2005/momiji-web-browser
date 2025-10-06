@@ -51,6 +51,8 @@ h6 {
 #description {
   margin: 0;
   margin-block-start: var(--space-xxsmall);
+  color: var(--text-color-deemphasized);
+
   & + a,
   & + ::slotted([slot="support-link"]) {
     font-size: var(--font-size-small);
