@@ -104,9 +104,10 @@ body {
   --urlbar-min-height: max(32px, 1.4em);
   --urlbar-icon-padding: calc((var(--urlbar-min-height) - 2px /* border */ - 2px /* padding */ - 16px /* icon */) / 2);
 
-  /* This should be used for icons and chiclets inside the input field. It makes
-     the gap around them more uniform when they are close to the field edges */
-  --urlbar-icon-border-radius: calc(var(--toolbarbutton-border-radius) - 1px);
+  /* This should be used for icons and chiclets inside the input field, as well
+     as result rows. It makes the gap around them more uniform when they are
+     close to the field edges. */
+  --urlbar-inner-border-radius: calc(var(--toolbarbutton-border-radius) - 1px);
   --urlbar-searchmodeswitcher-inline-padding: 6px;
   --urlbar-searchmodeswitcher-margin-inline-end: 0.45em;
 
