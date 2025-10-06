@@ -319,12 +319,6 @@ pref("media.videocontrols.keyboard-tab-to-all-controls", true);
   // 770 = DTLS 1.0, 771 = DTLS 1.2, 772 = DTLS 1.3
   pref("media.peerconnection.dtls.version.min", 771);
   pref("media.peerconnection.dtls.version.max", 772);
-  pref("media.peerconnection.dtls.enable_pq_hybrid_kex", true);
-  #ifdef EARLY_BETA_OR_EARLIER
-    pref("media.peerconnection.dtls.send_mlkem_keyshare", true);
-  #else
-    pref("media.peerconnection.dtls.send_mlkem_keyshare", false);
-  #endif
 
   pref("media.peerconnection.sctp.default_max_streams", 2048);
 

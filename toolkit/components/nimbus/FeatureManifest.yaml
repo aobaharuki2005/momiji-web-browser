@@ -4843,7 +4843,7 @@ pqcrypto:
       type: boolean
       setPref:
         branch: default
-        pref: media.peerconnection.dtls.enable_pq_hybrid_kex
+        pref: media.webrtc.enable_pq_dtls
       description: >-
         Whether to enable mlkem768x25519 for DTLS in WebRTC.
 
