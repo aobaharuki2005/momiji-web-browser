@@ -2583,7 +2583,11 @@ static bool AddToFoldedStub(JSContext* cx, const CacheIRWriter& writer,
   }
 
   // Limit the maximum number of shapes we will add before giving up.
+  // If we give up, transition the stub.
   if (foldedShapes->length() == MaxFoldedShapes) {
+    MOZ_ASSERT(fallback->state().mode() != ICState::Mode::Generic);
+    fallback->state().forceTransition();
+    fallback->discardStubs(cx->zone(), icEntry);
     return false;
   }
 
