@@ -5246,6 +5246,24 @@
       }
     ]
   },
+  "1938533": {
+    "label": "chatgpt.com",
+    "bugs": {
+      "1938533": {
+        "issue": "broken-interactive-elements",
+        "matches": ["https://chatgpt.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "only_channels": ["nightly"],
+        "content_scripts": {
+          "js": ["bug1938533-chatgpt.com-fix-voice-mode.js"]
+        }
+      }
+    ]
+  },
   "1976402": {
     "label": "dieseldispatch.com",
     "bugs": {
