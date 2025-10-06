@@ -404,13 +404,16 @@ class SystemResourceMonitor:
         self.start_time = time.monotonic()
         SystemResourceMonitor.instance = self
 
-    def stop(self):
+    def stop(self, upload_dir=None):
         """Stop measuring system-wide CPU resource utilization.
 
         You should call this if and only if you have called start(). You should
         always pair a stop() with a start().
 
         Currently, data is not available until you call stop().
+
+        Args:
+            upload_dir: Optional path to upload directory for artifact markers.
         """
         if not self._process:
             self._stopped = True
@@ -503,6 +506,27 @@ class SystemResourceMonitor:
         self._running = False
         SystemResourceUsage.instance = None
         self.end_time = time.monotonic()
+
+        # Add event markers for files in upload directory
+        if upload_dir is None:
+            upload_dir = os.environ.get("UPLOAD_DIR") or os.environ.get(
+                "MOZ_UPLOAD_DIR"
+            )
+        if upload_dir and os.path.isdir(upload_dir):
+            try:
+                for filename in os.listdir(upload_dir):
+                    filepath = os.path.join(upload_dir, filename)
+                    if os.path.isfile(filepath):
+                        stat = os.stat(filepath)
+                        timestamp = self.convert_to_monotonic_time(stat.st_mtime)
+                        marker_data = {
+                            "type": "Artifact",
+                            "filename": filename,
+                            "size": stat.st_size,
+                        }
+                        self.events.append((timestamp, "artifact", marker_data))
+            except Exception as e:
+                warnings.warn(f"Failed to scan upload directory: {e}")
 
     # Methods to record events alongside the monitored data.
 
@@ -1157,6 +1181,23 @@ class SystemResourceMonitor:
                             {
                                 "key": "color",
                                 "hidden": True,
+                            },
+                        ],
+                    },
+                    {
+                        "name": "Artifact",
+                        "tableLabel": "{marker.data.filename} — {marker.data.size}",
+                        "display": ["marker-chart", "marker-table"],
+                        "data": [
+                            {
+                                "key": "filename",
+                                "label": "Filename",
+                                "format": "string",
+                            },
+                            {
+                                "key": "size",
+                                "label": "Size",
+                                "format": "bytes",
                             },
                         ],
                     },
