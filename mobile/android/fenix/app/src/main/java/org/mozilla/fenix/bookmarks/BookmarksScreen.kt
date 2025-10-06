@@ -918,12 +918,7 @@ private fun SelectFolderScreen(
 
     Scaffold(
         topBar = {
-            SelectFolderTopBar(
-                onBackClick = { store.dispatch(BackClicked) },
-                onNewFolderClick = showNewFolderButton.takeIf { it }?.let {
-                    { store.dispatch(AddFolderClicked) }
-                },
-            )
+            SelectFolderTopBar(store = store)
         },
         containerColor = FirefoxTheme.colors.layer1,
     ) { paddingValues ->
@@ -997,10 +992,10 @@ private fun NewFolderListItem(onClick: () -> Unit) {
 }
 
 @Composable
-private fun SelectFolderTopBar(
-    onBackClick: () -> Unit,
-    onNewFolderClick: (() -> Unit)?,
-) {
+private fun SelectFolderTopBar(store: BookmarksStore) {
+    val onNewFolderClick = store.state.showNewFolderButton.takeIf { it }?.let {
+        { store.dispatch(AddFolderClicked) }
+    }
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(containerColor = FirefoxTheme.colors.layer1),
         title = {
@@ -1011,7 +1006,7 @@ private fun SelectFolderTopBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = onBackClick) {
+            IconButton(onClick = { store.dispatch(BackClicked) }) {
                 Icon(
                     painter = painterResource(iconsR.drawable.mozac_ic_back_24),
                     contentDescription = stringResource(R.string.bookmark_navigate_back_button_content_description),
@@ -1020,8 +1015,22 @@ private fun SelectFolderTopBar(
             }
         },
         actions = {
+            Box {
+                IconButton(onClick = {
+                    store.dispatch(BookmarksListMenuAction.SortMenu.SortMenuButtonClicked)
+                }) {
+                    Icon(
+                        painter = painterResource(iconsR.drawable.mozac_ic_filter),
+                        contentDescription = stringResource(
+                            R.string.bookmark_sort_menu_content_desc,
+                        ),
+                    )
+                }
+
+                SelectFolderSortOverflowMenu(store = store)
+            }
             if (onNewFolderClick != null) {
-                IconButton(onClick = onNewFolderClick) {
+                IconButton(onClick = { onNewFolderClick }) {
                     Icon(
                         painter = painterResource(iconsR.drawable.mozac_ic_folder_add_24),
                         contentDescription = stringResource(
@@ -1036,6 +1045,47 @@ private fun SelectFolderTopBar(
             top = 0.dp,
             bottom = 0.dp,
         ),
+    )
+}
+
+@Composable
+private fun SelectFolderSortOverflowMenu(store: BookmarksStore) {
+    val showMenu by store.observeAsState(store.state.sortMenuShown) {
+        store.state.sortMenuShown
+    }
+    val sortOrder by store.observeAsState(store.state.sortOrder) { store.state.sortOrder }
+
+    val menuItems = listOf(
+        MenuItem.CheckableItem(
+            text = Text.Resource(R.string.bookmark_sort_menu_custom),
+            isChecked = sortOrder is BookmarksListSortOrder.Positional,
+            onClick = { store.dispatch(SelectFolderAction.SortMenu.CustomSortClicked) },
+        ),
+        MenuItem.CheckableItem(
+            text = Text.Resource(R.string.bookmark_sort_menu_newest),
+            isChecked = sortOrder == BookmarksListSortOrder.Created(ascending = true),
+            onClick = { store.dispatch(SelectFolderAction.SortMenu.NewestClicked) },
+        ),
+        MenuItem.CheckableItem(
+            text = Text.Resource(R.string.bookmark_sort_menu_oldest),
+            isChecked = sortOrder == BookmarksListSortOrder.Created(ascending = false),
+            onClick = { store.dispatch(SelectFolderAction.SortMenu.OldestClicked) },
+        ),
+        MenuItem.CheckableItem(
+            text = Text.Resource(R.string.bookmark_sort_menu_a_to_z),
+            isChecked = sortOrder == BookmarksListSortOrder.Alphabetical(ascending = true),
+            onClick = { store.dispatch(SelectFolderAction.SortMenu.AtoZClicked) },
+        ),
+        MenuItem.CheckableItem(
+            text = Text.Resource(R.string.bookmark_sort_menu_z_to_a),
+            isChecked = sortOrder == BookmarksListSortOrder.Alphabetical(ascending = false),
+            onClick = { store.dispatch(SelectFolderAction.SortMenu.ZtoAClicked) },
+        ),
+    )
+    DropdownMenu(
+        menuItems = menuItems,
+        expanded = showMenu,
+        onDismissRequest = { store.dispatch(SelectFolderAction.SortMenu.SortMenuDismissed) },
     )
 }
 

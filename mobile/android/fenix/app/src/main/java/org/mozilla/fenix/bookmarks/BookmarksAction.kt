@@ -118,6 +118,16 @@ internal sealed class SelectFolderAction : BookmarksAction {
     data object ViewAppeared : SelectFolderAction()
     data class FoldersLoaded(val folders: List<SelectFolderItem>) : SelectFolderAction()
     data class ItemClicked(val folder: SelectFolderItem) : SelectFolderAction()
+
+    internal sealed class SortMenu : SelectFolderAction() {
+        data object SortMenuButtonClicked : SortMenu()
+        data object SortMenuDismissed : SortMenu()
+        data object CustomSortClicked : SortMenu()
+        data object NewestClicked : SortMenu()
+        data object OldestClicked : SortMenu()
+        data object AtoZClicked : SortMenu()
+        data object ZtoAClicked : SortMenu()
+    }
 }
 
 internal sealed class OpenTabsConfirmationDialogAction : BookmarksAction {

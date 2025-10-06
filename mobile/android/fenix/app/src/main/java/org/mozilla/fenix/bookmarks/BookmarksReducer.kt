@@ -103,6 +103,7 @@ private fun BookmarksState.handleSelectFolderAction(action: SelectFolderAction):
                 outerSelectionGuid = BookmarkRoot.Mobile.id,
             ),
         )
+        is SelectFolderAction.SortMenu -> this.handleSortMenuAction(action)
 
         SelectFolderAction.ViewAppeared -> this
     }
@@ -308,27 +309,45 @@ private fun BookmarksState.respondToBackClick(): BookmarksState = when {
     else -> this
 }
 
-private fun BookmarksState.handleSortMenuAction(action: BookmarksListMenuAction.SortMenu): BookmarksState =
+private fun BookmarksState.handleSortMenuAction(action: BookmarksAction): BookmarksState =
     when (action) {
-        BookmarksListMenuAction.SortMenu.SortMenuButtonClicked -> copy(
+        BookmarksListMenuAction.SortMenu.SortMenuButtonClicked,
+        SelectFolderAction.SortMenu.SortMenuButtonClicked,
+            -> copy(
             sortMenuShown = !sortMenuShown,
         )
-        BookmarksListMenuAction.SortMenu.SortMenuDismissed -> copy(
+        BookmarksListMenuAction.SortMenu.SortMenuDismissed,
+        SelectFolderAction.SortMenu.SortMenuDismissed,
+            -> copy(
             sortMenuShown = false,
         )
-        BookmarksListMenuAction.SortMenu.CustomSortClicked -> copy(sortOrder = BookmarksListSortOrder.Positional)
-        BookmarksListMenuAction.SortMenu.NewestClicked -> copy(
+        BookmarksListMenuAction.SortMenu.CustomSortClicked,
+        SelectFolderAction.SortMenu.CustomSortClicked,
+            -> copy(
+            sortOrder = BookmarksListSortOrder.Positional,
+        )
+        BookmarksListMenuAction.SortMenu.NewestClicked,
+        SelectFolderAction.SortMenu.NewestClicked,
+            -> copy(
             sortOrder = BookmarksListSortOrder.Created(true),
         )
-        BookmarksListMenuAction.SortMenu.OldestClicked -> copy(
+        BookmarksListMenuAction.SortMenu.OldestClicked,
+        SelectFolderAction.SortMenu.OldestClicked,
+            -> copy(
             sortOrder = BookmarksListSortOrder.Created(false),
         )
-        BookmarksListMenuAction.SortMenu.AtoZClicked -> copy(
+        BookmarksListMenuAction.SortMenu.AtoZClicked,
+        SelectFolderAction.SortMenu.AtoZClicked,
+            -> copy(
             sortOrder = BookmarksListSortOrder.Alphabetical(true),
         )
-        BookmarksListMenuAction.SortMenu.ZtoAClicked -> copy(
+
+        BookmarksListMenuAction.SortMenu.ZtoAClicked,
+        SelectFolderAction.SortMenu.ZtoAClicked,
+            -> copy(
             sortOrder = BookmarksListSortOrder.Alphabetical(false),
         )
+        else -> copy(sortOrder = BookmarksListSortOrder.Positional)
     }.let {
         it.copy(
             bookmarkItems = it.bookmarkItems.sortedWith(it.sortOrder.comparator),

@@ -227,6 +227,41 @@ class BookmarksMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN SelectFolderScreen WHEN SortMenuItem is clicked THEN Save the new sort order`() = runTestOnMain {
+        val tree = generateBookmarkTree()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(Result.success(tree))
+        var newSortOrder = BookmarksListSortOrder.default
+        saveSortOrder = {
+            newSortOrder = it
+        }
+        val bookmark = tree.children?.last { it.type == BookmarkNodeType.ITEM }!!
+        val bookmarkItem = BookmarkItem.Bookmark(
+            title = bookmark.title!!,
+            guid = bookmark.guid,
+            url = bookmark.url!!,
+            previewImageUrl = "",
+            position = bookmark.position,
+            dateAdded = bookmark.dateAdded,
+        )
+        val middleware = buildMiddleware()
+
+        val store = middleware.makeStore()
+        store.dispatch(EditBookmarkClicked(bookmarkItem))
+        store.dispatch(EditBookmarkAction.FolderClicked)
+        store.dispatch(SelectFolderAction.ViewAppeared)
+        assertEquals(false, store.state.sortMenuShown)
+
+        store.dispatch(SelectFolderAction.SortMenu.SortMenuButtonClicked)
+
+        assertEquals(true, store.state.sortMenuShown)
+
+        store.dispatch(SelectFolderAction.SortMenu.NewestClicked)
+        store.waitUntilIdle()
+        assertEquals(BookmarksListSortOrder.Created(true), newSortOrder)
+    }
+
+    @Test
     fun `GIVEN bookmarks in storage and user has a desktop bookmark WHEN store is initialized THEN bookmarks, including desktop will be loaded as display format`() = runTestOnMain {
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(1u)
         `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(Result.success(generateBookmarkTree()))

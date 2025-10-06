@@ -369,6 +369,10 @@ internal class BookmarksMiddleware(
                     }
                 }
             }
+            is SelectFolderAction.SortMenu -> scope.launch {
+                context.store.tryDispatchLoadFolders()
+                saveBookmarkSortOrder(context.store.state.sortOrder)
+            }
             is InitEditLoaded,
             SnackbarAction.Undo,
             is OpenTabsConfirmationDialogAction.Present,

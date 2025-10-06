@@ -212,6 +212,34 @@ class BookmarksReducerTest {
     }
 
     @Test
+    fun `GIVEN the select folder screen WHEN the sort menu items are clicked THEN resort the bookmark list`() {
+        val b1 = generateFolder(1, title = "z", dateAdded = 1, position = 0u)
+        val b2 = generateFolder(2, title = "a", dateAdded = 2, position = 1u)
+        val b3 = generateFolder(3, title = "z", dateAdded = 3, position = 1u)
+        val b4 = generateFolder(4, title = "b", dateAdded = 4, position = 1u)
+        val b5 = generateFolder(5, title = "d", dateAdded = 5, position = 2u)
+        val b6 = generateFolder(6, title = "j", dateAdded = 6, position = 3u)
+
+        val items = listOf(b1, b2, b3, b4, b5, b6)
+        val state = BookmarksState.default.copy(bookmarkItems = items)
+
+        val positional = bookmarksReducer(state, SelectFolderAction.SortMenu.CustomSortClicked)
+        assertEquals(listOf(b1, b2, b3, b4, b5, b6), positional.bookmarkItems)
+
+        val zToA = bookmarksReducer(state, BookmarksListMenuAction.SortMenu.ZtoAClicked)
+        assertEquals(listOf(b1, b3, b6, b5, b4, b2), zToA.bookmarkItems)
+
+        val aToZ = bookmarksReducer(zToA, BookmarksListMenuAction.SortMenu.AtoZClicked)
+        assertEquals(listOf(b2, b4, b5, b6, b1, b3), aToZ.bookmarkItems)
+
+        val newest = bookmarksReducer(aToZ, BookmarksListMenuAction.SortMenu.NewestClicked)
+        assertEquals(listOf(b6, b5, b4, b3, b2, b1), newest.bookmarkItems)
+
+        val oldest = bookmarksReducer(newest, BookmarksListMenuAction.SortMenu.OldestClicked)
+        assertEquals(listOf(b1, b2, b3, b4, b5, b6), oldest.bookmarkItems)
+    }
+
+    @Test
     fun `GIVEN there are already selected items WHEN clicking an unselected folder THEN it is added to selected items`() {
         val folder1 = generateFolder(1)
         val folder2 = generateFolder(2)
