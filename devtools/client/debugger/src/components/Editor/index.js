@@ -649,7 +649,7 @@ class Editor extends PureComponent {
       editor.focus();
     }
 
-    await editor.setCursorAt(line - 1, column);
+    await editor.setCursorAt(line, column);
   }
 
   async setText(props, editor) {

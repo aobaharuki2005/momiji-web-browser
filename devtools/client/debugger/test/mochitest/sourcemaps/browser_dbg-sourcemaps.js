@@ -161,7 +161,7 @@ add_task(async function () {
   );
 
   info("Move the cursor within the bundle to another original source");
-  setEditorCursorAt(dbg, 70, 0);
+  await setEditorCursorAt(dbg, 71, 0);
   mappedSourceLink = await waitFor(() => findElement(dbg, "mappedSourceLink"));
   is(
     mappedSourceLink.textContent,

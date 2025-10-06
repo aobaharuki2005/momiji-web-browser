@@ -112,7 +112,7 @@ class SourcePreview extends Component {
       // with the target search result
       if (this.editor) {
         await this.editor.scrollTo(line, 0);
-        await this.editor.setCursorAt(line - 1, 0);
+        await this.editor.setCursorAt(line, 0);
 
         // Highlight line
         this.editor.setLineContentMarker({

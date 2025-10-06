@@ -190,20 +190,6 @@ function assertCursorPosition(dbg, expectedLine, expectedColumn, message) {
   is(cursor.from.ch + 1, expectedColumn, message + " (actual cursor column)");
 }
 
-async function waitForCursorPosition(dbg, expectedLine) {
-  return waitFor(() => {
-    const cursorPosition = findElementWithSelector(dbg, ".cursor-position");
-    if (!cursorPosition) {
-      return false;
-    }
-    const { innerText } = cursorPosition;
-    // Cursor position text has the following shape: (L, C)
-    // where L is the line number, and C the column number
-    const line = innerText.substring(1, innerText.indexOf(","));
-    return parseInt(line, 10) == expectedLine;
-  });
-}
-
 /**
  * @see selectDebuggerContextMenuItem in debugger/test/mochitest/shared-head.js
  */
