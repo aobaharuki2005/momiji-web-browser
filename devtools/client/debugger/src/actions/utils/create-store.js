@@ -6,7 +6,6 @@
 
 /**
  * Redux store utils
- * @module utils/create-store
  */
 
 import {
@@ -20,10 +19,9 @@ import { thunk } from "./middleware/thunk";
 import { timing } from "./middleware/timing";
 import { context } from "./middleware/context";
 
-/**
- * @memberof utils/create-store
- * @static
- */
+const {
+  ignore,
+} = require("resource://devtools/client/shared/redux/middleware/ignore.js");
 
 /**
  * This creates a dispatcher with all the standard middleware in place
@@ -43,6 +41,7 @@ const configureStore = (opts = {}) => {
     thunk(opts.makeThunkArgs),
     context,
     promise,
+    ignore,
 
     // Order is important: services must go last as they always
     // operate on "already transformed" actions. Actions going through
