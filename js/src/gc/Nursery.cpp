@@ -1517,114 +1517,6 @@ void js::Nursery::printDeduplicationData(js::StringStats& prev,
   }
 }
 
-void js::Nursery::freeTrailerBlocks(JS::GCOptions options,
-                                    JS::GCReason reason) {
-  fromSpace.freeTrailerBlocks(mallocedBlockCache_);
-
-  if (options == JS::GCOptions::Shrink || gc::IsOOMReason(reason)) {
-    mallocedBlockCache_.clear();
-    return;
-  }
-
-  // Discard blocks from the cache at 0.05% per megabyte of nursery capacity,
-  // that is, 0.8% of blocks for a 16-megabyte nursery.  This allows the cache
-  // to gradually discard unneeded blocks in long running applications.
-  mallocedBlockCache_.preen(0.05 * double(capacity()) / (1024.0 * 1024.0));
-}
-
-void js::Nursery::Space::freeTrailerBlocks(
-    MallocedBlockCache& mallocedBlockCache) {
-  // This routine frees those blocks denoted by the set
-  //
-  //  trailersAdded_ (all of it)
-  //    - trailersRemoved_ (entries with index below trailersRemovedUsed_)
-  //
-  // For each block, places it back on the nursery's small-malloced-block pool
-  // by calling mallocedBlockCache.free.
-
-  MOZ_ASSERT(trailersAdded_.length() == trailersRemoved_.length());
-  MOZ_ASSERT(trailersRemovedUsed_ <= trailersRemoved_.length());
-
-  // Sort the removed entries.
-  std::sort(trailersRemoved_.begin(),
-            trailersRemoved_.begin() + trailersRemovedUsed_,
-            [](const void* block1, const void* block2) {
-              return uintptr_t(block1) < uintptr_t(block2);
-            });
-
-  // Use one of two schemes to enumerate the set subtraction.
-  if (trailersRemovedUsed_ < 1000) {
-    // If the number of removed items is relatively small, it isn't worth the
-    // cost of sorting `trailersAdded_`.  Instead, walk through the vector in
-    // whatever order it is and use binary search to establish whether each
-    // item is present in trailersRemoved_[0 .. trailersRemovedUsed_ - 1].
-    const size_t nAdded = trailersAdded_.length();
-    for (size_t i = 0; i < nAdded; i++) {
-      const PointerAndUint7 block = trailersAdded_[i];
-      const void* blockPointer = block.pointer();
-      if (!std::binary_search(trailersRemoved_.begin(),
-                              trailersRemoved_.begin() + trailersRemovedUsed_,
-                              blockPointer)) {
-        mallocedBlockCache.free(block);
-      }
-    }
-  } else {
-    // The general case, which is algorithmically safer for large inputs.
-    // Sort the added entries, and then walk through both them and the removed
-    // entries in lockstep.
-    std::sort(trailersAdded_.begin(), trailersAdded_.end(),
-              [](const PointerAndUint7& block1, const PointerAndUint7& block2) {
-                return uintptr_t(block1.pointer()) <
-                       uintptr_t(block2.pointer());
-              });
-    // Enumerate the set subtraction.  This is somewhat simplified by the fact
-    // that all elements of the removed set must also be present in the added
-    // set. (the "inclusion property").
-    const size_t nAdded = trailersAdded_.length();
-    const size_t nRemoved = trailersRemovedUsed_;
-    size_t iAdded;
-    size_t iRemoved = 0;
-    for (iAdded = 0; iAdded < nAdded; iAdded++) {
-      if (iRemoved == nRemoved) {
-        // We've run out of items to skip, so move on to the next loop.
-        break;
-      }
-      const PointerAndUint7 blockAdded = trailersAdded_[iAdded];
-      const void* blockRemoved = trailersRemoved_[iRemoved];
-      if (blockAdded.pointer() < blockRemoved) {
-        mallocedBlockCache.free(blockAdded);
-        continue;
-      }
-      // If this doesn't hold
-      // (that is, if `blockAdded.pointer() > blockRemoved`),
-      // then the abovementioned inclusion property doesn't hold.
-      MOZ_RELEASE_ASSERT(blockAdded.pointer() == blockRemoved);
-      iRemoved++;
-    }
-    MOZ_ASSERT(iRemoved == nRemoved);
-    // We've used up the removed set, so now finish up the remainder of the
-    // added set.
-    for (/*keep going*/; iAdded < nAdded; iAdded++) {
-      const PointerAndUint7 block = trailersAdded_[iAdded];
-      mallocedBlockCache.free(block);
-    }
-  }
-
-  // And empty out both sets, but preserve the underlying storage.
-  trailersAdded_.clear();
-  trailersRemoved_.clear();
-  trailersRemovedUsed_ = 0;
-  trailerBytes_ = 0;
-}
-
-size_t Nursery::sizeOfTrailerBlockSets(
-    mozilla::MallocSizeOf mallocSizeOf) const {
-  MOZ_ASSERT(fromSpace.trailersAdded_.empty());
-  MOZ_ASSERT(fromSpace.trailersRemoved_.empty());
-  return toSpace.trailersAdded_.sizeOfExcludingThis(mallocSizeOf) +
-         toSpace.trailersRemoved_.sizeOfExcludingThis(mallocSizeOf);
-}
-
 js::Nursery::CollectionResult js::Nursery::doCollection(AutoGCSession& session,
                                                         JS::GCOptions options,
                                                         JS::GCReason reason) {
@@ -1716,12 +1608,6 @@ js::Nursery::CollectionResult js::Nursery::doCollection(AutoGCSession& session,
                                       stringBuffersToReleaseAfterMinorGC_);
   fromSpace.mallocedBufferBytes = 0;
   endProfile(ProfileKey::FreeMallocedBuffers);
-
-  // Give trailer blocks associated with non-tenured Wasm{Struct,Array}Objects
-  // back to our `mallocedBlockCache_`.
-  startProfile(ProfileKey::FreeTrailerBlocks);
-  freeTrailerBlocks(options, reason);
-  endProfile(ProfileKey::FreeTrailerBlocks);
 
   startProfile(ProfileKey::ClearNursery);
   clear();
@@ -1959,27 +1845,6 @@ void js::Nursery::trackMallocedBufferOnPromotion(void* buffer, gc::Cell* owner,
   AutoEnterOOMUnsafeRegion oomUnsafe;
   if (!registerMallocedBuffer(buffer, nbytes)) {
     oomUnsafe.crash("Nursery::trackMallocedBufferOnPromotion");
-  }
-}
-
-void js::Nursery::trackTrailerOnPromotion(void* buffer, gc::Cell* owner,
-                                          size_t nbytes, size_t overhead,
-                                          MemoryUse use) {
-  MOZ_ASSERT(!isInside(buffer));
-  unregisterTrailer(buffer);
-
-  if (owner->isTenured()) {
-    // If we tenured the owner then account for the memory.
-    AddCellMemory(owner, nbytes + overhead, use);
-    return;
-  }
-
-  // Otherwise add it to the nursery's new buffer list.
-  PointerAndUint7 blockAndListID(buffer,
-                                 MallocedBlockCache::listIDForSize(nbytes));
-  AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!registerTrailer(blockAndListID, nbytes)) {
-    oomUnsafe.crash("Nursery::trackTrailerOnPromotion");
   }
 }
 
