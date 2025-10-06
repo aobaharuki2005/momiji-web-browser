@@ -100,5 +100,6 @@ tasks:
                 - win64-winchecksec
                 - vs
                 - sysroot-wasm32-wasi
+                - winappsdk-x86_64-pc-windows-msvc
             fetch:
                 - windows-rs

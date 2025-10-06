@@ -1204,6 +1204,7 @@ enum TitleBarHeightOption : int32_t {
 }  // namespace Microsoft
 }  // namespace winrt
 
+#ifndef __MINGW32__
 static StaticRefPtr<winrt::Microsoft::UI::Windowing::IAppWindowStatics>
     sAppWindowStatics;
 using GetWindowIdFromWindowType = HRESULT(STDAPICALLTYPE*)(
@@ -1303,8 +1304,10 @@ bool InitializeWindowsAppSDKStatics() {
   }
   return true;
 }
+#endif
 
 void WindowsUIUtils::SetIsTitlebarCollapsed(HWND aWnd, bool aIsCollapsed) {
+#ifndef __MINGW32__
   // Used to avoid synchronization for loading libraries below
   MOZ_ASSERT(NS_IsMainThread());
   // This function is needed to avoid drawing the titlebar buttons
@@ -1427,4 +1430,5 @@ void WindowsUIUtils::SetIsTitlebarCollapsed(HWND aWnd, bool aIsCollapsed) {
       return;
     }
   }
+#endif
 }

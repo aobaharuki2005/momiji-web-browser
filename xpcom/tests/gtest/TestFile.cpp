@@ -64,6 +64,8 @@ static auto GetSecurityInfoStructured(nsIFile* aFile) {
                          std::move(secDesc));
 }
 
+// SECURITY_SID_SIZE() is not defined in mingw headers
+#  if !defined(__MINGW32__)
 static void AddAcesForRandomSidToDir(nsIFile* aDir) {
   auto [dirPath, pDirDacl, secDesc] = GetSecurityInfoStructured(aDir);
 
@@ -96,6 +98,7 @@ static void AddAcesForRandomSidToDir(nsIFile* aDir) {
                                     newDacl.get(), nullptr),
             (ULONG)ERROR_SUCCESS);
 }
+#  endif
 #endif
 
 static already_AddRefed<nsIFile> NewFile(nsIFile* aBase) {
@@ -599,7 +602,8 @@ static void SetupAndTestFunctions(const nsAString& aDirName,
   // Test moving across directories and renaming at the same time
   ASSERT_TRUE(TestMove(subdir, base, "file2.txt", "file4.txt"));
 
-#ifdef XP_WIN
+  // SECURITY_SID_SIZE() is not defined in mingw headers
+#if defined(XP_WIN) && !defined(__MINGW32__)
   // On Windows if we move a file or directory to a directory on the same volume
   // where the inherited ACLs differ between the source and target dirs, then we
   // retain the ACEs from the original dir. Add inherited ACEs for random SIDs
