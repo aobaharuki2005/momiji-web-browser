@@ -1322,6 +1322,15 @@ const TargetingGetters = {
   get backupsInfo() {
     return QueryCache.getters.backupsInfo.get().catch(() => null);
   },
+
+  get isEncryptedBackup() {
+    const isEncryptedBackup =
+      Services.prefs.getStringPref(
+        "messaging-system-action.backupChooser",
+        null
+      ) === "full";
+    return isEncryptedBackup;
+  },
 };
 
 export const ASRouterTargeting = {

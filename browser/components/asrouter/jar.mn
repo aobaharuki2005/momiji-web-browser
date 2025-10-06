@@ -43,3 +43,5 @@ browser.jar:
   content/browser/asrouter/assets/recommend-bookmarks-toolbar/bookmarks-toolbar-dark.svg        (content/assets/recommend-bookmarks-toolbar/bookmarks-toolbar-dark.svg)
   content/browser/asrouter/assets/recommend-bookmarks-toolbar/drag-drop-bookmark-light.svg       (content/assets/recommend-bookmarks-toolbar/drag-drop-bookmark-light.svg)
   content/browser/asrouter/assets/recommend-bookmarks-toolbar/drag-drop-bookmark-dark.svg        (content/assets/recommend-bookmarks-toolbar/drag-drop-bookmark-dark.svg)
+  content/browser/asrouter/assets/subtract-16.svg                        (content/assets/subtract-16.svg)
+  content/browser/asrouter/assets/fox-with-checkmark.svg                 (content/assets/fox-with-checkmark.svg)

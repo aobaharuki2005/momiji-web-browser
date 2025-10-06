@@ -35,6 +35,7 @@ const MESSAGES = () => [
       id: "TEST_BACKUP_SPOTLIGHT",
       template: "multistage",
       modal: "tab",
+      transitions: true,
       screens: [
         {
           id: "SCREEN_1",
@@ -42,7 +43,8 @@ const MESSAGES = () => [
           content: {
             position: "center",
             screen_style: {
-              width: "579px",
+              width: "650px",
+              minHeight: "485px",
             },
             split_content_padding_block: "32px",
             title: {
@@ -72,7 +74,7 @@ const MESSAGES = () => [
               action: {
                 type: "OPEN_URL",
                 data: {
-                  args: "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/firefox-backup",
+                  args: "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/firefox-backup?utm_medium=firefox-desktop&utm_source=spotlight&utm_campaign=fx-backup-onboarding&utm_content=backup-turn-on-scheduled-learn-more-link&utm_term=fx-backup-onboarding-spotlight-1",
                   where: "tabshifted",
                 },
               },
@@ -136,7 +138,7 @@ const MESSAGES = () => [
                       needsAwait: true,
                       data: {
                         autoClose: false,
-                        entrypoint: "create-backup-spotlight",
+                        entrypoint: "spotlight-create-backup",
                         extraParams: {
                           service: "sync",
                           entrypoint_experiment: "fx-backup-onboarding",
@@ -263,7 +265,8 @@ const MESSAGES = () => [
           content: {
             position: "center",
             screen_style: {
-              width: "579px",
+              width: "650px",
+              minHeight: "485px",
             },
             split_content_padding_block: "32px",
             title: {
@@ -479,8 +482,7 @@ const MESSAGES = () => [
         {
           id: "SCREEN_3A",
           force_hide_steps_indicator: true,
-          targeting:
-            "('messaging-system-action.backupChooser' |preferenceValue == 'easy')",
+          targeting: "!isEncryptedBackup",
           content: {
             logo: {
               imageURL:
@@ -495,7 +497,8 @@ const MESSAGES = () => [
             },
             isEncryptedBackup: false,
             screen_style: {
-              width: "643px",
+              width: "650px",
+              minHeight: "485px",
             },
             tiles: {
               type: "fx_backup_file_path",
@@ -528,9 +531,9 @@ const MESSAGES = () => [
         {
           id: "SCREEN_3B",
           force_hide_steps_indicator: true,
-          targeting:
-            "('messaging-system-action.backupChooser' |preferenceValue == 'full')",
+          targeting: "isEncryptedBackup",
           content: {
+            isEncryptedBackup: true,
             logo: {
               imageURL:
                 "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/0706f067-eaf8-4537-a9e1-6098d990f511.svg",
@@ -539,9 +542,9 @@ const MESSAGES = () => [
             title: {
               raw: "Where do you want your backup saved?",
             },
-            isEncryptedBackup: true,
             screen_style: {
-              width: "643px",
+              width: "650px",
+              minHeight: "485px",
             },
             tiles: {
               type: "fx_backup_file_path",
@@ -576,8 +579,7 @@ const MESSAGES = () => [
         {
           id: "FX_BACKUP_ENCRYPTION",
           force_hide_steps_indicator: true,
-          targeting:
-            "('messaging-system-action.backupChooser' |preferenceValue == 'full')",
+          targeting: "isEncryptedBackup",
           content: {
             isEncryptedBackup: true,
             title: {
@@ -588,7 +590,8 @@ const MESSAGES = () => [
               fontSize: "13px",
             },
             screen_style: {
-              width: "700px",
+              width: "650px",
+              minHeight: "485px",
             },
             logo: {
               imageURL:
@@ -623,30 +626,186 @@ const MESSAGES = () => [
           },
         },
         {
-          id: "FX_BACKUP_THANKS",
+          id: "BACKUP_CONFIRMATION_SCREEN_EASY",
           force_hide_steps_indicator: true,
+          targeting: "!isEncryptedBackup",
+          content: {
+            screen_style: {
+              width: "650px",
+              minHeight: "485px",
+            },
+            logo: {
+              imageURL:
+                "chrome://browser/content/asrouter/assets/fox-with-checkmark.svg",
+              height: "96px",
+            },
+            title: {
+              string_id: "fx-backup-confirmation-screen-title",
+            },
+            tiles: {
+              type: "confirmation-checklist",
+              data: {
+                inert: true,
+                style: { width: "500px" },
+                items: [
+                  {
+                    icon: {
+                      background:
+                        "center / contain no-repeat url('chrome://browser/content/asrouter/assets/checkmark-16.svg')",
+                      height: "18px",
+                      width: "18px",
+                    },
+                    text: {
+                      string_id:
+                        "fx-backup-confirmation-screen-easy-setup-item-text-1",
+                    },
+                    subtext: {
+                      string_id: "fx-backup-confirmation-screen-item-subtext-1",
+                    },
+                    link_keys: ["settings"],
+                  },
+                  {
+                    icon: {
+                      background:
+                        "center / contain no-repeat url('chrome://browser/content/asrouter/assets/checkmark-16.svg')",
+                      height: "18px",
+                      width: "18px",
+                    },
+                    text: {
+                      string_id:
+                        "fx-backup-confirmation-screen-easy-setup-item-text-2",
+                    },
+                    subtext: {
+                      string_id: "fx-backup-confirmation-screen-item-subtext-2",
+                    },
+                  },
+                  {
+                    icon: {
+                      background:
+                        "center / contain no-repeat url('chrome://browser/content/asrouter/assets/subtract-16.svg')",
+                      height: "18px",
+                      width: "18px",
+                    },
+                    text: {
+                      string_id:
+                        "fx-backup-confirmation-screen-easy-setup-item-text-3",
+                    },
+                    subtext: {
+                      string_id:
+                        "fx-backup-confirmation-screen-easy-setup-item-subtext-3",
+                    },
+                    link_keys: ["settings"],
+                  },
+                ],
+              },
+            },
+            settings: {
+              action: {
+                type: "OPEN_ABOUT_PAGE",
+                data: {
+                  args: "preferences#sync-backup",
+                  where: "tab",
+                },
+              },
+            },
+            additional_button: {
+              label: {
+                string_id: "fx-backup-confirmation-screen-close-button",
+              },
+              style: "secondary",
+              action: { dismiss: true },
+            },
+          },
+        },
+        {
+          id: "BACKUP_CONFIRMATION_SCREEN_ENCRYPTED",
+          force_hide_steps_indicator: true,
+          targeting: "isEncryptedBackup",
           content: {
             isEncryptedBackup: true,
-            title: {
-              raw: "Done!",
-            },
             screen_style: {
-              width: "700px",
+              width: "650px",
+              minHeight: "485px",
             },
-            logo: {},
-            additional_button: {
-              style: "primary",
-              label: {
-                raw: "Finish",
+            logo: {
+              imageURL:
+                "chrome://browser/content/asrouter/assets/fox-with-checkmark.svg",
+              height: "96px",
+            },
+            title: {
+              string_id: "fx-backup-confirmation-screen-title",
+            },
+            tiles: {
+              type: "confirmation-checklist",
+              data: {
+                inert: true,
+                style: { width: "500px" },
+                items: [
+                  {
+                    icon: {
+                      background:
+                        "center / contain no-repeat url('chrome://browser/content/asrouter/assets/checkmark-16.svg')",
+                      height: "18px",
+                      width: "18px",
+                    },
+                    text: {
+                      string_id:
+                        "fx-backup-confirmation-screen-all-data-item-text-1",
+                    },
+                    subtext: {
+                      string_id: "fx-backup-confirmation-screen-item-subtext-1",
+                    },
+                    link_keys: ["settings"],
+                  },
+                  {
+                    icon: {
+                      background:
+                        "center / contain no-repeat url('chrome://browser/content/asrouter/assets/checkmark-16.svg')",
+                      height: "18px",
+                      width: "18px",
+                    },
+                    text: {
+                      string_id:
+                        "fx-backup-confirmation-screen-all-data-item-text-2",
+                    },
+                    subtext: {
+                      string_id: "fx-backup-confirmation-screen-item-subtext-2",
+                    },
+                  },
+                  {
+                    icon: {
+                      background:
+                        "center / contain no-repeat url('chrome://browser/content/asrouter/assets/checkmark-16.svg')",
+                      height: "18px",
+                      width: "18px",
+                    },
+                    text: {
+                      string_id:
+                        "fx-backup-confirmation-screen-all-data-item-text-3",
+                    },
+                  },
+                ],
               },
+            },
+            settings: {
               action: {
-                navigate: true,
+                type: "OPEN_ABOUT_PAGE",
+                data: {
+                  args: "preferences#sync-backup",
+                  where: "tab",
+                },
               },
+            },
+            additional_button: {
+              label: {
+                string_id: "fx-backup-confirmation-screen-close-button",
+              },
+              style: "secondary",
+              action: { dismiss: true },
             },
           },
         },
       ],
-      transitions: true,
     },
     provider: "panel_local_testing",
   },

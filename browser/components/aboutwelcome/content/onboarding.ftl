@@ -47,3 +47,20 @@ create-backup-screen-2-easy-list-3 = Not encrypted
 create-backup-screen-2-all-label = All data
 create-backup-screen-2-all-list-2 = Includes passwords and payments
 create-backup-screen-2-all-list-3 = Encrypted with a password
+
+## Fx Backup confirmation screen strings
+
+fx-backup-confirmation-screen-title = Your backup is scheduled
+fx-backup-confirmation-screen-close-button = Close
+
+fx-backup-confirmation-screen-all-data-item-text-1 = All browsing data included
+fx-backup-confirmation-screen-all-data-item-text-2 = Saved to your device
+fx-backup-confirmation-screen-all-data-item-text-3 = Encrypted and password protected
+
+fx-backup-confirmation-screen-easy-setup-item-text-1 = Bookmarks, history, settings, and other data inlcuded
+fx-backup-confirmation-screen-easy-setup-item-text-2 = Saved to your device
+fx-backup-confirmation-screen-easy-setup-item-text-3 = Passwords and payments not included
+fx-backup-confirmation-screen-easy-setup-item-subtext-3 = Go to <a data-l10n-name="settings">Settings</a> to include sensitive data.
+
+fx-backup-confirmation-screen-item-subtext-1 = Your backup will start in a few minutes and will run once a day. You can check progress in <a data-l10n-name="settings">Settings</a>.
+fx-backup-confirmation-screen-item-subtext-2 = { -brand-short-name } will look for your backup if you need to reinstall.

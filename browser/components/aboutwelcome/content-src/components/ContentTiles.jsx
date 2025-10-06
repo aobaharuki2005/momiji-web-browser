@@ -12,6 +12,7 @@ import { EmbeddedMigrationWizard } from "./EmbeddedMigrationWizard";
 import { EmbeddedFxBackupOptIn } from "./EmbeddedFxBackupOptIn";
 import { ActionChecklist } from "./ActionChecklist";
 import { EmbeddedBrowser } from "./EmbeddedBrowser";
+import { ConfirmationChecklist } from "./ConfirmationChecklist";
 import { AboutWelcomeUtils } from "../lib/aboutwelcome-utils.mjs";
 import { EmbeddedBackupRestore } from "./EmbeddedBackupRestore";
 
@@ -308,7 +309,6 @@ export const ContentTiles = props => {
             )}
             {tile.type === "fx_backup_file_path" && (
               <EmbeddedFxBackupOptIn
-                // TODO: This is based on user's choice on first screen
                 handleAction={props.handleAction}
                 isEncryptedBackup={content.isEncryptedBackup}
                 options={tile.options}
@@ -319,6 +319,12 @@ export const ContentTiles = props => {
                 handleAction={props.handleAction}
                 isEncryptedBackup={content.isEncryptedBackup}
                 options={tile.options}
+              />
+            )}
+            {tile.type === "confirmation-checklist" && tile.data && (
+              <ConfirmationChecklist
+                content={tile.data}
+                handleAction={props.handleAction}
               />
             )}
           </div>
