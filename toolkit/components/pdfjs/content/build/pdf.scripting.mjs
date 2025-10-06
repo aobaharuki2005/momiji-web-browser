@@ -21,9 +21,10 @@
  */
 
 /**
- * pdfjsVersion = 5.4.282
- * pdfjsBuild = 9d917b289
+ * pdfjsVersion = 5.4.305
+ * pdfjsBuild = f4104326f
  */
+var __webpack_exports__ = {};
 
 ;// ./src/scripting_api/constants.js
 const Border = Object.freeze({

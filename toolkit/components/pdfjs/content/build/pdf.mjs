@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.282
- * pdfjsBuild = 9d917b289
+ * pdfjsVersion = 5.4.305
+ * pdfjsBuild = f4104326f
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -12788,7 +12788,7 @@ function getDocument(src = {}) {
   }
   const docParams = {
     docId,
-    apiVersion: "5.4.282",
+    apiVersion: "5.4.305",
     data,
     password,
     disableAutoFetch,
@@ -14365,8 +14365,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "5.4.282";
-const build = "9d917b289";
+const version = "5.4.305";
+const build = "f4104326f";
 
 ;// ./src/display/editor/color_picker.js
 
@@ -19716,7 +19716,7 @@ class HighlightEditor extends AnnotationEditor {
       highlightOutlines: this.#highlightOutlines.getNewOutline(thickness / 2)
     });
     this.fixAndSetPosition();
-    this.setDims(this.width, this.height);
+    this.setDims();
   }
   #cleanDrawLayer() {
     if (this.#id === null || !this.parent) {
@@ -19819,7 +19819,7 @@ class HighlightEditor extends AnnotationEditor {
     highlightDiv.setAttribute("aria-hidden", "true");
     highlightDiv.className = "internal";
     highlightDiv.style.clipPath = this.#clipPathId;
-    this.setDims(this.width, this.height);
+    this.setDims();
     bindEvents(this, this.#highlightDiv, ["pointerover", "pointerleave"]);
     this.enableEditing();
     return div;

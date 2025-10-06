@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.282
- * pdfjsBuild = 9d917b289
+ * pdfjsVersion = 5.4.305
+ * pdfjsBuild = f4104326f
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -3126,8 +3126,8 @@ class CommentDialog {
         posY = 0;
       }
     }
-    posX /= innerWidth;
-    posY /= innerHeight;
+    posX = MathClamp(posX / innerWidth, 0, 1);
+    posY = MathClamp(posY / innerHeight, 0, 1);
     this.#setPosition(posX, posY);
     await this.#overlayManager.open(this.#dialog);
     textInput.focus();
@@ -8213,7 +8213,7 @@ class PDFViewer {
   #textLayerMode = TextLayerMode.ENABLE;
   #viewerAlert = null;
   constructor(options) {
-    const viewerVersion = "5.4.282";
+    const viewerVersion = "5.4.305";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
