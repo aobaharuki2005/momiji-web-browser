@@ -1691,9 +1691,9 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
 
   NS_ASSERTION(!mFrame->IsTableFrame(),
                "InitAbsoluteConstraints should not be called on table frames");
-  NS_ASSERTION(mFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW),
-               "Why are we here?");
-  MOZ_ASSERT(mStyleDisplay->IsAbsolutelyPositionedStyle());
+  MOZ_ASSERT(
+      mFrame->IsAbsolutelyPositioned(mStyleDisplay),
+      "InitAbsoluteConstraints should be called on abspos or fixedpos frames!");
 
   const auto anchorResolutionParams =
       AnchorPosOffsetResolutionParams::ExplicitCBFrameSize(
@@ -2405,8 +2405,7 @@ void ReflowInput::InitConstraints(
       mComputedMinSize.SizeTo(mWritingMode, 0, 0);
       mComputedMaxSize.SizeTo(mWritingMode, NS_UNCONSTRAINEDSIZE,
                               NS_UNCONSTRAINEDSIZE);
-    } else if (mFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
-               mStyleDisplay->IsAbsolutelyPositionedStyle() &&
+    } else if (mFrame->IsAbsolutelyPositioned(mStyleDisplay) &&
                // XXXfr hack for making frames behave properly when in overflow
                // container lists, see bug 154892; need to revisit later
                !mFrame->GetPrevInFlow()) {
