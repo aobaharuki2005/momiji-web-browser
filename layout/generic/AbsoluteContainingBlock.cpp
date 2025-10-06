@@ -713,13 +713,6 @@ void AbsoluteContainingBlock::ResolveSizeDependentOffsets(
       (NS_AUTOOFFSET == aOffsets->BStart(outerWM)) ||
       aKidReflowInput.mFlags.mIOffsetsNeedCSSAlign ||
       aKidReflowInput.mFlags.mBOffsetsNeedCSSAlign) {
-    if (-1 == aLogicalCBSize->ISize(wm)) {
-      // Get the containing block width/height
-      const ReflowInput* parentRI = aKidReflowInput.mParentReflowInput;
-      *aLogicalCBSize = aKidReflowInput.ComputeContainingBlockRectangle(
-          aPresContext, parentRI);
-    }
-
     const LogicalSize logicalCBSizeOuterWM =
         aLogicalCBSize->ConvertTo(outerWM, wm);
 
