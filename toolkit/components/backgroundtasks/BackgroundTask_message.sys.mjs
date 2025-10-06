@@ -61,7 +61,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ClientEnvironmentBase:
     "resource://gre/modules/components-utils/ClientEnvironment.sys.mjs",
-  ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
   IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
@@ -83,44 +82,10 @@ outputInfo = (sentinel, info) => {
   dump(`${sentinel}${JSON.stringify(info)}${sentinel}\n`);
 };
 
-/**
- * Monkey patch RemoteSettings clients to prevent HTTP connections and return
- * static data from the Nimbus collections.
- *
- * @param {object} options
- * @param {object[]} options.experiments
- * The experiments to return from the Nimbus experiments collections.
- */
-function monkeyPatchRemoteSettingsClients({ experiments = [] }) {
-  const now = Date.now();
-
-  const nimbusClients = lazy.ExperimentAPI._rsLoader.remoteSettingsClients;
-
-  // We aren't actually syncing these collections. In order for Nimbus to accept
-  // recipes from these collections, they *must* have non-null value returned by
-  // `getLastModified`. Otherwise, Nimbus will reject the recipes.
-  const getLastModified = () => Promise.resolve(now);
-  nimbusClients.experiments.db.getLastModified = getLastModified;
-  nimbusClients.secureExperiments.db.getLastModified = getLastModified;
-
-  // Prevent RemoteSettings clients from making HTTP connections to the Remote
-  // Settings server, which will cause test failures. Additionally, return
-  // `experiments` from both Nimbus collections. These collections each only
-  // support a subset of features -- the secureExperiments collection, e.g.,
-  // only supports recipes that have at least one of `newtabTrainhopAddon` and
-  // `prefFlips` -- but the `RemoteSettingsExperimentLoader` will filter out the
-  // recipes from each collection based on their supported features.
-  lazy.RemoteSettingsClient.prototype.get = async function (options = {}) {
-    const responseData =
-      this === nimbusClients.experiments ||
-      this === nimbusClients.secureExperiments
-        ? experiments
-        : [];
-
-    outputInfo({
-      "RemoteSettingsClient.get": { options, response: { data: responseData } },
-    });
-    return responseData;
+function monkeyPatchRemoteSettingsClient({ data = [] }) {
+  lazy.RemoteSettingsClient.prototype.get = async (options = {}) => {
+    outputInfo({ "RemoteSettingsClient.get": { options, response: { data } } });
+    return data;
   };
 }
 
@@ -253,7 +218,7 @@ async function handleCommandLine(commandLine) {
       data = [data];
     }
 
-    monkeyPatchRemoteSettingsClients({ experiments: data });
+    monkeyPatchRemoteSettingsClient({ data });
 
     console.log(`Saw --experiments, read recipes from ${experimentsPath}`);
   }
@@ -263,7 +228,7 @@ async function handleCommandLine(commandLine) {
     !experiments &&
     commandLine.handleFlag("no-experiments", CASE_INSENSITIVE)
   ) {
-    monkeyPatchRemoteSettingsClients({ experiments: [] });
+    monkeyPatchRemoteSettingsClient({ data: [] });
 
     console.log(`Saw --no-experiments, returning [] recipes`);
   }

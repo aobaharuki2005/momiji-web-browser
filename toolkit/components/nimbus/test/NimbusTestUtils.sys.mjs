@@ -722,15 +722,6 @@ export const NimbusTestUtils = {
       `,
       { profileId }
     );
-
-    await conn.execute(
-      `
-        DELETE FROM NimbusSyncTimestamps
-        WHERE
-          profileId = :profileId;
-      `,
-      { profileId }
-    );
   },
 
   /**
@@ -1179,17 +1170,8 @@ export const NimbusTestUtils = {
       .stub(loader.remoteSettingsClients.experiments, "get")
       .resolves(Array.isArray(experiments) ? experiments : []);
     sandbox
-      .stub(loader.remoteSettingsClients.experiments.db, "getLastModified")
-      .resolves(0);
-    sandbox
       .stub(loader.remoteSettingsClients.secureExperiments, "get")
       .resolves(Array.isArray(secureExperiments) ? secureExperiments : []);
-    sandbox
-      .stub(
-        loader.remoteSettingsClients.secureExperiments.db,
-        "getLastModified"
-      )
-      .resolves(0);
 
     if (migrationState) {
       for (const [phase, value] of Object.entries(migrationState)) {
