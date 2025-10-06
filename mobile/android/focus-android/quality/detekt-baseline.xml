@@ -2,7 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>UndocumentedPublicClass:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment$Companion</ID>
     <ID>UndocumentedPublicClass:AdvancedSettingsFragment.kt$AdvancedSettingsFragment : BaseSettingsFragmentOnSharedPreferenceChangeListener</ID>
     <ID>UndocumentedPublicClass:AppAction.kt$AppAction$NavigateUp : AppAction</ID>
     <ID>UndocumentedPublicClass:AppAction.kt$AppAction$OpenSettings : AppAction</ID>
@@ -15,12 +14,10 @@
     <ID>UndocumentedPublicClass:AppState.kt$Screen$Settings : Screen</ID>
     <ID>UndocumentedPublicClass:AppState.kt$Screen$SitePermissionOptionsScreen : Screen</ID>
     <ID>UndocumentedPublicClass:AppState.kt$Screen.Settings$Page</ID>
-    <ID>UndocumentedPublicClass:AppViewHolder.kt$AppViewHolder$Companion</ID>
     <ID>UndocumentedPublicClass:AutocompleteDomainFormatter.kt$AutocompleteDomainFormatter</ID>
     <ID>UndocumentedPublicClass:AutocompleteRemoveFragment.kt$AutocompleteRemoveFragment : AutocompleteListFragmentCoroutineScope</ID>
     <ID>UndocumentedPublicClass:BaseFragment.kt$BaseFragment : Fragment</ID>
     <ID>UndocumentedPublicClass:BaseSettingsFragment.kt$BaseSettingsFragment : PreferenceFragmentCompatMenuProvider</ID>
-    <ID>UndocumentedPublicClass:BiometricAuthenticationFragment.kt$BiometricAuthenticationFragment$Companion</ID>
     <ID>UndocumentedPublicClass:BrowserToolbarIntegration.kt$BrowserToolbarIntegration : LifecycleAwareFeature</ID>
     <ID>UndocumentedPublicClass:Config.kt$Config</ID>
     <ID>UndocumentedPublicClass:ConnectionDetailsPanel.kt$ConnectionDetailsPanel : BottomSheetDialog</ID>
@@ -58,7 +55,6 @@
     <ID>UndocumentedPublicClass:IconGenerator.kt$IconGenerator</ID>
     <ID>UndocumentedPublicClass:InputToolbarIntegration.kt$InputToolbarIntegration : LifecycleAwareFeature</ID>
     <ID>UndocumentedPublicClass:InstalledSearchEnginesSettingsFragment.kt$InstalledSearchEnginesSettingsFragment : BaseSettingsFragment</ID>
-    <ID>UndocumentedPublicClass:InstalledSearchEnginesSettingsFragment.kt$InstalledSearchEnginesSettingsFragment$Companion</ID>
     <ID>UndocumentedPublicClass:IntentProcessor.kt$IntentProcessor$Result</ID>
     <ID>UndocumentedPublicClass:IntentProcessor.kt$IntentProcessor.Result$CustomTab : Result</ID>
     <ID>UndocumentedPublicClass:IntentProcessor.kt$IntentProcessor.Result$None : Result</ID>
@@ -71,9 +67,7 @@
     <ID>UndocumentedPublicClass:LocaleDescriptor.kt$LocaleDescriptor : Comparable</ID>
     <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity$AppOpenType</ID>
     <ID>UndocumentedPublicClass:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference : Preference</ID>
-    <ID>UndocumentedPublicClass:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference$Companion</ID>
     <ID>UndocumentedPublicClass:ManualAddSearchEngineSettingsFragment.kt$ManualAddSearchEngineSettingsFragment : BaseSettingsFragment</ID>
-    <ID>UndocumentedPublicClass:ManualAddSearchEngineSettingsFragment.kt$ManualAddSearchEngineSettingsFragment$Companion</ID>
     <ID>UndocumentedPublicClass:MozillaPreference.kt$MozillaPreference : Preference</ID>
     <ID>UndocumentedPublicClass:MozillaSettingsFragment.kt$MozillaSettingsFragment : BaseSettingsFragment</ID>
     <ID>UndocumentedPublicClass:MultiselectSearchEngineListPreference.kt$MultiselectSearchEngineListPreference : SearchEngineListPreference</ID>
