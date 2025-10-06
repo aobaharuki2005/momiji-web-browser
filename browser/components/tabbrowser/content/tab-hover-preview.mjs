@@ -482,6 +482,7 @@ class TabGroupPanel extends Panel {
     super();
 
     this.panelElement = panel;
+    this.panelContent = panel.querySelector("#tabgroup-panel-content");
     this.win = this.panelElement.ownerGlobal;
 
     this.#panelSet = panelSet;
@@ -495,7 +496,7 @@ class TabGroupPanel extends Panel {
 
     this.#group = group;
     this.#movePanel();
-    this.#updatePanelContents();
+    this.#updatePanelContent();
 
     this.#panelSet.panelOpener.execute(() => {
       if (!this.#panelSet.shouldActivate() || !this.#group.collapsed) {
@@ -564,33 +565,34 @@ class TabGroupPanel extends Panel {
     Glean.tabgroup.groupInteractions.hover_preview.add();
   }
 
-  #updatePanelContents() {
+  #updatePanelContent() {
     const fragment = this.win.document.createDocumentFragment();
     for (let tab of this.#group.tabs) {
-      let menuitem = this.win.document.createXULElement("menuitem");
-      menuitem.setAttribute("label", tab.label);
-      menuitem.setAttribute(
+      let tabbutton = this.win.document.createXULElement("toolbarbutton");
+      tabbutton.setAttribute("label", tab.label);
+      tabbutton.setAttribute(
         "image",
         "page-icon:" + tab.linkedBrowser.currentURI.spec
       );
-      menuitem.setAttribute("tooltiptext", tab.label);
-      menuitem.classList.add("menuitem-iconic", "menuitem-with-favicon");
+      tabbutton.setAttribute("tooltiptext", tab.label);
+      tabbutton.classList.add("subviewbutton", "subviewbutton-iconic");
       if (tab == this.win.gBrowser.selectedTab) {
-        menuitem.classList.add("active-tab");
+        tabbutton.classList.add("active-tab");
       }
-      menuitem.tab = tab;
-      fragment.appendChild(menuitem);
+      tabbutton.tab = tab;
+      fragment.appendChild(tabbutton);
     }
-    this.panelElement.replaceChildren(fragment);
+    this.panelContent.replaceChildren(fragment);
   }
 
   handleEvent(event) {
     if (event.type == "command") {
       this.win.gBrowser.selectedTab = event.target.tab;
+      this.deactivate({ force: true });
     } else if (event.type == "mouseout" && event.target == this.panelElement) {
       this.deactivate();
     } else if (TabGroupPanel.PANEL_UPDATE_EVENTS.includes(event.type)) {
-      this.#updatePanelContents();
+      this.#updatePanelContent();
     }
   }
 

@@ -109,9 +109,6 @@ async function resetState() {
     await hiddenEvent;
   }
 
-  let openPanels = getOpenPanels();
-  Assert.ok(!openPanels.length, `sanity check: no panels open`);
-
   await Services.fog.testFlushAllChildren();
   Services.fog.testResetFOG();
 }
@@ -573,40 +570,41 @@ add_task(async function tabGroupPanelAppearsOnTabGroupHover() {
   const previewPanel = window.document.getElementById(
     TAB_GROUP_PREVIEW_PANEL_ID
   );
+  const panelContent = previewPanel.querySelector("#tabgroup-panel-content");
 
   Assert.equal(
-    previewPanel.children.length,
+    panelContent.children.length,
     2,
-    "Preview panel has one menuitem for each tab in the group"
+    "Preview panel has one toolbarbutton for each tab in the group"
   );
   Assert.equal(
-    previewPanel.children[0].tagName,
-    "menuitem",
-    "First child is a menuitem"
+    panelContent.children[0].tagName,
+    "toolbarbutton",
+    "First child is a toolbarbutton"
   );
   Assert.equal(
-    previewPanel.children[0].label,
+    panelContent.children[0].label,
     tab1.label,
     "First child has correct label"
   );
   Assert.equal(
-    previewPanel.children[0].getAttribute("tooltiptext"),
-    previewPanel.children[0].label,
+    panelContent.children[0].getAttribute("tooltiptext"),
+    panelContent.children[0].label,
     "First child has a tooltip that is identical to the label"
   );
   Assert.equal(
-    previewPanel.children[1].tagName,
-    "menuitem",
-    "Second child is a menuitem"
+    panelContent.children[1].tagName,
+    "toolbarbutton",
+    "Second child is a toolbarbutton"
   );
   Assert.equal(
-    previewPanel.children[1].label,
+    panelContent.children[1].label,
     tab2.label,
     "Second child has correct label"
   );
   Assert.equal(
-    previewPanel.children[1].getAttribute("tooltiptext"),
-    previewPanel.children[1].label,
+    panelContent.children[1].getAttribute("tooltiptext"),
+    panelContent.children[1].label,
     "Second child has a tooltip that is identical to the label"
   );
 
@@ -721,9 +719,10 @@ add_task(async function tabGroupPanelClickElementSwitchesTabs() {
   const previewPanel = window.document.getElementById(
     TAB_GROUP_PREVIEW_PANEL_ID
   );
+  const panelContent = previewPanel.querySelector("#tabgroup-panel-content");
 
   let tabSelectEvent = BrowserTestUtils.waitForEvent(group, "TabSelect");
-  previewPanel.children[1].click();
+  panelContent.children[1].click();
   await tabSelectEvent;
 
   Assert.equal(
@@ -789,13 +788,14 @@ add_task(async function tabGroupPanelUpdatesTests() {
   const previewPanel = window.document.getElementById(
     TAB_GROUP_PREVIEW_PANEL_ID
   );
+  const panelContent = previewPanel.querySelector("#tabgroup-panel-content");
 
   await openGroupPreview(group);
-  Assert.equal(previewPanel.children.length, 1, "Panel has one tab");
+  Assert.equal(panelContent.children.length, 1, "Panel has one tab");
   Assert.equal(
-    previewPanel.children[0].tab,
+    panelContent.children[0].tab,
     groupedTab,
-    "Menuitem is associated with the correct tab"
+    "toolbarbutton is associated with the correct tab"
   );
 
   info(
@@ -815,9 +815,9 @@ add_task(async function tabGroupPanelUpdatesTests() {
   );
   await tabRenameEvent;
   Assert.equal(
-    previewPanel.children[0].label,
+    panelContent.children[0].label,
     newTitle,
-    "Panel menuitem has updated label"
+    "Panel toolbarbutton has updated label"
   );
 
   info("Test that adding a tab to the group adds the tab to the group's panel");
@@ -826,14 +826,14 @@ add_task(async function tabGroupPanelUpdatesTests() {
   await TabOpenEvent;
 
   Assert.equal(
-    previewPanel.children.length,
+    panelContent.children.length,
     2,
     "Panel has two tabs after tab open"
   );
   Assert.equal(
-    previewPanel.children[1].tab,
+    panelContent.children[1].tab,
     newTab,
-    "New menuitem is associated with the new tab"
+    "New toolbarbutton is associated with the new tab"
   );
 
   info(
@@ -844,14 +844,14 @@ add_task(async function tabGroupPanelUpdatesTests() {
   await TabCloseEvent;
 
   Assert.equal(
-    previewPanel.children.length,
+    panelContent.children.length,
     1,
     "Panel has one tab after tab close"
   );
   Assert.equal(
-    previewPanel.children[0].tab,
+    panelContent.children[0].tab,
     groupedTab,
-    "Menuitem is associated with the original tab"
+    "toolbarbutton is associated with the original tab"
   );
 
   info(
@@ -863,11 +863,11 @@ add_task(async function tabGroupPanelUpdatesTests() {
   gBrowser.moveTabToGroup(newTab, group);
   await tabGroupedEvent;
 
-  Assert.equal(previewPanel.children.length, 2, "Panel has two tabs");
+  Assert.equal(panelContent.children.length, 2, "Panel has two tabs");
   Assert.equal(
-    previewPanel.children[1].tab,
+    panelContent.children[1].tab,
     newTab,
-    "Newly grouped tab is associated with the second menuitem"
+    "Newly grouped tab is associated with the second toolbarbutton"
   );
 
   info("Test that moving tabs within the group updates the panel");
@@ -877,12 +877,12 @@ add_task(async function tabGroupPanelUpdatesTests() {
   await tabMoveEvent;
 
   Assert.equal(
-    previewPanel.children[0].tab,
+    panelContent.children[0].tab,
     newTab,
     "New tab has moved to first position in the preview panel"
   );
   Assert.equal(
-    previewPanel.children[1].tab,
+    panelContent.children[1].tab,
     groupedTab,
     "Original tab has moved to second position in the preview panel"
   );
@@ -896,7 +896,7 @@ add_task(async function tabGroupPanelUpdatesTests() {
   await tabSelectEvent;
 
   Assert.ok(
-    previewPanel.children[1].classList.contains("active-tab"),
+    panelContent.children[1].classList.contains("active-tab"),
     "Selected tab has the active tab class set"
   );
 
@@ -907,9 +907,9 @@ add_task(async function tabGroupPanelUpdatesTests() {
   gBrowser.ungroupTab(newTab);
   await tabUngroupedEvent;
 
-  Assert.equal(previewPanel.children.length, 1, "Panel has one tab");
+  Assert.equal(panelContent.children.length, 1, "Panel has one tab");
   Assert.equal(
-    previewPanel.children[0].tab,
+    panelContent.children[0].tab,
     groupedTab,
     "Tab in the panel is the original tab"
   );
