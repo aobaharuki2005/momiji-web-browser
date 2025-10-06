@@ -160,6 +160,16 @@ class SourcePreview extends Component {
   }
 }
 
-module.exports = connect(null, dispatch => ({
-  resetTargetSearchResult: () => dispatch(setTargetSearchResult(null)),
-}))(SourcePreview);
+module.exports = connect(
+  state => {
+    if (!state.search) {
+      return null;
+    }
+    return {
+      targetSearchResult: state.search.targetSearchResult,
+    };
+  },
+  dispatch => ({
+    resetTargetSearchResult: () => dispatch(setTargetSearchResult(null)),
+  })
+)(SourcePreview);

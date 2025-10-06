@@ -349,6 +349,125 @@ add_task(async function searchWithRequestOnUnload() {
   await teardown(monitor);
 });
 
+// Asserts that the content is scrolled to show the correct matched content
+// on the line when a match is selected from the network search list.
+add_task(async function testContentIsScrolledWhenMatchIsSelected() {
+  const httpServer = createTestHTTPServer();
+  httpServer.registerPathHandler(`/`, function (request, response) {
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.write(`<html><meta charset=utf8>
+      <script type="text/javascript" src="/script.js"></script>
+      <h1>Test matches in scrolled content</h1>
+      </html>`);
+  });
+
+  // The "data" path takes a size query parameter and will return a body of the
+  // requested size.
+  httpServer.registerPathHandler("/script.js", function (request, response) {
+    response.setHeader("Content-Type", "text/javascript");
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.write(
+      `${Array.from({ length: 40 }, (_, i) => `// line ${++i}x`).join("\n")}`
+    );
+  });
+
+  const TEST_URI = `http://localhost:${httpServer.identity.primaryPort}/`;
+
+  const { tab, monitor } = await initNetMonitor(TEST_URI, {
+    requestCount: 1,
+  });
+  info("Starting test... ");
+  const { document, store, windowRequire } = monitor.panelWin;
+
+  // Action should be processed synchronously in tests.
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  store.dispatch(Actions.batchEnable(false));
+
+  // reload tab, expect the html page and the script request
+  const waitForEvents = waitForNetworkEvents(monitor, 2);
+  tab.linkedBrowser.reload();
+  await waitForEvents;
+
+  // Open the Search panel
+  await store.dispatch(Actions.openSearch());
+
+  // Fill search input with text and check displayed messages.
+  const waitForResult = waitFor(() =>
+    document.querySelector(".search-panel-content .treeRow.resourceRow")
+  );
+  typeInNetmonitor("line 3x", monitor);
+  EventUtils.synthesizeKey("KEY_Enter");
+  await waitForResult;
+
+  const result = document.querySelector(
+    ".search-panel-content .treeRow.resourceRow"
+  );
+  // Click the matches to
+  const waitForMatches = waitFor(
+    () =>
+      document.querySelectorAll(".search-panel-content .treeRow.resultRow")
+        ?.length == 1
+  );
+  clickElement(result, monitor);
+  await waitForMatches;
+
+  const matches = document.querySelectorAll(
+    ".search-panel-content .treeRow.resultRow"
+  );
+  // Click the first result match
+  const waitForResponsePanelContent = waitFor(() =>
+    document.querySelector(`#response-panel .cm-content`)
+  );
+  clickElement(matches[0], monitor);
+  await waitForResponsePanelContent;
+
+  const editor = getCMEditor(monitor);
+  is(
+    editor.getSelectionCursor().from.line,
+    3,
+    "The content on line 3 is highlighted"
+  );
+  is(
+    editor.getText(editor.getSelectionCursor().from.line),
+    "// line 3x",
+    "The content on the line with cursor (line 3) is correct"
+  );
+
+  // Set the cursor to the bottom of the document
+  let onScrolled = waitForEditorScrolling(monitor);
+  await editor.setCursorAt(40, 0);
+  await onScrolled;
+
+  is(
+    editor.getSelectionCursor().from.line,
+    40,
+    "The content on line 40 is highlighted"
+  );
+  is(
+    editor.getText(editor.getSelectionCursor().from.line),
+    "// line 40x",
+    "The content on the line with cursor (line 40) is correct"
+  );
+
+  // Click the first result match again
+  onScrolled = waitForEditorScrolling(monitor);
+  clickElement(matches[0], monitor);
+  await onScrolled;
+
+  // The editor should scroll back up and the matched content on line 3 should be highlighted
+
+  is(
+    editor.getSelectionCursor().from.line,
+    3,
+    "The content on line 3 is highlighted"
+  );
+  is(
+    editor.getText(editor.getSelectionCursor().from.line),
+    "// line 3x",
+    "The content on the line with cursor (line 3) is correct"
+  );
+});
+
 async function makeRequests(urls) {
   await content.wrappedJSObject.get(urls[0]);
   await content.wrappedJSObject.get(urls[1]);

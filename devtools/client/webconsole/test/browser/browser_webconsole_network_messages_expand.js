@@ -239,12 +239,6 @@ async function waitForPayloadReady(hud) {
   return hud.ui.once("network-request-payload-ready");
 }
 
-async function waitForSourceEditor(panel) {
-  return waitUntil(() => {
-    return !!panel.querySelector(".cm-editor");
-  });
-}
-
 async function waitForRequestUpdates(hud) {
   return hud.ui.once("network-messages-updated");
 }

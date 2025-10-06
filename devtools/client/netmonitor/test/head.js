@@ -1193,6 +1193,16 @@ function getCodeMirrorValue(monitor) {
 }
 
 /**
+ * Waits for the currently triggered editor scroll to complete
+ *
+ * @param {*} monitor
+ * @returns {Promise}
+ */
+async function waitForEditorScrolling(monitor) {
+  return getCMEditor(monitor).once("cm-editor-scrolled");
+}
+
+/**
  * Helper function opening the options menu
  */
 function openSettingsMenu(monitor) {

@@ -298,12 +298,6 @@ async function testSecurity(messageNode) {
   );
 }
 
-async function waitForSourceEditor(panel) {
-  return waitUntil(() => {
-    return !!panel.querySelector(".cm-content");
-  });
-}
-
 function expandXhrMessage(node) {
   info(
     "Click on XHR message and wait for the network detail panel to be displayed"

@@ -298,7 +298,7 @@ function navigate(searchResult) {
     // for search result navigation within the side panels.
     dispatch(setTargetSearchResult(searchResult));
 
-    // Preselect the right side panel.
+    // Preselect the required side panel.
     dispatch(selectDetailsPanelTab(searchResult.panel));
 
     // Select related request in the UI (it also opens the

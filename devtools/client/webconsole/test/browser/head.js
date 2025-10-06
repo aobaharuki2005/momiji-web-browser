@@ -270,6 +270,18 @@ async function waitForMessageByType(hud, text, typeSelector) {
 }
 
 /**
+ * Wait for the Source editor to be available.
+ *
+ * @param {Object} panel
+ * @returns
+ */
+async function waitForSourceEditor(panel) {
+  return waitUntil(() => {
+    return !!panel.querySelector(".cm-editor");
+  });
+}
+
+/**
  * Execute an input expression.
  *
  * @param {Object} hud : The webconsole.
