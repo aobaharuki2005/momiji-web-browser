@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/TextUtils.h"
@@ -96,7 +97,6 @@ nsresult NewLocalFile(const nsAString& aPath, bool aUseDOSDevicePathSyntax,
   file.forget(aResult);
   return NS_OK;
 }
-
 }  // anonymous namespace
 
 static HWND GetMostRecentNavigatorHWND() {
@@ -201,6 +201,73 @@ bool nsLocalFile::CheckForReservedFileName(const nsString& aFileName) {
   }
 
   return false;
+}
+
+/* static */
+bool nsLocalFile::ChildAclMatchesAclInheritedFromParent(
+    const NotNull<ACL*> aChildDacl, bool aIsChildDir,
+    const AutoFreeSecurityDescriptor& aChildSecDesc, nsIFile* aParentDir) {
+  // If we fail at any point return false.
+  ACL* parentDacl = nullptr;
+  AutoFreeSecurityDescriptor parentSecDesc;
+  nsAutoString parentPath;
+  MOZ_ALWAYS_SUCCEEDS(aParentDir->GetTarget(parentPath));
+  DWORD errCode = ::GetNamedSecurityInfoW(
+      parentPath.getW(), SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, nullptr,
+      nullptr, &parentDacl, nullptr, getter_Transfers(parentSecDesc));
+  if (errCode != ERROR_SUCCESS || !parentDacl) {
+    NS_ERROR(nsPrintfCString(
+                 "Failed to get parent dir DACL for comparison: %lx", errCode)
+                 .get());
+    return false;
+  }
+
+  // Create a new security descriptor with a DACL that just inherits from the
+  // parent. We can then compare the current childs DACL to make sure the counts
+  // of inherited ACEs match. We pass the child security descriptor as the
+  // creator to get the owner and group information.
+  AutoDestroySecurityDescriptor newSecDesc;
+  GENERIC_MAPPING mapping;
+  mapping.GenericRead = FILE_GENERIC_READ;
+  mapping.GenericWrite = FILE_GENERIC_WRITE;
+  mapping.GenericExecute = FILE_GENERIC_EXECUTE;
+  mapping.GenericAll = FILE_ALL_ACCESS;
+  if (!::CreatePrivateObjectSecurityEx(
+          parentSecDesc.get(), aChildSecDesc.get(),
+          getter_Transfers(newSecDesc), nullptr, aIsChildDir,
+          SEF_DACL_AUTO_INHERIT | SEF_AVOID_OWNER_CHECK |
+              SEF_AVOID_PRIVILEGE_CHECK,
+          nullptr, &mapping)) {
+    // There may be legitimate reasons for this to fail, so we might have to
+    // remove this if it causes problems.
+    NS_ERROR(nsPrintfCString(
+                 "Failed to create new inherited DACL for comparison: %lx",
+                 ::GetLastError())
+                 .get());
+    return false;
+  }
+
+  BOOL daclPresent;
+  ACL* newDacl = nullptr;
+  BOOL daclDefaulted;
+  if (!::GetSecurityDescriptorDacl(newSecDesc.get(), &daclPresent, &newDacl,
+                                   &daclDefaulted) ||
+      !daclPresent || !newDacl) {
+    NS_ERROR(
+        nsPrintfCString("Failed to get new DACL from security descriptor: %lx",
+                        ::GetLastError())
+            .get());
+    return false;
+  }
+
+  auto getInheritedAceCount = [](const ACL* aAcl) {
+    AclAceRange aclAceRange(WrapNotNull(aAcl));
+    return std::count_if(
+        aclAceRange.begin(), aclAceRange.end(),
+        [](const auto& hdr) { return hdr.AceFlags & INHERITED_ACE; });
+  };
+
+  return getInheritedAceCount(aChildDacl) == getInheritedAceCount(newDacl);
 }
 
 class nsDriveEnumerator : public nsSimpleEnumerator,
@@ -1800,6 +1867,10 @@ nsresult nsLocalFile::MoveOrCopyAsSingleFileOrDir(nsIFile* aDestParent,
     return NS_ERROR_FILE_ACCESS_DENIED;
   }
 
+  // Determine if we are a directory before any move/copy.
+  bool isDir = false;
+  MOZ_ALWAYS_SUCCEEDS(IsDirectory(&isDir));
+
   int copyOK = 0;
   if (move) {
     copyOK = ::MoveFileExW(filePath.get(), destPath.get(),
@@ -1850,31 +1921,30 @@ nsresult nsLocalFile::MoveOrCopyAsSingleFileOrDir(nsIFile* aDestParent,
   } else if (move && !(aOptions & SkipNtfsAclReset)) {
     // Set security permissions to inherit from parent.
     // Note: propagates to all children: slow for big file trees
-    PACL pOldDACL = nullptr;
-    PSECURITY_DESCRIPTOR pSD = nullptr;
-    ::GetNamedSecurityInfoW((LPWSTR)destPath.get(), SE_FILE_OBJECT,
-                            DACL_SECURITY_INFORMATION, nullptr, nullptr,
-                            &pOldDACL, nullptr, &pSD);
-    UniquePtr<VOID, LocalFreeDeleter> autoFreeSecDesc(pSD);
-    if (pOldDACL) {
-      // Test the current DACL, if we find one that is inherited then we can
-      // skip the reset. This avoids a request for SeTcbPrivilege, which can
-      // cause a lot of audit events if enabled (Bug 1816694).
-      bool inherited = false;
-      for (DWORD i = 0; i < pOldDACL->AceCount; ++i) {
-        VOID* pAce = nullptr;
-        if (::GetAce(pOldDACL, i, &pAce) &&
-            static_cast<PACE_HEADER>(pAce)->AceFlags & INHERITED_ACE) {
-          inherited = true;
-          break;
-        }
-      }
-
-      if (!inherited) {
-        ::SetNamedSecurityInfoW(
-            (LPWSTR)destPath.get(), SE_FILE_OBJECT,
-            DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION,
-            nullptr, nullptr, pOldDACL, nullptr);
+    ACL* childDacl = nullptr;
+    AutoFreeSecurityDescriptor childSecDesc;
+    // We need owner and group information for the parent ACL check.
+    DWORD errCode = ::GetNamedSecurityInfoW(
+        destPath.getW(), SE_FILE_OBJECT,
+        DACL_SECURITY_INFORMATION | OWNER_SECURITY_INFORMATION |
+            GROUP_SECURITY_INFORMATION,
+        nullptr, nullptr, &childDacl, nullptr, getter_Transfers(childSecDesc));
+    if (errCode == ERROR_SUCCESS && childDacl) {
+      // Compare the number of inherited ACEs on the child to the number we
+      // expect from the parent. If they don't match then we reset. This is
+      // because we can get old inherited ACEs from the previous dir if moved
+      // within the same volume. We check this to prevent unnecessary calls to
+      // SetNamedSecurityInfoW, this avoids a request for SeTcbPrivilege, which
+      // can cause a lot of audit events if enabled (Bug 1816694).
+      if (!ChildAclMatchesAclInheritedFromParent(WrapNotNull(childDacl), isDir,
+                                                 childSecDesc, aDestParent)) {
+        // We don't expect this to fail, but it shouldn't crash in release.
+        MOZ_ALWAYS_TRUE(
+            ERROR_SUCCESS ==
+            ::SetNamedSecurityInfoW(destPath.get(), SE_FILE_OBJECT,
+                                    DACL_SECURITY_INFORMATION |
+                                        UNPROTECTED_DACL_SECURITY_INFORMATION,
+                                    nullptr, nullptr, childDacl, nullptr));
       }
     }
   }
