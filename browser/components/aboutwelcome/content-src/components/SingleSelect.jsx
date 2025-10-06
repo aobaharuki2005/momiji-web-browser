@@ -146,7 +146,6 @@ export const SingleSelect = ({
                   {/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */}
                   <label
                     className={`select-item ${type}`}
-                    title={value}
                     onKeyDown={e => handleKeyDown(e)}
                     style={{
                       ...AboutWelcomeUtils.getValidStyle(

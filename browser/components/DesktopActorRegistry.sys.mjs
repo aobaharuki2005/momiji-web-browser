@@ -240,7 +240,14 @@ let JSWINDOWACTORS = {
         "BackupUI:EditBackupLocation": { wantUntrusted: true },
       },
     },
-    matches: ["about:preferences*", "about:settings*", "about:welcome*"],
+    includeChrome: true,
+    allFrames: true,
+    matches: [
+      "about:preferences*",
+      "about:settings*",
+      "about:welcome*",
+      "chrome://browser/content/spotlight.html",
+    ],
     enablePreference: "browser.backup.preferences.ui.enabled",
   },
 

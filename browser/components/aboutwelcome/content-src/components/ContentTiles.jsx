@@ -9,6 +9,7 @@ import { SingleSelect } from "./SingleSelect";
 import { MobileDownloads } from "./MobileDownloads";
 import { MultiSelect } from "./MultiSelect";
 import { EmbeddedMigrationWizard } from "./EmbeddedMigrationWizard";
+import { EmbeddedFxBackupOptIn } from "./EmbeddedFxBackupOptIn";
 import { ActionChecklist } from "./ActionChecklist";
 import { EmbeddedBrowser } from "./EmbeddedBrowser";
 import { AboutWelcomeUtils } from "../lib/aboutwelcome-utils.mjs";
@@ -303,6 +304,21 @@ export const ContentTiles = props => {
                 handleAction={props.handleAction}
                 content={{ tiles: tile }}
                 skipButton={props.content.skip_button}
+              />
+            )}
+            {tile.type === "fx_backup_file_path" && (
+              <EmbeddedFxBackupOptIn
+                // TODO: This is based on user's choice on first screen
+                handleAction={props.handleAction}
+                isEncryptedBackup={content.isEncryptedBackup}
+                options={tile.options}
+              />
+            )}
+            {tile.type === "fx_backup_password" && (
+              <EmbeddedFxBackupOptIn
+                handleAction={props.handleAction}
+                isEncryptedBackup={content.isEncryptedBackup}
+                options={tile.options}
               />
             )}
           </div>

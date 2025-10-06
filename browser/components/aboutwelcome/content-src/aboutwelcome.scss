@@ -117,8 +117,8 @@ html {
   --picker-focus-ring-color: var(--in-content-item-selected);
   --picker-checkbox-color: var(--in-content-item-selected);
   --picker-checkbox-hover-color: var(--picker-checkbox-color);
-  --picker-backup-flair-background: var(--color-blue-0);
-  --picker-backup-flair-color: var(--color-blue-50);
+  --picker-backup-flair-background: color-mix(in srgb, var(--color-accent-primary) 20%, transparent);
+  --picker-backup-flair-color: var(--color-accent-primary);
 
   @media (forced-colors: active) {
     --picker-background-color: ButtonFace;
@@ -1795,6 +1795,7 @@ html {
 
   .tiles-single-select-section {
     border: 0;
+    outline: none;
     display: flex;
     flex-wrap: wrap;
     gap: 5px;
@@ -1820,7 +1821,7 @@ html {
       .select-item {
         position: relative;
         padding-top: 5px;
-        border: 2px solid var(--single-select-border-color);
+        border: 1px solid var(--single-select-border-color);
         border-radius: var(--border-radius-large);
 
         &:has(.input:focus),
@@ -1834,7 +1835,7 @@ html {
         }
 
         &:has(.selected) {
-          border: 3px solid var(--button-background-color-primary);
+          border: 1px solid var(--button-background-color-primary);
           border-radius: var(--border-radius-large);
         }
 
@@ -1877,7 +1878,6 @@ html {
               border-radius: 10px 10px 0 0;
               background-color: var(--picker-backup-flair-background);
               color: var(--picker-backup-flair-color);
-              top: -5px;
 
               &.spacer {
                 background-color: transparent;
@@ -1912,7 +1912,7 @@ html {
           }
 
           .tile-list-icon-wrapper {
-            padding-block-start: 10px;
+            padding-block-start: 6px;
           }
 
           .tile-list-text {
@@ -1953,11 +1953,12 @@ html {
       z-index: 0;
 
       &.backup {
-        cursor: unset;
-        width: 300px;
+        cursor: default;
+        width: 225.5px;
+        padding-top: 0;
 
         &:has(.selected) {
-          border: 2px solid var(--picker-backup-flair-color);
+          border: 1px solid var(--color-accent-primary);
         }
 
         &:hover {
@@ -2604,10 +2605,6 @@ html {
     &.slim {
       padding: 0;
     }
-
-    &.tile-button {
-      cursor: pointer;
-    }
   }
 
   .secondary {
@@ -2747,7 +2744,8 @@ html {
     .inline-image,
     .link-paragraph,
     .multi-select-container,
-    migration-wizard {
+    migration-wizard,
+    turn-on-scheduled-backups::part(form) {
       transition-delay: 0.9s;
     }
 
@@ -2859,6 +2857,7 @@ html {
       .cta-link,
       .legal-paragraph,
       migration-wizard,
+      turn-on-scheduled-backups::part(form),
       .tile-title-container,
       .steps[above-button]:not(.progress-bar) {
         opacity: 0;
@@ -2935,7 +2934,8 @@ html {
       .tiles-single-select-section,
       .inline-image,
       .link-paragraph,
-      migration-wizard {
+      migration-wizard,
+      turn-on-scheduled-backups::part(form) {
         opacity: 0;
         translate: 0 var(--translate);
         transition-delay: 0.2s;
@@ -2990,5 +2990,13 @@ html {
     &::part(deck) {
       font-size: 0.83em;
     }
+  }
+
+  turn-on-scheduled-backups::part(form) {
+    transition: var(--transition);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-medium);
+    padding: 24px 30px;
+    margin-block: 0 24px;
   }
 }
