@@ -797,6 +797,21 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(expectedMenuButton(), updatedMenuButton)
     }
 
+    @Test
+    fun `GIVEN the open in app is highlighted THEN menu button is not highlighted`() = runTest {
+        val appStore = AppStore(
+            initialState = AppState(
+                supportedMenuNotifications = setOf(SupportedMenuNotifications.OpenInApp),
+            ),
+        )
+        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
+        val toolbarStore = buildStore(middleware)
+
+        mainLooperRule.idle()
+        val menuButton = toolbarStore.state.displayState.browserActionsEnd[1] as ActionButtonRes
+        assertEquals(expectedMenuButton(false), menuButton)
+    }
+
     private fun buildStore(
         middleware: BrowserToolbarMiddleware,
         context: Context = testContext,

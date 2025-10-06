@@ -60,6 +60,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode.Private
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.UseCases
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
+import org.mozilla.fenix.components.appstate.SupportedMenuNotifications
 import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.ext.isTallWindow
@@ -502,12 +503,16 @@ class BrowserToolbarMiddleware(
             )
         }
 
-        HomeToolbarAction.Menu -> ActionButtonRes(
-            drawableResId = iconsR.drawable.mozac_ic_ellipsis_vertical_24,
-            contentDescription = R.string.content_description_menu,
-            highlighted = appStore.state.supportedMenuNotifications.isNotEmpty(),
-            onClick = MenuClicked(source),
-        )
+        HomeToolbarAction.Menu -> {
+            val highlighted = appStore.state.supportedMenuNotifications
+                .any { it != SupportedMenuNotifications.OpenInApp }
+            ActionButtonRes(
+                drawableResId = iconsR.drawable.mozac_ic_ellipsis_vertical_24,
+                contentDescription = R.string.content_description_menu,
+                highlighted = highlighted,
+                onClick = MenuClicked(source),
+            )
+        }
 
         HomeToolbarAction.FakeBookmark -> ActionButtonRes(
             drawableResId = iconsR.drawable.mozac_ic_bookmark_24,
