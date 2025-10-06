@@ -701,9 +701,6 @@ struct ReflowInput : public SizeComputationInput {
 
   static constexpr float kNormalLineHeightFactor = 1.2f;
 
-  LogicalSize ComputeContainingBlockRectangle(
-      nsPresContext* aPresContext, const ReflowInput* aContainingBlockRI) const;
-
   /**
    * Apply the mComputed(Min/Max)ISize constraints to the content
    * size computed so far.
@@ -854,6 +851,15 @@ struct ReflowInput : public SizeComputationInput {
                        const Maybe<LogicalMargin>& aBorder,
                        const Maybe<LogicalMargin>& aPadding,
                        LayoutFrameType aFrameType);
+
+  /**
+   * Compute the content-box rect of the containing block frame in mFrame's
+   * writing-mode (mWritingMode).
+   *
+   * Note: the block-size in the return value may be unconstrained.
+   */
+  LogicalSize ComputeContainingBlockRectangle(
+      nsPresContext* aPresContext, const ReflowInput* aContainingBlockRI) const;
 
   // Returns the nearest containing block or block frame (whether or not
   // it is a containing block) for the specified frame.  Also returns
