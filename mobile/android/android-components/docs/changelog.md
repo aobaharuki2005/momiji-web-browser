@@ -11,6 +11,8 @@ permalink: /changelog/
   * ⚠️ **Breaking change**: Updated the `AppServicesInitializer.init` to take in a configuration object instead of individual components.
 * **feature-framebusting**
   * 🆕 New `GeckoSession.PromptDelegate.RedirectPrompt` prompt that is displayed when a third-party redirect is blocked. [Bug 1988107](https://bugzilla.mozilla.org/show_bug.cgi?id=1988107)
+* **feature-sitepermissions**
+  * 🚒 Bug fixed [Bug 1986429](https://bugzilla.mozilla.org/show_bug.cgi?id=1986429). Ensure that when accepting website notification permission, the user is prompted for system-level notification opt-in, if the system permission was not enabled.
 
 # 144.0
 * **feature-customtabs**

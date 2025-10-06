@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+plugins {
+    alias(libs.plugins.kotlin.compose)
+}
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
@@ -29,6 +31,10 @@ android {
     }
 
     namespace = 'mozilla.components.feature.sitepermissions'
+
+    buildFeatures {
+        compose = true
+    }
 }
 
 dependencies {
@@ -38,6 +44,14 @@ dependencies {
     implementation project(':components:support-ktx')
     implementation project(':components:support-utils')
     implementation project(':components:ui-icons')
+    implementation project(':components:compose-base')
+
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.compose.foundation
+    implementation libs.androidx.compose.ui.tooling.preview
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.material3
+    debugImplementation libs.androidx.compose.ui.tooling
 
     implementation libs.androidx.constraintlayout
     implementation libs.androidx.core.ktx
