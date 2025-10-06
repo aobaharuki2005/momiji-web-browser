@@ -193,32 +193,23 @@ MOZ_ALWAYS_INLINE WasmArrayObject* WasmArrayObject::createArrayOOL(
   // arrays use createArrayIL.
   MOZ_ASSERT(storageBytes > WasmArrayObject_MaxInlineBytes);
 
-  // Allocate the outline data before allocating the object so that we can
-  // infallibly initialize the pointer on the array object after it is
-  // allocated.
-  Nursery& nursery = cx->nursery();
-  PointerAndUint7 outlineAlloc(nullptr, 0);
-  outlineAlloc = nursery.mallocedBlockCache().alloc(storageBytes);
-  if (MOZ_UNLIKELY(!outlineAlloc.pointer())) {
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
-
-  // It's unfortunate that `arrayObj` has to be rooted, since this is a hot
-  // path and rooting costs around 15 instructions.  It is the call to
-  // registerTrailer that makes it necessary.
-  Rooted<WasmArrayObject*> arrayObj(cx);
-  arrayObj = (WasmArrayObject*)cx->newCell<WasmGcObject>(
+  auto* arrayObj = (WasmArrayObject*)cx->newCell<WasmGcObject>(
       allocKind, initialHeap, typeDefData->clasp, allocSite);
   if (MOZ_UNLIKELY(!arrayObj)) {
     ReportOutOfMemory(cx);
-    if (outlineAlloc.pointer()) {
-      nursery.mallocedBlockCache().free(outlineAlloc);
-    }
     return nullptr;
   }
 
-  DataHeader* outlineHeader = (DataHeader*)outlineAlloc.pointer();
+  uint8_t* outlineAlloc = AllocateCellBuffer<uint8_t>(
+      cx, arrayObj, storageBytes, MaxNurseryTrailerSize);
+  if (MOZ_UNLIKELY(!outlineAlloc)) {
+    arrayObj->numElements_ = 0;
+    arrayObj->data_ = nullptr;
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  DataHeader* outlineHeader = (DataHeader*)outlineAlloc;
   uint8_t* outlineData = (uint8_t*)(outlineHeader + 1);
   *outlineHeader = DataIsOOL;
 
@@ -233,25 +224,6 @@ MOZ_ALWAYS_INLINE WasmArrayObject* WasmArrayObject::createArrayOOL(
   }
 
   MOZ_ASSERT(!arrayObj->isDataInline());
-
-  if (MOZ_LIKELY(js::gc::IsInsideNursery(arrayObj))) {
-    // We need to register the OOL area with the nursery, so it will be freed
-    // after GCing of the nursery if `arrayObj_` doesn't make it into the
-    // tenured heap.  Note, the nursery will keep a running total of the
-    // current trailer block sizes, so it can decide to do a (minor)
-    // collection if that becomes excessive.
-    if (MOZ_UNLIKELY(!nursery.registerTrailer(outlineAlloc, storageBytes))) {
-      nursery.mallocedBlockCache().free(outlineAlloc);
-      ReportOutOfMemory(cx);
-      return nullptr;
-    }
-  } else {
-    MOZ_ASSERT(arrayObj->isTenured());
-    // Register the trailer size with the major GC mechanism, so that can also
-    // is able to decide if that space use warrants a (major) collection.
-    AddCellMemory(arrayObj, storageBytes + wasm::TrailerBlockOverhead,
-                  MemoryUse::WasmTrailerBlock);
-  }
 
   MOZ_ASSERT(typeDefData->clasp->shouldDelayMetadataBuilder());
   cx->realm()->setObjectPendingMetadata(arrayObj);
