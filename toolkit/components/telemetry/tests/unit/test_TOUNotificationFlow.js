@@ -728,7 +728,7 @@ add_task(
     Services.prefs.setStringPref("termsofuse.acceptedDate", String(Date.now()));
     Services.prefs.setIntPref(
       "termsofuse.acceptedVersion",
-      Services.prefs.getIntPref(TOU_CURRENT_VERSION_PREF)
+      Services.prefs.getIntPref(TOU_CURRENT_VERSION_PREF, 4)
     );
 
     Assert.ok(
