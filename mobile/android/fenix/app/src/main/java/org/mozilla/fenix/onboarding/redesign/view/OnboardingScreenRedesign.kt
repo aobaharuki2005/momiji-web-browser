@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.onboarding.redesign.view
 
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -36,9 +37,11 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -67,6 +70,7 @@ import org.mozilla.fenix.onboarding.view.ToolbarOption
 import org.mozilla.fenix.onboarding.view.ToolbarOptionType
 import org.mozilla.fenix.onboarding.view.mapToOnboardingPageState
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.utils.isLargeScreenSize
 
 private val logger: Logger = Logger("OnboardingScreenRedesign")
 
@@ -268,17 +272,21 @@ private fun OnboardingContent(
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val boxWithConstraintsScope = this
 
-        val pagerWidth = pageContentWidth(boxWithConstraintsScope)
-        val pagerHeight = pageContentHeight(boxWithConstraintsScope)
+        val isLargeScreen = LocalContext.current.isLargeScreenSize()
+        val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+        val pagerWidth = pageContentWidth(boxWithConstraintsScope, isLargeScreen)
+        val pagerHeight = pageContentHeight(boxWithConstraintsScope, isLargeScreen)
 
         val pagePeekWidth = ((maxWidth - pagerWidth) / 2).coerceAtLeast(8.dp)
 
-        // Background 'gradient' image.
-        Image(
-            painter = painterResource(R.drawable.onboarding_redesign_background),
-            contentDescription = null, // Decorative image only.
-            contentScale = ContentScale.FillWidth,
-        )
+        if (!isNonLargeScreenLandscape(isLargeScreen, isLandscape)) {
+            Image(
+                painter = painterResource(onboardingRedesignBackground(isLandscape)),
+                contentDescription = null, // Decorative image only.
+                contentScale = ContentScale.FillWidth,
+            )
+        }
 
         Column(verticalArrangement = Arrangement.Center) {
             Spacer(Modifier.weight(1f))
@@ -290,9 +298,9 @@ private fun OnboardingContent(
                     .height(pagerHeight)
                     .nestedScroll(nestedScrollConnection),
                 contentPadding = PaddingValues(horizontal = pagePeekWidth),
-                pageSize = PageSize.Fixed(pagerWidth),
+                pageSize = PageSize.Fill,
                 beyondViewportPageCount = 2,
-                pageSpacing = 8.dp,
+                pageSpacing = pageSpacing(isLargeScreen, pagePeekWidth),
                 key = { pagesToDisplay[it].type },
                 overscrollEffect = null,
             ) { pageIndex ->
@@ -402,17 +410,44 @@ private fun OnboardingPageForType(
 private object PageContentLayout {
     val MIN_HEIGHT_DP = 650.dp
     val MIN_WIDTH_DP = 360.dp
+    val MIN_HEIGHT_TABLET_DP = 620.dp
+    val MIN_WIDTH_TABLET_DP = 440.dp
     const val HEIGHT_RATIO = 0.8f
     const val WIDTH_RATIO = 0.85f
+    const val TABLET_WIDTH_RATIO = 0.35f
+    const val TABLET_HEIGHT_RATIO = 0.50f
 }
 
-private fun pageContentHeight(scope: BoxWithConstraintsScope) =
-    scope.maxHeight.times(PageContentLayout.HEIGHT_RATIO)
-        .coerceAtLeast(PageContentLayout.MIN_HEIGHT_DP)
+private fun pageContentHeight(scope: BoxWithConstraintsScope, isLargeScreen: Boolean): Dp {
+    val minHeight =
+        if (isLargeScreen) PageContentLayout.MIN_HEIGHT_TABLET_DP else PageContentLayout.MIN_HEIGHT_DP
+    val heightRatio =
+        if (isLargeScreen) PageContentLayout.TABLET_HEIGHT_RATIO else PageContentLayout.HEIGHT_RATIO
 
-private fun pageContentWidth(scope: BoxWithConstraintsScope) =
-    scope.maxWidth.times(PageContentLayout.WIDTH_RATIO)
-        .coerceAtLeast(PageContentLayout.MIN_WIDTH_DP)
+    return scope.maxHeight.times(heightRatio).coerceAtLeast(minHeight)
+}
+
+private fun pageContentWidth(scope: BoxWithConstraintsScope, isLargeScreen: Boolean): Dp {
+    val minWidth =
+        if (isLargeScreen) PageContentLayout.MIN_WIDTH_TABLET_DP else PageContentLayout.MIN_WIDTH_DP
+    val widthRatio =
+        if (isLargeScreen) PageContentLayout.TABLET_WIDTH_RATIO else PageContentLayout.WIDTH_RATIO
+
+    return scope.maxWidth.times(widthRatio).coerceAtLeast(minWidth)
+}
+
+private fun onboardingRedesignBackground(isLandscape: Boolean) =
+    if (isLandscape) {
+        R.drawable.onboarding_redesign_background_landscape
+    } else {
+        R.drawable.onboarding_redesign_background
+    }
+
+private fun isNonLargeScreenLandscape(isLargeScreen: Boolean, isLandscape: Boolean) =
+    (isLandscape && !isLargeScreen)
+
+private fun pageSpacing(isLargeScreen: Boolean, pagePeekWidth: Dp) =
+    if (isLargeScreen) pagePeekWidth else 8.dp
 
 private class DisableForwardSwipeNestedScrollConnection(
     private val pagerState: PagerState,
