@@ -120,29 +120,35 @@ class AbsoluteContainingBlock {
   /**
    * After an abspos child's size is known, this method can be used to
    * resolve size-dependent values in the ComputedLogicalOffsets on its
-   * reflow input. (This may involve resolving the inline dimension of
-   * aLogicalCBSize, too; hence, that variable is an in/outparam.)
+   * reflow input.
    *
-   * aKidSize, aMargin, aOffsets, and aLogicalCBSize are all expected to be
-   * represented in terms of the absolute containing block's writing-mode.
+   * aLogicalCBSize is expected in the abspos child's writing-mode. aKidSize,
+   * aMargin, aOffsets, are all expected in the absolute containing block's
+   * writing-mode.
+   *
+   * aOffset is an outparam.
    */
-  void ResolveSizeDependentOffsets(nsPresContext* aPresContext,
-                                   ReflowInput& aKidReflowInput,
+  void ResolveSizeDependentOffsets(ReflowInput& aKidReflowInput,
+                                   const LogicalSize& aLogicalCBSize,
                                    const LogicalSize& aKidSize,
                                    const LogicalMargin& aMargin,
-                                   LogicalMargin* aOffsets,
-                                   LogicalSize* aLogicalCBSize);
+                                   LogicalMargin& aOffsets);
 
   /**
    * For frames that have intrinsic block sizes, since we want to use the
    * frame's actual instrinsic block-size, we don't compute margins in
    * InitAbsoluteConstraints because the block-size isn't computed yet. This
    * method computes the margins for them after layout.
+   *
+   * aLogicalCBSize is expected in the abspos child's writing-mode. aKidSize,
+   * aMargin, aOffsets, are all expected in the absolute containing block's
+   * writing-mode.
+   *
    * aMargin and aOffsets are both outparams (though we only touch aOffsets if
    * the position is overconstrained)
    */
   void ResolveAutoMarginsAfterLayout(ReflowInput& aKidReflowInput,
-                                     const LogicalSize* aLogicalCBSize,
+                                     const LogicalSize& aLogicalCBSize,
                                      const LogicalSize& aKidSize,
                                      LogicalMargin& aMargin,
                                      LogicalMargin& aOffsets);
