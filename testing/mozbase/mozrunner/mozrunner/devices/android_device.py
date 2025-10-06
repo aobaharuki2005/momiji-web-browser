@@ -168,7 +168,7 @@ AVD_DICT = {
             "-selinux",
             "permissive",
             "-memory",
-            "3072",
+            "4096",
             "-cores",
             "8",
             "-prop",

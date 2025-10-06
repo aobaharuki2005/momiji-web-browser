@@ -20,7 +20,7 @@ config = {
         "-selinux",
         "permissive",
         "-memory",
-        "3072",
+        "4096",
         "-cores",
         "8",
         "-skin",
