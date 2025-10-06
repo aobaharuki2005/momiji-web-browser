@@ -9,8 +9,10 @@ import os
 import os.path
 import pprint
 import re
+import shutil
 import sys
 import tempfile
+import time
 import urllib.parse
 from copy import deepcopy
 from pathlib import Path
@@ -55,7 +57,18 @@ CreateBug = Optional[Callable[[], Bug]]
 Extras = Dict[str, PlatformInfo]
 FailedPlatforms = Dict[str, FailedPlatform]
 GenBugComment = Tuple[CreateBug, str, bool, dict, str]
+JSONType = Union[
+    None,
+    bool,
+    int,
+    float,
+    str,
+    List["JSONType"],
+    Dict[str, "JSONType"],
+]
 ListBug = List[Bug]
+ListInt = List[int]
+ListStr = List[str]
 ManifestPaths = Dict[str, Dict[str, List[str]]]
 OptBug = Optional[Bug]
 OptDifferences = Optional[List[int]]
@@ -84,6 +97,7 @@ PlatformPermutations = Dict[
     ],
 ]
 Runs = Dict[str, Dict[str, Any]]
+Suggestion = Tuple[OptInt, OptStr, OptStr]
 TaskIdOrPlatformInfo = Union[str, PlatformInfo]
 Tasks = List[TestTask]
 WptPaths = Tuple[OptStr, OptStr, OptStr, OptStr]
@@ -98,6 +112,8 @@ ATTACHMENT_REGEX = (
 )
 
 BUGZILLA_AUTHENTICATION_HELP = "Must create a Bugzilla API key per https://github.com/mozilla/mozci-tools/blob/main/citools/test_triage_bug_filer.py"
+CACHE_EXPIRY = 45  # days to expire entries in .skip_fails_cache
+CACHE_DIR = ".skip_fails_cache"
 
 MS_PER_MINUTE = 60 * 1000  # ms per minute
 DEBUG_THRESHOLD = 40 * MS_PER_MINUTE  # 40 minutes in ms
@@ -207,6 +223,7 @@ class Skipfails:
         new_version=None,
         task_id=None,
         user_agent=None,
+        clear_cache=None,
     ):
         self.command_context = command_context
         if self.command_context is not None:
@@ -258,6 +275,47 @@ class Skipfails:
         self.failed_platforms: FailedPlatforms = {}
         self.platform_permutations: PlatformPermutations = {}
         self.user_agent: OptStr = user_agent
+        self.clear_cache: OptStr = clear_cache
+        self.check_cache()
+
+    def check_cache(self) -> None:
+        """
+        Will ensure that the cache directory is present
+        And will clear any entries based upon --clear-cache
+        Or revisions older than 45 days
+        """
+        cache_dir = self.full_path(CACHE_DIR)
+        if not os.path.exists(cache_dir):
+            self.vinfo(f"creating cache directory: {cache_dir}")
+            os.mkdir(cache_dir)
+            return
+        self.vinfo(f"clearing cache for revisions older than {CACHE_EXPIRY} days")
+        expiry: float = CACHE_EXPIRY * 24 * 3600
+        for rev_dir in [e.name for e in os.scandir(cache_dir) if e.is_dir()]:
+            rev_path = os.path.join(cache_dir, rev_dir)
+            if (
+                self.clear_cache is not None
+                and (self.clear_cache == rev_dir or self.clear_cache == "all")
+            ) or self.file_age(rev_path) > expiry:
+                self.vinfo(f"clearing revision: {rev_path}")
+                self.delete_dir(rev_path)
+
+    def cached_path(self, revision: str, filename: str) -> str:
+        """Return full path for a cached filename for revision"""
+        cache_dir = self.full_path(CACHE_DIR)
+        return os.path.join(cache_dir, revision, filename)
+
+    def record_new_bug(self, revision: str, bugid: int) -> None:
+        """Records this bug id in the cache of created bugs for this revision"""
+        new_bugs_path = self.cached_path(revision, "new-bugs.json")
+        new_bugs: ListInt = []
+        if os.path.exists(new_bugs_path):
+            self.vinfo(f"Reading cached new bugs for revision: {revision}")
+            new_bugs = self.read_json(new_bugs_path)
+        if bugid not in new_bugs:
+            new_bugs.append(bugid)
+            new_bugs.sort()
+        self.write_json(new_bugs_path, new_bugs)
 
     def _initialize_bzapi(self):
         """Lazily initializes the Bugzilla API (returns True on success)"""
@@ -315,6 +373,32 @@ class Skipfails:
 
         return os.path.exists(self.full_path(filename))
 
+    def file_age(self, path: str) -> float:
+        """Returns age of filename in seconds"""
+
+        stat: os.stat_result = os.stat(path)
+        mtime: float = stat.st_mtime
+        now: float = time.time()
+        age: float = now - mtime
+        return age
+
+    def delete_dir(self, path: str) -> None:
+        """Recursively deletes dir at path"""
+        abs_path: str = os.path.abspath(path)
+        # Safety: prevent root or empty deletions
+        if abs_path in ("", os.path.sep):
+            raise ValueError(f"Refusing to delete unsafe path: {path}")
+        # Ensure path is inside topsrcdir
+        if not abs_path.startswith(self.topsrcdir + os.path.sep):
+            raise ValueError(
+                f"Refusing to delete: {path} is not inside {self.topsrcdir}"
+            )
+        if not os.path.exists(abs_path):
+            raise FileNotFoundError(f"Path does not exist: {abs_path}")
+        if not os.path.isdir(abs_path):
+            raise NotADirectoryError(f"Not a directory: {abs_path}")
+        shutil.rmtree(abs_path)
+
     def run(
         self,
         meta_bug_id: OptInt = None,
@@ -348,6 +432,16 @@ class Skipfails:
             self.vinfo(f"meta-bug-id: {meta_bug_id}")
         try_url = self.try_url
         revision, repo = self.get_revision(try_url)
+        use_tasks_cached = self.cached_path(revision, "tasks.json")
+        use_failures_cached = self.cached_path(revision, "failures.json")
+        if use_tasks is None and os.path.exists(use_tasks_cached):
+            use_tasks = use_tasks_cached
+        if save_tasks is None and use_tasks != use_tasks_cached:
+            save_tasks = use_tasks_cached
+        if use_failures is None and os.path.exists(use_failures_cached):
+            use_failures = use_failures_cached
+        if save_failures is None and use_failures != use_failures_cached:
+            save_failures = use_failures_cached
         if use_tasks is not None:
             tasks = self.read_tasks(use_tasks)
             self.vinfo(f"use tasks: {use_tasks}")
@@ -912,6 +1006,7 @@ class Skipfails:
         component: str = "General",
         version: str = "unspecified",
         bugtype: str = "task",
+        revision: OptStr = None,
     ) -> OptBug:
         """Create a bug"""
 
@@ -933,6 +1028,7 @@ class Skipfails:
             bug = self._bzapi.createbug(createinfo)
             if bug is not None:
                 self.vinfo(f'Created Bug {bug.id} {product}::{component} : "{summary}"')
+                self.record_new_bug(revision, bug.id)
         return bug
 
     def add_bug_comment(self, id: int, comment: str, meta_bug_id: OptInt = None):
@@ -1031,13 +1127,13 @@ class Skipfails:
                         if job_id is not None:
                             comment += f"\njob_id = {job_id}"
                             (
-                                suggestions_url,
                                 line_number,
                                 line,
                                 log_url,
-                            ) = self.get_bug_suggestions(repo, job_id, path, anyjs)
+                            ) = self.get_bug_suggestions(
+                                repo, revision, job_id, path, anyjs
+                            )
                             if log_url is not None:
-                                comment += f"\nBug suggestions: {suggestions_url}"
                                 comment += f"\nSpecifically see at line {line_number} in the attached log: {log_url}"
                                 comment += f'\n\n  "{line}"\n'
         bug_summary = f"MANIFEST {manifest}"
@@ -1052,7 +1148,13 @@ class Skipfails:
                 create_bug_lambda = cast(
                     CreateBug,
                     lambda: self.create_bug(
-                        bug_summary, description, product, component
+                        bug_summary,
+                        description,
+                        product,
+                        component,
+                        "unspecified",
+                        "task",
+                        revision,
                     ),
                 )
         elif len(bugs) == 1:
@@ -1638,30 +1740,50 @@ class Skipfails:
             self.job_ids[k] = job_id
         return job_id
 
-    def get_bug_suggestions(self, repo, job_id, path, anyjs=None):
+    def cached_bug_suggestions(self, repo, revision, job_id) -> JSONType:
         """
-        Return the (suggestions_url, line_number, line, log_url)
+        Return the bug_suggestions JSON for the job_id
+        Use the cache, if present, else download from treeherder
+        """
+        suggestions_path = self.cached_path(revision, f"suggest-{job_id}.json")
+        if os.path.exists(suggestions_path):
+            self.vinfo(
+                f"Reading cached bug_suggestions for {repo} revision: {revision} job_id: {job_id}"
+            )
+            suggestions = self.read_json(suggestions_path)
+        else:
+            suggestions_url = f"https://treeherder.mozilla.org/api/project/{repo}/jobs/{job_id}/bug_suggestions/"
+            self.vinfo(
+                f"Retrieving bug_suggestions for {repo} revision: {revision} job_id: {job_id}"
+            )
+            r = requests.get(suggestions_url, headers=self.headers)
+            if r.status_code != 200:
+                self.warning(f"FAILED to query Treeherder = {r} for {r.url}")
+                return None
+            suggestions = r.json()
+            self.write_json(suggestions_path, suggestions)
+        return suggestions
+
+    def get_bug_suggestions(
+        self, repo, revision, job_id, path, anyjs=None
+    ) -> Suggestion:
+        """
+        Return the (line_number, line, log_url)
         for the given repo and job_id
         """
-        self.vinfo(
-            f"Retrieving bug_suggestions for {repo} job_id: {job_id}, path: {path} ..."
-        )
-        suggestions_url = f"https://treeherder.mozilla.org/api/project/{repo}/jobs/{job_id}/bug_suggestions/"
-        line_number = None
-        line = None
-        log_url = None
-        r = requests.get(suggestions_url, headers=self.headers)
-        if r.status_code != 200:
-            self.warning(f"FAILED to query Treeherder = {r} for {r.url}")
-        else:
+        line_number: int = None
+        line: str = None
+        log_url: str = None
+        suggestions: JSONType = self.cached_bug_suggestions(repo, revision, job_id)
+        if suggestions is not None:
+            paths: ListStr = []
             if anyjs is not None:
-                pathdir = os.path.dirname(path) + "/"
+                pathdir: str = os.path.dirname(path) + "/"
                 paths = [pathdir + f for f in anyjs.keys()]
             else:
                 paths = [path]
-            response = r.json()
-            if len(response) > 0:
-                for sugg in response:
+            if len(suggestions) > 0:
+                for sugg in suggestions:
                     for p in paths:
                         path_end = sugg.get("path_end", None)
                         # handles WPT short paths
@@ -1670,8 +1792,7 @@ class Skipfails:
                             line = sugg["search"]
                             log_url = f"https://treeherder.mozilla.org/logviewer?repo={repo}&job_id={job_id}&lineNumber={line_number}"
                             break
-        rv = (suggestions_url, line_number, line, log_url)
-        return rv
+        return (line_number, line, log_url)
 
     def read_json(self, filename):
         """read data as JSON from filename"""
@@ -1718,6 +1839,16 @@ class Skipfails:
 
     def write_json(self, filename, data):
         """saves data as JSON to filename"""
+        # ensure that (at most ONE) parent dir exists
+        parent = os.path.dirname(filename)
+        grandparent = os.path.dirname(parent)
+        if not os.path.isdir(grandparent):
+            raise NotADirectoryError(
+                f"write_json: grand parent directory does not exist for: {filename}"
+            )
+        if not os.path.isdir(parent):
+            self.vinfo(f"write_json: creating parent directory for: {filename}")
+            os.mkdir(parent)
         fp = open(filename, "w", encoding="utf-8")
         json.dump(data, fp, indent=2, sort_keys=True)
         fp.close()

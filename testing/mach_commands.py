@@ -1240,6 +1240,14 @@ def manifest(_command_context):
     help="Bugzilla instance [disable]",
 )
 @CommandArgument(
+    "-C",
+    "--clear-cache",
+    nargs="?",
+    const="all",
+    default=None,
+    help="clear cache REVISION (or all)",
+)
+@CommandArgument(
     "-c",
     "--carryover",
     action="store_true",
@@ -1307,7 +1315,6 @@ def manifest(_command_context):
 @CommandArgument(
     "-u",
     "--user-agent",
-    dest="user_agent",
     default=None,
     help="User-Agent to use for mozci if queries are forbidden from treeherder",
 )
@@ -1331,6 +1338,7 @@ def skipfails(
     user_agent=None,
     carryover=False,
     failure_ratio=0.4,
+    clear_cache=None,
 ):
     from skipfails import Skipfails
 
@@ -1345,6 +1353,7 @@ def skipfails(
         new_version,
         task_id,
         user_agent,
+        clear_cache,
     ).run(
         meta_bug_id,
         save_tasks,

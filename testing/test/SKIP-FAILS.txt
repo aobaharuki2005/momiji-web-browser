@@ -51,6 +51,8 @@ Sub Command Arguments:
   try_url               Treeherder URL for try (please use quotes)
   -b, --bugzilla BUGZILLA
                         Bugzilla instance [disable]
+  -C, --clear-cache [CLEAR_CACHE]
+                        clear cache REVISION (or all)
   -c, --carryover       Set carryover mode (only skip failures for platform
                         matches)
   -d, --dry-run         Determine manifest changes, but do not write them
@@ -131,7 +133,6 @@ Design
       expression will be created with `os_version == 14.70` which would then match
       what mozinfo says on the next try run.
 
-
 3. Bugzilla interaction
    a. The bugzilla instance will be set to (in increasing precedence):
       i. Default: "bugzilla.allizom.org"
@@ -173,6 +174,19 @@ Design
       platform (see above) of previous conditions. Does not perform any other
       manifest edits or bugzilla changes.
 
+5. Cache for skip-fails
+   At the top of the source tree is a cache directory for skip-fails:
+   ".skip_fails_cache". This directory will be created if it is not present.
+   When running skip-fails if --use-tasks has not been set then
+   the cache directory will be searched for a tasks file corresponding
+   the revision (i.e. ".skip_fails_cache/REVISION/tasks.json"). If
+   that file is present then it is used. Similarly for --use-failures.
+   If --save-tasks has not been set then, by default, the tasks will
+   be saved in the cache directory. Similarly for --save-failures.
+   Any specific cache directory can be cleared with --clear-cache REVISION.
+   All cache directories can be deleted with --clear-cache (no argument).
+   Any cache directories which are over 45 days old will be automatically
+   cleared.
 
 As design changes for skip-fails / TOML, notes will be added here.
 
