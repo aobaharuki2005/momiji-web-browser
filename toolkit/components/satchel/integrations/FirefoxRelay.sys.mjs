@@ -554,6 +554,10 @@ async function shouldShowRelay(origin) {
 
 class RelayOffered {
   async *autocompleteItemsAsync(origin, scenarioName, hasInput) {
+    const originOnDenyList = await shouldNotShowRelay(origin);
+    if (originOnDenyList) {
+      return;
+    }
     const hasFxA = await hasFirefoxAccountAsync();
     const showRelayOnAllowlistSiteToAllUsers =
       Services.prefs.getBoolPref(gConfig.showToAllBrowsersPref, false) &&
