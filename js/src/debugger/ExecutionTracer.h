@@ -509,8 +509,10 @@ class ValueSummaries {
                                IsNested nested);
   bool writeSetObjectSummary(JSContext* cx, JS::Handle<SetObject*> set,
                              IsNested nested);
-  bool writeMapObjectSummary(JSContext* cx, JS::Handle<MapObject*> set,
+  bool writeMapObjectSummary(JSContext* cx, JS::Handle<MapObject*> map,
                              IsNested nested);
+  bool writeErrorObjectSummary(JSContext* cx, JS::Handle<JSObject*> obj,
+                               JS::Handle<ErrorObject*> error, IsNested nested);
   bool writeGenericOrWrappedPrimitiveObjectSummary(
       JSContext* cx, JS::Handle<NativeObject*> nobj, IsNested nested);
   bool writeExternalObjectSummary(JSContext* cx, JS::Handle<NativeObject*> nobj,
