@@ -36,8 +36,8 @@ static nsresult SendBitmap(java::GeckoResult::Param aResult,
         gfx::IntSize(aDesiredLength, aDesiredLength),
         imgIContainer::FRAME_FIRST, imgIContainer::FLAG_ASYNC_NOTIFY);
   } else {
-    surface = aImage->GetFrame(
-        imgIContainer::FRAME_FIRST, imgIContainer::FLAG_ASYNC_NOTIFY);
+    surface = aImage->GetFrame(imgIContainer::FRAME_FIRST,
+                               imgIContainer::FLAG_ASYNC_NOTIFY);
   }
 
   NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
