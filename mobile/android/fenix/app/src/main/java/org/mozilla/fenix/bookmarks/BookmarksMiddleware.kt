@@ -246,7 +246,9 @@ internal class BookmarksMiddleware(
                                 if (result.isFailure) {
                                     reportResultGlobally(BookmarksGlobalResultReport.EditBookmarkFailed)
                                 } else {
-                                    lastSavedFolderCache.setGuid(it.parentGuid)
+                                    if (preReductionState.bookmarksEditBookmarkState.edited) {
+                                        lastSavedFolderCache.setGuid(it.parentGuid)
+                                    }
                                 }
                             }
                             context.store.tryDispatchLoadFor(preReductionState.currentFolder.guid)

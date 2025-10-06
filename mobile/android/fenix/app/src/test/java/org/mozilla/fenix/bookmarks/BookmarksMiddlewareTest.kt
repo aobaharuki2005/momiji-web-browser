@@ -36,6 +36,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyList
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -1694,6 +1695,26 @@ class BookmarksMiddlewareTest {
             verify(bookmarksStorage).deleteNode(folder.guid)
             verify(lastSavedFolderCache).setGuid(null)
         }
+
+    @Test
+    fun `GIVEN editing a bookmark WHEN edit fails THAN last saved location does not change`() = runTestOnMain {
+        val tree = generateBookmarkTree()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(Result.success(tree))
+        val bookmark = tree.children?.first { it.type == BookmarkNodeType.ITEM }!!
+        val bookmarkItem = BookmarkItem.Bookmark(title = bookmark.title!!, guid = bookmark.guid, url = bookmark.url!!, previewImageUrl = bookmark.url!!, position = bookmark.position)
+        `when`(bookmarksStorage.updateNode(eq(bookmark.guid), any())).thenReturn(Result.failure(IllegalStateException()))
+        `when`(lastSavedFolderCache.getGuid()).thenReturn(bookmark.parentGuid)
+
+        val middleware = buildMiddleware()
+        val store = middleware.makeStore()
+
+        store.dispatch(BookmarksListMenuAction.Bookmark.EditClicked(bookmarkItem))
+        store.dispatch(EditBookmarkAction.TitleChanged(""))
+        store.dispatch(BackClicked)
+
+        verify(lastSavedFolderCache, never()).setGuid(anyString())
+    }
 
     @Test
     fun `GIVEN editing a bookmark WHEN edit fails THEN result is reported`() = runTestOnMain {

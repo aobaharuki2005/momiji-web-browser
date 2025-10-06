@@ -128,6 +128,7 @@ private fun BookmarksState.handleEditBookmarkAction(action: EditBookmarkAction):
             bookmarksEditBookmarkState = bookmarksEditBookmarkState?.let {
                 it.copy(
                     bookmark = it.bookmark.copy(title = action.title),
+                    edited = true,
                 )
             },
         )
@@ -136,6 +137,7 @@ private fun BookmarksState.handleEditBookmarkAction(action: EditBookmarkAction):
             bookmarksEditBookmarkState = bookmarksEditBookmarkState?.let {
                 it.copy(
                     bookmark = it.bookmark.copy(url = action.url),
+                    edited = true,
                 )
             },
         )
@@ -266,7 +268,7 @@ private fun BookmarksState.updateSelectedFolder(folder: SelectFolderItem): Bookm
             )
         } else {
             alwaysTryUpdate.copy(
-                bookmarksEditBookmarkState = bookmarksEditBookmarkState.copy(folder = folder.folder),
+                bookmarksEditBookmarkState = bookmarksEditBookmarkState.copy(folder = folder.folder, edited = true),
             )
         }
     }

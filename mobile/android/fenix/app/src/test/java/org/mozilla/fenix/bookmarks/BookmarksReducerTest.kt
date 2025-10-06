@@ -583,6 +583,7 @@ class BookmarksReducerTest {
         val expected = state.copy(
             bookmarksEditBookmarkState = state.bookmarksEditBookmarkState?.copy(
                 folder = BookmarkItem.Folder("Nested 0", "guid0", null),
+                edited = true,
             ),
             bookmarksSelectFolderState = state.bookmarksSelectFolderState?.copy(
                 outerSelectionGuid = "guid0",
@@ -590,6 +591,39 @@ class BookmarksReducerTest {
         )
 
         assertEquals(expected, result)
+    }
+
+    @Test
+    fun `GIVEN a bookmark WHEN a edit is made THEN the edited state is persisted`() {
+        val bookmarkItem = generateBookmark()
+        val folderItem = SelectFolderItem(0, BookmarkItem.Folder("Bookmarks", "guid0", null))
+        var state = BookmarksState.default.copy(
+            bookmarkItems = listOf(bookmarkItem),
+            bookmarksSelectFolderState = BookmarksSelectFolderState(
+                outerSelectionGuid = "guid0",
+                folders = listOf(
+                    folderItem,
+                    SelectFolderItem(0, BookmarkItem.Folder("Nested 0", "guid0", null)),
+                ),
+            ),
+        )
+
+        state = bookmarksReducer(state = state, action = EditBookmarkClicked(bookmarkItem))
+        state = bookmarksReducer(state = state, action = EditBookmarkAction.URLChanged("1234"))
+
+        assertEquals(true, state.bookmarksEditBookmarkState?.edited)
+
+        state = bookmarksReducer(state = state, action = EditBookmarkClicked(bookmarkItem))
+        assertEquals(false, state.bookmarksEditBookmarkState?.edited)
+
+        state = bookmarksReducer(state = state, action = EditBookmarkAction.TitleChanged("1234"))
+        assertEquals(true, state.bookmarksEditBookmarkState?.edited)
+
+        state = bookmarksReducer(state = state, action = EditBookmarkClicked(bookmarkItem))
+        assertEquals(false, state.bookmarksEditBookmarkState?.edited)
+
+        state = bookmarksReducer(state = state, action = SelectFolderAction.ItemClicked(folderItem))
+        assertEquals(true, state.bookmarksEditBookmarkState?.edited)
     }
 
     @Test
