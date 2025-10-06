@@ -177,3 +177,22 @@ add_task(async function test_fetchWithHistory_propagates_stream_error() {
     sb.restore();
   }
 });
+
+add_task(async function test_getPromptIntent_basic() {
+  const cases = [
+    { prompt: "please search for news on firefox", expected: "search" },
+    { prompt: "Can you FIND me the docs for PageAssist?", expected: "search" }, // case-insensitive
+    { prompt: "look up the best pizza in SF", expected: "search" },
+    { prompt: "hello there, how are you?", expected: "chat" },
+    { prompt: "tell me a joke", expected: "chat" },
+  ];
+
+  for (const { prompt, expected } of cases) {
+    const intent = await SmartAssistEngine.getPromptIntent(prompt);
+    Assert.equal(
+      intent,
+      expected,
+      `getPromptIntent("${prompt}") should return "${expected}"`
+    );
+  }
+});
