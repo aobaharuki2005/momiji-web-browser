@@ -86,6 +86,9 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 
 ["browser_dbg-paused-overlay.js"]
 
+["browser_dbg-pretty-print-auto.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
+
 ["browser_dbg-pretty-print-breakpoints-columns.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 

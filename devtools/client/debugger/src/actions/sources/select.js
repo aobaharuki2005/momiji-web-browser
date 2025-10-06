@@ -6,13 +6,12 @@
  * Redux actions for the sources state
  * @module actions/sources
  */
-import { prettyPrintSource, prettyPrintAndSelectSource } from "./prettyPrint";
-import { addTab, closeTabForSource } from "../tabs";
+import { prettyPrintSource } from "./prettyPrint";
+import { addTab } from "../tabs";
 import { loadSourceText } from "./loadSourceText";
 import { setBreakableLines } from "./breakableLines";
-
 import { prefs } from "../../utils/prefs";
-import { isMinified } from "../../utils/source";
+
 import { createLocation } from "../../utils/location";
 import {
   getRelatedMapLocation,
@@ -24,15 +23,13 @@ import {
   getSource,
   getFirstSourceActorForGeneratedSource,
   getSourceByURL,
-  getPrettySource,
   getSelectedLocation,
   getShouldSelectOriginalLocation,
-  canPrettyPrintSource,
-  getSourceTextContentForLocation,
   tabExists,
   hasSource,
   hasSourceActor,
   isPrettyPrinted,
+  isPrettyPrintedDisabled,
   isSourceActorWithSourceMap,
   getSelectedTraceIndex,
 } from "../../selectors/index";
@@ -145,13 +142,27 @@ async function mayBeSelectMappedSource(location, keepContext, thunkArgs) {
   // In this case we don't follow the "should select original location",
   // we solely follow user decision to have pretty printed the source.
   const sourceIsPrettyPrinted = isPrettyPrinted(getState(), location.source);
-  if (!location.source.isOriginal && sourceIsPrettyPrinted) {
+  const shouldPrettyPrint =
+    !location.source.isOriginal &&
+    (sourceIsPrettyPrinted ||
+      (prefs.autoPrettyPrint &&
+        !isPrettyPrintedDisabled(getState(), location.source)));
+
+  if (shouldPrettyPrint) {
+    const isAutoPrettyPrinting =
+      !sourceIsPrettyPrinted && prefs.autoPrettyPrint;
     // Note that prettyPrintSource has already been called a bit before when this generated source has been added
     // but it is a slow operation and is most likely not resolved yet.
-    // prettyPrintSource uses memoization to avoid doing the operation more than once, while waiting from both callsites.
+    // `prettyPrintSource` uses memoization to avoid doing the operation more than once, while waiting from both callsites.
     const prettyPrintedSource = await dispatch(
-      prettyPrintSource(location.source)
+      prettyPrintSource({ source: location.source, isAutoPrettyPrinting })
     );
+
+    // Return to the current location if the source can't be pretty printed
+    if (!prettyPrintedSource) {
+      return { shouldSelectOriginalLocation, newLocation: location };
+    }
+
     // If we aren't selecting a particular location line will be 0 and column be undefined,
     // avoid calling getRelatedMapLocation which may not map to any original location.
     if (location.line == 0 && !location.column) {
@@ -310,22 +321,6 @@ export function selectLocation(
     if (!loadedSource) {
       // If there was a navigation while we were loading the loadedSource
       return;
-    }
-
-    const sourceTextContent = getSourceTextContentForLocation(
-      getState(),
-      location
-    );
-
-    if (
-      keepContext &&
-      prefs.autoPrettyPrint &&
-      !getPrettySource(getState(), loadedSource.id) &&
-      canPrettyPrintSource(getState(), location) &&
-      isMinified(source, sourceTextContent)
-    ) {
-      await dispatch(prettyPrintAndSelectSource(loadedSource));
-      dispatch(closeTabForSource(loadedSource));
     }
 
     // When we select a generated source which has a sourcemap,
