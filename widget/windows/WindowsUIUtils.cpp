@@ -1318,6 +1318,22 @@ void WindowsUIUtils::SetIsTitlebarCollapsed(HWND aWnd, bool aIsCollapsed) {
         ("Skipping SetIsTitlebarCollapsed() because mica is not available"));
     return;
   }
+  // This pref is only false on certain test runs (most notably
+  // opt-talos-xperf), the Windows App SDK fails calling
+  // DCompositionCreateDevice3() with ERROR_ACCESS_DENIED, and the code assumes
+  // it is going to succeed so it proceeds to crash deferencing null.
+  //
+  // We're not exactly sure why this is happening right now, but I'm pretty sure
+  // it's specific to how we're running Firefox on those test runs, and
+  // I don't think any users will run into this. So those tests pass the
+  // --disable-windowsappsdk command line argument to avoid using
+  // the Windows App SDK.
+  if (!StaticPrefs::widget_windows_windowsappsdk_enabled()) {
+    MOZ_LOG(gWindowsLog, LogLevel::Info,
+            ("Skipping SetIsTitlebarCollapsed() because "
+             "widget.windows.windowsappsdk.enabled is false"));
+    return;
+  }
   if (!InitializeWindowsAppSDKStatics()) {
     return;
   }
