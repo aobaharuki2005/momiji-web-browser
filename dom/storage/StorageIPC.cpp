@@ -1452,9 +1452,11 @@ BackgroundSessionStorageManager* SessionStorageManagerParent::GetManager()
 }
 
 mozilla::ipc::IPCResult SessionStorageManagerParent::RecvClearStorages(
-    const OriginAttributesPattern& aPattern, const nsACString& aOriginScope) {
+    const OriginAttributesPattern& aPattern, const nsACString& aOriginScope,
+    const uint32_t& aMode) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
-  mBackgroundManager->ClearStorages(aPattern, aOriginScope);
+  mBackgroundManager->ClearStorages(aPattern, aOriginScope,
+                                    static_cast<DomainMatchingMode>(aMode));
   return IPC_OK();
 }
 
