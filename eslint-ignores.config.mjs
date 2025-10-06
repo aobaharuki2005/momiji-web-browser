@@ -95,6 +95,7 @@ export default [
 
   // Ignore devtools generated code
   "devtools/**/*.snapshot.mjs",
+  "tools/profiler/tests/browser/browser_test_feature_jstracing_objtestutils.snapshot.mjs",
   "devtools/client/webconsole/test/node/fixtures/stubs/*.js",
   "!devtools/client/webconsole/test/node/fixtures/stubs/index.js",
   "devtools/client/shared/source-map-loader/test/browser/fixtures/*.js",
