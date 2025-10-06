@@ -35,6 +35,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteractio
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
 import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.toolbar.AutocompleteProvider
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
@@ -56,10 +57,13 @@ import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode.Normal
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode.Private
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppAction.QrScannerAction.QrScannerInputAvailable
+import org.mozilla.fenix.components.appstate.AppAction.QrScannerAction.QrScannerInputConsumed
 import org.mozilla.fenix.components.appstate.AppAction.QrScannerAction.QrScannerRequested
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
@@ -812,6 +816,110 @@ class BrowserToolbarSearchMiddlewareTest {
         val actions = store.state.editState.editActionsEnd
         assertTrue(actions.size == 1)
         assertEquals(expectedQrButton, actions.last())
+    }
+
+    @Test
+    fun `GIVEN QR scan while in normal browsing mode WHEN receiving a result THEN open it as a new normal tab`() {
+        val appStoreActionsCaptor = CaptureActionsMiddleware<AppState, AppAction>()
+        val appStore = AppStore(middlewares = listOf(appStoreActionsCaptor))
+        val browserUseCases: FenixBrowserUseCases = mockk(relaxed = true)
+        every { components.useCases.fenixBrowserUseCases } returns browserUseCases
+        val browsingModeManager: BrowsingModeManager = mockk(relaxed = true) {
+            every { mode } returns Normal
+        }
+        val (_, store) = buildMiddlewareAndAddToStore(
+            appStore = appStore,
+            components = components,
+            browsingModeManager = browsingModeManager,
+        )
+        store.dispatch(ToggleEditMode(true))
+        val qrScannerButton = store.state.editState.editActionsEnd.last() as ActionButtonRes
+
+        store.dispatch(qrScannerButton.onClick as BrowserToolbarEvent).joinBlocking()
+        appStore.dispatch(QrScannerInputAvailable("mozilla.test")).joinBlocking()
+        shadowOf(Looper.getMainLooper()).idle() // wait for observing and processing qr scan result
+
+        assertEquals("mozilla.test", store.state.editState.query)
+        appStoreActionsCaptor.assertLastAction(QrScannerInputConsumed::class)
+        verify {
+            browserUseCases.loadUrlOrSearch(
+                searchTermOrURL = "mozilla.test",
+                newTab = true,
+                flags = EngineSession.LoadUrlFlags.external(),
+                private = false,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN QR scan while in private browsing mode WHEN receiving a result THEN open it as a new private tab`() {
+        val appStoreActionsCaptor = CaptureActionsMiddleware<AppState, AppAction>()
+        val appStore = AppStore(middlewares = listOf(appStoreActionsCaptor))
+        val browserUseCases: FenixBrowserUseCases = mockk(relaxed = true)
+        every { components.useCases.fenixBrowserUseCases } returns browserUseCases
+        val browsingModeManager: BrowsingModeManager = mockk(relaxed = true) {
+            every { mode } returns Private
+        }
+        val (_, store) = buildMiddlewareAndAddToStore(
+            appStore = appStore,
+            components = components,
+            browsingModeManager = browsingModeManager,
+        )
+        store.dispatch(ToggleEditMode(true))
+        val qrScannerButton = store.state.editState.editActionsEnd.last() as ActionButtonRes
+
+        store.dispatch(qrScannerButton.onClick as BrowserToolbarEvent).joinBlocking()
+        appStore.dispatch(QrScannerInputAvailable("test.mozilla")).joinBlocking()
+        shadowOf(Looper.getMainLooper()).idle() // wait for observing and processing qr scan result
+
+        assertEquals("test.mozilla", store.state.editState.query)
+        appStoreActionsCaptor.assertLastAction(QrScannerInputConsumed::class)
+        verify {
+            browserUseCases.loadUrlOrSearch(
+                searchTermOrURL = "test.mozilla",
+                newTab = true,
+                flags = EngineSession.LoadUrlFlags.external(),
+                private = true,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN QR scan starteds from browser WHEN receiving a result THEN open it in the same tab`() {
+        val appStoreActionsCaptor = CaptureActionsMiddleware<AppState, AppAction>()
+        val appStore = AppStore(
+            initialState = AppState(
+                searchState = AppSearchState.EMPTY.copy(sourceTabId = "test"),
+            ),
+            middlewares = listOf(appStoreActionsCaptor),
+        )
+        val browserUseCases: FenixBrowserUseCases = mockk(relaxed = true)
+        every { components.useCases.fenixBrowserUseCases } returns browserUseCases
+        val browsingModeManager: BrowsingModeManager = mockk(relaxed = true) {
+            every { mode } returns Normal
+        }
+        val (_, store) = buildMiddlewareAndAddToStore(
+            appStore = appStore,
+            components = components,
+            browsingModeManager = browsingModeManager,
+        )
+        store.dispatch(ToggleEditMode(true))
+        val qrScannerButton = store.state.editState.editActionsEnd.last() as ActionButtonRes
+
+        store.dispatch(qrScannerButton.onClick as BrowserToolbarEvent).joinBlocking()
+        appStore.dispatch(QrScannerInputAvailable("test.com")).joinBlocking()
+        shadowOf(Looper.getMainLooper()).idle() // wait for observing and processing qr scan result
+
+        assertEquals("test.com", store.state.editState.query)
+        appStoreActionsCaptor.assertLastAction(QrScannerInputConsumed::class)
+        verify {
+            browserUseCases.loadUrlOrSearch(
+                searchTermOrURL = "test.com",
+                newTab = false,
+                flags = EngineSession.LoadUrlFlags.external(),
+                private = false,
+            )
+        }
     }
 
     @Test

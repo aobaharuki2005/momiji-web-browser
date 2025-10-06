@@ -522,7 +522,7 @@ class BrowserToolbarSearchMiddleware(
                             searchTermOrURL = it.qrScannerState.lastScanData,
                             newTab = appStore.state.searchState.sourceTabId == null,
                             flags = EngineSession.LoadUrlFlags.external(),
-                            private = false,
+                            private = environment?.browsingModeManager?.mode == Private,
                         )
                         environment?.navController?.navigate(
                             resId = R.id.browserFragment,
