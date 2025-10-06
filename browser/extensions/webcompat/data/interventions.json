@@ -5455,5 +5455,20 @@
         "ua_string": ["add_Chrome"]
       }
     ]
+  },
+  "1991388": {
+    "label": "gismeteo.ru",
+    "bugs": {
+      "1991388": {
+        "issue": "desktop-layout-not-mobile",
+        "matches": ["*://gismeteo.ru/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
   }
 }
