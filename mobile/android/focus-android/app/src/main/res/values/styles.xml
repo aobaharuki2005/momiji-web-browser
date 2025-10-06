@@ -301,6 +301,8 @@
 
     <style name="App.Widget.Switch" parent="Widget.Material3.CompoundButton.Switch">
         <item name="android:theme">@style/SwitchTheme</item>
+        <item name="thumbTint">@color/thumb_color_selector</item>
+        <item name="trackTint">@color/track_color_selector</item>
     </style>
 
     <style name="SwitchTheme" parent="Theme.AppCompat.Light">
