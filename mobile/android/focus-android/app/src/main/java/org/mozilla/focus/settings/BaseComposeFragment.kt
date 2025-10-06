@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@file:Suppress("UnusedMaterialScaffoldPaddingParameter")
-
 package org.mozilla.focus.settings
 
 import android.os.Bundle
@@ -97,17 +95,19 @@ abstract class BaseComposeFragment : Fragment() {
             FocusTheme {
                 Scaffold(
                     modifier = Modifier.systemBarsPadding(),
+                    topBar = {
+                        FocusTopAppBar(
+                            title = title,
+                            modifier = Modifier,
+                            onNavigateUpClick = onNavigateUp(),
+                        )
+                    },
                 ) { paddingValues ->
                     Column(
                         modifier = Modifier
                             .background(colorResource(id = backgroundColorResource))
                             .padding(paddingValues),
                     ) {
-                        FocusTopAppBar(
-                            title = title,
-                            modifier = Modifier,
-                            onNavigateUpClick = onNavigateUp(),
-                        )
                         this@BaseComposeFragment.Content()
                     }
                 }
