@@ -37,14 +37,13 @@ from mozci.push import Push
 from mozci.task import Optional, TestTask
 from mozci.util.taskcluster import get_task
 from mozinfo.platforminfo import PlatformInfo
+from taskcluster.exceptions import TaskclusterRestFailure
 from wpt_path_utils import (
     WPT_META0,
     WPT_META0_CLASSIC,
     parse_wpt_path,
 )
 from yaml import load
-
-from taskcluster.exceptions import TaskclusterRestFailure
 
 # Use faster LibYAML, if installed: https://pyyaml.org/wiki/PyYAMLDocumentation
 try:
