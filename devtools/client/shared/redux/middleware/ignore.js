@@ -21,11 +21,11 @@ function ignore({ getState }) {
     }
 
     if (getState()[IGNORING]) {
-      // We only print the action type, and not the whole action object, as it can holds
-      // very complex data that would clutter stdout logs and make them impossible
-      // to parse for treeherder.
-      console.warn("IGNORED REDUX ACTION:", action.type);
-      return null;
+      // Throw to stop execution from the callsite and prevent any further code from running
+      throw new Error(
+        "[REDUX_MIDDLEWARE_IGNORED_REDUX_ACTION] Dispatching '" + action.type ||
+          action + "' action after panel's closing"
+      );
     }
 
     return next(action);

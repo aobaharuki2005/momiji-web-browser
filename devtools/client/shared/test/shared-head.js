@@ -19,6 +19,15 @@ for (const pref of devtoolsPreferences.getChildList("")) {
   }
 }
 
+{
+  const { PromiseTestUtils } = ChromeUtils.importESModule(
+    "resource://testing-common/PromiseTestUtils.sys.mjs"
+  );
+  PromiseTestUtils.allowMatchingRejectionsGlobally(
+    /REDUX_MIDDLEWARE_IGNORED_REDUX_ACTION/
+  );
+}
+
 async function resetPreferencesModifiedDuringTest() {
   if (!isXpcshell) {
     await SpecialPowers.flushPrefEnv();
