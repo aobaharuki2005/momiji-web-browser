@@ -9910,6 +9910,7 @@ void nsWindow::OnUnmap() {
   {
     MutexAutoLock lock(mWindowVisibilityMutex);
     mIsMapped = false;
+    mHasReceivedSizeAllocate = false;
 
     if (mSourceDragContext) {
       static auto sGtkDragCancel =
