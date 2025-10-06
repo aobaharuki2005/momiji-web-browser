@@ -20,6 +20,19 @@
 //=========================================================================
 // WasmStructObject inlineable allocation methods
 
+// Maximum size of trailer block to allocate directly in the nursery.
+//
+// For objects that die in the nursery, direct nursery allocation is faster and
+// is better for cache locality. For objects that survive, direct nursery
+// allocation incurs the overhead of copying the data. This parameter should be
+// chosen to balance these based on the expected allocation sizes and tenuring
+// rates in workloads we care about.
+//
+// This is set to a lower value than the default (Nursery::MaxNurseryBufferSize)
+// because we tend to get higher tenuring rates in Wasm GC benchmarks.
+static constexpr size_t MaxNurseryTrailerSize = 256;
+static_assert(MaxNurseryTrailerSize < js::gc::ChunkSize);
+
 namespace js {
 
 /* static */
@@ -94,25 +107,19 @@ MOZ_ALWAYS_INLINE WasmStructObject* WasmStructObject::createStructOOL(
   MOZ_ASSERT(inlineBytes == WasmStructObject_MaxInlineBytes);
   MOZ_ASSERT(outlineBytes > 0);
 
-  // Allocate the outline data area before allocating the object so that we can
-  // infallibly initialize the outline data area.
-  Nursery& nursery = cx->nursery();
-  PointerAndUint7 outlineData =
-      nursery.mallocedBlockCache().alloc(outlineBytes);
-  if (MOZ_UNLIKELY(!outlineData.pointer())) {
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
-
   // See corresponding comment in WasmArrayObject::createArray.
   Rooted<WasmStructObject*> structObj(cx);
   structObj = (WasmStructObject*)cx->newCell<WasmGcObject>(
       typeDefData->allocKind, initialHeap, typeDefData->clasp, allocSite);
   if (MOZ_UNLIKELY(!structObj)) {
     ReportOutOfMemory(cx);
-    if (outlineData.pointer()) {
-      nursery.mallocedBlockCache().free(outlineData);
-    }
+    return nullptr;
+  }
+
+  uint8_t* outlineData = AllocateCellBuffer<uint8_t>(
+      cx, structObj, outlineBytes, MaxNurseryTrailerSize);
+  if (MOZ_UNLIKELY(!outlineData)) {
+    structObj->outlineData_ = nullptr;
     return nullptr;
   }
 
@@ -121,24 +128,10 @@ MOZ_ALWAYS_INLINE WasmStructObject* WasmStructObject::createStructOOL(
   structObj->superTypeVector_ = typeDefData->superTypeVector;
 
   // Initialize the outline data fields
-  structObj->outlineData_ = (uint8_t*)outlineData.pointer();
+  structObj->outlineData_ = outlineData;
   if constexpr (ZeroFields) {
     memset(structObj->inlineData(), 0, inlineBytes);
-    memset(outlineData.pointer(), 0, outlineBytes);
-  }
-
-  if (MOZ_LIKELY(js::gc::IsInsideNursery(structObj))) {
-    // See corresponding comment in WasmArrayObject::createArrayNonEmpty.
-    if (MOZ_UNLIKELY(!nursery.registerTrailer(outlineData, outlineBytes))) {
-      nursery.mallocedBlockCache().free(outlineData);
-      ReportOutOfMemory(cx);
-      return nullptr;
-    }
-  } else {
-    // See corresponding comment in WasmArrayObject::createArrayNonEmpty.
-    MOZ_ASSERT(structObj->isTenured());
-    AddCellMemory(structObj, outlineBytes + wasm::TrailerBlockOverhead,
-                  MemoryUse::WasmTrailerBlock);
+    memset(outlineData, 0, outlineBytes);
   }
 
   MOZ_ASSERT(typeDefData->clasp->shouldDelayMetadataBuilder());

@@ -554,29 +554,16 @@ void WasmStructObject::obj_trace(JSTracer* trc, JSObject* object) {
         reinterpret_cast<AnyRef*>(structObj.inlineData() + offset);
     TraceManuallyBarrieredEdge(trc, fieldPtr, "wasm-struct-field");
   }
-  for (uint32_t offset : structType.outlineTraceOffsets_) {
-    AnyRef* fieldPtr =
-        reinterpret_cast<AnyRef*>(structObj.outlineData_ + offset);
-    TraceManuallyBarrieredEdge(trc, fieldPtr, "wasm-struct-field");
-  }
-}
 
-/* static */
-void WasmStructObject::obj_finalize(JS::GCContext* gcx, JSObject* object) {
-  // See corresponding comments in WasmArrayObject::obj_finalize.
-  WasmStructObject& structObj = object->as<WasmStructObject>();
   if (structObj.outlineData_) {
-    js_free(structObj.outlineData_);
-    const TypeDef& typeDef = structObj.typeDef();
-    MOZ_ASSERT(typeDef.isStructType());
-    uint32_t totalBytes = typeDef.structType().size_;
-    uint32_t inlineBytes, outlineBytes;
-    WasmStructObject::getDataByteSizes(totalBytes, &inlineBytes, &outlineBytes);
-    MOZ_ASSERT(inlineBytes == WasmStructObject_MaxInlineBytes);
-    MOZ_ASSERT(outlineBytes > 0);
-    gcx->removeCellMemory(&structObj, outlineBytes + TrailerBlockOverhead,
-                          MemoryUse::WasmTrailerBlock);
-    structObj.outlineData_ = nullptr;
+    TraceBufferEdge(trc, &structObj, &structObj.outlineData_,
+                    "WasmStructObject outline data");
+
+    for (uint32_t offset : structType.outlineTraceOffsets_) {
+      AnyRef* fieldPtr =
+          reinterpret_cast<AnyRef*>(structObj.outlineData_ + offset);
+      TraceManuallyBarrieredEdge(trc, fieldPtr, "wasm-struct-field");
+    }
   }
 }
 
@@ -593,9 +580,8 @@ size_t WasmStructObject::obj_moved(JSObject* obj, JSObject* old) {
     WasmStructObject::getDataByteSizes(totalBytes, &inlineBytes, &outlineBytes);
     MOZ_ASSERT(inlineBytes == WasmStructObject_MaxInlineBytes);
     MOZ_ASSERT(outlineBytes > 0);
-    nursery.trackTrailerOnPromotion(structObj.outlineData_, obj, outlineBytes,
-                                    TrailerBlockOverhead,
-                                    MemoryUse::WasmTrailerBlock);
+    nursery.maybeMoveBufferOnPromotion(&structObj.outlineData_, obj,
+                                       outlineBytes);
   }
 
   return 0;
@@ -627,11 +613,11 @@ static const JSClassOps WasmStructObjectOutlineClassOps = {
     nullptr, /* delProperty */
     nullptr, /* enumerate   */
     WasmGcObject::obj_newEnumerate,
-    nullptr,                        /* resolve     */
-    nullptr,                        /* mayResolve  */
-    WasmStructObject::obj_finalize, /* finalize    */
-    nullptr,                        /* call        */
-    nullptr,                        /* construct   */
+    nullptr, /* resolve     */
+    nullptr, /* mayResolve  */
+    nullptr, /* finalize    */
+    nullptr, /* call        */
+    nullptr, /* construct   */
     WasmStructObject::obj_trace,
 };
 static const ClassExtension WasmStructObjectOutlineClassExt = {
@@ -639,8 +625,7 @@ static const ClassExtension WasmStructObjectOutlineClassExt = {
 };
 const JSClass WasmStructObject::classOutline_ = {
     "WasmStructObject",
-    JSClass::NON_NATIVE | JSCLASS_DELAY_METADATA_BUILDER |
-        JSCLASS_BACKGROUND_FINALIZE | JSCLASS_SKIP_NURSERY_FINALIZE,
+    JSClass::NON_NATIVE | JSCLASS_DELAY_METADATA_BUILDER,
     &WasmStructObjectOutlineClassOps,
     JS_NULL_CLASS_SPEC,
     &WasmStructObjectOutlineClassExt,
