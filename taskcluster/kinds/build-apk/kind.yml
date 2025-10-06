@@ -22,13 +22,6 @@ task-defaults:
         path: '/builds/worker/workspace/obj-build/gradle/build/mobile/android/{source_project_name}/app/outputs/apk/{gradle_build}/{gradle_build_type}/{fileName}'
     attributes:
         build_platform: android
-    worker:
-        artifacts:
-            - path: /builds/worker/perfherder-data-apk-size.json
-              name: public/build/perfherder-data-apk-size.json
-              type: file
-        env:
-            MOZ_PERFHERDER_UPLOAD: /builds/worker/perfherder-data-apk-size.json
 
 tasks:
     focus-debug:
@@ -78,6 +71,13 @@ tasks:
         treeherder:
             symbol: fenix-debug(Bf)
             platform: fenix-android-all/opt
+        worker:
+            artifacts:
+                - path: /builds/worker/perfherder-data-apk-size.json
+                  name: public/build/perfherder-data-apk-size.json
+                  type: file
+            env:
+                MOZ_PERFHERDER_UPLOAD: /builds/worker/perfherder-data-apk-size.json
 
     focus-release:
         description: 'Release Focus build'
@@ -148,6 +148,13 @@ tasks:
         treeherder:
             symbol: fenix-release(Bf)
             platform: fenix-android-all/opt
+        worker:
+            artifacts:
+                - path: /builds/worker/perfherder-data-apk-size.json
+                  name: public/build/perfherder-data-apk-size.json
+                  type: file
+            env:
+                MOZ_PERFHERDER_UPLOAD: /builds/worker/perfherder-data-apk-size.json
 
     focus-nightly:
         description: 'Nightly focus build'
@@ -195,6 +202,13 @@ tasks:
         treeherder:
             symbol: fenix-nightly(B)
             platform: fenix-android-all/opt
+        worker:
+            artifacts:
+                - path: /builds/worker/perfherder-data-apk-size.json
+                  name: public/build/perfherder-data-apk-size.json
+                  type: file
+            env:
+                MOZ_PERFHERDER_UPLOAD: /builds/worker/perfherder-data-apk-size.json
 
     focus-beta:
         description: 'Beta focus build'
@@ -244,6 +258,13 @@ tasks:
         treeherder:
             symbol: fenix-beta(B)
             platform: fenix-android-all/opt
+        worker:
+            artifacts:
+                - path: /builds/worker/perfherder-data-apk-size.json
+                  name: public/build/perfherder-data-apk-size.json
+                  type: file
+            env:
+                MOZ_PERFHERDER_UPLOAD: /builds/worker/perfherder-data-apk-size.json
 
     focus-nightly-firebase:
         attributes:
