@@ -4,6 +4,7 @@
 
 
 import os
+import pathlib
 import sys
 import time
 
@@ -69,6 +70,16 @@ def _write_perfherder_data(lower_is_better):
             ],
         }
         print(f"PERFHERDER_DATA: {json.dumps(perfherder_data)}", file=sys.stderr)
+        perfherder_path = os.environ.get("MOZ_PERFHERDER_UPLOAD")
+        if perfherder_path:
+            upload_path = pathlib.Path(perfherder_path)
+        else:
+            upload_dir = os.environ.get("MOZ_UPLOAD_DIR")
+            upload_path = pathlib.Path(upload_dir) / "perfherder-data-bugbug.json"
+
+        upload_path.parent.mkdir(parents=True, exist_ok=True)
+        with upload_path.open("w", encoding="utf-8") as f:
+            json.dump(perfherder_data, f)
 
 
 @memoize
