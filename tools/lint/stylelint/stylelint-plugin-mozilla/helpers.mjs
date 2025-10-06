@@ -10,6 +10,13 @@ import valueParser from "postcss-value-parser";
 import { tokensTable } from "../../../../toolkit/themes/shared/design-system/tokens-table.mjs";
 
 /**
+ * Allows rules to access the tokens table without hard-coding the import path in multiple files.
+ *
+ * @returns {object}
+ */
+export const getTokensTable = () => tokensTable;
+
+/**
  * Our namespace used to prefix Mozilla stylelint rules.
  */
 const MOZILLA_NAMESPACE = "stylelint-plugin-mozilla";
