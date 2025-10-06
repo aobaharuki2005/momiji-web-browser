@@ -1551,6 +1551,18 @@ def target_tasks_perftest(full_task_graph, parameters, graph_config):
             yield name
 
 
+@register_target_task("perftest-fenix-startup")
+def target_tasks_perftest_fenix_startup(full_task_graph, parameters, graph_config):
+    """
+    Select perftest tasks we want to run daily for fenix startup
+    """
+    for name, task in full_task_graph.tasks.items():
+        if task.kind != "perftest":
+            continue
+        if "fenix" in name and "startup" in name and "simpleperf" not in name:
+            yield name
+
+
 @register_target_task("perftest-on-autoland")
 def target_tasks_perftest_autoland(full_task_graph, parameters, graph_config):
     """
