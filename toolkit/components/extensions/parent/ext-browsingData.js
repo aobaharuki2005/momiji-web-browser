@@ -216,10 +216,7 @@ const clearLocalStorage = async function (options) {
         Ci.nsIClearBySiteEntry
       );
 
-      //TODO: currently, passing cookieStoreId with empty hostname is not supported because
-      // CreateReversedDomain will reject empty string.
       entry.schemelessSite = hostname || "";
-
       entry.patternJSON = cookieStoreId
         ? JSON.stringify(
             getOriginAttributesPatternForCookieStoreId(cookieStoreId)
