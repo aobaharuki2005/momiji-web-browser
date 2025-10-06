@@ -7,7 +7,7 @@
 const BAD_LISTENER = "The event listener must be a function.";
 
 const eventListeners = Symbol("EventEmitter/listeners");
-const onceOriginalListener = Symbol("EventEmitter/once-original-listener");
+const onceResolvers = Symbol("EventEmitter/once-resolvers");
 loader.lazyRequireGetter(this, "flags", "resource://devtools/shared/flags.js");
 
 class EventEmitter {
@@ -92,21 +92,7 @@ class EventEmitter {
       // If the listeners list contains the listener given, we just remove it.
       if (listenersForType.has(listener)) {
         listenersForType.delete(listener);
-      } else {
-        // If it's not present, there is still the possibility that the listener
-        // have been added using `once`, since the method wraps the original listener
-        // in another function.
-        // So we iterate all the listeners to check if any of them is a wrapper to
-        // the `listener` given.
-        for (const value of listenersForType.values()) {
-          if (
-            onceOriginalListener in value &&
-            value[onceOriginalListener] === listener
-          ) {
-            listenersForType.delete(value);
-            break;
-          }
-        }
+        delete listener[onceResolvers];
       }
     } else if (length === 2) {
       // No listener was given, it means we're removing all the listeners from
@@ -145,29 +131,14 @@ class EventEmitter {
    * @return {Promise}
    *    The promise resolved once the event `type` is emitted.
    */
-  static once(target, type, listener, options) {
-    return new Promise(resolve => {
-      // This is the actual listener that will be added to the target's listener, it wraps
-      // the call to the original `listener` given.
-      const newListener = (first, ...rest) => {
-        // To prevent side effects we're removing the listener upfront.
-        EventEmitter.off(target, type, newListener);
-
-        let rv;
-        if (listener) {
-          rv = listener.call(target, first, ...rest);
-        }
-
-        // We resolve the promise once the listener is called.
-        resolve(first);
-
-        // Listeners may return a promise, so pass it along
-        return rv;
-      };
-
-      newListener[onceOriginalListener] = listener;
-      EventEmitter.on(target, type, newListener, options);
-    });
+  static once(target, type, listener = function () {}, options) {
+    const { promise, resolve } = Promise.withResolvers();
+    if (!listener[onceResolvers]) {
+      listener[onceResolvers] = [];
+    }
+    listener[onceResolvers].push(resolve);
+    EventEmitter.on(target, type, listener, options);
+    return promise;
   }
 
   static emit(target, type, ...rest) {
@@ -223,7 +194,23 @@ class EventEmitter {
       // event handler we're going to fire wasn't removed.
       if (listeners && listeners.has(listener)) {
         try {
+          // If this was a one-off listener (add via `EventEmitter.once`), unregister the
+          // listener right away, before firing the listener, to prevent re-entry in case
+          // the listener fires the same event again.
+          const resolvers = listener[onceResolvers];
+          if (resolvers) {
+            EventEmitter.off(target, type, listener);
+          }
           const promise = listener.apply(target, args);
+          // Resolve the promise returned by `EventEmitter.once` only after having called
+          // the listener.
+          if (resolvers) {
+            for (const resolver of resolvers) {
+              // Resolve with the first argument fired on the listened event
+              // (`EventEmitter.once` listeners don't have access to all the other arguments).
+              resolver(args[0]);
+            }
+          }
           if (async) {
             // Assert the name instead of `constructor != Promise` in order
             // to avoid cross compartment issues where Promise can be multiple.
