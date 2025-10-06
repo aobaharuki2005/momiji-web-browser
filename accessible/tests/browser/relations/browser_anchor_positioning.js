@@ -567,3 +567,52 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true }
 );
+
+/**
+ * Test multi columns colspan
+ */
+addAccessibleTask(
+  `
+<style>
+  .columns {
+    column-count: 2;
+    column-fill: auto;
+  }
+
+  .colspan {
+    column-span: all;
+  }
+
+  .spacer {
+    height: 10px;
+  }
+
+  #anchor {
+    anchor-name: --a1;
+    margin-left: 10px;
+    width: 40px;
+  }
+
+  #target {
+    position: absolute;
+    left: anchor(--a1 left);
+    top: anchor(--a1 top);
+    width: 150px;
+    height: 60px;
+  }
+</style>
+
+<div class="columns">
+  <div id="target" role="group"></div>
+  <div id="anchor" role="group">
+    <div class="spacer"></div>
+    <div class="colspan" style="height: 20px"></div>
+  </div>
+</div>`,
+  async function testTooltipPositionAnchor(browser, docAcc) {
+    const anchor = findAccessibleChildByID(docAcc, "anchor");
+    const target = findAccessibleChildByID(docAcc, "target");
+    await testDetailsRelations(anchor, target);
+  },
+  { chrome: true, topLevel: true }
+);

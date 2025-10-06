@@ -725,6 +725,12 @@ nsIFrame* nsCoreUtils::GetPositionedFrameForAnchor(
         // from anchor to positioned frame.
         const auto* referencedAnchors =
             frame->GetProperty(nsIFrame::AnchorPosReferences());
+        if (!referencedAnchors) {
+          // Depending on where we are in the reflow, this property may or may
+          // not be set. If it isn't set, a future reflow will set it, so we can
+          // just skip this frame for now.
+          continue;
+        }
         const auto* data = referencedAnchors->Lookup(name.AsAtom());
         if (data && *data && data->ref().mOrigin) {
           if (aAnchorFrame ==
