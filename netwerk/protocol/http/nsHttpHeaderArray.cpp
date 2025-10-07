@@ -43,14 +43,17 @@ nsresult nsHttpHeaderArray::SetHeader(
   MOZ_ASSERT(
       (variety == eVarietyResponse) || (variety == eVarietyRequestDefault) ||
           (variety == eVarietyRequestOverride) ||
+          (variety == eVarietyResponseOverride) ||
           (variety == eVarietyRequestEnforceDefault),
       "Net original headers can only be set using SetHeader_internal().");
 
   nsEntry* entry = nullptr;
   int32_t index = LookupEntry(header, &entry);
 
-  // If an empty value is received and we aren't merging headers discard it
-  if (value.IsEmpty() && header != nsHttp::X_Frame_Options) {
+  // If an empty value is received and we aren't merging headers discard it,
+  // unless we're overriding
+  if (value.IsEmpty() && header != nsHttp::X_Frame_Options &&
+      variety != eVarietyResponseOverride) {
     if (!merge && entry) {
       if (entry->variety == eVarietyResponseNetOriginalAndResponse) {
         MOZ_ASSERT(variety == eVarietyResponse);
@@ -79,7 +82,8 @@ nsresult nsHttpHeaderArray::SetHeader(
   if (!IsIgnoreMultipleHeader(header)) {
     // Replace the existing string with the new value
     if (entry->variety == eVarietyResponseNetOriginalAndResponse) {
-      MOZ_ASSERT(variety == eVarietyResponse);
+      MOZ_ASSERT(variety == eVarietyResponse ||
+                 variety == eVarietyResponseOverride);
       entry->variety = eVarietyResponseNetOriginal;
       return SetHeader_internal(header, headerName, value, variety);
     }
