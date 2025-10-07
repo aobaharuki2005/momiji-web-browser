@@ -290,6 +290,7 @@ for (const type of [
   "WALLPAPER_CLICK",
   "WALLPAPER_REMOVE_UPLOAD",
   "WALLPAPER_UPLOAD",
+  "WEATHER_DETECT_LOCATION",
   "WEATHER_IMPRESSION",
   "WEATHER_LOAD_ERROR",
   "WEATHER_LOCATION_DATA_UPDATE",
@@ -2053,6 +2054,7 @@ const LinkMenuOptions = {
     action: actionCreators.AlsoToMain({
       type: actionTypes.WEATHER_USER_OPT_IN_LOCATION,
     }),
+    userEvent: "WEATHER_DETECT_LOCATION",
   }),
   ChangeWeatherDisplaySimple: () => ({
     id: "newtab-weather-menu-change-weather-display-simple",

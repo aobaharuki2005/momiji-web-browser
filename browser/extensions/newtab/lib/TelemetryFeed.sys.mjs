@@ -751,6 +751,12 @@ export class TelemetryFeed {
         });
         break;
       }
+      case "WEATHER_DETECT_LOCATION": {
+        Glean.newtab.weatherDetectLocation.record({
+          newtab_visit_id: session.session_id,
+        });
+        break;
+      }
     }
   }
 
