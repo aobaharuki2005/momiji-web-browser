@@ -24,6 +24,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
+#include "Dictionary.h"
 
 static inline uint32_t PRTimeToSeconds(PRTime t_usec) {
   return uint32_t(t_usec / PR_USEC_PER_SEC);
@@ -129,6 +130,8 @@ class CacheEntry final : public nsIRunnable,
   void SetRegistered(bool aRegistered);
 
   TimeStamp const& LoadStart() const { return mLoadStart; }
+
+  void SetDictionary(DictionaryCacheEntry* aDict) { mDict = aDict; }
 
   enum EPurge {
     PURGE_DATA_ONLY_DISK_BACKED,
@@ -426,6 +429,8 @@ class CacheEntry final : public nsIRunnable,
   nsCOMPtr<nsITransportSecurityInfo> mSecurityInfo;
   mozilla::TimeStamp mLoadStart;
   uint32_t mUseCount{0};
+
+  RefPtr<DictionaryCacheEntry> mDict;
 
   const uint64_t mCacheEntryId;
 };

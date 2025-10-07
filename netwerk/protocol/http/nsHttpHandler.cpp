@@ -670,8 +670,11 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
     if (NS_FAILED(rv)) {
       return rv;
     }
+    LOG(("Setting Accept-Encoding: %s",
+         PromiseFlatCString(mDictionaryAcceptEncodings).get()));
 
-    LOG(("Found dictionary %s", PromiseFlatCString(dict->GetHash()).get()));
+    LOG(("Setting Available-Dictionary: %s",
+         PromiseFlatCString(dict->GetHash()).get()));
     rv = aRequest->SetHeader(nsHttp::Available_Dictionary, dict->GetHash(),
                              false, nsHttpHeaderArray::eVarietyRequestOverride);
     if (NS_FAILED(rv)) {
@@ -683,6 +686,8 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
       if (NS_FAILED(rv)) {
         return rv;
       }
+      LOG(("Setting Dictionary-Id: %s",
+           PromiseFlatCString(dict->GetId()).get()));
     }
     // Need to retain access to the dictionary until the request completes.
     // Note that this includes if the dictionary we offered gets replaced
