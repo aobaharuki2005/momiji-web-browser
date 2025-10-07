@@ -110,6 +110,8 @@ class StructuredOutputParser(OutputParser):
             SystemResourceMonitor.test_status(data)
         elif action == "log":
             SystemResourceMonitor.test_status(data)
+        elif action == "process_output":
+            SystemResourceMonitor.test_status(data)
         elif action == "suite_start":
             SystemResourceMonitor.begin_marker("suite", data["source"])
         elif action == "suite_end":
