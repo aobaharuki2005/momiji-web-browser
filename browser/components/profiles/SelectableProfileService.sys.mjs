@@ -1369,6 +1369,13 @@ class SelectableProfileServiceClass extends EventEmitter {
             profileId: lazy.ExperimentAPI.profileId,
           }
         );
+
+        await db.execute(
+          "DELETE FROM NimbusSyncTimestamps WHERE profileId = :profileId;",
+          {
+            profileId: lazy.ExperimentAPI.profileId,
+          }
+        );
       }
     );
 
