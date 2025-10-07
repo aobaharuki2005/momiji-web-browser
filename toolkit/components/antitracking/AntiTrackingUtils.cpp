@@ -626,7 +626,7 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
   // access could be granted using Storage-Access-Headers. And granting it
   // if instructed by the server via the "Activate-Storage-Access"-header.
   // Storage-Access headers are only sent in secure context
-  if(!nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(trackingURI)) {
+  if (!nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(trackingURI)) {
     return nsILoadInfo::NoStoragePermission;
   }
 
