@@ -11002,6 +11002,21 @@
   value: false
   mirror: always
 
+# Determines how we snap css outline-offset:
+#   0: No snapping (historical behavior)
+#   1: Always snap as border-width (proposed behavior in
+#      https://github.com/w3c/csswg-drafts/issues/12906)
+#   2: The above, but only on chrome code, for now.
+- name: layout.css.outline-offset.snapping
+  type: RelaxedAtomicInt32
+#ifdef NIGHTLY_BUILD
+  value: 1
+#else
+  value: 2
+#endif
+  mirror: always
+  rust: true
+
 - name: layout.visibility.min-recompute-interval-ms
   type: uint32_t
   value: 1000

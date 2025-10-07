@@ -1290,7 +1290,7 @@ void Theme::PaintAutoStyleOutline(nsIFrame* aFrame,
                                   const LayoutDeviceRect& aRect,
                                   const Colors& aColors, DPIRatio aDpiRatio) {
   const nscoord a2d = aFrame->PresContext()->AppUnitsPerDevPixel();
-  const auto cssOffset = aFrame->StyleOutline()->mOutlineOffset.ToAppUnits();
+  const auto cssOffset = aFrame->StyleOutline()->mOutlineOffset;
 
   LayoutDeviceRect rect(aRect);
   auto devOffset = LayoutDevicePixel::FromAppUnits(cssOffset, a2d);

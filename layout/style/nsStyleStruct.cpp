@@ -552,7 +552,7 @@ nsChangeHint nsStyleBorder::CalcDifference(
 
 nsStyleOutline::nsStyleOutline()
     : mOutlineWidth(kMediumBorderWidth),
-      mOutlineOffset({0.0f}),
+      mOutlineOffset(0),
       mOutlineColor(StyleColor::CurrentColor()),
       mOutlineStyle(StyleOutlineStyle::BorderStyle(StyleBorderStyle::None)),
       mActualOutlineWidth(0) {
@@ -596,8 +596,7 @@ nsChangeHint nsStyleOutline::CalcDifference(
 }
 
 nsSize nsStyleOutline::EffectiveOffsetFor(const nsRect& aRect) const {
-  const nscoord offset = mOutlineOffset.ToAppUnits();
-
+  const nscoord offset = mOutlineOffset;
   if (offset >= 0) {
     // Fast path for non-negative offset values
     return nsSize(offset, offset);
