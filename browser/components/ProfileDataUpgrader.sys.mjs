@@ -929,6 +929,11 @@ export let ProfileDataUpgrader = {
       Services.prefs.setBoolPref("signon.reencryptionNeeded", true);
     }
 
+    if (existingDataVersion < 161) {
+      // Force all logins to be re-migrated to the rust store.
+      Services.prefs.setBoolPref("signon.rustMirror.migrationNeeded", true);
+    }
+
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", newVersion);
   },
