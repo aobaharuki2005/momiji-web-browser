@@ -28,8 +28,6 @@ skip-if = [
 
 ["test_eventemitter_destroy.js"]
 
-["test_eventemitter_static.js"]
-
 ["test_executeSoon.js"]
 skip-if = [
   "os == 'android' && android_version == '24' && processor == 'x86_64'",
