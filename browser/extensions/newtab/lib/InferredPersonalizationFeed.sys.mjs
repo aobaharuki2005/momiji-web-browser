@@ -26,7 +26,7 @@ import { MODEL_TYPE } from "./InferredModel/InferredConstants.sys.mjs";
 
 const CACHE_KEY = "inferred_personalization_feed";
 const DISCOVERY_STREAM_CACHE_KEY = "discovery_stream";
-const INTEREST_VECTOR_UPDATE_HOURS = 8;
+const INTEREST_VECTOR_UPDATE_HOURS = 24;
 const HOURS_TO_MS = 60 * 60 * 1000;
 
 const PREF_USER_INFERRED_PERSONALIZATION =
@@ -73,6 +73,11 @@ export class InferredPersonalizationFeed {
       this.store.getState().Prefs.values[PREF_USER_INFERRED_PERSONALIZATION] &&
       this.store.getState().Prefs.values[PREF_SYSTEM_INFERRED_PERSONALIZATION]
     );
+  }
+
+  isStoreData() {
+    return !!this.store.getState().Prefs.values?.trainhopConfig
+      ?.newTabSectionsExperiment?.personalizationStoreFeaturesEnabled;
   }
 
   async init() {
@@ -431,12 +436,13 @@ export class InferredPersonalizationFeed {
         await this.clearOldData(0);
         break;
       case at.DISCOVERY_STREAM_IMPRESSION_STATS:
-        if (this.loaded && this.isEnabled()) {
+        // We have the ability to collect feature impressions when the feature is off
+        if (this.isEnabled() || this.isStoreData()) {
           await this.handleDiscoveryStreamImpressionStats(action);
         }
         break;
       case at.DISCOVERY_STREAM_USER_EVENT:
-        if (this.loaded && this.isEnabled()) {
+        if (this.isEnabled() || this.isStoreData()) {
           await this.handleDiscoveryStreamUserEvent(action);
         }
         break;
