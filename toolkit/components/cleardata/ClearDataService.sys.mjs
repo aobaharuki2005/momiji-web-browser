@@ -192,9 +192,6 @@ function hasSite(
 //                                      Sanitizer.sanitizeOnShutdown() and
 //                                      Sanitizer.onStartup()
 
-// IETF spec for compression dictionaries requires clearing them when cookies
-// are cleared for the site - Section 10 of
-// https://datatracker.ietf.org/doc/draft-ietf-httpbis-compression-dictionary/
 const CookieCleaner = {
   deleteByLocalFiles(aOriginAttributes) {
     return new Promise(aResolve => {
@@ -212,16 +209,6 @@ const CookieCleaner = {
         aHost,
         JSON.stringify(aOriginAttributes)
       );
-      // Compression dictionaries are https only
-      // Note that IPV6 urls require [...], but aPrincipal.host (passed
-      // to this) doesn't include the [].
-      if (aHost.includes(":") && aHost[0] != "[") {
-        aHost = "https://[" + aHost + "]";
-      } else {
-        aHost = "https://" + aHost;
-      }
-      let httpsURI = Services.io.newURI(aHost);
-      Services.cache2.clearOriginDictionary(httpsURI);
       aResolve();
     });
   },
@@ -230,9 +217,6 @@ const CookieCleaner = {
     // Fall back to clearing by host and OA pattern. This will over-clear, since
     // any properties that are not explicitly set in aPrincipal.originAttributes
     // will be wildcard matched.
-    // Note that we clear cookies for all ports, because apparently
-    // cookies historically have ignored ports based on sameSite rules:
-    // https://html.spec.whatwg.org/#same-site
     return this.deleteByHost(aPrincipal.host, aPrincipal.originAttributes);
   },
 
@@ -251,9 +235,6 @@ const CookieCleaner = {
           JSON.stringify(cookie.originAttributes)
         );
       });
-    // Compression dictionaries are https only
-    let httpsURI = Services.io.newURI("https://" + aSchemelessSite);
-    Services.cache2.clearOriginDictionary(httpsURI);
   },
 
   deleteByRange(aFrom) {
@@ -267,8 +248,6 @@ const CookieCleaner = {
           aOriginAttributesString
         );
       } catch (ex) {}
-      // XXX Bug 1984198 we need to clear dictionaries here (probably has
-      // to be in CookieService::RemoveCookiesWithOriginAttributes()
       aResolve();
     });
   },
@@ -276,7 +255,6 @@ const CookieCleaner = {
   deleteAll() {
     return new Promise(aResolve => {
       Services.cookies.removeAll();
-      Services.cache2.clearAllOriginDictionaries();
       aResolve();
     });
   },

@@ -243,7 +243,6 @@ class NodeHTTPSServerCode extends BaseNodeHTTPServerCode {
     const options = {
       key: fs.readFileSync(__dirname + "/http2-cert.key"),
       cert: fs.readFileSync(__dirname + "/http2-cert.pem"),
-      maxHeaderSize: 128 * 1024,
     };
     const https = require("https");
     global.server = https.createServer(
