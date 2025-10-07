@@ -7618,12 +7618,13 @@ dialog::after {
 .ds-card-grid .refined-cards .card-stp-button-hover-background {
   height: 100%;
   padding-block-start: 0;
-  background: var(--button-background-color-ghost);
+  background: transparent;
 }
 .ds-card-grid .refined-cards .card-stp-button-hover-background .card-stp-button-position-wrapper {
   inset-block-start: unset;
   inset-block-end: var(--space-medium);
   inset-inline-end: var(--space-large);
+  background: var(--button-background-color-ghost);
 }
 .ds-card-grid .refined-cards .context-menu-button {
   background-color: var(--button-background-color-ghost);
