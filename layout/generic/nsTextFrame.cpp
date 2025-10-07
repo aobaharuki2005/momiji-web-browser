@@ -5772,6 +5772,97 @@ static gfxFloat ComputeDecorationLineOffset(
   return 0;
 }
 
+// Helper to determine decoration trim offset.
+// Returns false if the trim would cut off the decoration entirely.
+static bool ComputeDecorationTrim(
+    const nsTextFrame* aFrame, const nsPresContext* aPresCtx,
+    const nsIFrame* aDecFrame, const gfxFont::Metrics& aMetrics,
+    nsCSSRendering::DecorationRectParams& aParams) {
+  const gfxFloat app = aPresCtx->AppUnitsPerDevPixel();
+  const WritingMode wm = aDecFrame->GetWritingMode();
+  bool verticalDec = wm.IsVertical();
+
+  aParams.trimLeft = 0.0;
+  aParams.trimRight = 0.0;
+
+  // Find the trim values for this frame.
+  const StyleTextDecorationTrim& cssTrim =
+      aDecFrame->StyleTextReset()->mTextDecorationTrim;
+  gfxFloat trimLeft, trimRight;
+  if (cssTrim.IsAuto()) {
+    // Use the EM size divide by 8, or 1 dev pixel if this is too
+    // small to ensure that at least some separation occurs.
+    const gfxFloat scale = aPresCtx->CSSToDevPixelScale().scale;
+    const nscoord autoDecorationTrim =
+        std::max(aMetrics.emHeight * 0.125, scale);
+    trimLeft = autoDecorationTrim;
+    trimRight = autoDecorationTrim;
+  } else {
+    MOZ_ASSERT(cssTrim.IsLength(), "Impossible text-decoration-trim");
+    const auto& length = cssTrim.AsLength();
+    if (length.start.IsZero() && length.end.IsZero()) {
+      // We can avoid doing the geometric calculations below, potentially
+      // walking up and back down the frame tree, and walking continuations.
+      return true;
+    }
+    trimLeft = NSAppUnitsToDoublePixels(length.start.ToAppUnits(), app);
+    trimRight = NSAppUnitsToDoublePixels(length.end.ToAppUnits(), app);
+  }
+
+  if (wm.IsBidiRTL()) {
+    std::swap(trimLeft, trimRight);
+  }
+  const nsPoint offset = aFrame->GetOffsetTo(aDecFrame);
+  const nsSize decSize = aDecFrame->GetSize();
+  const nsSize size = aFrame->GetSize();
+  nscoord start, end, max;
+  if (verticalDec) {
+    start = offset.y;
+    max = size.height;
+    end = decSize.height - (size.height + offset.y);
+  } else {
+    start = offset.x;
+    max = size.width;
+    end = decSize.width - (size.width + offset.x);
+  }
+
+  const bool cloneDecBreak = aDecFrame->StyleBorder()->mBoxDecorationBreak ==
+                             StyleBoxDecorationBreak::Clone;
+  // TODO alaskanemily: This will not correctly account for the case that the
+  // continuations are bidi continuations.
+  const bool applyLeft = cloneDecBreak || !aDecFrame->GetPrevContinuation();
+  if (applyLeft) {
+    trimLeft -= NSAppUnitsToDoublePixels(start, app);
+  }
+  const bool applyRight = cloneDecBreak || !aDecFrame->GetNextContinuation();
+  if (applyRight) {
+    trimRight -= NSAppUnitsToDoublePixels(end, app);
+  }
+
+  if (trimLeft >= NSAppUnitsToDoublePixels(max, app) - trimRight) {
+    // This frame does not contain the decoration at all.
+    return false;
+  }
+  // TODO alaskanemily: We currently determine if we should have a negative
+  // trim value by checking if we are at the edge of frame from which the
+  // decloration comes from.
+  //
+  // This is not absolutely correct, there could in theory be a zero-width
+  // frame before/after this frame, and we will draw the decoration extension
+  // twice (causing a visible inaccuracy for semi-transparent decorations).
+  //
+  // I am unsure if it's possible that the first/last frame might be inset
+  // for some reason, as well, in which case we will not draw the outset
+  // decorations.
+  if (applyLeft && (trimLeft > 0.0 || start == 0)) {
+    aParams.trimLeft = trimLeft;
+  }
+  if (applyRight && (trimRight > 0.0 || end == 0)) {
+    aParams.trimRight = trimRight;
+  }
+  return true;
+}
+
 void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
                                           nsIFrame* aBlock,
                                           PropertyProvider& aProvider,
@@ -5912,6 +6003,11 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
                 lineType, dec.mTextUnderlinePosition, dec.mTextUnderlineOffset,
                 metrics, appUnitsPerDevUnit, this, parentWM.IsCentralBaseline(),
                 swapUnderline);
+
+            if (!ComputeDecorationTrim(this, aPresContext, dec.mFrame, metrics,
+                                       params)) {
+              return;
+            }
 
             nsRect decorationRect =
                 nsCSSRendering::GetTextDecorationRect(aPresContext, params) +
@@ -7669,7 +7765,10 @@ void nsTextFrame::DrawTextRunAndDecorations(
         GetInflationForTextDecorations(dec.mFrame, inflationMinFontSize);
     const Metrics metrics = GetFirstFontMetrics(
         GetFontGroupForFrame(dec.mFrame, inflation), useVerticalMetrics);
-
+    if (!ComputeDecorationTrim(this, aParams.textStyle->PresContext(),
+                               dec.mFrame, metrics, params)) {
+      return;
+    }
     bCoord = (frameBStart - dec.mBaselineOffset) / app;
 
     params.color = dec.mColor;
