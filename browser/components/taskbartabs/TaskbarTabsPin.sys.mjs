@@ -56,11 +56,20 @@ export const TaskbarTabsPin = {
    * @returns {Promise} Resolves once finished.
    */
   async unpinTaskbarTab(aTaskbarTab, aRegistry) {
+    let unpinError = null;
+    let removalError = null;
+
     try {
       lazy.logConsole.info("Unpinning Taskbar Tab from the taskbar.");
 
       let { relativePath } = await generateShortcutInfo(aTaskbarTab);
-      lazy.ShellService.unpinShortcutFromTaskbar("Programs", relativePath);
+
+      try {
+        lazy.ShellService.unpinShortcutFromTaskbar("Programs", relativePath);
+      } catch (e) {
+        lazy.logConsole.error(`Failed to unpin shortcut: ${e.message}`);
+        unpinError = e;
+      }
 
       let iconFile = getIconFile(aTaskbarTab);
 
@@ -76,12 +85,18 @@ export const TaskbarTabsPin = {
         }),
         IOUtils.remove(iconFile.path),
       ]);
-
-      Glean.webApp.unpin.record({ result: "Success" });
     } catch (e) {
-      lazy.logConsole.error(`An error occurred while unpinning: ${e.message}`);
-      Glean.webApp.unpin.record({ result: e.name ?? "Unknown exception" });
+      lazy.logConsole.error(
+        `An error occurred while uninstalling: ${e.message}`
+      );
+      removalError = e;
     }
+
+    const message = e => (e ? (e.name ?? "Unknown exception") : "Success");
+    Glean.webApp.unpin.record({
+      result: message(unpinError),
+      removal_result: message(removalError),
+    });
   },
 
   /**

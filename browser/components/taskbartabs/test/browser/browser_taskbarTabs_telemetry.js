@@ -25,11 +25,22 @@ const exposePinResult = () => {
   }
 };
 
+// Similarly, we want to fake an error while deleting to check that telemetry
+// reports it.
+let gShortcutDeleteResult = null;
+const exposeDeleteResult = async () => {
+  if (gShortcutDeleteResult !== null) {
+    const error = new Error();
+    error.name = gShortcutDeleteResult;
+    throw error;
+  }
+};
+
 const proxyNativeShellService = {
   ...ShellService.shellService,
   createWindowsIcon: sinon.stub().resolves(),
   createShortcut: sinon.stub().resolves("dummy_path"),
-  deleteShortcut: sinon.stub().resolves("dummy_path"),
+  deleteShortcut: sinon.stub().callsFake(exposeDeleteResult),
   pinShortcutToTaskbar: sinon.stub().callsFake(exposePinResult),
   unpinShortcutFromTaskbar: sinon.stub().callsFake(exposePinResult),
 };
@@ -62,62 +73,93 @@ add_task(async function testInstallAndUninstallMetric() {
   is(snapshot.length, 1, "Should have recorded an 'uninstall' event");
 });
 
-add_task(async function testPinAndUnpinMetricSuccess() {
+async function testPinMetricCustom(aPinResult, aPinMessage = null) {
   let snapshot;
 
   const taskbarTab = gRegistry.findOrCreateTaskbarTab(PARSED_URL, 0);
   Services.fog.testResetFOG();
 
-  gShortcutPinResult = null;
+  gShortcutPinResult = aPinResult;
 
   await TaskbarTabsPin.pinTaskbarTab(taskbarTab, gRegistry);
   snapshot = Glean.webApp.pin.testGetValue();
   is(snapshot.length, 1, "A single pin event was recorded");
   Assert.strictEqual(
     snapshot[0].extra.result,
-    "Success",
-    "The pin event should be successful"
-  );
-
-  await TaskbarTabsPin.unpinTaskbarTab(taskbarTab, gRegistry);
-  snapshot = Glean.webApp.unpin.testGetValue();
-  is(snapshot.length, 1, "A single unpin event was recorded");
-  Assert.strictEqual(
-    snapshot[0].extra.result,
-    "Success",
-    "The unpin event should be successful"
+    aPinMessage ?? aPinResult ?? "Success",
+    `Should record the pin ${aPinResult ? "exception" : "success"}`
   );
 
   gRegistry.removeTaskbarTab(taskbarTab.id);
+}
+
+add_task(async function testPinMetricSuccess() {
+  await testPinMetricCustom(null);
 });
 
-add_task(async function testPinAndUnpinMetricError() {
+add_task(async function testPinMetricFail() {
+  await testPinMetricCustom("Pin fail!");
+});
+
+add_task(async function testPinMetricInvalid() {
+  await testPinMetricCustom(undefined, "Unknown exception");
+});
+
+async function testUnpinMetricCustom(
+  aUnpinResult,
+  aDeleteResult,
+  aUnpinMessage = null,
+  aDeleteMessage = null
+) {
   let snapshot;
 
   const taskbarTab = gRegistry.findOrCreateTaskbarTab(PARSED_URL, 0);
   Services.fog.testResetFOG();
 
-  gShortcutPinResult = "This test failed!";
+  gShortcutPinResult = aUnpinResult;
+  gShortcutDeleteResult = aDeleteResult;
 
-  await TaskbarTabsPin.pinTaskbarTab(taskbarTab, gRegistry);
-  snapshot = Glean.webApp.pin.testGetValue();
-  is(snapshot.length, 1, "A single pin event was recorded");
-  Assert.strictEqual(
-    snapshot[0].extra.result,
-    "This test failed!",
-    "The pin event shows failure"
-  );
+  // We've mocked out so much that calling pinTaskbarTab should be irrelevant.
 
   await TaskbarTabsPin.unpinTaskbarTab(taskbarTab, gRegistry);
   snapshot = Glean.webApp.unpin.testGetValue();
   is(snapshot.length, 1, "A single unpin event was recorded");
   Assert.strictEqual(
     snapshot[0].extra.result,
-    "This test failed!",
-    "The unpin event shows failure"
+    aUnpinMessage ?? aUnpinResult ?? "Success",
+    `Should record the unpin ${aUnpinResult ? "exception" : "success"}`
+  );
+  Assert.strictEqual(
+    snapshot[0].extra.removal_result,
+    aDeleteMessage ?? aDeleteResult ?? "Success",
+    `Should record the deletion ${aDeleteResult ? "exception" : "success"}`
   );
 
   gRegistry.removeTaskbarTab(taskbarTab.id);
+}
+
+add_task(async function testPinAndUnpinMetric_UnpinSuccessDeleteSuccess() {
+  await testUnpinMetricCustom(null, null);
+});
+
+add_task(async function testPinAndUnpinMetric_UnpinFailDeleteSuccess() {
+  await testUnpinMetricCustom("Unpin fail!", null);
+});
+
+add_task(async function testPinAndUnpinMetric_UnpinSuccessDeleteFail() {
+  await testUnpinMetricCustom(null, "Deletion fail!");
+});
+
+add_task(async function testPinAndUnpinMetric_UnpinSuccessDeleteFail() {
+  await testUnpinMetricCustom("Unpin fail!", "Deletion fail!");
+});
+
+add_task(async function testPinAndUnpinMetric_UnpinInvalid() {
+  await testUnpinMetricCustom(undefined, null, "Unknown exception", null);
+});
+
+add_task(async function testPinAndUnpinMetric_DeleteInvalid() {
+  await testUnpinMetricCustom(null, undefined, null, "Unknown exception");
 });
 
 add_task(async function testActivateWhenWindowOpened() {
