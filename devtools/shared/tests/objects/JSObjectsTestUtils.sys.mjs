@@ -121,10 +121,6 @@ function loadExpectedValues(expectedValuesFileName) {
 }
 
 async function mayBeSaveExpectedValues(actualValues) {
-  const isUpdate = Services.env.get(UPDATE_SNAPSHOT_ENV) == "true";
-  if (!isUpdate) {
-    return;
-  }
   if (!actualValues?.length) {
     return;
   }
@@ -166,8 +162,8 @@ async function mayBeSaveExpectedValues(actualValues) {
     assertionValues.push(
       "  // " + evaled +
         "\n" +
-        // Ident each newline to match the array item indentation
-        JSON.stringify(value, null, 2).replace(/^/gm, "  ") +
+        "  " +
+        JSON.stringify(value, null, 2) +
         ","
     );
   }
