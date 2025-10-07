@@ -7,7 +7,6 @@
 #include "HTMLFrameSetElement.h"
 
 #include "mozilla/Try.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/EventHandlerBinding.h"
 #include "mozilla/dom/HTMLFrameSetElementBinding.h"
@@ -45,17 +44,17 @@ void HTMLFrameSetElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::rows) {
       if (aValue) {
-        int32_t oldRows = mNumRows;
-        ParseRowCol(*aValue, mNumRows, &mRowSpecs);
-        if (mNumRows != oldRows) {
+        size_t oldNumRows = mRowSpecs.Length();
+        ParseRowCol(*aValue, mRowSpecs);
+        if (mRowSpecs.Length() != oldNumRows) {
           mCurrentRowColHint = nsChangeHint_ReconstructFrame;
         }
       }
     } else if (aName == nsGkAtoms::cols) {
       if (aValue) {
-        int32_t oldCols = mNumCols;
-        ParseRowCol(*aValue, mNumCols, &mColSpecs);
-        if (mNumCols != oldCols) {
+        size_t oldNumCols = mColSpecs.Length();
+        ParseRowCol(*aValue, mColSpecs);
+        if (mColSpecs.Length() != oldNumCols) {
           mCurrentRowColHint = nsChangeHint_ReconstructFrame;
         }
       }
@@ -67,41 +66,41 @@ void HTMLFrameSetElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
 }
 
 Span<const nsFramesetSpec> HTMLFrameSetElement::GetRowSpec() {
-  if (!mRowSpecs) {
+  if (mRowSpecs.IsEmpty()) {
     if (const nsAttrValue* value = GetParsedAttr(nsGkAtoms::rows)) {
-      if (NS_FAILED(ParseRowCol(*value, mNumRows, &mRowSpecs))) {
+      if (NS_FAILED(ParseRowCol(*value, mRowSpecs))) {
         return {};
       }
     }
 
-    if (!mRowSpecs) {  // we may not have had an attr or had an empty attr
-      mRowSpecs = MakeUnique<nsFramesetSpec[]>(1);
-      mNumRows = 1;
+    if (mRowSpecs.IsEmpty()) {
+      // We may not have had an attr or had an empty attr.
+      mRowSpecs.SetLength(1);
       mRowSpecs[0].mUnit = eFramesetUnit_Relative;
       mRowSpecs[0].mValue = 1;
     }
   }
 
-  return Span(mRowSpecs.get(), mNumRows);
+  return Span(mRowSpecs);
 }
 
 Span<const nsFramesetSpec> HTMLFrameSetElement::GetColSpec() {
-  if (!mColSpecs) {
+  if (mColSpecs.IsEmpty()) {
     if (const nsAttrValue* value = GetParsedAttr(nsGkAtoms::cols)) {
-      if (NS_FAILED(ParseRowCol(*value, mNumCols, &mColSpecs))) {
+      if (NS_FAILED(ParseRowCol(*value, mColSpecs))) {
         return {};
       }
     }
 
-    if (!mColSpecs) {  // we may not have had an attr or had an empty attr
-      mColSpecs = MakeUnique<nsFramesetSpec[]>(1);
-      mNumCols = 1;
+    if (mColSpecs.IsEmpty()) {
+      // We may not have had an attr or had an empty attr.
+      mColSpecs.SetLength(1);
       mColSpecs[0].mUnit = eFramesetUnit_Relative;
       mColSpecs[0].mValue = 1;
     }
   }
 
-  return Span(mColSpecs.get(), mNumCols);
+  return Span(mColSpecs);
 }
 
 bool HTMLFrameSetElement::ParseAttribute(int32_t aNamespaceID,
@@ -139,11 +138,9 @@ nsChangeHint HTMLFrameSetElement::GetAttributeChangeHint(
  * Translate a "rows" or "cols" spec into an array of nsFramesetSpecs
  */
 nsresult HTMLFrameSetElement::ParseRowCol(const nsAttrValue& aValue,
-                                          int32_t& aNumSpecs,
-                                          UniquePtr<nsFramesetSpec[]>* aSpecs) {
+                                          nsTArray<nsFramesetSpec>& aSpecs) {
   if (aValue.IsEmptyString()) {
-    aNumSpecs = 0;
-    *aSpecs = nullptr;
+    aSpecs.Clear();
     return NS_OK;
   }
 
@@ -169,10 +166,9 @@ nsresult HTMLFrameSetElement::ParseRowCol(const nsAttrValue& aValue,
     commaX = spec.FindChar(sComma, commaX + 1);
   }
 
-  auto specs = MakeUniqueFallible<nsFramesetSpec[]>(count);
-  if (!specs) {
-    *aSpecs = nullptr;
-    aNumSpecs = 0;
+  nsTArray<nsFramesetSpec> specs;
+  if (!specs.SetLength(count, fallible)) {
+    aSpecs.Clear();
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -247,9 +243,7 @@ nsresult HTMLFrameSetElement::ParseRowCol(const nsAttrValue& aValue,
     }
   }
 
-  aNumSpecs = static_cast<int32_t>(count);
-  // Transfer ownership to caller here
-  *aSpecs = std::move(specs);
+  aSpecs = std::move(specs);
 
   return NS_OK;
 }

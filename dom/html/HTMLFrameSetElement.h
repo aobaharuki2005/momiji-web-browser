@@ -9,8 +9,8 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Span.h"
-#include "mozilla/UniquePtr.h"
 #include "nsGenericHTMLElement.h"
+#include "nsTArray.h"
 
 /**
  * The nsFramesetUnit enum is used to denote the type of each entry
@@ -48,8 +48,6 @@ class HTMLFrameSetElement final : public nsGenericHTMLElement {
   explicit HTMLFrameSetElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
       : nsGenericHTMLElement(std::move(aNodeInfo)),
-        mNumRows(0),
-        mNumCols(0),
         mCurrentRowColHint(NS_STYLE_HINT_REFLOW) {
     SetHasWeirdParserInsertionMode();
   }
@@ -119,17 +117,9 @@ class HTMLFrameSetElement final : public nsGenericHTMLElement {
                      const nsAttrValue* aValue, bool aNotify) override;
 
  private:
-  nsresult ParseRowCol(const nsAttrValue& aValue, int32_t& aNumSpecs,
-                       UniquePtr<nsFramesetSpec[]>* aSpecs);
+  nsresult ParseRowCol(const nsAttrValue& aValue,
+                       nsTArray<nsFramesetSpec>& aSpecs);
 
-  /**
-   * The number of size specs in our "rows" attr
-   */
-  int32_t mNumRows;
-  /**
-   * The number of size specs in our "cols" attr
-   */
-  int32_t mNumCols;
   /**
    * The style hint to return for the rows/cols attrs in
    * GetAttributeChangeHint
@@ -138,11 +128,11 @@ class HTMLFrameSetElement final : public nsGenericHTMLElement {
   /**
    * The parsed representation of the "rows" attribute
    */
-  UniquePtr<nsFramesetSpec[]> mRowSpecs;  // parsed, non-computed dimensions
+  nsTArray<nsFramesetSpec> mRowSpecs;  // parsed, non-computed dimensions
   /**
    * The parsed representation of the "cols" attribute
    */
-  UniquePtr<nsFramesetSpec[]> mColSpecs;  // parsed, non-computed dimensions
+  nsTArray<nsFramesetSpec> mColSpecs;  // parsed, non-computed dimensions
 };
 
 }  // namespace mozilla::dom
