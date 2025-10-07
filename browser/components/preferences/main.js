@@ -406,6 +406,7 @@ Preferences.addSetting({
   id: "useSmoothScrolling",
   pref: "general.smoothScroll",
 });
+
 Preferences.addSetting({
   id: "useOverlayScrollbars",
   pref: "widget.gtk.overlay-scrollbars.enabled",

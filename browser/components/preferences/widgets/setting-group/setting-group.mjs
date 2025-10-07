@@ -46,6 +46,30 @@ export class SettingGroup extends MozLitElement {
     return this;
   }
 
+  async handleVisibilityChange() {
+    await this.updateComplete;
+    let visibleControls = [...this.controlEls].filter(el => !el.hidden);
+    if (!visibleControls.length) {
+      this.hidden = true;
+    } else {
+      this.hidden = false;
+    }
+    // FIXME: We need to replace this.closest() once the SettingGroup
+    // provides its own card wrapper/groupbox replacement element.
+    let closestGroupbox = this.closest("groupbox");
+    if (!closestGroupbox) {
+      return;
+    }
+    if (this.hidden) {
+      // Can't rely on .hidden for the toplevel groupbox because
+      // of the pane hiding/showing code potentially changing the
+      // hidden attribute.
+      closestGroupbox.style.display = "none";
+    } else {
+      closestGroupbox.style.display = "";
+    }
+  }
+
   async getUpdateComplete() {
     let result = await super.getUpdateComplete();
     await Promise.all([...this.controlEls].map(el => el.updateComplete));
@@ -94,6 +118,7 @@ export class SettingGroup extends MozLitElement {
       .supportPage=${ifDefined(this.config.supportPage)}
       @change=${this.onChange}
       @click=${this.onClick}
+      @visibility-change=${this.handleVisibilityChange}
       >${this.config.items.map(item => this.itemTemplate(item))}</moz-fieldset
     >`;
   }
