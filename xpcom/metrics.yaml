@@ -492,9 +492,9 @@ cycle_collector:
 
 memory:
   resident_fast:
-    type: labeled_memory_distribution
+    type: memory_distribution
     description: >
-      Resident memory size (KB) by process type
+      Resident memory size (KB)
 
       This metric was generated to correspond to the Legacy Telemetry
       exponential histogram MEMORY_RESIDENT_FAST.
@@ -508,11 +508,12 @@ memory:
     notification_emails:
       - memshrink-telemetry-alerts@mozilla.com
     expires: never
+    telemetry_mirror: MEMORY_RESIDENT_FAST
 
   resident_peak:
-    type: labeled_memory_distribution
+    type: memory_distribution
     description: >
-      Peak resident memory size (KB) by process type
+      Peak resident memory size (KB)
 
       This metric was generated to correspond to the Legacy Telemetry
       exponential histogram MEMORY_RESIDENT_PEAK.
@@ -527,6 +528,7 @@ memory:
       - memshrink-telemetry-alerts@mozilla.com
       - amccreight@mozilla.com
     expires: never
+    telemetry_mirror: MEMORY_RESIDENT_PEAK
 
   total:
     type: memory_distribution
@@ -577,9 +579,9 @@ memory:
     telemetry_mirror: MEMORY_DISTRIBUTION_AMONG_CONTENT
 
   unique:
-    type: labeled_memory_distribution
+    type: memory_distribution
     description: >
-      Unique Set Size (KB) by process type
+      Unique Set Size (KB)
 
       This metric was generated to correspond to the Legacy Telemetry
       exponential histogram MEMORY_UNIQUE.
@@ -593,6 +595,7 @@ memory:
     notification_emails:
       - memshrink-telemetry-alerts@mozilla.com
     expires: never
+    telemetry_mirror: MEMORY_UNIQUE
 
   vsize:
     type: memory_distribution
@@ -715,9 +718,9 @@ memory:
     telemetry_mirror: MEMORY_JS_REALMS_USER
 
   js_gc_heap:
-    type: labeled_memory_distribution
+    type: memory_distribution
     description: >
-      Memory used by the garbage-collected JavaScript heap (KB) by process type
+      Memory used by the garbage-collected JavaScript heap (KB)
 
       This metric was generated to correspond to the Legacy Telemetry
       exponential histogram MEMORY_JS_GC_HEAP.
@@ -729,6 +732,7 @@ memory:
     notification_emails:
       - memshrink-telemetry-alerts@mozilla.com
     expires: never
+    telemetry_mirror: MEMORY_JS_GC_HEAP
 
   storage_sqlite:
     type: memory_distribution
