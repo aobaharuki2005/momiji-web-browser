@@ -35,6 +35,9 @@ const { KeyCodes } = require("resource://devtools/client/shared/keycodes.js");
 const {
   FluentL10n,
 } = require("resource://devtools/client/shared/fluent-l10n/fluent-l10n.js");
+const {
+  START_IGNORE_ACTION,
+} = require("resource://devtools/client/shared/redux/middleware/ignore.js");
 
 var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(
   Ci.nsISupports
@@ -4482,7 +4485,12 @@ Toolbox.prototype = {
             this._removeWindowListeners();
             this._removeChromeEventHandlerEvents();
 
-            this._store = null;
+            if (this._store) {
+              // Prevents any further action from being dispatched.
+              // Do that late as NetMonitorAPI may still trigger some actions.
+              this._store.dispatch(START_IGNORE_ACTION);
+              this._store = null;
+            }
 
             // All Commands need to be destroyed.
             // This is done after other destruction tasks since it may tear down
