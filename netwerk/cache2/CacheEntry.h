@@ -76,7 +76,7 @@ class CacheEntry final : public nsIRunnable,
   nsresult SetExpirationTime(uint32_t expirationTime);
   nsresult GetOnStartTime(uint64_t* aTime);
   nsresult GetOnStopTime(uint64_t* aTime);
-  nsresult GetReady(bool* aReady);
+  nsresult GetReadyOrRevalidating(bool* aReady);
   nsresult SetNetworkTimes(uint64_t onStartTime, uint64_t onStopTime);
   nsresult SetContentType(uint8_t aContentType);
   nsresult ForceValidFor(uint32_t aSecondsToTheFuture);
@@ -472,8 +472,8 @@ class CacheEntryHandle final : public nsICacheEntry {
   NS_IMETHOD GetOnStopTime(uint64_t* aOnStopTime) override {
     return mEntry->GetOnStopTime(aOnStopTime);
   }
-  NS_IMETHOD GetReady(bool* aReady) override {
-    return mEntry->GetReady(aReady);
+  NS_IMETHOD GetReadyOrRevalidating(bool* aReady) override {
+    return mEntry->GetReadyOrRevalidating(aReady);
   }
   NS_IMETHOD SetNetworkTimes(uint64_t onStartTime,
                              uint64_t onStopTime) override {
