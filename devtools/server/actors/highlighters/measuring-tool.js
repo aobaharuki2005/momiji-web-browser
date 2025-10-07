@@ -4,7 +4,6 @@
 
 "use strict";
 
-const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const {
   getCurrentZoom,
   getWindowDimensions,
@@ -232,8 +231,6 @@ class MeasuringToolHighlighter {
     }
 
     this.markup.destroy();
-
-    EventEmitter.emit(this, "destroy");
   }
 
   show() {
