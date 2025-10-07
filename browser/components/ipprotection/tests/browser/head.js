@@ -13,6 +13,10 @@ const { IPProtectionService, IPProtectionStates } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPProtectionService.sys.mjs"
 );
 
+const { IPPSignInWatcher } = ChromeUtils.importESModule(
+  "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs"
+);
+
 const { HttpServer, HTTP_403 } = ChromeUtils.importESModule(
   "resource://testing-common/httpd.sys.mjs"
 );
@@ -23,7 +27,6 @@ const { NimbusTestUtils } = ChromeUtils.importESModule(
 
 ChromeUtils.defineESModuleGetters(this, {
   sinon: "resource://testing-common/Sinon.sys.mjs",
-  UIState: "resource://services-sync/UIState.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   CustomizableUI:
     "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
@@ -236,7 +239,6 @@ let DEFAULT_SERVICE_STATUS = {
 /* exported DEFAULT_SERVICE_STATUS */
 
 let STUBS = {
-  UIState: undefined,
   isLinkedToGuardian: undefined,
   enroll: undefined,
   fetchUserInfo: undefined,
@@ -267,7 +269,7 @@ add_setup(async function setupVPN() {
 });
 
 function setupStubs(stubs = STUBS) {
-  stubs.UIState = setupSandbox.stub(UIState, "get");
+  stubs.isSignedIn = setupSandbox.stub(IPPSignInWatcher, "isSignedIn");
   stubs.isLinkedToGuardian = setupSandbox.stub(
     IPProtectionService.guardian,
     "isLinkedToGuardian"
@@ -295,11 +297,7 @@ function setupService(
   stubs = STUBS
 ) {
   if (typeof isSignedIn != "undefined") {
-    stubs.UIState.returns({
-      status: isSignedIn
-        ? UIState.STATUS_SIGNED_IN
-        : UIState.STATUS_NOT_CONFIGURED,
-    });
+    stubs.isSignedIn.get(() => isSignedIn);
   }
 
   if (typeof isEnrolled != "undefined") {

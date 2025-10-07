@@ -17,8 +17,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
   IPProtectionStates:
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
-  UIState: "resource://services-sync/UIState.sys.mjs",
 });
+
+import { IPPSignInWatcher } from "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs";
 
 const VPN_ADDON_ID = "vpn@mozilla.com";
 
@@ -129,44 +130,6 @@ class VPNAddonHelper {
 }
 
 /**
- * This class monitors the Sign-In state and triggers the update of the service
- * if needed.
- */
-class SignInStateHelper {
-  /**
-   * Adds an observer for the FxA sign-in state.
-   */
-  init() {
-    this.fxaObserver = {
-      QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIObserver,
-        Ci.nsISupportsWeakReference,
-      ]),
-
-      observe() {
-        let { status } = lazy.UIState.get();
-        let signedIn = status == lazy.UIState.STATUS_SIGNED_IN;
-        if (signedIn !== lazy.IPProtectionService.signedIn) {
-          lazy.IPProtectionService.updateState();
-        }
-      },
-    };
-
-    Services.obs.addObserver(this.fxaObserver, lazy.UIState.ON_UPDATE);
-  }
-
-  /**
-   * Removes the FxA sign-in state observer
-   */
-  uninit() {
-    if (this.fxaObserver) {
-      Services.obs.removeObserver(this.fxaObserver, lazy.UIState.ON_UPDATE);
-      this.fxaObserver = null;
-    }
-  }
-}
-
-/**
  * This class monitors the eligibility flag from Nimbus
  */
 class EligibilityHelper {
@@ -186,9 +149,9 @@ class EligibilityHelper {
 const IPPHelpers = [
   new AccountResetHelper(),
   new EligibilityHelper(),
-  new SignInStateHelper(),
   new VPNAddonHelper(),
   new UIHelper(),
+  IPPSignInWatcher,
 ];
 
 export { IPPHelpers };
