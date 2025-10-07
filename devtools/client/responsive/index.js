@@ -21,6 +21,9 @@ const ReactDOM = require("resource://devtools/client/shared/vendor/react-dom.mjs
 const {
   Provider,
 } = require("resource://devtools/client/shared/vendor/react-redux.js");
+const {
+  START_IGNORE_ACTION,
+} = require("resource://devtools/client/shared/redux/middleware/ignore.js");
 
 const message = require("resource://devtools/client/responsive/utils/message.js");
 const App = createFactory(
@@ -67,6 +70,9 @@ const bootstrap = {
 
   destroy() {
     window.removeEventListener("unload", this.destroy, { once: true });
+
+    // Prevents any further action from being dispatched
+    this.store.dispatch(START_IGNORE_ACTION);
 
     // unmount to stop async action and renders after destroy
     ReactDOM.unmountComponentAtNode(this._root);
