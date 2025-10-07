@@ -12,7 +12,6 @@ import {
   createStore,
   applyMiddleware,
 } from "devtools/client/shared/vendor/redux";
-import { waitUntilService } from "./middleware/wait-service";
 import { log } from "./middleware/log";
 import { promise } from "./middleware/promise";
 import { timing } from "./middleware/timing";
@@ -24,6 +23,9 @@ const {
 const {
   thunk,
 } = require("resource://devtools/client/shared/redux/middleware/thunk.js");
+const {
+  waitUntilService,
+} = require("resource://devtools/client/shared/redux/middleware/wait-service.js");
 
 /**
  * This creates a dispatcher with all the standard middleware in place

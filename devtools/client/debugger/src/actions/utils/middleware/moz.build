@@ -10,5 +10,4 @@ CompiledModules(
     "log.js",
     "promise.js",
     "timing.js",
-    "wait-service.js",
 )
