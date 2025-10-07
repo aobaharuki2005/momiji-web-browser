@@ -129,7 +129,7 @@ async function migrateEnrollmentsToSql() {
     return;
   }
 
-  const { recipes } =
+  const recipes =
     await lazy.ExperimentAPI._rsLoader.getRecipesFromAllCollections({
       trigger: "migration",
     });
