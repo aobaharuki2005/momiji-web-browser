@@ -86,6 +86,7 @@ extern crate l10nregistry_ffi;
 extern crate localization_ffi;
 
 extern crate ipcclientcerts;
+extern crate qwac_trust_anchors;
 extern crate trust_anchors;
 
 #[cfg(any(

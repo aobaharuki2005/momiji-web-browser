@@ -38,6 +38,7 @@ nsCertType:sslServer
 TLSFeature:[<TLSFeature>,...]
 embeddedSCTList:[<key specification>:<YYYYMMDD>[:<leaf index>],...]
 delegationUsage:
+qcStatements:[<statement OID[:info OID]>,...]
 
 Where:
   [] indicates an optional field or component of a field
@@ -513,6 +514,8 @@ class Certificate:
             self.savedEmbeddedSCTListData = (value, critical)
         elif extensionType == "delegationUsage":
             self.addDelegationUsage(critical)
+        elif extensionType == "qcStatements":
+            self.addQCStatements(value, critical)
         else:
             raise UnknownExtensionTypeError(extensionType)
 
@@ -721,6 +724,29 @@ class Certificate:
             univ.ObjectIdentifier("1.3.6.1.4.1.11129.2.4.2"),
             univ.OctetString(extensionBytes),
             critical,
+        )
+
+    def addQCStatements(self, qcStatements, critical):
+        sequence = univ.Sequence()
+        for pos, qcStatement in enumerate(qcStatements.split(",")):
+            parts = qcStatement.split(":")
+            statementID = parts[0]
+            statementInfo = None
+            if len(parts) > 1:
+                statementInfo = parts[1]
+            qcStatementSequence = univ.Sequence()
+            qcStatementSequence.setComponentByPosition(
+                0, univ.ObjectIdentifier(statementID)
+            )
+            if statementInfo:
+                statementInfoSequence = univ.Sequence()
+                statementInfoSequence.setComponentByPosition(
+                    0, univ.ObjectIdentifier(statementInfo)
+                )
+                qcStatementSequence.setComponentByPosition(1, statementInfoSequence)
+            sequence.setComponentByPosition(pos, qcStatementSequence)
+        self.addExtension(
+            univ.ObjectIdentifier("1.3.6.1.5.5.7.1.3"), sequence, critical
         )
 
     def getVersion(self):

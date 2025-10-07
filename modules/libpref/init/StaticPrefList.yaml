@@ -17331,6 +17331,14 @@
   value: 128
   mirror: always
 
+# Whether or not to enable the test trust anchor list when verifying QWACs
+# (qualified website authentication certificates)
+- name: security.qwacs.enable_test_trust_anchors
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 - name: security.tls.version.min
   type: RelaxedAtomicUint32
   value: 3
