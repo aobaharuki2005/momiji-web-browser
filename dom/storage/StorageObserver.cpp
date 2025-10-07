@@ -376,11 +376,9 @@ StorageObserver::Observe(nsISupports* aSubject, const char* aTopic,
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsCString originScope;
-      if (!schemelessSite.IsEmpty()) {
-        rv = GetOriginScope(NS_ConvertUTF8toUTF16(schemelessSite).get(),
-                            originScope);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      rv = GetOriginScope(NS_ConvertUTF8toUTF16(schemelessSite).get(),
+                          originScope);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       Notify(aTopic, patternJSON, originScope);
     } else if (aData) {
