@@ -840,11 +840,15 @@ nsresult CacheIndex::InitEntry(const SHA1Sum::Hash* aHash,
 }
 
 // static
-nsresult CacheIndex::RemoveEntry(const SHA1Sum::Hash* aHash) {
-  LOG(("CacheIndex::RemoveEntry() [hash=%08x%08x%08x%08x%08x]",
-       LOGSHA1(aHash)));
+nsresult CacheIndex::RemoveEntry(const SHA1Sum::Hash* aHash,
+                                 const nsACString& aKey) {
+  LOG(("CacheIndex::RemoveEntry() [hash=%08x%08x%08x%08x%08x] key=%s",
+       LOGSHA1(aHash), PromiseFlatCString(aKey).get()));
 
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
+
+  // Remove the dictionary even if we later error out - async
+  DictionaryCache::RemoveDictionaryFor(aKey);
 
   StaticMutexAutoLock lock(sLock);
 

@@ -684,20 +684,22 @@ void CacheFileContextEvictor::EvictEntries() {
       continue;
     }
 
-    // Check whether we must filter by either base domain or by origin.
-    if (!mEntries[0]->mBaseDomain.IsEmpty() ||
-        !mEntries[0]->mOrigin.IsEmpty()) {
+    // Read metadata from the file synchronously
+    RefPtr<CacheFileMetadata> metadata = new CacheFileMetadata();
+    {
       // Get and read metadata for the entry
       nsCOMPtr<nsIFile> file;
       CacheFileIOManager::gInstance->GetFile(&hash, getter_AddRefs(file));
 
-      // Read metadata from the file synchronously
-      RefPtr<CacheFileMetadata> metadata = new CacheFileMetadata();
       rv = metadata->SyncReadMetadata(file);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         continue;
       }
+    }
 
+    // Check whether we must filter by either base domain or by origin.
+    if (!mEntries[0]->mBaseDomain.IsEmpty() ||
+        !mEntries[0]->mOrigin.IsEmpty()) {
       // Now get the context + enhance id + URL from the key.
       nsAutoCString uriSpec;
       RefPtr<nsILoadContextInfo> info =
@@ -820,7 +822,7 @@ void CacheFileContextEvictor::EvictEntries() {
 
     LOG(("CacheFileContextEvictor::EvictEntries - Removing entry."));
     file->Remove(false);
-    CacheIndex::RemoveEntry(&hash);
+    CacheIndex::RemoveEntry(&hash, metadata->GetKey());
   }
 
   MOZ_ASSERT_UNREACHABLE("We should never get here");

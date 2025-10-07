@@ -7,6 +7,8 @@
 
 #include "Dictionary.h"
 
+#include "CacheFileUtils.h"
+#include "nsString.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIAsyncInputStream.h"
 #include "nsICacheStorageService.h"
@@ -40,7 +42,6 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/glean/NetwerkMetrics.h"
 
-#include "mozilla/net/MozURL.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/NeckoChild.h"
@@ -96,6 +97,7 @@ bool DictionaryCacheEntry::Match(const nsACString& aFilePath,
   }
   if (mNotCached) {
     // Not actually in the cache
+    // May not actually be necessary, but good safety valve.
     return false;
   }
   // Not worth checking if we wouldn't use it
@@ -159,6 +161,10 @@ nsresult DictionaryCacheEntry::Prefetch(nsILoadContextInfo* aLoadContextInfo,
   // Start reading the cache entry into memory and call completion
   // function when done
   if (mWaitingPrefetch.IsEmpty()) {
+    // Note that if the cache entry has been cleared, and we still have active
+    // users of it, we'll hold onto that data since we have outstanding requests
+    // for it.  Probably we shouldn't allow new requests to use this data (and
+    // the WPTs assume we shouldn't).
     if (!mDictionaryDataComplete) {
       // We haven't requested it yet from the Cache and don't have it in memory
       // already.
@@ -189,7 +195,11 @@ nsresult DictionaryCacheEntry::Prefetch(nsILoadContextInfo* aLoadContextInfo,
         // For some reason the cache no longer has this entry; fail Prefetch
         // and also remove this from our origin
         aShouldSuspend = false;
-        // XXX Remove from origin
+        // Remove from origin
+        if (mOrigin) {
+          mOrigin->RemoveEntry(this);
+          mOrigin = nullptr;
+        }
         return NS_ERROR_FAILURE;
       }
       mWaitingPrefetch.AppendElement(aFunc);
@@ -256,7 +266,6 @@ void DictionaryCacheEntry::FinishHash() {
       if (!mBlocked) {
         mOrigin->FinishAddEntry(this);
       }
-      mOrigin = nullptr;
     }
   }
 }
@@ -325,6 +334,7 @@ nsresult DictionaryCacheEntry::Write(nsICacheEntry* aCacheEntry) {
 }
 
 nsresult DictionaryCacheEntry::RemoveEntry(nsICacheEntry* aCacheEntry) {
+  DICTIONARY_LOG(("RemoveEntry from metadata for %s", mURI.get()));
   return aCacheEntry->SetMetaDataElement(mURI.BeginReading(), nullptr);
 }
 
@@ -450,7 +460,7 @@ void DictionaryCacheEntry::UnblockAddEntry(DictionaryOrigin* aOrigin) {
   mBlocked = false;
 }
 
-void DictionaryCacheEntry::WriteOnHash(DictionaryOrigin* aOrigin) {
+void DictionaryCacheEntry::WriteOnHash() {
   bool hasHash = false;
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -458,12 +468,9 @@ void DictionaryCacheEntry::WriteOnHash(DictionaryOrigin* aOrigin) {
       hasHash = true;
     }
   }
-  if (hasHash) {
+  if (hasHash && mOrigin) {
     DICTIONARY_LOG(("Write already hashed"));
-    aOrigin->Write(this);
-  } else if (!mStopReceived) {
-    // This creates a cycle, but we'll clear it when we get FinishFile
-    mOrigin = aOrigin;
+    mOrigin->Write(this);
   }
 }
 
@@ -656,6 +663,7 @@ DictionaryOriginReader::OnStopRequest(nsIRequest* request, nsresult result) {
 
 // static
 already_AddRefed<DictionaryCache> DictionaryCache::GetInstance() {
+  // XXX lock?  In practice probably not needed, in theory yes
   if (!gDictionaryCache) {
     gDictionaryCache = new DictionaryCache();
     MOZ_ASSERT(NS_SUCCEEDED(gDictionaryCache->Init()));
@@ -720,16 +728,19 @@ already_AddRefed<DictionaryCacheEntry> DictionaryCache::AddEntry(
       // that the entry we're adding will need to be saved later once
       // we have the entry
 
+      // This creates a cycle until the dictionary is removed from the cache
+      aDictEntry->SetOrigin(origin);
+
       // Open (and parse metadata) or create
       RefPtr<DictionaryOriginReader> reader = new DictionaryOriginReader();
       reader->Start(
           origin, prepath, aURI, this,
-          [origin, aDictEntry](
+          [entry = RefPtr(aDictEntry)](
               DictionaryCacheEntry*
                   aDict) {  // XXX avoid so many lambdas which cause allocations
             // Write the dirty entry we couldn't write before once
             // we get the hash
-            aDictEntry->WriteOnHash(origin);
+            aDictEntry->WriteOnHash();
             return NS_OK;
           });
       return origin;
@@ -746,6 +757,8 @@ nsresult DictionaryCache::RemoveEntry(nsIURI* aURI, const nsACString& aKey) {
   if (NS_FAILED(aURI->GetPrePath(prepath))) {
     return NS_ERROR_FAILURE;
   }
+  DICTIONARY_LOG(("Dictionary RemoveEntry for %s : %s", prepath.get(),
+                  PromiseFlatCString(aKey).get()));
   if (auto origin = mDictionaryCache.Lookup(prepath)) {
     return origin.Data()->RemoveEntry(aKey);
   }
@@ -760,16 +773,91 @@ void DictionaryCache::Clear() {
 }
 
 // Remove a dictionary if it exists for the key given
+// static
 void DictionaryCache::RemoveDictionaryFor(const nsACString& aKey) {
-  RefPtr<MozURL> url;
-  nsresult rv = MozURL::Init(getter_AddRefs(url), aKey);
-  if (NS_SUCCEEDED(rv)) {
-    nsDependentCSubstring prepath = url->PrePath();
+  RefPtr<DictionaryCache> cache = GetInstance();
+  NS_DispatchToMainThread(NewRunnableMethod<const nsCString>(
+      "DictionaryCache::RemoveDictionaryFor", cache,
+      &DictionaryCache::RemoveDictionary, aKey));
+}
 
-    if (auto origin = mDictionaryCache.Lookup(prepath)) {
-      origin.Data()->RemoveEntry(aKey);
+// Remove a dictionary if it exists for the key given
+void DictionaryCache::RemoveDictionary(const nsACString& aKey) {
+  DICTIONARY_LOG(
+      ("Removing dictionary for %s", PromiseFlatCString(aKey).get()));
+  nsCString enhance;
+  nsCString urlstring;
+  nsCOMPtr<nsILoadContextInfo> info =
+      CacheFileUtils::ParseKey(aKey, &enhance, &urlstring);
+  MOZ_ASSERT(info);
+  if (!info) {
+    DICTIONARY_LOG(("DictionaryCache::RemoveDictionary() - Cannot parse key!"));
+    return;
+  }
+  nsCOMPtr<nsIURI> url;
+  nsresult rv = NS_NewURI(getter_AddRefs(url), urlstring);
+  if (NS_SUCCEEDED(rv)) {
+    nsCString prepath;
+    if (NS_SUCCEEDED(url->GetPrePath(prepath))) {
+      if (auto origin = mDictionaryCache.Lookup(prepath)) {
+        origin.Data()->RemoveEntry(urlstring);
+      }
     }
   }
+}
+
+// Remove a dictionary if it exists for the key given.  Mainthread only.
+// Note: due to cookie samesite rules, we need to clean for all ports
+// static
+void DictionaryCache::RemoveDictionaries(nsIURI* aURI) {
+  RefPtr<DictionaryCache> cache = GetInstance();
+  nsDependentCSubstring spec;  // aka https://site/ with no port
+  if (NS_FAILED(aURI->GetSpec(spec))) {
+    return;
+  }
+
+  DICTIONARY_LOG(("Removing all dictionaries for %s (%zu)",
+                  PromiseFlatCString(spec).get(), spec.Length()));
+  RefPtr<DictionaryOrigin> origin;
+  // We can't just use Remove here; the ClearSiteData service strips the port.
+  // We need to clear all that match the host with any port or none
+  cache->mDictionaryCache.RemoveIf([&spec](auto& entry) {
+    // We need to drop any port.  Assuming they're the same up to the / or : in
+    // mOrigin, we want to limit the host there.  Verify that:
+    // a) they're equal to that point
+    // b) that the next character of mOrigin is '/' or ':', which avoids
+    //    issues like matching https://foo.bar/ to (mOrigin)
+    //    https://foo.barsoom.com:666/
+    if (entry.Data()->mOrigin.Length() > spec.Length() &&
+        (entry.Data()->mOrigin[spec.Length() - 1] == '/' ||   // no port
+         entry.Data()->mOrigin[spec.Length() - 1] == ':')) {  // port
+      // no strncmp() for nsCStrings...
+      nsDependentCSubstring host =
+          Substring(entry.Data()->mOrigin, 0,
+                    spec.Length() - 1);  // not including '/' or ':'
+      nsDependentCSubstring temp =
+          Substring(spec, 0, spec.Length() - 1);  // Drop '/'
+      if (temp.Equals(host)) {
+        DICTIONARY_LOG(
+            ("Removing dictionary for %s", entry.Data()->mOrigin.get()));
+        entry.Data()->Clear();
+        return true;
+      }
+    }
+    return false;
+  });
+}
+
+// Remove a dictionary if it exists for the key given.  Mainthread only
+// static
+void DictionaryCache::RemoveAllDictionaries() {
+  RefPtr<DictionaryCache> cache = GetInstance();
+
+  DICTIONARY_LOG(("Removing all dictionaries"));
+  for (auto& origin : cache->mDictionaryCache) {
+    origin.GetData()->Clear();
+  }
+  cache->mDictionaryCache.Clear();
 }
 
 // Return an entry via a callback (async).
@@ -929,10 +1017,33 @@ already_AddRefed<DictionaryCacheEntry> DictionaryOrigin::AddEntry(
 }
 
 nsresult DictionaryOrigin::RemoveEntry(const nsACString& aKey) {
+  DICTIONARY_LOG(
+      ("DictionaryOrigin::RemoveEntry for %s", PromiseFlatCString(aKey).get()));
   for (const auto& dict : mEntries) {
     if (dict->GetURI().Equals(aKey)) {
+      // Ensure it doesn't disappear on us
+      RefPtr<DictionaryCacheEntry> hold(dict);
       mEntries.RemoveElement(dict);
-      dict->RemoveEntry(mEntry);
+      hold->RemoveEntry(mEntry);
+      if (MOZ_UNLIKELY(
+              MOZ_LOG_TEST(gDictionaryLog, mozilla::LogLevel::Debug))) {
+        DumpEntries();
+      }
+      return NS_OK;
+    }
+  }
+  DICTIONARY_LOG(("DictionaryOrigin::RemoveEntry (pending) for %s",
+                  PromiseFlatCString(aKey).get()));
+  for (const auto& dict : mPendingEntries) {
+    if (dict->GetURI().Equals(aKey)) {
+      // Ensure it doesn't disappear on us
+      RefPtr<DictionaryCacheEntry> hold(dict);
+      mPendingEntries.RemoveElement(dict);
+      hold->RemoveEntry(mEntry);
+      if (MOZ_UNLIKELY(
+              MOZ_LOG_TEST(gDictionaryLog, mozilla::LogLevel::Debug))) {
+        DumpEntries();
+      }
       return NS_OK;
     }
   }
@@ -949,7 +1060,19 @@ void DictionaryOrigin::FinishAddEntry(DictionaryCacheEntry* aEntry) {
 }
 
 void DictionaryOrigin::RemoveEntry(DictionaryCacheEntry* aEntry) {
-  mEntries.RemoveElement(aEntry);
+  DICTIONARY_LOG(("RemoveEntry(%s)", aEntry->mURI.get()));
+  if (!mEntries.RemoveElement(aEntry)) {
+    mPendingEntries.RemoveElement(aEntry);
+  }
+  if (MOZ_UNLIKELY(MOZ_LOG_TEST(gDictionaryLog, mozilla::LogLevel::Debug))) {
+    DumpEntries();
+  }
+}
+
+void DictionaryOrigin::Clear() {
+  mEntries.Clear();
+  mPendingEntries.Clear();
+  mEntry->AsyncDoom(nullptr);
 }
 
 // caller will throw this into a RefPtr
