@@ -1314,6 +1314,7 @@ nsresult CacheFileIOManager::Shutdown() {
   }
 
   CacheIndex::Shutdown();
+  DictionaryCache::Shutdown();
 
   if (CacheObserver::ClearCacheOnShutdown()) {
     auto totalTimer =
