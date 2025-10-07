@@ -1517,9 +1517,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Ջնջել պատմությունը</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Պատմությունը ջնջվեց</string>
+  <string name="history_delete_multiple_items_snackbar">Պատմությունը ջնջվեց</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s-ը ջնջվեց</string>
+  <string name="history_delete_single_item_snackbar">%1$s-ը ջնջվեց</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Ջնջել</string>
   <!--
@@ -2704,6 +2704,10 @@
   <string name="saved_login_hide_password">Թաքցնել գաղտնաբառը</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">Ապակողպեք՝ դիտելու համար պահված գաղտնաբառերը</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">Ապակողպել</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">Լքել</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">Անվտանգ դարձրեք ձեր պահված գաղտնաբառերը</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -3597,6 +3601,16 @@
   <string name="debug_drawer_add_new_address">Հավելել նոր հասցե ընտրված լեզվի համար</string>
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
   <string name="debug_drawer_delete_all_addresses">Ջնջել բոլոր հասցեները</string>
+  <!--
+    Debug drawer credit cards
+
+    The title of the credit cards feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_credit_cards_title">Բանկային քարտեր</string>
+  <!-- The title of the button in the debug drawer for adding a new credit card -->
+  <string name="debug_drawer_add_new_credit_card">Հավելել նոր բանկային քարտ</string>
+  <!-- The title of the button for deleting in the debug drawer all addresses. -->
+  <string name="debug_drawer_delete_all_credit_cards">Ջնջել բոլոր բանկային քարտերը</string>
   <!--
     Debug drawer "contextual feature recommendation" (CFR) tools
 

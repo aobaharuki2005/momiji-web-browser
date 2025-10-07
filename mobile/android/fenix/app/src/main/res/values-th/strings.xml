@@ -547,6 +547,8 @@
   <string name="onboarding_redesign_tou_subheader_one">โหลดหน้าเว็บได้ฉับไว</string>
   <!-- Terms of use (ToU) second subheader. -->
   <string name="onboarding_redesign_tou_subheader_two">การป้องกันการติดตามอัตโนมัติ</string>
+  <!-- Terms of use (ToU) third subheader. -->
+  <string name="onboarding_redesign_tou_subheader_three">ปรับแต่งได้นับพัน</string>
   <!-- Used as text for the link in onboarding_redesign_tou_body_one. -->
   <string name="onboarding_redesign_tou_body_one_link_text" tools:ignore="BrandUsage">เงื่อนไขการใช้งาน Firefox</string>
   <!--
@@ -1494,9 +1496,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">ลบประวัติ</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">ลบประวัติแล้ว</string>
+  <string name="history_delete_multiple_items_snackbar">ลบประวัติแล้ว</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">ลบ %1$s แล้ว</string>
+  <string name="history_delete_single_item_snackbar">ลบ %1$s แล้ว</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">ลบ</string>
   <!--
@@ -2677,6 +2679,10 @@
   <string name="saved_login_hide_password">ซ่อนรหัสผ่าน</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">ปลดล็อกเพื่อดูรหัสผ่านที่บันทึกไว้ของคุณ</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">ปลดล็อก</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">ออก</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">รักษาความปลอดภัยให้กับรหัสผ่านที่บันทึกไว้ของคุณ</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -3570,6 +3576,16 @@
   <string name="debug_drawer_add_new_address">เพิ่มที่อยู่ใหม่สำหรับตำแหน่งที่เลือก</string>
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
   <string name="debug_drawer_delete_all_addresses">ลบที่อยู่ทั้งหมด</string>
+  <!--
+    Debug drawer credit cards
+
+    The title of the credit cards feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_credit_cards_title">บัตรเครดิต</string>
+  <!-- The title of the button in the debug drawer for adding a new credit card -->
+  <string name="debug_drawer_add_new_credit_card">เพิ่มบัตรเครดิตใหม่</string>
+  <!-- The title of the button for deleting in the debug drawer all addresses. -->
+  <string name="debug_drawer_delete_all_credit_cards">ลบบัตรเครดิตทั้งหมด</string>
   <!--
     Debug drawer "contextual feature recommendation" (CFR) tools
 

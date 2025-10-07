@@ -44,6 +44,10 @@
   <string name="tab_tray_close_multiselect_content_description">Выйсці з рэжыму мультывыбару</string>
   <!-- Content description for save to collection button while in multiselect mode in tab tray -->
   <string name="tab_tray_collection_button_multiselect_content_description">Захаваць абраныя карткі ў калекцыю</string>
+  <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_header">Захоплівайце карткі з любой прылады</string>
+  <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
+  <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Увайсці</string>
   <!--
     Home - Bookmarks
 
@@ -214,6 +218,8 @@
   <string name="browser_menu_add_to_homescreen">Дадаць на хатні экран</string>
   <!-- Browser menu toggle that adds a PWA of the site on the device home screen. -->
   <string name="browser_menu_add_app_to_homescreen">Дадаць праграму на хатні экран</string>
+  <!-- Text for notifying users that Xiaomi devices require additional permissions to add to home screen -->
+  <string name="browser_menu_add_to_homescreen_xiaomi">Прыладам Xiaomi могуць спатрэбіцца дадатковыя дазволы для дадання цэтлікаў на галоўны экран. Калі ласка, праверце свае налады.</string>
   <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
   <string name="resync_button_content_description">Сінхранізаваць ізноў</string>
   <!-- Browser menu button that opens the find in page menu -->
@@ -363,6 +369,12 @@
   -->
   <string name="search_engine_icon_content_description_1">Пошукавая сістэма: %s</string>
   <!--
+    Content description (not visible, for screen readers etc.) of the search engine selector from the search toolbar.
+    %s is the search engine name (for example: DuckDuckGo).
+    The colon character (in "%s:") is intended to have the screen reader make a small pause between the search engine name and the description of the button.
+  -->
+  <string name="search_engine_selector_content_description">%s: выбар пошукавай сістэмы</string>
+  <!--
     Home onboarding
 
     Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog
@@ -444,6 +456,8 @@
   <string name="startup_crash_positive">Даслаць справаздачу пра крах</string>
   <!-- Button text to continue and not send a startup crash report -->
   <string name="startup_crash_negative">Не, дзякуй</string>
+  <!-- Button text to reopen firefox after the crash is processed %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_restart">Зноў адкрыць %s</string>
   <string name="onboarding_preferences_dialog_usage_data_learn_more_2">Падрабязней</string>
   <!-- Positive button label for the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_positive_button">Гатова</string>
@@ -457,8 +471,26 @@
   <string name="onboarding_term_of_service_line_two_link_text">Паведамленнем аб прыватнасці</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
   <string name="onboarding_term_of_service_line_three_link_text">Кіраваць</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_three. -->
+  <string name="onboarding_redesign_tou_body_three_link_text">Кіраваць наладамі</string>
+  <!-- Terms of use (ToU) onboarding page continue button label. -->
+  <string name="onboarding_redesign_tou_agree_and_continue_button_label">Працягнуць</string>
+  <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
+  <string name="onboarding_marketing_redesign_learn_more">Як мы выкарыстоўваем дадзеныя</string>
+  <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
+  <string name="onboarding_marketing_redesign_positive_button">Сцвердзіць</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Сінхранізацыя ўсюды, дзе вы карыстаецеся Firefox</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Атрымлівайце закладкі, укладкі і паролі на любой прыладзе. Усё абаронена шыфраваннем.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Пачаць сінхранізацыю</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Не зараз</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Як мы выкарыстоўваем дадзеныя</string>
+  <!-- Marketing onboarding page title variant. “One last thing” refers to the final step or action in the onboarding process that we’re asking users to take before they can start using the browser. -->
+  <string name="onboarding_marketing_title_1" tools:ignore="UnusedResources">Яшчэ адна рэч</string>
   <!-- Onboarding label for 'Save and continue' button, used by Nimbus experiments. -->
   <string name="onboarding_save_and_continue_button">Захаваць і працягваць</string>
   <!-- Onboarding toolbar selection card label for 'top' option, used by Nimbus experiments. -->
@@ -1176,9 +1208,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Выдаліць гісторыю</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Гісторыя выдалена</string>
+  <string name="history_delete_multiple_items_snackbar">Гісторыя выдалена</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s выдалены</string>
+  <string name="history_delete_single_item_snackbar">%1$s выдалены</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Выдаліць</string>
   <!--

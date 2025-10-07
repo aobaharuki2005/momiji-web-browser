@@ -1517,9 +1517,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Cancella cronologia</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Cronologia eliminata</string>
+  <string name="history_delete_multiple_items_snackbar">Cronologia eliminata</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s eliminato</string>
+  <string name="history_delete_single_item_snackbar">%1$s eliminato</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Elimina</string>
   <!--
@@ -2704,6 +2704,10 @@
   <string name="saved_login_hide_password">Nascondi password</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">Sblocca per visualizzare le password salvate</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">Sblocca</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">Esci</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">Proteggi le password salvate</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -3597,6 +3601,16 @@
   <string name="debug_drawer_add_new_address">Aggiungi un nuovo indirizzo per la lingua selezionata</string>
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
   <string name="debug_drawer_delete_all_addresses">Elimina tutti gli indirizzi</string>
+  <!--
+    Debug drawer credit cards
+
+    The title of the credit cards feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_credit_cards_title">Carte di credito</string>
+  <!-- The title of the button in the debug drawer for adding a new credit card -->
+  <string name="debug_drawer_add_new_credit_card">Aggiungi nuova carta di credito</string>
+  <!-- The title of the button for deleting in the debug drawer all addresses. -->
+  <string name="debug_drawer_delete_all_credit_cards">Elimina tutte le carte di credito</string>
   <!--
     Debug drawer "contextual feature recommendation" (CFR) tools
 

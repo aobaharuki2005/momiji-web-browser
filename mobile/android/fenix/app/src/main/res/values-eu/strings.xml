@@ -588,6 +588,14 @@
   <string name="onboarding_redesign_set_default_browser_title">Eskuratu jarraipenaren babes automatikoa lehenespenez</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Behin sakatzeak laguntzen du enpresek zure klikak espiatzea gelditzen.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Sinkronizatu Firefox darabilzun edozein lekutan</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Eskuratu laster-markak, fitxak eta pasahitzak edozein gailutan. Denak zifratzearekin babestuta.</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">Hasi sinkronizatzen</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">Une honetan ez</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Lagun iezaguzu Firefox hazten</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -720,6 +728,8 @@
   <string name="preferences_https_only_title">HTTPS-Only modua</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Erabili pantailaren blokeoa nabigatze pribatuko fitxak ezkutatzeko</string>
+  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
+  <string name="preferences_pbm_lock_screen_summary_3">Ikusi fitxak zure hatz-marka, PIN edo aurpegi bidezko desblokeoarekin. Hau gaituz gero, pantaila kapturatzea eta partekatzea eragotziko da.</string>
   <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Ikusi fitxak hatz-markarekin, PINarekin edo aurpegi bidezko desblokeoarekin.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Cookie iragarki-banden blokeatzailea</string>
@@ -1507,9 +1517,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Ezabatu historia</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Historia ezabatuta</string>
+  <string name="history_delete_multiple_items_snackbar">Historia ezabatuta</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s ezabatuta</string>
+  <string name="history_delete_single_item_snackbar">%1$s ezabatuta</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Ezabatu</string>
   <!--
@@ -2694,6 +2704,10 @@
   <string name="saved_login_hide_password">Ezkutatu pasahitza</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">Desblokeatu gordetako pasahitzak ikusteko</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">Desblokeatu</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">Utzi</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">Bermatu gordetako zure pasahitzak</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -3587,6 +3601,16 @@
   <string name="debug_drawer_add_new_address">Gehitu helbide berria hautatutako hizkuntzan</string>
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
   <string name="debug_drawer_delete_all_addresses">Ezabatu helbide guztiak</string>
+  <!--
+    Debug drawer credit cards
+
+    The title of the credit cards feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_credit_cards_title">Kreditu-txartelak</string>
+  <!-- The title of the button in the debug drawer for adding a new credit card -->
+  <string name="debug_drawer_add_new_credit_card">Gehitu kreditu-txartela</string>
+  <!-- The title of the button for deleting in the debug drawer all addresses. -->
+  <string name="debug_drawer_delete_all_credit_cards">Ezabatu kreditu-txartel guztiak</string>
   <!--
     Debug drawer "contextual feature recommendation" (CFR) tools
 

@@ -728,6 +728,8 @@
   <string name="preferences_https_only_title">Mode Hanya HTTPS</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Gunakan kunci layar untuk menyembunyikan tab dalam penjelajahan pribadi</string>
+  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
+  <string name="preferences_pbm_lock_screen_summary_3">Lihat tab dengan sidik jari, PIN, atau face unlock Anda. Mengaktifkan ini juga mencegah tangkapan layar dan berbagi.</string>
   <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Lihat tab dengan sidik jari, PIN, atau wajah Anda.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Pemblokir Spanduk Kuki</string>
@@ -1515,9 +1517,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Hapus riwayat</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Riwayat Dihapus</string>
+  <string name="history_delete_multiple_items_snackbar">Riwayat Dihapus</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s terhapus</string>
+  <string name="history_delete_single_item_snackbar">%1$s terhapus</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Hapus</string>
   <!--
@@ -2702,6 +2704,10 @@
   <string name="saved_login_hide_password">Sembunyikan sandi</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">Buka kunci untuk melihat kata sandi Anda yang tersimpan</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">Buka kunci</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">Tinggalkan</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">Amankan kata sandi Anda yang tersimpan</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -3595,6 +3601,16 @@
   <string name="debug_drawer_add_new_address">Tambahkan alamat baru untuk pelokalan yang dipilih</string>
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
   <string name="debug_drawer_delete_all_addresses">Hapus semua alamat</string>
+  <!--
+    Debug drawer credit cards
+
+    The title of the credit cards feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_credit_cards_title">Kartu kredit</string>
+  <!-- The title of the button in the debug drawer for adding a new credit card -->
+  <string name="debug_drawer_add_new_credit_card">Tambahkan kartu kredit baru</string>
+  <!-- The title of the button for deleting in the debug drawer all addresses. -->
+  <string name="debug_drawer_delete_all_credit_cards">Hapus semua kartu kredit</string>
   <!--
     Debug drawer "contextual feature recommendation" (CFR) tools
 

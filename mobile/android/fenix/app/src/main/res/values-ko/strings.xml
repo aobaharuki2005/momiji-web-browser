@@ -1517,9 +1517,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">기록 삭제</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">기록 삭제됨</string>
+  <string name="history_delete_multiple_items_snackbar">기록 삭제됨</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s 삭제됨</string>
+  <string name="history_delete_single_item_snackbar">%1$s 삭제됨</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">삭제</string>
   <!--
@@ -2704,6 +2704,10 @@
   <string name="saved_login_hide_password">비밀번호 숨기기</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">저장된 비밀번호를 보시려면 잠금 해제하세요</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">잠금 해제</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">나가기</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">저장된 비밀번호를 보호하세요</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -3597,6 +3601,16 @@
   <string name="debug_drawer_add_new_address">선택한 로케일의 새 주소 추가</string>
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
   <string name="debug_drawer_delete_all_addresses">모든 주소 삭제</string>
+  <!--
+    Debug drawer credit cards
+
+    The title of the credit cards feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_credit_cards_title">신용 카드</string>
+  <!-- The title of the button in the debug drawer for adding a new credit card -->
+  <string name="debug_drawer_add_new_credit_card">새 신용 카드 추가</string>
+  <!-- The title of the button for deleting in the debug drawer all addresses. -->
+  <string name="debug_drawer_delete_all_credit_cards">모든 신용 카드 삭제</string>
   <!--
     Debug drawer "contextual feature recommendation" (CFR) tools
 
