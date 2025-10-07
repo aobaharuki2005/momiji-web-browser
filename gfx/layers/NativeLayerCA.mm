@@ -889,6 +889,10 @@ NativeLayerCA::~NativeLayerCA() {
           this);
   }
 #endif
+
+  if (mSurfaceToPresent) {
+    IOSurfaceDecrementUseCount(mSurfaceToPresent.get());
+  }
 }
 
 void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
@@ -1321,7 +1325,15 @@ void NativeLayerCA::SetSurfaceToPresent(CFTypeRefPtr<IOSurfaceRef> aSurfaceRef,
              "Shouldn't call this for layers that get external surfaces.");
 
   bool changedSurface = (mSurfaceToPresent != aSurfaceRef);
-  mSurfaceToPresent = aSurfaceRef;
+  if (changedSurface) {
+    if (mSurfaceToPresent) {
+      IOSurfaceDecrementUseCount(mSurfaceToPresent.get());
+    }
+    mSurfaceToPresent = aSurfaceRef;
+    if (mSurfaceToPresent) {
+      IOSurfaceIncrementUseCount(mSurfaceToPresent.get());
+    }
+  }
 
   bool changedSize = (mSize != aSize);
   mSize = aSize;

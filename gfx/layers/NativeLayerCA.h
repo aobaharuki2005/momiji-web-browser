@@ -467,6 +467,10 @@ class NativeLayerCA : public NativeLayer {
   // Controls access to all fields of this class.
   Mutex mMutex MOZ_UNANNOTATED;
 
+  // The IOSurface to use for this layer. Optional.
+  // If not present, we get use a surface from mSurfaceHandler or mTextureHost
+  // instead. We mark the surface as "in use" as long as it is in
+  // mSurfaceToPresent, to prevent other processes from recycling it.
   CFTypeRefPtr<IOSurfaceRef> mSurfaceToPresent;
 
   Maybe<NativeLayerMacSurfaceHandler> mSurfaceHandler;
