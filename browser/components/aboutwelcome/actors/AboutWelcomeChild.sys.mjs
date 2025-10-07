@@ -137,14 +137,20 @@ export class AboutWelcomeChild extends JSWindowActorChild {
     Cu.exportFunction(this.AWNewScreen.bind(this), window, {
       defineAs: "AWNewScreen",
     });
+
     Cu.exportFunction(this.AWGetUnhandledCampaignAction.bind(this), window, {
       defineAs: "AWGetUnhandledCampaignAction",
     });
+
     Cu.exportFunction(
       this.AWFindBackupsInWellKnownLocations.bind(this),
       window,
       { defineAs: "AWFindBackupsInWellKnownLocations" }
     );
+
+    Cu.exportFunction(this.RPMGetFormatURLPref.bind(this), window, {
+      defineAs: "RPMGetFormatURLPref",
+    });
   }
 
   /**
@@ -398,6 +404,10 @@ export class AboutWelcomeChild extends JSWindowActorChild {
     return this.sendQueryAndCloneForContent(
       "AWPage:GET_UNHANDLED_CAMPAIGN_ACTION"
     );
+  }
+
+  RPMGetFormatURLPref(formatURL) {
+    return Services.urlFormatter.formatURLPref(formatURL);
   }
 
   /**
