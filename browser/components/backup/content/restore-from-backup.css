@@ -47,6 +47,10 @@
       display: flex;
       column-gap: var(--space-small);
       align-items: center;
+
+      &.aw-embedded-filepicker {
+        align-items: flex-end;
+      }
     }
 
     #backup-filepicker-label {
@@ -74,6 +78,21 @@
       &:dir(rtl) {
         background-position: calc(100% - var(--space-small)) 50%;
       }
+
+      &:is(textarea) {
+        background-position: var(--space-small) var(--space-small);
+        background-size: var(--icon-size);
+        resize: none;
+        overflow: hidden;
+      }
+
+      &:is(textarea):dir(rtl) {
+        background-position: calc(100% - var(--space-small)) var(--space-small);
+      }
+    }
+
+    #backup-filepicker-button {
+      margin-block: var(--space-xsmall);
     }
   }
 
