@@ -2437,7 +2437,8 @@ nsresult CacheFileIOManager::DoomFile(CacheFileHandle* aHandle,
 }
 
 nsresult CacheFileIOManager::DoomFileInternal(
-    CacheFileHandle* aHandle, PinningDoomRestriction aPinningDoomRestriction) {
+    CacheFileHandle* aHandle, PinningDoomRestriction aPinningDoomRestriction,
+    bool aClearDictionary) {
   LOG(("CacheFileIOManager::DoomFileInternal() [handle=%p]", aHandle));
   aHandle->Log();
 
@@ -2515,7 +2516,7 @@ nsresult CacheFileIOManager::DoomFileInternal(
   if (!aHandle->IsSpecialFile()) {
     // Ensure the string doesn't disappear with the handle
     RefPtr<CacheFileHandle> handle(aHandle);
-    CacheIndex::RemoveEntry(aHandle->Hash(), aHandle->Key());
+    CacheIndex::RemoveEntry(aHandle->Hash(), aHandle->Key(), aClearDictionary);
   }
 
   aHandle->mIsDoomed = true;
@@ -3415,6 +3416,14 @@ nsresult CacheFileIOManager::EvictByContext(
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+  // Clear the entries from the Index immediately, to comply with
+  // https://www.w3.org/TR/clear-site-data/#fetch-integration
+  // aBaseDomain isn't needed for Clear-Site-Data, but is for
+  // ClearBaseDomain.  This can also make CacheStorageService::Clear() and
+  // ClearBaseDomain() be synchronous.
+  // Note that we will effectively hide the entries until the actual evict
+  // happens.
+  CacheIndex::EvictByContext(aOrigin, aBaseDomain);
 
   return NS_OK;
 }
@@ -3448,6 +3457,9 @@ nsresult CacheFileIOManager::EvictByContextInternal(
     // This happens in xpcshell tests that use cache without profile. We need
     // to notify observers in this case since the tests are waiting for it.
     // Also notify for aPinned == true, those are interested as well.
+
+    // XXX This doesn't actually clear anything in this case (is there anything
+    // to clear?)
     if (!aLoadContextInfo) {
       RefPtr<EvictionNotifierRunnable> r = new EvictionNotifierRunnable();
       NS_DispatchToMainThread(r);
@@ -3470,6 +3482,9 @@ nsresult CacheFileIOManager::EvictByContextInternal(
   NS_ConvertUTF16toUTF8 baseDomain(aBaseDomain);
 
   // Doom all active handles that matches the load context
+  // NOTE: Dictionaries have already been cleared synchronously,
+  // so there's no need to re-clear them (which might cause
+  // problems if they were re-created in to interim).
   nsTArray<RefPtr<CacheFileHandle>> handles;
   mHandles.GetActiveHandles(&handles);
 
@@ -3553,7 +3568,8 @@ nsresult CacheFileIOManager::EvictByContextInternal(
     // doom decision will be deferred until pinning status is determined.
     rv = DoomFileInternal(handle,
                           aPinned ? CacheFileIOManager::DOOM_WHEN_PINNED
-                                  : CacheFileIOManager::DOOM_WHEN_NON_PINNED);
+                                  : CacheFileIOManager::DOOM_WHEN_NON_PINNED,
+                          false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       LOG(
           ("CacheFileIOManager::EvictByContextInternal() - Cannot doom handle"
@@ -3587,7 +3603,7 @@ nsresult CacheFileIOManager::CacheIndexStateChanged() {
   // non-null here.
   MOZ_ASSERT(gInstance);
 
-  // We have to re-distatch even if we are on IO thread to prevent reentering
+  // We have to re-dispatch even if we are on IO thread to prevent reentering
   // the lock in CacheIndex
   nsCOMPtr<nsIRunnable> ev = NewRunnableMethod(
       "net::CacheFileIOManager::CacheIndexStateChangedInternal",

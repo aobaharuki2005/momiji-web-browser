@@ -744,6 +744,10 @@ static bool RemoveExactEntry(CacheEntryTable* aEntries, nsACString const& aKey,
     return false;  // Already replaced...
   }
 
+  // Remove from DictionaryCache immediately, to ensure the removal is
+  // synchronous
+  DictionaryCache::RemoveDictionaryFor(aEntry->GetURI());
+
   LOG(("RemoveExactEntry [entry=%p removed]", aEntry));
   aEntries->Remove(aKey);
   return true;
@@ -899,7 +903,7 @@ nsresult CacheStorageService::ClearOriginInternal(
 NS_IMETHODIMP CacheStorageService::ClearOriginDictionary(nsIURI* aURI) {
   LOG(("CacheStorageService::ClearOriginDictionary"));
   // Note: due to cookie samesite rules, we need to clean for all ports
-  DictionaryCache::RemoveDictionaries(aURI);
+  DictionaryCache::RemoveDictionariesForOrigin(aURI);
   return NS_OK;
 }
 

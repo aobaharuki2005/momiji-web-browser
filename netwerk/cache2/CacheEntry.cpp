@@ -533,7 +533,7 @@ already_AddRefed<CacheEntryHandle> CacheEntry::ReopenTruncated(
   mLock.AssertCurrentThreadOwns();
 
   // Hold callbacks invocation, AddStorageEntry would invoke from doom
-  // prematurly
+  // prematurely
   mPreventCallbacks = true;
 
   RefPtr<CacheEntryHandle> handle;
