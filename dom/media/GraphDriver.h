@@ -493,7 +493,6 @@ class SystemClockDriver : public ThreadedDriver {
   // graph thread does not run during the initialization.
   TimeStamp mInitialTimeStamp;
   TimeStamp mCurrentTimeStamp;
-  TimeStamp mLastTimeStamp;
 };
 
 /**

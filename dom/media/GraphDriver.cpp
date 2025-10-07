@@ -180,8 +180,7 @@ SystemClockDriver::SystemClockDriver(GraphInterface* aGraphInterface,
                                      uint32_t aSampleRate)
     : ThreadedDriver(aGraphInterface, aPreviousDriver, aSampleRate),
       mInitialTimeStamp(TimeStamp::Now()),
-      mCurrentTimeStamp(TimeStamp::Now()),
-      mLastTimeStamp(TimeStamp::Now()) {}
+      mCurrentTimeStamp(TimeStamp::Now()) {}
 
 SystemClockDriver::~SystemClockDriver() = default;
 
