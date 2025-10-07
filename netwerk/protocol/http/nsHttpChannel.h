@@ -885,6 +885,10 @@ class nsHttpChannel final : public HttpBaseChannel,
   // Used to handle cancellation while suspended waiting for LNA permission
   bool mWaitingForLNAPermission{false};
 
+  bool mUsingDictionary{false};  // we added Available-Dictionary
+  bool mShouldSuspendForDictionary{false};
+  bool mSuspendedForDictionary{false};
+
  protected:
   virtual void DoNotifyListenerCleanup() override;
 

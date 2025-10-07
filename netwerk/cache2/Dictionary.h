@@ -40,12 +40,21 @@ namespace net {
 // When creating an entry from incoming data, we'll create it with no hash
 // initially until the full data has arrived, then update the Hash.
 class DictionaryCacheEntry final
-    : public LinkedListElement<RefPtr<DictionaryCacheEntry>> {
+    : public LinkedListElement<RefPtr<DictionaryCacheEntry>>,
+      public nsICacheEntryOpenCallback,
+      public nsIStreamListener {
  private:
-  ~DictionaryCacheEntry() { MOZ_ASSERT(mUsers == 0); }
+  ~DictionaryCacheEntry() {
+    MOZ_ASSERT(mUsers == 0);
+    MOZ_ASSERT(!isInList());
+  }
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DictionaryCacheEntry)
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSICACHEENTRYOPENCALLBACK
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+
   DictionaryCacheEntry(const nsACString& aKey, const nsACString& aPattern,
                        const nsACString& aId,
                        const Maybe<nsCString>& aHash = Nothing());
@@ -53,7 +62,10 @@ class DictionaryCacheEntry final
   // returns true if the pattern for the dictionary matches the path given
   bool Match(const nsACString& aFilePath, uint32_t& aLongest);
 
-  void Prefetch();
+  // Start reading the cache entry into memory and call completion
+  // function when done
+  bool Prefetch(nsILoadContextInfo* aLoadContextInfo,
+                const std::function<nsresult()>& aFunc);
 
   const nsACString& GetHash() const {
     MOZ_ASSERT(NS_IsMainThread());
@@ -65,19 +77,11 @@ class DictionaryCacheEntry final
     mHash = aHash;
   }
 
-  bool Valid() const { return !mHash.IsEmpty(); }
-
   const nsCString& GetId() const { return mId; }
 
   // keep track of requests that may need the data
-  void InUse() { mUsers++; }
-  void UseCompleted() {
-    MOZ_ASSERT(mUsers > 0);
-    mUsers--;
-    // Purge mDictionaryData
-    // XXX Don't clear until we can reload it from disk
-    //    mDictionaryData.clear();
-  }
+  void InUse();
+  void UseCompleted();
 
   const nsACString& GetURI() const { return mURI; }
 
@@ -85,6 +89,8 @@ class DictionaryCacheEntry final
     MOZ_ASSERT(NS_IsMainThread());
     mHash.Truncate(0);
     mDictionaryData.clear();
+    mDictionaryDataComplete = false;
+    MOZ_ASSERT(mWaitingPrefetch.IsEmpty());
   }
 
   const Vector<uint8_t>& GetDictionary() const { return mDictionaryData; }
@@ -100,10 +106,16 @@ class DictionaryCacheEntry final
     return (uint8_t*)mDictionaryData.begin();
   }
 
+  bool DictionaryReady() const { return mDictionaryDataComplete; }
+
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     // XXX
     return mallocSizeOf(this);
   }
+
+  static nsresult ReadCacheData(nsIInputStream* aInStream, void* aClosure,
+                                const char* aFromSegment, uint32_t aToOffset,
+                                uint32_t aCount, uint32_t* aWriteCount);
 
  private:
   nsCString mURI;  // URI (without ref) for the dictionary
@@ -122,6 +134,9 @@ class DictionaryCacheEntry final
 
   // for accumulating SHA-256 hash values for dictionaries
   nsCOMPtr<nsICryptoHash> mCrypto;
+
+  // call these when prefetch is complete
+  nsTArray<std::function<void()>> mWaitingPrefetch;
 };
 
 // XXX Do we want to pre-read dictionaries into RAM at startup (lazily)?
