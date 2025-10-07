@@ -211,7 +211,7 @@ NativeLayerRootCA::~NativeLayerRootCA() {
       mSublayers.IsEmpty(),
       "Please clear all layers before destroying the layer root.");
 
-  if (mMutatedOnscreenLayerStructure || mMutatedOffscreenLayerStructure) {
+  {
     // Clear the root layer's sublayers. At this point the window is usually
     // closed, so this transaction does not cause any screen updates.
     AutoCATransaction transaction;
@@ -219,6 +219,7 @@ NativeLayerRootCA::~NativeLayerRootCA() {
   }
 
   [mOnscreenRootCALayer release];
+  [mOffscreenRootCALayer release];
 }
 
 already_AddRefed<NativeLayer> NativeLayerRootCA::CreateLayer(
@@ -402,6 +403,11 @@ void NativeLayerRootCA::OnNativeLayerRootSnapshotterDestroyed(
 
 void NativeLayerRootCA::CommitOffscreen(CALayer* aRootCALayer) {
   MutexAutoLock lock(mMutex);
+  if (aRootCALayer != mOffscreenRootCALayer) {
+    [mOffscreenRootCALayer release];
+    mOffscreenRootCALayer = [aRootCALayer retain];
+    mMutatedOffscreenLayerStructure = true;
+  }
   CommitRepresentation(WhichRepresentation::OFFSCREEN, aRootCALayer, mSublayers,
                        mMutatedOffscreenLayerStructure, mWindowIsFullscreen);
   mMutatedOffscreenLayerStructure = false;
