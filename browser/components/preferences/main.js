@@ -1129,9 +1129,7 @@ let SETTINGS_CONFIG = {
       {
         id: "windowsLaunchOnLoginDisabledProfileBox",
         control: "moz-message-bar",
-        controlAttrs: {
-          l10nId: "startup-windows-launch-on-login-profile-disabled",
-        },
+        l10nId: "startup-windows-launch-on-login-profile-disabled",
       },
       {
         id: "alwaysCheckDefault",

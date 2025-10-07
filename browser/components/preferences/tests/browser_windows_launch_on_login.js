@@ -193,6 +193,13 @@ add_task(async function testDisablingLaunchOnLogin() {
   let launchOnLoginDisabledMessage = doc.getElementById(
     "windowsLaunchOnLoginDisabledProfileBox"
   );
+
+  is(
+    launchOnLoginDisabledMessage.dataset.l10nId,
+    "startup-windows-launch-on-login-profile-disabled",
+    "Has proper fluent ID"
+  );
+
   ok(!launchOnLoginDisabledMessage.hidden, "Disabled message is displayed");
 
   gBrowser.removeCurrentTab();
