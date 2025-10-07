@@ -128,7 +128,7 @@ export const MultiStageAboutWelcome = props => {
   }, [transition]);
 
   // Transition to next screen, opening about:home on last screen button CTA
-  const handleTransition = () => {
+  const handleTransition = goBack => {
     // Only handle transitioning out from a screen once.
     if (transition === "out") {
       return;
@@ -140,7 +140,10 @@ export const MultiStageAboutWelcome = props => {
     // Actually move forwards after all transitions finish.
     setTimeout(
       () => {
-        if (index < screens.length - 1) {
+        if (goBack) {
+          setTransition(props.transitions ? "in" : "");
+          setScreenIndex(prevState => prevState - 1);
+        } else if (index < screens.length - 1) {
           setTransition(props.transitions ? "in" : "");
           setScreenIndex(prevState => prevState + 1);
         } else {
@@ -615,7 +618,10 @@ export class WelcomeScreen extends React.PureComponent {
   }
 
   resolveActionFromContent(value, event, props) {
-    if (value === "submenu_button" && event.action) {
+    if (
+      (value === "submenu_button" || value === "tile_button") &&
+      event.action
+    ) {
       return event.action;
     }
 
@@ -706,7 +712,7 @@ export class WelcomeScreen extends React.PureComponent {
       this.props.setInitialTheme(this.props.activeTheme);
     }
 
-    // `navigate` and `dismiss` can be true/false/undefined, or they can be a
+    // `navigate`, `goBack` and `dismiss` can be true/false/undefined, or they can be a
     // string "actionResult" in which case we should use the actionResult
     // (boolean resolved by handleUserAction)
     const shouldDoBehavior = behavior => {
@@ -725,7 +731,7 @@ export class WelcomeScreen extends React.PureComponent {
     };
 
     if (shouldDoBehavior(action.navigate)) {
-      props.navigate();
+      props.navigate(action.goBack);
     }
 
     // Used by FeatureCallout to advance screens by re-rendering the whole

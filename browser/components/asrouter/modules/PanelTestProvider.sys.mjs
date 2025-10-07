@@ -20,6 +20,479 @@ const isMSIX =
 
 const MESSAGES = () => [
   {
+    id: "TEST_BACKUP_SPOTLIGHT",
+    groups: [],
+    targeting: true,
+    trigger: {
+      id: "defaultBrowserCheck",
+    },
+    template: "spotlight",
+    profileScope: "single",
+    frequency: {
+      lifetime: 100,
+    },
+    content: {
+      template: "multistage",
+      modal: "tab",
+      screens: [
+        {
+          id: "SCREEN_1",
+          force_hide_steps_indicator: true,
+          content: {
+            position: "center",
+            screen_style: {
+              width: "700px",
+            },
+            logo: {
+              height: "0px",
+              imageURL: "",
+            },
+            title: {
+              raw: "Upgrading to Windows 11? Let's back up your Firefox data",
+            },
+            subtitle: {
+              raw: "Automatically protect your passwords, bookmarks, and more in 1-2 minutes. Learn more",
+            },
+            tiles: {
+              type: "single-select",
+              autoTrigger: false,
+              selected: "sync",
+              action: {
+                picker: "<event>",
+              },
+              data: [
+                {
+                  inert: true,
+                  type: "backup",
+                  icon: {
+                    background:
+                      "center / contain no-repeat url('chrome://browser/content/asrouter/assets/fox-with-box-on-cloud.svg')",
+                    width: "60px",
+                    height: "42px",
+                    marginBlockStart: "10px",
+                    paddingBlockEnd: "10px",
+                    borderRadius: "5px",
+                  },
+                  id: "sync",
+                  flair: {
+                    centered: true,
+                    text: {
+                      raw: "Recommended",
+                    },
+                  },
+                  label: {
+                    raw: "Sync to cloud",
+                    fontSize: 17,
+                    fontWeight: 600,
+                  },
+                  body: {
+                    raw: "Back up on all signed in devices",
+                    fontWeight: 300,
+                    marginBlock: "-6px 16px",
+                  },
+                  tilebutton: {
+                    label: {
+                      raw: "Select",
+                    },
+                    style: "primary",
+                    marginBlock: "0 16px",
+                    action: {
+                      type: "FXA_SIGNIN_FLOW",
+                      dismiss: "actionResult",
+                      needsAwait: true,
+                      data: {
+                        entrypoint: "onboarding",
+                        extraParams: {
+                          utm_content: "migration-onboarding",
+                        },
+                      },
+                    },
+                  },
+                },
+                {
+                  inert: true,
+                  type: "backup",
+                  icon: {
+                    background:
+                      "center / contain no-repeat url('chrome://browser/content/asrouter/assets/fox-with-locked-box.svg')",
+                    width: "60px",
+                    height: "40px",
+                    marginBlockStart: "10px",
+                    paddingBlockEnd: "10px",
+                    borderRadius: "5px",
+                  },
+                  id: "backup",
+                  flair: {
+                    centered: true,
+                    spacer: true,
+                  },
+                  label: {
+                    raw: "Back up to PC",
+                    fontSize: 17,
+                    fontWeight: 600,
+                  },
+                  body: {
+                    raw: "Save to this device",
+                    fontWeight: 300,
+                    marginBlock: "-6px 16px",
+                  },
+                  tilebutton: {
+                    label: {
+                      raw: "Select",
+                    },
+                    style: "secondary",
+                    marginBlock: "0 16px",
+                    action: {
+                      navigate: true,
+                    },
+                  },
+                },
+              ],
+            },
+            additional_button: {
+              label: {
+                string_id: "fx-view-discoverability-secondary-button-label",
+              },
+              style: "secondary",
+              flow: "row",
+              action: {
+                type: "BLOCK_MESSAGE",
+                data: {
+                  id: "TEST_BACKUP_SPOTLIGHT",
+                },
+                dismiss: true,
+              },
+            },
+            submenu_button: {
+              submenu: [
+                {
+                  type: "action",
+                  label: {
+                    string_id: "split-dismiss-button-dont-show-option",
+                  },
+                  action: {
+                    type: "BLOCK_MESSAGE",
+                    data: {
+                      id: "TEST_BACKUP_SPOTLIGHT",
+                    },
+                    dismiss: true,
+                  },
+                  id: "block_recommendation",
+                },
+                {
+                  type: "action",
+                  label: {
+                    string_id: "split-dismiss-button-show-fewer-option",
+                  },
+                  action: {
+                    type: "MULTI_ACTION",
+                    dismiss: true,
+                    data: {
+                      actions: [
+                        {
+                          type: "SET_PREF",
+                          data: {
+                            pref: {
+                              name: "messaging-system-action.firefox-view-recommendations",
+                              value: true,
+                            },
+                          },
+                        },
+                        {
+                          type: "BLOCK_MESSAGE",
+                          data: {
+                            id: "TASKBAR_TAB_TEST_CALLOUT",
+                          },
+                        },
+                      ],
+                    },
+                  },
+                  id: "show_fewer_recommendations",
+                },
+                {
+                  type: "separator",
+                },
+                {
+                  type: "action",
+                  label: {
+                    string_id: "split-dismiss-button-manage-settings-option",
+                  },
+                  action: {
+                    type: "OPEN_ABOUT_PAGE",
+                    data: {
+                      args: "preferences#general-cfrfeatures",
+                      where: "tab",
+                    },
+                    dismiss: true,
+                  },
+                  id: "manage_settings",
+                },
+              ],
+              attached_to: "additional_button",
+            },
+          },
+        },
+        {
+          id: "SCREEN_2",
+          force_hide_steps_indicator: true,
+          content: {
+            position: "center",
+            screen_style: {
+              width: "700px",
+            },
+            logo: {
+              height: "0px",
+              imageURL: "",
+            },
+            title: {
+              raw: "Choose Firefox data to back up",
+            },
+            subtitle: {
+              raw: "Only takes a minute.",
+            },
+            tiles: {
+              type: "single-select",
+              selected: "all",
+              action: {
+                picker: "<event>",
+              },
+              data: [
+                {
+                  inert: true,
+                  type: "backup",
+                  icon: {
+                    background:
+                      "center / contain no-repeat url('https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a43cd9cc-e8b2-477c-92f2-345557370de1.svg')",
+                    width: "60px",
+                    height: "40px",
+                    marginBlockStart: "10px",
+                    paddingBlockEnd: "10px",
+                    borderRadius: "5px",
+                  },
+                  id: "easy",
+                  label: {
+                    raw: "Easy setup",
+                    fontSize: 17,
+                    fontWeight: 600,
+                  },
+                  body: {
+                    items: [
+                      {
+                        icon: {
+                          background:
+                            "center / contain no-repeat url('chrome://browser/content/asrouter/assets/checkmark-16.svg')",
+                          height: "18px",
+                          width: "18px",
+                        },
+                        text: {
+                          raw: "Bookmarks, history, settings, and more",
+                        },
+                      },
+                      {
+                        icon: {
+                          background:
+                            "center / contain no-repeat url('chrome://browser/content/asrouter/assets/close-16.svg')",
+                          height: "18px",
+                          width: "18px",
+                        },
+                        text: {
+                          raw: "Doesn't include passwords and payments",
+                        },
+                      },
+                      {
+                        icon: {
+                          background:
+                            "center / contain no-repeat url('chrome://browser/content/asrouter/assets/close-16.svg')",
+                          height: "18px",
+                          width: "18px",
+                        },
+                        text: {
+                          raw: "Not encrypted",
+                          fontWeight: 500,
+                        },
+                      },
+                    ],
+                  },
+                  tilebutton: {
+                    label: {
+                      raw: "Select",
+                    },
+                    marginBlock: "0 16px",
+                    style: "primary",
+                    action: {
+                      type: "SET_PREF",
+                      navigate: true,
+                      data: {
+                        pref: {
+                          name: "messaging-system-action.backupChooser",
+                          value: "easy",
+                        },
+                      },
+                    },
+                  },
+                },
+                {
+                  inert: true,
+                  type: "backup",
+                  icon: {
+                    background:
+                      "center / contain no-repeat url('https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/0ddfd632-b9c4-45d6-86c3-b89f94797110.svg')",
+                    width: "60px",
+                    height: "40px",
+                    marginBlockStart: "10px",
+                    paddingBlockEnd: "10px",
+                    borderRadius: "5px",
+                  },
+                  id: "all",
+                  label: {
+                    raw: "All data",
+                    fontSize: 17,
+                    fontWeight: 600,
+                  },
+                  body: {
+                    items: [
+                      {
+                        icon: {
+                          background:
+                            "center / contain no-repeat url('chrome://browser/content/asrouter/assets/checkmark-16.svg')",
+                          height: "18px",
+                          width: "18px",
+                        },
+                        text: {
+                          raw: "Bookmarks, history, settings, and more",
+                        },
+                      },
+                      {
+                        icon: {
+                          background:
+                            "center / contain no-repeat url('chrome://browser/content/asrouter/assets/checkmark-16.svg')",
+                          height: "18px",
+                          width: "18px",
+                        },
+                        text: {
+                          raw: "Includes passwords and payments",
+                        },
+                      },
+                      {
+                        icon: {
+                          background:
+                            "center / contain no-repeat url('chrome://browser/content/asrouter/assets/shield-checkmark-16.svg')",
+                          height: "18px",
+                          width: "18px",
+                        },
+                        text: {
+                          raw: "Encrypted with a password",
+                          fontWeight: 500,
+                        },
+                      },
+                    ],
+                  },
+                  tilebutton: {
+                    label: {
+                      raw: "Select",
+                    },
+                    marginBlock: "0 16px",
+                    style: "primary",
+                    action: {
+                      type: "SET_PREF",
+                      navigate: true,
+                      data: {
+                        pref: {
+                          name: "messaging-system-action.backupChooser",
+                          value: "full",
+                        },
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+            additional_button: {
+              style: "secondary",
+              label: {
+                raw: "Back",
+              },
+              action: {
+                navigate: true,
+                goBack: true,
+              },
+            },
+          },
+        },
+        {
+          id: "SCREEN_3A",
+          force_hide_steps_indicator: true,
+          targeting:
+            "('messaging-system-action.backupChooser' |preferenceValue == 'easy')",
+          content: {
+            logo: {
+              imageURL:
+                "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a3c640c8-7594-4bb2-bc18-8b4744f3aaf2.gif",
+            },
+            title: {
+              raw: "Easy Backup",
+              paddingBlock: "8px",
+            },
+            dismiss_button: {
+              action: {
+                dismiss: true,
+              },
+            },
+            primary_button: {
+              label: "Primary",
+              action: {
+                navigate: true,
+              },
+            },
+            secondary_button: {
+              label: "Go back",
+              action: {
+                navigate: true,
+                goBack: true,
+              },
+            },
+          },
+        },
+        {
+          id: "SCREEN_3B",
+          force_hide_steps_indicator: true,
+          targeting:
+            "('messaging-system-action.backupChooser' |preferenceValue == 'full' || preferenceValue == null)",
+          content: {
+            logo: {
+              imageURL:
+                "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a3c640c8-7594-4bb2-bc18-8b4744f3aaf2.gif",
+            },
+            title: {
+              raw: "Full Backup",
+              paddingBlock: "8px",
+            },
+            dismiss_button: {
+              action: {
+                dismiss: true,
+              },
+            },
+            primary_button: {
+              label: "Primary",
+              action: {
+                navigate: true,
+              },
+            },
+            secondary_button: {
+              label: "Go back",
+              action: {
+                navigate: true,
+                goBack: true,
+              },
+            },
+          },
+        },
+      ],
+      transitions: true,
+    },
+    provider: "panel_local_testing",
+  },
+  {
     id: "TASKBAR_TAB_TEST_CALLOUT",
     template: "feature_callout",
     groups: ["cfr"],
