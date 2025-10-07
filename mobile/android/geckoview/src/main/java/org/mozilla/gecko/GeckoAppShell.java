@@ -1791,4 +1791,7 @@ public class GeckoAppShell {
 
   @WrapForJNI(dispatchTo = "gecko")
   public static native void onTimezoneChanged();
+
+  @WrapForJNI
+  public static native void logGpuProcessLaunchFailure(String aMessage);
 }
