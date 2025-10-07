@@ -13,13 +13,15 @@ import {
   applyMiddleware,
 } from "devtools/client/shared/vendor/redux";
 import { log } from "./middleware/log";
-import { promise } from "./middleware/promise";
 import { timing } from "./middleware/timing";
 import { context } from "./middleware/context";
 
 const {
   ignore,
 } = require("resource://devtools/client/shared/redux/middleware/ignore.js");
+const {
+  promise,
+} = require("resource://devtools/client/shared/redux/middleware/promise.js");
 const {
   thunk,
 } = require("resource://devtools/client/shared/redux/middleware/thunk.js");
