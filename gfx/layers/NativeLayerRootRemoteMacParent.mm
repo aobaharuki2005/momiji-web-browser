@@ -102,13 +102,15 @@ mozilla::ipc::IPCResult NativeLayerRootRemoteMacParent::RecvRequestReadback(
     return IPC_FAIL(this, "Can't allocate shmem.");
   }
 
-  auto snapshotter = mRealNativeLayerRoot->CreateSnapshotter();
-  if (!snapshotter) {
-    return IPC_FAIL(this, "Can't create parent-side snapshotter.");
+  if (!mSnapshotter) {
+    mSnapshotter = mRealNativeLayerRoot->CreateSnapshotter();
+    if (!mSnapshotter) {
+      return IPC_FAIL(this, "Can't create parent-side snapshotter.");
+    }
   }
 
-  if (!snapshotter->ReadbackPixels(aSize, readbackFormat,
-                                   buffer.Range<uint8_t>())) {
+  if (!mSnapshotter->ReadbackPixels(aSize, readbackFormat,
+                                    buffer.Range<uint8_t>())) {
     return IPC_FAIL(this, "Failed readback.");
   }
 

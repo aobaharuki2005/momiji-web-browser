@@ -47,6 +47,7 @@ class NativeLayerRootRemoteMacParent final : public NativeLayerRemoteParent {
                             bool aIsHDR, IntSize aSize);
 
   RefPtr<NativeLayerRootCA> mRealNativeLayerRoot;
+  UniquePtr<NativeLayerRootSnapshotter> mSnapshotter;
   nsTHashMap<uint64_t, RefPtr<NativeLayer>> mKnownLayers;
 };
 
