@@ -610,7 +610,7 @@ yellow = submarine
         condition = "apple_catalina"
         bug = "Bug 200"
         manifestparser.toml.add_skip_if(manifest, filename, condition, bug)
-        condition = "os == 'android' && android_version == '34' && debug"
+        condition = "os == 'android' && os_version == '14' && debug"
         bug = "Bug 99999"
         (additional_comment, carryover) = manifestparser.toml.add_skip_if(
             manifest, filename, condition, bug, None, True

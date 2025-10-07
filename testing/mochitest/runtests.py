@@ -3543,7 +3543,6 @@ toolbar#nav-bar {
                 "xorigin": options.xOriginTests,
                 "condprof": options.conditionedProfile,
                 "msix": "WindowsApps" in options.app,
-                "android_version": mozinfo.info.get("android_version", -1),
                 "android": mozinfo.info.get("android", False),
                 "is_emulator": mozinfo.info.get("is_emulator", False),
                 "coverage": mozinfo.info.get("coverage", False),

@@ -1609,11 +1609,9 @@ class Skipfails:
         if os is not None:
             if kind == Kind.LIST:
                 skip_if = self._get_list_skip_if(extra)
-            elif os_version is not None:
+            else:
                 skip_if = "os" + eq + qq + os + qq
-                if os == "android":
-                    skip_if += aa + "android_version" + eq + qq + os_version + qq
-                else:
+                if os_version is not None:
                     skip_if += aa + "os_version" + eq + qq + os_version + qq
         arch = extra.arch
         if arch is not None and skip_if is not None and kind != Kind.LIST:

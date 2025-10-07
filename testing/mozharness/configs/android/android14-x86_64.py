@@ -42,5 +42,6 @@ config = {
     "bogomips_minimum": 3000,
     # in support of test-verify
     "android_version": 34,
+    "os_version": "14",
     "is_emulator": True,
 }

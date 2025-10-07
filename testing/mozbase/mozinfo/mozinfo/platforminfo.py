@@ -11,28 +11,57 @@ import yaml
 
 DictAny = Dict[str, Any]
 DictStr = Dict[str, str]
-OptTestSettings = Optional[Dict[str, Any]]
+OptTestSettings = Optional[DictAny]
+
+# From https://developer.android.com/tools/releases/platforms
+# https://apilevels.com/
+# https://en.wikipedia.org/wiki/Android_version_history
+# testing/mozbase/mozdevice/mozdevice/version_codes.py
+# MUST be a 1-1 map
+android_os_to_api_map = {
+    "7.0": "24",
+    "7.1": "25",
+    "8.0": "26",
+    "8.1": "27",
+    "9.0": "28",
+    "10.0": "29",
+    "11.0": "30",
+    "12.0": "31",
+    "12.1": "32",
+    "13": "33",
+    "14": "34",
+    "15": "35",
+    "16": "36",
+}
+
+
+def android_os_to_api_version(os_version: str):
+    api_version = android_os_to_api_map.get(os_version)
+    if api_version is None:
+        raise Exception(
+            f"Unknown Android OS version '{os_version}'. Supported versions are {(android_os_to_api_map.keys())}."
+        )
+    return api_version
+
+
+def android_api_to_os_version(api_version: str):
+    if not isinstance(api_version, str):
+        api_version = str(api_version)
+    os_version = None
+    for k in android_os_to_api_map.keys():
+        if android_os_to_api_map[k] == api_version:
+            os_version = k
+            break
+    if os_version is None:
+        raise Exception(
+            f"Unknown Android API version '{api_version}'. Supported versions are {android_os_to_api_map.values()}."
+        )
+    return os_version
 
 
 class PlatformInfo:
 
     variant_data = {}
-
-    # From https://developer.android.com/tools/releases/platforms
-    android_os_to_sdk_map = {
-        "7.0": "24",
-        "7.1": "25",
-        "8.0": "26",
-        "8.1": "27",
-        "9.0": "28",
-        "10.0": "29",
-        "11.0": "30",
-        "12.0": "31",
-        "12L": "32",
-        "13.0": "33",
-        "14": "34",
-        "14.0": "34",
-    }
 
     buildmap = {
         "debug-isolated-process": "isolated_process",
@@ -78,28 +107,28 @@ class PlatformInfo:
         return pretty
 
     def _clean_os_version(self) -> str:
-        cleaned_name = self.os
         version = self._platform_os["version"]
         if version is None:
             raise Exception("Could not find platform version")
 
-        if cleaned_name in ["mac", "linux"]:
+        if self.os in ["mac", "linux"]:
             # Hack for macosx 11.20 reported as 11.00
-            if cleaned_name == "mac" and version == "1100":
+            if self.os == "mac" and version == "1100":
                 return "11.20"
             if len(version) == 5 and version[2] == ".":
                 return version  # already has a dot
             return version[0:2] + "." + version[2:4]
-        if cleaned_name == "android":
-            android_version = self.android_os_to_sdk_map.get(version)
+        if self.os == "android":
+            if version not in android_os_to_api_map and version.endswith(".0"):
+                version = version[:-2]
+            android_version = android_os_to_api_map.get(version)
             if android_version is None:
                 raise Exception(
-                    f"Unknown android OS version {version}. Supported versions are {list(self.android_os_to_sdk_map.keys())}."
+                    f"Unknown android OS version {version}. Supported versions are {list(android_os_to_api_map.keys())}."
                 )
-            return android_version
 
         build = self.build
-        if build is not None and cleaned_name == "win":
+        if build is not None and self.os == "win":
             if build == "24h2":
                 version += ".26100"
             else:
