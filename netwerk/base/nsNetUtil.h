@@ -1165,6 +1165,13 @@ bool CheckPreloadAttrs(const nsAttrValue& aAs, const nsAString& aType,
                        mozilla::dom::Document* aDocument);
 void WarnIgnoredPreload(const mozilla::dom::Document&, nsIURI&);
 
+// Implements parsing of Use-As-Dictionary headers for Compression Dictionary
+// support.
+bool NS_ParseUseAsDictionary(const nsACString& aValue, nsACString& aMatch,
+                             nsACString& aMatchId,
+                             nsTArray<nsCString>& aMatchDestItems,
+                             nsACString& aType);
+
 /**
  * Returns true if the |aInput| in is part of the root domain of |aHost|.
  * For example, if |aInput| is "www.mozilla.org", and we pass in
