@@ -11,6 +11,7 @@ using mozilla::gfx::IntRect from "mozilla/gfx/Point.h";
 using mozilla::gfx::RoundedRect from "mozilla/gfx/Point.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
+[MoveOnly] using mozilla::layers::IOSurfacePort from "mozilla/layers/IOSurfacePort.h";
 
 namespace mozilla {
 namespace layers {
@@ -62,7 +63,7 @@ struct CommandLayerInfo {
 
 struct CommandChangedSurface {
   uint64_t ID;
-  uint32_t SurfaceID;
+  IOSurfacePort Surface;
   bool IsDRM;
   bool IsHDR;
   IntSize Size;
