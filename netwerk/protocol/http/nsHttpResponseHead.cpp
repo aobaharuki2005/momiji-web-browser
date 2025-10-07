@@ -193,6 +193,18 @@ nsresult nsHttpResponseHead::SetHeader(const nsHttpAtom& hdr,
   return SetHeader_locked(hdr, ""_ns, val, merge);
 }
 
+// override the current value
+nsresult nsHttpResponseHead::SetHeaderOverride(const nsHttpAtom& atom,
+                                               const nsACString& val) {
+  RecursiveMutexAutoLock monitor(mRecursiveMutex);
+
+  if (mInVisitHeaders) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mHeaders.SetHeaderFromNet(atom, ""_ns, val, true);
+}
+
 nsresult nsHttpResponseHead::SetHeader_locked(const nsHttpAtom& atom,
                                               const nsACString& hdr,
                                               const nsACString& val,
