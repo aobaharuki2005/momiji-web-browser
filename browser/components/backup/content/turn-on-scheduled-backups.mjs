@@ -170,6 +170,7 @@ export default class TurnOnScheduledBackups extends MozLitElement {
         composed: true,
       })
     );
+
     this.reset();
   }
 
@@ -221,14 +222,17 @@ export default class TurnOnScheduledBackups extends MozLitElement {
   }
 
   reset() {
-    this._newPath = "";
-    this._newIconURL = "";
-    this._newLabel = "";
     this._showPasswordOptions = false;
     this.passwordOptionsCheckboxEl.checked = false;
     this._passwordsMatch = false;
     this._inputPassValue = "";
     this.enableBackupErrorCode = 0;
+    // we don't want to reset the path when embedded in the spotlight
+    if (!this.embeddedFxBackupOptIn) {
+      this._newPath = "";
+      this._newIconURL = "";
+      this._newLabel = "";
+    }
 
     if (this.passwordOptionsExpandedEl) {
       /** @type {import("./password-validation-inputs.mjs").default} */

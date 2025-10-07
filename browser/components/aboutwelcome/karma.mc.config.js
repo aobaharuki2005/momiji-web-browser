@@ -186,6 +186,13 @@ module.exports = function (config) {
               branches: 0,
             },
             "content-src/components/TileList.jsx": {
+              // This file will be covered in a followup by end-to-end tests of the backup component
+              statements: 0,
+              lines: 0,
+              functions: 0,
+              branches: 0,
+            },
+            "content-src/components/ConfirmationChecklist.jsx": {
               // This file is will be covered in a followup by end-to-end tests of the backup component
               statements: 0,
               lines: 0,

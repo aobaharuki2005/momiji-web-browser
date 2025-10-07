@@ -155,6 +155,14 @@ export class BackupUIChild extends JSWindowActorChild {
 
           const waivedWidget = Cu.waiveXrays(widget);
           waivedWidget.backupServiceState = state;
+          //dispatch the event for the React listeners
+          widget.dispatchEvent(
+            new this.contentWindow.CustomEvent("BackupUI:StateWasUpdated", {
+              bubbles: true,
+              composed: true,
+              detail: { state },
+            })
+          );
         }
       }
     }

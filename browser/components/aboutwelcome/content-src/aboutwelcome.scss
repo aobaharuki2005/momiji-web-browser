@@ -1951,6 +1951,7 @@ html {
       border-radius: var(--border-radius-small);
       cursor: pointer;
       z-index: 0;
+      transition: var(--transition);
 
       &.backup {
         cursor: default;
@@ -2087,6 +2088,44 @@ html {
       > input {
         flex-grow: 0;
         flex-shrink: 0;
+      }
+    }
+  }
+
+  .confirmation-checklist-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px auto;
+
+    .confirmation-checklist-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      .confirmation-checklist-item {
+        display: flex;
+        flex-direction: column;
+        margin-inline-start: 20px;
+
+        &:last-child {
+          margin-block-end: 8px;
+        }
+      }
+
+      .confirmation-checklist-icon-wrapper {
+        display: flex;
+      }
+
+      .confirmation-checklist-text {
+        margin-inline-start: 8px;
+        font-weight: 500;
+      }
+
+      .confirmation-checklist-subtext {
+        margin-inline-start: 26px;
+        text-align: start;
+        font-size: 14px;
       }
     }
   }
