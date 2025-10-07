@@ -9633,6 +9633,10 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
+
+    if (Document* doc = GetDocument()) {
+      doc->DisallowBFCaching();
+    }
   }
 
   mAllowKeywordFixup = aLoadState->HasInternalLoadFlags(
