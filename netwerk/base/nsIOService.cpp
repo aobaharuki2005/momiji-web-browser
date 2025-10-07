@@ -240,6 +240,8 @@ static const char* gCallbackPrefs[] = {
 static const char* gCallbackPrefsForSocketProcess[] = {
     WEBRTC_PREF_PREFIX,
     NETWORK_DNS_PREF,
+    "media.webrtc.enable_pq_hybrid_kex",
+    "media.webrtc.send_mlkem_keyshare",
     "network.send_ODA_to_content_directly",
     "network.trr.",
     "doh-rollout.",
