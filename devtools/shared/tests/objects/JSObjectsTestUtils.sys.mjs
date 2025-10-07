@@ -166,8 +166,8 @@ async function mayBeSaveExpectedValues(actualValues) {
     assertionValues.push(
       "  // " + evaled +
         "\n" +
-        "  " +
-        JSON.stringify(value, null, 2) +
+        // Ident each newline to match the array item indentation
+        JSON.stringify(value, null, 2).replace(/^/gm, "  ") +
         ","
     );
   }
