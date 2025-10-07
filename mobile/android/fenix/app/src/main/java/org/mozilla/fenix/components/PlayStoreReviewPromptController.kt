@@ -12,7 +12,6 @@ import androidx.core.net.toUri
 import com.google.android.play.core.review.ReviewException
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManager
-import com.google.android.play.core.review.model.ReviewErrorCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.support.base.log.logger.Logger
@@ -42,20 +41,25 @@ class PlayStoreReviewPromptController(
         val reviewInfoFlow = withContext(Dispatchers.IO) { manager.requestReviewFlow() }
 
         reviewInfoFlow.addOnCompleteListener {
-            if (it.isSuccessful) {
+            val resultString = if (it.isSuccessful) {
                 logger.info("Review flow launched.")
                 // Launch the in-app flow.
                 manager.launchReviewFlow(activity, it.result)
+
+                it.result.toString()
             } else {
                 // Launch the Play store flow.
-                @ReviewErrorCode val reviewErrorCode = (it.exception as ReviewException).errorCode
+                val reviewErrorCode =
+                    (it.exception as? ReviewException)?.errorCode ?: ERROR_CODE_UNEXPECTED
                 logger.warn("Failed to launch in-app review flow due to: $reviewErrorCode .")
 
                 tryLaunchPlayStoreReview(activity)
+
+                "reviewErrorCode=$reviewErrorCode"
             }
 
             recordReviewPromptEvent(
-                reviewInfoAsString = it.result.toString(),
+                reviewInfoAsString = resultString,
                 numberOfAppLaunches = numberOfAppLaunches(),
                 now = Date(),
             )
@@ -81,12 +85,19 @@ class PlayStoreReviewPromptController(
             (activity as HomeActivity).openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.FENIX_PLAY_STORE_URL,
                 newTab = true,
-                from = BrowserDirection.FromSettings,
+                from = BrowserDirection.FromGlobal,
             )
             logger.warn("Failed to launch play store review flow due to: $e .")
         }
 
         logger.info("tryLaunchPlayStoreReview completed.")
+    }
+
+    companion object {
+        /**
+         * Placeholder for unexpected exception type.
+         */
+        private const val ERROR_CODE_UNEXPECTED: Int = -42
     }
 }
 
