@@ -554,7 +554,7 @@ struct nsCSSRendering {
       mozilla::Side aStartBevelSide, nscoord aStartBevelOffset,
       mozilla::Side aEndBevelSide, nscoord aEndBevelOffset);
 
-  // NOTE: pt, dirtyRect, lineSize, ascent, offset, trimLeft, and trimRight in
+  // NOTE: pt, dirtyRect, lineSize, ascent, offset, trimStart and trimEnd in
   //       the following structs are non-rounded device pixels, not app units.
   struct DecorationRectParams {
     // Checks if either start or end trim value is negative.
