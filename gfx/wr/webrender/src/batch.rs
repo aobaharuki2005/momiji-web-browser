@@ -1092,9 +1092,10 @@ impl BatchBuilder {
                         clip_mask_texture_id,
                     );
 
-                    match raster_config.composite_mode {
-                        PictureCompositeMode::TileCache { .. } => {}
-                        PictureCompositeMode::IntermediateSurface { .. } => {}
+                    let (key, prim_header_index, resource_address) = match raster_config.composite_mode {
+                        PictureCompositeMode::TileCache { .. }
+                        | PictureCompositeMode::IntermediateSurface { .. }
+                        => return,
                         PictureCompositeMode::Filter(ref filter) => {
                             assert!(filter.is_visible());
                             match filter {
@@ -1120,18 +1121,7 @@ impl BatchBuilder {
                                         }.encode(),
                                     );
 
-                                    self.add_brush_instance_to_batches(
-                                        key,
-                                        batch_features,
-                                        bounding_rect,
-                                        z_id,
-                                        INVALID_SEGMENT_INDEX,
-                                        EdgeAaSegmentMask::all(),
-                                        clip_task_address,
-                                        brush_flags,
-                                        prim_header_index,
-                                        uv_rect_address.as_int(),
-                                    );
+                                    (key, prim_header_index, uv_rect_address.as_int())
                                 }
                                 Filter::DropShadows(shadows) => {
                                     // Draw an instance per shadow first, following by the content.
@@ -1222,18 +1212,7 @@ impl BatchBuilder {
                                         }.encode(),
                                     );
 
-                                    self.add_brush_instance_to_batches(
-                                        content_key,
-                                        batch_features,
-                                        bounding_rect,
-                                        z_id_content,
-                                        INVALID_SEGMENT_INDEX,
-                                        EdgeAaSegmentMask::all(),
-                                        clip_task_address,
-                                        brush_flags,
-                                        content_prim_header_index,
-                                        content_uv_rect_address,
-                                    );
+                                    (content_key, content_prim_header_index, content_uv_rect_address)
                                 }
                                 Filter::Opacity(_, amount) => {
                                     let amount = (amount * 65536.0) as i32;
@@ -1256,18 +1235,7 @@ impl BatchBuilder {
                                         ]
                                     );
 
-                                    self.add_brush_instance_to_batches(
-                                        key,
-                                        batch_features,
-                                        bounding_rect,
-                                        z_id,
-                                        INVALID_SEGMENT_INDEX,
-                                        EdgeAaSegmentMask::all(),
-                                        clip_task_address,
-                                        brush_flags,
-                                        prim_header_index,
-                                        0,
-                                    );
+                                    (key, prim_header_index, 0)
                                 }
                                 _ => {
                                     // Must be kept in sync with brush_blend.glsl
@@ -1332,18 +1300,7 @@ impl BatchBuilder {
                                         ]
                                     );
 
-                                    self.add_brush_instance_to_batches(
-                                        key,
-                                        batch_features,
-                                        bounding_rect,
-                                        z_id,
-                                        INVALID_SEGMENT_INDEX,
-                                        EdgeAaSegmentMask::all(),
-                                        clip_task_address,
-                                        brush_flags,
-                                        prim_header_index,
-                                        0,
-                                    );
+                                    (key, prim_header_index, 0)
                                 }
                             }
                         }
@@ -1378,18 +1335,7 @@ impl BatchBuilder {
                                 ]
                             );
 
-                            self.add_brush_instance_to_batches(
-                                key,
-                                batch_features,
-                                bounding_rect,
-                                z_id,
-                                INVALID_SEGMENT_INDEX,
-                                EdgeAaSegmentMask::all(),
-                                clip_task_address,
-                                brush_flags,
-                                prim_header_index,
-                                0,
-                            );
+                            (key, prim_header_index, 0)
                         }
                         PictureCompositeMode::MixBlend(mode) if BlendMode::from_mix_blend_mode(
                             mode,
@@ -1424,18 +1370,7 @@ impl BatchBuilder {
                                 }.encode(),
                             );
 
-                            self.add_brush_instance_to_batches(
-                                key,
-                                batch_features,
-                                bounding_rect,
-                                z_id,
-                                INVALID_SEGMENT_INDEX,
-                                EdgeAaSegmentMask::all(),
-                                clip_task_address,
-                                brush_flags,
-                                prim_header_index,
-                                uv_rect_address.as_int(),
-                            );
+                            (key, prim_header_index, uv_rect_address.as_int())
                         }
                         PictureCompositeMode::MixBlend(mode) => {
                             let backdrop_id = picture.secondary_render_task_id.expect("no backdrop!?");
@@ -1506,6 +1441,8 @@ impl BatchBuilder {
                                 z_id,
                                 PrimitiveInstanceData::from(instance),
                             );
+
+                            return;
                         }
                         PictureCompositeMode::Blit(_) => {
                             match picture.context_3d {
@@ -1566,6 +1503,8 @@ impl BatchBuilder {
                                         prim_header_index,
                                         extra_prim_gpu_address,
                                     );
+
+                                    return;
                                 }
                                 Picture3DContext::Out { .. } => {
                                     let textures = TextureSet {
@@ -1621,6 +1560,8 @@ impl BatchBuilder {
                                         ctx,
                                         render_tasks,
                                     );
+
+                                    return;
                                 }
                             }
                         }
@@ -1645,18 +1586,7 @@ impl BatchBuilder {
                                 }.encode(),
                             );
 
-                            self.add_brush_instance_to_batches(
-                                key,
-                                batch_features,
-                                bounding_rect,
-                                z_id,
-                                INVALID_SEGMENT_INDEX,
-                                EdgeAaSegmentMask::all(),
-                                clip_task_address,
-                                brush_flags,
-                                prim_header_index,
-                                uv_rect_address.as_int(),
-                            );
+                            (key, prim_header_index, uv_rect_address.as_int())
                         }
                         PictureCompositeMode::SVGFEGraph(..) => {
                             let kind = BatchKind::Brush(
@@ -1679,20 +1609,22 @@ impl BatchBuilder {
                                 }.encode(),
                             );
 
-                            self.add_brush_instance_to_batches(
-                                key,
-                                batch_features,
-                                bounding_rect,
-                                z_id,
-                                INVALID_SEGMENT_INDEX,
-                                EdgeAaSegmentMask::all(),
-                                clip_task_address,
-                                brush_flags,
-                                prim_header_index,
-                                uv_rect_address.as_int(),
-                            );
+                            (key, prim_header_index, uv_rect_address.as_int())
                         }
-                    }
+                    };
+
+                    self.add_brush_instance_to_batches(
+                        key,
+                        batch_features,
+                        bounding_rect,
+                        z_id,
+                        INVALID_SEGMENT_INDEX,
+                        EdgeAaSegmentMask::all(),
+                        clip_task_address,
+                        brush_flags,
+                        prim_header_index,
+                        resource_address,
+                    );
                 }
                 None => {
                     unreachable!();
