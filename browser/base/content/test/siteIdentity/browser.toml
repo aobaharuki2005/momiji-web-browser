@@ -112,6 +112,9 @@ support-files = [
 
 ["browser_mixed_content_cert_override.js"]
 tags = "mcb"
+prefs = [
+  "security.certerrors.felt-privacy-v1=true"
+]
 support-files = ["test-mixedcontent-securityerrors.html"]
 
 ["browser_mixed_content_with_navigation.js"]
