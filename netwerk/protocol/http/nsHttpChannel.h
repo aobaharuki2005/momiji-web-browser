@@ -139,6 +139,7 @@ class nsHttpChannel final : public HttpBaseChannel,
                               const nsACString& reason) override;
   NS_IMETHOD Cancel(nsresult status) override;
   NS_IMETHOD Suspend() override;
+  static void StaticSuspend(nsHttpChannel* aChan);
   NS_IMETHOD Resume() override;
   // nsIChannel
   NS_IMETHOD
