@@ -30,6 +30,7 @@
 #include "nsIPermission.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsMixedContentBlocker.h"
 #include "nsPIDOMWindow.h"
 #include "nsQueryObject.h"
 #include "nsRFPService.h"
@@ -621,9 +622,17 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
     }
   }
 
-  // determine whether storage access could be granted using the
-  // Activate-Storage-Access header from the storage-access-headers draft.
-  // XXX(Bug 1968723, Bug 1968725): The response header is not yet parsed.
+  // The remaining part of the function is for determining whether storage
+  // access could be granted using Storage-Access-Headers. And granting it
+  // if instructed by the server via the "Activate-Storage-Access"-header.
+  // Storage-Access headers are only sent in secure context
+  if (!nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(trackingURI)) {
+    return nsILoadInfo::NoStoragePermission;
+  }
+
+  // In case Storage-Access was granted to the origin prior with the
+  // Storage-Access-API and the permission still exists, the website can
+  // activate Storage-Access with Storage-Access-Headers.
   uint32_t result = 0;
   rv = AntiTrackingUtils::TestStoragePermissionInParent(
       targetPrincipal, trackingPrincipal, &result);
@@ -640,6 +649,8 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
     }
   }
 
+  // In the ABA-case, A can also get storage-access automatically via
+  // Storage-Access-Headers.
   if (isThirdParty) {
     if (RefPtr<net::nsHttpChannel> httpChannel = do_QueryObject(aChannel)) {
       // Determine whether we are in ABA or AB case, erroring on AB side

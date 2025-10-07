@@ -121,6 +121,7 @@ static const char sIntPrefs[][45] = {
     "ui.windowsMica",
     "ui.windowsMicaPopups",
     "ui.macBigSurTheme",
+    "ui.macTahoeTheme",
     "ui.alertNotificationOrigin",
     "ui.scrollToClick",
     "ui.IMERawInputUnderlineStyle",

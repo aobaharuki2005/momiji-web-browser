@@ -404,13 +404,16 @@ class SystemResourceMonitor:
         self.start_time = time.monotonic()
         SystemResourceMonitor.instance = self
 
-    def stop(self):
+    def stop(self, upload_dir=None):
         """Stop measuring system-wide CPU resource utilization.
 
         You should call this if and only if you have called start(). You should
         always pair a stop() with a start().
 
         Currently, data is not available until you call stop().
+
+        Args:
+            upload_dir: Optional path to upload directory for artifact markers.
         """
         if not self._process:
             self._stopped = True
@@ -504,17 +507,48 @@ class SystemResourceMonitor:
         SystemResourceUsage.instance = None
         self.end_time = time.monotonic()
 
+        # Add event markers for files in upload directory
+        if upload_dir is None:
+            upload_dir = os.environ.get("UPLOAD_DIR") or os.environ.get(
+                "MOZ_UPLOAD_DIR"
+            )
+        if upload_dir and os.path.isdir(upload_dir):
+            try:
+                for filename in os.listdir(upload_dir):
+                    filepath = os.path.join(upload_dir, filename)
+                    if os.path.isfile(filepath):
+                        stat = os.stat(filepath)
+                        timestamp = self.convert_to_monotonic_time(stat.st_mtime)
+                        marker_data = {
+                            "type": "Artifact",
+                            "filename": filename,
+                            "size": stat.st_size,
+                        }
+                        self.events.append((timestamp, "artifact", marker_data))
+            except Exception as e:
+                warnings.warn(f"Failed to scan upload directory: {e}")
+
     # Methods to record events alongside the monitored data.
 
     @staticmethod
-    def record_event(name):
+    def record_event(name, timestamp=None, data=None):
         """Record an event as occuring now.
 
         Events are actions that occur at a specific point in time. If you are
         looking for an action that has a duration, see the phase API below.
+
+        Args:
+            name: Name of the event (string)
+            timestamp: Optional timestamp (monotonic time). If not provided, uses current time.
+            data: Optional marker payload dictionary (e.g., {"type": "TestStatus", ...})
         """
         if SystemResourceMonitor.instance:
-            SystemResourceMonitor.instance.events.append((time.monotonic(), name))
+            if timestamp is None:
+                timestamp = time.monotonic()
+            if data:
+                SystemResourceMonitor.instance.events.append((timestamp, name, data))
+            else:
+                SystemResourceMonitor.instance.events.append((timestamp, name))
 
     @staticmethod
     def record_marker(name, start, end, data):
@@ -612,6 +646,8 @@ class SystemResourceMonitor:
 
             if status in ("SKIP", "TIMEOUT"):
                 marker_data["color"] = "yellow"
+                if message:
+                    marker_data["message"] = message
             elif status in ("CRASH", "ERROR"):
                 marker_data["color"] = "red"
             elif expected is None and not will_retry:
@@ -621,6 +657,60 @@ class SystemResourceMonitor:
                 marker_data["color"] = "orange"
 
         SystemResourceMonitor.instance.record_marker("test", start, end, marker_data)
+
+    @staticmethod
+    def test_status(data):
+        """Record a test_status/log/process_output event.
+
+        Args:
+            data: Dictionary containing test_status/log/process_output data including:
+                  - "action": the action type
+                  - "test": test name (optional)
+                  - "subtest": subtest name (optional, only for test_status/log)
+                  - "status" or "level": status for test_status/log
+                  - "time": timestamp in milliseconds
+                  - "message" or "data": optional message
+        """
+        if not SystemResourceMonitor.instance:
+            return
+
+        time_sec = data["time"] / 1000
+        timestamp = SystemResourceMonitor.instance.convert_to_monotonic_time(time_sec)
+
+        action = data.get("action")
+        marker_data = {"type": "TestStatus"}
+
+        if action == "process_output":
+            # Process output uses "output" as marker name
+            marker_name = "output"
+            message = data.get("data")
+        else:
+            # test_status and log actions
+            status = (data.get("status") or data.get("level")).upper()
+            marker_name = status
+
+            # Determine color based on status
+            if status == "PASS":
+                marker_data["color"] = "green"
+            elif status == "FAIL":
+                marker_data["color"] = "orange"
+            elif status == "ERROR":
+                marker_data["color"] = "red"
+
+            subtest = data.get("subtest")
+            if subtest:
+                marker_data["subtest"] = subtest
+
+            message = data.get("message")
+
+        test_name = data.get("test")
+        if test_name:
+            marker_data["test"] = test_name
+
+        if message:
+            marker_data["message"] = message
+
+        SystemResourceMonitor.record_event(marker_name, timestamp, marker_data)
 
     @contextmanager
     def phase(self, name):
@@ -1030,7 +1120,7 @@ class SystemResourceMonitor:
                     {
                         "name": "Test",
                         "tooltipLabel": "{marker.data.name}",
-                        "tableLabel": "{marker.data.test} — {marker.data.status}",
+                        "tableLabel": "{marker.data.status} — {marker.data.test}",
                         "chartLabel": "{marker.data.name}",
                         "display": ["marker-chart", "marker-table"],
                         "colorField": "color",
@@ -1057,8 +1147,57 @@ class SystemResourceMonitor:
                                 "format": "string",
                             },
                             {
+                                "key": "message",
+                                "label": "Message",
+                                "format": "string",
+                            },
+                            {
                                 "key": "color",
                                 "hidden": True,
+                            },
+                        ],
+                    },
+                    {
+                        "name": "TestStatus",
+                        "tableLabel": "{marker.data.message} — {marker.data.test} {marker.data.subtest}",
+                        "display": ["marker-chart", "marker-table"],
+                        "colorField": "color",
+                        "data": [
+                            {
+                                "key": "message",
+                                "label": "Message",
+                                "format": "string",
+                            },
+                            {
+                                "key": "test",
+                                "label": "Test Name",
+                                "format": "string",
+                            },
+                            {
+                                "key": "subtest",
+                                "label": "Subtest",
+                                "format": "string",
+                            },
+                            {
+                                "key": "color",
+                                "hidden": True,
+                            },
+                        ],
+                    },
+                    {
+                        "name": "Artifact",
+                        "tableLabel": "{marker.data.filename} — {marker.data.size}",
+                        "display": ["marker-chart", "marker-table"],
+                        "data": [
+                            {
+                                "key": "filename",
+                                "label": "Filename",
+                                "format": "string",
+                            },
+                            {
+                                "key": "size",
+                                "label": "Size",
+                                "format": "bytes",
                             },
                         ],
                     },
@@ -1423,14 +1562,27 @@ class SystemResourceMonitor:
             add_marker(get_string_index(name), start, end, markerData, TASK_CATEGORY, 3)
         if self.events:
             event_string_index = get_string_index("Event")
-            for event_time, text in self.events:
-                if text:
+            for event in self.events:
+                if len(event) == 3:
+                    # Event with payload: (time, name, data)
+                    event_time, name, data = event
+                    add_marker(
+                        get_string_index(name),
+                        event_time,
+                        None,
+                        data,
+                        OTHER_CATEGORY,
+                        3,
+                    )
+                elif len(event) == 2:
+                    # Simple event: (time, text)
+                    event_time, text = event
                     add_marker(
                         event_string_index,
                         event_time,
                         None,
                         {"type": "Text", "text": text},
-                        TASK_CATEGORY,
+                        OTHER_CATEGORY,
                         3,
                     )
 

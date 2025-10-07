@@ -211,7 +211,7 @@ NativeLayerRootCA::~NativeLayerRootCA() {
       mSublayers.IsEmpty(),
       "Please clear all layers before destroying the layer root.");
 
-  if (mMutatedOnscreenLayerStructure || mMutatedOffscreenLayerStructure) {
+  {
     // Clear the root layer's sublayers. At this point the window is usually
     // closed, so this transaction does not cause any screen updates.
     AutoCATransaction transaction;
@@ -219,6 +219,7 @@ NativeLayerRootCA::~NativeLayerRootCA() {
   }
 
   [mOnscreenRootCALayer release];
+  [mOffscreenRootCALayer release];
 }
 
 already_AddRefed<NativeLayer> NativeLayerRootCA::CreateLayer(
@@ -402,6 +403,11 @@ void NativeLayerRootCA::OnNativeLayerRootSnapshotterDestroyed(
 
 void NativeLayerRootCA::CommitOffscreen(CALayer* aRootCALayer) {
   MutexAutoLock lock(mMutex);
+  if (aRootCALayer != mOffscreenRootCALayer) {
+    [mOffscreenRootCALayer release];
+    mOffscreenRootCALayer = [aRootCALayer retain];
+    mMutatedOffscreenLayerStructure = true;
+  }
   CommitRepresentation(WhichRepresentation::OFFSCREEN, aRootCALayer, mSublayers,
                        mMutatedOffscreenLayerStructure, mWindowIsFullscreen);
   mMutatedOffscreenLayerStructure = false;
@@ -883,6 +889,10 @@ NativeLayerCA::~NativeLayerCA() {
           this);
   }
 #endif
+
+  if (mSurfaceToPresent) {
+    IOSurfaceDecrementUseCount(mSurfaceToPresent.get());
+  }
 }
 
 void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
@@ -1315,7 +1325,15 @@ void NativeLayerCA::SetSurfaceToPresent(CFTypeRefPtr<IOSurfaceRef> aSurfaceRef,
              "Shouldn't call this for layers that get external surfaces.");
 
   bool changedSurface = (mSurfaceToPresent != aSurfaceRef);
-  mSurfaceToPresent = aSurfaceRef;
+  if (changedSurface) {
+    if (mSurfaceToPresent) {
+      IOSurfaceDecrementUseCount(mSurfaceToPresent.get());
+    }
+    mSurfaceToPresent = aSurfaceRef;
+    if (mSurfaceToPresent) {
+      IOSurfaceIncrementUseCount(mSurfaceToPresent.get());
+    }
+  }
 
   bool changedSize = (mSize != aSize);
   mSize = aSize;

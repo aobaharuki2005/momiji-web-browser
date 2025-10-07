@@ -21,6 +21,7 @@ EXTRA_JS_MODULES.ipprotection += [
     "IPProtectionServerlist.sys.mjs",
     "IPProtectionService.sys.mjs",
     "IPProtectionUsage.sys.mjs",
+    "IPPSignInWatcher.sys.mjs",
 ]
 
 BROWSER_CHROME_MANIFESTS += [

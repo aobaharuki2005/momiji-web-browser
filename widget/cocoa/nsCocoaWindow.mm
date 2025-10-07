@@ -7611,6 +7611,15 @@ static NSImage* GetMenuMaskImage() {
 // vibrancy effect and window border.
 - (void)setEffectViewWrapperForStyle:(WindowShadow)aStyle {
   NSView* wrapper = [&]() -> NSView* {
+    if (@available(macOS 26.0, *)) {
+      if (aStyle == WindowShadow::Menu) {
+        // Menus on macOS 26 use glass instead of vibrancy.
+        auto* effectView =
+            [[NSGlassEffectView alloc] initWithFrame:self.contentView.frame];
+        effectView.cornerRadius = 12.0f;
+        return effectView;
+      }
+    }
     if (aStyle == WindowShadow::Menu || aStyle == WindowShadow::Tooltip) {
       const bool isMenu = aStyle == WindowShadow::Menu;
       auto* effectView =
@@ -7721,6 +7730,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   mDrawsIntoWindowFrame = aState;
   if (changed) {
     [self reflowTitlebarElements];
+    [self updateTitlebarTransparency];
   }
 }
 
@@ -7848,6 +7858,32 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   if ([frameView respondsToSelector:@selector(_tileTitlebarAndRedisplay:)]) {
     [frameView _tileTitlebarAndRedisplay:NO];
   }
+}
+
+- (void)updateTitlebarTransparency {
+  if (self.drawsContentsIntoWindowFrame) {
+    // Hide the titlebar if we are drawing into it
+    self.titlebarAppearsTransparent = true;
+    return;
+  }
+
+  if (@available(macOS 26.0, *)) {
+    // On macOS 26, the titlebar must be transparent to hide the separator.
+    // This does not affect the titlebar background on macOS 26, as it
+    // already matches the window background even when not transparent.
+    if (self.titlebarSeparatorStyle == NSTitlebarSeparatorStyleNone) {
+      self.titlebarAppearsTransparent = true;
+      return;
+    }
+  }
+
+  // Show the titlebar otherwise.
+  self.titlebarAppearsTransparent = false;
+}
+
+- (void)setTitlebarSeparatorStyle:(NSTitlebarSeparatorStyle)aStyle {
+  [super setTitlebarSeparatorStyle:aStyle];
+  [self updateTitlebarTransparency];
 }
 
 - (BOOL)respondsToSelector:(SEL)aSelector {
@@ -8166,8 +8202,6 @@ static CGFloat DefaultTitlebarHeight() {
   BOOL stateChanged = self.drawsContentsIntoWindowFrame != aState;
   [super setDrawsContentsIntoWindowFrame:aState];
   if (stateChanged && [self.delegate isKindOfClass:[WindowDelegate class]]) {
-    // Hide the titlebar if we are drawing into it
-    self.titlebarAppearsTransparent = aState;
     self.titleVisibility = aState ? NSWindowTitleHidden : NSWindowTitleVisible;
 
     // Here we extend / shrink our mainChildView.

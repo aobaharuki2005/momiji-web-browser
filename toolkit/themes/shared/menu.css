@@ -31,6 +31,11 @@ panel {
   }
   @media (-moz-platform: macos) {
     --menuitem-padding: 3px 9px;
+
+    @media (-moz-mac-tahoe-theme) {
+      --menuitem-padding: 4px 11px;
+      --menuitem-border-radius: 7px;
+    }
   }
 
   @media (-moz-platform: windows) {

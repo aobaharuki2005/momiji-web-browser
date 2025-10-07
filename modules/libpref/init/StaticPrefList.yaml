@@ -4434,7 +4434,7 @@
 # (https://w3c.github.io/trusted-types/dist/spec/) is enabled.
 - name: dom.security.trusted_types.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # If true, all content requests will get upgraded to HTTPS://
@@ -12171,7 +12171,13 @@
   mirror: always
 
 # This pref disables using PQ crypto for WebRTC DTLS code.
-- name: media.webrtc.enable_pq_dtls
+- name: media.webrtc.enable_pq_hybrid_kex
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# This pref enabled sending ssl_grp_kem_mlkem768x25519 Key Share for WebRTC DTLS code.
+- name: media.webrtc.send_mlkem_keyshare
   type: RelaxedAtomicBool
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always

@@ -67,7 +67,8 @@ NativeLayerRootRemoteMacParent::RecvCommitNativeLayerCommands(
 
       case NativeLayerCommand::TCommandChangedSurface: {
         auto& changedSurface = command.get_CommandChangedSurface();
-        HandleChangedSurface(changedSurface.ID(), changedSurface.SurfaceID(),
+        HandleChangedSurface(changedSurface.ID(),
+                             std::move(changedSurface.Surface()),
                              changedSurface.IsDRM(), changedSurface.IsHDR(),
                              changedSurface.Size());
         break;
@@ -102,13 +103,15 @@ mozilla::ipc::IPCResult NativeLayerRootRemoteMacParent::RecvRequestReadback(
     return IPC_FAIL(this, "Can't allocate shmem.");
   }
 
-  auto snapshotter = mRealNativeLayerRoot->CreateSnapshotter();
-  if (!snapshotter) {
-    return IPC_FAIL(this, "Can't create parent-side snapshotter.");
+  if (!mSnapshotter) {
+    mSnapshotter = mRealNativeLayerRoot->CreateSnapshotter();
+    if (!mSnapshotter) {
+      return IPC_FAIL(this, "Can't create parent-side snapshotter.");
+    }
   }
 
-  if (!snapshotter->ReadbackPixels(aSize, readbackFormat,
-                                   buffer.Range<uint8_t>())) {
+  if (!mSnapshotter->ReadbackPixels(aSize, readbackFormat,
+                                    buffer.Range<uint8_t>())) {
     return IPC_FAIL(this, "Failed readback.");
   }
 
@@ -180,11 +183,9 @@ void NativeLayerRootRemoteMacParent::HandleLayerInfo(
   layer->SetSurfaceIsFlipped(aSurfaceIsFlipped);
 }
 
-void NativeLayerRootRemoteMacParent::HandleChangedSurface(uint64_t aID,
-                                                          uint32_t aSurfaceID,
-                                                          bool aIsDRM,
-                                                          bool aIsHDR,
-                                                          IntSize aSize) {
+void NativeLayerRootRemoteMacParent::HandleChangedSurface(
+    uint64_t aID, IOSurfacePort aSurfacePort, bool aIsDRM, bool aIsHDR,
+    IntSize aSize) {
   auto entry = mKnownLayers.MaybeGet(aID);
   if (!entry) {
     gfxWarning() << "Got a ChangedSurface for an unknown layer.";
@@ -194,14 +195,7 @@ void NativeLayerRootRemoteMacParent::HandleChangedSurface(uint64_t aID,
   RefPtr<NativeLayerCA> layer = (*entry)->AsNativeLayerCA();
   MOZ_ASSERT(layer, "All of our known layers should be NativeLayerCA.");
 
-  // Set the surface of this layer.
-  auto surfaceRef = IOSurfaceLookup(aSurfaceID);
-  if (surfaceRef) {
-    // The call to IOSurfaceLookup leaves us with a retain count of 1.
-    // The CFTypeRefPtr will take care of it when it falls out of scope,
-    // since we declare it with create rule semantics.
-    CFTypeRefPtr<IOSurfaceRef> surface =
-        CFTypeRefPtr<IOSurfaceRef>::WrapUnderCreateRule(surfaceRef);
+  if (auto surface = aSurfacePort.GetSurface()) {
     layer->SetSurfaceToPresent(surface, aSize, aIsDRM, aIsHDR);
   }
 }

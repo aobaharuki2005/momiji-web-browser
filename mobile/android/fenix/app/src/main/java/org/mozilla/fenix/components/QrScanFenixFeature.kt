@@ -13,9 +13,9 @@ import android.content.Intent
 import android.graphics.Typeface
 import android.text.style.StyleSpan
 import androidx.activity.result.ActivityResultLauncher
-import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChangedBy
@@ -103,7 +103,7 @@ class QrScanFenixFeature(
         if (url != null && url.isNotEmpty()) {
             val normalizedUrl = url.toNormalizedUrl()
             if (!normalizedUrl.toUri().isHttpOrHttps) {
-                AlertDialog.Builder(context).apply {
+                MaterialAlertDialogBuilder(context).apply {
                     setMessage(R.string.qr_scanner_dialog_invalid)
                     setPositiveButton(R.string.qr_scanner_dialog_invalid_ok) { dialog: DialogInterface, _ ->
                         appStore.dispatch(QrScannerAction.QrScannerInputConsumed)
@@ -113,7 +113,7 @@ class QrScanFenixFeature(
                 }.show()
             } else {
                 val appName = context.resources.getString(R.string.app_name)
-                AlertDialog.Builder(context).apply {
+                MaterialAlertDialogBuilder(context).apply {
                     val spannable = context.resources.getSpanned(
                         R.string.qr_scanner_confirmation_dialog_message,
                         appName to StyleSpan(Typeface.BOLD),

@@ -406,6 +406,7 @@ Preferences.addSetting({
   id: "useSmoothScrolling",
   pref: "general.smoothScroll",
 });
+
 Preferences.addSetting({
   id: "useOverlayScrollbars",
   pref: "widget.gtk.overlay-scrollbars.enabled",
@@ -568,6 +569,11 @@ Preferences.addSetting({
   },
 });
 Preferences.addSetting({ id: "containersPlaceholder" });
+
+Preferences.addSetting({
+  id: "connectionSettings",
+  onUserClick: () => gMainPane.showConnections(),
+});
 
 // Downloads
 /*
@@ -1361,6 +1367,43 @@ let SETTINGS_CONFIG = {
       },
     ],
   },
+  certificates: {
+    l10nId: "certs-description2",
+    supportPage: "secure-website-certificate",
+    headingLevel: 2,
+    items: [
+      {
+        id: "certificateButtonGroup",
+        control: "moz-box-group",
+        items: [
+          {
+            id: "viewCertificatesButton",
+            l10nId: "certs-view",
+            control: "moz-box-button",
+            controlAttrs: {
+              "search-l10n-ids":
+                "certmgr-tab-mine.label,certmgr-tab-people.label,certmgr-tab-servers.label,certmgr-tab-ca.label,certmgr-mine,certmgr-people,certmgr-server,certmgr-ca,certmgr-cert-name.label,certmgr-token-name.label,certmgr-view.label,certmgr-export.label,certmgr-delete.label",
+            },
+          },
+          {
+            id: "viewSecurityDevicesButton",
+            l10nId: "certs-devices",
+            control: "moz-box-button",
+            controlAttrs: {
+              "search-l10n-ids":
+                "devmgr-window.title,devmgr-devlist.label,devmgr-header-details.label,devmgr-header-value.label,devmgr-button-login.label,devmgr-button-logout.label,devmgr-button-changepw.label,devmgr-button-load.label,devmgr-button-unload.label,certs-devices-enable-fips",
+            },
+          },
+        ],
+      },
+
+      {
+        id: "certEnableThirdPartyToggle",
+        l10nId: "certs-thirdparty-toggle",
+        supportPage: "automatically-trust-third-party-certificates",
+      },
+    ],
+  },
   browsingProtection: {
     items: [
       {
@@ -1499,6 +1542,23 @@ let SETTINGS_CONFIG = {
       },
     ],
   },
+  networkProxy: {
+    items: [
+      {
+        id: "connectionSettings",
+        l10nId: "network-proxy-connection-settings",
+        control: "moz-box-button",
+        controlAttrs: {
+          "search-l10n-ids":
+            "connection-window2.title,connection-proxy-option-no.label,connection-proxy-option-auto.label,connection-proxy-option-system.label,connection-proxy-option-wpad.label,connection-proxy-option-manual.label,connection-proxy-http,connection-proxy-https,connection-proxy-http-port,connection-proxy-socks,connection-proxy-socks4,connection-proxy-socks5,connection-proxy-noproxy,connection-proxy-noproxy-desc,connection-proxy-https-sharing.label,connection-proxy-autotype.label,connection-proxy-reload.label,connection-proxy-autologin-checkbox.label,connection-proxy-socks-remote-dns.label",
+        },
+        // Bug 1990552: due to how this lays out in the legacy page, we do not include a
+        // controllingExtensionInfo attribute here. We will want one in the redesigned page,
+        // using storeId: "proxy.settings".
+        controllingExtensionInfo: undefined,
+      },
+    ],
+  },
 };
 
 /**
@@ -1616,6 +1676,7 @@ var gMainPane = {
     initSettingGroup("zoom");
     initSettingGroup("performance");
     initSettingGroup("startup");
+    initSettingGroup("networkProxy");
 
     if (AppConstants.platform == "win") {
       // Functionality for "Show tabs in taskbar" on Windows 7 and up.
@@ -1720,11 +1781,6 @@ var gMainPane = {
       gMainPane.updateColorsButton.bind(gMainPane)
     );
     gMainPane.updateColorsButton();
-    setEventListener(
-      "connectionSettings",
-      "command",
-      gMainPane.showConnections
-    );
     setEventListener(
       "browserContainersCheckbox",
       "command",

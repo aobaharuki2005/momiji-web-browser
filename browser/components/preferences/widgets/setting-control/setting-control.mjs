@@ -180,7 +180,7 @@ export class SettingControl extends MozLitElement {
 
   async getUpdateComplete() {
     let result = await super.getUpdateComplete();
-    await this.controlEl.updateComplete;
+    await this.controlEl?.updateComplete;
     return result;
   }
 
@@ -201,9 +201,16 @@ export class SettingControl extends MozLitElement {
       this.setValue();
       this.setting.on("change", this.onSettingChange);
     }
+    let prevHidden = this.hidden;
     this.hidden = !this.setting.visible;
+    if (prevHidden != this.hidden) {
+      this.dispatchEvent(new Event("visibility-change", { bubbles: true }));
+    }
   }
 
+  /**
+   * @type {MozLitElement['updated']}
+   */
   updated() {
     const control = this.controlRef?.value;
     if (!control) {

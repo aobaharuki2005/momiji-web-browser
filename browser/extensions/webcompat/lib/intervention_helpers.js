@@ -310,6 +310,7 @@ var InterventionHelpers = {
       not_channels,
       only_channels,
       skip_if,
+      ua_string,
     } = intervention;
     if (firefoxChannel) {
       if (only_channels && !only_channels.includes(firefoxChannel)) {
@@ -333,9 +334,19 @@ var InterventionHelpers = {
         return true;
       }
     }
+    if (ua_string) {
+      for (let ua of Array.isArray(ua_string) ? ua_string : [ua_string]) {
+        if (!InterventionHelpers.ua_change_functions[ua]) {
+          return true;
+        }
+      }
+    }
     if (skip_if) {
       try {
-        if (this.skip_if_functions[skip_if]?.()) {
+        if (
+          !this.skip_if_functions[skip_if] ||
+          this.skip_if_functions[skip_if]?.()
+        ) {
           return true;
         }
       } catch (e) {
@@ -343,6 +354,35 @@ var InterventionHelpers = {
           `Error while checking skip-if condition ${skip_if} for bug ${bug}:`,
           e
         );
+        return true;
+      }
+    }
+    return false;
+  },
+
+  nonCustomInterventionKeys: Object.freeze(
+    new Set([
+      "content_scripts",
+      "enabled",
+      "max_version",
+      "min_version",
+      "not_platforms",
+      "platforms",
+      "not_channels",
+      "only_channels",
+      "pref_check",
+      "skip_if",
+      "ua_string",
+    ])
+  ),
+
+  isMissingCustomFunctions(intervention, customFunctionNames) {
+    for (let key of Object.keys(intervention)) {
+      if (
+        !InterventionHelpers.nonCustomInterventionKeys.has(key) &&
+        !customFunctionNames.has(key)
+      ) {
+        return true;
       }
     }
     return false;

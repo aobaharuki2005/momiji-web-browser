@@ -6,8 +6,8 @@ https://creativecommons.org/publicdomain/zero/1.0/ */
 const { IPProtectionService, IPProtectionStates } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPProtectionService.sys.mjs"
 );
-const { UIState } = ChromeUtils.importESModule(
-  "resource://services-sync/UIState.sys.mjs"
+const { IPPSignInWatcher } = ChromeUtils.importESModule(
+  "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs"
 );
 
 do_get_profile();
@@ -53,9 +53,7 @@ add_task(async function test_IPProtectionStates_uninitialized() {
  */
 add_task(async function test_IPProtectionStates_uninitialized() {
   let sandbox = sinon.createSandbox();
-  sandbox.stub(UIState, "get").returns({
-    status: UIState.STATUS_STATUS_NOT_CONFIGURED,
-  });
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => false);
   sandbox
     .stub(IPProtectionService.guardian, "isLinkedToGuardian")
     .resolves(false);
@@ -87,9 +85,7 @@ add_task(async function test_IPProtectionStates_uninitialized() {
  */
 add_task(async function test_IPProtectionStates_unauthenticated() {
   let sandbox = sinon.createSandbox();
-  sandbox.stub(UIState, "get").returns({
-    status: UIState.STATUS_SIGNED_IN,
-  });
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => true);
   sandbox
     .stub(IPProtectionService.guardian, "isLinkedToGuardian")
     .resolves(false);
@@ -112,9 +108,7 @@ add_task(async function test_IPProtectionStates_unauthenticated() {
     "IP Protection service should no longer be unauthenticated"
   );
 
-  UIState.get.returns({
-    status: UIState.STATUS_STATUS_NOT_CONFIGURED,
-  });
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => false);
 
   await IPProtectionService.updateState();
 
@@ -133,9 +127,7 @@ add_task(async function test_IPProtectionStates_unauthenticated() {
  */
 add_task(async function test_IPProtectionStates_enrolling() {
   let sandbox = sinon.createSandbox();
-  sandbox.stub(UIState, "get").returns({
-    status: UIState.STATUS_SIGNED_IN,
-  });
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => true);
   sandbox
     .stub(IPProtectionService.guardian, "isLinkedToGuardian")
     .resolves(false);
@@ -174,9 +166,7 @@ add_task(async function test_IPProtectionStates_enrolling() {
  */
 add_task(async function test_IPProtectionStates_ready() {
   let sandbox = sinon.createSandbox();
-  sandbox.stub(UIState, "get").returns({
-    status: UIState.STATUS_SIGNED_IN,
-  });
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => true);
   sandbox
     .stub(IPProtectionService.guardian, "isLinkedToGuardian")
     .resolves(true);
@@ -194,9 +184,7 @@ add_task(async function test_IPProtectionStates_ready() {
     "IP Protection service should be ready"
   );
 
-  UIState.get.returns({
-    status: UIState.STATUS_STATUS_NOT_CONFIGURED,
-  });
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => false);
 
   await IPProtectionService.updateState();
 
@@ -215,9 +203,7 @@ add_task(async function test_IPProtectionStates_ready() {
  */
 add_task(async function test_IPProtectionStates_active() {
   let sandbox = sinon.createSandbox();
-  sandbox.stub(UIState, "get").returns({
-    status: UIState.STATUS_SIGNED_IN,
-  });
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => true);
   sandbox
     .stub(IPProtectionService.guardian, "isLinkedToGuardian")
     .resolves(true);
@@ -268,9 +254,7 @@ add_task(async function test_IPProtectionStates_active() {
  */
 add_task(async function test_IPProtectionStates_error() {
   let sandbox = sinon.createSandbox();
-  sandbox.stub(UIState, "get").returns({
-    status: UIState.STATUS_SIGNED_IN,
-  });
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => true);
   sandbox
     .stub(IPProtectionService.guardian, "isLinkedToGuardian")
     .resolves(true);

@@ -111,6 +111,10 @@ class TextInputHandler;
 - (void)setEffectViewWrapperForStyle:(mozilla::WindowShadow)aStyle;
 @property(nonatomic) mozilla::WindowShadow shadowStyle;
 
+- (void)updateTitlebarTransparency;
+- (void)setTitlebarSeparatorStyle:(NSTitlebarSeparatorStyle)aStyle
+    API_AVAILABLE(macos(11.0));
+
 - (void)releaseJSObjects;
 
 @end

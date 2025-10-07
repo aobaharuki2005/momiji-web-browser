@@ -216,8 +216,9 @@ class NativeLayerRootCA final : public NativeLayerRoot {
     RefPtr<NativeLayerRootCA> mLayerRoot;
   };
 
-  Mutex mMutex MOZ_UNANNOTATED;             // protects all other fields
-  CALayer* mOnscreenRootCALayer = nullptr;  // strong
+  Mutex mMutex MOZ_UNANNOTATED;              // protects all other fields
+  CALayer* mOnscreenRootCALayer = nullptr;   // strong
+  CALayer* mOffscreenRootCALayer = nullptr;  // strong
   NativeLayerRootSnapshotterCA* mWeakSnapshotter = nullptr;
   nsTArray<RefPtr<NativeLayerCA>> mSublayers;  // in z-order
   float mBackingScale = 1.0f;
@@ -466,6 +467,10 @@ class NativeLayerCA : public NativeLayer {
   // Controls access to all fields of this class.
   Mutex mMutex MOZ_UNANNOTATED;
 
+  // The IOSurface to use for this layer. Optional.
+  // If not present, we get use a surface from mSurfaceHandler or mTextureHost
+  // instead. We mark the surface as "in use" as long as it is in
+  // mSurfaceToPresent, to prevent other processes from recycling it.
   CFTypeRefPtr<IOSurfaceRef> mSurfaceToPresent;
 
   Maybe<NativeLayerMacSurfaceHandler> mSurfaceHandler;

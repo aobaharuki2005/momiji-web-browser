@@ -396,6 +396,7 @@ PK11_ImportDERPrivateKeyInfoAndReturnKey
 PK11_ImportEncryptedPrivateKeyInfoAndReturnKey
 PK11_ImportPublicKey
 PK11_ImportSymKey
+PK11_ImportSymKeyWithFlags
 PK11_InitPin
 PK11_IsDisabled
 PK11_IsFIPS

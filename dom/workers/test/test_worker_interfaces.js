@@ -504,15 +504,23 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "TransformStreamDefaultController", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "TrustedHTML", nightly: true, insecureContext: true },
+  { name: "TrustedHTML", earlyBetaOrEarlier: true, insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "TrustedScript", nightly: true, insecureContext: true },
+  { name: "TrustedScript", earlyBetaOrEarlier: true, insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "TrustedScriptURL", nightly: true, insecureContext: true },
+  { name: "TrustedScriptURL", earlyBetaOrEarlier: true, insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "TrustedTypePolicy", nightly: true, insecureContext: true },
+  {
+    name: "TrustedTypePolicy",
+    earlyBetaOrEarlier: true,
+    insecureContext: true,
+  },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "TrustedTypePolicyFactory", nightly: true, insecureContext: true },
+  {
+    name: "TrustedTypePolicyFactory",
+    earlyBetaOrEarlier: true,
+    insecureContext: true,
+  },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "URL", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!

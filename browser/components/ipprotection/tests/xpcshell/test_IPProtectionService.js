@@ -12,8 +12,8 @@ const { ExtensionTestUtils } = ChromeUtils.importESModule(
 const { IPProtectionService, IPProtectionStates } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPProtectionService.sys.mjs"
 );
-const { UIState } = ChromeUtils.importESModule(
-  "resource://services-sync/UIState.sys.mjs"
+const { IPPSignInWatcher } = ChromeUtils.importESModule(
+  "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs"
 );
 
 do_get_profile();
@@ -31,7 +31,7 @@ ExtensionTestUtils.init(this);
 function setupStubs(
   sandbox,
   options = {
-    signedIn: UIState.STATUS_SIGNED_IN,
+    signedIn: true,
     isLinkedToGuardian: true,
     validProxyPass: true,
     entitlement: {
@@ -41,9 +41,7 @@ function setupStubs(
     },
   }
 ) {
-  sandbox.stub(UIState, "get").returns({
-    status: options.signedIn,
-  });
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => options.signedIn);
   sandbox
     .stub(IPProtectionService.guardian, "isLinkedToGuardian")
     .resolves(options.isLinkedToGuardian);
@@ -174,7 +172,7 @@ add_task(async function test_IPProtectionService_updateState_signedIn() {
 
   await signedInEventPromise;
 
-  Assert.ok(IPProtectionService.isSignedIn, "Should be signed in after update");
+  Assert.ok(IPPSignInWatcher.isSignedIn, "Should be signed in after update");
 
   IPProtectionService.uninit();
   sandbox.restore();
@@ -189,9 +187,7 @@ add_task(async function test_IPProtectionService_updateState_signedOut() {
 
   await IPProtectionService.init();
 
-  UIState.get.returns({
-    status: UIState.STATUS_NOT_CONFIGURED,
-  });
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => false);
 
   let signedOutEventPromise = waitForEvent(
     IPProtectionService,
@@ -205,7 +201,7 @@ add_task(async function test_IPProtectionService_updateState_signedOut() {
   await signedOutEventPromise;
 
   Assert.ok(
-    !IPProtectionService.isSignedIn,
+    !IPPSignInWatcher.isSignedIn,
     "Should not be signed in after update"
   );
 
@@ -295,9 +291,7 @@ add_task(async function test_IPProtectionService_hasUpgraded_signed_out() {
 
   await IPProtectionService.init();
 
-  UIState.get.returns({
-    status: UIState.STATUS_NOT_CONFIGURED,
-  });
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => false);
 
   let signedOutEventPromise = waitForEvent(
     IPProtectionService,

@@ -1765,6 +1765,52 @@ Preferences.addSetting({
   },
 });
 
+Preferences.addSetting({
+  id: "certificateButtonGroup",
+});
+Preferences.addSetting({
+  id: "disableOpenCertManager",
+  pref: "security.disable_button.openCertManager",
+});
+Preferences.addSetting({
+  id: "disableOpenDeviceManager",
+  pref: "security.disable_button.openDeviceManager",
+});
+Preferences.addSetting({
+  id: "viewCertificatesButton",
+  deps: ["disableOpenCertManager"],
+  disabled: deps => {
+    return deps.disableOpenCertManager.value;
+  },
+  onUserClick: () => {
+    gPrivacyPane.showCertificates();
+  },
+});
+Preferences.addSetting({
+  id: "viewSecurityDevicesButton",
+  deps: ["disableOpenDeviceManager"],
+  disabled: deps => {
+    return deps.disableOpenDeviceManager.value;
+  },
+  onUserClick: () => {
+    gPrivacyPane.showSecurityDevices();
+  },
+});
+Preferences.addSetting({
+  id: "certEnableThirdPartyToggle",
+  pref: "security.enterprise_roots.enabled",
+  visible: () => {
+    // Third-party certificate import is only implemented for Windows and Mac,
+    // and we should not expose this as a user-configurable setting if there's
+    // an enterprise policy controlling it (either to enable _or_ disable it).
+    return (
+      (AppConstants.platform == "win" || AppConstants.platform == "macosx") &&
+      typeof Services.policies.getActivePolicies()?.Certificates
+        ?.ImportEnterpriseRoots == "undefined"
+    );
+  },
+});
+
 function setEventListener(aId, aEventType, aCallback) {
   document
     .getElementById(aId)
@@ -1956,19 +2002,6 @@ var gPrivacyPane = {
     ].getService(Ci.nsIUrlClassifierExceptionListService);
 
     exceptionListService.maybeMigrateCategoryPrefs();
-  },
-
-  _initThirdPartyCertsToggle() {
-    // Third-party certificate import is only implemented for Windows and Mac,
-    // and we should not expose this as a user-configurable setting if there's
-    // an enterprise policy controlling it (either to enable _or_ disable it).
-    let canConfigureThirdPartyCerts =
-      (AppConstants.platform == "win" || AppConstants.platform == "macosx") &&
-      typeof Services.policies.getActivePolicies()?.Certificates
-        ?.ImportEnterpriseRoots == "undefined";
-
-    document.getElementById("certEnableThirdPartyToggleBox").hidden =
-      !canConfigureThirdPartyCerts;
   },
 
   get dnsOverHttpsResolvers() {
@@ -2322,41 +2355,6 @@ var gPrivacyPane = {
   },
 
   /**
-   * Hides non technical privacy section when all controls within are hidden.
-   */
-  updateNonTechnicalPrivacySectionVisibility() {
-    let allDisabled =
-      !Preferences.get("privacy.globalprivacycontrol.functionality.enabled")
-        .value && !Preferences.get("privacy.donottrackheader.enabled").value;
-    let nonTechnicalPrivacyGroup = document.getElementById(
-      "nonTechnicalPrivacyGroup"
-    );
-    if (allDisabled) {
-      nonTechnicalPrivacyGroup.style.display = "none";
-    } else {
-      nonTechnicalPrivacyGroup.style.display = "";
-    }
-  },
-
-  /**
-   * Sets up listeners to control non technical privacy section visibility.
-   */
-  initNonTechnicalPrivacySection() {
-    // When prefs change that can cause all settings in the section to be hidden
-    // update visibility state of the entire section.
-    Preferences.get("privacy.globalprivacycontrol.functionality.enabled").on(
-      "change",
-      gPrivacyPane.updateNonTechnicalPrivacySectionVisibility.bind(gPrivacyPane)
-    );
-    Preferences.get("privacy.donottrackheader.enabled").on(
-      "change",
-      gPrivacyPane.updateNonTechnicalPrivacySectionVisibility.bind(gPrivacyPane)
-    );
-    // Initial visiblity state.
-    gPrivacyPane.updateNonTechnicalPrivacySectionVisibility();
-  },
-
-  /**
    * Sets up the UI for the number of days of history to keep, and updates the
    * label of the "Clear Now..." button.
    */
@@ -2368,8 +2366,7 @@ var gPrivacyPane = {
     initSettingGroup("httpsOnly");
     initSettingGroup("browsingProtection");
     initSettingGroup("cookiesAndSiteData");
-
-    this.initNonTechnicalPrivacySection();
+    initSettingGroup("certificates");
 
     this._updateSanitizeSettingsButton();
     this.initializeHistoryMode();
@@ -2385,7 +2382,6 @@ var gPrivacyPane = {
     this.networkCookieBehaviorReadPrefs();
     this._initTrackingProtectionExtensionControl();
     this._ensureTrackingProtectionExceptionListMigration();
-    this._initThirdPartyCertsToggle();
     this._initProfilesInfo();
 
     Preferences.get("privacy.trackingprotection.enabled").on(
@@ -2481,16 +2477,6 @@ var gPrivacyPane = {
       "addonExceptions",
       "command",
       gPrivacyPane.showAddonExceptions
-    );
-    setEventListener(
-      "viewCertificatesButton",
-      "command",
-      gPrivacyPane.showCertificates
-    );
-    setEventListener(
-      "viewSecurityDevicesButton",
-      "command",
-      gPrivacyPane.showSecurityDevices
     );
 
     this._pane = document.getElementById("panePrivacy");
@@ -2634,14 +2620,9 @@ var gPrivacyPane = {
     }
 
     let signonBundle = document.getElementById("signonBundle");
-    let pkiBundle = document.getElementById("pkiBundle");
     appendSearchKeywords("showPasswords", [
       signonBundle.getString("loginsDescriptionAll2"),
     ]);
-    appendSearchKeywords("viewSecurityDevicesButton", [
-      pkiBundle.getString("enable_fips"),
-    ]);
-
     if (!PrivateBrowsingUtils.enabled) {
       document.getElementById("privateBrowsingAutoStart").hidden = true;
       document.querySelector("menuitem[value='dontremember']").hidden = true;

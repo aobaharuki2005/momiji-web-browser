@@ -319,7 +319,7 @@ pref("media.videocontrols.keyboard-tab-to-all-controls", true);
   // 770 = DTLS 1.0, 771 = DTLS 1.2, 772 = DTLS 1.3
   pref("media.peerconnection.dtls.version.min", 771);
   pref("media.peerconnection.dtls.version.max", 772);
-
+  
   pref("media.peerconnection.sctp.default_max_streams", 2048);
 
 #if defined(XP_MACOSX)
@@ -3019,6 +3019,12 @@ pref("signon.firefoxRelay.manage_url", "https://relay.firefox.com/accounts/profi
 pref("signon.firefoxRelay.terms_of_service_url", "https://www.mozilla.org/%LOCALE%/about/legal/terms/subscription-services/");
 pref("signon.firefoxRelay.privacy_policy_url", "https://www.mozilla.org/%LOCALE%/privacy/subscription-services/");
 pref("signon.signupDetection.confidenceThreshold",     "0.75");
+
+#ifdef NIGHTLY_BUILD
+  pref("signon.rustMirror.enabled", true);
+#else
+  pref("signon.rustMirror.enabled", false);
+#endif
 
 // Satchel (Form Manager) prefs
 pref("browser.formfill.debug",            false);

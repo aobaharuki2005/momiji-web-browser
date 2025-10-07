@@ -75,17 +75,10 @@ elif system.startswith(("MINGW", "MSYS_NT")):
     info["os"] = "win"
     os_version = version = unknown
 elif system == "Linux":
-    # Attempt to use distro package to determine Linux distribution first.
-    # Failing that, fall back to use the platform method.
-    # Note that platform.linux_distribution() will be deprecated as of 3.8
-    # and this block will be removed once support for 2.7/3.5 is dropped.
-    try:
-        from distro import linux_distribution
-    except ImportError:
-        from platform import linux_distribution
+    import distro
 
-    output = linux_distribution()
-    (distribution, os_version, codename) = tuple(str(item.title()) for item in output)
+    distribution = distro.name().title()
+    os_version = distro.version().title()
 
     if not processor:
         processor = machine
@@ -93,8 +86,6 @@ elif system == "Linux":
         distribution = "lfs"
     if not os_version:
         os_version = release
-    if not codename:
-        codename = "unknown"
     version = "%s %s" % (distribution, os_version)
 
     if os.environ.get("WAYLAND_DISPLAY"):

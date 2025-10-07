@@ -493,9 +493,6 @@ impl PrimitiveHeaders {
     pub fn push(
         &mut self,
         prim_header: &PrimitiveHeader,
-        z: ZBufferId,
-        render_task_address: RenderTaskAddress,
-        user_data: [i32; 4],
     ) -> PrimitiveHeaderIndex {
         debug_assert_eq!(self.headers_int.len(), self.headers_float.len());
         let id = self.headers_float.len();
@@ -506,11 +503,11 @@ impl PrimitiveHeaders {
         });
 
         self.headers_int.push(PrimitiveHeaderI {
-            z,
-            render_task_address,
+            z: prim_header.z,
+            render_task_address: prim_header.render_task_address,
             specific_prim_address: prim_header.specific_prim_address.as_int(),
             transform_id: prim_header.transform_id,
-            user_data,
+            user_data: prim_header.user_data,
         });
 
         PrimitiveHeaderIndex(id as i32)
@@ -525,6 +522,9 @@ pub struct PrimitiveHeader {
     pub local_clip_rect: LayoutRect,
     pub specific_prim_address: GpuCacheAddress,
     pub transform_id: TransformPaletteId,
+    pub z: ZBufferId,
+    pub render_task_address: RenderTaskAddress,
+    pub user_data: [i32; 4],
 }
 
 // f32 parts of a primitive header

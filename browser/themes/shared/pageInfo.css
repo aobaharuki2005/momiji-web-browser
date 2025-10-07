@@ -14,13 +14,15 @@
     align-items: center;
     justify-content: center;
 
-    &::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      appearance: auto;
-      -moz-default-appearance: -moz-window-titlebar;
-      z-index: -1;
+    @media not (-moz-mac-tahoe-theme) {
+      &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        appearance: auto;
+        -moz-default-appearance: -moz-window-titlebar;
+        z-index: -1;
+      }
     }
   }
 }
