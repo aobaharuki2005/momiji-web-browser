@@ -660,8 +660,8 @@ void CacheFileContextEvictor::EvictEntries() {
       // this must be a new one. Skip it.
       LOG(
           ("CacheFileContextEvictor::EvictEntries() - Skipping entry since we "
-           "found an active handle. [handle=%p]",
-           handle.get()));
+           "found an active handle. [handle=%p key=%s]",
+           handle.get(), handle->Key().get()));
       continue;
     }
 
