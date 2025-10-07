@@ -260,6 +260,16 @@ tab-group-editor-color-selector2-red = Red
 tab-group-description = { $tabGroupName } — Tab Group
 tab-group-label-tooltip-collapsed = { $tabGroupName } — Collapsed
 tab-group-label-tooltip-expanded = { $tabGroupName } — Expanded
+tab-group-preview-name =
+  .aria-label = Tabs in a collapsed group
+
+## When collapsed, the tab group label's aria-description will indicate
+## whether the hover menu is open or closed.
+
+tab-group-preview-open-description = Tabs list open
+tab-group-preview-closed-description = Tabs list closed
+
+##
 
 tab-context-unnamed-group =
     .label = Unnamed group

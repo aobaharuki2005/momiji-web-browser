@@ -569,6 +569,7 @@ class TabGroupPanel extends Panel {
     const fragment = this.win.document.createDocumentFragment();
     for (let tab of this.#group.tabs) {
       let tabbutton = this.win.document.createXULElement("toolbarbutton");
+      tabbutton.setAttribute("role", "button");
       tabbutton.setAttribute("label", tab.label);
       tabbutton.setAttribute(
         "image",
