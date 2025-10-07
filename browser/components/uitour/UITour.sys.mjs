@@ -72,6 +72,8 @@ export var UITour = {
 
   _annotationPanelMutationObservers: new WeakMap(),
 
+  _initForBrowserObserverAdded: false,
+
   highlightEffects: ["random", "wobble", "zoom", "color", "focus-outline"],
   targets: new Map([
     [
@@ -644,8 +646,10 @@ export var UITour = {
     }
     this.tourBrowsersByWindow.get(window).add(aBrowser);
 
-    Services.obs.addObserver(this, "message-manager-close");
-
+    if (!this._initForBrowserObserverAdded) {
+      this._initForBrowserObserverAdded = true;
+      Services.obs.addObserver(this, "message-manager-close");
+    }
     window.addEventListener("SSWindowClosing", this);
   },
 
