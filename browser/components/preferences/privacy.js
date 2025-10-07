@@ -2355,41 +2355,6 @@ var gPrivacyPane = {
   },
 
   /**
-   * Hides non technical privacy section when all controls within are hidden.
-   */
-  updateNonTechnicalPrivacySectionVisibility() {
-    let allDisabled =
-      !Preferences.get("privacy.globalprivacycontrol.functionality.enabled")
-        .value && !Preferences.get("privacy.donottrackheader.enabled").value;
-    let nonTechnicalPrivacyGroup = document.getElementById(
-      "nonTechnicalPrivacyGroup"
-    );
-    if (allDisabled) {
-      nonTechnicalPrivacyGroup.style.display = "none";
-    } else {
-      nonTechnicalPrivacyGroup.style.display = "";
-    }
-  },
-
-  /**
-   * Sets up listeners to control non technical privacy section visibility.
-   */
-  initNonTechnicalPrivacySection() {
-    // When prefs change that can cause all settings in the section to be hidden
-    // update visibility state of the entire section.
-    Preferences.get("privacy.globalprivacycontrol.functionality.enabled").on(
-      "change",
-      gPrivacyPane.updateNonTechnicalPrivacySectionVisibility.bind(gPrivacyPane)
-    );
-    Preferences.get("privacy.donottrackheader.enabled").on(
-      "change",
-      gPrivacyPane.updateNonTechnicalPrivacySectionVisibility.bind(gPrivacyPane)
-    );
-    // Initial visiblity state.
-    gPrivacyPane.updateNonTechnicalPrivacySectionVisibility();
-  },
-
-  /**
    * Sets up the UI for the number of days of history to keep, and updates the
    * label of the "Clear Now..." button.
    */
@@ -2402,8 +2367,6 @@ var gPrivacyPane = {
     initSettingGroup("browsingProtection");
     initSettingGroup("cookiesAndSiteData");
     initSettingGroup("certificates");
-
-    this.initNonTechnicalPrivacySection();
 
     this._updateSanitizeSettingsButton();
     this.initializeHistoryMode();
