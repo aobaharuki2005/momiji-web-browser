@@ -32,6 +32,7 @@ const MESSAGES = () => [
       lifetime: 100,
     },
     content: {
+      id: "TEST_BACKUP_SPOTLIGHT",
       template: "multistage",
       modal: "tab",
       screens: [
@@ -41,17 +42,40 @@ const MESSAGES = () => [
           content: {
             position: "center",
             screen_style: {
-              width: "700px",
+              width: "579px",
             },
-            logo: {
-              height: "0px",
-              imageURL: "",
-            },
+            split_content_padding_block: "32px",
             title: {
-              raw: "Upgrading to Windows 11? Let's back up your Firefox data",
+              string_id: "create-backup-screen-1-title",
+              letterSpacing: "revert",
+              whiteSpace: "preserve-breaks",
+              lineHeight: "28px",
+              marginBlock: "0",
             },
             subtitle: {
-              raw: "Automatically protect your passwords, bookmarks, and more in 1-2 minutes. Learn more",
+              string_id: "create-backup-screen-1-subtitle",
+              fontSize: "0.8125em",
+              letterSpacing: "revert",
+              marginBlock: "12px 0",
+            },
+            cta_paragraph: {
+              text: {
+                string_id: "create-backup-learn-more-link",
+                string_name: "learn-more-label",
+                fontSize: "0.8125em",
+              },
+              style: {
+                marginBlock: "0",
+                lineHeight: "100%",
+                letterSpacing: "revert",
+              },
+              action: {
+                type: "OPEN_URL",
+                data: {
+                  args: "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/firefox-backup",
+                  where: "tabshifted",
+                },
+              },
             },
             tiles: {
               type: "single-select",
@@ -67,43 +91,60 @@ const MESSAGES = () => [
                   icon: {
                     background:
                       "center / contain no-repeat url('chrome://browser/content/asrouter/assets/fox-with-box-on-cloud.svg')",
-                    width: "60px",
-                    height: "42px",
-                    marginBlockStart: "10px",
-                    paddingBlockEnd: "10px",
+                    width: "133.9601px",
+                    height: "90.1186px",
+                    marginBlockStart: "8px",
                     borderRadius: "5px",
                   },
                   id: "sync",
                   flair: {
                     centered: true,
                     text: {
-                      raw: "Recommended",
+                      string_id: "create-backup-screen-1-flair",
+                      fontSize: "0.625em",
+                      fontWeight: "600",
+                      top: "revert",
+                      lineHeight: "normal",
                     },
                   },
                   label: {
-                    raw: "Sync to cloud",
+                    string_id: "create-backup-screen-1-sync-label",
                     fontSize: 17,
                     fontWeight: 600,
                   },
                   body: {
-                    raw: "Back up on all signed in devices",
-                    fontWeight: 300,
+                    string_id: "create-backup-screen-1-sync-body",
+                    fontSize: "0.625em",
+                    fontWeight: "400",
                     marginBlock: "-6px 16px",
+                    color: "var(--text-color-deemphasized)",
                   },
                   tilebutton: {
                     label: {
-                      raw: "Select",
+                      string_id: "create-backup-select-tile-button-label",
+                      minHeight: "24px",
+                      minWidth: "revert",
+                      lineHeight: "100%",
+                      paddingBlock: "4px",
+                      paddingInline: "16px",
+                      marginBlock: "0 16px",
                     },
                     style: "primary",
-                    marginBlock: "0 16px",
                     action: {
                       type: "FXA_SIGNIN_FLOW",
                       dismiss: "actionResult",
                       needsAwait: true,
                       data: {
-                        entrypoint: "onboarding",
+                        autoClose: false,
+                        entrypoint: "create-backup-spotlight",
                         extraParams: {
-                          utm_content: "migration-onboarding",
+                          service: "sync",
+                          entrypoint_experiment: "fx-backup-onboarding",
+                          entrypoint_variation: "1",
+                          utm_medium: "firefox-desktop",
+                          utm_source: "spotlight",
+                          utm_campaign: "fx-backup-onboarding",
+                          utm_term: "fx-backup-onboarding-spotlight-1",
                         },
                       },
                     },
@@ -115,10 +156,9 @@ const MESSAGES = () => [
                   icon: {
                     background:
                       "center / contain no-repeat url('chrome://browser/content/asrouter/assets/fox-with-locked-box.svg')",
-                    width: "60px",
-                    height: "40px",
-                    marginBlockStart: "10px",
-                    paddingBlockEnd: "10px",
+                    width: "114.475px",
+                    height: "90.1186px",
+                    marginBlockStart: "8px",
                     borderRadius: "5px",
                   },
                   id: "backup",
@@ -127,21 +167,28 @@ const MESSAGES = () => [
                     spacer: true,
                   },
                   label: {
-                    raw: "Back up to PC",
+                    string_id: "create-backup-screen-1-backup-label",
                     fontSize: 17,
                     fontWeight: 600,
                   },
                   body: {
-                    raw: "Save to this device",
-                    fontWeight: 300,
+                    string_id: "create-backup-screen-1-backup-body",
+                    fontSize: "0.625em",
+                    fontWeight: "400",
                     marginBlock: "-6px 16px",
+                    color: "var(--text-color-deemphasized)",
                   },
                   tilebutton: {
                     label: {
-                      raw: "Select",
+                      string_id: "create-backup-select-tile-button-label",
+                      minHeight: "24px",
+                      minWidth: "revert",
+                      lineHeight: "100%",
+                      paddingBlock: "4px",
+                      paddingInline: "16px",
+                      marginBlock: "0 16px",
                     },
                     style: "secondary",
-                    marginBlock: "0 16px",
                     action: {
                       navigate: true,
                     },
@@ -152,6 +199,12 @@ const MESSAGES = () => [
             additional_button: {
               label: {
                 string_id: "fx-view-discoverability-secondary-button-label",
+                fontSize: "0.75em",
+                minHeight: "24px",
+                minWidth: "revert",
+                lineHeight: "100%",
+                paddingBlock: "4px",
+                paddingInline: "12px",
               },
               style: "secondary",
               flow: "row",
@@ -164,26 +217,16 @@ const MESSAGES = () => [
               },
             },
             submenu_button: {
+              label: {
+                minHeight: "24px",
+                minWidth: "24px",
+                paddingBlock: "0",
+                paddingInline: "0",
+              },
               submenu: [
                 {
                   type: "action",
-                  label: {
-                    string_id: "split-dismiss-button-dont-show-option",
-                  },
-                  action: {
-                    type: "BLOCK_MESSAGE",
-                    data: {
-                      id: "TEST_BACKUP_SPOTLIGHT",
-                    },
-                    dismiss: true,
-                  },
-                  id: "block_recommendation",
-                },
-                {
-                  type: "action",
-                  label: {
-                    string_id: "split-dismiss-button-show-fewer-option",
-                  },
+                  label: { string_id: "create-backup-show-fewer" },
                   action: {
                     type: "MULTI_ACTION",
                     dismiss: true,
@@ -193,7 +236,7 @@ const MESSAGES = () => [
                           type: "SET_PREF",
                           data: {
                             pref: {
-                              name: "messaging-system-action.firefox-view-recommendations",
+                              name: "messaging-system-action.show-fewer-backup-messages",
                               value: true,
                             },
                           },
@@ -201,31 +244,13 @@ const MESSAGES = () => [
                         {
                           type: "BLOCK_MESSAGE",
                           data: {
-                            id: "TASKBAR_TAB_TEST_CALLOUT",
+                            id: "TEST_BACKUP_SPOTLIGHT",
                           },
                         },
                       ],
                     },
                   },
                   id: "show_fewer_recommendations",
-                },
-                {
-                  type: "separator",
-                },
-                {
-                  type: "action",
-                  label: {
-                    string_id: "split-dismiss-button-manage-settings-option",
-                  },
-                  action: {
-                    type: "OPEN_ABOUT_PAGE",
-                    data: {
-                      args: "preferences#general-cfrfeatures",
-                      where: "tab",
-                    },
-                    dismiss: true,
-                  },
-                  id: "manage_settings",
                 },
               ],
               attached_to: "additional_button",
@@ -238,17 +263,20 @@ const MESSAGES = () => [
           content: {
             position: "center",
             screen_style: {
-              width: "700px",
+              width: "579px",
             },
-            logo: {
-              height: "0px",
-              imageURL: "",
-            },
+            split_content_padding_block: "32px",
             title: {
-              raw: "Choose Firefox data to back up",
+              string_id: "create-backup-screen-2-title",
+              letterSpacing: "revert",
+              lineHeight: "28px",
+              marginBlock: "0",
             },
             subtitle: {
-              raw: "Only takes a minute.",
+              string_id: "create-backup-screen-2-subtitle",
+              fontSize: "0.8125em",
+              letterSpacing: "revert",
+              marginBlock: "8px 0",
             },
             tiles: {
               type: "single-select",
@@ -263,17 +291,17 @@ const MESSAGES = () => [
                   icon: {
                     background:
                       "center / contain no-repeat url('https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a43cd9cc-e8b2-477c-92f2-345557370de1.svg')",
-                    width: "60px",
-                    height: "40px",
-                    marginBlockStart: "10px",
-                    paddingBlockEnd: "10px",
+                    width: "54px",
+                    height: "54px",
+                    marginBlockStart: "22px",
                     borderRadius: "5px",
                   },
                   id: "easy",
                   label: {
-                    raw: "Easy setup",
+                    string_id: "create-backup-screen-2-easy-label",
                     fontSize: 17,
                     fontWeight: 600,
+                    marginBlock: "3px 10px",
                   },
                   body: {
                     items: [
@@ -285,7 +313,9 @@ const MESSAGES = () => [
                           width: "18px",
                         },
                         text: {
-                          raw: "Bookmarks, history, settings, and more",
+                          string_id: "create-backup-screen-2-easy-list-1",
+                          marginBlock: "4px",
+                          fontSize: "13px",
                         },
                       },
                       {
@@ -296,7 +326,9 @@ const MESSAGES = () => [
                           width: "18px",
                         },
                         text: {
-                          raw: "Doesn't include passwords and payments",
+                          string_id: "create-backup-screen-2-easy-list-2",
+                          marginBlock: "4px",
+                          fontSize: "13px",
                         },
                       },
                       {
@@ -307,17 +339,24 @@ const MESSAGES = () => [
                           width: "18px",
                         },
                         text: {
-                          raw: "Not encrypted",
-                          fontWeight: 500,
+                          string_id: "create-backup-screen-2-easy-list-3",
+                          marginBlock: "4px",
+                          fontSize: "13px",
+                          fontWeight: "600",
                         },
                       },
                     ],
                   },
                   tilebutton: {
                     label: {
-                      raw: "Select",
+                      string_id: "create-backup-select-tile-button-label",
+                      minHeight: "24px",
+                      minWidth: "revert",
+                      lineHeight: "100%",
+                      paddingBlock: "4px",
+                      paddingInline: "16px",
+                      marginBlock: "0 16px",
                     },
-                    marginBlock: "0 16px",
                     style: "primary",
                     action: {
                       type: "SET_PREF",
@@ -337,17 +376,17 @@ const MESSAGES = () => [
                   icon: {
                     background:
                       "center / contain no-repeat url('https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/0ddfd632-b9c4-45d6-86c3-b89f94797110.svg')",
-                    width: "60px",
-                    height: "40px",
-                    marginBlockStart: "10px",
-                    paddingBlockEnd: "10px",
+                    width: "54px",
+                    height: "54px",
+                    marginBlockStart: "22px",
                     borderRadius: "5px",
                   },
                   id: "all",
                   label: {
-                    raw: "All data",
+                    string_id: "create-backup-screen-2-all-label",
                     fontSize: 17,
                     fontWeight: 600,
+                    marginBlock: "3px 10px",
                   },
                   body: {
                     items: [
@@ -359,7 +398,9 @@ const MESSAGES = () => [
                           width: "18px",
                         },
                         text: {
-                          raw: "Bookmarks, history, settings, and more",
+                          string_id: "create-backup-screen-2-easy-list-1",
+                          marginBlock: "4px",
+                          fontSize: "13px",
                         },
                       },
                       {
@@ -370,7 +411,9 @@ const MESSAGES = () => [
                           width: "18px",
                         },
                         text: {
-                          raw: "Includes passwords and payments",
+                          string_id: "create-backup-screen-2-all-list-2",
+                          marginBlock: "4px",
+                          fontSize: "13px",
                         },
                       },
                       {
@@ -381,7 +424,9 @@ const MESSAGES = () => [
                           width: "18px",
                         },
                         text: {
-                          raw: "Encrypted with a password",
+                          string_id: "create-backup-screen-2-all-list-3",
+                          marginBlock: "4px",
+                          fontSize: "13px",
                           fontWeight: 500,
                         },
                       },
@@ -389,7 +434,13 @@ const MESSAGES = () => [
                   },
                   tilebutton: {
                     label: {
-                      raw: "Select",
+                      string_id: "create-backup-select-tile-button-label",
+                      minHeight: "24px",
+                      minWidth: "revert",
+                      lineHeight: "100%",
+                      paddingBlock: "4px",
+                      paddingInline: "16px",
+                      marginBlock: "0 16px",
                     },
                     marginBlock: "0 16px",
                     style: "primary",
@@ -410,7 +461,13 @@ const MESSAGES = () => [
             additional_button: {
               style: "secondary",
               label: {
-                raw: "Back",
+                string_id: "create-backup-back-button-label",
+                fontSize: "0.75em",
+                minHeight: "24px",
+                minWidth: "revert",
+                lineHeight: "100%",
+                paddingBlock: "4px",
+                paddingInline: "12px",
               },
               action: {
                 navigate: true,
@@ -427,25 +484,40 @@ const MESSAGES = () => [
           content: {
             logo: {
               imageURL:
-                "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a3c640c8-7594-4bb2-bc18-8b4744f3aaf2.gif",
+                "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/0706f067-eaf8-4537-a9e1-6098d990f511.svg",
+              height: "110px",
             },
             title: {
-              raw: "Easy Backup",
+              raw: "Where do you want your backup saved?",
               paddingBlock: "8px",
+              fontSize: "24px",
+              fontWeight: 600,
             },
-            dismiss_button: {
-              action: {
-                dismiss: true,
+            isEncryptedBackup: false,
+            screen_style: {
+              width: "643px",
+            },
+            tiles: {
+              type: "fx_backup_file_path",
+              options: {
+                hide_password_input: true,
+                file_path_label: "fx-backup-opt-in-filepath-label",
+                turn_on_backup_header: "fx-backup-opt-in-header",
+                turn_on_backup_confirm_btn_label:
+                  "fx-backup-opt-in-confirm-btn-label",
               },
             },
-            primary_button: {
-              label: "Primary",
-              action: {
-                navigate: true,
+            additional_button: {
+              style: "secondary",
+              label: {
+                raw: "Back",
+                fontSize: "0.75em",
+                minHeight: "24px",
+                minWidth: "revert",
+                lineHeight: "100%",
+                paddingBlock: "4px",
+                paddingInline: "12px",
               },
-            },
-            secondary_button: {
-              label: "Go back",
               action: {
                 navigate: true,
                 goBack: true,
@@ -457,32 +529,118 @@ const MESSAGES = () => [
           id: "SCREEN_3B",
           force_hide_steps_indicator: true,
           targeting:
-            "('messaging-system-action.backupChooser' |preferenceValue == 'full' || preferenceValue == null)",
+            "('messaging-system-action.backupChooser' |preferenceValue == 'full')",
           content: {
             logo: {
               imageURL:
-                "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a3c640c8-7594-4bb2-bc18-8b4744f3aaf2.gif",
+                "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/0706f067-eaf8-4537-a9e1-6098d990f511.svg",
+              height: "110px",
             },
             title: {
-              raw: "Full Backup",
-              paddingBlock: "8px",
+              raw: "Where do you want your backup saved?",
             },
-            dismiss_button: {
-              action: {
-                dismiss: true,
+            isEncryptedBackup: true,
+            screen_style: {
+              width: "643px",
+            },
+            tiles: {
+              type: "fx_backup_file_path",
+              options: {
+                hide_password_input: true,
+                hide_secondary_button: true,
+                file_path_label: "fx-backup-opt-in-filepath-label",
+                turn_on_backup_header: "fx-backup-opt-in-header",
+                turn_on_backup_confirm_btn_label:
+                  "fx-backup-opt-in-confirm-btn-label",
               },
             },
-            primary_button: {
-              label: "Primary",
-              action: {
-                navigate: true,
+            additional_button: {
+              style: "secondary",
+              flow: "row",
+              label: {
+                raw: "Back",
+                fontSize: "0.75em",
+                minHeight: "24px",
+                minWidth: "revert",
+                lineHeight: "100%",
+                paddingBlock: "4px",
+                paddingInline: "12px",
               },
-            },
-            secondary_button: {
-              label: "Go back",
               action: {
                 navigate: true,
                 goBack: true,
+              },
+            },
+          },
+        },
+        {
+          id: "FX_BACKUP_ENCRYPTION",
+          force_hide_steps_indicator: true,
+          targeting:
+            "('messaging-system-action.backupChooser' |preferenceValue == 'full')",
+          content: {
+            isEncryptedBackup: true,
+            title: {
+              raw: "Create a backup file password",
+            },
+            subtitle: {
+              raw: "Required to encrypt your data. Store it in a place you’ll remember.",
+              fontSize: "13px",
+            },
+            screen_style: {
+              width: "700px",
+            },
+            logo: {
+              imageURL:
+                "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/0fb332a4-6b15-4d6e-bbd5-0558ac3e004f.svg",
+              height: "130px",
+            },
+            tiles: {
+              type: "fx_backup_password",
+              options: {
+                hide_secondary_button: true,
+                create_password_label: "fx-backup-opt-in-create-password-label",
+                turn_on_backup_confirm_btn_label:
+                  "fx-backup-opt-in-confirm-btn-label",
+              },
+            },
+            additional_button: {
+              style: "secondary",
+              label: {
+                raw: "Back",
+                fontSize: "0.75em",
+                minHeight: "24px",
+                minWidth: "revert",
+                lineHeight: "100%",
+                paddingBlock: "4px",
+                paddingInline: "12px",
+              },
+              action: {
+                navigate: true,
+                goBack: true,
+              },
+            },
+          },
+        },
+        {
+          id: "FX_BACKUP_THANKS",
+          force_hide_steps_indicator: true,
+          content: {
+            isEncryptedBackup: true,
+            title: {
+              raw: "Done!",
+            },
+            screen_style: {
+              width: "700px",
+            },
+            logo: {},
+            additional_button: {
+              style: "primary",
+              label: {
+                raw: "Finish",
+              },
+              action: {
+                navigate: true,
               },
             },
           },

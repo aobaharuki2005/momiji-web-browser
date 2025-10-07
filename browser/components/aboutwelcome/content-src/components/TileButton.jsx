@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React, { useRef } from "react";
-import { AboutWelcomeUtils } from "../lib/aboutwelcome-utils.mjs";
 import { Localized } from "./MSLocalized";
 
 export const TileButton = props => {
@@ -13,23 +12,6 @@ export const TileButton = props => {
   if (!content) {
     return null;
   }
-
-  const CONFIGURABLE_STYLES = [
-    "background",
-    "borderRadius",
-    "height",
-    "marginBlock",
-    "marginBlockStart",
-    "marginBlockEnd",
-    "marginInline",
-    "paddingBlock",
-    "paddingBlockStart",
-    "paddingBlockEnd",
-    "paddingInline",
-    "paddingInlineStart",
-    "paddingInlineEnd",
-    "width",
-  ];
 
   function onClick(event) {
     let mockEvent = {
@@ -49,7 +31,6 @@ export const TileButton = props => {
         value="tile_button"
         ref={ref}
         className={`${content.style} tile-button slim`}
-        style={AboutWelcomeUtils.getValidStyle(content, CONFIGURABLE_STYLES)}
       />
     </Localized>
   );

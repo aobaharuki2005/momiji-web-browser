@@ -1062,8 +1062,8 @@ html {
   --picker-focus-ring-color: var(--in-content-item-selected);
   --picker-checkbox-color: var(--in-content-item-selected);
   --picker-checkbox-hover-color: var(--picker-checkbox-color);
-  --picker-backup-flair-background: var(--color-blue-0);
-  --picker-backup-flair-color: var(--color-blue-50);
+  --picker-backup-flair-background: color-mix(in srgb, var(--color-accent-primary) 20%, transparent);
+  --picker-backup-flair-color: var(--color-accent-primary);
   font-family: system-ui;
   font-size: 16px;
   position: relative;
@@ -2685,6 +2685,7 @@ html {
 }
 .onboardingContainer .tiles-single-select-section {
   border: 0;
+  outline: none;
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
@@ -2706,7 +2707,7 @@ html {
 .onboardingContainer .tiles-single-select-section.single-select .select-item, .onboardingContainer .tiles-single-select-section.theme .select-item {
   position: relative;
   padding-top: 5px;
-  border: 2px solid var(--single-select-border-color);
+  border: 1px solid var(--single-select-border-color);
   border-radius: var(--border-radius-large);
 }
 .onboardingContainer .tiles-single-select-section.single-select .select-item:has(.input:focus), .onboardingContainer .tiles-single-select-section.single-select .select-item:has(.selected), .onboardingContainer .tiles-single-select-section.theme .select-item:has(.input:focus), .onboardingContainer .tiles-single-select-section.theme .select-item:has(.selected) {
@@ -2717,7 +2718,7 @@ html {
   outline-offset: 5px;
 }
 .onboardingContainer .tiles-single-select-section.single-select .select-item:has(.selected), .onboardingContainer .tiles-single-select-section.theme .select-item:has(.selected) {
-  border: 3px solid var(--button-background-color-primary);
+  border: 1px solid var(--button-background-color-primary);
   border-radius: var(--border-radius-large);
 }
 .onboardingContainer .tiles-single-select-section.single-select .select-item:hover, .onboardingContainer .tiles-single-select-section.theme .select-item:hover {
@@ -2756,7 +2757,6 @@ html {
   border-radius: 10px 10px 0 0;
   background-color: var(--picker-backup-flair-background);
   color: var(--picker-backup-flair-color);
-  top: -5px;
 }
 .onboardingContainer .tiles-single-select-section.single-select .select-item .flair.centered.backup.spacer, .onboardingContainer .tiles-single-select-section.theme .select-item .flair.centered.backup.spacer {
   background-color: transparent;
@@ -2782,7 +2782,7 @@ html {
   margin-block-end: 8px;
 }
 .onboardingContainer .tiles-single-select-section.single-select .select-item .tile-list-container .tile-list-icon-wrapper, .onboardingContainer .tiles-single-select-section.theme .select-item .tile-list-container .tile-list-icon-wrapper {
-  padding-block-start: 10px;
+  padding-block-start: 6px;
 }
 .onboardingContainer .tiles-single-select-section.single-select .select-item .tile-list-container .tile-list-text, .onboardingContainer .tiles-single-select-section.theme .select-item .tile-list-container .tile-list-text {
   margin-inline-start: 8px;
@@ -2812,11 +2812,12 @@ html {
   z-index: 0;
 }
 .onboardingContainer .tiles-single-select-section .select-item.backup {
-  cursor: unset;
-  width: 300px;
+  cursor: default;
+  width: 225.5px;
+  padding-top: 0;
 }
 .onboardingContainer .tiles-single-select-section .select-item.backup:has(.selected) {
-  border: 2px solid var(--picker-backup-flair-color);
+  border: 1px solid var(--color-accent-primary);
 }
 .onboardingContainer .tiles-single-select-section .select-item.backup:hover {
   background-color: transparent;
@@ -3367,12 +3368,6 @@ html {
 .onboardingContainer .submenu-button.slim {
   padding: 0;
 }
-.onboardingContainer .primary.tile-button,
-.onboardingContainer .secondary.tile-button,
-.onboardingContainer .additional-cta.tile-button,
-.onboardingContainer .submenu-button.tile-button {
-  cursor: pointer;
-}
 .onboardingContainer .secondary {
   background-color: var(--button-background-color);
   color: var(--button-text-color);
@@ -3491,7 +3486,8 @@ html {
 .onboardingContainer .dialog-initial .inline-image,
 .onboardingContainer .dialog-initial .link-paragraph,
 .onboardingContainer .dialog-initial .multi-select-container,
-.onboardingContainer .dialog-initial migration-wizard {
+.onboardingContainer .dialog-initial migration-wizard,
+.onboardingContainer .dialog-initial turn-on-scheduled-backups::part(form) {
   transition-delay: 0.9s;
 }
 .onboardingContainer .dialog-initial .primary,
@@ -3578,6 +3574,7 @@ html {
 .onboardingContainer.transition-in .screen .cta-link,
 .onboardingContainer.transition-in .screen .legal-paragraph,
 .onboardingContainer.transition-in .screen migration-wizard,
+.onboardingContainer.transition-in .screen turn-on-scheduled-backups::part(form),
 .onboardingContainer.transition-in .screen .tile-title-container,
 .onboardingContainer.transition-in .screen .steps[above-button]:not(.progress-bar) {
   opacity: 0;
@@ -3632,7 +3629,8 @@ html {
 .onboardingContainer.transition-out .screen:not(.dialog-last) .tiles-single-select-section,
 .onboardingContainer.transition-out .screen:not(.dialog-last) .inline-image,
 .onboardingContainer.transition-out .screen:not(.dialog-last) .link-paragraph,
-.onboardingContainer.transition-out .screen:not(.dialog-last) migration-wizard {
+.onboardingContainer.transition-out .screen:not(.dialog-last) migration-wizard,
+.onboardingContainer.transition-out .screen:not(.dialog-last) turn-on-scheduled-backups::part(form) {
   opacity: 0;
   translate: 0 var(--translate);
   transition-delay: 0.2s;
@@ -3675,4 +3673,11 @@ html {
 }
 .onboardingContainer migration-wizard::part(deck) {
   font-size: 0.83em;
+}
+.onboardingContainer turn-on-scheduled-backups::part(form) {
+  transition: var(--transition);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-medium);
+  padding: 24px 30px;
+  margin-block: 0 24px;
 }
