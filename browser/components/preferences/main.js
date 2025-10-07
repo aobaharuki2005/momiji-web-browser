@@ -414,7 +414,9 @@ Preferences.addSetting({
 });
 Preferences.addSetting({
   id: "useOnScreenKeyboard",
-  pref: "ui.osk.enabled",
+  // Bug 1993053: Restore the pref to `ui.osk.enabled` after changing
+  // the PrefereceNotFoundError throwing behavior.
+  pref: AppConstants.platform == "win" ? "ui.osk.enabled" : undefined,
   visible: () => AppConstants.platform == "win",
 });
 Preferences.addSetting({

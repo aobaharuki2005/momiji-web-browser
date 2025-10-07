@@ -35,6 +35,17 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * @typedef {string | boolean | number} SettingValue
  */
 
+class PreferenceNotAddedError extends Error {
+  constructor(settingId, prefId) {
+    super(
+      `Setting "${settingId}" was unable to find Preference "${prefId}". Did you register it with Preferences.add/addAll?`
+    );
+    this.name = "PreferenceNotAddedError";
+    this.settingId = settingId;
+    this.prefId = prefId;
+  }
+}
+
 export class Setting extends EventEmitter {
   /**
    * @type {Preference | undefined | null}
@@ -57,6 +68,8 @@ export class Setting extends EventEmitter {
   /**
    * @param {PreferencesSettingsConfig['id']} id
    * @param {PreferencesSettingsConfig} config
+   * @throws {Error} Will throw an error (PreferenceNotAddedError) if
+   *    config.pref was not registered
    */
   constructor(id, config) {
     super();
@@ -68,6 +81,9 @@ export class Setting extends EventEmitter {
     this.id = id;
     this.config = config;
     this.pref = config.pref && Preferences.get(config.pref);
+    if (config.pref && !this.pref) {
+      throw new PreferenceNotAddedError(id, config.pref);
+    }
     this._emitting = false;
 
     this.controllingExtensionInfo = {
