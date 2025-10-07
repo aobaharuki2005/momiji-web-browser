@@ -167,6 +167,9 @@ class nsHTMLFramesetFrame final : public nsContainerFrame {
 
   void SetBorderResize(nsHTMLFramesetBorderFrame* aBorderFrame);
 
+  int32_t NumRows() const;
+  int32_t NumCols() const;
+
   template <typename T, class D = mozilla::DefaultDelete<T>>
   using UniquePtr = mozilla::UniquePtr<T, D>;
 

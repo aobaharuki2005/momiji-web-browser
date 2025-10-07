@@ -218,31 +218,31 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
   static_assert(
       NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(nscoord),
-      "Maximum value of mNumRows and mNumCols is NS_MAX_FRAMESET_SPEC_COUNT");
+      "Maximum value of NumRows() and NumCols() is NS_MAX_FRAMESET_SPEC_COUNT");
   mRowSizes.Clear();
-  mRowSizes.SetLength(mNumRows);
+  mRowSizes.SetLength(NumRows());
   mColSizes.Clear();
-  mColSizes.SetLength(mNumCols);
+  mColSizes.SetLength(NumCols());
 
   static_assert(
       NS_MAX_FRAMESET_SPEC_COUNT < INT32_MAX / NS_MAX_FRAMESET_SPEC_COUNT,
       "Should not overflow numCells");
-  int32_t numCells = mNumRows * mNumCols;
+  int32_t numCells = NumRows() * NumCols();
 
   static_assert(NS_MAX_FRAMESET_SPEC_COUNT <
                     UINT_MAX / sizeof(nsHTMLFramesetBorderFrame*),
                 "Should not overflow nsHTMLFramesetBorderFrame");
   mVerBorders.Clear();
-  mVerBorders.SetLength(mNumCols);  // 1 more than number of ver borders
+  mVerBorders.SetLength(NumCols());  // 1 more than number of ver borders
 
-  for (int verX = 0; verX < mNumCols; verX++) {
+  for (int32_t verX = 0; verX < NumCols(); verX++) {
     mVerBorders[verX] = nullptr;
   }
 
   mHorBorders.Clear();
-  mHorBorders.SetLength(mNumRows);  // 1 more than number of hor borders
+  mHorBorders.SetLength(NumRows());  // 1 more than number of hor borders
 
-  for (int horX = 0; horX < mNumRows; horX++) {
+  for (int32_t horX = 0; horX < NumRows(); horX++) {
     mHorBorders[horX] = nullptr;
   }
 
@@ -578,10 +578,11 @@ void nsHTMLFramesetFrame::GetDesiredSize(nsPresContext* aPresContext,
 void nsHTMLFramesetFrame::GetSizeOfChildAt(int32_t aIndexInParent,
                                            WritingMode aWM, LogicalSize& aSize,
                                            nsIntPoint& aCellIndex) {
-  int32_t row = aIndexInParent / mNumCols;
-  int32_t col = aIndexInParent -
-                (row * mNumCols);  // remainder from dividing index by mNumCols
-  if ((row < mNumRows) && (col < mNumCols)) {
+  int32_t row = aIndexInParent / NumCols();
+  int32_t col =
+      aIndexInParent -
+      (row * NumCols());  // remainder from dividing index by NumCols()
+  if ((row < NumRows()) && (col < NumCols())) {
     aSize.ISize(aWM) = mColSizes[col];
     aSize.BSize(aWM) = mRowSizes[row];
     aCellIndex.x = col;
@@ -799,12 +800,12 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
   // leftmost <frame> has no left border).
   int32_t borderWidth = GetBorderWidth(aPresContext, true);
 
-  width -= (mNumCols - 1) * borderWidth;
+  width -= (NumCols() - 1) * borderWidth;
   if (width < 0) {
     width = 0;
   }
 
-  height -= (mNumRows - 1) * borderWidth;
+  height -= (NumRows() - 1) * borderWidth;
   if (height < 0) {
     height = 0;
   }
@@ -819,13 +820,13 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
   ourContent->GetColSpec(&cols, &colSpecs);
   // If the number of cols or rows has changed, the frame for the frameset
   // will be re-created.
-  if (mNumRows != rows || mNumCols != cols) {
+  if (NumRows() != rows || NumCols() != cols) {
     mDrag.UnSet();
     return;
   }
 
-  CalculateRowCol(aPresContext, width, mNumCols, colSpecs, mColSizes);
-  CalculateRowCol(aPresContext, height, mNumRows, rowSpecs, mRowSizes);
+  CalculateRowCol(aPresContext, width, NumCols(), colSpecs, mColSizes);
+  CalculateRowCol(aPresContext, height, NumRows(), rowSpecs, mRowSizes);
 
   UniquePtr<bool[]> verBordersVis;  // vertical borders visibility
   UniquePtr<nscolor[]> verBorderColors;
@@ -835,23 +836,23 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
   nsFrameborder frameborder = GetFrameBorder();
 
   if (firstTime) {
-    // Check for overflow in memory allocations using mNumCols and mNumRows
+    // Check for overflow in memory allocations using NumCols() and NumRows()
     // which have a maxium value of NS_MAX_FRAMESET_SPEC_COUNT.
     static_assert(NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(bool),
                   "Check for overflow");
     static_assert(NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(nscolor),
                   "Check for overflow");
 
-    verBordersVis = MakeUnique<bool[]>(mNumCols);
-    verBorderColors = MakeUnique<nscolor[]>(mNumCols);
-    for (int verX = 0; verX < mNumCols; verX++) {
+    verBordersVis = MakeUnique<bool[]>(NumCols());
+    verBorderColors = MakeUnique<nscolor[]>(NumCols());
+    for (int32_t verX = 0; verX < NumCols(); verX++) {
       verBordersVis[verX] = false;
       verBorderColors[verX] = NO_COLOR;
     }
 
-    horBordersVis = MakeUnique<bool[]>(mNumRows);
-    horBorderColors = MakeUnique<nscolor[]>(mNumRows);
-    for (int horX = 0; horX < mNumRows; horX++) {
+    horBordersVis = MakeUnique<bool[]>(NumRows());
+    horBorderColors = MakeUnique<nscolor[]>(NumRows());
+    for (int32_t horX = 0; horX < NumRows(); horX++) {
       horBordersVis[horX] = false;
       horBorderColors[horX] = NO_COLOR;
     }
@@ -977,7 +978,7 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
           mEdgeColors.mTop = childColors.mTop;
         }
       }
-      if (mNumCols - 1 == cellIndex.x) {
+      if (NumCols() - 1 == cellIndex.x) {
         if (!(mEdgeVisibility & RIGHT_VIS)) {
           mEdgeVisibility |= (RIGHT_VIS & childVis);
         }
@@ -985,7 +986,7 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
           mEdgeColors.mRight = childColors.mRight;
         }
       }
-      if (mNumRows - 1 == cellIndex.y) {
+      if (NumRows() - 1 == cellIndex.y) {
         if (!(mEdgeVisibility & BOTTOM_VIS)) {
           mEdgeVisibility |= (BOTTOM_VIS & childVis);
         }
@@ -1030,7 +1031,7 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
   if (firstTime) {
     nscolor childColor;
     // set the visibility, color, mouse sensitivity of borders
-    for (int verX = 0; verX < mNumCols - 1; verX++) {
+    for (int32_t verX = 0; verX < NumCols() - 1; verX++) {
       if (mVerBorders[verX]) {
         mVerBorders[verX]->SetVisibility(verBordersVis[verX]);
         SetBorderResize(mVerBorders[verX]);
@@ -1040,7 +1041,7 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
         mVerBorders[verX]->SetColor(childColor);
       }
     }
-    for (int horX = 0; horX < mNumRows - 1; horX++) {
+    for (int32_t horX = 0; horX < NumRows() - 1; horX++) {
       if (mHorBorders[horX]) {
         mHorBorders[horX]->SetVisibility(horBordersVis[horX]);
         SetBorderResize(mHorBorders[horX]);
@@ -1072,15 +1073,15 @@ bool nsHTMLFramesetFrame::CanResize(bool aVertical, bool aLeft) {
   int32_t childX;
   int32_t startX;
   if (aVertical) {
-    startX = (aLeft) ? 0 : mNumCols - 1;
-    for (childX = startX; childX < mNonBorderChildCount; childX += mNumCols) {
+    startX = (aLeft) ? 0 : NumCols() - 1;
+    for (childX = startX; childX < mNonBorderChildCount; childX += NumCols()) {
       if (!CanChildResize(aVertical, aLeft, childX)) {
         return false;
       }
     }
   } else {
-    startX = (aLeft) ? 0 : (mNumRows - 1) * mNumCols;
-    int32_t endX = startX + mNumCols;
+    startX = (aLeft) ? 0 : (NumRows() - 1) * NumCols();
+    int32_t endX = startX + NumCols();
     for (childX = startX; childX < endX; childX++) {
       if (!CanChildResize(aVertical, aLeft, childX)) {
         return false;
@@ -1118,15 +1119,13 @@ void nsHTMLFramesetFrame::RecalculateBorderResize() {
                     UINT_MAX / sizeof(int32_t) / NS_MAX_FRAMESET_SPEC_COUNT,
                 "Check for overflow");
   // set the visibility and mouse sensitivity of borders
-  int32_t verX;
-  for (verX = 0; verX < mNumCols - 1; verX++) {
+  for (int32_t verX = 0; verX < NumCols() - 1; verX++) {
     if (mVerBorders[verX]) {
       mVerBorders[verX]->mCanResize = true;
       SetBorderResize(mVerBorders[verX]);
     }
   }
-  int32_t horX;
-  for (horX = 0; horX < mNumRows - 1; horX++) {
+  for (int32_t horX = 0; horX < NumRows() - 1; horX++) {
     if (mHorBorders[horX]) {
       mHorBorders[horX]->mCanResize = true;
       SetBorderResize(mHorBorders[horX]);
@@ -1137,22 +1136,22 @@ void nsHTMLFramesetFrame::RecalculateBorderResize() {
 void nsHTMLFramesetFrame::SetBorderResize(
     nsHTMLFramesetBorderFrame* aBorderFrame) {
   if (aBorderFrame->mVertical) {
-    for (int rowX = 0; rowX < mNumRows; rowX++) {
-      int32_t childX = aBorderFrame->mPrevNeighbor + (rowX * mNumCols);
+    for (int32_t rowX = 0; rowX < NumRows(); rowX++) {
+      int32_t childX = aBorderFrame->mPrevNeighbor + (rowX * NumCols());
       if (!CanChildResize(true, false, childX) ||
           !CanChildResize(true, true, childX + 1)) {
         aBorderFrame->mCanResize = false;
       }
     }
   } else {
-    int32_t childX = aBorderFrame->mPrevNeighbor * mNumCols;
-    int32_t endX = childX + mNumCols;
+    int32_t childX = aBorderFrame->mPrevNeighbor * NumCols();
+    int32_t endX = childX + NumCols();
     for (; childX < endX; childX++) {
       if (!CanChildResize(false, false, childX)) {
         aBorderFrame->mCanResize = false;
       }
     }
-    endX = endX + mNumCols;
+    endX = endX + NumCols();
     for (; childX < endX; childX++) {
       if (!CanChildResize(false, true, childX)) {
         aBorderFrame->mCanResize = false;
@@ -1160,6 +1159,10 @@ void nsHTMLFramesetFrame::SetBorderResize(
     }
   }
 }
+
+int32_t nsHTMLFramesetFrame::NumRows() const { return mNumRows; }
+
+int32_t nsHTMLFramesetFrame::NumCols() const { return mNumCols; }
 
 void nsHTMLFramesetFrame::StartMouseDrag(nsPresContext* aPresContext,
                                          nsHTMLFramesetBorderFrame* aBorder,
@@ -1214,13 +1217,13 @@ void nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
     if (change != 0) {
       // Recompute the specs from the new sizes.
       nscoord width =
-          mRect.width - (mNumCols - 1) * GetBorderWidth(aPresContext, true);
+          mRect.width - (NumCols() - 1) * GetBorderWidth(aPresContext, true);
       HTMLFrameSetElement* ourContent = HTMLFrameSetElement::FromNode(mContent);
       NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
       const nsFramesetSpec* colSpecs = nullptr;
       ourContent->GetColSpec(&mNumCols, &colSpecs);
       nsAutoString newColAttr;
-      GenerateRowCol(aPresContext, width, mNumCols, colSpecs, mColSizes,
+      GenerateRowCol(aPresContext, width, NumCols(), colSpecs, mColSizes,
                      newColAttr);
       // Setting the attr will trigger a reflow
       mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::cols,
@@ -1240,13 +1243,13 @@ void nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
     if (change != 0) {
       // Recompute the specs from the new sizes.
       nscoord height =
-          mRect.height - (mNumRows - 1) * GetBorderWidth(aPresContext, true);
+          mRect.height - (NumRows() - 1) * GetBorderWidth(aPresContext, true);
       HTMLFrameSetElement* ourContent = HTMLFrameSetElement::FromNode(mContent);
       NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
       const nsFramesetSpec* rowSpecs = nullptr;
       ourContent->GetRowSpec(&mNumRows, &rowSpecs);
       nsAutoString newRowAttr;
-      GenerateRowCol(aPresContext, height, mNumRows, rowSpecs, mRowSizes,
+      GenerateRowCol(aPresContext, height, NumRows(), rowSpecs, mRowSizes,
                      newRowAttr);
       // Setting the attr will trigger a reflow
       mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::rows,
