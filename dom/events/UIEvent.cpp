@@ -151,7 +151,7 @@ nsIntPoint UIEvent::GetLayerPoint() const {
   }
   // NOTE(emilio): This matches Blink to my knowledge, but it's generally not
   // super-well specified, see https://github.com/w3c/uievents/issues/398
-  RelativeTo root{mPresContext->PresShell()->GetRootFrame()};
+  RelativeTo root{targetFrame->PresShell()->GetRootFrame()};
   const nsPoint rootPoint =
       nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent, root);
   nsIFrame* layer = nsLayoutUtils::GetClosestLayer(targetFrame);
