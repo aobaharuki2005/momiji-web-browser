@@ -179,7 +179,8 @@ struct ValueSummary {
   // TracedJSContext::valueBuffer), and should be bumped every time the format
   // is changed.
   //
-  // Keep in mind to update js/src/jit-test/tests/debug/ExecutionTracer-traced-values.js
+  // Keep in mind to update
+  // js/src/jit-test/tests/debug/ExecutionTracer-traced-values.js
   // VALUE_SUMMARY_VERSION value.
   static const uint32_t VERSION = 2;
 
