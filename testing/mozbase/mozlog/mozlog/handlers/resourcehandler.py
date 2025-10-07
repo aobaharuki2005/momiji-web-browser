@@ -61,3 +61,6 @@ class ResourceHandler(LogHandler):
 
     def process_output(self, data):
         SystemResourceMonitor.test_status(data)
+
+    def crash(self, data):
+        SystemResourceMonitor.crash(data)

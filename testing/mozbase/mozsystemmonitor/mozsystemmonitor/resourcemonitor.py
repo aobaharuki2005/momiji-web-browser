@@ -712,6 +712,45 @@ class SystemResourceMonitor:
 
         SystemResourceMonitor.record_event(marker_name, timestamp, marker_data)
 
+    @staticmethod
+    def crash(data):
+        """Record a crash event.
+
+        Args:
+            data: Dictionary containing crash data including:
+                  - "signature": crash signature
+                  - "reason": crash reason (optional)
+                  - "test": test name (optional)
+                  - "minidump_path": path to minidump file (optional)
+                  - "time": timestamp in milliseconds
+        """
+        if not SystemResourceMonitor.instance:
+            return
+
+        time_sec = data["time"] / 1000
+        timestamp = SystemResourceMonitor.instance.convert_to_monotonic_time(time_sec)
+
+        marker_data = {
+            "type": "Crash",
+            "color": "red",
+        }
+
+        if signature := data.get("signature"):
+            marker_data["signature"] = signature
+        if reason := data.get("reason"):
+            marker_data["reason"] = reason
+        if test := data.get("test"):
+            marker_data["test"] = test
+
+        if minidump_path := data.get("minidump_path"):
+            # Extract the minidump name (without extension) from the path
+            # e.g., "/tmp/xpc-other-k49po531/7a7f1343-4dc3-224c-638b-5806ab642301.dmp"
+            # -> "7a7f1343-4dc3-224c-638b-5806ab642301"
+            minidump_name = os.path.splitext(os.path.basename(minidump_path))[0]
+            marker_data["minidump"] = minidump_name
+
+        SystemResourceMonitor.record_event("CRASH", timestamp, marker_data)
+
     @contextmanager
     def phase(self, name):
         """Context manager for recording an active phase."""
@@ -1198,6 +1237,38 @@ class SystemResourceMonitor:
                                 "key": "size",
                                 "label": "Size",
                                 "format": "bytes",
+                            },
+                        ],
+                    },
+                    {
+                        "name": "Crash",
+                        "tableLabel": "{marker.data.signature} — {marker.data.test}",
+                        "display": ["marker-chart", "marker-table"],
+                        "colorField": "color",
+                        "data": [
+                            {
+                                "key": "signature",
+                                "label": "Signature",
+                                "format": "string",
+                            },
+                            {
+                                "key": "reason",
+                                "label": "Reason",
+                                "format": "string",
+                            },
+                            {
+                                "key": "test",
+                                "label": "Test Name",
+                                "format": "string",
+                            },
+                            {
+                                "key": "minidump",
+                                "label": "Minidump",
+                                "format": "string",
+                            },
+                            {
+                                "key": "color",
+                                "hidden": True,
                             },
                         ],
                     },
