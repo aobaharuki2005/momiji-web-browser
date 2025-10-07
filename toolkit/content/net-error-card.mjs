@@ -148,7 +148,7 @@ export class NetErrorCard extends MozLitElement {
         break;
       }
       case "SSL_ERROR_BAD_CERT_DOMAIN": {
-        if (this.domainMismatchNames === null) {
+        if (!this.domainMismatchNames) {
           this.getDomainMismatchNames();
           return null;
         }

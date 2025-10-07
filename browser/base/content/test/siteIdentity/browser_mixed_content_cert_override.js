@@ -23,8 +23,7 @@ function getIdentityIcon() {
     .listStyleImage;
 }
 
-async function checkIdentityPopup(icon) {
-  await openIdentityPopup();
+function checkIdentityPopup(icon) {
   gIdentityHandler.refreshIdentityPopup();
   is(getIdentityIcon(), `url("chrome://global/skin/icons/${icon}")`);
   is(getConnectionState(), "secure-cert-user-overridden");
@@ -41,9 +40,10 @@ async function checkIdentityPopup(icon) {
 
 add_task(async function () {
   await BrowserTestUtils.openNewForegroundTab(gBrowser);
+
   // check that a warning is shown when loading a page with mixed content and an overridden certificate
   await loadBadCertPage(MIXED_CONTENT_URL);
-  await checkIdentityPopup("security-warning.svg");
+  checkIdentityPopup("security-warning.svg");
 
   // check that a warning is shown even without mixed content
   BrowserTestUtils.startLoadingURIString(
@@ -51,7 +51,7 @@ add_task(async function () {
     "https://self-signed.example.com"
   );
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  await checkIdentityPopup("security-warning.svg");
+  checkIdentityPopup("security-warning.svg");
 
   // remove cert exception
   let certOverrideService = Cc[
