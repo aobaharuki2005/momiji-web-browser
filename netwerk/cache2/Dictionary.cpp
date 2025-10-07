@@ -141,7 +141,7 @@ void DictionaryCacheEntry::UseCompleted() {
 
 // returns aShouldSuspend=true if we should suspend to wait for the prefetch
 bool DictionaryCacheEntry::Prefetch(nsILoadContextInfo* aLoadContextInfo,
-                                    const std::function<nsresult()>& aFunc) {
+                                    const std::function<void()>& aFunc) {
   DICTIONARY_LOG(("Prefetch for %s", mURI.get()));
   // Start reading the cache entry into memory and call completion
   // function when done
@@ -424,14 +424,16 @@ nsresult DictionaryCache::RemoveEntry(nsIURI* aURI, const nsACString& aKey) {
 }
 
 // return an entry
-already_AddRefed<DictionaryCacheEntry> DictionaryCache::GetDictionaryFor(
-    nsIURI* aURI) {
+void DictionaryCache::GetDictionaryFor(
+    nsIURI* aURI,
+    const std::function<nsresult(DictionaryCacheEntry*)>& aCallback) {
   // Note: IETF 2.2.3 Multiple Matching Directories
   // We need to return match-dest matches first
   // If no match-dest, then the longest match
   nsCString prepath;
   if (NS_FAILED(aURI->GetPrePath(prepath))) {
-    return nullptr;
+    (aCallback)(nullptr);
+    return;
   }
   if (auto origin = mDictionaryCache.Lookup(prepath)) {
     // Find the longest match
@@ -450,7 +452,8 @@ already_AddRefed<DictionaryCacheEntry> DictionaryCache::GetDictionaryFor(
       result->removeFrom(*(origin->get()));
       origin->get()->insertFront(result);
     }
-    return result.forget();
+    (aCallback)(result);
+    return;
   }
   // We don't have an entry at all.  We need to check if there's an
   // entry on disk for <origin>, unless we know we have all entries
@@ -465,7 +468,7 @@ already_AddRefed<DictionaryCacheEntry> DictionaryCache::GetDictionaryFor(
   // for each origin (i.e. if this isn't a cache, but an in-memory index),
   // then this can be synchronous
 
-  return nullptr;
+  (aCallback)(nullptr);
 }
 
 static void MakeMetadataEntry() {
