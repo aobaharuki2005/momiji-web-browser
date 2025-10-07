@@ -64,6 +64,7 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
   // returns true if the pattern for the dictionary matches the path given
   bool Match(const nsACString& aFilePath, uint32_t& aLongest);
 
+  // This will fail if the cache entry is no longer available.
   // Start reading the cache entry into memory and call completion
   // function when done
   nsresult Prefetch(nsILoadContextInfo* aLoadContextInfo, bool& aShouldSuspend,
@@ -199,6 +200,9 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
 
   // We should suspend until the ond entry has been read
   bool mShouldSuspend{false};
+
+  // The cache entry has been removed
+  bool mNotCached{false};
 
   // We're blocked from taking over for the old entry for now
   bool mBlocked{false};

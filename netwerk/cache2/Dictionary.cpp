@@ -94,6 +94,10 @@ bool DictionaryCacheEntry::Match(const nsACString& aFilePath,
     // We don't have the file yet
     return false;
   }
+  if (mNotCached) {
+    // Not actually in the cache
+    return false;
+  }
   // Not worth checking if we wouldn't use it
   // XXX Check match-dest
   if (mPattern.Length() > aLongest) {
@@ -157,7 +161,7 @@ nsresult DictionaryCacheEntry::Prefetch(nsILoadContextInfo* aLoadContextInfo,
   if (mWaitingPrefetch.IsEmpty()) {
     if (!mDictionaryDataComplete) {
       // We haven't requested it yet from the Cache and don't have it in memory
-      // already
+      // already.
       // We can't use sCacheStorage because we need the correct LoadContextInfo
       nsCOMPtr<nsICacheStorageService> cacheStorageService(
           components::CacheStorage::Service());
@@ -172,10 +176,20 @@ nsresult DictionaryCacheEntry::Prefetch(nsILoadContextInfo* aLoadContextInfo,
         aShouldSuspend = false;
         return NS_ERROR_FAILURE;
       }
+      // If the file isn't available in the cache, AsyncOpenURIString()
+      // will synchronously make a callback to OnCacheEntryAvailable() with
+      // nullptr.  We can key off that to fail Prefetch(), and also to
+      // remove ourselves from the origin.
       if (NS_FAILED(cacheStorage->AsyncOpenURIString(
-              mURI, ""_ns, nsICacheStorage::OPEN_READONLY, this))) {
-        // For some reason the cache no longer has this entry;
+              mURI, ""_ns,
+              nsICacheStorage::OPEN_READONLY |
+                  nsICacheStorage::OPEN_COMPLETE_ONLY,
+              this)) ||
+          mNotCached) {
+        // For some reason the cache no longer has this entry; fail Prefetch
+        // and also remove this from our origin
         aShouldSuspend = false;
+        // XXX Remove from origin
         return NS_ERROR_FAILURE;
       }
       mWaitingPrefetch.AppendElement(aFunc);
@@ -492,11 +506,9 @@ DictionaryCacheEntry::OnCacheEntryAvailable(nsICacheEntry* entry, bool isNew,
     }
     DICTIONARY_LOG(("Waiting for data"));
   } else {
-    // This shouldn't happen.... we should only be fetching something we know
-    // is in the cache.
-    // Presumably status is something like NS_ERROR_FILE_NOT_FOUND
     // XXX Error out any channels waiting on this cache entry.  Also,
-    // remove the dictionary entry from the origin?
+    // remove the dictionary entry from the origin.
+    mNotCached = true;  // For Prefetch()
     DICTIONARY_LOG(("Prefetched cache entry not available!"));
   }
 

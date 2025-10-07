@@ -1095,6 +1095,13 @@ nsresult CacheEntry::GetOnStopTime(uint64_t* aTime) {
   return mFile->GetOnStopTime(aTime);
 }
 
+nsresult CacheEntry::GetReady(bool* aReady) {
+  mozilla::MutexAutoLock lock(mLock);
+  // XXX REVALIDATING?
+  *aReady = mState == READY;
+  return NS_OK;
+}
+
 nsresult CacheEntry::SetNetworkTimes(uint64_t aOnStartTime,
                                      uint64_t aOnStopTime) {
   if (NS_SUCCEEDED(mFileStatus)) {
