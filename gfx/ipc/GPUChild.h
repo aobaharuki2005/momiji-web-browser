@@ -21,7 +21,7 @@ namespace gfx {
 
 class GPUProcessHost;
 
-class GPUChild final : public ipc::CrashReporterHelper<GPUChild>,
+class GPUChild final : public mozilla::ipc::CrashReporterHelper<GPUChild>,
                        public PGPUChild,
                        public gfxVarReceiver {
   typedef mozilla::dom::MemoryReportRequestHost MemoryReportRequestHost;
