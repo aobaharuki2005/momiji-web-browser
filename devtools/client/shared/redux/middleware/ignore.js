@@ -34,5 +34,10 @@ function ignore({ getState }) {
 
 module.exports = {
   ignore,
+
+  isIgnoringActions(state) {
+    return state[IGNORING];
+  },
+
   START_IGNORE_ACTION: { type: START_IGNORE_ACTION },
 };
