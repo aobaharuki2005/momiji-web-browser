@@ -11,6 +11,9 @@ const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 const createStore = require("resource://devtools/client/inspector/store.js");
 const InspectorStyleChangeTracker = require("resource://devtools/client/inspector/shared/style-change-tracker.js");
 const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
+const {
+  START_IGNORE_ACTION,
+} = require("resource://devtools/client/shared/redux/middleware/ignore.js");
 
 // Use privileged promise in panel documents to prevent having them to freeze
 // during toolbox destruction. See bug 1402779.
@@ -1760,6 +1763,9 @@ class Inspector extends EventEmitter {
       return;
     }
     this.#destroyed = true;
+
+    // Prevents any further action from being dispatched
+    this.store.dispatch(START_IGNORE_ACTION);
 
     this.#cancelUpdate();
 
