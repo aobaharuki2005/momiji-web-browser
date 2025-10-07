@@ -2704,6 +2704,10 @@
   <string name="saved_login_hide_password">ਪਾਸਵਰਡ ਲੁਕਾਓ</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">ਆਪਣੇ ਸੰਭਾਲੇ ਹੋਏ ਪਾਸਵਰਡ ਵੇਖਣ ਲਈ ਅਣ-ਲਾਕ ਕਰੋ</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">ਅਣ-ਲਾਕ ਕਰੋ</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">ਛੱਡੋ</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">ਆਪਣੇ ਸੰਭਾਲੇ ਹੋਏ ਪਾਸਵਰਡਾਂ ਨੂੰ ਸੁਰੱਖਿਅਤ ਕਰੋ</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -3597,6 +3601,16 @@
   <string name="debug_drawer_add_new_address">ਚੁਣੀ ਭਾਸ਼ਾ ਲਈ ਨਵਾਂ ਸਿਰਨਾਵਾਂ ਦਿਓ</string>
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
   <string name="debug_drawer_delete_all_addresses">ਸਭ ਸਿਰਨਾਵਿਆਂ ਨੂੰ ਹਟਾਓ</string>
+  <!--
+    Debug drawer credit cards
+
+    The title of the credit cards feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_credit_cards_title">ਕਰੈਡਿਟ ਕਾਰਡ</string>
+  <!-- The title of the button in the debug drawer for adding a new credit card -->
+  <string name="debug_drawer_add_new_credit_card">ਨਵਾਂ ਕਰੈਡਿਟ ਕਾਰਡ ਜੋੜੋ</string>
+  <!-- The title of the button for deleting in the debug drawer all addresses. -->
+  <string name="debug_drawer_delete_all_credit_cards">ਸਭ ਕਰੈਡਿਟ ਕਾਰਡ ਨੂੰ ਹਟਾਓ</string>
   <!--
     Debug drawer "contextual feature recommendation" (CFR) tools
 
