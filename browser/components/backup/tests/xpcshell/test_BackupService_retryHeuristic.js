@@ -50,44 +50,7 @@ add_setup(async () => {
   Services.prefs.setIntPref(BACKUP_RETRY_LIMIT_PREF_NAME, 2);
   Services.prefs.setBoolPref(DISABLED_ON_IDLE_RETRY_PREF_NAME, false);
 
-  // Much of this setup is copied from toolkit/profile/xpcshell/head.js. It is
-  // needed in order to put the xpcshell test environment into the state where
-  // it thinks its profile is the one pointed at by
-  // nsIToolkitProfileService.currentProfile.
-  let gProfD = do_get_profile();
-  let gDataHome = gProfD.clone();
-  gDataHome.append("data");
-  gDataHome.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
-  let gDataHomeLocal = gProfD.clone();
-  gDataHomeLocal.append("local");
-  gDataHomeLocal.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
-
-  let xreDirProvider = Cc["@mozilla.org/xre/directory-provider;1"].getService(
-    Ci.nsIXREDirProvider
-  );
-  xreDirProvider.setUserDataDirectory(gDataHome, false);
-  xreDirProvider.setUserDataDirectory(gDataHomeLocal, true);
-
-  let profileSvc = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
-    Ci.nsIToolkitProfileService
-  );
-
-  let createdProfile = {};
-  let didCreate = profileSvc.selectStartupProfile(
-    ["xpcshell"],
-    false,
-    AppConstants.UPDATE_CHANNEL,
-    "",
-    {},
-    {},
-    createdProfile
-  );
-  Assert.ok(didCreate, "Created a testing profile and set it to current.");
-  Assert.equal(
-    profileSvc.currentProfile,
-    createdProfile.value,
-    "Profile set to current"
-  );
+  setupProfile();
 
   registerCleanupFunction(async () => {
     Services.prefs.clearUserPref(BACKUP_DEFAULT_LOCATION_PREF_NAME);
