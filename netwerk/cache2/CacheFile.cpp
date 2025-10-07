@@ -493,6 +493,7 @@ nsresult CacheFile::OnFileOpened(CacheFileHandle* aHandle, nsresult aResult) {
 
     if (mDict && OutputStreamExists(false)) {
       mOutput->SetDictionary(mDict);
+      // leave mDict set for hash accumulation
     }
 
     autoDoom.mListener.swap(mDoomAfterOpenListener);

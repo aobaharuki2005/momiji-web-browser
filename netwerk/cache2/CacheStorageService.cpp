@@ -697,6 +697,8 @@ NS_IMETHODIMP CacheStorageService::ClearOriginsByPrincipal(
   nsAutoString origin;
   rv = nsContentUtils::GetWebExposedOriginSerialization(aPrincipal, origin);
   NS_ENSURE_SUCCESS(rv, rv);
+  LOG(("CacheStorageService::ClearOriginsByPrincipal %s",
+       NS_ConvertUTF16toUTF8(origin).get()));
 
   rv = ClearOriginInternal(origin, aPrincipal->OriginAttributesRef(), true);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -710,6 +712,8 @@ NS_IMETHODIMP CacheStorageService::ClearOriginsByPrincipal(
 NS_IMETHODIMP CacheStorageService::ClearOriginsByOriginAttributes(
     const nsAString& aOriginAttributes) {
   nsresult rv;
+  LOG(("CacheStorageService::ClearOriginsByOriginAttributes %s",
+       NS_ConvertUTF16toUTF8(aOriginAttributes).get()));
 
   if (NS_WARN_IF(aOriginAttributes.IsEmpty())) {
     return NS_ERROR_FAILURE;
@@ -747,6 +751,8 @@ static bool RemoveExactEntry(CacheEntryTable* aEntries, nsACString const& aKey,
 
 NS_IMETHODIMP CacheStorageService::ClearBaseDomain(
     const nsAString& aBaseDomain) {
+  LOG(("CacheStorageService::ClearBaseDomain %s",
+       NS_ConvertUTF16toUTF8(aBaseDomain).get()));
   mozilla::MutexAutoLock lock(sLock);
   if (sGlobalEntryTables) {
     if (mShutdown) return NS_ERROR_NOT_AVAILABLE;
@@ -816,6 +822,7 @@ NS_IMETHODIMP CacheStorageService::ClearBaseDomain(
 
     // Clear matched keys.
     for (uint32_t i = 0; i < keys.Length(); ++i) {
+      LOG(("CacheStorageService::ClearBaseDomain Dooming %s", keys[i].get()));
       DoomStorageEntries(keys[i], nullptr, true, false, nullptr);
     }
   }
@@ -886,6 +893,19 @@ nsresult CacheStorageService::ClearOriginInternal(
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP CacheStorageService::ClearOriginDictionary(nsIURI* aURI) {
+  LOG(("CacheStorageService::ClearOriginDictionary"));
+  // Note: due to cookie samesite rules, we need to clean for all ports
+  DictionaryCache::RemoveDictionaries(aURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP CacheStorageService::ClearAllOriginDictionaries() {
+  LOG(("CacheStorageService::ClearAllOriginDictionaries"));
+  DictionaryCache::RemoveAllDictionaries();
   return NS_OK;
 }
 
@@ -1834,7 +1854,8 @@ NS_IMPL_ISUPPORTS(CacheEntryDoomByKeyCallback, CacheFileIOListener,
 nsresult CacheStorageService::DoomStorageEntry(
     CacheStorage const* aStorage, const nsACString& aURI,
     const nsACString& aIdExtension, nsICacheEntryDoomCallback* aCallback) {
-  LOG(("CacheStorageService::DoomStorageEntry"));
+  LOG(("CacheStorageService::DoomStorageEntry %s",
+       PromiseFlatCString(aURI).get()));
 
   NS_ENSURE_ARG(aStorage);
 
