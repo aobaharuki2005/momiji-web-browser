@@ -67,8 +67,7 @@ class GraphRunner final : public Runnable {
 
    public:
     IterationState(GraphTime aStateTime, MixerCallbackReceiver* aMixerReceiver)
-        : mStateTime(aStateTime),
-          mMixerReceiver(aMixerReceiver) {}
+        : mStateTime(aStateTime), mMixerReceiver(aMixerReceiver) {}
     IterationState& operator=(const IterationState& aOther) = default;
     GraphTime StateTime() const { return mStateTime; }
     MixerCallbackReceiver* MixerReceiver() const { return mMixerReceiver; }
