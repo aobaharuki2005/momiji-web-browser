@@ -1565,7 +1565,10 @@ nsresult nsHttpChannel::DoConnectActual(
     return rv;
   }
 
-  return DispatchTransaction(aTransWithStickyConn);
+  return CallOrWaitForResume(
+      [trans = RefPtr(aTransWithStickyConn)](auto* self) {
+        return self->DispatchTransaction(trans);
+      });
 }
 
 nsresult nsHttpChannel::DispatchTransaction(
@@ -1960,10 +1963,16 @@ nsresult nsHttpChannel::SetupChannelForTransaction() {
     // This may be async; the dictionary headers may need to fetch an origin
     // dictionary cache entry from disk before adding the headers.  We can
     // continue with channel creation, and just block on this being done later
+    bool async;
     rv = gHttpHandler->AddAcceptAndDictionaryHeaders(
         mURI, mLoadInfo->GetExternalContentPolicyType(), &mRequestHead,
-        IsHTTPS(), [self = RefPtr(this)](DictionaryCacheEntry* aDict) {
+        IsHTTPS(), async,
+        [self = RefPtr(this)](bool aNeedsResume, DictionaryCacheEntry* aDict) {
           self->mDictDecompress = aDict;
+          if (aNeedsResume) {
+            LOG_DICTIONARIES(("Resuming after getting Dictionary headers"));
+            self->Resume();
+          }
           if (self->mDictDecompress) {
             LOG_DICTIONARIES(
                 ("Added dictionary header for %p, DirectoryCacheEntry %p",
@@ -1991,6 +2000,11 @@ nsresult nsHttpChannel::SetupChannelForTransaction() {
           return true;
         });
     if (NS_FAILED(rv)) return rv;
+    if (async) {
+      // we'll continue later if GetDictionaryFor is still reading
+      LOG_DICTIONARIES(("Suspending to get Dictionary headers"));
+      Suspend();
+    }
   }
 
   // See bug #466080. Transfer LOAD_ANONYMOUS flag to socket-layer.
@@ -5976,14 +5990,6 @@ nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
   rv = entry->SetMetaDataElement("original-response-headers", head.get());
   if (NS_FAILED(rv)) return rv;
 
-  // If this is being marked as a dictionary, add it to the list
-  if (StaticPrefs::network_http_dictionaries_enable() && self->IsHTTPS()) {
-    if (!self->ParseDictionary(entry, responseHead, aModified)) {
-      LOG_DICTIONARIES(
-          ("Failed to parse use-as-dictionary from %s", head.get()));
-    }
-  }
-
   // Indicate we have successfully finished setting metadata on the cache entry.
   rv = entry->MetaDataReady();
 
@@ -6021,8 +6027,12 @@ bool nsHttpChannel::ParseDictionary(nsICacheEntry* aEntry,
          matchIdVal.get(),
          matchDestItems.Length() > 0 ? matchDestItems[0].get() : "<none>",
          typeVal.get()));
+
+    uint32_t expTime = 0;
+    Unused << GetCacheTokenExpirationTime(&expTime);
+
     dicts->AddEntry(mURI, key, matchVal, matchDestItems, matchIdVal, Some(hash),
-                    aModified, getter_AddRefs(mDictSaving));
+                    aModified, expTime, getter_AddRefs(mDictSaving));
     // If this was 304 Not Modified, then we don't need the dictionary data
     // (though we may update the dictionary entry if the match/id/etc changed).
     // If this is 304, mDictSaving will be cleared by AddEntry.
