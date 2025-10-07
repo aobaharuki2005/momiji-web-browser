@@ -125,11 +125,11 @@ class nsHTMLFramesetFrame final : public nsContainerFrame {
              const nsTArray<int32_t>& aIndicies, nsTArray<int32_t>& aItems);
 
   void CalculateRowCol(nsPresContext* aPresContext, nscoord aSize,
-                       int32_t aNumSpecs, const nsFramesetSpec* aSpecs,
+                       const mozilla::Span<const nsFramesetSpec>& aSpecs,
                        nsTArray<nscoord>& aValues);
 
   void GenerateRowCol(nsPresContext* aPresContext, nscoord aSize,
-                      int32_t aNumSpecs, const nsFramesetSpec* aSpecs,
+                      const mozilla::Span<const nsFramesetSpec>& aSpecs,
                       const nsTArray<nscoord>& aValues, nsString& aNewAttr);
 
   virtual void GetDesiredSize(nsPresContext* aPresContext,

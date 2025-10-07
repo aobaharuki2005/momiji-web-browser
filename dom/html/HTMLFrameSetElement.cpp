@@ -66,16 +66,12 @@ void HTMLFrameSetElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                              aNotify);
 }
 
-nsresult HTMLFrameSetElement::GetRowSpec(int32_t* aNumValues,
-                                         const nsFramesetSpec** aSpecs) {
-  MOZ_ASSERT(aNumValues, "Must have a pointer to an integer here!");
-  MOZ_ASSERT(aSpecs, "Must have a pointer to an array of nsFramesetSpecs");
-  *aNumValues = 0;
-  *aSpecs = nullptr;
-
+Span<const nsFramesetSpec> HTMLFrameSetElement::GetRowSpec() {
   if (!mRowSpecs) {
     if (const nsAttrValue* value = GetParsedAttr(nsGkAtoms::rows)) {
-      MOZ_TRY(ParseRowCol(*value, mNumRows, &mRowSpecs));
+      if (NS_FAILED(ParseRowCol(*value, mNumRows, &mRowSpecs))) {
+        return {};
+      }
     }
 
     if (!mRowSpecs) {  // we may not have had an attr or had an empty attr
@@ -86,21 +82,15 @@ nsresult HTMLFrameSetElement::GetRowSpec(int32_t* aNumValues,
     }
   }
 
-  *aSpecs = mRowSpecs.get();
-  *aNumValues = mNumRows;
-  return NS_OK;
+  return Span(mRowSpecs.get(), mNumRows);
 }
 
-nsresult HTMLFrameSetElement::GetColSpec(int32_t* aNumValues,
-                                         const nsFramesetSpec** aSpecs) {
-  MOZ_ASSERT(aNumValues, "Must have a pointer to an integer here!");
-  MOZ_ASSERT(aSpecs, "Must have a pointer to an array of nsFramesetSpecs");
-  *aNumValues = 0;
-  *aSpecs = nullptr;
-
+Span<const nsFramesetSpec> HTMLFrameSetElement::GetColSpec() {
   if (!mColSpecs) {
     if (const nsAttrValue* value = GetParsedAttr(nsGkAtoms::cols)) {
-      MOZ_TRY(ParseRowCol(*value, mNumCols, &mColSpecs));
+      if (NS_FAILED(ParseRowCol(*value, mNumCols, &mColSpecs))) {
+        return {};
+      }
     }
 
     if (!mColSpecs) {  // we may not have had an attr or had an empty attr
@@ -111,9 +101,7 @@ nsresult HTMLFrameSetElement::GetColSpec(int32_t* aNumValues,
     }
   }
 
-  *aSpecs = mColSpecs.get();
-  *aNumValues = mNumCols;
-  return NS_OK;
+  return Span(mColSpecs.get(), mNumCols);
 }
 
 bool HTMLFrameSetElement::ParseAttribute(int32_t aNamespaceID,

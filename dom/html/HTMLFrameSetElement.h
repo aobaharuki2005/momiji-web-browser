@@ -8,6 +8,7 @@
 #define HTMLFrameSetElement_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "nsGenericHTMLElement.h"
 
@@ -89,20 +90,16 @@ class HTMLFrameSetElement final : public nsGenericHTMLElement {
 
   /**
    * GetRowSpec is used to get the "rows" spec.
-   * @param out int32_t aNumValues The number of row sizes specified.
-   * @param out nsFramesetSpec* aSpecs The array of size specifications.
-            This is _not_ owned by the caller, but by the nsFrameSetElement
-            implementation.  DO NOT DELETE IT.
+   * @return The span of size specifications, owned by the
+   *        nsFrameSetElement implementation.
    */
-  nsresult GetRowSpec(int32_t* aNumValues, const nsFramesetSpec** aSpecs);
+  Span<const nsFramesetSpec> GetRowSpec() MOZ_LIFETIME_BOUND;
   /**
-   * GetColSpec is used to get the "cols" spec
-   * @param out int32_t aNumValues The number of row sizes specified.
-   * @param out nsFramesetSpec* aSpecs The array of size specifications.
-            This is _not_ owned by the caller, but by the nsFrameSetElement
-            implementation.  DO NOT DELETE IT.
+   * GetColSpec is used to get the "cols" spec.
+   * @return The span of size specifications, owned by the
+   *        nsFrameSetElement implementation.
    */
-  nsresult GetColSpec(int32_t* aNumValues, const nsFramesetSpec** aSpecs);
+  Span<const nsFramesetSpec> GetColSpec() MOZ_LIFETIME_BOUND;
 
   bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                       const nsAString& aValue,

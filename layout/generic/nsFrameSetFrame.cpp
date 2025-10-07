@@ -209,12 +209,10 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   // Get the rows= cols= data
   HTMLFrameSetElement* ourContent = HTMLFrameSetElement::FromNode(mContent);
   NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
-  const nsFramesetSpec* rowSpecs = nullptr;
-  const nsFramesetSpec* colSpecs = nullptr;
-  // GetRowSpec and GetColSpec can fail, but when they do they set
-  // mNumRows and mNumCols respectively to 0, so we deal with it fine.
-  ourContent->GetRowSpec(&mNumRows, &rowSpecs);
-  ourContent->GetColSpec(&mNumCols, &colSpecs);
+  auto rowSpecs = ourContent->GetRowSpec();
+  auto colSpecs = ourContent->GetColSpec();
+  mNumRows = CheckedInt<int32_t>(rowSpecs.Length()).value();
+  mNumCols = CheckedInt<int32_t>(colSpecs.Length()).value();
 
   static_assert(
       NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(nscoord),
@@ -400,29 +398,29 @@ void nsHTMLFramesetFrame::Scale(nscoord aDesired, int32_t aNumIndicies,
  * specifier - fixed sizes have the highest priority, percentage sizes have the
  * next highest priority and relative sizes have the lowest.
  */
-void nsHTMLFramesetFrame::CalculateRowCol(nsPresContext* aPresContext,
-                                          nscoord aSize, int32_t aNumSpecs,
-                                          const nsFramesetSpec* aSpecs,
-                                          nsTArray<nscoord>& aValues) {
+void nsHTMLFramesetFrame::CalculateRowCol(
+    nsPresContext* aPresContext, nscoord aSize,
+    const mozilla::Span<const nsFramesetSpec>& aSpecs,
+    nsTArray<nscoord>& aValues) {
   static_assert(NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(int32_t),
                 "aNumSpecs maximum value is NS_MAX_FRAMESET_SPEC_COUNT");
-  MOZ_ASSERT(CheckedInt<size_t>(aNumSpecs).value() == aValues.Length());
+  MOZ_ASSERT(aSpecs.Length() == aValues.Length());
 
   int32_t fixedTotal = 0;
   int32_t numFixed = 0;
   nsTArray<int32_t> fixed;
-  fixed.SetLength(aNumSpecs);
+  fixed.SetLength(aSpecs.Length());
   int32_t numPercent = 0;
   nsTArray<int32_t> percent;
-  percent.SetLength(aNumSpecs);
+  percent.SetLength(aSpecs.Length());
   int32_t relativeSums = 0;
   int32_t numRelative = 0;
   nsTArray<int32_t> relative;
-  relative.SetLength(aNumSpecs);
+  relative.SetLength(aSpecs.Length());
 
   // initialize the fixed, percent, relative indices, allocate the fixed sizes
   // and zero the others
-  for (int32_t i = 0; i < aNumSpecs; i++) {
+  for (int32_t i = 0; i < CheckedInt<int32_t>(aSpecs.Length()).value(); i++) {
     aValues[i] = 0;
     switch (aSpecs[i].mUnit) {
       case eFramesetUnit_Fixed:
@@ -492,14 +490,13 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsPresContext* aPresContext,
  * each cell in the frameset.  Reverse of CalculateRowCol() behaviour.
  * This allows us to maintain the user size info through reflows.
  */
-void nsHTMLFramesetFrame::GenerateRowCol(nsPresContext* aPresContext,
-                                         nscoord aSize, int32_t aNumSpecs,
-                                         const nsFramesetSpec* aSpecs,
-                                         const nsTArray<nscoord>& aValues,
-                                         nsString& aNewAttr) {
-  MOZ_ASSERT(CheckedInt<size_t>(aNumSpecs).value() == aValues.Length());
+void nsHTMLFramesetFrame::GenerateRowCol(
+    nsPresContext* aPresContext, nscoord aSize,
+    const mozilla::Span<const nsFramesetSpec>& aSpecs,
+    const nsTArray<nscoord>& aValues, nsString& aNewAttr) {
+  MOZ_ASSERT(aSpecs.Length() == aValues.Length());
 
-  for (int32_t i = 0; i < aNumSpecs; i++) {
+  for (size_t i = 0; i < aSpecs.Length(); i++) {
     if (!aNewAttr.IsEmpty()) {
       aNewAttr.Append(char16_t(','));
     }
@@ -812,21 +809,18 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
 
   HTMLFrameSetElement* ourContent = HTMLFrameSetElement::FromNode(mContent);
   NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
-  const nsFramesetSpec* rowSpecs = nullptr;
-  const nsFramesetSpec* colSpecs = nullptr;
-  int32_t rows = 0;
-  int32_t cols = 0;
-  ourContent->GetRowSpec(&rows, &rowSpecs);
-  ourContent->GetColSpec(&cols, &colSpecs);
+  auto rowSpecs = ourContent->GetRowSpec();
+  auto colSpecs = ourContent->GetColSpec();
   // If the number of cols or rows has changed, the frame for the frameset
   // will be re-created.
-  if (NumRows() != rows || NumCols() != cols) {
+  if (CheckedInt<size_t>(NumRows()).value() != rowSpecs.Length() ||
+      CheckedInt<size_t>(NumCols()).value() != colSpecs.Length()) {
     mDrag.UnSet();
     return;
   }
 
-  CalculateRowCol(aPresContext, width, NumCols(), colSpecs, mColSizes);
-  CalculateRowCol(aPresContext, height, NumRows(), rowSpecs, mRowSizes);
+  CalculateRowCol(aPresContext, width, colSpecs, mColSizes);
+  CalculateRowCol(aPresContext, height, rowSpecs, mRowSizes);
 
   UniquePtr<bool[]> verBordersVis;  // vertical borders visibility
   UniquePtr<nscolor[]> verBorderColors;
@@ -1220,11 +1214,9 @@ void nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
           mRect.width - (NumCols() - 1) * GetBorderWidth(aPresContext, true);
       HTMLFrameSetElement* ourContent = HTMLFrameSetElement::FromNode(mContent);
       NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
-      const nsFramesetSpec* colSpecs = nullptr;
-      ourContent->GetColSpec(&mNumCols, &colSpecs);
+      auto colSpecs = ourContent->GetColSpec();
       nsAutoString newColAttr;
-      GenerateRowCol(aPresContext, width, NumCols(), colSpecs, mColSizes,
-                     newColAttr);
+      GenerateRowCol(aPresContext, width, colSpecs, mColSizes, newColAttr);
       // Setting the attr will trigger a reflow
       mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::cols,
                                      newColAttr, true);
@@ -1246,11 +1238,9 @@ void nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
           mRect.height - (NumRows() - 1) * GetBorderWidth(aPresContext, true);
       HTMLFrameSetElement* ourContent = HTMLFrameSetElement::FromNode(mContent);
       NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
-      const nsFramesetSpec* rowSpecs = nullptr;
-      ourContent->GetRowSpec(&mNumRows, &rowSpecs);
+      Span<const nsFramesetSpec> rowSpecs = ourContent->GetRowSpec();
       nsAutoString newRowAttr;
-      GenerateRowCol(aPresContext, height, NumRows(), rowSpecs, mRowSizes,
-                     newRowAttr);
+      GenerateRowCol(aPresContext, height, rowSpecs, mRowSizes, newRowAttr);
       // Setting the attr will trigger a reflow
       mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::rows,
                                      newRowAttr, true);
