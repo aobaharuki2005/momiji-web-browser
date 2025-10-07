@@ -24,7 +24,6 @@
 #include "mozilla/StaticPrefs_html5.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/TextUtils.h"
-#include "mozilla/glean/NetwerkMetrics.h"
 
 #include "mozilla/Unused.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -1402,14 +1401,10 @@ nsresult nsHtml5StreamParser::OnStopRequest(
   if (mOnStopCalled) {
     // OnStopRequest already executed (probably OMT).
     MOZ_ASSERT(NS_IsMainThread(), "Expected to run on main thread");
-    if (mOnDataFinishedTime) {
-      mOnStopRequestTime = TimeStamp::Now();
-    }
   } else {
     mOnStopCalled = true;
 
     if (MOZ_UNLIKELY(NS_IsMainThread())) {
-      MOZ_ASSERT(mOnDataFinishedTime.IsNull(), "stale mOnDataFinishedTime");
       nsCOMPtr<nsIRunnable> stopper = new nsHtml5RequestStopper(this);
       if (NS_FAILED(
               mEventTarget->Dispatch(stopper, nsIThread::DISPATCH_NORMAL))) {
@@ -1418,7 +1413,6 @@ nsresult nsHtml5StreamParser::OnStopRequest(
     } else {
       if (StaticPrefs::network_send_OnDataFinished_html5parser()) {
         MOZ_ASSERT(IsParserThread(), "Wrong thread!");
-        mOnDataFinishedTime = TimeStamp::Now();
         mozilla::MutexAutoLock autoLock(mTokenizerMutex);
         DoStopRequest();
         PostLoadFlusher();
@@ -1431,13 +1425,6 @@ nsresult nsHtml5StreamParser::OnStopRequest(
         return NS_OK;
       }
     }
-  }
-  if (!mOnStopRequestTime.IsNull() && !mOnDataFinishedTime.IsNull()) {
-    TimeDuration delta = (mOnStopRequestTime - mOnDataFinishedTime);
-    MOZ_ASSERT((delta.ToMilliseconds() >= 0),
-               "OnDataFinished after OnStopRequest");
-    glean::networking::http_content_html5parser_ondatafinished_to_onstop_delay
-        .AccumulateRawDuration(delta);
   }
   return NS_OK;
 }
