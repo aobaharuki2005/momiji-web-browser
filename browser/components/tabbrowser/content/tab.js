@@ -374,10 +374,7 @@
     }
 
     get group() {
-      if (this.parentElement?.tagName == "tab-group") {
-        return this.parentElement;
-      }
-      return null;
+      return this.closest("tab-group");
     }
 
     get splitview() {

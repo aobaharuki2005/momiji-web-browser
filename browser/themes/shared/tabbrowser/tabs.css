@@ -1045,6 +1045,37 @@
 
 /* Split View */
 
+tab-group > tab-split-view-wrapper {
+  #tabbrowser-tabs[orient="vertical"] & {
+    margin-inline-start: var(--space-xxsmall);
+    margin-block: calc(var(--space-xsmall) * -1);
+
+    .tabbrowser-tab:last-child {
+      .tab-group-line {
+        display: none;
+      }
+    }
+  }
+
+  @container vertical-tabs-container (max-width: 210px) {
+    #tabbrowser-tabs[orient="vertical"] & {
+      margin-inline-start: 0;
+
+      .tabbrowser-tab:last-child {
+        .tab-group-line {
+          display: flex;
+        }
+      }
+    }
+  }
+
+  #tabbrowser-tabs[orient="horizontal"] & > .tab-split-view-container {
+    margin-inline: 0;
+    padding-block-end: 0;
+    padding-inline: 0;
+  }
+}
+
 #tabbrowser-tabs .tab-split-view-container {
   display: grid;
   grid-template-columns: 50% 50%;
@@ -1233,7 +1264,8 @@ tab-group {
   }
 
   #tabbrowser-tabs[orient="vertical"] &[movingtabgroup][collapsed] > .tabbrowser-tab[visuallyselected],
-  #tabbrowser-tabs[orient="vertical"] &[collapsed] > .tabbrowser-tab:not([visuallyselected]) {
+  #tabbrowser-tabs[orient="vertical"] &[collapsed] > .tabbrowser-tab:not([visuallyselected]),
+  #tabbrowser-tabs[orient="vertical"] &[collapsed] > tab-split-view-wrapper:not([hasactivetab]) {
     display: none;
   }
 
