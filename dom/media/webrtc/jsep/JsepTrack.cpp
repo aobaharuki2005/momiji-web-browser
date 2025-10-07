@@ -155,11 +155,16 @@ void JsepTrack::RecvTrackSetRemote(const Sdp& aSdp,
   // We do this whether or not the track is active
   SetCNAME(helper.GetCNAME(aMsection));
   mSsrcs.clear();
+  // Storage of mSsrcs and mSsrcToRtxSsrc could be improved, see Bug 1990364
+  // Each `a=ssrc ssrc-attr:value` line can contain the same SSRC. We should
+  // only add unique SSRCs to mSsrcs.
+  std::set<uint32_t> ssrcsSet;
   if (aMsection.GetAttributeList().HasAttribute(SdpAttribute::kSsrcAttribute)) {
-    for (const auto& ssrcAttr : aMsection.GetAttributeList().GetSsrc().mSsrcs) {
-      mSsrcs.push_back(ssrcAttr.ssrc);
+    for (const auto& s : aMsection.GetAttributeList().GetSsrc().mSsrcs) {
+      ssrcsSet.insert(s.ssrc);
     }
   }
+  mSsrcs.assign(ssrcsSet.begin(), ssrcsSet.end());
 
   // Use FID ssrc-group to associate rtx ssrcs with "regular" ssrcs. Despite
   // not being part of RFC 4588, this is how rtx is negotiated by libwebrtc
