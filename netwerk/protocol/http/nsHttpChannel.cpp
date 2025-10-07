@@ -6153,6 +6153,7 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
       ("Content-Encoding for %p: %s", this, contentEncoding.get()));
   if (!dictionary.IsEmpty() || contentEncoding.Equals("dcb") ||
       contentEncoding.Equals("dcz")) {
+    LOG_DICTIONARIES(("Removing Content-Encoding for %p", this));
     nsCOMPtr<nsIStreamListener> listener;
     // otherwise we won't convert in the parent process
     SetApplyConversion(true);
