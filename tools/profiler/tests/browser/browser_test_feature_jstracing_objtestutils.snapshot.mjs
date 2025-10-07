@@ -601,39 +601,18 @@ export default [
     "type": "object",
     "class": "Error",
     "ownPropertyLength": 0,
-    "isError": false,
+    "isError": true,
     "extensible": false,
     "sealed": false,
     "frozen": false,
     "preview": {
-      "kind": "Object",
-      "ownProperties": {
-        "message": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "foo"
-        },
-        "columnNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 1
-        },
-        "lineNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 1
-        },
-        "fileName": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "eval line 7 > eval"
-        }
-      },
-      "ownPropertiesLength": 4
+      "kind": "Error",
+      "name": "Error",
+      "message": "foo",
+      "stack": "@eval line 7 > eval:1:1\n@eval:7:21\n",
+      "fileName": "eval line 7 > eval",
+      "lineNumber": 1,
+      "columnNumber": 1
     }
   },
 
@@ -642,39 +621,18 @@ export default [
     "type": "object",
     "class": "Error",
     "ownPropertyLength": 0,
-    "isError": false,
+    "isError": true,
     "extensible": false,
     "sealed": false,
     "frozen": false,
     "preview": {
-      "kind": "Object",
-      "ownProperties": {
-        "message": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long e"
-        },
-        "columnNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 7
-        },
-        "lineNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 1
-        },
-        "fileName": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "eval line 7 > eval"
-        }
-      },
-      "ownPropertiesLength": 4
+      "kind": "Error",
+      "name": "Error",
+      "message": "Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long e",
+      "stack": "@eval line 7 > eval:1:7\n@eval:7:21\n",
+      "fileName": "eval line 7 > eval",
+      "lineNumber": 1,
+      "columnNumber": 7
     }
   },
 
@@ -687,39 +645,18 @@ export default [
     "type": "object",
     "class": "Error",
     "ownPropertyLength": 0,
-    "isError": false,
+    "isError": true,
     "extensible": false,
     "sealed": false,
     "frozen": false,
     "preview": {
-      "kind": "Object",
-      "ownProperties": {
-        "message": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "bar"
-        },
-        "columnNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 6
-        },
-        "lineNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 1
-        },
-        "fileName": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "eval line 7 > eval"
-        }
-      },
-      "ownPropertiesLength": 4
+      "kind": "Error",
+      "name": "Error",
+      "message": "bar",
+      "stack": "@eval line 7 > eval:1:6\n@eval:7:21\n",
+      "fileName": "eval line 7 > eval",
+      "lineNumber": 1,
+      "columnNumber": 6
     }
   },
 
@@ -736,39 +673,18 @@ export default [
     "type": "object",
     "class": "ReferenceError",
     "ownPropertyLength": 0,
-    "isError": false,
+    "isError": true,
     "extensible": false,
     "sealed": false,
     "frozen": false,
     "preview": {
-      "kind": "Object",
-      "ownProperties": {
-        "message": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "asdf is not defined"
-        },
-        "columnNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 9
-        },
-        "lineNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 3
-        },
-        "fileName": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "eval line 7 > eval"
-        }
-      },
-      "ownPropertiesLength": 4
+      "kind": "Error",
+      "name": "ReferenceError",
+      "message": "asdf is not defined",
+      "stack": "bar@eval line 7 > eval:3:9\nfoo@eval line 7 > eval:6:9\n@eval line 7 > eval:9:7\n@eval:7:21\n",
+      "fileName": "eval line 7 > eval",
+      "lineNumber": 3,
+      "columnNumber": 9
     }
   },
 
@@ -777,39 +693,18 @@ export default [
     "type": "object",
     "class": "SyntaxError",
     "ownPropertyLength": 0,
-    "isError": false,
+    "isError": true,
     "extensible": false,
     "sealed": false,
     "frozen": false,
     "preview": {
-      "kind": "Object",
-      "ownProperties": {
-        "message": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "redeclaration of let a"
-        },
-        "columnNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 8
-        },
-        "lineNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 1
-        },
-        "fileName": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "eval line 7 > eval"
-        }
-      },
-      "ownPropertiesLength": 4
+      "kind": "Error",
+      "name": "SyntaxError",
+      "message": "redeclaration of let a",
+      "stack": "@eval line 7 > eval:1:1\n@eval:7:21\n",
+      "fileName": "eval line 7 > eval",
+      "lineNumber": 1,
+      "columnNumber": 8
     }
   },
 
@@ -865,51 +760,18 @@ export default [
     "type": "object",
     "class": "Error",
     "ownPropertyLength": 0,
-    "isError": false,
+    "isError": true,
     "extensible": false,
     "sealed": false,
     "frozen": false,
     "preview": {
-      "kind": "Object",
-      "ownProperties": {
-        "flavor": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "delicious"
-        },
-        "name": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "JuicyError"
-        },
-        "message": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "pineapple"
-        },
-        "columnNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 17
-        },
-        "lineNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 2
-        },
-        "fileName": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "eval line 7 > eval"
-        }
-      },
-      "ownPropertiesLength": 6
+      "kind": "Error",
+      "name": "JuicyError",
+      "message": "pineapple",
+      "stack": "@eval line 7 > eval:2:17\n@eval:7:21\n",
+      "fileName": "eval line 7 > eval",
+      "lineNumber": 2,
+      "columnNumber": 17
     }
   },
 
@@ -923,58 +785,18 @@ export default [
     "type": "object",
     "class": "Error",
     "ownPropertyLength": 0,
-    "isError": false,
+    "isError": true,
     "extensible": false,
     "sealed": false,
     "frozen": false,
     "preview": {
-      "kind": "Object",
-      "ownProperties": {
-        "cause": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": {
-            "type": "object",
-            "class": "SyntaxError",
-            "ownPropertyLength": 0,
-            "isError": false,
-            "extensible": false,
-            "sealed": false,
-            "frozen": false,
-            "preview": {
-              "kind": "Object",
-              "ownProperties": {},
-              "ownPropertiesLength": 4
-            }
-          }
-        },
-        "message": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "something went wrong"
-        },
-        "columnNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 17
-        },
-        "lineNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 3
-        },
-        "fileName": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "eval line 7 > eval"
-        }
-      },
-      "ownPropertiesLength": 5
+      "kind": "Error",
+      "name": "Error",
+      "message": "something went wrong",
+      "stack": "@eval line 7 > eval:3:17\n@eval:7:21\n",
+      "fileName": "eval line 7 > eval",
+      "lineNumber": 3,
+      "columnNumber": 17
     }
   },
 
@@ -988,58 +810,18 @@ export default [
     "type": "object",
     "class": "Error",
     "ownPropertyLength": 0,
-    "isError": false,
+    "isError": true,
     "extensible": false,
     "sealed": false,
     "frozen": false,
     "preview": {
-      "kind": "Object",
-      "ownProperties": {
-        "cause": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": {
-            "type": "object",
-            "class": "Error",
-            "ownPropertyLength": 0,
-            "isError": false,
-            "extensible": false,
-            "sealed": false,
-            "frozen": false,
-            "preview": {
-              "kind": "Object",
-              "ownProperties": {},
-              "ownPropertiesLength": 5
-            }
-          }
-        },
-        "message": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "err-d"
-        },
-        "columnNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 15
-        },
-        "lineNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 5
-        },
-        "fileName": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "eval line 7 > eval"
-        }
-      },
-      "ownPropertiesLength": 5
+      "kind": "Error",
+      "name": "Error",
+      "message": "err-d",
+      "stack": "@eval line 7 > eval:5:15\n@eval:7:21\n",
+      "fileName": "eval line 7 > eval",
+      "lineNumber": 5,
+      "columnNumber": 15
     }
   },
 
@@ -1051,58 +833,18 @@ export default [
     "type": "object",
     "class": "Error",
     "ownPropertyLength": 0,
-    "isError": false,
+    "isError": true,
     "extensible": false,
     "sealed": false,
     "frozen": false,
     "preview": {
-      "kind": "Object",
-      "ownProperties": {
-        "cause": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": {
-            "type": "object",
-            "class": "Error",
-            "ownPropertyLength": 0,
-            "isError": false,
-            "extensible": false,
-            "sealed": false,
-            "frozen": false,
-            "preview": {
-              "kind": "Object",
-              "ownProperties": {},
-              "ownPropertiesLength": 5
-            }
-          }
-        },
-        "message": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "err-b"
-        },
-        "columnNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 15
-        },
-        "lineNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 3
-        },
-        "fileName": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "eval line 7 > eval"
-        }
-      },
-      "ownPropertiesLength": 5
+      "kind": "Error",
+      "name": "Error",
+      "message": "err-b",
+      "stack": "@eval line 7 > eval:3:15\n@eval:7:21\n",
+      "fileName": "eval line 7 > eval",
+      "lineNumber": 3,
+      "columnNumber": 15
     }
   },
 
@@ -1111,47 +853,18 @@ export default [
     "type": "object",
     "class": "Error",
     "ownPropertyLength": 0,
-    "isError": false,
+    "isError": true,
     "extensible": false,
     "sealed": false,
     "frozen": false,
     "preview": {
-      "kind": "Object",
-      "ownProperties": {
-        "cause": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": {
-            "type": "null"
-          }
-        },
-        "message": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "null cause"
-        },
-        "columnNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 7
-        },
-        "lineNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 1
-        },
-        "fileName": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "eval line 7 > eval"
-        }
-      },
-      "ownPropertiesLength": 5
+      "kind": "Error",
+      "name": "Error",
+      "message": "null cause",
+      "stack": "@eval line 7 > eval:1:7\n@eval:7:21\n",
+      "fileName": "eval line 7 > eval",
+      "lineNumber": 1,
+      "columnNumber": 7
     }
   },
 
@@ -1160,45 +873,18 @@ export default [
     "type": "object",
     "class": "Error",
     "ownPropertyLength": 0,
-    "isError": false,
+    "isError": true,
     "extensible": false,
     "sealed": false,
     "frozen": false,
     "preview": {
-      "kind": "Object",
-      "ownProperties": {
-        "cause": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 0
-        },
-        "message": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "number cause"
-        },
-        "columnNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 7
-        },
-        "lineNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 1
-        },
-        "fileName": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "eval line 7 > eval"
-        }
-      },
-      "ownPropertiesLength": 5
+      "kind": "Error",
+      "name": "Error",
+      "message": "number cause",
+      "stack": "@eval line 7 > eval:1:7\n@eval:7:21\n",
+      "fileName": "eval line 7 > eval",
+      "lineNumber": 1,
+      "columnNumber": 7
     }
   },
 
@@ -1207,45 +893,18 @@ export default [
     "type": "object",
     "class": "Error",
     "ownPropertyLength": 0,
-    "isError": false,
+    "isError": true,
     "extensible": false,
     "sealed": false,
     "frozen": false,
     "preview": {
-      "kind": "Object",
-      "ownProperties": {
-        "cause": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "cause message"
-        },
-        "message": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "string cause"
-        },
-        "columnNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 7
-        },
-        "lineNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 1
-        },
-        "fileName": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "eval line 7 > eval"
-        }
-      },
-      "ownPropertiesLength": 5
+      "kind": "Error",
+      "name": "Error",
+      "message": "string cause",
+      "stack": "@eval line 7 > eval:1:7\n@eval:7:21\n",
+      "fileName": "eval line 7 > eval",
+      "lineNumber": 1,
+      "columnNumber": 7
     }
   },
 
@@ -1257,58 +916,18 @@ export default [
     "type": "object",
     "class": "Error",
     "ownPropertyLength": 0,
-    "isError": false,
+    "isError": true,
     "extensible": false,
     "sealed": false,
     "frozen": false,
     "preview": {
-      "kind": "Object",
-      "ownProperties": {
-        "cause": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": {
-            "type": "object",
-            "class": "Object",
-            "ownPropertyLength": 0,
-            "isError": false,
-            "extensible": false,
-            "sealed": false,
-            "frozen": false,
-            "preview": {
-              "kind": "Object",
-              "ownProperties": {},
-              "ownPropertiesLength": 2
-            }
-          }
-        },
-        "message": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "object cause"
-        },
-        "columnNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 13
-        },
-        "lineNumber": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 2
-        },
-        "fileName": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": "eval line 7 > eval"
-        }
-      },
-      "ownPropertiesLength": 5
+      "kind": "Error",
+      "name": "Error",
+      "message": "object cause",
+      "stack": "@eval line 7 > eval:2:13\n@eval:7:21\n",
+      "fileName": "eval line 7 > eval",
+      "lineNumber": 2,
+      "columnNumber": 13
     }
   },
 

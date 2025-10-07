@@ -36,12 +36,14 @@ const OBJECT_KIND_WRAPPED_PRIMITIVE_OBJECT = 4;
 const OBJECT_KIND_GENERIC_OBJECT = 5;
 const OBJECT_KIND_PROXY_OBJECT = 6;
 const OBJECT_KIND_EXTERNAL = 7;
+const OBJECT_KIND_ERROR = 8;
 
 const MAX_COLLECTION_VALUES = 16;
 
 const EXTERNAL_SUMMARY_EXPECTED_VERSION = 1;
 const EXTERNAL_SUMMARY_KIND_OTHER = 0;
 const EXTERNAL_SUMMARY_KIND_NODE = 1;
+const EXTERNAL_SUMMARY_KIND_EXCEPTION = 2;
 
 // const EXTERNAL_NODE_SUBKIND_OTHER = 0; (handled implicitly)
 const EXTERNAL_NODE_SUBKIND_ELEMENT = 1;
@@ -344,6 +346,20 @@ function readNodeSummary(result, reader, depth, shapes) {
   result.preview = preview;
 }
 
+function readExceptionSummary(result, reader, _depth, _shapes) {
+  result.class = "Error";
+  const preview = {};
+  preview.kind = "DOMException";
+  preview.name = reader.readString();
+  preview.message = reader.readString();
+  preview.code = reader.readUint16();
+  preview.result = reader.readUint32();
+  preview.lineNumber = reader.readUint32();
+  preview.columnNumber = reader.readUint32();
+  preview.stack = reader.readString();
+  result.preview = preview;
+}
+
 function readExternalObjectSummary(result, reader, depth, shapes) {
   readClassFromShape(result, reader, shapes);
 
@@ -365,11 +381,37 @@ function readExternalObjectSummary(result, reader, depth, shapes) {
         readNodeSummary(result, reader, depth, shapes);
         break;
       }
+      case EXTERNAL_SUMMARY_KIND_EXCEPTION: {
+        readExceptionSummary(result, reader, depth, shapes);
+        break;
+      }
       default:
     }
   } finally {
     reader.setIndex(startIndex + size);
   }
+}
+
+function readErrorObjectSummary(result, reader, depth, shapes) {
+  const shapeId = reader.readUint32();
+  const shape = shapes[shapeId];
+
+  if (!shape || shape.length <= 0) {
+    return;
+  }
+
+  const preview = {};
+  result.type = "object";
+  result.class = shape[0];
+  result.isError = true;
+  preview.kind = "Error";
+  preview.name = reader.readString();
+  preview.message = reader.readString();
+  preview.stack = reader.readString();
+  preview.fileName = reader.readString();
+  preview.lineNumber = reader.readUint32();
+  preview.columnNumber = reader.readUint32();
+  result.preview = preview;
 }
 
 function readObjectSummary(reader, flags, depth, shapes) {
@@ -399,6 +441,9 @@ function readObjectSummary(reader, flags, depth, shapes) {
       break;
     case OBJECT_KIND_EXTERNAL:
       readExternalObjectSummary(result, reader, depth, shapes);
+      break;
+    case OBJECT_KIND_ERROR:
+      readErrorObjectSummary(result, reader, depth, shapes);
       break;
     case OBJECT_KIND_WRAPPED_PRIMITIVE_OBJECT: {
       result.wrappedValue = readValueSummary(reader, depth, shapes);
