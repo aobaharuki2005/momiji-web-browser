@@ -120,6 +120,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
       nsHttpRequestHead*, bool isSecure,
       ExtContentPolicyType aContentPolicyType,
       bool aShouldResistFingerprinting);
+  [[nodiscard]] nsresult AddEncodingHeaders(nsHttpRequestHead* request,
+                                            bool isSecure, nsIURI* aURI);
   [[nodiscard]] nsresult AddConnectionHeader(nsHttpRequestHead*, uint32_t caps);
   bool IsAcceptableEncoding(const char* encoding, bool isSecure);
 
