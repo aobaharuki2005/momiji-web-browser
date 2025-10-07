@@ -2247,10 +2247,6 @@ void VertexAttribDivisor(GLuint index, GLuint divisor) {
 
 void BufferData(GLenum target, GLsizeiptr size, void* data,
                 UNUSED GLenum usage) {
-  if (size < 0) {
-    assert(0);
-    return;
-  }
   Buffer& b = ctx->buffers[ctx->get_binding(target)];
   if (size != b.size) {
     if (!b.allocate(size)) {
@@ -2265,7 +2261,7 @@ void BufferData(GLenum target, GLsizeiptr size, void* data,
 
 void BufferSubData(GLenum target, GLintptr offset, GLsizeiptr size,
                    void* data) {
-  if (offset < 0 || size < 0) {
+  if (offset < 0) {
     assert(0);
     return;
   }
