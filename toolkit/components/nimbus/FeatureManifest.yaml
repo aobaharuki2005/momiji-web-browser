@@ -1428,6 +1428,10 @@ newtabInferredPersonalization:
       type: boolean
       description: >-
         Whether to use Unary encoding with differential privacy in the interest vector. If false or not set, we default to laplace noise with real values
+    history_cull_days:
+      type: int
+      description: >-
+        Number of days local inferred feature history to preserve
     normalized_time_zone_offset:
       type: boolean
       description: >-
