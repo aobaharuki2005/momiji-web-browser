@@ -4165,6 +4165,39 @@ bool nsHttpChannel::ResponseWouldVary(nsICacheEntry* entry) {
   return false;
 }
 
+// Remove an entry from Vary header, if it exists
+void RemoveFromVary(nsHttpResponseHead* aResponseHead,
+                    const nsACString& aRemove) {
+  nsAutoCString buf;
+  Unused << aResponseHead->GetHeader(nsHttp::Vary, buf);
+
+  bool remove = false;
+  for (const nsACString& token :
+       nsCCharSeparatedTokenizer(buf, NS_HTTP_HEADER_SEP).ToRange()) {
+    if (token.Equals(aRemove)) {
+      // Need to build a new string without aRemove
+      remove = true;
+      break;
+    }
+  }
+  if (!remove) {
+    return;
+  }
+  nsAutoCString newValue;
+  for (const nsACString& token :
+       nsCCharSeparatedTokenizer(buf, NS_HTTP_HEADER_SEP).ToRange()) {
+    if (!token.Equals(aRemove)) {
+      if (!newValue.IsEmpty()) {
+        newValue += ","_ns;
+      }
+      newValue += token;
+    }
+  }
+  LOG(("RemoveFromVary %s removed, new value -> %s",
+       PromiseFlatCString(aRemove).get(), newValue.get()));
+  Unused << aResponseHead->SetHeaderOverride(nsHttp::Vary, newValue);
+}
+
 // We need to have an implementation of this function just so that we can keep
 // all references to mCallOnResume of type nsHttpChannel:  it's not OK in C++
 // to set a member function ptr to  a base class function.
@@ -6199,30 +6232,46 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
   // since we don't want to have to decompress it here and again in the content
   // process (if it's not dcb/dcz); if it is dcb/dcz we must decompress it
   // before the content process gets to see it
+  // XXX We could recompress this with e.g. gzip to save space and improve
+  // hitrate, at the cost of some CPU.
   nsAutoCString contentEncoding;
   Unused << mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
   LOG_DICTIONARIES(
       ("Content-Encoding for %p: %s", this, contentEncoding.get()));
   if (!dictionary.IsEmpty() || contentEncoding.Equals("dcb") ||
       contentEncoding.Equals("dcz")) {
-    LOG_DICTIONARIES(
-        ("Removing Content-Encoding %s for %p", contentEncoding.get(), this));
-    nsCOMPtr<nsIStreamListener> listener;
-    // otherwise we won't convert in the parent process
-    SetApplyConversion(true);
-    rv =
-        DoApplyContentConversions(mListener, getter_AddRefs(listener), nullptr);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    if (listener) {
+    if (!contentEncoding.IsEmpty()) {
       LOG_DICTIONARIES(
-          ("Installed nsHTTPCompressConv %p before tee", listener.get()));
-      mListener = listener;
-      mCompressListener = listener;
-      StoreHasAppliedConversion(true);
-    } else
-      LOG_DICTIONARIES(("Didn't install decompressor before tee"));
+          ("Removing Content-Encoding %s for %p", contentEncoding.get(), this));
+      nsCOMPtr<nsIStreamListener> listener;
+      // otherwise we won't convert in the parent process
+      SetApplyConversion(true);
+      rv = DoApplyContentConversions(mListener, getter_AddRefs(listener),
+                                     nullptr);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      if (listener) {
+        LOG_DICTIONARIES(
+            ("Installed nsHTTPCompressConv %p before tee", listener.get()));
+        mListener = listener;
+        mCompressListener = listener;
+        StoreHasAppliedConversion(true);
+
+      } else {
+        LOG_DICTIONARIES(("Didn't install decompressor before tee"));
+      }
+    }
+    // Remove Available-Dictionary from Vary header if present if we
+    // decompressed and changed the content type.  This avoids us refusing to
+    // match on a future load, for example if this dictionary was decoded from
+    // an earlier version using a dictionary (i.e. the update jquery to new
+    // version using the old version as a dictionary; no future load will use
+    // that old version).
+    // XXX It would be slightly more efficient to remove all at once
+    // instead of sequentially by passing an array of strings
+    RemoveFromVary(mResponseHead.get(), "available-dictionary"_ns);
+    RemoveFromVary(mResponseHead.get(), "accept-encoding"_ns);
   }
 
   // Must add these after adding possible decompressors, since that may modify
@@ -6232,8 +6281,6 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
     mCacheEntry->AsyncDoom(nullptr);
     return rv;
   }
-
-  // XXX telemetry as to how often we get dcb/dcz
   return NS_OK;
 }
 
