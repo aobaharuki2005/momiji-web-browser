@@ -11,6 +11,13 @@ import androidx.preference.PreferenceManager
 import org.mozilla.focus.R
 import org.mozilla.focus.generated.LocalesList
 
+/**
+ * A storage class responsible for managing the application's language settings.
+ * It provides access to the list of available languages, the currently selected language,
+ * and methods for persisting the user's language choice in SharedPreferences.
+ *
+ * @param context The application context, used to access resources and SharedPreferences.
+ */
 class LanguageStorage(private val context: Context) {
     private val sharedPref: SharedPreferences =
         PreferenceManager.getDefaultSharedPreferences(context)

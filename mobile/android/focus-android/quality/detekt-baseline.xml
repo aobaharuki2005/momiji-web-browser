@@ -32,7 +32,6 @@
     <ID>UndocumentedPublicClass:CustomTabsService.kt$CustomTabsService : AbstractCustomTabsService</ID>
     <ID>UndocumentedPublicClass:DebugFocusApplication.kt$DebugFocusApplication : FocusApplication</ID>
     <ID>UndocumentedPublicClass:DefaultBrowserPreference.kt$DefaultBrowserPreference : Preference</ID>
-    <ID>UndocumentedPublicClass:DefaultLanguageScreenInteractor.kt$DefaultLanguageScreenInteractor</ID>
     <ID>UndocumentedPublicClass:DefaultSitePermissionOptionsScreenInteractor.kt$DefaultSitePermissionOptionsScreenInteractor</ID>
     <ID>UndocumentedPublicClass:DownloadService.kt$DownloadService : AbstractFetchDownloadService</ID>
     <ID>UndocumentedPublicClass:EngineSharedPreferencesListener.kt$EngineSharedPreferencesListener$ChangeSource</ID>
@@ -59,11 +58,6 @@
     <ID>UndocumentedPublicClass:IntentProcessor.kt$IntentProcessor.Result$CustomTab : Result</ID>
     <ID>UndocumentedPublicClass:IntentProcessor.kt$IntentProcessor.Result$None : Result</ID>
     <ID>UndocumentedPublicClass:IntentProcessor.kt$IntentProcessor.Result$Tab : Result</ID>
-    <ID>UndocumentedPublicClass:LanguageScreenStore.kt$LanguageScreenAction$InitLanguages : LanguageScreenAction</ID>
-    <ID>UndocumentedPublicClass:LanguageScreenStore.kt$LanguageScreenAction$Select : LanguageScreenAction</ID>
-    <ID>UndocumentedPublicClass:LanguageScreenStore.kt$LanguageScreenAction$UpdateLanguages : LanguageScreenAction</ID>
-    <ID>UndocumentedPublicClass:LanguageScreenStore.kt$LanguageScreenStore : Store</ID>
-    <ID>UndocumentedPublicClass:LanguageStorage.kt$LanguageStorage</ID>
     <ID>UndocumentedPublicClass:LocaleDescriptor.kt$LocaleDescriptor : Comparable</ID>
     <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity$AppOpenType</ID>
     <ID>UndocumentedPublicClass:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference : Preference</ID>
@@ -151,7 +145,6 @@
     <ID>UndocumentedPublicFunction:ClientWrapper.kt$ClientWrapper$@Deprecated("Non-private Client usage should be prevented") fun unwrap(): Client</ID>
     <ID>UndocumentedPublicFunction:CookiesPreference.kt$CookiesPreference$fun updateSummary()</ID>
     <ID>UndocumentedPublicFunction:DefaultBrowserPreference.kt$DefaultBrowserPreference$fun update()</ID>
-    <ID>UndocumentedPublicFunction:DefaultLanguageScreenInteractor.kt$DefaultLanguageScreenInteractor$fun handleLanguageSelected(language: Language)</ID>
     <ID>UndocumentedPublicFunction:DefaultSitePermissionOptionsScreenInteractor.kt$DefaultSitePermissionOptionsScreenInteractor$fun handleSitePermissionOptionSelected(sitePermissionOption: SitePermissionOption)</ID>
     <ID>UndocumentedPublicFunction:ExceptionsListFragment.kt$ExceptionsListFragment.DomainListAdapter$fun move(from: Int, to: Int)</ID>
     <ID>UndocumentedPublicFunction:ExceptionsListFragment.kt$ExceptionsListFragment.DomainListAdapter$fun refresh(context: Context, body: (() -&gt; Unit)? = null)</ID>
@@ -168,7 +161,6 @@
     <ID>UndocumentedPublicFunction:HomeMenu.kt$HomeMenu$fun getMenuBuilder(): BrowserMenuBuilder</ID>
     <ID>UndocumentedPublicFunction:LocaleDescriptor.kt$LocaleDescriptor$fun getNativeName(): String?</ID>
     <ID>UndocumentedPublicFunction:LocaleDescriptor.kt$LocaleDescriptor$fun getTag(): String</ID>
-    <ID>UndocumentedPublicFunction:LocaleFragmentCompose.kt$@Composable fun LanguageNameAndTagItem( language: Language, isSelected: Boolean, onClick: (String) -&gt; Unit, )</ID>
     <ID>UndocumentedPublicFunction:MainActivity.kt$MainActivity$fun getToolbar(): ActionBar</ID>
     <ID>UndocumentedPublicFunction:MainActivityNavigation.kt$MainActivityNavigation$@Suppress("CyclomaticComplexMethod") fun settings(page: Screen.Settings.Page)</ID>
     <ID>UndocumentedPublicFunction:MainActivityNavigation.kt$MainActivityNavigation$fun showOnBoardingSecondScreen()</ID>
