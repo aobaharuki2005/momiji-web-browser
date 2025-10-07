@@ -7611,6 +7611,15 @@ static NSImage* GetMenuMaskImage() {
 // vibrancy effect and window border.
 - (void)setEffectViewWrapperForStyle:(WindowShadow)aStyle {
   NSView* wrapper = [&]() -> NSView* {
+    if (@available(macOS 26.0, *)) {
+      if (aStyle == WindowShadow::Menu) {
+        // Menus on macOS 26 use glass instead of vibrancy.
+        auto* effectView =
+            [[NSGlassEffectView alloc] initWithFrame:self.contentView.frame];
+        effectView.cornerRadius = 12.0f;
+        return effectView;
+      }
+    }
     if (aStyle == WindowShadow::Menu || aStyle == WindowShadow::Tooltip) {
       const bool isMenu = aStyle == WindowShadow::Menu;
       auto* effectView =
