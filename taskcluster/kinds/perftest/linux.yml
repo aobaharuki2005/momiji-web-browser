@@ -11,11 +11,11 @@ task-defaults:
             - browsertime
         build:
             - artifact: target.mozinfo.json
-            - artifact: target.common.tests.tar.zst
-            - artifact: target.condprof.tests.tar.zst
-            - artifact: target.perftests.tests.tar.zst
-            - artifact: target.xpcshell.tests.tar.zst
-            - artifact: target.mochitest.tests.tar.zst
+            - artifact: target.common.tests.tar.gz
+            - artifact: target.condprof.tests.tar.gz
+            - artifact: target.perftests.tests.tar.gz
+            - artifact: target.xpcshell.tests.tar.gz
+            - artifact: target.mochitest.tests.tar.gz
             - artifact: target.tar.xz
     platform: linux1804-64-shippable/opt
     require-build:

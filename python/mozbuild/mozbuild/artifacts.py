@@ -175,7 +175,7 @@ class ArtifactJob:
     # We can tell our input is a test archive by this suffix, which happens to
     # be the same across platforms.
     _test_zip_archive_suffix = ".common.tests.zip"
-    _test_tar_archive_suffix = ".common.tests.tar.zst"
+    _test_tar_archive_suffix = ".common.tests.tar.gz"
 
     # A map of extra archives to fetch and unpack.  An extra archive might
     # include optional build output to incorporate into the local artifact
@@ -225,7 +225,7 @@ class ArtifactJob:
         self._tests_re = None
         if download_tests:
             self._tests_re = re.compile(
-                r"public/build/(en-US/)?target\.common\.tests\.(zip|tar\.zst)$"
+                r"public/build/(en-US/)?target\.common\.tests\.(zip|tar\.gz)$"
             )
         self._maven_zip_re = None
         if download_maven_zip:
