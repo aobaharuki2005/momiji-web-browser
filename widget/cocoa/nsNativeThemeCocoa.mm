@@ -191,6 +191,10 @@ using CellMarginArray = PerSizeArray<IntMargin>;
 
 static void InflateControlRect(NSRect* rect, NSControlSize cocoaControlSize,
                                const CellMarginArray& marginSet) {
+  if (nsCocoaFeatures::OnTahoeOrLater()) {
+    // Controls on macOS 26 fill the entire frame and do not require inflation.
+    return;
+  }
   auto controlSize = EnumSizeForCocoaSize(cocoaControlSize);
   const IntMargin& buttonMargins = marginSet[controlSize];
   rect->origin.x -= buttonMargins.left;
