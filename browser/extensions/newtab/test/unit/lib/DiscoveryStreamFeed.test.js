@@ -2815,6 +2815,8 @@ describe("DiscoveryStreamFeed", () => {
         Prefs: {
           values: {
             "discoverystream.spocs.cacheTimeout": 1,
+            showSponsored: true,
+            "system.showSponsored": true,
           },
         },
       });
@@ -2828,6 +2830,8 @@ describe("DiscoveryStreamFeed", () => {
         Prefs: {
           values: {
             "discoverystream.spocs.cacheTimeout": 31,
+            showSponsored: true,
+            "system.showSponsored": true,
           },
         },
       });
@@ -2841,6 +2845,8 @@ describe("DiscoveryStreamFeed", () => {
         Prefs: {
           values: {
             "discoverystream.spocs.cacheTimeout": 20,
+            showSponsored: true,
+            "system.showSponsored": true,
           },
         },
       });
@@ -2855,6 +2861,8 @@ describe("DiscoveryStreamFeed", () => {
           values: {
             "discoverystream.spocs.onDemand": true,
             "discoverystream.spocs.cacheTimeout": 4,
+            showSponsored: true,
+            "system.showSponsored": true,
           },
         },
       });
@@ -2869,6 +2877,8 @@ describe("DiscoveryStreamFeed", () => {
           values: {
             "discoverystream.spocs.onDemand": true,
             "discoverystream.spocs.cacheTimeout": 31,
+            showSponsored: true,
+            "system.showSponsored": true,
           },
         },
       });
@@ -2883,6 +2893,8 @@ describe("DiscoveryStreamFeed", () => {
           values: {
             "discoverystream.spocs.onDemand": true,
             "discoverystream.spocs.cacheTimeout": 1,
+            showSponsored: true,
+            "system.showSponsored": true,
           },
         },
       });

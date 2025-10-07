@@ -532,7 +532,7 @@ export class DiscoveryStreamFeed {
       const spocsOnDemandConfig = values.trainhopConfig?.spocsOnDemand || {};
       const spocsOnDemand =
         spocsOnDemandConfig.enabled || values[PREF_SPOCS_CACHE_ONDEMAND];
-      this._spocsOnDemand = spocsOnDemand;
+      this._spocsOnDemand = this.showSponsoredStories && spocsOnDemand;
     }
 
     return this._spocsOnDemand;
