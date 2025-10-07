@@ -11,7 +11,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import kotlinx.coroutines.test.runTest
-import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ToggleEditMode
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.EnterEditMode
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ExitEditMode
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
 import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
@@ -72,7 +73,7 @@ class BrowserToolbarSearchStatusSyncMiddlewareTest {
         assertTrue(appStore.state.searchState.isSearchActive)
         assertTrue(toolbarStore.state.isEditMode())
 
-        toolbarStore.dispatch(ToggleEditMode(false)).joinBlocking()
+        toolbarStore.dispatch(ExitEditMode).joinBlocking()
         appStore.waitUntilIdle()
         mainLooperRule.idle()
         assertFalse(appStore.state.searchState.isSearchActive)
@@ -85,7 +86,7 @@ class BrowserToolbarSearchStatusSyncMiddlewareTest {
         assertFalse(toolbarStore.state.isEditMode())
         assertFalse(appStore.state.searchState.isSearchActive)
 
-        toolbarStore.dispatch(ToggleEditMode(true)).joinBlocking()
+        toolbarStore.dispatch(EnterEditMode).joinBlocking()
         mainLooperRule.idle()
 
         assertFalse(appStore.state.searchState.isSearchActive)

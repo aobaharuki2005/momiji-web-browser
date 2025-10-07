@@ -75,7 +75,7 @@ fun BrowserScreen(navController: NavController) {
     val showTabs = store.observeAsComposableState { state -> state.showTabs }
 
     BackHandler(enabled = toolbarState.isEditMode()) {
-        toolbarStore.dispatch(BrowserToolbarAction.ToggleEditMode(false))
+        toolbarStore.dispatch(BrowserToolbarAction.ExitEditMode)
     }
     AcornTheme {
         Box {
@@ -96,7 +96,7 @@ fun BrowserScreen(navController: NavController) {
                         Suggestions(
                             url,
                             onSuggestionClicked = { suggestion ->
-                                toolbarStore.dispatch(BrowserToolbarAction.ToggleEditMode(false))
+                                toolbarStore.dispatch(BrowserToolbarAction.ExitEditMode)
                                 suggestion.onSuggestionClicked?.invoke()
                             },
                             onAutoComplete = { suggestion ->
@@ -165,7 +165,7 @@ fun TabsTray(
                         selectTab = true,
                     )
                     store.dispatch(BrowserScreenAction.HideTabs)
-                    toolbarStore.dispatch(BrowserToolbarAction.ToggleEditMode(true))
+                    toolbarStore.dispatch(BrowserToolbarAction.EnterEditMode)
                 },
             ) {
                 Text("+")

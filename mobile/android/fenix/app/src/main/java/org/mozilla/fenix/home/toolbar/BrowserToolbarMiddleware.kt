@@ -31,8 +31,9 @@ import mozilla.components.compose.browser.toolbar.store.BrowserDisplayToolbarAct
 import mozilla.components.compose.browser.toolbar.store.BrowserDisplayToolbarAction.PageOriginUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.EnterEditMode
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ExitEditMode
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.Init
-import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ToggleEditMode
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent.Source
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.CombinedEventAndMenu
@@ -152,13 +153,16 @@ class BrowserToolbarMiddleware(
                 environment = null
             }
 
-            is ToggleEditMode -> {
+            is EnterEditMode -> {
                 next(action)
 
-                when (action.editMode) {
-                    true -> stopSearchStateUpdates()
-                    false -> observeSearchStateUpdates(context)
-                }
+                stopSearchStateUpdates()
+            }
+
+            is ExitEditMode -> {
+                next(action)
+
+                observeSearchStateUpdates(context)
             }
 
             is MenuClicked -> {

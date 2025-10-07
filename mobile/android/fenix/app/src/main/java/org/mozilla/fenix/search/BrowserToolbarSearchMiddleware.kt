@@ -40,7 +40,8 @@ import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.UrlSuggestionAutocompleted
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.CommitUrl
-import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ToggleEditMode
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.EnterEditMode
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ExitEditMode
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarMenu
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem
@@ -170,26 +171,26 @@ class BrowserToolbarSearchMiddleware(
                 context.dispatch(AutocompleteProvidersUpdated(emptyList()))
             }
 
-            is ToggleEditMode -> {
-                if (action.editMode) {
-                    refreshConfigurationAfterSearchEngineChange(
-                        context = context,
-                        searchEngine = reconcileSelectedEngine(),
-                    )
-                    observeVoiceInputResults(context)
-                    syncCurrentSearchEngine(context)
-                    syncAvailableEngines(context)
-                    updateSearchEndPageActions(context)
-                } else {
-                    syncCurrentSearchEngineJob?.cancel()
-                    syncAvailableSearchEnginesJob?.cancel()
+            is EnterEditMode -> {
+                refreshConfigurationAfterSearchEngineChange(
+                    context = context,
+                    searchEngine = reconcileSelectedEngine(),
+                )
+                observeVoiceInputResults(context)
+                syncCurrentSearchEngine(context)
+                syncAvailableEngines(context)
+                updateSearchEndPageActions(context)
+            }
 
-                    if (observeQRScannerInputJob?.isActive == true) {
-                        appStore.dispatch(AppAction.QrScannerAction.QrScannerDismissed)
-                    }
-                    observeQRScannerInputJob?.cancel()
-                    observeVoiceInputJob?.cancel()
+            is ExitEditMode -> {
+                syncCurrentSearchEngineJob?.cancel()
+                syncAvailableSearchEnginesJob?.cancel()
+
+                if (observeQRScannerInputJob?.isActive == true) {
+                    appStore.dispatch(AppAction.QrScannerAction.QrScannerDismissed)
                 }
+                observeQRScannerInputJob?.cancel()
+                observeVoiceInputJob?.cancel()
             }
 
             is SearchAborted -> {

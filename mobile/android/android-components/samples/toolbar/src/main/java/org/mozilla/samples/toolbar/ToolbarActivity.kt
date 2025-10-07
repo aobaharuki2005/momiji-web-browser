@@ -518,7 +518,7 @@ class ToolbarActivity : AppCompatActivity() {
                         store.dispatch(BrowserEditToolbarAction.SearchQueryUpdated(query = text))
                     },
                     onTextCommit = {
-                        store.dispatch(BrowserToolbarAction.ToggleEditMode(editMode = false))
+                        store.dispatch(BrowserToolbarAction.ExitEditMode)
                     },
                     url = "https://www.mozilla.org/en-US/firefox/mobile/",
                 )
