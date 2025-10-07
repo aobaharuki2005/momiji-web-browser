@@ -156,8 +156,10 @@ async function resendRequestAndWaitForNewRequest(monitor, originalRequestItem) {
 
   info("Open the context menu and select the resend for the request");
   EventUtils.sendMouseEvent({ type: "contextmenu" }, originalRequestItem);
+  const wait = waitForNetworkEvents(monitor, 1);
   await selectContextMenuItem(monitor, "request-list-context-resend-only");
   await waitForNewRequest;
+  await wait;
 
   const newResourceId = getSelectedRequest(store.getState()).id;
 
