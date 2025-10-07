@@ -394,6 +394,12 @@ name = "backtrace"
 version = "0.3.999"
 
 [[package]]
+name = "base16"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d27c3610c36aee21ce8ac510e6224498de4228ad772a171ed65643a24693a5a8"
+
+[[package]]
 name = "base64"
 version = "0.21.999"
 dependencies = [
@@ -2672,6 +2678,8 @@ dependencies = [
  "context_id",
  "error-support",
  "filter_adult",
+ "init_rust_components",
+ "logins",
  "relevancy",
  "search",
  "suggest",
@@ -2953,6 +2961,20 @@ version = "0.10.0"
 source = "git+https://github.com/erichdongubler-contrib/hashlink?rev=76dc47a12af5829c1e8bf4834e38b410dec2aeff#76dc47a12af5829c1e8bf4834e38b410dec2aeff"
 dependencies = [
  "hashbrown 0.16.0",
+]
+
+[[package]]
+name = "hawk"
+version = "5.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab302457b3e28e621daab18932d67a67328f29240bfaa5f604b7627ece1eacda"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "log",
+ "once_cell",
+ "thiserror 1.999.999",
+ "url",
 ]
 
 [[package]]
@@ -3392,6 +3414,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "init_rust_components"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=cd04a4d1a74294ab08434d7a5a8152d25d25e53c#cd04a4d1a74294ab08434d7a5a8152d25d25e53c"
+dependencies = [
+ "nss",
+ "uniffi",
+]
+
+[[package]]
 name = "interrupt-support"
 version = "0.1.0"
 source = "git+https://github.com/mozilla/application-services?rev=cd04a4d1a74294ab08434d7a5a8152d25d25e53c#cd04a4d1a74294ab08434d7a5a8152d25d25e53c"
@@ -3569,6 +3600,20 @@ dependencies = [
  "icu_capi",
  "mozglue-static",
  "unicode-bidi-ffi",
+]
+
+[[package]]
+name = "jwcrypto"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=cd04a4d1a74294ab08434d7a5a8152d25d25e53c#cd04a4d1a74294ab08434d7a5a8152d25d25e53c"
+dependencies = [
+ "base64 0.21.999",
+ "error-support",
+ "rc_crypto",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -3880,6 +3925,32 @@ name = "log"
 version = "0.4.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "30bde2b3dc3671ae49d8e2e9f044c7c005836e7a023ee57cffa25ab82764bb9e"
+
+[[package]]
+name = "logins"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=cd04a4d1a74294ab08434d7a5a8152d25d25e53c#cd04a4d1a74294ab08434d7a5a8152d25d25e53c"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "error-support",
+ "futures",
+ "interrupt-support",
+ "jwcrypto",
+ "lazy_static",
+ "nss",
+ "parking_lot",
+ "rusqlite 0.37.0",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "sql-support",
+ "sync-guid",
+ "sync15",
+ "thiserror 2.0.12",
+ "uniffi",
+ "url",
+]
 
 [[package]]
 name = "mach2"
@@ -4904,6 +4975,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "nss"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=cd04a4d1a74294ab08434d7a5a8152d25d25e53c#cd04a4d1a74294ab08434d7a5a8152d25d25e53c"
+dependencies = [
+ "base64 0.21.999",
+ "error-support",
+ "nss_sys",
+ "once_cell",
+ "serde",
+ "serde_derive",
+ "thiserror 2.0.12",
+]
+
+[[package]]
 name = "nss-gk-api"
 version = "0.3.0"
 source = "git+https://github.com/beurdouche/nss-gk-api?rev=e48a946811ffd64abc78de3ee284957d8d1c0d63#e48a946811ffd64abc78de3ee284957d8d1c0d63"
@@ -4916,6 +5001,20 @@ dependencies = [
  "serde",
  "serde_derive",
  "toml",
+]
+
+[[package]]
+name = "nss_build_common"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=cd04a4d1a74294ab08434d7a5a8152d25d25e53c#cd04a4d1a74294ab08434d7a5a8152d25d25e53c"
+
+[[package]]
+name = "nss_sys"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=cd04a4d1a74294ab08434d7a5a8152d25d25e53c#cd04a4d1a74294ab08434d7a5a8152d25d25e53c"
+dependencies = [
+ "libsqlite3-sys",
+ "nss_build_common",
 ]
 
 [[package]]
@@ -5691,6 +5790,19 @@ checksum = "1465873a3dfdaa8ae7cb14b4383657caab0b3e8a0aa9ae8e04b044854c8dfce2"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
+]
+
+[[package]]
+name = "rc_crypto"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=cd04a4d1a74294ab08434d7a5a8152d25d25e53c#cd04a4d1a74294ab08434d7a5a8152d25d25e53c"
+dependencies = [
+ "base64 0.21.999",
+ "error-support",
+ "hawk",
+ "hex",
+ "nss",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -6624,10 +6736,13 @@ version = "0.1.0"
 source = "git+https://github.com/mozilla/application-services?rev=cd04a4d1a74294ab08434d7a5a8152d25d25e53c#cd04a4d1a74294ab08434d7a5a8152d25d25e53c"
 dependencies = [
  "anyhow",
+ "base16",
+ "base64 0.21.999",
  "error-support",
  "interrupt-support",
  "lazy_static",
  "payload-support",
+ "rc_crypto",
  "serde",
  "serde_derive",
  "serde_json",
@@ -6635,6 +6750,8 @@ dependencies = [
  "sync-guid",
  "thiserror 2.0.12",
  "uniffi",
+ "url",
+ "viaduct",
 ]
 
 [[package]]
