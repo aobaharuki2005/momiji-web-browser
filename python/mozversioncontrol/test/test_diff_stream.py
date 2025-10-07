@@ -22,6 +22,17 @@ STEPS = {
         hg commit -m "FIRST PATCH"
         echo bar > file1.txt
         """,
+        # Create some files for path testing.
+        """
+       mkdir subdir
+       mkdir subdir/another
+       echo content > subdir/another/file.c
+       echo content > subdir/another/file.json
+       echo content > top.cpp
+       echo content > top.md
+       hg add top.* subdir/another/file.*
+       hg commit -m "Set up some files for path testing"
+       """,
     ],
     "git": [
         """
@@ -39,6 +50,17 @@ STEPS = {
         echo bar > file1.txt
         git add file1.txt
         """,
+        # Create some files for path testing.
+        """
+       mkdir subdir
+       mkdir subdir/another
+       echo content > subdir/another/file.c
+       echo content > subdir/another/file.json
+       echo content > top.cpp
+       echo content > top.md
+       git add top.* subdir/another/file.*
+       git commit -m "Set up some files for path testing"
+       """,
     ],
     "jj": [
         # Make a base commit.
@@ -58,6 +80,16 @@ STEPS = {
         jj new -m "resolve conflict"
         echo merged > file1.txt
        """,
+        # Create some files for path testing.
+        """
+       mkdir subdir
+       mkdir subdir/another
+       echo content > subdir/another/file.c
+       echo content > subdir/another/file.json
+       echo content > top.cpp
+       echo content > top.md
+       jj commit -m "Set up some files for path testing"
+       """,
     ],
 }
 
@@ -75,7 +107,7 @@ def test_diff_stream(repo):
     def changed_files(stream):
         files = set()
         for line in stream:
-            print(line)
+            print(line, end="")
             if m := re.match(r"diff --git \w/(\S+)", line):
                 files.add(m[1])
         return files
@@ -106,6 +138,19 @@ def test_diff_stream(repo):
     assert "file1.txt" in files
     assert "anotherfile.txt" in files
     assert "constant.txt" not in files
+
+    # Create some files in a subdir
+    repo.execute_next_step()
+
+    files = changed_files(
+        vcs.diff_stream(
+            vcs.head_ref, extensions=(".cpp", ".c", ".cc", ".h", ".m", ".mm")
+        )
+    )
+    assert "top.cpp" in files
+    assert "top.md" not in files
+    assert "subdir/another/file.c" in files
+    assert "subdir/another/file.json" not in files
 
 
 if __name__ == "__main__":
