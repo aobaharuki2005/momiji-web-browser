@@ -161,8 +161,6 @@ bool nsHTMLFramesetFrame::gDragInProgress = false;
 nsHTMLFramesetFrame::nsHTMLFramesetFrame(ComputedStyle* aStyle,
                                          nsPresContext* aPresContext)
     : nsContainerFrame(aStyle, aPresContext, kClassID) {
-  mNumRows = 0;
-  mNumCols = 0;
   mEdgeVisibility = 0;
   mParentFrameborder = eFrameborder_Yes;  // default
   mParentBorderWidth = -1;                // default not set
@@ -211,16 +209,14 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
   auto rowSpecs = ourContent->GetRowSpec();
   auto colSpecs = ourContent->GetColSpec();
-  mNumRows = CheckedInt<int32_t>(rowSpecs.Length()).value();
-  mNumCols = CheckedInt<int32_t>(colSpecs.Length()).value();
 
   static_assert(
       NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(nscoord),
       "Maximum value of NumRows() and NumCols() is NS_MAX_FRAMESET_SPEC_COUNT");
   mRowSizes.Clear();
-  mRowSizes.SetLength(NumRows());
+  mRowSizes.SetLength(rowSpecs.Length());
   mColSizes.Clear();
-  mColSizes.SetLength(NumCols());
+  mColSizes.SetLength(colSpecs.Length());
 
   static_assert(
       NS_MAX_FRAMESET_SPEC_COUNT < INT32_MAX / NS_MAX_FRAMESET_SPEC_COUNT,
@@ -1154,9 +1150,13 @@ void nsHTMLFramesetFrame::SetBorderResize(
   }
 }
 
-int32_t nsHTMLFramesetFrame::NumRows() const { return mNumRows; }
+int32_t nsHTMLFramesetFrame::NumRows() const {
+  return CheckedInt<int32_t>(mRowSizes.Length()).value();
+}
 
-int32_t nsHTMLFramesetFrame::NumCols() const { return mNumCols; }
+int32_t nsHTMLFramesetFrame::NumCols() const {
+  return CheckedInt<int32_t>(mColSizes.Length()).value();
+}
 
 void nsHTMLFramesetFrame::StartMouseDrag(nsPresContext* aPresContext,
                                          nsHTMLFramesetBorderFrame* aBorder,
