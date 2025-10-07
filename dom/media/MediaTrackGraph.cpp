@@ -1646,6 +1646,8 @@ auto MediaTrackGraphImpl::OneIterationImpl(
     GraphTime aStateTime, GraphTime aIterationEnd,
     MixerCallbackReceiver* aMixerReceiver) -> IterationResult {
   TRACE("MTG::OneIterationImpl");
+  TRACE_AUDIO_CALLBACK_FRAME_COUNT(
+      "MTG graph advance", aStateTime - mStateComputedTime, mSampleRate);
 
   if (SoftRealTimeLimitReached()) {
     TRACE("MTG::Demoting real-time thread!");
