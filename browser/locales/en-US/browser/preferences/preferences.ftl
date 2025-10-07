@@ -1581,9 +1581,9 @@ security-block-uncommon-software =
 
 ## Privacy Section - Certificates
 
-certs-header = Certificates
-
-certs-description = Configure the certificates that { -brand-short-name } uses for authentication.
+certs-description2 =
+    .label = Certificates
+    .description = Configure the certificates that { -brand-short-name } uses for authentication.
 
 certs-view =
     .label = View Certificates…
@@ -1596,6 +1596,8 @@ certs-devices =
 certs-thirdparty-toggle =
     .label = Allow { -brand-short-name } to automatically trust third-party root certificates you install
     .accesskey = t
+
+certs-devices-enable-fips = Enable FIPS
 
 space-alert-over-5gb-settings-button =
     .label = Open Settings

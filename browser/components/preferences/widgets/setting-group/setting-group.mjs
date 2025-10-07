@@ -14,6 +14,7 @@ const CLICK_HANDLERS = new Set([
   "moz-box-item",
   "moz-box-link",
   "moz-button",
+  "moz-box-group",
 ]);
 
 export class SettingGroup extends MozLitElement {
@@ -90,6 +91,7 @@ export class SettingGroup extends MozLitElement {
     return html`<moz-fieldset
       data-l10n-id=${ifDefined(this.config.l10nId)}
       .headingLevel=${this.config.headingLevel}
+      .supportPage=${ifDefined(this.config.supportPage)}
       @change=${this.onChange}
       @click=${this.onClick}
       >${this.config.items.map(item => this.itemTemplate(item))}</moz-fieldset

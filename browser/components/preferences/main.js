@@ -1366,6 +1366,43 @@ let SETTINGS_CONFIG = {
       },
     ],
   },
+  certificates: {
+    l10nId: "certs-description2",
+    supportPage: "secure-website-certificate",
+    headingLevel: 2,
+    items: [
+      {
+        id: "certificateButtonGroup",
+        control: "moz-box-group",
+        items: [
+          {
+            id: "viewCertificatesButton",
+            l10nId: "certs-view",
+            control: "moz-box-button",
+            controlAttrs: {
+              "search-l10n-ids":
+                "certmgr-tab-mine.label,certmgr-tab-people.label,certmgr-tab-servers.label,certmgr-tab-ca.label,certmgr-mine,certmgr-people,certmgr-server,certmgr-ca,certmgr-cert-name.label,certmgr-token-name.label,certmgr-view.label,certmgr-export.label,certmgr-delete.label",
+            },
+          },
+          {
+            id: "viewSecurityDevicesButton",
+            l10nId: "certs-devices",
+            control: "moz-box-button",
+            controlAttrs: {
+              "search-l10n-ids":
+                "devmgr-window.title,devmgr-devlist.label,devmgr-header-details.label,devmgr-header-value.label,devmgr-button-login.label,devmgr-button-logout.label,devmgr-button-changepw.label,devmgr-button-load.label,devmgr-button-unload.label,certs-devices-enable-fips",
+            },
+          },
+        ],
+      },
+
+      {
+        id: "certEnableThirdPartyToggle",
+        l10nId: "certs-thirdparty-toggle",
+        supportPage: "automatically-trust-third-party-certificates",
+      },
+    ],
+  },
   browsingProtection: {
     items: [
       {
