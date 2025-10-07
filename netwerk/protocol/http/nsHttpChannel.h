@@ -205,6 +205,9 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_IMETHOD SetResponseStatus(uint32_t aStatus,
                                const nsACString& aStatusText) override;
 
+  NS_IMETHOD GetDictionary(DictionaryCacheEntry** aDictionary) override;
+  NS_IMETHOD SetDictionary(DictionaryCacheEntry* aDictionary) override;
+
   void SetWarningReporter(HttpChannelSecurityWarningReporter* aReporter);
   HttpChannelSecurityWarningReporter* GetWarningReporter();
 

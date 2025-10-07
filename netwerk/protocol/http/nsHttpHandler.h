@@ -118,13 +118,11 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   static already_AddRefed<nsHttpHandler> GetInstance();
 
   [[nodiscard]] nsresult AddAcceptAndDictionaryHeaders(
-      nsIURI* aURI, nsHttpRequestHead* aRequest);
+      nsIURI* aURI, nsHttpRequestHead* aRequest, bool aSecure,
+      RefPtr<DictionaryCacheEntry>& aDict);
   [[nodiscard]] nsresult AddStandardRequestHeaders(
-      nsHttpRequestHead*, bool isSecure, nsIURI* aURI,
-      ExtContentPolicyType aContentPolicyType,
+      nsHttpRequestHead*, nsIURI* aURI, ExtContentPolicyType aContentPolicyType,
       bool aShouldResistFingerprinting);
-  [[nodiscard]] nsresult AddEncodingHeaders(nsHttpRequestHead* request,
-                                            bool isSecure, nsIURI* aURI);
   [[nodiscard]] nsresult AddConnectionHeader(nsHttpRequestHead*, uint32_t caps);
   bool IsAcceptableEncoding(const char* encoding, bool isSecure);
 
