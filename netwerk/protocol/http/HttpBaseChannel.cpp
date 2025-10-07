@@ -1549,7 +1549,7 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
         return rv;
       }
 
-      LOG(("converter removed '%s' content-encoding\n", val));
+      LOG(("Adding converter for content-encoding '%s'", val));
       if (Telemetry::CanRecordPrereleaseData()) {
         int mode = 0;
         if (from.EqualsLiteral("gzip") || from.EqualsLiteral("x-gzip")) {
@@ -1574,6 +1574,8 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
     }
   }
 
+  LOG(("Changing Content-Encoding from %s to %s", contentEncoding.get(),
+       newEncoding.get()));
   rv = mResponseHead->SetHeader(nsHttp::Content_Encoding, newEncoding);
 
   *aNewNextListener = do_AddRef(nextListener).take();
