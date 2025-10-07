@@ -348,7 +348,6 @@ nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
   // Construct connection info object
   nsAutoCString host;
   int32_t port = -1;
-  bool isHTTPS = isSecureOrTrustworthyURL(mURI);
 
   nsresult rv = mURI->GetAsciiHost(host);
   if (NS_FAILED(rv)) return rv;
@@ -375,13 +374,6 @@ nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
 
   rv = mRequestHead.SetHeader(nsHttp::Host, hostLine);
   if (NS_FAILED(rv)) return rv;
-
-  rv = gHttpHandler->AddAcceptAndDictionaryHeaders(aURI, &mRequestHead, isHTTPS,
-                                                   mDict);
-  if (NS_FAILED(rv)) return rv;
-  if (mDict) {
-    mDict->InUse();
-  }
 
   // Override the Accept header if a specific MediaDocument kind is forced.
   ExtContentPolicy contentPolicyType =
