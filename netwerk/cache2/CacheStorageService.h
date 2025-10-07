@@ -285,9 +285,11 @@ class CacheStorageService final : public nsICacheStorageService,
   /**
    * CacheFileIOManager uses this method to notify CacheStorageService that
    * an active entry was removed. This method is called even if the entry
-   * removal was originated by CacheStorageService.
+   * removal was originated by CacheStorageService.  This also removes the entry
+   * from the DictionaryCache.
    */
-  void CacheFileDoomed(nsILoadContextInfo* aLoadContextInfo,
+  void CacheFileDoomed(const nsACString& aKey,
+                       nsILoadContextInfo* aLoadContextInfo,
                        const nsACString& aIdExtension,
                        const nsACString& aURISpec);
 
