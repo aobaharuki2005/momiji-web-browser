@@ -369,6 +369,9 @@ nsresult DictionaryCache::AddEntry(nsIURI* aURI, const nsACString& aKey,
                     dict.get()));
     list->insertFront(dict);
     *aDictEntry = do_AddRef(dict).take();
+
+    // Queue event to flush dictionary metadata to the cache
+    // XXX
     return NS_OK;
   });
   return NS_OK;
@@ -463,6 +466,68 @@ already_AddRefed<DictionaryCacheEntry> DictionaryCache::GetDictionaryFor(
   // then this can be synchronous
 
   return nullptr;
+}
+
+static void MakeMetadataEntry() {
+  // XXX
+}
+
+bool DictionaryCache::ParseMetaDataEntry(const char* key, const char* value,
+                                         nsCString& uri, uint32_t& hitCount,
+                                         uint32_t& lastHit, uint32_t& flags) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  DICTIONARY_LOG(("Dictionary::ParseMetaDataEntry key=%s value=%s",
+                  key ? key : "", value));
+
+  const char* comma = strchr(value, ',');
+  if (!comma) {
+    DICTIONARY_LOG(("    could not find first comma"));
+    return false;
+  }
+
+  uint32_t version = static_cast<uint32_t>(atoi(value));
+  DICTIONARY_LOG(("    version -> %u", version));
+
+  if (version != METADATA_DICTIONARY_VERSION) {
+    DICTIONARY_LOG(("    metadata version mismatch %u != %u", version,
+                    METADATA_DICTIONARY_VERSION));
+    return false;
+  }
+
+  value = comma + 1;
+  comma = strchr(value, ',');
+  if (!comma) {
+    DICTIONARY_LOG(("    could not find second comma"));
+    return false;
+  }
+
+  hitCount = static_cast<uint32_t>(atoi(value));
+  DICTIONARY_LOG(("    hitCount -> %u", hitCount));
+
+  value = comma + 1;
+  comma = strchr(value, ',');
+  if (!comma) {
+    DICTIONARY_LOG(("    could not find third comma"));
+    return false;
+  }
+
+  lastHit = static_cast<uint32_t>(atoi(value));
+  DICTIONARY_LOG(("    lastHit -> %u", lastHit));
+
+  value = comma + 1;
+  flags = static_cast<uint32_t>(atoi(value));
+  DICTIONARY_LOG(("    flags -> %u", flags));
+
+  if (key) {
+    const char* uriStart = key + (sizeof(META_DICTIONARY_PREFIX) - 1);
+    uri.AssignASCII(uriStart);
+    DICTIONARY_LOG(("    uri -> %s", uriStart));
+  } else {
+    uri.Truncate();
+  }
+
+  return true;
 }
 
 // Overall structure:
