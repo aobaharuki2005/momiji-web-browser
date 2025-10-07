@@ -63,6 +63,11 @@ interface nsICacheStorage : nsISupports
   const uint32_t OPEN_INTERCEPTED = 1 << 6;
 
   /**
+   * Only open an existing entry which is complete (i.e. not being written)
+   */
+  const uint32_t OPEN_COMPLETE_ONLY = 1 << 7;
+
+  /**
    * Asynchronously opens a cache entry for the specified URI.
    * Result is fetched asynchronously via the callback.
    *
