@@ -414,7 +414,8 @@ class CacheFileIOManager final : public nsITimerCallback, public nsINamed {
                          bool aTruncate);
   nsresult DoomFileInternal(
       CacheFileHandle* aHandle,
-      PinningDoomRestriction aPinningDoomRestriction = NO_RESTRICTION);
+      PinningDoomRestriction aPinningDoomRestriction = NO_RESTRICTION,
+      bool aClearDirectory = true);
   nsresult DoomFileByKeyInternal(const SHA1Sum::Hash* aHash);
   nsresult MaybeReleaseNSPRHandleInternal(CacheFileHandle* aHandle,
                                           bool aIgnoreShutdownLag = false);

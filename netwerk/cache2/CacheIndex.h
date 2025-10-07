@@ -748,7 +748,8 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
 
   // Remove entry from index. The entry should be present in index.
   static nsresult RemoveEntry(const SHA1Sum::Hash* aHash,
-                              const nsACString& aKey);
+                              const nsACString& aKey,
+                              bool aClearDictionary = true);
 
   // Update some information in entry. The entry MUST be present in index and
   // MUST be initialized. Call to AddEntry() or EnsureEntryExists() and to
@@ -761,6 +762,11 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
                               const uint16_t* aOnStopTime,
                               const uint8_t* aContentType,
                               const uint32_t* aSize);
+
+  // Mark entries so we won't find them.  Used to implement synchronous
+  // clearing for Clear-Site-Data: cache for Compression Dictionaries
+  static void EvictByContext(const nsAString& aOrigin,
+                             const nsAString& aBaseDomain);
 
   // Remove all entries from the index. Called when clearing the whole cache.
   static nsresult RemoveAll();

@@ -659,6 +659,9 @@ nsresult nsHttpChannel::PrepareToConnect() {
           PROFILER_MARKER("Dictionary Prefetch", NETWORK,
                           MarkerTiming::IntervalStart(), FlowMarker,
                           Flow::FromPointer(self));
+          // XXX if this fails, retry the connection (we assume that the
+          // DictionaryCacheEntry has been removed).  Failure should be only in
+          // weird cases like no storage service.
           return NS_SUCCEEDED(self->mDictDecompress->Prefetch(
               GetLoadContextInfo(self), self->mShouldSuspendForDictionary,
               [self]() {

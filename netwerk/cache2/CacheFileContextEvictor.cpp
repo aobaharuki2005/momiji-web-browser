@@ -672,7 +672,7 @@ void CacheFileContextEvictor::EvictEntries() {
     };
     rv = CacheIndex::HasEntry(hash, &status, callback);
     // This must never fail, since eviction (this code) happens only when the
-    // index is up-to-date and thus the informatin is known.
+    // index is up-to-date and thus the information is known.
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     if (pinned != mEntries[0]->mPinned) {
@@ -822,7 +822,7 @@ void CacheFileContextEvictor::EvictEntries() {
 
     LOG(("CacheFileContextEvictor::EvictEntries - Removing entry."));
     file->Remove(false);
-    CacheIndex::RemoveEntry(&hash, metadata->GetKey());
+    CacheIndex::RemoveEntry(&hash, metadata->GetKey(), false);
   }
 
   MOZ_ASSERT_UNREACHABLE("We should never get here");

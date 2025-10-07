@@ -51,7 +51,7 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
   friend class DictionaryOrigin;
 
  private:
-  ~DictionaryCacheEntry() { MOZ_ASSERT(mUsers == 0); }
+  ~DictionaryCacheEntry();
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -122,14 +122,6 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
   }
 
   const nsACString& GetURI() const { return mURI; }
-
-  void Clear() {
-    MOZ_ASSERT(NS_IsMainThread());
-    mHash.Truncate(0);
-    mDictionaryData.clear();
-    mDictionaryDataComplete = false;
-    MOZ_ASSERT(mWaitingPrefetch.IsEmpty());
-  }
 
   const Vector<uint8_t>& GetDictionary() const { return mDictionaryData; }
 
@@ -340,7 +332,7 @@ class DictionaryCache final {
 
   nsresult RemoveEntry(nsIURI* aURI, const nsACString& aKey);
 
-  static void RemoveDictionaries(nsIURI* aURI);
+  static void RemoveDictionariesForOrigin(nsIURI* aURI);
   static void RemoveAllDictionaries();
 
   // Clears all ports at host
