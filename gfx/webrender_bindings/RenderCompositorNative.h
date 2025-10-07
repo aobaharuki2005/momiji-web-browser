@@ -172,6 +172,9 @@ class RenderCompositorNativeOGL : public RenderCompositorNative {
             wr::DeviceIntRect aValidRect) override;
   void Unbind() override;
 
+  void AttachExternalImage(wr::NativeSurfaceId aId,
+                           wr::ExternalImageId aExternalImage) override;
+
  protected:
   void InsertFrameDoneSync();
 
