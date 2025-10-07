@@ -92,7 +92,7 @@ public class ContentBlocking {
           .reportMalwareMistakeUrl("https://%LOCALE%.malware-error.mozilla.com/?url=")
           .advisoryUrl("https://developers.google.com/safe-browsing/v4/advisory")
           .advisoryName("Google Safe Browsing")
-          .enabled(false)
+          .enabled(BuildConfig.NIGHTLY_BUILD)
           .build();
 
   /** Protected constructor - this class shouldn't be instantiated. */
@@ -1489,7 +1489,11 @@ public class ContentBlocking {
       mAdvisoryName = new Pref<>(ROOT + mName + ".advisoryName", null);
       mDataSharingUrl = new Pref<>(ROOT + mName + ".dataSharingURL", null);
       mDataSharingEnabled = new Pref<>(ROOT + mName + ".dataSharing.enabled", false);
-      mEnabled = new Pref<>(ROOT + mName + ".enabled", false);
+      if (mName.equals("google5")) {
+        mEnabled = new Pref<>(ROOT + mName + ".enabled", BuildConfig.NIGHTLY_BUILD);
+      } else {
+        mEnabled = new Pref<>(ROOT + mName + ".enabled", false);
+      }
 
       if (source != null) {
         updatePrefs(source);
