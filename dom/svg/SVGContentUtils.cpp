@@ -464,7 +464,7 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, CTMType aCTMType,
     matrix *= getLocalTransformHelper(element, true);
     if (aCTMType == CTMType::NearestViewport) {
       if (element->IsSVGElement(nsGkAtoms::foreignObject)) {
-        return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular
+        return {};
       }
       if (EstablishesViewport(element)) {
         // XXX spec seems to say x,y translation should be undone for IsInnerSVG
@@ -475,11 +475,11 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, CTMType aCTMType,
   }
   if (aCTMType == CTMType::NearestViewport) {
     // didn't find a nearestViewportElement
-    return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular
+    return {};
   }
   if (!element->IsSVGElement(nsGkAtoms::svg)) {
     // Not a valid SVG fragment
-    return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular
+    return {};
   }
   if (element == aElement && !aHaveRecursed) {
     // We get here when getScreenCTM() is called on an outer-<svg>.
