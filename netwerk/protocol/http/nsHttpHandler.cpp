@@ -654,10 +654,13 @@ nsresult nsHttpHandler::InitConnectionMgr() {
 }
 
 // We're using RequestOverride because this can get called when these are
-// set by Fetch from the old request
+// set by Fetch from the old request. We need to pass a function pointer to
+// let GetDictionaryFor suspend the channel before starting the async
+// dictionary load.
 nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
     nsIURI* aURI, ExtContentPolicyType aType, nsHttpRequestHead* aRequest,
-    bool aSecure, bool& aAsync,
+    bool aSecure, bool& aAsync, nsHttpChannel* aChan,
+    void (*aSuspend)(nsHttpChannel*),
     const std::function<bool(bool, DictionaryCacheEntry*)>& aCallback) {
   LOG(("Adding Dictionary headers"));
   auto guard = MakeScopeExit([&]() { (aCallback)(false, nullptr); });
@@ -671,7 +674,7 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
       // aCallback will now be owned by GetDictionaryFor
       guard.release();
       mDictionaryCache->GetDictionaryFor(
-          aURI, aType, aAsync,
+          aURI, aType, aAsync, aChan, aSuspend,
           [self = RefPtr(this), aRequest, aCallback](
               bool aNeedsResume, DictionaryCacheEntry* aDict) {
             if (!aDict) {

@@ -22,7 +22,6 @@
 #include "nsIChannel.h"
 #include "nsContentUtils.h"
 #include "nsIFile.h"
-#include "nsIHttpChannel.h"
 #include "nsIInputStream.h"
 #include "nsILoadContext.h"
 #include "nsILoadContextInfo.h"
@@ -990,6 +989,7 @@ void DictionaryCache::RemoveAllDictionaries() {
 // If it's not in the cache, return nullptr via callback.
 void DictionaryCache::GetDictionaryFor(
     nsIURI* aURI, ExtContentPolicyType aType, bool& aAsync,
+    nsHttpChannel* aChan, void (*aSuspend)(nsHttpChannel*),
     const std::function<nsresult(bool, DictionaryCacheEntry*)>& aCallback) {
   aAsync = false;
   // Note: IETF 2.2.3 Multiple Matching Directories
@@ -1019,8 +1019,11 @@ void DictionaryCache::GetDictionaryFor(
            prepath.get()));
       // Wait for the metadata read to complete
       RefPtr<DictionaryOriginReader> reader = new DictionaryOriginReader();
-      reader->Start(existing.Data(), prepath, aURI, aType, this, aCallback);
+      // Must do this before calling start, which can run the callbacks and call
+      // Resume
       aAsync = true;
+      aSuspend(aChan);
+      reader->Start(existing.Data(), prepath, aURI, aType, this, aCallback);
     }
     return;
   }
