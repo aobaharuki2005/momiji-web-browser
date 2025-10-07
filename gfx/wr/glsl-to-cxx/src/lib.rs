@@ -1865,6 +1865,9 @@ pub fn show_hir_expr_inner(state: &OutputState, expr: &hir::Expr, top_level: boo
                                         );
                                         return;
                                     }
+                                } else if sym.name.starts_with("swgl_commitDithered") {
+                                    state.used_fragcoord.set(
+                                        state.used_fragcoord.get() | 1 | 2);
                                 }
                                 show_sym(state, name)
                             }
