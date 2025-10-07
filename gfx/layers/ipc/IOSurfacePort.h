@@ -19,14 +19,15 @@
 //
 // It is a separate file for the following reasons:
 // - Forward-declaring CFTypeRefPtr<IOSurfaceRef> correctly is tricky.
-// - IOSurfaceRef.h defines global types like "Point" which can interfere with name resolution.
+// - IOSurfaceRef.h defines global types like "Point" which can interfere with
+// name resolution.
 // - Smaller header files allow limiting the scope of the name pollution.
 
 namespace mozilla::layers {
 
 // The IPC descriptor for an IOSurface.
-// As long as the port is alive, the IOSurface is automatically marked as "in use",
-// including while the port is in IPC transit.
+// As long as the port is alive, the IOSurface is automatically marked as "in
+// use", including while the port is in IPC transit.
 struct IOSurfacePort {
 #ifdef XP_DARWIN
   UniqueMachSendRight mPort;

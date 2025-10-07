@@ -16,8 +16,8 @@
 namespace mozilla::gfx {
 
 using dom::CanvasRenderingContext2D;
-using dom::WorkerPrivate;
 using dom::StrongWorkerRef;
+using dom::WorkerPrivate;
 
 StaticMutex CanvasShutdownManager::sManagersMutex;
 MOZ_RUNINIT std::set<CanvasShutdownManager*> CanvasShutdownManager::sManagers;
