@@ -507,14 +507,24 @@ class SystemResourceMonitor:
     # Methods to record events alongside the monitored data.
 
     @staticmethod
-    def record_event(name):
+    def record_event(name, timestamp=None, data=None):
         """Record an event as occuring now.
 
         Events are actions that occur at a specific point in time. If you are
         looking for an action that has a duration, see the phase API below.
+
+        Args:
+            name: Name of the event (string)
+            timestamp: Optional timestamp (monotonic time). If not provided, uses current time.
+            data: Optional marker payload dictionary (e.g., {"type": "TestStatus", ...})
         """
         if SystemResourceMonitor.instance:
-            SystemResourceMonitor.instance.events.append((time.monotonic(), name))
+            if timestamp is None:
+                timestamp = time.monotonic()
+            if data:
+                SystemResourceMonitor.instance.events.append((timestamp, name, data))
+            else:
+                SystemResourceMonitor.instance.events.append((timestamp, name))
 
     @staticmethod
     def record_marker(name, start, end, data):
@@ -612,6 +622,8 @@ class SystemResourceMonitor:
 
             if status in ("SKIP", "TIMEOUT"):
                 marker_data["color"] = "yellow"
+                if message:
+                    marker_data["message"] = message
             elif status in ("CRASH", "ERROR"):
                 marker_data["color"] = "red"
             elif expected is None and not will_retry:
@@ -621,6 +633,54 @@ class SystemResourceMonitor:
                 marker_data["color"] = "orange"
 
         SystemResourceMonitor.instance.record_marker("test", start, end, marker_data)
+
+    @staticmethod
+    def test_status(data):
+        """Record a test_status event with color based on status.
+
+        Args:
+            data: Dictionary containing test_status data including:
+                  - "test": test name (optional)
+                  - "subtest": subtest name (optional)
+                  - "status" or "level": status ("PASS", "FAIL", "ERROR", "INFO", etc.)
+                  - "time": timestamp in milliseconds
+                  - "message": optional message
+        """
+        if not SystemResourceMonitor.instance:
+            return
+
+        time_sec = data["time"] / 1000
+        timestamp = SystemResourceMonitor.instance.convert_to_monotonic_time(time_sec)
+
+        # Accept either "status" or "level" field
+        status = (data.get("status") or data.get("level")).upper()
+
+        # Create marker data
+        marker_data = {
+            "type": "TestStatus",
+        }
+
+        test_name = data.get("test")
+        if test_name:
+            marker_data["test"] = test_name
+
+        subtest = data.get("subtest")
+        if subtest:
+            marker_data["subtest"] = subtest
+
+        # Determine color based on status
+        if status == "PASS":
+            marker_data["color"] = "green"
+        elif status == "FAIL":
+            marker_data["color"] = "orange"
+        elif status == "ERROR":
+            marker_data["color"] = "red"
+
+        message = data.get("message")
+        if message:
+            marker_data["message"] = message
+
+        SystemResourceMonitor.record_event(status, timestamp, marker_data)
 
     @contextmanager
     def phase(self, name):
@@ -1030,7 +1090,7 @@ class SystemResourceMonitor:
                     {
                         "name": "Test",
                         "tooltipLabel": "{marker.data.name}",
-                        "tableLabel": "{marker.data.test} — {marker.data.status}",
+                        "tableLabel": "{marker.data.status} — {marker.data.test}",
                         "chartLabel": "{marker.data.name}",
                         "display": ["marker-chart", "marker-table"],
                         "colorField": "color",
@@ -1054,6 +1114,38 @@ class SystemResourceMonitor:
                             {
                                 "key": "expected",
                                 "label": "Expected",
+                                "format": "string",
+                            },
+                            {
+                                "key": "message",
+                                "label": "Message",
+                                "format": "string",
+                            },
+                            {
+                                "key": "color",
+                                "hidden": True,
+                            },
+                        ],
+                    },
+                    {
+                        "name": "TestStatus",
+                        "tableLabel": "{marker.data.message} — {marker.data.test} {marker.data.subtest}",
+                        "display": ["marker-chart", "marker-table"],
+                        "colorField": "color",
+                        "data": [
+                            {
+                                "key": "message",
+                                "label": "Message",
+                                "format": "string",
+                            },
+                            {
+                                "key": "test",
+                                "label": "Test Name",
+                                "format": "string",
+                            },
+                            {
+                                "key": "subtest",
+                                "label": "Subtest",
                                 "format": "string",
                             },
                             {
@@ -1423,14 +1515,27 @@ class SystemResourceMonitor:
             add_marker(get_string_index(name), start, end, markerData, TASK_CATEGORY, 3)
         if self.events:
             event_string_index = get_string_index("Event")
-            for event_time, text in self.events:
-                if text:
+            for event in self.events:
+                if len(event) == 3:
+                    # Event with payload: (time, name, data)
+                    event_time, name, data = event
+                    add_marker(
+                        get_string_index(name),
+                        event_time,
+                        None,
+                        data,
+                        OTHER_CATEGORY,
+                        3,
+                    )
+                elif len(event) == 2:
+                    # Simple event: (time, text)
+                    event_time, text = event
                     add_marker(
                         event_string_index,
                         event_time,
                         None,
                         {"type": "Text", "text": text},
-                        TASK_CATEGORY,
+                        OTHER_CATEGORY,
                         3,
                     )
 
