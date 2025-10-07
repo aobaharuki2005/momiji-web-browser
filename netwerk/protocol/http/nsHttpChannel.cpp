@@ -150,6 +150,9 @@
 #  include "mozilla/StaticPrefs_fuzzing.h"
 #endif
 
+// TODO replace in later patch
+#define LOG_DICTIONARIES(x) LOG(x)
+
 namespace mozilla {
 
 using namespace dom;
@@ -503,6 +506,10 @@ nsHttpChannel::~nsHttpChannel() {
   ReleaseMainThreadOnlyReferences();
   if (gHttpHandler) {
     gHttpHandler->RemoveHttpChannel(mChannelId);
+  }
+
+  if (mDict) {
+    mDict->UseCompleted();
   }
 }
 
@@ -1960,8 +1967,8 @@ nsresult nsHttpChannel::SetupChannelForTransaction() {
     // override that, so we don't try.  Section 4.5 step 8.19 and 8.20 of
     // HTTP-network-or-cache fetch
     // https://fetch.spec.whatwg.org/#http-network-or-cache-fetch
-    rv = mHttpHandler->AddEncodingHeaders(&mRequestHead,
-                                          mURI->SchemeIs("https"), mURI);
+    rv = mHttpHandler->AddAcceptAndDictionaryHeaders(
+        mURI, &mRequestHead, mURI->SchemeIs("https"), mDict);
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -3502,8 +3509,34 @@ nsresult nsHttpChannel::ContinueProcessNormal(nsresult rv) {
   if (mCacheEntry) {
     rv = InitCacheEntry();
     if (NS_FAILED(rv)) CloseCacheEntry(true);
+  } else {
+    // We may still need to decompress in the parent if it's dcb or dcz
+    nsAutoCString contentEncoding;
+    Unused << mResponseHead->GetHeader(nsHttp::Content_Encoding,
+                                       contentEncoding);
+    if (contentEncoding.Equals("dcb") || contentEncoding.Equals("dcz")) {
+      LOG_DICTIONARIES(
+          ("Removing Content-Encoding %s for %p", contentEncoding.get(), this));
+      nsCOMPtr<nsIStreamListener> listener;
+      // otherwise we won't convert in the parent process
+      // XXX may be redundant, but safe
+      SetApplyConversion(true);
+      rv = DoApplyContentConversions(mListener, getter_AddRefs(listener),
+                                     nullptr);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      if (listener) {
+        LOG_DICTIONARIES(("Installed nsHTTPCompressConv %p without cache tee",
+                          listener.get()));
+        mListener = listener;
+        mCompressListener = listener;
+        StoreHasAppliedConversion(true);
+      } else {
+        LOG_DICTIONARIES(("Didn't install decompressor without cache tee"));
+      }
+    }
   }
-
   // Check that the server sent us what we were asking for
   if (LoadResuming()) {
     // Create an entity id from the response
@@ -3530,14 +3563,18 @@ nsresult nsHttpChannel::ContinueProcessNormal(nsresult rv) {
     }
   }
 
-  rv = CallOnStartRequest();
-  if (NS_FAILED(rv)) return rv;
+  // We need to do this before CallonStartRequest, since this can modify
+  // the Content-Encoding to remove dcb/dcz (and perhaps others), and
+  // CallOnStartRequest() sends this to the content process.
 
-  // install cache listener if we still have a cache entry open
+  // Install cache listener if we still have a cache entry open
   if (mCacheEntry && !LoadCacheEntryIsReadOnly()) {
     rv = InstallCacheListener();
     if (NS_FAILED(rv)) return rv;
   }
+
+  rv = CallOnStartRequest();
+  if (NS_FAILED(rv)) return rv;
 
   return NS_OK;
 }
@@ -6008,28 +6045,14 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
              mRaceCacheWithNetwork);
   MOZ_ASSERT(mListener);
 
-  nsAutoCString contentEncoding, contentType;
-  Unused << mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
-  mResponseHead->ContentType(contentType);
-  // If the content is compressible and the server has not compressed it,
-  // mark the cache entry for compression.
-  if (contentEncoding.IsEmpty() &&
-      (contentType.EqualsLiteral(TEXT_HTML) ||
-       contentType.EqualsLiteral(TEXT_PLAIN) ||
-       contentType.EqualsLiteral(TEXT_CSS) ||
-       contentType.EqualsLiteral(TEXT_JAVASCRIPT) ||
-       contentType.EqualsLiteral(TEXT_ECMASCRIPT) ||
-       contentType.EqualsLiteral(TEXT_XML) ||
-       contentType.EqualsLiteral(APPLICATION_JAVASCRIPT) ||
-       contentType.EqualsLiteral(APPLICATION_ECMASCRIPT) ||
-       contentType.EqualsLiteral(APPLICATION_XJAVASCRIPT) ||
-       contentType.EqualsLiteral(APPLICATION_XHTML_XML))) {
-    rv = mCacheEntry->SetMetaDataElement("uncompressed-len", "0");
-    if (NS_FAILED(rv)) {
-      LOG(("unable to mark cache entry for compression"));
-    }
+  // XXX We may want to consider recompressing any dcb/dcz files to save space
+  // and improve hitrate.  Downside is CPU use, complexity and perhaps delay,
+  // maybe.
+  nsAutoCString dictionary;
+  Unused << mResponseHead->GetHeader(nsHttp::Use_As_Dictionary, dictionary);
+  if (!dictionary.IsEmpty()) {
+    mCacheEntry->SetDictionary(mDict);
   }
-
   LOG(("Trading cache input stream for output stream [channel=%p]", this));
 
   // We must close the input stream first because cache entries do not
@@ -6081,12 +6104,44 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
       do_CreateInstance(kStreamListenerTeeCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
+  rv = tee->Init(mListener, out, nullptr);
   LOG(("nsHttpChannel::InstallCacheListener sync tee %p rv=%" PRIx32, tee.get(),
        static_cast<uint32_t>(rv)));
-  rv = tee->Init(mListener, out, nullptr);
   if (NS_FAILED(rv)) return rv;
-
   mListener = tee;
+
+  // If this is Use-As-Dictionary we need to be able to read it quickly for
+  // dictionary use, OR if it's encoded in dcb or dcz (using a dictionary),
+  // we must decompress it before storing since we won't have the dictionary
+  // when we go to read it out later.
+  // In this case, we hook an nsHTTPCompressConv instance in before the tee
+  // since we don't want to have to decompress it here and again in the content
+  // process (if it's not dcb/dcz); if it is dcb/dcz we must decompress it
+  // before the content process gets to see it
+  nsAutoCString contentEncoding;
+  Unused << mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
+  LOG(("Content-Encoding for %p: %s", this,
+       PromiseFlatCString(contentEncoding).get()));
+  if (!dictionary.IsEmpty() || contentEncoding.Equals("dcb") ||
+      contentEncoding.Equals("dcz")) {
+    nsCOMPtr<nsIStreamListener> listener;
+    // otherwise we won't convert in the parent process
+    SetApplyConversion(true);
+    rv =
+        DoApplyContentConversions(mListener, getter_AddRefs(listener), nullptr);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (listener) {
+      LOG(("Installed nsHTTPCompressConv %p before tee", listener.get()));
+      mListener = listener;
+      mCompressListener = listener;
+      StoreHasAppliedConversion(true);
+    } else
+      LOG(("Didn't install decompressor before tee"));
+  }
+
+  // XXX telemetry as to how often we get dcb/dcz
   return NS_OK;
 }
 
@@ -7696,6 +7751,24 @@ nsHttpChannel::GetEncodedBodySize(uint64_t* aEncodedBodySize) {
     *aEncodedBodySize = dataSize;
   } else {
     *aEncodedBodySize = mLogicalOffset;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetDictionary(DictionaryCacheEntry** aDictionary) {
+  *aDictionary = do_AddRef(mDict).take();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetDictionary(DictionaryCacheEntry* aDictionary) {
+  if (mDict) {
+    mDict->UseCompleted();
+  }
+  mDict = aDictionary;
+  if (aDictionary) {
+    aDictionary->InUse();
   }
   return NS_OK;
 }
