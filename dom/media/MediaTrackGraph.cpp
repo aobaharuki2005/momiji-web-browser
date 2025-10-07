@@ -1424,8 +1424,8 @@ void MediaTrackGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions) {
     track->mStartBlocking = mStateComputedTime;
   }
 
-  // If the loop is woken up so soon that IterationEnd() barely advances or
-  // if an offline graph is not currently rendering, we end up having
+  // If the loop is woken up so soon that mStateComputedTime does not advance
+  // or if an offline graph is not currently rendering, we end up having
   // aEndBlockingDecisions == mStateComputedTime.
   // Since the process interval [mStateComputedTime, aEndBlockingDecision) is
   // empty, Process() will not find any unblocked track and so will not
@@ -1635,16 +1635,15 @@ auto MediaTrackGraphImpl::OneIteration(GraphTime aStateTime,
                                        MixerCallbackReceiver* aMixerReceiver)
     -> IterationResult {
   if (mGraphRunner) {
-    return mGraphRunner->OneIteration(aStateTime, aIterationEnd,
-                                      aMixerReceiver);
+    return mGraphRunner->OneIteration(aStateTime, aMixerReceiver);
   }
 
-  return OneIterationImpl(aStateTime, aIterationEnd, aMixerReceiver);
+  return OneIterationImpl(aStateTime, aMixerReceiver);
 }
 
 auto MediaTrackGraphImpl::OneIterationImpl(
-    GraphTime aStateTime, GraphTime aIterationEnd,
-    MixerCallbackReceiver* aMixerReceiver) -> IterationResult {
+    GraphTime aStateTime, MixerCallbackReceiver* aMixerReceiver)
+    -> IterationResult {
   TRACE("MTG::OneIterationImpl");
   TRACE_AUDIO_CALLBACK_FRAME_COUNT(
       "MTG graph advance", aStateTime - mStateComputedTime, mSampleRate);
