@@ -655,8 +655,8 @@ nsresult nsHttpHandler::InitConnectionMgr() {
 // We're using RequestOverride because this can get called when these are
 // set by Fetch from the old request
 nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
-    nsIURI* aURI, nsHttpRequestHead* aRequest, bool aSecure,
-    const std::function<bool(DictionaryCacheEntry*)>& aCallback) {
+    nsIURI* aURI, ExtContentPolicyType aType, nsHttpRequestHead* aRequest,
+    bool aSecure, const std::function<bool(DictionaryCacheEntry*)>& aCallback) {
   LOG(("Adding Dictionary headers"));
   nsresult rv = NS_OK;
   // Add the "Accept-Encoding" header and possibly Dictionary headers
@@ -664,8 +664,9 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
     // The dictionary info may require us to check the cache.
     if (StaticPrefs::network_http_dictionaries_enable()) {
       mDictionaryCache->GetDictionaryFor(
-          aURI, [self = RefPtr(this), aRequest,
-                 aCallback](DictionaryCacheEntry* aDict) {
+          aURI, aType,
+          [self = RefPtr(this), aRequest,
+           aCallback](DictionaryCacheEntry* aDict) {
             nsresult rv;
             if (aDict) {
               nsAutoCStringN<64> encodedHash =

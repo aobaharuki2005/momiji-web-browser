@@ -1961,8 +1961,8 @@ nsresult nsHttpChannel::SetupChannelForTransaction() {
     // dictionary cache entry from disk before adding the headers.  We can
     // continue with channel creation, and just block on this being done later
     rv = gHttpHandler->AddAcceptAndDictionaryHeaders(
-        mURI, &mRequestHead, IsHTTPS(),
-        [self = RefPtr(this)](DictionaryCacheEntry* aDict) {
+        mURI, mLoadInfo->GetExternalContentPolicyType(), &mRequestHead,
+        IsHTTPS(), [self = RefPtr(this)](DictionaryCacheEntry* aDict) {
           self->mDictDecompress = aDict;
           if (self->mDictDecompress) {
             LOG_DICTIONARIES(
@@ -6016,11 +6016,13 @@ bool nsHttpChannel::ParseDictionary(nsICacheEntry* aEntry,
     RefPtr<DictionaryCache> dicts(DictionaryCache::GetInstance());
     LOG_DICTIONARIES(
         ("Adding DictionaryCache entry for %s: key %s, matchval %s, id=%s, "
-         "type=%s",
+         "match-dest[0]=%s, type=%s",
          mURI->GetSpecOrDefault().get(), key.get(), matchVal.get(),
-         matchIdVal.get(), typeVal.get()));
-    dicts->AddEntry(mURI, key, matchVal, matchIdVal, Some(hash), aModified,
-                    getter_AddRefs(mDictSaving));
+         matchIdVal.get(),
+         matchDestItems.Length() > 0 ? matchDestItems[0].get() : "<none>",
+         typeVal.get()));
+    dicts->AddEntry(mURI, key, matchVal, matchDestItems, matchIdVal, Some(hash),
+                    aModified, getter_AddRefs(mDictSaving));
     // If this was 304 Not Modified, then we don't need the dictionary data
     // (though we may update the dictionary entry if the match/id/etc changed).
     // If this is 304, mDictSaving will be cleared by AddEntry.
