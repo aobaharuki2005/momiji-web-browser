@@ -55,6 +55,13 @@ let SYNC_ENROLLMENTS_ENABLED = Services.prefs.getBoolPref(
  */
 export class NimbusEnrollments {
   /**
+   * Whether the NimbusEvents instance is initialized or not.
+   *
+   * @type {boolean}
+   */
+  #initialized;
+
+  /**
    * The ExperimentStore.
    *
    * @type {ExperimentStore}
@@ -96,6 +103,7 @@ export class NimbusEnrollments {
   #pending;
 
   constructor(store) {
+    this.#initialized = false;
     this.#store = store;
 
     this.#flushTask = new lazy.DeferredTask(
@@ -111,6 +119,19 @@ export class NimbusEnrollments {
     this.#finalized = false;
 
     this.#pending = new Map();
+  }
+
+  async init() {
+    if (this.#initialized) {
+      throw new Error("Already initialized");
+    }
+
+    this.#initialized = true;
+
+    const conn = await lazy.ProfilesDatastoreService.getConnection();
+    return conn.executeTransaction(async txn => {
+      return NimbusEnrollments.loadEnrollments(txn);
+    });
   }
 
   /**
@@ -449,11 +470,14 @@ export class NimbusEnrollments {
 
   /**
    * Load the enrollments from the NimbusEnrollments table.
+
+   * @param {OpenedConnection} txn An optional connection, used when this is
+   * called within a transaction.
    *
    * @returns {Promise<Record<string, object>>} The enrollments from the
    * NimbusEnrollments table.
    */
-  static async loadEnrollments() {
+  static async loadEnrollments(txn) {
     function copyProperties(target, src, properties) {
       for (const property of properties) {
         target[property] = src[property];
@@ -511,7 +535,7 @@ export class NimbusEnrollments {
       return [enrollment.slug, enrollment];
     }
 
-    const conn = await lazy.ProfilesDatastoreService.getConnection();
+    const conn = txn ?? (await lazy.ProfilesDatastoreService.getConnection());
     const rows = await conn.execute(
       `
       SELECT
