@@ -8,8 +8,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://global/content/translations/translations-document.sys.mjs",
   LRUCache:
     "chrome://global/content/translations/translations-document.sys.mjs",
-  LanguageDetector:
-    "resource://gre/modules/translations/LanguageDetector.sys.mjs",
 });
 
 /**
@@ -116,33 +114,6 @@ export class TranslationsChild extends JSWindowActorChild {
       }
       case "Translations:GetDocumentElementLang": {
         return this.document.documentElement.lang;
-      }
-      case "Translations:IdentifyLanguage": {
-        // Wait for idle callback as the page will be more settled if it has
-        // dynamic content, like on a React app.
-        if (this.contentWindow) {
-          await new Promise(resolve => {
-            this.contentWindow.requestIdleCallback(resolve);
-          });
-        }
-
-        if (this.#isDestroyed) {
-          return undefined;
-        }
-
-        const startTime = ChromeUtils.now();
-        const detectionResult =
-          await lazy.LanguageDetector.detectLanguageFromDocument(this.document);
-
-        if (this.#isDestroyed) {
-          return undefined;
-        }
-
-        this.addProfilerMarker(
-          `Detect language from document: ${detectionResult.language}`,
-          startTime
-        );
-        return detectionResult;
       }
       case "Translations:AcquirePort": {
         this.addProfilerMarker("Acquired a port, resuming translations");
