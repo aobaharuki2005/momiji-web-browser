@@ -9,40 +9,23 @@
 
 #include <memory>
 
+#include "api/frame_transformer_interface.h"
 #include "js/TypeDecls.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/TypedArray.h"  // ArrayBuffer
 
 class nsIGlobalObject;
 
-namespace webrtc {
-class TransformableFrameInterface;
-}
-
 namespace mozilla::dom {
-
-struct RTCEncodedFrameState {
-  std::unique_ptr<webrtc::TransformableFrameInterface> mFrame;
-  uint64_t mCounter = 0;
-  unsigned long mTimestamp = 0;
-
-  // work around only having forward-declared TransformableFrameInterface
-  ~RTCEncodedFrameState();
-
-  // avoid "move got disabled by a user-declared destructor” trap
-  RTCEncodedFrameState() = default;
-  RTCEncodedFrameState(RTCEncodedFrameState&&) noexcept = default;
-  RTCEncodedFrameState& operator=(RTCEncodedFrameState&&) noexcept = default;
-  RTCEncodedFrameState(const RTCEncodedFrameState&) = delete;
-  RTCEncodedFrameState& operator=(const RTCEncodedFrameState&) = delete;
-};
 
 class RTCRtpScriptTransformer;
 
 class RTCEncodedFrameBase : public nsISupports, public nsWrapperCache {
  public:
-  explicit RTCEncodedFrameBase(nsIGlobalObject* aGlobal,
-                               RTCEncodedFrameState& aState);
+  explicit RTCEncodedFrameBase(
+      nsIGlobalObject* aGlobal,
+      std::unique_ptr<webrtc::TransformableFrameInterface> aFrame,
+      uint64_t aCounter);
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -53,7 +36,7 @@ class RTCEncodedFrameBase : public nsISupports, public nsWrapperCache {
 
   void SetData(const ArrayBuffer& aData);
 
-  void GetData(JSContext* aCx, JS::Rooted<JSObject*>* aObj) const;
+  void GetData(JSContext* aCx, JS::Rooted<JSObject*>* aObj);
 
   uint64_t GetCounter() const;
 
@@ -65,20 +48,10 @@ class RTCEncodedFrameBase : public nsISupports, public nsWrapperCache {
 
  protected:
   virtual ~RTCEncodedFrameBase();
-
-  // forbid copy/move to protect mState
-  RTCEncodedFrameBase(const RTCEncodedFrameBase&) = delete;
-  RTCEncodedFrameBase& operator=(const RTCEncodedFrameBase&) = delete;
-  RTCEncodedFrameBase(RTCEncodedFrameBase&&) = delete;
-  RTCEncodedFrameBase& operator=(RTCEncodedFrameBase&&) = delete;
-
   RefPtr<nsIGlobalObject> mGlobal;
-
-  // Keep serializable state separate in this base and its subclasses
-  // in a manner that avoids diamond inheritance. Subclasses must pass
-  // in *this, to ensure it's constructed before and destroyed after
-  // this base; copy and move are deleted.
-  RTCEncodedFrameState& mState;
+  std::unique_ptr<webrtc::TransformableFrameInterface> mFrame;
+  const uint64_t mCounter = 0;
+  const unsigned long mTimestamp = 0;
   JS::Heap<JSObject*> mData;
 };
 

@@ -30,9 +30,6 @@ dictionary RTCEncodedVideoFrameMetadata {
 
 // New interfaces to define encoded video and audio frames. Will eventually
 // re-use or extend the equivalent defined in WebCodecs.
-//
-// [Serializable] is implemented without adding attribute here,
-// because we don't implement "full serialization" to disk.
 [Pref="media.peerconnection.enabled",
  Pref="media.peerconnection.scripttransform.enabled",
  Exposed=(Window,DedicatedWorker)]
