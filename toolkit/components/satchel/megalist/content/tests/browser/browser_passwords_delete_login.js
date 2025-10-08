@@ -68,4 +68,7 @@ add_task(async function test_delete_login_success() {
 
   const numPasswords = megalist.querySelectorAll("password-card").length;
   is(numPasswords, 2, "One login was successfully deleted.");
+
+  info("Closing the sidebar");
+  SidebarController.hide();
 });
