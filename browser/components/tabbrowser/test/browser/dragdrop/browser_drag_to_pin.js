@@ -18,6 +18,9 @@ registerCleanupFunction(() => {
   gReduceMotionOverride = currentReduceMotionOverride;
   Services.prefs.clearUserPref("sidebar.revamp");
   Services.prefs.clearUserPref("browser.tabs.groups.enabled");
+  Services.prefs.clearUserPref(
+    "browser.toolbarbuttons.introduced.sidebar-button"
+  );
   // Reset UI because sidebar-button added
   CustomizableUI.reset();
 });
@@ -103,6 +106,41 @@ add_task(async function test_pin_to_pinned_tabs_container_horizontal() {
   info("Remove tab");
   BrowserTestUtils.removeTab(tab);
   BrowserTestUtils.removeTab(tab2);
+});
+
+add_task(async function test_resize_container_on_unpin_horizontal() {
+  let pinnedTabsContainer = document.getElementById("pinned-tabs-container");
+  let unpinnedTabsContainer = document.getElementById(
+    "tabbrowser-arrowscrollbox"
+  );
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank", { pinned: true });
+  let pinnedTabsContainerOriginalWidth =
+    pinnedTabsContainer.getBoundingClientRect().width;
+
+  BrowserTestUtils.addTab(gBrowser, "about:blank", { pinned: true });
+  Assert.notEqual(
+    pinnedTabsContainer.getBoundingClientRect().width,
+    pinnedTabsContainerOriginalWidth,
+    "Pinned tabs container grew to fit a second pinned tab"
+  );
+
+  info("Drop a tab out of the pinned tabs container");
+  await customDragAndDrop(
+    tab,
+    unpinnedTabsContainer,
+    null,
+    BrowserTestUtils.waitForEvent(tab, "TabUnpinned")
+  );
+  ok(!tab.pinned, "Tab is unpinned");
+  is(
+    window.windowUtils.getBoundsWithoutFlushing(pinnedTabsContainer).width,
+    pinnedTabsContainerOriginalWidth,
+    "Pinned tabs container resized back to one tab"
+  );
+
+  while (gBrowser.tabs.length > 1) {
+    BrowserTestUtils.removeTab(gBrowser.tabs.at(0));
+  }
 });
 
 add_task(async function test_pin_to_promo_card_vertical() {
@@ -194,4 +232,48 @@ add_task(async function test_pin_to_pinned_tabs_container_vertical() {
   info("Remove tab");
   BrowserTestUtils.removeTab(tab);
   BrowserTestUtils.removeTab(tab2);
+});
+
+add_task(async function test_resize_container_on_unpin_vertical() {
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank", { pinned: true });
+  let pinnedTabsContainer = document.getElementById("pinned-tabs-container");
+  let pinnedTabsContainerOriginalHeight =
+    window.windowUtils.getBoundsWithoutFlushing(pinnedTabsContainer).height;
+  let unpinnedTabsContainer = document.getElementById(
+    "tabbrowser-arrowscrollbox"
+  );
+
+  // Add tabs until we have more than one row
+  let tabScreen = tab.screenY;
+  while (tabScreen == tab.screenY) {
+    let newTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
+      pinned: true,
+    });
+    tabScreen = newTab.screenY;
+  }
+  Assert.notEqual(
+    window.windowUtils.getBoundsWithoutFlushing(pinnedTabsContainer).height,
+    pinnedTabsContainerOriginalHeight,
+    "Pinned tabs container grew to fit a second row"
+  );
+
+  info("Drop a tab out of the pinned tabs container");
+  await customDragAndDrop(
+    tab,
+    unpinnedTabsContainer,
+    null,
+    BrowserTestUtils.waitForEvent(tab, "TabUnpinned")
+  );
+  ok(!tab.pinned, "Tab is unpinned");
+  is(
+    window.windowUtils.getBoundsWithoutFlushing(pinnedTabsContainer).height,
+    pinnedTabsContainerOriginalHeight,
+    "Pinned tabs container resized back to one row"
+  );
+
+  // Testing the dragging of the splitter vertically is in browser_resize_sidebar.js
+
+  while (gBrowser.tabs.length > 1) {
+    BrowserTestUtils.removeTab(gBrowser.tabs.at(0));
+  }
 });
