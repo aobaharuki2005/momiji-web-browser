@@ -131,7 +131,7 @@ case "${BRANCH}" in
 esac
 
 BROWSER_ARCHIVE="target.tar.xz"
-TESTS_ARCHIVE="target.common.tests.tar.gz"
+TESTS_ARCHIVE="target.common.tests.tar.zst"
 
 UNPACK_CMD="tar Jxf"
 COMMIT_AUTHOR='ffxbld <ffxbld@mozilla.com>'
