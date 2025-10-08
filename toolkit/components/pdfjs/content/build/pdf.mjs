@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.305
- * pdfjsBuild = f4104326f
+ * pdfjsVersion = 5.4.315
+ * pdfjsBuild = 8ba18075f
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -3688,7 +3688,7 @@ class AnnotationEditorUIManager {
   setSelected(editor) {
     this.updateToolbar({
       mode: editor.mode,
-      editId: editor.id
+      editId: editor.uid
     });
     this.#currentDrawingSession?.commitOrRemove();
     for (const ed of this.#selectedEditors) {
@@ -6082,6 +6082,7 @@ class AnnotationEditor {
     } else {
       this._uiManager.removeEditor(this);
     }
+    this.hideCommentPopup();
     if (this.#moveInDOMTimeout) {
       clearTimeout(this.#moveInDOMTimeout);
       this.#moveInDOMTimeout = null;
@@ -6097,6 +6098,8 @@ class AnnotationEditor {
     this.parent = null;
     this.#touchManager?.destroy();
     this.#touchManager = null;
+    this.#fakeAnnotation?.remove();
+    this.#fakeAnnotation = null;
   }
   get isResizable() {
     return false;
@@ -6285,8 +6288,11 @@ class AnnotationEditor {
     }
     this._editToolbar?.hide();
     this.#altText?.toggleAltTextBadge(true);
+    this.hideCommentPopup();
+  }
+  hideCommentPopup() {
     if (this.hasComment) {
-      this._uiManager.toggleComment(this, false, false);
+      this._uiManager.toggleComment(null);
     }
   }
   updateParams(type, value) {}
@@ -6309,7 +6315,7 @@ class AnnotationEditor {
     this.enterInEditMode();
     this.parent.updateToolbar({
       mode: this.constructor._editorType,
-      editId: this.id
+      editId: this.uid
     });
   }
   getElementForAltText() {
@@ -12788,7 +12794,7 @@ function getDocument(src = {}) {
   }
   const docParams = {
     docId,
-    apiVersion: "5.4.305",
+    apiVersion: "5.4.315",
     data,
     password,
     disableAutoFetch,
@@ -14365,8 +14371,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "5.4.305";
-const build = "f4104326f";
+const version = "5.4.315";
+const build = "8ba18075f";
 
 ;// ./src/display/editor/color_picker.js
 
@@ -14839,7 +14845,7 @@ class AnnotationElement {
     this._fieldObjects = parameters.fieldObjects;
     this.parent = parameters.parent;
     if (isRenderable) {
-      this.container = this._createContainer(ignoreBorder);
+      this.contentElement = this.container = this._createContainer(ignoreBorder);
     }
     if (createQuadrilaterals) {
       this._createQuadrilaterals();
@@ -15566,6 +15572,7 @@ class LinkAnnotationElement extends AnnotationElement {
     }
     this.container.classList.add("linkAnnotation");
     if (isBound) {
+      this.contentElement = link;
       this.container.append(link);
     }
     return this.container;
@@ -15948,6 +15955,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
         element.hidden = true;
       }
       GetElementsByNameSet.add(element);
+      this.contentElement = element;
       element.setAttribute("data-element-id", id);
       element.disabled = this.data.readOnly;
       element.name = this.data.fieldName;
@@ -17279,7 +17287,7 @@ class FreeTextAnnotationElement extends AnnotationElement {
   render() {
     this.container.classList.add("freeTextAnnotation");
     if (this.textContent) {
-      const content = document.createElement("div");
+      const content = this.contentElement = document.createElement("div");
       content.classList.add("annotationTextContent");
       content.setAttribute("role", "comment");
       for (const line of this.textContent) {
@@ -17826,7 +17834,10 @@ class AnnotationLayer {
     return this.#editableAnnotations.size > 0;
   }
   async #appendElement(element, id, popupElements) {
-    const contentElement = element.firstChild || element;
+    const {
+      contentElement,
+      container
+    } = element;
     const annotationId = contentElement.id = `${AnnotationPrefix}${id}`;
     const ariaAttributes = await this.#structTreeLayer?.getAriaAttributes(annotationId);
     if (ariaAttributes) {
@@ -17835,11 +17846,20 @@ class AnnotationLayer {
       }
     }
     if (popupElements) {
-      popupElements.at(-1).container.after(element);
+      popupElements.at(-1).container.after(container);
     } else {
-      this.div.append(element);
-      this.#accessibilityManager?.moveElementInDOM(this.div, element, contentElement, false);
+      this.#moveElementInDOM(container, contentElement);
     }
+  }
+  #moveElementInDOM(container, contentElement) {
+    this.div.append(container);
+    this.#accessibilityManager?.moveElementInDOM(this.div, container, contentElement, false, node => node.nodeName === "SECTION", (prevNode, node) => {
+      if (prevNode.nextElementSibling.nodeName === "BUTTON") {
+        prevNode.nextElementSibling.after(node);
+      } else {
+        prevNode.after(node);
+      }
+    });
   }
   async render(params) {
     const {
@@ -17897,7 +17917,7 @@ class AnnotationLayer {
       if (data.hidden) {
         rendered.style.visibility = "hidden";
       }
-      await this.#appendElement(rendered, data.id, elementParams.elements);
+      await this.#appendElement(element, data.id, elementParams.elements);
       element.extraPopupElement?.popup?.renderCommentButton();
       if (element._isEditable) {
         this.#editableAnnotations.set(element.data.id, element);
@@ -17921,8 +17941,8 @@ class AnnotationLayer {
       if (!element.isRenderable) {
         continue;
       }
-      const rendered = element.render();
-      await this.#appendElement(rendered, data.id, null);
+      element.render();
+      await this.#appendElement(element, data.id, null);
     }
   }
   update({
@@ -17999,11 +18019,24 @@ class AnnotationLayer {
       linkService: this.#linkService,
       annotationStorage: this.#annotationStorage
     });
-    const htmlElement = element.render();
-    div.append(htmlElement);
-    this.#accessibilityManager?.moveElementInDOM(div, htmlElement, htmlElement, false);
+    const rendered = element.render();
+    rendered.id = `${AnnotationPrefix}${id}`;
+    this.#moveElementInDOM(rendered, rendered);
     element.createOrUpdatePopup();
     return element;
+  }
+  togglePointerEvents(enabled = false) {
+    this.div.classList.toggle("disabled", !enabled);
+  }
+  updateFakeAnnotations(editors) {
+    if (editors.length === 0) {
+      return;
+    }
+    window.requestAnimationFrame(() => setTimeout(() => {
+      for (const editor of editors) {
+        editor.updateFakeAnnotationElement(this);
+      }
+    }, 10));
   }
   static get _defaultBorderStyle() {
     return shadow(this, "_defaultBorderStyle", Object.freeze({
@@ -23582,7 +23615,7 @@ class AnnotationEditorLayer {
     this.div.classList.toggle("disabled", !enabled);
   }
   toggleAnnotationLayerPointerEvents(enabled = false) {
-    this.#annotationLayer?.div.classList.toggle("disabled", !enabled);
+    this.#annotationLayer?.togglePointerEvents(enabled);
   }
   get #allEditorsIterator() {
     return this.#editors.size !== 0 ? this.#editors.values() : this.#uiManager.getEditors(this.pageIndex);
@@ -23680,13 +23713,14 @@ class AnnotationEditorLayer {
       });
     }
     const annotationLayer = this.#annotationLayer;
+    const needFakeAnnotation = [];
     if (annotationLayer) {
       const changedAnnotations = new Map();
       const resetAnnotations = new Map();
       for (const editor of this.#allEditorsIterator) {
         editor.disableEditing();
         if (!editor.annotationElementId) {
-          editor.updateFakeAnnotationElement(annotationLayer);
+          needFakeAnnotation.push(editor);
           continue;
         }
         if (editor.serialize() !== null) {
@@ -23738,6 +23772,7 @@ class AnnotationEditorLayer {
     }
     this.disableTextSelection();
     this.toggleAnnotationLayerPointerEvents(true);
+    annotationLayer?.updateFakeAnnotations(needFakeAnnotation);
     this.#isDisabling = false;
   }
   getEditableAnnotation(id) {

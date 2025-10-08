@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.305
- * pdfjsBuild = f4104326f
+ * pdfjsVersion = 5.4.315
+ * pdfjsBuild = 8ba18075f
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -3290,6 +3290,7 @@ class CommentPopup {
         }
       });
       this.#editor.comment = null;
+      this.#editor.focus();
       this.destroy();
     });
     del.addEventListener("contextmenu", noContextMenu);
@@ -6940,20 +6941,21 @@ class TextAccessibilityManager {
     const parent = child.parentNode;
     return parent?.classList.contains("markedContent") ? parent.id : null;
   }
-  moveElementInDOM(container, element, contentElement, isRemovable) {
+  moveElementInDOM(container, element, contentElement, isRemovable, filter, inserter) {
     const id = this.addPointerInTextLayer(contentElement, isRemovable);
     if (!container.hasChildNodes()) {
       container.append(element);
       return id;
     }
-    const children = Array.from(container.childNodes).filter(node => node !== element);
+    const children = Array.from(container.childNodes).filter(node => node !== element && (!filter || filter(node)));
     if (children.length === 0) {
       return id;
     }
-    const elementToCompare = contentElement || element;
-    const index = binarySearchFirstItem(children, node => TextAccessibilityManager.#compareElementPositions(elementToCompare, node) < 0);
+    const index = binarySearchFirstItem(children, node => TextAccessibilityManager.#compareElementPositions(element, node) < 0);
     if (index === 0) {
       children[0].before(element);
+    } else if (inserter) {
+      inserter(children[index - 1], element);
     } else {
       children[index - 1].after(element);
     }
@@ -8213,7 +8215,7 @@ class PDFViewer {
   #textLayerMode = TextLayerMode.ENABLE;
   #viewerAlert = null;
   constructor(options) {
-    const viewerVersion = "5.4.305";
+    const viewerVersion = "5.4.315";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
