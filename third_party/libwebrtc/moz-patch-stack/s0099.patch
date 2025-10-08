@@ -61,10 +61,10 @@ index 7cc8f5df17..df08cddc58 100644
        }
      }
 diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
-index 7aa3c3f428..2ca0a36dbb 100644
+index 06da79a112..a18d353a0e 100644
 --- a/sdk/BUILD.gn
 +++ b/sdk/BUILD.gn
-@@ -614,6 +614,20 @@ if (is_ios || is_mac) {
+@@ -637,6 +637,20 @@ if (is_ios || is_mac) {
          "CoreGraphics.framework",
          "CoreVideo.framework",
        ]
