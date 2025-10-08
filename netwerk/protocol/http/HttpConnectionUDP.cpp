@@ -91,9 +91,16 @@ class ConnectUDPTransaction : public nsAHttpTransaction {
     if (!mTransaction->Connection()) {
       mTransaction->SetConnection(mConnection);
     }
-    return mTransaction->WriteSegments(writer, count, countWritten);
+    nsresult rv = mTransaction->WriteSegments(writer, count, countWritten);
+    mTransaction = nullptr;
+    return rv;
   }
-  void Close(nsresult reason) override { mTransaction->Close(reason); }
+  void Close(nsresult reason) override {
+    LOG(("ConnectUDPTransaction close mTransaction=%p", mTransaction.get()));
+    if (mTransaction) {
+      mTransaction->Close(reason);
+    }
+  }
   nsHttpConnectionInfo* ConnectionInfo() override {
     return mTransaction->ConnectionInfo();
   }
@@ -185,7 +192,9 @@ HttpConnectionUDP::~HttpConnectionUDP() {
     mForceSendTimer = nullptr;
   }
 
-  MOZ_ASSERT(mQueuedTransaction.IsEmpty(),
+  MOZ_ASSERT(mQueuedHttpConnectTransaction.IsEmpty(),
+             "Should not have any queued transactions");
+  MOZ_ASSERT(mQueuedConnectUdpTransaction.IsEmpty(),
              "Should not have any queued transactions");
 }
 
@@ -435,15 +444,28 @@ nsresult HttpConnectionUDP::Activate(nsAHttpTransaction* trans, uint32_t caps,
   // connection.
   if (IsProxyConnectInProgress() && !mIsInTunnel && hTrans) {
     if (!mConnected) {
-      mQueuedTransaction.AppendElement(hTrans);
+      mQueuedHttpConnectTransaction.AppendElement(hTrans);
       Unused << ResumeSend();
     } else {
-      ResetTransaction(hTrans);
+      // Don’t call ResetTransaction() directly here.
+      // HttpConnectionUDP::Activate() may be invoked from
+      // nsHttpConnectionMgr::DispatchSpdyPendingQ(), which could run while
+      // enumerating all connection entries. ResetTransaction() can insert a new
+      // “wild” entry, and modifying the connection-entry table during iteration
+      // is not allowed.
+      RefPtr<HttpConnectionUDP> self(this);
+      RefPtr<nsHttpTransaction> httpTransaction(hTrans);
+      NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+          "HttpConnectionUDP::ResetTransaction",
+          [self{std::move(self)},
+           httpTransaction{std::move(httpTransaction)}]() {
+            self->ResetTransaction(httpTransaction);
+          }));
     }
     return NS_OK;
   }
 
-  // This is the CONNECT-UDP case. When mIsInTunnel is true, thi is
+  // This is the CONNECT-UDP case. When mIsInTunnel is true, this is
   // the *inner* connection from the proxy tunnel to the destination website.
   // If the proxy CONNECT is still in progress, we cannot send any data
   // yet because Http3ConnectUDPStream is not allowed to transmit until the
@@ -451,7 +473,7 @@ nsresult HttpConnectionUDP::Activate(nsAHttpTransaction* trans, uint32_t caps,
   // add it to the Http3Session once the proxy CONNECT completes.
   if (mIsInTunnel && IsProxyConnectInProgress() && hTrans) {
     LOG(("Queue trans %p due to proxy connct in progress", hTrans));
-    mQueuedTransaction.AppendElement(hTrans);
+    mQueuedConnectUdpTransaction.AppendElement(hTrans);
     return NS_OK;
   }
 
@@ -479,10 +501,10 @@ void HttpConnectionUDP::OnConnected() {
     return;
   }
 
-  for (const auto& trans : mQueuedTransaction) {
+  for (const auto& trans : mQueuedHttpConnectTransaction) {
     ResetTransaction(trans);
   }
-  mQueuedTransaction.Clear();
+  mQueuedHttpConnectTransaction.Clear();
 }
 
 already_AddRefed<nsIInputStream> HttpConnectionUDP::CreateProxyConnectStream(
@@ -597,10 +619,14 @@ void HttpConnectionUDP::Close(nsresult reason, bool aIsShutdown) {
     socket->Close();
   }
 
-  for (const auto& trans : mQueuedTransaction) {
+  for (const auto& trans : mQueuedHttpConnectTransaction) {
     trans->Close(reason);
   }
-  mQueuedTransaction.Clear();
+  mQueuedHttpConnectTransaction.Clear();
+  for (const auto& trans : mQueuedConnectUdpTransaction) {
+    trans->Close(reason);
+  }
+  mQueuedConnectUdpTransaction.Clear();
 }
 
 void HttpConnectionUDP::DontReuse() {
@@ -714,7 +740,8 @@ void HttpConnectionUDP::HandleTunnelResponse(
   bool onlyConnect = mTransactionCaps & NS_HTTP_CONNECT_ONLY;
   aHttpTransaction->OnProxyConnectComplete(responseStatus);
   if (responseStatus == 200) {
-    LOG(("proxy CONNECT succeeded! onlyconnect=%d\n", onlyConnect));
+    LOG(("proxy CONNECT succeeded! onlyconnect=%d mIsInTunnel=%d\n",
+         onlyConnect, mIsInTunnel));
     // If we're only connecting, we don't need to reset the transaction
     // state. We need to upgrade the socket now without doing the actual
     // http request.
@@ -722,19 +749,20 @@ void HttpConnectionUDP::HandleTunnelResponse(
       *reset = true;
     }
 
-    for (const auto& trans : mQueuedTransaction) {
+    for (const auto& trans : mQueuedConnectUdpTransaction) {
+      LOG(("add trans=%p", trans.get()));
       if (!mHttp3Session->AddStream(trans, trans->Priority(), mCallbacks)) {
         MOZ_ASSERT(false);  // this cannot happen!
         trans->Close(NS_ERROR_ABORT);
       }
     }
-    mQueuedTransaction.Clear();
+    mQueuedConnectUdpTransaction.Clear();
     mProxyConnectSucceeded = true;
     Unused << ResumeSend();
   } else {
     LOG(("proxy CONNECT failed! onlyconnect=%d\n", onlyConnect));
     aHttpTransaction->SetProxyConnectFailed();
-    mQueuedTransaction.Clear();
+    mQueuedConnectUdpTransaction.Clear();
   }
 }
 
@@ -903,7 +931,8 @@ void HttpConnectionUDP::CloseTransaction(nsAHttpTransaction* trans,
   // CloseTransaction may be called by nsHttpTransaction when a fallback
   // is needed. In this case, the transaction is still in mQueuedTransaction
   // and the proxy connect is still in progress.
-  bool transInQueue = mQueuedTransaction.Contains(trans);
+  bool transInQueue = mQueuedHttpConnectTransaction.Contains(trans) ||
+                      mQueuedConnectUdpTransaction.Contains(trans);
   MOZ_ASSERT(trans == mHttp3Session ||
              (transInQueue && IsProxyConnectInProgress()));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");

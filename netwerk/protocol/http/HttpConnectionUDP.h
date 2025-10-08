@@ -150,7 +150,8 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   nsCString mAlpnToken;
   bool mIsInTunnel = false;
   bool mProxyConnectSucceeded = false;
-  nsTArray<RefPtr<nsHttpTransaction>> mQueuedTransaction;
+  nsTArray<RefPtr<nsHttpTransaction>> mQueuedHttpConnectTransaction;
+  nsTArray<RefPtr<nsHttpTransaction>> mQueuedConnectUdpTransaction;
 };
 
 }  // namespace net
