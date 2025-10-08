@@ -38,23 +38,6 @@ namespace mozilla {
 static const int MEDIA_GRAPH_TARGET_PERIOD_MS = 10;
 
 /**
- * Assume that we might miss our scheduled wakeup of the MediaTrackGraph by
- * this much.
- */
-static const int SCHEDULE_SAFETY_MARGIN_MS = 10;
-
-/**
- * Try have this much audio buffered in streams and queued to the hardware.
- * The maximum delay to the end of the next control loop
- * is 2*MEDIA_GRAPH_TARGET_PERIOD_MS + SCHEDULE_SAFETY_MARGIN_MS.
- * There is no point in buffering more audio than this in a stream at any
- * given time (until we add processing).
- * This is not optimal yet.
- */
-static const int AUDIO_TARGET_MS =
-    2 * MEDIA_GRAPH_TARGET_PERIOD_MS + SCHEDULE_SAFETY_MARGIN_MS;
-
-/**
  * After starting a fallback driver, wait this long before attempting to re-init
  * the audio stream the first time.
  */
@@ -328,10 +311,14 @@ class GraphDriver {
   // GraphDriver's thread has started and the thread is running.
   virtual bool ThreadRunning() const = 0;
 
-  double MediaTimeToSeconds(GraphTime aTime) const {
+  double MediaTimeToSeconds(MediaTime aTime) const {
     NS_ASSERTION(aTime > -TRACK_TIME_MAX && aTime <= TRACK_TIME_MAX,
                  "Bad time");
     return static_cast<double>(aTime) / mSampleRate;
+  }
+
+  TimeDuration MediaTimeToTimeDuration(MediaTime aTime) const {
+    return TimeDuration::FromSeconds(MediaTimeToSeconds(aTime));
   }
 
   GraphTime SecondsToMediaTime(double aS) const {
@@ -449,13 +436,12 @@ class ThreadedDriver : public GraphDriver {
  protected:
   /* Waits until it's time to process more data. */
   void WaitForNextIteration();
-  /* Implementation dependent time the ThreadedDriver should wait between
-   * iterations. */
-  virtual TimeDuration WaitInterval() = 0;
+  /* Return the implementation-dependent time that the ThreadedDriver should
+   * wait for the next iteration.  Called only once per iteration;
+   * SystemClockDriver advances it's target iteration time stamp.*/
+  virtual TimeDuration NextIterationWaitDuration() = 0;
   /* When the graph wakes up to do an iteration, implementations return the
-   * range of time that will be processed.  This is called only once per
-   * iteration; it may determine the interval from state in a previous
-   * call. */
+   * range of time that will be processed. */
   virtual MediaTime GetIntervalForIteration() = 0;
 
   virtual ~ThreadedDriver();
@@ -485,14 +471,17 @@ class SystemClockDriver final : public ThreadedDriver {
 
  protected:
   /* Return the TimeDuration to wait before the next rendering iteration. */
-  TimeDuration WaitInterval() override;
+  TimeDuration NextIterationWaitDuration() override;
   MediaTime GetIntervalForIteration() override;
 
  private:
   // Those are only modified (after initialization) on the graph thread. The
   // graph thread does not run during the initialization.
   TimeStamp mInitialTimeStamp;
-  TimeStamp mCurrentTimeStamp;
+  // The system clock time when the next or in-progress iteration should start
+  // if the time that rendering happens advances consistently with the frames
+  // rendered.  Advanced before waiting to render the next iteration.
+  TimeStamp mTargetIterationTimeStamp;
 };
 
 /**
@@ -512,7 +501,7 @@ class OfflineClockDriver final : public ThreadedDriver {
   void RunThread() override;
 
  protected:
-  TimeDuration WaitInterval() override { return TimeDuration(); }
+  TimeDuration NextIterationWaitDuration() override { return TimeDuration(); }
   MediaTime GetIntervalForIteration() override;
 
  private:

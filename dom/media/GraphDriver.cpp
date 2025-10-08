@@ -180,41 +180,24 @@ SystemClockDriver::SystemClockDriver(GraphInterface* aGraphInterface,
                                      uint32_t aSampleRate)
     : ThreadedDriver(aGraphInterface, aPreviousDriver, aSampleRate),
       mInitialTimeStamp(TimeStamp::Now()),
-      mCurrentTimeStamp(TimeStamp::Now()) {}
+      mTargetIterationTimeStamp(TimeStamp::Now()) {}
 
 SystemClockDriver::~SystemClockDriver() = default;
 
 void ThreadedDriver::RunThread() {
   mThreadRunning = true;
   while (true) {
+    MediaTime interval = GetIntervalForIteration();
     auto iterationStart = mIterationEnd;
-    mIterationEnd += GetIntervalForIteration();
+    mIterationEnd += interval;
+    MOZ_ASSERT(iterationStart <= mIterationEnd);
 
     if (mStateComputedTime < mIterationEnd) {
       LOG(LogLevel::Warning, ("%p: Global underrun detected", Graph()));
       mIterationEnd = mStateComputedTime;
     }
 
-    if (iterationStart >= mIterationEnd) {
-      NS_ASSERTION(iterationStart == mIterationEnd, "Time can't go backwards!");
-      // This could happen due to low clock resolution, maybe?
-      LOG(LogLevel::Debug, ("%p: Time did not advance", Graph()));
-    }
-
-    GraphTime nextStateComputedTime =
-        MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(
-            mIterationEnd + MillisecondsToMediaTime(AUDIO_TARGET_MS));
-    if (nextStateComputedTime < mStateComputedTime) {
-      // A previous driver may have been processing further ahead of
-      // iterationEnd.
-      LOG(LogLevel::Warning,
-          ("%p: Prevent state from going backwards. interval[%ld; %ld] "
-           "state[%ld; "
-           "%ld]",
-           Graph(), (long)iterationStart, (long)mIterationEnd,
-           (long)mStateComputedTime, (long)nextStateComputedTime));
-      nextStateComputedTime = mStateComputedTime;
-    }
+    GraphTime nextStateComputedTime = mStateComputedTime + interval;
     LOG(LogLevel::Verbose,
         ("%p: interval[%ld; %ld] state[%ld; %ld]", Graph(),
          (long)iterationStart, (long)mIterationEnd, (long)mStateComputedTime,
@@ -243,18 +226,8 @@ void ThreadedDriver::RunThread() {
 }
 
 MediaTime SystemClockDriver::GetIntervalForIteration() {
-  TimeStamp now = TimeStamp::Now();
-  MediaTime interval =
-      SecondsToMediaTime((now - mCurrentTimeStamp).ToSeconds());
-  mCurrentTimeStamp = now;
-
-  MOZ_LOG(gMediaTrackGraphLog, LogLevel::Verbose,
-          ("%p: Updating current time to %f (real %f, StateComputedTime() %f)",
-           Graph(), MediaTimeToSeconds(mIterationEnd + interval),
-           (now - mInitialTimeStamp).ToSeconds(),
-           MediaTimeToSeconds(mStateComputedTime)));
-
-  return interval;
+  return MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(
+      MillisecondsToMediaTime(MEDIA_GRAPH_TARGET_PERIOD_MS));
 }
 
 void ThreadedDriver::EnsureNextIteration() {
@@ -264,20 +237,30 @@ void ThreadedDriver::EnsureNextIteration() {
 void ThreadedDriver::WaitForNextIteration() {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(OnThread());
-  mWaitHelper.WaitForNextIterationAtLeast(WaitInterval());
+  mWaitHelper.WaitForNextIterationAtLeast(NextIterationWaitDuration());
 }
 
 TimeDuration ThreadedDriver::IterationDuration() {
-  return TimeDuration::FromMilliseconds(MEDIA_GRAPH_TARGET_PERIOD_MS);
+  return MediaTimeToTimeDuration(GetIntervalForIteration());
 }
 
-TimeDuration SystemClockDriver::WaitInterval() {
+TimeDuration SystemClockDriver::NextIterationWaitDuration() {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(OnThread());
   TimeStamp now = TimeStamp::Now();
-  TimeDuration timeout = IterationDuration() - (now - mCurrentTimeStamp);
+  mTargetIterationTimeStamp += IterationDuration();
+  TimeDuration timeout = mTargetIterationTimeStamp - now;
+  if (timeout < TimeDuration::FromMilliseconds(-MEDIA_GRAPH_TARGET_PERIOD_MS)) {
+    // Rendering has fallen so far behind that the entire next rendering
+    // period has already passed.  Don't try to catch up again, but instead
+    // try to render at consistent time intervals from now.
+    LOG(LogLevel::Warning, ("%p: Global underrun detected", Graph()));
+    mTargetIterationTimeStamp = now;
+  }
+
   LOG(LogLevel::Verbose,
-      ("%p: Waiting for next iteration; at %f, timeout=%f", Graph(),
+      ("%p: Waiting for next iteration; at %f (real %f), timeout=%f", Graph(),
+       MediaTimeToSeconds(mStateComputedTime),
        (now - mInitialTimeStamp).ToSeconds(), timeout.ToSeconds()));
   return timeout;
 }
@@ -297,7 +280,8 @@ void OfflineClockDriver::RunThread() {
 }
 
 MediaTime OfflineClockDriver::GetIntervalForIteration() {
-  return MillisecondsToMediaTime(mSlice);
+  return MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(
+      MillisecondsToMediaTime(mSlice));
 }
 
 /* Helper to proxy the GraphInterface methods used by a running
