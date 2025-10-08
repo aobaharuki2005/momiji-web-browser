@@ -513,8 +513,9 @@ export class SearchService {
    */
   reset() {
     lazy.logConsole.debug("Resetting search service.");
-    if (this.#initializationStatus != "not initialized") {
+    if (this.#earlyObserversAdded) {
       Services.obs.removeObserver(this, lazy.Region.REGION_TOPIC);
+      this.#earlyObserversAdded = false;
     }
     this.#initializationStatus = "not initialized";
     this.#initDeferredPromise = Promise.withResolvers();
@@ -1237,6 +1238,13 @@ export class SearchService {
   #parseSubmissionMap = null;
 
   /**
+   * Keep track of pre-init observers have been added.
+   *
+   * @type {boolean}
+   */
+  #earlyObserversAdded = false;
+
+  /**
    * Keep track of observers have been added.
    *
    * @type {boolean}
@@ -1454,7 +1462,10 @@ export class SearchService {
   #doPreInitWork() {
     // We need to catch the region being updated during initialization so we
     // start listening straight away.
-    Services.obs.addObserver(this, lazy.Region.REGION_TOPIC);
+    if (!this.#earlyObserversAdded) {
+      Services.obs.addObserver(this, lazy.Region.REGION_TOPIC);
+      this.#earlyObserversAdded = true;
+    }
 
     this.#getIgnoreListAndSubscribe().catch(ex =>
       console.error(ex, "Search Service could not get the ignore list.")
@@ -3678,6 +3689,8 @@ export class SearchService {
     Services.obs.removeObserver(this, lazy.SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
     Services.obs.removeObserver(this, TOPIC_LOCALES_CHANGE);
+    this.#observersAdded = false;
+    this.#earlyObserversAdded = false;
   }
 
   QueryInterface = ChromeUtils.generateQI([
