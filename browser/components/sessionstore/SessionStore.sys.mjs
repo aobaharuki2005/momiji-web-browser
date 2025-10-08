@@ -7443,6 +7443,16 @@ var SessionStoreInternal = {
         Services.obs.notifyObservers(null, NOTIFY_BROWSER_STATE_RESTORED);
       }
 
+      // If all windows are on other virtual desktops (on Windows), open a new
+      // window on this desktop so the user isn't left wondering where their
+      // session went. See bug 1812489.
+      let anyWindowNotCloaked = this._browserWindows[Symbol.iterator]().some(
+        window => !window.isCloaked
+      );
+      if (!anyWindowNotCloaked) {
+        lazy.BrowserWindowTracker.openWindow();
+      }
+
       this._browserSetState = false;
       this._restoreCount = -1;
     },
