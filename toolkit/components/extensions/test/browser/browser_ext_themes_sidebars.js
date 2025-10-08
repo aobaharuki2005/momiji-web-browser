@@ -7,9 +7,6 @@ registerCleanupFunction(async function () {
   if (!document.getElementById("sidebar-box").hidden) {
     SidebarController.hide({ dismissPanel: true });
   }
-  Services.prefs.clearUserPref(
-    "browser.toolbarbuttons.introduced.sidebar-button"
-  );
 });
 
 /**
@@ -25,7 +22,6 @@ async function test_sidebar_theme(theme, isBrightText) {
     },
   });
 
-  const sidebarBrowser = document.getElementById("sidebar");
   const sidebarBox = document.getElementById("sidebar-box");
   const browserRoot = document.documentElement;
   const content = SidebarController.browser.contentWindow;
@@ -126,9 +122,7 @@ async function test_sidebar_theme(theme, isBrightText) {
   );
 
   if (isCustomSidebar) {
-    const sidebarBoxCS = window.getComputedStyle(
-      Services.prefs.getBoolPref("sidebar.revamp") ? sidebarBrowser : sidebarBox
-    );
+    const sidebarBoxCS = window.getComputedStyle(sidebarBox);
     is(
       sidebarBoxCS.backgroundColor,
       actualBackground,
@@ -192,7 +186,7 @@ async function test_sidebar_theme(theme, isBrightText) {
   );
 }
 
-async function check_themes() {
+add_task(async function test_support_sidebar_colors() {
   for (let command of ["viewBookmarksSidebar", "viewHistorySidebar"]) {
     info("Executing command: " + command);
 
@@ -240,19 +234,9 @@ async function check_themes() {
       false
     );
   }
-}
-add_task(async function test_old_sidebar_colors() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["sidebar.revamp", false]],
-  });
-  await check_themes();
-  await SpecialPowers.popPrefEnv();
 });
 
-add_task(async function test_old_sidebar_border_color() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["sidebar.revamp", false]],
-  });
+add_task(async function test_support_sidebar_border_color() {
   const LIGHT_SALMON = "#ffa07a";
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -297,83 +281,4 @@ add_task(async function test_old_sidebar_border_color() {
   }
 
   await extension.unload();
-  await SpecialPowers.popPrefEnv();
-});
-
-add_task(async function test_support_sidebar_colors() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["sidebar.revamp", true]],
-  });
-  await check_themes();
-  await SpecialPowers.popPrefEnv();
-});
-
-add_task(async function test_support_sidebar_border_color() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["sidebar.revamp", true]],
-  });
-  const command = "viewHistorySidebar";
-  info("Executing command: " + command);
-
-  await SidebarController.show(command);
-
-  const LIGHT_SALMON = "#ffa07a";
-  const extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      theme: {
-        colors: {
-          sidebar_border: LIGHT_SALMON,
-        },
-      },
-    },
-  });
-
-  await extension.startup();
-
-  const sidebarPanel = document.getElementById("sidebar");
-  const sidebarPanelCS = window.getComputedStyle(sidebarPanel);
-
-  is(
-    sidebarPanelCS.outlineColor,
-    hexToCSS(LIGHT_SALMON),
-    "The card border of the history sidebar panel should be colored properly"
-  );
-
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["sidebar.verticalTabs", true],
-      ["sidebar.visibility", "expand-on-hover"],
-    ],
-  });
-
-  // We only apply the border color to the launcher for expand on hover since it can overlap an open
-  // sidebar panel making it difficult to distinguish where one surface ends and the other begins.
-  is(
-    sidebarPanelCS.outlineColor,
-    hexToCSS(LIGHT_SALMON),
-    "The card border of the history sidebar panel should still be colored properly"
-  );
-
-  const sidebarLauncher = document.getElementById("sidebar-main");
-  const sidebarLauncherCS = window.getComputedStyle(sidebarLauncher);
-
-  is(
-    sidebarLauncherCS.borderInlineEndColor,
-    hexToCSS(LIGHT_SALMON),
-    "Sidebar launcher should be colored properly"
-  );
-
-  SidebarController.reversePosition();
-
-  is(
-    sidebarLauncherCS.borderInlineStartColor,
-    hexToCSS(LIGHT_SALMON),
-    "Sidebar launcher should be colored properly after switching sides"
-  );
-
-  SidebarController.reversePosition();
-
-  await extension.unload();
-  await SpecialPowers.popPrefEnv();
-  await SpecialPowers.popPrefEnv();
 });
