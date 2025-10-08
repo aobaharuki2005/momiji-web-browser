@@ -2665,25 +2665,6 @@
       }
     ]
   },
-  "1899937": {
-    "label": "plus.nhk.jp",
-    "bugs": {
-      "1899937": {
-        "issue": "firefox-blocked-completely",
-        "matches": ["*://plus.nhk.jp/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "content_scripts": {
-          "css": ["bug1899937-plus.nhk.jp-hide-unsupported.css"],
-          "js": ["bug1899937-plus.nhk.jp-request-picture-in-picture.js"]
-        },
-        "ua_string": ["add_Chrome"]
-      }
-    ]
-  },
   "1899945": {
     "label": "nytimes.com Modern Love Questions",
     "bugs": {
