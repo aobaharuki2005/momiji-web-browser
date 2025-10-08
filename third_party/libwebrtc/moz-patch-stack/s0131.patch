@@ -9,7 +9,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/293f1877fead30723
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/rtc_base/ssl_stream_adapter.h b/rtc_base/ssl_stream_adapter.h
-index b19e1916ec..308df14736 100644
+index 24fc299b82..ec16887eac 100644
 --- a/rtc_base/ssl_stream_adapter.h
 +++ b/rtc_base/ssl_stream_adapter.h
 @@ -247,7 +247,7 @@ class SSLStreamAdapter : public StreamInterface {
