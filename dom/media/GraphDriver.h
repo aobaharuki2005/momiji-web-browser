@@ -475,7 +475,7 @@ class ThreadedDriver : public GraphDriver {
  * A SystemClockDriver drives a GraphInterface using a system clock, and waits
  * using a monitor, between each iteration.
  */
-class SystemClockDriver : public ThreadedDriver {
+class SystemClockDriver final : public ThreadedDriver {
  public:
   SystemClockDriver(GraphInterface* aGraphInterface,
                     GraphDriver* aPreviousDriver, uint32_t aSampleRate);
@@ -499,7 +499,7 @@ class SystemClockDriver : public ThreadedDriver {
  * An OfflineClockDriver runs the graph as fast as possible, without waiting
  * between iteration.
  */
-class OfflineClockDriver : public ThreadedDriver {
+class OfflineClockDriver final : public ThreadedDriver {
  public:
   OfflineClockDriver(GraphInterface* aGraphInterface, uint32_t aSampleRate,
                      GraphTime aSlice);
@@ -547,7 +547,8 @@ struct AudioInputProcessingParamsRequest {
  *   API, we have to do block processing at 128 frames per block, we need to
  *   keep a little spill buffer to store the extra frames.
  */
-class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
+class AudioCallbackDriver final : public GraphDriver,
+                                  public MixerCallbackReceiver {
   using IterationResult = GraphInterface::IterationResult;
   enum class FallbackDriverState;
   class FallbackWrapper;
