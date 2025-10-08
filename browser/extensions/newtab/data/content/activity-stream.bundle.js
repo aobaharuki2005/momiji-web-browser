@@ -12034,12 +12034,14 @@ class _Weather extends (external_React_default()).PureComponent {
         size: "small",
         type: "default",
         "data-l10n-id": "newtab-weather-opt-in-not-now",
-        onClick: this.handleRejectOptIn
+        onClick: this.handleRejectOptIn,
+        id: "reject-opt-in"
       }), /*#__PURE__*/external_React_default().createElement("moz-button", {
         size: "small",
         type: "default",
         "data-l10n-id": "newtab-weather-opt-in-yes",
-        onClick: this.handleAcceptOptIn
+        onClick: this.handleAcceptOptIn,
+        id: "accept-opt-in"
       }))))));
     }
     return /*#__PURE__*/external_React_default().createElement("div", {
