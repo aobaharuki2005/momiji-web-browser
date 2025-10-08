@@ -1,48 +1,259 @@
-From: Gennady Tsitovich <gtsitovich@google.com>
-Date: Tue, 15 Jul 2025 08:24:50 +0000
-Subject: (cherry-pick-branch-heads/7258) [M139] Add chrome-cherry-picker
- account to bot allowlist
+From: Michael Froman <mjfroman@mac.com>
+Date: Wed, 8 Oct 2025 15:54:39 -0500
+Subject: (tmp-cherry-pick) Revert "Record audio timestamp across all ObjC
+ ADMs." (a473b69c06)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
+This reverts commit fa780492c902b0b0079386178b21b9c61221f25e.
+
+Reason for revert: Breaks first party projects. Use #include instead of #import for "rtc_base/checks.h"
+
+Bug: webrtc:13609
 Original change's description:
-> Add chrome-cherry-picker account to bot allowlist
+> Record audio timestamp across all ObjC ADMs.
 >
-> chrome-cherry-picker@chops-service-accounts.iam.gserviceaccount.com is
-> being by the Chrome Cherry Picker (go/chromecherrypicker) and needs to
-> be able to skip the author check for presubmits.
+> Added audio timestamp capture to ObjCAudioDeviceModule and extracted
+> nanoseconds from AudioTimeStamp construction into helper function.
 >
-> Bug: chromium:414375466
-> Change-Id: Ib9f15dd67a4efe5346e6631135e1bcd7196b992c
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/400480
+> The timestamp capture was initially implemented in the CL:
+> https://webrtc-review.googlesource.com/c/src/+/334720
+>
+> No-Try: True
+> Bug: webrtc:13609
+> Change-Id: I68d5c29ccc98cf817365988fa825875841e32ee7
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/397160
 > Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
-> Reviewed-by: Björn Terelius <terelius@webrtc.org>
-> Commit-Queue: Gennady Tsitovich <gtsitovich@google.com>
-> Cr-Commit-Position: refs/heads/main@{#45148}
+> Reviewed-by: Kári Helgason <kthelgason@webrtc.org>
+> Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#45000}
 
-Bug: chromium:431157710,chromium:414375466
-Change-Id: Ib9f15dd67a4efe5346e6631135e1bcd7196b992c
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/400700
-Commit-Queue: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
-Auto-Submit: Chrome Cherry Picker <chrome-cherry-picker@chops-service-accounts.iam.gserviceaccount.com>
-Bot-Commit: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
-Cr-Commit-Position: refs/branch-heads/7258@{#2}
-Cr-Branched-From: 74fa937f86ed8432c07676f7a1ce0e5e2812b3d5-refs/heads/main@{#44974}
+Bug: webrtc:13609
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Change-Id: Ife0052ff113f70d67dc6290d63691842d977cce7
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/397741
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Owners-Override: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#45001}
 ---
- PRESUBMIT.py | 2 ++
- 1 file changed, 2 insertions(+)
+ sdk/BUILD.gn                                  | 23 ---------
+ sdk/objc/helpers/AudioTimeStamp+Nanoseconds.h | 16 ------
+ .../helpers/AudioTimeStamp+Nanoseconds.mm     | 51 -------------------
+ sdk/objc/native/src/audio/audio_device_ios.h  |  3 ++
+ sdk/objc/native/src/audio/audio_device_ios.mm |  8 +--
+ sdk/objc/native/src/objc_audio_device.mm      |  8 +--
+ 6 files changed, 10 insertions(+), 99 deletions(-)
+ delete mode 100644 sdk/objc/helpers/AudioTimeStamp+Nanoseconds.h
+ delete mode 100644 sdk/objc/helpers/AudioTimeStamp+Nanoseconds.mm
 
-diff --git a/PRESUBMIT.py b/PRESUBMIT.py
-index 96fa8abd9d..debc65fb24 100755
---- a/PRESUBMIT.py
-+++ b/PRESUBMIT.py
-@@ -991,6 +991,8 @@ def CommonChecks(input_api, output_api):
-             bot_allowlist=[
-                 'chromium-webrtc-autoroll@webrtc-ci.iam.gserviceaccount.com',
-                 'webrtc-version-updater@webrtc-ci.iam.gserviceaccount.com',
-+                ('chrome-cherry-picker'
-+                 '@chops-service-accounts.iam.gserviceaccount.com'),
-             ]))
-     results.extend(
-         input_api.canned_checks.CheckChangeTodoHasOwner(
+diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
+index 3db2086d9e..26fc06efa8 100644
+--- a/sdk/BUILD.gn
++++ b/sdk/BUILD.gn
+@@ -184,27 +184,6 @@ if (is_ios || is_mac) {
+     }
+   }
+ 
+-  rtc_library("core_audio_helpers_objc") {
+-    sources = [
+-      "objc/helpers/AudioTimeStamp+Nanoseconds.h",
+-      "objc/helpers/AudioTimeStamp+Nanoseconds.mm",
+-    ]
+-
+-    deps = [
+-      ":base_objc",
+-      "../rtc_base:checks",
+-    ]
+-
+-    frameworks = [ "CoreAudio.framework" ]
+-
+-    configs += [
+-      "..:common_objc",
+-      ":used_from_extension",
+-    ]
+-
+-    public_configs = [ ":common_config_objc" ]
+-  }
+-
+   if (!build_with_chromium) {
+     rtc_library("callback_logger_objc") {
+       sources = [
+@@ -331,7 +310,6 @@ if (is_ios || is_mac) {
+           ":audio_objc",
+           ":audio_session_observer",
+           ":base_objc",
+-          ":core_audio_helpers_objc",
+           "../api:array_view",
+           "../api:scoped_refptr",
+           "../api:sequence_checker",
+@@ -523,7 +501,6 @@ if (is_ios || is_mac) {
+ 
+       deps = [
+         ":audio_device_api_objc",
+-        ":core_audio_helpers_objc",
+         "../api:array_view",
+         "../api:make_ref_counted",
+         "../api:refcountedbase",
+diff --git a/sdk/objc/helpers/AudioTimeStamp+Nanoseconds.h b/sdk/objc/helpers/AudioTimeStamp+Nanoseconds.h
+deleted file mode 100644
+index 46233d8223..0000000000
+--- a/sdk/objc/helpers/AudioTimeStamp+Nanoseconds.h
++++ /dev/null
+@@ -1,16 +0,0 @@
+-/*
+- *  Copyright 2025 The WebRTC project authors. All Rights Reserved.
+- *
+- *  Use of this source code is governed by a BSD-style license
+- *  that can be found in the LICENSE file in the root of the source
+- *  tree. An additional intellectual property rights grant can be found
+- *  in the file PATENTS.  All contributing project authors may
+- *  be found in the AUTHORS file in the root of the source tree.
+- */
+-
+-#import <CoreAudioTypes/CoreAudioTypes.h>
+-
+-#include <optional>
+-
+-std::optional<int64_t> AudioTimeStampGetNanoseconds(
+-    const AudioTimeStamp* timeStamp);
+diff --git a/sdk/objc/helpers/AudioTimeStamp+Nanoseconds.mm b/sdk/objc/helpers/AudioTimeStamp+Nanoseconds.mm
+deleted file mode 100644
+index bb11dbdfaa..0000000000
+--- a/sdk/objc/helpers/AudioTimeStamp+Nanoseconds.mm
++++ /dev/null
+@@ -1,51 +0,0 @@
+-/*
+- *  Copyright 2025 The WebRTC project authors. All Rights Reserved.
+- *
+- *  Use of this source code is governed by a BSD-style license
+- *  that can be found in the LICENSE file in the root of the source
+- *  tree. An additional intellectual property rights grant can be found
+- *  in the file PATENTS.  All contributing project authors may
+- *  be found in the AUTHORS file in the root of the source tree.
+- */
+-
+-#import "AudioTimeStamp+Nanoseconds.h"
+-
+-#import <mach/mach_time.h>
+-#import "rtc_base/checks.h"
+-
+-std::optional<int64_t> AudioTimeStampGetNanoseconds(
+-    const AudioTimeStamp* timeStamp) {
+-  if (!timeStamp || ((timeStamp->mFlags & kAudioTimeStampHostTimeValid) == 0) ||
+-      timeStamp->mHostTime == 0) {
+-    return std::nullopt;
+-  }
+-
+-  static mach_timebase_info_data_t mach_timebase;
+-  if (mach_timebase.denom == 0) {
+-    if (mach_timebase_info(&mach_timebase) != KERN_SUCCESS) {
+-      RTC_DCHECK_NOTREACHED() << "mach_timebase_info bad return code";
+-      return std::nullopt;
+-    }
+-  }
+-
+-  if (mach_timebase.denom == 0 || mach_timebase.numer == 0) {
+-    RTC_DCHECK_NOTREACHED() << "mach_timebase_info provided bad data";
+-    return std::nullopt;
+-  }
+-
+-  uint64_t time_scaled = 0;
+-  if (__builtin_umulll_overflow(
+-          timeStamp->mHostTime, mach_timebase.numer, &time_scaled)) {
+-    RTC_DCHECK_NOTREACHED() << "numeric overflow computing scaled host time";
+-    return std::nullopt;
+-  }
+-
+-  uint64_t nanoseconds = time_scaled / mach_timebase.denom;
+-  if (nanoseconds >
+-      static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
+-    RTC_DCHECK_NOTREACHED() << "numeric overflow computing nanoseconds";
+-    return std::nullopt;
+-  }
+-
+-  return static_cast<int64_t>(nanoseconds);
+-}
+diff --git a/sdk/objc/native/src/audio/audio_device_ios.h b/sdk/objc/native/src/audio/audio_device_ios.h
+index d1788a33d7..7dcffb07d5 100644
+--- a/sdk/objc/native/src/audio/audio_device_ios.h
++++ b/sdk/objc/native/src/audio/audio_device_ios.h
+@@ -333,6 +333,9 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
+   std::atomic<uint64_t> total_playout_delay_ms_;
+   std::atomic<double> hw_output_latency_;
+   int last_hw_output_latency_update_sample_count_;
++  // Ratio between mach tick units and nanosecond. Used to change mach tick
++  // units to nanoseconds.
++  double machTickUnitsToNanoseconds_;
+ };
+ }  // namespace ios_adm
+ }  // namespace webrtc
+diff --git a/sdk/objc/native/src/audio/audio_device_ios.mm b/sdk/objc/native/src/audio/audio_device_ios.mm
+index d9f8ea62a4..53dec77c75 100644
+--- a/sdk/objc/native/src/audio/audio_device_ios.mm
++++ b/sdk/objc/native/src/audio/audio_device_ios.mm
+@@ -33,7 +33,6 @@
+ #import "components/audio/RTCAudioSession.h"
+ #import "components/audio/RTCAudioSessionConfiguration.h"
+ #import "components/audio/RTCNativeAudioSessionDelegateAdapter.h"
+-#import "helpers/AudioTimeStamp+Nanoseconds.h"
+ 
+ namespace webrtc {
+ namespace ios_adm {
+@@ -131,6 +130,9 @@ AudioDeviceIOS::AudioDeviceIOS(
+ 
+   audio_session_observer_ =
+       [[RTCNativeAudioSessionDelegateAdapter alloc] initWithObserver:this];
++  mach_timebase_info_data_t tinfo;
++  mach_timebase_info(&tinfo);
++  machTickUnitsToNanoseconds_ = (double)tinfo.numer / tinfo.denom;
+ }
+ 
+ AudioDeviceIOS::~AudioDeviceIOS() {
+@@ -415,8 +417,8 @@ OSStatus AudioDeviceIOS::OnDeliverRecordedData(
+   // Get audio timestamp for the audio.
+   // The timestamp will not have NTP time epoch, but that will be addressed by
+   // the TimeStampAligner in AudioDeviceBuffer::SetRecordedBuffer().
+-  std::optional<int64_t> capture_timestamp_ns =
+-      AudioTimeStampGetNanoseconds(time_stamp);
++  SInt64 capture_timestamp_ns =
++      time_stamp->mHostTime * machTickUnitsToNanoseconds_;
+ 
+   // Allocate AudioBuffers to be used as storage for the received audio.
+   // The AudioBufferList structure works as a placeholder for the
+diff --git a/sdk/objc/native/src/objc_audio_device.mm b/sdk/objc/native/src/objc_audio_device.mm
+index 3044de9c9d..d17dd63811 100644
+--- a/sdk/objc/native/src/objc_audio_device.mm
++++ b/sdk/objc/native/src/objc_audio_device.mm
+@@ -13,7 +13,6 @@
+ #include <memory>
+ 
+ #import "components/audio/RTCAudioDevice.h"
+-#import "helpers/AudioTimeStamp+Nanoseconds.h"
+ #include "modules/audio_device/fine_audio_buffer.h"
+ #include "objc_audio_device_delegate.h"
+ #include "rtc_base/logging.h"
+@@ -450,8 +449,7 @@ OSStatus ObjCAudioDeviceModule::OnDeliverRecordedData(
+     record_fine_audio_buffer_->DeliverRecordedData(
+         webrtc::ArrayView<const int16_t>(
+             static_cast<int16_t*>(audio_buffer->mData), num_frames),
+-        cached_recording_delay_ms_.load(),
+-        AudioTimeStampGetNanoseconds(time_stamp));
++        cached_recording_delay_ms_.load());
+     return noErr;
+   }
+   RTC_DCHECK(render_block != nullptr)
+@@ -494,9 +492,7 @@ OSStatus ObjCAudioDeviceModule::OnDeliverRecordedData(
+   // Use the FineAudioBuffer instance to convert between native buffer size
+   // and the 10ms buffer size used by WebRTC.
+   record_fine_audio_buffer_->DeliverRecordedData(
+-      record_audio_buffer_,
+-      cached_recording_delay_ms_.load(),
+-      AudioTimeStampGetNanoseconds(time_stamp));
++      record_audio_buffer_, cached_recording_delay_ms_.load());
+   return noErr;
+ }
+ 
