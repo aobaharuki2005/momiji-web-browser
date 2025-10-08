@@ -39,7 +39,6 @@
 #endif
 
 #if defined(__cplusplus)
-#  include "mozilla/fallible.h"
 #  include "mozilla/mozalloc_abort.h"
 #  include "mozilla/CheckedArithmetic.h"
 #  include "mozilla/Likely.h"

@@ -30,7 +30,6 @@
 #include "mozilla/dom/quota/EncryptedBlock.h"
 #include "mozilla/dom/quota/EncryptingOutputStream_impl.h"
 #include "mozilla/dom/quota/NSSCipherStrategy.h"
-#include "mozilla/fallible.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsICloneableInputStream.h"

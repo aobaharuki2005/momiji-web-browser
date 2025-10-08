@@ -55,7 +55,6 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/MediaDeviceInfoBinding.h"
 #include "mozilla/dom/quota/QuotaManager.h"
-#include "mozilla/fallible.h"
 #include "mozilla/XorShift128PlusRNG.h"
 #include "mozilla/dom/CanvasUtils.h"
 
