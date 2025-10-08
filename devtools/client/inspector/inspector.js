@@ -1304,11 +1304,11 @@ class Inspector extends EventEmitter {
       },
     };
 
-    this.sidebar = new ToolSidebar(sidebar, this, "inspector", options);
+    this.sidebar = new ToolSidebar(sidebar, this, options);
     this.sidebar.on("select", this.onSidebarSelect);
 
     const ruleSideBar = this.panelDoc.getElementById("inspector-rules-sidebar");
-    this.ruleViewSideBar = new ToolSidebar(ruleSideBar, this, "inspector", {
+    this.ruleViewSideBar = new ToolSidebar(ruleSideBar, this, {
       hideTabstripe: true,
     });
 
