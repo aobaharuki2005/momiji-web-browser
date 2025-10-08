@@ -376,6 +376,10 @@ LlamaBackend::SamplerResult LlamaBackend::InitializeSampler(
         break;
       }
 
+      case LlamaSamplerType::Top_k:
+        samplerElement = mLib->llama_sampler_init_top_k(samplerConfig.mTopK);
+        break;
+
       default:
 
         auto msg = nsFmtCString(FMT_STRING("{}: Unimplemented sampler type"),

@@ -47,6 +47,7 @@ namespace mozilla::llama {
   X(struct llama_sampler*, llama_sampler_init_greedy, (void))               \
   X(struct llama_sampler*, llama_sampler_init_temp, (float t))              \
   X(struct llama_sampler*, llama_sampler_init_dist, (uint32_t seed))        \
+  X(struct llama_sampler*, llama_sampler_init_top_k, (int32_t k))           \
   X(void, llama_memory_clear, (llama_memory_t mem, bool data))              \
   X(llama_memory_t, llama_get_memory, (const struct llama_context* ctx))    \
   X(const struct llama_vocab*, llama_model_get_vocab,                       \
