@@ -31,10 +31,10 @@ for ( let memType of memTypes ) {
      drop
      (i32.load (local.get 1))))`,
     'f', `
-cmp %r.., %r..
+(movq 0x08\\(%r..\\), %r..\ncmp %r.., %r..|cmpq 0x08\\(%r..\\), %r..)
 jnb 0x00000000000000..
-movl \\(%r15,%r..,1\\), %e..
-movl \\(%r15,%r..,1\\), %eax`,
+movl \\(%r..,%r..,1\\), %e..
+movl \\(%r..,%r..,1\\), %eax`,
         {no_prefix:true});
 
     // Make sure constant indices below the heap minimum do not require a bounds
@@ -60,4 +60,3 @@ movl \\(%r15,%r..,1\\), %eax`,
 mov \\$0xFFFF, %eax
 movl \\(%r15,%rax,1\\), %eax`);
 }
-

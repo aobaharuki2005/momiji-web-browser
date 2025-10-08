@@ -23,7 +23,7 @@ codegenTestX86_adhoc(
      drop
      (i32.load (local.get 1))))`,
     'f', `
-cmp %e.., %e..
+(movl 0x04\\(%r..\\), %e..\ncmp %e.., %e..|cmpl 0x04\\(%r..\\), %e..)
 jnb 0x00000000000000..
 movl \\(%r..,%r..,1\\), %e..
 movl \\(%r..,%r..,1\\), %eax`,

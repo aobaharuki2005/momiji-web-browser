@@ -6746,6 +6746,8 @@ void LIRGenerator::visitWasmBoundsCheck(MWasmBoundsCheck* ins) {
         add(lir, ins);
       }
     }
+
+    return;
   }
 
   if (index->type() == MIRType::Int64) {
