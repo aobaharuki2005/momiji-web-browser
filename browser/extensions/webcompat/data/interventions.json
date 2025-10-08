@@ -5387,5 +5387,20 @@
         "ua_string": ["Chrome_with_FxQuantum"]
       }
     ]
+  },
+  "1992402": {
+    "label": "ehssrisk.sai360.net",
+    "bugs": {
+      "1992402": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://*.ehssrisk.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
   }
 }
