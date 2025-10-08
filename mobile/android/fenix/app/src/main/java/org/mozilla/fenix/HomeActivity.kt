@@ -308,7 +308,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     // Tracker for contextual menu (Copy|Search|Select all|etc...)
     private var actionMode: ActionMode? = null
 
-    private val startupPathProvider = StartupPathProvider()
+    private val startupPathProvider: StartupPathProvider = DefaultStartupPathProvider()
     private lateinit var startupTypeTelemetry: StartupTypeTelemetry
 
     private val onBackPressedCallback = object : UserInteractionOnBackPressedCallback(
