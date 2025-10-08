@@ -159,6 +159,7 @@ export default [
   "dom/base/test/jsmodules/module_badSyntax.mjs",
   "dom/base/test/jsmodules/test_syntaxErrorInline.html",
   "dom/base/test/jsmodules/test_syntaxErrorInlineAsync.html",
+  "dom/base/test/jsmodules/parse_error.js",
   "dom/base/test/test_bug687859.html",
   "dom/media/webrtc/tests/mochitests/identity/idp-bad.js",
   "dom/security/test/general/file_nonscript.json",

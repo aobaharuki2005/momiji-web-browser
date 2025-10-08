@@ -770,6 +770,15 @@ nsresult ModuleLoaderBase::OnFetchComplete(ModuleLoadRequest* aRequest,
   bool success = bool(aRequest->mModuleScript);
   MOZ_ASSERT(NS_SUCCEEDED(rv) == success);
 
+  // TODO: https://github.com/whatwg/html/issues/11755
+  // Should we check if the module script has an error to rethrow as well?
+  //
+  // https://html.spec.whatwg.org/#hostloadimportedmodule:fetch-a-single-imported-module-script
+  // Step 14. onSingleFetchComplete: step 2, and step 3
+  //   return ThrowCompletion if moduleScript is null or its parse error is not
+  //   null:
+  //   Step 4. Otherwise, set completion to NormalCompletion(moduleScript's
+  //     record).
   if (!aRequest->IsErrored()) {
     OnFetchSucceeded(aRequest);
   } else {
