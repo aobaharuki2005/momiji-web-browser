@@ -16,10 +16,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4527c41ef71d7683c
  4 files changed, 24 insertions(+), 12 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index f35531cb4d..3b10d0740c 100644
+index 8964d077bf..123739a1ff 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -524,6 +524,9 @@ if (!rtc_build_ssl) {
+@@ -523,6 +523,9 @@ if (!rtc_build_ssl) {
        "crypto",
        "ssl",
      ]
@@ -29,7 +29,7 @@ index f35531cb4d..3b10d0740c 100644
    }
  }
  
-@@ -617,6 +620,7 @@ if (!build_with_chromium) {
+@@ -616,6 +619,7 @@ if (!build_with_chromium) {
          "api/environment:environment_factory",
          "api/video:video_frame",
          "api/video:video_rtp_headers",

@@ -9,10 +9,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/43de54a6e52daf0a0
  1 file changed, 12 insertions(+), 1 deletion(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index 0571aa8936..64f86bedf1 100644
+index ff12ae0545..1ac89c4090 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -318,6 +318,17 @@ config("common_config") {
+@@ -317,6 +317,17 @@ config("common_config") {
    cflags_objc = []
    defines = []
  
@@ -30,7 +30,7 @@ index 0571aa8936..64f86bedf1 100644
    if (rtc_enable_protobuf) {
      defines += [ "WEBRTC_ENABLE_PROTOBUF=1" ]
    } else {
-@@ -419,7 +430,7 @@ config("common_config") {
+@@ -418,7 +429,7 @@ config("common_config") {
          # "-Wnested-externs",  (C/Obj-C only)
        ]
        cflags_objc += [ "-Wstrict-prototypes" ]
