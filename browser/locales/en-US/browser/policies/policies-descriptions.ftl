@@ -31,6 +31,8 @@ policy-AutoLaunchProtocolsFromOrigins = Define a list of external protocols that
 
 policy-BackgroundAppUpdate2 = Enable or disable the background updater.
 
+policy-Backup = Disable backup or restore of profile data.
+
 policy-BlockAboutAddons = Block access to the Add-ons Manager (about:addons).
 
 policy-BlockAboutConfig = Block access to the about:config page.
