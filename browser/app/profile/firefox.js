@@ -785,6 +785,11 @@ pref("browser.urlbar.suggest.yelpRealtime", true);
 // settings.
 pref("browser.urlbar.yelpRealtime.minKeywordLength", 0);
 
+// Timestamp of the time the user last performed a search via the urlbar
+// so that experiments can target users who have / have not performed
+// urlbar searches.
+pref("browser.urlbar.lastUrlbarSearchSeconds", 0);
+
 pref("browser.altClickSave", false);
 
 // Number of milliseconds to wait for the http headers (and thus

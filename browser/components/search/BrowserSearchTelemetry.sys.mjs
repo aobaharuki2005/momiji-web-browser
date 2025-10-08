@@ -163,6 +163,13 @@ class BrowserSearchTelemetryHandler {
         return;
       }
 
+      if (source.startsWith("urlbar")) {
+        Services.prefs.setIntPref(
+          "browser.urlbar.lastUrlbarSearchSeconds",
+          Math.round(Date.now() / 1000)
+        );
+      }
+
       if (source != "contextmenu_visual") {
         const countIdPrefix = `${engine.telemetryId}.`;
         const countIdSource = countIdPrefix + source;
