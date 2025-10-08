@@ -29,6 +29,8 @@
 #include "ScriptKind.h"
 #include "ScriptFetchOptions.h"
 
+class nsICacheInfoChannel;
+
 namespace mozilla::dom {
 
 class ScriptLoadContext;
@@ -187,11 +189,13 @@ class ScriptLoadRequest : public nsISupports,
   void SetPendingFetchingError();
 
   bool PassedConditionForDiskCache() const {
-    return mDiskCachingPlan == CachingPlan::PassedCondition;
+    return mDiskCachingPlan == CachingPlan::PassedCondition ||
+           mDiskCachingPlan == CachingPlan::MarkedForCache;
   }
 
   bool PassedConditionForMemoryCache() const {
-    return mMemoryCachingPlan == CachingPlan::PassedCondition;
+    return mMemoryCachingPlan == CachingPlan::PassedCondition ||
+           mMemoryCachingPlan == CachingPlan::MarkedForCache;
   }
 
   bool PassedConditionForEitherCache() const {
@@ -225,8 +229,42 @@ class ScriptLoadRequest : public nsISupports,
     mMemoryCachingPlan = CachingPlan::PassedCondition;
   }
 
+  bool IsMarkedForDiskCache() const {
+    return mDiskCachingPlan == CachingPlan::MarkedForCache;
+  }
+
+  bool IsMarkedForMemoryCache() const {
+    return mMemoryCachingPlan == CachingPlan::MarkedForCache;
+  }
+
+  bool IsMarkedForEitherCache() const {
+    return IsMarkedForDiskCache() || IsMarkedForMemoryCache();
+  }
+
+ protected:
+  void MarkForCache() {
+    MOZ_ASSERT(mDiskCachingPlan == CachingPlan::PassedCondition ||
+               mMemoryCachingPlan == CachingPlan::PassedCondition);
+
+    if (mDiskCachingPlan == CachingPlan::PassedCondition) {
+      mDiskCachingPlan = CachingPlan::MarkedForCache;
+    }
+    if (mMemoryCachingPlan == CachingPlan::PassedCondition) {
+      mMemoryCachingPlan = CachingPlan::MarkedForCache;
+    }
+  }
+
  public:
+  void MarkScriptForCache(JSScript* aScript);
+
   mozilla::CORSMode CORSMode() const { return mFetchOptions->mCORSMode; }
+
+  // Check the reference to the cache info channel, which is used by the disk
+  // cache.
+  bool HasDiskCacheReference() const { return !!mCacheInfo; }
+
+  // Drop the reference to the cache info channel.
+  void DropDiskCacheReference();
 
   bool HasLoadContext() const { return mLoadContext; }
   bool HasScriptLoadContext() const;
@@ -272,6 +310,10 @@ class ScriptLoadRequest : public nsISupports,
 
     // This fits the condition for the caching (e.g. file size, fetch count).
     PassedCondition,
+
+    // This is marked for encoding, with setting sufficient input,
+    // e.g. mScriptForCache for script.
+    MarkedForCache,
   };
   CachingPlan mDiskCachingPlan = CachingPlan::Uninitialized;
   CachingPlan mMemoryCachingPlan = CachingPlan::Uninitialized;
@@ -322,6 +364,16 @@ class ScriptLoadRequest : public nsISupports,
   // loaded value, such that multiple request referring to the same content
   // would share the same loaded script.
   RefPtr<LoadedScript> mLoadedScript;
+
+  // Holds the top-level JSScript that corresponds to the current source, once
+  // it is parsed, and marked to be saved in the bytecode cache.
+  //
+  // NOTE: This field is not used for ModuleLoadRequest.
+  JS::Heap<JSScript*> mScriptForCache;
+
+  // Holds the Cache information, which is used to register the bytecode
+  // on the cache entry, such that we can load it the next time.
+  nsCOMPtr<nsICacheInfoChannel> mCacheInfo;
 
   // LoadContext for augmenting the load depending on the loading
   // context (DOM, Worker, etc.)

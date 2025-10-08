@@ -61,14 +61,6 @@ ModuleLoadRequest::ModuleLoadRequest(
   MOZ_ASSERT(mLoader);
 }
 
-ModuleLoadRequest::~ModuleLoadRequest() {
-  MOZ_ASSERT(!mReferrerScript);
-  MOZ_ASSERT(!mModuleRequestObj);
-  MOZ_ASSERT(mPayload.isUndefined());
-
-  DropJSObjects(this);
-}
-
 nsIGlobalObject* ModuleLoadRequest::GetGlobalObject() {
   return mLoader->GetGlobalObject();
 }
