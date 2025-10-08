@@ -135,6 +135,22 @@ panel-item[type="file"]::part(button) {
   background-position: 6px center;
 }
 
+@media (forced-colors) {
+  panel-item:not(.selected)::part(button):hover {
+    fill: SelectedItemText;
+    color: SelectedItem;
+  }
+
+  panel-item.selected::part(button) {
+    border-block: 1px solid ButtonText;
+  }
+}
+
+panel-item.selected {
+  background-color: var(--button-background-color-active);
+  color: var(--button-text-color-active);
+}
+
 panel-item[type="file"]:-moz-locale-dir(rtl)::part(button),
 panel-item[type="file"]:dir(rtl)::part(button) {
   background-position-x: right 6px;
