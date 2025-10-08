@@ -81,8 +81,6 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  LanguageDetector:
-    "resource://gre/modules/translations/LanguageDetector.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   TranslationsTelemetry:
@@ -447,27 +445,6 @@ export class TranslationsParent extends JSWindowActorParent {
   static LANGUAGE_MODEL_MAJOR_VERSION_MAX = 3;
 
   /**
-   * The shorter the text, the less confidence we should have in the result of the language
-   * identification. Add another heuristic to report the ID as not confident if the length
-   * of the code points of the text is less than this threshold.
-   *
-   * This was determined by plotting a kernel density estimation of the number of times the
-   * source language had to be changed in the SelectTranslationsPanel vs. the code units in
-   * the source text.
-   *
-   * 0013 code units or less - 49.5% of language changes
-   * 0036 code units or less - 74.9% of language changes
-   * 0153 code units or less - 90.0% of language changes
-   * 0200 code units or less - 91.5% of language changes
-   * 0427 code units or less - 95.0% of language changes
-   * 1382 code units or less - 98.0% of language changes
-   * 3506 code units or less - 99.0% of language changes
-   *
-   * @type {number}
-   */
-  static #DOC_CONFIDENCE_THRESHOLD = 150;
-
-  /**
    * Contains the state that would affect UI. Anytime this state is changed, a dispatch
    * event is sent so that UI can react to it. The actor is inside of /toolkit and
    * needs a way of notifying /browser code (or other users) of when the state changes.
@@ -818,7 +795,7 @@ export class TranslationsParent extends JSWindowActorParent {
     // popup will not be shown.
     if (detectedLanguages.htmlLangAttribute && !detectedLanguages.identified) {
       // Compare language langTagsMatch
-      detectedLanguages.identified = await this.#identifyPageLanguage();
+      detectedLanguages.identified = await this.queryIdentifyLanguage();
 
       if (
         !lazy.TranslationsUtils.langTagsMatch(
@@ -867,7 +844,7 @@ export class TranslationsParent extends JSWindowActorParent {
 
           if (
             !TranslationsParent.findCompatibleSourceLangTagSync(
-              detectedLanguages.identified.language,
+              detectedLanguages.identifiedLangTag,
               await TranslationsParent.getNonPivotLanguagePairs()
             )
           ) {
@@ -3493,11 +3470,9 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
-   * Uses the page extractor to identify the current page's language.
-   *
    * @returns {Promise<DetectionResult>}
    */
-  async #identifyPageLanguage() {
+  async queryIdentifyLanguage() {
     if (
       TranslationsParent.isInAutomation() &&
       !TranslationsParent.#isTranslationsEngineMocked
@@ -3505,39 +3480,13 @@ export class TranslationsParent extends JSWindowActorParent {
       // In automation assume English is the language, but don't be confident.
       return { confident: false, language: "en", languages: [] };
     }
-
-    const actor =
-      this.browsingContext?.currentWindowGlobal?.getActor("PageExtractor");
-
-    if (!actor) {
-      throw new Error("Unable to get the PageExtractor actor.");
-    }
-
-    const startTime = ChromeUtils.now();
-
-    const pageText = await actor.getText();
-    if (this.#isDestroyed) {
-      return { language: "", confident: false, languages: [] };
-    }
-
-    const result = await lazy.LanguageDetector.detectLanguage(pageText);
-    if (this.#isDestroyed) {
-      return { language: "", confident: false, languages: [] };
-    }
-
-    const message = `Identified page language as "${result.language}": ${this.browsingContext?.currentURI?.spec}`;
-    ChromeUtils.addProfilerMarker(
-      "TranslationsParent",
-      { startTime, innerWindowId: this.innerWindowId },
-      message
-    );
-    lazy.console.debug(message);
-
-    if (pageText.length < TranslationsParent.#DOC_CONFIDENCE_THRESHOLD) {
-      result.confident = false;
-    }
-
-    return result;
+    return this.sendQuery("Translations:IdentifyLanguage").catch(error => {
+      if (this.#isDestroyed) {
+        // The actor was destroyed while this message was still being resolved.
+        return null;
+      }
+      return Promise.reject(error);
+    });
   }
 
   /**
@@ -3580,7 +3529,7 @@ export class TranslationsParent extends JSWindowActorParent {
       // Do a final check that the identified language matches the reported language
       // tag to ensure that the page isn't reporting the incorrect languages. This
       // check is deferred to now for performance considerations.
-      langTags.identified = await this.#identifyPageLanguage();
+      langTags.identified = await this.queryIdentifyLanguage();
       langTags.docLangTag = langTags.identified.language;
 
       if (
@@ -3763,7 +3712,7 @@ export class TranslationsParent extends JSWindowActorParent {
       userLangTag: null,
       isDocLangTagSupported: false,
       htmlLangAttribute: htmlLangAttribute ?? null,
-      identified: null,
+      identifiedLangTag: null,
     };
 
     /**
@@ -3814,7 +3763,7 @@ export class TranslationsParent extends JSWindowActorParent {
     if (!langTags.docLangTag) {
       // If the document's markup had no specified langTag, attempt to identify the
       // page's language.
-      langTags.identified = await this.#identifyPageLanguage();
+      langTags.identified = await this.queryIdentifyLanguage();
       langTags.docLangTag = langTags.identified.language;
       maybeNormalizeDocLangTag();
       langTags.identified.language = langTags.docLangTag;
