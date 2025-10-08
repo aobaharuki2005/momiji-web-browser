@@ -733,7 +733,7 @@ style:
     allowForUnclearPrecedence: false
   UntilInsteadOfRangeTo:
     active: false
-  UnusedImports:
+  UnusedImports: # (Default: false) Enabled in https://bugzilla.mozilla.org/show_bug.cgi?id=1977548
     active: true
   UnusedParameter:
     active: true
