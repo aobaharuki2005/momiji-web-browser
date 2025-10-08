@@ -49,6 +49,7 @@ DIRS += [
     "/third_party/libwebrtc/api/field_trials_gn",
     "/third_party/libwebrtc/api/field_trials_registry_gn",
     "/third_party/libwebrtc/api/field_trials_view_gn",
+    "/third_party/libwebrtc/api/frame_transformer_factory_gn",
     "/third_party/libwebrtc/api/frame_transformer_interface_gn",
     "/third_party/libwebrtc/api/function_view_gn",
     "/third_party/libwebrtc/api/libjingle_logging_api_gn",
