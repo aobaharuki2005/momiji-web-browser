@@ -20,10 +20,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d0b311007c033e838
  11 files changed, 55 insertions(+), 10 deletions(-)
 
 diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
-index 1c4d634729..a748c4f398 100644
+index f703ae0041..3a266c98fa 100644
 --- a/audio/audio_receive_stream.cc
 +++ b/audio/audio_receive_stream.cc
-@@ -57,6 +57,8 @@ std::string AudioReceiveStreamInterface::Config::Rtp::ToString() const {
+@@ -58,6 +58,8 @@ std::string AudioReceiveStreamInterface::Config::Rtp::ToString() const {
       << (rtcp_mode == RtcpMode::kCompound
               ? "compound"
               : (rtcp_mode == RtcpMode::kReducedSize ? "reducedSize" : "off"));
@@ -32,7 +32,7 @@ index 1c4d634729..a748c4f398 100644
    ss << '}';
    return ss.str();
  }
-@@ -90,7 +92,7 @@ std::unique_ptr<voe::ChannelReceiveInterface> CreateChannelReceive(
+@@ -91,7 +93,7 @@ std::unique_ptr<voe::ChannelReceiveInterface> CreateChannelReceive(
        config.jitter_buffer_min_delay_ms, config.enable_non_sender_rtt,
        config.decoder_factory, config.codec_pair_id,
        std::move(config.frame_decryptor), config.crypto_options,
