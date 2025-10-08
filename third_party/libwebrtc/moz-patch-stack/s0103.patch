@@ -412,7 +412,7 @@ index 3f517b73c0..edf214e0c4 100644
      deps = [
        ":generated_jni",
 diff --git a/logging/BUILD.gn b/logging/BUILD.gn
-index 65fe4b69f5..f091ff40cb 100644
+index 576980c5ab..2a8b864d5b 100644
 --- a/logging/BUILD.gn
 +++ b/logging/BUILD.gn
 @@ -11,8 +11,8 @@ if (rtc_enable_protobuf) {
@@ -455,7 +455,7 @@ index 8d53cdfa0a..181623546d 100644
  
  config("audio_device_warnings_config") {
 diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
-index 5102f92945..2e95f823fa 100644
+index 847e5ccbea..2f6be208d2 100644
 --- a/modules/audio_processing/aec3/BUILD.gn
 +++ b/modules/audio_processing/aec3/BUILD.gn
 @@ -124,7 +124,7 @@ rtc_library("aec3") {
@@ -756,7 +756,7 @@ index 8222263e1f..913382709e 100644
  import("../webrtc.gni")
  
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index 4038297072..c36ca05c5c 100644
+index 1117b2bb86..f9a36d94c9 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -6,10 +6,10 @@
@@ -772,7 +772,7 @@ index 4038297072..c36ca05c5c 100644
    import("//third_party/jni_zero/jni_zero.gni")
  }
  
-@@ -421,7 +421,7 @@ if (is_ios) {
+@@ -415,7 +415,7 @@ if (is_ios) {
      testonly = true
      visibility = [ "*" ]
      sources = [ "ios/google_test_runner.mm" ]
@@ -782,7 +782,7 @@ index 4038297072..c36ca05c5c 100644
      deps = [ ":google_test_runner_delegate" ]
    }
 diff --git a/test/fuzzers/BUILD.gn b/test/fuzzers/BUILD.gn
-index 62d0a537f4..8e5908a193 100644
+index d8f0eba11f..eb25867dc9 100644
 --- a/test/fuzzers/BUILD.gn
 +++ b/test/fuzzers/BUILD.gn
 @@ -6,7 +6,7 @@
