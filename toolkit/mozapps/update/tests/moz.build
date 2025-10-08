@@ -34,9 +34,6 @@ SimplePrograms(
     ]
 )
 
-if CONFIG["OS_ARCH"] == "WINNT":
-    SimplePrograms(["test_file_hold_open", "test_file_update_mtime"])
-
 LOCAL_INCLUDES += [
     "/toolkit/mozapps/update",
     "/toolkit/mozapps/update/common",
