@@ -246,7 +246,7 @@ index 40714b196e..2c6b39f59e 100644
  
  if (rtc_include_tests) {
 diff --git a/api/video/BUILD.gn b/api/video/BUILD.gn
-index d0af76a6a0..40d3be5e30 100644
+index 7ff6932db1..aadc46a5c8 100644
 --- a/api/video/BUILD.gn
 +++ b/api/video/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -782,7 +782,7 @@ index 1dda47bb61..c1ae6bba46 100644
      deps = [ ":google_test_runner_delegate" ]
    }
 diff --git a/test/fuzzers/BUILD.gn b/test/fuzzers/BUILD.gn
-index 3c2038d64b..058c82509d 100644
+index 62d0a537f4..8e5908a193 100644
 --- a/test/fuzzers/BUILD.gn
 +++ b/test/fuzzers/BUILD.gn
 @@ -6,7 +6,7 @@
