@@ -5508,6 +5508,7 @@ var gCSSProperties = {
     domProp: "cursor",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
+    applies_to_marker: true,
     initial_values: ["auto"],
     other_values: [
       "crosshair",
