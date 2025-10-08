@@ -380,6 +380,11 @@ LlamaBackend::SamplerResult LlamaBackend::InitializeSampler(
         samplerElement = mLib->llama_sampler_init_top_k(samplerConfig.mTopK);
         break;
 
+      case LlamaSamplerType::Top_p:
+        samplerElement = mLib->llama_sampler_init_top_p(samplerConfig.mTopP,
+                                                        samplerConfig.mMinKeep);
+        break;
+
       default:
 
         auto msg = nsFmtCString(FMT_STRING("{}: Unimplemented sampler type"),
