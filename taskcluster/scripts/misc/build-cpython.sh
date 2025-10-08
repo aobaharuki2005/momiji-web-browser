@@ -32,7 +32,7 @@ case `uname -s` in
                 macosx_version_min=11.0
                 ;;
             *)
-                macosx_version_min=10.12
+                macosx_version_min=10.15
                 ;;
         esac
         # NOTE: both CFLAGS and CPPFLAGS need to be set here, otherwise

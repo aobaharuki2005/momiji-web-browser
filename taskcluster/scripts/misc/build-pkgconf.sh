@@ -19,7 +19,7 @@ aarch64-unknown-linux-gnu)
     EXE=
     ;;
 x86_64-apple-darwin)
-    export MACOSX_DEPLOYMENT_TARGET=10.12
+    export MACOSX_DEPLOYMENT_TARGET=10.15
     TARGET=$1
     CC="clang --target=$TARGET -isysroot $MOZ_FETCHES_DIR/MacOSX26.0.sdk"
     EXE=

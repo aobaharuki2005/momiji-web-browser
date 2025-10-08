@@ -22,7 +22,7 @@ case "$CONFIGS" in
   # version doesn't really matter: as of writing, cmake checks at most for 10.5.
   mkdir -p $ORIGPWD/bin
   echo "#!/bin/sh" > $ORIGPWD/bin/sw_vers
-  echo echo 10.12 >> $ORIGPWD/bin/sw_vers
+  echo echo 10.15 >> $ORIGPWD/bin/sw_vers
   chmod +x $ORIGPWD/bin/sw_vers
   # these variables are used in build-clang.py
   export OSX_SYSROOT=$(ls -d $MOZ_FETCHES_DIR/MacOSX*.sdk)

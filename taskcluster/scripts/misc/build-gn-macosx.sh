@@ -6,7 +6,7 @@ set -e -v
 WORKSPACE=$HOME/workspace
 
 CROSS_SYSROOT=$MOZ_FETCHES_DIR/MacOSX26.0.sdk
-export MACOSX_DEPLOYMENT_TARGET=10.12
+export MACOSX_DEPLOYMENT_TARGET=10.15
 
 export CC=$MOZ_FETCHES_DIR/clang/bin/clang
 export CXX=$MOZ_FETCHES_DIR/clang/bin/clang++

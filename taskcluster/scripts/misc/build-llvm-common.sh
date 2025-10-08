@@ -27,7 +27,7 @@ aarch64-apple-darwin)
   ;;
 x86_64-apple-darwin)
   arch=x86_64
-  export MACOSX_DEPLOYMENT_TARGET=10.12
+  export MACOSX_DEPLOYMENT_TARGET=10.15
   ;;
 esac
 
@@ -56,7 +56,7 @@ case "$target" in
   # obviously missing when cross-compiling, so create a fake one. The exact
   # version doesn't really matter: as of writing, cmake checks at most for 10.5.
   echo "#!/bin/sh" > sw_vers
-  echo echo 10.12 >> sw_vers
+  echo echo 10.15 >> sw_vers
   chmod +x sw_vers
   PATH="$PATH:$PWD"
   ;;

@@ -29,7 +29,7 @@ case "$TARGET" in
   if test "$TARGET" = "aarch64-apple-darwin"; then
       export MACOSX_DEPLOYMENT_TARGET=11.0
   else
-      export MACOSX_DEPLOYMENT_TARGET=10.12
+      export MACOSX_DEPLOYMENT_TARGET=10.15
   fi
   ;;
 aarch64-unknown-linux-musl)

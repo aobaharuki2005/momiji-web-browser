@@ -36,7 +36,7 @@ case "$1" in
         EXE=.exe
         ;;
     macosx64)
-        export MACOSX_DEPLOYMENT_TARGET=10.12
+        export MACOSX_DEPLOYMENT_TARGET=10.15
         TARGET=x86_64-apple-darwin
         CC="clang -fuse-ld=lld --target=$TARGET -isysroot $MOZ_FETCHES_DIR/MacOSX26.0.sdk"
         EXE=
