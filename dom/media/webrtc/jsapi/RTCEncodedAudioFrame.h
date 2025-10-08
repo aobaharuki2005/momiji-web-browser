@@ -7,15 +7,19 @@
 #ifndef MOZILLA_DOM_MEDIA_WEBRTC_JSAPI_RTCENCODEDAUDIOFRAME_H_
 #define MOZILLA_DOM_MEDIA_WEBRTC_JSAPI_RTCENCODEDAUDIOFRAME_H_
 
-#include "jsapi/RTCEncodedFrameBase.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/RTCEncodedAudioFrameBinding.h"
+#include "mozilla/dom/RTCEncodedFrameBase.h"
 #include "nsIGlobalObject.h"
 
 namespace mozilla::dom {
 
+class StructuredCloneHolder;
+
 struct RTCEncodedAudioFrameData : RTCEncodedFrameState {
   RTCEncodedAudioFrameMetadata mMetadata;
+
+  [[nodiscard]] RTCEncodedAudioFrameData Clone() const;
 };
 
 // Wraps a libwebrtc frame, allowing the frame buffer to be modified, and
@@ -30,10 +34,13 @@ class RTCEncodedAudioFrame final : public RTCEncodedAudioFrameData,
       std::unique_ptr<webrtc::TransformableFrameInterface> aFrame,
       uint64_t aCounter, RTCRtpScriptTransformer* aOwner);
 
+  explicit RTCEncodedAudioFrame(nsIGlobalObject* aGlobal,
+                                RTCEncodedAudioFrameData&& aData);
+
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(RTCEncodedAudioFrame,
-                                           RTCEncodedFrameBase)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(RTCEncodedAudioFrame,
+                                                         RTCEncodedFrameBase)
 
   // webidl (timestamp and data accessors live in base class)
   JSObject* WrapObject(JSContext* aCx,
@@ -47,12 +54,11 @@ class RTCEncodedAudioFrame final : public RTCEncodedAudioFrameData,
 
   bool IsVideo() const override { return false; }
 
-  // [Serializable] implementations: {Read, Write}StructuredClone
-  static already_AddRefed<RTCEncodedAudioFrame> ReadStructuredClone(
-      JSContext* aCx, nsIGlobalObject* aGlobal,
-      JSStructuredCloneReader* aReader);
-  bool WriteStructuredClone(JSContext* aCx,
-                            JSStructuredCloneWriter* aWriter) const;
+  static JSObject* ReadStructuredClone(JSContext* aCx, nsIGlobalObject* aGlobal,
+                                       JSStructuredCloneReader* aReader,
+                                       RTCEncodedAudioFrameData& aData);
+  bool WriteStructuredClone(JSStructuredCloneWriter* aWriter,
+                            StructuredCloneHolder* aHolder) const;
 
  private:
   virtual ~RTCEncodedAudioFrame();
@@ -62,6 +68,11 @@ class RTCEncodedAudioFrame final : public RTCEncodedAudioFrameData,
   RTCEncodedAudioFrame& operator=(const RTCEncodedAudioFrame&) = delete;
   RTCEncodedAudioFrame(RTCEncodedAudioFrame&&) = delete;
   RTCEncodedAudioFrame& operator=(RTCEncodedAudioFrame&&) = delete;
+
+  // RTCEncodedAudioFrame can run on either main thread or worker thread.
+  void AssertIsOnOwningThread() const {
+    NS_ASSERT_OWNINGTHREAD(RTCEncodedAudioFrame);
+  }
 
   RefPtr<RTCRtpScriptTransformer> mOwner;
 };
