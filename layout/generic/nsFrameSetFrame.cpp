@@ -818,10 +818,10 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
   CalculateRowCol(aPresContext, width, colSpecs, mColSizes);
   CalculateRowCol(aPresContext, height, rowSpecs, mRowSizes);
 
-  UniquePtr<bool[]> verBordersVis;  // vertical borders visibility
-  UniquePtr<nscolor[]> verBorderColors;
-  UniquePtr<bool[]> horBordersVis;  // horizontal borders visibility
-  UniquePtr<nscolor[]> horBorderColors;
+  nsTArray<bool> verBordersVis;  // vertical borders visibility
+  nsTArray<nscolor> verBorderColors;
+  nsTArray<bool> horBordersVis;  // horizontal borders visibility
+  nsTArray<nscolor> horBorderColors;
   nscolor borderColor = GetBorderColor();
   nsFrameborder frameborder = GetFrameBorder();
 
@@ -833,15 +833,15 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
     static_assert(NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(nscolor),
                   "Check for overflow");
 
-    verBordersVis = MakeUnique<bool[]>(NumCols());
-    verBorderColors = MakeUnique<nscolor[]>(NumCols());
+    verBordersVis.SetLength(NumCols());
+    verBorderColors.SetLength(NumCols());
     for (int32_t verX = 0; verX < NumCols(); verX++) {
       verBordersVis[verX] = false;
       verBorderColors[verX] = NO_COLOR;
     }
 
-    horBordersVis = MakeUnique<bool[]>(NumRows());
-    horBorderColors = MakeUnique<nscolor[]>(NumRows());
+    horBordersVis.SetLength(NumRows());
+    horBorderColors.SetLength(NumRows());
     for (int32_t horX = 0; horX < NumRows(); horX++) {
       horBordersVis[horX] = false;
       horBorderColors[horX] = NO_COLOR;

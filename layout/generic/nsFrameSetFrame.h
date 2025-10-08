@@ -10,7 +10,6 @@
 #define nsHTMLFrameset_h___
 
 #include "mozilla/Attributes.h"
-#include "mozilla/UniquePtr.h"
 #include "nsColor.h"
 #include "nsContainerFrame.h"
 #include "nsTArray.h"
@@ -169,9 +168,6 @@ class nsHTMLFramesetFrame final : public nsContainerFrame {
 
   int32_t NumRows() const;
   int32_t NumCols() const;
-
-  template <typename T, class D = mozilla::DefaultDelete<T>>
-  using UniquePtr = mozilla::UniquePtr<T, D>;
 
   nsFramesetDrag mDrag;
   nsBorderColor mEdgeColors;
