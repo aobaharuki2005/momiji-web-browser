@@ -226,6 +226,10 @@ perf:
         description: |
           ETLD+1 domain of website visited.
         type: string
+      channel:
+        description: |
+          Release channel of the build. Either "nightly" or "release" only.
+        type: string
     send_in_pings:
       - pageload-base-domain
 

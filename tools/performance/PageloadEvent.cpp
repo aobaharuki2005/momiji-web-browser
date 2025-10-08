@@ -310,6 +310,12 @@ void PageloadEventData::SendAsPageLoadDomainEvent() {
   // Add some noise to any numerical metrics.
   extra.lcpTime = AddMultiplicativeNoise(this->lcpTime);
 
+#ifdef NIGHTLY_BUILD
+  extra.channel = mozilla::Some("nightly"_ns);
+#else
+  extra.channel = mozilla::Some("release"_ns);
+#endif
+
   // If the event is a page_load_domain event, then immediately send it.
   mozilla::glean::perf::page_load_domain.Record(mozilla::Some(extra));
 
