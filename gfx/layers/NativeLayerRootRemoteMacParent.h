@@ -30,6 +30,8 @@ class NativeLayerRootRemoteMacParent final : public NativeLayerRemoteParent {
   mozilla::ipc::IPCResult RecvRequestReadback(IntSize aSize,
                                               Shmem* const aPixels) override;
 
+  mozilla::ipc::IPCResult RecvFlush() override;
+
  protected:
   ~NativeLayerRootRemoteMacParent() = default;
 

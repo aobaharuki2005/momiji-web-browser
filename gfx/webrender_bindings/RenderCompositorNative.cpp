@@ -236,6 +236,10 @@ bool RenderCompositorNative::MaybeProcessScreenshotQueue() {
   return true;
 }
 
+void RenderCompositorNative::WaitUntilPresentationFlushed() {
+  mNativeLayerRoot->WaitUntilCommitToScreenHasBeenProcessed();
+}
+
 void RenderCompositorNative::CompositorBeginFrame() {
   mAddedLayers.Clear();
   mAddedTilePixelCount = 0;

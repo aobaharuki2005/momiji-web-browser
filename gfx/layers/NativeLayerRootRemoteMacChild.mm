@@ -137,6 +137,10 @@ bool NativeLayerRootRemoteMacChild::CommitToScreen() {
   return true;
 }
 
+void NativeLayerRootRemoteMacChild::WaitUntilCommitToScreenHasBeenProcessed() {
+  mRemoteChild->SendFlush();
+}
+
 void NativeLayerRootRemoteMacChild::CommitForSnapshot(CALayer* aRootCALayer) {
   [CATransaction begin];
   [CATransaction setDisableActions:YES];  // disable cross-fade

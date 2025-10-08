@@ -78,6 +78,12 @@ sync protocol PNativeLayerRemote
 parent:
   async CommitNativeLayerCommands(NativeLayerCommand[] commands);
   sync RequestReadback(IntSize size) returns (Shmem pixels);
+
+  // A synchronous no-op message, to make sure that any preceding
+  // CommitNativeLayerCommands messages have been processed.
+  // Used for synchronous widget-initiated paints, most importantly
+  // during window resize or when a new window is opened.
+  sync Flush();
 };
 
 } // layers

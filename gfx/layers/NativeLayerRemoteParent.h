@@ -17,6 +17,8 @@ class NativeLayerRemoteParent : public PNativeLayerRemoteParent {
 
   virtual mozilla::ipc::IPCResult RecvRequestReadback(IntSize aSize,
                                                       Shmem* const aPixels) = 0;
+
+  virtual mozilla::ipc::IPCResult RecvFlush() = 0;
 };
 
 }  // namespace layers

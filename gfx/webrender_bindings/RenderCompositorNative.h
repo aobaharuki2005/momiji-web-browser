@@ -59,6 +59,8 @@ class RenderCompositorNative : public RenderCompositor {
   bool MaybeGrabScreenshot(const gfx::IntSize& aWindowSize) override;
   bool MaybeProcessScreenshotQueue() override;
 
+  void WaitUntilPresentationFlushed() override;
+
   // Interface for wr::Compositor
   void CompositorBeginFrame() override;
   void CompositorEndFrame() override;
