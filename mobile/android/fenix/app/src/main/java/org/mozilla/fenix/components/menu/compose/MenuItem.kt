@@ -304,7 +304,7 @@ internal fun MenuBadgeItem(
         badgeBackgroundColor = FirefoxTheme.colors.badgeActive
         state = MenuItemState.ACTIVE
     } else {
-        badgeBackgroundColor = FirefoxTheme.colors.layerSearch
+        badgeBackgroundColor = FirefoxTheme.colors.layer2
         state = MenuItemState.DISABLED
     }
 
