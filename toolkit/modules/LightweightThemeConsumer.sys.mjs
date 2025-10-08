@@ -11,6 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ThemeContentPropertyList: "resource:///modules/ThemeVariableMap.sys.mjs",
   ThemeVariableMap: "resource:///modules/ThemeVariableMap.sys.mjs",
+  BuiltInThemeConfig: "resource:///modules/BuiltInThemeConfig.sys.mjs",
 });
 
 // Whether the content and chrome areas should always use the same color
@@ -23,17 +24,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
-const kDefaultThemes = {
-  [DEFAULT_THEME_ID]: {},
-  "firefox-compact-light@mozilla.org": {
-    colorScheme: "light",
-    forceNonNative: true,
-  },
-  "firefox-compact-dark@mozilla.org": {
-    colorScheme: "dark",
-    forceNonNative: true,
-  },
-};
 
 const toolkitVariableMap = [
   [
@@ -317,14 +307,18 @@ LightweightThemeConsumer.prototype = {
     if (!theme) {
       theme = { id: DEFAULT_THEME_ID };
     }
-    let builtinThemeConfig = kDefaultThemes[theme.id];
-    let hasTheme = !builtinThemeConfig;
+    let builtinThemeConfig = lazy.BuiltInThemeConfig.get(theme.id);
+    let hasTheme = theme.id != DEFAULT_THEME_ID && !builtinThemeConfig?.inApp;
     let colorSchemeOverride = (() => {
       if (useDarkTheme || themeData.darkTheme) {
         return useDarkTheme ? "dark" : "light";
       }
-      if (builtinThemeConfig?.colorScheme) {
-        return builtinThemeConfig.colorScheme;
+      if (builtinThemeConfig && theme.color_scheme) {
+        // TODO(emilio): Seems we could do this for all themes, (not just
+        // built-ins, and taking care of the auto/system values) and it'd
+        // be the right thing to do for per-window themes (but then we'd need
+        // to fix up the content theme selection too).
+        return theme.color_scheme;
       }
       // If not, reset the color scheme override field. This is required to reset
       // the color scheme on theme switch.
@@ -338,7 +332,7 @@ LightweightThemeConsumer.prototype = {
       this._win.browsingContext.prefersColorSchemeOverride =
         colorSchemeOverride;
     }
-    this._doc.forceNonNativeTheme = !!builtinThemeConfig?.forceNonNative;
+    this._doc.forceNonNativeTheme = !!builtinThemeConfig?.nonNative;
     let root = this._doc.documentElement;
     root.toggleAttribute("lwtheme-image", !!(hasTheme && theme.headerURL));
     this._setExperiment(hasTheme, themeData.experiment, theme.experimental);
