@@ -172,6 +172,7 @@ class MessagePort;
 class MessagePortIdentifier;
 struct VideoFrameSerializedData;
 struct AudioDataSerializedData;
+struct RTCEncodedVideoFrameData;
 
 class StructuredCloneHolder : public StructuredCloneHolderBase {
  public:
@@ -214,15 +215,16 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
   // Create a statement for each of the side DOM-ish data members.
   // mTransferredPorts is not included because it is part of the
   // deserialized state.
-#define CLONED_DATA_MEMBERS  \
-  STMT(mBlobImplArray);      \
-  STMT(mWasmModuleArray);    \
-  STMT(mInputStreamArray);   \
-  STMT(mClonedSurfaces);     \
-  STMT(mVideoFrames);        \
-  STMT(mAudioData);          \
-  STMT(mEncodedVideoChunks); \
-  STMT(mEncodedAudioChunks); \
+#define CLONED_DATA_MEMBERS     \
+  STMT(mBlobImplArray);         \
+  STMT(mWasmModuleArray);       \
+  STMT(mInputStreamArray);      \
+  STMT(mClonedSurfaces);        \
+  STMT(mVideoFrames);           \
+  STMT(mAudioData);             \
+  STMT(mEncodedVideoChunks);    \
+  STMT(mEncodedAudioChunks);    \
+  STMT(mRtcEncodedVideoFrames); \
   STMT(mPortIdentifiers);
 
   // Call this method to know if this object is keeping some DOM object alive.
@@ -300,6 +302,10 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
 
   nsTArray<EncodedAudioChunkData>& EncodedAudioChunks() {
     return mEncodedAudioChunks;
+  }
+
+  nsTArray<RTCEncodedVideoFrameData>& RtcEncodedVideoFrames() {
+    return mRtcEncodedVideoFrames;
   }
 
   // Implementations of the virtual methods to allow cloning of objects which
@@ -415,6 +421,9 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
 
   // Used for cloning EncodedAudioChunk in the structured cloning algorithm.
   nsTArray<EncodedAudioChunkData> mEncodedAudioChunks;
+
+  // Used for cloning RTCEncodedVideoFrame in the structured cloning algorithm.
+  nsTArray<RTCEncodedVideoFrameData> mRtcEncodedVideoFrames;
 
   // This raw pointer is only set within ::Read() and is unset by the end.
   nsIGlobalObject* MOZ_NON_OWNING_REF mGlobal;

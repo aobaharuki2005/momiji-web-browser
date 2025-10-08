@@ -14,6 +14,8 @@ dictionary RTCEncodedAudioFrameMetadata {
     short sequenceNumber;
 };
 
+// [Serializable] is implemented without adding attribute here,
+// because we don't implement "full serialization" to disk.
 [Pref="media.peerconnection.enabled",
  Pref="media.peerconnection.scripttransform.enabled",
  Exposed=(Window,DedicatedWorker)]

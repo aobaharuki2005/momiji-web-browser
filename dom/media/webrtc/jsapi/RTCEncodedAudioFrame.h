@@ -14,11 +14,16 @@
 
 namespace mozilla::dom {
 
+struct RTCEncodedAudioFrameData : RTCEncodedFrameState {
+  RTCEncodedAudioFrameMetadata mMetadata;
+};
+
 // Wraps a libwebrtc frame, allowing the frame buffer to be modified, and
 // providing read-only access to various metadata. After the libwebrtc frame is
 // extracted (with RTCEncodedFrameBase::TakeFrame), the frame buffer is
 // detached, but the metadata remains accessible.
-class RTCEncodedAudioFrame final : public RTCEncodedFrameBase {
+class RTCEncodedAudioFrame final : public RTCEncodedAudioFrameData,
+                                   public RTCEncodedFrameBase {
  public:
   explicit RTCEncodedAudioFrame(
       nsIGlobalObject* aGlobal,
@@ -42,10 +47,23 @@ class RTCEncodedAudioFrame final : public RTCEncodedFrameBase {
 
   bool IsVideo() const override { return false; }
 
+  // [Serializable] implementations: {Read, Write}StructuredClone
+  static already_AddRefed<RTCEncodedAudioFrame> ReadStructuredClone(
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      JSStructuredCloneReader* aReader);
+  bool WriteStructuredClone(JSContext* aCx,
+                            JSStructuredCloneWriter* aWriter) const;
+
  private:
   virtual ~RTCEncodedAudioFrame();
+
+  // forbid copy/move to keep mState member in base valid
+  RTCEncodedAudioFrame(const RTCEncodedAudioFrame&) = delete;
+  RTCEncodedAudioFrame& operator=(const RTCEncodedAudioFrame&) = delete;
+  RTCEncodedAudioFrame(RTCEncodedAudioFrame&&) = delete;
+  RTCEncodedAudioFrame& operator=(RTCEncodedAudioFrame&&) = delete;
+
   RefPtr<RTCRtpScriptTransformer> mOwner;
-  RTCEncodedAudioFrameMetadata mMetadata;
 };
 
 }  // namespace mozilla::dom
