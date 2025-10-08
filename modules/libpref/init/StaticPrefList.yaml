@@ -5538,9 +5538,13 @@
 #
 # When this condition changes, be sure to update the `run-if` / `skip-if`
 # conditions in `dom/webgpu/tests/mochitest/*.toml` accordingly.
+#
+# preprocessor.py doesn't understand parentheses, but && is higher precedence
+# than ||, meaning this pref defaults to true on any Windows architecture, or
+# on aarch64 (Apple Silicon) MacOS.
 - name: dom.webgpu.enabled
   type: RelaxedAtomicBool
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MACOSX) && defined(MOZ_AARCH64)
   value: true
 #else
   value: @IS_EARLY_BETA_OR_EARLIER@

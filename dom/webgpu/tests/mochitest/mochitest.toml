@@ -7,8 +7,9 @@ subsuite = "webgpu"
 # These conditions should be the same as the `skip-if` conditions in
 # `mochitest-no-pref.html`, except for `verify`.
 run-if = [
-  "nightly_build",
+  "early_beta_or_earlier",
   "os == 'win'",
+  "os == 'mac' && arch == 'aarch64'",
 ]
 
 prefs = [
