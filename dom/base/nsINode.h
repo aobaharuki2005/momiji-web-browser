@@ -14,7 +14,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Likely.h"
 #include "mozilla/LinkedList.h"
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMString.h"

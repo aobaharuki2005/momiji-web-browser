@@ -9,7 +9,6 @@
 #include <algorithm>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/ScopeExit.h"
 #include "nsGlobalWindowInner.h"
 
