@@ -2253,7 +2253,7 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
   SmoothScrollAnimation* animation = mAnimation->AsSmoothScrollAnimation();
   MOZ_ASSERT(animation);
 
-  animation->UpdateDestination(aEvent.mTimeStamp,
+  animation->UpdateDestination(GetFrameTime().Time(),
                                CSSPixel::ToAppUnits(destination),
                                nsSize(velocity.x, velocity.y));
 
