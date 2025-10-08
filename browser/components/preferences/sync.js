@@ -39,12 +39,6 @@ var gSyncPane = {
       .getElementById("weavePrefsDeck")
       .removeAttribute("data-hidden-from-search");
 
-    if (Services.prefs.getBoolPref(BACKUP_UI_ENABLED_PREF, false)) {
-      document
-        .getElementById("dataBackupGroup")
-        .removeAttribute("data-hidden-from-search");
-    }
-
     this.updateBackupUIVisibility();
 
     // If the Service hasn't finished initializing, wait for it.
@@ -304,6 +298,13 @@ var gSyncPane = {
       false
     );
 
+    let dataBackupSectionEl = document.getElementById("dataBackupSection");
+
+    dataBackupSectionEl.toggleAttribute(
+      "data-hidden-from-search",
+      !isBackupUIEnabled
+    );
+
     let dataBackupGroupEl = document.getElementById("dataBackupGroup");
     let backupGroupHeaderEl = document.getElementById("backupCategory");
 
@@ -317,11 +318,14 @@ var gSyncPane = {
       this.updateBackupUIVisibility
     );
 
-    window.addEventListener("unload", () =>
-      Services.prefs.removeObserver(
-        BACKUP_UI_ENABLED_PREF,
-        this.updateBackupUIVisibility
-      )
+    window.addEventListener(
+      "unload",
+      () =>
+        Services.prefs.removeObserver(
+          BACKUP_UI_ENABLED_PREF,
+          this.updateBackupUIVisibility
+        ),
+      { once: true }
     );
   },
 
