@@ -146,7 +146,8 @@ tree {
 html|input {
   background: transparent;
   border: none;
-  padding: 0;
+  padding: 0 var(--space-small);
+  outline-offset: var(--focus-outline-offset);
 }
 
 html|input.header {
