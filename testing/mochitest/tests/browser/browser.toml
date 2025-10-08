@@ -1,7 +1,8 @@
 [DEFAULT]
 support-files = [
   "head.js",
-  "dummy.html"]
+  "dummy.html",
+  "empty.html"]
 
 ["browser_BrowserTestUtils.js"]
 
