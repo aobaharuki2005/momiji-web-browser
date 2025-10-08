@@ -5178,6 +5178,21 @@
       }
     ]
   },
+  "1973019": {
+    "label": "mitsukoshi.mistore.jp",
+    "bugs": {
+      "1973019": {
+        "issue": "broken-redirect",
+        "matches": ["*://mitsukoshi.mistore.jp/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
+  },
   "1976402": {
     "label": "dieseldispatch.com",
     "bugs": {
