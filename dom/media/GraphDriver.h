@@ -367,7 +367,12 @@ class ThreadedDriver : public GraphDriver {
   class IterationWaitHelper {
     Monitor mMonitor MOZ_UNANNOTATED;
     // The below members are guarded by mMonitor.
-    bool mNeedAnotherIteration = false;
+
+    // Whether another iteration is required either to process control
+    // messages or to render.
+    // Drivers do not pass on this state when switching to another driver,
+    // so always perform at least one iteration.
+    bool mNeedAnotherIteration = true;
     TimeStamp mWakeTime;
 
    public:

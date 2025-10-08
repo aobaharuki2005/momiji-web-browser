@@ -187,6 +187,8 @@ SystemClockDriver::~SystemClockDriver() = default;
 void ThreadedDriver::RunThread() {
   mThreadRunning = true;
   while (true) {
+    WaitForNextIteration();
+
     MediaTime interval = GetIntervalForIteration();
     auto iterationStart = mIterationEnd;
     mIterationEnd += interval;
@@ -212,7 +214,6 @@ void ThreadedDriver::RunThread() {
       result.Stopped();
       break;
     }
-    WaitForNextIteration();
     if (GraphDriver* nextDriver = result.NextDriver()) {
       LOG(LogLevel::Debug, ("%p: Switching to AudioCallbackDriver", Graph()));
       result.Switched();
