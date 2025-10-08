@@ -5388,6 +5388,21 @@
       }
     ]
   },
+  "1992121": {
+    "label": "tutor-uksouth.classroom.cloud",
+    "bugs": {
+      "1992121": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://tutor-uksouth.classroom.cloud/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
+  },
   "1992402": {
     "label": "ehssrisk.sai360.net",
     "bugs": {
