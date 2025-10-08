@@ -1,141 +1,208 @@
 From: Michael Froman <mjfroman@mac.com>
-Date: Wed, 8 Oct 2025 18:37:46 -0500
-Subject: (tmp-cherry-pick) Revert "Introduce NetworkQueue interface"
- (3ca21dedef)
+Date: Wed, 8 Oct 2025 17:42:07 -0500
+Subject: (tmp-cherry-pick) Revert "Refactor class SendSideBandwidthEstimation"
+ (5298f72f97)
 
-This reverts commit 1cc000835fb5531179c3b0fc7007fd1245bac49d.
+This reverts commit c432ba14dbb2cdd2b90a6f18043254cbcfa2fd0e.
 
-Reason for revert: Breaks downstream test (threading issue)
+Reason for revert: Investigate downstream test breakage - b/429391976
 
-Bug: webrtc:42225697
+Bug: webrtc:423841921, webrtc:42222445
 Original change's description:
-> Introduce NetworkQueue interface
+> Refactor class SendSideBandwidthEstimation
 >
-> The purpose of the interface is to allow network simulations to implement their own queueing.
+> The goal is to make states more clear and be able to log where a certain decision come from.
+> In this cl:
+>  - loss bases BWE handling moved to separate files
+>  - remove field trial WebRTC-Bwe-ReceiverLimitCapsOnly
 >
-> The existing SimulatedNetwork is refactored to use a NetworkQueue interface.
-> Per default a simple LeayBucket is used that has the same behavior as SimulatedNetwork todayIntroduce NetworkQueue interface
->
-> Bug: webrtc:42225697
-> Change-Id: I9797a716c8a4599eb9e86e97fc6ebb267fee30f6
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/398281
-> Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+> Bug: webrtc:423841921, webrtc:42222445
+> Change-Id: I502bee094e18606f8a188214fafa421a868023ca
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/396342
+> Reviewed-by: Diep Bui <diepbp@webrtc.org>
 > Commit-Queue: Per Kjellander <perkj@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#45071}
+> Cr-Commit-Position: refs/heads/main@{#45056}
 
-Bug: webrtc:42225697
-No-Presubmit: true
-No-Tree-Checks: true
-No-Try: true
-Change-Id: Ie5293d6cb489c525f89173bd39ed8221af496d48
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/398941
-Reviewed-by: Evan Shrubsole <eshr@webrtc.org>
-Auto-Submit: Per Kjellander <perkj@webrtc.org>
+Bug: webrtc:423841921, webrtc:42222445
+Change-Id: I8dcda24877dd8b1fbab4e1bb5235e2e7b903dabf
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/399080
 Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
-Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#45073}
+Reviewed-by: Diep Bui <diepbp@webrtc.org>
+Commit-Queue: Per Kjellander <perkj@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#45088}
 ---
- BUILD.gn                                      |   1 -
- api/BUILD.gn                                  |   3 -
- api/test/network_emulation/BUILD.gn           |  31 ----
- .../leaky_bucket_network_queue.cc             |  82 ----------
- .../leaky_bucket_network_queue.h              |  64 --------
- .../leaky_bucket_network_queue_unittest.cc    |  59 -------
- api/test/network_emulation/network_queue.h    |  53 -------
- api/test/network_emulation_manager.cc         |  25 +--
- api/test/network_emulation_manager.h          |   4 -
- api/test/simulated_network.h                  |  15 --
- test/network/BUILD.gn                         |   3 -
- test/network/simulated_network.cc             | 145 ++++++++----------
- test/network/simulated_network.h              |  32 ++--
- test/network/simulated_network_unittest.cc    |  49 ++----
- 14 files changed, 91 insertions(+), 475 deletions(-)
- delete mode 100644 api/test/network_emulation/leaky_bucket_network_queue.cc
- delete mode 100644 api/test/network_emulation/leaky_bucket_network_queue.h
- delete mode 100644 api/test/network_emulation/leaky_bucket_network_queue_unittest.cc
- delete mode 100644 api/test/network_emulation/network_queue.h
+ experiments/field_trials.py                   |   5 +-
+ .../congestion_controller/goog_cc/BUILD.gn    |  24 -
+ .../goog_cc/goog_cc_network_control.cc        |  31 +-
+ .../goog_cc/loss_based_bwe.cc                 | 293 ------------
+ .../goog_cc/loss_based_bwe.h                  | 107 -----
+ .../goog_cc/loss_based_bwe_unittest.cc        | 157 -------
+ .../goog_cc/send_side_bandwidth_estimation.cc | 436 ++++++++++++++----
+ .../goog_cc/send_side_bandwidth_estimation.h  |  79 +++-
+ ...send_side_bandwidth_estimation_unittest.cc | 155 ++++---
+ 9 files changed, 500 insertions(+), 787 deletions(-)
+ delete mode 100644 modules/congestion_controller/goog_cc/loss_based_bwe.cc
+ delete mode 100644 modules/congestion_controller/goog_cc/loss_based_bwe.h
+ delete mode 100644 modules/congestion_controller/goog_cc/loss_based_bwe_unittest.cc
 
-diff --git a/BUILD.gn b/BUILD.gn
-index 1565aeb592..fd77e776cd 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
-@@ -635,7 +635,6 @@ if (rtc_include_tests && !build_with_chromium) {
-       "api/numerics:numerics_unittests",
-       "api/task_queue:pending_task_safety_flag_unittests",
-       "api/test/metrics:metrics_unittests",
--      "api/test/network_emulation:network_queue_unittests",
-       "api/transport:stun_unittest",
-       "api/transport/rtp:corruption_detection_message_unittest",
-       "api/video/test:rtc_api_video_unittests",
-diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 2e5f1a06a9..0b996dab6c 100644
---- a/api/BUILD.gn
-+++ b/api/BUILD.gn
-@@ -888,8 +888,6 @@ rtc_source_set("simulated_network_api") {
-     "../rtc_base:random",
-     "transport:ecn_marking",
-     "units:data_rate",
--    "units:data_size",
--    "units:timestamp",
-     "//third_party/abseil-cpp/absl/functional:any_invocable",
+diff --git a/experiments/field_trials.py b/experiments/field_trials.py
+index bb507462f1..dc1e12750a 100755
+--- a/experiments/field_trials.py
++++ b/experiments/field_trials.py
+@@ -583,6 +583,9 @@ POLICY_EXEMPT_FIELD_TRIALS: FrozenSet[FieldTrial] = frozenset([
+     FieldTrial('WebRTC-Bwe-ReceiveTimeFix',
+                42234228,
+                date(2024, 4, 1)),
++    FieldTrial('WebRTC-Bwe-ReceiverLimitCapsOnly',
++               42222445,
++               date(2024, 4, 1)),
+     FieldTrial('WebRTC-Bwe-RobustThroughputEstimatorSettings',
+                42220312,
+                date(2024, 4, 1)),
+@@ -902,7 +905,7 @@ POLICY_EXEMPT_FIELD_TRIALS: FrozenSet[FieldTrial] = frozenset([
+ ])  # yapf: disable
+ 
+ POLICY_EXEMPT_FIELD_TRIALS_DIGEST: str = \
+-    'cf604f3ec3a4fa7cf0857f8e1f9201366abe2e5f'
++    '625f8d689ab8bcfe4118347c6f8c852e3ac372c7'
+ 
+ REGISTERED_FIELD_TRIALS: FrozenSet[FieldTrial] = ACTIVE_FIELD_TRIALS.union(
+     POLICY_EXEMPT_FIELD_TRIALS)
+diff --git a/modules/congestion_controller/goog_cc/BUILD.gn b/modules/congestion_controller/goog_cc/BUILD.gn
+index 9b0660c244..e1cd1c4813 100644
+--- a/modules/congestion_controller/goog_cc/BUILD.gn
++++ b/modules/congestion_controller/goog_cc/BUILD.gn
+@@ -142,27 +142,6 @@ rtc_library("loss_based_bwe_v2") {
+     "//third_party/abseil-cpp/absl/algorithm:container",
    ]
  }
-@@ -915,7 +913,6 @@ rtc_library("network_emulation_manager_api") {
-     "../rtc_base:socket_address",
-     "../test/network:simulated_network",
-     "test/network_emulation",
--    "test/network_emulation:network_queue",
-     "units:data_rate",
-     "//third_party/abseil-cpp/absl/base:nullability",
-     "//third_party/abseil-cpp/absl/strings:string_view",
-diff --git a/api/test/network_emulation/BUILD.gn b/api/test/network_emulation/BUILD.gn
-index de58887b07..d22cc09d00 100644
---- a/api/test/network_emulation/BUILD.gn
-+++ b/api/test/network_emulation/BUILD.gn
-@@ -76,34 +76,3 @@ rtc_library("create_cross_traffic") {
-     "../../../test/network:emulated_network",
-   ]
- }
--
--rtc_library("network_queue") {
--  visibility = [ "*" ]
--
+-rtc_library("loss_based_bwe") {
 -  sources = [
--    "leaky_bucket_network_queue.cc",
--    "leaky_bucket_network_queue.h",
--    "network_queue.h",
+-    "loss_based_bwe.cc",
+-    "loss_based_bwe.h",
 -  ]
--
 -  deps = [
--    "../..:sequence_checker",
--    "../..:simulated_network_api",
+-    ":loss_based_bwe_v2",
+-    "../../../api:array_view",
+-    "../../../api:field_trials_view",
+-    "../../../api/transport:network_control",
+-    "../../../api/units:data_rate",
+-    "../../../api/units:data_size",
+-    "../../../api/units:time_delta",
+-    "../../../api/units:timestamp",
 -    "../../../rtc_base:checks",
--    "../../../rtc_base:macromagic",
--    "../../units:timestamp",
+-    "../../../rtc_base:logging",
+-    "../../../rtc_base/experiments:field_trial_parser",
+-    "../../remote_bitrate_estimator",
+-    "//third_party/abseil-cpp/absl/algorithm:container",
 -  ]
 -}
+ 
+ rtc_library("send_side_bwe") {
+   sources = [
+@@ -170,7 +149,6 @@ rtc_library("send_side_bwe") {
+     "send_side_bandwidth_estimation.h",
+   ]
+   deps = [
+-    ":loss_based_bwe",
+     ":loss_based_bwe_v2",
+     "../../../api:field_trials_view",
+     "../../../api/rtc_event_log",
+@@ -285,7 +263,6 @@ if (rtc_include_tests) {
+         "delay_based_bwe_unittest_helper.cc",
+         "delay_based_bwe_unittest_helper.h",
+         "goog_cc_network_control_unittest.cc",
+-        "loss_based_bwe_unittest.cc",
+         "loss_based_bwe_v2_test.cc",
+         "probe_bitrate_estimator_unittest.cc",
+         "probe_controller_unittest.cc",
+@@ -298,7 +275,6 @@ if (rtc_include_tests) {
+         ":delay_based_bwe",
+         ":estimators",
+         ":goog_cc",
+-        ":loss_based_bwe",
+         ":loss_based_bwe_v2",
+         ":probe_controller",
+         ":pushback_controller",
+diff --git a/modules/congestion_controller/goog_cc/goog_cc_network_control.cc b/modules/congestion_controller/goog_cc/goog_cc_network_control.cc
+index 2a64b31abf..45dda7b2c9 100644
+--- a/modules/congestion_controller/goog_cc/goog_cc_network_control.cc
++++ b/modules/congestion_controller/goog_cc/goog_cc_network_control.cc
+@@ -220,7 +220,7 @@ NetworkControlUpdate GoogCcNetworkController::OnProcessInterval(
+     congestion_window_pushback_controller_->UpdatePacingQueue(
+         msg.pacer_queue->bytes());
+   }
+-  bandwidth_estimation_->OnPeriodicUpdate(msg.at_time);
++  bandwidth_estimation_->UpdateEstimate(msg.at_time);
+   std::optional<int64_t> start_time_ms =
+       alr_detector_->GetApplicationLimitedRegionStartTime();
+   probe_controller_->SetAlrStartTimeMs(start_time_ms);
+@@ -380,8 +380,10 @@ std::vector<ProbeClusterConfig> GoogCcNetworkController::ResetConstraints(
+ 
+ NetworkControlUpdate GoogCcNetworkController::OnTransportLossReport(
+     TransportLossReport msg) {
++  int64_t total_packets_delta =
++      msg.packets_received_delta + msg.packets_lost_delta;
+   bandwidth_estimation_->UpdatePacketsLost(
+-      msg.packets_lost_delta, msg.packets_received_delta, msg.receive_time);
++      msg.packets_lost_delta, total_packets_delta, msg.receive_time);
+   return NetworkControlUpdate();
+ }
+ 
+@@ -452,7 +454,11 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
+     probe_controller_->SetAlrEndedTimeMs(now_ms);
+   }
+   previously_in_alr_ = alr_start_time.has_value();
 -
--rtc_library("network_queue_unittests") {
--  sources = [ "leaky_bucket_network_queue_unittest.cc" ]
--
--  testonly = true
--  deps = [
--    ":network_queue",
--    "../..:simulated_network_api",
--    "../../../test:test_support",
--    "../../units:data_size",
--    "../../units:timestamp",
--  ]
--}
-diff --git a/api/test/network_emulation/leaky_bucket_network_queue.cc b/api/test/network_emulation/leaky_bucket_network_queue.cc
++  acknowledged_bitrate_estimator_->IncomingPacketFeedbackVector(
++      report.SortedByReceiveTime());
++  auto acknowledged_bitrate = acknowledged_bitrate_estimator_->bitrate();
++  bandwidth_estimation_->SetAcknowledgedRate(acknowledged_bitrate,
++                                             report.feedback_time);
+   for (const auto& feedback : report.SortedByReceiveTime()) {
+     if (feedback.sent_packet.pacing_info.probe_cluster_id !=
+         PacedPacketInfo::kNotAProbe) {
+@@ -471,9 +477,6 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
+       *probe_bitrate < estimate_->link_capacity_lower) {
+     probe_bitrate.reset();
+   }
+-  acknowledged_bitrate_estimator_->IncomingPacketFeedbackVector(
+-      report.SortedByReceiveTime());
+-  auto acknowledged_bitrate = acknowledged_bitrate_estimator_->bitrate();
+   if (limit_probes_lower_than_throughput_estimate_ && probe_bitrate &&
+       acknowledged_bitrate) {
+     // Limit the backoff to something slightly below the acknowledged
+@@ -497,9 +500,19 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
+       report, acknowledged_bitrate, probe_bitrate, estimate_,
+       alr_start_time.has_value());
+ 
+-  bandwidth_estimation_->OnTransportPacketsFeedback(
+-      report, delay_based_bwe_->last_estimate(), acknowledged_bitrate,
+-      /*is_probe_rate=*/result.probe, alr_start_time.has_value());
++  if (result.updated) {
++    if (result.probe) {
++      bandwidth_estimation_->SetSendBitrate(result.target_bitrate,
++                                            report.feedback_time);
++    }
++    // Since SetSendBitrate now resets the delay-based estimate, we have to
++    // call UpdateDelayBasedEstimate after SetSendBitrate.
++    bandwidth_estimation_->UpdateDelayBasedEstimate(report.feedback_time,
++                                                    result.target_bitrate);
++  }
++  bandwidth_estimation_->UpdateLossBasedEstimator(
++      report, result.delay_detector_state, probe_bitrate,
++      alr_start_time.has_value());
+   if (result.updated) {
+     // Update the estimate in the ProbeController, in case we want to probe.
+     MaybeTriggerOnNetworkChanged(&update, report.feedback_time);
+diff --git a/modules/congestion_controller/goog_cc/loss_based_bwe.cc b/modules/congestion_controller/goog_cc/loss_based_bwe.cc
 deleted file mode 100644
-index 43170e0f3d..0000000000
---- a/api/test/network_emulation/leaky_bucket_network_queue.cc
+index ed40fc723b..0000000000
+--- a/modules/congestion_controller/goog_cc/loss_based_bwe.cc
 +++ /dev/null
-@@ -1,82 +0,0 @@
+@@ -1,293 +0,0 @@
 -/*
-- *  Copyright 2025 The WebRTC Project Authors. All rights reserved.
+- *  Copyright (c) 2025 The WebRTC project authors. All Rights Reserved.
 - *
 - *  Use of this source code is governed by a BSD-style license
 - *  that can be found in the LICENSE file in the root of the source
@@ -144,156 +211,297 @@ index 43170e0f3d..0000000000
 - *  be found in the AUTHORS file in the root of the source tree.
 - */
 -
--#include "api/test/network_emulation/leaky_bucket_network_queue.h"
+-#include "modules/congestion_controller/goog_cc/loss_based_bwe.h"
 -
 -#include <algorithm>
--#include <cstddef>
--#include <optional>
--#include <vector>
--
--#include "api/sequence_checker.h"
--#include "api/test/simulated_network.h"
--#include "api/units/timestamp.h"
--#include "rtc_base/checks.h"
--
--namespace webrtc {
--
--LeakyBucketNetworkQueue::LeakyBucketNetworkQueue(size_t max_packet_capacity)
--    : max_packet_capacity_(
--          std::min(max_packet_capacity,
--                   LeakyBucketNetworkQueue::kMaxPacketCapacity)) {
--  sequence_checker_.Detach();
--}
--
--bool LeakyBucketNetworkQueue::EnqueuePacket(
--    const PacketInFlightInfo& packet_info) {
--  RTC_DCHECK_RUN_ON(&sequence_checker_);
--  if (max_packet_capacity_ == queue_.size()) {
--    return false;
--  }
--  queue_.push(packet_info);
--  return true;
--}
--
--std::optional<PacketInFlightInfo> LeakyBucketNetworkQueue::PeekNextPacket()
--    const {
--  RTC_DCHECK_RUN_ON(&sequence_checker_);
--  if (queue_.empty()) {
--    return std::nullopt;
--  }
--  return queue_.front();
--}
--
--std::optional<PacketInFlightInfo> LeakyBucketNetworkQueue::DequeuePacket(
--    Timestamp time_now) {
--  RTC_DCHECK_RUN_ON(&sequence_checker_);
--  if (queue_.empty()) {
--    return std::nullopt;
--  }
--  RTC_DCHECK_LE(queue_.front().send_time(), time_now);
--  PacketInFlightInfo packet_info = queue_.front();
--  queue_.pop();
--  return packet_info;
--}
--
--bool LeakyBucketNetworkQueue::empty() const {
--  RTC_DCHECK_RUN_ON(&sequence_checker_);
--  return queue_.empty();
--}
--
--void LeakyBucketNetworkQueue::DropOldestPacket() {
--  RTC_DCHECK_RUN_ON(&sequence_checker_);
--  dropped_packets_.push_back(queue_.front());
--  queue_.pop();
--}
--
--std::vector<PacketInFlightInfo>
--LeakyBucketNetworkQueue::DequeueDroppedPackets() {
--  RTC_DCHECK_RUN_ON(&sequence_checker_);
--  std::vector<PacketInFlightInfo> dropped_packets;
--  dropped_packets.swap(dropped_packets_);
--  return dropped_packets;
--}
--
--}  // namespace webrtc
-diff --git a/api/test/network_emulation/leaky_bucket_network_queue.h b/api/test/network_emulation/leaky_bucket_network_queue.h
-deleted file mode 100644
-index 3b13b1ffb5..0000000000
---- a/api/test/network_emulation/leaky_bucket_network_queue.h
-+++ /dev/null
-@@ -1,64 +0,0 @@
--/*
-- *  Copyright 2025 The WebRTC Project Authors. All rights reserved.
-- *
-- *  Use of this source code is governed by a BSD-style license
-- *  that can be found in the LICENSE file in the root of the source
-- *  tree. An additional intellectual property rights grant can be found
-- *  in the file PATENTS.  All contributing project authors may
-- *  be found in the AUTHORS file in the root of the source tree.
-- */
--
--#ifndef API_TEST_NETWORK_EMULATION_LEAKY_BUCKET_NETWORK_QUEUE_H_
--#define API_TEST_NETWORK_EMULATION_LEAKY_BUCKET_NETWORK_QUEUE_H_
--
--#include <cstddef>
+-#include <cstdint>
+-#include <cstdio>
+-#include <limits>
 -#include <memory>
 -#include <optional>
--#include <queue>
--#include <vector>
+-#include <string>
+-#include <utility>
 -
--#include "api/sequence_checker.h"
--#include "api/test/network_emulation/network_queue.h"
--#include "api/test/simulated_network.h"
+-#include "api/field_trials_view.h"
+-#include "api/transport/network_types.h"
+-#include "api/units/data_rate.h"
+-#include "api/units/time_delta.h"
 -#include "api/units/timestamp.h"
+-#include "modules/congestion_controller/goog_cc/loss_based_bwe_v2.h"
+-#include "rtc_base/checks.h"
+-#include "rtc_base/logging.h"
 -
 -namespace webrtc {
 -
--// A network queue that uses a leaky bucket to limit the number of packets that
--// can be queued.
--class LeakyBucketNetworkQueue : public NetworkQueue {
-- public:
--  constexpr static size_t kMaxPacketCapacity = 100000;
--  LeakyBucketNetworkQueue()
--      : webrtc::LeakyBucketNetworkQueue(kMaxPacketCapacity) {}
--  explicit LeakyBucketNetworkQueue(size_t max_packet_capacity);
+-namespace {
 -
--  bool EnqueuePacket(const PacketInFlightInfo& packet_info) override;
--  std::optional<PacketInFlightInfo> PeekNextPacket() const override;
--  std::optional<PacketInFlightInfo> DequeuePacket(Timestamp time_now) override;
--  std::vector<PacketInFlightInfo> DequeueDroppedPackets() override;
--  bool empty() const override;
+-constexpr float kDefaultLowLossThreshold = 0.02f;
+-constexpr float kDefaultHighLossThreshold = 0.1f;
+-constexpr DataRate kDefaultBitrateThreshold = DataRate::Zero();
+-constexpr TimeDelta kBweIncreaseInterval = TimeDelta::Millis(1000);
+-constexpr TimeDelta kBweDecreaseInterval = TimeDelta::Millis(300);
+-constexpr TimeDelta kMaxRtcpFeedbackInterval = TimeDelta::Millis(5000);
+-constexpr int kLimitNumPackets = 20;
 -
--  void DropOldestPacket();
+-const char kBweLosExperiment[] = "WebRTC-BweLossExperiment";
 -
-- private:
--  SequenceChecker sequence_checker_;
--  const size_t max_packet_capacity_;
--  std::queue<PacketInFlightInfo> queue_;
--  std::vector<PacketInFlightInfo> dropped_packets_;
--};
+-bool BweLossExperimentIsEnabled(const FieldTrialsView& field_trials) {
+-  return field_trials.IsEnabled(kBweLosExperiment);
+-}
 -
--class LeakyBucketNetworkQueueFactory : public NetworkQueueFactory {
-- public:
--  explicit LeakyBucketNetworkQueueFactory(size_t max_packet_capacity)
--      : max_packet_capacity_(max_packet_capacity) {}
--  std::unique_ptr<NetworkQueue> CreateQueue() override {
--    return std::make_unique<LeakyBucketNetworkQueue>(max_packet_capacity_);
+-bool ReadBweLossExperimentParameters(const FieldTrialsView& field_trials,
+-                                     float* low_loss_threshold,
+-                                     float* high_loss_threshold,
+-                                     uint32_t* bitrate_threshold_kbps) {
+-  RTC_DCHECK(low_loss_threshold);
+-  RTC_DCHECK(high_loss_threshold);
+-  RTC_DCHECK(bitrate_threshold_kbps);
+-  std::string experiment_string = field_trials.Lookup(kBweLosExperiment);
+-  int parsed_values =
+-      sscanf(experiment_string.c_str(), "Enabled-%f,%f,%u", low_loss_threshold,
+-             high_loss_threshold, bitrate_threshold_kbps);
+-  if (parsed_values == 3) {
+-    RTC_CHECK_GT(*low_loss_threshold, 0.0f)
+-        << "Loss threshold must be greater than 0.";
+-    RTC_CHECK_LE(*low_loss_threshold, 1.0f)
+-        << "Loss threshold must be less than or equal to 1.";
+-    RTC_CHECK_GT(*high_loss_threshold, 0.0f)
+-        << "Loss threshold must be greater than 0.";
+-    RTC_CHECK_LE(*high_loss_threshold, 1.0f)
+-        << "Loss threshold must be less than or equal to 1.";
+-    RTC_CHECK_LE(*low_loss_threshold, *high_loss_threshold)
+-        << "The low loss threshold must be less than or equal to the high loss "
+-           "threshold.";
+-    RTC_CHECK_GE(*bitrate_threshold_kbps, 0)
+-        << "Bitrate threshold can't be negative.";
+-    RTC_CHECK_LT(*bitrate_threshold_kbps,
+-                 std::numeric_limits<int>::max() / 1000)
+-        << "Bitrate must be smaller enough to avoid overflows.";
+-    return true;
+-  }
+-  RTC_LOG(LS_WARNING) << "Failed to parse parameters for BweLossExperiment "
+-                         "experiment from field trial string. Using default.";
+-  *low_loss_threshold = kDefaultLowLossThreshold;
+-  *high_loss_threshold = kDefaultHighLossThreshold;
+-  *bitrate_threshold_kbps = kDefaultBitrateThreshold.kbps();
+-  return false;
+-}
+-}  // namespace
+-
+-LossBasedBwe::LossBasedBwe(const FieldTrialsView* field_trials)
+-    : field_trials_(field_trials),
+-      loss_based_bwe_v2_(std::make_unique<LossBasedBweV2>(field_trials)),
+-      low_loss_threshold_(kDefaultLowLossThreshold),
+-      high_loss_threshold_(kDefaultHighLossThreshold),
+-      bitrate_threshold_(kDefaultBitrateThreshold) {
+-  if (BweLossExperimentIsEnabled(*field_trials)) {
+-    uint32_t bitrate_threshold_kbps;
+-    if (ReadBweLossExperimentParameters(*field_trials, &low_loss_threshold_,
+-                                        &high_loss_threshold_,
+-                                        &bitrate_threshold_kbps)) {
+-      RTC_LOG(LS_INFO) << "Enabled BweLossExperiment with parameters "
+-                       << low_loss_threshold_ << ", " << high_loss_threshold_
+-                       << ", " << bitrate_threshold_kbps;
+-      bitrate_threshold_ = DataRate::KilobitsPerSec(bitrate_threshold_kbps);
+-    }
+-  }
+-}
+-
+-void LossBasedBwe::OnTransportPacketsFeedback(
+-    const TransportPacketsFeedback& report,
+-    DataRate delay_based,
+-    std::optional<DataRate> acknowledged_bitrate,
+-    bool is_probe_rate,
+-    bool in_alr) {
+-  if (is_probe_rate) {
+-    // delay_based bitrate overrides loss based BWE unless
+-    // loss_based_bandwidth_estimator_v2_ is used or until
+-    // loss_based_bandwidth_estimator_v2_ is ready.
+-    SetStartRate(delay_based);
+-  }
+-  delay_based_bwe_ = delay_based;
+-  if (!loss_based_bwe_v2_->IsEnabled()) {
+-    return;
+-  }
+-  if (acknowledged_bitrate.has_value()) {
+-    loss_based_bwe_v2_->SetAcknowledgedBitrate(*acknowledged_bitrate);
+-  }
+-  loss_based_bwe_v2_->UpdateBandwidthEstimate(report.packet_feedbacks,
+-                                              delay_based, in_alr);
+-}
+-
+-void LossBasedBwe::OnRouteChanged() {
+-  current_state_ = LossBasedState::kDelayBasedEstimate;
+-  lost_packets_since_last_loss_update_ = 0;
+-  expected_packets_since_last_loss_update_ = 0;
+-  min_bitrate_history_.clear();
+-  delay_based_bwe_ = DataRate::PlusInfinity();
+-  fallback_estimate_ = DataRate::Zero();
+-  has_decreased_since_last_fraction_loss_ = false;
+-  last_loss_feedback_ = Timestamp::MinusInfinity();
+-  last_loss_packet_report_ = Timestamp::MinusInfinity();
+-  last_fraction_loss_ = 0;
+-  last_logged_fraction_loss_ = 0;
+-  last_round_trip_time_ = TimeDelta::Zero();
+-  time_last_decrease_ = Timestamp::MinusInfinity();
+-  first_report_time_ = Timestamp::MinusInfinity();
+-  loss_based_bwe_v2_ = std::make_unique<LossBasedBweV2>(field_trials_);
+-}
+-
+-void LossBasedBwe::SetConfiguredMinMaxBitrate(DataRate min_rate,
+-                                              DataRate max_rate) {
+-  configured_min_rate_ = min_rate;
+-  configured_max_rate_ = max_rate;
+-  loss_based_bwe_v2_->SetMinMaxBitrate(min_rate, max_rate);
+-}
+-
+-void LossBasedBwe::SetStartRate(DataRate fallback_rate) {
+-  // Clear last sent bitrate history so the new value can be used directly
+-  // and not capped.
+-  min_bitrate_history_.clear();
+-  fallback_estimate_ = fallback_rate;
+-}
+-
+-void LossBasedBwe::OnPacketLossReport(int64_t packets_lost,
+-                                      int64_t packets_received,
+-                                      TimeDelta round_trip_time,
+-                                      Timestamp at_time) {
+-  last_loss_feedback_ = at_time;
+-  last_round_trip_time_ = round_trip_time;
+-  if (first_report_time_.IsInfinite()) {
+-    first_report_time_ = at_time;
+-  }
+-  int64_t number_of_packets = packets_lost + packets_received;
+-  // Check sequence number diff and weight loss report
+-  if (number_of_packets <= 0) {
+-    return;
+-  }
+-  int64_t expected =
+-      expected_packets_since_last_loss_update_ + number_of_packets;
+-
+-  // Don't generate a loss rate until it can be based on enough packets.
+-  if (expected < kLimitNumPackets) {
+-    // Accumulate reports.
+-    expected_packets_since_last_loss_update_ = expected;
+-    lost_packets_since_last_loss_update_ += packets_lost;
+-    return;
 -  }
 -
-- private:
--  const size_t max_packet_capacity_;
--};
--}  // namespace webrtc
+-  has_decreased_since_last_fraction_loss_ = false;
+-  int64_t lost_q8 =
+-      std::max<int64_t>(lost_packets_since_last_loss_update_ + packets_lost, 0)
+-      << 8;
+-  last_fraction_loss_ = std::min<int>(lost_q8 / expected, 255);
 -
--#endif  // API_TEST_NETWORK_EMULATION_LEAKY_BUCKET_NETWORK_QUEUE_H_
-diff --git a/api/test/network_emulation/leaky_bucket_network_queue_unittest.cc b/api/test/network_emulation/leaky_bucket_network_queue_unittest.cc
+-  // Reset accumulators.
+-  lost_packets_since_last_loss_update_ = 0;
+-  expected_packets_since_last_loss_update_ = 0;
+-  last_loss_packet_report_ = at_time;
+-}
+-
+-bool LossBasedBwe::OnPeriodicProcess(Timestamp at_time) {
+-  UpdateMinHistory(at_time);
+-  if (loss_based_bwe_v2_->IsReady()) {
+-    return false;
+-  }
+-
+-  TimeDelta time_since_loss_packet_report = at_time - last_loss_packet_report_;
+-  if (time_since_loss_packet_report < 1.2 * kMaxRtcpFeedbackInterval) {
+-    // We only care about loss above a given bitrate threshold.
+-    float loss = last_fraction_loss_ / 256.0f;
+-    // We only make decisions based on loss when the bitrate is above a
+-    // threshold. This is a crude way of handling loss which is uncorrelated
+-    // to congestion.
+-    if (fallback_estimate_ < bitrate_threshold_ ||
+-        loss <= low_loss_threshold_) {
+-      // Loss < 2%: Increase rate by 8% of the min bitrate in the last
+-      // kBweIncreaseInterval.
+-      // Note that by remembering the bitrate over the last second one can
+-      // rampup up one second faster than if only allowed to start ramping
+-      // at 8% per second rate now. E.g.:
+-      //   If sending a constant 100kbps it can rampup immediately to 108kbps
+-      //   whenever a receiver report is received with lower packet loss.
+-      //   If instead one would do: current_bitrate_ *= 1.08^(delta time),
+-      //   it would take over one second since the lower packet loss to
+-      //   achieve 108kbps.
+-      // Add 1 kbps extra, just to make sure that we do not get stuck
+-      // (gives a little extra increase at low rates, negligible at higher
+-      // rates).
+-      UpdateFallbackEstimate(
+-          DataRate::BitsPerSec(
+-              min_bitrate_history_.front().second.bps() * 1.08 + 0.5) +
+-          DataRate::BitsPerSec(1000));
+-      return true;
+-    } else if (fallback_estimate_ > bitrate_threshold_) {
+-      if (loss <= high_loss_threshold_) {
+-        // Loss between 2% - 10%: Do nothing.
+-      } else {
+-        // Loss > 10%: Limit the rate decreases to once a kBweDecreaseInterval
+-        // + rtt.
+-        if (!has_decreased_since_last_fraction_loss_ &&
+-            (at_time - time_last_decrease_) >=
+-                (kBweDecreaseInterval + last_round_trip_time_)) {
+-          time_last_decrease_ = at_time;
+-
+-          // Reduce rate:
+-          //   newRate = rate * (1 - 0.5*lossRate);
+-          //   where packetLoss = 256*lossRate;
+-          UpdateFallbackEstimate(DataRate::BitsPerSec(
+-              (fallback_estimate_.bps() *
+-               static_cast<double>(512 - last_fraction_loss_)) /
+-              512.0));
+-          has_decreased_since_last_fraction_loss_ = true;
+-          return true;
+-        }
+-      }
+-    }
+-  }
+-  return false;
+-}
+-
+-void LossBasedBwe::UpdateMinHistory(Timestamp at_time) {
+-  // Remove old data points from history.
+-  // Since history precision is in ms, add one so it is able to increase
+-  // bitrate if it is off by as little as 0.5ms.
+-  while (!min_bitrate_history_.empty() &&
+-         at_time - min_bitrate_history_.front().first + TimeDelta::Millis(1) >
+-             kBweIncreaseInterval) {
+-    min_bitrate_history_.pop_front();
+-  }
+-
+-  // Typical minimum sliding-window algorithm: Pop values higher than current
+-  // bitrate before pushing it.
+-  while (!min_bitrate_history_.empty() &&
+-         fallback_estimate_ <= min_bitrate_history_.back().second) {
+-    min_bitrate_history_.pop_back();
+-  }
+-
+-  min_bitrate_history_.push_back(std::make_pair(at_time, fallback_estimate_));
+-}
+-
+-DataRate LossBasedBwe::GetEstimate() {
+-  if (loss_based_bwe_v2_->IsReady()) {
+-    LossBasedBweV2::Result result = loss_based_bwe_v2_->GetLossBasedResult();
+-    current_state_ = result.state;
+-    return result.bandwidth_estimate;
+-  }
+-  return fallback_estimate_;
+-}
+-
+-void LossBasedBwe::UpdateFallbackEstimate(DataRate new_estimate) {
+-  fallback_estimate_ = std::min({delay_based_bwe_, new_estimate});
+-  fallback_estimate_ = std::max(configured_min_rate_, new_estimate);
+-}
+-
+-}  // namespace webrtc
+diff --git a/modules/congestion_controller/goog_cc/loss_based_bwe.h b/modules/congestion_controller/goog_cc/loss_based_bwe.h
 deleted file mode 100644
-index 8f896a3ec1..0000000000
---- a/api/test/network_emulation/leaky_bucket_network_queue_unittest.cc
+index b2ff8f413c..0000000000
+--- a/modules/congestion_controller/goog_cc/loss_based_bwe.h
 +++ /dev/null
-@@ -1,59 +0,0 @@
+@@ -1,107 +0,0 @@
 -/*
-- *  Copyright 2025 The WebRTC Project Authors. All rights reserved.
+- *  Copyright (c) 2025 The WebRTC project authors. All Rights Reserved.
 - *
 - *  Use of this source code is governed by a BSD-style license
 - *  that can be found in the LICENSE file in the root of the source
@@ -302,705 +510,1288 @@ index 8f896a3ec1..0000000000
 - *  be found in the AUTHORS file in the root of the source tree.
 - */
 -
--#include "api/test/network_emulation/leaky_bucket_network_queue.h"
+-#ifndef MODULES_CONGESTION_CONTROLLER_GOOG_CC_LOSS_BASED_BWE_H_
+-#define MODULES_CONGESTION_CONTROLLER_GOOG_CC_LOSS_BASED_BWE_H_
+-
+-#include <cstdint>
+-#include <deque>
+-#include <memory>
+-#include <optional>
+-#include <utility>
+-
+-#include "api/field_trials_view.h"
+-#include "api/transport/network_types.h"
+-#include "api/units/data_rate.h"
+-#include "api/units/time_delta.h"
+-#include "api/units/timestamp.h"
+-#include "modules/congestion_controller/goog_cc/loss_based_bwe_v2.h"
+-
+-namespace webrtc {
+-
+-// Estimates bandwidth available to WebRTC if there is packet loss.
+-// The estimate will depend on loss calculated from transport feedback if it
+-// exist, or (RTCP) receiver report otherwise.
+-class LossBasedBwe {
+- public:
+-  explicit LossBasedBwe(const FieldTrialsView* field_trials);
+-
+-  // Called when the network route change. Resets state.
+-  void OnRouteChanged();
+-
+-  // Called when new transport feedback is received.
+-  void OnTransportPacketsFeedback(const TransportPacketsFeedback& report,
+-                                  DataRate delay_based,
+-                                  std::optional<DataRate> acknowledged_bitrate,
+-                                  bool is_probe_rate,
+-                                  bool in_alr);
+-
+-  // Called when a new loss report (RTCP receiver report) is received.
+-  void OnPacketLossReport(int64_t packets_lost,
+-                          int64_t packets_received,
+-                          TimeDelta round_trip_time,
+-                          Timestamp at_time);
+-
+-  // Returns true if estimate changed.
+-  bool OnPeriodicProcess(Timestamp at_time);
+-
+-  void SetConfiguredMinMaxBitrate(DataRate min_rate, DataRate max_rate);
+-  // Sets the rate used as reference if there is no transport feedback. It is
+-  // also used as loss based estimate until enough transport feedback messages
+-  // has been received.
+-  void SetStartRate(DataRate fallback_rate);
+-
+-  LossBasedState state() const { return current_state_; }
+-  DataRate GetEstimate();
+-
+-  // Returns (number of packets lost << 8) / total number of packets. There has
+-  // to be at least 20 packets received or lost between each update.
+-  uint8_t fraction_loss() const { return last_fraction_loss_; }
+-
+- private:
+-  // Updates history of min bitrates.
+-  // After this method returns min_bitrate_history_.front().second contains the
+-  // min bitrate used during last kBweIncreaseIntervalMs.
+-  void UpdateMinHistory(Timestamp at_time);
+-
+-  void UpdateFallbackEstimate(DataRate new_estimate);
+-
+-  const FieldTrialsView* field_trials_;
+-  std::unique_ptr<LossBasedBweV2> loss_based_bwe_v2_;
+-
+-  DataRate configured_min_rate_;
+-  DataRate configured_max_rate_;
+-  DataRate delay_based_bwe_ = DataRate::PlusInfinity();
+-
+-  DataRate fallback_estimate_ = DataRate::Zero();
+-  LossBasedState current_state_ = LossBasedState::kDelayBasedEstimate;
+-
+-  TimeDelta last_round_trip_time_;
+-  int lost_packets_since_last_loss_update_ = 0;
+-  int expected_packets_since_last_loss_update_ = 0;
+-  // State variables used before LossBasedBweV2 is ready to be used or if
+-  // LossBasedBweV2 is disabled.
+-  std::deque<std::pair<Timestamp, DataRate> > min_bitrate_history_;
+-  bool has_decreased_since_last_fraction_loss_ = false;
+-  Timestamp time_last_decrease_ = Timestamp::MinusInfinity();
+-  float low_loss_threshold_;
+-  float high_loss_threshold_;
+-  DataRate bitrate_threshold_;
+-
+-  Timestamp first_report_time_ = Timestamp::MinusInfinity();
+-  Timestamp last_loss_feedback_ = Timestamp::MinusInfinity();
+-
+-  Timestamp last_loss_packet_report_ = Timestamp::MinusInfinity();
+-  uint8_t last_fraction_loss_ = 0;
+-  uint8_t last_logged_fraction_loss_ = 0;
+-};
+-
+-}  // namespace webrtc
+-#endif  // MODULES_CONGESTION_CONTROLLER_GOOG_CC_LOSS_BASED_BWE_H_
+diff --git a/modules/congestion_controller/goog_cc/loss_based_bwe_unittest.cc b/modules/congestion_controller/goog_cc/loss_based_bwe_unittest.cc
+deleted file mode 100644
+index 52561915ea..0000000000
+--- a/modules/congestion_controller/goog_cc/loss_based_bwe_unittest.cc
++++ /dev/null
+@@ -1,157 +0,0 @@
+-/*
+- *  Copyright (c) 2025 The WebRTC project authors. All Rights Reserved.
+- *
+- *  Use of this source code is governed by a BSD-style license
+- *  that can be found in the LICENSE file in the root of the source
+- *  tree. An additional intellectual property rights grant can be found
+- *  in the file PATENTS.  All contributing project authors may
+- *  be found in the AUTHORS file in the root of the source tree.
+- */
+-
+-#include "modules/congestion_controller/goog_cc/loss_based_bwe.h"
 -
 -#include <optional>
 -
--#include "api/test/simulated_network.h"
--#include "api/units/data_size.h"
+-#include "api/field_trials.h"
+-#include "api/transport/network_types.h"
+-#include "api/units/data_rate.h"
+-#include "api/units/time_delta.h"
 -#include "api/units/timestamp.h"
--#include "test/gmock.h"
+-#include "modules/congestion_controller/goog_cc/loss_based_bwe_v2.h"
+-#include "test/create_test_field_trials.h"
 -#include "test/gtest.h"
 -
 -namespace webrtc {
 -namespace {
 -
--using ::testing::Field;
--using ::testing::Optional;
--using ::testing::Property;
+-TEST(LossBasedBweTest, ReturnFractionLoss) {
+-  FieldTrials field_trials = CreateTestFieldTrials();
+-  LossBasedBwe loss_based_bwe(&field_trials);
+-  loss_based_bwe.SetConfiguredMinMaxBitrate(DataRate::KilobitsPerSec(50),
+-                                            DataRate::KilobitsPerSec(500));
+-  loss_based_bwe.SetStartRate(DataRate::KilobitsPerSec(100));
+-  EXPECT_EQ(loss_based_bwe.GetEstimate(), DataRate::KilobitsPerSec(100));
 -
--TEST(LeakyBucketNetworkQueueTest, EnqueuePacketReturnsFalseIfQueueIsFull) {
--  LeakyBucketNetworkQueue queue(/*max_packet_capacity=*/1);
--  PacketInFlightInfo packet_info(DataSize::Bytes(123), Timestamp::Zero(),
--                                 /*packet_id=*/1);
--  EXPECT_TRUE(queue.EnqueuePacket(packet_info));
--  EXPECT_FALSE(queue.EnqueuePacket(packet_info));
+-  // 25% packet loss.
+-  loss_based_bwe.OnPacketLossReport(/*packets_lost=*/5,
+-                                    /*packets_received=*/20,
+-                                    /*round_trip_time=*/TimeDelta::Millis(10),
+-                                    Timestamp::Seconds(123));
+-  EXPECT_EQ(loss_based_bwe.fraction_loss(), (5 << 8) / (20 + 5));
+-
+-  loss_based_bwe.OnPacketLossReport(
+-      /*packets_lost=*/0,
+-      /*packets_received=*/2,
+-      /*round_trip_time=*/TimeDelta::Millis(10),
+-      Timestamp::Seconds(123) + TimeDelta::Millis(50));
+-  // Not enough packets for a new update. Expect old value.
+-  EXPECT_EQ(loss_based_bwe.fraction_loss(), (5 << 8) / (20 + 5));
+-
+-  loss_based_bwe.OnPacketLossReport(
+-      /*packets_lost=*/0,
+-      /*packets_received=*/20,
+-      /*round_trip_time=*/TimeDelta::Millis(10),
+-      Timestamp::Seconds(123) + TimeDelta::Millis(70));
+-  EXPECT_EQ(loss_based_bwe.fraction_loss(), 0);
 -}
 -
--TEST(LeakyBucketNetworkQueueTest, ReturnsNullOptWhenEmtpy) {
--  LeakyBucketNetworkQueue queue(/*max_packet_capacity=*/1);
--  EXPECT_TRUE(queue.empty());
--  EXPECT_EQ(queue.DequeuePacket(Timestamp::Zero()), std::nullopt);
--  EXPECT_EQ(queue.PeekNextPacket(), std::nullopt);
--}
+-// Test that BWE react to loss even if no transport feedback is received.
+-TEST(LossBasedBweTest, EstimateReactToLossReport) {
+-  FieldTrials field_trials = CreateTestFieldTrials();
+-  LossBasedBwe loss_based_bwe(&field_trials);
+-  loss_based_bwe.SetConfiguredMinMaxBitrate(DataRate::KilobitsPerSec(50),
+-                                            DataRate::KilobitsPerSec(500));
+-  loss_based_bwe.SetStartRate(DataRate::KilobitsPerSec(100));
+-  EXPECT_EQ(loss_based_bwe.GetEstimate(), DataRate::KilobitsPerSec(100));
 -
--TEST(LeakyBucketNetworkQueueTest, DequeueDoesNotChangePacketInfo) {
--  LeakyBucketNetworkQueue queue(/*max_packet_capacity=*/1);
--  EXPECT_TRUE(queue.empty());
--  PacketInFlightInfo packet_info(DataSize::Bytes(123), Timestamp::Seconds(123),
--                                 /*packet_id=*/1);
--  queue.EnqueuePacket(packet_info);
--
--  EXPECT_THAT(
--      queue.DequeuePacket(Timestamp::Seconds(125)),
--      Optional(AllOf(
--          Field(&PacketInFlightInfo::packet_id, packet_info.packet_id),
--          Property(&PacketInFlightInfo::packet_size, packet_info.packet_size()),
--          Property(&PacketInFlightInfo::send_time, packet_info.send_time()))));
--}
--
--}  // namespace
--}  // namespace webrtc
-diff --git a/api/test/network_emulation/network_queue.h b/api/test/network_emulation/network_queue.h
-deleted file mode 100644
-index 31c3cddaf0..0000000000
---- a/api/test/network_emulation/network_queue.h
-+++ /dev/null
-@@ -1,53 +0,0 @@
--/*
-- *  Copyright 2025 The WebRTC Project Authors. All rights reserved.
-- *
-- *  Use of this source code is governed by a BSD-style license
-- *  that can be found in the LICENSE file in the root of the source
-- *  tree. An additional intellectual property rights grant can be found
-- *  in the file PATENTS.  All contributing project authors may
-- *  be found in the AUTHORS file in the root of the source tree.
-- */
--
--#ifndef API_TEST_NETWORK_EMULATION_NETWORK_QUEUE_H_
--#define API_TEST_NETWORK_EMULATION_NETWORK_QUEUE_H_
--
--#include <memory>
--#include <optional>
--#include <vector>
--
--#include "api/test/simulated_network.h"
--#include "api/units/timestamp.h"
--
--namespace webrtc {
--
--// NetworkQueue defines the interface for a queue used in network simulation.
--// The purpose is to allow for different AQM implementations.
--// A queue should not modify PacketInFlightInfo except for the explicit
--// congestion notification field (ecn).
--class NetworkQueue {
-- public:
--  virtual ~NetworkQueue() = default;
--  // Enqueues a packet.
--  // Must return true if the packet is enqueued successfully, false otherwise.
--  virtual bool EnqueuePacket(const PacketInFlightInfo& packet_info) = 0;
--  // Next packet that can be dequeued.
--  virtual std::optional<PacketInFlightInfo> PeekNextPacket() const = 0;
--  // Dequeues a packet.
--  // or std::nullopt if there are no enqueued packets.
--  virtual std::optional<PacketInFlightInfo> DequeuePacket(
--      Timestamp time_now) = 0;
--
--  // Dequeues all packets that are dropped by the queue itself after being
--  // enqueued.
--  virtual std::vector<PacketInFlightInfo> DequeueDroppedPackets() = 0;
--  virtual bool empty() const = 0;
--};
--
--class NetworkQueueFactory {
-- public:
--  virtual ~NetworkQueueFactory() = default;
--  virtual std::unique_ptr<NetworkQueue> CreateQueue() = 0;
--};
--
--}  // namespace webrtc
--#endif  // API_TEST_NETWORK_EMULATION_NETWORK_QUEUE_H_
-diff --git a/api/test/network_emulation_manager.cc b/api/test/network_emulation_manager.cc
-index 41ec9aba12..03dcd84573 100644
---- a/api/test/network_emulation_manager.cc
-+++ b/api/test/network_emulation_manager.cc
-@@ -9,15 +9,12 @@
-  */
- #include "api/test/network_emulation_manager.h"
- 
--#include <cstddef>
- #include <cstdint>
- #include <memory>
- #include <string>
- #include <utility>
- 
- #include "absl/strings/string_view.h"
--#include "api/test/network_emulation/leaky_bucket_network_queue.h"
--#include "api/test/network_emulation/network_queue.h"
- #include "api/test/simulated_network.h"
- #include "api/units/data_rate.h"
- #include "rtc_base/checks.h"
-@@ -57,13 +54,6 @@ NetworkEmulationManager::SimulatedNetworkNode::Builder::config(
-   return *this;
- }
- 
--NetworkEmulationManager::SimulatedNetworkNode::Builder&
--NetworkEmulationManager::SimulatedNetworkNode::Builder::queue_factory(
--    NetworkQueueFactory& queue_factory) {
--  queue_factory_ = &queue_factory;
--  return *this;
--}
--
- NetworkEmulationManager::SimulatedNetworkNode::Builder&
- NetworkEmulationManager::SimulatedNetworkNode::Builder::delay_ms(
-     int queue_delay_ms) {
-@@ -153,21 +143,8 @@ NetworkEmulationManager::SimulatedNetworkNode::Builder::Build(
-     uint64_t random_seed) const {
-   RTC_CHECK(net);
-   RTC_CHECK(net_ == nullptr || net_ == net);
--  std::unique_ptr<NetworkQueue> network_queue;
--  if (queue_factory_ != nullptr) {
--    network_queue = queue_factory_->CreateQueue();
--  } else {
--    size_t max_packet_capacity =
--        /*max_packet_capacity=*/config_.queue_length_packets > 0
--            ? config_.queue_length_packets - 1  // -1 to account for the
--                                                // packet in the capacity link.
--            : LeakyBucketNetworkQueue::kMaxPacketCapacity;
--    network_queue =
--        std::make_unique<LeakyBucketNetworkQueue>(max_packet_capacity);
+-  Timestamp now = Timestamp::Seconds(123);
+-  for (int i = 0; i < 3; ++i) {
+-    now += TimeDelta::Millis(30);
+-    // 25% packet loss.
+-    loss_based_bwe.OnPacketLossReport(
+-        /*packets_lost=*/5,
+-        /*packets_received=*/20,
+-        /*round_trip_time=*/TimeDelta::Millis(10), now);
+-    loss_based_bwe.OnPeriodicProcess(now);
 -  }
-   SimulatedNetworkNode res;
--  auto behavior = std::make_unique<SimulatedNetwork>(config_, random_seed,
--                                                     std::move(network_queue));
-+  auto behavior = std::make_unique<SimulatedNetwork>(config_, random_seed);
-   res.simulation = behavior.get();
-   res.node = net->CreateEmulatedNode(std::move(behavior));
-   return res;
-diff --git a/api/test/network_emulation_manager.h b/api/test/network_emulation_manager.h
-index c2758815a7..199a60e2ab 100644
---- a/api/test/network_emulation_manager.h
-+++ b/api/test/network_emulation_manager.h
-@@ -25,7 +25,6 @@
+-  EXPECT_LT(loss_based_bwe.GetEstimate(), DataRate::KilobitsPerSec(100));
+-  // V0 loss based estimator does not change state. Probing is still allowed?
+-  EXPECT_EQ(loss_based_bwe.state(), LossBasedState::kDelayBasedEstimate);
+-
+-  // If there is no loss, BWE eventually increase to current delay based
+-  // estimate.
+-  while (now < Timestamp::Seconds(123) + TimeDelta::Seconds(20)) {
+-    now += TimeDelta::Millis(30);
+-    loss_based_bwe.OnPacketLossReport(
+-        /*packets_lost=*/0,
+-        /*packets_received=*/20,
+-        /*round_trip_time=*/TimeDelta::Millis(10), now);
+-    loss_based_bwe.OnPeriodicProcess(now);
+-  }
+-  EXPECT_GT(loss_based_bwe.GetEstimate(), DataRate::KilobitsPerSec(100));
+-  EXPECT_LE(loss_based_bwe.GetEstimate(), DataRate::KilobitsPerSec(500));
+-  EXPECT_EQ(loss_based_bwe.state(), LossBasedState::kDelayBasedEstimate);
+-}
+-
+-TEST(LossBasedBweTest, IsProbeRateResetBweEvenIfLossLimitedInStartPhase) {
+-  FieldTrials field_trials = CreateTestFieldTrials();
+-  LossBasedBwe loss_based_bwe(&field_trials);
+-  loss_based_bwe.SetConfiguredMinMaxBitrate(DataRate::KilobitsPerSec(50),
+-                                            DataRate::KilobitsPerSec(500));
+-  loss_based_bwe.SetStartRate(DataRate::KilobitsPerSec(100));
+-  ASSERT_EQ(loss_based_bwe.GetEstimate(), DataRate::KilobitsPerSec(100));
+-
+-  Timestamp now = Timestamp::Seconds(123);
+-  for (int i = 0; i < 3; ++i) {
+-    now += TimeDelta::Millis(30);
+-    // 25% packet loss.
+-    loss_based_bwe.OnPacketLossReport(
+-        /*packets_lost=*/5,
+-        /*packets_received=*/20,
+-        /*round_trip_time=*/TimeDelta::Millis(10), now);
+-    loss_based_bwe.OnPeriodicProcess(now);
+-  }
+-  ASSERT_LT(loss_based_bwe.GetEstimate(), DataRate::KilobitsPerSec(100));
+-
+-  TransportPacketsFeedback feedback;
+-  feedback.feedback_time = now;
+-  loss_based_bwe.OnTransportPacketsFeedback(
+-      feedback, DataRate::KilobitsPerSec(200),
+-      /*acknowledged_bitrate=*/std::nullopt,
+-      /*is_probe_rate=*/true,
+-      /*in_alr=*/false);
+-  EXPECT_EQ(loss_based_bwe.GetEstimate(), DataRate::KilobitsPerSec(200));
+-}
+-
+-TEST(LossBasedBweTest, DelayBasedBweDoesNotResetBweIfLossLimitedInStartPhase) {
+-  FieldTrials field_trials = CreateTestFieldTrials();
+-  LossBasedBwe loss_based_bwe(&field_trials);
+-  loss_based_bwe.SetConfiguredMinMaxBitrate(DataRate::KilobitsPerSec(50),
+-                                            DataRate::KilobitsPerSec(500));
+-  loss_based_bwe.SetStartRate(DataRate::KilobitsPerSec(100));
+-  ASSERT_EQ(loss_based_bwe.GetEstimate(), DataRate::KilobitsPerSec(100));
+-
+-  Timestamp now = Timestamp::Seconds(123);
+-  for (int i = 0; i < 3; ++i) {
+-    now += TimeDelta::Millis(30);
+-    // 25% packet loss.
+-    loss_based_bwe.OnPacketLossReport(
+-        /*packets_lost=*/5,
+-        /*packets_received=*/20,
+-        /*round_trip_time=*/TimeDelta::Millis(10), now);
+-    loss_based_bwe.OnPeriodicProcess(now);
+-  }
+-  ASSERT_LT(loss_based_bwe.GetEstimate(), DataRate::KilobitsPerSec(100));
+-
+-  TransportPacketsFeedback feedback;
+-  feedback.feedback_time = now;
+-  loss_based_bwe.OnTransportPacketsFeedback(
+-      feedback, DataRate::KilobitsPerSec(200),
+-      /*acknowledged_bitrate=*/std::nullopt,
+-      /*is_probe_rate=*/false,
+-      /*in_alr=*/false);
+-  EXPECT_LT(loss_based_bwe.GetEstimate(), DataRate::KilobitsPerSec(100));
+-}
+-
+-}  // anonymous namespace
+-}  // namespace webrtc
+diff --git a/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.cc b/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.cc
+index b4c6e1cb6a..03c3f61de3 100644
+--- a/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.cc
++++ b/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.cc
+@@ -13,17 +13,20 @@
+ #include <algorithm>
+ #include <cstdint>
+ #include <cstdio>
++#include <limits>
+ #include <memory>
+ #include <optional>
++#include <string>
++#include <utility>
+ 
  #include "api/field_trials_view.h"
- #include "api/test/network_emulation/cross_traffic.h"
- #include "api/test/network_emulation/network_emulation_interfaces.h"
--#include "api/test/network_emulation/network_queue.h"
- #include "api/test/peer_network_dependencies.h"
- #include "api/test/simulated_network.h"
- #include "api/test/time_controller.h"
-@@ -191,8 +190,6 @@ class NetworkEmulationManager {
-       // Sets the config state, note that this will replace any previously set
-       // values.
-       Builder& config(BuiltInNetworkBehaviorConfig config);
--      // If set, `queue_factory` must outlive the Builder.
--      Builder& queue_factory(NetworkQueueFactory& queue_factory);
-       Builder& delay_ms(int queue_delay_ms);
-       Builder& capacity(DataRate link_capacity);
-       Builder& capacity_kbps(int link_capacity_kbps);
-@@ -210,7 +207,6 @@ class NetworkEmulationManager {
-      private:
-       NetworkEmulationManager* const net_;
-       BuiltInNetworkBehaviorConfig config_;
--      NetworkQueueFactory* queue_factory_ = nullptr;
-     };
-   };
-   virtual ~NetworkEmulationManager() = default;
-diff --git a/api/test/simulated_network.h b/api/test/simulated_network.h
-index d1a823a7d3..174fc0bb2b 100644
---- a/api/test/simulated_network.h
-+++ b/api/test/simulated_network.h
-@@ -21,8 +21,6 @@
- #include "absl/functional/any_invocable.h"
- #include "api/transport/ecn_marking.h"
+ #include "api/rtc_event_log/rtc_event_log.h"
++#include "api/transport/bandwidth_usage.h"
+ #include "api/transport/network_types.h"
  #include "api/units/data_rate.h"
--#include "api/units/data_size.h"
--#include "api/units/timestamp.h"
+ #include "api/units/time_delta.h"
+ #include "api/units/timestamp.h"
+ #include "logging/rtc_event_log/events/rtc_event_bwe_update_loss_based.h"
+-#include "modules/congestion_controller/goog_cc/loss_based_bwe.h"
+ #include "modules/congestion_controller/goog_cc/loss_based_bwe_v2.h"
+ #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
+ #include "rtc_base/checks.h"
+@@ -33,12 +36,20 @@
  
  namespace webrtc {
- 
-@@ -35,24 +33,11 @@ struct PacketInFlightInfo {
-         send_time_us(send_time_us),
-         packet_id(packet_id),
-         ecn(ecn) {}
--  PacketInFlightInfo(DataSize size,
--                     Timestamp send_time,
--                     uint64_t packet_id,
--                     EcnMarking ecn)
--      : PacketInFlightInfo(size.bytes(), send_time.us(), packet_id, ecn) {}
--  PacketInFlightInfo(DataSize size, Timestamp send_time, uint64_t packet_id)
--      : PacketInFlightInfo(size.bytes(),
--                           send_time.us(),
--                           packet_id,
--                           EcnMarking::kNotEct) {}
- 
-   PacketInFlightInfo(size_t size, int64_t send_time_us, uint64_t packet_id)
-       : PacketInFlightInfo(size, send_time_us, packet_id, EcnMarking::kNotEct) {
-   }
- 
--  DataSize packet_size() const { return DataSize::Bytes(size); }
--  Timestamp send_time() const { return Timestamp::Micros(send_time_us); }
+ namespace {
 -
-   size_t size;
-   int64_t send_time_us;
-   // Unique identifier for the packet in relation to other packets in flight.
-diff --git a/test/network/BUILD.gn b/test/network/BUILD.gn
-index 0e1e46bca9..870b56769e 100644
---- a/test/network/BUILD.gn
-+++ b/test/network/BUILD.gn
-@@ -261,7 +261,6 @@ rtc_library("simulated_network") {
-   deps = [
-     "../../api:sequence_checker",
-     "../../api:simulated_network_api",
--    "../../api/test/network_emulation:network_queue",
-     "../../api/units:data_rate",
-     "../../api/units:data_size",
-     "../../api/units:time_delta",
-@@ -284,9 +283,7 @@ if (rtc_include_tests) {
-       ":simulated_network",
-       "..:test_support",
-       "../../api:simulated_network_api",
--      "../../api/test/network_emulation:network_queue",
-       "../../api/units:data_rate",
--      "../../api/units:data_size",
-       "../../api/units:time_delta",
-       "../../api/units:timestamp",
-     ]
-diff --git a/test/network/simulated_network.cc b/test/network/simulated_network.cc
-index 7d67efc9b2..da0751f048 100644
---- a/test/network/simulated_network.cc
-+++ b/test/network/simulated_network.cc
-@@ -14,14 +14,11 @@
- #include <cmath>
- #include <cstdint>
- #include <functional>
--#include <memory>
- #include <optional>
- #include <utility>
- #include <vector>
++constexpr TimeDelta kBweIncreaseInterval = TimeDelta::Millis(1000);
++constexpr TimeDelta kBweDecreaseInterval = TimeDelta::Millis(300);
+ constexpr TimeDelta kStartPhase = TimeDelta::Millis(2000);
+ constexpr TimeDelta kBweConverganceTime = TimeDelta::Millis(20000);
++constexpr int kLimitNumPackets = 20;
+ constexpr DataRate kDefaultMaxBitrate = DataRate::BitsPerSec(1000000000);
+ constexpr TimeDelta kLowBitrateLogPeriod = TimeDelta::Millis(10000);
+ constexpr TimeDelta kRtcEventLogPeriod = TimeDelta::Millis(5000);
++// Expecting that RTCP feedback is sent uniformly within [0.5, 1.5]s intervals.
++constexpr TimeDelta kMaxRtcpFeedbackInterval = TimeDelta::Millis(5000);
++
++constexpr float kDefaultLowLossThreshold = 0.02f;
++constexpr float kDefaultHighLossThreshold = 0.1f;
++constexpr DataRate kDefaultBitrateThreshold = DataRate::Zero();
  
- #include "absl/functional/any_invocable.h"
--#include "api/test/network_emulation/leaky_bucket_network_queue.h"
--#include "api/test/network_emulation/network_queue.h"
- #include "api/test/simulated_network.h"
- #include "api/units/data_rate.h"
- #include "api/units/data_size.h"
-@@ -59,24 +56,11 @@ Timestamp CalculateArrivalTime(Timestamp start_time,
+ struct UmaRampUpMetric {
+   const char* metric_name;
+@@ -52,6 +63,49 @@ const UmaRampUpMetric kUmaRampupMetrics[] = {
+ const size_t kNumUmaRampupMetrics =
+     sizeof(kUmaRampupMetrics) / sizeof(kUmaRampupMetrics[0]);
  
++const char kBweLosExperiment[] = "WebRTC-BweLossExperiment";
++
++bool BweLossExperimentIsEnabled(const FieldTrialsView& field_trials) {
++  return field_trials.IsEnabled(kBweLosExperiment);
++}
++
++bool ReadBweLossExperimentParameters(const FieldTrialsView& field_trials,
++                                     float* low_loss_threshold,
++                                     float* high_loss_threshold,
++                                     uint32_t* bitrate_threshold_kbps) {
++  RTC_DCHECK(low_loss_threshold);
++  RTC_DCHECK(high_loss_threshold);
++  RTC_DCHECK(bitrate_threshold_kbps);
++  std::string experiment_string = field_trials.Lookup(kBweLosExperiment);
++  int parsed_values =
++      sscanf(experiment_string.c_str(), "Enabled-%f,%f,%u", low_loss_threshold,
++             high_loss_threshold, bitrate_threshold_kbps);
++  if (parsed_values == 3) {
++    RTC_CHECK_GT(*low_loss_threshold, 0.0f)
++        << "Loss threshold must be greater than 0.";
++    RTC_CHECK_LE(*low_loss_threshold, 1.0f)
++        << "Loss threshold must be less than or equal to 1.";
++    RTC_CHECK_GT(*high_loss_threshold, 0.0f)
++        << "Loss threshold must be greater than 0.";
++    RTC_CHECK_LE(*high_loss_threshold, 1.0f)
++        << "Loss threshold must be less than or equal to 1.";
++    RTC_CHECK_LE(*low_loss_threshold, *high_loss_threshold)
++        << "The low loss threshold must be less than or equal to the high loss "
++           "threshold.";
++    RTC_CHECK_GE(*bitrate_threshold_kbps, 0)
++        << "Bitrate threshold can't be negative.";
++    RTC_CHECK_LT(*bitrate_threshold_kbps,
++                 std::numeric_limits<int>::max() / 1000)
++        << "Bitrate must be smaller enough to avoid overflows.";
++    return true;
++  }
++  RTC_LOG(LS_WARNING) << "Failed to parse parameters for BweLossExperiment "
++                         "experiment from field trial string. Using default.";
++  *low_loss_threshold = kDefaultLowLossThreshold;
++  *high_loss_threshold = kDefaultHighLossThreshold;
++  *bitrate_threshold_kbps = kDefaultBitrateThreshold.kbps();
++  return false;
++}
  }  // namespace
  
--SimulatedNetwork::SimulatedNetwork(Config config,
--                                   uint64_t random_seed,
--                                   std::unique_ptr<NetworkQueue> queue)
--    : queue_(std::move(queue)), random_(random_seed) {
-+SimulatedNetwork::SimulatedNetwork(Config config, uint64_t random_seed)
-+    : random_(random_seed), bursting_(false), last_enqueue_time_us_(0) {
-   SetConfig(config);
- }
- 
--SimulatedNetwork::SimulatedNetwork(Config config, uint64_t random_seed)
--    : SimulatedNetwork(
--          config,
--          random_seed,
--          std::make_unique<LeakyBucketNetworkQueue>(
--              /*max_packet_capacity=*/config.queue_length_packets > 0
--                  ? config.queue_length_packets -
--                        1  // -1 to account for the
--                           // packet in the capacity link.
--                  : LeakyBucketNetworkQueue::kMaxPacketCapacity)) {}
+ RttBasedBackoff::RttBasedBackoff(const FieldTrialsView& key_value_config)
+@@ -96,54 +150,87 @@ RttBasedBackoff::~RttBasedBackoff() = default;
+ SendSideBandwidthEstimation::SendSideBandwidthEstimation(
+     const FieldTrialsView* key_value_config,
+     RtcEventLog* event_log)
+-    : rtt_backoff_(*key_value_config),
+-      loss_based_bwe_(key_value_config),
+-      last_logged_fraction_loss_(0),
+-      last_round_trip_time_(TimeDelta::Zero()),
+-      receiver_limit_(DataRate::PlusInfinity()),
+-      delay_based_limit_(DataRate::PlusInfinity()),
+-      loss_based_limit_(DataRate::PlusInfinity()),
+-      current_target_(kCongestionControllerMinBitrate),
++    : key_value_config_(key_value_config),
++      rtt_backoff_(*key_value_config),
++      lost_packets_since_last_loss_update_(0),
++      expected_packets_since_last_loss_update_(0),
++      current_target_(DataRate::Zero()),
+       last_logged_target_(DataRate::Zero()),
+       min_bitrate_configured_(kCongestionControllerMinBitrate),
+       max_bitrate_configured_(kDefaultMaxBitrate),
 -
- SimulatedNetwork::~SimulatedNetwork() = default;
- 
- void SimulatedNetwork::SetConfig(const Config& config) {
-@@ -109,21 +93,21 @@ void SimulatedNetwork::SetConfig(const BuiltInNetworkBehaviorConfig& new_config,
-                                  Timestamp config_update_time) {
-   RTC_DCHECK_RUNS_SERIALIZED(&process_checker_);
- 
--  if (capacity_link_.has_value()) {
-+  if (!capacity_link_.empty()) {
-     // Calculate and update how large portion of the packet first in the
-     // capacity link is left to to send at time `config_update_time`.
-     const BuiltInNetworkBehaviorConfig& current_config =
-         GetConfigState().config;
-     TimeDelta duration_with_current_config =
--        config_update_time - capacity_link_->last_update_time;
-+        config_update_time - capacity_link_.front().last_update_time;
-     RTC_DCHECK_GE(duration_with_current_config, TimeDelta::Zero());
--    capacity_link_->bits_left_to_send -= std::min(
-+    capacity_link_.front().bits_left_to_send -= std::min(
-         duration_with_current_config.ms() * current_config.link_capacity.kbps(),
--        capacity_link_->bits_left_to_send);
--    capacity_link_->last_update_time = config_update_time;
-+        capacity_link_.front().bits_left_to_send);
-+    capacity_link_.front().last_update_time = config_update_time;
-   }
-   SetConfig(new_config);
--  UpdateCapacityLink(GetConfigState(), config_update_time);
-+  UpdateCapacityQueue(GetConfigState(), config_update_time);
-   if (UpdateNextProcessTime() && next_process_time_changed_callback_) {
-     next_process_time_changed_callback_();
-   }
-@@ -142,6 +126,7 @@ void SimulatedNetwork::PauseTransmissionUntil(int64_t until_us) {
- 
- bool SimulatedNetwork::EnqueuePacket(PacketInFlightInfo packet) {
-   RTC_DCHECK_RUNS_SERIALIZED(&process_checker_);
-+
-   // Check that old packets don't get enqueued, the SimulatedNetwork expect that
-   // the packets' send time is monotonically increasing. The tolerance for
-   // non-monotonic enqueue events is 0.5 ms because on multi core systems
-@@ -152,7 +137,6 @@ bool SimulatedNetwork::EnqueuePacket(PacketInFlightInfo packet) {
-   // At the moment, we see more than 130ms between non-monotonic events, which
-   // is more than expected.
-   // RTC_DCHECK_GE(packet.send_time_us - last_enqueue_time_us_, -2000);
--  last_enqueue_time_us_ = packet.send_time_us;
- 
-   ConfigState state = GetConfigState();
- 
-@@ -160,26 +144,28 @@ bool SimulatedNetwork::EnqueuePacket(PacketInFlightInfo packet) {
-   // possible.
-   packet.size += state.config.packet_overhead;
- 
--  Timestamp enqueue_time = packet.send_time();
--  bool packet_enqueued = queue_->EnqueuePacket(packet);
--  // A packet can not enter the narrow section before the last packet has exit.
--  if (capacity_link_.has_value()) {
--    // A packet is already in the capacity link. Wait until it exits.
--    return packet_enqueued;
-+  // If `queue_length_packets` is 0, the queue size is infinite.
-+  if (state.config.queue_length_packets > 0 &&
-+      capacity_link_.size() >= state.config.queue_length_packets) {
-+    // Too many packet on the link, drop this one.
-+    return false;
-   }
--  PacketInFlightInfo next_packet = packet;
--  if (!queue_->empty()) {
--    next_packet = *queue_->DequeuePacket(enqueue_time);
--  }
--  Timestamp arrival_time = CalculateArrivalTime(
--      std::max(next_packet.send_time(), last_capacity_link_exit_time_),
--      packet.size * 8, state.config.link_capacity);
- 
--  capacity_link_ = {
--      .packet = next_packet,
--      .last_update_time = enqueue_time,
--      .bits_left_to_send = 8 * static_cast<int64_t>(next_packet.size),
--      .arrival_time = arrival_time};
-+  // Note that arrival time will be updated when previous packets are dequeued
-+  // from the capacity link.
-+  // A packet can not enter the narrow section before the last packet has exit.
-+  Timestamp enqueue_time = Timestamp::Micros(packet.send_time_us);
-+  Timestamp arrival_time =
-+      capacity_link_.empty()
-+          ? CalculateArrivalTime(
-+                std::max(enqueue_time, last_capacity_link_exit_time_),
-+                packet.size * 8, state.config.link_capacity)
-+          : Timestamp::PlusInfinity();
-+  capacity_link_.push(
-+      {.packet = packet,
-+       .last_update_time = enqueue_time,
-+       .bits_left_to_send = 8 * static_cast<int64_t>(packet.size),
-+       .arrival_time = arrival_time});
- 
-   // Only update `next_process_time_` if not already set. Otherwise,
-   // next_process_time_ is calculated when a packet is dequeued. Note that this
-@@ -188,8 +174,11 @@ bool SimulatedNetwork::EnqueuePacket(PacketInFlightInfo packet) {
-   // config.delay_standard_deviation_ms is set.
-   // TODO(bugs.webrtc.org/14525): Consider preventing this.
-   if (next_process_time_.IsInfinite() && arrival_time.IsFinite()) {
-+    RTC_DCHECK_EQ(capacity_link_.size(), 1);
-     next_process_time_ = arrival_time;
-   }
-+
-+  last_enqueue_time_us_ = packet.send_time_us;
-   return true;
+       last_low_bitrate_log_(Timestamp::MinusInfinity()),
+-      time_last_decrease_due_to_rtt_(Timestamp::MinusInfinity()),
+-      first_loss_report_time_(Timestamp::MinusInfinity()),
++      has_decreased_since_last_fraction_loss_(false),
++      last_loss_feedback_(Timestamp::MinusInfinity()),
++      last_loss_packet_report_(Timestamp::MinusInfinity()),
++      last_fraction_loss_(0),
++      last_logged_fraction_loss_(0),
++      last_round_trip_time_(TimeDelta::Zero()),
++      receiver_limit_(DataRate::PlusInfinity()),
++      delay_based_limit_(DataRate::PlusInfinity()),
++      time_last_decrease_(Timestamp::MinusInfinity()),
++      first_report_time_(Timestamp::MinusInfinity()),
+       initially_lost_packets_(0),
+       bitrate_at_2_seconds_(DataRate::Zero()),
+       uma_update_state_(kNoUpdate),
+       uma_rtt_state_(kNoUpdate),
+       rampup_uma_stats_updated_(kNumUmaRampupMetrics, false),
+       event_log_(event_log),
+-      last_rtc_event_log_(Timestamp::MinusInfinity()) {
++      last_rtc_event_log_(Timestamp::MinusInfinity()),
++      low_loss_threshold_(kDefaultLowLossThreshold),
++      high_loss_threshold_(kDefaultHighLossThreshold),
++      bitrate_threshold_(kDefaultBitrateThreshold),
++      loss_based_bandwidth_estimator_v2_(new LossBasedBweV2(key_value_config)),
++      loss_based_state_(LossBasedState::kDelayBasedEstimate),
++      disable_receiver_limit_caps_only_("Disabled") {
+   RTC_DCHECK(event_log);
+-  loss_based_bwe_.SetConfiguredMinMaxBitrate(min_bitrate_configured_,
+-                                             max_bitrate_configured_);
++  if (BweLossExperimentIsEnabled(*key_value_config_)) {
++    uint32_t bitrate_threshold_kbps;
++    if (ReadBweLossExperimentParameters(
++            *key_value_config_, &low_loss_threshold_, &high_loss_threshold_,
++            &bitrate_threshold_kbps)) {
++      RTC_LOG(LS_INFO) << "Enabled BweLossExperiment with parameters "
++                       << low_loss_threshold_ << ", " << high_loss_threshold_
++                       << ", " << bitrate_threshold_kbps;
++      bitrate_threshold_ = DataRate::KilobitsPerSec(bitrate_threshold_kbps);
++    }
++  }
++  ParseFieldTrial({&disable_receiver_limit_caps_only_},
++                  key_value_config->Lookup("WebRTC-Bwe-ReceiverLimitCapsOnly"));
++  if (LossBasedBandwidthEstimatorV2Enabled()) {
++    loss_based_bandwidth_estimator_v2_->SetMinMaxBitrate(
++        min_bitrate_configured_, max_bitrate_configured_);
++  }
  }
  
-@@ -201,19 +190,24 @@ std::optional<int64_t> SimulatedNetwork::NextDeliveryTimeUs() const {
-   return std::nullopt;
+ SendSideBandwidthEstimation::~SendSideBandwidthEstimation() {}
+ 
+ void SendSideBandwidthEstimation::OnRouteChange() {
+-  current_target_ = kCongestionControllerMinBitrate;
++  lost_packets_since_last_loss_update_ = 0;
++  expected_packets_since_last_loss_update_ = 0;
++  current_target_ = DataRate::Zero();
+   min_bitrate_configured_ = kCongestionControllerMinBitrate;
+   max_bitrate_configured_ = kDefaultMaxBitrate;
+   last_low_bitrate_log_ = Timestamp::MinusInfinity();
++  has_decreased_since_last_fraction_loss_ = false;
++  last_loss_feedback_ = Timestamp::MinusInfinity();
++  last_loss_packet_report_ = Timestamp::MinusInfinity();
++  last_fraction_loss_ = 0;
+   last_logged_fraction_loss_ = 0;
+   last_round_trip_time_ = TimeDelta::Zero();
+   receiver_limit_ = DataRate::PlusInfinity();
+   delay_based_limit_ = DataRate::PlusInfinity();
+-  loss_based_limit_ = DataRate::PlusInfinity();
+-  time_last_decrease_due_to_rtt_ = Timestamp::MinusInfinity();
+-  first_loss_report_time_ = Timestamp::MinusInfinity();
++  time_last_decrease_ = Timestamp::MinusInfinity();
++  first_report_time_ = Timestamp::MinusInfinity();
+   initially_lost_packets_ = 0;
+   bitrate_at_2_seconds_ = DataRate::Zero();
+   uma_update_state_ = kNoUpdate;
+   uma_rtt_state_ = kNoUpdate;
+   last_rtc_event_log_ = Timestamp::MinusInfinity();
+-  rtt_back_off_rate_ = std::nullopt;
+-  loss_based_bwe_.OnRouteChanged();
++  if (LossBasedBandwidthEstimatorV2Enabled() &&
++      loss_based_bandwidth_estimator_v2_->UseInStartPhase()) {
++    loss_based_bandwidth_estimator_v2_.reset(
++        new LossBasedBweV2(key_value_config_));
++  }
  }
  
--void SimulatedNetwork::UpdateCapacityLink(ConfigState state,
--                                          Timestamp time_now) {
--  if (capacity_link_.has_value()) {
--    // Recalculate the arrival time of the packet currently in the capacity link
--    // since it may have changed if the capacity has changed.
--    capacity_link_->last_update_time = std::max(
--        capacity_link_->last_update_time, last_capacity_link_exit_time_);
--    capacity_link_->arrival_time = CalculateArrivalTime(
--        capacity_link_->last_update_time, capacity_link_->bits_left_to_send,
--        state.config.link_capacity);
-+void SimulatedNetwork::UpdateCapacityQueue(ConfigState state,
-+                                           Timestamp time_now) {
-+  // Only the first packet in capacity_link_ have a calculated arrival time
-+  // (when packet leave the narrow section), and time when it entered the narrow
-+  // section. Also, the configuration may have changed. Thus we need to
-+  // calculate the arrival time again before maybe moving the packet to the
-+  // delay link.
-+  if (!capacity_link_.empty()) {
-+    capacity_link_.front().last_update_time = std::max(
-+        capacity_link_.front().last_update_time, last_capacity_link_exit_time_);
-+    capacity_link_.front().arrival_time = CalculateArrivalTime(
-+        capacity_link_.front().last_update_time,
-+        capacity_link_.front().bits_left_to_send, state.config.link_capacity);
+ void SendSideBandwidthEstimation::SetBitrates(
+@@ -153,12 +240,21 @@ void SendSideBandwidthEstimation::SetBitrates(
+     Timestamp at_time) {
+   SetMinMaxBitrate(min_bitrate, max_bitrate);
+   if (send_bitrate) {
+-    delay_based_limit_ = DataRate::PlusInfinity();
+-    current_target_ = *send_bitrate;
+-    loss_based_bwe_.SetStartRate(*send_bitrate);
++    SetSendBitrate(*send_bitrate, at_time);
    }
+ }
  
--  if (!capacity_link_.has_value() || time_now < capacity_link_->arrival_time) {
-+  // The capacity link is empty or the first packet is not expected to exit yet.
-+  if (capacity_link_.empty() ||
-+      time_now < capacity_link_.front().arrival_time) {
-     return;
++void SendSideBandwidthEstimation::SetSendBitrate(DataRate bitrate,
++                                                 Timestamp at_time) {
++  RTC_DCHECK_GT(bitrate, DataRate::Zero());
++  // Reset to avoid being capped by the estimate.
++  delay_based_limit_ = DataRate::PlusInfinity();
++  UpdateTargetBitrate(bitrate, at_time);
++  // Clear last sent bitrate history so the new value can be used directly
++  // and not capped.
++  min_bitrate_history_.clear();
++}
++
+ void SendSideBandwidthEstimation::SetMinMaxBitrate(DataRate min_bitrate,
+                                                    DataRate max_bitrate) {
+   min_bitrate_configured_ =
+@@ -168,8 +264,8 @@ void SendSideBandwidthEstimation::SetMinMaxBitrate(DataRate min_bitrate,
+   } else {
+     max_bitrate_configured_ = kDefaultMaxBitrate;
    }
-   bool reorder_packets = false;
-@@ -221,9 +215,9 @@ void SimulatedNetwork::UpdateCapacityLink(ConfigState state,
-   do {
-     // Time to get this packet (the original or just updated arrival_time is
-     // smaller or equal to time_now_us).
--    PacketInfo packet = *capacity_link_;
-+    PacketInfo packet = capacity_link_.front();
-     RTC_DCHECK(packet.arrival_time.IsFinite());
--    capacity_link_ = std::nullopt;
-+    capacity_link_.pop();
+-  loss_based_bwe_.SetConfiguredMinMaxBitrate(min_bitrate_configured_,
+-                                             max_bitrate_configured_);
++  loss_based_bandwidth_estimator_v2_->SetMinMaxBitrate(min_bitrate_configured_,
++                                                       max_bitrate_configured_);
+ }
  
-     // If the network is paused, the pause will be implemented as an extra delay
-     // to be spent in the `delay_link_` queue.
-@@ -233,8 +227,8 @@ void SimulatedNetwork::UpdateCapacityLink(ConfigState state,
-     }
+ int SendSideBandwidthEstimation::GetMinBitrate() const {
+@@ -177,11 +273,14 @@ int SendSideBandwidthEstimation::GetMinBitrate() const {
+ }
  
-     // Store the original arrival time, before applying packet loss or extra
--    // delay. This is needed to know when it is possible for the next packet
--    // in the queue to start transmitting.
-+    // delay. This is needed to know when it is the first available time the
-+    // next packet in the `capacity_link_` queue can start transmitting.
-     last_capacity_link_exit_time_ = packet.arrival_time;
+ DataRate SendSideBandwidthEstimation::target_rate() const {
+-  return current_target_;
++  DataRate target = current_target_;
++  if (!disable_receiver_limit_caps_only_)
++    target = std::min(target, receiver_limit_);
++  return std::max(min_bitrate_configured_, target);
+ }
  
-     // Drop packets at an average rate of `state.config.loss_percent` with
-@@ -271,24 +265,19 @@ void SimulatedNetwork::UpdateCapacityLink(ConfigState state,
-     delay_link_.emplace_back(packet);
+ LossBasedState SendSideBandwidthEstimation::loss_based_state() const {
+-  return loss_based_bwe_.state();
++  return loss_based_state_;
+ }
  
-     // If there are no packets in the queue, there is nothing else to do.
--    std::optional<PacketInFlightInfo> peek_packet = queue_->PeekNextPacket();
--    if (!peek_packet) {
-+    if (capacity_link_.empty()) {
-       break;
-     }
--    // It is possible that the next packet in the queue has a send time (at
--    // least in tests) after the previous packet left the capacity link.
--    Timestamp next_start =
--        std::max(last_capacity_link_exit_time_, peek_packet->send_time());
--    std::optional<PacketInFlightInfo> next_packet =
--        queue_->DequeuePacket(next_start);
--    capacity_link_ = {
--        .packet = *next_packet,
--        .last_update_time = next_start,
--        .bits_left_to_send = 8 * static_cast<int64_t>(next_packet->size),
--        .arrival_time = CalculateArrivalTime(next_start, next_packet->size * 8,
--                                             state.config.link_capacity)};
-+    // If instead there is another packet in the `capacity_link_` queue, let's
-+    // calculate its arrival_time based on the latest config (which might
-+    // have been changed since it was enqueued).
-+    Timestamp next_start = std::max(last_capacity_link_exit_time_,
-+                                    capacity_link_.front().last_update_time);
-+    capacity_link_.front().arrival_time =
-+        CalculateArrivalTime(next_start, capacity_link_.front().packet.size * 8,
-+                             state.config.link_capacity);
-     // And if the next packet in the queue needs to exit, let's dequeue it.
--  } while (capacity_link_->arrival_time <= time_now);
-+  } while (capacity_link_.front().arrival_time <= time_now);
- 
-   if (state.config.allow_reordering && reorder_packets) {
-     // Packets arrived out of order and since the network config allows
-@@ -311,13 +300,9 @@ std::vector<PacketDeliveryInfo> SimulatedNetwork::DequeueDeliverablePackets(
-   RTC_DCHECK_RUNS_SERIALIZED(&process_checker_);
-   Timestamp receive_time = Timestamp::Micros(receive_time_us);
- 
--  UpdateCapacityLink(GetConfigState(), receive_time);
-+  UpdateCapacityQueue(GetConfigState(), receive_time);
-   std::vector<PacketDeliveryInfo> packets_to_deliver;
- 
--  for (const PacketInFlightInfo& packet : queue_->DequeueDroppedPackets()) {
--    packets_to_deliver.emplace_back(packet, PacketDeliveryInfo::kNotReceived);
--  }
+ bool SendSideBandwidthEstimation::IsRttAboveLimit() const {
+@@ -192,59 +291,78 @@ void SendSideBandwidthEstimation::UpdateReceiverEstimate(Timestamp at_time,
+                                                          DataRate bandwidth) {
+   // TODO(srte): Ensure caller passes PlusInfinity, not zero, to represent no
+   // limitation.
+-  DataRate estimate = bandwidth.IsZero() ? DataRate::PlusInfinity() : bandwidth;
+-  if (estimate != receiver_limit_) {
+-    receiver_limit_ = estimate;
 -
-   // Check the extra delay queue.
-   while (!delay_link_.empty() &&
-          receive_time >= delay_link_.front().arrival_time) {
-@@ -346,8 +331,8 @@ bool SimulatedNetwork::UpdateNextProcessTime() {
-       break;
+-    if (IsInStartPhase(at_time) && loss_based_bwe_.fraction_loss() == 0 &&
+-        receiver_limit_ > current_target_ &&
+-        delay_based_limit_ > receiver_limit_) {
+-      // Reset the (fallback) loss based estimator and trust the remote estimate
+-      // is a good starting rate.
+-      loss_based_bwe_.SetStartRate(receiver_limit_);
+-      loss_based_limit_ = loss_based_bwe_.GetEstimate();
+-    }
+-    ApplyTargetLimits(at_time);
+-  }
++  receiver_limit_ = bandwidth.IsZero() ? DataRate::PlusInfinity() : bandwidth;
++  ApplyTargetLimits(at_time);
+ }
+ 
+-void SendSideBandwidthEstimation::OnTransportPacketsFeedback(
+-    const TransportPacketsFeedback& report,
+-    DataRate delay_based_estimate,
++void SendSideBandwidthEstimation::UpdateDelayBasedEstimate(Timestamp at_time,
++                                                           DataRate bitrate) {
++  // TODO(srte): Ensure caller passes PlusInfinity, not zero, to represent no
++  // limitation.
++  delay_based_limit_ = bitrate.IsZero() ? DataRate::PlusInfinity() : bitrate;
++  ApplyTargetLimits(at_time);
++}
++
++void SendSideBandwidthEstimation::SetAcknowledgedRate(
+     std::optional<DataRate> acknowledged_rate,
+-    bool is_probe_rate,
+-    bool in_alr) {
+-  delay_based_estimate = delay_based_estimate.IsZero()
+-                             ? DataRate::PlusInfinity()
+-                             : delay_based_estimate;
++    Timestamp at_time) {
+   acknowledged_rate_ = acknowledged_rate;
++  if (!acknowledged_rate.has_value()) {
++    return;
++  }
++  if (LossBasedBandwidthEstimatorV2Enabled()) {
++    loss_based_bandwidth_estimator_v2_->SetAcknowledgedBitrate(
++        *acknowledged_rate);
++  }
++}
+ 
+-  loss_based_bwe_.OnTransportPacketsFeedback(
+-      report, delay_based_estimate, acknowledged_rate_, is_probe_rate, in_alr);
+-
+-  DataRate loss_based_estimate = loss_based_bwe_.GetEstimate();
+-  if (loss_based_estimate != loss_based_limit_ ||
+-      delay_based_limit_ != delay_based_estimate) {
+-    delay_based_limit_ = delay_based_estimate;
+-    loss_based_limit_ = loss_based_estimate;
+-    ApplyTargetLimits(report.feedback_time);
++void SendSideBandwidthEstimation::UpdateLossBasedEstimator(
++    const TransportPacketsFeedback& report,
++    BandwidthUsage /* delay_detector_state */,
++    std::optional<DataRate> /* probe_bitrate */,
++    bool in_alr) {
++  if (LossBasedBandwidthEstimatorV2Enabled()) {
++    loss_based_bandwidth_estimator_v2_->UpdateBandwidthEstimate(
++        report.packet_feedbacks, delay_based_limit_, in_alr);
++    UpdateEstimate(report.feedback_time);
+   }
+ }
+ 
+ void SendSideBandwidthEstimation::UpdatePacketsLost(int64_t packets_lost,
+-                                                    int64_t packets_received,
++                                                    int64_t number_of_packets,
+                                                     Timestamp at_time) {
+-  if (first_loss_report_time_.IsInfinite()) {
+-    first_loss_report_time_ = at_time;
++  last_loss_feedback_ = at_time;
++  if (first_report_time_.IsInfinite())
++    first_report_time_ = at_time;
++
++  // Check sequence number diff and weight loss report
++  if (number_of_packets > 0) {
++    int64_t expected =
++        expected_packets_since_last_loss_update_ + number_of_packets;
++
++    // Don't generate a loss rate until it can be based on enough packets.
++    if (expected < kLimitNumPackets) {
++      // Accumulate reports.
++      expected_packets_since_last_loss_update_ = expected;
++      lost_packets_since_last_loss_update_ += packets_lost;
++      return;
++    }
++
++    has_decreased_since_last_fraction_loss_ = false;
++    int64_t lost_q8 =
++        std::max<int64_t>(lost_packets_since_last_loss_update_ + packets_lost,
++                          0)
++        << 8;
++    last_fraction_loss_ = std::min<int>(lost_q8 / expected, 255);
++
++    // Reset accumulators.
++    lost_packets_since_last_loss_update_ = 0;
++    expected_packets_since_last_loss_update_ = 0;
++    last_loss_packet_report_ = at_time;
++    UpdateEstimate(at_time);
+   }
+-  loss_based_bwe_.OnPacketLossReport(packets_lost, packets_received,
+-                                     last_round_trip_time_, at_time);
++
+   UpdateUmaStatsPacketsLost(at_time, packets_lost);
+-  DataRate estimate = loss_based_bwe_.GetEstimate();
+-  if (estimate != loss_based_limit_) {
+-    loss_based_limit_ = loss_based_bwe_.GetEstimate();
+-    ApplyTargetLimits(at_time);
+-  }
+ }
+ 
+ void SendSideBandwidthEstimation::UpdateUmaStatsPacketsLost(Timestamp at_time,
+@@ -255,7 +373,7 @@ void SendSideBandwidthEstimation::UpdateUmaStatsPacketsLost(Timestamp at_time,
+     if (!rampup_uma_stats_updated_[i] &&
+         bitrate_kbps.kbps() >= kUmaRampupMetrics[i].bitrate_kbps) {
+       RTC_HISTOGRAMS_COUNTS_100000(i, kUmaRampupMetrics[i].metric_name,
+-                                   (at_time - first_loss_report_time_).ms());
++                                   (at_time - first_report_time_).ms());
+       rampup_uma_stats_updated_[i] = true;
      }
    }
--  if (next_process_time_.IsInfinite() && capacity_link_.has_value()) {
--    next_process_time_ = capacity_link_->arrival_time;
-+  if (next_process_time_.IsInfinite() && !capacity_link_.empty()) {
-+    next_process_time_ = capacity_link_.front().arrival_time;
+@@ -269,7 +387,7 @@ void SendSideBandwidthEstimation::UpdateUmaStatsPacketsLost(Timestamp at_time,
+     RTC_HISTOGRAM_COUNTS("WebRTC.BWE.InitialBandwidthEstimate",
+                          bitrate_at_2_seconds_.kbps(), 0, 2000, 50);
+   } else if (uma_update_state_ == kFirstDone &&
+-             at_time - first_loss_report_time_ >= kBweConverganceTime) {
++             at_time - first_report_time_ >= kBweConverganceTime) {
+     uma_update_state_ = kDone;
+     int bitrate_diff_kbps = std::max(
+         bitrate_at_2_seconds_.kbps<int>() - bitrate_kbps.kbps<int>(), 0);
+@@ -290,25 +408,111 @@ void SendSideBandwidthEstimation::UpdateRtt(TimeDelta rtt, Timestamp at_time) {
    }
-   return next_process_time != next_process_time_;
  }
-diff --git a/test/network/simulated_network.h b/test/network/simulated_network.h
-index 0fdb28caa4..7abf7edca8 100644
---- a/test/network/simulated_network.h
-+++ b/test/network/simulated_network.h
-@@ -15,13 +15,12 @@
- #include <cstdint>
- #include <deque>
- #include <functional>
--#include <memory>
+ 
+-void SendSideBandwidthEstimation::OnPeriodicUpdate(Timestamp at_time) {
++void SendSideBandwidthEstimation::UpdateEstimate(Timestamp at_time) {
+   if (rtt_backoff_.IsRttAboveLimit()) {
+-    if (at_time - time_last_decrease_due_to_rtt_ >=
+-            rtt_backoff_.drop_interval_ &&
++    if (at_time - time_last_decrease_ >= rtt_backoff_.drop_interval_ &&
+         current_target_ > rtt_backoff_.bandwidth_floor_) {
+-      time_last_decrease_due_to_rtt_ = at_time;
+-      rtt_back_off_rate_ =
++      time_last_decrease_ = at_time;
++      DataRate new_bitrate =
+           std::max(current_target_ * rtt_backoff_.drop_fraction_,
+                    rtt_backoff_.bandwidth_floor_.Get());
+-      ApplyTargetLimits(at_time);
++      UpdateTargetBitrate(new_bitrate, at_time);
++      return;
+     }
+-  } else if (rtt_back_off_rate_.has_value()) {
+-    rtt_back_off_rate_ = std::nullopt;
++    // TODO(srte): This is likely redundant in most cases.
+     ApplyTargetLimits(at_time);
++    return;
+   }
+-  if (loss_based_bwe_.OnPeriodicProcess(at_time)) {
+-    loss_based_limit_ = loss_based_bwe_.GetEstimate();
++
++  // We trust the REMB and/or delay-based estimate during the first 2 seconds if
++  // we haven't had any packet loss reported, to allow startup bitrate probing.
++  if (last_fraction_loss_ == 0 && IsInStartPhase(at_time) &&
++      !loss_based_bandwidth_estimator_v2_->ReadyToUseInStartPhase()) {
++    DataRate new_bitrate = current_target_;
++    // TODO(srte): We should not allow the new_bitrate to be larger than the
++    // receiver limit here.
++    if (receiver_limit_.IsFinite())
++      new_bitrate = std::max(receiver_limit_, new_bitrate);
++    if (delay_based_limit_.IsFinite()) {
++      new_bitrate = std::max(delay_based_limit_, new_bitrate);
++    }
++    if (new_bitrate != current_target_) {
++      min_bitrate_history_.clear();
++      min_bitrate_history_.push_back(std::make_pair(at_time, current_target_));
++      UpdateTargetBitrate(new_bitrate, at_time);
++      return;
++    }
++  }
++  UpdateMinHistory(at_time);
++  if (last_loss_packet_report_.IsInfinite()) {
++    // No feedback received.
++    // TODO(srte): This is likely redundant in most cases.
+     ApplyTargetLimits(at_time);
++    return;
++  }
++
++  if (LossBasedBandwidthEstimatorV2ReadyForUse()) {
++    LossBasedBweV2::Result result =
++        loss_based_bandwidth_estimator_v2_->GetLossBasedResult();
++    loss_based_state_ = result.state;
++    UpdateTargetBitrate(result.bandwidth_estimate, at_time);
++    return;
++  }
++
++  TimeDelta time_since_loss_packet_report = at_time - last_loss_packet_report_;
++  if (time_since_loss_packet_report < 1.2 * kMaxRtcpFeedbackInterval) {
++    // We only care about loss above a given bitrate threshold.
++    float loss = last_fraction_loss_ / 256.0f;
++    // We only make decisions based on loss when the bitrate is above a
++    // threshold. This is a crude way of handling loss which is uncorrelated
++    // to congestion.
++    if (current_target_ < bitrate_threshold_ || loss <= low_loss_threshold_) {
++      // Loss < 2%: Increase rate by 8% of the min bitrate in the last
++      // kBweIncreaseInterval.
++      // Note that by remembering the bitrate over the last second one can
++      // rampup up one second faster than if only allowed to start ramping
++      // at 8% per second rate now. E.g.:
++      //   If sending a constant 100kbps it can rampup immediately to 108kbps
++      //   whenever a receiver report is received with lower packet loss.
++      //   If instead one would do: current_bitrate_ *= 1.08^(delta time),
++      //   it would take over one second since the lower packet loss to achieve
++      //   108kbps.
++      DataRate new_bitrate = DataRate::BitsPerSec(
++          min_bitrate_history_.front().second.bps() * 1.08 + 0.5);
++
++      // Add 1 kbps extra, just to make sure that we do not get stuck
++      // (gives a little extra increase at low rates, negligible at higher
++      // rates).
++      new_bitrate += DataRate::BitsPerSec(1000);
++      UpdateTargetBitrate(new_bitrate, at_time);
++      return;
++    } else if (current_target_ > bitrate_threshold_) {
++      if (loss <= high_loss_threshold_) {
++        // Loss between 2% - 10%: Do nothing.
++      } else {
++        // Loss > 10%: Limit the rate decreases to once a kBweDecreaseInterval
++        // + rtt.
++        if (!has_decreased_since_last_fraction_loss_ &&
++            (at_time - time_last_decrease_) >=
++                (kBweDecreaseInterval + last_round_trip_time_)) {
++          time_last_decrease_ = at_time;
++
++          // Reduce rate:
++          //   newRate = rate * (1 - 0.5*lossRate);
++          //   where packetLoss = 256*lossRate;
++          DataRate new_bitrate = DataRate::BitsPerSec(
++              (current_target_.bps() *
++               static_cast<double>(512 - last_fraction_loss_)) /
++              512.0);
++          has_decreased_since_last_fraction_loss_ = true;
++          UpdateTargetBitrate(new_bitrate, at_time);
++          return;
++        }
++      }
++    }
+   }
++  // TODO(srte): This is likely redundant in most cases.
++  ApplyTargetLimits(at_time);
+ }
+ 
+ void SendSideBandwidthEstimation::UpdatePropagationRtt(
+@@ -323,8 +527,35 @@ void SendSideBandwidthEstimation::OnSentPacket(const SentPacket& sent_packet) {
+ }
+ 
+ bool SendSideBandwidthEstimation::IsInStartPhase(Timestamp at_time) const {
+-  return first_loss_report_time_.IsInfinite() ||
+-         at_time - first_loss_report_time_ < kStartPhase;
++  return first_report_time_.IsInfinite() ||
++         at_time - first_report_time_ < kStartPhase;
++}
++
++void SendSideBandwidthEstimation::UpdateMinHistory(Timestamp at_time) {
++  // Remove old data points from history.
++  // Since history precision is in ms, add one so it is able to increase
++  // bitrate if it is off by as little as 0.5ms.
++  while (!min_bitrate_history_.empty() &&
++         at_time - min_bitrate_history_.front().first + TimeDelta::Millis(1) >
++             kBweIncreaseInterval) {
++    min_bitrate_history_.pop_front();
++  }
++
++  // Typical minimum sliding-window algorithm: Pop values higher than current
++  // bitrate before pushing it.
++  while (!min_bitrate_history_.empty() &&
++         current_target_ <= min_bitrate_history_.back().second) {
++    min_bitrate_history_.pop_back();
++  }
++
++  min_bitrate_history_.push_back(std::make_pair(at_time, current_target_));
++}
++
++DataRate SendSideBandwidthEstimation::GetUpperLimit() const {
++  DataRate upper_limit = delay_based_limit_;
++  if (disable_receiver_limit_caps_only_)
++    upper_limit = std::min(upper_limit, receiver_limit_);
++  return std::min(upper_limit, max_bitrate_configured_);
+ }
+ 
+ void SendSideBandwidthEstimation::MaybeLogLowBitrateWarning(DataRate bitrate,
+@@ -339,28 +570,39 @@ void SendSideBandwidthEstimation::MaybeLogLowBitrateWarning(DataRate bitrate,
+ 
+ void SendSideBandwidthEstimation::MaybeLogLossBasedEvent(Timestamp at_time) {
+   if (current_target_ != last_logged_target_ ||
+-      loss_based_bwe_.fraction_loss() != last_logged_fraction_loss_ ||
++      last_fraction_loss_ != last_logged_fraction_loss_ ||
+       at_time - last_rtc_event_log_ > kRtcEventLogPeriod) {
+     event_log_->Log(std::make_unique<RtcEventBweUpdateLossBased>(
+-        current_target_.bps(), loss_based_bwe_.fraction_loss(),
+-        /*total_packets_ =*/0));
+-    last_logged_fraction_loss_ = loss_based_bwe_.fraction_loss();
++        current_target_.bps(), last_fraction_loss_,
++        expected_packets_since_last_loss_update_));
++    last_logged_fraction_loss_ = last_fraction_loss_;
+     last_logged_target_ = current_target_;
+     last_rtc_event_log_ = at_time;
+   }
+ }
+ 
+-void SendSideBandwidthEstimation::ApplyTargetLimits(Timestamp at_time) {
+-  current_target_ =
+-      std::min({delay_based_limit_, receiver_limit_,
+-                rtt_back_off_rate_.value_or(DataRate::PlusInfinity()),
+-                loss_based_limit_, max_bitrate_configured_});
+-
+-  if (current_target_ < min_bitrate_configured_) {
+-    MaybeLogLowBitrateWarning(current_target_, at_time);
+-    current_target_ = min_bitrate_configured_;
++void SendSideBandwidthEstimation::UpdateTargetBitrate(DataRate new_bitrate,
++                                                      Timestamp at_time) {
++  new_bitrate = std::min(new_bitrate, GetUpperLimit());
++  if (new_bitrate < min_bitrate_configured_) {
++    MaybeLogLowBitrateWarning(new_bitrate, at_time);
++    new_bitrate = min_bitrate_configured_;
+   }
++  current_target_ = new_bitrate;
+   MaybeLogLossBasedEvent(at_time);
+ }
+ 
++void SendSideBandwidthEstimation::ApplyTargetLimits(Timestamp at_time) {
++  UpdateTargetBitrate(current_target_, at_time);
++}
++
++bool SendSideBandwidthEstimation::LossBasedBandwidthEstimatorV2Enabled() const {
++  return loss_based_bandwidth_estimator_v2_->IsEnabled();
++}
++
++bool SendSideBandwidthEstimation::LossBasedBandwidthEstimatorV2ReadyForUse()
++    const {
++  return loss_based_bandwidth_estimator_v2_->IsReady();
++}
++
+ }  // namespace webrtc
+diff --git a/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.h b/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.h
+index b68d9844fb..2795ba2386 100644
+--- a/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.h
++++ b/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.h
+@@ -15,15 +15,18 @@
+ 
+ #include <stdint.h>
+ 
++#include <deque>
++#include <memory>
  #include <optional>
-+#include <queue>
++#include <utility>
  #include <vector>
  
- #include "absl/functional/any_invocable.h"
- #include "api/sequence_checker.h"
--#include "api/test/network_emulation/network_queue.h"
- #include "api/test/simulated_network.h"
+ #include "api/field_trials_view.h"
++#include "api/transport/bandwidth_usage.h"
+ #include "api/transport/network_types.h"
+ #include "api/units/data_rate.h"
+ #include "api/units/time_delta.h"
  #include "api/units/timestamp.h"
- #include "rtc_base/race_checker.h"
-@@ -40,15 +39,11 @@ namespace webrtc {
- //                   packet through at the time with a limited capacity.
- // - Extra delay with or without packets reorder
- // - Packet overhead
--// Per default a simple leaky bucket queue is used that allows setting a max
--// capacity. But more advanced AQM can be used.
-+// - Queue max capacity
- class RTC_EXPORT SimulatedNetwork : public SimulatedNetworkInterface {
-  public:
-   using Config = BuiltInNetworkBehaviorConfig;
-   explicit SimulatedNetwork(Config config, uint64_t random_seed = 1);
--  SimulatedNetwork(Config config,
--                   uint64_t random_seed,
--                   std::unique_ptr<NetworkQueue> queue);
-   ~SimulatedNetwork() override;
+-#include "modules/congestion_controller/goog_cc/loss_based_bwe.h"
+ #include "modules/congestion_controller/goog_cc/loss_based_bwe_v2.h"
+ #include "rtc_base/experiments/field_trial_parser.h"
  
-   // Sets a new configuration. This will affect packets that will be sent with
-@@ -112,7 +107,7 @@ class RTC_EXPORT SimulatedNetwork : public SimulatedNetworkInterface {
-   // Moves packets from capacity- to delay link.
-   // If `previouse_config` is set, it is the config that was used until
-   // `time_now_us`
--  void UpdateCapacityLink(ConfigState state, Timestamp time_now)
-+  void UpdateCapacityQueue(ConfigState state, Timestamp time_now)
-       RTC_RUN_ON(&process_checker_);
-   ConfigState GetConfigState() const;
+@@ -68,20 +71,23 @@ class SendSideBandwidthEstimation {
+   // Return whether the current rtt is higher than the rtt limited configured in
+   // RttBasedBackoff.
+   bool IsRttAboveLimit() const;
+-  uint8_t fraction_loss() const { return loss_based_bwe_.fraction_loss(); }
++  uint8_t fraction_loss() const { return last_fraction_loss_; }
+   TimeDelta round_trip_time() const { return last_round_trip_time_; }
  
-@@ -121,13 +116,18 @@ class RTC_EXPORT SimulatedNetwork : public SimulatedNetworkInterface {
-   // Guards the data structures involved in delay and loss processing, such as
-   // the packet queues.
-   RaceChecker process_checker_;
+   // Call periodically to update estimate.
+-  void OnPeriodicUpdate(Timestamp at_time);
++  void UpdateEstimate(Timestamp at_time);
+   void OnSentPacket(const SentPacket& sent_packet);
+   void UpdatePropagationRtt(Timestamp at_time, TimeDelta propagation_rtt);
+ 
+   // Call when we receive a RTCP message with TMMBR or REMB.
+   void UpdateReceiverEstimate(Timestamp at_time, DataRate bandwidth);
+ 
++  // Call when a new delay-based estimate is available.
++  void UpdateDelayBasedEstimate(Timestamp at_time, DataRate bitrate);
++
+   // Call when we receive a RTCP message with a ReceiveBlock.
+   void UpdatePacketsLost(int64_t packets_lost,
+-                         int64_t packets_received,
++                         int64_t number_of_packets,
+                          Timestamp at_time);
+ 
+   // Call when we receive a RTCP message with a ReceiveBlock.
+@@ -91,14 +97,15 @@ class SendSideBandwidthEstimation {
+                    DataRate min_bitrate,
+                    DataRate max_bitrate,
+                    Timestamp at_time);
++  void SetSendBitrate(DataRate bitrate, Timestamp at_time);
+   void SetMinMaxBitrate(DataRate min_bitrate, DataRate max_bitrate);
+   int GetMinBitrate() const;
 -
--  // Queue of packets that have not yet entered the capacity link.
--  std::unique_ptr<webrtc::NetworkQueue> queue_;
--  // Models the capacity of the network. There can only be one packet at the
--  // time in the capacity link. The time spend in the capacity link depends on
--  // the link capacity.
--  std::optional<PacketInfo> capacity_link_ RTC_GUARDED_BY(process_checker_);
-+  // Models the capacity of the network by rejecting packets if the queue is
-+  // full and keeping them in the queue until they are ready to exit (according
-+  // to the link capacity, which cannot be violated, e.g. a 1 kbps link will
-+  // only be able to deliver 1000 bits per second).
-+  //
-+  // Invariant:
-+  // The head of the `capacity_link_` has arrival_time correctly set to the
-+  // time when the packet is supposed to be delivered (without accounting
-+  // potential packet loss or potential extra delay and without accounting for a
-+  // new configuration of the network, which requires a re-computation of the
-+  // arrival_time).
-+  std::queue<PacketInfo> capacity_link_ RTC_GUARDED_BY(process_checker_);
-   // Models the extra delay of the network (see `queue_delay_ms`
-   // and `delay_standard_deviation_ms` in BuiltInNetworkBehaviorConfig), packets
-   // in the `delay_link_` have technically already left the network and don't
-@@ -145,7 +145,7 @@ class RTC_EXPORT SimulatedNetwork : public SimulatedNetworkInterface {
+-  void OnTransportPacketsFeedback(const TransportPacketsFeedback& report,
+-                                  DataRate delay_based_estimate,
+-                                  std::optional<DataRate> acknowledged_rate,
+-                                  bool is_probe_rate,
+-                                  bool in_alr);
++  void SetAcknowledgedRate(std::optional<DataRate> acknowledged_rate,
++                           Timestamp at_time);
++  void UpdateLossBasedEstimator(const TransportPacketsFeedback& report,
++                                BandwidthUsage delay_detector_state,
++                                std::optional<DataRate> probe_bitrate,
++                                bool in_alr);
  
-   Random random_ RTC_GUARDED_BY(process_checker_);
-   // Are we currently dropping a burst of packets?
--  bool bursting_ = false;
-+  bool bursting_;
+  private:
+   friend class GoogCcStatePrinter;
+@@ -114,6 +121,9 @@ class SendSideBandwidthEstimation {
+   // min bitrate used during last kBweIncreaseIntervalMs.
+   void UpdateMinHistory(Timestamp at_time);
  
-   // The send time of the last enqueued packet, this is only used to check that
-   // the send time of enqueued packets is monotonically increasing.
-diff --git a/test/network/simulated_network_unittest.cc b/test/network/simulated_network_unittest.cc
-index 23ca9c5f0d..9c59ded933 100644
---- a/test/network/simulated_network_unittest.cc
-+++ b/test/network/simulated_network_unittest.cc
-@@ -11,15 +11,11 @@
++  // Gets the upper limit for the target bitrate. This is the minimum of the
++  // delay based limit, the receiver limit and the loss based controller limit.
++  DataRate GetUpperLimit() const;
+   // Prints a warning if `bitrate` if sufficiently long time has past since last
+   // warning.
+   void MaybeLogLowBitrateWarning(DataRate bitrate, Timestamp at_time);
+@@ -121,34 +131,47 @@ class SendSideBandwidthEstimation {
+   // has changed, or sufficient time has passed since last stored event.
+   void MaybeLogLossBasedEvent(Timestamp at_time);
  
- #include <cstddef>
++  // Cap `bitrate` to [min_bitrate_configured_, max_bitrate_configured_] and
++  // set `current_bitrate_` to the capped value and updates the event log.
++  void UpdateTargetBitrate(DataRate bitrate, Timestamp at_time);
++  // Applies lower and upper bounds to the current target rate.
++  // TODO(srte): This seems to be called even when limits haven't changed, that
++  // should be cleaned up.
+   void ApplyTargetLimits(Timestamp at_time);
+ 
++  bool LossBasedBandwidthEstimatorV2Enabled() const;
++  bool LossBasedBandwidthEstimatorV2ReadyForUse() const;
++
+   const FieldTrialsView* key_value_config_;
+   RttBasedBackoff rtt_backoff_;
+-  LossBasedBwe loss_based_bwe_;
++
++  std::deque<std::pair<Timestamp, DataRate> > min_bitrate_history_;
++
++  // incoming filters
++  int lost_packets_since_last_loss_update_;
++  int expected_packets_since_last_loss_update_;
+ 
+   std::optional<DataRate> acknowledged_rate_;
++  DataRate current_target_;
++  DataRate last_logged_target_;
++  DataRate min_bitrate_configured_;
++  DataRate max_bitrate_configured_;
++  Timestamp last_low_bitrate_log_;
++
++  bool has_decreased_since_last_fraction_loss_;
++  Timestamp last_loss_feedback_;
++  Timestamp last_loss_packet_report_;
++  uint8_t last_fraction_loss_;
+   uint8_t last_logged_fraction_loss_;
+   TimeDelta last_round_trip_time_;
++
+   // The max bitrate as set by the receiver in the call. This is typically
+   // signalled using the REMB RTCP message and is used when we don't have any
+   // send side delay based estimate.
+   DataRate receiver_limit_;
+   DataRate delay_based_limit_;
+-  DataRate loss_based_limit_;
+-
+-  // `rtt_back_off_rate_` is calculated in relation to a limit and can only be
+-  // lower than the limit. If not, it is nullopt.
+-  std::optional<DataRate> rtt_back_off_rate_;
+-
+-  DataRate current_target_;  // Current combined target rate.
+-  DataRate last_logged_target_;
+-  DataRate min_bitrate_configured_;
+-  DataRate max_bitrate_configured_;
+-  Timestamp last_low_bitrate_log_;
+-
+-  Timestamp time_last_decrease_due_to_rtt_;
+-  Timestamp first_loss_report_time_;
++  Timestamp time_last_decrease_;
++  Timestamp first_report_time_;
+   int initially_lost_packets_;
+   DataRate bitrate_at_2_seconds_;
+   UmaState uma_update_state_;
+@@ -156,6 +179,12 @@ class SendSideBandwidthEstimation {
+   std::vector<bool> rampup_uma_stats_updated_;
+   RtcEventLog* const event_log_;
+   Timestamp last_rtc_event_log_;
++  float low_loss_threshold_;
++  float high_loss_threshold_;
++  DataRate bitrate_threshold_;
++  std::unique_ptr<LossBasedBweV2> loss_based_bandwidth_estimator_v2_;
++  LossBasedState loss_based_state_;
++  FieldTrialFlag disable_receiver_limit_caps_only_;
+ };
+ }  // namespace webrtc
+ #endif  // MODULES_CONGESTION_CONTROLLER_GOOG_CC_SEND_SIDE_BANDWIDTH_ESTIMATION_H_
+diff --git a/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation_unittest.cc b/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation_unittest.cc
+index 93b76fc366..5efd337710 100644
+--- a/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation_unittest.cc
++++ b/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation_unittest.cc
+@@ -11,13 +11,10 @@
+ #include "modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.h"
+ 
  #include <cstdint>
--#include <memory>
- #include <optional>
--#include <utility>
- #include <vector>
+-#include <optional>
  
--#include "api/test/network_emulation/leaky_bucket_network_queue.h"
- #include "api/test/simulated_network.h"
+ #include "api/field_trials.h"
+ #include "api/rtc_event_log/rtc_event.h"
+-#include "api/transport/network_types.h"
  #include "api/units/data_rate.h"
 -#include "api/units/data_size.h"
  #include "api/units/time_delta.h"
  #include "api/units/timestamp.h"
- #include "test/gmock.h"
-@@ -29,10 +25,8 @@ namespace webrtc {
- namespace {
+ #include "logging/rtc_event_log/events/rtc_event_bwe_update_loss_based.h"
+@@ -44,87 +41,70 @@ MATCHER(LossBasedBweUpdateWithBitrateAndLossFraction, "") {
+   return bwe_event->bitrate_bps() > 0 && bwe_event->fraction_loss() > 0;
+ }
  
- using ::testing::ElementsAre;
--using ::testing::Field;
- using ::testing::MockFunction;
- using ::testing::SizeIs;
--using ::testing::UnorderedElementsAre;
+-TEST(SendSideBweTest, InitialRembAppliesImmediately) {
++void TestProbing(bool use_delay_based) {
+   ::testing::NiceMock<MockRtcEventLog> event_log;
+   FieldTrials key_value_config = CreateTestFieldTrials();
+   SendSideBandwidthEstimation bwe(&key_value_config, &event_log);
+   int64_t now_ms = 0;
+-  bwe.SetBitrates(DataRate::BitsPerSec(200000), DataRate::BitsPerSec(100000),
+-                  DataRate::BitsPerSec(1500000), Timestamp::Millis(now_ms));
++  bwe.SetMinMaxBitrate(DataRate::BitsPerSec(100000),
++                       DataRate::BitsPerSec(1500000));
++  bwe.SetSendBitrate(DataRate::BitsPerSec(200000), Timestamp::Millis(now_ms));
  
- PacketInFlightInfo PacketWithSize(size_t size) {
-   return PacketInFlightInfo(/*size=*/size, /*send_time_us=*/0, /*packet_id=*/1);
-@@ -468,7 +462,7 @@ TEST(SimulatedNetworkTest, QueueDelayMsWithStandardDeviationAndReorderAllowed) {
-           /*receive_time_us=*/TimeDelta::Seconds(5).us());
-   ASSERT_EQ(delivered_packets.size(), 4ul);
+   const int kRembBps = 1000000;
+   const int kSecondRembBps = kRembBps + 500000;
  
--  // And they have been reordered according to the applied extra delay.
-+  // And they have been reordered accorting to the applied extra delay.
-   EXPECT_EQ(delivered_packets[0].packet_id, 3ul);
-   EXPECT_EQ(delivered_packets[1].packet_id, 1ul);
-   EXPECT_GE(delivered_packets[1].receive_time_us,
-@@ -567,17 +561,18 @@ TEST(SimulatedNetworkTest, PacketLossBurst) {
-   EXPECT_EQ(delivered_packets.size(), 20ul);
+-  bwe.UpdatePacketsLost(/*packets_lost=*/0, /*packets_received=*/1,
++  bwe.UpdatePacketsLost(/*packets_lost=*/0, /*number_of_packets=*/1,
+                         Timestamp::Millis(now_ms));
+   bwe.UpdateRtt(TimeDelta::Millis(50), Timestamp::Millis(now_ms));
  
-   // Results in a burst of lost packets after the first packet lost.
--  // With the current random seed, at least 5 packets are lost.
--  int num_lost_packets = 0;
-+  // With the current random seed, the first 12 are not lost, while the
-+  // last 8 are.
-+  int current_packet = 0;
-   for (const auto& packet : delivered_packets) {
--    if (packet.receive_time_us == PacketDeliveryInfo::kNotReceived) {
--      num_lost_packets++;
+   // Initial REMB applies immediately.
+-  bwe.UpdateReceiverEstimate(Timestamp::Millis(now_ms),
+-                             DataRate::BitsPerSec(kRembBps));
+-  bwe.OnPeriodicUpdate(Timestamp::Millis(now_ms));
+-  EXPECT_EQ(bwe.target_rate().bps(), kRembBps);
++  if (use_delay_based) {
++    bwe.UpdateDelayBasedEstimate(Timestamp::Millis(now_ms),
++                                 DataRate::BitsPerSec(kRembBps));
++  } else {
++    bwe.UpdateReceiverEstimate(Timestamp::Millis(now_ms),
++                               DataRate::BitsPerSec(kRembBps));
++  }
++  bwe.UpdateEstimate(Timestamp::Millis(now_ms));
++  EXPECT_EQ(kRembBps, bwe.target_rate().bps());
+ 
+-  // Second REMB, after startphase doesn't apply immediately.
++  // Second REMB doesn't apply immediately.
+   now_ms += 2001;
+-  bwe.UpdateReceiverEstimate(Timestamp::Millis(now_ms),
+-                             DataRate::BitsPerSec(kSecondRembBps));
+-  bwe.OnPeriodicUpdate(Timestamp::Millis(now_ms));
++  if (use_delay_based) {
++    bwe.UpdateDelayBasedEstimate(Timestamp::Millis(now_ms),
++                                 DataRate::BitsPerSec(kSecondRembBps));
++  } else {
++    bwe.UpdateReceiverEstimate(Timestamp::Millis(now_ms),
++                               DataRate::BitsPerSec(kSecondRembBps));
++  }
++  bwe.UpdateEstimate(Timestamp::Millis(now_ms));
++  EXPECT_EQ(kRembBps, bwe.target_rate().bps());
++}
+ 
+-  EXPECT_EQ(bwe.target_rate().bps(), kRembBps);
++TEST(SendSideBweTest, InitialRembWithProbing) {
++  TestProbing(false);
+ }
+ 
+-TEST(SendSideBweTest, TargetFollowProbeRateIfNoLoss) {
+-  ::testing::NiceMock<MockRtcEventLog> event_log;
+-  FieldTrials key_value_config = CreateTestFieldTrials();
+-  SendSideBandwidthEstimation bwe(&key_value_config, &event_log);
+-  constexpr Timestamp kStartTime = Timestamp::Seconds(123);
+-  constexpr DataRate kInitialBwe = DataRate::KilobitsPerSec(200);
+-  bwe.SetBitrates(kInitialBwe, DataRate::KilobitsPerSec(100),
+-                  DataRate::KilobitsPerSec(15000), kStartTime);
+-  bwe.UpdatePacketsLost(/*packets_lost=*/0, /*packets_received=*/1, kStartTime);
+-
+-  ASSERT_EQ(bwe.target_rate(), kInitialBwe);
+-
+-  DataRate delay_based_estimate = kInitialBwe;
+-
+-  int sequence_number = 0;
+-  for (Timestamp now = kStartTime; now < kStartTime + TimeDelta::Seconds(5);
+-       now = now + TimeDelta::Seconds(1)) {
+-    TransportPacketsFeedback feedback;
+-    feedback.feedback_time = now;
+-    for (int i = 0; i < 100; ++i) {
+-      PacketResult packet;
+-      packet.sent_packet.sequence_number = ++sequence_number;
+-      packet.sent_packet.send_time = now;
+-      packet.sent_packet.size = DataSize::Bytes(1000);
+-      packet.receive_time = now;
+-      feedback.packet_feedbacks.push_back(packet);
 -    }
--    if (num_lost_packets > 0) {
-+    if (current_packet < 12) {
-+      EXPECT_NE(packet.receive_time_us, PacketDeliveryInfo::kNotReceived);
-+      current_packet++;
-+    } else {
-       EXPECT_EQ(packet.receive_time_us, PacketDeliveryInfo::kNotReceived);
-+      current_packet++;
-     }
-   }
--  EXPECT_GT(num_lost_packets, 5);
+-
+-    bwe.OnTransportPacketsFeedback(
+-        feedback, delay_based_estimate,
+-        /*acknowledged_rate=*/delay_based_estimate / 2,
+-        /*is_probe_rate=*/true,
+-        /*in_alr=*/false);
+-    EXPECT_EQ(bwe.target_rate(), delay_based_estimate);
+-    delay_based_estimate = 2 * delay_based_estimate;
+-  }
++TEST(SendSideBweTest, InitialDelayBasedBweWithProbing) {
++  TestProbing(true);
  }
  
- TEST(SimulatedNetworkTest, PauseTransmissionUntil) {
-@@ -673,32 +668,6 @@ TEST(SimulatedNetworkTest, EnqueuePacketWithSubSecondNonMonotonicBehaviour) {
-   EXPECT_EQ(delivered_packets[0].receive_time_us, TimeDelta::Seconds(3).us());
+ TEST(SendSideBweTest, DoesntReapplyBitrateDecreaseWithoutFollowingRemb) {
+   MockRtcEventLog event_log;
++  EXPECT_CALL(event_log, LogProxy(LossBasedBweUpdateWithBitrateOnly()))
++      .Times(1);
+   EXPECT_CALL(event_log,
+               LogProxy(LossBasedBweUpdateWithBitrateAndLossFraction()))
+-      .Times(2);
++      .Times(1);
+   FieldTrials key_value_config = CreateTestFieldTrials();
+   SendSideBandwidthEstimation bwe(&key_value_config, &event_log);
+   static const int kMinBitrateBps = 100000;
+   static const int kInitialBitrateBps = 1000000;
+   int64_t now_ms = 1000;
+-  bwe.SetBitrates(DataRate::BitsPerSec(kInitialBitrateBps),
+-                  DataRate::BitsPerSec(kMinBitrateBps),
+-                  DataRate::BitsPerSec(1500000), Timestamp::Millis(now_ms));
++  bwe.SetMinMaxBitrate(DataRate::BitsPerSec(kMinBitrateBps),
++                       DataRate::BitsPerSec(1500000));
++  bwe.SetSendBitrate(DataRate::BitsPerSec(kInitialBitrateBps),
++                     Timestamp::Millis(now_ms));
+ 
+   static const uint8_t kFractionLoss = 128;
+   static const int64_t kRttMs = 50;
+@@ -135,15 +115,13 @@ TEST(SendSideBweTest, DoesntReapplyBitrateDecreaseWithoutFollowingRemb) {
+   EXPECT_EQ(0, bwe.round_trip_time().ms());
+ 
+   // Signal heavy loss to go down in bitrate.
+-  bwe.UpdatePacketsLost(/*packets_lost=*/50, /*packets_received=*/50,
++  bwe.UpdatePacketsLost(/*packets_lost=*/50, /*number_of_packets=*/100,
+                         Timestamp::Millis(now_ms));
+   bwe.UpdateRtt(TimeDelta::Millis(kRttMs), Timestamp::Millis(now_ms));
+ 
+   // Trigger an update 2 seconds later to not be rate limited.
+   now_ms += 1000;
+-  bwe.UpdatePacketsLost(/*packets_lost=*/50, /*packets_received=*/50,
+-                        Timestamp::Millis(now_ms));
+-  bwe.OnPeriodicUpdate(Timestamp::Millis(now_ms));
++  bwe.UpdateEstimate(Timestamp::Millis(now_ms));
+   EXPECT_LT(bwe.target_rate().bps(), kInitialBitrateBps);
+   // Verify that the obtained bitrate isn't hitting the min bitrate, or this
+   // test doesn't make sense. If this ever happens, update the thresholds or
+@@ -153,13 +131,13 @@ TEST(SendSideBweTest, DoesntReapplyBitrateDecreaseWithoutFollowingRemb) {
+   EXPECT_EQ(kRttMs, bwe.round_trip_time().ms());
+ 
+   // Triggering an update shouldn't apply further downgrade nor upgrade since
+-  // there's no intermediate receiver block received indicating whether this
+-  // is currently good or not.
++  // there's no intermediate receiver block received indicating whether this is
++  // currently good or not.
+   int last_bitrate_bps = bwe.target_rate().bps();
+   // Trigger an update 2 seconds later to not be rate limited (but it still
+   // shouldn't update).
+   now_ms += 1000;
+-  bwe.OnPeriodicUpdate(Timestamp::Millis(now_ms));
++  bwe.UpdateEstimate(Timestamp::Millis(now_ms));
+ 
+   EXPECT_EQ(last_bitrate_bps, bwe.target_rate().bps());
+   // The old loss rate should still be applied though.
+@@ -167,6 +145,34 @@ TEST(SendSideBweTest, DoesntReapplyBitrateDecreaseWithoutFollowingRemb) {
+   EXPECT_EQ(kRttMs, bwe.round_trip_time().ms());
  }
  
--TEST(SimulatedNetworkTest, CanUseInjectedQueueAndDropPacketsAtQueueHead) {
--  auto queue =
--      std::make_unique<LeakyBucketNetworkQueue>(/*max_packet_capacity=*/3);
--  LeakyBucketNetworkQueue* queue_ptr = queue.get();
--  SimulatedNetwork network =
--      SimulatedNetwork({.link_capacity = DataRate::KilobitsPerSec(1)},
--                       /*random_seed=*/1, std::move(queue));
--  ASSERT_TRUE(network.EnqueuePacket(PacketInFlightInfo(
--      DataSize::Bytes(125), Timestamp::Seconds(1), /*packet_id=*/0)));
--  ASSERT_TRUE(network.EnqueuePacket(PacketInFlightInfo(
--      DataSize::Bytes(125), Timestamp::Seconds(1), /*packet_id=*/1)));
--
--  // packet 0 is already sent, packet 1 is in the queue and will be dropped.
--  queue_ptr->DropOldestPacket();
--
--  std::vector<PacketDeliveryInfo> delivered_packets =
--      network.DequeueDeliverablePackets(network.NextDeliveryTimeUs().value());
--  ASSERT_EQ(delivered_packets.size(), 2ul);
--  EXPECT_THAT(
--      delivered_packets,
--      UnorderedElementsAre(Field(&PacketDeliveryInfo::packet_id, 0),
--                           AllOf(Field(&PacketDeliveryInfo::packet_id, 1),
--                                 Field(&PacketDeliveryInfo::receive_time_us,
--                                       PacketDeliveryInfo::kNotReceived))));
--}
--
- // TODO(bugs.webrtc.org/14525): Re-enable when the DCHECK will be uncommented
- // and the non-monotonic events on real time clock tests is solved/understood.
- // TEST(SimulatedNetworkDeathTest, EnqueuePacketExpectMonotonicSendTime) {
++TEST(SendSideBweTest, SettingSendBitrateOverridesDelayBasedEstimate) {
++  ::testing::NiceMock<MockRtcEventLog> event_log;
++  FieldTrials key_value_config = CreateTestFieldTrials();
++  SendSideBandwidthEstimation bwe(&key_value_config, &event_log);
++  static const int kMinBitrateBps = 10000;
++  static const int kMaxBitrateBps = 10000000;
++  static const int kInitialBitrateBps = 300000;
++  static const int kDelayBasedBitrateBps = 350000;
++  static const int kForcedHighBitrate = 2500000;
++
++  int64_t now_ms = 0;
++
++  bwe.SetMinMaxBitrate(DataRate::BitsPerSec(kMinBitrateBps),
++                       DataRate::BitsPerSec(kMaxBitrateBps));
++  bwe.SetSendBitrate(DataRate::BitsPerSec(kInitialBitrateBps),
++                     Timestamp::Millis(now_ms));
++
++  bwe.UpdateDelayBasedEstimate(Timestamp::Millis(now_ms),
++                               DataRate::BitsPerSec(kDelayBasedBitrateBps));
++  bwe.UpdateEstimate(Timestamp::Millis(now_ms));
++  EXPECT_GE(bwe.target_rate().bps(), kInitialBitrateBps);
++  EXPECT_LE(bwe.target_rate().bps(), kDelayBasedBitrateBps);
++
++  bwe.SetSendBitrate(DataRate::BitsPerSec(kForcedHighBitrate),
++                     Timestamp::Millis(now_ms));
++  EXPECT_EQ(bwe.target_rate().bps(), kForcedHighBitrate);
++}
++
+ TEST(RttBasedBackoff, DefaultEnabled) {
+   RttBasedBackoff rtt_backoff(CreateTestFieldTrials());
+   EXPECT_TRUE(rtt_backoff.rtt_limit_.IsFinite());
+@@ -186,9 +192,10 @@ TEST(SendSideBweTest, FractionLossIsNotOverflowed) {
+   static const int kMinBitrateBps = 100000;
+   static const int kInitialBitrateBps = 1000000;
+   int64_t now_ms = 1000;
+-  bwe.SetBitrates(DataRate::BitsPerSec(kInitialBitrateBps),
+-                  DataRate::BitsPerSec(kMinBitrateBps),
+-                  DataRate::BitsPerSec(1500000), Timestamp::Millis(now_ms));
++  bwe.SetMinMaxBitrate(DataRate::BitsPerSec(kMinBitrateBps),
++                       DataRate::BitsPerSec(1500000));
++  bwe.SetSendBitrate(DataRate::BitsPerSec(kInitialBitrateBps),
++                     Timestamp::Millis(now_ms));
+ 
+   now_ms += 10000;
+ 
+@@ -209,10 +216,10 @@ TEST(SendSideBweTest, RttIsAboveLimitIfRttGreaterThanLimit) {
+   static const int kMaxBitrateBps = 10000000;
+   static const int kInitialBitrateBps = 300000;
+   int64_t now_ms = 0;
+-  bwe.SetBitrates(DataRate::BitsPerSec(kInitialBitrateBps),
+-                  DataRate::BitsPerSec(kMinBitrateBps),
+-                  DataRate::BitsPerSec(kMaxBitrateBps),
+-                  Timestamp::Millis(now_ms));
++  bwe.SetMinMaxBitrate(DataRate::BitsPerSec(kMinBitrateBps),
++                       DataRate::BitsPerSec(kMaxBitrateBps));
++  bwe.SetSendBitrate(DataRate::BitsPerSec(kInitialBitrateBps),
++                     Timestamp::Millis(now_ms));
+   bwe.UpdatePropagationRtt(/*at_time=*/Timestamp::Millis(now_ms),
+                            /*propagation_rtt=*/TimeDelta::Millis(5000));
+   EXPECT_TRUE(bwe.IsRttAboveLimit());
+@@ -226,10 +233,10 @@ TEST(SendSideBweTest, RttIsBelowLimitIfRttLessThanLimit) {
+   static const int kMaxBitrateBps = 10000000;
+   static const int kInitialBitrateBps = 300000;
+   int64_t now_ms = 0;
+-  bwe.SetBitrates(DataRate::BitsPerSec(kInitialBitrateBps),
+-                  DataRate::BitsPerSec(kMinBitrateBps),
+-                  DataRate::BitsPerSec(kMaxBitrateBps),
+-                  Timestamp::Millis(now_ms));
++  bwe.SetMinMaxBitrate(DataRate::BitsPerSec(kMinBitrateBps),
++                       DataRate::BitsPerSec(kMaxBitrateBps));
++  bwe.SetSendBitrate(DataRate::BitsPerSec(kInitialBitrateBps),
++                     Timestamp::Millis(now_ms));
+   bwe.UpdatePropagationRtt(/*at_time=*/Timestamp::Millis(now_ms),
+                            /*propagation_rtt=*/TimeDelta::Millis(1000));
+   EXPECT_FALSE(bwe.IsRttAboveLimit());
