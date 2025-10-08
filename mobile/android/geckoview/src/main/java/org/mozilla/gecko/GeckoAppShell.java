@@ -1770,6 +1770,18 @@ public class GeckoAppShell {
   }
 
   @WrapForJNI
+  private static void crashByUncaughtException() {
+    final Thread crashThread =
+        new Thread("UncaughtExceptionThread") {
+          @Override
+          public void run() {
+            throw new IllegalStateException();
+          }
+        };
+    crashThread.start();
+  }
+
+  @WrapForJNI
   public static native boolean isParentProcess();
 
   @WrapForJNI

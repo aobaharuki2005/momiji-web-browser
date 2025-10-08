@@ -16,6 +16,10 @@
 #include "mozilla/dom/RemoteType.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/java/GeckoAppShellWrappers.h"
+#endif
+
 #define ABOUT_CONFIG_ENABLED_PREF "general.aboutConfig.enable"
 
 NS_IMPL_ISUPPORTS(nsAboutRedirector, nsIAboutModule)
@@ -48,6 +52,12 @@ class CrashChannel final : public nsBaseChannel {
     if (spec.EqualsASCII("about:crashcontent") && XRE_IsContentProcess()) {
       MOZ_CRASH("Crash via about:crashcontent");
     }
+
+#ifdef MOZ_WIDGET_ANDROID
+    if (spec.EqualsASCII("about:crashcontentjava") && XRE_IsContentProcess()) {
+      mozilla::java::GeckoAppShell::CrashByUncaughtException();
+    }
+#endif
 
     if (spec.EqualsASCII("about:crashextensions") && XRE_IsParentProcess()) {
       using ContentParent = mozilla::dom::ContentParent;
@@ -222,6 +232,13 @@ static const RedirEntry kRedirMap[] = {
          nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::URI_CAN_LOAD_IN_CHILD |
          nsIAboutModule::URI_MUST_LOAD_IN_CHILD},
+#ifdef MOZ_WIDGET_ANDROID
+    {"crashcontentjava", "about:blank",
+     nsIAboutModule::HIDE_FROM_ABOUTABOUT |
+         nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+         nsIAboutModule::URI_CAN_LOAD_IN_CHILD |
+         nsIAboutModule::URI_MUST_LOAD_IN_CHILD},
+#endif
     {"crashgpu", "about:blank", nsIAboutModule::HIDE_FROM_ABOUTABOUT},
     {"crashextensions", "about:blank", nsIAboutModule::HIDE_FROM_ABOUTABOUT}};
 static const int kRedirTotal = std::size(kRedirMap);
@@ -241,7 +258,11 @@ nsAboutRedirector::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (path.EqualsASCII("crashparent") || path.EqualsASCII("crashcontent") ||
-      path.EqualsASCII("crashgpu") || path.EqualsASCII("crashextensions")) {
+      path.EqualsASCII("crashgpu") || path.EqualsASCII("crashextensions")
+#ifdef MOZ_WIDGET_ANDROID
+      || path.EqualsASCII("crashcontentjava")
+#endif
+  ) {
     bool isExternal;
     aLoadInfo->GetLoadTriggeredFromExternal(&isExternal);
     if (isExternal || !aLoadInfo->TriggeringPrincipal() ||

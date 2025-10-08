@@ -39,6 +39,7 @@ open class BaseSessionTest(
         const val CLICK_TO_REPLACE_HTML_PATH = "/assets/www/clickToReplace.html"
         const val CLIPBOARD_READ_HTML_PATH = "/assets/www/clipboard_read.html"
         const val CONTENT_CRASH_URL = "about:crashcontent"
+        const val CONTENT_CRASH_JAVA_URL = "about:crashcontentjava"
         const val DND_HTML_PATH = "/assets/www/dnd.html"
         const val DND_XORIGIN_HTML_PATH = "/assets/www/dnd_xorigin.html"
         const val DOWNLOAD_HTML_PATH = "/assets/www/download.html"
