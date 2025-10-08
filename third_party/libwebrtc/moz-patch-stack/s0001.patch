@@ -609,7 +609,7 @@ index e06698e0db..2629fe0aab 100644
    method_ = new_method;
  }
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.cc b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-index 3f9a852e18..8bc0ab998c 100644
+index 3f9a852e18..8f52699e89 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.cc
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.cc
 @@ -420,6 +420,45 @@ bool PlayoutDelayLimits::Write(ArrayView<uint8_t> data,
@@ -629,7 +629,7 @@ index 3f9a852e18..8bc0ab998c 100644
 +constexpr RTPExtensionType CsrcAudioLevel::kId;
 +constexpr const char* CsrcAudioLevel::kUri;
 +
-+bool CsrcAudioLevel::Parse(rtc::ArrayView<const uint8_t> data,
++bool CsrcAudioLevel::Parse(ArrayView<const uint8_t> data,
 +                           CsrcAudioLevelList* csrcAudioLevels) {
 +  if (data.size() < 1 || data.size() > kRtpCsrcSize)
 +    return false;
@@ -645,7 +645,7 @@ index 3f9a852e18..8bc0ab998c 100644
 +  return csrcAudioLevels.numAudioLevels;
 +}
 +
-+bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
++bool CsrcAudioLevel::Write(ArrayView<uint8_t> data,
 +                           const CsrcAudioLevelList& csrcAudioLevels) {
 +  RTC_DCHECK_GE(csrcAudioLevels.numAudioLevels, 0);
 +  for(uint8_t i = 0; i < csrcAudioLevels.numAudioLevels; i++) {

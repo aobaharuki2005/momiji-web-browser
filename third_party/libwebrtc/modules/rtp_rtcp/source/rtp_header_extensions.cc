@@ -436,7 +436,7 @@ bool PlayoutDelayLimits::Write(ArrayView<uint8_t> data,
 constexpr RTPExtensionType CsrcAudioLevel::kId;
 constexpr const char* CsrcAudioLevel::kUri;
 
-bool CsrcAudioLevel::Parse(rtc::ArrayView<const uint8_t> data,
+bool CsrcAudioLevel::Parse(ArrayView<const uint8_t> data,
                            CsrcAudioLevelList* csrcAudioLevels) {
   if (data.size() < 1 || data.size() > kRtpCsrcSize)
     return false;
@@ -452,7 +452,7 @@ size_t CsrcAudioLevel::ValueSize(const CsrcAudioLevelList& csrcAudioLevels) {
   return csrcAudioLevels.numAudioLevels;
 }
 
-bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
+bool CsrcAudioLevel::Write(ArrayView<uint8_t> data,
                            const CsrcAudioLevelList& csrcAudioLevels) {
   RTC_DCHECK_GE(csrcAudioLevels.numAudioLevels, 0);
   for(uint8_t i = 0; i < csrcAudioLevels.numAudioLevels; i++) {

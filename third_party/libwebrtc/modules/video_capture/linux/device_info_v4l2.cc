@@ -180,7 +180,7 @@ DeviceInfoV4l2::DeviceInfoV4l2() : DeviceInfoImpl()
 #endif
 {
 #ifdef WEBRTC_LINUX
-  _inotifyEventThread = rtc::PlatformThread::SpawnJoinable(
+  _inotifyEventThread = PlatformThread::SpawnJoinable(
       [this] {
         InotifyProcess();
       }, "InotifyEventThread");

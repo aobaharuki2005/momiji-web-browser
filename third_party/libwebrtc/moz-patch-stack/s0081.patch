@@ -50,7 +50,7 @@ index 1e75f35909..eb5d7a8e30 100644
     * Fills the membervariable _captureCapabilities with capabilites for the
     * given device name.
 diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index 04caaea592..401c38f9c5 100644
+index 6755a46146..bb533c6792 100644
 --- a/modules/video_capture/linux/device_info_v4l2.cc
 +++ b/modules/video_capture/linux/device_info_v4l2.cc
 @@ -232,7 +232,8 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
@@ -64,7 +64,7 @@ index 04caaea592..401c38f9c5 100644
    uint32_t count = 0;
    char device[20];
 diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
-index 0bec3eb765..55415845ad 100644
+index 60df9bb244..243b0c999d 100644
 --- a/modules/video_capture/linux/device_info_v4l2.h
 +++ b/modules/video_capture/linux/device_info_v4l2.h
 @@ -36,7 +36,8 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
