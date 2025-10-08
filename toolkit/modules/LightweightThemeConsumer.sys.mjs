@@ -23,6 +23,17 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
+const kDefaultThemes = {
+  [DEFAULT_THEME_ID]: {},
+  "firefox-compact-light@mozilla.org": {
+    colorScheme: "light",
+    forceNonNative: true,
+  },
+  "firefox-compact-dark@mozilla.org": {
+    colorScheme: "dark",
+    forceNonNative: true,
+  },
+};
 
 const toolkitVariableMap = [
   [
@@ -298,39 +309,38 @@ LightweightThemeConsumer.prototype = {
       // _determineToolbarAndContentTheme, because it applies the color scheme
       // globally for all windows. Skipping this method also means we don't
       // switch the content theme to dark.
-      //
-      // TODO: On Linux we most likely need to apply the dark theme, but on
-      // Windows and macOS we should be able to render light and dark windows
-      // with the default theme at the same time.
       updateGlobalThemeData = false;
       return true;
     })();
-
-    // If this is a per-window dark theme, set the color scheme override so
-    // child BrowsingContexts, such as embedded prompts, get themed
-    // appropriately.
-    // If not, reset the color scheme override field. This is required to reset
-    // the color scheme on theme switch.
-    if (this._win.browsingContext == this._win.browsingContext.top) {
-      if (useDarkTheme && !updateGlobalThemeData) {
-        this._win.browsingContext.prefersColorSchemeOverride = "dark";
-      } else {
-        this._win.browsingContext.prefersColorSchemeOverride = "none";
-      }
-    }
 
     let theme = useDarkTheme ? themeData.darkTheme : themeData.theme;
     if (!theme) {
       theme = { id: DEFAULT_THEME_ID };
     }
-    let hasTheme = theme.id != DEFAULT_THEME_ID;
-    let root = this._doc.documentElement;
-    if (hasTheme && theme.headerURL) {
-      root.setAttribute("lwtheme-image", "true");
-    } else {
-      root.removeAttribute("lwtheme-image");
-    }
+    let builtinThemeConfig = kDefaultThemes[theme.id];
+    let hasTheme = !builtinThemeConfig;
+    let colorSchemeOverride = (() => {
+      if (useDarkTheme || themeData.darkTheme) {
+        return useDarkTheme ? "dark" : "light";
+      }
+      if (builtinThemeConfig?.colorScheme) {
+        return builtinThemeConfig.colorScheme;
+      }
+      // If not, reset the color scheme override field. This is required to reset
+      // the color scheme on theme switch.
+      return "none";
+    })();
 
+    // NOTE(emilio): The !parent check shouldn't be needed ideally, but
+    // apparently Thunderbird uses this code on child frames?
+    // See bug 1752815.
+    if (!this._win.browsingContext.parent) {
+      this._win.browsingContext.prefersColorSchemeOverride =
+        colorSchemeOverride;
+    }
+    this._doc.forceNonNativeTheme = !!builtinThemeConfig?.forceNonNative;
+    let root = this._doc.documentElement;
+    root.toggleAttribute("lwtheme-image", !!(hasTheme && theme.headerURL));
     this._setExperiment(hasTheme, themeData.experiment, theme.experimental);
     _setImage(this._win, root, hasTheme, "--lwt-header-image", theme.headerURL);
     _setImage(
@@ -344,21 +354,15 @@ LightweightThemeConsumer.prototype = {
 
     _setDarkModeAttributes(this._doc, root, theme, _processedColors, hasTheme);
 
-    if (hasTheme) {
-      if (updateGlobalThemeData) {
-        _determineToolbarAndContentTheme(
-          this._doc,
-          theme,
-          _processedColors,
-          supportsDarkTheme,
-          useDarkTheme
-        );
-      }
-      root.setAttribute("lwtheme", "true");
-    } else {
-      _determineToolbarAndContentTheme(this._doc, null, null);
-      root.removeAttribute("lwtheme");
+    if (updateGlobalThemeData) {
+      _determineToolbarAndContentTheme(
+        this._doc,
+        hasTheme ? theme : null,
+        _processedColors,
+        colorSchemeOverride
+      );
     }
+    root.toggleAttribute("lwtheme", hasTheme);
 
     let contentThemeData = _getContentProperties(this._doc, hasTheme, theme);
     Services.ppmm.sharedData.set(`theme/${this._winId}`, contentThemeData);
@@ -509,8 +513,7 @@ function _determineToolbarAndContentTheme(
   aDoc,
   aTheme,
   colors,
-  aHasDarkTheme = false,
-  aIsDarkTheme = false
+  aColorSchemeOverride
 ) {
   const kDark = 0;
   const kLight = 1;
@@ -535,6 +538,9 @@ function _determineToolbarAndContentTheme(
   }
 
   let toolbarTheme = (function () {
+    if (aColorSchemeOverride != "none") {
+      return colorSchemeValue(aColorSchemeOverride);
+    }
     if (!aTheme) {
       return kSystem;
     }
@@ -542,15 +548,15 @@ function _determineToolbarAndContentTheme(
     if (themeValue !== null) {
       return themeValue;
     }
-    if (aHasDarkTheme) {
-      return aIsDarkTheme ? kDark : kLight;
-    }
     return _isToolbarDark(aDoc, aTheme, colors, true) ? kDark : kLight;
   })();
 
   let contentTheme = (function () {
     if (lazy.BROWSER_THEME_UNIFIED_COLOR_SCHEME) {
       return toolbarTheme;
+    }
+    if (aColorSchemeOverride != "none") {
+      return colorSchemeValue(aColorSchemeOverride);
     }
     if (!aTheme) {
       return kSystem;

@@ -1415,6 +1415,7 @@ Document::Document(const char* aContentType)
       mStyleSheetChangeEventsEnabled(false),
       mDevToolsAnonymousAndShadowEventsEnabled(false),
       mPausedByDevTools(false),
+      mForceNonNativeTheme(false),
       mIsSrcdocDocument(false),
       mHasDisplayDocument(false),
       mFontFaceSetDirty(true),
@@ -14857,6 +14858,18 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(UnblockParsingPromiseHandler)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(UnblockParsingPromiseHandler)
+
+void Document::SetForceNonNativeTheme(bool aForce) {
+  if (mForceNonNativeTheme == aForce) {
+    return;
+  }
+  mForceNonNativeTheme = aForce;
+  if (auto* pc = GetPresContext()) {
+    pc->MediaFeatureValuesChanged(
+        {MediaFeatureChangeReason::PreferenceChange},
+        MediaFeatureChangePropagation::JustThisDocument);
+  }
+}
 
 already_AddRefed<Promise> Document::BlockParsing(
     Promise& aPromise, const BlockParsingOptions& aOptions, ErrorResult& aRv) {

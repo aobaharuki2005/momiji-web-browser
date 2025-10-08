@@ -1808,6 +1808,17 @@
   value: 2
   mirror: always
 
+# Whether (-moz-native-theme) evaluates to true by default.
+- name: browser.theme.native-theme
+  type: RelaxedAtomicBool
+#ifdef MOZ_WIDGET_GTK
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+  rust: true
+
 # Communicates the preferred content theme color to platform (for e.g.,
 # prefers-color-scheme).
 #

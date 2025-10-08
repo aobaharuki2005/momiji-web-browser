@@ -375,12 +375,6 @@ pref("browser.overlink-delay", 80);
   pref("browser.taskbarTabs.enabled", false);
 #endif
 
-#if defined(MOZ_WIDGET_GTK)
-  pref("browser.theme.native-theme", true);
-#else
-  pref("browser.theme.native-theme", false);
-#endif
-
 // Whether using `ctrl` when hitting return/enter in the URL bar
 // (or clicking 'go') should prefix 'www.' and suffix
 // browser.fixup.alternate.suffix to the URL bar value prior to

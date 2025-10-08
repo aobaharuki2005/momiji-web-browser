@@ -530,6 +530,7 @@ static constexpr struct {
     // need to re-layout.
     {"browser.theme.toolbar-theme"_ns, widget::ThemeChangeKind::AllBits},
     {"browser.theme.content-theme"_ns},
+    {"browser.theme.native-theme"_ns},
     // Affects PreferenceSheet, and thus styling.
     {"browser.anchor_color"_ns, widget::ThemeChangeKind::Style},
     {"browser.anchor_color.dark"_ns, widget::ThemeChangeKind::Style},

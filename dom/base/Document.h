@@ -3619,6 +3619,9 @@ class Document : public nsINode,
   void SetPausedByDevTools(bool aValue) { mPausedByDevTools = aValue; }
   bool PausedByDevTools() const { return mPausedByDevTools; }
 
+  void SetForceNonNativeTheme(bool);
+  bool ForceNonNativeTheme() const { return mForceNonNativeTheme; }
+
   already_AddRefed<Promise> BlockParsing(Promise& aPromise,
                                          const BlockParsingOptions& aOptions,
                                          ErrorResult& aRv);
@@ -4910,7 +4913,8 @@ class Document : public nsINode,
   // Whether DevTools is pausing the page (in which case we don't really want to
   // stop rendering).
   bool mPausedByDevTools : 1;
-
+  // If true, (-moz-native-theme) media query always evaluates to false.
+  bool mForceNonNativeTheme : 1;
   // Whether the document was created by a srcdoc iframe.
   bool mIsSrcdocDocument : 1;
 

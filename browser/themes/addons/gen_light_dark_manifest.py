@@ -27,13 +27,10 @@ OVERRIDES = {
 
 def gen_light_dark_manifest(output_manifest, input_manifest, variant):
     assert variant == "light" or variant == "dark"
-    theme_key = "theme" if variant == "light" else "dark_theme"
 
     input = json.loads(open(input_manifest).read())
     output = copy.deepcopy(input)
 
-    del output["dark_theme"]
-    output["theme"] = input[theme_key]
     output |= OVERRIDES[variant]
 
     output_manifest.write(json.dumps(output, indent=2).encode("utf-8"))

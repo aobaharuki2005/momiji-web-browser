@@ -79,8 +79,7 @@
  * theme enabled, instead choosing to fall back to system colors and
  * transparencies in order to look more native.
  */
-/* stylelint-disable-next-line media-query-no-invalid */
-@media not ((prefers-contrast) or -moz-pref("browser.theme.native-theme")) {
+@media not ((prefers-contrast) or (-moz-native-theme)) {
   :root:not([lwtheme]) {
     --color-accent-primary: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
     --button-text-color-primary: light-dark(rgb(251, 251, 254), rgb(43, 42, 51));
