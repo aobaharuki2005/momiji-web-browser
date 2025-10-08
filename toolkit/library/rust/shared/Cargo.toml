@@ -82,7 +82,6 @@ crypto_hash = { path = "../../../../security/manager/ssl/crypto_hash" }
 data_storage = { path = "../../../../security/manager/ssl/data_storage" }
 ipcclientcerts = { path = "../../../../security/manager/ssl/ipcclientcerts" }
 mls_gk = { path = "../../../../security/mls/mls_gk" }
-qwac-trust-anchors = { path = "../../../../security/manager/ssl/qwac_trust_anchors" }
 trust-anchors = { path = "../../../../security/manager/ssl/trust_anchors" }
 signature_cache = { path = "../../../../security/certverifier/signature_cache" }
 

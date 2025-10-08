@@ -2645,7 +2645,6 @@ dependencies = [
  "processtools",
  "profiler_helper",
  "qcms",
- "qwac-trust-anchors",
  "rsdparsa_capi",
  "rure",
  "rusqlite 0.37.0",
@@ -5706,16 +5705,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1885c039570dc00dcb4ff087a89e185fd56bae234ddc7f056a945bf36467248d"
 dependencies = [
  "proc-macro2",
-]
-
-[[package]]
-name = "qwac-trust-anchors"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "rsclientcerts",
- "static_prefs",
- "thin-vec",
 ]
 
 [[package]]
