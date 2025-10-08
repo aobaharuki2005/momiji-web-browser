@@ -3,12 +3,12 @@
 
   "browser_specific_settings": {
     "gecko": {
-      "id": "firefox-light-dark@mozilla.org"
+      "id": "firefox-compact-dark@mozilla.org"
     }
   },
 
-  "name": "Firefox Theme",
-  "description": "A modern light and dark theme.",
+  "name": "Dark",
+  "description": "A theme with a dark color scheme.",
   "author": "Mozilla",
   "version": "1.3.4",
 
