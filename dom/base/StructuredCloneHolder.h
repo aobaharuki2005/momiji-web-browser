@@ -172,6 +172,9 @@ class MessagePort;
 class MessagePortIdentifier;
 struct VideoFrameSerializedData;
 struct AudioDataSerializedData;
+#ifdef MOZ_WEBRTC
+struct RTCEncodedVideoFrameData;
+#endif
 
 class StructuredCloneHolder : public StructuredCloneHolderBase {
  public:
@@ -211,18 +214,25 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
             JS::MutableHandle<JS::Value> aValue,
             const JS::CloneDataPolicy& aCloneDataPolicy, ErrorResult& aRv);
 
-  // Create a statement for each of the side DOM-ish data members.
-  // mTransferredPorts is not included because it is part of the
-  // deserialized state.
-#define CLONED_DATA_MEMBERS  \
-  STMT(mBlobImplArray);      \
-  STMT(mWasmModuleArray);    \
-  STMT(mInputStreamArray);   \
-  STMT(mClonedSurfaces);     \
-  STMT(mVideoFrames);        \
-  STMT(mAudioData);          \
-  STMT(mEncodedVideoChunks); \
-  STMT(mEncodedAudioChunks); \
+#ifdef MOZ_WEBRTC
+#  define IF_WEBRTC(x) x
+#else
+#  define IF_WEBRTC(x)
+#endif
+
+// Create a statement for each of the side DOM-ish data members.
+// mTransferredPorts is not included because it is part of the
+// deserialized state.
+#define CLONED_DATA_MEMBERS                \
+  STMT(mBlobImplArray);                    \
+  STMT(mWasmModuleArray);                  \
+  STMT(mInputStreamArray);                 \
+  STMT(mClonedSurfaces);                   \
+  STMT(mVideoFrames);                      \
+  STMT(mAudioData);                        \
+  STMT(mEncodedVideoChunks);               \
+  STMT(mEncodedAudioChunks);               \
+  IF_WEBRTC(STMT(mRtcEncodedVideoFrames);) \
   STMT(mPortIdentifiers);
 
   // Call this method to know if this object is keeping some DOM object alive.
@@ -301,6 +311,12 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
   nsTArray<EncodedAudioChunkData>& EncodedAudioChunks() {
     return mEncodedAudioChunks;
   }
+
+#ifdef MOZ_WEBRTC
+  nsTArray<RTCEncodedVideoFrameData>& RtcEncodedVideoFrames() {
+    return mRtcEncodedVideoFrames;
+  }
+#endif
 
   // Implementations of the virtual methods to allow cloning of objects which
   // JS engine itself doesn't clone.
@@ -415,6 +431,11 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
 
   // Used for cloning EncodedAudioChunk in the structured cloning algorithm.
   nsTArray<EncodedAudioChunkData> mEncodedAudioChunks;
+
+#ifdef MOZ_WEBRTC
+  // Used for cloning RTCEncodedVideoFrame in the structured cloning algorithm.
+  nsTArray<RTCEncodedVideoFrameData> mRtcEncodedVideoFrames;
+#endif
 
   // This raw pointer is only set within ::Read() and is unset by the end.
   nsIGlobalObject* MOZ_NON_OWNING_REF mGlobal;

@@ -42,12 +42,13 @@ RTCEncodedAudioFrame::RTCEncodedAudioFrame(
     nsIGlobalObject* aGlobal,
     std::unique_ptr<webrtc::TransformableFrameInterface> aFrame,
     uint64_t aCounter, RTCRtpScriptTransformer* aOwner)
-    : RTCEncodedFrameBase(aGlobal, std::move(aFrame), aCounter),
+    : RTCEncodedAudioFrameData{{std::move(aFrame), aCounter, /*timestamp*/ 0}},
+      RTCEncodedFrameBase(aGlobal, static_cast<RTCEncodedFrameState&>(*this)),
       mOwner(aOwner) {
   mMetadata.mSynchronizationSource.Construct(mFrame->GetSsrc());
   mMetadata.mPayloadType.Construct(mFrame->GetPayloadType());
   const auto& audioFrame(
-      static_cast<webrtc::TransformableAudioFrameInterface&>(*mFrame));
+      static_cast<webrtc::TransformableAudioFrameInterface&>(*mState.mFrame));
   mMetadata.mContributingSources.Construct();
   for (const auto csrc : audioFrame.GetContributingSources()) {
     Unused << mMetadata.mContributingSources.Value().AppendElement(csrc,
@@ -85,4 +86,20 @@ void RTCEncodedAudioFrame::GetMetadata(
 bool RTCEncodedAudioFrame::CheckOwner(RTCRtpScriptTransformer* aOwner) const {
   return aOwner == mOwner;
 }
+
+// https://www.w3.org/TR/webrtc-encoded-transform/#RTCEncodedAudioFrame-serialization
+/* static */
+already_AddRefed<RTCEncodedAudioFrame>
+RTCEncodedAudioFrame::ReadStructuredClone(JSContext* aCx,
+                                          nsIGlobalObject* aGlobal,
+                                          JSStructuredCloneReader* aReader) {
+  // TBD implementation to follow in followup patch
+  return nullptr;
+}
+
+bool RTCEncodedAudioFrame::WriteStructuredClone(
+    JSContext* aCx, JSStructuredCloneWriter* aWriter) const {
+  return false;
+}
+
 }  // namespace mozilla::dom
