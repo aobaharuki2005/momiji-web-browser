@@ -508,6 +508,9 @@ create-backup-screen-2-all-list-2 = Includes passwords and payments
 # Preceded by a green check mark and shield indicating "All data" backups are encrypted
 create-backup-screen-2-all-list-3 = Encrypted with a password
 
+# Title for a screen asking users to choose a file location
+create-backup-screen-3-location = Where do you want your backup saved?
+# Title for a screen asking users to create a password that will encrypt the backup
 create-backup-screen-3-title = Create a backup file password
 create-backup-screen-3-subtitle = Required to encrypt your data. Store it in a place you’ll remember.
 
