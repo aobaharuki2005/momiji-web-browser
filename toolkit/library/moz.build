@@ -204,33 +204,33 @@ if CONFIG["MOZ_WEBRTC"]:
 
 if CONFIG["OS_ARCH"] == "Darwin":
     OS_LIBS += [
+        "-framework AudioToolbox",
+        "-framework AVFoundation",
+        "-framework CoreFoundation",
+        "-framework CoreMedia",
+        "-framework CoreVideo",
+        "-framework Foundation",
         "-framework MediaPlayer",
         "-framework Metal",
+        "-framework QuartzCore",
+        "-framework Security",
     ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     OS_LIBS += [
-        "-framework Foundation",
-        "-framework CoreFoundation",
-        "-framework CoreLocation",
-        "-framework QuartzCore",
+        "-framework AddressBook",
+        "-framework AppKit",
+        "-framework ApplicationServices",
+        "-framework AudioUnit",
         "-framework Carbon",
         "-framework CoreAudio",
-        "-framework CoreVideo",
-        "-framework AudioToolbox",
-        "-framework AudioUnit",
-        "-framework AddressBook",
-        "-framework OpenGL",
-        "-framework Security",
-        "-framework ServiceManagement",
-        "-framework CoreServices",
-        "-framework ApplicationServices",
-        "-framework AppKit",
+        "-framework CoreLocation",
         "-framework CoreMIDI",
-        "-framework SystemConfiguration",
-        "-framework AVFoundation",
-        "-framework CoreMedia",
+        "-framework CoreServices",
         "-framework IOKit",
+        "-framework OpenGL",
+        "-framework ServiceManagement",
+        "-framework SystemConfiguration",
         "-weak_framework ScreenCaptureKit",
         "cups",
     ]
@@ -240,17 +240,9 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "uikit":
     OS_LIBS += [
-        "-framework Foundation",
-        "-framework CoreFoundation",
         "-framework CoreGraphics",
         "-framework CoreText",
-        "-framework AVFoundation",
-        "-framework AudioToolbox",
-        "-framework CoreMedia",
-        "-framework CoreVideo",
         "-framework OpenGLES",
-        "-framework QuartzCore",
-        "-framework Security",
     ]
 
 if CONFIG["MOZ_WMF"]:
