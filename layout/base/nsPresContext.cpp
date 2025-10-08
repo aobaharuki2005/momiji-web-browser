@@ -2760,7 +2760,7 @@ void nsPresContext::NotifyContentfulPaint() {
                "We should only notify contentful paint during refresh "
                "driver ticks");
     if (!perf->HadFCPTimingEntry()) {
-      TimeStamp nowTime = mMarkPaintTimingStart;
+      TimeStamp nowTime = rootPresContext->RefreshDriver()->MostRecentRefresh();
       MOZ_ASSERT(!nowTime.IsNull(),
                  "Most recent refresh timestamp should exist since we are in "
                  "a refresh driver tick");
