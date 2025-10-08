@@ -81,6 +81,14 @@ testRule({
       description: "Using currentColor is valid.",
     },
     {
+      code: ".a { border: none; }",
+      description: "Using none is valid.",
+    },
+    {
+      code: ".a { border: 0; }",
+      description: "Using 0 is valid.",
+    },
+    {
       code: ".a { border: 1px solid transparent; }",
       description: "Using transparent in shorthand is valid.",
     },

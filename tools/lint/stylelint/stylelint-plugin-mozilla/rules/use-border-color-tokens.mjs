@@ -41,6 +41,7 @@ const ALLOW_LIST = createAllowList([
   "auto",
   "normal",
   "none",
+  "0",
 ]);
 
 const SHORTHAND_CSS_PROPERTIES = [
