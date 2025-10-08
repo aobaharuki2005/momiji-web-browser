@@ -84,6 +84,11 @@
   -->
   <string name="felt_privacy_info_card_subtitle_2">Mae %1$s yn dileu eich cwcis, hanes, a data gwefan pan fyddwch yn cau eich holl dabiau preifat. %2$s</string>
   <!--
+    Description of private browsing mode displayed to users on the homepage when they enable private mode.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="felt_privacy_info_card_subtitle_3">Mae %1$s yn dileu eich cwcis, hanes, a data gwefan pan fyddwch yn cau eich holl dabiau preifat.</string>
+  <!--
     Clickable portion of the explanation for private browsing that links the user to our
     about privacy page.
     This string is used in felt_privacy_info_card_subtitle as the text for the link.
@@ -1481,7 +1486,9 @@
   <!-- Content description for tabs tray multiselect menu -->
   <string name="tab_tray_multiselect_menu_content_description">Dewislen tabiau penodol</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
-  <string name="tab_tray_homepage_tab">Tudalen Cartref</string>
+  <string name="tab_tray_homepage_tab" tools:ignore="UnusedResources" moz:removedIn="145">Tudalen Cartref</string>
+  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
+  <string name="tab_tray_homepage_tab_2">tudalen hafan %s</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Tynnu tab o’r casgliad</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1724,6 +1731,10 @@
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Cau</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">Beth ddigwyddodd? Beth ddylai fod wedi digwydd?</string>
+  <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
+  <string name="webcompat_reporter_etp_checkbox_text">Anfonwch URLau wedi\'u rhwystro gan amddiffyniad olrhain</string>
+  <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
+  <string name="webcompat_reporter_etp_checkbox_description">Gall Diogelwch Tracio Gwell rwystro tracwyr a sgriptiau y mae eu hangen ar rai gwefannau i weithio\'n iawn.</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 

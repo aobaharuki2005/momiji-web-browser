@@ -84,6 +84,11 @@
   -->
   <string name="felt_privacy_info_card_subtitle_2">%1$s usuwa Twoje ciasteczka, historię i dane witryn po zamknięciu wszystkich prywatnych kart. %2$s</string>
   <!--
+    Description of private browsing mode displayed to users on the homepage when they enable private mode.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="felt_privacy_info_card_subtitle_3">%1$s usuwa Twoje ciasteczka, historię i\u00a0dane witryn po zamknięciu wszystkich prywatnych kart.</string>
+  <!--
     Clickable portion of the explanation for private browsing that links the user to our
     about privacy page.
     This string is used in felt_privacy_info_card_subtitle as the text for the link.
@@ -1481,7 +1486,7 @@
   <!-- Content description for tabs tray multiselect menu -->
   <string name="tab_tray_multiselect_menu_content_description">Menu zaznaczonych kart</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
-  <string name="tab_tray_homepage_tab">Strona startowa</string>
+  <string name="tab_tray_homepage_tab" tools:ignore="UnusedResources" moz:removedIn="145">Strona startowa</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Usuń kartę z kolekcji</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->

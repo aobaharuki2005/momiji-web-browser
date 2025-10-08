@@ -1481,7 +1481,7 @@
   <!-- Content description for tabs tray multiselect menu -->
   <string name="tab_tray_multiselect_menu_content_description">Menú de pestañas seleccionadas</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
-  <string name="tab_tray_homepage_tab">Página de inicio</string>
+  <string name="tab_tray_homepage_tab" tools:ignore="UnusedResources" moz:removedIn="145">Página de inicio</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Eliminar pestaña de la colección</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -2704,6 +2704,10 @@
   <string name="saved_login_hide_password">Ocultar contraseña</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">Desbloquea para ver tus contraseñas guardadas</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">Desbloquear</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">Abandonar</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">Asegura tus contraseñas guardadas</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -3597,6 +3601,16 @@
   <string name="debug_drawer_add_new_address">Añade una nueva dirección para la localidad seleccionada</string>
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
   <string name="debug_drawer_delete_all_addresses">Eliminar todas las direcciones</string>
+  <!--
+    Debug drawer credit cards
+
+    The title of the credit cards feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_credit_cards_title">Tarjetas de crédito</string>
+  <!-- The title of the button in the debug drawer for adding a new credit card -->
+  <string name="debug_drawer_add_new_credit_card">Añadir nueva tarjeta de crédito</string>
+  <!-- The title of the button for deleting in the debug drawer all addresses. -->
+  <string name="debug_drawer_delete_all_credit_cards">Eliminar todas las tarjetas de crédito</string>
   <!--
     Debug drawer "contextual feature recommendation" (CFR) tools
 
