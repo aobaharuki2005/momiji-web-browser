@@ -4,10 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/* eslint-env node */
-
 import valueParser from "postcss-value-parser";
 import { tokensTable } from "../../../../toolkit/themes/shared/design-system/tokens-table.mjs";
+
+/**
+ * Allows rules to access the tokens table without hard-coding the import path in multiple files.
+ *
+ * @returns {object}
+ */
+export const getTokensTable = () => tokensTable;
 
 /**
  * Our namespace used to prefix Mozilla stylelint rules.
