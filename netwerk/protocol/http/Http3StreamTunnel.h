@@ -8,6 +8,7 @@
 
 #include "Http3Stream.h"
 #include "nsHttpConnection.h"
+#include "SimpleBuffer.h"
 
 namespace mozilla::net {
 
@@ -114,11 +115,16 @@ class Http3StreamTunnel final : public Http3Stream {
   [[nodiscard]] nsresult ReadSegments() override;
   [[nodiscard]] nsresult WriteSegments() override;
 
+  [[nodiscard]] nsresult OnWriteSegment(char* buf, uint32_t count,
+                                        uint32_t* countWritten) override;
+
  private:
   virtual ~Http3StreamTunnel();
+  nsresult BufferInput();
 
   RefPtr<Http3TransportLayer> mTransport;
   bool mClosed = false;
+  SimpleBuffer mSimpleBuffer;
 };
 
 }  // namespace mozilla::net

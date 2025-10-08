@@ -664,6 +664,40 @@ nsresult Http3StreamTunnel::ReadSegments() {
   return rv;
 }
 
+nsresult Http3StreamTunnel::BufferInput() {
+  char buf[SimpleBufferPage::kSimpleBufferPageSize];
+  uint32_t countWritten;
+  nsresult rv = mSession->ReadResponseData(
+      mStreamId, buf, SimpleBufferPage::kSimpleBufferPageSize, &countWritten,
+      &mFin);
+  if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
+    return rv;
+  }
+  LOG(("Http3StreamTunnel::BufferInput %p countWritten=%d mFin=%d", this,
+       countWritten, mFin));
+  if (countWritten == 0) {
+    if (mFin) {
+      mRecvState = RECV_DONE;
+      rv = NS_BASE_STREAM_CLOSED;
+    } else {
+      rv = NS_BASE_STREAM_WOULD_BLOCK;
+    }
+  } else {
+    mTotalRead += countWritten;
+    if (mFin) {
+      mRecvState = RECEIVED_FIN;
+    }
+  }
+  if (NS_SUCCEEDED(rv)) {
+    rv = mSimpleBuffer.Write(buf, countWritten);
+    if (NS_FAILED(rv)) {
+      MOZ_ASSERT(rv == NS_ERROR_OUT_OF_MEMORY);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  return rv;
+}
+
 nsresult Http3StreamTunnel::WriteSegments() {
   LOG(("Http3StreamTunnel::WriteSegments [this=%p]", this));
   if (mRecvState == RECV_DONE) {
@@ -674,7 +708,63 @@ nsresult Http3StreamTunnel::WriteSegments() {
     return NS_ERROR_UNEXPECTED;
   }
 
-  return mTransport->CallToWriteData();
+  nsresult rv = NS_OK;
+  bool again = true;
+
+  do {
+    mSocketInCondition = NS_OK;
+    rv = mTransport->CallToWriteData();
+    if (mRecvState == RECV_DONE) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    // When CallToWriteData() returns NS_BASE_STREAM_WOULD_BLOCK, it means the
+    // consumer can't accept data at the moment. We need to read the data into a
+    // buffer so it won't block other streams.
+    if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+      rv = BufferInput();
+    }
+
+    if (mRecvState == RECEIVED_FIN) {
+      rv = NS_BASE_STREAM_CLOSED;
+      mRecvState = RECV_DONE;
+    }
+
+    if (NS_FAILED(rv)) {
+      if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+        rv = NS_OK;
+      }
+      again = false;
+    } else if (NS_FAILED(mSocketInCondition)) {
+      if (mSocketInCondition != NS_BASE_STREAM_WOULD_BLOCK) {
+        rv = mSocketInCondition;
+      }
+      again = false;
+    }
+  } while (again && gHttpHandler->Active());
+
+  return rv;
+}
+
+nsresult Http3StreamTunnel::OnWriteSegment(char* buf, uint32_t count,
+                                           uint32_t* countWritten) {
+  LOG(("Http3StreamTunnel::OnWriteSegment [this=%p, state=%d", this,
+       mRecvState));
+  // Sometimes we have read data from the network and stored it in a pipe
+  // so that other streams can proceed when the gecko caller is not processing
+  // data events fast enough and flow control hasn't caught up yet. This
+  // gets the stored data out of that pipe
+  if (mSimpleBuffer.Available()) {
+    *countWritten = mSimpleBuffer.Read(buf, count);
+    MOZ_ASSERT(*countWritten);
+    LOG3(
+        ("Http3StreamTunnel::OnWriteSegment read from flow "
+         "control buffer %p %d",
+         this, *countWritten));
+    return NS_OK;
+  }
+
+  return Http3Stream::OnWriteSegment(buf, count, countWritten);
 }
 
 void Http3StreamTunnel::SetRequestDone() {
@@ -685,7 +775,17 @@ void Http3StreamTunnel::HasDataToWrite() {
   mSession->StreamHasDataToWrite(this);
 }
 
-void Http3StreamTunnel::HasDataToRead() { mSession->ConnectSlowConsumer(this); }
+void Http3StreamTunnel::HasDataToRead() {
+  // We can't always call ConnectSlowConsumer(), because it triggers
+  // ForceRecv(),
+  // which posts a runnable to call WriteSegments() again. When we already have
+  // data buffered, this is fine. The consumer can read data from the buffer.
+  // However, if no data is buffered, doing this would create a busy loop that
+  // continuously waits for data.
+  if (mSimpleBuffer.Available()) {
+    mSession->ConnectSlowConsumer(this);
+  }
+}
 
 already_AddRefed<nsHttpConnection> Http3StreamTunnel::CreateHttpConnection(
     nsIInterfaceRequestor* aCallbacks, PRIntervalTime aRtt,
