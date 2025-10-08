@@ -28,10 +28,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b85c57c2d6f060407
  1 file changed, 12 insertions(+), 4 deletions(-)
 
 diff --git a/net/dcsctp/tx/outstanding_data.cc b/net/dcsctp/tx/outstanding_data.cc
-index a92fc6f638..e74843d6c7 100644
+index 074e3c0461..63e750b5fc 100644
 --- a/net/dcsctp/tx/outstanding_data.cc
 +++ b/net/dcsctp/tx/outstanding_data.cc
-@@ -392,6 +392,7 @@ std::vector<std::pair<TSN, Data>> OutstandingData::GetChunksToBeRetransmitted(
+@@ -402,6 +402,7 @@ std::vector<std::pair<TSN, Data>> OutstandingData::GetChunksToBeRetransmitted(
  }
  
  void OutstandingData::ExpireOutstandingChunks(Timestamp now) {
@@ -39,7 +39,7 @@ index a92fc6f638..e74843d6c7 100644
    UnwrappedTSN tsn = last_cumulative_tsn_ack_;
    for (const Item& item : outstanding_data_) {
      tsn.Increment();
-@@ -401,15 +402,22 @@ void OutstandingData::ExpireOutstandingChunks(Timestamp now) {
+@@ -411,15 +412,22 @@ void OutstandingData::ExpireOutstandingChunks(Timestamp now) {
      if (item.is_abandoned()) {
        // Already abandoned.
      } else if (item.is_nacked() && item.has_expired(now)) {
