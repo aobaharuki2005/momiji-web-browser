@@ -52,10 +52,10 @@ index 606c1161bc..16290b35f7 100644
  
  rtc_library("encoded_frame") {
 diff --git a/webrtc.gni b/webrtc.gni
-index b77a0ce638..bb386f6e3f 100644
+index e9dea332d0..40679b2358 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
-@@ -502,8 +502,8 @@ all_poison_types = [
+@@ -496,8 +496,8 @@ all_poison_types = [
    "software_video_codecs",
  ]
  

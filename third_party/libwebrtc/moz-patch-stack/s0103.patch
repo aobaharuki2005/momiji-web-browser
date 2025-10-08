@@ -75,7 +75,7 @@ index cdbd705ec2..4ee826ec58 100644
  # The python interpreter to use by default. On Windows, this will look
  # for vpython3.exe and vpython3.bat.
 diff --git a/BUILD.gn b/BUILD.gn
-index 7b3ea1ec50..2e4ebfda99 100644
+index 74f7c78e12..f5aa3cc9fe 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -21,15 +21,15 @@
@@ -98,7 +98,7 @@ index 7b3ea1ec50..2e4ebfda99 100644
    import("//third_party/jni_zero/jni_zero.gni")
  }
  
-@@ -537,7 +537,7 @@ if (!build_with_chromium) {
+@@ -533,7 +533,7 @@ if (!build_with_chromium) {
  
      sources = []
      complete_static_lib = true
@@ -107,7 +107,7 @@ index 7b3ea1ec50..2e4ebfda99 100644
      defines = []
  
      deps = [
-@@ -849,7 +849,7 @@ rtc_static_library("dcsctp") {
+@@ -845,7 +845,7 @@ rtc_static_library("dcsctp") {
    visibility = [ "//:default" ]
    sources = []
    complete_static_lib = true
@@ -116,7 +116,7 @@ index 7b3ea1ec50..2e4ebfda99 100644
    defines = []
    deps = [
      "net/dcsctp/public:factory",
-@@ -884,7 +884,7 @@ group("poison_software_video_codecs") {
+@@ -880,7 +880,7 @@ group("poison_software_video_codecs") {
  if (!build_with_chromium) {
    # Write debug logs to gn_logs.txt.
    # This is also required for Siso builds.
@@ -804,7 +804,7 @@ index d8f0eba11f..eb25867dc9 100644
    }
  }
 diff --git a/webrtc.gni b/webrtc.gni
-index df16269eb4..51de7fba13 100644
+index a448f64dd3..2332abaee9 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -5,12 +5,12 @@
@@ -852,7 +852,7 @@ index df16269eb4..51de7fba13 100644
  }
  
  if (build_with_chromium) {
-@@ -387,8 +387,8 @@ rtc_common_configs = [ webrtc_root + ":common_config" ]
+@@ -382,8 +382,8 @@ rtc_common_configs = [ webrtc_root + ":common_config" ]
  
  if (is_mac || is_ios) {
    if (filter_include(default_compiler_configs,
@@ -863,7 +863,7 @@ index df16269eb4..51de7fba13 100644
    }
  }
  
-@@ -407,7 +407,7 @@ rtc_common_inherited_config = webrtc_root + ":common_inherited_config"
+@@ -401,7 +401,7 @@ rtc_common_inherited_config = webrtc_root + ":common_inherited_config"
  # Common configs to remove or add in all rtc targets.
  rtc_remove_configs = []
  if (!build_with_chromium && is_clang) {
