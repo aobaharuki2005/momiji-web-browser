@@ -52,6 +52,9 @@ const ICON_URL_APP =
 // was set by us to a custom handler icon and CSS should not try to override it.
 const APP_ICON_ATTR_NAME = "appHandlerIcon";
 
+const OPEN_EXTERNAL_LINK_NEXT_TO_ACTIVE_TAB_VALUE =
+  Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT;
+
 Preferences.addAll([
   // Startup
   { id: "browser.startup.page", type: "int" },
@@ -73,6 +76,10 @@ Preferences.addAll([
       1 opens such links in the most recent window or tab,
       2 opens such links in a new window,
       3 opens such links in a new tab
+  browser.link.open_newwindow.override.external
+    - this setting overrides `browser.link.open_newwindow` for externally
+      opened links.
+    - see `nsIBrowserDOMWindow` constants for the meaning of each value.
   browser.tabs.loadInBackground
   - true if display should switch to a new tab which has been opened from a
     link, false if display shouldn't switch
@@ -89,6 +96,7 @@ Preferences.addAll([
   */
 
   { id: "browser.link.open_newwindow", type: "int" },
+  { id: "browser.link.open_newwindow.override.external", type: "int" },
   { id: "browser.tabs.loadInBackground", type: "bool", inverted: true },
   { id: "browser.tabs.warnOnClose", type: "bool" },
   { id: "browser.warnOnQuitShortcut", type: "bool" },
@@ -1647,6 +1655,11 @@ var gMainPane = {
    * Initialization of gMainPane.
    */
   init() {
+    /**
+     * @param {string} aId
+     * @param {string} aEventType
+     * @param {(ev: Event) => void} aCallback
+     */
     function setEventListener(aId, aEventType, aCallback) {
       document
         .getElementById(aId)
@@ -2031,6 +2044,14 @@ var gMainPane = {
     Preferences.addSyncToPrefListener(
       document.getElementById("linkTargeting"),
       () => this.writeLinkTarget()
+    );
+    Preferences.addSyncFromPrefListener(
+      document.getElementById("openAppLinksNextToActiveTab"),
+      () => this.readExternalLinkNextToActiveTab()
+    );
+    Preferences.addSyncToPrefListener(
+      document.getElementById("openAppLinksNextToActiveTab"),
+      inputElement => this.writeExternalLinkNextToActiveTab(inputElement)
     );
     Preferences.addSyncFromPrefListener(
       document.getElementById("browserContainersCheckbox"),
@@ -2930,6 +2951,44 @@ var gMainPane = {
   writeLinkTarget() {
     var linkTargeting = document.getElementById("linkTargeting");
     return linkTargeting.checked ? 3 : 2;
+  },
+
+  /**
+   * @returns {boolean}
+   *   Whether the "Open links in tabs instead of new windows" settings
+   *   checkbox should be checked. Should only be checked if the
+   *   `browser.link.open_newwindow.override.external` pref is set to the
+   *   value of 7 (nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT).
+   */
+  readExternalLinkNextToActiveTab() {
+    const externalLinkOpenOverride = Preferences.get(
+      "browser.link.open_newwindow.override.external"
+    );
+
+    return (
+      externalLinkOpenOverride.value ==
+      Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT
+    );
+  },
+
+  /**
+   * This pref has at least 8 valid values but we are offering a checkbox
+   * to set one specific value (`7`).
+   *
+   * @param {HTMLInputElement} inputElement
+   * @returns {number}
+   *   - `7` (`nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT`) if checked
+   *   - the default value of
+   *     `browser.link.open_newwindow.override.external` if not checked
+   */
+  writeExternalLinkNextToActiveTab(inputElement) {
+    const externalLinkOpenOverride = Preferences.get(
+      "browser.link.open_newwindow.override.external"
+    );
+
+    return inputElement.checked
+      ? Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT
+      : externalLinkOpenOverride.defaultValue;
   },
 
   /**

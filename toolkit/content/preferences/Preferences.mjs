@@ -415,9 +415,15 @@ export const Preferences = {
     }
   },
 
+  /** @type {WeakMap<Element, (el: Element) => any>} */
   _syncFromPrefListeners: new WeakMap(),
+  /** @type {WeakMap<Element, (el: Element) => any>} */
   _syncToPrefListeners: new WeakMap(),
 
+  /**
+   * @param {Element} aElement
+   * @param {(el: Element) => any} callback
+   */
   addSyncFromPrefListener(aElement, callback) {
     this._syncFromPrefListeners.set(aElement, callback);
     if (this.updateQueued) {
@@ -433,6 +439,10 @@ export const Preferences = {
     }
   },
 
+  /**
+   * @param {Element} aElement
+   * @param {(el: Element) => any} callback
+   */
   addSyncToPrefListener(aElement, callback) {
     this._syncToPrefListeners.set(aElement, callback);
     if (this.updateQueued) {

@@ -188,6 +188,9 @@ open-new-link-as-tabs =
     .label = Open links in tabs instead of new windows
     .accesskey = w
 
+open-external-link-next-to-active-tab =
+    .label = Open links from apps next to your active tab
+
 ask-on-close-multiple-tabs =
     .label = Ask before closing multiple tabs
     .accesskey = m
