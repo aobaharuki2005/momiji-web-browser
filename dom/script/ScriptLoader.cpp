@@ -3580,20 +3580,15 @@ void ScriptLoader::UpdateCache() {
     return;
   }
 
-  // Should not be encoding modules at all.
-  nsCOMPtr<nsIScriptGlobalObject> globalObject = GetScriptGlobalObject();
-  if (!globalObject) {
-    GiveUpCaching();
+  JS::FrontendContext* fc = JS::NewFrontendContext();
+  if (!fc) {
+    LOG(
+        ("ScriptLoader (%p): Cannot create FrontendContext for bytecode "
+         "encoding.",
+         this));
     return;
   }
 
-  nsCOMPtr<nsIScriptContext> context = globalObject->GetScriptContext();
-  if (!context) {
-    GiveUpCaching();
-    return;
-  }
-
-  AutoEntryScript aes(globalObject, "encode bytecode", true);
   RefPtr<ScriptLoadRequest> request;
   while (!mCachingQueue.isEmpty()) {
     request = mCachingQueue.StealFirst();
@@ -3606,16 +3601,18 @@ void ScriptLoader::UpdateCache() {
     // TODO: Move this to SharedScriptCache.
     if (request->PassedConditionForDiskCache() &&
         request->getLoadedScript()->HasDiskCacheReference()) {
-      EncodeBytecodeAndSave(aes.cx(), request->getLoadedScript());
+      EncodeBytecodeAndSave(fc, request->getLoadedScript());
     }
 
     request->DropBytecode();
     request->getLoadedScript()->DropDiskCacheReference();
   }
+
+  JS::DestroyFrontendContext(fc);
 }
 
 void ScriptLoader::EncodeBytecodeAndSave(
-    JSContext* aCx, JS::loader::LoadedScript* aLoadedScript) {
+    JS::FrontendContext* aFc, JS::loader::LoadedScript* aLoadedScript) {
   MOZ_ASSERT(aLoadedScript->HasDiskCacheReference());
   MOZ_ASSERT(aLoadedScript->HasStencil());
 
@@ -3629,12 +3626,13 @@ void ScriptLoader::EncodeBytecodeAndSave(
   }
 
   JS::TranscodeResult result =
-      JS::EncodeStencil(aCx, aLoadedScript->GetStencil(), SRIAndBytecode);
+      JS::EncodeStencil(aFc, aLoadedScript->GetStencil(), SRIAndBytecode);
+
   if (result != JS::TranscodeResult::Ok) {
     // Encoding can be aborted for non-supported syntax (e.g. asm.js), or
     // any other internal error.
     // We don't care the error and just give up encoding.
-    JS_ClearPendingException(aCx);
+    JS::ClearFrontendErrors(aFc);
 
     LOG(("LoadedScript (%p): Cannot serialize bytecode", aLoadedScript));
     return;
