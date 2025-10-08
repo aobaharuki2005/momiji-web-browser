@@ -4085,6 +4085,23 @@
       }
     ]
   },
+  "1936429": {
+    "label": "diadora.com",
+    "bugs": {
+      "1936429": {
+        "issue": "extra-scrollbars",
+        "matches": ["*://www.diadora.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "content_scripts": {
+          "css": ["bug1936429-diadora.com-fix-doubled-scrollbars.css"]
+        }
+      }
+    ]
+  },
   "1939248": {
     "label": "rosasthai.com",
     "bugs": {
