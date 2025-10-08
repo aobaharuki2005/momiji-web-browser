@@ -173,7 +173,7 @@ void Location::SetHash(const nsACString& aHash, nsIPrincipal& aSubjectPrincipal,
     return;
   }
 
-  SetURI(uri, aSubjectPrincipal, aRv);
+  Navigate(uri, aSubjectPrincipal, aRv);
 }
 
 void Location::GetHost(nsACString& aHost, nsIPrincipal& aSubjectPrincipal,
@@ -211,7 +211,7 @@ void Location::SetHost(const nsACString& aHost, nsIPrincipal& aSubjectPrincipal,
     return;
   }
 
-  SetURI(uri, aSubjectPrincipal, aRv);
+  Navigate(uri, aSubjectPrincipal, aRv);
 }
 
 void Location::GetHostname(nsACString& aHostname,
@@ -248,7 +248,7 @@ void Location::SetHostname(const nsACString& aHostname,
     return;
   }
 
-  SetURI(uri, aSubjectPrincipal, aRv);
+  Navigate(uri, aSubjectPrincipal, aRv);
 }
 
 nsresult Location::GetHref(nsACString& aHref) {
@@ -328,7 +328,7 @@ void Location::SetPathname(const nsACString& aPathname,
     return;
   }
 
-  SetURI(uri, aSubjectPrincipal, aRv);
+  Navigate(uri, aSubjectPrincipal, aRv);
 }
 
 void Location::GetPort(nsACString& aPort, nsIPrincipal& aSubjectPrincipal,
@@ -387,7 +387,7 @@ void Location::SetPort(const nsACString& aPort, nsIPrincipal& aSubjectPrincipal,
     return;
   }
 
-  SetURI(uri, aSubjectPrincipal, aRv);
+  Navigate(uri, aSubjectPrincipal, aRv);
 }
 
 void Location::GetProtocol(nsACString& aProtocol,
@@ -462,7 +462,7 @@ void Location::SetProtocol(const nsACString& aProtocol,
     return;
   }
 
-  SetURI(uri, aSubjectPrincipal, aRv);
+  Navigate(uri, aSubjectPrincipal, aRv);
 }
 
 void Location::GetSearch(nsACString& aSearch, nsIPrincipal& aSubjectPrincipal,
@@ -513,7 +513,7 @@ void Location::SetSearch(const nsACString& aSearch,
     return;
   }
 
-  SetURI(uri, aSubjectPrincipal, aRv);
+  Navigate(uri, aSubjectPrincipal, aRv);
 }
 
 void Location::Reload(JSContext* aCx, bool aForceget,
