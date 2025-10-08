@@ -4314,13 +4314,10 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
   static LONG sLastClickCount = 0L;
   static BYTE sLastMouseButton = 0;
 
-  static_assert(std::is_same_v < decltype(sLastMousePoint.x),
-                decltype(eventPoint.x.value));
-  MOZ_ASSERT(IsValidAbsArgument(sLastMousePoint.x - eventPoint.x.value));
   bool insideMovementThreshold =
-      (std::abs(sLastMousePoint.x - eventPoint.x.value) <
+      (DeprecatedAbs(sLastMousePoint.x - eventPoint.x.value) <
        (short)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
-      (std::abs(sLastMousePoint.y - eventPoint.y.value) <
+      (DeprecatedAbs(sLastMousePoint.y - eventPoint.y.value) <
        (short)::GetSystemMetrics(SM_CYDOUBLECLK));
 
   BYTE eventButton;
@@ -6864,14 +6861,12 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam) {
     }
 
     if (mDisplayPanFeedback) {
-      const auto RoundedDeltaX = RoundDown(wheelEvent.mOverflowDeltaX);
-      MOZ_ASSERT(mozilla : IsValidAbsArgument(RoundedDeltaX));
-      mGesture.UpdatePanFeedbackX(mWnd, std::abs(RoundedDeltaX), endFeedback);
-
-      const auto RoundedDeltaY = RoundDown(wheelEvent.mOverflowDeltaY);
-      MOZ_ASSERT(mozilla::IsValidAbsArgument(RoundedDeltaY);
-      mGesture.UpdatePanFeedbackY(mWnd, std::abs(RoundDeltaY), endFeedback);
-
+      mGesture.UpdatePanFeedbackX(
+          mWnd, DeprecatedAbs(RoundDown(wheelEvent.mOverflowDeltaX)),
+          endFeedback);
+      mGesture.UpdatePanFeedbackY(
+          mWnd, DeprecatedAbs(RoundDown(wheelEvent.mOverflowDeltaY)),
+          endFeedback);
       mGesture.PanFeedbackFinalize(mWnd, endFeedback);
     }
 

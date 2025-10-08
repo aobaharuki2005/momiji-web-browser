@@ -281,14 +281,13 @@ MFBT_API uint64_t TimeStampValue::CheckQPC(const TimeStampValue& aOther) const {
   }
 
   // Check QPC is sane before using it.
-  uint64_t diff = Abs(deltaQPC - deltaGTC);
-  MOZ_ASSERT(sGTCResolutionThreshold >= 0);
-  if (diff <= (uint64_t)sGTCResolutionThreshold) {
+  int64_t diff = DeprecatedAbs(int64_t(deltaQPC) - int64_t(deltaGTC));
+  if (diff <= sGTCResolutionThreshold) {
     return deltaQPC;
   }
 
   // Treat absolutely for calibration purposes
-  uint64_t duration = Abs(deltaGTC);
+  int64_t duration = DeprecatedAbs(int64_t(deltaGTC));
   int64_t overflow = diff - sGTCResolutionThreshold;
 
   LOG(("TimeStamp: QPC check after %llums with overflow %1.4fms",
