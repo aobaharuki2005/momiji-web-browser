@@ -1200,8 +1200,7 @@ bool MediaTrackGraphImpl::ShouldUpdateMainThread() {
   TimeStamp now = TimeStamp::Now();
   // For offline graphs, update now if it has been long enough since the last
   // update, or if it has reached the end.
-  if ((now - mLastMainThreadUpdate).ToMilliseconds() >
-          CurrentDriver()->IterationDuration() ||
+  if (now - mLastMainThreadUpdate > CurrentDriver()->IterationDuration() ||
       mStateComputedTime >= mEndTime) {
     mLastMainThreadUpdate = now;
     return true;

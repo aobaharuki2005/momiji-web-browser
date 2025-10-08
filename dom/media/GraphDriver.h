@@ -282,7 +282,7 @@ class GraphDriver {
    * it can be indirectly set by the latency of the audio backend, and the
    * number of buffers of this audio backend: say we have four buffers, and 40ms
    * latency, we will get a callback approximately every 10ms. */
-  virtual uint32_t IterationDuration() = 0;
+  virtual TimeDuration IterationDuration() = 0;
   /*
    * Signaled by the graph when it needs another iteration. Goes unhandled for
    * GraphDrivers that are not able to sleep indefinitely (i.e., all drivers but
@@ -436,7 +436,7 @@ class ThreadedDriver : public GraphDriver {
    */
   virtual void RunThread();
   friend class MediaTrackGraphInitThreadRunnable;
-  uint32_t IterationDuration() override { return MEDIA_GRAPH_TARGET_PERIOD_MS; }
+  TimeDuration IterationDuration() override;
 
   nsIThread* Thread() const { return mThread; }
 
@@ -589,7 +589,7 @@ class AudioCallbackDriver final : public GraphDriver,
   void StateCallback(cubeb_state aState);
   /* This is an approximation of the number of millisecond there are between two
    * iterations of the graph. */
-  uint32_t IterationDuration() override;
+  TimeDuration IterationDuration() override;
   /* If the audio stream has started, this does nothing. There will be another
    * iteration. If there is an active fallback driver, we forward the call so it
    * can wake up. */

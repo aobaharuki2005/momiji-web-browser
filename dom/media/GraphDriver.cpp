@@ -267,20 +267,19 @@ void ThreadedDriver::WaitForNextIteration() {
   mWaitHelper.WaitForNextIterationAtLeast(WaitInterval());
 }
 
+TimeDuration ThreadedDriver::IterationDuration() {
+  return TimeDuration::FromMilliseconds(MEDIA_GRAPH_TARGET_PERIOD_MS);
+}
+
 TimeDuration SystemClockDriver::WaitInterval() {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(OnThread());
   TimeStamp now = TimeStamp::Now();
-  int64_t timeoutMS =
-      IterationDuration() - int64_t((now - mCurrentTimeStamp).ToMilliseconds());
-  // Make sure timeoutMS doesn't overflow 32 bits by waking up at
-  // least once a minute, if we need to wake up at all
-  timeoutMS = std::max<int64_t>(0, std::min<int64_t>(timeoutMS, 60 * 1000));
+  TimeDuration timeout = IterationDuration() - (now - mCurrentTimeStamp);
   LOG(LogLevel::Verbose,
       ("%p: Waiting for next iteration; at %f, timeout=%f", Graph(),
-       (now - mInitialTimeStamp).ToSeconds(), timeoutMS / 1000.0));
-
-  return TimeDuration::FromMilliseconds(timeoutMS);
+       (now - mInitialTimeStamp).ToSeconds(), timeout.ToSeconds()));
+  return timeout;
 }
 
 OfflineClockDriver::OfflineClockDriver(GraphInterface* aGraphInterface,
@@ -1243,11 +1242,11 @@ void AudioCallbackDriver::DeviceChangedCallback() {
 #endif
 }
 
-uint32_t AudioCallbackDriver::IterationDuration() {
+TimeDuration AudioCallbackDriver::IterationDuration() {
   MOZ_ASSERT(InIteration());
   // The real fix would be to have an API in cubeb to give us the number. Short
   // of that, we approximate it here. bug 1019507
-  return mIterationDurationMS;
+  return TimeDuration::FromMilliseconds(mIterationDurationMS);
 }
 
 void AudioCallbackDriver::EnsureNextIteration() {
