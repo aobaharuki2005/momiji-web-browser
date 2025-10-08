@@ -1644,7 +1644,6 @@ class ContentParent final : public PContentParent,
   RefPtr<IdleTaskRunner> mMaybeBeginShutdownRunner;
 
   static uint32_t sMaxContentProcesses;
-  static uint32_t sPageLoadEventCounter;
 
   bool mIsSignaledImpendingShutdown = false;
   bool mIsNotifiedShutdownSuccess = false;

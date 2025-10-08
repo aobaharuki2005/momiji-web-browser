@@ -89,22 +89,27 @@ class PageloadEventData {
   // Define ETLD separately since we want a special setter for it.
   mozilla::Maybe<nsCString> mDomain;
 
+  // Number of page loads after which a normal pageload ping is sent.
+  static uint32_t sPageLoadEventCounter;
+
  public:
   // Define a setter for every member.
   FOR_EACH_PAGELOAD_METRIC(DEFINE_SETTER)
 
   bool MaybeSetPublicRegistrableDomain(nsCOMPtr<nsIURI> aURI,
                                        nsIChannel* aChannel);
-  bool HasDomain() { return mDomain.isSome() && !mDomain.value().IsEmpty(); }
+  bool HasDomain() const {
+    return mDomain.isSome() && !mDomain.value().IsEmpty();
+  }
 
-  bool HasLoadTime() { return loadTime.isSome(); }
+  bool HasLoadTime() const { return loadTime.isSome(); }
 
   // Define setters for the individual bit features.
   void SetUserFeature(UserFeature aFeature);
   void SetDocumentFeature(DocumentFeature aFeature);
 
-  mozilla::glean::perf::PageLoadExtra ToPageLoadExtra() const;
-  mozilla::glean::perf::PageLoadDomainExtra ToPageLoadDomainExtra() const;
+  void SendAsPageLoadEvent();
+  void SendAsPageLoadDomainEvent();
 };
 #undef DEFINE_METRIC
 #undef DEFINE_SETTER
