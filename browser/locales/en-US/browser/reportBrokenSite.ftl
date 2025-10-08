@@ -37,6 +37,9 @@ report-broken-site-panel-reason-other =
 
 report-broken-site-panel-description-label = Describe the problem
 
+report-broken-site-panel-description =
+  .placeholder = What happened? What should have happened? Did turning off tracking protection help?
+
 report-broken-site-panel-description-optional-label = Describe the problem (optional)
 
 report-broken-site-panel-send-more-info-link = Send more info
