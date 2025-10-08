@@ -516,6 +516,10 @@ class MochitestServer:
             self._httpdPath = SCRIPT_DIR
         self._httpdPath = os.path.abspath(self._httpdPath)
 
+        self._trainHop = "browser.newtabpage.trainhopAddon.version=any" in options.get(
+            "extraPrefs", []
+        )
+
         MochitestServer.instance_count += 1
 
     def start(self):
@@ -528,6 +532,11 @@ class MochitestServer:
             env["LD_LIBRARY_PATH"] = self._xrePath
         else:
             env["LD_LIBRARY_PATH"] = ":".join([self._xrePath, env["LD_LIBRARY_PATH"]])
+
+        if self._trainHop:
+            env["LD_LIBRARY_PATH"] = ":".join(
+                [os.path.join(os.path.dirname(here), "bin"), env["LD_LIBRARY_PATH"]]
+            )
 
         # When running with an ASan build, our xpcshell server will also be ASan-enabled,
         # thus consuming too much resources when running together with the browser on
