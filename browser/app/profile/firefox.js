@@ -1041,12 +1041,7 @@ pref("browser.tabs.hoverPreview.enabled", true);
 pref("browser.tabs.hoverPreview.showThumbnails", true);
 
 pref("browser.tabs.groups.enabled", true);
-
-#ifdef NIGHTLY_BUILD
 pref("browser.tabs.groups.hoverPreview.enabled", true);
-#else
-pref("browser.tabs.groups.hoverPreview.enabled", false);
-#endif
 
 pref("browser.tabs.groups.smart.enabled", true);
 
