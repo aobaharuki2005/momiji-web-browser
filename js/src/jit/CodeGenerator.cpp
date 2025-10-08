@@ -5741,8 +5741,8 @@ void CodeGenerator::visitPostWriteBarrierCommon(LPostBarrierType* lir,
   Register temp = ToTempRegisterOrInvalid(lir->temp0());
 
   if (lir->object()->isConstant()) {
-    // Constant nursery objects cannot appear here, see
-    // LIRGenerator::visitPostWriteElementBarrier.
+    // The object must be tenured because MIR and LIR can't contain nursery
+    // pointers.
     MOZ_ASSERT(!IsInsideNursery(&lir->object()->toConstant()->toObject()));
   } else {
     masm.branchPtrInNurseryChunk(Assembler::Equal, ToRegister(lir->object()),
@@ -5773,8 +5773,8 @@ void CodeGenerator::visitPostWriteBarrierCommonV(LPostBarrierType* lir,
   Register temp = ToTempRegisterOrInvalid(lir->temp0());
 
   if (lir->object()->isConstant()) {
-    // Constant nursery objects cannot appear here, see
-    // LIRGenerator::visitPostWriteElementBarrier.
+    // The object must be tenured because MIR and LIR can't contain nursery
+    // pointers.
     MOZ_ASSERT(!IsInsideNursery(&lir->object()->toConstant()->toObject()));
   } else {
     masm.branchPtrInNurseryChunk(Assembler::Equal, ToRegister(lir->object()),
