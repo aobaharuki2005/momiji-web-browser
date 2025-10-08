@@ -471,12 +471,14 @@ export class _Weather extends React.PureComponent {
                       type="default"
                       data-l10n-id="newtab-weather-opt-in-not-now"
                       onClick={this.handleRejectOptIn}
+                      id="reject-opt-in"
                     />
                     <moz-button
                       size="small"
                       type="default"
                       data-l10n-id="newtab-weather-opt-in-yes"
                       onClick={this.handleAcceptOptIn}
+                      id="accept-opt-in"
                     />
                   </moz-button-group>
                 </div>
