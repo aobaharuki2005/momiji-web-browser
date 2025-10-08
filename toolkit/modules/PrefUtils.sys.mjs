@@ -2,15 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  LogManager: "resource://normandy/lib/LogManager.sys.mjs",
-});
-
-ChromeUtils.defineLazyGetter(lazy, "log", () => {
-  return lazy.LogManager.getLogger("preference-experiments");
-});
-
 const kPrefBranches = {
   user: Services.prefs,
   default: Services.prefs.getDefaultBranch(""),
@@ -115,7 +106,11 @@ export var PrefUtils = {
     if (branch === "user") {
       kPrefBranches.user.clearUserPref(pref);
     } else if (branch === "default") {
-      lazy.log.warn(
+      const log = console.createInstance({
+        prefix: "Toolkit.PrefUtils",
+        maxLogLevel: "Warn",
+      });
+      log.warn(
         `Cannot reset pref ${pref} on the default branch. Pref will be cleared at next restart.`
       );
     } else {

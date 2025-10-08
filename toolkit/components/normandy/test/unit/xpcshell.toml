@@ -16,8 +16,6 @@ tags = "normandy"
 
 ["test_NormandyApi.js"]
 
-["test_PrefUtils.js"]
-
 ["test_RecipeRunner.js"]
 
 ["test_addon_unenroll.js"]
