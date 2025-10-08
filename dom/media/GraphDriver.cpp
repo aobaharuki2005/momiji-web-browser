@@ -866,6 +866,7 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
 
   if (mAudioStreamState.compareExchange(AudioStreamState::Starting,
                                         AudioStreamState::Running)) {
+    MOZ_ASSERT(mScratchBuffer.IsEmpty());
     LOG(LogLevel::Verbose, ("%p: AudioCallbackDriver %p First audio callback "
                             "close the Fallback driver",
                             Graph(), this));
@@ -1296,6 +1297,13 @@ void AudioCallbackDriver::FallbackToSystemClockDriver() {
   LOG(LogLevel::Debug,
       ("%p: AudioCallbackDriver %p Falling back to SystemClockDriver.", Graph(),
        this));
+  // On DeviceChangedCallback() or StateChangeCallback(), mScratchBuffer might
+  // not be empty, but switching to a fallback driver is giving up on
+  // outputting mScratchBuffer contiguously.
+  // Clear the buffer so that it is not output later when an audio callback
+  // arrives for a new discontiguous output stream.
+  mScratchBuffer.Empty();
+
   mNextReInitBackoffStep =
       TimeDuration::FromMilliseconds(AUDIO_INITIAL_FALLBACK_BACKOFF_STEP_MS);
   mNextReInitAttempt = TimeStamp::Now() + mNextReInitBackoffStep;

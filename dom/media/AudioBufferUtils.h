@@ -167,6 +167,8 @@ class SpillBuffer {
     return this->operator=(aOther);
   }
 
+  bool IsEmpty() const { return mPosition == 0; }
+  void Empty() { mPosition = 0; }
   /* Empty the spill buffer into the buffer of the audio callback. This returns
    * the number of frames written. */
   uint32_t Empty(AudioCallbackBufferWrapper<T>& aBuffer) {
