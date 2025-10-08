@@ -252,13 +252,12 @@ static void WriteValTo(const Val& val, StorageType ty, void* dest) {
 // WasmArrayObject
 
 /* static */
-void js::WasmArrayObject::addSizeOfExcludingThis(
-    JSObject* obj, mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo* info,
-    JS::RuntimeSizes* runtimeSizes) {
-  const WasmArrayObject& a = obj->as<WasmArrayObject>();
-  if (!a.isDataInline()) {
-    info->objectsMallocHeapElementsNormal += mallocSizeOf(a.dataHeader());
+size_t js::WasmArrayObject::sizeOfExcludingThis() const {
+  if (!isDataInline() || !gc::IsBufferAlloc(dataHeader())) {
+    return 0;
   }
+
+  return gc::GetAllocSize(zone(), dataHeader());
 }
 
 /* static */
@@ -404,13 +403,12 @@ js::gc::AllocKind js::WasmStructObject::allocKindForTypeDef(
 }
 
 /* static */
-void js::WasmStructObject::addSizeOfExcludingThis(
-    JSObject* obj, mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo* info,
-    JS::RuntimeSizes* runtimeSizes) {
-  const WasmStructObject& s = obj->as<WasmStructObject>();
-  if (s.outlineData_) {
-    info->objectsMallocHeapSlots += mallocSizeOf(s.outlineData_);
+size_t js::WasmStructObject::sizeOfExcludingThis() const {
+  if (!outlineData_ || !gc::IsBufferAlloc(outlineData_)) {
+    return 0;
   }
+
+  return gc::GetAllocSize(zone(), outlineData_);
 }
 
 bool WasmStructObject::getField(JSContext* cx, uint32_t index,
