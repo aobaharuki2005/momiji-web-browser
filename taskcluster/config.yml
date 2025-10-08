@@ -601,9 +601,13 @@ workers:
             implementation: beetmover
             os: linux
             worker-type:
-                by-release-level:
-                    production: '{trust-domain}-3-beetmover'
-                    staging: '{trust-domain}-1-beetmover'
+                by-project:
+                    # Autoland needs level 3 for integration beetmover tasks
+                    autoland: '{trust-domain}-3-beetmover'
+                    default:
+                        by-release-level:
+                            production: '{trust-domain}-3-beetmover'
+                            staging: '{trust-domain}-1-beetmover'
         beetmover-android:
             provisioner: scriptworker-k8s
             implementation: scriptworker-beetmover
