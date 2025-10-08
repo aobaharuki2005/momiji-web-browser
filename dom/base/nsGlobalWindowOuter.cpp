@@ -6769,7 +6769,7 @@ nsresult nsGlobalWindowOuter::OpenInternal(
   // BrowsingContext::RevisePopupAbuseLevel() below.
   RefPtr<nsDocShellLoadState> loadState = aLoadState;
   if (!loadState && aNavigate && uri) {
-    loadState = nsWindowWatcher::CreateLoadState(uri, this, aDoJSFixups);
+    loadState = nsWindowWatcher::CreateLoadState(uri, this);
   }
 
   PopupBlocker::PopupControlState abuseLevel =

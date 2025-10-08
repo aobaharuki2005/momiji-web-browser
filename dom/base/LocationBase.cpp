@@ -12,7 +12,6 @@
 #include "mozilla/dom/WindowContext.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
-#include "nsDocLoader.h"
 #include "nsDocShellLoadState.h"
 #include "nsError.h"
 #include "nsGlobalWindowInner.h"
@@ -24,28 +23,16 @@
 
 namespace mozilla::dom {
 
-static bool IncumbentGlobalHasTransientActivation() {
-  nsGlobalWindowInner* window = nsContentUtils::IncumbentInnerWindow();
-  return window && window->GetWindowContext() && window->GetWindowContext() &&
-         window->GetWindowContext()->HasValidTransientUserGestureActivation();
-}
-
-// https://html.spec.whatwg.org/#location-object-navigate
-void LocationBase::Navigate(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
-                            ErrorResult& aRv,
-                            NavigationHistoryBehavior aHistoryHandling) {
-  // Step 1
-  RefPtr<BrowsingContext> navigable = GetBrowsingContext();
-  if (!navigable || navigable->IsDiscarded()) {
+void LocationBase::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
+                          ErrorResult& aRv, bool aReplace) {
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
+  if (!bc || bc->IsDiscarded()) {
     return;
   }
 
-  // Step 2-3, except the check for if document is completely loaded.
-  bool needsCompletelyLoadedDocument = !IncumbentGlobalHasTransientActivation();
-
-  // Step 4
-  navigable->Navigate(aURI, aSubjectPrincipal, aRv, aHistoryHandling,
-                      needsCompletelyLoadedDocument);
+  bc->Navigate(aURI, aSubjectPrincipal, aRv,
+               aReplace ? NavigationHistoryBehavior::Replace
+                        : NavigationHistoryBehavior::Auto);
 }
 
 void LocationBase::SetHref(const nsACString& aHref,
@@ -107,12 +94,7 @@ void LocationBase::SetHrefWithBase(const nsACString& aHref, nsIURI* aBase,
     }
   }
 
-  NavigationHistoryBehavior historyHandling = NavigationHistoryBehavior::Auto;
-  if (aReplace || inScriptTag) {
-    historyHandling = NavigationHistoryBehavior::Replace;
-  }
-
-  Navigate(newUri, aSubjectPrincipal, aRv, historyHandling);
+  SetURI(newUri, aSubjectPrincipal, aRv, aReplace || inScriptTag);
 }
 
 void LocationBase::Replace(const nsACString& aUrl,

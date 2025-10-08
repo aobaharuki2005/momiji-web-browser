@@ -51,6 +51,7 @@ nsDocShellLoadState::nsDocShellLoadState(
     const DocShellLoadStateInit& aLoadState, mozilla::ipc::IProtocol* aActor,
     bool* aReadSuccess)
     : mNotifiedBeforeUnloadListeners(false),
+      mShouldNotForceReplaceInOnLoad(false),
       mLoadIdentifier(aLoadState.LoadIdentifier()) {
   // If we return early, we failed to read in the data.
   *aReadSuccess = false;
@@ -70,8 +71,6 @@ nsDocShellLoadState::nsDocShellLoadState(
   mOriginalFrameSrc = aLoadState.OriginalFrameSrc();
   mShouldCheckForRecursion = aLoadState.ShouldCheckForRecursion();
   mIsFormSubmission = aLoadState.IsFormSubmission();
-  mNeedsCompletelyLoadedDocument = aLoadState.NeedsCompletelyLoadedDocument();
-  mHistoryBehavior = aLoadState.HistoryBehavior();
   mLoadType = aLoadState.LoadType();
   mTarget = aLoadState.Target();
   mTargetBrowsingContext = aLoadState.TargetBrowsingContext();
@@ -173,6 +172,7 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mInheritPrincipal(aOther.mInheritPrincipal),
       mPrincipalIsExplicit(aOther.mPrincipalIsExplicit),
       mNotifiedBeforeUnloadListeners(aOther.mNotifiedBeforeUnloadListeners),
+      mShouldNotForceReplaceInOnLoad(aOther.mShouldNotForceReplaceInOnLoad),
       mPrincipalToInherit(aOther.mPrincipalToInherit),
       mPartitionedPrincipalToInherit(aOther.mPartitionedPrincipalToInherit),
       mForceAllowDataURI(aOther.mForceAllowDataURI),
@@ -181,8 +181,6 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mOriginalFrameSrc(aOther.mOriginalFrameSrc),
       mShouldCheckForRecursion(aOther.mShouldCheckForRecursion),
       mIsFormSubmission(aOther.mIsFormSubmission),
-      mNeedsCompletelyLoadedDocument(aOther.mNeedsCompletelyLoadedDocument),
-      mHistoryBehavior(aOther.mHistoryBehavior),
       mLoadType(aOther.mLoadType),
       mSHEntry(aOther.mSHEntry),
       mTarget(aOther.mTarget),
@@ -237,13 +235,12 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI, uint64_t aLoadIdentifier)
       mInheritPrincipal(false),
       mPrincipalIsExplicit(false),
       mNotifiedBeforeUnloadListeners(false),
+      mShouldNotForceReplaceInOnLoad(false),
       mForceAllowDataURI(false),
       mIsExemptFromHTTPSFirstMode(false),
       mOriginalFrameSrc(false),
       mShouldCheckForRecursion(false),
       mIsFormSubmission(false),
-      mNeedsCompletelyLoadedDocument(false),
-      mHistoryBehavior(Nothing()),
       mLoadType(LOAD_NORMAL),
       mSrcdocData(VoidString()),
       mLoadFlags(0),
@@ -673,6 +670,15 @@ void nsDocShellLoadState::SetNotifiedBeforeUnloadListeners(
   mNotifiedBeforeUnloadListeners = aNotifiedBeforeUnloadListeners;
 }
 
+bool nsDocShellLoadState::ShouldNotForceReplaceInOnLoad() const {
+  return mShouldNotForceReplaceInOnLoad;
+}
+
+void nsDocShellLoadState::SetShouldNotForceReplaceInOnLoad(
+    bool aShouldNotForceReplaceInOnLoad) {
+  mShouldNotForceReplaceInOnLoad = aShouldNotForceReplaceInOnLoad;
+}
+
 bool nsDocShellLoadState::ForceAllowDataURI() const {
   return mForceAllowDataURI;
 }
@@ -719,29 +725,6 @@ bool nsDocShellLoadState::IsFormSubmission() const { return mIsFormSubmission; }
 
 void nsDocShellLoadState::SetIsFormSubmission(bool aIsFormSubmission) {
   mIsFormSubmission = aIsFormSubmission;
-}
-
-bool nsDocShellLoadState::NeedsCompletelyLoadedDocument() const {
-  return mNeedsCompletelyLoadedDocument;
-}
-
-void nsDocShellLoadState::SetNeedsCompletelyLoadedDocument(
-    bool aNeedsCompletelyLoadedDocument) {
-  mNeedsCompletelyLoadedDocument = aNeedsCompletelyLoadedDocument;
-}
-
-Maybe<mozilla::dom::NavigationHistoryBehavior>
-nsDocShellLoadState::HistoryBehavior() const {
-  return mHistoryBehavior;
-}
-
-void nsDocShellLoadState::SetHistoryBehavior(
-    mozilla::dom::NavigationHistoryBehavior aHistoryBehavior) {
-  mHistoryBehavior = Some(aHistoryBehavior);
-}
-
-void nsDocShellLoadState::ResetHistoryBehavior() {
-  mHistoryBehavior = Nothing();
 }
 
 uint32_t nsDocShellLoadState::LoadType() const { return mLoadType; }
@@ -1394,8 +1377,6 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize(
   loadState.OriginalFrameSrc() = mOriginalFrameSrc;
   loadState.ShouldCheckForRecursion() = mShouldCheckForRecursion;
   loadState.IsFormSubmission() = mIsFormSubmission;
-  loadState.NeedsCompletelyLoadedDocument() = mNeedsCompletelyLoadedDocument;
-  loadState.HistoryBehavior() = mHistoryBehavior;
   loadState.LoadType() = mLoadType;
   loadState.userNavigationInvolvement() = mUserNavigationInvolvement;
   loadState.Target() = mTarget;

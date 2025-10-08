@@ -23,10 +23,5 @@ template <>
 struct ParamTraits<mozilla::dom::NavigationType>
     : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::NavigationType> {
 };
-
-template <>
-struct ParamTraits<mozilla::dom::NavigationHistoryBehavior>
-    : public mozilla::dom::WebIDLEnumSerializer<
-          mozilla::dom::NavigationHistoryBehavior> {};
 }  // namespace IPC
 #endif
