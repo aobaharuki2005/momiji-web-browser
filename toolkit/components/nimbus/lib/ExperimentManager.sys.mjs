@@ -1563,16 +1563,6 @@ export class ExperimentManager {
     };
 
     for (const enrollment of enrollments) {
-      // TODO(bug 1956082): This is an async method that we are not awaiting.
-      //
-      // This function is only ever called inside a nsIPrefObserver callback,
-      // which are invoked without `await`. Awaiting here breaks tests in
-      // test_ExperimentManager_prefs.js, which assert about the values of prefs
-      // *after* we trigger unenrollment.
-      //
-      // There is no good way to synchronize this behaviour yet to satisfy tests and
-      // the only thing that is being deferred are the database writes, which we
-      // and our caller don't care about.
       this._unenroll(enrollment, UnenrollmentCause.ChangedPref(changedPref));
     }
   }
