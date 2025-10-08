@@ -16,7 +16,6 @@
 #include "mozilla/Components.h"
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/Logging.h"
-#include "mozilla/MacroForEach.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StorageAccess.h"

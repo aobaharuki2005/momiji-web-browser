@@ -17,7 +17,6 @@
 #include "js/Value.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/MacroForEach.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/dom/BindingDeclarations.h"
