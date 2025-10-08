@@ -3194,13 +3194,6 @@
         throw new Error("Cannot create split view with zero tabs");
       }
 
-      // Ensure selected tab is always first in split view
-      const selectedTabIndex = tabs.indexOf(gBrowser.selectedTab);
-      if (selectedTabIndex > -1 && selectedTabIndex != 0) {
-        const [removed] = tabs.splice(selectedTabIndex, 1);
-        tabs.unshift(removed);
-      }
-
       if (!id) {
         id = `${Date.now()}-${Math.round(Math.random() * 100)}`;
       }
@@ -3232,12 +3225,9 @@
         return;
       }
 
-      for (let i = splitview.tabs.length - 1; i >= 0; i--) {
-        this.#handleTabMove(splitview.tabs[i], () =>
-          gBrowser.tabContainer.insertBefore(
-            splitview.tabs[i],
-            splitview.nextElementSibling
-          )
+      for (const tab of splitview.tabs) {
+        this.#handleTabMove(tab, () =>
+          gBrowser.tabContainer.insertBefore(tab, splitview.nextElementSibling)
         );
       }
       splitview.remove();
@@ -7418,7 +7408,7 @@
     }
 
     getTabPids(tab) {
-      if (!tab?.linkedBrowser) {
+      if (!tab.linkedBrowser) {
         return [];
       }
 
@@ -9500,34 +9490,6 @@ var TabContextMenu = {
       contextUngroupTab.hidden = true;
     }
 
-    // Split View
-    let splitViewEnabled = Services.prefs.getBoolPref(
-      "browser.tabs.splitView.enabled",
-      false
-    );
-    let contextMoveTabToNewSplitView = document.getElementById(
-      "context_moveTabToSplitView"
-    );
-    let contextSeparateSplitView = document.getElementById(
-      "context_separateSplitView"
-    );
-    let hasSplitViewTab = this.contextTabs.some(tab => tab.splitview);
-    contextMoveTabToNewSplitView.hidden = !splitViewEnabled || hasSplitViewTab;
-    contextSeparateSplitView.hidden = !splitViewEnabled || !hasSplitViewTab;
-    if (splitViewEnabled) {
-      contextMoveTabToNewSplitView.removeAttribute("data-l10n-id");
-      contextMoveTabToNewSplitView.setAttribute(
-        "data-l10n-id",
-        this.contextTabs.length < 2
-          ? "tab-context-add-split-view"
-          : "tab-context-open-in-split-view"
-      );
-
-      let pinnedTabs = this.contextTabs.filter(t => t.pinned);
-      contextMoveTabToNewSplitView.disabled =
-        this.contextTabs.length > 2 || pinnedTabs.length;
-    }
-
     // Only one of Reload_Tab/Reload_Selected_Tabs should be visible.
     document.getElementById("context_reloadTab").hidden = this.multiselected;
     document.getElementById("context_reloadSelectedTabs").hidden =
@@ -9950,48 +9912,6 @@ var TabContextMenu = {
     for (let i = this.contextTabs.length - 1; i >= 0; i--) {
       gBrowser.ungroupTab(this.contextTabs[i]);
     }
-  },
-
-  moveTabsToSplitView() {
-    let insertBefore = this.contextTabs.includes(gBrowser.selectedTab)
-      ? gBrowser.selectedTab
-      : this.contextTabs[0];
-    let tabsToAdd = this.contextTabs;
-
-    let newTab = null;
-    if (this.contextTabs.length < 2) {
-      // Open new tab to split with context tab
-      newTab = gBrowser.addTrustedTab(BROWSER_NEW_TAB_URL);
-      tabsToAdd = [this.contextTabs[0], newTab];
-    }
-
-    gBrowser.addTabSplitView(tabsToAdd, {
-      insertBefore,
-    });
-
-    if (newTab) {
-      gBrowser.selectedTab = newTab;
-    }
-  },
-
-  unsplitTabs() {
-    const splitviews = new Set(
-      this.contextTabs.map(tab => tab.splitview).filter(Boolean)
-    );
-    splitviews.forEach(splitview => gBrowser.unsplitTabs(splitview));
-  },
-
-  addNewBadge() {
-    let badgeNewMenuItems = document.querySelectorAll(
-      "#tabContextMenu menuitem.badge-new"
-    );
-
-    badgeNewMenuItems.forEach(badgedMenuItem => {
-      badgedMenuItem.setAttribute(
-        "badge",
-        gBrowser.tabLocalization.formatValueSync("tab-context-badge-new")
-      );
-    });
   },
 };
 
