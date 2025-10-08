@@ -813,24 +813,20 @@ export class PipelineOptions {
       }
       // Validating featureId
       if (key === "featureId") {
-        const featureId = options[key];
-        if (FEATURES.hasOwnProperty(featureId)) {
+        if (FEATURES.hasOwnProperty(options[key])) {
           // if featureId is set and engineId is not set, we set it
           if (
             options.engineId == null ||
             options.engineId === DEFAULT_ENGINE_ID
           ) {
-            options.engineId = FEATURES[featureId].engineId;
+            options.engineId = FEATURES[options[key]].engineId;
             this.engineId = options.engineId;
           }
-        } else if (
-          // Allow tests to define a feature id.
-          featureId != "test-feature"
-        ) {
+        } else {
           // we want an explicit list of features.
           throw new PipelineOptionsValidationError(
             key,
-            featureId,
+            options[key],
             `Should be one of ${Object.keys(FEATURES).join(", ")}`
           );
         }
@@ -887,9 +883,7 @@ export class PipelineOptions {
 
       if (
         key === "backend" &&
-        !Object.values(BACKENDS).includes(options[key]) &&
-        // Allow tests to define a test backend.
-        options[key] != "test-backend"
+        !Object.values(BACKENDS).includes(options[key])
       ) {
         throw new PipelineOptionsValidationError(
           key,
