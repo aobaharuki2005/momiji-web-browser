@@ -139,14 +139,15 @@ export class InferredPersonalizationFeed {
       intervals,
       CLICK_TABLE
     );
-
+    const isClickModel = model.modelType === MODEL_TYPE.CLICKS;
     const interests = model.computeInterestVectors({
       dataForIntervals: aggClickPerInterval,
       indexSchema: schema,
       model_id: inferredModel.model_id,
+      applyPostProcessing: isClickModel,
     });
 
-    if (model.modelType === MODEL_TYPE.CLICKS) {
+    if (isClickModel) {
       return interests;
     }
 
