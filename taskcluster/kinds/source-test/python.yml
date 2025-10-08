@@ -144,9 +144,9 @@ mochitest-harness:
     fetches:
         build:
             - target.tar.xz
-            - artifact: target.common.tests.tar.zst
+            - artifact: target.common.tests.tar.gz
               dest: tests
-            - artifact: target.mochitest.tests.tar.zst
+            - artifact: target.mochitest.tests.tar.gz
               dest: tests
         toolchain:
             - linux64-fix-stacks
@@ -327,9 +327,9 @@ reftest-harness:
     fetches:
         build:
             - target.tar.xz
-            - artifact: target.common.tests.tar.zst
+            - artifact: target.common.tests.tar.gz
               dest: tests
-            - artifact: target.reftest.tests.tar.zst
+            - artifact: target.reftest.tests.tar.gz
               dest: tests
         toolchain:
             - linux64-fix-stacks
@@ -456,7 +456,7 @@ nimbus:
     fetches:
         build:
             - artifact: target.tar.xz
-            - artifact: target.common.tests.tar.zst
+            - artifact: target.common.tests.tar.gz
     worker:
         by-platform:
             linux2404-64.*:
@@ -497,7 +497,7 @@ fxms-schemas:
     fetches:
         build:
             - artifact: target.tar.xz
-            - artifact: target.common.tests.tar.zst
+            - artifact: target.common.tests.tar.gz
     worker:
         by-platform:
             linux2404-64.*:
@@ -596,9 +596,9 @@ telemetry-integration-tests:
     fetches:
         build:
             - target.tar.bz2
-            - artifact: target.common.tests.tar.zst
+            - artifact: target.common.tests.tar.gz
               dest: tests
-            - artifact: target.reftest.tests.tar.zst
+            - artifact: target.reftest.tests.tar.gz
               dest: tests
     when:
         files-changed:

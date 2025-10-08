@@ -44,7 +44,7 @@ tasks:
         fetches:
             build:
                 - target.jsshell.zip
-                - target.fuzztest.tests.tar.zst
+                - target.fuzztest.tests.tar.gz
         worker:
             docker-image: {in-tree: ubuntu2404-test}
             env:
@@ -71,7 +71,7 @@ tasks:
         fetches:
             build:
                 - artifact: target.tar.xz
-                - artifact: target.gtest.tests.tar.zst
+                - artifact: target.gtest.tests.tar.gz
                 - artifact: target.mozinfo.json
 
     grizzly-linux64-debug:
@@ -89,7 +89,7 @@ tasks:
         fetches:
             build:
                 - artifact: target.tar.xz
-                - artifact: target.gtest.tests.tar.zst
+                - artifact: target.gtest.tests.tar.gz
                 - artifact: target.mozinfo.json
 
     grizzly-linux64-tsan:
@@ -107,7 +107,7 @@ tasks:
         fetches:
             build:
                 - artifact: target.tar.xz
-                - artifact: target.gtest.tests.tar.zst
+                - artifact: target.gtest.tests.tar.gz
                 - artifact: target.mozinfo.json
 
     grizzly-windows-debug:
