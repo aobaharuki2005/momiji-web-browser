@@ -710,20 +710,12 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   static nsCString& BytecodeMimeTypeFor(
       JS::loader::LoadedScript* aLoadedScript);
 
-  // Decide whether to encode bytecode for given script load request.
-  //
-  // This method must be called before executing the script.
-  void MaybePrepareForCacheBeforeExecute(ScriptLoadRequest* aRequest);
-
   // Queue the script load request for caching if we decided to cache it, or
   // cleanup the script load request fields otherwise.
   //
   // This method must be called after executing the script.
   nsresult MaybePrepareForCacheAfterExecute(ScriptLoadRequest* aRequest,
                                             nsresult aRv);
-
-  void MaybePrepareModuleForCacheBeforeExecute(
-      JSContext* aCx, ModuleLoadRequest* aRequest) override;
 
   // Queue the top-level module load request for caching if we decided to cache
   // it, or cleanup the module load request fields otherwise.
