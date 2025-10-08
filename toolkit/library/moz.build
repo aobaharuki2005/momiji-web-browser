@@ -89,16 +89,7 @@ def Libxul(name, output_category=None):
 
     OS_LIBS += CONFIG["LIBATOMIC_LIBS"]
 
-    # TouchBar-related classes are only available in the 10.12.2 SDK and later.
-    # We need to weak link these classes until we've upgraded our SDK to at
-    # least 10.12.2.
-    # We're also linking against libresolv to solve bug 1367932.
     if CONFIG["OS_ARCH"] == "Darwin":
-        LDFLAGS += ["-Wl,-U,_OBJC_CLASS_$_NSTouchBar"]
-        LDFLAGS += ["-Wl,-U,_OBJC_CLASS_$_NSSharingServicePickerTouchBarItem"]
-        LDFLAGS += ["-Wl,-U,_OBJC_METACLASS_$_NSTouchBar"]
-        LDFLAGS += ["-Wl,-U,_OBJC_CLASS_$_NSCustomTouchBarItem"]
-        LDFLAGS += ["-Wl,-U,_OBJC_CLASS_$_NSPopoverTouchBarItem"]
         LDFLAGS += ["-lresolv"]
         LDFLAGS += ["-Wl,-rpath,@executable_path/../Frameworks/ChannelPrefs.framework"]
 
@@ -210,6 +201,12 @@ if CONFIG["MOZ_WEBRTC"]:
             "msdmo",
             "wininet",
         ]
+
+if CONFIG["OS_ARCH"] == "Darwin":
+    OS_LIBS += [
+        "-framework MediaPlayer",
+        "-framework Metal",
+    ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     OS_LIBS += [
@@ -342,14 +339,6 @@ if CONFIG["OS_ARCH"] == "FreeBSD":
     OS_LIBS += [
         "util",
     ]
-
-if CONFIG["OS_ARCH"] == "Darwin":
-    OS_LIBS += [
-        # Link to Metal as required by the Metal gfx-hal backend
-        "-weak_framework Metal",
-        "-weak_framework MediaPlayer",
-    ]
-
 
 if CONFIG["OS_ARCH"] == "WINNT":
     OS_LIBS += [
