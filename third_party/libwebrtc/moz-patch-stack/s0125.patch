@@ -1,22 +1,42 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 8 Aug 2025 14:18:00 -0500
-Subject: Bug 1980479 - (fix-2f21adc141) turn off rtc_rusty_base64
+From: Michael Froman <mjfroman@mac.com>
+Date: Tue, 16 Sep 2025 09:26:22 -0500
+Subject: Bug 1985396 - Cherry-pick upstream libwebrtc commit 73898ac18b
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6038962cc8531f7bac3a58170b052326f5fabf4a
+Upstream commit: https://webrtc.googlesource.com/src/+/73898ac18b498c3322f71b9543a2b77f465a47af
+       APM data dumpers: add missing include
+
+       Currently, audioproc_f fails to build with apm_debug_dump enabled.
+
+       Bug: webrtc:442745059
+       Change-Id: I349468891d798341abdaea32042cbe23c4722f75
+       Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/407641
+       Commit-Queue: Sam Zackrisson <saza@webrtc.org>
+       Commit-Queue: Lionel Koenig <lionelk@webrtc.org>
+       Reviewed-by: Lionel Koenig <lionelk@webrtc.org>
+       Cr-Commit-Position: refs/heads/main@{#45547}
 ---
- webrtc.gni | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ modules/audio_processing/logging/apm_data_dumper.cc | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/webrtc.gni b/webrtc.gni
-index 785492fe49..1e87de20e5 100644
---- a/webrtc.gni
-+++ b/webrtc.gni
-@@ -343,7 +343,7 @@ declare_args() {
-   rtc_disable_metrics = false
+diff --git a/modules/audio_processing/logging/apm_data_dumper.cc b/modules/audio_processing/logging/apm_data_dumper.cc
+index b26d90fbc8..d86d8d8d3b 100644
+--- a/modules/audio_processing/logging/apm_data_dumper.cc
++++ b/modules/audio_processing/logging/apm_data_dumper.cc
+@@ -10,13 +10,16 @@
  
-   # Enables an experimental rust version of base64 for building and testing.
--  rtc_rusty_base64 = true
-+  rtc_rusty_base64 = !build_with_mozilla
- }
+ #include "modules/audio_processing/logging/apm_data_dumper.h"
  
- declare_args() {
+-
+ // Check to verify that the define is properly set.
+ #if !defined(WEBRTC_APM_DEBUG_DUMP) || \
+     (WEBRTC_APM_DEBUG_DUMP != 0 && WEBRTC_APM_DEBUG_DUMP != 1)
+ #error "Set WEBRTC_APM_DEBUG_DUMP to either 0 or 1"
+ #endif
+ 
++#if WEBRTC_APM_DEBUG_DUMP == 1
++#include "rtc_base/strings/string_builder.h"
++#endif
++
+ namespace webrtc {
+ namespace {
+ 
