@@ -280,6 +280,37 @@ add_task(async function test_corrupted_idb_key() {
     },
   });
 
+  async function assertUnexpectedErrorOnTestMessage(
+    testMessage,
+    assertMessage
+  ) {
+    // Prevent test failures to be hit on Android builds when the extensions
+    // are configured to run in the parent process by explicitly allowing the
+    // uncaught rejection expected to be hit internally by the Promise-based
+    // IndexedDB wrapper defined in IndexedDB.sys.mjs when the unexpected
+    // corrupted storage scenario recreated in this test is expected to
+    // be triggering them as side-effects.
+    if (WebExtensionPolicy.isExtensionProcess) {
+      PromiseTestUtils.expectUncaughtRejection(rejectInfo => {
+        const EXPECTED_IN_REJECT_STACK =
+          "transaction.onerror@resource://gre/modules/IndexedDB.sys.mjs";
+        // We expect this kind of rejection to be hit internally by the
+        // Promise-based IndexedDB wrapper defined in IndexedDB.sys.mjs.
+        return (
+          rejectInfo.message == "null" &&
+          rejectInfo.stack.includes(EXPECTED_IN_REJECT_STACK)
+        );
+      });
+    }
+    extension.sendMessage(testMessage);
+    let result = await extension.awaitMessage(`${testMessage}:done`);
+    Assert.equal(
+      result.error,
+      "Error: An unexpected error occurred",
+      assertMessage
+    );
+  }
+
   await extension.startup();
   const { uuid } = extension;
 
@@ -337,18 +368,12 @@ add_task(async function test_corrupted_idb_key() {
   info(
     "Verify that reading and writing on the corrupted storage.local key fails as expected"
   );
-  extension.sendMessage("read-data");
-  let readResult = await extension.awaitMessage("read-data:done");
-  Assert.equal(
-    readResult.error,
-    "Error: An unexpected error occurred",
+  await assertUnexpectedErrorOnTestMessage(
+    "read-data",
     "Expect a rejection to be hit while retrieving data from the corrupted storage.local key"
   );
-  extension.sendMessage("write-data");
-  writeResult = await extension.awaitMessage("write-data:done");
-  Assert.equal(
-    writeResult.error,
-    "Error: An unexpected error occurred",
+  await assertUnexpectedErrorOnTestMessage(
+    "write-data",
     "Expect a rejection to be hit while writing data into the corrupted storage.local key"
   );
 
@@ -360,11 +385,8 @@ add_task(async function test_corrupted_idb_key() {
     "extensions.webextensions.keepStorageOnCorrupted.storageLocal",
     true
   );
-  extension.sendMessage("clear-data");
-  let clearResult = await extension.awaitMessage("clear-data:done");
-  Assert.equal(
-    clearResult.error,
-    "Error: An unexpected error occurred",
+  await assertUnexpectedErrorOnTestMessage(
+    "clear-data",
     "Expect a rejection to be hit while clearing storage.local with corrupted key if auto-reset is disabled"
   );
 
@@ -380,7 +402,7 @@ add_task(async function test_corrupted_idb_key() {
   // due to the underlying database corruption and then verify that
   // storage.local.get and storage.local.set do not hit a rejection anymore.
   extension.sendMessage("clear-data");
-  clearResult = await extension.awaitMessage("clear-data:done");
+  let clearResult = await extension.awaitMessage("clear-data:done");
   Assert.equal(
     clearResult.error,
     null,
