@@ -75,7 +75,7 @@ index 7e842cf2a2..655830c04c 100644
  # The python interpreter to use by default. On Windows, this will look
  # for vpython3.exe and vpython3.bat.
 diff --git a/BUILD.gn b/BUILD.gn
-index d5f414db72..41960d6b10 100644
+index 603e90dd87..c0822c25c4 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -21,15 +21,15 @@
@@ -107,7 +107,7 @@ index d5f414db72..41960d6b10 100644
      defines = []
  
      deps = [
-@@ -847,7 +847,7 @@ rtc_static_library("dcsctp") {
+@@ -850,7 +850,7 @@ rtc_static_library("dcsctp") {
    visibility = [ "//:default" ]
    sources = []
    complete_static_lib = true
@@ -116,7 +116,7 @@ index d5f414db72..41960d6b10 100644
    defines = []
    deps = [
      "net/dcsctp/public:factory",
-@@ -882,7 +882,7 @@ group("poison_software_video_codecs") {
+@@ -885,7 +885,7 @@ group("poison_software_video_codecs") {
  if (!build_with_chromium) {
    # Write debug logs to gn_logs.txt.
    # This is also required for Siso builds.

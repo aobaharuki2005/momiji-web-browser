@@ -116,7 +116,7 @@ index fbd2c38721..4d09e6b1b1 100644
    # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
    # Chromium fix resolves the problem.
 diff --git a/BUILD.gn b/BUILD.gn
-index 4ad7f3e00c..7859461b97 100644
+index d00f44d828..2e24ea6104 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -33,7 +33,7 @@ if (is_android) {
@@ -151,7 +151,7 @@ index 4ad7f3e00c..7859461b97 100644
  
  if (!rtc_build_ssl) {
    config("external_ssl_library") {
-@@ -566,6 +572,33 @@ if (!build_with_chromium) {
+@@ -565,6 +571,33 @@ if (!build_with_chromium) {
        "sdk",
        "video",
      ]
@@ -185,7 +185,7 @@ index 4ad7f3e00c..7859461b97 100644
  
      if (rtc_include_builtin_audio_codecs) {
        deps += [
-@@ -578,6 +611,16 @@ if (!build_with_chromium) {
+@@ -577,6 +610,16 @@ if (!build_with_chromium) {
        deps += [
          "api/video:video_frame",
          "api/video:video_rtp_headers",
