@@ -175,8 +175,7 @@ struct GraphInterface : public nsISupports {
   /* Called by GraphDriver to iterate the graph. Mixed audio output from the
    * graph is passed into aMixerReceiver, if it is non-null. */
   virtual IterationResult OneIteration(
-      GraphTime aStateComputedEnd, GraphTime aIterationEnd,
-      MixerCallbackReceiver* aMixerReceiver) = 0;
+      GraphTime aStateComputedEnd, MixerCallbackReceiver* aMixerReceiver) = 0;
 #ifdef DEBUG
   /* True if we're on aDriver's thread, or if we're on mGraphRunner's thread
    * and mGraphRunner is currently run by aDriver. */
@@ -296,9 +295,18 @@ class GraphDriver {
   /**
    * Set the state of the driver so it can start at the right point in time,
    * after switching from another driver.
+   *
+   * aIterationTimeStamp is the system clock time from when rendering began in
+   * the most recent iteration.  An audio callback is assumed invoked soon
+   * after the end of the provided portion of the platform audio buffer
+   * becomes available for reading or writing, and so provides a clock edge
+   * such that aCurrentTimeStamp advances consistently with the output time of
+   * the end of the set of frames rendered in each iteration.  Actual audio
+   * output time of the last data written would be at least a platform buffer
+   * length after a write buffer portion becomes available.
    */
-  void SetState(const nsACString& aStreamName, GraphTime aIterationEnd,
-                GraphTime aStateComputedTime);
+  void SetState(const nsACString& aStreamName, GraphTime aStateComputedTime,
+                TimeStamp aIterationTimeStamp);
 
   GraphInterface* Graph() const { return mGraphInterface; }
 
@@ -334,10 +342,19 @@ class GraphDriver {
  protected:
   // The UTF-8 name for system audio streams.  Graph thread.
   nsCString mStreamName;
-  // Time of the end of this graph iteration.
-  GraphTime mIterationEnd = 0;
   // Time until which the graph has processed data.
   GraphTime mStateComputedTime = 0;
+  // The system clock time when the iteration should or would start if these
+  // start times advance consistently with the number of frames rendered by
+  // the graph in each iteration.
+  // Initially null, if no previous driver exists to provide a reference time
+  // through SetState().
+  // SystemClockDriver advances this before waiting to render the next
+  // iteration.
+  // AudioCallbackDriver sets this to approximately now at the start of each
+  // iteration when !HasFallback().
+  // Unused by OfflineClockDriver.
+  TimeStamp mTargetIterationTimeStamp;
   // The GraphInterface this driver is currently iterating.
   const RefPtr<GraphInterface> mGraphInterface;
   // The sample rate for the graph, and in case of an audio driver, also for the
@@ -473,6 +490,9 @@ class SystemClockDriver final : public ThreadedDriver {
   virtual ~SystemClockDriver();
   SystemClockDriver* AsSystemClockDriver() override { return this; }
   const SystemClockDriver* AsSystemClockDriver() const override { return this; }
+  const TimeStamp& IterationTimeStamp() const {
+    return mTargetIterationTimeStamp;
+  }
 
  protected:
   /* Return the TimeDuration to wait before the next rendering iteration. */
@@ -483,10 +503,6 @@ class SystemClockDriver final : public ThreadedDriver {
   // Those are only modified (after initialization) on the graph thread. The
   // graph thread does not run during the initialization.
   TimeStamp mInitialTimeStamp;
-  // The system clock time when the next or in-progress iteration should start
-  // if the time that rendering happens advances consistently with the frames
-  // rendered.  Advanced before waiting to render the next iteration.
-  TimeStamp mTargetIterationTimeStamp;
 };
 
 /**
@@ -678,8 +694,8 @@ class AudioCallbackDriver final : public GraphDriver,
    * will be None. If it stopped after the graph told it to stop, or switch,
    * aState will be Stopped. Hands over state to the audio driver that may
    * iterate the graph after this has been called. */
-  void FallbackDriverStopped(GraphTime aIterationEnd,
-                             GraphTime aStateComputedTime,
+  void FallbackDriverStopped(GraphTime aStateComputedTime,
+                             TimeStamp aIterationTimeStamp,
                              FallbackDriverState aState);
 
   /* Called at the end of the fallback driver's iteration to see whether we
@@ -717,6 +733,10 @@ class AudioCallbackDriver final : public GraphDriver,
    */
   const CubebUtils::AudioDeviceID mOutputDeviceID;
   const CubebUtils::AudioDeviceID mInputDeviceID;
+  /* Whether the current or a future audio callback will be the first callback
+   * to iterate the graph.  Used only from DataCallback().
+   * Initialized on transition from AudioStreamState::Starting to Running. */
+  MOZ_INIT_OUTSIDE_CTOR bool mFirstCallbackIteration;
   /* Approximation of the time between two callbacks. This is used to schedule
    * video frames. This is in milliseconds. Only even used (after
    * inizatialization) on the audio callback thread. */

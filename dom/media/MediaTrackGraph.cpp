@@ -1630,7 +1630,6 @@ bool MediaTrackGraphImpl::UpdateMainThreadState() {
 }
 
 auto MediaTrackGraphImpl::OneIteration(GraphTime aStateTime,
-                                       GraphTime aIterationEnd,
                                        MixerCallbackReceiver* aMixerReceiver)
     -> IterationResult {
   if (mGraphRunner) {

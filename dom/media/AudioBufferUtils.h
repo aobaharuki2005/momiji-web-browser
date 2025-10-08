@@ -83,9 +83,16 @@ class AudioCallbackBufferWrapper {
    * Write some frames to the internal buffer. Free space in the buffer should
    * be checked prior to calling these.
    */
+  void WriteSilence(const uint32_t aFrames) {
+    MOZ_ASSERT(aFrames <= Available(),
+               "Writing more than we can in the audio buffer.");
+
+    std::fill_n(mBuffer + mSampleWriteOffset, aFrames, static_cast<T>(0));
+    mSampleWriteOffset += FramesToSamples(mChannels, aFrames);
+  }
   void WriteFrames(T* aBuffer, uint32_t aFrames) {
     MOZ_ASSERT(aFrames <= Available(),
-               "Writing more that we can in the audio buffer.");
+               "Writing more than we can in the audio buffer.");
 
     PodCopy(mBuffer + mSampleWriteOffset, aBuffer,
             FramesToSamples(mChannels, aFrames));
@@ -93,7 +100,7 @@ class AudioCallbackBufferWrapper {
   }
   void WriteFrames(const AudioChunk& aChunk, uint32_t aFrames) {
     MOZ_ASSERT(aFrames <= Available(),
-               "Writing more that we can in the audio buffer.");
+               "Writing more than we can in the audio buffer.");
 
     InterleaveAndConvertBuffer(aChunk.ChannelData<T>().Elements(), aFrames,
                                aChunk.mVolume, aChunk.ChannelCount(),

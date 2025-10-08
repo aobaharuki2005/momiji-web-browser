@@ -295,7 +295,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * OneIterationImpl is called directly. Mixed audio output from the graph is
    * passed into aMixerReceiver, if it is non-null.
    */
-  IterationResult OneIteration(GraphTime aStateTime, GraphTime aIterationEnd,
+  IterationResult OneIteration(GraphTime aStateTime,
                                MixerCallbackReceiver* aMixerReceiver) override;
 
   /**
