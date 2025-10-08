@@ -633,8 +633,11 @@ void ScriptPreloader::PrepareCacheWriteInternal() {
     return;
   }
 
-  AutoSafeJSAPI jsapi;
-  JSAutoRealm ar(jsapi.cx(), xpc::PrivilegedJunkScope());
+  JS::FrontendContext* fc = JS::NewFrontendContext();
+  if (!fc) {
+    return;
+  }
+
   bool found = false;
   for (auto& script : IterHash(mScripts, Match<ScriptStatus::Saved>())) {
     // Don't write any scripts that are also in the child cache. They'll be
@@ -654,10 +657,12 @@ void ScriptPreloader::PrepareCacheWriteInternal() {
       found = true;
     }
 
-    if (!script->mSize && !script->XDREncode(jsapi.cx())) {
+    if (!script->mSize && !script->XDREncode(fc)) {
       script.Remove();
     }
   }
+
+  JS::DestroyFrontendContext(fc);
 
   if (!found) {
     mSaveComplete = true;
@@ -1271,19 +1276,20 @@ ScriptPreloader::CachedStencil::CachedStencil(ScriptPreloader& cache,
   mProcessTypes = {};
 }
 
-bool ScriptPreloader::CachedStencil::XDREncode(JSContext* cx) {
+bool ScriptPreloader::CachedStencil::XDREncode(JS::FrontendContext* aFc) {
   auto cleanup = MakeScopeExit([&]() { MaybeDropStencil(); });
 
   mXDRData.construct<JS::TranscodeBuffer>();
 
-  JS::TranscodeResult code = JS::EncodeStencil(cx, mStencil, Buffer());
+  JS::TranscodeResult code = JS::EncodeStencil(aFc, mStencil, Buffer());
+
   if (code == JS::TranscodeResult::Ok) {
     mXDRRange.emplace(Buffer().begin(), Buffer().length());
     mSize = Range().length();
     return true;
   }
   mXDRData.destroy();
-  JS_ClearPendingException(cx);
+  JS::ClearFrontendErrors(aFc);
   return false;
 }
 
