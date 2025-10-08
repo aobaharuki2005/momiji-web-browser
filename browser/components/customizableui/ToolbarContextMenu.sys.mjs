@@ -232,6 +232,9 @@ export var ToolbarContextMenu = {
     let removeFromToolbar = popup.querySelector(
       ".customize-context-removeFromToolbar"
     );
+
+    let isTitlebarSpacer = toolbarItem?.classList.contains("titlebar-spacer");
+
     // Show/hide fullscreen context menu items and set the
     // autohide item's checked state to mirror the autohide pref.
     showFullScreenViewContextMenuItems(popup);
@@ -240,7 +243,9 @@ export var ToolbarContextMenu = {
     let sidebarRevampEnabled = Services.prefs.getBoolPref("sidebar.revamp");
     let showSidebarActions =
       ["tabbrowser-tabs", "sidebar-button"].includes(toolbarItem?.id) ||
-      toolbarItem?.localName == "toolbarspring";
+      toolbarItem?.localName == "toolbarspring" ||
+      isTitlebarSpacer;
+
     let toggleVerticalTabsItem = document.getElementById(
       "toolbar-context-toggle-vertical-tabs"
     );
