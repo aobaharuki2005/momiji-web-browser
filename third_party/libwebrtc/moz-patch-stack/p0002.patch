@@ -1,46 +1,48 @@
-From: Guido Urdaneta <guidou@webrtc.org>
-Date: Thu, 24 Jul 2025 11:01:29 +0200
-Subject: (cherry-pick-branch-heads/7258) Use FieldTrialsView::IsEnabled for
- DTLS 1.3
+From: Gennady Tsitovich <gtsitovich@google.com>
+Date: Tue, 15 Jul 2025 08:24:50 +0000
+Subject: (cherry-pick-branch-heads/7258) [M139] Add chrome-cherry-picker
+ account to bot allowlist
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-No behavior changes.
+Original change's description:
+> Add chrome-cherry-picker account to bot allowlist
+>
+> chrome-cherry-picker@chops-service-accounts.iam.gserviceaccount.com is
+> being by the Chrome Cherry Picker (go/chromecherrypicker) and needs to
+> be able to skip the author check for presubmits.
+>
+> Bug: chromium:414375466
+> Change-Id: Ib9f15dd67a4efe5346e6631135e1bcd7196b992c
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/400480
+> Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+> Reviewed-by: Björn Terelius <terelius@webrtc.org>
+> Commit-Queue: Gennady Tsitovich <gtsitovich@google.com>
+> Cr-Commit-Position: refs/heads/main@{#45148}
 
-(cherry picked from commit 5ff715d5666106e01d27205c1775d1e2d07ea254)
-
-Bug: webrtc:383141571, chromium:433885045, chromium:434133034
-Change-Id: Ice5f3e5cbd245ddea407248a6f29c61c646e6a72
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/401740
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Guido Urdaneta <guidou@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#45206}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/402200
-Cr-Commit-Position: refs/branch-heads/7258@{#3}
+Bug: chromium:431157710,chromium:414375466
+Change-Id: Ib9f15dd67a4efe5346e6631135e1bcd7196b992c
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/400700
+Commit-Queue: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
+Auto-Submit: Chrome Cherry Picker <chrome-cherry-picker@chops-service-accounts.iam.gserviceaccount.com>
+Bot-Commit: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
+Cr-Commit-Position: refs/branch-heads/7258@{#2}
 Cr-Branched-From: 74fa937f86ed8432c07676f7a1ce0e5e2812b3d5-refs/heads/main@{#44974}
 ---
- rtc_base/openssl_stream_adapter.cc | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ PRESUBMIT.py | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/rtc_base/openssl_stream_adapter.cc b/rtc_base/openssl_stream_adapter.cc
-index 7d7466b1cc..604a9465c7 100644
---- a/rtc_base/openssl_stream_adapter.cc
-+++ b/rtc_base/openssl_stream_adapter.cc
-@@ -144,13 +144,15 @@ int GetForceDtls13(const FieldTrialsView* field_trials) {
-     return kForceDtls13Off;
-   }
- #ifdef DTLS1_3_VERSION
--  auto mode = field_trials->Lookup("WebRTC-ForceDtls13");
--  RTC_LOG(LS_WARNING) << "WebRTC-ForceDtls13: " << mode;
--  if (mode == "Enabled") {
-+  if (field_trials->IsEnabled("WebRTC-ForceDtls13")) {
-+    RTC_LOG(LS_WARNING) << "WebRTC-ForceDtls13 Enabled";
-     return kForceDtls13Enabled;
--  } else if (mode == "Only") {
-+  }
-+  if (field_trials->Lookup("WebRTC-ForceDtls13") == "Only") {
-+    RTC_LOG(LS_WARNING) << "WebRTC-ForceDtls13 Only";
-     return kForceDtls13Only;
-   }
-+  RTC_LOG(LS_WARNING) << "WebRTC-ForceDtls13 Disabled";
- #endif
-   return kForceDtls13Off;
- }
+diff --git a/PRESUBMIT.py b/PRESUBMIT.py
+index 96fa8abd9d..debc65fb24 100755
+--- a/PRESUBMIT.py
++++ b/PRESUBMIT.py
+@@ -991,6 +991,8 @@ def CommonChecks(input_api, output_api):
+             bot_allowlist=[
+                 'chromium-webrtc-autoroll@webrtc-ci.iam.gserviceaccount.com',
+                 'webrtc-version-updater@webrtc-ci.iam.gserviceaccount.com',
++                ('chrome-cherry-picker'
++                 '@chops-service-accounts.iam.gserviceaccount.com'),
+             ]))
+     results.extend(
+         input_api.canned_checks.CheckChangeTodoHasOwner(
