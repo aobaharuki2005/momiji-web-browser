@@ -34,16 +34,13 @@ void ScriptCacheChild::SendScriptsAndFinalize(
     ScriptPreloader::ScriptHash& scripts) {
   MOZ_ASSERT(mWantCacheData);
 
-  auto matcher = ScriptPreloader::Match<ScriptPreloader::ScriptStatus::Saved>();
+  AutoSafeJSAPI jsapi;
 
-  JS::FrontendContext* fc = JS::NewFrontendContext();
-  if (!fc) {
-    return;
-  }
+  auto matcher = ScriptPreloader::Match<ScriptPreloader::ScriptStatus::Saved>();
 
   nsTArray<ScriptData> dataArray;
   for (auto& script : IterHash(scripts, matcher)) {
-    if (!script->mSize && !script->XDREncode(fc)) {
+    if (!script->mSize && !script->XDREncode(jsapi.cx())) {
       continue;
     }
 
@@ -59,8 +56,6 @@ void ScriptCacheChild::SendScriptsAndFinalize(
       script->FreeData();
     }
   }
-
-  JS::DestroyFrontendContext(fc);
 
   Send__delete__(this, dataArray);
 }

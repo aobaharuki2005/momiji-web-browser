@@ -95,7 +95,7 @@ bool ModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest, nsresult* aRvOut) {
 }
 
 nsresult ModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
-  if (aRequest->IsCachedStencil()) {
+  if (aRequest->IsStencil()) {
     GetScriptLoader()->EmulateNetworkEvents(aRequest);
     SetModuleFetchStarted(aRequest);
     return aRequest->OnFetchComplete(NS_OK);
@@ -235,7 +235,7 @@ nsresult ModuleLoader::CompileJavaScriptModule(
     JS::MutableHandle<JSObject*> aModuleOut) {
   GetScriptLoader()->CalculateCacheFlag(aRequest);
 
-  if (aRequest->IsCachedStencil()) {
+  if (aRequest->IsStencil()) {
     JS::InstantiateOptions instantiateOptions(aOptions);
     RefPtr<JS::Stencil> stencil = aRequest->GetStencil();
     aModuleOut.set(
@@ -262,8 +262,6 @@ nsresult ModuleLoader::CompileJavaScriptModule(
       return NS_ERROR_FAILURE;
     }
 
-    aRequest->SetStencil(stencil);
-
     JS::InstantiateOptions instantiateOptions(aOptions);
     aModuleOut.set(JS::InstantiateModuleStencil(aCx, instantiateOptions,
                                                 stencil, &storage));
@@ -280,7 +278,7 @@ nsresult ModuleLoader::CompileJavaScriptModule(
       MOZ_ASSERT(!alreadyStarted);
     }
 
-    GetScriptLoader()->TryCacheRequest(aRequest);
+    GetScriptLoader()->TryCacheRequest(aRequest, stencil);
 
     return NS_OK;
   }
@@ -313,8 +311,6 @@ nsresult ModuleLoader::CompileJavaScriptModule(
     return NS_ERROR_FAILURE;
   }
 
-  aRequest->SetStencil(stencil);
-
   JS::InstantiateOptions instantiateOptions(aOptions);
   aModuleOut.set(
       JS::InstantiateModuleStencil(aCx, instantiateOptions, stencil));
@@ -331,7 +327,7 @@ nsresult ModuleLoader::CompileJavaScriptModule(
     MOZ_ASSERT(!alreadyStarted);
   }
 
-  GetScriptLoader()->TryCacheRequest(aRequest);
+  GetScriptLoader()->TryCacheRequest(aRequest, stencil);
 
   return NS_OK;
 }
