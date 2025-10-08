@@ -713,8 +713,6 @@ https_first_disabled = true
 
 ["browser_trust_panel.js"]
 
-["browser_trust_panel_pages.js"]
-
 ["browser_trust_panel_security_view.js"]
 https_first_disabled = true
 

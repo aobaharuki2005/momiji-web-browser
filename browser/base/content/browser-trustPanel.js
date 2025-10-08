@@ -248,9 +248,7 @@ class TrustPanel {
     let secureConnection = this.#isSecurePage();
     icon.className = "";
 
-    if (this.#isURILoadedFromFile) {
-      icon.classList.add("file");
-    } else if (!this.#trackingProtectionEnabled) {
+    if (!this.#trackingProtectionEnabled) {
       icon.classList.add("inactive");
     } else if (secureConnection && this.#trackingProtectionEnabled) {
       icon.classList.add("secure");
@@ -516,9 +514,9 @@ class TrustPanel {
   }
 
   get #trackingProtectionEnabled() {
-    return (
-      !ContentBlockingAllowList.canHandle(window.gBrowser.selectedBrowser) ||
-      !ContentBlockingAllowList.includes(window.gBrowser.selectedBrowser)
+    return !(
+      ContentBlockingAllowList.canHandle(window.gBrowser.selectedBrowser) &&
+      ContentBlockingAllowList.includes(window.gBrowser.selectedBrowser)
     );
   }
 
@@ -838,7 +836,7 @@ class TrustPanel {
           tooltip = gNavigatorBundle.getString("identity.notSecure.tooltip");
         }
       }
-    } else if (!this.#isPotentiallyTrustworthy) {
+    } else {
       tooltip = gNavigatorBundle.getString("identity.notSecure.tooltip");
     }
 
