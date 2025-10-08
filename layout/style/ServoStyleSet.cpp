@@ -609,10 +609,10 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStartingStyle(
 }
 
 already_AddRefed<ComputedStyle> ServoStyleSet::ResolvePositionTry(
-    dom::Element& aElement, ComputedStyle& aStyle, nsAtom* aName) {
-  MOZ_ASSERT(aName);
+    dom::Element& aElement, ComputedStyle& aStyle,
+    const StyleDashedIdentAndOrTryTactic& aFallback) {
   return Servo_ComputedValues_GetForPositionTry(mRawData.get(), &aStyle,
-                                                &aElement, aName)
+                                                &aElement, &aFallback)
       .Consume();
 }
 

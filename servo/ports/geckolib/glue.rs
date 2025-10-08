@@ -172,6 +172,7 @@ use style::values::resolved;
 use style::values::specified::intersection_observer::IntersectionObserverMargin;
 use style::values::specified::source_size_list::SourceSizeList;
 use style::values::specified::svg_path::PathCommand;
+use style::values::specified::position::DashedIdentAndOrTryTactic;
 use style::values::specified::{AbsoluteLength, NoCalcLength};
 use style::values::{specified, AtomIdent, CustomIdent, KeyframesName};
 use style_traits::{CssWriter, ParseError, ParsingMode, ToCss, TypedValue};
@@ -4387,22 +4388,19 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForPositionTry(
     raw_data: &PerDocumentStyleData,
     style: &ComputedValues,
     element: &RawGeckoElement,
-    name: *const nsAtom,
+    name_and_try_tactic: &DashedIdentAndOrTryTactic,
 ) -> Strong<ComputedValues> {
-    debug_assert!(!name.is_null());
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     let guards = StylesheetGuards::same(&guard);
     let element = GeckoElement(element);
     let data = raw_data.borrow();
-    Atom::with(name, |name| {
-        data.stylist.resolve_position_try(
-            style,
-            &guards,
-            element,
-            name,
-        )
-    })
+    data.stylist.resolve_position_try(
+        style,
+        &guards,
+        element,
+        name_and_try_tactic
+    )
     .into()
 }
 
@@ -6846,6 +6844,7 @@ pub extern "C" fn Servo_ReparentStyle(
             Some(parent_style),
             Some(layout_parent_style),
             FirstLineReparenting::Yes { style_to_reparent },
+            /* try_tactic = */ Default::default(),
             /* rule_cache = */ None,
             &mut RuleCacheConditions::default(),
         )

@@ -900,18 +900,15 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     while (true) {
       nextFallback = &fallbacks[aIndex];
       if (nextFallback->IsIdentAndOrTactic()) {
-        auto* ident = nextFallback->AsIdentAndOrTactic().ident.AsAtom();
-        if (!ident->IsEmpty()) {
-          nextFallbackStyle = aPresContext->StyleSet()->ResolvePositionTry(
-              *aKidFrame->GetContent()->AsElement(), *aKidFrame->Style(),
-              ident);
-          if (!nextFallbackStyle) {
-            // No @position-try rule for this name was found, per spec we should
-            // skip it.
-            aIndex++;
-            if (aIndex >= fallbacks.Length()) {
-              return false;
-            }
+        nextFallbackStyle = aPresContext->StyleSet()->ResolvePositionTry(
+            *aKidFrame->GetContent()->AsElement(), *aKidFrame->Style(),
+            nextFallback->AsIdentAndOrTactic());
+        if (!nextFallbackStyle) {
+          // No @position-try rule for this name was found, per spec we should
+          // skip it.
+          aIndex++;
+          if (aIndex >= fallbacks.Length()) {
+            return false;
           }
         }
       }
