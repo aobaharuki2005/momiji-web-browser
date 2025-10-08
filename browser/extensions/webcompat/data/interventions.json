@@ -4628,6 +4628,21 @@
       }
     ]
   },
+  "1954427": {
+    "label": "eolno.nokas.com",
+    "bugs": {
+      "1954427": {
+        "issue": "desktop-layout-not-mobile",
+        "matches": ["*://eolno.nokas.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
+  },
   "1955529": {
     "label": "kancelaria.kros.sk",
     "bugs": {
