@@ -9615,7 +9615,7 @@
 # during process launch, before any configuration is attempted.
 - name: layers.gpu-process.max_launch_attempts
   type: RelaxedAtomicInt32
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX)
   value: 2
 #else
   value: 0
@@ -9625,11 +9625,7 @@
 # How many unstable GPU process restarts we allow for a given configuration.
 - name: layers.gpu-process.max_restarts
   type: RelaxedAtomicInt32
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_ANDROID)
   value: 6
-#else
-  value: 1
-#endif
   mirror: always
 
 # How many frames we must render before declaring the GPU process stable, and
