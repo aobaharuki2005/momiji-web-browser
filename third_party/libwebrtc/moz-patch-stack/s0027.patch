@@ -544,7 +544,7 @@ index 9cb0f770ca..0031392f8a 100644
  #include "rtc_base/memory/aligned_malloc.h"
  
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 203a55ba9d..60983d7a96 100644
+index 421e7ba136..309af412f7 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -77,7 +77,7 @@ rtc_library("rtc_media_base") {
