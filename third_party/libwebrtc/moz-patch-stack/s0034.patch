@@ -224,7 +224,7 @@ index a945d0c58d..f01637f2da 100644
    } else {
      sources += [ "aecm_core_c.cc" ]
 diff --git a/modules/audio_processing/agc/BUILD.gn b/modules/audio_processing/agc/BUILD.gn
-index f0824fea75..de7a61b909 100644
+index 090fbd4604..45d08ad066 100644
 --- a/modules/audio_processing/agc/BUILD.gn
 +++ b/modules/audio_processing/agc/BUILD.gn
 @@ -84,7 +84,7 @@ rtc_library("legacy_agc") {

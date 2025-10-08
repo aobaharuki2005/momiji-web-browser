@@ -481,7 +481,7 @@ index f01637f2da..d5bdc070be 100644
      }
    }
 diff --git a/modules/audio_processing/agc/BUILD.gn b/modules/audio_processing/agc/BUILD.gn
-index de7a61b909..795649ccd9 100644
+index 45d08ad066..2d6f3ca0b4 100644
 --- a/modules/audio_processing/agc/BUILD.gn
 +++ b/modules/audio_processing/agc/BUILD.gn
 @@ -86,7 +86,7 @@ rtc_library("legacy_agc") {
