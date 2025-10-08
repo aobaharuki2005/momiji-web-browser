@@ -115,10 +115,10 @@ index 56aba5ee63..0923e7aca7 100644
    if (number_of_cores <= 0) {
      RTC_LOG(LS_ERROR) << "Failed to get number of cores";
 diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
-index 0844b7fa66..57dc31e558 100644
+index fa03f59cdc..798034a846 100644
 --- a/rtc_base/physical_socket_server.cc
 +++ b/rtc_base/physical_socket_server.cc
-@@ -85,7 +85,10 @@ typedef void* SockOptArg;
+@@ -84,7 +84,10 @@ typedef void* SockOptArg;
  
  #endif  // WEBRTC_POSIX
  
@@ -130,7 +130,7 @@ index 0844b7fa66..57dc31e558 100644
  
  int64_t GetSocketRecvTimestamp(int socket) {
    struct timeval tv_ioctl;
-@@ -707,7 +710,7 @@ int PhysicalSocket::TranslateOption(Option opt, int* slevel, int* sopt) {
+@@ -706,7 +709,7 @@ int PhysicalSocket::TranslateOption(Option opt, int* slevel, int* sopt) {
        *slevel = IPPROTO_IP;
        *sopt = IP_DONTFRAGMENT;
        break;
