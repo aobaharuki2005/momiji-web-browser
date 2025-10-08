@@ -178,6 +178,9 @@ class VendorRust(MozbuildObject):
             }
         )
 
+    def generate_diff_stream(self):
+        return self.repository.diff_stream()
+
     def log(self, level, action, params, format_str):
         if level >= logging.WARNING:
             self._issues.append((level, format_str.format(**params)))
