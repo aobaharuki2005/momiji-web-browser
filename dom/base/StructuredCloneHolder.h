@@ -173,6 +173,7 @@ class MessagePortIdentifier;
 struct VideoFrameSerializedData;
 struct AudioDataSerializedData;
 struct RTCEncodedVideoFrameData;
+struct RTCEncodedAudioFrameData;
 
 class StructuredCloneHolder : public StructuredCloneHolderBase {
  public:
@@ -225,6 +226,7 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
   STMT(mEncodedVideoChunks);    \
   STMT(mEncodedAudioChunks);    \
   STMT(mRtcEncodedVideoFrames); \
+  STMT(mRtcEncodedAudioFrames); \
   STMT(mPortIdentifiers);
 
   // Call this method to know if this object is keeping some DOM object alive.
@@ -306,6 +308,10 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
 
   nsTArray<RTCEncodedVideoFrameData>& RtcEncodedVideoFrames() {
     return mRtcEncodedVideoFrames;
+  }
+
+  nsTArray<RTCEncodedAudioFrameData>& RtcEncodedAudioFrames() {
+    return mRtcEncodedAudioFrames;
   }
 
   // Implementations of the virtual methods to allow cloning of objects which
@@ -424,6 +430,9 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
 
   // Used for cloning RTCEncodedVideoFrame in the structured cloning algorithm.
   nsTArray<RTCEncodedVideoFrameData> mRtcEncodedVideoFrames;
+
+  // Used for cloning RTCEncodedAudioFrame in the structured cloning algorithm.
+  nsTArray<RTCEncodedAudioFrameData> mRtcEncodedAudioFrames;
 
   // This raw pointer is only set within ::Read() and is unset by the end.
   nsIGlobalObject* MOZ_NON_OWNING_REF mGlobal;

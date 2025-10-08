@@ -53,6 +53,8 @@
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/dom/OffscreenCanvasBinding.h"
+#include "mozilla/dom/RTCEncodedAudioFrame.h"
+#include "mozilla/dom/RTCEncodedAudioFrameBinding.h"
 #include "mozilla/dom/RTCEncodedVideoFrame.h"
 #include "mozilla/dom/RTCEncodedVideoFrameBinding.h"
 #include "mozilla/dom/ReadableStream.h"
@@ -1169,6 +1171,17 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
     }
   }
 
+  if (StaticPrefs::media_peerconnection_enabled() &&
+      aTag == SCTAG_DOM_RTCENCODEDAUDIOFRAME &&
+      CloneScope() == StructuredCloneScope::SameProcess &&
+      aCloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
+    JS::Rooted<JSObject*> global(aCx, mGlobal->GetGlobalJSObject());
+    if (RTCEncodedAudioFrame_Binding::ConstructorEnabled(aCx, global)) {
+      return RTCEncodedAudioFrame::ReadStructuredClone(
+          aCx, mGlobal, aReader, RtcEncodedAudioFrames()[aIndex]);
+    }
+  }
+
   return ReadFullySerializableObjects(aCx, aReader, aTag, false);
 }
 
@@ -1315,6 +1328,17 @@ bool StructuredCloneHolder::CustomWriteHandler(
   if (StaticPrefs::media_peerconnection_enabled()) {
     RTCEncodedVideoFrame* rtcFrame = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(RTCEncodedVideoFrame, &obj, rtcFrame))) {
+      SameProcessScopeRequired(aSameProcessScopeRequired);
+      return CloneScope() == StructuredCloneScope::SameProcess
+                 ? rtcFrame->WriteStructuredClone(aWriter, this)
+                 : false;
+    }
+  }
+
+  // See if this is an RTCEncodedAudioFrame object.
+  if (StaticPrefs::media_peerconnection_enabled()) {
+    RTCEncodedAudioFrame* rtcFrame = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(RTCEncodedAudioFrame, &obj, rtcFrame))) {
       SameProcessScopeRequired(aSameProcessScopeRequired);
       return CloneScope() == StructuredCloneScope::SameProcess
                  ? rtcFrame->WriteStructuredClone(aWriter, this)
