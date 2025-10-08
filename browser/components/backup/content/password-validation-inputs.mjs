@@ -14,7 +14,6 @@ import "chrome://browser/content/backup/password-rules-tooltip.mjs";
  */
 export default class PasswordValidationInputs extends MozLitElement {
   static properties = {
-    _hasCommon: { type: Boolean, state: true },
     _hasEmail: { type: Boolean, state: true },
     _passwordsMatch: { type: Boolean, state: true },
     _passwordsValid: { type: Boolean, state: true },
@@ -25,7 +24,6 @@ export default class PasswordValidationInputs extends MozLitElement {
      * track the focus state so that we can keep the tooltip open.
      */
     _tooltipFocus: { type: Boolean, state: true },
-    supportBaseLink: { type: String },
     createPasswordLabelL10nId: {
       type: String,
       reflect: true,
@@ -44,9 +42,7 @@ export default class PasswordValidationInputs extends MozLitElement {
 
   constructor() {
     super();
-    this.supportBaseLink = "";
     this._tooShort = true;
-    this._hasCommon = false;
     this._hasEmail = false;
     this._passwordsMatch = false;
     this._passwordsValid = false;
@@ -56,7 +52,6 @@ export default class PasswordValidationInputs extends MozLitElement {
   reset() {
     this.formEl.reset();
     this._showRules = false;
-    this._hasCommon = false;
     this._hasEmail = false;
     this._tooShort = true;
     this._passwordsMatch = false;
@@ -181,10 +176,8 @@ export default class PasswordValidationInputs extends MozLitElement {
           <password-rules-tooltip
             id="password-rules"
             class=${!this._showRules && !this._tooltipFocus ? "hidden" : ""}
-            .hasCommon=${this._hasCommon}
             .hasEmail=${this._hasEmail}
             .tooShort=${this._tooShort}
-            .supportBaseLink=${this.supportBaseLink}
             @focus=${this.handleTooltipFocus}
             @blur=${this.handleTooltipBlur}
           ></password-rules-tooltip>
