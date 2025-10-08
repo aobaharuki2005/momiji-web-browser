@@ -195,12 +195,13 @@ class TrustPanel {
     }
   }
 
-  showPopup({ event }) {
+  showPopup() {
     this.#initializePopup();
     this.#updatePopup();
 
+    let anchor = document.getElementById("trust-icon-container");
     let opts = { position: "bottomleft topleft" };
-    PanelMultiView.openPopup(this.#popup, event.target, opts);
+    PanelMultiView.openPopup(this.#popup, anchor, opts);
   }
 
   async #hidePopup() {
