@@ -473,7 +473,7 @@ index 11b03496be..3cc8835a5e 100644
  if (rtc_include_tests) {
    rtc_source_set("test_feedback_generator_interface") {
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index cfa6c85e6b..e09cf9ef3b 100644
+index e8d2d469cb..c9f5a37bed 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -48,7 +48,7 @@ rtc_library("call_interfaces") {
@@ -718,7 +718,7 @@ index 6d4d4a2363..316408a9b3 100644
      : content_hint(VideoTrackInterface::ContentHint::kNone) {}
  VideoOptions::~VideoOptions() = default;
 diff --git a/modules/audio_coding/BUILD.gn b/modules/audio_coding/BUILD.gn
-index 77b22dc5bd..3d11071e89 100644
+index a24282bee8..f09ff0301a 100644
 --- a/modules/audio_coding/BUILD.gn
 +++ b/modules/audio_coding/BUILD.gn
 @@ -362,7 +362,7 @@ rtc_library("webrtc_opus_wrapper") {
@@ -816,7 +816,7 @@ index a920be33f7..8d53cdfa0a 100644
      testonly = true
  
 diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
-index e643570330..8605e38a1e 100644
+index c7d983bcfa..6cc9d4c334 100644
 --- a/modules/audio_processing/aec3/BUILD.gn
 +++ b/modules/audio_processing/aec3/BUILD.gn
 @@ -263,14 +263,11 @@ if (current_cpu == "x86" || current_cpu == "x64") {
@@ -1194,10 +1194,10 @@ index c1181618e9..4a772795ed 100644
      deps += [
        "..:logging",
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index 739678aa84..9ac30f1b79 100644
+index c90d42d6e1..e0bb8bc2da 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
-@@ -259,6 +259,7 @@ rtc_library("audio_test_common") {
+@@ -258,6 +258,7 @@ rtc_library("audio_test_common") {
    ]
  }
  
@@ -1205,7 +1205,7 @@ index 739678aa84..9ac30f1b79 100644
  if (!build_with_chromium) {
    if (is_mac || is_ios) {
      rtc_library("video_test_mac") {
-@@ -315,8 +316,12 @@ if (!build_with_chromium) {
+@@ -313,8 +314,12 @@ if (!build_with_chromium) {
      }
    }
  }
@@ -1218,7 +1218,7 @@ index 739678aa84..9ac30f1b79 100644
    testonly = true
    sources = [
      "rtcp_packet_parser.cc",
-@@ -326,6 +331,7 @@ rtc_library("rtp_test_utils") {
+@@ -324,6 +329,7 @@ rtc_library("rtp_test_utils") {
      "rtp_file_writer.cc",
      "rtp_file_writer.h",
    ]
@@ -1226,7 +1226,7 @@ index 739678aa84..9ac30f1b79 100644
  
    deps = [
      "../api:array_view",
-@@ -543,7 +549,9 @@ rtc_library("video_frame_writer") {
+@@ -509,7 +515,9 @@ rtc_library("video_frame_writer") {
    ]
  
    if (!is_ios) {
@@ -1236,7 +1236,7 @@ index 739678aa84..9ac30f1b79 100644
      sources += [ "testsupport/jpeg_frame_writer.cc" ]
    } else {
      sources += [ "testsupport/jpeg_frame_writer_ios.cc" ]
-@@ -1386,6 +1394,7 @@ if (!build_with_chromium) {
+@@ -1350,6 +1358,7 @@ if (!build_with_chromium) {
    }
  }
  
@@ -1244,7 +1244,7 @@ index 739678aa84..9ac30f1b79 100644
  if (!build_with_chromium && is_android) {
    rtc_android_library("native_test_java") {
      testonly = true
-@@ -1428,6 +1437,7 @@ if (!build_with_chromium && is_android) {
+@@ -1392,6 +1401,7 @@ if (!build_with_chromium && is_android) {
      sources = [ "android/org/webrtc/native_test/NativeTestWebrtc.java" ]
    }
  }

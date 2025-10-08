@@ -246,7 +246,7 @@ index 40714b196e..2c6b39f59e 100644
  
  if (rtc_include_tests) {
 diff --git a/api/video/BUILD.gn b/api/video/BUILD.gn
-index 7ff6932db1..aadc46a5c8 100644
+index 4b6f18729b..c21d5fc2e8 100644
 --- a/api/video/BUILD.gn
 +++ b/api/video/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -276,7 +276,7 @@ index 802f8cc436..eb4fbcad65 100644
  
  rtc_library("scalability_mode") {
 diff --git a/audio/BUILD.gn b/audio/BUILD.gn
-index 9b287604dc..8f169039f3 100644
+index eda3161da8..612028625a 100644
 --- a/audio/BUILD.gn
 +++ b/audio/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -455,7 +455,7 @@ index 8d53cdfa0a..181623546d 100644
  
  config("audio_device_warnings_config") {
 diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
-index 6d942b7883..b414b7c538 100644
+index 5102f92945..2e95f823fa 100644
 --- a/modules/audio_processing/aec3/BUILD.gn
 +++ b/modules/audio_processing/aec3/BUILD.gn
 @@ -124,7 +124,7 @@ rtc_library("aec3") {
@@ -494,7 +494,7 @@ index 45d08ad066..2d6f3ca0b4 100644
      }
    }
 diff --git a/modules/audio_processing/agc2/BUILD.gn b/modules/audio_processing/agc2/BUILD.gn
-index 36d7f983f1..ee39b667b1 100644
+index 1581e49dae..23e68636bf 100644
 --- a/modules/audio_processing/agc2/BUILD.gn
 +++ b/modules/audio_processing/agc2/BUILD.gn
 @@ -258,7 +258,7 @@ rtc_library("vad_wrapper") {
@@ -756,7 +756,7 @@ index 8222263e1f..913382709e 100644
  import("../webrtc.gni")
  
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index 1dda47bb61..c1ae6bba46 100644
+index 4038297072..c36ca05c5c 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -6,10 +6,10 @@
@@ -772,7 +772,7 @@ index 1dda47bb61..c1ae6bba46 100644
    import("//third_party/jni_zero/jni_zero.gni")
  }
  
-@@ -455,7 +455,7 @@ if (is_ios) {
+@@ -421,7 +421,7 @@ if (is_ios) {
      testonly = true
      visibility = [ "*" ]
      sources = [ "ios/google_test_runner.mm" ]
