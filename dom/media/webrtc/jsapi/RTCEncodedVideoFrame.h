@@ -16,6 +16,7 @@ namespace mozilla::dom {
 
 class RTCRtpScriptTransformer;
 class StructuredCloneHolder;
+struct RTCEncodedVideoFrameOptions;
 
 struct RTCEncodedVideoFrameData : RTCEncodedFrameState {
   RTCEncodedVideoFrameType mType;
@@ -48,6 +49,10 @@ class RTCEncodedVideoFrame final : public RTCEncodedVideoFrameData,
   // webidl (timestamp and data accessors live in base class)
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
+
+  static already_AddRefed<RTCEncodedVideoFrame> Constructor(
+      const GlobalObject& aGlobal, const RTCEncodedVideoFrame& aOriginalFrame,
+      const RTCEncodedVideoFrameOptions& aOptions, ErrorResult& aRv);
 
   nsIGlobalObject* GetParentObject() const;
 

@@ -131,6 +131,39 @@ JSObject* RTCEncodedVideoFrame::WrapObject(JSContext* aCx,
   return RTCEncodedVideoFrame_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+// https://w3c.github.io/webrtc-encoded-transform/#RTCEncodedVideoFrame-constructor
+/* static */
+already_AddRefed<RTCEncodedVideoFrame> RTCEncodedVideoFrame::Constructor(
+    const GlobalObject& aGlobal, const RTCEncodedVideoFrame& aOriginalFrame,
+    const RTCEncodedVideoFrameOptions& aOptions, ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  auto frame = MakeRefPtr<RTCEncodedVideoFrame>(global, aOriginalFrame.Clone());
+
+  if (aOptions.mMetadata.WasPassed()) {
+    const auto& src = aOptions.mMetadata.Value();
+    auto& dst = frame->mMetadata;
+
+    auto set_if = [](auto& dst, const auto& src) {
+      if (src.WasPassed()) dst.Value() = src.Value();
+    };
+    set_if(dst.mFrameId, src.mFrameId);
+    set_if(dst.mDependencies, src.mDependencies);
+    set_if(dst.mWidth, src.mWidth);
+    set_if(dst.mHeight, src.mHeight);
+    set_if(dst.mSpatialIndex, src.mSpatialIndex);
+    set_if(dst.mTemporalIndex, src.mTemporalIndex);
+    set_if(dst.mSynchronizationSource, src.mSynchronizationSource);
+    set_if(dst.mPayloadType, src.mPayloadType);
+    set_if(dst.mContributingSources, src.mContributingSources);
+    set_if(dst.mTimestamp, src.mTimestamp);
+  }
+  return frame.forget();
+}
+
 RTCEncodedVideoFrameData RTCEncodedVideoFrameData::Clone() const {
   return RTCEncodedVideoFrameData{
       {webrtc::CloneVideoFrame(

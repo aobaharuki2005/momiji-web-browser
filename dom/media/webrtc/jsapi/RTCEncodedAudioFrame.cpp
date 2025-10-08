@@ -104,6 +104,33 @@ JSObject* RTCEncodedAudioFrame::WrapObject(JSContext* aCx,
   return RTCEncodedAudioFrame_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+// https://w3c.github.io/webrtc-encoded-transform/#RTCEncodedAudioFrame-constructor
+/* static */
+already_AddRefed<RTCEncodedAudioFrame> RTCEncodedAudioFrame::Constructor(
+    const GlobalObject& aGlobal, const RTCEncodedAudioFrame& aOriginalFrame,
+    const RTCEncodedAudioFrameOptions& aOptions, ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  auto frame = MakeRefPtr<RTCEncodedAudioFrame>(global, aOriginalFrame.Clone());
+
+  if (aOptions.mMetadata.WasPassed()) {
+    const auto& src = aOptions.mMetadata.Value();
+    auto& dst = frame->mMetadata;
+
+    auto set_if = [](auto& dst, const auto& src) {
+      if (src.WasPassed()) dst.Value() = src.Value();
+    };
+    set_if(dst.mSynchronizationSource, src.mSynchronizationSource);
+    set_if(dst.mPayloadType, src.mPayloadType);
+    set_if(dst.mContributingSources, src.mContributingSources);
+    set_if(dst.mSequenceNumber, src.mSequenceNumber);
+  }
+  return frame.forget();
+}
+
 RTCEncodedAudioFrameData RTCEncodedAudioFrameData::Clone() const {
   return RTCEncodedAudioFrameData{
       {webrtc::CloneAudioFrame(

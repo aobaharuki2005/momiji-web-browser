@@ -15,6 +15,7 @@
 namespace mozilla::dom {
 
 class StructuredCloneHolder;
+struct RTCEncodedAudioFrameOptions;
 
 struct RTCEncodedAudioFrameData : RTCEncodedFrameState {
   RTCEncodedAudioFrameMetadata mMetadata;
@@ -45,6 +46,10 @@ class RTCEncodedAudioFrame final : public RTCEncodedAudioFrameData,
   // webidl (timestamp and data accessors live in base class)
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
+
+  static already_AddRefed<RTCEncodedAudioFrame> Constructor(
+      const GlobalObject& aGlobal, const RTCEncodedAudioFrame& aOriginalFrame,
+      const RTCEncodedAudioFrameOptions& aOptions, ErrorResult& aRv);
 
   nsIGlobalObject* GetParentObject() const;
 
