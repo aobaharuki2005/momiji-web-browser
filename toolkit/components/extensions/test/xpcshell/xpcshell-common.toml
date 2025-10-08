@@ -569,6 +569,7 @@ skip-if = [
 skip-if = ["os == 'android' && debug"]
 
 ["test_ext_storage_local_corrupted_idb.js"]
+skip-if = ["os == 'android'"] # Uncaught rejection failure while running in in-process-webextensions mode.
 
 ["test_ext_storage_managed.js"]
 skip-if = ["os == 'android'"]

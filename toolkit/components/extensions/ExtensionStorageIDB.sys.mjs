@@ -169,6 +169,8 @@ var ErrorsTelemetry = {
 };
 
 export class ExtensionStorageLocalIDB extends IndexedDB {
+  #storagePrincipal;
+
   onupgradeneeded(event) {
     if (event.oldVersion < 1) {
       this.createObjectStore(IDB_DATA_STORENAME);
@@ -184,6 +186,7 @@ export class ExtensionStorageLocalIDB extends IndexedDB {
     let result = await super.openForPrincipal(storagePrincipal, IDB_NAME, {
       version: IDB_VERSION,
     });
+    result.#storagePrincipal = storagePrincipal;
 
     const isMissingObjestStore = db =>
       !db.objectStoreNames.contains(IDB_DATA_STORENAME) &&
@@ -246,6 +249,19 @@ export class ExtensionStorageLocalIDB extends IndexedDB {
       let req = Services.qms.clearStoragesForPrincipal(storagePrincipal);
       req.callback = resolve;
     });
+  }
+
+  async dropAndReopen() {
+    // Forcefully drop the corrupted IndexedDB database.
+    await ExtensionStorageLocalIDB.resetForPrincipal(this.#storagePrincipal);
+    // Reopen the database after it has been reset and retrive the
+    // underlying wrapped IndexedDB database instance to become
+    // the active one for the current IndexedDB database wrapper
+    // instance.
+    const newInstance = await ExtensionStorageLocalIDB.openForPrincipal(
+      this.#storagePrincipal
+    );
+    this.db = newInstance.db;
   }
 
   async isEmpty() {
@@ -462,14 +478,36 @@ export class ExtensionStorageLocalIDB extends IndexedDB {
 
     const objectStore = this.objectStore(IDB_DATA_STORENAME, "readwrite");
 
-    const cursor = await objectStore.openCursor();
-    while (!cursor.done) {
-      changes[cursor.key] = { oldValue: cursor.value };
-      changed = true;
-      await cursor.continue();
+    try {
+      const cursor = await objectStore.openCursor();
+      while (!cursor.done) {
+        changes[cursor.key] = { oldValue: cursor.value };
+        changed = true;
+        await cursor.continue();
+      }
+      await objectStore.clear();
+    } catch (err) {
+      // Error names expected to be raised on known corrupted storage
+      // issues that storage.local.clear method may be hitting.
+      const KNOWN_CORRUPTED_ERROR_NAMES = ["UnknownError"];
+      const errorName = ErrorsTelemetry.getErrorName(err);
+      if (
+        lazy.disabledAutoResetOnCorrupted ||
+        !KNOWN_CORRUPTED_ERROR_NAMES.includes(errorName)
+      ) {
+        throw err;
+      } else {
+        // Drop and reopen the database if iterating over the
+        // IDB objectStore keys or clearing the objectStore
+        // has hit unexpected rejections.
+        Cu.reportError(err);
+        Glean.extensionsData.storageLocalCorruptedReset.record({
+          addon_id: this.#storagePrincipal.addonId,
+          reason: `RejectedClear:${errorName}`,
+        });
+        await this.dropAndReopen();
+      }
     }
-
-    await objectStore.clear();
 
     return changed ? changes : null;
   }
