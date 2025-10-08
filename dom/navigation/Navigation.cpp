@@ -1443,12 +1443,12 @@ bool Navigation::InnerFireNavigateEvent(
               event->Finish(true);
 
               // Step 6
-              self->FireEvent(u"navigatesuccess"_ns);
-
-              // Step 7
               if (apiMethodTracker) {
                 apiMethodTracker->ResolveFinishedPromise();
               }
+
+              // Step 7
+              self->FireEvent(u"navigatesuccess"_ns);
 
               // Step 8
               if (self->mTransition) {
@@ -1493,19 +1493,19 @@ bool Navigation::InnerFireNavigateEvent(
               // Step 5
               event->Finish(false);
 
+              // Step 7
+              if (apiMethodTracker) {
+                apiMethodTracker->RejectFinishedPromise(aRejectionReason);
+              }
+
               if (AutoJSAPI jsapi;
                   !NS_WARN_IF(!jsapi.Init(event->GetParentObject()))) {
                 // Step 6
                 RootedDictionary<ErrorEventInit> init(jsapi.cx());
                 ExtractErrorInformation(jsapi.cx(), aRejectionReason, init);
 
-                // Step 7
+                // Step 8
                 self->FireErrorEvent(u"navigateerror"_ns, init);
-              }
-
-              // Step 8
-              if (apiMethodTracker) {
-                apiMethodTracker->RejectFinishedPromise(aRejectionReason);
               }
 
               // Step 9
@@ -1672,12 +1672,12 @@ void Navigation::AbortOngoingNavigation(JSContext* aCx,
   ExtractErrorInformation(aCx, error, init);
 
   // Step 10
-  FireErrorEvent(u"navigateerror"_ns, init);
-
-  // Step 11
   if (mOngoingAPIMethodTracker) {
     mOngoingAPIMethodTracker->RejectFinishedPromise(error);
   }
+
+  // Step 11
+  FireErrorEvent(u"navigateerror"_ns, init);
 
   // Step 12
   if (mTransition) {
