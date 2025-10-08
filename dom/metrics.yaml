@@ -230,6 +230,11 @@ perf:
         description: |
           Release channel of the build. Either "nightly" or "release" only.
         type: string
+      app_version_major:
+        description: |
+          Major version number.
+        type: quantity
+        unit: integer
     send_in_pings:
       - pageload-base-domain
 

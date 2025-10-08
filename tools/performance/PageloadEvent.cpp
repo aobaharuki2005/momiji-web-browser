@@ -316,6 +316,18 @@ void PageloadEventData::SendAsPageLoadDomainEvent() {
   extra.channel = mozilla::Some("release"_ns);
 #endif
 
+  // Get the major version number.
+  nsCString version(MOZ_STRINGIFY(MOZ_APP_VERSION_DISPLAY));
+  int32_t dotIndex = version.FindChar('.');
+  if (dotIndex != kNotFound) {
+    version.SetLength(dotIndex);
+  }
+  nsresult rv;
+  int32_t majorVersion = version.ToInteger(&rv);
+  if (NS_SUCCEEDED(rv)) {
+    extra.appVersionMajor = mozilla::Some(static_cast<uint32_t>(majorVersion));
+  }
+
   // If the event is a page_load_domain event, then immediately send it.
   mozilla::glean::perf::page_load_domain.Record(mozilla::Some(extra));
 
