@@ -9,6 +9,16 @@ const lazy = XPCOMUtils.declareLazy({
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.sys.mjs",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
   getTrimmedString: "resource://gre/modules/ExtensionTelemetry.sys.mjs",
+
+  disabledAutoResetOnCorrupted: {
+    // NOTE: this pref is meant to disable the auto reset of the
+    // IndexedDB backend database when it is detected as corrupted
+    // for debugging purpose.
+    pref: "extensions.webextensions.keepStorageOnCorrupted.storageLocal",
+    // TODO(Bug 1992973): change the default behavior as part of enabling auto-reset
+    // corrupted storage.local IndexedDB databases on all channels.
+    default: true,
+  },
 });
 
 // The userContextID reserved for the extension storage (its purpose is ensuring that the IndexedDB
@@ -158,20 +168,84 @@ var ErrorsTelemetry = {
   },
 };
 
-class ExtensionStorageLocalIDB extends IndexedDB {
+export class ExtensionStorageLocalIDB extends IndexedDB {
   onupgradeneeded(event) {
     if (event.oldVersion < 1) {
       this.createObjectStore(IDB_DATA_STORENAME);
     }
   }
 
-  static openForPrincipal(storagePrincipal) {
+  static get disabledAutoResetOnCorrupted() {
+    return lazy.disabledAutoResetOnCorrupted;
+  }
+
+  static async openForPrincipal(storagePrincipal) {
     // The db is opened using an extension principal isolated in a reserved user context id.
-    return /** @type {Promise<ExtensionStorageLocalIDB>} */ (
-      super.openForPrincipal(storagePrincipal, IDB_NAME, {
-        version: IDB_VERSION,
-      })
-    );
+    let result = await super.openForPrincipal(storagePrincipal, IDB_NAME, {
+      version: IDB_VERSION,
+    });
+
+    const isMissingObjestStore = db =>
+      !db.objectStoreNames.contains(IDB_DATA_STORENAME) &&
+      db.version >= IDB_VERSION;
+
+    // Delete and recreate the database from scratch if the expected object store
+    // isn't found in objectStoreNames DOMStringList.
+    //
+    // NOTE: the onupgradeneeded handler is expected to be executed before openForPrincipal
+    // resolves, and so if at this point the expected object store name isn't found, then
+    // it means that the database got corrupted (and if the database version is still
+    // set then the onupgradeneeded function would never recreate it).
+    if (isMissingObjestStore(result.db)) {
+      Glean.extensionsData.storageLocalCorruptedReset.record({
+        addon_id: storagePrincipal.addonId,
+        reason: "ObjectStoreNotFound",
+        after_reset: false,
+        reset_disabled: lazy.disabledAutoResetOnCorrupted,
+      });
+
+      if (!lazy.disabledAutoResetOnCorrupted) {
+        let resetErrorName = null;
+        try {
+          await this.resetForPrincipal(storagePrincipal);
+        } catch (err) {
+          Cu.reportError(err);
+          resetErrorName = ErrorsTelemetry.getErrorName(err);
+        }
+
+        // Now try again to open the db, which should create the object store
+        // from the onupgradedneeded event listener.
+        result = await super.openForPrincipal(storagePrincipal, IDB_NAME, {
+          version: IDB_VERSION,
+        });
+        // throw an error more specific than "An unexpected error occurred" if objectStoreNames
+        // doesn't still include the expected object store name.
+        if (isMissingObjestStore(result.db)) {
+          Glean.extensionsData.storageLocalCorruptedReset.record({
+            addon_id: storagePrincipal.addonId,
+            reason: "ObjectStoreNotFound",
+            after_reset: true,
+            reset_disabled: lazy.disabledAutoResetOnCorrupted,
+            reset_error_name: resetErrorName,
+          });
+          const { ExtensionError } = lazy.ExtensionUtils;
+          throw new ExtensionError("Corrupted storage.local backend");
+        }
+      }
+    }
+    /** @type {Promise<ExtensionStorageLocalIDB>} */
+    return result;
+  }
+
+  static async resetForPrincipal(storagePrincipal) {
+    await new Promise(resolve => {
+      // NOTE: using clearStoragesForPrincipal here to make sure we are completely
+      // dropping the corrupted indexeddb (storagePrincipal is only used for the storage.local
+      // IndexedDB backend and so the call that follows will not be clearing other storage
+      // backends that belongs to the API).
+      let req = Services.qms.clearStoragesForPrincipal(storagePrincipal);
+      req.callback = resolve;
+    });
   }
 
   async isEmpty() {
