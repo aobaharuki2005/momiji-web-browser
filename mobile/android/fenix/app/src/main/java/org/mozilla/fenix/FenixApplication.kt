@@ -109,6 +109,8 @@ import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.push.PushFxaIntegration
 import org.mozilla.fenix.push.WebPushEngineIntegration
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
+import org.mozilla.fenix.settings.doh.DefaultDohSettingsProvider
+import org.mozilla.fenix.settings.doh.DohSettingsProvider
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.isLargeScreenSize
 import org.mozilla.fenix.wallpapers.Wallpaper
@@ -756,10 +758,14 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     internal fun setStartupMetrics(
         browserStore: BrowserStore,
         settings: Settings,
+        dohSettingsProvider: DohSettingsProvider = DefaultDohSettingsProvider(
+            components.core.engine,
+            settings,
+        ),
         browsersCache: BrowsersCache = BrowsersCache,
         mozillaProductDetector: MozillaProductDetector = MozillaProductDetector,
     ) {
-        setPreferenceMetrics(settings)
+        setPreferenceMetrics(settings, dohSettingsProvider)
         with(Metrics) {
             // Set this early to guarantee it's in every ping from here on.
             distributionId.set(components.distributionIdManager.getDistributionId())
@@ -909,6 +915,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     @Suppress("ComplexMethod")
     private fun setPreferenceMetrics(
         settings: Settings,
+        dohSettingsProvider: DohSettingsProvider,
     ) {
         with(Preferences) {
             searchSuggestionsEnabled.set(settings.shouldShowSearchSuggestions)
@@ -980,6 +987,9 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             )
 
             inactiveTabsEnabled.set(settings.inactiveTabsAreEnabled)
+            dohProtectionLevel.set(dohSettingsProvider.getSelectedProtectionLevel().toString())
+            httpsOnlyMode.set(settings.getHttpsOnlyMode().toString())
+            globalPrivacyControlEnabled.set(settings.shouldEnableGlobalPrivacyControl)
         }
         reportHomeScreenMetrics(settings)
     }
