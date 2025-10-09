@@ -275,10 +275,11 @@ private fun OnboardingContent(
         val isLargeScreen = LocalContext.current.isLargeScreenSize()
         val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-        val pagerWidth = pageContentWidth(boxWithConstraintsScope, isLargeScreen)
-        val pagerHeight = pageContentHeight(boxWithConstraintsScope, isLargeScreen)
+        val pagerWidth = pageContentWidth(boxWithConstraintsScope, isLargeScreen, isLandscape)
+        val pagerHeight = pageContentHeight(boxWithConstraintsScope, isLargeScreen, isLandscape)
 
         val pagePeekWidth = ((maxWidth - pagerWidth) / 2).coerceAtLeast(8.dp)
+        val paddingValue = if (!isLargeScreen && isLandscape) 0.dp else pagePeekWidth
 
         if (!isNonLargeScreenLandscape(isLargeScreen, isLandscape)) {
             Image(
@@ -297,7 +298,7 @@ private fun OnboardingContent(
                     .fillMaxWidth()
                     .height(pagerHeight)
                     .nestedScroll(nestedScrollConnection),
-                contentPadding = PaddingValues(horizontal = pagePeekWidth),
+                contentPadding = PaddingValues(horizontal = paddingValue),
                 pageSize = PageSize.Fill,
                 beyondViewportPageCount = 2,
                 pageSpacing = pageSpacing(isLargeScreen, pagePeekWidth),
@@ -416,22 +417,40 @@ private object PageContentLayout {
     const val WIDTH_RATIO = 0.85f
     const val TABLET_WIDTH_RATIO = 0.35f
     const val TABLET_HEIGHT_RATIO = 0.50f
+    const val HEIGHT_RATIO_LANDSCAPE_NON_LARGE_SCREEN = 1f
+    const val WIDTH_RATIO_LANDSCAPE_NON_LARGE_SCREEN = 1f
 }
 
-private fun pageContentHeight(scope: BoxWithConstraintsScope, isLargeScreen: Boolean): Dp {
+private fun pageContentHeight(
+    scope: BoxWithConstraintsScope,
+    isLargeScreen: Boolean,
+    isLandscape: Boolean,
+): Dp {
     val minHeight =
         if (isLargeScreen) PageContentLayout.MIN_HEIGHT_TABLET_DP else PageContentLayout.MIN_HEIGHT_DP
     val heightRatio =
-        if (isLargeScreen) PageContentLayout.TABLET_HEIGHT_RATIO else PageContentLayout.HEIGHT_RATIO
+        when {
+            isLargeScreen -> PageContentLayout.TABLET_HEIGHT_RATIO
+            !isLargeScreen && isLandscape -> PageContentLayout.HEIGHT_RATIO_LANDSCAPE_NON_LARGE_SCREEN
+            else -> PageContentLayout.HEIGHT_RATIO
+        }
 
     return scope.maxHeight.times(heightRatio).coerceAtLeast(minHeight)
 }
 
-private fun pageContentWidth(scope: BoxWithConstraintsScope, isLargeScreen: Boolean): Dp {
+private fun pageContentWidth(
+    scope: BoxWithConstraintsScope,
+    isLargeScreen: Boolean,
+    isLandscape: Boolean,
+): Dp {
     val minWidth =
         if (isLargeScreen) PageContentLayout.MIN_WIDTH_TABLET_DP else PageContentLayout.MIN_WIDTH_DP
     val widthRatio =
-        if (isLargeScreen) PageContentLayout.TABLET_WIDTH_RATIO else PageContentLayout.WIDTH_RATIO
+        when {
+            isLargeScreen -> PageContentLayout.TABLET_WIDTH_RATIO
+            !isLargeScreen && isLandscape -> PageContentLayout.WIDTH_RATIO_LANDSCAPE_NON_LARGE_SCREEN
+            else -> PageContentLayout.WIDTH_RATIO
+        }
 
     return scope.maxWidth.times(widthRatio).coerceAtLeast(minWidth)
 }
