@@ -19,6 +19,10 @@ support-files = [
   "../data/simple.mar",
 ]
 
+["accessAndLockout.js"]
+run-if = ["os == 'win'"]
+reason = "Testing mechanism is Windows-only as it relies on CreateFileW"
+
 ["ausReadStrings.js"]
 
 ["backgroundUpdateTaskInternalUpdater.js"]
