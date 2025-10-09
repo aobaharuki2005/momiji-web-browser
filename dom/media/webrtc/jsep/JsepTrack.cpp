@@ -161,10 +161,14 @@ void JsepTrack::RecvTrackSetRemote(const Sdp& aSdp,
   std::set<uint32_t> ssrcsSet;
   if (aMsection.GetAttributeList().HasAttribute(SdpAttribute::kSsrcAttribute)) {
     for (const auto& s : aMsection.GetAttributeList().GetSsrc().mSsrcs) {
+      if (ssrcsSet.find(s.ssrc) != ssrcsSet.end()) {
+        continue;
+      }
       ssrcsSet.insert(s.ssrc);
+      // Preserve order of ssrcs as they appear in the m-section
+      mSsrcs.push_back(s.ssrc);
     }
   }
-  mSsrcs.assign(ssrcsSet.begin(), ssrcsSet.end());
 
   // Use FID ssrc-group to associate rtx ssrcs with "regular" ssrcs. Despite
   // not being part of RFC 4588, this is how rtx is negotiated by libwebrtc
