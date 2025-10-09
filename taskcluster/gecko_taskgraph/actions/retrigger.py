@@ -166,20 +166,22 @@ def retrigger_action(parameters, graph_config, input, task_group_id, task_id):
         with_downstream = " (with downstream) "
 
     times = input.get("times", 1)
-    for i in range(times):
-        create_tasks(
-            graph_config,
-            to_run,
-            full_task_graph,
-            label_to_taskid,
-            parameters,
-            decision_task_id,
-            i,
-            action_tag="retrigger-task",
-        )
 
-        logger.info(f"Scheduled {label}{with_downstream}(time {i + 1}/{times})")
-    combine_task_graph_files(list(range(times)))
+    def modifier(task):
+        task.attributes["task_duplicates"] = times
+        return task
+
+    create_tasks(
+        graph_config,
+        to_run,
+        full_task_graph,
+        label_to_taskid,
+        parameters,
+        decision_task_id,
+        action_tag="retrigger-task",
+        modifier=modifier,
+    )
+    logger.info(f"Scheduled {label}{with_downstream}({times} times)")
 
 
 @register_callback_action(
