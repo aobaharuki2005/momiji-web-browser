@@ -65,6 +65,8 @@ async function setup({
     backend,
   });
 
+  Services.fog.testResetFOG();
+
   await SpecialPowers.pushPrefEnv({
     set: [
       // Enabled by default.

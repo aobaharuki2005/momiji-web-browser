@@ -3,7 +3,13 @@
 
 requestLongerTimeout(2);
 
-const RAW_PIPELINE_OPTIONS = { taskName: "moz-echo", timeoutMS: -1 };
+const RAW_PIPELINE_OPTIONS = {
+  taskName: "moz-echo",
+  timeoutMS: -1,
+  modelId: "Mozilla/test",
+  featureId: "test-feature",
+  backend: "test-backend",
+};
 
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
@@ -46,6 +52,31 @@ add_task(async function test_default_telemetry() {
     "This gets echoed.",
     "The text get echoed exercising the whole flow."
   );
+
+  {
+    info("Test the engine_run event");
+    await engineInstance.lastResourceRequest;
+    const value = Glean.firefoxAiRuntime.engineRun.testGetValue();
+    Assert.equal(value?.length, 1, "One engine_run event was recorded");
+    const [{ extra }] = value;
+    const checkNumber = key => {
+      const value = extra[key];
+      Assert.notEqual(value, null, `${key} should be present`);
+      const number = Number(value); // Quantities are stored as strings.
+      Assert.ok(!Number.isNaN(number), `${key} should be a number`);
+      Assert.greater(number, 0, `${key} should be greater than 0`);
+    };
+    checkNumber("cpu_milliseconds");
+    checkNumber("wall_milliseconds");
+    checkNumber("cores");
+    checkNumber("cpu_utilization");
+    checkNumber("memory_bytes");
+
+    Assert.equal(extra.feature_id, "test-feature");
+    Assert.equal(extra.engine_id, "default-engine");
+    Assert.equal(extra.model_id, "Mozilla/test");
+    Assert.equal(extra.backend, "test-backend");
+  }
 
   Assert.equal(res.output.dtype, "q8", "The config was enriched by RS");
   ok(
