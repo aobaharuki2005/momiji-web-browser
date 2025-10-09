@@ -2028,21 +2028,6 @@
       }
     ]
   },
-  "1898895": {
-    "label": "eslatam.trygalaxy.com",
-    "bugs": {
-      "1898895": {
-        "issue": "firefox-blocked-completely",
-        "matches": ["*://eslatam.trygalaxy.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["android"],
-        "ua_string": ["Chrome_with_FxQuantum"]
-      }
-    ]
-  },
   "1898904": {
     "label": "indigo.shireburn.com",
     "bugs": {
@@ -4085,23 +4070,6 @@
       }
     ]
   },
-  "1936429": {
-    "label": "diadora.com",
-    "bugs": {
-      "1936429": {
-        "issue": "extra-scrollbars",
-        "matches": ["*://www.diadora.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "content_scripts": {
-          "css": ["bug1936429-diadora.com-fix-doubled-scrollbars.css"]
-        }
-      }
-    ]
-  },
   "1939248": {
     "label": "rosasthai.com",
     "bugs": {
@@ -4625,21 +4593,6 @@
         "content_scripts": {
           "css": ["bug1954144-td.com-scrollbar-fix.css"]
         }
-      }
-    ]
-  },
-  "1954427": {
-    "label": "eolno.nokas.com",
-    "bugs": {
-      "1954427": {
-        "issue": "desktop-layout-not-mobile",
-        "matches": ["*://eolno.nokas.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["android"],
-        "ua_string": ["Chrome_with_FxQuantum"]
       }
     ]
   },
@@ -5240,43 +5193,6 @@
       }
     ]
   },
-  "1973976": {
-    "label": "iweather.gov.vn",
-    "bugs": {
-      "1973976": {
-        "issue": "broken-layout",
-        "matches": ["*://iweather.gov.vn/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "pref_check": { "layout.css.webkit-fill-available.enabled": false },
-        "content_scripts": {
-          "css": ["bug1973976-iweather.gov.vn-fix-narrow-interface.css"]
-        }
-      }
-    ]
-  },
-  "1974686": {
-    "label": "hermes.admin.ch",
-    "bugs": {
-      "1974686": {
-        "issue": "broken-layout",
-        "matches": [
-          "*://www.hermes.admin.ch/de/projektmanagement/szenarien/it-entwicklung/szenariouebersicht.html*"
-        ]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "content_scripts": {
-          "css": ["bug1974686-hermes_admin_ch.css"]
-        }
-      }
-    ]
-  },
   "1976402": {
     "label": "dieseldispatch.com",
     "bugs": {
@@ -5508,21 +5424,6 @@
       "1992402": {
         "issue": "firefox-blocked-completely",
         "matches": ["*://*.ehssrisk.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "ua_string": ["add_Chrome"]
-      }
-    ]
-  },
-  "1993201": {
-    "label": "portal.pilot.ly",
-    "bugs": {
-      "1993201": {
-        "issue": "firefox-blocked-completely",
-        "matches": ["*://portal.pilot.ly/*"]
       }
     },
     "interventions": [
