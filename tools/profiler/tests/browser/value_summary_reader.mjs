@@ -6,8 +6,6 @@ const MAX_ARGUMENTS_TO_RECORD = 4;
 const ZERO_ARGUMENTS_MAGIC = -2;
 const EXPIRED_VALUES_MAGIC = -1;
 
-const EXPECTED_VALUE_SUMMARIES_VERSION = 1;
-
 const JSVAL_TYPE_DOUBLE = 0x00;
 const JSVAL_TYPE_INT32 = 0x01;
 const JSVAL_TYPE_BOOLEAN = 0x02;
@@ -19,10 +17,9 @@ const JSVAL_TYPE_SYMBOL = 0x07;
 const JSVAL_TYPE_BIGINT = 0x09;
 const JSVAL_TYPE_OBJECT = 0x0c;
 
-const GETTER_SETTER_MAGIC = 0x0f;
+const GETTER_SETTER_MAGIC = 0xf0;
 
 const GENERIC_OBJECT_HAS_DENSE_ELEMENTS = 1;
-const SYMBOL_NO_DESCRIPTION = 1;
 
 const NUMBER_IS_OUT_OF_LINE_MAGIC = 0xf;
 const MIN_INLINE_INT = -1;
@@ -152,7 +149,7 @@ class BufferReader {
   }
 }
 
-function readArrayLikeSummary(result, reader, depth, shapes) {
+function readArrayLikeSummary(result, reader, flags, depth, shapes) {
   const shapeId = reader.readUint32();
   const shape = shapes[shapeId];
 
@@ -168,7 +165,7 @@ function readArrayLikeSummary(result, reader, depth, shapes) {
   preview.length = reader.readUint32();
   if (depth < 1) {
     for (let i = 0; i < preview.length && i < MAX_COLLECTION_VALUES; i++) {
-      if (reader.peekUint8() === JSVAL_TYPE_MAGIC) {
+      if (reader.peekUint8() == JSVAL_TYPE_MAGIC) {
         reader.readUint8();
         continue;
       }
@@ -191,7 +188,7 @@ function readFunctionSummary(result, reader) {
   }
 }
 
-function readMapLikeSummary(result, reader, depth, shapes) {
+function readMapLikeSummary(result, reader, flags, depth, shapes) {
   const shapeId = reader.readUint32();
   const shape = shapes[shapeId];
 
@@ -206,7 +203,7 @@ function readMapLikeSummary(result, reader, depth, shapes) {
   preview.entries = [];
   preview.size = reader.readUint32();
   if (depth < 1) {
-    for (let i = 0; i < preview.size && i < MAX_COLLECTION_VALUES; i++) {
+    for (let i = 0; i < preview.length && i < MAX_COLLECTION_VALUES; i++) {
       const keySummary = readValueSummary(reader, depth + 1, shapes);
       const valueSummary = readValueSummary(reader, depth + 1, shapes);
       preview.entries.push([
@@ -253,7 +250,7 @@ function readGenericObjectSummary(result, reader, flags, depth, shapes) {
         configurable: true,
         enumerable: true,
       };
-      if (header === GETTER_SETTER_MAGIC) {
+      if (header == GETTER_SETTER_MAGIC) {
         reader.readUint8();
         desc.get = readValueSummary(reader, depth + 1, shapes);
         desc.set = readValueSummary(reader, depth + 1, shapes);
@@ -270,7 +267,7 @@ function readGenericObjectSummary(result, reader, flags, depth, shapes) {
     const elementsLength = reader.readUint32();
     if (depth < 1) {
       for (let i = 0; i < elementsLength && i < MAX_COLLECTION_VALUES; i++) {
-        if (reader.peekUint8() === JSVAL_TYPE_MAGIC) {
+        if (reader.peekUint8() == JSVAL_TYPE_MAGIC) {
           reader.readUint8();
           continue;
         }
@@ -311,7 +308,7 @@ function readNodeSummary(result, reader, depth, shapes) {
   const subkind = subkindAndIsConnected & ~(1 << 7);
   preview.isConnected = subkindAndIsConnected >> 7;
 
-  if (subkind === EXTERNAL_NODE_SUBKIND_ELEMENT) {
+  if (subkind == EXTERNAL_NODE_SUBKIND_ELEMENT) {
     preview.attributes = {};
     preview.attributesLength = reader.readUint32();
     for (
@@ -323,11 +320,11 @@ function readNodeSummary(result, reader, depth, shapes) {
       const attrVal = reader.readString();
       preview.attributes[attrName] = attrVal;
     }
-  } else if (subkind === EXTERNAL_NODE_SUBKIND_ATTR) {
+  } else if (subkind == EXTERNAL_NODE_SUBKIND_ATTR) {
     preview.value = reader.readString();
-  } else if (subkind === EXTERNAL_NODE_SUBKIND_DOCUMENT) {
+  } else if (subkind == EXTERNAL_NODE_SUBKIND_DOCUMENT) {
     preview.location = reader.readString();
-  } else if (subkind === EXTERNAL_NODE_SUBKIND_DOCUMENT_FRAGMENT) {
+  } else if (subkind == EXTERNAL_NODE_SUBKIND_DOCUMENT_FRAGMENT) {
     preview.childNodesLength = reader.readUint32();
     if (depth < 1) {
       preview.childNodes = [];
@@ -340,8 +337,8 @@ function readNodeSummary(result, reader, depth, shapes) {
       }
     }
   } else if (
-    subkind === EXTERNAL_NODE_SUBKIND_TEXT ||
-    subkind === EXTERNAL_NODE_SUBKIND_COMMENT
+    subkind == EXTERNAL_NODE_SUBKIND_TEXT ||
+    subkind == EXTERNAL_NODE_SUBKIND_COMMENT
   ) {
     preview.textContent = reader.readString();
   }
@@ -434,10 +431,10 @@ function readObjectSummary(reader, flags, depth, shapes) {
       readClassFromShape(result, reader, shapes);
       break;
     case OBJECT_KIND_ARRAY_LIKE:
-      readArrayLikeSummary(result, reader, depth, shapes);
+      readArrayLikeSummary(result, reader, flags, depth, shapes);
       break;
     case OBJECT_KIND_MAP_LIKE:
-      readMapLikeSummary(result, reader, depth, shapes);
+      readMapLikeSummary(result, reader, flags, depth, shapes);
       break;
     case OBJECT_KIND_FUNCTION:
       readFunctionSummary(result, reader);
@@ -495,7 +492,7 @@ function readValueSummary(reader, depth, shapes) {
       return 0;
 
     case JSVAL_TYPE_INT32:
-      if (flags === NUMBER_IS_OUT_OF_LINE_MAGIC) {
+      if (flags == NUMBER_IS_OUT_OF_LINE_MAGIC) {
         return reader.readInt32();
       }
       return flags + MIN_INLINE_INT;
@@ -507,11 +504,6 @@ function readValueSummary(reader, depth, shapes) {
     case JSVAL_TYPE_UNDEFINED:
       return { type: "undefined" };
     case JSVAL_TYPE_SYMBOL:
-      if (flags & SYMBOL_NO_DESCRIPTION) {
-        return {
-          type: "symbol",
-        };
-      }
       return {
         type: "symbol",
         name: reader.readString(),
@@ -532,29 +524,17 @@ function readValueSummary(reader, depth, shapes) {
   }
 }
 
-function bufferVersion(valuesBuffer) {
-  const reader = new BufferReader(valuesBuffer, 0);
-  const version = reader.readUint32();
-  return version;
-}
-
 function getArgumentSummaries(valuesBuffer, shapes, valuesBufferIndex) {
-  if (valuesBufferIndex === ZERO_ARGUMENTS_MAGIC) {
+  if (valuesBufferIndex == ZERO_ARGUMENTS_MAGIC) {
     return [];
   }
-  if (valuesBufferIndex === EXPIRED_VALUES_MAGIC) {
+  if (valuesBufferIndex == EXPIRED_VALUES_MAGIC) {
     return "<missing>";
   }
-  const theirVersion = bufferVersion(valuesBuffer);
-  if (theirVersion != EXPECTED_VALUE_SUMMARIES_VERSION) {
-    throw new Error(
-      `Unexpected tracer arguments buffer format. Expected ${EXPECTED_VALUE_SUMMARIES_VERSION}, received ${theirVersion}.`
-    );
-  }
 
-  const reader = new BufferReader(valuesBuffer, valuesBufferIndex);
-  const argc = reader.readUint32();
-  const args = new Array(argc);
+  let reader = new BufferReader(valuesBuffer, valuesBufferIndex);
+  let argc = reader.readUint32();
+  let args = new Array(argc);
   for (let i = 0; i < argc && i < MAX_ARGUMENTS_TO_RECORD; i++) {
     args[i] = readValueSummary(reader, 0, shapes);
   }

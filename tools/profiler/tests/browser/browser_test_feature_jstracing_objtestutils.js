@@ -9,7 +9,7 @@ const { XPCShellContentUtils } = ChromeUtils.importESModule(
   "resource://testing-common/XPCShellContentUtils.sys.mjs"
 );
 const { ValueSummaryReader } = ChromeUtils.importESModule(
-  "resource://devtools/client/shared/components/reps/reps/value-summary-reader.mjs"
+  "chrome://mochitests/content/browser/tools/profiler/tests/browser/value_summary_reader.mjs"
 );
 
 /**
