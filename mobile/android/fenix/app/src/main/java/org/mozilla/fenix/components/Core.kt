@@ -357,10 +357,7 @@ class Core(
                     repository = DefaultHomepageAsANewTabPreferenceRepository(context.settings()),
                 ),
                 AboutHomeMiddleware(
-                    homepageTitle = context.getString(
-                        R.string.tab_tray_homepage_tab_2,
-                        context.getString(R.string.app_name),
-                    ),
+                    homepageTitle = context.getString(R.string.tab_tray_homepage_tab),
                 ),
                 BrowserVisualCompletenessMiddleware(visualCompletenessQueue),
             )

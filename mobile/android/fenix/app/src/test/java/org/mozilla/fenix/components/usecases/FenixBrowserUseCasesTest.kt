@@ -79,10 +79,7 @@ class FenixBrowserUseCasesTest {
 
         every { searchUseCases.defaultSearch } returns defaultSearchUseCase
 
-        homepageTitle = testContext.getString(
-            R.string.tab_tray_homepage_tab_2,
-            testContext.getString(R.string.app_name),
-        )
+        homepageTitle = testContext.getString(R.string.tab_tray_homepage_tab)
         useCases = FenixBrowserUseCases(
             addNewTabUseCase = addNewTabUseCase,
             loadUrlUseCase = loadUrlUseCase,

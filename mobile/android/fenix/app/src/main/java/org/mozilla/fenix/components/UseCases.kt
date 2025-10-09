@@ -135,10 +135,7 @@ class UseCases(
             addNewTabUseCase = tabsUseCases.addTab,
             loadUrlUseCase = sessionUseCases.loadUrl,
             searchUseCases = searchUseCases,
-            homepageTitle = context.getString(
-                R.string.tab_tray_homepage_tab_2,
-                context.getString(R.string.app_name),
-            ),
+            homepageTitle = context.getString(R.string.tab_tray_homepage_tab),
             profiler = engine.value.profiler,
         )
     }
