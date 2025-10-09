@@ -238,17 +238,20 @@ def _rerun_task(task_id, label):
             "requests": {
                 "type": "array",
                 "items": {
-                    "tasks": {
-                        "type": "array",
-                        "description": "An array of task labels",
-                        "items": {"type": "string"},
-                    },
-                    "times": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 100,
-                        "title": "Times",
-                        "description": "How many times to run each task.",
+                    "type": "object",
+                    "properties": {
+                        "tasks": {
+                            "type": "array",
+                            "description": "An array of task labels",
+                            "items": {"type": "string"},
+                        },
+                        "times": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "title": "Times",
+                            "description": "How many times to run each task.",
+                        },
                     },
                     "additionalProperties": False,
                 },
