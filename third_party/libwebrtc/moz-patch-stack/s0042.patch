@@ -159,7 +159,7 @@ index d2304e87db..bbdb38864e 100644
    // Within this list, the sender-source SSRC pair is unique and per-pair the
    // ReportBlockData represents the latest Report Block that was received for
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index b23850b7f5..50bdf6b311 100644
+index 3d546ae5ea..687ff8cf1c 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -1182,9 +1182,10 @@ std::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
@@ -176,10 +176,10 @@ index b23850b7f5..50bdf6b311 100644
  
  std::optional<RtpRtcpInterface::SenderReportStats>
 diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index 7864dfb709..3cf94ec4b2 100644
+index 7e358c3c13..05498bd640 100644
 --- a/video/rtp_video_stream_receiver2.h
 +++ b/video/rtp_video_stream_receiver2.h
-@@ -232,7 +232,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
+@@ -233,7 +233,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
    // stats at all, and even on the most recent libwebrtc code there does not
    // seem to be any support for these stats right now. So, we hack this in.
    void RemoteRTCPSenderInfo(uint32_t* packet_count, uint32_t* octet_count,
@@ -190,10 +190,10 @@ index 7864dfb709..3cf94ec4b2 100644
   private:
    // Implements RtpVideoFrameReceiver.
 diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index 30917c0349..ec9be0a5a2 100644
+index b9c6931cff..8291132456 100644
 --- a/video/video_receive_stream2.cc
 +++ b/video/video_receive_stream2.cc
-@@ -632,7 +632,8 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
+@@ -631,7 +631,8 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
    // seem to be any support for these stats right now. So, we hack this in.
    rtp_video_stream_receiver_.RemoteRTCPSenderInfo(
        &stats.rtcp_sender_packets_sent, &stats.rtcp_sender_octets_sent,

@@ -15,10 +15,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9c487a574d218cc1c
  1 file changed, 12 insertions(+)
 
 diff --git a/audio/audio_receive_stream.h b/audio/audio_receive_stream.h
-index bc248120ef..fd00dfb3ed 100644
+index 0d78482e0e..d7ebd8c9d1 100644
 --- a/audio/audio_receive_stream.h
 +++ b/audio/audio_receive_stream.h
-@@ -31,7 +31,11 @@
+@@ -32,7 +32,11 @@
  #include "api/scoped_refptr.h"
  #include "api/sequence_checker.h"
  #include "api/transport/rtp/rtp_source.h"
@@ -30,7 +30,7 @@ index bc248120ef..fd00dfb3ed 100644
  #include "call/audio_receive_stream.h"
  #include "call/audio_state.h"
  #include "call/syncable.h"
-@@ -43,6 +47,14 @@ class PacketRouter;
+@@ -44,6 +48,14 @@ class PacketRouter;
  class RtpStreamReceiverControllerInterface;
  class RtpStreamReceiverInterface;
  
