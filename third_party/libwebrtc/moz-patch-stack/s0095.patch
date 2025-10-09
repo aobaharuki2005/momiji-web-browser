@@ -9,7 +9,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6baf67202c67b27c6
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/api/test/network_emulation/BUILD.gn b/api/test/network_emulation/BUILD.gn
-index de58887b07..665af721e3 100644
+index 681b289c6a..094c962f67 100644
 --- a/api/test/network_emulation/BUILD.gn
 +++ b/api/test/network_emulation/BUILD.gn
 @@ -6,10 +6,10 @@
