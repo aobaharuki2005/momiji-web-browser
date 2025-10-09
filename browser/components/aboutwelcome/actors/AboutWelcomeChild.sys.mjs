@@ -201,9 +201,11 @@ export class AboutWelcomeChild extends JSWindowActorChild {
     );
   }
 
-  AWFindBackupsInWellKnownLocations() {
-    // This return value will be used in https://bugzilla.mozilla.org/show_bug.cgi?id=1992157
-    return this.sendQueryAndCloneForContent("AWPage:BACKUP_FIND_WELL_KNOWN");
+  AWFindBackupsInWellKnownLocations(data) {
+    return this.sendQueryAndCloneForContent(
+      "AWPage:BACKUP_FIND_WELL_KNOWN",
+      data
+    );
   }
 
   /**

@@ -29,6 +29,10 @@ add_task(
       .stub(bs, "resolveExistingArchiveDestFolderPath")
       .callsFake(async _configured => BACKUP_DIR);
 
+    // getBackupFileInfo should return without throwing to simulate
+    // what happens when a valid backup file's validity is checked
+    sandbox.stub(bs, "getBackupFileInfo").callsFake(async _filePath => {});
+
     // Sanity: the directory exists and is empty
     Assert.ok(await IOUtils.exists(BACKUP_DIR), "Backup directory exists");
     Assert.equal(
@@ -38,7 +42,7 @@ add_task(
     );
 
     // 1) Single valid file -> findBackupsInWellKnownLocations should find it
-    const ONE = "FirefoxBackup_one.html";
+    const ONE = "FirefoxBackup_one_20241201-1200.html";
     await touch(ONE);
 
     let result = await bs.findBackupsInWellKnownLocations();
@@ -55,13 +59,13 @@ add_task(
     );
 
     // 2) Add a second matching file -> well-known search should refuse to pick (validateFile=false)
-    const TWO = "FirefoxBackup_two.html";
+    const TWO = "FirefoxBackup_two_20241202-1300.html";
     await touch(TWO);
 
     let result2 = await bs.findBackupsInWellKnownLocations();
     Assert.ok(
       !result2.found,
-      "Found should be false when multiple candidates exist"
+      "Found should be false when multiple candidates exist and validateFile=false"
     );
     Assert.equal(
       result2.multipleBackupsFound,
@@ -80,6 +84,26 @@ add_task(
       multipleFiles: true, // allow choosing even if we see more than one
     });
     Assert.ok(!multipleBackupsFound, "Should not report multiple when allowed");
+
+    // 4) With validateFile=true and multipleFiles=true, should select newest file,
+    // but still report multipleBackupsFound=true
+    let result3 = await bs.findBackupsInWellKnownLocations({
+      validateFile: true,
+      multipleFiles: true,
+    });
+    Assert.ok(
+      result3.found,
+      "Found should be true when validateFile=true and multiple files exist"
+    );
+    Assert.equal(
+      result3.multipleBackupsFound,
+      true,
+      "Should signal multipleBackupsFound when validateFile=true and multipleFiles=true and multiple files exist"
+    );
+    Assert.ok(
+      result3.backupFileToRestore && result3.backupFileToRestore.endsWith(TWO),
+      "Should select the newest file when validateFile=true"
+    );
 
     // Cleanup
     sandbox.restore();

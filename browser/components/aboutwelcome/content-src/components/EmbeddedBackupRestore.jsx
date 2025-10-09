@@ -12,7 +12,10 @@ export const EmbeddedBackupRestore = ({ handleAction, skipButton }) => {
 
   useEffect(() => {
     const loadRestore = async () => {
-      await window.AWFindBackupsInWellKnownLocations?.();
+      await window.AWFindBackupsInWellKnownLocations?.({
+        validateFile: true,
+        multipleFiles: true,
+      });
     };
     loadRestore();
     // Clear the pref used to target the restore screen so that users will not

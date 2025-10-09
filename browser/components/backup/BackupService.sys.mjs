@@ -3827,6 +3827,25 @@ export class BackupService extends EventTarget {
         return { multipleBackupsFound: true };
       }
 
+      // Sort the files by the timestamp at the end of the filename,
+      // so the newest valid file is selected as the file to restore
+      if (multipleFiles && maybeBackupFiles.length > 1 && validateFile) {
+        maybeBackupFiles.sort((a, b) => {
+          let nameA = PathUtils.filename(a);
+          let nameB = PathUtils.filename(b);
+          const match = /_(\d{8}-\d{4})\.html$/;
+          let timestampA = nameA.match(match)?.[1];
+          let timestampB = nameB.match(match)?.[1];
+
+          // If either file doesn't match the expected pattern, maintain the original order
+          if (!timestampA || !timestampB) {
+            return 0;
+          }
+
+          return timestampB.localeCompare(timestampA);
+        });
+      }
+
       for (const file of maybeBackupFiles) {
         if (validateFile) {
           try {
@@ -3852,6 +3871,13 @@ export class BackupService extends EventTarget {
 
         this.#_state.backupFileToRestore = file;
         this.stateUpdate();
+
+        // In the case that multiple files were found,
+        // but we also validated files to set the newest backup file as the file to restore,
+        // we still want to return that multiple backups were found.
+        if (multipleFiles && maybeBackupFiles.length > 1 && validateFile) {
+          return { multipleBackupsFound: true };
+        }
 
         // TODO: support multiple valid backups for different profiles.
         // Currently, we break out of the loop and select the first profile that works.
@@ -3879,17 +3905,27 @@ export class BackupService extends EventTarget {
    * - Clears any existing `lastBackupFileName` and `backupFileToRestore`
    *   in the internal state prior to searching.
    *
+   * @param {object} [options] - Configuration options.
+   * @param {boolean} [options.validateFile=false] - Whether to validate each backup file
+   *   before selecting it.
+   * @param {boolean} [options.multipleFiles=false] - Whether to allow selecting a file
+   *   when multiple files are found
+   *
    * @returns {Promise<object>} A result object with the following properties:
    * - {boolean} found — Whether a backup file was found.
    * - {string|null} backupFileToRestore — Path or identifier of the backup file (if found).
    * - {boolean} multipleBackupsFound — Currently always `false`, reserved for future use.
    */
-  async findBackupsInWellKnownLocations() {
+  async findBackupsInWellKnownLocations({
+    validateFile = false,
+    multipleFiles = false,
+  } = {}) {
     this.#_state.lastBackupFileName = "";
     this.#_state.backupFileToRestore = null;
 
     let { multipleBackupsFound } = await this.findIfABackupFileExists({
-      validateFile: false,
+      validateFile,
+      multipleFiles,
     });
 
     // if a valid backup file was found, backupFileToRestore should be set

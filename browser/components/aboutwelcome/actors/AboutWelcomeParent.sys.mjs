@@ -298,7 +298,7 @@ export class AboutWelcomeParent extends JSWindowActorParent {
         } catch {
           bs = lazy.BackupService.init();
         }
-        return bs.findBackupsInWellKnownLocations();
+        return bs.findBackupsInWellKnownLocations(data);
       }
       default:
         lazy.log.debug(`Unexpected event ${type} was not handled.`);
