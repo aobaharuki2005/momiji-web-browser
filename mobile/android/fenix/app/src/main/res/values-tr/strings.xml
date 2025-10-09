@@ -84,6 +84,11 @@
   -->
   <string name="felt_privacy_info_card_subtitle_2">%1$s, tüm gizli sekmelerinizi kapattığınızda çerezlerinizi, geçmişinizi ve site verilerinizi temizler. %2$s</string>
   <!--
+    Description of private browsing mode displayed to users on the homepage when they enable private mode.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="felt_privacy_info_card_subtitle_3">%1$s, tüm gizli sekmeleri kapattığınızda çerezlerinizi, geçmişinizi ve site verilerinizi temizler.</string>
+  <!--
     Clickable portion of the explanation for private browsing that links the user to our
     about privacy page.
     This string is used in felt_privacy_info_card_subtitle as the text for the link.
@@ -1482,6 +1487,8 @@
   <string name="tab_tray_multiselect_menu_content_description">Seçili sekmeler menüsü</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab" tools:ignore="UnusedResources" moz:removedIn="145">Giriş sayfası</string>
+  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
+  <string name="tab_tray_homepage_tab_2">%s giriş sayfası</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Sekmeyi koleksiyondan çıkar</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1724,6 +1731,10 @@
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Kapat</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">Ne oldu? Ne olması gerekiyordu?</string>
+  <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
+  <string name="webcompat_reporter_etp_checkbox_text">İzlenme koruması tarafından engellenen adresleri gönder</string>
+  <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
+  <string name="webcompat_reporter_etp_checkbox_description">Gelişmiş izlenme koruması bazı sitelerin düzgün çalışması için gereken takip kodlarını ve betikleri engelleyebilir.</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
