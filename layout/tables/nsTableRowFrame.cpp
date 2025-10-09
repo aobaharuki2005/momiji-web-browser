@@ -380,11 +380,6 @@ void nsTableRowFrame::DidResize(ForceAlignTopForTableCell aForceAlignTop) {
     // to this height, it will get a special bsize reflow.
   }
   FinishAndStoreOverflow(&desiredSize);
-  if (HasView()) {
-    nsContainerFrame::SyncFrameViewAfterReflow(PresContext(), this, GetView(),
-                                               desiredSize.InkOverflow(),
-                                               ReflowChildFlags::Default);
-  }
   // Let our base class do the usual work
 }
 

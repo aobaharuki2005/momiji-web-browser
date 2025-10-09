@@ -144,9 +144,6 @@ FRAME_STATE_BIT(Generic, 11, NS_FRAME_TOO_DEEP_IN_FRAME_TREE)
 // PresShell::FrameNeedsReflow.  Pass the right arguments instead.
 FRAME_STATE_BIT(Generic, 12, NS_FRAME_HAS_DIRTY_CHILDREN)
 
-// If this bit is set, the frame has an associated view
-FRAME_STATE_BIT(Generic, 13, NS_FRAME_HAS_VIEW)
-
 // If this bit is set, the frame was created from anonymous content.
 FRAME_STATE_BIT(Generic, 14, NS_FRAME_INDEPENDENT_SELECTION)
 

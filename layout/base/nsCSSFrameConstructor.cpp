@@ -1344,8 +1344,7 @@ static void MoveChildrenTo(nsIFrame* aOldParent, nsContainerFrame* aNewParent,
                            nsFrameList& aFrameList) {
 #ifdef DEBUG
   bool sameGrandParent = aOldParent->GetParent() == aNewParent->GetParent();
-
-  if (aNewParent->HasView() || aOldParent->HasView() || !sameGrandParent) {
+  if (aNewParent->GetView() || aOldParent->GetView() || !sameGrandParent) {
     // Move the frames into the new view
     nsContainerFrame::ReparentFrameViewList(aFrameList, aOldParent, aNewParent);
   }

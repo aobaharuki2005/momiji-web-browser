@@ -10885,9 +10885,9 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   // because for root frames (where they could be different, since root frames
   // are allowed to have overflow) the root view bounds need to match the
   // viewport bounds; the view manager "window dimensions" code depends on it.
-  if (target->HasView()) {
-    nsContainerFrame::SyncFrameViewAfterReflow(
-        mPresContext, target, target->GetView(), boundsRelativeToTarget);
+  if (auto* view = target->GetView()) {
+    nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, target, view,
+                                               boundsRelativeToTarget);
   }
 
   target->DidReflow(mPresContext, nullptr);

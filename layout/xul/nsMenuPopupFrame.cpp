@@ -2349,12 +2349,12 @@ int8_t nsMenuPopupFrame::GetAlignmentPosition() const {
  * as much as possible. Until we get rid of views finally...
  */
 void nsMenuPopupFrame::CreatePopupView() {
-  if (HasView()) {
+  if (mView) {
     return;
   }
 
   nsViewManager* viewManager = PresContext()->GetPresShell()->GetViewManager();
-  NS_ASSERTION(nullptr != viewManager, "null view manager");
+  NS_ASSERTION(viewManager, "null view manager");
 
   // Create a view
   nsView* parentView = viewManager->GetRootView();

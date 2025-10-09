@@ -478,11 +478,6 @@ void nsTableCellFrame::AlignChildWithinCell(
     // Invalidate new overflow rect.
     inner->InvalidateFrameSubtree();
   }
-  if (HasView()) {
-    nsContainerFrame::SyncFrameViewAfterReflow(PresContext(), this, GetView(),
-                                               reflowOutput.InkOverflow(),
-                                               ReflowChildFlags::Default);
-  }
 }
 
 bool nsTableCellFrame::ComputeCustomOverflow(OverflowAreas& aOverflowAreas) {

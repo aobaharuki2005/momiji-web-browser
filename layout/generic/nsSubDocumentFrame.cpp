@@ -213,7 +213,7 @@ void nsSubDocumentFrame::ShowViewer() {
 }
 
 void nsSubDocumentFrame::CreateView() {
-  MOZ_ASSERT(!HasView());
+  MOZ_ASSERT(!GetView());
 
   nsView* parentView = GetParent()->GetClosestView();
   MOZ_ASSERT(parentView, "no parent with view");

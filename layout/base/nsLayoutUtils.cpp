@@ -1602,7 +1602,7 @@ nsIFrame* nsLayoutUtils::GetPopupFrameForPoint(
       continue;
     }
     if (aFlags & GetPopupFrameForPointFlags::OnlyReturnFramesWithWidgets) {
-      if (!popup->HasView() || !popup->GetView()->HasWidget()) {
+      if (!popup->GetView() || !popup->GetView()->HasWidget()) {
         continue;
       }
     }
@@ -6729,11 +6729,6 @@ widget::TransparencyMode nsLayoutUtils::GetFrameTransparency(
 
 /* static */
 bool nsLayoutUtils::IsPopup(const nsIFrame* aFrame) {
-  // Optimization: the frame can't possibly be a popup if it has no view.
-  if (!aFrame->HasView()) {
-    NS_ASSERTION(!aFrame->IsMenuPopupFrame(), "popup frame must have a view");
-    return false;
-  }
   return aFrame->IsMenuPopupFrame();
 }
 

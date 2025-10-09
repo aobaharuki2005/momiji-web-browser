@@ -225,8 +225,8 @@ void nsContainerFrame::SafelyDestroyFrameListProp(
 
 void nsContainerFrame::Destroy(DestroyContext& aContext) {
   // Prevent event dispatch during destruction.
-  if (HasView()) {
-    GetView()->SetFrame(nullptr);
+  if (auto* view = GetView()) {
+    view->SetFrame(nullptr);
   }
 
   DestroyAbsoluteFrames(aContext);
@@ -565,12 +565,18 @@ nsIFrame::FrameSearchResult nsContainerFrame::PeekOffsetCharacter(
  * but before |Reflow|.
  */
 void nsContainerFrame::PositionFrameView(nsIFrame* aKidFrame) {
+  if (MOZ_LIKELY(!aKidFrame->MayHaveView())) {
+    return;
+  }
   nsIFrame* parentFrame = aKidFrame->GetParent();
-  if (!aKidFrame->HasView() || !parentFrame) {
+  if (!parentFrame) {
+    return;
+  }
+  auto* view = aKidFrame->GetView();
+  if (!view) {
     return;
   }
 
-  nsView* view = aKidFrame->GetView();
   nsViewManager* vm = view->GetViewManager();
   nsPoint pt;
   nsView* ancestorView = parentFrame->GetClosestView(&pt);
@@ -598,7 +604,7 @@ void nsContainerFrame::ReparentFrameView(nsIFrame* aChildFrame,
              "same old and new parent frame");
 
   // See if either the old parent frame or the new parent frame have a view
-  while (!aOldParentFrame->HasView() && !aNewParentFrame->HasView()) {
+  while (!aOldParentFrame->GetView() && !aNewParentFrame->GetView()) {
     // Walk up both the old parent frame and the new parent frame nodes
     // stopping when we either find a common parent or views for one
     // or both of the frames.
@@ -656,7 +662,7 @@ void nsContainerFrame::ReparentFrameViewList(const nsFrameList& aChildFrameList,
              "same old and new parent frame");
 
   // See if either the old parent frame or the new parent frame have a view
-  while (!aOldParentFrame->HasView() && !aNewParentFrame->HasView()) {
+  while (!aOldParentFrame->GetView() && !aNewParentFrame->GetView()) {
     // Walk up both the old parent frame and the new parent frame nodes
     // stopping when we either find a common parent or views for one
     // or both of the frames.
@@ -983,11 +989,7 @@ void nsContainerFrame::PositionChildViews(nsIFrame* aFrame) {
     for (nsIFrame* childFrame : list) {
       // Position the frame's view (if it has one) otherwise recursively
       // process its children
-      if (childFrame->HasView()) {
-        PositionFrameView(childFrame);
-      } else {
-        PositionChildViews(childFrame);
-      }
+      PlaceFrameView(childFrame);
     }
   }
 }
@@ -1030,21 +1032,16 @@ void nsContainerFrame::FinishReflowChild(
     aKidFrame->SetSize(aWM, convertedSize);
   }
 
-  if (aKidFrame->HasView()) {
-    nsView* view = aKidFrame->GetView();
+  if (nsView* view = aKidFrame->GetView()) {
     // Make sure the frame's view is properly sized and positioned and has
     // things like opacity correct
     SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
                              aDesiredSize.InkOverflow(), aFlags);
-  }
-
-  nsPoint newOrigin = aKidFrame->GetPosition();
-  if (!(aFlags & ReflowChildFlags::NoMoveView) && curOrigin != newOrigin) {
-    if (!aKidFrame->HasView()) {
-      // If the frame has moved, then we need to make sure any child views are
-      // correctly positioned
-      PositionChildViews(aKidFrame);
-    }
+  } else if (!(aFlags & ReflowChildFlags::NoMoveView) &&
+             curOrigin != aKidFrame->GetPosition()) {
+    // If the frame has moved, then we need to make sure any child views are
+    // correctly positioned
+    PositionChildViews(aKidFrame);
   }
 
   aKidFrame->DidReflow(aPresContext, aReflowInput);
@@ -1076,20 +1073,15 @@ void nsContainerFrame::FinishReflowChild(nsIFrame* aKidFrame,
     aKidFrame->SetSize(size);
   }
 
-  if (aKidFrame->HasView()) {
-    nsView* view = aKidFrame->GetView();
+  if (nsView* view = aKidFrame->GetView()) {
     // Make sure the frame's view is properly sized and positioned and has
     // things like opacity correct
     SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
                              aDesiredSize.InkOverflow(), aFlags);
-  }
-
-  if (!(aFlags & ReflowChildFlags::NoMoveView) && curOrigin != pos) {
-    if (!aKidFrame->HasView()) {
-      // If the frame has moved, then we need to make sure any child views are
-      // correctly positioned
-      PositionChildViews(aKidFrame);
-    }
+  } else if (!(aFlags & ReflowChildFlags::NoMoveView) && curOrigin != pos) {
+    // If the frame has moved, then we need to make sure any child views are
+    // correctly positioned
+    PositionChildViews(aKidFrame);
   }
 
   aKidFrame->DidReflow(aPresContext, aReflowInput);

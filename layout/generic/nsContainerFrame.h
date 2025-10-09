@@ -448,7 +448,7 @@ class nsContainerFrame : public nsSplittableFrame {
                                 const nsDisplayListSet& aLists) override;
 
   static void PlaceFrameView(nsIFrame* aFrame) {
-    if (aFrame->HasView()) {
+    if (aFrame->GetView()) {
       nsContainerFrame::PositionFrameView(aFrame);
     } else {
       nsContainerFrame::PositionChildViews(aFrame);

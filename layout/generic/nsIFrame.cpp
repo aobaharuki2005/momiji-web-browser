@@ -1519,12 +1519,11 @@ void nsIFrame::AssertNewStyleIsSane(ComputedStyle& aNewStyle) {
 
 void nsIFrame::ReparentFrameViewTo(nsViewManager* aViewManager,
                                    nsView* aNewParentView) {
-  if (HasView()) {
+  if (auto* view = GetView()) {
     if (IsMenuPopupFrame()) {
       // This view must be parented by the root view, don't reparent it.
       return;
     }
-    nsView* view = GetView();
     aViewManager->RemoveChild(view);
 
     // The view will remember the Z-order and other attributes that have been
@@ -7792,21 +7791,11 @@ nsIFrame* nsIFrame::GetTailContinuation() {
 // Associated view object
 void nsIFrame::SetView(nsView* aView) {
   if (aView) {
+    MOZ_ASSERT(MayHaveView(), "Only specific frame types can have an nsView");
     aView->SetFrame(this);
-
-#ifdef DEBUG
-    LayoutFrameType frameType = Type();
-    NS_ASSERTION(frameType == LayoutFrameType::SubDocument ||
-                     frameType == LayoutFrameType::Viewport ||
-                     frameType == LayoutFrameType::MenuPopup,
-                 "Only specific frame types can have an nsView");
-#endif
 
     // Store the view on the frame.
     SetViewInternal(aView);
-
-    // Set the frame state bit that says the frame has a view
-    AddStateBits(NS_FRAME_HAS_VIEW);
 
     // Let all of the ancestors know they have a descendant with a view.
     for (nsIFrame* f = GetParent();
@@ -7816,7 +7805,6 @@ void nsIFrame::SetView(nsView* aView) {
     }
   } else {
     MOZ_ASSERT_UNREACHABLE("Destroying a view while the frame is alive?");
-    RemoveStateBits(NS_FRAME_HAS_VIEW);
     SetViewInternal(nullptr);
   }
 }
@@ -7947,18 +7935,21 @@ nsRect nsIFrame::GetScreenRectInAppUnits() const {
 // Returns the offset from this frame to the closest geometric parent that
 // has a view. Also returns the containing view or null in case of error
 void nsIFrame::GetOffsetFromView(nsPoint& aOffset, nsView** aView) const {
-  MOZ_ASSERT(nullptr != aView, "null OUT parameter pointer");
+  MOZ_ASSERT(aView, "null OUT parameter pointer");
   nsIFrame* frame = const_cast<nsIFrame*>(this);
 
   *aView = nullptr;
   aOffset.MoveTo(0, 0);
-  do {
+  while (true) {
     aOffset += frame->GetPosition();
     frame = frame->GetParent();
-  } while (frame && !frame->HasView());
-
-  if (frame) {
-    *aView = frame->GetView();
+    if (!frame) {
+      break;
+    }
+    if (auto* view = frame->GetView()) {
+      *aView = view;
+      break;
+    }
   }
 }
 
@@ -8823,9 +8814,9 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
   const bool onlyDeterministic =
       aFlags.contains(ListFlag::OnlyListDeterministicInfo);
   aTo += ListTag(onlyDeterministic);
-  if (HasView()) {
+  if (auto* view = GetView()) {
     aTo += " [view";
-    ListPtr(aTo, aFlags, GetView());
+    ListPtr(aTo, aFlags, view);
     aTo += "]";
   }
   if (!onlyDeterministic) {
@@ -9433,7 +9424,7 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
           point.x = aPos->mDesiredCaretPos.x;
         }
 
-        if (!resultFrame->HasView()) {
+        if (!resultFrame->GetView()) {
           nsView* view;
           nsPoint offset;
           resultFrame->GetOffsetFromView(offset, &view);
@@ -10543,11 +10534,11 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
 nsView* nsIFrame::GetClosestView(nsPoint* aOffset) const {
   nsPoint offset(0, 0);
   for (const nsIFrame* f = this; f; f = f->GetParent()) {
-    if (f->HasView()) {
+    if (auto* view = f->GetView()) {
       if (aOffset) {
         *aOffset = offset;
       }
-      return f->GetView();
+      return view;
     }
     offset += f->GetPosition();
   }
@@ -11766,30 +11757,19 @@ void nsIFrame::SetParent(nsContainerFrame* aParent) {
   mParent = aParent;
   MOZ_ASSERT(!mParent || PresShell() == mParent->PresShell());
 
-  if (HasAnyStateBits(NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW)) {
-    for (nsIFrame* f = aParent;
-         f && !f->HasAnyStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
-         f = f->GetParent()) {
-      f->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
-    }
+  nsFrameState flagsToPropagateSameDoc =
+      GetStateBits() &
+      (NS_FRAME_HAS_CHILD_WITH_VIEW | NS_FRAME_CONTAINS_RELATIVE_BSIZE |
+       NS_FRAME_DESCENDANT_INTRINSIC_ISIZE_DEPENDS_ON_BSIZE);
+  if (GetView()) {
+    flagsToPropagateSameDoc |= NS_FRAME_HAS_CHILD_WITH_VIEW;
   }
-
-  if (HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
+  if (flagsToPropagateSameDoc) {
     for (nsIFrame* f = aParent; f; f = f->GetParent()) {
-      if (f->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
+      if (f->HasAllStateBits(flagsToPropagateSameDoc)) {
         break;
       }
-      f->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
-    }
-  }
-
-  if (HasAnyStateBits(NS_FRAME_DESCENDANT_INTRINSIC_ISIZE_DEPENDS_ON_BSIZE)) {
-    for (nsIFrame* f = aParent; f; f = f->GetParent()) {
-      if (f->HasAnyStateBits(
-              NS_FRAME_DESCENDANT_INTRINSIC_ISIZE_DEPENDS_ON_BSIZE)) {
-        break;
-      }
-      f->AddStateBits(NS_FRAME_DESCENDANT_INTRINSIC_ISIZE_DEPENDS_ON_BSIZE);
+      f->AddStateBits(flagsToPropagateSameDoc);
     }
   }
 
