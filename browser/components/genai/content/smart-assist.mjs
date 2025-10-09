@@ -179,6 +179,10 @@ export class SmartAssist extends MozLitElement {
   }
 
   render() {
+    const iconSrc = this.showLog
+      ? "chrome://global/skin/icons/arrow-down.svg"
+      : "chrome://global/skin/icons/arrow-up.svg";
+
     return html`
       <link
         rel="stylesheet"
@@ -220,30 +224,31 @@ export class SmartAssist extends MozLitElement {
                     <span class="log-title">Log</span>
                     <moz-button
                       type="ghost"
-                      iconSrc="chrome://global/skin/icons/arrow-down.svg"
+                      iconSrc=${iconSrc}
                       @click=${() => {
                         this.showLog = !this.showLog;
                       }}
                     >
                     </moz-button>
                   </div>
-                  <div class="log-entries">
-                    ${this.logState.map(
-                      data =>
-                        html`<div class="log-entry">
-                          <div><b>Message</b> : ${data.content}</div>
-                          <div><b>Date</b> : ${data.date}</div>
-                          <div>
-                            <b>Tool Response</b> :
-                            ${JSON.stringify(data.result)}
-                          </div>
-                        </div>`
-                    )}
-                  </div>
+                  ${this.showLog
+                    ? html` <div class="log-entries">
+                        ${this.logState.map(
+                          data =>
+                            html`<div class="log-entry">
+                              <div><b>Message</b> : ${data.content}</div>
+                              <div><b>Date</b> : ${data.date}</div>
+                              <div>
+                                <b>Tool Response</b> :
+                                ${JSON.stringify(data.result)}
+                              </div>
+                            </div>`
+                        )}
+                      </div>`
+                    : html``}
                 </div>`
               : html``
           }
-           
           </div>
 
           <!-- User Input -->
