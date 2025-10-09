@@ -115,7 +115,7 @@ void CookieValidation::ValidateInternal() {
   // This part checks if the caleers have set the expiry value to max 400 days.
   if (!mCookieData.isSession()) {
     int64_t maxageCap = StaticPrefs::network_cookie_maxageCap();
-    int64_t currentTimeInMSec = PR_Now() / PR_USEC_PER_MSEC;
+    int64_t currentTimeInMSec = mCookieData.creationTime() / PR_USEC_PER_MSEC;
     int64_t expiry = mCookieData.expiry();
     if (maxageCap && expiry > currentTimeInMSec + maxageCap * 1000) {
       mResult = eRejectedAttributeExpiryOversize;
