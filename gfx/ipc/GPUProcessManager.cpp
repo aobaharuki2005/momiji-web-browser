@@ -1555,23 +1555,15 @@ void GPUProcessManager::MapLayerTreeId(LayersId aLayersId,
 
 void GPUProcessManager::UnmapLayerTreeId(LayersId aLayersId,
                                          base::ProcessId aOwningId) {
-  // Only call EnsureGPUReady() if we have already launched the process, to
-  // avoid launching a new process unnecesarily. (eg if we are backgrounded)
-  nsresult rv = mProcess ? EnsureGPUReady() : NS_ERROR_NOT_AVAILABLE;
-  if (NS_WARN_IF(rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN)) {
-    return;
-  }
-
-  if (NS_SUCCEEDED(rv)) {
+  // If the GPU process is down, but not disabled, there is no need to relaunch
+  // here because the layers ID is already invalid.
+  if (mGPUChild) {
     mGPUChild->SendRemoveLayerTreeIdMapping(
         LayerTreeIdMapping(aLayersId, aOwningId));
-  } else if (!mProcess) {
+  } else if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
     CompositorBridgeParent::DeallocateLayerTreeId(aLayersId);
   }
 
-  // Must do this *after* the call to EnsureGPUReady, so that if the
-  // process is launched as a result then it is initialized with this
-  // LayersId, meaning it can be successfully unmapped.
   LayerTreeOwnerTracker::Get()->Unmap(aLayersId, aOwningId);
 }
 
