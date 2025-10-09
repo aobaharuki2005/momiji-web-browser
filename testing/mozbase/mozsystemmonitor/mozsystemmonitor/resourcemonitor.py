@@ -722,6 +722,7 @@ class SystemResourceMonitor:
                   - "reason": crash reason (optional)
                   - "test": test name (optional)
                   - "minidump_path": path to minidump file (optional)
+                  - "stack": structured stack (array of frame dicts) (optional)
                   - "time": timestamp in milliseconds
         """
         if not SystemResourceMonitor.instance:
@@ -748,6 +749,10 @@ class SystemResourceMonitor:
             # -> "7a7f1343-4dc3-224c-638b-5806ab642301"
             minidump_name = os.path.splitext(os.path.basename(minidump_path))[0]
             marker_data["minidump"] = minidump_name
+
+        # Add stack if available (structured format: array of frame dicts)
+        if stack := data.get("crashing_thread_stack"):
+            marker_data["stack"] = stack
 
         SystemResourceMonitor.record_event("CRASH", timestamp, marker_data)
 
@@ -1392,6 +1397,7 @@ class SystemResourceMonitor:
                         "endTime": [],
                         "phase": [],
                         "category": [],
+                        "stack": [],
                         "length": 0,
                     },
                     "stackTable": {
@@ -1459,6 +1465,162 @@ class SystemResourceMonitor:
                 stringArray.append(string)
                 return len(stringArray) - 1
 
+        def get_stack_index(stack_frames):
+            """Get a stack index from a structured stack (array of frame dicts).
+
+            Each frame dict contains:
+            - function: function name (optional)
+            - module: module/library name (optional)
+            - file: source file path (optional)
+            - line: line number (optional)
+            - offset: hex offset for unsymbolicated frames (optional)
+            - inlined: boolean indicating if this is an inlined frame (optional)
+
+            Returns the index of the innermost stack frame, or None if stack_frames is empty.
+            """
+            if not stack_frames:
+                return None
+
+            stackTable = firstThread["stackTable"]
+            frameTable = firstThread["frameTable"]
+            funcTable = firstThread["funcTable"]
+            resourceTable = firstThread["resourceTable"]
+            nativeSymbols = firstThread["nativeSymbols"]
+
+            # Build stack from outermost to innermost
+            stack_index = None
+            inline_depth = 0
+
+            for frame_data in reversed(stack_frames):
+                # Handle inline depth tracking
+                if frame_data.get("inlined"):
+                    inline_depth += 1
+                else:
+                    inline_depth = 0
+
+                # Get frame components
+                module_name = frame_data.get("module")
+                file_name = frame_data.get("file")
+                line_num = frame_data.get("line")
+
+                # Get offsets - different handling for native vs JIT frames
+                module_offset = frame_data.get("module_offset")
+                function_offset = frame_data.get("function_offset")
+                raw_offset = frame_data.get("offset")  # For JIT frames without module
+
+                func_name = frame_data.get("function")
+                if not func_name and (offset := module_offset or raw_offset):
+                    func_name = hex(offset)
+
+                # Get or create resource for the module
+                resource_index = -1
+                if module_name:
+                    # Find existing resource
+                    for i, name_idx in enumerate(resourceTable["name"]):
+                        if firstThread["stringArray"][name_idx] == module_name:
+                            resource_index = i
+                            break
+                    else:
+                        # Create new resource if not found
+                        resource_index = resourceTable["length"]
+                        resourceTable["lib"].append(None)
+                        resourceTable["name"].append(get_string_index(module_name))
+                        resourceTable["host"].append(None)
+                        # Possible resourceTypes:
+                        # 0 = unknown, 1 = library, 2 = addon, 3 = webhost, 4 = otherhost, 5 = url
+                        # https://github.com/firefox-devtools/profiler/blob/32cb6672c7ed47311e9d84963023d51f5147042b/src/profile-logic/data-structures.ts#L322
+                        resourceTable["type"].append(1)
+                        resourceTable["length"] += 1
+
+                # Create native symbol for unsymbolicated frames
+                # nativeSymbols.address = module_offset - function_offset
+                native_symbol_index = None
+                if (
+                    module_offset is not None
+                    and function_offset is not None
+                    and module_name
+                ):
+                    symbol_address = module_offset - function_offset
+
+                    # Check if this native symbol already exists
+                    for i in range(nativeSymbols["length"]):
+                        if (
+                            nativeSymbols["libIndex"][i] == resource_index
+                            and nativeSymbols["address"][i] == symbol_address
+                        ):
+                            native_symbol_index = i
+                            break
+                    else:
+                        # Create new native symbol if not found
+                        native_symbol_index = nativeSymbols["length"]
+                        nativeSymbols["libIndex"].append(resource_index)
+                        nativeSymbols["address"].append(symbol_address)
+                        nativeSymbols["name"].append(get_string_index(func_name))
+                        nativeSymbols["functionSize"].append(None)
+                        nativeSymbols["length"] += 1
+
+                # Get or create func index
+                func_name_index = get_string_index(func_name)
+                file_name_index = get_string_index(file_name) if file_name else None
+
+                for i, name_idx in enumerate(funcTable["name"]):
+                    if (
+                        name_idx == func_name_index
+                        and funcTable["resource"][i] == resource_index
+                        and funcTable["fileName"][i] == file_name_index
+                        and funcTable["lineNumber"][i] == line_num
+                    ):
+                        func_index = i
+                        break
+                else:
+                    func_index = funcTable["length"]
+                    funcTable["isJS"].append(False)
+                    funcTable["relevantForJS"].append(False)
+                    funcTable["name"].append(func_name_index)
+                    funcTable["resource"].append(resource_index)
+                    funcTable["fileName"].append(file_name_index)
+                    funcTable["lineNumber"].append(line_num)
+                    funcTable["columnNumber"].append(None)
+                    funcTable["length"] += 1
+
+                # Get or create frame index
+                # frameTable.address = module_offset for native frames, or offset for JIT frames
+                frame_address = module_offset or raw_offset or -1
+                for i, func_idx in enumerate(frameTable["func"]):
+                    if (
+                        func_idx == func_index
+                        and frameTable["line"][i] == line_num
+                        and frameTable["inlineDepth"][i] == inline_depth
+                        and frameTable["nativeSymbol"][i] == native_symbol_index
+                        and frameTable["address"][i] == frame_address
+                    ):
+                        frame_index = i
+                        break
+                else:
+                    frame_index = frameTable["length"]
+                    frameTable["address"].append(frame_address)
+                    frameTable["inlineDepth"].append(inline_depth)
+                    frameTable["category"].append(OTHER_CATEGORY)
+                    frameTable["subcategory"].append(0)
+                    frameTable["func"].append(func_index)
+                    frameTable["nativeSymbol"].append(native_symbol_index)
+                    frameTable["innerWindowID"].append(0)
+                    frameTable["implementation"].append(None)
+                    frameTable["line"].append(line_num)
+                    frameTable["column"].append(None)
+                    frameTable["length"] += 1
+
+                # Create stack entry
+                new_stack_index = stackTable["length"]
+                stackTable["frame"].append(frame_index)
+                stackTable["prefix"].append(stack_index)
+                stackTable["category"].append(0)
+                stackTable["subcategory"].append(0)
+                stackTable["length"] += 1
+                stack_index = new_stack_index
+
+            return stack_index
+
         def add_marker(
             name_index, start, end, data, category_index=OTHER_CATEGORY, precision=None
         ):
@@ -1479,7 +1641,23 @@ class SystemResourceMonitor:
                 markers["phase"].append(1)
             markers["category"].append(category_index)
             markers["name"].append(name_index)
+
+            # Extract and process stack if present (structured format: array of frame dicts)
+            stack_index = None
+            if isinstance(data, dict) and "stack" in data:
+                stack = data["stack"]
+                if isinstance(stack, list):
+                    stack_index = get_stack_index(stack)
+                    del data["stack"]
+                    # Add cause object to marker data for processed profile format
+                    if stack_index is not None:
+                        data["cause"] = {
+                            "time": markers["startTime"][-1],
+                            "stack": stack_index,
+                        }
+
             markers["data"].append(data)
+            markers["stack"].append(stack_index)
             markers["length"] = markers["length"] + 1
 
         def format_percent(value):

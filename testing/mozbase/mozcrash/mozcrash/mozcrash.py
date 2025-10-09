@@ -44,6 +44,7 @@ StackInfo = namedtuple(
         "pid",
         "reason",
         "java_stack",
+        "crashing_thread_stack",
     ],
 )
 
@@ -378,6 +379,7 @@ class CrashInfo:
         annotations = None
         pid = None
         process_type = "unknown"
+        crashing_thread_stack = None
         if (
             self.stackwalk_binary
             and os.path.exists(self.stackwalk_binary)
@@ -430,6 +432,7 @@ class CrashInfo:
                 processed_crash = self._process_json_output(json_output)
                 signature = processed_crash.get("signature")
                 pid = processed_crash.get("pid")
+                crashing_thread_stack = processed_crash.get("crashing_thread_stack")
 
         elif not self.stackwalk_binary:
             errors.append(
@@ -474,11 +477,13 @@ class CrashInfo:
             pid,
             reason,
             java_stack,
+            crashing_thread_stack,
         )
 
     def _process_json_output(self, json_path):
         signature = None
         pid = None
+        crashing_thread_stack = None
 
         try:
             json_file = open(json_path)
@@ -487,6 +492,7 @@ class CrashInfo:
 
             signature = self._generate_signature(crash_json)
             pid = crash_json.get("pid")
+            crashing_thread_stack = self._extract_crashing_thread_stack(crash_json)
 
         except Exception as e:
             traceback.print_exc()
@@ -495,6 +501,7 @@ class CrashInfo:
         return {
             "pid": pid,
             "signature": signature,
+            "crashing_thread_stack": crashing_thread_stack,
         }
 
     def _generate_signature(self, crash_json):
@@ -536,6 +543,65 @@ class CrashInfo:
                 signature = pmatch.group(1)
 
         return signature
+
+    def _extract_crashing_thread_stack(self, crash_json):
+        """Extract the crashing thread stack as a structured array of frames.
+
+        Returns a list of frame dictionaries with keys:
+        - function: function name (optional)
+        - module: module/library name (optional)
+        - file: source file path (optional)
+        - line: line number (optional)
+        - offset: hex offset for unsymbolicated frames (optional)
+        - inlined: boolean indicating if this is an inlined frame
+        """
+        if not (
+            (crashing_thread := crash_json.get("crashing_thread"))
+            and (frames := crashing_thread.get("frames"))
+        ):
+            return None
+
+        structured_stack = []
+
+        def process_frame(frame, parent_frame=None):
+            """Process a single frame (inline or main) and append to structured_stack.
+
+            Args:
+                frame: Frame data dictionary
+                parent_frame: Parent frame dict (for inline frames to inherit module)
+            """
+            result = {}
+
+            if func := frame.get("function"):
+                result["function"] = func
+            if file_str := frame.get("file"):
+                result["file"] = file_str
+            if line := frame.get("line"):
+                result["line"] = line
+
+            # Inline frames inherit module from parent, main frames have their own
+            if parent_frame:
+                result["inlined"] = True
+                if module := parent_frame.get("module"):
+                    result["module"] = module
+            elif module := frame.get("module"):
+                result["module"] = module
+                if module_offset := frame.get("module_offset"):
+                    result["module_offset"] = int(module_offset, 16)
+                if function_offset := frame.get("function_offset"):
+                    result["function_offset"] = int(function_offset, 16)
+            elif offset := frame.get("offset"):
+                # JIT code or unknown frame - use raw address
+                result["offset"] = int(offset, 16)
+
+            structured_stack.append(result)
+
+        for frame in frames:
+            for inline in frame.get("inlines") or []:
+                process_frame(inline, parent_frame=frame)
+            process_frame(frame)
+
+        return structured_stack if structured_stack else None
 
     def _parse_extra_file(self, path):
         with open(path) as file:

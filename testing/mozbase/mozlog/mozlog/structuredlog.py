@@ -584,6 +584,7 @@ class StructuredLogger:
         Unicode("java_stack", default=None, optional=True),
         Unicode("process_type", default=None, optional=True),
         List(Unicode, "stackwalk_errors", default=None),
+        List(Any, "crashing_thread_stack", default=None, optional=True),
         Unicode("subsuite", default=None, optional=True),
         Boolean("quiet", default=False, optional=True),
     )
