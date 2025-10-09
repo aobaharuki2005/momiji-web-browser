@@ -131,6 +131,60 @@ add_task(async function test_button_opens_discopane_when_no_extension() {
   );
 });
 
+add_task(async function test_button_opens_extlist_when_all_exts_pinned() {
+  const extensions = createExtensions([
+    {
+      name: "Pinned extension button outside extensions panel",
+      browser_action: { default_area: "navbar" },
+    },
+  ]);
+  await Promise.all(extensions.map(extension => extension.startup()));
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Set this to another value to make sure not to "accidentally" land on the right page
+      ["extensions.ui.lastCategory", "addons://list/theme"],
+      // showPane=true is the default, but to make sure that we get the
+      // expected behavior for the right reason, explicitly set it to true.
+      ["extensions.getAddons.showPane", true],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:robots" },
+    async () => {
+      const { button } = gUnifiedExtensions;
+      ok(button, "expected button");
+
+      // Primary click should open about:addons.
+      const tabPromise = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        "about:addons",
+        true
+      );
+
+      button.click();
+
+      const tab = await tabPromise;
+      is(
+        gBrowser.currentURI.spec,
+        "about:addons",
+        "expected about:addons to be open"
+      );
+      is(
+        gBrowser.selectedBrowser.contentWindow.gViewController.currentViewId,
+        "addons://list/extension",
+        "expected about:addons to show the extension list"
+      );
+      BrowserTestUtils.removeTab(tab);
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
+
+  await Promise.all(extensions.map(extension => extension.unload()));
+});
+
 add_task(
   async function test_button_opens_extlist_when_no_extension_and_pane_disabled() {
     // If extensions.getAddons.showPane is set to false, there is no "Recommended" tab,

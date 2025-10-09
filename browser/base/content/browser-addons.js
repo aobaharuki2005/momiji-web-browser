@@ -2660,15 +2660,9 @@ var gUnifiedExtensions = {
           !this.isPrivateWindowMissingExtensionsWithoutPBMAccess() &&
           !(await this.isAtLeastOneExtensionDisabled())
         ) {
-          let viewID;
-          if (
-            Services.prefs.getBoolPref("extensions.getAddons.showPane", true)
-          ) {
-            viewID = "addons://discover/";
-          } else {
-            viewID = "addons://list/extension";
-          }
-          await BrowserAddonUI.openAddonsMgr(viewID);
+          // This may happen if the user has pinned all of their extensions.
+          // In that case, the extensions panel is empty.
+          await BrowserAddonUI.openAddonsMgr("addons://list/extension");
           return;
         }
       }
