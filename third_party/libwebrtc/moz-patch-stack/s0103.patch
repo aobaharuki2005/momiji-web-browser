@@ -440,7 +440,7 @@ index a992a032c5..6f2dc22e00 100644
  import("../webrtc.gni")
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index 8d53cdfa0a..181623546d 100644
+index 8bb0e958ee..9da415eeda 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -9,8 +9,8 @@
