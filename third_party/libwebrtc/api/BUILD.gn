@@ -1033,8 +1033,8 @@ rtc_source_set("refcountedbase") {
   ]
 }
 
-if (!build_with_mozilla) {
 rtc_library("ice_transport_factory") {
+if (!build_with_mozilla) {
   visibility = [ "*" ]
   sources = [
     "ice_transport_factory.cc",
