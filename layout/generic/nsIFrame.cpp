@@ -1517,32 +1517,6 @@ void nsIFrame::AssertNewStyleIsSane(ComputedStyle& aNewStyle) {
 }
 #endif
 
-void nsIFrame::ReparentFrameViewTo(nsViewManager* aViewManager,
-                                   nsView* aNewParentView) {
-  if (auto* view = GetView()) {
-    if (IsMenuPopupFrame()) {
-      // This view must be parented by the root view, don't reparent it.
-      return;
-    }
-    aViewManager->RemoveChild(view);
-
-    // The view will remember the Z-order and other attributes that have been
-    // set on it.
-    nsView* insertBefore =
-        nsLayoutUtils::FindSiblingViewFor(aNewParentView, this);
-    aViewManager->InsertChild(aNewParentView, view, insertBefore,
-                              insertBefore != nullptr);
-  } else if (HasAnyStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW)) {
-    for (const auto& childList : ChildLists()) {
-      // Iterate the child frames, and check each child frame to see if it has
-      // a view
-      for (nsIFrame* child : childList.mList) {
-        child->ReparentFrameViewTo(aViewManager, aNewParentView);
-      }
-    }
-  }
-}
-
 void nsIFrame::SyncFrameViewProperties(nsView* aView) {
   if (!aView) {
     aView = GetView();
