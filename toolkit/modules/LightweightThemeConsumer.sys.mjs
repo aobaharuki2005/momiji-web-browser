@@ -295,10 +295,9 @@ LightweightThemeConsumer.prototype = {
       ) {
         return false;
       }
-      // When applying the dark theme for a PBM window we need to skip calling
-      // _determineToolbarAndContentTheme, because it applies the color scheme
-      // globally for all windows. Skipping this method also means we don't
-      // switch the content theme to dark.
+      // When applying the dark theme for a PBM window we need to skip setting
+      // the global toolbar / content theme prefs, because those apply to all
+      // windows.
       updateGlobalThemeData = false;
       return true;
     })();
@@ -309,29 +308,6 @@ LightweightThemeConsumer.prototype = {
     }
     let builtinThemeConfig = lazy.BuiltInThemeConfig.get(theme.id);
     let hasTheme = theme.id != DEFAULT_THEME_ID && !builtinThemeConfig?.inApp;
-    let colorSchemeOverride = (() => {
-      if (useDarkTheme || themeData.darkTheme) {
-        return useDarkTheme ? "dark" : "light";
-      }
-      if (builtinThemeConfig && theme.color_scheme) {
-        // TODO(emilio): Seems we could do this for all themes, (not just
-        // built-ins, and taking care of the auto/system values) and it'd
-        // be the right thing to do for per-window themes (but then we'd need
-        // to fix up the content theme selection too).
-        return theme.color_scheme;
-      }
-      // If not, reset the color scheme override field. This is required to reset
-      // the color scheme on theme switch.
-      return "none";
-    })();
-
-    // NOTE(emilio): The !parent check shouldn't be needed ideally, but
-    // apparently Thunderbird uses this code on child frames?
-    // See bug 1752815.
-    if (!this._win.browsingContext.parent) {
-      this._win.browsingContext.prefersColorSchemeOverride =
-        colorSchemeOverride;
-    }
     this._doc.forceNonNativeTheme = !!builtinThemeConfig?.nonNative;
     let root = this._doc.documentElement;
     root.toggleAttribute("lwtheme-image", !!(hasTheme && theme.headerURL));
@@ -344,16 +320,73 @@ LightweightThemeConsumer.prototype = {
       "--lwt-additional-images",
       theme.additionalBackgrounds
     );
-    let _processedColors = _setProperties(root, hasTheme, theme);
 
-    _setDarkModeAttributes(this._doc, root, theme, _processedColors, hasTheme);
+    let processedColors = _setProperties(root, hasTheme, theme);
+    _setDarkModeAttributes(this._doc, root, theme, processedColors, hasTheme);
 
+    let toolbarColorScheme = (() => {
+      if (useDarkTheme || themeData.darkTheme) {
+        return useDarkTheme ? "dark" : "light";
+      }
+      switch (theme.color_scheme) {
+        case "light":
+        case "dark":
+          return theme.color_scheme;
+        case "system":
+          return null;
+        default:
+          break;
+      }
+      if (!hasTheme) {
+        return null;
+      }
+      return _isToolbarDark(this._doc, theme, processedColors, true)
+        ? "dark"
+        : "light";
+    })();
+
+    let contentColorScheme = (() => {
+      if (lazy.BROWSER_THEME_UNIFIED_COLOR_SCHEME) {
+        return toolbarColorScheme;
+      }
+      let themeOverride = theme.content_color_scheme || theme.color_scheme;
+      switch (themeOverride) {
+        case "light":
+        case "dark":
+          return themeOverride;
+        case "system":
+          return null;
+        default:
+          break;
+      }
+      return null;
+    })();
+
+    // NOTE(emilio): The !parent check shouldn't be needed ideally, but
+    // apparently Thunderbird uses this code on child frames?
+    // See bug 1752815.
+    if (!this._win.browsingContext.parent) {
+      this._win.browsingContext.prefersColorSchemeOverride =
+        toolbarColorScheme || "none";
+    }
     if (updateGlobalThemeData) {
-      _determineToolbarAndContentTheme(
-        this._doc,
-        hasTheme ? theme : null,
-        _processedColors,
-        colorSchemeOverride
+      function colorSchemeToThemePref(scheme) {
+        switch (scheme) {
+          case "dark":
+            return 0;
+          case "light":
+            return 1;
+          default:
+            return 2; // system
+        }
+      }
+      Services.prefs.setIntPref(
+        "browser.theme.toolbar-theme",
+        colorSchemeToThemePref(toolbarColorScheme)
+      );
+      Services.prefs.setIntPref(
+        "browser.theme.content-theme",
+        colorSchemeToThemePref(contentColorScheme)
       );
     }
     root.toggleAttribute("lwtheme", hasTheme);
@@ -503,71 +536,6 @@ function _isToolbarDark(doc, theme, colors, hasTheme) {
   return _hasDarkFrame(doc, theme, colors, hasTheme);
 }
 
-function _determineToolbarAndContentTheme(
-  aDoc,
-  aTheme,
-  colors,
-  aColorSchemeOverride
-) {
-  const kDark = 0;
-  const kLight = 1;
-  const kSystem = 2;
-
-  function colorSchemeValue(aColorScheme) {
-    if (!aColorScheme) {
-      return null;
-    }
-    switch (aColorScheme) {
-      case "light":
-        return kLight;
-      case "dark":
-        return kDark;
-      case "system":
-        return kSystem;
-      case "auto":
-      default:
-        break;
-    }
-    return null;
-  }
-
-  let toolbarTheme = (function () {
-    if (aColorSchemeOverride != "none") {
-      return colorSchemeValue(aColorSchemeOverride);
-    }
-    if (!aTheme) {
-      return kSystem;
-    }
-    let themeValue = colorSchemeValue(aTheme.color_scheme);
-    if (themeValue !== null) {
-      return themeValue;
-    }
-    return _isToolbarDark(aDoc, aTheme, colors, true) ? kDark : kLight;
-  })();
-
-  let contentTheme = (function () {
-    if (lazy.BROWSER_THEME_UNIFIED_COLOR_SCHEME) {
-      return toolbarTheme;
-    }
-    if (aColorSchemeOverride != "none") {
-      return colorSchemeValue(aColorSchemeOverride);
-    }
-    if (!aTheme) {
-      return kSystem;
-    }
-    let themeValue = colorSchemeValue(
-      aTheme.content_color_scheme || aTheme.color_scheme
-    );
-    if (themeValue !== null) {
-      return themeValue;
-    }
-    return kSystem;
-  })();
-
-  Services.prefs.setIntPref("browser.theme.toolbar-theme", toolbarTheme);
-  Services.prefs.setIntPref("browser.theme.content-theme", contentTheme);
-}
-
 function _hasDarkFrame(doc, theme, colors, hasTheme) {
   if (!hasTheme) {
     return false;
@@ -594,7 +562,7 @@ function _hasDarkFrame(doc, theme, colors, hasTheme) {
  * @param {Document} doc
  * @param {Element} root
  * @param {object} colors
- *   The `_processedColors` object from the object created for our theme.
+ *   The `processedColors` object from the object created for our theme.
  * @param {boolean} hasTheme
  */
 function _setDarkModeAttributes(doc, root, theme, colors, hasTheme) {
@@ -694,12 +662,12 @@ function _setProperties(root, hasTheme, themeData) {
   let propertyOverrides = new Map();
   let doc = root.ownerDocument;
 
-  // Copy the theme into _processedColors. We'll replace values with processed
+  // Copy the theme into processedColors. We'll replace values with processed
   // colors if necessary. We copy because some colors (such as those used in
   // content) are not processed here, but are referenced in places that check
-  // _processedColors. Copying means _processedColors will contain irrelevant
+  // processedColors. Copying means processedColors will contain irrelevant
   // properties like `id`. There aren't too many, so that's OK.
-  let _processedColors = { ...themeData };
+  let processedColors = { ...themeData };
   for (let map of [toolkitVariableMap, lazy.ThemeVariableMap]) {
     for (let [cssVarName, definition] of map) {
       const {
@@ -726,12 +694,12 @@ function _setProperties(root, hasTheme, themeData) {
       }
 
       // Add processed color to themeData.
-      _processedColors[lwtProperty] = val;
+      processedColors[lwtProperty] = val;
 
       _setProperty(root, hasTheme, cssVarName, val);
     }
   }
-  return _processedColors;
+  return processedColors;
 }
 
 const kInvalidColor = { r: 0, g: 0, b: 0, a: 1 };

@@ -107,7 +107,7 @@ add_task(async function dark_theme_presence_overrides_heuristics() {
   await testTheme(
     "darkTheme presence overrides heuristics",
     systemScheme,
-    systemScheme,
+    kSystem,
     {
       theme: {
         colors: {
