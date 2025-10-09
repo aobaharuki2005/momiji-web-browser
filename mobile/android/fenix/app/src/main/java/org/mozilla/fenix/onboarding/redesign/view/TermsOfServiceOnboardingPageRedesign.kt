@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,7 +51,10 @@ fun TermsOfServiceOnboardingPageRedesign(
     pageState: OnboardingPageState,
     eventHandler: OnboardingTermsOfServiceEventHandler,
 ) {
-    Card {
+    Card(
+        modifier = Modifier.padding(bottom = 60.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+    ) {
         Column(
             modifier = Modifier
                 .background(FirefoxTheme.colors.layer1)
