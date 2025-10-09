@@ -145,6 +145,11 @@ class WakeLockTopic {
   explicit WakeLockTopic(const nsAString& aTopic) {
     CopyUTF16toUTF8(aTopic, mTopic);
     WAKE_LOCK_LOG("WakeLockTopic::WakeLockTopic() created %s", mTopic.get());
+    if (mTopic.Equals("video-playing")) {
+      mNiceTopic = "Playing video";
+    } else if (mTopic.Equals("audio-playing")) {
+      mNiceTopic = "Playing audio";
+    }
     if (sWakeLockType == Initial) {
       InitializeWakeLockType();
     }
@@ -203,8 +208,11 @@ class WakeLockTopic {
 #endif
   ~WakeLockTopic() = default;
 
-  // Why is screensaver inhibited
+  // Firefox internal inhibition state
   nsCString mTopic;
+
+  // Human readable topics we put to DBus interface
+  nsCString mNiceTopic;
 
   enum WakeLockState {
     Inhibited,
@@ -456,7 +464,7 @@ void WakeLockTopic::InhibitFreeDesktopPortal() {
             GVariantBuilder b;
             g_variant_builder_init(&b, G_VARIANT_TYPE_VARDICT);
             g_variant_builder_add(&b, "{sv}", "reason",
-                                  g_variant_new_string(self->mTopic.get()));
+                                  g_variant_new_string(self->mNiceTopic.get()));
 
             // From
             // https://flatpak.github.io/xdg-desktop-portal/docs/#gdbus-org.freedesktop.portal.Inhibit
@@ -508,7 +516,7 @@ void WakeLockTopic::InhibitFreeDesktopScreensaver() {
                          FREEDESKTOP_SCREENSAVER_OBJECT,
                          FREEDESKTOP_SCREENSAVER_INTERFACE, "Inhibit",
                          dont_AddRef(g_variant_ref_sink(g_variant_new(
-                             "(ss)", g_get_prgname(), mTopic.get()))));
+                             "(ss)", g_get_prgname(), mNiceTopic.get()))));
 }
 
 void WakeLockTopic::InhibitFreeDesktopPower() {
@@ -516,7 +524,7 @@ void WakeLockTopic::InhibitFreeDesktopPower() {
   DBusInhibitScreensaver(FREEDESKTOP_POWER_TARGET, FREEDESKTOP_POWER_OBJECT,
                          FREEDESKTOP_POWER_INTERFACE, "Inhibit",
                          dont_AddRef(g_variant_ref_sink(g_variant_new(
-                             "(ss)", g_get_prgname(), mTopic.get()))));
+                             "(ss)", g_get_prgname(), mNiceTopic.get()))));
 }
 
 void WakeLockTopic::InhibitGNOME() {
@@ -526,8 +534,8 @@ void WakeLockTopic::InhibitGNOME() {
   DBusInhibitScreensaver(
       SESSION_MANAGER_TARGET, SESSION_MANAGER_OBJECT, SESSION_MANAGER_INTERFACE,
       "Inhibit",
-      dont_AddRef(g_variant_ref_sink(
-          g_variant_new("(susu)", g_get_prgname(), xid, mTopic.get(), flags))));
+      dont_AddRef(g_variant_ref_sink(g_variant_new(
+          "(susu)", g_get_prgname(), xid, mNiceTopic.get(), flags))));
 }
 
 void WakeLockTopic::UninhibitFreeDesktopPortal() {
