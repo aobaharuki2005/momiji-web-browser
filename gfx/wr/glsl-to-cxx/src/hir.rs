@@ -3956,6 +3956,14 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         vec![Type::new(Sampler2D), Type::new(IVec2), Type::new(Int)],
         RunClass::Scalar,
     );
+    declare_function_ext(
+        state,
+        "swgl_validateGradientFromStops",
+        None,
+        Type::new(Int),
+        vec![Type::new(Sampler2D), Type::new(IVec2), Type::new(Int)],
+        RunClass::Scalar,
+    );
     declare_function(
         state,
         "swgl_commitLinearGradientRGBA8",
