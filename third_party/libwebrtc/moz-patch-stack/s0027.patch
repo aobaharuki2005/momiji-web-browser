@@ -116,7 +116,7 @@ index 1b112b34c0..18cf5d67f7 100644
    # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
    # Chromium fix resolves the problem.
 diff --git a/BUILD.gn b/BUILD.gn
-index 1565aeb592..cfbba26987 100644
+index a57c4e9497..de4c4b174c 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -33,7 +33,7 @@ if (is_android) {
@@ -128,7 +128,7 @@ index 1565aeb592..cfbba26987 100644
    # This target should (transitively) cause everything to be built; if you run
    # 'ninja default' and then 'ninja all', the second build should do no work.
    group("default") {
-@@ -157,6 +157,10 @@ config("common_inherited_config") {
+@@ -159,6 +159,10 @@ config("common_inherited_config") {
      defines += [ "WEBRTC_ENABLE_OBJC_SYMBOL_EXPORT" ]
    }
  
@@ -139,7 +139,7 @@ index 1565aeb592..cfbba26987 100644
    if (!rtc_builtin_ssl_root_certificates) {
      defines += [ "WEBRTC_EXCLUDE_BUILT_IN_SSL_ROOT_CERTS" ]
    }
-@@ -495,9 +499,11 @@ config("common_config") {
+@@ -497,9 +501,11 @@ config("common_config") {
    }
  }
  
@@ -151,7 +151,7 @@ index 1565aeb592..cfbba26987 100644
  
  if (!rtc_build_ssl) {
    config("external_ssl_library") {
-@@ -560,6 +566,33 @@ if (!build_with_chromium) {
+@@ -563,6 +569,33 @@ if (!build_with_chromium) {
        "sdk",
        "video",
      ]
@@ -185,7 +185,7 @@ index 1565aeb592..cfbba26987 100644
  
      if (rtc_include_builtin_audio_codecs) {
        deps += [
-@@ -572,6 +605,16 @@ if (!build_with_chromium) {
+@@ -575,6 +608,16 @@ if (!build_with_chromium) {
        deps += [
          "api/video:video_frame",
          "api/video:video_rtp_headers",
@@ -1013,7 +1013,7 @@ index 058b86bce4..2f7b5b5333 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 212939da78..db39bc5d26 100644
+index e2481ce813..5d98f2c0be 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -326,6 +326,7 @@ rtc_library("sample_counter") {
@@ -1176,7 +1176,7 @@ index 212939da78..db39bc5d26 100644
  
  rtc_library("ssl_adapter") {
    visibility = [ "*" ]
-@@ -2359,7 +2383,7 @@ if (rtc_include_tests) {
+@@ -2328,7 +2352,7 @@ if (rtc_include_tests) {
    }
  }
  
@@ -1280,7 +1280,7 @@ index c1acd56382..7abdf541f8 100644
      "../api:sequence_checker",
      "../api/adaptation:resource_adaptation_api",
 diff --git a/webrtc.gni b/webrtc.gni
-index 519e0849d2..aabdb21780 100644
+index 209cf7656d..1c85298081 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -35,6 +35,11 @@ if (is_mac) {

@@ -1383,7 +1383,7 @@ index d5ce6105a3..8bfd24de2b 100644
    const bool enable_svc_for_simulcast_;
    std::optional<SimulcastToSvcConverter> simulcast_to_svc_converter_;
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index cffc631ba1..212939da78 100644
+index cfbdae4c23..e2481ce813 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -450,6 +450,12 @@ rtc_library("logging") {
@@ -1501,7 +1501,7 @@ index b7933130bd..428fc9615d 100644
    vcm_ = nullptr;
  }
 diff --git a/webrtc.gni b/webrtc.gni
-index 30ca2afdd3..519e0849d2 100644
+index 112233b7d3..209cf7656d 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -123,7 +123,7 @@ declare_args() {
