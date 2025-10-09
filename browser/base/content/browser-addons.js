@@ -2233,20 +2233,17 @@ var gUnifiedExtensions = {
 
   /**
    * Gets a list of active WebExtensionPolicy instances of type "extension",
-   * sorted alphabetically based on add-on's names. Optionally, filter out
-   * extensions with browser action.
+   * excluding hidden extensions, available to this window.
    *
-   * @param {bool} all When set to true (the default), return the list of all
-   *                   active policies, including the ones that have a
-   *                   browser action. Otherwise, extensions with browser
-   *                   action are filtered out.
    * @returns {Array<WebExtensionPolicy>} An array of active policies.
    */
-  getActivePolicies(all = true) {
+  getActivePolicies() {
     let policies = WebExtensionPolicy.getActiveExtensions();
     policies = policies.filter(policy => {
       let { extension } = policy;
-      if (!policy.active || extension?.type !== "extension") {
+      if (extension?.type !== "extension") {
+        // extension can only be null due to bugs (bug 1642012).
+        // Exclude non-extension types such as themes, dictionaries, etc.
         return false;
       }
 
@@ -2257,10 +2254,9 @@ var gUnifiedExtensions = {
         return false;
       }
 
-      return all || !extension.hasBrowserActionUI;
+      return true;
     });
 
-    policies.sort((a, b) => a.name.localeCompare(b.name));
     return policies;
   },
 
@@ -2273,16 +2269,14 @@ var gUnifiedExtensions = {
    */
   hasExtensionsInPanel() {
     const policies = this.getActivePolicies();
-
-    return !!policies
-      .map(policy => this.browserActionFor(policy)?.widget)
-      .filter(widget => {
-        return (
-          !widget ||
-          widget?.areaType !== CustomizableUI.TYPE_TOOLBAR ||
-          widget?.forWindow(window).overflowed
-        );
-      }).length;
+    return policies.some(policy => {
+      let widget = this.browserActionFor(policy)?.widget;
+      return (
+        !widget ||
+        widget.areaType !== CustomizableUI.TYPE_TOOLBAR ||
+        widget.forWindow(window).overflowed
+      );
+    });
   },
 
   handleEvent(event) {
@@ -2343,11 +2337,18 @@ var gUnifiedExtensions = {
   },
 
   onPanelViewShowing(panelview) {
-    const list = panelview.querySelector(".unified-extensions-list");
+    const policies = this.getActivePolicies();
+
     // Only add extensions that do not have a browser action in this list since
     // the extensions with browser action have CUI widgets and will appear in
     // the panel (or toolbar) via the CUI mechanism.
-    for (const policy of this.getActivePolicies(/* all */ false)) {
+    const policiesForList = policies.filter(
+      p => !p.extension.hasBrowserActionUI
+    );
+    policiesForList.sort((a, b) => a.name.localeCompare(b.name));
+
+    const list = panelview.querySelector(".unified-extensions-list");
+    for (const policy of policiesForList) {
       const item = document.createElement("unified-extensions-item");
       item.setExtension(policy.extension);
       list.appendChild(item);
