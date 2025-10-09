@@ -359,9 +359,6 @@
     <!-- Launcher Icon colors -->
     <color name="ic_launcher_background">#FDFDFD</color>
 
-    <!-- Splash screen colors -->
-    <color name="splash_screen_color">@color/photonOrange50</color>
-
     <!-- Private Browsing Mode Persistent Notification -->
     <color name="pbm_notification_color">@color/photonViolet70</color>
 

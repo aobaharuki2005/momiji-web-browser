@@ -10,7 +10,7 @@
 
     <style name="SplashScreenThemeBase" parent="Theme.SplashScreen">
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen</item>
-        <item name="windowSplashScreenBackground">@color/splash_screen_color</item>
+        <item name="windowSplashScreenBackground">@color/fx_mobile_layer_color_1</item>
         <item name="postSplashScreenTheme">@style/NormalTheme</item>
     </style>
 
