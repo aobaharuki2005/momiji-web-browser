@@ -116,7 +116,7 @@ index 1b112b34c0..18cf5d67f7 100644
    # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
    # Chromium fix resolves the problem.
 diff --git a/BUILD.gn b/BUILD.gn
-index a57c4e9497..de4c4b174c 100644
+index ef4a7d286f..b064aac57b 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -33,7 +33,7 @@ if (is_android) {
@@ -1013,7 +1013,7 @@ index 39aa39a41c..b26e30e8bb 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 97f4bb2289..e9240a6ba0 100644
+index a0bf02c014..4a24d15362 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -326,6 +326,7 @@ rtc_library("sample_counter") {
@@ -1128,7 +1128,7 @@ index 97f4bb2289..e9240a6ba0 100644
  
  if (rtc_include_tests) {
    rtc_library("async_packet_socket_unittest") {
-@@ -1417,6 +1435,7 @@ rtc_library("data_rate_limiter") {
+@@ -1429,6 +1447,7 @@ rtc_library("data_rate_limiter") {
  }
  
  rtc_library("unique_id_generator") {
@@ -1136,7 +1136,7 @@ index 97f4bb2289..e9240a6ba0 100644
    sources = [
      "unique_id_generator.cc",
      "unique_id_generator.h",
-@@ -1434,6 +1453,7 @@ rtc_library("unique_id_generator") {
+@@ -1446,6 +1465,7 @@ rtc_library("unique_id_generator") {
      "//third_party/abseil-cpp/absl/strings:string_view",
    ]
  }
@@ -1144,7 +1144,7 @@ index 97f4bb2289..e9240a6ba0 100644
  
  rtc_library("crc32") {
    sources = [
-@@ -1465,6 +1485,7 @@ rtc_library("stream") {
+@@ -1477,6 +1497,7 @@ rtc_library("stream") {
  }
  
  rtc_library("rtc_certificate_generator") {
@@ -1152,7 +1152,7 @@ index 97f4bb2289..e9240a6ba0 100644
    visibility = [ "*" ]
    sources = [
      "rtc_certificate_generator.cc",
-@@ -1479,6 +1500,7 @@ rtc_library("rtc_certificate_generator") {
+@@ -1491,6 +1512,7 @@ rtc_library("rtc_certificate_generator") {
      "//third_party/abseil-cpp/absl/functional:any_invocable",
    ]
  }
@@ -1160,7 +1160,7 @@ index 97f4bb2289..e9240a6ba0 100644
  
  rtc_source_set("ssl_header") {
    visibility = [ "*" ]
-@@ -1535,6 +1557,7 @@ rtc_library("crypto_random") {
+@@ -1547,6 +1569,7 @@ rtc_library("crypto_random") {
  }
  
  rtc_library("ssl") {
@@ -1168,7 +1168,7 @@ index 97f4bb2289..e9240a6ba0 100644
    visibility = [ "*" ]
    sources = [
      "openssl_key_pair.cc",
-@@ -1607,6 +1630,7 @@ rtc_library("ssl") {
+@@ -1619,6 +1642,7 @@ rtc_library("ssl") {
      deps += [ ":win32" ]
    }
  }
@@ -1176,7 +1176,7 @@ index 97f4bb2289..e9240a6ba0 100644
  
  rtc_library("ssl_adapter") {
    visibility = [ "*" ]
-@@ -2329,7 +2353,7 @@ if (rtc_include_tests) {
+@@ -2341,7 +2365,7 @@ if (rtc_include_tests) {
    }
  }
  
