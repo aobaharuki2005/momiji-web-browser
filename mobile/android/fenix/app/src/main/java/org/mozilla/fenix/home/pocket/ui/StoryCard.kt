@@ -55,6 +55,7 @@ internal fun StoryCard(
         },
         modifier = modifier,
         shape = cardShape,
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(containerColor = FirefoxTheme.colors.layer2),
     ) {
         Column(
