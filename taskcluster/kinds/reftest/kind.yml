@@ -111,9 +111,12 @@ tasks:
         description: "Crashtest run"
         schedules-component: crashtest
         treeherder-symbol: R(C)
+        test-manifest-loader:
+            by-test-platform:
+                linux.*64-tsan(-qr)?/opt: default
+                default: null  # don't load tests in the taskgraph
         chunks:
             by-test-platform:
-                android-em.*: 1
                 linux.*64-tsan(-qr)?/opt: 4
                 default: 1
         variants:
