@@ -6,6 +6,8 @@ const MAX_ARGUMENTS_TO_RECORD = 4;
 const ZERO_ARGUMENTS_MAGIC = -2;
 const EXPIRED_VALUES_MAGIC = -1;
 
+const EXPECTED_VALUE_SUMMARIES_VERSION = 1;
+
 const JSVAL_TYPE_DOUBLE = 0x00;
 const JSVAL_TYPE_INT32 = 0x01;
 const JSVAL_TYPE_BOOLEAN = 0x02;
@@ -530,12 +532,24 @@ function readValueSummary(reader, depth, shapes) {
   }
 }
 
+function bufferVersion(valuesBuffer) {
+  const reader = new BufferReader(valuesBuffer, 0);
+  const version = reader.readUint32();
+  return version;
+}
+
 function getArgumentSummaries(valuesBuffer, shapes, valuesBufferIndex) {
   if (valuesBufferIndex === ZERO_ARGUMENTS_MAGIC) {
     return [];
   }
   if (valuesBufferIndex === EXPIRED_VALUES_MAGIC) {
     return "<missing>";
+  }
+  const theirVersion = bufferVersion(valuesBuffer);
+  if (theirVersion != EXPECTED_VALUE_SUMMARIES_VERSION) {
+    throw new Error(
+      `Unexpected tracer arguments buffer format. Expected ${EXPECTED_VALUE_SUMMARIES_VERSION}, received ${theirVersion}.`
+    );
   }
 
   const reader = new BufferReader(valuesBuffer, valuesBufferIndex);
