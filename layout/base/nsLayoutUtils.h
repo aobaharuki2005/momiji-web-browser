@@ -2166,8 +2166,8 @@ class nsLayoutUtils {
    *   @return a value suitable for passing to SetWindowTranslucency.
    */
   using TransparencyMode = mozilla::widget::TransparencyMode;
-  static TransparencyMode GetFrameTransparency(nsIFrame* aBackgroundFrame,
-                                               nsIFrame* aCSSRootFrame);
+  static TransparencyMode GetFrameTransparency(const nsIFrame* aBackgroundFrame,
+                                               const nsIFrame* aCSSRootFrame);
 
   /**
    * A frame is a popup if it has its own floating window. Menus, panels

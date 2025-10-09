@@ -3070,7 +3070,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(const bool& aEnabled) {
   } else {
     RefPtr<nsViewManager> vm = presShell->GetViewManager();
     if (nsView* view = vm->GetRootView()) {
-      presShell->PaintAndRequestComposite(view, PaintFlags::None);
+      presShell->PaintAndRequestComposite(
+          view->GetFrame(), view->GetWidget()->GetWindowRenderer(),
+          PaintFlags::None);
     }
   }
   presShell->SuppressDisplayport(false);
