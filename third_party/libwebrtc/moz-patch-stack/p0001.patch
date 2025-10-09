@@ -75,7 +75,7 @@ index 1565aeb592..fd77e776cd 100644
        "api/transport/rtp:corruption_detection_message_unittest",
        "api/video/test:rtc_api_video_unittests",
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 2e5f1a06a9..0b996dab6c 100644
+index 2cd7560d6c..1525c634b2 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -888,8 +888,6 @@ rtc_source_set("simulated_network_api") {

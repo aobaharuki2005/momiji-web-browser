@@ -203,7 +203,7 @@ index fd77e776cd..9d79e5e129 100644
      }
  
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 0b996dab6c..bb73b93245 100644
+index 1525c634b2..05a8d4fd17 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -44,6 +44,9 @@ rtc_library("enable_media") {
@@ -433,7 +433,7 @@ index 0000000000..45194f5ace
 +
 +#endif  // API_RTP_SENDER_SETPARAMETERS_CALLBACK_H_
 diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
-index 9f10f0afc6..c1c917abb2 100644
+index 10a8cb8b5d..e5d40da756 100644
 --- a/api/task_queue/BUILD.gn
 +++ b/api/task_queue/BUILD.gn
 @@ -29,6 +29,7 @@ rtc_library("task_queue") {

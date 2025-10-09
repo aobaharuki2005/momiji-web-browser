@@ -13,7 +13,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f097eb8cbd8b7686c
  2 files changed, 9 insertions(+)
 
 diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
-index c1c917abb2..de937ccf7e 100644
+index e5d40da756..7930cd7d39 100644
 --- a/api/task_queue/BUILD.gn
 +++ b/api/task_queue/BUILD.gn
 @@ -29,6 +29,11 @@ rtc_library("task_queue") {
