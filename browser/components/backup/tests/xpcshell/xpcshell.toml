@@ -35,6 +35,8 @@ support-files = [
 
 ["test_BackupService_enable_disable_encryption.js"]
 
+["test_BackupService_enabled.js"]
+
 ["test_BackupService_finalizeSingleFileArchive.js"]
 
 ["test_BackupService_onedrive.js"]
