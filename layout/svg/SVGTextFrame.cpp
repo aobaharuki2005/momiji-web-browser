@@ -1785,7 +1785,11 @@ class TextRenderedRunIterator {
   /**
    * Ensure any cached PropertyProvider is cleared at the end of the iteration.
    */
-  ~TextRenderedRunIterator() { mFrameIterator.Root()->ForgetCachedProvider(); }
+  ~TextRenderedRunIterator() {
+    if (auto* root = mFrameIterator.Root()) {
+      root->ForgetCachedProvider();
+    }
+  }
 
   /**
    * Returns the current TextRenderedRun.
@@ -2019,7 +2023,11 @@ class MOZ_STACK_CLASS CharIterator {
   /**
    * Ensure any cached PropertyProvider is cleared at the end of the iteration.
    */
-  ~CharIterator() { mFrameIterator.Root()->ForgetCachedProvider(); }
+  ~CharIterator() {
+    if (auto* root = mFrameIterator.Root()) {
+      root->ForgetCachedProvider();
+    }
+  }
 
   /**
    * Returns whether the iterator is finished.
