@@ -1,46 +1,468 @@
-From: Guido Urdaneta <guidou@webrtc.org>
-Date: Thu, 24 Jul 2025 11:01:29 +0200
-Subject: (cherry-pick-branch-heads/7258) Use FieldTrialsView::IsEnabled for
- DTLS 1.3
+From: Michael Froman <mjfroman@mac.com>
+Date: Thu, 9 Oct 2025 15:23:18 -0500
+Subject: (tmp-cherry-pick) Revert "Allow StdoutMetricsExporter to merge stream
+ and peers info in test_name." (a51269fb30)
 
-No behavior changes.
+This reverts commit 772386c50321aabfcaeea75857515d6f939c6ac1.
 
-(cherry picked from commit 5ff715d5666106e01d27205c1775d1e2d07ea254)
+Reason for revert: breaks chromium.fyi ios bots
 
-Bug: webrtc:383141571, chromium:433885045, chromium:434133034
-Change-Id: Ice5f3e5cbd245ddea407248a6f29c61c646e6a72
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/401740
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Guido Urdaneta <guidou@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#45206}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/402200
-Cr-Commit-Position: refs/branch-heads/7258@{#3}
-Cr-Branched-From: 74fa937f86ed8432c07676f7a1ce0e5e2812b3d5-refs/heads/main@{#44974}
+Bug: None
+Original change's description:
+> Allow StdoutMetricsExporter to merge stream and peers info in test_name.
+>
+> Currently, metrics printed by StdoutMetricsExporter have lost info
+> about stream, sender/receiver and peers. They look like:
+>
+> RESULT psnr_dB: foreman_cif_net_delay_0_0_plr_0_VP9= {38.697086,1.7471016} unitless_biggerIsBetter
+>
+> Which makes it impossible to know the stream to which this PSNR
+> measurement was referring to.
+>
+> This CL tries to restore the behaviour before [1], which changed test
+> names with:
+>
+> std::string DefaultVideoQualityAnalyzer::GetTestCaseName(
+>     const std::string& stream_label) const {
+>   if (!absl::GetFlag(FLAGS_isolated_script_test_perf_output).empty()) {
+>     return test_label_ + "/" + stream_label;
+>   }
+>   return test_label_;
+> }
+>
+> [1] - https://webrtc-review.googlesource.com/c/src/+/383720
+>
+> Bug: None
+> Change-Id: Iad3cf5cb723e37c2a32fc510a2d484b796024ace
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/399280
+> Reviewed-by: Jeremy Leconte <jleconte@google.com>
+> Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#45185}
+
+Bug: None
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Change-Id: I09690c949d4b395cadf5b201d37094f0310fadc9
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/401500
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Bot-Commit: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
+Commit-Queue: Jeremy Leconte <jleconte@google.com>
+Cr-Commit-Position: refs/heads/main@{#45189}
 ---
- rtc_base/openssl_stream_adapter.cc | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ BUILD.gn                                      |   1 +
+ api/test/metrics/BUILD.gn                     |  39 +++----
+ api/test/metrics/stdout_metrics_exporter.cc   |  22 +---
+ .../metrics/stdout_metrics_exporter_test.cc   |  87 ++++-----------
+ rtc_tools/BUILD.gn                            |   3 +-
+ rtc_tools/frame_analyzer/frame_analyzer.cc    | 100 +-----------------
+ 6 files changed, 41 insertions(+), 211 deletions(-)
 
-diff --git a/rtc_base/openssl_stream_adapter.cc b/rtc_base/openssl_stream_adapter.cc
-index 7d7466b1cc..604a9465c7 100644
---- a/rtc_base/openssl_stream_adapter.cc
-+++ b/rtc_base/openssl_stream_adapter.cc
-@@ -144,13 +144,15 @@ int GetForceDtls13(const FieldTrialsView* field_trials) {
-     return kForceDtls13Off;
-   }
- #ifdef DTLS1_3_VERSION
--  auto mode = field_trials->Lookup("WebRTC-ForceDtls13");
--  RTC_LOG(LS_WARNING) << "WebRTC-ForceDtls13: " << mode;
--  if (mode == "Enabled") {
-+  if (field_trials->IsEnabled("WebRTC-ForceDtls13")) {
-+    RTC_LOG(LS_WARNING) << "WebRTC-ForceDtls13 Enabled";
-     return kForceDtls13Enabled;
--  } else if (mode == "Only") {
-+  }
-+  if (field_trials->Lookup("WebRTC-ForceDtls13") == "Only") {
-+    RTC_LOG(LS_WARNING) << "WebRTC-ForceDtls13 Only";
-     return kForceDtls13Only;
-   }
-+  RTC_LOG(LS_WARNING) << "WebRTC-ForceDtls13 Disabled";
- #endif
-   return kForceDtls13Off;
+diff --git a/BUILD.gn b/BUILD.gn
+index 3357c2dcdf..bc948d4f2b 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -540,6 +540,7 @@ if (!build_with_chromium) {
+       "api/rtc_event_log:rtc_event_log_factory",
+       "api/task_queue",
+       "api/task_queue:default_task_queue_factory",
++      "api/test/metrics",
+       "api/video_codecs:video_decoder_factory_template",
+       "api/video_codecs:video_decoder_factory_template_dav1d_adapter",
+       "api/video_codecs:video_decoder_factory_template_libvpx_vp8_adapter",
+diff --git a/api/test/metrics/BUILD.gn b/api/test/metrics/BUILD.gn
+index abb6453bbe..3f93d22fa8 100644
+--- a/api/test/metrics/BUILD.gn
++++ b/api/test/metrics/BUILD.gn
+@@ -12,17 +12,14 @@ if (rtc_enable_protobuf) {
  }
+ 
+ group("metrics") {
+-  testonly = true
+   deps = [
+     ":global_metrics_logger_and_exporter",
+     ":metric",
+     ":metrics_accumulator",
+     ":metrics_exporter",
+     ":metrics_logger",
++    ":stdout_metrics_exporter",
+   ]
+-  if (!build_with_chromium) {
+-    deps += [ ":stdout_metrics_exporter" ]
+-  }
+ }
+ 
+ if (rtc_include_tests) {
+@@ -101,26 +98,18 @@ rtc_library("metrics_exporter") {
+   ]
+ }
+ 
+-if (!build_with_chromium) {
+-  # Hidden from the Chromium build because it depends on absl flags which
+-  # cannot be compiled in Chromium.
+-  rtc_library("stdout_metrics_exporter") {
+-    visibility = [ "*" ]
+-    testonly = true
+-    sources = [
+-      "stdout_metrics_exporter.cc",
+-      "stdout_metrics_exporter.h",
+-    ]
+-    deps = [
+-      ":metric",
+-      ":metrics_exporter",
+-      "../..:array_view",
+-      "../../../rtc_base:stringutils",
+-      "../../../test:test_flags",
+-      "//third_party/abseil-cpp/absl/flags:flag",
+-      "//third_party/abseil-cpp/absl/strings",
+-    ]
+-  }
++rtc_library("stdout_metrics_exporter") {
++  visibility = [ "*" ]
++  sources = [
++    "stdout_metrics_exporter.cc",
++    "stdout_metrics_exporter.h",
++  ]
++  deps = [
++    ":metric",
++    ":metrics_exporter",
++    "../..:array_view",
++    "../../../rtc_base:stringutils",
++  ]
+ }
+ 
+ rtc_library("chrome_perf_dashboard_metrics_exporter") {
+@@ -233,10 +222,8 @@ if (rtc_include_tests) {
+     deps = [
+       ":metric",
+       ":stdout_metrics_exporter",
+-      "../../../test:test_flags",
+       "../../../test:test_support",
+       "../../units:timestamp",
+-      "//third_party/abseil-cpp/absl/flags:flag",
+     ]
+   }
+ 
+diff --git a/api/test/metrics/stdout_metrics_exporter.cc b/api/test/metrics/stdout_metrics_exporter.cc
+index 336817f8da..52ae2916fc 100644
+--- a/api/test/metrics/stdout_metrics_exporter.cc
++++ b/api/test/metrics/stdout_metrics_exporter.cc
+@@ -15,12 +15,9 @@
+ #include <optional>
+ #include <string>
+ 
+-#include "absl/flags/flag.h"
+-#include "absl/strings/str_cat.h"
+ #include "api/array_view.h"
+ #include "api/test/metrics/metric.h"
+ #include "rtc_base/strings/string_builder.h"
+-#include "test/test_flags.h"
+ 
+ namespace webrtc {
+ namespace test {
+@@ -69,22 +66,6 @@ void AppendWithPrecision(double value,
+   }
+ }
+ 
+-std::string TestCaseAndMetadata(const Metric& metric) {
+-  if (absl::GetFlag(FLAGS_isolated_script_test_perf_output).empty()) {
+-    if (metric.metric_metadata.contains("video_stream")) {
+-      return absl::StrCat(metric.test_case, "/",
+-                          metric.metric_metadata.at("video_stream"), "_",
+-                          metric.metric_metadata.at("sender"), "_",
+-                          metric.metric_metadata.at("receiver"));
+-    }
+-    if (metric.metric_metadata.contains("peer")) {
+-      return absl::StrCat(metric.test_case, "/",
+-                          metric.metric_metadata.at("peer"));
+-    }
+-  }
+-  return metric.test_case;
+-}
+-
+ }  // namespace
+ 
+ StdoutMetricsExporter::StdoutMetricsExporter() : output_(stdout) {}
+@@ -98,8 +79,7 @@ bool StdoutMetricsExporter::Export(ArrayView<const Metric> metrics) {
+ 
+ void StdoutMetricsExporter::PrintMetric(const Metric& metric) {
+   StringBuilder value_stream;
+-  value_stream << TestCaseAndMetadata(metric) << " / " << metric.name
+-               << "= {mean=";
++  value_stream << metric.test_case << " / " << metric.name << "= {mean=";
+   if (metric.stats.mean.has_value()) {
+     AppendWithPrecision(*metric.stats.mean, 8, value_stream);
+   } else {
+diff --git a/api/test/metrics/stdout_metrics_exporter_test.cc b/api/test/metrics/stdout_metrics_exporter_test.cc
+index 93d25fb844..27c1d84927 100644
+--- a/api/test/metrics/stdout_metrics_exporter_test.cc
++++ b/api/test/metrics/stdout_metrics_exporter_test.cc
+@@ -13,11 +13,9 @@
+ #include <string>
+ #include <vector>
+ 
+-#include "absl/flags/flag.h"
+ #include "api/test/metrics/metric.h"
+ #include "api/units/timestamp.h"
+ #include "test/gtest.h"
+-#include "test/test_flags.h"
+ 
+ namespace webrtc {
+ namespace test {
+@@ -44,51 +42,27 @@ Metric PsnrForTestFoo(double mean, double stddev) {
+                 .stats = Metric::Stats{.mean = mean, .stddev = stddev}};
+ }
+ 
+-class StdoutMetricsExporterTest : public ::testing::Test {
+- public:
+-  StdoutMetricsExporterTest() {
+-    original_isolated_script_test_perf_output_ =
+-        absl::GetFlag(FLAGS_isolated_script_test_perf_output);
+-
+-    metric1_ = {
+-        .name = "test_metric1",
+-        .unit = Unit::kMilliseconds,
+-        .improvement_direction = ImprovementDirection::kBiggerIsBetter,
+-        .test_case = "test_case_name1",
+-        .metric_metadata =
+-            std::map<std::string, std::string>{{"video_stream", "alice_stream"},
+-                                               {"sender", "alice"},
+-                                               {"receiver", "bob"}},
+-        .time_series =
+-            Metric::TimeSeries{.samples = std::vector{Sample(10), Sample(20)}},
+-        .stats = Metric::Stats{
+-            .mean = 15.0, .stddev = 5.0, .min = 10.0, .max = 20.0}};
+-    metric2_ = {
+-        .name = "test_metric2",
+-        .unit = Unit::kKilobitsPerSecond,
+-        .improvement_direction = ImprovementDirection::kSmallerIsBetter,
+-        .test_case = "test_case_name2",
+-        .metric_metadata =
+-            std::map<std::string, std::string>{{"peer", "alice"}},
+-        .time_series =
+-            Metric::TimeSeries{.samples = std::vector{Sample(20), Sample(40)}},
+-        .stats = Metric::Stats{
+-            .mean = 30.0, .stddev = 10.0, .min = 20.0, .max = 40.0}};
+-  }
+-  ~StdoutMetricsExporterTest() {
+-    absl::SetFlag(&FLAGS_isolated_script_test_perf_output,
+-                  original_isolated_script_test_perf_output_);
+-  }
+-
+- protected:
+-  std::string original_isolated_script_test_perf_output_;
+-  Metric metric1_;
+-  Metric metric2_;
+-};
+-
+-TEST_F(StdoutMetricsExporterTest,
+-       ExportMetricFormatCorrectWhenIsolatedScriptTestPerfOutputIsSet) {
+-  absl::SetFlag(&FLAGS_isolated_script_test_perf_output, "/tmp/foo");
++TEST(StdoutMetricsExporterTest, ExportMetricFormatCorrect) {
++  Metric metric1{
++      .name = "test_metric1",
++      .unit = Unit::kMilliseconds,
++      .improvement_direction = ImprovementDirection::kBiggerIsBetter,
++      .test_case = "test_case_name1",
++      .metric_metadata = DefaultMetadata(),
++      .time_series =
++          Metric::TimeSeries{.samples = std::vector{Sample(10), Sample(20)}},
++      .stats =
++          Metric::Stats{.mean = 15.0, .stddev = 5.0, .min = 10.0, .max = 20.0}};
++  Metric metric2{
++      .name = "test_metric2",
++      .unit = Unit::kKilobitsPerSecond,
++      .improvement_direction = ImprovementDirection::kSmallerIsBetter,
++      .test_case = "test_case_name2",
++      .metric_metadata = DefaultMetadata(),
++      .time_series =
++          Metric::TimeSeries{.samples = std::vector{Sample(20), Sample(40)}},
++      .stats = Metric::Stats{
++          .mean = 30.0, .stddev = 10.0, .min = 20.0, .max = 40.0}};
+ 
+   testing::internal::CaptureStdout();
+   StdoutMetricsExporter exporter;
+@@ -99,24 +73,7 @@ TEST_F(StdoutMetricsExporterTest,
+       "RESULT: test_case_name2 / test_metric2= "
+       "{mean=30, stddev=10} KilobitsPerSecond (SmallerIsBetter)\n";
+ 
+-  EXPECT_TRUE(exporter.Export(std::vector<Metric>{metric1_, metric2_}));
+-  EXPECT_EQ(expected, testing::internal::GetCapturedStdout());
+-}
+-
+-TEST_F(StdoutMetricsExporterTest,
+-       ExportMetricFormatCorrectWhenIsolatedScriptTestPerfOutputIsNotSet) {
+-  absl::SetFlag(&FLAGS_isolated_script_test_perf_output, "");
+-
+-  testing::internal::CaptureStdout();
+-  StdoutMetricsExporter exporter;
+-
+-  std::string expected =
+-      "RESULT: test_case_name1/alice_stream_alice_bob / test_metric1= "
+-      "{mean=15, stddev=5} Milliseconds (BiggerIsBetter)\n"
+-      "RESULT: test_case_name2/alice / test_metric2= "
+-      "{mean=30, stddev=10} KilobitsPerSecond (SmallerIsBetter)\n";
+-
+-  EXPECT_TRUE(exporter.Export(std::vector<Metric>{metric1_, metric2_}));
++  EXPECT_TRUE(exporter.Export(std::vector<Metric>{metric1, metric2}));
+   EXPECT_EQ(expected, testing::internal::GetCapturedStdout());
+ }
+ 
+diff --git a/rtc_tools/BUILD.gn b/rtc_tools/BUILD.gn
+index 9fbf777891..e16258478c 100644
+--- a/rtc_tools/BUILD.gn
++++ b/rtc_tools/BUILD.gn
+@@ -140,13 +140,12 @@ if (!is_component_build) {
+       ":video_file_reader",
+       ":video_file_writer",
+       ":video_quality_analysis",
+-      "../api:array_view",
+       "../api:make_ref_counted",
+       "../api:scoped_refptr",
+       "../api/test/metrics:chrome_perf_dashboard_metrics_exporter",
+       "../api/test/metrics:global_metrics_logger_and_exporter",
+-      "../api/test/metrics:metric",
+       "../api/test/metrics:metrics_exporter",
++      "../api/test/metrics:stdout_metrics_exporter",
+       "../rtc_base:stringutils",
+       "//third_party/abseil-cpp/absl/flags:flag",
+       "//third_party/abseil-cpp/absl/flags:parse",
+diff --git a/rtc_tools/frame_analyzer/frame_analyzer.cc b/rtc_tools/frame_analyzer/frame_analyzer.cc
+index 71367c6640..9c416c3f0a 100644
+--- a/rtc_tools/frame_analyzer/frame_analyzer.cc
++++ b/rtc_tools/frame_analyzer/frame_analyzer.cc
+@@ -8,11 +8,10 @@
+  *  be found in the AUTHORS file in the root of the source tree.
+  */
+ 
+-#include <cmath>
++
+ #include <cstddef>
+ #include <cstdint>
+ #include <cstdio>
+-#include <cstdlib>
+ #include <memory>
+ #include <string>
+ #include <utility>
+@@ -21,12 +20,11 @@
+ #include "absl/flags/flag.h"
+ #include "absl/flags/parse.h"
+ #include "absl/strings/match.h"
+-#include "api/array_view.h"
+ #include "api/scoped_refptr.h"
+ #include "api/test/metrics/chrome_perf_dashboard_metrics_exporter.h"
+ #include "api/test/metrics/global_metrics_logger_and_exporter.h"
+-#include "api/test/metrics/metric.h"
+ #include "api/test/metrics/metrics_exporter.h"
++#include "api/test/metrics/stdout_metrics_exporter.h"
+ #include "rtc_base/strings/string_builder.h"
+ #include "rtc_tools/frame_analyzer/video_color_aligner.h"
+ #include "rtc_tools/frame_analyzer/video_geometry_aligner.h"
+@@ -77,98 +75,6 @@ std::string JoinFilename(std::string directory, std::string filename) {
+   return directory + kPathDelimiter + filename;
+ }
+ 
+-// FrameAnalyzerMetricsExporter is a fork of
+-// webrtc::test::StdoutMetricsExporter. The fork was required because:
+-// 1. frame_analyzer must be compiled with build_with_chromium=true
+-// 2. The api/metrics:stdout_metrics_exporter depends on absl/flags which cannot
+-//    be build when build_with_chromium=true unless the target is an
+-//    rtc_executable (which is not the case for
+-//    api/metrics:stdout_metrics_exporter). So this fork allows to cut the
+-//    dependency.
+-
+-// Returns positive integral part of the number.
+-int64_t IntegralPart(double value) {
+-  return std::lround(std::floor(std::abs(value)));
+-}
+-
+-void AppendWithPrecision(double value,
+-                         int digits_after_comma,
+-                         webrtc::StringBuilder& out) {
+-  int64_t multiplier = std::lround(std::pow(10, digits_after_comma));
+-  int64_t integral_part = IntegralPart(value);
+-  double decimal_part = std::abs(value) - integral_part;
+-
+-  // If decimal part has leading zeros then when it will be multiplied on
+-  // `multiplier`, leading zeros will be lost. To preserve them we add "1"
+-  // so then leading digit will be greater than 0 and won't be removed.
+-  //
+-  // During conversion to the string leading digit has to be stripped.
+-  //
+-  // Also due to rounding it may happen that leading digit may be incremented,
+-  // like with `digits_after_comma` 3 number 1.9995 will be rounded to 2. In
+-  // such case this increment has to be propagated to the `integral_part`.
+-  int64_t decimal_holder = std::lround((1 + decimal_part) * multiplier);
+-  if (decimal_holder >= 2 * multiplier) {
+-    // Rounding incremented added leading digit, so we need to transfer 1 to
+-    // integral part.
+-    integral_part++;
+-    decimal_holder -= multiplier;
+-  }
+-  // Remove trailing zeros.
+-  while (decimal_holder % 10 == 0) {
+-    decimal_holder /= 10;
+-  }
+-
+-  // Print serialized number to output.
+-  if (value < 0) {
+-    out << "-";
+-  }
+-  out << integral_part;
+-  if (decimal_holder != 1) {
+-    out << "." << std::to_string(decimal_holder).substr(1, digits_after_comma);
+-  }
+-}
+-
+-class FrameAnalyzerMetricsExporter : public webrtc::test::MetricsExporter {
+- public:
+-  FrameAnalyzerMetricsExporter() : output_(stdout) {}
+-  ~FrameAnalyzerMetricsExporter() override = default;
+-
+-  FrameAnalyzerMetricsExporter(const FrameAnalyzerMetricsExporter&) = delete;
+-  FrameAnalyzerMetricsExporter& operator=(const FrameAnalyzerMetricsExporter&) =
+-      delete;
+-
+-  bool Export(webrtc::ArrayView<const webrtc::test::Metric> metrics) override {
+-    for (const webrtc::test::Metric& metric : metrics) {
+-      PrintMetric(metric);
+-    }
+-    return true;
+-  }
+-
+- private:
+-  void PrintMetric(const webrtc::test::Metric& metric) {
+-    webrtc::StringBuilder value_stream;
+-    value_stream << metric.test_case << " / " << metric.name << "= {mean=";
+-    if (metric.stats.mean.has_value()) {
+-      AppendWithPrecision(*metric.stats.mean, 8, value_stream);
+-    } else {
+-      value_stream << "-";
+-    }
+-    value_stream << ", stddev=";
+-    if (metric.stats.stddev.has_value()) {
+-      AppendWithPrecision(*metric.stats.stddev, 8, value_stream);
+-    } else {
+-      value_stream << "-";
+-    }
+-    value_stream << "} " << ToString(metric.unit) << " ("
+-                 << ToString(metric.improvement_direction) << ")";
+-
+-    fprintf(output_, "RESULT: %s\n", value_stream.str().c_str());
+-  }
+-
+-  FILE* const output_;
+-};
+-
+ }  // namespace
+ 
+ /*
+@@ -262,7 +168,7 @@ int main(int argc, char* argv[]) {
+                                      *webrtc::test::GetGlobalMetricsLogger());
+ 
+   std::vector<std::unique_ptr<webrtc::test::MetricsExporter>> exporters;
+-  exporters.push_back(std::make_unique<FrameAnalyzerMetricsExporter>());
++  exporters.push_back(std::make_unique<webrtc::test::StdoutMetricsExporter>());
+   std::string chartjson_result_file =
+       absl::GetFlag(FLAGS_chartjson_result_file);
+   if (!chartjson_result_file.empty()) {
