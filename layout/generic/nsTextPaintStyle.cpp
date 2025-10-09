@@ -226,15 +226,11 @@ void nsTextPaintStyle::GetTargetTextColors(nscolor* aForeColor,
         &nsStyleBackground::mBackgroundColor);
     return;
   }
-  if (PresContext()->ForcingColors()) {
-    *aBackColor = LookAndFeel::Color(LookAndFeel::ColorID::Mark, mFrame);
-    *aForeColor = LookAndFeel::Color(LookAndFeel::ColorID::Marktext, mFrame);
-  } else {
-    *aBackColor =
-        LookAndFeel::Color(LookAndFeel::ColorID::TargetTextBackground, mFrame);
-    *aForeColor =
-        LookAndFeel::Color(LookAndFeel::ColorID::TargetTextForeground, mFrame);
-  }
+
+  *aBackColor =
+      LookAndFeel::Color(LookAndFeel::ColorID::TargetTextBackground, mFrame);
+  *aForeColor =
+      LookAndFeel::Color(LookAndFeel::ColorID::TargetTextForeground, mFrame);
 }
 
 bool nsTextPaintStyle::GetCustomHighlightTextColor(nsAtom* aHighlightName,
