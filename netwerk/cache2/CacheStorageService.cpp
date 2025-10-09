@@ -1405,16 +1405,6 @@ void CacheStorageService::MemoryPool::PurgeExpiredOrOverMemoryLimit() {
       return;
     }
 
-    if (mType == EType::DISK) {
-      mozilla::glean::networking::cache_purge_due_to_memory_limit
-          .Get("meta_data_file_size_limit"_ns)
-          .Add(1);
-    } else if (mType == EType::MEMORY) {
-      mozilla::glean::networking::cache_purge_due_to_memory_limit
-          .Get("cache_memory_limit"_ns)
-          .Add(1);
-    }
-
     auto r = PurgeByFrecency(minprogress);
     if (MOZ_LIKELY(r.isOk())) {
       size_t numPurged = r.unwrap();
