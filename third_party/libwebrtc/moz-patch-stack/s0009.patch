@@ -42,7 +42,7 @@ index 6452a3c235..9f7f3ea508 100644
  int32_t DeviceInfoV4l2::Init() {
    return 0;
 diff --git a/rtc_base/byte_order.h b/rtc_base/byte_order.h
-index cd4fd421ca..c8efa9ac83 100644
+index ba58571aca..dddaf9600b 100644
 --- a/rtc_base/byte_order.h
 +++ b/rtc_base/byte_order.h
 @@ -90,6 +90,8 @@
