@@ -135,10 +135,10 @@ internal sealed class MimeType(
 
     /**
      * True if any of the given mime values match this type. If no values are specified, then
-     * there will not be a match.
+     * it will match any mime type.
      */
     open fun matches(mimeTypes: Array<out String>) =
-        mimeTypes.isNotEmpty() && mimeTypes.any { it.startsWith(type) }
+        mimeTypes.isEmpty() || mimeTypes.any { it.startsWith(type) }
 
     open fun shouldCapture(mimeTypes: Array<out String>, capture: File.FacingMode) =
         capture != File.FacingMode.NONE &&
