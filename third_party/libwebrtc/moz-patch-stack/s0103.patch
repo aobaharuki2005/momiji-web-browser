@@ -687,10 +687,10 @@ index 4a772795ed..de27f01bb0 100644
  
  rtc_source_set("arch") {
 diff --git a/rtc_tools/network_tester/BUILD.gn b/rtc_tools/network_tester/BUILD.gn
-index 0947186878..c53c12acc1 100644
+index 4fa98d73a2..72c01d50ab 100644
 --- a/rtc_tools/network_tester/BUILD.gn
 +++ b/rtc_tools/network_tester/BUILD.gn
-@@ -177,8 +177,8 @@ if (is_android) {
+@@ -180,8 +180,8 @@ if (is_android) {
        "../../rtc_base:threading",
      ]
  
