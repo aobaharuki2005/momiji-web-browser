@@ -161,17 +161,23 @@ def log_crashes(
 ):
     """Log crashes using a structured logger"""
     crash_count = 0
-    for info in CrashInfo(
+    crash_info = CrashInfo(
         dump_directory,
         symbols_path,
         dump_save_path=dump_save_path,
         stackwalk_binary=stackwalk_binary,
-    ):
+    )
+    if num_dumps := len(crash_info.dump_files):
+        message = f"processing {num_dumps} crash" + ("es" if num_dumps != 1 else "")
+        logger.group_start(message)
+    for info in crash_info:
         crash_count += 1
         kwargs = info._asdict()
         kwargs.pop("extra")
         kwargs["quiet"] = quiet
         logger.crash(process=process, test=test, **kwargs)
+    if num_dumps:
+        logger.group_end(message)
     return crash_count
 
 
