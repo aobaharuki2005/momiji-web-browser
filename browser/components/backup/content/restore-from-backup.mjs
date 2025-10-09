@@ -249,7 +249,7 @@ export default class RestoreFromBackup extends MozLitElement {
                 id="restore-from-backup-no-backup-file-link"
                 slot="support-link"
                 is="moz-support-link"
-                support-page="todo-backup"
+                support-page="firefox-backup"
                 data-l10n-id="restore-from-backup-no-backup-file-link"
               ></a>`
             : null}
@@ -339,7 +339,7 @@ export default class RestoreFromBackup extends MozLitElement {
                 id="backup-incorrect-password-support-link"
                 slot="support-link"
                 is="moz-support-link"
-                support-page="todo-backup"
+                support-page="firefox-backup"
                 data-l10n-name="incorrect-password-support-link"
               ></a>
             </span>
@@ -425,7 +425,7 @@ export default class RestoreFromBackup extends MozLitElement {
           id="restore-from-backup-learn-more-link"
           slot="support-link"
           is="moz-support-link"
-          support-page="todo-backup"
+          support-page="firefox-backup"
           data-l10n-id="restore-from-backup-support-link"
         ></a>
       </moz-message-bar>
