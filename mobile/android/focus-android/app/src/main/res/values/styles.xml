@@ -18,6 +18,8 @@
         <item name="disabled">@color/disabled</item>
         <item name="destructive">@color/destructive</item>
         <item name="switchStyle">@style/App.Widget.Switch</item>
+        <item name="checkboxStyle">@style/App.Widget.CompoundButton.CheckBox</item>
+        <item name="radioButtonStyle">@style/App.Widget.CompoundButton.RadioButton</item>
 
         <!-- Use the same colors for both themes until light theme it will be implemented -->
         <item name="primaryText">@color/primaryText</item>
@@ -307,6 +309,14 @@
 
     <style name="SwitchTheme" parent="Theme.AppCompat.Light">
         <item name="colorControlActivated">@color/accentBright</item>
+    </style>
+
+    <style name="App.Widget.CompoundButton.CheckBox" parent="Widget.Material3.CompoundButton.CheckBox">
+        <item name="buttonTint">@color/compound_button_color_selector</item>
+    </style>
+
+    <style name="App.Widget.CompoundButton.RadioButton" parent="Widget.Material3.CompoundButton.RadioButton">
+        <item name="buttonTint">@color/compound_button_color_selector</item>
     </style>
 
     <style name="Preference.Title" parent="Widget.MaterialComponents.TextView">
