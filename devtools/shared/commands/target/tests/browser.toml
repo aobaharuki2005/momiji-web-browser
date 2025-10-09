@@ -22,6 +22,7 @@ support-files = [
 ["browser_target_command_browser_workers.js"]
 skip-if = [
   "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && tsan", # Bug 1767778
+  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && asan", # Bug 1767778
   "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && tsan", # Bug 1767778
 ]
 
