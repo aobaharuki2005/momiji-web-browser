@@ -55,10 +55,10 @@ index ba58571aca..dddaf9600b 100644
  #include <endian.h>
  #else
 diff --git a/rtc_base/cpu_info.cc b/rtc_base/cpu_info.cc
-index 56aba5ee63..0923e7aca7 100644
+index 22f76416b6..79505f20b4 100644
 --- a/rtc_base/cpu_info.cc
 +++ b/rtc_base/cpu_info.cc
-@@ -65,7 +65,7 @@ uint32_t DetectNumberOfCores() {
+@@ -66,7 +66,7 @@ uint32_t DetectNumberOfCores() {
    SYSTEM_INFO si;
    GetNativeSystemInfo(&si);
    number_of_cores = static_cast<int>(si.dwNumberOfProcessors);
