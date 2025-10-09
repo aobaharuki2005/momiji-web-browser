@@ -9,6 +9,8 @@
 unified-extensions-header-title = Extensions
 unified-extensions-manage-extensions =
     .label = Manage extensions
+unified-extensions-empty-reason-private-browsing-not-allowed = You have extensions installed, but not enabled in private windows
+unified-extensions-empty-content-explain-enable = Select “{ unified-extensions-item-message-manage }” to enable them in settings.
 
 ## An extension in the main list
 

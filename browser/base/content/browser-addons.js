@@ -2235,9 +2235,13 @@ var gUnifiedExtensions = {
    * Gets a list of active WebExtensionPolicy instances of type "extension",
    * excluding hidden extensions, available to this window.
    *
+   * @param {boolean} skipPBMCheck When false (the default), the result
+   *                  excludes extensions that cannot access the current window
+   *                  due to the window being a private browsing window that
+   *                  the extension is not allowed to access.
    * @returns {Array<WebExtensionPolicy>} An array of active policies.
    */
-  getActivePolicies() {
+  getActivePolicies(skipPBMCheck = false) {
     let policies = WebExtensionPolicy.getActiveExtensions();
     policies = policies.filter(policy => {
       let { extension } = policy;
@@ -2250,7 +2254,12 @@ var gUnifiedExtensions = {
       // Ignore hidden and extensions that cannot access the current window
       // (because of PB mode when we are in a private window), since users
       // cannot do anything with those extensions anyway.
-      if (extension.isHidden || !policy.canAccessWindow(window)) {
+      if (
+        extension.isHidden ||
+        // NOTE: policy.canAccessWindow() sounds generic, but it really only
+        // enforces private browsing access.
+        (!skipPBMCheck && !policy.canAccessWindow(window))
+      ) {
         return false;
       }
 
@@ -2265,10 +2274,12 @@ var gUnifiedExtensions = {
    * extensions panel, and false otherwise (e.g. when extensions are pinned in
    * the toolbar OR there are 0 active extensions).
    *
+   * @param {Array<WebExtensionPolicy> [policies] The list of extensions to
+   *   evaluate. Defaults to the active extensions with access to this window
+   *   (see getActivePolicies).
    * @returns {boolean} Whether there are extensions listed in the panel.
    */
-  hasExtensionsInPanel() {
-    const policies = this.getActivePolicies();
+  hasExtensionsInPanel(policies = this.getActivePolicies()) {
     return policies.some(policy => {
       let widget = this.browserActionFor(policy)?.widget;
       return (
@@ -2277,6 +2288,14 @@ var gUnifiedExtensions = {
         widget.forWindow(window).overflowed
       );
     });
+  },
+
+  isPrivateWindowMissingExtensionsWithoutPBMAccess() {
+    if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
+      return false;
+    }
+    const policies = this.getActivePolicies(/* skipPBMCheck */ true);
+    return policies.some(p => !p.privateBrowsingAllowed);
   },
 
   handleEvent(event) {
@@ -2352,6 +2371,24 @@ var gUnifiedExtensions = {
       const item = document.createElement("unified-extensions-item");
       item.setExtension(policy.extension);
       list.appendChild(item);
+    }
+
+    const emptyStateBox = panelview.querySelector(
+      "#unified-extensions-empty-state"
+    );
+    if (this.hasExtensionsInPanel(policies)) {
+      // Any of the extension lists are non-empty.
+      emptyStateBox.hidden = true;
+    } else if (this.isPrivateWindowMissingExtensionsWithoutPBMAccess()) {
+      document.l10n.setAttributes(
+        emptyStateBox.querySelector("h2"),
+        "unified-extensions-empty-reason-private-browsing-not-allowed"
+      );
+      document.l10n.setAttributes(
+        emptyStateBox.querySelector("description"),
+        "unified-extensions-empty-content-explain-enable"
+      );
+      emptyStateBox.hidden = false;
     }
 
     const container = panelview.querySelector(
@@ -2568,8 +2605,12 @@ var gUnifiedExtensions = {
         }
 
         // The button should directly open `about:addons` when the user does not
-        // have any active extensions listed in the unified extensions panel.
-        if (!this.hasExtensionsInPanel()) {
+        // have any active extensions listed in the unified extensions panel,
+        // and no alternative content is available for display in the panel.
+        if (
+          !this.hasExtensionsInPanel() &&
+          !this.isPrivateWindowMissingExtensionsWithoutPBMAccess()
+        ) {
           let viewID;
           if (
             Services.prefs.getBoolPref("extensions.getAddons.showPane", true) &&
