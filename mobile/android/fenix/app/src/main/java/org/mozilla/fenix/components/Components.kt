@@ -290,8 +290,6 @@ class Components(private val context: Context) {
                 SetupChecklistTelemetryMiddleware(),
                 ReviewPromptMiddleware(
                     isReviewPromptFeatureEnabled = { settings.customReviewPromptFeatureEnabled },
-                    numberOfAppLaunches = { settings.numberOfAppLaunches },
-                    isDefaultBrowser = { settings.isDefaultBrowser },
                     isTelemetryEnabled = { settings.isTelemetryEnabled },
                     createJexlHelper = nimbus::createJexlHelper,
                     nimbusEventStore = nimbus.events,
