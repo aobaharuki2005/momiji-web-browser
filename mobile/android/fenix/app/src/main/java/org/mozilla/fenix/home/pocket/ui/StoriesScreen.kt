@@ -30,6 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
+import mozilla.components.compose.base.theme.layout.AcornWindowSize
 import mozilla.components.compose.base.utils.BackInvokedHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.appstate.recommendations.ContentRecommendationsState
@@ -116,14 +117,26 @@ private fun Stories(
     state: ContentRecommendationsState,
     interactor: PocketStoriesInteractor,
 ) {
+    val windowSizeClass = FirefoxTheme.windowSize
+    val columnCount = when (windowSizeClass) {
+        AcornWindowSize.Small -> 1
+        AcornWindowSize.Medium -> 2
+        AcornWindowSize.Large -> 3
+    }
+
+    val verticalPadding = if (windowSizeClass != AcornWindowSize.Small) {
+        16.dp
+    } else {
+        12.dp
+    }
+
     LazyVerticalGrid(
-        columns = GridCells.Fixed(1),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        columns = GridCells.Fixed(columnCount),
+        verticalArrangement = Arrangement.spacedBy(verticalPadding),
+        horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
     ) {
         itemsIndexed(state.pocketStories) { index, story ->
             StoryCard(
-                modifier = Modifier.padding(horizontal = 16.dp),
                 story = story,
                 onClick = interactor::onStoryClicked,
             )
