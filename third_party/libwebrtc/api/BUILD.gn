@@ -73,6 +73,19 @@ rtc_library("enable_media_with_defaults") {
   ]
 }
 
+rtc_source_set("create_modular_peer_connection_factory") {
+  visibility = [ "*" ]
+  allow_poison = [ "environment_construction" ]
+  sources = [ "create_modular_peer_connection_factory.h" ]
+  deps = [
+    ":libjingle_peerconnection_api",
+    ":scoped_refptr",
+    "../pc:peer_connection_factory",
+    "../rtc_base/system:rtc_export",
+    "../stats:rtc_stats",
+  ]
+}
+
 if (!build_with_chromium && !build_with_mozilla) {
   rtc_library("create_peerconnection_factory") {
     visibility = [ "*" ]
@@ -82,14 +95,13 @@ if (!build_with_chromium && !build_with_mozilla) {
       "create_peerconnection_factory.h",
     ]
     deps = [
+      ":create_modular_peer_connection_factory",
       ":enable_media",
       ":field_trials_view",
       ":libjingle_peerconnection_api",
       ":scoped_refptr",
-      "../pc:peer_connection_factory",
       "../rtc_base:threading",
       "../rtc_base/system:rtc_export",
-      "../stats:rtc_stats",
       "audio:audio_device",
       "audio:audio_mixer_api",
       "audio:audio_processing",
@@ -304,6 +316,17 @@ rtc_library("rtp_sender_setparameters_callback") {
   ]
 }
 
+# TODO: bugs.webrtc.org/42220069 - Remove when downstream has been updated
+# to depend on `create_modular_peer_connection_factory` instead.
+rtc_source_set("create_modular_peer_connection_factory_internal") {
+  visibility = [ ":libjingle_peerconnection_api" ]
+  sources = [ "create_modular_peer_connection_factory_internal.h" ]
+  deps = [
+    ":scoped_refptr",
+    "../rtc_base/system:rtc_export",
+  ]
+}
+
 rtc_library("libjingle_peerconnection_api") {
 if (!build_with_mozilla) {
   visibility = [ "*" ]
@@ -345,6 +368,7 @@ if (!build_with_mozilla) {
     ":async_dns_resolver",
     ":audio_options_api",
     ":candidate",
+    ":create_modular_peer_connection_factory_internal",
     ":data_channel_event_observer_interface",
     ":dtls_transport_interface",
     ":fec_controller_api",

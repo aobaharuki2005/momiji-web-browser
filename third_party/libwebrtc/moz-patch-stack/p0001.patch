@@ -75,10 +75,10 @@ index 1565aeb592..fd77e776cd 100644
        "api/transport/rtp:corruption_detection_message_unittest",
        "api/video/test:rtc_api_video_unittests",
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 2cd7560d6c..1525c634b2 100644
+index 2dbc1c17ba..4ee76f6757 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
-@@ -888,8 +888,6 @@ rtc_source_set("simulated_network_api") {
+@@ -912,8 +912,6 @@ rtc_source_set("simulated_network_api") {
      "../rtc_base:random",
      "transport:ecn_marking",
      "units:data_rate",
@@ -87,7 +87,7 @@ index 2cd7560d6c..1525c634b2 100644
      "//third_party/abseil-cpp/absl/functional:any_invocable",
    ]
  }
-@@ -915,7 +913,6 @@ rtc_library("network_emulation_manager_api") {
+@@ -939,7 +937,6 @@ rtc_library("network_emulation_manager_api") {
      "../rtc_base:socket_address",
      "../test/network:simulated_network",
      "test/network_emulation",
