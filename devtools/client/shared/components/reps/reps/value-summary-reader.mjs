@@ -20,6 +20,7 @@ const JSVAL_TYPE_OBJECT = 0x0c;
 const GETTER_SETTER_MAGIC = 0x0f;
 
 const GENERIC_OBJECT_HAS_DENSE_ELEMENTS = 1;
+const SYMBOL_NO_DESCRIPTION = 1;
 
 const NUMBER_IS_OUT_OF_LINE_MAGIC = 0xf;
 const MIN_INLINE_INT = -1;
@@ -504,6 +505,11 @@ function readValueSummary(reader, depth, shapes) {
     case JSVAL_TYPE_UNDEFINED:
       return { type: "undefined" };
     case JSVAL_TYPE_SYMBOL:
+      if (flags & SYMBOL_NO_DESCRIPTION) {
+        return {
+          type: "symbol",
+        };
+      }
       return {
         type: "symbol",
         name: reader.readString(),
