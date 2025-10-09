@@ -225,17 +225,6 @@ void GPUProcessManager::ResetProcessStable() {
 }
 
 bool GPUProcessManager::IsProcessStable(const TimeStamp& aNow) {
-#ifdef MOZ_WIDGET_ANDROID
-  // On Android if the process is lost whilst in the background it was probably
-  // killed by the OS, and it may never have had a chance to have been declared
-  // stable prior to being killed. We don't want this happening repeatedly to
-  // result in the GPU process being disabled, so treat any process lost whilst
-  // in the background as stable.
-  if (!mAppInForeground) {
-    return true;
-  }
-#endif
-
   if (mTotalProcessAttempts > 0) {
     auto delta = (int32_t)(aNow - mProcessAttemptLastTime).ToMilliseconds();
     if (delta < StaticPrefs::layers_gpu_process_stable_min_uptime_ms()) {
@@ -739,7 +728,7 @@ bool GPUProcessManager::DisableWebRenderConfig(wr::WebRenderError aError,
   // bad driver state. In that case, we should consider restarting the GPU
   // process, or simulating a device reset to teardown the compositors to
   // hopefully alleviate the situation.
-  if (IsProcessStable(TimeStamp::Now())) {
+  if (IsProcessStable(TimeStamp::Now()) || (kIsAndroid && !mAppInForeground)) {
     if (mProcess) {
       mProcess->KillProcess(/* aGenerateMinidump */ false);
     } else {
@@ -948,6 +937,13 @@ void GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost) {
   // eagerly.
   if (IsProcessStable(TimeStamp::Now())) {
     mProcessStableOnce = true;
+    mUnstableProcessAttempts = 0;
+  } else if (kIsAndroid && !mAppInForeground) {
+    // On Android if the process is lost whilst in the background it was
+    // probably killed by the OS, and it may never have had a chance to have
+    // been declared stable prior to being killed. We don't want this happening
+    // repeatedly to result in the GPU process being disabled, so treat any
+    // process lost whilst in the background as stable.
     mUnstableProcessAttempts = 0;
   } else {
     mUnstableProcessAttempts++;
