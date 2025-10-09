@@ -965,7 +965,7 @@ class PresShell final : public nsStubDocumentObserver,
    * widget, otherwise the PresContext default background color. This color is
    * only visible if the contents of the view as a whole are translucent.
    */
-  nscolor ComputeBackstopColor(nsIFrame* aDisplayRoot);
+  nscolor ComputeBackstopColor(nsView* aDisplayRoot);
 
   void ObserveNativeAnonMutationsForPrint(bool aObserve) {
     mObservesMutationsForPrint = aObserve;
@@ -1367,15 +1367,14 @@ class PresShell final : public nsStubDocumentObserver,
    * SyncPaintFallback from the widget paint event.
    */
   MOZ_CAN_RUN_SCRIPT
-  void PaintAndRequestComposite(nsIFrame* aFrame, WindowRenderer* aRenderer,
-                                PaintFlags aFlags);
+  void PaintAndRequestComposite(nsView* aView, PaintFlags aFlags);
 
   /**
    * Does an immediate paint+composite using the FallbackRenderer (which must
    * be the current WindowRenderer for the root frame's widget).
    */
   MOZ_CAN_RUN_SCRIPT
-  void SyncPaintFallback(nsIFrame* aFrame, WindowRenderer* aRenderer);
+  void SyncPaintFallback(nsView* aView);
 
   /**
    * Notify that we're going to call Paint with PaintFlags::PaintLayers
@@ -1869,8 +1868,7 @@ class PresShell final : public nsStubDocumentObserver,
   bool ComputeActiveness() const;
 
   MOZ_CAN_RUN_SCRIPT
-  void PaintInternal(nsIFrame* aFrame, WindowRenderer* aRenderer,
-                     PaintInternalFlags aFlags);
+  void PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags);
 
   // Refresh observer management.
   void ScheduleFlush();
