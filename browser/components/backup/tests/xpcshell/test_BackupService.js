@@ -856,12 +856,17 @@ add_task(async function test_getBackupFileInfo() {
 
   const DATE = "2024-06-25T21:59:11.777Z";
   const IS_ENCRYPTED = true;
+  const DEVICE_NAME = "test-device";
 
   let fakeSampleArchiveResult = {
     isEncrypted: IS_ENCRYPTED,
     startByteOffset: 26985,
     contentType: "multipart/mixed",
-    archiveJSON: { version: 1, meta: { date: DATE }, encConfig: {} },
+    archiveJSON: {
+      version: 1,
+      meta: { date: DATE, deviceName: DEVICE_NAME },
+      encConfig: {},
+    },
   };
 
   sandbox
@@ -879,7 +884,7 @@ add_task(async function test_getBackupFileInfo() {
 
   Assert.deepEqual(
     bs.state.backupFileInfo,
-    { isEncrypted: IS_ENCRYPTED, date: DATE },
+    { isEncrypted: IS_ENCRYPTED, date: DATE, deviceName: DEVICE_NAME },
     "State should match a subset from the archive sample."
   );
 

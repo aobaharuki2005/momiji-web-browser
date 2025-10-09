@@ -2623,6 +2623,7 @@ export class BackupService extends EventTarget {
       appVersion: AppConstants.MOZ_APP_VERSION,
       buildID: AppConstants.MOZ_BUILDID,
       profileName,
+      deviceName: Services.sysinfo.get("device") || Services.dns.myHostName,
       machineName: lazy.fxAccounts.device.getLocalName(),
       osName: Services.sysinfo.getProperty("name"),
       osVersion: Services.sysinfo.getProperty("version"),
@@ -3784,6 +3785,7 @@ export class BackupService extends EventTarget {
     this.#_state.backupFileInfo = {
       isEncrypted,
       date: archiveJSON?.meta?.date,
+      deviceName: archiveJSON?.meta?.deviceName,
     };
     this.#_state.backupFileToRestore = backupFilePath;
     this.stateUpdate();

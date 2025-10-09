@@ -94,6 +94,13 @@
     #backup-filepicker-button {
       margin-block: var(--space-xsmall);
     }
+
+    #restore-from-backup-backup-found-info {
+      text-align: start;
+      color: var(--text-color-deemphasized);
+      font-size: var(--font-size-small);
+      margin-top: var(--space-xsmall);
+    }
   }
 
   #backup-password {

@@ -253,6 +253,21 @@ export default class RestoreFromBackup extends MozLitElement {
                 data-l10n-id="restore-from-backup-no-backup-file-link"
               ></a>`
             : null}
+          ${this.backupServiceState?.backupFileInfo
+            ? html`<p
+                id="restore-from-backup-backup-found-info"
+                data-l10n-id="backup-file-creation-date-and-device"
+                data-l10n-args=${JSON.stringify({
+                  machineName:
+                    this.backupServiceState.backupFileInfo.deviceName ?? "",
+                  date: this.backupServiceState.backupFileInfo.date
+                    ? new Date(
+                        this.backupServiceState.backupFileInfo.date
+                      ).getTime()
+                    : 0,
+                })}
+              ></p>`
+            : null}
         </fieldset>
 
         <fieldset id="password-entry-controls">

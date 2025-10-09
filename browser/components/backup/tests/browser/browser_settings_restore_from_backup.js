@@ -107,6 +107,7 @@ add_task(async function test_restore_from_backup() {
       ...restoreFromBackup.backupServiceState,
       backupFileInfo: {
         date: new Date(),
+        deviceName: "test-device",
         isEncrypted: true,
       },
     };
@@ -368,3 +369,72 @@ add_task(
     );
   }
 );
+
+/**
+ * Tests that the backup file info is displayed when backupFileInfo is present
+ */
+add_task(async function test_restore_backup_file_info_display() {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    let settings = browser.contentDocument.querySelector("backup-settings");
+    await settings.updateComplete;
+
+    Assert.ok(
+      settings.restoreFromBackupButtonEl,
+      "Restore button should exist"
+    );
+
+    settings.restoreFromBackupButtonEl.click();
+    await settings.updateComplete;
+
+    let restoreFromBackup = settings.restoreFromBackupEl;
+    Assert.ok(restoreFromBackup, "restore-from-backup should be found");
+
+    // Initially, backup file info should not be displayed underneath the input
+    let fileInfoSpan = restoreFromBackup.shadowRoot.querySelector(
+      "#restore-from-backup-backup-found-info"
+    );
+    Assert.ok(
+      !fileInfoSpan,
+      "Backup file info should not be displayed when backupFileInfo is null"
+    );
+
+    // Set backup file info with device name and date
+    const mockDate = new Date("2025-10-07T21:27:56.844Z");
+    const mockDeviceName = "test-device";
+    restoreFromBackup.backupServiceState = {
+      ...restoreFromBackup.backupServiceState,
+      backupFileInfo: {
+        date: mockDate,
+        deviceName: mockDeviceName,
+        isEncrypted: false,
+      },
+    };
+    await restoreFromBackup.updateComplete;
+
+    fileInfoSpan = restoreFromBackup.shadowRoot.querySelector(
+      "#restore-from-backup-backup-found-info"
+    );
+    Assert.ok(
+      fileInfoSpan,
+      "Backup file info should be displayed when backupFileInfo is set"
+    );
+
+    Assert.equal(
+      fileInfoSpan.getAttribute("data-l10n-id"),
+      "backup-file-creation-date-and-device",
+      "Should have the correct l10n id"
+    );
+
+    const l10nArgs = JSON.parse(fileInfoSpan.getAttribute("data-l10n-args"));
+    Assert.equal(
+      l10nArgs.machineName,
+      mockDeviceName,
+      "l10n args should contain the correct device name"
+    );
+    Assert.equal(
+      l10nArgs.date,
+      mockDate.getTime(),
+      "l10n args should contain the correct date"
+    );
+  });
+});
