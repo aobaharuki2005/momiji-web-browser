@@ -51,6 +51,19 @@ export default class PasswordRulesTooltip extends MozLitElement {
               class="rule-description"
             ></span>
           </li>
+          <li>
+            <img
+              class="icon"
+              src="chrome://browser/skin/preferences/category-privacy-security.svg"
+            />
+            <span data-l10n-id="password-rules-disclaimer"
+              ><a
+                data-l10n-name="password-support-link"
+                target="_blank"
+                href=${`${this.supportBaseLink}password-strength`}
+              ></a
+            ></span>
+          </li>
         </ul>
       </div>
     `;

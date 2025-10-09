@@ -3325,8 +3325,6 @@ export class BackupService extends EventTarget {
       );
     }
 
-    // TODO: Enforce other password rules here, such as ensuring that the
-    // password is not considered common.
     ({ instance: encState } =
       await lazy.ArchiveEncryptionState.initialize(password));
     if (!encState) {
