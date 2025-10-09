@@ -72,7 +72,7 @@ requestLongerTimeout(2);
 var UNMODIFIED_CANVAS_DATA = undefined;
 
 add_setup(async function () {
-  // Make sure Efficient Randomization is the only one on
+  // Disable the fingerprinting randomization.
   await SpecialPowers.pushPrefEnv({
     set: [
       [

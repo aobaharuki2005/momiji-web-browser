@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 DESKTOP_DEFAULT(CanvasRandomization)
-DESKTOP_DEFAULT(EfficientCanvasRandomization)
 DESKTOP_DEFAULT(FontVisibilityLangPack)
 DESKTOP_DEFAULT(JSMathFdlibm)
 DESKTOP_DEFAULT(ScreenAvailToResolution)
@@ -12,7 +11,6 @@ DESKTOP_DEFAULT(NavigatorHWConcurrencyTiered)
 DESKTOP_DEFAULT(MaxTouchPointsCollapse)
 
 ANDROID_DEFAULT(CanvasRandomization)
-ANDROID_DEFAULT(EfficientCanvasRandomization)
 ANDROID_DEFAULT(FontVisibilityLangPack)
 ANDROID_DEFAULT(JSMathFdlibm)
 ANDROID_DEFAULT(ScreenAvailToResolution)
