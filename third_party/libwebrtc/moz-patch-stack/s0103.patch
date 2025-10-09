@@ -75,7 +75,7 @@ index cdbd705ec2..4ee826ec58 100644
  # The python interpreter to use by default. On Windows, this will look
  # for vpython3.exe and vpython3.bat.
 diff --git a/BUILD.gn b/BUILD.gn
-index 74f7c78e12..f5aa3cc9fe 100644
+index 29fa9ffdc7..5f3497a925 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -21,15 +21,15 @@
@@ -107,7 +107,7 @@ index 74f7c78e12..f5aa3cc9fe 100644
      defines = []
  
      deps = [
-@@ -845,7 +845,7 @@ rtc_static_library("dcsctp") {
+@@ -846,7 +846,7 @@ rtc_static_library("dcsctp") {
    visibility = [ "//:default" ]
    sources = []
    complete_static_lib = true
@@ -116,7 +116,7 @@ index 74f7c78e12..f5aa3cc9fe 100644
    defines = []
    deps = [
      "net/dcsctp/public:factory",
-@@ -880,7 +880,7 @@ group("poison_software_video_codecs") {
+@@ -881,7 +881,7 @@ group("poison_software_video_codecs") {
  if (!build_with_chromium) {
    # Write debug logs to gn_logs.txt.
    # This is also required for Siso builds.
@@ -126,7 +126,7 @@ index 74f7c78e12..f5aa3cc9fe 100644
              "Generated during 'gn gen' by //BUILD.gn.",
              "",
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index f0dc1684d9..089f04a873 100644
+index f1c2c2e3a4..9e605c4920 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -8,8 +8,8 @@

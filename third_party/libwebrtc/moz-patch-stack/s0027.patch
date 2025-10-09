@@ -116,7 +116,7 @@ index 1b112b34c0..18cf5d67f7 100644
    # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
    # Chromium fix resolves the problem.
 diff --git a/BUILD.gn b/BUILD.gn
-index fd77e776cd..9d79e5e129 100644
+index 1565aeb592..cfbba26987 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -33,7 +33,7 @@ if (is_android) {
@@ -203,7 +203,7 @@ index fd77e776cd..9d79e5e129 100644
      }
  
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 4ee76f6757..f0dc1684d9 100644
+index 2dbc1c17ba..f1c2c2e3a4 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -44,6 +44,9 @@ rtc_library("enable_media") {
@@ -332,7 +332,7 @@ index 4ee76f6757..f0dc1684d9 100644
  
  rtc_source_set("data_channel_event_observer_interface") {
    visibility = [ "*" ]
-@@ -1001,6 +1034,7 @@ rtc_source_set("refcountedbase") {
+@@ -1004,6 +1037,7 @@ rtc_source_set("refcountedbase") {
  }
  
  rtc_library("ice_transport_factory") {
@@ -340,7 +340,7 @@ index 4ee76f6757..f0dc1684d9 100644
    visibility = [ "*" ]
    sources = [
      "ice_transport_factory.cc",
-@@ -1024,6 +1058,7 @@ rtc_library("ice_transport_factory") {
+@@ -1027,6 +1061,7 @@ rtc_library("ice_transport_factory") {
      "rtc_event_log:rtc_event_log",
    ]
  }
