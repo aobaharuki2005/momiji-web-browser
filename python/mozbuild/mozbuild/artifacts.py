@@ -1213,18 +1213,16 @@ class Artifacts:
         self._tree = tree
         self._job = job or self._guess_artifact_job()
         self._log = log
+        self._topsrcdir = topsrcdir
         self._hg = hg
         self._git = git
         self._jj = jj
         if self._jj:
-            self._git_root = subprocess.check_output(
-                [self._jj, "git", "root"], universal_newlines=True, cwd=topsrcdir
-            ).strip()
+            self._git_root = self.run_jj("git", "root").strip()
         else:
             self._git_root = None
         self._cache_dir = cache_dir
         self._skip_cache = skip_cache
-        self._topsrcdir = topsrcdir
         self._no_process = no_process
         self._unfiltered_project_package = unfiltered_project_package
 
@@ -1280,6 +1278,12 @@ class Artifacts:
         env["HGPLAIN"] = "1"
         kwargs["universal_newlines"] = True
         return subprocess.check_output([self._hg] + list(args), **kwargs)
+
+    def run_jj(self, *args, **kwargs):
+        kwargs["universal_newlines"] = True
+        return subprocess.check_output(
+            [self._jj] + list(args), **kwargs, cwd=self._topsrcdir
+        )
 
     def check_git_output(self, cmd, *args, **kwargs):
         env = os.environ.copy()
@@ -1424,13 +1428,13 @@ class Artifacts:
 
         return candidate_pushheads
 
-    def _get_revisions_from_git(self):
+    def _get_revisions_from_git(self, rev="HEAD"):
         rev_list = self.check_git_output(
             [
                 "rev-list",
                 "--topo-order",
                 f"--max-count={NUM_REVISIONS_TO_QUERY}",
-                "HEAD",
+                rev,
             ],
             cwd=self._topsrcdir,
         )
@@ -1472,6 +1476,12 @@ class Artifacts:
 
         If we're using git, retrieves hg revisions from git-cinnabar.
         """
+
+        if self._jj:
+            workspace_rev = self.run_jj(
+                "log", "--revisions", "@", "--template", "commit_id", "--no-graph"
+            ).strip()
+            return self._get_revisions_from_git(workspace_rev)
         if self._git:
             return self._get_revisions_from_git()
 
@@ -1705,7 +1715,9 @@ https://firefox-source-docs.mozilla.org/contributing/vcs/mercurial_bundles.html
                         logging.DEBUG,
                         "artifact",
                         {"hg_hash": hg_hash, "tree": tree},
-                        "Trying to find artifacts for hg revision {hg_hash} on tree {tree}.",
+                        # XXXgijs this log is now correct (these are git revs);
+                        # Updating the variable naming is bug 1993477.
+                        "Trying to find artifacts for git revision {hg_hash} on tree {tree}.",
                     )
                     urls = self.find_pushhead_artifacts(
                         task_cache, self._job, tree, hg_hash
