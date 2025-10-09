@@ -32,10 +32,10 @@ index c967019b11..bd66288681 100644
      defines += [ "WEBRTC_MAC" ]
    }
 diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
-index 2f7b5b5333..a525311157 100644
+index b26e30e8bb..93743554a9 100644
 --- a/modules/video_capture/BUILD.gn
 +++ b/modules/video_capture/BUILD.gn
-@@ -78,7 +78,7 @@ if (!build_with_chromium || is_linux || is_chromeos) {
+@@ -80,7 +80,7 @@ if (!build_with_chromium || is_linux || is_chromeos) {
        "video_capture_options.h",
      ]
  
@@ -45,11 +45,11 @@ index 2f7b5b5333..a525311157 100644
          "linux/device_info_linux.cc",
          "linux/device_info_v4l2.cc",
 diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
-index e3c2395f49..119cb07ab8 100644
+index 7d2b5416da..74dd7e5818 100644
 --- a/modules/video_capture/linux/device_info_v4l2.h
 +++ b/modules/video_capture/linux/device_info_v4l2.h
-@@ -16,7 +16,9 @@
- #include "modules/video_capture/device_info_impl.h"
+@@ -17,7 +17,9 @@
+ #include "rtc_base/thread_annotations.h"
  
  #include "rtc_base/platform_thread.h"
 +#ifdef WEBRTC_LINUX

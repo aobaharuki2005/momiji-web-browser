@@ -7,40 +7,20 @@ Bug 1554949 - Fix WebRTC build failure with newer linux kernel. r=dminor
 
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a636ecdcb91afb1c5d436bbcbd87da4f10f7df78
 ---
- modules/video_capture/linux/device_info_linux.cc   | 6 ++++++
- modules/video_capture/linux/device_info_v4l2.cc    | 8 +++++++-
- modules/video_capture/linux/video_capture_linux.cc | 9 ++++++++-
- rtc_base/byte_order.h                              | 2 ++
- rtc_base/cpu_info.cc                               | 2 +-
- rtc_base/physical_socket_server.cc                 | 7 +++++--
- 6 files changed, 29 insertions(+), 5 deletions(-)
+ modules/video_capture/linux/device_info_v4l2.cc | 8 +++++++-
+ rtc_base/byte_order.h                           | 2 ++
+ rtc_base/cpu_info.cc                            | 2 +-
+ rtc_base/physical_socket_server.cc              | 7 +++++--
+ 4 files changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/modules/video_capture/linux/device_info_linux.cc b/modules/video_capture/linux/device_info_linux.cc
-index 4f8b7c059b..56da475bf3 100644
---- a/modules/video_capture/linux/device_info_linux.cc
-+++ b/modules/video_capture/linux/device_info_linux.cc
-@@ -16,7 +16,13 @@
- #include <sys/ioctl.h>
- #include <unistd.h>
- // v4l includes
-+#if defined(__NetBSD__) || defined(__OpenBSD__) // WEBRTC_BSD
-+#include <sys/videoio.h>
-+#elif defined(__sun)
-+#include <sys/videodev2.h>
-+#else
- #include <linux/videodev2.h>
-+#endif
- 
- #include <vector>
- 
 diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index 7397a10625..19b32f16b9 100644
+index 6452a3c235..9f7f3ea508 100644
 --- a/modules/video_capture/linux/device_info_v4l2.cc
 +++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -18,7 +18,13 @@
- #include <sys/ioctl.h>
- #include <unistd.h>
- // v4l includes
+@@ -11,7 +11,13 @@
+ #include "modules/video_capture/linux/device_info_v4l2.h"
+ 
+ #include <fcntl.h>
 +#if defined(__NetBSD__) || defined(__OpenBSD__) // WEBRTC_BSD
 +#include <sys/videoio.h>
 +#elif defined(__sun)
@@ -48,8 +28,8 @@ index 7397a10625..19b32f16b9 100644
 +#else
  #include <linux/videodev2.h>
 +#endif
- 
- #include <vector>
+ #include <sys/ioctl.h>
+ #include <unistd.h>
  
 @@ -209,8 +215,8 @@ DeviceInfoV4l2::DeviceInfoV4l2() : DeviceInfoImpl()
      {
@@ -61,33 +41,6 @@ index 7397a10625..19b32f16b9 100644
  
  int32_t DeviceInfoV4l2::Init() {
    return 0;
-diff --git a/modules/video_capture/linux/video_capture_linux.cc b/modules/video_capture/linux/video_capture_linux.cc
-index 0b57cfe90c..1c635ea440 100644
---- a/modules/video_capture/linux/video_capture_linux.cc
-+++ b/modules/video_capture/linux/video_capture_linux.cc
-@@ -10,7 +10,6 @@
- 
- #include <errno.h>
- #include <fcntl.h>
--#include <linux/videodev2.h>
- #include <stdio.h>
- #include <string.h>
- #include <sys/ioctl.h>
-@@ -18,6 +17,14 @@
- #include <sys/select.h>
- #include <time.h>
- #include <unistd.h>
-+// v4l includes
-+#if defined(__NetBSD__) || defined(__OpenBSD__) // WEBRTC_BSD
-+#include <sys/videoio.h>
-+#elif defined(__sun)
-+#include <sys/videodev2.h>
-+#else
-+#include <linux/videodev2.h>
-+#endif
- 
- #include <new>
- #include <string>
 diff --git a/rtc_base/byte_order.h b/rtc_base/byte_order.h
 index cd4fd421ca..c8efa9ac83 100644
 --- a/rtc_base/byte_order.h

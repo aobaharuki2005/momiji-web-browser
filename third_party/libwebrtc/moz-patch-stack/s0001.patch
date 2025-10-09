@@ -784,10 +784,10 @@ index 45d5dbf686..c7e9a2a594 100644
    RTC_CHECK_NOTREACHED();
  }
 diff --git a/modules/video_capture/device_info_impl.cc b/modules/video_capture/device_info_impl.cc
-index 1d3e3ee89e..97039646f7 100644
+index f96fda0903..2b6a0568e1 100644
 --- a/modules/video_capture/device_info_impl.cc
 +++ b/modules/video_capture/device_info_impl.cc
-@@ -72,7 +72,7 @@ int32_t DeviceInfoImpl::GetCapability(const char* deviceUniqueIdUTF8,
+@@ -71,7 +71,7 @@ int32_t DeviceInfoImpl::GetCapability(const char* deviceUniqueIdUTF8,
  
    // Make sure the number is valid
    if (deviceCapabilityNumber >= (unsigned int)_captureCapabilities.size()) {
@@ -797,10 +797,10 @@ index 1d3e3ee89e..97039646f7 100644
                        << _captureCapabilities.size() << ").";
      return -1;
 diff --git a/modules/video_capture/device_info_impl.h b/modules/video_capture/device_info_impl.h
-index 546265049c..8acbef6d69 100644
+index c8d32179ed..86b19cbc22 100644
 --- a/modules/video_capture/device_info_impl.h
 +++ b/modules/video_capture/device_info_impl.h
-@@ -42,6 +42,7 @@ class DeviceInfoImpl : public VideoCaptureModule::DeviceInfo {
+@@ -41,6 +41,7 @@ class DeviceInfoImpl : public VideoCaptureModule::DeviceInfo {
    /* Initialize this object*/
  
    virtual int32_t Init() = 0;
@@ -809,7 +809,7 @@ index 546265049c..8acbef6d69 100644
     * Fills the member variable _captureCapabilities with capabilities for the
     * given device name.
 diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index a472e41a41..7397a10625 100644
+index 289975b2e1..6452a3c235 100644
 --- a/modules/video_capture/linux/device_info_v4l2.cc
 +++ b/modules/video_capture/linux/device_info_v4l2.cc
 @@ -45,15 +45,187 @@
@@ -1013,12 +1013,12 @@ index a472e41a41..7397a10625 100644
    uint32_t count = 0;
    char device[20];
 diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
-index fb95a6020d..95432a509d 100644
+index c08fbe6937..a94591e25d 100644
 --- a/modules/video_capture/linux/device_info_v4l2.h
 +++ b/modules/video_capture/linux/device_info_v4l2.h
-@@ -15,6 +15,9 @@
- 
+@@ -16,6 +16,9 @@
  #include "modules/video_capture/device_info_impl.h"
+ #include "rtc_base/thread_annotations.h"
  
 +#include "rtc_base/platform_thread.h"
 +#include <sys/inotify.h>
@@ -1026,7 +1026,7 @@ index fb95a6020d..95432a509d 100644
  namespace webrtc {
  namespace videocapturemodule {
  class DeviceInfoV4l2 : public DeviceInfoImpl {
-@@ -28,7 +31,8 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
+@@ -29,7 +32,8 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
                          char* deviceUniqueIdUTF8,
                          uint32_t deviceUniqueIdUTF8Length,
                          char* productUniqueIdUTF8 = 0,
@@ -1036,7 +1036,7 @@ index fb95a6020d..95432a509d 100644
    /*
     * Fills the membervariable _captureCapabilities with capabilites for the
     * given device name.
-@@ -45,6 +49,18 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
+@@ -46,6 +50,18 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
  
   private:
    bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);
@@ -1252,10 +1252,10 @@ index 6e205a215f..98bf0c78cf 100644
  
    return 0;
 diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
-index d3ac5fe5ef..3889867842 100644
+index 8c0f592e94..502a152902 100644
 --- a/modules/video_capture/video_capture_impl.h
 +++ b/modules/video_capture/video_capture_impl.h
-@@ -66,8 +66,10 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
+@@ -62,8 +62,10 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
        VideoSinkInterface<VideoFrame>* dataCallback) override;
    virtual void RegisterCaptureDataCallback(
        RawVideoSinkInterface* dataCallback) override;
@@ -1267,7 +1267,7 @@ index d3ac5fe5ef..3889867842 100644
    int32_t SetCaptureRotation(VideoRotation rotation) override;
    bool SetApplyRotation(bool enable) override;
    bool GetApplyRotation() override;
-@@ -117,7 +119,7 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
+@@ -113,7 +115,7 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
    // last time the frame rate callback function was called.
    int64_t _lastFrameRateCallbackTimeNanos RTC_GUARDED_BY(capture_checker_);
  

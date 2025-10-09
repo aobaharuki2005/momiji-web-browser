@@ -10,15 +10,7 @@
 
 #include "modules/video_capture/linux/device_info_v4l2.h"
 
-#include <errno.h>
 #include <fcntl.h>
-#include <poll.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-// v4l includes
 #if defined(__NetBSD__) || defined(__OpenBSD__) // WEBRTC_BSD
 #include <sys/videoio.h>
 #elif defined(__sun)
@@ -26,12 +18,20 @@
 #else
 #include <linux/videodev2.h>
 #endif
+#include <poll.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
-#include <vector>
+#include <cerrno>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
-#include "modules/video_capture/video_capture.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
+#include "modules/video_capture/device_info_impl.h"
 #include "modules/video_capture/video_capture_defines.h"
-#include "modules/video_capture/video_capture_impl.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
 // These defines are here to support building on kernel 3.16 which some
