@@ -34,7 +34,6 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FilterInstance.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/GeckoBindings.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"

@@ -13,7 +13,6 @@
 #include <type_traits>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/gfx/ScaleFactors2D.h"
 #include "Types.h"
 

@@ -8,7 +8,6 @@
 
 #include <math.h>
 
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/dom/DOMMatrix.h"
 #include "mozilla/dom/SVGMatrixBinding.h"
 #include "nsError.h"

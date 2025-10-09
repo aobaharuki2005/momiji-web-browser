@@ -60,7 +60,6 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/Preferences.h"

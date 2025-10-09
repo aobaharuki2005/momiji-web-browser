@@ -18,7 +18,6 @@
 #include "gfxMatrix.h"
 #include "gfxPlatform.h"
 #include "mozilla/ComputedStyle.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SVGContextPaint.h"
