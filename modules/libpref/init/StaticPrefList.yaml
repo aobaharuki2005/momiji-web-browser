@@ -1818,9 +1818,9 @@
 # Communicates the preferred content theme color to platform (for e.g.,
 # prefers-color-scheme).
 #
-# dark (0), light (1), system (2), or toolbar (3).
+# dark (0), light (1), or system (2)
 #
-# Default to "toolbar", the theming code sets it appropriately.
+# Default to "system", the theming code sets it appropriately.
 - name: browser.theme.content-theme
   type: RelaxedAtomicUint32
   value: 2
