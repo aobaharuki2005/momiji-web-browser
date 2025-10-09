@@ -63,6 +63,8 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.searchScreen
 
 class NavigationToolbarTestCompose : TestSetup() {
+    private val customTabActionButton = "CustomActionButton"
+
     private lateinit var searchMockServer: MockWebServer
 
     private val bookmarkFolderName = "My Folder"
@@ -136,7 +138,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifySecurePageSecuritySubMenuTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             val defaultWebPage = "https://mozilla-mobile.github.io/testapp/loginForm"
@@ -161,7 +163,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifyInsecurePageSecuritySubMenuTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             val defaultWebPage = getGenericAsset(mockWebServer, 1)
@@ -187,7 +189,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @SkipLeaks
     fun verifyClearCookiesFromQuickSettingsTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             val loginPage = "https://mozilla-mobile.github.io/testapp/loginForm"
@@ -208,7 +210,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifyFontSizingChangeTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             // Goes through the settings and changes the default text on a webpage, then verifies if the text has changed.
@@ -246,7 +248,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifySearchForBookmarkedItemsTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             val firstWebPage = getGenericAsset(mockWebServer, 1)
@@ -277,7 +279,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifyTheCustomTabsMainMenuItemsTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             val customMenuItem = "TestMenuItem"
@@ -303,7 +305,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifyShowSearchSuggestionsToggleTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             homeScreen {
@@ -337,7 +339,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifyTheDefaultSearchEngineCanBeChangedTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             // Goes through the settings and changes the default search engine, then verifies it has changed.
@@ -365,7 +367,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun scanQRCodeToOpenAWebpageTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             val cameraManager =
@@ -386,7 +388,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifyHistorySearchWithBrowsingHistoryTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             val firstPageUrl = getGenericAsset(searchMockServer, 1)
@@ -426,7 +428,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun searchEnginesCanBeChangedTemporarilyFromSearchSelectorMenuTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             (generalEnginesList + topicEnginesList).forEach {
@@ -449,7 +451,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun searchHistoryNotRememberedInPrivateBrowsingTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             TestHelper.appContext.settings().shouldShowSearchSuggestionsInPrivate = true
@@ -499,7 +501,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun searchResultsOpenedInNewTabsGenerateSearchGroupsTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             val firstPageUrl = getGenericAsset(searchMockServer, 1).url
@@ -537,7 +539,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun searchGroupIsNotGeneratedForLinksOpenedInPrivateTabsTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             // setting our custom mockWebServer search URL
@@ -579,7 +581,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @SkipLeaks
     fun swipeToSwitchTabTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             val firstWebPage = getGenericAsset(mockWebServer, 1)
@@ -605,7 +607,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun changeThemeOfTheAppTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             homeScreen {
@@ -625,7 +627,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun setToolbarPositionTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             homeScreen {
@@ -655,7 +657,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifyEnabledUrlAutocompleteToggleTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             // Currently part of an experiment https://bugzilla.mozilla.org/show_bug.cgi?id=1842106
@@ -712,7 +714,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun disableSearchBrowsingHistorySuggestionsToggleTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             val websiteURL = getGenericAsset(mockWebServer, 1).url.toString()
@@ -743,7 +745,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun disableSearchBookmarksToggleTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             val website = getGenericAsset(mockWebServer, 1)
@@ -778,7 +780,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifyShowVoiceSearchToggleTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             homeScreen {
@@ -804,7 +806,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun doNotAllowSearchSuggestionsInPrivateBrowsingTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             homeScreen {
@@ -822,7 +824,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifyClearSearchButtonTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             homeScreen {
@@ -838,7 +840,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifySearchForHistoryItemsTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             val firstWebPage = getGenericAsset(mockWebServer, 1)
@@ -869,7 +871,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifyHistorySearchWithoutBrowsingHistoryTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             homeScreen {
@@ -889,7 +891,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifySearchBarItemsTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             navigationToolbar {
@@ -911,7 +913,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifySearchSelectorMenuItemsTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             homeScreen {
@@ -932,7 +934,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifyTabsSearchItemsTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             searchScreen {
@@ -950,7 +952,7 @@ class NavigationToolbarTestCompose : TestSetup() {
     @Test
     fun verifyHistorySearchItemsTest() {
         runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA ||
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
                 composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
         ) {
             searchScreen {
@@ -959,6 +961,38 @@ class NavigationToolbarTestCompose : TestSetup() {
                 verifyVoiceSearchButtonWithComposableToolbar(composeTestRule, isDisplayed = true)
                 verifySearchBarPlaceholderWithComposableToolbar("Search history")
                 verifyScanButtonWithComposableToolbar(composeTestRule, isDisplayed = false)
+            }
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135036
+    @Test
+    fun verifyCustomTabViewItemsTest() {
+        runWithCondition(
+            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
+                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            val customTabPage = getGenericAsset(mockWebServer, 1)
+
+            intentReceiverActivityTestRule.launchActivity(
+                createCustomTabIntent(
+                    pageUrl = customTabPage.url.toString(),
+                    customActionButtonDescription = customTabActionButton,
+                ),
+            )
+
+            customTabScreen {
+                verifyCustomTabCloseButtonWithComposableToolbar(composeTestRule)
+                verifyCustomTabsSiteInfoButtonWithComposableToolbar(composeTestRule)
+                verifyCustomTabToolbarTitleWithComposableToolbar(composeTestRule, customTabPage.title)
+                verifyCustomTabUrlWithComposableToolbar(composeTestRule, customTabPage.url.toString())
+                verifyCustomTabActionButtonWithComposableToolbar(composeTestRule, customTabActionButton)
+                verifyCustomTabsShareButtonWithComposableToolbar(composeTestRule)
+                verifyMainMenuComposeButtonWithComposableToolbar(composeTestRule)
+                clickCustomTabCloseButtonWithComposableToolbar(composeTestRule)
+            }
+            homeScreen {
+                verifyHomeScreenAppBarItems()
             }
         }
     }
