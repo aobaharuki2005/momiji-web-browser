@@ -124,3 +124,60 @@ add_task(
     await SpecialPowers.popPrefEnv();
   }
 );
+
+add_task(async function test_button_click_in_pbm_without_any_extensions() {
+  const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+
+  // Button click opens about:addons (reuses about:privatebrowsing tab).
+  // Primary click should open about:addons.
+  const tabLoadedPromise = BrowserTestUtils.browserStopped(
+    win.gBrowser.selectedBrowser,
+    "about:addons"
+  );
+
+  win.gUnifiedExtensions.button.click();
+
+  await tabLoadedPromise;
+  is(
+    win.gBrowser.currentURI.spec,
+    "about:addons",
+    "expected about:addons to be open"
+  );
+
+  // This also closes the new tab.
+  await BrowserTestUtils.closeWindow(win);
+});
+
+// Tests behavior when the user has extensions installed, but without private
+// browsing access. Extensions without private browsing access are not shown,
+// and if this was the only extension, then there is no extension to show.
+//
+// The scenario of there being an extension with private access is covered by
+// test_list_active_extensions_only in browser_unified_extensions.js.
+add_task(async function test_button_click_in_pbm_without_private_extensions() {
+  const extensions = createExtensions([{ name: "Without private access" }]);
+  await Promise.all(extensions.map(extension => extension.startup()));
+
+  const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+
+  // Button click opens about:addons (reuses about:privatebrowsing tab).
+  // Primary click should open about:addons.
+  const tabLoadedPromise = BrowserTestUtils.browserStopped(
+    win.gBrowser.selectedBrowser,
+    "about:addons"
+  );
+
+  win.gUnifiedExtensions.button.click();
+
+  await tabLoadedPromise;
+  is(
+    win.gBrowser.currentURI.spec,
+    "about:addons",
+    "expected about:addons to be open"
+  );
+
+  // This also closes the new tab.
+  await BrowserTestUtils.closeWindow(win);
+
+  await Promise.all(extensions.map(extension => extension.unload()));
+});
