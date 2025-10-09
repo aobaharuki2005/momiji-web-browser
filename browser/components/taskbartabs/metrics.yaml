@@ -123,3 +123,18 @@ web_app:
     notification_emails:
       - nrishel@mozilla.com
     expires: never
+
+  installed_web_app_count:
+    type: quantity
+    unit: web apps
+    description: >
+      Count of currently installed web apps. Note that Firefox does not detect
+      unpinning or deleting the shortcut outside of Firefox, so this could
+      include web apps that the user has no way to access; see bug 1990342.
+    bugs:
+      - bugzilla.mozilla.org/show_bug.cgi?id=1986557
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D265682
+    notification_emails:
+      - nrishel@mozilla.com
+    expires: never

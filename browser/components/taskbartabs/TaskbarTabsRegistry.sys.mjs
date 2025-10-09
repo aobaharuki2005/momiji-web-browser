@@ -392,6 +392,15 @@ export class TaskbarTabsRegistry {
   }
 
   /**
+   * Gets the number of taskbar tabs that are registered in this registry.
+   *
+   * @returns {number} The number of registered taskbar tabs.
+   */
+  countTaskbarTabs() {
+    return this.#taskbarTabs.length;
+  }
+
+  /**
    * Passthrough to `EventEmitter.on`.
    *
    * @param  {...any} args - Same as `EventEmitter.on`.
