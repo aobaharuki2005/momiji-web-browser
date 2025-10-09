@@ -1042,6 +1042,14 @@ class XPCShellTestThread(Thread):
             if self.timedout:
                 return
 
+            # Check for crashes before logging test_end
+            found_crash = self.checkForCrashes(
+                self.tempDir, self.symbolsPath, test_name=name
+            )
+            if found_crash:
+                status = "CRASH"
+                message = "Test crashed"
+
             if status != expected or ended_before_crash_reporter_init:
                 if ended_before_crash_reporter_init:
                     self.log.test_end(
@@ -1052,11 +1060,16 @@ class XPCShellTestThread(Thread):
                         group=group,
                     )
                 elif self.retry:
+                    retry_message = (
+                        "Test crashed, will retry"
+                        if status == "CRASH"
+                        else "Test failed or timed out, will retry"
+                    )
                     self.log.test_end(
                         name,
                         status,
                         expected=status,
-                        message="Test failed or timed out, will retry",
+                        message=retry_message,
                         group=group,
                     )
                     self.clean_temp_dirs(path)
@@ -1096,16 +1109,6 @@ class XPCShellTestThread(Thread):
                     self.passCount = 1
                 else:
                     self.todoCount = 1
-
-            if self.checkForCrashes(self.tempDir, self.symbolsPath, test_name=name):
-                if self.retry:
-                    self.clean_temp_dirs(path)
-                    return
-
-                # If we assert during shutdown there's a chance the test has passed
-                # but we haven't logged full output, so do so here.
-                self.log_full_output()
-                self.failCount = 1
 
             if self.logfiles and process_output:
                 self.createLogFile(name, process_output)
