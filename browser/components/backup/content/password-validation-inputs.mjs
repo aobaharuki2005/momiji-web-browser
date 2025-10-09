@@ -77,10 +77,17 @@ export default class PasswordValidationInputs extends MozLitElement {
 
   updatePasswordValidity() {
     const emailRegex = /^[\w!#$%&'*+/=?^`{|}~.-]+@[A-Z0-9-]+\.[A-Z0-9.-]+$/i;
+    const l10n = new Localization(["preview/backupSettings.ftl"], true);
+
     this._hasEmail = emailRegex.test(this.inputNewPasswordEl.value);
     if (this._hasEmail) {
-      // TODO: we need a localized string for this error (bug 1909983)
-      this.inputNewPasswordEl.setCustomValidity("TODO: no emails");
+      const invalid_password_email_l10n_message = l10n.formatValueSync(
+        "password-validity-has-email"
+      );
+
+      this.inputNewPasswordEl.setCustomValidity(
+        invalid_password_email_l10n_message
+      );
     } else {
       this.inputNewPasswordEl.setCustomValidity("");
     }
@@ -91,8 +98,13 @@ export default class PasswordValidationInputs extends MozLitElement {
     this._passwordsMatch =
       this.inputNewPasswordEl.value == this.inputRepeatPasswordEl.value;
     if (!this._passwordsMatch) {
-      // TODO: we need a localized string for this error  (bug 1909983)
-      this.inputRepeatPasswordEl.setCustomValidity("TODO: not matching");
+      const passwords_do_not_match_l10n_message = l10n.formatValueSync(
+        "password-validity-do-not-match"
+      );
+
+      this.inputRepeatPasswordEl.setCustomValidity(
+        passwords_do_not_match_l10n_message
+      );
     } else {
       this.inputRepeatPasswordEl.setCustomValidity("");
     }
