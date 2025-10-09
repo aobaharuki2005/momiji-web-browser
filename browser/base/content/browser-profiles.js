@@ -256,6 +256,8 @@ var gProfiles = {
       currentProfile = SelectableProfileService.currentProfile;
     }
 
+    let subview = PanelMultiView.getViewNode(document, "PanelUI-profiles");
+
     let backButton = PanelMultiView.getViewNode(
       document,
       "profiles-appmenu-back-button"
@@ -282,9 +284,62 @@ var gProfiles = {
       "profiles-edit-this-profile-button"
     );
 
+    let profilesList = PanelMultiView.getViewNode(document, "profiles-list");
+    // Automatically created by PanelMultiView.
+    const headerSeparator = profilesHeader.nextElementSibling;
+    let footerSeparator = PanelMultiView.getViewNode(
+      document,
+      "footer-separator"
+    );
+    if (!footerSeparator) {
+      footerSeparator = document.createXULElement("toolbarseparator");
+      footerSeparator.id = "footer-separator";
+    }
+
+    let createProfileButton = PanelMultiView.getViewNode(
+      document,
+      "profiles-create-profile-button"
+    );
+    if (!createProfileButton) {
+      createProfileButton = document.createXULElement("toolbarbutton");
+      createProfileButton.id = "profiles-create-profile-button";
+      createProfileButton.classList.add(
+        "subviewbutton",
+        "subviewbutton-iconic"
+      );
+      createProfileButton.setAttribute(
+        "data-l10n-id",
+        "appmenu-create-profile"
+      );
+    }
+
+    let manageProfilesButton = PanelMultiView.getViewNode(
+      document,
+      "profiles-manage-profiles-button"
+    );
+
+    if (!manageProfilesButton) {
+      manageProfilesButton = document.createXULElement("toolbarbutton");
+      manageProfilesButton.id = "profiles-manage-profiles-button";
+      manageProfilesButton.classList.add(
+        "subviewbutton",
+        "panel-subview-footer-button"
+      );
+      manageProfilesButton.setAttribute(
+        "data-l10n-id",
+        "appmenu-manage-profiles"
+      );
+    }
+
     if (profiles.length < 2) {
       profilesHeader.removeAttribute("style");
       editButton.hidden = true;
+
+      headerSeparator.hidden = false;
+      footerSeparator.hidden = true;
+      const subviewBody = subview.querySelector(".panel-subview-body");
+      subview.insertBefore(createProfileButton, subviewBody);
+      subview.insertBefore(manageProfilesButton, subviewBody);
     } else {
       profilesHeader.style.backgroundColor = "var(--appmenu-profiles-theme-bg)";
       profilesHeader.style.color = "var(--appmenu-profiles-theme-fg)";
@@ -292,10 +347,14 @@ var gProfiles = {
     }
 
     if (currentProfile && profiles.length > 1) {
-      let subview = PanelMultiView.getViewNode(document, "PanelUI-profiles");
       let { themeBg, themeFg } = currentProfile.theme;
       subview.style.setProperty("--appmenu-profiles-theme-bg", themeBg);
       subview.style.setProperty("--appmenu-profiles-theme-fg", themeFg);
+
+      headerSeparator.hidden = true;
+      subview.appendChild(footerSeparator);
+      subview.appendChild(createProfileButton);
+      subview.appendChild(manageProfilesButton);
 
       let headerText = PanelMultiView.getViewNode(
         document,
@@ -322,7 +381,6 @@ var gProfiles = {
     let subtitle = PanelMultiView.getViewNode(document, "profiles-subtitle");
     subtitle.hidden = profiles.length < 2;
 
-    let profilesList = PanelMultiView.getViewNode(document, "profiles-list");
     while (profilesList.lastElementChild) {
       profilesList.lastElementChild.remove();
     }
