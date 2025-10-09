@@ -365,10 +365,7 @@ class XPCShellTestThread(Thread):
         Simple wrapper to check for crashes.
         On a remote system, this is more complex and we need to overload this function.
         """
-        quiet = False
-        if self.crashAsPass:
-            quiet = True
-
+        quiet = self.crashAsPass or self.retry
         return mozcrash.log_crashes(
             self.log, dump_directory, symbols_path, test=test_name, quiet=quiet
         )

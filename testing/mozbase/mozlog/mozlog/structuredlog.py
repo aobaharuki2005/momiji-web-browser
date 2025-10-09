@@ -585,6 +585,7 @@ class StructuredLogger:
         Unicode("process_type", default=None, optional=True),
         List(Unicode, "stackwalk_errors", default=None),
         Unicode("subsuite", default=None, optional=True),
+        Boolean("quiet", default=False, optional=True),
     )
     def crash(self, data):
         if data["stackwalk_errors"] is None:

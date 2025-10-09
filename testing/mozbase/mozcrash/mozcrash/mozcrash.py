@@ -168,10 +168,10 @@ def log_crashes(
         stackwalk_binary=stackwalk_binary,
     ):
         crash_count += 1
-        if not quiet:
-            kwargs = info._asdict()
-            kwargs.pop("extra")
-            logger.crash(process=process, test=test, **kwargs)
+        kwargs = info._asdict()
+        kwargs.pop("extra")
+        kwargs["quiet"] = quiet
+        logger.crash(process=process, test=test, **kwargs)
     return crash_count
 
 
