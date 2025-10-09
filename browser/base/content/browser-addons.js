@@ -2298,6 +2298,11 @@ var gUnifiedExtensions = {
     return policies.some(p => !p.privateBrowsingAllowed);
   },
 
+  async isAtLeastOneExtensionDisabled() {
+    const addons = await AddonManager.getAddonsByTypes(["extension"]);
+    return addons.some(a => !a.hidden && !a.isActive);
+  },
+
   handleEvent(event) {
     switch (event.type) {
       case "ViewShowing":
@@ -2389,6 +2394,21 @@ var gUnifiedExtensions = {
         "unified-extensions-empty-content-explain-enable"
       );
       emptyStateBox.hidden = false;
+    } else {
+      emptyStateBox.hidden = true;
+      this.isAtLeastOneExtensionDisabled().then(result => {
+        if (result) {
+          document.l10n.setAttributes(
+            emptyStateBox.querySelector("h2"),
+            "unified-extensions-empty-reason-extension-not-enabled"
+          );
+          document.l10n.setAttributes(
+            emptyStateBox.querySelector("description"),
+            "unified-extensions-empty-content-explain-enable"
+          );
+          emptyStateBox.hidden = false;
+        }
+      });
     }
 
     const container = panelview.querySelector(
@@ -2609,7 +2629,8 @@ var gUnifiedExtensions = {
         // and no alternative content is available for display in the panel.
         if (
           !this.hasExtensionsInPanel() &&
-          !this.isPrivateWindowMissingExtensionsWithoutPBMAccess()
+          !this.isPrivateWindowMissingExtensionsWithoutPBMAccess() &&
+          !(await this.isAtLeastOneExtensionDisabled())
         ) {
           let viewID;
           if (

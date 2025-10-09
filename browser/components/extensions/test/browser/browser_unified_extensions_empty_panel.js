@@ -3,11 +3,24 @@
 
 "use strict";
 
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
+);
+AddonTestUtils.initMochitest(this);
+
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
 
 loadTestSubscript("head_unified_extensions.js");
+
+// The createExtensions helper (using ExtensionTestUtils.loadExtension) does
+// not support disabled add-ons. This helper uses AOM directly instead.
+async function promiseInstallWebExtension(extensionData) {
+  let addonFile = AddonTestUtils.createTempWebExtensionFile(extensionData);
+  let { addon } = await AddonTestUtils.promiseInstallFile(addonFile);
+  return addon;
+}
 
 add_setup(async function () {
   // Make sure extension buttons added to the navbar will not overflow in the
@@ -270,4 +283,77 @@ add_task(async function test_button_click_in_pbm_pinned_and_no_access() {
   await BrowserTestUtils.closeWindow(win);
 
   await Promise.all(extensions.map(extension => extension.unload()));
+});
+
+add_task(async function test_empty_state_with_disabled_addon() {
+  const [extension] = createExtensions([{ name: "The Only Extension" }]);
+  await extension.startup();
+  const addon = await AddonManager.getAddonByID(extension.id);
+  await addon.disable();
+
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+
+  // This clicks on gUnifiedExtensions.button and waits for panel to show.
+  await openExtensionsPanel(win);
+
+  let emptyStateBox = getEmptyStateContainer(win);
+  ok(BrowserTestUtils.isVisible(emptyStateBox), "Empty state is visible");
+  is(
+    emptyStateBox.querySelector("h2").getAttribute("data-l10n-id"),
+    "unified-extensions-empty-reason-extension-not-enabled",
+    "Has header 'You have extensions installed, but not enabled'"
+  );
+  is(
+    emptyStateBox.querySelector("description").getAttribute("data-l10n-id"),
+    "unified-extensions-empty-content-explain-enable",
+    "Has description pointing to Manage extensions button."
+  );
+
+  await BrowserTestUtils.closeWindow(win);
+
+  await extension.unload();
+});
+
+// This test shows that non-extension add-ons are ignored in evaluating whether
+// the empty panel should be shown, even if there is another reason that could
+// potentially match for extension types (e.g. add-on being disabled).
+add_task(async function test_no_empty_state_with_disabled_non_extension() {
+  const disabledDictAddon = await promiseInstallWebExtension({
+    manifest: {
+      name: "This is a dictionary (definitely not type 'extension') (disabled)",
+      dictionaries: {},
+      browser_specific_settings: { gecko: { id: "@dict-disabled" } },
+    },
+  });
+  const dictAddon = await promiseInstallWebExtension({
+    manifest: {
+      name: "This is a dictionary (definitely not type 'extension') (enabled)",
+      dictionaries: {},
+      browser_specific_settings: { gecko: { id: "@dict-not-disabled" } },
+    },
+  });
+  await disabledDictAddon.disable();
+  is(disabledDictAddon.isActive, false, "One of the dict add-ons was disabled");
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:robots" },
+    async () => {
+      // Primary click should open about:addons. Notably, the extensions panel
+      // and "You have extensions installed, but not enabled" is not shown.
+      const tabPromise = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        "about:addons",
+        true
+      );
+
+      gUnifiedExtensions.button.click();
+
+      const tab = await tabPromise;
+      ok(true, "about:addons opened instead of panel about disabled add-ons");
+      BrowserTestUtils.removeTab(tab);
+    }
+  );
+
+  await disabledDictAddon.uninstall();
+  await dictAddon.uninstall();
 });
