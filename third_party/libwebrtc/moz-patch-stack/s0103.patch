@@ -657,7 +657,7 @@ index 9a55af3ea9..3d272ba975 100644
  
  rtc_library("aligned_malloc") {
 diff --git a/rtc_base/synchronization/BUILD.gn b/rtc_base/synchronization/BUILD.gn
-index 934f71d31d..e359df920a 100644
+index 2a197152b9..4d5008874e 100644
 --- a/rtc_base/synchronization/BUILD.gn
 +++ b/rtc_base/synchronization/BUILD.gn
 @@ -8,8 +8,8 @@
