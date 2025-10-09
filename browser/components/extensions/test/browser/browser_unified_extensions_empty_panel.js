@@ -36,14 +36,17 @@ add_setup(async function () {
   // the behavior when there are no extensions to render in the list.
   // Temporarily fake-hide these extensions to ensure that we start with zero
   // extensions from the test's POV.
-  function fakeHideExtension(extensionId) {
+  async function fakeHideExtension(extensionId) {
     const { extension } = WebExtensionPolicy.getByID(extensionId);
     // This shadows ExtensionData.isHidden of the Extension subclass, causing
     // gUnifiedExtensions.getActivePolicies() to ignore the extension.
     sandbox.stub(extension, "isHidden").get(() => true);
+
+    const addon = await AddonManager.getAddonByID(extensionId);
+    sandbox.stub(addon.__AddonInternal__, "hidden").get(() => true);
   }
-  fakeHideExtension("mochikit@mozilla.org");
-  fakeHideExtension("special-powers@mozilla.org");
+  await fakeHideExtension("mochikit@mozilla.org");
+  await fakeHideExtension("special-powers@mozilla.org");
 });
 
 function getEmptyStateContainer(win) {
@@ -354,6 +357,36 @@ add_task(async function test_empty_state_is_hidden_when_panel_is_non_empty() {
   await Promise.all(extensions.map(extension => extension.unload()));
 });
 
+// Verify empty state when private browsing permission is missing, but
+// incognito:not_allowed is specified. See bug 1992179 for context.
+add_task(async function test_button_click_in_pbm_and_incognito_not_allowed() {
+  const extensions = createExtensions([
+    { name: "ext with incognito:not_allowed", incognito: "not_allowed" },
+  ]);
+  await Promise.all(extensions.map(extension => extension.startup()));
+  const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+
+  // This clicks on gUnifiedExtensions.button and waits for panel to show.
+  await openExtensionsPanel(win);
+
+  let emptyStateBox = getEmptyStateContainer(win);
+  ok(BrowserTestUtils.isVisible(emptyStateBox), "Empty state is visible");
+  is(
+    emptyStateBox.querySelector("h2").getAttribute("data-l10n-id"),
+    "unified-extensions-empty-reason-private-browsing-not-allowed",
+    "Has header 'You have extensions installed, but not enabled in private windows'"
+  );
+  is(
+    emptyStateBox.querySelector("description").getAttribute("data-l10n-id"),
+    "unified-extensions-empty-content-explain-manage",
+    "Has description pointing to Manage extensions button with text MANAGE, not ENABLE"
+  );
+
+  await BrowserTestUtils.closeWindow(win);
+
+  await Promise.all(extensions.map(extension => extension.unload()));
+});
+
 // Verify the behavior when there is an extension with private access but is
 // pinned, and an extension without private access.
 add_task(async function test_button_click_in_pbm_pinned_and_no_access() {
@@ -475,7 +508,9 @@ add_task(async function test_no_empty_state_with_disabled_non_extension() {
 
 // Verifies that if the only add-on is disabled by blocklisting, that we still
 // see a panel and that the blocklist message is visible.
-add_task(async function test_empty_state_with_blocklisted_addon() {
+// Between hard block and soft blocks, the only difference is that soft block
+// can be re-enabled, and that should be reflected in the message.
+async function do_test_empty_state_with_blocklisted_addon(isSoftBlock) {
   const addonId = "@extension-that-is-blocked";
   const addon = await promiseInstallWebExtension({
     manifest: {
@@ -487,7 +522,9 @@ add_task(async function test_empty_state_with_blocklisted_addon() {
   let promiseBlocklistAttentionUpdated = AddonTestUtils.promiseManagerEvent(
     "onBlocklistAttentionUpdated"
   );
-  const cleanupBlocklist = await loadBlocklistRawData({ blocked: [addon] });
+  const cleanupBlocklist = await loadBlocklistRawData({
+    [isSoftBlock ? "softblocked" : "blocked"]: [addon],
+  });
   info("Wait for onBlocklistAttentionUpdated manager listener call");
   await promiseBlocklistAttentionUpdated;
 
@@ -500,7 +537,9 @@ add_task(async function test_empty_state_with_blocklisted_addon() {
   Assert.deepEqual(
     window.document.l10n.getAttributes(messages[0]),
     {
-      id: "unified-extensions-mb-blocklist-error-single",
+      id: isSoftBlock
+        ? "unified-extensions-mb-blocklist-warning-single"
+        : "unified-extensions-mb-blocklist-error-single",
       args: {
         extensionName: "Name of the blocked ext",
         extensionsCount: 1,
@@ -516,11 +555,19 @@ add_task(async function test_empty_state_with_blocklisted_addon() {
     "unified-extensions-empty-reason-extension-not-enabled",
     "Has header 'You have extensions installed, but not enabled'"
   );
-  is(
-    emptyStateBox.querySelector("description").getAttribute("data-l10n-id"),
-    "unified-extensions-empty-content-explain-enable",
-    "Has description pointing to Manage extensions button."
-  );
+  if (isSoftBlock) {
+    is(
+      emptyStateBox.querySelector("description").getAttribute("data-l10n-id"),
+      "unified-extensions-empty-content-explain-enable",
+      "Has description pointing to Manage extensions button with text ENABLE"
+    );
+  } else {
+    is(
+      emptyStateBox.querySelector("description").getAttribute("data-l10n-id"),
+      "unified-extensions-empty-content-explain-manage",
+      "Has description pointing to Manage extensions button with text MANAGE, not ENABLE"
+    );
+  }
 
   await closeExtensionsPanel(window);
 
@@ -538,4 +585,12 @@ add_task(async function test_empty_state_with_blocklisted_addon() {
   await closeExtensionsPanel(window);
 
   await addon.uninstall();
+}
+
+add_task(async function test_empty_state_with_blocklisted_addon_hardblock() {
+  await do_test_empty_state_with_blocklisted_addon(/* isSoftBlock */ false);
+});
+
+add_task(async function test_empty_state_with_blocklisted_addon_softblock() {
+  await do_test_empty_state_with_blocklisted_addon(/* isSoftBlock */ true);
 });

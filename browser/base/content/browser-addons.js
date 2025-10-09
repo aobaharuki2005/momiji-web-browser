@@ -10,6 +10,7 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AMBrowserExtensionsImport: "resource://gre/modules/AddonManager.sys.mjs",
   AbuseReporter: "resource://gre/modules/AbuseReporter.sys.mjs",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
@@ -2298,9 +2299,44 @@ var gUnifiedExtensions = {
     return policies.some(p => !p.privateBrowsingAllowed);
   },
 
-  async isAtLeastOneExtensionDisabled() {
+  /**
+   * Returns whether there is any active extension without private browsing
+   * access, for which the user can toggle the "Run in Private Windows" option.
+   * This complements the isPrivateWindowMissingExtensionsWithoutPBMAccess()
+   * method, by distinguishing cases where the user can enable any extension
+   * in the private window, vs cases where the user cannot.
+   *
+   * @returns {Promise<boolean>} Whether there is any "Run in Private Windows"
+   *                             option that is Off and can be set to On.
+   */
+  async isAtLeastOneExtensionWithPBMOptIn() {
     const addons = await AddonManager.getAddonsByTypes(["extension"]);
-    return addons.some(a => !a.hidden && !a.isActive);
+    return addons.some(addon => {
+      if (
+        // We only care about extensions shown in the panel and about:addons.
+        addon.hidden ||
+        // We only care about extensions whose PBM access can be toggled.
+        !(
+          addon.permissions &
+          lazy.AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS
+        )
+      ) {
+        return false;
+      }
+      const policy = WebExtensionPolicy.getByID(addon.id);
+      // policy can be null if the extension is not active.
+      return policy && !policy.privateBrowsingAllowed;
+    });
+  },
+
+  async getDisabledExtensionsInfo() {
+    let addons = await AddonManager.getAddonsByTypes(["extension"]);
+    addons = addons.filter(a => !a.hidden && !a.isActive);
+    const isAnyDisabled = !!addons.length;
+    const isAnyEnableable = addons.some(
+      a => a.permissions & lazy.AddonManager.PERM_CAN_ENABLE
+    );
+    return { isAnyDisabled, isAnyEnableable };
   },
 
   handleEvent(event) {
@@ -2394,17 +2430,29 @@ var gUnifiedExtensions = {
         "unified-extensions-empty-content-explain-enable"
       );
       emptyStateBox.hidden = false;
+      this.isAtLeastOneExtensionWithPBMOptIn().then(result => {
+        // The "enable" message is somewhat misleading when the user cannot
+        // enable the extension, show a generic message instead (bug 1992179).
+        if (!result) {
+          document.l10n.setAttributes(
+            emptyStateBox.querySelector("description"),
+            "unified-extensions-empty-content-explain-manage"
+          );
+        }
+      });
     } else {
       emptyStateBox.hidden = true;
-      this.isAtLeastOneExtensionDisabled().then(result => {
-        if (result) {
+      this.getDisabledExtensionsInfo().then(disabledExtensionsInfo => {
+        if (disabledExtensionsInfo.isAnyDisabled) {
           document.l10n.setAttributes(
             emptyStateBox.querySelector("h2"),
             "unified-extensions-empty-reason-extension-not-enabled"
           );
           document.l10n.setAttributes(
             emptyStateBox.querySelector("description"),
-            "unified-extensions-empty-content-explain-enable"
+            disabledExtensionsInfo.isAnyEnableable
+              ? "unified-extensions-empty-content-explain-enable"
+              : "unified-extensions-empty-content-explain-manage"
           );
           emptyStateBox.hidden = false;
         } else if (!policies.length) {
@@ -2658,7 +2706,7 @@ var gUnifiedExtensions = {
           policies.length &&
           !this.hasExtensionsInPanel(policies) &&
           !this.isPrivateWindowMissingExtensionsWithoutPBMAccess() &&
-          !(await this.isAtLeastOneExtensionDisabled())
+          !(await this.getDisabledExtensionsInfo()).isAnyDisabled
         ) {
           // This may happen if the user has pinned all of their extensions.
           // In that case, the extensions panel is empty.

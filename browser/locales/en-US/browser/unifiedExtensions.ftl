@@ -16,6 +16,7 @@ unified-extensions-empty-reason-extension-not-enabled = You have extensions inst
 # In this headline, “Level up” means to enhance your browsing experience.
 unified-extensions-empty-reason-zero-extensions-onboarding = Level up your browsing with extensions
 unified-extensions-empty-content-explain-enable = Select “{ unified-extensions-item-message-manage }” to enable them in settings.
+unified-extensions-empty-content-explain-manage = Select “{ unified-extensions-item-message-manage }” to manage them in settings.
 unified-extensions-empty-content-explain-extensions-onboarding = Personalize { -brand-short-name } by changing how it looks and performs or boosting privacy and safety.
 
 ## An extension in the main list
