@@ -9558,7 +9558,7 @@
 # unstable GPU process, otherwise simply crash the parent process.
 - name: layers.gpu-process.allow-fallback-to-parent
   type: bool
-  value: false
+  value: @IS_NOT_NIGHTLY_BUILD@
   mirror: once
 
 - name: layers.gpu-process.allow-software
