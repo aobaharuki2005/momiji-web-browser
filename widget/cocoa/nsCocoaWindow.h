@@ -391,12 +391,6 @@ class nsCocoaWindow final : public nsBaseWidget {
   bool WidgetPaintsBackground() override { return true; }
 
   void CreateCompositor(int aWidth, int aHeight) override;
-  static void FinishCreateCompositor(
-      int aWidth, int aHeight,
-      mozilla::ipc::Endpoint<mozilla::layers::PNativeLayerRemoteParent>&&
-          aParentEndpoint,
-      RefPtr<mozilla::layers::NativeLayerRootRemoteMacParent>
-          aNativeLayerRootRemoteMacParent);
   void DestroyCompositor() override;
   void SetCompositorWidgetDelegate(
       mozilla::widget::CompositorWidgetDelegate*) override;
