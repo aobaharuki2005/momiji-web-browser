@@ -126,7 +126,7 @@ index cf7548754f..2e0fd6721d 100644
              "Generated during 'gn gen' by //BUILD.gn.",
              "",
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index f1c2c2e3a4..9e605c4920 100644
+index b6da9b6920..eda94a3854 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -326,7 +326,7 @@ index 589142b014..2ee80ded55 100644
      }
    }
 diff --git a/examples/BUILD.gn b/examples/BUILD.gn
-index 4508146c93..e8306f3daa 100644
+index 9addddedc8..fef8e4ec56 100644
 --- a/examples/BUILD.gn
 +++ b/examples/BUILD.gn
 @@ -9,15 +9,15 @@
@@ -359,7 +359,7 @@ index 4508146c93..e8306f3daa 100644
            "//third_party/ocmock",
          ]
        }
-@@ -736,7 +736,7 @@ if (is_linux || is_chromeos || is_win) {
+@@ -739,7 +739,7 @@ if (is_linux || is_chromeos || is_win) {
          "peerconnection/client/main_wnd.cc",
          "peerconnection/client/main_wnd.h",
        ]
@@ -427,7 +427,7 @@ index 576980c5ab..2a8b864d5b 100644
  
  group("logging") {
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index a992a032c5..6f2dc22e00 100644
+index 82b4bbfbae..b58cb6ba9a 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -6,7 +6,7 @@
