@@ -10,6 +10,10 @@
 #include "WakeLockListener.h"
 #include "WidgetUtilsGtk.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Services.h"
+#include "nsIStringBundle.h"
+#include "nsReadableUtils.h"
+#include "nsContentUtils.h"
 
 #ifdef MOZ_ENABLE_DBUS
 #  include <gio/gio.h>
@@ -53,6 +57,16 @@ using namespace mozilla;
 using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS(WakeLockListener, nsIDOMMozWakeLockListener)
+
+static nsCString GetLocalizedWakeLockString(const char* aStringName) {
+  nsAutoString localizedString;
+  nsresult rv = nsContentUtils::GetLocalizedString(
+      nsContentUtils::eDOM_PROPERTIES, aStringName, localizedString);
+  if (NS_FAILED(rv)) {
+    return nsCString();
+  }
+  return NS_ConvertUTF16toUTF8(localizedString);
+}
 
 #define WAKE_LOCK_LOG(str, ...)                        \
   MOZ_LOG(gLinuxWakeLockLog, mozilla::LogLevel::Debug, \
@@ -146,9 +160,23 @@ class WakeLockTopic {
     CopyUTF16toUTF8(aTopic, mTopic);
     WAKE_LOCK_LOG("WakeLockTopic::WakeLockTopic() created %s", mTopic.get());
     if (mTopic.Equals("video-playing")) {
-      mNiceTopic = "Playing video";
+      static nsCString videoPlayingString = []() -> nsCString {
+        auto string = GetLocalizedWakeLockString("WakeLockVideoPlaying");
+        if (string.IsEmpty()) {
+          string = "Playing video";
+        }
+        return string;
+      }();
+      mNiceTopic = videoPlayingString;
     } else if (mTopic.Equals("audio-playing")) {
-      mNiceTopic = "Playing audio";
+      static nsCString audioPlayingString = []() -> nsCString {
+        auto string = GetLocalizedWakeLockString("WakeLockAudioPlaying");
+        if (string.IsEmpty()) {
+          string = "Playing audio";
+        }
+        return string;
+      }();
+      mNiceTopic = audioPlayingString;
     }
     if (sWakeLockType == Initial) {
       InitializeWakeLockType();
