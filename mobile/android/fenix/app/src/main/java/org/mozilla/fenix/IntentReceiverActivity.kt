@@ -27,7 +27,6 @@ import org.mozilla.fenix.components.getType
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isIntentInternal
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.perf.AppLinkIntentLaunchTypeProvider
 import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.shortcut.NewTabShortcutIntentProcessor
@@ -49,7 +48,7 @@ class IntentReceiverActivity : Activity() {
         // e.g. COLD launch is interpreted as WARM due to [Activity.onActivityCreated] being called
         // earlier.
         if (intent.dataString != null) { // data is null when there's no URI to load, e.g. Search widget.
-            val type = AppLinkIntentLaunchTypeProvider.getExternalIntentLaunchType(HomeActivity::class.java)
+            val type = components.appLinkIntentLaunchTypeProvider.getExternalIntentLaunchType(HomeActivity::class.java)
             intent.putExtra(EXTRA_APP_LINK_LAUNCH_TYPE, type)
         }
 
