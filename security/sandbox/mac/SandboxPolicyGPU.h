@@ -127,6 +127,13 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
     (global-name "com.apple.CoreDisplay.Notification")
     (global-name "com.apple.cvmsServ"))
 
+  ; Allow access to defaults services
+  (allow mach-lookup
+    (global-name "com.apple.cfprefsd.agent")
+    (global-name "com.apple.cfprefsd.daemon"))
+  (allow ipc-posix-shm-read-data
+    (ipc-posix-name-regex #"^apple\.cfprefs\..*"))
+
   (define (home-subpath home-relative-subpath)
     (subpath (string-append homePath home-relative-subpath)))
 
