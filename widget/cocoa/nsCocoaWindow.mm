@@ -974,30 +974,6 @@ void nsCocoaWindow::DestroyCompositor() {
   nsBaseWidget::DestroyCompositor();
 }
 
-void nsCocoaWindow::NotifyCompositorSessionLost(
-    mozilla::layers::CompositorSession* aSession) {
-  // The GPU process has crashed.
-  //
-  // Trigger a repaint of this window.
-  // Without this, WebRender won't receive a display list for this
-  // window until something else triggers a parent-side repaint. So tab
-  // contents would remain frozen until the user moves the mouse over a
-  // UI element, for example.
-  //
-  // The Windows equivalent to this code is InvalidateWindowForDeviceReset.
-  //
-  // We wait for a short time before the repaint in order to avoid
-  // flashing tab content - if we were to trigger the parent-side paint
-  // immediately, the composite would briefly hide the tab contents because
-  // the new compositor won't have a display list for the tab yet.
-  const double kTriggerPaintDelayAfterGpuProcessCrash = 0.4;  // 400ms
-  [mChildView performSelector:@selector(markLayerForDisplay)
-                   withObject:nil
-                   afterDelay:kTriggerPaintDelayAfterGpuProcessCrash];
-
-  nsBaseWidget::NotifyCompositorSessionLost(aSession);
-}
-
 void nsCocoaWindow::SetCompositorWidgetDelegate(
     mozilla::widget::CompositorWidgetDelegate* aDelegate) {
   if (aDelegate) {
