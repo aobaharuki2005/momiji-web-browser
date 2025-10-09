@@ -357,3 +357,70 @@ add_task(async function test_no_empty_state_with_disabled_non_extension() {
   await disabledDictAddon.uninstall();
   await dictAddon.uninstall();
 });
+
+// Verifies that if the only add-on is disabled by blocklisting, that we still
+// see a panel and that the blocklist message is visible.
+add_task(async function test_empty_state_with_blocklisted_addon() {
+  const addonId = "@extension-that-is-blocked";
+  const addon = await promiseInstallWebExtension({
+    manifest: {
+      name: "Name of the blocked ext",
+      browser_specific_settings: { gecko: { id: addonId } },
+    },
+  });
+
+  let promiseBlocklistAttentionUpdated = AddonTestUtils.promiseManagerEvent(
+    "onBlocklistAttentionUpdated"
+  );
+  const cleanupBlocklist = await loadBlocklistRawData({ blocked: [addon] });
+  info("Wait for onBlocklistAttentionUpdated manager listener call");
+  await promiseBlocklistAttentionUpdated;
+
+  // This clicks on gUnifiedExtensions.button and waits for panel to show.
+  await openExtensionsPanel(window);
+
+  // Verify that the blocklist messages appear.
+  const messages = getMessageBars(window);
+  is(messages.length, 1, "Expected a message in the Extensions Panel");
+  Assert.deepEqual(
+    window.document.l10n.getAttributes(messages[0]),
+    {
+      id: "unified-extensions-mb-blocklist-error-single",
+      args: {
+        extensionName: "Name of the blocked ext",
+        extensionsCount: 1,
+      },
+    },
+    "Blocklist message appears in the (empty) extension panel"
+  );
+
+  let emptyStateBox = getEmptyStateContainer(window);
+  ok(BrowserTestUtils.isVisible(emptyStateBox), "Empty state is visible");
+  is(
+    emptyStateBox.querySelector("h2").getAttribute("data-l10n-id"),
+    "unified-extensions-empty-reason-extension-not-enabled",
+    "Has header 'You have extensions installed, but not enabled'"
+  );
+  is(
+    emptyStateBox.querySelector("description").getAttribute("data-l10n-id"),
+    "unified-extensions-empty-content-explain-enable",
+    "Has description pointing to Manage extensions button."
+  );
+
+  await closeExtensionsPanel(window);
+
+  await cleanupBlocklist();
+
+  // Verify that the messages and empty state gets cleaned up when we re-open
+  // after unblocking.
+
+  await openExtensionsPanel(window);
+  is(getMessageBars().length, 0, "No blocklist messages after unblocking");
+  ok(
+    BrowserTestUtils.isHidden(getEmptyStateContainer(window)),
+    "Empty state is hidden when extension is unblocked"
+  );
+  await closeExtensionsPanel(window);
+
+  await addon.uninstall();
+});

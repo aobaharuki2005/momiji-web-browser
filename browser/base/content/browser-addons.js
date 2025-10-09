@@ -2634,10 +2634,7 @@ var gUnifiedExtensions = {
         ) {
           let viewID;
           if (
-            Services.prefs.getBoolPref("extensions.getAddons.showPane", true) &&
-            // Unconditionally show the list of extensions if the blocklist
-            // attention flag has been shown on the extension panel button.
-            !AddonManager.shouldShowBlocklistAttention()
+            Services.prefs.getBoolPref("extensions.getAddons.showPane", true)
           ) {
             viewID = "addons://discover/";
           } else {
