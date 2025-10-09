@@ -259,10 +259,8 @@ class nsViewManager final {
    * Retrieve the time of the last user event. User events
    * include mouse and keyboard events. The viewmanager
    * saves the time of the last user event.
-   *
-   * @param aTime Last user event time in microseconds
    */
-  void GetLastUserEventTime(uint32_t& aTime);
+  static uint32_t GetLastUserEventTime() { return gLastUserEventTime; }
 
   /**
    * Find the nearest display root view for the view aView. This is the view for

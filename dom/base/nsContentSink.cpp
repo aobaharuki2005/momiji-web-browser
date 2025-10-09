@@ -911,11 +911,7 @@ nsresult nsContentSink::WillParseImpl(void) {
   uint32_t currentTime = PR_IntervalToMicroseconds(PR_IntervalNow());
 
   if (StaticPrefs::content_sink_enable_perf_mode() == 0) {
-    nsViewManager* vm = presShell->GetViewManager();
-    NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
-    uint32_t lastEventTime;
-    vm->GetLastUserEventTime(lastEventTime);
-
+    uint32_t lastEventTime = nsViewManager::GetLastUserEventTime();
     bool newDynLower = mDocument->IsInBackgroundWindow() ||
                        ((currentTime - mBeginLoadTime) >
                             StaticPrefs::content_sink_initial_perf_time() &&
