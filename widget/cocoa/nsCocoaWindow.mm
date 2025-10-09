@@ -878,8 +878,6 @@ void nsCocoaWindow::HandleMainThreadCATransaction() {
 }
 
 void nsCocoaWindow::CreateCompositor(int aWidth, int aHeight) {
-  MOZ_ASSERT(!mNativeLayerRootRemoteMacParent);
-
   // Ensure we are on the parent process.
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -900,16 +898,34 @@ void nsCocoaWindow::CreateCompositor(int aWidth, int aHeight) {
   MOZ_ASSERT(
       pm, "Getting the gfxPlatform should have created the GPUProcessManager.");
 
-  // Ensure the GPU process has had a chance to start. The logic below
-  // will handle both success and error cases correctly, so we don't check an
-  // error code.
+  // Ensure the GPU process has had a chance to start. The logic in
+  // GetCompositorWidgetInitData will handle both success and error cases
+  // correctly, so we don't check an error code.
   pm->EnsureGPUReady();
+
+  // Do the rest of the compositor setup.
+  nsBaseWidget::CreateCompositor(aWidth, aHeight);
+}
+
+void nsCocoaWindow::GetCompositorWidgetInitData(
+    mozilla::widget::CompositorWidgetInitData* aInitData) {
+  // If we already have an mNativeLayerRootRemoteMacParent, close it first.
+  // This happens when we retry after the previous compositor session failed
+  // to be created.
+  if (RefPtr<NativeLayerRootRemoteMacParent> actor =
+          std::move(mNativeLayerRootRemoteMacParent)) {
+    MOZ_ASSERT(CompositorThread());
+    CompositorThread()->Dispatch(
+        NewRunnableMethod("NativeLayerRootRemoteMacParent::Close", actor,
+                          &NativeLayerRootRemoteMacParent::Close));
+  }
 
   // Create NativeLayerRemoteMac endpoints. The "parent" endpoint will
   // always connect to the parent process. The "child" endpoint will
   // connect to the gpu process, if it exists, otherwise the parent
   // process. Either way, the remaining code will bind the parent endpoint
   // on the parent process compositor thread.
+  auto* pm = mozilla::gfx::GPUProcessManager::Get();
   mozilla::ipc::EndpointProcInfo gpuProcessInfo = pm->GPUEndpointProcInfo();
 
   mozilla::ipc::EndpointProcInfo childProcessInfo =
@@ -918,26 +934,26 @@ void nsCocoaWindow::CreateCompositor(int aWidth, int aHeight) {
           : mozilla::ipc::EndpointProcInfo::Current();
 
   mozilla::ipc::Endpoint<PNativeLayerRemoteParent> parentEndpoint;
+  mozilla::ipc::Endpoint<PNativeLayerRemoteChild> childEndpoint;
   auto rv = PNativeLayerRemote::CreateEndpoints(
       mozilla::ipc::EndpointProcInfo::Current(), childProcessInfo,
-      &parentEndpoint, &mChildEndpoint);
+      &parentEndpoint, &childEndpoint);
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   MOZ_RELEASE_ASSERT(parentEndpoint.IsValid());
-  MOZ_RELEASE_ASSERT(mChildEndpoint.IsValid());
+  MOZ_RELEASE_ASSERT(childEndpoint.IsValid());
 
   // Create our mNativeLayerRootRemoteMacParent.
-  mNativeLayerRootRemoteMacParent =
+  RefPtr<NativeLayerRootRemoteMacParent> nativeLayerRemoteParent =
       new NativeLayerRootRemoteMacParent(mNativeLayerRoot);
 
   // Bind the parent endpoint compositor thread.
   MOZ_ASSERT(CompositorThread());
-  RefPtr<NativeLayerRootRemoteMacParent> nativeLayerRemoteParent(
-      mNativeLayerRootRemoteMacParent);
-  Monitor monitor("nsCocoaWindow::CreateCompositor");
+
+  Monitor monitor("nsCocoaWindow::GetCompositorWidgetInitData");
   bool didBindParentEndpoint = false;
 
   CompositorThread()->Dispatch(NS_NewRunnableFunction(
-      "nsCocoaWindow::CreateCompositor bind endpoint", [&]() {
+      "nsCocoaWindow::GetCompositorWidgetInitData bind endpoint", [&]() {
         // Bind the endpoint. This has to happen before the child endpoint is
         // sent to the GPU process.
         MOZ_ALWAYS_TRUE(parentEndpoint.Bind(nativeLayerRemoteParent));
@@ -946,16 +962,21 @@ void nsCocoaWindow::CreateCompositor(int aWidth, int aHeight) {
         lock.Notify();
       }));
 
-  // Block until the parent endpoint is bound, so that on the next call to
-  // GetCompositorWidgetInitData we are ready to forward the child endpoint
-  // to the GPU process.
-  MonitorAutoLock lock(monitor);
-  while (!didBindParentEndpoint) {
-    lock.Wait();
+  // Block until the parent endpoint is bound, so that the childEndpoint we
+  // return in our CompositorWidgetInitData is ready to be sent to the GPU
+  // process.
+  {
+    MonitorAutoLock lock(monitor);
+    while (!didBindParentEndpoint) {
+      lock.Wait();
+    }
   }
 
-  // Do the rest of the compositor setup.
-  nsBaseWidget::CreateCompositor(aWidth, aHeight);
+  auto deviceIntRect = GetClientBounds();
+  *aInitData = mozilla::widget::CocoaCompositorWidgetInitData(
+      deviceIntRect.Size(), std::move(childEndpoint));
+
+  mNativeLayerRootRemoteMacParent = std::move(nativeLayerRemoteParent);
 }
 
 void nsCocoaWindow::DestroyCompositor() {
@@ -1008,14 +1029,6 @@ void nsCocoaWindow::SetCompositorWidgetDelegate(
   } else {
     mCompositorWidgetDelegate = nullptr;
   }
-}
-
-void nsCocoaWindow::GetCompositorWidgetInitData(
-    mozilla::widget::CompositorWidgetInitData* aInitData) {
-  MOZ_ASSERT(mChildEndpoint.IsValid());
-  auto deviceIntRect = GetClientBounds();
-  *aInitData = mozilla::widget::CocoaCompositorWidgetInitData(
-      deviceIntRect.Size(), std::move(mChildEndpoint));
 }
 
 mozilla::layers::CompositorBridgeChild*
