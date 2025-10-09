@@ -129,6 +129,21 @@ add_task(async function test_split_view_panels() {
     await checkSplitViewPanelVisible(tab, true);
   }
 
+  info("Select tabs using tab panels.");
+  await SimpleTest.promiseFocus(tab1.linkedBrowser);
+  let panel = document.getElementById(tab1.linkedPanel);
+  Assert.ok(
+    panel.classList.contains("deck-selected"),
+    "First panel is selected."
+  );
+
+  await SimpleTest.promiseFocus(tab2.linkedBrowser);
+  panel = document.getElementById(tab2.linkedPanel);
+  Assert.ok(
+    panel.classList.contains("deck-selected"),
+    "Second panel is selected."
+  );
+
   info("Switch to a non-split view tab.");
   await BrowserTestUtils.switchTab(gBrowser, originalTab);
   for (const tab of splitView.tabs) {

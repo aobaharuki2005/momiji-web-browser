@@ -275,6 +275,18 @@
       this._tabbox = null;
     }
 
+    handleEvent(e) {
+      switch (e.type) {
+        case "focus": {
+          const browser = e.currentTarget;
+          const tab = browser.getTabBrowser().getTabForBrowser(browser);
+          const tabstrip = this.tabbox.tabs;
+          tabstrip.selectedItem = tab;
+          break;
+        }
+      }
+    }
+
     get tabbox() {
       // Memoize the result rather than replacing this getter, so that
       // it can be reset if the parent changes.
@@ -349,6 +361,7 @@
         const panelEl = document.getElementById(panel);
         panelEl?.classList.add("split-view-panel");
         panelEl?.setAttribute("column", i);
+        panelEl?.querySelector("browser")?.addEventListener("focus", this);
       }
       this.#splitViewPanels = newPanels;
       this.#isSplitViewActive = !!newPanels.length;
@@ -369,6 +382,7 @@
       const panelEl = document.getElementById(panel);
       panelEl?.classList.remove("split-view-panel");
       panelEl?.removeAttribute("column");
+      panelEl?.querySelector("browser")?.removeEventListener("focus", this);
       if (updateArray) {
         const index = this.#splitViewPanels.indexOf(panel);
         if (index !== -1) {
