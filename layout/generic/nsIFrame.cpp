@@ -5682,7 +5682,7 @@ static bool FrameContentCanHaveParentSelectionRange(nsIFrame* aFrame) {
   // control, but the focus didn't work right anyway; it'd probably be enough
   // if the left and right arrows could enter textboxes (which I don't believe
   // they can at the moment)
-  if (aFrame->IsTextInputFrame() || aFrame->IsListControlFrame()) {
+  if (aFrame->IsTextInputFrame()) {
     MOZ_ASSERT(aFrame->HasAnyStateBits(NS_FRAME_INDEPENDENT_SELECTION));
     return false;
   }
