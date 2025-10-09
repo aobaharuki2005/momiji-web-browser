@@ -103,7 +103,7 @@ fun Fragment.showToolbarWithIconButton(
 
             val item = menu.add(Menu.NONE, Menu.NONE, Menu.NONE, "")
             item.setIcon(iconResId)
-            item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
             item.setOnMenuItemClickListener {
                 onClick()
                 true
