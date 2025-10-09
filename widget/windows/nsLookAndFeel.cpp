@@ -313,7 +313,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       default:
         break;
     }
-
   }
 
   if (aScheme == ColorScheme::Dark) {
