@@ -65,7 +65,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/FlushType.h"
 #include "mozilla/Likely.h"
-#include "mozilla/LinkedList.h"
 #include "mozilla/Logging.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Maybe.h"

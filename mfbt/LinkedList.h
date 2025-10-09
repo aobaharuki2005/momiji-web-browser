@@ -65,8 +65,8 @@
 #define mozilla_LinkedList_h
 
 #include <algorithm>
-#include <utility>
 #include <iterator>
+#include <utility>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
