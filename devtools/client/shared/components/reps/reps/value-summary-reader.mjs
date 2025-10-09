@@ -206,7 +206,7 @@ function readMapLikeSummary(result, reader, depth, shapes) {
   preview.entries = [];
   preview.size = reader.readUint32();
   if (depth < 1) {
-    for (let i = 0; i < preview.length && i < MAX_COLLECTION_VALUES; i++) {
+    for (let i = 0; i < preview.size && i < MAX_COLLECTION_VALUES; i++) {
       const keySummary = readValueSummary(reader, depth + 1, shapes);
       const valueSummary = readValueSummary(reader, depth + 1, shapes);
       preview.entries.push([
