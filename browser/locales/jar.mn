@@ -16,7 +16,6 @@
   preview/translations.ftl                         (../locales-preview/translations.ftl)
   preview/credentialChooser.ftl                    (../../toolkit/components/credentialmanagement/credentialChooser.ftl)
   browser                                          (%browser/**/*.ftl)
-  preview/backupSettings.ftl                       (../locales-preview/backupSettings.ftl)
   preview/smartTabGroups.ftl                       (../locales-preview/smartTabGroups.ftl)
   preview/termsOfUse.ftl                           (../locales-preview/termsOfUse.ftl)
   preview/ipProtection.ftl                         (../locales-preview/ipProtection.ftl)

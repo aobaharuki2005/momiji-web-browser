@@ -11,7 +11,7 @@ import "./restore-from-backup.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import { ERRORS } from "chrome://browser/content/backup/backup-constants.mjs";
 
-window.MozXULElement.insertFTLIfNeeded("locales-preview/backupSettings.ftl");
+window.MozXULElement.insertFTLIfNeeded("browser/backupSettings.ftl");
 window.MozXULElement.insertFTLIfNeeded("branding/brand.ftl");
 
 export default {
