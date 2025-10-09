@@ -16,7 +16,6 @@ import org.hamcrest.Matchers.isEmptyOrNullString
 import org.hamcrest.Matchers.notNullValue
 import org.hamcrest.Matchers.nullValue
 import org.junit.Assert
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.AllowOrDeny
@@ -834,8 +833,8 @@ class PromptDelegateTest : BaseSessionTest(
             """.trimIndent(),
         )
 
-        mainSession.evaluateJS("document.addEventListener('click', () => this.c.click(), { once: true });")
-        mainSession.synthesizeTap(1, 1)
+        mainSession.notifyUserGestureActivation()
+        mainSession.evaluateJS("document.getElementById('colorexample').showPicker()")
 
         assertThat(
             "Value should match",
@@ -844,23 +843,15 @@ class PromptDelegateTest : BaseSessionTest(
         )
     }
 
-    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1988041")
     @WithDisplay(width = 100, height = 100)
     @Test
     fun dateTest() {
         mainSession.loadTestPath(PROMPT_HTML_PATH)
         mainSession.waitForPageStop()
 
-        mainSession.evaluateJS(
-            """
-            document.documentElement.style.paddingTop = "50px";
-            document.addEventListener("click", () => {
-                document.getElementById('dateexample').showPicker();
-            });
-            """.trimIndent(),
-        )
+        mainSession.notifyUserGestureActivation()
+        mainSession.evaluateJS("document.getElementById('dateexample').showPicker()")
 
-        mainSession.synthesizeTap(1, 1) // Provides user activation.
         sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onDateTimePrompt(session: GeckoSession, prompt: PromptDelegate.DateTimePrompt): GeckoResult<PromptDelegate.PromptResponse> {
@@ -1101,8 +1092,8 @@ class PromptDelegateTest : BaseSessionTest(
         mainSession.loadTestPath(PROMPT_HTML_PATH)
         mainSession.waitForPageStop()
 
-        mainSession.evaluateJS("document.addEventListener('click', () => document.getElementById('fileexample').click(), { once: true });")
-        mainSession.synthesizeTap(1, 1)
+        mainSession.notifyUserGestureActivation()
+        mainSession.evaluateJS("document.getElementById('fileexample').showPicker()")
 
         sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)
@@ -1125,8 +1116,8 @@ class PromptDelegateTest : BaseSessionTest(
         mainSession.loadTestPath(PROMPT_HTML_PATH)
         mainSession.waitForPageStop()
 
-        mainSession.evaluateJS("document.addEventListener('click', () => document.getElementById('filemultipleexample').click(), { once: true });")
-        mainSession.synthesizeTap(1, 1)
+        mainSession.notifyUserGestureActivation()
+        mainSession.evaluateJS("document.getElementById('filemultipleexample').showPicker()")
 
         sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)
@@ -1167,8 +1158,8 @@ class PromptDelegateTest : BaseSessionTest(
             }
         })
 
-        mainSession.evaluateJS("document.addEventListener('click', () => document.getElementById('direxample').click(), { once: true });")
-        mainSession.synthesizeTap(1, 1)
+        mainSession.notifyUserGestureActivation()
+        mainSession.evaluateJS("document.getElementById('direxample').showPicker()")
 
         sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)
