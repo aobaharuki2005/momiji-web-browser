@@ -340,9 +340,6 @@ include table-width/reftest.list
 
 include ../tables/reftests/reftest.list
 
-# target-text/
-include target-text/reftest.list
-
 # text/
 include text/reftest.list
 
