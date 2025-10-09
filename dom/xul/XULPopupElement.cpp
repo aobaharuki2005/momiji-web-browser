@@ -294,14 +294,10 @@ already_AddRefed<DOMRect> XULPopupElement::GetOuterScreenRect() {
     // instead, which at least has the position at which we were intending to
     // open the menu.
     screenRect = Some(CSSRect(menuPopupFrame->GetScreenAnchorRect()));
-  } else {
+  } else if (nsIWidget* widget = menuPopupFrame->GetWidget()) {
     // For non-native menus, query the bounds from the widget.
-    if (nsView* view = menuPopupFrame->GetView()) {
-      if (nsIWidget* widget = view->GetWidget()) {
-        screenRect = Some(widget->GetScreenBounds() /
-                          menuPopupFrame->PresContext()->CSSToDevPixelScale());
-      }
-    }
+    screenRect = Some(widget->GetScreenBounds() /
+                      menuPopupFrame->PresContext()->CSSToDevPixelScale());
   }
 
   if (screenRect) {
