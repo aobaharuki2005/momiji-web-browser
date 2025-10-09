@@ -596,10 +596,10 @@ index 28509654c4..1e2ae94c85 100644
        device_names->push_back(ToUtf8(device.DeviceName));
      }
 diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
-index e06698e0db..2629fe0aab 100644
+index 403890209e..429d497f10 100644
 --- a/modules/rtp_rtcp/source/rtcp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtcp_sender.cc
-@@ -206,7 +206,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
+@@ -205,7 +205,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
      next_time_to_send_rtcp_ = std::nullopt;
    } else if (method_ == RtcpMode::kOff) {
      // When switching on, reschedule the next packet
@@ -609,10 +609,10 @@ index e06698e0db..2629fe0aab 100644
    method_ = new_method;
  }
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.cc b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-index 3f9a852e18..8f52699e89 100644
+index 2c31b17568..39eb769f1c 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.cc
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-@@ -420,6 +420,45 @@ bool PlayoutDelayLimits::Write(ArrayView<uint8_t> data,
+@@ -421,6 +421,45 @@ bool PlayoutDelayLimits::Write(ArrayView<uint8_t> data,
    return true;
  }
  

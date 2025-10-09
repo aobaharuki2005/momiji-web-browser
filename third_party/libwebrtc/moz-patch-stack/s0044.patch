@@ -35,10 +35,10 @@ index a869c8ad41..b6a33882d1 100644
                    uint32_t ssrc,
                    uint32_t protected_media_ssrc,
 diff --git a/modules/rtp_rtcp/source/flexfec_receiver.cc b/modules/rtp_rtcp/source/flexfec_receiver.cc
-index c6465fbccf..5d1fd88fd1 100644
+index bde365fe18..5df6b2a8af 100644
 --- a/modules/rtp_rtcp/source/flexfec_receiver.cc
 +++ b/modules/rtp_rtcp/source/flexfec_receiver.cc
-@@ -39,6 +39,7 @@ constexpr TimeDelta kPacketLogInterval = TimeDelta::Seconds(10);
+@@ -38,6 +38,7 @@ constexpr TimeDelta kPacketLogInterval = TimeDelta::Seconds(10);
  
  }  // namespace
  
@@ -46,7 +46,7 @@ index c6465fbccf..5d1fd88fd1 100644
  FlexfecReceiver::FlexfecReceiver(
      uint32_t ssrc,
      uint32_t protected_media_ssrc,
-@@ -47,6 +48,7 @@ FlexfecReceiver::FlexfecReceiver(
+@@ -46,6 +47,7 @@ FlexfecReceiver::FlexfecReceiver(
                        ssrc,
                        protected_media_ssrc,
                        recovered_packet_receiver) {}
