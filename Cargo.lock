@@ -145,12 +145,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "array-init"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d62b7694a562cdf5a74227903507c56ab2cc8bdd1f781ed5cb4cf9c9f810bfc"
-
-[[package]]
 name = "arraydeque"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2617,7 +2611,6 @@ dependencies = [
  "gkrust_utils",
  "http_sfv",
  "idna_glue",
- "image_jxl",
  "ipcclientcerts",
  "ipdl_utils",
  "jog",
@@ -3398,13 +3391,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "image_jxl"
-version = "0.1.0"
-dependencies = [
- "jxl",
-]
-
-[[package]]
 name = "indexmap"
 version = "2.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3628,33 +3614,6 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "thiserror 2.0.12",
-]
-
-[[package]]
-name = "jxl"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "710d04dc49b46298fa2258f3fd082bcafb318e93e45bfbffb2b2419d615964e7"
-dependencies = [
- "array-init",
- "byteorder",
- "half 2.5.0",
- "jxl_macros",
- "num-derive",
- "num-traits",
- "thiserror 2.0.12",
-]
-
-[[package]]
-name = "jxl_macros"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5169e84285ee08cee04f115f2658cafba62e7ff54e8eb91a3842129ca12b003f"
-dependencies = [
- "proc-macro-error2",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -5577,28 +5536,6 @@ dependencies = [
  "sha3",
  "subtle",
  "thiserror 1.999.999",
-]
-
-[[package]]
-name = "proc-macro-error-attr2"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96de42df36bb9bba5542fe9f1a054b8cc87e172759a1868aa05c1f3acc89dfc5"
-dependencies = [
- "proc-macro2",
- "quote",
-]
-
-[[package]]
-name = "proc-macro-error2"
-version = "2.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11ec05c52be0a07b08061f7dd003e7d7092e0472bc731b4af7bb1ef876109802"
-dependencies = [
- "proc-macro-error-attr2",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
