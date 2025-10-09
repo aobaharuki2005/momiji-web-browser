@@ -380,8 +380,6 @@ nsresult nsTextControlFrame::CreateAnonymousContent(
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(mContent, "We should have a content!");
 
-  AddStateBits(NS_FRAME_INDEPENDENT_SELECTION);
-
   RefPtr<TextControlElement> textControlElement = ControlElement();
   mRootNode = MakeAnonElement(PseudoStyleType::mozTextControlEditingRoot);
   if (NS_WARN_IF(!mRootNode)) {
