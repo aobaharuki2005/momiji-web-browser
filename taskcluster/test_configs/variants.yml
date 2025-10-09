@@ -403,6 +403,7 @@ no-gpu-process:
                     "windows" in task["test-platform"]
                     || "android" in task["test-platform"]
                     || "linux" in task["test-platform"]
+                    || "macosx" in task["test-platform"]
                 '
     replace:
         virtualization: virtual
