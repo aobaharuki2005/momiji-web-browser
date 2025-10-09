@@ -9576,6 +9576,8 @@
   value: true
 #elif defined(MOZ_X11)
   value: false  # we'd like this to be @IS_NIGHTLY_BUILD@, see Bug 1927058
+#elif defined(XP_MACOSX)
+  value: @IS_NIGHTLY_BUILD@
 #else
   value: false
 #endif
