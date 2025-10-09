@@ -392,6 +392,8 @@ class nsCocoaWindow final : public nsBaseWidget {
 
   void CreateCompositor(int aWidth, int aHeight) override;
   void DestroyCompositor() override;
+  void NotifyCompositorSessionLost(
+      mozilla::layers::CompositorSession* aSession) override;
   void SetCompositorWidgetDelegate(
       mozilla::widget::CompositorWidgetDelegate*) override;
 
