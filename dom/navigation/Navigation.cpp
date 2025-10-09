@@ -770,6 +770,20 @@ void Navigation::Reload(JSContext* aCx, const NavigationReloadOptions& aOptions,
   MOZ_ASSERT(docShell);
   docShell->ReloadNavigable(Some(WrapNotNullUnchecked(aCx)),
                             nsIWebNavigation::LOAD_FLAGS_NONE, serializedState);
+  // This is stolen from #dom-navigation-navigate. If the upcoming non-traverse
+  // API method tracker is still apiMethodTracker, this means that the reload
+  // algorithm bailed out before ever getting to the inner navigate event
+  // firing algorithm which would promote that upcoming API method tracker to
+  // ongoing. This is done here because gecko's reload implementation has
+  // additional abort code paths which may return early before firing the
+  // navigate event.
+  if (mUpcomingNonTraverseAPIMethodTracker == apiMethodTracker) {
+    mUpcomingNonTraverseAPIMethodTracker = nullptr;
+    ErrorResult rv;
+    rv.ThrowAbortError("Reload aborted.");
+    SetEarlyErrorResult(aCx, aResult, std::move(rv));
+    return;
+  }
 
   // 10. Return a navigation API method tracker-derived result for
   //     apiMethodTracker.
@@ -1621,9 +1635,20 @@ void Navigation::InnerInformAboutAbortingNavigation(JSContext* aCx) {
   // As per https://github.com/whatwg/html/issues/11579, we should abort all
   // ongoing navigate events within "inform the navigation API about aborting
   // navigation".
+
+  // As per https://github.com/whatwg/html/issues/11735, we should move out
+  // the non-traverse api method tracker while aborting ongoing navigations.
+  // Aborting allows to run script (onnavigateerror), which could start a new
+  // navigation, which asserts if there's an upcoming non-traverse api method
+  // tracker.
+  RefPtr upcomingNonTraverseAPIMethodTracker =
+      std::move(mUpcomingNonTraverseAPIMethodTracker);
   while (HasOngoingNavigateEvent()) {
     AbortOngoingNavigation(aCx);
   }
+  MOZ_DIAGNOSTIC_ASSERT(!mUpcomingNonTraverseAPIMethodTracker);
+  mUpcomingNonTraverseAPIMethodTracker =
+      std::move(upcomingNonTraverseAPIMethodTracker);
 }
 
 // https://html.spec.whatwg.org/#abort-the-ongoing-navigation
