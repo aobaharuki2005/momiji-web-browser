@@ -10,10 +10,6 @@
 #include "WakeLockListener.h"
 #include "WidgetUtilsGtk.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Services.h"
-#include "nsIStringBundle.h"
-#include "nsReadableUtils.h"
-#include "nsContentUtils.h"
 
 #ifdef MOZ_ENABLE_DBUS
 #  include <gio/gio.h>
@@ -57,16 +53,6 @@ using namespace mozilla;
 using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS(WakeLockListener, nsIDOMMozWakeLockListener)
-
-static nsCString GetLocalizedWakeLockString(const char* aStringName) {
-  nsAutoString localizedString;
-  nsresult rv = nsContentUtils::GetLocalizedString(
-      nsContentUtils::eDOM_PROPERTIES, aStringName, localizedString);
-  if (NS_FAILED(rv)) {
-    return nsCString();
-  }
-  return NS_ConvertUTF16toUTF8(localizedString);
-}
 
 #define WAKE_LOCK_LOG(str, ...)                        \
   MOZ_LOG(gLinuxWakeLockLog, mozilla::LogLevel::Debug, \
@@ -159,25 +145,6 @@ class WakeLockTopic {
   explicit WakeLockTopic(const nsAString& aTopic) {
     CopyUTF16toUTF8(aTopic, mTopic);
     WAKE_LOCK_LOG("WakeLockTopic::WakeLockTopic() created %s", mTopic.get());
-    if (mTopic.Equals("video-playing")) {
-      static nsCString videoPlayingString = []() -> nsCString {
-        auto string = GetLocalizedWakeLockString("WakeLockVideoPlaying");
-        if (string.IsEmpty()) {
-          string = "Playing video";
-        }
-        return string;
-      }();
-      mNiceTopic = videoPlayingString;
-    } else if (mTopic.Equals("audio-playing")) {
-      static nsCString audioPlayingString = []() -> nsCString {
-        auto string = GetLocalizedWakeLockString("WakeLockAudioPlaying");
-        if (string.IsEmpty()) {
-          string = "Playing audio";
-        }
-        return string;
-      }();
-      mNiceTopic = audioPlayingString;
-    }
     if (sWakeLockType == Initial) {
       InitializeWakeLockType();
     }
@@ -236,11 +203,8 @@ class WakeLockTopic {
 #endif
   ~WakeLockTopic() = default;
 
-  // Firefox internal inhibition state
+  // Why is screensaver inhibited
   nsCString mTopic;
-
-  // Human readable topics we put to DBus interface
-  nsCString mNiceTopic;
 
   enum WakeLockState {
     Inhibited,
@@ -492,7 +456,7 @@ void WakeLockTopic::InhibitFreeDesktopPortal() {
             GVariantBuilder b;
             g_variant_builder_init(&b, G_VARIANT_TYPE_VARDICT);
             g_variant_builder_add(&b, "{sv}", "reason",
-                                  g_variant_new_string(self->mNiceTopic.get()));
+                                  g_variant_new_string(self->mTopic.get()));
 
             // From
             // https://flatpak.github.io/xdg-desktop-portal/docs/#gdbus-org.freedesktop.portal.Inhibit
@@ -544,7 +508,7 @@ void WakeLockTopic::InhibitFreeDesktopScreensaver() {
                          FREEDESKTOP_SCREENSAVER_OBJECT,
                          FREEDESKTOP_SCREENSAVER_INTERFACE, "Inhibit",
                          dont_AddRef(g_variant_ref_sink(g_variant_new(
-                             "(ss)", g_get_prgname(), mNiceTopic.get()))));
+                             "(ss)", g_get_prgname(), mTopic.get()))));
 }
 
 void WakeLockTopic::InhibitFreeDesktopPower() {
@@ -552,7 +516,7 @@ void WakeLockTopic::InhibitFreeDesktopPower() {
   DBusInhibitScreensaver(FREEDESKTOP_POWER_TARGET, FREEDESKTOP_POWER_OBJECT,
                          FREEDESKTOP_POWER_INTERFACE, "Inhibit",
                          dont_AddRef(g_variant_ref_sink(g_variant_new(
-                             "(ss)", g_get_prgname(), mNiceTopic.get()))));
+                             "(ss)", g_get_prgname(), mTopic.get()))));
 }
 
 void WakeLockTopic::InhibitGNOME() {
@@ -562,8 +526,8 @@ void WakeLockTopic::InhibitGNOME() {
   DBusInhibitScreensaver(
       SESSION_MANAGER_TARGET, SESSION_MANAGER_OBJECT, SESSION_MANAGER_INTERFACE,
       "Inhibit",
-      dont_AddRef(g_variant_ref_sink(g_variant_new(
-          "(susu)", g_get_prgname(), xid, mNiceTopic.get(), flags))));
+      dont_AddRef(g_variant_ref_sink(
+          g_variant_new("(susu)", g_get_prgname(), xid, mTopic.get(), flags))));
 }
 
 void WakeLockTopic::UninhibitFreeDesktopPortal() {
