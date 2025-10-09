@@ -59,10 +59,10 @@ index 7d2b5416da..74dd7e5818 100644
  struct v4l2_capability;
  
 diff --git a/rtc_base/platform_thread_types.cc b/rtc_base/platform_thread_types.cc
-index f057d4b7c3..61d8af14c2 100644
+index 20bf4afc44..697bedadb9 100644
 --- a/rtc_base/platform_thread_types.cc
 +++ b/rtc_base/platform_thread_types.cc
-@@ -52,7 +52,9 @@ PlatformThreadId CurrentThreadId() {
+@@ -56,7 +56,9 @@ PlatformThreadId CurrentThreadId() {
    return static_cast<PlatformThreadId>(pthread_self());
  #else
    // Default implementation for nacl and solaris.
