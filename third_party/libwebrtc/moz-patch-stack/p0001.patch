@@ -1,352 +1,46 @@
-From: Michael Froman <mjfroman@mac.com>
-Date: Thu, 9 Oct 2025 15:29:59 -0500
-Subject: (tmp-cherry-pick) Revert "Remove jni_generator_helper.h from WebRTC"
- (d552ad7fc0)
+From: Guido Urdaneta <guidou@webrtc.org>
+Date: Thu, 24 Jul 2025 11:01:29 +0200
+Subject: (cherry-pick-branch-heads/7258) Use FieldTrialsView::IsEnabled for
+ DTLS 1.3
 
-This reverts commit b690d7eb3521c90ae78c0abf5e7454201855b953.
+No behavior changes.
 
-Reason for revert: Breaks downstream
+(cherry picked from commit 5ff715d5666106e01d27205c1775d1e2d07ea254)
 
-Bug: b/325408567, b/319078685, b/351773023
-Original change's description:
-> Remove jni_generator_helper.h from WebRTC
->
-> Bug: b/325408567, b/319078685, b/351773023
-> Change-Id: I84c168b4ef8c6936e2644ad85edda8687c6c491a
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/401480
-> Reviewed-by: Jeremy Leconte <jleconte@google.com>
-> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-> Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#45191}
-
-Bug: b/325408567, b/319078685, b/351773023
-No-Presubmit: true
-No-Tree-Checks: true
-No-Try: true
-Change-Id: Ib7820a585f15940ea4d6ecb6075b80da85700e60
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/401580
-Reviewed-by: Jeremy Leconte <jleconte@google.com>
-Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
-Owners-Override: Mirko Bonadei <mbonadei@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#45192}
+Bug: webrtc:383141571, chromium:433885045, chromium:434133034
+Change-Id: Ice5f3e5cbd245ddea407248a6f29c61c646e6a72
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/401740
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Commit-Queue: Guido Urdaneta <guidou@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#45206}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/402200
+Cr-Commit-Position: refs/branch-heads/7258@{#3}
+Cr-Branched-From: 74fa937f86ed8432c07676f7a1ce0e5e2812b3d5-refs/heads/main@{#44974}
 ---
- examples/androidnativeapi/BUILD.gn         |   1 +
- examples/androidvoip/BUILD.gn              |   1 +
- sdk/android/BUILD.gn                       |  21 ++++
- sdk/android/src/jni/OWNERS                 |   3 +
- sdk/android/src/jni/jni_generator_helper.h | 114 +++++++++++++++++++++
- 5 files changed, 140 insertions(+)
- create mode 100644 sdk/android/src/jni/jni_generator_helper.h
+ rtc_base/openssl_stream_adapter.cc | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/examples/androidnativeapi/BUILD.gn b/examples/androidnativeapi/BUILD.gn
-index 64cd43e923..d0f9014a66 100644
---- a/examples/androidnativeapi/BUILD.gn
-+++ b/examples/androidnativeapi/BUILD.gn
-@@ -31,6 +31,7 @@ if (is_android) {
-     testonly = true
-     sources = [ "java/org/webrtc/examples/androidnativeapi/CallClient.java" ]
-     namespace = "webrtc_examples"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
+diff --git a/rtc_base/openssl_stream_adapter.cc b/rtc_base/openssl_stream_adapter.cc
+index 7d7466b1cc..604a9465c7 100644
+--- a/rtc_base/openssl_stream_adapter.cc
++++ b/rtc_base/openssl_stream_adapter.cc
+@@ -144,13 +144,15 @@ int GetForceDtls13(const FieldTrialsView* field_trials) {
+     return kForceDtls13Off;
    }
- 
-   rtc_shared_library("examples_androidnativeapi_jni") {
-diff --git a/examples/androidvoip/BUILD.gn b/examples/androidvoip/BUILD.gn
-index be28f08b3c..3f517b73c0 100644
---- a/examples/androidvoip/BUILD.gn
-+++ b/examples/androidvoip/BUILD.gn
-@@ -40,6 +40,7 @@ if (is_android) {
-     testonly = true
-     sources = [ "java/org/webrtc/examples/androidvoip/VoipClient.java" ]
-     namespace = "webrtc_examples"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
+ #ifdef DTLS1_3_VERSION
+-  auto mode = field_trials->Lookup("WebRTC-ForceDtls13");
+-  RTC_LOG(LS_WARNING) << "WebRTC-ForceDtls13: " << mode;
+-  if (mode == "Enabled") {
++  if (field_trials->IsEnabled("WebRTC-ForceDtls13")) {
++    RTC_LOG(LS_WARNING) << "WebRTC-ForceDtls13 Enabled";
+     return kForceDtls13Enabled;
+-  } else if (mode == "Only") {
++  }
++  if (field_trials->Lookup("WebRTC-ForceDtls13") == "Only") {
++    RTC_LOG(LS_WARNING) << "WebRTC-ForceDtls13 Only";
+     return kForceDtls13Only;
    }
- 
-   rtc_shared_library("examples_androidvoip_jni") {
-diff --git a/sdk/android/BUILD.gn b/sdk/android/BUILD.gn
-index f3db81c780..ae44285fc9 100644
---- a/sdk/android/BUILD.gn
-+++ b/sdk/android/BUILD.gn
-@@ -1000,6 +1000,7 @@ if (current_os == "linux" || is_android) {
-       "native_api/jni/class_loader.cc",
-       "native_api/jni/java_types.cc",
-       "native_api/jni/jvm.cc",
-+      "src/jni/jni_generator_helper.h",
-     ]
- 
-     public = [
-@@ -1361,16 +1362,19 @@ if (current_os == "linux" || is_android) {
-       "java/util/ArrayList.class",
-       "java/lang/Enum.class",
-     ]
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   generate_jni("generated_environment_jni") {
-     sources = [ "api/org/webrtc/Environment.java" ]
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   generate_jni("generated_metrics_jni") {
-     sources = [ "api/org/webrtc/Metrics.java" ]
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   # Generated JNI for public JNI targets, matching order of targets
-@@ -1384,6 +1388,7 @@ if (current_os == "linux" || is_android) {
-       "src/java/org/webrtc/JniCommon.java",
-     ]
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   generate_jni("generated_video_jni") {
-@@ -1413,11 +1418,13 @@ if (current_os == "linux" || is_android) {
-       "src/java/org/webrtc/WrappedNativeI420Buffer.java",
-     ]
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   generate_jni("generated_video_egl_jni") {
-     sources = [ "src/java/org/webrtc/EglBase10Impl.java" ]
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   generate_jni("generated_libvpx_vp8_jni") {
-@@ -1427,6 +1434,7 @@ if (current_os == "linux" || is_android) {
-     ]
- 
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   generate_jni("generated_libvpx_vp9_jni") {
-@@ -1436,18 +1444,21 @@ if (current_os == "linux" || is_android) {
-     ]
- 
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   generate_jni("generated_libaom_av1_encoder_jni") {
-     sources = [ "api/org/webrtc/LibaomAv1Encoder.java" ]
- 
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   generate_jni("generated_dav1d_jni") {
-     sources = [ "api/org/webrtc/Dav1dDecoder.java" ]
- 
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   generate_jni("generated_swcodecs_jni") {
-@@ -1457,11 +1468,13 @@ if (current_os == "linux" || is_android) {
-     ]
- 
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   generate_jni("generated_rtcerror_jni") {
-     sources = [ "src/java/org/webrtc/RtcError.java" ]
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   generate_jni("generated_peerconnection_jni") {
-@@ -1498,11 +1511,13 @@ if (current_os == "linux" || is_android) {
-       "api/org/webrtc/TurnCustomizer.java",
-     ]
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   generate_jni("generated_java_audio_jni") {
-     sources = [ "api/org/webrtc/audio/JavaAudioDeviceModule.java" ]
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   generate_jni("generated_builtin_audio_codecs_jni") {
-@@ -1511,6 +1526,7 @@ if (current_os == "linux" || is_android) {
-       "api/org/webrtc/BuiltinAudioEncoderFactoryFactory.java",
-     ]
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   # Generated JNI for native API targets
-@@ -1522,17 +1538,20 @@ if (current_os == "linux" || is_android) {
-       "src/java/org/webrtc/WebRtcClassLoader.java",
-     ]
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   # Generated JNI for internal targets.
- 
-   generate_jni("generated_logging_jni") {
-     sources = [ "src/java/org/webrtc/JNILogging.java" ]
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   generate_jni("generated_audio_device_module_base_jni") {
-     sources = [ "src/java/org/webrtc/audio/WebRtcAudioManager.java" ]
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   generate_jni("generated_java_audio_device_module_native_jni") {
-@@ -1541,6 +1560,7 @@ if (current_os == "linux" || is_android) {
-       "src/java/org/webrtc/audio/WebRtcAudioTrack.java",
-     ]
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
++  RTC_LOG(LS_WARNING) << "WebRTC-ForceDtls13 Disabled";
+ #endif
+   return kForceDtls13Off;
  }
- 
-@@ -1788,6 +1808,7 @@ if (is_android) {
-       "native_unittests/org/webrtc/PeerConnectionFactoryInitializationHelper.java",
-     ]
-     namespace = "webrtc::jni"
-+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-   }
- 
-   robolectric_binary("android_sdk_junit_tests") {
-diff --git a/sdk/android/src/jni/OWNERS b/sdk/android/src/jni/OWNERS
-index 557373424b..6d01899f22 100644
---- a/sdk/android/src/jni/OWNERS
-+++ b/sdk/android/src/jni/OWNERS
-@@ -2,3 +2,6 @@ per-file androidhistogram.cc=xalep@webrtc.org
- per-file androidmetrics.cc=xalep@webrtc.org
- per-file androidvideotracksource.*=xalep@webrtc.org
- per-file androidvideotracksource.cc=xalep@webrtc.org
-+
-+per-file jni_generator_helper.cc=file://infra/OWNERS
-+per-file jni_generator_helper.h=file://infra/OWNERS
-diff --git a/sdk/android/src/jni/jni_generator_helper.h b/sdk/android/src/jni/jni_generator_helper.h
-new file mode 100644
-index 0000000000..8fc711b8ac
---- /dev/null
-+++ b/sdk/android/src/jni/jni_generator_helper.h
-@@ -0,0 +1,114 @@
-+/*
-+ *  Copyright 2017 The WebRTC project authors. All Rights Reserved.
-+ *
-+ *  Use of this source code is governed by a BSD-style license
-+ *  that can be found in the LICENSE file in the root of the source
-+ *  tree. An additional intellectual property rights grant can be found
-+ *  in the file PATENTS.  All contributing project authors may
-+ *  be found in the AUTHORS file in the root of the source tree.
-+ */
-+// Do not include this file directly. It's intended to be used only by the JNI
-+// generation script. We are exporting types in strange namespaces in order to
-+// be compatible with the generated code targeted for Chromium.
-+
-+#ifndef SDK_ANDROID_SRC_JNI_JNI_GENERATOR_HELPER_H_
-+#define SDK_ANDROID_SRC_JNI_JNI_GENERATOR_HELPER_H_
-+
-+#include <jni.h>
-+
-+#include <atomic>
-+#include <cstdint>
-+#include <cstring>
-+
-+#include "third_party/jni_zero/jni_zero_internal.h"
-+
-+#define JNI_REGISTRATION_EXPORT __attribute__((visibility("default")))
-+
-+#if defined(WEBRTC_ARCH_X86)
-+// Dalvik JIT generated code doesn't guarantee 16-byte stack alignment on
-+// x86 - use force_align_arg_pointer to realign the stack at the JNI
-+// boundary. crbug.com/655248
-+#define JNI_GENERATOR_EXPORT \
-+  __attribute__((force_align_arg_pointer)) extern "C" JNIEXPORT JNICALL
-+#else
-+#define JNI_GENERATOR_EXPORT extern "C" JNIEXPORT JNICALL
-+#endif
-+
-+// Re-export helpers in the old jni_generator namespace.
-+// TODO(b/319078685): Remove once all uses of the jni_generator has been
-+// updated.
-+namespace jni_generator {
-+using jni_zero::internal::kJniStackMarkerValue;
-+
-+// TODO(b/319078685): Remove JniJavaCallContextUnchecked once all uses of the
-+// jni_generator has been updated.
-+struct JniJavaCallContextUnchecked {
-+  inline JniJavaCallContextUnchecked() {
-+// TODO(ssid): Implement for other architectures.
-+#if defined(__arm__) || defined(__aarch64__)
-+    // This assumes that this method does not increment the stack pointer.
-+    asm volatile("mov %0, sp" : "=r"(sp));
-+#else
-+    sp = 0;
-+#endif
-+  }
-+
-+  // Force no inline to reduce code size.
-+  template <jni_zero::MethodID::Type type>
-+  void Init(JNIEnv* env,
-+            jclass clazz,
-+            const char* method_name,
-+            const char* jni_signature,
-+            std::atomic<jmethodID>* atomic_method_id) {
-+    env1 = env;
-+
-+    // Make sure compiler doesn't optimize out the assignment.
-+    memcpy(&marker, &kJniStackMarkerValue, sizeof(kJniStackMarkerValue));
-+    // Gets PC of the calling function.
-+    pc = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
-+
-+    method_id = jni_zero::MethodID::LazyGet<type>(
-+        env, clazz, method_name, jni_signature, atomic_method_id);
-+  }
-+
-+  ~JniJavaCallContextUnchecked() {
-+    // Reset so that spurious marker finds are avoided.
-+    memset(&marker, 0, sizeof(marker));
-+  }
-+
-+  uint64_t marker;
-+  uintptr_t sp;
-+  uintptr_t pc;
-+
-+  JNIEnv* env1;
-+  jmethodID method_id;
-+};
-+
-+// TODO(b/319078685): Remove JniJavaCallContextChecked once all uses of the
-+// jni_generator has been updated.
-+// Context about the JNI call with exception unchecked to be stored in stack.
-+struct JniJavaCallContextChecked {
-+  // Force no inline to reduce code size.
-+  template <jni_zero::MethodID::Type type>
-+  void Init(JNIEnv* env,
-+            jclass clazz,
-+            const char* method_name,
-+            const char* jni_signature,
-+            std::atomic<jmethodID>* atomic_method_id) {
-+    base.Init<type>(env, clazz, method_name, jni_signature, atomic_method_id);
-+    // Reset `pc` to correct caller.
-+    base.pc = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
-+  }
-+
-+  ~JniJavaCallContextChecked() { jni_zero::CheckException(base.env1); }
-+
-+  JniJavaCallContextUnchecked base;
-+};
-+
-+static_assert(sizeof(JniJavaCallContextChecked) ==
-+                  sizeof(JniJavaCallContextUnchecked),
-+              "Stack unwinder cannot work with structs of different sizes.");
-+
-+}  // namespace jni_generator
-+
-+#endif  // SDK_ANDROID_SRC_JNI_JNI_GENERATOR_HELPER_H_
