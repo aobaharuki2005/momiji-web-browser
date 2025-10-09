@@ -13,6 +13,7 @@ mozglue-static = { path = "../../../../mozglue/static/rust" }
 geckoservo = { path = "../../../../servo/ports/geckolib" }
 kvstore = { path = "../../../components/kvstore" }
 mp4parse_capi = { git = "https://github.com/mozilla/mp4parse-rust", rev = "f955be5d2a04a631c0f1777d6f35370ea1a99e2d", features = ["missing-pixi-permitted"] }
+image_jxl = { path = "../../../../image/rust/jxl", optional = true }
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
 netwerk_helper = { path = "../../../../netwerk/base/rust-helper" }
