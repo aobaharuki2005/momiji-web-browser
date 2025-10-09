@@ -2407,6 +2407,28 @@ var gUnifiedExtensions = {
             "unified-extensions-empty-content-explain-enable"
           );
           emptyStateBox.hidden = false;
+        } else if (!policies.length) {
+          document.l10n.setAttributes(
+            emptyStateBox.querySelector("h2"),
+            "unified-extensions-empty-reason-zero-extensions-onboarding"
+          );
+          document.l10n.setAttributes(
+            emptyStateBox.querySelector("description"),
+            "unified-extensions-empty-content-explain-extensions-onboarding"
+          );
+          emptyStateBox.hidden = false;
+
+          // Replace the "Manage Extensions" button with "Discover Extensions".
+          // We add the "Discover Extensions" button, and "Manage Extensions"
+          // button (#unified-extensions-manage-extensions) is hidden by CSS.
+          const discoverButton = this._createDiscoverButton(panelview);
+
+          const manageExtensionsButton = panelview.querySelector(
+            "#unified-extensions-manage-extensions"
+          );
+          // Insert before toolbarseparator, to make it easier to hide the
+          // toolbarseparator and manageExtensionsButton with CSS.
+          manageExtensionsButton.previousElementSibling.before(discoverButton);
         }
       });
     }
@@ -2458,6 +2480,10 @@ var gUnifiedExtensions = {
     while (list.lastChild) {
       list.lastChild.remove();
     }
+    panelview
+      .querySelector("#unified-extensions-discover-extensions")
+      ?.remove();
+
     // If temporary access was granted, (maybe) clear attention indicator.
     requestAnimationFrame(() => this.updateAttention());
   },
@@ -2627,8 +2653,10 @@ var gUnifiedExtensions = {
         // The button should directly open `about:addons` when the user does not
         // have any active extensions listed in the unified extensions panel,
         // and no alternative content is available for display in the panel.
+        const policies = this.getActivePolicies();
         if (
-          !this.hasExtensionsInPanel() &&
+          policies.length &&
+          !this.hasExtensionsInPanel(policies) &&
           !this.isPrivateWindowMissingExtensionsWithoutPBMAccess() &&
           !(await this.isAtLeastOneExtensionDisabled())
         ) {
@@ -3114,6 +3142,36 @@ var gUnifiedExtensions = {
     }
 
     return messageBar;
+  },
+
+  _createDiscoverButton() {
+    const discoverButton = document.createElement("moz-button");
+    discoverButton.id = "unified-extensions-discover-extensions";
+    discoverButton.type = "primary";
+    discoverButton.className = "subviewbutton panel-subview-footer-button";
+    document.l10n.setAttributes(
+      discoverButton,
+      "unified-extensions-discover-extensions"
+    );
+
+    discoverButton.addEventListener("click", () => {
+      if (
+        // The "Discover Extensions" button is only shown if the user has not
+        // installed any extension. In that case, we direct to the discopane
+        // in about:addons. If the discopane is disabled, open the default
+        // view (Extensions list) instead. This view shows a link to AMO when
+        // the user does not have any extensions installed.
+        Services.prefs.getBoolPref("extensions.getAddons.showPane", true)
+      ) {
+        BrowserAddonUI.openAddonsMgr("addons://list/discover");
+      } else {
+        BrowserAddonUI.openAddonsMgr("addons://list/extension");
+      }
+      // Close panel.
+      this.togglePanel();
+    });
+
+    return discoverButton;
   },
 
   _shouldShowQuarantinedNotification() {

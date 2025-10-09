@@ -54,6 +54,46 @@ function getEmptyStateContainer(win) {
   return emptyStateBox;
 }
 
+function assertIsEmptyPanelOnboardingExtensions(win) {
+  const emptyStateBox = getEmptyStateContainer(win);
+  ok(BrowserTestUtils.isVisible(emptyStateBox), "Empty state is visible");
+  is(
+    emptyStateBox.querySelector("h2").getAttribute("data-l10n-id"),
+    "unified-extensions-empty-reason-zero-extensions-onboarding",
+    "Has header when the user does not have any extensions installed"
+  );
+  is(
+    emptyStateBox.querySelector("description").getAttribute("data-l10n-id"),
+    "unified-extensions-empty-content-explain-extensions-onboarding",
+    "Has description explaining extensions"
+  );
+
+  const discoverButton = getDiscoverButton(win);
+  ok(discoverButton, "Got 'Discover button'");
+  is(
+    discoverButton.getAttribute("data-l10n-id"),
+    "unified-extensions-discover-extensions",
+    "Button in extensions panel should be labeled 'Discover Extensions'"
+  );
+  is(
+    discoverButton.getAttribute("type"),
+    "primary",
+    "Discover button should be styled as a primary call-to-action button"
+  );
+  const manageExtensionsButton = getListView(win).querySelector(
+    "#unified-extensions-manage-extensions"
+  );
+  ok(
+    BrowserTestUtils.isHidden(manageExtensionsButton),
+    "'Manage Extensions' button should be hidden"
+  );
+}
+function getDiscoverButton(win) {
+  return win.gUnifiedExtensions.panel.querySelector(
+    "#unified-extensions-discover-extensions"
+  );
+}
+
 add_task(async function test_button_opens_discopane_when_no_extension() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:robots" },
@@ -61,14 +101,19 @@ add_task(async function test_button_opens_discopane_when_no_extension() {
       const { button } = gUnifiedExtensions;
       ok(button, "expected button");
 
-      // Primary click should open about:addons.
+      // This clicks on gUnifiedExtensions.button and waits for panel to show.
+      await openExtensionsPanel(window);
+
+      assertIsEmptyPanelOnboardingExtensions(window);
+      const discoverButton = getDiscoverButton(window);
+
       const tabPromise = BrowserTestUtils.waitForNewTab(
         gBrowser,
         "about:addons",
         true
       );
 
-      button.click();
+      discoverButton.click();
 
       const tab = await tabPromise;
       is(
@@ -82,19 +127,6 @@ add_task(async function test_button_opens_discopane_when_no_extension() {
         "expected about:addons to show the recommendations"
       );
       BrowserTestUtils.removeTab(tab);
-
-      // "Right-click" should open the context menu only.
-      const contextMenu = document.getElementById("toolbar-context-menu");
-      const popupShownPromise = BrowserTestUtils.waitForEvent(
-        contextMenu,
-        "popupshown"
-      );
-      EventUtils.synthesizeMouseAtCenter(button, {
-        type: "contextmenu",
-        button: 2,
-      });
-      await popupShownPromise;
-      await closeChromeContextMenu(contextMenu.id, null);
     }
   );
 });
@@ -115,17 +147,19 @@ add_task(
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: "about:robots" },
       async () => {
-        const { button } = gUnifiedExtensions;
-        ok(button, "expected button");
+        // This clicks on gUnifiedExtensions.button and waits for panel to show.
+        await openExtensionsPanel(window);
 
-        // Primary click should open about:addons.
+        assertIsEmptyPanelOnboardingExtensions(window);
+        const discoverButton = getDiscoverButton(window);
+
         const tabPromise = BrowserTestUtils.waitForNewTab(
           gBrowser,
           "about:addons",
           true
         );
 
-        button.click();
+        discoverButton.click();
 
         const tab = await tabPromise;
         is(
@@ -133,10 +167,27 @@ add_task(
           "about:addons",
           "expected about:addons to be open"
         );
+        const managerWindow = gBrowser.selectedBrowser.contentWindow;
         is(
-          gBrowser.selectedBrowser.contentWindow.gViewController.currentViewId,
+          managerWindow.gViewController.currentViewId,
           "addons://list/extension",
           "expected about:addons to show the extension list"
+        );
+        if (managerWindow.gViewController.isLoading) {
+          info("Waiting for about:addons to finish loading");
+          await BrowserTestUtils.waitForEvent(
+            managerWindow.document,
+            "view-loaded"
+          );
+        }
+        const amoLink = managerWindow.document.querySelector(
+          `#empty-addons-message a[data-l10n-name="get-extensions"]`
+        );
+        ok(amoLink, "Found link to get extensions");
+        is(
+          amoLink.href,
+          "https://addons.mozilla.org/en-US/firefox/",
+          "Link points to AMO, where the user can discover extensions"
         );
         BrowserTestUtils.removeTab(tab);
       }
@@ -149,6 +200,12 @@ add_task(
 add_task(async function test_button_click_in_pbm_without_any_extensions() {
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
+  // This clicks on gUnifiedExtensions.button and waits for panel to show.
+  await openExtensionsPanel(win);
+
+  assertIsEmptyPanelOnboardingExtensions(win);
+  const discoverButton = getDiscoverButton(win);
+
   // Button click opens about:addons (reuses about:privatebrowsing tab).
   // Primary click should open about:addons.
   const tabLoadedPromise = BrowserTestUtils.browserStopped(
@@ -156,7 +213,7 @@ add_task(async function test_button_click_in_pbm_without_any_extensions() {
     "about:addons"
   );
 
-  win.gUnifiedExtensions.button.click();
+  discoverButton.click();
 
   await tabLoadedPromise;
   is(
@@ -338,15 +395,19 @@ add_task(async function test_no_empty_state_with_disabled_non_extension() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:robots" },
     async () => {
-      // Primary click should open about:addons. Notably, the extensions panel
-      // and "You have extensions installed, but not enabled" is not shown.
+      // This clicks on gUnifiedExtensions.button and waits for panel to show.
+      await openExtensionsPanel(window);
+
+      assertIsEmptyPanelOnboardingExtensions(window);
+      const discoverButton = getDiscoverButton(window);
+
       const tabPromise = BrowserTestUtils.waitForNewTab(
         gBrowser,
         "about:addons",
         true
       );
 
-      gUnifiedExtensions.button.click();
+      discoverButton.click();
 
       const tab = await tabPromise;
       ok(true, "about:addons opened instead of panel about disabled add-ons");

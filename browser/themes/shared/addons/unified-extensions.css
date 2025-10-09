@@ -45,6 +45,15 @@
   }
 }
 
+#unified-extensions-discover-extensions {
+  width: auto; /* full width instead of fit-content */
+
+  + toolbarseparator,
+  + toolbarseparator + #unified-extensions-manage-extensions {
+    display: none;
+  }
+}
+
 /* Align extensions rendered with custom elements. */
 unified-extensions-item {
   display: flex;
