@@ -88,6 +88,7 @@
 #include <cstdint>
 #include <cstring>
 #include <limits>
+#include <numbers>
 
 #include "rtc_base/checks.h"
 #include "rtc_base/cpu_info.h"
@@ -207,14 +208,16 @@ void SincResampler::InitializeKernel() {
     for (size_t i = 0; i < kKernelSize; ++i) {
       const size_t idx = i + offset_idx * kKernelSize;
       const float pre_sinc = static_cast<float>(
-          M_PI * (static_cast<int>(i) - static_cast<int>(kKernelSize / 2) -
-                  subsample_offset));
+          std::numbers::pi *
+          (static_cast<int>(i) - static_cast<int>(kKernelSize / 2) -
+           subsample_offset));
       kernel_pre_sinc_storage_[idx] = pre_sinc;
 
       // Compute Blackman window, matching the offset of the sinc().
       const float x = (i - subsample_offset) / kKernelSize;
-      const float window = static_cast<float>(kA0 - kA1 * cos(2.0 * M_PI * x) +
-                                              kA2 * cos(4.0 * M_PI * x));
+      const float window =
+          static_cast<float>(kA0 - kA1 * cos(2.0 * std::numbers::pi * x) +
+                             kA2 * cos(4.0 * std::numbers::pi * x));
       kernel_window_storage_[idx] = window;
 
       // Compute the sinc with offset, then window the sinc() function and store

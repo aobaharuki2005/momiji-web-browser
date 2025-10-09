@@ -18,10 +18,6 @@
 
 #include "rtc_base/containers/flat_tree.h"  // IWYU pragma: export
 
-#if __cplusplus < 202002
-#  include "rtc_base/containers/identity.h"  // Mozilla: remove when fixing Bug 1980501
-#endif
-
 namespace webrtc {
 
 // flat_set is a container with a std::set-like interface that stores its
