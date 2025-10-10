@@ -136,7 +136,7 @@ async function doMigrateTest({
     info(`Reinitializing Suggest, i=${i}`);
 
     // Reinitialize Suggest.
-    await QuickSuggest._test_reinit({
+    await QuickSuggest._test_reset({
       ...testOverrides,
       region: shouldEnable ? "US" : "XX",
       locale: shouldEnable ? "en-US" : "xx-XX",
