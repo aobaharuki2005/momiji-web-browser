@@ -1730,9 +1730,7 @@ class GPUMemoryReporter : public MemoryReportingProcess {
  private:
   GPUChild* GetChild() const {
     if (GPUProcessManager* gpm = GPUProcessManager::Get()) {
-      if (GPUChild* child = gpm->GetGPUChild()) {
-        return child;
-      }
+      return gpm->GetGPUChild();
     }
     return nullptr;
   }
@@ -1742,12 +1740,14 @@ class GPUMemoryReporter : public MemoryReportingProcess {
 };
 
 RefPtr<MemoryReportingProcess> GPUProcessManager::GetProcessMemoryReporter() {
-  // Ensure mProcess is non-null before calling EnsureGPUReady, to avoid
-  // launching the process if it has not already been launched.
-  if (!mProcess || NS_FAILED(EnsureGPUReady())) {
+  // If we are in the middle of launching a GPU process, we can wait for it to
+  // finish, otherwise if there is no GPU process, we should just return now to
+  // avoid launching it again.
+  if (!mProcess || AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdown) ||
+      !mProcess->WaitForLaunch()) {
     return nullptr;
   }
-  return new GPUMemoryReporter();
+  return MakeRefPtr<GPUMemoryReporter>();
 }
 
 void GPUProcessManager::SetAppInForeground(bool aInForeground) {
