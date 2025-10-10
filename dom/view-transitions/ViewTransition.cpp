@@ -1352,13 +1352,16 @@ Maybe<SkipTransitionReason> ViewTransition::CaptureOldState() {
     if (RefPtr<PresShell> ps =
             nsContentUtils::GetInProcessSubtreeRootDocument(mDocument)
                 ->GetPresShell()) {
-      VT_LOG("ViewTransitions::CaptureOldState(), requesting composite");
       // Build a display list and send it to WR in order to perform the
       // capturing of old content.
       RefPtr<nsViewManager> vm = ps->GetViewManager();
-      ps->PaintAndRequestComposite(vm->GetRootView(),
-                                   PaintFlags::PaintCompositeOffscreen);
-      VT_LOG("ViewTransitions::CaptureOldState(), requesting composite end");
+      if (RefPtr widget = vm->GetRootWidget()) {
+        VT_LOG("ViewTransitions::CaptureOldState(), requesting composite");
+        ps->PaintAndRequestComposite(ps->GetRootFrame(),
+                                     widget->GetWindowRenderer(),
+                                     PaintFlags::PaintCompositeOffscreen);
+        VT_LOG("ViewTransitions::CaptureOldState(), requesting composite end");
+      }
     }
   }
 
