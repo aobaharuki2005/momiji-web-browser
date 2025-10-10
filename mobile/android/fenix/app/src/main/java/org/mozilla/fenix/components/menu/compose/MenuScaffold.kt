@@ -49,7 +49,7 @@ internal fun MenuScaffold(
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        if (scrollState.value != 0) {
+        if (scrollState.canScrollBackward) {
             HorizontalDivider(color = FirefoxTheme.colors.borderPrimary)
         }
 

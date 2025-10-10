@@ -107,14 +107,14 @@ internal fun CustomTabMenu(
                     isExtensionsExpanded = false,
                     isMoreMenuExpanded = false,
                 )
-                if (scrollState.value != 0) {
+                if (scrollState.canScrollBackward) {
                     HorizontalDivider(color = FirefoxTheme.colors.borderPrimary)
                 }
             }
         },
         footer = {
             if (isBottomToolbar) {
-                if (scrollState.value != 0) {
+                if (scrollState.canScrollBackward) {
                     HorizontalDivider(color = FirefoxTheme.colors.borderPrimary)
                 }
                 MenuNavigation(
