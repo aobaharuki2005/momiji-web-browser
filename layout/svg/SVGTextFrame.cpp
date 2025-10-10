@@ -3621,18 +3621,22 @@ void SVGTextFrame::SelectSubString(nsIContent* aContent, uint32_t charnum,
 
   UpdateGlyphPositioning();
 
-  // Convert charnum/nchars from addressable characters relative to
-  // aContent to global character indices.
-  CharIterator chit(this, CharIterator::eAddressable, aContent);
-  if (!chit.AdvanceToSubtree() || !chit.Next(charnum) ||
-      chit.IsAfterSubtree()) {
-    aRv.ThrowIndexSizeError("Character index out of range");
-    return;
+  RefPtr<nsIContent> content;
+
+  {
+    // Convert charnum/nchars from addressable characters relative to
+    // aContent to global character indices.
+    CharIterator chit(this, CharIterator::eAddressable, aContent);
+    if (!chit.AdvanceToSubtree() || !chit.Next(charnum) ||
+        chit.IsAfterSubtree()) {
+      aRv.ThrowIndexSizeError("Character index out of range");
+      return;
+    }
+    charnum = chit.TextElementCharIndex();
+    content = chit.GetTextFrame()->GetContent();
+    chit.NextWithinSubtree(nchars);
+    nchars = chit.TextElementCharIndex() - charnum;
   }
-  charnum = chit.TextElementCharIndex();
-  const RefPtr<nsIContent> content = chit.GetTextFrame()->GetContent();
-  chit.NextWithinSubtree(nchars);
-  nchars = chit.TextElementCharIndex() - charnum;
 
   RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
 
