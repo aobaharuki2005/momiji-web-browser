@@ -17,19 +17,14 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.Too
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Bottom
 import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Top
-import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.random.Random
 
 @RunWith(AndroidJUnit4::class)
 class BrowserToolbarStoreTest {
-
-    @get:Rule
-    val coroutineTestRule = MainCoroutineRule()
 
     @Test
     fun `WHEN enter edit mode action is dispatched THEN mode is updated and query remains unchanged`() {
