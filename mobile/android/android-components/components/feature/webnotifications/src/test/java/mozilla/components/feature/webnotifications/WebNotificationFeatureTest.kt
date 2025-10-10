@@ -8,6 +8,7 @@ import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.Icon.Source
@@ -22,12 +23,9 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.test.rule.MainCoroutineRule
-import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.anyBoolean
@@ -39,9 +37,6 @@ import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 class WebNotificationFeatureTest {
-
-    @get:Rule
-    val coroutinesTestRule = MainCoroutineRule()
 
     private val context = spy(testContext)
     private val browserIcons: BrowserIcons = mock()
@@ -110,7 +105,7 @@ class WebNotificationFeatureTest {
     }
 
     @Test
-    fun `engine notifies to show notification`() = runTestOnMain {
+    fun `engine notifies to show notification`() = runTest {
         val notification = testNotification.copy(sourceUrl = "https://mozilla.org:443")
         val feature = WebNotificationFeature(
             context,
@@ -134,6 +129,7 @@ class WebNotificationFeatureTest {
         ).thenReturn(permission)
 
         feature.onShowNotification(notification)
+        testScheduler.advanceUntilIdle()
 
         verify(notificationsDelegate).notify(
             eq(notification.tag),
@@ -146,7 +142,7 @@ class WebNotificationFeatureTest {
     }
 
     @Test
-    fun `notification ignored if site permissions are not allowed`() = runTestOnMain {
+    fun `notification ignored if site permissions are not allowed`() = runTest {
         val notification = testNotification.copy(sourceUrl = "https://mozilla.org:443")
         val feature = WebNotificationFeature(
             context,
@@ -181,7 +177,7 @@ class WebNotificationFeatureTest {
     }
 
     @Test
-    fun `success results depending on the system permissions`() = runTestOnMain {
+    fun `success results depending on the system permissions`() = runTest {
         val notificationManagerCompat = spy(NotificationManagerCompat.from(testContext))
 
         val notificationsDelegate = spy(NotificationsDelegate(notificationManagerCompat))
@@ -216,6 +212,7 @@ class WebNotificationFeatureTest {
         `when`(notificationManagerCompat.areNotificationsEnabled()).thenReturn(false)
 
         val deferred = feature.onShowNotification(notification)
+        testScheduler.advanceUntilIdle()
 
         // NotificationDelegate would prompt the user, but here we emulate the denial from the user
         val onPermissionRejectedCaptor = argumentCaptor<() -> Unit>()
@@ -238,7 +235,7 @@ class WebNotificationFeatureTest {
     }
 
     @Test
-    fun `notifications always allowed for web extensions`() = runTestOnMain {
+    fun `notifications always allowed for web extensions`() = runTest {
         val webExtensionNotification = WebNotification(
             "Mozilla",
             "mozilla.org",
@@ -265,6 +262,7 @@ class WebNotificationFeatureTest {
         )
 
         feature.onShowNotification(webExtensionNotification)
+        testScheduler.advanceUntilIdle()
 
         verify(notificationsDelegate).notify(
             eq(testNotification.tag),
