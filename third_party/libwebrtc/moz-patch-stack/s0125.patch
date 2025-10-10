@@ -14,10 +14,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/eae7b6ec4f7ca191e
  1 file changed, 9 insertions(+)
 
 diff --git a/rtc_base/cpu_info.cc b/rtc_base/cpu_info.cc
-index 71100178f1..ae774b4543 100644
+index f0bff56911..b51c9e950e 100644
 --- a/rtc_base/cpu_info.cc
 +++ b/rtc_base/cpu_info.cc
-@@ -17,7 +17,9 @@
+@@ -25,7 +25,9 @@
  #elif defined(WEBRTC_MAC)
  #include <sys/sysctl.h>
  #elif defined(WEBRTC_ANDROID)
@@ -27,7 +27,7 @@ index 71100178f1..ae774b4543 100644
  #include <unistd.h>
  #elif defined(WEBRTC_FUCHSIA)
  #include <zircon/syscalls.h>
-@@ -191,7 +193,14 @@ bool Supports(ISA instruction_set_architecture) {
+@@ -175,7 +177,14 @@ bool Supports(ISA instruction_set_architecture) {
  #elif defined(WEBRTC_ARCH_ARM_FAMILY)
    if (instruction_set_architecture == ISA::kNeon) {
  #if defined(WEBRTC_ANDROID)
