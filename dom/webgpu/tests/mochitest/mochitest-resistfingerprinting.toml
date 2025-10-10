@@ -8,7 +8,11 @@ run-if = [
 prefs = [
   "dom.webgpu.enabled=true",
   "dom.webgpu.service-workers.enabled=true",
-  "gfx.webgpu.ignore-blocklist=true", # https://bugzilla.mozilla.org/show_bug.cgi?id=1985348
+  # Ignoring the blocklist is necessary to run tests in CI on old Mesa versions
+  # (https://bugzilla.mozilla.org/show_bug.cgi?id=1985348) or against beta and
+  # release builds on old MacOS versions
+  # (https://bugzilla.mozilla.org/show_bug.cgi?id=1993341).
+  "gfx.webgpu.ignore-blocklist=true",
   "privacy.fingerprintingProtection=true",
   "privacy.fingerprintingProtection.overrides='-AllTargets,+WebGPULimits'",
 ]
