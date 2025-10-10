@@ -48,24 +48,24 @@ import mozilla.components.ui.icons.R as iconsR
  * [BottomAppBar] for the Tab Manager.
  *
  * @param tabsTrayStore [TabsTrayStore] used to listen for changes to [TabsTrayState].
- * @param pbmLocked Whether the private browsing mode is currently locked.
  * @param scrollBehavior Defines how the [BottomAppBar] should behave when the content under it is scrolled.
- * @param modifier The [Modifier] to be applied to this FAB.
  * @param onTabSettingsClick Invoked when the user clicks on the tab settings banner menu item.
  * @param onRecentlyClosedClick Invoked when the user clicks on the recently closed banner menu item.
  * @param onAccountSettingsClick Invoked when the user clicks on the account settings banner menu item.
  * @param onDeleteAllTabsClick Invoked when the user clicks on the close all tabs banner menu item.
+ * @param modifier The [Modifier] to be applied to this FAB.
+ * @param pbmLocked Whether the private browsing mode is currently locked.
  */
 @Composable
 internal fun TabManagerBottomAppBar(
     tabsTrayStore: TabsTrayStore,
-    pbmLocked: Boolean = false,
     scrollBehavior: BottomAppBarScrollBehavior,
-    modifier: Modifier = Modifier,
     onTabSettingsClick: () -> Unit,
     onRecentlyClosedClick: () -> Unit,
     onAccountSettingsClick: () -> Unit,
     onDeleteAllTabsClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    pbmLocked: Boolean = false,
 ) {
     val state by tabsTrayStore.observeAsState(initialValue = tabsTrayStore.state) { it }
     val privateTabsLocked = pbmLocked && state.selectedPage == Page.PrivateTabs
