@@ -1,6 +1,4 @@
 == target-text-light.html target-text-light-ref.html
 == target-text-bg-is-same-as-light.html target-text-bg-is-same-as-light-ref.html
-# Tests are deactivated on Linux, because dark mode detection does not work properly on CI.
-# https://bugzil.la/1993479
-skip-if(gtkWidget) == target-text-black.html target-text-black-ref.html
-skip-if(gtkWidget) == target-text-bg-is-same-as-dark.html target-text-bg-is-same-as-dark-ref.html
+== target-text-black.html target-text-black-ref.html
+== target-text-bg-is-same-as-dark.html target-text-bg-is-same-as-dark-ref.html
