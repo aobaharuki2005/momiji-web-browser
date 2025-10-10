@@ -204,7 +204,7 @@ index 3357c2dcdf..db3f2454bc 100644
      }
  
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index c5810b61a8..b6da9b6920 100644
+index d584d4591e..bf3dea8da6 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -44,6 +44,9 @@ rtc_library("enable_media") {
