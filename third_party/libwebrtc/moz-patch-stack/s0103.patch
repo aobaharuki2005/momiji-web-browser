@@ -382,10 +382,10 @@ index b671239bae..e545b2cde3 100644
    android_java_prebuilt("autobanh_java") {
      jar_path = "lib/autobanh.jar"
 diff --git a/examples/androidnativeapi/BUILD.gn b/examples/androidnativeapi/BUILD.gn
-index d0f9014a66..ae918e57eb 100644
+index 64cd43e923..6d36129869 100644
 --- a/examples/androidnativeapi/BUILD.gn
 +++ b/examples/androidnativeapi/BUILD.gn
-@@ -42,8 +42,8 @@ if (is_android) {
+@@ -41,8 +41,8 @@ if (is_android) {
        "jni/onload.cc",
      ]
  
@@ -397,10 +397,10 @@ index d0f9014a66..ae918e57eb 100644
      deps = [
        ":generated_jni",
 diff --git a/examples/androidvoip/BUILD.gn b/examples/androidvoip/BUILD.gn
-index 3f517b73c0..edf214e0c4 100644
+index be28f08b3c..dad74bd8dc 100644
 --- a/examples/androidvoip/BUILD.gn
 +++ b/examples/androidvoip/BUILD.gn
-@@ -51,8 +51,8 @@ if (is_android) {
+@@ -50,8 +50,8 @@ if (is_android) {
        "jni/onload.cc",
      ]
  
