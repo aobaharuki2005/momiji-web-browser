@@ -97,6 +97,15 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // If the GPU process is enabled but has not yet been launched then this will
   // launch the process. If that is not desired then check that return value of
   // Process() is non-null before calling.
+  //
+  // Returns:
+  // - NS_OK if compositing is ready, in either the GPU process or the parent
+  // process, even if in shutdown.
+  // - NS_ERROR_ILLEGAL_DURING_SHUTDOWN if compositing is not ready, and we are
+  // in shutdown.
+  // - NS_ERROR_ABORT if compositing is not ready, we failed to make it ready
+  // under the previous configuration, and that the configuration may have
+  // changed. This is only returned when aRetryAfterFallback is false.
   nsresult EnsureGPUReady(bool aRetryAfterFallback = true);
 
   already_AddRefed<CompositorSession> CreateTopLevelCompositor(
@@ -231,6 +240,8 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   void OnPreferenceChange(const char16_t* aData);
   void ScreenInformationChanged();
 
+  bool IsGPUReady() const;
+
   bool CreateContentCompositorManager(
       mozilla::ipc::EndpointProcInfo aOtherProcess,
       dom::ContentParentId aChildId, uint32_t aNamespace,
@@ -319,7 +330,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 #endif
 
 #if defined(MOZ_WIDGET_ANDROID)
-  already_AddRefed<UiCompositorControllerChild> CreateUiCompositorController(
+  RefPtr<UiCompositorControllerChild> CreateUiCompositorController(
       nsBaseWidget* aWidget, const LayersId aId);
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
