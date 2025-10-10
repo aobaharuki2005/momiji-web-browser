@@ -80,6 +80,7 @@
 #include "mozilla/widget/WinEventObserver.h"
 #include "mozilla/widget/WinMessages.h"
 #include "nsLookAndFeel.h"
+#include "nsMenuPopupFrame.h"
 #include "nsWindow.h"
 #include "nsWindowTaskbarConcealer.h"
 #include "nsAppRunner.h"
@@ -7209,20 +7210,14 @@ a11y::LocalAccessible* nsWindow::GetAccessible() {
   }
 
   // In case of popup window return a popup accessible.
-  nsView* view = nsView::GetViewFor(this);
-  if (view) {
-    nsIFrame* frame = view->GetFrame();
-    if (frame && nsLayoutUtils::IsPopup(frame)) {
-      nsAccessibilityService* accService = GetOrCreateAccService();
-      if (accService) {
-        a11y::DocAccessible* docAcc =
-            GetAccService()->GetDocAccessible(frame->PresShell());
-        if (docAcc) {
-          NS_LOG_WMGETOBJECT(
-              this, mWnd,
-              docAcc->GetAccessibleOrDescendant(frame->GetContent()));
-          return docAcc->GetAccessibleOrDescendant(frame->GetContent());
-        }
+  if (auto* frame = GetPopupFrame()) {
+    if (nsAccessibilityService* accService = GetOrCreateAccService()) {
+      a11y::DocAccessible* docAcc =
+          accService->GetDocAccessible(frame->PresShell());
+      if (docAcc) {
+        NS_LOG_WMGETOBJECT(
+            this, mWnd, docAcc->GetAccessibleOrDescendant(frame->GetContent()));
+        return docAcc->GetAccessibleOrDescendant(frame->GetContent());
       }
     }
   }

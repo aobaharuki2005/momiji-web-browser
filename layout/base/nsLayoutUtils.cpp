@@ -1602,7 +1602,7 @@ nsIFrame* nsLayoutUtils::GetPopupFrameForPoint(
       continue;
     }
     if (aFlags & GetPopupFrameForPointFlags::OnlyReturnFramesWithWidgets) {
-      if (!popup->GetView() || !popup->GetView()->HasWidget()) {
+      if (!popup->GetWidget()) {
         continue;
       }
     }
