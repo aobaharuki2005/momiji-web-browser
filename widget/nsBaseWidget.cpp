@@ -1464,7 +1464,7 @@ already_AddRefed<WebRenderLayerManager> nsBaseWidget::CreateCompositorSession(
     // If it failed to connect to GPU process, GPU process usage is disabled in
     // EnsureGPUReady(). It could update gfxVars and gfxConfigs.
     nsresult rv = gpu->EnsureGPUReady();
-    if (NS_WARN_IF(rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN)) {
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
 

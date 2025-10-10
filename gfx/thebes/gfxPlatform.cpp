@@ -4157,7 +4157,7 @@ void gfxPlatform::BuildContentDeviceData(
 
   // Make sure our settings are synchronized from the GPU process.
   DebugOnly<nsresult> rv = GPUProcessManager::Get()->EnsureGPUReady();
-  MOZ_ASSERT(rv != NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   aOut->prefs().hwCompositing() = gfxConfig::GetValue(Feature::HW_COMPOSITING);
   aOut->prefs().oglCompositing() =
