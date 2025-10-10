@@ -77,7 +77,7 @@ export default class PasswordValidationInputs extends MozLitElement {
 
   updatePasswordValidity() {
     const emailRegex = /^[\w!#$%&'*+/=?^`{|}~.-]+@[A-Z0-9-]+\.[A-Z0-9.-]+$/i;
-    const l10n = new Localization(["preview/backupSettings.ftl"], true);
+    const l10n = new Localization(["browser/backupSettings.ftl"], true);
 
     this._hasEmail = emailRegex.test(this.inputNewPasswordEl.value);
     if (this._hasEmail) {
