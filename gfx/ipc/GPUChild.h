@@ -35,8 +35,6 @@ class GPUChild final : public mozilla::ipc::CrashReporterHelper<GPUChild>,
 
   void Init();
 
-  bool IsGPUReady() const { return mGPUReady && !mWaitForVarUpdate; }
-
   bool EnsureGPUReady();
   void MarkWaitForVarUpdate() { mWaitForVarUpdate = true; }
 
