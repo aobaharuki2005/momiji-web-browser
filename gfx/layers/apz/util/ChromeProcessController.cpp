@@ -113,8 +113,10 @@ PresShell* ChromeProcessController::GetPresShell() const {
   if (!mWidget) {
     return nullptr;
   }
-  auto* frame = mWidget->GetFrame();
-  return frame ? frame->PresShell() : nullptr;
+  if (nsView* view = nsView::GetViewFor(mWidget)) {
+    return view->GetPresShell();
+  }
+  return nullptr;
 }
 
 dom::Document* ChromeProcessController::GetRootDocument() const {
@@ -146,7 +148,7 @@ void ChromeProcessController::HandleDoubleTap(
   MOZ_ASSERT(mUIThread->IsOnCurrentThread());
 
   RefPtr<dom::Document> document = GetRootContentDocument(aGuid.mScrollId);
-  if (!document) {
+  if (!document.get()) {
     return;
   }
 
@@ -373,5 +375,14 @@ void ChromeProcessController::NotifyScaleGestureComplete(
 }
 
 nsIFrame* ChromeProcessController::GetWidgetFrame() const {
-  return mWidget ? mWidget->GetFrame() : nullptr;
+  if (!mWidget) {
+    return nullptr;
+  }
+
+  nsView* view = nsView::GetViewFor(mWidget);
+  if (!view) {
+    return nullptr;
+  }
+
+  return view->GetFrame();
 }

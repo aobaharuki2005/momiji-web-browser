@@ -48,7 +48,7 @@
 class nsIBidiKeyboard;
 class nsIRollupListener;
 class nsIContent;
-class nsMenuPopupFrame;
+class ViewWrapper;
 class nsIRunnable;
 
 namespace mozilla {
@@ -2037,11 +2037,6 @@ class nsIWidget : public nsISupports {
 #endif
 
   static already_AddRefed<nsIBidiKeyboard> CreateBidiKeyboard();
-
-  // If this is a popup, returns the associated frame if any.
-  nsMenuPopupFrame* GetPopupFrame() const;
-  // Returns the frame currently associated to this widget.
-  nsIFrame* GetFrame() const;
 
   /**
    * Like GetDefaultScale, but taking into account only the system settings

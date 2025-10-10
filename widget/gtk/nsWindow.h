@@ -341,6 +341,7 @@ class nsWindow final : public nsBaseWidget {
   GdkWindow* GetGdkWindow() const { return mGdkWindow; };
   GdkWindow* GetToplevelGdkWindow() const;
   GtkWidget* GetGtkWidget() const { return mShell; }
+  nsIFrame* GetFrame() const;
   nsWindow* GetEffectiveParent();
   bool IsDestroyed() const { return mIsDestroyed; }
   bool IsPopup() const;

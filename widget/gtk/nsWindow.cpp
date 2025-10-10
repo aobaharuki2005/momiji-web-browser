@@ -1199,6 +1199,10 @@ bool nsWindow::IsWaylandPopup() const {
   return GdkIsWaylandDisplay() && IsPopup();
 }
 
+static nsMenuPopupFrame* GetMenuPopupFrame(nsIFrame* aFrame) {
+  return do_QueryFrame(aFrame);
+}
+
 void nsWindow::AppendPopupToHierarchyList(nsWindow* aToplevelWindow) {
   mWaylandToplevel = aToplevelWindow;
 
@@ -1593,7 +1597,7 @@ void nsWindow::WaylandPopupHierarchyCalculatePositions() {
         (int)(popup->mBounds.height / FractionalScaleFactor()));
 #ifdef MOZ_LOGGING
     if (LOG_ENABLED()) {
-      if (nsMenuPopupFrame* popupFrame = GetPopupFrame()) {
+      if (nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame())) {
         auto r = LayoutDeviceRect::FromAppUnitsRounded(
             popupFrame->GetRect(),
             popupFrame->PresContext()->AppUnitsPerDevPixel());
@@ -1630,7 +1634,7 @@ void nsWindow::WaylandPopupHierarchyCalculatePositions() {
 }
 
 bool nsWindow::WaylandPopupIsContextMenu() {
-  nsMenuPopupFrame* popupFrame = GetPopupFrame();
+  nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
   if (!popupFrame) {
     return false;
   }
@@ -1638,7 +1642,7 @@ bool nsWindow::WaylandPopupIsContextMenu() {
 }
 
 bool nsWindow::WaylandPopupIsPermanent() {
-  nsMenuPopupFrame* popupFrame = GetPopupFrame();
+  nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
   if (!popupFrame) {
     // We can always hide popups without frames.
     return false;
@@ -1647,7 +1651,7 @@ bool nsWindow::WaylandPopupIsPermanent() {
 }
 
 bool nsWindow::WaylandPopupIsAnchored() {
-  nsMenuPopupFrame* popupFrame = GetPopupFrame();
+  nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
   if (!popupFrame) {
     // We can always hide popups without frames.
     return false;
@@ -1656,10 +1660,10 @@ bool nsWindow::WaylandPopupIsAnchored() {
 }
 
 bool nsWindow::IsWidgetOverflowWindow() {
-  if (auto* frame = GetPopupFrame()) {
-    if (nsAtom* id = frame->GetContent()->GetID()) {
-      return id->Equals(u"widget-overflow"_ns);
-    }
+  if (this->GetFrame() && this->GetFrame()->GetContent()->GetID()) {
+    nsCString nodeId;
+    this->GetFrame()->GetContent()->GetID()->ToUTF8String(nodeId);
+    return nodeId.Equals("widget-overflow");
   }
   return false;
 }
@@ -1756,7 +1760,7 @@ bool nsWindow::WaylandPopupConfigure() {
   }
 
   // Don't track popups without frame
-  nsMenuPopupFrame* popupFrame = GetPopupFrame();
+  nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
   if (!popupFrame) {
     return false;
   }
@@ -1835,7 +1839,7 @@ bool nsWindow::IsInPopupHierarchy() {
 
 void nsWindow::AddWindowToPopupHierarchy() {
   LOG("nsWindow::AddWindowToPopupHierarchy\n");
-  if (!GetPopupFrame()) {
+  if (!GetFrame()) {
     LOG("  Window without frame cannot be added as popup!\n");
     return;
   }
@@ -2034,7 +2038,7 @@ void nsWindow::WaylandPopupPropagateChangesToLayout(bool aMove, bool aResize) {
 
   if (aResize) {
     LOG("  needSizeUpdate\n");
-    if (nsMenuPopupFrame* popupFrame = GetPopupFrame()) {
+    if (nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame())) {
       RefPtr<PresShell> presShell = popupFrame->PresShell();
       presShell->FrameNeedsReflow(popupFrame, IntrinsicDirty::None,
                                   NS_FRAME_IS_DIRTY);
@@ -2167,7 +2171,7 @@ static GdkGravity PopupAlignmentToGdkGravity(int8_t aAlignment) {
 }
 
 bool nsWindow::IsPopupDirectionRTL() {
-  nsMenuPopupFrame* popupFrame = GetPopupFrame();
+  nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
   return popupFrame && popupFrame->IsDirectionRTL();
 }
 
@@ -2479,7 +2483,7 @@ const nsWindow::WaylandPopupMoveToRectParams
 nsWindow::WaylandPopupGetPositionFromLayout() {
   LOG("nsWindow::WaylandPopupGetPositionFromLayout\n");
 
-  nsMenuPopupFrame* popupFrame = GetPopupFrame();
+  nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
 
   const bool isTopContextMenu = mPopupContextMenu && !mPopupAnchored;
   const bool isRTL = popupFrame->IsDirectionRTL();
@@ -2626,7 +2630,7 @@ bool nsWindow::WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor,
   LOG("nsWindow::WaylandPopupCheckAndGetAnchor");
 
   GdkWindow* gdkWindow = GetToplevelGdkWindow();
-  nsMenuPopupFrame* popupFrame = GetPopupFrame();
+  nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
   if (!gdkWindow || !popupFrame) {
     LOG("  can't use move-to-rect due missing gdkWindow or popupFrame");
     return false;
@@ -9731,6 +9735,14 @@ static nsIFrame* FindTitlebarFrame(nsIFrame* aFrame) {
   return nullptr;
 }
 
+nsIFrame* nsWindow::GetFrame() const {
+  nsView* view = nsView::GetViewFor(this);
+  if (!view) {
+    return nullptr;
+  }
+  return view->GetFrame();
+}
+
 void nsWindow::UpdateMozWindowActive() {
   // Update activation state for the :-moz-window-inactive pseudoclass.
   // Normally, this follows focus; we override it here to follow
@@ -10022,7 +10034,7 @@ void nsWindow::SetDragSource(GdkDragContext* aSourceDragContext) {
   mSourceDragContext = aSourceDragContext;
   if (IsPopup() &&
       (widget::GdkIsWaylandDisplay() || widget::IsXWaylandProtocol())) {
-    if (auto* menuPopupFrame = GetPopupFrame()) {
+    if (auto* menuPopupFrame = GetMenuPopupFrame(GetFrame())) {
       menuPopupFrame->SetIsDragSource(!!aSourceDragContext);
     }
   }
