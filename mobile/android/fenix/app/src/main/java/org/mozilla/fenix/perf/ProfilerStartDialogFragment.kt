@@ -61,28 +61,20 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
         val uiState by viewModel.uiState.collectAsState()
         val context = LocalContext.current
 
-        LaunchedEffect(uiState) {
-            when (val state = uiState) {
-                is ProfilerUiState.ShowToast -> {
-                    Toast.makeText(
-                        context,
-                        context.getString(state.messageResId) + state.extra,
-                        Toast.LENGTH_LONG,
-                    ).show()
-                }
-                is ProfilerUiState.Running, is ProfilerUiState.Finished -> {
-                    // No action needed - these states will auto-dismiss
-                }
-                is ProfilerUiState.Error -> {
-                    Toast.makeText(
-                        context,
-                        context.getString(state.messageResId) + " " + state.errorDetails,
-                        Toast.LENGTH_LONG,
-                    ).show()
-                }
-                else -> {}
+        val toastMessage: String? = when (val state = uiState) {
+            is ProfilerUiState.ShowToast -> {
+                stringResource(state.messageResId) + state.extra
             }
+            is ProfilerUiState.Error -> {
+                stringResource(state.messageResId) + " " + state.errorDetails
+            }
+            else -> null
+        }
 
+        LaunchedEffect(uiState) {
+            toastMessage?.let {
+                Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            }
             if (uiState.shouldDismiss()) {
                 dismissAllowingStateLoss()
             }

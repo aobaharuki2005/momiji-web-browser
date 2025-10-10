@@ -28,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -256,10 +255,8 @@ private fun ComponentPermissionBlockedByAndroidText(
     Text(
         textAlign = TextAlign.Start,
         color = focusColors.settingsTextColor,
-        text = LocalContext.current.getString(stringRes, permissionLabel).parseBold(),
-        style = TextStyle(
-            fontSize = 16.sp,
-        ),
+        text = stringResource(id = stringRes, permissionLabel ?: "").parseBold(),
+        style = TextStyle(fontSize = 16.sp),
         modifier = Modifier.padding(start = 55.dp, end = 16.dp, bottom = bottomPadding),
     )
 }

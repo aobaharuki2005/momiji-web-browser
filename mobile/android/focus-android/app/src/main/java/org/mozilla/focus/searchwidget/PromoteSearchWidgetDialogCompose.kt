@@ -27,7 +27,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -124,11 +123,8 @@ fun PromoteSearchWidgetDialogCompose(
 @Composable
 private fun DialogTitle() {
     Text(
-        text = stringResource(
-            id = R.string.promote_search_widget_dialog_title,
-        ),
-        modifier = Modifier
-            .padding(16.dp),
+        text = stringResource(id = R.string.promote_search_widget_dialog_title),
+        modifier = Modifier.padding(16.dp),
         color = focusColors.dialogTextColor,
         textAlign = TextAlign.Center,
         style = focusTypography.dialogTitle,
@@ -140,10 +136,9 @@ private fun DialogSubtitle() {
     Text(
         text = stringResource(
             id = R.string.promote_search_widget_dialog_subtitle,
-            LocalContext.current.getString(R.string.onboarding_short_app_name),
+            stringResource(R.string.onboarding_short_app_name),
         ),
-        modifier = Modifier
-            .padding(top = 16.dp, start = 16.dp, end = 16.dp),
+        modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp),
         color = focusColors.dialogTextColor,
         textAlign = TextAlign.Center,
         style = focusTypography.dialogContent,
@@ -154,9 +149,7 @@ private fun DialogSubtitle() {
 private fun DialogImage() {
     Image(
         painter = painterResource(R.drawable.focus_search_widget_promote_dialog),
-        contentDescription = LocalContext.current.getString(
-            R.string.promote_search_widget_dialog_picture_content_description,
-        ),
+        contentDescription = stringResource(R.string.promote_search_widget_dialog_picture_content_description),
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 10.dp, end = 10.dp)

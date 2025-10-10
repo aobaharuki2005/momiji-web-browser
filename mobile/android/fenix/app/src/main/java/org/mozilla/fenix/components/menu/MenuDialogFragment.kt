@@ -36,6 +36,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
@@ -329,13 +330,12 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                     )
                 }
 
+                val descCustom = stringResource(R.string.browser_custom_tab_menu_handlebar_content_description)
+                val descMain = stringResource(R.string.browser_close_main_menu_handlebar_content_description)
+
                 var handlebarContentDescription by remember {
                     mutableStateOf(
-                        if (args.accesspoint == MenuAccessPoint.External) {
-                            context.getString(R.string.browser_custom_tab_menu_handlebar_content_description)
-                        } else {
-                            context.getString(R.string.browser_close_main_menu_handlebar_content_description)
-                        },
+                        if (args.accesspoint == MenuAccessPoint.External) descCustom else descMain,
                     )
                 }
 
@@ -519,8 +519,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                     ) { route ->
                         when (route) {
                             Route.MainMenu -> {
-                                handlebarContentDescription =
-                                    context.getString(R.string.browser_close_main_menu_handlebar_content_description)
+                                handlebarContentDescription = descMain
 
                                 val account by syncStore.observeAsState(initialValue = null) { state -> state.account }
                                 val accountState by syncStore.observeAsState(initialValue = NotAuthenticated) { state ->
@@ -760,8 +759,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 val isSiteLoading by browserStore.observeAsState(false) { state ->
                                     args.customTabSessionId?.let { state.findCustomTab(it)?.content?.loading } ?: false
                                 }
-                                handlebarContentDescription =
-                                    context.getString(R.string.browser_custom_tab_menu_handlebar_content_description)
+                                handlebarContentDescription = descCustom
 
                                 CustomTabMenu(
                                     canGoBack = customTab?.content?.canGoBack ?: true,
