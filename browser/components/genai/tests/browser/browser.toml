@@ -35,7 +35,8 @@ skip-if = [
 ["browser_link_preview.js"]
 support-files = [
   "data/readableFr.html",
-  "data/readableEn.html"
+  "data/readableEn.html",
+  "data/encodingWithShiftJIS.html"
 ]
 
 ["browser_link_preview_nimbus.js"]
