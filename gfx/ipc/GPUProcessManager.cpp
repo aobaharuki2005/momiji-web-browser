@@ -363,22 +363,6 @@ bool GPUProcessManager::MaybeDisableGPUProcess(const char* aMessage,
   return true;
 }
 
-bool GPUProcessManager::IsGPUReady() const {
-  // If we have disabled the GPU process, then we know we are always ready.
-  if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
-    MOZ_ASSERT(!mProcess);
-    MOZ_ASSERT(!mGPUChild);
-    return true;
-  }
-
-  // If we have a GPUChild, then we know the process has finished launching.
-  if (mGPUChild) {
-    return mGPUChild->IsGPUReady();
-  }
-
-  return false;
-}
-
 nsresult GPUProcessManager::EnsureGPUReady(
     bool aRetryAfterFallback /* = true */) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -397,8 +381,7 @@ nsresult GPUProcessManager::EnsureGPUReady(
       }
 
       if (!LaunchGPUProcess()) {
-        MOZ_DIAGNOSTIC_ASSERT(!gfxConfig::IsEnabled(Feature::GPU_PROCESS));
-        return NS_OK;
+        return NS_ERROR_FAILURE;
       }
     }
 
@@ -413,13 +396,6 @@ nsresult GPUProcessManager::EnsureGPUReady(
         // or it will have disabled the GPU process.
         MOZ_ASSERT(!mProcess);
         MOZ_ASSERT(!mGPUChild);
-
-        // If aRetryAfterFallback is true, we will relaunch the process
-        // immediately in this loop (if still enabled). Otherwise we return to
-        // the caller to allow them to reconfigure first.
-        if (!aRetryAfterFallback) {
-          return NS_ERROR_ABORT;
-        }
         continue;
       }
     }
@@ -427,6 +403,7 @@ nsresult GPUProcessManager::EnsureGPUReady(
     // If we don't have a connected process by this stage, we must have
     // explicitly disabled the GPU process.
     if (!mGPUChild) {
+      MOZ_DIAGNOSTIC_ASSERT(!gfxConfig::IsEnabled(Feature::GPU_PROCESS));
       break;
     }
 
@@ -447,11 +424,9 @@ nsresult GPUProcessManager::EnsureGPUReady(
     // in this loop (if still enabled). Otherwise we return to the caller to
     // allow them to reconfigure first.
     if (!aRetryAfterFallback) {
-      return NS_ERROR_ABORT;
+      return NS_ERROR_NOT_AVAILABLE;
     }
   }
-
-  MOZ_DIAGNOSTIC_ASSERT(!gfxConfig::IsEnabled(Feature::GPU_PROCESS));
 
   // This is the first time we are trying to use the in-process compositor.
   if (mTotalProcessAttempts == 0) {
@@ -460,36 +435,34 @@ nsresult GPUProcessManager::EnsureGPUReady(
     }
     ResetProcessStable();
   }
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 bool GPUProcessManager::EnsureProtocolsReady() {
-  nsresult rv = EnsureGPUReady();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
   return EnsureCompositorManagerChild() && EnsureImageBridgeChild() &&
          EnsureVRManager();
 }
 
 bool GPUProcessManager::EnsureCompositorManagerChild() {
-  MOZ_ASSERT(IsGPUReady());
+  nsresult rv = EnsureGPUReady();
+  if (NS_WARN_IF(rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN)) {
+    return false;
+  }
 
   if (CompositorManagerChild::IsInitialized(mProcessToken)) {
     return true;
   }
 
-  if (!mGPUChild) {
+  if (NS_FAILED(rv)) {
     CompositorManagerChild::InitSameProcess(AllocateNamespace(), mProcessToken);
     return true;
   }
 
   ipc::Endpoint<PCompositorManagerParent> parentPipe;
   ipc::Endpoint<PCompositorManagerChild> childPipe;
-  nsresult rv = PCompositorManager::CreateEndpoints(
-      mGPUChild->OtherEndpointProcInfo(), ipc::EndpointProcInfo::Current(),
-      &parentPipe, &childPipe);
+  rv = PCompositorManager::CreateEndpoints(mGPUChild->OtherEndpointProcInfo(),
+                                           ipc::EndpointProcInfo::Current(),
+                                           &parentPipe, &childPipe);
   if (NS_FAILED(rv)) {
     DisableGPUProcess("Failed to create PCompositorManager endpoints");
     return true;
@@ -503,22 +476,25 @@ bool GPUProcessManager::EnsureCompositorManagerChild() {
 }
 
 bool GPUProcessManager::EnsureImageBridgeChild() {
-  MOZ_ASSERT(IsGPUReady());
-
   if (ImageBridgeChild::GetSingleton()) {
     return true;
   }
 
-  if (!mGPUChild) {
+  nsresult rv = EnsureGPUReady();
+  if (NS_WARN_IF(rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN)) {
+    return false;
+  }
+
+  if (NS_FAILED(rv)) {
     ImageBridgeChild::InitSameProcess(AllocateNamespace());
     return true;
   }
 
   ipc::Endpoint<PImageBridgeParent> parentPipe;
   ipc::Endpoint<PImageBridgeChild> childPipe;
-  nsresult rv = PImageBridge::CreateEndpoints(
-      mGPUChild->OtherEndpointProcInfo(), ipc::EndpointProcInfo::Current(),
-      &parentPipe, &childPipe);
+  rv = PImageBridge::CreateEndpoints(mGPUChild->OtherEndpointProcInfo(),
+                                     ipc::EndpointProcInfo::Current(),
+                                     &parentPipe, &childPipe);
   if (NS_FAILED(rv)) {
     DisableGPUProcess("Failed to create PImageBridge endpoints");
     return true;
@@ -531,22 +507,25 @@ bool GPUProcessManager::EnsureImageBridgeChild() {
 }
 
 bool GPUProcessManager::EnsureVRManager() {
-  MOZ_ASSERT(IsGPUReady());
-
   if (VRManagerChild::IsCreated()) {
     return true;
   }
 
-  if (!mGPUChild) {
+  nsresult rv = EnsureGPUReady();
+  if (NS_WARN_IF(rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN)) {
+    return false;
+  }
+
+  if (NS_FAILED(rv)) {
     VRManagerChild::InitSameProcess();
     return true;
   }
 
   ipc::Endpoint<PVRManagerParent> parentPipe;
   ipc::Endpoint<PVRManagerChild> childPipe;
-  nsresult rv = PVRManager::CreateEndpoints(mGPUChild->OtherEndpointProcInfo(),
-                                            ipc::EndpointProcInfo::Current(),
-                                            &parentPipe, &childPipe);
+  rv = PVRManager::CreateEndpoints(mGPUChild->OtherEndpointProcInfo(),
+                                   ipc::EndpointProcInfo::Current(),
+                                   &parentPipe, &childPipe);
   if (NS_FAILED(rv)) {
     DisableGPUProcess("Failed to create PVRManager endpoints");
     return true;
@@ -558,35 +537,39 @@ bool GPUProcessManager::EnsureVRManager() {
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
-RefPtr<UiCompositorControllerChild>
+already_AddRefed<UiCompositorControllerChild>
 GPUProcessManager::CreateUiCompositorController(nsBaseWidget* aWidget,
                                                 const LayersId aId) {
-  MOZ_ASSERT(IsGPUReady());
+  RefPtr<UiCompositorControllerChild> result;
 
-  if (!mGPUChild) {
-    return UiCompositorControllerChild::CreateForSameProcess(aId, aWidget);
-  }
-
-  ipc::Endpoint<PUiCompositorControllerParent> parentPipe;
-  ipc::Endpoint<PUiCompositorControllerChild> childPipe;
-  nsresult rv = PUiCompositorController::CreateEndpoints(
-      mGPUChild->OtherEndpointProcInfo(), ipc::EndpointProcInfo::Current(),
-      &parentPipe, &childPipe);
-  if (NS_FAILED(rv)) {
-    DisableGPUProcess("Failed to create PUiCompositorController endpoints");
+  nsresult rv = EnsureGPUReady();
+  if (NS_WARN_IF(rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN)) {
     return nullptr;
   }
 
-  mGPUChild->SendInitUiCompositorController(aId, std::move(parentPipe));
-  RefPtr<UiCompositorControllerChild> result =
-      UiCompositorControllerChild::CreateForGPUProcess(
-          mProcessToken, std::move(childPipe), aWidget);
+  if (NS_FAILED(rv)) {
+    result = UiCompositorControllerChild::CreateForSameProcess(aId, aWidget);
+  } else {
+    ipc::Endpoint<PUiCompositorControllerParent> parentPipe;
+    ipc::Endpoint<PUiCompositorControllerChild> childPipe;
+    rv = PUiCompositorController::CreateEndpoints(
+        mGPUChild->OtherEndpointProcInfo(), ipc::EndpointProcInfo::Current(),
+        &parentPipe, &childPipe);
+    if (NS_FAILED(rv)) {
+      DisableGPUProcess("Failed to create PUiCompositorController endpoints");
+      return nullptr;
+    }
 
-  if (result) {
-    result->SetCompositorSurfaceManager(
-        mProcess->GetCompositorSurfaceManager());
+    mGPUChild->SendInitUiCompositorController(aId, std::move(parentPipe));
+    result = UiCompositorControllerChild::CreateForGPUProcess(
+        mProcessToken, std::move(childPipe), aWidget);
+
+    if (result) {
+      result->SetCompositorSurfaceManager(
+          mProcess->GetCompositorSurfaceManager());
+    }
   }
-  return result;
+  return result.forget();
 }
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
@@ -1233,16 +1216,15 @@ already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(
   RefPtr<CompositorSession> session;
 
   nsresult rv = EnsureGPUReady(/* aRetryAfterFallback */ false);
-
-  // If we used fallback, then retry creating the compositor sessions because
-  // our configuration may have changed.
-  if (rv == NS_ERROR_ABORT) {
-    *aRetryOut = true;
+  if (NS_WARN_IF(rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN)) {
+    *aRetryOut = false;
     return nullptr;
   }
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    *aRetryOut = false;
+  // If we used fallback, then retry creating the compositor sessions because
+  // our configuration may have changed.
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    *aRetryOut = true;
     return nullptr;
   }
 
@@ -1276,10 +1258,10 @@ already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(
 #if defined(MOZ_WIDGET_ANDROID)
   if (session) {
     // Nothing to do if controller gets a nullptr
-    auto controller =
+    RefPtr<UiCompositorControllerChild> controller =
         CreateUiCompositorController(aWidget, session->RootLayerTreeId());
     MOZ_ASSERT(controller);
-    session->SetUiCompositorControllerChild(std::move(controller));
+    session->SetUiCompositorControllerChild(controller);
   }
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
@@ -1365,11 +1347,6 @@ bool GPUProcessManager::CreateContentBridges(
     ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
     ipc::Endpoint<PRemoteMediaManagerChild>* aOutVideoManager,
     dom::ContentParentId aChildId, nsTArray<uint32_t>* aNamespaces) {
-  nsresult rv = EnsureGPUReady();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
   const uint32_t cmNamespace = AllocateNamespace();
   if (!CreateContentCompositorManager(aOtherProcess, aChildId, cmNamespace,
                                       aOutCompositor) ||
@@ -1391,17 +1368,20 @@ bool GPUProcessManager::CreateContentBridges(
 bool GPUProcessManager::CreateContentCompositorManager(
     ipc::EndpointProcInfo aOtherProcess, dom::ContentParentId aChildId,
     uint32_t aNamespace, ipc::Endpoint<PCompositorManagerChild>* aOutEndpoint) {
-  MOZ_ASSERT(IsGPUReady());
-
   ipc::Endpoint<PCompositorManagerParent> parentPipe;
   ipc::Endpoint<PCompositorManagerChild> childPipe;
 
-  ipc::EndpointProcInfo parentInfo = mGPUChild
+  nsresult rv = EnsureGPUReady();
+  if (NS_WARN_IF(rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN)) {
+    return false;
+  }
+
+  ipc::EndpointProcInfo parentInfo = NS_SUCCEEDED(rv)
                                          ? mGPUChild->OtherEndpointProcInfo()
                                          : ipc::EndpointProcInfo::Current();
 
-  nsresult rv = PCompositorManager::CreateEndpoints(parentInfo, aOtherProcess,
-                                                    &parentPipe, &childPipe);
+  rv = PCompositorManager::CreateEndpoints(parentInfo, aOtherProcess,
+                                           &parentPipe, &childPipe);
   if (NS_FAILED(rv)) {
     gfxCriticalNote << "Could not create content compositor manager: "
                     << hexa(int(rv));
@@ -1424,20 +1404,23 @@ bool GPUProcessManager::CreateContentCompositorManager(
 bool GPUProcessManager::CreateContentImageBridge(
     ipc::EndpointProcInfo aOtherProcess, dom::ContentParentId aChildId,
     ipc::Endpoint<PImageBridgeChild>* aOutEndpoint) {
-  MOZ_ASSERT(IsGPUReady());
-
   if (!EnsureImageBridgeChild()) {
     return false;
   }
 
-  ipc::EndpointProcInfo parentInfo = mGPUChild
+  nsresult rv = EnsureGPUReady();
+  if (NS_WARN_IF(rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN)) {
+    return false;
+  }
+
+  ipc::EndpointProcInfo parentInfo = NS_SUCCEEDED(rv)
                                          ? mGPUChild->OtherEndpointProcInfo()
                                          : ipc::EndpointProcInfo::Current();
 
   ipc::Endpoint<PImageBridgeParent> parentPipe;
   ipc::Endpoint<PImageBridgeChild> childPipe;
-  nsresult rv = PImageBridge::CreateEndpoints(parentInfo, aOtherProcess,
-                                              &parentPipe, &childPipe);
+  rv = PImageBridge::CreateEndpoints(parentInfo, aOtherProcess, &parentPipe,
+                                     &childPipe);
   if (NS_FAILED(rv)) {
     gfxCriticalNote << "Could not create content compositor bridge: "
                     << hexa(int(rv));
@@ -1470,20 +1453,23 @@ ipc::EndpointProcInfo GPUProcessManager::GPUEndpointProcInfo() {
 bool GPUProcessManager::CreateContentVRManager(
     ipc::EndpointProcInfo aOtherProcess, dom::ContentParentId aChildId,
     ipc::Endpoint<PVRManagerChild>* aOutEndpoint) {
-  MOZ_ASSERT(IsGPUReady());
-
   if (NS_WARN_IF(!EnsureVRManager())) {
     return false;
   }
 
-  ipc::EndpointProcInfo parentInfo = mGPUChild
+  nsresult rv = EnsureGPUReady();
+  if (NS_WARN_IF(rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN)) {
+    return false;
+  }
+
+  ipc::EndpointProcInfo parentInfo = NS_SUCCEEDED(rv)
                                          ? mGPUChild->OtherEndpointProcInfo()
                                          : ipc::EndpointProcInfo::Current();
 
   ipc::Endpoint<PVRManagerParent> parentPipe;
   ipc::Endpoint<PVRManagerChild> childPipe;
-  nsresult rv = PVRManager::CreateEndpoints(parentInfo, aOtherProcess,
-                                            &parentPipe, &childPipe);
+  rv = PVRManager::CreateEndpoints(parentInfo, aOtherProcess, &parentPipe,
+                                   &childPipe);
   if (NS_FAILED(rv)) {
     gfxCriticalNote << "Could not create content compositor bridge: "
                     << hexa(int(rv));
@@ -1505,9 +1491,12 @@ bool GPUProcessManager::CreateContentVRManager(
 void GPUProcessManager::CreateContentRemoteMediaManager(
     ipc::EndpointProcInfo aOtherProcess, dom::ContentParentId aChildId,
     ipc::Endpoint<PRemoteMediaManagerChild>* aOutEndpoint) {
-  MOZ_ASSERT(IsGPUReady());
+  nsresult rv = EnsureGPUReady();
+  if (NS_WARN_IF(rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN)) {
+    return;
+  }
 
-  if (!mGPUChild || !StaticPrefs::media_gpu_process_decoder() ||
+  if (NS_FAILED(rv) || !StaticPrefs::media_gpu_process_decoder() ||
       !mDecodeVideoOnGpuProcess) {
     return;
   }
@@ -1515,9 +1504,9 @@ void GPUProcessManager::CreateContentRemoteMediaManager(
   ipc::Endpoint<PRemoteMediaManagerParent> parentPipe;
   ipc::Endpoint<PRemoteMediaManagerChild> childPipe;
 
-  nsresult rv = PRemoteMediaManager::CreateEndpoints(
-      mGPUChild->OtherEndpointProcInfo(), aOtherProcess, &parentPipe,
-      &childPipe);
+  rv = PRemoteMediaManager::CreateEndpoints(mGPUChild->OtherEndpointProcInfo(),
+                                            aOtherProcess, &parentPipe,
+                                            &childPipe);
   if (NS_FAILED(rv)) {
     gfxCriticalNote << "Could not create content video decoder: "
                     << hexa(int(rv));
@@ -1533,7 +1522,7 @@ void GPUProcessManager::InitVideoBridge(
     ipc::Endpoint<PVideoBridgeParent>&& aVideoBridge,
     layers::VideoBridgeSource aSource) {
   nsresult rv = EnsureGPUReady();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_WARN_IF(rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN)) {
     return;
   }
 
@@ -1545,7 +1534,7 @@ void GPUProcessManager::InitVideoBridge(
 void GPUProcessManager::MapLayerTreeId(LayersId aLayersId,
                                        base::ProcessId aOwningId) {
   nsresult rv = EnsureGPUReady();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_WARN_IF(rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN)) {
     return;
   }
 
