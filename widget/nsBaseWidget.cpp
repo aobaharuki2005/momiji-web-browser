@@ -74,6 +74,7 @@
 #include "nsIScreenManager.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIWidgetListener.h"
+#include "nsMenuPopupFrame.h"
 #include "nsRefPtrHashtable.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWidgetsCID.h"
@@ -444,6 +445,22 @@ void nsIWidget::RemoveAllChildren() {
     kid->ClearParent();
     MOZ_ASSERT(kid != mLastChild);
   }
+}
+
+nsIFrame* nsIWidget::GetFrame() const {
+  if (nsView* view = nsView::GetViewFor(this)) {
+    return view->GetFrame();
+  }
+  return nullptr;
+}
+
+nsMenuPopupFrame* nsIWidget::GetPopupFrame() const {
+  if (mWindowType != WindowType::Popup) {
+    return nullptr;
+  }
+  auto* frame = GetFrame();
+  MOZ_ASSERT_IF(frame, frame->IsMenuPopupFrame());
+  return do_QueryFrame(frame);
 }
 
 void nsBaseWidget::DynamicToolbarOffsetChanged(
