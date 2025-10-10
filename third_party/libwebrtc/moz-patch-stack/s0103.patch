@@ -75,7 +75,7 @@ index cdbd705ec2..4ee826ec58 100644
  # The python interpreter to use by default. On Windows, this will look
  # for vpython3.exe and vpython3.bat.
 diff --git a/BUILD.gn b/BUILD.gn
-index 4501b6d714..fd7b8c0244 100644
+index 9ebcd0de52..9a5730ab4c 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -21,15 +21,15 @@
@@ -107,7 +107,7 @@ index 4501b6d714..fd7b8c0244 100644
      defines = []
  
      deps = [
-@@ -854,7 +854,7 @@ rtc_static_library("dcsctp") {
+@@ -853,7 +853,7 @@ rtc_static_library("dcsctp") {
    visibility = [ "//:default" ]
    sources = []
    complete_static_lib = true
@@ -116,7 +116,7 @@ index 4501b6d714..fd7b8c0244 100644
    defines = []
    deps = [
      "net/dcsctp/public:factory",
-@@ -889,7 +889,7 @@ group("poison_software_video_codecs") {
+@@ -888,7 +888,7 @@ group("poison_software_video_codecs") {
  if (!build_with_chromium) {
    # Write debug logs to gn_logs.txt.
    # This is also required for Siso builds.
@@ -756,7 +756,7 @@ index 52efbf7c09..7461af4d7b 100644
  import("../webrtc.gni")
  
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index 6b73a8e345..f5367e350c 100644
+index 33f4ee8624..edd3e02d77 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -6,10 +6,10 @@
@@ -772,7 +772,7 @@ index 6b73a8e345..f5367e350c 100644
    import("//third_party/jni_zero/jni_zero.gni")
  }
  
-@@ -415,7 +415,7 @@ if (is_ios) {
+@@ -415,7 +415,7 @@ if (is_ios && !build_with_chromium) {
      testonly = true
      visibility = [ "*" ]
      sources = [ "ios/google_test_runner.mm" ]

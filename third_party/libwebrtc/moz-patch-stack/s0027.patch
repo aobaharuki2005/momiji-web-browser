@@ -116,7 +116,7 @@ index 1b112b34c0..18cf5d67f7 100644
    # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
    # Chromium fix resolves the problem.
 diff --git a/BUILD.gn b/BUILD.gn
-index bc948d4f2b..f5944b313c 100644
+index 3357c2dcdf..db3f2454bc 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -33,7 +33,7 @@ if (is_android) {
@@ -151,7 +151,7 @@ index bc948d4f2b..f5944b313c 100644
  
  if (!rtc_build_ssl) {
    config("external_ssl_library") {
-@@ -564,6 +570,34 @@ if (!build_with_chromium) {
+@@ -563,6 +569,34 @@ if (!build_with_chromium) {
        "sdk",
        "video",
      ]
@@ -186,7 +186,7 @@ index bc948d4f2b..f5944b313c 100644
  
      if (rtc_include_builtin_audio_codecs) {
        deps += [
-@@ -576,6 +610,16 @@ if (!build_with_chromium) {
+@@ -575,6 +609,16 @@ if (!build_with_chromium) {
        deps += [
          "api/video:video_frame",
          "api/video:video_rtp_headers",
@@ -1200,7 +1200,7 @@ index c1181618e9..4a772795ed 100644
      deps += [
        "..:logging",
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index f5dd45f86b..c206c33f49 100644
+index b07102a7d5..4b7bd27de2 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -258,6 +258,7 @@ rtc_library("audio_test_common") {
