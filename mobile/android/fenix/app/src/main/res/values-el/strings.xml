@@ -84,6 +84,11 @@
   -->
   <string name="felt_privacy_info_card_subtitle_2">Το %1$s διαγράφει τα cookie, το ιστορικό και τα δεδομένα ιστοτόπων σας όταν κλείνετε όλες τις ιδιωτικές σας καρτέλες. %2$s</string>
   <!--
+    Description of private browsing mode displayed to users on the homepage when they enable private mode.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="felt_privacy_info_card_subtitle_3">Το %1$s διαγράφει τα cookie, το ιστορικό και τα δεδομένα ιστοτόπων σας όταν κλείνετε όλες τις ιδιωτικές σας καρτέλες.</string>
+  <!--
     Clickable portion of the explanation for private browsing that links the user to our
     about privacy page.
     This string is used in felt_privacy_info_card_subtitle as the text for the link.
@@ -1482,6 +1487,8 @@
   <string name="tab_tray_multiselect_menu_content_description">Μενού επιλεγμένων καρτελών</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab" tools:ignore="UnusedResources" moz:removedIn="145">Αρχική σελίδα</string>
+  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
+  <string name="tab_tray_homepage_tab_2">%s αρχική σελίδα</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Αφαίρεση καρτέλας από τη συλλογή</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1724,6 +1731,10 @@
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Κλείσιμο</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">Τι συνέβη; Τι θα έπρεπε να έχει συμβεί;</string>
+  <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
+  <string name="webcompat_reporter_etp_checkbox_text">Αποστολή URL αποκλεισμένων από προστασία καταγραφής</string>
+  <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
+  <string name="webcompat_reporter_etp_checkbox_description">Η Ενισχυμένη προστασία από καταγραφή ενδέχεται να αποκλείσει ιχνηλάτες και σενάρια εντολών που χρειάζονται ορισμένοι ιστότοποι για να λειτουργούν σωστά.</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2704,6 +2715,10 @@
   <string name="saved_login_hide_password">Απόκρυψη κωδικού πρόσβασης</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">Ξεκλειδώστε για να δείτε τους αποθηκευμένους κωδικούς πρόσβασής σας</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">Ξεκλείδωμα</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">Αποχώρηση</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">Προστασία των αποθηκευμένων κωδικών πρόσβασής σας</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -3597,6 +3612,16 @@
   <string name="debug_drawer_add_new_address">Προσθήκη νέας διεύθυνσης για την επιλεγμένη γλώσσα</string>
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
   <string name="debug_drawer_delete_all_addresses">Διαγραφή όλων των διευθύνσεων</string>
+  <!--
+    Debug drawer credit cards
+
+    The title of the credit cards feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_credit_cards_title">Πιστωτικές κάρτες</string>
+  <!-- The title of the button in the debug drawer for adding a new credit card -->
+  <string name="debug_drawer_add_new_credit_card">Προσθήκη νέας πιστωτικής κάρτας</string>
+  <!-- The title of the button for deleting in the debug drawer all addresses. -->
+  <string name="debug_drawer_delete_all_credit_cards">Διαγραφή όλων των πιστωτικών καρτών</string>
   <!--
     Debug drawer "contextual feature recommendation" (CFR) tools
 
