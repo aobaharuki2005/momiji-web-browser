@@ -748,6 +748,10 @@ support-files = [
   "urlbarTelemetrySearchSuggestions.sjs",
   "urlbarTelemetrySearchSuggestions.xml",
 ]
+skip-if = [
+  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && opt", # Bug 1775830
+  "os == 'mac' && os_version == '10.15' && processor == 'x86_64'", # Bug 1775830
+]
 
 ["browser_urlbar_telemetry_autofill.js"]
 tags = "search-telemetry"
