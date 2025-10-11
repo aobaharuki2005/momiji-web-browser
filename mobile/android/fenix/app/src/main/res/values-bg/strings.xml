@@ -578,7 +578,7 @@
   <!-- Terms of use (ToU) onboarding page continue button label. -->
   <string name="onboarding_redesign_tou_agree_and_continue_button_label">Продължаване</string>
   <!-- Onboarding header for the toolbar selection card. -->
-  <string name="onboarding_redesign_customize_toolbar_title">Къде искате вашата адресна лента?</string>
+  <string name="onboarding_redesign_customize_toolbar_title">Къде да бъде разположена вашата адресна лента?</string>
   <!-- Onboarding label for 'Continue' button. -->
   <string name="onboarding_redesign_continue_button">Продължаване</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
@@ -1732,7 +1732,7 @@
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">Какво се случи? Какво трябваше да се случи?</string>
   <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
-  <string name="webcompat_reporter_etp_checkbox_text">Изпращане на адреси, блокирани от защитата за проследяване</string>
+  <string name="webcompat_reporter_etp_checkbox_text">Изпращане на адреси, блокирани от защитата от проследяване</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">Подобрена защита от проследяване може да блокира тракери и скриптове, от които някои уебсайтове се нуждаят, за да работят правилно.</string>
   <!--
@@ -3803,7 +3803,7 @@
   -->
   <string name="setup_checklist_group_essentials">Основни за %1$s</string>
   <!-- The title of the 'customize' group in the setup checklist. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="setup_checklist_group_customize">Персонализирайте вашия %1$s</string>
+  <string name="setup_checklist_group_customize">Персонализиране на вашия %1$s</string>
   <!-- The title of the 'helpful tools' group in the setup checklist -->
   <string name="setup_checklist_group_helpful_tools">Полезни инструменти</string>
   <!--
