@@ -775,8 +775,8 @@ add_task(async function test_canUpload_allowed_when_both_bypass_prefs_true() {
 
   Services.prefs.setBoolPref("browser.preonboarding.enabled", true);
   Assert.ok(
-    TelemetryReportingPolicy.canUpload(),
-    "Upload allowed when only legacy bypass is true"
+    !TelemetryReportingPolicy.canUpload(),
+    "Upload blocked when only one bypass is true and no other allow path conditions are met"
   );
   Services.prefs.setBoolPref("browser.preonboarding.enabled", false);
   Assert.ok(
@@ -786,7 +786,7 @@ add_task(async function test_canUpload_allowed_when_both_bypass_prefs_true() {
 });
 
 add_task(
-  async function test_canUpload_allowed_under_various_bypass_conditions() {
+  async function test_canUpload_allowed_when_tou_bypass_and_legacy_notified() {
     TelemetryReportingPolicy.reset();
 
     registerCleanupFunction(() => {
@@ -814,8 +814,8 @@ add_task(
     );
 
     Assert.ok(
-      TelemetryReportingPolicy.canUpload(),
-      "Upload allowed when TOU bypass is true even if legacy bypass is false and legacy policy has NOT been notified"
+      !TelemetryReportingPolicy.canUpload(),
+      "Upload not allowed when TOU bypass is true, legacy bypass is false, and legacy policy has NOT been notified"
     );
     // Mark legacy “notified” via the actual code path triggered via
     // testInfobarShown. This calls _recordNotificationData, which updates the
@@ -829,188 +829,6 @@ add_task(
     Assert.ok(
       TelemetryReportingPolicy.canUpload(),
       "Upload allowed when TOU bypass is true, legacy bypass is false, and legacy policy has been notified"
-    );
-  }
-);
-
-add_task(
-  async function test_canUpload_does_not_reconfigure_when_nimbus_ready() {
-    if (AppConstants.platform === "linux") {
-      info("Skipping on Linux where TOU flow is disabled by default");
-      return;
-    }
-
-    TelemetryReportingPolicy.reset();
-
-    registerCleanupFunction(() => {
-      Services.prefs.clearUserPref("browser.preonboarding.enabled");
-      Services.prefs.clearUserPref("datareporting.healthreport.uploadEnabled");
-      Services.prefs.clearUserPref(
-        TelemetryUtils.Preferences.BypassNotification
-      );
-      Services.prefs.clearUserPref(TOU_BYPASS_NOTIFICATION_PREF);
-      Services.prefs.clearUserPref(TOU_ACCEPTED_VERSION_PREF);
-      Services.prefs.clearUserPref(TOU_ACCEPTED_DATE_PREF);
-      TelemetryReportingPolicy.reset();
-    });
-
-    Services.prefs.setBoolPref(
-      TelemetryUtils.Preferences.BypassNotification,
-      false
-    );
-    Services.prefs.setBoolPref(TOU_BYPASS_NOTIFICATION_PREF, false);
-
-    Services.prefs.setBoolPref(
-      "datareporting.healthreport.uploadEnabled",
-      true
-    );
-
-    // Enroll so that _configureFromNimbus has something to read during startup.
-    const unenroll = await NimbusTestUtils.enrollWithFeatureConfig(
-      {
-        featureId: NimbusFeatures.preonboarding.featureId,
-        value: {
-          enabled: true,
-          currentVersion: 4,
-          minimumVersion: 4,
-          screens: [{ id: "test" }],
-        },
-      },
-      { isRollout: false }
-    );
-
-    // Simulate startup, this triggers the one-time _configureFromNimbus().
-    await Policy.fakeSessionRestoreNotification();
-
-    const getVarsStub = sinon
-      .stub(NimbusFeatures.preonboarding, "getAllVariables")
-      .callsFake(() => {
-        throw new Error(
-          "getAllVariables must not be called by canUpload() when already configured"
-        );
-      });
-
-    TelemetryReportingPolicy.canUpload();
-
-    Assert.equal(
-      getVarsStub.callCount,
-      0,
-      "canUpload() should not re-read Nimbus variables when already configured"
-    );
-
-    await unenroll();
-    sinon.restore();
-  }
-);
-
-add_task(async function test_canUpload_reconfigures_when_nimbus_not_ready() {
-  TelemetryReportingPolicy.reset();
-
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("browser.preonboarding.enabled");
-    Services.prefs.clearUserPref("datareporting.healthreport.uploadEnabled");
-    Services.prefs.clearUserPref(TelemetryUtils.Preferences.BypassNotification);
-    Services.prefs.clearUserPref(TOU_BYPASS_NOTIFICATION_PREF);
-    Services.prefs.clearUserPref(TOU_ACCEPTED_VERSION_PREF);
-    Services.prefs.clearUserPref(TOU_ACCEPTED_DATE_PREF);
-    sinon.restore();
-    TelemetryReportingPolicy.reset();
-  });
-
-  Services.prefs.setBoolPref(
-    TelemetryUtils.Preferences.BypassNotification,
-    false
-  );
-  Services.prefs.setBoolPref(TOU_BYPASS_NOTIFICATION_PREF, false);
-  Services.prefs.setBoolPref("datareporting.healthreport.uploadEnabled", true);
-
-  // Don’t trigger the startup config path.
-
-  // Fallback pref disables TOU flow and Nimbus returns enabled as false
-  Services.prefs.setBoolPref("browser.preonboarding.enabled", false);
-
-  const getVarsSpy = sinon
-    .stub(NimbusFeatures.preonboarding, "getAllVariables")
-    .returns({ enabled: false });
-
-  const result = TelemetryReportingPolicy.canUpload();
-
-  Assert.equal(
-    getVarsSpy.callCount,
-    1,
-    "canUpload() should trigger _configureFromNimbus() when variables are not yet set"
-  );
-
-  Assert.ok(
-    result,
-    "With Nimbus enabled set as false we are bypassing TOU and should allow upload"
-  );
-
-  sinon.restore();
-});
-
-add_task(
-  skipIfNotBrowser(),
-  async function test_legacy_bypass_blocked_when_TOU_should_show_and_not_accepted() {
-    TelemetryReportingPolicy.reset();
-
-    registerCleanupFunction(async () => {
-      Services.prefs.clearUserPref("browser.preonboarding.enabled");
-      Services.prefs.clearUserPref(
-        TelemetryUtils.Preferences.BypassNotification
-      );
-      Services.prefs.clearUserPref(TOU_BYPASS_NOTIFICATION_PREF);
-      Services.prefs.clearUserPref(TOU_ACCEPTED_VERSION_PREF);
-      Services.prefs.clearUserPref(TOU_ACCEPTED_DATE_PREF);
-      Services.prefs.clearUserPref(
-        "datareporting.policy.dataSubmissionPolicyNotifiedDate"
-      );
-      Services.prefs.clearUserPref(
-        "datareporting.policy.dataSubmissionPolicyAcceptedVersion"
-      );
-      TelemetryReportingPolicy.reset();
-      await unenroll();
-    });
-
-    // Legacy bypass ON, TOU bypass OFF
-    Services.prefs.setBoolPref(
-      TelemetryUtils.Preferences.BypassNotification,
-      true
-    );
-    Services.prefs.setBoolPref(TOU_BYPASS_NOTIFICATION_PREF, false);
-
-    // User has NOT accepted TOU
-    Services.prefs.clearUserPref(TOU_ACCEPTED_VERSION_PREF);
-    Services.prefs.clearUserPref(TOU_ACCEPTED_DATE_PREF);
-
-    // User has NOT accepted via Legacy flow
-    Services.prefs.clearUserPref(
-      "datareporting.policy.dataSubmissionPolicyNotifiedDate"
-    );
-    Services.prefs.clearUserPref(
-      "datareporting.policy.dataSubmissionPolicyAcceptedVersion"
-    );
-
-    // Make _shouldShowTOU() return true
-    Services.prefs.setBoolPref("browser.preonboarding.enabled", true);
-    const unenroll = await NimbusTestUtils.enrollWithFeatureConfig(
-      {
-        featureId: NimbusFeatures.preonboarding.featureId,
-        value: {
-          enabled: true,
-          currentVersion: 4,
-          minimumVersion: 4,
-          screens: [{ id: "test" }],
-        },
-      },
-      { isRollout: false }
-    );
-
-    const result = TelemetryReportingPolicy.canUpload();
-
-    Assert.ok(
-      !result,
-      "When TOU flow should be shown, but is not yet accepted with legacy bypass true, (!shouldShowTOU && bypassLegacy) is false, so upload is blocked."
     );
   }
 );
