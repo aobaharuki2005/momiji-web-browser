@@ -551,6 +551,7 @@ nsresult nsMathMLContainerFrame::FinalizeReflow(DrawTarget* aDrawTarget,
     GatherAndStoreOverflow(&aDesiredSize);
   }
 
+  mPresentationData.flags &= ~NS_MATHML_STRETCH_DONE;
   return NS_OK;
 }
 
