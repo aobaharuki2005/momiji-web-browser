@@ -592,13 +592,13 @@
   <!-- Set to default browser onboarding redesign title. -->
   <string name="onboarding_redesign_set_default_browser_title">Получаване на защита от автоматично проследяване по подразбиране</string>
   <!-- Set to default browser onboarding redesign body. -->
-  <string name="onboarding_redesign_set_default_browser_body">Едно докосване помага да спрете компаниите да следят кликванията ви.</string>
+  <string name="onboarding_redesign_set_default_browser_body">Едно докосване помага да спрете компаниите да следят посетените сайтове.</string>
   <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
-  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Синхронизирайте навсякъде, където използвате Firefox</string>
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Синхронизирайте данните си навсякъде, където използвате Firefox</string>
   <!-- Sync onboarding redesign body. -->
-  <string name="onboarding_redesign_sync_body">Получавайте отметки, раздели и пароли на всяко устройство. Всички защитени с криптиране.</string>
+  <string name="onboarding_redesign_sync_body">Получавайте отметки, раздели и пароли на всяко устройство, защитени чрез шифроване.</string>
   <!-- Sync onboarding redesign positive button text. -->
-  <string name="onboarding_redesign_sync_positive_button">Започнете да синхронизирате</string>
+  <string name="onboarding_redesign_sync_positive_button">Започване на синхронизацията на данни</string>
   <!-- Sync onboarding redesign negative button text. -->
   <string name="onboarding_redesign_sync_negative_button">Не сега</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
