@@ -1472,6 +1472,8 @@
   <string name="tab_tray_multiselect_menu_content_description">Valmynd valinna flipa</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab" tools:ignore="UnusedResources" moz:removedIn="145">Upphafssíða</string>
+  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
+  <string name="tab_tray_homepage_tab_2">Heimasíða %s</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Fjarlæga flipann úr safni</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -2692,6 +2694,10 @@
   <string name="saved_login_hide_password">Fela lykilorð</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">Aflæstu til að skoða vistuð lykilorð</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">Aflæsa</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">Yfirgefa</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">Tryggðu öryggi vistuðu lykilorðanna þinna</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -3585,6 +3591,16 @@
   <string name="debug_drawer_add_new_address">Bæta við nýju póstfangi fyrir valið svæði</string>
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
   <string name="debug_drawer_delete_all_addresses">Eyða öllum póstföngum</string>
+  <!--
+    Debug drawer credit cards
+
+    The title of the credit cards feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_credit_cards_title">Greiðslukort</string>
+  <!-- The title of the button in the debug drawer for adding a new credit card -->
+  <string name="debug_drawer_add_new_credit_card">Bæta við nýju greiðslukorti</string>
+  <!-- The title of the button for deleting in the debug drawer all addresses. -->
+  <string name="debug_drawer_delete_all_credit_cards">Eyða öllum greiðslukortum</string>
   <!--
     Debug drawer "contextual feature recommendation" (CFR) tools
 
