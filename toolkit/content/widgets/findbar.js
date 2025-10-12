@@ -1321,12 +1321,16 @@
         this._foundMatches.hidden = true;
         this._foundMatches.setAttribute("value", "");
       } else {
-        const l10nId =
-          result.total === -1
-            ? "findbar-found-matches-count-limit"
-            : "findbar-found-matches";
+        let l10nId, l10nArgs;
+        if (result.total === -1) {
+          l10nId = "findbar-found-matches-count-limit";
+          l10nArgs = { limit: result.limit };
+        } else {
+          l10nId = "findbar-found-matches";
+          l10nArgs = { current: result.current, total: result.total };
+        }
         this._foundMatches.hidden = false;
-        document.l10n.setAttributes(this._foundMatches, l10nId, result);
+        document.l10n.setAttributes(this._foundMatches, l10nId, l10nArgs);
       }
     }
 
