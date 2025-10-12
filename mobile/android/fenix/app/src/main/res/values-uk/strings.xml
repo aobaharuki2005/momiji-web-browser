@@ -371,7 +371,7 @@
     %1$s is the name of the language that is displayed in the original page. (For example: English)
     %2$s is the name of the language which the page was translated to. (For example: French)
   -->
-  <string name="browser_toolbar_translated_successfully">Сторінку перекладено з %1$s на %2$s.</string>
+  <string name="browser_toolbar_translated_successfully">Сторінку перекладено: %1$s – %2$s.</string>
   <!--
     Translation Toolbar
 
@@ -3167,7 +3167,7 @@
     %1$s is the name of the language that the page was translated from, for example, "French".
     %2$s is the name of the language that the page was translated to, for example, "English".
   -->
-  <string name="translations_bottom_sheet_title_translation_completed">Сторінку перекладено з %1$s на %2$s</string>
+  <string name="translations_bottom_sheet_title_translation_completed">Сторінку перекладено: %1$s – %2$s</string>
   <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. %1$s is the name of the app (for example "Firefox"). -->
   <string name="translations_bottom_sheet_title_first_time">Спробуйте приватні переклади у %1$s</string>
   <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. %1$s is a link using translations_bottom_sheet_info_message_learn_more as text. -->
