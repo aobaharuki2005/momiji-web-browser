@@ -7,11 +7,11 @@
   <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
   <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Подробиці про цю проблему чи помилку наразі недоступні.</p>]]></string>
   <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
-  <string name="mozac_browser_errorpages_security_ssl_title">Не вдалося встановити безпечне з’єднання</string>
+  <string name="mozac_browser_errorpages_security_ssl_title">Не вдалося встановити захищене з’єднання</string>
   <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
   <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul> <li>Неможливо відобразити сторінку, яку ви намагаєтесь переглянути, тому що не вдається перевірити справжність отриманих даних.</li> <li>Будь ласка, зв’яжіться з власниками вебсайту, щоб повідомити їх про цю проблему.</li> </ul>]]></string>
   <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
-  <string name="mozac_browser_errorpages_security_bad_cert_title">Не вдалося встановити безпечне з’єднання</string>
+  <string name="mozac_browser_errorpages_security_bad_cert_title">Не вдалося встановити захищене з’єднання</string>
   <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
   <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul> <li>Це може бути проблемою конфігурації сервера, або, можливо, хтось намагається імітувати сервер.</li> <li>Якщо раніше ви успішно отримували доступ до цього сервера, то це може бути тимчасовою помилкою і ви можете спробувати ще раз пізніше.</li> </ul>]]></string>
   <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
