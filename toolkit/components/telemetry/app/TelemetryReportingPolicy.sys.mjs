@@ -760,16 +760,9 @@ var TelemetryReportingPolicyImpl = {
    * Check if we are allowed to upload data.
    * Prerequisite: data submission is enabled (this.dataSubmissionEnabled).
    *
-   * In order to submit data, at least ONE of these conditions should be true:
-   *  1. The TOU flow is bypassed via a pref or Nimbus variable AND the legacy
-   *     notification flow bypass pref is set, so users bypass BOTH flows.
-   *  2. The TOU flow is bypassed via a pref or Nimbus variable and the legacy
-   *     notification flow bypass pref is NOT set, so has been been shown the
-   *     legacy flow (the data submission pref should be true and the
-   *     datachoices infobar should have been displayed).
-   *  3. The user has accepted the Terms of Use AND the user has opted-in to
-   *     sharing technical interaction data (the upload enabled pref should be
-   *     true).
+   * For upload to be allowed from a data reporting standpoint, the user should
+   * not qualify to see the legacy policy notification flow and also not qualify
+   * to see the Terms of Use acceptance flow.
    * @return {Boolean} True if we are allowed to upload data, false otherwise.
    */
   canUpload() {
@@ -779,33 +772,7 @@ var TelemetryReportingPolicyImpl = {
       return false;
     }
 
-    const bypassLegacyFlow = Services.prefs.getBoolPref(
-      TelemetryUtils.Preferences.BypassNotification,
-      false
-    );
-    // TOU flow is bypassed if the Nimbus preonboarding feature is disabled
-    // (disabled by default for Linux via the fallback
-    // browser.preonboarding.enabled pref) or if the explicit bypass pref is
-    // set.
-    const bypassTOUFlow =
-      Services.prefs.getBoolPref(TOU_BYPASS_NOTIFICATION_PREF, false) ||
-      (!Services.prefs.getBoolPref("browser.preonboarding.enabled", false) &&
-        this._nimbusVariables?.enabled !== true) ||
-      this._nimbusVariables?.enabled === false;
-    const allowInteractionData = Services.prefs.getBoolPref(
-      "datareporting.healthreport.uploadEnabled",
-      false
-    );
-
-    // Condition 1
-    const canUploadBypassLegacyAndTOU = bypassLegacyFlow && bypassTOUFlow;
-    // Condition 2
-    const canUploadLegacy =
-      bypassTOUFlow && !bypassLegacyFlow && this.isUserNotifiedOfCurrentPolicy;
-    // Condition 3
-    const canUploadTOU = this.hasUserAcceptedCurrentTOU && allowInteractionData;
-
-    return canUploadBypassLegacyAndTOU || canUploadLegacy || canUploadTOU;
+    return !this._shouldNotifyDataReportingPolicy() && !this._shouldShowTOU();
   },
 
   isFirstRun() {
@@ -872,6 +839,20 @@ var TelemetryReportingPolicyImpl = {
    * Determine whether the user should be shown the terms of use.
    */
   _shouldShowTOU() {
+    // In some cases, _shouldShowTOU can be called before the Nimbus variables
+    // are set. When this happens, we call _configureFromNimbus to initialize
+    // these variables before evaluating them. This ensures we have accurate
+    // data regarding whether preonboarding is enabled for the user. When
+    // preonboarding is explicitly disabled, it should be treated the same the
+    // bypassing the TOU flow via the bypass pref.
+    if (
+      !this._nimbusVariables ||
+      (typeof this._nimbusVariables === "object" &&
+        Object.keys(this._nimbusVariables).length === 0)
+    ) {
+      this._configureFromNimbus();
+    }
+
     if (!this._nimbusVariables.enabled || !this._nimbusVariables.screens) {
       this._log.trace(
         "_shouldShowTOU - TOU not enabled or no screens configured."
@@ -1096,7 +1077,7 @@ var TelemetryReportingPolicyImpl = {
     // _during_ the Firefox process lifetime; right now, we only notify the user
     // at Firefox startup.
     this.updateTOUPrefsForLegacyUsers();
-    await this._configureFromNimbus();
+    this._configureFromNimbus();
 
     if (this.isFirstRun()) {
       // We're performing the first run, flip firstRun preference for subsequent runs.
@@ -1233,7 +1214,7 @@ var TelemetryReportingPolicyImpl = {
    * Capture Nimbus configuration: record feature variables for future use and
    * set Gecko preferences based on values.
    */
-  async _configureFromNimbus() {
+  _configureFromNimbus() {
     if (AppConstants.MOZ_BUILD_APP != "browser") {
       // OnboardingMessageProvider is browser/ only
       return;
