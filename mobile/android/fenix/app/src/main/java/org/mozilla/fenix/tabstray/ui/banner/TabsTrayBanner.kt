@@ -314,6 +314,9 @@ private fun TabPageBanner(
             }
         },
         expandedHeight = ROW_HEIGHT_DP.dp,
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
         scrollBehavior = scrollBehavior,
     )
 }

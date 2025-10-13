@@ -785,7 +785,8 @@ TChar TokenizerBase<TChar>::Token::AsChar() const {
 }
 
 template <typename TChar>
-auto TokenizerBase<TChar>::Token::AsString() const -> TDependentSubstring {
+auto TokenizerBase<TChar>::Token::AsString() const
+    -> const TDependentSubstring& {
   MOZ_ASSERT(mType == TOKEN_WORD);
   return mWord;
 }
