@@ -1381,6 +1381,9 @@ function getSmallIncrementKey() {
  *        overridden by another the declaration. Defaults to false.
  * @param {Boolean|undefined} expectedElements[].declarations[].valid - Is the declaration valid.
  *        Defaults to true.
+ * @param {Boolean|undefined} expectedElements[].declarations[].dirty - Is the declaration dirty,
+ *        i.e. was it added/modified by the user (should have a left green border).
+ *        Defaults to false
  * @param {String} expectedElements[].header - If we're expecting a header (Inherited from,
  *        Pseudo-elements, …), the text of said header.
  */
@@ -1469,6 +1472,11 @@ function checkRuleViewContent(view, expectedElements) {
         ),
         !!expectedDeclaration?.valid,
         `"${selector}" ${propName.innerText} is ${expectedDeclaration?.valid === false ? "not valid" : "valid"}`
+      );
+      is(
+        !!ruleViewPropertyElement.hasAttribute("dirty"),
+        !!expectedDeclaration?.dirty,
+        `"${selector}" ${propName.innerText} is ${expectedDeclaration?.dirty ? "dirty" : "not dirty"}`
       );
     }
   }

@@ -300,6 +300,9 @@ class Rule {
 
     this.applyProperties(modifications => {
       modifications.createProperty(ind, name, value, priority, enabled);
+
+      this.store.userProperties.setProperty(this.domRule, name, value);
+
       // Now that the rule has been updated, the server might have given us data
       // that changes the state of the property. Update it now.
       prop.updateEditor();
