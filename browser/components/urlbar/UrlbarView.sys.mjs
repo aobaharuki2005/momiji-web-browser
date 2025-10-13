@@ -205,7 +205,7 @@ export class UrlbarView {
   }
 
   /**
-   * @returns {Element}
+   * @returns {HTMLElement}
    *   The currently selected element.
    */
   get selectedElement() {

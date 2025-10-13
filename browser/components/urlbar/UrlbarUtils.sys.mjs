@@ -96,7 +96,7 @@ export var UrlbarUtils = {
   }),
 
   // Defines UrlbarResult types.
-  RESULT_TYPE: {
+  RESULT_TYPE: Object.freeze({
     // An open tab.
     TAB_SWITCH: 1,
     // A search suggestion or engine.
@@ -119,7 +119,7 @@ export var UrlbarUtils = {
     // When you add a new type, also add its schema to
     // UrlbarUtils.RESULT_PAYLOAD_SCHEMA below.  Also consider checking if
     // consumers of "urlbar-user-start-navigation" need updating.
-  },
+  }),
 
   // This defines the source of results returned by a provider. Each provider
   // can return results from more than one source. This is used by the
@@ -701,14 +701,6 @@ export var UrlbarUtils = {
     }
 
     switch (result.type) {
-      case this.RESULT_TYPE.URL:
-      case this.RESULT_TYPE.BOOKMARKS:
-      case this.RESULT_TYPE.REMOTE_TAB:
-      case this.RESULT_TYPE.TAB_SWITCH:
-      case this.RESULT_TYPE.KEYWORD:
-      case this.RESULT_TYPE.SEARCH:
-      case this.RESULT_TYPE.OMNIBOX:
-        return 1;
       case this.RESULT_TYPE.TIP:
         return 3;
     }
