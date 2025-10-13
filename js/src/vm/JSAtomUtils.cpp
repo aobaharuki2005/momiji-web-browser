@@ -916,6 +916,28 @@ bool js::IndexToIdSlow(JSContext* cx, uint32_t index, MutableHandleId idp) {
   return true;
 }
 
+bool js::IndexToIdSlow(JSContext* cx, uint64_t index, MutableHandleId idp) {
+  MOZ_ASSERT(index > JS::PropertyKey::IntMax);
+
+  // Plus one to include the largest number.
+  constexpr size_t UINT64_CHAR_BUFFER_LENGTH =
+      std::numeric_limits<uint64_t>::digits10 + 1;
+
+  char buf[UINT64_CHAR_BUFFER_LENGTH];
+
+  auto result = std::to_chars(buf, buf + std::size(buf), index, 10);
+  MOZ_ASSERT(result.ec == std::errc());
+
+  size_t length = result.ptr - buf;
+  JSAtom* atom = Atomize(cx, buf, length);
+  if (!atom) {
+    return false;
+  }
+
+  idp.set(JS::PropertyKey::NonIntAtom(atom));
+  return true;
+}
+
 template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE JSAtom* PrimitiveToAtom(JSContext* cx,
                                                  const Value& v) {

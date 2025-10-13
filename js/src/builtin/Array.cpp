@@ -259,27 +259,6 @@ JS_PUBLIC_API bool js::StringIsArrayIndex(const char16_t* str, uint32_t length,
   return true;
 }
 
-template <typename T>
-static bool ToId(JSContext* cx, T index, MutableHandleId id);
-
-template <>
-bool ToId(JSContext* cx, uint32_t index, MutableHandleId id) {
-  return IndexToId(cx, index, id);
-}
-
-template <>
-bool ToId(JSContext* cx, uint64_t index, MutableHandleId id) {
-  MOZ_ASSERT(index < uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT));
-
-  if (index == uint32_t(index)) {
-    return IndexToId(cx, uint32_t(index), id);
-  }
-
-  Value tmp = DoubleValue(index);
-  return PrimitiveValueToId<CanGC>(cx, HandleValue::fromMarkedLocation(&tmp),
-                                   id);
-}
-
 /*
  * If the property at the given index exists, get its value into |vp| and set
  * |*hole| to false. Otherwise set |*hole| to true and |vp| to Undefined.
@@ -306,7 +285,7 @@ static bool HasAndGetElement(JSContext* cx, HandleObject obj,
   }
 
   RootedId id(cx);
-  if (!ToId(cx, index, &id)) {
+  if (!IndexToId(cx, index, &id)) {
     return false;
   }
 
@@ -475,7 +454,7 @@ static inline bool GetArrayElement(JSContext* cx, HandleObject obj,
   }
 
   RootedId id(cx);
-  if (!ToId(cx, index, &id)) {
+  if (!IndexToId(cx, index, &id)) {
     return false;
   }
   return GetProperty(cx, obj, obj, id, vp);
@@ -484,7 +463,7 @@ static inline bool GetArrayElement(JSContext* cx, HandleObject obj,
 static inline bool DefineArrayElement(JSContext* cx, HandleObject obj,
                                       uint64_t index, HandleValue value) {
   RootedId id(cx);
-  if (!ToId(cx, index, &id)) {
+  if (!IndexToId(cx, index, &id)) {
     return false;
   }
   return DefineDataProperty(cx, obj, id, value);
@@ -494,10 +473,9 @@ static inline bool DefineArrayElement(JSContext* cx, HandleObject obj,
 static inline bool SetArrayElement(JSContext* cx, HandleObject obj,
                                    uint64_t index, HandleValue v) {
   RootedId id(cx);
-  if (!ToId(cx, index, &id)) {
+  if (!IndexToId(cx, index, &id)) {
     return false;
   }
-
   return SetProperty(cx, obj, id, v);
 }
 
@@ -536,7 +514,7 @@ static bool DeleteArrayElement(JSContext* cx, HandleObject obj, uint64_t index,
   }
 
   RootedId id(cx);
-  if (!ToId(cx, index, &id)) {
+  if (!IndexToId(cx, index, &id)) {
     return false;
   }
   return DeleteProperty(cx, obj, id, result);
@@ -551,7 +529,7 @@ static bool DeletePropertyOrThrow(JSContext* cx, HandleObject obj,
   }
   if (!success) {
     RootedId id(cx);
-    if (!ToId(cx, index, &id)) {
+    if (!IndexToId(cx, index, &id)) {
       return false;
     }
     return success.reportError(cx, obj, id);
@@ -1586,7 +1564,7 @@ static bool SetArrayElements(JSContext* cx, HandleObject obj, uint64_t start,
       return false;
     }
 
-    if (!ToId(cx, start++, &id)) {
+    if (!IndexToId(cx, start++, &id)) {
       return false;
     }
 

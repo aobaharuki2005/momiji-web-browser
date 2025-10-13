@@ -82,6 +82,19 @@ inline bool IndexToId(JSContext* cx, uint32_t index, MutableHandleId idp) {
   return IndexToIdSlow(cx, index, idp);
 }
 
+bool IndexToIdSlow(JSContext* cx, uint64_t index, MutableHandleId idp);
+
+inline bool IndexToId(JSContext* cx, uint64_t index, MutableHandleId idp) {
+  MOZ_ASSERT(index < uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT));
+
+  if (index <= PropertyKey::IntMax) {
+    idp.set(PropertyKey::Int(index));
+    return true;
+  }
+
+  return IndexToIdSlow(cx, index, idp);
+}
+
 static MOZ_ALWAYS_INLINE JSLinearString* IdToString(
     JSContext* cx, jsid id, gc::Heap heap = gc::Heap::Default) {
   if (id.isString()) {
