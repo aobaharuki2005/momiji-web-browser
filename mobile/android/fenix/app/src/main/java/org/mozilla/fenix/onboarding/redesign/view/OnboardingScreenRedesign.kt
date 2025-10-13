@@ -280,8 +280,8 @@ private fun OnboardingContent(
         val isLargeScreen = LocalContext.current.isLargeScreenSize()
         val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-        val pagerWidth = pageContentWidth(boxWithConstraintsScope, isLargeScreen, isLandscape)
-        val pagerHeight = pageContentHeight(boxWithConstraintsScope, isLargeScreen, isLandscape)
+        val pagerWidth = pageContentWidth(boxWithConstraintsScope, isLargeScreen, isSmallPhoneScreen, isLandscape)
+        val pagerHeight = pageContentHeight(boxWithConstraintsScope, isLargeScreen, isSmallPhoneScreen, isLandscape)
 
         val pagePeekWidth = ((maxWidth - pagerWidth) / 2).coerceAtLeast(8.dp)
         val paddingValue = if (!isLargeScreen && isLandscape) 0.dp else pagePeekWidth
@@ -418,6 +418,8 @@ private fun OnboardingPageForType(
 private object PageContentLayout {
     val MIN_HEIGHT_DP = 650.dp
     val MIN_WIDTH_DP = 360.dp
+    val MIN_HEIGHT_SMALL_SCREEN_DP = 430.dp
+    val MIN_WIDTH_SMALL_SCREEN_DP = 300.dp
     val MIN_HEIGHT_TABLET_DP = 620.dp
     val MIN_WIDTH_TABLET_DP = 440.dp
     const val HEIGHT_RATIO = 0.8f
@@ -426,40 +428,72 @@ private object PageContentLayout {
     const val TABLET_HEIGHT_RATIO = 0.50f
     const val HEIGHT_RATIO_LANDSCAPE_NON_LARGE_SCREEN = 1f
     const val WIDTH_RATIO_LANDSCAPE_NON_LARGE_SCREEN = 1f
+    const val HEIGHT_RATIO_SMALL_SCREEN = 0.9f
+    const val WIDTH_RATIO_SMALL_SCREEN = 0.9f
 }
 
 private fun pageContentHeight(
     scope: BoxWithConstraintsScope,
     isLargeScreen: Boolean,
+    isSmallScreen: Boolean,
     isLandscape: Boolean,
 ): Dp {
-    val minHeight =
-        if (isLargeScreen) PageContentLayout.MIN_HEIGHT_TABLET_DP else PageContentLayout.MIN_HEIGHT_DP
-    val heightRatio =
-        when {
-            isLargeScreen -> PageContentLayout.TABLET_HEIGHT_RATIO
-            !isLargeScreen && isLandscape -> PageContentLayout.HEIGHT_RATIO_LANDSCAPE_NON_LARGE_SCREEN
-            else -> PageContentLayout.HEIGHT_RATIO
-        }
+    val minHeight = minHeight(isLargeScreen, isSmallScreen)
+    val heightRatio = heightRatio(isLargeScreen, isSmallScreen, isLandscape)
 
     return scope.maxHeight.times(heightRatio).coerceAtLeast(minHeight)
+}
+
+private fun minHeight(
+    isLargeScreen: Boolean,
+    isSmallScreen: Boolean,
+): Dp = when {
+    isLargeScreen -> PageContentLayout.MIN_HEIGHT_TABLET_DP
+    isSmallScreen -> PageContentLayout.MIN_HEIGHT_SMALL_SCREEN_DP
+    else -> PageContentLayout.MIN_HEIGHT_DP
+}
+
+private fun heightRatio(
+    isLargeScreen: Boolean,
+    isSmallScreen: Boolean,
+    isLandscape: Boolean,
+): Float = when {
+    isLargeScreen -> PageContentLayout.TABLET_HEIGHT_RATIO
+    isSmallScreen -> PageContentLayout.HEIGHT_RATIO_SMALL_SCREEN
+    !isLargeScreen && isLandscape -> PageContentLayout.HEIGHT_RATIO_LANDSCAPE_NON_LARGE_SCREEN
+    else -> PageContentLayout.HEIGHT_RATIO
 }
 
 private fun pageContentWidth(
     scope: BoxWithConstraintsScope,
     isLargeScreen: Boolean,
+    isSmallScreen: Boolean,
     isLandscape: Boolean,
 ): Dp {
-    val minWidth =
-        if (isLargeScreen) PageContentLayout.MIN_WIDTH_TABLET_DP else PageContentLayout.MIN_WIDTH_DP
-    val widthRatio =
-        when {
-            isLargeScreen -> PageContentLayout.TABLET_WIDTH_RATIO
-            !isLargeScreen && isLandscape -> PageContentLayout.WIDTH_RATIO_LANDSCAPE_NON_LARGE_SCREEN
-            else -> PageContentLayout.WIDTH_RATIO
-        }
+    val minWidth = minWidth(isLargeScreen, isSmallScreen)
+    val widthRatio = widthRatio(isLargeScreen, isSmallScreen, isLandscape)
 
     return scope.maxWidth.times(widthRatio).coerceAtLeast(minWidth)
+}
+
+private fun widthRatio(
+    isLargeScreen: Boolean,
+    isSmallScreen: Boolean,
+    isLandscape: Boolean,
+): Float = when {
+    isLargeScreen -> PageContentLayout.TABLET_WIDTH_RATIO
+    isSmallScreen -> PageContentLayout.WIDTH_RATIO_SMALL_SCREEN
+    !isLargeScreen && isLandscape -> PageContentLayout.WIDTH_RATIO_LANDSCAPE_NON_LARGE_SCREEN
+    else -> PageContentLayout.WIDTH_RATIO
+}
+
+private fun minWidth(
+    isLargeScreen: Boolean,
+    isSmallScreen: Boolean,
+): Dp = when {
+    isLargeScreen -> PageContentLayout.MIN_WIDTH_TABLET_DP
+    isSmallScreen -> PageContentLayout.MIN_WIDTH_SMALL_SCREEN_DP
+    else -> PageContentLayout.MIN_WIDTH_DP
 }
 
 private fun onboardingRedesignBackground(isLandscape: Boolean) =
