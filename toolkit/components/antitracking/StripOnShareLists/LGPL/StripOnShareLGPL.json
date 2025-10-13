@@ -180,7 +180,8 @@
       "pf_rd_m",
       "pf_rd_s",
       "pf_rd_t",
-      "pf_rd_r"
+      "pf_rd_r",
+      "ref_"
     ],
     "topLevelSites": ["www.imdb.com", "m.imdb.com"]
   },
