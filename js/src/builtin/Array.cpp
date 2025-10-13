@@ -311,6 +311,11 @@ static inline bool HasAndGetElement(JSContext* cx, HandleObject obj, T index,
   return HasAndGetElement(cx, obj, obj, index, hole, vp);
 }
 
+bool js::HasAndGetElement(JSContext* cx, HandleObject obj, uint64_t index,
+                          bool* hole, MutableHandleValue vp) {
+  return HasAndGetElement(cx, obj, obj, index, hole, vp);
+}
+
 bool ElementAdder::append(JSContext* cx, HandleValue v) {
   MOZ_ASSERT(index_ < length_);
   if (resObj_) {
@@ -1175,7 +1180,7 @@ JSString* js::ArrayToSource(JSContext* cx, HandleObject obj) {
   for (uint64_t index = 0; index < length; index++) {
     bool hole;
     if (!CheckForInterrupt(cx) ||
-        !HasAndGetElement(cx, obj, index, &hole, &elt)) {
+        !::HasAndGetElement(cx, obj, index, &hole, &elt)) {
       return nullptr;
     }
 
@@ -1687,8 +1692,8 @@ static bool array_reverse(JSContext* cx, unsigned argc, Value* vp) {
   for (uint64_t i = 0, half = len / 2; i < half; i++) {
     bool hole, hole2;
     if (!CheckForInterrupt(cx) ||
-        !HasAndGetElement(cx, obj, i, &hole, &lowval) ||
-        !HasAndGetElement(cx, obj, len - i - 1, &hole2, &hival)) {
+        !::HasAndGetElement(cx, obj, i, &hole, &lowval) ||
+        !::HasAndGetElement(cx, obj, len - i - 1, &hole2, &hival)) {
       return false;
     }
 
@@ -2216,7 +2221,7 @@ static bool ArraySortWithoutComparator(JSContext* cx, Handle<JSObject*> obj,
         }
 
         bool hole;
-        if (!HasAndGetElement(cx, obj, i, &hole, &v)) {
+        if (!::HasAndGetElement(cx, obj, i, &hole, &v)) {
           return false;
         }
         if (hole) {
@@ -2393,7 +2398,7 @@ static MOZ_ALWAYS_INLINE bool ArraySortPrologue(JSContext* cx,
       }
 
       bool hole;
-      if (!HasAndGetElement(cx, obj, i, &hole, &v)) {
+      if (!::HasAndGetElement(cx, obj, i, &hole, &v)) {
         return false;
       }
       if (hole) {
@@ -2803,7 +2808,7 @@ static bool array_shift(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     bool hole;
-    if (!HasAndGetElement(cx, obj, i + 1, &hole, &value)) {
+    if (!::HasAndGetElement(cx, obj, i + 1, &hole, &value)) {
       return false;
     }
     if (hole) {
@@ -2906,7 +2911,7 @@ static bool array_unshift(JSContext* cx, unsigned argc, Value* vp) {
             return false;
           }
           bool hole;
-          if (!HasAndGetElement(cx, obj, last, &hole, &value)) {
+          if (!::HasAndGetElement(cx, obj, last, &hole, &value)) {
             return false;
           }
           if (hole) {
@@ -3045,7 +3050,7 @@ static bool CopyArrayElements(JSContext* cx, HandleObject obj, uint64_t begin,
     for (; index < limit; index++) {
       bool hole;
       if (!CheckForInterrupt(cx) ||
-          !HasAndGetElement(cx, obj, begin + index, &hole, &value)) {
+          !::HasAndGetElement(cx, obj, begin + index, &hole, &value)) {
         return false;
       }
 
@@ -3073,7 +3078,7 @@ static bool CopyArrayElements(JSContext* cx, HandleObject obj, uint64_t begin,
   for (uint64_t i = startIndex; i < count; i++) {
     bool hole;
     if (!CheckForInterrupt(cx) ||
-        !HasAndGetElement(cx, obj, begin + i, &hole, &value)) {
+        !::HasAndGetElement(cx, obj, begin + i, &hole, &value)) {
       return false;
     }
 
@@ -3228,7 +3233,7 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
 
       /* Steps 13.b, 13.c.i. */
       bool hole;
-      if (!HasAndGetElement(cx, obj, actualStart + k, &hole, &fromValue)) {
+      if (!::HasAndGetElement(cx, obj, actualStart + k, &hole, &fromValue)) {
         return false;
       }
 
@@ -3290,7 +3295,7 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
 
         /* Steps 16.b.iii-v */
         bool hole;
-        if (!HasAndGetElement(cx, obj, from, &hole, &fromValue)) {
+        if (!::HasAndGetElement(cx, obj, from, &hole, &fromValue)) {
           return false;
         }
 
@@ -3389,7 +3394,7 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
 
         /* Steps 17.b.iii, 17.b.iv.1. */
         bool hole;
-        if (!HasAndGetElement(cx, obj, from, &hole, &fromValue)) {
+        if (!::HasAndGetElement(cx, obj, from, &hole, &fromValue)) {
           return false;
         }
 
@@ -3988,7 +3993,7 @@ static bool SliceSparse(JSContext* cx, HandleObject obj, uint64_t begin,
     MOZ_ASSERT(begin <= index && index < end);
 
     bool hole;
-    if (!HasAndGetElement(cx, obj, index, &hole, &value)) {
+    if (!::HasAndGetElement(cx, obj, index, &hole, &value)) {
       return false;
     }
 
@@ -4152,7 +4157,7 @@ static bool array_slice(JSContext* cx, unsigned argc, Value* vp) {
 
     /* Steps 10.a-b, and 10.c.i. */
     bool kNotPresent;
-    if (!HasAndGetElement(cx, obj, k, &kNotPresent, &kValue)) {
+    if (!::HasAndGetElement(cx, obj, k, &kNotPresent, &kValue)) {
       return false;
     }
 
@@ -4554,7 +4559,7 @@ bool js::array_indexOf(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     bool hole;
-    if (!HasAndGetElement(cx, obj, k, &hole, &v)) {
+    if (!::HasAndGetElement(cx, obj, k, &hole, &v)) {
       return false;
     }
     if (hole) {
@@ -4668,7 +4673,7 @@ bool js::array_lastIndexOf(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     bool hole;
-    if (!HasAndGetElement(cx, obj, uint64_t(i), &hole, &v)) {
+    if (!::HasAndGetElement(cx, obj, uint64_t(i), &hole, &v)) {
       return false;
     }
     if (hole) {
@@ -5056,7 +5061,7 @@ static bool array_concat(JSContext* cx, unsigned argc, Value* vp) {
 
           // Step 5.b.iv.2.
           bool hole;
-          if (!HasAndGetElement(cx, obj, k, &hole, &v)) {
+          if (!::HasAndGetElement(cx, obj, k, &hole, &v)) {
             return false;
           }
           if (!hole) {
