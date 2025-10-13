@@ -1354,15 +1354,15 @@ void ReflowInput::CalculateHypotheticalPosition(
   WritingMode wm = containingBlock->GetWritingMode();
   const nscoord blockIStartContentEdge = blockContainerBP.IStart(wm);
 
-  // If it's a replaced element and it has a 'auto' value for
-  //'inline size', see if we can get the intrinsic size. This will allow
-  // us to exactly determine both the inline edges
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
   const auto styleISize = mStylePosition->ISize(wm, anchorResolutionParams);
   bool isAutoISize = styleISize->IsAuto();
+
+  // If it's a replaced element and it has a 'auto' value for 'inline size', see
+  // if we can get the intrinsic size. This will allow us to exactly determine
+  // both the inline edges.
   Maybe<nsSize> intrinsicSize;
   if (mFlags.mIsReplaced && isAutoISize) {
-    // See if we can get the intrinsic size of the element
     intrinsicSize = mFrame->GetIntrinsicSize().ToSize();
   }
 
