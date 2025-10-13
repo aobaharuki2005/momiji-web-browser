@@ -47,7 +47,7 @@ import tarfile
 import tempfile
 import zipfile
 from contextlib import contextmanager
-from io import BufferedReader
+from io import BufferedReader, BytesIO
 from urllib.parse import urlparse
 
 import buildconfig
@@ -175,7 +175,7 @@ class ArtifactJob:
     # We can tell our input is a test archive by this suffix, which happens to
     # be the same across platforms.
     _test_zip_archive_suffix = ".common.tests.zip"
-    _test_tar_archive_suffix = ".common.tests.tar.gz"
+    _test_tar_archive_suffix = ".common.tests.tar.zst"
 
     # A map of extra archives to fetch and unpack.  An extra archive might
     # include optional build output to incorporate into the local artifact
@@ -225,7 +225,7 @@ class ArtifactJob:
         self._tests_re = None
         if download_tests:
             self._tests_re = re.compile(
-                r"public/build/(en-US/)?target\.common\.tests\.(zip|tar\.gz)$"
+                r"public/build/(en-US/)?target\.common\.tests\.(zip|tar\.zst)$"
             )
         self._maven_zip_re = None
         if download_maven_zip:
@@ -379,66 +379,75 @@ class ArtifactJob:
                 "matched an archive path."
             )
 
-    def process_tests_tar_artifact(self, filename, processed_filename):
+    def write_tests_tar_artifact(self, filename, stream, writer):
         from mozbuild.action.test_archive import OBJDIR_TEST_FILES
 
         added_entry = False
+        for filename, entry in TarFinder(filename, stream):
+            for (
+                pattern,
+                (src_prefix, dest_prefix),
+            ) in self.test_artifact_patterns:
+                if not mozpath.match(filename, pattern):
+                    continue
 
-        with self.get_writer(file=processed_filename, compress_level=5) as writer:
-            with tarfile.open(filename) as reader:
-                for filename, entry in TarFinder(filename, reader):
-                    for (
-                        pattern,
-                        (src_prefix, dest_prefix),
-                    ) in self.test_artifact_patterns:
-                        if not mozpath.match(filename, pattern):
-                            continue
+                destpath = mozpath.relpath(filename, src_prefix)
+                destpath = mozpath.join(dest_prefix, destpath)
+                self.log(
+                    logging.DEBUG,
+                    "artifact",
+                    {"destpath": destpath},
+                    "Adding {destpath} to processed archive",
+                )
+                mode = entry.mode
+                writer.add(destpath.encode("utf-8"), entry.open(), mode=mode)
+                added_entry = True
+                break
 
-                        destpath = mozpath.relpath(filename, src_prefix)
-                        destpath = mozpath.join(dest_prefix, destpath)
-                        self.log(
-                            logging.DEBUG,
-                            "artifact",
-                            {"destpath": destpath},
-                            "Adding {destpath} to processed archive",
-                        )
-                        mode = entry.mode
-                        writer.add(destpath.encode("utf-8"), entry.open(), mode=mode)
-                        added_entry = True
-                        break
+            if filename.endswith(".toml"):
+                # The artifact build writes test .toml files into the object
+                # directory; they don't come from the upstream test archive.
+                self.log(
+                    logging.DEBUG,
+                    "artifact",
+                    {"filename": filename},
+                    "Skipping test INI file {filename}",
+                )
+                continue
 
-                    if filename.endswith(".toml"):
-                        # The artifact build writes test .toml files into the object
-                        # directory; they don't come from the upstream test archive.
-                        self.log(
-                            logging.DEBUG,
-                            "artifact",
-                            {"filename": filename},
-                            "Skipping test INI file {filename}",
-                        )
-                        continue
-
-                    for files_entry in OBJDIR_TEST_FILES.values():
-                        origin_pattern = files_entry["pattern"]
-                        leaf_filename = filename
-                        if "dest" in files_entry:
-                            dest = files_entry["dest"]
-                            origin_pattern = mozpath.join(dest, origin_pattern)
-                            leaf_filename = filename[len(dest) + 1 :]
-                        if mozpath.match(filename, origin_pattern):
-                            destpath = mozpath.join(
-                                "..", files_entry["base"], leaf_filename
-                            )
-                            mode = entry.mode
-                            writer.add(
-                                destpath.encode("utf-8"), entry.open(), mode=mode
-                            )
+            for files_entry in OBJDIR_TEST_FILES.values():
+                origin_pattern = files_entry["pattern"]
+                leaf_filename = filename
+                if "dest" in files_entry:
+                    dest = files_entry["dest"]
+                    origin_pattern = mozpath.join(dest, origin_pattern)
+                    leaf_filename = filename[len(dest) + 1 :]
+                if mozpath.match(filename, origin_pattern):
+                    destpath = mozpath.join("..", files_entry["base"], leaf_filename)
+                    mode = entry.mode
+                    writer.add(destpath.encode("utf-8"), entry.open(), mode=mode)
 
         if not added_entry:
             raise ValueError(
                 f'Archive format changed! No pattern from "{LinuxArtifactJob.test_artifact_patterns}"'
                 "matched an archive path."
             )
+
+    def process_tests_tar_artifact(self, filename, processed_filename):
+        with self.get_writer(file=processed_filename, compress_level=5) as writer:
+            if filename.endswith(".zst"):
+                import zstandard
+
+                unzstd = zstandard.ZstdDecompressor()
+                with open(filename, mode="rb") as fd:
+                    out = BytesIO()
+                    unzstd.copy_stream(fd, out)
+                    out.seek(0)
+                    with tarfile.open(fileobj=out) as reader:
+                        self.write_tests_tar_artifact(filename, reader, writer)
+            else:
+                with tarfile.open(fileobj=filename) as reader:
+                    self.write_tests_tar_artifact(filename, reader, writer)
 
     def process_symbols_archive(
         self, filename, processed_filename, skip_compressed=False
