@@ -807,9 +807,7 @@ class JS::Realm : public JS::shadow::Realm {
 
   // Set the locale for this realm. Reset to the system default locale when the
   // input is |nullptr|.
-  void setLocaleOverride(const char* locale) {
-    behaviors_.setLocaleOverride(locale);
-  }
+  void setLocaleOverride(const char* locale);
 
   // Returns the date-time info for this realm. Returns nullptr unless a time
   // zone override was specified in the realm creation options.

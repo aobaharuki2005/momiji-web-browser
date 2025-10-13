@@ -3899,8 +3899,10 @@ static const JSFunctionSpec string_methods[] = {
     JS_INLINABLE_FN("trim", str_trim, 0, 0, StringTrim),
     JS_INLINABLE_FN("trimStart", str_trimStart, 0, 0, StringTrimStart),
     JS_INLINABLE_FN("trimEnd", str_trimEnd, 0, 0, StringTrimEnd),
-    JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0, 0),
-    JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0, 0),
+    JS_INLINABLE_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0, 0,
+                    StringToLocaleLowerCase),
+    JS_INLINABLE_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0, 0,
+                    StringToLocaleUpperCase),
     JS_FN("localeCompare", str_localeCompare, 1, 0),
     JS_SELF_HOSTED_FN("repeat", "String_repeat", 1, 0),
 #if JS_HAS_INTL_API

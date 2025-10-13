@@ -8823,6 +8823,106 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringToUpperCase() {
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachStringToLocaleLowerCase() {
+#if JS_HAS_INTL_API
+  // Expecting no arguments.
+  if (args_.length() != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure |this| is a primitive string value.
+  if (!thisval_.isString()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Don't inline when not using the default locale.
+  if (cx_->realm()->behaviors().localeOverride()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Default case mapping fuse must still be intact.
+  if (!cx_->runtime()
+           ->runtimeFuses.ref()
+           .defaultLocaleHasDefaultCaseMappingFuse.intact()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId = initializeInputOperand();
+
+  // Guard callee is the 'toLocaleLowerCase' native function.
+  ObjOperandId calleeId = emitNativeCalleeGuard(argcId);
+
+  // Guard this is a string.
+  ValOperandId thisValId = loadThis(calleeId);
+  StringOperandId strId = writer.guardToString(thisValId);
+
+  // Guard runtime default locale uses default case mapping.
+  writer.guardRuntimeFuse(
+      RuntimeFuses::FuseIndex::DefaultLocaleHasDefaultCaseMappingFuse);
+
+  // Return string converted to lower-case.
+  writer.stringToLowerCaseResult(strId);
+  writer.returnFromIC();
+
+  trackAttached("StringToLocaleLowerCase");
+  return AttachDecision::Attach;
+#else
+  // No inlining when Intl support is disabled.
+  return AttachDecision::Attach;
+#endif
+}
+
+AttachDecision InlinableNativeIRGenerator::tryAttachStringToLocaleUpperCase() {
+#if JS_HAS_INTL_API
+  // Expecting no arguments.
+  if (args_.length() != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure |this| is a primitive string value.
+  if (!thisval_.isString()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Don't inline when not using the default locale.
+  if (cx_->realm()->behaviors().localeOverride()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Default case mapping fuse must still be intact.
+  if (!cx_->runtime()
+           ->runtimeFuses.ref()
+           .defaultLocaleHasDefaultCaseMappingFuse.intact()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId = initializeInputOperand();
+
+  // Guard callee is the 'toLocaleUpperCase' native function.
+  ObjOperandId calleeId = emitNativeCalleeGuard(argcId);
+
+  // Guard this is a string.
+  ValOperandId thisValId = loadThis(calleeId);
+  StringOperandId strId = writer.guardToString(thisValId);
+
+  // Guard runtime default locale uses default case mapping.
+  writer.guardRuntimeFuse(
+      RuntimeFuses::FuseIndex::DefaultLocaleHasDefaultCaseMappingFuse);
+
+  // Return string converted to upper-case.
+  writer.stringToUpperCaseResult(strId);
+  writer.returnFromIC();
+
+  trackAttached("StringToLocaleUpperCase");
+  return AttachDecision::Attach;
+#else
+  // No inlining when Intl support is disabled.
+  return AttachDecision::Attach;
+#endif
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachStringTrim() {
   // Expecting no arguments.
   if (args_.length() != 0) {
@@ -13126,6 +13226,10 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachStringToLowerCase();
     case InlinableNative::StringToUpperCase:
       return tryAttachStringToUpperCase();
+    case InlinableNative::StringToLocaleLowerCase:
+      return tryAttachStringToLocaleLowerCase();
+    case InlinableNative::StringToLocaleUpperCase:
+      return tryAttachStringToLocaleUpperCase();
     case InlinableNative::StringTrim:
       return tryAttachStringTrim();
     case InlinableNative::StringTrimStart:

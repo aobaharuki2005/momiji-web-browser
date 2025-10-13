@@ -184,6 +184,8 @@
   _(StringEndsWith)                                \
   _(StringToLowerCase)                             \
   _(StringToUpperCase)                             \
+  _(StringToLocaleLowerCase)                       \
+  _(StringToLocaleUpperCase)                       \
   _(StringTrim)                                    \
   _(StringTrimStart)                               \
   _(StringTrimEnd)                                 \

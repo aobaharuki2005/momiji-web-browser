@@ -536,6 +536,14 @@ const char* Realm::getLocale() const {
   return runtime_->getDefaultLocale();
 }
 
+void Realm::setLocaleOverride(const char* locale) {
+  // Clear any jitcode in the runtime, because compiled code doesn't handle
+  // updates to a realm's locale override.
+  ReleaseAllJITCode(runtime_->gcContext());
+
+  behaviors_.setLocaleOverride(locale);
+}
+
 js::DateTimeInfo* Realm::getDateTimeInfo() {
 #if JS_HAS_INTL_API
   if (RefPtr<TimeZoneString> timeZone = behaviors_.timeZoneOverride()) {
