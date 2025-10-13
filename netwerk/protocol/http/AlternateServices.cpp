@@ -1130,8 +1130,8 @@ void AltSvcCache::UpdateAltServiceMapping(
   }
 
   if (map->IsHttp3()) {
-    bool isDirectOrNoProxy = pi ? pi->IsDirect() : true;
-    if (!isDirectOrNoProxy) {
+    bool isProxyAllowed = pi ? (pi->IsDirect() || pi->IsHttp3Proxy()) : true;
+    if (!isProxyAllowed) {
       LOG(
           ("AltSvcCache::UpdateAltServiceMapping %p map %p ignored h3 because "
            "proxy is in use %p\n",
