@@ -1718,8 +1718,6 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
 
     if (mFlags.mStaticPosIsCBOrigin) {
       hypotheticalPos.mWritingMode = cbwm;
-      hypotheticalPos.mIStart = nscoord(0);
-      hypotheticalPos.mBStart = nscoord(0);
       if (placeholderParent->IsGridContainerFrame() &&
           placeholderParent->HasAnyStateBits(NS_STATE_GRID_IS_COL_MASONRY |
                                              NS_STATE_GRID_IS_ROW_MASONRY)) {
