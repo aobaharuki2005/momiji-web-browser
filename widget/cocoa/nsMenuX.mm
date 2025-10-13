@@ -141,7 +141,7 @@ nsMenuX::nsMenuX(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner,
   mIcon = MakeUnique<nsMenuItemIconX>(this);
 
   if (mVisible) {
-    if (!isXULWindowMenu) {
+    if (!isXULWindowMenu && !IsXULEditMenu(mContent)) {
       SetRebuild(true);
     }
     SetupIcon();
@@ -1006,6 +1006,18 @@ bool nsMenuX::IsXULWindowMenu(nsIContent* aMenuContent) {
     nsAutoString id;
     aMenuContent->AsElement()->GetAttr(nsGkAtoms::id, id);
     if (id.Equals(u"windowMenu"_ns)) {
+      retval = true;
+    }
+  }
+  return retval;
+}
+
+bool nsMenuX::IsXULEditMenu(nsIContent* aMenuContent) {
+  bool retval = false;
+  if (aMenuContent && aMenuContent->IsElement()) {
+    nsAutoString id;
+    aMenuContent->AsElement()->GetAttr(nsGkAtoms::id, id);
+    if (id.Equals(u"edit-menu"_ns)) {
       retval = true;
     }
   }
