@@ -1173,6 +1173,8 @@
   <string name="tab_tray_multiselect_menu_content_description">Меню выбраных картак</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab" tools:ignore="UnusedResources" moz:removedIn="145">Хатняя старонка</string>
+  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
+  <string name="tab_tray_homepage_tab_2">Хатняя старонка %s</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Выдаліць картку з калекцыі</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1365,6 +1367,10 @@
   <string name="bookmark_add_folder">Дадаць папку</string>
   <!-- Snackbar title that confirms a bookmark was saved into a folder. %s is the name of the folder the bookmark was saved into. -->
   <string name="bookmark_saved_in_folder_snackbar">Захавана ў “%s”</string>
+  <!-- Snackbar title describing failure to edit an existing folder -->
+  <string name="bookmark_error_edit_folder">Не атрымалася адрэдагаваць папку</string>
+  <!-- Snackbar title describing failure to edit a bookmark -->
+  <string name="bookmark_error_edit_bookmark">Не атрымалася адрэдагаваць закладку</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
   <string name="edit_bookmark_snackbar_action">ЗМЯНІЦЬ</string>
   <!-- Bookmark menu move button -->
@@ -2091,6 +2097,12 @@
   <string name="saved_login_clear_username">Ачысціць імя карыстальніка</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">Ачысціць імя хоста</string>
+  <!-- Edit text for the login detail menu edit button -->
+  <string name="login_detail_menu_edit_button">Змяніць</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the edit login view. -->
+  <string name="edit_login_navigate_back_button_content_description">Перайсці назад</string>
+  <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
+  <string name="edit_login_button_content_description">Змяніць лагін</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Адкрыць сайт у браўзеры</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -2401,8 +2413,14 @@
   <string name="top_sites_menu_sponsor_privacy">Нашы спонсары і ваша прыватнасць</string>
   <!-- Label text displayed for a sponsored top site. -->
   <string name="top_sites_sponsored_label">Спонсарскі</string>
+  <!-- Text for the menu item to edit a top site. -->
+  <string name="top_sites_edit_top_site">Змяніць</string>
+  <!-- Text for the dialog title to edit a top site. -->
+  <string name="top_sites_edit_dialog_title">Рэдагаваць цэтлік</string>
   <!-- Button caption to confirm the edit of the top site. -->
   <string name="top_sites_edit_dialog_save">Захаваць</string>
+  <!-- Label for the URL edit field in the edit top site dialog. -->
+  <string name="top_sites_edit_dialog_url_title">Адрас</string>
   <!--
     Inactive tabs in the tabs tray
 
@@ -2759,6 +2777,8 @@
   <string name="likert_scale_option_6" tools:ignore="UnusedResources">Я ёй не карыстаюся</string>
   <!-- Option for likert scale -->
   <string name="likert_scale_option_8" tools:ignore="UnusedResources">Я не выкарыстоўваю сінхранізацыю</string>
+  <!-- Text shown in the survey title for homepage microsurvey. Note: The word "Firefox" should NOT be translated. -->
+  <string name="microsurvey_homepage_title" tools:ignore="BrandUsage,UnusedResources">Наколькі вы задаволены сваёй хатняй старонкай Firefox?</string>
   <!--
     Accessibility
 
@@ -2785,6 +2805,16 @@
     The title of the Addresses feature in the Debug Drawer.
   -->
   <string name="debug_drawer_addresses_title">Адрасы</string>
+  <!--
+    Debug drawer credit cards
+
+    The title of the credit cards feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_credit_cards_title">Крэдытныя карты</string>
+  <!-- The title of the button in the debug drawer for adding a new credit card -->
+  <string name="debug_drawer_add_new_credit_card">Дадаць крэдытную карту</string>
+  <!-- The title of the button for deleting in the debug drawer all addresses. -->
+  <string name="debug_drawer_delete_all_credit_cards">Выдаліць усе крэдытныя карты</string>
   <!--
     Beta Label Component !
 
