@@ -33,6 +33,7 @@
 #  include "builtin/intl/CommonFunctions.h"
 #  include "builtin/intl/FormatBuffer.h"
 #  include "builtin/intl/GlobalIntlData.h"
+#  include "builtin/intl/Locale.h"
 #endif
 #include "builtin/RegExp.h"
 #include "gc/GC.h"
@@ -943,15 +944,7 @@ static bool str_toLowerCase(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 #if JS_HAS_INTL_API
-// String.prototype.toLocaleLowerCase is self-hosted when Intl is exposed,
-// with core functionality performed by the intrinsic below.
-
-static const char* CaseMappingLocale(JSContext* cx, JSString* str) {
-  JSLinearString* locale = str->ensureLinear(cx);
-  if (!locale) {
-    return nullptr;
-  }
-
+static const char* CaseMappingLocale(JSLinearString* locale) {
   MOZ_ASSERT(locale->length() >= 2, "locale is a valid language tag");
 
   // Lithuanian, Turkish, and Azeri have language dependent case mappings.
@@ -969,38 +962,47 @@ static const char* CaseMappingLocale(JSContext* cx, JSString* str) {
     }
   }
 
-  return "";  // ICU root locale
+  return nullptr;
 }
 
-static bool HasDefaultCasing(const char* locale) { return !strcmp(locale, ""); }
+enum class TargetCase { Lower, Upper };
 
-bool js::intl_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  MOZ_ASSERT(args[0].isString());
-  MOZ_ASSERT(args[1].isString());
-
-  RootedString string(cx, args[0].toString());
-
-  const char* locale = CaseMappingLocale(cx, args[1].toString());
-  if (!locale) {
-    return false;
+/**
+ * TransformCase ( S, locales, targetCase )
+ */
+static JSLinearString* TransformCase(JSContext* cx, Handle<JSString*> string,
+                                     Handle<Value> locales,
+                                     TargetCase targetCase) {
+  // Step 1.
+  Rooted<intl::LocalesList> requestedLocales(cx, cx);
+  if (!intl::CanonicalizeLocaleList(cx, locales, &requestedLocales)) {
+    return nullptr;
   }
 
-  // Call String.prototype.toLowerCase() for language independent casing.
-  if (HasDefaultCasing(locale)) {
-    JSString* str = StringToLowerCase(cx, string);
-    if (!str) {
-      return false;
-    }
+  // Trivial case: When the input is empty, directly return the empty string.
+  if (string->empty()) {
+    return cx->emptyString();
+  }
 
-    args.rval().setString(str);
-    return true;
+  // Steps 2-3.
+  Rooted<JSLinearString*> requestedLocale(cx);
+  if (!requestedLocales.empty()) {
+    requestedLocale = requestedLocales[0];
+  } else {
+    requestedLocale = cx->global()->globalIntlData().defaultLocale(cx);
+  }
+
+  // Steps 4-10.
+  const char* locale = CaseMappingLocale(requestedLocale);
+  if (!locale) {
+    // Call the default case conversion methods for language independent casing.
+    return targetCase == TargetCase::Lower ? StringToLowerCase(cx, string)
+                                           : StringToUpperCase(cx, string);
   }
 
   AutoStableStringChars inputChars(cx);
   if (!inputChars.initTwoByte(cx, string)) {
-    return false;
+    return nullptr;
   }
   mozilla::Range<const char16_t> input = inputChars.twoByteRange();
 
@@ -1013,43 +1015,48 @@ bool js::intl_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp) {
 
   intl::FormatBuffer<char16_t, INLINE_CAPACITY> buffer(cx);
 
-  auto ok = mozilla::intl::String::ToLocaleLowerCase(locale, input, buffer);
+  auto ok =
+      targetCase == TargetCase::Lower
+          ? mozilla::intl::String::ToLocaleLowerCase(locale, input, buffer)
+          : mozilla::intl::String::ToLocaleUpperCase(locale, input, buffer);
   if (ok.isErr()) {
     intl::ReportInternalError(cx, ok.unwrapErr());
+    return nullptr;
+  }
+
+  return buffer.toString(cx);
+}
+#endif
+
+static bool str_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "String.prototype",
+                                        "toLocaleLowerCase");
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Steps 1-2.
+  Rooted<JSString*> str(
+      cx, ToStringForStringFunction(cx, "toLocaleLowerCase", args.thisv()));
+  if (!str) {
     return false;
   }
 
-  JSString* result = buffer.toString(cx);
+#if JS_HAS_INTL_API
+  // Step 3.
+  auto* result = TransformCase(cx, str, args.get(0), TargetCase::Lower);
   if (!result) {
     return false;
   }
 
   args.rval().setString(result);
   return true;
-}
-
 #else
-
-// When the Intl API is not exposed, String.prototype.toLowerCase is implemented
-// in C++.
-static bool str_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp) {
-  AutoJSMethodProfilerEntry pseudoFrame(cx, "String.prototype",
-                                        "toLocaleLowerCase");
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  RootedString str(
-      cx, ToStringForStringFunction(cx, "toLocaleLowerCase", args.thisv()));
-  if (!str) {
-    return false;
-  }
-
   /*
    * Forcefully ignore the first (or any) argument and return toLowerCase(),
    * ECMA has reserved that argument, presumably for defining the locale.
    */
   if (cx->runtime()->localeCallbacks &&
       cx->runtime()->localeCallbacks->localeToLowerCase) {
-    RootedValue result(cx);
+    Rooted<Value> result(cx);
     if (!cx->runtime()->localeCallbacks->localeToLowerCase(cx, str, &result)) {
       return false;
     }
@@ -1070,9 +1077,8 @@ static bool str_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp) {
 
   args.rval().setString(result);
   return true;
+#endif
 }
-
-#endif  // JS_HAS_INTL_API
 
 static inline bool ToUpperCaseHasSpecialCasing(Latin1Char charCode) {
   // U+00DF LATIN SMALL LETTER SHARP S is the only Latin-1 code point with
@@ -1359,86 +1365,34 @@ static bool str_toUpperCase(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-#if JS_HAS_INTL_API
-// String.prototype.toLocaleUpperCase is self-hosted when Intl is exposed,
-// with core functionality performed by the intrinsic below.
-
-bool js::intl_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp) {
+static bool str_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "String.prototype",
+                                        "toLocaleUpperCase");
   CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  MOZ_ASSERT(args[0].isString());
-  MOZ_ASSERT(args[1].isString());
 
-  RootedString string(cx, args[0].toString());
-
-  const char* locale = CaseMappingLocale(cx, args[1].toString());
-  if (!locale) {
+  Rooted<JSString*> str(
+      cx, ToStringForStringFunction(cx, "toLocaleUpperCase", args.thisv()));
+  if (!str) {
     return false;
   }
 
-  // Call String.prototype.toUpperCase() for language independent casing.
-  if (HasDefaultCasing(locale)) {
-    JSString* str = js::StringToUpperCase(cx, string);
-    if (!str) {
-      return false;
-    }
-
-    args.rval().setString(str);
-    return true;
-  }
-
-  AutoStableStringChars inputChars(cx);
-  if (!inputChars.initTwoByte(cx, string)) {
-    return false;
-  }
-  mozilla::Range<const char16_t> input = inputChars.twoByteRange();
-
-  // Note: maximum case mapping length is three characters, so the result
-  // length might be > INT32_MAX. ICU will fail in this case.
-  static_assert(JSString::MAX_LENGTH <= INT32_MAX,
-                "String length must fit in int32_t for ICU");
-
-  static const size_t INLINE_CAPACITY = js::intl::INITIAL_CHAR_BUFFER_SIZE;
-
-  intl::FormatBuffer<char16_t, INLINE_CAPACITY> buffer(cx);
-
-  auto ok = mozilla::intl::String::ToLocaleUpperCase(locale, input, buffer);
-  if (ok.isErr()) {
-    intl::ReportInternalError(cx, ok.unwrapErr());
-    return false;
-  }
-
-  JSString* result = buffer.toString(cx);
+#if JS_HAS_INTL_API
+  // Step 3.
+  auto* result = TransformCase(cx, str, args.get(0), TargetCase::Upper);
   if (!result) {
     return false;
   }
 
   args.rval().setString(result);
   return true;
-}
-
 #else
-
-// When the Intl API is not exposed, String.prototype.toUpperCase is implemented
-// in C++.
-static bool str_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp) {
-  AutoJSMethodProfilerEntry pseudoFrame(cx, "String.prototype",
-                                        "toLocaleUpperCase");
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  RootedString str(
-      cx, ToStringForStringFunction(cx, "toLocaleUpperCase", args.thisv()));
-  if (!str) {
-    return false;
-  }
-
   /*
    * Forcefully ignore the first (or any) argument and return toUpperCase(),
    * ECMA has reserved that argument, presumably for defining the locale.
    */
   if (cx->runtime()->localeCallbacks &&
       cx->runtime()->localeCallbacks->localeToUpperCase) {
-    RootedValue result(cx);
+    Rooted<Value> result(cx);
     if (!cx->runtime()->localeCallbacks->localeToUpperCase(cx, str, &result)) {
       return false;
     }
@@ -1459,9 +1413,8 @@ static bool str_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp) {
 
   args.rval().setString(result);
   return true;
+#endif
 }
-
-#endif  // JS_HAS_INTL_API
 
 /**
  * String.prototype.localeCompare ( that [ , reserved1 [ , reserved2 ] ] )
@@ -3892,13 +3845,8 @@ static const JSFunctionSpec string_methods[] = {
     JS_INLINABLE_FN("trim", str_trim, 0, 0, StringTrim),
     JS_INLINABLE_FN("trimStart", str_trimStart, 0, 0, StringTrimStart),
     JS_INLINABLE_FN("trimEnd", str_trimEnd, 0, 0, StringTrimEnd),
-#if JS_HAS_INTL_API
-    JS_SELF_HOSTED_FN("toLocaleLowerCase", "String_toLocaleLowerCase", 0, 0),
-    JS_SELF_HOSTED_FN("toLocaleUpperCase", "String_toLocaleUpperCase", 0, 0),
-#else
     JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0, 0),
     JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0, 0),
-#endif
     JS_FN("localeCompare", str_localeCompare, 1, 0),
     JS_SELF_HOSTED_FN("repeat", "String_repeat", 1, 0),
 #if JS_HAS_INTL_API

@@ -40,26 +40,6 @@ extern bool str_codePointAt(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool str_endsWith(JSContext* cx, unsigned argc, Value* vp);
 
-#if JS_HAS_INTL_API
-/**
- * Returns the input string converted to lower case based on the language
- * specific case mappings for the input locale.
- *
- * Usage: lowerCase = intl_toLocaleLowerCase(string, locale)
- */
-[[nodiscard]] extern bool intl_toLocaleLowerCase(JSContext* cx, unsigned argc,
-                                                 Value* vp);
-
-/**
- * Returns the input string converted to upper case based on the language
- * specific case mappings for the input locale.
- *
- * Usage: upperCase = intl_toLocaleUpperCase(string, locale)
- */
-[[nodiscard]] extern bool intl_toLocaleUpperCase(JSContext* cx, unsigned argc,
-                                                 Value* vp);
-#endif
-
 ArrayObject* StringSplitString(JSContext* cx, HandleString str,
                                HandleString sep, uint32_t limit);
 
