@@ -1349,6 +1349,20 @@ static inline int swgl_validateGradient(sampler2D sampler, ivec2_scalar address,
              : -1;
 }
 
+static inline int swgl_validateGradientFromStops(sampler2D sampler, ivec2_scalar address,
+                                                 int entries) {
+  // 1px (4 floats per color stop).
+  int colors_size = entries;
+  // 4 stop offsets (4 floats) per px.
+  int stops_size = ((entries + 3) & ~3) / 4;
+  return sampler->format == TextureFormat::RGBA32F && address.y >= 0 &&
+                 address.y < int(sampler->height) && address.x >= 0 &&
+                 address.x < int(sampler->width) && entries > 0 &&
+                 address.x + colors_size + stops_size <= int(sampler->width)
+             ? address.y * sampler->stride + address.x * 4
+             : -1;
+}
+
 static inline WideRGBA8 sampleGradient(sampler2D sampler, int address,
                                        Float entry) {
   assert(sampler->format == TextureFormat::RGBA32F);

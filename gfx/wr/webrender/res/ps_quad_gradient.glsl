@@ -365,11 +365,9 @@ void swgl_drawSpanRGBA8() {
 
     int stop_count = v_gradient_header.y;
     int colors_address = v_gradient_header.w;
-    int colors_addr = swgl_validateGradient(sGpuBufferF, get_gpu_buffer_uv(colors_address),
-                                            stop_count);
-    int offsets_addr = swgl_validateGradient(sGpuBufferF, get_gpu_buffer_uv(colors_address + stop_count),
-                                             stop_count);
-    if (offsets_addr < 0 || colors_addr < 0) {
+    int colors_addr = swgl_validateGradientFromStops(sGpuBufferF, get_gpu_buffer_uv(colors_address),
+                                                     stop_count);
+    if (colors_addr < 0) {
         // The gradient is invalid, this should not happen. We can't fall back to
         // the regular shader code because it expects the gradient stop offsets
         // to be laid out for a tree traversal but we laid them out linearly because
@@ -379,6 +377,7 @@ void swgl_drawSpanRGBA8() {
         return;
     }
 
+    int offsets_addr = colors_addr + stop_count * 4;
     vec2 pos = v_interpolated_data.xy;
     float start_radius = v_flat_data.x;
     bool repeat = v_gradient_header.z != 0.0;
