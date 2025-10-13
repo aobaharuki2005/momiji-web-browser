@@ -385,12 +385,6 @@ class WeakMap : public WeakMapBase {
   void traceMappings(WeakMapTracer* tracer) override;
 };
 
-using ObjectValueWeakMap = WeakMap<JSObject*, Value>;
-using ValueValueWeakMap = WeakMap<Value, Value>;
-
-// Generic weak map for mapping objects to other objects.
-using ObjectWeakMap = WeakMap<JSObject*, JSObject*>;
-
 // Get the hash from the Symbol.
 HashNumber GetSymbolHash(JS::Symbol* sym);
 
