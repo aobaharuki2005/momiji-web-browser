@@ -1733,6 +1733,8 @@
   <string name="webcompat_reporter_problem_description_placeholder_text">Kva skjedde? Kva burde ha skjedd?</string>
   <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
   <string name="webcompat_reporter_etp_checkbox_text">Send URL-ar blokkerte av sporingsvern</string>
+  <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
+  <string name="webcompat_reporter_etp_checkbox_description">Utvida sporingsvern kan blokkere sporarar og skript som enkelte nettstadar treng for å fungere ordentleg.</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
