@@ -144,7 +144,7 @@ void js::TrackedAllocPolicy<kind>::decMemory(size_t nbytes) {
     // Only subtract freed cell memory from retained size for cell associations
     // during sweeping.
     JS::GCContext* gcx = TlsGCContext.get();
-    updateRetainedSize = gcx->isFinalizing();
+    updateRetainedSize = gcx->isSweeping() || gcx->isFinalizing();
   }
 
   zone_->decNonGCMemory(this, nbytes, MemoryUse::TrackedAllocPolicy,
