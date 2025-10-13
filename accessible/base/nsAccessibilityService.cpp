@@ -681,7 +681,7 @@ void nsAccessibilityService::NotifyAnchorPositionedRemoved(
     return;
   }
 
-  nsIFrame* anchorFrame =
+  const nsIFrame* anchorFrame =
       nsCoreUtils::GetAnchorForPositionedFrame(aPresShell, aFrame);
   if (!anchorFrame) {
     return;

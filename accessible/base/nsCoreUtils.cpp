@@ -676,7 +676,7 @@ bool nsCoreUtils::IsTrimmedWhitespaceBeforeHardLineBreak(nsIFrame* aFrame) {
   return text.mString.IsEmpty();
 }
 
-nsIFrame* nsCoreUtils::GetAnchorForPositionedFrame(
+const nsIFrame* nsCoreUtils::GetAnchorForPositionedFrame(
     const PresShell* aPresShell, const nsIFrame* aPositionedFrame) {
   if (!aPositionedFrame ||
       !aPositionedFrame->Style()->HasAnchorPosReference()) {
@@ -691,7 +691,7 @@ nsIFrame* nsCoreUtils::GetAnchorForPositionedFrame(
     return nullptr;
   }
 
-  for (auto& entry : *referencedAnchors) {
+  for (const auto& entry : *referencedAnchors) {
     if (entry.GetData().isNothing()) {
       continue;
     }

@@ -2408,8 +2408,9 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
       // Check early if the accessible is a tooltip. If so, it can never be a
       // valid target for an anchor's details relation.
       if (Role() != roles::TOOLTIP) {
-        if (nsIFrame* anchorFrame = nsCoreUtils::GetAnchorForPositionedFrame(
-                mDoc->PresShellPtr(), GetFrame())) {
+        if (const nsIFrame* anchorFrame =
+                nsCoreUtils::GetAnchorForPositionedFrame(mDoc->PresShellPtr(),
+                                                         GetFrame())) {
           LocalAccessible* anchorAcc =
               mDoc->GetAccessible(anchorFrame->GetContent());
           if (anchorAcc->GetAnchorPositionTargetDetailsRelation() == this &&

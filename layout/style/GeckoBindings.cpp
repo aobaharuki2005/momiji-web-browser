@@ -1861,8 +1861,8 @@ static const nsAtom* GetUsedAnchorName(const nsIFrame* aPositioned,
   return stylePos->mPositionAnchor.AsIdent().AsAtom();
 }
 
-static nsIFrame* GetAnchorOf(const nsIFrame* aPositioned,
-                             const nsAtom* aAnchorName) {
+static const nsIFrame* GetAnchorOf(const nsIFrame* aPositioned,
+                                   const nsAtom* aAnchorName) {
   const auto* presShell = aPositioned->PresShell();
   MOZ_ASSERT(presShell, "No PresShell for frame?");
   return presShell->GetAnchorPosAnchor(aAnchorName, aPositioned);
