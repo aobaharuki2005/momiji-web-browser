@@ -11430,6 +11430,18 @@ bool CacheIRCompiler::emitGuardFuse(RealmFuses::FuseIndex fuseIndex) {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardRuntimeFuse(RuntimeFuses::FuseIndex fuseIndex) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.guardRuntimeFuse(fuseIndex, failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardObjectFuseProperty(
     ObjOperandId objId, uint32_t objFuseOwnerOffset, uint32_t objFuseOffset,
     uint32_t expectedGenerationOffset, uint32_t propIndexOffset,

@@ -874,6 +874,67 @@ bool WarpOracle::addFuseDependency(RealmFuses::FuseIndex fuseIndex,
   }
 }
 
+template <auto FuseMember, CompilationDependency::Type DepType>
+struct RuntimeFuseDependency final : public CompilationDependency {
+  explicit RuntimeFuseDependency() : CompilationDependency(DepType) {}
+
+  bool registerDependency(JSContext* cx,
+                          const IonScriptKey& ionScript) override {
+    MOZ_ASSERT(checkDependency(cx));
+    return (cx->runtime()->runtimeFuses.ref().*FuseMember)
+        .addFuseDependency(cx, ionScript);
+  }
+
+  CompilationDependency* clone(TempAllocator& alloc) const override {
+    return new (alloc.fallible()) RuntimeFuseDependency<FuseMember, DepType>();
+  }
+
+  bool checkDependency(JSContext* cx) const override {
+    return (cx->runtime()->runtimeFuses.ref().*FuseMember).intact();
+  }
+
+  HashNumber hash() const override { return mozilla::HashGeneric(type); }
+
+  bool operator==(const CompilationDependency& dep) const override {
+    // Since this dependency is runtime wide, they are all equal.
+    return dep.type == type;
+  }
+};
+
+bool WarpOracle::addFuseDependency(RuntimeFuses::FuseIndex fuseIndex,
+                                   bool* stillValid) {
+  MOZ_ASSERT(RuntimeFuses::isInvalidatingFuse(fuseIndex),
+             "All current runtime fuses are invalidating");
+
+  auto addIfStillValid = [&](const auto& dep) {
+    if (!dep.checkDependency(cx_)) {
+      *stillValid = false;
+      return true;
+    }
+    *stillValid = true;
+    return mirGen().tracker.addDependency(alloc_, dep);
+  };
+
+  // Register a compilation dependency for all fuses that are still valid.
+  switch (fuseIndex) {
+    case RuntimeFuses::FuseIndex::HasSeenObjectEmulateUndefinedFuse: {
+      using Dependency = RuntimeFuseDependency<
+          &RuntimeFuses::hasSeenObjectEmulateUndefinedFuse,
+          CompilationDependency::Type::EmulatesUndefined>;
+      return addIfStillValid(Dependency());
+    }
+    case RuntimeFuses::FuseIndex::HasSeenArrayExceedsInt32LengthFuse: {
+      using Dependency = RuntimeFuseDependency<
+          &RuntimeFuses::hasSeenArrayExceedsInt32LengthFuse,
+          CompilationDependency::Type::ArrayExceedsInt32Length>;
+      return addIfStillValid(Dependency());
+    }
+    case RuntimeFuses::FuseIndex::LastFuseIndex:
+      break;
+  }
+  MOZ_CRASH("invalid runtime fuse index");
+}
+
 class ObjectPropertyFuseDependency final : public CompilationDependency {
   ObjectFuse* fuse_;
   uint32_t expectedGeneration_;
@@ -1097,6 +1158,17 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
         break;
       case CacheOp::GuardFuse: {
         auto [fuseIndex] = reader.argsForGuardFuse();
+        bool stillValid;
+        if (!oracle_->addFuseDependency(fuseIndex, &stillValid)) {
+          return abort(AbortReason::Alloc);
+        }
+        if (!stillValid) {
+          hasInvalidFuseGuard = true;
+        }
+        break;
+      }
+      case CacheOp::GuardRuntimeFuse: {
+        auto [fuseIndex] = reader.argsForGuardRuntimeFuse();
         bool stillValid;
         if (!oracle_->addFuseDependency(fuseIndex, &stillValid)) {
           return abort(AbortReason::Alloc);

@@ -491,6 +491,13 @@ bool WarpCacheIRTranspiler::emitGuardFuse(RealmFuses::FuseIndex fuseIndex) {
   }
 }
 
+bool WarpCacheIRTranspiler::emitGuardRuntimeFuse(
+    RuntimeFuses::FuseIndex fuseIndex) {
+  // This is a no-op because WarpOracle has added a compilation dependency.
+  MOZ_ASSERT(RuntimeFuses::isInvalidatingFuse(fuseIndex));
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardObjectFuseProperty(
     ObjOperandId objId, uint32_t objFuseOwnerOffset, uint32_t objFuseOffset,
     uint32_t expectedGenerationOffset, uint32_t propIndexOffset,

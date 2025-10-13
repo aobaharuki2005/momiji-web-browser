@@ -280,6 +280,14 @@
   args:
     fuseWord: RealmFuseIndexImm
 
+# Guard on a runtime fuse.
+- name: GuardRuntimeFuse
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    fuseWord: RuntimeFuseIndexImm
+
 - name: GuardObjectFuseProperty
   shared: true
   transpile: true
