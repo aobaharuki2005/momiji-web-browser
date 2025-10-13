@@ -34,7 +34,6 @@ internal fun MoreSettingsSubmenu(
     isOpenInAppMenuHighlighted: Boolean,
     translationInfo: TranslationInfo,
     showShortcuts: Boolean,
-    isAndroidAutomotiveAvailable: Boolean,
     onWebCompatReporterClick: () -> Unit,
     onShortcutsMenuClick: () -> Unit,
     onAddToHomeScreenMenuClick: () -> Unit,
@@ -112,13 +111,12 @@ internal fun MoreSettingsSubmenu(
             beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_save_file_24),
             onClick = onSaveAsPDFMenuClick,
         )
-        if (!isAndroidAutomotiveAvailable) {
-            MenuItem(
-                label = stringResource(id = R.string.browser_menu_print_2),
-                beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_print_24),
-                onClick = onPrintMenuClick,
-            )
-        }
+
+        MenuItem(
+            label = stringResource(id = R.string.browser_menu_print_2),
+            beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_print_24),
+            onClick = onPrintMenuClick,
+        )
     }
 }
 
