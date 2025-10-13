@@ -101,19 +101,13 @@ nsresult Http3ConnectUDPStream::TryActivating() {
     return NS_ERROR_UNEXPECTED;
   }
 
-  bool useRoutedHost =
-      !mTransaction->ConnectionInfo()->GetRoutedHost().IsEmpty();
-  nsresult rv = builder->Set(
-      "target_host"_ns, useRoutedHost
-                            ? mTransaction->ConnectionInfo()->GetRoutedHost()
-                            : mTransaction->ConnectionInfo()->GetOrigin());
+  nsresult rv = builder->Set("target_host"_ns,
+                             mTransaction->ConnectionInfo()->GetOrigin());
   if (NS_FAILED(rv)) {
     return rv;
   }
   rv = builder->Set("target_port"_ns,
-                    useRoutedHost
-                        ? mTransaction->ConnectionInfo()->RoutedPort()
-                        : mTransaction->ConnectionInfo()->OriginPort());
+                    mTransaction->ConnectionInfo()->OriginPort());
   if (NS_FAILED(rv)) {
     return rv;
   }
