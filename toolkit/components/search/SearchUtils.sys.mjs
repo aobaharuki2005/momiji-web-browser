@@ -511,13 +511,19 @@ export var SearchUtils = {
    *
    * @param {string|nsIURI} uri
    *  The URI to the icon.
+   * @param {object} [originAttributes]
+   *   The origin attributes to download the icon.
    * @returns {Promise<[Uint8Array, string]>}
    *   Resolves to an array containing the data and the mime type.
    *   Rejects if the icon cannot be fetched.
    */
-  async fetchIcon(uri) {
+  async fetchIcon(uri, originAttributes = null) {
     return new Promise((resolve, reject) => {
-      let chan = SearchUtils.makeChannel(uri, Ci.nsIContentPolicy.TYPE_IMAGE);
+      let chan = SearchUtils.makeChannel(
+        uri,
+        Ci.nsIContentPolicy.TYPE_IMAGE,
+        originAttributes
+      );
       let listener = new SearchUtils.LoadListener(
         chan,
         /^image\//,

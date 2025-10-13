@@ -668,15 +668,19 @@ export class SearchEngine {
    * @param {string} iconURL
    *   A URI string pointing to the engine's icon.
    *   Must have http[s], data, or moz-extension protocol.
-   * @param {number} [size]
+   * @param {object} options
+   *   The options object
+   * @param {number} [options.size]
    *   Width and height of the icon (determined automatically if not provided).
-   * @param {boolean} [override]
+   * @param {boolean} [options.override]
    * Whether the new URI should override an existing one.
+   * @param {object} [options.originAttributes]
+   *   The origin attributes to use to load the icon.
    * @returns {Promise<void>}
    *   Resolves when the icon was set.
    *   Rejects with an Error if there was an error.
    */
-  async _setIcon(iconURL, size, override = true) {
+  async _setIcon(iconURL, options = { override: true }) {
     lazy.logConsole.debug(
       "_setIcon: Setting icon url for",
       this.name,
@@ -684,8 +688,12 @@ export class SearchEngine {
       limitURILength(iconURL)
     );
 
-    [iconURL, size] = await this._downloadAndRescaleIcon(iconURL, size);
-    this._addIconToMap(iconURL, size, override);
+    let size;
+    [iconURL, size] = await this._downloadAndRescaleIcon(iconURL, {
+      size: options.size,
+      originAttributes: options.originAttributes,
+    });
+    this._addIconToMap(iconURL, size, options.override);
 
     if (this._engineAddedToStore) {
       lazy.SearchUtils.notifyAction(
@@ -703,17 +711,23 @@ export class SearchEngine {
    * @param {string} iconURL
    *   A URI string pointing to the engine's icon.
    *   Must have http[s], data, or moz-extension protocol.
-   * @param {number} [size]
+   * @param {object} options
+   *   The options object
+   * @param {number} [options.size]
    *   Width and height of the icon (determined automatically if not provided).
+   * @param {object} [options.originAttributes]
+   *   The origin attributes to use to load the icon.
    * @returns {Promise<[string, number]>}
    *   Resolves to [dataURL, size] if successful and rejects if there was an error.
    */
-  async _downloadAndRescaleIcon(iconURL, size) {
+  async _downloadAndRescaleIcon(iconURL, options = {}) {
     let uri = lazy.SearchUtils.makeURI(iconURL);
 
     if (!uri) {
       throw new Error(`Invalid URI`);
     }
+
+    let size = options.size;
 
     switch (uri.scheme) {
       case "moz-extension": {
@@ -727,7 +741,10 @@ export class SearchEngine {
       case "data":
       case "http":
       case "https": {
-        let [byteArray, contentType] = await lazy.SearchUtils.fetchIcon(uri);
+        let [byteArray, contentType] = await lazy.SearchUtils.fetchIcon(
+          uri,
+          options.originAttributes
+        );
         if (byteArray.length > lazy.SearchUtils.MAX_ICON_SIZE) {
           lazy.logConsole.debug(
             `Rescaling icon for search engine ${this.name}.`
