@@ -26,11 +26,11 @@ struct GetCompositeConfigCommand;
 struct GetCompositeViewCommand;
 
 impl Command for PingCommand {
-    fn descriptor(&self) -> &'static CommandDescriptor {
-        &CommandDescriptor {
+    fn descriptor(&self) -> CommandDescriptor {
+        CommandDescriptor {
             name: "ping",
             help: "Test connection to specified host",
-            alias: None,
+            ..Default::default()
         }
     }
 
@@ -50,11 +50,12 @@ impl Command for PingCommand {
 }
 
 impl Command for GenerateFrameCommand {
-    fn descriptor(&self) -> &'static CommandDescriptor {
-        &CommandDescriptor {
+    fn descriptor(&self) -> CommandDescriptor {
+        CommandDescriptor {
             name: "generate-frame",
             help: "Generate and render one frame",
             alias: Some("f"),
+            ..Default::default()
         }
     }
 
@@ -74,11 +75,12 @@ impl Command for GenerateFrameCommand {
 }
 
 impl Command for ToggleProfilerCommand {
-    fn descriptor(&self) -> &'static CommandDescriptor {
-        &CommandDescriptor {
+    fn descriptor(&self) -> CommandDescriptor {
+        CommandDescriptor {
             name: "toggle-profiler",
             help: "Toggle the on-screen profiler overlay",
             alias: Some("p"),
+            ..Default::default()
         }
     }
 
@@ -108,11 +110,11 @@ impl Command for ToggleProfilerCommand {
 }
 
 impl Command for GetSpatialTreeCommand {
-    fn descriptor(&self) -> &'static CommandDescriptor {
-        &CommandDescriptor {
+    fn descriptor(&self) -> CommandDescriptor {
+        CommandDescriptor {
             name: "get-spatial-tree",
             help: "Print the current spatial tree to console",
-            alias: None,
+            ..Default::default()
         }
     }
 
@@ -138,11 +140,11 @@ impl Command for GetSpatialTreeCommand {
 }
 
 impl Command for GetCompositeConfigCommand {
-    fn descriptor(&self) -> &'static CommandDescriptor {
-        &CommandDescriptor {
+    fn descriptor(&self) -> CommandDescriptor {
+        CommandDescriptor {
             name: "get-composite-cfg",
             help: "Print the current compositing config to the console",
-            alias: None,
+            ..Default::default()
         }
     }
 
@@ -168,11 +170,11 @@ impl Command for GetCompositeConfigCommand {
 }
 
 impl Command for GetCompositeViewCommand {
-    fn descriptor(&self) -> &'static CommandDescriptor {
-        &CommandDescriptor {
+    fn descriptor(&self) -> CommandDescriptor {
+        CommandDescriptor {
             name: "get-composite-view",
             help: "Print the current compositing config to the console",
-            alias: None,
+            ..Default::default()
         }
     }
 
