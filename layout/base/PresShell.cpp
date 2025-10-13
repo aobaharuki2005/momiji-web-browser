@@ -12035,7 +12035,7 @@ nsIFrame* PresShell::GetAbsoluteContainingBlock(nsIFrame* aFrame) {
       aFrame, nsCSSFrameConstructor::ABS_POS);
 }
 
-nsIFrame* PresShell::GetAnchorPosAnchor(
+const nsIFrame* PresShell::GetAnchorPosAnchor(
     const nsAtom* aName, const nsIFrame* aPositionedFrame) const {
   MOZ_ASSERT(aName);
   MOZ_ASSERT(mLazyAnchorPosAnchorChanges.IsEmpty());
@@ -12223,7 +12223,8 @@ PresShell::AnchorPosUpdateResult PresShell::UpdateAnchorPosLayout() {
   return result;
 }
 
-static ScrollContainerFrame* FindScrollContainerFrameOf(nsIFrame* aFrame) {
+static ScrollContainerFrame* FindScrollContainerFrameOf(
+    const nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame, "NULL frame for FindScrollContainerFrameOf()");
   auto* parent = aFrame->GetParent();
   return nsLayoutUtils::GetNearestScrollContainerFrame(
@@ -12232,7 +12233,7 @@ static ScrollContainerFrame* FindScrollContainerFrameOf(nsIFrame* aFrame) {
 }
 
 static bool UnderScrollContainer(nsIFrame* aFrame,
-                                 ScrollContainerFrame* aScrollContainer) {
+                                 const ScrollContainerFrame* aScrollContainer) {
   MOZ_ASSERT(aFrame);
   MOZ_ASSERT(aScrollContainer);
   return aFrame == aScrollContainer ||
