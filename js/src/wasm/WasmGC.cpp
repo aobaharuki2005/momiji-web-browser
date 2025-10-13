@@ -46,7 +46,8 @@ using namespace js::wasm;
 bool wasm::CreateStackMapForFunctionEntryTrap(
     const wasm::ArgTypeVector& argTypes, const RegisterOffsets& trapExitLayout,
     size_t trapExitLayoutWords, size_t nBytesReservedBeforeTrap,
-    size_t nInboundStackArgBytes, wasm::StackMap** result) {
+    size_t nInboundStackArgBytes, wasm::StackMaps& stackMaps,
+    wasm::StackMap** result) {
   // Ensure this is defined on all return paths.
   *result = nullptr;
 
@@ -82,8 +83,7 @@ bool wasm::CreateStackMapForFunctionEntryTrap(
   }
 #endif
 
-  wasm::StackMap* stackMap =
-      wasm::StackMap::create(nTotalBytes / sizeof(void*));
+  wasm::StackMap* stackMap = stackMaps.create(nTotalBytes / sizeof(void*));
   if (!stackMap) {
     return false;
   }
@@ -329,7 +329,7 @@ void StackMaps::checkInvariants(const uint8_t* base) const {
 #ifdef DEBUG
   // Chech that each entry points from the stackmap structure points
   // to a plausible instruction.
-  for (auto iter = mapping_.iter(); !iter.done(); iter.next()) {
+  for (auto iter = codeOffsetToStackMap_.iter(); !iter.done(); iter.next()) {
     MOZ_ASSERT(IsPlausibleStackMapKey(base + iter.get().key()),
                "wasm stackmap does not reference a valid insn");
   }

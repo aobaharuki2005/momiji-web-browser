@@ -979,10 +979,8 @@ class LifoAlloc {
 
   void release(Mark mark);
 
- private:
   void cancelMark(Mark mark) { markCount--; }
 
- public:
   void releaseAll() {
     MOZ_ASSERT(!markCount);
 
