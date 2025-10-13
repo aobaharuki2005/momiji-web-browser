@@ -373,21 +373,11 @@ class WindowGlobalTargetActor extends BaseTargetActor {
       writable: true,
     });
 
-    // When this target tracks only one WindowGlobal, set a fixed innerWindowId and window,
+    // When this target tracks only one WindowGlobal, set a fixed innerWindowId,
     // so that it can easily be read safely while the related WindowGlobal is being destroyed.
     if (this.followWindowGlobalLifeCycle) {
       Object.defineProperty(this, "innerWindowId", {
         value: this.innerWindowId,
-        configurable: false,
-        writable: false,
-      });
-      Object.defineProperty(this, "window", {
-        value: this.window,
-        configurable: false,
-        writable: false,
-      });
-      Object.defineProperty(this, "chromeEventHandler", {
-        value: this.chromeEventHandler,
         configurable: false,
         writable: false,
       });
@@ -471,10 +461,23 @@ class WindowGlobalTargetActor extends BaseTargetActor {
   _targetScopedActorPool = null;
 
   /**
-   * A EventTarget object on which to listen for 'DOMWindowCreated' and 'pageshow' events.
+   * An object on which listen for DOMWindowCreated and pageshow events.
    */
   get chromeEventHandler() {
     return getDocShellChromeEventHandler(this.docShell);
+  }
+
+  /**
+   * Getter for the nsIMessageManager associated to the window global.
+   */
+  get messageManager() {
+    try {
+      return this.docShell.messageManager;
+    } catch (e) {
+      // In some cases we can't get a docshell.  We just have no message manager
+      // then,
+      return null;
+    }
   }
 
   /**

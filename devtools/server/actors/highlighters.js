@@ -48,7 +48,7 @@ const registerHighlighter = (typeName, modulePath) => {
  * CustomHighlighterActor is a generic Actor that instantiates a custom implementation of
  * a highlighter class given its type name which must be registered in `highlighterTypes`.
  * CustomHighlighterActor proxies calls to methods of the highlighter class instance:
- * constructor(nargetActor), show(node, options), hide(), destroy()
+ * constructor(targetActor), show(node, options), hide(), destroy()
  */
 exports.CustomHighlighterActor = class CustomHighligherActor extends Actor {
   /**
@@ -308,9 +308,7 @@ class HighlighterEnvironment extends EventEmitter {
     if (this._targetActor && this._targetActor.isRootActor) {
       return this.window;
     }
-    return (
-      this._targetActor?.chromeEventHandler || this.docShell.chromeEventHandler
-    );
+    return this.docShell && this.docShell.chromeEventHandler;
   }
 
   relayTargetEvent(name, data) {
