@@ -3163,25 +3163,14 @@ void SVGTextFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
     return;
   }
 
-  nsPresContext* presContext = PresContext();
+  if (IsSubtreeDirty()) {
+    return;
+  }
 
   if (HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
-    // If we are in a canvas DrawWindow call that used the
-    // DRAWWINDOW_DO_NOT_FLUSH flag, then we may still have out
-    // of date frames.  Just don't paint anything if they are
-    // dirty.
-    if (presContext->PresShell()->InDrawWindowNotFlushing() &&
-        IsSubtreeDirty()) {
-      return;
-    }
     // Text frames inside <clipPath>, <mask>, etc. will never have had
     // ReflowSVG called on them, so call UpdateGlyphPositioning to do this now.
     UpdateGlyphPositioning();
-  } else if (IsSubtreeDirty()) {
-    // If we are asked to paint before reflow has recomputed mPositions etc.
-    // directly via PaintSVG, rather than via a display list, then we need
-    // to bail out here too.
-    return;
   }
 
   const float epsilon = 0.0001;
@@ -3203,6 +3192,7 @@ void SVGTextFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
   // SVG frames' PaintSVG methods paint in CSS px, but normally frames paint in
   // dev pixels. Here we multiply a CSS-px-to-dev-pixel factor onto aTransform
   // so our non-SVG nsTextFrame children paint correctly.
+  nsPresContext* presContext = PresContext();
   auto auPerDevPx = presContext->AppUnitsPerDevPixel();
   float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(auPerDevPx);
   gfxMatrix canvasTMForChildren = aTransform;
