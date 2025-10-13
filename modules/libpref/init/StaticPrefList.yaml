@@ -7974,7 +7974,11 @@
  # Width of WebRender tile size
 - name: gfx.webrender.picture-tile-width
   type: RelaxedAtomicInt32
+#if defined(XP_WIN)
+  value: 512
+#else
   value: 1024
+#endif
   mirror: always
 
  # Width of WebRender tile size
