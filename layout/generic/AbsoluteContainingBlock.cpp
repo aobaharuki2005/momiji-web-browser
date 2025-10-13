@@ -1036,30 +1036,10 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
                                border.ConvertTo(wm, outerWM).BStart(wm)
                          : NS_UNCONSTRAINEDSIZE;
 
-    // If |aDelegatingFrame| is ViewportFrame, the parent reflow input is also
-    // |mCBReflowInput| of |kidReflowInput|. When initializing |kidReflowInput|,
-    // we use |logicalCBSize|, instead of the computed size of |mCBReflowInput|,
-    // if the cb size is not NS_UNCONSTRAINEDSIZE. However, in
-    // ReflowInput::CalculateHypotheticalPosition(), we may use the computed
-    // size of |mCBReflowInput| to calculate the hypothetical position, so here,
-    // we are trying to update the cb reflow input for kidReflowInput to match
-    // the size of |logicalCBSize|.
-    //
-    // FIXME: Bug 1983345. We may not need this if all the init functions in
-    // ReflowInput use the customized containing block rect (if any), instead of
-    // using the size of |mCBReflowInput| to do calculation.
-    Maybe<ReflowInput> parentReflowInput;
-    if (const ViewportFrame* viewport = do_QueryFrame(aDelegatingFrame)) {
-      parentReflowInput.emplace(aReflowInput);
-      // This function tweaks the computed inline size, computed block size, and
-      // available inline size of the input reflow input by scrollbars.
-      Unused << viewport->AdjustReflowInputForScrollbars(
-          parentReflowInput.ref());
-    }
-    ReflowInput kidReflowInput(
-        aPresContext, parentReflowInput.refOr(aReflowInput), aKidFrame,
-        LogicalSize(wm, availISize, availBSize), Some(logicalCBSize), initFlags,
-        {}, {}, aAnchorPosReferenceData);
+    ReflowInput kidReflowInput(aPresContext, aReflowInput, aKidFrame,
+                               LogicalSize(wm, availISize, availBSize),
+                               Some(logicalCBSize), initFlags, {}, {},
+                               aAnchorPosReferenceData);
 
     if (nscoord kidAvailBSize = kidReflowInput.AvailableBSize();
         kidAvailBSize != NS_UNCONSTRAINEDSIZE) {
