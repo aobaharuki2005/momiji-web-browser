@@ -7816,16 +7816,10 @@ nsIWidget* nsContentUtils::WidgetForDocument(const Document* aDocument) {
 
 nsIWidget* nsContentUtils::WidgetForContent(const nsIContent* aContent) {
   nsIFrame* frame = aContent->GetPrimaryFrame();
-  if (frame) {
-    frame = nsLayoutUtils::GetDisplayRootFrame(frame);
-
-    nsView* view = frame->GetView();
-    if (view) {
-      return view->GetWidget();
-    }
+  if (!frame) {
+    return nullptr;
   }
-
-  return nullptr;
+  return frame->GetNearestWidget();
 }
 
 WindowRenderer* nsContentUtils::WindowRendererForContent(
@@ -7840,11 +7834,9 @@ WindowRenderer* nsContentUtils::WindowRendererForContent(
 
 WindowRenderer* nsContentUtils::WindowRendererForDocument(
     const Document* aDoc) {
-  nsIWidget* widget = nsContentUtils::WidgetForDocument(aDoc);
-  if (widget) {
+  if (nsIWidget* widget = nsContentUtils::WidgetForDocument(aDoc)) {
     return widget->GetWindowRenderer();
   }
-
   return nullptr;
 }
 
@@ -9430,7 +9422,8 @@ nsIWidget* nsContentUtils::GetWidget(PresShell* aPresShell, nsPoint* aOffset) {
   if (!frame) {
     return nullptr;
   }
-  return frame->GetView()->GetNearestWidget(aOffset);
+  return aOffset ? frame->GetNearestWidget(*aOffset)
+                 : frame->GetNearestWidget();
 }
 
 int16_t nsContentUtils::GetButtonsFlagForButton(int32_t aButton) {
