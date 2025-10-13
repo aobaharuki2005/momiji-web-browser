@@ -240,7 +240,8 @@ class ObjectRealm {
   // All non-syntactic lexical environments in the realm. These are kept in a
   // map because when loading scripts into a non-syntactic environment, we
   // need to use the same lexical environment to persist lexical bindings.
-  using NonSyntacticLexialEnvironmentsMap = WeakMap<JSObject*, JSObject*>;
+  using NonSyntacticLexialEnvironmentsMap =
+      WeakMap<JSObject*, JSObject*, ZoneAllocPolicy>;
   js::UniquePtr<NonSyntacticLexialEnvironmentsMap>
       nonSyntacticLexicalEnvironments_;
 
@@ -253,7 +254,7 @@ class ObjectRealm {
 
   // Keep track of the metadata objects which can be associated with each JS
   // object. Both keys and values are in this realm.
-  using ObjectMetadataTable = WeakMap<JSObject*, JSObject*>;
+  using ObjectMetadataTable = WeakMap<JSObject*, JSObject*, ZoneAllocPolicy>;
   js::UniquePtr<ObjectMetadataTable> objectMetadataTable;
 
   using IteratorCache =
