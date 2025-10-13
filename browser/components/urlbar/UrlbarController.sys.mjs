@@ -93,10 +93,7 @@ export class UrlbarController {
     this._listeners = new Set();
     this._userSelectionBehavior = "none";
 
-    this.engagementEvent = new TelemetryEvent(
-      this,
-      options.eventTelemetryCategory
-    );
+    this.engagementEvent = new TelemetryEvent(this);
   }
 
   get NOTIFICATIONS() {
@@ -766,9 +763,8 @@ export class UrlbarController {
  * @see Events.yaml
  */
 class TelemetryEvent {
-  constructor(controller, category) {
+  constructor(controller) {
     this._controller = controller;
-    this._category = category;
     lazy.UrlbarPrefs.addObserver(this);
     this.#readPingPrefs();
     this._lastSearchDetailsForDisableSuggestTracking = null;
@@ -819,9 +815,6 @@ class TelemetryEvent {
       return;
     }
 
-    if (!this._category) {
-      return;
-    }
     if (!event) {
       console.error("Must always provide an event");
       return;
@@ -913,7 +906,7 @@ class TelemetryEvent {
   #internalRecord(event, details) {
     const startEventInfo = this._startEventInfo;
 
-    if (!this._category || !startEventInfo) {
+    if (!startEventInfo) {
       return;
     }
     if (

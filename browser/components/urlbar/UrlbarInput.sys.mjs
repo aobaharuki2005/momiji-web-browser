@@ -91,6 +91,9 @@ let px = number => number.toFixed(2) + "px";
 export class UrlbarInput {
   #allowBreakout = false;
   #breakoutBlockerCount = 0;
+  /**
+   * The source of the UrlbarInput for storing in events, e.g. `urlbar`, `searchbar`.
+   */
   #eventTelemetryCategory;
   #userTypedValue;
 
@@ -100,6 +103,7 @@ export class UrlbarInput {
    * @param {HTMLDivElement} options.textbox
    *   The container element.
    * @param {string} options.eventTelemetryCategory
+   *   The source of the UrlbarInput for storing in events, e.g. `urlbar`, `searchbar`.
    * @param {boolean} [options.isAddressbar]
    *   Whether this instance is meant to display the browser's current address,
    *   as opposed to being just a search input.
@@ -113,7 +117,6 @@ export class UrlbarInput {
     this.panel = this.textbox.querySelector(".urlbarView");
     this.controller = new lazy.UrlbarController({
       input: this,
-      eventTelemetryCategory,
       manager: isAddressbar ? null : lazy.SearchbarProvidersManager,
     });
     this.view = new lazy.UrlbarView(this);
