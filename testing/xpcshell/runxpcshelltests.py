@@ -767,6 +767,11 @@ class XPCShellTestThread(Thread):
                         del line["level"]
                 self.log_line(line)
             else:
+                # For text lines, replace text matching error patterns to avoid
+                # mozharness log parsing forcing an error job exit code
+                line = re.sub(
+                    r"ERROR: ((Address|Leak)Sanitizer)", r"ERROR (will retry): \1", line
+                )
                 # For text lines, we need to provide the timestamp that was
                 # recorded when appending the message to self.output_lines
                 self.log_line(line, time=timestamp)
