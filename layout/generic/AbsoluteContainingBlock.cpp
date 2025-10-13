@@ -850,11 +850,6 @@ struct MOZ_STACK_CLASS MOZ_RAII AutoFallbackStyleSetter {
 // XXX Optimize the case where it's a resize reflow and the absolutely
 // positioned child has the exact same size and position and skip the
 // reflow...
-
-// When bug 154892 is checked in, make sure that when
-// mChildListID == FrameChildListID::Fixed, the height is unconstrained.
-// since we don't allow replicated frames to split.
-
 void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     nsIFrame* aDelegatingFrame, nsPresContext* aPresContext,
     const ReflowInput& aReflowInput, const nsRect& aOriginalContainingBlockRect,
