@@ -371,7 +371,7 @@ ChromeUtils.defineLazyGetter(this, "gURLBar", () => {
   let urlbar = new UrlbarInput({
     textbox: document.getElementById("urlbar"),
     isAddressbar: true,
-    eventTelemetryCategory: "urlbar",
+    sapName: "urlbar",
   });
 
   let beforeFocusOrSelect = event => {

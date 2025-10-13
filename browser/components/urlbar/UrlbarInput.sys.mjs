@@ -92,9 +92,10 @@ export class UrlbarInput {
   #allowBreakout = false;
   #breakoutBlockerCount = 0;
   /**
-   * The source of the UrlbarInput for storing in events, e.g. `urlbar`, `searchbar`.
+   * The search access point name of the UrlbarInput for use with telemetry or
+   * logging, e.g. `urlbar`, `searchbar`.
    */
-  #eventTelemetryCategory;
+  #sapName;
   #userTypedValue;
 
   /**
@@ -102,13 +103,14 @@ export class UrlbarInput {
    *   The initial options for UrlbarInput.
    * @param {HTMLDivElement} options.textbox
    *   The container element.
-   * @param {string} options.eventTelemetryCategory
-   *   The source of the UrlbarInput for storing in events, e.g. `urlbar`, `searchbar`.
+   * @param {string} options.sapName
+   *   The search access point name of the UrlbarInput for use with telemetry or
+   *   logging, e.g. `urlbar`, `searchbar`.
    * @param {boolean} [options.isAddressbar]
    *   Whether this instance is meant to display the browser's current address,
    *   as opposed to being just a search input.
    */
-  constructor({ textbox, eventTelemetryCategory, isAddressbar = false }) {
+  constructor({ textbox, sapName, isAddressbar = false }) {
     this.textbox = textbox;
     this.isAddressbar = !!isAddressbar;
     this.window = this.textbox.ownerGlobal;
@@ -132,7 +134,7 @@ export class UrlbarInput {
     this._suppressStartQuery = false;
     this._suppressPrimaryAdjustment = false;
     this._untrimmedValue = "";
-    this.#eventTelemetryCategory = eventTelemetryCategory;
+    this.#sapName = sapName;
 
     this.QueryInterface = ChromeUtils.generateQI([
       "nsIObserver",
@@ -1205,7 +1207,7 @@ export class UrlbarInput {
     let openParams = {
       allowInheritPrincipal: false,
       globalHistoryOptions: {
-        triggeringSource: this.#eventTelemetryCategory,
+        triggeringSource: this.#sapName,
         triggeringSearchEngine: result.payload?.engine,
         triggeringSponsoredURL: result.payload?.isSponsored
           ? result.payload.url
@@ -1556,7 +1558,7 @@ export class UrlbarInput {
     if (result.payload.sendAttributionRequest) {
       lazy.PartnerLinkAttribution.makeRequest({
         targetURL: result.payload.url,
-        source: this.#eventTelemetryCategory,
+        source: this.#sapName,
         campaignID: Services.prefs.getStringPref(
           "browser.partnerlink.campaign.topsites"
         ),
@@ -2029,10 +2031,7 @@ export class UrlbarInput {
       // TODO: record SAP telemetry, see Bug 1961789.
     } else {
       url = searchEngine.searchForm;
-      lazy.BrowserSearchTelemetry.recordSearchForm(
-        searchEngine,
-        this.#eventTelemetryCategory
-      );
+      lazy.BrowserSearchTelemetry.recordSearchForm(searchEngine, this.#sapName);
     }
 
     this._lastSearchString = "";
@@ -2551,7 +2550,7 @@ export class UrlbarInput {
         return "urlbar-persisted";
       }
     }
-    return this.#eventTelemetryCategory;
+    return this.#sapName;
   }
 
   // Private methods below.
