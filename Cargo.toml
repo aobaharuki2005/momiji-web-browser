@@ -14,6 +14,7 @@ members = [
   "security/manager/ssl/osclientcerts",
   "security/manager/ssl/tests/unit/pkcs11testmodule",
   "security/manager/ssl/tests/unit/test_trust_anchors",
+  "security/manager/ssl/qwac_trust_anchors",
   "security/manager/ssl/trust_anchors",
   "security/mls/mls_gk",
   "testing/geckodriver",

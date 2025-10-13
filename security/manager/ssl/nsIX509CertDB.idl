@@ -368,4 +368,13 @@ interface nsIX509CertDB : nsISupports {
    */
   [must_use]
   nsIX509Cert getAndroidCertificateFromAlias(in AString alias);
+
+  /**
+   * Given a certificate and a list of other certificates that may be useful in
+   * path building, asynchronously determines whether or not the certificate in
+   * question is a 1-QWAC ("qualified website authentication certificate") as
+   * per ETSI TS 119 411-5 and related standards.
+   */
+  [implicit_jscontext]
+  Promise asyncVerify1QWAC(in nsIX509Cert cert, in Array<nsIX509Cert> collectedCerts);
 };
