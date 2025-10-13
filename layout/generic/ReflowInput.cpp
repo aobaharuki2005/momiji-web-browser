@@ -1553,7 +1553,7 @@ void ReflowInput::CalculateHypotheticalPosition(
     // When the containing block is the ViewportFrame, i.e. we are calculating
     // the static position for a fixed-positioned frame, we need to adjust the
     // origin to exclude the scrollbar or scrollbar-gutter area. The
-    // ViewportFrame's containing block rect is passed into
+    // ViewportFrame's containing block rect is adjusted in
     // AbsoluteContainingBlock::ReflowAbsoluteFrame(), and it will add the
     // rect's origin to the fixed-positioned frame's final position if needed.
     //

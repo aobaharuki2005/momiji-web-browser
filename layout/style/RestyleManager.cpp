@@ -985,9 +985,10 @@ static bool RecomputePosition(nsIFrame* aFrame) {
 
   ViewportFrame* viewport = do_QueryFrame(parentFrame);
   nsSize cbSize =
-      viewport ? viewport->AdjustReflowInputAsContainingBlock(parentReflowInput)
-                     .Size()
-               : aFrame->GetContainingBlock()->GetSize();
+      viewport
+          ? viewport->GetContainingBlockAdjustedForScrollbars(parentReflowInput)
+                .Size()
+          : aFrame->GetContainingBlock()->GetSize();
   const nsMargin& parentBorder =
       parentReflowInput.mStyleBorder->GetComputedBorder();
   cbSize -= nsSize(parentBorder.LeftRight(), parentBorder.TopBottom());
