@@ -73,13 +73,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "STRIP_ON_SHARE_CAN_DISABLE",
-  "privacy.query_stripping.strip_on_share.canDisable",
-  false
-);
-
 ChromeUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.UrlbarUtils.getLogger({ prefix: "Input" })
 );
@@ -3878,24 +3871,18 @@ export class UrlbarInput {
       }
       let controller =
         this.document.commandDispatcher.getControllerForCommand("cmd_copy");
-      // url bar is empty
-      if (!controller.isCommandEnabled("cmd_copy")) {
+      if (
+        !controller.isCommandEnabled("cmd_copy") ||
+        !this.#isClipboardURIValid()
+      ) {
         stripOnShare.setAttribute("hidden", true);
         return;
-      }
-      // selection is not a valid url
-      if (!this.#isClipboardURIValid()) {
-        stripOnShare.setAttribute("hidden", true);
-        return;
-      }
-      if (lazy.STRIP_ON_SHARE_CAN_DISABLE) {
-        if (!this.#canStrip()) {
-          stripOnShare.removeAttribute("hidden");
-          stripOnShare.setAttribute("disabled", true);
-          return;
-        }
       }
       stripOnShare.removeAttribute("hidden");
+      if (!this.#canStrip()) {
+        stripOnShare.setAttribute("disabled", true);
+        return;
+      }
       stripOnShare.removeAttribute("disabled");
     });
   }
