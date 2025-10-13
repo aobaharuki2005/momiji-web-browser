@@ -583,7 +583,7 @@ add_task(async function test_show_warning_when_text_is_long() {
   });
 
   await BrowserTestUtils.withNewTab(
-    "data:text/plain,hi".repeat(10000),
+    "data:text/plain,hello".repeat(10000),
     async () => {
       await SidebarController.show("viewGenaiChatSidebar");
 
@@ -596,8 +596,48 @@ add_task(async function test_show_warning_when_text_is_long() {
         return messageContainer.hasChildNodes();
       }, "Warning message shows because text is too long");
 
-      let events = Glean.genaiChatbot.lengthDisclaimer.testGetValue();
+      const events = Glean.genaiChatbot.lengthDisclaimer.testGetValue();
       Assert.equal(events.length, 1, "Warning message is shown");
+      Assert.equal(events[0].extra.length, 209984, "Has text maxlength");
+    }
+  );
+
+  Services.fog.testResetFOG();
+
+  await BrowserTestUtils.withNewTab(
+    "data:text/plain,hi".repeat(10000),
+    async () => {
+      const { document } = SidebarController.browser.contentWindow;
+      let messageContainer = document.getElementById("message-container");
+      const summarizeButton = document.getElementById("summarize-button");
+
+      const warningMessageShown =
+        await BrowserTestUtils.waitForMutationCondition(
+          document.getElementById("message-container"),
+          {
+            childList: true,
+            subtree: false,
+          },
+          () => {
+            const container = document.getElementById("message-container");
+
+            return (
+              !container.hidden &&
+              container.querySelectorAll("moz-message-bar").length === 1
+            );
+          }
+        );
+
+      summarizeButton.click();
+      await warningMessageShown;
+
+      await TestUtils.waitForCondition(() => {
+        const event = Glean.genaiChatbot.lengthDisclaimer.testGetValue();
+        return Array.isArray(event) && event.length === 1;
+      }, "New event is recorded");
+
+      let events = Glean.genaiChatbot.lengthDisclaimer.testGetValue();
+      Assert.equal(events.length, 1, "New Warning message is shown");
       Assert.equal(events[0].extra.type, "page_summarization", "Page type");
       Assert.equal(events[0].extra.length, 179984, "Has selection length");
       Assert.equal(events[0].extra.provider, "localhost", "With localhost");

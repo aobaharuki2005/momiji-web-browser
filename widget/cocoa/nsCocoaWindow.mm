@@ -975,11 +975,11 @@ void nsCocoaWindow::HandleMainThreadCATransaction() {
 }
 
 void nsCocoaWindow::CreateCompositor(int aWidth, int aHeight) {
-    MOZ_ASSERT(!mNativeLayerRootRemoteMacParent);
-    
-    // Ensure we are on the parent process.
     MOZ_ASSERT(XRE_IsParentProcess());
-    
+    if (mCompositorBridgeChild) {
+      [mChildView setUsingOMTCompositor:true];
+    }
+
     // We have some early exit cases. Create an exit scope so we call
     // our superclass implemenation in all code paths.
     auto completionScope =
@@ -994,22 +994,41 @@ void nsCocoaWindow::CreateCompositor(int aWidth, int aHeight) {
     //    compositor.
     // To clarify, we'll attempt to start the gpu process ourself, and
     // handle the error cases here.
-    
-  auto* pm = mozilla::gfx::GPUProcessManager::Get();
-  if (!pm) {
-    return;
-  }
 
-  // Ensure the GPU process has had a chance to start. The logic below
-  // will handle both success and error cases correctly, so we don't check an
-  // error code.
+  // Make sure the gfxPlatform is initialized, which is necessary to create
+  // the GPUProcessManager.
+  Unused << gfxPlatform::GetPlatform();
+  auto* pm = mozilla::gfx::GPUProcessManager::Get();
+  MOZ_ASSERT(
+      pm, "Getting the gfxPlatform should have created the GPUProcessManager.");
+
+  // Ensure the GPU process has had a chance to start. The logic in
+  // GetCompositorWidgetInitData will handle both success and error cases
+  // correctly, so we don't check an error code.
   pm->EnsureGPUReady();
+  // Do the rest of the compositor setup.
+  nsBaseWidget::CreateCompositor(aWidth, aHeight);
+}
+
+void nsCocoaWindow::GetCompositorWidgetInitData(
+    mozilla::widget::CompositorWidgetInitData* aInitData) {
+  // If we already have an mNativeLayerRootRemoteMacParent, close it first.
+  // This happens when we retry after the previous compositor session failed
+  // to be created.
+  if (RefPtr<NativeLayerRootRemoteMacParent> actor =
+          std::move(mNativeLayerRootRemoteMacParent)) {
+    MOZ_ASSERT(CompositorThread());
+    CompositorThread()->Dispatch(
+        NewRunnableMethod("NativeLayerRootRemoteMacParent::Close", actor,
+                          &NativeLayerRootRemoteMacParent::Close));
+  }
 
   // Create NativeLayerRemoteMac endpoints. The "parent" endpoint will
   // always connect to the parent process. The "child" endpoint will
   // connect to the gpu process, if it exists, otherwise the parent
   // process. Either way, the remaining code will bind the parent endpoint
   // on the parent process compositor thread.
+  auto* pm = mozilla::gfx::GPUProcessManager::Get();
   mozilla::ipc::EndpointProcInfo gpuProcessInfo = pm->GPUEndpointProcInfo();
 
   mozilla::ipc::EndpointProcInfo childProcessInfo =
@@ -1018,47 +1037,50 @@ void nsCocoaWindow::CreateCompositor(int aWidth, int aHeight) {
           : mozilla::ipc::EndpointProcInfo::Current();
 
   mozilla::ipc::Endpoint<PNativeLayerRemoteParent> parentEndpoint;
+  mozilla::ipc::Endpoint<PNativeLayerRemoteChild> childEndpoint;
   auto rv = PNativeLayerRemote::CreateEndpoints(
       mozilla::ipc::EndpointProcInfo::Current(), childProcessInfo,
-      &parentEndpoint, &mChildEndpoint);
-    MOZ_ASSERT(parentEndpoint.IsValid());
-    MOZ_ASSERT(mChildEndpoint.IsValid());
-    
-    if (NS_SUCCEEDED(rv)) {
-        // Create our mNativeLayerRootRemoteMacParent.
-        mNativeLayerRootRemoteMacParent =
-        new NativeLayerRootRemoteMacParent(mNativeLayerRoot);
-        
-        // Prepare the paramters to call FinishCreateCompositor.
-        RefPtr<NativeLayerRootRemoteMacParent> nativeLayerRemoteParent(
-                                                                       mNativeLayerRootRemoteMacParent);
-        
-        // We want the rest to run on the compositor thread.
-        MOZ_ASSERT(CompositorThread());
-        CompositorThread()->Dispatch(NewRunnableFunction(
-                                                         "nsCocoaWindow::FinishCreateCompositor",
-                                                         &nsCocoaWindow::FinishCreateCompositor, aWidth, aHeight,
-                                                         std::move(parentEndpoint), nativeLayerRemoteParent));
-    }
-}
+      &parentEndpoint, &childEndpoint);
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+  MOZ_ASSERT(parentEndpoint.IsValid());
+  MOZ_ASSERT(childEndpoint.IsValid());
+  
+  // Create our mNativeLayerRootRemoteMacParent.
+  RefPtr<NativeLayerRootRemoteMacParent> nativeLayerRemoteParent =
+  new NativeLayerRootRemoteMacParent(mNativeLayerRoot);
+  
+  // Bind the parent endpoint compositor thread.
+  MOZ_ASSERT(CompositorThread());
 
-/* static */
-void nsCocoaWindow::FinishCreateCompositor(
-                                           int aWidth, int aHeight,
-                                           mozilla::ipc::Endpoint<mozilla::layers::PNativeLayerRemoteParent>&&
-                                           aParentEndpoint,
-                                           RefPtr<NativeLayerRootRemoteMacParent> aNativeLayerRootRemoteMacParent) {
-    MOZ_ASSERT(aNativeLayerRootRemoteMacParent);
-    MOZ_ALWAYS_TRUE(aParentEndpoint.Bind(aNativeLayerRootRemoteMacParent));
-    // If this Bind fails, there's not much we can do, except signal somehow
-    // that we want to retry with an in-process compositor.
-    
-    // If everything has gone well, the mChildEndpoint will be used in
-    // GetCompositorWidgetInitData, to send the endpoint to the compositor
-    // widget. Later, the render thread will bind a NativeLayerRemoteMacChild
-    // to the child side of the endpoint. Once that is done, the compositor
-    // widget child actor can send messages to our parent actor, and we can
-    // update the real mNativeLayerRoot with the GPU surfaces.
+  Monitor monitor("nsCocoaWindow::GetCompositorWidgetInitData");
+
+  bool didBindParentEndpoint = false;
+
+  CompositorThread()->Dispatch(NS_NewRunnableFunction(
+      "nsCocoaWindow::GetCompositorWidgetInitData bind endpoint", [&]() {
+       // Bind the endpoint. This has to happen before the child endpoint is
+       // sent to the GPU process.
+       MOZ_ALWAYS_TRUE(parentEndpoint.Bind(nativeLayerRemoteParent));
+       MonitorAutoLock lock(monitor);
+       didBindParentEndpoint = true;
+       lock.Notify();
+  }));
+
+  // Block until the parent endpoint is bound, so that the childEndpoint we
+  // return in our CompositorWidgetInitData is ready to be sent to the GPU
+  // process.
+  {
+    MonitorAutoLock lock(monitor);
+    while (!didBindParentEndpoint) {
+      lock.Wait();
+    }
+  }
+
+  auto deviceIntRect = GetClientBounds();
+  *aInitData = mozilla::widget::CocoaCompositorWidgetInitData(
+      deviceIntRect.Size(), std::move(childEndpoint));
+
+  mNativeLayerRootRemoteMacParent = std::move(nativeLayerRemoteParent);
 }
 
 void nsCocoaWindow::DestroyCompositor() {
@@ -1077,6 +1099,31 @@ void nsCocoaWindow::DestroyCompositor() {
   nsBaseWidget::DestroyCompositor();
 }
 
+void nsCocoaWindow::NotifyCompositorSessionLost(
+    mozilla::layers::CompositorSession* aSession) {
+  // The GPU process has crashed.
+  //
+  // Trigger a repaint of this window.
+  // Without this, WebRender won't receive a display list for this
+  // window until something else triggers a parent-side repaint. So tab
+  // contents would remain frozen until the user moves the mouse over a
+  // UI element, for example.
+  //
+  // The Windows equivalent to this code is InvalidateWindowForDeviceReset.
+  //
+  // We wait for a short time before the repaint in order to avoid
+  // flashing tab content - if we were to trigger the parent-side paint
+  // immediately, the composite would briefly hide the tab contents because
+  // the new compositor won't have a display list for the tab yet.
+  const double kTriggerPaintDelayAfterGpuProcessCrash = 0.4;  // 400ms
+  [mChildView performSelector:@selector(markLayerForDisplay)
+                   withObject:nil
+                   afterDelay:kTriggerPaintDelayAfterGpuProcessCrash];
+
+  nsBaseWidget::NotifyCompositorSessionLost(aSession);
+
+}
+
 void nsCocoaWindow::SetCompositorWidgetDelegate(
     mozilla::widget::CompositorWidgetDelegate* aDelegate) {
   if (aDelegate) {
@@ -1087,13 +1134,6 @@ void nsCocoaWindow::SetCompositorWidgetDelegate(
   } else {
     mCompositorWidgetDelegate = nullptr;
   }
-}
-
-void nsCocoaWindow::GetCompositorWidgetInitData(
-    mozilla::widget::CompositorWidgetInitData* aInitData) {
-  auto deviceIntRect = GetClientBounds();
-  *aInitData = mozilla::widget::CocoaCompositorWidgetInitData(
-      deviceIntRect.Size(), std::move(mChildEndpoint));
 }
 
 mozilla::layers::CompositorBridgeChild*
@@ -8077,6 +8117,15 @@ static NSImage* GetMenuMaskImage() {
     return;
   }
   NSView* wrapper = [&]() -> NSView* {
+    if (@available(macOS 26.0, *)) {
+      if (aStyle == WindowShadow::Menu) {
+        // Menus on macOS 26 use glass instead of vibrancy.
+        auto* effectView =
+            [[NSGlassEffectView alloc] initWithFrame:self.contentView.frame];
+        effectView.cornerRadius = 12.0f;
+        return effectView;
+      }
+    }
     if (aStyle == WindowShadow::Menu || aStyle == WindowShadow::Tooltip) {
       const bool isMenu = aStyle == WindowShadow::Menu;
       auto* effectView =
@@ -8330,6 +8379,39 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   }
 }
 
+- (void)updateTitlebarTransparency {
+  if (!nsCocoaFeatures::OnYosemiteOrLater()) {
+    return;
+  }
+
+  if (self.drawsContentsIntoWindowFrame) {
+    // Hide the titlebar if we are drawing into it
+    if ([self respondsToSelector:@selector(setTitlebarAppearsTransparent:)]) {
+      self.titlebarAppearsTransparent = true;
+    }
+    return;
+  }
+
+  if (@available(macOS 26.0, *)) {
+    // On macOS 26, the titlebar must be transparent to hide the separator.
+    // This does not affect the titlebar background on macOS 26, as it
+    // already matches the window background even when not transparent.
+    if (self.titlebarSeparatorStyle == NSTitlebarSeparatorStyleNone) {
+      self.titlebarAppearsTransparent = true;
+      return;
+    }
+  }
+
+  if ([self respondsToSelector:@selector(setTitlebarAppearsTransparent:)]) {
+    // Show the titlebar otherwise.
+    self.titlebarAppearsTransparent = false;
+  }
+}
+
+- (void)setTitlebarSeparatorStyle:(NSTitlebarSeparatorStyle)aStyle {
+  [super setTitlebarSeparatorStyle:aStyle];
+  [self updateTitlebarTransparency];
+}
 
 - (BOOL)respondsToSelector:(SEL)aSelector {
   // Claim the window doesn't respond to this so that the system
@@ -8735,8 +8817,6 @@ static CGFloat DefaultTitlebarHeight() {
   [super setDrawsContentsIntoWindowFrame:aState];
   if (stateChanged && [self.delegate isKindOfClass:[WindowDelegate class]]) {
    if ([self respondsToSelector:@selector(setTitlebarAppearsTransparent:)]) {
-    // Hide the titlebar if we are drawing into it
-    self.titlebarAppearsTransparent = aState;
     self.titleVisibility = aState ? NSWindowTitleHidden : NSWindowTitleVisible;
     }
     // Here we extend / shrink our mainChildView.

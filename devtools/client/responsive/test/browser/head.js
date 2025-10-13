@@ -874,7 +874,7 @@ async function setTouchAndMetaViewportSupport(ui, value) {
   await promiseContentReflow(ui);
 }
 
-// This function checks that zoom, layout viewport width and height
+// This function checks that zoom, the initial containing block width and height
 // are all as expected.
 async function testViewportZoomWidthAndHeight(msg, ui, zoom, width, height) {
   if (typeof zoom !== "undefined") {
@@ -887,8 +887,8 @@ async function testViewportZoomWidthAndHeight(msg, ui, zoom, width, height) {
   if (typeof width !== "undefined" || typeof height !== "undefined") {
     const innerSize = await spawnViewportTask(ui, {}, function () {
       return {
-        width: content.innerWidth,
-        height: content.innerHeight,
+        width: content.document.documentElement.clientWidth,
+        height: content.document.documentElement.clientHeight,
       };
     });
     if (typeof width !== "undefined") {
@@ -1002,4 +1002,33 @@ async function waitForDevicePixelRatio(
   }
 
   return dpx;
+}
+
+async function moveMouse(x, y) {
+  info(`Moving mouse to (${x}, ${y})`);
+  await BrowserTestUtils.synthesizeMouse(
+    "html",
+    x,
+    y,
+    { type: "mousemove", isSynthesized: false },
+    gBrowser.selectedBrowser
+  );
+}
+
+async function openEyeDropper(inspector, highlighterTestFront) {
+  info("Opening the eyedropper");
+  const toggleButton = inspector.panelDoc.querySelector(
+    "#inspector-eyedropper-toggle"
+  );
+  toggleButton.click();
+  await TestUtils.waitForCondition(() =>
+    highlighterTestFront.isEyeDropperVisible()
+  );
+}
+
+async function waitForEyedropperColor(highlighterTestFront, expectedColor) {
+  await waitFor(async () => {
+    const color = await highlighterTestFront.getEyeDropperColorValue();
+    return color === expectedColor;
+  }, `Wait for the eyedropper color to be ${expectedColor}`);
 }

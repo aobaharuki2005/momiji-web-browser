@@ -4,6 +4,7 @@ const CHROME_ONLY_TOGGLES = [
   "-moz-print-preview",
   "-moz-overlay-scrollbars",
   "-moz-mac-big-sur-theme",
+  "-moz-mac-tahoe-theme",
   "-moz-menubar-drag",
   "-moz-windows-accent-color-in-titlebar",
   "-moz-swipe-animation-enabled",
@@ -14,6 +15,7 @@ const CHROME_ONLY_TOGGLES = [
   "-moz-gtk-csd-close-button",
   "-moz-gtk-csd-reversed-placement",
   "-moz-panel-animations",
+  "-moz-native-theme",
 ];
 
 // Non-parseable queries can be tested directly in

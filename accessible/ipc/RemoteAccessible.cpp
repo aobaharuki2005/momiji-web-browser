@@ -1193,25 +1193,76 @@ Relation RemoteAccessible::RelationByType(RelationType aType) const {
     return rel;
   }
 
-  for (const auto& data : kRelationTypeAtoms) {
-    if (data.mType != aType ||
-        (data.mValidTag && TagName() != data.mValidTag)) {
-      continue;
+  auto GetDirectRelationFromCache =
+      [](const RemoteAccessible* aAcc,
+         RelationType aRelType) -> Maybe<const nsTArray<uint64_t>&> {
+    for (const auto& data : kRelationTypeAtoms) {
+      if (data.mType != aRelType ||
+          (data.mValidTag && aAcc->TagName() != data.mValidTag)) {
+        continue;
+      }
+
+      if (auto maybeIds = aAcc->mCachedFields->GetAttribute<nsTArray<uint64_t>>(
+              data.mAtom)) {
+        if (data.mAtom == nsGkAtoms::target) {
+          if (!maybeIds->IsEmpty() &&
+              !nsAccUtils::IsValidDetailsTargetForAnchor(
+                  aAcc->mDoc->GetAccessible(maybeIds->ElementAt(0)), aAcc)) {
+            continue;
+          }
+        }
+
+        // Relations can have several cached attributes in order of precedence,
+        // if one is found we use it.
+        return maybeIds;
+      }
     }
 
-    if (auto maybeIds =
-            mCachedFields->GetAttribute<nsTArray<uint64_t>>(data.mAtom)) {
-      rel.AppendIter(new RemoteAccIterator(*maybeIds, Document()));
-    }
-    // Each relation type has only one relevant cached attribute,
-    // so break after we've handled the attr for this type,
-    // even if we didn't find any targets.
-    break;
+    return Nothing();
+  };
+
+  if (auto maybeIds = GetDirectRelationFromCache(this, aType)) {
+    rel.AppendIter(new RemoteAccIterator(*maybeIds, Document()));
   }
 
   if (auto accRelMapEntry = mDoc->mReverseRelations.Lookup(ID())) {
-    if (auto reverseIdsEntry = accRelMapEntry.Data().Lookup(aType)) {
-      rel.AppendIter(new RemoteAccIterator(reverseIdsEntry.Data(), Document()));
+    // A list of candidate IDs that might have a relation of type aType
+    // pointing to us. We keep a list so we don't evaluate or add the same
+    // target more than once.
+    nsTArray<uint64_t> relationCandidateIds;
+    for (const auto& data : kRelationTypeAtoms) {
+      if (data.mReverseType != aType) {
+        continue;
+      }
+
+      auto reverseIdsEntry = accRelMapEntry.Data().Lookup(&data);
+      if (!reverseIdsEntry) {
+        continue;
+      }
+
+      for (auto id : *reverseIdsEntry) {
+        if (relationCandidateIds.Contains(id)) {
+          // If multiple attributes point to the same target, only
+          // include it once. Our assumption is that there is a 1:1
+          // relationship between relation and reverse relation *types*.
+          continue;
+        }
+        relationCandidateIds.AppendElement(id);
+
+        RemoteAccessible* relatedAcc = mDoc->GetAccessible(id);
+        if (!relatedAcc) {
+          continue;
+        }
+
+        if (auto maybeIds =
+                GetDirectRelationFromCache(relatedAcc, data.mType)) {
+          if (maybeIds->Contains(ID())) {
+            // The candidate target has the forward relation type pointing
+            // to us, so we can add it as a target.
+            rel.AppendTarget(relatedAcc);
+          }
+        }
+      }
     }
   }
 
@@ -1346,7 +1397,7 @@ nsTArray<bool> RemoteAccessible::PreProcessRelations(AccAttributes* aFields) {
             // the following assert, we don't have parity on implicit/explicit
             // rels and something is wrong.
             nsTArray<uint64_t>& reverseRelIDs =
-                reverseRels->LookupOrInsert(data.mReverseType);
+                reverseRels->LookupOrInsert(&data);
             //  There might be other reverse relations stored for this acc, so
             //  remove our ID instead of deleting the array entirely.
             DebugOnly<bool> removed = reverseRelIDs.RemoveElement(ID());
@@ -1379,9 +1430,8 @@ void RemoteAccessible::PostProcessRelations(const nsTArray<bool>& aToUpdate) {
       const nsTArray<uint64_t>& newIDs =
           *mCachedFields->GetAttribute<nsTArray<uint64_t>>(data.mAtom);
       for (uint64_t id : newIDs) {
-        nsTHashMap<RelationType, nsTArray<uint64_t>>& relations =
-            Document()->mReverseRelations.LookupOrInsert(id);
-        nsTArray<uint64_t>& ids = relations.LookupOrInsert(data.mReverseType);
+        auto& relations = Document()->mReverseRelations.LookupOrInsert(id);
+        nsTArray<uint64_t>& ids = relations.LookupOrInsert(&data);
         ids.AppendElement(ID());
       }
     }
@@ -1395,7 +1445,7 @@ void RemoteAccessible::PruneRelationsOnShutdown() {
   }
   for (auto const& data : kRelationTypeAtoms) {
     // Fetch the list of targets for this reverse relation
-    auto reverseTargetList = reverseRels->Lookup(data.mReverseType);
+    auto reverseTargetList = reverseRels->Lookup(&data);
     if (!reverseTargetList) {
       continue;
     }
@@ -1498,6 +1548,17 @@ void RemoteAccessible::DOMNodeClass(nsString& aClass) const {
 void RemoteAccessible::ScrollToPoint(uint32_t aScrollType, int32_t aX,
                                      int32_t aY) {
   Unused << mDoc->SendScrollToPoint(mID, aScrollType, aX, aY);
+}
+
+bool RemoteAccessible::IsScrollable() const {
+  if (RequestDomainsIfInactive(CacheDomain::ScrollPosition)) {
+    return false;
+  }
+  return mCachedFields && mCachedFields->HasAttribute(CacheKey::ScrollPosition);
+}
+
+bool RemoteAccessible::IsPopover() const {
+  return mCachedFields && mCachedFields->HasAttribute(CacheKey::PopupType);
 }
 
 #if !defined(XP_WIN)
@@ -2370,8 +2431,72 @@ bool RemoteAccessible::GetStringARIAAttr(nsAtom* aAttrName,
   if (RequestDomainsIfInactive(CacheDomain::ARIA)) {
     return false;
   }
+
+  if (aAttrName == nsGkAtoms::role) {
+    if (mCachedFields->GetAttribute(CacheKey::ARIARole, aAttrValue)) {
+      // Unknown, or multiple roles.
+      return true;
+    }
+
+    if (const nsRoleMapEntry* roleMap = ARIARoleMap()) {
+      if (roleMap->roleAtom != nsGkAtoms::_empty) {
+        // Non-empty rolemap, stringify it and return true.
+        roleMap->roleAtom->ToString(aAttrValue);
+        return true;
+      }
+    }
+  }
+
   if (auto attrs = GetCachedARIAAttributes()) {
     return attrs->GetAttribute(aAttrName, aAttrValue);
+  }
+
+  return false;
+}
+
+bool RemoteAccessible::ARIAAttrValueIs(nsAtom* aAttrName,
+                                       nsAtom* aAttrValue) const {
+  if (RequestDomainsIfInactive(CacheDomain::ARIA)) {
+    return false;
+  }
+
+  if (aAttrName == nsGkAtoms::role) {
+    nsAutoString roleStr;
+    if (mCachedFields->GetAttribute(CacheKey::ARIARole, roleStr)) {
+      return aAttrValue->Equals(roleStr);
+    }
+
+    if (const nsRoleMapEntry* roleMap = ARIARoleMap()) {
+      return roleMap->roleAtom == aAttrValue;
+    }
+  }
+
+  if (auto attrs = GetCachedARIAAttributes()) {
+    if (auto val = attrs->GetAttribute<RefPtr<nsAtom>>(aAttrName)) {
+      return *val == aAttrValue;
+    }
+  }
+
+  return false;
+}
+
+bool RemoteAccessible::HasARIAAttr(nsAtom* aAttrName) const {
+  if (RequestDomainsIfInactive(CacheDomain::ARIA)) {
+    return false;
+  }
+
+  if (aAttrName == nsGkAtoms::role) {
+    if (const nsRoleMapEntry* roleMap = ARIARoleMap()) {
+      if (roleMap->roleAtom != nsGkAtoms::_empty) {
+        return true;
+      }
+    }
+
+    return mCachedFields->HasAttribute(CacheKey::ARIARole);
+  }
+
+  if (auto attrs = GetCachedARIAAttributes()) {
+    return attrs->HasAttribute(aAttrName);
   }
 
   return false;

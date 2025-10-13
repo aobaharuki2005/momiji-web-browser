@@ -124,6 +124,7 @@ static const char sIntPrefs[][45] = {
     "ui.macLionTheme",
     "ui.macYosemiteTheme",
     "ui.macBigSurTheme",
+    "ui.macTahoeTheme",
     "ui.alertNotificationOrigin",
     "ui.scrollToClick",
     "ui.IMERawInputUnderlineStyle",
@@ -543,6 +544,7 @@ static constexpr struct {
     // need to re-layout.
     {"browser.theme.toolbar-theme"_ns, widget::ThemeChangeKind::AllBits},
     {"browser.theme.content-theme"_ns},
+    {"browser.theme.native-theme"_ns},
     // Affects PreferenceSheet, and thus styling.
     {"browser.anchor_color"_ns, widget::ThemeChangeKind::Style},
     {"browser.anchor_color.dark"_ns, widget::ThemeChangeKind::Style},
@@ -736,7 +738,7 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       COLOR(MozMacActiveSourceListSelection, 0x0a, 0x64, 0xdc)
       COLOR(MozMacTooltip, 0xf7, 0xf7, 0xf7)
       COLOR(MozAutofillBackground, 0xff, 0xfc, 0xc8)
-      COLOR(TargetTextBackground, 0xff, 0xeb, 0xcd)
+      COLOR(TargetTextBackground, 0xf5, 0xcc, 0x58)  // --yellow-20
       COLOR(TargetTextForeground, 0x00, 0x00, 0x00)
     default:
       break;
@@ -894,6 +896,12 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
       // This is the light version of this color, but darkened to have good
       // contrast with our white-ish FieldText.
       color = NS_RGB(0x72, 0x6c, 0x00);
+      break;
+    case ColorID::TargetTextBackground:
+      color = NS_RGB(0xff, 0xf4, 0xd0);  // --yellow-0
+      break;
+    case ColorID::TargetTextForeground:
+      color = NS_RGB(0x00, 0x00, 0x00);
       break;
     default:
       return Nothing();

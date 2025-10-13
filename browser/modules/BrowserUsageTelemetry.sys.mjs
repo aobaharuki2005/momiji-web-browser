@@ -122,6 +122,11 @@ const BROWSER_UI_CONTAINER_IDS = {
   pageActionPanel: "pageaction-panel",
   "unified-extensions-area": "unified-extensions-area",
   "allTabsMenu-allTabsView": "alltabs-menu",
+  // Historically, panels opened from a button on any toolbar have been
+  // considered part of the nav-bar. Due to a technical change these panels
+  // are no longer descendants of the nav-bar; this entry just preserves
+  // continuity for telemetry.
+  "customizationui-widget-panel": "nav-bar",
 
   // This should appear last as some of the above are inside the nav bar.
   "nav-bar": "nav-bar",
@@ -681,7 +686,7 @@ export let BrowserUsageTelemetry = {
       case "unload":
         this._unregisterWindow(event.target);
         break;
-      case TAB_RESTORING_TOPIC:
+      case TAB_RESTORING_TOPIC: {
         // We're restoring a new tab from a previous or crashed session.
         // We don't want to track the URIs from these tabs, so let
         // |URICountListener| know about them.
@@ -691,6 +696,7 @@ export let BrowserUsageTelemetry = {
         const { loadedTabCount } = getOpenTabsAndWinsCounts();
         this._recordTabCounts({ loadedTabCount });
         break;
+      }
     }
   },
 

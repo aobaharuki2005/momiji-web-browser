@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.utils
 
+import android.content.res.Configuration
 import androidx.core.content.edit
 import io.mockk.every
 import io.mockk.spyk
@@ -1042,9 +1043,63 @@ class SettingsTest {
     }
 
     @Test
-    fun `GIVEN composable toolbar is enabled WHEN querying the toolbar height THEN get the height of the composable toolbar`() {
+    fun `GIVEN top composable toolbar is enabled WHEN querying the toolbar height THEN get the height of the composable toolbar`() {
         val settings = spyk(settings)
         every { settings.shouldUseComposableToolbar } returns true
+        every { settings.toolbarPosition } returns ToolbarPosition.TOP
+
+        assertEquals(64, settings.browserToolbarHeight)
+    }
+
+    @Test
+    fun `GIVEN bottom composable toolbar is enabled and navigation bar is disabled WHEN querying the toolbar height THEN get the height of the composable toolbar`() {
+        val settings = spyk(settings)
+        every { settings.shouldUseComposableToolbar } returns true
+        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
+        every { settings.shouldUseExpandedToolbar } returns false
+
+        assertEquals(64, settings.browserToolbarHeight)
+    }
+
+    @Test fun `GIVEN bottom composable toolbar is enabled and navigation bar is enabled WHEN querying the toolbar height THEN get the height of the composable toolbar`() {
+        testContext.resources.configuration.apply {
+            screenHeightDp = 481
+            screenWidthDp = 599
+        }
+        val settings = spyk(settings)
+        every { settings.shouldUseComposableToolbar } returns true
+        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
+        every { settings.shouldUseExpandedToolbar } returns true
+
+        assertEquals(56, settings.browserToolbarHeight)
+    }
+
+    @Test
+    fun `GIVEN bottom composable toolbar is enabled and navigation bar is enabled but window is not tall enough WHEN querying the toolbar height THEN get the height of the composable toolbar`() {
+        testContext.resources.configuration.apply {
+            screenHeightDp = 479
+            screenWidthDp = 599
+        }
+        val settings = spyk(settings)
+
+        every { settings.shouldUseComposableToolbar } returns true
+        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
+        every { settings.shouldUseExpandedToolbar } returns true
+
+        assertEquals(64, settings.browserToolbarHeight)
+    }
+
+    @Test
+    fun `GIVEN bottom composable toolbar is enabled and navigation bar is enabled but window is too wide WHEN querying the toolbar height THEN get the height of the composable toolbar`() {
+        testContext.resources.configuration.apply {
+            screenHeightDp = 481
+            screenWidthDp = 601
+        }
+        val settings = spyk(settings)
+
+        every { settings.shouldUseComposableToolbar } returns true
+        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
+        every { settings.shouldUseExpandedToolbar } returns true
 
         assertEquals(64, settings.browserToolbarHeight)
     }
@@ -1055,129 +1110,6 @@ class SettingsTest {
         every { settings.shouldUseComposableToolbar } returns false
 
         assertEquals(56, settings.browserToolbarHeight)
-    }
-
-    @Test
-    fun `GIVEN the address bar and the microsurvey are shown at bottom WHEN getBottomToolbarHeight THEN returns the combined height`() {
-        val settings = spyk(settings)
-        every { settings.shouldUseComposableToolbar } returns false
-        every { settings.shouldShowMicrosurveyPrompt } returns true
-        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
-
-        val bottomToolbarHeight = settings.getBottomToolbarHeight()
-
-        assertEquals(187, bottomToolbarHeight)
-    }
-
-    @Test
-    fun `GIVEN the composable toolbar and the microsurvey are shown at bottom WHEN getBottomToolbarHeight THEN returns the combined height`() {
-        val settings = spyk(settings)
-        every { settings.shouldUseComposableToolbar } returns true
-        every { settings.shouldShowMicrosurveyPrompt } returns true
-        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
-
-        val bottomToolbarHeight = settings.getBottomToolbarHeight()
-
-        assertEquals(195, bottomToolbarHeight)
-    }
-
-    @Test
-    fun `GIVEN just the microsurvey is shown at bottom WHEN getBottomToolbarHeight THEN returns it's height`() {
-        val settings = spyk(settings)
-        every { settings.shouldShowMicrosurveyPrompt } returns true
-        every { settings.toolbarPosition } returns ToolbarPosition.TOP
-
-        val bottomToolbarHeight = settings.getBottomToolbarHeight()
-
-        assertEquals(131, bottomToolbarHeight)
-    }
-
-    @Test
-    fun `GIVEN just the addressbar is shown at bottom WHEN getBottomToolbarHeight THEN returns it's height`() {
-        val settings = spyk(settings)
-        every { settings.shouldUseComposableToolbar } returns false
-        every { settings.shouldShowMicrosurveyPrompt } returns false
-        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
-
-        val bottomToolbarHeight = settings.getBottomToolbarHeight()
-
-        assertEquals(56, bottomToolbarHeight)
-    }
-
-    @Test
-    fun `GIVEN just the composable toolbar shown at bottom WHEN getBottomToolbarHeight THEN returns it's height`() {
-        val settings = spyk(settings)
-        every { settings.shouldUseComposableToolbar } returns true
-        every { settings.shouldShowMicrosurveyPrompt } returns false
-        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
-
-        val bottomToolbarHeight = settings.getBottomToolbarHeight()
-
-        assertEquals(64, bottomToolbarHeight)
-    }
-
-    @Test
-    fun `GIVEN the address bar, navigation bar and the microsurvey are shown at bottom WHEN getBottomToolbarHeight THEN returns the combined height`() {
-        val settings = spyk(settings)
-        every { settings.shouldUseComposableToolbar } returns false
-        every { settings.shouldShowMicrosurveyPrompt } returns true
-        every { settings.shouldUseExpandedToolbar } returns true
-        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
-
-        val bottomToolbarHeight = settings.getBottomToolbarHeight()
-
-        assertEquals(247, bottomToolbarHeight)
-    }
-
-    @Test
-    fun `GIVEN the composable toolbar, navigation bar and the microsurvey are shown at bottom WHEN getBottomToolbarHeight THEN returns the combined height`() {
-        val settings = spyk(settings)
-        every { settings.shouldUseComposableToolbar } returns true
-        every { settings.shouldShowMicrosurveyPrompt } returns true
-        every { settings.shouldUseExpandedToolbar } returns true
-        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
-
-        val bottomToolbarHeight = settings.getBottomToolbarHeight()
-
-        assertEquals(255, bottomToolbarHeight)
-    }
-
-    @Test
-    fun `GIVEN navigation bar and microsurvey is shown at bottom WHEN getBottomToolbarHeight THEN returns the combined height`() {
-        val settings = spyk(settings)
-        every { settings.shouldShowMicrosurveyPrompt } returns true
-        every { settings.shouldUseExpandedToolbar } returns true
-        every { settings.toolbarPosition } returns ToolbarPosition.TOP
-
-        val bottomToolbarHeight = settings.getBottomToolbarHeight()
-
-        assertEquals(191, bottomToolbarHeight)
-    }
-
-    @Test
-    fun `GIVEN the addressbar and navigation bar is shown at bottom WHEN getBottomToolbarHeight THEN returns the combined height`() {
-        val settings = spyk(settings)
-        every { settings.shouldUseComposableToolbar } returns false
-        every { settings.shouldShowMicrosurveyPrompt } returns false
-        every { settings.shouldUseExpandedToolbar } returns true
-        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
-
-        val bottomToolbarHeight = settings.getBottomToolbarHeight()
-
-        assertEquals(116, bottomToolbarHeight)
-    }
-
-    @Test
-    fun `GIVEN the composable toolbar and navigation bar are shown at bottom WHEN getBottomToolbarHeight THEN returns the combined height`() {
-        val settings = spyk(settings)
-        every { settings.shouldUseComposableToolbar } returns true
-        every { settings.shouldShowMicrosurveyPrompt } returns false
-        every { settings.shouldUseExpandedToolbar } returns true
-        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
-
-        val bottomToolbarHeight = settings.getBottomToolbarHeight()
-
-        assertEquals(124, bottomToolbarHeight)
     }
 
     @Test

@@ -588,7 +588,7 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
                      dateHeader, true, isForeignAndNotAddon, mustBePartitioned,
                      storagePrincipalOriginAttributes.IsPrivateBrowsing(),
                      loadInfo->GetIsOn3PCBExceptionList(),
-                     CookieCommons::GetCurrentTimeFromChannel(aChannel));
+                     CookieCommons::GetCurrentTimeInUSecFromChannel(aChannel));
 
   if (!cookieParser.ContainsCookie()) {
     return NS_OK;

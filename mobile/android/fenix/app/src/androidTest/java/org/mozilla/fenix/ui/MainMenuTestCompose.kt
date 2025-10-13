@@ -250,7 +250,9 @@ class MainMenuTestCompose : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
+            verifyPageContent(genericURL.content)
         }.openThreeDotMenu(composeTestRule) {
+            verifyTryRecommendedExtensionButton()
         }.openExtensionsFromMainMenu {
             verifyRecommendedAddonsViewFromRedesignedMainMenu(composeTestRule)
         }
@@ -430,7 +432,7 @@ class MainMenuTestCompose : TestSetup() {
             openMoreMenu()
         }.clickSaveToCollectionButton {
         }.selectExistingCollection(collectionTitle) {
-            verifySnackBarText("Tab saved!")
+            verifySnackBarText("Tab saved")
         }.goToHomescreen(composeTestRule) {
         }.expandCollection(composeTestRule, collectionTitle) {
             verifyTabSavedInCollection(composeTestRule, firstTestPage.title)
@@ -629,7 +631,7 @@ class MainMenuTestCompose : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(testPage.url) {
             clickPageObject(MatcherHelper.itemWithText("PDF form file"))
-            clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
+            clickPageObject(itemWithResIdAndText("android:id/button2", "Cancel"))
         }.openThreeDotMenu(composeTestRule) {
         }.clickFindInPageButton {
             verifyFindInPageNextButton()

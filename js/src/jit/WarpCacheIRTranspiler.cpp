@@ -358,7 +358,6 @@ bool WarpCacheIRTranspiler::transpile(
 #undef DEFINE_OP
 
       default:
-        fprintf(stderr, "Unsupported op: %s\n", CacheIROpNames[size_t(op)]);
         MOZ_CRASH("Unsupported op");
     }
   } while (reader.more());

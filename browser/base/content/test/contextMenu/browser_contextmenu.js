@@ -469,6 +469,11 @@ add_task(async function test_image() {
         ...(Services.prefs.getBoolPref("browser.menu.showViewImageInfo", false)
           ? ["context-viewimageinfo", true]
           : []),
+        ...// The visual-search menu item is not shown on SVGs.
+        (selector != "#test-svg-image" &&
+        Services.prefs.getBoolPref("browser.search.visualSearch.featureGate")
+          ? ["context-visual-search", true]
+          : []),
         "---",
         null,
         "context-setDesktopBackground",
@@ -1306,6 +1311,9 @@ add_task(async function test_image_in_iframe() {
       ...(Services.prefs.getBoolPref("browser.menu.showViewImageInfo", false)
         ? ["context-viewimageinfo", true]
         : []),
+      ...(Services.prefs.getBoolPref("browser.search.visualSearch.featureGate")
+        ? ["context-visual-search", true]
+        : []),
       "---",
       null,
       "context-setDesktopBackground",
@@ -1916,6 +1924,9 @@ add_task(async function test_imagelink() {
       ...(Services.prefs.getBoolPref("browser.menu.showViewImageInfo", false)
         ? ["context-viewimageinfo", true]
         : []),
+      ...(Services.prefs.getBoolPref("browser.search.visualSearch.featureGate")
+        ? ["context-visual-search", true]
+        : []),
       "---",
       null,
       "context-setDesktopBackground",
@@ -2028,6 +2039,9 @@ add_task(async function test_longdesc() {
         : []),
       "context-viewimagedesc",
       true,
+      ...(Services.prefs.getBoolPref("browser.search.visualSearch.featureGate")
+        ? ["context-visual-search", true]
+        : []),
       "---",
       null,
       "context-setDesktopBackground",

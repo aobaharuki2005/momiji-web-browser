@@ -97,6 +97,15 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // If the GPU process is enabled but has not yet been launched then this will
   // launch the process. If that is not desired then check that return value of
   // Process() is non-null before calling.
+  //
+  // Returns:
+  // - NS_OK if compositing is ready, in either the GPU process or the parent
+  // process, even if in shutdown.
+  // - NS_ERROR_ILLEGAL_DURING_SHUTDOWN if compositing is not ready, and we are
+  // in shutdown.
+  // - NS_ERROR_ABORT if compositing is not ready, we failed to make it ready
+  // under the previous configuration, and that the configuration may have
+  // changed. This is only returned when aRetryAfterFallback is false.
   nsresult EnsureGPUReady(bool aRetryAfterFallback = true);
 
   already_AddRefed<CompositorSession> CreateTopLevelCompositor(
@@ -231,6 +240,8 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   void OnPreferenceChange(const char16_t* aData);
   void ScreenInformationChanged();
 
+  bool IsGPUReady() const;
+
   bool CreateContentCompositorManager(
       mozilla::ipc::EndpointProcInfo aOtherProcess,
       dom::ContentParentId aChildId, uint32_t aNamespace,
@@ -284,6 +295,11 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   bool FallbackFromAcceleration(wr::WebRenderError aError,
                                 const nsCString& aMsg);
 
+  // Crashes the parent process if we are disabling the GPU process and we
+  // ever once had a stable GPU process. This is to avoid fallback into the
+  // parent when we know the configuration allows for the GPU process.
+  void MaybeCrashIfGpuProcessOnceStable();
+
   void ResetProcessStable();
 
   // Returns true if the composting pocess is currently considered to be stable.
@@ -314,7 +330,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 #endif
 
 #if defined(MOZ_WIDGET_ANDROID)
-  already_AddRefed<UiCompositorControllerChild> CreateUiCompositorController(
+  RefPtr<UiCompositorControllerChild> CreateUiCompositorController(
       nsBaseWidget* aWidget, const LayersId aId);
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
@@ -368,6 +384,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 
   uint32_t mUnstableProcessAttempts;
   uint32_t mTotalProcessAttempts;
+  uint32_t mLaunchProcessAttempts = 0;
   TimeStamp mProcessAttemptLastTime;
 
   nsTArray<RefPtr<RemoteCompositorSession>> mRemoteSessions;
@@ -384,6 +401,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   GPUProcessHost* mProcess;
   uint64_t mProcessToken;
   bool mProcessStable;
+  bool mProcessStableOnce = false;
   Maybe<wr::WebRenderError> mLastError;
   Maybe<nsCString> mLastErrorMsg;
   GPUChild* mGPUChild;

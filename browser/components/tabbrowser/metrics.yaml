@@ -433,6 +433,7 @@ tabgroup:
       - sthompson@mozilla.com
     bugs:
       - https://bugzil.la/1938401
+      - https://bugzil.la/1971241
     data_reviews:
       - https://bugzil.la/1938401
     data_sensitivity:
@@ -450,6 +451,7 @@ tabgroup:
       - delete
       - ungroup
       - move_window
+      - hover_preview
     expires: never
 
 

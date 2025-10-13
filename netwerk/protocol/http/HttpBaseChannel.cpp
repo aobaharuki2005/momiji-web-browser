@@ -21,6 +21,7 @@
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/CompactPair.h"
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/InputStreamLengthHelper.h"
@@ -394,7 +395,7 @@ nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
   }
 
   rv = gHttpHandler->AddStandardRequestHeaders(
-      &mRequestHead, isHTTPS, contentPolicyType,
+      &mRequestHead, aURI, isHTTPS, contentPolicyType,
       nsContentUtils::ShouldResistFingerprinting(this,
                                                  RFPTarget::HttpUserAgent));
   if (NS_FAILED(rv)) return rv;
@@ -1471,6 +1472,23 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
 
   LOG(("HttpBaseChannel::DoApplyContentConversions [this=%p]\n", this));
 
+#ifdef DEBUG
+  {
+    nsAutoCString contentEncoding;
+    nsresult rv =
+        mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
+    if (NS_SUCCEEDED(rv) && !contentEncoding.IsEmpty()) {
+      nsAutoCString newEncoding;
+      char* cePtr = contentEncoding.BeginWriting();
+      while (char* val = nsCRT::strtok(cePtr, HTTP_LWS ",", &cePtr)) {
+        if (strcmp(val, "dcb") == 0 || strcmp(val, "dcz") == 0) {
+          MOZ_ASSERT(LoadApplyConversion() && !LoadHasAppliedConversion());
+        }
+      }
+    }
+  }
+#endif
+
   if (!LoadApplyConversion()) {
     LOG(("not applying conversion per ApplyConversion\n"));
     return NS_OK;
@@ -1503,10 +1521,10 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
 
   char* cePtr = contentEncoding.BeginWriting();
   uint32_t count = 0;
+  bool removeEncodings = false;
   while (char* val = nsCRT::strtok(cePtr, HTTP_LWS ",", &cePtr)) {
     if (++count > 16) {
-      // That's ridiculous. We only understand 2 different ones :)
-      // but for compatibility with old code, we will just carry on without
+      // For compatibility with old code, we will just carry on without
       // removing the encodings
       LOG(("Too many Content-Encodings. Ignoring remainder.\n"));
       break;
@@ -1524,7 +1542,7 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
         return rv;
       }
 
-      LOG(("converter removed '%s' content-encoding\n", val));
+      LOG(("Adding converter for content-encoding '%s'", val));
       if (Telemetry::CanRecordPrereleaseData()) {
         int mode = 0;
         if (from.EqualsLiteral("gzip") || from.EqualsLiteral("x-gzip")) {
@@ -1536,13 +1554,42 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
           mode = 3;
         } else if (from.EqualsLiteral("zstd")) {
           mode = 4;
+        } else if (from.EqualsLiteral("dcb")) {
+          mode = 5;
+        } else if (from.EqualsLiteral("dcz")) {
+          mode = 6;
         }
         glean::http::content_encoding.AccumulateSingleSample(mode);
       }
+      if (from.EqualsLiteral("dcb") || from.EqualsLiteral("dcz")) {
+        MOZ_ASSERT(XRE_IsParentProcess());
+        removeEncodings = true;
+      }
       nextListener = converter;
     } else {
-      if (val) LOG(("Unknown content encoding '%s', ignoring\n", val));
+      if (val) {
+        LOG(("Unknown content encoding '%s'\n", val));
+      }
+      // we *should* return NS_ERROR_UNEXPECTED here, but that will break sites
+      // that use things like content-encoding: x-gzip, x-gzip (or any other
+      // weird encoding)
     }
+  }
+
+  // dcb and dcz encodings are removed when it's decompressed (always in
+  // the parent process).  However, in theory you could have
+  // Content-Encoding: dcb,gzip
+  // in which case we could pass it down to the content process as
+  // Content-Encoding: gzip.   We won't do that; we'll remove all compressors
+  // if we need to remove any.
+  // This double compression of course is silly, but supported by the spec.
+  if (removeEncodings) {
+    // if we have dcb or dcz, all content-encodings in the header should
+    // be removed as we're decompressing before the tee in the parent
+    // process
+    LOG(("Changing Content-Encoding from '%s' to ''", contentEncoding.get()));
+    // Can't use SetHeader; we need to overwrite the current value
+    rv = mResponseHead->SetHeaderOverride(nsHttp::Content_Encoding, ""_ns);
   }
   *aNewNextListener = do_AddRef(nextListener).take();
   return NS_OK;
@@ -2355,6 +2402,19 @@ HttpBaseChannel::GetIsMainDocumentChannel(bool* aValue) {
 NS_IMETHODIMP
 HttpBaseChannel::SetIsMainDocumentChannel(bool aValue) {
   StoreForceMainDocumentChannel(aValue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetIsUserAgentHeaderOutdated(bool* aValue) {
+  NS_ENSURE_ARG_POINTER(aValue);
+  *aValue = LoadIsUserAgentHeaderOutdated();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetIsUserAgentHeaderOutdated(bool aValue) {
+  StoreIsUserAgentHeaderOutdated(aValue);
   return NS_OK;
 }
 
@@ -6498,10 +6558,13 @@ void HttpBaseChannel::MaybeFlushConsoleReports() {
 void HttpBaseChannel::DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() {}
 
 bool HttpBaseChannel::Http3Allowed() const {
-  bool isDirectOrNoProxy =
-      mProxyInfo ? static_cast<nsProxyInfo*>(mProxyInfo.get())->IsDirect()
+  bool allowedProxyInfo =
+      mProxyInfo ? (static_cast<nsProxyInfo*>(mProxyInfo.get())->IsDirect() ||
+                    static_cast<nsProxyInfo*>(mProxyInfo.get())->IsHttp3Proxy())
                  : true;
-  return !mUpgradeProtocolCallback && isDirectOrNoProxy &&
+  // TODO: When mUpgradeProtocolCallback is not null, we should allow HTTP/3 for
+  // connect-udp.
+  return !mUpgradeProtocolCallback && allowedProxyInfo &&
          !(mCaps & NS_HTTP_BE_CONSERVATIVE) && !LoadBeConservative() &&
          LoadAllowHttp3();
 }

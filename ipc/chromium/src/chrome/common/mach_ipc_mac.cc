@@ -292,4 +292,111 @@ MachHandleProcessCheckIn(
 
   return Ok();
 }
+
+/* sorry nika, it's not working */
+/*
+class MachCheckInListener : public MessageLoopForIO::MachPortWatcher {
+ public:
+  MachCheckInListener(MachHandleProcessCheckInPromise::Private* promise,
+                      mozilla::UniqueMachReceiveRight endpoint, pid_t child_pid,
+                      std::vector<mozilla::UniqueMachSendRight> send_rights)
+      : promise_(promise),
+        child_pid_(child_pid),
+        endpoint_(std::move(endpoint)),
+        send_rights_(std::move(send_rights)) {}
+
+  // Start listening for a check-in - can |delete this|.
+  void Start(mozilla::TimeDuration timeout);
+
+ private:
+  void OnMachMessageReceived(mach_port_t port);
+  void OnMachSendPossible(mach_port_t, bool) { MOZ_ASSERT_UNREACHABLE(); }
+
+  // Complete the promise, and |delete this|.
+  void CompleteAndDelete(
+      const mozilla::Result<task_t, mozilla::ipc::LaunchError>& result);
+  void FailAndDelete(mozilla::StaticString aFunction) {
+    CompleteAndDelete(mozilla::Err(mozilla::ipc::LaunchError(aFunction)));
+  }
+
+  RefPtr<MachHandleProcessCheckInPromise::Private> promise_;
+  pid_t child_pid_ = -1;
+  mozilla::UniqueMachReceiveRight endpoint_;
+  MessageLoopForIO::MachPortWatchController watch_controller_;
+  nsCOMPtr<nsITimer> timeout_timer_;
+  std::vector<mozilla::UniqueMachSendRight> send_rights_;
+};
+
+void MachCheckInListener::Start(mozilla::TimeDuration timeout) {
+  mozilla::ipc::AssertIOThread();
+
+  // If a timeout was provided, start a timer.
+  if (timeout != mozilla::TimeDuration::Forever()) {
+    nsresult rv = NS_NewTimerWithCallback(
+        getter_AddRefs(timeout_timer_),
+        [this](nsITimer*) { FailAndDelete("MachCheckInListener TimedOut"); },
+        timeout, nsITimer::TYPE_ONE_SHOT, "MachCheckInListener"_ns,
+        XRE_GetAsyncIOEventTarget());
+    if (NS_FAILED(rv)) {
+      FailAndDelete("MachCheckIn: NewTimer");
+      return;
+    }
+  }
+
+  if (!MessageLoopForIO::current()->WatchMachReceivePort(
+          endpoint_.get(), &watch_controller_, this)) {
+    FailAndDelete("MachCheckIn: WatchMachPort");
+    return;
+  }
+}
+
+void MachCheckInListener::OnMachMessageReceived(mach_port_t port) {
+  mozilla::ipc::AssertIOThread();
+  MOZ_ASSERT(endpoint_.get() == port);
+
+  task_t task = MACH_PORT_NULL;
+  auto result =
+      MachHandleProcessCheckInSync(endpoint_.get(), child_pid_,
+                                   //timeout
+                                   0, send_rights_, &task);
+  CompleteAndDelete(result.map([&](const mozilla::Ok&) { return task; }));
+}
+
+void MachCheckInListener::CompleteAndDelete(
+    const mozilla::Result<task_t, mozilla::ipc::LaunchError>& result) {
+  mozilla::ipc::AssertIOThread();
+
+  if (result.isOk()) {
+    promise_->Resolve(result.inspect(), __func__);
+  } else {
+    promise_->Reject(result.inspectErr(), __func__);
+  }
+
+  watch_controller_.StopWatchingMachPort();
+  if (timeout_timer_) {
+    timeout_timer_->Cancel();
+  }
+
+  // SAFETY: MachCheckInListener can only be called by MessageLoopForIO or by a
+  // nsITimer callback. By cancelling both callbacks above, on the IPC I/O
+  // thread, we will never be called again.
+  delete this;
+}
+
+}  // namespace
+
+RefPtr<MachHandleProcessCheckInPromise> MachHandleProcessCheckIn(
+    mozilla::UniqueMachReceiveRight endpoint, pid_t child_pid,
+    mozilla::TimeDuration timeout,
+    std::vector<mozilla::UniqueMachSendRight> send_rights) {
+  mozilla::ipc::AssertIOThread();
+
+  auto promise =
+      mozilla::MakeRefPtr<MachHandleProcessCheckInPromise::Private>(__func__);
+  (new MachCheckInListener(promise, std::move(endpoint), child_pid,
+                           std::move(send_rights)))
+      ->Start(timeout);
+  return promise;
+}
+*/
 #endif

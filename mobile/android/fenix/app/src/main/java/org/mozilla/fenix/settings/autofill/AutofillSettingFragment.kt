@@ -14,12 +14,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
-import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.SwitchPreference
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -232,6 +233,12 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
                 getString(R.string.preferences_addresses_manage_addresses)
         } else {
             manageAddressesPreference.setIcon(iconsR.drawable.mozac_ic_plus_24)
+            manageAddressesPreference.icon?.setTint(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.fx_mobile_icon_color_primary,
+                ),
+            )
             manageAddressesPreference.title =
                 getString(R.string.preferences_addresses_add_address)
         }
@@ -268,6 +275,12 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
                 getString(R.string.preferences_credit_cards_manage_saved_cards_2)
         } else {
             manageSavedCardsPreference.setIcon(iconsR.drawable.mozac_ic_plus_24)
+            manageSavedCardsPreference.icon?.setTint(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.fx_mobile_icon_color_primary,
+                ),
+            )
             manageSavedCardsPreference.title =
                 getString(R.string.preferences_credit_cards_add_credit_card_2)
         }
@@ -312,7 +325,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
      * only used when BiometricPrompt is unavailable on the device.
      */
     override fun showPinDialogWarning(context: Context) {
-        AlertDialog.Builder(context).apply {
+        MaterialAlertDialogBuilder(context).apply {
             setTitle(getString(R.string.credit_cards_warning_dialog_title_2))
             setMessage(getString(R.string.credit_cards_warning_dialog_message_3))
 

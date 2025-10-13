@@ -967,8 +967,6 @@ void nsColumnSetFrame::DrainOverflowColumns() {
   if (prev) {
     AutoFrameListPtr overflows(presContext, prev->StealOverflowFrames());
     if (overflows) {
-      nsContainerFrame::ReparentFrameViewList(*overflows, prev, this);
-
       mFrames.InsertFrames(this, nullptr, std::move(*overflows));
     }
   }
@@ -1287,6 +1285,10 @@ void nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   if (IsVisibleForPainting()) {
     aLists.BorderBackground()->AppendNewToTop<nsDisplayColumnRule>(aBuilder,
                                                                    this);
+  }
+
+  if (HidesContent()) {
+    return;
   }
 
   // Our children won't have backgrounds so it doesn't matter where we put them.

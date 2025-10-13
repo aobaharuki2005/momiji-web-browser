@@ -1268,7 +1268,6 @@ newtabPrivatePing:
         pref: browser.newtabpage.activity-stream.telemetry.privatePing.maxSubmissionDelayMs
       description: >-
         The maximum range for the random delay from scheduling the newtab-content ping to actually sending it. The minimum is 1000 by default. This is in milliseconds.
-
 newtabPublisherFavicons:
   description: Enabled publihser favicons on cards in newtab
   owner: nbarrett@mozilla.com
@@ -1424,10 +1423,10 @@ newtabInferredPersonalization:
       type: int
       description: >-
         Time to refresh interest vector in hours
-    iv_unary_dp_in_request:
-      type: boolean
+    history_cull_days:
+      type: int
       description: >-
-        Whether to use Unary encoding with differential privacy in the interest vector. If false or not set, we default to laplace noise with real values
+        Number of days local inferred feature history to preserve
     normalized_time_zone_offset:
       type: boolean
       description: >-
@@ -2048,42 +2047,6 @@ pocketNewtab:
         pref: browser.newtabpage.activity-stream.discoverystream.thumbsUpDown.searchTopsitesCompact
       description: >-
         Change the layout of the sections to be more compact to account for the added card height with the thumbs up/down enabled.
-
-saveToPocket:
-  description: The save to Pocket feature
-  owner: sdowne@mozilla.com
-  hasExposure: false
-  variables:
-    enabled:
-      type: boolean
-      setPref:
-        branch: user
-        pref: extensions.pocket.enabled
-      description: Enabled save to Pocket feature.
-    emailButton:
-      type: boolean
-      setPref:
-        branch: user
-        pref: extensions.pocket.refresh.emailButton.enabled
-      description: Just for the new Pocket panels, enables the email signup button.
-    bffRecentSaves:
-      type: boolean
-      setPref:
-        branch: user
-        pref: extensions.pocket.bffRecentSaves
-      description: Use the new BFF Proxy Service instead of the legacy Pocket Service for Recent Saves
-    bffApi:
-      type: string
-      setPref:
-        branch: user
-        pref: extensions.pocket.bffApi
-      description: BFF Proxy Service domain
-    oAuthConsumerKeyBff:
-      type: string
-      setPref:
-        branch: user
-        pref: extensions.pocket.oAuthConsumerKeyBff
-      description: BFF Proxy Service OAuth Consumer Key
 
 sessionRestore:
   description: Session restore feature
@@ -3696,6 +3659,18 @@ thirdPartyTrackerCookieBlocking:
         branch: default
         pref: "network.cookie.cookieBehavior.trackerCookieBlocking"
 
+googleSafeBrowsingV5:
+  description: Control Google Safe Browsing V5 protocol
+  owner: tihuang@mozilla.com
+  hasExposure: false
+  variables:
+    enabled:
+      description: Whether to enable Google Safe Browsing V5 protocol.
+      type: boolean
+      setPref:
+        branch: default
+        pref: "browser.safebrowsing.provider.google5.enabled"
+
 fxaButtonVisibility:
   description: Prefs to control the visibility of the Firefox Accounts toolbar button when not signed in.
   owner: mconley@mozilla.com
@@ -4330,7 +4305,7 @@ scriptloader:
       type: boolean
       setPref:
         branch: user
-        pref: "dom.script_loader.navigation_cache"
+        pref: "dom.script_loader.experimental.navigation_cache"
 
 raceCacheWithNetwork:
   description: Prefs to toggle the race cache with network.
@@ -4836,6 +4811,16 @@ backupService:
       setPref:
         branch: user
         pref: browser.backup.scheduled.minimum-time-between-backups-seconds
+    archiveKillswitch:
+      type: boolean
+      default: false
+      description: >-
+        Disables backup archiving, overrides all other configs when true.
+    restoreKillswitch:
+      type: boolean
+      default: false
+      description: >-
+        Disables backup restoration, overrides all other configs when true.
 
 pqcrypto:
   description: Prefs that control the use of post-quantum cryptography.
@@ -4867,7 +4852,7 @@ pqcrypto:
       type: boolean
       setPref:
         branch: default
-        pref: media.webrtc.enable_pq_dtls
+        pref: media.webrtc.enable_pq_hybrid_kex
       description: >-
         Whether to enable mlkem768x25519 for DTLS in WebRTC.
 
@@ -5647,3 +5632,16 @@ image:
       setPref:
         branch: user
         pref: "image.mem.decode_bytes_at_a_time"
+
+walletCustomSchemes:
+  description: Defines which custom schemes are treated as digital identity requests
+  owner: bvandersloot@mozilla.com
+  hasExposure: false
+  variables:
+    enabledSchemes:
+      type: string
+      setPref:
+        branch: user
+        pref: privacy.wallet_schemes
+      description: >-
+        Comma separated lists of schemes

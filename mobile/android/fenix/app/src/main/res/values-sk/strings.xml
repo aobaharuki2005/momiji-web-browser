@@ -84,6 +84,11 @@
   -->
   <string name="felt_privacy_info_card_subtitle_2">Keď zatvoríte všetky súkromné karty, %1$s odstráni vaše súbory cookie, históriu a údaje stránok. %2$s</string>
   <!--
+    Description of private browsing mode displayed to users on the homepage when they enable private mode.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="felt_privacy_info_card_subtitle_3">Keď zatvoríte všetky súkromné karty, %1$s odstráni vaše súbory cookie, históriu a údaje stránok.</string>
+  <!--
     Clickable portion of the explanation for private browsing that links the user to our
     about privacy page.
     This string is used in felt_privacy_info_card_subtitle as the text for the link.
@@ -1482,6 +1487,8 @@
   <string name="tab_tray_multiselect_menu_content_description">Ponuka vybratých kariet</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab" tools:ignore="UnusedResources" moz:removedIn="145">Domovská stránka</string>
+  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
+  <string name="tab_tray_homepage_tab_2">Domovská stránka %su</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Odstrániť kartu z kolekcie</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1724,6 +1731,10 @@
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Zavrieť</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">Čo sa stalo? Čo sa malo stať?</string>
+  <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
+  <string name="webcompat_reporter_etp_checkbox_text">Odosielať adresy URL blokované ochranou sledovania</string>
+  <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
+  <string name="webcompat_reporter_etp_checkbox_description">Rozšírená ochrana pred sledovaním môže blokovať sledovacie prvky a skripty, ktoré niektoré webové stránky potrebujú na správne fungovanie.</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 

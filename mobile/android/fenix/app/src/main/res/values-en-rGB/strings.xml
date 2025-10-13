@@ -2656,7 +2656,7 @@
   <!-- Preference to access list of saved passwords -->
   <string name="preferences_passwords_saved_logins_2">Saved passwords</string>
   <!-- Description of empty list of saved passwords. %s is the name of the app (for example "Firefox"). -->
-  <string name="preferences_passwords_saved_logins_description_empty_text_2">The passwords you save or synchronise to %s will be listed here. All passwords you save are encrypted.\n</string>
+  <string name="preferences_passwords_saved_logins_description_empty_text_2">The passwords you save or synchronise to %s will be listed here. All passwords you save are encrypted.</string>
   <!-- Clickable text for opening an external link for more information about Sync. -->
   <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Learn more about Sync</string>
   <!-- Preference to access list of login exceptions that we never save logins for -->

@@ -9,9 +9,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/search/OpenSearchManager.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SearchUIUtils: "moz-src:///browser/components/search/SearchUIUtils.sys.mjs",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
+  UrlbarSearchUtils:
+    "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
+  UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "SearchModeSwitcherL10n", () => {
@@ -64,13 +65,7 @@ export class SearchModeSwitcher {
 
   async #onPopupShowing() {
     await this.#buildSearchModeList();
-
     this.#input.view.close({ showFocusBorder: false });
-
-    // This moves the focus to the urlbar when the popup is closed.
-    this.#input.document.commandDispatcher.focusedElement =
-      this.#input.inputField;
-
     Glean.urlbarUnifiedsearchbutton.opened.add(1);
   }
 
@@ -144,6 +139,9 @@ export class SearchModeSwitcher {
       return;
     }
     if (event.type == "popuphiding") {
+      // This moves the focus to the urlbar when the popup is closed.
+      this.#input.document.commandDispatcher.focusedElement =
+        this.#input.inputField;
       this.#toolbarbutton.setAttribute("aria-expanded", "false");
       return;
     }
@@ -402,6 +400,8 @@ export class SearchModeSwitcher {
 
   /**
    * Adds local options to the popup.
+   *
+   * @param {Element} separator
    */
   async #buildLocalSearchModeList(separator) {
     if (!this.#input.isAddressbar) {

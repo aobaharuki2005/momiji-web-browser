@@ -469,14 +469,7 @@ features:
         description: >
           When the feature is enabled the user will see a new composable toolbar instead the previous View based one.
         type: Boolean
-        default: false
-    defaults:
-      - channel: nightly
-        value:
-          enabled: true
-      - channel: developer
-        value:
-          enabled: true
+        default: true
 
   remote-tab-management:
     description: >
@@ -808,18 +801,13 @@ features:
       certificateTransparencyMode:
         description: >
           What mode Certificate Transparency is in (0=disable, 1=telemetry only, 2=enforce).
-        type: Int
-        default: 0
-    defaults:
-      - channel: nightly
-        value:
-          certificateTransparencyMode: 2
-      - channel: developer
-        value:
-          certificateTransparencyMode: 2
-      - channel: beta
-        value:
-          certificateTransparencyMode: 2
+        type: Option<Int>
+        default: null
+      crliteChannel:
+        description: >
+          The channel from which CRLite filters will be installed.
+        type: Option<String>
+        default: null
 
   pqcrypto:
     description: Control the use of post-quantum key exchange mechanisms in TLS and HTTP/3.
@@ -920,6 +908,15 @@ features:
       - channel: beta
         value:
           enabled: true
+
+  settings-search:
+      description: Feature to allow users to search for settings.
+      variables:
+        enabled:
+          description: >
+            Enables the user to search for settings.
+          type: Boolean
+          default: false
 
   toolbar-redesign-option:
     description: Control the visibility of toolbar redesign option in settings.

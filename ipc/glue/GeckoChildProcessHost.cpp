@@ -17,6 +17,7 @@
 #  include <mach/mach_traps.h>
 #  include "base/rand_util.h"
 #  include "chrome/common/mach_ipc_mac.h"
+#  include "mozilla/StaticPrefs_layers.h"
 #  include "mozilla/StaticPrefs_media.h"
 #endif
 #ifdef MOZ_WIDGET_COCOA
@@ -86,6 +87,7 @@
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include "GMPProcessParent.h"
 #  include "nsMacUtilsImpl.h"
+#  include "mozilla/gfx/GPUProcessHost.h"
 #endif
 
 #include "mozilla/ipc/UtilityProcessHost.h"
@@ -533,16 +535,23 @@ mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
   }
 
 #ifdef MOZ_WIDGET_COCOA
-  // The GMP child process runs via the Media Plugin Helper executable
-  // which is a clone of plugin-container allowing for GMP-specific
-  // codesigning entitlements.
+  // To support different child process types having different codesigning
+  // entitlements, different executables are used to run some child process
+  // types.
   nsCString bundleName;
   std::string executableLeafName;
   if (processType == GeckoProcessType_GMPlugin &&
       mozilla::StaticPrefs::media_plugin_helper_process_enabled()) {
+    // Use the media plugin helper executable
     bundleName = MOZ_EME_PROCESS_BUNDLENAME;
     executableLeafName = MOZ_EME_PROCESS_NAME_BRANDED;
+  } else if (processType == GeckoProcessType_GPU &&
+             mozilla::StaticPrefs::layers_gpu_process_executable_enabled()) {
+    // Use the GPU helper executable
+    bundleName = MOZ_GPU_PROCESS_BUNDLENAME;
+    executableLeafName = MOZ_GPU_PROCESS_NAME_BRANDED;
   } else {
+    // the default child process executable
     bundleName = MOZ_CHILD_PROCESS_BUNDLENAME;
     executableLeafName = MOZ_CHILD_PROCESS_NAME;
   }
@@ -954,17 +963,14 @@ void BaseProcessLauncher::GetChildLogName(const char* origLogName,
   buffer.AppendASCII(mChildIDString);
 }
 
-// Windows needs a single dedicated thread for process launching,
-// because of thread-safety restrictions/assertions in the sandbox
-// code.
+// We use a single dedicated thread for process launching. This is required on
+// Windows (due to sandboxing code), Android (due to the java code) and Linux
+// (due to ForkServerChild). Using a single thread is not required on macOS or
+// iOS, but we use one to keep the implementation consistent.
 //
-// Android also needs a single dedicated thread to simplify thread
-// safety in java.
-//
-// Fork server needs a dedicated thread for accessing
-// |ForkServiceChild|.
-#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) || \
-    defined(MOZ_ENABLE_FORKSERVER)
+// The only tier-1 platform where we do not need a dedicated thread is macOS,
+// however we use a dedicated thread there as well for consistency and
+// simplicity of implementation.
 
 static mozilla::StaticMutex gIPCLaunchThreadMutex;
 static mozilla::StaticRefPtr<nsIThread> gIPCLaunchThread
@@ -1017,20 +1023,6 @@ nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
   MOZ_DIAGNOSTIC_ASSERT(thread);
   return thread;
 }
-
-#else  // defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) ||
-       // defined(MOZ_ENABLE_FORKSERVER)
-
-// Other platforms use an on-demand thread pool.
-
-nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
-  nsCOMPtr<nsIEventTarget> pool =
-      mozilla::SharedThreadPool::Get("IPC Launch"_ns);
-  MOZ_DIAGNOSTIC_ASSERT(pool);
-  return pool;
-}
-
-#endif  // XP_WIN || MOZ_WIDGET_ANDROID || MOZ_ENABLE_FORKSERVER
 
 void
 #if defined(XP_WIN)
@@ -1524,9 +1516,9 @@ Result<Ok, LaunchError> MacProcessLauncher::DoFinishLaunch() {
 
   MOZ_ASSERT(mParentRecvPort, "should have been configured during DoSetup()");
 
-  // Wait for the child process to send us its 'task_t' data.
+  // Wait for the child process to send us its 'task_t' data, then send it the
+  // mach send/receive rights which are being passed on the commandline.
   const int kTimeoutMs = 10000;
-
   MOZ_TRY(MachHandleProcessCheckIn(
       mParentRecvPort.get(), base::GetProcId(mResults.mHandle), kTimeoutMs,
       mChildArgs.mSendRights, &mResults.mChildTask));
@@ -1886,6 +1878,9 @@ bool GeckoChildProcessHost::StartMacSandbox(int aArgc, char** aArgv,
       break;
     case GeckoProcessType_Utility:
       sandboxType = ipc::UtilityProcessHost::GetMacSandboxType();
+      break;
+    case GeckoProcessType_GPU:
+      sandboxType = gfx::GPUProcessHost::GetMacSandboxType();
       break;
     default:
       return true;

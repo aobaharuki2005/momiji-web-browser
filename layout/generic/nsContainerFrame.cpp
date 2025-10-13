@@ -10,6 +10,7 @@
 
 #include <algorithm>
 
+#include "mozilla/AbsoluteContainingBlock.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
@@ -19,7 +20,6 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/widget/InitData.h"
-#include "nsAbsoluteContainingBlock.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
 #include "nsBlockFrame.h"
@@ -225,8 +225,8 @@ void nsContainerFrame::SafelyDestroyFrameListProp(
 
 void nsContainerFrame::Destroy(DestroyContext& aContext) {
   // Prevent event dispatch during destruction.
-  if (HasView()) {
-    GetView()->SetFrame(nullptr);
+  if (auto* view = GetView()) {
+    view->SetFrame(nullptr);
   }
 
   DestroyAbsoluteFrames(aContext);
@@ -376,6 +376,9 @@ void nsContainerFrame::BuildDisplayListForNonBlockChildren(
     nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists,
     DisplayChildFlags aFlags) {
   nsIFrame* kid = mFrames.FirstChild();
+  if (!kid || HidesContent()) {
+    return;
+  }
   // Put each child's background directly onto the content list
   nsDisplayListSet set(aLists, aLists.Content());
   // The children should be in content order
@@ -562,12 +565,18 @@ nsIFrame::FrameSearchResult nsContainerFrame::PeekOffsetCharacter(
  * but before |Reflow|.
  */
 void nsContainerFrame::PositionFrameView(nsIFrame* aKidFrame) {
+  if (MOZ_LIKELY(!aKidFrame->MayHaveView())) {
+    return;
+  }
   nsIFrame* parentFrame = aKidFrame->GetParent();
-  if (!aKidFrame->HasView() || !parentFrame) {
+  if (!parentFrame) {
+    return;
+  }
+  auto* view = aKidFrame->GetView();
+  if (!view) {
     return;
   }
 
-  nsView* view = aKidFrame->GetView();
   nsViewManager* vm = view->GetViewManager();
   nsPoint pt;
   nsView* ancestorView = parentFrame->GetClosestView(&pt);
@@ -584,125 +593,6 @@ void nsContainerFrame::PositionFrameView(nsIFrame* aKidFrame) {
   vm->MoveViewTo(view, pt.x, pt.y);
 }
 
-void nsContainerFrame::ReparentFrameView(nsIFrame* aChildFrame,
-                                         nsIFrame* aOldParentFrame,
-                                         nsIFrame* aNewParentFrame) {
-#ifdef DEBUG
-  MOZ_ASSERT(aChildFrame, "null child frame pointer");
-  MOZ_ASSERT(aOldParentFrame, "null old parent frame pointer");
-  MOZ_ASSERT(aNewParentFrame, "null new parent frame pointer");
-  MOZ_ASSERT(aOldParentFrame != aNewParentFrame,
-             "same old and new parent frame");
-
-  // See if either the old parent frame or the new parent frame have a view
-  while (!aOldParentFrame->HasView() && !aNewParentFrame->HasView()) {
-    // Walk up both the old parent frame and the new parent frame nodes
-    // stopping when we either find a common parent or views for one
-    // or both of the frames.
-    //
-    // This works well in the common case where we push/pull and the old parent
-    // frame and the new parent frame are part of the same flow. They will
-    // typically be the same distance (height wise) from the
-    aOldParentFrame = aOldParentFrame->GetParent();
-    aNewParentFrame = aNewParentFrame->GetParent();
-
-    // We should never walk all the way to the root frame without finding
-    // a view
-    NS_ASSERTION(aOldParentFrame && aNewParentFrame, "didn't find view");
-
-    // See if we reached a common ancestor
-    if (aOldParentFrame == aNewParentFrame) {
-      break;
-    }
-  }
-
-  // See if we found a common parent frame
-  if (aOldParentFrame == aNewParentFrame) {
-    // We found a common parent and there are no views between the old parent
-    // and the common parent or the new parent frame and the common parent.
-    // Because neither the old parent frame nor the new parent frame have views,
-    // then any child views don't need reparenting
-    return;
-  }
-
-  // We found views for one or both of the ancestor frames before we
-  // found a common ancestor.
-  nsView* oldParentView = aOldParentFrame->GetClosestView();
-  nsView* newParentView = aNewParentFrame->GetClosestView();
-
-  // See if the old parent frame and the new parent frame are in the
-  // same view sub-hierarchy. If they are then we don't have to do
-  // anything
-  if (oldParentView != newParentView) {
-    MOZ_ASSERT_UNREACHABLE("can't move frames between views");
-    // They're not so we need to reparent any child views
-    aChildFrame->ReparentFrameViewTo(oldParentView->GetViewManager(),
-                                     newParentView);
-  }
-#endif
-}
-
-void nsContainerFrame::ReparentFrameViewList(const nsFrameList& aChildFrameList,
-                                             nsIFrame* aOldParentFrame,
-                                             nsIFrame* aNewParentFrame) {
-#ifdef DEBUG
-  MOZ_ASSERT(aChildFrameList.NotEmpty(), "empty child frame list");
-  MOZ_ASSERT(aOldParentFrame, "null old parent frame pointer");
-  MOZ_ASSERT(aNewParentFrame, "null new parent frame pointer");
-  MOZ_ASSERT(aOldParentFrame != aNewParentFrame,
-             "same old and new parent frame");
-
-  // See if either the old parent frame or the new parent frame have a view
-  while (!aOldParentFrame->HasView() && !aNewParentFrame->HasView()) {
-    // Walk up both the old parent frame and the new parent frame nodes
-    // stopping when we either find a common parent or views for one
-    // or both of the frames.
-    //
-    // This works well in the common case where we push/pull and the old parent
-    // frame and the new parent frame are part of the same flow. They will
-    // typically be the same distance (height wise) from the
-    aOldParentFrame = aOldParentFrame->GetParent();
-    aNewParentFrame = aNewParentFrame->GetParent();
-
-    // We should never walk all the way to the root frame without finding
-    // a view
-    NS_ASSERTION(aOldParentFrame && aNewParentFrame, "didn't find view");
-
-    // See if we reached a common ancestor
-    if (aOldParentFrame == aNewParentFrame) {
-      break;
-    }
-  }
-
-  // See if we found a common parent frame
-  if (aOldParentFrame == aNewParentFrame) {
-    // We found a common parent and there are no views between the old parent
-    // and the common parent or the new parent frame and the common parent.
-    // Because neither the old parent frame nor the new parent frame have views,
-    // then any child views don't need reparenting
-    return;
-  }
-
-  // We found views for one or both of the ancestor frames before we
-  // found a common ancestor.
-  nsView* oldParentView = aOldParentFrame->GetClosestView();
-  nsView* newParentView = aNewParentFrame->GetClosestView();
-
-  // See if the old parent frame and the new parent frame are in the
-  // same view sub-hierarchy. If they are then we don't have to do
-  // anything
-  if (oldParentView != newParentView) {
-    MOZ_ASSERT_UNREACHABLE("can't move frames between views");
-    nsViewManager* viewManager = oldParentView->GetViewManager();
-
-    // They're not so we need to reparent any child views
-    for (nsIFrame* f : aChildFrameList) {
-      f->ReparentFrameViewTo(viewManager, newParentView);
-    }
-  }
-#endif
-}
-
 void nsContainerFrame::ReparentFrame(nsIFrame* aFrame,
                                      nsContainerFrame* aOldParent,
                                      nsContainerFrame* aNewParent) {
@@ -710,10 +600,6 @@ void nsContainerFrame::ReparentFrame(nsIFrame* aFrame,
                "Parent not consistent with expectations");
 
   aFrame->SetParent(aNewParent);
-
-  // When pushing and pulling frames we need to check for whether any
-  // views need to be reparented
-  ReparentFrameView(aFrame, aOldParent, aNewParent);
 }
 
 void nsContainerFrame::ReparentFrames(nsFrameList& aFrameList,
@@ -977,11 +863,7 @@ void nsContainerFrame::PositionChildViews(nsIFrame* aFrame) {
     for (nsIFrame* childFrame : list) {
       // Position the frame's view (if it has one) otherwise recursively
       // process its children
-      if (childFrame->HasView()) {
-        PositionFrameView(childFrame);
-      } else {
-        PositionChildViews(childFrame);
-      }
+      PlaceFrameView(childFrame);
     }
   }
 }
@@ -1024,21 +906,16 @@ void nsContainerFrame::FinishReflowChild(
     aKidFrame->SetSize(aWM, convertedSize);
   }
 
-  if (aKidFrame->HasView()) {
-    nsView* view = aKidFrame->GetView();
+  if (nsView* view = aKidFrame->GetView()) {
     // Make sure the frame's view is properly sized and positioned and has
     // things like opacity correct
     SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
                              aDesiredSize.InkOverflow(), aFlags);
-  }
-
-  nsPoint newOrigin = aKidFrame->GetPosition();
-  if (!(aFlags & ReflowChildFlags::NoMoveView) && curOrigin != newOrigin) {
-    if (!aKidFrame->HasView()) {
-      // If the frame has moved, then we need to make sure any child views are
-      // correctly positioned
-      PositionChildViews(aKidFrame);
-    }
+  } else if (!(aFlags & ReflowChildFlags::NoMoveView) &&
+             curOrigin != aKidFrame->GetPosition()) {
+    // If the frame has moved, then we need to make sure any child views are
+    // correctly positioned
+    PositionChildViews(aKidFrame);
   }
 
   aKidFrame->DidReflow(aPresContext, aReflowInput);
@@ -1070,20 +947,15 @@ void nsContainerFrame::FinishReflowChild(nsIFrame* aKidFrame,
     aKidFrame->SetSize(size);
   }
 
-  if (aKidFrame->HasView()) {
-    nsView* view = aKidFrame->GetView();
+  if (nsView* view = aKidFrame->GetView()) {
     // Make sure the frame's view is properly sized and positioned and has
     // things like opacity correct
     SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
                              aDesiredSize.InkOverflow(), aFlags);
-  }
-
-  if (!(aFlags & ReflowChildFlags::NoMoveView) && curOrigin != pos) {
-    if (!aKidFrame->HasView()) {
-      // If the frame has moved, then we need to make sure any child views are
-      // correctly positioned
-      PositionChildViews(aKidFrame);
-    }
+  } else if (!(aFlags & ReflowChildFlags::NoMoveView) && curOrigin != pos) {
+    // If the frame has moved, then we need to make sure any child views are
+    // correctly positioned
+    PositionChildViews(aKidFrame);
   }
 
   aKidFrame->DidReflow(aPresContext, aReflowInput);
@@ -1234,8 +1106,7 @@ void nsContainerFrame::ReflowOverflowContainerChildren(
 
 void nsContainerFrame::DisplayOverflowContainers(
     nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
-  nsFrameList* overflowconts = GetOverflowContainers();
-  if (overflowconts) {
+  if (nsFrameList* overflowconts = GetOverflowContainers()) {
     for (nsIFrame* frame : *overflowconts) {
       BuildDisplayListForChild(aBuilder, frame, aLists);
     }
@@ -1801,10 +1672,6 @@ bool nsContainerFrame::MoveOverflowToChildList() {
       // Tables are special; they can have repeated header/footer
       // frames on mFrames at this point.
       NS_ASSERTION(mFrames.IsEmpty() || IsTableFrame(), "bad overflow list");
-      // When pushing and pulling frames we need to check for whether any
-      // views need to be reparented.
-      nsContainerFrame::ReparentFrameViewList(*prevOverflowFrames, prevInFlow,
-                                              this);
       mFrames.AppendFrames(this, std::move(*prevOverflowFrames));
       result = true;
     }
@@ -1974,10 +1841,6 @@ bool nsContainerFrame::MoveInlineOverflowToChildList(nsIFrame* aLineContainer) {
         ReparentFloatsForInlineChild(aLineContainer,
                                      prevOverflowFrames->FirstChild(), true);
       }
-      // When pushing and pulling frames we need to check for whether
-      // any views need to be reparented.
-      nsContainerFrame::ReparentFrameViewList(*prevOverflowFrames, prevInFlow,
-                                              this);
       // Prepend overflow frames to the list.
       mFrames.InsertFrames(this, nullptr, std::move(*prevOverflowFrames));
       result = true;
@@ -2029,7 +1892,6 @@ nsFrameList* nsContainerFrame::DrainExcessOverflowContainersList(
                                   prev->StealExcessOverflowContainers());
     if (excessFrames) {
       excessFrames->ApplySetParent(this);
-      nsContainerFrame::ReparentFrameViewList(*excessFrames, prev, this);
       if (overflowContainers) {
         // The default merge function is AppendFrames, so we use excessFrames as
         // the destination and then assign the result to overflowContainers.
@@ -2121,9 +1983,6 @@ nsIFrame* nsContainerFrame::PullNextInFlowChild(
 
     // Move the frame to the principal frame list of this container
     mFrames.AppendFrame(this, frame);
-    // AppendFrame has reparented the frame, we need
-    // to reparent the frame view then.
-    nsContainerFrame::ReparentFrameView(frame, nextInFlow, this);
   }
   return frame;
 }
@@ -2882,8 +2741,6 @@ nsresult nsOverflowContinuationTracker::Insert(nsIFrame* aOverflowCont,
       SetUpListWalker();
     }
     if (aOverflowCont->GetParent() != mParent) {
-      nsContainerFrame::ReparentFrameView(aOverflowCont,
-                                          aOverflowCont->GetParent(), mParent);
       reparented = true;
     }
 

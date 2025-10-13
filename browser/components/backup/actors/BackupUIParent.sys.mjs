@@ -135,7 +135,7 @@ export class BackupUIParent extends JSWindowActorParent {
       let mode = filter
         ? Ci.nsIFilePicker.modeOpen
         : Ci.nsIFilePicker.modeGetFolder;
-      fp.init(win, "", mode);
+      fp.init(win || this.browsingContext, "", mode);
 
       if (filter) {
         fp.appendFilters(Ci.nsIFilePicker[filter]);
@@ -189,6 +189,7 @@ export class BackupUIParent extends JSWindowActorParent {
         );
       } catch (e) {
         lazy.logConsole.error(`Failed to restore file: ${backupFile}`, e);
+        this.#bs.setRecoveryError(e.cause || lazy.ERRORS.UNKNOWN);
         return { success: false, errorCode: e.cause || lazy.ERRORS.UNKNOWN };
       }
       return { success: true };
@@ -234,8 +235,6 @@ export class BackupUIParent extends JSWindowActorParent {
        * this time with the new password.
        */
       return { success: true };
-    } else if (message.name == "FindIfABackupFileExists") {
-      this.#bs.findIfABackupFileExists();
     } else if (message.name == "ShowBackupLocation") {
       this.#bs.showBackupLocation();
     } else if (message.name == "EditBackupLocation") {
@@ -251,6 +250,8 @@ export class BackupUIParent extends JSWindowActorParent {
    * recent state object from BackupService.
    */
   sendState() {
-    this.sendAsyncMessage("StateUpdate", { state: this.#bs.state });
+    this.sendAsyncMessage("StateUpdate", {
+      state: this.#bs.state,
+    });
   }
 }

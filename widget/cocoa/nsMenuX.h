@@ -180,6 +180,7 @@ class nsMenuX final : public nsMenuParentX,
 
   static bool IsXULHelpMenu(nsIContent* aMenuContent);
   static bool IsXULWindowMenu(nsIContent* aMenuContent);
+  static bool IsXULEditMenu(nsIContent* aMenuContent);
 
   // Set an observer that gets notified of menu opening and closing.
   // The menu does not keep a strong reference the observer. The observer must

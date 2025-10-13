@@ -62,6 +62,13 @@ android {
         }
     }
 
+    // Exclude native libraries for unsupported architectures from third-party dependencies
+    packagingOptions {
+        jniLibs {
+            excludes += ["**/armeabi/*.so", "**/mips/*.so", "**/mips64/*.so", "**/x86/*.so"]
+        }
+    }
+
     lint {
         lintConfig = file("lint.xml")
         baseline = file("lint-baseline.xml")
@@ -302,7 +309,6 @@ dependencies {
     implementation libs.androidx.collection
     implementation platform(libs.androidx.compose.bom)
     implementation libs.androidx.compose.foundation
-    implementation libs.androidx.compose.material
     implementation libs.androidx.compose.material.icons
     implementation libs.androidx.compose.material3
     implementation libs.androidx.compose.runtime.livedata
@@ -555,6 +561,10 @@ def enabledLocales = project.provider { getEnabledLocales() }
 
 tasks.register('generateLocaleList') {
     def localeList = file(new File(generatedLocaleListDir, generatedLocaleListFilename))
+    
+    inputs.property("enabledLocales", enabledLocales)
+    outputs.file(localeList)
+    
     doLast {
         generatedLocaleListDir.mkdir()
         localeList.delete()

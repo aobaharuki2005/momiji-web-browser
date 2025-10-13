@@ -3244,7 +3244,7 @@ export class TranslationsDocument {
         } else if (element === targetNode) {
           elementCount++;
 
-          const translationsDocument = this.#domParser.parseFromString(
+          const translationsDocument = this.#domParser.parseFromSafeString(
             `<!DOCTYPE html><div>${translatedContent}</div>`,
             "text/html"
           );

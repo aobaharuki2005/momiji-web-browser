@@ -498,9 +498,10 @@ bool CookieParser::ParseMaxAgeAttribute(const nsACString& aMaxage,
 bool CookieParser::GetExpiry(CookieStruct& aCookieData,
                              const nsACString& aExpires,
                              const nsACString& aMaxage,
-                             int64_t aCurrentTimeInMSec,
                              const nsACString& aDateHeader, bool aFromHttp) {
   int64_t maxageCap = StaticPrefs::network_cookie_maxageCap();
+  int64_t creationTimeInMSec =
+      aCookieData.creationTime() / int64_t(PR_USEC_PER_MSEC);
 
   /* Determine when the cookie should expire. This is done by taking the
    * difference between the server time and the time the server wants the cookie
@@ -516,7 +517,7 @@ bool CookieParser::GetExpiry(CookieStruct& aCookieData,
     if (maxage == INT64_MIN) {
       aCookieData.expiry() = maxage;
     } else {
-      CheckedInt<int64_t> value(aCurrentTimeInMSec);
+      CheckedInt<int64_t> value(creationTimeInMSec);
       value += (maxageCap ? std::min(maxage, maxageCap) : maxage) * 1000;
 
       aCookieData.expiry() = value.isValid() ? value.value() : INT64_MAX;
@@ -549,7 +550,7 @@ bool CookieParser::GetExpiry(CookieStruct& aCookieData,
           StaticPrefs::network_cookie_useServerTime()) {
         int64_t serverTimeInMSec =
             dateHeaderTimeInUSec / int64_t(PR_USEC_PER_MSEC);
-        int64_t delta = aCurrentTimeInMSec - serverTimeInMSec;
+        int64_t delta = creationTimeInMSec - serverTimeInMSec;
         expiresInMSec += delta;
       }
     }
@@ -561,7 +562,7 @@ bool CookieParser::GetExpiry(CookieStruct& aCookieData,
     // The cookie item have to be used to the expired cookie.
 
     aCookieData.expiry() =
-        CookieCommons::MaybeCapExpiry(aCurrentTimeInMSec, expiresInMSec);
+        CookieCommons::MaybeCapExpiry(creationTimeInMSec, expiresInMSec);
     return false;
   }
 
@@ -656,11 +657,13 @@ void CookieParser::Parse(const nsACString& aBaseDomain, bool aRequireHostMatch,
                          const nsACString& aDateHeader, bool aFromHttp,
                          bool aIsForeignAndNotAddon, bool aPartitionedOnly,
                          bool aIsInPrivateBrowsing, bool aOn3pcbException,
-                         int64_t aCurrentTimeInMSec) {
+                         int64_t aCurrentTimeInUSec) {
   MOZ_ASSERT(!mValidation);
 
   // init expiryTime such that session cookies won't prematurely expire
   mCookieData.expiry() = INT64_MAX;
+  mCookieData.creationTime() =
+      Cookie::GenerateUniqueCreationTime(aCurrentTimeInUSec);
 
   mCookieData.schemeMap() = CookieCommons::URIToSchemeType(mHostURI);
 
@@ -679,8 +682,8 @@ void CookieParser::Parse(const nsACString& aBaseDomain, bool aRequireHostMatch,
   }
 
   // calculate expiry time of cookie.
-  mCookieData.isSession() = GetExpiry(
-      mCookieData, expires, maxage, aCurrentTimeInMSec, aDateHeader, aFromHttp);
+  mCookieData.isSession() =
+      GetExpiry(mCookieData, expires, maxage, aDateHeader, aFromHttp);
   if (aStatus == STATUS_ACCEPT_SESSION) {
     // force lifetime to session. note that the expiration time, if set above,
     // will still apply.

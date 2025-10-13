@@ -468,12 +468,6 @@ const nsTArray<RefPtr<GfxDriverInfo>>& GfxInfo::GetGfxDriverInfo() {
         OperatingSystem::OSX, DeviceFamily::IntelWebRenderBlocked,
         nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
         "FEATURE_FAILURE_INTEL_GEN5_OR_OLDER");
-
-    // Intel HD3000 disabled due to bug 1661505
-    IMPLEMENT_MAC_DRIVER_BLOCKLIST(
-        OperatingSystem::OSX, DeviceFamily::IntelSandyBridge,
-        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-        "FEATURE_FAILURE_INTEL_MAC_HD3000_NO_WEBRENDER");
   }
   return *sDriverInfo;
 }
@@ -517,6 +511,14 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
       aFailureId = "FEATURE_UNQUALIFIED_WEBRENDER_MAC_ROSETTA";
       return NS_OK;
+#ifndef EARLY_BETA_OR_EARLIER
+    } else if (aFeature == nsIGfxInfo::FEATURE_WEBGPU &&
+               !nsCocoaFeatures::OnTahoeOrLater()) {
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1993341
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
+      aFailureId = "FEATURE_FAILURE_WEBGPU_MACOS_26_REQUIRED";
+      return NS_OK;
+#endif
     }
   }
 

@@ -1272,7 +1272,7 @@ void gfxPlatform::Shutdown() {
   // started up. That's OK, they can handle it.
   gfxFontCache::Shutdown();
   gfxGradientCache::Shutdown();
-  gfxAlphaBoxBlur::ShutdownBlurCache();
+  gfxGaussianBlur::ShutdownBlurCache();
   gfxGraphiteShaper::Shutdown();
   gfxPlatformFontList::Shutdown();
   gfxFontMissingGlyphs::Shutdown();
@@ -3253,6 +3253,13 @@ void gfxPlatform::InitWebGPUConfig() {
   FeatureState& featureWebGPU = gfxConfig::GetFeature(Feature::WEBGPU);
   featureWebGPU.EnableByDefault();
 
+  if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS) &&
+      !StaticPrefs::dom_webgpu_allow_in_parent_AtStartup()) {
+    featureWebGPU.Disable(FeatureStatus::UnavailableNoGpuProcess,
+                          "Disabled without GPU process",
+                          "FEATURE_WEBGPU_NO_GPU_PROCESS"_ns);
+  }
+
   nsCString message;
   nsCString failureId;
   if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_WEBGPU, &message, failureId)) {
@@ -3415,7 +3422,8 @@ static void AcceleratedCanvas2DPrefChangeCallback(const char*, void*) {
     feature.UserForceEnable("Force-enabled by pref");
   }
 
-  if (kIsAndroid && !gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+  if (!StaticPrefs::gfx_canvas_accelerated_allow_in_parent_AtStartup() &&
+      !gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
     feature.Disable(FeatureStatus::Blocked, "Disabled by GPU Process disabled",
                     "FEATURE_FAILURE_DISABLED_BY_GPU_PROCESS_DISABLED"_ns);
   } else if (!gfxConfig::IsEnabled(Feature::WEBRENDER)) {
@@ -3999,6 +4007,10 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
       swglFallbackAllowed && !gfxVars::UseSoftwareWebRender()) {
     // Fallback from WebRender to Software WebRender.
     gfxCriticalNote << "Fallback WR to SW-WR";
+    DisableAcceleratedCanvasForFallback(
+        FeatureStatus::UnavailableNoHwCompositing,
+        "Disabled by fallback to Software WebRender",
+        "FEATURE_FAILURE_DISABLED_BY_FALLBACK_SOFTWARE_WEBRENDER"_ns);
     gfxVars::SetUseSoftwareWebRender(true);
     return true;
   }
@@ -4010,7 +4022,31 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
     // otherwise get stuck with WebRender. As such, force a switch to Software
     // WebRender in this case.
     gfxCriticalNoteOnce << "Fallback WR to SW-WR, forced";
+    DisableAcceleratedCanvasForFallback(
+        FeatureStatus::UnavailableNoHwCompositing,
+        "Disabled by fallback to Software WebRender",
+        "FEATURE_FAILURE_DISABLED_BY_FALLBACK_SOFTWARE_WEBRENDER"_ns);
     gfxVars::SetUseSoftwareWebRender(true);
+    return true;
+  }
+
+  if ((gfxVars::RemoteCanvasEnabled() &&
+       !StaticPrefs::dom_webgpu_allow_in_parent_AtStartup()) ||
+      (gfxVars::UseAcceleratedCanvas2D() &&
+       !StaticPrefs::gfx_canvas_accelerated_allow_in_parent_AtStartup()) ||
+      (gfxVars::AllowWebGPU() &&
+       !StaticPrefs::gfx_canvas_remote_allow_in_parent_AtStartup()) ||
+      (kIsAndroid && gfxVars::AllowWebglOop())) {
+    // Because content has a lot of control over inputs to remote canvas, we
+    // try to disable it as part of our final fallback step before disabling
+    // the GPU process. We don't actually support remote canvas in the parent
+    // process anyways, so this is not meaningfully worse from just
+    // switching directly to the parent process.
+    gfxCriticalNoteOnce << "Fallback SW-WR, disable remote canvas";
+    DisableAllCanvasForFallback(
+        FeatureStatus::UnavailableNoGpuProcess,
+        "Disabled by fallback to GPU Process disabled",
+        "FEATURE_FAILURE_DISABLED_BY_FALLBACK_GPU_PROCESS_DISABLED"_ns);
     return true;
   }
 
@@ -4024,25 +4060,46 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
 }
 
 /* static */
-void gfxPlatform::DisableGPUProcess() {
+void gfxPlatform::DisableAcceleratedCanvasForFallback(
+    FeatureStatus aStatus, const char* aMessage, const nsACString& aFailureId) {
+  if (gfxVars::UseAcceleratedCanvas2D() &&
+      !StaticPrefs::gfx_canvas_accelerated_allow_in_parent_AtStartup()) {
+    gfxConfig::Disable(Feature::ACCELERATED_CANVAS2D, aStatus, aMessage,
+                       aFailureId);
+    gfxVars::SetUseAcceleratedCanvas2D(false);
+  }
+}
+
+/* static */
+void gfxPlatform::DisableAllCanvasForFallback(FeatureStatus aStatus,
+                                              const char* aMessage,
+                                              const nsACString& aFailureId) {
+  DisableAcceleratedCanvasForFallback(aStatus, aMessage, aFailureId);
+
+  if (gfxVars::AllowWebGPU() &&
+      !StaticPrefs::dom_webgpu_allow_in_parent_AtStartup()) {
+    gfxConfig::Disable(Feature::WEBGPU, aStatus, aMessage, aFailureId);
+    gfxVars::SetAllowWebGPU(false);
+  }
+
   if (gfxVars::RemoteCanvasEnabled() &&
       !StaticPrefs::gfx_canvas_remote_allow_in_parent_AtStartup()) {
-    gfxConfig::Disable(
-        Feature::REMOTE_CANVAS, FeatureStatus::UnavailableNoGpuProcess,
-        "Disabled by GPU process disabled",
-        "FEATURE_REMOTE_CANVAS_DISABLED_BY_GPU_PROCESS_DISABLED"_ns);
+    gfxConfig::Disable(Feature::REMOTE_CANVAS, aStatus, aMessage, aFailureId);
     gfxVars::SetRemoteCanvasEnabled(false);
   }
 
   if (kIsAndroid) {
     // On android, enable out-of-process WebGL only when GPU process exists.
     gfxVars::SetAllowWebglOop(false);
-    // On android, enable accelerated canvas only when GPU process exists.
-    gfxVars::SetUseAcceleratedCanvas2D(false);
-    gfxConfig::Disable(Feature::ACCELERATED_CANVAS2D, FeatureStatus::Blocked,
-                       "Disabled by GPU Process disabled",
-                       "FEATURE_FAILURE_DISABLED_BY_GPU_PROCESS_DISABLED"_ns);
   }
+}
+
+/* static */
+void gfxPlatform::DisableGPUProcess() {
+  DisableAllCanvasForFallback(
+      FeatureStatus::UnavailableNoGpuProcess,
+      "Disabled by fallback to GPU Process disabled",
+      "FEATURE_FAILURE_DISABLED_BY_FALLBACK_GPU_PROCESS_DISABLED"_ns);
 
 #if defined(XP_WIN)
   CompositeProcessD3D11FencesHolderMap::Init();
@@ -4101,7 +4158,7 @@ void gfxPlatform::BuildContentDeviceData(
 
   // Make sure our settings are synchronized from the GPU process.
   DebugOnly<nsresult> rv = GPUProcessManager::Get()->EnsureGPUReady();
-  MOZ_ASSERT(rv != NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   aOut->prefs().hwCompositing() = gfxConfig::GetValue(Feature::HW_COMPOSITING);
   aOut->prefs().oglCompositing() =

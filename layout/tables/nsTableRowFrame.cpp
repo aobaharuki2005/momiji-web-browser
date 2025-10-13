@@ -380,11 +380,6 @@ void nsTableRowFrame::DidResize(ForceAlignTopForTableCell aForceAlignTop) {
     // to this height, it will get a special bsize reflow.
   }
   FinishAndStoreOverflow(&desiredSize);
-  if (HasView()) {
-    nsContainerFrame::SyncFrameViewAfterReflow(PresContext(), this, GetView(),
-                                               desiredSize.InkOverflow(),
-                                               ReflowChildFlags::Default);
-  }
   // Let our base class do the usual work
 }
 
@@ -529,7 +524,11 @@ void nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   DisplayOutline(aBuilder, aLists);
 
-  for (nsIFrame* kid : PrincipalChildList()) {
+  if (mFrames.IsEmpty() || HidesContent()) {
+    return;
+  }
+
+  for (nsIFrame* kid : mFrames) {
     BuildDisplayListForChild(aBuilder, kid, aLists);
   }
 }

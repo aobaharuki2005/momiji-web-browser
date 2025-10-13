@@ -4051,30 +4051,7 @@ bool PresShell::ScrollFrameIntoView(
 
     if (ScrollContainerFrame* sf = do_QueryFrame(container)) {
       nsPoint oldPosition = sf->GetScrollPosition();
-      nsRect targetRect = rect;
-      // Inflate the scrolled rect by the container's padding in each dimension,
-      // unless we have 'overflow-clip-box-*: content-box' in that dimension.
-      auto* disp = container->StyleDisplay();
-      if (disp->mOverflowClipBoxBlock == StyleOverflowClipBox::ContentBox ||
-          disp->mOverflowClipBoxInline == StyleOverflowClipBox::ContentBox) {
-        WritingMode wm = container->GetWritingMode();
-        bool cbH = (wm.IsVertical() ? disp->mOverflowClipBoxBlock
-                                    : disp->mOverflowClipBoxInline) ==
-                   StyleOverflowClipBox::ContentBox;
-        bool cbV = (wm.IsVertical() ? disp->mOverflowClipBoxInline
-                                    : disp->mOverflowClipBoxBlock) ==
-                   StyleOverflowClipBox::ContentBox;
-        nsMargin padding = container->GetUsedPadding();
-        if (!cbH) {
-          padding.left = padding.right = nscoord(0);
-        }
-        if (!cbV) {
-          padding.top = padding.bottom = nscoord(0);
-        }
-        targetRect.Inflate(padding);
-      }
-
-      targetRect -= sf->GetScrolledFrame()->GetPosition();
+      nsRect targetRect = rect - sf->GetScrolledFrame()->GetPosition();
 
       {
         AutoWeakFrame wf(container);
@@ -5786,8 +5763,8 @@ PresShell::CanvasBackground PresShell::ComputeCanvasBackground() const {
   return {viewportBg, pageBg};
 }
 
-nscolor PresShell::ComputeBackstopColor(nsView* aDisplayRoot) {
-  nsIWidget* widget = aDisplayRoot->GetWidget();
+nscolor PresShell::ComputeBackstopColor(nsIFrame* aDisplayRoot) {
+  nsIWidget* widget = aDisplayRoot ? aDisplayRoot->GetNearestWidget() : nullptr;
   if (widget &&
       (widget->GetTransparencyMode() != widget::TransparencyMode::Opaque ||
        widget->WidgetPaintsBackground())) {
@@ -6726,18 +6703,21 @@ void PresShell::RemoveFrameFromApproximatelyVisibleList(nsIFrame* aFrame) {
   }
 }
 
-void PresShell::PaintAndRequestComposite(nsView* aView, PaintFlags aFlags) {
+void PresShell::PaintAndRequestComposite(nsIFrame* aFrame,
+                                         WindowRenderer* aRenderer,
+                                         PaintFlags aFlags) {
   if (!mIsActive) {
     return;
   }
 
-  WindowRenderer* renderer = aView->GetWidget()->GetWindowRenderer();
-  NS_ASSERTION(renderer, "Must be in paint event");
-  if (renderer->AsFallback()) {
-    // The fallback renderer doesn't do any retaining, so we
-    // just need to notify the view and widget that we're invalid, and
-    // we'll do a paint+composite from the PaintWindow callback.
-    GetViewManager()->InvalidateView(aView);
+  NS_ASSERTION(aRenderer, "Must be in paint event");
+  if (aRenderer->AsFallback()) {
+    // The fallback renderer doesn't do any retaining, so we just need to
+    // notify the view and widget that we're invalid, and we'll do a
+    // paint+composite from the PaintWindow callback.
+    if (auto* view = aFrame ? aFrame->GetView() : nullptr) {
+      GetViewManager()->InvalidateView(view);
+    }
     return;
   }
 
@@ -6750,26 +6730,28 @@ void PresShell::PaintAndRequestComposite(nsView* aView, PaintFlags aFlags) {
   if (aFlags & PaintFlags::PaintCompositeOffscreen) {
     flags |= PaintInternalFlags::PaintCompositeOffscreen;
   }
-  PaintInternal(aView, flags);
+  PaintInternal(aFrame, aRenderer, flags);
 }
 
-void PresShell::SyncPaintFallback(nsView* aView) {
+void PresShell::SyncPaintFallback(nsIFrame* aFrame, WindowRenderer* aRenderer) {
   if (!mIsActive) {
     return;
   }
 
-  WindowRenderer* renderer = aView->GetWidget()->GetWindowRenderer();
-  NS_ASSERTION(renderer->AsFallback(),
+  NS_ASSERTION(aRenderer->AsFallback(),
                "Can't do Sync paint for remote renderers");
-  if (!renderer->AsFallback()) {
+  if (!aRenderer->AsFallback()) {
     return;
   }
 
-  PaintInternal(aView, PaintInternalFlags::PaintComposite);
+  PaintInternal(aFrame, aRenderer, PaintInternalFlags::PaintComposite);
   GetPresContext()->NotifyDidPaintForSubtree();
 }
 
-void PresShell::PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags) {
+void PresShell::PaintInternal(nsIFrame* aFrame, WindowRenderer* aRenderer,
+                              PaintInternalFlags aFlags) {
+  MOZ_ASSERT_IF(aFrame,
+                aFrame->IsViewportFrame() || aFrame->IsMenuPopupFrame());
   nsCString url;
   nsIURI* uri = mDocument->GetDocumentURI();
   Document* contentRoot = GetPrimaryContentDocument();
@@ -6794,7 +6776,7 @@ void PresShell::PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags) {
 #endif
 
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
-  NS_ASSERTION(aViewToPaint, "null view");
+  NS_ASSERTION(aRenderer, "null renderer");
 
   MOZ_ASSERT(!mApproximateFrameVisibilityVisited, "Should have been cleared");
 
@@ -6802,19 +6784,15 @@ void PresShell::PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags) {
     return;
   }
 
-  nsIFrame* frame = aViewToPaint->GetFrame();
-
   FocusTarget focusTarget;
   if (StaticPrefs::apz_keyboard_enabled_AtStartup()) {
     // Update the focus target for async keyboard scrolling. This will be
     // forwarded to APZ by nsDisplayList::PaintRoot. We need to to do this
     // before we enter the paint phase because dispatching eVoid events can
     // cause layout to happen.
-    uint64_t focusSequenceNumber;
-    if (nsMenuPopupFrame* popup = do_QueryFrame(frame)) {
+    uint64_t focusSequenceNumber = mAPZFocusSequenceNumber;
+    if (nsMenuPopupFrame* popup = do_QueryFrame(aFrame)) {
       focusSequenceNumber = popup->GetAPZFocusSequenceNumber();
-    } else {
-      focusSequenceNumber = mAPZFocusSequenceNumber;
     }
     focusTarget = FocusTarget(this, focusSequenceNumber);
   }
@@ -6822,9 +6800,7 @@ void PresShell::PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags) {
   nsPresContext* presContext = GetPresContext();
   AUTO_LAYOUT_PHASE_ENTRY_POINT(presContext, Paint);
 
-  WindowRenderer* renderer = aViewToPaint->GetWidget()->GetWindowRenderer();
-  NS_ASSERTION(renderer, "Must be in paint event");
-  WebRenderLayerManager* layerManager = renderer->AsWebRender();
+  WebRenderLayerManager* layerManager = aRenderer->AsWebRender();
 
   // Whether or not we should set first paint when painting is suppressed
   // is debatable. For now we'll do it because B2G relied on first paint
@@ -6843,7 +6819,7 @@ void PresShell::PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags) {
   const bool offscreen =
       bool(aFlags & PaintInternalFlags::PaintCompositeOffscreen);
 
-  if (!renderer->BeginTransaction(url)) {
+  if (!aRenderer->BeginTransaction(url)) {
     return;
   }
 
@@ -6853,24 +6829,24 @@ void PresShell::PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags) {
     layerManager->SetFocusTarget(focusTarget);
   }
 
-  if (frame) {
+  if (aFrame) {
     if (!(aFlags & PaintInternalFlags::PaintSyncDecodeImages) &&
-        !frame->HasAnyStateBits(NS_FRAME_UPDATE_LAYER_TREE)) {
+        !aFrame->HasAnyStateBits(NS_FRAME_UPDATE_LAYER_TREE)) {
       if (layerManager) {
         layerManager->SetTransactionIdAllocator(presContext->RefreshDriver());
       }
 
-      if (renderer->EndEmptyTransaction(
+      if (aRenderer->EndEmptyTransaction(
               (aFlags & PaintInternalFlags::PaintComposite)
                   ? WindowRenderer::END_DEFAULT
                   : WindowRenderer::END_NO_COMPOSITE)) {
         return;
       }
     }
-    frame->RemoveStateBits(NS_FRAME_UPDATE_LAYER_TREE);
+    aFrame->RemoveStateBits(NS_FRAME_UPDATE_LAYER_TREE);
   }
 
-  nscolor bgcolor = ComputeBackstopColor(aViewToPaint);
+  nscolor bgcolor = ComputeBackstopColor(aFrame);
   PaintFrameFlags flags =
       PaintFrameFlags::WidgetLayers | PaintFrameFlags::ExistingTransaction;
 
@@ -6885,21 +6861,21 @@ void PresShell::PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags) {
   if (aFlags & PaintInternalFlags::PaintCompositeOffscreen) {
     flags |= PaintFrameFlags::CompositeOffscreen;
   }
-  if (renderer->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+  if (aRenderer->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
     flags |= PaintFrameFlags::ForWebRender;
   }
 
-  if (frame) {
+  if (aFrame) {
     // We can paint directly into the widget using its layer manager.
     SelectionNodeCache cache(*this);
-    nsLayoutUtils::PaintFrame(nullptr, frame, nsRegion(), bgcolor,
+    nsLayoutUtils::PaintFrame(nullptr, aFrame, nsRegion(), bgcolor,
                               nsDisplayListBuilderMode::Painting, flags);
     return;
   }
 
   bgcolor = NS_ComposeColors(bgcolor, mCanvasBackground.mViewport.mColor);
 
-  if (renderer->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+  if (aRenderer->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
     LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
         presContext->GetVisibleArea(), presContext->AppUnitsPerDevPixel());
     WebRenderBackgroundData data(wr::ToLayoutRect(bounds),
@@ -6912,7 +6888,7 @@ void PresShell::PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags) {
     return;
   }
 
-  FallbackRenderer* fallback = renderer->AsFallback();
+  FallbackRenderer* fallback = aRenderer->AsFallback();
   MOZ_ASSERT(fallback);
 
   if (aFlags & PaintInternalFlags::PaintComposite) {
@@ -10908,9 +10884,9 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   // because for root frames (where they could be different, since root frames
   // are allowed to have overflow) the root view bounds need to match the
   // viewport bounds; the view manager "window dimensions" code depends on it.
-  if (target->HasView()) {
-    nsContainerFrame::SyncFrameViewAfterReflow(
-        mPresContext, target, target->GetView(), boundsRelativeToTarget);
+  if (auto* view = target->GetView()) {
+    nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, target, view,
+                                               boundsRelativeToTarget);
   }
 
   target->DidReflow(mPresContext, nullptr);
@@ -12145,6 +12121,12 @@ void PresShell::RemoveAnchorPosAnchor(const nsAtom* aName, nsIFrame* aFrame) {
     return;  // Nothing to remove.
   }
 
+#ifdef ACCESSIBILITY
+  if (nsAccessibilityService* accService = GetAccService()) {
+    accService->NotifyAnchorRemoved(this, aFrame);
+  }
+#endif
+
   auto& anchorArray = entry.Data();
 
   // XXX: Once the implementation is more complete,
@@ -12213,20 +12195,20 @@ PresShell::AnchorPosUpdateResult PresShell::UpdateAnchorPosLayout() {
   for (auto* positioned : mAnchorPosPositioned) {
     MOZ_ASSERT(positioned->IsAbsolutelyPositioned(),
                "Anchor positioned frame is not absolutely positioned?");
-    const auto* referencedAnchors =
+    const auto* anchorPosReferenceData =
         positioned->GetProperty(nsIFrame::AnchorPosReferences());
     // Note that it's possible (Though unlikely) to register as anchor
     // positioned but not actually make any anchor resolution - e.g.
     // `position-anchor` is set, but no other anchor positioning property is
     // used.
-    if (!referencedAnchors || referencedAnchors->IsEmpty()) {
+    if (!anchorPosReferenceData || anchorPosReferenceData->IsEmpty()) {
       continue;
     }
     if (positioned->HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
       // Already marked for reflow.
       continue;
     }
-    for (const auto& kv : *referencedAnchors) {
+    for (const auto& kv : *anchorPosReferenceData) {
       const auto& data = kv.GetData();
       const auto& anchorName = kv.GetKey();
       const auto* anchor = GetAnchorPosAnchor(anchorName, positioned);
@@ -12327,20 +12309,56 @@ void PresShell::UpdateAnchorPosLayoutForScroll(
       // Already dirty? Skip.
       continue;
     }
-    const auto* referencedAnchors =
-        positioned->GetProperty(nsIFrame::AnchorPosReferences());
-    if (!referencedAnchors || referencedAnchors->IsEmpty()) {
+
+    const auto* stylePos = positioned->StylePosition();
+    if (!stylePos->mPositionAnchor.IsIdent()) {
+      // If it doesn't have a default anchor then it doesn't compensate for
+      // scroll.
       continue;
     }
+
+    const auto* anchorPosReferenceData =
+        positioned->GetProperty(nsIFrame::AnchorPosReferences());
+    if (!anchorPosReferenceData || anchorPosReferenceData->IsEmpty()) {
+      // If it doesn't reference any anchors then it doesn't compensate for
+      // scroll.
+      continue;
+    }
+
+    const nsAtom* defaultAnchorName =
+        stylePos->mPositionAnchor.AsIdent().AsAtom();
+    // We might not need to do this GetAnchorPosAnchor call at all if none of
+    // the affected anchors are referenced by positioned below. We could
+    // improve this.
+    auto* defaultAnchorFrame =
+        GetAnchorPosAnchor(defaultAnchorName, positioned);
+    if (!defaultAnchorFrame) {
+      continue;
+    }
+    auto* nearestScrollToDefaultAnchor =
+        FindScrollContainerFrameOf(defaultAnchorFrame);
+
     auto* absoluteContainingBlock = positioned->GetParent();
+
+    if (UnderScrollContainer(absoluteContainingBlock,
+                             nearestScrollToDefaultAnchor)) {
+      // If the positioned element's containing block is under the only possible
+      // anchor scroll container that it can scroll with, they'll scroll
+      // together without intervention, so skip the update.
+      continue;
+    }
+
     for (const auto& entry : affectedAnchors) {
       const auto* anchorName = entry.mAnchorName;
       const auto& anchors = entry.mFrames;
-      const auto* data = referencedAnchors->Lookup(anchorName);
+      const auto* data = anchorPosReferenceData->Lookup(anchorName);
       if (!data) {
         continue;
       }
-      const auto* anchorFrame = GetAnchorPosAnchor(anchorName, positioned);
+      const auto* anchorFrame =
+          anchorName == defaultAnchorName
+              ? defaultAnchorFrame
+              : GetAnchorPosAnchor(anchorName, positioned);
       const auto idx = anchors.IndexOf(anchorFrame, 0, Comparator{});
       if (idx == anchors.NoIndex) {
         // Referring to an anchor of the same name but unaffected by scrolling -
@@ -12349,11 +12367,8 @@ void PresShell::UpdateAnchorPosLayoutForScroll(
       }
       auto* anchorScrollContainer =
           anchors.ElementAt(idx).mNearestScrollContainer;
-      if (UnderScrollContainer(absoluteContainingBlock,
-                               anchorScrollContainer)) {
-        // If the positioned element's containing block is under the anchor's
-        // scroll container, they'll scroll together without intervention, so
-        // skip the update.
+      if (anchorScrollContainer != nearestScrollToDefaultAnchor) {
+        // We do not compensate for scroll for this anchor
         continue;
       }
 
@@ -12912,6 +12927,13 @@ nsSize PresShell::GetLayoutViewportSize() const {
     result = sf->GetScrollPortRect().Size();
   }
   return result;
+}
+
+nsSize PresShell::GetInnerSize() const {
+  if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
+    return sf->GetSizeForWindowInnerSize();
+  }
+  return mPresContext->GetVisibleArea().Size();
 }
 
 nsSize PresShell::GetVisualViewportSizeUpdatedByDynamicToolbar() const {

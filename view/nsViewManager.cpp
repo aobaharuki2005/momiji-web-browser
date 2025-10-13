@@ -269,11 +269,11 @@ void nsViewManager::Refresh(nsView* aView,
         printf_stderr("--COMPOSITE-- %p\n", presShell.get());
       }
 #endif
-      WindowRenderer* renderer = widget->GetWindowRenderer();
+      RefPtr<WindowRenderer> renderer = widget->GetWindowRenderer();
       if (!renderer->NeedsWidgetInvalidation()) {
         renderer->FlushRendering(wr::RenderReasons::WIDGET);
       } else {
-        presShell->SyncPaintFallback(aView);
+        presShell->SyncPaintFallback(aView->GetFrame(), renderer);
       }
 #ifdef MOZ_DUMP_PAINTING
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
@@ -396,7 +396,8 @@ void nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget) {
       }
 #endif
 
-      presShell->PaintAndRequestComposite(view, PaintFlags::None);
+      presShell->PaintAndRequestComposite(
+          view->GetFrame(), aWidget->GetWindowRenderer(), PaintFlags::None);
       view->SetForcedRepaint(false);
 
 #ifdef MOZ_DUMP_PAINTING
@@ -828,10 +829,6 @@ void nsViewManager::CallWillPaintOnObservers() {
       }
     }
   }
-}
-
-void nsViewManager::GetLastUserEventTime(uint32_t& aTime) {
-  aTime = gLastUserEventTime;
 }
 
 void nsViewManager::InvalidateHierarchy() {

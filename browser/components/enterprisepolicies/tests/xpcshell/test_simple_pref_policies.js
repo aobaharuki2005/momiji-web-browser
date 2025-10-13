@@ -775,6 +775,29 @@ const POLICIES_TESTS = [
     },
   },
 
+  // POLICY: LocalNetworkAccess
+  {
+    policies: {
+      LocalNetworkAccess: {
+        Enabled: true,
+      },
+    },
+    unlockedPrefs: {
+      "network.lna.enabled": true,
+    },
+  },
+  {
+    policies: {
+      LocalNetworkAccess: {
+        Enabled: false,
+        Locked: true,
+      },
+    },
+    lockedPrefs: {
+      "network.lna.enabled": false,
+    },
+  },
+
   // POLICY: EncryptedMediaExtensions
 
   {

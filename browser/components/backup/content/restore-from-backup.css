@@ -47,6 +47,19 @@
       display: flex;
       column-gap: var(--space-small);
       align-items: center;
+
+      &.aw-embedded-filepicker {
+        align-items: flex-end;
+      }
+    }
+
+    #backup-filepicker-label {
+      text-align: start;
+      font-weight: var(--label-font-weight, normal);
+    }
+
+    #restore-from-backup-no-backup-file-link {
+      text-align: start;
     }
 
     #backup-filepicker-input {
@@ -65,6 +78,28 @@
       &:dir(rtl) {
         background-position: calc(100% - var(--space-small)) 50%;
       }
+
+      &:is(textarea) {
+        background-position: var(--space-small) var(--space-small);
+        background-size: var(--icon-size);
+        resize: none;
+        overflow: hidden;
+      }
+
+      &:is(textarea):dir(rtl) {
+        background-position: calc(100% - var(--space-small)) var(--space-small);
+      }
+    }
+
+    #backup-filepicker-button {
+      margin-block: var(--space-xsmall);
+    }
+
+    #restore-from-backup-backup-found-info {
+      text-align: start;
+      color: var(--text-color-deemphasized);
+      font-size: var(--font-size-small);
+      margin-top: var(--space-xsmall);
     }
   }
 
@@ -75,20 +110,29 @@
     & > #backup-password-label {
       display: flex;
       flex-direction: column;
+      text-align: start;
     }
 
     & > #backup-password-label > input {
       margin-inline-start: 0;
+      margin-block: var(--space-xsmall);
+      font-weight: var(--label-font-weight, normal);
+    }
+
+    & > #backup-password-error {
+      text-align: start;
     }
 
     & > #backup-password-description {
       color: var(--text-color-deemphasized);
       font-size: var(--font-size-small);
+      text-align: start;
     }
   }
 
   #restore-from-backup-button-group {
     grid-area: button-group;
+    justify-content: var(--button-group-justify-content, flex-end);
   }
 
   #backup-password-input[aria-invalid="true"] {

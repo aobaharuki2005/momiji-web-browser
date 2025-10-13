@@ -1,6 +1,63 @@
 {
   "data": [
     {
+      "hash": "2000f182efa8ce5f69bc3f9e574666b5bc2c0af684eedd32f69d15aa9021ea85",
+      "name": "vocab.enpl.spm",
+      "schema": 1759933425754,
+      "toLang": "pl",
+      "version": "2.0",
+      "fileType": "vocab",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "2000f182efa8ce5f69bc3f9e574666b5bc2c0af684eedd32f69d15aa9021ea85",
+        "size": 821612,
+        "filename": "vocab.enpl.spm",
+        "location": "main-workspace/translations-models/733c250d-f88b-49ed-86b9-129b1f8bf7dc.spm",
+        "mimetype": "text/plain"
+      },
+      "filter_expression": "",
+      "id": "61dceb87-bf6e-47d3-b28a-a11546dda054",
+      "last_modified": 1759937886189
+    },
+    {
+      "hash": "f5fa0b27d18d3505a3ca9d23c3ea49d2bb8515b23256e5c7d5b556c4a99f454c",
+      "name": "model.enpl.intgemm.alphas.bin",
+      "schema": 1759933407065,
+      "toLang": "pl",
+      "version": "2.0",
+      "fileType": "model",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "f5fa0b27d18d3505a3ca9d23c3ea49d2bb8515b23256e5c7d5b556c4a99f454c",
+        "size": 31561787,
+        "filename": "model.enpl.intgemm.alphas.bin",
+        "location": "main-workspace/translations-models/8c07b685-43f9-4441-8161-e2dcf244c0bf.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "",
+      "id": "29620b10-ab40-4949-9bd5-c6ab990cf4e9",
+      "last_modified": 1759937886185
+    },
+    {
+      "hash": "2603233dd6959c6be05e037ac764a5d0774b4631dd0f7ac51ff8f2283bb78f2f",
+      "name": "lex.50.50.enpl.s2t.bin",
+      "schema": 1759933399194,
+      "toLang": "pl",
+      "version": "2.0",
+      "fileType": "lex",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "2603233dd6959c6be05e037ac764a5d0774b4631dd0f7ac51ff8f2283bb78f2f",
+        "size": 3539888,
+        "filename": "lex.50.50.enpl.s2t.bin",
+        "location": "main-workspace/translations-models/682771ef-3687-40bf-b167-abe13f827e48.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "",
+      "id": "772b509f-f64c-407c-b960-e22fd84fb889",
+      "last_modified": 1759937886180
+    },
+    {
       "hash": "d9f46182823d5bbc84201252b2dfcac28f63e561f0ec827ed858f241864c9def",
       "name": "vocab.enpt.spm",
       "schema": 1759520726445,
@@ -10989,5 +11046,5 @@
       "last_modified": 1701186751412
     }
   ],
-  "timestamp": 1759521854764
+  "timestamp": 1759937886189
 }

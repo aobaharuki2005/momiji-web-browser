@@ -1168,6 +1168,348 @@ const BASE_MESSAGES = () => [
     },
   },
   {
+    id: "RESTORE_FROM_BACKUP",
+    template: "spotlight",
+    groups: [""],
+    content: {
+      template: "multistage",
+      transitions: true,
+      modal: "tab",
+      backdrop: "transparent",
+      id: "RESTORE_FROM_BACKUP",
+      screens: [
+        {
+          id: "RESTORE_FROM_BACKUP_SCREEN",
+          content: {
+            position: "split",
+            split_content_padding_block: "166px",
+            background:
+              "url('chrome://activity-stream/content/data/content/assets/fox-doodle-backup.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
+            logo: {},
+            title: {
+              string_id: "restored-from-backup-success-title",
+            },
+            cta_paragraph: {
+              text: {
+                string_id: "restored-from-backup-success-no-checklist-subtitle",
+                string_name: "settings",
+                paddingInline: "0 100px",
+              },
+              action: {
+                type: "OPEN_ABOUT_PAGE",
+                data: {
+                  args: "preferences",
+                  where: "tab",
+                },
+              },
+            },
+            primary_button: {
+              label: {
+                string_id:
+                  "restored-from-backup-success-no-checklist-primary-button",
+                paddingBlock: "4px",
+                paddingInline: "16px",
+              },
+              action: {
+                navigate: true,
+              },
+            },
+          },
+        },
+      ],
+    },
+    targeting:
+      "source == 'startup' && !doesAppNeedPin && isDefaultBrowser && !'browser.shell.checkDefaultBrowser'|preferenceValue && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
+    trigger: {
+      id: "defaultBrowserCheck",
+    },
+    frequency: {
+      lifetime: 1,
+    },
+  },
+  {
+    id: "RESTORE_FROM_BACKUP_NEED_DEFAULT_NEED_PIN",
+    template: "spotlight",
+    groups: [""],
+    content: {
+      template: "multistage",
+      transitions: true,
+      modal: "tab",
+      backdrop: "transparent",
+      id: "RESTORE_FROM_BACKUP_NEED_DEFAULT_NEED_PIN",
+      screens: [
+        {
+          id: "RESTORE_FROM_BACKUP_NEED_DEFAULT_NEED_PIN_SCREEN",
+          content: {
+            position: "split",
+            background:
+              "url('chrome://activity-stream/content/data/content/assets/fox-doodle-backup.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
+            logo: {},
+            title: {
+              string_id: "restored-from-backup-success-title",
+            },
+            subtitle: {
+              string_id: "restored-from-backup-success-with-checklist-subtitle",
+              paddingInline: "0 48px",
+            },
+            primary_button: {
+              label: {
+                string_id:
+                  "restored-from-backup-success-with-checklist-primary-button",
+                paddingBlock: "4px",
+                paddingInline: "16px",
+              },
+              action: {
+                type: "MULTI_ACTION",
+                collectSelect: true,
+                navigate: true,
+                data: {
+                  actions: [],
+                },
+              },
+            },
+            secondary_button: {
+              label: {
+                string_id:
+                  "restored-from-backup-success-with-checklist-secondary-button",
+              },
+              action: {
+                navigate: true,
+              },
+              has_arrow_icon: true,
+            },
+            tiles: {
+              type: "multiselect",
+              style: {
+                gap: "10px",
+              },
+              data: [
+                {
+                  id: "checkbox-1",
+                  defaultValue: true,
+                  label: {
+                    string_id:
+                      "mr2022-onboarding-easy-setup-set-default-checkbox-label",
+                  },
+                  action: {
+                    type: "SET_DEFAULT_BROWSER",
+                  },
+                },
+                {
+                  id: "checkbox-2",
+                  defaultValue: true,
+                  label: {
+                    string_id: isMSIX
+                      ? "mr2022-onboarding-pin-primary-button-label-msix"
+                      : "mr2022-onboarding-pin-primary-button-label",
+                  },
+                  action: {
+                    type: "MULTI_ACTION",
+                    data: {
+                      actions: [
+                        {
+                          type: "PIN_FIREFOX_TO_TASKBAR",
+                        },
+                        {
+                          type: "PIN_FIREFOX_TO_START_MENU",
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      ],
+    },
+    targeting:
+      "source == 'startup' && doesAppNeedPin && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
+    trigger: {
+      id: "defaultBrowserCheck",
+    },
+    frequency: {
+      lifetime: 1,
+    },
+  },
+  {
+    id: "RESTORE_FROM_BACKUP_NEED_DEFAULT",
+    template: "spotlight",
+    groups: [""],
+    content: {
+      template: "multistage",
+      transitions: true,
+      modal: "tab",
+      backdrop: "transparent",
+      id: "RESTORE_FROM_BACKUP_NEED_DEFAULT",
+      screens: [
+        {
+          id: "RESTORE_FROM_BACKUP_NEED_DEFAULT_SCREEN",
+          content: {
+            position: "split",
+            background:
+              "url('chrome://activity-stream/content/data/content/assets/fox-doodle-backup.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
+            logo: {},
+            title: {
+              string_id: "restored-from-backup-success-title",
+            },
+            subtitle: {
+              string_id: "restored-from-backup-success-with-checklist-subtitle",
+              paddingInline: "0 48px",
+            },
+            primary_button: {
+              label: {
+                string_id:
+                  "restored-from-backup-success-with-checklist-primary-button",
+                paddingBlock: "4px",
+                paddingInline: "16px",
+              },
+              action: {
+                type: "MULTI_ACTION",
+                collectSelect: true,
+                navigate: true,
+                data: {
+                  actions: [],
+                },
+              },
+            },
+            secondary_button: {
+              label: {
+                string_id:
+                  "restored-from-backup-success-with-checklist-secondary-button",
+              },
+              action: {
+                navigate: true,
+              },
+              has_arrow_icon: true,
+            },
+            tiles: {
+              type: "multiselect",
+              style: {
+                gap: "10px",
+              },
+              data: [
+                {
+                  id: "checkbox-1",
+                  defaultValue: true,
+                  label: {
+                    string_id:
+                      "mr2022-onboarding-easy-setup-set-default-checkbox-label",
+                  },
+                  action: {
+                    type: "SET_DEFAULT_BROWSER",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      ],
+    },
+    targeting:
+      "source == 'startup' && !doesAppNeedPin && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
+    trigger: {
+      id: "defaultBrowserCheck",
+    },
+    frequency: {
+      lifetime: 1,
+    },
+  },
+  {
+    id: "RESTORE_FROM_BACKUP_NEED_PIN",
+    template: "spotlight",
+    groups: [""],
+    content: {
+      template: "multistage",
+      transitions: true,
+      modal: "tab",
+      backdrop: "transparent",
+      id: "RESTORE_FROM_BACKUP_NEED_PIN",
+      screens: [
+        {
+          id: "RESTORE_FROM_BACKUP_NEED_PIN_SCREEN",
+          content: {
+            position: "split",
+            background:
+              "url('chrome://activity-stream/content/data/content/assets/fox-doodle-backup.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
+            logo: {},
+            title: {
+              string_id: "restored-from-backup-success-title",
+            },
+            subtitle: {
+              string_id: "restored-from-backup-success-with-checklist-subtitle",
+              paddingInline: "0 48px",
+            },
+            primary_button: {
+              label: {
+                string_id:
+                  "restored-from-backup-success-with-checklist-primary-button",
+                paddingBlock: "4px",
+                paddingInline: "16px",
+              },
+              action: {
+                type: "MULTI_ACTION",
+                collectSelect: true,
+                navigate: true,
+                data: {
+                  actions: [],
+                },
+              },
+            },
+            secondary_button: {
+              label: {
+                string_id:
+                  "restored-from-backup-success-with-checklist-secondary-button",
+              },
+              action: {
+                navigate: true,
+              },
+              has_arrow_icon: true,
+            },
+            tiles: {
+              type: "multiselect",
+              style: {
+                gap: "10px",
+              },
+              data: [
+                {
+                  id: "checkbox-1",
+                  defaultValue: true,
+                  label: {
+                    string_id: isMSIX
+                      ? "mr2022-onboarding-pin-primary-button-label-msix"
+                      : "mr2022-onboarding-pin-primary-button-label",
+                  },
+                  action: {
+                    type: "MULTI_ACTION",
+                    data: {
+                      actions: [
+                        {
+                          type: "PIN_FIREFOX_TO_TASKBAR",
+                        },
+                        {
+                          type: "PIN_FIREFOX_TO_START_MENU",
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      ],
+    },
+    targeting:
+      "source == 'startup' && doesAppNeedPin && !willShowDefaultPrompt &&(!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser) && 'browser.backup.profile-restoration-date'|preferenceValue",
+    trigger: {
+      id: "defaultBrowserCheck",
+    },
+    frequency: {
+      lifetime: 1,
+    },
+  },
+  {
     id: "TAIL_FOX_SET_DEFAULT",
     template: "spotlight",
     groups: ["eco"],
@@ -2015,11 +2357,29 @@ export const OnboardingMessageProvider = {
 
   async getMessages() {
     const messages = await this.translateMessages(await ONBOARDING_MESSAGES());
+    OnboardingMessageProvider.getRestoredFromBackupMessage(messages);
     return messages;
   },
 
   getPreonboardingMessages() {
     return PREONBOARDING_MESSAGES();
+  },
+
+  // If the user has restored from a backup, mutate the restore from backup message to appear once per backup by using the restoration timestamp as the unique message id
+  getRestoredFromBackupMessage(messages) {
+    const backupRestorationTimestamp = Services.prefs.getIntPref(
+      "browser.backup.profile-restoration-date",
+      0
+    );
+
+    if (backupRestorationTimestamp) {
+      for (const msg of messages) {
+        if (msg.id.startsWith("RESTORE_FROM_BACKUP")) {
+          msg.id += `_${backupRestorationTimestamp}`;
+          msg.content.id += `_${backupRestorationTimestamp}`;
+        }
+      }
+    }
   },
 
   async getUntranslatedMessages() {

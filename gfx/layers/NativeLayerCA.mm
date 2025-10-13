@@ -203,37 +203,24 @@ NativeLayerRootCA::CreateForCALayer(CALayer* aLayer) {
   return layerRoot.forget();
 }
 
-// Returns an autoreleased CALayer* object.
-static CALayer* MakeOffscreenRootCALayer() {
-  // This layer should behave similarly to the backing layer of a flipped
-  // NSView. It will never be rendered on the screen and it will never be
-  // attached to an NSView's layer; instead, it will be the root layer of a
-  // "local" CAContext. Setting geometryFlipped to YES causes the orientation of
-  // descendant CALayers' contents (such as IOSurfaces) to be consistent with
-  // what happens in a layer subtree that is attached to a flipped NSView.
-  // Setting it to NO would cause the surfaces in individual leaf layers to
-  // render upside down (rather than just flipping the entire layer tree upside
-  // down).
-  AutoCATransaction transaction;
-  CALayer* layer = [CALayer layer];
-  layer.position = CGPointZero;
-  layer.bounds = CGRectZero;
-  layer.anchorPoint = CGPointZero;
-  layer.contentsGravity = kCAGravityTopLeft;
-  layer.masksToBounds = YES;
-  layer.geometryFlipped = YES;
-  return layer;
-}
-
 NativeLayerRootCA::NativeLayerRootCA(CALayer* aLayer)
-    : mMutex("NativeLayerRootCA"),
-      mOnscreenRepresentation(aLayer),
-      mOffscreenRepresentation(MakeOffscreenRootCALayer()) {}
+    : mMutex("NativeLayerRootCA"), mOnscreenRootCALayer([aLayer retain]) {}
 
 NativeLayerRootCA::~NativeLayerRootCA() {
   MOZ_RELEASE_ASSERT(
       mSublayers.IsEmpty(),
       "Please clear all layers before destroying the layer root.");
+
+
+  {
+    // Clear the root layer's sublayers. At this point the window is usually
+    // closed, so this transaction does not cause any screen updates.
+    AutoCATransaction transaction;
+    mOnscreenRootCALayer.sublayers = @[];
+  }
+
+  [mOnscreenRootCALayer release];
+  [mOffscreenRootCALayer release];
 }
 
 already_AddRefed<NativeLayer> NativeLayerRootCA::CreateLayer(
@@ -272,8 +259,7 @@ void NativeLayerRootCA::AppendLayer(NativeLayer* aLayer) {
   mSublayers.AppendElement(layerCA);
   layerCA->SetBackingScale(mBackingScale);
   layerCA->SetRootWindowIsFullscreen(mWindowIsFullscreen);
-  ForAllRepresentations(
-      [&](Representation& r) { r.mMutatedLayerStructure = true; });
+  SetMutatedLayerStructure();
 }
 
 void NativeLayerRootCA::RemoveLayer(NativeLayer* aLayer) {
@@ -283,8 +269,7 @@ void NativeLayerRootCA::RemoveLayer(NativeLayer* aLayer) {
   MOZ_RELEASE_ASSERT(layerCA);
 
   mSublayers.RemoveElement(layerCA);
-  ForAllRepresentations(
-      [&](Representation& r) { r.mMutatedLayerStructure = true; });
+  SetMutatedLayerStructure();
 }
 
 void NativeLayerRootCA::SetLayers(
@@ -309,8 +294,7 @@ void NativeLayerRootCA::SetLayers(
 
   if (layersCA != mSublayers) {
     mSublayers = std::move(layersCA);
-    ForAllRepresentations(
-        [&](Representation& r) { r.mMutatedLayerStructure = true; });
+    SetMutatedLayerStructure();
   }
 }
 
@@ -353,8 +337,10 @@ bool NativeLayerRootCA::CommitToScreen() {
       return false;
     }
 
-    mOnscreenRepresentation.Commit(WhichRepresentation::ONSCREEN, mSublayers,
-                                   mWindowIsFullscreen);
+    CommitRepresentation(WhichRepresentation::ONSCREEN, mOnscreenRootCALayer,
+                         mSublayers, mMutatedOnscreenLayerStructure,
+                         mWindowIsFullscreen);
+    mMutatedOnscreenLayerStructure = false;
 
     mCommitPending = false;
 
@@ -402,7 +388,7 @@ UniquePtr<NativeLayerRootSnapshotter> NativeLayerRootCA::CreateSnapshotter() {
                      "should exist when this is called");
 
   auto cr = NativeLayerRootSnapshotterCA::Create(
-      this, mOffscreenRepresentation.mRootCALayer);
+      MakeUnique<SnapshotterDelegate>(this));
   if (cr) {
     mWeakSnapshotter = cr.get();
   }
@@ -421,117 +407,99 @@ void NativeLayerRootCA::OnNativeLayerRootSnapshotterDestroyed(
 }
 #endif
 
-void NativeLayerRootCA::CommitOffscreen() {
+void NativeLayerRootCA::CommitOffscreen(CALayer* aRootCALayer) {
   MutexAutoLock lock(mMutex);
-  mOffscreenRepresentation.Commit(WhichRepresentation::OFFSCREEN, mSublayers,
-                                  mWindowIsFullscreen);
-}
-
-template <typename F>
-void NativeLayerRootCA::ForAllRepresentations(F aFn) {
-  aFn(mOnscreenRepresentation);
-  aFn(mOffscreenRepresentation);
-}
-
-NativeLayerRootCA::Representation::Representation(CALayer* aRootCALayer)
-    : mRootCALayer([aRootCALayer retain]) {}
-
-NativeLayerRootCA::Representation::~Representation() {
-  if (mMutatedLayerStructure) {
-    // Clear the root layer's sublayers. At this point the window is usually
-    // closed, so this transaction does not cause any screen updates.
-    AutoCATransaction transaction;
-    mRootCALayer.sublayers = @[];
+  if (aRootCALayer != mOffscreenRootCALayer) {
+    [mOffscreenRootCALayer release];
+    mOffscreenRootCALayer = [aRootCALayer retain];
+    mMutatedOffscreenLayerStructure = true;
   }
-
-  [mRootCALayer release];
+  CommitRepresentation(WhichRepresentation::OFFSCREEN, aRootCALayer, mSublayers,
+                       mMutatedOffscreenLayerStructure, mWindowIsFullscreen);
+  mMutatedOffscreenLayerStructure = false;
 }
 
-void NativeLayerRootCA::Representation::Commit(
+void NativeLayerRootCA::SetMutatedLayerStructure() {
+  mMutatedOnscreenLayerStructure = true;
+  mMutatedOffscreenLayerStructure = true;
+}
+
+NativeLayerCAUpdateType NativeLayerRootCA::GetMaxUpdateRequired(
     WhichRepresentation aRepresentation,
     const nsTArray<RefPtr<NativeLayerCA>>& aSublayers,
-    bool aWindowIsFullscreen) {
-  bool mustRebuild = mMutatedLayerStructure;
-  if (!mustRebuild) {
-    // Check which type of update we need to do, if any.
-    NativeLayerCA::UpdateType updateRequired = NativeLayerCA::UpdateType::None;
+    bool aMutatedLayerStructure) const {
+  if (aMutatedLayerStructure) {
+    return UpdateType::All;
+  }
 
-    for (auto layer : aSublayers) {
-      // Use the ordering of our UpdateType enums to build a maximal update
-      // type.
-      updateRequired =
-          std::max(updateRequired, layer->HasUpdate(aRepresentation));
-      if (updateRequired == NativeLayerCA::UpdateType::All) {
-        break;
-      }
+  UpdateType maxUpdateRequired = UpdateType::None;
+  for (const auto& layer : aSublayers) {
+    UpdateType updateRequired = layer->HasUpdate(aRepresentation);
+    if (updateRequired == UpdateType::All) {
+      return UpdateType::All;
     }
+    // Use the ordering of our UpdateType enum values.
+    maxUpdateRequired = std::max(maxUpdateRequired, updateRequired);
+  }
+  return maxUpdateRequired;
+}
 
-    if (updateRequired == NativeLayerCA::UpdateType::None) {
+void NativeLayerRootCA::CommitRepresentation(
+    WhichRepresentation aRepresentation, CALayer* aRootCALayer,
+    const nsTArray<RefPtr<NativeLayerCA>>& aSublayers,
+    bool aMutatedLayerStructure, bool aWindowIsFullscreen) {
+  UpdateType updateRequired =
+      GetMaxUpdateRequired(aRepresentation, aSublayers, aMutatedLayerStructure);
+  if (updateRequired == NativeLayerCA::UpdateType::OnlyVideo) {
+    // Attempt a video-only update, which does not require being wrapped in a
+    // CATransaction.
+    bool allUpdatesSucceeded =
+        std::all_of(aSublayers.begin(), aSublayers.end(),
+                    [=](const RefPtr<NativeLayerCA>& layer) {
+                      bool ignoredMustRebuild = false;
+                      return layer->ApplyChanges(
+                          aRepresentation, NativeLayerCA::UpdateType::OnlyVideo,
+                          &ignoredMustRebuild);
+                    });
+
+    if (allUpdatesSucceeded) {
       // Nothing more needed, so early exit.
       return;
-    }
-
-    if (updateRequired == NativeLayerCA::UpdateType::OnlyVideo) {
-      bool allUpdatesSucceeded = std::all_of(
-          aSublayers.begin(), aSublayers.end(),
-          [=](const RefPtr<NativeLayerCA>& layer) {
-            return layer->ApplyChanges(aRepresentation,
-                                       NativeLayerCA::UpdateType::OnlyVideo);
-          });
-
-      if (allUpdatesSucceeded) {
-        // Nothing more needed, so early exit;
-        return;
-      }
     }
   }
 
   // We're going to do a full update now, which requires a transaction. Update
-  // all of the sublayers. Afterwards, only continue processing the sublayers
-  // which have an extent.
+  // all of the sublayers. We collect all sublayers with non-zero extents into
+  // the sublayers array - layers which are completely clipped out will return
+  // null from UndelyingCALayer.
   AutoCATransaction transaction;
-  nsTArray<NativeLayerCA*> sublayersWithExtent;
-  for (auto layer : aSublayers) {
-    mustRebuild |= layer->WillUpdateAffectLayers(aRepresentation);
-    layer->ApplyChanges(aRepresentation, NativeLayerCA::UpdateType::All);
-    CALayer* caLayer = layer->UnderlyingCALayer(aRepresentation);
-    if (!caLayer.masksToBounds || !CGRectIsEmpty(caLayer.bounds)) {
-      // This layer has an extent. If it didn't before, we need to rebuild.
-      mustRebuild |= !layer->HasExtent();
-      layer->SetHasExtent(true);
-      sublayersWithExtent.AppendElement(layer);
-    } else {
-      // This layer has no extent. If it did before, we need to rebuild.
-      mustRebuild |= layer->HasExtent();
-      layer->SetHasExtent(false);
+  NSMutableArray<CALayer*>* sublayers =
+      [NSMutableArray arrayWithCapacity:aSublayers.Length()];
+  bool mustRebuild = updateRequired == UpdateType::All;
+  for (const auto& layer : aSublayers) {
+    layer->ApplyChanges(aRepresentation, NativeLayerCA::UpdateType::All,
+                        &mustRebuild);
+    if (CALayer* caLayer = layer->UnderlyingCALayer(aRepresentation)) {
+      [sublayers addObject:caLayer];
     }
-
-    // One other reason we may need to rebuild is if the caLayer is not part of
-    // the root layer's sublayers. This might happen if the caLayer was rebuilt.
-    // We construct this check in a way that maximizes the boolean
-    // short-circuit, because we don't want to call containsObject unless
-    // absolutely necessary.
-    mustRebuild =
-        mustRebuild || ![mRootCALayer.sublayers containsObject:caLayer];
   }
 
   if (mustRebuild) {
-    uint32_t sublayersCount = sublayersWithExtent.Length();
-    NSMutableArray<CALayer*>* sublayers =
-        [NSMutableArray arrayWithCapacity:sublayersCount];
-    for (auto layer : sublayersWithExtent) {
-      [sublayers addObject:layer->UnderlyingCALayer(aRepresentation)];
-    }
-    mRootCALayer.sublayers = sublayers;
+    aRootCALayer.sublayers = sublayers;
   }
-
-  mMutatedLayerStructure = false;
 }
+
+SnapshotterCADelegate::~SnapshotterCADelegate() = default;
+
+NativeLayerRootCA::SnapshotterDelegate::SnapshotterDelegate(
+    NativeLayerRootCA* aLayerRoot)
+    : mLayerRoot(aLayerRoot) {}
+NativeLayerRootCA::SnapshotterDelegate::~SnapshotterDelegate() = default;
 
 #ifdef XP_MACOSX
 /* static */ UniquePtr<NativeLayerRootSnapshotterCA>
-NativeLayerRootSnapshotterCA::Create(NativeLayerRootCA* aLayerRoot,
-                                     CALayer* aRootCALayer) {
+NativeLayerRootSnapshotterCA::Create(
+    UniquePtr<SnapshotterCADelegate>&& aDelegate) {
   if (NS_IsMainThread()) {
     // Disallow creating snapshotters on the main thread.
     // On the main thread, any explicit CATransaction / NSAnimationContext is
@@ -552,8 +520,7 @@ NativeLayerRootSnapshotterCA::Create(NativeLayerRootCA* aLayerRoot,
   }
 
   return UniquePtr<NativeLayerRootSnapshotterCA>(
-      new NativeLayerRootSnapshotterCA(aLayerRoot, std::move(gl),
-                                       aRootCALayer));
+      new NativeLayerRootSnapshotterCA(std::move(aDelegate), std::move(gl)));
 }
 #endif
 
@@ -626,22 +593,24 @@ VideoLowPowerType NativeLayerRootCA::CheckVideoLowPower(
   // determine more detail.
 
   uint32_t videoLayerCount = 0;
-  NativeLayerCA* topLayer = nullptr;
+  DebugOnly<RefPtr<NativeLayerCA>> topLayer;
   CALayer* topCALayer = nil;
   CALayer* secondCALayer = nil;
   bool topLayerIsVideo = false;
 
   for (auto layer : mSublayers) {
     // Only layers with extent are contributing to our sublayers.
-    if (layer->HasExtent()) {
-      topLayer = layer;
-
-      secondCALayer = topCALayer;
-      topCALayer = topLayer->UnderlyingCALayer(WhichRepresentation::ONSCREEN);
-      topLayerIsVideo = topLayer->IsVideo(aProofOfLock);
-      if (topLayerIsVideo) {
+    CALayer* caLayer = layer->UnderlyingCALayer(WhichRepresentation::ONSCREEN);
+    if (caLayer) {
+      bool isVideo = layer->IsVideo(aProofOfLock); 
+      if (isVideo) {
         ++videoLayerCount;
       }
+      secondCALayer = topCALayer;
+
+      topLayer = layer;
+      topCALayer = caLayer;
+      topLayerIsVideo = isVideo;
     }
   }
 
@@ -717,20 +686,17 @@ VideoLowPowerType NativeLayerRootCA::CheckVideoLowPower(
 
 #ifdef XP_MACOSX
 NativeLayerRootSnapshotterCA::NativeLayerRootSnapshotterCA(
-    NativeLayerRootCA* aLayerRoot, RefPtr<GLContext>&& aGL,
-    CALayer* aRootCALayer)
-    : mLayerRoot(aLayerRoot), mGL(aGL) {
-  AutoCATransaction transaction;
-  mRenderer = [[CARenderer
-      rendererWithCGLContext:gl::GLContextCGL::Cast(mGL)->GetCGLContext()
-                     options:nil] retain];
-  mRenderer.layer = aRootCALayer;
-}
+    UniquePtr<SnapshotterCADelegate>&& aDelegate, RefPtr<GLContext>&& aGL)
+    : mDelegate(std::move(aDelegate)), mGL(aGL) {}
 
 NativeLayerRootSnapshotterCA::~NativeLayerRootSnapshotterCA() {
-  mLayerRoot->OnNativeLayerRootSnapshotterDestroyed(this);
-  AutoCATransaction transaction;
-  [mRenderer release];
+  mDelegate->OnSnapshotterDestroyed(this);
+
+  if (mRenderer) {
+    AutoCATransaction transaction;
+    mRenderer.layer.sublayers = @[];
+    [mRenderer release];
+  }
 }
 
 already_AddRefed<profiler_screenshots::RenderSource>
@@ -743,21 +709,45 @@ void NativeLayerRootSnapshotterCA::UpdateSnapshot(const IntSize& aSize) {
   CGRect bounds = CGRectMake(0, 0, aSize.width, aSize.height);
 
   {
-    // Set the correct bounds and scale on the renderer and its root layer.
+    // Lazily initialize our renderer, and set the correct bounds and scale
+    // on the renderer and its root layer.
+    AutoCATransaction transaction;
+    if (!mRenderer) {
+      mRenderer = [[CARenderer
+          rendererWithCGLContext:gl::GLContextCGL::Cast(mGL)->GetCGLContext()
+                         options:nil] retain];
+      // This layer should behave similarly to the backing layer of a flipped
+      // NSView. It will never be rendered on the screen and it will never be
+      // attached to an NSView's layer; instead, it will be the root layer of a
+      // "local" CAContext. Setting geometryFlipped to YES causes the
+      // orientation of descendant CALayers' contents (such as IOSurfaces) to be
+      // consistent with what happens in a layer subtree that is attached to a
+      // flipped NSView. Setting it to NO would cause the surfaces in individual
+      // leaf layers to render upside down (rather than just flipping the entire
+      // layer tree upside down).
+      AutoCATransaction transaction;
+      CALayer* layer = [CALayer layer];
+      layer.position = CGPointZero;
+      layer.anchorPoint = CGPointZero;
+      layer.contentsGravity = kCAGravityTopLeft;
+      layer.masksToBounds = YES;
+      layer.geometryFlipped = YES;
+      mRenderer.layer = layer;
+    }
+
     // CARenderer always renders at unit scale, i.e. the coordinates on the root
     // layer must map 1:1 to render target pixels. But the coordinates on our
     // content layers are in "points", where 1 point maps to 2 device pixels on
     // HiDPI. So in order to render at the full device pixel resolution, we set
     // a scale transform on the root offscreen layer.
-    AutoCATransaction transaction;
     mRenderer.layer.bounds = bounds;
-    float scale = mLayerRoot->BackingScale();
+    float scale = mDelegate->BackingScale();
     mRenderer.layer.sublayerTransform = CATransform3DMakeScale(scale, scale, 1);
     mRenderer.bounds = bounds;
   }
 
-  mLayerRoot->CommitOffscreen();
-
+  mDelegate->UpdateSnapshotterLayers(mRenderer.layer);
+  
   mGL->MakeCurrent();
 
   bool needToRedrawEverything = false;
@@ -901,9 +891,10 @@ CGColorRef CGColorCreateForDeviceColor(gfx::DeviceColor aColor) {
 }
 
 NativeLayerCA::NativeLayerCA(gfx::DeviceColor aColor)
-    : mMutex("NativeLayerCA"), mIsOpaque(aColor.a >= 1.0f) {
+    : mMutex("NativeLayerCA"),
+      mColor(Some(aColor)),
+      mIsOpaque(aColor.a >= 1.0f) {
   MOZ_ASSERT(aColor.a > 0.0f, "Can't handle a fully transparent backdrop.");
-  mColor.AssignUnderCreateRule(CGColorCreateForDeviceColor(aColor));
 }
 
 NativeLayerCA::NativeLayerCA(const IntSize& aSize, bool aIsOpaque)
@@ -918,6 +909,10 @@ NativeLayerCA::~NativeLayerCA() {
           this);
   }
 #endif
+
+  if (mSurfaceToPresent) {
+    IOSurfaceDecrementUseCount(mSurfaceToPresent.get());
+  }
 }
 
 void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
@@ -1231,7 +1226,7 @@ void NativeLayerCA::DumpLayer(std::ostream& aOutputStream) {
   }
 
   Maybe<CGRect> scaledClipRect =
-      CalculateClipGeometry(surfaceSize, mPosition, mTransform, displayRect,
+      NativeLayerCA::CalculateClipGeometry(surfaceSize, mPosition, mTransform, displayRect,
                             mClipRect, mBackingScale);
 
   CGRect useClipRect;
@@ -1253,10 +1248,9 @@ void NativeLayerCA::DumpLayer(std::ostream& aOutputStream) {
   }
 
   if (mColor) {
-    const CGFloat* components = CGColorGetComponents(mColor.get());
-    aOutputStream << "background: rgb(" << components[0] * 255.0f << " "
-                  << components[1] * 255.0f << " " << components[2] * 255.0f
-                  << "); opacity: " << components[3] << "; ";
+    aOutputStream << "background: rgb(" << mColor->r * 255.0f << " "
+                  << mColor->g * 255.0f << " " << mColor->b * 255.0f
+                  << "); opacity: " << mColor->a << "; ";
 
     // That's all we need for color layers. We don't need to specify an image.
     aOutputStream << "\"/></div>\n";
@@ -1377,7 +1371,15 @@ void NativeLayerCA::SetSurfaceToPresent(CFTypeRefPtr<IOSurfaceRef> aSurfaceRef,
              "Shouldn't call this for layers that get external surfaces.");
 
   bool changedSurface = (mSurfaceToPresent != aSurfaceRef);
-  mSurfaceToPresent = aSurfaceRef;
+  if (changedSurface) {
+    if (mSurfaceToPresent) {
+      IOSurfaceDecrementUseCount(mSurfaceToPresent.get());
+    }
+    mSurfaceToPresent = aSurfaceRef;
+    if (mSurfaceToPresent) {
+      IOSurfaceIncrementUseCount(mSurfaceToPresent.get());
+    }
+  }
 
   bool changedSize = (mSize != aSize);
   mSize = aSize;
@@ -1425,7 +1427,7 @@ void NativeLayerCA::SetSurfaceToPresent(CFTypeRefPtr<IOSurfaceRef> aSurfaceRef,
   }
 }
 
-NativeLayerCA::Representation::Representation()
+NativeLayerCARepresentation::NativeLayerCARepresentation()
     : mMutatedPosition(true),
       mMutatedTransform(true),
       mMutatedDisplayRect(true),
@@ -1440,7 +1442,7 @@ NativeLayerCA::Representation::Representation()
       mMutatedIsDRM(true) {}
 
 
-NativeLayerCA::Representation::~Representation() {
+NativeLayerCARepresentation::~NativeLayerCARepresentation() {
   [mContentCALayer release];
   [mOpaquenessTintLayer release];
   [mWrappingCALayer release];
@@ -1550,7 +1552,8 @@ Maybe<CGRect> NativeLayerCA::CalculateClipGeometry(
 }
 
 bool NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation,
-                                 NativeLayerCA::UpdateType aUpdate) {
+                                 NativeLayerCA::UpdateType aUpdate,
+                                 bool* aMustRebuild) {
   MutexAutoLock lock(mMutex);
   CFTypeRefPtr<IOSurfaceRef> surface;
   IntSize size = mSize;
@@ -1570,11 +1573,20 @@ bool NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation,
     surface = mTextureHost->GetSurface()->GetIOSurfaceRef();
   }
 
-  return GetRepresentation(aRepresentation)
-      .ApplyChanges(aUpdate, size, mIsOpaque, mPosition, mTransform,
-                    displayRect, mClipRect, mRoundedClipRect, mBackingScale,
-                    surfaceIsFlipped, mSamplingFilter, mSpecializeVideo,
-                    surface, mColor, mIsDRM, IsVideo(lock));
+  auto& r = GetRepresentation(aRepresentation);
+  if (r.mMutatedSpecializeVideo) {
+    *aMustRebuild = true;
+  }
+  bool hadExtentBeforeUpdate = r.UnderlyingCALayer() != nullptr;
+  bool updateSucceeded = r.ApplyChanges(
+      aUpdate, size, mIsOpaque, mPosition, mTransform, displayRect, mClipRect,
+      mRoundedClipRect, mBackingScale, surfaceIsFlipped, mSamplingFilter,
+      mSpecializeVideo, surface, mColor, mIsDRM, IsVideo(lock));
+  bool hasExtentAfterUpdate = r.UnderlyingCALayer() != nullptr;
+  if (hasExtentAfterUpdate != hadExtentBeforeUpdate) {
+    *aMustRebuild = true;
+  }
+  return updateSucceeded;
 }
 
 CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
@@ -1773,14 +1785,14 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
   return true;
 }
 
-bool NativeLayerCA::Representation::ApplyChanges(
-    NativeLayerCA::UpdateType aUpdate, const IntSize& aSize, bool aIsOpaque,
+bool NativeLayerCARepresentation::ApplyChanges(
+    UpdateType aUpdate, const IntSize& aSize, bool aIsOpaque,
     const IntPoint& aPosition, const Matrix4x4& aTransform,
     const IntRect& aDisplayRect, const Maybe<IntRect>& aClipRect,
     const Maybe<gfx::RoundedRect>& aRoundedClip, float aBackingScale,
     bool aSurfaceIsFlipped, gfx::SamplingFilter aSamplingFilter,
-    bool aSpecializeVideo, CFTypeRefPtr<IOSurfaceRef> aFrontSurface,
-    CFTypeRefPtr<CGColorRef> aColor, bool aIsDRM, bool aIsVideo) {
+    bool aSpecializeVideo, const CFTypeRefPtr<IOSurfaceRef>& aFrontSurface,
+    const Maybe<gfx::DeviceColor>& aColor, bool aIsDRM, bool aIsVideo) {
   // If we have an OnlyVideo update, handle it and early exit.
   if (aUpdate == UpdateType::OnlyVideo) {
     // If we don't have any updates to do, exit early with success. This is
@@ -1858,7 +1870,8 @@ bool NativeLayerCA::Representation::ApplyChanges(
     if (aColor) {
       // Color layers set a color on the clip layer and don't get a content
       // layer.
-      mRoundedClipCALayer.backgroundColor = aColor.get();
+      mRoundedClipCALayer.backgroundColor =
+          CGColorCreateForDeviceColor(*aColor); 
     } else {
       if (aSpecializeVideo) {
 #ifdef NIGHTLY_BUILD
@@ -1960,7 +1973,7 @@ bool NativeLayerCA::Representation::ApplyChanges(
   if (mMutatedBackingScale || mMutatedPosition || mMutatedDisplayRect ||
       mMutatedClipRect || mMutatedRoundedClipRect || mMutatedTransform ||
       mMutatedSurfaceIsFlipped || mMutatedSize || layerNeedsInitialization) {
-    Maybe<CGRect> scaledClipRect = CalculateClipGeometry(
+    Maybe<CGRect> scaledClipRect = NativeLayerCA::CalculateClipGeometry(
         aSize, aPosition, aTransform, aDisplayRect, aClipRect, aBackingScale);
 
     CGRect useClipRect;
@@ -2169,13 +2182,6 @@ NativeLayerCA::UpdateType NativeLayerCA::Representation::HasUpdate(
   }
 
   return UpdateType::None;
-}
-
-bool NativeLayerCA::WillUpdateAffectLayers(
-    WhichRepresentation aRepresentation) {
-  MutexAutoLock lock(mMutex);
-  auto& r = GetRepresentation(aRepresentation);
-  return r.mMutatedSpecializeVideo || !r.UnderlyingCALayer();
 }
 
 bool DownscaleTargetNLRS::DownscaleFrom(

@@ -181,7 +181,6 @@ enum class GLRenderer {
   Tegra,
   AndroidEmulator,
   GalliumLlvmpipe,
-  IntelHD3000,
   MicrosoftBasicRenderDriver,
   SamsungXclipse,
   Other

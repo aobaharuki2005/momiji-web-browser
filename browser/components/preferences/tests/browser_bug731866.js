@@ -7,7 +7,7 @@ const browserContainersGroupDisabled = !SpecialPowers.getBoolPref(
 const cookieBannerHandlingDisabled = !SpecialPowers.getBoolPref(
   "cookiebanners.ui.desktop.enabled"
 );
-const backupGroupDisabled = !SpecialPowers.getBoolPref(
+const backupSectionDisabled = !SpecialPowers.getBoolPref(
   "browser.backup.preferences.ui.enabled"
 );
 const profilesGroupDisabled = !SelectableProfileService.isEnabled;
@@ -65,8 +65,8 @@ function checkElements(expectedPane) {
     }
 
     // Backup is currently disabled by default. (bug 1895791)
-    if (element.id == "dataBackupGroup" && backupGroupDisabled) {
-      is_element_hidden(element, "Disabled dataBackupGroup should be hidden");
+    if (element.id == "dataBackupSection" && backupSectionDisabled) {
+      is_element_hidden(element, "Disabled dataBackupSection should be hidden");
       continue;
     }
 

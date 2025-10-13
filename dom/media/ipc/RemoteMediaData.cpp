@@ -29,9 +29,11 @@ uint8_t* RemoteArrayOfByteBuffer::BuffersStartAddress() const {
 }
 
 bool RemoteArrayOfByteBuffer::Check(size_t aOffset, size_t aSizeInBytes) const {
-  return mBuffers && mBuffers->IsReadable() &&
-         detail::IsAddValid(aOffset, aSizeInBytes) &&
-         aOffset + aSizeInBytes <= mBuffers->Size<uint8_t>();
+  if (!mBuffers || !mBuffers->IsReadable()) {
+    return false;
+  }
+  auto size = CheckedInt<size_t>(aOffset) + aSizeInBytes;
+  return size.isValid() && size.value() <= mBuffers->Size<uint8_t>();
 }
 
 void RemoteArrayOfByteBuffer::Write(size_t aOffset, const void* aSourceAddr,

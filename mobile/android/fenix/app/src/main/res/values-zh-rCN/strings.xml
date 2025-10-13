@@ -84,6 +84,11 @@
   -->
   <string name="felt_privacy_info_card_subtitle_2">%1$s 会在您关闭所有隐私标签页时删除您的 Cookie、历史记录和网站数据。%2$s</string>
   <!--
+    Description of private browsing mode displayed to users on the homepage when they enable private mode.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="felt_privacy_info_card_subtitle_3">%1$s 会在您关闭所有隐私标签页后删除 Cookie、历史记录、站点数据。</string>
+  <!--
     Clickable portion of the explanation for private browsing that links the user to our
     about privacy page.
     This string is used in felt_privacy_info_card_subtitle as the text for the link.
@@ -1728,6 +1733,8 @@
   <string name="webcompat_reporter_problem_description_placeholder_text">请描述出现的问题，并说明期望的效果</string>
   <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
   <string name="webcompat_reporter_etp_checkbox_text">发送被跟踪保护拦截的网址</string>
+  <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
+  <string name="webcompat_reporter_etp_checkbox_description">增强型跟踪保护可能会拦截某些网站正常运作所需的跟踪器和脚本。</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2541,7 +2548,7 @@
   <!-- Bullet point 2 for "Max Protection" information page under "DNS over HTTPS" -->
   <string name="preference_doh_max_protection_info_2">安全 DNS 不可用时发出警告</string>
   <!-- Bullet point 3 for "Max Protection" information page under "DNS over HTTPS" -->
-  <string name="preference_doh_max_protection_info_3">在无法使用安全 DNS 的情况下，某些网站可能无法加载或功能异常</string>
+  <string name="preference_doh_max_protection_info_3">在无法使用安全 DNS 的情况下，网站将无法加载或功能异常</string>
   <!-- Title displayed for "Off" option under "DNS over HTTPS" -->
   <string name="preference_doh_off">关</string>
   <!-- Summary displayed for "Off" option under "DNS over HTTPS" -->

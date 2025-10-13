@@ -700,9 +700,16 @@ Function LaunchFullInstaller
   ${If} $CheckboxShortcuts == 0
     WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "TaskbarShortcut" "false"
     WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "DesktopShortcut" "false"
+    WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "DesktopLauncher" "false"
   ${Else}
     WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "TaskbarShortcut" "true"
+!ifdef DESKTOP_LAUNCHER_ENABLED
+    WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "DesktopShortcut" "false"
+    WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "DesktopLauncher" "true"
+!else
     WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "DesktopShortcut" "true"
+    WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "DesktopLauncher" "false"
+!endif
   ${EndIf}
 
 !ifdef MOZ_MAINTENANCE_SERVICE

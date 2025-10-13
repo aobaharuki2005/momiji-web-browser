@@ -361,6 +361,10 @@ static NSString* CUIControlSizeForCocoaSize(NSControlSize aControlSize) {
 static void InflateControlRect(NSRect* rect, NSControlSize cocoaControlSize,
                                const float marginSet[][3][4]) {
   if (!marginSet) return;
+  if (nsCocoaFeatures::OnTahoeOrLater()) {
+      // Controls on macOS 26 fill the entire frame and do not require inflation.
+      return;
+  }
 
   static int osIndex = nsCocoaFeatures::OnYosemiteOrLater() ? yosemiteOSorlater : leopardOSorlater;
   size_t controlSize = EnumSizeForCocoaSize(cocoaControlSize);

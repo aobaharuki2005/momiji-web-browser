@@ -14,7 +14,7 @@
 
 #include <stddef.h>
 
-static const PRTime kCTExpirationTime = INT64_C(1765796113000000);
+static const PRTime kCTExpirationTime = INT64_C(1766058457000000);
 
 namespace mozilla::ct {
 
@@ -157,7 +157,8 @@ const CTLogInfo kCTLogList[] = {
      "\x75\x80\xb7\x53\xa7\x85\xd5\xbc\xab\x47\x06\x55\xdb\xb5\xdf\x88\xa1\x6f"
      "\x38",
      91},
-    {"DigiCert 'Wyvern2025h2' Log", CTLogState::Admissible, CTLogFormat::RFC6962,
+    {"DigiCert 'Wyvern2025h2' Log", CTLogState::Admissible,
+     CTLogFormat::RFC6962,
      1724900983000,  // 2024-08-29T03:09:43Z
      2,              // operated by DigiCert
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -187,7 +188,8 @@ const CTLogInfo kCTLogList[] = {
      "\xde\x9b\x8c\x13\x92\xb7\xad\x3d\x0f\xa1\x9c\x8f\x48\xce\x74\x27\x18\x23"
      "\x99",
      91},
-    {"DigiCert 'Sphinx2025h2' Log", CTLogState::Admissible, CTLogFormat::RFC6962,
+    {"DigiCert 'Sphinx2025h2' Log", CTLogState::Admissible,
+     CTLogFormat::RFC6962,
      1724900983000,  // 2024-08-29T03:09:43Z
      2,              // operated by DigiCert
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -407,7 +409,8 @@ const CTLogInfo kCTLogList[] = {
      "\xf4\xfc\x5c\xa9\x8c\x5f\xfb\x0d\x60\xe4\x2c\x0f\x16\xec\x2a\xb2\x6d\xeb"
      "\x15",
      91},
-    {"Let's Encrypt 'Sycamore2025h2d'", CTLogState::Admissible, CTLogFormat::Tiled,
+    {"Let's Encrypt 'Sycamore2025h2d'", CTLogState::Admissible,
+     CTLogFormat::Tiled,
      1758078000000,  // 2025-09-17T03:00:00Z
      4,              // operated by Let's Encrypt
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -417,7 +420,8 @@ const CTLogInfo kCTLogList[] = {
      "\x15\x7f\xc6\xa1\xaa\xfa\x9d\xbc\xd0\x1e\xd5\x7b\xe6\xe7\x78\x47\x42\x1a"
      "\x7e",
      91},
-    {"Let's Encrypt 'Sycamore2026h1'", CTLogState::Admissible, CTLogFormat::Tiled,
+    {"Let's Encrypt 'Sycamore2026h1'", CTLogState::Admissible,
+     CTLogFormat::Tiled,
      1758078000000,  // 2025-09-17T03:00:00Z
      4,              // operated by Let's Encrypt
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -427,7 +431,8 @@ const CTLogInfo kCTLogList[] = {
      "\x55\x42\x8f\x61\xa7\xc0\x25\xe9\x40\x9c\xc7\xc6\xce\xfd\xe5\x1c\x27\x3c"
      "\x80",
      91},
-    {"Let's Encrypt 'Sycamore2026h2'", CTLogState::Admissible, CTLogFormat::Tiled,
+    {"Let's Encrypt 'Sycamore2026h2'", CTLogState::Admissible,
+     CTLogFormat::Tiled,
      1758078000000,  // 2025-09-17T03:00:00Z
      4,              // operated by Let's Encrypt
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -437,7 +442,8 @@ const CTLogInfo kCTLogList[] = {
      "\xca\xb3\x88\xf8\x48\xc6\xc5\x9e\xd4\x88\xf7\x0d\xdd\xb2\xf7\x43\xdf\x45"
      "\xa8",
      91},
-    {"Let's Encrypt 'Sycamore2027h1'", CTLogState::Admissible, CTLogFormat::Tiled,
+    {"Let's Encrypt 'Sycamore2027h1'", CTLogState::Admissible,
+     CTLogFormat::Tiled,
      1758078000000,  // 2025-09-17T03:00:00Z
      4,              // operated by Let's Encrypt
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -447,7 +453,8 @@ const CTLogInfo kCTLogList[] = {
      "\xa9\xf9\x16\x69\x26\x8c\xfe\x7f\xb7\xa5\xf0\x81\x7f\x80\x40\x92\x97\x71"
      "\xf2",
      91},
-    {"Let's Encrypt 'Sycamore2027h2'", CTLogState::Admissible, CTLogFormat::Tiled,
+    {"Let's Encrypt 'Sycamore2027h2'", CTLogState::Admissible,
+     CTLogFormat::Tiled,
      1758078000000,  // 2025-09-17T03:00:00Z
      4,              // operated by Let's Encrypt
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -457,7 +464,8 @@ const CTLogInfo kCTLogList[] = {
      "\x5b\xe0\x07\xf7\x00\x16\x3c\xb4\x4b\xe6\xf9\xad\xcf\xb6\x64\x87\x67\xf6"
      "\x9c",
      91},
-    {"Let's Encrypt 'Willow2025h2d'", CTLogState::Admissible, CTLogFormat::Tiled,
+    {"Let's Encrypt 'Willow2025h2d'", CTLogState::Admissible,
+     CTLogFormat::Tiled,
      1758078000000,  // 2025-09-17T03:00:00Z
      4,              // operated by Let's Encrypt
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -547,7 +555,8 @@ const CTLogInfo kCTLogList[] = {
      "\x9d\x7d\x05\x53\xc7\x9e\x94\xea\x9b\x57\x46\xbf\x4f\xa4\x7e\xfb\xdf\xfa"
      "\x85",
      91},
-    {"Bogus placeholder log to unbreak misbehaving CT libraries", CTLogState::Retired, CTLogFormat::RFC6962,
+    {"Bogus placeholder log to unbreak misbehaving CT libraries",
+     CTLogState::Retired, CTLogFormat::RFC6962,
      1750489200000,  // 2025-06-21T07:00:00Z
      6,              // operated by Geomys
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -607,7 +616,8 @@ const CTLogInfo kCTLogList[] = {
      "\x66\x8c\x31\x22\x44\x8a\xa5\x96\x06\x96\xa2\xed\x74\xb5\x5c\x2d\x60\xd2"
      "\xe7",
      91},
-    {"Bogus RFC6962 log to avoid breaking misbehaving CT libraries", CTLogState::Retired, CTLogFormat::RFC6962,
+    {"Bogus RFC6962 log to avoid breaking misbehaving CT libraries",
+     CTLogState::Retired, CTLogFormat::RFC6962,
      1750489200000,  // 2025-06-21T07:00:00Z
      7,              // operated by IPng Networks
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -616,6 +626,50 @@ const CTLogInfo kCTLogList[] = {
      "\x17\xa2\xc6\x70\xbe\x80\x55\x52\x17\x4a\xe3\x85\xf7\x9f\xd6\x83\x4a\x8b"
      "\x65\x5e\x3d\xd5\x06\xeb\x35\x18\x34\xea\x63\x3a\x2b\x01\x33\x0d\x75\xed"
      "\xaa",
+     91},
+    {"IPng Networks 'Halloumi2025h2'", CTLogState::Admissible,
+     CTLogFormat::Tiled,
+     1759861800000,  // 2025-10-07T18:30:00Z
+     7,              // operated by IPng Networks
+     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
+     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xa8\x9c\x52\x9c\x27\x0c\x85\x68\xa4"
+     "\x08\x57\x96\xa3\x54\x62\xa6\x51\x9a\x54\x46\x4b\xe5\x59\xf8\x28\x42\x58"
+     "\x64\xcf\x7b\x46\x8e\x57\xb9\x38\x38\x87\xaf\xa7\xf3\x4e\xee\xb5\xf3\xd2"
+     "\xee\xaa\xa9\x2e\xfe\x66\x7b\xf7\x5d\x96\x92\x85\x1a\x81\x5f\x90\xc0\x6b"
+     "\x01",
+     91},
+    {"IPng Networks 'Halloumi2026h1'", CTLogState::Admissible,
+     CTLogFormat::Tiled,
+     1759861800000,  // 2025-10-07T18:30:00Z
+     7,              // operated by IPng Networks
+     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
+     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xcd\xd7\x27\x1b\x04\x63\x9b\x66\x68"
+     "\x03\xaf\x09\x15\x92\x9f\xa0\xce\x1c\x38\xf3\xc6\xd9\xfa\xf4\x89\x1e\xf6"
+     "\xa7\x75\xda\x9f\x39\xce\x97\x0e\x7b\x1c\x9f\x51\x95\x84\x4d\xb7\xbe\x60"
+     "\x20\xc2\x0a\x80\x1d\x6b\xd1\xdc\x58\xe4\x9a\x23\xab\x59\xbc\xba\x86\xd8"
+     "\x8e",
+     91},
+    {"IPng Networks 'Halloumi2027h1'", CTLogState::Admissible,
+     CTLogFormat::Tiled,
+     1759861800000,  // 2025-10-07T18:30:00Z
+     7,              // operated by IPng Networks
+     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
+     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xc3\x94\x94\x97\x6c\x9f\x77\x94\xc5"
+     "\x4a\xa5\x06\xbf\xb0\x3e\x23\x9f\x93\xa4\xb7\xbe\xcc\x47\x1c\x9a\xd5\x95"
+     "\x41\xa9\x10\x42\xd3\x87\x60\xaa\x87\xf1\x36\xf2\x71\xa9\x45\xc7\x9c\x5a"
+     "\xa8\x4e\x4f\x53\x83\x44\xc3\x09\xc0\x27\xd1\x56\x79\x3f\xfa\x41\xaa\x2f"
+     "\x67",
+     91},
+    {"IPng Networks 'Halloumi2027h2'", CTLogState::Admissible,
+     CTLogFormat::Tiled,
+     1759861800000,  // 2025-10-07T18:30:00Z
+     7,              // operated by IPng Networks
+     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
+     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xae\x62\x9b\x16\x43\xc6\xed\x07\xd0"
+     "\x50\x04\x61\x6c\x88\xa4\xf2\xf5\x5b\x22\x45\xe1\x2b\xe6\x0c\x07\xa4\xef"
+     "\x2d\x99\x32\x86\x7c\xef\xef\x07\x9d\x9f\xe9\x7b\x54\x28\x6a\xa2\xf6\x47"
+     "\x28\xe4\x17\x99\x91\x1d\xe0\x1f\xb7\x96\x3a\x2f\x22\x94\x33\xd8\x79\xb2"
+     "\x1c",
      91},
     {"IPng Networks 'Gouda2025h2'", CTLogState::Admissible, CTLogFormat::Tiled,
      1758078000000,  // 2025-09-17T03:00:00Z

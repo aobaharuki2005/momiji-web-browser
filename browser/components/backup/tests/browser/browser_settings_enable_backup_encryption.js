@@ -13,7 +13,7 @@ add_task(async function test_enable_backup_encryption_checkbox_confirm() {
   Services.telemetry.clearEvents();
   Services.fog.testResetFOG();
 
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let sandbox = sinon.createSandbox();
     let enableEncryptionStub = sandbox
       .stub(BackupService.prototype, "enableEncryption")
@@ -135,112 +135,122 @@ add_task(
     Services.telemetry.clearEvents();
     Services.fog.testResetFOG();
 
-    await BrowserTestUtils.withNewTab("about:preferences", async browser => {
-      let sandbox = sinon.createSandbox();
-      let enableEncryptionStub = sandbox
-        .stub(BackupService.prototype, "enableEncryption")
-        .resolves(true);
-      let disableEncryptionStub = sandbox
-        .stub(BackupService.prototype, "disableEncryption")
-        .resolves(true);
+    await BrowserTestUtils.withNewTab(
+      "about:preferences#sync",
+      async browser => {
+        let sandbox = sinon.createSandbox();
+        let enableEncryptionStub = sandbox
+          .stub(BackupService.prototype, "enableEncryption")
+          .resolves(true);
+        let disableEncryptionStub = sandbox
+          .stub(BackupService.prototype, "disableEncryption")
+          .resolves(true);
 
-      await SpecialPowers.pushPrefEnv({
-        set: [[SCHEDULED_BACKUPS_ENABLED_PREF, true]],
-      });
+        await SpecialPowers.pushPrefEnv({
+          set: [[SCHEDULED_BACKUPS_ENABLED_PREF, true]],
+        });
 
-      let settings = browser.contentDocument.querySelector("backup-settings");
-      settings.backupServiceState.encryptionEnabled = true;
-      await settings.requestUpdate();
-      await settings.updateComplete;
+        let settings = browser.contentDocument.querySelector("backup-settings");
+        settings.backupServiceState.encryptionEnabled = true;
+        await settings.requestUpdate();
+        await settings.updateComplete;
 
-      let changePasswordButton = settings.changePasswordButtonEl;
-      Assert.ok(changePasswordButton, "Change password button should be found");
+        let changePasswordButton = settings.changePasswordButtonEl;
+        Assert.ok(
+          changePasswordButton,
+          "Change password button should be found"
+        );
 
-      changePasswordButton.click();
-      await settings.updateComplete;
+        changePasswordButton.click();
+        await settings.updateComplete;
 
-      let enableBackupEncryptionDialog =
-        settings.enableBackupEncryptionDialogEl;
-      Assert.ok(
-        enableBackupEncryptionDialog?.open,
-        "enable-backup-encryption-dialog should be open"
-      );
+        let enableBackupEncryptionDialog =
+          settings.enableBackupEncryptionDialogEl;
+        Assert.ok(
+          enableBackupEncryptionDialog?.open,
+          "enable-backup-encryption-dialog should be open"
+        );
 
-      let enableBackupEncryption = settings.enableBackupEncryptionEl;
-      Assert.ok(
-        enableBackupEncryption,
-        "enable-backup-encryption should be found"
-      );
-      Assert.equal(
-        enableBackupEncryption.type,
-        "change-password",
-        "enable-backup-encryption type should be change-password"
-      );
+        let enableBackupEncryption = settings.enableBackupEncryptionEl;
+        Assert.ok(
+          enableBackupEncryption,
+          "enable-backup-encryption should be found"
+        );
+        Assert.equal(
+          enableBackupEncryption.type,
+          "change-password",
+          "enable-backup-encryption type should be change-password"
+        );
 
-      let passwordInputs = enableBackupEncryption.passwordInputsEl;
-      Assert.ok(passwordInputs, "password-validation-inputs should be found");
+        let passwordInputs = enableBackupEncryption.passwordInputsEl;
+        Assert.ok(passwordInputs, "password-validation-inputs should be found");
 
-      let confirmButton = enableBackupEncryption.confirmButtonEl;
-      Assert.ok(confirmButton, "Confirm button should be found");
-      Assert.ok(confirmButton.disabled, "Confirm button should be disabled");
+        let confirmButton = enableBackupEncryption.confirmButtonEl;
+        Assert.ok(confirmButton, "Confirm button should be found");
+        Assert.ok(confirmButton.disabled, "Confirm button should be disabled");
 
-      // Pretend we have a valid password
-      let validPromise = createMockValidityPassEventPromise(
-        enableBackupEncryption,
-        passwordInputs,
-        "ValidPasswordsDetected"
-      );
+        // Pretend we have a valid password
+        let validPromise = createMockValidityPassEventPromise(
+          enableBackupEncryption,
+          passwordInputs,
+          "ValidPasswordsDetected"
+        );
 
-      let confirmButtonPromise = BrowserTestUtils.waitForMutationCondition(
-        confirmButton,
-        { attributes: true },
-        () => !confirmButton.disabled
-      );
+        let confirmButtonPromise = BrowserTestUtils.waitForMutationCondition(
+          confirmButton,
+          { attributes: true },
+          () => !confirmButton.disabled
+        );
 
-      await validPromise;
-      await confirmButtonPromise;
-      ok(
-        !confirmButton.disabled,
-        "Confirm button should no longer be disabled"
-      );
+        await validPromise;
+        await confirmButtonPromise;
+        ok(
+          !confirmButton.disabled,
+          "Confirm button should no longer be disabled"
+        );
 
-      await settings.updateComplete;
-      confirmButton = settings.enableBackupEncryptionEl.confirmButtonEl;
+        await settings.updateComplete;
+        confirmButton = settings.enableBackupEncryptionEl.confirmButtonEl;
 
-      let promise = BrowserTestUtils.waitForEvent(
-        window,
-        "BackupUI:RerunEncryption"
-      );
-      confirmButton.click();
-      await promise;
+        let promise = BrowserTestUtils.waitForEvent(
+          window,
+          "BackupUI:RerunEncryption"
+        );
+        confirmButton.click();
+        await promise;
 
-      Assert.ok(
-        disableEncryptionStub.calledOnce,
-        "BackupService was called to disable encryption first before registering the changed password"
-      );
-      Assert.ok(
-        enableEncryptionStub.calledOnceWith(MOCK_PASSWORD),
-        "BackupService was called to re-run encryption with changed password"
-      );
+        Assert.ok(
+          disableEncryptionStub.calledOnce,
+          "BackupService was called to disable encryption first before registering the changed password"
+        );
+        Assert.ok(
+          enableEncryptionStub.calledOnceWith(MOCK_PASSWORD),
+          "BackupService was called to re-run encryption with changed password"
+        );
 
-      let legacyEvents = TelemetryTestUtils.getEvents(
-        {
-          category: "browser.backup",
-          method: "password_changed",
-          object: "BackupService",
-        },
-        { process: "parent" }
-      );
-      Assert.equal(
-        legacyEvents.length,
-        1,
-        "Found the password_changed legacy event."
-      );
-      let events = Glean.browserBackup.passwordChanged.testGetValue();
-      Assert.equal(events.length, 1, "Found the passwordChanged Glean event.");
+        let legacyEvents = TelemetryTestUtils.getEvents(
+          {
+            category: "browser.backup",
+            method: "password_changed",
+            object: "BackupService",
+          },
+          { process: "parent" }
+        );
+        Assert.equal(
+          legacyEvents.length,
+          1,
+          "Found the password_changed legacy event."
+        );
+        let events = Glean.browserBackup.passwordChanged.testGetValue();
+        Assert.equal(
+          events.length,
+          1,
+          "Found the passwordChanged Glean event."
+        );
 
-      await SpecialPowers.popPrefEnv();
-      sandbox.restore();
-    });
+        await SpecialPowers.popPrefEnv();
+        sandbox.restore();
+      }
+    );
   }
 );
