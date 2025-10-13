@@ -1353,7 +1353,6 @@ const nsCString& GfxInfoBase::GetApplicationVersion() {
     // The GPU process doesn't need hardware acceleration and can run on
     // devices that we normally block from not being on our whitelist.
     case nsIGfxInfo::FEATURE_GPU_PROCESS:
-      return kIsAndroid;
     // We can mostly assume that ANGLE will work
     case nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE:
     // Remote WebGL is needed for Win32k Lockdown, so it should be enabled
