@@ -772,6 +772,8 @@ class XPCShellTestThread(Thread):
                 line = re.sub(
                     r"ERROR: ((Address|Leak)Sanitizer)", r"ERROR (will retry): \1", line
                 )
+                # Treeherder's log parser catches "fatal error" as an error
+                line = re.sub(r"fatal error", r"error", line)
                 # For text lines, we need to provide the timestamp that was
                 # recorded when appending the message to self.output_lines
                 self.log_line(line, time=timestamp)
