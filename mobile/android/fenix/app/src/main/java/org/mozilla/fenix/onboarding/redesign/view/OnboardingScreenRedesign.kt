@@ -72,6 +72,10 @@ import org.mozilla.fenix.onboarding.view.mapToOnboardingPageState
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.isLargeScreenSize
 
+/**
+ * The small device max height. The value comes from [org.mozilla.fenix.ext.isTallWindow].
+ */
+private val SMALL_SCREEN_MAX_HEIGHT = 480.dp
 private val logger: Logger = Logger("OnboardingScreenRedesign")
 
 /**
@@ -271,6 +275,7 @@ private fun OnboardingContent(
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val boxWithConstraintsScope = this
+        val isSmallPhoneScreen = boxWithConstraintsScope.maxHeight <= SMALL_SCREEN_MAX_HEIGHT
 
         val isLargeScreen = LocalContext.current.isLargeScreenSize()
         val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -333,15 +338,17 @@ private fun OnboardingContent(
 
             Spacer(Modifier.weight(1f))
 
-            PagerIndicator(
-                pagerState = pagerState,
-                activeColor = FirefoxTheme.colors.actionPrimary,
-                inactiveColor = FirefoxTheme.colors.actionSecondary,
-                leaveTrail = true,
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(bottom = 16.dp),
-            )
+            if (!isSmallPhoneScreen) {
+                PagerIndicator(
+                    pagerState = pagerState,
+                    activeColor = FirefoxTheme.colors.actionPrimary,
+                    inactiveColor = FirefoxTheme.colors.actionSecondary,
+                    leaveTrail = true,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(bottom = 16.dp),
+                )
+            }
         }
     }
 }
