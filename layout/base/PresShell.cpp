@@ -12038,7 +12038,11 @@ nsIFrame* PresShell::GetAbsoluteContainingBlock(nsIFrame* aFrame) {
 const nsIFrame* PresShell::GetAnchorPosAnchor(
     const nsAtom* aName, const nsIFrame* aPositionedFrame) const {
   MOZ_ASSERT(aName);
+  MOZ_ASSERT(!aName->IsEmpty());
   MOZ_ASSERT(mLazyAnchorPosAnchorChanges.IsEmpty());
+  if (aName == nsGkAtoms::AnchorPosImplicitAnchor) {
+    return AnchorPositioningUtils::GetAnchorPosImplicitAnchor(aPositionedFrame);
+  }
   if (const auto& entry = mAnchorPosAnchors.Lookup(aName)) {
     return AnchorPositioningUtils::FindFirstAcceptableAnchor(
         aName, aPositionedFrame, entry.Data());
@@ -12311,13 +12315,6 @@ void PresShell::UpdateAnchorPosLayoutForScroll(
       continue;
     }
 
-    const auto* stylePos = positioned->StylePosition();
-    if (!stylePos->mPositionAnchor.IsIdent()) {
-      // If it doesn't have a default anchor then it doesn't compensate for
-      // scroll.
-      continue;
-    }
-
     const auto* anchorPosReferenceData =
         positioned->GetProperty(nsIFrame::AnchorPosReferences());
     if (!anchorPosReferenceData || anchorPosReferenceData->IsEmpty()) {
@@ -12327,11 +12324,14 @@ void PresShell::UpdateAnchorPosLayoutForScroll(
     }
 
     const nsAtom* defaultAnchorName =
-        stylePos->mPositionAnchor.AsIdent().AsAtom();
+        AnchorPositioningUtils::GetUsedAnchorName(positioned, nullptr);
+    if (!defaultAnchorName) {
+      continue;
+    }
     // We might not need to do this GetAnchorPosAnchor call at all if none of
     // the affected anchors are referenced by positioned below. We could
     // improve this.
-    auto* defaultAnchorFrame =
+    const nsIFrame* defaultAnchorFrame =
         GetAnchorPosAnchor(defaultAnchorName, positioned);
     if (!defaultAnchorFrame) {
       continue;
@@ -12349,6 +12349,28 @@ void PresShell::UpdateAnchorPosLayoutForScroll(
       continue;
     }
 
+    const auto* stylePos = positioned->StylePosition();
+    if (!stylePos->mPositionAnchor.IsIdent()) {
+      auto* nearestScrollFrame = FindScrollContainerFrameOf(defaultAnchorFrame);
+      if (!nearestScrollFrame) {
+        // Fixed-pos anchor.
+        continue;
+      }
+      if (!UnderScrollContainer(nearestScrollFrame, aScrollContainer)) {
+        continue;
+      }
+      const auto* data = anchorPosReferenceData->Lookup(defaultAnchorName);
+      if (!data) {
+        continue;
+      }
+      if (NeedReflowForAnchorPos(defaultAnchorFrame, positioned, *data)) {
+        // Abspos frames should not affect ancestor intrinsics.
+        FrameNeedsReflow(positioned, IntrinsicDirty::None,
+                         NS_FRAME_HAS_DIRTY_CHILDREN);
+      }
+      continue;
+    }
+
     for (const auto& entry : affectedAnchors) {
       const auto* anchorName = entry.mAnchorName;
       const auto& anchors = entry.mFrames;
@@ -12361,7 +12383,7 @@ void PresShell::UpdateAnchorPosLayoutForScroll(
               ? defaultAnchorFrame
               : GetAnchorPosAnchor(anchorName, positioned);
       const auto idx = anchors.IndexOf(anchorFrame, 0, Comparator{});
-      if (idx == anchors.NoIndex) {
+      if (idx == nsTArray<AffectedAnchor>::NoIndex) {
         // Referring to an anchor of the same name but unaffected by scrolling -
         // skip.
         continue;

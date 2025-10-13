@@ -787,14 +787,15 @@ nsRect AnchorPositioningUtils::AdjustAbsoluteContainingBlockRectForPositionArea(
     const StylePositionTryFallbacksTryTactic* aFallbackTactic) {
   // TODO: We need a single, unified way of getting the anchor, unifying
   // GetUsedAnchorName etc.
-  const auto& defaultAnchor =
-      aPositionedFrame->StylePosition()->mPositionAnchor;
-  if (!defaultAnchor.IsIdent()) {
+  const nsAtom* anchorName =
+      AnchorPositioningUtils::GetUsedAnchorName(aPositionedFrame, nullptr);
+  if (!anchorName) {
     return aCBRect;
   }
-  const nsAtom* anchorName = defaultAnchor.AsIdent().AsAtom();
 
   nsRect anchorRect;
+  MOZ_ASSERT_IF(aPositionedFrame->HasAnchorPosReference(),
+                aAnchorPosReferenceData);
   const auto result = aAnchorPosReferenceData->InsertOrModify(anchorName, true);
   if (result.mAlreadyResolved) {
     MOZ_ASSERT(result.mEntry, "Entry exists but null?");
@@ -905,6 +906,66 @@ nsRect AnchorPositioningUtils::AdjustAbsoluteContainingBlockRectForPositionArea(
 // Out of line to avoid having to include AnchorPosReferenceData from nsIFrame.h
 void DeleteAnchorPosReferenceData(AnchorPosReferenceData* aData) {
   delete aData;
+}
+
+const nsAtom* AnchorPositioningUtils::GetUsedAnchorName(
+    const nsIFrame* aPositioned, const nsAtom* aAnchorName) {
+  if (aAnchorName && !aAnchorName->IsEmpty()) {
+    return aAnchorName;
+  }
+
+  const auto defaultAnchor = aPositioned->StylePosition()->mPositionAnchor;
+  if (defaultAnchor.IsIdent()) {
+    return defaultAnchor.AsIdent().AsAtom();
+  }
+
+  if (aPositioned->Style()->IsPseudoElement()) {
+    return nsGkAtoms::AnchorPosImplicitAnchor;
+  }
+
+  if (const nsIContent* content = aPositioned->GetContent()) {
+    if (const auto* element = content->AsElement()) {
+      if (element->GetPopoverData()) {
+        return nsGkAtoms::AnchorPosImplicitAnchor;
+      }
+    }
+  }
+
+  return nullptr;
+}
+
+const nsIFrame* AnchorPositioningUtils::GetAnchorPosImplicitAnchor(
+    const nsIFrame* aFrame) {
+  const auto* frameContent = aFrame->GetContent();
+  const bool hasElement = frameContent && frameContent->IsElement();
+  if (!aFrame->Style()->IsPseudoElement() && !hasElement) {
+    return nullptr;
+  }
+
+  if (MOZ_LIKELY(hasElement)) {
+    const auto* element = frameContent->AsElement();
+    MOZ_ASSERT(element);
+    const dom::PopoverData* popoverData = element->GetPopoverData();
+    if (MOZ_UNLIKELY(popoverData)) {
+      if (const RefPtr<dom::Element>& invoker = popoverData->GetInvoker()) {
+        return invoker->GetPrimaryFrame();
+      }
+    }
+  }
+
+  const auto* pseudoRoot = aFrame->GetClosestNativeAnonymousSubtreeRoot();
+  if (!pseudoRoot) {
+    return nullptr;
+  }
+
+  const auto* pseudoRootFrame = pseudoRoot->GetPrimaryFrame();
+  if (!pseudoRootFrame) {
+    return nullptr;
+  }
+
+  return pseudoRootFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)
+             ? pseudoRootFrame->GetPlaceholderFrame()->GetParent()
+             : pseudoRootFrame->GetParent();
 }
 
 }  // namespace mozilla

@@ -110,6 +110,32 @@ struct AnchorPositioningUtils {
       const nsRect& aCBRect, AnchorPosReferenceData* aAnchorPosReferenceData,
       const StylePositionArea& aPositionArea,
       const StylePositionTryFallbacksTryTactic* aFallbackTactic);
+
+  /**
+   * Gets the used anchor name for an anchor positioned frame.
+   *
+   * @param aPositioned The anchor positioned frame.
+   * @param aAnchorName The anchor name specified in the anchor function,
+   *   or nullptr if not specified.
+   *
+   * If `aAnchorName` is not specified, then this function will return the
+   * default anchor name, if the `position-anchor` property specified one.
+   * Otherwise it will return `nsGkAtoms::AnchorPosImplicitAnchor` if the
+   * element has an implicit anchor, or a nullptr.
+   */
+  static const nsAtom* GetUsedAnchorName(const nsIFrame* aPositioned,
+                                         const nsAtom* aAnchorName);
+
+  /**
+   * Get the implicit anchor of the frame.
+   *
+   * @param aFrame The anchor positioned frame.
+   *
+   * For pseudo-elements, this returns the parent frame of the originating
+   * element. For popovers, this returns the primary frame of the invoker. In
+   * all other cases, returns null.
+   */
+  static const nsIFrame* GetAnchorPosImplicitAnchor(const nsIFrame* aFrame);
 };
 
 }  // namespace mozilla

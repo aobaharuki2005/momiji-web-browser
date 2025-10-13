@@ -1847,22 +1847,9 @@ static bool AnchorSideUsesCBWM(
   return false;
 }
 
-static const nsAtom* GetUsedAnchorName(const nsIFrame* aPositioned,
-                                       const nsAtom* aAnchorName) {
-  if (aAnchorName && !aAnchorName->IsEmpty()) {
-    return aAnchorName;
-  }
-  const auto* stylePos = aPositioned->StylePosition();
-  if (!stylePos->mPositionAnchor.IsIdent()) {
-    // No valid anchor specified, bail.
-    // TODO(dshin): Implicit anchor should be looked at here.
-    return nullptr;
-  }
-  return stylePos->mPositionAnchor.AsIdent().AsAtom();
-}
-
 static const nsIFrame* GetAnchorOf(const nsIFrame* aPositioned,
                                    const nsAtom* aAnchorName) {
+  MOZ_ASSERT(aPositioned, "Must have a positioned frame");
   const auto* presShell = aPositioned->PresShell();
   MOZ_ASSERT(presShell, "No PresShell for frame?");
   return presShell->GetAnchorPosAnchor(aAnchorName, aPositioned);
@@ -1875,7 +1862,8 @@ static Maybe<AnchorPosInfo> GetAnchorPosRect(
     return Nothing{};
   }
 
-  const auto* anchorName = GetUsedAnchorName(aPositioned, aAnchorName);
+  const auto* anchorName =
+      AnchorPositioningUtils::GetUsedAnchorName(aPositioned, aAnchorName);
   if (!anchorName) {
     return Nothing{};
   }
@@ -1885,6 +1873,7 @@ static Maybe<AnchorPosInfo> GetAnchorPosRect(
   const auto* containingBlock = aPositioned->GetParent();
 
   Maybe<AnchorPosResolutionData>* entry = nullptr;
+
   if (aReferenceData) {
     const auto result = aReferenceData->InsertOrModify(anchorName, true);
     if (result.mAlreadyResolved) {
@@ -1918,8 +1907,14 @@ bool Gecko_GetAnchorPosOffset(const AnchorPosOffsetResolutionParams* aParams,
   if (!aParams || !aParams->mBaseParams.mFrame) {
     return false;
   }
+
+  const auto* anchorName = AnchorPositioningUtils::GetUsedAnchorName(
+      aParams->mBaseParams.mFrame, aAnchorName);
+
+  // Note: No exit on null anchorName: Instead, GetAnchorPosRect may return the
+  // containing block.
   const auto info = GetAnchorPosRect(
-      aParams->mBaseParams.mFrame, aAnchorName, !aParams->mCBSize,
+      aParams->mBaseParams.mFrame, anchorName, !aParams->mCBSize,
       aParams->mBaseParams.mAnchorPosReferenceData);
   if (info.isNothing()) {
     return false;
@@ -2004,7 +1999,8 @@ bool Gecko_GetAnchorPosSize(const AnchorPosResolutionParams* aParams,
   }
   const auto* positioned = aParams->mFrame;
 
-  const auto* anchorName = GetUsedAnchorName(positioned, aAnchorName);
+  const auto* anchorName =
+      AnchorPositioningUtils::GetUsedAnchorName(positioned, aAnchorName);
   if (!anchorName) {
     return false;
   }

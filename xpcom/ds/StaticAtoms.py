@@ -2517,6 +2517,8 @@ STATIC_ATOMS = [
     Atom("_ua_view_transition_fade_out", "-ua-view-transition-fade-out"),
     Atom("_ua_view_transition_fade_in", "-ua-view-transition-fade-in"),
     Atom("_ua_mix_blend_mode_plus_lighter", "-ua-mix-blend-mode-plus-lighter"),
+    # CSS anchor positioning implicit anchor
+    Atom("AnchorPosImplicitAnchor", "AnchorPosImplicitAnchor"),
     # CSS pseudo-elements -- these must appear in the same order as
     # in nsCSSPseudoElementList.h
     PseudoElementAtom("PseudoElement_after", ":after"),
