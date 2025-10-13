@@ -306,7 +306,7 @@ private fun OnboardingContent(
                 contentPadding = PaddingValues(horizontal = paddingValue),
                 pageSize = PageSize.Fill,
                 beyondViewportPageCount = 2,
-                pageSpacing = pageSpacing(isLargeScreen, pagePeekWidth),
+                pageSpacing = pageSpacing(isLargeScreen, isSmallPhoneScreen, pagePeekWidth),
                 key = { pagesToDisplay[it].type },
                 overscrollEffect = null,
             ) { pageIndex ->
@@ -472,8 +472,8 @@ private fun onboardingRedesignBackground(isLandscape: Boolean) =
 private fun isNonLargeScreenLandscape(isLargeScreen: Boolean, isLandscape: Boolean) =
     (isLandscape && !isLargeScreen)
 
-private fun pageSpacing(isLargeScreen: Boolean, pagePeekWidth: Dp) =
-    if (isLargeScreen) pagePeekWidth else 8.dp
+private fun pageSpacing(isLargeScreen: Boolean, isSmallScreen: Boolean, pagePeekWidth: Dp) =
+    if (isLargeScreen || isSmallScreen) pagePeekWidth else 8.dp
 
 private class DisableForwardSwipeNestedScrollConnection(
     private val pagerState: PagerState,
