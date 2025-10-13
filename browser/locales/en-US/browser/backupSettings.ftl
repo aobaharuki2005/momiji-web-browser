@@ -60,7 +60,7 @@ settings-data-change-password = Change password…
 ## These strings are displayed in a modal when users want to turn on scheduled backups.
 
 turn-on-scheduled-backups-header = Turn on backup
-turn-on-scheduled-backups-description = { -brand-short-name } will create a snapshot of your data every 60 minutes. You can restore it if there’s a problem or you get a new device.
+turn-on-scheduled-backups-description = { -brand-short-name } will create a snapshot of your data every 24 hours. You can restore it if there’s a problem or you get a new device.
 turn-on-scheduled-backups-support-link = What will be backed up?
 
 # "Location" refers to the save location or a folder where users want backups stored.
