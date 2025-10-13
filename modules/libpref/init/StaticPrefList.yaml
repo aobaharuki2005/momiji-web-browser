@@ -11149,13 +11149,6 @@
   mirror: always
   rust: true
 
-# Whether to disable forced centering of binary operators (+, =, ...).
-- name: mathml.centered_operators.disabled
-  type: bool
-  value: true
-  mirror: always
-  rust: true
-
 # Whether to disable extra top/bottom spacing for stretchy operators.
 - name: mathml.top_bottom_spacing_for_stretchy_operators.disabled
   type: bool
