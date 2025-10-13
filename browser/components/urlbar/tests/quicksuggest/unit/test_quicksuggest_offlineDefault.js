@@ -147,12 +147,10 @@ async function doTest({ locale, region, expectSuggestToBeEnabled }) {
   }
 
   // Set the region and locale, call the function, check the pref values.
-  await QuickSuggestTestUtils.withLocales({
-    homeRegion: region,
-    locales: [locale],
+  await QuickSuggestTestUtils.withRegionAndLocale({
+    region,
+    locale,
     callback: async () => {
-      await QuickSuggest._test_reset();
-
       for (let [name, value] of Object.entries(expectedPrefs)) {
         // Check the default-branch value.
         Assert.strictEqual(
