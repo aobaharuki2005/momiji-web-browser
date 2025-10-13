@@ -96,23 +96,7 @@ const PREF_SPOCS_CACHE_ONDEMAND = "discoverystream.spocs.onDemand";
 const PREF_SPOCS_CACHE_TIMEOUT = "discoverystream.spocs.cacheTimeout";
 const PREF_SPOCS_STARTUP_CACHE_ENABLED =
   "discoverystream.spocs.startupCache.enabled";
-const PREF_CONTEXTUAL_CONTENT_ENABLED =
-  "discoverystream.contextualContent.enabled";
-const PREF_FAKESPOT_ENABLED =
-  "discoverystream.contextualContent.fakespot.enabled";
 const PREF_CONTEXTUAL_ADS = "discoverystream.sections.contextualAds.enabled";
-const PREF_CONTEXTUAL_CONTENT_SELECTED_FEED =
-  "discoverystream.contextualContent.selectedFeed";
-const PREF_CONTEXTUAL_CONTENT_LISTFEED_TITLE =
-  "discoverystream.contextualContent.listFeedTitle";
-const PREF_CONTEXTUAL_CONTENT_FAKESPOT_FOOTER =
-  "discoverystream.contextualContent.fakespot.footerCopy";
-const PREF_CONTEXTUAL_CONTENT_FAKESPOT_CATEGORY =
-  "discoverystream.contextualContent.fakespot.defaultCategoryTitle";
-const PREF_CONTEXTUAL_CONTENT_FAKESPOT_CTA_COPY =
-  "discoverystream.contextualContent.fakespot.ctaCopy";
-const PREF_CONTEXTUAL_CONTENT_FAKESPOT_CTA_URL =
-  "discoverystream.contextualContent.fakespot.ctaUrl";
 const PREF_USER_INFERRED_PERSONALIZATION =
   "discoverystream.sections.personalization.inferred.user.enabled";
 const PREF_SYSTEM_INFERRED_PERSONALIZATION =
@@ -1847,8 +1831,6 @@ export class DiscoveryStreamFeed {
     const cachedData = (await this.cache.get()) || {};
     const prefs = this.store.getState().Prefs.values;
     const sectionsEnabled = prefs[PREF_SECTIONS_ENABLED];
-    let isFakespot;
-    const selectedFeedPref = prefs[PREF_CONTEXTUAL_CONTENT_SELECTED_FEED];
     // Should we fetch /curated-recommendations over OHTTP
     const merinoOhttpEnabled = prefs[PREF_MERINO_OHTTP];
     let sections = [];
@@ -1886,45 +1868,6 @@ export class DiscoveryStreamFeed {
           topic: item.topic,
           url: item.url,
         }));
-        if (feedResponse.feeds && selectedFeedPref && !sectionsEnabled) {
-          isFakespot = selectedFeedPref === "fakespot";
-          const keyName = isFakespot ? "products" : "recommendations";
-          const selectedFeedResponse = feedResponse.feeds[selectedFeedPref];
-          selectedFeedResponse?.[keyName]?.forEach(item =>
-            recommendations.push({
-              id: isFakespot
-                ? item.id
-                : item.corpusItemId ||
-                  item.scheduledCorpusItemId ||
-                  item.tileId,
-              scheduled_corpus_item_id: item.scheduledCorpusItemId,
-              corpus_item_id: item.corpusItemId,
-              url: item.url,
-              title: item.title,
-              topic: item.topic,
-              excerpt: item.excerpt,
-              publisher: item.publisher,
-              raw_image_src: item.imageUrl,
-              received_rank: item.receivedRank,
-              recommended_at: feedResponse.recommendedAt,
-              // property to determine if rec is used in ListFeed or not
-              feedName: selectedFeedPref,
-              category: item.category,
-              icon_src: item.iconUrl,
-              isTimeSensitive: item.isTimeSensitive,
-            })
-          );
-
-          const prevTitle = prefs[PREF_CONTEXTUAL_CONTENT_LISTFEED_TITLE];
-
-          const feedTitle = isFakespot
-            ? selectedFeedResponse.headerCopy
-            : selectedFeedResponse.title;
-
-          if (feedTitle && feedTitle !== prevTitle) {
-            this.handleListfeedStrings(selectedFeedResponse, isFakespot);
-          }
-        }
 
         if (sectionsEnabled) {
           for (const [sectionKey, sectionData] of Object.entries(
@@ -2051,45 +1994,6 @@ export class DiscoveryStreamFeed {
     );
   }
 
-  handleListfeedStrings(feedResponse, isFakespot) {
-    if (isFakespot) {
-      this.store.dispatch(
-        ac.SetPref(
-          PREF_CONTEXTUAL_CONTENT_LISTFEED_TITLE,
-          feedResponse.headerCopy
-        )
-      );
-      this.store.dispatch(
-        ac.SetPref(
-          PREF_CONTEXTUAL_CONTENT_FAKESPOT_CATEGORY,
-          feedResponse.defaultCategoryName
-        )
-      );
-      this.store.dispatch(
-        ac.SetPref(
-          PREF_CONTEXTUAL_CONTENT_FAKESPOT_FOOTER,
-          feedResponse.footerCopy
-        )
-      );
-      this.store.dispatch(
-        ac.SetPref(
-          PREF_CONTEXTUAL_CONTENT_FAKESPOT_CTA_COPY,
-          feedResponse.cta.ctaCopy
-        )
-      );
-      this.store.dispatch(
-        ac.SetPref(
-          PREF_CONTEXTUAL_CONTENT_FAKESPOT_CTA_URL,
-          feedResponse.cta.url
-        )
-      );
-    } else {
-      this.store.dispatch(
-        ac.SetPref(PREF_CONTEXTUAL_CONTENT_LISTFEED_TITLE, feedResponse.title)
-      );
-    }
-  }
-
   formatComponentFeedRequest(sectionPersonalization = {}) {
     const prefs = this.store.getState().Prefs.values;
     const inferredPersonalization =
@@ -2160,21 +2064,7 @@ export class DiscoveryStreamFeed {
 
     const sectionsEnabled = prefs[PREF_SECTIONS_ENABLED];
 
-    // Should we pass the feed param to the merino request
-    const contextualContentEnabled = prefs[PREF_CONTEXTUAL_CONTENT_ENABLED];
-    const selectedFeed = prefs[PREF_CONTEXTUAL_CONTENT_SELECTED_FEED];
-    const isFakespot = selectedFeed === "fakespot";
-    const fakespotEnabled = prefs[PREF_FAKESPOT_ENABLED];
-
-    const shouldFetchTBRFeed =
-      (contextualContentEnabled && !isFakespot) ||
-      (contextualContentEnabled && isFakespot && fakespotEnabled);
-
-    if (shouldFetchTBRFeed) {
-      body.feeds = [selectedFeed];
-    }
     if (sectionsEnabled) {
-      // if sections is enabled, it should override the TBR feed
       body.feeds = ["sections"];
     }
 
@@ -2693,8 +2583,6 @@ export class DiscoveryStreamFeed {
       case PREF_ENDPOINTS:
       case PREF_SPOC_POSITIONS:
       case PREF_UNIFIED_ADS_SPOCS_ENABLED:
-      case PREF_CONTEXTUAL_CONTENT_ENABLED:
-      case PREF_CONTEXTUAL_CONTENT_SELECTED_FEED:
       case PREF_SECTIONS_ENABLED:
       case PREF_INTEREST_PICKER_ENABLED:
         // This is a config reset directly related to Discovery Stream pref.

@@ -82,11 +82,6 @@ const REGION_THUMBS_CONFIG =
 const LOCALE_THUMBS_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.thumbsUpDown.locale-thumbs-config";
 
-const REGION_CONTEXTUAL_CONTENT_CONFIG =
-  "browser.newtabpage.activity-stream.discoverystream.contextualContent.region-content-config";
-const LOCALE_CONTEXTUAL_CONTENT_CONFIG =
-  "browser.newtabpage.activity-stream.discoverystream.contextualContent.locale-content-config";
-
 const REGION_CONTEXTUAL_AD_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.sections.contextualAds.region-config";
 const LOCALE_CONTEXTUAL_AD_CONFIG =
@@ -187,13 +182,6 @@ function showThumbsUpDown({ geo, locale }) {
   return (
     csvPrefHasValue(REGION_THUMBS_CONFIG, geo) &&
     csvPrefHasValue(LOCALE_THUMBS_CONFIG, locale)
-  );
-}
-
-function showContextualContent({ geo, locale }) {
-  return (
-    csvPrefHasValue(REGION_CONTEXTUAL_CONTENT_CONFIG, geo) &&
-    csvPrefHasValue(LOCALE_CONTEXTUAL_CONTENT_CONFIG, locale)
   );
 }
 
@@ -1290,70 +1278,6 @@ export const PREFS_CONFIG = new Map([
     {
       title: "Controls if spocs should be included in startup cache.",
       value: false,
-    },
-  ],
-  [
-    "discoverystream.contextualContent.enabled",
-    {
-      title: "Controls if contextual content (List feed) is displayed",
-      getValue: showContextualContent,
-    },
-  ],
-  [
-    "discoverystream.contextualContent.feeds",
-    {
-      title: "CSV list of possible topics for the contextual content feed",
-      value: "need_to_know, fakespot",
-    },
-  ],
-  [
-    "discoverystream.contextualContent.selectedFeed",
-    {
-      title:
-        "currently selected feed (one of discoverystream.contextualContent.feeds) to display in listfeed",
-      value: "need_to_know",
-    },
-  ],
-  [
-    "discoverystream.contextualContent.listFeedTitle",
-    {
-      title: "Title for currently selected feed",
-      value: "",
-    },
-  ],
-  [
-    "discoverystream.contextualContent.fakespot.defaultCategoryTitle",
-    {
-      title: "Title default category from fakespot endpoint",
-      value: "",
-    },
-  ],
-  [
-    "discoverystream.contextualContent.fakespot.footerCopy",
-    {
-      title: "footer copy for fakespot feed",
-      value: "",
-    },
-  ],
-  [
-    "discoverystream.contextualContent.fakespot.enabled",
-    {
-      title: "User controlled pref that displays fakespot feed",
-      value: true,
-    },
-  ],
-  [
-    "discoverystream.contextualContent.fakespot.ctaCopy",
-    {
-      title: "cta copy for fakespot feed",
-      value: "",
-    },
-  ],
-  [
-    "discoverystream.contextualContent.fakespot.ctaUrl",
-    {
-      title: "cta link for fakespot feed",
-      value: "",
     },
   ],
   [

@@ -574,138 +574,6 @@ newtab:
       send_in_pings:
         - newtab
 
-  fakespot_dismiss:
-    type: event
-    description: >
-      Recorded when a user dissmisses TBR fakespot feed
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1924873
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1924873
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - nbarrett@mozilla.com
-    expires: never
-    extra_keys:
-      newtab_visit_id: *newtab_visit_id
-    send_in_pings:
-      - newtab
-
-  fakespot_about_click:
-    type: event
-    description: >
-      Recorded when a user the 'About Fakespot' link in TBR fakespot feed context menu
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1924873
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1924873
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - nbarrett@mozilla.com
-    expires: never
-    extra_keys:
-      newtab_visit_id: *newtab_visit_id
-    send_in_pings:
-      - newtab
-
-  fakespot_click:
-    type: event
-    description: >
-      Recorded when a user clicks on a card in TBR fakespot feed
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1924873
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1924873
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - nbarrett@mozilla.com
-    expires: never
-    extra_keys:
-      newtab_visit_id: *newtab_visit_id
-      product_id:
-        description: >
-          id of fakespot product
-        type: string
-      category:
-        description: >
-          category of fakespot product
-        type: string
-    send_in_pings:
-      - newtab
-
-  fakespot_product_impression:
-    type: event
-    description: >
-      Recorded when a user triggers an impression on a card in TBR fakespot feed
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1924873
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1924873
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - nbarrett@mozilla.com
-    expires: never
-    extra_keys:
-      newtab_visit_id: *newtab_visit_id
-      product_title:
-        description: >
-          title of fakespot product
-        type: string
-      product_id:
-        description: >
-          id of fakespot product
-        type: string
-      category:
-        description: >
-          category of fakespot product
-        type: string
-    send_in_pings:
-      - newtab
-
-  fakespot_cta_click:
-    type: event
-    description: >
-      Recorded when a user clicks on the CTA in TBR fakespot feed
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1924873
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1924873
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - nbarrett@mozilla.com
-    expires: never
-    extra_keys:
-      newtab_visit_id: *newtab_visit_id
-    send_in_pings:
-      - newtab
-
-  fakespot_category:
-    type: event
-    description: >
-      Recorded when a user changes the category in TBR fakespot feed
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1924873
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1924873
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - nbarrett@mozilla.com
-    expires: never
-    extra_keys:
-      newtab_visit_id: *newtab_visit_id
-      category:
-        description: >
-          category that user selected
-        type: string
-    send_in_pings:
-      - newtab
-
   sections_impression:
     type: event
     description: >
@@ -1989,10 +1857,6 @@ pocket:
         description: >
           The list of topics the user selected
         type: string
-      is_list_card:
-        description: >
-          Where the article card is in the list component
-        type: boolean
       section:
         description: >
           If click belongs in a section, the name of the section
@@ -2060,10 +1924,6 @@ pocket:
         description: >
           The list of topics the user selected
         type: string
-      is_list_card:
-        description: >
-          Where the article card is in the list component
-        type: boolean
       section:
         description: >
           If click belongs in a section, the name of the section
@@ -2108,10 +1968,6 @@ pocket:
       corpus_item_id: *corpus_item_id
       received_rank: *received_rank
       recommended_at: *recommended_at
-      is_list_card:
-        description: >
-          Where the article card is in the list component
-        type: boolean
       section:
         description: >
           If click belongs in a section, the name of the section
@@ -2178,10 +2034,6 @@ pocket:
         description: >
           The list of topics the user selected
         type: string
-      is_list_card:
-        description: >
-          Where the article card is in the list component
-        type: boolean
       section:
         description: >
           If click belongs in a section, the name of the section
@@ -2323,10 +2175,6 @@ pocket:
       topic:
         description: The topic of the recommendation. Like "entertainment".
         type: string
-      is_list_card:
-        description: >
-          Where the article card is in the list component
-        type: boolean
       section:
         description: >
           If event belongs in a section, the name of the section
@@ -2569,10 +2417,6 @@ newtab_content:
         description: >
           The list of topics the user selected
         type: string
-      is_list_card:
-        description: >
-          Where the article card is in the list component
-        type: boolean
       section:
         description: >
           If click belongs in a section, the name of the section
@@ -2625,10 +2469,6 @@ newtab_content:
         description: >
           The list of topics the user selected
         type: string
-      is_list_card:
-        description: >
-          Where the article card is in the list component
-        type: boolean
       section:
         description: >
           If click belongs in a section, the name of the section
@@ -2720,10 +2560,6 @@ newtab_content:
       topic:
         description: The topic of the recommendation. Like "entertainment".
         type: string
-      is_list_card:
-        description: >
-          Where the article card is in the list component
-        type: boolean
       section:
         description: >
           If event belongs in a section, the name of the section

@@ -5,7 +5,6 @@
 import { DSCard, PlaceholderDSCard } from "../DSCard/DSCard.jsx";
 import { DSEmptyState } from "../DSEmptyState/DSEmptyState.jsx";
 import { TopicsWidget } from "../TopicsWidget/TopicsWidget.jsx";
-import { ListFeed } from "../ListFeed/ListFeed.jsx";
 import { AdBanner } from "../AdBanner/AdBanner.jsx";
 import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
 import React, { useEffect, useRef } from "react";
@@ -18,11 +17,6 @@ const PREF_TOPICS_SELECTED = "discoverystream.topicSelection.selectedTopics";
 const PREF_TOPICS_AVAILABLE = "discoverystream.topicSelection.topics";
 const PREF_SPOCS_STARTUPCACHE_ENABLED =
   "discoverystream.spocs.startupCache.enabled";
-const PREF_LIST_FEED_ENABLED = "discoverystream.contextualContent.enabled";
-const PREF_LIST_FEED_SELECTED_FEED =
-  "discoverystream.contextualContent.selectedFeed";
-const PREF_FAKESPOT_ENABLED =
-  "discoverystream.contextualContent.fakespot.enabled";
 const PREF_BILLBOARD_ENABLED = "newtabAdSize.billboard";
 const PREF_BILLBOARD_POSITION = "newtabAdSize.billboard.position";
 const PREF_LEADERBOARD_ENABLED = "newtabAdSize.leaderboard";
@@ -94,8 +88,6 @@ export class _CardGrid extends React.PureComponent {
     const selectedTopics = prefs[PREF_TOPICS_SELECTED];
     const availableTopics = prefs[PREF_TOPICS_AVAILABLE];
     const spocsStartupCacheEnabled = prefs[PREF_SPOCS_STARTUPCACHE_ENABLED];
-    const listFeedEnabled = prefs[PREF_LIST_FEED_ENABLED];
-    const listFeedSelectedFeed = prefs[PREF_LIST_FEED_SELECTED_FEED];
     const billboardEnabled = prefs[PREF_BILLBOARD_ENABLED];
     const leaderboardEnabled = prefs[PREF_LEADERBOARD_ENABLED];
     const trendingEnabled =
@@ -104,10 +96,7 @@ export class _CardGrid extends React.PureComponent {
       prefs[PREF_SEARCH_ENGINE]?.toLowerCase() === "google";
     const trendingVariant = prefs[PREF_TRENDING_SEARCH_VARIANT];
 
-    // filter out recs that should be in ListFeed
-    const recs = this.props.data.recommendations
-      .filter(item => !item.feedName)
-      .slice(0, items);
+    const recs = this.props.data.recommendations.slice(0, items);
     const cards = [];
 
     for (let index = 0; index < items; index++) {
@@ -204,21 +193,6 @@ export class _CardGrid extends React.PureComponent {
         }
       }
     }
-    if (listFeedEnabled) {
-      const isFakespot = listFeedSelectedFeed === "fakespot";
-      const fakespotEnabled = prefs[PREF_FAKESPOT_ENABLED];
-      if (!isFakespot || (isFakespot && fakespotEnabled)) {
-        // Place the list feed as the 3rd element in the card grid
-        cards.splice(
-          2,
-          1,
-          this.renderListFeed(
-            this.props.data.recommendations,
-            listFeedSelectedFeed
-          )
-        );
-      }
-    }
     if (trendingEnabled && trendingVariant === "b") {
       const firstSpocPosition = this.props.spocPositions[0]?.index;
       // double check that a spoc/mrec is actually in the index it should be in
@@ -299,24 +273,6 @@ export class _CardGrid extends React.PureComponent {
     return (
       <>{cards?.length > 0 && <div className={gridClassName}>{cards}</div>}</>
     );
-  }
-
-  renderListFeed(recommendations, selectedFeed) {
-    const recs = recommendations.filter(item => item.feedName === selectedFeed);
-    const isFakespot = selectedFeed === "fakespot";
-    // remove duplicates from category list
-    const categories = [...new Set(recs.map(({ category }) => category))];
-    const listFeed = (
-      <ListFeed
-        // only display recs that match selectedFeed for ListFeed
-        recs={recs}
-        categories={isFakespot ? categories : []}
-        firstVisibleTimestamp={this.props.firstVisibleTimestamp}
-        type={this.props.type}
-        dispatch={this.props.dispatch}
-      />
-    );
-    return listFeed;
   }
 
   renderGridClassName() {
