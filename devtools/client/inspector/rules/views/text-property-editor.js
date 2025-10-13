@@ -567,7 +567,7 @@ class TextPropertyEditor {
       val += " !" + this.prop.priority;
     }
 
-    const propDirty = store.userProperties.contains(this.rule.domRule, name);
+    const propDirty = this.prop.isPropertyChanged;
 
     if (propDirty) {
       this.element.setAttribute("dirty", "");
