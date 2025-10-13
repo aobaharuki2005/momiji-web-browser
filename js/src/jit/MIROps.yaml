@@ -2210,6 +2210,7 @@
   movable: true
   congruent_to: custom
   alias_set: custom
+  generate_lir: true
 
 - name: GuardMultipleShapes
   operands:

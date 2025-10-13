@@ -5785,7 +5785,7 @@ void LIRGenerator::visitGuardGlobalGeneration(MGuardGlobalGeneration* ins) {
 }
 
 void LIRGenerator::visitGuardFuse(MGuardFuse* ins) {
-  auto* lir = new (alloc()) LGuardFuse(temp());
+  auto* lir = new (alloc()) LGuardFuse();
   assignSnapshot(lir, ins->bailoutKind());
   add(lir, ins);
 }

@@ -4470,14 +4470,13 @@ void CodeGenerator::visitGuardShape(LGuardShape* guard) {
 void CodeGenerator::visitGuardFuse(LGuardFuse* guard) {
   auto fuseIndex = guard->mir()->fuseIndex();
 
-  Register temp = ToRegister(guard->temp0());
   Label bail;
 
   // Bake specific fuse address for Ion code, because we won't share this code
   // across realms.
   GuardFuse* fuse = mirGen().realm->realmFuses().getFuseByIndex(fuseIndex);
-  masm.loadPtr(AbsoluteAddress(fuse->fuseRef()), temp);
-  masm.branchPtr(Assembler::NotEqual, temp, ImmPtr(nullptr), &bail);
+  masm.branchPtr(Assembler::NotEqual, AbsoluteAddress(fuse->fuseRef()),
+                 ImmWord(0), &bail);
 
   bailoutFrom(&bail, guard->snapshot());
 }

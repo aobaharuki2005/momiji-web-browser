@@ -3029,10 +3029,6 @@
   mir_op: true
   num_temps: 1
 
-- name: GuardFuse
-  mir_op: true
-  num_temps: 1
-
 - name: GuardIsProxy
   operands:
     object: WordSized
