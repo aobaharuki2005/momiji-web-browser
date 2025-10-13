@@ -859,14 +859,18 @@ struct ReflowInput : public SizeComputationInput {
   LogicalSize ComputeContainingBlockRectangle(
       nsPresContext* aPresContext, const ReflowInput* aContainingBlockRI) const;
 
-  // Returns the nearest containing block or block frame (whether or not
-  // it is a containing block) for the specified frame.  Also returns
-  // the inline-start edge and logical size of the containing block's
-  // content area.
-  // These are returned in the coordinate space of the containing block.
-  nsIFrame* GetHypotheticalBoxContainer(nsIFrame* aFrame,
-                                        nscoord& aCBIStartEdge,
-                                        LogicalSize& aCBSize) const;
+  // mBorderPadding and mFrame are both in mBoxContainer's writing-mode.
+  struct HypotheticalBoxContainerInfo {
+    nsIFrame* mBoxContainer;
+    LogicalMargin mBorderPadding;
+    LogicalSize mContentBoxSize;
+  };
+
+  // Returns the nearest containing block for aFrame. Also returns its border &
+  // padding and content-box size. These are returned in the coordinate space of
+  // the containing block.
+  HypotheticalBoxContainerInfo GetHypotheticalBoxContainer(
+      const nsIFrame* aFrame) const;
 
   // Calculate the position of the hypothetical box that the placeholder frame
   // (for a position:fixed/absolute element) would have if it were in the flow

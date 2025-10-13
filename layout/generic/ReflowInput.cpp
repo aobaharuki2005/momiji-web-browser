@@ -1188,47 +1188,31 @@ void ReflowInput::ApplyRelativePositioning(
   *aPosition = LogicalPoint(aWritingMode, pos, aContainerSize - frameSize);
 }
 
-nsIFrame* ReflowInput::GetHypotheticalBoxContainer(nsIFrame* aFrame,
-                                                   nscoord& aCBIStartEdge,
-                                                   LogicalSize& aCBSize) const {
-  aFrame = aFrame->GetContainingBlock();
-  NS_ASSERTION(aFrame != mFrame, "How did that happen?");
+ReflowInput::HypotheticalBoxContainerInfo
+ReflowInput::GetHypotheticalBoxContainer(const nsIFrame* aFrame) const {
+  nsIFrame* cb = aFrame->GetContainingBlock();
+  NS_ASSERTION(cb != mFrame, "How did that happen?");
 
-  /* Now aFrame is the containing block we want */
-
-  /* Check whether the containing block is currently being reflowed.
-     If so, use the info from the reflow input. */
-  const ReflowInput* reflowInput;
-  if (aFrame->HasAnyStateBits(NS_FRAME_IN_REFLOW)) {
-    for (reflowInput = mParentReflowInput;
-         reflowInput && reflowInput->mFrame != aFrame;
-         reflowInput = reflowInput->mParentReflowInput) {
-      /* do nothing */
+  // If cb is currently being reflowed, find its ReflowInput.
+  const ReflowInput* ri = nullptr;
+  if (cb->HasAnyStateBits(NS_FRAME_IN_REFLOW)) {
+    ri = mParentReflowInput;
+    while (ri && ri->mFrame != cb) {
+      ri = ri->mParentReflowInput;
     }
-  } else {
-    reflowInput = nullptr;
   }
 
-  if (reflowInput) {
-    WritingMode wm = reflowInput->GetWritingMode();
-    NS_ASSERTION(wm == aFrame->GetWritingMode(), "unexpected writing mode");
-    aCBIStartEdge = reflowInput->ComputedLogicalBorderPadding(wm).IStart(wm);
-    aCBSize = reflowInput->ComputedSize(wm);
-  } else {
-    /* Didn't find a reflow reflowInput for aFrame.  Just compute the
-       information we want, on the assumption that aFrame already knows its
-       size.  This really ought to be true by now. */
-    NS_ASSERTION(!aFrame->HasAnyStateBits(NS_FRAME_IN_REFLOW),
-                 "aFrame shouldn't be in reflow; we'll lie if it is");
-    WritingMode wm = aFrame->GetWritingMode();
-    // Compute CB's offset & content-box size by subtracting borderpadding from
-    // frame size.
-    const auto& bp = aFrame->GetLogicalUsedBorderAndPadding(wm);
-    aCBIStartEdge = bp.IStart(wm);
-    aCBSize = aFrame->GetLogicalSize(wm) - bp.Size(wm);
+  const WritingMode wm = cb->GetWritingMode();
+  if (ri) {
+    return {cb, ri->ComputedLogicalBorderPadding(wm), ri->ComputedSize(wm)};
   }
 
-  return aFrame;
+  // Didn't find a ReflowInput for cb. Just compute the information we want, on
+  // the assumption that cb already knows its size. This really ought to be true
+  // by now.
+  NS_ASSERTION(!cb->HasAnyStateBits(NS_FRAME_IN_REFLOW),
+               "cb shouldn't be in reflow; we'll lie if it is");
+  return {cb, cb->GetLogicalUsedBorderAndPadding(wm), cb->ContentSize(wm)};
 }
 
 struct nsHypotheticalPosition {
@@ -1364,22 +1348,15 @@ void ReflowInput::CalculateHypotheticalPosition(
   NS_ASSERTION(mStyleDisplay->mOriginalDisplay != StyleDisplay::None,
                "mOriginalDisplay has not been properly initialized");
 
-  // Find the nearest containing block frame to the placeholder frame,
-  // and its inline-start edge and width.
-  nscoord blockIStartContentEdge;
-  // Dummy writing mode for blockContentSize, will be changed as needed by
-  // GetHypotheticalBoxContainer.
   WritingMode cbwm = aCBReflowInput->GetWritingMode();
-  LogicalSize blockContentSize(cbwm);
-  nsIFrame* containingBlock = GetHypotheticalBoxContainer(
-      aPlaceholderFrame, blockIStartContentEdge, blockContentSize);
-  // Now blockContentSize is in containingBlock's writing mode.
+  const auto [containingBlock, blockContainerBP, blockContentSize] =
+      GetHypotheticalBoxContainer(aPlaceholderFrame);
+  WritingMode wm = containingBlock->GetWritingMode();
+  const nscoord blockIStartContentEdge = blockContainerBP.IStart(wm);
 
   // If it's a replaced element and it has a 'auto' value for
   //'inline size', see if we can get the intrinsic size. This will allow
   // us to exactly determine both the inline edges
-  WritingMode wm = containingBlock->GetWritingMode();
-
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
   const auto styleISize = mStylePosition->ISize(wm, anchorResolutionParams);
   bool isAutoISize = styleISize->IsAuto();
