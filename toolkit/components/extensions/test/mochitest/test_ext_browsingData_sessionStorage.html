@@ -84,7 +84,7 @@ add_task(async function testLocalStorage() {
     if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
       await sendMessageToTabs(tabs, "resetSessionStorage");
       await sendMessageToTabs(tabs, "checkSessionStorageSet");
-      // TODO: passing only the cookieStoreId is not supported, it will not delete anything.
+      // Now passing only the cookieStoreId should clear all sessionStorage for that container
       await browser.browsingData.removeLocalStorage({
         cookieStoreId: "firefox-container-1",
       });
@@ -93,7 +93,7 @@ add_task(async function testLocalStorage() {
 
       // TODO: containers support is lacking on GeckoView (Bug 1643740)
       if (!navigator.userAgent.includes("Android")) {
-        await browser.tabs.sendMessage(tabs["https://test1.example.org/"].id, "checkSessionStorageSet");
+        await browser.tabs.sendMessage(tabs["https://test1.example.org/"].id, "checkSessionStorageCleared");
       }
 
       await sendMessageToTabs(tabs, "resetSessionStorage");
