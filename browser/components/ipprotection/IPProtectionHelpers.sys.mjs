@@ -20,6 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 import { IPPSignInWatcher } from "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs";
+import { IPPStartupCache } from "resource:///modules/ipprotection/IPPStartupCache.sys.mjs";
 
 const VPN_ADDON_ID = "vpn@mozilla.com";
 
@@ -37,6 +38,8 @@ class UIHelper {
       this.handleEvent
     );
   }
+
+  initOnStartupCompleted() {}
 
   uninit() {
     lazy.IPProtectionService.removeEventListener(
@@ -76,6 +79,8 @@ class AccountResetHelper {
     );
   }
 
+  initOnStartupCompleted() {}
+
   uninit() {
     lazy.IPProtectionService.removeEventListener(
       "IPProtectionService:StateChanged",
@@ -101,10 +106,12 @@ class AccountResetHelper {
  * This class removes the UI widget if the VPN add-on is installed.
  */
 class VPNAddonHelper {
+  init() {}
+
   /**
    * Adds an observer to monitor the VPN add-on installation
    */
-  init() {
+  initOnStartupCompleted() {
     this.addonVPNListener = {
       onInstallEnded(_install, addon) {
         if (addon.id === VPN_ADDON_ID && lazy.IPProtectionService.hasUpgraded) {
@@ -133,7 +140,9 @@ class VPNAddonHelper {
  * This class monitors the eligibility flag from Nimbus
  */
 class EligibilityHelper {
-  init() {
+  init() {}
+
+  initOnStartupCompleted() {
     lazy.NimbusFeatures.ipProtection.onUpdate(
       lazy.IPProtectionService.updateState
     );
@@ -147,6 +156,7 @@ class EligibilityHelper {
 }
 
 const IPPHelpers = [
+  IPPStartupCache,
   new AccountResetHelper(),
   new EligibilityHelper(),
   new VPNAddonHelper(),

@@ -10,12 +10,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UIState: "resource://services-sync/UIState.sys.mjs",
 });
 
-ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
-  return ChromeUtils.importESModule(
-    "resource://gre/modules/FxAccounts.sys.mjs"
-  ).getFxAccountsSingleton();
-});
-
 /**
  * This class monitors the Sign-In state and triggers the update of the service
  * if needed.
@@ -31,10 +25,14 @@ class IPPSignInWatcherSingleton {
     this.#signedIn = signedIn;
   }
 
+  init() {
+    this.#signedIn = Services.prefs.prefHasUserValue("services.sync.username");
+  }
+
   /**
-   * Adds an observer for the FxA sign-in state.
+   * Adds an observer for the FxA sign-in state, only when the browser is fully started.
    */
-  async init() {
+  async initOnStartupCompleted() {
     this.fxaObserver = {
       QueryInterface: ChromeUtils.generateQI([
         Ci.nsIObserver,
@@ -52,13 +50,6 @@ class IPPSignInWatcherSingleton {
     };
 
     Services.obs.addObserver(this.fxaObserver, lazy.UIState.ON_UPDATE);
-
-    // Let's check the sign-in state only if we have seen the user signed in
-    // once at least.
-    if (Services.prefs.prefHasUserValue("services.sync.username")) {
-      const userData = await lazy.fxAccounts.getSignedInUser();
-      this.#signedIn = userData?.verified || false;
-    }
   }
 
   /**
