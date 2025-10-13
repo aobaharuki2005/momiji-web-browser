@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * Note: If you add or modify the list of helpers, make sure to update the
+ * corresponding documentation in the `docs` folder as well.
+ */
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {

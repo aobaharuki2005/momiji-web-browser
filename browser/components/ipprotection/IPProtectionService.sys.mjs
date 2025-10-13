@@ -51,6 +51,9 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
  *  Proxy is active.
  * @property {string} ERROR
  *  Error
+ *
+ * Note: If you update this list of states, make sure to update the
+ * corresponding documentation in the `docs` folder as well.
  */
 export const IPProtectionStates = Object.freeze({
   UNINITIALIZED: "uninitialized",
