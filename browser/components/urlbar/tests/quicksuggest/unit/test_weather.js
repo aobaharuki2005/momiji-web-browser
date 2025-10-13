@@ -298,12 +298,8 @@ async function doLocaleTest({ shouldRunTask, osUnit, unitsByLocale }) {
 
   // Check locales.
   for (let [locale, temperatureUnit] of Object.entries(unitsByLocale)) {
-    await QuickSuggestTestUtils.withRegionAndLocale({
-      locale,
-      // Weather suggestions are not enabled by default for all regions/locale
-      // combinations in this test, so don't reset Suggest so that they remain
-      // enabled rather than being set according to region/locale.
-      skipSuggestReset: true,
+    await QuickSuggestTestUtils.withLocales({
+      locales: [locale],
       callback: async () => {
         info("Checking locale: " + locale);
         await check_results({
@@ -449,13 +445,9 @@ add_task(async function queryOutsideNorthAmerica_clientOutsideNorthAmerica() {
 });
 
 async function doRegionTest({ homeRegion, locale, query, expectedTitleL10n }) {
-  await QuickSuggestTestUtils.withRegionAndLocale({
-    locale,
-    region: homeRegion,
-    // Weather suggestions are not enabled by default for all regions/locale
-    // combinations in this test, so don't reset Suggest so that they remain
-    // enabled rather than being set according to region/locale.
-    skipSuggestReset: true,
+  await QuickSuggestTestUtils.withLocales({
+    homeRegion,
+    locales: [locale],
     callback: async () => {
       info(
         "Doing region test: " + JSON.stringify({ homeRegion, locale, query })

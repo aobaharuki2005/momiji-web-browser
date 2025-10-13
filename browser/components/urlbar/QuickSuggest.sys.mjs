@@ -68,10 +68,10 @@ const SUGGEST_PREFS = Object.freeze({
   },
   "quicksuggest.enabled": {
     defaultValues: {
-      DE: [["de", ...EN_LOCALES], true],
-      FR: [["fr", ...EN_LOCALES], true],
+      DE: [["de"], true],
+      FR: [["fr"], true],
       GB: [EN_LOCALES, true],
-      IT: [["it", ...EN_LOCALES], true],
+      IT: [["it"], true],
       US: [EN_LOCALES, true],
     },
   },
@@ -121,10 +121,10 @@ const SUGGEST_PREFS = Object.freeze({
   },
   "importantDates.featureGate": {
     defaultValues: {
-      DE: [["de", ...EN_LOCALES], true],
-      FR: [["fr", ...EN_LOCALES], true],
+      DE: [["de"], true],
+      FR: [["fr"], true],
       GB: [EN_LOCALES, true],
-      IT: [["it", ...EN_LOCALES], true],
+      IT: [["it"], true],
       US: [EN_LOCALES, true],
     },
   },

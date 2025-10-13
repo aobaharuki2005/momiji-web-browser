@@ -12,26 +12,7 @@ ChromeUtils.defineESModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
-const EN_LOCALES = ["en-CA", "en-GB", "en-US", "en-ZA"];
-
-// Expected prefs when Suggest is disabled.
-const EXPECTED_PREFS_SUGGEST_DISABLED = {
-  "quicksuggest.enabled": false,
-  "quicksuggest.dataCollection.enabled": false,
-  "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.NONE,
-  "suggest.quicksuggest.nonsponsored": false,
-  "suggest.quicksuggest.sponsored": false,
-  "addons.featureGate": false,
-  "amp.featureGate": false,
-  "importantDates.featureGate": false,
-  "mdn.featureGate": false,
-  "weather.featureGate": false,
-  "wikipedia.featureGate": false,
-  "yelp.featureGate": false,
-};
-
-// Expected prefs for native locales in EU countries (e.g., `de` locale in Germany).
-const EXPECTED_PREFS_EU_NATIVE = {
+const EXPECTED_EU_PREFS = {
   "quicksuggest.enabled": true,
   "quicksuggest.dataCollection.enabled": false,
   "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.OFFLINE_ONLY,
@@ -46,72 +27,55 @@ const EXPECTED_PREFS_EU_NATIVE = {
   "yelp.featureGate": false,
 };
 
-// Expected prefs for `en` locales in EU countries (e.g., `en-US` locale in
-// Germany).
-const EXPECTED_PREFS_EU_EN = {
-  ...EXPECTED_PREFS_SUGGEST_DISABLED,
-  "quicksuggest.enabled": true,
-  "importantDates.featureGate": true,
+// All the prefs that are initialized when Suggest is enabled, per region.
+const EXPECTED_PREFS_BY_REGION = {
+  DE: EXPECTED_EU_PREFS,
+  FR: EXPECTED_EU_PREFS,
+  GB: {
+    "quicksuggest.enabled": true,
+    "quicksuggest.dataCollection.enabled": false,
+    "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.OFFLINE_ONLY,
+    "suggest.quicksuggest.nonsponsored": true,
+    "suggest.quicksuggest.sponsored": true,
+    "addons.featureGate": false,
+    "amp.featureGate": true,
+    "importantDates.featureGate": true,
+    "mdn.featureGate": false,
+    "weather.featureGate": true,
+    "wikipedia.featureGate": true,
+    "yelp.featureGate": false,
+  },
+  IT: EXPECTED_EU_PREFS,
+  US: {
+    "quicksuggest.enabled": true,
+    "quicksuggest.dataCollection.enabled": false,
+    "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.OFFLINE_ONLY,
+    "suggest.quicksuggest.nonsponsored": true,
+    "suggest.quicksuggest.sponsored": true,
+    "addons.featureGate": true,
+    "amp.featureGate": true,
+    "importantDates.featureGate": true,
+    "mdn.featureGate": true,
+    "weather.featureGate": true,
+    "wikipedia.featureGate": true,
+    "yelp.featureGate": true,
+  },
 };
 
-// Region -> locale -> expected prefs when Suggest is enabled
-const EXPECTED_PREFS_BY_LOCALE_BY_REGION = {
-  DE: {
-    de: EXPECTED_PREFS_EU_NATIVE,
-    ...Object.fromEntries(
-      EN_LOCALES.map(locale => [locale, EXPECTED_PREFS_EU_EN])
-    ),
-  },
-  FR: {
-    fr: EXPECTED_PREFS_EU_NATIVE,
-    ...Object.fromEntries(
-      EN_LOCALES.map(locale => [locale, EXPECTED_PREFS_EU_EN])
-    ),
-  },
-  GB: Object.fromEntries(
-    EN_LOCALES.map(locale => [
-      locale,
-      {
-        "quicksuggest.enabled": true,
-        "quicksuggest.dataCollection.enabled": false,
-        "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.OFFLINE_ONLY,
-        "suggest.quicksuggest.nonsponsored": true,
-        "suggest.quicksuggest.sponsored": true,
-        "addons.featureGate": false,
-        "amp.featureGate": true,
-        "importantDates.featureGate": true,
-        "mdn.featureGate": false,
-        "weather.featureGate": true,
-        "wikipedia.featureGate": true,
-        "yelp.featureGate": false,
-      },
-    ])
-  ),
-  IT: {
-    it: EXPECTED_PREFS_EU_NATIVE,
-    ...Object.fromEntries(
-      EN_LOCALES.map(locale => [locale, EXPECTED_PREFS_EU_EN])
-    ),
-  },
-  US: Object.fromEntries(
-    EN_LOCALES.map(locale => [
-      locale,
-      {
-        "quicksuggest.enabled": true,
-        "quicksuggest.dataCollection.enabled": false,
-        "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.OFFLINE_ONLY,
-        "suggest.quicksuggest.nonsponsored": true,
-        "suggest.quicksuggest.sponsored": true,
-        "addons.featureGate": true,
-        "amp.featureGate": true,
-        "importantDates.featureGate": true,
-        "mdn.featureGate": true,
-        "weather.featureGate": true,
-        "wikipedia.featureGate": true,
-        "yelp.featureGate": true,
-      },
-    ])
-  ),
+// Expected prefs when Suggest is disabled.
+const EXPECTED_PREFS_DISABLED = {
+  "quicksuggest.enabled": false,
+  "quicksuggest.dataCollection.enabled": false,
+  "quicksuggest.settingsUi": 0,
+  "suggest.quicksuggest.nonsponsored": false,
+  "suggest.quicksuggest.sponsored": false,
+  "addons.featureGate": false,
+  "amp.featureGate": false,
+  "importantDates.featureGate": false,
+  "mdn.featureGate": false,
+  "weather.featureGate": false,
+  "wikipedia.featureGate": false,
+  "yelp.featureGate": false,
 };
 
 add_setup(async () => {
@@ -120,36 +84,28 @@ add_setup(async () => {
 
 add_task(async function test() {
   let tests = [
-    // Regions/locales where Suggest should be enabled to some extent
-    { region: "DE", locale: "de" },
-    { region: "DE", locale: "en-GB" },
-    { region: "DE", locale: "en-US" },
+    // Suggest should be enabled
+    { region: "DE", locale: "de", expectSuggestToBeEnabled: true },
+    { region: "FR", locale: "fr", expectSuggestToBeEnabled: true },
+    { region: "GB", locale: "en-US", expectSuggestToBeEnabled: true },
+    { region: "GB", locale: "en-CA", expectSuggestToBeEnabled: true },
+    { region: "GB", locale: "en-GB", expectSuggestToBeEnabled: true },
+    { region: "IT", locale: "it", expectSuggestToBeEnabled: true },
+    { region: "US", locale: "en-US", expectSuggestToBeEnabled: true },
+    { region: "US", locale: "en-CA", expectSuggestToBeEnabled: true },
+    { region: "US", locale: "en-GB", expectSuggestToBeEnabled: true },
 
-    { region: "FR", locale: "fr" },
-    { region: "FR", locale: "en-GB" },
-    { region: "FR", locale: "en-US" },
-
-    { region: "GB", locale: "en-US" },
-    { region: "GB", locale: "en-CA" },
-    { region: "GB", locale: "en-GB" },
-
-    { region: "IT", locale: "it" },
-    { region: "IT", locale: "en-GB" },
-    { region: "IT", locale: "en-US" },
-
-    { region: "US", locale: "en-US" },
-    { region: "US", locale: "en-CA" },
-    { region: "US", locale: "en-GB" },
-
-    // Regions/locales where Suggest should be completely disabled
-    { region: "CA", locale: "en-US" },
-    { region: "CA", locale: "en-CA" },
-    { region: "GB", locale: "de" },
-    { region: "US", locale: "de" },
+    // Suggest should be disabled
+    { region: "CA", locale: "en-US", expectSuggestToBeEnabled: false },
+    { region: "CA", locale: "en-CA", expectSuggestToBeEnabled: false },
+    { region: "DE", locale: "en-US", expectSuggestToBeEnabled: false },
+    { region: "FR", locale: "en-US", expectSuggestToBeEnabled: false },
+    { region: "GB", locale: "de", expectSuggestToBeEnabled: false },
+    { region: "IT", locale: "en-US", expectSuggestToBeEnabled: false },
+    { region: "US", locale: "de", expectSuggestToBeEnabled: false },
   ];
-
-  for (let { locale, region } of tests) {
-    await doTest({ locale, region });
+  for (let { locale, region, expectSuggestToBeEnabled } of tests) {
+    await doTest({ locale, region, expectSuggestToBeEnabled });
   }
 });
 
@@ -163,11 +119,20 @@ add_task(async function test() {
  *   The locale to simulate.
  * @param {string} options.region
  *   The "home" region to simulate.
+ * @param {boolean} options.expectSuggestToBeEnabled
+ *   Whether Suggest is expected to be enabled by default for the given locale
+ *   and region.
  */
-async function doTest({ locale, region }) {
-  let expectedPrefs =
-    EXPECTED_PREFS_BY_LOCALE_BY_REGION[region]?.[locale] ??
-    EXPECTED_PREFS_SUGGEST_DISABLED;
+async function doTest({ locale, region, expectSuggestToBeEnabled }) {
+  let expectedPrefs = EXPECTED_PREFS_DISABLED;
+  if (expectSuggestToBeEnabled) {
+    expectedPrefs = EXPECTED_PREFS_BY_REGION[region];
+    Assert.ok(
+      expectedPrefs,
+      "EXPECTED_PREFS_BY_REGION should have an entry for region since expectSuggestToBeEnabled is true, region=" +
+        region
+    );
+  }
 
   let defaults = new Preferences({
     branch: "browser.urlbar.",
@@ -182,10 +147,12 @@ async function doTest({ locale, region }) {
   }
 
   // Set the region and locale, call the function, check the pref values.
-  await QuickSuggestTestUtils.withRegionAndLocale({
-    region,
-    locale,
+  await QuickSuggestTestUtils.withLocales({
+    homeRegion: region,
+    locales: [locale],
     callback: async () => {
+      await QuickSuggest._test_reset();
+
       for (let [name, value] of Object.entries(expectedPrefs)) {
         // Check the default-branch value.
         Assert.strictEqual(
