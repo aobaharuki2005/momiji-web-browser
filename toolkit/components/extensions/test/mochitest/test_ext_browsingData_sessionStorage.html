@@ -65,8 +65,7 @@ add_task(async function testLocalStorage() {
     });
     await browser.tabs.sendMessage(tabs["https://example.com/"].id, "checkSessionStorageCleared");
     await browser.tabs.sendMessage(tabs["https://example.net/"].id, "checkSessionStorageSet");
-    ////TODO: Legacy sessionStorage implementation would not recognize the difference between example.com and test1.example.com, temporarily use example.org instead.
-    await browser.tabs.sendMessage(tabs["https://test1.example.org/"].id, "checkSessionStorageSet");
+    await browser.tabs.sendMessage(tabs["https://test1.example.com/"].id, "checkSessionStorageSet");
 
 
     await sendMessageToTabs(tabs, "resetSessionStorage");
@@ -93,7 +92,7 @@ add_task(async function testLocalStorage() {
 
       // TODO: containers support is lacking on GeckoView (Bug 1643740)
       if (!navigator.userAgent.includes("Android")) {
-        await browser.tabs.sendMessage(tabs["https://test1.example.org/"].id, "checkSessionStorageCleared");
+        await browser.tabs.sendMessage(tabs["https://test1.example.com/"].id, "checkSessionStorageCleared");
       }
 
       await sendMessageToTabs(tabs, "resetSessionStorage");
@@ -102,13 +101,16 @@ add_task(async function testLocalStorage() {
       // Happy path: Passing both hostname and cookieStoreId would clear the sessionStorage.
       await browser.browsingData.removeLocalStorage({
         cookieStoreId: "firefox-container-1",
-        hostnames: ["example.org"],
+        hostnames: ["test1.example.com"],
       });
 
       await browser.tabs.sendMessage(tabs["https://example.com/"].id, "checkSessionStorageSet");
       await browser.tabs.sendMessage(tabs["https://example.net/"].id, "checkSessionStorageSet");
-      await browser.tabs.sendMessage(tabs["https://test1.example.org/"].id, "checkSessionStorageCleared");
 
+      // TODO: containers support is lacking on GeckoView (Bug 1643740)
+      if (!navigator.userAgent.includes("Android")) {
+        await browser.tabs.sendMessage(tabs["https://test1.example.com/"].id, "checkSessionStorageCleared");
+      }
       await sendMessageToTabs(tabs, "resetSessionStorage");
       await sendMessageToTabs(tabs, "checkSessionStorageSet");
       // Hostname doesn't match, so nothing cleared.
@@ -177,7 +179,7 @@ add_task(async function testLocalStorage() {
         { url: "https://example.com" },
         { url: "https://example.net" },
         {
-          url: "https://test1.example.org",
+          url: "https://test1.example.com",
           cookieStoreId: 'firefox-container-1',
         },
       ];
@@ -234,7 +236,7 @@ add_task(async function testLocalStorage() {
           matches: [
             "https://example.com/",
             "https://example.net/",
-            "https://test1.example.org/",
+            "https://test1.example.com/",
           ],
           js: ["content-script.js"],
           run_at: "document_end",

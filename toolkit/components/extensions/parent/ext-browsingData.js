@@ -223,9 +223,9 @@ const clearLocalStorage = async function (options) {
           )
         : "";
 
-      Services.obs.notifyObservers(entry, "browser:purge-sessionStorage");
+      Services.obs.notifyObservers(entry, "extension:purge-sessionStorage");
     } else {
-      Services.obs.notifyObservers(null, "browser:purge-sessionStorage");
+      Services.obs.notifyObservers(null, "extension:purge-sessionStorage");
     }
   };
 
