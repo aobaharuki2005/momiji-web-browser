@@ -378,7 +378,7 @@ private fun LoginDeletionDialog(
                 onClick = onDeleteTapped,
             ) {
                 Text(
-                    text = stringResource(R.string.bookmark_menu_delete_button).uppercase(),
+                    text = stringResource(R.string.bookmark_menu_delete_button),
                 )
             }
         },
@@ -387,7 +387,7 @@ private fun LoginDeletionDialog(
                 onClick = onCancelTapped,
             ) {
                 Text(
-                    text = stringResource(R.string.bookmark_delete_negative).uppercase(),
+                    text = stringResource(R.string.bookmark_delete_negative),
                 )
             }
         },
