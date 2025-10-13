@@ -40,7 +40,7 @@ class PlayStoreReviewPromptController(
         logger.info("tryPromptReview in progress...")
         val reviewInfoFlow = withContext(Dispatchers.IO) { manager.requestReviewFlow() }
 
-        reviewInfoFlow.addOnCompleteListener {
+        reviewInfoFlow.addOnCompleteListener(activity) {
             val resultString = if (it.isSuccessful) {
                 logger.info("Review flow launched.")
                 // Launch the in-app flow.
