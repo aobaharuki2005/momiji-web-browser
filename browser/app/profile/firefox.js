@@ -577,9 +577,9 @@ pref("browser.urlbar.quicksuggest.mlEnabled", false);
 // backend.
 pref("browser.urlbar.quicksuggest.mlInitDelaySeconds", 0);
 
-// Which Suggest settings to show in the settings UI. See
-// `QuickSuggest.SETTINGS_UI` for values.
-pref("browser.urlbar.quicksuggest.settingsUi", 0);
+// Which Suggest settings to show in the settings UI, when Suggest is enabled.
+// See `QuickSuggest.SETTINGS_UI` for values.
+pref("browser.urlbar.quicksuggest.settingsUi", 1);
 
 // Whether unit conversion is enabled.
 pref("browser.urlbar.unitConversion.enabled", true);

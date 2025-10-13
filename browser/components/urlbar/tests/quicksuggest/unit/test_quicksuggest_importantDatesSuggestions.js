@@ -61,6 +61,27 @@ const REMOTE_SETTINGS_RECORDS = [
     ],
   },
 
+  // DE region, en-US locale
+  {
+    type: "dynamic-suggestions",
+    suggestion_type: "important_dates",
+    filter_expression: "env.country == 'DE' && env.locale == 'en-US'",
+    attachment: [
+      {
+        keywords: ["de en-us event"],
+        data: {
+          result: {
+            isImportantDate: true,
+            payload: {
+              dates: ["2026-01-02"],
+              name: "DE en-US Event",
+            },
+          },
+        },
+      },
+    ],
+  },
+
   // other non-important-dates records
   {
     type: "dynamic-suggestions",
@@ -367,6 +388,21 @@ add_task(async function otherRegionsAndLocales() {
       ],
     },
 
+    // DE region, en-US locale (should match)
+    {
+      region: "DE",
+      locale: "en-US",
+      matchingQuery: "de en-us event",
+      expectedResultData: {
+        date: "Friday, January 2, 2026",
+        description: "DE en-US Event",
+      },
+      nonMatchingQueries: [
+        "de de event", // DE region, de locale
+        "event 1", // US region, en-US locale
+      ],
+    },
+
     // XX region, en-US locale (should not match)
     {
       region: "XX",
@@ -382,7 +418,7 @@ add_task(async function otherRegionsAndLocales() {
     // US region, de locale (should not match)
     {
       region: "US",
-      locale: "af",
+      locale: "de",
       matchingQuery: null,
       nonMatchingQueries: [
         "de de event", // DE region, de locale
