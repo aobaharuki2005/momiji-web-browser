@@ -19,6 +19,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
+import { IPPAutoStartHelpers } from "resource:///modules/ipprotection/IPPAutoStart.sys.mjs";
 import { IPPSignInWatcher } from "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs";
 import { IPPStartupCache } from "resource:///modules/ipprotection/IPPStartupCache.sys.mjs";
 
@@ -155,13 +156,17 @@ class EligibilityHelper {
   }
 }
 
+// The order is important! Eligibility must be the last one because nimbus
+// triggers the callback immdiately, which could compute a new state for all
+// the helpers.
 const IPPHelpers = [
   IPPStartupCache,
-  new AccountResetHelper(),
-  new EligibilityHelper(),
-  new VPNAddonHelper(),
-  new UIHelper(),
   IPPSignInWatcher,
+  new UIHelper(),
+  new AccountResetHelper(),
+  new VPNAddonHelper(),
+  new EligibilityHelper(),
+  ...IPPAutoStartHelpers,
 ];
 
 export { IPPHelpers };

@@ -70,7 +70,7 @@ class IPPProxyManager {
   }
 
   get active() {
-    return !!this.#connection?.active;
+    return !!this.#connection?.active && !!this.#connection?.proxyInfo;
   }
 
   get isolationKey() {
@@ -86,6 +86,20 @@ class IPPProxyManager {
     this.handleProxyErrorEvent = this.#handleProxyErrorEvent.bind(this);
   }
 
+  createChannelFilter() {
+    if (!this.#connection) {
+      this.#connection = lazy.IPPChannelFilter.create();
+      this.#connection.start();
+    }
+  }
+
+  cancelChannelFilter() {
+    if (this.#connection) {
+      this.#connection.stop();
+      this.#connection = null;
+    }
+  }
+
   /**
    * Starts the proxy connection:
    * - Gets a new proxy pass if needed.
@@ -95,6 +109,8 @@ class IPPProxyManager {
    * @returns {Promise<boolean|Error>}
    */
   async start() {
+    this.createChannelFilter();
+
     // If the current proxy pass is valid, no need to re-authenticate.
     // Throws an error if the proxy pass is not available.
     if (!this.#pass?.isValid()) {
@@ -104,17 +120,12 @@ class IPPProxyManager {
     const location = await lazy.getDefaultLocation();
     const server = await lazy.selectServer(location?.city);
     lazy.logConsole.debug("Server:", server?.hostname);
-    if (this.#connection?.active) {
-      this.#connection.stop();
-    }
 
-    this.#connection = lazy.IPPChannelFilter.create(
+    this.#connection.initialize(
       this.#pass.asBearerToken(),
       server.hostname,
       server.port
     );
-
-    this.#connection.start();
 
     this.usageObserver.start();
     this.usageObserver.addIsolationKey(this.#connection.isolationKey);
@@ -137,9 +148,9 @@ class IPPProxyManager {
    * @returns {int}
    */
   stop() {
-    this.#connection?.stop();
+    this.cancelChannelFilter();
+
     this.networkErrorObserver.stop();
-    this.#connection = null;
 
     lazy.logConsole.info("Stopped");
 

@@ -202,6 +202,11 @@ add_task(async function customize_toolbar_remove_widget() {
  * back to the initial area on re-init.
  */
 add_task(async function toolbar_placement_customized() {
+  setupService({
+    isSignedIn: true,
+    isEnrolled: true,
+  });
+
   let start = CustomizableUI.getPlacementOfWidget(IPProtectionWidget.WIDGET_ID);
   Assert.equal(
     start.area,
@@ -227,8 +232,17 @@ add_task(async function toolbar_placement_customized() {
   let widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.equal(widget, null, "IP Protection widget is removed");
 
+  const waitForStateChange = BrowserTestUtils.waitForEvent(
+    lazy.IPProtectionService,
+    "IPProtectionService:StateChanged",
+    false,
+    () => lazy.IPProtectionService.state === lazy.IPProtectionStates.READY
+  );
+
   // Reenable the feature
   await setupExperiment();
+
+  await waitForStateChange;
 
   let restored = CustomizableUI.getPlacementOfWidget(
     IPProtectionWidget.WIDGET_ID

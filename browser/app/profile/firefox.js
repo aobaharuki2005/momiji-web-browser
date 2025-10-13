@@ -3468,6 +3468,7 @@ pref("browser.contextual-services.contextId.rotation-in-days", 7);
 pref("browser.contextual-services.contextId.rust-component.enabled", true);
 
 // Pref to enable the IP protection feature
+pref("browser.ipProtection.autoStartEnabled", false);
 pref("browser.ipProtection.enabled", false);
 pref("browser.ipProtection.userEnabled", false);
 pref("browser.ipProtection.variant", "");
