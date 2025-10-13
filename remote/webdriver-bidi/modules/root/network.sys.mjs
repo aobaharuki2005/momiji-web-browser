@@ -364,6 +364,11 @@ const IMMUTABLE_RESPONSE_HEADERS = [
   "transfer-encoding",
 ];
 
+const UNAVAILABLE_DATA_ERROR_REASON = {
+  Aborted: "aborted",
+  Evicted: "evicted",
+};
+
 class NetworkModule extends RootBiDiModule {
   #blockedRequests;
   #collectedNetworkData;
@@ -1240,8 +1245,9 @@ class NetworkModule extends RootBiDiModule {
     }
 
     if (collectedData.bytes === null) {
+      const reason = collectedData.unavailableReason;
       throw new lazy.error.UnavailableNetworkDataError(
-        `Network data content for request id ${requestId} and DataType ${dataType} is unavailable`
+        `Network data content for request id ${requestId} and DataType ${dataType} is unavailable (reason: ${reason})`
       );
     }
 
@@ -1653,6 +1659,7 @@ class NetworkModule extends RootBiDiModule {
       for (const collectedData of alreadyCollectedData) {
         availableSize = availableSize + collectedData.size;
         collectedData.bytes = null;
+        collectedData.unavailableReason = UNAVAILABLE_DATA_ERROR_REASON.Evicted;
         collectedData.size = null;
 
         if (size <= availableSize) {
@@ -1789,6 +1796,8 @@ class NetworkModule extends RootBiDiModule {
       request: request.requestId,
       size: null,
       type: DataType.Response,
+      // Internal string used in the UnavailableNetworkData error message.
+      unavailableReason: null,
     };
 
     // The actual cloning is already handled by the DevTools
@@ -2144,7 +2153,12 @@ class NetworkModule extends RootBiDiModule {
       return;
     }
 
+    lazy.logger.trace(
+      `Network data not collected for request "${request.requestId}" and data type "${DataType.Response}"` +
+        `: fetch error`
+    );
     collectedData.pending = false;
+    collectedData.unavailableReason = UNAVAILABLE_DATA_ERROR_REASON.Aborted;
     collectedData.networkDataCollected.resolve();
   }
 
@@ -2171,6 +2185,10 @@ class NetworkModule extends RootBiDiModule {
     }
 
     if (!(response instanceof lazy.NetworkResponse)) {
+      lazy.logger.trace(
+        `Network data not collected for request "${request.requestId}" and data type "${DataType.Response}"` +
+          `: unsupported response (data scheme or cached resource)`
+      );
       // Cached stencils do not return any response body.
       // TODO: Handle response body for data URLs.
       collectedData.networkDataCollected.resolve();
@@ -2181,6 +2199,10 @@ class NetworkModule extends RootBiDiModule {
       request.contextId
     );
     if (!browsingContext) {
+      lazy.logger.trace(
+        `Network data not collected for request "${request.requestId}" and data type "${DataType.Response}"` +
+          `: navigable no longer available`
+      );
       collectedData.pending = false;
       this.#collectedNetworkData.delete(
         `${collectedData.request}-${collectedData.type}`
@@ -2201,6 +2223,10 @@ class NetworkModule extends RootBiDiModule {
     }
 
     if (!collectors.length) {
+      lazy.logger.trace(
+        `Network data not collected for request "${request.requestId}" and data type "${DataType.Response}"` +
+          `: no matching collector`
+      );
       collectedData.pending = false;
       this.#collectedNetworkData.delete(
         `${collectedData.request}-${collectedData.type}`
