@@ -852,12 +852,10 @@ struct ReflowInput : public SizeComputationInput {
                        const Maybe<LogicalMargin>& aPadding,
                        LayoutFrameType aFrameType);
 
-  /**
-   * Compute the content-box rect of the containing block frame in mFrame's
-   * writing-mode (mWritingMode).
-   *
-   * Note: the block-size in the return value may be unconstrained.
-   */
+  // Compute the content-box size of the containing block frame in mFrame's
+  // writing-mode (mWritingMode).
+  //
+  // Note: the block-size in the return value may be unconstrained.
   LogicalSize ComputeContainingBlockRectangle(
       nsPresContext* aPresContext, const ReflowInput* aContainingBlockRI) const;
 
