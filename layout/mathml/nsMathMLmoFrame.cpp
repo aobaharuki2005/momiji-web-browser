@@ -593,18 +593,6 @@ nsMathMLmoFrame::Stretch(DrawTarget* aDrawTarget,
   nscoord axisHeight, height;
   GetAxisHeight(aDrawTarget, fm, axisHeight);
 
-  // get the leading to be left at the top and the bottom of the stretched char
-  // this seems more reliable than using fm->GetLeading() on suspicious fonts
-  const nscoord leading = [&fm] {
-    if (StaticPrefs::
-            mathml_top_bottom_spacing_for_stretchy_operators_disabled()) {
-      return 0;
-    }
-    nscoord em;
-    GetEmHeight(fm, em);
-    return NSToCoordRound(0.2f * (float)em);
-  }();
-
   // Operators that are stretchy are handled by the MathMLChar
   // ('form' is reset if stretch fails -- i.e., we don't bother to stretch next
   // time)
@@ -775,7 +763,7 @@ nsMathMLmoFrame::Stretch(DrawTarget* aDrawTarget,
 
   // Fixup for the final height.
   // On one hand, our stretchy height can sometimes be shorter than surrounding
-  // ASCII chars, e.g., arrow symbols have |mBoundingMetrics.ascent + leading|
+  // ASCII chars, e.g., arrow symbols have |mBoundingMetrics.ascent|
   // that is smaller than the ASCII's ascent, hence when painting the background
   // later, it won't look uniform along the line.
   // On the other hand, sometimes we may leave too much gap when our glyph
@@ -798,9 +786,9 @@ nsMathMLmoFrame::Stretch(DrawTarget* aDrawTarget,
   }
   if (isAccent && firstChild) {
     // see bug 188467 for what is going on here
-    nscoord dy = aDesiredStretchSize.BlockStartAscent() -
-                 (mBoundingMetrics.ascent + leading);
-    aDesiredStretchSize.SetBlockStartAscent(mBoundingMetrics.ascent + leading);
+    nscoord dy =
+        aDesiredStretchSize.BlockStartAscent() - (mBoundingMetrics.ascent);
+    aDesiredStretchSize.SetBlockStartAscent(mBoundingMetrics.ascent);
     aDesiredStretchSize.Height() =
         aDesiredStretchSize.BlockStartAscent() + mBoundingMetrics.descent;
 
@@ -809,10 +797,9 @@ nsMathMLmoFrame::Stretch(DrawTarget* aDrawTarget,
     nscoord ascent = fm->MaxAscent();
     nscoord descent = fm->MaxDescent();
     aDesiredStretchSize.SetBlockStartAscent(
-        std::max(mBoundingMetrics.ascent + leading, ascent));
-    aDesiredStretchSize.Height() =
-        aDesiredStretchSize.BlockStartAscent() +
-        std::max(mBoundingMetrics.descent + leading, descent);
+        std::max(mBoundingMetrics.ascent, ascent));
+    aDesiredStretchSize.Height() = aDesiredStretchSize.BlockStartAscent() +
+                                   std::max(mBoundingMetrics.descent, descent);
   }
   aDesiredStretchSize.Width() = mBoundingMetrics.width;
   aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics;
