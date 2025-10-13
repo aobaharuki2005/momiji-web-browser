@@ -20,10 +20,6 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 export class ContextMenuParent extends JSWindowActorParent {
   receiveMessage(message) {
     let browser = this.manager.rootFrameLoader.ownerElement;
-    if (browser.hasAttribute("disablecontextmenu")) {
-      return;
-    }
-
     let win = browser.ownerGlobal;
     // It's possible that the <xul:browser> associated with this
     // ContextMenu message doesn't belong to a window that actually

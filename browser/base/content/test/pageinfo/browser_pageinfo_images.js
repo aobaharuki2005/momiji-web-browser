@@ -2,7 +2,8 @@
 
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "https://example.com"
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+  "http://example.com"
 );
 
 add_task(async function test_all_images_mentioned() {
@@ -58,7 +59,7 @@ add_task(async function test_view_image_info() {
       let contextMenu = document.getElementById("contentAreaContextMenu");
       let viewImageInfo = document.getElementById("context-viewimageinfo");
 
-      let imageInfo = await SpecialPowers.spawn(browser, [], () => {
+      let imageInfo = await SpecialPowers.spawn(browser, [], async () => {
         let testImg = content.document.querySelector("img");
         return {
           src: testImg.src,
@@ -73,28 +74,20 @@ add_task(async function test_view_image_info() {
 
       await BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
 
-      let promiseMediaLoad = BrowserTestUtils.domWindowOpened().then(win =>
-        BrowserTestUtils.waitForEvent(win, "page-info-mediapreview-load")
+      let promisePageInfoLoaded = BrowserTestUtils.domWindowOpened().then(win =>
+        BrowserTestUtils.waitForEvent(win, "page-info-init")
       );
 
       contextMenu.activateItem(viewImageInfo);
 
-      let pageInfo = (await promiseMediaLoad).target.ownerGlobal;
-      let mediaBrowser = pageInfo.document.getElementById("mediaBrowser");
-
-      let previewImageInfo = await SpecialPowers.spawn(mediaBrowser, [], () => {
-        let img = content.document.querySelector("img");
-        return {
-          src: img.src,
-        };
-      });
+      let pageInfo = (await promisePageInfoLoaded).target.ownerGlobal;
+      let pageInfoImg = pageInfo.document.getElementById("thepreviewimage");
 
       Assert.equal(
-        previewImageInfo.src,
+        pageInfoImg.src,
         imageInfo.src,
-        "selected image is correct"
+        "selected image is the correct"
       );
-
       await BrowserTestUtils.closeWindow(pageInfo);
     }
   );
@@ -108,10 +101,7 @@ add_task(async function test_image_size() {
         gBrowser.selectedBrowser.currentURI.spec,
         "mediaTab"
       );
-      await BrowserTestUtils.waitForEvent(
-        pageInfo,
-        "page-info-mediapreview-load"
-      );
+      await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
 
       let imageSize = pageInfo.document.getElementById("imagesizetext");
 

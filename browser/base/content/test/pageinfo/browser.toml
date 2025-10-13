@@ -1,5 +1,13 @@
 [DEFAULT]
 
+["browser_pageinfo_firstPartyIsolation.js"]
+support-files = [
+  "image.html",
+  "../general/audio.ogg",
+  "../general/moz.png",
+  "../general/video.webm",
+]
+
 ["browser_pageinfo_iframe_media.js"]
 support-files = ["iframes.html"]
 
@@ -10,14 +18,6 @@ skip-if = ["os == 'linux'"] # bug 1161699
 support-files = ["all_images.html"]
 
 ["browser_pageinfo_permissions.js"]
-
-["browser_pageinfo_previewBrowser.js"]
-support-files = [
-  "image.html",
-  "../general/audio.ogg",
-  "../general/moz.png",
-  "../general/video.webm",
-]
 
 ["browser_pageinfo_rtl.js"]
 
