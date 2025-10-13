@@ -929,6 +929,12 @@ bool WarpOracle::addFuseDependency(RuntimeFuses::FuseIndex fuseIndex,
           CompilationDependency::Type::ArrayExceedsInt32Length>;
       return addIfStillValid(Dependency());
     }
+    case RuntimeFuses::FuseIndex::DefaultLocaleHasDefaultCaseMappingFuse: {
+      using Dependency = RuntimeFuseDependency<
+          &RuntimeFuses::defaultLocaleHasDefaultCaseMappingFuse,
+          CompilationDependency::Type::DefaultCaseMapping>;
+      return addIfStillValid(Dependency());
+    }
     case RuntimeFuses::FuseIndex::LastFuseIndex:
       break;
   }

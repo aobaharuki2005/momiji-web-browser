@@ -794,8 +794,16 @@ struct JSRuntime {
   /* Reset the default locale to OS defaults. */
   void resetDefaultLocale();
 
-  /* Gets current default locale. String remains owned by context. */
+  /* Gets current default locale. String remains owned by runtime. */
   const char* getDefaultLocale();
+
+  /*
+   * Gets current default locale or nullptr if not initialized.
+   * String remains owned by runtime.
+   */
+  const char* getDefaultLocaleIfInitialized() const {
+    return defaultLocale.ref().get();
+  }
 
   /* Garbage collector state. */
   js::gc::GCRuntime gc;

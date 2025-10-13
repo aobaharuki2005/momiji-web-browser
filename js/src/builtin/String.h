@@ -90,6 +90,10 @@ extern JSLinearString* StringFromCharCode(JSContext* cx, int32_t charCode);
 
 extern JSLinearString* StringFromCodePoint(JSContext* cx, char32_t codePoint);
 
+#if JS_HAS_INTL_API
+bool LocaleHasDefaultCaseMapping(const char* locale);
+#endif
+
 } /* namespace js */
 
 #endif /* builtin_String_h */

@@ -10,6 +10,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Compiler.h"
 #if JS_HAS_INTL_API
+#  include "mozilla/intl/Locale.h"
 #  include "mozilla/intl/String.h"
 #endif
 #include "mozilla/Likely.h"
@@ -944,17 +945,70 @@ static bool str_toLowerCase(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 #if JS_HAS_INTL_API
+// Lithuanian, Turkish, and Azeri have language dependent case mappings.
+static constexpr char LanguagesWithSpecialCasing[][3] = {"lt", "tr", "az"};
+
+bool js::LocaleHasDefaultCaseMapping(const char* locale) {
+  MOZ_ASSERT(locale);
+
+  size_t languageSubtagLength;
+  if (auto* sep = strchr(locale, '-')) {
+    languageSubtagLength = sep - locale;
+  } else {
+    languageSubtagLength = std::strlen(locale);
+  }
+
+  // Invalid locale identifiers default to the last-ditch locale "en-GB", which
+  // has default case mapping.
+  mozilla::Span<const char> span{locale, languageSubtagLength};
+  {
+    // Tell the analysis the |IsStructurallyValidLanguageTag| function can't GC.
+    JS::AutoSuppressGCAnalysis nogc;
+    if (!mozilla::intl::IsStructurallyValidLanguageTag(span)) {
+      return true;
+    }
+  }
+
+  mozilla::intl::LanguageSubtag subtag{span};
+
+  // Canonical case for the language subtag is lower-case
+  {
+    // Tell the analysis the |ToLowerCase| function can't GC.
+    JS::AutoSuppressGCAnalysis nogc;
+
+    subtag.ToLowerCase();
+  }
+
+  // Replace outdated language subtags. Skips complex language mappings, which
+  // is okay because none of the languages with special casing are affected by
+  // complex language mapping.
+  {
+    // Tell the analysis the |LanguageMapping| function can't GC.
+    JS::AutoSuppressGCAnalysis nogc;
+
+    (void)mozilla::intl::Locale::LanguageMapping(subtag);
+  }
+
+  // Check for languages which don't use the default case mapping algorithm.
+  for (const auto& language : LanguagesWithSpecialCasing) {
+    if (subtag.EqualTo(language)) {
+      return false;
+    }
+  }
+
+  // Simple locale with default case mapping. (Or an invalid locale which
+  // defaults to the last-ditch locale "en-GB".)
+  return true;
+}
+
 static const char* CaseMappingLocale(JSLinearString* locale) {
   MOZ_ASSERT(locale->length() >= 2, "locale is a valid language tag");
-
-  // Lithuanian, Turkish, and Azeri have language dependent case mappings.
-  static const char languagesWithSpecialCasing[][3] = {"lt", "tr", "az"};
 
   // All strings in |languagesWithSpecialCasing| are of length two, so we
   // only need to compare the first two characters to find a matching locale.
   // ES2017 Intl, §9.2.2 BestAvailableLocale
   if (locale->length() == 2 || locale->latin1OrTwoByteChar(2) == '-') {
-    for (const auto& language : languagesWithSpecialCasing) {
+    for (const auto& language : LanguagesWithSpecialCasing) {
       if (locale->latin1OrTwoByteChar(0) == language[0] &&
           locale->latin1OrTwoByteChar(1) == language[1]) {
         return language;
