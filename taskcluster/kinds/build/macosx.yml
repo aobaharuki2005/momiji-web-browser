@@ -482,7 +482,7 @@ macosx64-devedition/opt:
             - artifact: mozharness.zip
               extract: false
               dest: ../artifacts
-            - artifact: target.trainhop.tests.tar.gz
+            - artifact: target.trainhop.tests.tar.zst
               extract: false
               dest: ../artifacts
         macosx64-aarch64-devedition-opt:
