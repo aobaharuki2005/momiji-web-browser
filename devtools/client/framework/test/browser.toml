@@ -65,6 +65,8 @@ skip-if = [
 
 ["browser_commands_from_url.js"]
 
+["browser_destroying_iframes.js"]
+
 ["browser_devtools_api_destroy.js"]
 
 ["browser_dynamic_tool_enabling.js"]
