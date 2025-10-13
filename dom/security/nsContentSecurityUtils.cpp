@@ -1403,8 +1403,7 @@ static nsLiteralCString sImgSrcAddonsAllowList[] = {
 // img-src *
 //  UNSAFE! Allows loading everything.
 static nsLiteralCString sImgSrcWildcardAllowList[] = {
-    "about:reader"_ns,
-    "chrome://browser/content/syncedtabs/sidebar.xhtml"_ns,
+    "about:reader"_ns, "chrome://browser/content/syncedtabs/sidebar.xhtml"_ns,
     // STOP! Do not add anything to this list.
 };
 // img-src https://example.org
