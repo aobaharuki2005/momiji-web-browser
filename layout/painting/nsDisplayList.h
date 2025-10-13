@@ -359,9 +359,8 @@ class nsDisplayListBuilder {
     mTemporaryItems.AppendElement(aItem);
   }
 
-  WindowRenderer* GetWidgetWindowRenderer(nsView** aView = nullptr);
-  layers::WebRenderLayerManager* GetWidgetLayerManager(
-      nsView** aView = nullptr);
+  WindowRenderer* GetWidgetWindowRenderer();
+  layers::WebRenderLayerManager* GetWidgetLayerManager();
 
   /**
    * @return true if the display is being built in order to determine which

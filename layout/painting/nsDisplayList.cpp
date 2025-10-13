@@ -2125,25 +2125,19 @@ nsRect nsDisplayList::GetBuildingRect() const {
   return result;
 }
 
-WindowRenderer* nsDisplayListBuilder::GetWidgetWindowRenderer(nsView** aView) {
-  if (aView) {
-    *aView = RootReferenceFrame()->GetView();
-  }
+WindowRenderer* nsDisplayListBuilder::GetWidgetWindowRenderer() {
   if (RootReferenceFrame() !=
       nsLayoutUtils::GetDisplayRootFrame(RootReferenceFrame())) {
     return nullptr;
   }
-  nsIWidget* window = RootReferenceFrame()->GetNearestWidget();
-  if (window) {
+  if (nsIWidget* window = RootReferenceFrame()->GetNearestWidget()) {
     return window->GetWindowRenderer();
   }
   return nullptr;
 }
 
-WebRenderLayerManager* nsDisplayListBuilder::GetWidgetLayerManager(
-    nsView** aView) {
-  WindowRenderer* renderer = GetWidgetWindowRenderer();
-  if (renderer) {
+WebRenderLayerManager* nsDisplayListBuilder::GetWidgetLayerManager() {
+  if (WindowRenderer* renderer = GetWidgetWindowRenderer()) {
     return renderer->AsWebRender();
   }
   return nullptr;
@@ -2197,9 +2191,8 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
   WindowRenderer* renderer = nullptr;
   bool widgetTransaction = false;
   bool doBeginTransaction = true;
-  nsView* view = nullptr;
   if (aFlags & PAINT_USE_WIDGET_LAYERS) {
-    renderer = aBuilder->GetWidgetWindowRenderer(&view);
+    renderer = aBuilder->GetWidgetWindowRenderer();
     if (renderer) {
       // The fallback renderer doesn't retain any content, so it's
       // not meaningful to use it when drawing to an external context.

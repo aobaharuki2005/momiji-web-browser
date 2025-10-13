@@ -8443,7 +8443,7 @@ void nsLayoutUtils::DoLogTestDataForPaint(WebRenderLayerManager* aManager,
 void nsLayoutUtils::LogAdditionalTestData(nsDisplayListBuilder* aBuilder,
                                           const std::string& aKey,
                                           const std::string& aValue) {
-  WebRenderLayerManager* manager = aBuilder->GetWidgetLayerManager(nullptr);
+  WebRenderLayerManager* manager = aBuilder->GetWidgetLayerManager();
   if (!manager) {
     return;
   }
