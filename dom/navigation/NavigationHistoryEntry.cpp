@@ -110,7 +110,7 @@ void NavigationHistoryEntry::GetState(JSContext* aCx,
   if (!mSHInfo) {
     return;
   }
-  RefPtr<nsStructuredCloneContainer> state = mSHInfo->GetNavigationState();
+  RefPtr<nsIStructuredCloneContainer> state = mSHInfo->GetNavigationAPIState();
   if (!state) {
     aResult.setUndefined();
     return;
@@ -123,8 +123,9 @@ void NavigationHistoryEntry::GetState(JSContext* aCx,
   }
 }
 
-void NavigationHistoryEntry::SetState(nsStructuredCloneContainer* aState) {
-  mSHInfo->SetNavigationState(aState);
+void NavigationHistoryEntry::SetNavigationAPIState(
+    nsIStructuredCloneContainer* aState) {
+  mSHInfo->SetNavigationAPIState(aState);
 }
 
 bool NavigationHistoryEntry::IsSameEntry(
@@ -159,12 +160,13 @@ const nsID& NavigationHistoryEntry::Key() const {
   return mSHInfo->NavigationKey();
 }
 
-nsStructuredCloneContainer* NavigationHistoryEntry::GetNavigationState() const {
+nsIStructuredCloneContainer* NavigationHistoryEntry::GetNavigationAPIState()
+    const {
   if (!mSHInfo) {
     return nullptr;
   }
 
-  return mSHInfo->GetNavigationState();
+  return mSHInfo->GetNavigationAPIState();
 }
 
 void NavigationHistoryEntry::ResetIndexForDisposal() { mIndex = -1; }

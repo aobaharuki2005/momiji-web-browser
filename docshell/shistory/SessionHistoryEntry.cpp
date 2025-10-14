@@ -55,7 +55,7 @@ SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
                       ? Nothing()
                       : Some(aLoadState->SrcdocData())),
       mBaseURI(aLoadState->BaseURI()),
-      mNavigationState(static_cast<nsStructuredCloneContainer*>(
+      mNavigationAPIState(static_cast<nsStructuredCloneContainer*>(
           aLoadState->GetNavigationAPIState())),
       mLoadReplace(aLoadState->LoadReplace()),
       mHasUserActivation(aLoadState->HasValidUserGestureActivation()),
@@ -167,7 +167,7 @@ void SessionHistoryInfo::Reset(nsIURI* aURI, const nsID& aDocShellID,
   mTransient = false;
   mHasUserInteraction = false;
   mHasUserActivation = false;
-  mNavigationState = nullptr;
+  mNavigationAPIState = nullptr;
 
   mSharedState.Get()->mTriggeringPrincipal = aTriggeringPrincipal;
   mSharedState.Get()->mPrincipalToInherit = aPrincipalToInherit;
@@ -255,13 +255,13 @@ bool SessionHistoryInfo::IsSubFrame() const {
   return mSharedState.Get()->mIsFrameNavigation;
 }
 
-nsStructuredCloneContainer* SessionHistoryInfo::GetNavigationState() const {
-  return mNavigationState.get();
+nsIStructuredCloneContainer* SessionHistoryInfo::GetNavigationAPIState() const {
+  return mNavigationAPIState.get();
 }
 
-void SessionHistoryInfo::SetNavigationState(
-    nsStructuredCloneContainer* aState) {
-  mNavigationState = aState;
+void SessionHistoryInfo::SetNavigationAPIState(
+    nsIStructuredCloneContainer* aState) {
+  mNavigationAPIState = static_cast<nsStructuredCloneContainer*>(aState);
 }
 
 void SessionHistoryInfo::SetSaveLayoutStateFlag(bool aSaveLayoutStateFlag) {
@@ -1586,11 +1586,11 @@ void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
   }
 
   Maybe<std::tuple<uint32_t, dom::ClonedMessageData>> navigationState;
-  if (aParam.mNavigationState) {
+  if (aParam.mNavigationAPIState) {
     navigationState.emplace();
-    NS_ENSURE_SUCCESS_VOID(aParam.mNavigationState->GetFormatVersion(
+    NS_ENSURE_SUCCESS_VOID(aParam.mNavigationAPIState->GetFormatVersion(
         &std::get<0>(*navigationState)));
-    NS_ENSURE_TRUE_VOID(aParam.mNavigationState->BuildClonedMessageData(
+    NS_ENSURE_TRUE_VOID(aParam.mNavigationAPIState->BuildClonedMessageData(
         std::get<1>(*navigationState)));
   }
 
@@ -1760,11 +1760,11 @@ bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
 
   if (navigationState.isSome()) {
     uint32_t version = std::get<0>(*navigationState);
-    aResult->mNavigationState = new nsStructuredCloneContainer(version);
-    aResult->mNavigationState->StealFromClonedMessageData(
+    aResult->mNavigationAPIState = new nsStructuredCloneContainer(version);
+    aResult->mNavigationAPIState->StealFromClonedMessageData(
         std::get<1>(*navigationState));
   }
-  MOZ_ASSERT_IF(navigationState.isNothing(), !aResult->mNavigationState);
+  MOZ_ASSERT_IF(navigationState.isNothing(), !aResult->mNavigationAPIState);
 
   return true;
 }

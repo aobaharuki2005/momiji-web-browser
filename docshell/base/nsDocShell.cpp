@@ -3958,7 +3958,7 @@ nsresult nsDocShell::ReloadNavigable(
         aNavigationAPIState;
     if (!destinationNavigationAPIState) {
       destinationNavigationAPIState =
-          mActiveEntry ? mActiveEntry->GetNavigationState() : nullptr;
+          mActiveEntry ? mActiveEntry->GetNavigationAPIState() : nullptr;
     }
 
     // 1.4 Let continue be the result of firing a push/replace/reload navigate
@@ -8960,7 +8960,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   // https://html.spec.whatwg.org/#navigate-fragid
   // Step 2
   RefPtr<nsIStructuredCloneContainer> destinationNavigationAPIState =
-      mActiveEntry ? mActiveEntry->GetNavigationState() : nullptr;
+      mActiveEntry ? mActiveEntry->GetNavigationAPIState() : nullptr;
   // Step 3
   if (auto* navigationAPIState = aLoadState->GetNavigationAPIState()) {
     destinationNavigationAPIState = navigationAPIState;
@@ -9320,7 +9320,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       }
 
       if (destinationNavigationAPIState) {
-        mActiveEntry->SetNavigationState(destinationNavigationAPIState);
+        mActiveEntry->SetNavigationAPIState(destinationNavigationAPIState);
       }
 
       if (LOAD_TYPE_HAS_FLAGS(mLoadType, LOAD_FLAGS_REPLACE_HISTORY)) {

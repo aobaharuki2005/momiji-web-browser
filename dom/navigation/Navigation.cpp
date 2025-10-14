@@ -93,8 +93,7 @@ struct NavigationAPIMethodTracker final : public nsISupports {
     mCommittedToEntry = aNHE;
     if (mSerializedState) {
       // Step 2
-      aNHE->SetState(
-          static_cast<nsStructuredCloneContainer*>(mSerializedState.get()));
+      aNHE->SetNavigationAPIState(mSerializedState);
       // At this point, apiMethodTracker's serialized state is no longer needed.
       // We drop it do now for efficiency.
       mSerializedState = nullptr;
@@ -244,7 +243,7 @@ void Navigation::UpdateCurrentEntry(
     return;
   }
 
-  currentEntry->SetState(serializedState);
+  currentEntry->SetNavigationAPIState(serializedState);
 
   NavigationCurrentEntryChangeEventInit init;
   init.mFrom = currentEntry;
@@ -741,7 +740,7 @@ void Navigation::Reload(JSContext* aCx, const NavigationReloadOptions& aOptions,
     // 4.2 If current is not null, then set serializedState to current's
     //     session history entry's navigation API state.
     if (RefPtr<NavigationHistoryEntry> current = GetCurrentEntry()) {
-      serializedState = current->GetNavigationState();
+      serializedState = current->GetNavigationAPIState();
     }
   }
   // 5. If document is not fully active, then return an early error result for
@@ -921,8 +920,8 @@ bool Navigation::FireTraverseNavigateEvent(
       FindNavigationHistoryEntry(aDestinationSessionHistoryInfo);
 
   // Step 6.2 and step 7.2
-  RefPtr<nsStructuredCloneContainer> state =
-      destinationNHE ? destinationNHE->GetNavigationState() : nullptr;
+  RefPtr<nsIStructuredCloneContainer> state =
+      destinationNHE ? destinationNHE->GetNavigationAPIState() : nullptr;
 
   // Step 8
   bool isSameDocument =
