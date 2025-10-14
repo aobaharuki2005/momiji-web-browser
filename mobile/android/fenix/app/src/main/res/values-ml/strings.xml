@@ -1369,7 +1369,7 @@
   <!-- Content description for tabs tray multiselect menu -->
   <string name="tab_tray_multiselect_menu_content_description">തിരഞ്ഞെടുത്ത ടാബുകളുടെ കുറിപ്പടികട്ട</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
-  <string name="tab_tray_homepage_tab" tools:ignore="UnusedResources" moz:removedIn="145">ആമുഖതാൾ</string>
+  <string name="tab_tray_homepage_tab">ആമുഖതാൾ</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">ശേഖരത്തിൽ നിന്ന് ടാബ് നീക്കം ചെയ്യുക</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->

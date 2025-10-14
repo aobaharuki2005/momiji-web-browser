@@ -1486,9 +1486,9 @@
   <!-- Content description for tabs tray multiselect menu -->
   <string name="tab_tray_multiselect_menu_content_description">Menu des onglets sélectionnés</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
-  <string name="tab_tray_homepage_tab" tools:ignore="UnusedResources" moz:removedIn="145">Page d’accueil</string>
+  <string name="tab_tray_homepage_tab">Page d’accueil</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2">Page d’accueil de %s</string>
+  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">Page d’accueil de %s</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Supprimer l’onglet de la collection</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
