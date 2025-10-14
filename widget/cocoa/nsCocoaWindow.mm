@@ -1192,7 +1192,7 @@ void nsCocoaWindow::PostRender(WidgetRenderingContext* aContext)
   mCompositingLock.Unlock();
 }
 
-RefPtr<layers::NativeLayerRoot> nsCocoaWindow::GetNativeLayerRoot() {
+layers::NativeLayerRoot* nsCocoaWindow::GetNativeLayerRoot() {
   return mNativeLayerRoot;
 }
 

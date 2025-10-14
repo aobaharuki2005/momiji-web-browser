@@ -1143,7 +1143,7 @@ int32_t nsWindow::RoundsWidgetCoordinatesTo() {
   return 1;
 }
 
-RefPtr<layers::NativeLayerRoot> nsWindow::GetNativeLayerRoot() {
+layers::NativeLayerRoot* nsWindow::GetNativeLayerRoot() {
   return mNativeLayerRoot;
 }
 

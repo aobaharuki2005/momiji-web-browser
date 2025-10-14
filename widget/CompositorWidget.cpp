@@ -6,6 +6,7 @@
 #include "GLConsts.h"
 #include "nsIWidget.h"
 #include "VsyncDispatcher.h"
+#include "mozilla/gfx/2D.h"
 
 namespace mozilla {
 namespace widget {

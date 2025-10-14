@@ -15,7 +15,6 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Compiler.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
@@ -45,12 +44,6 @@
 #include "nsWeakReference.h"
 #include "mozilla/widget/InitData.h"
 #include "nsXULAppAPI.h"
-
-// GCC needs this to compile RefPtr<NativeLayerRoot> GetNativeLayerRoot(),
-// surprisingly.
-#if MOZ_IS_GCC
-#  include "mozilla/layers/NativeLayer.h"
-#endif
 
 // Windows specific constant indicating the maximum number of touch points the
 // inject api will allow. This also sets the maximum numerical value for touch
@@ -1362,7 +1355,7 @@ class nsIWidget : public nsSupportsWeakReference {
     return true;
   }
   virtual void PostRender(mozilla::widget::WidgetRenderingContext* aContext) {}
-  virtual RefPtr<mozilla::layers::NativeLayerRoot> GetNativeLayerRoot() {
+  virtual mozilla::layers::NativeLayerRoot* GetNativeLayerRoot() {
     return nullptr;
   }
   virtual already_AddRefed<DrawTarget> StartRemoteDrawing();

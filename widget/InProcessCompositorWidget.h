@@ -19,7 +19,7 @@ class InProcessCompositorWidget : public CompositorWidget {
 
   bool PreRender(WidgetRenderingContext* aManager) override;
   void PostRender(WidgetRenderingContext* aManager) override;
-  RefPtr<layers::NativeLayerRoot> GetNativeLayerRoot() override;
+  layers::NativeLayerRoot* GetNativeLayerRoot() override;
   already_AddRefed<gfx::DrawTarget> StartRemoteDrawing() override;
   already_AddRefed<gfx::DrawTarget> StartRemoteDrawingInRegion(
       const LayoutDeviceIntRegion& aInvalidRegion) override;

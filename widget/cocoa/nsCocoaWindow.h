@@ -403,7 +403,7 @@ class nsCocoaWindow final : public nsIWidget {
 
   bool PreRender(mozilla::widget::WidgetRenderingContext* aContext) override;
   void PostRender(mozilla::widget::WidgetRenderingContext* aContext) override;
-  RefPtr<mozilla::layers::NativeLayerRoot> GetNativeLayerRoot() override;
+  mozilla::layers::NativeLayerRoot* GetNativeLayerRoot() override;
 
   void UpdateWindowDraggingRegion(
       const LayoutDeviceIntRegion& aRegion) override;

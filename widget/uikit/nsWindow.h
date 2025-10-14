@@ -111,7 +111,7 @@ class nsWindow final : public nsIWidget {
                       void* aCallbackData) override;
   */
 
-  RefPtr<mozilla::layers::NativeLayerRoot> GetNativeLayerRoot() override;
+  mozilla::layers::NativeLayerRoot* GetNativeLayerRoot() override;
 
   void HandleMainThreadCATransaction();
 

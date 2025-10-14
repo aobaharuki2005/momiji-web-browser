@@ -5,6 +5,7 @@
 #include "InProcessCompositorWidget.h"
 
 #include "mozilla/VsyncDispatcher.h"
+#include "mozilla/layers/NativeLayer.h"
 #include "nsIWidget.h"
 
 namespace mozilla {
@@ -55,8 +56,7 @@ void InProcessCompositorWidget::PostRender(WidgetRenderingContext* aContext) {
   mWidget->PostRender(aContext);
 }
 
-RefPtr<layers::NativeLayerRoot>
-InProcessCompositorWidget::GetNativeLayerRoot() {
+layers::NativeLayerRoot* InProcessCompositorWidget::GetNativeLayerRoot() {
   CheckWidgetSanity();
   return mWidget->GetNativeLayerRoot();
 }
