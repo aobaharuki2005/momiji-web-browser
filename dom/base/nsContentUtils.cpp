@@ -107,7 +107,6 @@
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ScrollbarPreferences.h"
 #include "mozilla/ShutdownPhase.h"

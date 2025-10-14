@@ -110,7 +110,6 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/RDDProcessManager.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/ViewportUtils.h"
