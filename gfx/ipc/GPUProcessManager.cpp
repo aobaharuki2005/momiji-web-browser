@@ -457,7 +457,7 @@ bool GPUProcessManager::EnsureProtocolsReady() {
 }
 
 bool GPUProcessManager::EnsureCompositorManagerChild() {
-  MOZ_ASSERT(IsGPUReady());
+  MOZ_DIAGNOSTIC_ASSERT(IsGPUReady());
 
   if (CompositorManagerChild::IsInitialized(mProcessToken)) {
     return true;
@@ -486,7 +486,7 @@ bool GPUProcessManager::EnsureCompositorManagerChild() {
 }
 
 bool GPUProcessManager::EnsureImageBridgeChild() {
-  MOZ_ASSERT(IsGPUReady());
+  MOZ_DIAGNOSTIC_ASSERT(IsGPUReady());
 
   if (ImageBridgeChild::GetSingleton()) {
     return true;
@@ -514,7 +514,7 @@ bool GPUProcessManager::EnsureImageBridgeChild() {
 }
 
 bool GPUProcessManager::EnsureVRManager() {
-  MOZ_ASSERT(IsGPUReady());
+  MOZ_DIAGNOSTIC_ASSERT(IsGPUReady());
 
   if (VRManagerChild::IsCreated()) {
     return true;
@@ -544,7 +544,7 @@ bool GPUProcessManager::EnsureVRManager() {
 RefPtr<UiCompositorControllerChild>
 GPUProcessManager::CreateUiCompositorController(nsIWidget* aWidget,
                                                 const LayersId aId) {
-  MOZ_ASSERT(IsGPUReady());
+  MOZ_DIAGNOSTIC_ASSERT(IsGPUReady());
 
   if (!mGPUChild) {
     return UiCompositorControllerChild::CreateForSameProcess(aId, aWidget);
@@ -1209,7 +1209,7 @@ already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(
     CSSToLayoutDeviceScale aScale, const CompositorOptions& aOptions,
     bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize,
     uint64_t aInnerWindowId, bool* aRetryOut) {
-  MOZ_ASSERT(IsGPUReady());
+  MOZ_DIAGNOSTIC_ASSERT(IsGPUReady());
   MOZ_ASSERT(aRetryOut);
 
   if (!EnsureProtocolsReady()) {
@@ -1358,7 +1358,7 @@ bool GPUProcessManager::CreateContentBridges(
 bool GPUProcessManager::CreateContentCompositorManager(
     ipc::EndpointProcInfo aOtherProcess, dom::ContentParentId aChildId,
     uint32_t aNamespace, ipc::Endpoint<PCompositorManagerChild>* aOutEndpoint) {
-  MOZ_ASSERT(IsGPUReady());
+  MOZ_DIAGNOSTIC_ASSERT(IsGPUReady());
 
   ipc::Endpoint<PCompositorManagerParent> parentPipe;
   ipc::Endpoint<PCompositorManagerChild> childPipe;
@@ -1391,7 +1391,7 @@ bool GPUProcessManager::CreateContentCompositorManager(
 bool GPUProcessManager::CreateContentImageBridge(
     ipc::EndpointProcInfo aOtherProcess, dom::ContentParentId aChildId,
     ipc::Endpoint<PImageBridgeChild>* aOutEndpoint) {
-  MOZ_ASSERT(IsGPUReady());
+  MOZ_DIAGNOSTIC_ASSERT(IsGPUReady());
 
   if (!EnsureImageBridgeChild()) {
     return false;
@@ -1437,7 +1437,7 @@ ipc::EndpointProcInfo GPUProcessManager::GPUEndpointProcInfo() {
 bool GPUProcessManager::CreateContentVRManager(
     ipc::EndpointProcInfo aOtherProcess, dom::ContentParentId aChildId,
     ipc::Endpoint<PVRManagerChild>* aOutEndpoint) {
-  MOZ_ASSERT(IsGPUReady());
+  MOZ_DIAGNOSTIC_ASSERT(IsGPUReady());
 
   if (NS_WARN_IF(!EnsureVRManager())) {
     return false;
@@ -1472,7 +1472,7 @@ bool GPUProcessManager::CreateContentVRManager(
 void GPUProcessManager::CreateContentRemoteMediaManager(
     ipc::EndpointProcInfo aOtherProcess, dom::ContentParentId aChildId,
     ipc::Endpoint<PRemoteMediaManagerChild>* aOutEndpoint) {
-  MOZ_ASSERT(IsGPUReady());
+  MOZ_DIAGNOSTIC_ASSERT(IsGPUReady());
 
   if (!mGPUChild || !StaticPrefs::media_gpu_process_decoder() ||
       !mDecodeVideoOnGpuProcess) {
