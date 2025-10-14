@@ -257,7 +257,10 @@ static void EraseIf(js::gc::EphemeronEdgeVector& entries, Pred pred) {
 static void SweepEphemeronEdgesWhileMinorSweeping(
     js::gc::EphemeronEdgeVector& entries) {
   EraseIf(entries, [](js::gc::EphemeronEdge& edge) -> bool {
-    return IsAboutToBeFinalizedDuringMinorSweep(&edge.target);
+    Cell* target = edge.target();
+    bool dead = IsAboutToBeFinalizedDuringMinorSweep(&target);
+    edge = js::gc::EphemeronEdge(edge.color(), target);
+    return dead;
   });
 }
 
