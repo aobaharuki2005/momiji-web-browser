@@ -4,7 +4,7 @@
 
 #include "CompositorWidget.h"
 #include "GLConsts.h"
-#include "nsBaseWidget.h"
+#include "nsIWidget.h"
 #include "VsyncDispatcher.h"
 
 namespace mozilla {

@@ -42,6 +42,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileBinding.h"
 #include "mozilla/dom/FunctionBinding.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/layers/APZCCallbackHelper.h"

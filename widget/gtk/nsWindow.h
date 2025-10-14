@@ -24,7 +24,7 @@
 #include "mozilla/gfx/BaseMargin.h"
 #include "mozilla/widget/WindowSurface.h"
 #include "mozilla/widget/WindowSurfaceProvider.h"
-#include "nsBaseWidget.h"
+#include "nsIWidget.h"
 #include "nsGkAtoms.h"
 #include "nsIDragService.h"
 #include "nsRefPtrHashtable.h"
@@ -153,7 +153,7 @@ class WaylandSurfaceLock;
 
 class gfxImageSurface;
 
-class nsWindow final : public nsBaseWidget {
+class nsWindow final : public nsIWidget {
  public:
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::WidgetEventTime WidgetEventTime;
@@ -165,7 +165,7 @@ class nsWindow final : public nsBaseWidget {
 
   static void ReleaseGlobals();
 
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsWindow, nsBaseWidget)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsWindow, nsIWidget)
 
   nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                          nsEventStatus& aStatus) override;
@@ -177,7 +177,7 @@ class nsWindow final : public nsBaseWidget {
   bool AreBoundsSane();
 
   // nsIWidget
-  using nsBaseWidget::Create;  // for Create signature not overridden here
+  using nsIWidget::Create;  // for Create signature not overridden here
   [[nodiscard]] nsresult Create(nsIWidget* aParent,
                                 const LayoutDeviceIntRect& aRect,
                                 InitData* aInitData) override;
@@ -837,7 +837,7 @@ class nsWindow final : public nsBaseWidget {
 
   bool IsAlwaysUndecoratedWindow() const;
 
-  // nsBaseWidget
+  // nsIWidget
   WindowRenderer* GetWindowRenderer() override;
   void DidGetNonBlankPaint() override;
 

@@ -75,7 +75,7 @@ static bool MightNeedIMEFocus(const widget::InitData* aInitData) {
 #endif
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(PuppetWidget, nsBaseWidget,
+NS_IMPL_ISUPPORTS_INHERITED(PuppetWidget, nsIWidget,
                             TextEventDispatcherListener)
 
 PuppetWidget::PuppetWidget(BrowserChild* aBrowserChild)

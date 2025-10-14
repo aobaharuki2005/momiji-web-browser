@@ -21,7 +21,7 @@
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsIObserver.h"
 #include "nsThreadUtils.h"
-class nsBaseWidget;
+class nsIWidget;
 enum class DeviceResetReason;
 
 namespace mozilla {
@@ -109,7 +109,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   nsresult EnsureGPUReady(bool aRetryAfterFallback = true);
 
   already_AddRefed<CompositorSession> CreateTopLevelCompositor(
-      nsBaseWidget* aWidget, WebRenderLayerManager* aLayerManager,
+      nsIWidget* aWidget, WebRenderLayerManager* aLayerManager,
       CSSToLayoutDeviceScale aScale, const CompositorOptions& aOptions,
       bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize,
       uint64_t aInnerWindowId, bool* aRetry);
@@ -331,11 +331,11 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 
 #if defined(MOZ_WIDGET_ANDROID)
   RefPtr<UiCompositorControllerChild> CreateUiCompositorController(
-      nsBaseWidget* aWidget, const LayersId aId);
+      nsIWidget* aWidget, const LayersId aId);
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
   RefPtr<CompositorSession> CreateRemoteSession(
-      nsBaseWidget* aWidget, WebRenderLayerManager* aLayerManager,
+      nsIWidget* aWidget, WebRenderLayerManager* aLayerManager,
       const LayersId& aRootLayerTreeId, CSSToLayoutDeviceScale aScale,
       const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
       const gfx::IntSize& aSurfaceSize, uint64_t aInnerWindowId);

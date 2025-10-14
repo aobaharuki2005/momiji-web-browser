@@ -2,6 +2,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include "InputData.h"
 #include "HeadlessWidget.h"
 #include "ErrorList.h"
 #include "HeadlessCompositorWidget.h"
@@ -14,6 +15,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
+#include "UnitTransforms.h"
 #include "mozilla/WritingModes.h"
 #include "mozilla/widget/HeadlessWidgetTypes.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
@@ -111,9 +113,9 @@ void HeadlessWidget::Destroy() {
     }
   }
 
-  nsBaseWidget::OnDestroy();
+  nsIWidget::OnDestroy();
 
-  nsBaseWidget::Destroy();
+  nsIWidget::Destroy();
 }
 
 nsresult HeadlessWidget::Create(nsIWidget* aParent,
@@ -237,7 +239,7 @@ LayoutDeviceIntPoint HeadlessWidget::WidgetToScreenOffset() {
 }
 
 WindowRenderer* HeadlessWidget::GetWindowRenderer() {
-  return nsBaseWidget::GetWindowRenderer();
+  return nsIWidget::GetWindowRenderer();
 }
 
 void HeadlessWidget::SetCompositorWidgetDelegate(
@@ -335,7 +337,7 @@ void HeadlessWidget::ApplySizeModeSideEffects() {
     }
     case nsSizeMode_Fullscreen:
       // This will take care of resizing the window.
-      nsBaseWidget::InfallibleMakeFullScreen(true);
+      nsIWidget::InfallibleMakeFullScreen(true);
       break;
     default:
       break;

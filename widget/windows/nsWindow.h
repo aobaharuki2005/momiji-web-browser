@@ -11,7 +11,7 @@
  */
 
 #include "mozilla/RefPtr.h"
-#include "nsBaseWidget.h"
+#include "nsIWidget.h"
 #include "CompositorWidget.h"
 #include "mozilla/EventForwards.h"
 #include "nsClassHashtable.h"
@@ -64,6 +64,7 @@ class imgIContainer;
 
 namespace mozilla {
 class WidgetMouseEvent;
+class InputData;
 namespace widget {
 class NativeKey;
 class InProcessWinCompositorWidget;
@@ -133,14 +134,14 @@ void SetWindowStyles(HWND, const WindowStyles&);
 
 }  // namespace mozilla::widget
 
-class nsWindow final : public nsBaseWidget {
+class nsWindow final : public nsIWidget {
  public:
   using Styles = mozilla::widget::WindowStyles;
   using WindowHook = mozilla::widget::WindowHook;
   using IMEContext = mozilla::widget::IMEContext;
   using WidgetEventTime = mozilla::WidgetEventTime;
 
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsWindow, nsBaseWidget)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsWindow, nsIWidget)
 
   nsWindow();
 
@@ -187,7 +188,7 @@ class nsWindow final : public nsBaseWidget {
   nsWindow* GetParentWindowBase(bool aIncludeOwner);
 
   // nsIWidget interface
-  using nsBaseWidget::Create;  // for Create signature not overridden here
+  using nsIWidget::Create;  // for Create signature not overridden here
   [[nodiscard]] nsresult Create(nsIWidget* aParent,
                                 const LayoutDeviceIntRect& aRect,
                                 InitData* aInitData = nullptr) override;
@@ -241,7 +242,6 @@ class nsWindow final : public nsBaseWidget {
                   bool aIncludeChildren = false);
   void Invalidate(const LayoutDeviceIntRect& aRect) override;
   void* GetNativeData(uint32_t aDataType) override;
-  void FreeNativeData(void* data, uint32_t aDataType) override;
   nsresult SetTitle(const nsAString& aTitle) override;
   void SetIcon(const nsAString& aIconSpec) override;
   LayoutDeviceIntPoint WidgetToScreenOffset() override;

@@ -64,10 +64,10 @@ already_AddRefed<TextureHost> CreateTextureHostOGL(
  *
  * Note that it is important to be careful about the ownership model with
  * the OpenGL backend, due to some widget limitation on Linux: before
- * the nsBaseWidget associated with our OpenGL context has been completely
+ * the nsIWidget associated with our OpenGL context has been completely
  * deleted, every resource belonging to the OpenGL context MUST have been
  * released. At the moment the teardown sequence happens in the middle of
- * the nsBaseWidget's destructor, meaning that at a given moment we must be
+ * the nsIWidget's destructor, meaning that at a given moment we must be
  * able to easily find and release all the GL resources.
  * The point is: be careful about the ownership model and limit the number
  * of objects sharing references to GL resources to make the tear down

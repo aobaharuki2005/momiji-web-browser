@@ -17,7 +17,7 @@
 #endif
 
 class nsIWidget;
-class nsBaseWidget;
+class nsIWidget;
 
 namespace mozilla {
 class VsyncObserver;

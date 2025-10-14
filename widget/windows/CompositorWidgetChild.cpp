@@ -8,7 +8,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/widget/CompositorWidgetVsyncObserver.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
-#include "nsBaseWidget.h"
+#include "nsIWidget.h"
 #include "VsyncDispatcher.h"
 #include "gfxPlatform.h"
 #include "RemoteBackbuffer.h"

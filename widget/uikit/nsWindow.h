@@ -10,7 +10,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 
 #include "mozilla/widget/IOSView.h"
-#include "nsBaseWidget.h"
+#include "nsIWidget.h"
 #include "gfxPoint.h"
 
 #include "nsTArray.h"
@@ -33,7 +33,7 @@ class TextInputHandler;
 #define NS_WINDOW_IID \
   {0x5e6fd559, 0xb3f9, 0x40c9, {0x92, 0xd1, 0xef, 0x80, 0xb4, 0xf9, 0x69, 0xe9}}
 
-class nsWindow final : public nsBaseWidget {
+class nsWindow final : public nsIWidget {
  public:
   nsWindow();
 

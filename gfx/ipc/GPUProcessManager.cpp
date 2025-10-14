@@ -46,7 +46,7 @@
 #ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
 #  include "mozilla/widget/CompositorWidgetChild.h"
 #endif
-#include "nsBaseWidget.h"
+#include "nsIWidget.h"
 #include "nsContentUtils.h"
 #include "VRManagerChild.h"
 #include "VRManagerParent.h"
@@ -558,7 +558,7 @@ bool GPUProcessManager::EnsureVRManager() {
 
 #if defined(MOZ_WIDGET_ANDROID)
 RefPtr<UiCompositorControllerChild>
-GPUProcessManager::CreateUiCompositorController(nsBaseWidget* aWidget,
+GPUProcessManager::CreateUiCompositorController(nsIWidget* aWidget,
                                                 const LayersId aId) {
   MOZ_ASSERT(IsGPUReady());
 
@@ -1221,7 +1221,7 @@ void GPUProcessManager::StopObserving() {
 }
 
 already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(
-    nsBaseWidget* aWidget, WebRenderLayerManager* aLayerManager,
+    nsIWidget* aWidget, WebRenderLayerManager* aLayerManager,
     CSSToLayoutDeviceScale aScale, const CompositorOptions& aOptions,
     bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize,
     uint64_t aInnerWindowId, bool* aRetryOut) {
@@ -1287,7 +1287,7 @@ already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(
 }
 
 RefPtr<CompositorSession> GPUProcessManager::CreateRemoteSession(
-    nsBaseWidget* aWidget, WebRenderLayerManager* aLayerManager,
+    nsIWidget* aWidget, WebRenderLayerManager* aLayerManager,
     const LayersId& aRootLayerTreeId, CSSToLayoutDeviceScale aScale,
     const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
     const gfx::IntSize& aSurfaceSize, uint64_t aInnerWindowId) {

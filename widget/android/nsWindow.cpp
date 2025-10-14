@@ -2243,7 +2243,7 @@ nsWindow::~nsWindow() {
   ALOG("nsWindow %p destructor", (void*)this);
   // The mCompositorSession should have been cleaned up in nsWindow::Destroy()
   // DestroyLayerManager() will call DestroyCompositor() which will crash if
-  // called from nsBaseWidget destructor. See Bug 1392705
+  // called from nsIWidget destructor. See Bug 1392705
   MOZ_ASSERT(!mCompositorSession);
 }
 
@@ -2290,7 +2290,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
 void nsWindow::Destroy() {
   MutexAutoLock lock(mDestroyMutex);
 
-  nsBaseWidget::mOnDestroyCalled = true;
+  nsIWidget::mOnDestroyCalled = true;
 
   // Disassociate our native object from GeckoView.
   mGeckoViewSupport.Detach();
@@ -2300,15 +2300,15 @@ void nsWindow::Destroy() {
 
   // Ensure the compositor has been shutdown before this nsWindow is potentially
   // deleted
-  nsBaseWidget::DestroyCompositor();
+  nsIWidget::DestroyCompositor();
 
-  nsBaseWidget::Destroy();
+  nsIWidget::Destroy();
 
   if (IsTopLevel()) {
     gTopLevelWindows.RemoveElement(this);
   }
 
-  nsBaseWidget::OnDestroy();
+  nsIWidget::OnDestroy();
 
 #ifdef DEBUG_ANDROID_WIDGET
   DumpWindows();
@@ -2709,7 +2709,7 @@ void nsWindow::CreateLayerManager() {
 
 void nsWindow::NotifyCompositorSessionLost(
     mozilla::layers::CompositorSession* aSession) {
-  nsBaseWidget::NotifyCompositorSessionLost(aSession);
+  nsIWidget::NotifyCompositorSessionLost(aSession);
 
   DispatchToUiThread("nsWindow::NotifyCompositorSessionLost",
                      [lvs = mLayerViewSupport] {
@@ -3257,7 +3257,7 @@ uint32_t nsWindow::GetMaxTouchPoints() const {
 void nsWindow::UpdateZoomConstraints(
     const uint32_t& aPresShellId, const ScrollableLayerGuid::ViewID& aViewId,
     const mozilla::Maybe<ZoomConstraints>& aConstraints) {
-  nsBaseWidget::UpdateZoomConstraints(aPresShellId, aViewId, aConstraints);
+  nsIWidget::UpdateZoomConstraints(aPresShellId, aViewId, aConstraints);
 }
 
 CompositorBridgeChild* nsWindow::GetCompositorBridgeChild() const {

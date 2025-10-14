@@ -7,7 +7,7 @@
 #define HEADLESSWIDGET_H
 
 #include "mozilla/widget/InProcessCompositorWidget.h"
-#include "nsBaseWidget.h"
+#include "nsIWidget.h"
 #include "CompositorWidget.h"
 #include "mozilla/dom/WheelEventBinding.h"
 
@@ -39,11 +39,11 @@ namespace mozilla {
 enum class NativeKeyBindingsType : uint8_t;
 namespace widget {
 
-class HeadlessWidget final : public nsBaseWidget {
+class HeadlessWidget final : public nsIWidget {
  public:
   HeadlessWidget();
 
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(HeadlessWidget, nsBaseWidget)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HeadlessWidget, nsIWidget)
 
   void* GetNativeData(uint32_t aDataType) override {
     // Headless widgets have no native data.
@@ -52,7 +52,7 @@ class HeadlessWidget final : public nsBaseWidget {
 
   nsresult Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
                   widget::InitData* aInitData = nullptr) override;
-  using nsBaseWidget::Create;  // for Create signature not overridden here
+  using nsIWidget::Create;  // for Create signature not overridden here
 
   void GetCompositorWidgetInitData(
       mozilla::widget::CompositorWidgetInitData* aInitData) override;

@@ -529,7 +529,7 @@ struct InputContext final {
   }
 };
 
-// FYI: Implemented in nsBaseWidget.cpp
+// FYI: Implemented in nsIWidget.cpp
 const char* ToChar(InputContext::Origin aOrigin);
 
 struct InputContextAction final {
@@ -678,7 +678,7 @@ enum IMEMessage : IMEMessageType {
   REQUEST_TO_CANCEL_COMPOSITION
 };
 
-// FYI: Implemented in nsBaseWidget.cpp
+// FYI: Implemented in nsIWidget.cpp
 const char* ToChar(IMEMessage aIMEMessage);
 
 struct IMENotification final {

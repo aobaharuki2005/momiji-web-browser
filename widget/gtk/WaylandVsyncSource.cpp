@@ -15,6 +15,7 @@
 #  include "nsGtkUtils.h"
 #  include "mozilla/StaticPrefs_layout.h"
 #  include "mozilla/StaticPrefs_widget.h"
+#  include "mozilla/widget/WindowOcclusionState.h"
 #  include "nsWindow.h"
 
 #  include <gdk/gdkwayland.h>

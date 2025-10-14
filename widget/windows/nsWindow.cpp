@@ -817,7 +817,7 @@ static bool IsCloaked(HWND hwnd) {
  **************************************************************/
 
 nsWindow::nsWindow()
-    : nsBaseWidget(BorderStyle::Default),
+    : nsIWidget(BorderStyle::Default),
       mFrameState(std::in_place, this),
       mPIPWindow(false),
       mMicaBackdrop(false),
@@ -1943,7 +1943,7 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
 
   mSizeConstraintsScale = GetDefaultScale().scale;
 
-  nsBaseWidget::SetSizeConstraints(c);
+  nsIWidget::SetSizeConstraints(c);
 }
 
 const SizeConstraints nsWindow::GetSizeConstraints() {
@@ -3505,7 +3505,6 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
  * SECTION: Native data storage
  *
  * nsIWidget::GetNativeData
- * nsIWidget::FreeNativeData
  *
  * Set or clear native data based on a constant.
  *
@@ -3533,18 +3532,6 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
   }
 
   return nullptr;
-}
-
-// Free some native data according to aDataType
-void nsWindow::FreeNativeData(void* data, uint32_t aDataType) {
-  switch (aDataType) {
-    case NS_NATIVE_GRAPHIC:
-    case NS_NATIVE_WIDGET:
-    case NS_NATIVE_WINDOW:
-      break;
-    default:
-      break;
-  }
 }
 
 /**************************************************************
@@ -3845,9 +3832,7 @@ WindowRenderer* nsWindow::GetWindowRenderer() {
     return mWindowRenderer;
   }
 
-  if (!mLocalesChangedObserver) {
-    mLocalesChangedObserver = new LocalesChangedObserver(this);
-  }
+  EnsureLocalesChangedObserver();
 
   // Try OMTC first.
   if (!mWindowRenderer && ShouldUseOffMainThreadCompositing()) {
@@ -3884,7 +3869,7 @@ WindowRenderer* nsWindow::GetWindowRenderer() {
       mMaxTextureSize = knowsCompositor->GetMaxTextureSize();
       c.mMaxSize.width = std::min(c.mMaxSize.width, mMaxTextureSize);
       c.mMaxSize.height = std::min(c.mMaxSize.height, mMaxTextureSize);
-      nsBaseWidget::SetSizeConstraints(c);
+      nsIWidget::SetSizeConstraints(c);
     }
   }
 
@@ -3893,7 +3878,7 @@ WindowRenderer* nsWindow::GetWindowRenderer() {
 
 /**************************************************************
  *
- * SECTION: nsBaseWidget::SetCompositorWidgetDelegate
+ * SECTION: nsIWidget::SetCompositorWidgetDelegate
  *
  * Called to connect the nsWindow to the delegate providing
  * platform compositing API access.
@@ -6939,10 +6924,10 @@ void nsWindow::OnDestroy() {
   if (sCurrentWindow == this) sCurrentWindow = nullptr;
 
   // Disconnects us from our parent, will call our GetParent().
-  nsBaseWidget::Destroy();
+  nsIWidget::Destroy();
 
   // Release references to children, device context, toolkit, and app shell.
-  nsBaseWidget::OnDestroy();
+  nsIWidget::OnDestroy();
 
   // We have to destroy the native drag target before we null out our window
   // pointer.
@@ -6950,7 +6935,7 @@ void nsWindow::OnDestroy() {
 
   // If we're going away and for some reason we're still the rollup widget,
   // rollup and turn off capture.
-  nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
+  nsIRollupListener* rollupListener = nsIWidget::GetActiveRollupListener();
   nsCOMPtr<nsIWidget> rollupWidget;
   if (rollupListener) {
     rollupWidget = rollupListener->GetRollupWidget();
@@ -7025,7 +7010,7 @@ bool nsWindow::ShouldUseOffMainThreadCompositing() {
   if (mWindowType == WindowType::Popup && mPopupType == PopupType::Tooltip) {
     return false;
   }
-  return nsBaseWidget::ShouldUseOffMainThreadCompositing();
+  return nsIWidget::ShouldUseOffMainThreadCompositing();
 }
 
 void nsWindow::WindowUsesOMTC() {
@@ -7634,7 +7619,7 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
     }
   }
 
-  nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
+  nsIRollupListener* rollupListener = nsIWidget::GetActiveRollupListener();
   NS_ENSURE_TRUE(rollupListener, false);
 
   nsCOMPtr<nsIWidget> popup = rollupListener->GetRollupWidget();
@@ -8479,11 +8464,11 @@ void nsWindow::ChangedDPI() {
 }
 
 static Result<POINTER_FLAGS, nsresult> PointerStateToFlag(
-    nsWindow::TouchPointerState aPointerState, bool isUpdate) {
-  bool hover = aPointerState & nsWindow::TOUCH_HOVER;
-  bool contact = aPointerState & nsWindow::TOUCH_CONTACT;
-  bool remove = aPointerState & nsWindow::TOUCH_REMOVE;
-  bool cancel = aPointerState & nsWindow::TOUCH_CANCEL;
+    TouchPointerState aPointerState, bool isUpdate) {
+  bool hover = aPointerState & TOUCH_HOVER;
+  bool contact = aPointerState & TOUCH_CONTACT;
+  bool remove = aPointerState & TOUCH_REMOVE;
+  bool cancel = aPointerState & TOUCH_CANCEL;
 
   POINTER_FLAGS flags;
   if (isUpdate) {

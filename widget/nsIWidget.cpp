@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsBaseWidget.h"
+#include "nsIWidget.h"
 
 #include <utility>
 
@@ -111,74 +111,36 @@ using namespace mozilla::ipc;
 using namespace mozilla::widget;
 using namespace mozilla;
 
-// Async pump timer during injected long touch taps
-#define TOUCH_INJECT_PUMP_TIMER_MSEC 50
-#define TOUCH_INJECT_LONG_TAP_DEFAULT_MSEC 1500
-int32_t nsIWidget::sPointerIdCounter = 0;
+namespace mozilla::widget {
 
-// Some statics from nsIWidget.h
-/*static*/
-uint64_t AutoSynthesizedEventCallbackNotifier::sCallbackId = 0;
-MOZ_RUNINIT nsTHashMap<uint64_t, nsCOMPtr<nsISynthesizedEventCallback>>
-    AutoSynthesizedEventCallbackNotifier::sSavedCallbacks;
+// Helper class used in shutting down gfx related code.
+class WidgetShutdownObserver final : public nsIObserver {
+  ~WidgetShutdownObserver();
 
-// The maximum amount of time to let the EnableDragDrop runnable wait in the
-// idle queue before timing out and moving it to the regular queue. Value is in
-// milliseconds.
-const uint32_t kAsyncDragDropTimeout = 1000;
+ public:
+  explicit WidgetShutdownObserver(nsIWidget* aWidget);
 
-NS_IMPL_ISUPPORTS(nsBaseWidget, nsIWidget, nsISupportsWeakReference)
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
-//-------------------------------------------------------------------------
-//
-// nsBaseWidget constructor
-//
-//-------------------------------------------------------------------------
+  void Register();
+  void Unregister();
 
-nsBaseWidget::nsBaseWidget() : nsBaseWidget(BorderStyle::None) {}
-
-nsBaseWidget::nsBaseWidget(BorderStyle aBorderStyle)
-    : mWidgetListener(nullptr),
-      mAttachedWidgetListener(nullptr),
-      mPreviouslyAttachedWidgetListener(nullptr),
-      mCompositorVsyncDispatcher(nullptr),
-      mBorderStyle(aBorderStyle),
-      mBounds(0, 0, 0, 0),
-      mIsTiled(false),
-      mPopupLevel(PopupLevel::Top),
-      mPopupType(PopupType::Any),
-      mHasRemoteContent(false),
-      mUpdateCursor(true),
-      mUseAttachedEvents(false),
-      mIMEHasFocus(false),
-      mIMEHasQuit(false),
-      mIsFullyOccluded(false),
-      mNeedFastSnaphot(false),
-      mCurrentPanGestureBelongsToSwipe(false),
-      mIsPIPWindow(false) {
-#ifdef NOISY_WIDGET_LEAKS
-  gNumWidgets++;
-  printf("WIDGETS+ = %d\n", gNumWidgets);
-#endif
-
-#ifdef DEBUG
-  debug_RegisterPrefCallbacks();
-#endif
-
-  mShutdownObserver = new WidgetShutdownObserver(this);
-}
+  nsIWidget* mWidget;
+  bool mRegistered;
+};
 
 NS_IMPL_ISUPPORTS(WidgetShutdownObserver, nsIObserver)
 
-WidgetShutdownObserver::WidgetShutdownObserver(nsBaseWidget* aWidget)
+WidgetShutdownObserver::WidgetShutdownObserver(nsIWidget* aWidget)
     : mWidget(aWidget), mRegistered(false) {
   Register();
 }
 
 WidgetShutdownObserver::~WidgetShutdownObserver() {
-  // No need to call Unregister(), we can't be destroyed until nsBaseWidget
-  // gets torn down. The observer service and nsBaseWidget have a ref on us
-  // so nsBaseWidget has to call Unregister and then clear its ref.
+  // No need to call Unregister(), we can't be destroyed until nsIWidget
+  // gets torn down. The observer service and nsIWidget.have a ref on us
+  // so nsIWidget.has to call Unregister and then clear its ref.
 }
 
 NS_IMETHODIMP
@@ -188,10 +150,10 @@ WidgetShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    RefPtr<nsBaseWidget> widget(mWidget);
+    RefPtr<nsIWidget> widget(mWidget);
     widget->Shutdown();
   } else if (!strcmp(aTopic, "quit-application")) {
-    RefPtr<nsBaseWidget> widget(mWidget);
+    RefPtr<nsIWidget> widget(mWidget);
     widget->QuitIME();
   }
   return NS_OK;
@@ -237,17 +199,34 @@ void WidgetShutdownObserver::Unregister() {
 
 #define INTL_APP_LOCALES_CHANGED "intl:app-locales-changed"
 
+// Helper class used for observing locales change.
+class LocalesChangedObserver final : public nsIObserver {
+  ~LocalesChangedObserver();
+
+ public:
+  explicit LocalesChangedObserver(nsIWidget* aWidget);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  void Register();
+  void Unregister();
+
+  nsIWidget* mWidget;
+  bool mRegistered;
+};
+
 NS_IMPL_ISUPPORTS(LocalesChangedObserver, nsIObserver)
 
-LocalesChangedObserver::LocalesChangedObserver(nsBaseWidget* aWidget)
+LocalesChangedObserver::LocalesChangedObserver(nsIWidget* aWidget)
     : mWidget(aWidget), mRegistered(false) {
   Register();
 }
 
 LocalesChangedObserver::~LocalesChangedObserver() {
-  // No need to call Unregister(), we can't be destroyed until nsBaseWidget
-  // gets torn down. The observer service and nsBaseWidget have a ref on us
-  // so nsBaseWidget has to call Unregister and then clear its ref.
+  // No need to call Unregister(), we can't be destroyed until nsIWidget
+  // gets torn down. The observer service and nsIWidget.have a ref on us
+  // so nsIWidget.has to call Unregister and then clear its ref.
 }
 
 NS_IMETHODIMP
@@ -257,7 +236,7 @@ LocalesChangedObserver::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
   if (!strcmp(aTopic, INTL_APP_LOCALES_CHANGED)) {
-    RefPtr<nsBaseWidget> widget(mWidget);
+    RefPtr<nsIWidget> widget(mWidget);
     widget->LocalesChanged();
   }
   return NS_OK;
@@ -274,7 +253,7 @@ void LocalesChangedObserver::Register() {
   }
 
   // Locale might be update before registering
-  RefPtr<nsBaseWidget> widget(mWidget);
+  RefPtr<nsIWidget> widget(mWidget);
   widget->LocalesChanged();
 
   mRegistered = true;
@@ -294,19 +273,78 @@ void LocalesChangedObserver::Unregister() {
   mRegistered = false;
 }
 
-void nsBaseWidget::Shutdown() {
+}  // namespace mozilla::widget
+
+// Async pump timer during injected long touch taps
+#define TOUCH_INJECT_PUMP_TIMER_MSEC 50
+#define TOUCH_INJECT_LONG_TAP_DEFAULT_MSEC 1500
+int32_t nsIWidget::sPointerIdCounter = 0;
+
+// Some statics from nsIWidget.h
+/*static*/
+uint64_t AutoSynthesizedEventCallbackNotifier::sCallbackId = 0;
+MOZ_RUNINIT nsTHashMap<uint64_t, nsCOMPtr<nsISynthesizedEventCallback>>
+    AutoSynthesizedEventCallbackNotifier::sSavedCallbacks;
+
+// The maximum amount of time to let the EnableDragDrop runnable wait in the
+// idle queue before timing out and moving it to the regular queue. Value is in
+// milliseconds.
+const uint32_t kAsyncDragDropTimeout = 1000;
+
+NS_IMPL_ISUPPORTS(nsIWidget, nsIWidget, nsISupportsWeakReference)
+
+//-------------------------------------------------------------------------
+//
+// nsIWidget constructor
+//
+//-------------------------------------------------------------------------
+
+nsIWidget::nsIWidget() : nsIWidget(BorderStyle::None) {}
+
+nsIWidget::nsIWidget(BorderStyle aBorderStyle)
+    : mWidgetListener(nullptr),
+      mAttachedWidgetListener(nullptr),
+      mPreviouslyAttachedWidgetListener(nullptr),
+      mCompositorVsyncDispatcher(nullptr),
+      mBorderStyle(aBorderStyle),
+      mBounds(0, 0, 0, 0),
+      mIsTiled(false),
+      mPopupLevel(PopupLevel::Top),
+      mPopupType(PopupType::Any),
+      mHasRemoteContent(false),
+      mUpdateCursor(true),
+      mUseAttachedEvents(false),
+      mIMEHasFocus(false),
+      mIMEHasQuit(false),
+      mIsFullyOccluded(false),
+      mNeedFastSnaphot(false),
+      mCurrentPanGestureBelongsToSwipe(false),
+      mIsPIPWindow(false) {
+#ifdef NOISY_WIDGET_LEAKS
+  gNumWidgets++;
+  printf("WIDGETS+ = %d\n", gNumWidgets);
+#endif
+
+#ifdef DEBUG
+  debug_RegisterPrefCallbacks();
+#endif
+
+  mShutdownObserver = new WidgetShutdownObserver(this);
+}
+
+void nsIWidget::Shutdown() {
   NotifyLiveResizeStopped();
   DestroyCompositor();
   FreeLocalesChangedObserver();
   FreeShutdownObserver();
 }
 
-void nsBaseWidget::QuitIME() {
+void nsIWidget::QuitIME() {
   IMEStateManager::WidgetOnQuit(this);
   this->mIMEHasQuit = true;
 }
 
-void nsBaseWidget::DestroyCompositor() {
+void nsIWidget::DestroyCompositor() {
   RevokeTransactionIdAllocator();
 
   // We release this before releasing the compositor, since it may hold the
@@ -346,21 +384,21 @@ void nsBaseWidget::DestroyCompositor() {
 
 // This prevents the layer manager from starting a new transaction during
 // shutdown.
-void nsBaseWidget::RevokeTransactionIdAllocator() {
+void nsIWidget::RevokeTransactionIdAllocator() {
   if (!mWindowRenderer || !mWindowRenderer->AsWebRender()) {
     return;
   }
   mWindowRenderer->AsWebRender()->SetTransactionIdAllocator(nullptr);
 }
 
-void nsBaseWidget::ReleaseContentController() {
+void nsIWidget::ReleaseContentController() {
   if (mRootContentController) {
     mRootContentController->Destroy();
     mRootContentController = nullptr;
   }
 }
 
-void nsBaseWidget::DestroyLayerManager() {
+void nsIWidget::DestroyLayerManager() {
   if (mWindowRenderer) {
     mWindowRenderer->Destroy();
     mWindowRenderer = nullptr;
@@ -368,16 +406,22 @@ void nsBaseWidget::DestroyLayerManager() {
   DestroyCompositor();
 }
 
-void nsBaseWidget::OnRenderingDeviceReset() { DestroyLayerManager(); }
+void nsIWidget::OnRenderingDeviceReset() { DestroyLayerManager(); }
 
-void nsBaseWidget::FreeShutdownObserver() {
+void nsIWidget::FreeShutdownObserver() {
   if (mShutdownObserver) {
     mShutdownObserver->Unregister();
   }
   mShutdownObserver = nullptr;
 }
 
-void nsBaseWidget::FreeLocalesChangedObserver() {
+void nsIWidget::EnsureLocalesChangedObserver() {
+  if (!mLocalesChangedObserver) {
+    mLocalesChangedObserver = new LocalesChangedObserver(this);
+  }
+}
+
+void nsIWidget::FreeLocalesChangedObserver() {
   if (mLocalesChangedObserver) {
     mLocalesChangedObserver->Unregister();
   }
@@ -386,11 +430,11 @@ void nsBaseWidget::FreeLocalesChangedObserver() {
 
 //-------------------------------------------------------------------------
 //
-// nsBaseWidget destructor
+// nsIWidget destructor
 //
 //-------------------------------------------------------------------------
 
-nsBaseWidget::~nsBaseWidget() {
+nsIWidget::~nsIWidget() {
   if (mSwipeTracker) {
     mSwipeTracker->Destroy();
     mSwipeTracker = nullptr;
@@ -413,7 +457,7 @@ nsBaseWidget::~nsBaseWidget() {
 // Basic create.
 //
 //-------------------------------------------------------------------------
-void nsBaseWidget::BaseCreate(nsIWidget* aParent, widget::InitData* aInitData) {
+void nsIWidget::BaseCreate(nsIWidget* aParent, widget::InitData* aInitData) {
   if (aInitData) {
     mWindowType = aInitData->mWindowType;
     mBorderStyle = aInitData->mBorderStyle;
@@ -466,8 +510,7 @@ nsMenuPopupFrame* nsIWidget::GetPopupFrame() const {
   return static_cast<nsMenuPopupFrame*>(GetWidgetListener());
 }
 
-void nsBaseWidget::DynamicToolbarOffsetChanged(
-    mozilla::ScreenIntCoord aOffset) {
+void nsIWidget::DynamicToolbarOffsetChanged(mozilla::ScreenIntCoord aOffset) {
   if (mCompositorBridgeChild) {
     mCompositorBridgeChild->SendDynamicToolbarOffsetChanged(aOffset);
   }
@@ -496,15 +539,15 @@ LayoutDeviceIntRect nsIWidget::MaybeRoundToDisplayPixels(
 //
 //-------------------------------------------------------------------------
 
-nsIWidgetListener* nsBaseWidget::GetWidgetListener() const {
+nsIWidgetListener* nsIWidget::GetWidgetListener() const {
   return mWidgetListener;
 }
 
-void nsBaseWidget::SetWidgetListener(nsIWidgetListener* aWidgetListener) {
+void nsIWidget::SetWidgetListener(nsIWidgetListener* aWidgetListener) {
   mWidgetListener = aWidgetListener;
 }
 
-already_AddRefed<nsIWidget> nsBaseWidget::CreateChild(
+already_AddRefed<nsIWidget> nsIWidget::CreateChild(
     const LayoutDeviceIntRect& aRect, widget::InitData& aInitData) {
   nsCOMPtr<nsIWidget> widget;
   switch (mWidgetType) {
@@ -544,7 +587,7 @@ already_AddRefed<nsIWidget> nsBaseWidget::CreateChild(
 }
 
 // Attach a view to our widget which we'll send events to.
-void nsBaseWidget::AttachViewToTopLevel(bool aUseAttachedEvents) {
+void nsIWidget::AttachViewToTopLevel(bool aUseAttachedEvents) {
   NS_ASSERTION(mWindowType == WindowType::TopLevel ||
                    mWindowType == WindowType::Dialog ||
                    mWindowType == WindowType::Invisible,
@@ -553,29 +596,29 @@ void nsBaseWidget::AttachViewToTopLevel(bool aUseAttachedEvents) {
   mUseAttachedEvents = aUseAttachedEvents;
 }
 
-nsIWidgetListener* nsBaseWidget::GetAttachedWidgetListener() const {
+nsIWidgetListener* nsIWidget::GetAttachedWidgetListener() const {
   return mAttachedWidgetListener;
 }
 
-nsIWidgetListener* nsBaseWidget::GetPreviouslyAttachedWidgetListener() {
+nsIWidgetListener* nsIWidget::GetPreviouslyAttachedWidgetListener() {
   return mPreviouslyAttachedWidgetListener;
 }
 
-void nsBaseWidget::SetPreviouslyAttachedWidgetListener(
+void nsIWidget::SetPreviouslyAttachedWidgetListener(
     nsIWidgetListener* aListener) {
   mPreviouslyAttachedWidgetListener = aListener;
 }
 
-void nsBaseWidget::SetAttachedWidgetListener(nsIWidgetListener* aListener) {
+void nsIWidget::SetAttachedWidgetListener(nsIWidgetListener* aListener) {
   mAttachedWidgetListener = aListener;
 }
 
 //-------------------------------------------------------------------------
 //
-// Close this nsBaseWidget
+// Close this nsIWidget
 //
 //-------------------------------------------------------------------------
-void nsBaseWidget::Destroy() {
+void nsIWidget::Destroy() {
   DestroyCompositor();
 
   // Just in case our parent is the only ref to us
@@ -604,9 +647,9 @@ nsIWidget* nsIWidget::GetTopLevelWidget() {
   return cur;
 }
 
-float nsBaseWidget::GetDPI() { return 96.0f; }
+float nsIWidget::GetDPI() { return 96.0f; }
 
-void nsBaseWidget::NotifyAPZOfDPIChange() {
+void nsIWidget::NotifyAPZOfDPIChange() {
   if (mAPZC) {
     mAPZC->SetDPI(GetDPI());
   }
@@ -696,23 +739,15 @@ void nsIWidget::RemoveFromChildList(nsIWidget* aChild) {
   aChild->SetPrevSibling(nullptr);
 }
 
-void nsBaseWidget::GetWorkspaceID(nsAString& workspaceID) {
-  workspaceID.Truncate();
-}
-
-void nsBaseWidget::MoveToWorkspace(const nsAString& workspaceID) {
-  // Noop.
-}
-
 //-------------------------------------------------------------------------
 //
 // Get this component cursor
 //
 //-------------------------------------------------------------------------
 
-void nsBaseWidget::SetCursor(const Cursor& aCursor) { mCursor = aCursor; }
+void nsIWidget::SetCursor(const Cursor& aCursor) { mCursor = aCursor; }
 
-void nsBaseWidget::SetCustomCursorAllowed(bool aIsAllowed) {
+void nsIWidget::SetCustomCursorAllowed(bool aIsAllowed) {
   if (aIsAllowed != mCustomCursorAllowed) {
     mCustomCursorAllowed = aIsAllowed;
     mUpdateCursor = true;
@@ -726,19 +761,19 @@ void nsBaseWidget::SetCustomCursorAllowed(bool aIsAllowed) {
 //
 //-------------------------------------------------------------------------
 
-void nsBaseWidget::SetTransparencyMode(TransparencyMode aMode) {}
+void nsIWidget::SetTransparencyMode(TransparencyMode aMode) {}
 
-TransparencyMode nsBaseWidget::GetTransparencyMode() {
+TransparencyMode nsIWidget::GetTransparencyMode() {
   return TransparencyMode::Opaque;
 }
 
 /* virtual */
-void nsBaseWidget::PerformFullscreenTransition(FullscreenTransitionStage aStage,
-                                               uint16_t aDuration,
-                                               nsISupports* aData,
-                                               nsIRunnable* aCallback) {
+void nsIWidget::PerformFullscreenTransition(FullscreenTransitionStage aStage,
+                                            uint16_t aDuration,
+                                            nsISupports* aData,
+                                            nsIRunnable* aCallback) {
   MOZ_ASSERT_UNREACHABLE(
-      "Should never call PerformFullscreenTransition on nsBaseWidget");
+      "Should never call PerformFullscreenTransition on nsIWidget");
 }
 
 //-------------------------------------------------------------------------
@@ -746,7 +781,7 @@ void nsBaseWidget::PerformFullscreenTransition(FullscreenTransitionStage aStage,
 // Put the window into full-screen mode
 //
 //-------------------------------------------------------------------------
-void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
+void nsIWidget::InfallibleMakeFullScreen(bool aFullScreen) {
 #define MOZ_FORMAT_RECT(fmtstr) "[" fmtstr "," fmtstr " " fmtstr "x" fmtstr "]"
 #define MOZ_SPLAT_RECT(rect) \
   (rect).X(), (rect).Y(), (rect).Width(), (rect).Height()
@@ -960,13 +995,13 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
 #undef MOZ_FORMAT_RECT
 }
 
-nsresult nsBaseWidget::MakeFullScreen(bool aFullScreen) {
+nsresult nsIWidget::MakeFullScreen(bool aFullScreen) {
   InfallibleMakeFullScreen(aFullScreen);
   return NS_OK;
 }
 
-nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
-    nsBaseWidget* aWidget, gfxContext* aTarget)
+nsIWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(nsIWidget* aWidget,
+                                                        gfxContext* aTarget)
     : mWidget(aWidget) {
   WindowRenderer* renderer = mWidget->GetWindowRenderer();
   if (auto* fallback = renderer->AsFallback()) {
@@ -975,23 +1010,23 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
   }
 }
 
-nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup() {
+nsIWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup() {
   if (mRenderer) {
     mRenderer->SetTarget(nullptr);
   }
 }
 
-bool nsBaseWidget::IsSmallPopup() const {
+bool nsIWidget::IsSmallPopup() const {
   return mWindowType == WindowType::Popup && mPopupType != PopupType::Panel;
 }
 
-bool nsBaseWidget::ComputeShouldAccelerate() {
+bool nsIWidget::ComputeShouldAccelerate() {
   return gfx::gfxConfig::IsEnabled(gfx::Feature::HW_COMPOSITING) &&
          (WidgetTypeSupportsAcceleration() ||
           StaticPrefs::gfx_webrender_unaccelerated_widget_force());
 }
 
-bool nsBaseWidget::UseAPZ() const {
+bool nsIWidget::UseAPZ() const {
   // APZ disabled globally
   if (!gfxPlatform::AsyncPanZoomEnabled()) {
     return false;
@@ -1023,7 +1058,7 @@ bool nsBaseWidget::UseAPZ() const {
   return false;
 }
 
-void nsBaseWidget::CreateCompositor() {
+void nsIWidget::CreateCompositor() {
   LayoutDeviceIntRect rect = GetBounds();
   CreateCompositor(rect.Width(), rect.Height());
 }
@@ -1041,13 +1076,13 @@ void nsIWidget::PauseOrResumeCompositor(bool aPause) {
 }
 
 already_AddRefed<GeckoContentController>
-nsBaseWidget::CreateRootContentController() {
+nsIWidget::CreateRootContentController() {
   RefPtr<GeckoContentController> controller =
       new ChromeProcessController(this, mAPZEventState, mAPZC);
   return controller.forget();
 }
 
-void nsBaseWidget::ConfigureAPZCTreeManager() {
+void nsIWidget::ConfigureAPZCTreeManager() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mAPZC);
 
@@ -1079,18 +1114,18 @@ void nsBaseWidget::ConfigureAPZCTreeManager() {
   }
 }
 
-void nsBaseWidget::ConfigureAPZControllerThread() {
+void nsIWidget::ConfigureAPZControllerThread() {
   // By default the controller thread is the main thread.
   APZThreadUtils::SetControllerThread(NS_GetCurrentThread());
 }
 
-void nsBaseWidget::SetConfirmedTargetAPZC(
+void nsIWidget::SetConfirmedTargetAPZC(
     uint64_t aInputBlockId,
     const nsTArray<ScrollableLayerGuid>& aTargets) const {
   mAPZC->SetTargetAPZC(aInputBlockId, aTargets);
 }
 
-void nsBaseWidget::UpdateZoomConstraints(
+void nsIWidget::UpdateZoomConstraints(
     const uint32_t& aPresShellId, const ScrollableLayerGuid::ViewID& aViewId,
     const Maybe<ZoomConstraints>& aConstraints) {
   if (!mCompositorSession || !mAPZC) {
@@ -1111,9 +1146,9 @@ void nsBaseWidget::UpdateZoomConstraints(
       ScrollableLayerGuid(layersId, aPresShellId, aViewId), aConstraints);
 }
 
-bool nsBaseWidget::AsyncPanZoomEnabled() const { return !!mAPZC; }
+bool nsIWidget::AsyncPanZoomEnabled() const { return !!mAPZC; }
 
-nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
+nsEventStatus nsIWidget::ProcessUntransformedAPZEvent(
     WidgetInputEvent* aEvent, const APZEventResult& aApzResult) {
   MOZ_ASSERT(NS_IsMainThread());
   ScrollableLayerGuid targetGuid = aApzResult.mTargetGuid;
@@ -1186,7 +1221,7 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
 template <class InputType, class EventType>
 class DispatchEventOnMainThread : public Runnable {
  public:
-  DispatchEventOnMainThread(const InputType& aInput, nsBaseWidget* aWidget,
+  DispatchEventOnMainThread(const InputType& aInput, nsIWidget* aWidget,
                             const APZEventResult& aAPZResult)
       : mozilla::Runnable("DispatchEventOnMainThread"),
         mInput(aInput),
@@ -1201,7 +1236,7 @@ class DispatchEventOnMainThread : public Runnable {
 
  private:
   InputType mInput;
-  nsBaseWidget* mWidget;
+  nsIWidget* mWidget;
   APZEventResult mAPZResult;
 };
 
@@ -1230,8 +1265,7 @@ class DispatchInputOnControllerThread : public Runnable {
  public:
   enum class APZOnly { Yes, No };
   DispatchInputOnControllerThread(const EventType& aEvent,
-                                  IAPZCTreeManager* aAPZC,
-                                  nsBaseWidget* aWidget,
+                                  IAPZCTreeManager* aAPZC, nsIWidget* aWidget,
                                   APZOnly aAPZOnly = APZOnly::No)
       : mozilla::Runnable("DispatchInputOnControllerThread"),
         mMainMessageLoop(MessageLoop::current()),
@@ -1256,11 +1290,11 @@ class DispatchInputOnControllerThread : public Runnable {
   MessageLoop* mMainMessageLoop;
   InputType mInput;
   RefPtr<IAPZCTreeManager> mAPZC;
-  nsBaseWidget* mWidget;
+  nsIWidget* mWidget;
   const APZOnly mAPZOnly;
 };
 
-void nsBaseWidget::DispatchTouchInput(MultiTouchInput& aInput) {
+void nsIWidget::DispatchTouchInput(MultiTouchInput& aInput) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aInput.mInputSource ==
                  mozilla::dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH ||
@@ -1284,7 +1318,7 @@ void nsBaseWidget::DispatchTouchInput(MultiTouchInput& aInput) {
   }
 }
 
-void nsBaseWidget::DispatchPanGestureInput(PanGestureInput& aInput) {
+void nsIWidget::DispatchPanGestureInput(PanGestureInput& aInput) {
   MOZ_ASSERT(NS_IsMainThread());
   if (mAPZC) {
     MOZ_ASSERT(APZThreadUtils::IsControllerThread());
@@ -1303,7 +1337,7 @@ void nsBaseWidget::DispatchPanGestureInput(PanGestureInput& aInput) {
   }
 }
 
-void nsBaseWidget::DispatchPinchGestureInput(PinchGestureInput& aInput) {
+void nsIWidget::DispatchPinchGestureInput(PinchGestureInput& aInput) {
   MOZ_ASSERT(NS_IsMainThread());
   if (mAPZC) {
     MOZ_ASSERT(APZThreadUtils::IsControllerThread());
@@ -1321,7 +1355,7 @@ void nsBaseWidget::DispatchPinchGestureInput(PinchGestureInput& aInput) {
   }
 }
 
-nsIWidget::ContentAndAPZEventStatus nsBaseWidget::DispatchInputEvent(
+nsIWidget::ContentAndAPZEventStatus nsIWidget::DispatchInputEvent(
     WidgetInputEvent* aEvent) {
   nsIWidget::ContentAndAPZEventStatus status;
   MOZ_ASSERT(NS_IsMainThread());
@@ -1390,7 +1424,7 @@ nsIWidget::ContentAndAPZEventStatus nsBaseWidget::DispatchInputEvent(
   return status;
 }
 
-void nsBaseWidget::DispatchEventToAPZOnly(mozilla::WidgetInputEvent* aEvent) {
+void nsIWidget::DispatchEventToAPZOnly(mozilla::WidgetInputEvent* aEvent) {
   MOZ_ASSERT(NS_IsMainThread());
   if (mAPZC) {
     if (APZThreadUtils::IsControllerThread()) {
@@ -1412,13 +1446,13 @@ void nsBaseWidget::DispatchEventToAPZOnly(mozilla::WidgetInputEvent* aEvent) {
   }
 }
 
-bool nsBaseWidget::DispatchWindowEvent(WidgetGUIEvent& event) {
+bool nsIWidget::DispatchWindowEvent(WidgetGUIEvent& event) {
   nsEventStatus status;
   DispatchEvent(&event, status);
   return ConvertStatus(status);
 }
 
-Document* nsBaseWidget::GetDocument() const {
+Document* nsIWidget::GetDocument() const {
   if (mWidgetListener) {
     if (PresShell* presShell = mWidgetListener->GetPresShell()) {
       return presShell->GetDocument();
@@ -1427,7 +1461,7 @@ Document* nsBaseWidget::GetDocument() const {
   return nullptr;
 }
 
-void nsBaseWidget::CreateCompositorVsyncDispatcher() {
+void nsIWidget::CreateCompositorVsyncDispatcher() {
   // Parent directly listens to the vsync source whereas
   // child process communicate via IPC
   // Should be called AFTER gfxPlatform is initialized
@@ -1447,7 +1481,7 @@ void nsBaseWidget::CreateCompositorVsyncDispatcher() {
 }
 
 already_AddRefed<CompositorVsyncDispatcher>
-nsBaseWidget::GetCompositorVsyncDispatcher() {
+nsIWidget::GetCompositorVsyncDispatcher() {
   MOZ_ASSERT(mCompositorVsyncDispatcherLock.get());
 
   MutexAutoLock lock(*mCompositorVsyncDispatcherLock.get());
@@ -1455,7 +1489,7 @@ nsBaseWidget::GetCompositorVsyncDispatcher() {
   return dispatcher.forget();
 }
 
-already_AddRefed<WebRenderLayerManager> nsBaseWidget::CreateCompositorSession(
+already_AddRefed<WebRenderLayerManager> nsIWidget::CreateCompositorSession(
     int aWidth, int aHeight, CompositorOptions* aOptionsOut) {
   MOZ_ASSERT(aOptionsOut);
 
@@ -1547,7 +1581,7 @@ already_AddRefed<WebRenderLayerManager> nsBaseWidget::CreateCompositorSession(
   } while (true);
 }
 
-void nsBaseWidget::CreateCompositor(int aWidth, int aHeight) {
+void nsIWidget::CreateCompositor(int aWidth, int aHeight) {
   // This makes sure that gfxPlatforms gets initialized if it hasn't by now.
   gfxPlatform::GetPlatform();
 
@@ -1627,16 +1661,16 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight) {
   }
 }
 
-void nsBaseWidget::NotifyCompositorSessionLost(CompositorSession* aSession) {
+void nsIWidget::NotifyCompositorSessionLost(CompositorSession* aSession) {
   MOZ_ASSERT(aSession == mCompositorSession);
   DestroyLayerManager();
 }
 
-bool nsBaseWidget::ShouldUseOffMainThreadCompositing() {
+bool nsIWidget::ShouldUseOffMainThreadCompositing() {
   return gfxPlatform::UsesOffMainThreadCompositing();
 }
 
-WindowRenderer* nsBaseWidget::GetWindowRenderer() {
+WindowRenderer* nsIWidget::GetWindowRenderer() {
   if (!mWindowRenderer) {
     if (!mShutdownObserver) {
       // We are shutting down, do not try to re-create a LayerManager
@@ -1654,22 +1688,22 @@ WindowRenderer* nsBaseWidget::GetWindowRenderer() {
   return mWindowRenderer;
 }
 
-WindowRenderer* nsBaseWidget::CreateFallbackRenderer() {
+WindowRenderer* nsIWidget::CreateFallbackRenderer() {
   return new FallbackRenderer;
 }
 
-CompositorBridgeChild* nsBaseWidget::GetRemoteRenderer() {
+CompositorBridgeChild* nsIWidget::GetRemoteRenderer() {
   return mCompositorBridgeChild;
 }
 
-void nsBaseWidget::ClearCachedWebrenderResources() {
+void nsIWidget::ClearCachedWebrenderResources() {
   if (!mWindowRenderer || !mWindowRenderer->AsWebRender()) {
     return;
   }
   mWindowRenderer->AsWebRender()->ClearCachedResources();
 }
 
-bool nsBaseWidget::SetNeedFastSnaphot() {
+bool nsIWidget::SetNeedFastSnaphot() {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!mCompositorSession);
 
@@ -1681,18 +1715,18 @@ bool nsBaseWidget::SetNeedFastSnaphot() {
   return true;
 }
 
-already_AddRefed<gfx::DrawTarget> nsBaseWidget::StartRemoteDrawing() {
+already_AddRefed<gfx::DrawTarget> nsIWidget::StartRemoteDrawing() {
   return nullptr;
 }
 
-uint32_t nsBaseWidget::GetGLFrameBufferFormat() { return LOCAL_GL_RGBA; }
+uint32_t nsIWidget::GetGLFrameBufferFormat() { return LOCAL_GL_RGBA; }
 
 //-------------------------------------------------------------------------
 //
 // Destroy the window
 //
 //-------------------------------------------------------------------------
-void nsBaseWidget::OnDestroy() {
+void nsIWidget::OnDestroy() {
   if (mTextEventDispatcher) {
     mTextEventDispatcher->OnDestroyWidget();
     // Don't release it until this widget actually released because after this
@@ -1706,7 +1740,7 @@ void nsBaseWidget::OnDestroy() {
 }
 
 /* static */
-DesktopIntPoint nsBaseWidget::ConstrainPositionToBounds(
+DesktopIntPoint nsIWidget::ConstrainPositionToBounds(
     const DesktopIntPoint& aPoint, const DesktopIntSize& aSize,
     const DesktopIntRect& aScreenRect) {
   DesktopIntPoint point = aPoint;
@@ -1739,7 +1773,7 @@ DesktopIntPoint nsBaseWidget::ConstrainPositionToBounds(
   return point;
 }
 
-void nsBaseWidget::MoveClient(const DesktopPoint& aOffset) {
+void nsIWidget::MoveClient(const DesktopPoint& aOffset) {
   LayoutDeviceIntPoint clientOffset(GetClientOffset());
 
   // GetClientOffset returns device pixels; scale back to desktop pixels
@@ -1754,7 +1788,7 @@ void nsBaseWidget::MoveClient(const DesktopPoint& aOffset) {
   }
 }
 
-void nsBaseWidget::ResizeClient(const DesktopSize& aSize, bool aRepaint) {
+void nsIWidget::ResizeClient(const DesktopSize& aSize, bool aRepaint) {
   NS_ASSERTION((aSize.width >= 0), "Negative width passed to ResizeClient");
   NS_ASSERTION((aSize.height >= 0), "Negative height passed to ResizeClient");
 
@@ -1777,7 +1811,7 @@ void nsBaseWidget::ResizeClient(const DesktopSize& aSize, bool aRepaint) {
   }
 }
 
-void nsBaseWidget::ResizeClient(const DesktopRect& aRect, bool aRepaint) {
+void nsIWidget::ResizeClient(const DesktopRect& aRect, bool aRepaint) {
   NS_ASSERTION((aRect.Width() >= 0), "Negative width passed to ResizeClient");
   NS_ASSERTION((aRect.Height() >= 0), "Negative height passed to ResizeClient");
 
@@ -1814,23 +1848,23 @@ void nsBaseWidget::ResizeClient(const DesktopRect& aRect, bool aRepaint) {
  * overridden
  *
  **/
-LayoutDeviceIntRect nsBaseWidget::GetClientBounds() { return GetBounds(); }
+LayoutDeviceIntRect nsIWidget::GetClientBounds() { return GetBounds(); }
 
 /**
  * If the implementation of nsWindow supports borders this method MUST be
  * overridden
  *
  **/
-LayoutDeviceIntRect nsBaseWidget::GetBounds() { return mBounds; }
+LayoutDeviceIntRect nsIWidget::GetBounds() { return mBounds; }
 
 /**
  * If the implementation of nsWindow uses a local coordinate system within the
  *window, this method must be overridden
  *
  **/
-LayoutDeviceIntRect nsBaseWidget::GetScreenBounds() { return GetBounds(); }
+LayoutDeviceIntRect nsIWidget::GetScreenBounds() { return GetBounds(); }
 
-nsresult nsBaseWidget::GetRestoredBounds(LayoutDeviceIntRect& aRect) {
+nsresult nsIWidget::GetRestoredBounds(LayoutDeviceIntRect& aRect) {
   if (SizeMode() != nsSizeMode_Normal) {
     return NS_ERROR_FAILURE;
   }
@@ -1838,15 +1872,15 @@ nsresult nsBaseWidget::GetRestoredBounds(LayoutDeviceIntRect& aRect) {
   return NS_OK;
 }
 
-LayoutDeviceIntPoint nsBaseWidget::GetClientOffset() {
+LayoutDeviceIntPoint nsIWidget::GetClientOffset() {
   return LayoutDeviceIntPoint(0, 0);
 }
 
-uint32_t nsBaseWidget::GetMaxTouchPoints() const { return 0; }
+uint32_t nsIWidget::GetMaxTouchPoints() const { return 0; }
 
-bool nsBaseWidget::HasPendingInputEvent() { return false; }
+bool nsIWidget::HasPendingInputEvent() { return false; }
 
-bool nsBaseWidget::ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) {
+bool nsIWidget::ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) {
   return false;
 }
 
@@ -1867,14 +1901,14 @@ static bool ResolveIconNameHelper(nsIFile* aFile, const nsAString& aIconName,
 
 /**
  * Resolve the given icon name into a local file object.  This method is
- * intended to be called by subclasses of nsBaseWidget.  aIconSuffix is a
+ * intended to be called by subclasses of nsIWidget.  aIconSuffix is a
  * platform specific icon file suffix (e.g., ".ico" under Win32).
  *
  * If no file is found matching the given parameters, then null is returned.
  */
-void nsBaseWidget::ResolveIconName(const nsAString& aIconName,
-                                   const nsAString& aIconSuffix,
-                                   nsIFile** aResult) {
+void nsIWidget::ResolveIconName(const nsAString& aIconName,
+                                const nsAString& aIconSuffix,
+                                nsIFile** aResult) {
   *aResult = nullptr;
 
   nsCOMPtr<nsIProperties> dirSvc =
@@ -1909,7 +1943,7 @@ void nsBaseWidget::ResolveIconName(const nsAString& aIconName,
     NS_ADDREF(*aResult = file);
 }
 
-void nsBaseWidget::SetSizeConstraints(const SizeConstraints& aConstraints) {
+void nsIWidget::SetSizeConstraints(const SizeConstraints& aConstraints) {
   mSizeConstraints = aConstraints;
 
   // Popups are constrained during layout, and we don't want to synchronously
@@ -1942,17 +1976,17 @@ void nsBaseWidget::SetSizeConstraints(const SizeConstraints& aConstraints) {
   }
 }
 
-const widget::SizeConstraints nsBaseWidget::GetSizeConstraints() {
+const widget::SizeConstraints nsIWidget::GetSizeConstraints() {
   return mSizeConstraints;
 }
 
 // static
-nsIRollupListener* nsBaseWidget::GetActiveRollupListener() {
+nsIRollupListener* nsIWidget::GetActiveRollupListener() {
   // TODO: Simplify this.
   return nsXULPopupManager::GetInstance();
 }
 
-void nsBaseWidget::NotifyWindowDestroyed() {
+void nsIWidget::NotifyWindowDestroyed() {
   if (!mWidgetListener) return;
 
   nsCOMPtr<nsIAppWindow> window = mWidgetListener->GetAppWindow();
@@ -1962,8 +1996,8 @@ void nsBaseWidget::NotifyWindowDestroyed() {
   }
 }
 
-void nsBaseWidget::NotifyWindowMoved(int32_t aX, int32_t aY,
-                                     ByMoveToRect aByMoveToRect) {
+void nsIWidget::NotifyWindowMoved(int32_t aX, int32_t aY,
+                                  ByMoveToRect aByMoveToRect) {
   if (mWidgetListener) {
     mWidgetListener->WindowMoved(this, aX, aY, aByMoveToRect);
   }
@@ -1973,7 +2007,7 @@ void nsBaseWidget::NotifyWindowMoved(int32_t aX, int32_t aY,
   }
 }
 
-void nsBaseWidget::NotifySizeMoveDone() {
+void nsIWidget::NotifySizeMoveDone() {
   if (!mWidgetListener) {
     return;
   }
@@ -1982,11 +2016,11 @@ void nsBaseWidget::NotifySizeMoveDone() {
   }
 }
 
-void nsBaseWidget::NotifyThemeChanged(ThemeChangeKind aKind) {
+void nsIWidget::NotifyThemeChanged(ThemeChangeKind aKind) {
   LookAndFeel::NotifyChangedAllWindows(aKind);
 }
 
-nsresult nsBaseWidget::NotifyIME(const IMENotification& aIMENotification) {
+nsresult nsIWidget::NotifyIME(const IMENotification& aIMENotification) {
   if (mIMEHasQuit) {
     return NS_OK;
   }
@@ -2022,14 +2056,14 @@ nsresult nsBaseWidget::NotifyIME(const IMENotification& aIMENotification) {
   }
 }
 
-void nsBaseWidget::EnsureTextEventDispatcher() {
+void nsIWidget::EnsureTextEventDispatcher() {
   if (mTextEventDispatcher) {
     return;
   }
   mTextEventDispatcher = new TextEventDispatcher(this);
 }
 
-nsIWidget::NativeIMEContext nsBaseWidget::GetNativeIMEContext() {
+nsIWidget::NativeIMEContext nsIWidget::GetNativeIMEContext() {
   if (mTextEventDispatcher && mTextEventDispatcher->GetPseudoIMEContext()) {
     // If we already have a TextEventDispatcher and it's working with
     // a TextInputProcessor, we need to return pseudo IME context since
@@ -2043,12 +2077,12 @@ nsIWidget::NativeIMEContext nsBaseWidget::GetNativeIMEContext() {
   return NativeIMEContext(this);
 }
 
-nsIWidget::TextEventDispatcher* nsBaseWidget::GetTextEventDispatcher() {
+nsIWidget::TextEventDispatcher* nsIWidget::GetTextEventDispatcher() {
   EnsureTextEventDispatcher();
   return mTextEventDispatcher;
 }
 
-void* nsBaseWidget::GetPseudoIMEContext() {
+void* nsIWidget::GetPseudoIMEContext() {
   TextEventDispatcher* dispatcher = GetTextEventDispatcher();
   if (!dispatcher) {
     return nullptr;
@@ -2056,17 +2090,16 @@ void* nsBaseWidget::GetPseudoIMEContext() {
   return dispatcher->GetPseudoIMEContext();
 }
 
-TextEventDispatcherListener*
-nsBaseWidget::GetNativeTextEventDispatcherListener() {
+TextEventDispatcherListener* nsIWidget::GetNativeTextEventDispatcherListener() {
   // TODO: If all platforms supported use of TextEventDispatcher for handling
   //       native IME and keyboard events, this method should be removed since
   //       in such case, this is overridden by all the subclasses.
   return nullptr;
 }
 
-void nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
-                              const ScrollableLayerGuid::ViewID& aViewId,
-                              const CSSRect& aRect, const uint32_t& aFlags) {
+void nsIWidget::ZoomToRect(const uint32_t& aPresShellId,
+                           const ScrollableLayerGuid::ViewID& aViewId,
+                           const CSSRect& aRect, const uint32_t& aFlags) {
   if (!mCompositorSession || !mAPZC) {
     return;
   }
@@ -2077,7 +2110,7 @@ void nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
 
 #ifdef ACCESSIBILITY
 
-a11y::LocalAccessible* nsBaseWidget::GetRootAccessible() {
+a11y::LocalAccessible* nsIWidget::GetRootAccessible() {
   NS_ENSURE_TRUE(mWidgetListener, nullptr);
 
   PresShell* presShell = mWidgetListener->GetPresShell();
@@ -2101,8 +2134,7 @@ a11y::LocalAccessible* nsBaseWidget::GetRootAccessible() {
 
 #endif  // ACCESSIBILITY
 
-void nsBaseWidget::StartAsyncScrollbarDrag(
-    const AsyncDragMetrics& aDragMetrics) {
+void nsIWidget::StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics) {
   if (!AsyncPanZoomEnabled()) {
     return;
   }
@@ -2116,25 +2148,25 @@ void nsBaseWidget::StartAsyncScrollbarDrag(
   mAPZC->StartScrollbarDrag(guid, aDragMetrics);
 }
 
-bool nsBaseWidget::StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,
-                                        const ScrollableLayerGuid& aGuid) {
+bool nsIWidget::StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,
+                                     const ScrollableLayerGuid& aGuid) {
   MOZ_ASSERT(XRE_IsParentProcess() && AsyncPanZoomEnabled());
 
   return mAPZC->StartAutoscroll(aGuid, aAnchorLocation);
 }
 
-void nsBaseWidget::StopAsyncAutoscroll(const ScrollableLayerGuid& aGuid) {
+void nsIWidget::StopAsyncAutoscroll(const ScrollableLayerGuid& aGuid) {
   MOZ_ASSERT(XRE_IsParentProcess() && AsyncPanZoomEnabled());
 
   mAPZC->StopAutoscroll(aGuid);
 }
 
-LayersId nsBaseWidget::GetRootLayerTreeId() {
+LayersId nsIWidget::GetRootLayerTreeId() {
   return mCompositorSession ? mCompositorSession->RootLayerTreeId()
                             : LayersId{0};
 }
 
-already_AddRefed<widget::Screen> nsBaseWidget::GetWidgetScreen() {
+already_AddRefed<widget::Screen> nsIWidget::GetWidgetScreen() {
   ScreenManager& screenManager = ScreenManager::GetSingleton();
   LayoutDeviceIntRect bounds = GetScreenBounds();
   DesktopIntRect deskBounds = RoundedToInt(bounds / GetDesktopToDeviceScale());
@@ -2234,57 +2266,7 @@ CSSToLayoutDeviceScale nsIWidget::GetFallbackDefaultScale() {
   return s->GetCSSToLayoutDeviceScale(Screen::IncludeOSZoom::No);
 }
 
-MultiTouchInput nsBaseWidget::UpdateSynthesizedTouchState(
-    MultiTouchInput* aState, mozilla::TimeStamp aTimeStamp, uint32_t aPointerId,
-    TouchPointerState aPointerState, LayoutDeviceIntPoint aPoint,
-    double aPointerPressure, uint32_t aPointerOrientation) {
-  ScreenIntPoint pointerScreenPoint = ViewAs<ScreenPixel>(
-      aPoint, PixelCastJustification::LayoutDeviceIsScreenForBounds);
-
-  // We can't dispatch *aState directly because (a) dispatching
-  // it might inadvertently modify it and (b) in the case of touchend or
-  // touchcancel events aState will hold the touches that are
-  // still down whereas the input dispatched needs to hold the removed
-  // touch(es). We use |inputToDispatch| for this purpose.
-  MultiTouchInput inputToDispatch;
-  inputToDispatch.mInputType = MULTITOUCH_INPUT;
-  inputToDispatch.mTimeStamp = aTimeStamp;
-
-  int32_t index = aState->IndexOfTouch((int32_t)aPointerId);
-  if (aPointerState == TOUCH_CONTACT) {
-    if (index >= 0) {
-      // found an existing touch point, update it
-      SingleTouchData& point = aState->mTouches[index];
-      point.mScreenPoint = pointerScreenPoint;
-      point.mRotationAngle = (float)aPointerOrientation;
-      point.mForce = (float)aPointerPressure;
-      inputToDispatch.mType = MultiTouchInput::MULTITOUCH_MOVE;
-    } else {
-      // new touch point, add it
-      aState->mTouches.AppendElement(SingleTouchData(
-          (int32_t)aPointerId, pointerScreenPoint, ScreenSize(0, 0),
-          (float)aPointerOrientation, (float)aPointerPressure));
-      inputToDispatch.mType = MultiTouchInput::MULTITOUCH_START;
-    }
-    inputToDispatch.mTouches = aState->mTouches;
-  } else {
-    MOZ_ASSERT(aPointerState == TOUCH_REMOVE || aPointerState == TOUCH_CANCEL);
-    // a touch point is being lifted, so remove it from the stored list
-    if (index >= 0) {
-      aState->mTouches.RemoveElementAt(index);
-    }
-    inputToDispatch.mType =
-        (aPointerState == TOUCH_REMOVE ? MultiTouchInput::MULTITOUCH_END
-                                       : MultiTouchInput::MULTITOUCH_CANCEL);
-    inputToDispatch.mTouches.AppendElement(SingleTouchData(
-        (int32_t)aPointerId, pointerScreenPoint, ScreenSize(0, 0),
-        (float)aPointerOrientation, (float)aPointerPressure));
-  }
-
-  return inputToDispatch;
-}
-
-void nsBaseWidget::NotifyLiveResizeStarted() {
+void nsIWidget::NotifyLiveResizeStarted() {
   // If we have mLiveResizeListeners already non-empty, we should notify those
   // listeners that the resize stopped before starting anew. In theory this
   // should never happen because we shouldn't get nested live resize actions.
@@ -2306,7 +2288,7 @@ void nsBaseWidget::NotifyLiveResizeStarted() {
   }
 }
 
-void nsBaseWidget::NotifyLiveResizeStopped() {
+void nsIWidget::NotifyLiveResizeStopped() {
   if (!mLiveResizeListeners.IsEmpty()) {
     for (uint32_t i = 0; i < mLiveResizeListeners.Length(); i++) {
       mLiveResizeListeners[i]->LiveResizeStopped();
@@ -2315,8 +2297,8 @@ void nsBaseWidget::NotifyLiveResizeStopped() {
   }
 }
 
-nsresult nsBaseWidget::AsyncEnableDragDrop(bool aEnable) {
-  RefPtr<nsBaseWidget> kungFuDeathGrip = this;
+nsresult nsIWidget::AsyncEnableDragDrop(bool aEnable) {
+  RefPtr<nsIWidget> kungFuDeathGrip = this;
   return NS_DispatchToCurrentThreadQueue(
       NS_NewRunnableFunction(
           "AsyncEnableDragDropFn",
@@ -2324,15 +2306,14 @@ nsresult nsBaseWidget::AsyncEnableDragDrop(bool aEnable) {
       kAsyncDragDropTimeout, EventQueuePriority::Idle);
 }
 
-void nsBaseWidget::SwipeFinished() {
+void nsIWidget::SwipeFinished() {
   if (mSwipeTracker) {
     mSwipeTracker->Destroy();
     mSwipeTracker = nullptr;
   }
 }
 
-void nsBaseWidget::ReportSwipeStarted(uint64_t aInputBlockId,
-                                      bool aStartSwipe) {
+void nsIWidget::ReportSwipeStarted(uint64_t aInputBlockId, bool aStartSwipe) {
   if (mSwipeEventQueue && mSwipeEventQueue->inputBlockId == aInputBlockId) {
     if (aStartSwipe) {
       PanGestureInput& startEvent = mSwipeEventQueue->queuedEvents[0];
@@ -2350,7 +2331,7 @@ void nsBaseWidget::ReportSwipeStarted(uint64_t aInputBlockId,
   }
 }
 
-void nsBaseWidget::TrackScrollEventAsSwipe(
+void nsIWidget::TrackScrollEventAsSwipe(
     const mozilla::PanGestureInput& aSwipeStartEvent,
     uint32_t aAllowedDirections, uint64_t aInputBlockId) {
   // If a swipe is currently being tracked kill it -- it's been interrupted
@@ -2379,7 +2360,7 @@ void nsBaseWidget::TrackScrollEventAsSwipe(
   }
 }
 
-nsBaseWidget::SwipeInfo nsBaseWidget::SendMayStartSwipe(
+nsIWidget::SwipeInfo nsIWidget::SendMayStartSwipe(
     const mozilla::PanGestureInput& aSwipeStartEvent) {
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
 
@@ -2405,7 +2386,7 @@ nsBaseWidget::SwipeInfo nsBaseWidget::SendMayStartSwipe(
   return result;
 }
 
-WidgetWheelEvent nsBaseWidget::MayStartSwipeForAPZ(
+WidgetWheelEvent nsIWidget::MayStartSwipeForAPZ(
     const PanGestureInput& aPanInput, const APZEventResult& aApzResult) {
   WidgetWheelEvent event = aPanInput.ToWidgetEvent(this);
 
@@ -2454,7 +2435,7 @@ WidgetWheelEvent nsBaseWidget::MayStartSwipeForAPZ(
   return event;
 }
 
-bool nsBaseWidget::MayStartSwipeForNonAPZ(const PanGestureInput& aPanInput) {
+bool nsIWidget::MayStartSwipeForNonAPZ(const PanGestureInput& aPanInput) {
   // Ignore swipe-to-navigation in PiP window.
   if (mIsPIPWindow) {
     return false;
@@ -2510,7 +2491,7 @@ bool nsBaseWidget::MayStartSwipeForNonAPZ(const PanGestureInput& aPanInput) {
   return true;
 }
 
-LayersId nsBaseWidget::GetLayersId() const {
+LayersId nsIWidget::GetLayersId() const {
   return mCompositorSession ? mCompositorSession->RootLayerTreeId()
                             : LayersId{0};
 }
@@ -2544,7 +2525,59 @@ already_AddRefed<nsIBidiKeyboard> nsIWidget::CreateBidiKeyboardInner() {
 }
 #endif
 
-namespace mozilla::widget {
+namespace mozilla {
+
+MultiTouchInput UpdateSynthesizedTouchState(
+    MultiTouchInput* aState, TimeStamp aTimeStamp, uint32_t aPointerId,
+    TouchPointerState aPointerState, LayoutDeviceIntPoint aPoint,
+    double aPointerPressure, uint32_t aPointerOrientation) {
+  ScreenIntPoint pointerScreenPoint = ViewAs<ScreenPixel>(
+      aPoint, PixelCastJustification::LayoutDeviceIsScreenForBounds);
+
+  // We can't dispatch *aState directly because (a) dispatching
+  // it might inadvertently modify it and (b) in the case of touchend or
+  // touchcancel events aState will hold the touches that are
+  // still down whereas the input dispatched needs to hold the removed
+  // touch(es). We use |inputToDispatch| for this purpose.
+  MultiTouchInput inputToDispatch;
+  inputToDispatch.mInputType = MULTITOUCH_INPUT;
+  inputToDispatch.mTimeStamp = aTimeStamp;
+
+  int32_t index = aState->IndexOfTouch((int32_t)aPointerId);
+  if (aPointerState == TOUCH_CONTACT) {
+    if (index >= 0) {
+      // found an existing touch point, update it
+      SingleTouchData& point = aState->mTouches[index];
+      point.mScreenPoint = pointerScreenPoint;
+      point.mRotationAngle = (float)aPointerOrientation;
+      point.mForce = (float)aPointerPressure;
+      inputToDispatch.mType = MultiTouchInput::MULTITOUCH_MOVE;
+    } else {
+      // new touch point, add it
+      aState->mTouches.AppendElement(SingleTouchData(
+          (int32_t)aPointerId, pointerScreenPoint, ScreenSize(0, 0),
+          (float)aPointerOrientation, (float)aPointerPressure));
+      inputToDispatch.mType = MultiTouchInput::MULTITOUCH_START;
+    }
+    inputToDispatch.mTouches = aState->mTouches;
+  } else {
+    MOZ_ASSERT(aPointerState == TOUCH_REMOVE || aPointerState == TOUCH_CANCEL);
+    // a touch point is being lifted, so remove it from the stored list
+    if (index >= 0) {
+      aState->mTouches.RemoveElementAt(index);
+    }
+    inputToDispatch.mType =
+        (aPointerState == TOUCH_REMOVE ? MultiTouchInput::MULTITOUCH_END
+                                       : MultiTouchInput::MULTITOUCH_CANCEL);
+    inputToDispatch.mTouches.AppendElement(SingleTouchData(
+        (int32_t)aPointerId, pointerScreenPoint, ScreenSize(0, 0),
+        (float)aPointerOrientation, (float)aPointerPressure));
+  }
+
+  return inputToDispatch;
+}
+
+namespace widget {
 
 const char* ToChar(InputContext::Origin aOrigin) {
   switch (aOrigin) {
@@ -3338,7 +3371,8 @@ void IMENotification::TextChangeDataBase::Test() {
 
 #endif  // #ifdef DEBUG
 
-}  // namespace mozilla::widget
+}  // namespace widget
+}  // namespace mozilla
 
 #ifdef DEBUG
 //////////////////////////////////////////////////////////////
@@ -3359,7 +3393,7 @@ static PrefPair debug_PrefValues[] = {
     {"nglayout.debug.paint_dumping", false}};
 
 //////////////////////////////////////////////////////////////
-bool nsBaseWidget::debug_GetCachedBoolPref(const char* aPrefName) {
+bool nsIWidget::debug_GetCachedBoolPref(const char* aPrefName) {
   NS_ASSERTION(nullptr != aPrefName, "cmon, pref name is null.");
 
   for (uint32_t i = 0; i < std::size(debug_PrefValues); i++) {
@@ -3439,9 +3473,9 @@ static int32_t _GetPrintCount() {
 }
 //////////////////////////////////////////////////////////////
 /* static */
-void nsBaseWidget::debug_DumpEvent(FILE* aFileOut, nsIWidget* aWidget,
-                                   WidgetGUIEvent* aGuiEvent,
-                                   const char* aWidgetName, int32_t aWindowID) {
+void nsIWidget::debug_DumpEvent(FILE* aFileOut, nsIWidget* aWidget,
+                                WidgetGUIEvent* aGuiEvent,
+                                const char* aWidgetName, int32_t aWindowID) {
   if (aGuiEvent->mMessage == eMouseMove) {
     if (!debug_GetCachedBoolPref("nglayout.debug.motion_event_dumping")) return;
   }
@@ -3461,10 +3495,10 @@ void nsBaseWidget::debug_DumpEvent(FILE* aFileOut, nsIWidget* aWidget,
 }
 //////////////////////////////////////////////////////////////
 /* static */
-void nsBaseWidget::debug_DumpPaintEvent(FILE* aFileOut, nsIWidget* aWidget,
-                                        const nsIntRegion& aRegion,
-                                        const char* aWidgetName,
-                                        int32_t aWindowID) {
+void nsIWidget::debug_DumpPaintEvent(FILE* aFileOut, nsIWidget* aWidget,
+                                     const nsIntRegion& aRegion,
+                                     const char* aWidgetName,
+                                     int32_t aWindowID) {
   NS_ASSERTION(nullptr != aFileOut, "cmon, null output FILE");
   NS_ASSERTION(nullptr != aWidget, "cmon, the widget is null");
 
@@ -3481,10 +3515,10 @@ void nsBaseWidget::debug_DumpPaintEvent(FILE* aFileOut, nsIWidget* aWidget,
 }
 //////////////////////////////////////////////////////////////
 /* static */
-void nsBaseWidget::debug_DumpInvalidate(FILE* aFileOut, nsIWidget* aWidget,
-                                        const LayoutDeviceIntRect* aRect,
-                                        const char* aWidgetName,
-                                        int32_t aWindowID) {
+void nsIWidget::debug_DumpInvalidate(FILE* aFileOut, nsIWidget* aWidget,
+                                     const LayoutDeviceIntRect* aRect,
+                                     const char* aWidgetName,
+                                     int32_t aWindowID) {
   if (!debug_GetCachedBoolPref("nglayout.debug.invalidate_dumping")) return;
 
   NS_ASSERTION(nullptr != aFileOut, "cmon, null output FILE");

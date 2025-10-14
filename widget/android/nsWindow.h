@@ -9,7 +9,7 @@
 
 #include "AndroidGraphics.h"
 #include "mozilla/layers/CompositorScrollUpdate.h"
-#include "nsBaseWidget.h"
+#include "nsIWidget.h"
 #include "gfxPoint.h"
 #include "nsIUserIdleServiceInternal.h"
 #include "nsTArray.h"
@@ -27,6 +27,7 @@ struct ANPEvent;
 
 namespace mozilla {
 class WidgetTouchEvent;
+class MouseInput;
 
 namespace layers {
 class CompositorBridgeChild;
@@ -53,16 +54,16 @@ class SessionAccessibility;
 }  // namespace a11y
 }  // namespace mozilla
 
-class nsWindow final : public nsBaseWidget {
+class nsWindow final : public nsIWidget {
  private:
   virtual ~nsWindow();
 
  public:
-  using nsBaseWidget::GetWindowRenderer;
+  using nsIWidget::GetWindowRenderer;
 
   nsWindow();
 
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsWindow, nsBaseWidget)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsWindow, nsIWidget)
 
   static void InitNatives();
   void OnGeckoViewReady();
@@ -154,7 +155,7 @@ class nsWindow final : public nsBaseWidget {
   // nsIWidget
   //
 
-  using nsBaseWidget::Create;  // for Create signature not overridden here
+  using nsIWidget::Create;  // for Create signature not overridden here
   [[nodiscard]] nsresult Create(nsIWidget* aParent,
                                 const LayoutDeviceIntRect& aRect,
                                 InitData* aInitData) override;

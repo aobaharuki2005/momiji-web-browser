@@ -745,7 +745,7 @@ class nsAutoRetainUIKitObject {
 
 @end
 
-NS_IMPL_ISUPPORTS_INHERITED(nsWindow, nsBaseWidget, nsWindow);
+NS_IMPL_ISUPPORTS_INHERITED(nsWindow, nsIWidget, nsWindow);
 
 nsWindow::nsWindow()
     : mNativeView(nullptr),
@@ -792,7 +792,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
   mWindowType = WindowType::TopLevel;
   mBorderStyle = BorderStyle::Default;
 
-  nsBaseWidget::BaseCreate(aParent, aInitData);
+  nsIWidget::BaseCreate(aParent, aInitData);
 
   NS_ASSERTION(IsTopLevel() || parent,
                "non top level window doesn't have a parent!");
@@ -839,13 +839,13 @@ void nsWindow::Destroy() {
 
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
 
-  nsBaseWidget::Destroy();
+  nsIWidget::Destroy();
 
   // ReportDestroyEvent();
 
   TearDownView();
 
-  nsBaseWidget::OnDestroy();
+  nsIWidget::OnDestroy();
 }
 
 void nsWindow::Show(bool aState) {
@@ -932,7 +932,7 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
   mSizeMode = static_cast<nsSizeMode>(aMode);
   if (aMode == nsSizeMode_Maximized || aMode == nsSizeMode_Fullscreen) {
     // Resize to fill screen
-    nsBaseWidget::InfallibleMakeFullScreen(true);
+    nsIWidget::InfallibleMakeFullScreen(true);
   }
   ReportSizeModeEvent(aMode);
 }

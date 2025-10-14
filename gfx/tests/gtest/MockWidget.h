@@ -9,7 +9,7 @@
 
 #include "mozilla/gfx/Point.h"
 #include "mozilla/widget/InProcessCompositorWidget.h"
-#include "nsBaseWidget.h"
+#include "nsIWidget.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 
@@ -19,7 +19,7 @@ using mozilla::gl::GLContextProvider;
 
 using mozilla::gfx::IntSize;
 
-class MockWidget : public nsBaseWidget {
+class MockWidget : public nsIWidget {
  public:
   MockWidget() : mCompWidth(0), mCompHeight(0) {}
   MockWidget(int aWidth, int aHeight)

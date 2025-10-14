@@ -6218,7 +6218,7 @@ void PresShell::ProcessSynthMouseOrPointerMoveEvent(
 
   if (pointShell) {
     // Since this gets run in a refresh tick there isn't an InputAPZContext on
-    // the stack from the nsBaseWidget. We need to simulate one with at least
+    // the stack from the nsIWidget. We need to simulate one with at least
     // the correct target guid, so that the correct callback transform gets
     // applied if this event goes to a child process. The input block id is set
     // to 0 because this is a synthetic event which doesn't really belong to any

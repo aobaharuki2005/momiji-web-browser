@@ -9,10 +9,11 @@
 
 #include <windows.h>
 
-#include "nsBaseWidget.h"
+#include "nsIWidget.h"
 #include "Units.h"
+#include "mozilla/widget/WindowOcclusionState.h"
 
-class MockWinWidget : public nsBaseWidget {
+class MockWinWidget : public nsIWidget {
  public:
   static RefPtr<MockWinWidget> Create(DWORD aStyle, DWORD aExStyle,
                                       const LayoutDeviceIntRect& aRect);

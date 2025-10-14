@@ -74,7 +74,6 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/toolkit/library/buildid_reader_ffi.h"
 #include "nsAppRunner.h"
-#include "nsBaseWidget.h"
 #include "nsContentUtils.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
@@ -107,6 +106,7 @@
 #include "nsIURI.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"
+#include "nsIWidget.h"
 #include "nsIXULRuntime.h"
 #include "nsLayoutUtils.h"
 #include "nsNameSpaceManager.h"
@@ -1107,7 +1107,7 @@ bool nsFrameLoader::ShowRemoteFrame(nsSubDocumentFrame* aFrame) {
 
     // We never want to host remote frameloaders in simple popups, like menus.
     nsIWidget* widget = nsContentUtils::WidgetForContent(mOwnerContent);
-    if (!widget || static_cast<nsBaseWidget*>(widget)->IsSmallPopup()) {
+    if (!widget || widget->IsSmallPopup()) {
       return false;
     }
 
