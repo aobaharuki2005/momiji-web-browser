@@ -13238,7 +13238,7 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
     JS::Prefs::set_experimental_error_iserror(true);
   }
 
-  bool symbolsAsWeakMapKeys = false;
+  bool symbolsAsWeakMapKeys = true;
   if (op.getBoolOption("enable-symbols-as-weakmap-keys")) {
     symbolsAsWeakMapKeys = true;
   }
