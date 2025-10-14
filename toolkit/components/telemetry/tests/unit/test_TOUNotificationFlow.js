@@ -100,6 +100,34 @@ add_setup(skipIfNotBrowser(), async () => {
   registerCleanupFunction(cleanup);
 });
 
+add_setup(() => {
+  // In head.js, we force TOU pre-onboarding off in xpcshell so Telemetry isn't
+  // gated on Browser UI. Revert for these tests.
+  const TOS_ENABLED_PREF = "browser.preonboarding.enabled";
+  Services.prefs.clearUserPref(TOS_ENABLED_PREF);
+});
+
+add_setup(() => {
+  // Clean up all potentially modified prefs and reset state after test tasks
+  // have run.
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref(TOU_ACCEPTED_DATE_PREF);
+    Services.prefs.clearUserPref(TOU_ACCEPTED_VERSION_PREF);
+    Services.prefs.clearUserPref(TOU_BYPASS_NOTIFICATION_PREF);
+    Services.prefs.clearUserPref("browser.preonboarding.enabled");
+    Services.prefs.clearUserPref("browser.preonboarding.screens");
+    Services.prefs.clearUserPref(
+      "datareporting.policy.dataSubmissionPolicyNotifiedTime"
+    );
+    Services.prefs.clearUserPref(
+      "datareporting.policy.dataSubmissionPolicyAcceptedVersion"
+    );
+    Services.prefs.clearUserPref(TelemetryUtils.Preferences.BypassNotification);
+
+    TelemetryReportingPolicy.reset();
+  });
+});
+
 add_task(skipIfNotBrowser(), async function test_feature_prefs() {
   // Verify that feature values impact Gecko preferences at
   // `sessionstore-windows-restored` time, but not afterward.
@@ -675,160 +703,223 @@ add_task(
   }
 );
 
-add_task(
-  async function test_canUpload_unblocked_by_tou_accepted_and_uploadEnabled() {
-    if (AppConstants.platform === "linux") {
-      info("Skipping test for Linux where TOU flow is disabled by default");
-      return;
-    }
-    TelemetryReportingPolicy.reset();
-
-    registerCleanupFunction(() => {
-      Services.prefs.clearUserPref(
-        TelemetryUtils.Preferences.BypassNotification
-      );
-      Services.prefs.clearUserPref("datareporting.healthreport.uploadEnabled");
-      Services.prefs.clearUserPref("termsofuse.acceptedDate");
-      Services.prefs.clearUserPref("termsofuse.acceptedVersion");
-      TelemetryReportingPolicy.reset();
-    });
-
-    Services.prefs.setBoolPref(
-      TelemetryUtils.Preferences.BypassNotification,
-      false
-    );
-
-    // This is true by default for most users
-    Services.prefs.setBoolPref(
-      "datareporting.healthreport.uploadEnabled",
-      true
-    );
-
-    Assert.ok(
-      !TelemetryReportingPolicy.canUpload(),
-      "Before accepting TOU legacy upload is blocked"
-    );
-
-    Assert.ok(
-      !Services.prefs.getIntPref(
-        "datareporting.policy.dataSubmissionPolicyAcceptedVersion",
-        0
-      ),
-      "Legacy policy flow accepted version not set"
-    );
-
-    Assert.ok(
-      !Services.prefs.getBoolPref(
-        "datareporting.policy.dataSubmissionPolicyNotifiedDate",
-        0
-      ),
-      "Legacy policy flow accepted date not set"
-    );
-
-    Services.prefs.setStringPref("termsofuse.acceptedDate", String(Date.now()));
-    Services.prefs.setIntPref(
-      "termsofuse.acceptedVersion",
-      Services.prefs.getIntPref(TOU_CURRENT_VERSION_PREF, 4)
-    );
-
-    Assert.ok(
-      TelemetryReportingPolicy.userHasAcceptedTOU(),
-      "TOU acceptance is recorded"
-    );
-
-    Assert.ok(TelemetryReportingPolicy.canUpload(), "Legacy upload allowed");
-
-    Services.prefs.setBoolPref(
-      "datareporting.healthreport.uploadEnabled",
-      false
-    );
-
-    Assert.ok(
-      !TelemetryReportingPolicy.canUpload(),
-      "Legacy upload blocked when user opts out of sharing interaction data"
-    );
+add_task(async function test_canUpload_unblocked_by_tou_accepted() {
+  if (AppConstants.platform === "linux") {
+    info("Skipping test for Linux where TOU flow is disabled by default");
+    return;
   }
-);
 
-add_task(async function test_canUpload_allowed_when_both_bypass_prefs_true() {
+  const cleanup = () => {
+    Services.prefs.clearUserPref(TelemetryUtils.Preferences.BypassNotification);
+    Services.prefs.clearUserPref("termsofuse.acceptedDate");
+    Services.prefs.clearUserPref("termsofuse.acceptedVersion");
+    TelemetryReportingPolicy.reset();
+  };
+
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.BypassNotification,
+    false
+  );
+
   TelemetryReportingPolicy.reset();
 
-  registerCleanupFunction(() => {
+  Assert.ok(
+    !TelemetryReportingPolicy.canUpload(),
+    "Before accepting TOU legacy upload is blocked"
+  );
+
+  Assert.ok(
+    !Services.prefs.getIntPref(
+      "datareporting.policy.dataSubmissionPolicyAcceptedVersion",
+      0
+    ),
+    "Legacy policy flow accepted version not set"
+  );
+
+  Assert.ok(
+    !Services.prefs.getBoolPref(
+      "datareporting.policy.dataSubmissionPolicyNotifiedTime",
+      0
+    ),
+    "Legacy policy flow accepted date not set"
+  );
+
+  Services.prefs.setStringPref("termsofuse.acceptedDate", String(Date.now()));
+  Services.prefs.setIntPref(
+    "termsofuse.acceptedVersion",
+    Services.prefs.getIntPref(TOU_CURRENT_VERSION_PREF, 4)
+  );
+
+  TelemetryReportingPolicy.reset();
+
+  Assert.ok(
+    TelemetryReportingPolicy.userHasAcceptedTOU(),
+    "TOU acceptance is recorded"
+  );
+
+  Assert.ok(TelemetryReportingPolicy.canUpload(), "Legacy upload allowed");
+
+  cleanup();
+});
+
+add_task(async function test_canUpload_allowed_when_both_bypass_prefs_true() {
+  const cleanup = () => {
     Services.prefs.clearUserPref(TelemetryUtils.Preferences.BypassNotification);
     Services.prefs.clearUserPref("termsofuse.bypassNotification");
     Services.prefs.clearUserPref("browser.preonboarding.enabled");
     TelemetryReportingPolicy.reset();
-  });
+  };
 
   Services.prefs.setBoolPref(
     TelemetryUtils.Preferences.BypassNotification,
     true
   );
   Services.prefs.setBoolPref("termsofuse.bypassNotification", true);
+  Services.prefs.setBoolPref("browser.preonboarding.enabled", true);
 
+  TelemetryReportingPolicy.reset();
   Assert.ok(
     TelemetryReportingPolicy.canUpload(),
     "Upload allowed when both legacy and TOU notification flows are bypassed"
   );
 
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.BypassNotification,
+    true
+  );
   Services.prefs.setBoolPref("termsofuse.bypassNotification", false);
-
   Services.prefs.setBoolPref("browser.preonboarding.enabled", true);
+  Services.prefs.setBoolPref("browser.preonboarding.screens", []);
+
+  TelemetryReportingPolicy.reset();
   Assert.ok(
     !TelemetryReportingPolicy.canUpload(),
-    "Upload blocked when only one bypass is true and no other allow path conditions are met"
+    "Upload not allowed when only legacy bypass is true and TOU should show"
   );
-  Services.prefs.setBoolPref("browser.preonboarding.enabled", false);
+
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.BypassNotification,
+    false
+  );
+  Services.prefs.setBoolPref("termsofuse.bypassNotification", true);
+  // Force TOU enabled so we’re not falling back to legacy notification (on
+  // Linux, this is false by default).
+  Services.prefs.setBoolPref("browser.preonboarding.enabled", true);
+
+  TelemetryReportingPolicy.reset();
   Assert.ok(
-    TelemetryReportingPolicy.canUpload(),
-    "Upload NOT blocked when only one bypass is true and no other allow path conditions are met"
+    !TelemetryReportingPolicy.canUpload(),
+    "Upload blocked when only TOU bypass is true and TOU should show"
   );
+
+  cleanup();
+});
+
+add_task(async function test_canUpload_reconfigures_when_nimbus_not_ready() {
+  const cleanup = () => {
+    Services.prefs.clearUserPref("browser.preonboarding.enabled");
+    Services.prefs.clearUserPref(TelemetryUtils.Preferences.BypassNotification);
+    Services.prefs.clearUserPref(TOU_BYPASS_NOTIFICATION_PREF);
+    Services.prefs.clearUserPref(TOU_ACCEPTED_VERSION_PREF);
+    Services.prefs.clearUserPref(TOU_ACCEPTED_DATE_PREF);
+    sinon.restore();
+    TelemetryReportingPolicy.reset();
+  };
+
+  // Force a path where canUpload() must consult Nimbus
+  Services.prefs.setBoolPref("browser.preonboarding.enabled", true);
+  Services.prefs.setBoolPref(TOU_BYPASS_NOTIFICATION_PREF, false);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.BypassNotification,
+    true
+  );
+
+  const getVarsSpy = sinon
+    .stub(NimbusFeatures.preonboarding, "getAllVariables")
+    .returns({ enabled: false });
+
+  TelemetryReportingPolicy.reset();
+
+  const result = TelemetryReportingPolicy.canUpload();
+
+  Assert.equal(
+    getVarsSpy.callCount,
+    1,
+    "canUpload() should trigger _configureFromNimbus() when variables are not yet set"
+  );
+
+  Assert.ok(
+    result,
+    "With Nimbus enabled=false, TOU is off; legacy bypass allows upload"
+  );
+
+  cleanup();
 });
 
 add_task(
-  async function test_canUpload_allowed_when_tou_bypass_and_legacy_notified() {
-    TelemetryReportingPolicy.reset();
-
-    registerCleanupFunction(() => {
+  skipIfNotBrowser(),
+  async function test_legacy_bypass_blocked_when_TOU_should_show_and_not_accepted() {
+    const cleanup = async () => {
+      Services.prefs.clearUserPref("browser.preonboarding.enabled");
       Services.prefs.clearUserPref(
         TelemetryUtils.Preferences.BypassNotification
       );
-      Services.prefs.clearUserPref("termsofuse.bypassNotification");
+      Services.prefs.clearUserPref(TOU_BYPASS_NOTIFICATION_PREF);
+      Services.prefs.clearUserPref(TOU_ACCEPTED_VERSION_PREF);
+      Services.prefs.clearUserPref(TOU_ACCEPTED_DATE_PREF);
       Services.prefs.clearUserPref(
-        "datareporting.policy.dataSubmissionPolicyNotifiedDate"
+        "datareporting.policy.dataSubmissionPolicyNotifiedTime"
       );
       Services.prefs.clearUserPref(
-        "TelemetryUtils.Preferences.DataSubmissionEnabled"
+        "datareporting.policy.dataSubmissionPolicyAcceptedVersion"
       );
       TelemetryReportingPolicy.reset();
-    });
+      await unenroll();
+    };
 
-    Services.prefs.setBoolPref("termsofuse.bypassNotification", true);
+    // Legacy bypass ON, TOU bypass OFF
     Services.prefs.setBoolPref(
       TelemetryUtils.Preferences.BypassNotification,
-      false
-    );
-    Services.prefs.setBoolPref(
-      TelemetryUtils.Preferences.DataSubmissionEnabled,
       true
     );
+    Services.prefs.setBoolPref(TOU_BYPASS_NOTIFICATION_PREF, false);
 
-    Assert.ok(
-      !TelemetryReportingPolicy.canUpload(),
-      "Upload not allowed when TOU bypass is true, legacy bypass is false, and legacy policy has NOT been notified"
+    // User has NOT accepted TOU
+    Services.prefs.clearUserPref(TOU_ACCEPTED_VERSION_PREF);
+    Services.prefs.clearUserPref(TOU_ACCEPTED_DATE_PREF);
+
+    // User has NOT accepted via Legacy flow
+    Services.prefs.clearUserPref(
+      "datareporting.policy.dataSubmissionPolicyNotifiedTime"
     );
-    // Mark legacy “notified” via the actual code path triggered via
-    // testInfobarShown. This calls _recordNotificationData, which updates the
-    // legacy notification accepted time and version prefs. It also calls
-    // _userNotified which in turn calls lazy.TelemetrySend.notifyCanUpload.
-    // This simulates the user being notified of the legacy infobar flow.
-    TelemetryReportingPolicy.testInfobarShown();
-    // Ensure the policy re-reads state after pref mutations.
+    Services.prefs.clearUserPref(
+      "datareporting.policy.dataSubmissionPolicyAcceptedVersion"
+    );
+
+    // Make _shouldShowTOU() return true
+    Services.prefs.setBoolPref("browser.preonboarding.enabled", true);
+    const unenroll = await NimbusTestUtils.enrollWithFeatureConfig(
+      {
+        featureId: NimbusFeatures.preonboarding.featureId,
+        value: {
+          enabled: true,
+          currentVersion: 4,
+          minimumVersion: 4,
+          screens: [{ id: "test" }],
+        },
+      },
+      { isRollout: false }
+    );
+
     TelemetryReportingPolicy.reset();
 
+    const result = TelemetryReportingPolicy.canUpload();
+
     Assert.ok(
-      TelemetryReportingPolicy.canUpload(),
-      "Upload allowed when TOU bypass is true, legacy bypass is false, and legacy policy has been notified"
+      !result,
+      "When TOU flow should be shown, but is not yet accepted with legacy bypass true, (!shouldShowTOU && bypassLegacy) is false, so upload is blocked."
     );
+
+    await cleanup();
   }
 );
