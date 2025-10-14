@@ -138,6 +138,19 @@ class IPProtectionServiceSingleton extends EventTarget {
   }
 
   /**
+   * Setups the IPProtectionService if enabled early during the firefox startup
+   * phases.
+   */
+  async maybeEarlyInit() {
+    if (
+      this.featureEnabled &&
+      Services.prefs.getBoolPref("browser.ipProtection.autoStartEnabled")
+    ) {
+      await this.init();
+    }
+  }
+
+  /**
    * Setups the IPProtectionService if enabled.
    */
   async init() {
