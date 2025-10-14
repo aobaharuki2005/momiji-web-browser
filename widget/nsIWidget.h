@@ -15,6 +15,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Compiler.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
@@ -47,7 +48,7 @@
 
 // GCC needs this to compile RefPtr<NativeLayerRoot> GetNativeLayerRoot(),
 // surprisingly.
-#ifdef MOZ_IS_GCC
+#if MOZ_IS_GCC
 #  include "mozilla/layers/NativeLayer.h"
 #endif
 
