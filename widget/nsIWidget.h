@@ -45,6 +45,12 @@
 #include "mozilla/widget/InitData.h"
 #include "nsXULAppAPI.h"
 
+// GCC needs this to compile RefPtr<NativeLayerRoot> GetNativeLayerRoot(),
+// surprisingly.
+#ifdef MOZ_IS_GCC
+#  include "mozilla/layers/NativeLayer.h"
+#endif
+
 // Windows specific constant indicating the maximum number of touch points the
 // inject api will allow. This also sets the maximum numerical value for touch
 // ids we can use when injecting touch points on Windows.
