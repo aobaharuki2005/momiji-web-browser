@@ -469,7 +469,7 @@ class MediaStreamTrack : public DOMEventTargetHelper, public SupportsWeakPtr {
   already_AddRefed<Promise> ApplyConstraints(
       const dom::MediaTrackConstraints& aConstraints, CallerType aCallerType,
       ErrorResult& aRv);
-  already_AddRefed<MediaStreamTrack> Clone();
+  virtual already_AddRefed<MediaStreamTrack> Clone() = 0;
   MediaStreamTrackState ReadyState() { return mReadyState; }
 
   IMPL_EVENT_HANDLER(mute)
@@ -642,7 +642,15 @@ class MediaStreamTrack : public DOMEventTargetHelper, public SupportsWeakPtr {
    * Creates a new MediaStreamTrack with the same kind, input track, input
    * track ID and source as this MediaStreamTrack.
    */
-  virtual already_AddRefed<MediaStreamTrack> CloneInternal() = 0;
+
+  template <typename TrackType>
+  already_AddRefed<MediaStreamTrack> CloneInternal() {
+    auto newTrack = MakeRefPtr<TrackType>(mWindow, mInputTrack, mSource,
+                                          ReadyState(), Muted(), mConstraints);
+    newTrack->SetEnabled(Enabled());
+    newTrack->SetMuted(Muted());
+    return newTrack.forget();
+  }
 
   nsTArray<PrincipalChangeObserver<MediaStreamTrack>*>
       mPrincipalChangeObservers;
