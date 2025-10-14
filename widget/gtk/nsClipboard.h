@@ -151,9 +151,36 @@ class nsClipboard final : public nsBaseClipboard, public nsIObserver {
   nsCOMPtr<nsITransferable> mGlobalTransferable;
   RefPtr<nsRetrievalContext> mContext;
 
+  void IncrementSequenceNumber(int32_t aWhichClipboard) {
+    if (aWhichClipboard == kSelectionClipboard) {
+      mSelectionSequenceNumber++;
+    } else {
+      mGlobalSequenceNumber++;
+    }
+  }
+  int32_t GetSequenceNumber(int32_t aWhichClipboard) {
+    return (aWhichClipboard == kSelectionClipboard) ? mSelectionSequenceNumber
+                                                    : mGlobalSequenceNumber;
+  }
+
   // Sequence number of the system clipboard data.
   int32_t mSelectionSequenceNumber = 0;
   int32_t mGlobalSequenceNumber = 0;
+
+  void MarkNextOwnerClipboardChange(int32_t aWhichClipboard, bool aOurChange) {
+    if (aWhichClipboard == kSelectionClipboard) {
+      mWeSetSelectionData = aOurChange;
+    } else {
+      mWeSetGlobalData = aOurChange;
+    }
+  }
+  bool IsOurOwnerClipboardChange(int32_t aWhichClipboard) {
+    return (aWhichClipboard == kSelectionClipboard) ? mWeSetSelectionData
+                                                    : mWeSetGlobalData;
+  }
+
+  bool mWeSetSelectionData = false;
+  bool mWeSetGlobalData = false;
 };
 
 extern const int kClipboardTimeout;
