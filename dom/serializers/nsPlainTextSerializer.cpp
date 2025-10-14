@@ -230,8 +230,11 @@ uint32_t nsPlainTextSerializer::OutputManager::GetOutputLength() const {
 
 nsPlainTextSerializer::nsPlainTextSerializer()
     : mFloatingLines(-1),
+      mLineBreakDue(false),
       kSpace(u" "_ns)  // Init of "constant"
 {
+  mHeadLevel = 0;
+  mHasWrittenCiteBlockquote = false;
   mSpanLevel = 0;
   for (int32_t i = 0; i <= 6; i++) {
     mHeaderCounter[i] = 0;
@@ -252,6 +255,8 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   mIgnoreAboveIndex = (uint32_t)kNotFound;
 
   mULCount = 0;
+
+  mIgnoredChildNodeLevel = 0;
 }
 
 nsPlainTextSerializer::~nsPlainTextSerializer() {
@@ -453,21 +458,6 @@ nsPlainTextSerializer::AppendText(Text* aText, int32_t aStartOffset,
     return NS_OK;
   }
 
-  // If we don't want any output, just return.
-  if (!DoOutput()) {
-    return NS_OK;
-  }
-
-  if (mLineBreakDue) {
-    EnsureVerticalSpace(mFloatingLines);
-  }
-
-  // Check whether this text node is under an element that doesn’t need  to be
-  // serialized. If so, we can return early here.
-  if (MustSuppressLeaf()) {
-    return NS_OK;
-  }
-
   nsAutoString textstr;
   if (characterDataBuffer->Is2b()) {
     textstr.Assign(characterDataBuffer->Get2b() + aStartOffset, length);
@@ -489,11 +479,11 @@ nsPlainTextSerializer::AppendText(Text* aText, int32_t aStartOffset,
   while (offset != kNotFound) {
     if (offset > start) {
       // Pass in the line
-      DoAddText(Substring(textstr, start, offset - start));
+      DoAddText(false, Substring(textstr, start, offset - start));
     }
 
     // Pass in a newline
-    DoAddLineBreak();
+    DoAddText();
 
     start = offset + 1;
     offset = textstr.FindCharInSet(u"\n\r", start);
@@ -502,9 +492,9 @@ nsPlainTextSerializer::AppendText(Text* aText, int32_t aStartOffset,
   // Consume the last bit of the string if there's any left
   if (start < length) {
     if (start) {
-      DoAddText(Substring(textstr, start, length - start));
+      DoAddText(false, Substring(textstr, start, length - start));
     } else {
-      DoAddText(textstr);
+      DoAddText(false, textstr);
     }
   }
 
@@ -1118,37 +1108,43 @@ bool nsPlainTextSerializer::MustSuppressLeaf() const {
   return false;
 }
 
-void nsPlainTextSerializer::DoAddLineBreak() {
-  MOZ_ASSERT(DoOutput());
-  MOZ_ASSERT(!mLineBreakDue);
-  MOZ_ASSERT(mIgnoreAboveIndex == (uint32_t)kNotFound);
-  MOZ_ASSERT(!MustSuppressLeaf());
+void nsPlainTextSerializer::DoAddText() { DoAddText(true, u""_ns); }
 
-  // The only times we want to pass along whitespace from the original
-  // html source are if we're forced into preformatted mode via flags,
-  // or if we're prettyprinting and we're inside a <pre>.
-  // Otherwise, either we're collapsing to minimal text, or we're
-  // prettyprinting to mimic the html format, and in neither case
-  // does the formatting of the html source help us.
-  if (mSettings.HasFlag(nsIDocumentEncoder::OutputPreformatted) ||
-      (mPreFormattedMail && !mSettings.GetWrapColumn()) ||
-      IsElementPreformatted()) {
-    EnsureVerticalSpace(mEmptyLines + 1);
-  } else if (!mInWhitespace) {
-    Write(kSpace);
-    mInWhitespace = true;
+void nsPlainTextSerializer::DoAddText(bool aIsLineBreak,
+                                      const nsAString& aText) {
+  // If we don't want any output, just return
+  if (!DoOutput()) {
+    return;
   }
-}
 
-void nsPlainTextSerializer::DoAddText(const nsAString& aText) {
-  MOZ_ASSERT(DoOutput());
-  MOZ_ASSERT(!mLineBreakDue);
-  MOZ_ASSERT(mIgnoreAboveIndex == (uint32_t)kNotFound);
-  MOZ_ASSERT(!MustSuppressLeaf());
+  if (!aIsLineBreak) {
+    // Make sure to reset this, since it's no longer true.
+    mHasWrittenCiteBlockquote = false;
+  }
 
-  // Reset this, as it’s no longer true after serializing texts, so the next
-  // <pre> element will get a leading newline.
-  mHasWrittenCiteBlockquote = false;
+  if (mLineBreakDue) EnsureVerticalSpace(mFloatingLines);
+
+  if (MustSuppressLeaf()) {
+    return;
+  }
+
+  if (aIsLineBreak) {
+    // The only times we want to pass along whitespace from the original
+    // html source are if we're forced into preformatted mode via flags,
+    // or if we're prettyprinting and we're inside a <pre>.
+    // Otherwise, either we're collapsing to minimal text, or we're
+    // prettyprinting to mimic the html format, and in neither case
+    // does the formatting of the html source help us.
+    if (mSettings.HasFlag(nsIDocumentEncoder::OutputPreformatted) ||
+        (mPreFormattedMail && !mSettings.GetWrapColumn()) ||
+        IsElementPreformatted()) {
+      EnsureVerticalSpace(mEmptyLines + 1);
+    } else if (!mInWhitespace) {
+      Write(kSpace);
+      mInWhitespace = true;
+    }
+    return;
+  }
 
   Write(aText);
 }
