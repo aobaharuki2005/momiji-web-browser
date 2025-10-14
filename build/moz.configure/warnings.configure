@@ -110,6 +110,11 @@ check_and_add_warning("-Wno-deprecated-enum-enum-conversion", cxx_compiler)
 check_and_add_warning("-Wno-deprecated-this-capture", cxx_compiler)
 check_and_add_warning("-Wno-error=deprecated", when=building_with_gcc)
 
+# Enable some C++23 compat warnings. We can remove these flags after we compile
+# as C++23 (bug 1880762) because they will be enabled by default:
+check_and_add_warning("-Wdeprecated-literal-operator", cxx_compiler)
+check_and_add_warning("-Winvalid-utf8")
+
 # catches possible misuse of the comma operator
 check_and_add_warning("-Wcomma", cxx_compiler)
 
