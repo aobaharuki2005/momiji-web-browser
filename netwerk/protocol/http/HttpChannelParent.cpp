@@ -20,7 +20,9 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/NeckoParent.h"
+#include "mozilla/net/ExecuteIfOnMainThreadEventTarget.h"
 #include "mozilla/net/CookieServiceParent.h"
+#include "nsIClassOfService.h"
 #include "mozilla/Components.h"
 #include "mozilla/InputStreamLengthHelper.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -654,9 +656,10 @@ bool HttpChannelParent::DoAsyncOpen(
   // Wait for HttpBackgroundChannel to continue the async open procedure.
   ++mAsyncOpenBarrier;
   RefPtr<HttpChannelParent> self = this;
+  nsCOMPtr<nsISerialEventTarget> eventTarget = GetEventTargetForBgParentWait();
   WaitForBgParent(mChannel->ChannelId())
       ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
+          eventTarget, __func__,
           [self]() {
             self->mRequest.Complete();
             self->TryInvokeAsyncOpen(NS_OK);
@@ -737,10 +740,10 @@ bool HttpChannelParent::ConnectChannel(const uint32_t& registrarId) {
   MOZ_ASSERT(mPromise.IsEmpty());
   // Waiting for background channel
   RefPtr<HttpChannelParent> self = this;
+  nsCOMPtr<nsISerialEventTarget> eventTarget = GetEventTargetForBgParentWait();
   WaitForBgParent(mChannel->ChannelId())
       ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [self]() { self->mRequest.Complete(); },
+          eventTarget, __func__, [self]() { self->mRequest.Complete(); },
           [self](const nsresult& aResult) {
             NS_ERROR("failed to establish the background channel");
             self->mRequest.Complete();
@@ -983,9 +986,11 @@ HttpChannelParent::ContinueVerification(
   // Otherwise, wait for the background channel.
   nsCOMPtr<nsIAsyncVerifyRedirectReadyCallback> callback = aCallback;
   if (mChannel) {
+    nsCOMPtr<nsISerialEventTarget> eventTarget =
+        GetEventTargetForBgParentWait();
     WaitForBgParent(mChannel->ChannelId())
         ->Then(
-            GetMainThreadSerialEventTarget(), __func__,
+            eventTarget, __func__,
             [callback]() { callback->ReadyToVerify(NS_OK); },
             [callback](const nsresult& aResult) {
               NS_ERROR("failed to establish the background channel");
@@ -1550,6 +1555,21 @@ HttpChannelParent::OnDataAvailable(nsIRequest* aRequest,
   }
 
   return NS_OK;
+}
+
+// Get the appropriate event target for background parent operations based on
+// the channel's class of service flags: Urgent channels use
+// ExecuteIfOnMainThreadEventTarget to avoid the async main-thread dispatch
+// overhead when already on the main thread. Non-urgent channels use the regular
+// event queue to prevent head-of-line blocking that would delay other main
+// thread events.
+nsCOMPtr<nsISerialEventTarget>
+HttpChannelParent::GetEventTargetForBgParentWait() {
+  uint32_t classOfServiceFlags = 0;
+  mChannel->GetClassFlags(&classOfServiceFlags);
+  return (classOfServiceFlags & nsIClassOfService::UrgentStart)
+             ? ExecuteIfOnMainThreadEventTarget::Get()
+             : GetMainThreadSerialEventTarget();
 }
 
 bool HttpChannelParent::NeedFlowControl() {

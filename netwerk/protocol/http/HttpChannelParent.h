@@ -243,6 +243,12 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   // consumed quickly enough. Otherwise, memory explosion could happen.
   bool NeedFlowControl();
 
+  // Get the appropriate event target for background parent operations based on
+  // channel's class of service flags: synchronous event target for urgent
+  // channels, queued for others to balance responsiveness and prevent
+  // head-of-line blocking.
+  nsCOMPtr<nsISerialEventTarget> GetEventTargetForBgParentWait();
+
   bool IsRedirectDueToAuthRetry(uint32_t redirectFlags);
 
   int32_t mSendWindowSize;
