@@ -17,6 +17,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 const FULL_PAGE_URL = "chrome://browser/content/genai/smartAssistPage.html";
+const ACTION_CHAT = "chat";
+const ACTION_SEARCH = "search";
 
 /**
  * A custom element for managing the smart assistant sidebar.
@@ -47,15 +49,14 @@ export class SmartAssist extends MozLitElement {
     this.overrideNewTab = Services.prefs.getBoolPref(
       "browser.ml.smartAssist.overrideNewTab"
     );
-    this.actionKey = "chat";
-
+    this.actionKey = ACTION_CHAT;
     this._actions = {
-      chat: {
+      [ACTION_CHAT]: {
         label: "Submit",
         icon: "chrome://global/skin/icons/arrow-right.svg",
         run: this._actionChat,
       },
-      search: {
+      [ACTION_SEARCH]: {
         label: "Search",
         icon: "chrome://global/skin/icons/search-glass.svg",
         run: this._actionSearch,
@@ -87,11 +88,19 @@ export class SmartAssist extends MozLitElement {
   };
 
   _handlePromptInput = async e => {
-    const value = e.target.value;
-    this.userPrompt = value;
+    try {
+      const value = e.target.value;
+      this.userPrompt = value;
 
-    // Determine intent based on keywords in the prompt
-    this.actionKey = await lazy.SmartAssistEngine.getPromptIntent(value);
+      const intent = await lazy.SmartAssistEngine.getPromptIntent(value);
+      this.actionKey = [ACTION_CHAT, ACTION_SEARCH].includes(intent)
+        ? intent
+        : ACTION_CHAT;
+    } catch (error) {
+      // Default to chat on error
+      this.actionKey = ACTION_CHAT;
+      console.error("Error determining prompt intent:", error);
+    }
   };
 
   /**

@@ -179,6 +179,7 @@ add_task(async function test_fetchWithHistory_propagates_stream_error() {
 });
 
 add_task(async function test_getPromptIntent_basic() {
+  const sb = sinon.createSandbox();
   const cases = [
     { prompt: "please search for news on firefox", expected: "search" },
     { prompt: "Can you FIND me the docs for PageAssist?", expected: "search" }, // case-insensitive
@@ -186,6 +187,30 @@ add_task(async function test_getPromptIntent_basic() {
     { prompt: "hello there, how are you?", expected: "chat" },
     { prompt: "tell me a joke", expected: "chat" },
   ];
+
+  const fakeEngine = {
+    run({ args: [[query]] }) {
+      const searchKeywords = [
+        "search",
+        "find",
+        "look",
+        "query",
+        "locate",
+        "explore",
+      ];
+      const formattedPrompt = query.toLowerCase();
+
+      const intent = searchKeywords.some(keyword =>
+        formattedPrompt.includes(keyword)
+      )
+        ? "search"
+        : "chat";
+
+      return [{ label: intent }];
+    },
+  };
+
+  sb.stub(SmartAssistEngine, "_createEngine").resolves(fakeEngine);
 
   for (const { prompt, expected } of cases) {
     const intent = await SmartAssistEngine.getPromptIntent(prompt);

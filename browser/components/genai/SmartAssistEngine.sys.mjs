@@ -212,29 +212,25 @@ export const SmartAssistEngine = {
   },
 
   /**
+   * Gets the intent of the prompt using a text classification model.
    *
    * @param {string} prompt
    * @returns {string} "search" | "chat"
    */
-  async getPromptIntent(prompt) {
-    // TODO : this is mock logic to determine if the user wants to search or chat
-    // We will eventually want to use a model to determine this intent
-    const searchKeywords = [
-      "search",
-      "find",
-      "look",
-      "query",
-      "locate",
-      "explore",
-    ];
-    const formattedPrompt = prompt.toLowerCase();
 
-    const intent = searchKeywords.some(keyword =>
-      formattedPrompt.includes(keyword)
-    )
-      ? "search"
-      : "chat";
-
-    return intent;
+  async getPromptIntent(query) {
+    try {
+      const engine = await this._createEngine({
+        featureId: "smart-intent",
+        modelId: "mozilla/query-intent-detection",
+        modelRevision: "v0.1.0",
+        taskName: "text-classification",
+      });
+      const resp = await engine.run({ args: [[query]] });
+      return resp[0].label.toLowerCase();
+    } catch (error) {
+      console.error("Error using intent detection model:", error);
+      throw error;
+    }
   },
 };

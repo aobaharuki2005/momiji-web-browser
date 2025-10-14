@@ -172,6 +172,10 @@ export const FEATURES = {
     engineId: "wllamapreview",
     fluentId: "mlmodel-link-preview",
   },
+  // see browser/components/genai/SmartAssistEngine.sys.mjs
+  "smart-intent": {
+    engineId: "smart-intent",
+  },
 };
 
 /**
