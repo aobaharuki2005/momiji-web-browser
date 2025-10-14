@@ -102,7 +102,7 @@ class CamerasParent final : public PCamerasParent {
       const CaptureEngine& aCapEngine, const nsACString& aUniqueIdUTF8,
       const uint64_t& aWindowID) override;
   mozilla::ipc::IPCResult RecvReleaseCapture(const CaptureEngine& aCapEngine,
-                                             const int& aCaptureId) override;
+                                             const int& aStreamId) override;
   mozilla::ipc::IPCResult RecvNumberOfCaptureDevices(
       const CaptureEngine& aCapEngine) override;
   mozilla::ipc::IPCResult RecvNumberOfCapabilities(
@@ -113,14 +113,14 @@ class CamerasParent final : public PCamerasParent {
   mozilla::ipc::IPCResult RecvGetCaptureDevice(
       const CaptureEngine& aCapEngine, const int& aDeviceIndex) override;
   mozilla::ipc::IPCResult RecvStartCapture(
-      const CaptureEngine& aCapEngine, const int& aCaptureId,
+      const CaptureEngine& aCapEngine, const int& aStreamId,
       const VideoCaptureCapability& aIpcCaps,
       const NormalizedConstraints& aConstraints,
       const dom::VideoResizeModeEnum& aResizeMode) override;
   mozilla::ipc::IPCResult RecvFocusOnSelectedSource(
-      const CaptureEngine& aCapEngine, const int& aCaptureId) override;
+      const CaptureEngine& aCapEngine, const int& aStreamId) override;
   mozilla::ipc::IPCResult RecvStopCapture(const CaptureEngine& aCapEngine,
-                                          const int& aCaptureId) override;
+                                          const int& aStreamId) override;
   mozilla::ipc::IPCResult RecvReleaseFrame(
       mozilla::ipc::Shmem&& aShmem) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -149,8 +149,8 @@ class CamerasParent final : public PCamerasParent {
   virtual ~CamerasParent();
 
   // We use these helpers for shutdown and for the respective IPC commands.
-  void StopCapture(const CaptureEngine& aCapEngine, int aCaptureId);
-  int ReleaseCapture(const CaptureEngine& aCapEngine, int aCaptureId);
+  void StopCapture(const CaptureEngine& aCapEngine, int aStreamId);
+  int ReleaseCapture(const CaptureEngine& aCapEngine, int aStreamId);
 
   void OnDeviceChange();
 
