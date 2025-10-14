@@ -74,8 +74,9 @@ void VideoStreamTrack::GetLabel(nsAString& aLabel, CallerType aCallerType) {
   MediaStreamTrack::GetLabel(aLabel, aCallerType);
 }
 
-already_AddRefed<MediaStreamTrack> VideoStreamTrack::Clone() {
-  return MediaStreamTrack::CloneInternal<VideoStreamTrack>();
+already_AddRefed<MediaStreamTrack> VideoStreamTrack::CloneInternal() {
+  return do_AddRef(new VideoStreamTrack(mWindow, mInputTrack, mSource,
+                                        ReadyState(), Muted(), mConstraints));
 }
 
 }  // namespace mozilla::dom

@@ -46,21 +46,19 @@ int VideoEngine::SetAndroidObjects() {
 }
 #endif
 
-int32_t VideoEngine::CreateVideoCapture(const char* aDeviceUniqueIdUTF8,
-                                        uint64_t aWindowID) {
+int32_t VideoEngine::CreateVideoCapture(const char* aDeviceUniqueIdUTF8) {
   LOG(("%s", __PRETTY_FUNCTION__));
   MOZ_ASSERT(aDeviceUniqueIdUTF8);
 
   int32_t id = GenerateId();
   LOG(("CaptureDeviceType=%s id=%d", EnumValueToString(mCaptureDevType), id));
 
-  for (auto& it : mSharedCapturers) {
+  for (auto& it : mCaps) {
     if (it.second.VideoCapture() &&
         it.second.VideoCapture()->CurrentDeviceName() &&
         strcmp(it.second.VideoCapture()->CurrentDeviceName(),
                aDeviceUniqueIdUTF8) == 0) {
-      mIdToCapturerMap.emplace(id, CaptureHandle{.mCaptureEntryNum = it.first,
-                                                 .mWindowID = aWindowID});
+      mIdMap.emplace(id, it.first);
       return id;
     }
   }
@@ -73,9 +71,8 @@ int32_t VideoEngine::CreateVideoCapture(const char* aDeviceUniqueIdUTF8,
   entry =
       CaptureEntry(id, std::move(capturer.mCapturer), capturer.mDesktopImpl);
 
-  mSharedCapturers.emplace(id, std::move(entry));
-  mIdToCapturerMap.emplace(
-      id, CaptureHandle{.mCaptureEntryNum = id, .mWindowID = aWindowID});
+  mCaps.emplace(id, std::move(entry));
+  mIdMap.emplace(id, id);
   return id;
 }
 
@@ -84,15 +81,14 @@ int VideoEngine::ReleaseVideoCapture(const int32_t aId) {
 
 #ifdef DEBUG
   {
-    auto it = mIdToCapturerMap.find(aId);
-    MOZ_ASSERT(it != mIdToCapturerMap.end());
+    auto it = mIdMap.find(aId);
+    MOZ_ASSERT(it != mIdMap.end());
     Unused << it;
   }
 #endif
 
-  for (auto& it : mIdToCapturerMap) {
-    if (it.first != aId &&
-        it.second.mCaptureEntryNum == mIdToCapturerMap[aId].mCaptureEntryNum) {
+  for (auto& it : mIdMap) {
+    if (it.first != aId && it.second == mIdMap[aId]) {
       // There are other tracks still using this hardware.
       found = true;
     }
@@ -105,13 +101,13 @@ int VideoEngine::ReleaseVideoCapture(const int32_t aId) {
     });
     MOZ_ASSERT(found);
     if (found) {
-      auto it = mSharedCapturers.find(mIdToCapturerMap[aId].mCaptureEntryNum);
-      MOZ_ASSERT(it != mSharedCapturers.end());
-      mSharedCapturers.erase(it);
+      auto it = mCaps.find(mIdMap[aId]);
+      MOZ_ASSERT(it != mCaps.end());
+      mCaps.erase(it);
     }
   }
 
-  mIdToCapturerMap.erase(aId);
+  mIdMap.erase(aId);
   return found ? 0 : (-1);
 }
 
@@ -220,42 +216,19 @@ bool VideoEngine::WithEntry(
     const std::function<void(CaptureEntry& entry)>&& fn) {
 #ifdef DEBUG
   {
-    auto it = mIdToCapturerMap.find(entryCapnum);
-    MOZ_ASSERT(it != mIdToCapturerMap.end());
+    auto it = mIdMap.find(entryCapnum);
+    MOZ_ASSERT(it != mIdMap.end());
     Unused << it;
   }
 #endif
 
-  auto it =
-      mSharedCapturers.find(mIdToCapturerMap[entryCapnum].mCaptureEntryNum);
-  MOZ_ASSERT(it != mSharedCapturers.end());
-  if (it == mSharedCapturers.end()) {
+  auto it = mCaps.find(mIdMap[entryCapnum]);
+  MOZ_ASSERT(it != mCaps.end());
+  if (it == mCaps.end()) {
     return false;
   }
   fn(it->second);
   return true;
-}
-
-bool VideoEngine::IsWindowCapturing(uint64_t aWindowID,
-                                    const nsCString& aUniqueIdUTF8) {
-  Maybe<int32_t> sharedId;
-  for (auto& [id, entry] : mSharedCapturers) {
-    if (entry.VideoCapture() && entry.VideoCapture()->CurrentDeviceName() &&
-        strcmp(entry.VideoCapture()->CurrentDeviceName(),
-               aUniqueIdUTF8.get()) == 0) {
-      sharedId = Some(id);
-      break;
-    }
-  }
-  if (!sharedId) {
-    return false;
-  }
-  for (auto& [id, handle] : mIdToCapturerMap) {
-    if (handle.mCaptureEntryNum == *sharedId && handle.mWindowID == aWindowID) {
-      return true;
-    }
-  }
-  return false;
 }
 
 int32_t VideoEngine::GenerateId() {
@@ -280,8 +253,8 @@ VideoEngine::VideoEngine(const CaptureDeviceType& aCaptureDeviceType,
 }
 
 VideoEngine::~VideoEngine() {
-  MOZ_ASSERT(mSharedCapturers.empty());
-  MOZ_ASSERT(mIdToCapturerMap.empty());
+  MOZ_ASSERT(mCaps.empty());
+  MOZ_ASSERT(mIdMap.empty());
 }
 
 }  // namespace mozilla::camera

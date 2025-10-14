@@ -146,12 +146,10 @@ class CamerasChild final : public PCamerasChild {
 
   // IPC messages recevied, received on the PBackground thread
   // these are the actual callbacks with data
-  mozilla::ipc::IPCResult RecvCaptureEnded(
-      nsTArray<int>&& aCaptureIds) override;
+  mozilla::ipc::IPCResult RecvCaptureEnded(const int&) override;
   mozilla::ipc::IPCResult RecvDeliverFrame(
-      const int& aCaptureId, nsTArray<int>&& aStreamIds,
-      mozilla::ipc::Shmem&& aShmem,
-      const VideoFrameProperties& aProps) override;
+      const int&, mozilla::ipc::Shmem&&,
+      const VideoFrameProperties& prop) override;
 
   mozilla::ipc::IPCResult RecvDeviceChange() override;
 
