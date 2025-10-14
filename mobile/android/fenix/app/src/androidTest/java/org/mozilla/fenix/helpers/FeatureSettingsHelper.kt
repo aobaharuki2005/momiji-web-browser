@@ -122,6 +122,14 @@ interface FeatureSettingsHelper {
     var isComposeLoginsEnabled: Boolean
 
     /**
+     * The Open links in External apps settings, between the following options:
+     * - Ask before opening
+     * - Never
+     * - Always open in app
+     */
+    var openLinksInExternalApp: OpenLinksInApp
+
+    /**
      * Enable or disable the translations prompt after a page that can be translated is loaded.
      */
     fun enableOrDisablePageLoadTranslationsPrompt(enableTranslationsPrompt: Boolean) {
@@ -148,4 +156,10 @@ enum class ETPPolicy {
     STANDARD,
     STRICT,
     CUSTOM,
+}
+
+enum class OpenLinksInApp {
+    ALWAYS,
+    NEVER,
+    ASK,
 }
