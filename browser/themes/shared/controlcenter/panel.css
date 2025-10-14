@@ -866,7 +866,7 @@
 
 .trustpanel-header {
   font-weight: var(--font-weight-bold);
-  margin-block-end: var(--space-small);
+  margin-block-end: var(--space-medium);
 
   #trustpanel-blockerDetailsView &,
   #trustpanel-blockerView & {
@@ -947,6 +947,18 @@
 
   #trustpanel-popup[tracking-protection="warning"] & {
     visibility: visible;
+  }
+
+  .trustpanel-header {
+    background-image: url(chrome://global/skin/icons/security-broken.svg);
+    background-position: left center;
+    background-repeat: no-repeat;
+    background-size: var(--icon-size);
+    padding-inline-start: calc(var(--icon-size) + var(--space-small));
+
+    &:-moz-locale-dir(rtl) {
+      background-position-x: right;
+    }
   }
 }
 
