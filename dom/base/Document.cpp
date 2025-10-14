@@ -1916,19 +1916,19 @@ void Document::GetFailedCertSecurityInfo(FailedCertSecurityInfo& aInfo,
   int64_t maxValidity = std::numeric_limits<int64_t>::max();
   int64_t minValidity = 0;
   PRTime notBefore, notAfter;
-  nsTArray<RefPtr<nsIX509Cert>> failedCertArray;
-  rv = tsi->GetFailedCertChain(failedCertArray);
+  nsTArray<RefPtr<nsIX509Cert>> handshakeCertificates;
+  rv = tsi->GetHandshakeCertificates(handshakeCertificates);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return;
   }
 
-  if (NS_WARN_IF(failedCertArray.IsEmpty())) {
+  if (NS_WARN_IF(handshakeCertificates.IsEmpty())) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
-  for (const auto& certificate : failedCertArray) {
+  for (const auto& certificate : handshakeCertificates) {
     rv = certificate->GetIssuerCommonName(issuerCommonName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRv.Throw(rv);

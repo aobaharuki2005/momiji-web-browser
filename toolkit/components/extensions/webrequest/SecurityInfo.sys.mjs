@@ -102,9 +102,9 @@ export const SecurityInfo = {
       // The connection failed.
       info.state = "broken";
       info.errorMessage = securityInfo.errorMessage;
-      if (options.certificateChain && securityInfo.failedCertChain) {
+      if (options.certificateChain && securityInfo.handshakeCertificates) {
         info.certificates = this.getCertificateChain(
-          securityInfo.failedCertChain,
+          securityInfo.handshakeCertificates,
           false,
           options
         );
