@@ -103,10 +103,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // process, even if in shutdown.
   // - NS_ERROR_ILLEGAL_DURING_SHUTDOWN if compositing is not ready, and we are
   // in shutdown.
-  // - NS_ERROR_ABORT if compositing is not ready, we failed to make it ready
-  // under the previous configuration, and that the configuration may have
-  // changed. This is only returned when aRetryAfterFallback is false.
-  nsresult EnsureGPUReady(bool aRetryAfterFallback = true);
+  nsresult EnsureGPUReady();
 
   already_AddRefed<CompositorSession> CreateTopLevelCompositor(
       nsIWidget* aWidget, WebRenderLayerManager* aLayerManager,

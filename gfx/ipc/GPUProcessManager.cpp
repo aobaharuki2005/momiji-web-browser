@@ -352,9 +352,12 @@ bool GPUProcessManager::MaybeDisableGPUProcess(const char* aMessage,
   // process equivalent, and we need to make sure those services are setup
   // correctly. We cannot re-enter DisableGPUProcess from this call because we
   // know that it is disabled in the config above.
-  DebugOnly<bool> ready = EnsureProtocolsReady();
-  MOZ_ASSERT_IF(!ready,
-                AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdown));
+  if (NS_WARN_IF(NS_FAILED(EnsureGPUReady()))) {
+    MOZ_ASSERT(AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdown));
+  } else {
+    DebugOnly<bool> ready = EnsureProtocolsReady();
+    MOZ_ASSERT(ready);
+  }
 
   // If we disable the GPU process during reinitialization after a previous
   // crash, then we need to tell the content processes again, because they
@@ -379,8 +382,7 @@ bool GPUProcessManager::IsGPUReady() const {
   return false;
 }
 
-nsresult GPUProcessManager::EnsureGPUReady(
-    bool aRetryAfterFallback /* = true */) {
+nsresult GPUProcessManager::EnsureGPUReady() {
   MOZ_ASSERT(NS_IsMainThread());
 
   // We only wait to fail with NS_ERROR_ILLEGAL_DURING_SHUTDOWN if we would
@@ -413,13 +415,6 @@ nsresult GPUProcessManager::EnsureGPUReady(
         // or it will have disabled the GPU process.
         MOZ_ASSERT(!mProcess);
         MOZ_ASSERT(!mGPUChild);
-
-        // If aRetryAfterFallback is true, we will relaunch the process
-        // immediately in this loop (if still enabled). Otherwise we return to
-        // the caller to allow them to reconfigure first.
-        if (!aRetryAfterFallback) {
-          return NS_ERROR_ABORT;
-        }
         continue;
       }
     }
@@ -442,13 +437,6 @@ nsresult GPUProcessManager::EnsureGPUReady(
     // reasons, before first falling back from acceleration, and eventually
     // disabling the GPU process altogether.
     OnProcessUnexpectedShutdown(mProcess);
-
-    // If aRetryAfterFallback is true, we will relaunch the process immediately
-    // in this loop (if still enabled). Otherwise we return to the caller to
-    // allow them to reconfigure first.
-    if (!aRetryAfterFallback) {
-      return NS_ERROR_ABORT;
-    }
   }
 
   MOZ_DIAGNOSTIC_ASSERT(!gfxConfig::IsEnabled(Feature::GPU_PROCESS));
@@ -464,10 +452,6 @@ nsresult GPUProcessManager::EnsureGPUReady(
 }
 
 bool GPUProcessManager::EnsureProtocolsReady() {
-  if (NS_WARN_IF(NS_FAILED(EnsureGPUReady()))) {
-    return false;
-  }
-
   return EnsureCompositorManagerChild() && EnsureImageBridgeChild() &&
          EnsureVRManager();
 }
@@ -1225,31 +1209,16 @@ already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(
     CSSToLayoutDeviceScale aScale, const CompositorOptions& aOptions,
     bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize,
     uint64_t aInnerWindowId, bool* aRetryOut) {
+  MOZ_ASSERT(IsGPUReady());
   MOZ_ASSERT(aRetryOut);
-
-  LayersId layerTreeId = AllocateLayerTreeId();
-
-  RefPtr<CompositorSession> session;
-
-  nsresult rv = EnsureGPUReady(/* aRetryAfterFallback */ false);
-
-  // If we used fallback, then retry creating the compositor sessions because
-  // our configuration may have changed.
-  if (rv == NS_ERROR_ABORT) {
-    *aRetryOut = true;
-    return nullptr;
-  }
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    *aRetryOut = false;
-    return nullptr;
-  }
 
   if (!EnsureProtocolsReady()) {
     *aRetryOut = false;
     return nullptr;
   }
 
+  LayersId layerTreeId = AllocateLayerTreeId();
+  RefPtr<CompositorSession> session;
   if (mGPUChild) {
     session = CreateRemoteSession(aWidget, aLayerManager, layerTreeId, aScale,
                                   aOptions, aUseExternalSurfaceSize,
