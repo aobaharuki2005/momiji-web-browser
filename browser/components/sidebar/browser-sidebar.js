@@ -2294,12 +2294,18 @@ var SidebarController = {
     switch (e.type) {
       case "popupshown":
         /* Temporarily remove MousePosTracker listener when a context menu is open */
-        if (e.composedTarget.id !== "tab-preview-panel") {
+        if (
+          e.composedTarget.id !== "tab-preview-panel" &&
+          e.composedTarget.tagName !== "tooltip"
+        ) {
           this._addHoverStateBlocker();
         }
         break;
       case "popuphidden":
-        if (e.composedTarget.id !== "tab-preview-panel") {
+        if (
+          e.composedTarget.id !== "tab-preview-panel" &&
+          e.composedTarget.tagName !== "tooltip"
+        ) {
           await this._removeHoverStateBlocker();
         }
         break;
