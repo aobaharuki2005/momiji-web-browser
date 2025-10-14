@@ -1963,7 +1963,12 @@ bool IsYUVSwapChainFormat(DXGI_FORMAT aFormat) {
 void DCSurfaceVideo::AttachExternalImage(wr::ExternalImageId aExternalImage) {
   auto [texture, usageInfo] =
       RenderThread::Get()->GetRenderTextureAndUsageInfo(aExternalImage);
-  MOZ_RELEASE_ASSERT(texture);
+  if (!texture) {
+    gfxCriticalNoteOnce << "Failed to attach ExternalImage for extId:"
+                        << AsUint64(aExternalImage);
+    mRenderTextureHost = nullptr;
+    return;
+  }
 
   if (usageInfo) {
     mRenderTextureHostUsageInfo = usageInfo;
