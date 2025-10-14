@@ -55,6 +55,8 @@ SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
                       ? Nothing()
                       : Some(aLoadState->SrcdocData())),
       mBaseURI(aLoadState->BaseURI()),
+      mNavigationState(static_cast<nsStructuredCloneContainer*>(
+          aLoadState->GetNavigationAPIState())),
       mLoadReplace(aLoadState->LoadReplace()),
       mHasUserActivation(aLoadState->HasValidUserGestureActivation()),
       mSharedState(SharedState::Create(
