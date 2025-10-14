@@ -56,6 +56,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
     BrowserUsageTelemetry.recordPinnedTabsCount(pinnedTabCount);
   }
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "openExternalLinkOverridePref",
+  "browser.link.open_newwindow.override.external",
+  -1
+);
 
 // The upper bound for the count of the visited unique domain names.
 const MAX_UNIQUE_VISITED_DOMAINS = 100;
@@ -1226,19 +1232,18 @@ export let BrowserUsageTelemetry = {
   },
 
   /**
-   * @param {number} prefValue
-   *   pref `browser.link.open_newwindow.override.external`
+   * @returns {boolean}
    */
-  _isOpenNextToActiveTabSettingEnabled(prefValue) {
-    return prefValue == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT;
+  _isOpenNextToActiveTabSettingEnabled() {
+    return (
+      lazy.openExternalLinkOverridePref ==
+      Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT
+    );
   },
 
   _recordOpenNextToActiveTabSettingValue() {
-    const value = Services.prefs.getIntPref(
-      "browser.link.open_newwindow.override.external"
-    );
     Glean.linkHandling.openNextToActiveTabSettingsEnabled.set(
-      this._isOpenNextToActiveTabSettingEnabled(value)
+      this._isOpenNextToActiveTabSettingEnabled()
     );
   },
 
@@ -1298,6 +1303,8 @@ export let BrowserUsageTelemetry = {
 
   /**
    * Updates the tab counts.
+   * @param {CustomEvent} [event]
+   *   `TabOpen` event
    */
   _onTabOpen(event) {
     // Update the "tab opened" count and its maximum.
@@ -1309,6 +1316,12 @@ export let BrowserUsageTelemetry = {
 
     if (event?.target?.group) {
       Glean.tabgroup.tabInteractions.new.add();
+    }
+
+    if (event?.detail?.fromExternal) {
+      Glean.linkHandling.openFromExternalApp.record({
+        next_to_active_tab: this._isOpenNextToActiveTabSettingEnabled(),
+      });
     }
 
     const userContextId = event?.target?.getAttribute("usercontextid");
