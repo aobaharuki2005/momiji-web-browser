@@ -259,6 +259,8 @@ void CamerasParent::OnDeviceChange() {
 
 class DeliverFrameRunnable : public mozilla::Runnable {
  public:
+  // Constructor for when no ShmemBuffer (of the right size) was available, so
+  // keep the frame around until we can allocate one on PBackground (in Run).
   DeliverFrameRunnable(CamerasParent* aParent, CaptureEngine aEngine,
                        int aCaptureId, nsTArray<int>&& aStreamIds,
                        const TrackingId& aTrackingId,
@@ -270,21 +272,8 @@ class DeliverFrameRunnable : public mozilla::Runnable {
         mCaptureId(aCaptureId),
         mStreamIds(std::move(aStreamIds)),
         mTrackingId(aTrackingId),
-        mProperties(aProperties) {
-    // No ShmemBuffer (of the right size) was available, so make an
-    // extra buffer here.  We have no idea when we are going to run and
-    // it will be potentially long after the webrtc frame callback has
-    // returned, so the copy needs to be no later than here.
-    // We will need to copy this back into a Shmem later on so we prefer
-    // using ShmemBuffers to avoid the extra copy.
-    PerformanceRecorder<CopyVideoStage> rec(
-        "CamerasParent::VideoFrameToAltBuffer"_ns, aTrackingId, aFrame.width(),
-        aFrame.height());
-    mAlternateBuffer.reset(new unsigned char[aProperties.bufferSize()]);
-    VideoFrameUtils::CopyVideoFrameBuffers(mAlternateBuffer.get(),
-                                           aProperties.bufferSize(), aFrame);
-    rec.Record();
-  }
+        mBuffer(aFrame),
+        mProperties(aProperties) {}
 
   DeliverFrameRunnable(CamerasParent* aParent, CaptureEngine aEngine,
                        int aCaptureId, nsTArray<int>&& aStreamIds,
@@ -308,8 +297,7 @@ class DeliverFrameRunnable : public mozilla::Runnable {
       return NS_OK;
     }
     mParent->DeliverFrameOverIPC(mCapEngine, mCaptureId, mStreamIds,
-                                 mTrackingId, std::move(mBuffer),
-                                 mAlternateBuffer.get(), mProperties);
+                                 mTrackingId, std::move(mBuffer), mProperties);
     return NS_OK;
   }
 
@@ -319,22 +307,20 @@ class DeliverFrameRunnable : public mozilla::Runnable {
   const int mCaptureId;
   const nsTArray<int> mStreamIds;
   const TrackingId mTrackingId;
-  ShmemBuffer mBuffer;
-  UniquePtr<unsigned char[]> mAlternateBuffer;
+  Variant<ShmemBuffer, webrtc::VideoFrame> mBuffer;
   const VideoFrameProperties mProperties;
 };
 
-int CamerasParent::DeliverFrameOverIPC(CaptureEngine aCapEngine, int aCaptureId,
-                                       const Span<const int>& aStreamIds,
-                                       const TrackingId& aTrackingId,
-                                       ShmemBuffer aBuffer,
-                                       unsigned char* aAltBuffer,
-                                       const VideoFrameProperties& aProps) {
+int CamerasParent::DeliverFrameOverIPC(
+    CaptureEngine aCapEngine, int aCaptureId, const Span<const int>& aStreamIds,
+    const TrackingId& aTrackingId,
+    Variant<ShmemBuffer, webrtc::VideoFrame>&& aBuffer,
+    const VideoFrameProperties& aProps) {
   // No ShmemBuffers were available, so construct one now of the right size
   // and copy into it. That is an extra copy, but we expect this to be
   // the exceptional case, because we just assured the next call *will* have a
   // buffer of the right size.
-  if (aAltBuffer != nullptr) {
+  if (!aBuffer.is<ShmemBuffer>()) {
     // Get a shared memory buffer from the pool, at least size big
     ShmemBuffer shMemBuff;
     {
@@ -355,8 +341,8 @@ int CamerasParent::DeliverFrameOverIPC(CaptureEngine aCapEngine, int aCaptureId,
     PerformanceRecorder<CopyVideoStage> rec(
         "CamerasParent::AltBufferToShmem"_ns, aTrackingId, aProps.width(),
         aProps.height());
-    // get() and Size() check for proper alignment of the segment
-    memcpy(shMemBuff.GetBytes(), aAltBuffer, aProps.bufferSize());
+    VideoFrameUtils::CopyVideoFrameBuffers(shMemBuff,
+                                           aBuffer.as<webrtc::VideoFrame>());
     rec.Record();
 
     if (!SendDeliverFrame(aCaptureId, aStreamIds, std::move(shMemBuff.Get()),
@@ -364,11 +350,11 @@ int CamerasParent::DeliverFrameOverIPC(CaptureEngine aCapEngine, int aCaptureId,
       return -1;
     }
   } else {
-    MOZ_ASSERT(aBuffer.Valid());
+    MOZ_ASSERT(aBuffer.as<ShmemBuffer>().Valid());
     // ShmemBuffer was available, we're all good. A single copy happened
     // in the original webrtc callback.
-    if (!SendDeliverFrame(aCaptureId, aStreamIds, std::move(aBuffer.Get()),
-                          aProps)) {
+    if (!SendDeliverFrame(aCaptureId, aStreamIds,
+                          std::move(aBuffer.as<ShmemBuffer>().Get()), aProps)) {
       return -1;
     }
   }
