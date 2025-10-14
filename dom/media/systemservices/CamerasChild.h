@@ -149,8 +149,9 @@ class CamerasChild final : public PCamerasChild {
   mozilla::ipc::IPCResult RecvCaptureEnded(
       nsTArray<int>&& aCaptureIds) override;
   mozilla::ipc::IPCResult RecvDeliverFrame(
-      nsTArray<int>&& capIds, mozilla::ipc::Shmem&& shmem,
-      const VideoFrameProperties& prop) override;
+      const int& aCaptureId, nsTArray<int>&& aStreamIds,
+      mozilla::ipc::Shmem&& aShmem,
+      const VideoFrameProperties& aProps) override;
 
   mozilla::ipc::IPCResult RecvDeviceChange() override;
 

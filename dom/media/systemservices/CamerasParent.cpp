@@ -260,13 +260,14 @@ void CamerasParent::OnDeviceChange() {
 class DeliverFrameRunnable : public mozilla::Runnable {
  public:
   DeliverFrameRunnable(CamerasParent* aParent, CaptureEngine aEngine,
-                       nsTArray<int>&& aStreamIds,
+                       int aCaptureId, nsTArray<int>&& aStreamIds,
                        const TrackingId& aTrackingId,
                        const webrtc::VideoFrame& aFrame,
                        const VideoFrameProperties& aProperties)
       : Runnable("camera::DeliverFrameRunnable"),
         mParent(aParent),
         mCapEngine(aEngine),
+        mCaptureId(aCaptureId),
         mStreamIds(std::move(aStreamIds)),
         mTrackingId(aTrackingId),
         mProperties(aProperties) {
@@ -286,12 +287,13 @@ class DeliverFrameRunnable : public mozilla::Runnable {
   }
 
   DeliverFrameRunnable(CamerasParent* aParent, CaptureEngine aEngine,
-                       nsTArray<int>&& aStreamIds,
+                       int aCaptureId, nsTArray<int>&& aStreamIds,
                        const TrackingId& aTrackingId, ShmemBuffer aBuffer,
                        VideoFrameProperties& aProperties)
       : Runnable("camera::DeliverFrameRunnable"),
         mParent(aParent),
         mCapEngine(aEngine),
+        mCaptureId(aCaptureId),
         mStreamIds(std::move(aStreamIds)),
         mTrackingId(aTrackingId),
         mBuffer(std::move(aBuffer)),
@@ -305,15 +307,16 @@ class DeliverFrameRunnable : public mozilla::Runnable {
       // Communication channel is being torn down
       return NS_OK;
     }
-    mParent->DeliverFrameOverIPC(mCapEngine, mStreamIds, mTrackingId,
-                                 std::move(mBuffer), mAlternateBuffer.get(),
-                                 mProperties);
+    mParent->DeliverFrameOverIPC(mCapEngine, mCaptureId, mStreamIds,
+                                 mTrackingId, std::move(mBuffer),
+                                 mAlternateBuffer.get(), mProperties);
     return NS_OK;
   }
 
  private:
   const RefPtr<CamerasParent> mParent;
   const CaptureEngine mCapEngine;
+  const int mCaptureId;
   const nsTArray<int> mStreamIds;
   const TrackingId mTrackingId;
   ShmemBuffer mBuffer;
@@ -321,7 +324,7 @@ class DeliverFrameRunnable : public mozilla::Runnable {
   const VideoFrameProperties mProperties;
 };
 
-int CamerasParent::DeliverFrameOverIPC(CaptureEngine aCapEngine,
+int CamerasParent::DeliverFrameOverIPC(CaptureEngine aCapEngine, int aCaptureId,
                                        const Span<const int>& aStreamIds,
                                        const TrackingId& aTrackingId,
                                        ShmemBuffer aBuffer,
@@ -333,7 +336,15 @@ int CamerasParent::DeliverFrameOverIPC(CaptureEngine aCapEngine,
   // buffer of the right size.
   if (aAltBuffer != nullptr) {
     // Get a shared memory buffer from the pool, at least size big
-    ShmemBuffer shMemBuff = mShmemPool.Get(this, aProps.bufferSize());
+    ShmemBuffer shMemBuff;
+    {
+      auto guard = mShmemPools.Lock();
+      auto it = guard->find(aCaptureId);
+      if (it != guard->end()) {
+        auto& [_, pool] = *it;
+        shMemBuff = pool.Get(this, aProps.bufferSize());
+      }
+    }
 
     if (!shMemBuff.Valid()) {
       LOG("No usable Video shmem in DeliverFrame (out of buffers?)");
@@ -348,14 +359,16 @@ int CamerasParent::DeliverFrameOverIPC(CaptureEngine aCapEngine,
     memcpy(shMemBuff.GetBytes(), aAltBuffer, aProps.bufferSize());
     rec.Record();
 
-    if (!SendDeliverFrame(aStreamIds, std::move(shMemBuff.Get()), aProps)) {
+    if (!SendDeliverFrame(aCaptureId, aStreamIds, std::move(shMemBuff.Get()),
+                          aProps)) {
       return -1;
     }
   } else {
     MOZ_ASSERT(aBuffer.Valid());
     // ShmemBuffer was available, we're all good. A single copy happened
     // in the original webrtc callback.
-    if (!SendDeliverFrame(aStreamIds, std::move(aBuffer.Get()), aProps)) {
+    if (!SendDeliverFrame(aCaptureId, aStreamIds, std::move(aBuffer.Get()),
+                          aProps)) {
       return -1;
     }
   }
@@ -380,8 +393,14 @@ bool CamerasParent::IsWindowCapturing(uint64_t aWindowId,
   return false;
 }
 
-ShmemBuffer CamerasParent::GetBuffer(size_t aSize) {
-  return mShmemPool.GetIfAvailable(aSize);
+ShmemBuffer CamerasParent::GetBuffer(int aCaptureId, size_t aSize) {
+  auto guard = mShmemPools.Lock();
+  auto it = guard->find(aCaptureId);
+  if (it == guard->end()) {
+    return ShmemBuffer();
+  }
+  auto& [_, pool] = *it;
+  return pool.GetIfAvailable(aSize);
 }
 
 /*static*/
@@ -645,7 +664,8 @@ void AggregateCapturer::OnFrame(const webrtc::VideoFrame& aVideoFrame) {
 
     LOG_VERBOSE("CamerasParent(%p)::%s", parent, __func__);
     // Get a shared memory buffer to copy the frame data into
-    ShmemBuffer shMemBuffer = parent->GetBuffer(properties.bufferSize());
+    ShmemBuffer shMemBuffer =
+        parent->GetBuffer(mCaptureId, properties.bufferSize());
     if (!shMemBuffer.Valid()) {
       // Either we ran out of buffers or they're not the right size yet
       LOG("Correctly sized Video shmem not available in DeliverFrame");
@@ -660,23 +680,34 @@ void AggregateCapturer::OnFrame(const webrtc::VideoFrame& aVideoFrame) {
       VideoFrameUtils::CopyVideoFrameBuffers(
           shMemBuffer.GetBytes(), properties.bufferSize(), aVideoFrame);
       rec.Record();
-      runnable = new DeliverFrameRunnable(parent, mCapEngine, std::move(ids),
-                                          mTrackingId, std::move(shMemBuffer),
-                                          properties);
+      runnable = new DeliverFrameRunnable(parent, mCapEngine, mCaptureId,
+                                          std::move(ids), mTrackingId,
+                                          std::move(shMemBuffer), properties);
     }
     if (!runnable) {
-      runnable = new DeliverFrameRunnable(parent, mCapEngine, std::move(ids),
-                                          mTrackingId, aVideoFrame, properties);
+      runnable = new DeliverFrameRunnable(parent, mCapEngine, mCaptureId,
+                                          std::move(ids), mTrackingId,
+                                          aVideoFrame, properties);
     }
     nsIEventTarget* target = parent->GetBackgroundEventTarget();
     target->Dispatch(runnable, NS_DISPATCH_NORMAL);
   }
 }
 
-ipc::IPCResult CamerasParent::RecvReleaseFrame(ipc::Shmem&& aShmem) {
+ipc::IPCResult CamerasParent::RecvReleaseFrame(const int& aCaptureId,
+                                               ipc::Shmem&& aShmem) {
   MOZ_ASSERT(mPBackgroundEventTarget->IsOnCurrentThread());
 
-  mShmemPool.Put(ShmemBuffer(aShmem));
+  auto guard = mShmemPools.Lock();
+  auto it = guard->find(aCaptureId);
+  if (it == guard->end()) {
+    MOZ_ASSERT_UNREACHABLE(
+        "Releasing shmem but pool is already gone. Shmem must have been "
+        "deallocated.");
+    return IPC_FAIL(this, "Shmem was already deallocated");
+  }
+  auto& [_, pool] = *it;
+  pool.Put(ShmemBuffer(aShmem));
   return IPC_OK();
 }
 
@@ -1313,12 +1344,18 @@ auto CamerasParent::GetOrCreateCapturer(
     -> GetOrCreateCapturerResult {
   MOZ_ASSERT(mVideoCaptureThread->IsOnCurrentThread());
   VideoEngine* engine = EnsureInitialized(aEngine);
+  const auto ensureShmemPool = [&](int aCaptureId) {
+    auto guard = mShmemPools.Lock();
+    constexpr size_t kMaxShmemBuffers = 1;
+    guard->try_emplace(aCaptureId, kMaxShmemBuffers);
+  };
   for (auto& capturer : *mCapturers) {
     if (capturer->mCapEngine != aEngine) {
       continue;
     }
     if (capturer->mUniqueId.Equals(aUniqueId)) {
       int streamId = engine->GenerateId();
+      ensureShmemPool(capturer->mCaptureId);
       capturer->AddStream(this, streamId, aWindowId);
       return {.mCapturer = capturer.get(), .mStreamId = streamId};
     }
@@ -1326,6 +1363,7 @@ auto CamerasParent::GetOrCreateCapturer(
   NotNull capturer = mCapturers->AppendElement(
       AggregateCapturer::Create(mVideoCaptureThread, aEngine, engine, aUniqueId,
                                 aWindowId, std::move(aCapabilities), this));
+  ensureShmemPool(capturer->get()->mCaptureId);
   return {.mCapturer = capturer->get(),
           .mStreamId = capturer->get()->mCaptureId};
 }
@@ -1428,7 +1466,12 @@ void CamerasParent::ActorDestroy(ActorDestroyReason aWhy) {
   LOG_FUNCTION();
 
   // Release shared memory now, it's our last chance
-  mShmemPool.Cleanup(this);
+  {
+    auto guard = mShmemPools.Lock();
+    for (auto& [captureId, pool] : *guard) {
+      pool.Cleanup(this);
+    }
+  }
   // We don't want to receive callbacks or anything if we can't
   // forward them anymore anyway.
   mDestroyed = true;
@@ -1461,7 +1504,7 @@ CamerasParent::CamerasParent()
       mEngines(sEngines),
       mCapturers(sCapturers),
       mVideoCaptureFactory(EnsureVideoCaptureFactory()),
-      mShmemPool(CaptureEngine::MaxEngine),
+      mShmemPools("CamerasParent::mShmemPools"),
       mPBackgroundEventTarget(GetCurrentSerialEventTarget()),
       mDestroyed(false) {
   MOZ_ASSERT(mPBackgroundEventTarget != nullptr,
