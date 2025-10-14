@@ -14171,9 +14171,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.text-autospace.enabled")) {
       applies_to_first_letter: true,
       applies_to_first_line: true,
       applies_to_placeholder: true,
-      initial_values: ["normal"],
+      initial_values: ["no-autospace"],
       other_values: [
-        "no-autospace",
+        "normal",
         "auto",
         "ideograph-alpha",
         "ideograph-numeric",
