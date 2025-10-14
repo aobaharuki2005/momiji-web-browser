@@ -1183,7 +1183,11 @@ class BrowserRobot {
     fun verifyWebCompatReporterViewItems(composeTestRule: ComposeTestRule, websiteURL: String) {
         Log.i(TAG, "verifyWebCompatReporterViewItems: Trying to verify that the report broken site description is displayed")
         composeTestRule.onNodeWithContentDescription(
-            getStringResource(R.string.webcompat_reporter_description_2, appName) + " " + getStringResource(R.string.a11y_links_available),
+            getStringResource(
+                R.string.webcompat_reporter_description_3,
+                appName,
+                getStringResource(R.string.webcompat_reporter_learn_more),
+            ) + " " + getStringResource(R.string.a11y_links_available),
         ).assertIsDisplayed()
         Log.i(TAG, "verifyWebCompatReporterViewItems: Verified that the report broken site description is displayed")
         Log.i(TAG, "verifyWebCompatReporterViewItems: Trying to verify that the \"URL\" header is displayed")
