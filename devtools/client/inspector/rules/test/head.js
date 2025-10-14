@@ -1384,6 +1384,8 @@ function getSmallIncrementKey() {
  * @param {Boolean|undefined} expectedElements[].declarations[].dirty - Is the declaration dirty,
  *        i.e. was it added/modified by the user (should have a left green border).
  *        Defaults to false
+ * @param {Boolean|undefined} expectedElements[].declarations[].highlighted - Is the declaration
+ *        highlighted by a search.
  * @param {String} expectedElements[].header - If we're expecting a header (Inherited from,
  *        Pseudo-elements, …), the text of said header.
  */
@@ -1441,7 +1443,7 @@ function checkRuleViewContent(view, expectedElements) {
     is(
       declarations.length,
       expectedElement.declarations.length,
-      "Got the expected number of declarations"
+      `Got the expected number of declarations for expected element #${i} (${selector})`
     );
     for (let j = 0; j < declarations.length; j++) {
       const expectedDeclaration = expectedElement.declarations[j];
@@ -1456,6 +1458,12 @@ function checkRuleViewContent(view, expectedElements) {
         expectedDeclaration?.name,
         "Got expected property name"
       );
+      if (propName.innerText !== expectedDeclaration?.name) {
+        // We don't have the expected property name, don't run the other assertions to
+        // avoid spamming the output
+        continue;
+      }
+
       is(
         propValue.innerText,
         expectedDeclaration?.value,
@@ -1477,6 +1485,11 @@ function checkRuleViewContent(view, expectedElements) {
         !!ruleViewPropertyElement.hasAttribute("dirty"),
         !!expectedDeclaration?.dirty,
         `"${selector}" ${propName.innerText} is ${expectedDeclaration?.dirty ? "dirty" : "not dirty"}`
+      );
+      is(
+        ruleViewPropertyElement.querySelector(".ruleview-highlight") !== null,
+        !!expectedDeclaration?.highlighted,
+        `"${selector}" ${propName.innerText} is ${expectedDeclaration?.highlighted ? "highlighted" : "not highlighted"} `
       );
     }
   }
