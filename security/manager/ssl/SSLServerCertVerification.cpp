@@ -1168,13 +1168,13 @@ SSLServerCertVerificationResult::Run() {
     nsTArray<uint8_t> certBytes(mPeerCertChain.ElementAt(0).Clone());
     nsCOMPtr<nsIX509Cert> cert(new nsNSSCertificate(std::move(certBytes)));
     mSocketControl->SetServerCert(cert, EVStatus::NotEV);
+    mSocketControl->SetFailedCertChain(std::move(mPeerCertChain));
     if (mOverridableErrorCategory !=
         nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET) {
       mSocketControl->SetStatusErrorBits(mOverridableErrorCategory);
     }
   }
 
-  mSocketControl->SetHandshakeCertificates(std::move(mPeerCertChain));
   mSocketControl->SetCertVerificationResult(mFinalError);
   // Release this reference to the socket control so that it will be freed on
   // the socket thread.

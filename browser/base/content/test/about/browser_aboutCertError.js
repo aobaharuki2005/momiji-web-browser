@@ -225,14 +225,14 @@ add_task(async function checkAdvancedDetails() {
         "none",
         "Debug information is visible"
       );
-      let handshakeCertificates =
-        content.docShell.failedChannel.securityInfo.handshakeCertificates.map(
-          cert => cert.getBase64DERString()
+      let failedCertChain =
+        content.docShell.failedChannel.securityInfo.failedCertChain.map(cert =>
+          cert.getBase64DERString()
         );
       return {
         divDisplay: content.getComputedStyle(div).display,
         text: text.textContent,
-        handshakeCertificates,
+        failedCertChain,
       };
     });
     isnot(message.divDisplay, "none", "Debug information is visible");
@@ -249,7 +249,7 @@ add_task(async function checkAdvancedDetails() {
       message.text.includes("HTTP Public Key Pinning: false"),
       "Correct HPKP value found"
     );
-    let certChain = getCertChainAsString(message.handshakeCertificates);
+    let certChain = getCertChainAsString(message.failedCertChain);
     ok(message.text.includes(certChain), "Found certificate chain");
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -307,14 +307,14 @@ add_task(async function checkAdvancedDetailsForHSTS() {
       errorCode.click();
       let div = doc.getElementById("certificateErrorDebugInformation");
       let text = doc.getElementById("certificateErrorText");
-      let handshakeCertificates =
-        content.docShell.failedChannel.securityInfo.handshakeCertificates.map(
-          cert => cert.getBase64DERString()
+      let failedCertChain =
+        content.docShell.failedChannel.securityInfo.failedCertChain.map(cert =>
+          cert.getBase64DERString()
         );
       return {
         divDisplay: content.getComputedStyle(div).display,
         text: text.textContent,
-        handshakeCertificates,
+        failedCertChain,
       };
     });
     isnot(message.divDisplay, "none", "Debug information is visible");
@@ -333,7 +333,7 @@ add_task(async function checkAdvancedDetailsForHSTS() {
       message.text.includes("HTTP Public Key Pinning: true"),
       "Correct HPKP value found"
     );
-    let certChain = getCertChainAsString(message.handshakeCertificates);
+    let certChain = getCertChainAsString(message.failedCertChain);
     ok(message.text.includes(certChain), "Found certificate chain");
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);

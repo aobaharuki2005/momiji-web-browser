@@ -33,7 +33,7 @@ class TransportSecurityInfo : public nsITransportSecurityInfo {
  public:
   TransportSecurityInfo(
       uint32_t aSecurityState, PRErrorCode aErrorCode,
-      nsTArray<RefPtr<nsIX509Cert>>&& aHandshakeCertificates,
+      nsTArray<RefPtr<nsIX509Cert>>&& aFailedCertChain,
       nsCOMPtr<nsIX509Cert>& aServerCert,
       nsTArray<RefPtr<nsIX509Cert>>&& aSucceededCertChain,
       Maybe<uint16_t> aCipherSuite, Maybe<nsCString> aKeaGroupName,
@@ -60,11 +60,9 @@ class TransportSecurityInfo : public nsITransportSecurityInfo {
 
   const uint32_t mSecurityState;
   const PRErrorCode mErrorCode;
-  // Certificates provided in the TLS handshake by the server.
-  const nsTArray<RefPtr<nsIX509Cert>> mHandshakeCertificates;
-  // The server end-entity certificate.
+  // Peer cert chain for failed connections.
+  const nsTArray<RefPtr<nsIX509Cert>> mFailedCertChain;
   const nsCOMPtr<nsIX509Cert> mServerCert;
-  // The chain built during certificate validation, if successful.
   const nsTArray<RefPtr<nsIX509Cert>> mSucceededCertChain;
   const mozilla::Maybe<uint16_t> mCipherSuite;
   const mozilla::Maybe<nsCString> mKeaGroupName;

@@ -83,10 +83,10 @@ void CommonSocketControl::SetSucceededCertChain(
   return CreateCertChain(mSucceededCertChain, std::move(aCertList));
 }
 
-void CommonSocketControl::SetHandshakeCertificates(
+void CommonSocketControl::SetFailedCertChain(
     nsTArray<nsTArray<uint8_t>>&& aCertList) {
   COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
-  return CreateCertChain(mHandshakeCertificates, std::move(aCertList));
+  return CreateCertChain(mFailedCertChain, std::move(aCertList));
 }
 
 void CommonSocketControl::SetCanceled(PRErrorCode errorCode) {
@@ -319,8 +319,8 @@ void CommonSocketControl::RebuildCertificateInfoFromSSLTokenCache() {
     SetIsBuiltCertChainRootBuiltInRoot(*info.mIsBuiltCertChainRootBuiltInRoot);
   }
 
-  if (info.mHandshakeCertificatesBytes) {
-    SetHandshakeCertificates(std::move(*info.mHandshakeCertificatesBytes));
+  if (info.mFailedCertChainBytes) {
+    SetFailedCertChain(std::move(*info.mFailedCertChainBytes));
   }
 }
 
@@ -451,8 +451,8 @@ CommonSocketControl::GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) {
   }
   nsCOMPtr<nsITransportSecurityInfo> securityInfo(
       new psm::TransportSecurityInfo(
-          mSecurityState, mErrorCode, mHandshakeCertificates.Clone(),
-          mServerCert, mSucceededCertChain.Clone(), mCipherSuite, mKeaGroupName,
+          mSecurityState, mErrorCode, mFailedCertChain.Clone(), mServerCert,
+          mSucceededCertChain.Clone(), mCipherSuite, mKeaGroupName,
           mSignatureSchemeName, mProtocolVersion,
           mCertificateTransparencyStatus, mIsAcceptedEch,
           mIsDelegatedCredential, mOverridableErrorCategory, mMadeOCSPRequests,

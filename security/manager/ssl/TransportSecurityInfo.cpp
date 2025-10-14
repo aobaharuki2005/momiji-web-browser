@@ -39,7 +39,7 @@ namespace psm {
 
 TransportSecurityInfo::TransportSecurityInfo(
     uint32_t aSecurityState, PRErrorCode aErrorCode,
-    nsTArray<RefPtr<nsIX509Cert>>&& aHandshakeCertificates,
+    nsTArray<RefPtr<nsIX509Cert>>&& aFailedCertChain,
     nsCOMPtr<nsIX509Cert>& aServerCert,
     nsTArray<RefPtr<nsIX509Cert>>&& aSucceededCertChain,
     Maybe<uint16_t> aCipherSuite, Maybe<nsCString> aKeaGroupName,
@@ -52,7 +52,7 @@ TransportSecurityInfo::TransportSecurityInfo(
     bool aIsBuiltCertChainRootBuiltInRoot, const nsCString& aPeerId)
     : mSecurityState(aSecurityState),
       mErrorCode(aErrorCode),
-      mHandshakeCertificates(std::move(aHandshakeCertificates)),
+      mFailedCertChain(std::move(aFailedCertChain)),
       mServerCert(aServerCert),
       mSucceededCertChain(std::move(aSucceededCertChain)),
       mCipherSuite(aCipherSuite),
@@ -201,9 +201,9 @@ TransportSecurityInfo::ToString(nsACString& aResult) {
     NS_ENSURE_SUCCESS(rv, rv);
   }
   // END moved from nsISSLStatus
-  rv = objStream->Write16(mHandshakeCertificates.Length());
+  rv = objStream->Write16(mFailedCertChain.Length());
   NS_ENSURE_SUCCESS(rv, rv);
-  for (const auto& cert : mHandshakeCertificates) {
+  for (const auto& cert : mFailedCertChain) {
     rv = objStream->WriteCompoundObject(cert, NS_GET_IID(nsIX509Cert), true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -409,8 +409,8 @@ nsresult TransportSecurityInfo::ReadSSLStatus(
     }
 
     // Read only to consume bytes from the stream.
-    nsTArray<RefPtr<nsIX509Cert>> handshakeCertificates;
-    rv = ReadCertList(aStream, handshakeCertificates);
+    nsTArray<RefPtr<nsIX509Cert>> failedCertChain;
+    rv = ReadCertList(aStream, failedCertChain);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -540,7 +540,7 @@ nsresult TransportSecurityInfo::Read(const nsCString& aSerializedSecurityInfo,
 
   uint32_t aSecurityState = 0;
   PRErrorCode aErrorCode = 0;
-  nsTArray<RefPtr<nsIX509Cert>> aHandshakeCertificates;
+  nsTArray<RefPtr<nsIX509Cert>> aFailedCertChain;
   nsCOMPtr<nsIX509Cert> aServerCert;
   nsTArray<RefPtr<nsIX509Cert>> aSucceededCertChain;
   Maybe<uint16_t> aCipherSuite;
@@ -703,15 +703,14 @@ nsresult TransportSecurityInfo::Read(const nsCString& aSerializedSecurityInfo,
   // END moved from nsISSLStatus
   if (serVersionParsedToInt < 3) {
     // The old data structure of certList(nsIX509CertList) presents
-    rv = ReadCertList(objStream, aHandshakeCertificates);
+    rv = ReadCertList(objStream, aFailedCertChain);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     uint16_t certCount;
     rv = objStream->Read16(&certCount);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = ReadCertificatesFromStream(objStream, certCount,
-                                    aHandshakeCertificates);
+    rv = ReadCertificatesFromStream(objStream, certCount, aFailedCertChain);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -792,8 +791,8 @@ nsresult TransportSecurityInfo::Read(const nsCString& aSerializedSecurityInfo,
   }
 
   RefPtr<nsITransportSecurityInfo> securityInfo(new TransportSecurityInfo(
-      aSecurityState, aErrorCode, std::move(aHandshakeCertificates),
-      aServerCert, std::move(aSucceededCertChain), aCipherSuite, aKeaGroupName,
+      aSecurityState, aErrorCode, std::move(aFailedCertChain), aServerCert,
+      std::move(aSucceededCertChain), aCipherSuite, aKeaGroupName,
       aSignatureSchemeName, aProtocolVersion, aCertificateTransparencyStatus,
       aIsAcceptedEch, aIsDelegatedCredential, aOverridableErrorCategory,
       aMadeOCSPRequests, aUsedPrivateDNS, aIsEV, aNPNCompleted, aNegotiatedNPN,
@@ -805,7 +804,7 @@ nsresult TransportSecurityInfo::Read(const nsCString& aSerializedSecurityInfo,
 void TransportSecurityInfo::SerializeToIPC(IPC::MessageWriter* aWriter) {
   WriteParam(aWriter, mSecurityState);
   WriteParam(aWriter, mErrorCode);
-  WriteParam(aWriter, mHandshakeCertificates);
+  WriteParam(aWriter, mFailedCertChain);
   WriteParam(aWriter, mServerCert);
   WriteParam(aWriter, mSucceededCertChain);
   WriteParam(aWriter, mCipherSuite);
@@ -830,7 +829,7 @@ bool TransportSecurityInfo::DeserializeFromIPC(
     IPC::MessageReader* aReader, RefPtr<nsITransportSecurityInfo>* aResult) {
   uint32_t aSecurityState;
   PRErrorCode aErrorCode;
-  nsTArray<RefPtr<nsIX509Cert>> aHandshakeCertificates;
+  nsTArray<RefPtr<nsIX509Cert>> aFailedCertChain;
   nsCOMPtr<nsIX509Cert> aServerCert;
   nsTArray<RefPtr<nsIX509Cert>> aSucceededCertChain;
   Maybe<uint16_t> aCipherSuite;
@@ -852,7 +851,7 @@ bool TransportSecurityInfo::DeserializeFromIPC(
 
   if (!ReadParam(aReader, &aSecurityState) ||
       !ReadParam(aReader, &aErrorCode) ||
-      !ReadParam(aReader, &aHandshakeCertificates) ||
+      !ReadParam(aReader, &aFailedCertChain) ||
       !ReadParam(aReader, &aServerCert) ||
       !ReadParam(aReader, &aSucceededCertChain) ||
       !ReadParam(aReader, &aCipherSuite) ||
@@ -873,8 +872,8 @@ bool TransportSecurityInfo::DeserializeFromIPC(
   }
 
   RefPtr<nsITransportSecurityInfo> securityInfo(new TransportSecurityInfo(
-      aSecurityState, aErrorCode, std::move(aHandshakeCertificates),
-      aServerCert, std::move(aSucceededCertChain), aCipherSuite, aKeaGroupName,
+      aSecurityState, aErrorCode, std::move(aFailedCertChain), aServerCert,
+      std::move(aSucceededCertChain), aCipherSuite, aKeaGroupName,
       aSignatureSchemeName, aProtocolVersion, aCertificateTransparencyStatus,
       aIsAcceptedEch, aIsDelegatedCredential, aOverridableErrorCategory,
       aMadeOCSPRequests, aUsedPrivateDNS, aIsEV, aNPNCompleted, aNegotiatedNPN,
@@ -884,13 +883,13 @@ bool TransportSecurityInfo::DeserializeFromIPC(
 }
 
 NS_IMETHODIMP
-TransportSecurityInfo::GetHandshakeCertificates(
-    nsTArray<RefPtr<nsIX509Cert>>& aHandshakeCertificates) {
-  MOZ_ASSERT(aHandshakeCertificates.IsEmpty());
-  if (!aHandshakeCertificates.IsEmpty()) {
+TransportSecurityInfo::GetFailedCertChain(
+    nsTArray<RefPtr<nsIX509Cert>>& aFailedCertChain) {
+  MOZ_ASSERT(aFailedCertChain.IsEmpty());
+  if (!aFailedCertChain.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
-  aHandshakeCertificates.AppendElements(mHandshakeCertificates);
+  aFailedCertChain.AppendElements(mFailedCertChain);
   return NS_OK;
 }
 
