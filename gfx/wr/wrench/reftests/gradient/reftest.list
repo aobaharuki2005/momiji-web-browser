@@ -32,6 +32,8 @@ platform(linux,mac) fuzzy(1,80000) == radial-ellipse.yaml radial-ellipse-ref.png
 
 != radial-circle.yaml radial-ellipse.yaml
 
+== radial-negative-scale-ninepatch.yaml radial-negative-scale-ninepatch-ref.yaml
+
 == norm-linear-1.yaml norm-linear-1-ref.yaml
 == norm-linear-2.yaml norm-linear-2-ref.yaml
 == norm-linear-3.yaml norm-linear-3-ref.yaml
