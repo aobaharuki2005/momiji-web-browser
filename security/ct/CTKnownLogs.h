@@ -14,7 +14,7 @@
 
 #include <stddef.h>
 
-static const PRTime kCTExpirationTime = INT64_C(1766058457000000);
+static const PRTime kCTExpirationTime = INT64_C(1766524883000000);
 
 namespace mozilla::ct {
 
@@ -157,8 +157,7 @@ const CTLogInfo kCTLogList[] = {
      "\x75\x80\xb7\x53\xa7\x85\xd5\xbc\xab\x47\x06\x55\xdb\xb5\xdf\x88\xa1\x6f"
      "\x38",
      91},
-    {"DigiCert 'Wyvern2025h2' Log", CTLogState::Admissible,
-     CTLogFormat::RFC6962,
+    {"DigiCert 'Wyvern2025h2' Log", CTLogState::Admissible, CTLogFormat::RFC6962,
      1724900983000,  // 2024-08-29T03:09:43Z
      2,              // operated by DigiCert
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -188,8 +187,27 @@ const CTLogInfo kCTLogList[] = {
      "\xde\x9b\x8c\x13\x92\xb7\xad\x3d\x0f\xa1\x9c\x8f\x48\xce\x74\x27\x18\x23"
      "\x99",
      91},
-    {"DigiCert 'Sphinx2025h2' Log", CTLogState::Admissible,
-     CTLogFormat::RFC6962,
+    {"DigiCert 'Wyvern2027h1'", CTLogState::Admissible, CTLogFormat::RFC6962,
+     1760119200000,  // 2025-10-10T18:00:00Z
+     2,              // operated by DigiCert
+     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
+     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x6a\xcb\x71\x62\x3d\x66\x9e\xd1\xae"
+     "\xca\xfe\xf8\x93\x87\xfe\xc9\xa2\x31\xf9\x91\x33\x95\x22\x7e\x89\x54\xd8"
+     "\x5a\x5c\x3c\x4a\x94\x8a\x27\x84\xdf\xc5\x85\xae\x06\x19\xc4\x4e\x58\x69"
+     "\xc8\x6f\xf9\xb1\xe2\x67\xd2\x63\x92\x9d\x58\x17\xb1\x9d\x49\x45\xf9\x48"
+     "\xee",
+     91},
+    {"DigiCert 'Wyvern2027h2'", CTLogState::Admissible, CTLogFormat::RFC6962,
+     1760119200000,  // 2025-10-10T18:00:00Z
+     2,              // operated by DigiCert
+     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
+     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xb8\xe8\x3c\x85\xc8\x1a\x61\x3f\xcc"
+     "\x4a\x1c\x69\x6a\x0d\x87\x8a\x07\xb4\xce\xc2\xf3\xcf\xcb\xce\x2d\x95\xe9"
+     "\xe9\xf6\x82\x77\x33\x3e\x32\x7f\xe7\x8f\x25\x3d\x44\xe0\x2e\xc0\x3c\x6e"
+     "\xbb\xcf\x3f\x1a\xbc\x67\xe3\xa9\x26\x7a\x17\x4e\x29\x50\xc5\x7b\x16\xdd"
+     "\x4a",
+     91},
+    {"DigiCert 'Sphinx2025h2' Log", CTLogState::Admissible, CTLogFormat::RFC6962,
      1724900983000,  // 2024-08-29T03:09:43Z
      2,              // operated by DigiCert
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -218,6 +236,26 @@ const CTLogInfo kCTLogList[] = {
      "\x22\x79\xa7\x64\x59\xd3\x89\x93\x21\x66\xfb\x09\x81\x60\x1f\x62\x55\x34"
      "\x38\x8c\xa4\x38\x2e\xac\x95\x0c\xeb\xed\x4f\x64\xbc\x45\x42\xf7\x06\x7a"
      "\xcd",
+     91},
+    {"DigiCert 'sphinx2027h1'", CTLogState::Admissible, CTLogFormat::RFC6962,
+     1760119200000,  // 2025-10-10T18:00:00Z
+     2,              // operated by DigiCert
+     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
+     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xbe\x2a\xc8\xab\x55\xcf\xc2\x0c\x06"
+     "\xec\x19\xdb\x32\x1d\xb3\xa1\x46\xc4\xb7\xe4\xfc\xcf\xc5\xc0\xb6\x0f\x65"
+     "\xa3\xc8\xe6\x6b\xe6\x9a\x4d\x09\x7c\x89\x50\xb2\xa5\x41\x57\xb4\xba\x6d"
+     "\xe3\xf4\x87\x6a\x85\x33\x6e\xf7\x23\x0d\x7f\xfa\x07\x52\x1b\x2f\x73\xa8"
+     "\x21",
+     91},
+    {"DigiCert 'sphinx2027h2'", CTLogState::Admissible, CTLogFormat::RFC6962,
+     1760119200000,  // 2025-10-10T18:00:00Z
+     2,              // operated by DigiCert
+     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
+     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x50\x27\xb6\xdc\xcf\x3c\xf6\x60\x2c"
+     "\x51\x57\x93\x4c\x17\x0d\xb0\x09\x8f\xdf\xbe\x19\x59\x06\xe8\x2d\xd4\x7c"
+     "\x45\xd1\xb0\x33\x75\x59\xe8\xff\xec\x0f\x08\x6b\x2f\xbc\x0a\xe3\x3a\xd7"
+     "\x3e\x1d\xc7\xc0\xb0\xc3\x2f\x10\xe3\xbd\x10\x5e\x8a\xf5\x12\x6e\x96\x52"
+     "\xc0",
      91},
     {"Sectigo 'Sabre2025h2'", CTLogState::Admissible, CTLogFormat::RFC6962,
      1758216000000,  // 2025-09-18T17:20:00Z
@@ -409,8 +447,7 @@ const CTLogInfo kCTLogList[] = {
      "\xf4\xfc\x5c\xa9\x8c\x5f\xfb\x0d\x60\xe4\x2c\x0f\x16\xec\x2a\xb2\x6d\xeb"
      "\x15",
      91},
-    {"Let's Encrypt 'Sycamore2025h2d'", CTLogState::Admissible,
-     CTLogFormat::Tiled,
+    {"Let's Encrypt 'Sycamore2025h2d'", CTLogState::Admissible, CTLogFormat::Tiled,
      1758078000000,  // 2025-09-17T03:00:00Z
      4,              // operated by Let's Encrypt
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -420,8 +457,7 @@ const CTLogInfo kCTLogList[] = {
      "\x15\x7f\xc6\xa1\xaa\xfa\x9d\xbc\xd0\x1e\xd5\x7b\xe6\xe7\x78\x47\x42\x1a"
      "\x7e",
      91},
-    {"Let's Encrypt 'Sycamore2026h1'", CTLogState::Admissible,
-     CTLogFormat::Tiled,
+    {"Let's Encrypt 'Sycamore2026h1'", CTLogState::Admissible, CTLogFormat::Tiled,
      1758078000000,  // 2025-09-17T03:00:00Z
      4,              // operated by Let's Encrypt
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -431,8 +467,7 @@ const CTLogInfo kCTLogList[] = {
      "\x55\x42\x8f\x61\xa7\xc0\x25\xe9\x40\x9c\xc7\xc6\xce\xfd\xe5\x1c\x27\x3c"
      "\x80",
      91},
-    {"Let's Encrypt 'Sycamore2026h2'", CTLogState::Admissible,
-     CTLogFormat::Tiled,
+    {"Let's Encrypt 'Sycamore2026h2'", CTLogState::Admissible, CTLogFormat::Tiled,
      1758078000000,  // 2025-09-17T03:00:00Z
      4,              // operated by Let's Encrypt
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -442,8 +477,7 @@ const CTLogInfo kCTLogList[] = {
      "\xca\xb3\x88\xf8\x48\xc6\xc5\x9e\xd4\x88\xf7\x0d\xdd\xb2\xf7\x43\xdf\x45"
      "\xa8",
      91},
-    {"Let's Encrypt 'Sycamore2027h1'", CTLogState::Admissible,
-     CTLogFormat::Tiled,
+    {"Let's Encrypt 'Sycamore2027h1'", CTLogState::Admissible, CTLogFormat::Tiled,
      1758078000000,  // 2025-09-17T03:00:00Z
      4,              // operated by Let's Encrypt
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -453,8 +487,7 @@ const CTLogInfo kCTLogList[] = {
      "\xa9\xf9\x16\x69\x26\x8c\xfe\x7f\xb7\xa5\xf0\x81\x7f\x80\x40\x92\x97\x71"
      "\xf2",
      91},
-    {"Let's Encrypt 'Sycamore2027h2'", CTLogState::Admissible,
-     CTLogFormat::Tiled,
+    {"Let's Encrypt 'Sycamore2027h2'", CTLogState::Admissible, CTLogFormat::Tiled,
      1758078000000,  // 2025-09-17T03:00:00Z
      4,              // operated by Let's Encrypt
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -464,8 +497,7 @@ const CTLogInfo kCTLogList[] = {
      "\x5b\xe0\x07\xf7\x00\x16\x3c\xb4\x4b\xe6\xf9\xad\xcf\xb6\x64\x87\x67\xf6"
      "\x9c",
      91},
-    {"Let's Encrypt 'Willow2025h2d'", CTLogState::Admissible,
-     CTLogFormat::Tiled,
+    {"Let's Encrypt 'Willow2025h2d'", CTLogState::Admissible, CTLogFormat::Tiled,
      1758078000000,  // 2025-09-17T03:00:00Z
      4,              // operated by Let's Encrypt
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -555,8 +587,7 @@ const CTLogInfo kCTLogList[] = {
      "\x9d\x7d\x05\x53\xc7\x9e\x94\xea\x9b\x57\x46\xbf\x4f\xa4\x7e\xfb\xdf\xfa"
      "\x85",
      91},
-    {"Bogus placeholder log to unbreak misbehaving CT libraries",
-     CTLogState::Retired, CTLogFormat::RFC6962,
+    {"Bogus placeholder log to unbreak misbehaving CT libraries", CTLogState::Retired, CTLogFormat::RFC6962,
      1750489200000,  // 2025-06-21T07:00:00Z
      6,              // operated by Geomys
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -597,7 +628,7 @@ const CTLogInfo kCTLogList[] = {
      "\x37",
      91},
     {"Geomys 'Tuscolo2027h1'", CTLogState::Admissible, CTLogFormat::Tiled,
-     1753822800000,  // 2025-07-29T21:00:00Z
+     1759957200000,  // 2025-10-08T21:00:00Z
      6,              // operated by Geomys
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x39\x8c\x30\x1a\x86\x8d\xa5\x9f\xd2"
@@ -607,7 +638,7 @@ const CTLogInfo kCTLogList[] = {
      "\x78",
      91},
     {"Geomys 'Tuscolo2027h2'", CTLogState::Admissible, CTLogFormat::Tiled,
-     1753822800000,  // 2025-07-29T21:00:00Z
+     1759957200000,  // 2025-10-08T21:00:00Z
      6,              // operated by Geomys
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x20\x0c\xf6\x80\xe0\xfb\xc0\x8a\x6d"
@@ -616,8 +647,7 @@ const CTLogInfo kCTLogList[] = {
      "\x66\x8c\x31\x22\x44\x8a\xa5\x96\x06\x96\xa2\xed\x74\xb5\x5c\x2d\x60\xd2"
      "\xe7",
      91},
-    {"Bogus RFC6962 log to avoid breaking misbehaving CT libraries",
-     CTLogState::Retired, CTLogFormat::RFC6962,
+    {"Bogus RFC6962 log to avoid breaking misbehaving CT libraries", CTLogState::Retired, CTLogFormat::RFC6962,
      1750489200000,  // 2025-06-21T07:00:00Z
      7,              // operated by IPng Networks
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -627,8 +657,7 @@ const CTLogInfo kCTLogList[] = {
      "\x65\x5e\x3d\xd5\x06\xeb\x35\x18\x34\xea\x63\x3a\x2b\x01\x33\x0d\x75\xed"
      "\xaa",
      91},
-    {"IPng Networks 'Halloumi2025h2'", CTLogState::Admissible,
-     CTLogFormat::Tiled,
+    {"IPng Networks 'Halloumi2025h2'", CTLogState::Admissible, CTLogFormat::Tiled,
      1759861800000,  // 2025-10-07T18:30:00Z
      7,              // operated by IPng Networks
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -638,8 +667,7 @@ const CTLogInfo kCTLogList[] = {
      "\xee\xaa\xa9\x2e\xfe\x66\x7b\xf7\x5d\x96\x92\x85\x1a\x81\x5f\x90\xc0\x6b"
      "\x01",
      91},
-    {"IPng Networks 'Halloumi2026h1'", CTLogState::Admissible,
-     CTLogFormat::Tiled,
+    {"IPng Networks 'Halloumi2026h1'", CTLogState::Admissible, CTLogFormat::Tiled,
      1759861800000,  // 2025-10-07T18:30:00Z
      7,              // operated by IPng Networks
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -649,8 +677,7 @@ const CTLogInfo kCTLogList[] = {
      "\x20\xc2\x0a\x80\x1d\x6b\xd1\xdc\x58\xe4\x9a\x23\xab\x59\xbc\xba\x86\xd8"
      "\x8e",
      91},
-    {"IPng Networks 'Halloumi2027h1'", CTLogState::Admissible,
-     CTLogFormat::Tiled,
+    {"IPng Networks 'Halloumi2027h1'", CTLogState::Admissible, CTLogFormat::Tiled,
      1759861800000,  // 2025-10-07T18:30:00Z
      7,              // operated by IPng Networks
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -660,8 +687,7 @@ const CTLogInfo kCTLogList[] = {
      "\xa8\x4e\x4f\x53\x83\x44\xc3\x09\xc0\x27\xd1\x56\x79\x3f\xfa\x41\xaa\x2f"
      "\x67",
      91},
-    {"IPng Networks 'Halloumi2027h2'", CTLogState::Admissible,
-     CTLogFormat::Tiled,
+    {"IPng Networks 'Halloumi2027h2'", CTLogState::Admissible, CTLogFormat::Tiled,
      1759861800000,  // 2025-10-07T18:30:00Z
      7,              // operated by IPng Networks
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
