@@ -82,6 +82,11 @@ class JS_PUBLIC_API SliceBudget {
   // the predicted idle time.
   bool extended = false;
 
+  // Temporarily allow going over budget. (isOverBudget() will return false,
+  // though step() will still have an effect and will matter once this is set
+  // back to false.)
+  bool keepGoing = false;
+
  private:
   explicit SliceBudget(InterruptRequestFlag* irqPtr)
       : counter(irqPtr ? StepsPerExpensiveCheck : UnlimitedCounter),
@@ -121,7 +126,9 @@ class JS_PUBLIC_API SliceBudget {
     }
   }
 
-  bool isOverBudget() { return counter <= 0 && checkOverBudget(); }
+  bool isOverBudget() {
+    return counter <= 0 && !keepGoing && checkOverBudget();
+  }
 
   bool isWorkBudget() const { return budget.is<WorkBudget>(); }
   bool isTimeBudget() const { return budget.is<TimeBudget>(); }
