@@ -28,25 +28,56 @@ namespace mozilla::camera {
 class CamerasParent;
 class VideoEngine;
 
-class CallbackHelper : public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
+// Class that manages sharing of VideoCaptureImpl instances on top of
+// VideoEngine. Sharing is needed as access to most sources is exclusive
+// system-wide.
+//
+// There is at most one AggregateCapturer instance per unique source, as defined
+// by its unique capture ID.
+//
+// There can be multiple requests for a stream from a source, as defined by
+// unique stream IDs.
+//
+// Stream IDs and capture IDs use the same ID space. With capture happening in
+// the parent process, application-wide uniqueness is guaranteed.
+//
+// When multiple stream requests have been made for a source, even across
+// multiple CamerasParent instances, this class distributes a single frame to
+// each CamerasParent instance that has requested a stream. Distribution to the
+// various stream requests happens in CamerasChild::RecvDeliverFrame.
+//
+// This class similarly handles capture-ended events, and distributes them to
+// the correct CamerasParent instances, with distribution to streams happening
+// in CamerasChild::RecvCaptureEnded.
+class AggregateCapturer final
+    : public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
-  CallbackHelper(CaptureEngine aCapEng, int aStreamId, CamerasParent* aParent)
-      : mCapEngine(aCapEng),
-        mStreamId(aStreamId),
-        mTrackingId(CaptureEngineToTrackingSourceStr(aCapEng), aStreamId),
-        mParent(aParent),
-        mConfiguration("CallbackHelper::mConfiguration") {}
+  static std::unique_ptr<AggregateCapturer> Create(
+      nsISerialEventTarget* aVideoCaptureThread, CaptureEngine aCapEng,
+      VideoEngine* aEngine, const nsCString& aUniqueId, uint64_t aWindowId,
+      nsTArray<webrtc::VideoCaptureCapability>&& aCapabilities,
+      CamerasParent* aParent);
 
-  void SetConfiguration(const webrtc::VideoCaptureCapability& aCapability,
-                        const NormalizedConstraints& aConstraints,
-                        const dom::VideoResizeModeEnum& aResizeMode);
+  ~AggregateCapturer();
+
+  void AddStream(CamerasParent* aParent, int aStreamId, uint64_t aWindowId);
+  struct RemoveStreamResult {
+    size_t mNumRemainingStreams;
+    size_t mNumRemainingStreamsForParent;
+  };
+  RemoveStreamResult RemoveStream(int aStreamId);
+  RemoveStreamResult RemoveStreamsFor(CamerasParent* aParent);
+  Maybe<int> CaptureIdFor(int aStreamId);
+  void SetConfigurationFor(int aStreamId,
+                           const webrtc::VideoCaptureCapability& aCapability,
+                           const NormalizedConstraints& aConstraints,
+                           const dom::VideoResizeModeEnum& aResizeMode,
+                           bool aStarted);
+  webrtc::VideoCaptureCapability CombinedCapability();
 
   void OnCaptureEnded();
   void OnFrame(const webrtc::VideoFrame& aVideoFrame) override;
 
-  friend CamerasParent;
-
- private:
   struct Configuration {
     webrtc::VideoCaptureCapability mCapability;
     NormalizedConstraints mConstraints;
@@ -54,15 +85,55 @@ class CallbackHelper : public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
     // defaults factored in.
     dom::VideoResizeModeEnum mResizeMode{};
   };
+  // Representation of a stream request for the source of this AggregateCapturer
+  // instance.
+  struct Stream {
+    // The CamerasParent instance that requested this stream. mParent is
+    // responsible for the lifetime of this stream.
+    CamerasParent* const mParent;
+    // The id that identifies this stream. This is unique within the application
+    // session, in the same set of IDs as AggregateCapturer::mCaptureId.
+    const int mId{-1};
+    // The id of the window where the request for this stream originated.
+    const uint64_t mWindowId{};
+    // The configuration applied to this stream.
+    Configuration mConfiguration;
+    // Whether the stream has been started and not stopped. As opposed to
+    // allocated and not deallocated, which controls the presence of this stream
+    // altogether.
+    bool mStarted{false};
+    // The timestamp of the last frame sent to mParent for this stream.
+    media::TimeUnit mLastFrameTime{media::TimeUnit::FromNegativeInfinity()};
+  };
+  // The video capture thread is where all access to this class must happen.
+  const nsCOMPtr<nsISerialEventTarget> mVideoCaptureThread;
+  // The identifier for which VideoEngine instance we are using, i.e. which type
+  // of source we're associated with.
   const CaptureEngine mCapEngine;
-  const int mStreamId;
+  // The (singleton from sEngines) VideoEngine instance that mCaptureId is valid
+  // in.
+  const RefPtr<VideoEngine> mEngine;
+  // The unique ID string of the associated device.
+  const nsCString mUniqueId;
+  // The id that identifies the capturer instance of the associated source
+  // device in VideoEngine.
+  const int mCaptureId;
+  // Tracking ID of the capturer for profiler markers.
   const TrackingId mTrackingId;
-  CamerasParent* const mParent;
+  // The (immutable) list of capabilities offered by the associated source
+  // device.
+  const nsTArray<webrtc::VideoCaptureCapability> mCapabilities;
+  // The list of streams that have been requested from all CamerasParent
+  // instances for the associated source device.
+  DataMutex<nsTArray<std::unique_ptr<Stream>>> mStreams;
+
+ private:
+  AggregateCapturer(nsISerialEventTarget* aVideoCaptureThread,
+                    CaptureEngine aCapEng, VideoEngine* aEngine,
+                    const nsCString& aUniqueId, int aCaptureId,
+                    nsTArray<webrtc::VideoCaptureCapability>&& aCapabilities);
+
   MediaEventListener mCaptureEndedListener;
-  bool mConnectedToCaptureEnded = false;
-  DataMutex<Configuration> mConfiguration;
-  // Capture thread only.
-  media::TimeUnit mLastFrameTime = media::TimeUnit::FromNegativeInfinity();
 };
 
 class DeliverFrameRunnable;
@@ -127,6 +198,7 @@ class CamerasParent final : public PCamerasParent {
   mozilla::ipc::IPCResult RecvEnsureInitialized(
       const CaptureEngine& aCapEngine) override;
 
+  bool IsWindowCapturing(uint64_t aWindowId, const nsACString& aUniqueId) const;
   nsIEventTarget* GetBackgroundEventTarget() {
     return mPBackgroundEventTarget;
   };
@@ -138,7 +210,8 @@ class CamerasParent final : public PCamerasParent {
   ShmemBuffer GetBuffer(size_t aSize);
 
   // helper to forward to the PBackground thread
-  int DeliverFrameOverIPC(CaptureEngine aCapEngine, int aStreamId,
+  int DeliverFrameOverIPC(CaptureEngine aCapEngine,
+                          const Span<const int>& aStreamId,
                           const TrackingId& aTrackingId, ShmemBuffer aBuffer,
                           unsigned char* aAltBuffer,
                           const VideoFrameProperties& aProps);
@@ -148,9 +221,18 @@ class CamerasParent final : public PCamerasParent {
  private:
   virtual ~CamerasParent();
 
-  // We use these helpers for shutdown and for the respective IPC commands.
-  void StopCapture(const CaptureEngine& aCapEngine, int aStreamId);
-  int ReleaseCapture(const CaptureEngine& aCapEngine, int aStreamId);
+  struct GetOrCreateCapturerResult {
+    AggregateCapturer* mCapturer{};
+    int mStreamId{};
+  };
+  GetOrCreateCapturerResult GetOrCreateCapturer(
+      CaptureEngine aEngine, uint64_t aWindowId, const nsCString& aUniqueId,
+      nsTArray<webrtc::VideoCaptureCapability>&& aCapabilities);
+  AggregateCapturer* GetCapturer(CaptureEngine aEngine, int aStreamId);
+  int ReleaseStream(CaptureEngine aEngine, int aStreamId);
+
+  nsTArray<webrtc::VideoCaptureCapability> const* EnsureCapabilitiesPopulated(
+      CaptureEngine aEngine, const nsCString& aUniqueId);
 
   void OnDeviceChange();
 
@@ -167,7 +249,6 @@ class CamerasParent final : public PCamerasParent {
 
   void OnShutdown();
 
-  nsTArray<UniquePtr<CallbackHelper>> mCallbacks;
   // If existent, blocks xpcom shutdown while alive.
   // Note that this makes a reference cycle that gets broken in ActorDestroy().
   const UniquePtr<media::ShutdownBlockingTicket> mShutdownBlocker;
@@ -179,6 +260,13 @@ class CamerasParent final : public PCamerasParent {
 
   // Reference to same VideoEngineArray as sEngines. Video capture thread only.
   const RefPtr<VideoEngineArray> mEngines;
+
+  // Reference to same array of AggregateCapturers as sCapturers. There is one
+  // AggregateCapturer per allocated video source. It tracks the mapping from
+  // source to streamIds and CamerasParent instances. Video capture thread only.
+  const RefPtr<
+      media::Refcountable<nsTArray<std::unique_ptr<AggregateCapturer>>>>
+      mCapturers;
 
   // Reference to same VideoCaptureFactory as sVideoCaptureFactory. Video
   // capture thread only.
@@ -193,7 +281,7 @@ class CamerasParent final : public PCamerasParent {
   // Set to true in ActorDestroy. PBackground only.
   bool mDestroyed;
 
-  std::map<nsCString, std::map<int, webrtc::VideoCaptureCapability>>
+  std::map<nsCString, nsTArray<webrtc::VideoCaptureCapability>>
       mAllCandidateCapabilities;
 
   // Listener for the camera VideoEngine::DeviceChangeEvent(). Video capture
