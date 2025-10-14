@@ -1297,6 +1297,8 @@ nsresult LocalMediaDevice::Deallocate() {
 already_AddRefed<LocalMediaDevice> LocalMediaDevice::Clone() const {
   MOZ_ASSERT(NS_IsMainThread());
   auto device = MakeRefPtr<LocalMediaDevice>(mRawDevice, mID, mGroupID, mName);
+  device->mSource =
+      mRawDevice->mEngine->CreateSourceFrom(mSource, device->mRawDevice);
 #ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
   // The source is normally created on the MediaManager thread. But for cloning,
   // it ends up being created on main thread. Make sure its owning event target
