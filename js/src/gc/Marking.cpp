@@ -2408,13 +2408,13 @@ IncrementalProgress JS::Zone::enterWeakMarkingMode(GCMarker* marker,
     CellColor srcColor = gc::detail::GetEffectiveColor(marker, src);
     auto& edges = r.front().value();
 
+    size_t numEdges = edges.length();
     if (IsMarked(srcColor) && edges.length() > 0) {
-      uint32_t steps = edges.length();
       marker->markEphemeronEdges(edges, AsMarkColor(srcColor));
-      budget.step(steps);
-      if (budget.isOverBudget()) {
-        return NotFinished;
-      }
+    }
+    budget.step(1 + numEdges);
+    if (budget.isOverBudget()) {
+      return NotFinished;
     }
   }
 

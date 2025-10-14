@@ -615,6 +615,31 @@ IncrementalProgress GCRuntime::markWeakReferences(
   auto leaveOnExit =
       mozilla::MakeScopeExit([&] { marker().leaveWeakMarkingMode(); });
 
+  // If enterWeakMarkingMode takes up at least 80% of a slice, finish marking
+  // completely in the next slice before yielding again. This avoids the problem
+  // where scanning gcEphemeronEdges (which must be done at the beginning of
+  // each slice) takes longer than a slice and therefore no (or little) progress
+  // can be made per slice.
+  double progressBeforeEnterWMM = budget.progress();
+  auto checkSlowEnter = mozilla::MakeScopeExit([&] {
+    // Called only when returning NotFinished.
+    if (budget.progress() - progressBeforeEnterWMM > 0.8) {
+      // Overran the budget. Finish the marking synchronously in the next slice.
+      // Repeatedly returning to the mutator would require re-scanning the full
+      // edge table in every slice, and we already know that this will take up
+      // most or all of a single slice budget.
+      finishMarkingDuringSweeping = true;
+    }
+  });
+
+  // The previous logic is for the first enterWeakMarkingMode slice. This logic
+  // then kicks in for the next slice, to update the budget to actually keep
+  // going.
+  if (!budget.isUnlimited() && finishMarkingDuringSweeping) {
+    JS_LOG(gc, Info, "enterWeakMarkingMode finishing marking in next slice");
+    budget.keepGoing = true;
+  }
+
   if (marker().enterWeakMarkingMode()) {
     // If there was an 'enter-weak-marking-mode' token in the queue, then it
     // and everything after it will still be in the queue so we can process
@@ -659,6 +684,7 @@ IncrementalProgress GCRuntime::markWeakReferences(
   }
 
   assertNoMarkingWork();
+  checkSlowEnter.release();  // No need to lengthen next slice.
 
   return Finished;
 }
@@ -1283,6 +1309,9 @@ IncrementalProgress GCRuntime::endMarkingSweepGroup(JS::GCContext* gcx,
   // We must not yield after this point before we start sweeping the group.
   safeToYield = false;
 
+  // If we temporarily prevented yielding during marking, release the hold now.
+  budget.keepGoing = false;
+
   MaybeCheckWeakMapMarking(this);
 
   return Finished;
@@ -1609,6 +1638,7 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JS::GCContext* gcx,
   using namespace gcstats;
 
   AutoSCC scc(stats(), sweepGroupIndex);
+  finishMarkingDuringSweeping = false;
 
   bool sweepingAtoms = false;
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
