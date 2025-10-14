@@ -8,7 +8,9 @@ import mozversioncontrol
 # List of moz.build that currently hold a LegacyTest
 # *Don't touch that dial!*
 
-allowlist = {}
+allowlist = {
+    "ipc/ipdl/test/ipdl/moz.build",
+}
 
 
 def test_extra_legacy_tests():
