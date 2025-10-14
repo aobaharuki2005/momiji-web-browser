@@ -58,7 +58,7 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
       },
       {
         tag: "span",
-        classList: ["urlbarView-realtime-description-separator"],
+        classList: ["urlbarView-realtime-description-separator-dot"],
       },
       {
         name: `ticker_${index}`,
@@ -76,7 +76,7 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
       },
       {
         tag: "span",
-        classList: ["urlbarView-realtime-description-separator"],
+        classList: ["urlbarView-realtime-description-separator-dot"],
       },
       {
         name: `last_price_${index}`,
@@ -85,7 +85,7 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
       },
       {
         tag: "span",
-        classList: ["urlbarView-realtime-description-separator"],
+        classList: ["urlbarView-realtime-description-separator-dot"],
       },
       {
         name: `exchange_${index}`,

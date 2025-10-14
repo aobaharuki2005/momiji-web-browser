@@ -21,6 +21,8 @@ prefs = [
 
 ["test_quicksuggest_exposures_locales.js"]
 
+["test_quicksuggest_flight_status.js"]
+
 ["test_quicksuggest_importantDatesSuggestions.js"]
 
 ["test_quicksuggest_impressionCaps.js"]

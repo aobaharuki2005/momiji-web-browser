@@ -449,6 +449,14 @@
     > .urlbarView-row-buttons
     > &:not([open]):first-child:empty {
     display: none;
+
+    /* The realtime suggestions' style will be broken if the width will be
+       changed by hover. Thus we use the visibility instead of display to keep
+       the element size */
+    .urlbarView-row:is([dynamicType="flightStatus"], [dynamicType="market"], [dynamicType="yelpRealtime"]) & {
+      display: unset;
+      visibility: hidden;
+    }
   }
 
   /* Labeled result menu button */
@@ -1319,6 +1327,8 @@
   --green-status-color: light-dark(var(--color-green-60), var(--color-green-20));
   --red-status-color: light-dark(var(--color-red-70), var(--color-red-40));
 
+  /* Realtime suggestions can contain many items, which should always wrap. */
+  flex-wrap: wrap;
   /* Remove the usual inner padding. Each item in the row will have its own. */
   padding: 0;
 
@@ -1383,10 +1393,17 @@
         color: var(--urlbarView-secondary-text-color);
       }
 
-      > .urlbarView-realtime-description-top > .urlbarView-realtime-description-separator::before,
-      > .urlbarView-realtime-description-bottom > .urlbarView-realtime-description-separator::before {
+      > .urlbarView-realtime-description-top > .urlbarView-realtime-description-separator-dot::before,
+      > .urlbarView-realtime-description-bottom > .urlbarView-realtime-description-separator-dot::before {
         margin-inline: var(--space-xsmall);
         content: "·";
+        display: inline;
+      }
+
+      > .urlbarView-realtime-description-top > .urlbarView-realtime-description-separator-dash::before,
+      > .urlbarView-realtime-description-bottom > .urlbarView-realtime-description-separator-dash::before {
+        margin-inline: var(--space-xsmall);
+        content: "–";
         display: inline;
       }
     }
@@ -1508,6 +1525,59 @@
         > .urlbarView-yelpRealtime-description-business-hours
         > span {
         color: var(--red-status-color);
+      }
+    }
+  }
+}
+
+/* Flight status suggestions specific */
+
+.urlbarView-row[dynamicType="flightStatus"] > .urlbarView-realtime-root > .urlbarView-realtime-item {
+  > .urlbarView-realtime-image-container {
+    --airline-fallback-icon-color: #bac2ca;
+
+    border-color: color-mix(in srgb, currentColor 10%, transparent);
+    background-color: var(--urlbar-box-focus-bgcolor);
+
+    > .urlbarView-realtime-image[fallback] {
+      width: 26px;
+      height: 26px;
+      flex-basis: 26px;
+      fill: var(--airline-fallback-icon-color);
+    }
+  }
+
+  > .urlbarView-realtime-description {
+    > .urlbarView-realtime-description-top > .urlbarView-flightStatus-time {
+      font-weight: var(--font-weight-bold);
+      margin-inline-end: var(--space-small);
+    }
+
+    > .urlbarView-realtime-description-bottom {
+      > .urlbarView-flightStatus-status {
+        font-weight: var(--font-weight-bold);
+      }
+
+      .urlbarView-row:not([selected])
+        > .urlbarView-realtime-root
+        > .urlbarView-realtime-item:is([status="ontime"], [status="inflight"], [status="arrived"]):not([selected])
+        > .urlbarView-realtime-description
+        > &
+        > .urlbarView-flightStatus-status {
+        color: var(--green-status-color);
+      }
+
+      .urlbarView-row:not([selected])
+        > .urlbarView-realtime-root
+        > .urlbarView-realtime-item:is([status="cancelled"], [status="delayed"]):not([selected])
+        > .urlbarView-realtime-description
+        > &
+        > .urlbarView-flightStatus-status {
+        color: var(--red-status-color);
+      }
+
+      > .urlbarView-realtime-description-separator-dot:has(+ .urlbarView-flightStatus-time-left-minutes:empty) {
+        display: none;
       }
     }
   }

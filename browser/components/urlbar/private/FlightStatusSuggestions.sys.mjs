@@ -1,0 +1,253 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import { RealtimeSuggestProvider } from "moz-src:///browser/components/urlbar/private/RealtimeSuggestProvider.sys.mjs";
+
+/**
+ * A feature that supports flight status suggestions.
+ */
+export class FlightStatusSuggestions extends RealtimeSuggestProvider {
+  get realtimeType() {
+    return "flightStatus";
+  }
+
+  get isSponsored() {
+    return false;
+  }
+
+  get merinoProvider() {
+    return "flightaware";
+  }
+
+  getViewTemplateForDescriptionTop(index) {
+    return [
+      {
+        name: `departure_time_${index}`,
+        tag: "span",
+        classList: ["urlbarView-flightStatus-time"],
+      },
+      {
+        name: `origin_airport_${index}`,
+        tag: "span",
+        classList: ["urlbarView-flightStatus-airport"],
+      },
+      {
+        tag: "span",
+        classList: ["urlbarView-realtime-description-separator-dash"],
+      },
+      {
+        name: `arrival_time_${index}`,
+        tag: "span",
+        classList: ["urlbarView-flightStatus-time"],
+      },
+      {
+        name: `destination_airport_${index}`,
+        tag: "span",
+        classList: ["urlbarView-flightStatus-airport"],
+      },
+    ];
+  }
+
+  getViewTemplateForDescriptionBottom(index) {
+    return [
+      {
+        name: `departure_date_${index}`,
+        tag: "span",
+        classList: ["urlbarView-flightStatus-departure-date"],
+      },
+      {
+        tag: "span",
+        classList: ["urlbarView-realtime-description-separator-dot"],
+      },
+      {
+        name: `flight_number_${index}`,
+        tag: "span",
+        classList: ["urlbarView-flightStatus-flight-number"],
+      },
+      {
+        tag: "span",
+        classList: ["urlbarView-realtime-description-separator-dot"],
+      },
+      {
+        name: `status_${index}`,
+        tag: "span",
+        classList: ["urlbarView-flightStatus-status"],
+      },
+      {
+        tag: "span",
+        classList: ["urlbarView-realtime-description-separator-dot"],
+      },
+      {
+        name: `time_left_minutes_${index}`,
+        tag: "span",
+        classList: ["urlbarView-flightStatus-time-left-minutes"],
+      },
+    ];
+  }
+
+  getViewUpdateForValues(values) {
+    return Object.assign(
+      {},
+      ...values.flatMap((v, i) => {
+        let status;
+        switch (v.status) {
+          case "Scheduled": {
+            status = "ontime";
+            break;
+          }
+          case "En Route": {
+            status = "inflight";
+            break;
+          }
+          case "Arrived": {
+            status = "arrived";
+            break;
+          }
+          case "Cancelled": {
+            status = "cancelled";
+            break;
+          }
+          case "Delayed": {
+            status = "delayed";
+            break;
+          }
+        }
+
+        let departureTime;
+        let departureTimeZone;
+        let arrivalTime;
+        let arrivalTimeZone;
+        if (status == "delayed" || !v.delayed) {
+          departureTime = new Date(v.departure.scheduled_time);
+          departureTimeZone = getTimeZone(v.departure.scheduled_time);
+          arrivalTime = new Date(v.arrival.scheduled_time);
+          arrivalTimeZone = getTimeZone(v.arrival.scheduled_time);
+        } else {
+          departureTime = new Date(v.departure.estimated_time);
+          departureTimeZone = getTimeZone(v.departure.estimated_time);
+          arrivalTime = new Date(v.arrival.estimated_time);
+          arrivalTimeZone = getTimeZone(v.arrival.estimated_time);
+        }
+
+        let statusL10nId = `urlbar-result-flight-status-status-${status}`;
+        let statusL10nArgs;
+        if (status == "delayed") {
+          statusL10nArgs = {
+            departureEstimatedTime: new Intl.DateTimeFormat(undefined, {
+              hour: "numeric",
+              minute: "numeric",
+              timeZone: getTimeZone(v.departure.estimated_time),
+            }).format(new Date(v.departure.estimated_time)),
+          };
+        }
+
+        return {
+          [`item_${i}`]: {
+            attributes: {
+              status,
+            },
+          },
+          [`image_${i}`]: {
+            attributes: {
+              src:
+                v.airline.icon ??
+                "chrome://browser/skin/urlbar/flight-airline.svg",
+              fallback: !v.airline.icon,
+            },
+          },
+          [`departure_time_${i}`]: {
+            textContent: new Intl.DateTimeFormat(undefined, {
+              hour: "numeric",
+              minute: "numeric",
+              timeZone: departureTimeZone,
+            }).format(departureTime),
+          },
+          [`departure_date_${i}`]: {
+            textContent: new Intl.DateTimeFormat(undefined, {
+              month: "long",
+              day: "numeric",
+              weekday: "short",
+              timeZone: departureTimeZone,
+            }).format(departureTime),
+          },
+          [`arrival_time_${i}`]: {
+            textContent: new Intl.DateTimeFormat(undefined, {
+              hour: "numeric",
+              minute: "numeric",
+              timeZone: arrivalTimeZone,
+            }).format(arrivalTime),
+          },
+          [`origin_airport_${i}`]: {
+            l10n: {
+              id: "urlbar-result-flight-status-airport",
+              args: {
+                city: v.origin.city,
+                code: v.origin.code,
+              },
+              cacheable: true,
+              excludeArgsFromCacheKey: true,
+            },
+          },
+          [`destination_airport_${i}`]: {
+            l10n: {
+              id: "urlbar-result-flight-status-airport",
+              args: {
+                city: v.destination.city,
+                code: v.destination.code,
+              },
+              cacheable: true,
+              excludeArgsFromCacheKey: true,
+            },
+          },
+          [`flight_number_${i}`]: v.airline.name
+            ? {
+                l10n: {
+                  id: "urlbar-result-flight-status-flight-number-with-airline",
+                  args: {
+                    flightNumber: v.flight_number,
+                    airlineName: v.airline.name,
+                  },
+                  cacheable: true,
+                  excludeArgsFromCacheKey: !!statusL10nArgs,
+                },
+              }
+            : {
+                textContent: v.flight_number,
+              },
+          [`status_${i}`]: {
+            l10n: {
+              id: statusL10nId,
+              args: statusL10nArgs,
+              cacheable: true,
+              excludeArgsFromCacheKey: !!statusL10nArgs,
+            },
+          },
+          [`time_left_minutes_${i}`]:
+            v.time_left_minutes != undefined
+              ? {
+                  l10n: {
+                    id: "urlbar-result-flight-status-time-left-minutes",
+                    args: {
+                      timeLeftMinutes: v.time_left_minutes,
+                    },
+                    cacheable: true,
+                    excludeArgsFromCacheKey: !!statusL10nArgs,
+                  },
+                }
+              : null,
+        };
+      })
+    );
+  }
+}
+
+function getTimeZone(isoTimeString) {
+  let match = isoTimeString.match(/([+-]\d{2}:?\d{2}|Z)$/);
+  if (!match) {
+    return undefined;
+  }
+
+  let timeZone = match[1];
+  return timeZone == "Z" ? "UTC" : timeZone;
+}

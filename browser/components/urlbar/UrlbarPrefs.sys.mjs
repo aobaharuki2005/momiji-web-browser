@@ -137,6 +137,18 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // When true, `javascript:` URLs are not included in search results.
   ["filter.javascript", true],
 
+  // Feature gate pref for flight status suggestions in the urlbar.
+  ["flightStatus.featureGate", false],
+
+  // The minimum prefix length of a flight status keyword the user must type to
+  // trigger the suggestion. 0 means the min length should be taken from Nimbus
+  // or remote settings.
+  ["flightStatus.minKeywordLength", 0],
+
+  // The number of times the user has clicked the "Show less frequently" command
+  // for flight status suggestions.
+  ["flightStatus.showLessFrequentlyCount", 0],
+
   // Focus the content document when pressing the Escape key, if there's no
   // remaining typed history.
   ["focusContentDocumentOnEsc", true],
@@ -459,6 +471,10 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
 
   // Whether results will include search engines (e.g. tab-to-search).
   ["suggest.engines", true],
+
+  // If `browser.urlbar.flightStatus.featureGate` is true, this controls whether
+  // flight status suggestions are turned on.
+  ["suggest.flightStatus", true],
 
   // Whether results will include the user's history.
   ["suggest.history", true],

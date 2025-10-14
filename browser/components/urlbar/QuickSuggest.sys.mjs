@@ -164,6 +164,8 @@ const FEATURES = {
     "moz-src:///browser/components/urlbar/private/AmpSuggestions.sys.mjs",
   DynamicSuggestions:
     "moz-src:///browser/components/urlbar/private/DynamicSuggestions.sys.mjs",
+  FlightStatusSuggestions:
+    "moz-src:///browser/components/urlbar/private/FlightStatusSuggestions.sys.mjs",
   ImportantDatesSuggestions:
     "moz-src:///browser/components/urlbar/private/ImportantDatesSuggestions.sys.mjs",
   ImpressionCaps:

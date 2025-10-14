@@ -51,7 +51,7 @@ export class YelpRealtimeSuggestions extends RealtimeSuggestProvider {
       },
       {
         tag: "span",
-        classList: ["urlbarView-realtime-description-separator"],
+        classList: ["urlbarView-realtime-description-separator-dot"],
       },
       {
         name: `pricing_${index}`,
@@ -60,7 +60,7 @@ export class YelpRealtimeSuggestions extends RealtimeSuggestProvider {
       },
       {
         tag: "span",
-        classList: ["urlbarView-realtime-description-separator"],
+        classList: ["urlbarView-realtime-description-separator-dot"],
       },
       {
         name: `business_hours_${index}`,
@@ -69,7 +69,7 @@ export class YelpRealtimeSuggestions extends RealtimeSuggestProvider {
       },
       {
         tag: "span",
-        classList: ["urlbarView-realtime-description-separator"],
+        classList: ["urlbarView-realtime-description-separator-dot"],
       },
       {
         tag: "span",

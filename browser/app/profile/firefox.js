@@ -779,6 +779,9 @@ pref("browser.urlbar.suggest.yelpRealtime", true);
 // settings.
 pref("browser.urlbar.yelpRealtime.minKeywordLength", 0);
 
+// Feature gate pref for flight status suggestions in the urlbar.
+pref("browser.urlbar.flightStatus.featureGate", false);
+
 // Timestamp of the time the user last performed a search via the urlbar
 // so that experiments can target users who have / have not performed
 // urlbar searches.
