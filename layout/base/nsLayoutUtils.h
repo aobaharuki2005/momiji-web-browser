@@ -719,7 +719,7 @@ class nsLayoutUtils {
   enum class GetPopupFrameForPointFlags : uint8_t {
     OnlyReturnFramesWithWidgets = 0x1,
   };
-  static nsIFrame* GetPopupFrameForPoint(
+  static nsMenuPopupFrame* GetPopupFrameForPoint(
       nsPresContext* aRootPresContext, nsIWidget* aWidget,
       const mozilla::LayoutDeviceIntPoint& aPoint,
       GetPopupFrameForPointFlags aFlags = GetPopupFrameForPointFlags(0));

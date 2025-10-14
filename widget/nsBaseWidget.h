@@ -243,8 +243,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() override {
     return mozilla::DesktopToLayoutDeviceScale(1.0);
   }
-  mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScaleByScreen()
-      override;
 
   void ConstrainPosition(DesktopIntPoint&) override {}
   // Utility function for derived-class overrides of ConstrainPosition.

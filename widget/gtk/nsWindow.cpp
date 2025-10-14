@@ -780,18 +780,6 @@ DesktopToLayoutDeviceScale nsWindow::GetDesktopToDeviceScale() {
   return DesktopToLayoutDeviceScale(1.0);
 }
 
-DesktopToLayoutDeviceScale nsWindow::GetDesktopToDeviceScaleByScreen() {
-#ifdef MOZ_WAYLAND
-  if (GdkIsWaylandDisplay()) {
-    // In wayland there's no absolute screen position, so we need to use the
-    // scale factor of our top level, which is what FractionalScaleFactor does,
-    // luckily.
-    return DesktopToLayoutDeviceScale(FractionalScaleFactor());
-  }
-#endif
-  return nsBaseWidget::GetDesktopToDeviceScale();
-}
-
 bool nsWindow::WidgetTypeSupportsAcceleration() {
   if (IsSmallPopup() || mIsDragPopup) {
     return false;
@@ -6003,7 +5991,7 @@ bool nsWindow::ConfigureX11GLVisual() {
 #endif
 
 nsAutoCString nsWindow::GetFrameTag() const {
-  if (nsIFrame* frame = GetFrame()) {
+  if (nsIFrame* frame = GetPopupFrame()) {
 #ifdef DEBUG_FRAME_DUMP
     return frame->ListTag();
 #else
@@ -9741,11 +9729,14 @@ void nsWindow::UpdateMozWindowActive() {
 void nsWindow::ForceTitlebarRedraw() {
   MOZ_ASSERT(mDrawInTitlebar, "We should not redraw invisible titlebar.");
 
-  if (!mWidgetListener || !mWidgetListener->GetPresShell()) {
+  if (!mWidgetListener) {
     return;
   }
-
-  nsIFrame* frame = GetFrame();
+  PresShell* ps = mWidgetListener->GetPresShell();
+  if (!ps) {
+    return;
+  }
+  nsIFrame* frame = ps->GetRootFrame();
   if (!frame) {
     return;
   }

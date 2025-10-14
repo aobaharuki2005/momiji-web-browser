@@ -558,14 +558,6 @@ class nsIWidget : public nsISupports {
    */
   virtual mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() = 0;
 
-  /**
-   * Return the scaling factor between device pixels and the platform-
-   * dependent "desktop pixels" by looking up the screen by the position
-   * of the widget.
-   */
-  virtual mozilla::DesktopToLayoutDeviceScale
-  GetDesktopToDeviceScaleByScreen() = 0;
-
   virtual void DynamicToolbarOffsetChanged(mozilla::ScreenIntCoord aOffset) = 0;
 
   /**

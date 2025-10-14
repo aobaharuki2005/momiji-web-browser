@@ -4146,20 +4146,6 @@ void PresShell::SchedulePaint() {
   }
 }
 
-void PresShell::DispatchSynthMouseOrPointerMove(
-    WidgetMouseEvent* aMouseOrPointerMoveEvent) {
-  AUTO_PROFILER_TRACING_MARKER_DOCSHELL("Paint",
-                                        "DispatchSynthMouseOrPointerMove",
-                                        GRAPHICS, mPresContext->GetDocShell());
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsView* targetView = nsView::GetViewFor(aMouseOrPointerMoveEvent->mWidget);
-  if (!targetView) {
-    return;
-  }
-  RefPtr<nsViewManager> viewManager = targetView->GetViewManager();
-  viewManager->DispatchEvent(aMouseOrPointerMoveEvent, targetView, &status);
-}
-
 void PresShell::ClearMouseCaptureOnView(nsView* aView) {
   if (nsIContent* capturingContent = GetCapturingContent()) {
     if (aView) {
@@ -5910,13 +5896,12 @@ void PresShell::SynthesizeMouseMove(bool aFromScroll) {
   }
 }
 
-static nsView* FindFloatingViewContaining(nsPresContext* aRootPresContext,
-                                          nsIWidget* aRootWidget,
-                                          const LayoutDeviceIntPoint& aPt) {
-  nsIFrame* popupFrame = nsLayoutUtils::GetPopupFrameForPoint(
+static nsMenuPopupFrame* FindPopupFrame(nsPresContext* aRootPresContext,
+                                        nsIWidget* aRootWidget,
+                                        const LayoutDeviceIntPoint& aPt) {
+  return nsLayoutUtils::GetPopupFrameForPoint(
       aRootPresContext, aRootWidget, aPt,
       nsLayoutUtils::GetPopupFrameForPointFlags::OnlyReturnFramesWithWidgets);
-  return popupFrame ? popupFrame->GetView() : nullptr;
 }
 
 /*
@@ -5925,8 +5910,7 @@ static nsView* FindFloatingViewContaining(nsPresContext* aRootPresContext,
  * floating view.  It assumes that only floating views extend outside the bounds
  * of their parents.
  *
- * This methods should only be called if FindFloatingViewContaining returns
- * null.
+ * This methods should only be called if FindPopupFrame returns null.
  *
  * aPt is relative aRelativeToView with the viewport type
  * aRelativeToViewportType. aRelativeToView will always have a frame. If aView
@@ -6123,74 +6107,69 @@ void PresShell::ProcessSynthMouseOrPointerMoveEvent(
 
   int32_t APD = mPresContext->AppUnitsPerDevPixel();
 
-  // We need a widget to put in the event we are going to dispatch so we look
-  // for a view that has a widget and the mouse location is over. We first look
-  // for floating views, if there isn't one we use the root view. |view| holds
-  // that view.
-  nsView* view = nullptr;
-
-  // The appunits per devpixel ratio of |view|.
-  int32_t viewAPD;
-
   // mRefPoint will be mMouseLocation relative to the widget of |view|, the
-  // widget we will put in the event we dispatch, in viewAPD appunits
+  // widget we will put in the event we dispatch, in widgetAPD appunits
   nsPoint refpoint(0, 0);
-
-  // We always dispatch the event to the pres shell that contains the view that
-  // the mouse is over. pointVM is the VM of that pres shell.
-  nsViewManager* pointVM = nullptr;
 
   nsView* const rootView = mViewManager ? mViewManager->GetRootView() : nullptr;
   if (!rootView || !rootView->HasWidget()) {
     return;
   }
-#ifdef DEBUG
-  nsCOMPtr<nsIDragSession> dragSession =
-      nsContentUtils::GetDragSession(rootView->GetWidget());
-  MOZ_ASSERT(!dragSession);
-#endif
+  MOZ_ASSERT(!nsCOMPtr{nsContentUtils::GetDragSession(rootView->GetWidget())});
 
+  // We need a widget to put in the event we are going to dispatch so we look
+  // for a view that has a widget and the mouse location is over. We first look
+  // for floating views, if there isn't one we use the root view. |view| holds
+  // that view.
+  nsCOMPtr<nsIWidget> widget;
+  // We always dispatch the event to the pres shell that contains the view that
+  // the mouse is over. pointShell is that.
+  RefPtr<PresShell> pointShell;
+  // The appunits per devpixel ratio of |widget|.
+  int32_t widgetAPD;
+  // If we're in a child process and the view points to an OOP iframe, this is
+  // its BrowserBridgeChild.
+  RefPtr<BrowserBridgeChild> bbc;
+
+  // We either dispatch the event to a popup, or a view.
+  nsMenuPopupFrame* popupFrame = nullptr;
   if (rootView->GetFrame()) {
-    view =
-        FindFloatingViewContaining(mPresContext, rootView->GetWidget(),
-                                   LayoutDeviceIntPoint::FromAppUnitsToNearest(
-                                       aPointerInfo.mLastRefPointInRootDoc +
-                                           rootView->ViewToWidgetOffset(),
-                                       APD));
+    popupFrame = FindPopupFrame(mPresContext, rootView->GetWidget(),
+                                LayoutDeviceIntPoint::FromAppUnitsToNearest(
+                                    aPointerInfo.mLastRefPointInRootDoc +
+                                        rootView->ViewToWidgetOffset(),
+                                    APD));
+    if (popupFrame) {
+      pointShell = popupFrame->PresShell();
+      widget = popupFrame->GetWidget();
+      widgetAPD = popupFrame->PresContext()->AppUnitsPerDevPixel();
+      refpoint = aPointerInfo.mLastRefPointInRootDoc;
+      DebugOnly<nsLayoutUtils::TransformResult> result =
+          nsLayoutUtils::TransformPoint(
+              RelativeTo{rootView->GetFrame(), ViewportType::Visual},
+              RelativeTo{popupFrame, ViewportType::Layout}, refpoint);
+      MOZ_ASSERT(result == nsLayoutUtils::TRANSFORM_SUCCEEDED);
+    }
   }
-
-  nsView* pointView = view;
-  if (!view) {
-    view = rootView;
+  if (!widget) {
+    widget = rootView->GetWidget();
+    widgetAPD = APD;
+    nsView* pointView = rootView;
     if (rootView->GetFrame()) {
       pointView = FindViewContaining(rootView, ViewportType::Visual, rootView,
                                      aPointerInfo.mLastRefPointInRootDoc);
-    } else {
-      pointView = rootView;
     }
     // pointView can be null in situations related to mouse capture
-    pointVM = (pointView ? pointView : view)->GetViewManager();
+    pointShell = (pointView ? pointView : rootView)->GetPresShell();
+    bbc = GetChildBrowser(pointView);
     refpoint =
         aPointerInfo.mLastRefPointInRootDoc + rootView->ViewToWidgetOffset();
-    viewAPD = APD;
-  } else {
-    pointVM = view->GetViewManager();
-    nsIFrame* frame = view->GetFrame();
-    NS_ASSERTION(frame, "floating views can't be anonymous");
-    viewAPD = frame->PresContext()->AppUnitsPerDevPixel();
-    refpoint = aPointerInfo.mLastRefPointInRootDoc;
-    DebugOnly<nsLayoutUtils::TransformResult> result =
-        nsLayoutUtils::TransformPoint(
-            RelativeTo{rootView->GetFrame(), ViewportType::Visual},
-            RelativeTo{frame, ViewportType::Layout}, refpoint);
-    MOZ_ASSERT(result == nsLayoutUtils::TRANSFORM_SUCCEEDED);
-    refpoint += view->ViewToWidgetOffset();
   }
-  NS_ASSERTION(view->GetWidget(), "view should have a widget here");
+  NS_ASSERTION(widget, "view should have a widget here");
   Maybe<WidgetMouseEvent> mouseMoveEvent;
   Maybe<WidgetPointerEvent> pointerMoveEvent;
   if (aMoveMessage == eMouseMove) {
-    mouseMoveEvent.emplace(true, eMouseMove, view->GetWidget(),
+    mouseMoveEvent.emplace(true, eMouseMove, widget,
                            WidgetMouseEvent::eSynthesized);
     mouseMoveEvent->mButton = MouseButton::ePrimary;
     // We don't want to dispatch preceding pointer event since the caller
@@ -6198,7 +6177,7 @@ void PresShell::ProcessSynthMouseOrPointerMoveEvent(
     // iframe, we'll set this to true again below.
     mouseMoveEvent->convertToPointer = false;
   } else {
-    pointerMoveEvent.emplace(true, ePointerMove, view->GetWidget());
+    pointerMoveEvent.emplace(true, ePointerMove, widget);
     pointerMoveEvent->mButton = MouseButton::eNotPressed;
     pointerMoveEvent->mReason = WidgetMouseEvent::eSynthesized;
   }
@@ -6214,13 +6193,13 @@ void PresShell::ProcessSynthMouseOrPointerMoveEvent(
   event.mFlags.mIsSynthesizedForTests = aPointerInfo.mIsSynthesizedForTests;
 
   event.mRefPoint =
-      LayoutDeviceIntPoint::FromAppUnitsToNearest(refpoint, viewAPD);
+      LayoutDeviceIntPoint::FromAppUnitsToNearest(refpoint, widgetAPD);
   event.mButtons = aPointerInfo.mLastButtons;
   event.mInputSource = aPointerInfo.mInputSource;
   event.pointerId = aPointerId;
   event.mModifiers = PresShell::GetCurrentModifiers();
 
-  if (BrowserBridgeChild* bbc = GetChildBrowser(pointView)) {
+  if (bbc) {
     // If we have a BrowserBridgeChild, we're going to be dispatching this
     // mouse event into an OOP iframe of the current document if and only if
     // we're synthesizing a mouse move.
@@ -6237,7 +6216,7 @@ void PresShell::ProcessSynthMouseOrPointerMoveEvent(
     return;
   }
 
-  if (RefPtr<PresShell> presShell = pointVM->GetPresShell()) {
+  if (pointShell) {
     // Since this gets run in a refresh tick there isn't an InputAPZContext on
     // the stack from the nsBaseWidget. We need to simulate one with at least
     // the correct target guid, so that the correct callback transform gets
@@ -6246,7 +6225,16 @@ void PresShell::ProcessSynthMouseOrPointerMoveEvent(
     // input block. Same for the APZ response field.
     InputAPZContext apzContext(aPointerInfo.mLastTargetGuid, 0,
                                nsEventStatus_eIgnore);
-    presShell->DispatchSynthMouseOrPointerMove(&event);
+    AUTO_PROFILER_TRACING_MARKER_DOCSHELL(
+        "Paint", "DispatchSynthMouseOrPointerMove", GRAPHICS,
+        pointShell->GetPresContext()->GetDocShell());
+    nsEventStatus status = nsEventStatus_eIgnore;
+    if (popupFrame) {
+      pointShell->HandleEvent(popupFrame, &event, false, &status);
+    } else {
+      RefPtr<nsViewManager> viewManager = rootView->GetViewManager();
+      viewManager->DispatchEvent(&event, rootView, &status);
+    }
   }
 }
 

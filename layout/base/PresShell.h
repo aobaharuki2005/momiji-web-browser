@@ -1091,9 +1091,6 @@ class PresShell final : public nsStubDocumentObserver,
     mUnderHiddenEmbedderElement = aUnderHiddenEmbedderElement;
   }
 
-  MOZ_CAN_RUN_SCRIPT void DispatchSynthMouseOrPointerMove(
-      WidgetMouseEvent* aMouseOrPointerMoveEvent);
-
   /* Temporarily ignore the Displayport for better paint performance. We
    * trigger a repaint once suppression is disabled. Without that
    * the displayport may get left at the suppressed size for an extended

@@ -117,6 +117,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 #include "nsIOService.h"
+#include "nsMenuPopupFrame.h"
 #include "nsObjectLoadingContent.h"
 #ifdef FUZZING
 #  include "mozilla/StaticPrefs_fuzzing.h"

@@ -89,6 +89,7 @@
 #include "nsImageFrame.h"
 #include "nsInlineFrame.h"
 #include "nsLayoutUtils.h"
+#include "nsMenuPopupFrame.h"
 #include "nsNameSpaceManager.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
@@ -351,9 +352,14 @@ bool nsIFrame::IsVisibleConsideringAncestors(uint32_t aFlags) const {
     // involves loading more memory. It's only allowed in chrome sheets so let's
     // only support it in the parent process so we can mostly optimize this out
     // in content processes.
-    if (XRE_IsParentProcess() &&
-        frame->StyleUIReset()->mMozSubtreeHiddenOnlyVisually) {
-      return false;
+    if (XRE_IsParentProcess()) {
+      if (const nsMenuPopupFrame* popup = do_QueryFrame(frame);
+          popup && !popup->IsOpen()) {
+        return false;
+      }
+      if (frame->StyleUIReset()->mMozSubtreeHiddenOnlyVisually) {
+        return false;
+      }
     }
 
     // This method is used to determine if a frame is focusable, because it's
@@ -937,8 +943,7 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
     ps->ClearFrameRefs(this);
   }
 
-  nsView* view = GetView();
-  if (view) {
+  if (nsView* view = GetView()) {
     view->SetFrame(nullptr);
     view->Destroy();
   }
@@ -7932,16 +7937,44 @@ void nsIFrame::GetOffsetFromView(nsPoint& aOffset, nsView** aView) const {
 }
 
 nsIWidget* nsIFrame::GetNearestWidget() const {
-  return GetClosestView()->GetNearestWidget(nullptr);
+  if (!HasAnyStateBits(NS_FRAME_IN_POPUP)) {
+    return PresShell()->GetViewManager()->GetRootWidget();
+  }
+  nsPoint unused;
+  return GetNearestWidget(unused);
 }
 
 nsIWidget* nsIFrame::GetNearestWidget(nsPoint& aOffset) const {
-  nsPoint offsetToView;
-  nsPoint offsetToWidget;
-  nsIWidget* widget =
-      GetClosestView(&offsetToView)->GetNearestWidget(&offsetToWidget);
-  aOffset = offsetToView + offsetToWidget;
-  return widget;
+  aOffset.MoveTo(0, 0);
+  nsIFrame* frame = const_cast<nsIFrame*>(this);
+  do {
+    if (frame->IsMenuPopupFrame()) {
+      return static_cast<nsMenuPopupFrame*>(frame)->GetWidget();
+    }
+    if (auto* view = frame->GetView()) {
+      // NOTE(emilio): NS_FRAME_IN_POPUP gets propagated across documents, so we
+      // just need to be careful to not jump to the view hierarchy in this case,
+      // since popups are not part of it.
+      if (!frame->HasAnyStateBits(NS_FRAME_IN_POPUP)) {
+        nsPoint offsetToWidget;
+        nsIWidget* widget = view->GetNearestWidget(&offsetToWidget);
+        aOffset += offsetToWidget;
+        return widget;
+      }
+      MOZ_ASSERT(!view->GetWidget(),
+                 "Shouldn't have a nested widget inside a popup");
+    }
+    aOffset += frame->GetPosition();
+    nsPoint crossDocOffset;
+    frame =
+        nsLayoutUtils::GetCrossDocParentFrameInProcess(frame, &crossDocOffset);
+    aOffset += crossDocOffset;
+    MOZ_ASSERT(frame, "Root frame should have a widget");
+    if (!frame) {
+      break;
+    }
+  } while (true);
+  return PresShell()->GetViewManager()->GetRootWidget();
 }
 
 Matrix4x4Flagged nsIFrame::GetTransformMatrix(ViewportType aViewportType,

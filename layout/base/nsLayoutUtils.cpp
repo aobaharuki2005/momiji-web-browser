@@ -1582,7 +1582,7 @@ nsIFrame* nsLayoutUtils::GetPopupFrameForEventCoordinates(
                                guiEvent->mRefPoint);
 }
 
-nsIFrame* nsLayoutUtils::GetPopupFrameForPoint(
+nsMenuPopupFrame* nsLayoutUtils::GetPopupFrameForPoint(
     nsPresContext* aRootPresContext, nsIWidget* aWidget,
     const mozilla::LayoutDeviceIntPoint& aPoint,
     GetPopupFrameForPointFlags aFlags /* = GetPopupFrameForPointFlags(0) */) {

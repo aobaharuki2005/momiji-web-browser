@@ -271,15 +271,6 @@ class nsView final : public nsIWidgetListener {
                         bool aResetVisibility = true);
 
   /**
-   * Create a popup widget for this view.  Pass |aParentWidget| to
-   * explicitly set the popup's parent.  If it's not passed, the view
-   * hierarchy will be searched for an appropriate parent widget.  The
-   * other params are the same as for |CreateWidget()|, except that
-   * |aWidgetInitData| must be nonnull.
-   */
-  nsresult CreateWidgetForPopup(mozilla::widget::InitData*, nsIWidget* aParent);
-
-  /**
    * Destroys the associated widget for this view.  If this method is
    * not called explicitly, the widget when be destroyed when its
    * view gets destroyed.
@@ -359,6 +350,11 @@ class nsView final : public nsIWidgetListener {
    */
   bool IsRoot() const;
 
+  static LayoutDeviceIntRect CalcWidgetBounds(
+      const nsRect& aBounds, int32_t aAppUnitsPerDevPixel, nsView* aParentView,
+      nsIWidget* aThisWidget, mozilla::widget::WindowType,
+      mozilla::widget::TransparencyMode);
+
   LayoutDeviceIntRect CalcWidgetBounds(mozilla::widget::WindowType,
                                        mozilla::widget::TransparencyMode);
 
@@ -386,8 +382,6 @@ class nsView final : public nsIWidgetListener {
   // nsIWidgetListener
   mozilla::PresShell* GetPresShell() override;
   nsView* GetView() override { return this; }
-  bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y,
-                   ByMoveToRect) override;
   bool WindowResized(nsIWidget* aWidget, int32_t aWidth,
                      int32_t aHeight) override;
 #ifdef MOZ_WIDGET_ANDROID
@@ -396,7 +390,6 @@ class nsView final : public nsIWidgetListener {
   void KeyboardHeightChanged(mozilla::ScreenIntCoord aHeight) override;
   void AndroidPipModeChanged(bool) override;
 #endif
-  bool RequestWindowClose(nsIWidget* aWidget) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void WillPaintWindow(nsIWidget* aWidget) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
@@ -426,11 +419,7 @@ class nsView final : public nsIWidgetListener {
 
   bool ForcedRepaint() { return mForcedRepaint; }
 
-  // Do the actual work of ResetWidgetBounds, unconditionally.  Don't
-  // call this method if we have no widget.
-  void DoResetWidgetBounds(bool aMoveOnly, bool aInvalidateChangedSize);
   void InitializeWindow(bool aEnableDragDrop, bool aResetVisibility);
-
   bool IsEffectivelyVisible();
 
   /**
@@ -439,8 +428,7 @@ class nsView final : public nsIWidgetListener {
    * or to the left of its origin position. The term 'dimensions' indicates it
    * is relative to this view.
    */
-  void SetDimensions(const nsRect& aRect, bool aPaint = true,
-                     bool aResizeWidget = true);
+  void SetDimensions(const nsRect& aRect);
 
   /**
    * Called to indicate that the visibility of a view has been
@@ -459,7 +447,6 @@ class nsView final : public nsIWidgetListener {
   void InsertChild(nsView* aChild, nsView* aSibling);
   void RemoveChild(nsView* aChild);
 
-  void ResetWidgetBounds(bool aRecurse, bool aForceSync);
   void AssertNoWindow();
 
   void NotifyEffectiveVisibilityChanged(bool aEffectivelyVisible);

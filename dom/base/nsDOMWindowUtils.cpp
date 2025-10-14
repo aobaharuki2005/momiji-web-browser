@@ -67,6 +67,7 @@
 #include "nsJSEnvironment.h"
 #include "nsJSUtils.h"
 #include "nsLayoutUtils.h"
+#include "nsMenuPopupFrame.h"
 #include "nsPresContext.h"
 #include "nsQueryContentEventResult.h"
 #include "nsQueryObject.h"

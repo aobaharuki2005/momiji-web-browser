@@ -448,6 +448,9 @@ void nsIWidget::RemoveAllChildren() {
 }
 
 nsIFrame* nsIWidget::GetFrame() const {
+  if (auto* popup = GetPopupFrame()) {
+    return popup;
+  }
   if (nsView* view = nsView::GetViewFor(this)) {
     return view->GetFrame();
   }
@@ -458,9 +461,9 @@ nsMenuPopupFrame* nsIWidget::GetPopupFrame() const {
   if (mWindowType != WindowType::Popup) {
     return nullptr;
   }
-  auto* frame = GetFrame();
-  MOZ_ASSERT_IF(frame, frame->IsMenuPopupFrame());
-  return do_QueryFrame(frame);
+  MOZ_ASSERT_IF(GetWidgetListener(),
+                GetWidgetListener()->GetAsMenuPopupFrame());
+  return static_cast<nsMenuPopupFrame*>(GetWidgetListener());
 }
 
 void nsBaseWidget::DynamicToolbarOffsetChanged(
@@ -2138,17 +2141,10 @@ already_AddRefed<widget::Screen> nsBaseWidget::GetWidgetScreen() {
   return screenManager.ScreenForRect(deskBounds);
 }
 
-mozilla::DesktopToLayoutDeviceScale
-nsBaseWidget::GetDesktopToDeviceScaleByScreen() {
-  return (nsView::GetViewFor(this)->GetViewManager()->GetDeviceContext())
-      ->GetDesktopToDeviceScale();
-}
-
 nsresult nsIWidget::SynthesizeNativeTouchTap(
     LayoutDeviceIntPoint aPoint, bool aLongTap,
     nsISynthesizedEventCallback* aCallback) {
   AutoSynthesizedEventCallbackNotifier notifier(aCallback);
-
   if (sPointerIdCounter > TOUCH_INJECT_MAX_POINTS) {
     sPointerIdCounter = 0;
   }

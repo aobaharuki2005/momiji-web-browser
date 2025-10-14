@@ -2638,6 +2638,10 @@ bool nsRefreshDriver::PaintIfNeeded() {
   {
     PaintTelemetry::AutoRecordPaint record;
     vm->ProcessPendingUpdates();
+    // Paint our popups.
+    if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
+      pm->PaintPopups(this);
+    }
   }
   return true;
 }

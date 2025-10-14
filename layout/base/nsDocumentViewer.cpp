@@ -3245,6 +3245,8 @@ bool nsDocumentViewer::ShouldAttachToTopLevel() {
   nsIWidgetListener* parentListener = mParentWidget->GetWidgetListener();
   MOZ_ASSERT(!parentListener || !parentListener->GetView(),
              "Expect a top level widget");
+  MOZ_ASSERT(!parentListener || !parentListener->GetAsMenuPopupFrame(),
+             "Expect a top level widget");
 #endif
   return true;
 }

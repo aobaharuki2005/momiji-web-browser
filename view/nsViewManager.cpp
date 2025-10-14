@@ -96,7 +96,7 @@ nsView* nsViewManager::CreateView(const nsRect& aBounds, nsView* aParent,
   v->SetParent(aParent);
   v->SetPosition(aBounds.X(), aBounds.Y());
   nsRect dim(0, 0, aBounds.Width(), aBounds.Height());
-  v->SetDimensions(dim, false);
+  v->SetDimensions(dim);
   return v;
 }
 
@@ -145,7 +145,7 @@ void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight) {
     return;
   }
   // Don't resize the widget. It is already being set elsewhere.
-  mRootView->SetDimensions(newDim, true, false);
+  mRootView->SetDimensions(newDim);
   if (RefPtr<PresShell> presShell = mPresShell) {
     presShell->ResizeReflow(aWidth, aHeight);
   }
@@ -305,19 +305,16 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
   aView->GetViewManager()->ProcessPendingUpdatesRecurse(aView, widgets);
   for (uint32_t i = 0; i < widgets.Length(); ++i) {
     nsView* view = nsView::GetViewFor(widgets[i]);
-    if (view) {
-      if (view->mNeedsWindowPropertiesSync) {
-        view->mNeedsWindowPropertiesSync = false;
-        if (nsViewManager* vm = view->GetViewManager()) {
-          if (PresShell* presShell = vm->GetPresShell()) {
-            presShell->SyncWindowProperties(/* aSync */ true);
-          }
+    if (!view) {
+      continue;
+    }
+    if (view->mNeedsWindowPropertiesSync) {
+      view->mNeedsWindowPropertiesSync = false;
+      if (nsViewManager* vm = view->GetViewManager()) {
+        if (PresShell* presShell = vm->GetPresShell()) {
+          presShell->SyncWindowProperties(/* aSync */ true);
         }
       }
-    }
-    view = nsView::GetViewFor(widgets[i]);
-    if (view) {
-      view->ResetWidgetBounds(false, true);
     }
   }
   if (rootPresShell->GetViewManager() != this) {
@@ -604,7 +601,7 @@ void nsViewManager::DispatchEvent(WidgetGUIEvent* aEvent, nsView* aView,
     }
   }
 
-  if (nullptr != frame) {
+  if (frame) {
     // Hold a refcount to the presshell. The continued existence of the
     // presshell will delay deletion of this view hierarchy should the event
     // want to cause its destruction in, say, some JavaScript event handler.
@@ -690,7 +687,7 @@ void nsViewManager::ResizeView(nsView* aView, const nsRect& aRect) {
 
   nsRect oldDimensions = aView->GetDimensions();
   if (!oldDimensions.IsEqualEdges(aRect)) {
-    aView->SetDimensions(aRect, true);
+    aView->SetDimensions(aRect);
   }
 
   // Note that if layout resizes the view and the view has a custom clip
