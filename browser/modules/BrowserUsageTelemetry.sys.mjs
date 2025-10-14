@@ -205,6 +205,12 @@ const PLACES_OPEN_COMMANDS = [
 // Default: 5min.
 const FLOW_IDLE_TIME = 5 * 60 * 1000;
 
+const externalTabMovementRegistry = {
+  internallyOpenedTabs: new WeakSet(),
+  externallyOpenedTabsNextToActiveTab: new WeakSet(),
+  externallyOpenedTabsAtEndOfTabStrip: new WeakSet(),
+};
+
 function telemetryId(widgetId, obscureAddons = true) {
   // Add-on IDs need to be obscured.
   function addonId(id) {
@@ -1318,10 +1324,27 @@ export let BrowserUsageTelemetry = {
       Glean.tabgroup.tabInteractions.new.add();
     }
 
-    if (event?.detail?.fromExternal) {
-      Glean.linkHandling.openFromExternalApp.record({
-        next_to_active_tab: this._isOpenNextToActiveTabSettingEnabled(),
-      });
+    if (event) {
+      if (event.detail?.fromExternal) {
+        const wasOpenedNextToActiveTab =
+          this._isOpenNextToActiveTabSettingEnabled();
+
+        Glean.linkHandling.openFromExternalApp.record({
+          next_to_active_tab: wasOpenedNextToActiveTab,
+        });
+
+        if (wasOpenedNextToActiveTab) {
+          externalTabMovementRegistry.externallyOpenedTabsNextToActiveTab.add(
+            event.target
+          );
+        } else {
+          externalTabMovementRegistry.externallyOpenedTabsAtEndOfTabStrip.add(
+            event.target
+          );
+        }
+      } else {
+        externalTabMovementRegistry.internallyOpenedTabs.add(event.target);
+      }
     }
 
     const userContextId = event?.target?.getAttribute("usercontextid");
@@ -1350,6 +1373,11 @@ export let BrowserUsageTelemetry = {
     this._recordTabCounts({ tabCount, loadedTabCount });
   },
 
+  /**
+   *
+   * @param {CustomEvent} event
+   *   TabClose event.
+   */
   _onTabClosed(event) {
     const group = event.target?.group;
     const isUserTriggered = event.detail?.isUserTriggered;
@@ -1377,6 +1405,13 @@ export let BrowserUsageTelemetry = {
       this.recordPinnedTabsCount(pinnedTabs - 1);
       Glean.pinnedTabs.close.record({
         layout: lazy.sidebarVerticalTabs ? "vertical" : "horizontal",
+      });
+    }
+
+    if (event.target) {
+      // Stop tracking any tabs that have been tracked since their `TabOpen` events.
+      Object.values(externalTabMovementRegistry).forEach(set => {
+        set.delete(event.target);
       });
     }
   },
@@ -1611,6 +1646,8 @@ export let BrowserUsageTelemetry = {
       this._updateTabMovementsRecord(tabMovementsRecord, event);
       tabMovementsRecord.deferredTask.arm();
     }
+
+    this._recordExternalTabMovement(event);
   },
 
   /**
@@ -1635,6 +1672,28 @@ export let BrowserUsageTelemetry = {
 
     if (previousTabState.tabGroupId && !currentTabState.tabGroupId) {
       Glean.tabgroup.tabInteractions.remove_same_window.add();
+    }
+  },
+
+  /**
+   * @param {CustomEvent} event
+   *   TabMove event
+   */
+  _recordExternalTabMovement(event) {
+    if (externalTabMovementRegistry.internallyOpenedTabs.has(event.target)) {
+      Glean.browserUiInteraction.tabMovement.not_from_external_app.add();
+    } else if (
+      externalTabMovementRegistry.externallyOpenedTabsNextToActiveTab.has(
+        event.target
+      )
+    ) {
+      Glean.browserUiInteraction.tabMovement.from_external_app_next_to_active_tab.add();
+    } else if (
+      externalTabMovementRegistry.externallyOpenedTabsAtEndOfTabStrip.has(
+        event.target
+      )
+    ) {
+      Glean.browserUiInteraction.tabMovement.from_external_app_tab_strip_end.add();
     }
   },
 
