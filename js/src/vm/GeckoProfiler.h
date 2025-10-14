@@ -127,6 +127,9 @@ class GeckoProfilerRuntime {
   void (*eventMarker_)(mozilla::MarkerCategory, const char*, const char*);
   void (*intervalMarker_)(mozilla::MarkerCategory, const char*,
                           mozilla::TimeStamp, const char*);
+  void (*flowMarker_)(mozilla::MarkerCategory, const char*, uint64_t);
+  void (*terminatingFlowMarker_)(mozilla::MarkerCategory, const char*,
+                                 uint64_t);
 
  public:
   explicit GeckoProfilerRuntime(JSRuntime* rt);
@@ -141,6 +144,10 @@ class GeckoProfilerRuntime {
                                  const char*));
   void setIntervalMarker(void (*fn)(mozilla::MarkerCategory, const char*,
                                     mozilla::TimeStamp, const char*));
+  void setFlowMarker(void (*fn)(mozilla::MarkerCategory, const char*,
+                                uint64_t));
+  void setTerminatingFlowMarker(void (*fn)(mozilla::MarkerCategory, const char*,
+                                           uint64_t));
 
   static JS::UniqueChars allocProfileString(JSContext* cx, BaseScript* script);
   const char* profileString(JSContext* cx, BaseScript* script);
@@ -153,6 +160,17 @@ class GeckoProfilerRuntime {
 
   void markInterval(
       const char* event, mozilla::TimeStamp start, const char* details,
+      JS::ProfilingCategoryPair jsPair = JS::ProfilingCategoryPair::JS);
+
+  // Note that flowId will be added as a process-scoped id for both
+  // markFlow and markTerminatingFlow.
+  //
+  // See baseprofiler/public/Flow.h
+  void markFlow(
+      const char* markerName, uint64_t flowId,
+      JS::ProfilingCategoryPair jsPair = JS::ProfilingCategoryPair::JS);
+  void markTerminatingFlow(
+      const char* markerName, uint64_t flowId,
       JS::ProfilingCategoryPair jsPair = JS::ProfilingCategoryPair::JS);
 
   ProfileStringMap& strings() { return strings_.ref(); }

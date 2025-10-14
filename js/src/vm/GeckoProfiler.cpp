@@ -34,7 +34,9 @@ GeckoProfilerRuntime::GeckoProfilerRuntime(JSRuntime* rt)
       slowAssertions(false),
       enabled_(false),
       eventMarker_(nullptr),
-      intervalMarker_(nullptr) {
+      intervalMarker_(nullptr),
+      flowMarker_(nullptr),
+      terminatingFlowMarker_(nullptr) {
   MOZ_ASSERT(rt != nullptr);
 }
 
@@ -53,6 +55,16 @@ void GeckoProfilerRuntime::setEventMarker(void (*fn)(mozilla::MarkerCategory,
 void GeckoProfilerRuntime::setIntervalMarker(void (*fn)(
     mozilla::MarkerCategory, const char*, mozilla::TimeStamp, const char*)) {
   intervalMarker_ = fn;
+}
+
+void GeckoProfilerRuntime::setFlowMarker(void (*fn)(mozilla::MarkerCategory,
+                                                    const char*, uint64_t)) {
+  flowMarker_ = fn;
+}
+
+void GeckoProfilerRuntime::setTerminatingFlowMarker(
+    void (*fn)(mozilla::MarkerCategory, const char*, uint64_t)) {
+  terminatingFlowMarker_ = fn;
 }
 
 // Get a pointer to the top-most profiling frame, given the exit frame pointer.
@@ -211,6 +223,28 @@ void GeckoProfilerRuntime::markInterval(const char* event,
     mozilla::MarkerCategory category(
         static_cast<mozilla::baseprofiler::ProfilingCategoryPair>(jsPair));
     intervalMarker_(category, event, start, details);
+  }
+}
+
+void GeckoProfilerRuntime::markFlow(const char* markerName, uint64_t flowId,
+                                    JS::ProfilingCategoryPair jsPair) {
+  MOZ_ASSERT(enabled());
+  if (flowMarker_) {
+    JS::AutoSuppressGCAnalysis nogc;
+    mozilla::MarkerCategory category(
+        static_cast<mozilla::baseprofiler::ProfilingCategoryPair>(jsPair));
+    flowMarker_(category, markerName, flowId);
+  }
+}
+
+void GeckoProfilerRuntime::markTerminatingFlow(
+    const char* markerName, uint64_t flowId, JS::ProfilingCategoryPair jsPair) {
+  MOZ_ASSERT(enabled());
+  if (terminatingFlowMarker_) {
+    JS::AutoSuppressGCAnalysis nogc;
+    mozilla::MarkerCategory category(
+        static_cast<mozilla::baseprofiler::ProfilingCategoryPair>(jsPair));
+    terminatingFlowMarker_(category, markerName, flowId);
   }
 }
 
@@ -510,14 +544,20 @@ JS_PUBLIC_API void js::EnableContextProfilingStack(JSContext* cx,
   cx->runtime()->geckoProfiler().enable(enabled);
 }
 
-JS_PUBLIC_API void js::RegisterContextProfilingEventMarker(
+JS_PUBLIC_API void js::RegisterContextProfilerMarkers(
     JSContext* cx,
-    void (*mark)(mozilla::MarkerCategory, const char*, const char*),
-    void (*interval)(mozilla::MarkerCategory, const char*, mozilla::TimeStamp,
-                     const char*)) {
+    void (*eventMarker)(mozilla::MarkerCategory, const char*, const char*),
+    void (*intervalMarker)(mozilla::MarkerCategory, const char*,
+                           mozilla::TimeStamp, const char*),
+    void (*flowMarker)(mozilla::MarkerCategory, const char*, uint64_t),
+    void (*terminatingFlowMarker)(mozilla::MarkerCategory, const char*,
+                                  uint64_t)) {
   MOZ_ASSERT(cx->runtime()->geckoProfiler().enabled());
-  cx->runtime()->geckoProfiler().setEventMarker(mark);
-  cx->runtime()->geckoProfiler().setIntervalMarker(interval);
+  cx->runtime()->geckoProfiler().setEventMarker(eventMarker);
+  cx->runtime()->geckoProfiler().setIntervalMarker(intervalMarker);
+  cx->runtime()->geckoProfiler().setFlowMarker(flowMarker);
+  cx->runtime()->geckoProfiler().setTerminatingFlowMarker(
+      terminatingFlowMarker);
 }
 
 AutoSuppressProfilerSampling::AutoSuppressProfilerSampling(JSContext* cx)
