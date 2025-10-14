@@ -970,7 +970,7 @@ bool Navigation::FirePushReplaceReloadNavigateEvent(
   RefPtr<NavigationDestination> destination =
       MakeAndAddRef<NavigationDestination>(GetOwnerGlobal(), aDestinationURL,
                                            /* aEntry */ nullptr,
-                                           /* aState */ nullptr,
+                                           /* aState */ aNavigationAPIState,
                                            aIsSameDocument);
 
   // Step 8
