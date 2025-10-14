@@ -11104,7 +11104,7 @@
 # "thickmathspace" etc for length attributes.
 - name: mathml.mathspace_names.disabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Whether to render all unknown mathml elements as <mrow>
@@ -11144,7 +11144,7 @@
 # implemented via text-transform: auto when that flag is enabled.
 - name: mathml.legacy_mathvariant_attribute.disabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
   rust: true
 
