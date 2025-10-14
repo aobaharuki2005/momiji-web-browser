@@ -196,7 +196,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 
   // Invoked when we know we will shutdown (but before shutdown begins), to
   // avoid races with other shutdown observers.
-  void StopObserving();
+  void StopBatteryObserving();
 
   // Causes the GPU process to crash. Used for tests and diagnostics
   void CrashProcess();
@@ -232,8 +232,6 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   RefPtr<PGPUChild::TestTriggerMetricsPromise> TestTriggerMetrics();
 
  private:
-  // Called from our xpcom-shutdown observer.
-  void OnXPCOMShutdown();
   void OnPreferenceChange(const char16_t* aData);
   void ScreenInformationChanged();
 
@@ -303,7 +301,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   bool IsProcessStable(const TimeStamp& aNow);
 
   // Shutdown the GPU process.
-  void CleanShutdown();
+  void ShutdownInternal();
   // Destroy the process and clean up resources.
   // Setting aUnexpectedShutdown = true indicates that this is being called to
   // clean up resources in response to an unexpected shutdown having been
@@ -339,33 +337,32 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 
   DISALLOW_COPY_AND_ASSIGN(GPUProcessManager);
 
+  void NotifyObserve(const char* aTopic, const char16_t* aData);
   void NotifyBatteryInfo(const hal::BatteryInformation& aBatteryInfo);
 
   class Observer final : public nsIObserver {
    public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
-    explicit Observer(GPUProcessManager* aManager);
+
+    Observer();
+    void Shutdown();
 
    protected:
     virtual ~Observer() = default;
-
-    GPUProcessManager* mManager;
   };
   friend class Observer;
 
   class BatteryObserver final : public hal::BatteryObserver {
    public:
     NS_INLINE_DECL_REFCOUNTING(BatteryObserver)
-    explicit BatteryObserver(GPUProcessManager* aManager);
 
+    BatteryObserver();
     void Notify(const hal::BatteryInformation& aBatteryInfo) override;
-    void ShutDown();
+    void Shutdown();
 
    protected:
-    virtual ~BatteryObserver();
-
-    GPUProcessManager* mManager;
+    ~BatteryObserver() override = default;
   };
 
  private:
