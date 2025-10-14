@@ -525,8 +525,137 @@ class SystemResourceMonitor:
                             "size": stat.st_size,
                         }
                         self.events.append((timestamp, "artifact", marker_data))
+
+                        # Parse sccache.log if found
+                        if filename == "sccache.log":
+                            self._parse_sccache_log(filepath)
             except Exception as e:
                 warnings.warn(f"Failed to scan upload directory: {e}")
+
+    def _parse_sccache_log(self, filepath):
+        """Parse sccache.log and add profiler markers for cache hits and misses."""
+        import re
+        from datetime import datetime
+
+        parse_start = time.monotonic()
+
+        try:
+            # Track compilation entries: file -> {hash_time, lookup_time, write_time, hit}
+            compilations = {}
+
+            # Compile regex pattern outside the loop
+            # Matches: [timestamp DEBUG ...] [filename]: message ([\d.]+) s[,$]
+            # Examples:
+            #   [timestamp] [file.o]: generate_hash_key took 0.123 s
+            #   [timestamp] [file.o]: Cache hit in 0.456 s
+            #   [timestamp] [file.o]: Compiled in 2.580 s, storing in cache
+            pattern = re.compile(
+                r"\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z) .*\] \[([^\]]+)\]: (.+) ([\d.]+) s(?:,|$)"
+            )
+
+            with open(filepath) as f:
+                for line in f:
+                    match = pattern.match(line)
+                    if not match:
+                        continue
+
+                    timestamp_str = match.group(1)
+                    filename = match.group(2)
+                    message = match.group(3)
+                    duration = float(match.group(4)) * 1000  # Convert to milliseconds
+
+                    # Parse ISO 8601 timestamp and convert to monotonic time
+                    dt = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+                    timestamp = self.convert_to_monotonic_time(dt.timestamp())
+
+                    # Get or create compilation entry
+                    entry = compilations.setdefault(filename, {})
+
+                    # Track hash generation time
+                    if message == "generate_hash_key took":
+                        entry["hash_time"] = duration
+                        # timestamp is in seconds, duration in milliseconds
+                        entry["start_time"] = timestamp - (duration / 1000)
+
+                    # Track cache hit/miss and lookup time
+                    elif message == "Cache hit in":
+                        entry["lookup_time"] = duration
+                        entry["hit"] = True
+                        entry["end_time"] = timestamp
+
+                    elif message == "Cache miss in":
+                        entry["lookup_time"] = duration
+                        entry["hit"] = False
+
+                    # Track cache write time (only for misses)
+                    elif message == "Cache write finished in":
+                        entry["write_time"] = duration
+                        entry["end_time"] = timestamp
+
+                    # Track compilation time (for misses)
+                    elif message == "Compiled in":
+                        entry["compile_time"] = duration
+
+                    # Track cache artifact creation time (for misses)
+                    elif message == "Created cache artifact in":
+                        entry["artifact_time"] = duration
+
+            # Add markers for each compilation
+            for filename, data in compilations.items():
+                if "start_time" not in data or "end_time" not in data:
+                    continue
+
+                marker_data = {
+                    "type": "sccache",
+                    "file": filename,
+                }
+
+                if "hash_time" in data:
+                    marker_data["hash_time"] = data["hash_time"]
+                if "lookup_time" in data:
+                    marker_data["lookup_time"] = data["lookup_time"]
+
+                if data.get("hit"):
+                    marker_data["status"] = "hit"
+                    marker_data["color"] = "green"
+                else:
+                    marker_data["status"] = "miss"
+                    marker_data["color"] = "yellow"
+                    if "compile_time" in data:
+                        marker_data["compile_time"] = data["compile_time"]
+                    if "artifact_time" in data:
+                        marker_data["artifact_time"] = data["artifact_time"]
+                    if "write_time" in data:
+                        marker_data["write_time"] = data["write_time"]
+
+                self.markers.append(
+                    (
+                        "sccache",
+                        data["start_time"],
+                        data["end_time"],
+                        marker_data,
+                    )
+                )
+
+        except Exception as e:
+            warnings.warn(f"Failed to parse sccache.log: {e}")
+        else:
+            # Add a duration marker showing parsing time
+            parse_end = time.monotonic()
+            num_markers = len(compilations)
+            # Add as a duration marker
+            if num_markers > 0:
+                self.markers.append(
+                    (
+                        "sccache parsing",
+                        parse_start,
+                        parse_end,
+                        {
+                            "type": "Text",
+                            "text": f"Parsed {num_markers} sccache entries from log",
+                        },
+                    )
+                )
 
     # Methods to record events alongside the monitored data.
 
@@ -1362,6 +1491,55 @@ class SystemResourceMonitor:
                         ],
                         "graphs": [
                             {"key": "interval", "color": "purple", "type": "line"}
+                        ],
+                    },
+                    {
+                        "name": "sccache",
+                        "tooltipLabel": "{marker.data.status}: {marker.data.file}",
+                        "tableLabel": "{marker.data.status}: {marker.data.file}",
+                        "chartLabel": "{marker.data.file}",
+                        "display": ["marker-chart", "marker-table"],
+                        "colorField": "color",
+                        "data": [
+                            {
+                                "key": "file",
+                                "label": "File",
+                                "format": "string",
+                            },
+                            {
+                                "key": "status",
+                                "label": "Status",
+                                "format": "string",
+                            },
+                            {
+                                "key": "hash_time",
+                                "label": "Hash Time",
+                                "format": "duration",
+                            },
+                            {
+                                "key": "lookup_time",
+                                "label": "Lookup Time",
+                                "format": "duration",
+                            },
+                            {
+                                "key": "compile_time",
+                                "label": "Compile Time",
+                                "format": "duration",
+                            },
+                            {
+                                "key": "artifact_time",
+                                "label": "Artifact Creation Time",
+                                "format": "duration",
+                            },
+                            {
+                                "key": "write_time",
+                                "label": "Cache Write Time",
+                                "format": "duration",
+                            },
+                            {
+                                "key": "color",
+                                "hidden": True,
+                            },
                         ],
                     },
                 ],
