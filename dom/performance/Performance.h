@@ -222,7 +222,7 @@ class Performance : public DOMEventTargetHelper {
 
  private:
   MOZ_ALWAYS_INLINE bool CanAddResourceTimingEntry();
-  void BufferEvent();
+  void ResourceTimingBufferFullEvent();
   void MaybeEmitExternalProfilerMarker(
       const nsAString& aName, Maybe<const PerformanceMeasureOptions&> aOptions,
       Maybe<const nsAString&> aStartMark, const Optional<nsAString>& aEndMark);
