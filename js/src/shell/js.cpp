@@ -12821,6 +12821,8 @@ bool InitOptionParser(OptionParser& op) {
                         "Disable Object.groupBy and Map.groupBy") ||
       !op.addBoolOption('\0', "enable-symbols-as-weakmap-keys",
                         "Enable Symbols As WeakMap keys") ||
+      !op.addBoolOption('\0', "no-symbols-as-weakmap-keys",
+                        "Disable Symbols As WeakMap keys") ||
       !op.addBoolOption('\0', "enable-uint8array-base64",
                         "Enable Uint8Array base64/hex methods") ||
       !op.addBoolOption('\0', "enable-regexp-duplicate-named-groups",
@@ -13235,9 +13237,17 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   if (op.getBoolOption("enable-error-iserror")) {
     JS::Prefs::set_experimental_error_iserror(true);
   }
+
+  bool symbolsAsWeakMapKeys = false;
   if (op.getBoolOption("enable-symbols-as-weakmap-keys")) {
-    JS::Prefs::setAtStartup_experimental_symbols_as_weakmap_keys(true);
+    symbolsAsWeakMapKeys = true;
   }
+  if (op.getBoolOption("no-symbols-as-weakmap-keys")) {
+    symbolsAsWeakMapKeys = false;
+  }
+  JS::Prefs::setAtStartup_experimental_symbols_as_weakmap_keys(
+      symbolsAsWeakMapKeys);
+
 #ifdef NIGHTLY_BUILD
   if (op.getBoolOption("enable-async-iterator-helpers")) {
     JS::Prefs::setAtStartup_experimental_async_iterator_helpers(true);
