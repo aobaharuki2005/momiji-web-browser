@@ -2985,7 +2985,12 @@ var gMainPane = {
     const externalLinkOpenOverride = Preferences.get(
       "browser.link.open_newwindow.override.external"
     );
-
+    Glean.linkHandling.openNextToActiveTabSettingsEnabled.set(
+      inputElement.checked
+    );
+    Glean.linkHandling.openNextToActiveTabSettingsChange.record({
+      checked: inputElement.checked,
+    });
     return inputElement.checked
       ? Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT
       : externalLinkOpenOverride.defaultValue;
