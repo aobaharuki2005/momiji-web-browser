@@ -1407,13 +1407,12 @@
   mirror: always
 
 # Control whether we enable the feature of crash pull at all
-# Disabled by default for now until further notice
 - name: browser.crashReports.crashPull
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-# Should we prompt the user to send targetted crash report requested by devs?
+# Should we prompt the user to send targeted crash report requested by devs?
 - name: browser.crashReports.requestedNeverShowAgain
   type: bool
   value: false
