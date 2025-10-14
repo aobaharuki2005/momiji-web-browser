@@ -397,6 +397,14 @@ class DeviceListener : public SupportsWeakPtr {
    */
   RefPtr<DeviceListenerPromise> InitializeAsync();
 
+ private:
+  /**
+   * Initializes synchronously. Must be called on the media thread.
+   */
+  nsresult Initialize(PrincipalHandle aPrincipal, LocalMediaDevice* aDevice,
+                      MediaTrack* aTrack, bool aStartDevice);
+
+ public:
   /**
    * Posts a task to stop the device associated with this DeviceListener and
    * notifies the associated window listener that a track was stopped.
@@ -4292,51 +4300,24 @@ DeviceListener::InitializeAsync() {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
   MOZ_DIAGNOSTIC_ASSERT(!mStopped);
 
-  return MediaManager::Dispatch<DeviceListenerPromise>(
-             __func__,
-             [principal = GetPrincipalHandle(), device = mDeviceState->mDevice,
+  return InvokeAsync(
+             MediaManager::Get()->mMediaThread, __func__,
+             [this, self = RefPtr(this), principal = GetPrincipalHandle(),
+              device = mDeviceState->mDevice,
               track = mDeviceState->mTrackSource->mTrack,
-              deviceMuted = mDeviceState->mDeviceMuted](
-                 MozPromiseHolder<DeviceListenerPromise>& aHolder) {
-               auto kind = device->Kind();
-               device->SetTrack(track, principal);
-               nsresult rv = deviceMuted ? NS_OK : device->Start();
-               if (kind == MediaDeviceKind::Audioinput ||
-                   kind == MediaDeviceKind::Videoinput) {
-                 if ((rv == NS_ERROR_NOT_AVAILABLE &&
-                      kind == MediaDeviceKind::Audioinput) ||
-                     (NS_FAILED(rv) && kind == MediaDeviceKind::Videoinput)) {
-                   PR_Sleep(200);
-                   rv = device->Start();
-                 }
-                 if (rv == NS_ERROR_NOT_AVAILABLE &&
-                     kind == MediaDeviceKind::Audioinput) {
-                   nsCString log;
-                   log.AssignLiteral("Concurrent mic process limit.");
-                   aHolder.Reject(MakeRefPtr<MediaMgrError>(
-                                      MediaMgrError::Name::NotReadableError,
-                                      std::move(log)),
-                                  __func__);
-                   return;
-                 }
+              deviceMuted = mDeviceState->mDeviceMuted] {
+               nsresult rv = Initialize(principal, device, track,
+                                        /*aStartDevice=*/!deviceMuted);
+               if (NS_SUCCEEDED(rv)) {
+                 return GenericPromise::CreateAndResolve(
+                     true, "DeviceListener::InitializeAsync success");
                }
-               if (NS_FAILED(rv)) {
-                 nsCString log;
-                 log.AppendPrintf("Starting %s failed",
-                                  dom::GetEnumString(kind).get());
-                 aHolder.Reject(
-                     MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError,
-                                               std::move(log)),
-                     __func__);
-                 return;
-               }
-               LOG("started %s device %p", dom::GetEnumString(kind).get(),
-                   device.get());
-               aHolder.Resolve(true, __func__);
+               return GenericPromise::CreateAndReject(
+                   rv, "DeviceListener::InitializeAsync failure");
              })
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [self = RefPtr<DeviceListener>(this), this]() {
+          [self = RefPtr<DeviceListener>(this), this](bool) {
             if (mStopped) {
               // We were shut down during the async init
               return DeviceListenerPromise::CreateAndResolve(true, __func__);
@@ -4351,10 +4332,25 @@ DeviceListener::InitializeAsync() {
             mDeviceState->mTrackEnabledTime = TimeStamp::Now();
             return DeviceListenerPromise::CreateAndResolve(true, __func__);
           },
-          [self = RefPtr<DeviceListener>(this),
-           this](const RefPtr<MediaMgrError>& aResult) {
+          [self = RefPtr<DeviceListener>(this), this](nsresult aRv) {
+            auto kind = mDeviceState->mDevice->Kind();
+            RefPtr<MediaMgrError> err;
+            if (aRv == NS_ERROR_NOT_AVAILABLE &&
+                kind == MediaDeviceKind::Audioinput) {
+              nsCString log;
+              log.AssignLiteral("Concurrent mic process limit.");
+              err = MakeRefPtr<MediaMgrError>(
+                  MediaMgrError::Name::NotReadableError, std::move(log));
+            } else if (NS_FAILED(aRv)) {
+              nsCString log;
+              log.AppendPrintf("Starting %s failed",
+                               dom::GetEnumString(kind).get());
+              err = MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError,
+                                              std::move(log));
+            }
+
             if (mStopped) {
-              return DeviceListenerPromise::CreateAndReject(aResult, __func__);
+              return DeviceListenerPromise::CreateAndReject(err, __func__);
             }
 
             MOZ_DIAGNOSTIC_ASSERT(!mDeviceState->mTrackEnabled);
@@ -4362,8 +4358,29 @@ DeviceListener::InitializeAsync() {
             MOZ_DIAGNOSTIC_ASSERT(!mDeviceState->mStopped);
 
             Stop();
-            return DeviceListenerPromise::CreateAndReject(aResult, __func__);
+
+            return DeviceListenerPromise::CreateAndReject(err, __func__);
           });
+}
+
+nsresult DeviceListener::Initialize(PrincipalHandle aPrincipal,
+                                    LocalMediaDevice* aDevice,
+                                    MediaTrack* aTrack, bool aStartDevice) {
+  MOZ_ASSERT(MediaManager::IsInMediaThread());
+
+  auto kind = aDevice->Kind();
+  aDevice->SetTrack(aTrack, aPrincipal);
+  nsresult rv = aStartDevice ? aDevice->Start() : NS_OK;
+  if (kind == MediaDeviceKind::Audioinput ||
+      kind == MediaDeviceKind::Videoinput) {
+    if ((rv == NS_ERROR_NOT_AVAILABLE && kind == MediaDeviceKind::Audioinput) ||
+        (NS_FAILED(rv) && kind == MediaDeviceKind::Videoinput)) {
+      PR_Sleep(200);
+      rv = aDevice->Start();
+    }
+  }
+  LOG("started %s device %p", dom::GetEnumString(kind).get(), aDevice);
+  return rv;
 }
 
 void DeviceListener::Stop() {
