@@ -507,7 +507,7 @@ class AutocompleteTest : BaseSessionTest() {
                     equalTo(savedAddresses.size),
                 )
 
-                val addressOption = prompt.options.find { it.value.familyName == selectedAddress.familyName }
+                val addressOption = prompt.options.find { it.value.guid == selectedAddress.guid }
                 val address = addressOption?.value
 
                 assertThat("Address should not be null", address, notNullValue())
@@ -656,6 +656,38 @@ class AutocompleteTest : BaseSessionTest() {
         val savedAddresses = mutableListOf<Address>(savedAddress)
 
         checkAddressesForCorrectness(savedAddresses.toTypedArray(), savedAddress)
+    }
+
+    @Test
+    fun addressSelectAndFillWithoutGivenName() {
+        val name = "Peter Parker"
+        val streetAddress = "20 Ingram Street, Forest Hills Gardens, Queens"
+        val postalCode = "11375"
+        val country = "US"
+        val email = "spiderman@newyork.com"
+        val tel = "+1 180090021"
+        val organization = ""
+        val guid = "test-guid"
+        val builder = Address.Builder()
+            .guid(guid)
+            .name(name)
+            .streetAddress(streetAddress)
+            .postalCode(postalCode)
+            .country(country)
+            .email(email)
+            .tel(tel)
+            .organization(organization)
+
+        val savedAddress = builder.build()
+
+        val expectedAddress = builder
+            .givenName("Peter")
+            .familyName("Parker")
+            .build()
+
+        val savedAddresses = arrayOf(savedAddress)
+
+        checkAddressesForCorrectness(savedAddresses, expectedAddress)
     }
 
     @Test
