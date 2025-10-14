@@ -3340,7 +3340,8 @@ CrashPipeType GetChildNotificationPipe() {
 
 UniqueFileHandle RegisterChildIPCChannel() {
   if (gCrashHelperClient) {
-    AncillaryData ipc_endpoint = register_child_ipc_channel(gCrashHelperClient);
+    RawAncillaryData ipc_endpoint =
+        register_child_ipc_channel(gCrashHelperClient);
     return UniqueFileHandle{ipc_endpoint};
   }
 
