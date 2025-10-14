@@ -13,6 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   SmartAssistEngine:
     "moz-src:///browser/components/genai/SmartAssistEngine.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
 const FULL_PAGE_URL = "chrome://browser/content/genai/smartAssistPage.html";
@@ -101,8 +102,46 @@ export class SmartAssist extends MozLitElement {
     return this._actions[this.actionKey];
   }
 
-  _actionSearch = () => {
-    // TODO: Implement search functionality
+  _actionSearch = async () => {
+    const searchTerms = (this.userPrompt || "").trim();
+    if (!searchTerms) {
+      return;
+    }
+
+    const isPrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(window);
+    const engine = isPrivate
+      ? await Services.search.getDefaultPrivate()
+      : await Services.search.getDefault();
+
+    const submission = engine.getSubmission(searchTerms); // default to SEARCH (text/html)
+
+    // getSubmission can return null if the engine doesn't have a URL
+    // with a text/html response type. This is unlikely (since
+    // SearchService._addEngineToStore() should fail for such an engine),
+    // but let's be on the safe side.
+    if (!submission) {
+      return;
+    }
+
+    const triggeringPrincipal =
+      Services.scriptSecurityManager.createNullPrincipal({});
+
+    window.browsingContext.topChromeWindow.openLinkIn(
+      submission.uri.spec,
+      "current",
+      {
+        private: isPrivate,
+        postData: submission.postData,
+        inBackground: false,
+        relatedToCurrent: true,
+        triggeringPrincipal,
+        policyContainer: null,
+        targetBrowser: null,
+        globalHistoryOptions: {
+          triggeringSearchEngine: engine.name,
+        },
+      }
+    );
   };
 
   _actionChat = async () => {
