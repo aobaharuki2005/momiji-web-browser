@@ -2191,7 +2191,11 @@ class NetworkModule extends RootBiDiModule {
       );
       // Cached stencils do not return any response body.
       // TODO: Handle response body for data URLs.
+      collectedData.pending = false;
       collectedData.networkDataCollected.resolve();
+      this.#collectedNetworkData.delete(
+        `${collectedData.request}-${collectedData.type}`
+      );
       return;
     }
 
