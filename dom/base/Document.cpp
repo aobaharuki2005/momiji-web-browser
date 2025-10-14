@@ -97,7 +97,6 @@
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/PseudoStyleType.h"
-#include "mozilla/RefCountType.h"
 #include "mozilla/RelativeTo.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ReverseIterator.h"
