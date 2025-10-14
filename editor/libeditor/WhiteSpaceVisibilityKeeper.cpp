@@ -1867,20 +1867,22 @@ WhiteSpaceVisibilityKeeper::EnsureNoInvisibleWhiteSpaces(
       (!aPoint.IsEndOfContainer() && !aPoint.IsCharCollapsibleASCIISpace())) {
     return EditorDOMPoint();
   }
-  const Element* const closestBlockElement =
+  const Element* const maybeNonEditableClosestBlockElement =
       HTMLEditUtils::GetInclusiveAncestorElement(
           *aPoint.ContainerAs<nsIContent>(), HTMLEditUtils::ClosestBlockElement,
           BlockInlineCheck::UseComputedDisplayStyle);
-  if (MOZ_UNLIKELY(!closestBlockElement)) {
+  if (MOZ_UNLIKELY(!maybeNonEditableClosestBlockElement)) {
     return EditorDOMPoint();  // aPoint is not in a block.
   }
   const TextFragmentData textFragmentDataForLeadingWhiteSpaces(
       Scan::EditableNodes,
       aPoint.IsStartOfContainer() &&
-              aPoint.GetContainer() == closestBlockElement
+              (aPoint.GetContainer() == maybeNonEditableClosestBlockElement ||
+               aPoint.GetContainer()->IsEditingHost())
           ? aPoint
           : aPoint.PreviousPointOrParentPoint<EditorDOMPoint>(),
-      BlockInlineCheck::UseComputedDisplayStyle, closestBlockElement);
+      BlockInlineCheck::UseComputedDisplayStyle,
+      maybeNonEditableClosestBlockElement);
   if (NS_WARN_IF(!textFragmentDataForLeadingWhiteSpaces.IsInitialized())) {
     return Err(NS_ERROR_FAILURE);
   }
@@ -1941,7 +1943,7 @@ WhiteSpaceVisibilityKeeper::EnsureNoInvisibleWhiteSpaces(
           ? textFragmentDataForLeadingWhiteSpaces
           : TextFragmentData(Scan::EditableNodes, aPoint,
                              BlockInlineCheck::UseComputedDisplayStyle,
-                             closestBlockElement);
+                             maybeNonEditableClosestBlockElement);
   const EditorDOMRange& trailingWhiteSpaceRange =
       textFragmentData.InvisibleTrailingWhiteSpaceRangeRef();
   if (trailingWhiteSpaceRange.IsPositioned() &&
