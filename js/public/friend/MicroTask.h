@@ -158,5 +158,11 @@ JS_PUBLIC_API JSObject* MaybeGetHostDefinedGlobalFromJSMicroTask(
 
 JS_PUBLIC_API JSObject* MaybeGetPromiseFromJSMicroTask(const MicroTask& entry);
 
+// Get the flow ID from a JS microtask for profiler markers.
+// This only returns false if entry has become a dead wrapper,
+// in which case the microtask doesn't run anyhow.
+JS_PUBLIC_API bool GetFlowIdFromJSMicroTask(const MicroTask& entry,
+                                            uint64_t* uid);
+
 }  // namespace JS
 #endif /* js_friend_MicroTask_h */

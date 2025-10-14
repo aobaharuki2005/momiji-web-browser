@@ -981,9 +981,26 @@ static bool MOZ_CAN_RUN_SCRIPT
 RunMicroTask(JSContext* aCx, JS::MutableHandle<JS::MicroTask> task) {
   if (RefPtr<MicroTaskRunnable> runnable =
           MaybeUnwrapTaskToOwnedRunnable(task)) {
+    AUTO_PROFILER_TERMINATING_FLOW_MARKER_FLOW_ONLY(
+        "RunMicroTaskRunnable", OTHER, Flow::FromPointer(runnable.get()));
     AutoSlowOperation aso;
     runnable->Run(aso);
     return true;
+  }
+
+  // Avoid the overhead of GetFlowIdFromJSMicroTask in the common case
+  // of not having the profiler enabled.
+  mozilla::Maybe<AutoProfilerTerminatingFlowMarkerFlowOnly> terminatingMarker;
+  if (profiler_is_active_and_unpaused() &&
+      profiler_feature_active(ProfilerFeature::Flows)) {
+    uint64_t flowId = 0;
+    // Since this only returns false when the microtask won't run (dead wrapper)
+    // we can elide the marker if it does fail.
+    if (JS::GetFlowIdFromJSMicroTask(task.get(), &flowId)) {
+      terminatingMarker.emplace("RunMicroTask",
+                                mozilla::baseprofiler::category::OTHER,
+                                Flow::ProcessScoped(flowId));
+    }
   }
 
   JS::Rooted<JSObject*> maybePromise(aCx,
@@ -1189,11 +1206,6 @@ bool CycleCollectedJSContext::PerformMicroTaskCheckPoint(bool aForce) {
 
         // Bug 1991164: Need to support LogMicroTaskQueue Entry for
         // LogMicroTaskQueueEntry::Run log(job.get().get());
-
-        // Bug 1990870: Need to support flow markers with JS Micro Tasks.
-        // AUTO_PROFILER_TERMINATING_FLOW_MARKER_FLOW_ONLY(
-        //     "CycleCollectedJSContext::PerformDebuggerMicroTaskCheckpoint",
-        //     OTHER, Flow::FromPointer(runnable.get()));
 
         // Note: We're dropping the return value on the floor here. This is
         // consistent with the previous implementation, which left the
