@@ -853,46 +853,59 @@ ipc::IPCResult CamerasParent::RecvAllocateCapture(
   using Promise1 = MozPromise<bool, bool, true>;
   using Data = std::tuple<int, int>;
   using Promise2 = MozPromise<Data, bool, true>;
-  InvokeAsync(GetMainThreadSerialEventTarget(), __func__,
-              [aWindowID] {
-                // Verify whether the claimed origin has received permission
-                // to use the camera, either persistently or this session (one
-                // shot).
-                bool allowed = HasCameraPermission(aWindowID);
-                if (!allowed) {
-                  // Developer preference for turning off permission check.
-                  if (Preferences::GetBool(
-                          "media.navigator.permission.disabled", false)) {
-                    allowed = true;
-                    LOG("No permission but checks are disabled");
-                  } else {
-                    LOG("No camera permission for this origin");
-                  }
-                }
-                return Promise1::CreateAndResolve(
-                    allowed, "CamerasParent::RecvAllocateCapture");
-              })
-      ->Then(mVideoCaptureThread, __func__,
-             [this, self = RefPtr(this), aCapEngine,
-              unique_id = nsCString(aUniqueIdUTF8)](
-                 Promise1::ResolveOrRejectValue&& aValue) {
-               bool allowed = aValue.ResolveValue();
-               int captureId = -1;
-               int error = -1;
-               if (allowed && EnsureInitialized(aCapEngine)) {
-                 VideoEngine* engine = mEngines->ElementAt(aCapEngine);
-                 captureId = engine->CreateVideoCapture(unique_id.get());
-                 engine->WithEntry(captureId,
-                                   [&error](VideoEngine::CaptureEntry& cap) {
-                                     if (cap.VideoCapture()) {
-                                       error = 0;
-                                     }
-                                   });
-               }
-               return Promise2::CreateAndResolve(
-                   std::make_tuple(captureId, error),
-                   "CamerasParent::RecvAllocateCapture");
-             })
+  InvokeAsync(
+      GetMainThreadSerialEventTarget(), __func__,
+      [aWindowID] {
+        // Verify whether the claimed origin has received permission
+        // to use the camera, either persistently or this session (one
+        // shot).
+        bool allowed = HasCameraPermission(aWindowID);
+        if (!allowed && Preferences::GetBool(
+                            "media.navigator.permission.disabled", false)) {
+          // Developer preference for turning off permission check.
+          allowed = true;
+          LOG("No permission but checks are disabled");
+        }
+        if (!allowed) {
+          LOG("No camera permission for this origin");
+        }
+        return Promise1::CreateAndResolve(allowed,
+                                          "CamerasParent::RecvAllocateCapture");
+      })
+      ->Then(
+          mVideoCaptureThread, __func__,
+          [this, self = RefPtr(this), aCapEngine, aWindowID,
+           unique_id = nsCString(aUniqueIdUTF8)](
+              Promise1::ResolveOrRejectValue&& aValue) {
+            VideoEngine* engine = EnsureInitialized(aCapEngine);
+            if (!engine) {
+              return Promise2::CreateAndResolve(
+                  std::make_tuple(-1, -1),
+                  "CamerasParent::RecvAllocateCapture no engine");
+            }
+            bool allowed = aValue.ResolveValue();
+            if (!allowed && engine->IsWindowCapturing(aWindowID, unique_id)) {
+              allowed = true;
+              LOG("No permission but window is already capturing this device");
+            }
+            if (!allowed) {
+              return Promise2::CreateAndResolve(
+                  std::make_tuple(-1, -1),
+                  "CamerasParent::RecvAllocateCapture");
+            }
+
+            const int captureId =
+                engine->CreateVideoCapture(unique_id.get(), aWindowID);
+            int error = -1;
+            engine->WithEntry(captureId, [&](VideoEngine::CaptureEntry& cap) {
+              if (cap.VideoCapture()) {
+                error = 0;
+              }
+            });
+            return Promise2::CreateAndResolve(
+                std::make_tuple(captureId, error),
+                "CamerasParent::RecvAllocateCapture");
+          })
       ->Then(
           mPBackgroundEventTarget, __func__,
           [this, self = RefPtr(this)](Promise2::ResolveOrRejectValue&& aValue) {
