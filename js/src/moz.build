@@ -64,6 +64,12 @@ if not CONFIG["JS_DISABLE_SHELL"]:
             "fuzz-tests",
         ]
 
+LegacyTest(
+    f"%{CONFIG['PYTHON3']}",
+    "/config/check_js_msg_encoding.py",
+    depends=["/config/check_js_msg_encoding.py"],
+)
+
 if CONFIG["FUZZING_INTERFACES"] and CONFIG["LIBFUZZER"]:
     # In addition to regular coverage provided by trace-pc-guard,
     # LibFuzzer can use trace-cmp to instrument various compare instructions.
