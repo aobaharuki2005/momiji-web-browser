@@ -9,7 +9,6 @@
 #include "TextDirectiveUtil.h"
 #include "fragmentdirectives_ffi_generated.h"
 #include "mozilla/CycleCollectedUniquePtr.h"
-#include "mozilla/ResultVariant.h"
 #include "mozilla/glean/DomMetrics.h"
 #include "nsFind.h"
 #include "nsRange.h"
