@@ -742,10 +742,10 @@ void GCMarker::markEphemeronEdges(EphemeronEdgeVector& edges,
   DebugOnly<size_t> initialLength = edges.length();
 
   for (auto& edge : edges) {
-    MarkColor targetColor = std::min(srcColor, MarkColor(edge.color()));
+    MarkColor targetColor = std::min(srcColor, MarkColor(edge.color));
     MOZ_ASSERT(markColor() >= targetColor);
     if (targetColor == markColor()) {
-      ApplyGCThingTyped(edge.target(), edge.target()->getTraceKind(),
+      ApplyGCThingTyped(edge.target, edge.target->getTraceKind(),
                         [this](auto t) {
                           markAndTraverse<MarkingOptions::MarkImplicitEdges>(t);
                         });
@@ -762,7 +762,7 @@ void GCMarker::markEphemeronEdges(EphemeronEdgeVector& edges,
   // delegate zone to get marked later, look up an edge in this table, and
   // then try to mark something in a Zone that is no longer marking.
   if (srcColor == MarkColor::Black && markColor() == MarkColor::Black) {
-    edges.eraseIf([](auto& edge) { return edge.color() == MarkColor::Black; });
+    edges.eraseIf([](auto& edge) { return edge.color == MarkColor::Black; });
   }
 }
 
@@ -2408,13 +2408,13 @@ IncrementalProgress JS::Zone::enterWeakMarkingMode(GCMarker* marker,
     CellColor srcColor = gc::detail::GetEffectiveColor(marker, src);
     auto& edges = r.front().value();
 
-    size_t numEdges = edges.length();
     if (IsMarked(srcColor) && edges.length() > 0) {
+      uint32_t steps = edges.length();
       marker->markEphemeronEdges(edges, AsMarkColor(srcColor));
-    }
-    budget.step(1 + numEdges);
-    if (budget.isOverBudget()) {
-      return NotFinished;
+      budget.step(steps);
+      if (budget.isOverBudget()) {
+        return NotFinished;
+      }
     }
   }
 

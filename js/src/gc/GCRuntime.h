@@ -1055,9 +1055,6 @@ class GCRuntime {
   GCSchedulingTunables tunables;
   GCSchedulingState schedulingState;
   MainThreadData<bool> fullGCRequested;
-  // If an enterWeakMarking slice takes too long, suppress yielding during the
-  // next slice.
-  MainThreadData<bool> finishMarkingDuringSweeping;
 
   // Helper thread configuration.
   MainThreadData<double> helperThreadRatio;

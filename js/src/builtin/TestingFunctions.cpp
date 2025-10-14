@@ -2901,12 +2901,6 @@ static bool CurrentGC(JSContext* cx, unsigned argc, Value* vp) {
   }
 #  endif
 
-  val = BooleanValue(gc.finishMarkingDuringSweeping);
-  if (!JS_DefineProperty(cx, result, "finishMarkingDuringSweeping", val,
-                         JSPROP_ENUMERATE)) {
-    return false;
-  }
-
   args.rval().setObject(*result);
   return true;
 }
