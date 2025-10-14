@@ -49,6 +49,7 @@ import org.mozilla.fenix.debugsettings.addresses.SharedPrefsAddressesDebugLocale
 import org.mozilla.fenix.ext.TALL_SCREEN_HEIGHT_DP
 import org.mozilla.fenix.ext.WIDE_SCREEN_WIDTH_DP
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getApplicationInstalledTime
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.pixelSizeFor
 import org.mozilla.fenix.home.pocket.ContentRecommendationsFeatureHelper
@@ -70,6 +71,7 @@ import org.mozilla.fenix.settings.registerOnSharedPreferenceChangeListener
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_AUDIBLE
 import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
+import org.mozilla.fenix.termsofuse.TOU_VERSION
 import org.mozilla.fenix.wallpapers.Wallpaper
 import java.security.InvalidParameterException
 import java.util.UUID
@@ -594,6 +596,33 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_terms_accepted),
         default = false,
         persistDefaultIfNotExists = true,
+    )
+
+    /**
+     * The date the user accepted the Terms of Use.
+     */
+    var termsOfUseAcceptedTimeInMillis by longPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_terms_accepted_date),
+        default = { if (hasAcceptedTermsOfService) applicationInstalledTime else 0L },
+    )
+
+    /**
+     * Temporary testing helper to set the date the user accepted the Terms of Use.
+     *
+     * Will be addressed in a more permanent refactor as part of
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=1993949.
+     *
+     * ⚠️ Only mutate from tests.
+     */
+    @VisibleForTesting
+    internal var applicationInstalledTime = appContext.getApplicationInstalledTime(logger)
+
+    /**
+     * The version of the Terms of Use that the user has accepted.
+     */
+    var termsOfUseAcceptedVersion by intPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_terms_accepted_version),
+        default = { if (hasAcceptedTermsOfService) TOU_VERSION else 0 },
     )
 
     /**

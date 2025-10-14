@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.utils
 
-import android.content.res.Configuration
 import androidx.core.content.edit
 import io.mockk.every
 import io.mockk.spyk
@@ -31,6 +30,8 @@ import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
 import org.robolectric.RobolectricTestRunner
 import java.util.Calendar
+
+private const val TOU_VERSION = 5
 
 @RunWith(RobolectricTestRunner::class)
 class SettingsTest {
@@ -1239,5 +1240,41 @@ class SettingsTest {
 
         assertFalse(settings.preferences.contains(oldKey))
         eventStore.assertNoPastEvents()
+    }
+
+    @Test
+    fun `WHEN user has accepted the ToU THEN termsOfUseAcceptedTimeInMillis returns the app installed time`() {
+        val installTime = 12345L
+        settings.applicationInstalledTime = installTime
+        settings.hasAcceptedTermsOfService = true
+
+        val result = settings.termsOfUseAcceptedTimeInMillis
+        assertEquals(installTime, result)
+    }
+
+    @Test
+    fun `WHEN user has not accepted the ToU THEN termsOfUseAcceptedTimeInMillis returns 0L`() {
+        val installTime = 12345L
+        settings.applicationInstalledTime = installTime
+        settings.hasAcceptedTermsOfService = false
+
+        val result = settings.termsOfUseAcceptedTimeInMillis
+        assertEquals(0L, result)
+    }
+
+    @Test
+    fun `WHEN user has accepted the ToU THEN termsOfUseAcceptedVersion returns the ToU version`() {
+        settings.hasAcceptedTermsOfService = true
+
+        val result = settings.termsOfUseAcceptedVersion
+        assertEquals(TOU_VERSION, result)
+    }
+
+    @Test
+    fun `WHEN user has not accepted the ToU THEN termsOfUseAcceptedVersion returns 0`() {
+        settings.hasAcceptedTermsOfService = false
+
+        val result = settings.termsOfUseAcceptedVersion
+        assertEquals(0, result)
     }
 }

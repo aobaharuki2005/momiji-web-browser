@@ -7,6 +7,7 @@ package org.mozilla.fenix.ext
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.provider.Settings
@@ -19,6 +20,7 @@ import androidx.annotation.StringRes
 import mozilla.components.compose.base.theme.layout.AcornWindowSize
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.locale.LocaleManager
+import mozilla.components.support.utils.ext.getPackageInfoCompat
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
@@ -175,3 +177,16 @@ fun Context.isToolbarAtBottom() =
  * @return The pixel size corresponding to the given dimension resource.
  */
 fun Context.pixelSizeFor(@DimenRes resId: Int) = resources.getDimensionPixelSize(resId)
+
+/**
+ * Returns the installation time of this application (in milliseconds).
+ *
+ * @param logger Used to log a warning if package information cannot be retrieved.
+ * @return The installation time in milliseconds since epoch, or `0L` if unavailable.
+ */
+fun Context.getApplicationInstalledTime(logger: Logger): Long = try {
+    packageManager.getPackageInfoCompat(packageName, 0).firstInstallTime
+} catch (e: PackageManager.NameNotFoundException) {
+    logger.warn("Unable to retrieve package info for $packageName", e)
+    0L
+}

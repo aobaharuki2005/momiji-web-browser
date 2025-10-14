@@ -4,4 +4,7 @@
 
 package org.mozilla.fenix.termsofuse
 
+/**
+ * The current version of the Terms of Use.
+ */
 const val TOU_VERSION = 5
