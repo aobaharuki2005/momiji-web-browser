@@ -1927,9 +1927,10 @@ export class TelemetryFeed {
         }
 
         Glean.pocket.dismiss.record({
-          possiblyRedactedNewTabPing,
+          ...possiblyRedactedNewTabPing,
           newtab_visit_id: session.session_id,
         });
+
         if (this.privatePingEnabled) {
           this.newtabContentPing.recordEvent("dismiss", gleanData);
         }
