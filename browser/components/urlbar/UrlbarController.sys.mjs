@@ -1173,7 +1173,7 @@ class TelemetryEvent {
           actions,
           available_semantic_sources,
         };
-        lazy.logger.info(`abandonment event:`, eventInfo);
+        lazy.logger.info(`engagement event:`, eventInfo);
         Glean.urlbar.engagement.record(eventInfo);
         break;
       }
@@ -1192,7 +1192,7 @@ class TelemetryEvent {
           actions,
           available_semantic_sources,
         };
-        lazy.logger.info(`engagement event:`, eventInfo);
+        lazy.logger.info(`abandonment event:`, eventInfo);
         Glean.urlbar.abandonment.record(eventInfo);
         break;
       }
