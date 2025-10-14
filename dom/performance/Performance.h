@@ -179,7 +179,7 @@ class Performance : public DOMEventTargetHelper {
   void ClearUserEntries(const Optional<nsAString>& aEntryName,
                         const nsAString& aEntryType);
 
-  virtual void DispatchBufferFullEvent() = 0;
+  virtual void DispatchResourceTimingBufferFullEvent() = 0;
 
   virtual DOMHighResTimeStamp CreationTime() const = 0;
 
