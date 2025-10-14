@@ -11,9 +11,8 @@
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/LayersTypes.h"
-#include "mozilla/Compiler.h"
 
-#if MOZ_IS_GCC
+#ifdef MOZ_IS_GCC
 #  include "mozilla/layers/NativeLayer.h"
 #endif
 
