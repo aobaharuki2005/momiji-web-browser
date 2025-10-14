@@ -399,17 +399,16 @@ class SPSNALIterator {
   }
   reader.Read(paramSets[i].mOffset);
 
-  uint8_t byte;
-  MOZ_TRY_VAR(byte, reader.ReadU8());
+  uint8_t byte = MOZ_TRY(reader.ReadU8());
   uint8_t nalUnitType = byte & 0x1f;
   if (nalUnitType == H264_NAL_PREFIX || nalUnitType == H264_NAL_SLICE_EXT) {
     bool svcExtensionFlag = false;
-    MOZ_TRY_VAR(byte, reader.ReadU8());
+    byte = MOZ_TRY(reader.ReadU8());
     svcExtensionFlag = byte & 0x80;
     if (svcExtensionFlag) {
       // Discard the first byte, and find the temporal id in the second byte
       MOZ_TRY(reader.ReadU8());
-      MOZ_TRY_VAR(byte, reader.ReadU8());
+      byte = MOZ_TRY(reader.ReadU8());
       int temporalId = (byte & 0xE0) >> 5;
       return temporalId;
     }
@@ -1145,13 +1144,11 @@ bool H264::CompareExtraData(const mozilla::MediaByteBuffer* aExtraData1,
 
 static inline Result<Ok, nsresult> ReadSEIInt(BufferReader& aBr,
                                               uint32_t& aOutput) {
-  uint8_t tmpByte;
-
   aOutput = 0;
-  MOZ_TRY_VAR(tmpByte, aBr.ReadU8());
+  uint8_t tmpByte = MOZ_TRY(aBr.ReadU8());
   while (tmpByte == 0xFF) {
     aOutput += 255;
-    MOZ_TRY_VAR(tmpByte, aBr.ReadU8());
+    tmpByte = MOZ_TRY(aBr.ReadU8());
   }
   aOutput += tmpByte;  // this is the last byte
   return Ok();

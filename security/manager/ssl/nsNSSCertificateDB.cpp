@@ -1255,8 +1255,7 @@ nsresult VerifyCertAtTime(nsIX509Cert* aCert, nsIX509CertDB::VerifyUsage aUsage,
                                           OriginAttributes(), &evStatus);
   } else {
     const nsCString& flatHostname = PromiseFlatCString(aHostname);
-    VerifyUsage vu;
-    MOZ_TRY_VAR(vu, MapX509UsageToVerifierUsage(aUsage));
+    VerifyUsage vu = MOZ_TRY(MapX509UsageToVerifierUsage(aUsage));
     result = certVerifier->VerifyCert(
         certBytes, vu, aTime,
         nullptr,  // Assume no context

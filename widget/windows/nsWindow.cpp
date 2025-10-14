@@ -8551,7 +8551,7 @@ nsresult nsWindow::SynthesizeNativeTouchPoint(
   // If we already know about this pointer id get it's record
   return mActivePointers.WithEntryHandle(aPointerId, [&](auto&& entry) {
     POINTER_FLAGS flags;
-    // Can't use MOZ_TRY_VAR because it confuses WithEntryHandle
+    // Can't use MOZ_TRY because it confuses WithEntryHandle
     auto result = PointerStateToFlag(aPointerState, !!entry);
     if (result.isOk()) {
       flags = result.unwrap();
@@ -8639,7 +8639,7 @@ nsresult nsWindow::SynthesizeNativePenInput(
   // If we already know about this pointer id get it's record
   return mActivePointers.WithEntryHandle(aPointerId, [&](auto&& entry) {
     POINTER_FLAGS flags;
-    // Can't use MOZ_TRY_VAR because it confuses WithEntryHandle
+    // Can't use MOZ_TRY because it confuses WithEntryHandle
     auto result = PointerStateToFlag(aPointerState, !!entry);
     if (result.isOk()) {
       flags = result.unwrap();

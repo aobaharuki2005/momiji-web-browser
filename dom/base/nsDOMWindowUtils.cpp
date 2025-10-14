@@ -1936,8 +1936,8 @@ Result<mozilla::LayoutDeviceRect, nsresult> nsDOMWindowUtils::ConvertTo(
 NS_IMETHODIMP
 nsDOMWindowUtils::ToScreenRectInCSSUnits(float aX, float aY, float aWidth,
                                          float aHeight, DOMRect** aResult) {
-  LayoutDeviceRect devRect;
-  MOZ_TRY_VAR(devRect, ConvertTo(aX, aY, aWidth, aHeight, CoordsType::Screen));
+  LayoutDeviceRect devRect =
+      MOZ_TRY(ConvertTo(aX, aY, aWidth, aHeight, CoordsType::Screen));
 
   nsPresContext* presContext = GetPresContext();
   MOZ_ASSERT(presContext);
@@ -1960,9 +1960,8 @@ nsDOMWindowUtils::ToScreenRectInCSSUnits(float aX, float aY, float aWidth,
 NS_IMETHODIMP
 nsDOMWindowUtils::ToScreenRect(float aX, float aY, float aWidth, float aHeight,
                                DOMRect** aResult) {
-  LayoutDeviceRect devPixelsRect;
-  MOZ_TRY_VAR(devPixelsRect,
-              ConvertTo(aX, aY, aWidth, aHeight, CoordsType::Screen));
+  LayoutDeviceRect devPixelsRect =
+      MOZ_TRY(ConvertTo(aX, aY, aWidth, aHeight, CoordsType::Screen));
 
   ScreenRect rect = ViewAs<ScreenPixel>(
       devPixelsRect, PixelCastJustification::ScreenIsParentLayerForRoot);
@@ -1976,9 +1975,8 @@ nsDOMWindowUtils::ToScreenRect(float aX, float aY, float aWidth, float aHeight,
 NS_IMETHODIMP
 nsDOMWindowUtils::ToTopLevelWidgetRect(float aX, float aY, float aWidth,
                                        float aHeight, DOMRect** aResult) {
-  LayoutDeviceRect rect;
-  MOZ_TRY_VAR(rect,
-              ConvertTo(aX, aY, aWidth, aHeight, CoordsType::TopLevelWidget));
+  LayoutDeviceRect rect =
+      MOZ_TRY(ConvertTo(aX, aY, aWidth, aHeight, CoordsType::TopLevelWidget));
 
   RefPtr<DOMRect> outRect = new DOMRect(mWindow);
   outRect->SetRect(rect.x, rect.y, rect.width, rect.height);
@@ -3518,8 +3516,8 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  quota::PrincipalMetadata principalMetadata;
-  MOZ_TRY_VAR(principalMetadata, quota::GetInfoFromWindow(window));
+  quota::PrincipalMetadata principalMetadata =
+      MOZ_TRY(quota::GetInfoFromWindow(window));
 
   RefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
   if (mgr) {
@@ -3845,8 +3843,8 @@ nsDOMWindowUtils::AddSheet(nsIPreloadedStyleSheet* aSheet,
   nsCOMPtr<Document> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-  StyleSheet* sheet = nullptr;
-  MOZ_TRY_VAR(sheet, static_cast<PreloadedStyleSheet*>(aSheet)->GetSheet());
+  StyleSheet* sheet =
+      MOZ_TRY(static_cast<PreloadedStyleSheet*>(aSheet)->GetSheet());
 
   Document::additionalSheetType type = convertSheetType(aSheetType);
   return doc->AddAdditionalStyleSheet(type, sheet);

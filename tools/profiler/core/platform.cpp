@@ -3999,10 +3999,8 @@ do_profiler_stream_json_for_this_process(
     return Err(ProfilerError::IsInactive);
   }
 
-  ProfileGenerationAdditionalInformation additionalInfo;
-  MOZ_TRY_VAR(
-      additionalInfo,
-      locked_profiler_stream_json_for_this_process(
+  ProfileGenerationAdditionalInformation additionalInfo =
+      MOZ_TRY(locked_profiler_stream_json_for_this_process(
           lock, aWriter, aSinceTime, preRecordedMetaInformation,
           aIsShuttingDown, aService,
           aProgressLogger.CreateSubLoggerFromTo(
@@ -4025,10 +4023,10 @@ profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
       "In the parent process, profiles should only be generated from the main "
       "thread, otherwise they will be incomplete.");
 
-  ProfileGenerationAdditionalInformation additionalInfo;
-  MOZ_TRY_VAR(additionalInfo, do_profiler_stream_json_for_this_process(
-                                  aWriter, aSinceTime, aIsShuttingDown,
-                                  aService, std::move(aProgressLogger)));
+  ProfileGenerationAdditionalInformation additionalInfo =
+      MOZ_TRY(do_profiler_stream_json_for_this_process(
+          aWriter, aSinceTime, aIsShuttingDown, aService,
+          std::move(aProgressLogger)));
 
   return additionalInfo;
 }

@@ -426,8 +426,7 @@ Result<Ok, nsresult> ScriptPreloader::OpenCache() {
 
   MOZ_TRY(NS_GetSpecialDirectory("ProfLDS", getter_AddRefs(mProfD)));
 
-  nsCOMPtr<nsIFile> cacheFile;
-  MOZ_TRY_VAR(cacheFile, GetCacheFile(u".bin"_ns));
+  nsCOMPtr<nsIFile> cacheFile = MOZ_TRY(GetCacheFile(u".bin"_ns));
 
   bool exists;
   MOZ_TRY(cacheFile->Exists(&exists));
@@ -706,8 +705,7 @@ Result<Ok, nsresult> ScriptPreloader::WriteCache() {
     return Ok();
   }
 
-  nsCOMPtr<nsIFile> cacheFile;
-  MOZ_TRY_VAR(cacheFile, GetCacheFile(u"-new.bin"_ns));
+  nsCOMPtr<nsIFile> cacheFile = MOZ_TRY(GetCacheFile(u"-new.bin"_ns));
 
   bool exists;
   MOZ_TRY(cacheFile->Exists(&exists));

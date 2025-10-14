@@ -549,8 +549,7 @@ Result<ShutdownPhase, nsresult> IDLShutdownPhaseToNative(
 
 NS_IMETHODIMP
 nsAppStartup::AdvanceShutdownPhase(IDLShutdownPhase aPhase) {
-  ShutdownPhase nativePhase;
-  MOZ_TRY_VAR(nativePhase, IDLShutdownPhaseToNative(aPhase));
+  ShutdownPhase nativePhase = MOZ_TRY(IDLShutdownPhaseToNative(aPhase));
   AppShutdown::AdvanceShutdownPhase(nativePhase);
   return NS_OK;
 }
@@ -558,8 +557,7 @@ nsAppStartup::AdvanceShutdownPhase(IDLShutdownPhase aPhase) {
 NS_IMETHODIMP
 nsAppStartup::IsInOrBeyondShutdownPhase(IDLShutdownPhase aPhase,
                                         bool* aIsInOrBeyond) {
-  ShutdownPhase nativePhase;
-  MOZ_TRY_VAR(nativePhase, IDLShutdownPhaseToNative(aPhase));
+  ShutdownPhase nativePhase = MOZ_TRY(IDLShutdownPhaseToNative(aPhase));
   *aIsInOrBeyond = AppShutdown::IsInOrBeyond(nativePhase);
   return NS_OK;
 }

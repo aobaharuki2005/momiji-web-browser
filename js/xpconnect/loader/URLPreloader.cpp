@@ -176,8 +176,7 @@ Result<nsCOMPtr<nsIFile>, nsresult> URLPreloader::FindCacheFile() {
     return Err(NS_ERROR_ABORT);
   }
 
-  nsCOMPtr<nsIFile> cacheFile;
-  MOZ_TRY_VAR(cacheFile, GetCacheFile(u".bin"_ns));
+  nsCOMPtr<nsIFile> cacheFile = MOZ_TRY(GetCacheFile(u".bin"_ns));
 
   bool exists;
   MOZ_TRY(cacheFile->Exists(&exists));
@@ -212,8 +211,7 @@ Result<Ok, nsresult> URLPreloader::WriteCache() {
 
   LOG(Debug, "Writing cache...");
 
-  nsCOMPtr<nsIFile> cacheFile;
-  MOZ_TRY_VAR(cacheFile, GetCacheFile(u"-new.bin"_ns));
+  nsCOMPtr<nsIFile> cacheFile = MOZ_TRY(GetCacheFile(u"-new.bin"_ns));
 
   bool exists;
   MOZ_TRY(cacheFile->Exists(&exists));
@@ -267,8 +265,7 @@ Result<Ok, nsresult> URLPreloader::ReadCache(
     LinkedList<URLEntry>& pendingURLs) {
   LOG(Debug, "Reading cache...");
 
-  nsCOMPtr<nsIFile> cacheFile;
-  MOZ_TRY_VAR(cacheFile, FindCacheFile());
+  nsCOMPtr<nsIFile> cacheFile = MOZ_TRY(FindCacheFile());
 
   AutoMemMap cache;
   MOZ_TRY(cache.init(cacheFile));
@@ -500,8 +497,7 @@ Result<nsCString, nsresult> URLPreloader::ReadInternal(const CacheKey& key,
 
 Result<nsCString, nsresult> URLPreloader::ReadURIInternal(nsIURI* uri,
                                                           ReadType readType) {
-  CacheKey key;
-  MOZ_TRY_VAR(key, ResolveURI(uri));
+  CacheKey key = MOZ_TRY(ResolveURI(uri));
 
   return ReadInternal(key, readType);
 }
@@ -640,10 +636,9 @@ Result<FileLocation, nsresult> URLPreloader::CacheKey::ToFileLocation() {
 }
 
 Result<nsCString, nsresult> URLPreloader::URLEntry::Read() {
-  FileLocation location;
-  MOZ_TRY_VAR(location, ToFileLocation());
+  FileLocation location = MOZ_TRY(ToFileLocation());
 
-  MOZ_TRY_VAR(mData, ReadLocation(location));
+  mData = MOZ_TRY(ReadLocation(location));
   return mData;
 }
 

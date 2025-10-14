@@ -5137,9 +5137,8 @@ nsDocShell::RefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
     nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
     NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsITimer> timer;
-    MOZ_TRY_VAR(timer, NS_NewTimerWithCallback(refreshTimer, aDelay,
-                                               nsITimer::TYPE_ONE_SHOT));
+    nsCOMPtr<nsITimer> timer = MOZ_TRY(
+        NS_NewTimerWithCallback(refreshTimer, aDelay, nsITimer::TYPE_ONE_SHOT));
 
     mRefreshURIList->AppendElement(timer);  // owning timer ref
   }

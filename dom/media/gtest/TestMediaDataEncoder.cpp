@@ -346,16 +346,16 @@ Result<Ok, nsresult> IsValidAVCC(const mozilla::MediaRawData* aSample,
     uint32_t nalLen;
     switch (aNALUSize) {
       case 1:
-        MOZ_TRY_VAR(nalLen, reader.ReadU8());
+        nalLen = MOZ_TRY(reader.ReadU8());
         break;
       case 2:
-        MOZ_TRY_VAR(nalLen, reader.ReadU16());
+        nalLen = MOZ_TRY(reader.ReadU16());
         break;
       case 3:
-        MOZ_TRY_VAR(nalLen, reader.ReadU24());
+        nalLen = MOZ_TRY(reader.ReadU24());
         break;
       case 4:
-        MOZ_TRY_VAR(nalLen, reader.ReadU32());
+        nalLen = MOZ_TRY(reader.ReadU32());
         break;
       default:
         return Err(NS_ERROR_INVALID_ARG);

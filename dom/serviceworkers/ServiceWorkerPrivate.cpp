@@ -1144,8 +1144,7 @@ nsresult ServiceWorkerPrivate::SendFetchEvent(
     Shutdown();
   });
 
-  IPCInternalRequest request;
-  MOZ_TRY_VAR(request, GetIPCInternalRequest(aChannel));
+  IPCInternalRequest request = MOZ_TRY(GetIPCInternalRequest(aChannel));
 
   scopeExit.release();
 

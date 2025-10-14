@@ -1809,8 +1809,7 @@ nsXULAppInfo::GetExtraFileForID(const nsAString& aId, nsIFile** aExtraFile) {
 NS_IMETHODIMP
 nsXULAppInfo::AnnotateCrashReport(const nsACString& key,
                                   JS::Handle<JS::Value> data, JSContext* cx) {
-  CrashReporter::Annotation annotation;
-  MOZ_TRY_VAR(annotation, GetCrashAnnotation(key));
+  CrashReporter::Annotation annotation = MOZ_TRY(GetCrashAnnotation(key));
   switch (data.type()) {
     case JS::ValueType::Int32:
       CrashReporter::RecordAnnotationU32(annotation, data.toInt32());
@@ -1844,8 +1843,7 @@ nsXULAppInfo::AnnotateCrashReport(const nsACString& key,
 
 NS_IMETHODIMP
 nsXULAppInfo::RemoveCrashReportAnnotation(const nsACString& key) {
-  CrashReporter::Annotation annotation;
-  MOZ_TRY_VAR(annotation, GetCrashAnnotation(key));
+  CrashReporter::Annotation annotation = MOZ_TRY(GetCrashAnnotation(key));
   CrashReporter::UnrecordAnnotation(annotation);
   return NS_OK;
 }
@@ -1860,8 +1858,7 @@ nsXULAppInfo::IsAnnotationValid(const nsACString& aValue, bool* aIsValid) {
 NS_IMETHODIMP
 nsXULAppInfo::IsAnnotationAllowedForPing(const nsACString& aValue,
                                          bool* aIsAllowed) {
-  CrashReporter::Annotation annotation;
-  MOZ_TRY_VAR(annotation, GetCrashAnnotation(aValue));
+  CrashReporter::Annotation annotation = MOZ_TRY(GetCrashAnnotation(aValue));
   *aIsAllowed = CrashReporter::IsAnnotationAllowedForPing(annotation);
   return NS_OK;
 }
@@ -1869,8 +1866,7 @@ nsXULAppInfo::IsAnnotationAllowedForPing(const nsACString& aValue,
 NS_IMETHODIMP
 nsXULAppInfo::IsAnnotationAllowedForReport(const nsACString& aValue,
                                            bool* aIsAllowed) {
-  CrashReporter::Annotation annotation;
-  MOZ_TRY_VAR(annotation, GetCrashAnnotation(aValue));
+  CrashReporter::Annotation annotation = MOZ_TRY(GetCrashAnnotation(aValue));
   *aIsAllowed = CrashReporter::IsAnnotationAllowedForReport(annotation);
   return NS_OK;
 }
@@ -6142,8 +6138,7 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   // If we exit gracefully, remove the startup crash canary file.
   auto cleanup = MakeScopeExit([&]() -> nsresult {
     if (mProfLD) {
-      nsCOMPtr<nsIFile> crashFile;
-      MOZ_TRY_VAR(crashFile, GetIncompleteStartupFile(mProfLD));
+      nsCOMPtr<nsIFile> crashFile = MOZ_TRY(GetIncompleteStartupFile(mProfLD));
       crashFile->Remove(false);
     }
     return NS_OK;

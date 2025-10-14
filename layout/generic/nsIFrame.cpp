@@ -10425,9 +10425,7 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
       return result;
     }
 
-    bool atLineEdge;
-    MOZ_TRY_VAR(
-        atLineEdge,
+    bool atLineEdge = MOZ_TRY(
         needsVisualTraversal
             ? traversedFrame->IsVisuallyAtLineEdge(it, thisLine, aDirection)
             : traversedFrame->IsLogicallyAtLineEdge(it, thisLine, aDirection));

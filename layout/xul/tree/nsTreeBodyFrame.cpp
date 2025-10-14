@@ -1569,9 +1569,8 @@ nsresult nsTreeBodyFrame::CreateTimer(const LookAndFeel::IntID aID,
   // Create a new timer only if the delay is greater than zero.
   // Zero value means that this feature is completely disabled.
   if (delay > 0) {
-    MOZ_TRY_VAR(timer,
-                NS_NewTimerWithFuncCallback(aFunc, this, delay, aType, aName,
-                                            GetMainThreadSerialEventTarget()));
+    timer = MOZ_TRY(NS_NewTimerWithFuncCallback(
+        aFunc, this, delay, aType, aName, GetMainThreadSerialEventTarget()));
   }
 
   timer.forget(aTimer);

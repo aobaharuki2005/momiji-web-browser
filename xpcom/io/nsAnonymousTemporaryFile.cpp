@@ -164,8 +164,8 @@ class nsAnonTempFileRemover final : public nsIObserver, public nsINamed {
     // idle observer too early, it will be registered before the fake idle
     // service is installed when running in xpcshell, and this interferes with
     // the fake idle service, causing xpcshell-test failures.
-    MOZ_TRY_VAR(mTimer, NS_NewTimerWithObserver(this, SCHEDULE_TIMEOUT_MS,
-                                                nsITimer::TYPE_ONE_SHOT));
+    mTimer = MOZ_TRY(NS_NewTimerWithObserver(this, SCHEDULE_TIMEOUT_MS,
+                                             nsITimer::TYPE_ONE_SHOT));
 
     // Register shutdown observer so we can cancel the timer if we shutdown
     // before the timer runs.

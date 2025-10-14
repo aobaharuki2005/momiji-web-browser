@@ -160,8 +160,8 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
   WarpScriptOracle scriptOracle(cx_, this, outerScript_, &mirGen_.outerInfo(),
                                 icScript);
 
-  WarpScriptSnapshot* scriptSnapshot;
-  MOZ_TRY_VAR(scriptSnapshot, scriptOracle.createScriptSnapshot());
+  WarpScriptSnapshot* scriptSnapshot =
+      MOZ_TRY(scriptOracle.createScriptSnapshot());
 
   // Insert the outermost scriptSnapshot at the front of the list.
   scriptSnapshots_.insertFront(scriptSnapshot);
@@ -1082,9 +1082,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     // and their relative frequency.
     if (ICSupportsPolymorphicTypeData(loc.getOp()) &&
         fallbackStub->enteredCount() == 0) {
-      bool inlinedPolymorphicTypes = false;
-      MOZ_TRY_VAR(
-          inlinedPolymorphicTypes,
+      bool inlinedPolymorphicTypes = MOZ_TRY(
           maybeInlinePolymorphicTypes(snapshots, loc, stub, fallbackStub));
       if (inlinedPolymorphicTypes) {
         return Ok();
@@ -1251,9 +1249,8 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   if (fallbackStub->trialInliningState() == TrialInliningState::Inlined ||
       fallbackStub->trialInliningState() ==
           TrialInliningState::MonomorphicInlined) {
-    bool inlinedCall;
-    MOZ_TRY_VAR(inlinedCall, maybeInlineCall(snapshots, loc, stub, fallbackStub,
-                                             stubDataCopy));
+    bool inlinedCall = MOZ_TRY(
+        maybeInlineCall(snapshots, loc, stub, fallbackStub, stubDataCopy));
     if (inlinedCall) {
       return Ok();
     }

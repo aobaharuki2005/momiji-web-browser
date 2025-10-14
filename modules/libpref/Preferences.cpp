@@ -1274,16 +1274,14 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
   }
 
   nsresult GetValue(PrefValueKind aKind, bool* aResult) const {
-    PrefValueKind kind;
-    MOZ_TRY_VAR(kind, WantValueKind(PrefType::Bool, aKind));
+    PrefValueKind kind = MOZ_TRY(WantValueKind(PrefType::Bool, aKind));
 
     *aResult = GetBoolValue(kind);
     return NS_OK;
   }
 
   nsresult GetValue(PrefValueKind aKind, int32_t* aResult) const {
-    PrefValueKind kind;
-    MOZ_TRY_VAR(kind, WantValueKind(PrefType::Int, aKind));
+    PrefValueKind kind = MOZ_TRY(WantValueKind(PrefType::Int, aKind));
 
     *aResult = GetIntValue(kind);
     return NS_OK;
@@ -1305,8 +1303,7 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
   }
 
   nsresult GetValue(PrefValueKind aKind, nsACString& aResult) const {
-    PrefValueKind kind;
-    MOZ_TRY_VAR(kind, WantValueKind(PrefType::String, aKind));
+    PrefValueKind kind = MOZ_TRY(WantValueKind(PrefType::String, aKind));
 
     aResult = GetStringValue(kind);
     return NS_OK;
@@ -4750,8 +4747,7 @@ nsresult Preferences::WritePrefFile(
 static nsresult openPrefFile(nsIFile* aFile, PrefValueKind aKind) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  nsCString data;
-  MOZ_TRY_VAR(data, URLPreloader::ReadFile(aFile));
+  nsCString data = MOZ_TRY(URLPreloader::ReadFile(aFile));
 
   nsAutoString filenameUtf16;
   aFile->GetLeafName(filenameUtf16);
@@ -4851,9 +4847,8 @@ static nsresult pref_LoadPrefsInDir(nsIFile* aDir) {
 
 static nsresult pref_ReadPrefFromJar(nsZipArchive* aJarReader,
                                      const char* aName) {
-  nsCString manifest;
-  MOZ_TRY_VAR(manifest,
-              URLPreloader::ReadZip(aJarReader, nsDependentCString(aName)));
+  nsCString manifest =
+      MOZ_TRY(URLPreloader::ReadZip(aJarReader, nsDependentCString(aName)));
 
   Parser parser;
   if (!parser.Parse(PrefValueKind::Default, aName, manifest)) {
@@ -5431,11 +5426,8 @@ nsresult Preferences::Lock(const char* aPrefName) {
   ENSURE_PARENT_PROCESS("Lock", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  Pref* pref;
-  MOZ_TRY_VAR(pref,
-              pref_LookupForModify(aPrefName, [](const PrefWrapper& aPref) {
-                return !aPref.IsLocked();
-              }));
+  Pref* pref = MOZ_TRY(pref_LookupForModify(
+      aPrefName, [](const PrefWrapper& aPref) { return !aPref.IsLocked(); }));
 
   if (pref) {
     pref->SetIsLocked(true);
@@ -5450,11 +5442,8 @@ nsresult Preferences::Unlock(const char* aPrefName) {
   ENSURE_PARENT_PROCESS("Unlock", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  Pref* pref;
-  MOZ_TRY_VAR(pref,
-              pref_LookupForModify(aPrefName, [](const PrefWrapper& aPref) {
-                return aPref.IsLocked();
-              }));
+  Pref* pref = MOZ_TRY(pref_LookupForModify(
+      aPrefName, [](const PrefWrapper& aPref) { return aPref.IsLocked(); }));
 
   if (pref) {
     pref->SetIsLocked(false);

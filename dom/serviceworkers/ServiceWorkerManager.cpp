@@ -1101,8 +1101,8 @@ ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
 nsresult ServiceWorkerManager::SendCookieChangeEvent(
     const OriginAttributes& aOriginAttributes, const nsACString& aScope,
     const net::CookieStruct& aCookie, bool aCookieDeleted) {
-  nsCOMPtr<nsIPrincipal> principal;
-  MOZ_TRY_VAR(principal, ScopeToPrincipal(aScope, aOriginAttributes));
+  nsCOMPtr<nsIPrincipal> principal =
+      MOZ_TRY(ScopeToPrincipal(aScope, aOriginAttributes));
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
       GetRegistration(principal, aScope);
@@ -1129,8 +1129,7 @@ nsresult ServiceWorkerManager::SendPushEvent(
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsIPrincipal> principal;
-  MOZ_TRY_VAR(principal, ScopeToPrincipal(aScope, attrs));
+  nsCOMPtr<nsIPrincipal> principal = MOZ_TRY(ScopeToPrincipal(aScope, attrs));
 
   // The registration handling a push notification must have an exact scope
   // match. This will try to find an exact match, unlike how fetch may find the
@@ -3033,8 +3032,7 @@ ServiceWorkerManager::WakeForExtensionAPIEvent(
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPrincipal> principal;
-  MOZ_TRY_VAR(principal, ScopeToPrincipal(scopeURI, {}));
+  nsCOMPtr<nsIPrincipal> principal = MOZ_TRY(ScopeToPrincipal(scopeURI, {}));
 
   auto* addonPolicy = BasePrincipal::Cast(principal)->AddonPolicy();
   if (NS_WARN_IF(!addonPolicy)) {

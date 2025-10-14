@@ -842,8 +842,7 @@ nsresult mozJSModuleLoader::GetScriptForLocation(
         stencil = CompileModuleScriptToStencil(aCx, options, srcBuf);
       }
     } else {
-      nsCString str;
-      MOZ_TRY_VAR(str, ReadScript(aInfo));
+      nsCString str = MOZ_TRY(ReadScript(aInfo));
 
       JS::SourceText<mozilla::Utf8Unit> srcBuf;
       if (srcBuf.init(aCx, str.get(), str.Length(),

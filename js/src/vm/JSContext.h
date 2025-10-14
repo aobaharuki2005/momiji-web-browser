@@ -1238,7 +1238,7 @@ inline BufferHolder<T>::BufferHolder(JSContext* cx, T* buffer)
  *
  * ## Checking Results when your return type is not Result
  *
- * This header defines alternatives to MOZ_TRY and MOZ_TRY_VAR for when you
+ * This header defines alternatives to MOZ_TRY for when you
  * need to call a `Result` function from a function that uses false or nullptr
  * to indicate errors:
  *

@@ -792,8 +792,7 @@ Result<NavigationIsolationOptions, nsresult> IsolationOptionsForNavigation(
 
   // If the load has any special remote type handling, do so at this point.
   if (behavior != IsolationBehavior::WebContent) {
-    MOZ_TRY_VAR(
-        options.mRemoteType,
+    options.mRemoteType = MOZ_TRY(
         SpecialBehaviorRemoteType(behavior, aCurrentRemoteType, aParentWindow));
 
     if (options.mRemoteType != aCurrentRemoteType &&
@@ -1035,8 +1034,7 @@ Result<WorkerIsolationOptions, nsresult> IsolationOptionsForWorker(
   }
 
   if (behavior != IsolationBehavior::WebContent) {
-    MOZ_TRY_VAR(
-        options.mRemoteType,
+    options.mRemoteType = MOZ_TRY(
         SpecialBehaviorRemoteType(behavior, preferredRemoteType, nullptr));
 
     MOZ_LOG(

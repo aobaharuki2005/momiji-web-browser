@@ -16,8 +16,7 @@
 using namespace mozilla;
 
 nsresult nsINIParser::Init(nsIFile* aFile) {
-  nsCString result;
-  MOZ_TRY_VAR(result, URLPreloader::ReadFile(aFile));
+  nsCString result = MOZ_TRY(URLPreloader::ReadFile(aFile));
 
   return InitFromString(result);
 }

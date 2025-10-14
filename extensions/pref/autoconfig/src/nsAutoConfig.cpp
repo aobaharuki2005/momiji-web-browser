@@ -288,9 +288,8 @@ nsresult nsAutoConfig::downloadAutoConfig() {
     if (NS_SUCCEEDED(rv) && minutes > 0) {
       // Create a new timer and pass this nsAutoConfig
       // object as a timer callback.
-      MOZ_TRY_VAR(mTimer,
-                  NS_NewTimerWithCallback(this, minutes * 60 * 1000,
-                                          nsITimer::TYPE_REPEATING_SLACK));
+      mTimer = MOZ_TRY(NS_NewTimerWithCallback(this, minutes * 60 * 1000,
+                                               nsITimer::TYPE_REPEATING_SLACK));
     }
   }  // first_time
 

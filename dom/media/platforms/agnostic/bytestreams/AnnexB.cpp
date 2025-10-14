@@ -47,8 +47,7 @@ Result<Ok, nsresult> AnnexB::ConvertAVCCSampleToAnnexB(
   ByteWriter<BigEndian> writer(tmp);
 
   while (reader.Remaining() >= 4) {
-    uint32_t nalLen;
-    MOZ_TRY_VAR(nalLen, reader.ReadU32());
+    uint32_t nalLen = MOZ_TRY(reader.ReadU32());
     const uint8_t* p = reader.Read(nalLen);
 
     if (!writer.Write(kAnnexBDelimiter, std::size(kAnnexBDelimiter))) {
@@ -122,8 +121,7 @@ Result<Ok, nsresult> AnnexB::ConvertHVCCSampleToAnnexB(
   nsTArray<uint8_t> tmp;
   ByteWriter<BigEndian> writer(tmp);
   while (reader.Remaining() >= 4) {
-    uint32_t nalLen;
-    MOZ_TRY_VAR(nalLen, reader.ReadU32());
+    uint32_t nalLen = MOZ_TRY(reader.ReadU32());
     const uint8_t* p = reader.Read(nalLen);
     if (!writer.Write(kAnnexBDelimiter, std::size(kAnnexBDelimiter))) {
       LOG("Failed to write kAnnexBDelimiter, OOM?");
@@ -234,8 +232,7 @@ already_AddRefed<mozilla::MediaByteBuffer> AnnexB::ConvertHVCCExtraDataToAnnexB(
 Result<mozilla::Ok, nsresult> AnnexB::ConvertSPSOrPPS(
     BufferReader& aReader, uint8_t aCount, mozilla::MediaByteBuffer* aAnnexB) {
   for (int i = 0; i < aCount; i++) {
-    uint16_t length;
-    MOZ_TRY_VAR(length, aReader.ReadU16());
+    uint16_t length = MOZ_TRY(aReader.ReadU16());
 
     const uint8_t* ptr = aReader.Read(length);
     if (!ptr) {
@@ -259,8 +256,7 @@ static Result<Ok, nsresult> FindStartCodeInternal(BufferReader& aBr) {
   }
 
   while (aBr.Remaining() >= 6) {
-    uint32_t x32;
-    MOZ_TRY_VAR(x32, aBr.PeekU32());
+    uint32_t x32 = MOZ_TRY(aBr.PeekU32());
     if ((x32 - 0x01010101) & (~x32) & 0x80808080) {  // Has 0x00 byte(s).
       if ((x32 >> 8) == 0x000001) {                  // 0x000001??
         return Ok();
@@ -285,8 +281,7 @@ static Result<Ok, nsresult> FindStartCodeInternal(BufferReader& aBr) {
   }
 
   while (aBr.Remaining() >= 3) {
-    uint32_t data;
-    MOZ_TRY_VAR(data, aBr.PeekU24());
+    uint32_t data = MOZ_TRY(aBr.PeekU24());
     if (data == 0x000001) {
       return Ok();
     }
@@ -309,8 +304,7 @@ static Result<Ok, nsresult> FindStartCode(BufferReader& aBr,
   if (aBr.Offset()) {
     // Check if it's 4-bytes start code
     aBr.Rewind(1);
-    uint8_t data;
-    MOZ_TRY_VAR(data, aBr.ReadU8());
+    uint8_t data = MOZ_TRY(aBr.ReadU8());
     if (data == 0) {
       aStartSize = 4;
     }
@@ -526,16 +520,16 @@ AnnexB::ConvertNALUTo4BytesNALU(mozilla::MediaRawData* aSample,
     uint32_t nalLen;
     switch (aNALUSize) {
       case 1:
-        MOZ_TRY_VAR(nalLen, reader.ReadU8());
+        nalLen = MOZ_TRY(reader.ReadU8());
         break;
       case 2:
-        MOZ_TRY_VAR(nalLen, reader.ReadU16());
+        nalLen = MOZ_TRY(reader.ReadU16());
         break;
       case 3:
-        MOZ_TRY_VAR(nalLen, reader.ReadU24());
+        nalLen = MOZ_TRY(reader.ReadU24());
         break;
       case 4:
-        MOZ_TRY_VAR(nalLen, reader.ReadU32());
+        nalLen = MOZ_TRY(reader.ReadU32());
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("Bytes of the NAL body length must be in [1,4]");

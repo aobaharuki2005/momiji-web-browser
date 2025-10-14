@@ -181,7 +181,7 @@ class NotNull;
  *   return NS_OK;
  * }
  *
- * 2. Using MOZ_TRY/MOZ_TRY_VAR macros
+ * 2. Using MOZ_TRY macro
  *
  * Typical use cases:
  *
@@ -383,7 +383,7 @@ class NotNull;
  *   return NS_OK;
  * }
  *
- * QM_TRY/QM_TRY_UNWRAP/QM_TRY_INSPECT is like MOZ_TRY/MOZ_TRY_VAR but if an
+ * QM_TRY/QM_TRY_UNWRAP/QM_TRY_INSPECT is like MOZ_TRY but if an
  * error occurs it additionally calls a generic function HandleError to handle
  * the error and it can be used to return custom return values as well and even
  * call an additional cleanup function.
@@ -1182,8 +1182,7 @@ auto CollectEach(Step aStep, const Body& aBody)
           typename std::invoke_result_t<Body, StepResultType&&>::ok_type>);
 
   while (true) {
-    StepResultType element;
-    MOZ_TRY_VAR(element, aStep());
+    StepResultType element = MOZ_TRY(aStep());
 
     if (!static_cast<bool>(element)) {
       break;
@@ -1211,7 +1210,7 @@ auto ReduceEach(InputGenerator aInputGenerator, T aInit,
       [&res, &aBinaryOp](const auto& element)
           -> Result<Ok,
                     typename std::invoke_result_t<InputGenerator>::err_type> {
-        MOZ_TRY_VAR(res, aBinaryOp(std::move(res), element));
+        res = MOZ_TRY(aBinaryOp(std::move(res), element));
 
         return Ok{};
       }));

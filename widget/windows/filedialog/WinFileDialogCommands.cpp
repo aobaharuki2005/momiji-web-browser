@@ -467,8 +467,7 @@ auto SpawnPickerT(HWND parent, FileDialogType type, ExtractorF&& extractor,
         // with our context set temporarily to system-dpi-aware.
         WinUtils::AutoSystemDpiAware dpiAwareness;
 
-        RefPtr<IFileDialog> dialog;
-        MOZ_TRY_VAR(dialog, MakeFileDialog(type));
+        RefPtr<IFileDialog> dialog = MOZ_TRY(MakeFileDialog(type));
 
         MOZ_TRY(ApplyCommands(dialog, commands));
 
@@ -479,8 +478,7 @@ auto SpawnPickerT(HWND parent, FileDialogType type, ExtractorF&& extractor,
           return mozilla::Err(MOZ_FD_LOCAL_ERROR("IFileDialog::Show", rv));
         }
 
-        RetT res;
-        MOZ_TRY_VAR(res, extractor(dialog.get()));
+        RetT res = MOZ_TRY(extractor(dialog.get()));
 
         return Some(res);
       });

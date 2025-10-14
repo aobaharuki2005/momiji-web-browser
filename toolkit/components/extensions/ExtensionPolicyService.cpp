@@ -257,8 +257,7 @@ ExtensionPolicyService::CollectReports(nsIHandleReportCallback* aHandleReport,
     name.ReplaceSubstring("\"", "");
     name.ReplaceSubstring("\\", "");
 
-    nsString url;
-    MOZ_TRY_VAR(url, ext->GetURL(u""_ns));
+    nsString url = MOZ_TRY(ext->GetURL(u""_ns));
 
     nsPrintfCString desc("Extension(id=%s, name=\"%s\", baseURL=%s)", id.get(),
                          name.get(), NS_ConvertUTF16toUTF8(url).get());

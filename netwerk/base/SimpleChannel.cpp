@@ -33,8 +33,8 @@ nsresult SimpleChannel::OpenContentStream(bool async,
                                           nsIChannel** channel) {
   NS_ENSURE_TRUE(mCallbacks, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIInputStream> stream;
-  MOZ_TRY_VAR(stream, mCallbacks->OpenContentStream(async, this));
+  nsCOMPtr<nsIInputStream> stream =
+      MOZ_TRY(mCallbacks->OpenContentStream(async, this));
   MOZ_ASSERT(stream);
 
   mCallbacks = nullptr;

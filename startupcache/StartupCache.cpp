@@ -574,22 +574,21 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
   for (auto& e : entries) {
     auto value = e.second;
     value->mOffset = offset;
-    Span<const char> result;
-    MOZ_TRY_VAR(result,
-                ctx.BeginCompressing(writeSpan).mapErr(MapLZ4ErrorToNsresult));
+    Span<const char> result =
+        MOZ_TRY(ctx.BeginCompressing(writeSpan).mapErr(MapLZ4ErrorToNsresult));
     MOZ_TRY(Write(fd, result.Elements(), result.Length()));
     offset += result.Length();
 
     for (size_t i = 0; i < value->mUncompressedSize; i += chunkSize) {
       size_t size = std::min(chunkSize, value->mUncompressedSize - i);
       char* uncompressed = value->mData.get() + i;
-      MOZ_TRY_VAR(result, ctx.ContinueCompressing(Span(uncompressed, size))
-                              .mapErr(MapLZ4ErrorToNsresult));
+      result = MOZ_TRY(ctx.ContinueCompressing(Span(uncompressed, size))
+                           .mapErr(MapLZ4ErrorToNsresult));
       MOZ_TRY(Write(fd, result.Elements(), result.Length()));
       offset += result.Length();
     }
 
-    MOZ_TRY_VAR(result, ctx.EndCompressing().mapErr(MapLZ4ErrorToNsresult));
+    result = MOZ_TRY(ctx.EndCompressing().mapErr(MapLZ4ErrorToNsresult));
     MOZ_TRY(Write(fd, result.Elements(), result.Length()));
     offset += result.Length();
     value->mCompressedSize = offset - value->mOffset;

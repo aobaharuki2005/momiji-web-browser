@@ -603,8 +603,7 @@ Result<bool, nsresult> ExtensionProtocolHandler::AllowExternalResource(
   // allow loading. Before we allow an unpacked extension to load a
   // resource outside of the extension dir, we make sure the extension
   // dir is within the app directory.
-  bool result;
-  MOZ_TRY_VAR(result, AppDirContains(aExtensionDir));
+  bool result = MOZ_TRY(AppDirContains(aExtensionDir));
   if (!result) {
     return false;
   }
@@ -784,18 +783,16 @@ Result<nsCOMPtr<nsIInputStream>, nsresult> ExtensionProtocolHandler::NewStream(
   bool isResourceFromExtensionDir = false;
   MOZ_TRY(extensionDir->Contains(requestedFile, &isResourceFromExtensionDir));
   if (!isResourceFromExtensionDir) {
-    bool isAllowed;
-    MOZ_TRY_VAR(isAllowed, AllowExternalResource(extensionDir, requestedFile));
+    bool isAllowed =
+        MOZ_TRY(AllowExternalResource(extensionDir, requestedFile));
     if (!isAllowed) {
       LogExternalResourceError(extensionDir, requestedFile);
       return Err(NS_ERROR_FILE_ACCESS_DENIED);
     }
   }
 
-  nsCOMPtr<nsIInputStream> inputStream;
-  MOZ_TRY_VAR(inputStream,
-              NS_NewLocalFileInputStream(requestedFile, PR_RDONLY, -1,
-                                         nsIFileInputStream::DEFER_OPEN));
+  nsCOMPtr<nsIInputStream> inputStream = MOZ_TRY(NS_NewLocalFileInputStream(
+      requestedFile, PR_RDONLY, -1, nsIFileInputStream::DEFER_OPEN));
 
   return inputStream;
 }
