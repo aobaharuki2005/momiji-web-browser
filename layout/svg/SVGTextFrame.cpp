@@ -3613,6 +3613,7 @@ void SVGTextFrame::SelectSubString(nsIContent* aContent, uint32_t charnum,
 
   RefPtr<nsIContent> content;
 
+  // Ensure the destructor of CharIterator runs before calling HandleClick.
   {
     // Convert charnum/nchars from addressable characters relative to
     // aContent to global character indices.
