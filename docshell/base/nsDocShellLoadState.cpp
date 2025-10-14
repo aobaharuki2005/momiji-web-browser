@@ -116,6 +116,11 @@ nsDocShellLoadState::nsDocShellLoadState(
   mUnstrippedURI = aLoadState.UnstrippedURI();
   mRemoteTypeOverride = aLoadState.RemoteTypeOverride();
 
+  if (aLoadState.NavigationAPIState()) {
+    mNavigationAPIState = MakeRefPtr<nsStructuredCloneContainer>();
+    mNavigationAPIState->CopyFromClonedMessageData(
+        *aLoadState.NavigationAPIState());
+  }
   // We know this was created remotely, as we just received it over IPC.
   mWasCreatedRemotely = true;
 
@@ -213,7 +218,8 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mTriggeringRemoteType(aOther.mTriggeringRemoteType),
       mSchemelessInput(aOther.mSchemelessInput),
       mForceMediaDocument(aOther.mForceMediaDocument),
-      mHttpsUpgradeTelemetry(aOther.mHttpsUpgradeTelemetry) {
+      mHttpsUpgradeTelemetry(aOther.mHttpsUpgradeTelemetry),
+      mNavigationAPIState(aOther.mNavigationAPIState) {
   MOZ_DIAGNOSTIC_ASSERT(
       XRE_IsParentProcess(),
       "Cloning a nsDocShellLoadState with the same load identifier is only "
@@ -1442,6 +1448,13 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize(
   loadState.UnstrippedURI() = mUnstrippedURI;
   loadState.RemoteTypeOverride() = mRemoteTypeOverride;
 
+  if (mNavigationAPIState) {
+    loadState.NavigationAPIState().emplace();
+    DebugOnly<bool> success = mNavigationAPIState->BuildClonedMessageData(
+        *loadState.NavigationAPIState());
+    MOZ_ASSERT(success);
+  }
+
   if (XRE_IsParentProcess()) {
     mozilla::ipc::IToplevelProtocol* top = aActor->ToplevelProtocol();
     MOZ_RELEASE_ASSERT(top &&
@@ -1477,7 +1490,8 @@ nsIStructuredCloneContainer* nsDocShellLoadState::GetNavigationAPIState()
 
 void nsDocShellLoadState::SetNavigationAPIState(
     nsIStructuredCloneContainer* aNavigationAPIState) {
-  mNavigationAPIState = aNavigationAPIState;
+  mNavigationAPIState =
+      static_cast<nsStructuredCloneContainer*>(aNavigationAPIState);
 }
 
 NavigationType nsDocShellLoadState::GetNavigationType() const {

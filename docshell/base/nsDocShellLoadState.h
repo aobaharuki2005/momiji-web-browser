@@ -438,8 +438,7 @@ class nsDocShellLoadState final {
   void SetSourceElement(mozilla::dom::Element* aElement);
   already_AddRefed<mozilla::dom::Element> GetSourceElement() const;
 
-  // This is used as the parameter for https://html.spec.whatwg.org/#navigate,
-  // but it's currently missing. See bug 1966674
+  // This is used as the parameter for https://html.spec.whatwg.org/#navigate
   nsIStructuredCloneContainer* GetNavigationAPIState() const;
   void SetNavigationAPIState(nsIStructuredCloneContainer* aNavigationAPIState);
 
@@ -728,7 +727,7 @@ class nsDocShellLoadState final {
 
   nsWeakPtr mSourceElement;
 
-  nsCOMPtr<nsIStructuredCloneContainer> mNavigationAPIState;
+  RefPtr<nsStructuredCloneContainer> mNavigationAPIState;
 
   RefPtr<mozilla::dom::FormData> mFormDataEntryList;
 

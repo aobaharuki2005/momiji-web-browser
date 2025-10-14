@@ -235,6 +235,9 @@ struct DocShellLoadStateInit
   ForceMediaDocument forceMediaDocument;
   HTTPSUpgradeTelemetryType HttpsUpgradeTelemetry;
 
+  // https://html.spec.whatwg.org/#she-navigation-api-state
+  ClonedMessageData? NavigationAPIState; 
+
   // Fields missing due to lack of need or serialization
   // nsCOMPtr<nsIDocShell> mSourceDocShell;
   // bool mIsSrcDocLoad; // useless without sourcedocshell
