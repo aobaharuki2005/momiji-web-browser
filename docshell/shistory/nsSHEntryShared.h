@@ -85,8 +85,6 @@ struct SHEntrySharedState {
   bool mIsFrameNavigation = false;
   bool mSaveLayoutState = true;
 
-  RefPtr<nsStructuredCloneContainer> mNavigationState;
-
  protected:
   static uint64_t GenerateId();
 };
