@@ -19,7 +19,6 @@
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StorageAccess.h"
-#include "mozilla/TextUtils.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/BrowsingContext.h"
