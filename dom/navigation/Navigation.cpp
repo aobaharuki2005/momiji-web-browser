@@ -245,6 +245,21 @@ void Navigation::UpdateCurrentEntry(
 
   currentEntry->SetNavigationAPIState(serializedState);
 
+  ToMaybeRef(GetOwnerWindow())
+      .andThen([](auto& aWindow) {
+        return ToMaybeRef(aWindow.GetBrowsingContext());
+      })
+      .apply([serializedState](auto& navigable) {
+        navigable.SynchronizeNavigationAPIState(serializedState);
+        ToMaybeRef(nsDocShell::Cast(navigable.GetDocShell()))
+            .andThen([](auto& docshell) {
+              return ToMaybeRef(docshell.GetActiveSessionHistoryInfo());
+            })
+            .apply([serializedState](auto& activeInfo) {
+              activeInfo.SetNavigationAPIState(serializedState);
+            });
+      });
+
   NavigationCurrentEntryChangeEventInit init;
   init.mFrom = currentEntry;
   // Leaving the navigation type unspecified means it will be initialized to

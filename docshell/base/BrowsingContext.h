@@ -1070,6 +1070,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void ClearCachedValuesOfLocations();
 
   void ConsumeHistoryActivation();
+  void SynchronizeNavigationAPIState(nsIStructuredCloneContainer* aState);
 
  protected:
   virtual ~BrowsingContext();

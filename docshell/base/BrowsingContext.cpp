@@ -4485,6 +4485,25 @@ void BrowsingContext::ConsumeHistoryActivation() {
   });
 }
 
+void BrowsingContext::SynchronizeNavigationAPIState(
+    nsIStructuredCloneContainer* aState) {
+  if (!aState) {
+    return;
+  }
+
+  if (XRE_IsContentProcess()) {
+    ClonedMessageData data;
+    DebugOnly<bool> result = static_cast<nsStructuredCloneContainer*>(aState)
+                                 ->BuildClonedMessageData(data);
+    MOZ_ASSERT(result);
+
+    MOZ_ASSERT(ContentChild::GetSingleton());
+    ContentChild::GetSingleton()->SendSynchronizeNavigationAPIState(this, data);
+  } else {
+    Canonical()->SynchronizeNavigationAPIState(aState);
+  }
+}
+
 }  // namespace dom
 
 namespace ipc {

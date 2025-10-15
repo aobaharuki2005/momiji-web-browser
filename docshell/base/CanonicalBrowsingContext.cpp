@@ -2864,6 +2864,13 @@ void CanonicalBrowsingContext::SynchronizeLayoutHistoryState() {
   }
 }
 
+void CanonicalBrowsingContext::SynchronizeNavigationAPIState(
+    nsIStructuredCloneContainer* aState) {
+  if (mActiveEntry) {
+    mActiveEntry->SetNavigationAPIState(aState);
+  }
+}
+
 void CanonicalBrowsingContext::ResetScalingZoom() {
   // This currently only ever gets called in the parent process, and we
   // pass the message on to the WindowGlobalChild for the rootmost browsing

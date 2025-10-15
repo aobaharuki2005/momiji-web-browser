@@ -465,6 +465,10 @@ class SessionHistoryEntry : public nsISHEntry,
 
   already_AddRefed<nsIURI> GetURIOrInheritedForAboutBlank() const;
 
+  void SetNavigationAPIState(nsIStructuredCloneContainer* aState) {
+    mInfo->SetNavigationAPIState(aState);
+  }
+
  private:
   friend struct LoadingSessionHistoryInfo;
   virtual ~SessionHistoryEntry();

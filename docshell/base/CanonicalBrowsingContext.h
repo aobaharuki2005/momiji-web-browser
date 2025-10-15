@@ -337,6 +337,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void SynchronizeLayoutHistoryState();
 
+  void SynchronizeNavigationAPIState(nsIStructuredCloneContainer* aState);
+
   void ResetScalingZoom();
 
   void SetContainerFeaturePolicy(

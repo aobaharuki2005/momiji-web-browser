@@ -7741,6 +7741,20 @@ ContentParent::RecvGetLoadingSessionHistoryInfoFromParent(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvSynchronizeNavigationAPIState(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const ClonedMessageData& aState) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  RefPtr state = MakeRefPtr<nsStructuredCloneContainer>();
+  state->CopyFromClonedMessageData(aState);
+
+  aContext.get_canonical()->SynchronizeNavigationAPIState(state);
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvRemoveFromBFCache(
     const MaybeDiscarded<BrowsingContext>& aContext) {
   if (aContext.IsNullOrDiscarded()) {

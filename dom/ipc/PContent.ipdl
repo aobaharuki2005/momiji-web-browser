@@ -1103,6 +1103,9 @@ parent:
     async GetLoadingSessionHistoryInfoFromParent(MaybeDiscardedBrowsingContext aContext)
         returns (LoadingSessionHistoryInfo? aLoadingInfo);
 
+    async SynchronizeNavigationAPIState(MaybeDiscardedBrowsingContext aContext,
+        ClonedMessageData aState);
+
     async RemoveFromBFCache(MaybeDiscardedBrowsingContext aContext);
 
     async InitBackground(Endpoint<PBackgroundStarterParent> aEndpoint);
