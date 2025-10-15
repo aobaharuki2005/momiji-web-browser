@@ -95,6 +95,8 @@ static constexpr RelationData kRelationTypeAtoms[] = {
      RelationType::DETAILS_FOR},
     {nsGkAtoms::aria_errormessage, nullptr, RelationType::ERRORMSG,
      RelationType::ERRORMSG_FOR},
+    {nsGkAtoms::aria_actions, nullptr, RelationType::ACTION,
+     RelationType::ACTION_FOR},
 };
 
 // The count of numbers needed to serialize an nsRect. This is used when
