@@ -13,8 +13,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   deserializeBytesValue:
     "chrome://remote/content/webdriver-bidi/modules/root/network.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
-  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   UserContextManager:
     "chrome://remote/content/shared/UserContextManager.sys.mjs",
 });
@@ -707,7 +707,7 @@ class StorageModule extends RootBiDiModule {
    *     If the browsing context cannot be found.
    */
   #getBrowsingContext(contextId) {
-    const context = lazy.TabManager.getBrowsingContextById(contextId);
+    const context = lazy.NavigableManager.getBrowsingContextById(contextId);
     if (context === null) {
       throw new lazy.error.NoSuchFrameError(
         `Browsing Context with id ${contextId} not found`

@@ -12,6 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
+  NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
   OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   processExtraData:
@@ -21,7 +22,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs",
   setDefaultAndAssertSerializationOptions:
     "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
-  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   UserContextManager:
     "chrome://remote/content/shared/UserContextManager.sys.mjs",
   WindowGlobalMessageHandler:
@@ -856,7 +856,7 @@ class ScriptModule extends RootBiDiModule {
   }
 
   #getBrowsingContext(contextId) {
-    const context = lazy.TabManager.getBrowsingContextById(contextId);
+    const context = lazy.NavigableManager.getBrowsingContextById(contextId);
     if (context === null) {
       throw new lazy.error.NoSuchFrameError(
         `Browsing Context with id ${contextId} not found`
@@ -912,7 +912,9 @@ class ScriptModule extends RootBiDiModule {
       .flat()
       .map(realm => {
         // Resolve browsing context to a TabManager id.
-        realm.context = lazy.TabManager.getIdForBrowsingContext(realm.context);
+        realm.context = lazy.NavigableManager.getIdForBrowsingContext(
+          realm.context
+        );
         return realm;
       })
       .filter(realm => realm.context !== null);
@@ -920,7 +922,9 @@ class ScriptModule extends RootBiDiModule {
 
   #onRealmCreated = (eventName, { realmInfo }) => {
     // Resolve browsing context to a TabManager id.
-    const context = lazy.TabManager.getIdForBrowsingContext(realmInfo.context);
+    const context = lazy.NavigableManager.getIdForBrowsingContext(
+      realmInfo.context
+    );
     const browsingContextId = realmInfo.context.id;
 
     // Do not emit the event, if the browsing context is gone.

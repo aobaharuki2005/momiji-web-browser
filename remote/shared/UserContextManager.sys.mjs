@@ -163,19 +163,13 @@ export class UserContextManagerClass {
    *     The array of tabs.
    */
   getTabsForUserContext(internalId) {
-    const tabs = [];
-
-    for (const tab of lazy.TabManager.tabs) {
-      if (
+    return lazy.TabManager.allTabs.filter(tab => {
+      return (
         (tab.hasAttribute("usercontextid") &&
           parseInt(tab.getAttribute("usercontextid"), 10) == internalId) ||
         (!tab.hasAttribute("usercontextid") && internalId === 0)
-      ) {
-        tabs.push(tab);
-      }
-    }
-
-    return tabs;
+      );
+    });
   }
 
   /**

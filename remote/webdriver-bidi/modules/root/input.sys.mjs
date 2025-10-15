@@ -11,8 +11,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   event: "chrome://remote/content/shared/webdriver/Event.sys.mjs",
+  NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
-  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
 });
 
 class InputModule extends RootBiDiModule {
@@ -267,7 +267,7 @@ class InputModule extends RootBiDiModule {
       lazy.pprint`Expected "context" to be a string, got ${contextId}`
     );
 
-    const context = lazy.TabManager.getBrowsingContextById(contextId);
+    const context = lazy.NavigableManager.getBrowsingContextById(contextId);
     if (!context) {
       throw new lazy.error.NoSuchFrameError(
         `Browsing context with id ${contextId} not found`
@@ -313,7 +313,7 @@ class InputModule extends RootBiDiModule {
       lazy.pprint`Expected "context" to be a string, got ${contextId}`
     );
 
-    const context = lazy.TabManager.getBrowsingContextById(contextId);
+    const context = lazy.NavigableManager.getBrowsingContextById(contextId);
     if (!context) {
       throw new lazy.error.NoSuchFrameError(
         `Browsing context with id ${contextId} not found`
@@ -366,7 +366,7 @@ class InputModule extends RootBiDiModule {
       lazy.pprint`Expected "context" to be a string, got ${contextId}`
     );
 
-    const context = lazy.TabManager.getBrowsingContextById(contextId);
+    const context = lazy.NavigableManager.getBrowsingContextById(contextId);
     if (!context) {
       throw new lazy.error.NoSuchFrameError(
         `Browsing context with id ${contextId} not found`

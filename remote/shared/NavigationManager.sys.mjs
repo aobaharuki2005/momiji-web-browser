@@ -13,6 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/listeners/DownloadListener.sys.mjs",
   generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
+  NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
   ParentWebProgressListener:
     "chrome://remote/content/shared/listeners/ParentWebProgressListener.sys.mjs",
   PromptListener:
@@ -147,7 +148,7 @@ class NavigationRegistry extends EventEmitter {
       return null;
     }
 
-    const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
+    const navigableId = lazy.NavigableManager.getIdForBrowsingContext(context);
     if (!this.#navigations.has(navigableId)) {
       return null;
     }
@@ -211,7 +212,7 @@ class NavigationRegistry extends EventEmitter {
     const { contextDetails, url } = data;
 
     const context = this.#getContextFromContextDetails(contextDetails);
-    const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
+    const navigableId = lazy.NavigableManager.getIdForBrowsingContext(context);
 
     const navigationId = this.#getOrCreateNavigationId(navigableId);
     const navigation = this.#createNavigationObject({
@@ -261,7 +262,7 @@ class NavigationRegistry extends EventEmitter {
     const { contextDetails, url } = data;
 
     const context = this.#getContextFromContextDetails(contextDetails);
-    const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
+    const navigableId = lazy.NavigableManager.getIdForBrowsingContext(context);
 
     // History updates are immediately done, fire a single event.
     this.emit(NAVIGATION_EVENTS.HistoryUpdated, { navigableId, url });
@@ -287,7 +288,7 @@ class NavigationRegistry extends EventEmitter {
     const { contextDetails, url } = data;
 
     const context = this.#getContextFromContextDetails(contextDetails);
-    const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
+    const navigableId = lazy.NavigableManager.getIdForBrowsingContext(context);
 
     const navigationId = this.#getOrCreateNavigationId(navigableId);
     const navigation = this.#createNavigationObject({
@@ -339,7 +340,7 @@ class NavigationRegistry extends EventEmitter {
     const { contextDetails, errorName, url } = data;
 
     const context = this.#getContextFromContextDetails(contextDetails);
-    const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
+    const navigableId = lazy.NavigableManager.getIdForBrowsingContext(context);
 
     const navigation = this.#navigations.get(navigableId);
 
@@ -404,7 +405,7 @@ class NavigationRegistry extends EventEmitter {
     const { contextDetails, errorName, url } = data;
 
     const context = this.#getContextFromContextDetails(contextDetails);
-    const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
+    const navigableId = lazy.NavigableManager.getIdForBrowsingContext(context);
 
     const navigation = this.#navigations.get(navigableId);
 
@@ -458,7 +459,7 @@ class NavigationRegistry extends EventEmitter {
   notifyNavigationStarted(data) {
     const { contextDetails, url } = data;
     const context = this.#getContextFromContextDetails(contextDetails);
-    const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
+    const navigableId = lazy.NavigableManager.getIdForBrowsingContext(context);
 
     let navigation = this.#navigations.get(navigableId);
 
@@ -566,7 +567,7 @@ class NavigationRegistry extends EventEmitter {
     const { contextDetails, url } = data;
 
     const context = this.#getContextFromContextDetails(contextDetails);
-    const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
+    const navigableId = lazy.NavigableManager.getIdForBrowsingContext(context);
 
     const navigation = this.#navigations.get(navigableId);
     if (!navigation) {
@@ -611,7 +612,7 @@ class NavigationRegistry extends EventEmitter {
   registerNavigationId(data) {
     const { contextDetails } = data;
     const context = this.#getContextFromContextDetails(contextDetails);
-    const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
+    const navigableId = lazy.NavigableManager.getIdForBrowsingContext(context);
 
     const existingNavigation = this.#navigations.get(navigableId);
     if (
@@ -690,7 +691,7 @@ class NavigationRegistry extends EventEmitter {
     }
 
     const navigableId =
-      lazy.TabManager.getIdForBrowsingContext(browsingContext);
+      lazy.NavigableManager.getIdForBrowsingContext(browsingContext);
     let navigation = this.#navigations.get(navigableId);
 
     if (navigation) {
@@ -731,7 +732,7 @@ class NavigationRegistry extends EventEmitter {
     }
 
     const navigableId =
-      lazy.TabManager.getIdForBrowsingContext(browsingContext);
+      lazy.NavigableManager.getIdForBrowsingContext(browsingContext);
     const navigation = this.#navigations.get(navigableId);
 
     // No need to fail navigation, if there is no navigation in progress.
@@ -755,13 +756,14 @@ class NavigationRegistry extends EventEmitter {
     const { download } = data;
 
     const contextId = download.source.browsingContextId;
-    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
+    const browsingContext =
+      lazy.NavigableManager.getBrowsingContextById(contextId);
     if (!browsingContext) {
       return;
     }
 
     const navigableId =
-      lazy.TabManager.getIdForBrowsingContext(browsingContext);
+      lazy.NavigableManager.getIdForBrowsingContext(browsingContext);
     const url = download.source.url;
 
     const navigation = this.#navigations.get(navigableId);
@@ -791,13 +793,14 @@ class NavigationRegistry extends EventEmitter {
     const { download } = data;
 
     const contextId = download.source.browsingContextId;
-    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
+    const browsingContext =
+      lazy.NavigableManager.getBrowsingContextById(contextId);
     if (!browsingContext) {
       return;
     }
 
     const navigableId =
-      lazy.TabManager.getIdForBrowsingContext(browsingContext);
+      lazy.NavigableManager.getIdForBrowsingContext(browsingContext);
     const url = download.source.url;
 
     let navigationId = null;

@@ -23,6 +23,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   modal: "chrome://remote/content/shared/Prompt.sys.mjs",
   registerNavigationId:
     "chrome://remote/content/shared/NavigationManager.sys.mjs",
+  NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
   NavigationListener:
     "chrome://remote/content/shared/listeners/NavigationListener.sys.mjs",
   PollPromise: "chrome://remote/content/shared/Sync.sys.mjs",
@@ -539,7 +540,7 @@ class BrowsingContextModule extends RootBiDiModule {
       lazy.pprint`Expected "promptUnload" to be a boolean, got ${promptUnload}`
     );
 
-    const context = lazy.TabManager.getBrowsingContextById(contextId);
+    const context = lazy.NavigableManager.getBrowsingContextById(contextId);
     if (!context) {
       throw new lazy.error.NoSuchFrameError(
         `Browsing Context with id ${contextId} not found`
@@ -613,7 +614,7 @@ class BrowsingContextModule extends RootBiDiModule {
       );
 
       referenceContext =
-        lazy.TabManager.getBrowsingContextById(referenceContextId);
+        lazy.NavigableManager.getBrowsingContextById(referenceContextId);
       if (!referenceContext) {
         throw new lazy.error.NoSuchFrameError(
           `Browsing Context with id ${referenceContextId} not found`
@@ -768,7 +769,7 @@ class BrowsingContextModule extends RootBiDiModule {
     browser.parentElement.clientHeight;
 
     return {
-      context: lazy.TabManager.getIdForBrowser(browser),
+      context: lazy.NavigableManager.getIdForBrowser(browser),
     };
   }
 
@@ -1893,7 +1894,7 @@ class BrowsingContextModule extends RootBiDiModule {
       return null;
     }
 
-    const context = lazy.TabManager.getBrowsingContextById(contextId);
+    const context = lazy.NavigableManager.getBrowsingContextById(contextId);
     if (context === null) {
       throw new lazy.error.NoSuchFrameError(
         `Browsing Context with id ${contextId} not found`
@@ -2089,7 +2090,7 @@ class BrowsingContextModule extends RootBiDiModule {
   #onPromptClosed = async (eventName, data) => {
     if (this.#subscribedEvents.has("browsingContext.userPromptClosed")) {
       const { contentBrowser, detail } = data;
-      const navigableId = lazy.TabManager.getIdForBrowser(contentBrowser);
+      const navigableId = lazy.NavigableManager.getIdForBrowser(contentBrowser);
 
       if (navigableId === null) {
         return;
@@ -2120,7 +2121,7 @@ class BrowsingContextModule extends RootBiDiModule {
         return;
       }
 
-      const navigableId = lazy.TabManager.getIdForBrowser(contentBrowser);
+      const navigableId = lazy.NavigableManager.getIdForBrowser(contentBrowser);
 
       const session = lazy.getWebDriverSessionById(
         this.messageHandler.sessionId
@@ -2478,11 +2479,11 @@ export const getBrowsingContextInfo = (context, options = {}) => {
   const userContext = lazy.UserContextManager.getIdByBrowsingContext(context);
   const originalOpener =
     context.crossGroupOpener !== null
-      ? lazy.TabManager.getIdForBrowsingContext(context.crossGroupOpener)
+      ? lazy.NavigableManager.getIdForBrowsingContext(context.crossGroupOpener)
       : null;
   const contextInfo = {
     children,
-    context: lazy.TabManager.getIdForBrowsingContext(context),
+    context: lazy.NavigableManager.getIdForBrowsingContext(context),
     // TODO: Bug 1904641. If a browsing context was not tracked in TabManager,
     // because it was created and discarded before the WebDriver BiDi session was
     // started, we get undefined as id for this browsing context.
@@ -2495,7 +2496,9 @@ export const getBrowsingContextInfo = (context, options = {}) => {
 
   if (includeParentId) {
     // Only emit the parent id for the top-most browsing context.
-    const parentId = lazy.TabManager.getIdForBrowsingContext(context.parent);
+    const parentId = lazy.NavigableManager.getIdForBrowsingContext(
+      context.parent
+    );
     contextInfo.parent = parentId;
   }
 

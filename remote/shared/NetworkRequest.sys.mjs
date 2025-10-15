@@ -4,14 +4,14 @@
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
+  NavigationState: "chrome://remote/content/shared/NavigationManager.sys.mjs",
   NetworkHelper:
     "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
   NetworkUtils:
     "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
-  NavigationState: "chrome://remote/content/shared/NavigationManager.sys.mjs",
   notifyNavigationStarted:
     "chrome://remote/content/shared/NavigationManager.sys.mjs",
-  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
 });
 
 /**
@@ -377,7 +377,7 @@ export class NetworkRequest {
   #getContextId() {
     const id = lazy.NetworkUtils.getChannelBrowsingContextID(this.#channel);
     const browsingContext = BrowsingContext.get(id);
-    return lazy.TabManager.getIdForBrowsingContext(browsingContext);
+    return lazy.NavigableManager.getIdForBrowsingContext(browsingContext);
   }
 
   /**
@@ -476,7 +476,7 @@ export class NetworkRequest {
       return null;
     }
 
-    const browsingContext = lazy.TabManager.getBrowsingContextById(
+    const browsingContext = lazy.NavigableManager.getBrowsingContextById(
       this.#contextId
     );
 
@@ -501,7 +501,7 @@ export class NetworkRequest {
       return false;
     }
 
-    const browsingContext = lazy.TabManager.getBrowsingContextById(
+    const browsingContext = lazy.NavigableManager.getBrowsingContextById(
       this.#contextId
     );
     return !browsingContext.parent;

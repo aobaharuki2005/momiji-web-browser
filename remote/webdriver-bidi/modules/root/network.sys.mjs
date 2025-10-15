@@ -16,6 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   matchURLPattern:
     "chrome://remote/content/shared/webdriver/URLPattern.sys.mjs",
+  NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
   NetworkDecodedBodySizeMap:
     "chrome://remote/content/shared/NetworkDecodedBodySizeMap.sys.mjs",
   NetworkListener:
@@ -26,7 +27,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   parseURLPattern:
     "chrome://remote/content/shared/webdriver/URLPattern.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
-  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   truncate: "chrome://remote/content/shared/Format.sys.mjs",
   updateCacheBehavior:
     "chrome://remote/content/shared/NetworkCacheManager.sys.mjs",
@@ -1881,7 +1881,7 @@ class NetworkModule extends RootBiDiModule {
   }
 
   #getBrowsingContext(contextId) {
-    const context = lazy.TabManager.getBrowsingContextById(contextId);
+    const context = lazy.NavigableManager.getBrowsingContextById(contextId);
     if (context === null) {
       throw new lazy.error.NoSuchFrameError(
         `Browsing Context with id ${contextId} not found`
@@ -2124,7 +2124,8 @@ class NetworkModule extends RootBiDiModule {
    */
   #matchCollectorForNavigable(collector, navigable) {
     if (collector.contexts.size) {
-      const navigableId = lazy.TabManager.getIdForBrowsingContext(navigable);
+      const navigableId =
+        lazy.NavigableManager.getIdForBrowsingContext(navigable);
       return collector.contexts.has(navigableId);
     }
 
@@ -2199,7 +2200,7 @@ class NetworkModule extends RootBiDiModule {
       return;
     }
 
-    const browsingContext = lazy.TabManager.getBrowsingContextById(
+    const browsingContext = lazy.NavigableManager.getBrowsingContextById(
       request.contextId
     );
     if (!browsingContext) {
@@ -2294,7 +2295,7 @@ class NetworkModule extends RootBiDiModule {
 
     let isBlocked = false;
     try {
-      const browsingContext = lazy.TabManager.getBrowsingContextById(
+      const browsingContext = lazy.NavigableManager.getBrowsingContextById(
         request.contextId
       );
       if (!browsingContext) {
@@ -2367,7 +2368,7 @@ class NetworkModule extends RootBiDiModule {
       return;
     }
 
-    const browsingContext = lazy.TabManager.getBrowsingContextById(
+    const browsingContext = lazy.NavigableManager.getBrowsingContextById(
       request.contextId
     );
     if (!browsingContext) {
@@ -2425,7 +2426,7 @@ class NetworkModule extends RootBiDiModule {
   #onFetchError = (name, data) => {
     const { request } = data;
 
-    const browsingContext = lazy.TabManager.getBrowsingContextById(
+    const browsingContext = lazy.NavigableManager.getBrowsingContextById(
       request.contextId
     );
     if (!browsingContext) {
@@ -2467,7 +2468,7 @@ class NetworkModule extends RootBiDiModule {
   #onResponseEvent = async (name, data) => {
     const { request, response } = data;
 
-    const browsingContext = lazy.TabManager.getBrowsingContextById(
+    const browsingContext = lazy.NavigableManager.getBrowsingContextById(
       request.contextId
     );
     if (!browsingContext) {
@@ -2544,8 +2545,9 @@ class NetworkModule extends RootBiDiModule {
     if (request.contextId) {
       // Retrieve the top browsing context id for this network event.
       contextId = request.contextId;
-      const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
-      topContextId = lazy.TabManager.getIdForBrowsingContext(
+      const browsingContext =
+        lazy.NavigableManager.getBrowsingContextById(contextId);
+      topContextId = lazy.NavigableManager.getIdForBrowsingContext(
         browsingContext.top
       );
     }

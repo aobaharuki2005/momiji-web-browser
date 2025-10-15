@@ -27,6 +27,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Marionette: "chrome://remote/content/components/Marionette.sys.mjs",
   MarionettePrefs: "chrome://remote/content/marionette/prefs.sys.mjs",
   modal: "chrome://remote/content/shared/Prompt.sys.mjs",
+  NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
   navigate: "chrome://remote/content/marionette/navigate.sys.mjs",
   permissions: "chrome://remote/content/shared/Permissions.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
@@ -1357,7 +1358,8 @@ GeckoDriver.prototype.getWindowHandle = function () {
   if (this.context == lazy.Context.Chrome) {
     return lazy.windowManager.getIdForWindow(this.curBrowser.window);
   }
-  return lazy.TabManager.getIdForBrowser(this.curBrowser.contentBrowser);
+
+  return this.curBrowser.contentBrowserId;
 };
 
 /**
@@ -1378,7 +1380,10 @@ GeckoDriver.prototype.getWindowHandles = function () {
   if (this.context == lazy.Context.Chrome) {
     return lazy.windowManager.chromeWindowHandles.map(String);
   }
-  return lazy.TabManager.allBrowserUniqueIds.map(String);
+
+  return lazy.TabManager.getBrowsers({ unloaded: true }).map(browser =>
+    lazy.NavigableManager.getIdForBrowser(browser)
+  );
 };
 
 /**
@@ -2706,7 +2711,7 @@ GeckoDriver.prototype.newWindow = async function (cmd) {
     }
   );
 
-  const id = lazy.TabManager.getIdForBrowser(contentBrowser);
+  const id = lazy.NavigableManager.getIdForBrowser(contentBrowser);
 
   return { handle: id.toString(), type };
 };
@@ -2747,7 +2752,9 @@ GeckoDriver.prototype.close = async function () {
   await this.curBrowser.closeTab();
   this.currentSession.contentBrowsingContext = null;
 
-  return lazy.TabManager.allBrowserUniqueIds.map(String);
+  return lazy.TabManager.getBrowsers({ unloaded: true }).map(browser =>
+    lazy.NavigableManager.getIdForBrowser(browser)
+  );
 };
 
 /**

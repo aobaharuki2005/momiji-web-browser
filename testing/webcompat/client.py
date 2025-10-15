@@ -897,12 +897,13 @@ class Client:
                 ChromeUtils.defineESModuleGetters(lazy, {
                   EventPromise: "chrome://remote/content/shared/Sync.sys.mjs",
                   modal: "chrome://remote/content/shared/Prompt.sys.mjs",
+                  NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
                   PromptListener: "chrome://remote/content/shared/listeners/PromptListener.sys.mjs",
                   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
                 });
 
                 async function tryClosePrompt(contextId) {
-                    const context = lazy.TabManager.getBrowsingContextById(contextId);
+                    const context = lazy.NavigableManager.getBrowsingContextById(contextId);
                     if (!context) {
                       return;
                     }
@@ -960,7 +961,7 @@ class Client:
                 promptListener.on("opened", async (eventName, data) => {
                     const { contentBrowser, prompt } = data;
                     const type = prompt.promptType;
-                    const context = lazy.TabManager.getIdForBrowser(contentBrowser);
+                    const context = lazy.NavigableManager.getIdForBrowser(contentBrowser);
                     const message = await prompt.getText();
                     alerts.push({type, context, message});
                     tryClosePrompt(context);

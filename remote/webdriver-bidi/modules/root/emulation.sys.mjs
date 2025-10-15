@@ -12,6 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
+  NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   SessionDataMethod:
     "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs",
@@ -1153,7 +1154,7 @@ class EmulationModule extends RootBiDiModule {
     try {
       context.customUserAgent = userAgent;
     } catch (e) {
-      const contextId = lazy.TabManager.getIdForBrowsingContext(context);
+      const contextId = lazy.NavigableManager.getIdForBrowsingContext(context);
 
       lazy.logger.warn(
         `Failed to override user agent for context with id: ${contextId} (${e.message})`
@@ -1203,7 +1204,7 @@ class EmulationModule extends RootBiDiModule {
   }
 
   #getBrowsingContext(contextId) {
-    const context = lazy.TabManager.getBrowsingContextById(contextId);
+    const context = lazy.NavigableManager.getBrowsingContextById(contextId);
     if (context === null) {
       throw new lazy.error.NoSuchFrameError(
         `Browsing Context with id ${contextId} not found`
