@@ -390,6 +390,12 @@ mozilla::LogModule* GetMacAccessibilityLog() {
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
+- (id)accessibilityCustomActions {
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+  return [self moxCustomActions];
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
+}
+
 - (BOOL)isAccessibilityElement {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
@@ -583,6 +589,10 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 }
 
 - (NSArray*)moxCustomContent {
+  return nil;
+}
+
+- (NSArray*)moxCustomActions {
   return nil;
 }
 
