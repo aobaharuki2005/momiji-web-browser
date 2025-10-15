@@ -8,6 +8,7 @@ const lazy = {};
 
 const MODE_PREF = "browser.ipProtection.exceptionsMode";
 const EXCLUSIONS_PREF = "browser.ipProtection.domainExclusions";
+const INCLUSIONS_PREF = "browser.ipProtection.domainInclusions";
 const LOG_PREF = "browser.ipProtection.log";
 
 const MODE = {
@@ -28,6 +29,7 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
 class ExceptionsManager {
   #inited = false;
   #exclusions = null;
+  #inclusions = null;
   #mode = MODE.ALL;
 
   /**
@@ -47,6 +49,22 @@ class ExceptionsManager {
   }
 
   /**
+   * The set of domains to include for VPN protection.
+   *
+   * @returns {Set<string>}
+   *  A set of domain names as strings.
+   *
+   * @example
+   *  Set { "https://www.example.com", "https://www.bbc.co.uk" }
+   */
+  get inclusions() {
+    if (!this.#inclusions || !(this.#inclusions instanceof Set)) {
+      this.#inclusions = new Set();
+    }
+    return this.#inclusions;
+  }
+
+  /**
    * The type of site exceptions for VPN.
    *
    * @see MODE
@@ -61,7 +79,12 @@ class ExceptionsManager {
     }
 
     this.#mode = this.#getModePref();
-    this.#loadExceptions();
+
+    this.#exclusions = new Set();
+    this.#inclusions = new Set();
+    this.#loadExceptionsForPref(EXCLUSIONS_PREF);
+    this.#loadExceptionsForPref(INCLUSIONS_PREF);
+
     this.#inited = true;
   }
 
@@ -129,6 +152,11 @@ class ExceptionsManager {
 
     if (pref === EXCLUSIONS_PREF) {
       prefString = this.domainExclusions;
+    } else if (pref === INCLUSIONS_PREF) {
+      prefString = this.domainInclusions;
+    } else {
+      lazy.logConsole.error(`Invalid pref ${pref} found.`);
+      return "";
     }
 
     if (typeof prefString !== "string") {
@@ -140,21 +168,19 @@ class ExceptionsManager {
   }
 
   /**
-   * If mode is MODE.ALL, initializes the exclusions set with domains from
-   * browser.ipProtection.domainExclusions.
+   * Initializes the exclusions set with domains from
+   * browser.ipProtection.domainExclusions, or
+   * initializes the inclusions set with domains from
+   * browser.ipProtection.domainInclusions.
    *
-   * @see MODE
+   * @param {string} pref
+   *  The exclusions pref (browser.ipProtection.domainExclusions)
+   *  or inclusions pref (browser.ipProtection.domainInclusions).
    * @see exclusions
+   * @see inclusions
    */
-  #loadExceptions() {
-    if (this.#mode == MODE.ALL) {
-      this.#loadExclusions();
-    }
-  }
-
-  #loadExclusions() {
-    this.#exclusions = new Set();
-    let prefString = this.#getExceptionPref(EXCLUSIONS_PREF);
+  #loadExceptionsForPref(pref) {
+    let prefString = this.#getExceptionPref(pref);
 
     if (!prefString) {
       return;
@@ -163,25 +189,30 @@ class ExceptionsManager {
     let domains = prefString.trim().split(",");
 
     for (let domain of domains) {
-      if (!this.#canExcludeDomain(domain)) {
+      if (!this.#canCreateURI(domain)) {
         continue;
       }
 
       let uri = Services.io.newURI(domain);
-      this.#exclusions.add(uri.prePath);
+
+      if (pref === EXCLUSIONS_PREF) {
+        this.#exclusions.add(uri.prePath);
+      } else if (pref === INCLUSIONS_PREF) {
+        this.#inclusions.add(uri.prePath);
+      }
     }
   }
 
   /**
-   * Checks if we can exclude a domain from VPN usage.
+   * Checks if we can add a domain as an exclusion or inclusion for VPN usage.
    *
    * @param {string} domain
    *  The domain name.
    * @returns {boolean}
-   *  True if we can exclude the domain because it meets our exclusion rules.
+   *  True if a URI can be created from the domain string.
    *  Else false.
    */
-  #canExcludeDomain(domain) {
+  #canCreateURI(domain) {
     try {
       return !!Services.io.newURI(domain);
     } catch (e) {
@@ -201,18 +232,29 @@ class ExceptionsManager {
    */
   addException(domain) {
     // TODO: to be called by IPProtectionPanel or other classes (Bug 1990975, Bug 1990972)
-    if (this.#mode == MODE.ALL) {
+    if (this.#mode === MODE.ALL) {
       this.#addExclusion(domain);
+    } else if (this.#mode === MODE.SELECT) {
+      this.#addInclusion(domain);
     }
   }
 
   #addExclusion(domain) {
-    if (!this.#canExcludeDomain(domain)) {
+    if (!this.#canCreateURI(domain)) {
       return;
     }
 
     this.#exclusions.add(domain);
     this.#updateExclusionPref();
+  }
+
+  #addInclusion(domain) {
+    if (!this.#canCreateURI(domain)) {
+      return;
+    }
+
+    this.#inclusions.add(domain);
+    this.#updateInclusionPref();
   }
 
   /**
@@ -226,14 +268,22 @@ class ExceptionsManager {
    */
   removeException(domain) {
     // TODO: to be called by IPProtectionPanel or other classes (Bug 1990975, Bug 1990972)
-    if (this.#mode == MODE.ALL) {
+    if (this.#mode === MODE.ALL) {
       this.#removeExclusion(domain);
+    } else if (this.#mode === MODE.SELECT) {
+      this.#removeInclusion(domain);
     }
   }
 
   #removeExclusion(domain) {
     if (this.#exclusions.delete(domain)) {
       this.#updateExclusionPref();
+    }
+  }
+
+  #removeInclusion(domain) {
+    if (this.#inclusions.delete(domain)) {
+      this.#updateInclusionPref();
     }
   }
 
@@ -247,11 +297,20 @@ class ExceptionsManager {
   }
 
   /**
+   * Updates the value of browser.ipProtection.domainInclusions
+   * according to the latest version of the inclusions set.
+   */
+  #updateInclusionPref() {
+    let newPrefString = [...this.#inclusions].join(",");
+    Services.prefs.setStringPref(INCLUSIONS_PREF, newPrefString);
+  }
+
+  /**
    * Clear the exclusions set.
    */
   #unloadExceptions() {
-    // TODO: clear inclusions set here too
     this.#exclusions = null;
+    this.#inclusions = null;
   }
 }
 
@@ -261,6 +320,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   IPPExceptionsManager,
   "domainExclusions",
   EXCLUSIONS_PREF,
+  ""
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  IPPExceptionsManager,
+  "domainInclusions",
+  INCLUSIONS_PREF,
   ""
 );
 

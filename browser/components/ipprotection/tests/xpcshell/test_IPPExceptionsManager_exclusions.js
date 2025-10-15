@@ -7,7 +7,10 @@ const { IPPExceptionsManager } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPPExceptionsManager.sys.mjs"
 );
 
+const MODE_PREF = "browser.ipProtection.exceptionsMode";
 const EXCLUSIONS_PREF = "browser.ipProtection.domainExclusions";
+
+const ALL_MODE = "all";
 
 /**
  * Tests manager initialization when there are no exclusions.
@@ -15,6 +18,7 @@ const EXCLUSIONS_PREF = "browser.ipProtection.domainExclusions";
 add_task(async function test_IPPExceptionsManager_init_with_no_exclusions() {
   const stringPref = "";
 
+  Services.prefs.setStringPref(MODE_PREF, ALL_MODE);
   Services.prefs.setStringPref(EXCLUSIONS_PREF, stringPref);
 
   IPPExceptionsManager.init();
@@ -29,6 +33,7 @@ add_task(async function test_IPPExceptionsManager_init_with_no_exclusions() {
 
   Assert.ok(!newStringPref, "String pref should be empty");
 
+  Services.prefs.clearUserPref(MODE_PREF);
   Services.prefs.clearUserPref(EXCLUSIONS_PREF);
 
   IPPExceptionsManager.uninit();
@@ -43,6 +48,7 @@ add_task(async function test_IPPExceptionsManager_init_with_exclusions() {
   const site3 = "https://www.another.example.ca";
   const stringPref = `${site1},${site2},${site3}`;
 
+  Services.prefs.setStringPref(MODE_PREF, ALL_MODE);
   Services.prefs.setStringPref(EXCLUSIONS_PREF, stringPref);
 
   IPPExceptionsManager.init();
@@ -73,6 +79,7 @@ add_task(async function test_IPPExceptionsManager_init_with_exclusions() {
   Assert.ok(newStringPref.includes(site2), `String pref includes ${site2}`);
   Assert.ok(newStringPref.includes(site3), `String pref includes ${site3}`);
 
+  Services.prefs.clearUserPref(MODE_PREF);
   Services.prefs.clearUserPref(EXCLUSIONS_PREF);
   IPPExceptionsManager.uninit();
 });
@@ -84,6 +91,7 @@ add_task(
   async function test_IPPExceptionsManager_init_with_invalid_exclusions() {
     const invalidStringPref = "noturl";
 
+    Services.prefs.setStringPref(MODE_PREF, ALL_MODE);
     Services.prefs.setStringPref(EXCLUSIONS_PREF, invalidStringPref);
 
     IPPExceptionsManager.init();
@@ -94,6 +102,7 @@ add_task(
       "exclusions set should have 0 valid domains"
     );
 
+    Services.prefs.clearUserPref(MODE_PREF);
     Services.prefs.clearUserPref(EXCLUSIONS_PREF);
     IPPExceptionsManager.uninit();
   }
@@ -105,6 +114,7 @@ add_task(
 add_task(async function test_IPPExceptionsManager_add_exclusions() {
   const site1 = "https://www.example.com";
 
+  Services.prefs.setStringPref(MODE_PREF, ALL_MODE);
   Services.prefs.setStringPref(EXCLUSIONS_PREF, site1);
 
   IPPExceptionsManager.init();
@@ -144,6 +154,7 @@ add_task(async function test_IPPExceptionsManager_add_exclusions() {
     `String pref includes ${validSite}`
   );
 
+  Services.prefs.clearUserPref(MODE_PREF);
   Services.prefs.clearUserPref(EXCLUSIONS_PREF);
   IPPExceptionsManager.uninit();
 });
@@ -154,6 +165,7 @@ add_task(async function test_IPPExceptionsManager_add_exclusions() {
 add_task(async function test_IPPExceptionsManager_remove_exclusions() {
   const site1 = "https://www.example.com";
 
+  Services.prefs.setStringPref(MODE_PREF, ALL_MODE);
   Services.prefs.setStringPref(EXCLUSIONS_PREF, site1);
 
   IPPExceptionsManager.init();
@@ -174,6 +186,7 @@ add_task(async function test_IPPExceptionsManager_remove_exclusions() {
 
   Assert.ok(!newStringPref, "String pref should be empty");
 
+  Services.prefs.clearUserPref(MODE_PREF);
   Services.prefs.clearUserPref(EXCLUSIONS_PREF);
   IPPExceptionsManager.uninit();
 });
