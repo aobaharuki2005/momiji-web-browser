@@ -3741,6 +3741,12 @@ bool nsHttpTransaction::AllowedToConnectToIpAddressSpace(
     return true;
   }
 
+  // Skip LNA checks entirely for WebSocket connections if websocket LNA is
+  // disabled
+  if (!StaticPrefs::network_lna_websocket_enabled() && IsWebsocketUpgrade()) {
+    return true;  // Allow all WebSocket connections
+  }
+
   // store targetIpAddress space which is required later by nsHttpChannel for
   // permission prompts
   {

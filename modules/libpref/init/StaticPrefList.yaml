@@ -14493,6 +14493,14 @@
   value: true
   mirror: always
 
+# When this pref is false, skip all LNA checks for WebSocket connections.
+# When true, WebSocket connections follow normal LNA rules.
+# Currently this is disabled for parity with chrome
+- name: network.lna.websocket.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # The proxy type. See nsIProtocolProxyService.idl
 #     PROXYCONFIG_DIRECT   = 0
 #     PROXYCONFIG_MANUAL   = 1
