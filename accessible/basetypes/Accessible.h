@@ -603,8 +603,6 @@ class Accessible {
 
   bool IsSelect() const { return HasGenericType(eSelect); }
 
-  bool IsActionable() const { return HasGenericType(eActionable); }
-
   bool IsText() const { return mGenericTypes & eText; }
 
   bool IsImage() const { return mType == eImageType; }
