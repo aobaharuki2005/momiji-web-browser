@@ -603,6 +603,8 @@ class Accessible {
 
   bool IsSelect() const { return HasGenericType(eSelect); }
 
+  bool IsActionable() const { return HasGenericType(eActionable); }
+
   bool IsText() const { return mGenericTypes & eText; }
 
   bool IsImage() const { return mType == eImageType; }
@@ -778,15 +780,6 @@ class Accessible {
    */
   virtual int32_t GetLevel(bool aFast) const;
 
-  /**
-   * Return true if accessible has a primary action directly related to it, like
-   * "click", "activate", "press", "jump", "open", "close", etc. A non-primary
-   * action would be a complementary one like "showlongdesc".
-   * If an accessible has an action that is associated with an ancestor, it is
-   * not a primary action either.
-   */
-  virtual bool HasPrimaryAction() const = 0;
-
  protected:
   // Some abstracted group utility methods.
 
@@ -819,6 +812,15 @@ class Accessible {
    * Return the nearest ancestor that has a primary action, or null.
    */
   const Accessible* ActionAncestor() const;
+
+  /**
+   * Return true if accessible has a primary action directly related to it, like
+   * "click", "activate", "press", "jump", "open", "close", etc. A non-primary
+   * action would be a complementary one like "showlongdesc".
+   * If an accessible has an action that is associated with an ancestor, it is
+   * not a primary action either.
+   */
+  virtual bool HasPrimaryAction() const = 0;
 
   /**
    * Apply states which are implied by other information common to both

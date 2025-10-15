@@ -188,9 +188,6 @@ enum CheckedState {
 - (NSArray*)moxCustomContent;
 
 // override
-- (NSArray*)moxCustomActions;
-
-// override
 - (NSNumber*)moxEnabled;
 
 // override

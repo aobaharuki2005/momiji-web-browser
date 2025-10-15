@@ -45,8 +45,6 @@
 // currently focused UI element (possibly a child accessible)
 - (id)accessibilityFocusedUIElement;
 
-- (NSArray*)accessibilityCustomActions;
-
 /*** attributes ***/
 
 // all supported attributes

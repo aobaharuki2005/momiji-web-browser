@@ -58,14 +58,8 @@ interface nsIAccessibleMacInterface : nsISupports
   jsval getParameterizedAttributeValue(in AString attributeName, in jsval parameter);
 
   /**
-   * Gets a description of the specified action.
-   * Emulates `AXUIElementCopyActionDescription`.
-   */
-  AString getActionDescription(in AString actionName);
-
-  /**
    * Requests that the accessibility object perform the specified action.
-   * Emulates `AXUIElementPerformAction`.
+   * Emulatets `AXUIElementPerformAction`.
    */
   void performAction(in AString actionName);
 

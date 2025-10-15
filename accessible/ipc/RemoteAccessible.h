@@ -390,8 +390,6 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
 
   virtual bool IsPopover() const override;
 
-  virtual bool HasPrimaryAction() const override;
-
 #if !defined(XP_WIN)
   void Announce(const nsString& aAnnouncement, uint16_t aPriority);
 #endif  // !defined(XP_WIN)
@@ -494,6 +492,9 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
 
   virtual void GetPositionAndSetSize(int32_t* aPosInSet,
                                      int32_t* aSetSize) override;
+
+  virtual bool HasPrimaryAction() const override;
+
   nsAtom* GetPrimaryAction() const;
 
   virtual nsTArray<int32_t>& GetCachedHyperTextOffsets() override;

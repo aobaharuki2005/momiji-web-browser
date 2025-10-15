@@ -68,8 +68,7 @@ static nsStaticAtom* const kRelationAttrs[] = {
     nsGkAtoms::aria_controls,     nsGkAtoms::aria_flowto,
     nsGkAtoms::aria_errormessage, nsGkAtoms::_for,
     nsGkAtoms::control,           nsGkAtoms::popovertarget,
-    nsGkAtoms::commandfor,        nsGkAtoms::aria_activedescendant,
-    nsGkAtoms::aria_actions};
+    nsGkAtoms::commandfor,        nsGkAtoms::aria_activedescendant};
 
 static const uint32_t kRelationAttrsLen = std::size(kRelationAttrs);
 

@@ -305,9 +305,16 @@ static uint16_t CreateMaiInterfaces(Accessible* aAccessible) {
     interfaces |= 1 << MAI_INTERFACE_SELECTION;
   }
 
-  // XXX: Always include the action interface because aria-actions
-  // can define actions mid-life.
-  interfaces |= 1 << MAI_INTERFACE_ACTION;
+  if (aAccessible->IsRemote()) {
+    if (aAccessible->IsActionable()) {
+      interfaces |= 1 << MAI_INTERFACE_ACTION;
+    }
+  } else {
+    // XXX: Harmonize this with remote accessibles
+    if (aAccessible->ActionCount()) {
+      interfaces |= 1 << MAI_INTERFACE_ACTION;
+    }
+  }
 
   return interfaces;
 }

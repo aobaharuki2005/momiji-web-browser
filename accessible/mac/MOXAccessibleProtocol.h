@@ -25,9 +25,6 @@
 // Forwarded from accessibilityFocusedUIElement.
 - (id _Nullable)moxFocusedUIElement;
 
-// Retrieve a list of custom actions.
-- (NSArray* _Nullable)moxCustomActions;
-
 // Sends a notification to any observing assistive applications.
 - (void)moxPostNotification:(NSString* _Nonnull)notification;
 

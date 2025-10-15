@@ -31,7 +31,6 @@ addAccessibleTask(
 
     await checkInterfaces("p", [
       "Accessible",
-      "Action",
       "Collection",
       "Component",
       "EditableText",
@@ -51,7 +50,6 @@ addAccessibleTask(
     ]);
     await checkInterfaces("range_input", [
       "Accessible",
-      "Action",
       "Collection",
       "Component",
       "Hyperlink",

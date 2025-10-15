@@ -86,9 +86,10 @@ enum AccGenericType {
   eTableRow = 1 << 13,
   eText = 1 << 14,
   eNumericValue = 1 << 15,
-  eDPub = 1 << 16,
+  eActionable = 1 << 16,  // This is for remote accessibles
+  eDPub = 1 << 17,
 
-  eLastAccGenericType = eDPub,
+  eLastAccGenericType = eActionable,
   eAllGenericTypes = (eLastAccGenericType << 1) - 1
 };
 

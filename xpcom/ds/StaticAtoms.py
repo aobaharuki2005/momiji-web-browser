@@ -119,7 +119,6 @@ STATIC_ATOMS = [
     Atom("archive", "archive"),
     Atom("area", "area"),
     Atom("aria", "aria"),
-    Atom("aria_actions", "aria-actions"),
     Atom("aria_activedescendant", "aria-activedescendant"),
     Atom("aria_atomic", "aria-atomic"),
     Atom("aria_autocomplete", "aria-autocomplete"),
