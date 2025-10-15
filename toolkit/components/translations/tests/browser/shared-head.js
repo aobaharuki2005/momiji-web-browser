@@ -1368,11 +1368,15 @@ class MockedA11yUtils {
  */
 async function ensureWindowSize(win, width, height) {
   if (
-    Math.abs(win.outerWidth - width) < 1 &&
-    Math.abs(win.outerHeight - height) < 1
+    Math.abs(win.outerWidth - width) <= 1 &&
+    Math.abs(win.outerHeight - height) <= 1
   ) {
     return;
   }
+
+  info(
+    `Resizing to ${width}x${height} (currently ${win.outerWidth}x${win.outerHeight})`
+  );
 
   const resizePromise = BrowserTestUtils.waitForEvent(win, "resize");
 
