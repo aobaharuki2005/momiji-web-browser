@@ -451,6 +451,11 @@ fn do_debug_flags_ui(
         let mut push_flags = false;
 
         push_flags |= ui.checkbox_flags(
+            "Force invalidation",
+            &mut ctx.data_model.debug_flags,
+            DebugFlags::FORCE_PICTURE_INVALIDATION
+        );
+        push_flags |= ui.checkbox_flags(
             "Profiler",
             &mut ctx.data_model.debug_flags,
             DebugFlags::PROFILER_DBG
@@ -464,6 +469,36 @@ fn do_debug_flags_ui(
             "Texture Cache",
             &mut ctx.data_model.debug_flags,
             DebugFlags::TEXTURE_CACHE_DBG
+        );
+        push_flags |= ui.checkbox_flags(
+            "Picture cache",
+            &mut ctx.data_model.debug_flags,
+            DebugFlags::PICTURE_CACHING_DBG
+        );
+        push_flags |= ui.checkbox_flags(
+            "Picture borders",
+            &mut ctx.data_model.debug_flags,
+            DebugFlags::PICTURE_BORDERS
+        );
+        push_flags |= ui.checkbox_flags(
+            "Highlight backdrop filters",
+            &mut ctx.data_model.debug_flags,
+            DebugFlags::HIGHLIGHT_BACKDROP_FILTERS
+        );
+        push_flags |= ui.checkbox_flags(
+            "Skip alpha passes",
+            &mut ctx.data_model.debug_flags,
+            DebugFlags::DISABLE_ALPHA_PASS
+        );
+        push_flags |= ui.checkbox_flags(
+            "Skip opaque passes",
+            &mut ctx.data_model.debug_flags,
+            DebugFlags::DISABLE_OPAQUE_PASS
+        );
+        push_flags |= ui.checkbox_flags(
+            "Show overdraw",
+            &mut ctx.data_model.debug_flags,
+            DebugFlags::SHOW_OVERDRAW
         );
 
         if push_flags {
