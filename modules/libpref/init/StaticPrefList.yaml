@@ -10471,7 +10471,7 @@
 # https://drafts.csswg.org/css-text-4/#text-autospace-property
 - name: layout.css.text-autospace.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Maximum number of lines to try balancing.
