@@ -14501,6 +14501,13 @@
   value: false
   mirror: always
 
+# When this pref is true, skip LNA checks for requests from private network
+# to localhost (private -> local IP address space transitions).
+- name: network.lna.local-network-to-localhost.skip-checks
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # The proxy type. See nsIProtocolProxyService.idl
 #     PROXYCONFIG_DIRECT   = 0
 #     PROXYCONFIG_MANUAL   = 1
