@@ -33,7 +33,6 @@ support-files = [
 ["browser_translations_recent_language_memory_auto_translate.js"]
 
 ["browser_translations_recent_language_memory_full_page_and_select.js"]
-skip-if = ["os == 'linux' && os_version == '22.04' && display == 'wayland' && !debug"] # Bug 1994245
 
 ["browser_translations_recent_language_memory_full_page_and_select_multi_window.js"]
 skip-if = ["os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && ccov"] # Bug 1972458

@@ -25,7 +25,6 @@ support-files = [
 ["browser_translations_full_page_telemetry_translation_request.js"]
 
 ["browser_translations_full_page_telemetry_unsupported_lang.js"]
-skip-if = ["os == 'linux' && os_version == '22.04' && display == 'wayland' && !debug"] # Bug 1994245
 
 ["browser_translations_select_telemetry_change_both_languages_together.js"]
 
