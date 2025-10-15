@@ -2914,16 +2914,16 @@ bool gfxFont::MeasureGlyphs(const gfxTextRun* aTextRun, uint32_t aStart,
                             gfxFloat* aAdvanceMin, gfxFloat* aAdvanceMax) {
   const gfxTextRun::CompressedGlyph* charGlyphs =
       aTextRun->GetCharacterGlyphs();
-  double x = 0;
-  if (aSpacing) {
-    x += aSpacing[0].mBefore;
-  }
   uint32_t spaceGlyph = GetSpaceGlyph();
   bool allGlyphsInvisible = true;
 
   AutoReadLock lock(aExtents->mLock);
 
+  double x = 0;
   for (uint32_t i = aStart; i < aEnd; ++i) {
+    if (aSpacing) {
+      x += aSpacing->mBefore;
+    }
     const gfxTextRun::CompressedGlyph* glyphData = &charGlyphs[i];
     if (glyphData->IsSimpleGlyph()) {
       double advance = glyphData->GetSimpleAdvance();
@@ -3011,11 +3011,8 @@ bool gfxFont::MeasureGlyphs(const gfxTextRun* aTextRun, uint32_t aStart,
       }
     }
     if (aSpacing) {
-      double space = aSpacing[i - aStart].mAfter;
-      if (i + 1 < aEnd) {
-        space += aSpacing[i + 1 - aStart].mBefore;
-      }
-      x += space;
+      x += aSpacing->mAfter;
+      ++aSpacing;
     }
   }
 

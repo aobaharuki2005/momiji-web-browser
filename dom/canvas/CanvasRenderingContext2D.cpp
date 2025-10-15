@@ -4635,7 +4635,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     explicit PropertyProvider(const CanvasBidiProcessor& aProcessor)
         : mProcessor(aProcessor) {}
 
-    void GetSpacing(gfxTextRun::Range aRange,
+    bool GetSpacing(gfxTextRun::Range aRange,
                     gfxFont::Spacing* aSpacing) const {
       for (auto i = aRange.start; i < aRange.end; ++i) {
         auto* charGlyphs = mProcessor.mTextRun->GetCharacterGlyphs();
@@ -4665,6 +4665,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
         }
         aSpacing++;
       }
+      return mProcessor.mLetterSpacing != 0.0 || mProcessor.mWordSpacing != 0.0;
     }
 
     mozilla::StyleHyphens GetHyphensOption() const {
