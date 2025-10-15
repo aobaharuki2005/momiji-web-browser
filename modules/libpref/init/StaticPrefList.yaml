@@ -14493,13 +14493,6 @@
   value: true
   mirror: always
 
-# Comma-separated list of domains to skip LNA checks for.
-# Supports suffix wildcard patterns (*.example.com)
-- name: network.lna.skip-domains
-  type: String
-  value: ""
-  mirror: never
-
 # The proxy type. See nsIProtocolProxyService.idl
 #     PROXYCONFIG_DIRECT   = 0
 #     PROXYCONFIG_MANUAL   = 1

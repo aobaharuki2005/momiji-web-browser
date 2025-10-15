@@ -1011,12 +1011,6 @@
         "EnablePrompting": {
           "type": "boolean"
         },
-        "SkipDomains": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
         "Locked": {
           "type": "boolean"
         }

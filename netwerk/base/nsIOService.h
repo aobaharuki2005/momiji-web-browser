@@ -158,8 +158,6 @@ class nsIOService final : public nsIIOService,
   NS_IMETHODIMP GetOverridenIpAddressSpace(
       nsILoadInfo::IPAddressSpace* aIpAddressSpace, const NetAddr& aAddr);
 
-  bool ShouldSkipDomainForLNA(const nsACString& aDomain);
-
  private:
   // These shouldn't be called directly:
   // - construct using GetInstance
@@ -215,7 +213,6 @@ class nsIOService final : public nsIIOService,
 
   void UpdateAddressSpaceOverrideList(const char* aPrefName,
                                       nsTArray<nsCString>& aTargetList);
-  void UpdateSkipDomainsList();
 
  private:
   mozilla::Atomic<bool, mozilla::Relaxed> mOffline{true};
@@ -250,7 +247,6 @@ class nsIOService final : public nsIIOService,
   nsTArray<nsCString> mPublicAddressSpaceOverridesList MOZ_GUARDED_BY(mLock);
   nsTArray<nsCString> mPrivateAddressSpaceOverridesList MOZ_GUARDED_BY(mLock);
   nsTArray<nsCString> mLocalAddressSpaceOverrideList MOZ_GUARDED_BY(mLock);
-  nsTArray<nsCString> mLNASkipDomainsList MOZ_GUARDED_BY(mLock);
 
   nsTHashMap<nsCString, RuntimeProtocolHandler> mRuntimeProtocolHandlers
       MOZ_GUARDED_BY(mLock);
