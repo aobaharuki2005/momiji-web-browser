@@ -897,6 +897,13 @@ export class TranslationsDocument {
   #scheduler;
 
   /**
+   * The script direction of the source language.
+   *
+   * @type {("ltr"|"rtl")}
+   */
+  #sourceScriptDirection;
+
+  /**
    * The script direction of the target language.
    *
    * @type {("ltr"|"rtl")}
@@ -1093,6 +1100,8 @@ export class TranslationsDocument {
     this.#documentLanguage = documentLanguage;
     this.#translationsCache = translationsCache;
     this.#actorReportFirstVisibleChange = reportVisibleChange;
+    this.#sourceScriptDirection =
+      Services.intl.getScriptDirection(documentLanguage);
     this.#targetScriptDirection =
       Services.intl.getScriptDirection(targetLanguage);
     this.#translationsMode = isFindBarOpen ? "content-eager" : "lazy";
@@ -3249,9 +3258,17 @@ export class TranslationsDocument {
             "text/html"
           );
 
+          if (this.#sourceScriptDirection !== this.#targetScriptDirection) {
+            element.setAttribute("dir", this.#targetScriptDirection);
+          }
+
           updateElement(translationsDocument, element);
           this.#processedContentNodes.add(targetNode);
         } else {
+          if (this.#sourceScriptDirection !== this.#targetScriptDirection) {
+            const parentElement = asElement(targetNode.parentNode);
+            parentElement?.setAttribute("dir", this.#targetScriptDirection);
+          }
           textNodeCount++;
           targetNode.textContent = translatedContent;
           this.#processedContentNodes.add(targetNode);
