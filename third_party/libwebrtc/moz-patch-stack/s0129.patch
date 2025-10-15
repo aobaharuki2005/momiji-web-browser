@@ -5,14 +5,14 @@ Subject: Bug 1980501 - enable c++20 builds in libwebrtc. r?ng!
 Differential Revision: https://phabricator.services.mozilla.com/D267994
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/43de54a6e52daf0a06956ae01951ef1e29d46e82
 ---
- BUILD.gn | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+ BUILD.gn | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index 600993950b..108b8c6160 100644
+index 600993950b..3ba008076e 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -315,6 +315,17 @@ config("common_config") {
+@@ -315,6 +315,16 @@ config("common_config") {
    cflags_objc = []
    defines = []
  
@@ -21,8 +21,7 @@ index 600993950b..108b8c6160 100644
 +  if (build_with_mozilla) {
 +    if (is_win) {
 +      cflags_cc += [ "-std:c++20" ]
-+    }
-+    else {
++    } else {
 +      cflags_cc += [ "-std=gnu++20" ]
 +    }
 +  }
@@ -30,7 +29,7 @@ index 600993950b..108b8c6160 100644
    if (rtc_enable_protobuf) {
      defines += [ "WEBRTC_ENABLE_PROTOBUF=1" ]
    } else {
-@@ -416,7 +427,7 @@ config("common_config") {
+@@ -416,7 +426,7 @@ config("common_config") {
          # "-Wnested-externs",  (C/Obj-C only)
        ]
        cflags_objc += [ "-Wstrict-prototypes" ]
