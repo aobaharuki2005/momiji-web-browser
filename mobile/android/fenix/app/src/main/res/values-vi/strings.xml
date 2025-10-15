@@ -1486,9 +1486,9 @@
   <!-- Content description for tabs tray multiselect menu -->
   <string name="tab_tray_multiselect_menu_content_description">Menu thẻ đã chọn</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
-  <string name="tab_tray_homepage_tab" tools:ignore="UnusedResources" moz:removedIn="145">Trang chủ</string>
+  <string name="tab_tray_homepage_tab">Trang chủ</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2">Trang chủ %s</string>
+  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">Trang chủ %s</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Xóa thẻ khỏi bộ sưu tập</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->

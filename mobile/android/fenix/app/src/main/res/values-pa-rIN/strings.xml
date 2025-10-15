@@ -1481,7 +1481,7 @@
   <!-- Content description for tabs tray multiselect menu -->
   <string name="tab_tray_multiselect_menu_content_description">ਚੁਣੀਆਂ ਟੈਬਾਂ ਦਾ ਮੇਨੂ</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
-  <string name="tab_tray_homepage_tab" tools:ignore="UnusedResources" moz:removedIn="145">ਮੁੱਖ ਸਫ਼ਾ</string>
+  <string name="tab_tray_homepage_tab">ਮੁੱਖ ਸਫ਼ਾ</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">ਟੈਬ ਨੂੰ ਭੰਡਾਰ ਵਿੱਚੋਂ ਹਟਾਓ</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
