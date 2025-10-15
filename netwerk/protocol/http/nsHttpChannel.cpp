@@ -6310,6 +6310,19 @@ nsresult nsHttpChannel::DoInstallCacheListener(bool aIsDictionaryCompressed,
     if (NS_FAILED(rv)) {
       return rv;
     }
+    // if we have dcb or dcz or if this is Use-As-Dictionary, all
+    // content-encodings in the header should be removed as we're
+    // decompressing before the tee in the parent process
+    LOG(
+        ("Clearing  Content-Encoding since we're dictionary-compressed or are "
+         "a dictionary"));
+    // Can't use SetHeader; we need to overwrite the current value
+    rv = mResponseHead->SetHeaderOverride(nsHttp::Content_Encoding, ""_ns);
+    if (NS_FAILED(rv)) {
+      mCacheEntry->AsyncDoom(nullptr);
+      return rv;
+    }
+
     // Remove Available-Dictionary from Vary header if present.  This
     // avoids us refusing to match on a future load, for example if this
     // dictionary was decoded from an earlier version using a dictionary
