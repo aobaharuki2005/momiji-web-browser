@@ -526,7 +526,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   CacheBehavior GetCacheBehavior(ScriptLoadRequest* aRequest);
 
-  void TryCacheRequest(ScriptLoadRequest* aRequest);
+  void TryCacheRequest(ScriptLoadRequest* aRequest,
+                       RefPtr<JS::Stencil>& aStencil);
 
   JS::loader::ScriptLoadRequest* LookupPreloadRequest(
       nsIScriptElement* aElement, JS::loader::ScriptKind aScriptKind,
@@ -694,6 +695,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   void InstantiateClassicScriptFromMaybeEncodedSource(
       JSContext* aCx, JS::CompileOptions& aCompileOptions,
       ScriptLoadRequest* aRequest, JS::MutableHandle<JSScript*> aScript,
+      RefPtr<JS::Stencil>& aStencilOut,
       JS::Handle<JS::Value> aDebuggerPrivateValue,
       JS::Handle<JSScript*> aDebuggerIntroductionScript, ErrorResult& aRv);
 
@@ -707,8 +709,6 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
       JS::Handle<JSScript*> aDebuggerIntroductionScript, ErrorResult& aRv);
 
   static nsCString& BytecodeMimeTypeFor(ScriptLoadRequest* aRequest);
-  static nsCString& BytecodeMimeTypeFor(
-      JS::loader::LoadedScript* aLoadedScript);
 
   // Decide whether to encode bytecode for given script load request,
   // and store the script into the request if necessary.
@@ -774,14 +774,20 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   /**
    * Finish collecting the delazifications and return the stencil.
    */
-  void FinishCollectingDelazifications(JSContext* aCx,
-                                       ScriptLoadRequest* aRequest);
+  already_AddRefed<JS::Stencil> FinishCollectingDelazifications(
+      JSContext* aCx, ScriptLoadRequest* aRequest);
 
   /**
    * Encode the stencils and save the bytecode to the necko cache.
    */
-  void EncodeBytecodeAndSave(JSContext* aCx,
-                             JS::loader::LoadedScript* aLoadedScript);
+  void EncodeBytecodeAndSave(JSContext* aCx, ScriptLoadRequest* aRequest,
+                             nsCOMPtr<nsICacheInfoChannel>& aCacheInfo,
+                             nsCString& aMimeType,
+                             const JS::TranscodeBuffer& aSRI,
+                             JS::Stencil* aStencil);
+
+  void StoreCacheInfo(JS::loader::LoadedScript* aLoadedScript,
+                      ScriptLoadRequest* aRequest);
 
   /**
    * Stop collecting delazifications for all requests.
