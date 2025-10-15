@@ -56,6 +56,15 @@ add_task(async function test_restore_from_backup() {
     });
     MockFilePicker.returnValue = MockFilePicker.returnOK;
 
+    let quitObservedPromise = TestUtils.topicObserved(
+      "quit-application-requested",
+      subject => {
+        let cancelQuit = subject.QueryInterface(Ci.nsISupportsPRBool);
+        cancelQuit.data = true;
+        return true;
+      }
+    );
+
     let settings = browser.contentDocument.querySelector("backup-settings");
 
     await settings.updateComplete;
@@ -145,6 +154,8 @@ add_task(async function test_restore_from_backup() {
       );
     });
 
+    await quitObservedPromise;
+
     Assert.ok(
       recoverFromBackupArchiveStub.calledOnce,
       "BackupService was called to start a recovery from a backup archive."
@@ -167,6 +178,15 @@ add_task(async function test_restore_in_progress() {
     let recoverFromBackupArchiveStub = sandbox
       .stub(bs, "recoverFromBackupArchive")
       .returns(recoverPromise);
+
+    let quitObservedPromise = TestUtils.topicObserved(
+      "quit-application-requested",
+      subject => {
+        let cancelQuit = subject.QueryInterface(Ci.nsISupportsPRBool);
+        cancelQuit.data = true;
+        return true;
+      }
+    );
 
     let settings = browser.contentDocument.querySelector("backup-settings");
 
@@ -278,6 +298,8 @@ add_task(async function test_restore_in_progress() {
       !settings.restoreFromBackupDialogEl.open,
       "Restore dialog should now be closed."
     );
+
+    await quitObservedPromise;
 
     sandbox.restore();
   });
