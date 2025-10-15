@@ -8683,11 +8683,11 @@ void CodeGenerator::visitNewTypedArrayInline(LNewTypedArrayInline* lir) {
 }
 
 void CodeGenerator::visitNewTypedArray(LNewTypedArray* lir) {
-  Register objReg = ToRegister(lir->output());
+  Register output = ToRegister(lir->output());
   Register temp1Reg = ToRegister(lir->temp0());
   Register temp2Reg = ToRegister(lir->temp1());
   Register lengthReg = ToRegister(lir->temp2());
-  LiveRegisterSet liveRegs = liveVolatileRegs(lir);
+  Register temp4Reg = ToRegister(lir->temp3());
 
   auto* templateObject = lir->mir()->templateObject();
   gc::Heap initialHeap = lir->mir()->initialHeap();
@@ -8699,15 +8699,17 @@ void CodeGenerator::visitNewTypedArray(LNewTypedArray* lir) {
   using Fn = TypedArrayObject* (*)(JSContext*, HandleObject, int32_t length);
   OutOfLineCode* ool = oolCallVM<Fn, NewTypedArrayWithTemplateAndLength>(
       lir, ArgList(ImmGCPtr(templateObject), Imm32(n)),
-      StoreRegisterTo(objReg));
+      StoreRegisterTo(output));
 
   TemplateObject templateObj(templateObject);
-  masm.createGCObject(objReg, temp1Reg, templateObj, initialHeap, ool->entry());
+  masm.createGCObject(temp4Reg, temp1Reg, templateObj, initialHeap,
+                      ool->entry());
 
   masm.move32(Imm32(n), lengthReg);
 
-  masm.initTypedArraySlots(objReg, lengthReg, temp1Reg, temp2Reg, liveRegs,
+  masm.initTypedArraySlots(temp4Reg, lengthReg, temp1Reg, temp2Reg,
                            ool->entry(), templateObject);
+  masm.mov(temp4Reg, output);
 
   masm.bind(ool->rejoin());
 }
@@ -8715,10 +8717,10 @@ void CodeGenerator::visitNewTypedArray(LNewTypedArray* lir) {
 void CodeGenerator::visitNewTypedArrayDynamicLength(
     LNewTypedArrayDynamicLength* lir) {
   Register lengthReg = ToRegister(lir->length());
-  Register objReg = ToRegister(lir->output());
+  Register output = ToRegister(lir->output());
   Register temp1Reg = ToRegister(lir->temp0());
   Register temp2Reg = ToRegister(lir->temp1());
-  LiveRegisterSet liveRegs = liveVolatileRegs(lir);
+  Register temp3Reg = ToRegister(lir->temp2());
 
   JSObject* templateObject = lir->mir()->templateObject();
   gc::Heap initialHeap = lir->mir()->initialHeap();
@@ -8728,16 +8730,15 @@ void CodeGenerator::visitNewTypedArrayDynamicLength(
   using Fn = TypedArrayObject* (*)(JSContext*, HandleObject, int32_t length);
   OutOfLineCode* ool = oolCallVM<Fn, NewTypedArrayWithTemplateAndLength>(
       lir, ArgList(ImmGCPtr(templateObject), lengthReg),
-      StoreRegisterTo(objReg));
-
-  // Volatile |lengthReg| is saved across the ABI call in |initTypedArraySlots|.
-  MOZ_ASSERT_IF(lengthReg.volatile_(), liveRegs.has(lengthReg));
+      StoreRegisterTo(output));
 
   TemplateObject templateObj(templateObject);
-  masm.createGCObject(objReg, temp1Reg, templateObj, initialHeap, ool->entry());
+  masm.createGCObject(temp3Reg, temp1Reg, templateObj, initialHeap,
+                      ool->entry());
 
-  masm.initTypedArraySlots(objReg, lengthReg, temp1Reg, temp2Reg, liveRegs,
+  masm.initTypedArraySlots(temp3Reg, lengthReg, temp1Reg, temp2Reg,
                            ool->entry(), ttemplate);
+  masm.mov(temp3Reg, output);
 
   masm.bind(ool->rejoin());
 }

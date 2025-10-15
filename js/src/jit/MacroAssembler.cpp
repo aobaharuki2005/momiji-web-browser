@@ -902,10 +902,15 @@ static std::pair<uint32_t, uint32_t> FindStartOfUninitializedAndUndefinedSlots(
 }
 
 void MacroAssembler::initTypedArraySlots(
-    Register obj, Register length, Register temp1, Register temp2,
-    LiveRegisterSet liveRegs, Label* fail,
+    Register obj, Register length, Register temp1, Register temp2, Label* fail,
     const FixedLengthTypedArrayObject* templateObj) {
   MOZ_ASSERT(!templateObj->hasBuffer());
+  MOZ_ASSERT(obj != length);
+  MOZ_ASSERT(obj != temp1);
+  MOZ_ASSERT(obj != temp2);
+  MOZ_ASSERT(length != temp1);
+  MOZ_ASSERT(length != temp2);
+  MOZ_ASSERT(temp1 != temp2);
 
   constexpr size_t dataSlotOffset = ArrayBufferViewObject::dataOffset();
   constexpr size_t dataOffset = dataSlotOffset + sizeof(HeapSlot);
@@ -926,13 +931,14 @@ void MacroAssembler::initTypedArraySlots(
   size_t inlineCapacity = templateObj->tenuredSizeOfThis() - dataOffset;
   movePtr(ImmWord(inlineCapacity), temp2);
 
-  // Ensure volatile |obj| is saved across the call.
+  // Ensure volatile |obj| and |length| are saved across the call.
   if (obj.volatile_()) {
-    liveRegs.addUnchecked(obj);
+    Push(obj);
   }
-
+  if (length.volatile_()) {
+    Push(length);
+  }
   // Allocate a buffer on the heap to store the data elements.
-  PushRegsInMask(liveRegs);
   using Fn =
       void (*)(JSContext*, FixedLengthTypedArrayObject*, int32_t, size_t);
   setupUnalignedABICall(temp1);
@@ -942,7 +948,12 @@ void MacroAssembler::initTypedArraySlots(
   passABIArg(length);
   passABIArg(temp2);
   callWithABI<Fn, AllocateAndInitTypedArrayBuffer>();
-  PopRegsInMask(liveRegs);
+  if (length.volatile_()) {
+    Pop(length);
+  }
+  if (obj.volatile_()) {
+    Pop(obj);
+  }
 
   // Fail when data slot is UndefinedValue.
   branchTestUndefined(Assembler::Equal, Address(obj, dataSlotOffset), fail);

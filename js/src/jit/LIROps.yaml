@@ -205,7 +205,8 @@
 
 - name: NewTypedArray
   result_type: WordSized
-  num_temps: 3
+  call_instruction: true
+  num_temps: 4
   mir_op: true
 
 - name: NewTypedArrayInline

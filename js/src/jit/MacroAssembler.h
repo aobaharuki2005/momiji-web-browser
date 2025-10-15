@@ -5623,8 +5623,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
                    const TemplateObject& templateObj, bool initContents = true);
 
   void initTypedArraySlots(Register obj, Register length, Register temp1,
-                           Register temp2, LiveRegisterSet liveRegs,
-                           Label* fail,
+                           Register temp2, Label* fail,
                            const FixedLengthTypedArrayObject* templateObj);
 
   void initTypedArraySlotsInline(

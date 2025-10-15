@@ -292,8 +292,9 @@
   guard: true
   # Throws if length is negative.
   alias_set: custom
+  possibly_calls: true
   generate_lir: true
-  lir_temps: 2
+  lir_temps: 3
 
 # Create a new TypedArray from an Array (or Array-like object) or a TypedArray.
 - name: NewTypedArrayFromArray
