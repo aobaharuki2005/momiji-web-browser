@@ -69,13 +69,6 @@ add_setup(async () => {
   Services.prefs.setBoolPref("network.localhost.prompt.testing", true);
   Services.prefs.setBoolPref("network.localnetwork.prompt.testing", true);
 
-  Services.prefs.setBoolPref(
-    "network.lna.local-network-to-localhost.skip-checks",
-    false
-  );
-
-  Services.prefs.setBoolPref("network.lna.websocket.enabled", true);
-
   // H1 Server
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/test_lna", pathHandler);
@@ -96,10 +89,6 @@ add_setup(async () => {
       Services.prefs.clearUserPref("network.lna.blocking.prompt.testing");
       Services.prefs.clearUserPref("network.localhost.prompt.testing.allow");
       Services.prefs.clearUserPref("network.localnetwork.prompt.testing.allow");
-      Services.prefs.clearUserPref(
-        "network.lna.local-network-to-localhost.skip-checks"
-      );
-      Services.prefs.clearUserPref("network.lna.websocket.enabled");
 
       Services.prefs.clearUserPref(
         "network.lna.address_space.private.override"
@@ -320,100 +309,4 @@ add_task(async function lna_blocking_tests_local_network() {
       Assert.equal(chan.protocolVersion, url === H1_URL ? "http/1.1" : "h2");
     }
   }
-  Services.prefs.clearUserPref("network.lna.address_space.private.override");
-});
-
-// Test the new network.lna.local-network-to-localhost.skip-checks preference
-add_task(async function lna_local_network_to_localhost_skip_checks() {
-  // Test cases: [skipPref, parentSpace, urlSuffix, expectedStatus, baseURL]
-  const skipTestCases = [
-    // Skip pref disabled (false) - existing behavior should be preserved
-    [
-      false,
-      Ci.nsILoadInfo.Private,
-      "/test_lna",
-      Cr.NS_ERROR_LOCAL_NETWORK_ACCESS_DENIED,
-      H1_URL,
-    ],
-    [
-      false,
-      Ci.nsILoadInfo.Private,
-      "/test_lna",
-      Cr.NS_ERROR_LOCAL_NETWORK_ACCESS_DENIED,
-      H2_URL,
-    ],
-    [
-      false,
-      Ci.nsILoadInfo.Public,
-      "/test_lna",
-      Cr.NS_ERROR_LOCAL_NETWORK_ACCESS_DENIED,
-      H1_URL,
-    ],
-    [
-      false,
-      Ci.nsILoadInfo.Public,
-      "/test_lna",
-      Cr.NS_ERROR_LOCAL_NETWORK_ACCESS_DENIED,
-      H2_URL,
-    ],
-
-    // Skip pref enabled (true) - new behavior: Private->Local allowed, Public->Local still blocked
-    [true, Ci.nsILoadInfo.Private, "/test_lna", Cr.NS_OK, H1_URL], // Private->Local now allowed
-    [true, Ci.nsILoadInfo.Private, "/test_lna", Cr.NS_OK, H2_URL], // Private->Local now allowed
-    [
-      true,
-      Ci.nsILoadInfo.Public,
-      "/test_lna",
-      Cr.NS_ERROR_LOCAL_NETWORK_ACCESS_DENIED,
-      H1_URL,
-    ], // Public->Local still blocked
-    [
-      true,
-      Ci.nsILoadInfo.Public,
-      "/test_lna",
-      Cr.NS_ERROR_LOCAL_NETWORK_ACCESS_DENIED,
-      H2_URL,
-    ], // Public->Local still blocked
-  ];
-
-  for (let [
-    skipPref,
-    parentSpace,
-    suffix,
-    expectedStatus,
-    url,
-  ] of skipTestCases) {
-    info(
-      `Testing skip pref: ${skipPref}, ${parentSpace} -> Local, expect: ${expectedStatus}`
-    );
-
-    // Set the new skip preference
-    Services.prefs.setBoolPref(
-      "network.lna.local-network-to-localhost.skip-checks",
-      skipPref
-    );
-
-    // Disable prompt simulation for clean testing (prompt should not affect skip logic)
-    Services.prefs.setBoolPref("network.localhost.prompt.testing.allow", false);
-
-    let chan = makeChannel(url + suffix);
-    chan.loadInfo.parentIpAddressSpace = parentSpace;
-    // Target is always Local (localhost) since we're testing localhost servers
-
-    let expectFailure = expectedStatus !== Cr.NS_OK ? CL_EXPECT_FAILURE : 0;
-
-    await new Promise(resolve => {
-      chan.asyncOpen(new ChannelListener(resolve, null, expectFailure));
-    });
-
-    Assert.equal(chan.status, expectedStatus);
-    if (expectedStatus === Cr.NS_OK) {
-      Assert.equal(chan.protocolVersion, url === H1_URL ? "http/1.1" : "h2");
-    }
-  }
-
-  // Cleanup
-  Services.prefs.clearUserPref(
-    "network.lna.local-network-to-localhost.skip-checks"
-  );
 });
