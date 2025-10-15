@@ -11130,7 +11130,7 @@
 # Whether to enable support for the math-shift CSS property.
 - name: mathml.math_shift.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to disable the MathML3 support for the mathvariant attribute. For
