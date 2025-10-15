@@ -3319,6 +3319,15 @@ nsCString& ScriptLoader::BytecodeMimeTypeFor(ScriptLoadRequest* aRequest) {
   return nsContentUtils::JSScriptBytecodeMimeType();
 }
 
+/* static */
+nsCString& ScriptLoader::BytecodeMimeTypeFor(
+    JS::loader::LoadedScript* aLoadedScript) {
+  if (aLoadedScript->IsModuleScript()) {
+    return nsContentUtils::JSModuleBytecodeMimeType();
+  }
+  return nsContentUtils::JSScriptBytecodeMimeType();
+}
+
 void ScriptLoader::MaybePrepareForCacheBeforeExecute(
     ScriptLoadRequest* aRequest, JS::Handle<JSScript*> aScript) {
   if (!aRequest->PassedConditionForEitherCache()) {
@@ -3635,59 +3644,23 @@ void ScriptLoader::UpdateCache() {
     MOZ_ASSERT(!IsWebExtensionRequest(request),
                "Bytecode for web extension content scrips is not cached");
 
-    RefPtr<JS::Stencil> stencil;
-    stencil = FinishCollectingDelazifications(aes.cx(), request);
-    if (mCache) {
-      if (stencil) {
-        MOZ_ASSERT_IF(request->IsCachedStencil(),
-                      stencil == request->GetStencil());
+    FinishCollectingDelazifications(aes.cx(), request);
 
-        // The bytecode encoding is performed only when there was no
-        // bytecode stored in the necko cache.
-        //
-        // TODO: Move this to SharedScriptCache.
-
-        if (request->IsMarkedForDiskCache() &&
-            request->getLoadedScript()->HasDiskCacheReference()) {
-          // If this is not a cached stencil, the nsICacheInfoChannel is stored
-          // when the this request receives a source text
-          // (See ScriptLoadHandler::OnStreamComplete),
-          // and also the SRI is calculated only in that case.
-          //
-          // If this is cached stencil, The nsICacheInfoChannel is stored when
-          // the cached request received a source text
-          // (See ScriptLoadHandler::OnStreamComplete),
-          // and also the SRI is calculated and stored into the cache only in
-          // that case.
-          EncodeBytecodeAndSave(
-              aes.cx(), request, request->getLoadedScript()->mCacheInfo,
-              BytecodeMimeTypeFor(request), request->SRIAndBytecode(), stencil);
-
-          // Even if this is cached stencil, the cached nsICacheInfoChannel can
-          // be used only once. We don't overwrite the bytecode cache.
-          request->getLoadedScript()->DropDiskCacheReference();
-
-          request->DropBytecode();
-        }
-      }
-      request->getLoadedScript()->DropDiskCacheReference();
-    } else {
-      if (stencil) {
-        MOZ_ASSERT(request->SRIAndBytecode().length() ==
-                   request->GetSRILength());
-
-        EncodeBytecodeAndSave(
-            aes.cx(), request, request->getLoadedScript()->mCacheInfo,
-            BytecodeMimeTypeFor(request), request->SRIAndBytecode(), stencil);
-
-        request->DropBytecode();
-      }
-      request->getLoadedScript()->DropDiskCacheReference();
+    // The bytecode encoding is performed only when there was no
+    // bytecode stored in the necko cache.
+    //
+    // TODO: Move this to SharedScriptCache.
+    if (request->IsMarkedForDiskCache() &&
+        request->getLoadedScript()->HasDiskCacheReference()) {
+      EncodeBytecodeAndSave(aes.cx(), request->getLoadedScript());
     }
+
+    request->DropBytecode();
+    request->getLoadedScript()->DropDiskCacheReference();
   }
 }
 
-already_AddRefed<JS::Stencil> ScriptLoader::FinishCollectingDelazifications(
+void ScriptLoader::FinishCollectingDelazifications(
     JSContext* aCx, ScriptLoadRequest* aRequest) {
   RefPtr<JS::Stencil> stencil;
   bool result;
@@ -3705,36 +3678,34 @@ already_AddRefed<JS::Stencil> ScriptLoader::FinishCollectingDelazifications(
   }
   if (!result) {
     JS_ClearPendingException(aCx);
-    return nullptr;
+    return;
   }
-  return stencil.forget();
+  MOZ_ASSERT(stencil == aRequest->GetStencil());
 }
 
 void ScriptLoader::EncodeBytecodeAndSave(
-    JSContext* aCx, ScriptLoadRequest* aRequest,
-    nsCOMPtr<nsICacheInfoChannel>& aCacheInfo, nsCString& aMimeType,
-    const JS::TranscodeBuffer& aSRI, JS::Stencil* aStencil) {
-  MOZ_ASSERT(aCacheInfo);
+    JSContext* aCx, JS::loader::LoadedScript* aLoadedScript) {
+  MOZ_ASSERT(aLoadedScript->HasDiskCacheReference());
+  MOZ_ASSERT(aLoadedScript->HasStencil());
 
-  size_t SRILength = aSRI.length();
+  size_t SRILength = aLoadedScript->SRIAndBytecode().length();
   MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(SRILength));
 
   JS::TranscodeBuffer SRIAndBytecode;
-  if (!SRIAndBytecode.appendAll(aSRI)) {
-    LOG(("LoadedScript (%p): Cannot allocate buffer",
-         aRequest->getLoadedScript()));
+  if (!SRIAndBytecode.appendAll(aLoadedScript->SRIAndBytecode())) {
+    LOG(("LoadedScript (%p): Cannot allocate buffer", aLoadedScript));
     return;
   }
 
-  JS::TranscodeResult result = JS::EncodeStencil(aCx, aStencil, SRIAndBytecode);
+  JS::TranscodeResult result =
+      JS::EncodeStencil(aCx, aLoadedScript->GetStencil(), SRIAndBytecode);
   if (result != JS::TranscodeResult::Ok) {
     // Encoding can be aborted for non-supported syntax (e.g. asm.js), or
     // any other internal error.
     // We don't care the error and just give up encoding.
     JS_ClearPendingException(aCx);
 
-    LOG(("LoadedScript (%p): Cannot serialize bytecode",
-         aRequest->getLoadedScript()));
+    LOG(("LoadedScript (%p): Cannot serialize bytecode", aLoadedScript));
     return;
   }
 
@@ -3748,7 +3719,7 @@ void ScriptLoader::EncodeBytecodeAndSave(
     LOG(
         ("LoadedScript (%p): Bytecode cache is too large to be decoded "
          "correctly.",
-         aRequest->getLoadedScript()));
+         aLoadedScript));
     return;
   }
 
@@ -3756,22 +3727,22 @@ void ScriptLoader::EncodeBytecodeAndSave(
   // might fail if the stream is already open by another request, in which
   // case, we just ignore the current one.
   nsCOMPtr<nsIAsyncOutputStream> output;
-  nsresult rv = aCacheInfo->OpenAlternativeOutputStream(
-      aMimeType, static_cast<int64_t>(compressedBytecode.length()),
+  nsresult rv = aLoadedScript->mCacheInfo->OpenAlternativeOutputStream(
+      BytecodeMimeTypeFor(aLoadedScript),
+      static_cast<int64_t>(compressedBytecode.length()),
       getter_AddRefs(output));
   if (NS_FAILED(rv)) {
     LOG(
         ("LoadedScript (%p): Cannot open bytecode cache (rv = %X, output "
          "= %p)",
-         aRequest->getLoadedScript(), unsigned(rv), output.get()));
+         aLoadedScript, unsigned(rv), output.get()));
     return;
   }
   MOZ_ASSERT(output);
 
   auto closeOutStream = mozilla::MakeScopeExit([&]() {
     rv = output->CloseWithStatus(rv);
-    LOG(("LoadedScript (%p): Closing (rv = %X)", aRequest->getLoadedScript(),
-         unsigned(rv)));
+    LOG(("LoadedScript (%p): Closing (rv = %X)", aLoadedScript, unsigned(rv)));
   });
 
   uint32_t n;
@@ -3780,8 +3751,7 @@ void ScriptLoader::EncodeBytecodeAndSave(
   LOG(
       ("LoadedScript (%p): Write bytecode cache (rv = %X, length = %u, "
        "written = %u)",
-       aRequest->getLoadedScript(), unsigned(rv),
-       unsigned(compressedBytecode.length()), n));
+       aLoadedScript, unsigned(rv), unsigned(compressedBytecode.length()), n));
   if (NS_FAILED(rv)) {
     return;
   }
