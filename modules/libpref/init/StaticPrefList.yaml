@@ -14483,7 +14483,7 @@
 # will automatically be blocked.
 - name: network.lna.block_trackers
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: false
   mirror: always
 
 # When this pref is true, top-level document navigation to local network addresses
