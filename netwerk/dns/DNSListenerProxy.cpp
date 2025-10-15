@@ -23,7 +23,7 @@ DNSListenerProxy::OnLookupComplete(nsICancelable* aRequest,
   RefPtr<DNSListenerProxy> self = this;
   nsCOMPtr<nsICancelable> request = aRequest;
   nsCOMPtr<nsIDNSRecord> record = aRecord;
-  return mTargetThread->Dispatch(
+  nsresult rv = mTargetThread->Dispatch(
       NS_NewRunnableFunction("DNSListenerProxy::OnLookupComplete",
                              [self, request, record, aStatus]() {
                                Unused << self->mListener->OnLookupComplete(
@@ -31,6 +31,10 @@ DNSListenerProxy::OnLookupComplete(nsICancelable* aRequest,
                                self->mListener = nullptr;
                              }),
       NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("DNSListenerProxy::OnLookupComplete dispatch failed.");
+  }
+  return rv;
 }
 
 }  // namespace net
