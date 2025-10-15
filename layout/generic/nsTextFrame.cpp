@@ -5802,11 +5802,14 @@ static bool ComputeDecorationTrim(
       aDecFrame->StyleTextReset()->mTextDecorationTrim;
   gfxFloat trimLeft, trimRight;
   if (cssTrim.IsAuto()) {
-    // Use the EM size divide by 8, or 1 dev pixel if this is too
-    // small to ensure that at least some separation occurs.
+    // Use a trim factor of 1/12.5, so we get 2px of trim (resulting in a 4px
+    // gap between adjacent lines) at font-size 25px.
+    constexpr gfxFloat kAutoTrimFactor = 1.0 / 12.5;
+    // Use the EM size multiplied by kAutoTrimFactor, with a minimum of one
+    // CSS pixel to ensure that at least some separation occurs.
     const gfxFloat scale = aPresCtx->CSSToDevPixelScale().scale;
     const nscoord autoDecorationTrim =
-        std::max(aMetrics.emHeight * 0.125, scale);
+        std::max(aMetrics.emHeight * kAutoTrimFactor, scale);
     trimLeft = autoDecorationTrim;
     trimRight = autoDecorationTrim;
   } else {
