@@ -117,7 +117,12 @@ class LoadedScript : public nsIMemoryReporter {
 
   // Type of data this instance holds, which is either provided by the nsChannel
   // or retrieved from the cache.
-  enum class DataType : uint8_t { eUnknown, eTextSource, eBytecode, eStencil };
+  enum class DataType : uint8_t {
+    eUnknown,
+    eTextSource,
+    eBytecode,
+    eCachedStencil
+  };
 
   // Use a vector backed by the JS allocator for script text so that contents
   // can be transferred in constant time to the JS engine, not copied in linear
@@ -132,7 +137,7 @@ class LoadedScript : public nsIMemoryReporter {
   bool IsTextSource() const { return mDataType == DataType::eTextSource; }
   bool IsSource() const { return IsTextSource(); }
   bool IsBytecode() const { return mDataType == DataType::eBytecode; }
-  bool IsStencil() const { return mDataType == DataType::eStencil; }
+  bool IsCachedStencil() const { return mDataType == DataType::eCachedStencil; }
 
   void SetUnknownDataType() {
     mDataType = DataType::eUnknown;
@@ -150,9 +155,9 @@ class LoadedScript : public nsIMemoryReporter {
     mDataType = DataType::eBytecode;
   }
 
-  void SetStencil(already_AddRefed<Stencil> aStencil) {
+  void SetCachedStencil(already_AddRefed<Stencil> aStencil) {
     SetUnknownDataType();
-    mDataType = DataType::eStencil;
+    mDataType = DataType::eCachedStencil;
     mStencil = aStencil;
   }
 
@@ -204,7 +209,7 @@ class LoadedScript : public nsIMemoryReporter {
   }
 
   bool CanHaveBytecode() const {
-    return IsBytecode() || IsSource() || IsStencil();
+    return IsBytecode() || IsSource() || IsCachedStencil();
   }
 
   TranscodeBuffer& SRIAndBytecode() {
@@ -237,7 +242,7 @@ class LoadedScript : public nsIMemoryReporter {
   }
 
   Stencil* GetStencil() const {
-    MOZ_ASSERT(IsStencil());
+    MOZ_ASSERT(IsCachedStencil());
     return mStencil;
   }
 
@@ -322,7 +327,7 @@ class LoadedScriptDelegate {
   bool IsTextSource() const { return GetLoadedScript()->IsTextSource(); }
   bool IsSource() const { return GetLoadedScript()->IsSource(); }
   bool IsBytecode() const { return GetLoadedScript()->IsBytecode(); }
-  bool IsStencil() const { return GetLoadedScript()->IsStencil(); }
+  bool IsCachedStencil() const { return GetLoadedScript()->IsCachedStencil(); }
 
   void SetUnknownDataType() { GetLoadedScript()->SetUnknownDataType(); }
 
@@ -332,8 +337,8 @@ class LoadedScriptDelegate {
 
   void SetBytecode() { GetLoadedScript()->SetBytecode(); }
 
-  void SetStencil(already_AddRefed<Stencil> aStencil) {
-    GetLoadedScript()->SetStencil(std::move(aStencil));
+  void SetCachedStencil(already_AddRefed<Stencil> aStencil) {
+    GetLoadedScript()->SetCachedStencil(std::move(aStencil));
   }
 
   bool IsUTF16Text() const { return GetLoadedScript()->IsUTF16Text(); }

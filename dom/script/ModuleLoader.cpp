@@ -95,7 +95,7 @@ bool ModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest, nsresult* aRvOut) {
 }
 
 nsresult ModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
-  if (aRequest->IsStencil()) {
+  if (aRequest->IsCachedStencil()) {
     GetScriptLoader()->EmulateNetworkEvents(aRequest);
     SetModuleFetchStarted(aRequest);
     return aRequest->OnFetchComplete(NS_OK);
@@ -235,7 +235,7 @@ nsresult ModuleLoader::CompileJavaScriptModule(
     JS::MutableHandle<JSObject*> aModuleOut) {
   GetScriptLoader()->CalculateCacheFlag(aRequest);
 
-  if (aRequest->IsStencil()) {
+  if (aRequest->IsCachedStencil()) {
     JS::InstantiateOptions instantiateOptions(aOptions);
     RefPtr<JS::Stencil> stencil = aRequest->GetStencil();
     aModuleOut.set(
