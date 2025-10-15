@@ -21,11 +21,22 @@ pyatspiFile = subprocess.check_output(
     ),
     encoding="utf-8",
 ).rstrip()
+giFile = subprocess.check_output(
+    (
+        os.path.join(sys.base_prefix, "bin", "python3"),
+        "-c",
+        "import gi; print(gi.__file__)",
+    ),
+    encoding="utf-8",
+).rstrip()
 sys.path.append(os.path.dirname(os.path.dirname(pyatspiFile)))
+sys.path.append(os.path.dirname(os.path.dirname(giFile)))
 import pyatspi
 
 sys.path.pop()
+sys.path.pop()
 del pyatspiFile
+del giFile
 
 
 def setup():
