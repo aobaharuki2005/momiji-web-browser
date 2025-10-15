@@ -526,8 +526,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   CacheBehavior GetCacheBehavior(ScriptLoadRequest* aRequest);
 
-  void TryCacheRequest(ScriptLoadRequest* aRequest,
-                       RefPtr<JS::Stencil>& aStencil);
+  void TryCacheRequest(ScriptLoadRequest* aRequest);
 
   JS::loader::ScriptLoadRequest* LookupPreloadRequest(
       nsIScriptElement* aElement, JS::loader::ScriptKind aScriptKind,
@@ -695,7 +694,6 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   void InstantiateClassicScriptFromMaybeEncodedSource(
       JSContext* aCx, JS::CompileOptions& aCompileOptions,
       ScriptLoadRequest* aRequest, JS::MutableHandle<JSScript*> aScript,
-      RefPtr<JS::Stencil>& aStencilOut,
       JS::Handle<JS::Value> aDebuggerPrivateValue,
       JS::Handle<JSScript*> aDebuggerIntroductionScript, ErrorResult& aRv);
 

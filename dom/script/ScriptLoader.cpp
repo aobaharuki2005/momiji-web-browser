@@ -3065,7 +3065,6 @@ static void InstantiateStencil(
 void ScriptLoader::InstantiateClassicScriptFromMaybeEncodedSource(
     JSContext* aCx, JS::CompileOptions& aCompileOptions,
     ScriptLoadRequest* aRequest, JS::MutableHandle<JSScript*> aScript,
-    RefPtr<JS::Stencil>& aStencilOut,
     JS::Handle<JS::Value> aDebuggerPrivateValue,
     JS::Handle<JSScript*> aDebuggerIntroductionScript, ErrorResult& aRv) {
   nsAutoCString profilerLabelString;
@@ -3086,7 +3085,8 @@ void ScriptLoader::InstantiateClassicScriptFromMaybeEncodedSource(
         aRv.NoteJSContextException(aCx);
         return;
       }
-      aStencilOut = stencil.get();
+
+      aRequest->SetStencil(stencil);
 
       InstantiateStencil(aCx, aCompileOptions, stencil, aScript,
                          aDebuggerPrivateValue, aDebuggerIntroductionScript,
@@ -3099,9 +3099,10 @@ void ScriptLoader::InstantiateClassicScriptFromMaybeEncodedSource(
 
       RefPtr<JS::Stencil> stencil;
       Decode(aCx, aCompileOptions, aRequest->Bytecode(), stencil, aRv);
-      aStencilOut = stencil.get();
 
       if (stencil) {
+        aRequest->SetStencil(stencil);
+
         InstantiateStencil(aCx, aCompileOptions, stencil, aScript,
                            aDebuggerPrivateValue, aDebuggerIntroductionScript,
                            aRv);
@@ -3135,7 +3136,8 @@ void ScriptLoader::InstantiateClassicScriptFromMaybeEncodedSource(
       aRv.NoteJSContextException(aCx);
       return;
     }
-    aStencilOut = stencil.get();
+
+    aRequest->SetStencil(stencil);
 
     InstantiateStencil(aCx, aCompileOptions, stencil, aScript,
                        aDebuggerPrivateValue, aDebuggerIntroductionScript, aRv,
@@ -3163,9 +3165,10 @@ void ScriptLoader::InstantiateClassicScriptFromMaybeEncodedSource(
 
       MOZ_ASSERT(!maybeSource.empty());
       maybeSource.mapNonEmpty(compile);
-      aStencilOut = stencil.get();
 
       if (stencil) {
+        aRequest->SetStencil(stencil);
+
         InstantiateStencil(aCx, aCompileOptions, stencil, aScript,
                            aDebuggerPrivateValue, aDebuggerIntroductionScript,
                            erv, /* aStorage = */ nullptr,
@@ -3222,15 +3225,14 @@ void ScriptLoader::InstantiateClassicScriptFromAny(
     return;
   }
 
-  RefPtr<JS::Stencil> stencil;
   InstantiateClassicScriptFromMaybeEncodedSource(
-      aCx, aCompileOptions, aRequest, aScript, stencil, aDebuggerPrivateValue,
+      aCx, aCompileOptions, aRequest, aScript, aDebuggerPrivateValue,
       aDebuggerIntroductionScript, aRv);
   if (aRv.Failed()) {
     return;
   }
 
-  TryCacheRequest(aRequest, stencil);
+  TryCacheRequest(aRequest);
 }
 
 ScriptLoader::CacheBehavior ScriptLoader::GetCacheBehavior(
@@ -3276,24 +3278,26 @@ ScriptLoader::CacheBehavior ScriptLoader::GetCacheBehavior(
   return CacheBehavior::Insert;
 }
 
-void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest,
-                                   RefPtr<JS::Stencil>& aStencil) {
+void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->HasStencil());
   CacheBehavior cacheBehavior = GetCacheBehavior(aRequest);
 
   if (cacheBehavior == CacheBehavior::DoNothing) {
+    if (!aRequest->PassedConditionForDiskCache()) {
+      aRequest->ClearStencil();
+    }
     return;
   }
 
   MOZ_ASSERT(mCache);
-  MOZ_ASSERT(aStencil);
 
-  if (!JS::IsStencilCacheable(aStencil)) {
+  if (!JS::IsStencilCacheable(aRequest->GetStencil())) {
     // If the stencil is not compatible with the cache (e.g. contains asm.js),
     // this should also evict any the existing cache if any.
     cacheBehavior = CacheBehavior::Evict;
   }
 
-  aRequest->SetCachedStencil(aStencil.forget());
+  aRequest->ConvertToCachedStencil();
 
   if (cacheBehavior == CacheBehavior::Insert) {
     auto loadData = MakeRefPtr<ScriptLoadData>(this, aRequest);
@@ -3309,6 +3313,10 @@ void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest,
     mCache->Evict(key);
     LOG(("ScriptLoader (%p): Evicting in-memory cache for %s.", this,
          aRequest->mURI->GetSpecOrDefault().get()));
+
+    if (!aRequest->PassedConditionForDiskCache()) {
+      aRequest->ClearStencil();
+    }
   }
 }
 

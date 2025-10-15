@@ -262,6 +262,8 @@ nsresult ModuleLoader::CompileJavaScriptModule(
       return NS_ERROR_FAILURE;
     }
 
+    aRequest->SetStencil(stencil);
+
     JS::InstantiateOptions instantiateOptions(aOptions);
     aModuleOut.set(JS::InstantiateModuleStencil(aCx, instantiateOptions,
                                                 stencil, &storage));
@@ -278,7 +280,7 @@ nsresult ModuleLoader::CompileJavaScriptModule(
       MOZ_ASSERT(!alreadyStarted);
     }
 
-    GetScriptLoader()->TryCacheRequest(aRequest, stencil);
+    GetScriptLoader()->TryCacheRequest(aRequest);
 
     return NS_OK;
   }
@@ -311,6 +313,8 @@ nsresult ModuleLoader::CompileJavaScriptModule(
     return NS_ERROR_FAILURE;
   }
 
+  aRequest->SetStencil(stencil);
+
   JS::InstantiateOptions instantiateOptions(aOptions);
   aModuleOut.set(
       JS::InstantiateModuleStencil(aCx, instantiateOptions, stencil));
@@ -327,7 +331,7 @@ nsresult ModuleLoader::CompileJavaScriptModule(
     MOZ_ASSERT(!alreadyStarted);
   }
 
-  GetScriptLoader()->TryCacheRequest(aRequest, stencil);
+  GetScriptLoader()->TryCacheRequest(aRequest);
 
   return NS_OK;
 }
