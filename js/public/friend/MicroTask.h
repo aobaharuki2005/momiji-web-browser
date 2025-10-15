@@ -61,7 +61,7 @@ namespace JS {
 // sees fit.
 using MicroTask = JS::Value;
 
-JS_PUBLIC_API bool IsJSMicroTask(Handle<JS::Value> hv);
+JS_PUBLIC_API bool IsJSMicroTask(const JS::Value& hv);
 
 // Run a MicroTask that is known to be a JS MicroTask. This will crash
 // if provided an invalid task kind.
