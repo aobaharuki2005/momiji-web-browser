@@ -11112,7 +11112,7 @@
 # the writing mode is right to left.
 - name: mathml.rtl_operator_mirroring.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to disable fallback for mathvariant=italic/bold/bold-italic via
