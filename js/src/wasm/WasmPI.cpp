@@ -53,6 +53,10 @@
 #  include "jit/riscv64/Simulator-riscv64.h"
 #endif
 
+#ifdef JS_CODEGEN_LOONG64
+#  include "jit/loong64/Simulator-loong64.h"
+#endif
+
 #ifdef XP_WIN
 #  include "util/WindowsWrapper.h"
 #endif
@@ -132,7 +136,7 @@ void SuspenderObjectData::switchSimulatorToSuspendable() {
 }
 #  endif
 
-#  ifdef JS_SIMULATOR_RISCV64
+#  if defined(JS_SIMULATOR_RISCV64) || defined(JS_SIMULATOR_LOONG64)
 void SuspenderObjectData::switchSimulatorToMain() {
   suspendableSP_ = (void*)Simulator::Current()->getRegister(Simulator::sp);
   suspendableFP_ = (void*)Simulator::Current()->getRegister(Simulator::fp);
@@ -573,7 +577,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
 
 #  ifdef JS_SIMULATOR
 #    if defined(JS_SIMULATOR_ARM64) || defined(JS_SIMULATOR_ARM) || \
-        defined(JS_SIMULATOR_RISCV64)
+        defined(JS_SIMULATOR_RISCV64) || defined(JS_SIMULATOR_LOONG64)
   // The simulator is using its own stack, however switching is needed for
   // virtual registers.
   stacks->switchSimulatorToMain();
