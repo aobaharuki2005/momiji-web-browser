@@ -428,6 +428,7 @@ private fun MultiSelectBanner(
         },
         expandedHeight = ROW_HEIGHT_DP.dp,
         colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             actionIconContentColor = buttonTint,
         ),
     )
