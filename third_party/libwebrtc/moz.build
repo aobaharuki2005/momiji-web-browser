@@ -498,6 +498,7 @@ DIRS += [
     "/third_party/libwebrtc/video/corruption_detection/generic_mapping_functions_gn",
     "/third_party/libwebrtc/video/corruption_detection/halton_frame_sampler_gn",
     "/third_party/libwebrtc/video/corruption_detection/halton_sequence_gn",
+    "/third_party/libwebrtc/video/corruption_detection/video_frame_sampler_gn",
     "/third_party/libwebrtc/video/decode_synchronizer_gn",
     "/third_party/libwebrtc/video/frame_cadence_adapter_gn",
     "/third_party/libwebrtc/video/frame_decode_scheduler_gn",
