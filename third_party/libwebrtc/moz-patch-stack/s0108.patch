@@ -16,7 +16,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4527c41ef71d7683c
  4 files changed, 24 insertions(+), 12 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index a89b2e964b..c287c476df 100644
+index 2e315c79c4..174ce0d2f4 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -521,6 +521,9 @@ if (!rtc_build_ssl) {
@@ -29,7 +29,7 @@ index a89b2e964b..c287c476df 100644
    }
  }
  
-@@ -616,6 +619,7 @@ if (!build_with_chromium) {
+@@ -615,6 +618,7 @@ if (!build_with_chromium) {
          "api/environment:environment_factory",
          "api/video:video_frame",
          "api/video:video_rtp_headers",
@@ -116,7 +116,7 @@ index b58cb6ba9a..4299453d22 100644
    public_configs = []
    if (!build_with_chromium) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 80e93e96ac..daed1b405e 100644
+index 9653fd651f..82b050a559 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -1533,6 +1533,7 @@ rtc_source_set("ssl_header") {

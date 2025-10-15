@@ -1383,7 +1383,7 @@ index d5ce6105a3..8bfd24de2b 100644
    const bool enable_svc_for_simulcast_;
    std::optional<SimulcastToSvcConverter> simulcast_to_svc_converter_;
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index fdf70e2756..9e5dfe3c6e 100644
+index 62268d946d..9744edba44 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -449,6 +449,12 @@ rtc_library("logging") {
@@ -1446,7 +1446,7 @@ index f157205e7d..fe82a4bb4c 100644
  // The list of logging streams currently configured.
  // Note: we explicitly do not clean this up, because of the uncertain ordering
 diff --git a/rtc_base/logging.h b/rtc_base/logging.h
-index c24826dde4..937e0edd30 100644
+index 0023684501..a04fc4b2ed 100644
 --- a/rtc_base/logging.h
 +++ b/rtc_base/logging.h
 @@ -554,6 +554,12 @@ class LogMessage {

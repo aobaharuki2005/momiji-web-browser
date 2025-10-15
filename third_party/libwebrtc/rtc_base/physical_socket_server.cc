@@ -69,8 +69,6 @@
 
 #if defined(WEBRTC_WIN)
 #define LAST_SYSTEM_ERROR (::GetLastError())
-#elif defined(__native_client__) && __native_client__
-#define LAST_SYSTEM_ERROR (0)
 #elif defined(WEBRTC_POSIX)
 #define LAST_SYSTEM_ERROR (errno)
 #endif  // WEBRTC_WIN
@@ -80,7 +78,7 @@
 typedef void* SockOptArg;
 #endif  // WEBRTC_POSIX
 
-#if defined(WEBRTC_POSIX) && !defined(WEBRTC_MAC) && !defined(WEBRTC_BSD) && !defined(__native_client__)
+#if defined(WEBRTC_POSIX) && !defined(WEBRTC_MAC) && !defined(WEBRTC_BSD)
 #if defined(WEBRTC_LINUX)
 #include <linux/sockios.h>
 #endif
@@ -703,7 +701,7 @@ int PhysicalSocket::TranslateOption(Option opt, int* slevel, int* sopt) {
       *slevel = IPPROTO_IP;
       *sopt = IP_DONTFRAGMENT;
       break;
-#elif defined(WEBRTC_MAC) || defined(WEBRTC_BSD) || defined(__native_client__)
+#elif defined(WEBRTC_MAC) || defined(WEBRTC_BSD)
       RTC_LOG(LS_WARNING) << "Socket::OPT_DONTFRAGMENT not supported.";
       return -1;
 #elif defined(WEBRTC_POSIX)
