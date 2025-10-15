@@ -13,6 +13,8 @@ prefs = [
   "security.allow_eval_with_system_principal=true"
 ]
 
+["browser_action.js"]
+
 ["browser_atspi_interfaces.js"]
 
 ["browser_groupPosition.js"]
