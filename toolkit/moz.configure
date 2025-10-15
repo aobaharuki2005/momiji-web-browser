@@ -1208,9 +1208,15 @@ option(
     "--enable-webrender-debugger", help="Build the websocket debug server in WebRender"
 )
 
-set_config(
-    "MOZ_WEBRENDER_DEBUGGER", depends_if("--enable-webrender-debugger")(lambda _: True)
-)
+
+@depends("--enable-webrender-debugger")
+def webrender_debugger(value):
+    if value:
+        return True
+
+
+set_config("MOZ_WEBRENDER_DEBUGGER", webrender_debugger)
+set_define("MOZ_WEBRENDER_DEBUGGER", webrender_debugger)
 
 # Additional system headers defined at the application level
 # ==============================================================

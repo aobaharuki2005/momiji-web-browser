@@ -7616,7 +7616,11 @@
 
 - name: gfx.webrender.debug.enable-capture
   type: bool
+#ifdef MOZ_WEBRENDER_DEBUGGER
+  value: true
+#else
   value: false
+#endif
   mirror: once
 
 - name: gfx.webrender.debug.dl.dump-parent
