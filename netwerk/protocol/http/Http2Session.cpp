@@ -290,10 +290,9 @@ Http2Session::~Http2Session() {
 
   Shutdown(NS_OK);
 
-  RefPtr<nsHttpConnectionInfo> ci = ConnectionInfo();
-  if (mTrrStreams && ci) {
+  if (mTrrStreams) {
     mozilla::glean::networking::trr_request_count_per_conn
-        .Get(nsPrintfCString("%s_h2", ci->Origin()))
+        .Get(nsPrintfCString("%s_h2", mTrrHost.get()))
         .Add(static_cast<int32_t>(mTrrStreams));
   }
   glean::spdy::parallel_streams.AccumulateSingleSample(mConcurrentHighWater);
@@ -545,6 +544,9 @@ uint32_t Http2Session::RegisterStreamID(Http2StreamBase* stream,
     // don't count push streams here
     RefPtr<nsHttpConnectionInfo> ci(stream->ConnectionInfo());
     if (ci && ci->GetIsTrrServiceChannel()) {
+      if (mTrrHost.IsEmpty()) {
+        mTrrHost = ci->GetOrigin();
+      }
       IncrementTrrCounter();
     }
   }

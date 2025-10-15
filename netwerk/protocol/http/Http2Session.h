@@ -655,6 +655,7 @@ class Http2Session final : public ASpdySession,
  private:
   TimeStamp mLastTRRResponseTime;  // Time of the last successful TRR response
   uint32_t mTrrStreams;
+  nsCString mTrrHost;
 
   // Whether we allow websockets, based on a pref
   bool mEnableWebsockets = false;
