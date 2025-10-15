@@ -2636,6 +2636,9 @@ pref("browser.tabs.fadeOutExplicitlyUnloadedTabs", true);
 // they are explicitly unloaded) are faded out in the tab bar.
 pref("browser.tabs.fadeOutUnloadedTabs", false);
 
+// Whether tabs can be "split" or displayed side by side at once.
+pref("browser.tabs.splitView.enabled", false);
+
 // If true, unprivileged extensions may use experimental APIs on
 // nightly and developer edition.
 pref("extensions.experiments.enabled", false);
