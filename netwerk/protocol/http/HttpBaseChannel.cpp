@@ -1563,8 +1563,8 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
       }
       if (from.EqualsLiteral("dcb") || from.EqualsLiteral("dcz")) {
         MOZ_ASSERT(XRE_IsParentProcess());
-        removeEncodings = true;
       }
+      removeEncodings = true;
       nextListener = converter;
     } else {
       if (val) {
@@ -1584,9 +1584,9 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
   // if we need to remove any.
   // This double compression of course is silly, but supported by the spec.
   if (removeEncodings) {
-    // if we have dcb or dcz, all content-encodings in the header should
-    // be removed as we're decompressing before the tee in the parent
-    // process
+    // if we have dcb or dcz or if this is Use-As-Dictionary, all
+    // content-encodings in the header should be removed as we're
+    // decompressing before the tee in the parent process
     LOG(("Changing Content-Encoding from '%s' to ''", contentEncoding.get()));
     // Can't use SetHeader; we need to overwrite the current value
     rv = mResponseHead->SetHeaderOverride(nsHttp::Content_Encoding, ""_ns);
