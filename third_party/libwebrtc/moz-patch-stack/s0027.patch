@@ -203,7 +203,7 @@ index 3357c2dcdf..7131daa82c 100644
      }
  
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index d584d4591e..bf3dea8da6 100644
+index 036a23ca9b..ac2234a065 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -44,6 +44,9 @@ rtc_library("enable_media") {
@@ -341,7 +341,7 @@ index d584d4591e..bf3dea8da6 100644
    sources = [
      "ice_transport_factory.cc",
 @@ -1028,6 +1062,7 @@ rtc_library("ice_transport_factory") {
-     "rtc_event_log:rtc_event_log",
+     "rtc_event_log",
    ]
  }
 +}
@@ -458,7 +458,7 @@ index 71778f52ec..7db75d5fd3 100644
  rtc_library("default_task_queue_factory") {
    visibility = [ "*" ]
 diff --git a/api/transport/BUILD.gn b/api/transport/BUILD.gn
-index 11b03496be..3cc8835a5e 100644
+index b99d40378d..c017173a7e 100644
 --- a/api/transport/BUILD.gn
 +++ b/api/transport/BUILD.gn
 @@ -108,6 +108,7 @@ rtc_source_set("sctp_transport_factory_interface") {
@@ -549,7 +549,7 @@ index 88890be798..c9aefc297b 100644
  #include "rtc_base/memory/aligned_malloc.h"
  
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 3c1647e0b7..d70b62b608 100644
+index 98a675a7c9..6cfbf1b9f3 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -77,7 +77,7 @@ rtc_library("rtc_media_base") {
@@ -723,7 +723,7 @@ index 6d4d4a2363..316408a9b3 100644
      : content_hint(VideoTrackInterface::ContentHint::kNone) {}
  VideoOptions::~VideoOptions() = default;
 diff --git a/modules/audio_coding/BUILD.gn b/modules/audio_coding/BUILD.gn
-index bce09e0f81..12a9566a8f 100644
+index 9649f0c940..51570e8c95 100644
 --- a/modules/audio_coding/BUILD.gn
 +++ b/modules/audio_coding/BUILD.gn
 @@ -362,7 +362,7 @@ rtc_library("webrtc_opus_wrapper") {
@@ -736,7 +736,7 @@ index bce09e0f81..12a9566a8f 100644
  }
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index 66f69fca39..baecf90aa8 100644
+index a26de6be15..a90fac2f4c 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -30,6 +30,7 @@ rtc_source_set("audio_device_default") {
@@ -1199,7 +1199,7 @@ index c1181618e9..4a772795ed 100644
      deps += [
        "..:logging",
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index b07102a7d5..4b7bd27de2 100644
+index 9edc60ad74..7bd39bd85b 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -258,6 +258,7 @@ rtc_library("audio_test_common") {
@@ -1258,7 +1258,7 @@ index b07102a7d5..4b7bd27de2 100644
  rtc_library("call_config_utils") {
    testonly = true
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index c1acd56382..7abdf541f8 100644
+index b9bbf1c3b9..a7aba5f8c9 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {
