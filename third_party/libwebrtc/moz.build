@@ -60,6 +60,7 @@ DIRS += [
     "/third_party/libwebrtc/api/metronome/metronome_gn",
     "/third_party/libwebrtc/api/neteq/default_neteq_controller_factory_gn",
     "/third_party/libwebrtc/api/neteq/default_neteq_factory_gn",
+    "/third_party/libwebrtc/api/neteq/delay_manager_api_gn",
     "/third_party/libwebrtc/api/neteq/neteq_api_gn",
     "/third_party/libwebrtc/api/neteq/neteq_controller_api_gn",
     "/third_party/libwebrtc/api/neteq/tick_timer_gn",
