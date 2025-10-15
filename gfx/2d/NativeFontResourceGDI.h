@@ -28,8 +28,8 @@ class NativeFontResourceGDI final : public NativeFontResource {
    * @param aDataLength length of data.
    * @return Referenced NativeFontResourceGDI or nullptr if invalid.
    */
-  static already_AddRefed<NativeFontResourceGDI> Create(uint8_t* aFontData,
-                                                        uint32_t aDataLength);
+  static already_AddRefed<NativeFontResourceGDI> Create(
+      const uint8_t* aFontData, uint32_t aDataLength);
 
   virtual ~NativeFontResourceGDI();
 

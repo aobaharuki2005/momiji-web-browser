@@ -542,7 +542,8 @@ uint32_t Factory::GetMaxSurfaceSize(BackendType aType) {
 }
 
 already_AddRefed<NativeFontResource> Factory::CreateNativeFontResource(
-    uint8_t* aData, uint32_t aSize, FontType aFontType, void* aFontContext) {
+    const uint8_t* aData, uint32_t aSize, FontType aFontType,
+    void* aFontContext) {
   switch (aFontType) {
 #ifdef WIN32
     case FontType::DWRITE:

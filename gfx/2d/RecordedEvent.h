@@ -87,7 +87,6 @@ struct ReferencePtr {
 
 struct RecordedFontDetails {
   uint64_t fontDataKey = 0;
-  uint32_t size = 0;
   uint32_t index = 0;
 };
 
@@ -541,21 +540,21 @@ class RecordedStrokeOptionsMixin {
   UniquePtr<Float[]> mDashPatternStorage;
 };
 
-template <typename T>
+template <typename T, typename Z = size_t>
 class RecordedEventArray {
  public:
   T* data() { return mData.get(); }
   const T* data() const { return mData.get(); }
-  size_t size() const { return mSize; }
+  Z size() const { return mSize; }
   bool empty() const { return !mSize; }
 
-  void Assign(const T* aData, size_t aSize) {
+  void Assign(const T* aData, Z aSize) {
     mSize = aSize;
     mData = MakeUnique<T[]>(aSize);
     PodCopy(mData.get(), aData, aSize);
   }
 
-  bool TryAlloc(size_t aSize) {
+  bool TryAlloc(Z aSize) {
     if (mSize > 0) {
       MOZ_ASSERT_UNREACHABLE();
       return false;
@@ -568,6 +567,14 @@ class RecordedEventArray {
     return true;
   }
 
+  bool TryAssign(const T* aData, Z aSize) {
+    if (!TryAlloc(aSize)) {
+      return false;
+    }
+    PodCopy(mData.get(), aData, aSize);
+    return true;
+  }
+
   template <typename S>
   void Write(S& aStream) const {
     if (mSize) {
@@ -577,7 +584,7 @@ class RecordedEventArray {
   }
 
   template <typename S>
-  bool Read(S& aStream, size_t aSize) {
+  bool Read(S& aStream, Z aSize) {
     if (!aStream.good() || !TryAlloc(aSize)) {
       return false;
     }
@@ -595,7 +602,7 @@ class RecordedEventArray {
   }
 
  protected:
-  size_t mSize = 0;
+  Z mSize = 0;
   UniquePtr<T[]> mData;
 };
 
