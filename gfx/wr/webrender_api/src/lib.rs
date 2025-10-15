@@ -714,8 +714,6 @@ bitflags! {
         const TEXTURE_CACHE_DBG_CLEAR_EVICTED = 1 << 10;
         /// Show picture caching debug overlay
         const PICTURE_CACHING_DBG   = 1 << 11;
-        /// Highlight all primitives with colors based on kind.
-        const PRIMITIVE_DBG = 1 << 12;
         /// Draw a zoom widget showing part of the framebuffer zoomed in.
         const ZOOM_DBG = 1 << 13;
         /// Scale the debug renderer down for a smaller screen. This will disrupt

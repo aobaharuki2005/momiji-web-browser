@@ -1463,7 +1463,7 @@ impl Renderer {
             DebugFlags::EPOCHS |
             DebugFlags::GPU_CACHE_DBG |
             DebugFlags::PICTURE_CACHING_DBG |
-            DebugFlags::PRIMITIVE_DBG |
+            DebugFlags::PICTURE_BORDERS |
             DebugFlags::ZOOM_DBG |
             DebugFlags::WINDOW_VISIBILITY_DBG
         );
