@@ -3435,6 +3435,7 @@ pref("browser.backup.disabled-on-idle-backup-retry", false);
 // staging directories/archives are ones that the file system prevents us from
 // removing for any reason.
 pref("browser.backup.max-num-unremovable-staging-items", 5);
+pref("browser.backup.scheduled.user-disabled", false);
 
 #ifdef NIGHTLY_BUILD
   // Pref to enable the new profiles
