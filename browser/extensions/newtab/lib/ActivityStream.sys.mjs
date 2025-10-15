@@ -27,6 +27,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FaviconFeed: "resource://newtab/lib/FaviconFeed.sys.mjs",
   HighlightsFeed: "resource://newtab/lib/HighlightsFeed.sys.mjs",
   ListsFeed: "resource://newtab/lib/Widgets/ListsFeed.sys.mjs",
+  NewTabAttributionFeed: "resource://newtab/lib/NewTabAttributionFeed.sys.mjs",
   NewTabInit: "resource://newtab/lib/NewTabInit.sys.mjs",
   NewTabMessaging: "resource://newtab/lib/NewTabMessaging.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
@@ -748,6 +749,13 @@ export const PREFS_CONFIG = new Map([
     {
       title:
         "Boolean flag to enable logging shortcuts interactions even if enabled is off",
+      value: false,
+    },
+  ],
+  [
+    "discoverystream.attribution.enabled",
+    {
+      title: "Boolean flag to enable newtab attribution",
       value: false,
     },
   ],
@@ -1505,6 +1513,12 @@ const FEEDS_DATA = [
     factory: () => new lazy.SmartShortcutsFeed(),
     title:
       "Handles generating and caching an interest vector for shortcuts personalization",
+    value: true,
+  },
+  {
+    name: "newtabattributionfeed",
+    factory: () => new lazy.NewTabAttributionFeed(),
+    title: "Handles a local DB for story and shortcuts clicks and impressions",
     value: true,
   },
   {
