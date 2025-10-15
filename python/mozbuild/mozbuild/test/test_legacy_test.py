@@ -11,6 +11,7 @@ import mozversioncontrol
 allowlist = {
     "ipc/ipdl/test/ipdl/moz.build",
     "js/src/moz.build",
+    "js/src/build/moz.build",
     "toolkit/xre/test/win/moz.build",
 }
 
