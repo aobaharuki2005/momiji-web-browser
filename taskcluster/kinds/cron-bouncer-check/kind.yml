@@ -66,16 +66,8 @@ tasks:
             product: devedition
             job-name: devedition-bouncer-check
         run:
-            config:
-                by-project:
-                    mozilla-beta:
-                        - releases/bouncer_firefox_devedition.py
-                    default:
-                        - releases/dev_bouncer_firefox_devedition.py
-            product-field:
-                by-project:
-                    mozilla-beta: LATEST_FIREFOX_RELEASED_DEVEL_VERSION
-                    default: LATEST_FIREFOX_DEVEL_VERSION
+            config: releases/bouncer_firefox_devedition.py
+            product-field: FIREFOX_DEVEDITION
             products-url: https://product-details.mozilla.org/1.0/firefox_versions.json
         treeherder:
             platform: devedition-release/opt
