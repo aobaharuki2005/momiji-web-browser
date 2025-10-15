@@ -12,6 +12,7 @@ allowlist = {
     "ipc/ipdl/test/ipdl/moz.build",
     "js/src/moz.build",
     "js/src/build/moz.build",
+    "memory/replace/logalloc/replay/moz.build",
     "toolkit/xre/test/win/moz.build",
 }
 
