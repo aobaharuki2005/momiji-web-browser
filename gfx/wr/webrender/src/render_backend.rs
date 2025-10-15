@@ -1155,9 +1155,13 @@ impl RenderBackend {
                             .cloned()
                             .collect();
                         for document_id in documents {
+                            let mut invalidation_config = false;
                             if let Some(doc) = self.documents.get_mut(&document_id) {
                                 doc.frame_is_valid = false;
+                                invalidation_config = doc.scene.config.force_invalidation;
+                                doc.scene.config.force_invalidation = true;
                             }
+
                             self.update_document(
                                 document_id,
                                 Vec::default(),
@@ -1171,7 +1175,12 @@ impl RenderBackend {
                                 true,
                                 frame_counter,
                                 false,
-                                None);
+                                None,
+                            );
+
+                            if let Some(doc) = self.documents.get_mut(&document_id) {
+                                doc.scene.config.force_invalidation = invalidation_config;
+                            }
                         }
                         self.bookkeep_after_frames();
 
