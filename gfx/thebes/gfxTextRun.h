@@ -230,7 +230,7 @@ class gfxTextRun : public gfxShapedText {
 
     // Returns the extra width that will be consumed by a hyphen. This should
     // be constant for a given textrun.
-    virtual gfxFloat GetHyphenWidth() const = 0;
+    virtual nscoord GetHyphenWidth() const = 0;
 
     // Return orientation flags to be used when creating a hyphen textrun.
     virtual mozilla::gfx::ShapedTextFlags GetShapedTextFlags() const = 0;

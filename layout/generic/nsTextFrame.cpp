@@ -272,11 +272,11 @@ TextAutospace::BoundarySet TextAutospace::InitBoundarySet(
 }  // namespace mozilla
 
 struct TabWidth {
-  TabWidth(uint32_t aOffset, uint32_t aWidth)
-      : mOffset(aOffset), mWidth(float(aWidth)) {}
+  TabWidth(uint32_t aOffset, nscoord aWidth)
+      : mOffset(aOffset), mWidth(aWidth) {}
 
   uint32_t mOffset;  // DOM offset relative to the current frame's offset.
-  float mWidth;      // extra space to be added at this position (in app units)
+  nscoord mWidth;    // extra space to be added at this position (in app units)
 };
 
 struct nsTextFrame::TabWidthStore {
@@ -3464,7 +3464,7 @@ nsTextFrame::PropertyProvider::PropertyProvider(
       mLength(aLength),
       mWordSpacing(WordSpacing(aFrame, *aTextStyle)),
       mLetterSpacing(LetterSpacing(aFrame, *aTextStyle)),
-      mMinTabAdvance(-1.0),
+      mMinTabAdvance(-1),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(aOffsetFromBlockOriginForTabs),
       mJustificationArrayStart(0),
@@ -3494,7 +3494,7 @@ nsTextFrame::PropertyProvider::PropertyProvider(
       mLength(aFrame->GetContentLength()),
       mWordSpacing(WordSpacing(aFrame, *mTextStyle)),
       mLetterSpacing(LetterSpacing(aFrame, *mTextStyle)),
-      mMinTabAdvance(-1.0),
+      mMinTabAdvance(-1),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(0),
       mJustificationArrayStart(0),
@@ -3514,7 +3514,7 @@ already_AddRefed<DrawTarget> nsTextFrame::PropertyProvider::GetDrawTarget()
 }
 
 gfxFloat nsTextFrame::PropertyProvider::MinTabAdvance() const {
-  if (mMinTabAdvance < 0.0) {
+  if (mMinTabAdvance < 0) {
     mMinTabAdvance = GetMinTabAdvanceAppUnits(mTextRun);
   }
   return mMinTabAdvance;
@@ -3863,7 +3863,7 @@ static gfxFloat ComputeTabWidthAppUnits(const nsIFrame* aFrame) {
 
   MOZ_ASSERT(tabSize.IsNumber());
   gfxFloat spaces = tabSize.number._0;
-  MOZ_ASSERT(spaces >= 0);
+  MOZ_ASSERT(spaces >= 0.0);
 
   const nsIFrame* cb = aFrame->GetContainingBlock(0, aFrame->StyleDisplay());
   const auto* styleText = cb->StyleText();
@@ -4266,12 +4266,13 @@ bool nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
 }
 
 // aX and the result are in whole appunits.
-static gfxFloat AdvanceToNextTab(gfxFloat aX, gfxFloat aTabWidth,
-                                 gfxFloat aMinAdvance) {
+static nscoord AdvanceToNextTab(nscoord aX, gfxFloat aTabWidth,
+                                gfxFloat aMinAdvance) {
   // Advance aX to the next multiple of aTabWidth. We must advance
   // by at least aMinAdvance.
   gfxFloat nextPos = aX + aMinAdvance;
-  return aTabWidth > 0.0 ? ceil(nextPos / aTabWidth) * aTabWidth : nextPos;
+  return NSToCoordRound(aTabWidth > 0 ? ceil(nextPos / aTabWidth) * aTabWidth
+                                      : nextPos);
 }
 
 void nsTextFrame::PropertyProvider::CalcTabWidths(Range aRange,
@@ -4332,11 +4333,10 @@ void nsTextFrame::PropertyProvider::CalcTabWidths(Range aRange,
           mTabWidths = new TabWidthStore(mFrame->GetContentOffset());
           mFrame->SetProperty(TabWidthProperty(), mTabWidths);
         }
-        double nextTab = AdvanceToNextTab(mOffsetFromBlockOriginForTabs,
-                                          aTabWidth, MinTabAdvance());
+        nscoord nextTab = AdvanceToNextTab(mOffsetFromBlockOriginForTabs,
+                                           aTabWidth, MinTabAdvance());
         mTabWidths->mWidths.AppendElement(
-            TabWidth(i - startOffset,
-                     NSToIntRound(nextTab - mOffsetFromBlockOriginForTabs)));
+            TabWidth(i - startOffset, nextTab - mOffsetFromBlockOriginForTabs));
         mOffsetFromBlockOriginForTabs = nextTab;
       }
 
@@ -4356,7 +4356,7 @@ void nsTextFrame::PropertyProvider::CalcTabWidths(Range aRange,
   }
 }
 
-gfxFloat nsTextFrame::PropertyProvider::GetHyphenWidth() const {
+nscoord nsTextFrame::PropertyProvider::GetHyphenWidth() const {
   if (mHyphenWidth < 0) {
     const auto& hyphenateChar = mTextStyle->mHyphenateCharacter;
     if (hyphenateChar.IsAuto()) {
@@ -9544,7 +9544,7 @@ void nsTextFrame::AddInlineMinISizeForFlow(gfxContext* aRenderingContext,
         aData->ForceBreak();
       } else if (i < flowEndInTextRun && hyphenating &&
                  gfxTextRun::IsOptionalHyphenBreak(hyphBuffer[i - start])) {
-        aData->OptionallyBreak(NSToCoordRound(provider.GetHyphenWidth()));
+        aData->OptionallyBreak(provider.GetHyphenWidth());
       } else {
         aData->OptionallyBreak();
       }
@@ -10694,8 +10694,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // Disallow negative widths
   WritingMode wm = GetWritingMode();
   LogicalSize finalSize(wm);
-  finalSize.ISize(wm) =
-      NSToCoordCeilClamped(std::max(gfxFloat(0.0), textMetrics.mAdvanceWidth));
+  finalSize.ISize(wm) = std::max(0, textMetrics.mAdvanceWidth);
 
   nscoord fontBaseline;
   // Note(dshin): Baseline should tecnhically be halfway through the em box for
