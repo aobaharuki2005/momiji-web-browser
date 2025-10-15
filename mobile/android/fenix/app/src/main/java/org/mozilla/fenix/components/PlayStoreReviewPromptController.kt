@@ -36,7 +36,10 @@ class PlayStoreReviewPromptController(
     /**
      * Launch the in-app review flow, unless we've hit the quota.
      */
-    suspend fun tryPromptReview(activity: Activity) {
+    suspend fun tryPromptReview(
+        activity: Activity,
+        onError: () -> Unit = {},
+    ) {
         logger.info("tryPromptReview in progress...")
         val reviewInfoFlow = withContext(Dispatchers.IO) { manager.requestReviewFlow() }
 
@@ -53,7 +56,7 @@ class PlayStoreReviewPromptController(
                     (it.exception as? ReviewException)?.errorCode ?: ERROR_CODE_UNEXPECTED
                 logger.warn("Failed to launch in-app review flow due to: $reviewErrorCode .")
 
-                tryLaunchPlayStoreReview(activity)
+                onError()
 
                 "reviewErrorCode=$reviewErrorCode"
             }
