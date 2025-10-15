@@ -492,7 +492,7 @@ index a80d9aa1ff..0e77405fa4 100644
  }
  
 diff --git a/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc b/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc
-index 59047dc03f..3a0cef3b3e 100644
+index 531130a876..fcaaee9eb7 100644
 --- a/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc
 +++ b/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc
 @@ -39,6 +39,7 @@ namespace {
@@ -521,7 +521,7 @@ index 59047dc03f..3a0cef3b3e 100644
      x_display_->AddEventHandler(xfixes_event_base_ + XFixesCursorNotify, this);
  
 diff --git a/modules/desktop_capture/linux/x11/screen_capturer_x11.cc b/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
-index 4f32a27426..d05ec87963 100644
+index ce7312424b..d1898a2ea7 100644
 --- a/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
 +++ b/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
 @@ -307,7 +307,7 @@ bool ScreenCapturerX11::GetSourceList(SourceList* sources) {
@@ -1170,7 +1170,7 @@ index d7fa0fa26e..bb45a88f0e 100644
  
  VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo(
 diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index 6e205a215f..98bf0c78cf 100644
+index c5d3f989ab..74c1768e8f 100644
 --- a/modules/video_capture/video_capture_impl.cc
 +++ b/modules/video_capture/video_capture_impl.cc
 @@ -88,7 +88,6 @@ VideoCaptureImpl::VideoCaptureImpl()
@@ -1237,7 +1237,7 @@ index 6e205a215f..98bf0c78cf 100644
    }
  
    return 0;
-@@ -240,6 +251,13 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+@@ -239,6 +250,13 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
            .build();
    captureFrame.set_ntp_time_ms(captureTime);
  
