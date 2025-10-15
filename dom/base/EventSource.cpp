@@ -19,7 +19,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Try.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/EventSourceBinding.h"
 #include "mozilla/dom/EventSourceEventService.h"
 #include "mozilla/dom/MessageEvent.h"

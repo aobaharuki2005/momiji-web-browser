@@ -20,7 +20,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/intl/Localization.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/widget/WinTaskbar.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
