@@ -3265,6 +3265,13 @@ static bool NondeterministicGetWeakMapKeys(JSContext* cx, unsigned argc,
   return true;
 }
 
+static bool SetGrayBitsInvalid(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  cx->runtime()->gc.setGrayBitsInvalid();
+  args.rval().setUndefined();
+  return true;
+}
+
 class HasChildTracer final : public JS::CallbackTracer {
   RootedValue child_;
   bool found_;
@@ -10398,6 +10405,10 @@ gc::ZealModeHelpText),
     JS_FN_HELP("nondeterministicGetWeakMapKeys", NondeterministicGetWeakMapKeys, 1, 0,
 "nondeterministicGetWeakMapKeys(weakmap)",
 "  Return an array of the keys in the given WeakMap."),
+
+    JS_FN_HELP("setGrayBitsInvalid", SetGrayBitsInvalid, 0, 0,
+"setGrayBitsInvalid()",
+"  Set the gray bits state to invalid."),
 
     JS_FN_HELP("internalConst", InternalConst, 1, 0,
 "internalConst(name)",

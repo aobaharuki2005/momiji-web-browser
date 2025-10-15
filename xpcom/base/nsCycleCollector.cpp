@@ -3456,12 +3456,31 @@ void nsCycleCollector::CheckThreadSafety() {
 #endif
 }
 
+static void SendNeedGCTelemetry(bool needGC) {
+  if (NS_IsMainThread()) {
+    glean::cycle_collector::need_gc
+        .EnumGet(static_cast<glean::cycle_collector::NeedGcLabel>(needGC))
+        .Add();
+    return;
+  }
+
+  glean::cycle_collector::worker_need_gc
+      .EnumGet(static_cast<glean::cycle_collector::WorkerNeedGcLabel>(needGC))
+      .Add();
+}
+
 // The cycle collector uses the mark bitmap to discover what JS objects are
-// reachable only from XPConnect roots that might participate in cycles. We ask
-// the JS runtime whether we need to force a GC before this CC. It should only
-// be true when UnmarkGray has run out of stack. We also force GCs on shutdown
-// to collect cycles involving both DOM and JS, and in WantAllTraces CCs to
-// prevent hijinks from ForgetSkippable and compartmental GCs.
+// reachable only from XPConnect roots that might participate in cycles.
+//
+// That data might not currently be valid, requiring a GC to restore it. This is
+// rare in practice and is caused by an OOM during gray unmarking.
+//
+// We also force GCs on shutdown to collect cycles involving both DOM and JS,
+// and in WantAllTraces CCs to prevent hijinks from ForgetSkippable and
+// compartmental GCs.
+//
+// If we don't need to GC we still need to fix up the gray bits since gray
+// unmarking doesn't trace through weakmaps. We don't need to do this after GC.
 void nsCycleCollector::FixGrayBits(bool aIsShutdown, TimeLog& aTimeLog) {
   CheckThreadSafety();
 
@@ -3469,52 +3488,34 @@ void nsCycleCollector::FixGrayBits(bool aIsShutdown, TimeLog& aTimeLog) {
     return;
   }
 
-  // If we're not forcing a GC anyways due to shutdown or an all traces CC,
-  // check to see if we still need to do one to fix the gray bits.
-  if (!(aIsShutdown || (mLogger && mLogger->IsAllTraces()))) {
+  bool grayBitsInvalid = !mCCJSRuntime->AreGCGrayBitsValid();
+
+  bool wantAllTraces = mLogger && mLogger->IsAllTraces();
+
+  if (!aIsShutdown && !wantAllTraces) {
+    SendNeedGCTelemetry(grayBitsInvalid);
+  }
+
+  if (!aIsShutdown && !wantAllTraces && !grayBitsInvalid) {
+    // No need to GC. We only need to fix up the gray bits.
     mCCJSRuntime->FixWeakMappingGrayBits();
-    aTimeLog.Checkpoint("FixWeakMappingGrayBits");
-
-    bool needGC = !mCCJSRuntime->AreGCGrayBitsValid();
-    // Only do a telemetry ping for non-shutdown CCs.
-    if (NS_IsMainThread()) {
-      glean::cycle_collector::need_gc
-          .EnumGet(static_cast<glean::cycle_collector::NeedGcLabel>(needGC))
-          .Add();
-    } else {
-      glean::cycle_collector::worker_need_gc
-          .EnumGet(
-              static_cast<glean::cycle_collector::WorkerNeedGcLabel>(needGC))
-          .Add();
-    }
-
-    if (!needGC) {
-      return;
-    }
+    aTimeLog.Checkpoint("FixGrayBits::FixWeakMappingGrayBits");
+    return;
   }
 
   mResults.mForcedGC = true;
 
-  uint32_t count = 0;
-  do {
-    if (aIsShutdown) {
-      mCCJSRuntime->GarbageCollect(JS::GCOptions::Shutdown,
-                                   JS::GCReason::SHUTDOWN_CC);
-    } else {
-      mCCJSRuntime->GarbageCollect(JS::GCOptions::Normal,
-                                   JS::GCReason::CC_FORCED);
-    }
+  JS::GCOptions options = JS::GCOptions::Normal;
+  JS::GCReason reason = JS::GCReason::CC_FORCED;
+  if (aIsShutdown) {
+    options = JS::GCOptions::Shutdown;
+    reason = JS::GCReason::SHUTDOWN_CC;
+  }
 
-    mCCJSRuntime->FixWeakMappingGrayBits();
+  mCCJSRuntime->GarbageCollect(options, reason);
+  MOZ_ASSERT(mCCJSRuntime->AreGCGrayBitsValid());
 
-    // It's possible that FixWeakMappingGrayBits will hit OOM when unmarking
-    // gray and we will have to go round again. The second time there should not
-    // be any weak mappings to fix up so the loop body should run at most twice.
-    MOZ_RELEASE_ASSERT(count < 2);
-    count++;
-  } while (!mCCJSRuntime->AreGCGrayBitsValid());
-
-  aTimeLog.Checkpoint("FixGrayBits");
+  aTimeLog.Checkpoint("FixGrayBits::GarbageCollect");
 }
 
 bool nsCycleCollector::IsIncrementalGCInProgress() {
