@@ -1056,6 +1056,10 @@ child:
     async DispatchBeforeUnloadToSubtree(MaybeDiscardedBrowsingContext aStartingAt, SessionHistoryInfo? info)
         returns (PermitUnloadResult result);
 
+    // Only dispatches "navigate" to the traversable. Used in case we don't want to dispatch beforeunload.
+    async DispatchNavigateToTraversable(MaybeDiscardedBrowsingContext aTraversable, SessionHistoryInfo? info)
+        returns (PermitUnloadResult result);
+
     // Update the cached list of codec supported in the given process.
     async UpdateMediaCodecsSupported(RemoteMediaIn aLocation, MediaCodecsSupported aSupported);
 

@@ -41,6 +41,7 @@
 #include "mozilla/dom/JSWindowActorBinding.h"
 #include "mozilla/dom/JSWindowActorParent.h"
 #include "mozilla/dom/MediaController.h"
+#include "mozilla/dom/Navigation.h"
 #include "mozilla/dom/NavigatorLogin.h"
 #include "mozilla/dom/PBackgroundSessionStorageCache.h"
 #include "mozilla/dom/UseCounterMetrics.h"
@@ -833,9 +834,17 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
     // If `aInfo` is passed, only dispatch to the content process of the top
     // level window.
     if (aInfo) {
+      MOZ_DIAGNOSTIC_ASSERT(Navigation::IsAPIEnabled());
       ContentParent* cp = mWGP->GetContentParent();
       mPendingRequests++;
-      cp->SendDispatchBeforeUnloadToSubtree(bc, aInfo, resolve, reject);
+      // Here eDontPromptAndUnload means that we ignore beforeunload handlers,
+      // but we still need to handle the traversable navigate handler.
+      if (mAction ==
+          nsIDocumentViewer::PermitUnloadAction::eDontPromptAndUnload) {
+        cp->SendDispatchNavigateToTraversable(bc, aInfo, resolve, reject);
+      } else {
+        cp->SendDispatchBeforeUnloadToSubtree(bc, aInfo, resolve, reject);
+      }
     } else {
       bc->PreOrderWalk([&](dom::BrowsingContext* aBC) {
         if (WindowGlobalParent* wgp =

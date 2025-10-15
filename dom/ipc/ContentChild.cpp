@@ -4367,13 +4367,6 @@ mozilla::ipc::IPCResult ContentChild::RecvDispatchBeforeUnloadToSubtree(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvInitNextGenLocalStorageEnabled(
-    const bool& aEnabled) {
-  mozilla::dom::RecvInitNextGenLocalStorageEnabled(aEnabled);
-
-  return IPC_OK();
-}
-
 /* static */ void ContentChild::DispatchBeforeUnloadToSubtree(
     BrowsingContext* aStartingAt,
     const mozilla::Maybe<SessionHistoryInfo>& aInfo,
@@ -4419,6 +4412,26 @@ mozilla::ipc::IPCResult ContentChild::RecvInitNextGenLocalStorageEnabled(
   if (!resolved) {
     aResolver(nsIDocumentViewer::eContinue);
   }
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvDispatchNavigateToTraversable(
+    const MaybeDiscarded<BrowsingContext>& aTraversable,
+    const mozilla::Maybe<SessionHistoryInfo>& aInfo,
+    DispatchNavigateToTraversableResolver&& aResolver) {
+  if (aTraversable.IsNullOrDiscarded() || !aTraversable->GetDocShell()) {
+    aResolver(nsIDocumentViewer::eContinue);
+  } else {
+    RefPtr docShell = nsDocShell::Cast(aTraversable->GetDocShell());
+    aResolver(docShell->MaybeFireTraversableTraverseHistory(*aInfo, Nothing()));
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvInitNextGenLocalStorageEnabled(
+    const bool& aEnabled) {
+  mozilla::dom::RecvInitNextGenLocalStorageEnabled(aEnabled);
+
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvGoBack(

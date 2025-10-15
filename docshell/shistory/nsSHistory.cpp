@@ -1465,43 +1465,40 @@ static bool MaybeCheckUnloadingIsCanceled(
     return false;
   }
 
-  // Step 4.3.2
-  auto found =
-      std::find_if(aLoadResults.begin(), aLoadResults.end(),
-                   [traversable = RefPtr{aTraversable}](const auto& result) {
-                     return result.mBrowsingContext->Id() == traversable->Id();
-                   });
-  // Step 4.3.2
-  bool needsBeforeUnload = found != aLoadResults.end();
-
-  // Step 4.2
-  // This is a bit fishy since we don't have a direct way of performing
-  // the step, but this does its best.
-  RefPtr<nsDocShellLoadState> loadState =
-      needsBeforeUnload ? found->mLoadState : nullptr;
-  RefPtr<CanonicalBrowsingContext> browsingContext = aTraversable->Canonical();
-  MOZ_DIAGNOSTIC_ASSERT(!needsBeforeUnload ||
-                        found->mBrowsingContext == browsingContext);
-
-  nsCOMPtr<SessionHistoryEntry> currentEntry =
-      browsingContext->GetActiveSessionHistoryEntry();
-  // If we didn't find a load state, it means that traversable stays at the
-  // current entry.
-  nsCOMPtr<SessionHistoryEntry> targetEntry =
-      loadState ? do_QueryInterface(loadState->SHEntry()) : currentEntry;
-
-  // Step 4.3
-  if (!currentEntry || currentEntry->GetID() == targetEntry->GetID()) {
-    return false;
-  }
+  RefPtr<CanonicalBrowsingContext> traversable = aTraversable->Canonical();
 
   RefPtr<WindowGlobalParent> windowGlobalParent =
-      browsingContext->GetCurrentWindowGlobal();
+      traversable->GetCurrentWindowGlobal();
   // An efficiency trick. We've set this flag on the window context if we've
   // seen a "navigate" and/or a "beforeunload" handler set. If not we know we
   // can skip this.
   if (!windowGlobalParent || (!windowGlobalParent->NeedsBeforeUnload() &&
                               !windowGlobalParent->GetNeedsTraverse())) {
+    return false;
+  }
+
+  // Step 4.2
+  auto found =
+      std::find_if(aLoadResults.begin(), aLoadResults.end(),
+                   [traversable](const auto& result) {
+                     return result.mBrowsingContext->Id() == traversable->Id();
+                   });
+
+  // Step 4.3, since current entry is always different to not finding one.
+  if (found == aLoadResults.end()) {
+    return false;
+  }
+
+  // Step 4.2
+  nsCOMPtr<SessionHistoryEntry> targetEntry =
+      do_QueryInterface(found->mLoadState->SHEntry());
+
+  nsCOMPtr<SessionHistoryEntry> currentEntry =
+      traversable->GetActiveSessionHistoryEntry();
+
+  // Step 4.3, but the actual checks in the spec.
+  if (!currentEntry || !targetEntry ||
+      currentEntry->GetID() == targetEntry->GetID()) {
     return false;
   }
 
@@ -1518,6 +1515,17 @@ static bool MaybeCheckUnloadingIsCanceled(
     return false;
   }
 
+  // Step 4.3.2
+  // If we squint we can see spec here, insofar that for a traversable's
+  // beforeunload handler to fire, the target entry needs to be:
+  // * non-null, i.e. part of navigables being traversed
+  // * different from the current entry
+  // * cross document from the current entry
+  // * have beforeunload handlers
+  bool needsBeforeUnload =
+      windowGlobalParent->NeedsBeforeUnload() &&
+      currentEntry->SharedInfo() != targetEntry->SharedInfo();
+
   // Step 4.3.3 isn't needed since that's what PermitUnloadChildNavigables
   // achieves by skipping top level navigable.
 
@@ -1525,10 +1533,10 @@ static bool MaybeCheckUnloadingIsCanceled(
   // PermitUnloadTraversable only includes the process of the top level browsing
   // context.
 
-  // If we don't have any unload handlers registered, we still need to run
-  // navigate event handlers, but we don't need to show the prompt.
+  // If we're not going to run any beforeunload handlers, we still need to run
+  // navigate event handlers for the traversable.
   nsIDocumentViewer::PermitUnloadAction action =
-      windowGlobalParent->NeedsBeforeUnload()
+      needsBeforeUnload
           ? nsIDocumentViewer::PermitUnloadAction::ePrompt
           : nsIDocumentViewer::PermitUnloadAction::eDontPromptAndUnload;
   windowGlobalParent->PermitUnloadTraversable(
@@ -1536,8 +1544,18 @@ static bool MaybeCheckUnloadingIsCanceled(
       [action, loadResults = CopyableTArray(std::move(aLoadResults)),
        windowGlobalParent,
        aResolver](nsIDocumentViewer::PermitUnloadResult aResult) mutable {
-        if (aResult != nsIDocumentViewer::eContinue) {
+        if (aResult != nsIDocumentViewer::PermitUnloadResult::eContinue) {
           aResolver(loadResults, aResult);
+          return;
+        }
+
+        // If the traversable didn't have beforeunloadun handlers, we won't run
+        // other navigable's unload handlers either. That will be handled by
+        // regular navigation.
+        if (action ==
+            nsIDocumentViewer::PermitUnloadAction::eDontPromptAndUnload) {
+          aResolver(loadResults,
+                    nsIDocumentViewer::PermitUnloadResult::eContinue);
           return;
         }
 
@@ -1610,7 +1628,7 @@ void nsSHistory::LoadURIs(const nsTArray<LoadEntryResult>& aLoadResults,
     return;
   }
 
-  // There's no unload handlers, resolve immediately.
+  // There's no beforeunload handlers, resolve immediately.
   aResolver(NS_OK);
 
   // And we fall back to the simple case if we shouldn't fire a "traverse"
