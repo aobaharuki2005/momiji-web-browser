@@ -554,11 +554,15 @@ void CodeGenerator::visitOutOfLineCallVM(
   JitSpewFin(JitSpew_Codegen);
 #endif
   perfSpewer().recordInstruction(masm, lir);
-  saveLive(lir);
+  if (!lir->isCall()) {
+    saveLive(lir);
+  }
   ool->args().generate(this);
   callVM<Fn, fn>(lir);
   ool->out().generate(this);
-  restoreLiveIgnore(lir, ool->out().clobbered());
+  if (!lir->isCall()) {
+    restoreLiveIgnore(lir, ool->out().clobbered());
+  }
   masm.jump(ool->rejoin());
 }
 
