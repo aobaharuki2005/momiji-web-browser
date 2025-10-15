@@ -22,7 +22,6 @@ config = {
         "installer-latest": {
             "product-name": "Firefox-beta-latest",
             "platforms": [
-                "linux",
                 "linux64",
                 "linux64-aarch64",
                 "osx",
@@ -45,7 +44,6 @@ config = {
         "installer-latest-ssl": {
             "product-name": "Firefox-beta-latest-SSL",
             "platforms": [
-                "linux",
                 "linux64",
                 "linux64-aarch64",
                 "osx",
@@ -121,7 +119,6 @@ config = {
         "langpack-latest": {
             "product-name": "Firefox-beta-langpack-latest-SSL",
             "platforms": [
-                "linux",
                 "linux64",
                 "linux64-aarch64",
                 "osx",
