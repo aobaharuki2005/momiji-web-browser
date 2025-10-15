@@ -320,7 +320,13 @@ add_task(async function checkClearSearch() {
     { selector: "element", declarations: [] },
     {
       selector: "h1",
-      declarations: [{ name: "--my-unique-var", value: "var(--my-color-1)" }],
+      declarations: [
+        {
+          name: "--my-unique-var",
+          value: "var(--my-color-1)",
+          highlighted: true,
+        },
+      ],
     },
   ]);
   const rule = getRuleViewRuleEditor(view, 1).rule;
