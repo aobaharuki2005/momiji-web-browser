@@ -79,7 +79,7 @@ support-files = [
 ]
 
 ["browser_aboutNewTab_bookmarksToolbar.js"]
-skip=if = [
+skip-if = [
   "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1775602
 ]
 
