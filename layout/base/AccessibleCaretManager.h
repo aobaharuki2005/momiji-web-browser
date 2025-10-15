@@ -402,11 +402,11 @@ class AccessibleCaretManager {
    public:
     void Update(const AccessibleCaretManager& aAccessibleCaretManager);
 
-    enum class Value : bool { Disabled, Enabled };
-
-    Value Get() const { return mValue; }
+    bool ShouldDisable() const { return mValue == Value::Disabled; }
 
    private:
+    enum class Value : bool { Disabled, Enabled };
+
     Value mValue = Value::Enabled;
   };
 

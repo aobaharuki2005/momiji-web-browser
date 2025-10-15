@@ -798,8 +798,7 @@ void AccessibleCaretManager::SetLastInputSource(uint16_t aInputSource) {
 }
 
 bool AccessibleCaretManager::ShouldDisableApz() const {
-  return mDesiredAsyncPanZoomState.Get() ==
-         DesiredAsyncPanZoomState::Value::Disabled;
+  return mDesiredAsyncPanZoomState.ShouldDisable();
 }
 
 Selection* AccessibleCaretManager::GetSelection() const {
