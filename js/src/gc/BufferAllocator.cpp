@@ -2131,6 +2131,10 @@ void* BufferAllocator::bumpAlloc(size_t bytes, size_t sizeClass,
 
   void* ptr = allocFromRegion(region, bytes, sizeClass);
   updateFreeListsAfterAlloc(&freeLists.ref(), region, sizeClass);
+
+  DebugOnlyPoison(ptr, JS_ALLOCATED_BUFFER_PATTERN, bytes,
+                  MemCheckKind::MakeUndefined);
+
   return ptr;
 }
 
