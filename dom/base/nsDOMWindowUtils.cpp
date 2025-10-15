@@ -3055,6 +3055,12 @@ nsDOMWindowUtils::DisableApzForElement(Element* aElement) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::IsApzDisabledForElement(Element* aElement, bool* aOutResult) {
+  *aOutResult = nsLayoutUtils::ShouldDisableApzForElement(aElement);
+  return NS_OK;
+}
+
 static nsTArray<ScrollContainerFrame*> CollectScrollableAncestors(
     nsIFrame* aStart) {
   nsTArray<ScrollContainerFrame*> result;
