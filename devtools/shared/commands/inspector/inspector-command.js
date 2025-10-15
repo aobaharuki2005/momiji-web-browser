@@ -176,14 +176,14 @@ class InspectorCommand {
    *        Several selectors can be needed if the element is nested in frames
    *        and not directly in the root document.
    * @param {Integer} timeoutInMs
-   *        The maximum number of ms the function should run (defaults to 5000).
+   *        The maximum number of ms the function should run (defaults to 1000).
    *        If it exceeds this, the returned promise will resolve with `null`.
    * @return {Promise<NodeFront|null>} a promise that resolves when the node front is found
    *        for selection using inspector tools. It resolves with the deepest frame document
    *        that could be retrieved when the "final" nodeFront couldn't be found in the page.
    *        It resolves with `null` when the function runs for more than timeoutInMs.
    */
-  async findNodeFrontFromSelectors(nodeSelectors, timeoutInMs = 5000) {
+  async findNodeFrontFromSelectors(nodeSelectors, timeoutInMs = 1000) {
     if (
       !nodeSelectors ||
       !Array.isArray(nodeSelectors) ||
