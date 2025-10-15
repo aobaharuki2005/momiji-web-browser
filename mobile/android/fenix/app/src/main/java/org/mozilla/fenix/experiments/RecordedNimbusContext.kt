@@ -62,8 +62,6 @@ class RecordedNimbusContext(
     val deviceModel: String = Build.MODEL,
     val userAcceptedTou: Boolean,
     val noShortcutsOrStoriesOptOuts: Boolean,
-    val userClickedTouPromptLink: Boolean,
-    val userClickedTouPromptRemindMeLater: Boolean,
 ) : RecordedContext {
     /**
      * [getEventQueries] is called by the Nimbus SDK Rust code to retrieve the map of event
@@ -104,8 +102,6 @@ class RecordedNimbusContext(
                 deviceModel = deviceModel,
                 userAcceptedTou = userAcceptedTou,
                 noShortcutsOrStoriesOptOuts = noShortcutsOrStoriesOptOuts,
-                userClickedTouPromptLink = userClickedTouPromptLink,
-                userClickedTouPromptRemindMeLater = userClickedTouPromptRemindMeLater,
             ),
         )
         Pings.nimbus.submit()
@@ -151,8 +147,6 @@ class RecordedNimbusContext(
                 "device_model" to deviceModel,
                 "user_accepted_tou" to userAcceptedTou,
                 "no_shortcuts_or_stories_opt_outs" to noShortcutsOrStoriesOptOuts,
-                "user_clicked_tou_prompt_link" to userClickedTouPromptLink,
-                "user_clicked_tou_prompt_remind_me_later" to userClickedTouPromptRemindMeLater,
             ),
         )
         return obj
@@ -200,8 +194,6 @@ class RecordedNimbusContext(
                 region = calculatedAttributes.region,
                 userAcceptedTou = settings.hasAcceptedTermsOfService,
                 noShortcutsOrStoriesOptOuts = settings.noShortcutsOrStoriesOptOuts(context),
-                userClickedTouPromptLink = settings.hasClickedTermOfUsePromptLink,
-                userClickedTouPromptRemindMeLater = settings.hasClickedTermOfUsePromptRemindMeLater,
             )
         }
 
@@ -258,8 +250,6 @@ class RecordedNimbusContext(
                 region = "US",
                 userAcceptedTou = true,
                 noShortcutsOrStoriesOptOuts = true,
-                userClickedTouPromptLink = true,
-                userClickedTouPromptRemindMeLater = true,
             )
         }
     }

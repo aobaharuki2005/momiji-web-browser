@@ -31,16 +31,6 @@ interface TermsOfUsePromptRepository {
     fun updateLastTermsOfUsePromptTimeInMillis(currentTimeInMillis: Long = System.currentTimeMillis())
 
     /**
-     * Updates the 'has clicked the term of use prompt link' preference to true.
-     */
-    fun updateHasClickedTermOfUsePromptLinkPreference()
-
-    /**
-     * Updates the 'has clicked the term of use prompt "remind me later" action' preference to true.
-     */
-    fun updateHasClickedTermOfUsePromptRemindMeLaterPreference()
-
-    /**
      * Increments the number of times the Terms of Use prompt has been displayed by 1.
      */
     fun incrementTermsOfUsePromptDisplayedCount()
@@ -66,14 +56,6 @@ class DefaultTermsOfUsePromptRepository(
 
     override fun updateLastTermsOfUsePromptTimeInMillis(currentTimeInMillis: Long) {
         settings.lastTermsOfUsePromptTimeInMillis = currentTimeInMillis
-    }
-
-    override fun updateHasClickedTermOfUsePromptLinkPreference() {
-        settings.hasClickedTermOfUsePromptLink = true
-    }
-
-    override fun updateHasClickedTermOfUsePromptRemindMeLaterPreference() {
-        settings.hasClickedTermOfUsePromptRemindMeLater = true
     }
 
     override fun incrementTermsOfUsePromptDisplayedCount() {
