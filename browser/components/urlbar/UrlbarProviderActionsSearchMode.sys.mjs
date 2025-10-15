@@ -41,7 +41,10 @@ export class UrlbarProviderActionsSearchMode extends UrlbarProvider {
 
   async startQuery(queryContext, addCallback) {
     let input = queryContext.trimmedLowerCaseSearchString;
-    let results = await lazy.ActionsProviderQuickActions.getActions(input);
+    let results = await lazy.ActionsProviderQuickActions.getActions({
+      input,
+      includesExactMatch: true,
+    });
     results.forEach(resultKey => {
       let result = new lazy.UrlbarResult({
         type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
