@@ -430,12 +430,11 @@ ExternalTextureSourceHost::ExternalTextureSourceHost(
     case layers::SurfaceDescriptor::TSurfaceDescriptorBuffer: {
       const layers::SurfaceDescriptorBuffer& bufferDesc =
           sd.get_SurfaceDescriptorBuffer();
+      ipc::Shmem& bufferShmem = bufferDesc.data().get_Shmem();
       auto source =
           CreateFromBufferDesc(aParent, aDeviceId, aQueueId, aDesc,
-                               bufferDesc.desc(), GetAddressFromDescriptor(sd));
-      if (bufferDesc.data().type() == layers::MemoryOrShmem::TShmem) {
-        aParent->DeallocShmem(bufferDesc.data().get_Shmem());
-      }
+                               bufferDesc.desc(), bufferShmem.get<uint8_t>());
+      aParent->DeallocShmem(bufferShmem);
       return source;
     } break;
 
