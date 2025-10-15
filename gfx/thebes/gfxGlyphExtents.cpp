@@ -35,7 +35,7 @@ gfxGlyphExtents::~gfxGlyphExtents() {
 
 bool gfxGlyphExtents::GetTightGlyphExtentsAppUnitsLocked(
     gfxFont* aFont, DrawTarget* aDrawTarget, uint32_t aGlyphID,
-    gfxRect* aExtents) {
+    nsRect* aExtents) {
   HashEntry* entry = mTightGlyphExtents.GetEntry(aGlyphID);
   if (!entry) {
     // Some functions higher up in the call chain deliberately pass in a
@@ -64,7 +64,7 @@ bool gfxGlyphExtents::GetTightGlyphExtentsAppUnitsLocked(
     }
   }
 
-  *aExtents = gfxRect(entry->x, entry->y, entry->width, entry->height);
+  *aExtents = nsRect(entry->x, entry->y, entry->width, entry->height);
   return true;
 }
 
@@ -127,7 +127,7 @@ void gfxGlyphExtents::GlyphWidths::Set(uint32_t aGlyphID, uint16_t aWidth) {
 }
 
 void gfxGlyphExtents::SetTightGlyphExtents(uint32_t aGlyphID,
-                                           const gfxRect& aExtentsAppUnits) {
+                                           const nsRect& aExtentsAppUnits) {
   AutoWriteLock lock(mLock);
   HashEntry* entry = mTightGlyphExtents.PutEntry(aGlyphID);
   if (!entry) {

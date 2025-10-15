@@ -29,6 +29,7 @@
 #include "mozilla/StaticPresData.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
 #include "nsStyleUtil.h"
 #include "nsUnicodeProperties.h"
@@ -548,12 +549,11 @@ struct MOZ_STACK_CLASS BufferAlphaColor {
 
   ~BufferAlphaColor() = default;
 
-  void PushSolidColor(const gfxRect& aBounds, const DeviceColor& aAlphaColor,
+  void PushSolidColor(const nsRect& aBounds, const DeviceColor& aAlphaColor,
                       uint32_t appsPerDevUnit) {
     mContext->Save();
-    mContext->SnappedClip(gfxRect(
-        aBounds.X() / appsPerDevUnit, aBounds.Y() / appsPerDevUnit,
-        aBounds.Width() / appsPerDevUnit, aBounds.Height() / appsPerDevUnit));
+    mContext->SnappedClip(
+        nsLayoutUtils::RectToGfxRect(aBounds, appsPerDevUnit));
     mContext->SetDeviceColor(
         DeviceColor(aAlphaColor.r, aAlphaColor.g, aAlphaColor.b));
     mContext->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, aAlphaColor.a);
@@ -672,9 +672,9 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
                               aParams.provider);
         if (IsRightToLeft()) {
           metrics.mBoundingBox.MoveBy(
-              gfxPoint(aPt.x - metrics.mAdvanceWidth, aPt.y));
+              nsPoint(aPt.x - metrics.mAdvanceWidth, aPt.y));
         } else {
-          metrics.mBoundingBox.MoveBy(gfxPoint(aPt.x, aPt.y));
+          metrics.mBoundingBox.MoveBy(nsPoint(aPt.x, aPt.y));
         }
         gotMetrics = true;
       }

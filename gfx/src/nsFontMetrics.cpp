@@ -401,10 +401,10 @@ static nsBoundingMetrics GetTextBoundingMetrics(
     gfxTextRun::Metrics theMetrics = textRun->MeasureText(
         gfxTextRun::Range(0, aLength), aType, aDrawTarget, &provider);
 
-    m.leftBearing = NSToCoordFloor(theMetrics.mBoundingBox.X());
-    m.rightBearing = NSToCoordCeil(theMetrics.mBoundingBox.XMost());
-    m.ascent = NSToCoordCeil(-theMetrics.mBoundingBox.Y());
-    m.descent = NSToCoordCeil(theMetrics.mBoundingBox.YMost());
+    m.leftBearing = theMetrics.mBoundingBox.X();
+    m.rightBearing = theMetrics.mBoundingBox.XMost();
+    m.ascent = -theMetrics.mBoundingBox.Y();
+    m.descent = theMetrics.mBoundingBox.YMost();
     m.width = theMetrics.mAdvanceWidth;
   }
   return m;

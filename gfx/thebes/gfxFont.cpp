@@ -32,6 +32,7 @@
 #include "gfxUserFontSet.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"
+#include "nsLayoutUtils.h"
 #include "nsSpecialCasingData.h"
 #include "nsTextRunTransformations.h"
 #include "nsUGenCategory.h"
@@ -962,11 +963,11 @@ void gfxFont::RunMetrics::CombineWith(const RunMetrics& aOther,
   mAscent = std::max(mAscent, aOther.mAscent);
   mDescent = std::max(mDescent, aOther.mDescent);
   if (aOtherIsOnLeft) {
-    mBoundingBox = (mBoundingBox + gfxPoint(aOther.mAdvanceWidth, 0))
+    mBoundingBox = (mBoundingBox + nsPoint(aOther.mAdvanceWidth, 0))
                        .Union(aOther.mBoundingBox);
   } else {
     mBoundingBox =
-        mBoundingBox.Union(aOther.mBoundingBox + gfxPoint(mAdvanceWidth, 0));
+        mBoundingBox.Union(aOther.mBoundingBox + nsPoint(mAdvanceWidth, 0));
   }
   mAdvanceWidth += aOther.mAdvanceWidth;
 }
@@ -2874,7 +2875,7 @@ bool gfxFont::HasColorGlyphFor(uint32_t aCh, uint32_t aNextCh) {
   return false;
 }
 
-static void UnionRange(gfxFloat aX, gfxFloat* aDestMin, gfxFloat* aDestMax) {
+static void UnionRange(nscoord aX, nscoord* aDestMin, nscoord* aDestMax) {
   *aDestMin = std::min(*aDestMin, aX);
   *aDestMax = std::max(*aDestMax, aX);
 }
@@ -2895,7 +2896,7 @@ bool gfxFont::IsSpaceGlyphInvisible(DrawTarget* aRefDrawTarget,
       GetAdjustedSize() >= 1.0) {
     gfxGlyphExtents* extents =
         GetOrCreateGlyphExtents(aTextRun->GetAppUnitsPerDevUnit());
-    gfxRect glyphExtents;
+    nsRect glyphExtents;
     flag = extents->GetTightGlyphExtentsAppUnits(
                this, aRefDrawTarget, GetSpaceGlyph(), &glyphExtents) &&
                    glyphExtents.IsEmpty()
@@ -2911,7 +2912,7 @@ bool gfxFont::MeasureGlyphs(const gfxTextRun* aTextRun, uint32_t aStart,
                             DrawTarget* aRefDrawTarget, Spacing* aSpacing,
                             gfxGlyphExtents* aExtents, bool aIsRTL,
                             bool aNeedsGlyphExtents, RunMetrics& aMetrics,
-                            gfxFloat* aAdvanceMin, gfxFloat* aAdvanceMax) {
+                            nscoord* aAdvanceMin, nscoord* aAdvanceMax) {
   const gfxTextRun::CompressedGlyph* charGlyphs =
       aTextRun->GetCharacterGlyphs();
   uint32_t spaceGlyph = GetSpaceGlyph();
@@ -2935,7 +2936,7 @@ bool gfxFont::MeasureGlyphs(const gfxTextRun* aTextRun, uint32_t aStart,
           gfxFontEntry::LazyFlag flag = mFontEntry->mSpaceGlyphIsInvisible;
           if (flag == gfxFontEntry::LazyFlag::Uninitialized &&
               GetAdjustedSize() >= 1.0) {
-            gfxRect glyphExtents;
+            nsRect glyphExtents;
             flag = aExtents->GetTightGlyphExtentsAppUnitsLocked(
                        this, aRefDrawTarget, spaceGlyph, &glyphExtents) &&
                            glyphExtents.IsEmpty()
@@ -2958,11 +2959,11 @@ bool gfxFont::MeasureGlyphs(const gfxTextRun* aTextRun, uint32_t aStart,
           UnionRange(x, aAdvanceMin, aAdvanceMax);
           UnionRange(x + extentsWidth, aAdvanceMin, aAdvanceMax);
         } else {
-          gfxRect glyphRect;
+          nsRect glyphRect;
           if (!aExtents->GetTightGlyphExtentsAppUnitsLocked(
                   this, aRefDrawTarget, glyphIndex, &glyphRect)) {
-            glyphRect = gfxRect(0, aMetrics.mBoundingBox.Y(), advance,
-                                aMetrics.mBoundingBox.Height());
+            glyphRect = nsRect(0, aMetrics.mBoundingBox.Y(), advance,
+                               aMetrics.mBoundingBox.Height());
           }
           if (aIsRTL) {
             // In effect, swap left and right sidebearings of the glyph, for
@@ -2985,15 +2986,15 @@ bool gfxFont::MeasureGlyphs(const gfxTextRun* aTextRun, uint32_t aStart,
         uint32_t j;
         for (j = 0; j < glyphCount; ++j, ++details) {
           uint32_t glyphIndex = details->mGlyphID;
-          double advance = details->mAdvance;
-          gfxRect glyphRect;
+          nscoord advance = details->mAdvance;
+          nsRect glyphRect;
           if (glyphData->IsMissing() ||
               !aExtents->GetTightGlyphExtentsAppUnitsLocked(
                   this, aRefDrawTarget, glyphIndex, &glyphRect)) {
             // We might have failed to get glyph extents due to
             // OOM or something
-            glyphRect = gfxRect(0, -aMetrics.mAscent, advance,
-                                aMetrics.mAscent + aMetrics.mDescent);
+            glyphRect = nsRect(0, -aMetrics.mAscent, advance,
+                               aMetrics.mAscent + aMetrics.mDescent);
           }
           if (aIsRTL) {
             // Swap left/right sidebearings of the glyph, because we're doing
@@ -3054,9 +3055,9 @@ bool gfxFont::MeasureGlyphs(const gfxTextRun* aTextRun, uint32_t aStart,
                      "detailedGlyph record should not be missing!");
         uint32_t j;
         for (j = 0; j < glyphCount; ++j, ++details) {
-          double advance = details->mAdvance;
-          gfxRect glyphRect(0, -aMetrics.mAscent, advance,
-                            aMetrics.mAscent + aMetrics.mDescent);
+          nscoord advance = details->mAdvance;
+          nsRect glyphRect(0, -aMetrics.mAscent, advance,
+                           aMetrics.mAscent + aMetrics.mDescent);
           if (aIsRTL) {
             // Swap left/right sidebearings of the glyph, because we're doing
             // mirrored measurement.
@@ -3124,7 +3125,7 @@ gfxFont::RunMetrics gfxFont::Measure(const gfxTextRun* aTextRun,
           : nsFontMetrics::eHorizontal;
   const gfxFont::Metrics& fontMetrics = GetMetrics(orientation);
 
-  gfxFloat baselineOffset = 0;
+  nscoord baselineOffset = 0;
   if (aTextRun->UseCenterBaseline() &&
       orientation == nsFontMetrics::eHorizontal) {
     // For a horizontal font being used in vertical writing mode with
@@ -3136,23 +3137,25 @@ gfxFont::RunMetrics gfxFont::Measure(const gfxTextRun* aTextRun,
     // XXX Eventually we should probably use the BASE table, if present.
     // But it usually isn't, so we need an ad hoc adjustment for now.
     baselineOffset =
-        appUnitsPerDevUnit * (fontMetrics.emAscent - fontMetrics.emDescent) / 2;
+        NSToCoordRound(appUnitsPerDevUnit *
+                       (fontMetrics.emAscent - fontMetrics.emDescent) / 2.0);
   }
 
   RunMetrics metrics;
-  metrics.mAscent = fontMetrics.maxAscent * appUnitsPerDevUnit;
-  metrics.mDescent = fontMetrics.maxDescent * appUnitsPerDevUnit;
+  metrics.mAscent = NSToCoordRound(fontMetrics.maxAscent * appUnitsPerDevUnit);
+  metrics.mDescent =
+      NSToCoordRound(fontMetrics.maxDescent * appUnitsPerDevUnit);
 
   if (aStart == aEnd) {
     // exit now before we look at aSpacing[0], which is undefined
     metrics.mAscent -= baselineOffset;
     metrics.mDescent += baselineOffset;
     metrics.mBoundingBox =
-        gfxRect(0, -metrics.mAscent, 0, metrics.mAscent + metrics.mDescent);
+        nsRect(0, -metrics.mAscent, 0, metrics.mAscent + metrics.mDescent);
     return metrics;
   }
 
-  gfxFloat advanceMin = 0, advanceMax = 0;
+  nscoord advanceMin = 0, advanceMax = 0;
   bool isRTL = aTextRun->IsRightToLeft();
   bool needsGlyphExtents = NeedsGlyphExtents(this, aTextRun);
   gfxGlyphExtents* extents =
@@ -3177,8 +3180,8 @@ gfxFont::RunMetrics gfxFont::Measure(const gfxTextRun* aTextRun,
     metrics.mBoundingBox.SetEmpty();
   } else if (aBoundingBoxType == LOOSE_INK_EXTENTS) {
     UnionRange(metrics.mAdvanceWidth, &advanceMin, &advanceMax);
-    gfxRect fontBox(advanceMin, -metrics.mAscent, advanceMax - advanceMin,
-                    metrics.mAscent + metrics.mDescent);
+    nsRect fontBox(advanceMin, -metrics.mAscent, advanceMax - advanceMin,
+                   metrics.mAscent + metrics.mDescent);
     metrics.mBoundingBox = metrics.mBoundingBox.Union(fontBox);
   }
 
@@ -3209,9 +3212,10 @@ gfxFont::RunMetrics gfxFont::Measure(const gfxTextRun* aTextRun,
       extendRightEdge = skew < 0.0 ? ceil(-skew * metrics.mBoundingBox.YMost())
                                    : ceil(skew * -metrics.mBoundingBox.Y());
     }
-    metrics.mBoundingBox.SetWidth(metrics.mBoundingBox.Width() +
-                                  extendLeftEdge + extendRightEdge);
-    metrics.mBoundingBox.MoveByX(-extendLeftEdge);
+    metrics.mBoundingBox.SetWidth(
+        metrics.mBoundingBox.Width() +
+        NSToCoordRound(extendLeftEdge + extendRightEdge));
+    metrics.mBoundingBox.MoveByX(NSToCoordRound(-extendLeftEdge));
   }
 
   if (baselineOffset != 0) {
@@ -4111,16 +4115,27 @@ gfxGlyphExtents* gfxFont::GetOrCreateGlyphExtents(int32_t aAppUnitsPerDevUnit) {
   return glyphExtents;
 }
 
+// Helper to convert device-pixel bounds to nsRect using aAppPerDev factor.
+// Note: not using nsLayoutUtils::RoundGfxRectToAppRect here because it
+// has different rounding behavior (using Rect::ScaleRoundOut rather than
+// rounding the individual fields), which affects MathML glyph placement.
+template <class T>
+static inline nsRect ToAppRect(const T& aBounds, int32_t aAppPerDev) {
+  return nsRect(NSToCoordRound(aBounds.X() * aAppPerDev),
+                NSToCoordRound(aBounds.Y() * aAppPerDev),
+                NSToCoordRound(aBounds.Width() * aAppPerDev),
+                NSToCoordRound(aBounds.Height() * aAppPerDev));
+}
+
 void gfxFont::SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
                                 bool aNeedTight, gfxGlyphExtents* aExtents) {
+  int32_t appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();
   gfxRect svgBounds;
   if (mFontEntry->TryGetSVGData(this) && mFontEntry->HasSVGGlyph(aGlyphID) &&
       mFontEntry->GetSVGGlyphExtents(aDrawTarget, aGlyphID, GetAdjustedSize(),
                                      &svgBounds)) {
-    gfxFloat d2a = aExtents->GetAppUnitsPerDevUnit();
-    aExtents->SetTightGlyphExtents(
-        aGlyphID, gfxRect(svgBounds.X() * d2a, svgBounds.Y() * d2a,
-                          svgBounds.Width() * d2a, svgBounds.Height() * d2a));
+    aExtents->SetTightGlyphExtents(aGlyphID,
+                                   ToAppRect(svgBounds, appUnitsPerDevUnit));
     return;
   }
 
@@ -4133,10 +4148,8 @@ void gfxFont::SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
           mFontEntry->mCOLR, shaper->GetHBFont(), aGlyphID, aDrawTarget,
           scaledFont, mFUnitsConvFactor);
       if (!r.IsEmpty()) {
-        gfxFloat d2a = aExtents->GetAppUnitsPerDevUnit();
-        aExtents->SetTightGlyphExtents(
-            aGlyphID, gfxRect(r.X() * d2a, r.Y() * d2a, r.Width() * d2a,
-                              r.Height() * d2a));
+        aExtents->SetTightGlyphExtents(aGlyphID,
+                                       ToAppRect(r, appUnitsPerDevUnit));
         return;
       }
     }
@@ -4146,7 +4159,6 @@ void gfxFont::SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
   GetGlyphBounds(aGlyphID, &bounds, mAntialiasOption == kAntialiasNone);
 
   const Metrics& fontMetrics = GetMetrics(nsFontMetrics::eHorizontal);
-  int32_t appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();
   if (!aNeedTight && bounds.x >= 0.0 && bounds.y >= -fontMetrics.maxAscent &&
       bounds.height + bounds.y <= fontMetrics.maxDescent) {
     uint32_t appUnitsWidth =
@@ -4163,10 +4175,8 @@ void gfxFont::SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
   }
 #endif
 
-  gfxFloat d2a = appUnitsPerDevUnit;
-  aExtents->SetTightGlyphExtents(
-      aGlyphID, gfxRect(bounds.x * d2a, bounds.y * d2a, bounds.width * d2a,
-                        bounds.height * d2a));
+  aExtents->SetTightGlyphExtents(aGlyphID,
+                                 ToAppRect(bounds, appUnitsPerDevUnit));
 }
 
 // Try to initialize font metrics by reading sfnt tables directly;

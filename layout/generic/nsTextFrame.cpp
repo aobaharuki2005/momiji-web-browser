@@ -6567,7 +6567,8 @@ static void AddHyphenToMetrics(nsTextFrame* aTextFrame, bool aIsRightToLeft,
 
 void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
                                  const StyleSimpleShadow& aShadowDetails,
-                                 gfxRect& aBoundingBox, uint32_t aBlurFlags) {
+                                 const gfxRect& aBoundingBox,
+                                 uint32_t aBlurFlags) {
   AUTO_PROFILER_LABEL("nsTextFrame::PaintOneShadow", GRAPHICS);
 
   nsPoint shadowOffset(aShadowDetails.horizontal.ToAppUnits(),
@@ -7371,8 +7372,8 @@ void nsTextFrame::PaintShadows(Span<const StyleSimpleShadow> aShadows,
                        aParams.context->GetDrawTarget());
   }
   // Add bounds of text decorations
-  gfxRect decorationRect(0, -shadowMetrics.mAscent, shadowMetrics.mAdvanceWidth,
-                         shadowMetrics.mAscent + shadowMetrics.mDescent);
+  nsRect decorationRect(0, -shadowMetrics.mAscent, shadowMetrics.mAdvanceWidth,
+                        shadowMetrics.mAscent + shadowMetrics.mDescent);
   shadowMetrics.mBoundingBox.UnionRect(shadowMetrics.mBoundingBox,
                                        decorationRect);
 
@@ -7396,7 +7397,12 @@ void nsTextFrame::PaintShadows(Span<const StyleSimpleShadow> aShadows,
   }
 
   for (const auto& shadow : Reversed(aShadows)) {
-    PaintOneShadow(aParams, shadow, shadowMetrics.mBoundingBox, blurFlags);
+    PaintOneShadow(
+        aParams, shadow,
+        gfxRect(shadowMetrics.mBoundingBox.x, shadowMetrics.mBoundingBox.y,
+                shadowMetrics.mBoundingBox.width,
+                shadowMetrics.mBoundingBox.height),
+        blurFlags);
   }
 }
 
@@ -9871,15 +9877,6 @@ nsIFrame::SizeComputationResult nsTextFrame::ComputeSize(
           AspectRatioUsage::None};
 }
 
-static nsRect RoundOut(const gfxRect& aRect) {
-  nsRect r;
-  r.x = NSToCoordFloor(aRect.X());
-  r.y = NSToCoordFloor(aRect.Y());
-  r.width = NSToCoordCeil(aRect.XMost()) - r.x;
-  r.height = NSToCoordCeil(aRect.YMost()) - r.y;
-  return r;
-}
-
 nsRect nsTextFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const {
   if (Style()->HasTextDecorationLines() || HasAnyStateBits(TEXT_HYPHEN_BREAK)) {
     // This is conservative, but OK.
@@ -9905,7 +9902,7 @@ nsRect nsTextFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const {
   }
   // mAscent should be the same as metrics.mAscent, but it's what we use to
   // paint so that's the one we'll use.
-  nsRect boundingBox = RoundOut(metrics.mBoundingBox);
+  nsRect boundingBox = metrics.mBoundingBox;
   boundingBox += nsPoint(0, mAscent);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
@@ -9930,8 +9927,8 @@ nsresult nsTextFrame::GetPrefWidthTightBounds(gfxContext* aContext, nscoord* aX,
       ComputeTransformedRange(provider), gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS,
       aContext->GetDrawTarget(), &provider);
   // Round it like nsTextFrame::ComputeTightBounds() to ensure consistency.
-  *aX = NSToCoordFloor(metrics.mBoundingBox.x);
-  *aXMost = NSToCoordCeil(metrics.mBoundingBox.XMost());
+  *aX = metrics.mBoundingBox.x;
+  *aXMost = metrics.mBoundingBox.XMost();
 
   return NS_OK;
 }
@@ -10684,10 +10681,8 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // first-letter frames should use the tight bounding box metrics for
   // ascent/descent for good drop-cap effects
   if (HasAnyStateBits(TEXT_FIRST_LETTER)) {
-    textMetrics.mAscent =
-        std::max(gfxFloat(0.0), -textMetrics.mBoundingBox.Y());
-    textMetrics.mDescent =
-        std::max(gfxFloat(0.0), textMetrics.mBoundingBox.YMost());
+    textMetrics.mAscent = std::max(0, -textMetrics.mBoundingBox.Y());
+    textMetrics.mDescent = std::max(0, textMetrics.mBoundingBox.YMost());
   }
 
   // Setup metrics for caller
@@ -10705,8 +10700,8 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     finalSize.BSize(wm) = 0;
     fontBaseline = 0;
   } else if (boundingBoxType != gfxFont::LOOSE_INK_EXTENTS) {
-    fontBaseline = NSToCoordCeil(textMetrics.mAscent);
-    const auto size = fontBaseline + NSToCoordCeil(textMetrics.mDescent);
+    fontBaseline = textMetrics.mAscent;
+    const auto size = fontBaseline + textMetrics.mDescent;
     // Use actual text metrics for floating first letter frame.
     aMetrics.SetBlockStartAscent(wm.IsAlphabeticalBaseline() ? fontBaseline
                                                              : size / 2);
@@ -10720,10 +10715,9 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
         wm.IsLineInverted() ? fm->MaxDescent() : fm->MaxAscent();
     nscoord fontDescent =
         wm.IsLineInverted() ? fm->MaxAscent() : fm->MaxDescent();
-    fontBaseline = std::max(NSToCoordCeil(textMetrics.mAscent), fontAscent);
+    fontBaseline = std::max(textMetrics.mAscent, fontAscent);
     const auto size =
-        fontBaseline +
-        std::max(NSToCoordCeil(textMetrics.mDescent), fontDescent);
+        fontBaseline + std::max(textMetrics.mDescent, fontDescent);
     aMetrics.SetBlockStartAscent(wm.IsAlphabeticalBaseline() ? fontBaseline
                                                              : size / 2);
     finalSize.BSize(wm) = size;
@@ -10819,7 +10813,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   mAscent = fontBaseline;
 
   // Handle text that runs outside its normal bounds.
-  nsRect boundingBox = RoundOut(textMetrics.mBoundingBox);
+  nsRect boundingBox = textMetrics.mBoundingBox;
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
     std::swap(boundingBox.x, boundingBox.y);
@@ -11077,7 +11071,7 @@ OverflowAreas nsTextFrame::RecomputeOverflow(nsIFrame* aBlockFrame,
   if (GetWritingMode().IsLineInverted()) {
     textMetrics.mBoundingBox.y = -textMetrics.mBoundingBox.YMost();
   }
-  nsRect boundingBox = RoundOut(textMetrics.mBoundingBox);
+  nsRect boundingBox = textMetrics.mBoundingBox;
   boundingBox += nsPoint(0, mAscent);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
