@@ -1155,6 +1155,9 @@ impl RenderBackend {
                             .cloned()
                             .collect();
                         for document_id in documents {
+                            if let Some(doc) = self.documents.get_mut(&document_id) {
+                                doc.frame_is_valid = false;
+                            }
                             self.update_document(
                                 document_id,
                                 Vec::default(),
@@ -1274,6 +1277,9 @@ impl RenderBackend {
                         let force_invalidation = flags.contains(DebugFlags::FORCE_PICTURE_INVALIDATION);
                         if self.frame_config.force_invalidation != force_invalidation {
                             self.frame_config.force_invalidation = force_invalidation;
+                            for doc in self.documents.values_mut() {
+                                doc.scene.config.force_invalidation = force_invalidation;
+                            }
                             self.update_frame_builder_config();
                         }
 
@@ -1535,7 +1541,7 @@ impl RenderBackend {
     ) -> bool {
         let update_doc_start = zeitstempel::now();
 
-        let requested_frame = render_frame;
+        let requested_frame = render_frame || self.frame_config.force_invalidation;
 
         let requires_frame_build = self.requires_frame_build();
         let doc = self.documents.get_mut(&document_id).unwrap();

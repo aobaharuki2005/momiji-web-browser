@@ -248,6 +248,9 @@ async fn handle_request(
                     api.send_debug_cmd(
                         DebugCommand::SetFlags(flags)
                     );
+                    api.send_debug_cmd(
+                        DebugCommand::GenerateFrame
+                    );
                     Ok(string_response(format!("flags = {:?}", flags)))
                 }
                 _ => {
