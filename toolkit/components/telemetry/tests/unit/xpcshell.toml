@@ -54,8 +54,11 @@ tags = "addons"
 skip-if = ["os == 'android'"]
 
 ["test_TOUNotificationFlow.js"]
-skip-if = ["os == 'android'"]
-# The TOU notification flow is desktop only
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'",
+]
+# The TOU notification flow is desktop-only and not used by Thunderbird.
 
 ["test_TelemetryClientID_reset.js"]
 skip-if = ["os == 'android'"] # Disabled as Android/GeckoView doesn't run TelemetryController
