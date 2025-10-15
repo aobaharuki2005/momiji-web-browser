@@ -65,8 +65,8 @@ async function getParentProcessActors(callback) {
   callback(commands.client, mainProcessTargetFront);
 }
 
-function getSourceActor(aSources, aURL) {
-  const item = aSources.getItemForAttachment(a => a.source.url === aURL);
+function getSourceActor(sources, url) {
+  const item = sources.getItemForAttachment(a => a.source.url === url);
   return item && item.value;
 }
 
