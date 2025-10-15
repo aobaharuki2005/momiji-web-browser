@@ -16,12 +16,12 @@ from .ini import combine_fields
 __all__ = ["read_toml", "alphabetize_toml_str", "add_skip_if", "sort_paths"]
 
 CreateBug = Optional[Callable[[], object]]
-ListStr = List[str]
+ListStr = List[str]  # noqa UP006
 OptArray = Optional[Array]
 OptRegex = Optional[re.Pattern]
 OptStr = Optional[str]
-OptConditions = List[Tuple[str, OptStr]]
-TupleStrBool = Tuple[str, bool]
+OptConditions = List[Tuple[str, OptStr]]  # noqa UP006
+TupleStrBoolStr = Tuple[str, bool, str]  # noqa UP006
 
 FILENAME_REGEX = r"^([A-Za-z0-9_./-]*)([Bb][Uu][Gg])([-_]*)([0-9]+)([A-Za-z0-9_./-]*)$"
 DEFAULT_SECTION = "DEFAULT"
@@ -409,7 +409,7 @@ def add_skip_if(
     bug_reference: OptStr = None,
     create_bug_lambda: CreateBug = None,
     carryover_mode: bool = False,
-) -> TupleStrBool:
+) -> TupleStrBoolStr:
     """
     Will take a TOMLkit manifest document (i.e. from a previous invocation
     of read_toml(..., document=True) and accessing the document
@@ -533,7 +533,7 @@ def add_skip_if(
         skip_if = {"skip-if": mp_array}
         del keyvals["skip-if"]
         keyvals.update(skip_if)
-    return (additional_comment, carryover)
+    return (additional_comment, carryover, bug_reference)
 
 
 def _should_remove_condition(

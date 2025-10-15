@@ -245,7 +245,7 @@ def addtest(
 
     if editor is not MISSING_ARG:
         if editor is not None:
-            editor = editor
+            pass
         elif "VISUAL" in os.environ:
             editor = os.environ["VISUAL"]
         elif "EDITOR" in os.environ:
@@ -258,7 +258,7 @@ def addtest(
         if editor:
             import subprocess
 
-            proc = subprocess.Popen("%s %s" % (editor, " ".join(paths)), shell=True)
+            proc = subprocess.Popen(f"{editor} {' '.join(paths)}", shell=True)
 
         if proc:
             proc.wait()
@@ -302,21 +302,18 @@ def guess_suite(abs_test):
         and guess_doc(abs_test) == "js"
     ):
         guessed_suite = "xpcshell"
-    else:
-        if filename.startswith("browser_") and (has_browser_ini or has_browser_toml):
-            guessed_suite = "mochitest-browser-chrome"
-        elif filename.startswith("test_"):
-            if (has_chrome_ini or has_chrome_toml) and (
-                has_plain_ini or has_plain_toml
-            ):
-                err = (
-                    "Error: directory contains both a chrome.{ini|toml} and mochitest.{ini|toml}. "
-                    "Please set --suite=mochitest-chrome or --suite=mochitest-plain."
-                )
-            elif has_chrome_ini or has_chrome_toml:
-                guessed_suite = "mochitest-chrome"
-            elif has_plain_ini or has_plain_toml:
-                guessed_suite = "mochitest-plain"
+    elif filename.startswith("browser_") and (has_browser_ini or has_browser_toml):
+        guessed_suite = "mochitest-browser-chrome"
+    elif filename.startswith("test_"):
+        if (has_chrome_ini or has_chrome_toml) and (has_plain_ini or has_plain_toml):
+            err = (
+                "Error: directory contains both a chrome.toml and mochitest.toml. "
+                "Please set --suite=mochitest-chrome or --suite=mochitest-plain."
+            )
+    elif has_chrome_ini or has_chrome_toml:
+        guessed_suite = "mochitest-chrome"
+    elif has_plain_ini or has_plain_toml:
+        guessed_suite = "mochitest-plain"
     return guessed_suite, err
 
 
@@ -533,7 +530,7 @@ def run_desktop_test(
     try:
         result = cppunittests.run_test_harness(options, tests)
     except Exception as e:
-        log.error("Caught exception running cpp unit tests: %s" % str(e))
+        log.error(f"Caught exception running cpp unit tests: {str(e)}")
         result = False
         raise
 
@@ -565,7 +562,7 @@ def run_android_test(command_context, tests, symbols_path, manifest_path, log):
     try:
         result = remotecppunittests.run_test_harness(options, tests)
     except Exception as e:
-        log.error("Caught exception running cpp unit tests: %s" % str(e))
+        log.error(f"Caught exception running cpp unit tests: {str(e)}")
         result = False
         raise
 
@@ -999,17 +996,14 @@ def test_info_failures(
         return
 
     # get bug info
-    url = (
-        "https://bugzilla.mozilla.org/rest/bug?include_fields=summary,depends_on&id=%s"
-        % bugid
-    )
+    url = f"https://bugzilla.mozilla.org/rest/bug?include_fields=summary,depends_on&id={bugid}"
     r = requests.get(url, headers={"User-agent": "mach-test-info/1.0"})
     if r.status_code != 200:
-        print("%s error retrieving url: %s" % (r.status_code, url))
+        print(f"{r.status_code} error retrieving url: {url}")
 
     data = r.json()
     if not data:
-        print("unable to get bugzilla information for %s" % bugid)
+        print(f"unable to get bugzilla information for {bugid}")
         return
 
     summary = data["bugs"][0]["summary"]
@@ -1029,7 +1023,7 @@ def test_info_failures(
     data = []
     for b in buglist:
         url = "https://treeherder.mozilla.org/api/failuresbybug/"
-        url += "?startday=%s&endday=%s&tree=trunk&bug=%s" % (start, end, b)
+        url += f"?startday={start}&endday={end}&tree=trunk&bug={b}"
         r = requests.get(url, headers={"User-agent": "mach-test-info/1.0"})
         r.raise_for_status()
 
@@ -1049,8 +1043,7 @@ def test_info_failures(
     variants = yaml.safe_load(r.text)
 
     print(
-        "\nQuerying data for bug %s annotated from %s to %s on trunk.\n\n"
-        % (buglist, start, end)
+        f"\nQuerying data for bug {buglist} annotated from {start} to {end} on trunk.\n\n"
     )
     jobs = {}
     lines = {}
@@ -1058,13 +1051,12 @@ def test_info_failures(
         # config = platform/buildtype
         # testsuite (<suite>[-variant][-<chunk>])
         # lines - group by patterns that contain test name
-        config = "%s/%s" % (failure["platform"], failure["build_type"])
-
+        config = f"{failure['platform']}/{failure['build_type']}"
         variant = ""
         suite = ""
         varpos = len(failure["test_suite"])
         for v in variants.keys():
-            var = "-%s" % variants[v]["suffix"]
+            var = f"-{variants[v]['suffix']}"
             if var in failure["test_suite"]:
                 if failure["test_suite"].find(var) < varpos:
                     variant = var
@@ -1080,9 +1072,9 @@ def test_info_failures(
             pass  # if this works, then the last '-X' is a number :)
 
         if suite == "":
-            print("Error: failure to find variant in %s" % failure["test_suite"])
+            print(f"Error: failure to find variant in {failure['test_suite']}")
 
-        job = "%s-%s%s" % (config, suite, variant)
+        job = f"{config}-{suite}{variant}"
         if job not in jobs.keys():
             jobs[job] = 0
         jobs[job] += 1
@@ -1094,11 +1086,11 @@ def test_info_failures(
                 continue
             # strip off timestamp and mozharness status
             parts = line.split("TEST-UNEXPECTED")
-            l = "TEST-UNEXPECTED%s" % parts[-1]
+            l = f"TEST-UNEXPECTED{parts[-1]}"
 
             # only keep 25 characters of the failure, often longer is random numbers
             parts = l.split(testname)
-            l = "%s%s%s" % (parts[0], testname, parts[1][:25])
+            l = parts[0] + testname + parts[1][:25]
 
             hvalue += hash(l)
 
@@ -1113,9 +1105,11 @@ def test_info_failures(
         lines[hvalue]["config"].append(job)
 
     for h in lines.keys():
-        print("%s errors with:" % (len(lines[h]["config"])))
-        for l in lines[h]["lines"]:
-            print(l)
+        print(f"{len(lines[h]['config'])} errors with:")
+        failure_lines = lines[h]["lines"]
+        if len(failure_lines) > 0:
+            for l in failure_lines:
+                print(l)
         else:
             print(
                 "... no failure lines recorded in"
@@ -1125,7 +1119,7 @@ def test_info_failures(
         for job in jobs:
             count = len([x for x in lines[h]["config"] if x == job])
             if count > 0:
-                print("  %s: %s" % (job, count))
+                print(f"  {job}: {count}")
         print("")
 
 
@@ -1284,6 +1278,12 @@ def manifest(_command_context):
     help="Task id to write a condition for instead of all tasks from the push",
 )
 @CommandArgument(
+    "-k",
+    "--known-intermittents",
+    action="store_true",
+    help="Set known intermittents mode (only skip failures known intermittents)",
+)
+@CommandArgument(
     "-M",
     "--max-failures",
     type=int,
@@ -1339,6 +1339,7 @@ def skipfails(
     carryover=False,
     failure_ratio=0.4,
     clear_cache=None,
+    known_intermittents=False,
 ):
     from skipfails import Skipfails
 
@@ -1363,6 +1364,7 @@ def skipfails(
         max_failures,
         carryover,
         failure_ratio,
+        known_intermittents,
     )
 
 
@@ -1432,7 +1434,7 @@ def high_freq_skipfails(command_context, failures: str, days: str):
 )
 def clean_skipfails(
     command_context,
-    manifest_search_path: List[str],
+    manifest_search_path: List[str],  # noqa UP006
     os_name: Optional[str] = None,
     os_version: Optional[str] = None,
     processor: Optional[str] = None,
