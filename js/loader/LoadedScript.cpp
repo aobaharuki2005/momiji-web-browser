@@ -262,6 +262,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ModuleScript, LoadedScript)
   tmp->UnlinkModuleRecord();
   tmp->mParseError.setUndefined();
   tmp->mErrorToRethrow.setUndefined();
+  tmp->DropDiskCacheReference();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ModuleScript, LoadedScript)
