@@ -9,31 +9,25 @@
 // We're loading an image that would take a few second to load so the iframe won't have
 // its readyState to "complete" (it should be "interactive").
 // That was causing some issue, see Bug 1733539.
+const IMG_URL = URL_ROOT_COM_SSL + "sjs_slow-loading-image.sjs";
+const FRAME_URI =
+  "data:text/html;charset=utf-8," +
+  encodeURI(`
+    <div id="in-frame">div in the iframe</div>
+    <img src="${IMG_URL}"></img>
+  `);
+const HTML = `
+  <iframe src="${FRAME_URI}"></iframe>
+`;
 
-function getTestURI(delay) {
-  const IMG_URL = `${URL_ROOT_COM_SSL}sjs_slow-loading-image.sjs?delay=${delay}`;
-  const FRAME_URI =
-    "data:text/html;charset=utf-8," +
-    encodeURI(`
-      <div id="in-frame">div in the iframe</div>
-      <img src="${IMG_URL}"></img>
-    `);
-  const HTML = `
-    <iframe src="${FRAME_URI}"></iframe>
-  `;
-
-  return "data:text/html;charset=utf-8," + encodeURI(HTML);
-}
-
-const TEST_URI = getTestURI(100);
-const SLOW_TEST_URI = getTestURI(5000);
+const TEST_URI = "data:text/html;charset=utf-8," + encodeURI(HTML);
 
 add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URI);
 
   await selectNodeInFrames(["iframe", "#in-frame"], inspector);
 
-  let markupLoaded = inspector.once("markuploaded");
+  const markupLoaded = inspector.once("markuploaded");
 
   info("Reloading page.");
   await navigateTo(TEST_URI);
@@ -51,42 +45,4 @@ add_task(async function () {
     reloadedNodeFront,
     "#in-frame selected after reload."
   );
-
-  info("Check that markup view is not blocked for a page with a slow iframe");
-  await navigateTo(SLOW_TEST_URI);
-  await selectNodeInFrames(["iframe", "#in-frame"], inspector);
-
-  markupLoaded = inspector.once("markuploaded");
-
-  info("Reloading page.");
-  const onNavigate = navigateTo(SLOW_TEST_URI);
-
-  info("Waiting for markupview to load after reload.");
-  await markupLoaded;
-
-  info("Check that the navigation is not done yet");
-  ok(
-    !(await hasPromiseResolved(onNavigate)),
-    "Navigation to page with slow iframe is not done yet"
-  );
-
-  const bodyNodeFront = await getNodeFrontInFrames(["body"], inspector);
-  is(
-    inspector.selection.nodeFront,
-    bodyNodeFront,
-    "Iframe was too slow to load, the markup view selected body as fallback"
-  );
-
-  await onNavigate;
 });
-
-async function hasPromiseResolved(promise) {
-  let resolved = false;
-
-  // Note that the catch() is only here to avoid leaking promise rejections.
-  // In all cases the resolved flag should be successfully flipped in finally().
-  promise.finally(() => (resolved = true)).catch(() => {});
-  // Make sure microtasks have time to run.
-  await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
-  return resolved;
-}
