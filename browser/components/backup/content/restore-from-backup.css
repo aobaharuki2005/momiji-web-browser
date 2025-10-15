@@ -47,10 +47,6 @@
       display: flex;
       column-gap: var(--space-small);
       align-items: center;
-
-      &.aw-embedded-filepicker {
-        align-items: flex-end;
-      }
     }
 
     #backup-filepicker-label {
@@ -132,7 +128,6 @@
 
   #restore-from-backup-button-group {
     grid-area: button-group;
-    justify-content: var(--button-group-justify-content, flex-end);
   }
 
   #backup-password-input[aria-invalid="true"] {
@@ -143,5 +138,45 @@
   .field-error {
     color: var(--text-color-error);
     font-size: var(--font-size-small);
+  }
+}
+
+/* about:welcome embedded styles */
+:host([aboutwelcomeembedded]) {
+  #restore-from-backup-wrapper {
+    #restore-from-backup-button-group {
+      justify-content: flex-start;
+    }
+
+    #backup-filepicker-controls #backup-filepicker {
+      align-items: flex-end;
+    }
+
+    #password-entry-controls,
+    #backup-filepicker {
+      max-width: 400px;
+    }
+
+    #backup-filepicker-controls {
+      @media (800px < width <= 960px) {
+        #backup-filepicker {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        #backup-filepicker-input:is(textarea) {
+          flex: 1 1 auto;
+        }
+      }
+    }
+
+    @media (width <= 800px) {
+      #restore-from-backup-button-group {
+        justify-content: center;
+      }
+
+      #restore-from-backup-confirm-button {
+        min-width: 240px;
+      }
+    }
   }
 }

@@ -97,6 +97,22 @@ html {
   }
 }
 
+.onboardingContainer:has(.embedded-backup-restore-container) {
+  .screen[pos='split'][fullscreen] {
+    .section-main {
+      .main-content {
+        .welcome-text {
+          margin-block: 15px 22px;
+
+          h1, h2 {
+            max-width: 300px;
+          }
+        }
+      }
+    }
+  }
+}
+
 .onboardingContainer {
   --grey-subtitle-1: light-dark(#696977, #FFF);
   --mr-welcome-background-color: light-dark(#F8F6F4, #333336);

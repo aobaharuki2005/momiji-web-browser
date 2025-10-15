@@ -63,4 +63,63 @@ describe("EmbeddedBackupRestore component", () => {
       "should call AWFindBackupsInWellKnownLocations exactly once on mount"
     );
   });
+
+  it("renders skip button when provided and applies arrow icon class, and calls handleAction", async () => {
+    const handleAction = sandbox.stub();
+    const skipButton = {
+      label: { raw: "Skip" },
+      has_arrow_icon: true,
+    };
+
+    wrapper = mount(
+      <EmbeddedBackupRestore
+        handleAction={handleAction}
+        skipButton={skipButton}
+      />
+    );
+
+    const button = wrapper.find("#secondary_button");
+    assert.ok(button.exists(), "skip button rendered");
+    assert.isTrue(
+      button.hasClass("secondary") && button.hasClass("arrow-icon"),
+      "arrow icon class is applied when has_arrow_icon is true"
+    );
+
+    button.simulate("click");
+    sinon.assert.calledOnce(handleAction);
+  });
+
+  it("updates skip button state based on BackupUI:RecoveryProgress events", async () => {
+    const skipButton = { label: { string_id: "skip" } };
+    wrapper = mount(<EmbeddedBackupRestore skipButton={skipButton} />);
+    const node = wrapper.find("restore-from-backup").getDOMNode();
+
+    node.dispatchEvent(
+      new CustomEvent("BackupUI:RecoveryProgress", {
+        detail: { recoveryInProgress: true },
+      })
+    );
+
+    wrapper.update();
+    let button = wrapper.find("#secondary_button");
+    assert.isTrue(button.prop("disabled"));
+    assert.equal(button.prop("aria-busy"), true);
+
+    node.dispatchEvent(
+      new CustomEvent("BackupUI:RecoveryProgress", {
+        detail: { recoveryInProgress: false },
+      })
+    );
+
+    wrapper.update();
+    button = wrapper.find("#secondary_button");
+    assert.isFalse(button.prop("disabled"));
+    assert.isUndefined(button.prop("aria-busy"));
+  });
+
+  it("does not render skip button section when skipButton prop is missing", () => {
+    wrapper = mount(<EmbeddedBackupRestore />);
+    assert.isFalse(wrapper.find("#secondary_button").exists());
+    assert.isFalse(wrapper.find(".secondary-cta").exists());
+  });
 });
