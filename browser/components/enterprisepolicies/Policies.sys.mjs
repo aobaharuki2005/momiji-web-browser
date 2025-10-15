@@ -1867,6 +1867,16 @@ export var Policies = {
           );
         }
       }
+
+      // Handle SkipDomains separately (can be set independently of Enabled)
+      if ("SkipDomains" in param && Array.isArray(param.SkipDomains)) {
+        let skipDomainsValue = param.SkipDomains.join(",");
+        PoliciesUtils.setDefaultPref(
+          "network.lna.skip-domains",
+          skipDomainsValue,
+          param.Locked
+        );
+      }
     },
   },
 
