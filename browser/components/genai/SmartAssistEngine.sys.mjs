@@ -222,7 +222,7 @@ export const SmartAssistEngine = {
     try {
       const engine = await this._createEngine({
         featureId: "smart-intent",
-        modelId: "mozilla/query-intent-detection",
+        modelId: "mozilla/mobilebert-query-intent-detection",
         modelRevision: "v0.1.0",
         taskName: "text-classification",
       });
