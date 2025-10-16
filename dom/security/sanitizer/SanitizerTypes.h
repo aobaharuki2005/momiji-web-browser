@@ -7,12 +7,21 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/SanitizerBinding.h"
+#include "nsHashtablesFwd.h"
+#include "nsTHashSet.h"
 
 namespace mozilla::dom::sanitizer {
 
+struct CanonicalElementAttributes;
+
 // The name of an element/attribute combined with its namespace.
-class CanonicalName {
+class CanonicalName : public PLDHashEntryHdr {
  public:
+  using KeyType = const CanonicalName&;
+  using KeyTypePointer = const CanonicalName*;
+
+  explicit CanonicalName(KeyTypePointer aKey)
+      : mLocalName(aKey->mLocalName), mNamespace(aKey->mNamespace) {}
   CanonicalName(CanonicalName&&) = default;
   CanonicalName(RefPtr<nsAtom> aLocalName, RefPtr<nsAtom> aNamespace)
       : mLocalName(std::move(aLocalName)), mNamespace(std::move(aNamespace)) {}
@@ -20,84 +29,53 @@ class CanonicalName {
       : mLocalName(aLocalName), mNamespace(aNamespace) {}
   ~CanonicalName() = default;
 
+  KeyType GetKey() const { return *this; }
+  bool KeyEquals(KeyTypePointer aKey) const {
+    return mLocalName == aKey->mLocalName && mNamespace == aKey->mNamespace;
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) {
+    return mozilla::HashGeneric(aKey->mLocalName.get(), aKey->mNamespace.get());
+  }
+
+  enum { ALLOW_MEMMOVE = true };
+
   // Caution: Only use this for attribute names, not elements!
   // Returns true for names that start with data-* and have a null namespace.
   bool IsDataAttribute() const;
 
-  bool operator==(const CanonicalName& aOther) const {
-    return mLocalName == aOther.mLocalName && mNamespace == aOther.mNamespace;
-  }
-
-  SanitizerElementNamespace ToSanitizerElementNamespace() const;
   SanitizerAttributeNamespace ToSanitizerAttributeNamespace() const;
+  SanitizerElementNamespace ToSanitizerElementNamespace() const;
+  SanitizerElementNamespaceWithAttributes
+  ToSanitizerElementNamespaceWithAttributes(
+      const CanonicalElementAttributes& aElementAttributes) const;
 
   CanonicalName Clone() const { return CanonicalName(mLocalName, mNamespace); }
 
  protected:
+  template <typename SanitizerName>
+  void SetSanitizerName(SanitizerName& aName) const;
+
   RefPtr<nsAtom> mLocalName;
   // A "null" namespace is represented by the nullptr.
   RefPtr<nsAtom> mNamespace;
 };
 
-// TODO: Replace this with some kind of optimized ordered set.
-template <typename ValueType>
-class ListSet {
- public:
-  ListSet() = default;
+using CanonicalNameSet = nsTHashSet<CanonicalName>;
 
-  explicit ListSet(nsTArray<ValueType>&& aValues)
-      : mValues(std::move(aValues)) {}
+struct CanonicalElementAttributes {
+  Maybe<CanonicalNameSet> mAttributes;
+  Maybe<CanonicalNameSet> mRemoveAttributes;
 
-  void Insert(ValueType&& aValue) {
-    if (Contains(aValue)) {
-      return;
-    }
-
-    mValues.AppendElement(std::move(aValue));
-  }
-  bool Remove(const CanonicalName& aValue) {
-    return mValues.RemoveElement(aValue);
-  }
-  bool Contains(const CanonicalName& aValue) const {
-    return mValues.Contains(aValue);
-  }
-  bool IsEmpty() const { return mValues.IsEmpty(); }
-
-  ValueType* Get(const CanonicalName& aValue) {
-    auto index = mValues.IndexOf(aValue);
-    if (index == mValues.NoIndex) {
-      return nullptr;
-    }
-    return &mValues[index];
-  }
-
-  const nsTArray<ValueType>& Values() const { return mValues; }
-  nsTArray<ValueType>& Values() { return mValues; }
-
-  bool HasDuplicates() const;
-
- private:
-  nsTArray<ValueType> mValues;
+  bool Equals(const CanonicalElementAttributes& aOther) const;
 };
 
-class CanonicalElementWithAttributes : public CanonicalName {
- public:
-  explicit CanonicalElementWithAttributes(CanonicalName&& aName)
-      : CanonicalName(std::move(aName)) {}
-
-  bool EqualAttributes(const CanonicalElementWithAttributes& aOther) const;
-
-  SanitizerElementNamespaceWithAttributes
-  ToSanitizerElementNamespaceWithAttributes() const;
-
-  CanonicalElementWithAttributes Clone() const;
-
-  Maybe<ListSet<CanonicalName>> mAttributes;
-  Maybe<ListSet<CanonicalName>> mRemoveAttributes;
-};
+using CanonicalElementMap =
+    nsTHashMap<CanonicalName, CanonicalElementAttributes>;
 
 nsTArray<OwningStringOrSanitizerAttributeNamespace> ToSanitizerAttributes(
-    const ListSet<CanonicalName>& aList);
+    const CanonicalNameSet& aSet);
 
 }  // namespace mozilla::dom::sanitizer
 

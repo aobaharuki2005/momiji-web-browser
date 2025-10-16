@@ -129,14 +129,12 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
 
   RefPtr<nsIGlobalObject> mGlobal;
 
-  Maybe<sanitizer::ListSet<sanitizer::CanonicalElementWithAttributes>>
-      mElements;
-  Maybe<sanitizer::ListSet<sanitizer::CanonicalName>> mRemoveElements;
-  Maybe<sanitizer::ListSet<sanitizer::CanonicalName>>
-      mReplaceWithChildrenElements;
+  Maybe<sanitizer::CanonicalElementMap> mElements;
+  Maybe<sanitizer::CanonicalNameSet> mRemoveElements;
+  Maybe<sanitizer::CanonicalNameSet> mReplaceWithChildrenElements;
 
-  Maybe<sanitizer::ListSet<sanitizer::CanonicalName>> mAttributes;
-  Maybe<sanitizer::ListSet<sanitizer::CanonicalName>> mRemoveAttributes;
+  Maybe<sanitizer::CanonicalNameSet> mAttributes;
+  Maybe<sanitizer::CanonicalNameSet> mRemoveAttributes;
 
   bool mComments = false;
   // mDataAttributes always exists when mAttributes exists after

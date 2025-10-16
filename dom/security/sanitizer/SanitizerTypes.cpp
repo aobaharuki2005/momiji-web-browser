@@ -11,113 +11,84 @@ bool CanonicalName::IsDataAttribute() const {
          !mNamespace;
 }
 
+template <typename SanitizerName>
+void CanonicalName::SetSanitizerName(SanitizerName& aSanitizerName) const {
+  mLocalName->ToString(aSanitizerName.mName);
+  if (mNamespace) {
+    mNamespace->ToString(aSanitizerName.mNamespace);
+  } else {
+    aSanitizerName.mNamespace.SetIsVoid(true);
+  }
+}
+
 SanitizerAttributeNamespace CanonicalName::ToSanitizerAttributeNamespace()
     const {
   SanitizerAttributeNamespace result;
-  mLocalName->ToString(result.mName);
-  if (mNamespace) {
-    mNamespace->ToString(result.mNamespace);
-  } else {
-    result.mNamespace.SetIsVoid(true);
-  }
-  return result;
-}
-
-SanitizerElementNamespaceWithAttributes
-CanonicalElementWithAttributes::ToSanitizerElementNamespaceWithAttributes()
-    const {
-  SanitizerElementNamespaceWithAttributes result;
-  mLocalName->ToString(result.mName);
-  if (mNamespace) {
-    mNamespace->ToString(result.mNamespace);
-  } else {
-    result.mNamespace.SetIsVoid(true);
-  }
-  if (mAttributes) {
-    result.mAttributes.Construct(ToSanitizerAttributes(*mAttributes));
-  }
-  if (mRemoveAttributes) {
-    result.mRemoveAttributes.Construct(
-        ToSanitizerAttributes(*mRemoveAttributes));
-  }
+  SetSanitizerName(result);
   return result;
 }
 
 SanitizerElementNamespace CanonicalName::ToSanitizerElementNamespace() const {
   SanitizerElementNamespace result;
-  mLocalName->ToString(result.mName);
-  if (mNamespace) {
-    mNamespace->ToString(result.mNamespace);
-  } else {
-    result.mNamespace.SetIsVoid(true);
+  SetSanitizerName(result);
+  return result;
+}
+
+SanitizerElementNamespaceWithAttributes
+CanonicalName::ToSanitizerElementNamespaceWithAttributes(
+    const CanonicalElementAttributes& aElementAttributes) const {
+  SanitizerElementNamespaceWithAttributes result;
+  SetSanitizerName(result);
+  if (aElementAttributes.mAttributes) {
+    result.mAttributes.Construct(
+        ToSanitizerAttributes(*aElementAttributes.mAttributes));
+  }
+  if (aElementAttributes.mRemoveAttributes) {
+    result.mRemoveAttributes.Construct(
+        ToSanitizerAttributes(*aElementAttributes.mRemoveAttributes));
   }
   return result;
 }
 
-// TODO(bug 1989215): This is obviously quadratic. Fix this!
-template <typename ValueType>
-bool ListSet<ValueType>::HasDuplicates() const {
-  for (size_t i = 0; i + 1 < mValues.Length(); i++) {
-    if (mValues.IndexOf(mValues[i], i + 1) != mValues.NoIndex) {
-      return true;
-    }
-  }
-  return false;
-}
-
-template class ListSet<CanonicalName>;
-template class ListSet<CanonicalElementWithAttributes>;
-
-bool CanonicalElementWithAttributes::EqualAttributes(
-    const CanonicalElementWithAttributes& aOther) const {
-  MOZ_ASSERT(*this == aOther);
-
+bool CanonicalElementAttributes::Equals(
+    const CanonicalElementAttributes& aOther) const {
   if (mAttributes.isSome() != aOther.mAttributes.isSome() ||
       mRemoveAttributes.isSome() != aOther.mRemoveAttributes.isSome()) {
     return false;
   }
 
   if (mAttributes) {
-    if (mAttributes->Values() != aOther.mAttributes->Values()) {
+    if (mAttributes->Count() != aOther.mAttributes->Count()) {
       return false;
+    }
+
+    for (const CanonicalName& attr : *mAttributes) {
+      if (!aOther.mAttributes->Contains(attr)) {
+        return false;
+      }
     }
   }
 
   if (mRemoveAttributes) {
-    if (mRemoveAttributes->Values() != aOther.mRemoveAttributes->Values()) {
+    if (mRemoveAttributes->Count() != aOther.mRemoveAttributes->Count()) {
       return false;
+    }
+
+    for (const CanonicalName& attr : *mRemoveAttributes) {
+      if (!aOther.mRemoveAttributes->Contains(attr)) {
+        return false;
+      }
     }
   }
 
   return true;
 }
 
-CanonicalElementWithAttributes CanonicalElementWithAttributes::Clone() const {
-  CanonicalElementWithAttributes elem(CanonicalName::Clone());
-
-  if (mAttributes) {
-    nsTArray<CanonicalName> attributes;
-    for (const auto& attr : mAttributes->Values()) {
-      attributes.AppendElement(attr.Clone());
-    }
-    elem.mAttributes = Some(ListSet(std::move(attributes)));
-  }
-
-  if (mRemoveAttributes) {
-    nsTArray<CanonicalName> attributes;
-    for (const auto& attr : mRemoveAttributes->Values()) {
-      attributes.AppendElement(attr.Clone());
-    }
-    elem.mRemoveAttributes = Some(ListSet(std::move(attributes)));
-  }
-
-  return elem;
-}
-
 nsTArray<OwningStringOrSanitizerAttributeNamespace> ToSanitizerAttributes(
-    const ListSet<CanonicalName>& aList) {
+    const CanonicalNameSet& aSet) {
+  // XXX Sorting
   nsTArray<OwningStringOrSanitizerAttributeNamespace> attributes;
-  for (const CanonicalName& canonical : aList.Values()) {
+  for (const CanonicalName& canonical : aSet) {
     attributes.AppendElement()->SetAsSanitizerAttributeNamespace() =
         canonical.ToSanitizerAttributeNamespace();
   }
