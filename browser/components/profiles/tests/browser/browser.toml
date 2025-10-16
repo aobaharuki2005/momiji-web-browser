@@ -23,6 +23,11 @@ skip-if = [
 
 ["browser_delete_profile_page_test.js"]
 
+["browser_desktop_shortcut_test.js"]
+run-if = [
+  "os == 'win'",
+] # Desktop shortcuts are only supported on Windows.
+
 ["browser_edit_profile_test.js"]
 skip-if = [
   "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && debug", # Bug 1942961

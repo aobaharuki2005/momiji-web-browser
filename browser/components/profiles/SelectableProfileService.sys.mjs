@@ -1353,6 +1353,8 @@ class SelectableProfileServiceClass extends EventEmitter {
     let newDefault = profiles.find(p => p.id !== this.currentProfile.id);
     await this.setDefaultProfileForGroup(newDefault);
 
+    await this.currentProfile.removeDesktopShortcut();
+
     await this.#connection.executeBeforeShutdown(
       "SelectableProfileService: deleteCurrentProfile",
       async db => {

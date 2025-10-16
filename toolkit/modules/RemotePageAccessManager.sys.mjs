@@ -143,6 +143,7 @@ export let RemotePageAccessManager = {
         "Profiles:GetEditProfileContent",
         "Profiles:UpdateProfileTheme",
         "Profiles:UpdateProfileAvatar",
+        "Profiles:SetDesktopShortcut",
       ],
       RPMSendAsyncMessage: [
         "Profiles:UpdateProfileName",

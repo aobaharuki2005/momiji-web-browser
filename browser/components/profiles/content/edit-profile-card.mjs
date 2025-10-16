@@ -62,6 +62,8 @@ import "chrome://browser/content/profiles/avatar.mjs";
 import "chrome://browser/content/profiles/profiles-theme-card.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/profiles/profile-avatar-selector.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://global/content/elements/moz-toggle.mjs";
 
 const SAVE_NAME_TIMEOUT = 2000;
 const SAVED_MESSAGE_TIMEOUT = 5000;
@@ -71,23 +73,25 @@ const SAVED_MESSAGE_TIMEOUT = 5000;
  */
 export class EditProfileCard extends MozLitElement {
   static properties = {
+    hasDesktopShortcut: { type: Boolean },
     profile: { type: Object },
     profiles: { type: Array },
     themes: { type: Array },
   };
 
   static queries = {
-    mozCard: "moz-card",
-    nameInput: "#profile-name",
-    errorMessage: "#error-message",
-    savedMessage: "#saved-message",
-    deleteButton: "#delete-button",
-    doneButton: "#done-button",
-    moreThemesLink: "#more-themes",
-    headerAvatar: "#header-avatar",
-    themesPicker: "#themes",
     avatarSelector: "profile-avatar-selector",
     avatarSelectorLink: "#profile-avatar-selector-link",
+    deleteButton: "#delete-button",
+    doneButton: "#done-button",
+    errorMessage: "#error-message",
+    headerAvatar: "#header-avatar",
+    moreThemesLink: "#more-themes",
+    mozCard: "moz-card",
+    nameInput: "#profile-name",
+    savedMessage: "#saved-message",
+    shortcutToggle: "#desktop-shortcut-toggle",
+    themesPicker: "#themes",
   };
 
   updateNameDebouncer = null;
@@ -127,15 +131,23 @@ export class EditProfileCard extends MozLitElement {
       return;
     }
 
-    let { currentProfile, profiles, themes, isInAutomation } =
-      await RPMSendQuery("Profiles:GetEditProfileContent");
+    let {
+      currentProfile,
+      hasDesktopShortcut,
+      isInAutomation,
+      platform,
+      profiles,
+      themes,
+    } = await RPMSendQuery("Profiles:GetEditProfileContent");
 
     if (isInAutomation) {
       this.updateNameDebouncer.timeout = 50;
     }
 
-    this.setProfile(currentProfile);
+    this.hasDesktopShortcut = hasDesktopShortcut;
+    this.platform = platform;
     this.profiles = profiles;
+    this.setProfile(currentProfile);
     this.themes = themes;
   }
 
@@ -397,6 +409,36 @@ export class EditProfileCard extends MozLitElement {
     </moz-visual-picker>`;
   }
 
+  desktopShortcutTemplate() {
+    if (this.platform !== "win") {
+      return null;
+    }
+
+    return html`<div id="desktop-shortcut-section">
+      <label
+        for="desktop-shortcut-toggle"
+        data-l10n-id="edit-profile-page-desktop-shortcut-header"
+      ></label>
+      <moz-toggle
+        id="desktop-shortcut-toggle"
+        ?pressed=${this.hasDesktopShortcut}
+        @click=${this.handleDesktopShortcutToggle}
+      ></moz-toggle>
+    </div>`;
+  }
+
+  async handleDesktopShortcutToggle(event) {
+    event.preventDefault();
+    let { hasDesktopShortcut } = await RPMSendQuery(
+      "Profiles:SetDesktopShortcut",
+      {
+        shouldEnable: event.target.pressed,
+      }
+    );
+    this.shortcutToggle.pressed = hasDesktopShortcut;
+    this.requestUpdate();
+  }
+
   handleThemeChange() {
     this.updateTheme(this.themesPicker.value);
   }
@@ -496,7 +538,7 @@ export class EditProfileCard extends MozLitElement {
           ${this.headerAvatarTemplate()}
           <div id="profile-content">
             ${this.headerTemplate()}${this.profilesNameTemplate()}
-            ${this.themesTemplate()}
+            ${this.themesTemplate()} ${this.desktopShortcutTemplate()}
 
             <a
               id="more-themes"
