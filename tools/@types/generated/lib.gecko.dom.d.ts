@@ -7778,8 +7778,6 @@ declare var Directory: {
 };
 
 interface DocumentEventMap extends GlobalEventHandlersEventMap, OnErrorEventHandlerForNodesEventMap, TouchEventHandlersEventMap {
-    "afterscriptexecute": Event;
-    "beforescriptexecute": Event;
     "fullscreenchange": Event;
     "fullscreenerror": Event;
     "pointerlockchange": Event;
@@ -7851,8 +7849,6 @@ interface Document extends Node, DocumentOrShadowRoot, FontFaceSource, GeometryU
     readonly mozFullScreen: boolean;
     readonly mozFullScreenEnabled: boolean;
     readonly mozSyntheticDocument: boolean;
-    onafterscriptexecute: ((this: Document, ev: Event) => any) | null;
-    onbeforescriptexecute: ((this: Document, ev: Event) => any) | null;
     onfullscreenchange: ((this: Document, ev: Event) => any) | null;
     onfullscreenerror: ((this: Document, ev: Event) => any) | null;
     onpointerlockchange: ((this: Document, ev: Event) => any) | null;

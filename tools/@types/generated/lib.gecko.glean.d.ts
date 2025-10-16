@@ -3105,10 +3105,8 @@ interface GleanImpl {
   }
 
   useCounterDeprecatedOpsDoc: {
-    afterScriptExecuteEvent: GleanCounter;
     ambientLightEvent: GleanCounter;
     appCache: GleanCounter;
-    beforeScriptExecuteEvent: GleanCounter;
     components: GleanCounter;
     createImageBitmapCanvasRenderingContext2D: GleanCounter;
     deprecatedTestingAttribute: GleanCounter;
@@ -3154,10 +3152,8 @@ interface GleanImpl {
   }
 
   useCounterDeprecatedOpsPage: {
-    afterScriptExecuteEvent: GleanCounter;
     ambientLightEvent: GleanCounter;
     appCache: GleanCounter;
-    beforeScriptExecuteEvent: GleanCounter;
     components: GleanCounter;
     createImageBitmapCanvasRenderingContext2D: GleanCounter;
     deprecatedTestingAttribute: GleanCounter;

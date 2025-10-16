@@ -209,12 +209,6 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
     return mScriptElement;
   }
 
-  // Event target for beforescriptexecute/afterscriptexecute events.
-  inline nsIScriptElement* GetScriptElementForExecuteEvents() const {
-    MOZ_ASSERT(mScriptElement);
-    return mScriptElement;
-  }
-
   // For ScriptLoader::mCurrentParserInsertedScript.
   inline nsIScriptElement* GetScriptElementForCurrentParserInsertedScript()
       const {
