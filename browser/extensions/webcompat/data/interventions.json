@@ -3970,21 +3970,6 @@
       }
     ]
   },
-  "1933811": {
-    "label": "indices.circana.com",
-    "bugs": {
-      "1898959": {
-        "issue": "firefox-blocked-completely",
-        "matches": ["*://indices.circana.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "ua_string": ["add_Chrome"]
-      }
-    ]
-  },
   "1933910": {
     "label": "www.tiktok.com/tiktokstudio",
     "bugs": {
