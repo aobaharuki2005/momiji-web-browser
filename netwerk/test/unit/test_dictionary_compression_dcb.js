@@ -472,6 +472,7 @@ async function setupDicts() {
 }
 
 add_setup(async function () {
+  Services.prefs.setBoolPref("network.http.dictionaries.enable", true);
   if (!server) {
     server = await setupDCBTestServer();
   }
@@ -484,6 +485,10 @@ add_setup(async function () {
   evict_cache_entries("all", lci);
 
   await setupDicts();
+});
+
+registerCleanupFunction(async () => {
+  Services.prefs.clearUserPref("network.http.dictionaries.enable");
 });
 
 // Test basic dictionary-compressed Brotli functionality

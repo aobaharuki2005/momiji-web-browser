@@ -46,6 +46,7 @@ const TEST_DICTIONARIES = {
 let server = null;
 
 add_setup(async function () {
+  Services.prefs.setBoolPref("network.http.dictionaries.enable", true);
   if (!server) {
     server = await setupServer();
   }
@@ -56,6 +57,10 @@ add_setup(async function () {
     partitionKey: `(https,localhost)`,
   });
   evict_cache_entries("all", lci);
+});
+
+registerCleanupFunction(async () => {
+  Services.prefs.clearUserPref("network.http.dictionaries.enable");
 });
 
 // Utility function to calculate SHA-256 hash
