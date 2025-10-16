@@ -899,18 +899,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
  public:
   void fBufferData(GLenum target, GLsizeiptr size, const GLvoid* data,
                    GLenum usage) {
-    if (WorkAroundDriverBugs() && target == LOCAL_GL_ARRAY_BUFFER &&
-        mVertexBufferExtraPadding) {
-      // Some drivers require extra padding at the end of array buffers.
-      // See bug 1983036.
-      raw_fBufferData(target, size + *mVertexBufferExtraPadding, nullptr,
-                      usage);
-      if (data) {
-        fBufferSubData(target, 0, size, data);
-      }
-    } else {
-      raw_fBufferData(target, size, data, usage);
-    }
+    raw_fBufferData(target, size, data, usage);
 
     // bug 744888
     if (WorkAroundDriverBugs() && !data && Vendor() == GLVendor::NVIDIA) {
@@ -3920,14 +3909,10 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   GLint mMaxCubeMapTextureSize = 0;
   GLint mMaxRenderbufferSize = 0;
   GLint mMaxViewportDims[2] = {};
-  GLint mMaxVertexAttribStride = 0;
   GLsizei mMaxSamples = 0;
   bool mNeedsTextureSizeChecks = false;
   bool mNeedsFlushBeforeDeleteFB = false;
   bool mTextureAllocCrashesOnMapFailure = false;
-  // Amount of additional padding bytes that must be allocated for
-  // GL_ARRAY_BUFFER buffers to work around driver bugs. See bug 1983036.
-  Maybe<GLint> mVertexBufferExtraPadding;
   const bool mWorkAroundDriverBugs;
   mutable uint64_t mSyncGLCallCount = 0;
 
