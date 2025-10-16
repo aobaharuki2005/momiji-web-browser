@@ -71,7 +71,8 @@ class NavigableManagerClass {
     return null;
   }
 
-  /* Retrieve the browsing context corresponding to the provided navigabl id.
+  /**
+   * Retrieve the browsing context corresponding to the provided navigabl id.
    *
    * @param {string} id
    *     A browsing context unique id (created by getIdForBrowsingContext).
