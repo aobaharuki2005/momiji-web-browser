@@ -1521,6 +1521,7 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
 
   char* cePtr = contentEncoding.BeginWriting();
   uint32_t count = 0;
+  bool removeEncodings = false;
   while (char* val = nsCRT::strtok(cePtr, HTTP_LWS ",", &cePtr)) {
     if (++count > 16) {
       // For compatibility with old code, we will just carry on without
@@ -1562,15 +1563,8 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
       }
       if (from.EqualsLiteral("dcb") || from.EqualsLiteral("dcz")) {
         MOZ_ASSERT(XRE_IsParentProcess());
+        removeEncodings = true;
       }
-      // dcb and dcz encodings are removed when it's decompressed (always in
-      // the parent process).  However, in theory you could have
-      // Content-Encoding: dcb,gzip
-      // in which case we could pass it down to the content process as
-      // Content-Encoding: gzip.   We won't do that; we'll remove all
-      // compressors if we need to remove any. This double compression of course
-      // is silly, but supported by the spec.
-
       nextListener = converter;
     } else {
       if (val) {
@@ -1582,6 +1576,21 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
     }
   }
 
+  // dcb and dcz encodings are removed when it's decompressed (always in
+  // the parent process).  However, in theory you could have
+  // Content-Encoding: dcb,gzip
+  // in which case we could pass it down to the content process as
+  // Content-Encoding: gzip.   We won't do that; we'll remove all compressors
+  // if we need to remove any.
+  // This double compression of course is silly, but supported by the spec.
+  if (removeEncodings) {
+    // if we have dcb or dcz, all content-encodings in the header should
+    // be removed as we're decompressing before the tee in the parent
+    // process
+    LOG(("Changing Content-Encoding from '%s' to ''", contentEncoding.get()));
+    // Can't use SetHeader; we need to overwrite the current value
+    rv = mResponseHead->SetHeaderOverride(nsHttp::Content_Encoding, ""_ns);
+  }
   *aNewNextListener = do_AddRef(nextListener).take();
   return NS_OK;
 }
