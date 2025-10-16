@@ -5408,5 +5408,22 @@
         }
       }
     ]
+  },
+  "1994142": {
+    "label": "virtual-cards.exnode.ru",
+    "bugs": {
+      "1994142": {
+        "issue": "broken-layout",
+        "matches": ["*://virtual-cards.exnode.ru/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "content_scripts": {
+          "css": ["1994142-virtual-cards.exnode.ru-fix-table-layout.css"]
+        }
+      }
+    ]
   }
 }
