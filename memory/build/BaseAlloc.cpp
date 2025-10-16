@@ -10,7 +10,7 @@
 
 using namespace mozilla;
 
-Mutex base_mtx;
+MOZ_CONSTINIT Mutex base_mtx;
 
 // Current pages that are being used for internal memory allocations.  These
 // pages are carved up in cacheline-size quanta, so that there is no chance of
