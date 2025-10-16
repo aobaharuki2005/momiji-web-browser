@@ -932,6 +932,22 @@ class BrowserRobot {
         )
     }
 
+    fun verifyOpenLinkInAnotherAppPromptIsNotShown() {
+        assertUIObjectIsGone(
+            itemContainingText(
+                getStringResource(
+                    applinksR.string.mozac_feature_applinks_normal_confirm_dialog_title_with_app_name,
+                    appName,
+                ),
+            ),
+            itemContainingText(
+                getStringResource(
+                    applinksR.string.mozac_feature_applinks_normal_confirm_dialog_message,
+                ),
+            ),
+        )
+    }
+
     fun verifyPrivateBrowsingOpenLinkInAnotherAppPrompt(appName: String, url: String, pageObject: UiObject) {
         for (i in 1..RETRY_COUNT) {
             try {

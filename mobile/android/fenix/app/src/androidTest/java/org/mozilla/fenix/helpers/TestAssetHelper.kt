@@ -101,6 +101,12 @@ object TestAssetHelper {
         return TestAsset(url, "", "")
     }
 
+    fun getAppLinksRedirectAsset(server: MockWebServer): TestAsset {
+        val url = server.url("pages/appLinksLinks.html").toString().toUri()!!
+
+        return TestAsset(url, "", "")
+    }
+
     fun getCreditCardFormAsset(server: MockWebServer): TestAsset {
         val url = server.url("pages/creditCardForm.html").toString().toUri()!!
 
