@@ -1531,6 +1531,38 @@ class Client:
             pass
         return self.execute_script("return window.fastclicked")
 
+    async def test_aceomni_pan_and_zoom_works(self, url):
+        await self.navigate(url, wait="none")
+        img = self.await_css("#imageZoom", is_displayed=True)
+        await self.stall(1)
+
+        def get_zoom_x():
+            return self.execute_script(
+                "return arguments[0].style.cssText.match(/--zoom-x:\\s?(\\d+(\\.\\d+)?)%/)?.[1]",
+                img,
+            )
+
+        if get_zoom_x() is not None:
+            return False
+
+        await self.stall(0.5)
+        coords = self.get_element_screen_position(img)
+        coords = [coords[0] + 50, coords[1] + 100]
+        await self.apz_move(coords=coords)
+        await self.stall(0.5)
+        old_x = float(get_zoom_x())
+
+        for i in range(20):
+            coords = [coords[0] + 10, coords[1]]
+            await self.apz_move(coords=coords)
+            await self.stall(0.01)
+            x = float(get_zoom_x())
+            if x < old_x:
+                return False
+            old_x = x
+
+        return True
+
     def is_displayed(self, element):
         if element is None:
             return False
