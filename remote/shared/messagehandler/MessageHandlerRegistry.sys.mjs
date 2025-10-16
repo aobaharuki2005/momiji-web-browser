@@ -61,10 +61,10 @@ export function getMessageHandlerClass(type) {
  * after crossing a technical boundary (eg process, thread...).
  */
 export class MessageHandlerRegistry extends EventEmitter {
-  /**
-   * @param {string} type
+  /*
+   * @param {String} type
    *     MessageHandler type, one of MessageHandler.type.
-   * @param {object} context
+   * @param {Object} context
    *     The context object, which depends on the type.
    */
   constructor(type, context) {

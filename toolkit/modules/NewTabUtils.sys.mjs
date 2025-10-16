@@ -956,7 +956,7 @@ var ActivityStreamProvider = {
     );
   },
 
-  /**
+  /*
    * Gets the top frecent sites for Activity Stream.
    *
    * @param {Object} aOptions

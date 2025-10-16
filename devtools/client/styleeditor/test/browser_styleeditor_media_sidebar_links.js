@@ -3,10 +3,8 @@
 
 "use strict";
 
-/**
- * Tests responsive mode links for `@media` sidebar width and height related
- * conditions.
- */
+/* Tests responsive mode links for
+ * @media sidebar width and height related conditions */
 
 loader.lazyRequireGetter(
   this,

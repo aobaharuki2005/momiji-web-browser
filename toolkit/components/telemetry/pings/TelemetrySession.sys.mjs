@@ -1291,8 +1291,7 @@ var Impl = {
     return promise;
   },
 
-  /**
-   * Loads session data from the session data file.
+  /** Loads session data from the session data file.
    * @return {Promise<object>} A promise which is resolved with an object when
    *                            loading has completed, with null otherwise.
    */

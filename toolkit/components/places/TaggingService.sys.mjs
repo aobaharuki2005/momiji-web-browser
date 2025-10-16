@@ -541,17 +541,13 @@ class TagSearch {
 export function TagAutoCompleteSearch() {}
 
 TagAutoCompleteSearch.prototype = {
-  /**
+  /*
    * Search for a given string and notify a listener of the result.
    *
-   * @param {string} searchString
-   *   The string to search for.
-   * @param {string} searchParam
-   *   An extra parameter.
-   * @param {nsIAutoCompleteResult} previousResult
-   *   A previous result to use for faster searching.
-   * @param {nsIAutoCompleteObserver} listener
-   *   A listener to notify when the search is complete.
+   * @param searchString - The string to search for
+   * @param searchParam - An extra parameter
+   * @param previousResult - A previous result to use for faster searching
+   * @param listener - A listener to notify when the search is complete
    */
   startSearch(searchString, searchParam, previousResult, listener) {
     if (this._search) {

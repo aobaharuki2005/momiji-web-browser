@@ -834,9 +834,8 @@ function runInParent(aFunctionOrURL) {
   return chromeScript;
 }
 
-/**
- * Manage logins in parent chrome process.
- */
+/** Manage logins in parent chrome process.
+ * */
 function manageLoginsInParent() {
   return runInParent(function addLoginsInParentInner() {
     /* eslint-env mozilla/chrome-script */
@@ -886,8 +885,7 @@ function manageLoginsInParent() {
   });
 }
 
-/**
- * Initialize with a list of logins. The logins are added within the parent chrome process.
+/** Initialize with a list of logins. The logins are added within the parent chrome process.
  * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
  *                          that would be passed to nsLoginInfo.init().
  */
@@ -897,8 +895,7 @@ async function addLoginsInParent(...aLogins) {
   return script;
 }
 
-/**
- * Initialize with a list of logins, after removing all user facing logins.
+/** Initialize with a list of logins, after removing all user facing logins.
  * The logins are added within the parent chrome process.
  * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
  *                          that would be passed to nsLoginInfo.init().
@@ -945,8 +942,7 @@ async function setStoredLoginsDuringTask(...logins) {
   });
 }
 
-/**
- * Returns a promise which resolves to a list of logins
+/** Returns a promise which resolves to a list of logins
  */
 function getLogins() {
   const script = manageLoginsInParent();
@@ -1126,7 +1122,7 @@ function setContentForTask(html) {
   return content.firstElementChild;
 }
 
-/**
+/*
  * Set preferences via SpecialPowers.pushPrefEnv and reset them after current
  * task has finished.
  *

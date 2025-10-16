@@ -5691,8 +5691,7 @@ var SessionStoreInternal = {
     return Promise.all(windowOpenedPromises);
   },
 
-  /**
-   * Reset closedId's from previous sessions to ensure these IDs are unique
+  /** reset closedId's from previous sessions to ensure these IDs are unique
    * @param tabData
    *        an array of data to be restored
    * @param {String} windowId

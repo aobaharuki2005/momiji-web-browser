@@ -3582,7 +3582,7 @@ export var XPIProvider = {
     return XPIExports.XPIDatabase.getBlocklistAttentionInfo();
   },
 
-  /**
+  /*
    * Notified when a preference we're interested in has changed.
    *
    * @see nsIObserver

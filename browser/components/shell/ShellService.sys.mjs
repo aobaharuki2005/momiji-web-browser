@@ -134,13 +134,13 @@ let ShellServiceInternal = {
     return false;
   },
 
-  /**
+  /*
    * Check if UserChoice is impossible.
    *
    * Separated for easy stubbing in tests.
    *
-   * @returns {string}
-   *   Telemetry result like "Err*", or null if UserChoice is possible.
+   * @return string telemetry result like "Err*", or null if UserChoice
+   * is possible.
    */
   _userChoiceImpossibleTelemetryResult() {
     let winShellService = this.shellService.QueryInterface(
@@ -155,11 +155,10 @@ let ShellServiceInternal = {
     return null;
   },
 
-  /**
+  /*
    * Accommodate `setDefaultPDFHandlerOnlyReplaceBrowsers` feature.
-   *
-   * @returns {boolean}
-   *   True if Firefox should set itself as default PDF handler, false otherwise.
+   * @return true if Firefox should set itself as default PDF handler, false
+   * otherwise.
    */
   _shouldSetDefaultPDFHandler() {
     if (
@@ -248,15 +247,14 @@ let ShellServiceInternal = {
     };
   },
 
-  /**
+  /*
    * Set the default browser through the UserChoice registry keys on Windows.
    *
    * NOTE: This does NOT open the System Settings app for manual selection
    * in case of failure. If that is desired, catch the exception and call
    * setDefaultBrowser().
    *
-   * @returns {Promise<void>}
-   *   Resolves when successful, rejects with Error on failure.
+   * @return Promise, resolves when successful, rejects with Error on failure.
    */
   async setAsDefaultUserChoice() {
     if (AppConstants.platform != "win") {

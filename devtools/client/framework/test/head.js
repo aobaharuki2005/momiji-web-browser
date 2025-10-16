@@ -85,8 +85,7 @@ function synthesizeKeyElement(el) {
   EventUtils.synthesizeKey(key, mod, el.ownerDocument.defaultView);
 }
 
-/**
- * Check the toolbox host type and prefs to make sure they match the
+/* Check the toolbox host type and prefs to make sure they match the
  * expected values
  * @param {Toolbox}
  * @param {HostType} hostType

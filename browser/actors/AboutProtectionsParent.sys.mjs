@@ -161,7 +161,10 @@ export class AboutProtectionsParent extends JSWindowActorParent {
   /**
    * Retrieves login data for the user.
    *
-   * @return {{numLogins: number, potentiallyBreachedLogins: number, mobileDeviceConnected: boolean }}
+   * @return {{
+   *            numLogins: Number,
+   *            potentiallyBreachedLogins: Number,
+   *            mobileDeviceConnected: Boolean }}
    */
   async getLoginData() {
     if (gTestOverride && "getLoginData" in gTestOverride) {
@@ -209,18 +212,14 @@ export class AboutProtectionsParent extends JSWindowActorParent {
   }
 
   /**
-   * @typedef {object} ProtectionsMonitorData
-   * @property {number} monitoredEmails
-   * @property {number} numBreaches
-   * @property {number} passwords
-   * @property {?string} userEmail
-   * @property {boolean} error
-   */
-
-  /**
    * Retrieves monitor data for the user.
    *
-   * @return {ProtectionsMonitorData}
+   * @return {{ monitoredEmails: Number,
+   *            numBreaches: Number,
+   *            passwords: Number,
+   *            userEmail: String|null,
+   *            error: Boolean }}
+   *         Monitor data.
    */
   async getMonitorData() {
     if (gTestOverride && "getMonitorData" in gTestOverride) {

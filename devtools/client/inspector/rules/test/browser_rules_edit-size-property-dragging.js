@@ -297,8 +297,12 @@ async function testDraggingClassIsAddedOnValueUpdate(view) {
 /**
  * Runs each test and check whether or not the property is draggable
  *
- * @param {CSSRuleView} view
- * @param {{name: string, value: string, shouldBeDraggable: boolean}[]} tests
+ * @param  {CSSRuleView} view
+ * @param  {Array.<{
+ *   name: String,
+ *   value: String,
+ *   shouldBeDraggable: Boolean,
+ * }>} tests
  */
 function runIsDraggableTest(view, tests) {
   for (const test of tests) {
