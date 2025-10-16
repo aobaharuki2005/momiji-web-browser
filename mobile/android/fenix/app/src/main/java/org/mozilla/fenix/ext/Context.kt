@@ -189,4 +189,7 @@ fun Context.getApplicationInstalledTime(logger: Logger): Long = try {
 } catch (e: PackageManager.NameNotFoundException) {
     logger.warn("Unable to retrieve package info for $packageName", e)
     0L
+} catch (e: UnsupportedOperationException) {
+    logger.warn("Unable to retrieve package info for $packageName", e)
+    0L
 }
