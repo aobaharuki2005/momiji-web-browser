@@ -1098,6 +1098,7 @@ def target_tasks_searchfox(full_task_graph, parameters, graph_config):
         "searchfox-linux64-searchfox/opt",
         "searchfox-linux64-searchfox/debug",
         "searchfox-macosx64-searchfox/debug",
+        "searchfox-macosx64-aarch64-searchfox/opt",
         "searchfox-macosx64-aarch64-searchfox/debug",
         "searchfox-win64-searchfox/debug",
         "searchfox-android-aarch64-searchfox/debug",
