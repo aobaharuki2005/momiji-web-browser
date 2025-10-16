@@ -328,6 +328,10 @@ interface nsICacheEntry : nsISupports
    */
   [noscript] void SetDictionary(in DictionaryCacheEntry dict);
 
+  /**
+   * Set bypass flag to allow waiting listeners to continue even while entry is being written
+   */
+  void setBypassWriterLock(in boolean aBypass);
 };
 
 /**

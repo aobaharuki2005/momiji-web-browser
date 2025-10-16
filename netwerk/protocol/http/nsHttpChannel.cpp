@@ -6288,6 +6288,7 @@ nsresult nsHttpChannel::DoInstallCacheListener(bool aIsDictionaryCompressed,
   if (NS_FAILED(rv)) return rv;
   mListener = tee;
 
+  mWritingToCache = true;
   // If this is Use-As-Dictionary we need to be able to read it quickly for
   // dictionary use, OR if it's encoded in dcb or dcz (using a dictionary),
   // we must decompress it before storing since we won't have the dictionary
@@ -7122,6 +7123,7 @@ void nsHttpChannel::CancelNetworkRequest(nsresult aStatus) {
 
 NS_IMETHODIMP
 nsHttpChannel::Suspend() {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(LoadIsPending(), NS_ERROR_NOT_AVAILABLE);
 
   PROFILER_MARKER("nsHttpChannel::Suspend", NETWORK, {}, FlowMarker,
@@ -7133,6 +7135,21 @@ nsHttpChannel::Suspend() {
 
   if (mSuspendCount == 1) {
     mSuspendTimestamp = TimeStamp::NowLoRes();
+
+    // Start timer to detect if we're suspended too long
+    // This helps unblock waiting cache listeners when a channel is suspended
+    // for an unreasonably long time.
+    uint32_t delay = StaticPrefs::network_cache_suspended_writer_delay_ms();
+    if (!mSuspendTimer && delay) {
+      mSuspendTimer = NS_NewTimer();
+    }
+
+    if (mSuspendTimer && delay) {
+      RefPtr<TimerCallback> timerCallback = new TimerCallback(this);
+      mSuspendTimer->InitWithCallback(timerCallback, delay,
+                                      nsITimer::TYPE_ONE_SHOT);
+      LOG(("  started suspend timer, will fire in %dms", delay));
+    }
   }
 
   nsresult rvTransaction = NS_OK;
@@ -7152,6 +7169,7 @@ void nsHttpChannel::StaticSuspend(nsHttpChannel* aChan) { aChan->Suspend(); }
 
 NS_IMETHODIMP
 nsHttpChannel::Resume() {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
 
   AUTO_PROFILER_FLOW_MARKER("nsHttpChannel::Resume", NETWORK,
@@ -7161,6 +7179,18 @@ nsHttpChannel::Resume() {
 
   if (--mSuspendCount == 0) {
     mSuspendTotalTime += TimeStamp::NowLoRes() - mSuspendTimestamp;
+
+    // Cancel suspend timer since we're resuming
+    if (mSuspendTimer) {
+      mSuspendTimer->Cancel();
+      LOG(("  cancelled suspend timer"));
+    }
+
+    // Reset bypass flag since the writer is resuming
+    if (mCacheEntry && (mWritingToCache || LoadCacheEntryIsWriteOnly())) {
+      mCacheEntry->SetBypassWriterLock(false);
+      LOG(("  reset bypass writer lock flag"));
+    }
 
     if (mCallOnResume) {
       // Resume the interrupted procedure first, then resume
@@ -10101,6 +10131,7 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
   }
 
   CloseCacheEntry(!aContentComplete);
+  mWritingToCache = false;
 
   if (mLoadGroup) {
     mLoadGroup->RemoveRequest(this, nullptr, aStatus);
@@ -11686,6 +11717,21 @@ nsresult nsHttpChannel::TriggerNetwork() {
   return ContinueConnect();
 }
 
+nsresult nsHttpChannel::OnSuspendTimeout() {
+  MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread");
+
+  LOG(("nsHttpChannel::OnSuspendTimeout [this=%p]\n", this));
+
+  // If we're still suspended and have a cache entry, enable bypass mode
+  // This allows any waiting or future listeners to continue
+  if (mSuspendCount > 0 && mCacheEntry) {
+    LOG(("  suspend timeout: bypassing writer lock"));
+    mCacheEntry->SetBypassWriterLock(true);
+  }
+
+  return NS_OK;
+}
+
 void nsHttpChannel::MaybeRaceCacheWithNetwork() {
   nsresult rv;
 
@@ -11792,6 +11838,9 @@ nsHttpChannel::TimerCallback::Notify(nsITimer* aTimer) {
   }
   if (aTimer == mChannel->mNetworkTriggerTimer) {
     return mChannel->TriggerNetwork();
+  }
+  if (aTimer == mChannel->mSuspendTimer) {
+    return mChannel->OnSuspendTimeout();
   }
   MOZ_CRASH("Unknown timer");
 

@@ -120,6 +120,12 @@ class CacheEntry final : public nsIRunnable,
   bool IsDoomed() const { return mIsDoomed; }
   bool IsPinned() const { return mPinned; }
 
+  // Mark entry to allow bypassing writer lock for new listeners
+  void SetBypassWriterLock(bool aBypass);
+  bool ShouldBypassWriterLock() const MOZ_REQUIRES(mLock) {
+    return mBypassWriterLock;
+  }
+
   // Methods for entry management (eviction from memory),
   // called only on the management thread.
 
@@ -366,6 +372,8 @@ class CacheEntry final : public nsIRunnable,
   // Whether the pinning state of the entry is known (equals to the actual state
   // of the cache file)
   bool mPinningKnown : 1 MOZ_GUARDED_BY(mLock);
+  // Whether to bypass writer lock for new listeners (when writer is suspended)
+  bool mBypassWriterLock : 1 MOZ_GUARDED_BY(mLock);
 
   static char const* StateString(uint32_t aState);
 
@@ -553,6 +561,10 @@ class CacheEntryHandle final : public nsICacheEntry {
   }
   NS_IMETHOD SetDictionary(DictionaryCacheEntry* aDict) override {
     return mEntry->SetDictionary(aDict);
+  }
+  NS_IMETHOD SetBypassWriterLock(bool aBypass) override {
+    mEntry->SetBypassWriterLock(aBypass);
+    return NS_OK;
   }
 
   // Specific implementation:

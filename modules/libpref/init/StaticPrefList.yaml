@@ -15538,6 +15538,14 @@
   value: false
   mirror: always
 
+# The number of milliseconds after which a suspended channel writing
+# to a cache entry will notify all readers waiting for a callback to
+# continue without a cache entry.
+- name: network.cache.suspended_writer_delay_ms
+  type: RelaxedAtomicUint32
+  value: 5000
+  mirror: always
+
 # This is used for a temporary workaround for a web-compat issue. If pref is
 # true CORS preflight requests are allowed to send client certificates.
 - name: network.cors_preflight.allow_client_cert

@@ -835,6 +835,7 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   nsresult TriggerNetworkWithDelay(uint32_t aDelay);
   nsresult TriggerNetwork();
+  nsresult OnSuspendTimeout();
   void CancelNetworkRequest(nsresult aStatus);
 
   nsresult LogConsoleError(const char* aTag);
@@ -848,6 +849,12 @@ class nsHttpChannel final : public HttpBaseChannel,
   nsCOMPtr<nsITimer> mNetworkTriggerTimer;
   // Is true if the network request has been triggered.
   bool mNetworkTriggered = false;
+
+  // Timer to detect if channel has been suspended too long while writing to
+  // cache. When the timer fires we'll notify the cache entry to make
+  // all other listeners continue.
+  nsCOMPtr<nsITimer> mSuspendTimer;
+  bool mWritingToCache = false;
   bool mWaitingForProxy = false;
   bool mStaleRevalidation = false;
   // Will be true if the onCacheEntryAvailable callback is not called by the
