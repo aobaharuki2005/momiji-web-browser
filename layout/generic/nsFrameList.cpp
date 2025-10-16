@@ -186,7 +186,7 @@ nsIFrame* nsFrameList::FrameAt(int32_t aIndex) const {
   return frame;
 }
 
-int32_t nsFrameList::IndexOf(nsIFrame* aFrame) const {
+int32_t nsFrameList::IndexOf(const nsIFrame* aFrame) const {
   int32_t count = 0;
   for (nsIFrame* f = mFirstChild; f; f = f->GetNextSibling()) {
     if (f == aFrame) {

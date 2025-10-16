@@ -6680,7 +6680,7 @@ Result<nsILineIterator::LineInfo, nsresult> nsFlexContainerFrame::GetLine(
   return lineInfo;
 }
 
-int32_t nsFlexContainerFrame::FindLineContaining(nsIFrame* aFrame,
+int32_t nsFlexContainerFrame::FindLineContaining(const nsIFrame* aFrame,
                                                  int32_t aStartLine) {
   const int32_t index = mFrames.IndexOf(aFrame);
   if (index < 0) {

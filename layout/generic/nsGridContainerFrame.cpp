@@ -10807,7 +10807,7 @@ Result<nsILineIterator::LineInfo, nsresult> nsGridContainerFrame::GetLine(
   return rv;
 }
 
-int32_t nsGridContainerFrame::FindLineContaining(nsIFrame* aFrame,
+int32_t nsGridContainerFrame::FindLineContaining(const nsIFrame* aFrame,
                                                  int32_t aStartLine) {
   const int32_t index = mFrames.IndexOf(aFrame);
   if (index < 0) {

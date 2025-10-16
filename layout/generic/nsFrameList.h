@@ -271,7 +271,7 @@ class nsFrameList {
   nsIFrame* LastChild() const { return mLastChild; }
 
   nsIFrame* FrameAt(int32_t aIndex) const;
-  int32_t IndexOf(nsIFrame* aFrame) const;
+  int32_t IndexOf(const nsIFrame* aFrame) const;
 
   bool IsEmpty() const { return nullptr == mFirstChild; }
 

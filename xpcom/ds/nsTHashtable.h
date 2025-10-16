@@ -810,7 +810,7 @@ class nsTHashtable<nsPtrHashKey<T>>
     return reinterpret_cast<EntryType*>(Base::GetEntry(aKey));
   }
 
-  bool Contains(T* aKey) const { return Base::Contains(aKey); }
+  bool Contains(const T* aKey) const { return Base::Contains(aKey); }
 
   EntryType* PutEntry(T* aKey) {
     return reinterpret_cast<EntryType*>(Base::PutEntry(aKey));
