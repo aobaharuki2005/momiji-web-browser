@@ -954,10 +954,13 @@ export var BrowserTestUtils = {
    *        A xul:browser.
    * @param {string} uri
    *        The URI to load.
+   * @param {number} loadFlags [optional]
+   *        Load flags to pass to nsIWebNavigation.loadURI.
    */
-  startLoadingURIString(browser, uri) {
+  startLoadingURIString(browser, uri, loadFlags) {
     browser.fixupAndLoadURIString(uri, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      loadFlags,
     });
   },
 
