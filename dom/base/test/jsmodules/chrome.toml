@@ -14,6 +14,7 @@ support-files = [
   "import_parse_error_1.mjs",
   "import_parse_error_2.mjs",
   "import_parse_error_3.mjs",
+  "large_module_import_404.mjs",
   "exportA1.mjs",
   "exportA2.mjs",
   "export_ambiguous.mjs",
@@ -74,6 +75,8 @@ support-files = [
 ["test_import_meta_resolve.html"]
 
 ["test_importedModuleMemoization.html"]
+
+["test_large_module_import_404.html"]
 
 ["test_linkErrorInCommon1.html"]
 
