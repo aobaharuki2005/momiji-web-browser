@@ -29,8 +29,6 @@
 #include "ScriptKind.h"
 #include "ScriptFetchOptions.h"
 
-class nsICacheInfoChannel;
-
 namespace mozilla::dom {
 
 class ScriptLoadContext;
@@ -259,13 +257,6 @@ class ScriptLoadRequest : public nsISupports,
 
   mozilla::CORSMode CORSMode() const { return mFetchOptions->mCORSMode; }
 
-  // Check the reference to the cache info channel, which is used by the disk
-  // cache.
-  bool HasDiskCacheReference() const { return !!mCacheInfo; }
-
-  // Drop the reference to the cache info channel.
-  void DropDiskCacheReference();
-
   bool HasLoadContext() const { return mLoadContext; }
   bool HasScriptLoadContext() const;
   bool HasWorkerLoadContext() const;
@@ -370,10 +361,6 @@ class ScriptLoadRequest : public nsISupports,
   //
   // NOTE: This field is not used for ModuleLoadRequest.
   JS::Heap<JSScript*> mScriptForCache;
-
-  // Holds the Cache information, which is used to register the bytecode
-  // on the cache entry, such that we can load it the next time.
-  nsCOMPtr<nsICacheInfoChannel> mCacheInfo;
 
   // LoadContext for augmenting the load depending on the loading
   // context (DOM, Worker, etc.)
