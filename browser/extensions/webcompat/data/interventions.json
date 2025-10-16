@@ -1273,23 +1273,6 @@
       }
     ]
   },
-  "1836103": {
-    "label": "autostar-novoross.ru",
-    "bugs": {
-      "1891078": {
-        "issue": "broken-layout",
-        "matches": ["*://autostar-novoross.ru/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "content_scripts": {
-          "css": ["bug1836103-autostar-novoross.ru-make-map-taller.css"]
-        }
-      }
-    ]
-  },
   "1836105": {
     "label": "cnn.com",
     "bugs": {
