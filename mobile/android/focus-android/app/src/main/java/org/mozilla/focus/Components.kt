@@ -242,7 +242,7 @@ class Components(
 
     val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(store) }
 
-    val downloadsUseCases: DownloadsUseCases by lazy { DownloadsUseCases(store) }
+    val downloadsUseCases: DownloadsUseCases by lazy { DownloadsUseCases(store, context.applicationContext) }
 
     val appLinksUseCases: AppLinksUseCases by lazy { AppLinksUseCases(context.applicationContext) }
 
