@@ -4,7 +4,7 @@
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [["sidebar.verticalTabs", false]],
+    set: [["sidebar.verticalTabs", true]],
   });
 });
 
