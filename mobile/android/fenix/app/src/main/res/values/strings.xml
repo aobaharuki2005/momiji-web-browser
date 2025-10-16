@@ -731,6 +731,10 @@
     <!-- Preference for showing the tab strip -->
     <string name="preferences_tab_strip">Tab bar display</string>
     <!-- Preference for gestures based actions -->
+    <string name="preferences_toolbar_shortcut">Toolbar shortcut</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_toolbar_select_shortcut">Select a shortcut</string>
+    <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Gestures</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Customize</string>

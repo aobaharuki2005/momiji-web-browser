@@ -164,6 +164,7 @@ import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixGleanTestRule
+import org.mozilla.fenix.settings.ToolbarShortcutPreference
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.Shadows.shadowOf
@@ -2758,6 +2759,22 @@ class BrowserToolbarMiddlewareTest {
         mainLooperRule.idle()
         val updatedMenuButton = toolbarStore.state.displayState.browserActionsEnd[2] as ActionButtonRes
         assertEquals(expectedMenuButton(), updatedMenuButton)
+    }
+
+    @Test
+    fun `mapShortcutToAction maps keys to actions and falls back to NewTab`() {
+        assertEquals(
+            ToolbarAction.NewTab,
+            BrowserToolbarMiddleware.mapShortcutToAction(ToolbarShortcutPreference.Keys.NEW_TAB),
+        )
+        assertEquals(
+            ToolbarAction.Share,
+            BrowserToolbarMiddleware.mapShortcutToAction(ToolbarShortcutPreference.Keys.SHARE),
+        )
+        assertEquals(
+            ToolbarAction.NewTab,
+            BrowserToolbarMiddleware.mapShortcutToAction("does_not_exist"),
+        )
     }
 
     private fun assertEqualsTabCounterButton(expected: TabCounterAction, actual: TabCounterAction) {

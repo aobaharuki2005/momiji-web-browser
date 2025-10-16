@@ -124,6 +124,7 @@ import org.mozilla.fenix.ext.isWideWindow
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.nimbus.FxNimbus
+import org.mozilla.fenix.settings.ToolbarShortcutPreference
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCookieBannerUIMode
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.tabstray.ext.isActiveDownload
@@ -741,9 +742,12 @@ class BrowserToolbarMiddleware(
         val isTallWindow = environment?.fragment?.isTallWindow() == true
         val tabStripEnabled = settings.isTabStripEnabled
         val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
+        val useCustomPrimary = settings.shouldShowToolbarCustomization && !shouldUseExpandedToolbar
+        val primarySlotAction = mapShortcutToAction(settings.toolbarShortcutKey)
+            .takeIf { useCustomPrimary } ?: ToolbarAction.NewTab
 
         val configs = listOf(
-            ToolbarActionConfig(ToolbarAction.NewTab) {
+            ToolbarActionConfig(primarySlotAction) {
                 !tabStripEnabled && (!shouldUseExpandedToolbar || !isTallWindow || isWideWindow)
             },
             ToolbarActionConfig(ToolbarAction.TabCounter) {
@@ -1239,5 +1243,15 @@ class BrowserToolbarMiddleware(
     private fun Source.toMetricSource() = when (this) {
         Source.AddressBar -> MetricsUtils.BookmarkAction.Source.BROWSER_TOOLBAR
         Source.NavigationBar -> MetricsUtils.BookmarkAction.Source.BROWSER_NAVBAR
+    }
+
+    companion object {
+        @VisibleForTesting
+        @JvmStatic
+        internal fun mapShortcutToAction(key: String): ToolbarAction = when (key) {
+            ToolbarShortcutPreference.Keys.NEW_TAB -> ToolbarAction.NewTab
+            ToolbarShortcutPreference.Keys.SHARE -> ToolbarAction.Share
+            else -> ToolbarAction.NewTab
+        }
     }
 }

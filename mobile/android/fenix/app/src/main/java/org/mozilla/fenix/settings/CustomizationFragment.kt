@@ -60,6 +60,7 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         updateToolbarCategoryBasedOnTabStrip(tabletAndTabStripEnabled)
         setupTabStripCategory()
         setupToolbarLayout()
+        updateToolbarShortcutBasedOnLayout()
 
         // if tab strip is enabled, swipe toolbar to switch tabs should not be enabled so the
         // preference is not shown
@@ -84,6 +85,21 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         } else {
             setupToolbarCategory()
         }
+    }
+
+    private fun updateToolbarShortcutBasedOnLayout() {
+        val category = requirePreference<PreferenceCategory>(
+            R.string.pref_key_customization_category_toolbar_shortcut,
+        )
+        val settings = requireContext().settings()
+
+        category.isVisible =
+            settings.shouldShowToolbarCustomization &&
+                    Config.channel.isNightlyOrDebug &&
+                    settings.shouldUseComposableToolbar &&
+                    settings.toolbarRedesignEnabled &&
+                    isTallWindow() &&
+                    !settings.shouldUseExpandedToolbar
     }
 
     private fun setupRadioGroups() {
@@ -193,6 +209,11 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         (requirePreference(R.string.pref_key_customization_category_toolbar_layout) as PreferenceCategory).apply {
             isVisible = Config.channel.isNightlyOrDebug && settings.shouldUseComposableToolbar &&
                     settings.toolbarRedesignEnabled && isTallWindow() && !isWideWindow()
+        }
+
+        val layoutToggle = requirePreference<ToggleRadioButtonPreference>(R.string.pref_key_toolbar_expanded)
+        layoutToggle.setOnToggleChanged {
+            updateToolbarShortcutBasedOnLayout()
         }
         updateToolbarLayoutIcons()
     }
