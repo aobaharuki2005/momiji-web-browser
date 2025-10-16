@@ -3399,7 +3399,7 @@
 
     Title text for the protection panel banner when the site is not secure.
   -->
-  <string name="protection_panel_banner_not_secure_title">Бъдете внимателни в този сайт</string>
+  <string name="protection_panel_banner_not_secure_title">Бъдете внимателни на тази страница</string>
   <!-- Description text for the protection panel banner when the site is not secure. -->
   <string name="protection_panel_banner_not_secure_description">Връзката ви не е защитена.</string>
   <!-- Title text for the protection panel banner when tracking protection is disabled. -->
@@ -3415,7 +3415,7 @@
   -->
   <string name="protection_panel_banner_protected_title">%s е на пост</string>
   <!-- Description text for the protection panel banner when tracking protection is enabled. -->
-  <string name="protection_panel_banner_protected_description">Вие сте защитени. Ако забележим нещо, ще ви уведомим.</string>
+  <string name="protection_panel_banner_protected_description">Защитени сте. Ако забележим нещо, ще ви уведомим.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">Подобрена защита от проследяване</string>
   <!-- Toggle if Enhanced Tracking Protection is turned on -->
