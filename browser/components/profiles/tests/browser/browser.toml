@@ -46,8 +46,10 @@ fail-if = ["a11y_checks"] # Bug 1955503
 ["browser_refresh_button.js"]
 
 ["browser_test_current_theme_from_amo.js"]
+skip-if = ["os == 'win'"] # Bug 1994086
 
 ["browser_test_last_tab.js"]
+skip-if = ["os == 'win'"] # Bug 1994086
 
 ["browser_test_nimbus_feature.js"]
 
