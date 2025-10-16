@@ -3588,21 +3588,6 @@
       }
     ]
   },
-  "1915541": {
-    "label": "app.sunroom.so",
-    "bugs": {
-      "1915541": {
-        "issue": "firefox-blocked-completely",
-        "matches": ["*://app.sunroom.so/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "ua_string": ["add_Chrome"]
-      }
-    ]
-  },
   "1916900": {
     "label": "vuemotion.santacasaba.org.br",
     "bugs": {
