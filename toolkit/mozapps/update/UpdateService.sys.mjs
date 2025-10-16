@@ -826,7 +826,7 @@ function getCanStageUpdates(transient = true) {
   return lazy.gCanStageUpdatesSession;
 }
 
-/*
+/**
  * Whether or not the application can use BITS to download updates.
  *
  * @param {boolean} [transient] Whether transient factors such as the update

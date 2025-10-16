@@ -2772,7 +2772,7 @@ async function test_restorePrefs_manifestChanged() {
     });
   }
 
-  /*
+  /**
    * Test that enrollments end when the manifest is sufficiently changed and
    * that the appropriate telemetry is submitted.
    *

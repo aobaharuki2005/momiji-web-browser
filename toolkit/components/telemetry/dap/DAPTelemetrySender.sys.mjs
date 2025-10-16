@@ -239,7 +239,7 @@ export const DAPTelemetrySender = new (class {
     }
   }
 
-  /*
+  /**
    * @typedef {object} AggregatorKeys
    * @property {Uint8Array} leader_hpke - The leader's DAP HPKE key.
    * @property {Uint8Array} helper_hpke - The helper's DAP HPKE key.

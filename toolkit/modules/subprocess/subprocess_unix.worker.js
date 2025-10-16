@@ -481,7 +481,7 @@ class Process extends BaseProcess {
  * process termination.
  * */
 class ManagedProcess extends BaseProcess {
-  /*
+  /**
    * Connect to an already running process that was spawned externally,
    * through numeric stdin/stdout/stderr file descriptors.
    *
@@ -542,7 +542,7 @@ class ManagedProcess extends BaseProcess {
     }
   }
 
-  /*
+  /**
    * A ManagedProcess is already running, so here the spawn just performs the
    * connection of the file descriptors received.
    *

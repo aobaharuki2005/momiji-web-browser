@@ -1126,7 +1126,7 @@ function setContentForTask(html) {
   return content.firstElementChild;
 }
 
-/*
+/**
  * Set preferences via SpecialPowers.pushPrefEnv and reset them after current
  * task has finished.
  *

@@ -1081,7 +1081,7 @@ const kTextHtmlPrefixClipboardDataWindows =
 const kTextHtmlSuffixClipboardDataWindows =
   "<!--EndFragment-->\n</body>\n</html>";
 
-/*
+/**
  * Polls the clipboard waiting for the expected value. A known value different than
  * the expected value is put on the clipboard first (and also polled for) so we
  * can be sure the value we get isn't just the expected value because it was already
