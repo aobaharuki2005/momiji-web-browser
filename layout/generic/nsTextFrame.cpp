@@ -3815,10 +3815,11 @@ JustificationInfo nsTextFrame::PropertyProvider::ComputeJustification(
   return info;
 }
 
-// aStart, aLength in transformed string offsets
-void nsTextFrame::PropertyProvider::GetSpacing(Range aRange,
+// aStart, aLength in transformed string offsets.
+// Returns false if no non-standard spacing was required.
+bool nsTextFrame::PropertyProvider::GetSpacing(Range aRange,
                                                Spacing* aSpacing) const {
-  GetSpacingInternal(
+  return GetSpacingInternal(
       aRange, aSpacing,
       !(mTextRun->GetFlags2() & nsTextFrameUtils::Flags::HasTab));
 }
@@ -4066,7 +4067,7 @@ static bool HasCJKGlyphRun(const gfxTextRun* aTextRun) {
   return false;
 }
 
-void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
+bool nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
                                                        Spacing* aSpacing,
                                                        bool aIgnoreTabs) const {
   MOZ_ASSERT(IsInBounds(mStart, mLength, aRange), "Range out of bounds");
@@ -4074,8 +4075,13 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
   std::memset(aSpacing, 0, aRange.Length() * sizeof(*aSpacing));
 
   if (mFrame->Style()->IsTextCombined()) {
-    return;
+    return false;
   }
+
+  // Track whether any non-standard spacing is actually present in this range.
+  // If letter-spacing is non-zero this will always be true, but for the
+  /// word-spacing and text-autospace cases it will depend on the actual text.
+  bool spacingPresent = mLetterSpacing;
 
   // First, compute the word spacing, letter spacing, and text-autospace
   // spacing.
@@ -4185,6 +4191,7 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
                          &iter);
           uint32_t runOffset = iter.GetSkippedOffset() - aRange.start;
           aSpacing[runOffset].mAfter += mWordSpacing;
+          spacingPresent = true;
         }
         // Add text-autospace spacing only at cluster starts. Always check the
         // character classes if the textrun includes CJK; otherwise, check only
@@ -4209,6 +4216,7 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
                     prevClass.valueOrFrom(findPrecedingClass), currClass)) {
               aSpacing[runOffsetInSubstring + i].mBefore +=
                   mTextAutospace->InterScriptSpacing();
+              spacingPresent = true;
             }
             // Even if we didn't actually need to check spacing rules here, we
             // record the new prevClass. (Incidentally, this ensure that we'll
@@ -4230,6 +4238,7 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
         mTabWidths->ApplySpacing(aSpacing,
                                  aRange.start - mStart.GetSkippedOffset(),
                                  aRange.Length());
+        spacingPresent = true;
       }
     }
   }
@@ -4250,7 +4259,10 @@ void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
       aSpacing[offset].mBefore += spacing.mBefore;
       aSpacing[offset].mAfter += spacing.mAfter;
     }
+    spacingPresent = true;
   }
+
+  return spacingPresent;
 }
 
 // aX and the result are in whole appunits.
