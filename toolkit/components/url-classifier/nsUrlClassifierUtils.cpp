@@ -1022,15 +1022,22 @@ nsresult nsUrlClassifierUtils::ReadProvidersFromPrefs(ProviderDictType& aDict) {
     providers.Insert(provider);
   }
 
+  // Sort the providers to ensure the google5 provider is always after the
+  // google4 provider.
+  nsTArray<nsCString> sortedProviders;
+  for (auto& provider : providers) {
+    sortedProviders.AppendElement(provider);
+  }
+  sortedProviders.Sort();
+
   bool isGoogle5Enabled = mozilla::Preferences::GetBool(
       "browser.safebrowsing.provider.google5.enabled");
 
   // Now we have all providers. Check which one owns |aTableName|.
   // e.g. The owning lists of provider "google" is defined in
   // "browser.safebrowsing.provider.google.lists".
-  for (const auto& provider : providers) {
-    nsPrintfCString owninListsPref("%s.lists",
-                                   nsPromiseFlatCString{provider}.get());
+  for (const auto& provider : sortedProviders) {
+    nsPrintfCString owninListsPref("%s.lists", provider.get());
 
     nsAutoCString owningLists;
     nsresult rv = prefBranch->GetCharPref(owninListsPref.get(), owningLists);
