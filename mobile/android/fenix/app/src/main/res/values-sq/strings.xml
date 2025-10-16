@@ -478,8 +478,6 @@
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Ndihmonani të fuqizojmë Firefox-in</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Kur na tregoni se si e zbuluat Firefox-in dhe se e përdorni, na ndihmoni ta paraqesim shfletuesin tonë te më tepër njerëz.</string>
-  <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Ndani me partnerë teknologjish marketingu të Mozilla-s të dhëna minimale. Këto të dhëna nuk shiten kurrë, apo të përdoren për t’ju shfaqur reklama.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Si i përdorim të dhënat</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1467,13 +1465,9 @@
   <!--
     Bookmarks
 
-    Confirmation message for a dialog confirming if the user wants to delete the selected folder
+    Confirmation message for a dialog confirming if the user wants to delete multiple items.
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">Jeni i sigurt se doni të fshihet kjo dosje?</string>
-  <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items. -->
   <string name="bookmark_delete_folders_confirmation_dialog">Jeni i sigurt se doni të fshihen objektet e përzgjedhur?</string>
-  <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">%s do të fshijë objektet e përzgjedhur.</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">Anuloje</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1502,8 +1496,6 @@
   <string name="bookmark_menu_open_all_in_private_tabs_button">Hapi krejt në skeda private</string>
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">Fshije</string>
-  <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Ruaje</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Renditi sipas radhe të përshtatur</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1523,8 +1515,6 @@
   <string name="edit_bookmark_fragment_title">Përpunoni faqerojtësin</string>
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">Përpunoni dosjen</string>
-  <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">Që të shihni faqerojtës të njëkohësuar, bëni hyrjen</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">URL</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1535,33 +1525,21 @@
   <string name="bookmark_name_label">EMËR</string>
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">Emër</string>
-  <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">Shtoni dosje</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">Përzgjidhni dosje</string>
-  <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">Duhet të ketë një titull</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">URL e pavlefshme</string>
-  <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">S’ka faqerojtës këtu</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">U fshi %1$s</string>
-  <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">Faqerojtësit u fshinë</string>
-  <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">Po fshihen dosjet e përzgjedhura</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">ZHBËJE</string>
   <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
   <string name="bookmark_delete_single_item">U fshi %s</string>
   <!-- Bookmark snackbar message for deleting multiple items. %s is the number of items being deleted -->
   <string name="bookmark_delete_multiple_items">Objekte të fshirë: %s</string>
-  <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">Jepni terma kërkimi</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">Shko mbrapsht</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
@@ -1846,10 +1824,8 @@
   <!--
     Snackbar
 
-    Text shown in snackbar when user deletes a collection
+    Text shown in snackbar when user closes a tab
   -->
-  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Koleksioni u fshi</string>
-  <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Skeda u mbyll</string>
   <!-- Text shown in snackbar when user closes all tabs -->
   <string name="snackbar_tabs_closed">Skedat u mbyllën</string>
@@ -1882,8 +1858,6 @@
   <string name="qr_scanner_dialog_invalid_ok">OK</string>
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">Jeni i sigurt se doni të fshihet %1$s?</string>
-  <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Fshije</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Ky është një shembull teksti. Gjendet këtu për të treguar se si do të duket teksti, kur zmadhoni ose zvogëloni madhësinë përmes këtij rregullimi.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2523,8 +2497,6 @@
   <string name="confirm_clear_permission_site">Jeni i sigurt se doni të spastrohet kjo leje për këtë sajt?</string>
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">Pa përjashtime sajti</string>
-  <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">Jeni i sigurt se doni të fshihet ky faqerojtës?</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">Shtoje te shkurtore</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -2687,8 +2659,6 @@
   <string name="radio_preference_info_content_description">Klikoni për më tepër hollësi</string>
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">Lëvizni për sipër</string>
-  <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">Mbylle</string>
   <!--
     Pocket recommended stories
 
@@ -3335,8 +3305,6 @@
   <string name="setup_checklist_task_toolbar_selection">Zgjidhni vendosje paneli</string>
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Eksploroni zgjerime</string>
-  <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources"><![CDATA[Instalo <em>widget</em> kërkimesh]]></string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

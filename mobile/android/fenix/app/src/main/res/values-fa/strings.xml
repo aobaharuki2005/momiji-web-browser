@@ -269,6 +269,8 @@
   <string name="browser_menu_customize_home_1">سفارشی‌سازی صفحه خانه</string>
   <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
   <string name="browser_menu_sign_in">ورود</string>
+  <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+  <string name="browser_menu_sign_in_caption_3">همگام‌سازی گذرواژه‌ها، نشانک‌ها و موارد دیگر</string>
   <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
   <string name="browser_menu_sign_back_in_to_sync">برای همگام‌سازی دوباره وارد شوید</string>
   <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
@@ -433,14 +435,14 @@
     Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
     Note: The word "Firefox" should NOT be translated
   -->
-  <string name="juno_onboarding_enable_notifications_title_nimbus_2" tools:ignore="BrandUsage">آگاهی‌ها کمک می‌کنند تا با Firefox امن‌ تر بکنید</string>
+  <string name="juno_onboarding_enable_notifications_title_nimbus_2" tools:ignore="BrandUsage">آگاه‌سازی‌ها به شما کمک می‌کنند با Firefox ایمن‌تر بمانید</string>
   <!--
     Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
     Note: The word "Firefox" should NOT be translated
   -->
   <string name="juno_onboarding_enable_notifications_description_nimbus_2" tools:ignore="BrandUsage">به طور ایمن برگه ها را بین دستگاه های خود ارسال کنید و سایر ویژگی های حریم خصوصی را در Firefox کشف کنید.</string>
   <!-- Text for the button to request notification permission on the device -->
-  <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">روشن کردن آگاهی‌ها</string>
+  <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">روشن کردن آگاه‌سازی‌ها</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
   <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">اکنون نه</string>
   <!--
@@ -504,8 +506,6 @@
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">به ما در رشد Firefox کمک کنید</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">وقتی به ما می‌گویید که چگونه Firefox را کشف کرده‌اید و از آن استفاده می‌کنید، به ما کمک می‌کنید تا مرورگر خود را به افراد بیشتری معرفی کنیم.</string>
-  <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">هم‌رسانی داده‌های حداقلی با شرکای فناوری بازاریابی Mozilla. این داده‌ها هرگز فروخته نمی‌شوند یا برای نشان دادن تبلیغات به شما استفاده نمی‌شوند.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">نحوه استفاده ما از داده‌ها</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1512,13 +1512,9 @@
   <!--
     Bookmarks
 
-    Confirmation message for a dialog confirming if the user wants to delete the selected folder
+    Confirmation message for a dialog confirming if the user wants to delete multiple items.
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">آيا از حذف اين پوشه مطمئن هستيد؟</string>
-  <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items. -->
   <string name="bookmark_delete_folders_confirmation_dialog">آیا مطمئن هستید که می‌خواهید موارد انتخاب شده را حذف کنید؟</string>
-  <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">%s موارد انتخاب شده را حذف می کند.</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">لغو</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1547,8 +1543,6 @@
   <string name="bookmark_menu_open_all_in_private_tabs_button">گشودن همه در زبانه‌های خصوصی</string>
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">حذف</string>
-  <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">ذخیره</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">به ترتیب چینش سفارشی</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1568,8 +1562,6 @@
   <string name="edit_bookmark_fragment_title">ویرایش نشانک</string>
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">ویرایش پوشه</string>
-  <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">برای همگام‌سازی نشانک‌ها وارد شوید</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">نشانی اینترنتی</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1580,33 +1572,21 @@
   <string name="bookmark_name_label">نام</string>
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">نام</string>
-  <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">افزودن پوشه</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">انتخاب پوشه</string>
-  <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">باید یک عنوان داشته باشد</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">نشانی معتبر نیست</string>
-  <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">در اینجا هیچ نشانک وجود ندارد</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">%1$sحذف شد</string>
-  <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">نشانک حذف گردید</string>
-  <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">حذف پوشه‌های انتخاب شده</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">برگردان</string>
   <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
   <string name="bookmark_delete_single_item">%s حذف شد</string>
   <!-- Bookmark snackbar message for deleting multiple items. %s is the number of items being deleted -->
   <string name="bookmark_delete_multiple_items">موارد حذف شده: %s</string>
-  <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">عبارات جست‌وجو را وارد کنید</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">بازگشت به عقب</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
@@ -1893,10 +1873,8 @@
   <!--
     Snackbar
 
-    Text shown in snackbar when user deletes a collection
+    Text shown in snackbar when user closes a tab
   -->
-  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">مجموعه حذف شده</string>
-  <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">زبانه بسته شده</string>
   <!-- Text shown in snackbar when user closes all tabs -->
   <string name="snackbar_tabs_closed">زبانه‌های بسته شده</string>
@@ -1929,8 +1907,6 @@
   <string name="qr_scanner_dialog_invalid_ok">تأیید</string>
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">آیا در خصوص حذف کردن%1$s مطئنید؟</string>
-  <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">حذف</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">این نمونه متن است. در اینجا آمده است تا نشان دهیم که با بزرگنمایی یا کاهش اندازه با این تنظیم ، متن چگونه ظاهر می شود.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2578,8 +2554,6 @@
   <string name="confirm_clear_permission_site">آیا مطمئنید که می‌خواهید این اجازه را برای این پایگاه پاک کنید؟</string>
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">بدون استثنای پایگاه</string>
-  <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">آیا از حذف این نشانک مطمئن هستید؟</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">افزودن به میان‌برها</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -2737,8 +2711,6 @@
   <string name="radio_preference_info_content_description">برای جزئیات بیشتر کلیک کنید</string>
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">پیمایش به بالا</string>
-  <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">بستن</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
   <string name="pocket_stories_sponsor_indication">حمایت شده</string>
   <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off. -->
@@ -3381,8 +3353,6 @@
   <string name="setup_checklist_task_toolbar_selection">انتخاب محل قرارگیری نوار ابزار</string>
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">کاوش افزونه‌ها</string>
-  <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">نصب ابزارک جستجو</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
