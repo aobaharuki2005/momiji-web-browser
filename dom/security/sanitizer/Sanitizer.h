@@ -77,7 +77,8 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
   ~Sanitizer() = default;
 
   void CanonicalizeConfiguration(const SanitizerConfig& aConfig,
-                                 bool aAllowCommentsAndDataAttributes);
+                                 bool aAllowCommentsAndDataAttributes,
+                                 ErrorResult& aRv);
   void IsValid(ErrorResult& aRv);
 
   void SetDefaultConfig();
