@@ -317,7 +317,7 @@ networking:
       - necko@mozilla.com
       - edgul@mozilla.com
       - baku@mozilla.com
-    expires: 147
+    expires: 157
     labels:
       - eOK
       - eRejectedEmptyNameAndValue
