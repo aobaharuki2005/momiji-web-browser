@@ -1659,6 +1659,10 @@ class GeckoEngine(
         override var crliteChannel: String?
             get() = runtime.settings.crliteChannel
             set(value) { value?.let { runtime.settings.setCrliteChannel(value) } }
+
+        override var safeBrowsingV5Enabled: Boolean?
+            get() = runtime.settings.contentBlocking.safeBrowsingV5Enabled.or(false)
+            set(value) { value?.let { runtime.settings.contentBlocking.setSafeBrowsingV5Enabled(value) } }
     }.apply {
         defaultSettings?.let {
             this.javascriptEnabled = it.javascriptEnabled
@@ -1707,6 +1711,7 @@ class GeckoEngine(
             this.bannedPorts = it.bannedPorts
             this.lnaBlockingEnabled = it.lnaBlockingEnabled
             this.crliteChannel = it.crliteChannel
+            this.safeBrowsingV5Enabled = it.safeBrowsingV5Enabled
         }
     }
 

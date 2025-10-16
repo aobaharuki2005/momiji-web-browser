@@ -583,6 +583,7 @@ package org.mozilla.geckoview {
     method @NonNull public String[] getSafeBrowsingMalwareTable();
     method @NonNull public String[] getSafeBrowsingPhishingTable();
     method @NonNull public Collection<ContentBlocking.SafeBrowsingProvider> getSafeBrowsingProviders();
+    method @NonNull public Boolean getSafeBrowsingV5Enabled();
     method public boolean getStrictSocialTrackingProtection();
     method @NonNull public ContentBlocking.Settings setAllowListBaselineTrackingProtection(boolean);
     method @NonNull public ContentBlocking.Settings setAllowListConvenienceTrackingProtection(boolean);
@@ -607,6 +608,7 @@ package org.mozilla.geckoview {
     method @NonNull public ContentBlocking.Settings setSafeBrowsingMalwareTable(@NonNull String...);
     method @NonNull public ContentBlocking.Settings setSafeBrowsingPhishingTable(@NonNull String...);
     method @NonNull public ContentBlocking.Settings setSafeBrowsingProviders(@NonNull ContentBlocking.SafeBrowsingProvider...);
+    method @NonNull public ContentBlocking.Settings setSafeBrowsingV5Enabled(boolean);
     method @NonNull public ContentBlocking.Settings setStrictSocialTrackingProtection(boolean);
     field public static final Parcelable.Creator<ContentBlocking.Settings> CREATOR;
   }

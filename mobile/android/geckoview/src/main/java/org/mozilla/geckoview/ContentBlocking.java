@@ -608,6 +608,36 @@ public class ContentBlocking {
     }
 
     /**
+     * Get whether Safe Browsing V5 is enabled.
+     *
+     * @return Whether Safe Browsing V5 is enabled.
+     */
+    public @NonNull Boolean getSafeBrowsingV5Enabled() {
+      final SafeBrowsingProvider provider = mSafeBrowsingProviders.get("google5");
+      if (provider == null) {
+        return false;
+      }
+
+      return provider.getEnabled();
+    }
+
+    /**
+     * Set the value to control whether Safe Browsing V5 is enabled.
+     *
+     * @param enabled Whether we set the Safe Browsing V5 to enabled or disabled
+     * @return the {@link Settings} instance.
+     */
+    public @NonNull Settings setSafeBrowsingV5Enabled(final boolean enabled) {
+      final SafeBrowsingProvider provider = mSafeBrowsingProviders.get("google5");
+      if (provider == null) {
+        return this;
+      }
+
+      provider.mEnabled.commit(enabled);
+      return this;
+    }
+
+    /**
      * Get the table for SafeBrowsing Phishing. The identifiers present in this table must match one
      * of the identifiers present in {@link SafeBrowsingProvider#getLists}.
      *
