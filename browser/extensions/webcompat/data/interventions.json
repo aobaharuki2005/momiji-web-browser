@@ -3448,21 +3448,6 @@
       }
     ]
   },
-  "1907062": {
-    "label": "upload-images.jianshu.io",
-    "bugs": {
-      "1907062": {
-        "issue": "broken-images",
-        "matches": ["*://upload-images.jianshu.io/upload_images/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "ua_string": ["Chrome_with_FxQuantum"]
-      }
-    ]
-  },
   "1908636": {
     "label": "xmgl.ccccltd.cn",
     "bugs": {
