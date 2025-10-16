@@ -9,7 +9,6 @@ loader.lazyRequireGetter(
   "resource://devtools/server/devtools-server.js",
   true
 );
-loader.lazyRequireGetter(this, "flags", "resource://devtools/shared/flags.js");
 const lazy = {};
 ChromeUtils.defineESModuleGetters(
   lazy,
@@ -158,9 +157,6 @@ function getSystemInfo() {
     // Update channel
     channel: lazy.AppConstants.MOZ_UPDATE_CHANNEL,
 
-    // Timeout multiplier for tests.
-    timeoutMultiplier: getTimeoutMultiplier(),
-
     dpi,
     useragent,
     width,
@@ -203,27 +199,4 @@ function getProfileLocation() {
   }
 }
 
-/**
- * Retrieve a timeout multiplier based on the platform. Slow platforms should
- * use a bigger multiplier.
- */
-function getTimeoutMultiplier() {
-  // Slow platform checks are only relevant to avoid issues in mochitests.
-  if (!flags.testing) {
-    return 1;
-  }
-
-  if (
-    lazy.AppConstants.DEBUG ||
-    lazy.AppConstants.MOZ_CODE_COVERAGE ||
-    lazy.AppConstants.ASAN
-  ) {
-    return 4;
-  }
-  if (lazy.AppConstants.TSAN) {
-    return 8;
-  }
-
-  return 1;
-}
 exports.getSystemInfo = getSystemInfo;
