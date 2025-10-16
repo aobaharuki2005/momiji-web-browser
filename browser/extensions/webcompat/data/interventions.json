@@ -1069,21 +1069,6 @@
       }
     ]
   },
-  "1827678_119012": {
-    "label": "kt.com",
-    "bugs": {
-      "1944036": {
-        "issue": "firefox-blocked-completely",
-        "matches": ["*://*.kt.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["desktop"],
-        "ua_string": ["Chrome"]
-      }
-    ]
-  },
   "1827678_119402": {
     "label": "oirsa.org",
     "bugs": {
