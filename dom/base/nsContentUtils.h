@@ -39,7 +39,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/SourceLocation.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CacheExpirationTime.h"
 #include "mozilla/dom/FetchPriority.h"
