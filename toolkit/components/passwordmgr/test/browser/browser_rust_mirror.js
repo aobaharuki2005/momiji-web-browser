@@ -116,14 +116,22 @@ add_task(async function test_mirror_removeLogin() {
  */
 add_task(async function test_mirror_csv_import_add() {
   await SpecialPowers.pushPrefEnv({
-    set: [["signon.rustMirror.enabled", true]],
+    set: [
+      ["signon.rustMirror.enabled", true],
+      ["signon.rustMirror.migrationNeeded", true],
+    ],
   });
 
   let csvFile = await LoginTestUtils.file.setupCsvFileWithLines([
     "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
     `https://example.com,joe@example.com,qwerty,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb46f0},1589617814635,1589710449871,1589617846802`,
   ]);
+  const prefChangePromise = TestUtils.waitForPrefChange(
+    "signon.rustMirror.migrationNeeded"
+  );
   await LoginCSVImport.importFromCSV(csvFile.path);
+  // wait for the mirror to complete
+  await prefChangePromise;
 
   // note LoginManagerRustStorage is a singleton and already initialized when
   // Services.logins gets initialized.
@@ -143,7 +151,10 @@ add_task(async function test_mirror_csv_import_add() {
  */
 add_task(async function test_mirror_csv_import_modify() {
   await SpecialPowers.pushPrefEnv({
-    set: [["signon.rustMirror.enabled", true]],
+    set: [
+      ["signon.rustMirror.enabled", true],
+      ["signon.rustMirror.migrationNeeded", true],
+    ],
   });
 
   // create a login
@@ -153,12 +164,17 @@ add_task(async function test_mirror_csv_import_modify() {
     password: "password",
   });
   const login = await Services.logins.addLoginAsync(loginInfo);
+  const prefChangePromise = TestUtils.waitForPrefChange(
+    "signon.rustMirror.migrationNeeded"
+  );
   // and import it, so we update
   let csvFile = await LoginTestUtils.file.setupCsvFileWithLines([
     "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
     `https://example.com,username,qwerty,My realm,,${login.guid},1589617814635,1589710449871,1589617846802`,
   ]);
   await LoginCSVImport.importFromCSV(csvFile.path);
+  // wait for the mirror to complete
+  await prefChangePromise;
 
   // note LoginManagerRustStorage is a singleton and already initialized when
   // Services.logins gets initialized.
