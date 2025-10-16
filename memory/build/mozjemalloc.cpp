@@ -918,6 +918,8 @@ struct ArenaTreeTrait {
 //   used by the standard API.
 class ArenaCollection {
  public:
+  constexpr ArenaCollection() {}
+
   bool Init() MOZ_REQUIRES(gInitLock) MOZ_EXCLUDES(mLock) {
     arena_params_t params;
     // The main arena allows more dirty pages than the default for other arenas.
@@ -1187,8 +1189,8 @@ class ArenaCollection {
     return aArenaId & MAIN_THREAD_ARENA_BIT;
   }
 
-  arena_t* mDefaultArena;
-  arena_id_t mLastPublicArenaId MOZ_GUARDED_BY(mLock);
+  arena_t* mDefaultArena = nullptr;
+  arena_id_t mLastPublicArenaId MOZ_GUARDED_BY(mLock) = 0;
 
   // Accessing mArenas and mPrivateArenas can only be done while holding mLock.
   Tree mArenas MOZ_GUARDED_BY(mLock);
@@ -1228,7 +1230,7 @@ class ArenaCollection {
   Atomic<bool> mIsDeferredPurgeEnabled;
 };
 
-MOZ_RUNINIT static ArenaCollection gArenas;
+MOZ_CONSTINIT static ArenaCollection gArenas;
 
 // Protects huge allocation-related data structures.
 static Mutex huge_mtx;
