@@ -975,6 +975,14 @@ void nsMenuPopupFrame::InitializePopupAsNativeContextMenu(
   mAnchorType = MenuPopupAnchorType::Point;
   mPositionedOffset = 0;
   mPositionedByMoveToRect = false;
+  // Native context menus don't call PrepareWidget(), so if we have a widget
+  // already (which generally should only be possible on tests, since
+  // otherwise we shouldn't ever mix native / non-native for the same popup) we
+  // should destroy it now.
+  if (mExpirationState.IsTracked()) {
+    PopupExpirationTracker::Get()->RemoveObject(this);
+  }
+  DestroyWidget();
 }
 
 void nsMenuPopupFrame::InitializePopupAtRect(nsIContent* aTriggerContent,
