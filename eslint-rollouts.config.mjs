@@ -303,6 +303,7 @@ export default [
       "uriloader/**",
       "widget/tests/window_composition_text_querycontent.xhtml",
     ],
+    ignores: ["devtools/startup/**"],
     rules: mozilla.turnOff(mozilla.configs["flat/valid-jsdoc"].rules),
   },
   {
@@ -467,6 +468,7 @@ export default [
       "widget/tests/file*.js",
       "widget/tests/window_composition_text_querycontent.xhtml",
     ],
+    ignores: ["devtools/startup/**"],
     rules: mozilla.turnOff(mozilla.configs["flat/require-jsdoc"].rules),
   },
   {
