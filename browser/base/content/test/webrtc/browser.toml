@@ -57,7 +57,10 @@ https_first_disabled = true
 
 ["browser_devices_get_user_media_in_frame.js"]
 https_first_disabled = true
-skip-if = ["debug"] # bug 1369731
+skip-if = [
+  "debug", # bug 1369731
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1989731
+]
 
 ["browser_devices_get_user_media_in_xorigin_frame.js"]
 https_first_disabled = true
