@@ -113,8 +113,11 @@ class PlatformInfo:
 
         if self.os in ["mac", "linux"]:
             # Hack for macosx 11.20 reported as 11.00
-            if self.os == "mac" and version == "1100":
-                return "11.20"
+            if self.os == "mac":
+                if version == "1100":
+                    return "11.20"
+                elif version == "1500":
+                    return "15.30"
             if len(version) == 5 and version[2] == ".":
                 return version  # already has a dot
             return version[0:2] + "." + version[2:4]
