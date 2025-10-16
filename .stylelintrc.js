@@ -275,6 +275,7 @@ module.exports = {
     "stylelint-plugin-mozilla/use-font-size-tokens": true,
     "stylelint-plugin-mozilla/use-font-weight-tokens": true,
     "stylelint-plugin-mozilla/use-space-tokens": true,
+    "stylelint-plugin-mozilla/use-background-color-tokens": true,
   },
 
   overrides: [
@@ -420,6 +421,7 @@ module.exports = {
         "stylelint-plugin-mozilla/use-font-size-tokens": false,
         "stylelint-plugin-mozilla/use-font-weight-tokens": false,
         "stylelint-plugin-mozilla/use-space-tokens": false,
+        "stylelint-plugin-mozilla/use-background-color-tokens": false,
       },
     },
     {
@@ -432,6 +434,7 @@ module.exports = {
         "stylelint-plugin-mozilla/use-border-radius-tokens": true,
         "stylelint-plugin-mozilla/use-border-color-tokens": false,
         "stylelint-plugin-mozilla/use-space-tokens": false,
+        "stylelint-plugin-mozilla/use-background-color-tokens": false,
       },
     },
   ],
