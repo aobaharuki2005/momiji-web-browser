@@ -158,6 +158,12 @@
   text-decoration: underline;
 }
 
+:any-link:lang(ja),
+:any-link:lang(ko),
+:any-link:lang(zh) {
+  text-decoration-trim: auto;
+}
+
 :link {
   color: LinkText;
 }
