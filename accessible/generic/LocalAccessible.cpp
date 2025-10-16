@@ -1516,7 +1516,8 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
 
   if (aAttribute == nsGkAtoms::aria_controls ||
       aAttribute == nsGkAtoms::aria_flowto ||
-      aAttribute == nsGkAtoms::aria_errormessage) {
+      aAttribute == nsGkAtoms::aria_errormessage ||
+      aAttribute == nsGkAtoms::aria_actions) {
     mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
   }
 
@@ -2432,6 +2433,14 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
     case RelationType::ERRORMSG_FOR:
       return Relation(
           new RelatedAccIterator(mDoc, mContent, nsGkAtoms::aria_errormessage));
+
+    case RelationType::ACTION:
+      return Relation(new AssociatedElementsIterator(mDoc, mContent,
+                                                     nsGkAtoms::aria_actions));
+
+    case RelationType::ACTION_FOR:
+      return Relation(
+          new RelatedAccIterator(mDoc, mContent, nsGkAtoms::aria_actions));
 
     default:
       return Relation();
