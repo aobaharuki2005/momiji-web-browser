@@ -11,6 +11,9 @@ const { LoginManagerRustStorage } = ChromeUtils.importESModule(
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
+const { LoginCSVImport } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginCSVImport.sys.mjs"
+);
 
 /**
  * Tests addLogin gets synced to Rust Storage
@@ -102,6 +105,73 @@ add_task(async function test_mirror_removeLogin() {
 
   const allLogins = await rustStorage.getAllLogins();
   Assert.equal(allLogins.length, 0);
+
+  LoginTestUtils.clearData();
+  rustStorage.removeAllLogins();
+  await SpecialPowers.flushPrefEnv();
+});
+
+/**
+ * Tests CSV import: addition gets synced to Rust Storage
+ */
+add_task(async function test_mirror_csv_import_add() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["signon.rustMirror.enabled", true]],
+  });
+
+  let csvFile = await LoginTestUtils.file.setupCsvFileWithLines([
+    "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
+    `https://example.com,joe@example.com,qwerty,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb46f0},1589617814635,1589710449871,1589617846802`,
+  ]);
+  await LoginCSVImport.importFromCSV(csvFile.path);
+
+  // note LoginManagerRustStorage is a singleton and already initialized when
+  // Services.logins gets initialized.
+  const rustStorage = new LoginManagerRustStorage();
+
+  const storedLoginInfos = await Services.logins.getAllLogins();
+  const rustStoredLoginInfos = await rustStorage.getAllLogins();
+  LoginTestUtils.assertLoginListsEqual(storedLoginInfos, rustStoredLoginInfos);
+
+  LoginTestUtils.clearData();
+  rustStorage.removeAllLogins();
+  await SpecialPowers.flushPrefEnv();
+});
+
+/**
+ * Tests CSV import: modification gets synced to Rust Storage
+ */
+add_task(async function test_mirror_csv_import_modify() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["signon.rustMirror.enabled", true]],
+  });
+
+  // create a login
+  const loginInfo = LoginTestUtils.testData.formLogin({
+    origin: "https://example.com",
+    username: "username",
+    password: "password",
+  });
+  const login = await Services.logins.addLoginAsync(loginInfo);
+  // and import it, so we update
+  let csvFile = await LoginTestUtils.file.setupCsvFileWithLines([
+    "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
+    `https://example.com,username,qwerty,My realm,,${login.guid},1589617814635,1589710449871,1589617846802`,
+  ]);
+  await LoginCSVImport.importFromCSV(csvFile.path);
+
+  // note LoginManagerRustStorage is a singleton and already initialized when
+  // Services.logins gets initialized.
+  const rustStorage = new LoginManagerRustStorage();
+
+  const [storedLoginInfo] = await Services.logins.getAllLogins();
+  const [rustStoredLoginInfo] = await rustStorage.getAllLogins();
+
+  Assert.equal(
+    storedLoginInfo.password,
+    rustStoredLoginInfo.password,
+    "password has been updated via csv import"
+  );
 
   LoginTestUtils.clearData();
   rustStorage.removeAllLogins();
