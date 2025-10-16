@@ -1633,6 +1633,7 @@ export class ActivityStream {
     if (this.geo === "") {
       Services.obs.removeObserver(this, lazy.Region.REGION_TOPIC);
     }
+    delete this.geo;
 
     Services.obs.removeObserver(this, "intl:app-locales-changed");
 
@@ -1645,6 +1646,10 @@ export class ActivityStream {
   _updateDynamicPrefs() {
     // Save the geo pref if we have it
     if (lazy.Region.home) {
+      if (this.geo === "") {
+        // The observer has become obsolete.
+        Services.obs.removeObserver(this, lazy.Region.REGION_TOPIC);
+      }
       this.geo = lazy.Region.home;
     } else if (this.geo !== "") {
       // Watch for geo changes and use a dummy value for now
