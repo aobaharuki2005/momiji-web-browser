@@ -189,23 +189,6 @@ void Sanitizer::SetDefaultConfig() {
   ClearOnShutdown(&sDefaultAttributes);
 }
 
-auto& GetAsSanitizerElementNamespace(
-    const StringOrSanitizerElementNamespace& aElement) {
-  return aElement.GetAsSanitizerElementNamespace();
-}
-auto& GetAsSanitizerElementNamespace(
-    const OwningStringOrSanitizerElementNamespace& aElement) {
-  return aElement.GetAsSanitizerElementNamespace();
-}
-auto& GetAsSanitizerElementNamespace(
-    const StringOrSanitizerElementNamespaceWithAttributes& aElement) {
-  return aElement.GetAsSanitizerElementNamespaceWithAttributes();
-}
-auto& GetAsSanitizerElementNamespace(
-    const OwningStringOrSanitizerElementNamespaceWithAttributes& aElement) {
-  return aElement.GetAsSanitizerElementNamespaceWithAttributes();
-}
-
 // https://wicg.github.io/sanitizer-api/#canonicalize-a-sanitizer-element
 template <typename SanitizerElement>
 static CanonicalName CanonicalizeElement(const SanitizerElement& aElement) {
@@ -224,7 +207,7 @@ static CanonicalName CanonicalizeElement(const SanitizerElement& aElement) {
 
   // Step 3. Assert: name is a dictionary and both name["name"] and
   // name["namespace"] exist.
-  const auto& elem = GetAsSanitizerElementNamespace(aElement);
+  const auto& elem = GetAsDictionary(aElement);
   MOZ_ASSERT(!elem.mName.IsVoid());
 
   // Step 4. If name["namespace"] is the empty string, then set it to null.
@@ -760,49 +743,89 @@ void Sanitizer::MaybeMaterializeDefaultConfig() {
   mIsDefaultConfig = false;
 }
 
+// https://wicg.github.io/sanitizer-api/#dom-sanitizer-get
 void Sanitizer::Get(SanitizerConfig& aConfig) {
   MaybeMaterializeDefaultConfig();
 
+  // Step 1. Let config be this’s configuration.
+  // Step 2. If config["elements"] exists:
   if (mElements) {
     nsTArray<OwningStringOrSanitizerElementNamespaceWithAttributes> elements;
+    // Step 2.1. For any element of config["elements"]:
     for (const auto& entry : *mElements) {
-      elements.AppendElement()->SetAsSanitizerElementNamespaceWithAttributes() =
+      // Step 2.1.1. If element["attributes"] exists:
+      // Step 2.1.2. If element["removeAttributes"] exists:
+      // ...
+      // (The attributes are sorted by the ToSanitizerAttributes call in
+      // ToSanitizerElementNamespaceWithAttributes)
+      OwningStringOrSanitizerElementNamespaceWithAttributes owning;
+      owning.SetAsSanitizerElementNamespaceWithAttributes() =
           entry.GetKey().ToSanitizerElementNamespaceWithAttributes(
               entry.GetData());
+
+      // Step 2.2. Set config["elements"] to the result of sort in ascending
+      // order config["elements"], with elementA being less than item elementB.
+      // (Instead of sorting at the end, we sort during insertion)
+      elements.InsertElementSorted(owning,
+                                   SanitizerComparator<decltype(owning)>());
     }
     aConfig.mElements.Construct(std::move(elements));
   } else {
+    // Step 3. If config["removeElements"] exists:
+    // Step 3.1. Set config["removeElements"] to the result of sort in ascending
+    // order config["removeElements"], with elementA being less than item
+    // elementB.
     nsTArray<OwningStringOrSanitizerElementNamespace> removeElements;
     for (const CanonicalName& canonical : *mRemoveElements) {
-      removeElements.AppendElement()->SetAsSanitizerElementNamespace() =
+      OwningStringOrSanitizerElementNamespace owning;
+      owning.SetAsSanitizerElementNamespace() =
           canonical.ToSanitizerElementNamespace();
+      removeElements.InsertElementSorted(
+          owning, SanitizerComparator<decltype(owning)>());
     }
     aConfig.mRemoveElements.Construct(std::move(removeElements));
   }
 
+  // Step 4. If config["replaceWithChildrenElements"] exists:
   if (mReplaceWithChildrenElements) {
+    // Step 4.1. Set config["replaceWithChildrenElements"] to the result of sort
+    // in ascending order config["replaceWithChildrenElements"], with elementA
+    // being less than item elementB.
     nsTArray<OwningStringOrSanitizerElementNamespace>
         replaceWithChildrenElements;
     for (const CanonicalName& canonical : *mReplaceWithChildrenElements) {
-      replaceWithChildrenElements.AppendElement()
-          ->SetAsSanitizerElementNamespace() =
+      OwningStringOrSanitizerElementNamespace owning;
+      owning.SetAsSanitizerElementNamespace() =
           canonical.ToSanitizerElementNamespace();
+      replaceWithChildrenElements.InsertElementSorted(
+          owning, SanitizerComparator<decltype(owning)>());
     }
     aConfig.mReplaceWithChildrenElements.Construct(
         std::move(replaceWithChildrenElements));
   }
 
+  // Step 5. If config["attributes"] exists:
   if (mAttributes) {
+    // Step 5.1. Set config["attributes"] to the result of sort in ascending
+    // order config["attributes"], with attrA being less than item attrB.
+    // (Sorting is done by ToSanitizerAttributes)
     aConfig.mAttributes.Construct(ToSanitizerAttributes(*mAttributes));
   } else {
+    // Step 6. If config["removeAttributes"] exists:
+    // Step 6.1. Set config["removeAttributes"] to the result of sort in
+    // ascending order config["removeAttributes"], with attrA being less than
+    // item attrB.
     aConfig.mRemoveAttributes.Construct(
         ToSanitizerAttributes(*mRemoveAttributes));
   }
 
+  // (In the spec these already exist in the |config| and don't need sorting)
   aConfig.mComments.Construct(mComments);
   if (mDataAttributes) {
     aConfig.mDataAttributes.Construct(*mDataAttributes);
   }
+
+  // Step 7. Return config.
 }
 
 // https://wicg.github.io/sanitizer-api/#sanitizerconfig-allow-an-element

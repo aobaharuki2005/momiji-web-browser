@@ -77,6 +77,81 @@ using CanonicalElementMap =
 nsTArray<OwningStringOrSanitizerAttributeNamespace> ToSanitizerAttributes(
     const CanonicalNameSet& aSet);
 
+inline const auto& GetAsDictionary(
+    const OwningStringOrSanitizerAttributeNamespace& aOwning) {
+  return aOwning.GetAsSanitizerAttributeNamespace();
+}
+
+inline const auto& GetAsDictionary(
+    const OwningStringOrSanitizerElementNamespace& aOwning) {
+  return aOwning.GetAsSanitizerElementNamespace();
+}
+
+inline const auto& GetAsDictionary(
+    const OwningStringOrSanitizerElementNamespaceWithAttributes& aOwning) {
+  return aOwning.GetAsSanitizerElementNamespaceWithAttributes();
+}
+
+inline const auto& GetAsDictionary(
+    const StringOrSanitizerElementNamespace& aElement) {
+  return aElement.GetAsSanitizerElementNamespace();
+}
+
+inline const auto& GetAsDictionary(
+    const StringOrSanitizerElementNamespaceWithAttributes& aElement) {
+  return aElement.GetAsSanitizerElementNamespaceWithAttributes();
+}
+
+template <typename SanitizerNameNamespace>
+class MOZ_STACK_CLASS SanitizerComparator final {
+ public:
+  bool Equals(const SanitizerNameNamespace& aItemA,
+              const SanitizerNameNamespace& aItemB) const {
+    const auto& itemA = GetAsDictionary(aItemA);
+    const auto& itemB = GetAsDictionary(aItemB);
+
+    return itemA.mNamespace.IsVoid() == itemB.mNamespace.IsVoid() &&
+           itemA.mNamespace == itemB.mNamespace && itemA.mName == itemB.mName;
+  }
+
+  // https://wicg.github.io/sanitizer-api/#sanitizerconfig-less-than-item
+  bool LessThan(const SanitizerNameNamespace& aItemA,
+                const SanitizerNameNamespace& aItemB) const {
+    const auto& itemA = GetAsDictionary(aItemA);
+    const auto& itemB = GetAsDictionary(aItemB);
+
+    // Step 1. If itemA["namespace"] is null:
+    if (itemA.mNamespace.IsVoid()) {
+      // Step 1.1. If itemB["namespace"] is not null, return true.
+      if (!itemB.mNamespace.IsVoid()) {
+        return true;
+      }
+    } else {
+      // Step 2. Otherwise:
+      // Step 2.1. If itemB["namespace"] is null, return false.
+      if (itemB.mNamespace.IsVoid()) {
+        return false;
+      }
+
+      int result = Compare(itemA.mNamespace, itemB.mNamespace);
+      // Step 2.2. If itemA["namespace"] is code unit less than
+      // itemB["namespace"], return true.
+      if (result < 0) {
+        return true;
+      }
+      // Step 2.3. If itemA["namespace"] is not equal itemB["namespace"], return
+      // false.
+      // XXX https://github.com/WICG/sanitizer-api/pull/341
+      if (result != 0) {
+        return false;
+      }
+    }
+
+    // Step 3. Return itemA["name"] is code unit less thanitemB["name"].
+    return itemA.mName < itemB.mName;
+  }
+};
+
 }  // namespace mozilla::dom::sanitizer
 
 #endif

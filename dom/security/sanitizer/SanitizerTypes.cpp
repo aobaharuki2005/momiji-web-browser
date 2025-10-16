@@ -86,11 +86,13 @@ bool CanonicalElementAttributes::Equals(
 
 nsTArray<OwningStringOrSanitizerAttributeNamespace> ToSanitizerAttributes(
     const CanonicalNameSet& aSet) {
-  // XXX Sorting
   nsTArray<OwningStringOrSanitizerAttributeNamespace> attributes;
   for (const CanonicalName& canonical : aSet) {
-    attributes.AppendElement()->SetAsSanitizerAttributeNamespace() =
+    OwningStringOrSanitizerAttributeNamespace owning;
+    owning.SetAsSanitizerAttributeNamespace() =
         canonical.ToSanitizerAttributeNamespace();
+    attributes.InsertElementSorted(owning,
+                                   SanitizerComparator<decltype(owning)>());
   }
   return attributes;
 }
