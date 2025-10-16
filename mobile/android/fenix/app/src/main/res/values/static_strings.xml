@@ -255,10 +255,10 @@
     <string name="crash_debug_deferral_button">Reset deferral settings</string>
     <!-- Subtitle warning text for crash button -->
     <string name="crash_debug_crash_app_warning">This will crash the app to start crash reporting flow. Please also ensure that the crash report option is set to "Ask before sending" in the data collections settings if you want the dialog to pop up.</string>
-    <!-- Subtitle warning text for crash button -->
-    <string name="crash_debug_startup_crash_warning">This will set the flag that a startup crash was detected and crash the app to enter the startup crash flow on next startup.</string>
-    <!-- Button text to set app to crash during next startup -->
-    <string name="crash_debug_crash_on_next_startup">Set startup crash flag and crash app</string>
     <!-- Timer text for deferral period %s is the timer string -->
     <string name="crash_debug_deferral_timer">Current deferral period: %s</string>
+    <!-- Button text to show startup crash screen -->
+    <string name="crash_debug_show_startup_crash_screen">Show startup crash screen</string>
+    <!-- Subtitle warning text for crash button -->
+    <string name="crash_debug_startup_crash_warning">This will start the startup crash activity in a new process and terminate the current process.</string>
 </resources>

@@ -9,13 +9,11 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_MAIN
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
-import android.os.Process
 import android.os.StrictMode
 import android.text.format.DateUtils
 import android.util.AttributeSet
@@ -105,7 +103,6 @@ import org.mozilla.fenix.components.metrics.GrowthDataWorker
 import org.mozilla.fenix.components.metrics.MarketingAttributionService
 import org.mozilla.fenix.components.metrics.fonts.FontEnumerationWorker
 import org.mozilla.fenix.crashes.CrashReporterBinding
-import org.mozilla.fenix.crashes.StartupCrashCanary
 import org.mozilla.fenix.crashes.UnsubmittedCrashDialog
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.databinding.ActivityHomeBinding
@@ -162,7 +159,6 @@ import org.mozilla.fenix.splashscreen.DefaultExperimentsOperationStorage
 import org.mozilla.fenix.splashscreen.DefaultSplashScreenStorage
 import org.mozilla.fenix.splashscreen.FetchExperimentsOperation
 import org.mozilla.fenix.splashscreen.SplashScreenManager
-import org.mozilla.fenix.startupCrash.StartupCrashActivity
 import org.mozilla.fenix.tabhistory.TabHistoryDialogFragment
 import org.mozilla.fenix.tabstray.TabsTrayFragment
 import org.mozilla.fenix.theme.DefaultThemeManager
@@ -350,29 +346,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         }
     }
 
-    final override fun onCreate(savedInstanceState: Bundle?) {
-        if (StartupCrashCanary.build(applicationContext).startupCrashDetected) {
-            super.onCreate(savedInstanceState)
-            val startupCrashIntent =
-                Intent(
-                    applicationContext,
-                    StartupCrashActivity::class.java,
-                )
-            startupCrashIntent.flags = FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
-            startActivity(startupCrashIntent)
-            // We kill the process, because `finish` will cause `onDestroy` to run which would end up
-            // causing several components to be initialized and potentially cause the startup crash.
-            Process.killProcess(Process.myPid())
-        } else {
-            initialize(savedInstanceState)
-        }
-    }
-
-    /**
-     * Initializes [HomeActivity] and all required subsystems.
-     */
     @Suppress("ComplexMethod")
-    fun initialize(savedInstanceState: Bundle?) {
+    final override fun onCreate(savedInstanceState: Bundle?) {
         // DO NOT MOVE ANYTHING ABOVE THIS getProfilerTime CALL.
         val startTimeProfiler = components.core.engine.profiler?.getProfilerTime()
 

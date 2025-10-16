@@ -491,6 +491,7 @@
         <activity
             android:name=".startupCrash.StartupCrashActivity"
             android:exported="false"
+            android:process=":StartupCrashActivityProcess"
             >
         </activity>
 
