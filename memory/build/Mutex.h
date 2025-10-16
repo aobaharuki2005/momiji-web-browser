@@ -58,12 +58,24 @@ struct MOZ_CAPABILITY("mutex") Mutex {
   pthread_mutex_t mMutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
+#ifdef MOZ_DEBUG
+  bool mInitialised = false;
+
+  // Called by StaticMutex
+  explicit constexpr Mutex(bool aInitialised) : mInitialised(aInitialised) {}
+#else
+  explicit constexpr Mutex(bool aIgnored) {}
+#endif
+
   // Although a constexpr constructor is provided, it will not initialise the
   // mutex and calling Init() is required.
   constexpr Mutex() {}
 
   // (Re-)initializes a mutex. Returns whether initialization succeeded.
   inline bool Init() {
+#ifdef MOZ_DEBUG
+    mInitialised = true;
+#endif
 #if defined(XP_WIN)
     if (!InitializeCriticalSectionAndSpinCount(mMutex.addr(), 5000)) {
       return false;
@@ -90,6 +102,8 @@ struct MOZ_CAPABILITY("mutex") Mutex {
   }
 
   inline void Lock() MOZ_CAPABILITY_ACQUIRE() {
+    MOZ_ASSERT(mInitialised);
+
 #if defined(XP_WIN)
     EnterCriticalSection(mMutex.addr());
 #elif defined(XP_DARWIN)
@@ -111,6 +125,8 @@ struct MOZ_CAPABILITY("mutex") Mutex {
   [[nodiscard]] bool TryLock() MOZ_TRY_ACQUIRE(true);
 
   inline void Unlock() MOZ_CAPABILITY_RELEASE() {
+    MOZ_ASSERT(mInitialised);
+
 #if defined(XP_WIN)
     LeaveCriticalSection(mMutex.addr());
 #elif defined(XP_DARWIN)
@@ -149,8 +165,9 @@ struct MOZ_CAPABILITY("mutex") StaticMutex {
 };
 
 #else
-typedef Mutex StaticMutex;
-
+struct MOZ_CAPABILITY("mutex") StaticMutex : public Mutex {
+  constexpr StaticMutex() : Mutex(true) {}
+};
 #endif
 
 #ifdef XP_WIN
