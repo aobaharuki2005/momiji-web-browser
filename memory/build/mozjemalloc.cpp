@@ -919,13 +919,6 @@ struct ArenaTreeTrait {
 class ArenaCollection {
  public:
   bool Init() MOZ_REQUIRES(gInitLock) MOZ_EXCLUDES(mLock) {
-    MOZ_PUSH_IGNORE_THREAD_SAFETY
-    mArenas.Init();
-    mPrivateArenas.Init();
-#ifndef NON_RANDOM_ARENA_IDS
-    mMainThreadArenas.Init();
-#endif
-    MOZ_POP_THREAD_SAFETY
     arena_params_t params;
     // The main arena allows more dirty pages than the default for other arenas.
     params.mMaxDirty = opt_dirty_max;
@@ -3509,7 +3502,6 @@ arena_t::arena_t(arena_params_t* aParams, bool aIsPrivate) {
   mId = 0;
 
   // Initialize chunks.
-  mChunksDirty.Init();
 #ifdef MALLOC_DOUBLE_PURGE
   new (&mChunksMAdvised) DoublyLinkedList<arena_chunk_t>();
 #endif
@@ -3592,8 +3584,6 @@ arena_t::arena_t(arena_params_t* aParams, bool aIsPrivate) {
   mMaxDirtyBase = (aParams && aParams->mMaxDirty) ? aParams->mMaxDirty
                                                   : (opt_dirty_max / 8);
   UpdateMaxDirty();
-
-  mRunsAvail.Init();
 
   // Initialize bins.
   SizeClass sizeClass(1);
@@ -3732,7 +3722,6 @@ arena_id_t ArenaCollection::MakeRandArenaId(bool aIsMainThreadOnly) const {
 static void huge_init() MOZ_REQUIRES(gInitLock) {
   huge_mtx.Init();
   MOZ_PUSH_IGNORE_THREAD_SAFETY
-  huge.Init();
   huge_allocated = 0;
   huge_mapped = 0;
   huge_operations = 0;

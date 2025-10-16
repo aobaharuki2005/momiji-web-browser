@@ -503,10 +503,6 @@ Atomic<size_t> gRecycledSize;
 void chunks_init() {
   // Initialize chunks data.
   chunks_mtx.Init();
-  MOZ_PUSH_IGNORE_THREAD_SAFETY
-  gChunksBySize.Init();
-  gChunksByAddress.Init();
-  MOZ_POP_THREAD_SAFETY
 }
 
 #ifdef XP_WIN
