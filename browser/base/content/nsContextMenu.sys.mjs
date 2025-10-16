@@ -1381,7 +1381,7 @@ export class nsContextMenu {
 
         count = 0;
       } else if (!menuItem.hidden) {
-        if (menuItem.localName == "menu" && menuItem.menupopup) {
+        if (menuItem.localName == "menu") {
           this.showHideSeparators(menuItem.menupopup);
         } else if (menuItem.localName == "menugroup") {
           this.showHideSeparators(menuItem);
