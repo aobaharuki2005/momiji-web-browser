@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { ERRORS } = ChromeUtils.importESModule(
+  "chrome://browser/content/backup/backup-constants.mjs"
+);
+
 let TEST_PROFILE_PATH;
 
 add_setup(async () => {
@@ -458,5 +462,90 @@ add_task(async function test_restore_backup_file_info_display() {
       mockDate.getTime(),
       "l10n args should contain the correct date"
     );
+  });
+});
+
+/**
+ * Helper function to test that a support link has the appropriate attributes
+ *
+ * @param {Element} link - The support link element to test
+ * @param {string} linkName - The name of the link to test
+ */
+
+function assertNonEmbeddedSupportLink(link, linkName) {
+  Assert.ok(link, `${linkName} should be present`);
+  Assert.equal(
+    link.getAttribute("is"),
+    "moz-support-link",
+    `${linkName} should use moz-support-link when not embedded`
+  );
+  Assert.equal(
+    link.getAttribute("support-page"),
+    "firefox-backup",
+    `${linkName} should have support-page attribute`
+  );
+  Assert.ok(
+    !link.href.includes("utm_source"),
+    `${linkName} should not have UTM params when not embedded`
+  );
+}
+
+/**
+ * Tests that support links use moz-support-link when aboutWelcomeEmbedded is falsy
+ */
+add_task(async function test_support_links_non_embedded() {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    let settings = browser.contentDocument.querySelector("backup-settings");
+    await settings.updateComplete;
+
+    settings.restoreFromBackupButtonEl.click();
+    await settings.updateComplete;
+
+    let restoreFromBackup = settings.restoreFromBackupEl;
+    Assert.ok(restoreFromBackup, "restore-from-backup should be found");
+
+    Assert.ok(
+      !restoreFromBackup.aboutWelcomeEmbedded,
+      "aboutWelcomeEmbedded should be falsy"
+    );
+
+    // Test the 'no backup file' link
+    let noBackupFileLink = restoreFromBackup.shadowRoot.querySelector(
+      "#restore-from-backup-no-backup-file-link"
+    );
+    assertNonEmbeddedSupportLink(noBackupFileLink, "'No backup file' link");
+
+    // Test the description link
+    restoreFromBackup.backupServiceState = {
+      ...restoreFromBackup.backupServiceState,
+      backupFileInfo: {
+        date: new Date(),
+        deviceName: "test-device",
+        isEncrypted: false,
+      },
+    };
+    await restoreFromBackup.updateComplete;
+
+    let descriptionLink = restoreFromBackup.shadowRoot.querySelector(
+      "#restore-from-backup-learn-more-link"
+    );
+    assertNonEmbeddedSupportLink(descriptionLink, "Description link");
+
+    // Test the incorrect password link
+    restoreFromBackup.backupServiceState = {
+      ...restoreFromBackup.backupServiceState,
+      backupFileInfo: {
+        date: new Date(),
+        deviceName: "test-device",
+        isEncrypted: true,
+      },
+      recoveryErrorCode: ERRORS.UNAUTHORIZED,
+    };
+    await restoreFromBackup.updateComplete;
+
+    let passwordErrorLink = restoreFromBackup.shadowRoot.querySelector(
+      "#backup-incorrect-password-support-link"
+    );
+    assertNonEmbeddedSupportLink(passwordErrorLink, "Password error link");
   });
 });
