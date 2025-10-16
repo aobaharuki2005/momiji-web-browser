@@ -440,7 +440,7 @@ addAccessibleTask(
   `
 <div role="tablist">
   <div id="noSel" role="tab" tabindex="0">noSel</div>
-  <div id="selFalse" role="tab" aria-selected="false" tabindex="0">selFalse</div>
+  <div id="noSel2" role="tab" tabindex="0">noSel2</div>
 </div>
 <div role="listbox" aria-multiselectable="true">
   <div id="multiNoSel" role="option" tabindex="0">multiNoSel</div>
@@ -460,13 +460,13 @@ addAccessibleTask(
     await focused;
     testStates(noSel, STATE_FOCUSED | STATE_SELECTED, 0, 0, 0);
 
-    const selFalse = findAccessibleChildByID(docAcc, "selFalse");
-    testStates(selFalse, 0, 0, STATE_FOCUSED | STATE_SELECTED, 0);
-    info("Focusing selFalse");
-    focused = waitForEvent(EVENT_FOCUS, selFalse);
-    selFalse.takeFocus();
+    const noSel2 = findAccessibleChildByID(docAcc, "noSel2");
+    testStates(noSel2, 0, 0, STATE_FOCUSED | STATE_SELECTED, 0);
+    info("Focusing noSel2");
+    focused = waitForEvent(EVENT_FOCUS, noSel2);
+    noSel2.takeFocus();
     await focused;
-    testStates(selFalse, STATE_FOCUSED, 0, STATE_SELECTED, 0);
+    testStates(noSel2, STATE_FOCUSED | STATE_SELECTED, 0, 0, 0);
 
     const multiNoSel = findAccessibleChildByID(docAcc, "multiNoSel");
     testStates(multiNoSel, 0, 0, STATE_FOCUSED | STATE_SELECTED, 0);

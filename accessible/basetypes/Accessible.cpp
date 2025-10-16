@@ -685,20 +685,15 @@ void Accessible::ApplyImplicitState(uint64_t& aState) const {
        roleMapEntry->Is(nsGkAtoms::tab) ||
        roleMapEntry->Is(nsGkAtoms::treeitem)) &&
       !(aState & states::SELECTED) && ARIASelected().valueOr(true)) {
-    // Special case for tabs: focused tab or focus inside related tab panel
-    // implies selected state.
-    if (roleMapEntry->role == roles::PAGETAB) {
-      if (aState & states::FOCUSED) {
-        aState |= states::SELECTED;
-      } else {
-        // If focus is in a child of the tab panel surely the tab is selected!
-        Relation rel = RelationByType(RelationType::LABEL_FOR);
-        Accessible* relTarget = nullptr;
-        while ((relTarget = rel.Next())) {
-          if (relTarget->Role() == roles::PROPERTYPAGE &&
-              FocusMgr()->IsFocusWithin(relTarget)) {
-            aState |= states::SELECTED;
-          }
+    if (roleMapEntry->role == roles::PAGETAB && !(aState & states::FOCUSED)) {
+      // If focus is within the tab panel, this should mean the tab is selected.
+      // Note that we handle focus on the tab itself below.
+      Relation rel = RelationByType(RelationType::LABEL_FOR);
+      Accessible* relTarget = nullptr;
+      while ((relTarget = rel.Next())) {
+        if (relTarget->Role() == roles::PROPERTYPAGE &&
+            FocusMgr()->IsFocusWithin(relTarget)) {
+          aState |= states::SELECTED;
         }
       }
     } else if (aState & states::FOCUSED) {
