@@ -1004,6 +1004,8 @@ bool Navigation::FireDownloadRequestNavigateEvent(
   // in #fire-a-download-request-navigate-event have been moved to after step
   // 25 in #inner-navigate-event-firing-algorithm in our implementation.
 
+  InnerInformAboutAbortingNavigation(aCx);
+
   // Step 3 to step 7
   RefPtr<NavigationDestination> destination =
       MakeAndAddRef<NavigationDestination>(GetOwnerGlobal(), aDestinationURL,
