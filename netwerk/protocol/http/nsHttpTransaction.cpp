@@ -3767,6 +3767,13 @@ bool nsHttpTransaction::AllowedToConnectToIpAddressSpace(
   // for private network access
   // XXX add link to LNA spec once it is published
 
+  // Skip LNA checks for private network to localhost if preference is enabled
+  if (StaticPrefs::network_lna_local_network_to_localhost_skip_checks() &&
+      mParentIPAddressSpace == nsILoadInfo::IPAddressSpace::Private &&
+      aTargetIpAddressSpace == nsILoadInfo::IPAddressSpace::Local) {
+    return true;  // Allow private->localhost access
+  }
+
   if (mozilla::net::IsLocalOrPrivateNetworkAccess(mParentIPAddressSpace,
                                                   aTargetIpAddressSpace)) {
     if (aTargetIpAddressSpace == nsILoadInfo::IPAddressSpace::Local &&

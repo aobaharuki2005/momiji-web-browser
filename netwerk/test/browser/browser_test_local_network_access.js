@@ -27,6 +27,8 @@ add_setup(async function () {
       ["network.lna.block_trackers", true],
       ["network.lna.blocking", true],
       ["network.http.rcwn.enabled", false],
+      ["network.lna.websocket.enabled", true],
+      ["network.lna.local-network-to-localhost.skip-checks", false],
     ],
   });
   Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk");
@@ -533,5 +535,6 @@ add_task(async function test_lna_websocket_preference() {
     ok(false, `WebSocket LNA preference test failed: ${error.message}`);
   }
 
+  await SpecialPowers.popPrefEnv();
   await SpecialPowers.popPrefEnv();
 });
