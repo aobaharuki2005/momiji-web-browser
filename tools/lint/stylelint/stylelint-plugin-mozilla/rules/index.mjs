@@ -11,6 +11,7 @@ import useFontSizeTokens from "./use-font-size-tokens.mjs";
 import useFontWeightTokens from "./use-font-weight-tokens.mjs";
 import useSpaceTokens from "./use-space-tokens.mjs";
 import useBackgroundColorTokens from "./use-background-color-tokens.mjs";
+import useTextColorTokens from "./use-text-color-tokens.mjs";
 
 export default {
   "no-base-design-tokens": noBaseDesignTokens,
@@ -20,4 +21,5 @@ export default {
   "use-font-weight-tokens": useFontWeightTokens,
   "use-space-tokens": useSpaceTokens,
   "use-background-color-tokens": useBackgroundColorTokens,
+  "use-text-color-tokens": useTextColorTokens,
 };

@@ -17,62 +17,25 @@ const {
 } = stylelint;
 
 // Name our rule, set the error message, and link to meta
-const ruleName = namespace("use-border-color-tokens");
+const ruleName = namespace("use-text-color-tokens");
 
 const messages = ruleMessages(ruleName, {
-  rejected: value => `${value} should use a border-color design token.`,
+  rejected: value => `${value} should use a text-color design token.`,
 });
 
 const meta = {
-  url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/stylelint-plugin-mozilla/rules/use-border-color-tokens.html",
+  url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/stylelint-plugin-mozilla/rules/use-text-color-tokens.html",
   fixable: false,
 };
 
-// Gather an array of the ready css `['var(--token-name)']`
-const INCLUDE_CATEGORIES = ["border-color", "border", "outline"];
+const INCLUDE_CATEGORIES = ["text-color"];
 
 const tokenCSS = createTokenNamesArray(INCLUDE_CATEGORIES);
 
-// Allowed border-color values in CSS
-const ALLOW_LIST = createAllowList([
-  "transparent",
-  "currentColor",
-  "auto",
-  "normal",
-  "none",
-  "0",
-]);
+// Allowed text-color values in CSS
+const ALLOW_LIST = createAllowList(["currentColor"]);
 
-const SHORTHAND_CSS_PROPERTIES = [
-  "border",
-  "border-top",
-  "border-right",
-  "border-bottom",
-  "border-left",
-  "border-block",
-  "border-block-start",
-  "border-block-end",
-  "border-inline",
-  "border-inline-start",
-  "border-inline-end",
-  "outline",
-];
-
-const CSS_PROPERTIES = [
-  "border-color",
-  "outline-color",
-  "border-top-color",
-  "border-right-color",
-  "border-bottom-color",
-  "border-left-color",
-  "border-block-color",
-  "border-block-start-color",
-  "border-block-end-color",
-  "border-inline-color",
-  "border-inline-start-color",
-  "border-inline-end-color",
-  ...SHORTHAND_CSS_PROPERTIES,
-];
+const CSS_PROPERTIES = ["color"];
 
 const ruleFunction = primaryOption => {
   return (root, result) => {
