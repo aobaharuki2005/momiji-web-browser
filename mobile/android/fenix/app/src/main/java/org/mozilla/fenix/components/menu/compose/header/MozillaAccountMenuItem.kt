@@ -105,7 +105,10 @@ internal fun MozillaAccountMenuItem(
             .height(IntrinsicSize.Min)
             .defaultMinSize(minHeight = BUTTON_HEIGHT)
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 6.dp),
+            .padding(
+                horizontal = FirefoxTheme.layout.space.dynamic200,
+                vertical = FirefoxTheme.layout.space.static100,
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AvatarIcon(account, accountState, isPrivate)
