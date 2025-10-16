@@ -247,7 +247,7 @@ class Interventions {
     }
 
     if (skipped.length) {
-      console.warn(
+      console.debug(
         "Skipping",
         skipped.length,
         "un-needed interventions",
@@ -311,11 +311,15 @@ class Interventions {
 
     if (!this._getActiveInterventionById(config.id)) {
       this._availableInterventions.push(config);
-      console.info("Added webcompat intervention", config.id, config);
+      console.debug("Added webcompat intervention", config.id, config);
     } else {
       for (const [index, oldConfig] of this._availableInterventions.entries()) {
         if (oldConfig.id === config.id && oldConfig !== config) {
-          console.info("Replaced webcompat intervention", oldConfig.id, config);
+          console.debug(
+            "Replaced webcompat intervention",
+            oldConfig.id,
+            config
+          );
           this._availableInterventions[index] = config;
         }
       }
@@ -431,7 +435,7 @@ class Interventions {
 
     listeners.onBeforeSendHeaders = listener;
 
-    console.info(`Enabled UA override for ${label}`);
+    console.debug(`Enabled UA override for ${label}`);
   }
 
   async _enableRequestBlocks(label, intervention, blocks) {
@@ -454,7 +458,7 @@ class Interventions {
     ]);
 
     listeners.onBeforeRequest = listener;
-    console.info(`Blocking requests as specified for ${label}`);
+    console.debug(`Blocking requests as specified for ${label}`);
   }
 
   async _enableContentScripts(bug, label, intervention, matches) {
@@ -482,7 +486,7 @@ class Interventions {
         ({ id }) => !alreadyReggedIds.includes(id)
       );
       await browser.scripting.registerContentScripts(stillNeeded);
-      console.info(
+      console.debug(
         `Registered still-not-active content scripts for ${label}`,
         stillNeeded
       );
