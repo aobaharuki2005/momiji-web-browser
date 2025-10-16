@@ -1743,13 +1743,23 @@ class RecordedFilterNodeSetAttribute
   };
 
   template <typename T>
+  void WritePayload(const T& aValue) {
+    mPayload.Assign(reinterpret_cast<const uint8_t*>(&aValue), sizeof(T));
+  }
+
+  void WritePayload(const bool& aValue) {
+    uint8_t data = aValue ? 1 : 0;
+    mPayload.Assign(&data, 1);
+  }
+
+  template <typename T>
   RecordedFilterNodeSetAttribute(FilterNode* aNode, uint32_t aIndex,
                                  T aArgument, ArgType aArgType)
       : RecordedEventDerived(FILTERNODESETATTRIBUTE),
         mNode(aNode),
         mIndex(aIndex),
         mArgType(aArgType) {
-    mPayload.Assign(reinterpret_cast<const uint8_t*>(&aArgument), sizeof(T));
+    WritePayload(aArgument);
   }
 
   RecordedFilterNodeSetAttribute(FilterNode* aNode, uint32_t aIndex,
@@ -4440,11 +4450,6 @@ inline void RecordedMaskSurface::OutputSimpleEventInfo(
   OutputSimplePatternInfo(mPattern, aStringStream);
 }
 
-template <typename T>
-void ReplaySetAttribute(FilterNode* aNode, uint32_t aIndex, T aValue) {
-  aNode->SetAttribute(aIndex, aValue);
-}
-
 inline bool RecordedFilterNodeSetAttribute::PlayEvent(
     Translator* aTranslator) const {
   FilterNode* node = aTranslator->LookupFilterNode(mNode);
@@ -4452,16 +4457,18 @@ inline bool RecordedFilterNodeSetAttribute::PlayEvent(
     return false;
   }
 
-#define REPLAY_SET_ATTRIBUTE(type, argtype)                    \
+#define REPLAY_SET_ATTRIBUTE_CAST(type, cast, argtype)         \
   case ARGTYPE_##argtype:                                      \
     if (mPayload.size() < sizeof(type)) {                      \
       return false;                                            \
     }                                                          \
-    ReplaySetAttribute(node, mIndex, *(type*)mPayload.data()); \
+    node->SetAttribute(mIndex, cast(*(type*)mPayload.data())); \
     break
+#define REPLAY_SET_ATTRIBUTE(type, argtype) \
+  REPLAY_SET_ATTRIBUTE_CAST(type, , argtype)
 
   switch (mArgType) {
-    REPLAY_SET_ATTRIBUTE(bool, BOOL);
+    REPLAY_SET_ATTRIBUTE_CAST(uint8_t, bool, BOOL);
     REPLAY_SET_ATTRIBUTE(uint32_t, UINT32);
     REPLAY_SET_ATTRIBUTE(Float, FLOAT);
     REPLAY_SET_ATTRIBUTE(Size, SIZE);
