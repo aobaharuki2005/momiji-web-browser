@@ -56,6 +56,8 @@ support-files = [
 
 ["test_getMatchingCSSRules_pseudo.html"]
 
+["test_getMatchingCSSRules_shadow_dom.html"]
+
 ["test_getMatchingCSSRules_slotted.html"]
 
 ["test_getMatchingCSSRules_starting_style.html"]
