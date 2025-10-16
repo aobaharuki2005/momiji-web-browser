@@ -1066,7 +1066,7 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
                           rv ? "supported" : "not supported");
         if (rv) {
           supportedScheme += scheme;
-          break;
+          continue;
         }
         // Try 16 bytes IV.
         additionalFeature.AppendLiteral(u"encryption-iv-size=16,");
@@ -1079,7 +1079,7 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
 
         if (rv) {
           supportedScheme += scheme;
-          break;
+          continue;
         }
       }
       // Add a capability if supported scheme exists
