@@ -810,3 +810,26 @@ link.handling:
         type: boolean
     no_lint:
       - COMMON_PREFIX
+  open_from_external_app:
+    type: event
+    disabled: true
+    description: >
+      This is recorded when a link is clicked outside of Firefox and this external
+      link is then opened inside of Firefox. The "Open links from apps next to
+      your active tab" option governs the behavior of where the link will be opened.
+    bugs:
+      - https://bugzil.la/1988855
+    data_reviews:
+      - https://bugzil.la/1988855
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sthompson@mozilla.com
+    expires: never
+    extra_keys:
+      next_to_active_tab:
+        description: >
+          Whether the link was opened next to the active tab.
+        type: boolean
+    no_lint:
+      - COMMON_PREFIX
