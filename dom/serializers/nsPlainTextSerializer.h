@@ -123,9 +123,8 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void CloseContainerForOutputFormatted(const nsAtom* aTag);
   nsresult DoAddLeaf(const nsAtom* aTag);
 
-  void DoAddText();
-  // @param aText Ignored if aIsLineBreak is true.
-  void DoAddText(bool aIsLineBreak, const nsAString& aText);
+  void DoAddText(const nsAString& aText);
+  void DoAddLineBreak();
 
   inline bool DoOutput() const { return mHeadLevel == 0; }
 
@@ -150,7 +149,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   static bool IsCssBlockLevelElement(mozilla::dom::Element* aElement);
 
  private:
-  uint32_t mHeadLevel;
+  uint32_t mHeadLevel = 0;
 
   class Settings {
    public:
@@ -323,7 +322,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // If we've just written out a cite blockquote, we need to remember it
   // so we don't duplicate spaces before a <pre wrap> (which mail uses to quote
   // old messages).
-  bool mHasWrittenCiteBlockquote;
+  bool mHasWrittenCiteBlockquote = false;
 
   int32_t mFloatingLines;  // To store the number of lazy line breaks
 
@@ -343,7 +342,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // is due because of a closing tag. Setting it to "TRUE" while closing the
   // tags. Hence opening tags are guaranteed to start with appropriate line
   // breaks.
-  bool mLineBreakDue;
+  bool mLineBreakDue = false;
 
   bool mPreformattedBlockBoundary;
 
@@ -391,7 +390,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // serializer enters those specific nodes, mIgnoredChildNodeLevel increases
   // and is greater than 0. Otherwise when serializer leaves those nodes,
   // mIgnoredChildNodeLevel decreases.
-  uint32_t mIgnoredChildNodeLevel;
+  uint32_t mIgnoredChildNodeLevel = 0;
 };
 
 nsresult NS_NewPlainTextSerializer(nsIContentSerializer** aSerializer);
