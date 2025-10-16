@@ -149,7 +149,7 @@ class BufferReader {
   }
 }
 
-function readArrayLikeSummary(result, reader, flags, depth, shapes) {
+function readArrayLikeSummary(result, reader, depth, shapes) {
   const shapeId = reader.readUint32();
   const shape = shapes[shapeId];
 
@@ -165,7 +165,7 @@ function readArrayLikeSummary(result, reader, flags, depth, shapes) {
   preview.length = reader.readUint32();
   if (depth < 1) {
     for (let i = 0; i < preview.length && i < MAX_COLLECTION_VALUES; i++) {
-      if (reader.peekUint8() == JSVAL_TYPE_MAGIC) {
+      if (reader.peekUint8() === JSVAL_TYPE_MAGIC) {
         reader.readUint8();
         continue;
       }
@@ -188,7 +188,7 @@ function readFunctionSummary(result, reader) {
   }
 }
 
-function readMapLikeSummary(result, reader, flags, depth, shapes) {
+function readMapLikeSummary(result, reader, depth, shapes) {
   const shapeId = reader.readUint32();
   const shape = shapes[shapeId];
 
@@ -250,7 +250,7 @@ function readGenericObjectSummary(result, reader, flags, depth, shapes) {
         configurable: true,
         enumerable: true,
       };
-      if (header == GETTER_SETTER_MAGIC) {
+      if (header === GETTER_SETTER_MAGIC) {
         reader.readUint8();
         desc.get = readValueSummary(reader, depth + 1, shapes);
         desc.set = readValueSummary(reader, depth + 1, shapes);
@@ -267,7 +267,7 @@ function readGenericObjectSummary(result, reader, flags, depth, shapes) {
     const elementsLength = reader.readUint32();
     if (depth < 1) {
       for (let i = 0; i < elementsLength && i < MAX_COLLECTION_VALUES; i++) {
-        if (reader.peekUint8() == JSVAL_TYPE_MAGIC) {
+        if (reader.peekUint8() === JSVAL_TYPE_MAGIC) {
           reader.readUint8();
           continue;
         }
@@ -308,7 +308,7 @@ function readNodeSummary(result, reader, depth, shapes) {
   const subkind = subkindAndIsConnected & ~(1 << 7);
   preview.isConnected = subkindAndIsConnected >> 7;
 
-  if (subkind == EXTERNAL_NODE_SUBKIND_ELEMENT) {
+  if (subkind === EXTERNAL_NODE_SUBKIND_ELEMENT) {
     preview.attributes = {};
     preview.attributesLength = reader.readUint32();
     for (
@@ -320,11 +320,11 @@ function readNodeSummary(result, reader, depth, shapes) {
       const attrVal = reader.readString();
       preview.attributes[attrName] = attrVal;
     }
-  } else if (subkind == EXTERNAL_NODE_SUBKIND_ATTR) {
+  } else if (subkind === EXTERNAL_NODE_SUBKIND_ATTR) {
     preview.value = reader.readString();
-  } else if (subkind == EXTERNAL_NODE_SUBKIND_DOCUMENT) {
+  } else if (subkind === EXTERNAL_NODE_SUBKIND_DOCUMENT) {
     preview.location = reader.readString();
-  } else if (subkind == EXTERNAL_NODE_SUBKIND_DOCUMENT_FRAGMENT) {
+  } else if (subkind === EXTERNAL_NODE_SUBKIND_DOCUMENT_FRAGMENT) {
     preview.childNodesLength = reader.readUint32();
     if (depth < 1) {
       preview.childNodes = [];
@@ -337,8 +337,8 @@ function readNodeSummary(result, reader, depth, shapes) {
       }
     }
   } else if (
-    subkind == EXTERNAL_NODE_SUBKIND_TEXT ||
-    subkind == EXTERNAL_NODE_SUBKIND_COMMENT
+    subkind === EXTERNAL_NODE_SUBKIND_TEXT ||
+    subkind === EXTERNAL_NODE_SUBKIND_COMMENT
   ) {
     preview.textContent = reader.readString();
   }
@@ -431,10 +431,10 @@ function readObjectSummary(reader, flags, depth, shapes) {
       readClassFromShape(result, reader, shapes);
       break;
     case OBJECT_KIND_ARRAY_LIKE:
-      readArrayLikeSummary(result, reader, flags, depth, shapes);
+      readArrayLikeSummary(result, reader, depth, shapes);
       break;
     case OBJECT_KIND_MAP_LIKE:
-      readMapLikeSummary(result, reader, flags, depth, shapes);
+      readMapLikeSummary(result, reader, depth, shapes);
       break;
     case OBJECT_KIND_FUNCTION:
       readFunctionSummary(result, reader);
@@ -492,7 +492,7 @@ function readValueSummary(reader, depth, shapes) {
       return 0;
 
     case JSVAL_TYPE_INT32:
-      if (flags == NUMBER_IS_OUT_OF_LINE_MAGIC) {
+      if (flags === NUMBER_IS_OUT_OF_LINE_MAGIC) {
         return reader.readInt32();
       }
       return flags + MIN_INLINE_INT;
@@ -525,16 +525,16 @@ function readValueSummary(reader, depth, shapes) {
 }
 
 function getArgumentSummaries(valuesBuffer, shapes, valuesBufferIndex) {
-  if (valuesBufferIndex == ZERO_ARGUMENTS_MAGIC) {
+  if (valuesBufferIndex === ZERO_ARGUMENTS_MAGIC) {
     return [];
   }
-  if (valuesBufferIndex == EXPIRED_VALUES_MAGIC) {
+  if (valuesBufferIndex === EXPIRED_VALUES_MAGIC) {
     return "<missing>";
   }
 
-  let reader = new BufferReader(valuesBuffer, valuesBufferIndex);
-  let argc = reader.readUint32();
-  let args = new Array(argc);
+  const reader = new BufferReader(valuesBuffer, valuesBufferIndex);
+  const argc = reader.readUint32();
+  const args = new Array(argc);
   for (let i = 0; i < argc && i < MAX_ARGUMENTS_TO_RECORD; i++) {
     args[i] = readValueSummary(reader, 0, shapes);
   }
