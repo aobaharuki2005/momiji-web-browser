@@ -4180,8 +4180,9 @@ static bool ShouldSkipFrame(nsDisplayListBuilder* aBuilder,
       !aFrame->IsSelected()) {
     return true;
   }
-  static const nsFrameState skipFlags =
-      NS_FRAME_TOO_DEEP_IN_FRAME_TREE | NS_FRAME_IS_NONDISPLAY;
+  static const nsFrameState skipFlags = NS_FRAME_TOO_DEEP_IN_FRAME_TREE |
+                                        NS_FRAME_IS_NONDISPLAY |
+                                        NS_FRAME_POSITION_VISIBILITY_HIDDEN;
   if (aFrame->HasAnyStateBits(skipFlags)) {
     return true;
   }
