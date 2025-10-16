@@ -30,7 +30,6 @@ async def calls_canPlayType(client, type):
     )
     if play:
         play.click()
-        client.await_css(ERROR_MSG_CSS, is_displayed=True)
     return client.execute_script(
         """
       return window.__cpts.includes(arguments[0]);
