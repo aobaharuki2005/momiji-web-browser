@@ -9,6 +9,9 @@ import { RootBiDiModule } from "chrome://remote/content/webdriver-bidi/modules/R
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  NetworkHelper:
+    "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
+
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   CacheBehavior: "chrome://remote/content/shared/NetworkCacheManager.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
@@ -2185,13 +2188,12 @@ class NetworkModule extends RootBiDiModule {
       return;
     }
 
-    if (!(response instanceof lazy.NetworkResponse)) {
+    if (!(response instanceof lazy.NetworkResponse) && !response.isDataURL) {
       lazy.logger.trace(
         `Network data not collected for request "${request.requestId}" and data type "${DataType.Response}"` +
-          `: unsupported response (data scheme or cached resource)`
+          `: unsupported response (read from memory cache)`
       );
       // Cached stencils do not return any response body.
-      // TODO: Handle response body for data URLs.
       collectedData.pending = false;
       collectedData.networkDataCollected.resolve();
       this.#collectedNetworkData.delete(
@@ -2247,10 +2249,26 @@ class NetworkModule extends RootBiDiModule {
     // body. Since this is handled by the DevTools NetworkResponseListener, so
     // here we wait until the response content is set.
     try {
-      const bytesOrNull = await response.readResponseBody();
-      if (bytesOrNull !== null) {
-        bytes = bytesOrNull;
-        size = response.encodedBodySize;
+      if (response.isDataURL) {
+        // Handle data URLs as a special case since the response is not provided
+        // by the DevTools ResponseListener in this case.
+        const url = request.serializedURL;
+        const body = url.substring(url.indexOf(",") + 1);
+        const isText =
+          response.mimeType &&
+          lazy.NetworkHelper.isTextMimeType(response.mimeType);
+        // TODO: Reuse a common interface being introduced in Bug 1988955.
+        bytes = {
+          getDecodedResponseBody: () => body,
+          encoding: isText ? null : "base64",
+        };
+        size = body.length;
+      } else {
+        const bytesOrNull = await response.readResponseBody();
+        if (bytesOrNull !== null) {
+          bytes = bytesOrNull;
+          size = response.encodedBodySize;
+        }
       }
     } catch {
       // Let processBodyError be this step: Do nothing.

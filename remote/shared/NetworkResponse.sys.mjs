@@ -100,6 +100,10 @@ export class NetworkResponse {
     return this.#fromServiceWorker;
   }
 
+  get isDataURL() {
+    return this.#isDataURL;
+  }
+
   get mimeType() {
     return this.#getComputedMimeType();
   }
@@ -247,10 +251,11 @@ export class NetworkResponse {
   toJSON() {
     return {
       decodedBodySize: this.decodedBodySize,
-      headers: this.headers,
-      headersTransmittedSize: this.headersTransmittedSize,
       encodedBodySize: this.encodedBodySize,
       fromCache: this.fromCache,
+      headers: this.headers,
+      headersTransmittedSize: this.headersTransmittedSize,
+      isDataURL: this.isDataURL,
       mimeType: this.mimeType,
       protocol: this.protocol,
       serializedURL: this.serializedURL,
