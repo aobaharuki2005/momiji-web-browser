@@ -4,19 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "Common.h"
 #include "gtest/gtest.h"
 #include "nsCRT.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIParserUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
-
-const uint32_t kDefaultWrapColumn = 72;
-
-void ConvertBufToPlainText(nsString& aConBuf, int aFlag, uint32_t aWrapColumn) {
-  nsCOMPtr<nsIParserUtils> utils = do_GetService(NS_PARSERUTILS_CONTRACTID);
-  utils->ConvertToPlainText(aConBuf, aFlag, aWrapColumn, aConBuf);
-}
 
 // Test for ASCII with format=flowed; delsp=yes
 TEST(PlainTextSerializer, ASCIIWithFlowedDelSp)
@@ -350,25 +344,4 @@ TEST(PlainTextSerializer, OneHundredAndOneOL)
   nsAutoString expected;
   expected.AppendLiteral(" 1. X" NS_LINEBREAK);
   ASSERT_EQ(test, expected);
-}
-
-TEST(PlainTextSerializer, BlockQuoteCite)
-{
-  nsAutoString test;
-  test.AppendLiteral(u"<blockquote type=cite>hello world</blockquote>");
-
-  const uint32_t wrapColumn = 10;
-  ConvertBufToPlainText(test,
-                        nsIDocumentEncoder::OutputFormatted |
-                            nsIDocumentEncoder::OutputFormatFlowed |
-                            nsIDocumentEncoder::OutputCRLineBreak |
-                            nsIDocumentEncoder::OutputLFLineBreak,
-                        wrapColumn);
-
-  constexpr auto expect = NS_LITERAL_STRING_FROM_CSTRING(
-      "> hello \r\n"
-      "> world\r\n");
-
-  ASSERT_TRUE(test.Equals(expect))
-  << "Wrong blockquote cite to text serialization";
 }
