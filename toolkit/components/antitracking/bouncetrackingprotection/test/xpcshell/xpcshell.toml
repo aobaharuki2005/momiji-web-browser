@@ -1,5 +1,4 @@
 [DEFAULT]
-head = "head.js"
 prefs = [
   "privacy.bounceTrackingProtection.mode=1",
   "privacy.bounceTrackingProtection.enableTestMode=true",

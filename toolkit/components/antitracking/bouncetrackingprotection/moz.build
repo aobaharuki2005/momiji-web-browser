@@ -34,7 +34,6 @@ EXPORTS.mozilla += [
     "BounceTrackingStateGlobal.h",
     "BounceTrackingStorageObserver.h",
     "ClearDataCallback.h",
-    "ProfileAfterChangeGate.h",
     "PromiseNativeWrapper.h",
 ]
 
@@ -48,7 +47,6 @@ UNIFIED_SOURCES += [
     "BounceTrackingStateGlobal.cpp",
     "BounceTrackingStorageObserver.cpp",
     "ClearDataCallback.cpp",
-    "ProfileAfterChangeGate.cpp",
     "PromiseNativeWrapper.cpp",
 ]
 
