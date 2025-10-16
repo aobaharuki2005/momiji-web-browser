@@ -223,18 +223,18 @@ MOZ_CONSTINIT StaticMutex gInitLock MOZ_UNANNOTATED;
 
 struct arena_stats_t {
   // Number of bytes currently mapped.
-  size_t mapped;
+  size_t mapped = 0;
 
   // Current number of committed pages (non madvised/decommitted)
-  size_t committed;
+  size_t committed = 0;
 
   // Per-size-category statistics.
-  size_t allocated_small;
+  size_t allocated_small = 0;
 
-  size_t allocated_large;
+  size_t allocated_large = 0;
 
   // The number of "memory operations" aka mallocs/frees.
-  uint64_t operations;
+  uint64_t operations = 0;
 };
 
 // Describe size classes to which allocations are rounded up to.
@@ -473,8 +473,8 @@ enum PurgeCondition { PurgeIfThreshold, PurgeUnconditional };
 
 struct arena_t {
 #if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
-  uint32_t mMagic;
 #  define ARENA_MAGIC 0x947d3d24
+  uint32_t mMagic = ARENA_MAGIC;
 #endif
 
   // Linkage for the tree of arenas by id.
@@ -485,7 +485,7 @@ struct arena_t {
   // Arena id, that we keep away from the beginning of the struct so that
   // free list pointers in TypedBaseAlloc<arena_t> don't overflow in it,
   // and it keeps the value it had after the destructor.
-  arena_id_t mId;
+  arena_id_t mId = 0;
 
   // Operations on this arena require that lock be locked. The MaybeMutex
   // class will elude locking if the arena is accessed from a single thread
@@ -528,7 +528,7 @@ struct arena_t {
   // There is one spare chunk per arena, rather than one spare total, in
   // order to avoid interactions between multiple threads that could make
   // a single spare inadequate.
-  arena_chunk_t* mSpare MOZ_GUARDED_BY(mLock);
+  arena_chunk_t* mSpare MOZ_GUARDED_BY(mLock) = nullptr;
 
   // A per-arena opt-in to randomize the offset of small allocations
   // Needs no lock, read-only.
@@ -537,8 +537,9 @@ struct arena_t {
   // A pseudorandom number generator. Initially null, it gets initialized
   // on first use to avoid recursive malloc initialization (e.g. on OSX
   // arc4random allocates memory).
-  mozilla::non_crypto::XorShift128PlusRNG* mPRNG MOZ_GUARDED_BY(mLock);
-  bool mIsPRNGInitializing MOZ_GUARDED_BY(mLock);
+  mozilla::non_crypto::XorShift128PlusRNG* mPRNG MOZ_GUARDED_BY(mLock) =
+      nullptr;
+  bool mIsPRNGInitializing MOZ_GUARDED_BY(mLock) = false;
 
  public:
   // Whether this is a private arena. Multiple public arenas are just a
@@ -555,23 +556,23 @@ struct arena_t {
   // dirty, and for which madvise(... MADV_FREE) has not been called.  By
   // tracking this, we can institute a limit on how much dirty unused
   // memory is mapped for each arena.
-  size_t mNumDirty MOZ_GUARDED_BY(mLock);
+  size_t mNumDirty MOZ_GUARDED_BY(mLock) = 0;
 
   // Precalculated value for faster checks.
   size_t mMaxDirty MOZ_GUARDED_BY(mLock);
 
   // The current number of pages that are available without a system call (but
   // probably a page fault).
-  size_t mNumMAdvised MOZ_GUARDED_BY(mLock);
-  size_t mNumFresh MOZ_GUARDED_BY(mLock);
+  size_t mNumMAdvised MOZ_GUARDED_BY(mLock) = 0;
+  size_t mNumFresh MOZ_GUARDED_BY(mLock) = 0;
 
   // Maximum value allowed for mNumDirty.
   // Needs no lock, read-only.
   size_t mMaxDirtyBase;
 
   // Needs no lock, read-only.
-  int32_t mMaxDirtyIncreaseOverride;
-  int32_t mMaxDirtyDecreaseOverride;
+  int32_t mMaxDirtyIncreaseOverride = 0;
+  int32_t mMaxDirtyDecreaseOverride = 0;
 
   // The link to gArenas.mOutstandingPurges.
   // Note that this must only be accessed while holding gArenas.mPurgeListLock
@@ -595,7 +596,7 @@ struct arena_t {
   // completely done.  This is used to avoid accessing the list (and list lock)
   // on every call to ShouldStartPurge() and to avoid deleting arenas that
   // another thread is purging.
-  bool mIsPurgePending MOZ_GUARDED_BY(mLock);
+  bool mIsPurgePending MOZ_GUARDED_BY(mLock) = false;
 
   // A mirror of ArenaCollection::mIsDeferredPurgeEnabled, here only to
   // optimize memory reads in ShouldStartPurge().
@@ -609,7 +610,7 @@ struct arena_t {
   // fixed size area including a null terminating byte.  The actual maximum
   // length of the string is one less than LABEL_MAX_CAPACITY;
   static constexpr size_t LABEL_MAX_CAPACITY = 128;
-  char mLabel[LABEL_MAX_CAPACITY];
+  char mLabel[LABEL_MAX_CAPACITY] = {};
 
  private:
   // Size/address-ordered tree of this arena's available runs.  This tree
@@ -3496,20 +3497,15 @@ void arena_t::operator delete(void* aPtr) {
   TypedBaseAlloc<arena_t>::dealloc((arena_t*)aPtr);
 }
 
-arena_t::arena_t(arena_params_t* aParams, bool aIsPrivate) {
-  unsigned i;
-
-  memset(&mLink, 0, sizeof(mLink));
-  memset(&mStats, 0, sizeof(arena_stats_t));
-  mId = 0;
-
-  // Initialize chunks.
-#ifdef MALLOC_DOUBLE_PURGE
-  new (&mChunksMAdvised) DoublyLinkedList<arena_chunk_t>();
-#endif
-  mSpare = nullptr;
-
-  mRandomizeSmallAllocations = opt_randomize_small;
+arena_t::arena_t(arena_params_t* aParams, bool aIsPrivate)
+    : mRandomizeSmallAllocations(opt_randomize_small),
+      mIsPrivate(aIsPrivate),
+      // The default maximum amount of dirty pages allowed on arenas is a
+      // fraction of opt_dirty_max.
+      mMaxDirtyBase((aParams && aParams->mMaxDirty) ? aParams->mMaxDirty
+                                                    : (opt_dirty_max / 8)),
+      mLastSignificantReuseNS(GetTimestampNS()),
+      mIsDeferredPurgeEnabled(gArenas.IsDeferredPurgeEnabled()) {
   MaybeMutex::DoLock doLock = MaybeMutex::MUST_LOCK;
   if (aParams) {
     uint32_t randFlags = aParams->mFlags & ARENA_FLAG_RANDOMIZE_SMALL_MASK;
@@ -3551,45 +3547,23 @@ arena_t::arena_t(arena_params_t* aParams, bool aIsPrivate) {
       strncpy(mLabel, aParams->mLabel, LABEL_MAX_CAPACITY - 1);
       mLabel[LABEL_MAX_CAPACITY - 1] = 0;
 
-      // If the string was trucated, then replace it's end with "..."
+      // If the string was truncated, then replace its end with "..."
       if (strlen(aParams->mLabel) >= LABEL_MAX_CAPACITY) {
         for (int i = 0; i < 3; i++) {
           mLabel[LABEL_MAX_CAPACITY - 2 - i] = '.';
         }
       }
-    } else {
-      mLabel[0] = 0;
     }
-  } else {
-    mMaxDirtyIncreaseOverride = 0;
-    mMaxDirtyDecreaseOverride = 0;
-
-    mLabel[0] = 0;
   }
-
-  mLastSignificantReuseNS = GetTimestampNS();
-  mIsPurgePending = false;
-  mIsDeferredPurgeEnabled = gArenas.IsDeferredPurgeEnabled();
 
   MOZ_RELEASE_ASSERT(mLock.Init(doLock));
 
-  mPRNG = nullptr;
-  mIsPRNGInitializing = false;
-
-  mIsPrivate = aIsPrivate;
-
-  mNumDirty = 0;
-  mNumFresh = 0;
-  mNumMAdvised = 0;
-  // The default maximum amount of dirty pages allowed on arenas is a fraction
-  // of opt_dirty_max.
-  mMaxDirtyBase = (aParams && aParams->mMaxDirty) ? aParams->mMaxDirty
-                                                  : (opt_dirty_max / 8);
   UpdateMaxDirty();
 
   // Initialize bins.
   SizeClass sizeClass(1);
 
+  unsigned i;
   for (i = 0;; i++) {
     arena_bin_t& bin = mBins[i];
     bin.Init(sizeClass);
@@ -3601,10 +3575,6 @@ arena_t::arena_t(arena_params_t* aParams, bool aIsPrivate) {
     sizeClass = sizeClass.Next();
   }
   MOZ_ASSERT(i == NUM_SMALL_CLASSES - 1);
-
-#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
-  mMagic = ARENA_MAGIC;
-#endif
 }
 
 arena_t::~arena_t() {
