@@ -4606,9 +4606,6 @@ nsCSSFrameConstructor::FindMathMLData(const Element& aElement,
                                        std::size(sMathMLData))) {
     return data;
   }
-  if (!StaticPrefs::mathml_unknown_mrow_enabled()) {
-    return nullptr;
-  }
   // Unknown MathML elements render as an mrow, see:
   // https://w3c.github.io/mathml-core/#ref-for-dfn-unknown-mathml-element-2
   static constexpr FrameConstructionData sMrowData =
