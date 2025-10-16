@@ -32,6 +32,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -46,6 +47,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.compose.base.menu.DropdownMenu
 import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.text.Text
+import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Banner
 import org.mozilla.fenix.tabstray.Page
@@ -55,6 +57,7 @@ import org.mozilla.fenix.tabstray.TabsTrayState.Mode
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.tabstray.ui.tabstray.TabsTray
+import org.mozilla.fenix.tabstray.ui.theme.getTabManagerTheme
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.max
 import mozilla.components.ui.icons.R as iconsR
@@ -233,6 +236,7 @@ private fun TabPageBanner(
                 selectedTabIndex = selectedTabIndex,
                 modifier = Modifier.fillMaxWidth(),
                 contentColor = MaterialTheme.colorScheme.primary,
+                containerColor = Color.Transparent,
                 indicator = {
                     TabRowDefaults.PrimaryIndicator(
                         modifier = Modifier.tabIndicatorOffset(
@@ -470,18 +474,13 @@ private fun generateMultiSelectBannerMenuItems(
 @Preview(locale = "es")
 @Composable
 private fun TabsTrayBannerPreview() {
-    TabsTrayBannerPreviewRoot(
-        selectedPage = Page.SyncedTabs,
-        normalTabCount = 5,
-    )
+    TabsTrayBannerPreviewRoot(selectedPage = Page.SyncedTabs)
 }
 
 @PreviewLightDark
 @Composable
 private fun TabsTrayBannerAutoClosePreview() {
-    TabsTrayBannerPreviewRoot(
-        shouldShowTabAutoCloseBanner = true,
-    )
+    TabsTrayBannerPreviewRoot(shouldShowTabAutoCloseBanner = true)
 }
 
 @PreviewLightDark
@@ -519,34 +518,27 @@ private fun TabsTrayBannerMultiselectNoTabsSelectedPreview() {
 private fun TabsTrayBannerPreviewRoot(
     selectMode: Mode = Mode.Normal,
     selectedPage: Page = Page.NormalTabs,
-    normalTabCount: Int = 10,
-    privateTabCount: Int = 10,
-    syncedTabCount: Int = 10,
     shouldShowTabAutoCloseBanner: Boolean = false,
     shouldShowLockPbmBanner: Boolean = false,
 ) {
-    val normalTabs = generateFakeTabsList(normalTabCount)
-    val privateTabs = generateFakeTabsList(privateTabCount)
-
     val tabsTrayStore = remember {
         TabsTrayStore(
             initialState = TabsTrayState(
                 selectedPage = selectedPage,
                 mode = selectMode,
-                normalTabs = normalTabs,
-                privateTabs = privateTabs,
             ),
         )
     }
+    val state by tabsTrayStore.observeAsState(tabsTrayStore.state) { it }
 
-    FirefoxTheme {
+    FirefoxTheme(theme = getTabManagerTheme(page = state.selectedPage)) {
         Box(modifier = Modifier.size(400.dp)) {
             TabsTrayBanner(
-                selectedPage = selectedPage,
-                normalTabCount = normalTabCount,
-                privateTabCount = privateTabCount,
-                syncedTabCount = syncedTabCount,
-                selectionMode = selectMode,
+                selectedPage = state.selectedPage,
+                normalTabCount = 0,
+                privateTabCount = 0,
+                syncedTabCount = 0,
+                selectionMode = state.mode,
                 isInDebugMode = false,
                 shouldShowTabAutoCloseBanner = shouldShowTabAutoCloseBanner,
                 shouldShowLockPbmBanner = shouldShowLockPbmBanner,
@@ -571,17 +563,3 @@ private fun TabsTrayBannerPreviewRoot(
         }
     }
 }
-
-private fun generateFakeTabsList(
-    tabCount: Int = 10,
-    isPrivate: Boolean = false,
-): List<TabSessionState> =
-    List(tabCount) { index ->
-        TabSessionState(
-            id = "tabId$index-$isPrivate",
-            content = ContentState(
-                url = "www.mozilla.com",
-                private = isPrivate,
-            ),
-        )
-    }
