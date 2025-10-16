@@ -37,6 +37,38 @@ task-defaults:
             MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
 
 tasks:
+    linux64-searchfox/opt:
+        description: "Linux64 opt Searchfox"
+        index:
+            job-name: linux64-searchfox-opt
+        treeherder:
+            platform: linux64/opt
+        worker:
+            max-run-time: 10800
+            env:
+                PERFHERDER_EXTRA_OPTIONS: searchfox
+                MOZSEARCH_PLATFORM: "linux"
+        run:
+            using: mozharness
+            actions: [build]
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_sub_linux_configs/64_searchfox_and_opt.py
+            script: "mozharness/scripts/fx_desktop_build.py"
+            tooltool-downloads: public
+            keep-artifacts: false
+        fetches:
+            toolchain:
+                - linux64-clang
+                - linux64-nasm
+                - linux64-node
+                - linux64-rust
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - linux64-pkgconf
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+
     linux64-searchfox/debug:
         description: "Linux64 Debug Searchfox"
         index:
