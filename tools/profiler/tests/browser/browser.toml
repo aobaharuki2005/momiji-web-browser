@@ -18,7 +18,6 @@ skip-if = ["!nightly_build"] # This features is only enabled on nightly via MOZ_
 ["browser_test_feature_jstracing_objtestutils.js"]
 support-files = [
   "browser_test_feature_jstracing_objtestutils.snapshot.mjs",
-  "value_summary_reader.mjs"
 ]
 skip-if = [
   # This features is only enabled on nightly via MOZ_EXECUTION_TRACING build flag
