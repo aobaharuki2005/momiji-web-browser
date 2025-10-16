@@ -252,6 +252,50 @@ tasks:
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
 
+    win64-searchfox/opt:
+        description: "Win64 Searchfox Opt (clang-cl)"
+        index:
+            job-name: win64-searchfox-opt
+        treeherder:
+            platform: windows2012-64/opt
+        worker:
+            max-run-time: 10800
+            env:
+                PERFHERDER_EXTRA_OPTIONS: searchfox
+                MOZSEARCH_PLATFORM: "windows"
+        run:
+            using: mozharness
+            options: [append-env-variables-from-configs]
+            actions: [get-secrets, build]
+            script: mozharness/scripts/fx_desktop_build.py
+            secrets: true
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_base_linux_64_builds.py
+                - builds/taskcluster_sub_win64/searchfox_opt.py
+            extra-config:
+                mozconfig_platform: win64
+        fetches:
+            toolchain:
+                - linux64-clang
+                - linux64-rust-cross
+                - linux64-rust-size
+                - linux64-nasm
+                - linux64-node
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - linux64-wine
+                - linux64-winchecksec
+                - nsis
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+                - vs
+                - dxc-x86_64-pc-windows-msvc
+                - winappsdk-x86_64-pc-windows-msvc
+            fetch:
+                - upx-3.95-win
+                - windows-rs
+
     win64-searchfox/debug:
         description: "Win64 Searchfox Debug (clang-cl)"
         index:
