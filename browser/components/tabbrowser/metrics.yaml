@@ -770,3 +770,43 @@ browser.tabclose:
       - mconley@mozilla.com
     expires: never
     telemetry_mirror: FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS
+
+link.handling:
+  open_next_to_active_tab_settings_enabled:
+    type: boolean
+    lifetime: application
+    description: >
+      Records if the user has the "Open links from apps next to your active tab"
+      feature enabled.
+    notification_emails:
+      - sthompson@mozilla.com
+    bugs:
+      - https://bugzil.la/1988855
+    data_reviews:
+      - https://bugzil.la/1988855
+    data_sensitivity:
+      - interaction
+    expires: never
+    no_lint:
+      - COMMON_PREFIX
+  open_next_to_active_tab_settings_change:
+    type: event
+    description: >
+      This is recorded when the "Open links from apps next to your active tab"
+      checkbox in the General > Tabs section of about:preferences is toggled.
+    bugs:
+      - https://bugzil.la/1988855
+    data_reviews:
+      - https://bugzil.la/1988855
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sthompson@mozilla.com
+    expires: never
+    extra_keys:
+      checked:
+        description: >
+          Whether the checkbox was toggled on or off.
+        type: boolean
+    no_lint:
+      - COMMON_PREFIX

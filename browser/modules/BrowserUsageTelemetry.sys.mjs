@@ -522,8 +522,10 @@ export let BrowserUsageTelemetry = {
       "media.videocontrols.picture-in-picture.enable-when-switching-tabs.enabled",
       this
     );
+    Services.prefs.addObserver("idle-daily", this);
 
     this._recordUITelemetry();
+    this._recordInitialPrefValues();
     this.recordPinnedTabsCount();
 
     this._onTabsOpenedTask = new lazy.DeferredTask(
@@ -636,6 +638,10 @@ export let BrowserUsageTelemetry = {
             if (Services.prefs.getBoolPref(data)) {
               Glean.pictureinpictureSettings.enableAutotriggerSettings.record();
             }
+            break;
+
+          case "idle-daily":
+            this._recordInitialPrefValues();
             break;
         }
         break;
@@ -1209,6 +1215,31 @@ export let BrowserUsageTelemetry = {
       let key = `${telemetryId(widgetId, false)}_pinned_${position}`;
       Glean.browserUi.mirrorForToolbarWidgets[key].set(true);
     }
+  },
+
+  /**
+   * Records the startup values of prefs that govern important browser behavior
+   * options.
+   */
+  _recordInitialPrefValues() {
+    this._recordOpenNextToActiveTabSettingValue();
+  },
+
+  /**
+   * @param {number} prefValue
+   *   pref `browser.link.open_newwindow.override.external`
+   */
+  _isOpenNextToActiveTabSettingEnabled(prefValue) {
+    return prefValue == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT;
+  },
+
+  _recordOpenNextToActiveTabSettingValue() {
+    const value = Services.prefs.getIntPref(
+      "browser.link.open_newwindow.override.external"
+    );
+    Glean.linkHandling.openNextToActiveTabSettingsEnabled.set(
+      this._isOpenNextToActiveTabSettingEnabled(value)
+    );
   },
 
   /**
