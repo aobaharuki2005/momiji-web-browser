@@ -3716,11 +3716,6 @@ void ScriptLoader::EncodeBytecodeAndSave(
     const JS::TranscodeBuffer& aSRI, JS::Stencil* aStencil) {
   MOZ_ASSERT(aCacheInfo);
 
-  using namespace mozilla::Telemetry;
-  nsresult rv = NS_OK;
-  auto bytecodeFailed = mozilla::MakeScopeExit(
-      [&]() { TRACE_FOR_TEST_NONE(aRequest, "scriptloader_bytecode_failed"); });
-
   size_t SRILength = aSRI.length();
   MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(SRILength));
 
@@ -3761,7 +3756,7 @@ void ScriptLoader::EncodeBytecodeAndSave(
   // might fail if the stream is already open by another request, in which
   // case, we just ignore the current one.
   nsCOMPtr<nsIAsyncOutputStream> output;
-  rv = aCacheInfo->OpenAlternativeOutputStream(
+  nsresult rv = aCacheInfo->OpenAlternativeOutputStream(
       aMimeType, static_cast<int64_t>(compressedBytecode.length()),
       getter_AddRefs(output));
   if (NS_FAILED(rv)) {
@@ -3792,9 +3787,6 @@ void ScriptLoader::EncodeBytecodeAndSave(
   }
 
   MOZ_RELEASE_ASSERT(compressedBytecode.length() == n);
-
-  bytecodeFailed.release();
-  TRACE_FOR_TEST_NONE(aRequest, "scriptloader_bytecode_saved");
 }
 
 void ScriptLoader::GiveUpCaching() {
