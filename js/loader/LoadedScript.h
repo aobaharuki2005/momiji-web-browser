@@ -124,17 +124,17 @@ class LoadedScript : public nsIMemoryReporter {
     // This script is received as a plain text from the channel.
     // mScriptData holds the text source, and mStencil holds the compiled
     // stencil.
-    // mScriptBytecode holds the SRI.
+    // mSRIAndBytecode holds the SRI.
     eTextSource,
 
     // This script is received as a bytecode from the channel.
-    // mScriptBytecode holds the SRI and the bytecode, and mStencil holds the
+    // mSRIAndBytecode holds the SRI and the bytecode, and mStencil holds the
     // decoded stencil.
     eBytecode,
 
     // This script is cached from the previous load.
-    // mStencil holds the cached stencil, and mSRI holds the SRI.
-    // mScriptData and mScriptBytecode are unused.
+    // mStencil holds the cached stencil, and mSRIAndBytecode holds the SRI.
+    // mScriptData is unused.
     eCachedStencil
   };
 
@@ -231,11 +231,11 @@ class LoadedScript : public nsIMemoryReporter {
     // as we want to be able to save the bytecode content when we are loading
     // from source.
     MOZ_ASSERT(CanHaveBytecode());
-    return mScriptBytecode;
+    return mSRIAndBytecode;
   }
   TranscodeRange Bytecode() const {
     MOZ_ASSERT(IsBytecode());
-    const auto& bytecode = mScriptBytecode;
+    const auto& bytecode = mSRIAndBytecode;
     auto offset = mBytecodeOffset;
     return TranscodeRange(bytecode.begin() + offset,
                           bytecode.length() - offset);
@@ -252,7 +252,7 @@ class LoadedScript : public nsIMemoryReporter {
 
   void DropBytecode() {
     MOZ_ASSERT(CanHaveBytecode());
-    mScriptBytecode.clearAndFree();
+    mSRIAndBytecode.clearAndFree();
   }
 
   bool HasStencil() const { return mStencil; }
@@ -281,7 +281,7 @@ class LoadedScript : public nsIMemoryReporter {
  public:
   // Fields.
 
-  // Determine whether the mScriptData or mScriptBytecode is used.
+  // Determine whether the mScriptData or mSRIAndBytecode is used.
   // See DataType description for more info.
   DataType mDataType;
 
@@ -298,7 +298,7 @@ class LoadedScript : public nsIMemoryReporter {
   mozilla::dom::ReferrerPolicy mReferrerPolicy;
 
  public:
-  // Offset of the bytecode in mScriptBytecode.
+  // Offset of the bytecode in mSRIAndBytecode.
   uint32_t mBytecodeOffset;
 
  private:
@@ -316,10 +316,13 @@ class LoadedScript : public nsIMemoryReporter {
   // since mScriptData is cleared when the source is passed to the JS engine.
   size_t mReceivedScriptTextLength;
 
-  // Holds the SRI serialized hash and the script bytecode for non-inline
-  // scripts. The data is laid out according to ScriptBytecodeDataLayout
-  // or, if compression is enabled, ScriptBytecodeCompressedDataLayout.
-  TranscodeBuffer mScriptBytecode;
+  // Holds either of the following for non-inline scripts:
+  //   * The SRI serialized hash and the paddings, which is calculated when
+  //     receiving the source text
+  //   * The SRI, padding, and the script bytecode, which is received
+  //     from necko. The data is laid out according to ScriptBytecodeDataLayout
+  //     or, if compression is enabled, ScriptBytecodeCompressedDataLayout.
+  TranscodeBuffer mSRIAndBytecode;
 
   // Holds the stencil for the script.  This field is used in all DataType.
   RefPtr<Stencil> mStencil;
@@ -330,9 +333,6 @@ class LoadedScript : public nsIMemoryReporter {
   // IsTextSource() or IsCachedStencil(), and it's cleared after saving the
   // bytecode (Thus, used only once).
   nsCOMPtr<nsICacheInfoChannel> mCacheInfo;
-
-  // The SRI data and the padding, used when saving the bytecode.
-  JS::TranscodeBuffer mSRI;
 };
 
 // Provide accessors for any classes `Derived` which is providing the
