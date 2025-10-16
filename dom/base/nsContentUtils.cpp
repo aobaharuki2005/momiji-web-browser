@@ -132,7 +132,6 @@
 #include "mozilla/Tokenizer.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-#include "mozilla/Variant.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/AutoEntryScript.h"

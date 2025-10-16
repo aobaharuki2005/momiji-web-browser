@@ -11,7 +11,6 @@
 
 #include "mozilla/a11y/DocAccessible.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace a11y {

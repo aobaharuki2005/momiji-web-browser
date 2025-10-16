@@ -265,7 +265,9 @@ use_fat_lto = cxx_compiler.try_link(
         lambda extra: ["-flto", "-ffat-lto-objects"] + (extra or [])
     ),
     check_msg="whether the C++ compiler supports fat lto objects",
-    when=depends("--enable-lto", enable_tests)(lambda lto, tests: lto and not tests),
+    when=depends(select_linker, "--enable-lto", enable_tests)(
+        lambda linker, lto, tests: linker and linker.KIND == "lld" and lto and tests
+    ),
 )
 
 
