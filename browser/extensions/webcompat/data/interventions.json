@@ -5249,23 +5249,6 @@
       }
     ]
   },
-  "1979612": {
-    "label": "scrolller.com",
-    "bugs": {
-      "1979612": {
-        "issue": "page-fails-to-load",
-        "matches": ["*://scrolller.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "content_scripts": {
-          "js": ["bug1979612-scroller.com-shim-mozappearance.js"]
-        }
-      }
-    ]
-  },
   "1980382": {
     "label": "www.fidrec.com.sg",
     "bugs": {
