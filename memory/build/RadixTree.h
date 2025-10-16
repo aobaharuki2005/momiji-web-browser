@@ -44,9 +44,12 @@ class AddressRadixTree {
   Mutex mLock MOZ_UNANNOTATED;
   // We guard only the single slot creations and assume read-only is safe
   // at any time.
-  void** mRoot;
+  void** mRoot = nullptr;
 
  public:
+  // Note that the constructor does not initialise the mutex.
+  constexpr AddressRadixTree() {}
+
   bool Init() MOZ_REQUIRES(gInitLock) MOZ_EXCLUDES(mLock);
 
   inline void* Get(void* aAddr) MOZ_EXCLUDES(mLock);
