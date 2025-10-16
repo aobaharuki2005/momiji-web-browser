@@ -1335,7 +1335,7 @@ const StyleContainIntrinsicSize& nsStylePosition::ContainIntrinsicISize(
   return aWM.IsVertical() ? mContainIntrinsicHeight : mContainIntrinsicWidth;
 }
 
-StyleAlignSelf nsStylePosition::UsedAlignSelf(
+StyleSelfAlignment nsStylePosition::UsedAlignSelf(
     const ComputedStyle* aParent) const {
   if (mAlignSelf._0 != StyleAlignFlags::AUTO) {
     return mAlignSelf;
@@ -1349,14 +1349,14 @@ StyleAlignSelf nsStylePosition::UsedAlignSelf(
   return {StyleAlignFlags::NORMAL};
 }
 
-StyleJustifySelf nsStylePosition::UsedJustifySelf(
+StyleSelfAlignment nsStylePosition::UsedJustifySelf(
     const ComputedStyle* aParent) const {
   if (mJustifySelf._0 != StyleAlignFlags::AUTO) {
     return mJustifySelf;
   }
   if (MOZ_LIKELY(aParent)) {
     const auto& inheritedJustifyItems =
-        aParent->StylePosition()->mJustifyItems.computed;
+        aParent->StylePosition()->mJustifyItems.computed._0;
     return {inheritedJustifyItems._0 & ~StyleAlignFlags::LEGACY};
   }
   return {StyleAlignFlags::NORMAL};

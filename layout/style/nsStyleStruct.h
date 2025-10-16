@@ -934,8 +934,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   using LogicalAxis = mozilla::LogicalAxis;
   using StyleImplicitGridTracks = mozilla::StyleImplicitGridTracks;
   using ComputedStyle = mozilla::ComputedStyle;
-  using StyleAlignSelf = mozilla::StyleAlignSelf;
-  using StyleJustifySelf = mozilla::StyleJustifySelf;
+  using StyleSelfAlignment = mozilla::StyleSelfAlignment;
 
   nsChangeHint CalcDifference(const nsStylePosition& aNewData,
                               const ComputedStyle& aOldStyle) const;
@@ -973,13 +972,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
    * Return the used value for 'align-self' given our parent ComputedStyle
    * (or null for the root).
    */
-  StyleAlignSelf UsedAlignSelf(const ComputedStyle*) const;
+  StyleSelfAlignment UsedAlignSelf(const ComputedStyle*) const;
 
   /**
    * Return the used value for 'justify-self' given our parent ComputedStyle
    * aParent (or null for the root).
    */
-  StyleJustifySelf UsedJustifySelf(const ComputedStyle*) const;
+  StyleSelfAlignment UsedJustifySelf(const ComputedStyle*) const;
 
   /**
    * Return the used value for 'justify/align-self' in aAxis given our parent
@@ -1020,12 +1019,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   mozilla::StyleGridAutoFlow mGridAutoFlow;
   mozilla::StyleMasonryAutoFlow mMasonryAutoFlow;
 
-  mozilla::StyleAlignContent mAlignContent;
-  mozilla::StyleAlignItems mAlignItems;
-  mozilla::StyleAlignSelf mAlignSelf;
-  mozilla::StyleJustifyContent mJustifyContent;
+  mozilla::StyleContentDistribution mAlignContent;
+  mozilla::StyleItemPlacement mAlignItems;
+  mozilla::StyleSelfAlignment mAlignSelf;
+  mozilla::StyleContentDistribution mJustifyContent;
   mozilla::StyleComputedJustifyItems mJustifyItems;
-  mozilla::StyleJustifySelf mJustifySelf;
+  mozilla::StyleSelfAlignment mJustifySelf;
   mozilla::StyleFlexDirection mFlexDirection;
   mozilla::StyleFlexWrap mFlexWrap;
   mozilla::StyleObjectFit mObjectFit;
