@@ -344,7 +344,7 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_tab_manager_enhancements).apply {
-            isVisible = Config.channel.isNightlyOrDebug
+            isVisible = true
             isChecked = context.settings().tabManagerEnhancementsEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
