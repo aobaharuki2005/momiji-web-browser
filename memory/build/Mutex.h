@@ -44,9 +44,15 @@ struct MOZ_CAPABILITY("mutex") Mutex {
 #if defined(XP_WIN)
   CRITICAL_SECTION mMutex;
 #elif defined(XP_DARWIN)
-  os_unfair_lock mMutex;
+  os_unfair_lock mMutex = OS_UNFAIR_LOCK_INIT;
+#elif defined(XP_LINUX) && !defined(ANDROID)
+  pthread_mutex_t mMutex = PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP;
 #else
-  pthread_mutex_t mMutex;
+  pthread_mutex_t mMutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
+
+#ifndef XP_WIN
+  constexpr Mutex() {}
 #endif
 
   // Initializes a mutex. Returns whether initialization succeeded.
@@ -124,6 +130,8 @@ struct MOZ_CAPABILITY("mutex") Mutex {
 struct MOZ_CAPABILITY("mutex") StaticMutex {
   SRWLOCK mMutex;
 
+  constexpr StaticMutex() : mMutex(SRWLOCK_INIT) {}
+
   inline void Lock() MOZ_CAPABILITY_ACQUIRE() {
     AcquireSRWLockExclusive(&mMutex);
   }
@@ -133,20 +141,8 @@ struct MOZ_CAPABILITY("mutex") StaticMutex {
   }
 };
 
-// Normally, we'd use a constexpr constructor, but MSVC likes to create
-// static initializers anyways.
-#  define STATIC_MUTEX_INIT SRWLOCK_INIT
-
 #else
 typedef Mutex StaticMutex;
-
-#  if defined(XP_DARWIN)
-#    define STATIC_MUTEX_INIT OS_UNFAIR_LOCK_INIT
-#  elif defined(XP_LINUX) && !defined(ANDROID)
-#    define STATIC_MUTEX_INIT PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP
-#  else
-#    define STATIC_MUTEX_INIT PTHREAD_MUTEX_INITIALIZER
-#  endif
 
 #endif
 
