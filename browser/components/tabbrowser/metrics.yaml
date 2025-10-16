@@ -114,8 +114,6 @@ browser.ui.interaction:
       - mconley@mozilla.com
     expires: never
     telemetry_mirror: BROWSER_UI_INTERACTION_ALL_TABS_PANEL_DRAGSTART_TAB_EVENT_COUNT
-    no_lint:
-      - COMMON_PREFIX
 
   all_tabs_panel_entrypoint:
     type: labeled_counter
@@ -133,8 +131,25 @@ browser.ui.interaction:
       - mconley@mozilla.com
     expires: never
     telemetry_mirror: BROWSER_UI_INTERACTION_ALL_TABS_PANEL_ENTRYPOINT
-    no_lint:
-      - COMMON_PREFIX
+
+  tab_movement:
+    type: labeled_counter
+    disabled: true
+    description: >
+      Records information about user tab movements within the tab strip.
+    bugs:
+      - https://bugzil.la/1988855
+    data_reviews:
+      - https://bugzil.la/1988855
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sthompson@mozilla.com
+    expires: never
+    labels:
+      - not_from_external_app
+      - from_external_app_next_to_active_tab
+      - from_external_app_tab_strip_end
 
 tabgroup:
   create_group:
