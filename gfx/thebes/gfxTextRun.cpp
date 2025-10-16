@@ -29,7 +29,6 @@
 #include "mozilla/StaticPresData.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-#include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
 #include "nsStyleUtil.h"
 #include "nsUnicodeProperties.h"
@@ -330,16 +329,14 @@ gfxTextRun::LigatureData gfxTextRun::ComputeLigatureData(
   if (aProvider && (mFlags & gfx::ShapedTextFlags::TEXT_ENABLE_SPACING)) {
     gfxFont::Spacing spacing;
     if (aPartRange.start == result.mRange.start) {
-      if (aProvider->GetSpacing(Range(aPartRange.start, aPartRange.start + 1),
-                                &spacing)) {
-        result.mPartWidth += spacing.mBefore;
-      }
+      aProvider->GetSpacing(Range(aPartRange.start, aPartRange.start + 1),
+                            &spacing);
+      result.mPartWidth += spacing.mBefore;
     }
     if (aPartRange.end == result.mRange.end) {
-      if (aProvider->GetSpacing(Range(aPartRange.end - 1, aPartRange.end),
-                                &spacing)) {
-        result.mPartWidth += spacing.mAfter;
-      }
+      aProvider->GetSpacing(Range(aPartRange.end - 1, aPartRange.end),
+                            &spacing);
+      result.mPartWidth += spacing.mAfter;
     }
   }
 
@@ -361,16 +358,15 @@ int32_t gfxTextRun::GetAdvanceForGlyphs(Range aRange) const {
   return advance;
 }
 
-// Returns false if there is definitely no spacing to apply.
-static bool GetAdjustedSpacing(
+static void GetAdjustedSpacing(
     const gfxTextRun* aTextRun, gfxTextRun::Range aRange,
     const gfxTextRun::PropertyProvider& aProvider,
     gfxTextRun::PropertyProvider::Spacing* aSpacing) {
   if (aRange.start >= aRange.end) {
-    return false;
+    return;
   }
 
-  bool result = aProvider.GetSpacing(aRange, aSpacing);
+  aProvider.GetSpacing(aRange, aSpacing);
 
 #ifdef DEBUG
   // Check to see if we have spacing inside ligatures
@@ -389,8 +385,6 @@ static bool GetAdjustedSpacing(
     }
   }
 #endif
-
-  return result;
 }
 
 bool gfxTextRun::GetAdjustedSpacingArray(
@@ -404,11 +398,8 @@ bool gfxTextRun::GetAdjustedSpacingArray(
   }
   auto spacingOffset = aSpacingRange.start - aRange.start;
   memset(aSpacing->Elements(), 0, sizeof(gfxFont::Spacing) * spacingOffset);
-  if (!GetAdjustedSpacing(this, aSpacingRange, *aProvider,
-                          aSpacing->Elements() + spacingOffset)) {
-    aSpacing->Clear();
-    return false;
-  }
+  GetAdjustedSpacing(this, aSpacingRange, *aProvider,
+                     aSpacing->Elements() + spacingOffset);
   memset(aSpacing->Elements() + spacingOffset + aSpacingRange.Length(), 0,
          sizeof(gfxFont::Spacing) * (aRange.end - aSpacingRange.end));
   return true;
@@ -549,11 +540,12 @@ struct MOZ_STACK_CLASS BufferAlphaColor {
 
   ~BufferAlphaColor() = default;
 
-  void PushSolidColor(const nsRect& aBounds, const DeviceColor& aAlphaColor,
+  void PushSolidColor(const gfxRect& aBounds, const DeviceColor& aAlphaColor,
                       uint32_t appsPerDevUnit) {
     mContext->Save();
-    mContext->SnappedClip(
-        nsLayoutUtils::RectToGfxRect(aBounds, appsPerDevUnit));
+    mContext->SnappedClip(gfxRect(
+        aBounds.X() / appsPerDevUnit, aBounds.Y() / appsPerDevUnit,
+        aBounds.Width() / appsPerDevUnit, aBounds.Height() / appsPerDevUnit));
     mContext->SetDeviceColor(
         DeviceColor(aAlphaColor.r, aAlphaColor.g, aAlphaColor.b));
     mContext->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, aAlphaColor.a);
@@ -672,9 +664,9 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
                               aParams.provider);
         if (IsRightToLeft()) {
           metrics.mBoundingBox.MoveBy(
-              nsPoint(aPt.x - metrics.mAdvanceWidth, aPt.y));
+              gfxPoint(aPt.x - metrics.mAdvanceWidth, aPt.y));
         } else {
-          metrics.mBoundingBox.MoveBy(nsPoint(aPt.x, aPt.y));
+          metrics.mBoundingBox.MoveBy(gfxPoint(aPt.x, aPt.y));
         }
         gotMetrics = true;
       }
@@ -1235,16 +1227,15 @@ gfxFloat gfxTextRun::GetAdvanceWidth(
     uint32_t i;
     AutoTArray<PropertyProvider::Spacing, 200> spacingBuffer;
     if (spacingBuffer.AppendElements(aRange.Length(), fallible)) {
-      if (GetAdjustedSpacing(this, ligatureRange, *aProvider,
-                             spacingBuffer.Elements())) {
-        for (i = 0; i < ligatureRange.Length(); ++i) {
-          PropertyProvider::Spacing* space = &spacingBuffer[i];
-          result += space->mBefore + space->mAfter;
-        }
-        if (aSpacing) {
-          aSpacing->mBefore = spacingBuffer[0].mBefore;
-          aSpacing->mAfter = spacingBuffer.LastElement().mAfter;
-        }
+      GetAdjustedSpacing(this, ligatureRange, *aProvider,
+                         spacingBuffer.Elements());
+      for (i = 0; i < ligatureRange.Length(); ++i) {
+        PropertyProvider::Spacing* space = &spacingBuffer[i];
+        result += space->mBefore + space->mAfter;
+      }
+      if (aSpacing) {
+        aSpacing->mBefore = spacingBuffer[0].mBefore;
+        aSpacing->mAfter = spacingBuffer.LastElement().mAfter;
       }
     }
   }

@@ -272,11 +272,11 @@ TextAutospace::BoundarySet TextAutospace::InitBoundarySet(
 }  // namespace mozilla
 
 struct TabWidth {
-  TabWidth(uint32_t aOffset, nscoord aWidth)
-      : mOffset(aOffset), mWidth(aWidth) {}
+  TabWidth(uint32_t aOffset, uint32_t aWidth)
+      : mOffset(aOffset), mWidth(float(aWidth)) {}
 
   uint32_t mOffset;  // DOM offset relative to the current frame's offset.
-  nscoord mWidth;    // extra space to be added at this position (in app units)
+  float mWidth;      // extra space to be added at this position (in app units)
 };
 
 struct nsTextFrame::TabWidthStore {
@@ -3464,7 +3464,7 @@ nsTextFrame::PropertyProvider::PropertyProvider(
       mLength(aLength),
       mWordSpacing(WordSpacing(aFrame, *aTextStyle)),
       mLetterSpacing(LetterSpacing(aFrame, *aTextStyle)),
-      mMinTabAdvance(-1),
+      mMinTabAdvance(-1.0),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(aOffsetFromBlockOriginForTabs),
       mJustificationArrayStart(0),
@@ -3494,7 +3494,7 @@ nsTextFrame::PropertyProvider::PropertyProvider(
       mLength(aFrame->GetContentLength()),
       mWordSpacing(WordSpacing(aFrame, *mTextStyle)),
       mLetterSpacing(LetterSpacing(aFrame, *mTextStyle)),
-      mMinTabAdvance(-1),
+      mMinTabAdvance(-1.0),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(0),
       mJustificationArrayStart(0),
@@ -3514,7 +3514,7 @@ already_AddRefed<DrawTarget> nsTextFrame::PropertyProvider::GetDrawTarget()
 }
 
 gfxFloat nsTextFrame::PropertyProvider::MinTabAdvance() const {
-  if (mMinTabAdvance < 0) {
+  if (mMinTabAdvance < 0.0) {
     mMinTabAdvance = GetMinTabAdvanceAppUnits(mTextRun);
   }
   return mMinTabAdvance;
@@ -3815,11 +3815,10 @@ JustificationInfo nsTextFrame::PropertyProvider::ComputeJustification(
   return info;
 }
 
-// aStart, aLength in transformed string offsets.
-// Returns false if no non-standard spacing was required.
-bool nsTextFrame::PropertyProvider::GetSpacing(Range aRange,
+// aStart, aLength in transformed string offsets
+void nsTextFrame::PropertyProvider::GetSpacing(Range aRange,
                                                Spacing* aSpacing) const {
-  return GetSpacingInternal(
+  GetSpacingInternal(
       aRange, aSpacing,
       !(mTextRun->GetFlags2() & nsTextFrameUtils::Flags::HasTab));
 }
@@ -3863,7 +3862,7 @@ static gfxFloat ComputeTabWidthAppUnits(const nsIFrame* aFrame) {
 
   MOZ_ASSERT(tabSize.IsNumber());
   gfxFloat spaces = tabSize.number._0;
-  MOZ_ASSERT(spaces >= 0.0);
+  MOZ_ASSERT(spaces >= 0);
 
   const nsIFrame* cb = aFrame->GetContainingBlock(0, aFrame->StyleDisplay());
   const auto* styleText = cb->StyleText();
@@ -3879,8 +3878,8 @@ static gfxFloat ComputeTabWidthAppUnits(const nsIFrame* aFrame) {
   RefPtr font = fm->GetThebesFontGroup()->GetFirstValidFont(' ');
   auto metrics = font->GetMetrics(vertical ? nsFontMetrics::eVertical
                                            : nsFontMetrics::eHorizontal);
-  nscoord spaceWidth = NSToCoordRound(metrics.spaceWidth *
-                                      cb->PresContext()->AppUnitsPerDevPixel());
+  nscoord spaceWidth = nscoord(
+      NS_round(metrics.spaceWidth * cb->PresContext()->AppUnitsPerDevPixel()));
   return spaces *
          (spaceWidth + styleText->mLetterSpacing.Resolve(fm->EmHeight()) +
           styleText->mWordSpacing.Resolve(spaceWidth));
@@ -4067,7 +4066,7 @@ static bool HasCJKGlyphRun(const gfxTextRun* aTextRun) {
   return false;
 }
 
-bool nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
+void nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
                                                        Spacing* aSpacing,
                                                        bool aIgnoreTabs) const {
   MOZ_ASSERT(IsInBounds(mStart, mLength, aRange), "Range out of bounds");
@@ -4075,13 +4074,8 @@ bool nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
   std::memset(aSpacing, 0, aRange.Length() * sizeof(*aSpacing));
 
   if (mFrame->Style()->IsTextCombined()) {
-    return false;
+    return;
   }
-
-  // Track whether any non-standard spacing is actually present in this range.
-  // If letter-spacing is non-zero this will always be true, but for the
-  /// word-spacing and text-autospace cases it will depend on the actual text.
-  bool spacingPresent = mLetterSpacing;
 
   // First, compute the word spacing, letter spacing, and text-autospace
   // spacing.
@@ -4091,24 +4085,24 @@ bool nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
     //   0 - Gecko legacy model, spacing added to trailing side of letter
     //   1 - WebKit/Blink-compatible, spacing added to right-hand side
     //   2 - Symmetrical spacing, half added to each side
-    nscoord before, after;
+    gfxFloat before, after;
     switch (StaticPrefs::layout_css_letter_spacing_model()) {
       default:  // use Gecko legacy behavior if pref value is unknown
       case 0:
-        before = 0;
+        before = 0.0;
         after = mLetterSpacing;
         break;
       case 1:
         if (mTextRun->IsRightToLeft()) {
           before = mLetterSpacing;
-          after = 0;
+          after = 0.0;
         } else {
-          before = 0;
+          before = 0.0;
           after = mLetterSpacing;
         }
         break;
       case 2:
-        before = NSToCoordRound(mLetterSpacing * 0.5);
+        before = mLetterSpacing / 2.0;
         after = mLetterSpacing - before;
         break;
     }
@@ -4170,12 +4164,12 @@ bool nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
       uint32_t runOffsetInSubstring = run.GetSkippedOffset() - aRange.start;
       gfxSkipCharsIterator iter = run.GetPos();
       for (int32_t i = 0; i < run.GetRunLength(); ++i) {
-        if (!atStart && before != 0 &&
+        if (!atStart && before != 0.0 &&
             CanAddSpacingBefore(mTextRun, run.GetSkippedOffset() + i,
                                 newlineIsSignificant)) {
           aSpacing[runOffsetInSubstring + i].mBefore += before;
         }
-        if (after != 0 &&
+        if (after != 0.0 &&
             CanAddSpacingAfter(mTextRun, run.GetSkippedOffset() + i,
                                newlineIsSignificant)) {
           // End of a cluster, not in a ligature: put letter-spacing after it
@@ -4191,7 +4185,6 @@ bool nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
                          &iter);
           uint32_t runOffset = iter.GetSkippedOffset() - aRange.start;
           aSpacing[runOffset].mAfter += mWordSpacing;
-          spacingPresent = true;
         }
         // Add text-autospace spacing only at cluster starts. Always check the
         // character classes if the textrun includes CJK; otherwise, check only
@@ -4216,7 +4209,6 @@ bool nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
                     prevClass.valueOrFrom(findPrecedingClass), currClass)) {
               aSpacing[runOffsetInSubstring + i].mBefore +=
                   mTextAutospace->InterScriptSpacing();
-              spacingPresent = true;
             }
             // Even if we didn't actually need to check spacing rules here, we
             // record the new prevClass. (Incidentally, this ensure that we'll
@@ -4238,7 +4230,6 @@ bool nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
         mTabWidths->ApplySpacing(aSpacing,
                                  aRange.start - mStart.GetSkippedOffset(),
                                  aRange.Length());
-        spacingPresent = true;
       }
     }
   }
@@ -4259,20 +4250,16 @@ bool nsTextFrame::PropertyProvider::GetSpacingInternal(Range aRange,
       aSpacing[offset].mBefore += spacing.mBefore;
       aSpacing[offset].mAfter += spacing.mAfter;
     }
-    spacingPresent = true;
   }
-
-  return spacingPresent;
 }
 
 // aX and the result are in whole appunits.
-static nscoord AdvanceToNextTab(nscoord aX, gfxFloat aTabWidth,
-                                gfxFloat aMinAdvance) {
+static gfxFloat AdvanceToNextTab(gfxFloat aX, gfxFloat aTabWidth,
+                                 gfxFloat aMinAdvance) {
   // Advance aX to the next multiple of aTabWidth. We must advance
   // by at least aMinAdvance.
   gfxFloat nextPos = aX + aMinAdvance;
-  return NSToCoordRound(aTabWidth > 0 ? ceil(nextPos / aTabWidth) * aTabWidth
-                                      : nextPos);
+  return aTabWidth > 0.0 ? ceil(nextPos / aTabWidth) * aTabWidth : nextPos;
 }
 
 void nsTextFrame::PropertyProvider::CalcTabWidths(Range aRange,
@@ -4333,10 +4320,11 @@ void nsTextFrame::PropertyProvider::CalcTabWidths(Range aRange,
           mTabWidths = new TabWidthStore(mFrame->GetContentOffset());
           mFrame->SetProperty(TabWidthProperty(), mTabWidths);
         }
-        nscoord nextTab = AdvanceToNextTab(mOffsetFromBlockOriginForTabs,
-                                           aTabWidth, MinTabAdvance());
+        double nextTab = AdvanceToNextTab(mOffsetFromBlockOriginForTabs,
+                                          aTabWidth, MinTabAdvance());
         mTabWidths->mWidths.AppendElement(
-            TabWidth(i - startOffset, nextTab - mOffsetFromBlockOriginForTabs));
+            TabWidth(i - startOffset,
+                     NSToIntRound(nextTab - mOffsetFromBlockOriginForTabs)));
         mOffsetFromBlockOriginForTabs = nextTab;
       }
 
@@ -4356,7 +4344,7 @@ void nsTextFrame::PropertyProvider::CalcTabWidths(Range aRange,
   }
 }
 
-nscoord nsTextFrame::PropertyProvider::GetHyphenWidth() const {
+gfxFloat nsTextFrame::PropertyProvider::GetHyphenWidth() const {
   if (mHyphenWidth < 0) {
     const auto& hyphenateChar = mTextStyle->mHyphenateCharacter;
     if (hyphenateChar.IsAuto()) {
@@ -6567,8 +6555,7 @@ static void AddHyphenToMetrics(nsTextFrame* aTextFrame, bool aIsRightToLeft,
 
 void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
                                  const StyleSimpleShadow& aShadowDetails,
-                                 const gfxRect& aBoundingBox,
-                                 uint32_t aBlurFlags) {
+                                 gfxRect& aBoundingBox, uint32_t aBlurFlags) {
   AUTO_PROFILER_LABEL("nsTextFrame::PaintOneShadow", GRAPHICS);
 
   nsPoint shadowOffset(aShadowDetails.horizontal.ToAppUnits(),
@@ -7372,8 +7359,8 @@ void nsTextFrame::PaintShadows(Span<const StyleSimpleShadow> aShadows,
                        aParams.context->GetDrawTarget());
   }
   // Add bounds of text decorations
-  nsRect decorationRect(0, -shadowMetrics.mAscent, shadowMetrics.mAdvanceWidth,
-                        shadowMetrics.mAscent + shadowMetrics.mDescent);
+  gfxRect decorationRect(0, -shadowMetrics.mAscent, shadowMetrics.mAdvanceWidth,
+                         shadowMetrics.mAscent + shadowMetrics.mDescent);
   shadowMetrics.mBoundingBox.UnionRect(shadowMetrics.mBoundingBox,
                                        decorationRect);
 
@@ -7397,12 +7384,7 @@ void nsTextFrame::PaintShadows(Span<const StyleSimpleShadow> aShadows,
   }
 
   for (const auto& shadow : Reversed(aShadows)) {
-    PaintOneShadow(
-        aParams, shadow,
-        gfxRect(shadowMetrics.mBoundingBox.x, shadowMetrics.mBoundingBox.y,
-                shadowMetrics.mBoundingBox.width,
-                shadowMetrics.mBoundingBox.height),
-        blurFlags);
+    PaintOneShadow(aParams, shadow, shadowMetrics.mBoundingBox, blurFlags);
   }
 }
 
@@ -9550,7 +9532,7 @@ void nsTextFrame::AddInlineMinISizeForFlow(gfxContext* aRenderingContext,
         aData->ForceBreak();
       } else if (i < flowEndInTextRun && hyphenating &&
                  gfxTextRun::IsOptionalHyphenBreak(hyphBuffer[i - start])) {
-        aData->OptionallyBreak(provider.GetHyphenWidth());
+        aData->OptionallyBreak(NSToCoordRound(provider.GetHyphenWidth()));
       } else {
         aData->OptionallyBreak();
       }
@@ -9877,6 +9859,15 @@ nsIFrame::SizeComputationResult nsTextFrame::ComputeSize(
           AspectRatioUsage::None};
 }
 
+static nsRect RoundOut(const gfxRect& aRect) {
+  nsRect r;
+  r.x = NSToCoordFloor(aRect.X());
+  r.y = NSToCoordFloor(aRect.Y());
+  r.width = NSToCoordCeil(aRect.XMost()) - r.x;
+  r.height = NSToCoordCeil(aRect.YMost()) - r.y;
+  return r;
+}
+
 nsRect nsTextFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const {
   if (Style()->HasTextDecorationLines() || HasAnyStateBits(TEXT_HYPHEN_BREAK)) {
     // This is conservative, but OK.
@@ -9902,7 +9893,7 @@ nsRect nsTextFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const {
   }
   // mAscent should be the same as metrics.mAscent, but it's what we use to
   // paint so that's the one we'll use.
-  nsRect boundingBox = metrics.mBoundingBox;
+  nsRect boundingBox = RoundOut(metrics.mBoundingBox);
   boundingBox += nsPoint(0, mAscent);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
@@ -9927,8 +9918,8 @@ nsresult nsTextFrame::GetPrefWidthTightBounds(gfxContext* aContext, nscoord* aX,
       ComputeTransformedRange(provider), gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS,
       aContext->GetDrawTarget(), &provider);
   // Round it like nsTextFrame::ComputeTightBounds() to ensure consistency.
-  *aX = metrics.mBoundingBox.x;
-  *aXMost = metrics.mBoundingBox.XMost();
+  *aX = NSToCoordFloor(metrics.mBoundingBox.x);
+  *aXMost = NSToCoordCeil(metrics.mBoundingBox.XMost());
 
   return NS_OK;
 }
@@ -10681,15 +10672,18 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // first-letter frames should use the tight bounding box metrics for
   // ascent/descent for good drop-cap effects
   if (HasAnyStateBits(TEXT_FIRST_LETTER)) {
-    textMetrics.mAscent = std::max(0, -textMetrics.mBoundingBox.Y());
-    textMetrics.mDescent = std::max(0, textMetrics.mBoundingBox.YMost());
+    textMetrics.mAscent =
+        std::max(gfxFloat(0.0), -textMetrics.mBoundingBox.Y());
+    textMetrics.mDescent =
+        std::max(gfxFloat(0.0), textMetrics.mBoundingBox.YMost());
   }
 
   // Setup metrics for caller
   // Disallow negative widths
   WritingMode wm = GetWritingMode();
   LogicalSize finalSize(wm);
-  finalSize.ISize(wm) = std::max(0, textMetrics.mAdvanceWidth);
+  finalSize.ISize(wm) =
+      NSToCoordCeilClamped(std::max(gfxFloat(0.0), textMetrics.mAdvanceWidth));
 
   nscoord fontBaseline;
   // Note(dshin): Baseline should tecnhically be halfway through the em box for
@@ -10700,8 +10694,8 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     finalSize.BSize(wm) = 0;
     fontBaseline = 0;
   } else if (boundingBoxType != gfxFont::LOOSE_INK_EXTENTS) {
-    fontBaseline = textMetrics.mAscent;
-    const auto size = fontBaseline + textMetrics.mDescent;
+    fontBaseline = NSToCoordCeil(textMetrics.mAscent);
+    const auto size = fontBaseline + NSToCoordCeil(textMetrics.mDescent);
     // Use actual text metrics for floating first letter frame.
     aMetrics.SetBlockStartAscent(wm.IsAlphabeticalBaseline() ? fontBaseline
                                                              : size / 2);
@@ -10715,9 +10709,10 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
         wm.IsLineInverted() ? fm->MaxDescent() : fm->MaxAscent();
     nscoord fontDescent =
         wm.IsLineInverted() ? fm->MaxAscent() : fm->MaxDescent();
-    fontBaseline = std::max(textMetrics.mAscent, fontAscent);
+    fontBaseline = std::max(NSToCoordCeil(textMetrics.mAscent), fontAscent);
     const auto size =
-        fontBaseline + std::max(textMetrics.mDescent, fontDescent);
+        fontBaseline +
+        std::max(NSToCoordCeil(textMetrics.mDescent), fontDescent);
     aMetrics.SetBlockStartAscent(wm.IsAlphabeticalBaseline() ? fontBaseline
                                                              : size / 2);
     finalSize.BSize(wm) = size;
@@ -10813,7 +10808,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   mAscent = fontBaseline;
 
   // Handle text that runs outside its normal bounds.
-  nsRect boundingBox = textMetrics.mBoundingBox;
+  nsRect boundingBox = RoundOut(textMetrics.mBoundingBox);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
     std::swap(boundingBox.x, boundingBox.y);
@@ -11071,7 +11066,7 @@ OverflowAreas nsTextFrame::RecomputeOverflow(nsIFrame* aBlockFrame,
   if (GetWritingMode().IsLineInverted()) {
     textMetrics.mBoundingBox.y = -textMetrics.mBoundingBox.YMost();
   }
-  nsRect boundingBox = textMetrics.mBoundingBox;
+  nsRect boundingBox = RoundOut(textMetrics.mBoundingBox);
   boundingBox += nsPoint(0, mAscent);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
