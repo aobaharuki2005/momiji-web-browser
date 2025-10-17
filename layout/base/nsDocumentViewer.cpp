@@ -2226,7 +2226,6 @@ void nsDocumentViewer::MakeWindow(const nsSize& aSize, nsView* aContainerView) {
   // Don't create widgets for ResourceDocs (external resources & svg images),
   // because when they're displayed, they're painted into *another* document's
   // widget.
-  MOZ_ASSERT_IF(!aContainerView, mParentWidget);
   if (!mDocument->IsResourceDoc() && mParentWidget) {
     // Reuse the top level parent widget.
     view->AttachToTopLevelWidget(mParentWidget);
