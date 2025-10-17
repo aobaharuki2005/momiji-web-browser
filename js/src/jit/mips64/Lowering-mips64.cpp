@@ -33,6 +33,8 @@ LBoxAllocation LIRGeneratorMIPS64::useBoxFixed(MDefinition* mir, Register reg1,
   return LBoxAllocation(LUse(reg1, mir->virtualRegister(), useAtStart));
 }
 
+LDefinition LIRGeneratorMIPS64::tempToUnbox() { return temp(); }
+
 void LIRGeneratorMIPS64::lowerDivI64(MDiv* div) {
   if (div->isUnsigned()) {
     lowerUDivI64(div);

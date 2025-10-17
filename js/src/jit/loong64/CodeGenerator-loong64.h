@@ -61,20 +61,11 @@ class CodeGeneratorLOONG64 : public CodeGeneratorShared {
     masm.branchPtr(c, lhs, rhs, &bail);
     bailoutFrom(&bail, snapshot);
   }
-  void bailoutTestPtr(Assembler::Condition c, Register lhs, Register rhs,
+  template <typename T1, typename T2>
+  void bailoutTestPtr(Assembler::Condition c, T1 lhs, T2 rhs,
                       LSnapshot* snapshot) {
-    // TODO(loong64) Didn't use branchTestPtr due to '-Wundefined-inline'.
-    MOZ_ASSERT(c == Assembler::Zero || c == Assembler::NonZero ||
-               c == Assembler::Signed || c == Assembler::NotSigned);
     Label bail;
-    if (lhs == rhs) {
-      masm.ma_b(lhs, rhs, &bail, c);
-    } else {
-      UseScratchRegisterScope temps(masm);
-      Register scratch = temps.Acquire();
-      masm.as_and(scratch, lhs, rhs);
-      masm.ma_b(scratch, scratch, &bail, c);
-    }
+    masm.branchTestPtr(c, lhs, rhs, &bail);
     bailoutFrom(&bail, snapshot);
   }
   void bailoutIfFalseBool(Register reg, LSnapshot* snapshot) {
