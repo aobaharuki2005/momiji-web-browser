@@ -488,7 +488,7 @@ wr::WebRenderAPI* WebRenderAPI::GetRootAPI() {
   return this;
 }
 
-void WebRenderAPI::UpdateDebugFlags(uint32_t aFlags) {
+void WebRenderAPI::UpdateDebugFlags(uint64_t aFlags) {
   wr_api_set_debug_flags(mDocHandle, wr::DebugFlags{aFlags});
 }
 
