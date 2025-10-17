@@ -119,18 +119,12 @@ export var XPCOMUtils = {
    *        The name of the getter to define on aObject for the service.
    * @param {string} aContract
    *        The contract used to obtain the service.
-   * @param {nsID|string} aInterface
+   * @param {nsIID} aInterface
    *        The interface or name of interface to query the service to.
    */
   defineLazyServiceGetter(aObject, aName, aContract, aInterface) {
     ChromeUtils.defineLazyGetter(aObject, aName, () => {
-      if (aInterface) {
-        if (typeof aInterface === "string") {
-          aInterface = Ci[aInterface];
-        }
-        return Cc[aContract].getService(aInterface);
-      }
-      return Cc[aContract].getService().wrappedJSObject;
+      return Cc[aContract].getService(aInterface);
     });
   },
 
