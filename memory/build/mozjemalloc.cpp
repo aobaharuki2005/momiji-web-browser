@@ -406,7 +406,7 @@ struct arena_bin_t {
   uint32_t mRunFirstRegionOffset;
 
   // Current number of runs in this bin, full or otherwise.
-  uint32_t mNumRuns;
+  uint32_t mNumRuns = 0;
 
   // A constant for fast division by size class.  This value is 16 bits wide so
   // it is placed last.
@@ -435,7 +435,7 @@ struct arena_bin_t {
   //  1280  24 KiB   1536  32 KiB   1792  16 KiB   2048 128 KiB
   //  2304  16 KiB   2560  48 KiB   2816  36 KiB   3072  64 KiB
   //  3328  36 KiB   3584  32 KiB   3840  64 KiB
-  inline void Init(SizeClass aSizeClass);
+  explicit arena_bin_t(SizeClass aSizeClass);
 };
 
 // We try to keep the above structure aligned with common cache lines sizes,
@@ -2557,20 +2557,15 @@ arena_run_t* arena_t::GetNonFullBinRun(arena_bin_t* aBin) {
   return GetNewEmptyBinRun(aBin);
 }
 
-void arena_bin_t::Init(SizeClass aSizeClass) {
+arena_bin_t::arena_bin_t(SizeClass aSizeClass) : mSizeClass(aSizeClass.Size()) {
   size_t try_run_size;
   unsigned try_nregs, try_mask_nelms, try_reg0_offset;
   // Size of the run header, excluding mRegionsMask.
   static const size_t kFixedHeaderSize = offsetof(arena_run_t, mRegionsMask);
 
-  new (&mNonFullRuns) DoublyLinkedList<arena_run_t>();
-
   MOZ_ASSERT(aSizeClass.Size() <= gMaxBinClass);
 
   try_run_size = gPageSize;
-
-  mSizeClass = aSizeClass.Size();
-  mNumRuns = 0;
 
   // Run size expansion loop.
   while (true) {
@@ -3553,8 +3548,7 @@ arena_t::arena_t(arena_params_t* aParams, bool aIsPrivate)
 
   unsigned i;
   for (i = 0;; i++) {
-    arena_bin_t& bin = mBins[i];
-    bin.Init(sizeClass);
+    new (&mBins[i]) arena_bin_t(sizeClass);
 
     // SizeClass doesn't want sizes larger than gMaxBinClass for now.
     if (sizeClass.Size() == gMaxBinClass) {
