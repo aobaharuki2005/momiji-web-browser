@@ -1,3 +1,7 @@
+// |jit-test| skip-variant-if: --ion-eager, getBuildConfiguration("simulator")
+
+// Slow in simulators with --ion-eager.
+
 // Lowering provides a specialisation when the base operand is a constant which
 // is a power of two.
 
