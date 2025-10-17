@@ -40,6 +40,7 @@ intl/components/src/UnicodeScriptCodes.h
 intl/unicharutil/util/nsSpecialCasingData.cpp
 intl/unicharutil/util/nsUnicodePropertyData.cpp
 media/mp4parse-rust/mp4parse.h
+security/ct/CTKnownLogs.h
 security/manager/ssl/StaticHPKPins.h
 
 # Ignored because these files are used to generate a windows.h STL wrapper,
