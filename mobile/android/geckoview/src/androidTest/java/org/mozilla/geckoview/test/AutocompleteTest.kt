@@ -9,12 +9,14 @@ import android.os.Looper
 import android.view.KeyEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import junit.framework.TestCase.assertTrue
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.isEmptyOrNullString
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.Autocomplete
 import org.mozilla.geckoview.Autocomplete.Address
 import org.mozilla.geckoview.Autocomplete.AddressSelectOption
 import org.mozilla.geckoview.Autocomplete.CreditCard
@@ -30,6 +32,7 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.PromptDelegate
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.AutocompleteRequest
+import org.mozilla.geckoview.TranslationsController
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 
@@ -2601,5 +2604,70 @@ class AutocompleteTest : BaseSessionTest() {
         sessionRule.waitForResult(promptHandled)
         mainSession.evaluateJS("document.querySelector('#user1').blur()")
         sessionRule.waitForResult(result)
+    }
+
+    @Test
+    fun testAddressStructureGetFieldsForUS() {
+        val structureResult = Autocomplete.AddressStructure.getAddressStructure("US")
+
+        try {
+            sessionRule.waitForResult(structureResult)
+            assertTrue("Should not be able to retreive a structure.", true)
+        } catch (e: Exception) {
+            assertTrue("Should not have an exception.", false)
+        }
+
+        sessionRule.waitForResult(structureResult).let { fields ->
+            val expectedResult = listOf(
+                Pair("name", "autofill-address-name"),
+                Pair("organization", "autofill-address-organization"),
+                Pair("street-address", "autofill-address-street"),
+                Pair("address-level2", "autofill-address-city"),
+                Pair("address-level1", "autofill-address-state"),
+                Pair("postal-code", "autofill-address-zip"),
+                Pair("country", "autofill-address-country"),
+                Pair("tel", "autofill-address-tel"),
+                Pair("email", "autofill-address-email"),
+            )
+
+            expectedResult.forEachIndexed { index, pair ->
+                assertTrue(
+                    "Result should have id: ${pair.first}, localizationKey: ${pair.second}",
+                    fields[index].id == pair.first && fields[index].localizationKey == pair.second,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun testAddressStructureGetFieldsForJP() {
+        val structureResult = Autocomplete.AddressStructure.getAddressStructure("JP")
+
+        try {
+            sessionRule.waitForResult(structureResult)
+            assertTrue("Should not be able to retreive a structure.", true)
+        } catch (e: Exception) {
+            assertTrue("Should not have an exception.", false)
+        }
+
+        sessionRule.waitForResult(structureResult).let { fields ->
+            val expectedResult = listOf(
+                Pair("postal-code", "autofill-address-postal-code"),
+                Pair("address-level1", "autofill-address-prefecture"),
+                Pair("street-address", "autofill-address-street"),
+                Pair("organization", "autofill-address-organization"),
+                Pair("name", "autofill-address-name"),
+                Pair("country", "autofill-address-country"),
+                Pair("tel", "autofill-address-tel"),
+                Pair("email", "autofill-address-email"),
+            )
+
+            expectedResult.forEachIndexed { index, pair ->
+                assertTrue(
+                    "Result should have id: ${pair.first}, localizationKey: ${pair.second}",
+                    fields[index].id == pair.first && fields[index].localizationKey == pair.second,
+                )
+            }
+        }
     }
 }
