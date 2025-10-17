@@ -580,6 +580,35 @@ static bool ProvidesTitle(const Accessible* aAccessible, nsString& aName) {
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
+- (NSArray*)moxCustomActions {
+  if (@available(macOS 13.0, *)) {
+    NSMutableArray<NSAccessibilityCustomAction*>* customActions =
+        [[[NSMutableArray alloc] init] autorelease];
+    Relation relatedActions(
+        mGeckoAccessible->RelationByType(RelationType::ACTION));
+    while (Accessible* target = relatedActions.Next()) {
+      if (target->HasPrimaryAction()) {
+        // Any ACTION related accesibles should be considered a custom action.
+        mozAccessible* nativeTarget = GetNativeFromGeckoAccessible(target);
+        if (nativeTarget) {
+          nsAutoString name;
+          // Use the name of the target as the action name.
+          target->Name(name);
+          NSAccessibilityCustomAction* action =
+              [[NSAccessibilityCustomAction alloc]
+                  initWithName:nsCocoaUtils::ToNSString(name)
+                        target:nativeTarget
+                      selector:@selector(moxPerformPress)];
+          [customActions addObject:action];
+        }
+      }
+    }
+    return customActions;
+  }
+
+  return nil;
+}
+
 - (NSWindow*)moxWindow {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
