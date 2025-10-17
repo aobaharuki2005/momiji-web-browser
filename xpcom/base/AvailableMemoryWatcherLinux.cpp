@@ -306,11 +306,11 @@ void nsAvailableMemoryWatcher::HandleLowMemory() {
   }
   if (!mUnderMemoryPressure) {
     mUnderMemoryPressure = true;
-    UpdatePSIInfo(lock);
-    UpdateCrashAnnotation(lock);
     // Poll more frequently under memory pressure.
     StartPolling(lock);
   }
+  UpdatePSIInfo(lock);
+  UpdateCrashAnnotation(lock);
   UpdateLowMemoryTimeStamp();
   // We handle low memory offthread, but we want to unload
   // tabs only from the main thread, so we will dispatch this
@@ -360,9 +360,9 @@ void nsAvailableMemoryWatcher::MaybeHandleHighMemory() {
     RecordTelemetryEventOnHighMemory(lock);
     NS_NotifyOfEventualMemoryPressure(MemoryPressureState::NoPressure);
     mUnderMemoryPressure = false;
-    UpdatePSIInfo(lock);
-    UpdateCrashAnnotation(lock);
   }
+  UpdatePSIInfo(lock);
+  UpdateCrashAnnotation(lock);
   StartPolling(lock);
 }
 
