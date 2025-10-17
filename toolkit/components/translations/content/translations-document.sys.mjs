@@ -3213,6 +3213,42 @@ export class TranslationsDocument {
   }
 
   /**
+   * Updates the script direction of a given element,
+   * only if the source and target script directions differ.
+   *
+   * If the element is contained within a list item, then this
+   * also updates the script direction of the list item as well
+   * as the containing list.
+   *
+   * This is a special-case scenario that really improves the layout
+   * of lists on pages when translating to the reverse script direciton.
+   *
+   * @param {Element?} element
+   */
+  #maybeUpdateScriptDirection(element) {
+    if (
+      !element ||
+      this.#sourceScriptDirection === this.#targetScriptDirection
+    ) {
+      return;
+    }
+
+    const targetScriptDirection = this.#targetScriptDirection;
+
+    element.setAttribute("dir", targetScriptDirection);
+
+    const listItemAncestor = element.closest("li");
+    if (!listItemAncestor) {
+      return;
+    }
+
+    listItemAncestor.setAttribute("dir", targetScriptDirection);
+    listItemAncestor
+      .closest("ul, ol")
+      ?.setAttribute("dir", targetScriptDirection);
+  }
+
+  /**
    * Updates all nodes that have completed attribute translation requests.
    *
    * This function is called asynchronously, so nodes may already be dead. Before
@@ -3258,19 +3294,16 @@ export class TranslationsDocument {
             "text/html"
           );
 
-          if (this.#sourceScriptDirection !== this.#targetScriptDirection) {
-            element.setAttribute("dir", this.#targetScriptDirection);
-          }
-
           updateElement(translationsDocument, element);
+          this.#maybeUpdateScriptDirection(element);
+
           this.#processedContentNodes.add(targetNode);
         } else {
-          if (this.#sourceScriptDirection !== this.#targetScriptDirection) {
-            const parentElement = asElement(targetNode.parentNode);
-            parentElement?.setAttribute("dir", this.#targetScriptDirection);
-          }
           textNodeCount++;
+
           targetNode.textContent = translatedContent;
+          this.#maybeUpdateScriptDirection(asElement(targetNode.parentNode));
+
           this.#processedContentNodes.add(targetNode);
         }
 
