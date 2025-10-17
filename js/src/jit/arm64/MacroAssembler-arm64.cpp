@@ -3373,8 +3373,8 @@ void MacroAssembler::floorFloat32ToInt32(FloatRegister src, Register dest,
   B(&fin);
 
   bind(&handleZero);
-  // Move the top word of the float into the output reg, if it is non-zero,
-  // then the original value was -0.0.
+  // Move the float into the output reg, if it is non-zero, then the original
+  // value was -0.0.
   Fmov(o32, iFlt);
   Cbnz(o32, fail);
   bind(&fin);
@@ -3384,7 +3384,6 @@ void MacroAssembler::floorDoubleToInt32(FloatRegister src, Register dest,
                                         Label* fail) {
   ARMFPRegister iDbl(src, 64);
   ARMRegister o64(dest, 64);
-  ARMRegister o32(dest, 32);
 
   Label handleZero;
   Label fin;
@@ -3407,8 +3406,8 @@ void MacroAssembler::floorDoubleToInt32(FloatRegister src, Register dest,
   B(&fin);
 
   bind(&handleZero);
-  // Move the top word of the double into the output reg, if it is non-zero,
-  // then the original value was -0.0.
+  // Move the double into the output reg, if it is non-zero, then the original
+  // value was -0.0.
   Fmov(o64, iDbl);
   Cbnz(o64, fail);
   bind(&fin);
@@ -3439,8 +3438,8 @@ void MacroAssembler::ceilFloat32ToInt32(FloatRegister src, Register dest,
 
   // Bail if the input is in (-1, -0] or NaN.
   bind(&handleZero);
-  // Move the top word of the float into the output reg, if it is non-zero,
-  // then the original value wasn't +0.0.
+  // Move the float into the output reg, if it is non-zero, then the original
+  // value wasn't +0.0.
   Fmov(o32, iFlt);
   Cbnz(o32, fail);
   bind(&fin);
@@ -3450,7 +3449,6 @@ void MacroAssembler::ceilDoubleToInt32(FloatRegister src, Register dest,
                                        Label* fail) {
   ARMFPRegister iDbl(src, 64);
   ARMRegister o64(dest, 64);
-  ARMRegister o32(dest, 32);
 
   Label handleZero;
   Label fin;
@@ -3471,8 +3469,8 @@ void MacroAssembler::ceilDoubleToInt32(FloatRegister src, Register dest,
 
   // Bail if the input is in (-1, -0] or NaN.
   bind(&handleZero);
-  // Move the top word of the double into the output reg, if it is non-zero,
-  // then the original value wasn't +0.0.
+  // Move the double into the output reg, if it is non-zero, then the original
+  // value wasn't +0.0.
   Fmov(o64, iDbl);
   Cbnz(o64, fail);
   bind(&fin);
