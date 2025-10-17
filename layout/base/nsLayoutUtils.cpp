@@ -1499,10 +1499,9 @@ nsPoint GetEventCoordinatesRelativeTo(nsIWidget* aWidget,
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }
 
-  nsView* view = frame->GetView();
-  if (view) {
+  if (nsView* view = frame->GetView()) {
     nsIWidget* frameWidget = view->GetWidget();
-    if (frameWidget && frameWidget == aWidget) {
+    if (frameWidget == aWidget) {
       // Special case this cause it happens a lot.
       // This also fixes bug 664707, events in the extra-special case of select
       // dropdown popups that are transformed.

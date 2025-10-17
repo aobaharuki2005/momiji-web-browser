@@ -3889,7 +3889,7 @@ nsIWidget* nsGlobalWindowOuter::GetNearestWidget() const {
   if (!rootFrame) {
     return nullptr;
   }
-  return rootFrame->GetView()->GetNearestWidget(nullptr);
+  return rootFrame->GetNearestWidget();
 }
 
 void nsGlobalWindowOuter::SetFullscreenOuter(bool aFullscreen,
@@ -6139,8 +6139,7 @@ nsGlobalWindowOuter* nsGlobalWindowOuter::EnterModalState() {
       do_GetService("@mozilla.org/widget/dragservice;1");
   if (ds && topWin->GetDocShell()) {
     if (PresShell* presShell = topWin->GetDocShell()->GetPresShell()) {
-      if (nsViewManager* vm = presShell->GetViewManager()) {
-        RefPtr<nsIWidget> widget = vm->GetRootWidget();
+      if (RefPtr<nsIWidget> widget = presShell->GetRootWidget()) {
         if (nsCOMPtr<nsIDragSession> session = ds->GetCurrentSession(widget)) {
           session->EndDragSession(true, 0);
         }
@@ -7163,26 +7162,14 @@ void nsGlobalWindowOuter::SetCursorOuter(const nsACString& aCursor,
   }
 
   if (presContext) {
-    // Need root widget.
     PresShell* presShell = mDocShell->GetPresShell();
     if (!presShell) {
       aError.Throw(NS_ERROR_FAILURE);
       return;
     }
 
-    nsViewManager* vm = presShell->GetViewManager();
-    if (!vm) {
-      aError.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    nsView* rootView = vm->GetRootView();
-    if (!rootView) {
-      aError.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    nsIWidget* widget = rootView->GetNearestWidget(nullptr);
+    // Need root widget.
+    nsIWidget* widget = presShell->GetRootWidget();
     if (!widget) {
       aError.Throw(NS_ERROR_FAILURE);
       return;

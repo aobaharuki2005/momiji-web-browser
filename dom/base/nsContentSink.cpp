@@ -774,9 +774,7 @@ nsresult nsContentSink::DidProcessATokenImpl() {
   if (StaticPrefs::content_sink_pending_event_mode() != 0 &&
       !mHasPendingEvent &&
       (mDeflectedCount % StaticPrefs::content_sink_event_probe_rate()) == 0) {
-    nsViewManager* vm = presShell->GetViewManager();
-    NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIWidget> widget = vm->GetRootWidget();
+    nsIWidget* widget = presShell->GetRootWidget();
     mHasPendingEvent = widget && widget->HasPendingInputEvent();
   }
 

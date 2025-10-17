@@ -52,12 +52,7 @@ static nsWindow* GetWindow(dom::Document* aDocument) {
     return nullptr;
   }
 
-  RefPtr<nsViewManager> vm = presShell->GetViewManager();
-  if (!vm) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIWidget> widget = vm->GetRootWidget();
+  nsCOMPtr<nsIWidget> widget = presShell->GetRootWidget();
   if (!widget) {
     return nullptr;
   }

@@ -225,12 +225,12 @@ UniquePtr<nsMenuChainItem> nsMenuChainItem::Detach() {
 }
 
 void nsXULPopupManager::AddMenuChainItem(UniquePtr<nsMenuChainItem> aItem) {
-  PopupType popupType = aItem->Frame()->GetPopupType();
+  auto* frame = aItem->Frame();
+  PopupType popupType = frame->GetPopupType();
   if (StaticPrefs::layout_cursor_disable_for_popups() &&
       popupType != PopupType::Tooltip) {
-    if (nsPresContext* rootPC =
-            aItem->Frame()->PresContext()->GetRootPresContext()) {
-      if (nsCOMPtr<nsIWidget> rootWidget = rootPC->GetRootWidget()) {
+    if (auto* rootPc = frame->PresContext()->GetRootPresContext()) {
+      if (nsCOMPtr<nsIWidget> rootWidget = rootPc->GetRootWidget()) {
         rootWidget->SetCustomCursorAllowed(false);
       }
     }
@@ -1751,8 +1751,7 @@ nsEventStatus nsXULPopupManager::FirePopupShowingEvent(
   // coordinates are relative to the root widget
   nsPresContext* rootPresContext = aPresContext->GetRootPresContext();
   if (rootPresContext) {
-    event.mWidget =
-        rootPresContext->PresShell()->GetViewManager()->GetRootWidget();
+    event.mWidget = rootPresContext->GetRootWidget();
   } else {
     event.mWidget = nullptr;
   }

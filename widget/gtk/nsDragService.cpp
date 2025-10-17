@@ -730,11 +730,10 @@ static GtkWindow* GetGtkWindow(dom::Document* aDocument) {
     return nullptr;
   }
 
-  RefPtr<nsViewManager> vm = presShell->GetViewManager();
-  if (!vm) return nullptr;
-
-  nsCOMPtr<nsIWidget> widget = vm->GetRootWidget();
-  if (!widget) return nullptr;
+  nsCOMPtr<nsIWidget> widget = presShell->GetRootWidget();
+  if (!widget) {
+    return nullptr;
+  }
 
   GtkWidget* gtkWidget = static_cast<nsWindow*>(widget.get())->GetGtkWidget();
   if (!gtkWidget) return nullptr;

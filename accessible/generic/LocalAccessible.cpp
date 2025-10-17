@@ -497,7 +497,7 @@ LocalAccessible* LocalAccessible::LocalChildAtPoint(
   nsIFrame* startFrame = rootFrame;
 
   // Check whether the point is at popup content.
-  nsIWidget* rootWidget = rootFrame->GetView()->GetNearestWidget(nullptr);
+  nsIWidget* rootWidget = rootFrame->GetNearestWidget();
   NS_ENSURE_TRUE(rootWidget, nullptr);
 
   LayoutDeviceIntRect rootRect = rootWidget->GetScreenBounds();

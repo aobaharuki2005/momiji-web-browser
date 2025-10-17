@@ -9975,8 +9975,7 @@ bool PresShell::EventHandler::AdjustContextMenuKeyEvent(
   nsRootPresContext* rootPC = GetPresContext()->GetRootPresContext();
   aMouseEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
   if (rootPC) {
-    aMouseEvent->mWidget =
-        rootPC->PresShell()->GetViewManager()->GetRootWidget();
+    aMouseEvent->mWidget = rootPC->PresShell()->GetRootWidget();
     if (aMouseEvent->mWidget) {
       // default the refpoint to the topleft of our document
       nsPoint offset(0, 0);
@@ -12156,6 +12155,10 @@ void PresShell::UpdateImageLockingState() {
       }
     }
   }
+}
+
+nsIWidget* PresShell::GetRootWidget() const {
+  return mViewManager ? mViewManager->GetRootWidget() : nullptr;
 }
 
 PresShell* PresShell::GetRootPresShell() const {

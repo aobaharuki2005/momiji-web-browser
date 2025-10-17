@@ -7903,14 +7903,10 @@ nsRect nsIFrame::GetScreenRectInAppUnits() const {
         parentScreenRectAppUnits.TopLeft() + rootFrameOffsetInParent;
     rootScreenPos.x = NS_round(parentScale * rootPt.x);
     rootScreenPos.y = NS_round(parentScale * rootPt.y);
-  } else {
-    nsCOMPtr<nsIWidget> rootWidget =
-        presContext->PresShell()->GetViewManager()->GetRootWidget();
-    if (rootWidget) {
-      LayoutDeviceIntPoint rootDevPx = rootWidget->WidgetToScreenOffset();
-      rootScreenPos.x = presContext->DevPixelsToAppUnits(rootDevPx.x);
-      rootScreenPos.y = presContext->DevPixelsToAppUnits(rootDevPx.y);
-    }
+  } else if (nsCOMPtr<nsIWidget> rootWidget = presContext->GetRootWidget()) {
+    LayoutDeviceIntPoint rootDevPx = rootWidget->WidgetToScreenOffset();
+    rootScreenPos.x = presContext->DevPixelsToAppUnits(rootDevPx.x);
+    rootScreenPos.y = presContext->DevPixelsToAppUnits(rootDevPx.y);
   }
 
   return nsRect(rootScreenPos + GetOffsetTo(rootFrame), GetSize());
@@ -7939,7 +7935,7 @@ void nsIFrame::GetOffsetFromView(nsPoint& aOffset, nsView** aView) const {
 
 nsIWidget* nsIFrame::GetNearestWidget() const {
   if (!HasAnyStateBits(NS_FRAME_IN_POPUP)) {
-    return PresShell()->GetViewManager()->GetRootWidget();
+    return PresContext()->GetRootWidget();
   }
   nsPoint unused;
   return GetNearestWidget(unused);
@@ -7975,7 +7971,7 @@ nsIWidget* nsIFrame::GetNearestWidget(nsPoint& aOffset) const {
       break;
     }
   } while (true);
-  return PresShell()->GetViewManager()->GetRootWidget();
+  return PresContext()->GetRootWidget();
 }
 
 Matrix4x4Flagged nsIFrame::GetTransformMatrix(ViewportType aViewportType,

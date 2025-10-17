@@ -1354,8 +1354,7 @@ Maybe<SkipTransitionReason> ViewTransition::CaptureOldState() {
                 ->GetPresShell()) {
       // Build a display list and send it to WR in order to perform the
       // capturing of old content.
-      RefPtr<nsViewManager> vm = ps->GetViewManager();
-      if (RefPtr widget = vm->GetRootWidget()) {
+      if (RefPtr widget = ps->GetRootWidget()) {
         VT_LOG("ViewTransitions::CaptureOldState(), requesting composite");
         ps->PaintAndRequestComposite(ps->GetRootFrame(),
                                      widget->GetWindowRenderer(),

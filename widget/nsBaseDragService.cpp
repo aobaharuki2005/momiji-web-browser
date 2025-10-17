@@ -1351,8 +1351,7 @@ void nsBaseDragSession::TakeSessionBrowserListFromService() {
 /* static */
 nsIWidget* nsBaseDragService::GetWidgetFromWidgetProvider(
     nsISupports* aWidgetProvider) {
-  nsCOMPtr<nsIWidget> widget = do_QueryObject(aWidgetProvider);
-  if (widget) {
+  if (nsCOMPtr<nsIWidget> widget = do_QueryObject(aWidgetProvider)) {
     return widget;
   }
 
@@ -1374,9 +1373,7 @@ nsIWidget* nsBaseDragService::GetWidgetFromWidgetProvider(
   NS_ENSURE_TRUE(docShell, nullptr);
   PresShell* presShell = docShell->GetPresShell();
   NS_ENSURE_TRUE(presShell, nullptr);
-  nsViewManager* vm = presShell->GetViewManager();
-  NS_ENSURE_TRUE(vm, nullptr);
-  return vm->GetRootWidget();
+  return presShell->GetRootWidget();
 }
 
 NS_IMETHODIMP
