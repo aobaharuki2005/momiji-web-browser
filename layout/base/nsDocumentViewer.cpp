@@ -2216,7 +2216,7 @@ void nsDocumentViewer::MakeWindow(const nsSize& aSize, nsView* aContainerView) {
   mViewManager = new nsViewManager(mPresContext->DeviceContext());
 
   // The root view is always at 0,0.
-  nsRect tbounds(nsPoint(0, 0), aSize);
+  nsRect tbounds(nsPoint(), aSize);
   // Create a view
   nsView* view = mViewManager->CreateView(tbounds, aContainerView);
   MOZ_ASSERT(view);
@@ -2226,10 +2226,13 @@ void nsDocumentViewer::MakeWindow(const nsSize& aSize, nsView* aContainerView) {
   // Don't create widgets for ResourceDocs (external resources & svg images),
   // because when they're displayed, they're painted into *another* document's
   // widget.
-  if (!mDocument->IsResourceDoc() && mParentWidget) {
-    // Reuse the top level parent widget.
-    view->AttachToTopLevelWidget(mParentWidget);
-    mAttachedToParent = true;
+  if (!mDocument->IsResourceDoc()) {
+    MOZ_ASSERT_IF(!aContainerView, mParentWidget);
+    if (mParentWidget) {
+      // Reuse the top level parent widget.
+      view->AttachToTopLevelWidget(mParentWidget);
+      mAttachedToParent = true;
+    }
   }
 
   // Setup hierarchical relationship in view manager
