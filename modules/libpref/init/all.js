@@ -319,7 +319,7 @@ pref("media.videocontrols.keyboard-tab-to-all-controls", true);
   // 770 = DTLS 1.0, 771 = DTLS 1.2, 772 = DTLS 1.3
   pref("media.peerconnection.dtls.version.min", 771);
   pref("media.peerconnection.dtls.version.max", 772);
-  
+
   pref("media.peerconnection.sctp.default_max_streams", 2048);
 
 #if defined(XP_MACOSX)
@@ -3339,8 +3339,8 @@ pref("privacy.trackingprotection.emailtracking.webapp.domains", "mail.163.com,ma
 // and baseline) for users in ETP "strict" and "custom" mode.
 pref("privacy.trackingprotection.allow_list.hasMigratedCategoryPrefs", false);
 
-// Indicates if the user has interacted with the ETP category, tracking protection baseline exceptions, 
-// or convenience exceptions by changing them in the prefs or in the UI. This is used to determine 
+// Indicates if the user has interacted with the ETP category, tracking protection baseline exceptions,
+// or convenience exceptions by changing them in the prefs or in the UI. This is used to determine
 // if we should show the ETP Strict exceptions onboarding message again.
 pref("privacy.trackingprotection.allow_list.hasUserInteractedWithETPSettings", false);
 
@@ -3994,9 +3994,6 @@ pref("devtools.remote.adb.extensionID", "adb@mozilla.org");
 // The URL for for devtools-adb-extension (overridden in tests to a local
 // path).
 pref("devtools.remote.adb.extensionURL", "https://ftp.mozilla.org/pub/labs/devtools/adb-extension/#OS#/adb-extension-latest-#OS#.xpi");
-
-// Enable Inactive CSS detection; used both by the client and the server.
-pref("devtools.inspector.inactive.css.enabled", true);
 
 // Should F12 open the Developer Tools toolbox.
 pref("devtools.f12_enabled", true);

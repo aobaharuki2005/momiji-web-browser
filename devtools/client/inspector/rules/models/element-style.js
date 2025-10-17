@@ -29,8 +29,6 @@ loader.lazyRequireGetter(
   true
 );
 
-const PREF_INACTIVE_CSS_ENABLED = "devtools.inspector.inactive.css.enabled";
-
 /**
  * ElementStyle is responsible for the following:
  *   Keeps track of which properties are overridden.
@@ -73,16 +71,6 @@ class ElementStyle {
     if (!("disabled" in this.store)) {
       this.store.disabled = new WeakMap();
     }
-  }
-
-  get unusedCssEnabled() {
-    if (!this._unusedCssEnabled) {
-      this._unusedCssEnabled = Services.prefs.getBoolPref(
-        PREF_INACTIVE_CSS_ENABLED,
-        false
-      );
-    }
-    return this._unusedCssEnabled;
   }
 
   destroy() {
@@ -488,7 +476,7 @@ class ElementStyle {
       }
 
       // For each editor show or hide the inactive CSS icon as needed.
-      if (textProp.editor && this.unusedCssEnabled) {
+      if (textProp.editor) {
         textProp.editor.updateUI();
       }
     }
