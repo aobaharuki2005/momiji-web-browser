@@ -69,19 +69,20 @@ bool ModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest, nsresult* aRvOut) {
     return false;
   }
 
-  // If this document is sandboxed without 'allow-scripts', abort.
-  if (GetScriptLoader()->GetDocument()->HasScriptsBlockedBySandbox()) {
-    *aRvOut = NS_OK;
-    return false;
-  }
-
-  // To prevent dynamic code execution, content scripts can only
-  // load moz-extension URLs.
   nsCOMPtr<nsIPrincipal> principal = aRequest->TriggeringPrincipal();
-  if (BasePrincipal::Cast(principal)->ContentScriptAddonPolicy() &&
-      !aRequest->mURI->SchemeIs("moz-extension")) {
-    *aRvOut = NS_ERROR_DOM_WEBEXT_CONTENT_SCRIPT_URI;
-    return false;
+  if (BasePrincipal::Cast(principal)->ContentScriptAddonPolicy()) {
+    // To prevent dynamic code execution, content scripts can only
+    // load moz-extension URLs.
+    if (!aRequest->mURI->SchemeIs("moz-extension")) {
+      *aRvOut = NS_ERROR_DOM_WEBEXT_CONTENT_SCRIPT_URI;
+      return false;
+    }
+  } else {
+    // If this document is sandboxed without 'allow-scripts', abort.
+    if (GetScriptLoader()->GetDocument()->HasScriptsBlockedBySandbox()) {
+      *aRvOut = NS_ERROR_CONTENT_BLOCKED;
+      return false;
+    }
   }
 
   if (LOG_ENABLED()) {
