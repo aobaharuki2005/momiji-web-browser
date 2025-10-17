@@ -527,10 +527,6 @@ class nsCocoaWindow final : public nsIWidget {
   void UpdateFullscreenState(bool aFullScreen, bool aNativeMode);
   nsresult DoMakeFullScreen(bool aFullScreen, bool aUseSystemTransition);
 
-  already_AddRefed<nsIWidget> AllocateChildPopupWidget() override {
-    return nsIWidget::CreateTopLevelWindow();
-  }
-
   BaseWindow* mWindow;                // our cocoa window [STRONG]
   BaseWindow* mClosedRetainedWindow;  // a second strong reference to our
   // window upon closing it, held through our destructor. This is useful

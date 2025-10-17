@@ -552,11 +552,7 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChild(
   nsCOMPtr<nsIWidget> widget;
   switch (mWidgetType) {
     case WidgetType::Native: {
-      if (aInitData.mWindowType == WindowType::Popup) {
-        widget = AllocateChildPopupWidget();
-      } else {
-        widget = nsIWidget::CreateChildWindow();
-      }
+      widget = nsIWidget::CreateChildWindow();
       break;
     }
     case WidgetType::Headless:

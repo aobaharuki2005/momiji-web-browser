@@ -2141,10 +2141,6 @@ class nsIWidget : public nsSupportsWeakReference {
 
   static already_AddRefed<nsIWidget> CreateChildWindow();
 
-  virtual already_AddRefed<nsIWidget> AllocateChildPopupWidget() {
-    return CreateChildWindow();
-  }
-
   /**
    * Allocate and return a "puppet widget" that doesn't directly
    * correlate to a platform widget; platform events and data must
