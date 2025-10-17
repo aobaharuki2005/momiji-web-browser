@@ -3270,6 +3270,25 @@
       }
     ]
   },
+  "1902520": {
+    "label": "www.keisan.nta.go.jp",
+    "bugs": {
+      "1902520": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://www.keisan.nta.go.jp/kyoutu/ky/sm/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["mac"],
+        "ua_string": ["Safari_with_FxQuantum"]
+      },
+      {
+        "platforms": ["windows"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
+  },
   "1902527": {
     "label": "app.gather.town",
     "bugs": {
