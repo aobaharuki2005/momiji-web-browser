@@ -2802,6 +2802,7 @@ void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
     }
   }
   MOZ_ASSERT(numFpu == 0);
+
   diffF -= diffF % sizeof(uintptr_t);
   MOZ_ASSERT(diffF == 0);
 }

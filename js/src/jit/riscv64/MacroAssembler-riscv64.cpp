@@ -4102,9 +4102,9 @@ void MacroAssembler::speculationBarrier() { MOZ_CRASH(); }
 void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
                                      Register) {
   FloatRegisterSet fpuSet(set.fpus().reduceSetForPush());
-  unsigned numFpu = fpuSet.size();
+  mozilla::DebugOnly<unsigned> numFpu = fpuSet.size();
   int32_t diffF = fpuSet.getPushSizeInBytes();
-  int32_t diffG = set.gprs().size() * sizeof(intptr_t);
+  mozilla::DebugOnly<int32_t> diffG = set.gprs().size() * sizeof(intptr_t);
 
   MOZ_ASSERT(dest.offset >= diffG + diffF);
 
@@ -4133,6 +4133,7 @@ void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
     }
   }
   MOZ_ASSERT(numFpu == 0);
+
   diffF -= diffF % sizeof(uintptr_t);
   MOZ_ASSERT(diffF == 0);
 }
