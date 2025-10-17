@@ -2424,8 +2424,8 @@ class Matrix4x4TypedFlagged
   PointTyped<TargetUnits, F> TransformPointSimple(
       const PointTyped<SourceUnits, F>& aPoint) const {
     PointTyped<SourceUnits, F> temp;
-    temp.x = aPoint.x * _11 + aPoint.y * +_21 + _41;
-    temp.y = aPoint.x * _12 + aPoint.y * +_22 + _42;
+    temp.x = aPoint.x * _11 + aPoint.y * _21 + _41;
+    temp.y = aPoint.x * _12 + aPoint.y * _22 + _42;
     return temp;
   }
 
