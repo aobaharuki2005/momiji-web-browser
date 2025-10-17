@@ -670,11 +670,10 @@ export const GenAI = {
       contextTabs = null,
     } = contextMenu;
 
-    showItem(menu, false);
-
     // DO NOT show menu when inside an extension panel
     const uri = browser.browsingContext.currentURI.spec;
     if (uri.startsWith("moz-extension:")) {
+      showItem(menu, false);
       return;
     }
 
@@ -698,6 +697,7 @@ export const GenAI = {
         break;
     }
     if (!canShow) {
+      showItem(menu, false);
       return;
     }
 
@@ -718,6 +718,9 @@ export const GenAI = {
       }
       menu.menupopup?.remove();
     }
+
+    // NOTE: Show the menu item synchronously, before any `await`.
+    showItem(menu, true);
 
     // Determine if we have selection or should use page content
     const context = {
@@ -806,8 +809,6 @@ export const GenAI = {
         Services.prefs.setBoolPref("browser.ml.chat.menu", false);
       }
     });
-
-    showItem(menu, true);
   },
 
   /**
