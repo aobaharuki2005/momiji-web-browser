@@ -42,27 +42,39 @@ class PlayStoreReviewPromptController(
      */
     suspend fun tryPromptReview(
         activity: Activity,
+        onNotDisplayed: () -> Unit = {},
         onError: () -> Unit = {},
     ) {
         logger.info("tryPromptReview in progress...")
-        val reviewInfoFlow = withContext(Dispatchers.IO) { manager.requestReviewFlow() }
+        val reviewInfoTask = withContext(Dispatchers.IO) { manager.requestReviewFlow() }
 
-        reviewInfoFlow.addOnCompleteListener(activity) {
-            val result = if (it.isSuccessful) {
+        reviewInfoTask.addOnCompleteListener(activity) { task ->
+            val result = if (task.isSuccessful) {
                 logger.info("Review flow launched.")
                 // Launch the in-app flow.
-                manager.launchReviewFlow(activity, it.result)
+                manager.launchReviewFlow(activity, task.result)
 
-                ReviewPromptAttemptResult.from(it.result.toString())
+                ReviewPromptAttemptResult.from(task.result.toString())
             } else {
-                // Launch the Play store flow.
-                val reviewErrorCode =
-                    (it.exception as? ReviewException)?.errorCode ?: ERROR_CODE_UNEXPECTED
-                logger.warn("Failed to launch in-app review flow due to: $reviewErrorCode .")
-
-                onError()
-
                 Error
+            }
+
+            when (result) {
+                NotDisplayed -> {
+                    logger.warn("In-app review flow reported as not displayed, even though there was no error.")
+
+                    onNotDisplayed()
+                }
+
+                Error -> {
+                    val reviewErrorCode =
+                        (task.exception as? ReviewException)?.errorCode ?: ERROR_CODE_UNEXPECTED
+                    logger.warn("Failed to launch in-app review flow due to: $reviewErrorCode.")
+
+                    onError()
+                }
+
+                Displayed, Unknown -> {}
             }
 
             recordReviewPromptEvent(
@@ -94,7 +106,7 @@ class PlayStoreReviewPromptController(
                 newTab = true,
                 from = BrowserDirection.FromGlobal,
             )
-            logger.warn("Failed to launch play store review flow due to: $e .")
+            logger.warn("Failed to launch play store review flow due to: $e.")
         }
 
         logger.info("tryLaunchPlayStoreReview completed.")

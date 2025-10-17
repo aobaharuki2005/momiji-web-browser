@@ -28,6 +28,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.ReviewPrompt
 import org.mozilla.fenix.components.ReviewPromptAttemptResult.Displayed
+import org.mozilla.fenix.components.ReviewPromptAttemptResult.Error
 import org.mozilla.fenix.components.ReviewPromptAttemptResult.NotDisplayed
 import org.mozilla.fenix.components.ReviewPromptAttemptResult.Unknown
 import org.mozilla.fenix.helpers.FenixGleanTestRule
@@ -139,6 +140,11 @@ class PlayStoreReviewPromptControllerTest {
     @Test
     fun reviewPromptWasNotDisplayed() {
         testRecordReviewPromptEventRecordsTheExpectedData(NotDisplayed, "false")
+    }
+
+    @Test
+    fun reviewPromptDisplayStateError() {
+        testRecordReviewPromptEventRecordsTheExpectedData(Error, "error")
     }
 
     @Test

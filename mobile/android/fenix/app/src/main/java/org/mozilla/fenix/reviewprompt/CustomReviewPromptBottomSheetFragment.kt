@@ -85,6 +85,7 @@ class CustomReviewPromptBottomSheetFragment : BottomSheetDialogFragment() {
                         with(requireComponents.playStoreReviewPromptController) {
                             tryPromptReview(
                                 activity = activity,
+                                onNotDisplayed = { tryLaunchPlayStoreReview(activity) },
                                 onError = { tryLaunchPlayStoreReview(activity) },
                             )
                         }
