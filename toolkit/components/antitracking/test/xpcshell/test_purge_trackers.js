@@ -29,7 +29,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "PurgeTrackerService",
   "@mozilla.org/purge-tracker-service;1",
-  "nsIPurgeTrackerService"
+  Ci.nsIPurgeTrackerService
 );
 
 async function setupTest(aCookieBehavior) {

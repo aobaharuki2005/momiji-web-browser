@@ -14,7 +14,7 @@ const lazy = {};
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   ExternalProtocolService: [
     "@mozilla.org/uriloader/external-protocol-service;1",
-    "nsIExternalProtocolService",
+    Ci.nsIExternalProtocolService,
   ],
 });
 

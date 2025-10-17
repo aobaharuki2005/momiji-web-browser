@@ -62,7 +62,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "imgTools",
   "@mozilla.org/image/tools;1",
-  "imgITools"
+  Ci.imgITools
 );
 ChromeUtils.defineESModuleGetters(lazy, {
   PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",

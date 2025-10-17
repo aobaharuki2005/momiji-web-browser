@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "contentBlockingAllowList",
   "@mozilla.org/content-blocking-allow-list;1",
-  "nsIContentBlockingAllowList"
+  Ci.nsIContentBlockingAllowList
 );
 
 const permissionExceptionsL10n = {

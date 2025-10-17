@@ -135,29 +135,27 @@ export var XPCOMUtils = {
   },
 
   /**
+   * @typedef {[string, nsIID]} aServicesDetail
+   *   Details of the service, the first item in the array is the contract
+   *   ID, the second is the nsIID for the interface of the service.
+   */
+
+  /**
    * Defines a lazy service getter on a specified object for each
    * property in the given object.
    *
    * @param {object} aObject
    *        The object to define the lazy getter on.
-   * @param {object} aServices
+   * @param {{[key: string]: aServicesDetail}} aServices
    *        An object with a property for each service to be
-   *        imported, where the property name is the name of the
-   *        symbol to define, and the value is a 1 or 2 element array
-   *        containing the contract ID and, optionally, the interface
-   *        name of the service, as passed to defineLazyServiceGetter.
+   *        imported.
    */
   defineLazyServiceGetters(aObject, aServices) {
     for (let [name, service] of Object.entries(aServices)) {
       // Note: This is hot code, and cross-compartment array wrappers
       // are not JIT-friendly to destructuring or spread operators, so
       // we need to use indexed access instead.
-      this.defineLazyServiceGetter(
-        aObject,
-        name,
-        service[0],
-        service[1] || null
-      );
+      this.defineLazyServiceGetter(aObject, name, service[0], service[1]);
     }
   },
 

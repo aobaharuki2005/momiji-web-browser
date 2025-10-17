@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "gPushNotifier",
   "@mozilla.org/push/Notifier;1",
-  "nsIPushNotifier"
+  Ci.nsIPushNotifier
 );
 ChromeUtils.defineESModuleGetters(lazy, {
   PushCrypto: "resource://gre/modules/PushCrypto.sys.mjs",

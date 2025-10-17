@@ -39,16 +39,19 @@ ChromeUtils.defineESModuleGetters(lazy, {
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   aomStartup: [
     "@mozilla.org/addons/addon-manager-startup;1",
-    "amIAddonManagerStartup",
+    Ci.amIAddonManagerStartup,
   ],
   resProto: [
     "@mozilla.org/network/protocol;1?name=resource",
-    "nsISubstitutingProtocolHandler",
+    Ci.nsISubstitutingProtocolHandler,
   ],
-  spellCheck: ["@mozilla.org/spellchecker/engine;1", "mozISpellCheckingEngine"],
+  spellCheck: [
+    "@mozilla.org/spellchecker/engine;1",
+    Ci.mozISpellCheckingEngine,
+  ],
   timerManager: [
     "@mozilla.org/updates/timer-manager;1",
-    "nsIUpdateTimerManager",
+    Ci.nsIUpdateTimerManager,
   ],
 });
 
