@@ -9,12 +9,15 @@ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SkipLeaks
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AppAndSystemHelper.enableOrDisableBackGestureNavigationOnDevice
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
+import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.helpers.TestHelper.verifyDarkThemeApplied
 import org.mozilla.fenix.helpers.TestHelper.verifyLightThemeApplied
+import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
 import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -22,7 +25,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 
 class SettingsCustomizeTest : TestSetup() {
     @get:Rule
-    val activityTestRule =
+    val composeTestRule =
         AndroidComposeTestRule(
             HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
         ) { it.activity }
@@ -32,7 +35,7 @@ class SettingsCustomizeTest : TestSetup() {
 
     private fun getUiTheme(): Boolean {
         val mode =
-            activityTestRule.activity.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
+            composeTestRule.activity.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
 
         return when (mode) {
             Configuration.UI_MODE_NIGHT_YES -> true // dark theme is set
@@ -103,7 +106,7 @@ class SettingsCustomizeTest : TestSetup() {
         }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openTabDrawer(activityTestRule) {
+        }.openTabDrawer(composeTestRule) {
         }.openNewTab {
         }.submitQuery(secondWebPage.url.toString()) {
             swipeNavBarRight(secondWebPage.url.toString())
@@ -123,6 +126,54 @@ class SettingsCustomizeTest : TestSetup() {
             verifyPullToRefreshGesturePrefState(isEnabled = true)
             clickPullToRefreshToggle()
             verifyPullToRefreshGesturePrefState(isEnabled = false)
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3186732
+    @SmokeTest
+    @Test
+    fun verifyTheDefaultAppIconSettingTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openCustomizeSubMenu {
+            verifyAppIconOption(composeTestRule, "Default")
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3186731
+    @SmokeTest
+    @Test
+    fun verifyTheAppIconSelectionPageTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openCustomizeSubMenu {
+            clickTheAppIconOption(composeTestRule)
+            verifyAppIconSettingItems(composeTestRule)
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3186734
+    @SmokeTest
+    @Test
+    fun verifyTheChangeAppIconButtonTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openCustomizeSubMenu {
+            verifyAppIconOption(composeTestRule, "Default")
+            clickTheAppIconOption(composeTestRule)
+            clickAppIconOption(composeTestRule, appIconOptionName = "Dark")
+            verifyChangeAppIconDialog(composeTestRule)
+            clickTheChangeIconDialogButton(composeTestRule)
+            restartApp(composeTestRule.activityRule)
+        }
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openCustomizeSubMenu {
+            verifyAppIconOption(composeTestRule, "Dark")
         }
     }
 }
