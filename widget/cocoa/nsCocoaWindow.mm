@@ -4752,15 +4752,6 @@ DesktopToLayoutDeviceScale ParentBackingScaleFactor(nsIWidget* aParent) {
   return DesktopToLayoutDeviceScale(1.0);
 }
 
-// Returns the screen rectangle for the given widget.
-// Child widgets are positioned relative to this rectangle.
-// Exactly one of the arguments must be non-null.
-static DesktopRect GetWidgetScreenRectForChildren(nsIWidget* aWidget) {
-  mozilla::DesktopToLayoutDeviceScale scale =
-      aWidget->GetDesktopToDeviceScale();
-  return aWidget->GetClientBounds() / scale;
-}
-
 // aRect here is specified in desktop pixels
 //
 // For child windows aRect.{x,y} are offsets from the origin of the parent
@@ -4785,22 +4776,8 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent, const DesktopIntRect& aRect,
   mAlwaysOnTop = aInitData->mAlwaysOnTop;
   mIsAlert = aInitData->mIsAlert;
 
-  // If we have a parent widget, the new widget will be offset from the
-  // parent widget by aRect.{x,y}. Otherwise, we'll use aRect for the
-  // new widget coordinates.
-  DesktopIntPoint parentOrigin;
-
-  // Do we have a parent widget?
-  if (aParent) {
-    DesktopRect parentDesktopRect = GetWidgetScreenRectForChildren(aParent);
-    parentOrigin = gfx::RoundedToInt(parentDesktopRect.TopLeft());
-  }
-
-  DesktopIntRect widgetRect = aRect + parentOrigin;
-
-  nsresult rv =
-      CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(widgetRect),
-                         mBorderStyle, false, aInitData->mIsPrivate);
+  nsresult rv = CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(aRect),
+                                   mBorderStyle, false, aInitData->mIsPrivate);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mIsAnimationSuppressed = aInitData->mIsAnimationSuppressed;
