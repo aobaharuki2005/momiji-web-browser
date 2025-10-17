@@ -952,7 +952,8 @@ void MacroAssemblerMIPSShared::ma_b(Register lhs, Register rhs, Label* label,
       UseScratchRegisterScope temps(*this);
       Register scratch = temps.Acquire();
       Condition cond = ma_cmp(scratch, lhs, rhs, c);
-      asMasm().branchWithCode(getBranchCode(scratch, cond), label, jumpKind);
+      asMasm().branchWithCode(getBranchCode(scratch, cond), label, jumpKind,
+                              scratch);
     } break;
   }
 }
@@ -979,7 +980,8 @@ void MacroAssemblerMIPSShared::ma_b(Register lhs, Imm32 imm, Label* label,
         break;
       default:
         Condition cond = ma_cmp(scratch, lhs, imm, c);
-        asMasm().branchWithCode(getBranchCode(scratch, cond), label, jumpKind);
+        asMasm().branchWithCode(getBranchCode(scratch, cond), label, jumpKind,
+                                scratch);
     }
   }
 }
