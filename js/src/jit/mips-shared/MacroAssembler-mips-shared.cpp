@@ -3316,8 +3316,7 @@ void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
 
   moveFromFloat32(fscratch, dest);
 
-  branchTest32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
-  branchTest32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
+  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
 
   jump(&end);
 
@@ -3343,7 +3342,11 @@ void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
   as_floorws(fscratch, temp);
   moveFromFloat32(fscratch, dest);
 
+  // Need to test for both INT_MIN and INT_MAX:
+  // If NAN2008=0, out-of-range (negative) values return INT_MAX.
+  // If NAN2008=1, out-of-range negative values return INT_MIN.
   branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
 
   bind(&end);
 }
@@ -3380,7 +3383,6 @@ void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
 
   moveFromDoubleLo(dscratch, dest);
 
-  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
   branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
 
   jump(&end);
@@ -3407,7 +3409,11 @@ void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
   as_floorwd(dscratch, temp);
   moveFromDoubleLo(dscratch, dest);
 
+  // Need to test for both INT_MIN and INT_MAX:
+  // If NAN2008=0, out-of-range (negative) values return INT_MAX.
+  // If NAN2008=1, out-of-range negative values return INT_MIN.
   branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
 
   bind(&end);
 }
