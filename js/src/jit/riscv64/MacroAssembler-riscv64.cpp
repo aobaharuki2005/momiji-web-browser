@@ -365,36 +365,58 @@ void MacroAssemblerRiscv64::ma_compareF32(Register rd, DoubleCondition cc,
                                           FloatRegister cmp1,
                                           FloatRegister cmp2) {
   switch (cc) {
-    case DoubleEqualOrUnordered:
     case DoubleEqual:
       feq_s(rd, cmp1, cmp2);
-      break;
-    case DoubleNotEqualOrUnordered:
-    case DoubleNotEqual: {
-      Label done;
-      CompareIsNanF32(rd, cmp1, cmp2);
-      ma_branch(&done, Equal, rd, Operand(1));
-      feq_s(rd, cmp1, cmp2);
-      bind(&done);
+      return;
+    case DoubleEqualOrUnordered: {
+      UseScratchRegisterScope temps(this);
+      Register scratch = temps.Acquire();
+      flt_s(rd, cmp1, cmp2);
+      flt_s(scratch, cmp2, cmp1);
+      or_(rd, rd, scratch);
       NegateBool(rd, rd);
-      break;
+      return;
     }
-    case DoubleLessThanOrUnordered:
+    case DoubleNotEqual: {
+      UseScratchRegisterScope temps(this);
+      Register scratch = temps.Acquire();
+      flt_s(rd, cmp1, cmp2);
+      flt_s(scratch, cmp2, cmp1);
+      or_(rd, rd, scratch);
+      return;
+    }
+    case DoubleNotEqualOrUnordered:
+      feq_s(rd, cmp1, cmp2);
+      NegateBool(rd, rd);
+      return;
     case DoubleLessThan:
       flt_s(rd, cmp1, cmp2);
-      break;
-    case DoubleGreaterThanOrEqualOrUnordered:
+      return;
+    case DoubleLessThanOrUnordered:
+      fle_s(rd, cmp2, cmp1);
+      NegateBool(rd, rd);
+      return;
     case DoubleGreaterThanOrEqual:
       fle_s(rd, cmp2, cmp1);
-      break;
-    case DoubleLessThanOrEqualOrUnordered:
+      return;
+    case DoubleGreaterThanOrEqualOrUnordered:
+      flt_s(rd, cmp1, cmp2);
+      NegateBool(rd, rd);
+      return;
     case DoubleLessThanOrEqual:
       fle_s(rd, cmp1, cmp2);
-      break;
-    case DoubleGreaterThanOrUnordered:
+      return;
+    case DoubleLessThanOrEqualOrUnordered:
+      flt_s(rd, cmp2, cmp1);
+      NegateBool(rd, rd);
+      return;
     case DoubleGreaterThan:
       flt_s(rd, cmp2, cmp1);
-      break;
+      return;
+    case DoubleGreaterThanOrUnordered:
+      fle_s(rd, cmp1, cmp2);
+      NegateBool(rd, rd);
+      return;
     case DoubleOrdered:
       CompareIsNotNanF32(rd, cmp1, cmp2);
       return;
@@ -402,60 +424,70 @@ void MacroAssemblerRiscv64::ma_compareF32(Register rd, DoubleCondition cc,
       CompareIsNanF32(rd, cmp1, cmp2);
       return;
   }
-  if (cc >= FIRST_UNORDERED && cc <= LAST_UNORDERED) {
-    UseScratchRegisterScope temps(this);
-    Register scratch = temps.Acquire();
-    CompareIsNanF32(scratch, cmp1, cmp2);
-    or_(rd, rd, scratch);
-  }
 }
 
 void MacroAssemblerRiscv64::ma_compareF64(Register rd, DoubleCondition cc,
                                           FloatRegister cmp1,
                                           FloatRegister cmp2) {
   switch (cc) {
-    case DoubleEqualOrUnordered:
     case DoubleEqual:
       feq_d(rd, cmp1, cmp2);
-      break;
-    case DoubleNotEqualOrUnordered:
-    case DoubleNotEqual: {
-      Label done;
-      CompareIsNanF64(rd, cmp1, cmp2);
-      ma_branch(&done, Equal, rd, Operand(1));
-      feq_d(rd, cmp1, cmp2);
-      bind(&done);
+      return;
+    case DoubleEqualOrUnordered: {
+      UseScratchRegisterScope temps(this);
+      Register scratch = temps.Acquire();
+      flt_d(rd, cmp1, cmp2);
+      flt_d(scratch, cmp2, cmp1);
+      or_(rd, rd, scratch);
       NegateBool(rd, rd);
-    } break;
-    case DoubleLessThanOrUnordered:
+      return;
+    }
+    case DoubleNotEqual: {
+      UseScratchRegisterScope temps(this);
+      Register scratch = temps.Acquire();
+      flt_d(rd, cmp1, cmp2);
+      flt_d(scratch, cmp2, cmp1);
+      or_(rd, rd, scratch);
+      return;
+    }
+    case DoubleNotEqualOrUnordered:
+      feq_d(rd, cmp1, cmp2);
+      NegateBool(rd, rd);
+      return;
     case DoubleLessThan:
       flt_d(rd, cmp1, cmp2);
-      break;
-    case DoubleGreaterThanOrEqualOrUnordered:
+      return;
+    case DoubleLessThanOrUnordered:
+      fle_d(rd, cmp2, cmp1);
+      NegateBool(rd, rd);
+      return;
     case DoubleGreaterThanOrEqual:
       fle_d(rd, cmp2, cmp1);
-      break;
-    case DoubleLessThanOrEqualOrUnordered:
+      return;
+    case DoubleGreaterThanOrEqualOrUnordered:
+      flt_d(rd, cmp1, cmp2);
+      NegateBool(rd, rd);
+      return;
     case DoubleLessThanOrEqual:
       fle_d(rd, cmp1, cmp2);
-      break;
-    case DoubleGreaterThanOrUnordered:
+      return;
+    case DoubleLessThanOrEqualOrUnordered:
+      flt_d(rd, cmp2, cmp1);
+      NegateBool(rd, rd);
+      return;
     case DoubleGreaterThan:
       flt_d(rd, cmp2, cmp1);
-      break;
+      return;
+    case DoubleGreaterThanOrUnordered:
+      fle_d(rd, cmp1, cmp2);
+      NegateBool(rd, rd);
+      return;
     case DoubleOrdered:
       CompareIsNotNanF64(rd, cmp1, cmp2);
       return;
     case DoubleUnordered:
       CompareIsNanF64(rd, cmp1, cmp2);
       return;
-  }
-
-  if (cc >= FIRST_UNORDERED && cc <= LAST_UNORDERED) {
-    UseScratchRegisterScope temps(this);
-    Register scratch = temps.Acquire();
-    CompareIsNanF64(scratch, cmp1, cmp2);
-    or_(rd, rd, scratch);
   }
 }
 
@@ -6201,24 +6233,26 @@ void MacroAssemblerRiscv64::ma_call(ImmPtr dest) {
 
 void MacroAssemblerRiscv64::CompareIsNotNanF32(Register rd, FPURegister cmp1,
                                                FPURegister cmp2) {
-  UseScratchRegisterScope temps(this);
-  BlockTrampolinePoolScope block_trampoline_pool(this, 3);
-  Register scratch = temps.Acquire();
+  feq_s(rd, cmp1, cmp1);  // rd <- !isNan(cmp1)
+  if (cmp1 != cmp2) {
+    UseScratchRegisterScope temps(this);
+    Register scratch = temps.Acquire();
 
-  feq_s(rd, cmp1, cmp1);       // rd <- !isNan(cmp1)
-  feq_s(scratch, cmp2, cmp2);  // scratch <- !isNaN(cmp2)
-  ma_and(rd, rd, scratch);     // rd <- !isNan(cmp1) && !isNan(cmp2)
+    feq_s(scratch, cmp2, cmp2);  // scratch <- !isNaN(cmp2)
+    ma_and(rd, rd, scratch);     // rd <- !isNan(cmp1) && !isNan(cmp2)
+  }
 }
 
 void MacroAssemblerRiscv64::CompareIsNotNanF64(Register rd, FPURegister cmp1,
                                                FPURegister cmp2) {
-  UseScratchRegisterScope temps(this);
-  BlockTrampolinePoolScope block_trampoline_pool(this, 3);
-  Register scratch = temps.Acquire();
+  feq_d(rd, cmp1, cmp1);  // rd <- !isNan(cmp1)
+  if (cmp1 != cmp2) {
+    UseScratchRegisterScope temps(this);
+    Register scratch = temps.Acquire();
 
-  feq_d(rd, cmp1, cmp1);       // rd <- !isNan(cmp1)
-  feq_d(scratch, cmp2, cmp2);  // scratch <- !isNaN(cmp2)
-  ma_and(rd, rd, scratch);     // rd <- !isNan(cmp1) && !isNan(cmp2)
+    feq_d(scratch, cmp2, cmp2);  // scratch <- !isNaN(cmp2)
+    ma_and(rd, rd, scratch);     // rd <- !isNan(cmp1) && !isNan(cmp2)
+  }
 }
 
 void MacroAssemblerRiscv64::CompareIsNanF32(Register rd, FPURegister cmp1,

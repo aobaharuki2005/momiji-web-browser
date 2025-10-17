@@ -354,8 +354,6 @@ class Assembler : public AssemblerShared,
     DoubleGreaterThanOrEqualOrUnordered,
     DoubleLessThanOrUnordered,
     DoubleLessThanOrEqualOrUnordered,
-    FIRST_UNORDERED = DoubleUnordered,
-    LAST_UNORDERED = DoubleLessThanOrEqualOrUnordered
   };
 
   Register getStackPointer() const { return StackPointer; }
