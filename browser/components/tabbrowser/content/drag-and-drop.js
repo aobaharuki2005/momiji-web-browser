@@ -1230,7 +1230,7 @@
         // from appearing to move while the dragged tabs are positioned absolutely
         let isTabInCollapsingGroup = expandGroupOnDrop && t.group == tab.group;
         if (!movingTabsSet.has(t) && !isTabInCollapsingGroup) {
-          t.style.transition = "none";
+          t.animationsEnabled = false;
           suppressTransitionsFor.push(t);
         }
       }
@@ -1241,7 +1241,7 @@
           .then(() => {
             window.requestAnimationFrame(() => {
               for (let t of suppressTransitionsFor) {
-                t.style.transition = "";
+                t.animationsEnabled = true;
               }
             });
           });

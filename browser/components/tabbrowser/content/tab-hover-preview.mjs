@@ -604,6 +604,33 @@ class TabGroupPanel extends Panel {
 
   handleEvent(event) {
     if (event.type == "command") {
+      if (this.win.gBrowser.selectedTab == event.target.tab) {
+        this.deactivate({ force: true });
+        return;
+      }
+
+      // bug1984732: temporarily disable CSS transitions while tabs are
+      // switching to prevent an unsightly "slide" animation when switching
+      // tabs within a collapsed group
+      let switchingTabs = [this.win.gBrowser.selectedTab, event.target.tab];
+      if (switchingTabs.every(tab => tab.group == this.#group)) {
+        for (let tab of switchingTabs) {
+          tab.animationsEnabled = false;
+        }
+
+        this.win.addEventListener(
+          "TabSwitchDone",
+          () => {
+            this.win.requestAnimationFrame(() => {
+              for (let tab of switchingTabs) {
+                tab.animationsEnabled = true;
+              }
+            });
+          },
+          { once: true }
+        );
+      }
+
       this.win.gBrowser.selectedTab = event.target.tab;
       this.deactivate({ force: true });
     } else if (event.type == "mouseout" && event.target == this.panelElement) {

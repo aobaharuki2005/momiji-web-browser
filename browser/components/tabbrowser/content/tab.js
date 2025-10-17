@@ -273,6 +273,14 @@
       gBrowser._tabAttrModified(this, ["undiscardable"]);
     }
 
+    get animationsEnabled() {
+      return this.style.transition == "";
+    }
+
+    set animationsEnabled(val) {
+      this.style.transition = val ? "" : "none";
+    }
+
     get isEmpty() {
       // Determines if a tab is "empty", usually used in the context of determining
       // if it's ok to close the tab.
