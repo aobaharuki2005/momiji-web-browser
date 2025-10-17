@@ -494,7 +494,7 @@ void MacroAssemblerMIPS64::ma_addPtrTestOverflow(Register rd, Register rs,
     ma_move(scratch, rt);
     as_daddu(rd, rs, rt);
     as_xor(scratch, rd, scratch);
-    as_and(scratch, scratch, scratch2);
+    as_and(scratch2, scratch, scratch2);
   }
 
   ma_b(scratch2, zero, overflow, Assembler::LessThan);
@@ -520,7 +520,7 @@ void MacroAssemblerMIPS64::ma_addPtrTestOverflow(Register rd, Register rs,
 
     as_daddu(rd, rs, scratch);
     as_xor(scratch, rd, scratch);
-    as_and(scratch, scratch, scratch2);
+    as_and(scratch2, scratch, scratch2);
   }
   ma_b(scratch2, zero, overflow, Assembler::LessThan);
 }
