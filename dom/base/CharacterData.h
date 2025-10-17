@@ -13,7 +13,6 @@
 #define mozilla_dom_CharacterData_h
 
 #include "CharacterDataBuffer.h"
-#include "mozilla/Attributes.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
 #include "nsIContent.h"

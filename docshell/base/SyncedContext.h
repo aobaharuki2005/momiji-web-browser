@@ -10,7 +10,6 @@
 #include <array>
 #include <type_traits>
 #include <utility>
-#include "mozilla/Attributes.h"
 #include "mozilla/BitSet.h"
 #include "mozilla/EnumSet.h"
 #include "nsStringFwd.h"

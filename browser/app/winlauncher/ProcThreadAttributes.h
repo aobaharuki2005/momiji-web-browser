@@ -11,7 +11,6 @@
 
 #include <utility>
 
-#include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 

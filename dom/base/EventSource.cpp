@@ -8,7 +8,6 @@
 
 #include "ReferrerInfo.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Components.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/DataMutex.h"

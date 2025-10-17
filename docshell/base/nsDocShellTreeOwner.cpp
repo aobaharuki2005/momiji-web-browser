@@ -45,7 +45,6 @@
 #include "nsView.h"
 #include "nsXULTooltipListener.h"
 #include "nsIConstraintValidation.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/Try.h"
 #include "mozilla/dom/DragEvent.h"

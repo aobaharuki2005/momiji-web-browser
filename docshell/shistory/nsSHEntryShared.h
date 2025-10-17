@@ -18,7 +18,6 @@
 #include "nsStructuredCloneContainer.h"
 #include "nsStubMutationObserver.h"
 
-#include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 
 class nsSHEntry;

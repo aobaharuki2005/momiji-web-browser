@@ -17,7 +17,6 @@
 #include "nsSHistory.h"
 #include "nsThreadUtils.h"
 #include "nsFrameLoader.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
 
 namespace dom = mozilla::dom;
