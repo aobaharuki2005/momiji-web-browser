@@ -1523,7 +1523,7 @@ function createTestHTTPServer() {
   return server;
 }
 
-/*
+/**
  * Register an actor in the content process of the current tab.
  *
  * Calling ActorRegistry.registerModule only registers the actor in the current process.
@@ -2533,7 +2533,7 @@ function getNetmonitorContextMenuItem(monitor, id) {
   return Menu.getMenuElementById(id, monitor.panelWin.document);
 }
 
-/*
+/**
  * Selects and clicks the context menu item of the netmonitor, it should
  * also wait for the popup to close.
  * @param {Object} monitor

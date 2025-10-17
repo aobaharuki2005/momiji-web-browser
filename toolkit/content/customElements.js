@@ -236,7 +236,7 @@
           }
         }
       }
-      /*
+      /**
        * A declarative way to wire up attribute inheritance and automatically generate
        * the `observedAttributes` getter.  For example, if you returned:
        *    {
@@ -346,7 +346,7 @@
         }
       }
 
-      /*
+      /**
        * Implements attribute value inheritance by child elements.
        *
        * @param {array} list

@@ -65,7 +65,7 @@ export class FxAccountsOAuth {
     this.#flow = {};
   }
 
-  /*
+  /**
    * Gets a stored flow
    * @param { string } state: The base-64 URL-safe state string that was created at the start of the flow
    * @returns { Object }: The values initially stored when startign th eoauth flow

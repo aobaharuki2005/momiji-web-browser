@@ -694,7 +694,7 @@ function synthesizeMouse(
   );
 }
 
-/*
+/**
  * Synthesize a mouse event in `aWindow` at a point.
  *
  * `nsIDOMWindowUtils.sendMouseEvent` takes floats for the coordinates.
@@ -898,7 +898,7 @@ function synthesizeMouseAtPoint(
   return defaultPrevented;
 }
 
-/*
+/**
  * Synthesize a mouse event at the center of `aTarget`.
  *
  * Note that additional events may be fired as a result of this call. For
