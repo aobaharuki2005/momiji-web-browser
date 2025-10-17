@@ -3,16 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::RawtestHarness;
+use crate::euclid::point2;
 use webrender::api::*;
 use webrender::api::units::*;
+use webrender::Transaction;
 
 struct SnapTestContext {
     root_spatial_id: SpatialId,
     test_size: FramebufferIntSize,
     font_size: f32,
     ahem_font_key: FontInstanceKey,
-    offset: f32,
-    expected_offset: i32,
+    variant: usize,
 }
 
 enum SnapTestExpectation {
@@ -23,11 +24,22 @@ enum SnapTestExpectation {
     }
 }
 
-type SnapTestFunction = fn(&mut DisplayListBuilder, &mut SnapTestContext) -> SnapTestExpectation;
+struct ScrollRequest {
+    external_scroll_id: ExternalScrollId,
+    amount: f32,
+}
+
+struct SnapTestResult {
+    scrolls: Vec<ScrollRequest>,
+    expected: SnapTestExpectation,
+}
+
+type SnapTestFunction = fn(&mut DisplayListBuilder, &mut SnapTestContext) -> SnapTestResult;
 
 struct SnapTest {
     name: &'static str,
     f: SnapTestFunction,
+    variations: usize,
 }
 
 struct SnapVariation {
@@ -38,25 +50,42 @@ struct SnapVariation {
 const MAGENTA_RECT: SnapTest = SnapTest {
     name: "clear",
     f: dl_clear,
+    variations: 1,
 };
 
 // Types of snap tests
-const TESTS: &[SnapTest; 2] = &[
+const TESTS: &[SnapTest; 4] = &[
     // Rectangle, no transform/scroll
     SnapTest {
         name: "rect",
         f: dl_simple_rect,
+        variations: SIMPLE_FRACTIONAL_VARIANTS.len(),
     },
 
     // Glyph, no transform/scroll
     SnapTest {
         name: "glyph",
         f: dl_simple_glyph,
+        variations: SIMPLE_FRACTIONAL_VARIANTS.len(),
     },
+
+    // Rect, APZ
+    SnapTest {
+        name: "scroll1",
+        f: dl_scrolling1,
+        variations: SCROLL_VARIANTS.len(),
+    },
+
+    // Rect, APZ + external scroll offset
+    SnapTest {
+        name: "rect-apz-ext-1",
+        f: dl_scrolling_ext1,
+        variations: EXTERNAL_SCROLL_VARIANTS.len(),
+    }
 ];
 
 // Variants we will run for each snap test with expected float offset and raster difference
-const VARIANTS: &[SnapVariation; 13] = &[
+const SIMPLE_FRACTIONAL_VARIANTS: [SnapVariation; 13] = [
     SnapVariation {
         offset: 0.0,
         expected: 0,
@@ -111,6 +140,46 @@ const VARIANTS: &[SnapVariation; 13] = &[
     },
 ];
 
+struct ScrollVariation{
+    apz_scroll: f32,
+    prim_offset: f32,
+    expected: i32,
+}
+
+const SCROLL_VARIANTS: [ScrollVariation; 3] = [
+    ScrollVariation {
+        apz_scroll: 0.0,
+        prim_offset: 0.0,
+        expected: 0,
+    },
+    ScrollVariation {
+        apz_scroll: -1.0,
+        prim_offset: 0.0,
+        expected: 1,
+    },
+    ScrollVariation {
+        apz_scroll: -1.5,
+        prim_offset: 0.0,
+        expected: 2,
+    },
+];
+
+struct ExternalScrollVariation{
+    external_offset: f32,
+    apz_scroll: f32,
+    prim_offset: f32,
+    expected: i32,
+}
+
+const EXTERNAL_SCROLL_VARIANTS: [ExternalScrollVariation; 1] = [
+    ExternalScrollVariation {
+        external_offset: 100.0,
+        apz_scroll: -101.0,
+        prim_offset: -100.0,
+        expected: 1,
+    },
+];
+
 impl<'a> RawtestHarness<'a> {
     pub fn test_snapping(&mut self) {
         println!("\tsnapping test...");
@@ -136,14 +205,13 @@ impl<'a> RawtestHarness<'a> {
 
         // Run each test
         for test in TESTS {
-            for variant in VARIANTS {
+            for i in 0 .. test.variations {
                 let mut ctx = SnapTestContext {
                     ahem_font_key,
                     font_size,
-                    offset: variant.offset,
-                    expected_offset: variant.expected,
                     root_spatial_id: SpatialId::root_scroll_node(self.wrench.root_pipeline_id),
                     test_size,
+                    variant: i,
                 };
 
                 any_fails = !self.run_snap_test(test, &mut ctx);
@@ -167,20 +235,42 @@ impl<'a> RawtestHarness<'a> {
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
         builder.begin();
 
-        let expected = (test.f)(&mut builder, ctx);
+        let result = (test.f)(&mut builder, ctx);
 
-        let pixels = self.render_display_list_and_get_pixels(
-            builder,
+        let window_size = self.window.get_inner_size();
+        let window_rect = FramebufferIntRect::from_origin_and_size(
+            point2(0, window_size.height - ctx.test_size.height),
             ctx.test_size,
         );
+
+        let txn = Transaction::new();
+        self.submit_dl(&mut Epoch(0), builder, txn);
+
+        for scroll in result.scrolls {
+            let mut txn = Transaction::new();
+            txn.set_scroll_offsets(
+                scroll.external_scroll_id,
+                vec![SampledScrollOffset {
+                    offset: LayoutVector2D::new(0.0, scroll.amount),
+                    generation: APZScrollGeneration::default(),
+                }],
+            );
+            txn.generate_frame(0, true, false, RenderReasons::TESTING);
+            self.wrench.api.send_transaction(self.wrench.document_id, txn);
+
+            self.render_and_get_pixels(window_rect);
+        }
+
+        let pixels = self.render_and_get_pixels(window_rect);
+
         let ok = validate_output(
             &pixels,
-            expected,
+            result.expected,
             ctx.test_size,
         );
 
         if !ok {
-            println!("FAIL {} [{}/{}]", test.name, ctx.offset, ctx.expected_offset);
+            println!("FAIL {} [{}]", test.name, ctx.variant);
 
             // enable to save output as png for debugging
             // use crate::png;
@@ -266,7 +356,7 @@ fn validate_output(
 fn dl_clear(
     builder: &mut DisplayListBuilder,
     ctx: &mut SnapTestContext,
-) -> SnapTestExpectation {
+) -> SnapTestResult {
     let color = ColorF::new(1.0, 0.0, 1.0, 1.0);
 
     let bounds = ctx.test_size
@@ -285,10 +375,13 @@ fn dl_clear(
         color,
     );
 
-    SnapTestExpectation::Rect {
-        expected_color: color.into(),
-        expected_rect: ctx.test_size.cast_unit().into(),
-        expected_offset: 0,
+    SnapTestResult {
+        scrolls: vec![],
+        expected: SnapTestExpectation::Rect {
+            expected_color: color.into(),
+            expected_rect: ctx.test_size.cast_unit().into(),
+            expected_offset: 0,
+        }
     }
 }
 
@@ -296,8 +389,9 @@ fn dl_clear(
 fn dl_simple_rect(
     builder: &mut DisplayListBuilder,
     ctx: &mut SnapTestContext
-) -> SnapTestExpectation {
+) -> SnapTestResult {
     let color = ColorF::BLACK;
+    let variant = &SIMPLE_FRACTIONAL_VARIANTS[ctx.variant];
 
     let prim_size = DeviceIntSize::new(
         ctx.test_size.width / 2,
@@ -316,7 +410,7 @@ fn dl_simple_rect(
         .to_f32()
         .cast_unit()
         .translate(
-            LayoutVector2D::new(0.0, ctx.offset)
+            LayoutVector2D::new(0.0, variant.offset)
         );
 
     builder.push_rect(
@@ -330,10 +424,13 @@ fn dl_simple_rect(
         color,
     );
 
-    SnapTestExpectation::Rect {
-        expected_color: color.into(),
-        expected_rect: rect,
-        expected_offset: ctx.expected_offset,
+    SnapTestResult {
+        scrolls: vec![],
+        expected: SnapTestExpectation::Rect {
+            expected_color: color.into(),
+            expected_rect: rect,
+            expected_offset: variant.expected,
+        }
     }
 }
 
@@ -341,8 +438,9 @@ fn dl_simple_rect(
 fn dl_simple_glyph(
     builder: &mut DisplayListBuilder,
     ctx: &mut SnapTestContext,
-) -> SnapTestExpectation {
+) -> SnapTestResult {
     let color = ColorF::BLACK;
+    let variant = &SIMPLE_FRACTIONAL_VARIANTS[ctx.variant];
 
     let prim_size = DeviceIntSize::new(
         ctx.test_size.width / 2,
@@ -361,8 +459,8 @@ fn dl_simple_glyph(
         .to_f32()
         .cast_unit()
         .translate(
-            LayoutVector2D::new(0.0, ctx.offset)
-        );
+            LayoutVector2D::new(0.0, variant.offset)
+    );
 
     builder.push_text(
         &CommonItemProperties {
@@ -387,9 +485,142 @@ fn dl_simple_glyph(
         None,
     );
 
-    SnapTestExpectation::Rect {
-        expected_color: color.into(),
-        expected_rect: rect,
-        expected_offset: ctx.expected_offset,
+    SnapTestResult {
+        scrolls: vec![],
+        expected: SnapTestExpectation::Rect {
+            expected_color: color.into(),
+            expected_rect: rect,
+            expected_offset: variant.expected,
+        }
+    }
+}
+
+fn dl_scrolling1(
+    builder: &mut DisplayListBuilder,
+    ctx: &mut SnapTestContext,
+) -> SnapTestResult {
+    let color = ColorF::BLACK;
+    let external_scroll_id = ExternalScrollId(1, PipelineId::dummy());
+    let variant = &SCROLL_VARIANTS[ctx.variant];
+
+    let scroll_id = builder.define_scroll_frame(
+        ctx.root_spatial_id,
+        external_scroll_id,
+        LayoutRect::from_size(LayoutSize::new(100.0, 1000.0)),
+        LayoutRect::from_size(LayoutSize::new(100.0, 100.0)),
+        LayoutVector2D::zero(),
+        APZScrollGeneration::default(),
+        HasScrollLinkedEffect::No,
+        SpatialTreeItemKey::new(0, 0),
+    );
+
+    let prim_size = DeviceIntSize::new(
+        ctx.test_size.width / 2,
+        ctx.test_size.height / 2
+    );
+
+    let rect = DeviceIntRect::from_origin_and_size(
+        DeviceIntPoint::new(
+            (ctx.test_size.width - prim_size.width) / 2,
+            (ctx.test_size.height - prim_size.height) / 2,
+        ),
+        prim_size,
+    );
+
+    let bounds = rect
+        .to_f32()
+        .cast_unit()
+        .translate(
+            LayoutVector2D::new(0.0, variant.prim_offset)
+        );
+
+    builder.push_rect(
+        &CommonItemProperties {
+            clip_rect: bounds,
+            clip_chain_id: ClipChainId::INVALID,
+            spatial_id: scroll_id,
+            flags: PrimitiveFlags::default(),
+        },
+        bounds,
+        color,
+    );
+
+    SnapTestResult {
+        scrolls: vec![
+            ScrollRequest {
+                external_scroll_id,
+                amount: variant.apz_scroll,
+            }
+        ],
+        expected: SnapTestExpectation::Rect {
+            expected_color: color.into(),
+            expected_rect: rect,
+            expected_offset: variant.expected,
+        }
+    }
+}
+
+fn dl_scrolling_ext1(
+    builder: &mut DisplayListBuilder,
+    ctx: &mut SnapTestContext,
+) -> SnapTestResult {
+    let color = ColorF::BLACK;
+    let external_scroll_id = ExternalScrollId(1, PipelineId::dummy());
+    let variant = &EXTERNAL_SCROLL_VARIANTS[ctx.variant];
+
+    let scroll_id = builder.define_scroll_frame(
+        ctx.root_spatial_id,
+        external_scroll_id,
+        LayoutRect::from_size(LayoutSize::new(100.0, 1000.0)),
+        LayoutRect::from_size(LayoutSize::new(100.0, 100.0)),
+        LayoutVector2D::new(0.0, variant.external_offset),
+        APZScrollGeneration::default(),
+        HasScrollLinkedEffect::No,
+        SpatialTreeItemKey::new(0, 0),
+    );
+
+    let prim_size = DeviceIntSize::new(
+        ctx.test_size.width / 2,
+        ctx.test_size.height / 2
+    );
+
+    let rect = DeviceIntRect::from_origin_and_size(
+        DeviceIntPoint::new(
+            (ctx.test_size.width - prim_size.width) / 2,
+            (ctx.test_size.height - prim_size.height) / 2,
+        ),
+        prim_size,
+    );
+
+    let bounds = rect
+        .to_f32()
+        .cast_unit()
+        .translate(
+            LayoutVector2D::new(0.0, variant.prim_offset)
+        );
+
+    builder.push_rect(
+        &CommonItemProperties {
+            clip_rect: bounds,
+            clip_chain_id: ClipChainId::INVALID,
+            spatial_id: scroll_id,
+            flags: PrimitiveFlags::default(),
+        },
+        bounds,
+        color,
+    );
+
+    SnapTestResult {
+        scrolls: vec![
+            ScrollRequest {
+                external_scroll_id,
+                amount: variant.apz_scroll,
+            }
+        ],
+        expected: SnapTestExpectation::Rect {
+            expected_color: color.into(),
+            expected_rect: rect,
+            expected_offset: variant.expected,
+        }
     }
 }
