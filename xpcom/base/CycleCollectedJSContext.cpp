@@ -981,12 +981,20 @@ static bool MOZ_CAN_RUN_SCRIPT
 RunMicroTask(JSContext* aCx, JS::MutableHandle<JS::MicroTask> task) {
   if (RefPtr<MicroTaskRunnable> runnable =
           MaybeUnwrapTaskToOwnedRunnable(task)) {
+    LogMicroTaskRunnable::Run log(runnable);
+
     AUTO_PROFILER_TERMINATING_FLOW_MARKER_FLOW_ONLY(
         "RunMicroTaskRunnable", OTHER, Flow::FromPointer(runnable.get()));
     AutoSlowOperation aso;
     runnable->Run(aso);
     return true;
   }
+
+  MOZ_ASSERT(task.isObject());
+
+  // Note this simply prints the address & does not hold on to it, so
+  // this is fine from a GC perspective.
+  LogJSMicroTask::Run log(&task.toObject());
 
   // Avoid the overhead of GetFlowIdFromJSMicroTask in the common case
   // of not having the profiler enabled.
@@ -1203,9 +1211,6 @@ bool CycleCollectedJSContext::PerformMicroTaskCheckPoint(bool aForce) {
           JS::JobQueueIsEmpty(Context());
         }
         didProcess = true;
-
-        // Bug 1991164: Need to support LogMicroTaskQueue Entry for
-        // LogMicroTaskQueueEntry::Run log(job.get().get());
 
         // Note: We're dropping the return value on the floor here. This is
         // consistent with the previous implementation, which left the

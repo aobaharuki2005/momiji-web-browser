@@ -659,6 +659,7 @@ template class LogTaskBase<Task>;
 template class LogTaskBase<PresShell>;
 template class LogTaskBase<dom::FrameRequestCallback>;
 template class LogTaskBase<dom::VideoFrameRequestCallback>;
+template class LogTaskBase<JSObject>;
 
 MOZ_THREAD_LOCAL(nsISerialEventTarget*)
 SerialEventTargetGuard::sCurrentThreadTLS;

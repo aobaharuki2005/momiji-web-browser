@@ -35,6 +35,7 @@
 
 class MessageLoop;
 class nsIThread;
+class JSObject;
 
 //-----------------------------------------------------------------------------
 // These methods are alternatives to the methods on nsIThreadManager, provided
@@ -1840,6 +1841,7 @@ typedef LogTaskBase<PresShell> LogPresShellObserver;
 typedef LogTaskBase<dom::FrameRequestCallback> LogFrameRequestCallback;
 typedef LogTaskBase<dom::VideoFrameRequestCallback>
     LogVideoFrameRequestCallback;
+typedef LogTaskBase<JSObject> LogJSMicroTask;
 // If you add new types don't forget to add:
 // `template class LogTaskBase<YourType>;` to nsThreadUtils.cpp
 
