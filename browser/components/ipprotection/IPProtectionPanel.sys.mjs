@@ -223,7 +223,7 @@ export class IPProtectionPanel {
   /**
    * Creates a panel component in a panelView.
    *
-   * @param {XULBrowserElement} panelView
+   * @param {MozBrowser} panelView
    */
   #createPanel(panelView) {
     let { ownerDocument } = panelView;

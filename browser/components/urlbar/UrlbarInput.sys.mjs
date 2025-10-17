@@ -3176,7 +3176,7 @@ export class UrlbarInput {
    *   True if this query was initiated from a form history result.
    * @param {string} [searchActionDetails.url]
    *   The url this query was triggered with.
-   * @param {XULBrowserElement} [browser]
+   * @param {MozBrowser} [browser]
    *   The browser where the search is being opened.
    *   Defaults to the window's selected browser.
    */
