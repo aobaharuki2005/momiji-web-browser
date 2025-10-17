@@ -38,7 +38,7 @@ const EXPECTED_REFLOWS = [
   },
   {
     stack: [
-      "#updateTabStylesOnDrag@chrome://browser/content/tabbrowser/drag-and-drop.js",
+      "_updateTabStylesOnDrag@chrome://browser/content/tabbrowser/drag-and-drop.js",
       "startTabDrag@chrome://browser/content/tabbrowser/drag-and-drop.js",
       "handle_dragstart@chrome://browser/content/tabbrowser/drag-and-drop.js",
       "on_dragstart@chrome://browser/content/tabbrowser/tabs.js",
