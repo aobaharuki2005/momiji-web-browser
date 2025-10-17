@@ -2563,6 +2563,8 @@ void arena_bin_t::Init(SizeClass aSizeClass) {
   // Size of the run header, excluding mRegionsMask.
   static const size_t kFixedHeaderSize = offsetof(arena_run_t, mRegionsMask);
 
+  new (&mNonFullRuns) DoublyLinkedList<arena_run_t>();
+
   MOZ_ASSERT(aSizeClass.Size() <= gMaxBinClass);
 
   try_run_size = gPageSize;
