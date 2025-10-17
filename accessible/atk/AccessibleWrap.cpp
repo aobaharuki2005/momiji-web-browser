@@ -1151,6 +1151,19 @@ void a11y::PlatformSelectionEvent(Accessible*, Accessible* aWidget, uint32_t) {
   g_signal_emit_by_name(obj, "selection_changed");
 }
 
+mozilla::StaticAutoPtr<nsCString> sReturnedString;
+
+// static
+const char* AccessibleWrap::ReturnString(nsAString& aString) {
+  if (!sReturnedString) {
+    sReturnedString = new nsCString();
+    ClearOnShutdown(&sReturnedString);
+  }
+
+  CopyUTF16toUTF8(aString, *sReturnedString);
+  return sReturnedString->get();
+}
+
 // static
 void AccessibleWrap::GetKeyBinding(Accessible* aAccessible,
                                    nsAString& aResult) {
