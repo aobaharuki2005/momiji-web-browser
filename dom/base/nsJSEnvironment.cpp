@@ -1380,6 +1380,16 @@ void nsJSContext::MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
     return;
   }
 
+  PresShell* presShell = rootDocument->GetPresShell();
+  if (!presShell) {
+    return;
+  }
+
+  nsViewManager* vm = presShell->GetViewManager();
+  if (!vm) {
+    return;
+  }
+
   if (!sScheduler->IsUserActive() &&
       (sScheduler->InIncrementalGC() || sScheduler->IsCollectingCycles())) {
     Maybe<TimeStamp> next = nsRefreshDriver::GetNextTickHint();
