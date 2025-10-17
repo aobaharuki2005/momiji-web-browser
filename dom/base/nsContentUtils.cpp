@@ -7798,19 +7798,8 @@ nsIWidget* nsContentUtils::WidgetForDocument(const Document* aDocument) {
   if (!presShell) {
     return nullptr;
   }
-  nsViewManager* vm = presShell->GetViewManager();
-  if (!vm) {
-    return nullptr;
-  }
-  nsView* rootView = vm->GetRootView();
-  if (!rootView) {
-    return nullptr;
-  }
-  nsView* displayRoot = nsViewManager::GetDisplayRootFor(rootView);
-  if (!displayRoot) {
-    return nullptr;
-  }
-  return displayRoot->GetNearestWidget(nullptr);
+  nsIFrame* rootFrame = presShell->GetRootFrame();
+  return rootFrame ? rootFrame->GetNearestWidget() : nullptr;
 }
 
 nsIWidget* nsContentUtils::WidgetForContent(const nsIContent* aContent) {
