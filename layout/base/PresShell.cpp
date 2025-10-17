@@ -11473,22 +11473,15 @@ bool PresShell::VerifyIncrementalReflow() {
   // Get our scrolling preference
   nsView* rootView = mViewManager->GetRootView();
   NS_ENSURE_TRUE(rootView->HasWidget(), false);
-  nsIWidget* parentWidget = rootView->GetWidget();
 
   // Create a new view manager.
-  auto vm = MakeRefPtr<nsViewManager>();
-  rv = vm->Init(dc);
-  NS_ENSURE_SUCCESS(rv, false);
+  auto vm = MakeRefPtr<nsViewManager>(dc);
 
   // Create a child window of the parent that is our "root view/window"
   // Create a view
   nsRect tbounds = mPresContext->GetVisibleArea();
   nsView* view = vm->CreateView(tbounds, nullptr);
   NS_ENSURE_TRUE(view, false);
-
-  // now create the widget for the view
-  rv = view->CreateWidget(parentWidget, true);
-  NS_ENSURE_SUCCESS(rv, false);
 
   // Setup hierarchical relationship in view manager
   vm->SetRootView(view);

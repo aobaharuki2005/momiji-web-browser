@@ -1566,7 +1566,7 @@ class nsIWidget : public nsSupportsWeakReference {
    * Enables the dropping of files to a widget.
    */
   virtual void EnableDragDrop(bool aEnable) {}
-  nsresult AsyncEnableDragDrop(bool aEnable);
+  void AsyncEnableDragDrop(bool aEnable);
 
   /**
    * Classify the window for the window manager. Mostly for X11.

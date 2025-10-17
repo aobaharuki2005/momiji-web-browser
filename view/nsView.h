@@ -261,16 +261,6 @@ class nsView final : public nsIWidgetListener {
   nsIWidget* GetNearestWidget(nsPoint* aOffset) const;
 
   /**
-   * Create a widget to associate with this view.  This variant of
-   * CreateWidget*() will look around in the view hierarchy for an
-   * appropriate parent widget for the view.
-   *
-   * @return error status
-   */
-  nsresult CreateWidget(nsIWidget* aParent, bool aEnableDragDrop = true,
-                        bool aResetVisibility = true);
-
-  /**
    * Destroys the associated widget for this view.  If this method is
    * not called explicitly, the widget when be destroyed when its
    * view gets destroyed.
@@ -288,8 +278,8 @@ class nsView final : public nsIWidgetListener {
    *
    * @param aWidget The widget to attach to / detach from.
    */
-  nsresult AttachToTopLevelWidget(nsIWidget* aWidget);
-  nsresult DetachFromTopLevelWidget();
+  void AttachToTopLevelWidget(nsIWidget* aWidget);
+  void DetachFromTopLevelWidget();
 
   /**
    * Returns a flag indicating whether the view owns it's widget

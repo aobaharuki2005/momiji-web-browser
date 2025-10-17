@@ -51,14 +51,17 @@ using namespace mozilla::layers;
 
 uint32_t nsViewManager::gLastUserEventTime = 0;
 
-nsViewManager::nsViewManager()
-    : mPresShell(nullptr),
+nsViewManager::nsViewManager(nsDeviceContext* aContext)
+    : mContext(aContext),
+      mPresShell(nullptr),
       mDelayedResize(NSCOORD_NONE, NSCOORD_NONE),
       mRootView(nullptr),
       mRefreshDisableCount(0),
       mPainting(false),
       mRecursiveRefreshPending(false),
-      mHasPendingWidgetGeometryChanges(false) {}
+      mHasPendingWidgetGeometryChanges(false) {
+  MOZ_ASSERT(aContext);
+}
 
 nsViewManager::~nsViewManager() {
   if (mRootView) {
@@ -72,22 +75,6 @@ nsViewManager::~nsViewManager() {
   MOZ_RELEASE_ASSERT(!mPresShell,
                      "Releasing nsViewManager without having called Destroy on "
                      "the PresShell!");
-}
-
-// We don't hold a reference to the presentation context because it
-// holds a reference to us.
-nsresult nsViewManager::Init(nsDeviceContext* aContext) {
-  MOZ_ASSERT(nullptr != aContext, "null ptr");
-
-  if (nullptr == aContext) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (nullptr != mContext) {
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
-  mContext = aContext;
-
-  return NS_OK;
 }
 
 nsView* nsViewManager::CreateView(const nsRect& aBounds, nsView* aParent,
@@ -540,7 +527,9 @@ void nsViewManager::WillPaintWindow(nsIWidget* aWidget) {
 
 bool nsViewManager::PaintWindow(nsIWidget* aWidget,
                                 const LayoutDeviceIntRegion& aRegion) {
-  if (!aWidget || !mContext) return false;
+  if (!aWidget) {
+    return false;
+  }
 
   NS_ASSERTION(
       IsPaintingAllowed(),

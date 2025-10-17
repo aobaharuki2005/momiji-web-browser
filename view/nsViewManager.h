@@ -36,7 +36,7 @@ class nsViewManager final {
 
   NS_INLINE_DECL_REFCOUNTING(nsViewManager)
 
-  nsViewManager();
+  explicit nsViewManager(nsDeviceContext* aContext);
 
   /**
    * Initialize the ViewManager

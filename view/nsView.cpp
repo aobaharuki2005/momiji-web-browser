@@ -382,55 +382,6 @@ void nsView::RemoveChild(nsView* child) {
   }
 }
 
-struct DefaultWidgetInitData : public widget::InitData {
-  DefaultWidgetInitData() : widget::InitData() {
-    mClipChildren = true;
-    mClipSiblings = true;
-  }
-};
-
-nsresult nsView::CreateWidget(nsIWidget* aParent, bool aEnableDragDrop,
-                              bool aResetVisibility) {
-  AssertNoWindow();
-
-  DefaultWidgetInitData initData;
-  LayoutDeviceIntRect trect =
-      CalcWidgetBounds(initData.mWindowType, initData.mTransparencyMode);
-
-  if (!aParent && GetParent()) {
-    aParent = GetParent()->GetNearestWidget(nullptr);
-  }
-  if (!aParent) {
-    NS_ERROR("nsView::CreateWidget without suitable parent widget??");
-    return NS_ERROR_FAILURE;
-  }
-
-  mWindow = aParent->CreateChild(trect, initData);
-  if (!mWindow) {
-    return NS_ERROR_FAILURE;
-  }
-
-  InitializeWindow(aEnableDragDrop, aResetVisibility);
-
-  return NS_OK;
-}
-
-void nsView::InitializeWindow(bool aEnableDragDrop, bool aResetVisibility) {
-  MOZ_ASSERT(mWindow, "Must have a window to initialize");
-
-  mWindow->SetWidgetListener(this);
-
-  if (aEnableDragDrop) {
-    mWindow->EnableDragDrop(true);
-  }
-
-  // make sure visibility state is accurate
-
-  if (aResetVisibility) {
-    SetVisibility(GetVisibility());
-  }
-}
-
 void nsView::SetNeedsWindowPropertiesSync() {
   mNeedsWindowPropertiesSync = true;
   if (mViewManager) {
@@ -439,8 +390,15 @@ void nsView::SetNeedsWindowPropertiesSync() {
 }
 
 // Attach to a top level widget and start receiving mirrored events.
-nsresult nsView::AttachToTopLevelWidget(nsIWidget* aWidget) {
+void nsView::AttachToTopLevelWidget(nsIWidget* aWidget) {
   MOZ_ASSERT(aWidget, "null widget ptr");
+#ifdef DEBUG
+  nsIWidgetListener* parentListener = aWidget->GetWidgetListener();
+  MOZ_ASSERT(!parentListener || !parentListener->GetView(),
+             "Expect a top level widget");
+  MOZ_ASSERT(!parentListener || !parentListener->GetAsMenuPopupFrame(),
+             "Expect a top level widget");
+#endif
 
   /// XXXjimm This is a temporary workaround to an issue w/document
   // viewer (bug 513162).
@@ -458,18 +416,16 @@ nsresult nsView::AttachToTopLevelWidget(nsIWidget* aWidget) {
 
   mWindow->SetAttachedWidgetListener(this);
   if (mWindow->GetWindowType() != WindowType::Invisible) {
-    nsresult rv = mWindow->AsyncEnableDragDrop(true);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mWindow->AsyncEnableDragDrop(true);
   }
   mWidgetIsTopLevel = true;
 
   // Refresh the view bounds
   RecalcWidgetBounds();
-  return NS_OK;
 }
 
 // Detach this view from an attached widget.
-nsresult nsView::DetachFromTopLevelWidget() {
+void nsView::DetachFromTopLevelWidget() {
   MOZ_ASSERT(mWidgetIsTopLevel, "Not attached currently!");
   MOZ_ASSERT(mWindow, "null mWindow for DetachFromTopLevelWidget!");
 
@@ -490,8 +446,6 @@ nsresult nsView::DetachFromTopLevelWidget() {
   mWindow = nullptr;
 
   mWidgetIsTopLevel = false;
-
-  return NS_OK;
 }
 
 void nsView::AssertNoWindow() {

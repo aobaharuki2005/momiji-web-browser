@@ -1286,9 +1286,7 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
   // init it with the DC
   MOZ_TRY(aPO->mPresContext->Init(printData->mPrintDC));
 
-  aPO->mViewManager = new nsViewManager();
-
-  MOZ_TRY(aPO->mViewManager->Init(printData->mPrintDC));
+  aPO->mViewManager = new nsViewManager(printData->mPrintDC);
 
   bool doReturn = false;
   bool documentIsTopLevel = false;
