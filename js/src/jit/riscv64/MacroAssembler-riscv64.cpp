@@ -4641,7 +4641,7 @@ void MacroAssembler::wasmTruncateDoubleToInt32(FloatRegister input,
   if (isSaturating) {
     Clear_if_nan_d(output, input);
   } else {
-    ma_b(scratch, Imm32(1), oolEntry, Assembler::NotEqual);
+    ma_b(scratch, Imm32(0), oolEntry, Assembler::Equal);
   }
 }
 
@@ -4655,7 +4655,7 @@ void MacroAssembler::wasmTruncateDoubleToInt64(
     bind(oolRejoin);
     Clear_if_nan_d(output.reg, input);
   } else {
-    ma_b(scratch, Imm32(1), oolEntry, Assembler::NotEqual);
+    ma_b(scratch, Imm32(0), oolEntry, Assembler::Equal);
   }
 }
 
@@ -4669,7 +4669,7 @@ void MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input,
   if (isSaturating) {
     Clear_if_nan_d(output, input);
   } else {
-    ma_b(scratch, Imm32(1), oolEntry, Assembler::NotEqual);
+    ma_b(scratch, Imm32(0), oolEntry, Assembler::Equal);
   }
 }
 
@@ -4683,7 +4683,7 @@ void MacroAssembler::wasmTruncateDoubleToUInt64(
     bind(oolRejoin);
     Clear_if_nan_d(output.reg, input);
   } else {
-    ma_b(scratch, Imm32(1), oolEntry, Assembler::NotEqual);
+    ma_b(scratch, Imm32(0), oolEntry, Assembler::Equal);
   }
 }
 
@@ -4697,7 +4697,7 @@ void MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input,
   if (isSaturating) {
     Clear_if_nan_s(output, input);
   } else {
-    ma_b(scratch, Imm32(1), oolEntry, Assembler::NotEqual);
+    ma_b(scratch, Imm32(0), oolEntry, Assembler::Equal);
   }
 }
 
@@ -4712,7 +4712,7 @@ void MacroAssembler::wasmTruncateFloat32ToInt64(
     bind(oolRejoin);
     Clear_if_nan_s(output.reg, input);
   } else {
-    ma_b(scratch, Imm32(1), oolEntry, Assembler::NotEqual);
+    ma_b(scratch, Imm32(0), oolEntry, Assembler::Equal);
   }
 }
 
@@ -4726,7 +4726,7 @@ void MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input,
   if (isSaturating) {
     Clear_if_nan_s(output, input);
   } else {
-    ma_b(scratch, Imm32(1), oolEntry, Assembler::NotEqual);
+    ma_b(scratch, Imm32(0), oolEntry, Assembler::Equal);
   }
 }
 
@@ -4741,7 +4741,7 @@ void MacroAssembler::wasmTruncateFloat32ToUInt64(
     bind(oolRejoin);
     Clear_if_nan_s(output.reg, input);
   } else {
-    ma_b(scratch, Imm32(1), oolEntry, Assembler::NotEqual);
+    ma_b(scratch, Imm32(0), oolEntry, Assembler::Equal);
   }
 }
 

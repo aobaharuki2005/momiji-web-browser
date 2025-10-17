@@ -1532,7 +1532,7 @@ void CodeGenerator::visitPowHalfD(LPowHalfD* ins) {
 
   masm.ma_compareF64(scratch, Assembler::DoubleNotEqualOrUnordered, input,
                      fpscratch);
-  masm.ma_branch(&skip, Assembler::Equal, scratch, Operand(1));
+  masm.ma_b(scratch, Imm32(0), &skip, Assembler::NotEqual, ShortJump);
   // masm.ma_bc_d(input, fpscratch, &skip, Assembler::DoubleNotEqualOrUnordered,
   //              ShortJump);
   masm.fneg_d(output, fpscratch);
