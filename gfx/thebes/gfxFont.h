@@ -1662,19 +1662,17 @@ class gfxFont {
    * Metrics for a particular string
    */
   struct RunMetrics {
-    RunMetrics() { mAdvanceWidth = mAscent = mDescent = 0.0; }
-
     void CombineWith(const RunMetrics& aOther, bool aOtherIsOnLeft);
 
     // can be negative (partly due to negative spacing).
     // Advance widths should be additive: the advance width of the
     // (offset1, length1) plus the advance width of (offset1 + length1,
     // length2) should be the advance width of (offset1, length1 + length2)
-    gfxFloat mAdvanceWidth;
+    nscoord mAdvanceWidth = 0;
 
     // For zero-width substrings, these must be zero!
-    gfxFloat mAscent;   // always non-negative
-    gfxFloat mDescent;  // always non-negative
+    gfxFloat mAscent = 0.0;   // always non-negative
+    gfxFloat mDescent = 0.0;  // always non-negative
 
     // Bounding box that is guaranteed to include everything drawn.
     // If a tight boundingBox was requested when these metrics were
