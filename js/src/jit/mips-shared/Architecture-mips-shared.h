@@ -296,17 +296,37 @@ class FloatRegisterMIPSShared {
   }
 };
 
-namespace mips_private {
-extern uint32_t Flags;
-extern bool hasFPU;
-extern bool isLoongson;
-extern bool hasR2;
-}  // namespace mips_private
+class MIPSFlags final {
+  static inline bool initialized = false;
 
-inline uint32_t GetMIPSFlags() { return mips_private::Flags; }
-inline bool hasFPU() { return mips_private::hasFPU; }
-inline bool isLoongson() { return mips_private::isLoongson; }
-inline bool hasR2() { return mips_private::hasR2; }
+  static inline uint32_t flags = 0;
+  static inline bool hasFPU = false;
+  static inline bool hasR2 = false;
+  static inline bool isLoongson = false;
+
+ public:
+  MIPSFlags() = delete;
+
+  // MIPSFlags::Init is called from the JitContext constructor to read the
+  // hardware flags. This method must only be called exactly once.
+  static void Init();
+
+  static bool IsInitialized() { return initialized; }
+
+  static uint32_t GetFlags() {
+    MOZ_ASSERT(IsInitialized());
+    return flags;
+  }
+
+  static bool HasFPU() { return hasFPU; }
+  static bool HasR2() { return hasR2; }
+  static bool IsLoongson() { return isLoongson; }
+};
+
+inline uint32_t GetMIPSFlags() { return MIPSFlags::GetFlags(); }
+inline bool hasFPU() { return MIPSFlags::HasFPU(); }
+inline bool isLoongson() { return MIPSFlags::IsLoongson(); }
+inline bool hasR2() { return MIPSFlags::HasR2(); }
 
 // MIPS doesn't have double registers that can NOT be treated as float32.
 inline bool hasUnaliasedDouble() { return false; }
