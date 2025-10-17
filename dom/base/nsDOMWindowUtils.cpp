@@ -934,14 +934,11 @@ nsresult nsDOMWindowUtils::SendTouchEventCommon(
 
   nsEventStatus status = nsEventStatus_eIgnore;
   if (aToWindow) {
-    RefPtr<PresShell> presShell;
-    nsView* view = nsContentUtils::GetViewToDispatchEvent(
-        presContext, getter_AddRefs(presShell));
-    if (!presShell || !view) {
-      return NS_ERROR_FAILURE;
-    }
+    RefPtr<PresShell> presShell = presContext->PresShell();
+    // XXX shouldn't this happen _after_ DispatchEvent?
     *aPreventDefault = (status == nsEventStatus_eConsumeNoDefault);
-    return presShell->HandleEvent(view->GetFrame(), &event, false, &status);
+    return presShell->HandleEvent(presShell->GetRootFrame(), &event, false,
+                                  &status);
   }
 
   if (aAsyncEnabled == AsyncEnabledOption::ASYNC_ENABLED ||

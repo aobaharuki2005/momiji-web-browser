@@ -9457,25 +9457,6 @@ LayoutDeviceIntPoint nsContentUtils::ToWidgetPoint(
       visualRelative, aPresContext->AppUnitsPerDevPixel());
 }
 
-nsView* nsContentUtils::GetViewToDispatchEvent(nsPresContext* aPresContext,
-                                               PresShell** aPresShell) {
-  if (!aPresContext || !aPresShell) {
-    return nullptr;
-  }
-  RefPtr<PresShell> presShell = aPresContext->PresShell();
-  if (NS_WARN_IF(!presShell)) {
-    *aPresShell = nullptr;
-    return nullptr;
-  }
-  nsViewManager* viewManager = presShell->GetViewManager();
-  if (!viewManager) {
-    presShell.forget(aPresShell);  // XXX Is this intentional?
-    return nullptr;
-  }
-  presShell.forget(aPresShell);
-  return viewManager->GetRootView();
-}
-
 namespace {
 
 class SynthesizedMouseEventCallback final : public nsISynthesizedEventCallback {
@@ -9636,14 +9617,8 @@ Result<bool, nsresult> nsContentUtils::SynthesizeMouseEvent(
 
   nsEventStatus status = nsEventStatus_eIgnore;
   if (aOptions.mToWindow) {
-    RefPtr<PresShell> presShell;
-    nsView* view =
-        GetViewToDispatchEvent(presContext, getter_AddRefs(presShell));
-    if (!presShell || !view) {
-      return Err(NS_ERROR_FAILURE);
-    }
-    nsresult rv = presShell->HandleEvent(view->GetFrame(), &mouseOrPointerEvent,
-                                         false, &status);
+    nsresult rv = aPresShell->HandleEvent(aPresShell->GetRootFrame(),
+                                          &mouseOrPointerEvent, false, &status);
     if (NS_FAILED(rv)) {
       return Err(rv);
     }
