@@ -5250,6 +5250,23 @@
       }
     ]
   },
+  "1986438": {
+    "label": "gamma.app",
+    "bugs": {
+      "1986438": {
+        "issue": "unsupported-warning",
+        "matches": ["*://gamma.app/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "content_scripts": {
+          "js": ["1986438-gamma.app-hide-unsupported.js"]
+        }
+      }
+    ]
+  },
   "1987351": {
     "label": "mirage.decart.ai",
     "bugs": {

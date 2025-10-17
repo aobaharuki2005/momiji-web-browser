@@ -5,19 +5,24 @@
 "use strict";
 
 /**
- * Bug 1902399 - hide browser warning on recochoku.jp
+ * Bug 1986438 - hide browser warning on gamma.app
  */
 
 const callback = (mutations, observer) => {
   const search = document.evaluate(
-    "//*[text()[contains(., 'Chromeブラウザの最新版をご利用ください')]]",
+    "//*[text()[contains(., 'works best on Chrome')]]",
     document,
     null,
     4
   );
   const found = search.iterateNext();
   if (found) {
-    found.closest(".header-caution").remove();
+    const alerts = found.closest(".chakra-alert");
+    if (alerts.querySelectorAll(".chakra-stack").length === 1) {
+      alerts.remove();
+    } else {
+      found.closest(".chakra-stack").remove();
+    }
     observer?.disconnect();
   }
 };
@@ -26,12 +31,4 @@ const observer = new MutationObserver(callback);
 observer.observe(document.documentElement, {
   childList: true,
   subtree: true,
-});
-
-window.addEventListener("DOMContentLoaded", () => {
-  const mutations = observer.takeRecords();
-  observer.disconnect();
-  if (mutations.length) {
-    callback(mutations);
-  }
 });
