@@ -10,34 +10,36 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -50,17 +52,20 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.modifier.thenConditional
-import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.button.RadioButton
 import org.mozilla.fenix.theme.FirefoxTheme
+import java.util.Locale
 import mozilla.components.ui.icons.R as iconsR
 
 private val LIST_ITEM_HEIGHT = 56.dp
@@ -68,46 +73,7 @@ private val ICON_SIZE = 24.dp
 
 private const val TOAST_LENGTH = Toast.LENGTH_SHORT
 
-/**
- * List item used to display a image with optional Composable for adding UI to the end of the list item.
- *
- * @param label The label in the list item.
- * @param iconPainter [Painter] used to display an [Icon] at the beginning of the list item.
- * @param enabled Controls the enabled state of the list item. When `false`, the list item will not
- * be clickable.
- * @param modifier [Modifier] to be applied to the layout.
- * @param iconTint Tint color to be applied on the [Icon].
- * @param onClick Called when the user clicks on the item.
- * @param afterListItemAction Optional Composable for adding UI to the end of the list item.
- */
-@Composable
-fun ImageListItem(
-    label: String,
-    iconPainter: Painter,
-    enabled: Boolean,
-    modifier: Modifier = Modifier,
-    iconTint: Color? = null,
-    onClick: (() -> Unit)? = null,
-    afterListItemAction: @Composable RowScope.() -> Unit = {},
-) {
-    ListItem(
-        label = label,
-        modifier = modifier,
-        enabled = enabled,
-        onClick = onClick,
-        beforeListItemAction = {
-            Image(
-                painter = iconPainter,
-                contentDescription = null,
-                modifier = Modifier.size(ICON_SIZE),
-                colorFilter = iconTint?.let { ColorFilter.tint(it) },
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-        },
-        afterListItemAction = afterListItemAction,
-    )
-}
+private val EmptyListItemSlot: @Composable RowScope.() -> Unit = {}
 
 /**
  * List item used to display a label with an optional description text and an optional
@@ -116,6 +82,7 @@ fun ImageListItem(
  * @param label The label in the list item.
  * @param modifier [Modifier] to be applied to the layout.
  * @param maxLabelLines An optional maximum number of lines for the label text to span.
+ * @param overline An optional text shown above the label.
  * @param description An optional description text below the label.
  * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
  * @param minHeight An optional minimum height for the list item.
@@ -132,6 +99,7 @@ fun TextListItem(
     label: String,
     modifier: Modifier = Modifier,
     maxLabelLines: Int = 1,
+    overline: String? = null,
     description: String? = null,
     maxDescriptionLines: Int = 1,
     minHeight: Dp = LIST_ITEM_HEIGHT,
@@ -139,13 +107,14 @@ fun TextListItem(
     onLongClick: (() -> Unit)? = null,
     iconPainter: Painter? = null,
     iconDescription: String? = null,
-    iconTint: Color = FirefoxTheme.colors.iconPrimary,
+    iconTint: Color = ListItemDefaults.colors().leadingIconColor,
     onIconClick: (() -> Unit)? = null,
 ) {
     ListItem(
         label = label,
         maxLabelLines = maxLabelLines,
         modifier = modifier,
+        overline = overline,
         description = description,
         maxDescriptionLines = maxDescriptionLines,
         minHeight = minHeight,
@@ -155,8 +124,6 @@ fun TextListItem(
         if (iconPainter == null) {
             return@ListItem
         }
-
-        Spacer(modifier = Modifier.width(16.dp))
 
         if (onIconClick == null) {
             Icon(
@@ -190,6 +157,7 @@ fun TextListItem(
  * @param modifier [Modifier] to be applied to the layout.
  * @param faviconShape The shape used to clip the favicon. Defaults to a slightly rounded rectangle.
  * @param labelModifier [Modifier] to be applied to the label.
+ * @param overline An optional text shown above the label.
  * @param description An optional description text below the label.
  * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
  * @param faviconPainter Optional painter to use when fetching a new favicon is unnecessary.
@@ -209,6 +177,7 @@ fun FaviconListItem(
     modifier: Modifier = Modifier,
     faviconShape: Shape = RoundedCornerShape(2.dp),
     labelModifier: Modifier = Modifier,
+    overline: String? = null,
     description: String? = null,
     maxDescriptionLines: Int = 1,
     faviconPainter: Painter? = null,
@@ -224,6 +193,7 @@ fun FaviconListItem(
         label = label,
         modifier = modifier,
         labelModifier = labelModifier,
+        overline = overline,
         description = description,
         maxDescriptionLines = maxDescriptionLines,
         onClick = onClick,
@@ -242,8 +212,6 @@ fun FaviconListItem(
                     shape = faviconShape,
                 )
             }
-
-            Spacer(modifier = Modifier.width(16.dp))
         },
         afterListItemAction = {
             if (iconPainter == null || onIconClick == null) {
@@ -251,12 +219,8 @@ fun FaviconListItem(
             }
 
             if (showDivider) {
-                Spacer(modifier = Modifier.width(8.dp))
-
                 VerticalDivider()
             }
-
-            Spacer(modifier = Modifier.width(16.dp))
 
             IconButton(
                 onClick = onIconClick,
@@ -268,7 +232,6 @@ fun FaviconListItem(
                 Icon(
                     painter = iconPainter,
                     contentDescription = iconDescription,
-                    tint = FirefoxTheme.colors.iconPrimary,
                 )
             }
         },
@@ -283,6 +246,8 @@ fun FaviconListItem(
  * @param modifier [Modifier] to be applied to the layout.
  * @param labelModifier [Modifier] to be applied to the label.
  * @param labelTextColor [Color] to be applied to the label.
+ * @param overline An optional text shown above the label.
+ * @param overlineTextColor [Color] to be applied to the overline text.
  * @param descriptionTextColor [Color] to be applied to the description.
  * @param maxLabelLines An optional maximum number of lines for the label text to span.
  * @param description An optional description text below the label.
@@ -310,8 +275,10 @@ fun IconListItem(
     label: String,
     modifier: Modifier = Modifier,
     labelModifier: Modifier = Modifier,
-    labelTextColor: Color = FirefoxTheme.colors.textPrimary,
-    descriptionTextColor: Color = FirefoxTheme.colors.textSecondary,
+    labelTextColor: Color = ListItemDefaults.colors().headlineColor,
+    overline: String? = null,
+    overlineTextColor: Color = ListItemDefaults.colors().overlineColor,
+    descriptionTextColor: Color = ListItemDefaults.colors().supportingTextColor,
     maxLabelLines: Int = 1,
     description: String? = null,
     maxDescriptionLines: Int = 1,
@@ -321,12 +288,12 @@ fun IconListItem(
     onLongClick: (() -> Unit)? = null,
     beforeIconPainter: Painter,
     beforeIconDescription: String? = null,
-    beforeIconTint: Color = FirefoxTheme.colors.iconPrimary,
+    beforeIconTint: Color = ListItemDefaults.colors().leadingIconColor,
     isBeforeIconHighlighted: Boolean = false,
     showDivider: Boolean = false,
     afterIconPainter: Painter? = null,
     afterIconDescription: String? = null,
-    afterIconTint: Color = FirefoxTheme.colors.iconPrimary,
+    afterIconTint: Color = ListItemDefaults.colors().trailingIconColor,
     onAfterIconClick: (() -> Unit)? = null,
     afterListAction: (@Composable () -> Unit)? = null,
 ) {
@@ -335,6 +302,8 @@ fun IconListItem(
         modifier = modifier,
         labelModifier = labelModifier,
         labelTextColor = labelTextColor,
+        overline = overline,
+        overlineTextColor = overlineTextColor,
         descriptionTextColor = descriptionTextColor,
         maxLabelLines = maxLabelLines,
         description = description,
@@ -348,18 +317,18 @@ fun IconListItem(
                 isHighlighted = isBeforeIconHighlighted,
                 painter = beforeIconPainter,
                 description = beforeIconDescription,
-                tint = if (enabled) beforeIconTint else FirefoxTheme.colors.iconDisabled,
+                tint = if (enabled) beforeIconTint else ListItemDefaults.colors().disabledLeadingIconColor,
             )
         },
         afterListItemAction = {
             IconListItemAfterIcon(
-                showDivider = showDivider,
                 enabled = enabled,
                 painter = afterIconPainter,
                 description = afterIconDescription,
-                tint = if (enabled) afterIconTint else FirefoxTheme.colors.iconDisabled,
+                tint = if (enabled) afterIconTint else ListItemDefaults.colors().disabledTrailingIconColor,
                 onClick = onAfterIconClick,
                 listAction = afterListAction,
+                showDivider = showDivider,
             )
         },
     )
@@ -385,8 +354,6 @@ private fun IconListItemBeforeIcon(
             tint = tint,
         )
     }
-
-    Spacer(modifier = Modifier.width(16.dp))
 }
 
 @Composable
@@ -409,12 +376,8 @@ private fun IconListItemAfterIcon(
     }
 
     if (showDivider) {
-        Spacer(modifier = Modifier.width(8.dp))
-
         VerticalDivider()
     }
-
-    Spacer(modifier = Modifier.width(16.dp))
 
     if (onClick == null) {
         Icon(
@@ -443,14 +406,18 @@ private fun IconListItemAfterIcon(
 
 /**
  * List item used to display a label with an optional description text and
- * a [RadioButton] at the beginning.
+ * a [RadioButton] at the beginning or at the end.
  *
  * @param label The label in the list item.
  * @param selected [Boolean] That indicates whether the [RadioButton] is currently selected.
  * @param modifier [Modifier] to be applied to the layout.
+ * @param overline An optional text shown above the label.
  * @param maxLabelLines An optional maximum number of lines for the label text to span.
  * @param description An optional description text below the label.
  * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
+ * @param enabled Controls the enabled state of the list item. When `false`, the list item will not
+ * be clickable.
+ * @param showButtonAfter [Boolean] That indicates whether the [RadioButton] is after the [ListItem].
  * @param onClick Called when the user clicks on the item.
  */
 @Composable
@@ -458,11 +425,24 @@ fun RadioButtonListItem(
     label: String,
     selected: Boolean,
     modifier: Modifier = Modifier,
+    overline: String? = null,
     maxLabelLines: Int = 1,
     description: String? = null,
     maxDescriptionLines: Int = 1,
+    enabled: Boolean = true,
+    showButtonAfter: Boolean = false,
     onClick: (() -> Unit),
 ) {
+    val radioButton: @Composable RowScope.() -> Unit = {
+        RadioButton(
+            selected = selected,
+            modifier = Modifier
+                .size(ICON_SIZE)
+                .clearAndSetSemantics {},
+            enabled = enabled,
+            onClick = onClick,
+        )
+    }
     ListItem(
         label = label,
         modifier = modifier
@@ -471,31 +451,81 @@ fun RadioButtonListItem(
                 role = Role.RadioButton
             },
         maxLabelLines = maxLabelLines,
+        overline = overline,
         description = description,
         maxDescriptionLines = maxDescriptionLines,
+        enabled = enabled,
         onClick = onClick,
-        beforeListItemAction = {
-            RadioButton(
-                selected = selected,
-                modifier = Modifier
-                    .size(ICON_SIZE)
-                    .clearAndSetSemantics {},
-                onClick = onClick,
-            )
-
-            Spacer(modifier = Modifier.width(32.dp))
-        },
+        beforeListItemAction = if (showButtonAfter) radioButton else EmptyListItemSlot,
+        afterListItemAction = if (showButtonAfter) radioButton else EmptyListItemSlot,
     )
 }
 
 /**
- * Selectable list item used to display a label and a [Favicon] with an optional description text and
- * an optional [IconButton] at the end.
+ * List item used to display a label with an optional description text and
+ * a [Switch] at the beginning or at the end.
+ *
+ * @param label The label in the list item.
+ * @param checked [Boolean] That indicates whether the [Switch] is currently checked.
+ * @param modifier [Modifier] to be applied to the layout.
+ * @param overline An optional text shown above the label.
+ * @param maxLabelLines An optional maximum number of lines for the label text to span.
+ * @param description An optional description text below the label.
+ * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
+ * @param enabled Controls the enabled state of the list item. When `false`, the list item will not
+ * be clickable.
+ * @param showSwitchAfter [Boolean] That indicates whether the [RadioButton] is after the [ListItem].
+ * @param onClick Called when the user clicks the [Switch].
+ */
+@Composable
+fun SwitchListItem(
+    label: String,
+    checked: Boolean,
+    modifier: Modifier = Modifier,
+    overline: String? = null,
+    maxLabelLines: Int = 1,
+    description: String? = null,
+    maxDescriptionLines: Int = 1,
+    enabled: Boolean = true,
+    showSwitchAfter: Boolean = false,
+    onClick: (Boolean) -> Unit,
+) {
+    val switch: @Composable RowScope.() -> Unit = {
+        Switch(
+            checked = checked,
+            onCheckedChange = onClick,
+            enabled = enabled,
+            modifier = Modifier
+                .clearAndSetSemantics {},
+        )
+    }
+
+    ListItem(
+        label = label,
+        modifier = modifier.semantics(mergeDescendants = true) {
+            this.selected = checked
+            role = Role.Switch
+        },
+        maxLabelLines = maxLabelLines,
+        overline = overline,
+        description = description,
+        maxDescriptionLines = maxDescriptionLines,
+        enabled = enabled,
+        onClick = { onClick(!checked) },
+        beforeListItemAction = if (showSwitchAfter) switch else EmptyListItemSlot,
+        afterListItemAction = if (showSwitchAfter) switch else EmptyListItemSlot,
+    )
+}
+
+/**
+ * Selectable list item used to display a label and a [Favicon] with an optional description text
+ * at either the beginning or the end and an optional [IconButton] at the end.
  *
  * @param label The label in the list item.
  * @param url Website [url] for which the favicon will be shown.
  * @param isSelected The selected state of the item.
  * @param modifier [Modifier] to be applied to the layout.
+ * @param overline An optional text shown above the label.
  * @param description An optional description text below the label.
  * @param faviconPainter Optional painter to use when fetching a new favicon is unnecessary.
  * @param onClick Called when the user clicks on the item.
@@ -513,6 +543,7 @@ fun SelectableFaviconListItem(
     url: String,
     isSelected: Boolean,
     modifier: Modifier = Modifier,
+    overline: String? = null,
     description: String? = null,
     faviconPainter: Painter? = null,
     onClick: (() -> Unit)? = null,
@@ -526,6 +557,7 @@ fun SelectableFaviconListItem(
     ListItem(
         label = label,
         modifier = modifier,
+        overline = overline,
         description = description,
         onClick = onClick,
         onLongClick = onLongClick,
@@ -540,15 +572,10 @@ fun SelectableFaviconListItem(
                             modifier = Modifier.size(ICON_SIZE),
                         )
                     } else {
-                        Favicon(
-                            url = url,
-                            size = ICON_SIZE,
-                        )
+                        Favicon(url = url, size = ICON_SIZE)
                     }
                 },
             )
-
-            Spacer(modifier = Modifier.width(16.dp))
         },
         afterListItemAction = {
             if ((iconPainter == null || onIconClick == null) && iconSlot == null) {
@@ -556,12 +583,8 @@ fun SelectableFaviconListItem(
             }
 
             if (showDivider) {
-                Spacer(modifier = Modifier.width(8.dp))
-
                 VerticalDivider()
             }
-
-            Spacer(modifier = Modifier.width(16.dp))
 
             when {
                 iconPainter != null && onIconClick != null -> {
@@ -572,7 +595,7 @@ fun SelectableFaviconListItem(
                         Icon(
                             painter = iconPainter,
                             contentDescription = iconDescription,
-                            tint = FirefoxTheme.colors.iconPrimary,
+                            tint = ListItemDefaults.colors().trailingIconColor,
                         )
                     }
                 }
@@ -591,6 +614,8 @@ fun SelectableFaviconListItem(
  * @param modifier [Modifier] to be applied to the layout.
  * @param labelModifier [Modifier] to be applied to the label layout.
  * @param labelTextColor [Color] to be applied to the label.
+ * @param overline An optional text shown above the label.
+ * @param overlineTextColor [Color] to be applied to the overline text.
  * @param descriptionTextColor [Color] to be applied to the description.
  * @param maxLabelLines An optional maximum number of lines for the label text to span.
  * @param description An optional description text below the label.
@@ -618,8 +643,10 @@ fun SelectableIconListItem(
     isSelected: Boolean,
     modifier: Modifier = Modifier,
     labelModifier: Modifier = modifier,
-    labelTextColor: Color = FirefoxTheme.colors.textPrimary,
-    descriptionTextColor: Color = FirefoxTheme.colors.textSecondary,
+    labelTextColor: Color = ListItemDefaults.colors().headlineColor,
+    overline: String? = null,
+    overlineTextColor: Color = ListItemDefaults.colors().overlineColor,
+    descriptionTextColor: Color = ListItemDefaults.colors().supportingTextColor,
     maxLabelLines: Int = 1,
     description: String? = null,
     enabled: Boolean = true,
@@ -628,11 +655,11 @@ fun SelectableIconListItem(
     onLongClick: (() -> Unit)? = null,
     beforeIconPainter: Painter,
     beforeIconDescription: String? = null,
-    beforeIconTint: Color = FirefoxTheme.colors.iconPrimary,
+    beforeIconTint: Color = ListItemDefaults.colors().leadingIconColor,
     showDivider: Boolean = false,
     afterIconPainter: Painter? = null,
     afterIconDescription: String? = null,
-    afterIconTint: Color = FirefoxTheme.colors.iconPrimary,
+    afterIconTint: Color = ListItemDefaults.colors().trailingIconColor,
     onAfterIconClick: (() -> Unit)? = null,
     iconSlot: (@Composable () -> Unit)? = null,
 ) {
@@ -641,6 +668,8 @@ fun SelectableIconListItem(
         modifier = modifier,
         labelModifier = labelModifier,
         labelTextColor = labelTextColor,
+        overline = overline,
+        overlineTextColor = overlineTextColor,
         descriptionTextColor = descriptionTextColor,
         maxLabelLines = maxLabelLines,
         description = description,
@@ -655,27 +684,21 @@ fun SelectableIconListItem(
                     Icon(
                         painter = beforeIconPainter,
                         contentDescription = beforeIconDescription,
-                        tint = if (enabled) beforeIconTint else FirefoxTheme.colors.iconDisabled,
+                        tint = if (enabled) beforeIconTint else ListItemDefaults.colors().disabledLeadingIconColor,
                     )
                 },
             )
-
-            Spacer(modifier = Modifier.width(16.dp))
         },
         afterListItemAction = {
             if (afterIconPainter == null && iconSlot == null) {
                 return@ListItem
             }
 
-            val tint = if (enabled) afterIconTint else FirefoxTheme.colors.iconDisabled
+            val tint = if (enabled) afterIconTint else ListItemDefaults.colors().disabledTrailingIconColor
 
             if (showDivider) {
-                Spacer(modifier = Modifier.width(8.dp))
-
                 VerticalDivider()
             }
-
-            Spacer(modifier = Modifier.width(16.dp))
 
             when {
                 afterIconPainter != null -> {
@@ -714,11 +737,13 @@ fun SelectableIconListItem(
  * @param icon The icon resource to be displayed at the beginning of the list item.
  * @param isSelected The selected state of the item.
  * @param modifier [Modifier] to be applied to the composable.
+ * @param overline An optional text shown above the label.
  * @param descriptionTextColor [Color] to be applied to the description.
  * @param iconTint Tint to be applied to [icon].
  * @param labelOverflow How visual overflow should be handled for the label.
  * @param afterListItemAction Composable for adding UI to the end of the list item.
  * @param belowListItemContent Composable for adding UI to the bottom of the list item content.
+ * @param showSelectableItemAfter [Boolean] That indicates whether the [Icon] is after the [ListItem].
  */
 @Composable
 fun SelectableListItem(
@@ -727,34 +752,45 @@ fun SelectableListItem(
     @DrawableRes icon: Int,
     isSelected: Boolean,
     modifier: Modifier = Modifier,
-    descriptionTextColor: Color = FirefoxTheme.colors.textSecondary,
-    iconTint: Color = FirefoxTheme.colors.iconPrimary,
+    overline: String? = null,
+    descriptionTextColor: Color = ListItemDefaults.colors().supportingTextColor,
+    iconTint: Color = ListItemDefaults.colors().leadingIconColor,
     labelOverflow: TextOverflow = TextOverflow.Ellipsis,
     afterListItemAction: @Composable RowScope.() -> Unit,
     belowListItemContent: @Composable ColumnScope.() -> Unit = {},
+    showSelectableItemAfter: Boolean = false,
 ) {
+    val selectableItem: @Composable RowScope.() -> Unit = {
+        SelectableItemIcon(
+            icon = {
+                Icon(
+                    painter = painterResource(id = icon),
+                    contentDescription = null,
+                    tint = iconTint,
+                )
+            },
+            isSelected = isSelected,
+        )
+    }
     ListItem(
         label = label,
         description = description,
         modifier = modifier,
+        overline = overline,
         descriptionTextColor = descriptionTextColor,
         belowListItemContent = belowListItemContent,
         labelOverflow = labelOverflow,
         beforeListItemAction = {
-            SelectableItemIcon(
-                icon = {
-                    Icon(
-                        painter = painterResource(id = icon),
-                        contentDescription = null,
-                        tint = iconTint,
-                    )
-                },
-                isSelected = isSelected,
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
+            if (!showSelectableItemAfter) {
+                selectableItem()
+            }
         },
-        afterListItemAction = afterListItemAction,
+        afterListItemAction =
+            if (showSelectableItemAfter) {
+                selectableItem
+            } else {
+                afterListItemAction
+            },
     )
 }
 
@@ -770,22 +806,11 @@ private fun SelectableItemIcon(
     icon: @Composable () -> Unit,
 ) {
     if (isSelected) {
-        Box(
-            modifier = Modifier
-                .background(
-                    color = FirefoxTheme.colors.layerAccent,
-                    shape = CircleShape,
-                )
-                .size(24.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(id = iconsR.drawable.mozac_ic_checkmark_24),
-                contentDescription = null,
-                modifier = Modifier.size(12.dp),
-                tint = PhotonColors.White,
-            )
-        }
+        Checkbox(
+            checked = true,
+            onCheckedChange = null,
+            modifier = Modifier.size(18.dp),
+        )
     } else {
         icon()
     }
@@ -797,6 +822,8 @@ private fun SelectableItemIcon(
  *
  * @param label The label in the list item.
  * @param modifier [Modifier] to be applied to the layout.
+ * @param overline An optional text shown above the label.
+ * @param overlineTextColor [Color] to be applied to the overline text.
  * @param labelModifier [Modifier] to be applied to the label.
  * @param labelTextColor [Color] to be applied to the label.
  * @param descriptionTextColor [Color] to be applied to the description.
@@ -817,9 +844,11 @@ private fun SelectableItemIcon(
 private fun ListItem(
     label: String,
     modifier: Modifier = Modifier,
+    overline: String? = null,
+    overlineTextColor: Color = ListItemDefaults.colors().overlineColor,
     labelModifier: Modifier = Modifier,
-    labelTextColor: Color = FirefoxTheme.colors.textPrimary,
-    descriptionTextColor: Color = FirefoxTheme.colors.textSecondary,
+    labelTextColor: Color = ListItemDefaults.colors().headlineColor,
+    descriptionTextColor: Color = ListItemDefaults.colors().supportingTextColor,
     labelOverflow: TextOverflow = TextOverflow.Ellipsis,
     maxLabelLines: Int = 1,
     description: String? = null,
@@ -833,45 +862,56 @@ private fun ListItem(
     afterListItemAction: @Composable RowScope.() -> Unit = {},
 ) {
     val haptics = LocalHapticFeedback.current
-    Row(
-        modifier = modifier
-            .height(IntrinsicSize.Min)
-            .defaultMinSize(minHeight = minHeight)
-            .thenConditional(
-                modifier = Modifier.combinedClickable(
-                    onClick = { onClick?.invoke() },
-                    onLongClick = {
-                        onLongClick?.let {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            it.invoke()
-                        }
-                    },
+    val contentColor = if (enabled) {
+        ListItemDefaults.contentColor
+    } else {
+        ListItemDefaults.colors().disabledLeadingIconColor
+    }
+
+    CompositionLocalProvider(LocalContentColor provides contentColor) {
+        Row(
+            modifier = modifier
+                .height(IntrinsicSize.Min)
+                .defaultMinSize(minHeight = minHeight)
+                .thenConditional(
+                    modifier = Modifier.combinedClickable(
+                        onClick = { onClick?.invoke() },
+                        onLongClick = {
+                            onLongClick?.let {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                it.invoke()
+                            }
+                        },
+                    ),
+                    predicate = { (onClick != null || onLongClick != null) && enabled },
+                )
+                .padding(
+                    horizontal = FirefoxTheme.layout.space.dynamic200,
+                    vertical = FirefoxTheme.layout.space.static150,
                 ),
-                predicate = { (onClick != null || onLongClick != null) && enabled },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(FirefoxTheme.layout.space.static200),
+        ) {
+            beforeListItemAction()
+
+            ListItemContent(
+                label = label,
+                modifier = Modifier.weight(1f),
+                labelModifier = labelModifier,
+                labelTextColor = labelTextColor,
+                overline = overline,
+                overlineTextColor = overlineTextColor,
+                descriptionTextColor = descriptionTextColor,
+                labelOverflow = labelOverflow,
+                maxLabelLines = maxLabelLines,
+                description = description,
+                maxDescriptionLines = maxDescriptionLines,
+                enabled = enabled,
+                belowListItemContent = belowListItemContent,
             )
-            .padding(
-                horizontal = FirefoxTheme.layout.space.dynamic200,
-                vertical = FirefoxTheme.layout.space.static100,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        beforeListItemAction()
 
-        ListItemContent(
-            label = label,
-            modifier = Modifier.weight(1f),
-            labelModifier = labelModifier,
-            labelTextColor = labelTextColor,
-            descriptionTextColor = descriptionTextColor,
-            labelOverflow = labelOverflow,
-            maxLabelLines = maxLabelLines,
-            description = description,
-            maxDescriptionLines = maxDescriptionLines,
-            enabled = enabled,
-            belowListItemContent = belowListItemContent,
-        )
-
-        afterListItemAction()
+            afterListItemAction()
+        }
     }
 }
 
@@ -880,8 +920,10 @@ private fun ListItemContent(
     label: String,
     modifier: Modifier = Modifier,
     labelModifier: Modifier = Modifier,
-    labelTextColor: Color = FirefoxTheme.colors.textPrimary,
-    descriptionTextColor: Color = FirefoxTheme.colors.textSecondary,
+    labelTextColor: Color = ListItemDefaults.colors().headlineColor,
+    overline: String? = null,
+    overlineTextColor: Color = ListItemDefaults.colors().overlineColor,
+    descriptionTextColor: Color = ListItemDefaults.colors().supportingTextColor,
     labelOverflow: TextOverflow = TextOverflow.Ellipsis,
     maxLabelLines: Int = 1,
     description: String? = null,
@@ -892,21 +934,28 @@ private fun ListItemContent(
     Column(
         modifier = modifier,
     ) {
+        overline?.let {
+            Text(
+                text = it.uppercase(Locale.getDefault()),
+                color = overlineTextColor,
+                style = FirefoxTheme.typography.overline.copy(hyphens = Hyphens.Auto),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         Text(
             text = label,
             modifier = labelModifier,
-            color = if (enabled) labelTextColor else FirefoxTheme.colors.textDisabled,
+            color = if (enabled) labelTextColor else ListItemDefaults.colors().disabledHeadlineColor,
             overflow = labelOverflow,
-            style = FirefoxTheme.typography.subtitle1.merge(
-                platformStyle = PlatformTextStyle(includeFontPadding = true),
-            ),
+            style = FirefoxTheme.typography.subtitle1.copy(hyphens = Hyphens.Auto),
             maxLines = maxLabelLines,
         )
 
         description?.let {
             Text(
                 text = description,
-                color = if (enabled) descriptionTextColor else FirefoxTheme.colors.textDisabled,
+                color = descriptionTextColor,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = maxDescriptionLines,
                 style = FirefoxTheme.typography.body2
@@ -950,6 +999,20 @@ private fun TextListItemWithDescriptionPreview() {
 }
 
 @Composable
+@Preview(name = "TextListItem with overline and a description", uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun TextListItemWithOverLineDescriptionPreview() {
+    FirefoxTheme {
+        Box(Modifier.background(MaterialTheme.colorScheme.surface)) {
+            TextListItem(
+                label = "Label + description",
+                overline = "Overline",
+                description = "Description text",
+            )
+        }
+    }
+}
+
+@Composable
 @Preview(name = "TextListItem with a right icon", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TextListItemWithIconPreview() {
     FirefoxTheme {
@@ -965,6 +1028,14 @@ private fun TextListItemWithIconPreview() {
 
             TextListItem(
                 label = "Label + right icon",
+                onClick = {},
+                iconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
+                iconDescription = "click me",
+            )
+
+            TextListItem(
+                label = "Label + right icon",
+                overline = "Overline",
                 onClick = {},
                 iconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                 iconDescription = "click me",
@@ -987,15 +1058,24 @@ private fun IconListItemPreview() {
 
             IconListItem(
                 label = "Left icon list item",
-                labelTextColor = FirefoxTheme.colors.textAccent,
                 onClick = {},
                 beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                 beforeIconDescription = "click me",
-                beforeIconTint = FirefoxTheme.colors.iconAccentViolet,
             )
 
             IconListItem(
                 label = "Left icon list item + right icon",
+                onClick = {},
+                beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
+                beforeIconDescription = "click me",
+                showDivider = true,
+                afterIconPainter = painterResource(iconsR.drawable.mozac_ic_chevron_right_24),
+                afterIconDescription = null,
+            )
+
+            IconListItem(
+                label = "Left icon list item + right icon (disabled)",
+                enabled = false,
                 onClick = {},
                 beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                 beforeIconDescription = "click me",
@@ -1005,6 +1085,7 @@ private fun IconListItemPreview() {
 
             IconListItem(
                 label = "Left icon list item + right icon (disabled)",
+                overline = "Overline",
                 enabled = false,
                 onClick = {},
                 beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
@@ -1033,16 +1114,6 @@ private fun IconListItemWithAfterListActionPreview() {
                 afterIconDescription = "click me",
                 onAfterIconClick = { Toast.makeText(context, "icon click", TOAST_LENGTH).show() },
             )
-
-            IconListItem(
-                label = "IconListItem + right icon + divider + clicks",
-                beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
-                beforeIconDescription = null,
-                showDivider = true,
-                afterIconPainter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
-                afterIconDescription = "click me",
-                onAfterIconClick = { Toast.makeText(context, "icon click", TOAST_LENGTH).show() },
-            )
         }
     }
 }
@@ -1063,16 +1134,7 @@ private fun FaviconListItemPreview() {
                 onClick = { Toast.makeText(context, "list item click", TOAST_LENGTH).show() },
                 iconPainter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
                 onIconClick = { Toast.makeText(context, "icon click", TOAST_LENGTH).show() },
-            )
-
-            FaviconListItem(
-                label = "Favicon + right icon + show divider + clicks",
-                url = "",
-                description = "Description text",
-                onClick = { Toast.makeText(context, "list item click", TOAST_LENGTH).show() },
                 showDivider = true,
-                iconPainter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
-                onIconClick = { Toast.makeText(context, "icon click", TOAST_LENGTH).show() },
             )
 
             FaviconListItem(
@@ -1082,28 +1144,14 @@ private fun FaviconListItemPreview() {
                 faviconPainter = painterResource(id = iconsR.drawable.mozac_ic_collection_24),
                 onClick = { Toast.makeText(context, "list item click", TOAST_LENGTH).show() },
             )
-        }
-    }
-}
 
-@Composable
-@PreviewLightDark
-private fun ImageListItemPreview() {
-    FirefoxTheme {
-        Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
-            ImageListItem(
-                label = "label",
-                iconPainter = painterResource(iconsR.drawable.mozac_ic_web_extension_default_icon),
-                enabled = true,
-                onClick = {},
-                afterListItemAction = {
-                    Text(
-                        text = "afterListItemText",
-                        color = Color.White,
-                        style = FirefoxTheme.typography.subtitle1,
-                        maxLines = 1,
-                    )
-                },
+            FaviconListItem(
+                label = "Favicon + painter",
+                overline = "Overline",
+                url = "",
+                description = "Description text",
+                faviconPainter = painterResource(id = iconsR.drawable.mozac_ic_collection_24),
+                onClick = { Toast.makeText(context, "list item click", TOAST_LENGTH).show() },
             )
         }
     }
@@ -1120,9 +1168,21 @@ private fun RadioButtonListItemPreview() {
             radioOptions.forEach { text ->
                 RadioButtonListItem(
                     label = text,
+                    overline = "Overline",
                     description = "$text description",
                     onClick = { onOptionSelected(text) },
                     selected = (text == selectedOption),
+                )
+            }
+            radioOptions.forEach { text ->
+                RadioButtonListItem(
+                    label = text,
+                    selected = (text == selectedOption),
+                    overline = "Overline",
+                    description = "$text description",
+                    enabled = false,
+                    showButtonAfter = true,
+                    onClick = { onOptionSelected(text) },
                 )
             }
         }
@@ -1131,73 +1191,98 @@ private fun RadioButtonListItemPreview() {
 
 @Composable
 @PreviewLightDark
-private fun SelectableFaviconListItemPreview() {
+private fun SwitchListItemPreview() {
+    FirefoxTheme {
+        Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
+            SwitchListItem(
+                label = "Switch item",
+                overline = "Overline",
+                description = "Switch item description",
+                checked = true,
+                onClick = { },
+            )
+            SwitchListItem(
+                label = "Switch item",
+                overline = "Overline",
+                description = "Switch item description",
+                checked = true,
+                enabled = false,
+                showSwitchAfter = true,
+                onClick = { },
+            )
+        }
+    }
+}
+
+private data class SelectableFaviconListItemPreviewState(
+    val label: String,
+    val url: String = "",
+    val isSelected: Boolean = false,
+    val overline: String? = null,
+    val description: String? = "Description text",
+    val faviconRes: Int? = null,
+    val onClick: (() -> Unit)? = { },
+    val onLongClick: (() -> Unit)? = { },
+    val showFaviconAfter: Boolean = false,
+    val iconRes: Int? = null,
+    val onIconClick: (() -> Unit)? = { },
+)
+
+private class SelectableFaviconListItemParameterProvider :
+    PreviewParameterProvider<SelectableFaviconListItemPreviewState> {
+    override val values: Sequence<SelectableFaviconListItemPreviewState>
+        get() = sequenceOf(
+            SelectableFaviconListItemPreviewState(
+                label = "Favicon + right icon",
+                faviconRes = iconsR.drawable.mozac_ic_collection_24,
+                iconRes = iconsR.drawable.mozac_ic_ellipsis_vertical_24,
+            ),
+            SelectableFaviconListItemPreviewState(
+                label = "Favicon + right icon + overline",
+                overline = "Overline",
+                faviconRes = iconsR.drawable.mozac_ic_collection_24,
+                iconRes = iconsR.drawable.mozac_ic_ellipsis_vertical_24,
+            ),
+            SelectableFaviconListItemPreviewState(
+                label = "Selected favicon + right icon",
+                isSelected = true,
+                faviconRes = iconsR.drawable.mozac_ic_collection_24,
+                iconRes = iconsR.drawable.mozac_ic_ellipsis_vertical_24,
+            ),
+            SelectableFaviconListItemPreviewState(
+                label = "Favicon + painter",
+                faviconRes = iconsR.drawable.mozac_ic_collection_24,
+            ),
+            SelectableFaviconListItemPreviewState(
+                label = "Selected favicon + painter",
+                faviconRes = iconsR.drawable.mozac_ic_collection_24,
+                isSelected = true,
+            ),
+        )
+}
+
+@Composable
+@PreviewLightDark
+private fun SelectableFaviconListItemPreview(
+    @PreviewParameter(SelectableFaviconListItemParameterProvider::class) state: SelectableFaviconListItemPreviewState,
+) {
+    val faviconPainter = state.faviconRes?.let { painterResource(it) }
+    val iconPainter = state.iconRes?.let { painterResource(it) }
+
     FirefoxTheme {
         Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
             SelectableFaviconListItem(
-                label = "Favicon + right icon",
-                url = "",
-                isSelected = false,
-                description = "Description text",
-                onClick = { },
-                onLongClick = { },
-                iconPainter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
-                onIconClick = { },
-            )
-
-            SelectableFaviconListItem(
-                label = "Selected favicon + right icon",
-                url = "",
-                isSelected = true,
-                description = "Description text",
-                onClick = { },
-                onLongClick = { },
-                iconPainter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
-                onIconClick = { },
-            )
-
-            SelectableFaviconListItem(
-                label = "Favicon + right icon + show divider",
-                url = "",
-                isSelected = false,
-                description = "Description text",
-                onClick = { },
-                onLongClick = { },
-                showDivider = true,
-                iconPainter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
-                onIconClick = { },
-            )
-
-            SelectableFaviconListItem(
-                label = "Selected favicon + right icon + show divider",
-                url = "",
-                isSelected = true,
-                description = "Description text",
-                onClick = { },
-                onLongClick = { },
-                showDivider = true,
-                iconPainter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
-                onIconClick = { },
-            )
-
-            SelectableFaviconListItem(
-                label = "Favicon + painter",
-                url = "",
-                isSelected = false,
-                description = "Description text",
-                faviconPainter = painterResource(id = iconsR.drawable.mozac_ic_collection_24),
-                onClick = { },
-                onLongClick = { },
-            )
-
-            SelectableFaviconListItem(
-                label = "Selected favicon + painter",
-                url = "",
-                isSelected = true,
-                description = "Description text",
-                faviconPainter = painterResource(id = iconsR.drawable.mozac_ic_collection_24),
-                onClick = { },
-                onLongClick = { },
+                label = state.label,
+                url = state.url,
+                isSelected = state.isSelected,
+                overline = state.overline,
+                description = state.description,
+                faviconPainter = faviconPainter,
+                onClick = state.onClick,
+                onLongClick = state.onLongClick,
+                showDivider = false,
+                iconPainter = iconPainter,
+                onIconClick = {},
             )
         }
     }
@@ -1228,21 +1313,17 @@ private fun SelectableIconListItemPreview() {
             SelectableIconListItem(
                 label = "Left icon list item",
                 isSelected = false,
-                labelTextColor = FirefoxTheme.colors.textAccent,
                 onClick = {},
                 beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                 beforeIconDescription = "click me",
-                beforeIconTint = FirefoxTheme.colors.iconAccentViolet,
             )
 
             SelectableIconListItem(
                 label = "Selected left icon list item",
                 isSelected = true,
-                labelTextColor = FirefoxTheme.colors.textAccent,
                 onClick = {},
                 beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                 beforeIconDescription = "click me",
-                beforeIconTint = FirefoxTheme.colors.iconAccentViolet,
             )
 
             SelectableIconListItem(
@@ -1279,6 +1360,18 @@ private fun SelectableIconListItemPreview() {
             SelectableIconListItem(
                 label = "Selected left icon list item + right icon (disabled)",
                 isSelected = true,
+                enabled = false,
+                onClick = {},
+                beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
+                beforeIconDescription = "click me",
+                afterIconPainter = painterResource(iconsR.drawable.mozac_ic_chevron_right_24),
+                afterIconDescription = null,
+            )
+
+            SelectableIconListItem(
+                label = "Selected left icon list item + right icon (disabled)",
+                isSelected = true,
+                overline = "Overline",
                 enabled = false,
                 onClick = {},
                 beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
@@ -1323,11 +1416,46 @@ private fun SelectableListItemPreview() {
                     ) {
                         Icon(
                             painter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
-                            tint = FirefoxTheme.colors.iconPrimary,
                             contentDescription = null,
                         )
                     }
                 },
+            )
+
+            SelectableListItem(
+                label = "Non selectable item",
+                description = "with after action",
+                icon = iconsR.drawable.mozac_ic_folder_24,
+                isSelected = false,
+                overline = "Overline",
+                afterListItemAction = {
+                    IconButton(
+                        onClick = {},
+                        modifier = Modifier.size(ICON_SIZE),
+                    ) {
+                        Icon(
+                            painter = painterResource(iconsR.drawable.mozac_ic_ellipsis_vertical_24),
+                            contentDescription = null,
+                        )
+                    }
+                },
+            )
+            SelectableListItem(
+                label = "Selected item",
+                description = "Description text",
+                icon = iconsR.drawable.mozac_ic_folder_24,
+                isSelected = true,
+                afterListItemAction = {},
+                showSelectableItemAfter = true,
+            )
+
+            SelectableListItem(
+                label = "Non selectable item",
+                description = "without after action",
+                icon = iconsR.drawable.mozac_ic_folder_24,
+                isSelected = false,
+                afterListItemAction = {},
+                showSelectableItemAfter = true,
             )
         }
     }

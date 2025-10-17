@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.WEB_EXTENSION_ITEM
 import org.mozilla.fenix.compose.list.IconListItem
-import org.mozilla.fenix.compose.list.ImageListItem
 import org.mozilla.fenix.compose.list.TextListItem
 import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.ui.icons.R as iconsR
@@ -226,11 +225,11 @@ internal fun WebExtensionMenuItem(
     onClick: (() -> Unit)? = null,
     onSettingsClick: (() -> Unit)? = null,
 ) {
-    ImageListItem(
+    IconListItem(
         label = label,
-        iconPainter = iconPainter,
         enabled = enabled == true,
-        iconTint = iconTint,
+        beforeIconTint = iconTint ?: FirefoxTheme.colors.iconPrimary,
+        beforeIconPainter = iconPainter,
         onClick = onClick,
         modifier = Modifier
             .testTag(WEB_EXTENSION_ITEM)
@@ -251,7 +250,7 @@ internal fun WebExtensionMenuItem(
             .background(
                 color = FirefoxTheme.colors.layer3,
             ),
-        afterListItemAction = {
+        afterListAction = {
             Row(
                 modifier = Modifier.padding(start = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
