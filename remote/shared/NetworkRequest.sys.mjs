@@ -4,12 +4,14 @@
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
-  NavigationState: "chrome://remote/content/shared/NavigationManager.sys.mjs",
   NetworkHelper:
     "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
   NetworkUtils:
     "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
+
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
+  NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
+  NavigationState: "chrome://remote/content/shared/NavigationManager.sys.mjs",
   notifyNavigationStarted:
     "chrome://remote/content/shared/NavigationManager.sys.mjs",
 });
@@ -33,6 +35,13 @@ export class NetworkRequest {
   #requestId;
   #timedChannel;
   #wrappedChannel;
+
+  /**
+   * NetworkRequest relies on WrappedChannel's id to identify requests. However
+   * this id is generated based on a counter in each process. Therefore we can
+   * have overlaps for network requests handled in different processes
+   */
+  static UNIQUE_ID_SUFFIX = lazy.generateUUID();
 
   /**
    *
@@ -79,9 +88,11 @@ export class NetworkRequest {
     this.#wrappedChannel = ChannelWrapper.get(channel);
 
     this.#redirectCount = this.#timedChannel.redirectCount;
+
     // The wrappedChannel id remains identical across redirects, whereas
     // nsIChannel.channelId is different for each and every request.
-    this.#requestId = this.#wrappedChannel.id.toString();
+    // Add a suffix unique to the process where the event is handled.
+    this.#requestId = `${this.#wrappedChannel.id.toString()}-${NetworkRequest.UNIQUE_ID_SUFFIX}`;
 
     this.#contextId = this.#getContextId();
     this.#navigationId = this.#getNavigationId();
