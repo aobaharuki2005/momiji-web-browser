@@ -433,7 +433,7 @@ ExternalTextureSourceHost::ExternalTextureSourceHost(
       ipc::Shmem& bufferShmem = bufferDesc.data().get_Shmem();
       auto source =
           CreateFromBufferDesc(aParent, aDeviceId, aQueueId, aDesc,
-                               bufferDesc.desc(), bufferShmem.get<uint8_t>());
+                               bufferDesc.desc(), bufferShmem.Range<uint8_t>());
       aParent->DeallocShmem(bufferShmem);
       return source;
     } break;
@@ -468,9 +468,10 @@ ExternalTextureSourceHost::ExternalTextureSourceHost(
                                  "Unexpected TextureHost type"_ns);
             return CreateError();
           }
-          return CreateFromBufferDesc(aParent, aDeviceId, aQueueId, aDesc,
-                                      bufferHost->GetBufferDescriptor(),
-                                      bufferHost->GetBuffer());
+          return CreateFromBufferDesc(
+              aParent, aDeviceId, aQueueId, aDesc,
+              bufferHost->GetBufferDescriptor(),
+              Span(bufferHost->GetBuffer(), bufferHost->GetBufferSize()));
         } break;
 
         case layers::RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorD3D10: {
@@ -526,7 +527,7 @@ ExternalTextureSourceHost::ExternalTextureSourceHost(
 ExternalTextureSourceHost::CreateFromBufferDesc(
     WebGPUParent* aParent, RawId aDeviceId, RawId aQueueId,
     const ExternalTextureSourceDescriptor& aDesc,
-    const layers::BufferDescriptor& aSd, uint8_t* aBuffer) {
+    const layers::BufferDescriptor& aSd, Span<uint8_t> aBuffer) {
   const gfx::SurfaceFormat format =
       layers::ImageDataSerializer::FormatFromBufferDescriptor(aSd);
   // Creates a texture and view for a single plane, and writes the provided data
@@ -534,7 +535,7 @@ ExternalTextureSourceHost::CreateFromBufferDesc(
   auto createPlane = [aParent, aDeviceId, aQueueId](
                          RawId texId, RawId viewId,
                          ffi::WGPUTextureFormat format, gfx::IntSize size,
-                         uint8_t* buffer, uint32_t stride) {
+                         Span<uint8_t> buffer, uint32_t stride) {
     const ffi::WGPUTextureDescriptor textureDesc{
         .size =
             ffi::WGPUExtent3d{
@@ -572,9 +573,10 @@ ExternalTextureSourceHost::CreateFromBufferDesc(
         .bytes_per_row = &stride,
         .rows_per_image = nullptr,
     };
+    const Span<uint8_t> slice = buffer.to(size.height * stride);
     const ffi::WGPUFfiSlice_u8 data{
-        .data = buffer,
-        .length = size.height * stride,
+        .data = slice.data(),
+        .length = slice.size(),
     };
     {
       ErrorBuffer error;
@@ -654,12 +656,12 @@ ExternalTextureSourceHost::CreateFromBufferDesc(
       }
 
       createPlane(aDesc.mTextureIds[0], aDesc.mViewIds[0], planeFormat, ySize,
-                  aBuffer + yCbCrDesc.yOffset(), yCbCrDesc.yStride());
+                  aBuffer.from(yCbCrDesc.yOffset()), yCbCrDesc.yStride());
       createPlane(aDesc.mTextureIds[1], aDesc.mViewIds[1], planeFormat,
-                  cbCrSize, aBuffer + yCbCrDesc.cbOffset(),
+                  cbCrSize, aBuffer.from(yCbCrDesc.cbOffset()),
                   yCbCrDesc.cbCrStride());
       createPlane(aDesc.mTextureIds[2], aDesc.mViewIds[2], planeFormat,
-                  cbCrSize, aBuffer + yCbCrDesc.crOffset(),
+                  cbCrSize, aBuffer.from(yCbCrDesc.crOffset()),
                   yCbCrDesc.cbCrStride());
       usedTextureIds.AppendElements(aDesc.mTextureIds.data(),
                                     aDesc.mTextureIds.size());
