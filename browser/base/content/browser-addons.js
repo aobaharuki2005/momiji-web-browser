@@ -2427,7 +2427,7 @@ var gUnifiedExtensions = {
       );
       document.l10n.setAttributes(
         emptyStateBox.querySelector("description"),
-        "unified-extensions-empty-content-explain-enable"
+        "unified-extensions-empty-content-explain-enable2"
       );
       emptyStateBox.hidden = false;
       this.isAtLeastOneExtensionWithPBMOptIn().then(result => {
@@ -2436,7 +2436,7 @@ var gUnifiedExtensions = {
         if (!result) {
           document.l10n.setAttributes(
             emptyStateBox.querySelector("description"),
-            "unified-extensions-empty-content-explain-manage"
+            "unified-extensions-empty-content-explain-manage2"
           );
         }
       });
@@ -2451,8 +2451,8 @@ var gUnifiedExtensions = {
           document.l10n.setAttributes(
             emptyStateBox.querySelector("description"),
             disabledExtensionsInfo.isAnyEnableable
-              ? "unified-extensions-empty-content-explain-enable"
-              : "unified-extensions-empty-content-explain-manage"
+              ? "unified-extensions-empty-content-explain-enable2"
+              : "unified-extensions-empty-content-explain-manage2"
           );
           emptyStateBox.hidden = false;
         } else if (!policies.length) {
