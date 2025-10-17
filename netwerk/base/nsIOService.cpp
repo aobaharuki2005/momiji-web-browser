@@ -260,9 +260,6 @@ static const char* gCallbackPrefsForSocketProcess[] = {
     "network.lna.enabled",
     "network.lna.blocking",
     "network.lna.address_space.private.override",
-    "network.lna.address_space.public.override",
-    "network.lna.websocket.enabled",
-    "network.lna.local-network-to-localhost.skip-checks",
     nullptr,
 };
 
