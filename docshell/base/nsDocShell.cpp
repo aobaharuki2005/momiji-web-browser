@@ -4130,8 +4130,8 @@ void nsDocShell::DisplayRestrictedContentError() {
     return;
   }
   doc->TerminateParserAndDisableScripts();
-  DisplayLoadError(NS_ERROR_RESTRICTED_CONTENT, doc->GetDocumentURI(), nullptr, nullptr,
-                   &didDisplayLoadError);
+  DisplayLoadError(NS_ERROR_RESTRICTED_CONTENT, doc->GetDocumentURI(), nullptr,
+                   nullptr, &didDisplayLoadError);
 }
 
 /* static */
