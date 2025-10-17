@@ -415,11 +415,10 @@ class MacroAssemblerRiscv64 : public Assembler {
   void BranchLong(Label* L);
 
   // Floating point branches
-  void BranchTrueShortF(Register rs, Label* target);
-  void BranchFalseShortF(Register rs, Label* target);
-
-  void BranchTrueF(Register rs, Label* target);
-  void BranchFalseF(Register rs, Label* target);
+  void BranchFloat32(DoubleCondition cc, FloatRegister frs1, FloatRegister frs2,
+                     Label* label, JumpKind jumpKind);
+  void BranchFloat64(DoubleCondition cc, FloatRegister frs1, FloatRegister frs2,
+                     Label* label, JumpKind jumpKind);
 
   void moveFromDoubleHi(FloatRegister src, Register dest) {
     fmv_x_d(dest, src);

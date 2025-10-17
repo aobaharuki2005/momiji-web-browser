@@ -4052,12 +4052,8 @@ void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
 
   // Branch to a slow path if input < 0.0 due to complicated rounding rules.
   {
-    UseScratchRegisterScope temps(this);
-    Register scratch = temps.Acquire();
-
-    fmv_w_x(temp, zero);
-    ma_compareF32(scratch, Assembler::DoubleLessThan, src, temp);
-    ma_b(scratch, Imm32(0), &negative, Assembler::NotEqual, ShortJump);
+    loadConstantFloat32(0.0f, temp);
+    BranchFloat32(Assembler::DoubleLessThan, src, temp, &negative, ShortJump);
   }
 
   // Fail if the input is negative zero.
@@ -4118,12 +4114,8 @@ void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
 
   // Branch to a slow path if input < 0.0 due to complicated rounding rules.
   {
-    UseScratchRegisterScope temps(this);
-    Register scratch = temps.Acquire();
-
-    fmv_d_x(temp, zero);
-    ma_compareF64(scratch, Assembler::DoubleLessThan, src, temp);
-    ma_b(scratch, Imm32(0), &negative, Assembler::NotEqual, ShortJump);
+    loadConstantDouble(0.0, temp);
+    BranchFloat64(Assembler::DoubleLessThan, src, temp, &negative, ShortJump);
   }
 
   // Fail if the input is negative zero.
@@ -6300,6 +6292,26 @@ void MacroAssemblerRiscv64::CompareIsNanF64(Register rd, FPURegister cmp1,
   ma_xor(rd, rd, Operand(1));          // rd <- isNan(cmp1) || isNan(cmp2)
 }
 
+void MacroAssemblerRiscv64::BranchFloat32(DoubleCondition cc,
+                                          FloatRegister frs1,
+                                          FloatRegister frs2, Label* L,
+                                          JumpKind jumpKind) {
+  UseScratchRegisterScope temps(this);
+  Register scratch = temps.Acquire();
+  ma_compareF32(scratch, cc, frs1, frs2);
+  ma_b(scratch, Imm32(0), L, NotEqual, jumpKind);
+}
+
+void MacroAssemblerRiscv64::BranchFloat64(DoubleCondition cc,
+                                          FloatRegister frs1,
+                                          FloatRegister frs2, Label* L,
+                                          JumpKind jumpKind) {
+  UseScratchRegisterScope temps(this);
+  Register scratch = temps.Acquire();
+  ma_compareF64(scratch, cc, frs1, frs2);
+  ma_b(scratch, Imm32(0), L, NotEqual, jumpKind);
+}
+
 void MacroAssemblerRiscv64::Clz32(Register rd, Register xx) {
   // 32 bit unsigned in lower word: count number of leading zeros.
   //  int n = 32;
@@ -6746,14 +6758,11 @@ void MacroAssemblerRiscv64::FloatMinMaxHelper(FPURegister dst, FPURegister src1,
   // operand is NaN; but for JS, if any operand is NaN, result is Nan. The
   // following handles the discrepency between handling of NaN between ISA and
   // JS semantics
-  UseScratchRegisterScope temps(this);
-  Register scratch = temps.Acquire();
   if (std::is_same<float, F_TYPE>::value) {
-    CompareIsNotNanF32(scratch, src1, src2);
+    BranchFloat32(Assembler::DoubleUnordered, src1, src2, &nan, ShortJump);
   } else {
-    CompareIsNotNanF64(scratch, src1, src2);
+    BranchFloat64(Assembler::DoubleUnordered, src1, src2, &nan, ShortJump);
   }
-  BranchFalseF(scratch, &nan);
 
   if (kind == MaxMinKind::kMax) {
     if (std::is_same<float, F_TYPE>::value) {
@@ -6803,38 +6812,6 @@ void MacroAssemblerRiscv64::Float64Min(FPURegister dst, FPURegister src1,
                                        FPURegister src2) {
   comment(__FUNCTION__);
   FloatMinMaxHelper<double>(dst, src1, src2, MaxMinKind::kMin);
-}
-
-void MacroAssemblerRiscv64::BranchTrueShortF(Register rs, Label* target) {
-  ma_branch(target, NotEqual, rs, Operand(zero_reg));
-}
-
-void MacroAssemblerRiscv64::BranchFalseShortF(Register rs, Label* target) {
-  ma_branch(target, Equal, rs, Operand(zero_reg));
-}
-
-void MacroAssemblerRiscv64::BranchTrueF(Register rs, Label* target) {
-  bool long_branch = target->bound() ? !is_near(target) : false;
-  if (long_branch) {
-    Label skip;
-    BranchFalseShortF(rs, &skip);
-    BranchLong(target);
-    bind(&skip);
-  } else {
-    BranchTrueShortF(rs, target);
-  }
-}
-
-void MacroAssemblerRiscv64::BranchFalseF(Register rs, Label* target) {
-  bool long_branch = target->bound() ? !is_near(target) : false;
-  if (long_branch) {
-    Label skip;
-    BranchTrueShortF(rs, &skip);
-    BranchLong(target);
-    bind(&skip);
-  } else {
-    BranchFalseShortF(rs, target);
-  }
 }
 
 void MacroAssemblerRiscv64::Ror(Register rd, Register rs, const Operand& rt) {

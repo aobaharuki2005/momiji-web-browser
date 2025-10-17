@@ -649,18 +649,13 @@ void MacroAssembler::branch64(Condition cond, const Address& lhs,
 
 void MacroAssembler::branchDouble(DoubleCondition cc, FloatRegister frs1,
                                   FloatRegister frs2, Label* L) {
-  UseScratchRegisterScope temps(this);
-  Register scratch = temps.Acquire();
-  ma_compareF64(scratch, cc, frs1, frs2);
-  ma_b(scratch, Imm32(0), L, NotEqual);
+  BranchFloat64(cc, frs1, frs2, L, LongJump);
 }
 void MacroAssembler::branchFloat(DoubleCondition cc, FloatRegister frs1,
                                  FloatRegister frs2, Label* L) {
-  UseScratchRegisterScope temps(this);
-  Register scratch = temps.Acquire();
-  ma_compareF32(scratch, cc, frs1, frs2);
-  ma_b(scratch, Imm32(0), L, NotEqual);
+  BranchFloat32(cc, frs1, frs2, L, LongJump);
 }
+
 void MacroAssembler::branchMulPtr(Condition cond, Register src, Register dest,
                                   Label* label) {
   MOZ_ASSERT(cond == Assembler::Overflow);
