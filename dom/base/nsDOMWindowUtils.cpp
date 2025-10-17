@@ -935,20 +935,14 @@ nsresult nsDOMWindowUtils::SendTouchEventCommon(
   nsEventStatus status = nsEventStatus_eIgnore;
   if (aToWindow) {
     RefPtr<PresShell> presShell = presContext->PresShell();
-    // XXX shouldn't this happen _after_ DispatchEvent?
-    *aPreventDefault = (status == nsEventStatus_eConsumeNoDefault);
-    return presShell->HandleEvent(presShell->GetRootFrame(), &event, false,
-                                  &status);
-  }
-
-  if (aAsyncEnabled == AsyncEnabledOption::ASYNC_ENABLED ||
-      StaticPrefs::test_events_async_enabled()) {
+    MOZ_TRY(presShell->HandleEvent(presShell->GetRootFrame(), &event, false,
+                                   &status));
+  } else if (aAsyncEnabled == AsyncEnabledOption::ASYNC_ENABLED ||
+             StaticPrefs::test_events_async_enabled()) {
     status = widget->DispatchInputEvent(&event).mContentStatus;
   } else {
-    nsresult rv = widget->DispatchEvent(&event, status);
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_TRY(widget->DispatchEvent(&event, status));
   }
-
   if (aPreventDefault) {
     *aPreventDefault = (status == nsEventStatus_eConsumeNoDefault);
   }
