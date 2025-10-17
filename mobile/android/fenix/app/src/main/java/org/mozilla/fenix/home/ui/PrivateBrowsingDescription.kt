@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,7 +30,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.compose.LinkTextState
@@ -113,7 +113,7 @@ fun PrivateBrowsingDescription2(
     ) {
         Text(
             text = stringResource(id = R.string.felt_privacy_desc_card_title),
-            color = PhotonColors.White,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
             style = FirefoxTheme.typography.headline5,
         )
@@ -123,7 +123,7 @@ fun PrivateBrowsingDescription2(
                 id = R.string.felt_privacy_info_card_subtitle_3,
                 stringResource(id = R.string.app_name),
             ),
-            color = PhotonColors.White,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
             style = FirefoxTheme.typography.subtitle1,
         )
@@ -144,7 +144,7 @@ fun PrivateBrowsingDescription2(
                     ),
                 ),
                 style = FirefoxTheme.typography.subtitle1,
-                linkTextColor = PhotonColors.White,
+                linkTextColor = MaterialTheme.colorScheme.onSurface,
                 linkTextDecoration = TextDecoration.Underline,
                 textAlign = TextAlign.Center,
             )
@@ -172,7 +172,7 @@ private fun PrivacyBrowsingDescription2Preview() {
     FirefoxTheme(theme = Theme.Private) {
         Column(
             modifier = Modifier
-                .background(FirefoxTheme.colors.layer1)
+                .background(MaterialTheme.colorScheme.surface)
                 .fillMaxSize(),
         ) {
             PrivateBrowsingDescription2(
