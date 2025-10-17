@@ -15,10 +15,10 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // int32_t, uint32_t
 
-#include "gc/Barrier.h"                  // HeapPtr
-#include "gc/ZoneAllocator.h"            // CellAllocPolicy
-#include "js/Class.h"                    // JSClass, ObjectOpResult
-#include "js/ColumnNumber.h"             // JS::ColumnNumberOneOrigin
+#include "gc/Barrier.h"        // HeapPtr
+#include "gc/ZoneAllocator.h"  // CellAllocPolicy
+#include "js/Class.h"          // JSClass, ObjectOpResult
+#include "js/ColumnNumber.h"   // JS::ColumnNumberOneOrigin
 #include "js/GCVector.h"
 #include "js/Id.h"  // jsid
 #include "js/Modules.h"
