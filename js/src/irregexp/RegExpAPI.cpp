@@ -417,10 +417,12 @@ class RegExpDepthCheck final : public v8::internal::RegExpVisitor {
   }
 
   // Leaf nodes with no children
-#define LEAF_DEPTH(Kind)                                                  \
-  void* Visit##Kind(v8::internal::RegExp##Kind* node, void*) override {   \
-    AutoCheckRecursionLimit recursion(cx_);                               \
-    return (void*)recursion.checkWithExtraDontReport(cx_, FRAME_PADDING); \
+#define LEAF_DEPTH(Kind)                                                \
+  void* Visit##Kind(v8::internal::RegExp##Kind* node, void*) override { \
+    uint8_t padding[FRAME_PADDING];                                     \
+    dummy_ = padding; /* Prevent padding from being optimized away.*/   \
+    AutoCheckRecursionLimit recursion(cx_);                             \
+    return (void*)recursion.checkDontReport(cx_);                       \
   }
 
   LEAF_DEPTH(Assertion)
@@ -435,8 +437,10 @@ class RegExpDepthCheck final : public v8::internal::RegExpVisitor {
   // Wrapper nodes with one child
 #define WRAPPER_DEPTH(Kind)                                             \
   void* Visit##Kind(v8::internal::RegExp##Kind* node, void*) override { \
+    uint8_t padding[FRAME_PADDING];                                     \
+    dummy_ = padding; /* Prevent padding from being optimized away.*/   \
     AutoCheckRecursionLimit recursion(cx_);                             \
-    if (!recursion.checkWithExtraDontReport(cx_, FRAME_PADDING)) {      \
+    if (!recursion.checkDontReport(cx_)) {                              \
       return nullptr;                                                   \
     }                                                                   \
     return node->body()->Accept(this, nullptr);                         \
@@ -450,8 +454,10 @@ class RegExpDepthCheck final : public v8::internal::RegExpVisitor {
 
   void* VisitAlternative(v8::internal::RegExpAlternative* node,
                          void*) override {
+    uint8_t padding[FRAME_PADDING];
+    dummy_ = padding; /* Prevent padding from being optimized away.*/
     AutoCheckRecursionLimit recursion(cx_);
-    if (!recursion.checkWithExtraDontReport(cx_, FRAME_PADDING)) {
+    if (!recursion.checkDontReport(cx_)) {
       return nullptr;
     }
     for (auto* child : *node->nodes()) {
@@ -463,8 +469,10 @@ class RegExpDepthCheck final : public v8::internal::RegExpVisitor {
   }
   void* VisitDisjunction(v8::internal::RegExpDisjunction* node,
                          void*) override {
+    uint8_t padding[FRAME_PADDING];
+    dummy_ = padding; /* Prevent padding from being optimized away.*/
     AutoCheckRecursionLimit recursion(cx_);
-    if (!recursion.checkWithExtraDontReport(cx_, FRAME_PADDING)) {
+    if (!recursion.checkDontReport(cx_)) {
       return nullptr;
     }
     for (auto* child : *node->alternatives()) {
@@ -476,8 +484,10 @@ class RegExpDepthCheck final : public v8::internal::RegExpVisitor {
   }
   void* VisitClassSetExpression(v8::internal::RegExpClassSetExpression* node,
                                 void*) override {
+    uint8_t padding[FRAME_PADDING];
+    dummy_ = padding; /* Prevent padding from being optimized away.*/
     AutoCheckRecursionLimit recursion(cx_);
-    if (!recursion.checkWithExtraDontReport(cx_, FRAME_PADDING)) {
+    if (!recursion.checkDontReport(cx_)) {
       return nullptr;
     }
     for (auto* child : *node->operands()) {
@@ -490,6 +500,7 @@ class RegExpDepthCheck final : public v8::internal::RegExpVisitor {
 
  private:
   JSContext* cx_;
+  void* dummy_ = nullptr;
 
   // This size is picked to be comfortably larger than any
   // RegExp*::ToNode stack frame.
@@ -783,7 +794,8 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
   // Avoid stack overflow while recursively walking the AST.
   RegExpDepthCheck depthCheck(cx);
   if (!depthCheck.check(data.tree)) {
-    ReportOverRecursed(cx);
+    JS_ReportErrorASCII(cx, "regexp too big");
+    cx->reportResourceExhaustion();
     return false;
   }
 
