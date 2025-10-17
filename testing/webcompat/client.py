@@ -35,6 +35,17 @@ class Client:
 
         self._start_collecting_alerts()
 
+    async def set_page_zoom_level(self, level):
+        with self.using_context("chrome"):
+            self.execute_script(
+                r"""
+                    const [ level ] = arguments;
+                    const win = browser.ownerGlobal;
+                    win.ZoomManager.setZoomForBrowser(win.gBrowser.selectedTab.linkedBrowser, level);
+                    """,
+                level,
+            )
+
     async def maybe_override_platform(self):
         if hasattr(self, "_platform_override_checked"):
             return

@@ -4721,6 +4721,23 @@
       }
     ]
   },
+  "1959598": {
+    "label": "signal-tech.com",
+    "bugs": {
+      "1959598": {
+        "issue": "broken-scrolling",
+        "matches": ["*://www.signal-tech.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "content_scripts": {
+          "js": ["bug1959598-www.signal-tech.com-round-pageYOffset.js"]
+        }
+      }
+    ]
+  },
   "1960316": {
     "label": "wms.sso.biglobe.ne.jp",
     "bugs": {
