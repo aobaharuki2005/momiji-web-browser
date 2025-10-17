@@ -2010,7 +2010,7 @@ const BASE_MESSAGES = () => [
       ],
     },
     targeting:
-      "source == 'startup' && !doesAppNeedPin && isDefaultBrowser && !'browser.shell.checkDefaultBrowser'|preferenceValue && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
+      "backupRestoreEnabled && source == 'startup' && !doesAppNeedPin && isDefaultBrowser && !'browser.shell.checkDefaultBrowser'|preferenceValue && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
     trigger: {
       id: "defaultBrowserCheck",
     },
@@ -2115,7 +2115,7 @@ const BASE_MESSAGES = () => [
       ],
     },
     targeting:
-      "source == 'startup' && doesAppNeedPin && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
+      "backupRestoreEnabled && source == 'startup' && doesAppNeedPin && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
     trigger: {
       id: "defaultBrowserCheck",
     },
@@ -2198,7 +2198,7 @@ const BASE_MESSAGES = () => [
       ],
     },
     targeting:
-      "source == 'startup' && !doesAppNeedPin && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
+      "backupRestoreEnabled && source == 'startup' && !doesAppNeedPin && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
     trigger: {
       id: "defaultBrowserCheck",
     },
@@ -2292,7 +2292,7 @@ const BASE_MESSAGES = () => [
       ],
     },
     targeting:
-      "source == 'startup' && doesAppNeedPin && !willShowDefaultPrompt &&(!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser) && 'browser.backup.profile-restoration-date'|preferenceValue",
+      "backupRestoreEnabled && source == 'startup' && doesAppNeedPin && !willShowDefaultPrompt &&(!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser) && 'browser.backup.profile-restoration-date'|preferenceValue",
     trigger: {
       id: "defaultBrowserCheck",
     },
