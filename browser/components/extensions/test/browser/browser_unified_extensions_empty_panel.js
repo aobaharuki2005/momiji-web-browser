@@ -97,6 +97,31 @@ function getDiscoverButton(win) {
   );
 }
 
+async function checkManageExtensionsText(elem) {
+  const l10nId = elem.dataset.l10nId;
+  const doc = elem.ownerDocument;
+  if (doc.hasPendingL10nMutations) {
+    await BrowserTestUtils.waitForEvent(doc, "L10nMutationsFinished");
+  }
+  const expectedButtonText = "Manage extensions";
+  let expectedTextContent;
+  if (l10nId === "unified-extensions-empty-content-explain-enable2") {
+    expectedTextContent =
+      "Select “Manage extensions” to enable them in settings.";
+  } else if (l10nId === "unified-extensions-empty-content-explain-manage2") {
+    expectedTextContent =
+      "Select “Manage extensions” to manage them in settings.";
+  } else {
+    ok(false, `Unexpected data-l10n-id: ${l10nId}`);
+    return;
+  }
+  ok(
+    expectedTextContent.includes(expectedButtonText),
+    "Description contains button text ('Manage extensions')"
+  );
+  is(expectedTextContent, elem.textContent, "Description has expected text");
+}
+
 add_task(async function test_button_opens_discopane_when_no_extension() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:robots" },
@@ -310,9 +335,11 @@ add_task(async function test_button_click_in_pbm_without_private_extensions() {
   );
   is(
     emptyStateBox.querySelector("description").getAttribute("data-l10n-id"),
-    "unified-extensions-empty-content-explain-enable",
+    "unified-extensions-empty-content-explain-enable2",
     "Has description pointing to Manage extensions button."
   );
+
+  await checkManageExtensionsText(emptyStateBox.querySelector("description"));
 
   await BrowserTestUtils.closeWindow(win);
 
@@ -378,9 +405,11 @@ add_task(async function test_button_click_in_pbm_and_incognito_not_allowed() {
   );
   is(
     emptyStateBox.querySelector("description").getAttribute("data-l10n-id"),
-    "unified-extensions-empty-content-explain-manage",
+    "unified-extensions-empty-content-explain-manage2",
     "Has description pointing to Manage extensions button with text MANAGE, not ENABLE"
   );
+
+  await checkManageExtensionsText(emptyStateBox.querySelector("description"));
 
   await BrowserTestUtils.closeWindow(win);
 
@@ -420,9 +449,11 @@ add_task(async function test_button_click_in_pbm_pinned_and_no_access() {
   );
   is(
     emptyStateBox.querySelector("description").getAttribute("data-l10n-id"),
-    "unified-extensions-empty-content-explain-enable",
+    "unified-extensions-empty-content-explain-enable2",
     "Has description pointing to Manage extensions button."
   );
+
+  await checkManageExtensionsText(emptyStateBox.querySelector("description"));
 
   await BrowserTestUtils.closeWindow(win);
 
@@ -449,9 +480,11 @@ add_task(async function test_empty_state_with_disabled_addon() {
   );
   is(
     emptyStateBox.querySelector("description").getAttribute("data-l10n-id"),
-    "unified-extensions-empty-content-explain-enable",
+    "unified-extensions-empty-content-explain-enable2",
     "Has description pointing to Manage extensions button."
   );
+
+  await checkManageExtensionsText(emptyStateBox.querySelector("description"));
 
   await BrowserTestUtils.closeWindow(win);
 
@@ -558,15 +591,17 @@ async function do_test_empty_state_with_blocklisted_addon(isSoftBlock) {
   if (isSoftBlock) {
     is(
       emptyStateBox.querySelector("description").getAttribute("data-l10n-id"),
-      "unified-extensions-empty-content-explain-enable",
+      "unified-extensions-empty-content-explain-enable2",
       "Has description pointing to Manage extensions button with text ENABLE"
     );
+    await checkManageExtensionsText(emptyStateBox.querySelector("description"));
   } else {
     is(
       emptyStateBox.querySelector("description").getAttribute("data-l10n-id"),
-      "unified-extensions-empty-content-explain-manage",
+      "unified-extensions-empty-content-explain-manage2",
       "Has description pointing to Manage extensions button with text MANAGE, not ENABLE"
     );
+    await checkManageExtensionsText(emptyStateBox.querySelector("description"));
   }
 
   await closeExtensionsPanel(window);
