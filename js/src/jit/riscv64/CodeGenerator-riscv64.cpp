@@ -280,6 +280,9 @@ void CodeGeneratorRiscv64::visitOutOfLineTableSwitch(
 
 void CodeGeneratorRiscv64::visitOutOfLineWasmTruncateCheck(
     OutOfLineWasmTruncateCheck* ool) {
+  MOZ_ASSERT(!ool->isSaturating(),
+             "saturating case doesn't require an OOL path");
+
   FloatRegister input = ool->input();
   Register output = ool->output();
   Register64 output64 = ool->output64();
@@ -308,6 +311,9 @@ void CodeGeneratorRiscv64::visitOutOfLineWasmTruncateCheck(
   } else {
     MOZ_CRASH("unexpected type");
   }
+
+  // The OOL path is only used to execute the correct trap.
+  MOZ_ASSERT(!oolRejoin->bound(), "ool path doesn't return");
 }
 
 void CodeGenerator::visitBox(LBox* box) {
@@ -597,12 +603,19 @@ void CodeGenerator::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir) {
 
   MOZ_ASSERT(fromType == MIRType::Double || fromType == MIRType::Float32);
 
-  auto* ool = new (alloc()) OutOfLineWasmTruncateCheck(mir, input, output);
-  addOutOfLineCode(ool, mir);
-
-  Label* oolEntry = ool->entry();
-  Label* oolRejoin = ool->rejoin();
   bool isSaturating = mir->isSaturating();
+
+  // RISCV saturating instructions don't require an OOL path.
+  OutOfLineWasmTruncateCheck* ool = nullptr;
+  Label* oolEntry = nullptr;
+  Label* oolRejoin = nullptr;
+  if (!isSaturating) {
+    ool = new (alloc()) OutOfLineWasmTruncateCheck(mir, input, output);
+    addOutOfLineCode(ool, mir);
+
+    oolEntry = ool->entry();
+    oolRejoin = ool->rejoin();
+  }
 
   if (fromType == MIRType::Double) {
     if (mir->isUnsigned()) {
@@ -621,6 +634,10 @@ void CodeGenerator::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir) {
                                       oolRejoin, InvalidFloatReg);
     }
   }
+
+  // RISCV can handle all success case. The OOL path is only used to execute
+  // the correct trap.
+  MOZ_ASSERT(!ool || !ool->rejoin()->bound(), "ool path doesn't return");
 }
 
 void CodeGenerator::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir) {
@@ -1621,36 +1638,35 @@ void CodeGenerator::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir) {
 
   MOZ_ASSERT(fromType == MIRType::Double || fromType == MIRType::Float32);
 
-  auto* ool = new (alloc()) OutOfLineWasmTruncateCheck(mir, input, output);
-  addOutOfLineCode(ool, mir);
+  bool isSaturating = mir->isSaturating();
 
-  Label* oolEntry = ool->entry();
-  if (mir->isUnsigned()) {
-    if (fromType == MIRType::Double) {
-      masm.wasmTruncateDoubleToUInt32(input, output, mir->isSaturating(),
-                                      oolEntry);
-    } else if (fromType == MIRType::Float32) {
-      masm.wasmTruncateFloat32ToUInt32(input, output, mir->isSaturating(),
-                                       oolEntry);
-    } else {
-      MOZ_CRASH("unexpected type");
-    }
+  // RISCV saturating instructions don't require an OOL path.
+  OutOfLineWasmTruncateCheck* ool = nullptr;
+  Label* oolEntry = nullptr;
+  if (!isSaturating) {
+    ool = new (alloc()) OutOfLineWasmTruncateCheck(mir, input, output);
+    addOutOfLineCode(ool, mir);
 
-    masm.bind(ool->rejoin());
-    return;
+    oolEntry = ool->entry();
   }
 
   if (fromType == MIRType::Double) {
-    masm.wasmTruncateDoubleToInt32(input, output, mir->isSaturating(),
-                                   oolEntry);
-  } else if (fromType == MIRType::Float32) {
-    masm.wasmTruncateFloat32ToInt32(input, output, mir->isSaturating(),
-                                    oolEntry);
+    if (mir->isUnsigned()) {
+      masm.wasmTruncateDoubleToUInt32(input, output, isSaturating, oolEntry);
+    } else {
+      masm.wasmTruncateDoubleToInt32(input, output, isSaturating, oolEntry);
+    }
   } else {
-    MOZ_CRASH("unexpected type");
+    if (mir->isUnsigned()) {
+      masm.wasmTruncateFloat32ToUInt32(input, output, isSaturating, oolEntry);
+    } else {
+      masm.wasmTruncateFloat32ToInt32(input, output, isSaturating, oolEntry);
+    }
   }
 
-  masm.bind(ool->rejoin());
+  // RISCV can handle all success case. The OOL path is only used to execute
+  // the correct trap.
+  MOZ_ASSERT(!ool || !ool->rejoin()->bound(), "ool path doesn't return");
 }
 
 void CodeGenerator::visitCopySignF(LCopySignF* ins) {
