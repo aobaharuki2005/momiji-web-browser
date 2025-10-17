@@ -1583,6 +1583,12 @@ bool Navigation::InnerFireNavigateEvent(
     MOZ_DIAGNOSTIC_ASSERT(apiMethodTracker == mOngoingAPIMethodTracker);
     // Step 35
     apiMethodTracker->CleanUp();
+  } else {
+    // It needs to be ensured that the ongoing navigate event is cleared in
+    // every code path (e.g. for download events), so that we don't keep
+    // intermediate state around.
+    // See also https://github.com/whatwg/html/issues/11802
+    mOngoingNavigateEvent = nullptr;
   }
 
   // Step 37 and step 38
