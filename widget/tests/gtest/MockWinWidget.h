@@ -45,10 +45,9 @@ class MockWinWidget : public nsIWidget {
   }
   void Show(bool aState) override {}
   bool IsVisible() const override { return true; }
-  void Move(double aX, double aY) override {}
-  void Resize(double aWidth, double aHeight, bool aRepaint) override {}
-  void Resize(double aX, double aY, double aWidth, double aHeight,
-              bool aRepaint) override {}
+  void Move(const DesktopPoint&) override {}
+  void Resize(const DesktopSize&, bool aRepaint) override {}
+  void Resize(const DesktopRect&, bool aRepaint) override {}
 
   void Enable(bool aState) override {}
   bool IsEnabled() const override { return true; }
@@ -65,6 +64,7 @@ class MockWinWidget : public nsIWidget {
   void SetInputContext(const InputContext& aContext,
                        const InputContextAction& aAction) override {}
   InputContext GetInputContext() override { abort(); }
+  LayoutDeviceIntRect GetBounds() override { return mBounds; }
 
  private:
   MockWinWidget();
@@ -74,6 +74,7 @@ class MockWinWidget : public nsIWidget {
                   const LayoutDeviceIntRect& aRect);
 
   HWND mWnd = 0;
+  LayoutDeviceIntRect mBounds;
 
   mozilla::widget::OcclusionState mExpectation =
       mozilla::widget::OcclusionState::UNKNOWN;

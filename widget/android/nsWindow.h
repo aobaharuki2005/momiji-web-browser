@@ -79,6 +79,7 @@ class nsWindow final : public nsIWidget {
   mozilla::widget::PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate =
       nullptr;
   mozilla::Mutex mDestroyMutex{"nsWindow::mDestroyMutex"};
+  LayoutDeviceIntRect mBounds;
 
   // Unique ID given to each widget, used to map Surfaces to widgets
   // in the CompositorSurfaceManager.
@@ -165,10 +166,9 @@ class nsWindow final : public nsIWidget {
   void Show(bool aState) override;
   bool IsVisible() const override;
   void ConstrainPosition(DesktopIntPoint&) override;
-  void Move(double aX, double aY) override;
-  void Resize(double aWidth, double aHeight, bool aRepaint) override;
-  void Resize(double aX, double aY, double aWidth, double aHeight,
-              bool aRepaint) override;
+  void Move(const DesktopPoint&) override;
+  void Resize(const DesktopSize&, bool aRepaint) override;
+  void Resize(const DesktopRect&, bool aRepaint) override;
   nsSizeMode SizeMode() override { return mSizeMode; }
   void SetSizeMode(nsSizeMode aMode) override;
   void Enable(bool aState) override;
@@ -176,6 +176,7 @@ class nsWindow final : public nsIWidget {
   void Invalidate(const LayoutDeviceIntRect& aRect) override;
   void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;
   LayoutDeviceIntRect GetScreenBounds() override;
+  LayoutDeviceIntRect GetBounds() override { return mBounds; }
   LayoutDeviceIntPoint WidgetToScreenOffset() override;
   nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                          nsEventStatus& aStatus) override;
@@ -261,6 +262,9 @@ class nsWindow final : public nsIWidget {
 
   mozilla::jni::NativeWeakPtr<mozilla::widget::NPZCSupport>
   GetNPZCSupportWeakPtr();
+
+  void DoResize(double aX, double aY, double aWidth, double aHeight,
+                bool aRepaint);
 
  protected:
   void BringToFront();

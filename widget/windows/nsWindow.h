@@ -211,10 +211,9 @@ class nsWindow final : public nsIWidget {
   void LockAspectRatio(bool aShouldLock) override;
   const SizeConstraints GetSizeConstraints() override;
   void SetInputRegion(const InputRegion&) override;
-  void Move(double aX, double aY) override;
-  void Resize(double aWidth, double aHeight, bool aRepaint) override;
-  void Resize(double aX, double aY, double aWidth, double aHeight,
-              bool aRepaint) override;
+  void Move(const DesktopPoint&) override;
+  void Resize(const DesktopSize&, bool aRepaint) override;
+  void Resize(const DesktopRect&, bool aRepaint) override;
   void SetSizeMode(nsSizeMode aMode) override;
   nsSizeMode SizeMode() override;
   void GetWorkspaceID(nsAString& workspaceID) override;
@@ -829,6 +828,8 @@ class nsWindow final : public nsIWidget {
   // Opaque region maintained by UpdateOpaqueRegion (relative to the client
   // area).
   LayoutDeviceIntRegion mOpaqueRegion;
+
+  LayoutDeviceIntRect mBounds;
 
   // Graphics
   LayoutDeviceIntRect mLastPaintBounds;

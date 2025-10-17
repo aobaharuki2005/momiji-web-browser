@@ -60,16 +60,16 @@ class HeadlessWidget final : public nsIWidget {
   void Destroy() override;
   void Show(bool aState) override;
   bool IsVisible() const override;
-  void Move(double aX, double aY) override;
-  void Resize(double aWidth, double aHeight, bool aRepaint) override;
-  void Resize(double aX, double aY, double aWidth, double aHeight,
-              bool aRepaint) override;
+  void Move(const DesktopPoint&) override;
+  void Resize(const DesktopSize&, bool aRepaint) override;
+  void Resize(const DesktopRect&, bool aRepaint) override;
   nsSizeMode SizeMode() override { return mSizeMode; }
   void SetSizeMode(nsSizeMode aMode) override;
   nsresult MakeFullScreen(bool aFullScreen) override;
   void Enable(bool aState) override;
   bool IsEnabled() const override;
   void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;
+  LayoutDeviceIntRect GetBounds() override { return mBounds; }
   void Invalidate(const LayoutDeviceIntRect& aRect) override {
     // TODO: see if we need to do anything here.
   }
@@ -149,6 +149,7 @@ class HeadlessWidget final : public nsIWidget {
   // In headless there is no window manager to track window bounds
   // across size mode changes, so we must track it to emulate.
   LayoutDeviceIntRect mRestoreBounds;
+  LayoutDeviceIntRect mBounds;
   void ApplySizeModeSideEffects();
   // Move while maintaining size mode.
   void MoveInternal(int32_t aX, int32_t aY);

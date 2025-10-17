@@ -191,11 +191,10 @@ class nsWindow final : public nsIWidget {
   void ConstrainPosition(DesktopIntPoint&) override;
   void SetSizeConstraints(const SizeConstraints&) override;
   void LockAspectRatio(bool aShouldLock) override;
-  void Move(double aX, double aY) override;
+  void Move(const DesktopPoint&) override;
   void Show(bool aState) override;
-  void Resize(double aWidth, double aHeight, bool aRepaint) override;
-  void Resize(double aX, double aY, double aWidth, double aHeight,
-              bool aRepaint) override;
+  void Resize(const DesktopSize&, bool aRepaint) override;
+  void Resize(const DesktopRect&, bool aRepaint) override;
   bool IsEnabled() const override;
 
   nsSizeMode SizeMode() override { return mSizeMode; }
@@ -206,6 +205,7 @@ class nsWindow final : public nsIWidget {
   void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;
   LayoutDeviceIntRect GetScreenBounds() override;
   LayoutDeviceIntRect GetClientBounds() override;
+  LayoutDeviceIntRect GetBounds() override { return mBounds; }
   LayoutDeviceIntSize GetClientSize() override;
   LayoutDeviceIntPoint GetClientOffset() override {
     return LayoutDeviceIntPoint(mClientMargin.left, mClientMargin.top);
@@ -624,6 +624,8 @@ class nsWindow final : public nsIWidget {
   LayoutDeviceIntPoint mLastMoveRequest;
   // Margin from mBounds to the client rect (including CSD decorations).
   LayoutDeviceIntMargin mClientMargin;
+  // Bounds of the window, as in GetBounds().
+  LayoutDeviceIntRect mBounds;
 
   // This field omits duplicate scroll events caused by GNOME bug 726878.
   guint32 mLastScrollEventTime = GDK_CURRENT_TIME;

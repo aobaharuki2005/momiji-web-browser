@@ -232,7 +232,7 @@ class nsCocoaWindow final : public nsIWidget {
 
   void ConstrainPosition(DesktopIntPoint&) override;
   void SetSizeConstraints(const SizeConstraints& aConstraints) override;
-  void Move(double aX, double aY) override;
+  void Move(const DesktopPoint&) override;
   nsSizeMode SizeMode() override { return mSizeMode; }
   void SetSizeMode(nsSizeMode aMode) override;
   void GetWorkspaceID(nsAString& workspaceID) override;
@@ -354,12 +354,12 @@ class nsCocoaWindow final : public nsIWidget {
     mFullscreenTransitionAnimation = nil;
   }
 
-  void Resize(double aWidth, double aHeight, bool aRepaint) override;
-  void Resize(double aX, double aY, double aWidth, double aHeight,
-              bool aRepaint) override;
+  void Resize(const DesktopSize&, bool aRepaint) override;
+  void Resize(const DesktopRect&, bool aRepaint) override;
   NSRect GetClientCocoaRect();
   LayoutDeviceIntRect GetClientBounds() override;
   LayoutDeviceIntRect GetScreenBounds() override;
+  LayoutDeviceIntRect GetBounds() override { return mBounds; }
   void ReportMoveEvent();
   void ReportSizeEvent();
   bool WidgetTypeSupportsAcceleration() override { return true; }
@@ -661,6 +661,8 @@ class nsCocoaWindow final : public nsIWidget {
   RefPtr<mozilla::widget::TextInputHandler> mTextInputHandler;
   InputContext mInputContext;
   NSWindowAnimationBehavior mWindowAnimationBehavior;
+
+  LayoutDeviceIntRect mBounds;
 
   mozilla::widget::PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate =
       nullptr;

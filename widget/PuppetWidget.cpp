@@ -96,13 +96,14 @@ void PuppetWidget::InfallibleCreate(nsIWidget* aParent,
                                     const LayoutDeviceIntRect& aRect,
                                     const widget::InitData& aInitData) {
   BaseCreate(aParent, aInitData);
+  MOZ_ASSERT(GetDesktopToDeviceScale().scale == 1.0);
 
   mBounds = aRect;
   mEnabled = true;
 
   mNeedIMEStateInit = MightNeedIMEFocus(aInitData);
 
-  Resize(mBounds.X(), mBounds.Y(), mBounds.Width(), mBounds.Height(), false);
+  Resize(aRect.Size() / GetDesktopToDeviceScale(), false);
   mMemoryPressureObserver = MemoryPressureObserver::Create(this);
 }
 
@@ -159,15 +160,15 @@ void PuppetWidget::Show(bool aState) {
     // of no use anymore (and is actually actively harmful - see
     // bug 1323586).
     mPreviouslyAttachedWidgetListener = nullptr;
-    Resize(mBounds.Width(), mBounds.Height(), false);
+    Resize(mBounds.Size() / GetDesktopToDeviceScale(), false);
     Invalidate(mBounds);
   }
 }
 
-void PuppetWidget::Resize(double aWidth, double aHeight, bool aRepaint) {
+void PuppetWidget::Resize(const DesktopSize& aSize, bool aRepaint) {
+  MOZ_ASSERT(GetDesktopToDeviceScale().scale == 1.0);
   LayoutDeviceIntRect oldBounds = mBounds;
-  mBounds.SizeTo(
-      LayoutDeviceIntSize(NSToIntRound(aWidth), NSToIntRound(aHeight)));
+  mBounds.SizeTo(LayoutDeviceIntSize::Round(aSize * GetDesktopToDeviceScale()));
 
   // XXX: roc says that |aRepaint| dictates whether or not to
   // invalidate the expanded area
@@ -965,6 +966,8 @@ LayoutDeviceIntPoint PuppetWidget::GetWindowPosition() {
   return LayoutDeviceIntPoint(winX, winY) +
          GetOwningBrowserChild()->GetClientOffset();
 }
+
+LayoutDeviceIntRect PuppetWidget::GetBounds() { return mBounds; }
 
 LayoutDeviceIntRect PuppetWidget::GetScreenBounds() {
   return LayoutDeviceIntRect(WidgetToScreenOffset(), mBounds.Size());

@@ -1934,7 +1934,7 @@ nsDocumentViewer::SetBoundsWithFlags(const LayoutDeviceIntRect& aBounds,
   if (mWindow && !mAttachedToParent) {
     // Resize the widget, but don't trigger repaint. Layout will generate
     // repaint requests during reflow.
-    mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height, false);
+    mWindow->Resize(aBounds / mWindow->GetDesktopToDeviceScale(), false);
   } else if (mPresContext && mViewManager) {
     // Ensure presContext's deviceContext is up to date, as we sometimes get
     // here before a resolution-change notification has been fully handled
@@ -2002,7 +2002,7 @@ nsDocumentViewer::Move(int32_t aX, int32_t aY) {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
   mBounds.MoveTo(aX, aY);
   if (mWindow) {
-    mWindow->Move(aX, aY);
+    mWindow->Move(mBounds.TopLeft() / mWindow->GetDesktopToDeviceScale());
   }
   return NS_OK;
 }

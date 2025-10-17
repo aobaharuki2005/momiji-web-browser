@@ -772,18 +772,7 @@ class nsIWidget : public nsSupportsWeakReference {
    * @param aY the new y position expressed in the parent's coordinate system
    *
    **/
-  virtual void Move(double aX, double aY) = 0;
-
-  // Return whether this widget interprets parameters to Move and Resize APIs
-  // as "desktop pixels" rather than "device pixels", and therefore
-  // applies its GetDefaultScale() value to them before using them as mBounds
-  // etc (which are always stored in device pixels).
-  // Note that APIs that -get- the widget's position/size/bounds, rather than
-  // -setting- them (i.e. moving or resizing the widget) will always return
-  // values in the widget's device pixels.
-  bool BoundsUseDesktopPixels() const {
-    return mWindowType <= WindowType::Popup;
-  }
+  virtual void Move(const DesktopPoint&) = 0;
 
   /**
    * Reposition this widget so that the client area has the given offset.
@@ -793,7 +782,7 @@ class nsIWidget : public nsSupportsWeakReference {
    *                 widget (for root widgets and popup widgets it is in
    *                 screen coordinates)
    **/
-  virtual void MoveClient(const DesktopPoint& aOffset);
+  void MoveClient(const DesktopPoint& aOffset);
 
   /**
    * Resize this widget. Any size constraints set for the window by a
@@ -804,33 +793,23 @@ class nsIWidget : public nsSupportsWeakReference {
    *                system
    * @param aRepaint whether the widget should be repainted
    */
-  virtual void Resize(double aWidth, double aHeight, bool aRepaint) = 0;
+  virtual void Resize(const DesktopSize&, bool aRepaint) = 0;
 
   /**
    * Lock the aspect ratio of a Window
-   *
    * @param aShouldLock bool
-   *
    */
-  virtual void LockAspectRatio(bool aShouldLock) {};
+  virtual void LockAspectRatio(bool aShouldLock) {}
 
   /**
    * Move or resize this widget. Any size constraints set for the window by
    * a previous call to SetSizeConstraints will be applied.
    *
-   * @param aX       the new x position expressed in the parent's coordinate
-   *                 system
-   * @param aY       the new y position expressed in the parent's coordinate
-   *                 system
-   * @param aWidth   the new width expressed in the parent's coordinate system
-   * @param aHeight  the new height expressed in the parent's coordinate
-   *                 system
    * @param aRepaint whether the widget should be repainted if the size
    *                 changes
    *
    */
-  virtual void Resize(double aX, double aY, double aWidth, double aHeight,
-                      bool aRepaint) = 0;
+  virtual void Resize(const DesktopRect&, bool aRepaint) = 0;
 
   /**
    * Resize the widget so that the inner client area has the given size.
@@ -838,7 +817,7 @@ class nsIWidget : public nsSupportsWeakReference {
    * @param aSize    the new size of the client area.
    * @param aRepaint whether the widget should be repainted
    */
-  virtual void ResizeClient(const DesktopSize& aSize, bool aRepaint);
+  void ResizeClient(const DesktopSize& aSize, bool aRepaint);
 
   /**
    * Resize and reposition the widget so tht inner client area has the given
@@ -850,7 +829,7 @@ class nsIWidget : public nsSupportsWeakReference {
    *                 is in screen coordinates).
    * @param aRepaint whether the widget should be repainted
    */
-  virtual void ResizeClient(const DesktopRect& aRect, bool aRepaint);
+  void ResizeClient(const DesktopRect& aRect, bool aRepaint);
 
   /**
    * Minimize, maximize or normalize the window size.
@@ -918,7 +897,7 @@ class nsIWidget : public nsSupportsWeakReference {
    *
    * @return the x, y, width and height of this widget.
    */
-  virtual LayoutDeviceIntRect GetBounds();
+  virtual LayoutDeviceIntRect GetBounds() = 0;
 
   /**
    * Get this widget's outside dimensions in device coordinates. This
@@ -926,7 +905,7 @@ class nsIWidget : public nsSupportsWeakReference {
    *
    * @return the x, y, width and height of this widget.
    */
-  virtual LayoutDeviceIntRect GetScreenBounds();
+  virtual LayoutDeviceIntRect GetScreenBounds() { return GetBounds(); }
 
   /**
    * Similar to GetScreenBounds except that this function will always
@@ -960,7 +939,7 @@ class nsIWidget : public nsSupportsWeakReference {
    *
    * @return the x, y, width and height of the client area of this widget.
    */
-  virtual LayoutDeviceIntRect GetClientBounds();
+  virtual LayoutDeviceIntRect GetClientBounds() { return GetBounds(); }
 
   /** Whether to extend the client area into the titlebar. */
   virtual void SetCustomTitlebar(bool) {}
@@ -2430,7 +2409,6 @@ class nsIWidget : public nsSupportsWeakReference {
   Cursor mCursor;
   bool mCustomCursorAllowed = true;
   BorderStyle mBorderStyle;
-  LayoutDeviceIntRect mBounds;
   bool mIsTiled;
   PopupLevel mPopupLevel;
   PopupType mPopupType;

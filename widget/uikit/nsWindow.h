@@ -58,14 +58,16 @@ class nsWindow final : public nsIWidget {
   void SetBackgroundColor(const nscolor& aColor) override;
   void* GetNativeData(uint32_t aDataType) override;
 
-  void Move(double aX, double aY) override;
+  void Move(const DesktopPoint&) override;
   nsSizeMode SizeMode() override { return mSizeMode; }
   void SetSizeMode(nsSizeMode aMode) override;
   void EnteredFullScreen(bool aFullScreen);
-  void Resize(double aWidth, double aHeight, bool aRepaint) override;
-  void Resize(double aX, double aY, double aWidth, double aHeight,
-              bool aRepaint) override;
+  void Resize(const DesktopSize&, bool aRepaint) override;
+  void Resize(const DesktopRect&, bool aRepaint) override;
+  void DoResize(double aX, double aY, double aWidth, double aHeight,
+                bool aRepaint);
   LayoutDeviceIntRect GetScreenBounds() override;
+  LayoutDeviceIntRect GetBounds() override { return mBounds; }
   void ReportMoveEvent();
   void ReportSizeEvent();
   void ReportSizeModeEvent(nsSizeMode aMode);
@@ -164,6 +166,7 @@ class nsWindow final : public nsIWidget {
   RefPtr<mozilla::layers::NativeLayerRootCA> mNativeLayerRoot;
 
   RefPtr<mozilla::CancelableRunnable> mUnsuspendAsyncCATransactionsRunnable;
+  LayoutDeviceIntRect mBounds;
 
   void OnSizeChanged(const mozilla::gfx::IntSize& aSize);
 

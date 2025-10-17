@@ -1345,7 +1345,7 @@ class LayerViewSupport final
       return;
     }
 
-    gkWindow->Resize(aLeft, aTop, aWidth, aHeight, /* repaint */ false);
+    gkWindow->DoResize(aLeft, aTop, aWidth, aHeight, /* repaint */ false);
   }
 
   void NotifyMemoryPressure() {
@@ -2469,7 +2469,7 @@ void nsWindow::Show(bool aState) {
 bool nsWindow::IsVisible() const { return mIsVisible; }
 
 void nsWindow::ConstrainPosition(DesktopIntPoint& aPoint) {
-  ALOG("nsWindow[%p]::ConstrainPosition [%d %d]", (void*)this, aPoint.x.value,
+  ALOG("nsWindow[%p]::ConstrainPosition [%d %d]", this, aPoint.x.value,
        aPoint.y.value);
 
   // Constrain toplevel windows; children we don't care about
@@ -2478,19 +2478,25 @@ void nsWindow::ConstrainPosition(DesktopIntPoint& aPoint) {
   }
 }
 
-void nsWindow::Move(double aX, double aY) {
-  if (IsTopLevel()) return;
+void nsWindow::Move(const DesktopPoint& aPoint) {
+  if (IsTopLevel()) {
+    return;
+  }
 
-  Resize(aX, aY, mBounds.width, mBounds.height, true);
+  DoResize(aPoint.x, aPoint.y, mBounds.width, mBounds.height, true);
 }
 
-void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
-  Resize(mBounds.x, mBounds.y, aWidth, aHeight, aRepaint);
+void nsWindow::Resize(const DesktopSize& aSize, bool aRepaint) {
+  DoResize(mBounds.x, mBounds.y, aSize.width, aSize.height, aRepaint);
 }
 
-void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
-                      bool aRepaint) {
-  ALOG("nsWindow[%p]::Resize [%f %f %f %f] (repaint %d)", (void*)this, aX, aY,
+void nsWindow::Resize(const DesktopRect& aRect, bool aRepaint) {
+  DoResize(aRect.x, aRect.y, aRect.width, aRect.height, aRepaint);
+}
+
+void nsWindow::DoResize(double aX, double aY, double aWidth, double aHeight,
+                        bool aRepaint) {
+  ALOG("nsWindow[%p]::DoResize [%f %f %f %f] (repaint %d)", this, aX, aY,
        aWidth, aHeight, aRepaint);
 
   LayoutDeviceIntRect oldBounds = mBounds;

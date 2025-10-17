@@ -57,10 +57,9 @@ class MockWidget : public nsIWidget {
   }
   void Show(bool aState) override {}
   bool IsVisible() const override { return true; }
-  void Move(double aX, double aY) override {}
-  void Resize(double aWidth, double aHeight, bool aRepaint) override {}
-  void Resize(double aX, double aY, double aWidth, double aHeight,
-              bool aRepaint) override {}
+  void Move(const DesktopPoint&) override {}
+  void Resize(const DesktopSize&, bool aRepaint) override {}
+  void Resize(const DesktopRect&, bool aRepaint) override {}
 
   void Enable(bool aState) override {}
   bool IsEnabled() const override { return true; }

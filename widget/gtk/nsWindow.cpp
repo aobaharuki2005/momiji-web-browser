@@ -1117,29 +1117,23 @@ void nsWindow::ResizeInt(const Maybe<LayoutDeviceIntPoint>& aMove,
   NativeMoveResize(moved, resized);
 }
 
-void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
-  double scale =
-      BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
-  LOG("nsWindow::Resize %.2f x %.2f (scaled %.2f x %.2f)", aWidth, aHeight,
-      scale * aWidth, scale * aHeight);
-
-  auto size = LayoutDeviceIntSize::Round(scale * aWidth, scale * aHeight);
-
+void nsWindow::Resize(const DesktopSize& aSize, bool aRepaint) {
+  auto size = LayoutDeviceIntSize::Round(aSize * GetDesktopToDeviceScale());
+  LOG("nsWindow::Resize %s (scaled %s)", ToString(aSize).c_str(),
+      ToString(size).c_str());
   ResizeInt(Nothing(), size);
 }
 
-void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
-                      bool aRepaint) {
-  double scale =
-      BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
-  auto size = LayoutDeviceIntSize::Round(scale * aWidth, scale * aHeight);
-  auto topLeft = LayoutDeviceIntPoint::Round(scale * aX, scale * aY);
+void nsWindow::Resize(const DesktopRect& aRect, bool aRepaint) {
+  auto size =
+      LayoutDeviceIntSize::Round(aRect.Size() * GetDesktopToDeviceScale());
+  auto topLeft =
+      LayoutDeviceIntPoint::Round(aRect.TopLeft() * GetDesktopToDeviceScale());
 
-  LOG("nsWindow::Resize [%.2f,%.2f] -> [%.2f x %.2f] scaled [%.2f,%.2f] -> "
-      "[%.2f x %.2f] "
-      "repaint %d\n",
-      aX, aY, aWidth, aHeight, scale * aX, scale * aY, scale * aWidth,
-      scale * aHeight, aRepaint);
+  LOG("nsWindow::Resize [%.2f,%.2f] -> [%.2f x %.2f] scaled [%d,%d] -> "
+      "[%d x %d] repaint %d\n",
+      aRect.x, aRect.y, aRect.width, aRect.height, topLeft.x.value,
+      topLeft.y.value, size.width, size.height, aRepaint);
 
   ResizeInt(Some(topLeft), size);
 }
@@ -1148,11 +1142,9 @@ void nsWindow::Enable(bool aState) { mEnabled = aState; }
 
 bool nsWindow::IsEnabled() const { return mEnabled; }
 
-void nsWindow::Move(double aX, double aY) {
-  double scale =
-      BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
-  const LayoutDeviceIntPoint request(NSToIntRound(aX * scale),
-                                     NSToIntRound(aY * scale));
+void nsWindow::Move(const DesktopPoint& aTopLeft) {
+  auto request =
+      LayoutDeviceIntPoint::Round(aTopLeft * GetDesktopToDeviceScale());
   LOG("nsWindow::Move to %d x %d\n", request.x.value, request.y.value);
 
   if (mSizeMode != nsSizeMode_Normal && IsTopLevelWidget()) {

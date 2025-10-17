@@ -716,15 +716,14 @@ nsresult AppWindow::MoveResize(const Maybe<DesktopPoint>& aPosition,
   }
 
   if (aPosition && aSize) {
-    mWindow->Resize(aPosition->x, aPosition->y, aSize->width, aSize->height,
-                    aRepaint);
+    mWindow->Resize(DesktopRect(*aPosition, *aSize), aRepaint);
     dirtyAttributes = {PersistentAttribute::Size,
                        PersistentAttribute::Position};
   } else if (aSize) {
-    mWindow->Resize(aSize->width, aSize->height, aRepaint);
+    mWindow->Resize(*aSize, aRepaint);
     dirtyAttributes = {PersistentAttribute::Size};
   } else if (aPosition) {
-    mWindow->Move(aPosition->x, aPosition->y);
+    mWindow->Move(*aPosition);
     dirtyAttributes = {PersistentAttribute::Position};
   }
 

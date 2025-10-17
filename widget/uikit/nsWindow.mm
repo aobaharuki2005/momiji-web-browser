@@ -346,10 +346,10 @@ class nsAutoRetainUIKitObject {
   }
 
   CGFloat scaleFactor = [self contentScaleFactor];
-  mGeckoChild->Resize(self.frame.origin.x * scaleFactor,
-                      self.frame.origin.y * scaleFactor,
-                      self.frame.size.width * scaleFactor,
-                      self.frame.size.height * scaleFactor, false);
+  mGeckoChild->DoResize(self.frame.origin.x * scaleFactor,
+                        self.frame.origin.y * scaleFactor,
+                        self.frame.size.width * scaleFactor,
+                        self.frame.size.height * scaleFactor, false);
 }
 
 - (BOOL)canBecomeFirstResponder {
@@ -861,14 +861,16 @@ void nsWindow::Show(bool aState) {
   }
 }
 
-void nsWindow::Move(double aX, double aY) {
-  if (!mNativeView || (mBounds.x == aX && mBounds.y == aY)) return;
+void nsWindow::Move(const DesktopPoint& aPoint) {
+  if (!mNativeView || (mBounds.x == aPoint.x && mBounds.y == aPoint.y)) {
+    return;
+  }
 
   // XXX: handle this
   // The point we have is in Gecko coordinates (origin top-left). Convert
   // it to Cocoa ones (origin bottom-left).
-  mBounds.x = aX;
-  mBounds.y = aY;
+  mBounds.x = aPoint.x;
+  mBounds.y = aPoint.y;
 
   if (mWindowType != WindowType::TopLevel) {
     mNativeView.frame = DevPixelsToUIKitPoints(mBounds, BackingScaleFactor());
@@ -879,11 +881,19 @@ void nsWindow::Move(double aX, double aY) {
   ReportMoveEvent();
 }
 
-void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
-                      bool aRepaint) {
-  BOOL isMoving = (mBounds.x != aX || mBounds.y != aY);
-  BOOL isResizing = (mBounds.width != aWidth || mBounds.height != aHeight);
-  if (!mNativeView || (!isMoving && !isResizing)) return;
+void nsWindow::Resize(const DesktopRect& aRect, bool aRepaint) {
+  DoResize(aRect.x, aRect.y, aRect.width, aRect.height, aRepaint);
+}
+
+void nsWindow::DoResize(double aX, double aY, double aWidth, double aHeight,
+                        bool aRepaint) {
+  // FIXME: This code is confused about integers vs. double coords, and desktop
+  // vs. device pixels.
+  BOOL isMoving = mBounds.x != aX || mBounds.y != aY;
+  BOOL isResizing = mBounds.width != aWidth || mBounds.height != aHeight;
+  if (!mNativeView || (!isMoving && !isResizing)) {
+    return;
+  }
 
   if (isMoving) {
     mBounds.x = aX;
@@ -906,12 +916,14 @@ void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
   if (isResizing) ReportSizeEvent();
 }
 
-void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
-  if (!mNativeView || (mBounds.width == aWidth && mBounds.height == aHeight))
+void nsWindow::Resize(const DesktopSize& aSize, bool aRepaint) {
+  if (!mNativeView ||
+      (mBounds.width == aSize.width && mBounds.height == aSize.height)) {
     return;
+  }
 
-  mBounds.width = aWidth;
-  mBounds.height = aHeight;
+  mBounds.width = aSize.width;
+  mBounds.height = aSize.height;
 
   if (mWindowType != WindowType::TopLevel) {
     [mNativeView
