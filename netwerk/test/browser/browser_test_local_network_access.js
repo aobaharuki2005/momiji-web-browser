@@ -537,4 +537,3 @@ add_task(async function test_lna_websocket_preference() {
 
   await SpecialPowers.popPrefEnv();
 });
-
