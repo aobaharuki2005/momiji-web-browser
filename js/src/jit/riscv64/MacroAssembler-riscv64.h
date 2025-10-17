@@ -451,6 +451,7 @@ class MacroAssemblerRiscv64 : public Assembler {
 
   void Clear_if_nan_d(Register rd, FPURegister fs);
   void Clear_if_nan_s(Register rd, FPURegister fs);
+
   // Convert double to unsigned word.
   void Trunc_uw_d(Register rd, FPURegister fs, Register result = InvalidReg,
                   bool Inexact = false);
@@ -463,7 +464,7 @@ class MacroAssemblerRiscv64 : public Assembler {
   void Trunc_ul_d(Register rd, FPURegister fs, Register result = InvalidReg,
                   bool Inexact = false);
 
-  // Convert singled to signed long.
+  // Convert single to signed long.
   void Trunc_l_d(Register rd, FPURegister fs, Register result = InvalidReg,
                  bool Inexact = false);
 
@@ -479,7 +480,7 @@ class MacroAssemblerRiscv64 : public Assembler {
   void Trunc_ul_s(Register rd, FPURegister fs, Register result = InvalidReg,
                   bool Inexact = false);
 
-  // Convert singled to signed long.
+  // Convert single to signed long.
   void Trunc_l_s(Register rd, FPURegister fs, Register result = InvalidReg,
                  bool Inexact = false);
 
@@ -511,6 +512,14 @@ class MacroAssemblerRiscv64 : public Assembler {
   void Ceil_w_d(Register rd, FPURegister fs, Register result = InvalidReg,
                 bool Inexact = false);
 
+  // Ceil single to signed long.
+  void Ceil_l_s(Register rd, FPURegister fs, Register result = InvalidReg,
+                bool Inexact = false);
+
+  // Ceil double to signed long.
+  void Ceil_l_d(Register rd, FPURegister fs, Register result = InvalidReg,
+                bool Inexact = false);
+
   // Floor single to signed word.
   void Floor_w_s(Register rd, FPURegister fs, Register result = InvalidReg,
                  bool Inexact = false);
@@ -518,6 +527,22 @@ class MacroAssemblerRiscv64 : public Assembler {
   // Floor double to signed word.
   void Floor_w_d(Register rd, FPURegister fs, Register result = InvalidReg,
                  bool Inexact = false);
+
+  // Floor single to signed long.
+  void Floor_l_s(Register rd, FPURegister fs, Register result = InvalidReg,
+                 bool Inexact = false);
+
+  // Floor double to signed long.
+  void Floor_l_d(Register rd, FPURegister fs, Register result = InvalidReg,
+                 bool Inexact = false);
+
+  // Round single to signed long, ties to max magnitude (or away from zero).
+  void RoundMaxMag_l_s(Register rd, FPURegister fs,
+                       Register result = InvalidReg, bool Inexact = false);
+
+  // Round double to signed long, ties to max magnitude (or away from zero).
+  void RoundMaxMag_l_d(Register rd, FPURegister fs,
+                       Register result = InvalidReg, bool Inexact = false);
 
   void Clz32(Register rd, Register rs);
   void Ctz32(Register rd, Register rs);
