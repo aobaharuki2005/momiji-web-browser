@@ -61,10 +61,7 @@
 //   | Word size                 |  32 bit |  64 bit |  64 bit |
 //   | Page size                 |    4 Kb |    4 Kb |   16 Kb |
 //   |=========================================================|
-//   | Small    | Tiny           |    4/-w |      -w |       - |
-//   |          |                |       8 |    8/-w |       8 |
-//   |          |----------------+---------|---------|---------|
-//   |          | Quantum-spaced |      16 |      16 |      16 |
+//   | Small    | Quantum-spaced |      16 |      16 |      16 |
 //   |          |                |      32 |      32 |      32 |
 //   |          |                |      48 |      48 |      48 |
 //   |          |                |     ... |     ... |     ... |
@@ -100,13 +97,8 @@
 //
 // Legend:
 //   n:    Size class exists for this platform.
-//   n/-w: This size class doesn't exist on Windows (see kMinTinyClass).
 //   -:    This size class doesn't exist for this platform.
 //   ...:  Size classes follow a pattern here.
-//
-// NOTE: Due to Mozilla bug 691003, we cannot reserve less than one word for an
-// allocation on Linux or Mac.  So on 32-bit *nix, the smallest bucket size is
-// 4 bytes, and on 64-bit, the smallest bucket size is 8 bytes.
 //
 // A different mechanism is used for each category:
 //
@@ -243,7 +235,6 @@ struct arena_stats_t {
 class SizeClass {
  public:
   enum ClassType {
-    Tiny,
     Quantum,
     QuantumWide,
     SubPage,
@@ -251,10 +242,12 @@ class SizeClass {
   };
 
   explicit inline SizeClass(size_t aSize) {
-    if (aSize <= kMaxTinyClass) {
-      mType = Tiny;
-      mSize = std::max(RoundUpPow2(aSize), kMinTinyClass);
-    } else if (aSize <= kMaxQuantumClass) {
+    // We can skip an extra condition here if aSize > 0 and kQuantum >=
+    // kMinQuantumClass.
+    MOZ_ASSERT(aSize > 0);
+    static_assert(kQuantum >= kMinQuantumClass);
+
+    if (aSize <= kMaxQuantumClass) {
       mType = Quantum;
       mSize = QUANTUM_CEILING(aSize);
     } else if (aSize <= kMaxQuantumWideClass) {
@@ -2692,25 +2685,18 @@ void* arena_t::MallocSmall(size_t aSize, bool aZero) {
   aSize = sizeClass.Size();
 
   switch (sizeClass.Type()) {
-    case SizeClass::Tiny:
-      bin = &mBins[FloorLog2(aSize / kMinTinyClass)];
-      break;
     case SizeClass::Quantum:
       // Although we divide 2 things by kQuantum, the compiler will
-      // reduce `kMinQuantumClass / kQuantum` and `kNumTinyClasses` to a
-      // single constant.
-      bin = &mBins[kNumTinyClasses + (aSize / kQuantum) -
-                   (kMinQuantumClass / kQuantum)];
+      // reduce `kMinQuantumClass / kQuantum` to a single constant.
+      bin = &mBins[(aSize / kQuantum) - (kMinQuantumClass / kQuantum)];
       break;
     case SizeClass::QuantumWide:
-      bin =
-          &mBins[kNumTinyClasses + kNumQuantumClasses + (aSize / kQuantumWide) -
-                 (kMinQuantumWideClass / kQuantumWide)];
+      bin = &mBins[kNumQuantumClasses + (aSize / kQuantumWide) -
+                   (kMinQuantumWideClass / kQuantumWide)];
       break;
     case SizeClass::SubPage:
-      bin =
-          &mBins[kNumTinyClasses + kNumQuantumClasses + kNumQuantumWideClasses +
-                 (FloorLog2(aSize) - LOG2(kMinSubPageClass))];
+      bin = &mBins[kNumQuantumClasses + kNumQuantumWideClasses +
+                   (FloorLog2(aSize) - LOG2(kMinSubPageClass))];
       break;
     default:
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected size class type");
@@ -4210,7 +4196,9 @@ inline void* MozJemalloc::valloc(size_t aSize) {
 
 // This was added by Mozilla for use by SQLite.
 inline size_t MozJemalloc::malloc_good_size(size_t aSize) {
-  if (aSize <= gMaxLargeClass) {
+  if (aSize == 0) {
+    aSize = SizeClass(1).Size();
+  } else if (aSize <= gMaxLargeClass) {
     // Small or large
     aSize = SizeClass(aSize).Size();
   } else {
