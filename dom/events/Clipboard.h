@@ -9,7 +9,6 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/Logging.h"
-#include "mozilla/RefPtr.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
 
