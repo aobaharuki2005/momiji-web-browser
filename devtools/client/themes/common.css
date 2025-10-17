@@ -413,15 +413,11 @@ iframe {
 }
 
 /* Standalone buttons */
-.devtools-button[data-standalone] {
+.devtools-button.devtools-button-standalone {
   min-height: 28px;
   padding: 4px 6px;
-  border: 1px solid transparent;
+  border: 1px solid light-dark(rgba(138, 161, 180, 0.2), transparent);
   background: var(--toolbarbutton-background);
-}
-
-.theme-light .devtools-button[data-standalone] {
-  border-color: rgba(138, 161, 180, 0.2);
 }
 
 /* Selectable button which is unchecked. */
