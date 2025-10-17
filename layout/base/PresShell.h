@@ -740,18 +740,6 @@ class PresShell final : public nsStubDocumentObserver,
    */
   MOZ_CAN_RUN_SCRIPT void ReconstructFrames();
 
-  /**
-   * See if reflow verification is enabled. To enable reflow verification add
-   * "verifyreflow:1" to your MOZ_LOG environment variable (any non-zero
-   * debug level will work). Or, call SetVerifyReflowEnable with true.
-   */
-  static bool GetVerifyReflowEnable();
-
-  /**
-   * Set the verify-reflow enable flag.
-   */
-  static void SetVerifyReflowEnable(bool aEnabled);
-
   nsIFrame* GetAbsoluteContainingBlock(nsIFrame* aFrame);
 
   // https://drafts.csswg.org/css-anchor-position-1/#target
@@ -3182,11 +3170,7 @@ class PresShell final : public nsStubDocumentObserver,
   VisibleFrames mApproximatelyVisibleFrames;
 
 #ifdef DEBUG
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool VerifyIncrementalReflow();
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoVerifyReflow();
   void VerifyHasDirtyRootAncestor(nsIFrame* aFrame);
-
-  bool mInVerifyReflow = false;
   // The reflow root under which we're currently reflowing.  Null when
   // not in reflow.
   nsIFrame* mCurrentReflowRoot = nullptr;
