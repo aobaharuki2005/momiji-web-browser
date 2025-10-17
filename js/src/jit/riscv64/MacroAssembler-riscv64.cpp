@@ -6743,11 +6743,13 @@ void MacroAssemblerRiscv64::FloatMinMaxHelper(FPURegister dst, FPURegister src1,
   MOZ_ASSERT((std::is_same<F_TYPE, float>::value) ||
              (std::is_same<F_TYPE, double>::value));
 
-  if (src1 == src2 && dst != src1) {
-    if (std::is_same<float, F_TYPE>::value) {
-      fmv_s(dst, src1);
-    } else {
-      fmv_d(dst, src1);
+  if (src1 == src2) {
+    if (dst != src1) {
+      if (std::is_same<float, F_TYPE>::value) {
+        fmv_s(dst, src1);
+      } else {
+        fmv_d(dst, src1);
+      }
     }
     return;
   }
