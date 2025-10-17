@@ -259,10 +259,10 @@ class nsTextFrame : public nsIFrame {
     int32_t mLength;
 
     // space for each whitespace char
-    const gfxFloat mWordSpacing;
+    const nscoord mWordSpacing;
 
     // space for each letter
-    const gfxFloat mLetterSpacing;
+    const nscoord mLetterSpacing;
 
     // If TextAutospace exists, inter-script spacing applies.
     Maybe<mozilla::TextAutospace> mTextAutospace;
