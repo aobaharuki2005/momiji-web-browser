@@ -382,6 +382,7 @@ export default [
       "toolkit/components/certviewer/content/components/about-certificate-items.mjs",
       "toolkit/components/certviewer/content/components/about-certificate-section.mjs",
       "toolkit/components/httpsonlyerror/content/errorpage.js",
+      "toolkit/content/aboutRestricted/aboutRestricted.mjs",
       "toolkit/content/aboutNetError.mjs",
       "toolkit/content/aboutNetErrorHelpers.mjs",
       "toolkit/content/net-error-card.mjs",

@@ -453,6 +453,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   bool CanOpenModalPicker();
 
+  static bool ShouldEnforceParentalControls();
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();

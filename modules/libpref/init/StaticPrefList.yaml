@@ -17574,6 +17574,17 @@
   value: 1
   mirror: always
 
+- name: security.restrict_to_adults.respect_platform
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.restrict_to_adults.always
+  type: bool
+  value: false
+  mirror: always
+
+
 #---------------------------------------------------------------------------
 # Prefs starting with "signon."
 #---------------------------------------------------------------------------

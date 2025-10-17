@@ -119,6 +119,20 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
+  AboutRestricted: {
+    parent: {
+      esModuleURI: "resource://gre/actors/AboutRestrictedParent.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource://gre/actors/AboutRestrictedChild.sys.mjs",
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["about:restricted?*"],
+    allFrames: true,
+  },
+
   AudioPlayback: {
     parent: {
       esModuleURI: "resource://gre/actors/AudioPlaybackParent.sys.mjs",

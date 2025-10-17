@@ -284,7 +284,10 @@ struct EmbedderColorSchemes {
    * protections */                                                           \
   FIELD(TopInnerSizeForRFP, CSSIntSize)                                       \
   /* Used to propagate document's IPAddressSpace  */                          \
-  FIELD(IPAddressSpace, nsILoadInfo::IPAddressSpace)
+  FIELD(IPAddressSpace, nsILoadInfo::IPAddressSpace)                          \
+  /* This is true if we should redirect to an error page when inserting *     \
+   * meta tags flagging adult content into our documents */                   \
+  FIELD(ParentalControlsEnabled, bool)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -1417,6 +1420,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   bool CanSet(FieldIndex<IDX_IPAddressSpace>, nsILoadInfo::IPAddressSpace,
               ContentParent*) {
+    return XRE_IsParentProcess();
+  }
+
+  bool CanSet(FieldIndex<IDX_ParentalControlsEnabled>, bool, ContentParent*) {
     return XRE_IsParentProcess();
   }
 

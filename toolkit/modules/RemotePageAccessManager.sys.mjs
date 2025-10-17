@@ -236,6 +236,10 @@ export let RemotePageAccessManager = {
       ],
       RPMRecordGleanEvent: ["securityUiProtections"],
     },
+    "about:restricted": {
+      RPMSendAsyncMessage: ["goBack"],
+      RPMGetBoolPref: ["security.restrict_to_adults.always"],
+    },
     "about:tabcrashed": {
       RPMSendAsyncMessage: ["Load", "closeTab", "restoreTab", "restoreAll"],
       RPMAddMessageListener: ["*"],

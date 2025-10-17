@@ -782,6 +782,11 @@ class nsDocShell final : public nsDocLoader,
     return didDisplayLoadError;
   }
 
+  // Called when a document is recognised as content the device owner doesn't
+  // want to be displayed. Stops parsing, stops scripts, and displays an
+  // error page with DisplayLoadError.
+  void DisplayRestrictedContentError();
+
   //
   // Uncategorized
   //
