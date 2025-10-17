@@ -6405,12 +6405,14 @@ LayoutDeviceIntRect nsCocoaWindow::GetScreenBounds() {
 
 double nsCocoaWindow::GetDefaultScaleInternal() { return BackingScaleFactor(); }
 
-static CGFloat GetBackingScaleFactor(NSWindow* aWindow) {
-  NSRect frame = aWindow.frame;
-  if (frame.size.width > 0 && frame.size.height > 0) {
-    return nsCocoaUtils::GetBackingScaleFactor(aWindow);
+CGFloat nsCocoaWindow::ComputeBackingScaleFactor() const {
+  if (nsIWidget* parent = GetParent()) {
+    return parent->GetDesktopToDeviceScale().scale;
   }
-
+  NSRect frame = mWindow.frame;
+  if (frame.size.width > 0 && frame.size.height > 0) {
+    return nsCocoaUtils::GetBackingScaleFactor(mWindow);
+  }
   // For windows with zero width or height, the backingScaleFactor method
   // is broken - it will always return 2 on a retina macbook, even when
   // the window position implies it's on a non-hidpi external display
@@ -6421,18 +6423,17 @@ static CGFloat GetBackingScaleFactor(NSWindow* aWindow) {
   // NSBackingPropertyOldScaleFactorKey key when a window on an
   // external display is resized to/from zero height, even though it hasn't
   // really changed screens.
-
+  //
   // This causes us to handle popup window sizing incorrectly when the
   // popup is resized to zero height (bug 820327) - nsXULPopupManager
   // becomes (incorrectly) convinced the popup has been explicitly forced
   // to a non-default size and needs to have size attributes attached.
-
+  //
   // Workaround: instead of asking the window, we'll find the screen it is on
   // and ask that for *its* backing scale factor.
-
+  //
   // (See bug 853252 and additional comments in windowDidChangeScreen: below
   // for further complications this causes.)
-
   // First, expand the rect so that it actually has a measurable area,
   // for FindTargetScreenForRect to use.
   if (frame.size.width == 0) {
@@ -6441,7 +6442,6 @@ static CGFloat GetBackingScaleFactor(NSWindow* aWindow) {
   if (frame.size.height == 0) {
     frame.size.height = 1;
   }
-
   // Then identify the screen it belongs to, and return its scale factor.
   NSScreen* screen =
       FindTargetScreenForRect(nsCocoaUtils::CocoaRectToGeckoRect(frame));
@@ -6455,12 +6455,12 @@ CGFloat nsCocoaWindow::BackingScaleFactor() const {
   if (!mWindow) {
     return 1.0;
   }
-  mBackingScaleFactor = GetBackingScaleFactor(mWindow);
+  mBackingScaleFactor = ComputeBackingScaleFactor();
   return mBackingScaleFactor;
 }
 
 void nsCocoaWindow::BackingScaleFactorChanged() {
-  CGFloat newScale = GetBackingScaleFactor(mWindow);
+  CGFloat newScale = ComputeBackingScaleFactor();
 
   // Ignore notification if it hasn't really changed
   if (BackingScaleFactor() == newScale) {

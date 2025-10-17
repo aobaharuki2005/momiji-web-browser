@@ -520,6 +520,7 @@ class nsCocoaWindow final : public nsIWidget {
   void UpdateBounds();
   int32_t GetWorkspaceID();
   void MoveVisibleWindowToWorkspace(int32_t workspaceID);
+  CGFloat ComputeBackingScaleFactor() const;
 
   void DoResize(double aX, double aY, double aWidth, double aHeight,
                 bool aRepaint, bool aConstrainToCurrentScreen);
