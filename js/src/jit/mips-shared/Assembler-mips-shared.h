@@ -1146,14 +1146,20 @@ class AssemblerMIPSShared : public AssemblerShared {
  public:
   // FP convert instructions
   BufferOffset as_ceilws(FloatRegister fd, FloatRegister fs);
+  BufferOffset as_ceills(FloatRegister fd, FloatRegister fs);
   BufferOffset as_floorws(FloatRegister fd, FloatRegister fs);
+  BufferOffset as_floorls(FloatRegister fd, FloatRegister fs);
   BufferOffset as_roundws(FloatRegister fd, FloatRegister fs);
+  BufferOffset as_roundls(FloatRegister fd, FloatRegister fs);
   BufferOffset as_truncws(FloatRegister fd, FloatRegister fs);
   BufferOffset as_truncls(FloatRegister fd, FloatRegister fs);
 
   BufferOffset as_ceilwd(FloatRegister fd, FloatRegister fs);
+  BufferOffset as_ceilld(FloatRegister fd, FloatRegister fs);
   BufferOffset as_floorwd(FloatRegister fd, FloatRegister fs);
+  BufferOffset as_floorld(FloatRegister fd, FloatRegister fs);
   BufferOffset as_roundwd(FloatRegister fd, FloatRegister fs);
+  BufferOffset as_roundld(FloatRegister fd, FloatRegister fs);
   BufferOffset as_truncwd(FloatRegister fd, FloatRegister fs);
   BufferOffset as_truncld(FloatRegister fd, FloatRegister fs);
 

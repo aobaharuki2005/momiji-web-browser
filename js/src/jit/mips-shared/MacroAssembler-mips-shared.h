@@ -206,11 +206,6 @@ class MacroAssemblerMIPSShared : public Assembler {
   void ma_cmp_set_float32(Register dst, FloatRegister lhs, FloatRegister rhs,
                           DoubleCondition c);
 
-  void moveToDoubleLo(Register src, FloatRegister dest) { as_mtc1(src, dest); }
-  void moveFromDoubleLo(FloatRegister src, Register dest) {
-    as_mfc1(dest, src);
-  }
-
   void moveToFloat32(Register src, FloatRegister dest) { as_mtc1(src, dest); }
   void moveFromFloat32(FloatRegister src, Register dest) { as_mfc1(dest, src); }
 
