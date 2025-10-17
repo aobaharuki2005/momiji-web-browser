@@ -497,8 +497,6 @@ class Assembler : public AssemblerShared,
     return &scratch_register_list_;
   }
 
-  void EmitConstPoolWithJumpIfNeeded(size_t margin = 0) {}
-
   // As opposed to x86/x64 version, the data relocation has to be executed
   // before to recover the pointer, and not after.
   void writeDataRelocation(ImmGCPtr ptr) {

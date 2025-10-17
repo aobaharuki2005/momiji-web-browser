@@ -4918,8 +4918,12 @@ bool MacroAssemblerRiscv64::BranchShortHelper(int32_t offset, Label* L,
   UseScratchRegisterScope temps(this);
   Register scratch = Register();
   if (rt.is_imm()) {
-    scratch = temps.Acquire();
-    ma_li(scratch, Imm64(rt.immediate()));
+    if (rt.immediate() == 0) {
+      scratch = zero;
+    } else {
+      scratch = temps.Acquire();
+      ma_li(scratch, Imm64(rt.immediate()));
+    }
   } else {
     MOZ_ASSERT(rt.is_reg());
     scratch = rt.rm();
@@ -4930,7 +4934,6 @@ bool MacroAssemblerRiscv64::BranchShortHelper(int32_t offset, Label* L,
       case Always:
         if (!CalculateOffset(L, &offset, OffsetSize::kOffset21)) return false;
         Assembler::j(offset);
-        EmitConstPoolWithJumpIfNeeded();
         break;
       case Equal:
         // rs == rt
@@ -5073,15 +5076,13 @@ void MacroAssemblerRiscv64::BranchLong(Label* L) {
   // Generate position independent long branch.
   UseScratchRegisterScope temps(this);
   Register scratch = temps.Acquire();
-  int32_t imm;
-  imm = branch_long_offset(L);
+  int32_t imm = branch_long_offset(L);
   GenPCRelativeJump(scratch, imm);
 }
 
 void MacroAssemblerRiscv64::BranchAndLinkLong(Label* L) {
   // Generate position independent long branch and link.
-  int32_t imm;
-  imm = branch_long_offset(L);
+  int32_t imm = branch_long_offset(L);
   UseScratchRegisterScope temps(this);
   Register scratch = temps.Acquire();
   GenPCRelativeJumpAndLink(scratch, imm);
@@ -5089,37 +5090,25 @@ void MacroAssemblerRiscv64::BranchAndLinkLong(Label* L) {
 
 void MacroAssemblerRiscv64::ma_branch(Label* L, Condition cond, Register rs,
                                       const Operand& rt, JumpKind jumpKind) {
-  if (L->used()) {
-    if (jumpKind == ShortJump && BranchShortCheck(0, L, cond, rs, rt)) {
-      return;
-    }
-    if (cond != Always) {
-      Label skip;
-      Condition neg_cond = InvertCondition(cond);
-      (void)BranchShort(&skip, neg_cond, rs, rt);  // Guaranteed to be short.
-      BranchLong(L);
-      bind(&skip);
-    } else {
-      BranchLong(L);
-      EmitConstPoolWithJumpIfNeeded();
-    }
+  // Always prefer short jumps when the label is already bound. (If the label is
+  // bound, BranchShort can cheaply determine if short jumps are possible.)
+  if (L->bound()) {
+    jumpKind = ShortJump;
+  }
+
+  if (jumpKind == ShortJump && BranchShort(L, cond, rs, rt)) {
+    return;
+  }
+
+  if (cond != Always) {
+    Label skip;
+    Condition neg_cond = InvertCondition(cond);
+    MOZ_ALWAYS_TRUE(
+        BranchShort(&skip, neg_cond, rs, rt));  // Guaranteed to be short.
+    BranchLong(L);
+    bind(&skip);
   } else {
-    if (jumpKind == LongJump) {
-      if (cond != Always) {
-        Label skip;
-        Condition neg_cond = InvertCondition(cond);
-        (void)BranchShort(&skip, neg_cond, rs, rt);  // Guaranteed to be short.
-        BranchLong(L);
-        bind(&skip);
-      } else {
-        BranchLong(L);
-        EmitConstPoolWithJumpIfNeeded();
-      }
-    } else {
-      if (!BranchShort(L, cond, rs, rt)) {
-        ma_branch(L, cond, rs, rt, LongJump);
-      }
-    }
+    BranchLong(L);
   }
 }
 
@@ -5138,27 +5127,42 @@ void MacroAssemblerRiscv64::ma_b(Register lhs, ImmPtr imm, Label* l,
   ma_b(lhs, ImmWord(uintptr_t(imm.value)), l, c, jumpKind);
 }
 
-// Branches when done from within loongarch-specific code.
+// Branches when done from within riscv code.
 void MacroAssemblerRiscv64::ma_b(Register lhs, ImmWord imm, Label* label,
                                  Condition c, JumpKind jumpKind) {
-  UseScratchRegisterScope temps(this);
-  Register scratch = temps.Acquire();
-  MOZ_ASSERT(lhs != scratch);
-  ma_li(scratch, imm);
-  ma_b(lhs, Register(scratch), label, c, jumpKind);
+  switch (c) {
+    case Always:
+      ma_branch(label, c, zero, Operand(zero), jumpKind);
+      break;
+    case Zero:
+    case NonZero:
+    case Signed:
+    case NotSigned:
+      MOZ_ASSERT(imm.value == 0);
+      ma_b(lhs, lhs, label, c, jumpKind);
+      break;
+    default:
+      ma_branch(label, c, lhs, Operand(imm.value), jumpKind);
+      break;
+  }
 }
 
 void MacroAssemblerRiscv64::ma_b(Register lhs, Imm32 imm, Label* label,
                                  Condition c, JumpKind jumpKind) {
-  if ((c == NonZero || c == Zero || c == Signed || c == NotSigned) &&
-      imm.value == 0) {
-    ma_b(lhs, lhs, label, c, jumpKind);
-  } else {
-    UseScratchRegisterScope temps(this);
-    Register scratch = temps.Acquire();
-    MOZ_ASSERT(lhs != scratch);
-    ma_li(scratch, imm);
-    ma_b(lhs, Register(scratch), label, c, jumpKind);
+  switch (c) {
+    case Always:
+      ma_branch(label, c, zero, Operand(zero), jumpKind);
+      break;
+    case Zero:
+    case NonZero:
+    case Signed:
+    case NotSigned:
+      MOZ_ASSERT(imm.value == 0);
+      ma_b(lhs, lhs, label, c, jumpKind);
+      break;
+    default:
+      ma_branch(label, c, lhs, Operand(imm.value), jumpKind);
+      break;
   }
 }
 
@@ -5173,10 +5177,6 @@ void MacroAssemblerRiscv64::ma_b(Address addr, Imm32 imm, Label* label,
 void MacroAssemblerRiscv64::ma_b(Register lhs, Register rhs, Label* label,
                                  Condition c, JumpKind jumpKind) {
   switch (c) {
-    case Equal:
-    case NotEqual:
-      ma_branch(label, c, lhs, rhs, jumpKind);
-      break;
     case Always:
       ma_branch(label, c, zero, Operand(zero), jumpKind);
       break;
@@ -5196,10 +5196,9 @@ void MacroAssemblerRiscv64::ma_b(Register lhs, Register rhs, Label* label,
       MOZ_ASSERT(lhs == rhs);
       ma_branch(label, GreaterThanOrEqual, lhs, Operand(zero), jumpKind);
       break;
-    default: {
+    default:
       ma_branch(label, c, lhs, rhs, jumpKind);
       break;
-    }
   }
 }
 
