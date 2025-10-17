@@ -117,10 +117,6 @@
     "queryParams": ["click_sum", "ref", "click_key", "organic_search_click"],
     "topLevelSites": ["www.etsy.com"]
   },
-  "wikipedia": {
-    "queryParams": ["wprov"],
-    "topLevelSites": ["www.wikipedia.org", "en.wikipedia.org"]
-  },
   "wallstreetjournal": {
     "queryParams": ["reflink"],
     "topLevelSites": ["www.wsj.com"]
