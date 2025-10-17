@@ -183,15 +183,15 @@ void Performance::GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
 
 void Performance::GetEntriesByType(
     const nsAString& aEntryType, nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
-  if (aEntryType.EqualsLiteral("resource")) {
+  RefPtr<nsAtom> entryType = NS_Atomize(aEntryType);
+  if (entryType == nsGkAtoms::resource) {
     aRetval = mResourceEntries.Clone();
     return;
   }
 
   aRetval.Clear();
 
-  if (aEntryType.EqualsLiteral("mark") || aEntryType.EqualsLiteral("measure")) {
-    RefPtr<nsAtom> entryType = NS_Atomize(aEntryType);
+  if (entryType == nsGkAtoms::mark || entryType == nsGkAtoms::measure) {
     for (PerformanceEntry* entry : mUserEntries) {
       if (entry->GetEntryType() == entryType) {
         aRetval.AppendElement(entry);

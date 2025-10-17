@@ -608,6 +608,7 @@ STATIC_ATOMS = [
     Atom("label", "label"),
     Atom("lang", "lang"),
     Atom("language", "language"),
+    Atom("largestContentfulPaint", "largest-contentful-paint"),
     Atom("last", "last"),
     Atom("layer", "layer"),
     Atom("LayerActivity", "LayerActivity"),
