@@ -691,6 +691,55 @@ void ModuleNamespaceObject::ProxyHandler::finalize(JS::GCContext* gcx,
   }
 }
 
+static uint32_t IncrementModuleAsyncEvaluationCount(JSRuntime* rt) {
+  uint32_t ordinal = rt->moduleAsyncEvaluatingPostOrder;
+  MOZ_ASSERT(ordinal != ASYNC_EVALUATING_POST_ORDER_DONE);
+  MOZ_ASSERT(ordinal != ASYNC_EVALUATING_POST_ORDER_UNSET);
+  MOZ_ASSERT(ordinal < ASYNC_EVALUATING_POST_ORDER_MAX_VALUE);
+  rt->moduleAsyncEvaluatingPostOrder++;
+  return ordinal;
+}
+
+// Reset the runtime's moduleAsyncEvaluatingPostOrder counter when the last
+// module that was async evaluating is finished.
+//
+// The graph is not re-entrant and any future modules will be independent from
+// this one.
+static void MaybeResetPostOrderCounter(JSRuntime* rt,
+                                       uint32_t finishedPostOrder) {
+  if (rt->moduleAsyncEvaluatingPostOrder == finishedPostOrder + 1) {
+    rt->moduleAsyncEvaluatingPostOrder = 0;
+  }
+}
+
+bool AsyncEvaluationOrder::isUnset() const {
+  return value == ASYNC_EVALUATING_POST_ORDER_UNSET;
+}
+
+bool AsyncEvaluationOrder::isDone() const {
+  return value == ASYNC_EVALUATING_POST_ORDER_DONE;
+}
+
+bool AsyncEvaluationOrder::isInteger() const {
+  return value <= ASYNC_EVALUATING_POST_ORDER_MAX_VALUE;
+}
+
+uint32_t AsyncEvaluationOrder::get() const {
+  MOZ_ASSERT(isInteger());
+  return value;
+}
+
+void AsyncEvaluationOrder::set(JSRuntime* rt) {
+  MOZ_ASSERT(isUnset());
+  value = IncrementModuleAsyncEvaluationCount(rt);
+}
+
+void AsyncEvaluationOrder::setDone(JSRuntime* rt) {
+  MOZ_ASSERT(isInteger());
+  MaybeResetPostOrderCounter(rt, value);
+  value = ASYNC_EVALUATING_POST_ORDER_DONE;
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // SyntheticModuleFields
 
@@ -721,13 +770,11 @@ class js::CyclicModuleFields {
   // Flag bits that determine whether other fields are present.
   bool hasDfsIndex : 1;
   bool hasDfsAncestorIndex : 1;
-  bool isAsyncEvaluating : 1;
   bool hasPendingAsyncDependencies : 1;
 
   // Fields whose presence is conditional on the flag bits above.
   uint32_t dfsIndex = 0;
   uint32_t dfsAncestorIndex = 0;
-  uint32_t asyncEvaluatingPostOrder = 0;
   uint32_t pendingAsyncDependencies = 0;
 
   // Fields describing the layout of exportEntries.
@@ -744,6 +791,7 @@ class js::CyclicModuleFields {
   ExportEntryVector exportEntries;
   IndirectBindingMap importBindings;
   UniquePtr<FunctionDeclarationVector> functionDeclarations;
+  AsyncEvaluationOrder asyncEvaluationOrder;
   HeapPtr<PromiseObject*> topLevelCapability;
   HeapPtr<ListObject*> asyncParentModules;
   HeapPtr<ModuleObject*> cycleRoot;
@@ -767,11 +815,6 @@ class js::CyclicModuleFields {
   Maybe<uint32_t> maybeDfsAncestorIndex() const;
   void clearDfsIndexes();
 
-  void setAsyncEvaluating(uint32_t postOrder);
-  bool getIsAsyncEvaluating() const;
-  Maybe<uint32_t> maybeAsyncEvaluatingPostOrder() const;
-  void clearAsyncEvaluatingPostOrder();
-
   void setPendingAsyncDependencies(uint32_t newValue);
   Maybe<uint32_t> maybePendingAsyncDependencies() const;
 };
@@ -780,7 +823,6 @@ CyclicModuleFields::CyclicModuleFields()
     : hasTopLevelAwait(false),
       hasDfsIndex(false),
       hasDfsAncestorIndex(false),
-      isAsyncEvaluating(false),
       hasPendingAsyncDependencies(false) {}
 
 void CyclicModuleFields::trace(JSTracer* trc) {
@@ -853,28 +895,6 @@ void CyclicModuleFields::clearDfsIndexes() {
   hasDfsIndex = false;
   dfsAncestorIndex = 0;
   hasDfsAncestorIndex = false;
-}
-
-void CyclicModuleFields::setAsyncEvaluating(uint32_t postOrder) {
-  isAsyncEvaluating = true;
-  asyncEvaluatingPostOrder = postOrder;
-}
-
-bool CyclicModuleFields::getIsAsyncEvaluating() const {
-  return isAsyncEvaluating;
-}
-
-Maybe<uint32_t> CyclicModuleFields::maybeAsyncEvaluatingPostOrder() const {
-  if (!isAsyncEvaluating ||
-      asyncEvaluatingPostOrder == ASYNC_EVALUATING_POST_ORDER_CLEARED) {
-    return Nothing();
-  }
-
-  return Some(asyncEvaluatingPostOrder);
-}
-
-void CyclicModuleFields::clearAsyncEvaluatingPostOrder() {
-  asyncEvaluatingPostOrder = ASYNC_EVALUATING_POST_ORDER_CLEARED;
 }
 
 void CyclicModuleFields::setPendingAsyncDependencies(uint32_t newValue) {
@@ -1053,32 +1073,6 @@ void ModuleObject::initAsyncSlots(JSContext* cx, bool hasTopLevelAwait,
   cyclicModuleFields()->asyncParentModules = asyncParentModules;
 }
 
-static uint32_t NextPostOrder(JSRuntime* rt) {
-  uint32_t ordinal = rt->moduleAsyncEvaluatingPostOrder;
-  MOZ_ASSERT(ordinal != ASYNC_EVALUATING_POST_ORDER_CLEARED);
-  MOZ_ASSERT(ordinal < MAX_UINT32);
-  rt->moduleAsyncEvaluatingPostOrder++;
-  return ordinal;
-}
-
-// Reset the runtime's moduleAsyncEvaluatingPostOrder counter when the last
-// module that was async evaluating is finished.
-//
-// The graph is not re-entrant and any future modules will be independent from
-// this one.
-static void MaybeResetPostOrderCounter(JSRuntime* rt,
-                                       uint32_t finishedPostOrder) {
-  if (rt->moduleAsyncEvaluatingPostOrder == finishedPostOrder + 1) {
-    rt->moduleAsyncEvaluatingPostOrder = ASYNC_EVALUATING_POST_ORDER_INIT;
-  }
-}
-
-void ModuleObject::setAsyncEvaluating() {
-  MOZ_ASSERT(!isAsyncEvaluating());
-  uint32_t postOrder = NextPostOrder(runtimeFromMainThread());
-  cyclicModuleFields()->setAsyncEvaluating(postOrder);
-}
-
 void ModuleObject::initScriptSlots(HandleScript script) {
   MOZ_ASSERT(script);
   MOZ_ASSERT(script->sourceObject());
@@ -1189,8 +1183,12 @@ bool ModuleObject::hasTopLevelAwait() const {
   return cyclicModuleFields()->hasTopLevelAwait;
 }
 
-bool ModuleObject::isAsyncEvaluating() const {
-  return cyclicModuleFields()->getIsAsyncEvaluating();
+AsyncEvaluationOrder& ModuleObject::asyncEvaluationOrder() {
+  return cyclicModuleFields()->asyncEvaluationOrder;
+}
+
+AsyncEvaluationOrder const& ModuleObject::asyncEvaluationOrder() const {
+  return cyclicModuleFields()->asyncEvaluationOrder;
 }
 
 Maybe<uint32_t> ModuleObject::maybeDfsIndex() const {
@@ -1265,23 +1263,6 @@ Maybe<uint32_t> ModuleObject::maybePendingAsyncDependencies() const {
 
 uint32_t ModuleObject::pendingAsyncDependencies() const {
   return maybePendingAsyncDependencies().value();
-}
-
-Maybe<uint32_t> ModuleObject::maybeAsyncEvaluatingPostOrder() const {
-  return cyclicModuleFields()->maybeAsyncEvaluatingPostOrder();
-}
-
-uint32_t ModuleObject::getAsyncEvaluatingPostOrder() const {
-  return cyclicModuleFields()->maybeAsyncEvaluatingPostOrder().value();
-}
-
-void ModuleObject::clearAsyncEvaluatingPostOrder() {
-  MOZ_ASSERT(status() == ModuleStatus::Evaluated);
-
-  JSRuntime* rt = runtimeFromMainThread();
-  MaybeResetPostOrderCounter(rt, getAsyncEvaluatingPostOrder());
-
-  cyclicModuleFields()->clearAsyncEvaluatingPostOrder();
 }
 
 void ModuleObject::setPendingAsyncDependencies(uint32_t newValue) {
