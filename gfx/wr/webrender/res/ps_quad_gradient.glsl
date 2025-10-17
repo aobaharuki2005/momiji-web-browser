@@ -359,7 +359,8 @@ vec4 pattern_fragment(vec4 color) {
 
 #if defined(SWGL_DRAW_SPAN)
 void swgl_drawSpanRGBA8() {
-    if (v_gradient_header.x != GRADIENT_KIND_RADIAL) {
+    int kind = v_gradient_header.x;
+    if (kind != GRADIENT_KIND_LINEAR && kind != GRADIENT_KIND_RADIAL) {
         return;
     }
 
@@ -379,16 +380,30 @@ void swgl_drawSpanRGBA8() {
 
     int offsets_addr = colors_addr + stop_count * 4;
     vec2 pos = v_interpolated_data.xy;
-    float start_radius = v_flat_data.x;
     bool repeat = v_gradient_header.z != 0.0;
 
+    if (kind == GRADIENT_KIND_LINEAR) {
+        vec2 scale_dir = v_flat_data.xy;
+        float start_offset = v_flat_data.z;
+
 #ifdef WR_FEATURE_DITHERING
-    swgl_commitDitheredRadialGradientFromStopsRGBA8(sGpuBufferF, offsets_addr, colors_addr,
-                                            stop_count, repeat, pos, start_radius, gl_FragCoord);
+        swgl_commitDitheredLinearGradientFromStopsRGBA8(sGpuBufferF, offsets_addr, colors_addr,
+            stop_count, repeat, pos, scale_dir, start_offset, gl_FragCoord);
 #else
-    swgl_commitRadialGradientFromStopsRGBA8(sGpuBufferF, offsets_addr, colors_addr,
-                                            stop_count, repeat, pos, start_radius);
+        swgl_commitLinearGradientFromStopsRGBA8(sGpuBufferF, offsets_addr, colors_addr,
+            stop_count, repeat, pos, scale_dir, start_offset);
 #endif
+    } else if (kind == GRADIENT_KIND_RADIAL) {
+      float start_radius = v_flat_data.x;
+
+#ifdef WR_FEATURE_DITHERING
+      swgl_commitDitheredRadialGradientFromStopsRGBA8(sGpuBufferF, offsets_addr, colors_addr,
+          stop_count, repeat, pos, start_radius, gl_FragCoord);
+#else
+      swgl_commitRadialGradientFromStopsRGBA8(sGpuBufferF, offsets_addr, colors_addr,
+          stop_count, repeat, pos, start_radius);
+#endif
+    }
 }
 #endif
 
