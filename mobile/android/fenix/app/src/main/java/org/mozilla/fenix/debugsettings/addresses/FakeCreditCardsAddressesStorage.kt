@@ -72,9 +72,9 @@ internal fun String.generateFakeAddressForLangTag(): UpdatableAddressFields = wh
         streetAddress = " 530 E McDowell Rd",
         addressLevel3 = "",
         addressLevel2 = "Phoenix",
-        addressLevel1 = "Arizona",
+        addressLevel1 = "AZ",
         postalCode = "85003",
-        country = "United States",
+        country = "US",
         tel = " (602) 555-5555",
         email = "englishunitedstates@gmail.com",
     )
