@@ -965,7 +965,16 @@ uint32_t H264::ComputeMaxRefFrames(const mozilla::MediaByteBuffer* aExtraData) {
       RefPtr<mozilla::MediaByteBuffer> decodedNAL = DecodeNALUnit(p, nalLen);
       SEIRecoveryData data;
       if (DecodeRecoverySEI(decodedNAL, data)) {
-        return FrameType::I_FRAME_OTHER;
+        // When both conditions are true, it means that starting decoding from
+        // an SEI frame will produce the same result as starting from an IDR
+        // frame, with no frame difference. If only one condition is true, it is
+        // not a true IDR substitute and may cause minor visual artifacts.
+        // However, since some video streams are incorrectly muxed without
+        // proper attributes, allowing playback with a few visual imperfections
+        // is preferable to failing to play them at all.
+        return (data.recovery_frame_cnt == 0 || data.exact_match_flag == 0)
+                   ? FrameType::I_FRAME_IDR
+                   : FrameType::I_FRAME_OTHER;
       }
     } else if (nalType == H264_NAL_SLICE) {
       RefPtr<mozilla::MediaByteBuffer> decodedNAL = DecodeNALUnit(p, nalLen);
