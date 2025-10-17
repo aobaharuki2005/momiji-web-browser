@@ -75,14 +75,14 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "QueryStringStripper",
   "@mozilla.org/url-query-string-stripper;1",
-  "nsIURLQueryStringStripper"
+  Ci.nsIURLQueryStringStripper
 );
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "clipboard",
   "@mozilla.org/widget/clipboardhelper;1",
-  "nsIClipboardHelper"
+  Ci.nsIClipboardHelper
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(

@@ -62,7 +62,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "gFormFillService",
   "@mozilla.org/satchel/form-fill-controller;1",
-  "nsIFormFillController"
+  Ci.nsIFormFillController
 );
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {

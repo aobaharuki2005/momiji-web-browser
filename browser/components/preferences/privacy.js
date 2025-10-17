@@ -66,7 +66,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "TrackingDBService",
   "@mozilla.org/tracking-db-service;1",
-  "nsITrackingDBService"
+  Ci.nsITrackingDBService
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(

@@ -77,8 +77,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
-  BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
-  PushService: ["@mozilla.org/push/Service;1", "nsIPushService"],
+  BrowserHandler: ["@mozilla.org/browser/clh;1", Ci.nsIBrowserHandler],
+  PushService: ["@mozilla.org/push/Service;1", Ci.nsIPushService],
 });
 
 if (AppConstants.ENABLE_WEBDRIVER) {
@@ -86,14 +86,14 @@ if (AppConstants.ENABLE_WEBDRIVER) {
     lazy,
     "Marionette",
     "@mozilla.org/remote/marionette;1",
-    "nsIMarionette"
+    Ci.nsIMarionette
   );
 
   XPCOMUtils.defineLazyServiceGetter(
     lazy,
     "RemoteAgent",
     "@mozilla.org/remote/agent;1",
-    "nsIRemoteAgent"
+    Ci.nsIRemoteAgent
   );
 } else {
   lazy.Marionette = { running: false };
@@ -153,7 +153,7 @@ export function BrowserGlue() {
     this,
     "_userIdleService",
     "@mozilla.org/widget/useridleservice;1",
-    "nsIUserIdleService"
+    Ci.nsIUserIdleService
   );
 
   this._init();

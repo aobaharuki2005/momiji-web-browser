@@ -26,9 +26,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
-  UpdateManager: ["@mozilla.org/updates/update-manager;1", "nsIUpdateManager"],
-  WinTaskbar: ["@mozilla.org/windows-taskbar;1", "nsIWinTaskbar"],
-  WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
+  UpdateManager: ["@mozilla.org/updates/update-manager;1", Ci.nsIUpdateManager],
+  WinTaskbar: ["@mozilla.org/windows-taskbar;1", Ci.nsIWinTaskbar],
+  WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", Ci.nsIWindowsUIUtils],
 });
 
 ChromeUtils.defineLazyGetter(lazy, "gSystemPrincipal", () =>

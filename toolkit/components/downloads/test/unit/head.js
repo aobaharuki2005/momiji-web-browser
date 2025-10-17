@@ -62,7 +62,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "gMIMEService",
   "@mozilla.org/mime;1",
-  "nsIMIMEService"
+  Ci.nsIMIMEService
 );
 
 const ReferrerInfo = Components.Constructor(

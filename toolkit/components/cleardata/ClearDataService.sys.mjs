@@ -18,25 +18,25 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "sas",
   "@mozilla.org/storage/activity-service;1",
-  "nsIStorageActivityService"
+  Ci.nsIStorageActivityService
 );
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "TrackingDBService",
   "@mozilla.org/tracking-db-service;1",
-  "nsITrackingDBService"
+  Ci.nsITrackingDBService
 );
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "IdentityCredentialStorageService",
   "@mozilla.org/browser/identity-credential-storage-service;1",
-  "nsIIdentityCredentialStorageService"
+  Ci.nsIIdentityCredentialStorageService
 );
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "bounceTrackingProtection",
   "@mozilla.org/bounce-tracking-protection;1",
-  "nsIBounceTrackingProtection"
+  Ci.nsIBounceTrackingProtection
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(

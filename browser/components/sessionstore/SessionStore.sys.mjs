@@ -169,7 +169,7 @@ import { GlobalState } from "resource:///modules/sessionstore/GlobalState.sys.mj
 const lazy = {};
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
-  gScreenManager: ["@mozilla.org/gfx/screenmanager;1", "nsIScreenManager"],
+  gScreenManager: ["@mozilla.org/gfx/screenmanager;1", Ci.nsIScreenManager],
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {

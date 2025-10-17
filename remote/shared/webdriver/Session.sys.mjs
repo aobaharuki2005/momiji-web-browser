@@ -38,7 +38,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "aomStartup",
   "@mozilla.org/addons/addon-manager-startup;1",
-  "amIAddonManagerStartup"
+  Ci.amIAddonManagerStartup
 );
 
 // Global singleton that holds active WebDriver sessions
