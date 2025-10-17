@@ -65,7 +65,7 @@
   <!-- Description for the "nativeMessaging" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_native_messaging_description">تبادل پیام با برنامه‌هایی جز این برنامه</string>
   <!-- Description for the "notifications" WebExtensions API permission. -->
-  <string name="mozac_feature_addons_permissions_notifications_description">نمایش هشدار بر روی صفحه برای شما</string>
+  <string name="mozac_feature_addons_permissions_notifications_description">نمایش آگاه‌سازی‌ها برای شما</string>
   <!-- Description for the "pkcs11" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_pkcs11_description">فراهم‌سازی خدمات احراز هویت رمزنگاری شده</string>
   <!-- Description for the "proxy" WebExtensions API permission. -->

@@ -337,8 +337,6 @@
   -->
   <string name="browser_menu_default_banner_title">Аз «%1$s» ба таври пешфарз истифода баред</string>
   <!-- Label text within the set as default banner -->
-  <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Дар як лаҳза танзим кунед. Дар вақти дилхоҳ иваз намоед.</string>
-  <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle_2">Зудкор, хусусӣ ва барои шумо сохта шудааст.</string>
   <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss_promotion">Пинҳон кардани таблиғу реклама</string>
@@ -605,8 +603,6 @@
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Ба мо барои инкишофи браузери «Firefox» кумак расонед</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Вақте ки шумо хабар медиҳед, ки чӣ тавр браузери «Firefox»-ро пайдо кардед ва онро истифода мебаред, шумо ба мо барои муаррифӣ кардани браузер ба шумораи зиёди одамон кумак мерасонед.</string>
-  <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Маълумоти камтаринро ба шарикони технологияи бозоршиносии «Mozilla» мубодила кунед. Ин маълумот ҳеҷ вақт фурӯхта намешавад ё нисбат ба шумо барои нишон додани таблиғ истифода намешавад.</string>
   <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_out_checkbox">Маълумотро ба шарикони технологияи бозоршиносии «Mozilla» мубодила кунед. Ин маълумот ҳеҷ вақт фурӯхта намешавад ё нисбат ба шумо барои нишон додани таблиғ истифода намешавад.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
@@ -1697,8 +1693,6 @@
     The title of the Web Compat Reporter feature. This is displayed in the top app bar.
   -->
   <string name="webcompat_reporter_screen_title">Гузориш дар бораи сомонаи вайроншуда</string>
-  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Гузориши шумо ба мо кумак мекунад, то ки тавонем ҳар гуна мушкилиро дар «%1$s» фаҳмем ва ислоҳ намоем, ва барномаро барои ҳамаи мо беҳтар созем. Маълумоти бештар гиред</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
   <string name="webcompat_reporter_description_3">Гузориши шумо ба мо кумак мекунад, то ки тавонем ҳар гуна мушкилиро дар «%1$s» фаҳмем ва ислоҳ намоем, ва барномаро барои ҳамаи мо беҳтар созем. %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
@@ -1731,6 +1725,8 @@
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Пӯшидан</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">Чӣ гап шуд? Чӣ гап мешуд?</string>
+  <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
+  <string name="webcompat_reporter_etp_checkbox_text">Фиристодани нишониҳои «URL», ки ба воситаи муҳофизат аз пайгирӣ манъ карда шудаанд</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -1791,13 +1787,9 @@
   <!--
     Bookmarks
 
-    Confirmation message for a dialog confirming if the user wants to delete the selected folder
+    Confirmation message for a dialog confirming if the user wants to delete multiple items.
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">Шумо мутмаин ҳастед, ки мехоҳед ин ҷузвдонро нест намоед?</string>
-  <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items. -->
   <string name="bookmark_delete_folders_confirmation_dialog">Шумо мутмаин ҳастед, ки мехоҳед унсурҳои интихобшударо нест намоед?</string>
-  <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">%s ҷузъҳои интихобшударо нест мекунад.</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">Бекор кардан</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1834,8 +1826,6 @@
   <string name="bookmark_menu_open_all_in_private_tabs_button">Ҳамаро дар варақаҳои хусусӣ кушодан</string>
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">Нест кардан</string>
-  <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Нигоҳ доштан</string>
   <!-- Accessibility label for sorting options -->
   <string name="bookmark_sort_menu_content_desc">Имконоти мураттабсозӣ</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
@@ -1857,8 +1847,6 @@
   <string name="edit_bookmark_fragment_title">Таҳрир кардани хатбарак</string>
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">Таҳрир кардани ҷузвдон</string>
-  <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">Барои дидани хатбаракҳои ҳамоҳангшуда ворид шавед</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">Нишонии URL</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1869,33 +1857,21 @@
   <string name="bookmark_name_label">НОМ</string>
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">Ном</string>
-  <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">Илова кардани ҷузвдон</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">Интихоб кардани ҷузвдон</string>
-  <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">Бояд унвон дошта бошад</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">Нишонии URL беэътибор аст</string>
-  <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">Ягон хатбарак нест</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">%1$s нест карда шуд</string>
-  <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">Хатбаракҳо нест карда шуданд</string>
-  <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">Несткунии ҷузвдонҳои интихобшуда</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">БОТИЛ КАРДАН</string>
   <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
   <string name="bookmark_delete_single_item">«%s» нест карда шуд</string>
   <!-- Bookmark snackbar message for deleting multiple items. %s is the number of items being deleted -->
   <string name="bookmark_delete_multiple_items">Унсурҳои нестшуда: %s</string>
-  <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">Вожаҳои ҷустуҷӯиро ворид намоед</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">Ба қафо гузаштан</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
@@ -2194,10 +2170,8 @@
   <!--
     Snackbar
 
-    Text shown in snackbar when user deletes a collection
+    Text shown in snackbar when user closes a tab
   -->
-  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Маҷмуа нест карда шуд</string>
-  <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Варақа пӯшида шуд</string>
   <!-- Text shown in snackbar when user closes all tabs -->
   <string name="snackbar_tabs_closed">Варақаҳо пӯшида шуданд</string>
@@ -2232,8 +2206,6 @@
   <string name="qr_scanner_dialog_invalid_ok">ХУБ</string>
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">Шумо мутмаин ҳастед, ки мехоҳед %1$s-ро нест намоед?</string>
-  <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Нест кардан</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Ин матни намунавӣ мебошад. Дар ин ҷо матни намунавӣ нишон медиҳад, ки чӣ тавр он ҳангоми калон ва хурд кардани андозаи ҳуруф бо танзими ҷорӣ нишон дода мешавад.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2919,8 +2891,6 @@
   <string name="confirm_clear_permission_site">Шумо мутмаин ҳастед, ки мехоҳед ин иҷозатҳоро барои сомонаи ҷорӣ тоза намоед?</string>
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">Ягон истиснои сомона нест</string>
-  <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">Шумо мутмаин ҳастед, ки мехоҳед ин хатбаракро нест намоед?</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">Илова кардан ба миёнбурҳо</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -3099,8 +3069,6 @@
   <string name="radio_preference_info_content_description">Барои тафсилоти бештар зер кунед</string>
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">Ба боло гузаред</string>
-  <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">Пӯшидан</string>
   <!--
     Pocket recommended stories
 
@@ -3788,8 +3756,6 @@
   <string name="setup_checklist_task_toolbar_selection">Ҷойгиршавии навори абзорҳоро интихоб намоед</string>
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Васеъшавиҳоро озмоед</string>
-  <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Насб кардани виҷети ҷустуҷӯ</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget_2">Озмоиши виҷети ҷустуҷӯ</string>
   <!--

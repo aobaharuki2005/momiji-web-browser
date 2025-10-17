@@ -326,8 +326,6 @@
   -->
   <string name="browser_menu_default_banner_title">Err %1$s d amezwer</string>
   <!-- Label text within the set as default banner -->
-  <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Kra n tsinin kan. Beddel sya ɣer da</string>
-  <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle_2">D arurad, d uslig, yettwaxdem i kečč⋅kemm.</string>
   <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
   <string name="browser_menu_recommended_extensions_content_description">Ugar n telɣut</string>
@@ -570,8 +568,6 @@
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Mudd afus i usnerni n Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Mi ara tebḍuḍ amek i d-tessneḍ Firefox d wamek i t-tesseqdaceḍ, ad aɣ-tɛawneḍ ad nessiweḍ iminig-nneɣ i wugar n yimdanen.</string>
-  <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Bḍu cwiṭ n yisefka akked yisefkaicriken n tetiknulujit n Mozilla. Isefka-a werǧin ttnuzun neɣ ttusqdacen i uskan n udellel.</string>
   <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_out_checkbox">Bḍu isefka akked yisefkaicriken n tetiknulujit n Mozilla. Isefka-a werǧin ttnuzun neɣ ttusqdacen i uskan n udellel.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
@@ -1695,13 +1691,9 @@
   <!--
     Bookmarks
 
-    Confirmation message for a dialog confirming if the user wants to delete the selected folder
+    Confirmation message for a dialog confirming if the user wants to delete multiple items.
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">Tebɣiḍ ad tekseḍ akaram-agi?</string>
-  <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items. -->
   <string name="bookmark_delete_folders_confirmation_dialog">D tidet tebɣid ad tekkseḍ iferdisen i yettwafernen?</string>
-  <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
-  <string name="bookmark_delete_multiple_folders_confirmation_dialog" tools:ignore="UnusedResources" moz:removedIn="143">%s ad ikkes iferdisen ittwafernen.</string>
   <!-- Text for the cancel button on delete bookmark dialog -->
   <string name="bookmark_delete_negative">Sefsex</string>
   <!-- Screen title for adding a bookmarks folder -->
@@ -1730,8 +1722,6 @@
   <string name="bookmark_menu_open_all_in_private_tabs_button">Ldi kullec deg waccaren usligen</string>
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">Kkes</string>
-  <!-- Bookmark overflow menu save button -->
-  <string name="bookmark_menu_save_button" tools:ignore="UnusedResources" moz:removedIn="143">Sekles</string>
   <!-- Accessibility label for sorting options -->
   <string name="bookmark_sort_menu_content_desc">Tixtiṛiyin n usmizwer</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
@@ -1753,8 +1743,6 @@
   <string name="edit_bookmark_fragment_title">Beddel tacreḍt n usebter</string>
   <!-- Bookmark folder editing screen title -->
   <string name="edit_bookmark_folder_fragment_title">Ẓreg akaram</string>
-  <!-- Bookmark sign in button message -->
-  <string name="bookmark_sign_in_button" tools:ignore="UnusedResources" moz:removedIn="143">Qqen akken ad twaliḍ ticṛaḍ n isebtar imtawin</string>
   <!-- Bookmark URL editing field label -->
   <string name="bookmark_url_label">URL</string>
   <!-- Bookmark FOLDER editing field label -->
@@ -1765,33 +1753,21 @@
   <string name="bookmark_name_label">ISEM</string>
   <!-- Label for a text input field for a bookmark or folder name -->
   <string name="bookmark_name_label_normal_case">Isem</string>
-  <!-- Bookmark add folder screen title -->
-  <string name="bookmark_add_folder_fragment_label" tools:ignore="UnusedResources" moz:removedIn="143">Rnu akaram</string>
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">Fren akaram</string>
-  <!-- Bookmark editing error missing title -->
-  <string name="bookmark_empty_title_error" tools:ignore="UnusedResources" moz:removedIn="143">Yssefk ad yesɛu azwel</string>
   <!-- Bookmark editing error missing or improper URL -->
   <string name="bookmark_invalid_url_error">URL mačči d tarameɣtut</string>
-  <!-- Bookmark screen message for empty bookmarks folder -->
-  <string name="bookmarks_empty_message" tools:ignore="UnusedResources" moz:removedIn="143">Ulac ticṛaḍ n isebtar dagi</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">Kkes %1$s</string>
-  <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_2" tools:ignore="UnusedResources" moz:removedIn="143">Ticraḍ n isebtar ttwakksent</string>
-  <!-- Bookmark snackbar message on deleting multiple bookmarks including folders -->
-  <string name="bookmark_deletion_multiple_snackbar_message_3" tools:ignore="UnusedResources" moz:removedIn="143">Tukksa n ikaramen ittwafernen</string>
   <!-- Bookmark undo button for deletion snackbar action -->
   <string name="bookmark_undo_deletion">UƔAL</string>
   <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
   <string name="bookmark_delete_single_item">%s yettwakkes</string>
   <!-- Bookmark snackbar message for deleting multiple items. %s is the number of items being deleted -->
   <string name="bookmark_delete_multiple_items">Iferdisen yettwakksen: %s</string>
-  <!-- Text for the button to search all bookmarks -->
-  <string name="bookmark_search" tools:ignore="UnusedResources" moz:removedIn="143">Sekcem awalen n unadi</string>
   <!-- Content description for the bookmark navigation bar back button -->
   <string name="bookmark_navigate_back_button_content_description">Inig ar deffir</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
@@ -2082,10 +2058,8 @@
   <!--
     Snackbar
 
-    Text shown in snackbar when user deletes a collection
+    Text shown in snackbar when user closes a tab
   -->
-  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Tettwakkes tegrumma</string>
-  <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Iccer imdel</string>
   <!-- Text shown in snackbar when user closes all tabs -->
   <string name="snackbar_tabs_closed">Medlen iccaren</string>
@@ -2118,8 +2092,6 @@
   <string name="qr_scanner_dialog_invalid_ok">IH</string>
   <!-- Tab collection deletion prompt dialog message. %1$s is the collection name. -->
   <string name="tab_collection_dialog_message">Tebɣiḍ ad tekseḍ %1$s?</string>
-  <!-- Tab collection deletion prompt dialog option to delete the collection -->
-  <string name="tab_collection_dialog_positive" tools:ignore="UnusedResources" moz:removedIn="143">Kkes</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Aḍris-a d amedya. akken ad tezṛeḍ amek ara d-iban u dris mi ara ad tesneɣseḍ neɣ ad ternuḍ tuɣzi deg iɣewwaṛen.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2763,8 +2735,6 @@
   <string name="confirm_clear_permission_site">Tebɣiḍ ad tekkseḍ tisirag-a i usmel-a?</string>
   <!-- label shown when there are not site exceptions to show in the site exception settings -->
   <string name="no_site_exceptions">Ulac tisuraf n ismal</string>
-  <!-- Bookmark deletion confirmation -->
-  <string name="bookmark_deletion_confirmation" tools:ignore="UnusedResources" moz:removedIn="143">Tebɣiḍ ad tekseḍ Ticraḍ-a n iccaren?</string>
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">Rnu ɣer yinegzumen</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -2933,8 +2903,6 @@
   <string name="radio_preference_info_content_description">Sit i wugar n telqayt</string>
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">Inig d asawen</string>
-  <!-- Content description for privacy content close button -->
-  <string name="privacy_content_close_button_content_description" tools:ignore="UnusedResources" moz:removedIn="143">Mdel</string>
   <!--
     Pocket recommended stories
 
@@ -3588,8 +3556,6 @@
   <string name="setup_checklist_task_toolbar_selection">Fren adeg deg ufeggag n yifecka</string>
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Snirem isiɣzaf</string>
-  <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Sbedd awiǧit n unadi</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget_2">Snirem awiǧit n unadi</string>
   <!--
