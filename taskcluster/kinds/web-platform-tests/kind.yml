@@ -235,6 +235,7 @@ tasks:
                     by-test-platform:
                         android.*: []
                         .*-wayland.*: []
+                        .*/debug: []
                         default: ['mozilla-central']
         test-manifest-loader: null  # don't load tests in the taskgraph
         tier: 2
@@ -603,6 +604,7 @@ tasks:
                     by-test-platform:
                         android.*: []
                         .*-wayland.*: []
+                        .*/debug: []
                         default: ['mozilla-central']
         test-manifest-loader: null  # don't load tests in the taskgraph
         tier: 2
