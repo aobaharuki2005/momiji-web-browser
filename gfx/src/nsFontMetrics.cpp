@@ -312,8 +312,7 @@ nscoord nsFontMetrics::GetWidth(const char* aString, uint32_t aLength,
   StubPropertyProvider provider;
   AutoTextRun textRun(this, aDrawTarget, aString, aLength);
   if (textRun.get()) {
-    return NSToCoordRound(
-        textRun->GetAdvanceWidth(gfxTextRun::Range(0, aLength), &provider));
+    return textRun->GetAdvanceWidth(gfxTextRun::Range(0, aLength), &provider);
   }
   return 0;
 }
@@ -329,8 +328,7 @@ nscoord nsFontMetrics::GetWidth(const char16_t* aString, uint32_t aLength,
   StubPropertyProvider provider;
   AutoTextRun textRun(this, aDrawTarget, aString, aLength);
   if (textRun.get()) {
-    return NSToCoordRound(
-        textRun->GetAdvanceWidth(gfxTextRun::Range(0, aLength), &provider));
+    return textRun->GetAdvanceWidth(gfxTextRun::Range(0, aLength), &provider);
   }
   return 0;
 }
