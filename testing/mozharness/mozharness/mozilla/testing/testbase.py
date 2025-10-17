@@ -3,11 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import concurrent.futures
 import copy
 import json
 import os
 import platform
 import ssl
+import traceback
 
 from six.moves import urllib
 from six.moves.urllib.parse import ParseResult, urlparse
@@ -385,7 +387,8 @@ You can set this by specifying --test-url URL
                 )
         return package_requirements
 
-    def _download_test_packages(self, suite_categories, extract_dirs):
+    def _download_test_packages(self, suite_categories, extract_dirs, executor):
+        futures = set()
         # Some platforms define more suite categories/names than others.
         # This is a difference in the convention of the configs more than
         # to how these tests are run, so we pave over these differences here.
@@ -469,7 +472,13 @@ You can set this by specifying --test-url URL
                 unpack_dirs = None
 
             url = self.query_build_dir_url(file_name)
-            self.download_unpack(url, target_dir, extract_dirs=unpack_dirs)
+            futures.add(
+                executor.submit(
+                    self.download_unpack, url, target_dir, extract_dirs=unpack_dirs
+                )
+            )
+
+        return futures
 
     def _download_test_zip(self, extract_dirs=None):
         dirs = self.query_abs_dirs()
@@ -567,33 +576,54 @@ You can set this by specifying --test-url URL
                 self.info("Replacing url %s -> %s" % (url, new_url))
                 setattr(self, attr, new_url)
 
-        if "test_url" in self.config:
-            # A user has specified a test_url directly, any test_packages_url will
-            # be ignored.
-            if self.test_packages_url:
-                self.error(
-                    'Test data will be downloaded from "%s", the specified test '
-                    ' package data at "%s" will be ignored.'
-                    % (self.config.get("test_url"), self.test_packages_url)
+        futures = set()
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            if "test_url" in self.config:
+                # A user has specified a test_url directly, any test_packages_url will
+                # be ignored.
+                if self.test_packages_url:
+                    self.error(
+                        'Test data will be downloaded from "%s", the specified test '
+                        ' package data at "%s" will be ignored.'
+                        % (self.config.get("test_url"), self.test_packages_url)
+                    )
+
+                futures.add(executor.submit(self._download_test_zip, extract_dirs))
+            else:
+                if not self.test_packages_url:
+                    # The caller intends to download harness specific packages, but doesn't know
+                    # where the packages manifest is located. This is the case when the
+                    # test package manifest isn't set as a property, which is true
+                    # for some self-serve jobs and platforms using parse_make_upload.
+                    self.test_packages_url = self.query_prefixed_build_dir_url(
+                        ".test_packages.json"
+                    )
+
+                suite_categories = suite_categories or ["common"]
+                futures.update(
+                    self._download_test_packages(
+                        suite_categories, extract_dirs, executor
+                    )
                 )
 
-            self._download_test_zip(extract_dirs)
-        else:
-            if not self.test_packages_url:
-                # The caller intends to download harness specific packages, but doesn't know
-                # where the packages manifest is located. This is the case when the
-                # test package manifest isn't set as a property, which is true
-                # for some self-serve jobs and platforms using parse_make_upload.
-                self.test_packages_url = self.query_prefixed_build_dir_url(
-                    ".test_packages.json"
-                )
+            futures.add(executor.submit(self._download_installer))
+            if self.config.get("download_symbols"):
+                futures.add(executor.submit(self._download_and_extract_symbols))
 
-            suite_categories = suite_categories or ["common"]
-            self._download_test_packages(suite_categories, extract_dirs)
+        concurrent.futures.wait(futures)
 
-        self._download_installer()
-        if self.config.get("download_symbols"):
-            self._download_and_extract_symbols()
+        exceptions = []
+        for future in futures:
+            if exc := future.exception():
+                exceptions.append(exc)
+        if exceptions:
+            # It looks weird to be adding our own `\n` here but it's necessary
+            # because `format_exception` does so, so we need to match it to be
+            # able to call `join` later to format the final message properly.
+            msg = ["Got download error(s):\n"]
+            for exc in exceptions:
+                msg.extend(traceback.format_exception(exc))
+            self.fatal("".join(msg))
 
     # create_virtualenv is in VirtualenvMixin.
 
