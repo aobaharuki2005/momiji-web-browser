@@ -95,7 +95,6 @@ internal fun AddonMenuItem(
             faviconPainter = BitmapPainter(image = addonIcon.asImageBitmap()),
             onClick = onClick,
             showDivider = showDivider,
-            dividerColor = FirefoxTheme.colors.borderPrimary,
             iconPainter = if (isInstallAddonInProgress) {
                 painterResource(id = iconsR.drawable.mozac_ic_sync_24)
             } else {

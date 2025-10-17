@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -27,10 +26,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,7 +65,6 @@ import mozilla.components.ui.icons.R as iconsR
 
 private val LIST_ITEM_HEIGHT = 56.dp
 private val ICON_SIZE = 24.dp
-private val DIVIDER_VERTICAL_PADDING = 6.dp
 
 private const val TOAST_LENGTH = Toast.LENGTH_SHORT
 
@@ -198,7 +197,6 @@ fun TextListItem(
  * @param onLongClick Called when the user long clicks on the item.
  * @param showDivider Whether or not to display a vertical divider line before the [IconButton]
  * at the end.
- * @param dividerColor [Color] to be applied to the divider. Default is [FirefoxTheme.colors.borderSecondary].
  * @param iconPainter [Painter] used to display an [IconButton] after the list item.
  * @param iconButtonModifier [Modifier] to be applied to the icon button.
  * @param iconDescription Content description of the icon.
@@ -217,7 +215,6 @@ fun FaviconListItem(
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     showDivider: Boolean = false,
-    dividerColor: Color = FirefoxTheme.colors.borderSecondary,
     iconPainter: Painter? = null,
     iconButtonModifier: Modifier = Modifier,
     iconDescription: String? = null,
@@ -256,13 +253,7 @@ fun FaviconListItem(
             if (showDivider) {
                 Spacer(modifier = Modifier.width(8.dp))
 
-                HorizontalDivider(
-                    modifier = Modifier
-                        .padding(vertical = DIVIDER_VERTICAL_PADDING)
-                        .fillMaxHeight()
-                        .width(1.dp),
-                    color = dividerColor,
-                )
+                VerticalDivider()
             }
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -420,13 +411,7 @@ private fun IconListItemAfterIcon(
     if (showDivider) {
         Spacer(modifier = Modifier.width(8.dp))
 
-        HorizontalDivider(
-            modifier = Modifier
-                .padding(vertical = DIVIDER_VERTICAL_PADDING)
-                .fillMaxHeight()
-                .width(1.dp),
-            color = FirefoxTheme.colors.borderSecondary,
-        )
+        VerticalDivider()
     }
 
     Spacer(modifier = Modifier.width(16.dp))
@@ -573,13 +558,7 @@ fun SelectableFaviconListItem(
             if (showDivider) {
                 Spacer(modifier = Modifier.width(8.dp))
 
-                HorizontalDivider(
-                    modifier = Modifier
-                        .padding(vertical = DIVIDER_VERTICAL_PADDING)
-                        .fillMaxHeight()
-                        .width(1.dp),
-                    color = FirefoxTheme.colors.borderSecondary,
-                )
+                VerticalDivider()
             }
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -693,13 +672,7 @@ fun SelectableIconListItem(
             if (showDivider) {
                 Spacer(modifier = Modifier.width(8.dp))
 
-                HorizontalDivider(
-                    modifier = Modifier
-                        .padding(vertical = DIVIDER_VERTICAL_PADDING)
-                        .fillMaxHeight()
-                        .width(1.dp),
-                    color = FirefoxTheme.colors.borderSecondary,
-                )
+                VerticalDivider()
             }
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -957,7 +930,7 @@ private fun ListItemContent(
 @Preview(name = "TextListItem", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TextListItemPreview() {
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Box(Modifier.background(MaterialTheme.colorScheme.surface)) {
             TextListItem(label = "Label only")
         }
     }
@@ -967,7 +940,7 @@ private fun TextListItemPreview() {
 @Preview(name = "TextListItem with a description", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TextListItemWithDescriptionPreview() {
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Box(Modifier.background(MaterialTheme.colorScheme.surface)) {
             TextListItem(
                 label = "Label + description",
                 description = "Description text",
@@ -980,7 +953,7 @@ private fun TextListItemWithDescriptionPreview() {
 @Preview(name = "TextListItem with a right icon", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TextListItemWithIconPreview() {
     FirefoxTheme {
-        Column(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
             val context = LocalContext.current
             TextListItem(
                 label = "Label + right icon button",
@@ -1004,7 +977,7 @@ private fun TextListItemWithIconPreview() {
 @Preview(name = "IconListItem", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun IconListItemPreview() {
     FirefoxTheme {
-        Column(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
             IconListItem(
                 label = "Left icon list item",
                 onClick = {},
@@ -1050,7 +1023,7 @@ private fun IconListItemPreview() {
 )
 private fun IconListItemWithAfterListActionPreview() {
     FirefoxTheme {
-        Column(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
             val context = LocalContext.current
             IconListItem(
                 label = "IconListItem + right icon + clicks",
@@ -1081,7 +1054,7 @@ private fun IconListItemWithAfterListActionPreview() {
 )
 private fun FaviconListItemPreview() {
     FirefoxTheme {
-        Column(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
             val context = LocalContext.current
             FaviconListItem(
                 label = "Favicon + right icon + clicks",
@@ -1117,7 +1090,7 @@ private fun FaviconListItemPreview() {
 @PreviewLightDark
 private fun ImageListItemPreview() {
     FirefoxTheme {
-        Column(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
             ImageListItem(
                 label = "label",
                 iconPainter = painterResource(iconsR.drawable.mozac_ic_web_extension_default_icon),
@@ -1143,7 +1116,7 @@ private fun RadioButtonListItemPreview() {
         listOf("Radio button first item", "Radio button second item", "Radio button third item")
     val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[1]) }
     FirefoxTheme {
-        Column(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
             radioOptions.forEach { text ->
                 RadioButtonListItem(
                     label = text,
@@ -1160,7 +1133,7 @@ private fun RadioButtonListItemPreview() {
 @PreviewLightDark
 private fun SelectableFaviconListItemPreview() {
     FirefoxTheme {
-        Column(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
             SelectableFaviconListItem(
                 label = "Favicon + right icon",
                 url = "",
@@ -1235,7 +1208,7 @@ private fun SelectableFaviconListItemPreview() {
 @Suppress("LongMethod")
 private fun SelectableIconListItemPreview() {
     FirefoxTheme {
-        Column(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
             SelectableIconListItem(
                 label = "Left icon list item",
                 isSelected = false,
@@ -1321,7 +1294,7 @@ private fun SelectableIconListItemPreview() {
 @PreviewLightDark
 private fun SelectableListItemPreview() {
     FirefoxTheme {
-        Column(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
             SelectableListItem(
                 label = "Selected item",
                 description = "Description text",
