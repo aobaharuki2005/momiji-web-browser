@@ -1384,7 +1384,8 @@ HttpBaseChannel::SetApplyConversion(bool value) {
 
 nsresult HttpBaseChannel::DoApplyContentConversions(
     nsIStreamListener* aNextListener, nsIStreamListener** aNewNextListener) {
-  return DoApplyContentConversions(aNextListener, aNewNextListener, nullptr);
+  return DoApplyContentConversionsInternal(aNextListener, aNewNextListener,
+                                           false, nullptr);
 }
 
 // create a listener chain that looks like this
@@ -1465,12 +1466,22 @@ NS_IMETHODIMP
 HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
                                            nsIStreamListener** aNewNextListener,
                                            nsISupports* aCtxt) {
+  return DoApplyContentConversionsInternal(aNextListener, aNewNextListener,
+                                           false, aCtxt);
+}
+
+nsresult HttpBaseChannel::DoApplyContentConversionsInternal(
+    nsIStreamListener* aNextListener, nsIStreamListener** aNewNextListener,
+    bool aRemoveEncodings, nsISupports* aCtxt) {
   *aNewNextListener = nullptr;
   if (!mResponseHead || !aNextListener) {
     return NS_OK;
   }
 
-  LOG(("HttpBaseChannel::DoApplyContentConversions [this=%p]\n", this));
+  LOG(
+      ("HttpBaseChannel::DoApplyContentConversions [this=%p], "
+       "removeEncodings=%d\n",
+       this, aRemoveEncodings));
 
 #ifdef DEBUG
   {
@@ -1521,7 +1532,6 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
 
   char* cePtr = contentEncoding.BeginWriting();
   uint32_t count = 0;
-  bool removeEncodings = false;
   while (char* val = nsCRT::strtok(cePtr, HTTP_LWS ",", &cePtr)) {
     if (++count > 16) {
       // For compatibility with old code, we will just carry on without
@@ -1561,10 +1571,11 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
         }
         glean::http::content_encoding.AccumulateSingleSample(mode);
       }
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       if (from.EqualsLiteral("dcb") || from.EqualsLiteral("dcz")) {
-        MOZ_ASSERT(XRE_IsParentProcess());
-        removeEncodings = true;
+        MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
       }
+#endif
       nextListener = converter;
     } else {
       if (val) {
@@ -1583,10 +1594,11 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
   // Content-Encoding: gzip.   We won't do that; we'll remove all compressors
   // if we need to remove any.
   // This double compression of course is silly, but supported by the spec.
-  if (removeEncodings) {
-    // if we have dcb or dcz, all content-encodings in the header should
-    // be removed as we're decompressing before the tee in the parent
-    // process
+  if (aRemoveEncodings) {
+    // If we have dcb or dcz, all content-encodings in the header should be
+    // removed as we're decompressing before the tee in the parent
+    // process. Also we should remove any encodings if it's a dictionary
+    // so we can load it quickly
     LOG(("Changing Content-Encoding from '%s' to ''", contentEncoding.get()));
     // Can't use SetHeader; we need to overwrite the current value
     rv = mResponseHead->SetHeaderOverride(nsHttp::Content_Encoding, ""_ns);

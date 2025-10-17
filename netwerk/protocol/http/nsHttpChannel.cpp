@@ -3614,8 +3614,8 @@ nsresult nsHttpChannel::ContinueProcessNormal(nsresult rv) {
       // otherwise we won't convert in the parent process
       // XXX may be redundant, but safe
       SetApplyConversion(true);
-      rv = DoApplyContentConversions(mListener, getter_AddRefs(listener),
-                                     nullptr);
+      rv = DoApplyContentConversionsInternal(
+          mListener, getter_AddRefs(listener), true, nullptr);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -6306,8 +6306,8 @@ nsresult nsHttpChannel::DoInstallCacheListener(bool aIsDictionaryCompressed,
     nsCOMPtr<nsIStreamListener> listener;
     // otherwise we won't convert in the parent process
     SetApplyConversion(true);
-    rv =
-        DoApplyContentConversions(mListener, getter_AddRefs(listener), nullptr);
+    rv = DoApplyContentConversionsInternal(mListener, getter_AddRefs(listener),
+                                           true, nullptr);
     if (NS_FAILED(rv)) {
       return rv;
     }
