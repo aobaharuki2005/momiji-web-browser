@@ -121,6 +121,18 @@
       "type": "boolean"
     },
 
+    "BrowserDataBackup": {
+      "type": ["boolean", "object"],
+      "properties": {
+        "AllowBackup": {
+          "type": "boolean"
+        },
+        "AllowRestore": {
+          "type": "boolean"
+        }
+      }
+    },
+
     "BlockAboutAddons": {
       "type": "boolean"
     },
