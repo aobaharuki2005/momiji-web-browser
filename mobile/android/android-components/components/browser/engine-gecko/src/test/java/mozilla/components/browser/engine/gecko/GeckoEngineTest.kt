@@ -10,6 +10,7 @@ import android.graphics.Color
 import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.ExperimentalAndroidComponentsApi
+import mozilla.components.browser.engine.gecko.autofill.RuntimeAddressStructureAccessor
 import mozilla.components.browser.engine.gecko.ext.getAntiTrackingPolicy
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.browser.engine.gecko.preferences.GeckoPreferenceAccessor
@@ -4480,6 +4481,16 @@ class GeckoEngineTest {
 
         assert(onSuccessCalled) { "Should have successfully completed." }
         assert(!onErrorCalled) { "Should not have called an error." }
+    }
+
+    @Test
+    fun `WHEN getAddressStructure is called THEN addressStructureAccessor should be called`() {
+        var getAddressStructureCalled = false
+        val engine = GeckoEngine(testContext, runtime = runtime, addressStructureAccessor = { region, success, error ->
+            getAddressStructureCalled = true
+        })
+        engine.getAddressStructure("JP", { _ -> }, { _ -> })
+        assertTrue("AddressStructureAccessor should be called,", getAddressStructureCalled)
     }
 
     private fun createSocialTrackersLogEntryList(): List<ContentBlockingController.LogEntry> {
