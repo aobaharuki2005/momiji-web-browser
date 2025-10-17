@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "styleSheetService",
   "@mozilla.org/content/style-sheet-service;1",
-  Ci.nsIStyleSheetService
+  "nsIStyleSheetService"
 );
 
 // Query selector for selectable elements in results.

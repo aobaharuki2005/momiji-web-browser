@@ -60,7 +60,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "IDNService",
   "@mozilla.org/network/idn-service;1",
-  Ci.nsIIDNService
+  "nsIIDNService"
 );
 
 var localeNumberFormatCache = new Map();

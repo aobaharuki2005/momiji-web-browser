@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "IdentityCredentialStorageService",
   "@mozilla.org/browser/identity-credential-storage-service;1",
-  Ci.nsIIdentityCredentialStorageService
+  "nsIIdentityCredentialStorageService"
 );
 
 do_get_profile();

@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "resProto",
   "@mozilla.org/network/protocol;1?name=resource",
-  Ci.nsISubstitutingProtocolHandler
+  "nsISubstitutingProtocolHandler"
 );
 
 // These are not automagically defined for us because we are an extension.

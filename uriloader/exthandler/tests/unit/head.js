@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "gHandlerService",
   "@mozilla.org/uriloader/handler-service;1",
-  Ci.nsIHandlerService
+  "nsIHandlerService"
 );
 
 do_get_profile();

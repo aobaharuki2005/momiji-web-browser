@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "cryptoSDR",
   "@mozilla.org/login-manager/crypto/SDR;1",
-  Ci.nsILoginManagerCrypto
+  "nsILoginManagerCrypto"
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(

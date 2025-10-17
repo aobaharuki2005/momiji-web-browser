@@ -62,14 +62,14 @@ if (AppConstants.ENABLE_WEBDRIVER) {
     lazy,
     "Marionette",
     "@mozilla.org/remote/marionette;1",
-    Ci.nsIMarionette
+    "nsIMarionette"
   );
 
   XPCOMUtils.defineLazyServiceGetter(
     lazy,
     "RemoteAgent",
     "@mozilla.org/remote/agent;1",
-    Ci.nsIRemoteAgent
+    "nsIRemoteAgent"
   );
 } else {
   lazy.Marionette = { running: false };
@@ -77,7 +77,7 @@ if (AppConstants.ENABLE_WEBDRIVER) {
 }
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
-  BrowserHandler: ["@mozilla.org/browser/clh;1", Ci.nsIBrowserHandler],
+  BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {

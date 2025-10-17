@@ -32,31 +32,31 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "AUS",
   "@mozilla.org/updates/update-service;1",
-  Ci.nsIApplicationUpdateService
+  "nsIApplicationUpdateService"
 );
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "UM",
   "@mozilla.org/updates/update-manager;1",
-  Ci.nsIUpdateManager
+  "nsIUpdateManager"
 );
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "CheckSvc",
   "@mozilla.org/updates/update-checker;1",
-  Ci.nsIUpdateChecker
+  "nsIUpdateChecker"
 );
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "UpdateServiceStub",
   "@mozilla.org/updates/update-service-stub;1",
-  Ci.nsIApplicationUpdateServiceStub
+  "nsIApplicationUpdateServiceStub"
 );
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "UpdateMutex",
   "@mozilla.org/updates/update-mutex;1",
-  Ci.nsIUpdateMutex
+  "nsIUpdateMutex"
 );
 
 const UPDATESERVICE_CID = Components.ID(

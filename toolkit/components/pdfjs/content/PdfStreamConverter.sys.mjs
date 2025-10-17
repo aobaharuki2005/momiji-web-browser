@@ -42,13 +42,13 @@ XPCOMUtils.defineLazyServiceGetter(
   Svc,
   "mime",
   "@mozilla.org/mime;1",
-  Ci.nsIMIMEService
+  "nsIMIMEService"
 );
 XPCOMUtils.defineLazyServiceGetter(
   Svc,
   "handlers",
   "@mozilla.org/uriloader/handler-service;1",
-  Ci.nsIHandlerService
+  "nsIHandlerService"
 );
 
 ChromeUtils.defineLazyGetter(lazy, "gOurBinary", () => {

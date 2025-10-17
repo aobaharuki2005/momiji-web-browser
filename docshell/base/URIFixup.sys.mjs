@@ -26,21 +26,21 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "externalProtocolService",
   "@mozilla.org/uriloader/external-protocol-service;1",
-  Ci.nsIExternalProtocolService
+  "nsIExternalProtocolService"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "defaultProtocolHandler",
   "@mozilla.org/network/protocol;1?name=default",
-  Ci.nsIProtocolHandler
+  "nsIProtocolHandler"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "fileProtocolHandler",
   "@mozilla.org/network/protocol;1?name=file",
-  Ci.nsIFileProtocolHandler
+  "nsIFileProtocolHandler"
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(

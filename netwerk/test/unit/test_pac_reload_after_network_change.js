@@ -7,7 +7,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "gProxyService",
   "@mozilla.org/network/protocol-proxy-service;1",
-  Ci.nsIProtocolProxyService
+  "nsIProtocolProxyService"
 );
 var { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"

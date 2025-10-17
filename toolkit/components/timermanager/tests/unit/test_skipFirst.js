@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "gUpdateTimerManager",
   "@mozilla.org/updates/timer-manager;1",
-  Ci.nsIUpdateTimerManager
+  "nsIUpdateTimerManager"
 );
 
 const PREF_APP_UPDATE_LASTUPDATETIME_FMT = "app.update.lastUpdateTime.%ID%";

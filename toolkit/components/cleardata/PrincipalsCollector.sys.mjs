@@ -10,7 +10,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "serviceWorkerManager",
   "@mozilla.org/serviceworkers/manager;1",
-  Ci.nsIServiceWorkerManager
+  "nsIServiceWorkerManager"
 );
 
 let logConsole;

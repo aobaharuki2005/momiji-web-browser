@@ -9,7 +9,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "asyncHistory",
   "@mozilla.org/browser/history;1",
-  Ci.mozIAsyncHistory
+  "mozIAsyncHistory"
 );
 
 add_task(async function test_embed_visit() {

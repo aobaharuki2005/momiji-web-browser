@@ -8,7 +8,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "IdentityCredentialPromptService",
   "@mozilla.org/browser/identitycredentialpromptservice;1",
-  Ci.nsIIdentityCredentialPromptService
+  "nsIIdentityCredentialPromptService"
 );
 
 const TEST_URL = "https://example.com/";

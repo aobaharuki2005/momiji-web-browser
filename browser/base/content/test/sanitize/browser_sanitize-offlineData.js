@@ -14,13 +14,13 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "sas",
   "@mozilla.org/storage/activity-service;1",
-  Ci.nsIStorageActivityService
+  "nsIStorageActivityService"
 );
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "swm",
   "@mozilla.org/serviceworkers/manager;1",
-  Ci.nsIServiceWorkerManager
+  "nsIServiceWorkerManager"
 );
 
 const oneHour = 3600000000;

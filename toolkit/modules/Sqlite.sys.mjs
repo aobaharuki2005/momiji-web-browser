@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "FinalizationWitnessService",
   "@mozilla.org/toolkit/finalizationwitness;1",
-  Ci.nsIFinalizationWitnessService
+  "nsIFinalizationWitnessService"
 );
 
 // Regular expression used by isInvalidBoundLikeQuery

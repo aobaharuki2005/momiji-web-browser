@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "mimeHeader",
   "@mozilla.org/network/mime-hdrparam;1",
-  Ci.nsIMIMEHeaderParam
+  "nsIMIMEHeaderParam"
 );
 
 const BinaryInputStream = Components.Constructor(

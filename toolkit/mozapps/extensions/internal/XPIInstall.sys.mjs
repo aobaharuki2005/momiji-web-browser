@@ -82,7 +82,7 @@ const ZipReader = Components.Constructor(
 );
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
-  gCertDB: ["@mozilla.org/security/x509certdb;1", Ci.nsIX509CertDB],
+  gCertDB: ["@mozilla.org/security/x509certdb;1", "nsIX509CertDB"],
 });
 
 const PREF_INSTALL_REQUIRESECUREORIGIN =

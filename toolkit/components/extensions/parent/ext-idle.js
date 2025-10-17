@@ -8,7 +8,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "idleService",
   "@mozilla.org/widget/useridleservice;1",
-  Ci.nsIUserIdleService
+  "nsIUserIdleService"
 );
 
 var { DefaultWeakMap } = ExtensionUtils;

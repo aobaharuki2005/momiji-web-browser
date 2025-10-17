@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "mimeService",
   "@mozilla.org/mime;1",
-  Ci.nsIMIMEService
+  "nsIMIMEService"
 );
 
 function readFile(file) {

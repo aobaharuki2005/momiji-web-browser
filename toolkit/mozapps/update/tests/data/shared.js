@@ -152,14 +152,14 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "gUpdateManager",
   "@mozilla.org/updates/update-manager;1",
-  Ci.nsIUpdateManager
+  "nsIUpdateManager"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "gUpdateChecker",
   "@mozilla.org/updates/update-checker;1",
-  Ci.nsIUpdateChecker
+  "nsIUpdateChecker"
 );
 
 ChromeUtils.defineLazyGetter(this, "gDefaultPrefBranch", function test_gDPB() {

@@ -15,14 +15,14 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "gNetworkLinkService",
   "@mozilla.org/network/network-link-service;1",
-  Ci.nsINetworkLinkService
+  "nsINetworkLinkService"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "gParentalControlsService",
   "@mozilla.org/parental-controls-service;1",
-  Ci.nsIParentalControlsService
+  "nsIParentalControlsService"
 );
 
 ChromeUtils.defineESModuleGetters(lazy, {

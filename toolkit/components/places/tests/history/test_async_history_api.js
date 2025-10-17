@@ -8,7 +8,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "asyncHistory",
   "@mozilla.org/browser/history;1",
-  Ci.mozIAsyncHistory
+  "mozIAsyncHistory"
 );
 
 const TEST_DOMAIN = "http://mozilla.org/";

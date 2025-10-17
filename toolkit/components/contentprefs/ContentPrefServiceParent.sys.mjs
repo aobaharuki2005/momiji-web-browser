@@ -157,5 +157,5 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "cps2",
   "@mozilla.org/content-pref/service;1",
-  Ci.nsIContentPrefService2
+  "nsIContentPrefService2"
 );

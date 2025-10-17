@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "UpdateService",
   "@mozilla.org/updates/update-service;1",
-  Ci.nsIApplicationUpdateService
+  "nsIApplicationUpdateService"
 );
 
 add_setup(function test_setup() {

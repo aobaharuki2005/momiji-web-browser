@@ -16,14 +16,14 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "XreDirProvider",
   "@mozilla.org/xre/directory-provider;1",
-  Ci.nsIXREDirProvider
+  "nsIXREDirProvider"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "BackgroundTasks",
   "@mozilla.org/backgroundtasks;1",
-  Ci.nsIBackgroundTasks
+  "nsIBackgroundTasks"
 );
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
@@ -604,28 +604,25 @@ let ShellServiceInternal = {
 let shellInterface;
 switch (AppConstants.platform) {
   case "win":
-    shellInterface = Ci.nsIWindowsShellService;
+    shellInterface = "nsIWindowsShellService";
     break;
   case "macosx":
-    shellInterface = Ci.nsIMacShellService;
+    shellInterface = "nsIMacShellService";
     break;
   case "linux":
-    shellInterface = Ci.nsIGNOMEShellService;
+    shellInterface = "nsIGNOMEShellService";
     break;
   default:
     lazy.log.warn(
       `No platform native shell service interface for ${AppConstants.platform} queried, add for new platforms.`
     );
-    shellInterface = Ci.nsIShellService;
+    shellInterface = "nsIShellService";
 }
 
 XPCOMUtils.defineLazyServiceGetters(ShellServiceInternal, {
-  defaultAgent: ["@mozilla.org/default-agent;1", Ci.nsIDefaultAgent],
+  defaultAgent: ["@mozilla.org/default-agent;1", "nsIDefaultAgent"],
   shellService: ["@mozilla.org/browser/shell-service;1", shellInterface],
-  macDockSupport: [
-    "@mozilla.org/widget/macdocksupport;1",
-    Ci.nsIMacDockSupport,
-  ],
+  macDockSupport: ["@mozilla.org/widget/macdocksupport;1", "nsIMacDockSupport"],
 });
 
 /**

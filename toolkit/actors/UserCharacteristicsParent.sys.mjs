@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "UserCharacteristicsPageService",
   "@mozilla.org/user-characteristics-page;1",
-  Ci.nsIUserCharacteristicsPageService
+  "nsIUserCharacteristicsPageService"
 );
 
 function mapToObjectReplacer(_key, value) {

@@ -17,14 +17,14 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "AppUpdateService",
   "@mozilla.org/updates/update-service;1",
-  Ci.nsIApplicationUpdateService
+  "nsIApplicationUpdateService"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "UpdateManager",
   "@mozilla.org/updates/update-manager;1",
-  Ci.nsIUpdateManager
+  "nsIUpdateManager"
 );
 
 const PREF_APP_UPDATE_UNSUPPORTED_URL = "app.update.unsupported.url";

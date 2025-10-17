@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "gKeychainUtils",
   "@mozilla.org/profile/migrator/keychainmigrationutils;1",
-  Ci.nsIKeychainMigrationUtils
+  "nsIKeychainMigrationUtils"
 );
 
 const gTextEncoder = new TextEncoder();

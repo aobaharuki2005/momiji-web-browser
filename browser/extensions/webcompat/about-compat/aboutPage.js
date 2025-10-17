@@ -10,7 +10,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "resProto",
   "@mozilla.org/network/protocol;1?name=resource",
-  Ci.nsISubstitutingProtocolHandler
+  "nsISubstitutingProtocolHandler"
 );
 
 const ResourceSubstitution = "webcompat";

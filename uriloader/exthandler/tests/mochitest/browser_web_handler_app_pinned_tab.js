@@ -15,13 +15,13 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "gExternalProtocolService",
   "@mozilla.org/uriloader/external-protocol-service;1",
-  Ci.nsIExternalProtocolService
+  "nsIExternalProtocolService"
 );
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "gHandlerService",
   "@mozilla.org/uriloader/handler-service;1",
-  Ci.nsIHandlerService
+  "nsIHandlerService"
 );
 
 let prevAlwaysAskBeforeHandling;

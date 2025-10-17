@@ -10,7 +10,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "webauthnService",
   "@mozilla.org/webauthn/service;1",
-  Ci.nsIWebAuthnService
+  "nsIWebAuthnService"
 );
 
 export let WebAuthnPromptHelper = {

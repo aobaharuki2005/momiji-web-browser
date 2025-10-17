@@ -43,7 +43,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "parserUtils",
   "@mozilla.org/parserutils;1",
-  Ci.nsIParserUtils
+  "nsIParserUtils"
 );
 
 export var UrlbarUtils = {

@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "MediaManagerService",
   "@mozilla.org/mediaManagerService;1",
-  Ci.nsIMediaManagerService
+  "nsIMediaManagerService"
 );
 
 const STATUS_RECORDING = "recording";

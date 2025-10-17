@@ -8,7 +8,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "gProxyService",
   "@mozilla.org/network/protocol-proxy-service;1",
-  Ci.nsIProtocolProxyService
+  "nsIProtocolProxyService"
 );
 
 ChromeUtils.defineLazyGetter(this, "systemSettings", function () {

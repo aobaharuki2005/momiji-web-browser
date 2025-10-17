@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "ClipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1",
-  Ci.nsIClipboardHelper
+  "nsIClipboardHelper"
 );
 
 // This pref is relative to the `browser.urlbar` branch.

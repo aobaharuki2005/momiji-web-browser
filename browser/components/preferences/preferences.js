@@ -51,18 +51,18 @@ var fxAccounts = getFxAccountsSingleton();
 XPCOMUtils.defineLazyServiceGetters(this, {
   gApplicationUpdateService: [
     "@mozilla.org/updates/update-service;1",
-    Ci.nsIApplicationUpdateService,
+    "nsIApplicationUpdateService",
   ],
 
   listManager: [
     "@mozilla.org/url-classifier/listmanager;1",
-    Ci.nsIUrlListManager,
+    "nsIUrlListManager",
   ],
   gHandlerService: [
     "@mozilla.org/uriloader/handler-service;1",
-    Ci.nsIHandlerService,
+    "nsIHandlerService",
   ],
-  gMIMEService: ["@mozilla.org/mime;1", Ci.nsIMIMEService],
+  gMIMEService: ["@mozilla.org/mime;1", "nsIMIMEService"],
 });
 
 if (Cc["@mozilla.org/gio-service;1"]) {
@@ -70,7 +70,7 @@ if (Cc["@mozilla.org/gio-service;1"]) {
     this,
     "gGIOService",
     "@mozilla.org/gio-service;1",
-    Ci.nsIGIOService
+    "nsIGIOService"
   );
 } else {
   this.gGIOService = null;

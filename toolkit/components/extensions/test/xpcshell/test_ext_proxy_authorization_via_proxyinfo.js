@@ -4,7 +4,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "authManager",
   "@mozilla.org/network/http-auth-manager;1",
-  Ci.nsIHttpAuthManager
+  "nsIHttpAuthManager"
 );
 
 const proxy = createHttpServer();

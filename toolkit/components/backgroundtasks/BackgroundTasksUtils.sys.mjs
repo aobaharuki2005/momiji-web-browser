@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "ProfileService",
   "@mozilla.org/toolkit/profile-service;1",
-  Ci.nsIToolkitProfileService
+  "nsIToolkitProfileService"
 );
 
 ChromeUtils.defineESModuleGetters(lazy, {

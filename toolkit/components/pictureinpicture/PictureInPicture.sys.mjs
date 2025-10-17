@@ -10,7 +10,7 @@ import { ShortcutUtils } from "resource://gre/modules/ShortcutUtils.sys.mjs";
 
 const lazy = {};
 XPCOMUtils.defineLazyServiceGetters(lazy, {
-  WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", Ci.nsIWindowsUIUtils],
+  WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {

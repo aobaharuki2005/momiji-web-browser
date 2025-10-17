@@ -12,13 +12,13 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "gClassifier",
   "@mozilla.org/url-classifier/dbservice;1",
-  Ci.nsIURIClassifier
+  "nsIURIClassifier"
 );
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "gStorageActivityService",
   "@mozilla.org/storage/activity-service;1",
-  Ci.nsIStorageActivityService
+  "nsIStorageActivityService"
 );
 
 ChromeUtils.defineLazyGetter(lazy, "gClassifierFeature", () => {

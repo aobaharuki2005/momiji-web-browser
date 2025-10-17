@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "XreDirProvider",
   "@mozilla.org/xre/directory-provider;1",
-  Ci.nsIXREDirProvider
+  "nsIXREDirProvider"
 );
 
 const _userChoiceImpossibleTelemetryResultStub = sinon

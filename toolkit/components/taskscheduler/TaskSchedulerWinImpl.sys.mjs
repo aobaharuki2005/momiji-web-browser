@@ -11,11 +11,11 @@ const lazy = {};
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   WinTaskSvc: [
     "@mozilla.org/win-task-scheduler-service;1",
-    Ci.nsIWinTaskSchedulerService,
+    "nsIWinTaskSchedulerService",
   ],
   XreDirProvider: [
     "@mozilla.org/xre/directory-provider;1",
-    Ci.nsIXREDirProvider,
+    "nsIXREDirProvider",
   ],
 });
 

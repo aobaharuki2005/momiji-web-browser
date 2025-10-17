@@ -44,10 +44,10 @@ ChromeUtils.defineLazyGetter(lazy, "localization", () => {
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
-  idleService: ["@mozilla.org/widget/useridleservice;1", Ci.nsIUserIdleService],
+  idleService: ["@mozilla.org/widget/useridleservice;1", "nsIUserIdleService"],
   UpdateService: [
     "@mozilla.org/updates/update-service;1",
-    Ci.nsIApplicationUpdateService,
+    "nsIApplicationUpdateService",
   ],
 });
 

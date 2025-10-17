@@ -9,7 +9,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "TrackingDBService",
   "@mozilla.org/tracking-db-service;1",
-  Ci.nsITrackingDBService
+  "nsITrackingDBService"
 );
 
 ChromeUtils.defineLazyGetter(this, "TRACK_DB_PATH", function () {

@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1",
-  Ci.nsIClipboardHelper
+  "nsIClipboardHelper"
 );
 
 add_setup(async function () {

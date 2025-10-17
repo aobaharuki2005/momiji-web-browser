@@ -9,16 +9,16 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 const lazy = {};
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
-  gCertDB: ["@mozilla.org/security/x509certdb;1", Ci.nsIX509CertDB],
+  gCertDB: ["@mozilla.org/security/x509certdb;1", "nsIX509CertDB"],
   gExternalProtocolService: [
     "@mozilla.org/uriloader/external-protocol-service;1",
-    Ci.nsIExternalProtocolService,
+    "nsIExternalProtocolService",
   ],
   gHandlerService: [
     "@mozilla.org/uriloader/handler-service;1",
-    Ci.nsIHandlerService,
+    "nsIHandlerService",
   ],
-  gMIMEService: ["@mozilla.org/mime;1", Ci.nsIMIMEService],
+  gMIMEService: ["@mozilla.org/mime;1", "nsIMIMEService"],
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {

@@ -46,7 +46,7 @@ XPCOMUtils.defineLazyServiceGetter(
   Svc,
   "mime",
   "@mozilla.org/mime;1",
-  Ci.nsIMIMEService
+  "nsIMIMEService"
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(

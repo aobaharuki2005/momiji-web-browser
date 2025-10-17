@@ -16,13 +16,13 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "CaptivePortalService",
   "@mozilla.org/network/captive-portal-service;1",
-  Ci.nsICaptivePortalService
+  "nsICaptivePortalService"
 );
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "gNetworkLinkService",
   "@mozilla.org/network/network-link-service;1",
-  Ci.nsINetworkLinkService
+  "nsINetworkLinkService"
 );
 
 // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.

@@ -32,19 +32,19 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "gDownloadPlatform",
   "@mozilla.org/toolkit/download-platform;1",
-  Ci.mozIDownloadPlatform
+  "mozIDownloadPlatform"
 );
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "gMIMEService",
   "@mozilla.org/mime;1",
-  Ci.nsIMIMEService
+  "nsIMIMEService"
 );
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "gExternalProtocolService",
   "@mozilla.org/uriloader/external-protocol-service;1",
-  Ci.nsIExternalProtocolService
+  "nsIExternalProtocolService"
 );
 
 ChromeUtils.defineLazyGetter(lazy, "gParentalControlsService", function () {

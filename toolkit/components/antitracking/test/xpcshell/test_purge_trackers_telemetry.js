@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "PurgeTrackerService",
   "@mozilla.org/purge-tracker-service;1",
-  Ci.nsIPurgeTrackerService
+  "nsIPurgeTrackerService"
 );
 
 add_task(async function setup() {

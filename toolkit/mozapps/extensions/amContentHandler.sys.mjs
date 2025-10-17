@@ -10,7 +10,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
-  ThirdPartyUtil: ["@mozilla.org/thirdpartyutil;1", Ci.mozIThirdPartyUtil],
+  ThirdPartyUtil: ["@mozilla.org/thirdpartyutil;1", "mozIThirdPartyUtil"],
 });
 
 export function amContentHandler() {}

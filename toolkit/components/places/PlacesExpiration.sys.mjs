@@ -417,7 +417,7 @@ export function nsPlacesExpiration() {
     this,
     "_idle",
     "@mozilla.org/widget/useridleservice;1",
-    Ci.nsIUserIdleService
+    "nsIUserIdleService"
   );
 
   // Max number of unique URIs to retain in history.

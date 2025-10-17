@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "pkcs11db",
   "@mozilla.org/security/pkcs11moduledb;1",
-  Ci.nsIPKCS11ModuleDB
+  "nsIPKCS11ModuleDB"
 );
 
 // eslint-disable-next-line mozilla/reject-importGlobalProperties

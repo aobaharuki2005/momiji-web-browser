@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "timerManager",
   "@mozilla.org/updates/timer-manager;1",
-  Ci.nsIUpdateTimerManager
+  "nsIUpdateTimerManager"
 );
 
 // Constants used by `nsIUpdateTimerManager` for a cross-session timer.

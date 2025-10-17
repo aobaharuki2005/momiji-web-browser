@@ -78,13 +78,13 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "IDNService",
   "@mozilla.org/network/idn-service;1",
-  Ci.nsIIDNService
+  "nsIIDNService"
 );
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "ContentPrefService2",
   "@mozilla.org/content-pref/service;1",
-  Ci.nsIContentPrefService2
+  "nsIContentPrefService2"
 );
 
 ChromeUtils.defineLazyGetter(lazy, "gBrandBundle", function () {

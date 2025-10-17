@@ -11,14 +11,14 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "OverrideService",
   "@mozilla.org/security/certoverride;1",
-  Ci.nsICertOverrideService
+  "nsICertOverrideService"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "IDNService",
   "@mozilla.org/network/idn-service;1",
-  Ci.nsIIDNService
+  "nsIIDNService"
 );
 
 ChromeUtils.defineESModuleGetters(lazy, {

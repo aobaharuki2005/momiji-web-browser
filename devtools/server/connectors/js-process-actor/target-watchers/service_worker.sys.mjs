@@ -10,7 +10,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "wdm",
   "@mozilla.org/dom/workers/workerdebuggermanager;1",
-  Ci.nsIWorkerDebuggerManager
+  "nsIWorkerDebuggerManager"
 );
 
 class ServiceWorkerTargetWatcherClass extends WorkerTargetWatcherClass {

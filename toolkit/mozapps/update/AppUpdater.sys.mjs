@@ -782,19 +782,19 @@ XPCOMUtils.defineLazyServiceGetter(
   AppUpdater.prototype,
   "aus",
   "@mozilla.org/updates/update-service;1",
-  Ci.nsIApplicationUpdateService
+  "nsIApplicationUpdateService"
 );
 XPCOMUtils.defineLazyServiceGetter(
   AppUpdater.prototype,
   "checker",
   "@mozilla.org/updates/update-checker;1",
-  Ci.nsIUpdateChecker
+  "nsIUpdateChecker"
 );
 XPCOMUtils.defineLazyServiceGetter(
   AppUpdater.prototype,
   "um",
   "@mozilla.org/updates/update-manager;1",
-  Ci.nsIUpdateManager
+  "nsIUpdateManager"
 );
 
 AppUpdater.STATUS = {

@@ -31,7 +31,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "PushService",
   "@mozilla.org/push/Service;1",
-  Ci.nsIPushService
+  "nsIPushService"
 );
 
 initTestLogging("Trace");

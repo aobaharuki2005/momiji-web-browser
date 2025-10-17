@@ -40,7 +40,7 @@ if (AppConstants.MOZ_UPDATER) {
     lazy,
     "UpdateServiceStub",
     "@mozilla.org/updates/update-service-stub;1",
-    Ci.nsIApplicationUpdateServiceStub
+    "nsIApplicationUpdateServiceStub"
   );
 }
 

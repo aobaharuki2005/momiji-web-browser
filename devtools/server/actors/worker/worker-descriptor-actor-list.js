@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "wdm",
   "@mozilla.org/dom/workers/workerdebuggermanager;1",
-  Ci.nsIWorkerDebuggerManager
+  "nsIWorkerDebuggerManager"
 );
 
 function matchWorkerDebugger(dbg, options) {

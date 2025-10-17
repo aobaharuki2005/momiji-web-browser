@@ -8,7 +8,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "spellCheck",
   "@mozilla.org/spellchecker/engine;1",
-  Ci.mozISpellCheckingEngine
+  "mozISpellCheckingEngine"
 );
 
 const nsFile = Components.Constructor(

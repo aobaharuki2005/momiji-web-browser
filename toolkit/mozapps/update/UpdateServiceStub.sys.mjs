@@ -18,14 +18,14 @@ if (AppConstants.ENABLE_WEBDRIVER) {
     lazy,
     "Marionette",
     "@mozilla.org/remote/marionette;1",
-    Ci.nsIMarionette
+    "nsIMarionette"
   );
 
   XPCOMUtils.defineLazyServiceGetter(
     lazy,
     "RemoteAgent",
     "@mozilla.org/remote/agent;1",
-    Ci.nsIRemoteAgent
+    "nsIRemoteAgent"
   );
 } else {
   lazy.Marionette = { running: false };

@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "peuService",
   "@mozilla.org/partitioning/exception-list-service;1",
-  Ci.nsIPartitioningExceptionListService
+  "nsIPartitioningExceptionListService"
 );
 
 const TEST_REDIRECT_TOP_PAGE =

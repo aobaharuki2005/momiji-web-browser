@@ -7,7 +7,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "TrackingDBService",
   "@mozilla.org/tracking-db-service;1",
-  Ci.nsITrackingDBService
+  "nsITrackingDBService"
 );
 
 const { AboutProtectionsParent } = ChromeUtils.importESModule(

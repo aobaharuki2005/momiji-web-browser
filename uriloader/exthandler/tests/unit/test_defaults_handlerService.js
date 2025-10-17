@@ -7,7 +7,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "gExternalProtocolService",
   "@mozilla.org/uriloader/external-protocol-service;1",
-  Ci.nsIExternalProtocolService
+  "nsIExternalProtocolService"
 );
 ChromeUtils.defineESModuleGetters(this, {
   kHandlerList: "resource://gre/modules/handlers/HandlerList.sys.mjs",

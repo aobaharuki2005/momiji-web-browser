@@ -14,9 +14,9 @@ let lazy = {};
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   MacSharingService: [
     "@mozilla.org/widget/macsharingservice;1",
-    Ci.nsIMacSharingService,
+    "nsIMacSharingService",
   ],
-  WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", Ci.nsIWindowsUIUtils],
+  WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
 });
 
 class SharingUtilsCls {

@@ -8,7 +8,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "IdentityCredentialStorageService",
   "@mozilla.org/browser/identity-credential-storage-service;1",
-  Ci.nsIIdentityCredentialStorageService
+  "nsIIdentityCredentialStorageService"
 );
 
 const TEST_URL = "https://example.com/";

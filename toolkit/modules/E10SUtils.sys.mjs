@@ -43,13 +43,13 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "serializationHelper",
   "@mozilla.org/network/serialization-helper;1",
-  Ci.nsISerializationHelper
+  "nsISerializationHelper"
 );
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "extProtService",
   "@mozilla.org/uriloader/external-protocol-service;1",
-  Ci.nsIExternalProtocolService
+  "nsIExternalProtocolService"
 );
 
 function getOriginalReaderModeURI(aURI) {

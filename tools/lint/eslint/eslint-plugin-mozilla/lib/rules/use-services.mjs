@@ -35,12 +35,10 @@ export default {
           node.callee.property.type == "Identifier" &&
           node.callee.property.name == "defineLazyServiceGetter" &&
           node.arguments.length == 4 &&
-          node.arguments[3].type == "MemberExpression" &&
-          node.arguments[3].property.type == "Identifier" &&
-          node.arguments[3].property.name in servicesInterfaceMap
+          node.arguments[3].type == "Literal" &&
+          node.arguments[3].value in servicesInterfaceMap
         ) {
-          let serviceName =
-            servicesInterfaceMap[node.arguments[3].property.name];
+          let serviceName = servicesInterfaceMap[node.arguments[3].value];
 
           context.report({
             node,
@@ -63,12 +61,10 @@ export default {
             if (
               property.value.type == "ArrayExpression" &&
               property.value.elements.length == 2 &&
-              property.value.elements[1].type == "MemberExpression" &&
-              property.value.elements[1].property.type == "Identifier" &&
-              property.value.elements[1].property.name in servicesInterfaceMap
+              property.value.elements[1].value in servicesInterfaceMap
             ) {
               let serviceName =
-                servicesInterfaceMap[property.value.elements[1].property.name];
+                servicesInterfaceMap[property.value.elements[1].value];
 
               context.report({
                 node: property.value,

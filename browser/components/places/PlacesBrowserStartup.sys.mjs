@@ -17,10 +17,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
-  BrowserHandler: ["@mozilla.org/browser/clh;1", Ci.nsIBrowserHandler],
+  BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
   UserIdleService: [
     "@mozilla.org/widget/useridleservice;1",
-    Ci.nsIUserIdleService,
+    "nsIUserIdleService",
   ],
 });
 

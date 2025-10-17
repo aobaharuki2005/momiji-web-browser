@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "promptService",
   "@mozilla.org/prompter;1",
-  Ci.nsIPromptService
+  "nsIPromptService"
 );
 
 var { ExtensionError } = ExtensionUtils;

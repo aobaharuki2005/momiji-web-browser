@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "protocolProxyService",
   "@mozilla.org/network/protocol-proxy-service;1",
-  Ci.nsIProtocolProxyService
+  "nsIProtocolProxyService"
 );
 
 const nsIProtocolProxyChannelFilter = ChromeUtils.generateQI([

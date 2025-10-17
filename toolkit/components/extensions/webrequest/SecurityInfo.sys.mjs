@@ -10,14 +10,14 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "NSSErrorsService",
   "@mozilla.org/nss_errors_service;1",
-  Ci.nsINSSErrorsService
+  "nsINSSErrorsService"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "pkps",
   "@mozilla.org/security/publickeypinningservice;1",
-  Ci.nsIPublicKeyPinningService
+  "nsIPublicKeyPinningService"
 );
 
 // NOTE: SecurityInfo is largely reworked from the devtools NetworkHelper with changes
