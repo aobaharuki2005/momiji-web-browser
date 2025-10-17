@@ -204,11 +204,11 @@ class nsCocoaWindow final : public nsIWidget {
   nsCocoaWindow();
 
   [[nodiscard]] nsresult Create(nsIWidget* aParent, const DesktopIntRect& aRect,
-                                InitData* = nullptr) override;
+                                const InitData&) override;
 
   [[nodiscard]] nsresult Create(nsIWidget* aParent,
                                 const LayoutDeviceIntRect& aRect,
-                                InitData* = nullptr) override;
+                                const InitData&) override;
 
   void Destroy() override;
 

@@ -120,14 +120,11 @@ void HeadlessWidget::Destroy() {
 
 nsresult HeadlessWidget::Create(nsIWidget* aParent,
                                 const LayoutDeviceIntRect& aRect,
-                                widget::InitData* aInitData) {
+                                const widget::InitData& aInitData) {
   BaseCreate(aParent, aInitData);
-
   mBounds = aRect;
   mRestoreBounds = aRect;
-
-  mAlwaysOnTop = aInitData && aInitData->mAlwaysOnTop;
-
+  mAlwaysOnTop = aInitData.mAlwaysOnTop;
   return NS_OK;
 }
 

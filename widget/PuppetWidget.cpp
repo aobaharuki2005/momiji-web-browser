@@ -56,14 +56,13 @@ already_AddRefed<nsIWidget> nsIWidget::CreatePuppetWidget(
   return widget.forget();
 }
 
-namespace mozilla {
-namespace widget {
+namespace mozilla::widget {
 
-static bool IsPopup(const widget::InitData* aInitData) {
-  return aInitData && aInitData->mWindowType == WindowType::Popup;
+static bool IsPopup(const widget::InitData& aInitData) {
+  return aInitData.mWindowType == WindowType::Popup;
 }
 
-static bool MightNeedIMEFocus(const widget::InitData* aInitData) {
+static bool MightNeedIMEFocus(const widget::InitData& aInitData) {
   // In the puppet-widget world, popup widgets are just dummies and
   // shouldn't try to mess with IME state.
   //
@@ -95,7 +94,7 @@ PuppetWidget::~PuppetWidget() { Destroy(); }
 
 void PuppetWidget::InfallibleCreate(nsIWidget* aParent,
                                     const LayoutDeviceIntRect& aRect,
-                                    widget::InitData* aInitData) {
+                                    const widget::InitData& aInitData) {
   BaseCreate(aParent, aInitData);
 
   mBounds = aRect;
@@ -109,7 +108,7 @@ void PuppetWidget::InfallibleCreate(nsIWidget* aParent,
 
 nsresult PuppetWidget::Create(nsIWidget* aParent,
                               const LayoutDeviceIntRect& aRect,
-                              widget::InitData* aInitData) {
+                              const widget::InitData& aInitData) {
   InfallibleCreate(aParent, aRect, aInitData);
   return NS_OK;
 }
@@ -1121,5 +1120,4 @@ LayersId PuppetWidget::GetLayersId() const {
   return mBrowserChild ? mBrowserChild->GetLayersId() : LayersId{0};
 }
 
-}  // namespace widget
-}  // namespace mozilla
+}  // namespace mozilla::widget

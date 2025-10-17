@@ -407,9 +407,7 @@ nsAppShellService::CreateWindowlessBrowser(bool aIsChrome, uint32_t aChromeMask,
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv =
-      widget->Create(nullptr, LayoutDeviceIntRect(0, 0, 0, 0), nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(widget->Create(nullptr, LayoutDeviceIntRect(), widget::InitData()));
 
   // Create a BrowsingContext for our windowless browser.
   RefPtr<BrowsingContext> browsingContext = BrowsingContext::CreateIndependent(

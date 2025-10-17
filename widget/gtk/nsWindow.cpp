@@ -6072,9 +6072,8 @@ void nsWindow::ConfigureCompositor() {
 }
 
 nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
-                          widget::InitData* aInitData) {
-  MOZ_DIAGNOSTIC_ASSERT(!aInitData ||
-                        aInitData->mWindowType != WindowType::Invisible);
+                          const widget::InitData& aInitData) {
+  MOZ_DIAGNOSTIC_ASSERT(aInitData.mWindowType != WindowType::Invisible);
 
 #ifdef ACCESSIBILITY
   // Send a DBus message to check whether a11y is enabled
@@ -6107,8 +6106,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
   mLastMoveRequest = mBounds.TopLeft();
 
   const bool popupNeedsAlphaVisual =
-      mWindowType == WindowType::Popup && aInitData &&
-      aInitData->mTransparencyMode == TransparencyMode::Transparent;
+      mWindowType == WindowType::Popup &&
+      aInitData.mTransparencyMode == TransparencyMode::Transparent;
 
   // Figure out our parent window.
   auto* parentnsWindow = static_cast<nsWindow*>(aParent);
@@ -6122,9 +6121,9 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
     return NS_ERROR_FAILURE;
   }
 
-  mAlwaysOnTop = aInitData && aInitData->mAlwaysOnTop;
-  mIsAlert = aInitData && aInitData->mIsAlert;
-  mIsDragPopup = aInitData && aInitData->mIsDragPopup;
+  mAlwaysOnTop = aInitData.mAlwaysOnTop;
+  mIsAlert = aInitData.mIsAlert;
+  mIsDragPopup = aInitData.mIsDragPopup;
 
   // For popups, use the standard GtkWindowType GTK_WINDOW_POPUP,
   // which will use a Window with the override-redirect attribute
@@ -6133,7 +6132,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
   // popup window position.
   GtkWindowType type = GTK_WINDOW_TOPLEVEL;
   if (mWindowType == WindowType::Popup) {
-    MOZ_ASSERT(aInitData);
     type = GTK_WINDOW_POPUP;
   }
   mShell = gtk_window_new(type);
@@ -6221,7 +6219,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
       LOG("  set parent window [%p]\n", parentnsWindow);
     }
   } else if (mWindowType == WindowType::Popup) {
-    MOZ_ASSERT(aInitData);
     mGtkWindowRoleName = "Popup";
 
     LOG("  nsWindow::Create() Popup");
@@ -6348,7 +6345,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
   }
 
   if (mWindowType == WindowType::Popup) {
-    MOZ_ASSERT(aInitData);
     // gdk does not automatically set the cursor for "temporary"
     // windows, which are what gtk uses for popups.
 

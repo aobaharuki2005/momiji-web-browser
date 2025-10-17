@@ -51,7 +51,7 @@ class HeadlessWidget final : public nsIWidget {
   }
 
   nsresult Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
-                  widget::InitData* aInitData = nullptr) override;
+                  const widget::InitData&) override;
   using nsIWidget::Create;  // for Create signature not overridden here
 
   void GetCompositorWidgetInitData(

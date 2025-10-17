@@ -1010,7 +1010,7 @@ void SetWindowStyles(HWND aWnd, const WindowStyles& aStyles) {
 
 // Create the proper widget
 nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
-                          widget::InitData* aInitData) {
+                          const widget::InitData& aInitData) {
   // Historical note: there was once some belief and/or intent that nsWindows
   // could be created on arbitrary threads, and this may still be reflected in
   // some comments.
@@ -1020,10 +1020,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
   // (WM_FONTCHANGE et al.) are received and processed.
   WinEventWindow::Ensure();
 
-  widget::InitData defaultInitData;
-  if (!aInitData) aInitData = &defaultInitData;
-
-  MOZ_DIAGNOSTIC_ASSERT(aInitData->mWindowType != WindowType::Invisible);
+  MOZ_DIAGNOSTIC_ASSERT(aInitData.mWindowType != WindowType::Invisible);
 
   mBounds = aRect;
 
@@ -1035,12 +1032,12 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
   HWND parent =
       aParent ? (HWND)aParent->GetNativeData(NS_NATIVE_WINDOW) : nullptr;
 
-  mIsRTL = aInitData->mRTL;
-  mPIPWindow = aInitData->mPIPWindow;
-  mOpeningAnimationSuppressed = aInitData->mIsAnimationSuppressed;
-  mAlwaysOnTop = aInitData->mAlwaysOnTop;
-  mIsAlert = aInitData->mIsAlert;
-  mResizable = aInitData->mResizable;
+  mIsRTL = aInitData.mRTL;
+  mPIPWindow = aInitData.mPIPWindow;
+  mOpeningAnimationSuppressed = aInitData.mIsAnimationSuppressed;
+  mAlwaysOnTop = aInitData.mAlwaysOnTop;
+  mIsAlert = aInitData.mIsAlert;
+  mResizable = aInitData.mResizable;
 
   Styles desiredStyles{
       .style = static_cast<LONG_PTR>(WindowStyle()),
@@ -1049,12 +1046,12 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
 
   if (mWindowType != WindowType::Popup) {
     // See if the caller wants to explicitly set clip children and clip siblings
-    if (aInitData->mClipChildren) {
+    if (aInitData.mClipChildren) {
       desiredStyles.style |= WS_CLIPCHILDREN;
     } else {
       desiredStyles.style &= ~WS_CLIPCHILDREN;
     }
-    if (aInitData->mClipSiblings) {
+    if (aInitData.mClipSiblings) {
       desiredStyles.style |= WS_CLIPSIBLINGS;
     }
   }
@@ -1063,7 +1060,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
 
   // Take specific actions when creating the first top-level window
   static bool sFirstTopLevelWindowCreated = false;
-  if (aInitData->mWindowType == WindowType::TopLevel && !aParent &&
+  if (aInitData.mWindowType == WindowType::TopLevel && !aParent &&
       !sFirstTopLevelWindowCreated) {
     sFirstTopLevelWindowCreated = true;
     mWnd = ConsumePreXULSkeletonUIHandle();
@@ -1164,7 +1161,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
     // AUMID).
     bool usePrivateAumid =
         Preferences::GetBool("browser.privateWindowSeparation.enabled", true) &&
-        (aInitData->mIsPrivate) &&
+        aInitData.mIsPrivate &&
         !StaticPrefs::browser_privatebrowsing_autostart();
     RefPtr<IPropertyStore> pPropStore;
     if (!FAILED(SHGetPropertyStoreForWindow(mWnd, IID_IPropertyStore,

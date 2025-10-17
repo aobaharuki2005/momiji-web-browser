@@ -35,36 +35,36 @@ class MockWinWidget : public nsIWidget {
 
   void* GetNativeData(uint32_t aDataType) override { return nullptr; }
 
-  virtual nsresult Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
-                          InitData* aInitData = nullptr) override {
+  nsresult Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
+                  const InitData&) override {
     return NS_OK;
   }
-  virtual nsresult Create(nsIWidget* aParent, const DesktopIntRect& aRect,
-                          InitData* aInitData = nullptr) override {
+  nsresult Create(nsIWidget* aParent, const DesktopIntRect& aRect,
+                  const InitData&) override {
     return NS_OK;
   }
-  virtual void Show(bool aState) override {}
-  virtual bool IsVisible() const override { return true; }
-  virtual void Move(double aX, double aY) override {}
-  virtual void Resize(double aWidth, double aHeight, bool aRepaint) override {}
-  virtual void Resize(double aX, double aY, double aWidth, double aHeight,
-                      bool aRepaint) override {}
+  void Show(bool aState) override {}
+  bool IsVisible() const override { return true; }
+  void Move(double aX, double aY) override {}
+  void Resize(double aWidth, double aHeight, bool aRepaint) override {}
+  void Resize(double aX, double aY, double aWidth, double aHeight,
+              bool aRepaint) override {}
 
-  virtual void Enable(bool aState) override {}
-  virtual bool IsEnabled() const override { return true; }
-  virtual void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override {}
-  virtual void Invalidate(const LayoutDeviceIntRect& aRect) override {}
-  virtual nsresult SetTitle(const nsAString& title) override { return NS_OK; }
-  virtual LayoutDeviceIntPoint WidgetToScreenOffset() override {
+  void Enable(bool aState) override {}
+  bool IsEnabled() const override { return true; }
+  void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override {}
+  void Invalidate(const LayoutDeviceIntRect& aRect) override {}
+  nsresult SetTitle(const nsAString& title) override { return NS_OK; }
+  LayoutDeviceIntPoint WidgetToScreenOffset() override {
     return LayoutDeviceIntPoint(0, 0);
   }
-  virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
-                                 nsEventStatus& aStatus) override {
+  nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+                         nsEventStatus& aStatus) override {
     return NS_OK;
   }
-  virtual void SetInputContext(const InputContext& aContext,
-                               const InputContextAction& aAction) override {}
-  virtual InputContext GetInputContext() override { abort(); }
+  void SetInputContext(const InputContext& aContext,
+                       const InputContextAction& aAction) override {}
+  InputContext GetInputContext() override { abort(); }
 
  private:
   MockWinWidget();

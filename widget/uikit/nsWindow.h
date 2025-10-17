@@ -45,9 +45,8 @@ class nsWindow final : public nsIWidget {
   // nsIWidget
   //
 
-  [[nodiscard]] nsresult Create(
-      nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
-      mozilla::widget::InitData* aInitData = nullptr) override;
+  [[nodiscard]] nsresult Create(nsIWidget* aParent, const LayoutDeviceIntRect&,
+                                const mozilla::widget::InitData&) override;
   void Destroy() override;
   void Show(bool aState) override;
   void Enable(bool aState) override {}

@@ -2253,7 +2253,7 @@ bool nsWindow::IsTopLevel() {
 }
 
 nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
-                          InitData* aInitData) {
+                          const InitData& aInitData) {
   ALOG("nsWindow[%p]::Create %p [%d %d %d %d]", (void*)this, (void*)aParent,
        aRect.x, aRect.y, aRect.width, aRect.height);
 
@@ -2270,8 +2270,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
   mBounds = rect;
   SetSizeConstraints(SizeConstraints());
 
-  MOZ_DIAGNOSTIC_ASSERT(!aInitData ||
-                        aInitData->mWindowType != WindowType::Invisible);
+  MOZ_DIAGNOSTIC_ASSERT(aInitData.mWindowType != WindowType::Invisible);
 
   BaseCreate(aParent, aInitData);
   MOZ_ASSERT_IF(!IsTopLevel(), aParent);

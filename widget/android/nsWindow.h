@@ -156,9 +156,8 @@ class nsWindow final : public nsIWidget {
   //
 
   using nsIWidget::Create;  // for Create signature not overridden here
-  [[nodiscard]] nsresult Create(nsIWidget* aParent,
-                                const LayoutDeviceIntRect& aRect,
-                                InitData* aInitData) override;
+  [[nodiscard]] nsresult Create(nsIWidget* aParent, const LayoutDeviceIntRect&,
+                                const InitData&) override;
   void Destroy() override;
   void DidClearParent(nsIWidget*) override;
   float GetDPI() override;

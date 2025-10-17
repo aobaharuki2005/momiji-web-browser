@@ -457,15 +457,14 @@ nsIWidget::~nsIWidget() {
 // Basic create.
 //
 //-------------------------------------------------------------------------
-void nsIWidget::BaseCreate(nsIWidget* aParent, widget::InitData* aInitData) {
-  if (aInitData) {
-    mWindowType = aInitData->mWindowType;
-    mBorderStyle = aInitData->mBorderStyle;
-    mPopupLevel = aInitData->mPopupLevel;
-    mPopupType = aInitData->mPopupHint;
-    mHasRemoteContent = aInitData->mHasRemoteContent;
-    mIsPIPWindow = aInitData->mPIPWindow;
-  }
+void nsIWidget::BaseCreate(nsIWidget* aParent,
+                           const widget::InitData& aInitData) {
+  mWindowType = aInitData.mWindowType;
+  mBorderStyle = aInitData.mBorderStyle;
+  mPopupLevel = aInitData.mPopupLevel;
+  mPopupType = aInitData.mPopupHint;
+  mHasRemoteContent = aInitData.mHasRemoteContent;
+  mIsPIPWindow = aInitData.mPIPWindow;
 
   mParent = aParent;
   if (mParent) {
@@ -548,7 +547,9 @@ void nsIWidget::SetWidgetListener(nsIWidgetListener* aWidgetListener) {
 }
 
 already_AddRefed<nsIWidget> nsIWidget::CreateChild(
-    const LayoutDeviceIntRect& aRect, widget::InitData& aInitData) {
+    const LayoutDeviceIntRect& aRect, const widget::InitData& aInitData) {
+  MOZ_ASSERT(aInitData.mWindowType == WindowType::Popup,
+             "Creating non-popup puppet widget?");
   nsCOMPtr<nsIWidget> widget;
   switch (mWidgetType) {
     case WidgetType::Native: {
@@ -560,8 +561,6 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChild(
       break;
     case WidgetType::Puppet: {
       // This really only should happen in crashtests that have menupopups.
-      MOZ_ASSERT(aInitData.mWindowType == WindowType::Popup,
-                 "Creating non-popup puppet widget?");
       widget = nsIWidget::CreatePuppetWidget(nullptr);
       break;
     }
@@ -575,7 +574,7 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChild(
     widget->SetNeedFastSnaphot();
   }
 
-  if (NS_FAILED(widget->Create(this, aRect, &aInitData))) {
+  if (NS_FAILED(widget->Create(this, aRect, aInitData))) {
     return nullptr;
   }
 
