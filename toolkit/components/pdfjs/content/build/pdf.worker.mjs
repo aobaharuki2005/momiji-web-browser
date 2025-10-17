@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.315
- * pdfjsBuild = 8ba18075f
+ * pdfjsVersion = 5.4.329
+ * pdfjsBuild = 3eca60735
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -107,6 +107,11 @@ const PermissionFlag = {
   COPY_FOR_ACCESSIBILITY: 0x200,
   ASSEMBLE: 0x400,
   PRINT_HIGH_QUALITY: 0x800
+};
+const MeshFigureType = {
+  TRIANGLES: 1,
+  LATTICE: 2,
+  PATCH: 3
 };
 const TextRenderingMode = {
   FILL: 0,
@@ -27583,7 +27588,7 @@ class MeshShading extends BaseShading {
       reader.align();
     }
     this.figures.push({
-      type: "triangles",
+      type: MeshFigureType.TRIANGLES,
       coords: new Int32Array(ps),
       colors: new Int32Array(ps)
     });
@@ -27600,7 +27605,7 @@ class MeshShading extends BaseShading {
       colors.push(color);
     }
     this.figures.push({
-      type: "lattice",
+      type: MeshFigureType.LATTICE,
       coords: new Int32Array(ps),
       colors: new Int32Array(ps),
       verticesPerRow
@@ -27717,7 +27722,7 @@ class MeshShading extends BaseShading {
       ps[10] = coords.length;
       coords.push([(-4 * coords[ps[15]][0] - coords[ps[0]][0] + 6 * (coords[ps[11]][0] + coords[ps[14]][0]) - 2 * (coords[ps[12]][0] + coords[ps[3]][0]) + 3 * (coords[ps[2]][0] + coords[ps[8]][0])) / 9, (-4 * coords[ps[15]][1] - coords[ps[0]][1] + 6 * (coords[ps[11]][1] + coords[ps[14]][1]) - 2 * (coords[ps[12]][1] + coords[ps[3]][1]) + 3 * (coords[ps[2]][1] + coords[ps[8]][1])) / 9]);
       this.figures.push({
-        type: "patch",
+        type: MeshFigureType.PATCH,
         coords: new Int32Array(ps),
         colors: new Int32Array(cs)
       });
@@ -27842,7 +27847,7 @@ class MeshShading extends BaseShading {
           break;
       }
       this.figures.push({
-        type: "patch",
+        type: MeshFigureType.PATCH,
         coords: new Int32Array(ps),
         colors: new Int32Array(cs)
       });
@@ -27850,7 +27855,7 @@ class MeshShading extends BaseShading {
   }
   _buildFigureFromPatch(index) {
     const figure = this.figures[index];
-    assert(figure.type === "patch", "Unexpected patch mesh figure");
+    assert(figure.type === MeshFigureType.PATCH, "Unexpected patch mesh figure");
     const coords = this.coords,
       colors = this.colors;
     const pi = figure.coords;
@@ -27915,7 +27920,7 @@ class MeshShading extends BaseShading {
     figureCoords[verticesPerRow * splitYBy + splitXBy] = pi[15];
     figureColors[verticesPerRow * splitYBy + splitXBy] = ci[3];
     this.figures[index] = {
-      type: "lattice",
+      type: MeshFigureType.LATTICE,
       coords: figureCoords,
       colors: figureColors,
       verticesPerRow
@@ -36848,6 +36853,28 @@ class StructTreeRoot {
     this.ref = rootRef instanceof Ref ? rootRef : null;
     this.roleMap = new Map();
     this.structParentIds = null;
+    this.kidRefToPosition = undefined;
+  }
+  getKidPosition(kidRef) {
+    if (this.kidRefToPosition === undefined) {
+      const obj = this.dict.get("K");
+      if (Array.isArray(obj)) {
+        const map = this.kidRefToPosition = new Map();
+        for (let i = 0, ii = obj.length; i < ii; i++) {
+          const ref = obj[i];
+          if (ref) {
+            map.set(ref.toString(), i);
+          }
+        }
+      } else if (obj instanceof Dict) {
+        this.kidRefToPosition = new Map([[obj.objId, 0]]);
+      } else if (!obj) {
+        this.kidRefToPosition = new Map();
+      } else {
+        this.kidRefToPosition = null;
+      }
+    }
+    return this.kidRefToPosition ? this.kidRefToPosition.get(kidRef) ?? NaN : -1;
   }
   init() {
     this.readRoleMap();
@@ -37502,29 +37529,14 @@ class StructTreePage {
     return element;
   }
   addTopLevelNode(dict, element) {
-    const obj = this.rootDict.get("K");
-    if (!obj) {
+    const index = this.root.getKidPosition(dict.objId);
+    if (isNaN(index)) {
       return false;
     }
-    if (obj instanceof Dict) {
-      if (obj.objId !== dict.objId) {
-        return false;
-      }
-      this.nodes[0] = element;
-      return true;
+    if (index !== -1) {
+      this.nodes[index] = element;
     }
-    if (!Array.isArray(obj)) {
-      return true;
-    }
-    let save = false;
-    for (let i = 0; i < obj.length; i++) {
-      const kidRef = obj[i];
-      if (kidRef?.toString() === dict.objId) {
-        this.nodes[i] = element;
-        save = true;
-      }
-    }
-    return save;
+    return true;
   }
   get serializable() {
     function nodeToSerializable(node, parent, level = 0) {
@@ -53477,10 +53489,10 @@ class DatasetReader {
 ;// ./src/core/intersector.js
 class SingleIntersector {
   #annotation;
-  #minX = Infinity;
-  #minY = Infinity;
-  #maxX = -Infinity;
-  #maxY = -Infinity;
+  minX = Infinity;
+  minY = Infinity;
+  maxX = -Infinity;
+  maxY = -Infinity;
   #quadPoints = null;
   #text = [];
   #extraChars = [];
@@ -53490,24 +53502,21 @@ class SingleIntersector {
     this.#annotation = annotation;
     const quadPoints = annotation.data.quadPoints;
     if (!quadPoints) {
-      [this.#minX, this.#minY, this.#maxX, this.#maxY] = annotation.data.rect;
+      [this.minX, this.minY, this.maxX, this.maxY] = annotation.data.rect;
       return;
     }
     for (let i = 0, ii = quadPoints.length; i < ii; i += 8) {
-      this.#minX = Math.min(this.#minX, quadPoints[i]);
-      this.#maxX = Math.max(this.#maxX, quadPoints[i + 2]);
-      this.#minY = Math.min(this.#minY, quadPoints[i + 5]);
-      this.#maxY = Math.max(this.#maxY, quadPoints[i + 1]);
+      this.minX = Math.min(this.minX, quadPoints[i]);
+      this.maxX = Math.max(this.maxX, quadPoints[i + 2]);
+      this.minY = Math.min(this.minY, quadPoints[i + 5]);
+      this.maxY = Math.max(this.maxY, quadPoints[i + 1]);
     }
     if (quadPoints.length > 8) {
       this.#quadPoints = quadPoints;
     }
   }
-  overlaps(other) {
-    return !(this.#minX >= other.#maxX || this.#maxX <= other.#minX || this.#minY >= other.#maxY || this.#maxY <= other.#minY);
-  }
   #intersects(x, y) {
-    if (this.#minX >= x || this.#maxX <= x || this.#minY >= y || this.#maxY <= y) {
+    if (this.minX >= x || this.maxX <= x || this.minY >= y || this.maxY <= y) {
       return false;
     }
     const quadPoints = this.#quadPoints;
@@ -53558,52 +53567,81 @@ class SingleIntersector {
     this.#annotation.data.overlaidText = this.#text.join("");
   }
 }
+const STEPS = 64;
 class Intersector {
-  #intersectors = new Map();
+  #intersectors = [];
+  #grid = [];
+  #minX;
+  #maxX;
+  #minY;
+  #maxY;
+  #invXRatio;
+  #invYRatio;
   constructor(annotations) {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    const intersectors = this.#intersectors;
     for (const annotation of annotations) {
       if (!annotation.data.quadPoints && !annotation.data.rect) {
         continue;
       }
       const intersector = new SingleIntersector(annotation);
-      for (const [otherIntersector, overlapping] of this.#intersectors) {
-        if (otherIntersector.overlaps(intersector)) {
-          if (!overlapping) {
-            this.#intersectors.set(otherIntersector, new Set([intersector]));
-          } else {
-            overlapping.add(intersector);
+      intersectors.push(intersector);
+      minX = Math.min(minX, intersector.minX);
+      minY = Math.min(minY, intersector.minY);
+      maxX = Math.max(maxX, intersector.maxX);
+      maxY = Math.max(maxY, intersector.maxY);
+    }
+    this.#minX = minX;
+    this.#minY = minY;
+    this.#maxX = maxX;
+    this.#maxY = maxY;
+    this.#invXRatio = (STEPS - 1) / (maxX - minX);
+    this.#invYRatio = (STEPS - 1) / (maxY - minY);
+    for (const intersector of intersectors) {
+      const iMin = this.#getGridIndex(intersector.minX, intersector.minY);
+      const iMax = this.#getGridIndex(intersector.maxX, intersector.maxY);
+      const w = (iMax - iMin) % STEPS;
+      const h = Math.floor((iMax - iMin) / STEPS);
+      for (let i = iMin; i <= iMin + h * STEPS; i += STEPS) {
+        for (let j = 0; j <= w; j++) {
+          let existing = this.#grid[i + j];
+          if (!existing) {
+            this.#grid[i + j] = existing = [];
           }
+          existing.push(intersector);
         }
       }
-      this.#intersectors.set(intersector, null);
     }
+  }
+  #getGridIndex(x, y) {
+    const i = Math.floor((x - this.#minX) * this.#invXRatio);
+    const j = Math.floor((y - this.#minY) * this.#invYRatio);
+    return i + j * STEPS;
   }
   addGlyph(transform, width, height, glyph) {
     const x = transform[4] + width / 2;
     const y = transform[5] + height / 2;
-    let overlappingIntersectors;
-    for (const [intersector, overlapping] of this.#intersectors) {
-      if (overlappingIntersectors) {
-        if (overlappingIntersectors.has(intersector)) {
-          intersector.addGlyph(x, y, glyph);
-        } else {
-          intersector.disableExtraChars();
-        }
-        continue;
-      }
-      if (!intersector.addGlyph(x, y, glyph)) {
-        continue;
-      }
-      overlappingIntersectors = overlapping;
+    if (x < this.#minX || y < this.#minY || x > this.#maxX || y > this.#maxY) {
+      return;
+    }
+    const intersectors = this.#grid[this.#getGridIndex(x, y)];
+    if (!intersectors) {
+      return;
+    }
+    for (const intersector of intersectors) {
+      intersector.addGlyph(x, y, glyph);
     }
   }
   addExtraChar(char) {
-    for (const intersector of this.#intersectors.keys()) {
+    for (const intersector of this.#intersectors) {
       intersector.addExtraChar(char);
     }
   }
   setText() {
-    for (const intersector of this.#intersectors.keys()) {
+    for (const intersector of this.#intersectors) {
       intersector.setText();
     }
   }
@@ -58126,7 +58164,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "5.4.315";
+    const workerVersion = "5.4.329";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }

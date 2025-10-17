@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.315
- * pdfjsBuild = 8ba18075f
+ * pdfjsVersion = 5.4.329
+ * pdfjsBuild = 3eca60735
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -10126,21 +10126,19 @@ class TextAccessibilityManager {
     const parent = child.parentNode;
     return parent?.classList.contains("markedContent") ? parent.id : null;
   }
-  moveElementInDOM(container, element, contentElement, isRemovable, filter, inserter) {
+  moveElementInDOM(container, element, contentElement, isRemovable) {
     const id = this.addPointerInTextLayer(contentElement, isRemovable);
     if (!container.hasChildNodes()) {
       container.append(element);
       return id;
     }
-    const children = Array.from(container.childNodes).filter(node => node !== element && (!filter || filter(node)));
+    const children = Array.from(container.childNodes).filter(node => node !== element);
     if (children.length === 0) {
       return id;
     }
     const index = binarySearchFirstItem(children, node => TextAccessibilityManager.#compareElementPositions(element, node) < 0);
     if (index === 0) {
       children[0].before(element);
-    } else if (inserter) {
-      inserter(children[index - 1], element);
     } else {
       children[index - 1].after(element);
     }
@@ -11400,7 +11398,7 @@ class PDFViewer {
   #textLayerMode = TextLayerMode.ENABLE;
   #viewerAlert = null;
   constructor(options) {
-    const viewerVersion = "5.4.315";
+    const viewerVersion = "5.4.329";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
