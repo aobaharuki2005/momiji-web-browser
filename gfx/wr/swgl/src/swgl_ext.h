@@ -1509,6 +1509,79 @@ static ALWAYS_INLINE WideRGBA8 dither(WideRGBA8 color, int32_t fragCoordX,
   return color + ditherNoiseYIndexed[fragCoordX & 7];
 }
 
+// Finds the gradient stop pair that affects the provided offset.
+//
+// The returned index corresponds to the gradient stop immediately before the
+// current offset (in increasing offset order), so the gradient stop pair
+// is defined by [index, index + 1].
+//
+// Output parameters:
+//  - (out) prevOffset is set to the offset of the returned stop.
+//  - (out) nextOffset is set to the offset of the following stop.
+//  - (in/out) initialIndex is the index at which to start the search.
+//    It is updated by this function.
+//  - (in/out) initialOffset is the offset of the stop at initalOffset.
+//    It is updated by this function.
+static int32_t findGradientStopPair(float offset, float* stops,
+                                    int32_t numStops, int32_t& initialIndex,
+                                    float& initialOffset, float& prevOffset,
+                                    float& nextOffset) {
+  int32_t index = initialIndex;
+
+  // Walk forward or backward depending on where the target offset is relative
+  // to the initial offset.
+  if (offset >= initialOffset) {
+    // Walk the gradient stops forward
+    float next = stops[initialIndex];
+    float prev = stops[max(initialIndex - 1, 0)];
+    while (index < numStops) {
+      if (next > offset) {
+        break;
+      }
+
+      index += 1;
+      prev = next;
+      next = stops[index];
+    }
+
+    // We wither:
+    //  - Walked 1 stop past the one we are looking for, so we need to
+    //    adjust the index by decrementing it.
+    //  - Walked past the last stop so the index is out of bounds. We
+    //    don't *have* to decrement it since we are going to clamp it
+    //    at the end of the function but doing it does not break the
+    //    logic either.
+    index -= 1;
+
+    prevOffset = prev;
+    nextOffset = next;
+  } else {
+    // Walk back.
+    float next = stops[initialIndex];
+    float prev = stops[min(initialIndex + 1, numStops - 1)];
+    while (index > 0) {
+      if (next < offset) {
+        break;
+      }
+
+      index -= 1;
+      prev = next;
+      next = stops[index];
+    }
+
+    // Since we are walking backwards, prev and next are swapped.
+    prevOffset = next;
+    nextOffset = prev;
+  }
+
+  index = clamp(index, 0, numStops - 2);
+
+  initialIndex = index;
+  initialOffset = prevOffset;
+
+  return index;
+}
+
 // Samples an entire span of a linear gradient by crawling the gradient table
 // and looking for consecutive stops that can be merged into a single larger
 // gradient, then interpolating between those larger gradients within the span.
@@ -2021,79 +2094,6 @@ static bool commitRadialGradient(sampler2D sampler, int address, float size,
     dotPosDelta += deltaDelta2;
   }
   return true;
-}
-
-// Finds the gradient stop pair that affects the provided offset.
-//
-// The returned index corresponds to the gradient stop immediately before the
-// current offset (in increasing offset order), so the gradient stop pair
-// is defined by [index, index + 1].
-//
-// Output parameters:
-//  - (out) prevOffset is set to the offset of the returned stop.
-//  - (out) nextOffset is set to the offset of the following stop.
-//  - (in/out) initialIndex is the index at which to start the search.
-//    It is updated by this function.
-//  - (in/out) initialOffset is the offset of the stop at initalOffset.
-//    It is updated by this function.
-static int32_t findGradientStopPair(float offset, float* stops,
-                                    int32_t numStops, int32_t& initialIndex,
-                                    float& initialOffset, float& prevOffset,
-                                    float& nextOffset) {
-  int32_t index = initialIndex;
-
-  // Walk forward or backward depending on where the target offset is relative
-  // to the initial offset.
-  if (offset >= initialOffset) {
-    // Walk the gradient stops forward
-    float next = stops[initialIndex];
-    float prev = stops[max(initialIndex - 1, 0)];
-    while (index < numStops) {
-      if (next > offset) {
-        break;
-      }
-
-      index += 1;
-      prev = next;
-      next = stops[index];
-    }
-
-    // We wither:
-    //  - Walked 1 stop past the one we are looking for, so we need to
-    //    adjust the index by decrementing it.
-    //  - Walked past the last stop so the index is out of bounds. We
-    //    don't *have* to decrement it since we are going to clamp it
-    //    at the end of the function but doing it does not break the
-    //    logic either.
-    index -= 1;
-
-    prevOffset = prev;
-    nextOffset = next;
-  } else {
-    // Walk back.
-    float next = stops[initialIndex];
-    float prev = stops[min(initialIndex + 1, numStops - 1)];
-    while (index > 0) {
-      if (next < offset) {
-        break;
-      }
-
-      index -= 1;
-      prev = next;
-      next = stops[index];
-    }
-
-    // Since we are walking backwards, prev and next are swapped.
-    prevOffset = next;
-    nextOffset = prev;
-  }
-
-  index = clamp(index, 0, numStops - 2);
-
-  initialIndex = index;
-  initialOffset = prevOffset;
-
-  return index;
 }
 
 // Samples an entire span of a radial gradient.
