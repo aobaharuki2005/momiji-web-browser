@@ -150,7 +150,8 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       stackFormat_(parentRuntime ? js::StackFormat::Default
                                  : js::StackFormat::SpiderMonkey),
       wasmInstances(mutexid::WasmRuntimeInstances),
-      moduleAsyncEvaluatingPostOrder(0) {
+      moduleAsyncEvaluatingPostOrder(0),
+      pendingAsyncModuleEvaluations(0) {
   JS_COUNT_CTOR(JSRuntime);
   liveRuntimesCount++;
 

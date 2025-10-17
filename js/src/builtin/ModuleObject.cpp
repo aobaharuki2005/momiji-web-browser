@@ -691,25 +691,26 @@ void ModuleNamespaceObject::ProxyHandler::finalize(JS::GCContext* gcx,
   }
 }
 
+// https://tc39.es/ecma262/#sec-IncrementModuleAsyncEvaluationCount
+// 9.6.3 IncrementModuleAsyncEvaluationCount()
 static uint32_t IncrementModuleAsyncEvaluationCount(JSRuntime* rt) {
+  if (rt->pendingAsyncModuleEvaluations == 0) {
+    // From the spec NOTE:
+    //   An implementation may unobservably reset [[ModuleAsyncEvaluationCount]]
+    //   to 0 whenever there are no pending modules.
+    rt->moduleAsyncEvaluatingPostOrder = 0;
+  }
+
   uint32_t ordinal = rt->moduleAsyncEvaluatingPostOrder;
   MOZ_ASSERT(ordinal != ASYNC_EVALUATING_POST_ORDER_DONE);
   MOZ_ASSERT(ordinal != ASYNC_EVALUATING_POST_ORDER_UNSET);
   MOZ_ASSERT(ordinal < ASYNC_EVALUATING_POST_ORDER_MAX_VALUE);
   rt->moduleAsyncEvaluatingPostOrder++;
-  return ordinal;
-}
 
-// Reset the runtime's moduleAsyncEvaluatingPostOrder counter when the last
-// module that was async evaluating is finished.
-//
-// The graph is not re-entrant and any future modules will be independent from
-// this one.
-static void MaybeResetPostOrderCounter(JSRuntime* rt,
-                                       uint32_t finishedPostOrder) {
-  if (rt->moduleAsyncEvaluatingPostOrder == finishedPostOrder + 1) {
-    rt->moduleAsyncEvaluatingPostOrder = 0;
-  }
+  MOZ_ASSERT(rt->pendingAsyncModuleEvaluations < MAX_UINT32);
+  rt->pendingAsyncModuleEvaluations++;
+
+  return ordinal;
 }
 
 bool AsyncEvaluationOrder::isUnset() const {
@@ -736,7 +737,8 @@ void AsyncEvaluationOrder::set(JSRuntime* rt) {
 
 void AsyncEvaluationOrder::setDone(JSRuntime* rt) {
   MOZ_ASSERT(isInteger());
-  MaybeResetPostOrderCounter(rt, value);
+  MOZ_ASSERT(rt->pendingAsyncModuleEvaluations > 0);
+  rt->pendingAsyncModuleEvaluations--;
   value = ASYNC_EVALUATING_POST_ORDER_DONE;
 }
 
