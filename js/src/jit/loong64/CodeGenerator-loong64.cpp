@@ -153,7 +153,7 @@ class js::jit::OutOfLineTableSwitch
   }
 
  public:
-  OutOfLineTableSwitch(MTableSwitch* mir) : mir_(mir) {}
+  explicit OutOfLineTableSwitch(MTableSwitch* mir) : mir_(mir) {}
 
   MTableSwitch* mir() const { return mir_; }
 

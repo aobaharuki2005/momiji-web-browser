@@ -248,7 +248,7 @@ class Assembler : public AssemblerShared,
       Header(int size_, bool isNatural_)
           : size(size_), isNatural(isNatural_), ONES(0xffff) {}
 
-      Header(uint32_t data) : data(data) {
+      explicit Header(uint32_t data) : data(data) {
         static_assert(sizeof(Header) == sizeof(uint32_t));
         MOZ_ASSERT(ONES == 0xffff);
       }

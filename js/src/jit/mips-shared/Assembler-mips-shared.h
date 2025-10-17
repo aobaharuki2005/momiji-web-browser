@@ -550,7 +550,7 @@ class BOffImm16 {
   bool isInvalid() { return data == INVALID; }
   Instruction* getDest(Instruction* src) const;
 
-  BOffImm16(InstImm inst);
+  explicit BOffImm16(InstImm inst);
 };
 
 // A JOffImm26 is a 26 bit immediate that is used for unconditional jumps.
@@ -592,7 +592,7 @@ class Imm16 {
 
  public:
   Imm16();
-  Imm16(uint32_t imm) : value(imm) {}
+  explicit Imm16(uint32_t imm) : value(imm) {}
   uint32_t encode() { return value; }
   int32_t decodeSigned() { return value; }
   uint32_t decodeUnsigned() { return value; }
@@ -612,7 +612,7 @@ class Imm8 {
 
  public:
   Imm8();
-  Imm8(uint32_t imm) : value(imm) {}
+  explicit Imm8(uint32_t imm) : value(imm) {}
   uint32_t encode(uint32_t shift) { return value << shift; }
   int32_t decodeSigned() { return value; }
   uint32_t decodeUnsigned() { return value; }
@@ -634,7 +634,7 @@ class GSImm13 {
 
  public:
   GSImm13();
-  GSImm13(uint32_t imm) : value(imm & ~0xf) {}
+  explicit GSImm13(uint32_t imm) : value(imm & ~0xf) {}
   uint32_t encode(uint32_t shift) { return ((value >> 4) & 0x1ff) << shift; }
   int32_t decodeSigned() { return value; }
   uint32_t decodeUnsigned() { return value; }
@@ -653,9 +653,9 @@ class Operand {
   int32_t offset;
 
  public:
-  Operand(Register reg_) : tag(REG), reg(reg_.code()) {}
+  explicit Operand(Register reg_) : tag(REG), reg(reg_.code()) {}
 
-  Operand(FloatRegister freg) : tag(FREG), reg(freg.code()) {}
+  explicit Operand(FloatRegister freg) : tag(FREG), reg(freg.code()) {}
 
   Operand(Register base, Imm32 off)
       : tag(MEM), reg(base.code()), offset(off.value) {}
@@ -663,7 +663,7 @@ class Operand {
   Operand(Register base, int32_t off)
       : tag(MEM), reg(base.code()), offset(off) {}
 
-  Operand(const Address& addr)
+  explicit Operand(const Address& addr)
       : tag(MEM), reg(addr.base.code()), offset(addr.offset) {}
 
   Tag getTag() const { return tag; }
@@ -1319,7 +1319,7 @@ class Instruction {
   uint32_t data;
 
   // Standard constructor
-  Instruction(uint32_t data_) : data(data_) {}
+  explicit Instruction(uint32_t data_) : data(data_) {}
 
   // You should never create an instruction directly.  You should create a
   // more specific instruction which will eventually call one of these
@@ -1443,7 +1443,7 @@ class InstImm : public Instruction {
       : Instruction(op | rs | cc | off.encode()) {}
   InstImm(OpcodeField op, Register rs, Register rt, Imm16 off)
       : Instruction(op | RS(rs) | RT(rt) | off.encode()) {}
-  InstImm(uint32_t raw) : Instruction(raw) {}
+  MOZ_IMPLICIT InstImm(uint32_t raw) : Instruction(raw) {}
   // For floating-point loads and stores.
   InstImm(OpcodeField op, Register rs, FloatRegister rt, Imm16 off)
       : Instruction(op | RS(rs) | RT(rt) | off.encode()) {}
@@ -1499,7 +1499,7 @@ class InstGS : public Instruction {
   InstGS(OpcodeField op, Register rs, FloatRegister rt, FloatRegister rz,
          GSImm13 off, FunctionField ff)
       : Instruction(op | RS(rs) | RT(rt) | RZ(rz) | off.encode(6) | ff) {}
-  InstGS(uint32_t raw) : Instruction(raw) {}
+  explicit InstGS(uint32_t raw) : Instruction(raw) {}
   // For floating-point unaligned loads and stores.
   InstGS(OpcodeField op, Register rs, FloatRegister rt, Imm8 off,
          FunctionField ff)

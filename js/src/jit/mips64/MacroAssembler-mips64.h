@@ -27,7 +27,7 @@ struct ImmShiftedTag : public ImmWord {
 };
 
 struct ImmTag : public Imm32 {
-  ImmTag(JSValueTag mask) : Imm32(int32_t(mask)) {}
+  explicit ImmTag(JSValueTag mask) : Imm32(int32_t(mask)) {}
 };
 
 static constexpr ValueOperand JSReturnOperand{JSReturnReg};

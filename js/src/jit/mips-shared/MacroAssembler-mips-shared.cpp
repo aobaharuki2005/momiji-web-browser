@@ -2329,7 +2329,7 @@ void MacroAssembler::patchSub32FromMemAndBranchIfNegative(CodeOffset offset,
   // |      |  |  |
   // 001001 rs rt imm = addiu rs, rt, imm
   MOZ_ASSERT(inst->extractOpcode() == ((uint32_t)op_addiu >> OpcodeShift));
-  inst->setImm16(-val & 0xffff);
+  inst->setImm16(Imm16(-val & 0xffff));
 }
 
 // ========================================================================
