@@ -4653,319 +4653,275 @@ void MacroAssembler::speculationBarrier() { MOZ_CRASH(); }
 void MacroAssembler::floorFloat32ToInt32(FloatRegister src, Register dest,
                                          Label* fail) {
   ScratchFloat32Scope fpscratch(asMasm());
-  FloatRegister scratch = fpscratch;
-  Label skipCheck, done;
 
-  // If Nan, 0 or -0 check for bailout
-  loadConstantFloat32(0.0f, scratch);
-  ma_bc_s(src, scratch, &skipCheck, Assembler::DoubleNotEqual, ShortJump);
+  // Round toward negative infinity.
+  as_ftintrm_l_s(fpscratch, src);
+  moveFromDouble(fpscratch, dest);
 
-  // If high part is not zero, it is NaN or -0, so we bail.
+  // Sign extend lower 32 bits to test if the result isn't an Int32.
   {
-    UseScratchRegisterScope temps(asMasm());
+    UseScratchRegisterScope temps(*this);
     Register scratch = temps.Acquire();
-    moveFromDoubleLo(src, scratch);
-    branch32(Assembler::NotEqual, scratch, zero, fail);
+
+    move32SignExtendToPtr(dest, scratch);
+    branchPtr(Assembler::NotEqual, dest, scratch, fail);
   }
 
-  // Input was zero, so return zero.
-  move32(Imm32(0), dest);
-  ma_b(&done, ShortJump);
-
-  bind(&skipCheck);
-  as_ftintrm_w_s(scratch, src);
-  moveFromDoubleLo(scratch, dest);
-
-  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
-  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
-
-  bind(&done);
+  // We have to check for -0 and NaN when the result is zero.
+  Label notZero;
+  ma_b(dest, zero, &notZero, Assembler::NotEqual, ShortJump);
+  {
+    // If any of the two most significant bits is set, |src| is -0 or NaN.
+    moveFromFloat32(src, dest);
+    as_srli_w(dest, dest, 30);
+    branch32(Assembler::NotEqual, dest, zero, fail);
+  }
+  bind(&notZero);
 }
 
 void MacroAssembler::floorDoubleToInt32(FloatRegister src, Register dest,
                                         Label* fail) {
   ScratchDoubleScope fpscratch(asMasm());
-  FloatRegister scratch = fpscratch;
-  Label skipCheck, done;
 
-  // If Nan, 0 or -0 check for bailout
-  loadConstantDouble(0.0, scratch);
-  ma_bc_d(src, scratch, &skipCheck, Assembler::DoubleNotEqual, ShortJump);
+  // Round toward negative infinity.
+  as_ftintrm_l_d(fpscratch, src);
+  moveFromDouble(fpscratch, dest);
 
-  // If high part is not zero, it is NaN or -0, so we bail.
+  // Sign extend lower 32 bits to test if the result isn't an Int32.
   {
-    UseScratchRegisterScope temps(asMasm());
+    UseScratchRegisterScope temps(*this);
     Register scratch = temps.Acquire();
-    moveFromDoubleHi(src, scratch);
-    branch32(Assembler::NotEqual, scratch, zero, fail);
+
+    move32SignExtendToPtr(dest, scratch);
+    branchPtr(Assembler::NotEqual, dest, scratch, fail);
   }
 
-  // Input was zero, so return zero.
-  move32(Imm32(0), dest);
-  ma_b(&done, ShortJump);
-
-  bind(&skipCheck);
-  as_ftintrm_w_d(scratch, src);
-  moveFromDoubleLo(scratch, dest);
-
-  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
-  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
-
-  bind(&done);
+  // We have to check for -0 and NaN when the result is zero.
+  Label notZero;
+  ma_b(dest, zero, &notZero, Assembler::NotEqual, ShortJump);
+  {
+    // If any of the two most significant bits is set, |src| is negative or NaN.
+    moveFromDouble(src, dest);
+    as_srli_d(dest, dest, 62);
+    branchPtr(Assembler::NotEqual, dest, zero, fail);
+  }
+  bind(&notZero);
 }
 
 void MacroAssembler::ceilFloat32ToInt32(FloatRegister src, Register dest,
                                         Label* fail) {
   ScratchFloat32Scope fpscratch(asMasm());
-  FloatRegister scratch = fpscratch;
-  Label performCeil, done;
 
-  // If x < -1 or x > 0 then perform ceil.
-  loadConstantFloat32(0.0f, scratch);
-  branchFloat(Assembler::DoubleGreaterThan, src, scratch, &performCeil);
-  loadConstantFloat32(-1.0f, scratch);
-  branchFloat(Assembler::DoubleLessThanOrEqual, src, scratch, &performCeil);
+  // Round toward positive infinity.
+  as_ftintrp_l_s(fpscratch, src);
+  moveFromDouble(fpscratch, dest);
 
-  // If binary value is not zero, the input was not 0, so we bail.
+  // Sign extend lower 32 bits to test if the result isn't an Int32.
   {
-    UseScratchRegisterScope temps(asMasm());
+    UseScratchRegisterScope temps(*this);
     Register scratch = temps.Acquire();
-    moveFromFloat32(src, scratch);
-    branch32(Assembler::NotEqual, scratch, zero, fail);
+
+    move32SignExtendToPtr(dest, scratch);
+    branchPtr(Assembler::NotEqual, dest, scratch, fail);
   }
 
-  // Input was zero, so return zero.
-  move32(Imm32(0), dest);
-  ma_b(&done, ShortJump);
-
-  bind(&performCeil);
-  as_ftintrp_w_s(scratch, src);
-  moveFromFloat32(scratch, dest);
-
-  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
-  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
-
-  bind(&done);
+  // We have to check for (-1, -0] and NaN when the result is zero.
+  Label notZero;
+  ma_b(dest, zero, &notZero, Assembler::NotEqual, ShortJump);
+  {
+    // If binary value is not zero, the input was not 0, so we bail.
+    moveFromFloat32(src, dest);
+    branch32(Assembler::NotEqual, dest, zero, fail);
+  }
+  bind(&notZero);
 }
 
 void MacroAssembler::ceilDoubleToInt32(FloatRegister src, Register dest,
                                        Label* fail) {
   ScratchDoubleScope fpscratch(asMasm());
-  FloatRegister scratch = fpscratch;
-  Label performCeil, done;
 
-  // If x < -1 or x > 0 then perform ceil.
-  loadConstantDouble(0, scratch);
-  branchDouble(Assembler::DoubleGreaterThan, src, scratch, &performCeil);
-  loadConstantDouble(-1.0, scratch);
-  branchDouble(Assembler::DoubleLessThanOrEqual, src, scratch, &performCeil);
+  // Round toward positive infinity.
+  as_ftintrp_l_d(fpscratch, src);
+  moveFromDouble(fpscratch, dest);
 
-  // If binary value is not zero, the input was not 0, so we bail.
+  // Sign extend lower 32 bits to test if the result isn't an Int32.
   {
-    UseScratchRegisterScope temps(asMasm());
+    UseScratchRegisterScope temps(*this);
     Register scratch = temps.Acquire();
-    moveFromDoubleHi(src, scratch);
-    branch32(Assembler::NotEqual, scratch, zero, fail);
+
+    move32SignExtendToPtr(dest, scratch);
+    branchPtr(Assembler::NotEqual, dest, scratch, fail);
   }
 
-  // Input was zero, so return zero.
-  move32(Imm32(0), dest);
-  ma_b(&done, ShortJump);
-
-  bind(&performCeil);
-  as_ftintrp_w_d(scratch, src);
-  moveFromDoubleLo(scratch, dest);
-
-  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
-  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
-
-  bind(&done);
+  // We have to check for (-1, -0] and NaN when the result is zero.
+  Label notZero;
+  ma_b(dest, zero, &notZero, Assembler::NotEqual, ShortJump);
+  {
+    // If binary value is not zero, the input was not 0, so we bail.
+    moveFromDouble(src, dest);
+    branchPtr(Assembler::NotEqual, dest, zero, fail);
+  }
+  bind(&notZero);
 }
 
 void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
                                          FloatRegister temp, Label* fail) {
   ScratchFloat32Scope fpscratch(*this);
 
-  Label negative, end, skipCheck;
+  Label negative, end, performRound;
 
-  // Load biggest number less than 0.5 in the temp register.
-  loadConstantFloat32(GetBiggestNumberLessThan(0.5f), temp);
-
-  // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
+  // Branch for negative inputs. Doesn't catch NaN or -0.
   loadConstantFloat32(0.0f, fpscratch);
   ma_bc_s(src, fpscratch, &negative, Assembler::DoubleLessThan, ShortJump);
 
-  // If Nan, 0 or -0 check for bailout
-  ma_bc_s(src, fpscratch, &skipCheck, Assembler::DoubleNotEqual, ShortJump);
-
-  // If binary value is not zero, it is NaN or -0, so we bail.
+  // If non-negative check for bailout.
+  ma_bc_s(src, fpscratch, &performRound, Assembler::DoubleNotEqual, ShortJump);
   {
-    UseScratchRegisterScope temps(asMasm());
-    Register scratch = temps.Acquire();
-    moveFromFloat32(src, scratch);
-    branch32(Assembler::NotEqual, scratch, zero, fail);
+    // If binary value is not zero, it is NaN or -0, so we bail.
+    moveFromFloat32(src, dest);
+    branch32(Assembler::NotEqual, dest, zero, fail);
+    ma_b(&end, ShortJump);
   }
-
-  // Input was zero, so return zero.
-  move32(Imm32(0), dest);
-  ma_b(&end, ShortJump);
-
-  bind(&skipCheck);
-  as_fadd_s(fpscratch, src, temp);
-  as_ftintrm_w_s(fpscratch, fpscratch);
-
-  moveFromFloat32(fpscratch, dest);
-
-  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
-  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
-
-  jump(&end);
 
   // Input is negative, but isn't -0.
   bind(&negative);
+  {
+    // Inputs in [-0.5, 0) are rounded to -0. Fail.
+    loadConstantFloat32(-0.5f, fpscratch);
+    branchFloat(Assembler::DoubleGreaterThanOrEqual, src, fpscratch, fail);
+  }
 
-  // Inputs in ]-0.5; 0] need to be added 0.5, other negative inputs need to
-  // be added the biggest double less than 0.5.
-  Label loadJoin;
-  loadConstantFloat32(-0.5f, fpscratch);
-  branchFloat(Assembler::DoubleLessThan, src, fpscratch, &loadJoin);
-  loadConstantFloat32(0.5f, temp);
-  bind(&loadJoin);
+  bind(&performRound);
+  {
+    // Load biggest number less than 0.5 in the temp register.
+    loadConstantFloat32(GetBiggestNumberLessThan(0.5f), temp);
 
-  as_fadd_s(temp, src, temp);
+    // Other inputs need the biggest float less than 0.5 added.
+    as_fadd_s(fpscratch, src, temp);
 
-  // If input + 0.5 >= 0, input is a negative number >= -0.5 and the
-  // result is -0.
-  branchFloat(Assembler::DoubleGreaterThanOrEqual, temp, fpscratch, fail);
+    // Round toward negative infinity.
+    as_ftintrm_l_s(fpscratch, fpscratch);
+    moveFromDouble(fpscratch, dest);
 
-  // Truncate and round toward zero.
-  // This is off-by-one for everything but integer-valued inputs.
-  as_ftintrm_w_s(fpscratch, temp);
-  moveFromFloat32(fpscratch, dest);
+    // Sign extend lower 32 bits to test if the result isn't an Int32.
+    {
+      UseScratchRegisterScope temps(*this);
+      Register scratch = temps.Acquire();
 
-  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
-
+      move32SignExtendToPtr(dest, scratch);
+      branchPtr(Assembler::NotEqual, dest, scratch, fail);
+    }
+  }
   bind(&end);
 }
 
 void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
                                         FloatRegister temp, Label* fail) {
-  ScratchDoubleScope scratch(*this);
+  ScratchDoubleScope fpscratch(*this);
 
-  Label negative, end, skipCheck;
+  Label negative, end, performRound;
 
-  // Load biggest number less than 0.5 in the temp register.
-  loadConstantDouble(GetBiggestNumberLessThan(0.5), temp);
+  // Branch for negative inputs. Doesn't catch NaN or -0.
+  loadConstantDouble(0.0, fpscratch);
+  ma_bc_d(src, fpscratch, &negative, Assembler::DoubleLessThan, ShortJump);
 
-  // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
-  loadConstantDouble(0.0, scratch);
-  ma_bc_d(src, scratch, &negative, Assembler::DoubleLessThan, ShortJump);
-
-  // If Nan, 0 or -0 check for bailout
-  ma_bc_d(src, scratch, &skipCheck, Assembler::DoubleNotEqual, ShortJump);
-
-  // If high part is not zero, it is NaN or -0, so we bail.
+  // If non-negative check for bailout.
+  ma_bc_d(src, fpscratch, &performRound, Assembler::DoubleNotEqual, ShortJump);
   {
-    UseScratchRegisterScope temps(asMasm());
-    Register scratch = temps.Acquire();
-    moveFromDoubleHi(src, scratch);
-    branch32(Assembler::NotEqual, scratch, zero, fail);
+    // If binary value is not zero, it is NaN or -0, so we bail.
+    moveFromDouble(src, dest);
+    branchPtr(Assembler::NotEqual, dest, zero, fail);
+    ma_b(&end, ShortJump);
   }
-
-  // Input was zero, so return zero.
-  move32(Imm32(0), dest);
-  ma_b(&end, ShortJump);
-
-  bind(&skipCheck);
-  as_fadd_d(scratch, src, temp);
-  as_ftintrm_w_d(scratch, scratch);
-
-  moveFromDoubleLo(scratch, dest);
-
-  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
-  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
-
-  jump(&end);
 
   // Input is negative, but isn't -0.
   bind(&negative);
+  {
+    // Inputs in [-0.5, 0) are rounded to -0. Fail.
+    loadConstantDouble(-0.5, fpscratch);
+    branchDouble(Assembler::DoubleGreaterThanOrEqual, src, fpscratch, fail);
+  }
 
-  // Inputs in ]-0.5; 0] need to be added 0.5, other negative inputs need to
-  // be added the biggest double less than 0.5.
-  Label loadJoin;
-  loadConstantDouble(-0.5, scratch);
-  branchDouble(Assembler::DoubleLessThan, src, scratch, &loadJoin);
-  loadConstantDouble(0.5, temp);
-  bind(&loadJoin);
+  bind(&performRound);
+  {
+    // Load biggest number less than 0.5 in the temp register.
+    loadConstantDouble(GetBiggestNumberLessThan(0.5), temp);
 
-  addDouble(src, temp);
+    // Other inputs need the biggest double less than 0.5 added.
+    as_fadd_d(fpscratch, src, temp);
 
-  // If input + 0.5 >= 0, input is a negative number >= -0.5 and the
-  // result is -0.
-  branchDouble(Assembler::DoubleGreaterThanOrEqual, temp, scratch, fail);
+    // Round toward negative infinity.
+    as_ftintrm_l_d(fpscratch, fpscratch);
+    moveFromDouble(fpscratch, dest);
 
-  // Truncate and round toward zero.
-  // This is off-by-one for everything but integer-valued inputs.
-  as_ftintrm_w_d(scratch, temp);
-  moveFromDoubleLo(scratch, dest);
+    // Sign extend lower 32 bits to test if the result isn't an Int32.
+    {
+      UseScratchRegisterScope temps(*this);
+      Register scratch = temps.Acquire();
 
-  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
-
+      move32SignExtendToPtr(dest, scratch);
+      branchPtr(Assembler::NotEqual, dest, scratch, fail);
+    }
+  }
   bind(&end);
 }
 
 void MacroAssembler::truncFloat32ToInt32(FloatRegister src, Register dest,
                                          Label* fail) {
-  UseScratchRegisterScope temps(asMasm());
-  Register scratch = temps.Acquire();
   ScratchFloat32Scope fpscratch(asMasm());
 
-  Label notZero;
-  as_ftintrz_w_s(fpscratch, src);
-  as_movfcsr2gr(scratch);
-  moveFromFloat32(fpscratch, dest);
-  as_bstrpick_w(scratch, scratch, Assembler::CauseV, Assembler::CauseV);
-  ma_b(dest, zero, &notZero, Assembler::NotEqual, ShortJump);
+  // Round toward zero.
+  as_ftintrz_l_s(fpscratch, src);
+  moveFromDouble(fpscratch, dest);
 
+  // Sign extend lower 32 bits to test if the result isn't an Int32.
   {
-    // dest == zero
-    UseScratchRegisterScope temps2(asMasm());
-    Register scratch2 = temps2.Acquire();
-    moveFromFloat32(src, scratch2);
-    // Check if input is in ]-1; -0] range by checking the sign bit.
-    as_slt(scratch2, scratch2, zero);
-    as_add_d(scratch, scratch, scratch2);
+    UseScratchRegisterScope temps(*this);
+    Register scratch = temps.Acquire();
+
+    move32SignExtendToPtr(dest, scratch);
+    branchPtr(Assembler::NotEqual, dest, scratch, fail);
   }
 
+  // We have to check for (-1, -0] and NaN when the result is zero.
+  Label notZero;
+  ma_b(dest, zero, &notZero, Assembler::NotEqual, ShortJump);
+  {
+    // If any of the two most significant bits is set, |src| is negative or NaN.
+    moveFromFloat32(src, dest);
+    as_srli_w(dest, dest, 30);
+    branch32(Assembler::NotEqual, dest, zero, fail);
+  }
   bind(&notZero);
-  branch32(Assembler::NotEqual, Register(scratch), zero, fail);
 }
 
 void MacroAssembler::truncDoubleToInt32(FloatRegister src, Register dest,
                                         Label* fail) {
-  UseScratchRegisterScope temps(asMasm());
-  Register scratch = temps.Acquire();
-  ScratchFloat32Scope fpscratch(asMasm());
+  ScratchDoubleScope fpscratch(asMasm());
 
-  Label notZero;
-  as_ftintrz_w_d(fpscratch, src);
-  as_movfcsr2gr(scratch);
-  moveFromFloat32(fpscratch, dest);
-  as_bstrpick_w(scratch, scratch, Assembler::CauseV, Assembler::CauseV);
-  ma_b(dest, zero, &notZero, Assembler::NotEqual, ShortJump);
+  // Round toward zero.
+  as_ftintrz_l_d(fpscratch, src);
+  moveFromDouble(fpscratch, dest);
 
+  // Sign extend lower 32 bits to test if the result isn't an Int32.
   {
-    // dest == zero
-    UseScratchRegisterScope temps2(asMasm());
-    Register scratch2 = temps2.Acquire();
-    moveFromDoubleHi(src, scratch2);
-    // Check if input is in ]-1; -0] range by checking the sign bit.
-    as_slt(scratch2, scratch2, zero);
-    as_add_d(scratch, scratch, scratch2);
+    UseScratchRegisterScope temps(*this);
+    Register scratch = temps.Acquire();
+
+    move32SignExtendToPtr(dest, scratch);
+    branchPtr(Assembler::NotEqual, dest, scratch, fail);
   }
 
+  // We have to check for (-1, -0] and NaN when the result is zero.
+  Label notZero;
+  ma_b(dest, zero, &notZero, Assembler::NotEqual, ShortJump);
+  {
+    // If any of the two most significant bits is set, |src| is negative or NaN.
+    moveFromDouble(src, dest);
+    as_srli_d(dest, dest, 62);
+    branchPtr(Assembler::NotEqual, dest, zero, fail);
+  }
   bind(&notZero);
-  branch32(Assembler::NotEqual, Register(scratch), zero, fail);
 }
 
 void MacroAssembler::nearbyIntDouble(RoundingMode mode, FloatRegister src,
