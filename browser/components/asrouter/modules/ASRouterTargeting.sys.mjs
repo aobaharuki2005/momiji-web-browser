@@ -530,11 +530,7 @@ export function getSortedMessages(messages, options = {}) {
  *                    its type (web extenstion or custom url) and the parsed url(s)
  *
  * @param {string} url - A URL string for home page or newtab page
- * @returns {Object} {
- *   isWebExt: boolean,
- *   isCustomUrl: boolean,
- *   urls: Array<{url: string, host: string}>
- * }
+ * @returns  {{isWebExt: boolean, isCustomUrl: boolean, urls: {url: string, host: string}[]}}
  */
 function parseAboutPageURL(url) {
   let ret = {
@@ -1120,7 +1116,8 @@ const TargetingGetters = {
       .getCharPref("distribution.id", "");
   },
 
-  /** Where the Firefox View button is shown, if at all.
+  /**
+   * Where the Firefox View button is shown, if at all.
    * @return {string} container of the button if it is shown in the toolbar/overflow menu
    * @return {string} `null` if the button has been removed
    */

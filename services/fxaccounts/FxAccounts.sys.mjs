@@ -1150,9 +1150,12 @@ FxAccountsInternal.prototype = {
     return this.startPollEmailStatus(state, data.sessionToken, "push");
   },
 
-  /** Destroyes an OAuth Token by sending a request to the FxA server
-   * @param { Object } tokenData: The token's data, with `tokenData.token` being the token itself
-   **/
+  /**
+   * Destroyes an OAuth Token by sending a request to the FxA server
+   *
+   * @param {object} tokenData
+   *  The token's data, with `tokenData.token` being the token itself
+   */
   destroyOAuthToken(tokenData) {
     return this.fxAccountsClient.oauthDestroy(OAUTH_CLIENT_ID, tokenData.token);
   },
