@@ -21,7 +21,7 @@ transforms:
 task-defaults:
     shipping-phase: promote
     shipping-product: firefox
-    run-on-releases: [release, release-rc, beta]
+    run-on-releases: [release, release-rc, beta, esr140]
     treeherder:
         kind: other
         tier: 2

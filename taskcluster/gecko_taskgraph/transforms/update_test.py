@@ -5,10 +5,24 @@
 Transform the update-test suite to parametrize by locale, source version, machine
 """
 
+from enum import Enum
+
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.copy import deepcopy
+from typing_extensions import final
 
 from gecko_taskgraph.util.attributes import task_name
+
+
+@final
+class ReleaseType(Enum):
+    """Release type"""
+
+    release = 0
+    beta = 1
+    esr = 2
+    other = 3
+
 
 transforms = TransformSequence()
 
@@ -42,16 +56,27 @@ UPDATE_ARTIFACT_NAME = "public/update-test"
 
 DEFAULT_VERSIONS_BACK = 3
 
+ESR_SUPPORT_CUTOFF = 140
+
 
 def infix_treeherder_symbol(symbol, infix):
     head, tail = symbol.split("(", 1)
+    if infix.startswith("-"):
+        infix = infix[1:]
     return f"{head}({tail[:-1]}-{infix})"
 
 
 @transforms.add
 def set_task_configuration(config, tasks):
+    release_type = ReleaseType.release
     config_tasks = {}
-    is_beta = config.params["release_type"] == "beta"
+    if config.params["release_type"] == "beta":
+        release_type = ReleaseType.beta
+    elif config.params["release_type"].startswith("esr"):
+        esr_version = int(config.params["release_type"].split("esr")[1])
+        release_type = ReleaseType.esr
+        if esr_version < ESR_SUPPORT_CUTOFF:
+            return None
 
     for dep in config.kind_dependencies_tasks.values():
         if "update-verify-config" in dep.kind:
@@ -89,11 +114,18 @@ def set_task_configuration(config, tasks):
             this_task["run"]["cwd"] = "{checkout}"
             del this_task["os"]
 
-            if is_beta and this_task["shipping-product"] == "firefox":
-                this_task["name"] = this_task["name"] + "-beta"
-                this_task["run"]["command"] = (
-                    this_task["run"]["command"] + " --channel beta-localtest"
-                )
+            if this_task["shipping-product"] == "firefox":
+                if release_type == ReleaseType.beta:
+                    this_task["name"] = this_task["name"] + "-beta"
+                    this_task["run"]["command"] = (
+                        this_task["run"]["command"] + " --channel beta-localtest"
+                    )
+                elif release_type == ReleaseType.esr:
+                    this_task["name"] = this_task["name"] + "-esr"
+                    this_task["run"]["command"] = (
+                        this_task["run"]["command"]
+                        + f" --channel esr-localtest --esr-version {esr_version}"
+                    )
             this_task["name"] = this_task["name"].replace("linux-docker-", "")
             this_task["index"]["job-name"] = "update-test-" + this_task["name"]
 
@@ -137,6 +169,9 @@ def parametrize_by_locale(config, tasks):
 def parametrize_by_source_version(config, tasks):
     for task in tasks:
         if "source-version" not in task.get("name"):
+            yield task
+            continue
+        if "-esr" in task.get("name"):
             yield task
             continue
         # NB: We actually want source_versions_back = 0, because it gives us oldest usable ver
