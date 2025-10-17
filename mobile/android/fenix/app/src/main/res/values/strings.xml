@@ -391,15 +391,15 @@
     <string name="juno_onboarding_default_browser_title_nimbus_2">We love keeping you safe</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources">Find out why millions love Firefox</string>
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">Find out why millions love Firefox</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Safe browsing with more choices</string>
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Safe browsing with more choices</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Our non-profit backed browser helps stop companies from secretly following you around the web.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">More than 100 million people protect their privacy by choosing a browser that’s backed by a nonprofit.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">More than 100 million people protect their privacy by choosing a browser that’s backed by a nonprofit.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Known trackers? Blocked automatically. Extensions? Try all 700. PDFs? Our built-in reader makes them easy to manage.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">Known trackers? Blocked automatically. Extensions? Try all 700. PDFs? Our built-in reader makes them easy to manage.</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Set as default browser</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
