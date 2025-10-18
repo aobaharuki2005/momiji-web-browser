@@ -728,19 +728,6 @@ export class TranslationsParent extends JSWindowActorParent {
     const { documentURI } = this.browsingContext.currentWindowGlobal;
 
     if (
-      TranslationsParent.isInAutomation() &&
-      !TranslationsParent.testAutomaticPopup
-    ) {
-      // Do not offer translations in automation, as many tests do not expect this
-      // behavior.
-      lazy.console.log(
-        "maybeOfferTranslations - Do not offer translations in automation.",
-        documentURI?.spec
-      );
-      return;
-    }
-
-    if (
       !detectedLanguages.docLangTag ||
       !detectedLanguages.userLangTag ||
       !detectedLanguages.isDocLangTagSupported
@@ -908,6 +895,19 @@ export class TranslationsParent extends JSWindowActorParent {
       // In Android, the active window is the active tab.
       isCurrentPage = documentURI?.spec === browser.documentURI?.spec;
     }
+
+    if (
+      TranslationsParent.isInAutomation() &&
+      !TranslationsParent.testAutomaticPopup
+    ) {
+      // Do not show the panel in automation, as many tests do not expect this behavior.
+      lazy.console.log(
+        "maybeOfferTranslations - Do not show the translations panel in automation.",
+        documentURI?.spec
+      );
+      return;
+    }
+
     if (isCurrentPage) {
       lazy.console.log(
         "maybeOfferTranslations - Offering a translation",
@@ -3473,13 +3473,6 @@ export class TranslationsParent extends JSWindowActorParent {
    * @returns {Promise<DetectionResult>}
    */
   async queryIdentifyLanguage() {
-    if (
-      TranslationsParent.isInAutomation() &&
-      !TranslationsParent.#isTranslationsEngineMocked
-    ) {
-      // In automation assume English is the language, but don't be confident.
-      return { confident: false, language: "en", languages: [] };
-    }
     return this.sendQuery("Translations:IdentifyLanguage").catch(error => {
       if (this.#isDestroyed) {
         // The actor was destroyed while this message was still being resolved.
