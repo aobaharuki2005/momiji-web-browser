@@ -112,6 +112,7 @@ export const DefaultMeta = ({
   showTopics,
   icon_src,
   refinedCardsLayout,
+  tabIndex,
 }) => {
   const shouldHaveThumbs =
     format !== "rectangle" && mayHaveSectionsCards && mayHaveThumbsUpDown;
@@ -155,6 +156,7 @@ export const DefaultMeta = ({
             sponsor={sponsor}
             isThumbsDownActive={state.isThumbsDownActive}
             isThumbsUpActive={state.isThumbsUpActive}
+            tabIndex={tabIndex}
           />
         )}
       {(shouldHaveFooterSection || refinedCardsLayout) && (
@@ -181,6 +183,7 @@ export const DefaultMeta = ({
               isThumbsDownActive={state.isThumbsDownActive}
               isThumbsUpActive={state.isThumbsUpActive}
               refinedCardsLayout={refinedCardsLayout}
+              tabIndex={tabIndex}
             />
           )}
           {showTopics && (
@@ -884,6 +887,8 @@ export class _DSCard extends React.PureComponent {
           url={this.props.url}
           title={this.props.title}
           isSponsored={!!this.props.flightId}
+          tabIndex={this.props.tabIndex}
+          onFocus={this.props.onFocus}
         >
           {this.props.showTopics &&
             !this.props.mayHaveSectionsCards &&
@@ -969,6 +974,7 @@ export class _DSCard extends React.PureComponent {
               topic={this.props.topic}
               icon_src={faviconSrc}
               refinedCardsLayout={refinedCardsLayout}
+              tabIndex={this.props.tabIndex}
             />
           )}
         </SafeAnchor>
@@ -1017,6 +1023,7 @@ export class _DSCard extends React.PureComponent {
                 isSectionsCard={this.props.mayHaveSectionsCards}
                 topic={this.props.topic}
                 selected_topics={this.props.selected_topics}
+                tabIndex={this.props.tabIndex}
               />
             )}
           </div>

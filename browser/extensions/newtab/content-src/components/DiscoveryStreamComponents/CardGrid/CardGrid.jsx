@@ -70,6 +70,48 @@ export function IntersectionObserver({
 }
 
 export class _CardGrid extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      focusedIndex: 0,
+    };
+    this.onCardFocus = this.onCardFocus.bind(this);
+    this.handleCardKeyDown = this.handleCardKeyDown.bind(this);
+  }
+
+  onCardFocus(index) {
+    this.setState({ focusedIndex: index });
+  }
+
+  handleCardKeyDown(e) {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault();
+
+      const currentCardEl = e.target.closest("article.ds-card");
+      if (!currentCardEl) {
+        return;
+      }
+
+      let targetCardEl = currentCardEl;
+
+      // Walk through siblings to find the target card element
+      while (targetCardEl) {
+        targetCardEl =
+          e.key === "ArrowLeft"
+            ? targetCardEl.previousElementSibling
+            : targetCardEl.nextElementSibling;
+
+        if (targetCardEl && targetCardEl.matches("article.ds-card")) {
+          const link = targetCardEl.querySelector("a.ds-card-link");
+          if (link) {
+            link.focus();
+          }
+          break;
+        }
+      }
+    }
+  }
+
   // eslint-disable-next-line max-statements
   renderCards() {
     const prefs = this.props.Prefs.values;
@@ -98,19 +140,25 @@ export class _CardGrid extends React.PureComponent {
 
     const recs = this.props.data.recommendations.slice(0, items);
     const cards = [];
+    let cardIndex = 0;
 
     for (let index = 0; index < items; index++) {
       const rec = recs[index];
-      cards.push(
+      const isPlaceholder =
         topicsLoading ||
-          this.props.placeholder ||
-          !rec ||
-          rec.placeholder ||
-          (rec.flight_id &&
-            !spocsStartupCacheEnabled &&
-            this.props.App.isForStartupCache.DiscoveryStream) ? (
-          <PlaceholderDSCard key={`dscard-${index}`} />
-        ) : (
+        this.props.placeholder ||
+        !rec ||
+        rec.placeholder ||
+        (rec.flight_id &&
+          !spocsStartupCacheEnabled &&
+          this.props.App.isForStartupCache.DiscoveryStream);
+
+      if (isPlaceholder) {
+        cards.push(<PlaceholderDSCard key={`dscard-${index}`} />);
+      } else {
+        const currentCardIndex = cardIndex;
+        cardIndex++;
+        cards.push(
           <DSCard
             key={`dscard-${rec.id}`}
             pos={rec.pos}
@@ -154,9 +202,11 @@ export class _CardGrid extends React.PureComponent {
             format={rec.format}
             alt_text={rec.alt_text}
             isTimeSensitive={rec.isTimeSensitive}
+            tabIndex={currentCardIndex === this.state.focusedIndex ? 0 : -1}
+            onFocus={() => this.onCardFocus(currentCardIndex)}
           />
-        )
-      );
+        );
+      }
     }
 
     if (widgets?.positions?.length && widgets?.data?.length) {
@@ -271,7 +321,13 @@ export class _CardGrid extends React.PureComponent {
     const gridClassName = this.renderGridClassName();
 
     return (
-      <>{cards?.length > 0 && <div className={gridClassName}>{cards}</div>}</>
+      <>
+        {cards?.length > 0 && (
+          <div className={gridClassName} onKeyDown={this.handleCardKeyDown}>
+            {cards}
+          </div>
+        )}
+      </>
     );
   }
 
