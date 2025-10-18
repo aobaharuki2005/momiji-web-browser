@@ -7,8 +7,9 @@ const browserContainersGroupDisabled = !SpecialPowers.getBoolPref(
 const cookieBannerHandlingDisabled = !SpecialPowers.getBoolPref(
   "cookiebanners.ui.desktop.enabled"
 );
-const backupSectionDisabled = !SpecialPowers.getBoolPref(
-  "browser.backup.preferences.ui.enabled"
+const backupSectionDisabled = !(
+  SpecialPowers.getBoolPref("browser.backup.archive.enabled") ||
+  SpecialPowers.getBoolPref("browser.backup.restore.enabled")
 );
 const ipProtectionExperiment = SpecialPowers.getStringPref(
   "browser.ipProtection.variant"
