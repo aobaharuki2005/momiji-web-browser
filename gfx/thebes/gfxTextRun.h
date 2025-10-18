@@ -230,7 +230,7 @@ class gfxTextRun : public gfxShapedText {
 
     // Returns the extra width that will be consumed by a hyphen. This should
     // be constant for a given textrun.
-    virtual nscoord GetHyphenWidth() const = 0;
+    virtual gfxFloat GetHyphenWidth() const = 0;
 
     // Return orientation flags to be used when creating a hyphen textrun.
     virtual mozilla::gfx::ShapedTextFlags GetShapedTextFlags() const = 0;
@@ -338,10 +338,10 @@ class gfxTextRun : public gfxShapedText {
    * the substring would be returned in it. NOTE: the spacing is
    * included in the advance width.
    */
-  nscoord GetAdvanceWidth(Range aRange, const PropertyProvider* aProvider,
-                          PropertyProvider::Spacing* aSpacing = nullptr) const;
+  gfxFloat GetAdvanceWidth(Range aRange, const PropertyProvider* aProvider,
+                           PropertyProvider::Spacing* aSpacing = nullptr) const;
 
-  nscoord GetAdvanceWidth() const {
+  gfxFloat GetAdvanceWidth() const {
     return GetAdvanceWidth(Range(this), nullptr);
   }
 
@@ -349,7 +349,7 @@ class gfxTextRun : public gfxShapedText {
    * Computes the minimum advance width for a substring assuming line
    * breaking is allowed everywhere.
    */
-  nscoord GetMinAdvanceWidth(Range aRange);
+  gfxFloat GetMinAdvanceWidth(Range aRange);
 
   /**
    * Clear all stored line breaks for the given range (both before and after),
@@ -724,11 +724,11 @@ class gfxTextRun : public gfxShapedText {
     Range mRange;
     // appunits advance to the start of the ligature part within the ligature;
     // never includes any spacing
-    nscoord mPartAdvance;
+    gfxFloat mPartAdvance;
     // appunits width of the ligature part; includes before-spacing
     // when the part is at the start of the ligature, and after-spacing
     // when the part is as the end of the ligature
-    nscoord mPartWidth;
+    gfxFloat mPartWidth;
 
     bool mClipBeforePart;
     bool mClipAfterPart;
@@ -822,7 +822,7 @@ class gfxTextRun : public gfxShapedText {
   // **** general helpers ****
 
   // Get the total advance for a range of glyphs.
-  nscoord GetAdvanceForGlyphs(Range aRange) const;
+  int32_t GetAdvanceForGlyphs(Range aRange) const;
 
   // Spacing for characters outside the range aSpacingStart/aSpacingEnd
   // is assumed to be zero; such characters are not passed to aProvider.
@@ -844,8 +844,8 @@ class gfxTextRun : public gfxShapedText {
   // if aProvider is null then mBeforeSpacing and mAfterSpacing are set to zero
   LigatureData ComputeLigatureData(Range aPartRange,
                                    const PropertyProvider* aProvider) const;
-  nscoord ComputePartialLigatureWidth(Range aPartRange,
-                                      const PropertyProvider* aProvider) const;
+  gfxFloat ComputePartialLigatureWidth(Range aPartRange,
+                                       const PropertyProvider* aProvider) const;
   void DrawPartialLigature(gfxFont* aFont, Range aRange,
                            mozilla::gfx::Point* aPt,
                            const PropertyProvider* aProvider,
@@ -856,6 +856,9 @@ class gfxTextRun : public gfxShapedText {
   // aRange->start == aRange->end.
   // Returns whether any adjustment was made.
   bool ShrinkToLigatureBoundaries(Range* aRange) const;
+  // result in appunits
+  gfxFloat GetPartialLigatureWidth(Range aRange,
+                                   const PropertyProvider* aProvider) const;
   void AccumulatePartialLigatureMetrics(
       gfxFont* aFont, Range aRange, gfxFont::BoundingBoxType aBoundingBoxType,
       DrawTarget* aRefDrawTarget, const PropertyProvider* aProvider,
