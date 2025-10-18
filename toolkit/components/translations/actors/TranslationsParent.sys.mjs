@@ -3473,6 +3473,10 @@ export class TranslationsParent extends JSWindowActorParent {
    * @returns {Promise<DetectionResult>}
    */
   async queryIdentifyLanguage() {
+    if (this.languageState?.detectedLanguages?.identified) {
+      return this.languageState.detectedLanguages.identified;
+    }
+
     return this.sendQuery("Translations:IdentifyLanguage").catch(error => {
       if (this.#isDestroyed) {
         // The actor was destroyed while this message was still being resolved.
