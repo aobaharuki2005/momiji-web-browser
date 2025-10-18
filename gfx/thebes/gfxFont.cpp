@@ -968,7 +968,7 @@ void gfxFont::RunMetrics::CombineWith(const RunMetrics& aOther,
     mBoundingBox =
         mBoundingBox.Union(aOther.mBoundingBox + gfxPoint(mAdvanceWidth, 0));
   }
-  mAdvanceWidth += aOther.mAdvanceWidth;
+  mAdvanceWidth = NSCoordSaturatingAdd(mAdvanceWidth, aOther.mAdvanceWidth);
 }
 
 gfxFont::gfxFont(const RefPtr<UnscaledFont>& aUnscaledFont,
