@@ -210,6 +210,9 @@ Preferences.addAll([
   // Global Privacy Control
   { id: "privacy.globalprivacycontrol.enabled", type: "bool" },
 
+  // Firefox VPN
+  { id: "browser.ipProtection.variant", type: "string" },
+
   // Media
   { id: "media.autoplay.default", type: "int" },
 
@@ -1250,6 +1253,17 @@ Preferences.addSetting({
     "etpStrictEnabled",
     ...SECURITY_WARNINGS.map(warning => warning.id),
   ],
+});
+
+Preferences.addSetting({
+  id: "ipProtectionVisible",
+  pref: "browser.ipProtection.variant",
+  get: prefVal => prefVal == "beta",
+});
+Preferences.addSetting({
+  id: "ipProtectionPlaceholderMessage",
+  deps: ["ipProtectionVisible"],
+  visible: ({ ipProtectionVisible }) => ipProtectionVisible.value,
 });
 
 // Study opt out
@@ -2367,6 +2381,7 @@ var gPrivacyPane = {
     initSettingGroup("browsingProtection");
     initSettingGroup("cookiesAndSiteData");
     initSettingGroup("certificates");
+    initSettingGroup("ipprotection");
 
     this._updateSanitizeSettingsButton();
     this.initializeHistoryMode();

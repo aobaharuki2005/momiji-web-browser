@@ -76,4 +76,11 @@ ipprotection-message-generic-error =
   .heading = Couldn’t connect to VPN
   .message = Try again in a few minutes.
 
+## IP Protection Settings
+
+ip-protection-description =
+  .label = { -firefox-vpn-brand-name }
+  .description = Hides your location and adds extra encryption to your browsing in { -brand-short-name }.
+ip-protection-learn-more = Learn more
+
 ##

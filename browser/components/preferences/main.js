@@ -1479,6 +1479,21 @@ let SETTINGS_CONFIG = {
       },
     ],
   },
+  ipprotection: {
+    l10nId: "ip-protection-description",
+    headingLevel: 2,
+    // TODO: Replace support url with finalized link (Bug 1993266)
+    supportPage: "ip-protection",
+    items: [
+      {
+        id: "ipProtectionPlaceholderMessage",
+        control: "moz-message-bar",
+        controlAttrs: {
+          message: "This is a placeholder for the IP Protection section",
+        },
+      },
+    ],
+  },
   cookiesAndSiteData: {
     l10nId: "sitedata-label",
     items: [
