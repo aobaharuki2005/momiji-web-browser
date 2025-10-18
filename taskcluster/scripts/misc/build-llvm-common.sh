@@ -69,7 +69,8 @@ case "$target" in
     arch=${target%-linux-android}
     ;;
   esac
-  api_level=21
+  # Keep this in sync with min_android_version in android-ndk.configure.
+  api_level=26
   target=$target$api_level
   # These flags are only necessary to pass the cmake tests. They don't end up
   # actually using libgcc, so use an empty library instead of trying to find

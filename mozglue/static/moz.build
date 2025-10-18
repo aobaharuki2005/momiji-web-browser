@@ -7,6 +7,8 @@
 EXPORTS.mozilla = ["Compression.h"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    OS_LIBS += ["android"]
+
     EXPORTS.mozilla += ["android/Ashmem.h"]
 
     UNIFIED_SOURCES += [
