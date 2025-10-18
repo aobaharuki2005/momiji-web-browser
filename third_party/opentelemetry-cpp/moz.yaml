@@ -72,6 +72,7 @@ vendoring:
   patches:
    - patches/fix-ambiguous-holds_alternative.patch # Maybe we should upstream this
    - patches/remove-non-vendored-context_value-variant.patch
+   - patches/remove-log-related-entries-from-otlp-exporter.patch
 
 updatebot:
   maintainer-phab: mvanstraten
