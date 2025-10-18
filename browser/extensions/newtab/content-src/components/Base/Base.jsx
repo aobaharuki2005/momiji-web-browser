@@ -779,36 +779,6 @@ export class BaseContent extends React.PureComponent {
 
     return (
       <div className={featureClassName}>
-        {/* Floating menu for customize menu toggle */}
-        <menu className="personalizeButtonWrapper">
-          <CustomizeMenu
-            onClose={this.closeCustomizationMenu}
-            onOpen={this.openCustomizationMenu}
-            openPreferences={this.openPreferences}
-            setPref={this.setPref}
-            enabledSections={enabledSections}
-            enabledWidgets={enabledWidgets}
-            wallpapersEnabled={wallpapersEnabled}
-            activeWallpaper={activeWallpaper}
-            pocketRegion={pocketRegion}
-            mayHaveTopicSections={mayHavePersonalizedTopicSections}
-            mayHaveInferredPersonalization={mayHaveInferredPersonalization}
-            mayHaveWeather={mayHaveWeather}
-            mayHaveTrendingSearch={mayHaveTrendingSearch}
-            mayHaveWidgets={mayHaveWidgets}
-            mayHaveTimerWidget={mayHaveTimerWidget}
-            mayHaveListsWidget={mayHaveListsWidget}
-            showing={customizeMenuVisible}
-          />
-          {this.shouldShowOMCHighlight("CustomWallpaperHighlight") && (
-            <MessageWrapper dispatch={this.props.dispatch}>
-              <WallpaperFeatureHighlight
-                position="inset-block-start inset-inline-start"
-                dispatch={this.props.dispatch}
-              />
-            </MessageWrapper>
-          )}
-        </menu>
         <div className="weatherWrapper">
           {shouldDisplayWeather && (
             <ErrorBoundary>
@@ -887,6 +857,36 @@ export class BaseContent extends React.PureComponent {
             <TopicSelection supportUrl={supportUrl} />
           )}
         </div>
+        {/* Floating menu for customize menu toggle */}
+        <menu className="personalizeButtonWrapper">
+          <CustomizeMenu
+            onClose={this.closeCustomizationMenu}
+            onOpen={this.openCustomizationMenu}
+            openPreferences={this.openPreferences}
+            setPref={this.setPref}
+            enabledSections={enabledSections}
+            enabledWidgets={enabledWidgets}
+            wallpapersEnabled={wallpapersEnabled}
+            activeWallpaper={activeWallpaper}
+            pocketRegion={pocketRegion}
+            mayHaveTopicSections={mayHavePersonalizedTopicSections}
+            mayHaveInferredPersonalization={mayHaveInferredPersonalization}
+            mayHaveWeather={mayHaveWeather}
+            mayHaveTrendingSearch={mayHaveTrendingSearch}
+            mayHaveWidgets={mayHaveWidgets}
+            mayHaveTimerWidget={mayHaveTimerWidget}
+            mayHaveListsWidget={mayHaveListsWidget}
+            showing={customizeMenuVisible}
+          />
+          {this.shouldShowOMCHighlight("CustomWallpaperHighlight") && (
+            <MessageWrapper dispatch={this.props.dispatch}>
+              <WallpaperFeatureHighlight
+                position="inset-block-start inset-inline-start"
+                dispatch={this.props.dispatch}
+              />
+            </MessageWrapper>
+          )}
+        </menu>
       </div>
     );
   }
