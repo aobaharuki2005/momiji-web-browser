@@ -1494,3 +1494,9 @@ function checkRuleViewContent(view, expectedElements) {
     }
   }
 }
+
+function getUnusedVariableButton(view, elementIndexInView) {
+  return view.element.children[elementIndexInView].querySelector(
+    ".ruleview-show-unused-custom-css-properties"
+  );
+}

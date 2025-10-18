@@ -454,6 +454,15 @@ class ElementStyle {
     this.variablesMap.set(pseudo, variables);
     this.startingStyleVariablesMap.set(pseudo, startingStyleVariables);
 
+    const rulesEditors = new Set();
+    const variableTree = new Map();
+
+    if (!this.usedVariables) {
+      this.usedVariables = new Set();
+    } else {
+      this.usedVariables.clear();
+    }
+
     // For each TextProperty, mark it overridden if all of its computed
     // properties are marked overridden. Update the text property's associated
     // editor, if any. This will clear the _overriddenDirty state on all
@@ -479,6 +488,55 @@ class ElementStyle {
       if (textProp.editor) {
         textProp.editor.updateUI();
       }
+
+      // First we need to update used variables from all declarations
+      textProp.updateUsedVariables();
+      const isCustomProperty = textProp.name.startsWith("--");
+      const isNewCustomProperty =
+        isCustomProperty && textProp.isPropertyChanged;
+      if (isNewCustomProperty) {
+        this.usedVariables.add(textProp.name);
+      }
+      if (textProp.usedVariables) {
+        if (!isCustomProperty) {
+          for (const variable of textProp.usedVariables) {
+            this.usedVariables.add(variable);
+          }
+        } else {
+          variableTree.set(textProp.name, textProp.usedVariables);
+        }
+      }
+
+      if (textProp.rule.editor) {
+        rulesEditors.add(textProp.rule.editor);
+      }
+    }
+
+    const collectVariableDependencies = variable => {
+      if (!variableTree.has(variable)) {
+        return;
+      }
+
+      for (const dep of variableTree.get(variable)) {
+        if (!this.usedVariables.has(dep)) {
+          this.usedVariables.add(dep);
+          collectVariableDependencies(dep);
+        }
+      }
+    };
+
+    for (const variable of this.usedVariables) {
+      collectVariableDependencies(variable);
+    }
+
+    for (const textProp of textProps) {
+      // Then we need to update the isUnusedCssVariable
+      textProp.updateIsUnusedVariable();
+    }
+
+    // Then update the UI
+    for (const ruleEditor of rulesEditors) {
+      ruleEditor.updateUnusedCssVariables();
     }
   }
 

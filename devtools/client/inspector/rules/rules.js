@@ -150,7 +150,9 @@ function CssRuleView(inspector, document, store) {
   this.cssProperties = inspector.cssProperties;
   this.styleDocument = document;
   this.styleWindow = this.styleDocument.defaultView;
-  this.store = store || {};
+  this.store = store || {
+    expandedUnusedCustomCssPropertiesRuleActorIds: new Set(),
+  };
 
   // Allow tests to override debouncing behavior, as this can cause intermittents.
   this.debounce = debounce;
@@ -1500,8 +1502,18 @@ CssRuleView.prototype = {
 
       // Initialize rule editor
       if (!rule.editor) {
+        const ruleActorID = rule.domRule.actorID;
         rule.editor = new RuleEditor(this, rule, {
           elementsWithPendingClicks: this._elementsWithPendingClicks,
+          onShowUnusedCustomCssProperties: () => {
+            this.store.expandedUnusedCustomCssPropertiesRuleActorIds.add(
+              ruleActorID
+            );
+          },
+          shouldHideUnusedCustomCssProperties:
+            !this.store.expandedUnusedCustomCssPropertiesRuleActorIds.has(
+              ruleActorID
+            ),
         });
         editorReadyPromises.push(rule.editor.once("source-link-updated"));
       }
@@ -1809,15 +1821,18 @@ CssRuleView.prototype = {
    *         false otherwise.
    */
   _highlightRuleProperty(textProperty) {
-    // Get the actual property value displayed in the rule view
-    const propertyName = textProperty.editor.prop.name.toLowerCase();
-    const propertyValue =
-      textProperty.editor.valueSpan.textContent.toLowerCase();
+    const propertyName = textProperty.name.toLowerCase();
+    // Get the actual property value displayed in the rule view if we have an editor for
+    // it (that might not be the case for unused CSS custom properties).
+    const propertyValue = textProperty.editor
+      ? textProperty.editor.valueSpan.textContent.toLowerCase()
+      : textProperty.value.toLowerCase();
 
     return this._highlightMatches({
-      element: textProperty.editor.container,
+      element: textProperty.editor?.container,
       propertyName,
       propertyValue,
+      textProperty,
     });
   },
 
@@ -1832,6 +1847,10 @@ CssRuleView.prototype = {
    *         otherwise.
    */
   _highlightComputedProperty(textProperty) {
+    if (!textProperty.editor) {
+      return false;
+    }
+
     let isComputedHighlighted = false;
 
     // Highlight search matches in the computed list of properties
@@ -1846,6 +1865,7 @@ CssRuleView.prototype = {
           element: computed.element,
           propertyName: computedName,
           propertyValue: computedValue,
+          textProperty,
         })
           ? true
           : isComputedHighlighted;
@@ -1867,10 +1887,13 @@ CssRuleView.prototype = {
    *         The property name of a rule
    * @param  {String} options.propertyValue
    *         The property value of a rule
+   * @param  {TextProperty} options.textProperty
+   *         The text property that we may highlight. It's helpful in cases we don't have
+   *         an element yet (e.g. if the property is a hidden unused variable)
    * @return {Boolean} true if the given search terms match the property, false
    *         otherwise.
    */
-  _highlightMatches({ element, propertyName, propertyValue }) {
+  _highlightMatches({ element, propertyName, propertyValue, textProperty }) {
     const {
       searchPropertyName,
       searchPropertyValue,
@@ -1909,11 +1932,26 @@ CssRuleView.prototype = {
         );
     }
 
-    if (matches) {
-      element.classList.add("ruleview-highlight");
+    if (!matches) {
+      return false;
     }
 
-    return matches;
+    // We might not have an element when the prop is an unused custom css property.
+    if (!element && textProperty?.isUnusedVariable) {
+      const editor =
+        textProperty.rule.editor.showUnusedCssVariable(textProperty);
+
+      // The editor couldn't be created, bail (shouldn't happen)
+      if (!editor) {
+        return false;
+      }
+
+      element = editor.container;
+    }
+
+    element.classList.add("ruleview-highlight");
+
+    return true;
   },
 
   /**
@@ -2198,6 +2236,12 @@ CssRuleView.prototype = {
             // the pseudo element container and scrolling smoothly to the rule.
             scrollBehavior = "auto";
             this._togglePseudoElementRuleContainer();
+          }
+
+          // If we're jumping to an unused CSS variable, it might not be visible, so show
+          // it here.
+          if (!textProp.editor && textProp.isUnusedVariable) {
+            textProp.rule.editor.showUnusedCssVariable(textProp);
           }
 
           this._highlightElementInRule(
@@ -2717,6 +2761,7 @@ class RuleViewTool {
       this.document =
       this.inspector =
       this.readyPromise =
+      this.store =
       this.#abortController =
         null;
   }

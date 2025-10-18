@@ -319,3 +319,9 @@ skip-if = ["os == 'linux' && os_version == '24.04' && processor == 'x86_64' && d
 ["browser_rules_variables_autocomplete.js"]
 
 ["browser_rules_variables_host.js"]
+
+["browser_rules_variables_unused_add_property.js"]
+
+["browser_rules_variables_unused_filtering.js"]
+
+["browser_rules_variables_unused.js"]
