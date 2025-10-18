@@ -14092,6 +14092,7 @@ const DiscoveryStreamBase = (0,external_ReactRedux_namespaceObject.connect)(stat
   App: state.App
 }))(_DiscoveryStreamBase);
 ;// CONCATENATED MODULE: ./content-src/components/CustomizeMenu/SectionsMgmtPanel/SectionsMgmtPanel.jsx
+function SectionsMgmtPanel_extends() { return SectionsMgmtPanel_extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, SectionsMgmtPanel_extends.apply(null, arguments); }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14102,7 +14103,8 @@ const DiscoveryStreamBase = (0,external_ReactRedux_namespaceObject.connect)(stat
 // eslint-disable-next-line no-shadow
 
 function SectionsMgmtPanel({
-  exitEventFired
+  exitEventFired,
+  pocketEnabled
 }) {
   const [showPanel, setShowPanel] = (0,external_React_namespaceObject.useState)(false); // State management with useState
   const {
@@ -14287,10 +14289,12 @@ function SectionsMgmtPanel({
       "data-l10n-id": "newtab-section-unblock-button"
     }))));
   });
-  return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("moz-box-button", {
+  return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("moz-box-button", SectionsMgmtPanel_extends({
     onClick: togglePanel,
     "data-l10n-id": "newtab-section-manage-topics-button-v2"
-  }), /*#__PURE__*/external_React_default().createElement(external_ReactTransitionGroup_namespaceObject.CSSTransition, {
+  }, !pocketEnabled ? {
+    disabled: true
+  } : {})), /*#__PURE__*/external_React_default().createElement(external_ReactTransitionGroup_namespaceObject.CSSTransition, {
     in: showPanel,
     timeout: 300,
     classNames: "sections-mgmt-panel",
@@ -14981,7 +14985,9 @@ class ContentSection extends (external_React_default()).PureComponent {
       return;
     }
     if (drawerRef) {
-      let drawerHeight = parseFloat(window.getComputedStyle(drawerRef)?.height) || 0;
+      // Use measured height if valid, otherwise use a large fallback
+      // since overflow:hidden on the parent safely hides the drawer
+      let drawerHeight = parseFloat(window.getComputedStyle(drawerRef)?.height) || 100;
       if (isOpen) {
         drawerRef.style.marginTop = "var(--space-small)";
       } else {
@@ -15183,7 +15189,8 @@ class ContentSection extends (external_React_default()).PureComponent {
       htmlFor: "inferred-personalization",
       "data-l10n-id": "newtab-custom-stories-personalized-checkbox-label"
     })), mayHaveTopicSections && /*#__PURE__*/external_React_default().createElement(SectionsMgmtPanel, {
-      exitEventFired: exitEventFired
+      exitEventFired: exitEventFired,
+      pocketEnabled: pocketEnabled
     }))))))), /*#__PURE__*/external_React_default().createElement("span", {
       className: "divider",
       role: "separator"
