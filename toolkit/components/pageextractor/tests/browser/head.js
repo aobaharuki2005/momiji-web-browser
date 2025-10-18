@@ -29,14 +29,28 @@ async function html(strings, ...values) {
     true // waitForLoad
   );
 
-  /** @type {PageExtractorParent} */
   const actor =
     tab.linkedBrowser.browsingContext.currentWindowGlobal.getActor(
       "PageExtractor"
     );
 
   return {
+    /**
+     * @type {PageExtractorParent}
+     */
     actor,
+
+    /**
+     * Get a new page extractor, which can change when navigating pages.
+     *
+     * @returns {PageExtractorParent}
+     */
+    getPageExtractor() {
+      return tab.linkedBrowser.browsingContext.currentWindowGlobal.getActor(
+        "PageExtractor"
+      );
+    },
+
     async cleanup() {
       info("Cleaning up");
       await serverClosed;
@@ -75,4 +89,43 @@ function serveOnce(html) {
   info("Server listening for: " + url);
 
   return { url, serverClosed: promise };
+}
+
+/**
+ * Click the reader-mode button if the reader-mode button is available.
+ * Fails if the reader-mode button is hidden.
+ */
+async function toggleReaderMode() {
+  const readerButton = document.getElementById("reader-mode-button");
+  await BrowserTestUtils.waitForMutationCondition(
+    readerButton,
+    { attributes: true, attributeFilter: ["hidden"] },
+    () => readerButton.hidden === false
+  );
+
+  readerButton.getAttribute("readeractive")
+    ? info("Exiting reader mode")
+    : info("Entering reader mode");
+
+  const readyPromise = readerButton.getAttribute("readeractive")
+    ? BrowserTestUtils.waitForMutationCondition(
+        readerButton,
+        { attributes: true, attributeFilter: ["readeractive"] },
+        () => !readerButton.getAttribute("readeractive")
+      )
+    : BrowserTestUtils.waitForContentEvent(
+        gBrowser.selectedBrowser,
+        "AboutReaderContentReady"
+      );
+
+  click(readerButton, "Clicking the reader-mode button");
+  await readyPromise;
+}
+
+function click(button, message) {
+  info(message);
+  if (button.hidden) {
+    throw new Error("The button was hidden when trying to click it.");
+  }
+  button.click();
 }

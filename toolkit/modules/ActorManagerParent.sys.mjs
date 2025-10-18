@@ -482,6 +482,7 @@ let JSWINDOWACTORS = {
       "file:///*",
       "moz-extension://*",
       "data:text/html,*",
+      "about:reader?*",
     ],
     messageManagerGroups: ["browsers"],
   },
