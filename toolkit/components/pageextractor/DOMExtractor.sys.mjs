@@ -5,29 +5,119 @@
 // @ts-check
 
 /**
- * @param {Document} document
- * @returns {string}
+ * @import { GetTextOptions } from './PageExtractor.js'
  */
-export function extractTextFromDOM(document) {
-  const blocks = subdivideNodeIntoBlocks(document.body);
 
-  let textContent = "";
-  for (const block of blocks) {
+/**
+ * The context for extracting text content from the DOM.
+ */
+class ExtractionContext {
+  /**
+   * Set of nodes that have already been processed, used to avoid duplicating text extraction.
+   *
+   * @type {Set<Node>}
+   */
+  #processedNodes = new Set();
+
+  /**
+   * The text-extraction options, provided at initialization.
+   *
+   * @type {GetTextOptions}
+   */
+  #options;
+
+  /**
+   * The accumulated text content that has been extracted from the DOM.
+   *
+   * @type {string}
+   */
+  #textContent = "";
+
+  /**
+   * Constructs a new extraction context with the provided options.
+   *
+   * @param {GetTextOptions} options
+   */
+  constructor(options) {
+    this.#options = options;
+  }
+
+  /**
+   * Accumulated text content produced during traversal.
+   *
+   * @returns {string}
+   */
+  get textContent() {
+    return this.#textContent;
+  }
+
+  /**
+   * Returns true if this node or its ancestor's text content has
+   * already been extracted from the DOM.
+   *
+   * @param {Node} node
+   */
+  #isNodeProcessed(node) {
+    if (this.#processedNodes.has(node)) {
+      return true;
+    }
+
+    for (const ancestor of getAncestorsIterator(node)) {
+      if (this.#processedNodes.has(ancestor)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Append the node's text content to the accumulated text only if the node
+   * itself as well as no ancestor of the node has already been processed.
+   *
+   * @param {Node} node
+   */
+  maybeAppendTextContent(node) {
+    if (this.#isNodeProcessed(node)) {
+      return;
+    }
+
+    this.#processedNodes.add(node);
+
+    const element = asHTMLElement(node);
+    const text = asTextNode(node);
     let innerText = "";
-    const element = asHTMLElement(block);
-    const text = asTextNode(block);
 
     if (element) {
       innerText = element.innerText.trim();
     } else if (text?.nodeValue) {
       innerText = text.nodeValue.trim();
     }
+
     if (innerText) {
-      textContent += "\n" + innerText;
+      this.#textContent += "\n" + innerText;
     }
   }
+}
 
-  return textContent;
+/**
+ * Extracts visible text content from the DOM.
+ *
+ * By default, this extracts content from the entire page.
+ *
+ * Callers may specify filters for the extracted text via
+ * the supported options @see {GetTextOptions}.
+ *
+ * @param {Document} document
+ * @param {GetTextOptions} options
+ *
+ * @returns {string}
+ */
+export function extractTextFromDOM(document, options) {
+  const context = new ExtractionContext(options);
+
+  subdivideAndExtractText(document.body, context);
+
+  return context.textContent;
 }
 
 /**
@@ -317,30 +407,26 @@ function hasNonWhitespaceTextNodes(node) {
  * of inline text can be found.
  *
  * @param {Node} node
- * @returns {Set<Node>}
+ * @param {ExtractionContext} context
  */
-function subdivideNodeIntoBlocks(node) {
-  /** @type {Set<Node>} */
-  const blocks = new Set();
+function subdivideAndExtractText(node, context) {
   switch (determineBlockStatus(node)) {
     case NodeFilter.FILTER_REJECT: {
       // This node is rejected as it shouldn't be used for text extraction.
-      return blocks;
+      return;
     }
 
     // Either a shadow host or a block element
     case NodeFilter.FILTER_ACCEPT: {
       const shadowRoot = getShadowRoot(node);
       if (shadowRoot) {
-        processSubdivide(shadowRoot, blocks);
+        processSubdivide(shadowRoot, context);
       } else {
         const element = asHTMLElement(node);
         if (element && isHTMLElementHidden(element)) {
           break;
         }
-        if (noAncestorsAdded(node, blocks)) {
-          blocks.add(node);
-        }
+        context.maybeAppendTextContent(node);
       }
       break;
     }
@@ -349,11 +435,10 @@ function subdivideNodeIntoBlocks(node) {
       // This node may have text to extract, but it needs to be subdivided into smaller
       // pieces. Create a TreeWalker to walk the subtree, and find the subtrees/nodes
       // that contain enough inline elements to extract.
-      processSubdivide(node, blocks);
+      processSubdivide(node, context);
       break;
     }
   }
-  return blocks;
 }
 
 /**
@@ -361,9 +446,9 @@ function subdivideNodeIntoBlocks(node) {
  * through the DOM tree of nodes, including elements in the Shadow DOM.
  *
  * @param {Node} node
- * @param {Set<Node>} blocks
+ * @param {ExtractionContext} context
  */
-function processSubdivide(node, blocks) {
+function processSubdivide(node, context) {
   const { ownerDocument } = node;
   if (!ownerDocument) {
     return;
@@ -381,28 +466,11 @@ function processSubdivide(node, blocks) {
   while ((currentNode = nodeIterator.nextNode())) {
     const shadowRoot = getShadowRoot(currentNode);
     if (shadowRoot) {
-      processSubdivide(shadowRoot, blocks);
-    } else if (noAncestorsAdded(currentNode, blocks)) {
-      blocks.add(currentNode);
+      processSubdivide(shadowRoot, context);
+    } else {
+      context.maybeAppendTextContent(currentNode);
     }
   }
-}
-
-/**
- * TODO - The original TranslationsDocument algorithm didn't require this, so perhaps
- * something was not ported correctly. This should be removed to see if the error
- * can be reproduced, and this mitigation removed.
- *
- * @param {Node} node
- * @param {Set<Node>} blocks
- */
-function noAncestorsAdded(node, blocks) {
-  for (const ancestor of getAncestorsIterator(node)) {
-    if (blocks.has(ancestor)) {
-      return false;
-    }
-  }
-  return true;
 }
 
 /**

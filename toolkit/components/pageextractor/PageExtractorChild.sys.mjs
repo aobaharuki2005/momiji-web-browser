@@ -115,7 +115,7 @@ export class PageExtractorChild extends JSWindowActorChild {
       throw new Error("Just getting the viewport is not supported yet.");
     }
 
-    const text = lazy.extractTextFromDOM(document);
+    const text = lazy.extractTextFromDOM(document, options);
 
     lazy.console.log("GetText", options);
     lazy.console.debug(text);
