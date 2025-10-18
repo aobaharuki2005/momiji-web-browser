@@ -2163,7 +2163,9 @@ void Http3Session::CloseStreamInternal(Http3StreamBase* aStream,
   // Close(NS_OK) implies that the NeqoHttp3Conn will be closed, so we can only
   // do this when there is no Http3Steeam, WebTransportSession and
   // WebTransportStream.
-  if ((mShouldClose || mGoawayReceived) && HasNoActiveStreams()) {
+  if ((mShouldClose || mGoawayReceived) &&
+      (!mStreamTransactionHash.Count() && mWebTransportSessions.IsEmpty() &&
+       mWebTransportStreams.IsEmpty() && mTunnelStreams.IsEmpty())) {
     MOZ_ASSERT(!IsClosing());
     Close(NS_OK);
   }
@@ -2238,7 +2240,7 @@ void Http3Session::DontReuse() {
   }
 
   mShouldClose = true;
-  if (HasNoActiveStreams()) {
+  if (!mStreamTransactionHash.Count()) {
     // This is a temporary workaround and should be fixed properly in Happy
     // Eyeballs project. We should not exclude this domain if
     // Http3Session::DontReuse is called from

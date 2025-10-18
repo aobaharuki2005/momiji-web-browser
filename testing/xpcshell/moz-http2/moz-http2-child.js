@@ -4,8 +4,8 @@
 
 /* eslint-env node */
 
-function sendBackResponse(messageId, evalResult, e) {
-  const output = { result: evalResult, error: "", errorStack: "", messageId };
+function sendBackResponse(evalResult, e) {
+  const output = { result: evalResult, error: "", errorStack: "" };
   if (e) {
     output.error = e.toString();
     output.errorStack = e.stack;
@@ -15,20 +15,19 @@ function sendBackResponse(messageId, evalResult, e) {
 
 process.on("message", msg => {
   const code = msg.code;
-  const messageId = msg.messageId;
   let evalResult = null;
   try {
     // eslint-disable-next-line no-eval
     evalResult = eval(code);
     if (evalResult instanceof Promise) {
       evalResult
-        .then(x => sendBackResponse(messageId, x))
-        .catch(e => sendBackResponse(messageId, undefined, e));
+        .then(x => sendBackResponse(x))
+        .catch(e => sendBackResponse(undefined, e));
       return;
     }
   } catch (e) {
-    sendBackResponse(messageId, undefined, e);
+    sendBackResponse(undefined, e);
     return;
   }
-  sendBackResponse(messageId, evalResult);
+  sendBackResponse(evalResult);
 });

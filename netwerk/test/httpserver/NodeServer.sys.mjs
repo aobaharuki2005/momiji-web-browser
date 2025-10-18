@@ -1108,7 +1108,7 @@ export class HTTP3Server {
   /// Stops the server
   async stop() {
     if (this.processId) {
-      await NodeServer.kill(this.processId, true);
+      await NodeServer.kill(this.processId);
       this.processId = undefined;
     }
   }
@@ -1171,13 +1171,13 @@ export class NodeServer {
     return this.sendCommand(command, `/execute/${id}`);
   }
   // Shuts down the server
-  static kill(id, ignoreError = false) {
-    return this.sendCommand("", `/kill/${id}`, ignoreError);
+  static kill(id) {
+    return this.sendCommand("", `/kill/${id}`);
   }
 
   // Issues a request to the node server (handler defined in moz-http2.js)
   // This method should not be called directly.
-  static sendCommand(command, path, ignoreError = false) {
+  static sendCommand(command, path) {
     let h2Port = Services.env.get("MOZNODE_EXEC_PORT");
     if (!h2Port) {
       throw new Error("Could not find MOZNODE_EXEC_PORT");
@@ -1224,10 +1224,6 @@ export class NodeServer {
         if (x.error) {
           let e = new Error(x.error, "", 0);
           e.stack = x.errorStack;
-          if (ignoreError) {
-            resolve(undefined);
-            return;
-          }
           reject(e);
           return;
         }
