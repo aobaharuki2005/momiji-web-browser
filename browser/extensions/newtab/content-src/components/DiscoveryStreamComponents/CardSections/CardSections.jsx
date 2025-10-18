@@ -179,6 +179,12 @@ function CardSection({
 
       const activeColumn = getActiveColumnLayout(window.innerWidth);
 
+      // Arrow direction should match visual navigation direction in RTL
+      const isRTL = document.dir === "rtl";
+      const navigateToPrevious = isRTL
+        ? e.key === "ArrowRight"
+        : e.key === "ArrowLeft";
+
       // Extract current position from classList
       let currentPosition = null;
       const positionPrefix = `${activeColumn}-position-`;
@@ -196,8 +202,9 @@ function CardSection({
         return;
       }
 
-      const targetPosition =
-        e.key === "ArrowLeft" ? currentPosition - 1 : currentPosition + 1;
+      const targetPosition = navigateToPrevious
+        ? currentPosition - 1
+        : currentPosition + 1;
 
       // Find card with target position
       const parentEl = currentCardEl.parentElement;

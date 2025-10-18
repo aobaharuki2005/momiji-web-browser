@@ -92,14 +92,19 @@ export class _CardGrid extends React.PureComponent {
         return;
       }
 
+      // Arrow direction should match visual navigation direction in RTL
+      const isRTL = document.dir === "rtl";
+      const navigateToPrevious = isRTL
+        ? e.key === "ArrowRight"
+        : e.key === "ArrowLeft";
+
       let targetCardEl = currentCardEl;
 
       // Walk through siblings to find the target card element
       while (targetCardEl) {
-        targetCardEl =
-          e.key === "ArrowLeft"
-            ? targetCardEl.previousElementSibling
-            : targetCardEl.nextElementSibling;
+        targetCardEl = navigateToPrevious
+          ? targetCardEl.previousElementSibling
+          : targetCardEl.nextElementSibling;
 
         if (targetCardEl && targetCardEl.matches("article.ds-card")) {
           const link = targetCardEl.querySelector("a.ds-card-link");
