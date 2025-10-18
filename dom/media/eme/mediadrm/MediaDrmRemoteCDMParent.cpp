@@ -30,17 +30,7 @@ void MediaDrmRemoteCDMParent::InitializeStatics() {
 
   sCbMap = new DrmCallbackMap();
 
-  // The NDK header is wrong for AMediaCodecCryptoInfo_setPattern. It is only
-  // present in 24+, not 21+. As such, we can't rely upon the builtin check,
-  // instead we need to load it manually.
-  // See https://github.com/android/ndk/issues/2169
-  void* lib = dlopen("libmediandk.so", RTLD_NOW);
-  sAMediaCodecCryptoInfo_setPattern =
-      (AMediaCodecCryptoInfoFnPtr_setPattern)dlsym(
-          lib, "AMediaCodecCryptoInfo_setPattern");
-  if (__builtin_available(android 24, *)) {
-    MOZ_ASSERT(sAMediaCodecCryptoInfo_setPattern);
-  }
+  MOZ_ASSERT(sAMediaCodecCryptoInfo_setPattern);
 }
 
 /* static */
