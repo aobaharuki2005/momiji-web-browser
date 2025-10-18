@@ -885,10 +885,10 @@ static nsBoundingMetrics MeasureTextRun(DrawTarget* aDrawTarget,
       aTextRun->MeasureText(gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS, aDrawTarget);
 
   nsBoundingMetrics bm;
-  bm.leftBearing = NSToCoordFloor(metrics.mBoundingBox.X());
-  bm.rightBearing = NSToCoordCeil(metrics.mBoundingBox.XMost());
-  bm.ascent = NSToCoordCeil(-metrics.mBoundingBox.Y());
-  bm.descent = NSToCoordCeil(metrics.mBoundingBox.YMost());
+  bm.leftBearing = metrics.mBoundingBox.X();
+  bm.rightBearing = metrics.mBoundingBox.XMost();
+  bm.ascent = -metrics.mBoundingBox.Y();
+  bm.descent = metrics.mBoundingBox.YMost();
   bm.width = metrics.mAdvanceWidth;
 
   return bm;
