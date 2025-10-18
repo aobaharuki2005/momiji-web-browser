@@ -103,7 +103,7 @@ private fun SelectedCheckmark(selected: Boolean = false) {
                 .size(24.dp)
                 .padding(1.dp)
                 .clip(CircleShape)
-                .background(FirefoxTheme.colors.textAccent),
+                .background(MaterialTheme.colorScheme.tertiary),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

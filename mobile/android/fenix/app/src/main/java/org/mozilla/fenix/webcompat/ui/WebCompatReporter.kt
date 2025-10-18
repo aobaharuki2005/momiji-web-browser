@@ -25,6 +25,7 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -121,7 +122,7 @@ fun WebCompatReporter(
                     ),
                 ),
                 style = FirefoxTheme.typography.body2.copy(color = FirefoxTheme.colors.textPrimary),
-                linkTextColor = FirefoxTheme.colors.textAccent,
+                linkTextColor = MaterialTheme.colorScheme.tertiary,
                 linkTextDecoration = TextDecoration.Underline,
                 textAlign = TextAlign.Start,
             )
@@ -253,7 +254,7 @@ fun WebCompatReporter(
                                 store.dispatch(WebCompatReporterAction.SendMoreInfoClicked)
                             },
                         style = FirefoxTheme.typography.body2,
-                        color = FirefoxTheme.colors.textAccent,
+                        color = MaterialTheme.colorScheme.tertiary,
                         textDecoration = TextDecoration.Underline,
                     )
 

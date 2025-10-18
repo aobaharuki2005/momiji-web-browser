@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -67,9 +68,9 @@ fun HomeSectionHeader(
             textColor = wallpaperAdaptedTextColor ?: FirefoxTheme.colors.textPrimary,
             description = description,
             showAllTextColor = if (isWallpaperDefault) {
-                FirefoxTheme.colors.textAccent
+                MaterialTheme.colorScheme.tertiary
             } else {
-                wallpaperAdaptedTextColor ?: FirefoxTheme.colors.textAccent
+                wallpaperAdaptedTextColor ?: MaterialTheme.colorScheme.tertiary
             },
             onShowAllClick = onShowAllClick,
         )
@@ -92,7 +93,7 @@ private fun HomeSectionHeaderContent(
     modifier: Modifier = Modifier,
     textColor: Color = FirefoxTheme.colors.textPrimary,
     description: String = "",
-    showAllTextColor: Color = FirefoxTheme.colors.textAccent,
+    showAllTextColor: Color = MaterialTheme.colorScheme.tertiary,
     onShowAllClick: (() -> Unit)? = null,
 ) {
     Row(

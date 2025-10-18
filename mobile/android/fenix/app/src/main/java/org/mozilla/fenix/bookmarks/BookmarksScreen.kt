@@ -961,7 +961,7 @@ private fun FolderListItem(
             Spacer(modifier = Modifier.width(56.dp))
             Text(
                 text = folder.title,
-                color = FirefoxTheme.colors.textAccent,
+                color = MaterialTheme.colorScheme.tertiary,
                 style = FirefoxTheme.typography.headline8,
             )
         }
@@ -984,9 +984,9 @@ private fun NewFolderListItem(onClick: () -> Unit) {
     IconListItem(
         label = stringResource(R.string.bookmark_select_folder_new_folder_button_title),
         modifier = Modifier.width(FirefoxTheme.layout.size.containerMaxWidth),
-        labelTextColor = FirefoxTheme.colors.textAccent,
+        labelTextColor = MaterialTheme.colorScheme.tertiary,
         beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_add_24),
-        beforeIconTint = FirefoxTheme.colors.textAccent,
+        beforeIconTint = MaterialTheme.colorScheme.tertiary,
         onClick = onClick,
     )
 }

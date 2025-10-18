@@ -943,6 +943,7 @@ private fun ListItemContent(
                 overflow = TextOverflow.Ellipsis,
             )
         }
+
         Text(
             text = label,
             modifier = labelModifier,
@@ -1058,6 +1059,7 @@ private fun IconListItemPreview() {
 
             IconListItem(
                 label = "Left icon list item",
+                labelTextColor = MaterialTheme.colorScheme.tertiary,
                 onClick = {},
                 beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                 beforeIconDescription = "click me",
@@ -1313,6 +1315,7 @@ private fun SelectableIconListItemPreview() {
             SelectableIconListItem(
                 label = "Left icon list item",
                 isSelected = false,
+                labelTextColor = MaterialTheme.colorScheme.tertiary,
                 onClick = {},
                 beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                 beforeIconDescription = "click me",
@@ -1321,6 +1324,7 @@ private fun SelectableIconListItemPreview() {
             SelectableIconListItem(
                 label = "Selected left icon list item",
                 isSelected = true,
+                labelTextColor = MaterialTheme.colorScheme.tertiary,
                 onClick = {},
                 beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                 beforeIconDescription = "click me",
