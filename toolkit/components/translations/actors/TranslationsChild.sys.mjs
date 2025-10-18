@@ -39,9 +39,11 @@ export class TranslationsChild extends JSWindowActorChild {
     }
 
     if (event.type === "DOMContentLoaded") {
-      this.sendAsyncMessage("Translations:ReportLangTags", {
-        documentElementLang: this.document.documentElement.lang,
+      this.sendAsyncMessage("Translations:DOMContentLoaded", {
+        htmlLangAttribute: this.document.documentElement.lang,
       });
+    } else if (event.type === "load") {
+      this.sendAsyncMessage("Translations:Load");
     }
   }
 

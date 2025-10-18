@@ -468,6 +468,33 @@ export class TranslationsParent extends JSWindowActorParent {
   static #DOC_CONFIDENCE_THRESHOLD = 150;
 
   /**
+   * The maximum time that we will wait to react to the page's
+   * language after observing the DOMContentLoaded event.
+   *
+   * In an ideal scenario, we want to fully wait for the "load"
+   * event before we scrape the page for text, but we also need
+   * mindful that some pages may take a long time to fully load
+   * depending on the complexity of the page and the speed of
+   * the user's connection.
+   *
+   * This is the worst-case scenario where we will start scraping
+   * the page text even if it has not yet fully loaded.
+   */
+  static #REACT_TO_PAGE_LANGUAGE_TIMEOUT = 2000;
+
+  /**
+   * A race that determines when to react to to the page's language tag.
+   *
+   * Ideally, we want to wait for the page to fully load, but we may have
+   * to take action before that.
+   *
+   * @see {TranslationsParent#REACT_TO_PAGE_LANGUAGE_TIMEOUT}
+   *
+   * @type {PromiseWithResolvers<string> | null}
+   */
+  #reactToPageLanguageRace = null;
+
+  /**
    * Contains the state that would affect UI. Anytime this state is changed, a dispatch
    * event is sent so that UI can react to it. The actor is inside of /toolkit and
    * needs a way of notifying /browser code (or other users) of when the state changes.
@@ -1550,58 +1577,92 @@ export class TranslationsParent extends JSWindowActorParent {
     return port2;
   }
 
+  /**
+   * Reacts to the page's language tag by considering the HTML lang attribute
+   * and also scraping a sample of the visible text on the page.
+   *
+   * An action is taken based on the agreement between the detected language
+   * and the HTML lang attribute (or lack thereof).
+   *
+   * @param {string} htmlLangAttribute
+   * @param {string} reason
+   */
+  async #reactToPageLanguage(htmlLangAttribute, reason) {
+    lazy.console.debug(`Reacting to page language due to "${reason}".`);
+
+    const detectedLanguages = await this.getDetectedLanguages(
+      htmlLangAttribute
+    ).catch(error => {
+      // Detecting the languages can fail if the page gets destroyed before it
+      // can be completed. This runs on every page that doesn't have a lang tag,
+      // so only report the error if you have Translations logging turned on to
+      // avoid console spam.
+      lazy.console.log("Failed to get the detected languages.", error);
+    });
+
+    if (this.#isDestroyed) {
+      return;
+    }
+
+    if (!detectedLanguages) {
+      // The actor was already destroyed, and the detectedLanguages weren't reported
+      // in time.
+      return;
+    }
+
+    this.languageState.detectedLanguages = detectedLanguages;
+
+    if (await this.shouldAutoTranslate(detectedLanguages)) {
+      if (this.#isDestroyed) {
+        return;
+      }
+
+      this.translate(
+        {
+          sourceLanguage: detectedLanguages.docLangTag,
+          targetLanguage: detectedLanguages.userLangTag,
+        },
+        true // reportAsAutoTranslate
+      );
+    } else {
+      if (this.#isDestroyed) {
+        return;
+      }
+
+      this.maybeOfferTranslations(detectedLanguages).catch(error =>
+        lazy.console.error(error)
+      );
+    }
+  }
+
   async receiveMessage({ name, data }) {
     if (this.#isDestroyed) {
       return undefined;
     }
 
     switch (name) {
-      case "Translations:ReportLangTags": {
-        const { htmlLangAttribute, href } = data;
-        const detectedLanguages = await this.getDetectedLanguages(
-          htmlLangAttribute,
-          href
-        ).catch(error => {
-          // Detecting the languages can fail if the page gets destroyed before it
-          // can be completed. This runs on every page that doesn't have a lang tag,
-          // so only report the error if you have Translations logging turned on to
-          // avoid console spam.
-          lazy.console.log("Failed to get the detected languages.", error);
+      case "Translations:DOMContentLoaded": {
+        const { htmlLangAttribute } = data;
+
+        this.#reactToPageLanguageRace = Promise.withResolvers();
+        const { promise, resolve } = this.#reactToPageLanguageRace;
+
+        promise.then(reason => {
+          if (this.#isDestroyed) {
+            return;
+          }
+          this.#reactToPageLanguage(htmlLangAttribute, reason);
+          this.#reactToPageLanguageRace = null;
         });
 
-        if (this.#isDestroyed) {
-          return undefined;
-        }
+        lazy.setTimeout(() => {
+          resolve("timeout");
+        }, TranslationsParent.#REACT_TO_PAGE_LANGUAGE_TIMEOUT);
 
-        if (!detectedLanguages) {
-          // The actor was already destroyed, and the detectedLanguages weren't reported
-          // in time.
-          return undefined;
-        }
-
-        this.languageState.detectedLanguages = detectedLanguages;
-
-        if (await this.shouldAutoTranslate(detectedLanguages)) {
-          if (this.#isDestroyed) {
-            return undefined;
-          }
-
-          this.translate(
-            {
-              sourceLanguage: detectedLanguages.docLangTag,
-              targetLanguage: detectedLanguages.userLangTag,
-            },
-            true // reportAsAutoTranslate
-          );
-        } else {
-          if (this.#isDestroyed) {
-            return undefined;
-          }
-
-          this.maybeOfferTranslations(detectedLanguages).catch(error =>
-            lazy.console.error(error)
-          );
-        }
+        return undefined;
+      }
+      case "Translations:Load": {
+        this.#reactToPageLanguageRace?.resolve("load");
         return undefined;
       }
       case "Translations:RequestPort": {
@@ -3726,11 +3787,10 @@ export class TranslationsParent extends JSWindowActorParent {
    * rather than the child to remove the per-content process memory allocation amount.
    *
    * @param {string} [htmlLangAttribute]
-   * @param {string} [href]
    * @returns {Promise<LangTags | null>} - Returns null if the actor was destroyed before
    *   the result could be resolved.
    */
-  async getDetectedLanguages(htmlLangAttribute, href) {
+  async getDetectedLanguages(htmlLangAttribute) {
     if (this.languageState.detectedLanguages) {
       return this.languageState.detectedLanguages;
     }
@@ -3739,14 +3799,9 @@ export class TranslationsParent extends JSWindowActorParent {
       return null;
     }
 
-    if (htmlLangAttribute === undefined) {
-      htmlLangAttribute = await this.queryDocumentElementLang();
-      if (this.#isDestroyed) {
-        return null;
-      }
+    if (htmlLangAttribute) {
+      htmlLangAttribute = this.maybeRefineMacroLanguageTag(htmlLangAttribute);
     }
-
-    htmlLangAttribute = this.maybeRefineMacroLanguageTag(htmlLangAttribute);
 
     let languagePairs = await TranslationsParent.getNonPivotLanguagePairs();
     if (this.#isDestroyed) {
@@ -3827,7 +3882,7 @@ export class TranslationsParent extends JSWindowActorParent {
         { innerWindowId: this.innerWindowId },
         message
       );
-      lazy.console.log(message, href);
+      lazy.console.log(message);
 
       const langTag = await TranslationsParent.getTopPreferredSupportedToLang();
       if (this.#isDestroyed) {
@@ -3857,7 +3912,8 @@ export class TranslationsParent extends JSWindowActorParent {
         { innerWindowId: this.innerWindowId },
         message
       );
-      lazy.console.log(message, href);
+      lazy.console.log(message);
+
       // The docLangTag will be set, while the userLangTag will be null.
       return langTags;
     }
