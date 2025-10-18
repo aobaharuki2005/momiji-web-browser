@@ -448,7 +448,6 @@ bool DictionaryCacheEntry::ParseMetadata(const char* aSrc) {
     return false;
   }
   aSrc = GetEncodedString(aSrc, mHash);
-  aSrc = GetEncodedString(aSrc, mHash);
   aSrc = GetEncodedString(aSrc, mPattern);
   aSrc = GetEncodedString(aSrc, mId);
   nsAutoCString temp;
