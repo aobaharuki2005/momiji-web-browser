@@ -21,10 +21,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
   IPProtectionStates:
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
 import { IPPAutoStartHelpers } from "resource:///modules/ipprotection/IPPAutoStart.sys.mjs";
+import { IPPNimbusHelper } from "resource:///modules/ipprotection/IPPNimbusHelper.sys.mjs";
 import { IPPSignInWatcher } from "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs";
 import { IPPStartupCache } from "resource:///modules/ipprotection/IPPStartupCache.sys.mjs";
 
@@ -142,26 +142,7 @@ class VPNAddonHelper {
   }
 }
 
-/**
- * This class monitors the eligibility flag from Nimbus
- */
-class EligibilityHelper {
-  init() {}
-
-  initOnStartupCompleted() {
-    lazy.NimbusFeatures.ipProtection.onUpdate(
-      lazy.IPProtectionService.updateState
-    );
-  }
-
-  uninit() {
-    lazy.NimbusFeatures.ipProtection.offUpdate(
-      lazy.IPProtectionService.updateState
-    );
-  }
-}
-
-// The order is important! Eligibility must be the last one because nimbus
+// The order is important! NimbusHelper must be the last one because nimbus
 // triggers the callback immdiately, which could compute a new state for all
 // the helpers.
 const IPPHelpers = [
@@ -170,8 +151,8 @@ const IPPHelpers = [
   new UIHelper(),
   new AccountResetHelper(),
   new VPNAddonHelper(),
-  new EligibilityHelper(),
   ...IPPAutoStartHelpers,
+  IPPNimbusHelper,
 ];
 
 export { IPPHelpers };

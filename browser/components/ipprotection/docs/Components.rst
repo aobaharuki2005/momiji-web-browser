@@ -32,7 +32,7 @@ A diagram of all the main components is the following:
        UIHelper["UI Helper"]
        AccountResetHelper["Account Reset Helper"]
        VPNAddonHelper["VPN Add-on Helper"]
-       EligibilityHelper["Nimbus Eligibility Helper"]
+      IPPNimbusHelper["Nimbus Eligibility Helper"]
        IPPAutoStart["Auto-Start Helper"]
        IPPEarlyStartupFilter["Early Startup Filter Helper"]
      end
@@ -132,8 +132,9 @@ VPNAddonHelper
   Monitors the installation of the Mozilla VPN add‑on and removes the UI when
   appropriate.
 
-EligibilityHelper
-  Monitors the Nimbus experiment flag and triggers state updates when it changes.
+IPPNimbusHelper
+  Monitors the Nimbus feature (``NimbusFeatures.ipProtection``) and triggers a
+  state recomputation on updates.
 
 How to implement new components
 -------------------------------
@@ -148,7 +149,8 @@ Recommended steps:
 2. If your helper reacts to state changes, listen to the
    ``IPProtectionService:StateChanged`` event.
 3. Add your helper to the ``IPPHelpers`` array in ``IPProtectionHelpers.sys.mjs``.
-   Be mindful of ordering if your helper depends on others (e.g. Nimbus
-   eligibility is registered last to avoid premature updates).
+   Be mindful of ordering if your helper depends on others. For example,
+   ``IPPNimbusHelper`` is registered last to avoid premature state updates
+   triggered by Nimbus’ immediate callback.
 4. If your component needs to trigger a recomputation, call
    ``IPProtectionService.updateState``.

@@ -9,12 +9,12 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   GuardianClient: "resource:///modules/ipprotection/GuardianClient.sys.mjs",
   IPPHelpers: "resource:///modules/ipprotection/IPProtectionHelpers.sys.mjs",
+  IPPNimbusHelper: "resource:///modules/ipprotection/IPPNimbusHelper.sys.mjs",
   IPPProxyManager: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
   IPPSignInWatcher: "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs",
   IPPStartupCache: "resource:///modules/ipprotection/IPPStartupCache.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
 import {
@@ -322,24 +322,6 @@ class IPProtectionServiceSingleton extends EventTarget {
   }
 
   /**
-   * Check if this device is in the experiment with a variant branch.
-   *
-   * @returns {boolean}
-   */
-  get isEligible() {
-    let inExperiment = lazy.NimbusFeatures.ipProtection.getEnrollmentMetadata();
-    let isEligible = inExperiment?.branch && inExperiment.branch !== "control";
-
-    if (inExperiment) {
-      lazy.NimbusFeatures.ipProtection.recordExposureEvent({
-        once: true,
-      });
-    }
-
-    return isEligible;
-  }
-
-  /**
    * Clear the current entitlement and requests a state update to dispatch
    * the current hasUpgraded status.
    *
@@ -461,7 +443,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     // For non authenticated users, we can check if they are eligible (the UI
     // is shown and they have to login) or we don't know yet their current
     // enroll state (no UI is shown).
-    let eligible = this.isEligible;
+    let eligible = lazy.IPPNimbusHelper.isEligible;
     if (!lazy.IPPSignInWatcher.isSignedIn) {
       return !eligible
         ? IPProtectionStates.UNAVAILABLE

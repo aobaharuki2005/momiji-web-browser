@@ -6,6 +6,9 @@ https://creativecommons.org/publicdomain/zero/1.0/ */
 const { IPProtectionService, IPProtectionStates } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPProtectionService.sys.mjs"
 );
+const { IPPNimbusHelper } = ChromeUtils.importESModule(
+  "resource:///modules/ipprotection/IPPNimbusHelper.sys.mjs"
+);
 const { IPPSignInWatcher } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs"
 );
@@ -66,7 +69,7 @@ add_task(async function test_IPProtectionStates_uninitialized() {
     "IP Protection service should be unavailable"
   );
 
-  sandbox.stub(IPProtectionService, "isEligible").get(() => true);
+  sandbox.stub(IPPNimbusHelper, "isEligible").get(() => true);
 
   await IPProtectionService.updateState();
 
@@ -98,7 +101,7 @@ add_task(async function test_IPProtectionStates_unauthenticated() {
     "IP Protection service should be unavailable"
   );
 
-  sandbox.stub(IPProtectionService, "isEligible").get(() => true);
+  sandbox.stub(IPPNimbusHelper, "isEligible").get(() => true);
 
   await IPProtectionService.updateState();
 
@@ -131,7 +134,7 @@ add_task(async function test_IPProtectionStates_enrolling() {
   sandbox
     .stub(IPProtectionService.guardian, "isLinkedToGuardian")
     .resolves(false);
-  sandbox.stub(IPProtectionService, "isEligible").get(() => true);
+  sandbox.stub(IPPNimbusHelper, "isEligible").get(() => true);
   sandbox.stub(IPProtectionService.guardian, "enroll").resolves({ ok: true });
   sandbox.stub(IPProtectionService.guardian, "fetchUserInfo").resolves({
     status: 200,
