@@ -245,7 +245,7 @@ class ExternalTextureSourceHost {
   static ExternalTextureSourceHost CreateFromBufferDesc(
       WebGPUParent* aParent, RawId aDeviceId, RawId aQueueId,
       const ExternalTextureSourceDescriptor& aDesc,
-      const layers::BufferDescriptor& aSd, uint8_t* aBuffer);
+      const layers::BufferDescriptor& aSd, Span<uint8_t> aBuffer);
   static ExternalTextureSourceHost CreateFromD3D10Desc(
       WebGPUParent* aParent, RawId aDeviceId, RawId aQueueId,
       const ExternalTextureSourceDescriptor& aDesc,
