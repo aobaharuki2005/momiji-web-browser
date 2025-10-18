@@ -480,7 +480,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * This is the worst-case scenario where we will start scraping
    * the page text even if it has not yet fully loaded.
    */
-  static #REACT_TO_PAGE_LANGUAGE_TIMEOUT = 2000;
+  static #REACT_TO_PAGE_LANGUAGE_TIMEOUT = 500;
 
   /**
    * A race that determines when to react to to the page's language tag.
@@ -3572,7 +3572,17 @@ export class TranslationsParent extends JSWindowActorParent {
 
     const startTime = ChromeUtils.now();
 
-    const pageText = await actor.getText();
+    // Manual profiling on 10 page loads of https://es.wikipedia.org/wiki/Felis_catus:
+    // -------------------------------------------------------------------------------
+    //
+    //   No limit: 2064 samples, 224/237/294 [min/med/max]ms (~85k code units)
+    // 8192 limit:  681 samples,  75/ 87/128 [min/med/max]ms
+    // 4096 limit:  457 samples,  51/ 55/ 97 [min/med/max]ms
+    // 2048 limit:  240 samples,  29/ 39/ 64 [min/med/max]ms
+    // 1024 limit:  142 samples,  19/ 28/ 58 [min/med/max]ms
+    //
+    // 2048 Code units feels like a decent length for performance and sample size.
+    const pageText = await actor.getText({ sufficientLength: 2048 });
     if (this.#isDestroyed) {
       return { language: "", confident: false, languages: [] };
     }
