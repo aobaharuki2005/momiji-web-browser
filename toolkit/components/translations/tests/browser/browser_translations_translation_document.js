@@ -1183,7 +1183,7 @@ add_task(async function test_html_lang_attribute() {
 
   translate();
 
-  await waitForCondition(() => document.documentElement.lang === "EN");
+  await waitForCondition(() => document.documentElement.lang === "es");
 
   cleanup();
 });
@@ -1946,3 +1946,103 @@ add_task(async function test_node_specific_attribute_mutation() {
 
   cleanup();
 });
+
+add_task(
+  async function test_direction_ltr_to_rtl_sets_dir_on_content_not_attributes() {
+    const { translate, htmlMatches, cleanup } = await createTranslationsDoc(
+      /* html */ `
+      <div id="content" title="A translated title">
+        This block of content should get RTL direction.
+      </div>
+      <input id="onlyPlaceholder" type="text" placeholder="A translated placeholder">
+      <div id="onlyTitle" title="Only a translated title"></div>
+      <div>
+        Div text.
+        <span>Span within a div.</span>
+      </div>
+      <span>
+        Span text.
+        <div>Div within a span.</div>
+      </span>
+    `,
+      { sourceLanguage: "en", targetLanguage: "ar" }
+    );
+
+    translate();
+
+    await htmlMatches(
+      'LTR to RTL: content elements get dir="rtl", but attribute-only elements do not.',
+      /* html */ `
+      <div id="content" title="A TRANSLATED TITLE" dir="rtl">
+        THIS BLOCK OF CONTENT SHOULD GET RTL DIRECTION.
+      </div>
+      <input id="onlyPlaceholder" type="text" placeholder="A TRANSLATED PLACEHOLDER">
+      <div id="onlyTitle" title="ONLY A TRANSLATED TITLE"></div>
+      <div dir="rtl">
+        DIV TEXT.
+        <span>
+          SPAN WITHIN A DIV.
+        </span>
+      </div>
+      <span dir="rtl">
+        SPAN TEXT.
+        <div dir="rtl">
+          DIV WITHIN A SPAN.
+        </div>
+      </span>
+    `
+    );
+
+    cleanup();
+  }
+);
+
+add_task(
+  async function test_direction_rtl_to_ltr_sets_dir_on_content_not_attributes() {
+    const { translate, htmlMatches, cleanup } = await createTranslationsDoc(
+      /* html */ `
+      <div id="content" title="A translated title">
+        This block of content should get LTR direction.
+      </div>
+      <input id="onlyPlaceholder" type="text" placeholder="A translated placeholder">
+      <div id="onlyTitle" title="Only a translated title"></div>
+      <div>
+        Div text.
+        <span>Span within a div.</span>
+      </div>
+      <span>
+        Span text.
+        <div>Div within a span.</div>
+      </span>
+    `,
+      { sourceLanguage: "ar", targetLanguage: "en" }
+    );
+
+    translate();
+
+    await htmlMatches(
+      'RTL to LTR: content elements get dir="ltr", but attribute-only elements do not.',
+      /* html */ `
+      <div id="content" title="A TRANSLATED TITLE" dir="ltr">
+        THIS BLOCK OF CONTENT SHOULD GET LTR DIRECTION.
+      </div>
+      <input id="onlyPlaceholder" type="text" placeholder="A TRANSLATED PLACEHOLDER">
+      <div id="onlyTitle" title="ONLY A TRANSLATED TITLE"></div>
+      <div dir="ltr">
+        DIV TEXT.
+        <span>
+          SPAN WITHIN A DIV.
+        </span>
+      </div>
+      <span dir="ltr">
+        SPAN TEXT.
+        <div dir="ltr">
+          DIV WITHIN A SPAN.
+        </div>
+      </span>
+    `
+    );
+
+    cleanup();
+  }
+);

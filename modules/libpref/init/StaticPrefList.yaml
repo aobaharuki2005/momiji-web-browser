@@ -1804,23 +1804,12 @@
   value: 2
   mirror: always
 
-# Whether (-moz-native-theme) evaluates to true by default.
-- name: browser.theme.native-theme
-  type: RelaxedAtomicBool
-#ifdef MOZ_WIDGET_GTK
-  value: true
-#else
-  value: false
-#endif
-  mirror: always
-  rust: true
-
 # Communicates the preferred content theme color to platform (for e.g.,
 # prefers-color-scheme).
 #
-# dark (0), light (1), or system (2)
+# dark (0), light (1), system (2), or toolbar (3).
 #
-# Default to "system", the theming code sets it appropriately.
+# Default to "toolbar", the theming code sets it appropriately.
 - name: browser.theme.content-theme
   type: RelaxedAtomicUint32
   value: 2
@@ -10473,7 +10462,7 @@
 # https://drafts.csswg.org/css-text-4/#text-autospace-property
 - name: layout.css.text-autospace.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Maximum number of lines to try balancing.
@@ -15759,7 +15748,7 @@
 # Enable HTTP Compression Dictionary support
 - name: network.http.dictionaries.enable
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------

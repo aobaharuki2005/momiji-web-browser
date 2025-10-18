@@ -8,7 +8,8 @@
   --arrowpanel-field-background: light-dark(rgba(249, 249, 250, 0.3), rgba(12, 12, 13, 0.3));
 }
 
-@media (-moz-native-theme) {
+/* stylelint-disable-next-line media-query-no-invalid */
+@media -moz-pref("browser.theme.native-theme") {
   @media not (prefers-contrast) {
     :root:not([lwtheme]) {
       @media (prefers-color-scheme: light) {

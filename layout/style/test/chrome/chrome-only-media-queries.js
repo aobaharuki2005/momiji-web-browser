@@ -15,7 +15,6 @@ const CHROME_ONLY_TOGGLES = [
   "-moz-gtk-csd-close-button",
   "-moz-gtk-csd-reversed-placement",
   "-moz-panel-animations",
-  "-moz-native-theme",
 ];
 
 // Non-parseable queries can be tested directly in

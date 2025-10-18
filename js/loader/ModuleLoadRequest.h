@@ -120,7 +120,7 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
 
   void SetErroredLoadingImports() {
     MOZ_ASSERT(IsDynamicImport());
-    MOZ_ASSERT(IsFetching());
+    MOZ_ASSERT(IsFetching() || IsCompiling());
     mErroredLoadingImports = true;
   }
 

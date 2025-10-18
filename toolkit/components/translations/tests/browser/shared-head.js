@@ -678,13 +678,25 @@ const { TranslationsDocument, LRUCache } = ChromeUtils.importESModule(
 );
 
 /**
- * @param {string} html
- * @param {{
- *  mockedTranslatorPort?: (message: string) => Promise<string>,
- *  mockedReportVisibleChange?: () => void
- * }} [options]
+ * Creates a translated document from the provided HTML string.
+ *
+ * @param {string} html - The HTML source to translate.
+ * @param {object} [options] - Optional configuration.
+ * @param {string} [options.sourceLanguage="en"] - Source language code (default: "en").
+ * @param {string} [options.targetLanguage="en"] - Target language code (default: "en").
+ * @param {(message: string) => Promise<string>} [options.mockedTranslatorPort] - Optional mock translation function.
+ * @param {() => void} [options.mockedReportVisibleChange] - Optional callback for visibility reporting.
+ * @returns {Promise<void>} Resolves when the document translation is complete.
  */
-async function createTranslationsDoc(html, options) {
+async function createTranslationsDoc(
+  html,
+  {
+    sourceLanguage = "en",
+    targetLanguage = "es",
+    mockedTranslatorPort,
+    mockedReportVisibleChange,
+  } = {}
+) {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.translations.enable", true],
@@ -707,14 +719,14 @@ async function createTranslationsDoc(html, options) {
     info("Creating the TranslationsDocument.");
     translationsDoc = new TranslationsDocument(
       document,
-      "en",
-      "EN",
+      sourceLanguage,
+      targetLanguage,
       0, // This is a fake innerWindowID
-      options?.mockedTranslatorPort ?? createMockedTranslatorPort(),
+      mockedTranslatorPort ?? createMockedTranslatorPort(),
       () => {
         throw new Error("Cannot request a new port");
       },
-      options?.mockedReportVisibleChange ?? (() => {}),
+      mockedReportVisibleChange ?? (() => {}),
       new LRUCache(),
       false
     );

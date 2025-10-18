@@ -1185,7 +1185,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::StyleWordBreak mWordBreak = mozilla::StyleWordBreak::Normal;
   mozilla::StyleOverflowWrap mOverflowWrap = mozilla::StyleOverflowWrap::Normal;
   mozilla::StyleTextAutospace mTextAutospace =
-      mozilla::StyleTextAutospace::NORMAL;
+      mozilla::StyleTextAutospace::NO_AUTOSPACE;
 
  public:
   mozilla::StyleHyphens mHyphens;
