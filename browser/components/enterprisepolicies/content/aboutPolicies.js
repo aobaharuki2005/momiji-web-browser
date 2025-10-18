@@ -296,7 +296,6 @@ function generateDocumentation() {
     SecurityDevices: "SecurityDevices2",
     SkipTermsOfUse: "SkipTermsOfUse2",
     WindowsSSO: "Windows10SSO",
-    Backup: "BrowserDataBackup",
   };
   let deprecated_policies = ["DisablePocket"];
 

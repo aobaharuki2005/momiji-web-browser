@@ -4,8 +4,6 @@ head = "head.js"
 firefox-appdir = "browser"
 prefs = [
   "browser.backup.log=true",
-  "browser.backup.archive.enabled=true",
-  "browser.backup.restore.enabled=true",
 ]
 
 ["test_AddonsBackupResource.js"]

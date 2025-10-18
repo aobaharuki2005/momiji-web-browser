@@ -167,18 +167,6 @@
       }
     },
 
-    "BrowserDataBackup": {
-      "type": ["boolean", "object"],
-      "properties": {
-        "AllowBackup": {
-          "type": "boolean"
-        },
-        "AllowRestore": {
-          "type": "boolean"
-        }
-      }
-    },
-
     "CaptivePortal": {
       "type": "boolean"
     },
