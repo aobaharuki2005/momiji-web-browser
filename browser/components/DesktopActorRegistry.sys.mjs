@@ -248,6 +248,7 @@ let JSWINDOWACTORS = {
       "about:welcome*",
       "chrome://browser/content/spotlight.html",
     ],
+    enablePreference: "browser.backup.preferences.ui.enabled",
   },
 
   BlockedSite: {

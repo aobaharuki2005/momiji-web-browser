@@ -57,9 +57,7 @@ add_task(async function test_aboutwelcome_embedded_backup_restore_properties() {
   await pushPrefs([
     "browser.backup.enabled",
     true,
-    "browser.backup.archive.enabled",
-    true,
-    "browser.backup.restore.enabled",
+    "browser.backup.preferences.ui.enabled",
     true,
   ]);
 

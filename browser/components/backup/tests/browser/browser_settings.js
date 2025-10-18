@@ -8,8 +8,6 @@ const { MockRegistrar } = ChromeUtils.importESModule(
 );
 
 const SCHEDULED_BACKUPS_ENABLED_PREF = "browser.backup.scheduled.enabled";
-const BACKUP_ARCHIVE_ENABLED_PREF = "browser.backup.archive.enabled";
-const BACKUP_RESTORE_ENABLED_PREF = "browser.backup.restore.enabled";
 
 add_setup(async () => {
   MockFilePicker.init(window.browsingContext);
@@ -37,7 +35,7 @@ add_task(async function test_preferences_visibility() {
   });
 
   await SpecialPowers.pushPrefEnv({
-    set: [[BACKUP_ARCHIVE_ENABLED_PREF, false]],
+    set: [["browser.backup.preferences.ui.enabled", false]],
   });
 
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
@@ -46,39 +44,11 @@ add_task(async function test_preferences_visibility() {
     Assert.ok(backupSection, "Found backup preferences section");
 
     Assert.ok(
-      BrowserTestUtils.isVisible(backupSection),
-      "Backup section is still visible"
-    );
-
-    let settings = browser.contentDocument.querySelector("backup-settings");
-    let backupArchiveSection = settings.querySelector("#scheduled-backups");
-
-    Assert.ok(!backupArchiveSection, "Backup archive section is not available");
-
-    Assert.ok(
-      settings.restoreFromBackupEl,
-      "Backup restore section is available"
-    );
-  });
-  await SpecialPowers.pushPrefEnv({
-    set: [[BACKUP_RESTORE_ENABLED_PREF, false]],
-  });
-  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
-    let settings = browser.contentDocument.querySelector("backup-settings");
-    Assert.ok(
-      !settings.restoreFromBackupEl,
-      "Backup Restore section is not available"
-    );
-
-    let backupSection =
-      browser.contentDocument.querySelector("#dataBackupGroup");
-    Assert.ok(
       BrowserTestUtils.isHidden(backupSection),
       "Backup section is now hidden"
     );
   });
 
-  await SpecialPowers.popPrefEnv();
   await SpecialPowers.popPrefEnv();
 });
 
@@ -95,15 +65,6 @@ add_task(async function test_disable_backup_encryption_confirm() {
     let disableEncryptionStub = sandbox
       .stub(BackupService.prototype, "disableEncryption")
       .resolves(true);
-
-    Assert.ok(
-      Services.prefs.getBoolPref(BACKUP_RESTORE_ENABLED_PREF),
-      "Restore pref is back to true"
-    );
-    Assert.ok(
-      Services.prefs.getBoolPref(BACKUP_ARCHIVE_ENABLED_PREF),
-      "Archive pref is back to true"
-    );
 
     await SpecialPowers.pushPrefEnv({
       set: [[SCHEDULED_BACKUPS_ENABLED_PREF, true]],
