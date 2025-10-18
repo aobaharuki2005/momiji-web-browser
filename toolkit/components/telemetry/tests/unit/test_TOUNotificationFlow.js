@@ -43,6 +43,8 @@ function fakeResetAcceptedPolicy() {
 // Fake dismissing a modal dialog.
 function fakeInteractWithModal() {
   Services.obs.notifyObservers(null, "termsofuse:interacted");
+  // Mark that notification is no longer in progress
+  TelemetryReportingPolicy.testNotificationInProgress(false);
 }
 
 function unsetMinimumPolicyVersion() {
@@ -123,7 +125,7 @@ add_setup(() => {
       "datareporting.policy.dataSubmissionPolicyAcceptedVersion"
     );
     Services.prefs.clearUserPref(TelemetryUtils.Preferences.BypassNotification);
-
+    TelemetryReportingPolicy.testNotificationInProgress(false);
     TelemetryReportingPolicy.reset();
   });
 });
@@ -575,11 +577,19 @@ add_task(
 
     let p = Policy.delayedSetup();
     Policy.fakeSessionRestoreNotification();
+    // Mark that notification is in progress
+    TelemetryReportingPolicy.testNotificationInProgress(true);
     // Spin the event loop once – the notification should *not* have fired yet.
     await TestUtils.waitForTick();
+
     Assert.ok(
       !notificationSeen,
       "Notification should not be dispatched before the user interacts"
+    );
+
+    Assert.ok(
+      !TelemetryReportingPolicy.canUpload(),
+      "canUpload() is false while TOU modal is showing (notification in progress)"
     );
 
     Assert.equal(
@@ -593,12 +603,18 @@ add_task(
     await p;
 
     Assert.ok(
+      TelemetryReportingPolicy.canUpload(),
+      "canUpload() is true after the user accepts the TOU via the modal"
+    );
+
+    Assert.ok(
       notificationSeen,
       "Notification fires after the user accepts the ToU in this session"
     );
 
     // Clean-up.
     fakeResetAcceptedPolicy();
+    TelemetryReportingPolicy.testNotificationInProgress(false);
     await doCleanup();
     sinon.restore();
   }
@@ -622,6 +638,8 @@ add_task(
 
     let p = Policy.delayedSetup();
     Policy.fakeSessionRestoreNotification();
+    // Mark that notification is in progress
+    TelemetryReportingPolicy.testNotificationInProgress(true);
     // Spin the event loop once – the notification should *not* have fired yet.
     await TestUtils.waitForTick();
     Assert.ok(
@@ -635,8 +653,18 @@ add_task(
       "showModal should be invoked exactly once when prompting the user"
     );
 
+    Assert.ok(
+      !TelemetryReportingPolicy.canUpload(),
+      "canUpload() is false while TOU modal is showing (notification in progress)"
+    );
+
     await TestUtils.waitForTick();
     await p;
+
+    Assert.ok(
+      !TelemetryReportingPolicy.canUpload(),
+      "canUpload() remains false if the user never accepts and no bypass applies"
+    );
 
     Assert.ok(
       !notificationSeen,
@@ -646,6 +674,7 @@ add_task(
     // Clean-up.
     fakeResetAcceptedPolicy();
     await doCleanup();
+    TelemetryReportingPolicy.testNotificationInProgress(false);
     sinon.restore();
   }
 );
@@ -668,6 +697,8 @@ add_task(
 
     let p = Policy.delayedSetup();
     Policy.fakeSessionRestoreNotification();
+    // Mark that notification is in progress
+    TelemetryReportingPolicy.testNotificationInProgress(true);
     // Spin the event loop once – the notification should *not* have fired yet.
     await TestUtils.waitForTick();
     Assert.ok(
@@ -681,6 +712,11 @@ add_task(
       "showModal should be invoked exactly once when prompting the user"
     );
 
+    Assert.ok(
+      !TelemetryReportingPolicy.canUpload(),
+      "canUpload() is false while modal is displayed"
+    );
+
     await TestUtils.waitForTick();
     await p;
 
@@ -688,8 +724,19 @@ add_task(
       !notificationSeen,
       "Notification should still not be dispatched if never interacted with"
     );
+
+    Assert.ok(
+      !TelemetryReportingPolicy.canUpload(),
+      "canUpload() remains false"
+    );
+
     fakeInteractWithModal();
     await TestUtils.waitForTick();
+
+    Assert.ok(
+      TelemetryReportingPolicy.canUpload(),
+      "canUpload() becomes true after later acceptance"
+    );
 
     Assert.ok(
       notificationSeen,
@@ -698,6 +745,7 @@ add_task(
 
     // Clean-up.
     fakeResetAcceptedPolicy();
+    TelemetryReportingPolicy.testNotificationInProgress(false);
     await doCleanup();
     sinon.restore();
   }

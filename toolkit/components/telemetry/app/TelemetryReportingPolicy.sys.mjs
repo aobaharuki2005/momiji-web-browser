@@ -221,6 +221,13 @@ export var TelemetryReportingPolicy = {
   },
 
   /**
+   * Test only method, used simulate a notification being in-progress.
+   */
+  testNotificationInProgress(inProgress) {
+    TelemetryReportingPolicyImpl._notificationInProgress = inProgress;
+  },
+
+  /**
    * Test only method, used to get TOS on-train release dates by channel.
    */
   get fullOnTrainReleaseDates() {
@@ -760,15 +767,27 @@ var TelemetryReportingPolicyImpl = {
    * Check if we are allowed to upload data.
    * Prerequisite: data submission is enabled (this.dataSubmissionEnabled).
    *
-   * For upload to be allowed from a data reporting standpoint, the user should
-   * not qualify to see the legacy policy notification flow and also not qualify
-   * to see the Terms of Use acceptance flow.
+   * If a notification is currently in progress, the user should not be allowed
+   * to upload data.
+   *
+   * Otherwise, for upload to be allowed from a data reporting standpoint, the
+   * user should not qualify to see the legacy policy notification flow and also
+   * not qualify to see the Terms of Use acceptance flow.
    * @return {Boolean} True if we are allowed to upload data, false otherwise.
    */
   canUpload() {
     // If data submission is disabled, there's no point in showing the infobar. Just
     // forbid to upload.
     if (!this.dataSubmissionEnabled) {
+      return false;
+    }
+
+    // If a notification is in progress, such as when the TOU modal is currently
+    // showing and user has not yet accepted, do not allow upload. The legacy
+    // flow doesn't require interaction, so the notification is only considered
+    // to be in progress for the brief period between when the infobar or
+    // privacy notice tab is shown and when the notification is recorded.
+    if (this._notificationInProgress) {
       return false;
     }
 
