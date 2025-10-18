@@ -889,7 +889,7 @@ static nsBoundingMetrics MeasureTextRun(DrawTarget* aDrawTarget,
   bm.rightBearing = NSToCoordCeil(metrics.mBoundingBox.XMost());
   bm.ascent = NSToCoordCeil(-metrics.mBoundingBox.Y());
   bm.descent = NSToCoordCeil(metrics.mBoundingBox.YMost());
-  bm.width = NSToCoordRound(metrics.mAdvanceWidth);
+  bm.width = metrics.mAdvanceWidth;
 
   return bm;
 }
