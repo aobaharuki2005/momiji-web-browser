@@ -831,7 +831,7 @@ export class TranslationsParent extends JSWindowActorParent {
 
           if (
             !TranslationsParent.findCompatibleSourceLangTagSync(
-              detectedLanguages.identifiedLangTag,
+              detectedLanguages.identified.language,
               await TranslationsParent.getNonPivotLanguagePairs()
             )
           ) {
@@ -3709,7 +3709,7 @@ export class TranslationsParent extends JSWindowActorParent {
       userLangTag: null,
       isDocLangTagSupported: false,
       htmlLangAttribute: htmlLangAttribute ?? null,
-      identifiedLangTag: null,
+      identified: null,
     };
 
     /**
