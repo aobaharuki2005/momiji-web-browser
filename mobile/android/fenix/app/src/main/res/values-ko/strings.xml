@@ -2262,7 +2262,7 @@
   <!-- Body text of a delete browsing data dialog. -->
   <string name="delete_history_prompt_body_2">기록 제거 (다른 기기에서 동기화된 기록 포함)</string>
   <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
-  <string name="delete_history_prompt_button_last_hour">지난 시간</string>
+  <string name="delete_history_prompt_button_last_hour">최근 1시간</string>
   <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
   <string name="delete_history_prompt_button_today_and_yesterday">오늘 및 어제</string>
   <!-- Radio button in the delete browsing data dialog to delete all history. -->
