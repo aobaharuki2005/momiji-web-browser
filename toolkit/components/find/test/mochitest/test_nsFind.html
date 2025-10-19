@@ -345,6 +345,12 @@ async function runTests() {
   assertNotFound(space, "\u{3000D}");
   assertNotFound(space, "\u{3000A}");
 
+  // Bug 1951607: Text inside <option> elements within <optgroup> in a <select>
+  // should be findable.
+  var selectElement = document.getElementById("select-with-optgroup");
+  assertFound(selectElement, "optgroup");
+  assertFound(selectElement, "OptionInOptGroup");
+
   // Do these test at the end since they trigger failure screenshots in
   // the test harness, and we want as much information as possible about
   // any OTHER tests that may have already failed.
@@ -456,6 +462,11 @@ async function runTests() {
 </div>
 <p id="nonspace">&#x2000D;&#x10000A;</p>
 <p id="space"> <br>&nbsp;</p>
+<select id="select-with-optgroup" multiple>
+  <optgroup label="optgroup">
+    <option>OptionInOptGroup</option>
+  </optgroup>
+</select>
 <pre id="test">
 </pre>
 </body>
