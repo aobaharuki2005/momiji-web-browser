@@ -278,42 +278,15 @@ async function runTests() {
   assertNotFound(quotes, "Tardigrade");
   assertNotFound(quotes, "Amoeba");
 
-  // hidden=until-found content is found
+  // nsFind should be able to find text inside hidden=until-found
+  // or closed <details> elements.
+  // Note: nsFind itself does not trigger the reveal algorithm; that is the
+  // responsibility of the caller (e.g., find-in-page, nsTypeAheadFind).
   // https://html.spec.whatwg.org/#attr-hidden-until-found
-  const hiddenUntilFound = document.querySelector("#hidden-until-found");
-  // Create a promise that resolves when the beforematch event fires.
-  const beforematchPromise = new Promise(resolve => {
-    hiddenUntilFound.onbeforematch = () => resolve();
-  });
-  is(
-    getComputedStyle(hiddenUntilFound).contentVisibility,
-    "hidden",
-    "hidden=until-found content has content-visibility: hidden before being found"
-  );
   assertFound(document.body, "hidden until found");
 
-  await beforematchPromise;
-  await new Promise(resolve => requestAnimationFrame(resolve));
-
-  is(
-    getComputedStyle(hiddenUntilFound).contentVisibility,
-    "visible",
-    "hidden=until-found content has content-visibility: visible after being found"
-  );
-
-  // https://html.spec.whatwg.org/#interaction-with-details-and-hidden=until-found
-  const hiddenHiddenUntilFound = document.querySelector("div#hidden-until-found-inside-hidden");
-  hiddenHiddenUntilFound.onbeforematch = () => ok(
-    false,
-    "Beforematch must not be fired for a hidden=until-found element which is inside a content-visibility:hidden element."
-  );
   assertNotFound(document.body, "hidden because of content-visibility: hidden outside of hidden=until-found");
 
-  const nestedHiddenInHiddenUntilFound = document.querySelector("div#hidden-until-found-with-inner-hidden");
-  nestedHiddenInHiddenUntilFound.onbeforematch = () => ok(
-    false,
-    "Beforematch must not be fired for a hidden=until-found element if the matched content is content-visibility:hidden"
-  );
   assertNotFound(document.body, "nested hidden block should not be found");
   assertNotFound(document.body, "nested visibility:hidden should not be found");
 

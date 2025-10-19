@@ -140,6 +140,8 @@ tags = "audiochannel"
 
 ["browser_findbar_disabled_manual.js"]
 
+["browser_findbar_hidden_beforematch.js"]
+
 ["browser_findbar_hiddenframes.js"]
 
 ["browser_findbar_marks.js"]

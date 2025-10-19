@@ -77,6 +77,9 @@ nsTArray<RefPtr<nsRange>> TextDirectiveFinder::FindTextDirectivesInDocument() {
       textDirectiveRanges.AppendElement(range);
       TEXT_FRAGMENT_LOG("Found text directive '{}'",
                         ToString(textDirective).c_str());
+      if (RefPtr startNode = range->GetStartContainer()) {
+        startNode->QueueAncestorRevealingAlgorithm();
+      }
     } else {
       uninvokedTextDirectives.AppendElement(std::move(textDirective));
     }

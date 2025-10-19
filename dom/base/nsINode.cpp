@@ -4181,6 +4181,14 @@ ShadowRoot* nsINode::GetShadowRootForSelection() const {
   return shadowRoot;
 }
 
+void nsINode::QueueAncestorRevealingAlgorithm() {
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "RevealAncestors",
+      [self = RefPtr{this}]() MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
+        self->AncestorRevealingAlgorithm(IgnoreErrors());
+      }));
+}
+
 enum class RevealType : uint8_t {
   UntilFound,
   Details,

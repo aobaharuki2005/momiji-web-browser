@@ -503,6 +503,12 @@ nsresult nsTypeAheadFind::FindItNow(uint32_t aMode, bool aIsLinksOnly,
       }
       mSelectionController = do_GetWeakReference(selectionController);
 
+      // Reveal hidden-until-found and closed details elements for the match.
+      // https://html.spec.whatwg.org/#interaction-with-details-and-hidden=until-found
+      if (RefPtr startNode = returnRange->GetStartContainer()) {
+        startNode->QueueAncestorRevealingAlgorithm();
+      }
+
       // Select the found text
       if (selection) {
         selection->RemoveAllRanges(IgnoreErrors());
