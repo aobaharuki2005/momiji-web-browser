@@ -494,7 +494,7 @@
     Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
     Note: The word "Firefox" should NOT be translated
   -->
-  <string name="juno_onboarding_add_search_widget_description" tools:ignore="BrandUsage,UnusedResources">S prohlížečem Firefox na domovské obrazovce budete mít snadný přístup k prohlížeči, který chrání soukromí a blokuje sledování prvky stránek.</string>
+  <string name="juno_onboarding_add_search_widget_description" tools:ignore="BrandUsage,UnusedResources">S prohlížečem Firefox na domovské obrazovce budete mít snadný přístup k prohlížeči, který chrání soukromí a blokuje sledovací prvky stránek.</string>
   <!--
     Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
     Note: The word "Firefox" should NOT be translated
