@@ -647,22 +647,10 @@ nsresult nsTypeAheadFind::GetSearchContainers(
 
   if (!doc) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIContent> rootContent;
-  if (doc->IsHTMLOrXHTML()) {
-    rootContent = doc->GetBody();
-  }
-
-  if (!rootContent) {
-    rootContent = doc->GetRootElement();
-    if (!rootContent) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
   if (!mSearchRange) {
     mSearchRange = nsRange::Create(doc);
   }
-  nsCOMPtr<nsINode> searchRootNode(rootContent);
+  nsCOMPtr<nsINode> searchRootNode(doc);
 
   mSearchRange->SelectNodeContents(*searchRootNode, IgnoreErrors());
 
