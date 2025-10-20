@@ -231,7 +231,7 @@ void GfxInfo::GetData() {
   bool error = !ManageChildProcess("glxtest", &sGLXTestPID, &sGLXTestPipe,
                                    GFX_TEST_TIMEOUT, &glxData);
   if (error) {
-    gfxCriticalNote
+    gfxWarning()
         << "Failed to get GPU info from glxtest. Fallback to SW rendering! Run "
            "with MOZ_GFX_DEBUG=1 env variable to get further info.\n";
   }
@@ -270,7 +270,7 @@ void GfxInfo::GetData() {
       stringToFill->Assign(line);
       stringToFill = nullptr;
     } else if (logString) {
-      gfxCriticalNote << "glxtest: " << line;
+      gfxWarning() << "glxtest: " << line;
       logString = false;
     } else if (!strcmp(line, "VENDOR")) {
       stringToFill = &glVendor;
@@ -482,14 +482,14 @@ void GfxInfo::GetData() {
   // If we still don't have a vendor ID, we can try the PCI vendor list.
   if (mVendorId.IsEmpty()) {
     if (pciVendors.IsEmpty()) {
-      gfxCriticalNote << "No GPUs detected via PCI\n";
+      gfxWarning() << "No GPUs detected via PCI\n";
     } else {
       for (size_t i = 0; i < pciVendors.Length(); ++i) {
         if (mVendorId.IsEmpty()) {
           mVendorId = pciVendors[i];
         } else if (mVendorId != pciVendors[i]) {
-          gfxCriticalNote << "More than 1 GPU vendor detected via PCI, cannot "
-                             "deduce vendor\n";
+          gfxWarning() << "More than 1 GPU vendor detected via PCI, cannot "
+                          "deduce vendor\n";
           mVendorId.Truncate();
           break;
         }
@@ -505,8 +505,8 @@ void GfxInfo::GetData() {
         if (mDeviceId.IsEmpty()) {
           mDeviceId = pciDevices[i];
         } else if (mDeviceId != pciDevices[i]) {
-          gfxCriticalNote << "More than 1 GPU from same vendor detected via "
-                             "PCI, cannot deduce device\n";
+          gfxWarning() << "More than 1 GPU from same vendor detected via "
+                          "PCI, cannot deduce device\n";
           mDeviceId.Truncate();
           break;
         }
@@ -517,7 +517,7 @@ void GfxInfo::GetData() {
   // Assuming we know the vendor, we should check for a secondary card.
   if (!mVendorId.IsEmpty()) {
     if (pciLen > 2) {
-      gfxCriticalNote
+      gfxWarning()
           << "More than 2 GPUs detected via PCI, secondary GPU is arbitrary\n";
     }
     for (size_t i = 0; i < pciLen; ++i) {
@@ -533,8 +533,8 @@ void GfxInfo::GetData() {
   // If we couldn't choose, log them.
   if (mVendorId.IsEmpty()) {
     for (size_t i = 0; i < pciLen; ++i) {
-      gfxCriticalNote << "PCI candidate " << pciVendors[i].get() << "/"
-                      << pciDevices[i].get() << "\n";
+      gfxWarning() << "PCI candidate " << pciVendors[i].get() << "/"
+                   << pciDevices[i].get() << "\n";
     }
   }
 
