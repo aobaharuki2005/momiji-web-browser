@@ -4936,7 +4936,12 @@ void MacroAssembler::nearbyIntFloat32(RoundingMode mode, FloatRegister src,
 
 void MacroAssembler::copySignDouble(FloatRegister lhs, FloatRegister rhs,
                                     FloatRegister output) {
-  MOZ_CRASH("not supported on this platform");
+  as_fcopysign_d(output, lhs, rhs);
+}
+
+void MacroAssembler::copySignFloat32(FloatRegister lhs, FloatRegister rhs,
+                                     FloatRegister output) {
+  as_fcopysign_s(output, lhs, rhs);
 }
 
 void MacroAssemblerLOONG64Compat::move32(Imm32 imm, Register dest) {

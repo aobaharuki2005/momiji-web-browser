@@ -3808,10 +3808,12 @@ void Simulator::decodeTypeOp17(SimInstruction* instr) {
       UNIMPLEMENTED();
       break;
     case op_fcopysign_s:
-      UNIMPLEMENTED();
+      setFpuRegisterFloat(fd_reg(instr),
+                          std::copysign(fj_float(instr), fk_float(instr)));
       break;
     case op_fcopysign_d:
-      UNIMPLEMENTED();
+      setFpuRegisterDouble(fd_reg(instr),
+                           std::copysign(fj_double(instr), fk_double(instr)));
       break;
     default:
       UNREACHABLE();
