@@ -3074,6 +3074,12 @@ bool XMLHttpRequestMainThread::CanSend(ErrorResult& aRv) {
     return false;
   }
 
+  // Backstop against late workers.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
+    aRv.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return false;
+  }
+
   return true;
 }
 
