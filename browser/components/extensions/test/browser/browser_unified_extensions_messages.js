@@ -610,7 +610,7 @@ add_task(async function test_quarantined_and_blocklist_message() {
       await openExtensionsPanel();
       let messages = getMessageBars();
       Assert.equal(messages.length, 1, "expected a message");
-      verifyQuarantinedDomainsMessageBar(messages[0]);
+      await verifyQuarantinedDomainsMessageBar(messages[0]);
       await closeExtensionsPanel();
 
       let promiseBlocklistAttentionUpdated = AddonTestUtils.promiseManagerEvent(
@@ -638,7 +638,7 @@ add_task(async function test_quarantined_and_blocklist_message() {
           },
         },
       });
-      verifyQuarantinedDomainsMessageBar(messages[1]);
+      await verifyQuarantinedDomainsMessageBar(messages[1]);
       await closeExtensionsPanel();
       cleanupBlocklist();
     }

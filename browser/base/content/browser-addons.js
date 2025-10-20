@@ -2488,6 +2488,7 @@ var gUnifiedExtensions = {
     if (Services.appinfo.inSafeMode) {
       this._messageBarSafemode ??= this._makeMessageBar({
         messageBarFluentId: "unified-extensions-notice-safe-mode",
+        supportPage: "diagnose-firefox-issues-using-troubleshoot-mode",
         type: "info",
       });
       container.prepend(this._messageBarSafemode);
@@ -2508,6 +2509,8 @@ var gUnifiedExtensions = {
           messageBarFluentId:
             "unified-extensions-mb-quarantined-domain-message-3",
           supportPage: "quarantined-domains",
+          supportPageFluentId:
+            "unified-extensions-mb-quarantined-domain-learn-more",
           dismissible: false,
         });
         this._messageBarQuarantinedDomain
@@ -3140,6 +3143,7 @@ var gUnifiedExtensions = {
     messageBarFluentId,
     messageBarFluentArgs,
     supportPage = null,
+    supportPageFluentId,
     linkToAboutAddons = false,
     type = "warning",
   }) {
@@ -3181,11 +3185,9 @@ var gUnifiedExtensions = {
         is: "moz-support-link",
       });
       supportUrl.setAttribute("support-page", supportPage);
-      document.l10n.setAttributes(
-        supportUrl,
-        "unified-extensions-mb-quarantined-domain-learn-more"
-      );
-      supportUrl.setAttribute("data-l10n-attrs", "aria-label");
+      if (supportPageFluentId) {
+        document.l10n.setAttributes(supportUrl, supportPageFluentId);
+      }
       supportUrl.setAttribute("slot", "support-link");
 
       messageBar.append(supportUrl);

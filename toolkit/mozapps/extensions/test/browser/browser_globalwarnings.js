@@ -16,7 +16,7 @@ async function loadDetail(win, id) {
   await loaded;
 }
 
-function checkMessageShown(win, type, hasButton) {
+function checkMessageShown(win, type, hasButton, expectedSupportPage) {
   let stack = win.document.querySelector("global-warnings");
   is(stack.childElementCount, 1, "There is one message");
   let messageBar = stack.firstElementChild;
@@ -37,6 +37,18 @@ function checkMessageShown(win, type, hasButton) {
     let button = messageBar.querySelector("button");
     is_element_visible(button, "Button is visible");
     is(button.getAttribute("action"), type, "Button action is set");
+  }
+
+  const supportLinkEls = messageBar.supportLinkEls;
+  if (expectedSupportPage) {
+    Assert.equal(1, supportLinkEls.length, "Got Learn mode link");
+    Assert.equal(
+      expectedSupportPage,
+      supportLinkEls[0].supportPage,
+      "Learn more link points to expected destination"
+    );
+  } else {
+    Assert.equal(0, supportLinkEls.length, "No Learn mode links");
   }
 }
 
@@ -166,13 +178,16 @@ add_task(async function checkSafeMode() {
   globalWarnings.inSafeMode = true;
   globalWarnings.refresh();
 
+  const safeModeSupportsPage =
+    "diagnose-firefox-issues-using-troubleshoot-mode";
+
   // Check detail view.
   await loadDetail(win, id);
-  checkMessageShown(win, "safe-mode");
+  checkMessageShown(win, "safe-mode", false, safeModeSupportsPage);
 
   // Check other views.
   await switchView(win, "theme");
-  checkMessageShown(win, "safe-mode");
+  checkMessageShown(win, "safe-mode", false, safeModeSupportsPage);
   await switchView(win, "plugin");
   checkNoMessages(win);
 

@@ -659,6 +659,13 @@ add_task(async function test_safe_mode_notice() {
   is(bar.getAttribute("type"), "info", "Bar is informational notice");
   ok(!bar.hasAttribute("dismissable"), "Bar is not dismissable");
 
+  const supportLink = bar.querySelector("a");
+  is(
+    supportLink.getAttribute("support-page"),
+    "diagnose-firefox-issues-using-troubleshoot-mode",
+    "expected the correct support page ID"
+  );
+
   // We don't exactly care which empty state is shown, as the notice is
   // independent of the empty state. We just verify as a sanity check that the
   // panel is indeed empty, which is most realistic when users enter safe mode.
