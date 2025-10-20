@@ -1175,7 +1175,7 @@
     rhs: ValId
 
 - name: ArrayJoinResult
-  shared: false
+  shared: true
   transpile: true
   cost_estimate: 5
   args:

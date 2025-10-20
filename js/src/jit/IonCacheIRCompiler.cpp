@@ -2330,11 +2330,6 @@ bool IonCacheIRCompiler::emitLoadArgumentDynamicSlot(ValOperandId resultId,
   MOZ_CRASH("Call ICs not used in ion");
 }
 
-bool IonCacheIRCompiler::emitArrayJoinResult(ObjOperandId objId,
-                                             StringOperandId sepId) {
-  MOZ_CRASH("Call ICs not used in ion");
-}
-
 bool IonCacheIRCompiler::emitIsArrayResult(ValOperandId inputId) {
   MOZ_CRASH("Call ICs not used in ion");
 }
