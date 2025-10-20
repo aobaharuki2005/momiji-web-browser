@@ -87,12 +87,12 @@ NS_IMETHODIMP nsCookieRule::GetCookie(nsICookie** aCookie) {
   // Copy cookie and update expiry, creation and last accessed time.
   RefPtr<net::Cookie> cookieNative = mCookie->Clone();
 
-  int64_t currentTimeInUsec = PR_Now();
-  cookieNative->SetCreationTime(
-      net::Cookie::GenerateUniqueCreationTime(currentTimeInUsec));
-  cookieNative->SetLastAccessed(currentTimeInUsec);
-  cookieNative->SetExpiry((currentTimeInUsec / PR_USEC_PER_MSEC) +
-                          mExpiryRelative * PR_MSEC_PER_SEC);
+  int64_t currentTimeInUSec = PR_Now();
+  cookieNative->SetCreationTimeInUSec(
+      net::Cookie::GenerateUniqueCreationTimeInUSec(currentTimeInUSec));
+  cookieNative->SetLastAccessedInUSec(currentTimeInUSec);
+  cookieNative->SetExpiryInMSec((currentTimeInUSec / PR_USEC_PER_MSEC) +
+                                mExpiryRelative * PR_MSEC_PER_SEC);
 
   cookieNative.forget(aCookie);
   return NS_OK;

@@ -425,9 +425,9 @@ already_AddRefed<Cookie> CookieCommons::CreateCookieFromDocument(
       aCookieParser.CookieData(), cookiePrincipal->OriginAttributesRef());
   MOZ_ASSERT(cookie);
 
-  cookie->SetLastAccessed(currentTimeInUsec);
-  cookie->SetCreationTime(
-      Cookie::GenerateUniqueCreationTime(currentTimeInUsec));
+  cookie->SetLastAccessedInUSec(currentTimeInUsec);
+  cookie->SetCreationTimeInUSec(
+      Cookie::GenerateUniqueCreationTimeInUSec(currentTimeInUsec));
 
   aBaseDomain = baseDomain;
   aAttrs = cookiePrincipal->OriginAttributesRef();

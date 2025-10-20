@@ -910,7 +910,7 @@ void CookieStore::CookieStructToItem(const CookieStruct& aData,
   }
 
   if (!aData.isSession()) {
-    aItem->mExpires.Construct(aData.expiry());
+    aItem->mExpires.Construct(aData.expiryInMSec());
   } else {
     aItem->mExpires.Construct(nullptr);
   }

@@ -501,7 +501,7 @@ bool CookieParser::GetExpiry(CookieStruct& aCookieData,
                              const nsACString& aDateHeader, bool aFromHttp) {
   int64_t maxageCap = StaticPrefs::network_cookie_maxageCap();
   int64_t creationTimeInMSec =
-      aCookieData.creationTime() / int64_t(PR_USEC_PER_MSEC);
+      aCookieData.creationTimeInUSec() / int64_t(PR_USEC_PER_MSEC);
 
   /* Determine when the cookie should expire. This is done by taking the
    * difference between the server time and the time the server wants the cookie
@@ -515,12 +515,12 @@ bool CookieParser::GetExpiry(CookieStruct& aCookieData,
   int64_t maxage = 0;
   if (ParseMaxAgeAttribute(aMaxage, &maxage)) {
     if (maxage == INT64_MIN) {
-      aCookieData.expiry() = maxage;
+      aCookieData.expiryInMSec() = maxage;
     } else {
       CheckedInt<int64_t> value(creationTimeInMSec);
       value += (maxageCap ? std::min(maxage, maxageCap) : maxage) * 1000;
 
-      aCookieData.expiry() = value.isValid() ? value.value() : INT64_MAX;
+      aCookieData.expiryInMSec() = value.isValid() ? value.value() : INT64_MAX;
     }
 
     return false;
@@ -561,7 +561,7 @@ bool CookieParser::GetExpiry(CookieStruct& aCookieData,
     // time be set less than current time and more than server time.
     // The cookie item have to be used to the expired cookie.
 
-    aCookieData.expiry() =
+    aCookieData.expiryInMSec() =
         CookieCommons::MaybeCapExpiry(creationTimeInMSec, expiresInMSec);
     return false;
   }
@@ -661,9 +661,9 @@ void CookieParser::Parse(const nsACString& aBaseDomain, bool aRequireHostMatch,
   MOZ_ASSERT(!mValidation);
 
   // init expiryTime such that session cookies won't prematurely expire
-  mCookieData.expiry() = INT64_MAX;
-  mCookieData.creationTime() =
-      Cookie::GenerateUniqueCreationTime(aCurrentTimeInUSec);
+  mCookieData.expiryInMSec() = INT64_MAX;
+  mCookieData.creationTimeInUSec() =
+      Cookie::GenerateUniqueCreationTimeInUSec(aCurrentTimeInUSec);
 
   mCookieData.schemeMap() = CookieCommons::URIToSchemeType(mHostURI);
 

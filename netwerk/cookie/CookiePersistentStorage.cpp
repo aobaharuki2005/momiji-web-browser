@@ -35,9 +35,9 @@ constexpr auto IDX_NAME = 0;
 constexpr auto IDX_VALUE = 1;
 constexpr auto IDX_HOST = 2;
 constexpr auto IDX_PATH = 3;
-constexpr auto IDX_EXPIRY = 4;
-constexpr auto IDX_LAST_ACCESSED = 5;
-constexpr auto IDX_CREATION_TIME = 6;
+constexpr auto IDX_EXPIRY_INMSEC = 4;
+constexpr auto IDX_LAST_ACCESSED_INUSEC = 5;
+constexpr auto IDX_CREATION_TIME_INUSEC = 6;
 constexpr auto IDX_SECURE = 7;
 constexpr auto IDX_HTTPONLY = 8;
 constexpr auto IDX_ORIGIN_ATTRIBUTES = 9;
@@ -82,13 +82,15 @@ void BindCookieParameters(mozIStorageBindingParamsArray* aParamsArray,
   rv = params->BindUTF8StringByName("path"_ns, aCookie->Path());
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  rv = params->BindInt64ByName("expiry"_ns, aCookie->Expiry());
+  rv = params->BindInt64ByName("expiry"_ns, aCookie->ExpiryInMSec());
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  rv = params->BindInt64ByName("lastAccessed"_ns, aCookie->LastAccessed());
+  rv =
+      params->BindInt64ByName("lastAccessed"_ns, aCookie->LastAccessedInUSec());
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  rv = params->BindInt64ByName("creationTime"_ns, aCookie->CreationTime());
+  rv =
+      params->BindInt64ByName("creationTime"_ns, aCookie->CreationTimeInUSec());
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   rv = params->BindInt32ByName("isSecure"_ns, aCookie->IsSecure());
@@ -784,12 +786,12 @@ void CookiePersistentStorage::StaleCookies(
 }
 
 void CookiePersistentStorage::UpdateCookieInList(
-    Cookie* aCookie, int64_t aLastAccessed,
+    Cookie* aCookie, int64_t aLastAccessedInUSec,
     mozIStorageBindingParamsArray* aParamsArray) {
   MOZ_ASSERT(aCookie);
 
-  // udpate the lastAccessed timestamp
-  aCookie->SetLastAccessed(aLastAccessed);
+  // udpate the lastAccessedInUSec timestamp
+  aCookie->SetLastAccessedInUSec(aLastAccessedInUSec);
 
   // if it's a non-session cookie, update it in the db too
   if (!aCookie->IsSession() && aParamsArray) {
@@ -799,7 +801,7 @@ void CookiePersistentStorage::UpdateCookieInList(
 
     // Bind our parameters.
     DebugOnly<nsresult> rv =
-        params->BindInt64ByName("lastAccessed"_ns, aLastAccessed);
+        params->BindInt64ByName("lastAccessed"_ns, aLastAccessedInUSec);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     rv = params->BindUTF8StringByName("name"_ns, aCookie->Name());
@@ -1920,9 +1922,9 @@ UniquePtr<CookieStruct> CookiePersistentStorage::GetCookieFromRow(
   rv = aRow->GetUTF8String(IDX_PATH, path);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  int64_t expiry = aRow->AsInt64(IDX_EXPIRY);
-  int64_t lastAccessed = aRow->AsInt64(IDX_LAST_ACCESSED);
-  int64_t creationTime = aRow->AsInt64(IDX_CREATION_TIME);
+  int64_t expiryInMSec = aRow->AsInt64(IDX_EXPIRY_INMSEC);
+  int64_t lastAccessedInUSec = aRow->AsInt64(IDX_LAST_ACCESSED_INUSEC);
+  int64_t creationTimeInUSec = aRow->AsInt64(IDX_CREATION_TIME_INUSEC);
   bool isSecure = 0 != aRow->AsInt32(IDX_SECURE);
   bool isHttpOnly = 0 != aRow->AsInt32(IDX_HTTPONLY);
   int32_t sameSite = aRow->AsInt32(IDX_SAME_SITE);
@@ -1932,8 +1934,9 @@ UniquePtr<CookieStruct> CookiePersistentStorage::GetCookieFromRow(
 
   // Create a new constCookie and assign the data.
   return MakeUnique<CookieStruct>(
-      name, value, host, path, expiry, lastAccessed, creationTime, isHttpOnly,
-      false, isSecure, isPartitionedAttributeSet, sameSite,
+      name, value, host, path, expiryInMSec, lastAccessedInUSec,
+      creationTimeInUSec, isHttpOnly, false, isSecure,
+      isPartitionedAttributeSet, sameSite,
       static_cast<nsICookie::schemeType>(schemeMap));
 }
 
@@ -2029,7 +2032,7 @@ void CookiePersistentStorage::InitDBConn() {
 
     // CreateValidated fixes up the creation and lastAccessed times.
     // If the DB is corrupted and the timestaps are far away in the future
-    // we don't want the creation timestamp to update gLastCreationTime
+    // we don't want the creation timestamp to update gLastCreationTimeInUSec
     // as that would contaminate all the next creation times.
     // We fix up these dates to not be later than the current time.
     // The downside is that if the user sets the date far away in the past
@@ -2414,7 +2417,7 @@ void CookiePersistentStorage::RecordValidationTelemetry() {
           MOZ_ASSERT(newCookie);
 
           newCookie->SetSameSite(nsICookie::SAMESITE_UNSET);
-          newCookie->SetCreationTime(cookie->CreationTime());
+          newCookie->SetCreationTimeInUSec(cookie->CreationTimeInUSec());
 
           listToAdd.AppendElement(CookieToAddOrRemove{
               entry.mBaseDomain, entry.mOriginAttributes, newCookie});
@@ -2428,9 +2431,9 @@ void CookiePersistentStorage::RecordValidationTelemetry() {
 
           int64_t currentTimeInMSec = PR_Now() / PR_USEC_PER_MSEC;
 
-          newCookie->SetExpiry(CookieCommons::MaybeCapExpiry(currentTimeInMSec,
-                                                             cookie->Expiry()));
-          newCookie->SetCreationTime(cookie->CreationTime());
+          newCookie->SetExpiryInMSec(CookieCommons::MaybeCapExpiry(
+              currentTimeInMSec, cookie->ExpiryInMSec()));
+          newCookie->SetCreationTimeInUSec(cookie->CreationTimeInUSec());
 
           listToAdd.AppendElement(CookieToAddOrRemove{
               entry.mBaseDomain, entry.mOriginAttributes, newCookie});
@@ -2455,7 +2458,7 @@ void CookiePersistentStorage::RecordValidationTelemetry() {
 
   for (CookieToAddOrRemove& data : listToAdd) {
     AddCookie(nullptr, data.mBaseDomain, data.mOriginAttributes, data.mCookie,
-              data.mCookie->CreationTime(), nullptr, VoidCString(), true,
+              data.mCookie->CreationTimeInUSec(), nullptr, VoidCString(), true,
               !data.mOriginAttributes.mPartitionKey.IsEmpty(), nullptr,
               nullptr);
   }
