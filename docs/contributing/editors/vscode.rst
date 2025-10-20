@@ -54,6 +54,13 @@ integration.
    needed by `clangd` server will not be refreshed. This is a known `bug <https://github.com/clangd/vscode-clangd/issues/42>`__
    in `clangd-vscode` extension
 
+.. note::
+
+   The combination of rust-analyzer and clangd can be memory-intensive with the Firefox codebase.
+   If you experience OOM issues or hangs, consider increasing swap space (e.g., to 16 GiB) or
+   closing memory-heavy applications. On Linux, consider using `EarlyOOM <https://github.com/rfjakob/earlyoom>`__
+   to mitigate the impact on your system.
+
 Ignore Files in Mercurial Repositories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
