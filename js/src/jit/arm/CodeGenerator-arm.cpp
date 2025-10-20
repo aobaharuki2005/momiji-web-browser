@@ -2366,24 +2366,7 @@ void CodeGenerator::visitCopySignF(LCopySignF* ins) {
   FloatRegister rhs = ToFloatRegister(ins->rhs());
   FloatRegister output = ToFloatRegister(ins->output());
 
-  Register lhsi = ToRegister(ins->temp0());
-  Register rhsi = ToRegister(ins->temp1());
-
-  masm.ma_vxfer(lhs, lhsi);
-  masm.ma_vxfer(rhs, rhsi);
-
-  ScratchRegisterScope scratch(masm);
-
-  // Clear lhs's sign.
-  masm.ma_and(Imm32(INT32_MAX), lhsi, lhsi, scratch);
-
-  // Keep rhs's sign.
-  masm.ma_and(Imm32(INT32_MIN), rhsi, rhsi, scratch);
-
-  // Combine.
-  masm.ma_orr(lhsi, rhsi, rhsi);
-
-  masm.ma_vxfer(rhsi, output);
+  masm.copySignFloat32(lhs, rhs, output);
 }
 
 void CodeGenerator::visitCopySignD(LCopySignD* ins) {
@@ -2391,30 +2374,7 @@ void CodeGenerator::visitCopySignD(LCopySignD* ins) {
   FloatRegister rhs = ToFloatRegister(ins->rhs());
   FloatRegister output = ToFloatRegister(ins->output());
 
-  Register lhsi = ToRegister(ins->temp0());
-  Register rhsi = ToRegister(ins->temp1());
-
-  // Manipulate high words of double inputs.
-  masm.as_vxfer(lhsi, InvalidReg, lhs, Assembler::FloatToCore,
-                Assembler::Always, 1);
-  masm.as_vxfer(rhsi, InvalidReg, rhs, Assembler::FloatToCore,
-                Assembler::Always, 1);
-
-  ScratchRegisterScope scratch(masm);
-
-  // Clear lhs's sign.
-  masm.ma_and(Imm32(INT32_MAX), lhsi, lhsi, scratch);
-
-  // Keep rhs's sign.
-  masm.ma_and(Imm32(INT32_MIN), rhsi, rhsi, scratch);
-
-  // Combine.
-  masm.ma_orr(lhsi, rhsi, rhsi);
-
-  // Reconstruct the output.
-  masm.as_vxfer(lhsi, InvalidReg, lhs, Assembler::FloatToCore,
-                Assembler::Always, 0);
-  masm.ma_vxfer(lhsi, rhsi, output);
+  masm.copySignDouble(lhs, rhs, output);
 }
 
 void CodeGenerator::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir) {

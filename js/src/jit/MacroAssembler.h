@@ -1328,7 +1328,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void copySignDouble(FloatRegister lhs, FloatRegister rhs,
                       FloatRegister output) PER_SHARED_ARCH;
   void copySignFloat32(FloatRegister lhs, FloatRegister rhs,
-                       FloatRegister output) DEFINED_ON(x86_shared, arm64);
+                       FloatRegister output) DEFINED_ON(arm, arm64, x86_shared);
 
   // Returns a random double in range [0, 1) in |dest|. The |rng| register must
   // hold a pointer to a mozilla::non_crypto::XorShift128PlusRNG.

@@ -1145,9 +1145,6 @@ void LIRGenerator::visitCopySign(MCopySign* ins) {
     lir = new (alloc()) LCopySignF();
   }
 
-  lir->setTemp(0, temp());
-  lir->setTemp(1, temp());
-
   lowerForFPU(lir, ins, lhs, rhs);
 }
 
