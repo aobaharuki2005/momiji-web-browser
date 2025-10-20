@@ -50,6 +50,18 @@ CanonicalName::ToSanitizerElementNamespaceWithAttributes(
   return result;
 }
 
+std::ostream& operator<<(std::ostream& aStream, const CanonicalName& aName) {
+  nsAutoCString localName;
+  aName.mLocalName->ToUTF8String(localName);
+  aStream << '"' << localName << '"';
+  if (aName.mNamespace) {
+    nsAutoCString nameSpace;
+    aName.mNamespace->ToUTF8String(nameSpace);
+    return aStream << " (namespace: \"" << nameSpace << "\")";
+  }
+  return aStream << " (namespace: null)";
+}
+
 bool CanonicalElementAttributes::Equals(
     const CanonicalElementAttributes& aOther) const {
   if (mAttributes.isSome() != aOther.mAttributes.isSome() ||

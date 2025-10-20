@@ -5,6 +5,7 @@
 #ifndef mozilla_dom_SanitizerTypes_h
 #define mozilla_dom_SanitizerTypes_h
 
+#include "fmt/format.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/SanitizerBinding.h"
 #include "nsHashtablesFwd.h"
@@ -54,6 +55,9 @@ class CanonicalName : public PLDHashEntryHdr {
   CanonicalName Clone() const { return CanonicalName(mLocalName, mNamespace); }
 
  protected:
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const CanonicalName& aName);
+
   template <typename SanitizerName>
   void SetSanitizerName(SanitizerName& aName) const;
 
@@ -61,6 +65,8 @@ class CanonicalName : public PLDHashEntryHdr {
   // A "null" namespace is represented by the nullptr.
   RefPtr<nsAtom> mNamespace;
 };
+
+std::ostream& operator<<(std::ostream& aStream, const CanonicalName& aName);
 
 using CanonicalNameSet = nsTHashSet<CanonicalName>;
 
@@ -153,5 +159,9 @@ class MOZ_STACK_CLASS SanitizerComparator final {
 };
 
 }  // namespace mozilla::dom::sanitizer
+
+template <>
+struct fmt::formatter<mozilla::dom::sanitizer::CanonicalName>
+    : ostream_formatter {};
 
 #endif

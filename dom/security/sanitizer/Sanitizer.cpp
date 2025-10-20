@@ -16,6 +16,7 @@
 #include "mozilla/dom/SanitizerBinding.h"
 #include "mozilla/dom/SanitizerDefaultConfig.h"
 #include "nsContentUtils.h"
+#include "nsFmtString.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIContentInlines.h"
 #include "nsNameSpaceManager.h"
@@ -289,10 +290,12 @@ static CanonicalElementAttributes CanonicalizeElementAttributes(
       for (const auto& attribute : elem.mAttributes.Value()) {
         // Step 2.1.2.1. Append the result of canonicalize a sanitizer attribute
         // with attribute to attributes.
-        if (!attributes.EnsureInserted(CanonicalizeAttribute(attribute))) {
+        CanonicalName canonicalAttr = CanonicalizeAttribute(attribute);
+        if (!attributes.EnsureInserted(canonicalAttr)) {
           if (aErrorMsg) {
-            aErrorMsg->AssignLiteral(
-                "Duplicate attribute in local 'attributes'");
+            aErrorMsg->Assign(nsFmtCString(
+                FMT_STRING("Duplicate attribute {} in 'attributes' of {}."),
+                canonicalAttr, CanonicalizeElement(aElement)));
             return CanonicalElementAttributes();
           }
         }
@@ -311,10 +314,13 @@ static CanonicalElementAttributes CanonicalizeElementAttributes(
       for (const auto& attribute : elem.mRemoveAttributes.Value()) {
         // Step 2.2.2.1. Append the result of canonicalize a sanitizer attribute
         // with attribute to attributes.
-        if (!attributes.EnsureInserted(CanonicalizeAttribute(attribute))) {
+        CanonicalName canonicalAttr = CanonicalizeAttribute(attribute);
+        if (!attributes.EnsureInserted(canonicalAttr)) {
           if (aErrorMsg) {
-            aErrorMsg->AssignLiteral(
-                "Duplicate attribute in local 'removeAttributes'");
+            aErrorMsg->Assign(nsFmtCString(
+                FMT_STRING(
+                    "Duplicate attribute {} in 'removeAttributes' of {}."),
+                canonicalAttr, CanonicalizeElement(aElement)));
             return CanonicalElementAttributes();
           }
         }
@@ -369,16 +375,18 @@ void Sanitizer::CanonicalizeConfiguration(const SanitizerConfig& aConfig,
     for (const auto& element : aConfig.mElements.Value()) {
       // Step 3.3.2.1. Append the result of canonicalize a sanitizer element
       // with attributes element to elements.
-
       CanonicalName elementName = CanonicalizeElement(element);
       if (elements.Contains(elementName)) {
-        return aRv.ThrowTypeError("Duplicate element in 'elements'");
+        aRv.ThrowTypeError(nsFmtCString(
+            FMT_STRING("Duplicate element {} in 'elements'."), elementName));
+        return;
       }
 
       CanonicalElementAttributes elementAttributes =
           CanonicalizeElementAttributes(element, &errorMsg);
       if (!errorMsg.IsEmpty()) {
-        return aRv.ThrowTypeError(errorMsg);
+        aRv.ThrowTypeError(errorMsg);
+        return;
       }
 
       elements.InsertOrUpdate(elementName, std::move(elementAttributes));
@@ -397,8 +405,11 @@ void Sanitizer::CanonicalizeConfiguration(const SanitizerConfig& aConfig,
     for (const auto& element : aConfig.mRemoveElements.Value()) {
       // Step 4.2.1. Append the result of canonicalize a sanitizer element
       // element to elements.
-      if (!elements.EnsureInserted(CanonicalizeElement(element))) {
-        aRv.ThrowTypeError("Duplicate element in 'removeElements'");
+      CanonicalName canonical = CanonicalizeElement(element);
+      if (!elements.EnsureInserted(canonical)) {
+        aRv.ThrowTypeError(nsFmtCString(
+            FMT_STRING("Duplicate element {} in 'removeElements'."),
+            canonical));
         return;
       }
     }
@@ -417,9 +428,12 @@ void Sanitizer::CanonicalizeConfiguration(const SanitizerConfig& aConfig,
     for (const auto& element : aConfig.mReplaceWithChildrenElements.Value()) {
       // Step 5.2.1. Append the result of canonicalize a sanitizer element
       // element to elements.
-      if (!elements.EnsureInserted(CanonicalizeElement(element))) {
-        aRv.ThrowTypeError(
-            "Duplicate element in 'replaceWithChildrenElements'");
+      CanonicalName canonical = CanonicalizeElement(element);
+      if (!elements.EnsureInserted(canonical)) {
+        aRv.ThrowTypeError(nsFmtCString(
+            FMT_STRING(
+                "Duplicate element {} in 'replaceWithChildrenElements'."),
+            canonical));
         return;
       }
     }
@@ -437,8 +451,10 @@ void Sanitizer::CanonicalizeConfiguration(const SanitizerConfig& aConfig,
     for (const auto& attribute : aConfig.mAttributes.Value()) {
       // Step 6.2.1. Append the result of canonicalize a sanitizer attribute
       // attribute to attributes.
-      if (!attributes.EnsureInserted(CanonicalizeAttribute(attribute))) {
-        aRv.ThrowTypeError("Duplicate attribute in 'attributes'");
+      CanonicalName canonical = CanonicalizeAttribute(attribute);
+      if (!attributes.EnsureInserted(canonical)) {
+        aRv.ThrowTypeError(nsFmtCString(
+            FMT_STRING("Duplicate attribute {} in 'attributes'."), canonical));
         return;
       }
     }
@@ -456,8 +472,11 @@ void Sanitizer::CanonicalizeConfiguration(const SanitizerConfig& aConfig,
     for (const auto& attribute : aConfig.mRemoveAttributes.Value()) {
       // Step 7.2.2. Append the result of canonicalize a sanitizer attribute
       // attribute to attributes.
-      if (!attributes.EnsureInserted(CanonicalizeAttribute(attribute))) {
-        aRv.ThrowTypeError("Duplicate attribute in 'removeAttributes'");
+      CanonicalName canonical = CanonicalizeAttribute(attribute);
+      if (!attributes.EnsureInserted(canonical)) {
+        aRv.ThrowTypeError(nsFmtCString(
+            FMT_STRING("Duplicate attribute {} in 'removeAttributes'."),
+            canonical));
         return;
       }
     }
@@ -494,7 +513,7 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
              "Must have either due to CanonicalizeConfiguration");
   if (mElements && mRemoveElements) {
     aRv.ThrowTypeError(
-        "'elements' and 'removeElements' are not allowed at the same time");
+        "'elements' and 'removeElements' are not allowed at the same time.");
     return;
   }
 
@@ -505,7 +524,7 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
   if (mAttributes && mRemoveAttributes) {
     aRv.ThrowTypeError(
         "'attributes' and 'removeAttributes' are not allowed at the same "
-        "time");
+        "time.");
     return;
   }
 
@@ -525,8 +544,9 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
     for (const CanonicalName& name : mElements->Keys()) {
       if (mReplaceWithChildrenElements->Contains(name)) {
         aRv.ThrowTypeError(
-            "Element can't be in both 'elements' and "
-            "'replaceWithChildrenElements'");
+            nsFmtCString(FMT_STRING("Element {} can't be in both 'elements' "
+                                    "and 'replaceWithChildrenElements'."),
+                         name));
         return;
       }
     }
@@ -538,9 +558,10 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
   if (mRemoveElements && mReplaceWithChildrenElements) {
     for (const CanonicalName& name : *mRemoveElements) {
       if (mReplaceWithChildrenElements->Contains(name)) {
-        aRv.ThrowTypeError(
-            "Element can't be in both 'removeElements' and "
-            "'replaceWithChildrenElements'");
+        aRv.ThrowTypeError(nsFmtCString(
+            FMT_STRING("Element {} can't be in both 'removeElements' and "
+                       "'replaceWithChildrenElements'."),
+            name));
         return;
       }
     }
@@ -562,8 +583,11 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
         if (elemAttributes.mAttributes) {
           for (const CanonicalName& name : *elemAttributes.mAttributes) {
             if (mAttributes->Contains(name)) {
-              aRv.ThrowTypeError(
-                  "Same attribute both in local and global 'attributes'");
+              aRv.ThrowTypeError(nsFmtCString(
+                  FMT_STRING(
+                      "Attribute {} can't be part of both the 'attributes' of "
+                      "the element {} and the global 'attributes'."),
+                  name, entry.GetKey()));
               return;
             }
           }
@@ -574,9 +598,11 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
         if (elemAttributes.mRemoveAttributes) {
           for (const CanonicalName& name : *elemAttributes.mRemoveAttributes) {
             if (!mAttributes->Contains(name)) {
-              aRv.ThrowTypeError(
-                  "Attribute in local 'removeAttributes' but not in global "
-                  "'attributes'");
+              aRv.ThrowTypeError(nsFmtCString(
+                  FMT_STRING(
+                      "Attribute {} can't be in 'removeAttributes' of the "
+                      "element {} but not in the global 'attributes'."),
+                  name, entry.GetKey()));
               return;
             }
           }
@@ -592,9 +618,11 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
           // data attribute.
           for (const CanonicalName& name : *elemAttributes.mAttributes) {
             if (name.IsDataAttribute()) {
-              aRv.ThrowTypeError(
-                  "Local 'attributes' contains a data attribute, which is "
-                  "redundant with 'dataAttributes' being true");
+              aRv.ThrowTypeError(nsFmtCString(
+                  FMT_STRING(
+                      "Data attribute {} in the 'attributes' of the element {} "
+                      "is redundant with 'dataAttributes' being true."),
+                  name, entry.GetKey()));
               return;
             }
           }
@@ -611,9 +639,10 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
       // attribute.
       for (const CanonicalName& name : *mAttributes) {
         if (name.IsDataAttribute()) {
-          aRv.ThrowTypeError(
-              "Global 'attributes' contains a data attribute, which is "
-              "redundant with 'dataAttributes' being true");
+          aRv.ThrowTypeError(nsFmtCString(
+              FMT_STRING("Data attribute {} in the global 'attributes' is "
+                         "redundant with 'dataAttributes' being true."),
+              name));
           return;
         }
       }
@@ -633,9 +662,11 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
         if (elemAttributes.mAttributes) {
           for (const CanonicalName& name : *elemAttributes.mAttributes) {
             if (mRemoveAttributes->Contains(name)) {
-              aRv.ThrowTypeError(
-                  "Same attribute both in local 'attributes' and global "
-                  "'removeAttributes'.");
+              aRv.ThrowTypeError(nsFmtCString(
+                  FMT_STRING(
+                      "Attribute {} can't be in 'attributes' of the element {} "
+                      "while in the global 'removeAttributes'."),
+                  name, entry.GetKey()));
               return;
             }
           }
@@ -646,9 +677,11 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
         if (elemAttributes.mRemoveAttributes) {
           for (const CanonicalName& name : *elemAttributes.mRemoveAttributes) {
             if (mRemoveAttributes->Contains(name)) {
-              aRv.ThrowTypeError(
-                  "Same attribute both in local and global "
-                  "'removeAttributes'.");
+              aRv.ThrowTypeError(nsFmtCString(
+                  FMT_STRING("Attribute {} can't be part of both the "
+                             "'removeAttributes' of the element {} and the "
+                             "global 'removeAttributes'."),
+                  name, entry.GetKey()));
               return;
             }
           }
@@ -660,7 +693,7 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
     if (mDataAttributes) {
       aRv.ThrowTypeError(
           "'removeAttributes' and 'dataAttributes' aren't allowed at the "
-          "same time");
+          "same time.");
     }
   }
 }
