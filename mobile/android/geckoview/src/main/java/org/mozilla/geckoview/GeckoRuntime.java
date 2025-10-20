@@ -471,6 +471,10 @@ public final class GeckoRuntime implements Parcelable {
       flags |= GeckoThread.FLAG_CONTENT_ISOLATED;
     }
 
+    if (settings.getAppZygoteProcessEnabled()) {
+      flags |= GeckoThread.FLAG_CONTENT_ISOLATED_HAS_ZYGOTE;
+    }
+
     final Class<?> crashHandler = settings.getCrashHandler();
     if (crashHandler != null) {
       try {

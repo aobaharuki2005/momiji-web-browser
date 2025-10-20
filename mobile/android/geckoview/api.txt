@@ -995,6 +995,7 @@ package org.mozilla.geckoview {
   @AnyThread public final class GeckoRuntimeSettings extends RuntimeSettings {
     method public boolean getAboutConfigEnabled();
     method public int getAllowInsecureConnections();
+    method public boolean getAppZygoteProcessEnabled();
     method @NonNull public String[] getArguments();
     method public boolean getAutomaticFontSizeAdjustment();
     method @NonNull public String getBannedPorts();
@@ -1131,6 +1132,7 @@ package org.mozilla.geckoview {
     ctor public Builder();
     method @NonNull public GeckoRuntimeSettings.Builder aboutConfigEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder allowInsecureConnections(int);
+    method @NonNull public GeckoRuntimeSettings.Builder appZygoteProcessEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder arguments(@NonNull String[]);
     method @NonNull public GeckoRuntimeSettings.Builder automaticFontSizeAdjustment(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder configFilePath(@Nullable String);

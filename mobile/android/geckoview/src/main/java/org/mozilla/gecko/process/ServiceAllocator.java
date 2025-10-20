@@ -214,7 +214,9 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
     }
 
     public boolean isContent() {
-      return mType == GeckoProcessType.CONTENT || mType == GeckoProcessType.CONTENT_ISOLATED;
+      return mType == GeckoProcessType.CONTENT
+          || mType == GeckoProcessType.CONTENT_ISOLATED
+          || mType == GeckoProcessType.CONTENT_ISOLATED_WITH_ZYGOTE;
     }
 
     public GeckoProcessType getType() {
@@ -530,7 +532,7 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
   @SuppressLint("NewApi") // Linter cannot follow our hasQApis() checks
   private String allocate(@NonNull final GeckoProcessType type) {
     XPCOMEventTarget.assertOnLauncherThread();
-    if (type != GeckoProcessType.CONTENT && type != GeckoProcessType.CONTENT_ISOLATED) {
+    if (!GeckoProcessManager.isContent(type)) {
       // No unique id necessary
       return null;
     }
@@ -538,7 +540,9 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
     // Lazy initialization of mContentAllocPolicy to ensure that it is constructed on the
     // launcher thread.
     if (mContentAllocPolicy == null) {
-      if (hasQApis() && type == GeckoProcessType.CONTENT_ISOLATED) {
+      if (hasQApis()
+          && (type == GeckoProcessType.CONTENT_ISOLATED
+              || type == GeckoProcessType.CONTENT_ISOLATED_WITH_ZYGOTE)) {
         mContentAllocPolicy = new IsolatedContentPolicy();
       } else {
         mContentAllocPolicy = new DefaultContentPolicy();

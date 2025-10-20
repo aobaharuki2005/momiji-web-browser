@@ -42,6 +42,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
   private final String mInstanceId;
 
   private boolean mIsolatedProcess = false;
+  private boolean mAppZygote = false;
 
   public static GeckoProcessManager getInstance() {
     return INSTANCE;
@@ -128,9 +129,8 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         throw new RuntimeException("Invalid PID");
       }
 
-      if (type == GeckoProcessType.CONTENT
-          && GeckoProcessManager.getInstance().isIsolatedProcessEnabled()) {
-        mType = GeckoProcessType.CONTENT_ISOLATED;
+      if (type == GeckoProcessType.CONTENT) {
+        mType = GeckoProcessType.determineContentProcessType();
       } else {
         mType = type;
       }
@@ -309,8 +309,11 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     }
   }
 
-  private static boolean isContent(final GeckoProcessType type) {
-    return type == GeckoProcessType.CONTENT || type == GeckoProcessType.CONTENT_ISOLATED;
+  /** package */
+  static boolean isContent(final GeckoProcessType type) {
+    return type == GeckoProcessType.CONTENT
+        || type == GeckoProcessType.CONTENT_ISOLATED
+        || type == GeckoProcessType.CONTENT_ISOLATED_WITH_ZYGOTE;
   }
 
   private static class NonContentConnection extends ChildConnection {
@@ -426,12 +429,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     public ContentConnection(
         @NonNull final ServiceAllocator allocator, @NonNull final PriorityLevel initialPriority) {
-      super(
-          allocator,
-          GeckoProcessManager.getInstance().isIsolatedProcessEnabled()
-              ? GeckoProcessType.CONTENT_ISOLATED
-              : GeckoProcessType.CONTENT,
-          initialPriority);
+      super(allocator, GeckoProcessType.determineContentProcessType(), initialPriority);
     }
 
     @Override
@@ -715,9 +713,19 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     mIsolatedProcess = enabled;
   }
 
+  /** Sets whether the content service runs on isolated process with app Zygote preloading. */
+  public void setAppZygoteEnabled(final boolean enabled) {
+    mAppZygote = enabled;
+  }
+
   /** true if the content service runs on isolated process. */
   public boolean isIsolatedProcessEnabled() {
     return mIsolatedProcess;
+  }
+
+  /** true if app Zygote preloading is enabled. */
+  public boolean isAppZygoteEnabled() {
+    return mAppZygote;
   }
 
   public void crashChild(@NonNull final Selector selector) {
