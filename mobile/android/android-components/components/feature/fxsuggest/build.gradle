@@ -24,6 +24,7 @@ dependencies {
     implementation project(':components:concept-engine')
     implementation project(':components:feature-session')
     implementation project(':components:service-nimbus')
+    implementation project(':components:support-appservices')
     implementation project(':components:support-base')
     implementation project(':components:support-remotesettings')
     implementation project(':components:support-ktx')
