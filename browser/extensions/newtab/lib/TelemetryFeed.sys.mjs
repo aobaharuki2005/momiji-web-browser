@@ -282,9 +282,7 @@ export class TelemetryFeed {
   }
 
   browserOpenNewtabStart() {
-    // This shim can be removed once Firefox 144 makes it to the release
-    // channel.
-    let now = ChromeUtils.now?.() || Cu.now();
+    let now = ChromeUtils.now();
     this._browserOpenNewtabStart = Math.round(this.processStartTs + now);
 
     ChromeUtils.addProfilerMarker(
@@ -524,9 +522,7 @@ export class TelemetryFeed {
     }
 
     if (session.perf.visibility_event_rcvd_ts) {
-      // @backward-compat { version 144 } This newtab train-hop compatibility
-      // shim can be removed once Firefox 144 makes it to the release channel.
-      let absNow = this.processStartTs + (ChromeUtils.now?.() || Cu.now());
+      let absNow = this.processStartTs + ChromeUtils.now();
       session.session_duration = Math.round(
         absNow - session.perf.visibility_event_rcvd_ts
       );
