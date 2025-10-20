@@ -1006,37 +1006,6 @@ export var PlacesUIUtils = {
   },
 
   /**
-   * WARNING TO ADDON AUTHORS: DO NOT USE THIS METHOD. IT'S LIKELY TO BE REMOVED IN A
-   * FUTURE RELEASE.
-   *
-   * Checks if a place: href represents a folder shortcut.
-   *
-   * @param {string} queryString
-   *        the query string to check (a place: href)
-   * @returns {boolean} whether or not queryString represents a folder shortcut.
-   * @throws if queryString is malformed.
-   */
-  isFolderShortcutQueryString(queryString) {
-    // Based on GetSimpleBookmarksQueryFolder in nsNavHistory.cpp.
-
-    let query = {},
-      options = {};
-    lazy.PlacesUtils.history.queryStringToQuery(queryString, query, options);
-    query = query.value;
-    options = options.value;
-    return (
-      query.folderCount == 1 &&
-      !query.hasBeginTime &&
-      !query.hasEndTime &&
-      !query.hasDomain &&
-      !query.hasURI &&
-      !query.hasSearchTerms &&
-      !query.tags.length == 0 &&
-      options.maxResults == 0
-    );
-  },
-
-  /**
    * Helpers for consumers of editBookmarkOverlay which don't have a node as their input.
    *
    * Given a bookmark object for either a url bookmark or a folder, returned by
@@ -1073,11 +1042,7 @@ export var PlacesUIUtils = {
         }
 
         if (/^place:/.test(this.uri)) {
-          if (this.isFolderShortcutQueryString(this.uri)) {
-            return Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT;
-          }
-
-          return Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
+          throw new Error("Place URIs are not supported.");
         }
 
         return Ci.nsINavHistoryResultNode.RESULT_TYPE_URI;
