@@ -2,6 +2,431 @@
   "data": [
     {
       "stash": {
+        "blocked": [
+          "{e93456f8-d7b2-4bbc-a0fa-341a3aa4eb4f}:12.8.1",
+          "{43c5e417-1039-4dc1-ae63-4b0db51b7ee4}:12.23.1",
+          "{813127d9-1fb2-4244-9502-5064bd53388e}:12.8.1",
+          "{161cd9df-6813-41e7-85c4-f871fb420b19}:12.8.1",
+          "{d1e9aca0-ceb1-4677-82b5-a42ab9d73a3a}:12.8.1",
+          "{4a3aa6bb-5c93-4509-8e65-3624a1214177}:12.8.1",
+          "{1b595676-73a5-48a8-8deb-bdaf4afe3c12}:12.8.1",
+          "inject-script@example.com:1.0",
+          "inject-script@example.com:1.0.1",
+          "{0563a5f1-9b53-4263-8bfb-10ac75de09fe}:1.0",
+          "{0563a5f1-9b53-4263-8bfb-10ac75de09fe}:1.0.5",
+          "slabis_51@gmail.com:1.2.0"
+        ],
+        "unblocked": [],
+        "softblocked": [
+          "myaddon-2025@example.com:3.1.6",
+          "{f16600be-0039-4687-9050-5c79706e2529}:0.1",
+          "OnYourOwnSample@sample.com:1.2.1.0",
+          "OnYourOwnSample@sample.com:1.2.0.1beta2",
+          "OnYourOwnSample@sample.com:1.2.0.1beta3",
+          "smart-profile-filler-pro@gmail.com:1.0",
+          "{c4a7977e-dab6-46c3-bf63-876d8f42df84}:1.0",
+          "DOI_ISBN_Library@nriag.sci.eg:3.0.1",
+          "info@mehmetdilekci.com:23.12"
+        ]
+      },
+      "schema": 1760926549550,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760963705981,
+      "id": "18d981c3-a84f-4b34-b1f7-1764b3609fdd",
+      "last_modified": 1760963795296
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "mobilede-extractor-private@rahimic.dev:1.0.2",
+          "{5bad2c22-322f-4c27-b370-d1fb336a98af}:1.0",
+          "{0c6db96f-d8be-4c3d-ae36-be08c58aae0c}:1.1",
+          "capsolver@example.com:1.16.3",
+          "enhancer@goldenfox.com:17.3.4"
+        ]
+      },
+      "schema": 1760898979923,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760920505735,
+      "id": "9be07f2e-11fb-4304-ac81-1ab110d5d72d",
+      "last_modified": 1760920595591
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "{fb18e79b-f4a6-4f18-8f4a-09c37daba478}:1.0",
+          "dhairya@example.com:1.0",
+          "{ecab9c5e-cfa8-4dd1-9a71-af556f50241a}:1.7",
+          "{ecab9c5e-cfa8-4dd1-9a71-af556f50241a}:1.8",
+          "mobilede-messenger@arijan.dev:0.3.2",
+          "extension-ff@marky.dev:1.0.5",
+          "mobilede-extractor@local:1.0.1",
+          "mobilede-extractor@local:1.0.2"
+        ]
+      },
+      "schema": 1760877392233,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760898904855,
+      "id": "003b68a6-1cb5-4ab1-a0d9-c5d87df5a4ce",
+      "last_modified": 1760898979542
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "com.rohith.imageblur@example.com:3.0",
+          "hari.trawia@gmail.com:0.0.1",
+          "hari.trawia@gmail.com:0.9.0",
+          "{586e4a9c-02a9-4bd6-a1a6-0018e80fb807}:3.0",
+          "{586e4a9c-02a9-4bd6-a1a6-0018e80fb807}:2.0",
+          "{68a657be-3b14-4645-8b01-d973d951a4ad}:1.0",
+          "pxdownloader@example.com:0.19.1"
+        ]
+      },
+      "schema": 1760855799253,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760877305745,
+      "id": "000ace57-a864-4fff-9c12-be2d85874adc",
+      "last_modified": 1760877391921
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "neptune@curseforge:1.1.1",
+          "{2c2e604b-2dce-461d-93f5-877c0b9eca99}:1.0.1.4"
+        ]
+      },
+      "schema": 1760840148983,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760855706276,
+      "id": "22c85fb1-f958-401d-84ca-23180fe2948c",
+      "last_modified": 1760855799028
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "{4cafb9f5-5126-4f01-8d7a-6215f0de7b85}:1.0.1",
+          "kinozalhelper@elektrikis.id.lv:2.23.0",
+          "kinozalhelper@elektrikis.id.lv:2.23.1",
+          "kinozalhelper@elektrikis.id.lv:2.23.2",
+          "kinozalhelper@elektrikis.id.lv:2.23.3",
+          "kinozalhelper@elektrikis.id.lv:2.24.0",
+          "kinozalhelper@elektrikis.id.lv:2.25.0",
+          "kinozalhelper@elektrikis.id.lv:2.25.1",
+          "afk-case-farmer-neon@twoja-domena.com:1.0",
+          "{b17d3bae-21ae-4ae7-97ac-af29bc020b4c}:1.0",
+          "{159b6f72-6536-444e-b2e0-3d7540da1445}:8.1.1.3",
+          "{5c26db35-377c-464a-8af0-34c1a1e713c7}:1.0"
+        ]
+      },
+      "schema": 1760812595871,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760834104659,
+      "id": "85be3567-f103-45e7-8096-e92aeb2a404c",
+      "last_modified": 1760834178421
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "{aa7de67a-643e-4cd4-ac55-c3acc37af065}:1.1",
+          "defendia-extension@example.com:1.1.4",
+          "firemarks-wizard-2025-10-02@example.com:1.0.1",
+          "com.rohith.imageblur@example.com:1.0",
+          "com.rohith.imageblur@example.com:3.1",
+          "{b2f4b40c-2997-4ea2-95e2-ea19f40d8581}:25.10.1",
+          "{6b83a01a-92c4-4701-b6ab-78a70e311218}:3.0"
+        ]
+      },
+      "schema": 1760791000018,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760812505477,
+      "id": "c0417832-2389-4fef-a612-22416accb511",
+      "last_modified": 1760812595637
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "{2955d19b-bf87-4955-989b-030dab35340d}:1.1",
+          "vpn-browser-connector@local:1.0",
+          "dddflkfjemblhfmjdlmmilapbkdaabcj@chrome-store-foxified--1430166479:3.1.0",
+          "dcelasun@gmail.com:0.94",
+          "dcelasun@gmail.com:0.96",
+          "dcelasun@gmail.com:1.0",
+          "dcelasun@gmail.com:1.1resigned1",
+          "disable-html5-autoplay-fork@npatch:2025.10.18.3",
+          "{12c8532b-0bdd-428c-b57f-25dd835b9df5}:1.0.5",
+          "{daf46bf7-a45e-4450-979c-91cf07434c3d}:1.0",
+          "{daf46bf7-a45e-4450-979c-91cf07434c3d}:1.1",
+          "{daf46bf7-a45e-4450-979c-91cf07434c3d}:1.2",
+          "{daf46bf7-a45e-4450-979c-91cf07434c3d}:1.3",
+          "{daf46bf7-a45e-4450-979c-91cf07434c3d}:1.4",
+          "{daf46bf7-a45e-4450-979c-91cf07434c3d}:1.5",
+          "{daf46bf7-a45e-4450-979c-91cf07434c3d}:1.6",
+          "{daf46bf7-a45e-4450-979c-91cf07434c3d}:1.7",
+          "{daf46bf7-a45e-4450-979c-91cf07434c3d}:1.8",
+          "{daf46bf7-a45e-4450-979c-91cf07434c3d}:1.9",
+          "{daf46bf7-a45e-4450-979c-91cf07434c3d}:1.10"
+        ]
+      },
+      "schema": 1760769386840,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760790906251,
+      "id": "92c2e46a-1eaf-49a3-9441-bfaea283c3f6",
+      "last_modified": 1760790999780
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "hi@sp4ceMan.xyz:2.3.6",
+          "hi@sp4ceMan.xyz:2.3.8",
+          "startpage@willhord.dev:0.1.3",
+          "{e060084d-1a49-45d2-b446-decf15b32ff5}:1.1.4",
+          "{1001c94d-799d-47e5-8d38-8d72a88f302d}:2.1.5",
+          "download-video-without-sound-addon@example.com:2025.10.17.1"
+        ]
+      },
+      "schema": 1760753754027,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760769304961,
+      "id": "acc4d9e9-781e-4b50-9a64-188d15cebf6e",
+      "last_modified": 1760769386602
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "airplane@airplanegobrr.xyz:1.1.0",
+          "aistudio-automation-server@example.com:4.0",
+          "@downloader.airplanegobrr:0.0.1",
+          "hi@sp4ceMan.xyz:2.2.1",
+          "hi@sp4ceMan.xyz:2.2.6",
+          "hi@sp4ceMan.xyz:2.2.8",
+          "hi@sp4ceMan.xyz:2.2.9",
+          "hi@sp4ceMan.xyz:2.3.0",
+          "hi@sp4ceMan.xyz:2.3.1",
+          "hi@sp4ceMan.xyz:2.3.2",
+          "hi@sp4ceMan.xyz:2.3.3",
+          "hi@sp4ceMan.xyz:2.3.4",
+          "hi@sp4ceMan.xyz:2.3.5",
+          "nudge-security-browser-helper@nudge-security:0.9.100"
+        ]
+      },
+      "schema": 1760726182546,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760747705629,
+      "id": "b43b2446-77c5-45e2-890b-da8463153331",
+      "last_modified": 1760747789179
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{4c34ff73-75b7-49f9-9415-f42fa992fc51}:2.2.1",
+          "{1c4ffc4b-39ea-404f-a225-67f543361198}:1.0",
+          "{1c4ffc4b-39ea-404f-a225-67f543361198}:1.1.0",
+          "{1c4ffc4b-39ea-404f-a225-67f543361198}:3.6",
+          "{1c4ffc4b-39ea-404f-a225-67f543361198}:311.6",
+          "{35b16ed0-4524-4931-ac35-ef777b215cf8}:1.0",
+          "{35b16ed0-4524-4931-ac35-ef777b215cf8}:301.6",
+          "{5fcbfe37-dc5c-488a-9e8f-eb4f79415a78}:1.0",
+          "{5fcbfe37-dc5c-488a-9e8f-eb4f79415a78}:301.6",
+          "{2f924118-3b7d-47ae-95ad-2c3c97cd5259}:1.0",
+          "{2f924118-3b7d-47ae-95ad-2c3c97cd5259}:301.6",
+          "{aa489e63-e9fa-4a08-99b4-e227c4cdbbcd}:1.0",
+          "{aa489e63-e9fa-4a08-99b4-e227c4cdbbcd}:372.6"
+        ],
+        "unblocked": [],
+        "softblocked": [
+          "calculadora-simples@example.com:1.1",
+          "calculadora-simples@example.com:1.0",
+          "extension@serpboost.net:0.9",
+          "{587a10d1-0640-469c-9796-b0809e7d9588}:25.10.0",
+          "aecmckhhfknljgicfkpbinfkpnijehcm@chrome-store-foxified-1276866597:1.0.0",
+          "jepmfegpglmmpcldolgpnfocekggingc@chrome-store-foxified-1276866597:1.18",
+          "firefox-extension@harmonic.security:0.433.0",
+          "addon@n.novelia.cc:1.1.3",
+          "{90f8d5ea-6a00-4737-b4bf-3967e3bab8d7}:0.1",
+          "{90f8d5ea-6a00-4737-b4bf-3967e3bab8d7}:0.1.1",
+          "{90f8d5ea-6a00-4737-b4bf-3967e3bab8d7}:0.2",
+          "{90f8d5ea-6a00-4737-b4bf-3967e3bab8d7}:0.2.1",
+          "{90f8d5ea-6a00-4737-b4bf-3967e3bab8d7}:0.2.2",
+          "{90f8d5ea-6a00-4737-b4bf-3967e3bab8d7}:0.2.3",
+          "{90f8d5ea-6a00-4737-b4bf-3967e3bab8d7}:0.2.4",
+          "{14f3cfca-e121-45cb-a203-d534d16b5e30}:1.0.3",
+          "{8e525cbf-8bbf-437e-a4f7-d10e8316e5d6}:0.9.2",
+          "{8e525cbf-8bbf-437e-a4f7-d10e8316e5d6}:1.0",
+          "{8e525cbf-8bbf-437e-a4f7-d10e8316e5d6}:1.1",
+          "{8e525cbf-8bbf-437e-a4f7-d10e8316e5d6}:1.2",
+          "{8e525cbf-8bbf-437e-a4f7-d10e8316e5d6}:1.3",
+          "{8e525cbf-8bbf-437e-a4f7-d10e8316e5d6}:1.4",
+          "{8e525cbf-8bbf-437e-a4f7-d10e8316e5d6}:1.5",
+          "{b1287793-f632-47b2-815f-a8fd43074802}:0.0.10.9"
+        ]
+      },
+      "schema": 1760714993522,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760726104701,
+      "id": "a5c079a1-a8c4-4971-a191-51459e5259a4",
+      "last_modified": 1760726182235
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "{8d41eb56-1df6-483e-82b1-358d0dba62eb}:0.2",
+          "{8d41eb56-1df6-483e-82b1-358d0dba62eb}:0.1",
+          "ip-surligneur-https@example.com:1.0",
+          "firefox-language-plugin@dhananjayandroid.github.io:1.0.0",
+          "opensearch-vscode@telekom.hu:1.0.0",
+          "pdf-provenance@research.local:1.1.26"
+        ]
+      },
+      "schema": 1760682991077,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760704505976,
+      "id": "79356a3d-9565-4514-abed-bab87bd111a7",
+      "last_modified": 1760704593076
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "contact@kohsto.com:0.1.0",
+          "{37d22675-73ad-42a0-a573-d2013c8ee82a}:0.1.0",
+          "downie@charliemonroe.net:1.3.1",
+          "slash-to-clear5@example.com:1.0.0",
+          "slash-clear1@example.com:1.0.0",
+          "{f582902c-c40a-446f-b069-22e229a42766}:1.1"
+        ]
+      },
+      "schema": 1760667351757,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760682905970,
+      "id": "554e25a8-ef0a-4fdf-9fd7-dd005e00d6d8",
+      "last_modified": 1760682990910
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "diobot@rezorp.com:1.0.4",
+          "{d25499b4-74cd-4963-a32b-dd566d654b63}:1.0",
+          "instatrack2@bambiguy.com:1.4.1",
+          "instatrack2@bambiguy.com:1.4.2",
+          "instatrack2@bambiguy.com:1.4.4",
+          "instatrack2@bambiguy.com:1.4.5",
+          "instatrack2@bambiguy.com:1.4.6",
+          "{1e607904-38c3-4424-b32d-299103650fbb}:1.0",
+          "dropfromclipboard@itszariep:1.12",
+          "{a58b12df-0023-4843-9587-bedf7be71f1f}:2.0",
+          "{a58b12df-0023-4843-9587-bedf7be71f1f}:3.0",
+          "{f94d466b-894e-43f9-aa3c-9724cd058c7a}:1.1",
+          "{f94d466b-894e-43f9-aa3c-9724cd058c7a}:1.2",
+          "{f94d466b-894e-43f9-aa3c-9724cd058c7a}:1.3",
+          "{f94d466b-894e-43f9-aa3c-9724cd058c7a}:2.0",
+          "{f94d466b-894e-43f9-aa3c-9724cd058c7a}:2.1",
+          "{f94d466b-894e-43f9-aa3c-9724cd058c7a}:2.2",
+          "{f94d466b-894e-43f9-aa3c-9724cd058c7a}:2.3",
+          "{f94d466b-894e-43f9-aa3c-9724cd058c7a}:2.4",
+          "{f94d466b-894e-43f9-aa3c-9724cd058c7a}:2.5",
+          "{f94d466b-894e-43f9-aa3c-9724cd058c7a}:2.6",
+          "{f94d466b-894e-43f9-aa3c-9724cd058c7a}:2.61",
+          "{f94d466b-894e-43f9-aa3c-9724cd058c7a}:2.62",
+          "{f94d466b-894e-43f9-aa3c-9724cd058c7a}:2.63",
+          "summarize-on-select@example.com:1.2.0",
+          "{f2d61811-0d7a-4d44-bba6-ee1b71a6f425}:1.0",
+          "{f2d61811-0d7a-4d44-bba6-ee1b71a6f425}:2.0",
+          "belagum@belagum.ru:1.2.0",
+          "belagum@belagum.ru:1.3.0",
+          "download-video-without-sound-addon@example.com:2025.10.13.3"
+        ]
+      },
+      "schema": 1760639782118,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760661304694,
+      "id": "65ea8f1f-e0b6-40b3-81a6-10ead0c8076e",
+      "last_modified": 1760661378847
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "{0194bb95-0a0a-72f5-9eca-3b0bd4a85dde}:3",
+          "{31c651e8-cea4-4616-8f3c-7055b038755a}:1.0",
+          "{31c651e8-cea4-4616-8f3c-7055b038755a}:1.2.0",
+          "{31c651e8-cea4-4616-8f3c-7055b038755a}:1.2.1",
+          "{31c651e8-cea4-4616-8f3c-7055b038755a}:1.2.2",
+          "{31c651e8-cea4-4616-8f3c-7055b038755a}:1.4.0",
+          "{eb66bd99-08e0-4913-8936-21b6858330bf}:1.4",
+          "{eb66bd99-08e0-4913-8936-21b6858330bf}:1.5",
+          "{eb66bd99-08e0-4913-8936-21b6858330bf}:1.6",
+          "{eb66bd99-08e0-4913-8936-21b6858330bf}:1.7",
+          "{af8838a8-d71f-4f3d-99b9-1cb14f4bd5c8}:1.0.1.2",
+          "{af8838a8-d71f-4f3d-99b9-1cb14f4bd5c8}:1.0.1a",
+          "{f983c850-4ec3-4d30-8a6b-d4f32d31500e}:1.0",
+          "{18cb4392-46a5-47fd-ae88-1de68c848619}:1.0",
+          "etsy-uploader@example.com:1.0.3",
+          "{0b0b8468-5fbc-4fcb-977b-b6dc5f1d834a}:0.1",
+          "{0b0b8468-5fbc-4fcb-977b-b6dc5f1d834a}:0.2",
+          "{0b0b8468-5fbc-4fcb-977b-b6dc5f1d834a}:0.3",
+          "{0b0b8468-5fbc-4fcb-977b-b6dc5f1d834a}:0.4",
+          "{0b0b8468-5fbc-4fcb-977b-b6dc5f1d834a}:0.5",
+          "{0b0b8468-5fbc-4fcb-977b-b6dc5f1d834a}:0.6",
+          "{0b0b8468-5fbc-4fcb-977b-b6dc5f1d834a}:0.7",
+          "{0b0b8468-5fbc-4fcb-977b-b6dc5f1d834a}:0.8",
+          "nexus-saved@example.com:0.1.0"
+        ]
+      },
+      "schema": 1760618193179,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760639705843,
+      "id": "b5f9e519-cf5a-4034-ae41-328ac83d475d",
+      "last_modified": 1760639781822
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "{af35f273-112c-4ab1-a536-6d42eec0159f}:6.1",
+          "@medium-bypass:1.1.1",
+          "@medium-bypass:1.1",
+          "{e9291b99-a215-4c6a-b324-f11176c9c18f}:2.0",
+          "{0e67187a-89e1-463d-8a0b-8f8a1c20c493}:1.0",
+          "{0e67187a-89e1-463d-8a0b-8f8a1c20c493}:2.0",
+          "{feaabefd-d154-4c6e-9052-f71630b812c8}:1.0",
+          "{feaabefd-d154-4c6e-9052-f71630b812c8}:3.0",
+          "{feaabefd-d154-4c6e-9052-f71630b812c8}:2.0",
+          "virustotal-scanner@jaffacakes118.dev:1.3"
+        ]
+      },
+      "schema": 1760596591810,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1760618106024,
+      "id": "679c4898-6386-400f-80fa-f6863ce7ca8b",
+      "last_modified": 1760618193001
+    },
+    {
+      "stash": {
         "blocked": [],
         "unblocked": [],
         "softblocked": [
@@ -9314,5 +9739,5 @@
       "last_modified": 1755023922753
     }
   ],
-  "timestamp": 1760596591639
+  "timestamp": 1760963795296
 }
