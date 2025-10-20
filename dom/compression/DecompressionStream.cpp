@@ -10,103 +10,16 @@
 #include "js/TypeDecls.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/dom/BufferSourceBinding.h"
-#include "mozilla/dom/BufferSourceBindingFwd.h"
 #include "mozilla/dom/DecompressionStreamBinding.h"
 #include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/TextDecoderStream.h"
 #include "mozilla/dom/TransformStream.h"
-#include "mozilla/dom/TransformerCallbackHelpers.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WritableStream.h"
 #include "zstd/zstd.h"
 
 namespace mozilla::dom {
 using namespace compression;
-
-class DecompressionStreamAlgorithms : public TransformerAlgorithmsWrapper {
- public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DecompressionStreamAlgorithms,
-                                           TransformerAlgorithmsBase)
-
-  // Step 3 of
-  // https://wicg.github.io/compression/#dom-decompressionstream-decompressionstream
-  // Let transformAlgorithm be an algorithm which takes a chunk argument and
-  // runs the compress and enqueue a chunk algorithm with this and chunk.
-  MOZ_CAN_RUN_SCRIPT
-  void TransformCallbackImpl(JS::Handle<JS::Value> aChunk,
-                             TransformStreamDefaultController& aController,
-                             ErrorResult& aRv) override {
-    AutoJSAPI jsapi;
-    if (!jsapi.Init(aController.GetParentObject())) {
-      aRv.ThrowUnknownError("Internal error");
-      return;
-    }
-    JSContext* cx = jsapi.cx();
-
-    // https://compression.spec.whatwg.org/#decompress-and-enqueue-a-chunk
-
-    // Step 1: If chunk is not a BufferSource type, then throw a TypeError.
-    RootedUnion<OwningBufferSource> bufferSource(cx);
-    if (!bufferSource.Init(cx, aChunk)) {
-      aRv.MightThrowJSException();
-      aRv.StealExceptionFromJSContext(cx);
-      return;
-    }
-
-    // Step 2: Let buffer be the result of decompressing chunk with ds's format
-    // and context. If this results in an error, then throw a TypeError.
-    // Step 3 - 5: (Done in DecompressAndEnqueue)
-    ProcessTypedArraysFixed(
-        bufferSource,
-        [&](const Span<uint8_t>& aData) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-          DecompressAndEnqueue(cx, aData, Flush::No, aController, aRv);
-        });
-  }
-
-  // Step 4 of
-  // https://compression.spec.whatwg.org/#dom-decompressionstream-decompressionstream
-  // Let flushAlgorithm be an algorithm which takes no argument and runs the
-  // compress flush and enqueue algorithm with this.
-  MOZ_CAN_RUN_SCRIPT void FlushCallbackImpl(
-      TransformStreamDefaultController& aController,
-      ErrorResult& aRv) override {
-    AutoJSAPI jsapi;
-    if (!jsapi.Init(aController.GetParentObject())) {
-      aRv.ThrowUnknownError("Internal error");
-      return;
-    }
-    JSContext* cx = jsapi.cx();
-
-    // https://wicg.github.io/compression/#decompress-flush-and-enqueue
-
-    // Step 1: Let buffer be the result of decompressing an empty input with
-    // ds's format and context, with the finish flag.
-    // Step 2 - 4: (Done in DecompressAndEnqueue)
-    DecompressAndEnqueue(cx, Span<const uint8_t>(), Flush::Yes, aController,
-                         aRv);
-  }
-
- protected:
-  static const uint16_t kBufferSize = 16384;
-
-  ~DecompressionStreamAlgorithms() = default;
-
-  MOZ_CAN_RUN_SCRIPT
-  virtual void DecompressAndEnqueue(
-      JSContext* aCx, Span<const uint8_t> aInput, Flush,
-      TransformStreamDefaultController& aController, ErrorResult& aRv) = 0;
-};
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DecompressionStreamAlgorithms,
-                                   TransformerAlgorithmsBase)
-NS_IMPL_ADDREF_INHERITED(DecompressionStreamAlgorithms,
-                         TransformerAlgorithmsBase)
-NS_IMPL_RELEASE_INHERITED(DecompressionStreamAlgorithms,
-                          TransformerAlgorithmsBase)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DecompressionStreamAlgorithms)
-NS_INTERFACE_MAP_END_INHERITING(TransformerAlgorithmsBase)
 
 // See the zlib manual in https://www.zlib.net/manual.html or in
 // https://searchfox.org/mozilla-central/source/modules/zlib/src/zlib.h
