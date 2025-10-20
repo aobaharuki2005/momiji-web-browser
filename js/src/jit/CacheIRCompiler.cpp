@@ -9855,15 +9855,15 @@ bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
                                              StringOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
-  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
-
-  allocator.ensureDoubleRegister(masm, inputId, floatScratch0);
   Register result = allocator.defineRegister(masm, resultId);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
     return false;
   }
+
+  AutoScratchFloatRegister scratchFloat(this, failure);
+  allocator.ensureDoubleRegister(masm, inputId, scratchFloat);
 
   LiveRegisterSet volatileRegs = liveVolatileRegs();
   volatileRegs.takeUnchecked(result);
@@ -9873,13 +9873,14 @@ bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
   masm.setupUnalignedABICall(result);
   masm.loadJSContext(result);
   masm.passABIArg(result);
-  masm.passABIArg(floatScratch0, ABIType::Float64);
+  masm.passABIArg(scratchFloat, ABIType::Float64);
   masm.callWithABI<Fn, js::NumberToStringPure>();
 
   masm.storeCallPointerResult(result);
   masm.PopRegsInMask(volatileRegs);
 
-  masm.branchPtr(Assembler::Equal, result, ImmPtr(nullptr), failure->label());
+  masm.branchPtr(Assembler::Equal, result, ImmPtr(nullptr),
+                 scratchFloat.failure());
   return true;
 }
 

@@ -19,3 +19,13 @@ function testDateGetTime() {
   }
 }
 testDateGetTime();
+
+function testNumberToString() {
+  Object.defineProperty(Number.prototype, "tostr", {get: Number.prototype.toString});
+
+  for (var i = 0; i < 100; ++i) {
+    assertEq(0..tostr, "0");
+    assertEq(0.5.tostr, "0.5");
+  }
+}
+testNumberToString();
