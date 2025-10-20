@@ -13505,7 +13505,7 @@ bool Document::HasBeenScrolledSince(
   return false;
 }
 
-bool Document::CanRewriteURL(nsIURI* aTargetURL) const {
+bool Document::CanRewriteURL(nsIURI* aTargetURL, bool aReportErrors) const {
   if (nsContentUtils::URIIsLocalFile(aTargetURL)) {
     // It's a file:// URI
     nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
@@ -13524,8 +13524,8 @@ bool Document::CanRewriteURL(nsIURI* aTargetURL) const {
   // set docBaseURI arbitrarily to any domain.
   bool isPrivateWin =
       NodePrincipal()->OriginAttributesRef().IsPrivateBrowsing();
-  if (NS_FAILED(secMan->CheckSameOriginURI(mDocumentURI, aTargetURL, true,
-                                           isPrivateWin))) {
+  if (NS_FAILED(secMan->CheckSameOriginURI(mDocumentURI, aTargetURL,
+                                           aReportErrors, isPrivateWin))) {
     return false;
   }
 

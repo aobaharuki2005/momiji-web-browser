@@ -2766,7 +2766,7 @@ class Document : public nsINode,
    * Return true if the documents current url can be re-written to `aTargetURL`.
    * This implements https://html.spec.whatwg.org/#can-have-its-url-rewritten.
    */
-  bool CanRewriteURL(nsIURI* aTargetURL) const;
+  bool CanRewriteURL(nsIURI* aTargetURL, bool aReportErrors = true) const;
 
   /**
    * Return true if this document is fully active as described by spec.
