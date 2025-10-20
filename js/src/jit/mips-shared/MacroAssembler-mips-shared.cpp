@@ -3446,7 +3446,36 @@ void MacroAssembler::nearbyIntFloat32(RoundingMode mode, FloatRegister src,
 
 void MacroAssembler::copySignDouble(FloatRegister lhs, FloatRegister rhs,
                                     FloatRegister output) {
-  MOZ_CRASH("not supported on this platform");
+  UseScratchRegisterScope temps(*this);
+  Register lhsi = temps.Acquire();
+  Register rhsi = temps.Acquire();
+
+  // Manipulate high words of double inputs.
+  moveFromDoubleHi(lhs, lhsi);
+  moveFromDoubleHi(rhs, rhsi);
+
+  // Combine.
+  ma_ins(rhsi, lhsi, 0, 31);
+
+  if (lhs != output) {
+    moveDouble(lhs, output);
+  }
+  moveToDoubleHi(rhsi, output);
+}
+
+void MacroAssembler::copySignFloat32(FloatRegister lhs, FloatRegister rhs,
+                                     FloatRegister output) {
+  UseScratchRegisterScope temps(*this);
+  Register lhsi = temps.Acquire();
+  Register rhsi = temps.Acquire();
+
+  moveFromFloat32(lhs, lhsi);
+  moveFromFloat32(rhs, rhsi);
+
+  // Combine.
+  ma_ins(rhsi, lhsi, 0, 31);
+
+  moveToFloat32(rhsi, output);
 }
 
 void MacroAssembler::shiftIndex32AndAdd(Register indexTemp32, int shift,
