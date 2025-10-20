@@ -84,6 +84,11 @@
   -->
   <string name="felt_privacy_info_card_subtitle_2">%1$s elimina tus cookies, historial y datos del sitio cuando cierras todas tus pestañas privadas. %2$s</string>
   <!--
+    Description of private browsing mode displayed to users on the homepage when they enable private mode.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="felt_privacy_info_card_subtitle_3">%1$s elimina tus cookies, historial y datos del sitio cuando cierras todas tus pestañas privadas.</string>
+  <!--
     Clickable portion of the explanation for private browsing that links the user to our
     about privacy page.
     This string is used in felt_privacy_info_card_subtitle as the text for the link.
@@ -598,6 +603,8 @@
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Ayúdanos a mejorar Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Cuando compartes cómo conociste Firefox y cómo lo usas, nos ayudas a presentar nuestro navegador a más personas.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Comparte datos con los socios tecnológicos de marketing de Mozilla. Estos datos nunca se venden ni se utilizan para mostrarte anuncios.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Cómo utilizamos los datos</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -722,6 +729,8 @@
   <string name="preferences_https_only_title">Modo solo HTTPS</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Utiliza el bloqueo de pantalla para ocultar pestañas en la navegación privada</string>
+  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
+  <string name="preferences_pbm_lock_screen_summary_3">Visualiza las pestañas con desbloqueo mediante huella dactilar, PIN o facial. Activar esta opción también impide capturar y compartir la pantalla.</string>
   <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Ver pestañas con tu huella digital, PIN o desbloqueo facial.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Bloqueador de avisos de cookies</string>
@@ -1052,6 +1061,8 @@
   <string name="restart_warning_dialog_title">¿Cambiar el icono de la aplicación?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
   <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Cambiar el icono requiere que la aplicación se reinicie.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_warning_dialog_body_2">La aplicación podría cerrarse. Simplemente toca el nuevo icono para volver a abrir %1$s.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Reiniciar ahora</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
@@ -1406,6 +1417,13 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Saber más</string>
   <!--
+    Sessions
+
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">Pestañas normales abiertas: %1$s. Toca para cambiar de pestaña.</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1419,6 +1437,8 @@
   <string name="tabs_header_private_tabs_title">Privado</string>
   <!-- Text for the tabs header normal tabs -->
   <string name="tabs_header_normal_tabs_title">Pestañas</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">Sincronizadas</string>
   <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
   <string name="tab_manager_floating_action_button_new_normal_tab">Nueva pestaña</string>
   <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
@@ -1463,6 +1483,8 @@
   <string name="tab_tray_multiselect_menu_content_description">Menú de pestañas seleccionadas</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">Página de inicio</string>
+  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
+  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">Página de inicio de %s</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Eliminar pestaña de la colección</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1703,6 +1725,10 @@
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Cerrar</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">¿Qué ha sucedido? ¿Qué debería haber pasado?</string>
+  <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
+  <string name="webcompat_reporter_etp_checkbox_text">Enviar URLs bloqueadas por la protección contra el rastreo</string>
+  <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
+  <string name="webcompat_reporter_etp_checkbox_description">La protección mejorada contra el rastreo puede bloquear rastreadores y scripts que algunos sitios web necesitan para funcionar correctamente.</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2325,12 +2351,18 @@
   <string name="preference_enhanced_tracking_protection_strict">Estricto</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Protección contra rastreo mejorada y mayor rendimiento, pero puede que algunos sitios no funcionen correctamente.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">Permitir que %1$s aplique automáticamente las excepciones requeridas para evitar problemas importantes del sitio web.</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">También aplicar excepciones automáticamente que solo sean necesarias para solucionar problemas menores y hacer que estén disponibles funciones útiles.</string>
   <!--
     Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
 
     Title for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection
   -->
   <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">¿Estás seguro de querer desactivar las correcciones?</string>
+  <!-- Message for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">Esta configuración ayuda a solucionar los problemas más comunes del sitio. Si la desactiva, es posible que algunos sitios no funcionen y %1$s no podrá ayudar a solucionar esos problemas.</string>
   <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
   <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Desactivar correcciones</string>
   <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
@@ -2653,6 +2685,10 @@
   <string name="saved_login_hide_password">Ocultar contraseña</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">Desbloquea para ver tus contraseñas guardadas</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">Desbloquear</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">Salir</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">Asegura tus contraseñas guardadas</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -3352,6 +3388,10 @@
   <string name="protection_panel_etp_toggle_on">Activado</string>
   <!-- Toggle if Enhanced Tracking Protection is turned off -->
   <string name="protection_panel_etp_toggle_off">Desactivado</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">Si algo parece que no funciona en este sitio, intenta desactivarla.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">Se recomienda activar la protección contra el rastreo.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3361,6 +3401,8 @@
   <string name="protection_panel_no_trackers_blocked">No se han encontrado rastreadores</string>
   <!-- Text for when tracking protection is disabled and no trackers are blocked. -->
   <string name="protection_panel_etp_disabled_no_trackers_blocked">Los rastreadores no están bloqueados</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings_2">Ajustes de privacidad</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">Permisos</string>
   <!--
@@ -3537,6 +3579,16 @@
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
   <string name="debug_drawer_delete_all_addresses">Borrar todas las direcciones</string>
   <!--
+    Debug drawer credit cards
+
+    The title of the credit cards feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_credit_cards_title">Tarjetas de crédito</string>
+  <!-- The title of the button in the debug drawer for adding a new credit card -->
+  <string name="debug_drawer_add_new_credit_card">Añadir nueva tarjeta de crédito</string>
+  <!-- The title of the button for deleting in the debug drawer all addresses. -->
+  <string name="debug_drawer_delete_all_credit_cards">Eliminar todas las tarjetas de crédito</string>
+  <!--
     Debug drawer "contextual feature recommendation" (CFR) tools
 
     The title of the CFR Tools feature in the Debug Drawer
@@ -3572,6 +3624,14 @@
   <string name="debug_drawer_override_region">Reemplazar la región de inicio y la actual</string>
   <!-- The title of the button for overriding home region permanently. -->
   <string name="debug_drawer_override_home_region_permanently">Reemplazar la región de origen de forma permanente</string>
+  <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">Herramientas de complementos</string>
+  <!-- The title of the button used to check for add-on updates. -->
+  <string name="addons_debug_tools_check_for_updates_button">Buscar actualizaciones</string>
   <!--
     Messages explaining how to exit fullscreen mode
 
@@ -3698,6 +3758,8 @@
   <string name="setup_checklist_task_toolbar_selection">Elige la ubicación de la barra de herramientas</string>
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Explorar extensiones</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Explorar el widget de búsqueda</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
@@ -3762,4 +3824,32 @@
   <string name="review_prompt_feedback_header">Lamentamos que tengas problemas. Cuéntanos cómo podemos mejorar %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Enviar opinión</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">Tenemos una actualización</string>
+  <!--
+    Message for the terms of use pop up prompt
+    %1$s is the product name "Firefox"
+    %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
+    %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
+  -->
+  <string name="terms_of_use_prompt_message_1">Hemos introducido %2$s de %1$s y actualizado nuestra %3$s.</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">Por favor, tómate un momento para revisar y aceptar. %1$s.</string>
+  <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
+  <string name="terms_of_use_prompt_link_terms_of_use">Términos de uso</string>
+  <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
+  <string name="terms_of_use_prompt_link_privacy_notice">Aviso de privacidad</string>
+  <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
+  <string name="terms_of_use_prompt_link_learn_more">Saber más</string>
+  <!-- Label for a button to accept the terms of use -->
+  <string name="terms_of_use_prompt_accept">Aceptar</string>
+  <!-- Label for a button to postpone accepting the terms of use -->
+  <string name="terms_of_use_prompt_postpone">Recordármelo más tarde</string>
 </resources>

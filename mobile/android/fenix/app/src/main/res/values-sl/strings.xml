@@ -50,6 +50,8 @@
   <string name="tab_tray_collection_button_multiselect_content_description">Shrani izbrane zavihke v zbirko</string>
   <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
   <string name="tab_manager_empty_synced_tabs_page_header">Zajemite zavihke s katerekoli naprave</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">Za upravljanje sinhroniziranih zavihkov z vseh naprav se prijavite.</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Prijava</string>
   <!--
@@ -81,6 +83,11 @@
     %2$s is a link using felt_privacy_info_card_subtitle_link_text as text
   -->
   <string name="felt_privacy_info_card_subtitle_2">Ko zaprete vse zasebne zavihke, %1$s izbriše piškotke, zgodovino in podatke o spletnih mestih. %2$s</string>
+  <!--
+    Description of private browsing mode displayed to users on the homepage when they enable private mode.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="felt_privacy_info_card_subtitle_3">Ko zaprete vse zasebne zavihke, %1$s izbriše piškotke, zgodovino in podatke o spletnih mestih.</string>
   <!--
     Clickable portion of the explanation for private browsing that links the user to our
     about privacy page.
