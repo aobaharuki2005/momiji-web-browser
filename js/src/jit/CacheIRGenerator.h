@@ -187,8 +187,6 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
                                  HandleId id);
   AttachDecision tryAttachMap(HandleObject obj, ObjOperandId objId,
                               HandleId id);
-  AttachDecision tryAttachSet(HandleObject obj, ObjOperandId objId,
-                              HandleId id);
   AttachDecision tryAttachModuleNamespace(HandleObject obj, ObjOperandId objId,
                                           HandleId id);
   AttachDecision tryAttachWindowProxy(HandleObject obj, ObjOperandId objId,

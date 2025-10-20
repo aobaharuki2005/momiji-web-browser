@@ -311,10 +311,6 @@ class SetObject : public OrderedHashSetObject {
 
   size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf);
 
-  static bool isOriginalSizeGetter(Native native) {
-    return native == static_cast<Native>(SetObject::size);
-  }
-
  private:
   static const ClassSpec classSpec_;
   static const JSClassOps classOps_;

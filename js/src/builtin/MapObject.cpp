@@ -1242,7 +1242,7 @@ const JSClass SetObject::protoClass_ = {
 };
 
 const JSPropertySpec SetObject::properties[] = {
-    JS_PSG("size", size, 0),
+    JS_INLINABLE_PSG("size", size, 0, SetSize),
     JS_STRING_SYM_PS(toStringTag, "Set", JSPROP_READONLY),
     JS_PS_END,
 };
