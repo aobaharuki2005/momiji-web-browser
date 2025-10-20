@@ -3581,6 +3581,34 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
       nsIEditor::DirectionIsBackspace(aDirectionAndAmount);
 
   const OwningNonNull<nsRange> rangeToDelete(aRangeToDelete);
+
+  // If mLeftContent ends with an invisible line break, we should delete it
+  // before joining the blocks because that will appear as a visible line break
+  // if JoinNodesDeepWithTransaction() moves the first line content of
+  // mRightContent to end of the line break in mLeftContent.
+  if (HTMLEditUtils::IsBlockElement(
+          *mLeftContent, BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
+    const WSScanResult lastThingInLeftBlock =
+        WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
+            WSRunScanner::Scan::All, EditorRawDOMPoint::AtEndOf(*mLeftContent),
+            BlockInlineCheck::UseComputedDisplayOutsideStyle);
+    if (lastThingInLeftBlock.ReachedLineBreak()) {
+      const EditorLineBreak lineBreak =
+          lastThingInLeftBlock.CreateEditorLineBreak<EditorLineBreak>();
+      // FIXME: If the line break is wrapped in an non-editable inline element,
+      // we should delete its parent too or should fail.
+      Result<EditorDOMPoint, nsresult> exLineBreakPointOrError =
+          aHTMLEditor.DeleteLineBreakWithTransaction(
+              lineBreak, nsIEditor::eNoStrip, aEditingHost);
+      if (MOZ_UNLIKELY(exLineBreakPointOrError.isErr())) {
+        NS_WARNING("HTMLEditor::DeleteLineBreakWithTransaction() failed");
+        return exLineBreakPointOrError.propagateErr();
+      }
+    }
+  }
+
+  // Then, normalizer white-spaces at end of mLeftContent and at start of
+  // mRightContent to keep their visibility.
   Result<EditorDOMRange, nsresult> rangeToDeleteOrError =
       WhiteSpaceVisibilityKeeper::NormalizeSurroundingWhiteSpacesToJoin(
           aHTMLEditor, EditorDOMRange(*rangeToDelete));
@@ -3595,6 +3623,9 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     NS_WARNING("EditorDOMRange::SetToRange() failed");
     return Err(rv);
   }
+
+  // Finally, delete the selected content and move first line of mRightContent
+  // to end of mLeftContent.
   if (!rangeToDelete->Collapsed()) {
     AutoClonedSelectionRangeArray rangesToDelete(rangeToDelete,
                                                  aLimitersAndCaretData);

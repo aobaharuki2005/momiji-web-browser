@@ -8,7 +8,8 @@
 
 #include "EditorBase.h"
 #include "EditorForwards.h"
-#include "EditorDOMPoint.h"  // for EditorDOMPoint
+#include "EditorDOMPoint.h"   // for EditorDOMPoint
+#include "EditorLineBreak.h"  // for EditorLineBreakBase
 #include "HTMLEditor.h"
 #include "HTMLEditUtils.h"
 
@@ -162,6 +163,18 @@ class MOZ_STACK_CLASS WSScanResult final {
     return mContent->AsText();
   }
 
+  template <typename EditorLineBreakType>
+  MOZ_NEVER_INLINE_DEBUG EditorLineBreakType CreateEditorLineBreak() const {
+    if (ReachedBRElement()) {
+      return EditorLineBreakType(*BRElementPtr());
+    }
+    if (ReachedPreformattedLineBreak()) {
+      return EditorLineBreakType(*TextPtr(), *mOffset);
+    }
+    MOZ_CRASH("Didn't reach a line break");
+    return EditorLineBreakType(*BRElementPtr());
+  }
+
   /**
    * Returns true if found or reached content is editable.
    */
@@ -285,6 +298,15 @@ class MOZ_STACK_CLASS WSScanResult final {
 
   bool ReachedPreformattedLineBreak() const {
     return mReason == WSType::PreformattedLineBreak;
+  }
+
+  /**
+   * Return true if reached a <br> element or a preformatted line break.
+   * Return false when reached a block boundary.  Use ReachedLineBoundary() if
+   * you want it to return true in the case too.
+   */
+  [[nodiscard]] bool ReachedLineBreak() const {
+    return ReachedBRElement() || ReachedPreformattedLineBreak();
   }
 
   /**
