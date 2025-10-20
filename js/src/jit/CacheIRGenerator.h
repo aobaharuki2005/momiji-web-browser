@@ -176,9 +176,6 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
                                                 ValOperandId receiverId);
   AttachDecision tryAttachObjectLength(HandleObject obj, ObjOperandId objId,
                                        HandleId id);
-  AttachDecision tryAttachArrayBufferMaybeShared(HandleObject obj,
-                                                 ObjOperandId objId,
-                                                 HandleId id);
   AttachDecision tryAttachRegExp(HandleObject obj, ObjOperandId objId,
                                  HandleId id);
   AttachDecision tryAttachModuleNamespace(HandleObject obj, ObjOperandId objId,
@@ -890,6 +887,8 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachWeakMapHas();
   AttachDecision tryAttachWeakMapGet();
   AttachDecision tryAttachWeakSetHas();
+  AttachDecision tryAttachArrayBufferByteLength();
+  AttachDecision tryAttachSharedArrayBufferByteLength();
 #ifdef FUZZING_JS_FUZZILLI
   AttachDecision tryAttachFuzzilliHash();
 #endif

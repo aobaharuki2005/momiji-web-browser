@@ -39,6 +39,8 @@
   _(ArrayPush)                                     \
   _(ArraySlice)                                    \
                                                    \
+  _(ArrayBufferByteLength)                         \
+                                                   \
   _(AtomicsCompareExchange)                        \
   _(AtomicsExchange)                               \
   _(AtomicsLoad)                                   \
@@ -170,6 +172,8 @@
   _(SetHas)                                        \
   _(SetAdd)                                        \
   _(SetSize)                                       \
+                                                   \
+  _(SharedArrayBufferByteLength)                   \
                                                    \
   _(String)                                        \
   _(StringToString)                                \

@@ -465,7 +465,6 @@ AttachDecision GetPropIRGenerator::tryAttachStub() {
 
     if (nameOrSymbol) {
       TRY_ATTACH(tryAttachObjectLength(obj, objId, id));
-      TRY_ATTACH(tryAttachArrayBufferMaybeShared(obj, objId, id));
       TRY_ATTACH(tryAttachRegExp(obj, objId, id));
       TRY_ATTACH(tryAttachNative(obj, objId, id, receiverId));
       TRY_ATTACH(tryAttachModuleNamespace(obj, objId, id));
@@ -2460,68 +2459,6 @@ AttachDecision GetPropIRGenerator::tryAttachInlinableNativeGetter(
   InlinableNativeIRGenerator nativeGen(*this, target, thisValue, flags,
                                        receiverId);
   return nativeGen.tryAttachStub();
-}
-
-AttachDecision GetPropIRGenerator::tryAttachArrayBufferMaybeShared(
-    HandleObject obj, ObjOperandId objId, HandleId id) {
-  if (!obj->is<ArrayBufferObjectMaybeShared>()) {
-    return AttachDecision::NoAction;
-  }
-  auto* buf = &obj->as<ArrayBufferObjectMaybeShared>();
-
-  if (mode_ != ICState::Mode::Specialized) {
-    return AttachDecision::NoAction;
-  }
-
-  // Receiver should be the object.
-  if (isSuper()) {
-    return AttachDecision::NoAction;
-  }
-
-  if (!id.isAtom(cx_->names().byteLength)) {
-    return AttachDecision::NoAction;
-  }
-
-  NativeObject* holder = nullptr;
-  Maybe<PropertyInfo> prop;
-  NativeGetPropKind kind =
-      CanAttachNativeGetProp(cx_, obj, id, &holder, &prop, pc_);
-  if (kind != NativeGetPropKind::NativeGetter) {
-    return AttachDecision::NoAction;
-  }
-
-  auto& fun = holder->getGetter(*prop)->as<JSFunction>();
-  if (buf->is<ArrayBufferObject>()) {
-    if (!ArrayBufferObject::isOriginalByteLengthGetter(fun.native())) {
-      return AttachDecision::NoAction;
-    }
-  } else {
-    if (!SharedArrayBufferObject::isOriginalByteLengthGetter(fun.native())) {
-      return AttachDecision::NoAction;
-    }
-  }
-
-  maybeEmitIdGuard(id);
-  // Emit all the normal guards for calling this native, but specialize
-  // callNativeGetterResult.
-  emitCallGetterResultGuards(buf, holder, id, *prop, objId);
-  if (!buf->is<GrowableSharedArrayBufferObject>()) {
-    if (buf->byteLength() <= INT32_MAX) {
-      writer.loadArrayBufferByteLengthInt32Result(objId);
-    } else {
-      writer.loadArrayBufferByteLengthDoubleResult(objId);
-    }
-  } else {
-    if (buf->byteLength() <= INT32_MAX) {
-      writer.growableSharedArrayBufferByteLengthInt32Result(objId);
-    } else {
-      writer.growableSharedArrayBufferByteLengthDoubleResult(objId);
-    }
-  }
-  writer.returnFromIC();
-
-  trackAttached("GetProp.ArrayBufferMaybeSharedByteLength");
-  return AttachDecision::Attach;
 }
 
 AttachDecision GetPropIRGenerator::tryAttachRegExp(HandleObject obj,
@@ -11931,6 +11868,101 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayLength(
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachArrayBufferByteLength() {
+  // Expecting no arguments.
+  if (args_.length() != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure |this| is an ArrayBufferObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<ArrayBufferObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  auto* buf = &thisval_.toObject().as<ArrayBufferObject>();
+
+  // Initialize the input operand.
+  Int32OperandId argcId = initializeInputOperand();
+
+  // Guard callee is the 'byteLength' native function.
+  ObjOperandId calleeId = emitNativeCalleeGuard(argcId);
+
+  // Guard |this| is an ArrayBufferObject.
+  ValOperandId thisValId = loadThis(calleeId);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+
+  if (buf->is<FixedLengthArrayBufferObject>()) {
+    emitOptimisticClassGuard(objId, buf,
+                             GuardClassKind::FixedLengthArrayBuffer);
+  } else if (buf->is<ImmutableArrayBufferObject>()) {
+    emitOptimisticClassGuard(objId, buf, GuardClassKind::ImmutableArrayBuffer);
+  } else {
+    emitOptimisticClassGuard(objId, buf, GuardClassKind::ResizableArrayBuffer);
+  }
+
+  if (buf->byteLength() <= INT32_MAX) {
+    writer.loadArrayBufferByteLengthInt32Result(objId);
+  } else {
+    writer.loadArrayBufferByteLengthDoubleResult(objId);
+  }
+
+  writer.returnFromIC();
+
+  trackAttached("ArrayBufferByteLength");
+  return AttachDecision::Attach;
+}
+
+AttachDecision
+InlinableNativeIRGenerator::tryAttachSharedArrayBufferByteLength() {
+  // Expecting no arguments.
+  if (args_.length() != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure |this| is a SharedArrayBufferObject.
+  if (!thisval_.isObject() ||
+      !thisval_.toObject().is<SharedArrayBufferObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  auto* buf = &thisval_.toObject().as<SharedArrayBufferObject>();
+
+  // Initialize the input operand.
+  Int32OperandId argcId = initializeInputOperand();
+
+  // Guard callee is the 'byteLength' native function.
+  ObjOperandId calleeId = emitNativeCalleeGuard(argcId);
+
+  // Guard |this| is a SharedArrayBufferObject.
+  ValOperandId thisValId = loadThis(calleeId);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+
+  if (buf->is<FixedLengthSharedArrayBufferObject>()) {
+    emitOptimisticClassGuard(objId, buf,
+                             GuardClassKind::FixedLengthSharedArrayBuffer);
+
+    if (buf->byteLength() <= INT32_MAX) {
+      writer.loadArrayBufferByteLengthInt32Result(objId);
+    } else {
+      writer.loadArrayBufferByteLengthDoubleResult(objId);
+    }
+  } else {
+    emitOptimisticClassGuard(objId, buf,
+                             GuardClassKind::GrowableSharedArrayBuffer);
+
+    if (buf->byteLength() <= INT32_MAX) {
+      writer.growableSharedArrayBufferByteLengthInt32Result(objId);
+    } else {
+      writer.growableSharedArrayBufferByteLengthDoubleResult(objId);
+    }
+  }
+
+  writer.returnFromIC();
+
+  trackAttached("SharedArrayBufferByteLength");
+  return AttachDecision::Attach;
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachIsConstructing() {
   // Self-hosted code calls this with no arguments in function scripts.
   MOZ_ASSERT(args_.length() == 0);
@@ -13522,6 +13554,14 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachWeakMapHas();
     case InlinableNative::WeakSetHas:
       return tryAttachWeakSetHas();
+
+    // ArrayBuffer natives.
+    case InlinableNative::ArrayBufferByteLength:
+      return tryAttachArrayBufferByteLength();
+
+    // SharedArrayBuffer natives.
+    case InlinableNative::SharedArrayBufferByteLength:
+      return tryAttachSharedArrayBufferByteLength();
 
     // Testing functions.
     case InlinableNative::TestBailout:
