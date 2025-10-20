@@ -143,7 +143,7 @@ function testInit() {
 
     let processCount = Services.prefs.getIntPref("dom.ipc.processCount", 1);
     if (processCount > 1) {
-      // Currently starting a content process is slow, to aviod timeouts, let's
+      // Currently starting a content process is slow, to avoid timeouts, let's
       // keep alive content processes.
       Services.prefs.setIntPref("dom.ipc.keepProcessesAlive.web", processCount);
     }
@@ -342,6 +342,10 @@ Tester.prototype = {
         "resource://testing-common/CoverageUtils.sys.mjs"
       );
       this._coverageCollector = new CoverageCollector(coveragePath);
+    }
+
+    if (gConfig.debugger || gConfig.debuggerInteractive || gConfig.jsdebugger) {
+      gTimeoutSeconds = 24 * 60 * 60 * 1000; // 24 hours
     }
 
     this.structuredLogger.info("*** Start BrowserChrome Test Results ***");
