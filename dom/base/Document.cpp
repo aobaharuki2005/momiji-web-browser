@@ -2546,6 +2546,12 @@ void Document::AccumulatePageLoadTelemetry() {
       if (timeToRequestStart > zeroDuration) {
         mPageloadEventData.set_timeToRequestStart(
             static_cast<uint32_t>(timeToRequestStart.ToMilliseconds()));
+      } else {
+        // Speculative and pre-established connections may yield zero or
+        // slightly negative timeToRequestStart timings. We record these as zero
+        // to maintain consistent, non-negative timing data, while still
+        // capturing the impact of early connection establishment.
+        mPageloadEventData.set_timeToRequestStart(0);
       }
     }
 
