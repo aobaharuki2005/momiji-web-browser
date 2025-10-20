@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DOM_COMPRESSIONSTREAM_H_
-#define DOM_COMPRESSIONSTREAM_H_
+#ifndef DOM_COMPRESSION_COMPRESSIONSTREAM_H_
+#define DOM_COMPRESSION_COMPRESSIONSTREAM_H_
 
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
@@ -56,4 +56,4 @@ class CompressionStream final : public nsISupports, public nsWrapperCache {
 
 }  // namespace mozilla::dom
 
-#endif  // DOM_COMPRESSIONSTREAM_H_
+#endif  // DOM_COMPRESSION_COMPRESSIONSTREAM_H_
