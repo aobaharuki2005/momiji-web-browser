@@ -239,9 +239,6 @@ def mozharness_test_on_docker(config, job, taskdesc):
         command.append("--total-chunk={}".format(test["chunks"]))
         command.append("--this-chunk={}".format(test["this-chunk"]))
 
-    if test.get("timeoutfactor"):
-        command.append("--timeout-factor={}".format(test["timeoutfactor"]))
-
     if "download-symbols" in mozharness:
         download_symbols = mozharness["download-symbols"]
         download_symbols = {True: "true", False: "false"}.get(
@@ -463,9 +460,6 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     elif mozharness.get("chunked") or test["chunks"] > 1:
         mh_command.append("--total-chunk={}".format(test["chunks"]))
         mh_command.append("--this-chunk={}".format(test["this-chunk"]))
-
-    if test.get("timeoutfactor"):
-        mh_command.append("--timeout-factor={}".format(test["timeoutfactor"]))
 
     if is_try(config.params):
         env["TRY_COMMIT_MSG"] = config.params["message"]

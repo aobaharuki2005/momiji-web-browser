@@ -105,11 +105,6 @@ test_description_schema = Schema(
         Required("chunks"): optionally_keyed_by(
             "test-platform", "variant", Any(int, "dynamic")
         ),
-        # Timeout multiplier to apply to default test timeout values. Can be keyed
-        # by test platform.
-        Optional("timeoutfactor"): optionally_keyed_by(
-            "test-platform", Any(int, float)
-        ),
         # Custom 'test_manifest_loader' to use, overriding the one configured in the
         # parameters. When 'null', no test chunking will be performed. Can also
         # be used to disable "manifest scheduling".
@@ -411,7 +406,6 @@ def resolve_keys(config, tasks):
         "suite",
         "suite.name",
         "test-manifest-loader",
-        "timeoutfactor",
         "use-caches",
     )
     for task in tasks:

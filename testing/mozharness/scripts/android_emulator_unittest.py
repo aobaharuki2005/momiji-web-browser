@@ -65,15 +65,6 @@ class AndroidEmulatorTest(
                 },
             ],
             [
-                ["--timeout-factor"],
-                {
-                    "action": "store",
-                    "dest": "timeout_factor",
-                    "default": None,
-                    "help": "Multiplier for test timeout values",
-                },
-            ],
-            [
                 ["--enable-xorigin-tests"],
                 {
                     "action": "store_true",
@@ -205,7 +196,6 @@ class AndroidEmulatorTest(
         self.test_suite = suite
         self.this_chunk = c.get("this_chunk")
         self.total_chunks = c.get("total_chunks")
-        self.timeout_factor = c.get("timeout_factor")
         self.xre_path = None
         self.device_serial = "emulator-5554"
         self.log_raw_level = c.get("log_raw_level")
@@ -375,9 +365,6 @@ class AndroidEmulatorTest(
                     cmd.extend(["--this-chunk", self.this_chunk])
                 if self.total_chunks is not None:
                     cmd.extend(["--total-chunks", self.total_chunks])
-
-        if self.timeout_factor is not None:
-            cmd.extend(["--timeout-factor", self.timeout_factor])
 
         if category not in SUITE_NO_E10S:
             if category in SUITE_DEFAULT_E10S and not c["e10s"]:
