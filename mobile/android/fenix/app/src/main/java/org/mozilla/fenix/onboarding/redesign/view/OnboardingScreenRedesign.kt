@@ -6,8 +6,10 @@ package org.mozilla.fenix.onboarding.redesign.view
 
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
@@ -33,13 +35,13 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -77,6 +79,25 @@ import org.mozilla.fenix.utils.isLargeScreenSize
  */
 private val SMALL_SCREEN_MAX_HEIGHT = 480.dp
 private val logger: Logger = Logger("OnboardingScreenRedesign")
+
+/**
+ * The colors used for the gradient background.
+ */
+private object GradientColors {
+    val nonDarkMode = listOf(
+        Color(0xFFF5C1BD), // light pink (top)
+        Color(0xFFED8043), // orange
+        Color(0xFFEB691D), // deeper orange-red
+        Color(0xFFE00B1D), // strong red (bottom)
+    )
+
+    val darkMode = listOf(
+        Color(0xFF9B7AE0), // soft violet (top)
+        Color(0xFF7B4FC9), // medium purple
+        Color(0xFF4A289A), // deep purple
+        Color(0xFF2E1468), // darkest purple (bottom)
+    )
+}
 
 /**
  * A screen for displaying onboarding.
@@ -287,11 +308,7 @@ private fun OnboardingContent(
         val paddingValue = if (!isLargeScreen && isLandscape) 0.dp else pagePeekWidth
 
         if (!isNonLargeScreenLandscape(isLargeScreen, isLandscape)) {
-            Image(
-                painter = painterResource(onboardingRedesignBackground(isLandscape)),
-                contentDescription = null, // Decorative image only.
-                contentScale = ContentScale.FillWidth,
-            )
+            GradientBackground()
         }
 
         Column(verticalArrangement = Arrangement.Center) {
@@ -351,6 +368,17 @@ private fun OnboardingContent(
             }
         }
     }
+}
+
+@Composable
+private fun GradientBackground() {
+    val colors = if (isSystemInDarkTheme()) GradientColors.darkMode else GradientColors.nonDarkMode
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(brush = Brush.verticalGradient(colors = colors)),
+    )
 }
 
 @Composable
@@ -495,13 +523,6 @@ private fun minWidth(
     isSmallScreen -> PageContentLayout.MIN_WIDTH_SMALL_SCREEN_DP
     else -> PageContentLayout.MIN_WIDTH_DP
 }
-
-private fun onboardingRedesignBackground(isLandscape: Boolean) =
-    if (isLandscape) {
-        R.drawable.onboarding_redesign_background_landscape
-    } else {
-        R.drawable.onboarding_redesign_background
-    }
 
 private fun isNonLargeScreenLandscape(isLargeScreen: Boolean, isLandscape: Boolean) =
     (isLandscape && !isLargeScreen)
