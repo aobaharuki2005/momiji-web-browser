@@ -106,9 +106,9 @@ struct AnchorPositioningUtils {
    * https://drafts.csswg.org/css-anchor-position-1/#position-area
    */
   static nsRect AdjustAbsoluteContainingBlockRectForPositionArea(
-      nsIFrame* aPositionedFrame, nsIFrame* aContainingBlock,
-      const nsRect& aCBRect, AnchorPosReferenceData* aAnchorPosReferenceData,
-      const StylePositionArea& aPositionArea,
+      const nsRect& aAnchorRect, const nsRect& aCBRect,
+      WritingMode aPositionedWM, WritingMode aCBWM,
+      const StylePositionArea& aPosArea,
       const StylePositionTryFallbacksTryTactic* aFallbackTactic);
 
   /**
@@ -136,6 +136,26 @@ struct AnchorPositioningUtils {
    * all other cases, returns null.
    */
   static const nsIFrame* GetAnchorPosImplicitAnchor(const nsIFrame* aFrame);
+
+  struct DefaultAnchorInfo {
+    const nsAtom* mName = nullptr;
+    Maybe<nsRect> mRect;
+  };
+
+  /**
+   * Resolve the default anchor's rect, if the default anchor exists and is
+   * valid.
+   *
+   * @param aFrame The anchor positioned frame.
+   * @param aCBRectIsValid Whether or not the containing block's `GetRect`
+   * returns a valid result. This will be not be the case during the abspos
+   * frame's reflow.
+   * @param aAnchorPosReferenceData Anchor pos references to attempt to reuse &
+   * cache lookups to.
+   */
+  static DefaultAnchorInfo GetDefaultAnchor(
+      const nsIFrame* aPositioned, bool aCBRectIsValid,
+      AnchorPosReferenceData* aAnchorPosReferenceData);
 };
 
 }  // namespace mozilla

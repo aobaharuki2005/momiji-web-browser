@@ -960,10 +960,15 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       }
 
       if (!positionArea.IsNone()) {
-        return AnchorPositioningUtils::
-            AdjustAbsoluteContainingBlockRectForPositionArea(
-                aKidFrame, aDelegatingFrame, aOriginalContainingBlockRect,
-                aAnchorPosReferenceData, positionArea, tactic);
+        const auto defaultAnchorInfo = AnchorPositioningUtils::GetDefaultAnchor(
+            aKidFrame, false, aAnchorPosReferenceData);
+        if (defaultAnchorInfo.mRect) {
+          return AnchorPositioningUtils::
+              AdjustAbsoluteContainingBlockRectForPositionArea(
+                  *defaultAnchorInfo.mRect, aOriginalContainingBlockRect,
+                  aKidFrame->GetWritingMode(),
+                  aDelegatingFrame->GetWritingMode(), positionArea, tactic);
+        }
       }
 
       if (ViewportFrame* viewport = do_QueryFrame(aDelegatingFrame)) {

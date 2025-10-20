@@ -781,49 +781,9 @@ static StylePositionArea ToPhysicalPositionArea(StylePositionArea aPosArea,
 }
 
 nsRect AnchorPositioningUtils::AdjustAbsoluteContainingBlockRectForPositionArea(
-    nsIFrame* aPositionedFrame, nsIFrame* aContainingBlock,
-    const nsRect& aCBRect, AnchorPosReferenceData* aAnchorPosReferenceData,
-    const StylePositionArea& aPosArea,
+    const nsRect& aAnchorRect, const nsRect& aCBRect, WritingMode aPositionedWM,
+    WritingMode aCBWM, const StylePositionArea& aPosArea,
     const StylePositionTryFallbacksTryTactic* aFallbackTactic) {
-  // TODO: We need a single, unified way of getting the anchor, unifying
-  // GetUsedAnchorName etc.
-  const nsAtom* anchorName =
-      AnchorPositioningUtils::GetUsedAnchorName(aPositionedFrame, nullptr);
-  if (!anchorName) {
-    return aCBRect;
-  }
-
-  nsRect anchorRect;
-  MOZ_ASSERT_IF(aPositionedFrame->HasAnchorPosReference(),
-                aAnchorPosReferenceData);
-  const auto result = aAnchorPosReferenceData->InsertOrModify(anchorName, true);
-  if (result.mAlreadyResolved) {
-    MOZ_ASSERT(result.mEntry, "Entry exists but null?");
-    if (result.mEntry->isNothing()) {
-      return aCBRect;
-    }
-    const auto& data = result.mEntry->value();
-    MOZ_ASSERT(data.mOrigin, "Missing anchor offset resolution.");
-    anchorRect = nsRect{data.mOrigin.ref(), data.mSize};
-  } else {
-    Maybe<AnchorPosResolutionData>* entry = result.mEntry;
-    PresShell* presShell = aPositionedFrame->PresShell();
-    const auto* anchor =
-        presShell->GetAnchorPosAnchor(anchorName, aPositionedFrame);
-    if (!anchor) {
-      // If we have a cached entry, just check that it resolved to nothing last
-      // time as well.
-      MOZ_ASSERT_IF(entry, entry->isNothing());
-      return aCBRect;
-    }
-    const auto info = AnchorPositioningUtils::GetAnchorPosRect(
-        aContainingBlock, anchor, false, entry);
-    if (info.isNothing()) {
-      return aCBRect;
-    }
-    anchorRect = info.ref().mRect;
-  }
-
   // Get the boundaries of 3x3 grid in CB's frame space. The edges of the
   // default anchor box are clamped to the bounds of the CB, even if that
   // results in zero width/height cells.
@@ -838,28 +798,26 @@ nsRect AnchorPositioningUtils::AdjustAbsoluteContainingBlockRectForPositionArea(
   //              |            |            |            |
   // ttbEdges[3]  +------------+------------+------------+
 
-  nscoord ltrEdges[4] = {aCBRect.x, anchorRect.x,
-                         anchorRect.x + anchorRect.width,
+  nscoord ltrEdges[4] = {aCBRect.x, aAnchorRect.x,
+                         aAnchorRect.x + aAnchorRect.width,
                          aCBRect.x + aCBRect.width};
-  nscoord ttbEdges[4] = {aCBRect.y, anchorRect.y,
-                         anchorRect.y + anchorRect.height,
+  nscoord ttbEdges[4] = {aCBRect.y, aAnchorRect.y,
+                         aAnchorRect.y + aAnchorRect.height,
                          aCBRect.y + aCBRect.height};
   ltrEdges[1] = std::clamp(ltrEdges[1], ltrEdges[0], ltrEdges[3]);
   ltrEdges[2] = std::clamp(ltrEdges[2], ltrEdges[0], ltrEdges[3]);
   ttbEdges[1] = std::clamp(ttbEdges[1], ttbEdges[0], ttbEdges[3]);
   ttbEdges[2] = std::clamp(ttbEdges[2], ttbEdges[0], ttbEdges[3]);
 
-  WritingMode cbWM = aContainingBlock->GetWritingMode();
-  WritingMode posWM = aPositionedFrame->GetWritingMode();
-
   nsRect res = aCBRect;
 
   // PositionArea, resolved to only contain Left/Right/Top/Bottom values.
-  StylePositionArea posArea = ToPhysicalPositionArea(aPosArea, cbWM, posWM);
+  StylePositionArea posArea =
+      ToPhysicalPositionArea(aPosArea, aCBWM, aPositionedWM);
   if (aFallbackTactic) {
     // See https://github.com/w3c/csswg-drafts/issues/12869 for which WM to use
     // here.
-    ApplyFallbackTactic(posArea, *aFallbackTactic, posWM);
+    ApplyFallbackTactic(posArea, *aFallbackTactic, aPositionedWM);
   }
 
   nscoord right = ltrEdges[3];
@@ -966,6 +924,45 @@ const nsIFrame* AnchorPositioningUtils::GetAnchorPosImplicitAnchor(
   return pseudoRootFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)
              ? pseudoRootFrame->GetPlaceholderFrame()->GetParent()
              : pseudoRootFrame->GetParent();
+}
+
+AnchorPositioningUtils::DefaultAnchorInfo
+AnchorPositioningUtils::GetDefaultAnchor(
+    const nsIFrame* aPositioned, bool aCBRectIsValid,
+    AnchorPosReferenceData* aAnchorPosReferenceData) {
+  const auto* presShell = aPositioned->PresShell();
+  const auto* name = GetUsedAnchorName(aPositioned, nullptr);
+  if (!name) {
+    return {};
+  }
+
+  Maybe<AnchorPosResolutionData>* entry = nullptr;
+  if (aAnchorPosReferenceData) {
+    auto result = aAnchorPosReferenceData->InsertOrModify(name, true);
+    entry = result.mEntry;
+    if (result.mAlreadyResolved) {
+      return DefaultAnchorInfo{
+          name, entry->map([](const AnchorPosResolutionData& aValue) {
+            MOZ_ASSERT(aValue.mOrigin, "Already resolved but no origin?");
+            return nsRect{*aValue.mOrigin, aValue.mSize};
+          })};
+    }
+  }
+
+  const auto* anchor = presShell->GetAnchorPosAnchor(name, aPositioned);
+  if (!anchor) {
+    return {name, Nothing{}};
+  }
+
+  const auto info =
+      GetAnchorPosRect(aPositioned->GetParent(), anchor, aCBRectIsValid, entry);
+  if (!info) {
+    NS_WARNING("Can find anchor frame but not rect (In multicol?)");
+    // Behave as if anchor is invalid.
+    return {name, Nothing{}};
+  }
+
+  return {name, Some(info->mRect)};
 }
 
 }  // namespace mozilla
