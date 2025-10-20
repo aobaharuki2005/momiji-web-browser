@@ -9,6 +9,7 @@
 
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/Likely.h"
@@ -4382,68 +4383,183 @@ static UniqueChars QuoteString(JSContext* cx, char16_t ch) {
   return sprinter.release();
 }
 
+// Constant for an invalid nibble. Choosen so that validation can be performed
+// with just 1-2 instructions on all supported architectures.
+static constexpr uint32_t InvalidNibble = -1;
+
+template <typename Char>
+static inline uint32_t HexDigitToNibbleOrInvalid(Char ch) {
+  if ('0' <= ch && ch <= '9') {
+    return ch - '0';
+  }
+  if ('A' <= ch && ch <= 'F') {
+    return ch - 'A' + 10;
+  }
+  if ('a' <= ch && ch <= 'f') {
+    return ch - 'a' + 10;
+  }
+  return InvalidNibble;
+}
+
 /**
  * FromHex ( string [ , maxLength ] )
  *
  * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-fromhex
  */
-template <class Sink>
-static bool FromHex(JSContext* cx, Handle<JSString*> string, Sink& sink,
-                    size_t* readLength) {
+template <typename Ops, typename CharT>
+static size_t FromHex(const CharT* chars, size_t length,
+                      TypedArrayObject* tarray) {
+  auto data = Ops::extract(tarray).template cast<uint8_t*>();
+
+  // Step 4.
+  size_t index = 0;
+
+  // Step 5. (Checked in caller.)
+  MOZ_ASSERT(length % 2 == 0);
+
+  // Process eight characters per loop iteration.
+  size_t alignedLength = length & ~7;
+  if (index < alignedLength) {
+    auto data32 = data.template cast<uint32_t*>();
+
+    // Step 6.
+    while (index < alignedLength) {
+      // Step 6.a.
+      auto c0 = chars[index + 0];
+      auto c1 = chars[index + 1];
+      auto c2 = chars[index + 2];
+      auto c3 = chars[index + 3];
+
+      // Step 6.d.
+      uint32_t word1 = (HexDigitToNibbleOrInvalid(c2) << 12) |
+                       (HexDigitToNibbleOrInvalid(c3) << 8) |
+                       (HexDigitToNibbleOrInvalid(c0) << 4) |
+                       (HexDigitToNibbleOrInvalid(c1) << 0);
+      // Step 6.b.
+      if (MOZ_UNLIKELY(int32_t(word1) < 0)) {
+        break;
+      }
+
+      // Step 6.a.
+      auto c4 = chars[index + 4];
+      auto c5 = chars[index + 5];
+      auto c6 = chars[index + 6];
+      auto c7 = chars[index + 7];
+
+      // Step 6.d.
+      uint32_t word2 = (HexDigitToNibbleOrInvalid(c6) << 12) |
+                       (HexDigitToNibbleOrInvalid(c7) << 8) |
+                       (HexDigitToNibbleOrInvalid(c4) << 4) |
+                       (HexDigitToNibbleOrInvalid(c5) << 0);
+
+      // Step 6.b.
+      if (MOZ_UNLIKELY(int32_t(word2) < 0)) {
+        break;
+      }
+
+      // Step 6.c.
+      index += 4 * 2;
+
+      // Step 6.e.
+      //
+      // The word was constructed in little-endian order, so in the unlikely
+      // case of a big-endian system we have to swap it.
+      uint32_t word =
+          mozilla::NativeEndian::swapFromLittleEndian((word2 << 16) | word1);
+      Ops::store(data32++, word);
+    }
+
+    data = data32.template cast<uint8_t*>();
+  }
+
+  // Step 6.
+  while (index < length) {
+    // Step 6.a.
+    auto c0 = chars[index + 0];
+    auto c1 = chars[index + 1];
+
+    // Step 6.d.
+    uint32_t byte = (HexDigitToNibbleOrInvalid(c0) << 4) |
+                    (HexDigitToNibbleOrInvalid(c1) << 0);
+
+    // Step 6.b.
+    if (MOZ_UNLIKELY(int32_t(byte) < 0)) {
+      return index;
+    }
+
+    // Step 6.c.
+    index += 2;
+
+    // Step 6.e.
+    Ops::store(data++, uint8_t(byte));
+  }
+
+  // Step 7.
+  return index;
+}
+
+/**
+ * FromHex ( string [ , maxLength ] )
+ *
+ * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-fromhex
+ */
+template <typename Ops>
+static size_t FromHex(JSLinearString* linear, size_t length,
+                      TypedArrayObject* tarray) {
+  JS::AutoCheckCannotGC nogc;
+  if (linear->hasLatin1Chars()) {
+    return FromHex<Ops>(linear->latin1Chars(nogc), length, tarray);
+  }
+  return FromHex<Ops>(linear->twoByteChars(nogc), length, tarray);
+}
+
+/**
+ * FromHex ( string [ , maxLength ] )
+ *
+ * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-fromhex
+ */
+static bool FromHex(JSContext* cx, JSString* string, size_t maxLength,
+                    TypedArrayObject* tarray) {
+  MOZ_ASSERT(tarray->type() == Scalar::Uint8);
+
+  // The underlying buffer must neither be detached nor shrunk. (It may have
+  // been grown when it's a growable shared buffer and a concurrent thread
+  // resized the buffer.)
+  MOZ_ASSERT(!tarray->hasDetachedBuffer());
+  MOZ_ASSERT(tarray->length().valueOr(0) >= maxLength);
+
   // Step 1. (Not applicable in our implementation.)
 
   // Step 2.
-  size_t length = string->length();
+  //
+  // Each byte is encoded in two characters.
+  size_t readLength = maxLength * 2;
+  MOZ_ASSERT(readLength <= string->length());
 
-  // Step 3.
-  if (length % 2 != 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TYPED_ARRAY_BAD_HEX_STRING_LENGTH);
-    return false;
-  }
+  // Step 3. (Not applicable in our implementation.)
 
   JSLinearString* linear = string->ensureLinear(cx);
   if (!linear) {
     return false;
   }
 
-  // Step 4. (Not applicable in our implementation.)
-
-  // Step 5.
-  size_t index = 0;
-
-  // Step 6.
-  while (index < length && sink.canAppend()) {
-    // Step 6.a.
+  // Steps 4 and 6-7.
+  size_t index;
+  if (tarray->isSharedMemory()) {
+    index = FromHex<SharedOps>(linear, readLength, tarray);
+  } else {
+    index = FromHex<UnsharedOps>(linear, readLength, tarray);
+  }
+  if (MOZ_UNLIKELY(index < readLength)) {
     char16_t c0 = linear->latin1OrTwoByteChar(index);
     char16_t c1 = linear->latin1OrTwoByteChar(index + 1);
-
-    // Step 6.b.
-    if (MOZ_UNLIKELY(!mozilla::IsAsciiHexDigit(c0) ||
-                     !mozilla::IsAsciiHexDigit(c1))) {
-      char16_t ch = !mozilla::IsAsciiHexDigit(c0) ? c0 : c1;
-      if (auto str = QuoteString(cx, ch)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_TYPED_ARRAY_BAD_HEX_DIGIT, str.get());
-      }
-      return false;
+    char16_t ch = !mozilla::IsAsciiHexDigit(c0) ? c0 : c1;
+    if (auto str = QuoteString(cx, ch)) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TYPED_ARRAY_BAD_HEX_DIGIT, str.get());
     }
-
-    // Step 6.c.
-    index += 2;
-
-    // Step 6.d.
-    uint8_t byte = (mozilla::AsciiAlphanumericToNumber(c0) << 4) +
-                   mozilla::AsciiAlphanumericToNumber(c1);
-
-    // Step 6.e.
-    if (!sink.append(byte)) {
-      return false;
-    }
+    return false;
   }
-
-  // Step 7.
-  *readLength = index;
   return true;
 }
 
@@ -4991,28 +5107,30 @@ static bool uint8array_fromHex(JSContext* cx, unsigned argc, Value* vp) {
   }
   Rooted<JSString*> string(cx, args[0].toString());
 
-  // Step 2.
-  ByteVector bytes(cx);
-  ByteSink sink{bytes};
-  size_t unusedReadLength;
-  if (!FromHex(cx, string, sink, &unusedReadLength)) {
+  // FromHex, step 2.
+  size_t stringLength = string->length();
+
+  // FromHex, step 3.
+  if (stringLength % 2 != 0) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TYPED_ARRAY_BAD_HEX_STRING_LENGTH);
     return false;
   }
 
-  // Step 3.
-  size_t resultLength = bytes.length();
+  // Step 4. (Reordered)
+  size_t resultLength = stringLength / 2;
 
-  // Step 4.
-  auto* tarray =
-      TypedArrayObjectTemplate<uint8_t>::fromLength(cx, resultLength);
+  // Step 5. (Reordered)
+  Rooted<TypedArrayObject*> tarray(
+      cx, TypedArrayObjectTemplate<uint8_t>::fromLength(cx, resultLength));
   if (!tarray) {
     return false;
   }
 
-  // Step 5.
-  auto target = SharedMem<uint8_t*>::unshared(tarray->dataPointerUnshared());
-  auto source = SharedMem<uint8_t*>::unshared(bytes.begin());
-  UnsharedOps::podCopy(target, source, resultLength);
+  // Steps 2-3.
+  if (!FromHex(cx, string, resultLength, tarray)) {
+    return false;
+  }
 
   // Step 6.
   args.rval().setObject(*tarray);
@@ -5144,23 +5262,32 @@ static bool uint8array_setFromHex(JSContext* cx, const CallArgs& args) {
   Rooted<JSString*> string(cx, args[0].toString());
 
   // Steps 4-6.
-  auto length = tarray->length();
-  if (!length) {
+  auto byteLength = tarray->length();
+  if (!byteLength) {
     ReportOutOfBounds(cx, tarray);
     return false;
   }
 
-  // Steps 7-9.
-  TypedArraySink sink{tarray, *length};
-  size_t readLength;
-  if (!FromHex(cx, string, sink, &readLength)) {
+  // FromHex, step 2.
+  size_t stringLength = string->length();
+
+  // FromHex, step 3.
+  if (stringLength % 2 != 0) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TYPED_ARRAY_BAD_HEX_STRING_LENGTH);
     return false;
   }
 
-  // Step 10.
-  size_t written = sink.written();
+  // |string| encodes |stringLength / 2| bytes, but we can't write more bytes
+  // than there is space in |tarray|.
+  size_t maxLength = std::min(*byteLength, stringLength / 2);
 
-  // Steps 11-13. (Not applicable in our implementation.)
+  // Steps 7-9.
+  if (!FromHex(cx, string, maxLength, tarray)) {
+    return false;
+  }
+
+  // Steps 10-13. (Not applicable in our implementation.)
 
   // Step 14.
   Rooted<PlainObject*> result(cx, NewPlainObject(cx));
@@ -5169,13 +5296,18 @@ static bool uint8array_setFromHex(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 15.
-  Rooted<Value> readValue(cx, NumberValue(readLength));
+  //
+  // Each byte is encoded in two characters, so the number of read characters is
+  // exactly twice as large as |maxLength|.
+  Rooted<Value> readValue(cx, NumberValue(maxLength * 2));
   if (!DefineDataProperty(cx, result, cx->names().read, readValue)) {
     return false;
   }
 
   // Step 16.
-  Rooted<Value> writtenValue(cx, NumberValue(written));
+  //
+  // |maxLength| was constrained to the number of bytes written on success.
+  Rooted<Value> writtenValue(cx, NumberValue(maxLength));
   if (!DefineDataProperty(cx, result, cx->names().written, writtenValue)) {
     return false;
   }
