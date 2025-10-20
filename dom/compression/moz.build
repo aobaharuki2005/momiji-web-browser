@@ -17,6 +17,7 @@ UNIFIED_SOURCES += [
     "CompressionStream.cpp",
     "DecompressionStream.cpp",
     "FormatZlib.cpp",
+    "FormatZstd.cpp",
 ]
 
 FINAL_LIBRARY = "xul"
