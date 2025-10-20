@@ -2099,8 +2099,7 @@ pub extern "C" fn Servo_StyleSheet_GetSourceMapURL(
     contents: &StylesheetContents,
     result: &mut nsACString,
 ) {
-    let url_opt = contents.source_map_url.read();
-    if let Some(ref url) = *url_opt {
+    if let Some(ref url) = contents.source_map_url {
         result.assign(url);
     }
 }
@@ -2110,8 +2109,7 @@ pub extern "C" fn Servo_StyleSheet_GetSourceURL(
     contents: &StylesheetContents,
     result: &mut nsACString,
 ) {
-    let url_opt = contents.source_url.read();
-    if let Some(ref url) = *url_opt {
+    if let Some(ref url) = contents.source_url {
         result.assign(url);
     }
 }
@@ -2904,8 +2902,8 @@ pub extern "C" fn Servo_StyleRule_SetSelectorText(
         use selectors::parser::ParseRelative;
         use style::selector_parser::SelectorParser;
 
-        let namespaces = contents.namespaces.read();
-        let url_data = contents.url_data.read();
+        let namespaces = &contents.namespaces;
+        let url_data = &contents.url_data;
         let parser = SelectorParser {
             stylesheet_origin: contents.origin,
             namespaces: &namespaces,
@@ -3324,7 +3322,7 @@ pub extern "C" fn Servo_PageRule_SetSelectorText(
             return true;
         }
 
-        let url_data = contents.url_data.read();
+        let url_data = &contents.url_data;
         let context = ParserContext::new(
             Origin::Author,
             &url_data,
@@ -9452,8 +9450,8 @@ pub unsafe extern "C" fn Servo_SharedMemoryBuilder_AddStylesheet(
     // Assert some things we assume when we create a style sheet from shared
     // memory.
     debug_assert_eq!(contents.quirks_mode, QuirksMode::NoQuirks);
-    debug_assert!(contents.source_map_url.read().is_none());
-    debug_assert!(contents.source_url.read().is_none());
+    debug_assert!(contents.source_map_url.is_none());
+    debug_assert!(contents.source_url.is_none());
 
     match builder.write(&contents.rules) {
         Ok(rules_ptr) => &**rules_ptr,
