@@ -2254,7 +2254,7 @@
     thisShape: ShapeField
 
 - name: BindFunctionResult
-  shared: false
+  shared: true
   transpile: true
   cost_estimate: 5
   args:
@@ -2263,7 +2263,7 @@
     templateObject: ObjectField
 
 - name: SpecializedBindFunctionResult
-  shared: false
+  shared: true
   transpile: true
   cost_estimate: 4
   args:
