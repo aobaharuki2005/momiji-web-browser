@@ -221,13 +221,10 @@ BaseWebSocketChannel::InitLoadInfoNative(
     nsINode* aLoadingNode, nsIPrincipal* aLoadingPrincipal,
     nsIPrincipal* aTriggeringPrincipal,
     nsICookieJarSettings* aCookieJarSettings, uint32_t aSecurityFlags,
-    nsContentPolicyType aContentPolicyType,
-    const Maybe<mozilla::dom::ClientInfo>& aClientInfo,
-    uint32_t aSandboxFlags) {
-  MOZ_ASSERT(NS_IsMainThread());
+    nsContentPolicyType aContentPolicyType, uint32_t aSandboxFlags) {
   mLoadInfo = MOZ_TRY(LoadInfo::Create(
       aLoadingPrincipal, aTriggeringPrincipal, aLoadingNode, aSecurityFlags,
-      aContentPolicyType, aClientInfo,
+      aContentPolicyType, Maybe<mozilla::dom::ClientInfo>(),
       Maybe<mozilla::dom::ServiceWorkerDescriptor>(), aSandboxFlags));
   if (aCookieJarSettings) {
     mLoadInfo->SetCookieJarSettings(aCookieJarSettings);
@@ -252,9 +249,9 @@ BaseWebSocketChannel::InitLoadInfo(nsINode* aLoadingNode,
                                    nsIPrincipal* aTriggeringPrincipal,
                                    uint32_t aSecurityFlags,
                                    nsContentPolicyType aContentPolicyType) {
-  return InitLoadInfoNative(
-      aLoadingNode, aLoadingPrincipal, aTriggeringPrincipal, nullptr,
-      aSecurityFlags, aContentPolicyType, Maybe<mozilla::dom::ClientInfo>(), 0);
+  return InitLoadInfoNative(aLoadingNode, aLoadingPrincipal,
+                            aTriggeringPrincipal, nullptr, aSecurityFlags,
+                            aContentPolicyType, 0);
 }
 
 NS_IMETHODIMP

@@ -54,13 +54,13 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   NS_IMETHOD SetPingInterval(uint32_t aSeconds) override;
   NS_IMETHOD GetPingTimeout(uint32_t* aSeconds) override;
   NS_IMETHOD SetPingTimeout(uint32_t aSeconds) override;
-  NS_IMETHOD InitLoadInfoNative(
-      nsINode* aLoadingNode, nsIPrincipal* aLoadingPrincipal,
-      nsIPrincipal* aTriggeringPrincipal,
-      nsICookieJarSettings* aCookieJarSettings, uint32_t aSecurityFlags,
-      nsContentPolicyType aContentPolicyType,
-      const Maybe<mozilla::dom::ClientInfo>& aClientInfo,
-      uint32_t aSandboxFlags) override;
+  NS_IMETHOD InitLoadInfoNative(nsINode* aLoadingNode,
+                                nsIPrincipal* aLoadingPrincipal,
+                                nsIPrincipal* aTriggeringPrincipal,
+                                nsICookieJarSettings* aCookieJarSettings,
+                                uint32_t aSecurityFlags,
+                                nsContentPolicyType aContentPolicyType,
+                                uint32_t aSandboxFlags) override;
   NS_IMETHOD InitLoadInfo(nsINode* aLoadingNode,
                           nsIPrincipal* aLoadingPrincipal,
                           nsIPrincipal* aTriggeringPrincipal,
