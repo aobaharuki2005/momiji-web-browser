@@ -32,7 +32,7 @@ add_task(async function () {
   EventUtils.sendKey("F2", inspector.markup._frame.contentWindow);
   await onHtmlEditorCreated;
 
-  ok(inspector.markup.htmlEditor._visible, "HTML Editor is visible");
+  ok(inspector.markup.htmlEditor.isVisible, "HTML Editor is visible");
   is(
     inspector.markup.htmlEditor.editor.getText(),
     DIV1_HTML,
@@ -43,7 +43,7 @@ add_task(async function () {
   let onEditorHidden = once(inspector.markup.htmlEditor, "popuphidden");
   EventUtils.sendKey("ESCAPE", inspector.markup.htmlEditor.doc.defaultView);
   await onEditorHidden;
-  ok(!inspector.markup.htmlEditor._visible, "HTML Editor is not visible");
+  ok(!inspector.markup.htmlEditor.isVisible, "HTML Editor is not visible");
 
   await selectNode("#d2", inspector);
 
@@ -52,7 +52,7 @@ add_task(async function () {
   EventUtils.sendKey("F2", inspector.markup._frame.contentWindow);
   await onHtmlEditorCreated;
 
-  ok(inspector.markup.htmlEditor._visible, "HTML Editor is visible");
+  ok(inspector.markup.htmlEditor.isVisible, "HTML Editor is visible");
   is(
     inspector.markup.htmlEditor.editor.getText(),
     DIV2_HTML,
@@ -84,5 +84,5 @@ add_task(async function () {
   onEditorHidden = once(inspector.markup.htmlEditor, "popuphidden");
   EventUtils.sendKey("ESCAPE", inspector.markup.htmlEditor.doc.defaultView);
   await onEditorHidden;
-  ok(!inspector.markup.htmlEditor._visible, "HTML Editor is not visible");
+  ok(!inspector.markup.htmlEditor.isVisible, "HTML Editor is not visible");
 });
