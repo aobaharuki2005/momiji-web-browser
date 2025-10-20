@@ -297,7 +297,7 @@ export let PlacesBrowserStartup = {
     // interval between backups elapsed.
     if (
       !lastBackupFile ||
-      new Date() - lazy.PlacesBackups.getDateForFile(lastBackupFile) >
+      Date.now() - lazy.PlacesBackups.getDateForFile(lastBackupFile).getTime() >
         BOOKMARKS_BACKUP_MIN_INTERVAL_DAYS * 86400000
     ) {
       let maxBackups = Services.prefs.getIntPref(
