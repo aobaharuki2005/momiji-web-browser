@@ -412,6 +412,7 @@
       --color-accent-primary: ButtonText;
       --color-accent-primary-hover: SelectedItem;
       --color-accent-primary-active: var(--color-accent-primary-hover);
+      --color-accent-primary-selected: SelectedItem;
 
       /** Focus Outline **/
       --focus-outline-color: var(--text-color);
@@ -424,6 +425,7 @@
 
       /** Text **/
       --text-color-disabled: GrayText;
+      --text-color-accent-primary-selected: SelectedItemText;
     }
   }
 }
