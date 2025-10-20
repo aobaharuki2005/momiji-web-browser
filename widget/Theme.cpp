@@ -1234,21 +1234,18 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
     case StyleAppearance::ScrollbarbuttonDown:
     case StyleAppearance::ScrollbarbuttonLeft:
     case StyleAppearance::ScrollbarbuttonRight: {
-      // For scrollbar-width:thin, we don't display the buttons.
-      if (!ScrollbarDrawing::IsScrollbarWidthThin(aFrame)) {
-        if constexpr (std::is_same_v<PaintBackendData, WebRenderBackendData>) {
-          // TODO: Need to figure out how to best draw this using WR.
-          return false;
-        } else {
-          bool isHorizontal =
-              aAppearance == StyleAppearance::ScrollbarbuttonLeft ||
-              aAppearance == StyleAppearance::ScrollbarbuttonRight;
-          auto kind = ComputeScrollbarKind(aFrame, isHorizontal);
-          GetScrollbarDrawing().PaintScrollbarButton(
-              aPaintData, aAppearance, devPxRect, kind, aFrame,
-              *nsLayoutUtils::StyleForScrollbar(aFrame), elementState, colors,
-              dpiRatio);
-        }
+      if constexpr (std::is_same_v<PaintBackendData, WebRenderBackendData>) {
+        // TODO: Need to figure out how to best draw this using WR.
+        return false;
+      } else {
+        bool isHorizontal =
+            aAppearance == StyleAppearance::ScrollbarbuttonLeft ||
+            aAppearance == StyleAppearance::ScrollbarbuttonRight;
+        auto kind = ComputeScrollbarKind(aFrame, isHorizontal);
+        GetScrollbarDrawing().PaintScrollbarButton(
+            aPaintData, aAppearance, devPxRect, kind, aFrame,
+            *nsLayoutUtils::StyleForScrollbar(aFrame), elementState, colors,
+            dpiRatio);
       }
       break;
     }
