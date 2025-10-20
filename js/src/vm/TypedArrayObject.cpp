@@ -5339,6 +5339,49 @@ static bool uint8array_toBase64(JSContext* cx, unsigned argc, Value* vp) {
                                                                        args);
 }
 
+template <typename Ops>
+static void ToHex(TypedArrayObject* tarray, size_t length,
+                  JSStringBuilder& sb) {
+  // NB: Lower case hex digits.
+  static constexpr char HexDigits[] = "0123456789abcdef";
+  static_assert(std::char_traits<char>::length(HexDigits) == 16);
+
+  // Process multiple bytes per loop to reduce number of calls to
+  // infallibleAppend. Choose four bytes because tested compilers can optimize
+  // this amount of bytes into a single write operation.
+  constexpr size_t BYTES_PER_LOOP = 4;
+
+  size_t alignedLength = length & ~(BYTES_PER_LOOP - 1);
+
+  // Steps 3 and 5.
+  //
+  // Our implementation directly converts the bytes to their string
+  // representation instead of first collecting them into an intermediate list.
+  auto data = Ops::extract(tarray).template cast<uint8_t*>();
+  for (size_t index = 0; index < alignedLength;) {
+    char chars[BYTES_PER_LOOP * 2];
+
+    for (size_t i = 0; i < BYTES_PER_LOOP; ++i) {
+      auto byte = Ops::load(data + index++);
+      chars[i * 2 + 0] = HexDigits[byte >> 4];
+      chars[i * 2 + 1] = HexDigits[byte & 0xf];
+    }
+
+    sb.infallibleAppend(chars, sizeof(chars));
+  }
+
+  // Write the remaining characters.
+  for (size_t index = alignedLength; index < length;) {
+    char chars[2];
+
+    auto byte = Ops::load(data + index++);
+    chars[0] = HexDigits[byte >> 4];
+    chars[1] = HexDigits[byte & 0xf];
+
+    sb.infallibleAppend(chars, sizeof(chars));
+  }
+}
+
 /**
  * Uint8Array.prototype.toHex ( )
  *
@@ -5375,20 +5418,11 @@ static bool uint8array_toHex(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // NB: Lower case hex digits.
-  static constexpr char HexDigits[] = "0123456789abcdef";
-  static_assert(std::char_traits<char>::length(HexDigits) == 16);
-
   // Steps 3 and 5.
-  //
-  // Our implementation directly converts the bytes to their string
-  // representation instead of first collecting them into an intermediate list.
-  auto data = tarray->dataPointerEither().cast<uint8_t*>();
-  for (size_t index = 0; index < *length; index++) {
-    auto byte = jit::AtomicOperations::loadSafeWhenRacy(data + index);
-
-    sb.infallibleAppend(HexDigits[byte >> 4]);
-    sb.infallibleAppend(HexDigits[byte & 0xf]);
+  if (tarray->isSharedMemory()) {
+    ToHex<SharedOps>(tarray, *length, sb);
+  } else {
+    ToHex<UnsharedOps>(tarray, *length, sb);
   }
 
   MOZ_ASSERT(sb.length() == outLength, "all characters were written");
