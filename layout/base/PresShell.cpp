@@ -126,6 +126,7 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/glean/GfxMetrics.h"
 #include "mozilla/glean/LayoutMetrics.h"
+#include "mozilla/glue/Debug.h"
 #include "mozilla/layers/APZPublicUtils.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/FocusTarget.h"
@@ -5610,7 +5611,8 @@ PresShell::CanvasBackground PresShell::ComputeCanvasBackground() const {
 }
 
 nscolor PresShell::ComputeBackstopColor(nsIFrame* aDisplayRoot) {
-  nsIWidget* widget = aDisplayRoot ? aDisplayRoot->GetNearestWidget() : nullptr;
+  nsIWidget* widget =
+      aDisplayRoot ? aDisplayRoot->GetNearestWidget() : GetNearestWidget();
   if (widget &&
       (widget->GetTransparencyMode() != widget::TransparencyMode::Opaque ||
        widget->WidgetPaintsBackground())) {
@@ -5630,14 +5632,28 @@ struct PaintParams {
 
 WindowRenderer* PresShell::GetWindowRenderer() {
   NS_ASSERTION(mViewManager, "Should have view manager");
-
-  nsView* rootView = mViewManager->GetRootView();
-  if (rootView) {
+  if (nsView* rootView = mViewManager->GetRootView()) {
     if (nsIWidget* widget = rootView->GetWidget()) {
       return widget->GetWindowRenderer();
     }
   }
   return nullptr;
+}
+
+nsIWidget* PresShell::GetNearestWidget() const {
+  if (mViewManager) {
+    if (auto* root = mViewManager->GetRootView()) {
+      if (nsIWidget* widget = root->GetWidget()) {
+        return widget;
+      }
+    }
+  }
+  if (auto* el = mDocument->GetEmbedderElement()) {
+    if (auto* f = el->GetPrimaryFrame()) {
+      return f->GetNearestWidget();
+    }
+  }
+  return GetRootWidget();
 }
 
 bool PresShell::AsyncPanZoomEnabled() {

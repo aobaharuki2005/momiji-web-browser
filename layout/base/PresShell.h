@@ -456,6 +456,10 @@ class PresShell final : public nsStubDocumentObserver,
   // Return the closest root widget (widget owned by a root frame).
   nsIWidget* GetRootWidget() const;
 
+  // Return the closest widget (including popups, if our document is inside a
+  // popup).
+  nsIWidget* GetNearestWidget() const;
+
   /**
    * Get root scroll container frame from the frame constructor.
    */
