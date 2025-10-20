@@ -3450,17 +3450,13 @@ void MacroAssembler::copySignDouble(FloatRegister lhs, FloatRegister rhs,
   Register lhsi = temps.Acquire();
   Register rhsi = temps.Acquire();
 
-  // Manipulate high words of double inputs.
-  moveFromDoubleHi(lhs, lhsi);
-  moveFromDoubleHi(rhs, rhsi);
+  moveFromDouble(lhs, lhsi);
+  moveFromDouble(rhs, rhsi);
 
   // Combine.
-  ma_ins(rhsi, lhsi, 0, 31);
+  ma_dins(rhsi, lhsi, Imm32(0), Imm32(63));
 
-  if (lhs != output) {
-    moveDouble(lhs, output);
-  }
-  moveToDoubleHi(rhsi, output);
+  moveToDouble(rhsi, output);
 }
 
 void MacroAssembler::copySignFloat32(FloatRegister lhs, FloatRegister rhs,
