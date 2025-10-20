@@ -971,7 +971,7 @@ bool Navigation::FireTraverseNavigateEvent(
 bool Navigation::FirePushReplaceReloadNavigateEvent(
     JSContext* aCx, NavigationType aNavigationType, nsIURI* aDestinationURL,
     bool aIsSameDocument, Maybe<UserNavigationInvolvement> aUserInvolvement,
-    Element* aSourceElement, already_AddRefed<FormData> aFormDataEntryList,
+    Element* aSourceElement, FormData* aFormDataEntryList,
     nsIStructuredCloneContainer* aNavigationAPIState,
     nsIStructuredCloneContainer* aClassicHistoryAPIState) {
   // To not unnecessarily create an event that's never used, step 1 and step 2
@@ -991,7 +991,7 @@ bool Navigation::FirePushReplaceReloadNavigateEvent(
   return InnerFireNavigateEvent(
       aCx, aNavigationType, destination,
       aUserInvolvement.valueOr(UserNavigationInvolvement::None), aSourceElement,
-      std::move(aFormDataEntryList), aClassicHistoryAPIState,
+      aFormDataEntryList, aClassicHistoryAPIState,
       /* aDownloadRequestFilename */ VoidString());
 }
 
@@ -1192,7 +1192,7 @@ bool Navigation::InnerFireNavigateEvent(
     JSContext* aCx, NavigationType aNavigationType,
     NavigationDestination* aDestination,
     UserNavigationInvolvement aUserInvolvement, Element* aSourceElement,
-    already_AddRefed<FormData> aFormDataEntryList,
+    FormData* aFormDataEntryList,
     nsIStructuredCloneContainer* aClassicHistoryAPIState,
     const nsAString& aDownloadRequestFilename) {
   nsCOMPtr<nsIGlobalObject> globalObject = GetOwnerGlobal();

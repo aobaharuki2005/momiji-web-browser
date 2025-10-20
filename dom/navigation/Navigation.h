@@ -117,7 +117,7 @@ class Navigation final : public DOMEventTargetHelper {
   MOZ_CAN_RUN_SCRIPT bool FirePushReplaceReloadNavigateEvent(
       JSContext* aCx, NavigationType aNavigationType, nsIURI* aDestinationURL,
       bool aIsSameDocument, Maybe<UserNavigationInvolvement> aUserInvolvement,
-      Element* aSourceElement, already_AddRefed<FormData> aFormDataEntryList,
+      Element* aSourceElement, FormData* aFormDataEntryList,
       nsIStructuredCloneContainer* aNavigationAPIState,
       nsIStructuredCloneContainer* aClassicHistoryAPIState);
 
@@ -168,7 +168,7 @@ class Navigation final : public DOMEventTargetHelper {
       JSContext* aCx, NavigationType aNavigationType,
       NavigationDestination* aDestination,
       UserNavigationInvolvement aUserInvolvement, Element* aSourceElement,
-      already_AddRefed<FormData> aFormDataEntryList,
+      FormData* aFormDataEntryList,
       nsIStructuredCloneContainer* aClassicHistoryAPIState,
       const nsAString& aDownloadRequestFilename);
 
