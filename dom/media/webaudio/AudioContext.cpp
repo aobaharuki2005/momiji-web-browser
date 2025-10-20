@@ -283,6 +283,7 @@ already_AddRefed<AudioContext> AudioContext::Constructor(
                          ? aOptions.mSampleRate.Value()
                          : MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE;
 
+  WEB_AUDIO_API_LOG("AudioContext sampleRate={}", sampleRate);
   RefPtr<AudioContext> object =
       new AudioContext(window, false, 2, 0, sampleRate);
 
@@ -317,6 +318,9 @@ already_AddRefed<AudioContext> AudioContext::Constructor(
     return nullptr;
   }
 
+  WEB_AUDIO_API_LOG(
+      "OfflineAudioContext numberOfChannels={} length={} sampleRate={}",
+      aNumberOfChannels, aLength, aSampleRate);
   if (aNumberOfChannels == 0 ||
       aNumberOfChannels > WebAudioUtils::MaxChannelCount) {
     aRv.ThrowNotSupportedError(
