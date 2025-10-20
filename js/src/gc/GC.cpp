@@ -5488,14 +5488,18 @@ JS_PUBLIC_API bool js::gc::detail::CanCheckGrayBits(const TenuredCell* cell) {
 
   MOZ_ASSERT(cell);
 
+  JS::Zone* zone = cell->zoneFromAnyThread();
+  if (zone->isAtomsZone() && cell->isMarkedBlack()) {
+    // This could be a shared atom in the parent runtime. Skip this check.
+    return true;
+  }
+
   auto* runtime = cell->runtimeFromAnyThread();
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
 
   if (!runtime->gc.areGrayBitsValid()) {
     return false;
   }
-
-  JS::Zone* zone = cell->zone();
 
   if (runtime->gc.isIncrementalGCInProgress() && !zone->wasGCStarted()) {
     return false;
