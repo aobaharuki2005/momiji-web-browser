@@ -1840,12 +1840,10 @@ static bool TypedArray_toStringTagGetter(JSContext* cx, unsigned argc,
 }
 
 /* static */ const JSPropertySpec TypedArrayObject::protoAccessors[] = {
-    JS_INLINABLE_PSG("length", TypedArray_lengthGetter, 0, TypedArrayLength),
+    JS_PSG("length", TypedArray_lengthGetter, 0),
     JS_PSG("buffer", TypedArray_bufferGetter, 0),
-    JS_INLINABLE_PSG("byteLength", TypedArray_byteLengthGetter, 0,
-                     TypedArrayByteLength),
-    JS_INLINABLE_PSG("byteOffset", TypedArray_byteOffsetGetter, 0,
-                     TypedArrayByteOffset),
+    JS_PSG("byteLength", TypedArray_byteLengthGetter, 0),
+    JS_PSG("byteOffset", TypedArray_byteOffsetGetter, 0),
     JS_SYM_GET(toStringTag, TypedArray_toStringTagGetter, 0),
     JS_PS_END,
 };
@@ -6187,6 +6185,21 @@ const JSClass TypedArrayObject::protoClasses[Scalar::MaxTypedArrayViewType] = {
     JS_FOR_EACH_TYPED_ARRAY(IMPL_TYPED_ARRAY_PROTO_CLASS)
 #undef IMPL_TYPED_ARRAY_PROTO_CLASS
 };
+
+/* static */
+bool TypedArrayObject::isOriginalLengthGetter(Native native) {
+  return native == TypedArray_lengthGetter;
+}
+
+/* static */
+bool TypedArrayObject::isOriginalByteOffsetGetter(Native native) {
+  return native == TypedArray_byteOffsetGetter;
+}
+
+/* static */
+bool TypedArrayObject::isOriginalByteLengthGetter(Native native) {
+  return native == TypedArray_byteLengthGetter;
+}
 
 bool js::IsTypedArrayConstructor(const JSObject* obj) {
 #define CHECK_TYPED_ARRAY_CONSTRUCTOR(_, T, N)                                 \

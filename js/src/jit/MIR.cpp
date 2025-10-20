@@ -7163,17 +7163,21 @@ MDefinition* MGuardSpecificInt32::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
-MDefinition* MGuardShape::foldsTo(TempAllocator& alloc) {
-  if (object()->isGuardShape() &&
-      shape() == object()->toGuardShape()->shape()) {
-    return object();
+bool MCallBindVar::congruentTo(const MDefinition* ins) const {
+  if (!ins->isCallBindVar()) {
+    return false;
   }
-  return this;
+  return congruentIfOperandsEqual(ins);
 }
 
 bool MGuardShape::congruentTo(const MDefinition* ins) const {
-  return congruentIfOperandsEqual(ins) &&
-         shape() == ins->toGuardShape()->shape();
+  if (!ins->isGuardShape()) {
+    return false;
+  }
+  if (shape() != ins->toGuardShape()->shape()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
 }
 
 AliasSet MGuardShape::getAliasSet() const {

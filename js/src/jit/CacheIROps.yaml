@@ -1175,7 +1175,7 @@
     rhs: ValId
 
 - name: ArrayJoinResult
-  shared: true
+  shared: false
   transpile: true
   cost_estimate: 5
   args:
@@ -1204,7 +1204,7 @@
     array: ObjId
 
 - name: PackedArraySliceResult
-  shared: true
+  shared: false
   transpile: true
   cost_estimate: 5
   args:
@@ -1214,7 +1214,7 @@
     end: Int32Id
 
 - name: ArgumentsSliceResult
-  shared: true
+  shared: false
   transpile: true
   cost_estimate: 5
   args:
@@ -1688,7 +1688,7 @@
 # Because Baseline stub code is shared by all realms in the Zone, this
 # instruction loads a pointer to the RNG from a stub field.
 - name: MathRandomResult
-  shared: true
+  shared: false
   transpile: true
   cost_estimate: 3
   args:
@@ -2254,7 +2254,7 @@
     thisShape: ShapeField
 
 - name: BindFunctionResult
-  shared: true
+  shared: false
   transpile: true
   cost_estimate: 5
   args:
@@ -2263,7 +2263,7 @@
     templateObject: ObjectField
 
 - name: SpecializedBindFunctionResult
-  shared: true
+  shared: false
   transpile: true
   cost_estimate: 4
   args:

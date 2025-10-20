@@ -2174,7 +2174,7 @@
     environmentChain: Object
   result_type: Object
   movable: true
-  congruent_to: if_operands_equal
+  congruent_to: custom
   alias_set: none
   generate_lir: true
 
@@ -2189,7 +2189,6 @@
   congruent_to: custom
   alias_set: custom
   might_alias: custom
-  folds_to: custom
   generate_lir: true
   lir_temps: 1
 

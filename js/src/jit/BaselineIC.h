@@ -391,12 +391,13 @@ extern bool DoLazyConstantFallback(JSContext* cx, BaselineFrame* frame,
                                    MutableHandleValue res);
 
 extern bool DoGetPropFallback(JSContext* cx, BaselineFrame* frame,
-                              ICFallbackStub* stub, HandleValue val,
+                              ICFallbackStub* stub, MutableHandleValue val,
                               MutableHandleValue res);
 
 extern bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
                                    ICFallbackStub* stub, HandleValue receiver,
-                                   HandleValue val, MutableHandleValue res);
+                                   MutableHandleValue val,
+                                   MutableHandleValue res);
 
 extern bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
                               ICFallbackStub* stub, Value* stack,

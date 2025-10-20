@@ -718,7 +718,7 @@ bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
 #endif
 
   TryAttachStub<GetPropIRGenerator>("GetElem", cx, frame, stub,
-                                    CacheKind::GetElem, lhs, rhs, lhs);
+                                    CacheKind::GetElem, lhs, rhs);
 
   if (!GetElementOperation(cx, lhs, rhs, res)) {
     return false;
@@ -752,8 +752,7 @@ bool DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame,
   }
 
   TryAttachStub<GetPropIRGenerator>("GetElemSuper", cx, frame, stub,
-                                    CacheKind::GetElemSuper, lhs, rhs,
-                                    receiver);
+                                    CacheKind::GetElemSuper, lhs, rhs);
 
   return GetObjectElementOperation(cx, op, lhsObj, receiver, rhs, res);
 }
@@ -1289,7 +1288,7 @@ bool FallbackICCodeCompiler::emit_LazyConstant() {
 //
 
 bool DoGetPropFallback(JSContext* cx, BaselineFrame* frame,
-                       ICFallbackStub* stub, HandleValue val,
+                       ICFallbackStub* stub, MutableHandleValue val,
                        MutableHandleValue res) {
   stub->incrementEnteredCount();
   MaybeNotifyWarp(frame->outerScript(), stub);
@@ -1305,7 +1304,7 @@ bool DoGetPropFallback(JSContext* cx, BaselineFrame* frame,
   RootedValue idVal(cx, StringValue(name));
 
   TryAttachStub<GetPropIRGenerator>("GetProp", cx, frame, stub,
-                                    CacheKind::GetProp, val, idVal, val);
+                                    CacheKind::GetProp, val, idVal);
 
   if (op == JSOp::GetBoundName) {
     RootedObject env(cx, &val.toObject());
@@ -1323,7 +1322,7 @@ bool DoGetPropFallback(JSContext* cx, BaselineFrame* frame,
 
 bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
                             ICFallbackStub* stub, HandleValue receiver,
-                            HandleValue val, MutableHandleValue res) {
+                            MutableHandleValue val, MutableHandleValue res) {
   stub->incrementEnteredCount();
   MaybeNotifyWarp(frame->outerScript(), stub);
 
@@ -1347,8 +1346,7 @@ bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
   }
 
   TryAttachStub<GetPropIRGenerator>("GetPropSuper", cx, frame, stub,
-                                    CacheKind::GetPropSuper, val, idVal,
-                                    receiver);
+                                    CacheKind::GetPropSuper, val, idVal);
 
   if (!GetProperty(cx, valObj, receiver, name, res)) {
     return false;
@@ -1371,7 +1369,7 @@ bool FallbackICCodeCompiler::emitGetProp(bool hasReceiver) {
     masm.pushBaselineFramePtr(FramePointer, R0.scratchReg());
 
     using Fn = bool (*)(JSContext*, BaselineFrame*, ICFallbackStub*,
-                        HandleValue, HandleValue, MutableHandleValue);
+                        HandleValue, MutableHandleValue, MutableHandleValue);
     if (!tailCallVM<Fn, DoGetPropSuperFallback>(masm)) {
       return false;
     }
@@ -1385,7 +1383,7 @@ bool FallbackICCodeCompiler::emitGetProp(bool hasReceiver) {
     masm.pushBaselineFramePtr(FramePointer, R0.scratchReg());
 
     using Fn = bool (*)(JSContext*, BaselineFrame*, ICFallbackStub*,
-                        HandleValue, MutableHandleValue);
+                        MutableHandleValue, MutableHandleValue);
     if (!tailCallVM<Fn, DoGetPropFallback>(masm)) {
       return false;
     }
@@ -1646,7 +1644,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICFallbackStub* stub,
   // allowed to attach stubs.
   if (canAttachStub) {
     HandleValueArray args = HandleValueArray::fromMarkedLocation(argc, vp + 2);
-    CallIRGenerator gen(cx, script, pc, stub->state(), frame, argc, callee,
+    CallIRGenerator gen(cx, script, pc, op, stub->state(), frame, argc, callee,
                         callArgs.thisv(), newTarget, args);
     switch (gen.tryAttachStub()) {
       case AttachDecision::NoAction:
@@ -1737,8 +1735,8 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
 
     HandleValueArray args = HandleValueArray::fromMarkedLocation(
         aobj->length(), aobj->getDenseElements());
-    CallIRGenerator gen(cx, script, pc, stub->state(), frame, 1, callee, thisv,
-                        newTarget, args);
+    CallIRGenerator gen(cx, script, pc, op, stub->state(), frame, 1, callee,
+                        thisv, newTarget, args);
     switch (gen.tryAttachStub()) {
       case AttachDecision::NoAction:
         break;
