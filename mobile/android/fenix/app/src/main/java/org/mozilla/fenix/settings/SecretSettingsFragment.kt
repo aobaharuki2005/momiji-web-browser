@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings
 
+import android.os.Build
 import android.os.Bundle
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
@@ -364,6 +365,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
         requirePreference<SwitchPreference>(R.string.pref_key_enable_isolated_process).apply {
             isVisible = Config.channel.isNightlyOrDebug
             isChecked = context.settings().isIsolatedProcessEnabled
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_app_zygote_process).apply {
+            isVisible = Config.channel.isNightlyOrDebug && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+            isChecked = context.settings().isAppZygoteEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
     }

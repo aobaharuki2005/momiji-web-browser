@@ -181,6 +181,7 @@ class FenixApplicationTest {
         every { application.getDeviceTotalRAM() } returns 7L
         every { settings.inactiveTabsAreEnabled } returns true
         every { settings.isIsolatedProcessEnabled } returns true
+        every { settings.isAppZygoteEnabled } returns true
         every { application.isDeviceRamAboveThreshold } returns true
         every { dohSettingsProvider.getSelectedProtectionLevel() } returns ProtectionLevel.Max
         every { settings.getHttpsOnlyMode() } returns HttpsOnlyMode.ENABLED_PRIVATE_ONLY
@@ -236,6 +237,7 @@ class FenixApplicationTest {
         assertEquals(listOf("switch", "touch exploration"), Preferences.accessibilityServices.testGetValue())
         assertEquals(true, Preferences.inactiveTabsEnabled.testGetValue())
         assertEquals(true, Preferences.isolatedContentProcessesEnabled.testGetValue())
+        assertEquals(true, Preferences.appZygoteIsolatedContentProcessesEnabled.testGetValue())
         assertEquals(true, Metrics.defaultWallpaper.testGetValue())
         assertEquals(true, Metrics.ramMoreThanThreshold.testGetValue())
         assertEquals(7L, Metrics.deviceTotalRam.testGetValue())

@@ -132,6 +132,7 @@ object GeckoProvider {
                 FxNimbus.features.sameDocumentNavigationOverridesLoadType.value().forceDisableUri,
             )
             .isolatedProcessEnabled(context.settings().isIsolatedProcessEnabled)
+            .appZygoteProcessEnabled(context.settings().isAppZygoteEnabled)
             .build()
     }
 }

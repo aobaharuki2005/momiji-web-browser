@@ -4388,6 +4388,25 @@ preferences:
     metadata:
       tags:
         - Settings
+  app_zygote_isolated_content_processes_enabled:
+    type: boolean
+    lifetime: application
+    description: True when app Zygote preloading with isolated processes is enabled.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1989943
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D265600
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - Settings
+        - Performance
 
 search.default_engine:
   code:

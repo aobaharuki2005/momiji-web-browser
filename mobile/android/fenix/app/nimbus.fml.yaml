@@ -1023,6 +1023,11 @@ features:
           Whether or not to enable isolated content processes.
         type: Boolean
         default: false
+      app-zygote-preloading:
+        description: >
+          Whether or not to enable app Zygote preloaded isolated content processes.
+        type: Boolean
+        default: false
 
   custom-review-prompt:
     description: Feature that controls the Play store in-app custom review prompt.

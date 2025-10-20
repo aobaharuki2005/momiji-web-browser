@@ -907,6 +907,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             openLinksInAppEnabled.set(settings.openLinksInExternalApp)
             signedInSync.set(settings.signedInFxaAccount)
             isolatedContentProcessesEnabled.set(settings.isIsolatedProcessEnabled)
+            appZygoteIsolatedContentProcessesEnabled.set(settings.isAppZygoteEnabled)
 
             val syncedItems = SyncEnginesStorage(applicationContext).getStatus().entries.filter {
                 it.value
