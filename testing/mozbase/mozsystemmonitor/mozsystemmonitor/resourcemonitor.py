@@ -27,6 +27,9 @@ class PsutilStub:
                 "write_time",
             ],
         )
+        self.snetio = namedtuple(
+            "snetio", ["bytes_sent", "bytes_recv", "packets_sent", "packets_recv"]
+        )
         self.pcputimes = namedtuple("pcputimes", ["user", "system"])
         self.svmem = namedtuple(
             "svmem",
@@ -57,6 +60,9 @@ class PsutilStub:
 
     def disk_io_counters(self):
         return self.sdiskio(0, 0, 0, 0, 0, 0)
+
+    def net_io_counters(self):
+        return self.snetio(0, 0, 0, 0)
 
     def swap_memory(self):
         return self.sswap(0, 0, 0, 0, 0, 0)
@@ -90,6 +96,18 @@ def get_disk_io_counters():
         io_counters = PsutilStub().disk_io_counters()
 
     return io_counters
+
+
+def get_network_io_counters():
+    try:
+        net_counters = psutil.net_io_counters()
+
+        if net_counters is None:
+            return PsutilStub().net_io_counters()
+    except (RuntimeError, AttributeError):
+        net_counters = PsutilStub().net_io_counters()
+
+    return net_counters
 
 
 def _poll(pipe, poll_interval=0.1):
@@ -127,6 +145,7 @@ def _collect(pipe, poll_interval):
         # Establish initial values.
 
         io_last = get_disk_io_counters()
+        net_io_last = get_network_io_counters()
         swap_last = psutil.swap_memory()
         psutil.cpu_percent(None, True)
         cpu_last = psutil.cpu_times(True)
@@ -175,6 +194,7 @@ def _collect(pipe, poll_interval):
 
         while not _poll(pipe, poll_interval=sleep_interval):
             io = get_disk_io_counters()
+            net_io = get_network_io_counters()
             virt_mem = psutil.virtual_memory()
             swap_mem = psutil.swap_memory()
             cpu_percent = psutil.cpu_percent(None, True)
@@ -189,6 +209,11 @@ def _collect(pipe, poll_interval):
             # TODO Consider patching "delta" API to upstream.
             io_diff = [v - io_last[i] for i, v in enumerate(io)]
             io_last = io
+
+            net_io_diff = [
+                v - net_io_last[i] for i, v in enumerate(net_io[:4])
+            ]  # Only use first 4 fields
+            net_io_last = net_io
 
             cpu_diff = []
             for core, values in enumerate(cpu_times):
@@ -206,6 +231,7 @@ def _collect(pipe, poll_interval):
                     last_time,
                     measured_end_time,
                     io_diff,
+                    net_io_diff,
                     cpu_diff,
                     cpu_percent,
                     list(virt_mem),
@@ -249,7 +275,7 @@ def _collect(pipe, poll_interval):
 
 SystemResourceUsage = namedtuple(
     "SystemResourceUsage",
-    ["start", "end", "cpu_times", "cpu_percent", "io", "virt", "swap"],
+    ["start", "end", "cpu_times", "cpu_percent", "io", "net_io", "virt", "swap"],
 )
 
 
@@ -355,6 +381,7 @@ class SystemResourceMonitor:
             cpu_percent = psutil.cpu_percent(0.0, True)
             cpu_times = psutil.cpu_times(False)
             io = get_disk_io_counters()
+            net_io = get_network_io_counters()
             virt = psutil.virtual_memory()
             swap = psutil.swap_memory()
         except Exception as e:
@@ -366,6 +393,8 @@ class SystemResourceMonitor:
         self._cpu_times_len = len(cpu_times)
         self._io_type = type(io)
         self._io_len = len(io)
+        # Only use first 4 fields of net_io (bytes_sent, bytes_recv, packets_sent, packets_recv)
+        self._net_io_type = namedtuple("net_io", list(net_io._fields[:4]))
         self._virt_type = type(virt)
         self._virt_len = len(virt)
         self._swap_type = type(swap)
@@ -441,6 +470,7 @@ class SystemResourceMonitor:
                     start_time,
                     end_time,
                     io_diff,
+                    net_io_diff,
                     cpu_diff,
                     cpu_percent,
                     virt_mem,
@@ -454,9 +484,9 @@ class SystemResourceMonitor:
             if start_time == "process":
                 pid = end_time
                 start = self.convert_to_monotonic_time(io_diff)
-                end = self.convert_to_monotonic_time(cpu_diff)
-                cmd = cpu_percent
-                ppid = virt_mem
+                end = self.convert_to_monotonic_time(net_io_diff)
+                cmd = cpu_diff
+                ppid = cpu_percent
                 self.processes.append((pid, start, end, cmd, ppid))
                 continue
 
@@ -467,13 +497,21 @@ class SystemResourceMonitor:
 
             try:
                 io = self._io_type(*io_diff)
+                net_io = self._net_io_type(*net_io_diff)
                 virt = self._virt_type(*virt_mem)
                 swap = self._swap_type(*swap_mem)
                 cpu_times = [self._cpu_times_type(*v) for v in cpu_diff]
 
                 self.measurements.append(
                     SystemResourceUsage(
-                        start_time, end_time, cpu_times, cpu_percent, io, virt, swap
+                        start_time,
+                        end_time,
+                        cpu_times,
+                        cpu_percent,
+                        io,
+                        net_io,
+                        virt,
+                        swap,
                     )
                 )
             except Exception:
@@ -1455,6 +1493,37 @@ class SystemResourceMonitor:
                         ],
                     },
                     {
+                        "name": "NetIO",
+                        "tooltipLabel": "{marker.name}",
+                        "display": [],
+                        "data": [
+                            {
+                                "key": "sent_bytes",
+                                "label": "Sent",
+                                "format": "bytes",
+                            },
+                            {
+                                "key": "sent_count",
+                                "label": "Packets sent",
+                                "format": "integer",
+                            },
+                            {
+                                "key": "recv_bytes",
+                                "label": "Received",
+                                "format": "bytes",
+                            },
+                            {
+                                "key": "recv_count",
+                                "label": "Packets received",
+                                "format": "integer",
+                            },
+                        ],
+                        "graphs": [
+                            {"key": "recv_bytes", "color": "blue", "type": "bar"},
+                            {"key": "sent_bytes", "color": "orange", "type": "bar"},
+                        ],
+                    },
+                    {
                         "name": "Process",
                         "chartLabel": "{marker.data.cmd}",
                         "tooltipLabel": "{marker.name}",
@@ -1925,6 +1994,7 @@ class SystemResourceMonitor:
         cpu_string_index = get_string_index("CPU Use")
         memory_string_index = get_string_index("Memory")
         io_string_index = get_string_index("IO")
+        network_string_index = get_string_index("NetIO")
         interval_string_index = get_string_index("Sampling Interval")
         valid_cpu_fields = set()
         for m in self.measurements:
@@ -1990,6 +2060,16 @@ class SystemResourceMonitor:
                 "write_bytes": m.io.write_bytes,
             }
             add_marker(io_string_index, m.start, m.end, markerData)
+
+            # Network IO
+            markerData = {
+                "type": "NetIO",
+                "recv_count": m.net_io.packets_recv,
+                "recv_bytes": m.net_io.bytes_recv,
+                "sent_count": m.net_io.packets_sent,
+                "sent_bytes": m.net_io.bytes_sent,
+            }
+            add_marker(network_string_index, m.start, m.end, markerData)
 
             # Sampling interval marker
             add_marker(
