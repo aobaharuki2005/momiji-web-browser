@@ -5330,6 +5330,107 @@ static bool uint8array_setFromHex(JSContext* cx, unsigned argc, Value* vp) {
                                                                          args);
 }
 
+template <typename Ops>
+static void ToBase64(TypedArrayObject* tarray, size_t length, Alphabet alphabet,
+                     OmitPadding omitPadding, JSStringBuilder& sb) {
+  const auto& base64Chars = alphabet == Alphabet::Base64
+                                ? Base64::Encode::Base64
+                                : Base64::Encode::Base64Url;
+
+  auto encode = [&base64Chars](uint32_t value) {
+    return base64Chars[value & 0x3f];
+  };
+
+  // Our implementation directly converts the bytes to their string
+  // representation instead of first collecting them into an intermediate list.
+  auto data = Ops::extract(tarray).template cast<uint8_t*>();
+  auto toRead = length;
+
+  if (toRead >= 12) {
+    auto data32 = data.template cast<uint32_t*>();
+    for (; toRead >= 12; toRead -= 12) {
+      // Read three 32-bit words.
+      auto word0 = mozilla::NativeEndian::swapToBigEndian(Ops::load(data32++));
+      auto word1 = mozilla::NativeEndian::swapToBigEndian(Ops::load(data32++));
+      auto word2 = mozilla::NativeEndian::swapToBigEndian(Ops::load(data32++));
+
+      // Split into four uint24 values.
+      auto u24_0 = word0 >> 8;
+      auto u24_1 = (word0 << 16) | (word1 >> 16);
+      auto u24_2 = (word1 << 8) | (word2 >> 24);
+      auto u24_3 = word2;
+
+      // Encode the uint24 values as base64 and write in blocks of eight
+      // characters.
+      char chars1[] = {
+          encode(u24_0 >> 18), encode(u24_0 >> 12),
+          encode(u24_0 >> 6),  encode(u24_0 >> 0),
+
+          encode(u24_1 >> 18), encode(u24_1 >> 12),
+          encode(u24_1 >> 6),  encode(u24_1 >> 0),
+      };
+      sb.infallibleAppend(chars1, sizeof(chars1));
+
+      char chars2[] = {
+          encode(u24_2 >> 18), encode(u24_2 >> 12),
+          encode(u24_2 >> 6),  encode(u24_2 >> 0),
+
+          encode(u24_3 >> 18), encode(u24_3 >> 12),
+          encode(u24_3 >> 6),  encode(u24_3 >> 0),
+      };
+      sb.infallibleAppend(chars2, sizeof(chars2));
+    }
+    data = data32.template cast<uint8_t*>();
+  }
+
+  for (; toRead >= 3; toRead -= 3) {
+    // Combine three input bytes into a single uint24 value.
+    auto byte0 = Ops::load(data++);
+    auto byte1 = Ops::load(data++);
+    auto byte2 = Ops::load(data++);
+    auto u24 = (uint32_t(byte0) << 16) | (uint32_t(byte1) << 8) | byte2;
+
+    // Encode the uint24 value as base64.
+    char chars[] = {
+        encode(u24 >> 18),
+        encode(u24 >> 12),
+        encode(u24 >> 6),
+        encode(u24 >> 0),
+    };
+    sb.infallibleAppend(chars, sizeof(chars));
+  }
+
+  // Trailing two and one element bytes are optionally padded with '='.
+  if (toRead == 2) {
+    // Combine two input bytes into a single uint24 value.
+    auto byte0 = Ops::load(data++);
+    auto byte1 = Ops::load(data++);
+    auto u24 = (uint32_t(byte0) << 16) | (uint32_t(byte1) << 8);
+
+    // Encode the uint24 value as base64, optionally including padding.
+    sb.infallibleAppend(encode(u24 >> 18));
+    sb.infallibleAppend(encode(u24 >> 12));
+    sb.infallibleAppend(encode(u24 >> 6));
+    if (omitPadding == OmitPadding::No) {
+      sb.infallibleAppend('=');
+    }
+  } else if (toRead == 1) {
+    // Combine one input byte into a single uint24 value.
+    auto byte0 = Ops::load(data++);
+    auto u24 = uint32_t(byte0) << 16;
+
+    // Encode the uint24 value as base64, optionally including padding.
+    sb.infallibleAppend(encode(u24 >> 18));
+    sb.infallibleAppend(encode(u24 >> 12));
+    if (omitPadding == OmitPadding::No) {
+      sb.infallibleAppend('=');
+      sb.infallibleAppend('=');
+    }
+  } else {
+    MOZ_ASSERT(toRead == 0);
+  }
+}
+
 /**
  * Uint8Array.prototype.toBase64 ( [ options ] )
  *
@@ -5390,60 +5491,10 @@ static bool uint8array_toBase64(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 9-10.
-  const auto& base64Chars = alphabet == Alphabet::Base64
-                                ? Base64::Encode::Base64
-                                : Base64::Encode::Base64Url;
-
-  auto encode = [&base64Chars](uint32_t value) {
-    return base64Chars[value & 0x3f];
-  };
-
-  // Our implementation directly converts the bytes to their string
-  // representation instead of first collecting them into an intermediate list.
-  auto data = tarray->dataPointerEither().cast<uint8_t*>();
-  auto toRead = *length;
-  for (; toRead >= 3; toRead -= 3) {
-    // Combine three input bytes into a single uint24 value.
-    auto byte0 = jit::AtomicOperations::loadSafeWhenRacy(data++);
-    auto byte1 = jit::AtomicOperations::loadSafeWhenRacy(data++);
-    auto byte2 = jit::AtomicOperations::loadSafeWhenRacy(data++);
-    auto u24 = (uint32_t(byte0) << 16) | (uint32_t(byte1) << 8) | byte2;
-
-    // Encode the uint24 value as base64.
-    sb.infallibleAppend(encode(u24 >> 18));
-    sb.infallibleAppend(encode(u24 >> 12));
-    sb.infallibleAppend(encode(u24 >> 6));
-    sb.infallibleAppend(encode(u24 >> 0));
-  }
-
-  // Trailing two and one element bytes are optionally padded with '='.
-  if (toRead == 2) {
-    // Combine two input bytes into a single uint24 value.
-    auto byte0 = jit::AtomicOperations::loadSafeWhenRacy(data++);
-    auto byte1 = jit::AtomicOperations::loadSafeWhenRacy(data++);
-    auto u24 = (uint32_t(byte0) << 16) | (uint32_t(byte1) << 8);
-
-    // Encode the uint24 value as base64, optionally including padding.
-    sb.infallibleAppend(encode(u24 >> 18));
-    sb.infallibleAppend(encode(u24 >> 12));
-    sb.infallibleAppend(encode(u24 >> 6));
-    if (omitPadding == OmitPadding::No) {
-      sb.infallibleAppend('=');
-    }
-  } else if (toRead == 1) {
-    // Combine one input byte into a single uint24 value.
-    auto byte0 = jit::AtomicOperations::loadSafeWhenRacy(data++);
-    auto u24 = uint32_t(byte0) << 16;
-
-    // Encode the uint24 value as base64, optionally including padding.
-    sb.infallibleAppend(encode(u24 >> 18));
-    sb.infallibleAppend(encode(u24 >> 12));
-    if (omitPadding == OmitPadding::No) {
-      sb.infallibleAppend('=');
-      sb.infallibleAppend('=');
-    }
+  if (tarray->isSharedMemory()) {
+    ToBase64<SharedOps>(tarray, *length, alphabet, omitPadding, sb);
   } else {
-    MOZ_ASSERT(toRead == 0);
+    ToBase64<UnsharedOps>(tarray, *length, alphabet, omitPadding, sb);
   }
 
   MOZ_ASSERT(sb.length() == outLength.value(), "all characters were written");
