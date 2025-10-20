@@ -465,7 +465,6 @@ AttachDecision GetPropIRGenerator::tryAttachStub() {
 
     if (nameOrSymbol) {
       TRY_ATTACH(tryAttachObjectLength(obj, objId, id));
-      TRY_ATTACH(tryAttachTypedArray(obj, objId, id));
       TRY_ATTACH(tryAttachDataView(obj, objId, id));
       TRY_ATTACH(tryAttachArrayBufferMaybeShared(obj, objId, id));
       TRY_ATTACH(tryAttachRegExp(obj, objId, id));
@@ -2462,105 +2461,6 @@ AttachDecision GetPropIRGenerator::tryAttachInlinableNativeGetter(
   InlinableNativeIRGenerator nativeGen(*this, target, thisValue, flags,
                                        receiverId);
   return nativeGen.tryAttachStub();
-}
-
-AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
-                                                       ObjOperandId objId,
-                                                       HandleId id) {
-  if (!obj->is<TypedArrayObject>()) {
-    return AttachDecision::NoAction;
-  }
-
-  if (mode_ != ICState::Mode::Specialized) {
-    return AttachDecision::NoAction;
-  }
-
-  // Receiver should be the object.
-  if (isSuper()) {
-    return AttachDecision::NoAction;
-  }
-
-  bool isLength = id.isAtom(cx_->names().length);
-  bool isByteOffset = id.isAtom(cx_->names().byteOffset);
-  if (!isLength && !isByteOffset && !id.isAtom(cx_->names().byteLength)) {
-    return AttachDecision::NoAction;
-  }
-
-  NativeObject* holder = nullptr;
-  Maybe<PropertyInfo> prop;
-  NativeGetPropKind kind =
-      CanAttachNativeGetProp(cx_, obj, id, &holder, &prop, pc_);
-  if (kind != NativeGetPropKind::NativeGetter) {
-    return AttachDecision::NoAction;
-  }
-
-  JSFunction& fun = holder->getGetter(*prop)->as<JSFunction>();
-  if (isLength) {
-    if (!TypedArrayObject::isOriginalLengthGetter(fun.native())) {
-      return AttachDecision::NoAction;
-    }
-  } else if (isByteOffset) {
-    if (!TypedArrayObject::isOriginalByteOffsetGetter(fun.native())) {
-      return AttachDecision::NoAction;
-    }
-  } else {
-    if (!TypedArrayObject::isOriginalByteLengthGetter(fun.native())) {
-      return AttachDecision::NoAction;
-    }
-  }
-
-  auto* tarr = &obj->as<TypedArrayObject>();
-
-  maybeEmitIdGuard(id);
-  // Emit all the normal guards for calling this native, but specialize
-  // callNativeGetterResult.
-  emitCallGetterResultGuards(tarr, holder, id, *prop, objId);
-  if (isLength) {
-    size_t length = tarr->length().valueOr(0);
-    if (!tarr->is<ResizableTypedArrayObject>()) {
-      if (length <= INT32_MAX) {
-        writer.loadArrayBufferViewLengthInt32Result(objId);
-      } else {
-        writer.loadArrayBufferViewLengthDoubleResult(objId);
-      }
-    } else {
-      if (length <= INT32_MAX) {
-        writer.resizableTypedArrayLengthInt32Result(objId);
-      } else {
-        writer.resizableTypedArrayLengthDoubleResult(objId);
-      }
-    }
-    trackAttached("GetProp.TypedArrayLength");
-  } else if (isByteOffset) {
-    // byteOffset doesn't need to use different code paths for fixed-length and
-    // resizable TypedArrays.
-    size_t byteOffset = tarr->byteOffset().valueOr(0);
-    if (byteOffset <= INT32_MAX) {
-      writer.arrayBufferViewByteOffsetInt32Result(objId);
-    } else {
-      writer.arrayBufferViewByteOffsetDoubleResult(objId);
-    }
-    trackAttached("GetProp.TypedArrayByteOffset");
-  } else {
-    size_t byteLength = tarr->byteLength().valueOr(0);
-    if (!tarr->is<ResizableTypedArrayObject>()) {
-      if (byteLength <= INT32_MAX) {
-        writer.typedArrayByteLengthInt32Result(objId);
-      } else {
-        writer.typedArrayByteLengthDoubleResult(objId);
-      }
-    } else {
-      if (byteLength <= INT32_MAX) {
-        writer.resizableTypedArrayByteLengthInt32Result(objId);
-      } else {
-        writer.resizableTypedArrayByteLengthDoubleResult(objId);
-      }
-    }
-    trackAttached("GetProp.TypedArrayByteLength");
-  }
-  writer.returnFromIC();
-
-  return AttachDecision::Attach;
 }
 
 AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
@@ -11757,6 +11657,135 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArraySubarray() {
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayLength() {
+  // Expecting no arguments.
+  if (args_.length() != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure |this| is a TypedArrayObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<TypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  auto* tarr = &thisval_.toObject().as<TypedArrayObject>();
+
+  // Initialize the input operand.
+  Int32OperandId argcId = initializeInputOperand();
+
+  // Guard callee is the 'length' native function.
+  ObjOperandId calleeId = emitNativeCalleeGuard(argcId);
+
+  // Guard |this| is a TypedArrayObject.
+  ValOperandId thisValId = loadThis(calleeId);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+  writer.guardShapeForClass(objId, tarr->shape());
+
+  size_t length = tarr->length().valueOr(0);
+  if (!tarr->is<ResizableTypedArrayObject>()) {
+    if (length <= INT32_MAX) {
+      writer.loadArrayBufferViewLengthInt32Result(objId);
+    } else {
+      writer.loadArrayBufferViewLengthDoubleResult(objId);
+    }
+  } else {
+    if (length <= INT32_MAX) {
+      writer.resizableTypedArrayLengthInt32Result(objId);
+    } else {
+      writer.resizableTypedArrayLengthDoubleResult(objId);
+    }
+  }
+
+  writer.returnFromIC();
+
+  trackAttached("TypedArrayLength");
+  return AttachDecision::Attach;
+}
+
+AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayByteLength() {
+  // Expecting no arguments.
+  if (args_.length() != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure |this| is a TypedArrayObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<TypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  auto* tarr = &thisval_.toObject().as<TypedArrayObject>();
+
+  // Initialize the input operand.
+  Int32OperandId argcId = initializeInputOperand();
+
+  // Guard callee is the 'byteLength' native function.
+  ObjOperandId calleeId = emitNativeCalleeGuard(argcId);
+
+  // Guard |this| is a TypedArrayObject.
+  ValOperandId thisValId = loadThis(calleeId);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+  writer.guardShapeForClass(objId, tarr->shape());
+
+  size_t byteLength = tarr->byteLength().valueOr(0);
+  if (!tarr->is<ResizableTypedArrayObject>()) {
+    if (byteLength <= INT32_MAX) {
+      writer.typedArrayByteLengthInt32Result(objId);
+    } else {
+      writer.typedArrayByteLengthDoubleResult(objId);
+    }
+  } else {
+    if (byteLength <= INT32_MAX) {
+      writer.resizableTypedArrayByteLengthInt32Result(objId);
+    } else {
+      writer.resizableTypedArrayByteLengthDoubleResult(objId);
+    }
+  }
+
+  writer.returnFromIC();
+
+  trackAttached("TypedArrayByteLength");
+  return AttachDecision::Attach;
+}
+
+AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayByteOffset() {
+  // Expecting no arguments.
+  if (args_.length() != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure |this| is a TypedArrayObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<TypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  auto* tarr = &thisval_.toObject().as<TypedArrayObject>();
+
+  // Initialize the input operand.
+  Int32OperandId argcId = initializeInputOperand();
+
+  // Guard callee is the 'byteLength' native function.
+  ObjOperandId calleeId = emitNativeCalleeGuard(argcId);
+
+  // Guard |this| is a TypedArrayObject.
+  ValOperandId thisValId = loadThis(calleeId);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+  writer.guardShapeForClass(objId, tarr->shape());
+
+  // byteOffset doesn't need to use different code paths for fixed-length and
+  // resizable TypedArrays.
+  size_t byteOffset = tarr->byteOffset().valueOr(0);
+  if (byteOffset <= INT32_MAX) {
+    writer.arrayBufferViewByteOffsetInt32Result(objId);
+  } else {
+    writer.arrayBufferViewByteOffsetDoubleResult(objId);
+  }
+
+  writer.returnFromIC();
+
+  trackAttached("TypedArrayByteOffset");
+  return AttachDecision::Attach;
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachIsTypedArray(
     bool isPossiblyWrapped) {
   // Self-hosted code calls this with a single object argument.
@@ -13334,6 +13363,12 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachTypedArraySet();
     case InlinableNative::TypedArraySubarray:
       return tryAttachTypedArraySubarray();
+    case InlinableNative::TypedArrayLength:
+      return tryAttachTypedArrayLength();
+    case InlinableNative::TypedArrayByteLength:
+      return tryAttachTypedArrayByteLength();
+    case InlinableNative::TypedArrayByteOffset:
+      return tryAttachTypedArrayByteOffset();
 
     // TypedArray intrinsics.
     case InlinableNative::IntrinsicIsTypedArray:

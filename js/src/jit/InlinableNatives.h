@@ -204,6 +204,9 @@
   _(TypedArrayFill)                                \
   _(TypedArraySet)                                 \
   _(TypedArraySubarray)                            \
+  _(TypedArrayLength)                              \
+  _(TypedArrayByteLength)                          \
+  _(TypedArrayByteOffset)                          \
                                                    \
   _(TestBailout)                                   \
   _(TestAssertFloat32)                             \
