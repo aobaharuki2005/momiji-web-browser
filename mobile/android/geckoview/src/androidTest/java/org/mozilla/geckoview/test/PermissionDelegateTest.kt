@@ -1208,6 +1208,8 @@ class PermissionDelegateTest : BaseSessionTest() {
     @Test
     fun localDeviceAccessPermission() {
         sessionRule.setPrefsUntilTestEnd(mapOf("network.lna.blocking" to true))
+        // enable LNA checks for local network to localhost checks
+        sessionRule.setPrefsUntilTestEnd(mapOf("network.lna.local-network-to-localhost.skip-checks" to false))
 
         mainSession.loadUri("https://example.com/")
         mainSession.waitForPageStop()
