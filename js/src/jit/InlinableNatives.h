@@ -157,6 +157,14 @@
                                                    \
   _(ReflectGetPrototypeOf)                         \
                                                    \
+  _(RegExpDotAll)                                  \
+  _(RegExpGlobal)                                  \
+  _(RegExpHasIndices)                              \
+  _(RegExpIgnoreCase)                              \
+  _(RegExpMultiline)                               \
+  _(RegExpSticky)                                  \
+  _(RegExpUnicode)                                 \
+  _(RegExpUnicodeSets)                             \
   _(RegExpMatcher)                                 \
   _(RegExpSearcher)                                \
   _(RegExpSearcherLastLimit)                       \
