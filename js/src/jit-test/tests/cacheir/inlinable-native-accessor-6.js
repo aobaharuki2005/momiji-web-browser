@@ -38,3 +38,21 @@ function testStringAt() {
   }
 }
 testStringAt();
+
+function testArraySlice() {
+  Object.defineProperty(Array.prototype, "sliced", {get: Array.prototype.slice});
+
+  for (var i = 0; i < 100; ++i) {
+    assertEq([1, 2].sliced.length, 2);
+  }
+}
+testArraySlice();
+
+function testArraySliceArguments() {
+  Object.defineProperty(arguments, "sliced", {get: Array.prototype.slice});
+
+  for (var i = 0; i < 100; ++i) {
+    assertEq(arguments.sliced.length, 0);
+  }
+}
+testArraySliceArguments();

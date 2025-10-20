@@ -6804,6 +6804,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArraySlice() {
   if (isPackedArray) {
     emitOptimisticClassGuard(objId, &thisval_.toObject(),
                              GuardClassKind::Array);
+    writer.guardArrayIsPacked(objId);
   } else {
     auto* args = &thisval_.toObject().as<ArgumentsObject>();
 
