@@ -165,6 +165,7 @@ class MOZ_RAII IRGenerator {
 class MOZ_RAII GetPropIRGenerator : public IRGenerator {
   HandleValue val_;
   HandleValue idVal_;
+  HandleValue receiverVal_;
 
   friend class InlinableNativeIRGenerator;
 
@@ -298,7 +299,7 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
  public:
   GetPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
                      ICState state, CacheKind cacheKind, HandleValue val,
-                     HandleValue idVal);
+                     HandleValue idVal, HandleValue receiverVal);
 
   AttachDecision tryAttachStub();
 };
@@ -679,7 +680,7 @@ class MOZ_RAII InlinableNativeIRGenerator {
   JSOp op() const { return generator_.jsop(); }
   uint32_t stackArgc() const { return stackArgc_; }
 
-  // Inlined native accessor for GetProp or GetElem operations.
+  // Inlined native accessor for GetProp(Super) or GetElem(Super) operations.
   bool isAccessorOp() const { return !IsInvokeOp(op()); }
 
   bool isCalleeBoundFunction() const;
@@ -1133,7 +1134,8 @@ inline bool BytecodeCallOpCanHaveInlinableNative(JSOp op) {
 
 // Returns true for bytecode get ops that can use InlinableNativeIRGenerator.
 inline bool BytecodeGetOpCanHaveInlinableNative(JSOp op) {
-  return op == JSOp::GetProp || op == JSOp::GetElem;
+  return op == JSOp::GetProp || op == JSOp::GetElem ||
+         op == JSOp::GetPropSuper || op == JSOp::GetElemSuper;
 }
 
 inline bool BytecodeOpCanHaveAllocSite(JSOp op) {
