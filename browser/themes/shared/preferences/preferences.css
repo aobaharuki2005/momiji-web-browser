@@ -491,8 +491,8 @@ a[is="moz-support-link"]:not(.sidebar-footer-link, [hidden]) {
 
 #engineList > treechildren::-moz-tree-image(engineShown, checked, selected),
 #blocklistsTree > treechildren::-moz-tree-image(selectionCol, checked, selected) {
-  fill: var(--in-content-item-selected-text);
-  stroke: var(--in-content-item-selected);
+  fill: var(--text-color-accent-primary-selected);
+  stroke: var(--color-accent-primary-selected);
 }
 
 @media (forced-colors) {

@@ -802,8 +802,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
       color = NS_RGB(0xb1, 0xb1, 0xb1);
       break;
     case ColorID::MozCellhighlight:
-    case ColorID::Selecteditem:  // --button-background-color-primary /
-                                 // --in-content-item-selected
+    case ColorID::Selecteditem:  // --color-accent-primary-selected
       color = NS_RGB(0, 221, 255);
       break;
     case ColorID::MozSidebar:
@@ -815,8 +814,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::Threedface:
     case ColorID::MozCombobox:
     case ColorID::MozCellhighlighttext:
-    case ColorID::Selecteditemtext:  // --button-text-color-primary /
-                                     // --in-content-item-selected-text
+    case ColorID::Selecteditemtext:  // --text-color-accent-primary-selected
       color = NS_RGB(43, 42, 51);
       break;
     case ColorID::Threeddarkshadow:  // Same as Threedlightshadow but with the

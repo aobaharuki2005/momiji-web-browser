@@ -128,10 +128,10 @@ html {
   --picker-background-color: color-mix(in srgb, transparent 98%, light-dark(black, white) 2%);
   --picker-hover-background-color: color-mix(in srgb, transparent 95%, light-dark(black, white) 5%);
   --picker-border-color: var(--in-content-border-color);
-  --picker-checked-border-color: var(--in-content-item-selected);
+  --picker-checked-border-color: var(--color-accent-primary-selected);
   --picker-hover-border-color: var(--picker-border-color);
-  --picker-focus-ring-color: var(--in-content-item-selected);
-  --picker-checkbox-color: var(--in-content-item-selected);
+  --picker-focus-ring-color: var(--color-accent-primary-selected);
+  --picker-checkbox-color: var(--color-accent-primary-selected);
   --picker-checkbox-hover-color: var(--picker-checkbox-color);
   --picker-backup-flair-background: color-mix(in srgb, var(--color-accent-primary) 20%, transparent);
   --picker-backup-flair-color: var(--color-accent-primary);
