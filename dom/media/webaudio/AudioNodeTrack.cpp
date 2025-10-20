@@ -436,7 +436,7 @@ void AudioNodeTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
       NS_ASSERTION(mLastChunks[i].GetDuration() == WEBAUDIO_BLOCK_SIZE,
                    "Invalid WebAudio chunk size");
     }
-    if (finished) {
+    if (finished && !mMarkAsEndedAfterThisBlock) {
       mMarkAsEndedAfterThisBlock = true;
       if (mIsActive) {
         ScheduleCheckForInactive();
