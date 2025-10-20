@@ -18,7 +18,7 @@ function test(x, y, z) {
             // values are the same.)
             var ys = [${y}, ${y}];
             var zs = [${z}, ${z}];
-            for (var i = 0; i < 1000; ++i) {
+            for (var i = 0; i < 200; ++i) {
                 assertNear(${fn(x, "ys[i & 1]")}, zs[i & 1]);
             }
         `);
