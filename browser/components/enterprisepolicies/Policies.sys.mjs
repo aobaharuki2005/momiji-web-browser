@@ -395,55 +395,6 @@ export var Policies = {
     },
   },
 
-  BrowserDataBackup: {
-    onBeforeUIStartup(manager, param) {
-      if (typeof param === "boolean") {
-        setAndLockPref("browser.backup.enabled", param);
-        setAndLockPref("browser.backup.archive.enabled", param);
-        setAndLockPref("browser.backup.restore.enabled", param);
-      } else {
-        const hasBackup = "AllowBackup" in param;
-        const hasRestore = "AllowRestore" in param;
-        let serviceValue;
-
-        if (hasBackup && hasRestore) {
-          // both present but could be set to false
-          serviceValue = param.AllowBackup || param.AllowRestore;
-        } else if (hasBackup && param.AllowBackup) {
-          // only AllowBackup is true
-          serviceValue = true;
-        } else if (hasRestore && param.AllowRestore) {
-          // only AllowRestore is true
-          serviceValue = true;
-        }
-
-        if (serviceValue !== undefined) {
-          PoliciesUtils.setDefaultPref(
-            "browser.backup.enabled",
-            serviceValue,
-            true
-          );
-        }
-
-        if (hasBackup) {
-          PoliciesUtils.setDefaultPref(
-            "browser.backup.archive.enabled",
-            param.AllowBackup,
-            true
-          );
-        }
-
-        if (hasRestore) {
-          PoliciesUtils.setDefaultPref(
-            "browser.backup.restore.enabled",
-            param.AllowRestore,
-            true
-          );
-        }
-      }
-    },
-  },
-
   CaptivePortal: {
     onBeforeAddons(manager, param) {
       setAndLockPref("network.captive-portal-service.enabled", param);
