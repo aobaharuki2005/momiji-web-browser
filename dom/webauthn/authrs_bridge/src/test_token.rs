@@ -174,7 +174,7 @@ impl TestToken {
         }
     }
 
-    fn get_credentials(&self) -> Ref<Vec<TestTokenCredential>> {
+    fn get_credentials(&self) -> Ref<'_, Vec<TestTokenCredential>> {
         self.credentials.borrow()
     }
 
