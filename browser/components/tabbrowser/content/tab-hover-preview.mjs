@@ -506,6 +506,16 @@ class TabGroupPanel extends Panel {
     });
   }
 
+  /**
+   * Move keyboard focus into the group preview panel.
+   *
+   * @param {-1|1} [dir] Whether to focus the beginning or end of the list.
+   */
+  focusPanel(dir = 1) {
+    let childIndex = dir > 0 ? 0 : this.panelContent.children.length - 1;
+    this.panelContent.children[childIndex].focus();
+  }
+
   deactivate({ force = false } = {}) {
     if (force) {
       this.win.clearTimeout(this.#deactivateTimer);
@@ -570,13 +580,19 @@ class TabGroupPanel extends Panel {
     for (let tab of this.#group.tabs) {
       let tabbutton = this.win.document.createXULElement("toolbarbutton");
       tabbutton.setAttribute("role", "button");
+      tabbutton.setAttribute("keyNav", false);
+      tabbutton.setAttribute("tabindex", 0);
       tabbutton.setAttribute("label", tab.label);
       tabbutton.setAttribute(
         "image",
         "page-icon:" + tab.linkedBrowser.currentURI.spec
       );
       tabbutton.setAttribute("tooltiptext", tab.label);
-      tabbutton.classList.add("subviewbutton", "subviewbutton-iconic");
+      tabbutton.classList.add(
+        "subviewbutton",
+        "subviewbutton-iconic",
+        "group-preview-button"
+      );
       if (tab == this.win.gBrowser.selectedTab) {
         tabbutton.classList.add("active-tab");
       }
