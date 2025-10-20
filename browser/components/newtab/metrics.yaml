@@ -1257,6 +1257,26 @@ newtab:
       - mconley@mozilla.com
     expires: never
 
+  highlights_enabled:
+    lifetime: application
+    type: boolean
+    description: >
+      Whether "highlights" is enabled on the newtab.
+      AKA the "Recent Activity" section.
+      Corresponds to the value of the
+      `browser.newtabpage.activity-stream.feeds.section.highlights` pref.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1992486
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1992486
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mconley@Mozilla.com
+    expires: never
+    send_in_pings:
+      - newtab
+
 newtab.search:
   enabled:
     lifetime: application

@@ -43,6 +43,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   UTEventReporting: "resource://newtab/lib/UTEventReporting.sys.mjs",
   NewTabContentPing: "resource://newtab/lib/NewTabContentPing.sys.mjs",
+  NewTabGleanUtils: "resource://newtab/lib/NewTabGleanUtils.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
@@ -134,15 +135,18 @@ const PREF_SURFACE_ID = "telemetry.surfaceId";
 const CONTENT_PING_VERSION = 2;
 
 const ACTIVITY_STREAM_PREF_BRANCH = "browser.newtabpage.activity-stream.";
+
 const NEWTAB_PING_PREFS = {
   showSearch: Glean.newtabSearch.enabled,
   "feeds.topsites": Glean.topsites.enabled,
   [PREF_SHOW_SPONSORED_TOPSITES]: Glean.topsites.sponsoredEnabled,
+  "feeds.section.highlights": Glean.newtab.highlightsEnabled,
   "feeds.section.topstories": Glean.pocket.enabled,
   [PREF_SHOW_SPONSORED_STORIES]: Glean.pocket.sponsoredStoriesEnabled,
   topSitesRows: Glean.topsites.rows,
   showWeather: Glean.newtab.weatherEnabled,
 };
+
 const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
 const TOPIC_SELECTION_SELECTED_TOPICS_PREF =
   "browser.newtabpage.activity-stream.discoverystream.topicSelection.selectedTopics";
@@ -2149,7 +2153,17 @@ export class TelemetryFeed {
     }
   }
 
-  _setNewtabPrefMetrics(fullPrefName, isChanged) {
+  async _setNewtabPrefMetrics(fullPrefName, isChanged) {
+    // @backward-compat { version 146 } This newtab train-hop compatibility
+    // shim can be removed once Firefox 146 makes it to the release channel.
+    const is146AndUp =
+      Services.vc.compare(AppConstants.MOZ_APP_VERSION, "146.0a1") >= 0;
+    if (!is146AndUp) {
+      await lazy.NewTabGleanUtils.registrationDone;
+      NEWTAB_PING_PREFS["feeds.section.highlights"] =
+        Glean.newtab.highlightsEnabled;
+    }
+
     const pref = fullPrefName.slice(ACTIVITY_STREAM_PREF_BRANCH.length);
     if (!Object.hasOwn(NEWTAB_PING_PREFS, pref)) {
       return;
