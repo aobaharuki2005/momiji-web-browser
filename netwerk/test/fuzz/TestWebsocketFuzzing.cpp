@@ -161,7 +161,7 @@ static int FuzzingRunNetworkWebsocket(const uint8_t* data, size_t size) {
 
     rv = gWebSocketChannel->InitLoadInfoNative(
         nullptr, nullPrincipal, nsContentUtils::GetSystemPrincipal(), nullptr,
-        secFlags, nsIContentPolicy::TYPE_WEBSOCKET, sandboxFlags);
+        secFlags, nsIContentPolicy::TYPE_WEBSOCKET, Nothing(), sandboxFlags);
 
     if (rv != NS_OK) {
       MOZ_CRASH("Failed to call InitLoadInfo");
