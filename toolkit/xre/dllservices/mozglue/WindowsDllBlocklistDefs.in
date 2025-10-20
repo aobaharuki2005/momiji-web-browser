@@ -359,6 +359,9 @@ BROWSER_PROCESS += [
     # old AMD JPEG decoder DLLs (bug 1328838)
     DllBlocklistEntry("amf-wic-jpeg-decoder64.dll", ALL_VERSIONS),
     DllBlocklistEntry("amf-wic-jpeg-decoder32.dll", ALL_VERSIONS),
+
+    # old versions of KeyScrambler (bug 1994657)
+    DllBlocklistEntry("KeyScramblerIE.dll", (3, 17, 0, 4)),
 ]
 
 CHILD_PROCESSES += [
