@@ -5,7 +5,6 @@
 package org.mozilla.fenix.ui
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -202,29 +201,6 @@ class SettingsHomepageTest : TestSetup() {
 
         browserScreen {
             verifyPageContent(genericPage.content)
-        }
-    }
-
-    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1676359
-    @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/26559")
-    @Test
-    fun verifyWallpaperChangeTest() {
-        val wallpapers = listOf(
-            "Wallpaper Item: amethyst",
-            "Wallpaper Item: cerulean",
-            "Wallpaper Item: sunrise",
-        )
-
-        for (wallpaper in wallpapers) {
-            homeScreen {
-            }.openThreeDotMenu {
-            }.openCustomizeHome {
-                openWallpapersMenu()
-                selectWallpaper(wallpaper)
-                verifySnackBarText("Wallpaper updated!")
-            }.clickSnackBarViewButton {
-                verifyWallpaperImageApplied(true)
-            }
         }
     }
 }
