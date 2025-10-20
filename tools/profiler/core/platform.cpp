@@ -297,6 +297,11 @@ void profiler_dump_and_stop();
 // Forward declare the function to call when we need to start the profiler.
 void profiler_start_from_signal();
 
+#if defined(GP_OS_darwin)
+// Forward declare thermal state observer function (macOS only)
+void profiler_register_thermal_state_observer();
+#endif
+
 mozilla::Atomic<int, mozilla::MemoryOrdering::Relaxed> gSkipSampling;
 
 #if defined(GP_OS_android)
@@ -6159,6 +6164,13 @@ void profiler_init(void* aStackTop) {
   // The GeckoMain thread registration happened too early to record a marker,
   // so let's record it again now.
   profiler_mark_thread_awake();
+
+#if defined(GP_OS_darwin)
+  // Register thermal state observer callback on macOS (parent process only)
+  if (XRE_IsParentProcess()) {
+    profiler_register_thermal_state_observer();
+  }
+#endif
 
   invoke_profiler_state_change_callbacks(ProfilingState::Started);
 
