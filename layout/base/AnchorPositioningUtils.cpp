@@ -798,18 +798,19 @@ nsRect AnchorPositioningUtils::AdjustAbsoluteContainingBlockRectForPositionArea(
   //              |            |            |            |
   // ttbEdges[3]  +------------+------------+------------+
 
-  nscoord ltrEdges[4] = {aCBRect.x, aAnchorRect.x,
+  const nsRect gridRect = aCBRect.Union(aAnchorRect);
+  nscoord ltrEdges[4] = {gridRect.x, aAnchorRect.x,
                          aAnchorRect.x + aAnchorRect.width,
-                         aCBRect.x + aCBRect.width};
-  nscoord ttbEdges[4] = {aCBRect.y, aAnchorRect.y,
+                         gridRect.x + gridRect.width};
+  nscoord ttbEdges[4] = {gridRect.y, aAnchorRect.y,
                          aAnchorRect.y + aAnchorRect.height,
-                         aCBRect.y + aCBRect.height};
+                         gridRect.y + gridRect.height};
   ltrEdges[1] = std::clamp(ltrEdges[1], ltrEdges[0], ltrEdges[3]);
   ltrEdges[2] = std::clamp(ltrEdges[2], ltrEdges[0], ltrEdges[3]);
   ttbEdges[1] = std::clamp(ttbEdges[1], ttbEdges[0], ttbEdges[3]);
   ttbEdges[2] = std::clamp(ttbEdges[2], ttbEdges[0], ttbEdges[3]);
 
-  nsRect res = aCBRect;
+  nsRect res = gridRect;
 
   // PositionArea, resolved to only contain Left/Right/Top/Bottom values.
   StylePositionArea posArea =
