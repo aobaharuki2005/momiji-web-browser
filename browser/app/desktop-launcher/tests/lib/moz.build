@@ -30,8 +30,5 @@ OS_LIBS += [
     "shell32",
     "winhttp",
 ]
-DEFFILE = "desktop-launcher-test.def"
-Library("desktop-launcher-test")
-DisableStlWrapping()
 
 FINAL_LIBRARY = "xul-gtest"
