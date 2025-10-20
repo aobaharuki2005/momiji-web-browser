@@ -3893,35 +3893,6 @@ set_config(
     ),
 )
 
-
-@depends(target, c_compiler)
-def htmlaccel_config(target, c_compiler):
-    # Keep this is sync with the mozilla::htmlaccel::htmlaccelEnabled function.
-    #
-    # The code compiles on SSSE3, but AVX+BMI generates better code
-    # and has been available for 12 years at the time of landing this,
-    # so let's give the best code to users with reasonably recent hardware.
-    #
-    # Not enabled on 32-bit x86, due to lack of insight into what hardware is
-    # representative at this point in time and due to lack of such hardware
-    # for testing to see what config would actually be an optimization.
-    #
-    # aarch64 does not need extra flags.
-    #
-    # clang-cl doesn't tolerate -flax-vector-conversions but GCC requires it.
-    #
-    # -mavx2 doesn't change codegen vs. -mavx. AVX2 and BMI always co-occur
-    # in Intel CPUs, but there are AMD CPUs that have AVX and BMI without
-    # AVX2.
-    if target.cpu != "x86_64":
-        return []
-    if c_compiler.type == "gcc":
-        return ["-mavx", "-mbmi", "-flax-vector-conversions"]
-    return ["-mavx", "-mbmi"]
-
-
-set_config("HTML_ACCEL_FLAGS", htmlaccel_config)
-
 # dtrace support
 ##
 option("--enable-dtrace", help="Build with dtrace support")

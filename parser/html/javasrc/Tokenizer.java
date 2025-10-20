@@ -932,7 +932,7 @@ public class Tokenizer implements Locator, Locator2 {
 
     // ]NOCPP]
 
-    @Inline HtmlAttributes emptyAttributes() {
+    HtmlAttributes emptyAttributes() {
         // [NOCPP[
         if (newAttributesEachTime) {
             return new HtmlAttributes(mappingLangToXmlLang);
@@ -944,7 +944,7 @@ public class Tokenizer implements Locator, Locator2 {
         // ]NOCPP]
     }
 
-    private void appendCharRefBuf(char c) {
+    @Inline private void appendCharRefBuf(char c) {
         // CPPONLY: assert charRefBufLen < charRefBuf.length:
         // CPPONLY:     "RELEASE: Attempted to overrun charRefBuf!";
         charRefBuf[charRefBufLen++] = c;
@@ -982,7 +982,7 @@ public class Tokenizer implements Locator, Locator2 {
      * @param c
      *            the UTF-16 code unit to append
      */
-    private void appendStrBuf(char c) {
+    @Inline private void appendStrBuf(char c) {
         // CPPONLY: assert strBufLen < strBuf.length: "Previous buffer length insufficient.";
         // CPPONLY: if (strBufLen == strBuf.length) {
         // CPPONLY:     if (!EnsureBufferSpace(1)) {
@@ -1000,7 +1000,7 @@ public class Tokenizer implements Locator, Locator2 {
      *
      * @return the buffer as a string
      */
-    @Inline protected String strBufToString() {
+    protected String strBufToString() {
         String str = Portability.newStringFromBuffer(strBuf, 0, strBufLen
             // CPPONLY: , tokenHandler, !newAttributesEachTime && attributeName == AttributeName.CLASS
         );
@@ -1014,7 +1014,7 @@ public class Tokenizer implements Locator, Locator2 {
      *
      * @return the buffer as local name
      */
-    @Inline private void strBufToDoctypeName() {
+    private void strBufToDoctypeName() {
         doctypeName = Portability.newLocalNameFromBuffer(strBuf, strBufLen, interner);
         clearStrBufAfterUse();
     }
@@ -1025,7 +1025,7 @@ public class Tokenizer implements Locator, Locator2 {
      * @throws SAXException
      *             if the token handler threw
      */
-    @Inline private void emitStrBuf() throws SAXException {
+    private void emitStrBuf() throws SAXException {
         if (strBufLen > 0) {
             tokenHandler.characters(strBuf, 0, strBufLen);
             clearStrBufAfterUse();
@@ -1455,6 +1455,12 @@ public class Tokenizer implements Locator, Locator2 {
          */
         int pos = start - 1;
 
+        /**
+         * The index of the first <code>char</code> in <code>buf</code> that is
+         * part of a coalesced run of character tokens or
+         * <code>Integer.MAX_VALUE</code> if there is not a current run being
+         * coalesced.
+         */
         switch (state) {
             case DATA:
             case RCDATA:
@@ -1480,24 +1486,19 @@ public class Tokenizer implements Locator, Locator2 {
                 break;
         }
 
+        /**
+         * The number of <code>char</code>s in <code>buf</code> that have
+         * meaning. (The rest of the array is garbage and should not be
+         * examined.)
+         */
         // CPPONLY: if (mViewSource) {
         // CPPONLY:   mViewSource.SetBuffer(buffer);
-        // CPPONLY:   if (htmlaccelEnabled()) {
-        // CPPONLY:     pos = StateLoopViewSourceSIMD(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
-        // CPPONLY:   } else {
-        // CPPONLY:     pos = StateLoopViewSourceALU(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
-        // CPPONLY:   }
+        // CPPONLY:   pos = stateLoop(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
         // CPPONLY:   mViewSource.DropBuffer((pos == buffer.getEnd()) ? pos : pos + 1);
         // CPPONLY: } else if (tokenHandler.WantsLineAndColumn()) {
-        // CPPONLY:   if (htmlaccelEnabled()) {
-        // CPPONLY:     pos = StateLoopLineColSIMD(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
-        // CPPONLY:   } else {
-        // CPPONLY:     pos = StateLoopLineColALU(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
-        // CPPONLY:   }
-        // CPPONLY: } else if (htmlaccelEnabled()) {
-        // CPPONLY:   pos = StateLoopFastestSIMD(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
+        // CPPONLY:   pos = stateLoop(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
         // CPPONLY: } else {
-        // CPPONLY:   pos = StateLoopFastestALU(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
+        // CPPONLY:   pos = stateLoop(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
         // CPPONLY: }
         // [NOCPP[
         pos = stateLoop(state, c, pos, buffer.getBuffer(), false, returnState,
@@ -1546,7 +1547,7 @@ public class Tokenizer implements Locator, Locator2 {
     }
     // ]NOCPP]
 
-    @SuppressWarnings("unused") @Inline private int stateLoop(int state, char c,
+    @SuppressWarnings("unused") private int stateLoop(int state, char c,
             int pos, @NoLength char[] buf, boolean reconsume, int returnState,
             int endPos) throws SAXException {
         boolean reportedConsecutiveHyphens = false;
@@ -1622,127 +1623,54 @@ public class Tokenizer implements Locator, Locator2 {
             switch (state) {
                 case DATA:
                     dataloop: for (;;) {
-                        // Ideally this reconsume block would be a separate state, DATA_RECONSUME above this one
-                        // with fallthrough into this state. However, such a change would be disruptive to
-                        // TransitionHandler and everything that works with returnState.
                         if (reconsume) {
                             reconsume = false;
-                            // This is a manual copy of the switch below with break/continue
-                            // adjusted as relevant. Make sure to keep in sync with the switch below!
-                            switch (c) {
-                                case '&':
-                                    /*
-                                     * U+0026 AMPERSAND (&) Switch to the character
-                                     * reference in data state.
-                                     */
-                                    flushChars(buf, pos);
-                                    assert charRefBufLen == 0: "charRefBufLen not reset after previous use!";
-                                    appendCharRefBuf(c);
-                                    setAdditionalAndRememberAmpersandLocation('\u0000');
-                                    returnState = state;
-                                    state = transition(state, Tokenizer.CONSUME_CHARACTER_REFERENCE, reconsume, pos);
-                                    continue stateloop;
-                                case '<':
-                                    /*
-                                     * U+003C LESS-THAN SIGN (<) Switch to the tag
-                                     * open state.
-                                     */
-                                    flushChars(buf, pos);
-
-                                    state = transition(state, Tokenizer.TAG_OPEN, reconsume, pos);
-                                    // `break` optimizes; `continue stateloop;` would be valid
-                                    break dataloop;
-                                case '\u0000':
-                                    maybeEmitReplacementCharacter(buf, pos);
-                                    break;
-                                case '\r':
-                                    emitCarriageReturn(buf, pos);
-                                    break stateloop;
-                                case '\n':
-                                    silentLineFeed();
-                                    // CPPONLY: MOZ_FALLTHROUGH;
-                                default:
-                                    /*
-                                     * Anything else Emit the input character as a
-                                     * character token.
-                                     *
-                                     * Stay in the data state.
-                                     */
-                                    break;
+                        } else {
+                            if (++pos == endPos) {
+                                break stateloop;
                             }
+                            c = checkChar(buf, pos);
                         }
-                        datamiddle: for (;;) {
-                            ++pos;
-                            // Perhaps at some point, it will be appropriate to do SIMD in Java, but not today.
-                            // The line below advances pos by some number of code units that this state is indifferent to.
-                            // CPPONLY: pos += accelerateAdvancementData(buf, pos, endPos);
-                            for (;;) {
-                                if (pos == endPos) {
-                                    break stateloop;
-                                }
-                                c = checkChar(buf, pos);
-                                // Make sure to keep in sync with the switch above in the reconsume block!
-                                switch (c) {
-                                    case '&':
-                                        /*
-                                         * U+0026 AMPERSAND (&) Switch to the character
-                                         * reference in data state.
-                                         */
-                                        flushChars(buf, pos);
-                                        assert charRefBufLen == 0: "charRefBufLen not reset after previous use!";
-                                        appendCharRefBuf(c);
-                                        setAdditionalAndRememberAmpersandLocation('\u0000');
-                                        returnState = state;
-                                        state = transition(state, Tokenizer.CONSUME_CHARACTER_REFERENCE, reconsume, pos);
-                                        continue stateloop;
-                                    case '<':
-                                        /*
-                                         * U+003C LESS-THAN SIGN (<) Switch to the tag
-                                         * open state.
-                                         */
-                                        flushChars(buf, pos);
+                        switch (c) {
+                            case '&':
+                                /*
+                                 * U+0026 AMPERSAND (&) Switch to the character
+                                 * reference in data state.
+                                 */
+                                flushChars(buf, pos);
+                                assert charRefBufLen == 0: "charRefBufLen not reset after previous use!";
+                                appendCharRefBuf(c);
+                                setAdditionalAndRememberAmpersandLocation('\u0000');
+                                returnState = state;
+                                state = transition(state, Tokenizer.CONSUME_CHARACTER_REFERENCE, reconsume, pos);
+                                continue stateloop;
+                            case '<':
+                                /*
+                                 * U+003C LESS-THAN SIGN (<) Switch to the tag
+                                 * open state.
+                                 */
+                                flushChars(buf, pos);
 
-                                        state = transition(state, Tokenizer.TAG_OPEN, reconsume, pos);
-                                        // `break` optimizes; `continue stateloop;` would be valid
-                                        break dataloop;
-                                    case '\u0000':
-                                        maybeEmitReplacementCharacter(buf, pos);
-                                        // Continue from above the accelerateAdvancementData call.
-                                        continue datamiddle;
-                                    case '\r':
-                                        emitCarriageReturn(buf, pos);
-                                        break stateloop;
-                                    case '\n':
-                                        silentLineFeed();
-                                        // Continue from above the accelerateAdvancementData call.
-                                        continue datamiddle;
-                                    default:
-                                        /*
-                                         * Anything else Emit the input character as a
-                                         * character token.
-                                         *
-                                         * Stay in the data state.
-                                         */
-                                        // Don't go back to accelerateAdvancementData to avoid
-                                        // bouncing back and forth in a way that doesn't make good
-                                        // use of SIMD when we have less than a SIMD stride to go
-                                        // or when we come here due to a non-BMP characters.
-                                        // The SIMD code doesn't have ALU handling for the remainder
-                                        // that is shorter than a SIMD stride, because this case
-                                        // in this switch has to exist anyway (for SIMD-unavailable
-                                        // and for non-BMP cases) and this innermost loop can serve
-                                        // that purpose, too. In the non-BMP case we stay on the
-                                        // ALU path until we end up in one of the other cases in this
-                                        // switch (e.g. end of line) in order to avoid bouncing back
-                                        // and forth when we have text in a non-BMP script instead
-                                        // of an isolated emoji.
-                                        //
-                                        // We need to increment pos when staying in this innermost
-                                        // loop!
-                                        ++pos;
-                                        continue;
-                                }
-                            }
+                                state = transition(state, Tokenizer.TAG_OPEN, reconsume, pos);
+                                // `break` optimizes; `continue stateloop;` would be valid
+                                break dataloop;
+                            case '\u0000':
+                                maybeEmitReplacementCharacter(buf, pos);
+                                continue;
+                            case '\r':
+                                emitCarriageReturn(buf, pos);
+                                break stateloop;
+                            case '\n':
+                                silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
+                            default:
+                                /*
+                                 * Anything else Emit the input character as a
+                                 * character token.
+                                 *
+                                 * Stay in the data state.
+                                 */
+                                continue;
                         }
                     }
                     // CPPONLY: MOZ_FALLTHROUGH;
@@ -4074,122 +4002,52 @@ public class Tokenizer implements Locator, Locator2 {
                     // no fallthrough, reordering opportunity
                 case RCDATA:
                     rcdataloop: for (;;) {
-                        // Ideally this reconsume block would be a separate state, RCDATA_RECONSUME above this one
-                        // with fallthrough into this state. However, such a change would be disruptive to
-                        // TransitionHandler and everything that works with returnState.
                         if (reconsume) {
                             reconsume = false;
-                            // This is a manual copy of the switch below with break/continue
-                            // adjusted as relevant. Make sure to keep in sync with the switch below!
-                            switch (c) {
-                                case '&':
-                                    /*
-                                    * U+0026 AMPERSAND (&) Switch to the character
-                                    * reference in RCDATA state.
-                                    */
-                                    flushChars(buf, pos);
-                                    assert charRefBufLen == 0: "charRefBufLen not reset after previous use!";
-                                    appendCharRefBuf(c);
-                                    setAdditionalAndRememberAmpersandLocation('\u0000');
-                                    returnState = state;
-                                    state = transition(state, Tokenizer.CONSUME_CHARACTER_REFERENCE, reconsume, pos);
-                                    continue stateloop;
-                                case '<':
-                                    /*
-                                    * U+003C LESS-THAN SIGN (<) Switch to the
-                                    * RCDATA less-than sign state.
-                                    */
-                                    flushChars(buf, pos);
-
-                                    state = transition(state, Tokenizer.RAWTEXT_RCDATA_LESS_THAN_SIGN, reconsume, pos);
-                                    continue stateloop;
-                                case '\u0000':
-                                    maybeEmitReplacementCharacter(buf, pos);
-                                    break;
-                                case '\r':
-                                    emitCarriageReturn(buf, pos);
-                                    break stateloop;
-                                case '\n':
-                                    silentLineFeed();
-                                    // CPPONLY: MOZ_FALLTHROUGH;
-                                default:
-                                    /*
-                                    * Emit the current input character as a
-                                    * character token. Stay in the RCDATA state.
-                                    */
-                                    break;
+                        } else {
+                            if (++pos == endPos) {
+                                break stateloop;
                             }
+                            c = checkChar(buf, pos);
                         }
-                        rcdatamiddle: for (;;) {
-                            ++pos;
-                            // Perhaps at some point, it will be appropriate to do SIMD in Java, but not today.
-                            // The line below advances pos by some number of code units that this state is indifferent to.
-                            // RCDATA and DATA have the same set of characters that they are indifferent to, hence accelerateData.
-                            // CPPONLY: pos += accelerateAdvancementData(buf, pos, endPos);
-                            for (;;) {
-                                if (pos == endPos) {
-                                    break stateloop;
-                                }
-                                c = checkChar(buf, pos);
-                                // Make sure to keep in sync with the switch above in the reconsume block!
-                                switch (c) {
-                                    case '&':
-                                        /*
-                                        * U+0026 AMPERSAND (&) Switch to the character
-                                        * reference in RCDATA state.
-                                        */
-                                        flushChars(buf, pos);
-                                        assert charRefBufLen == 0: "charRefBufLen not reset after previous use!";
-                                        appendCharRefBuf(c);
-                                        setAdditionalAndRememberAmpersandLocation('\u0000');
-                                        returnState = state;
-                                        state = transition(state, Tokenizer.CONSUME_CHARACTER_REFERENCE, reconsume, pos);
-                                        continue stateloop;
-                                    case '<':
-                                        /*
-                                        * U+003C LESS-THAN SIGN (<) Switch to the
-                                        * RCDATA less-than sign state.
-                                        */
-                                        flushChars(buf, pos);
+                        switch (c) {
+                            case '&':
+                                /*
+                                 * U+0026 AMPERSAND (&) Switch to the character
+                                 * reference in RCDATA state.
+                                 */
+                                flushChars(buf, pos);
+                                assert charRefBufLen == 0: "charRefBufLen not reset after previous use!";
+                                appendCharRefBuf(c);
+                                setAdditionalAndRememberAmpersandLocation('\u0000');
+                                returnState = state;
+                                state = transition(state, Tokenizer.CONSUME_CHARACTER_REFERENCE, reconsume, pos);
+                                continue stateloop;
+                            case '<':
+                                /*
+                                 * U+003C LESS-THAN SIGN (<) Switch to the
+                                 * RCDATA less-than sign state.
+                                 */
+                                flushChars(buf, pos);
 
-                                        state = transition(state, Tokenizer.RAWTEXT_RCDATA_LESS_THAN_SIGN, reconsume, pos);
-                                        continue stateloop;
-                                    case '\u0000':
-                                        maybeEmitReplacementCharacter(buf, pos);
-                                        // Continue from above the accelerateAdvancementData call.
-                                        continue rcdatamiddle;
-                                    case '\r':
-                                        emitCarriageReturn(buf, pos);
-                                        break stateloop;
-                                    case '\n':
-                                        silentLineFeed();
-                                        // Continue from above the accelerateAdvancementData call.
-                                        continue rcdatamiddle;
-                                    default:
-                                        /*
-                                        * Emit the current input character as a
-                                        * character token. Stay in the RCDATA state.
-                                        */
-                                        // Don't go back to accelerateAdvancementData to avoid
-                                        // bouncing back and forth in a way that doesn't make good
-                                        // use of SIMD when we have less than a SIMD stride to go
-                                        // or when we come here due to a non-BMP characters.
-                                        // The SIMD code doesn't have ALU handling for the remainder
-                                        // that is shorter than a SIMD stride, because this case
-                                        // in this switch has to exist anyway (for SIMD-unavailable
-                                        // and for non-BMP cases) and this innermost loop can serve
-                                        // that purpose, too. In the non-BMP case we stay on the
-                                        // ALU path until we end up in one of the other cases in this
-                                        // switch (e.g. end of line) in order to avoid bouncing back
-                                        // and forth when we have text in a non-BMP script instead
-                                        // of an isolated emoji.
-                                        //
-                                        // We need to increment pos when staying in this innermost
-                                        // loop!
-                                        ++pos;
-                                        continue;
-                                }
-                            }
+                                returnState = state;
+                                state = transition(state, Tokenizer.RAWTEXT_RCDATA_LESS_THAN_SIGN, reconsume, pos);
+                                continue stateloop;
+                            case '\u0000':
+                                emitReplacementCharacter(buf, pos);
+                                continue;
+                            case '\r':
+                                emitCarriageReturn(buf, pos);
+                                break stateloop;
+                            case '\n':
+                                silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
+                            default:
+                                /*
+                                 * Emit the current input character as a
+                                 * character token. Stay in the RCDATA state.
+                                 */
+                                continue;
                         }
                     }
                     // no fallthrough, reordering opportunity
@@ -6490,24 +6348,24 @@ public class Tokenizer implements Locator, Locator2 {
         forceQuirks = false;
     }
 
-    @Inline private void adjustDoubleHyphenAndAppendToStrBufCarriageReturn()
+    private void adjustDoubleHyphenAndAppendToStrBufCarriageReturn()
             throws SAXException {
         silentCarriageReturn();
         adjustDoubleHyphenAndAppendToStrBufAndErr('\n', false);
     }
 
-    @Inline private void adjustDoubleHyphenAndAppendToStrBufLineFeed()
+    private void adjustDoubleHyphenAndAppendToStrBufLineFeed()
             throws SAXException {
         silentLineFeed();
         adjustDoubleHyphenAndAppendToStrBufAndErr('\n', false);
     }
 
-    @Inline private void appendStrBufLineFeed() {
+    private void appendStrBufLineFeed() {
         silentLineFeed();
         appendStrBuf('\n');
     }
 
-    @Inline private void appendStrBufCarriageReturn() {
+    private void appendStrBufCarriageReturn() {
         silentCarriageReturn();
         appendStrBuf('\n');
     }
@@ -6525,7 +6383,7 @@ public class Tokenizer implements Locator, Locator2 {
 
     // ]NOCPP]
 
-    @Inline private void emitCarriageReturn(@NoLength char[] buf, int pos)
+    private void emitCarriageReturn(@NoLength char[] buf, int pos)
             throws SAXException {
         silentCarriageReturn();
         flushChars(buf, pos);
@@ -6554,7 +6412,7 @@ public class Tokenizer implements Locator, Locator2 {
         cstart = pos + 1;
     }
 
-    @Inline private void setAdditionalAndRememberAmpersandLocation(char add) {
+    private void setAdditionalAndRememberAmpersandLocation(char add) {
         additional = add;
         // [NOCPP[
         ampersandLocation = new LocatorImpl(this);
@@ -7219,7 +7077,7 @@ public class Tokenizer implements Locator, Locator2 {
      * happened in a non-text context, this method turns that deferred suspension
      * request into an immediately-pending suspension request.
      */
-    @Inline private void suspendIfRequestedAfterCurrentNonTextToken() {
+    private void suspendIfRequestedAfterCurrentNonTextToken() {
         if (suspendAfterCurrentNonTextToken) {
             suspendAfterCurrentNonTextToken = false;
             shouldSuspend = true;
@@ -7363,7 +7221,7 @@ public class Tokenizer implements Locator, Locator2 {
      * @param val
      * @throws SAXException
      */
-    @Inline private void emitOrAppendTwo(@Const @NoLength char[] val, int returnState)
+    private void emitOrAppendTwo(@Const @NoLength char[] val, int returnState)
             throws SAXException {
         if ((returnState & DATA_AND_RCDATA_MASK) != 0) {
             appendStrBuf(val[0]);
@@ -7373,7 +7231,7 @@ public class Tokenizer implements Locator, Locator2 {
         }
     }
 
-    @Inline private void emitOrAppendOne(@Const @NoLength char[] val, int returnState)
+    private void emitOrAppendOne(@Const @NoLength char[] val, int returnState)
             throws SAXException {
         if ((returnState & DATA_AND_RCDATA_MASK) != 0) {
             appendStrBuf(val[0]);
@@ -7410,7 +7268,7 @@ public class Tokenizer implements Locator, Locator2 {
         }
     }
 
-    @Inline public void requestSuspension() {
+    public void requestSuspension() {
         shouldSuspend = true;
     }
 
@@ -7453,7 +7311,7 @@ public class Tokenizer implements Locator, Locator2 {
 
     // ]NOCPP]
 
-    @Inline public boolean isInDataState() {
+    public boolean isInDataState() {
         return (stateSave == DATA);
     }
 
