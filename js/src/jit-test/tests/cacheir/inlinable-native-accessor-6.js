@@ -29,3 +29,12 @@ function testNumberToString() {
   }
 }
 testNumberToString();
+
+function testStringAt() {
+  Object.defineProperty(String.prototype, "at_", {get: String.prototype.at});
+
+  for (var i = 0; i < 100; ++i) {
+    assertEq("a".at_, "a");
+  }
+}
+testStringAt();
