@@ -39,7 +39,7 @@ export default [
   "**/reftest/",
   "**/reftests/",
   // Don't ignore the reftest harness files.
-  "!/layout/tools/reftest/",
+  "!layout/tools/reftest/",
 
   // Exclude expected objdirs.
   "obj*/",
