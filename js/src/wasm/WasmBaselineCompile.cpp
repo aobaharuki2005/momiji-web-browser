@@ -3092,14 +3092,12 @@ static void MaxF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd) {
   bc.masm.maxDouble(rs, rsd, HandleNaNSpecially(true));
 }
 
-static void CopysignF64(MacroAssembler& masm, RegF64 rs, RegF64 rsd,
-                        RegI64 temp0, RegI64 temp1) {
-  masm.moveDoubleToGPR64(rsd, temp0);
-  masm.moveDoubleToGPR64(rs, temp1);
-  masm.and64(Imm64(INT64_MAX), temp0);
-  masm.and64(Imm64(INT64_MIN), temp1);
-  masm.or64(temp1, temp0);
-  masm.moveGPR64ToDouble(temp0, rsd);
+static void CopysignF64(MacroAssembler& masm, RegF64 rs, RegF64 rsd) {
+  // No code generated for the no-op case.
+  if (rs == rsd) {
+    return;
+  }
+  masm.copySignDouble(rsd, rs, rsd);
 }
 
 static void AbsF64(MacroAssembler& masm, RegF64 rsd) {
@@ -3161,14 +3159,12 @@ static void MaxF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd) {
   bc.masm.maxFloat32(rs, rsd, HandleNaNSpecially(true));
 }
 
-static void CopysignF32(MacroAssembler& masm, RegF32 rs, RegF32 rsd,
-                        RegI32 temp0, RegI32 temp1) {
-  masm.moveFloat32ToGPR(rsd, temp0);
-  masm.moveFloat32ToGPR(rs, temp1);
-  masm.and32(Imm32(INT32_MAX), temp0);
-  masm.and32(Imm32(INT32_MIN), temp1);
-  masm.or32(temp1, temp0);
-  masm.moveGPRToFloat32(temp0, rsd);
+static void CopysignF32(MacroAssembler& masm, RegF32 rs, RegF32 rsd) {
+  // No code generated for the no-op case.
+  if (rs == rsd) {
+    return;
+  }
+  masm.copySignFloat32(rsd, rs, rsd);
 }
 
 static void AbsF32(MacroAssembler& masm, RegF32 rsd) {
