@@ -682,9 +682,9 @@ already_AddRefed<dom::Promise> StyleSheet::Replace(const nsACString& aText,
 
   // TODO(emilio, 1642227): Should constructable stylesheets notify global
   // observers (i.e., set mMustNotify to true)?
-  auto* loader = mConstructorDocument->CSSLoader();
+  css::Loader& loader = mConstructorDocument->EnsureCSSLoader();
   auto loadData = MakeRefPtr<css::SheetLoadData>(
-      loader, /* aURI = */ nullptr, this, css::SyncLoad::No,
+      &loader, /* aURI = */ nullptr, this, css::SyncLoad::No,
       css::Loader::UseSystemPrincipal::No, css::StylePreloadKind::None,
       /* aPreloadEncoding */ nullptr, /* aObserver */ nullptr,
       mConstructorDocument->NodePrincipal(), GetReferrerInfo(),
@@ -699,7 +699,7 @@ already_AddRefed<dom::Promise> StyleSheet::Replace(const nsACString& aText,
   MOZ_ASSERT(!mReplacePromise);
   mReplacePromise = promise;
   auto holder = MakeRefPtr<css::SheetLoadDataHolder>(__func__, loadData, false);
-  ParseSheet(*loader, aText, holder)
+  ParseSheet(loader, aText, holder)
       ->Then(
           target, __func__,
           [loadData] { loadData->SheetFinishedParsingAsync(); },
@@ -727,10 +727,9 @@ void StyleSheet::ReplaceSync(const nsACString& aText, ErrorResult& aRv) {
 
   // 3. Parse aText into rules.
   // 4. If rules contain @imports, skip them and continue parsing.
-  auto* loader = mConstructorDocument->CSSLoader();
   RefPtr<const StyleStylesheetContents> rawContent =
       Servo_StyleSheet_FromUTF8Bytes(
-          loader, this,
+          &mConstructorDocument->EnsureCSSLoader(), this,
           /* load_data = */ nullptr, &aText, mParsingMode, URLData(),
           mConstructorDocument->GetCompatibilityMode(),
           /* reusable_sheets = */ nullptr, StyleAllowImportRules::No,
@@ -1339,9 +1338,9 @@ void StyleSheet::ReparseSheet(const nsACString& aInput, ErrorResult& aRv) {
   // kills the document
   RefPtr<css::Loader> loader;
   if (Document* doc = GetAssociatedDocument()) {
-    loader = doc->CSSLoader();
-    NS_ASSERTION(loader, "Document with no CSS loader!");
-  } else {
+    loader = &doc->EnsureCSSLoader();
+  }
+  if (!loader) {
     loader = new css::Loader;
   }
 

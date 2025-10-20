@@ -6459,7 +6459,7 @@ static already_AddRefed<Document> CreateInertDocument(const Document* aTemplate,
     nsresult rv = NS_NewDOMDocument(
         getter_AddRefs(doc), u""_ns, u""_ns, nullptr,
         aTemplate->GetDocumentURI(), aTemplate->GetDocBaseURI(),
-        aTemplate->NodePrincipal(), true, sgo, aFlavor);
+        aTemplate->NodePrincipal(), LoadedAsData::AsData, sgo, aFlavor);
     if (NS_FAILED(rv)) {
       return nullptr;
     }
@@ -6480,7 +6480,7 @@ static already_AddRefed<Document> CreateInertDocument(const Document* aTemplate,
   nsCOMPtr<Document> doc;
   nsresult rv =
       NS_NewDOMDocument(getter_AddRefs(doc), u""_ns, u""_ns, nullptr, uri, uri,
-                        nullPrincipal, true, nullptr, aFlavor);
+                        nullPrincipal, LoadedAsData::AsData, nullptr, aFlavor);
   if (NS_FAILED(rv)) {
     return nullptr;
   }

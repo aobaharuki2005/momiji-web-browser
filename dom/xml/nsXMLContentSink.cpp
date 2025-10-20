@@ -192,9 +192,7 @@ nsresult nsXMLContentSink::MaybePrettyPrint() {
   mIsDocumentObserver = false;
 
   // Reenable the CSSLoader so that the prettyprinting stylesheets can load
-  if (mCSSLoader) {
-    mCSSLoader->SetEnabled(true);
-  }
+  mDocument->EnsureCSSLoader().SetEnabled(true);
 
   RefPtr<nsXMLPrettyPrinter> printer;
   nsresult rv = NS_NewXMLPrettyPrinter(getter_AddRefs(printer));
@@ -305,8 +303,9 @@ nsXMLContentSink::DidBuildModel(bool aTerminated) {
 
       // We're pretty-printing now.  See whether we should wait up on
       // stylesheet loads
-      if (mDocument->CSSLoader()->HasPendingLoads()) {
-        mDocument->CSSLoader()->AddObserver(this);
+      css::Loader* cssLoader = mDocument->GetExistingCSSLoader();
+      if (cssLoader && cssLoader->HasPendingLoads()) {
+        cssLoader->AddObserver(this);
         // wait for those sheets to load
         startLayout = false;
       }
@@ -445,8 +444,9 @@ nsXMLContentSink::StyleSheetLoaded(StyleSheet* aSheet, bool aWasDeferred,
     return nsContentSink::StyleSheetLoaded(aSheet, aWasDeferred, aStatus);
   }
 
-  if (!mDocument->CSSLoader()->HasPendingLoads()) {
-    mDocument->CSSLoader()->RemoveObserver(this);
+  if (mDocument->GetExistingCSSLoader() &&
+      !mDocument->GetExistingCSSLoader()->HasPendingLoads()) {
+    mDocument->GetExistingCSSLoader()->RemoveObserver(this);
     StartLayout(false);
     ScrollToRef();
   }
@@ -668,7 +668,9 @@ nsresult nsXMLContentSink::CloseElement(nsIContent* aContent) {
       rv = updateOrError.unwrapErr();
     } else if (updateOrError.unwrap().ShouldBlock() && !mRunsToCompletion) {
       ++mPendingSheetCount;
-      mScriptLoader->AddParserBlockingScriptExecutionBlocker();
+      if (mScriptLoader) {
+        mScriptLoader->AddParserBlockingScriptExecutionBlocker();
+      }
     }
   }
 
@@ -944,7 +946,9 @@ bool nsXMLContentSink::SetDocElement(int32_t aNameSpaceID, nsAtom* aTagName,
       // Successfully started a stylesheet load
       if (update.ShouldBlock() && !mRunsToCompletion) {
         ++mPendingSheetCount;
-        mScriptLoader->AddParserBlockingScriptExecutionBlocker();
+        if (mScriptLoader) {
+          mScriptLoader->AddParserBlockingScriptExecutionBlocker();
+        }
       }
     }
   }
@@ -957,10 +961,13 @@ bool nsXMLContentSink::SetDocElement(int32_t aNameSpaceID, nsAtom* aTagName,
     if (mPrettyPrintXML) {
       // In this case, disable script execution, stylesheet
       // loading, and auto XLinks since we plan to prettyprint.
-      mDocument->ScriptLoader()->SetEnabled(false);
-      if (mCSSLoader) {
-        mCSSLoader->SetEnabled(false);
+      if (dom::ScriptLoader* scriptLoader = mDocument->GetScriptLoader()) {
+        scriptLoader->SetEnabled(false);
       }
+      // Sadly, we need to create the CSSLoader to disable it so that
+      // something else doesn't create it in an enabled state after
+      // this point but before it is OK to re-enable.
+      mDocument->EnsureCSSLoader().SetEnabled(false);
     }
   }
 

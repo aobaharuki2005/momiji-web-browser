@@ -40,7 +40,7 @@ class nsHTMLDocument : public mozilla::dom::Document {
  public:
   using Document::SetDocumentURI;
 
-  nsHTMLDocument();
+  explicit nsHTMLDocument(mozilla::dom::LoadedAsData aLoadedAsData);
   virtual nsresult Init(nsIPrincipal* aPrincipal,
                         nsIPrincipal* aPartitionedPrincipal) override;
 
