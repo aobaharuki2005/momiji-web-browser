@@ -28,6 +28,11 @@ function checkMessageShown(win, type, hasButton) {
   );
   is_element_visible(messageBar, "Message bar is visible");
   is(messageBar.getAttribute("warning-type"), type);
+  if (type == "safe-mode") {
+    is(messageBar.dataset.l10nId, "extensions-warning-safe-mode3");
+  } else {
+    is(messageBar.dataset.l10nId, `extensions-warning-${type}2`);
+  }
   if (hasButton) {
     let button = messageBar.querySelector("button");
     is_element_visible(button, "Button is visible");

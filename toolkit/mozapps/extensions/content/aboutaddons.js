@@ -831,7 +831,7 @@ class GlobalWarnings extends MessageBarStackElement {
   getGlobalWarningL10nIds(type) {
     const WARNING_TYPE_TO_L10NID_MAPPING = {
       "safe-mode": {
-        messageId: "extensions-warning-safe-mode2",
+        messageId: "extensions-warning-safe-mode3",
       },
       "update-security": {
         messageId: "extensions-warning-update-security2",
