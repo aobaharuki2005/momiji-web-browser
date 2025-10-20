@@ -86,6 +86,8 @@ class MOZ_RAII IRGenerator {
   IRGenerator(const IRGenerator&) = delete;
   IRGenerator& operator=(const IRGenerator&) = delete;
 
+  JSOp jsop() const { return JSOp(*pc_); }
+
   bool maybeGuardInt32Index(const Value& index, ValOperandId indexId,
                             uint32_t* int32Index, Int32OperandId* int32IndexId);
 
@@ -143,6 +145,7 @@ class MOZ_RAII IRGenerator {
   gc::AllocSite* maybeCreateAllocSite();
 
   friend class CacheIRSpewer;
+  friend class InlinableNativeIRGenerator;
 
  public:
   explicit IRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
@@ -598,7 +601,6 @@ enum class ScriptedThisResult { NoAction, UninitializedThis, PlainObjectShape };
 
 class MOZ_RAII CallIRGenerator : public IRGenerator {
  private:
-  JSOp op_;
   uint32_t argc_;
   HandleValue callee_;
   HandleValue thisval_;
@@ -639,7 +641,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   void trackAttached(const char* name /* must be a C string literal */);
 
  public:
-  CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, JSOp op,
+  CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
                   ICState state, BaselineFrame* frame, uint32_t argc,
                   HandleValue callee, HandleValue thisval,
                   HandleValue newTarget, HandleValueArray args);
@@ -661,8 +663,8 @@ class MOZ_RAII InlinableNativeIRGenerator {
   HandleScript script() const { return generator_.script_; }
   JSObject* callee() const { return &generator_.callee_.toObject(); }
   bool isFirstStub() const { return generator_.isFirstStub_; }
-  bool ignoresResult() const { return generator_.op_ == JSOp::CallIgnoresRv; }
-  JSOp op() const { return generator_.op_; }
+  bool ignoresResult() const { return op() == JSOp::CallIgnoresRv; }
+  JSOp op() const { return generator_.jsop(); }
   uint32_t stackArgc() const { return generator_.argc_; }
 
   bool isCalleeBoundFunction() const;

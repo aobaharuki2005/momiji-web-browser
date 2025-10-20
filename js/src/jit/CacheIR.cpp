@@ -6508,12 +6508,11 @@ void OptimizeSpreadCallIRGenerator::trackAttached(const char* name) {
 }
 
 CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script,
-                                 jsbytecode* pc, JSOp op, ICState state,
+                                 jsbytecode* pc, ICState state,
                                  BaselineFrame* frame, uint32_t argc,
                                  HandleValue callee, HandleValue thisval,
                                  HandleValue newTarget, HandleValueArray args)
     : IRGenerator(cx, script, pc, CacheKind::Call, state, frame),
-      op_(op),
       argc_(argc),
       callee_(callee),
       thisval_(thisval),
@@ -11437,7 +11436,7 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
       writer.callScriptedFunction(thisObjId, argcId, targetFlags,
                                   ClampFixedArgc(argc_));
     } else {
-      writer.callNativeFunction(thisObjId, argcId, op_, target, targetFlags,
+      writer.callNativeFunction(thisObjId, argcId, jsop(), target, targetFlags,
                                 ClampFixedArgc(argc_));
     }
   } else {
@@ -12749,7 +12748,7 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
     if (isScripted) {
       writer.callScriptedFunction(thisObjId, argcId, targetFlags, fixedArgc);
     } else {
-      writer.callNativeFunction(thisObjId, argcId, op_, target, targetFlags,
+      writer.callNativeFunction(thisObjId, argcId, jsop(), target, targetFlags,
                                 fixedArgc);
     }
   } else {
@@ -13750,7 +13749,7 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   } else if (isSpecialized) {
     // Ensure callee matches this stub's callee
     writer.guardSpecificFunction(calleeObjId, calleeFunc);
-    writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, flags,
+    writer.callNativeFunction(calleeObjId, argcId, jsop(), calleeFunc, flags,
                               ClampFixedArgc(argc_));
 
     trackAttached("Call.CallNative");
@@ -14003,11 +14002,15 @@ AttachDecision CallIRGenerator::tryAttachBoundNative(
   return nativeGen.tryAttachStub();
 }
 
+static bool IsInlinableFunCallOrApply(JSOp op) {
+  return op == JSOp::Call || op == JSOp::CallContent ||
+         op == JSOp::CallIgnoresRv;
+}
+
 AttachDecision CallIRGenerator::tryAttachBoundFunCall(
     Handle<BoundFunctionObject*> calleeObj) {
   // Only optimize fun_call for simple calls.
-  if (op_ != JSOp::Call && op_ != JSOp::CallContent &&
-      op_ != JSOp::CallIgnoresRv) {
+  if (!IsInlinableFunCallOrApply(jsop())) {
     return AttachDecision::NoAction;
   }
 
@@ -14111,8 +14114,7 @@ AttachDecision CallIRGenerator::tryAttachBoundFunCall(
 AttachDecision CallIRGenerator::tryAttachBoundFunApply(
     Handle<BoundFunctionObject*> calleeObj) {
   // Only optimize fun_apply for simple calls.
-  if (op_ != JSOp::Call && op_ != JSOp::CallContent &&
-      op_ != JSOp::CallIgnoresRv) {
+  if (!IsInlinableFunCallOrApply(jsop())) {
     return AttachDecision::NoAction;
   }
 
@@ -14370,7 +14372,7 @@ AttachDecision CallIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
 
   // Some opcodes are not yet supported.
-  switch (op_) {
+  switch (jsop()) {
     case JSOp::Call:
     case JSOp::CallContent:
     case JSOp::CallIgnoresRv:
@@ -14420,8 +14422,7 @@ AttachDecision CallIRGenerator::tryAttachStub() {
   // Try inlining Function.prototype.{call,apply}. We don't use the
   // InlinableNative mechanism for this because we want to optimize these more
   // aggressively than other natives.
-  if (op_ == JSOp::Call || op_ == JSOp::CallContent ||
-      op_ == JSOp::CallIgnoresRv) {
+  if (IsInlinableFunCallOrApply(jsop())) {
     TRY_ATTACH(tryAttachFunCall(calleeFunc));
     TRY_ATTACH(tryAttachFunApply(calleeFunc));
     TRY_ATTACH(tryAttachFunCallBound(calleeFunc));
