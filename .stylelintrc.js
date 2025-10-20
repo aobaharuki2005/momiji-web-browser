@@ -442,5 +442,11 @@ module.exports = {
         "stylelint-plugin-mozilla/use-text-color-tokens": false,
       },
     },
+    {
+      files: ["toolkit/**/*.css", "toolkit/**/*.scss"],
+      rules: {
+        "stylelint-plugin-mozilla/no-browser-refs-in-toolkit": true,
+      },
+    },
   ],
 };

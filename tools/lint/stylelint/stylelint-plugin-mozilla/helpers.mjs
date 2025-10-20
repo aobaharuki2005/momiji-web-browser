@@ -167,6 +167,9 @@ export const isFunction = node => node.type === "function";
 export const isVariableFunction = node =>
   isFunction(node) && node.value === "var";
 
+// checks if a node is a url() function
+export const isUrlFunction = node => isFunction(node) && node.value === "url";
+
 /**
  * Checks if CSS includes a named color, e.g. 'white' or 'rebeccapurple'
  *
