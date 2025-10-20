@@ -835,8 +835,8 @@ void LIRGenerator::visitCopySign(MCopySign* ins) {
   }
 
   lir->setOperand(0, useRegisterAtStart(lhs));
-  lir->setOperand(1, useRegister(rhs));
-  defineReuseInput(lir, ins, 0);
+  lir->setOperand(1, useRegisterAtStart(rhs));
+  define(lir, ins);
 }
 
 void LIRGenerator::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins) {
