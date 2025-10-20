@@ -1044,6 +1044,9 @@ static JSLinearString* TransformCase(JSContext* cx, Handle<JSString*> string,
     requestedLocale = requestedLocales[0];
   } else {
     requestedLocale = cx->global()->globalIntlData().defaultLocale(cx);
+    if (!requestedLocale) {
+      return nullptr;
+    }
   }
 
   // Steps 4-10.
