@@ -56,6 +56,9 @@ unified-extensions-context-menu-move-widget-down =
 
 ## Notifications
 
+unified-extensions-notice-safe-mode =
+    .message = All extensions have been disabled by Troubleshoot Mode.
+
 # .heading is processed by moz-message-bar to be used as a heading attribute
 unified-extensions-mb-quarantined-domain-message-3 =
     .heading = Some extensions are not allowed

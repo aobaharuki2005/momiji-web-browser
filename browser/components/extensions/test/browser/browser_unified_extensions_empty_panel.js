@@ -629,3 +629,51 @@ add_task(async function test_empty_state_with_blocklisted_addon_hardblock() {
 add_task(async function test_empty_state_with_blocklisted_addon_softblock() {
   await do_test_empty_state_with_blocklisted_addon(/* isSoftBlock */ true);
 });
+
+add_task(async function test_safe_mode_notice() {
+  const sandbox = sinon.createSandbox();
+  registerCleanupFunction(() => sandbox.restore());
+
+  // Services.appinfo.inSafeMode is ordinarily a constant fixed at browser
+  // startup. We fake its implementation, and use a separate browser window in
+  // the test to make sure that any state derived from reading the inSafeMode
+  // flag is limited to this window.
+  const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+  // Services.appinfo.inSafeMode is a non-configurable property, so to spoof
+  // its value we stub Services.appinfo and let it fall back to the original
+  // implementation for every property, except for inSafeMode.
+  const appinfoStub = new Proxy(Services.appinfo, {
+    get(target, propertyKey) {
+      if (propertyKey === "inSafeMode") {
+        return true;
+      }
+      return Reflect.get(target, propertyKey, target);
+    },
+  });
+  sandbox.stub(Services, "appinfo").get(() => appinfoStub);
+  await openExtensionsPanel(win);
+
+  const messages = getMessageBars(win);
+  is(messages.length, 1, "Got one message bar");
+  const bar = messages[0];
+  is(bar.getAttribute("type"), "info", "Bar is informational notice");
+  ok(!bar.hasAttribute("dismissable"), "Bar is not dismissable");
+
+  // We don't exactly care which empty state is shown, as the notice is
+  // independent of the empty state. We just verify as a sanity check that the
+  // panel is indeed empty, which is most realistic when users enter safe mode.
+  let emptyStateBox = getEmptyStateContainer(win);
+  ok(BrowserTestUtils.isVisible(emptyStateBox), "Empty state is visible");
+
+  await closeExtensionsPanel(win);
+
+  // Closing and re-opening should show one bar.
+  await openExtensionsPanel(win);
+  is(getMessageBars(win).length, 1, "Still one bar");
+  await closeExtensionsPanel(win);
+
+  sandbox.restore();
+  is(Services.appinfo.inSafeMode, false, "Restored original inSafeMode");
+
+  await BrowserTestUtils.closeWindow(win);
+});
