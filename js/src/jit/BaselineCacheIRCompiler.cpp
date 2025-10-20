@@ -26,7 +26,6 @@
 #include "js/friend/DOMProxy.h"       // JS::ExpandoAndGeneration
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/Proxy.h"
-#include "util/DifferentialTesting.h"
 #include "util/Unicode.h"
 #include "vm/PortableBaselineInterpret.h"
 #include "vm/StaticStrings.h"
@@ -1452,28 +1451,6 @@ bool BaselineCacheIRCompiler::emitStringFromCodePointResult(
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   return emitStringFromCodeResult(codeId, StringCode::CodePoint);
-}
-
-bool BaselineCacheIRCompiler::emitMathRandomResult(uint32_t rngOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  AutoOutputRegister output(*this);
-  AutoScratchRegister scratch1(allocator, masm);
-  AutoScratchRegister64 scratch2(allocator, masm);
-  AutoAvailableFloatRegister scratchFloat(*this, FloatReg0);
-
-  Address rngAddr(stubAddress(rngOffset));
-  masm.loadPtr(rngAddr, scratch1);
-
-  masm.randomDouble(scratch1, scratchFloat, scratch2,
-                    output.valueReg().toRegister64());
-
-  if (js::SupportDifferentialTesting()) {
-    masm.loadConstantDouble(0.0, scratchFloat);
-  }
-
-  masm.boxDouble(scratchFloat, output.valueReg(), scratchFloat);
-  return true;
 }
 
 bool BaselineCacheIRCompiler::emitReflectGetPrototypeOfResult(
