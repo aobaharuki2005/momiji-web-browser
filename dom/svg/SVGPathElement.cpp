@@ -137,8 +137,8 @@ static void CreatePathSegments(SVGPathElement* aPathElement,
           Point cp1, cp2;
           while (converter.GetNextSegment(&cp1, &cp2, &segEnd)) {
             auto curve = StylePathCommand::CubicCurve(
-                StyleByTo::To,
-                StyleCoordinatePair<StyleCSSFloat>{segEnd.x, segEnd.y},
+                StyleCommandEndPoint<StyleCSSFloat>::ToPosition(
+                    {segEnd.x, segEnd.y}),
                 StyleCoordinatePair<StyleCSSFloat>{cp1.x, cp1.y},
                 StyleCoordinatePair<StyleCSSFloat>{cp2.x, cp2.y});
             aValues.AppendElement(new SVGPathSegment(aPathElement, curve));

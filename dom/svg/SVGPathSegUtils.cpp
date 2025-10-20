@@ -110,7 +110,7 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
     case StylePathCommand::Tag::Move: {
       const Point& p = aCommand.move.point.ToGfxPoint();
       aState.start = aState.pos =
-          aCommand.move.by_to == StyleByTo::To ? p : aState.pos + p;
+          aCommand.move.point.IsToPosition() ? p : aState.pos + p;
       if (aState.ShouldUpdateLengthAndControlPoints()) {
         // aState.length is unchanged, since move commands don't affect path=
         // length.
@@ -119,7 +119,7 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       break;
     }
     case StylePathCommand::Tag::Line: {
-      Point to = aCommand.line.by_to == StyleByTo::To
+      Point to = aCommand.line.point.IsToPosition()
                      ? aCommand.line.point.ToGfxPoint()
                      : aState.pos + aCommand.line.point.ToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
@@ -130,7 +130,7 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       break;
     }
     case StylePathCommand::Tag::CubicCurve: {
-      const bool isRelative = aCommand.cubic_curve.by_to == StyleByTo::By;
+      const bool isRelative = aCommand.cubic_curve.point.IsByCoordinate();
       Point to = isRelative
                      ? aState.pos + aCommand.cubic_curve.point.ToGfxPoint()
                      : aCommand.cubic_curve.point.ToGfxPoint();
@@ -150,7 +150,7 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       break;
     }
     case StylePathCommand::Tag::QuadCurve: {
-      const bool isRelative = aCommand.quad_curve.by_to == StyleByTo::By;
+      const bool isRelative = aCommand.quad_curve.point.IsByCoordinate();
       Point to = isRelative
                      ? aState.pos + aCommand.quad_curve.point.ToGfxPoint()
                      : aCommand.quad_curve.point.ToGfxPoint();
@@ -167,9 +167,8 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
     }
     case StylePathCommand::Tag::Arc: {
       const auto& arc = aCommand.arc;
-      Point to = arc.by_to == StyleByTo::To
-                     ? arc.point.ToGfxPoint()
-                     : aState.pos + arc.point.ToGfxPoint();
+      Point to = arc.point.IsToPosition() ? arc.point.ToGfxPoint()
+                                          : aState.pos + arc.point.ToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
         float dist = 0;
         Point radii = arc.radii.ToGfxPoint();
@@ -216,7 +215,7 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       break;
     }
     case StylePathCommand::Tag::SmoothCubic: {
-      const bool isRelative = aCommand.smooth_cubic.by_to == StyleByTo::By;
+      const bool isRelative = aCommand.smooth_cubic.point.IsByCoordinate();
       Point to = isRelative
                      ? aState.pos + aCommand.smooth_cubic.point.ToGfxPoint()
                      : aCommand.smooth_cubic.point.ToGfxPoint();
@@ -234,7 +233,7 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       break;
     }
     case StylePathCommand::Tag::SmoothQuad: {
-      Point to = aCommand.smooth_quad.by_to == StyleByTo::To
+      Point to = aCommand.smooth_quad.point.IsToPosition()
                      ? aCommand.smooth_quad.point.ToGfxPoint()
                      : aState.pos + aCommand.smooth_quad.point.ToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
@@ -404,7 +403,7 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
           return Nothing();
         }
 
-        if (cmd.move.by_to == StyleByTo::By) {
+        if (cmd.move.point.IsByCoordinate()) {
           to = segStart + to;
         }
 
@@ -429,7 +428,7 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
       }
       case StylePathCommand::Tag::Line: {
         Point to = cmd.line.point.ToGfxPoint();
-        if (cmd.line.by_to == StyleByTo::By) {
+        if (cmd.line.point.IsByCoordinate()) {
           to = segStart + to;
         }
 

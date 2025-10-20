@@ -256,14 +256,14 @@ static already_AddRefed<Path> BuildPathInternal(
       case Command::Tag::Move: {
         maybeApproximateZeroLengthSubpathSquareCaps(prevSeg, seg);
         const Point& p = cmd.move.point.ToGfxPoint(aPercentageBasis);
-        pathStart = segEnd = cmd.move.by_to == StyleByTo::To ? p : segStart + p;
+        pathStart = segEnd = cmd.move.point.IsToPosition() ? p : segStart + p;
         aBuilder->MoveTo(scale(segEnd));
         subpathHasLength = false;
         break;
       }
       case Command::Tag::Line: {
         const Point& p = cmd.line.point.ToGfxPoint(aPercentageBasis);
-        segEnd = cmd.line.by_to == StyleByTo::To ? p : segStart + p;
+        segEnd = cmd.line.point.IsToPosition() ? p : segStart + p;
         if (segEnd != segStart) {
           subpathHasLength = true;
           aBuilder->LineTo(scale(segEnd));
@@ -275,7 +275,7 @@ static already_AddRefed<Path> BuildPathInternal(
         cp2 = cmd.cubic_curve.control2.ToGfxPoint(aPercentageBasis);
         segEnd = cmd.cubic_curve.point.ToGfxPoint(aPercentageBasis);
 
-        if (cmd.cubic_curve.by_to == StyleByTo::By) {
+        if (cmd.cubic_curve.point.IsByCoordinate()) {
           cp1 += segStart;
           cp2 += segStart;
           segEnd += segStart;
@@ -291,7 +291,7 @@ static already_AddRefed<Path> BuildPathInternal(
         cp1 = cmd.quad_curve.control1.ToGfxPoint(aPercentageBasis);
         segEnd = cmd.quad_curve.point.ToGfxPoint(aPercentageBasis);
 
-        if (cmd.quad_curve.by_to == StyleByTo::By) {
+        if (cmd.quad_curve.point.IsByCoordinate()) {
           cp1 += segStart;
           segEnd += segStart;  // set before setting tcp2!
         }
@@ -310,7 +310,7 @@ static already_AddRefed<Path> BuildPathInternal(
         const auto& arc = cmd.arc;
         const Point& radii = arc.radii.ToGfxPoint(aPercentageBasis);
         segEnd = arc.point.ToGfxPoint(aPercentageBasis);
-        if (arc.by_to == StyleByTo::By) {
+        if (arc.point.IsByCoordinate()) {
           segEnd += segStart;
         }
         if (segEnd != segStart) {
@@ -363,7 +363,7 @@ static already_AddRefed<Path> BuildPathInternal(
         cp2 = cmd.smooth_cubic.control2.ToGfxPoint(aPercentageBasis);
         segEnd = cmd.smooth_cubic.point.ToGfxPoint(aPercentageBasis);
 
-        if (cmd.smooth_cubic.by_to == StyleByTo::By) {
+        if (cmd.smooth_cubic.point.IsByCoordinate()) {
           cp2 += segStart;
           segEnd += segStart;
         }
@@ -382,7 +382,7 @@ static already_AddRefed<Path> BuildPathInternal(
 
         const Point& p = cmd.smooth_quad.point.ToGfxPoint(aPercentageBasis);
         // set before setting tcp2!
-        segEnd = cmd.smooth_quad.by_to == StyleByTo::To ? p : segStart + p;
+        segEnd = cmd.smooth_quad.point.IsToPosition() ? p : segStart + p;
         tcp2 = cp1 + (segEnd - cp1) / 3;
 
         if (segEnd != segStart || segEnd != cp1) {
@@ -556,7 +556,7 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
 
       case StylePathCommand::Tag::Move: {
         const Point& p = cmd.move.point.ToGfxPoint() * aZoom;
-        pathStart = segEnd = cmd.move.by_to == StyleByTo::To ? p : segStart + p;
+        pathStart = segEnd = cmd.move.point.IsToPosition() ? p : segStart + p;
         pathStartIndex = aMarks->Length();
         // If authors are going to specify multiple consecutive moveto commands
         // with markers, me might as well make the angle do something useful:
@@ -565,7 +565,7 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
       }
       case StylePathCommand::Tag::Line: {
         const Point& p = cmd.line.point.ToGfxPoint() * aZoom;
-        segEnd = cmd.line.by_to == StyleByTo::To ? p : segStart + p;
+        segEnd = cmd.line.point.IsToPosition() ? p : segStart + p;
         segStartAngle = segEndAngle = AngleOfVector(segEnd, segStart);
         break;
       }
@@ -574,7 +574,7 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
         Point cp2 = cmd.cubic_curve.control2.ToGfxPoint() * aZoom;
         segEnd = cmd.cubic_curve.point.ToGfxPoint() * aZoom;
 
-        if (cmd.cubic_curve.by_to == StyleByTo::By) {
+        if (cmd.cubic_curve.point.IsByCoordinate()) {
           cp1 += segStart;
           cp2 += segStart;
           segEnd += segStart;
@@ -591,7 +591,7 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
         Point cp1 = cmd.quad_curve.control1.ToGfxPoint() * aZoom;
         segEnd = cmd.quad_curve.point.ToGfxPoint() * aZoom;
 
-        if (cmd.quad_curve.by_to == StyleByTo::By) {
+        if (cmd.quad_curve.point.IsByCoordinate()) {
           cp1 += segStart;
           segEnd += segStart;  // set before setting tcp2!
         }
@@ -609,7 +609,7 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
         bool largeArcFlag = arc.arc_size == StyleArcSize::Large;
         bool sweepFlag = arc.arc_sweep == StyleArcSweep::Cw;
         segEnd = arc.point.ToGfxPoint() * aZoom;
-        if (arc.by_to == StyleByTo::By) {
+        if (arc.point.IsByCoordinate()) {
           segEnd += segStart;
         }
 
@@ -668,7 +668,7 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
         Point cp2 = cmd.smooth_cubic.control2.ToGfxPoint() * aZoom;
         segEnd = cmd.smooth_cubic.point.ToGfxPoint() * aZoom;
 
-        if (cmd.smooth_cubic.by_to == StyleByTo::By) {
+        if (cmd.smooth_cubic.point.IsByCoordinate()) {
           cp2 += segStart;
           segEnd += segStart;
         }
@@ -684,7 +684,7 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
         const Point& cp1 = prevSeg && prevSeg->IsQuadraticType()
                                ? segStart * 2 - prevCP
                                : segStart;
-        segEnd = cmd.smooth_quad.by_to == StyleByTo::To
+        segEnd = cmd.smooth_quad.point.IsToPosition()
                      ? cmd.smooth_quad.point.ToGfxPoint() * aZoom
                      : segStart + cmd.smooth_quad.point.ToGfxPoint() * aZoom;
 

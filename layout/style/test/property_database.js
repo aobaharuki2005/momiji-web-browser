@@ -1040,8 +1040,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.basic-shape-shape.enabled")) {
     "shape(from 10px 10px, move by 10px 5px, line by 20px 40%, close)",
     "shape(from 10px 10px, hline by 10px, vline to 5rem)",
     "shape(from 10px 10px, vline by 5%, hline to 1vw)",
-    "shape(from 10px 10px, curve to 50px 20px via 10rem 1%)",
-    "shape(from 10px 10px, smooth to 50px 20px via 10rem 1%)",
+    "shape(from 10px 10px, curve to 50px 20px with 10rem 1%)",
+    "shape(from 10px 10px, smooth to 50px 20px with 10rem 1%)",
     "shape(from 10% 1rem, arc to 50px 1pt of 20% cw large rotate 25deg)"
   );
 
