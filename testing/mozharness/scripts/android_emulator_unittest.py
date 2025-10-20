@@ -130,6 +130,15 @@ class AndroidEmulatorTest(
                 },
             ],
             [
+                ["--enable-isolated-zygote-process"],
+                {
+                    "action": "store_true",
+                    "dest": "enable_isolated_zygote_process",
+                    "default": False,
+                    "help": "Run with app Zygote preloading enabled.",
+                },
+            ],
+            [
                 ["--repeat"],
                 {
                     "action": "store",
@@ -206,6 +215,7 @@ class AndroidEmulatorTest(
         self.disable_e10s = c.get("disable_e10s")
         self.disable_fission = c.get("disable_fission")
         self.web_content_isolation_strategy = c.get("web_content_isolation_strategy")
+        self.enable_isolated_zygote_process = c.get("enable_isolated_zygote_process")
         self.extra_prefs = c.get("extra_prefs")
         self.test_tags = c.get("test_tags")
 
@@ -346,6 +356,9 @@ class AndroidEmulatorTest(
         # do not add --disable fission if we don't have --disable-e10s
         if c["disable_fission"] and category not in ["gtest", "cppunittest"]:
             cmd.append("--disable-fission")
+
+        if c["enable_isolated_zygote_process"]:
+            cmd.append("--enable-isolated-zygote-process")
 
         if "web_content_isolation_strategy" in c:
             cmd.append(
