@@ -317,6 +317,7 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::MapHas:
     case InlinableNative::MapDelete:
     case InlinableNative::MapSet:
+    case InlinableNative::MapSize:
     case InlinableNative::Number:
     case InlinableNative::NumberParseInt:
     case InlinableNative::NumberToString:

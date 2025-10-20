@@ -185,8 +185,6 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
                                                  HandleId id);
   AttachDecision tryAttachRegExp(HandleObject obj, ObjOperandId objId,
                                  HandleId id);
-  AttachDecision tryAttachMap(HandleObject obj, ObjOperandId objId,
-                              HandleId id);
   AttachDecision tryAttachModuleNamespace(HandleObject obj, ObjOperandId objId,
                                           HandleId id);
   AttachDecision tryAttachWindowProxy(HandleObject obj, ObjOperandId objId,
@@ -885,6 +883,7 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachMapGet();
   AttachDecision tryAttachMapDelete();
   AttachDecision tryAttachMapSet();
+  AttachDecision tryAttachMapSize();
   AttachDecision tryAttachDateGetTime();
   AttachDecision tryAttachDateGet(DateComponent component);
   AttachDecision tryAttachWeakMapHas();

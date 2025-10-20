@@ -181,10 +181,6 @@ class MapObject : public OrderedHashMapObject {
   [[nodiscard]] static bool set(JSContext* cx, unsigned argc, Value* vp);
   [[nodiscard]] static bool has(JSContext* cx, unsigned argc, Value* vp);
 
-  static bool isOriginalSizeGetter(Native native) {
-    return native == static_cast<Native>(MapObject::size);
-  }
-
  private:
   static const ClassSpec classSpec_;
   static const JSClassOps classOps_;

@@ -371,7 +371,7 @@ const JSClass MapObject::protoClass_ = {
 };
 
 const JSPropertySpec MapObject::properties[] = {
-    JS_PSG("size", size, 0),
+    JS_INLINABLE_PSG("size", size, 0, MapSize),
     JS_STRING_SYM_PS(toStringTag, "Map", JSPROP_READONLY),
     JS_PS_END,
 };
