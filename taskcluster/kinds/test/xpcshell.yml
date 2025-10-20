@@ -120,6 +120,9 @@ xpcshell:
                     linux1804-64.*/opt: 2
                     linux2404-64.*/opt: 2
                     default: 4
+    timeoutfactor:
+        by-test-platform:
+            default: 1
     max-run-time:
         by-variant:
             msix: 7200

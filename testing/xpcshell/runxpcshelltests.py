@@ -1961,6 +1961,14 @@ class XPCShellTests:
             JSDebuggerInfo = namedtuple("JSDebuggerInfo", ["port"])
             self.jsDebuggerInfo = JSDebuggerInfo(port=options["jsDebuggerPort"])
 
+        # Apply timeout factor
+        timeout_factor = options.get("timeoutFactor", 1.0)
+        self.harness_timeout = int(HARNESS_TIMEOUT * timeout_factor)
+        self.log.info(
+            f"Using harness timeout of {self.harness_timeout}s "
+            f"(base={HARNESS_TIMEOUT}s, factor={timeout_factor})"
+        )
+
         self.app_binary = options.get("app_binary")
         self.xpcshell = options.get("xpcshell")
         self.http3ServerPath = options.get("http3server")
