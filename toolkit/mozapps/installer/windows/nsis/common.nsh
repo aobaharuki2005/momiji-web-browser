@@ -7396,7 +7396,7 @@
           ${EndIf}
 
           ${If} ${FileExists} "$SMPROGRAMS\$R5"
-            ShellLink::GetShortCutTarget "$SMPROGRAMS\$$R5"
+            ShellLink::GetShortCutTarget "$SMPROGRAMS\$R5"
             Pop $R4
             ${GetLongPath} "$R4" $R4
             ${If} "$R4" == "$R9" ; link path == install path
