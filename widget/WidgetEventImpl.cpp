@@ -606,23 +606,6 @@ bool WidgetEvent::IsBlockedForFingerprintingResistance() const {
               keyboardEvent->mKeyNameIndex == KEY_NAME_INDEX_Control ||
               keyboardEvent->mKeyNameIndex == KEY_NAME_INDEX_AltGraph);
     }
-    case ePointerEventClass: {
-      if (IsPointerEventMessageOriginallyMouseEventMessage(mMessage)) {
-        return false;
-      }
-
-      if (SPOOFED_MAX_TOUCH_POINTS > 0) {
-        return false;
-      }
-
-      const WidgetPointerEvent* pointerEvent = AsPointerEvent();
-
-      // We suppress the pointer events if it is not primary for fingerprinting
-      // resistance. It is because of that we want to spoof any pointer event
-      // into a mouse pointer event and the mouse pointer event only has
-      // isPrimary as true.
-      return !pointerEvent->mIsPrimary;
-    }
     default:
       return false;
   }
