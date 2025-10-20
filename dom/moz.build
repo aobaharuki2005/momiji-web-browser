@@ -36,7 +36,6 @@ DIRS += [
     "clients",
     "closewatcher",
     "commandhandler",
-    "compression",
     "cookiestore",
     "credentialmanagement",
     "crypto",
