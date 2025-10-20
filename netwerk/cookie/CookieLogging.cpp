@@ -127,6 +127,12 @@ void CookieLogging::LogCookie(Cookie* aCookie) {
                            &explodedTime);
     MOZ_LOG(gCookieLog, LogLevel::Debug, ("created: %s", timeString));
 
+    PR_ExplodeTime(aCookie->UpdateTimeInUSec(), PR_GMTParameters,
+                   &explodedTime);
+    PR_FormatTimeUSEnglish(timeString, TIME_STRING_LENGTH, "%c GMT",
+                           &explodedTime);
+    MOZ_LOG(gCookieLog, LogLevel::Debug, ("created: %s", timeString));
+
     MOZ_LOG(gCookieLog, LogLevel::Debug,
             ("is secure: %s\n", aCookie->IsSecure() ? "true" : "false"));
     MOZ_LOG(gCookieLog, LogLevel::Debug,

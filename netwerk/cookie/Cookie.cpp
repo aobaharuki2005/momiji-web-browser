@@ -131,6 +131,17 @@ already_AddRefed<Cookie> Cookie::CreateValidated(
     cookie->mData.lastAccessedInUSec() = currentTimeInUsec;
   }
 
+  if (cookie->mData.updateTimeInUSec() > currentTimeInUsec) {
+    uint64_t diffInSeconds =
+        (cookie->mData.updateTimeInUSec() - currentTimeInUsec) /
+        PR_USEC_PER_SEC;
+    mozilla::glean::networking::cookie_access_fixup_diff.AccumulateSingleSample(
+        diffInSeconds);
+    glean::networking::cookie_timestamp_fixed_count.Get("updateTime"_ns).Add(1);
+
+    cookie->mData.updateTimeInUSec() = currentTimeInUsec;
+  }
+
   return cookie.forget();
 }
 
@@ -205,6 +216,10 @@ NS_IMETHODIMP Cookie::GetCreationTime(int64_t* aCreation) {
 }
 NS_IMETHODIMP Cookie::GetLastAccessed(int64_t* aTime) {
   *aTime = LastAccessedInUSec();
+  return NS_OK;
+}
+NS_IMETHODIMP Cookie::GetUpdateTime(int64_t* aTime) {
+  *aTime = UpdateTimeInUSec();
   return NS_OK;
 }
 NS_IMETHODIMP Cookie::GetSameSite(int32_t* aSameSite) {

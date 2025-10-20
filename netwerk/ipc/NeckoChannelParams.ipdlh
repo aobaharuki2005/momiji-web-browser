@@ -499,6 +499,7 @@ struct CookieStruct
   int64_t   expiryInMSec;
   int64_t   lastAccessedInUSec;
   int64_t   creationTimeInUSec;
+  int64_t   updateTimeInUSec;
   bool      isHttpOnly;
   bool      isSession;
   bool      isSecure;

@@ -428,6 +428,7 @@ already_AddRefed<Cookie> CookieCommons::CreateCookieFromDocument(
   cookie->SetLastAccessedInUSec(currentTimeInUsec);
   cookie->SetCreationTimeInUSec(
       Cookie::GenerateUniqueCreationTimeInUSec(currentTimeInUsec));
+  cookie->SetUpdateTimeInUSec(cookie->CreationTimeInUSec());
 
   aBaseDomain = baseDomain;
   aAttrs = cookiePrincipal->OriginAttributesRef();

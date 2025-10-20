@@ -172,7 +172,7 @@ bool ProcessSameSiteCookieForForeignRequest(nsIChannel* aChannel,
   // without a SameSite value when used for unsafe http methods.
   if (aLaxByDefault && aCookie->SameSite() == nsICookie::SAMESITE_UNSET &&
       StaticPrefs::network_cookie_sameSite_laxPlusPOST_timeout() > 0 &&
-      currentTimeInUsec - aCookie->CreationTimeInUSec() <=
+      currentTimeInUsec - aCookie->UpdateTimeInUSec() <=
           (StaticPrefs::network_cookie_sameSite_laxPlusPOST_timeout() *
            PR_USEC_PER_SEC) &&
       !NS_IsSafeMethodNav(aChannel)) {
@@ -629,6 +629,7 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
   cookie->SetLastAccessedInUSec(currentTimeInUsec);
   cookie->SetCreationTimeInUSec(
       Cookie::GenerateUniqueCreationTimeInUSec(currentTimeInUsec));
+  cookie->SetUpdateTimeInUSec(cookie->CreationTimeInUSec());
 
   // Use TargetBrowsingContext to also take frame loads into account.
   RefPtr<BrowsingContext> bc = loadInfo->GetTargetBrowsingContext();
@@ -822,11 +823,14 @@ nsresult CookieService::AddInternal(
   NS_ENSURE_SUCCESS(rv, rv);
 
   int64_t currentTimeInUsec = PR_Now();
-  CookieStruct cookieData(
-      nsCString(aName), nsCString(aValue), host, nsCString(aPath), aExpiry,
-      currentTimeInUsec,
-      Cookie::GenerateUniqueCreationTimeInUSec(currentTimeInUsec), aIsHttpOnly,
-      aIsSession, aIsSecure, aIsPartitioned, aSameSite, aSchemeMap);
+  int64_t uniqueCreationTimeInUSec =
+      Cookie::GenerateUniqueCreationTimeInUSec(currentTimeInUsec);
+
+  CookieStruct cookieData(nsCString(aName), nsCString(aValue), host,
+                          nsCString(aPath), aExpiry, currentTimeInUsec,
+                          uniqueCreationTimeInUSec, uniqueCreationTimeInUSec,
+                          aIsHttpOnly, aIsSession, aIsSecure, aIsPartitioned,
+                          aSameSite, aSchemeMap);
 
   RefPtr<CookieValidation> cv = CookieValidation::Validate(cookieData);
 
@@ -1731,6 +1735,7 @@ nsICookieValidation::ValidationError CookieService::SetCookiesFromIPC(
     cookie->SetLastAccessedInUSec(currentTimeInUsec);
     cookie->SetCreationTimeInUSec(
         Cookie::GenerateUniqueCreationTimeInUSec(currentTimeInUsec));
+    cookie->SetUpdateTimeInUSec(cookie->CreationTimeInUSec());
 
     storage->AddCookie(nullptr, aBaseDomain, aAttrs, cookie, currentTimeInUsec,
                        aHostURI, ""_ns, aFromHttp, aIsThirdParty,

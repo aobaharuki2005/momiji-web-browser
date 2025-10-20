@@ -90,6 +90,7 @@ class Cookie final : public nsICookie {
   inline int64_t CreationTimeInUSec() const {
     return mData.creationTimeInUSec();
   }
+  inline int64_t UpdateTimeInUSec() const { return mData.updateTimeInUSec(); }
   inline bool IsSession() const { return mData.isSession(); }
   inline bool IsDomain() const { return *mData.host().get() == '.'; }
   inline bool IsSecure() const { return mData.isSecure(); }
@@ -119,6 +120,9 @@ class Cookie final : public nsICookie {
   // Create(). Use with caution!
   inline void SetCreationTimeInUSec(int64_t aTimeInUSec) {
     mData.creationTimeInUSec() = aTimeInUSec;
+  }
+  inline void SetUpdateTimeInUSec(int64_t aTimeInUSec) {
+    mData.updateTimeInUSec() = aTimeInUSec;
   }
   inline void SetSchemeMap(uint8_t aSchemeMap) {
     mData.schemeMap() = aSchemeMap;

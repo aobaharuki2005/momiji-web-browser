@@ -664,6 +664,7 @@ void CookieParser::Parse(const nsACString& aBaseDomain, bool aRequireHostMatch,
   mCookieData.expiryInMSec() = INT64_MAX;
   mCookieData.creationTimeInUSec() =
       Cookie::GenerateUniqueCreationTimeInUSec(aCurrentTimeInUSec);
+  mCookieData.updateTimeInUSec() = mCookieData.creationTimeInUSec();
 
   mCookieData.schemeMap() = CookieCommons::URIToSchemeType(mHostURI);
 

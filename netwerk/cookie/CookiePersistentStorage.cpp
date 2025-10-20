@@ -28,7 +28,7 @@
 #include "nsVariant.h"
 #include "prprf.h"
 
-constexpr auto COOKIES_SCHEMA_VERSION = 16;
+constexpr auto COOKIES_SCHEMA_VERSION = 17;
 
 // parameter indexes; see |Read|
 constexpr auto IDX_NAME = 0;
@@ -44,6 +44,7 @@ constexpr auto IDX_ORIGIN_ATTRIBUTES = 9;
 constexpr auto IDX_SAME_SITE = 10;
 constexpr auto IDX_SCHEME_MAP = 11;
 constexpr auto IDX_PARTITIONED_ATTRIBUTE_SET = 12;
+constexpr auto IDX_UPDATE_TIME_INUSEC = 13;
 
 #define COOKIES_FILE "cookies.sqlite"
 
@@ -107,6 +108,9 @@ void BindCookieParameters(mozIStorageBindingParamsArray* aParamsArray,
 
   rv = params->BindInt32ByName("isPartitionedAttributeSet"_ns,
                                aCookie->RawIsPartitioned());
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  rv = params->BindInt64ByName("updateTime"_ns, aCookie->UpdateTimeInUSec());
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Bind the params to the array.
@@ -1580,6 +1584,21 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::TryInitDB(
             nsLiteralCString("UPDATE moz_cookies SET expiry = expiry * 1000;"));
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
+        [[fallthrough]];
+      }
+
+      case 16: {
+        // Add the updateTime column to the table.
+        rv = mSyncConn->ExecuteSimpleSQL(
+            nsLiteralCString("ALTER TABLE moz_cookies ADD updateTime INTEGER"));
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        // OK so... this is tricky because we have to guess the creationTime
+        rv = mSyncConn->ExecuteSimpleSQL(nsLiteralCString(
+            "UPDATE moz_cookies SET updateTime = CAST(strftime('%s','now') AS "
+            "INTEGER) * 1000000"));
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
         // No more upgrades. Update the schema version.
         rv = mSyncConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
@@ -1849,7 +1868,8 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::Read() {
                                                   "originAttributes, "
                                                   "sameSite, "
                                                   "schemeMap, "
-                                                  "isPartitionedAttributeSet "
+                                                  "isPartitionedAttributeSet, "
+                                                  "updateTime "
                                                   "FROM moz_cookies"),
                                  getter_AddRefs(stmt));
 
@@ -1925,6 +1945,7 @@ UniquePtr<CookieStruct> CookiePersistentStorage::GetCookieFromRow(
   int64_t expiryInMSec = aRow->AsInt64(IDX_EXPIRY_INMSEC);
   int64_t lastAccessedInUSec = aRow->AsInt64(IDX_LAST_ACCESSED_INUSEC);
   int64_t creationTimeInUSec = aRow->AsInt64(IDX_CREATION_TIME_INUSEC);
+  int64_t updateTimeInUSec = aRow->AsInt64(IDX_UPDATE_TIME_INUSEC);
   bool isSecure = 0 != aRow->AsInt32(IDX_SECURE);
   bool isHttpOnly = 0 != aRow->AsInt32(IDX_HTTPONLY);
   int32_t sameSite = aRow->AsInt32(IDX_SAME_SITE);
@@ -1935,7 +1956,7 @@ UniquePtr<CookieStruct> CookiePersistentStorage::GetCookieFromRow(
   // Create a new constCookie and assign the data.
   return MakeUnique<CookieStruct>(
       name, value, host, path, expiryInMSec, lastAccessedInUSec,
-      creationTimeInUSec, isHttpOnly, false, isSecure,
+      creationTimeInUSec, updateTimeInUSec, isHttpOnly, false, isSecure,
       isPartitionedAttributeSet, sameSite,
       static_cast<nsICookie::schemeType>(schemeMap));
 }
@@ -2148,7 +2169,8 @@ nsresult CookiePersistentStorage::InitDBConnInternal() {
                        "isHttpOnly, "
                        "sameSite, "
                        "schemeMap, "
-                       "isPartitionedAttributeSet "
+                       "isPartitionedAttributeSet, "
+                       "updateTime "
                        ") VALUES ("
                        ":originAttributes, "
                        ":name, "
@@ -2162,7 +2184,8 @@ nsresult CookiePersistentStorage::InitDBConnInternal() {
                        ":isHttpOnly, "
                        ":sameSite, "
                        ":schemeMap, "
-                       ":isPartitionedAttributeSet "
+                       ":isPartitionedAttributeSet, "
+                       ":updateTime "
                        ")"),
       getter_AddRefs(mStmtInsert));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2207,6 +2230,7 @@ nsresult CookiePersistentStorage::CreateTableWorker(const char* aName) {
       "sameSite INTEGER DEFAULT 0, "
       "schemeMap INTEGER DEFAULT 0, "
       "isPartitionedAttributeSet INTEGER DEFAULT 0, "
+      "updateTime INTEGER, "
       "CONSTRAINT moz_uniqueid UNIQUE (name, host, path, originAttributes)"
       ")");
   return mSyncConn->ExecuteSimpleSQL(command);
