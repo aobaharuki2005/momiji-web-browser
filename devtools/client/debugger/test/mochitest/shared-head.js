@@ -3533,19 +3533,28 @@ async function toggleJsTracerMenuItem(dbg, selector) {
 }
 
 /**
- * Asserts that the contents of the inline previews and the lines
- * that they are displayed on are accurate
+ * Asserts that the number of displayed inline previews, the contents of the inline previews and the lines
+ * that they are displayed on, are accurate
  *
  * @param {Object} dbg
  * @param {Array} expectedInlinePreviews
  * @param {String} fnName
  */
 async function assertInlinePreviews(dbg, expectedInlinePreviews, fnName) {
-  await waitForAllElements(
+  // Accumulate all the previews over the various lines
+  let expectedNumberOfInlinePreviews = 0;
+  for (const { previews } of expectedInlinePreviews) {
+    expectedNumberOfInlinePreviews += previews.length;
+  }
+
+  const inlinePreviews = await waitForAllElements(
     dbg,
     "visibleInlinePreviews",
-    expectedInlinePreviews.length
+    expectedNumberOfInlinePreviews,
+    true
   );
+
+  ok(true, `Displayed ${inlinePreviews.length} inline previews`);
 
   for (const expectedInlinePreview of expectedInlinePreviews) {
     const { previews, line } = expectedInlinePreview;

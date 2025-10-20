@@ -247,6 +247,15 @@ add_task(async function testInlinePreviewsWithExplicitResourceManagement() {
         ],
         line: 3,
       },
+      {
+        previews: [
+          {
+            identifier: "erm.foo:",
+            value: "42",
+          },
+        ],
+        line: 7,
+      },
     ],
   });
 
