@@ -2786,12 +2786,15 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     xpcomInit.userContentSheetURL() = nullptr;
   }
 
-  // 1. Build ContentDeviceData first, as it may affect some gfxVars.
+  // 1. Ensure the GPU process is ready, as we know we are not yet in shutdown.
+  GPUProcessManager* gpm = GPUProcessManager::Get();
+  gpm->EnsureGPUReady();
+  // 2. Build ContentDeviceData first, as it may affect some gfxVars.
   gfxPlatform::GetPlatform()->BuildContentDeviceData(
       &xpcomInit.contentDeviceData());
-  // 2. Gather non-default gfxVars.
+  // 3. Gather non-default gfxVars.
   xpcomInit.gfxNonDefaultVarUpdates() = gfxVars::FetchNonDefaultVars();
-  // 3. Start listening for gfxVars updates, to notify content process later on.
+  // 4. Start listening for gfxVars updates, to notify content process later on.
   gfxVars::AddReceiver(this);
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
@@ -2905,8 +2908,6 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   // PBrowsers are created, because they rely on the Compositor
   // already being around.  (Creation is async, so can't happen
   // on demand.)
-  GPUProcessManager* gpm = GPUProcessManager::Get();
-
   Endpoint<PCompositorManagerChild> compositor;
   Endpoint<PImageBridgeChild> imageBridge;
   Endpoint<PVRManagerChild> vrBridge;
