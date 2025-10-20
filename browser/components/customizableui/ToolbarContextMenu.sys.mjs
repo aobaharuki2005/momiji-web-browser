@@ -266,7 +266,8 @@ export var ToolbarContextMenu = {
       !showSidebarActions || isVerticalTabStripMenu;
     document.getElementById("customizationMenuSeparator").hidden =
       toolbarItem?.id == "tabbrowser-tabs" ||
-      toolbarItem?.localName == "toolbarspring";
+      (toolbarItem?.localName == "toolbarspring" &&
+        !CustomizationHandler.isCustomizing());
 
     // View -> Toolbars menu doesn't have the moveToPanel or removeFromToolbar items.
     if (!moveToPanel || !removeFromToolbar) {

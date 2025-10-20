@@ -713,3 +713,44 @@ add_task(async function downloads_button_context() {
   await hiddenPromise;
   await SpecialPowers.popPrefEnv();
 });
+
+// Bug 1992031 - During customization mode, a separator should be shown
+// between "Remove from toolbar" and "Menu Bar" for flexible spaces
+add_task(async function flexible_space_context_menu_customize_mode() {
+  await startCustomizing();
+  CustomizableUI.addWidgetToArea("spring", "nav-bar");
+  let springs = document.querySelectorAll("#nav-bar toolbarspring");
+  let lastSpring = springs[springs.length - 1];
+  ok(lastSpring, "we added a spring");
+  let contextMenu = document.getElementById("toolbar-context-menu");
+  let shownPromise = popupShown(contextMenu);
+  EventUtils.synthesizeMouse(lastSpring, 2, 2, {
+    type: "contextmenu",
+    button: 2,
+  });
+  await shownPromise;
+
+  let expectedEntries = [
+    ["#toolbar-context-toggle-vertical-tabs", true],
+    ["---"],
+    [".customize-context-moveToPanel", false],
+    [".customize-context-removeFromToolbar", true],
+    ["---"],
+  ];
+
+  if (!isOSX) {
+    expectedEntries.push(["#toggle_toolbar-menubar", true]);
+  }
+
+  expectedEntries.push(
+    ["#toggle_PersonalToolbar", true],
+    ["---"],
+    [".viewCustomizeToolbar", false]
+  );
+
+  checkContextMenu(contextMenu, expectedEntries);
+  contextMenu.hidePopup();
+  gCustomizeMode.removeFromArea(lastSpring);
+  ok(!lastSpring.parentNode, "Spring should have been removed successfully.");
+  await endCustomizing();
+});
