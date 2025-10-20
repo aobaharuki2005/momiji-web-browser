@@ -88,12 +88,6 @@ nsresult UtilityMediaServiceChild::BindToUtilityProcess(
 void UtilityMediaServiceChild::ActorDestroy(ActorDestroyReason aReason) {
   MOZ_ASSERT(NS_IsMainThread());
   gfx::gfxVars::RemoveReceiver(this);
-#ifdef MOZ_WMF_MEDIA_ENGINE
-  if (auto* gpm = gfx::GPUProcessManager::Get()) {
-    // Note: the manager could have shutdown already.
-    gpm->RemoveListener(this);
-  }
-#endif
   Shutdown(mSandbox);
 }
 
@@ -150,33 +144,60 @@ void UtilityMediaServiceChild::OnCompositorUnexpectedShutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM);
   mHasCreatedVideoBridge = State::None;
-
-  if (auto* gpm = gfx::GPUProcessManager::Get()) {
-    if (auto utilpm = UtilityProcessManager::GetSingleton())
-      if (auto parent = utilpm->GetProcessParent(mSandbox)) {
-        if (NS_SUCCEEDED(gpm->CreateUtilityMFCDMVideoBridge(
-                this, parent->OtherEndpointProcInfo()))) {
-          mHasCreatedVideoBridge = State::Creating;
-        }
-      }
-  }
+  CreateVideoBridge();
 }
 
-bool UtilityMediaServiceChild::CreateVideoBridge(
-    mozilla::ipc::EndpointProcInfo aOtherProcess) {
+bool UtilityMediaServiceChild::CreateVideoBridge() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM);
-  MOZ_ASSERT(mHasCreatedVideoBridge == State::None);
+  ipc::Endpoint<layers::PVideoBridgeParent> parentPipe;
+  ipc::Endpoint<layers::PVideoBridgeChild> childPipe;
 
-  auto* gpm = gfx::GPUProcessManager::Get();
-  if (NS_WARN_IF(!gpm) || NS_WARN_IF(NS_FAILED(gpm->EnsureGPUReady())) ||
-      NS_WARN_IF(
-          NS_FAILED(gpm->CreateUtilityMFCDMVideoBridge(this, aOtherProcess)))) {
+  MOZ_ASSERT(mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM);
+
+  // Creating or already created, avoiding reinit a bridge.
+  if (mHasCreatedVideoBridge != State::None) {
+    return true;
+  }
+  mHasCreatedVideoBridge = State::Creating;
+
+  gfx::GPUProcessManager* gpuManager = gfx::GPUProcessManager::Get();
+  ipc::EndpointProcInfo gpuProcessInfo = gpuManager
+                                             ? gpuManager->GPUEndpointProcInfo()
+                                             : ipc::EndpointProcInfo::Invalid();
+
+  // Build content device data first; this ensure that the GPU process is fully
+  // ready.
+  gfx::ContentDeviceData contentDeviceData;
+  gfxPlatform::GetPlatform()->BuildContentDeviceData(&contentDeviceData);
+
+  // The child end is the producer of video frames; the parent end is the
+  // consumer.
+  EndpointProcInfo childInfo = UtilityProcessManager::GetSingleton()
+                                   ->GetProcessParent(mSandbox)
+                                   ->OtherEndpointProcInfo();
+  EndpointProcInfo parentInfo =
+      gpuProcessInfo != ipc::EndpointProcInfo::Invalid()
+          ? gpuProcessInfo
+          : ipc::EndpointProcInfo::Current();
+
+  nsresult rv = layers::PVideoBridge::CreateEndpoints(parentInfo, childInfo,
+                                                      &parentPipe, &childPipe);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to create endpoints for video bridge!");
     return false;
   }
 
-  gpm->AddListener(this);
-  mHasCreatedVideoBridge = State::Creating;
+  if (gpuProcessInfo != ipc::EndpointProcInfo::Invalid()) {
+    gpuManager->InitVideoBridge(
+        std::move(parentPipe),
+        layers::VideoBridgeSource::MFMediaEngineCDMProcess);
+  } else {
+    layers::VideoBridgeParent::Open(
+        std::move(parentPipe),
+        layers::VideoBridgeSource::MFMediaEngineCDMProcess);
+  }
+
+  SendInitVideoBridge(std::move(childPipe), contentDeviceData);
   return true;
 }
 #endif

@@ -72,6 +72,10 @@ bool RDDChild::Init() {
   Unused << SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));
 
   gfxVars::AddReceiver(this);
+  auto* gpm = gfx::GPUProcessManager::Get();
+  if (gpm) {
+    gpm->AddListener(this);
+  }
 
   return true;
 }
@@ -106,14 +110,9 @@ bool RDDChild::SendRequestMemoryReport(const uint32_t& aGeneration,
 }
 
 void RDDChild::OnCompositorUnexpectedShutdown() {
-  if (!CanSend()) {
-    return;
-  }
-
-  if (RDDProcessManager* rddpm = RDDProcessManager::Get()) {
-    if (auto* gpm = GPUProcessManager::Get()) {
-      gpm->CreateRddVideoBridge(rddpm, this);
-    }
+  auto* rddm = RDDProcessManager::Get();
+  if (rddm) {
+    rddm->CreateVideoBridge();
   }
 }
 
@@ -208,7 +207,8 @@ void RDDChild::ActorDestroy(ActorDestroyReason aWhy) {
     GenerateCrashReport();
   }
 
-  if (auto* gpm = gfx::GPUProcessManager::Get()) {
+  auto* gpm = gfx::GPUProcessManager::Get();
+  if (gpm) {
     // Note: the manager could have shutdown already.
     gpm->RemoveListener(this);
   }

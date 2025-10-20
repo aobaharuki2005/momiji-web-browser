@@ -385,7 +385,7 @@ UtilityProcessManager::StartProcessForRemoteMediaDecoding(
 
 #ifdef MOZ_WMF_MEDIA_ENGINE
             if (aSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM &&
-                !umsc->CreateVideoBridge(process)) {
+                !umsc->CreateVideoBridge()) {
               MOZ_ASSERT(false, "Failed to create video bridge");
               return RetPromise::CreateAndReject(
                   LaunchError("UMSC::CreateVideoBridge"), __func__);
