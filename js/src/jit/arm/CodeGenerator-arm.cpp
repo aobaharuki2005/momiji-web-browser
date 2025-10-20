@@ -2361,22 +2361,6 @@ void CodeGenerator::visitInt64ToFloatingPointCall(
   masm.Pop(InstanceReg);
 }
 
-void CodeGenerator::visitCopySignF(LCopySignF* ins) {
-  FloatRegister lhs = ToFloatRegister(ins->lhs());
-  FloatRegister rhs = ToFloatRegister(ins->rhs());
-  FloatRegister output = ToFloatRegister(ins->output());
-
-  masm.copySignFloat32(lhs, rhs, output);
-}
-
-void CodeGenerator::visitCopySignD(LCopySignD* ins) {
-  FloatRegister lhs = ToFloatRegister(ins->lhs());
-  FloatRegister rhs = ToFloatRegister(ins->rhs());
-  FloatRegister output = ToFloatRegister(ins->output());
-
-  masm.copySignDouble(lhs, rhs, output);
-}
-
 void CodeGenerator::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir) {
   LInt64Allocation input = lir->input();
   Register output = ToRegister(lir->output());

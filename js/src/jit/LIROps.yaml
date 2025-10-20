@@ -1156,7 +1156,6 @@
   operands:
     lhs: WordSized
     rhs: WordSized
-  num_temps: 2
   defer_init: true
 
 # Copysign for float32.
@@ -1165,7 +1164,6 @@
   operands:
     lhs: WordSized
     rhs: WordSized
-  num_temps: 2
   defer_init: true
 
 # Count leading zeroes on an int32.

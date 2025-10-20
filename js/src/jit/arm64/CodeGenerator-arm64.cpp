@@ -2151,20 +2151,6 @@ void CodeGenerator::visitWasmLoad(LWasmLoad* lir) {
                 ToRegister(lir->ptr()), ToAnyRegister(lir->output()));
 }
 
-void CodeGenerator::visitCopySignD(LCopySignD* ins) {
-  MOZ_ASSERT(ins->temp0()->isBogusTemp());
-  MOZ_ASSERT(ins->temp1()->isBogusTemp());
-  masm.copySignDouble(ToFloatRegister(ins->lhs()), ToFloatRegister(ins->rhs()),
-                      ToFloatRegister(ins->output()));
-}
-
-void CodeGenerator::visitCopySignF(LCopySignF* ins) {
-  MOZ_ASSERT(ins->temp0()->isBogusTemp());
-  MOZ_ASSERT(ins->temp1()->isBogusTemp());
-  masm.copySignFloat32(ToFloatRegister(ins->lhs()), ToFloatRegister(ins->rhs()),
-                       ToFloatRegister(ins->output()));
-}
-
 void CodeGenerator::visitWasmStore(LWasmStore* lir) {
   const MWasmStore* mir = lir->mir();
 

@@ -2018,38 +2018,6 @@ Operand CodeGeneratorX86Shared::toMemoryAccessOperand(T* lir, int32_t disp) {
   return destAddr;
 }
 
-void CodeGenerator::visitCopySignF(LCopySignF* lir) {
-  FloatRegister lhs = ToFloatRegister(lir->lhs());
-  FloatRegister rhs = ToFloatRegister(lir->rhs());
-
-  FloatRegister out = ToFloatRegister(lir->output());
-
-  if (lhs == rhs) {
-    if (lhs != out) {
-      masm.moveFloat32(lhs, out);
-    }
-    return;
-  }
-
-  masm.copySignFloat32(lhs, rhs, out);
-}
-
-void CodeGenerator::visitCopySignD(LCopySignD* lir) {
-  FloatRegister lhs = ToFloatRegister(lir->lhs());
-  FloatRegister rhs = ToFloatRegister(lir->rhs());
-
-  FloatRegister out = ToFloatRegister(lir->output());
-
-  if (lhs == rhs) {
-    if (lhs != out) {
-      masm.moveDouble(lhs, out);
-    }
-    return;
-  }
-
-  masm.copySignDouble(lhs, rhs, out);
-}
-
 void CodeGenerator::visitSimd128(LSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
   const LDefinition* out = ins->output();

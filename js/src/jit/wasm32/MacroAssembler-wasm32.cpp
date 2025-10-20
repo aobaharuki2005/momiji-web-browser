@@ -395,6 +395,11 @@ void MacroAssembler::copySignDouble(FloatRegister lhs, FloatRegister rhs,
   MOZ_CRASH();
 }
 
+void MacroAssembler::copySignFloat32(FloatRegister lhs, FloatRegister rhs,
+                                     FloatRegister output) {
+  MOZ_CRASH();
+}
+
 void MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
                                      const Value& rhs, Label* label) {
   MOZ_CRASH();
