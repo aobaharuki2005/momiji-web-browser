@@ -2485,8 +2485,9 @@ mozilla::dom::SessionHistoryEntry* nsSHistory::FindAdjacentContiguousEntryFor(
     GetEntryAtIndex(i, getter_AddRefs(nextEntry));
     foundParent = FindParent(
         ancestors, static_cast<SessionHistoryEntry*>(nextEntry.get()));
-    if (!foundParent || !foundParent->Children().Contains(
-                            aEntry, SessionHistoryEntryIDComparator())) {
+    if ((!foundParent && nextEntry->GetID() != aEntry->GetID()) ||
+        (foundParent && !foundParent->Children().Contains(
+                            aEntry, SessionHistoryEntryIDComparator()))) {
       break;
     }
     rootEntry = nextEntry;
