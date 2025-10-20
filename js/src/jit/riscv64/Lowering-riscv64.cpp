@@ -552,9 +552,6 @@ void LIRGenerator::visitCopySign(MCopySign* ins) {
     lir = new (alloc()) LCopySignF();
   }
 
-  lir->setTemp(0, temp());
-  lir->setTemp(1, temp());
-
   lir->setOperand(0, useRegisterAtStart(lhs));
   lir->setOperand(1, useRegister(rhs));
   defineReuseInput(lir, ins, 0);

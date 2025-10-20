@@ -1674,7 +1674,7 @@ void CodeGenerator::visitCopySignF(LCopySignF* ins) {
   FloatRegister rhs = ToFloatRegister(ins->rhs());
   FloatRegister output = ToFloatRegister(ins->output());
 
-  masm.fsgnj_s(output, lhs, rhs);
+  masm.copySignFloat32(lhs, rhs, output);
 }
 
 void CodeGenerator::visitCopySignD(LCopySignD* ins) {
@@ -1682,7 +1682,7 @@ void CodeGenerator::visitCopySignD(LCopySignD* ins) {
   FloatRegister rhs = ToFloatRegister(ins->rhs());
   FloatRegister output = ToFloatRegister(ins->output());
 
-  masm.fsgnj_d(output, lhs, rhs);
+  masm.copySignDouble(lhs, rhs, output);
 }
 
 void CodeGenerator::visitTestDAndBranch(LTestDAndBranch* test) {
