@@ -14,18 +14,29 @@ interface PointerEvent : MouseEvent
 
   readonly attribute long pointerId;
 
+  [NeedsCallerType]
   readonly attribute double width;
+  [NeedsCallerType]
   readonly attribute double height;
+  [NeedsCallerType]
   readonly attribute float pressure;
+  [NeedsCallerType]
   readonly attribute float tangentialPressure;
+  [NeedsCallerType]
   readonly attribute long tiltX;
+  [NeedsCallerType]
   readonly attribute long tiltY;
+  [NeedsCallerType]
   readonly attribute long twist;
+  [NeedsCallerType]
   readonly attribute double altitudeAngle;
+  [NeedsCallerType]
   readonly attribute double azimuthAngle;
 
+  [NeedsCallerType]
   readonly attribute DOMString pointerType;
   readonly attribute boolean isPrimary;
+  [NeedsCallerType]
   readonly attribute long persistentDeviceId;
 
   [Func="mozilla::dom::PointerEvent::EnableGetCoalescedEvents"]
