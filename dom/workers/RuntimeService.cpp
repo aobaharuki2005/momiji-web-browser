@@ -1015,16 +1015,16 @@ class WorkerJSContext final : public mozilla::CycleCollectedJSContext {
       if (IsWorkerGlobal(global) || IsShadowRealmGlobal(global)) {
         if (!EnqueueMicroTask(cx, runnable.forget())) {
           // This should never fail, but if it does, we have no choice but to
-          // crash.
-          MOZ_CRASH("Failed to enqueue micro task from worker.");
+          // crash. This is always an OOM.
+          NS_ABORT_OOM(0);
         }
       } else {
         MOZ_ASSERT(IsWorkerDebuggerGlobal(global) ||
                    IsWorkerDebuggerSandbox(global));
         if (!EnqueueDebugMicroTask(cx, runnable.forget())) {
           // This should never fail, but if it does, we have no choice but to
-          // crash.
-          MOZ_CRASH("Failed to enqueue debugger micro task from worker.");
+          // crash. This is always an OOM.
+          NS_ABORT_OOM(0);
         }
       }
     } else {

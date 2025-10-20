@@ -1212,10 +1212,9 @@ bool CycleCollectedJSContext::PerformMicroTaskCheckPoint(bool aForce) {
         }
         didProcess = true;
 
-        // Note: We're dropping the return value on the floor here. This is
-        // consistent with the previous implementation, which left the
-        // exception if it was there pending on the context, but likely should
-        // be changed.
+        // Note: We're dropping the return value on the floor here, however
+        // cleanup and exception handling are done as part of the CallSetup
+        // destructor if necessary.
         (void)RunMicroTask(cx, &job);
       }
     }
