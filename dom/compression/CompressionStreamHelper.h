@@ -7,16 +7,11 @@
 #ifndef DOM_COMPRESSION_STREAM_HELPER_H_
 #define DOM_COMPRESSION_STREAM_HELPER_H_
 
-#include "js/TypeDecls.h"
+#include "BaseAlgorithms.h"
 #include "mozilla/dom/CompressionStreamBinding.h"
 #include "zlib.h"
 
 namespace mozilla::dom::compression {
-
-// A top-level, library-agnostic flush enum that should be converted
-// into the native flush values for a given (de)compression library
-// with a function defined below.
-enum class Flush : bool { No, Yes };
 
 inline uint8_t intoZLibFlush(Flush aFlush) {
   switch (aFlush) {
