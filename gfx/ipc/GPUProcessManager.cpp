@@ -13,13 +13,15 @@
 #include "mozilla/AppShutdown.h"
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/RDDChild.h"
+#include "mozilla/RDDProcessManager.h"
+#include "mozilla/RemoteMediaManagerChild.h"
+#include "mozilla/RemoteMediaManagerParent.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "mozilla/RemoteMediaManagerChild.h"
-#include "mozilla/RemoteMediaManagerParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUChild.h"
@@ -39,6 +41,7 @@
 #include "mozilla/layers/InProcessCompositorSession.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/layers/RemoteCompositorSession.h"
+#include "mozilla/layers/VideoBridgeParent.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsAppRunner.h"
@@ -55,6 +58,10 @@
 #include "VsyncSource.h"
 #include "nsExceptionHandler.h"
 #include "nsPrintfCString.h"
+
+#ifdef MOZ_WMF_MEDIA_ENGINE
+#  include "mozilla/ipc/UtilityMediaServiceChild.h"
+#endif
 
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "mozilla/java/SurfaceControlManagerWrappers.h"
@@ -435,6 +442,11 @@ nsresult GPUProcessManager::EnsureGPUReady() {
       break;
     }
 
+    // We already call this in OnProcessLaunchComplete that is called during
+    // WaitForLaunch, but there could be more gfxVar/gfxConfig updates that need
+    // to be sent over, if we are calling this well after the process has
+    // launched. This is because changes can occur due to device resets without
+    // a process crash.
     if (mGPUChild->EnsureGPUReady()) {
       return NS_OK;
     }
@@ -589,7 +601,8 @@ void GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost) {
   // By definition, the process failing to launch is an unstable attempt. While
   // we did not get to the point where we are using the features, we should just
   // follow the same fallback procedure.
-  if (!mProcess->IsConnected()) {
+  auto* gpuChild = mProcess->GetActor();
+  if (!mProcess->IsConnected() || !gpuChild || !gpuChild->EnsureGPUReady()) {
     ++mLaunchProcessAttempts;
     if (mLaunchProcessAttempts >
         uint32_t(StaticPrefs::layers_gpu_process_max_launch_attempts())) {
@@ -605,7 +618,7 @@ void GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost) {
   }
 
   mLaunchProcessAttempts = 0;
-  mGPUChild = mProcess->GetActor();
+  mGPUChild = gpuChild;
   mProcessToken = mProcess->GetProcessToken();
 #if defined(XP_WIN)
   if (mAppInForeground) {
@@ -1511,16 +1524,72 @@ void GPUProcessManager::CreateContentRemoteMediaManager(
   *aOutEndpoint = std::move(childPipe);
 }
 
-void GPUProcessManager::InitVideoBridge(
-    ipc::Endpoint<PVideoBridgeParent>&& aVideoBridge,
-    layers::VideoBridgeSource aSource) {
-  if (NS_WARN_IF(NS_FAILED(EnsureGPUReady()))) {
-    return;
+#ifdef MOZ_WMF_MEDIA_ENGINE
+nsresult GPUProcessManager::CreateUtilityMFCDMVideoBridge(
+    mozilla::ipc::UtilityMediaServiceChild* aChild,
+    mozilla::ipc::EndpointProcInfo aOtherProcess) {
+  MOZ_ASSERT(aChild);
+  MOZ_ASSERT(aChild->CanSend());
+
+  ipc::Endpoint<PVideoBridgeChild> childPipe;
+  nsresult rv = EnsureVideoBridge(VideoBridgeSource::MFMediaEngineCDMProcess,
+                                  aOtherProcess, &childPipe);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  gfx::ContentDeviceData contentDeviceData;
+  gfxPlatform::GetPlatform()->BuildContentDeviceData(&contentDeviceData);
+  aChild->SendInitVideoBridge(std::move(childPipe), contentDeviceData);
+  return NS_OK;
+}
+#endif
+
+nsresult GPUProcessManager::CreateRddVideoBridge(RDDProcessManager* aRDD,
+                                                 RDDChild* aChild) {
+  MOZ_ASSERT(aRDD);
+  MOZ_ASSERT(aChild);
+  MOZ_ASSERT(aChild->CanSend());
+
+  ipc::Endpoint<PVideoBridgeChild> childPipe;
+  nsresult rv = EnsureVideoBridge(VideoBridgeSource::RddProcess,
+                                  aChild->OtherEndpointProcInfo(), &childPipe);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  gfx::ContentDeviceData contentDeviceData;
+  gfxPlatform::GetPlatform()->BuildContentDeviceData(&contentDeviceData);
+  aChild->SendInitVideoBridge(std::move(childPipe),
+                              !aRDD->AttemptedRDDProcess(), contentDeviceData);
+  return NS_OK;
+}
+
+nsresult GPUProcessManager::EnsureVideoBridge(
+    layers::VideoBridgeSource aSource,
+    mozilla::ipc::EndpointProcInfo aOtherProcess,
+    mozilla::ipc::Endpoint<layers::PVideoBridgeChild>* aOutChildPipe) {
+  MOZ_ASSERT(aOutChildPipe);
+  MOZ_DIAGNOSTIC_ASSERT(IsGPUReady());
+
+  ipc::EndpointProcInfo gpuInfo = mGPUChild ? mGPUChild->OtherEndpointProcInfo()
+                                            : ipc::EndpointProcInfo::Current();
+
+  // The child end is the producer of video frames; the parent end is the
+  // consumer.
+  ipc::Endpoint<PVideoBridgeParent> parentPipe;
+  nsresult rv = PVideoBridge::CreateEndpoints(gpuInfo, aOtherProcess,
+                                              &parentPipe, aOutChildPipe);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   if (mGPUChild) {
-    mGPUChild->SendInitVideoBridge(std::move(aVideoBridge), aSource);
+    mGPUChild->SendInitVideoBridge(std::move(parentPipe), aSource);
+  } else {
+    VideoBridgeParent::Open(std::move(parentPipe), aSource);
   }
+  return NS_OK;
 }
 
 void GPUProcessManager::MapLayerTreeId(LayersId aLayersId,
@@ -1658,7 +1727,9 @@ void GPUProcessManager::UnregisterInProcessSession(
 }
 
 void GPUProcessManager::AddListener(GPUProcessListener* aListener) {
-  mListeners.AppendElement(aListener);
+  if (!mListeners.Contains(aListener)) {
+    mListeners.AppendElement(aListener);
+  }
 }
 
 void GPUProcessManager::RemoveListener(GPUProcessListener* aListener) {
