@@ -237,10 +237,14 @@ typescript:
             # tools/lint/typescript.yml
             # Not adding `jsx` for these since we know there's no jsx files in
             # these directories.
+            - 'browser/components/places/**/*.*js'
+            - 'browser/components/places/**/*.ts'
             - 'browser/components/search/**/*.*js'
             - 'browser/components/search/**/*.ts'
             - 'browser/components/urlbar/**/*.*js'
             - 'browser/components/urlbar/**/*.ts'
+            - 'toolkit/components/places/**/*.*js'
+            - 'toolkit/components/places/**/*.ts'
             - 'toolkit/components/search/**/*.*js'
             - 'toolkit/components/search/**/*.ts'
             # Support Files
