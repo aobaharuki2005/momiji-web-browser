@@ -654,24 +654,27 @@ class MOZ_RAII InlinableNativeIRGenerator {
   CacheIRWriter& writer;
   JSContext* cx_;
 
+  HandleObject callee_;
   HandleFunction target_;
   HandleValue newTarget_;
   HandleValue thisval_;
   HandleValueArray args_;
+  Handle<BoundFunctionObject*> boundTarget_;
   CallFlags flags_;
+  uint32_t stackArgc_;
 
   HandleScript script() const { return generator_.script_; }
-  JSObject* callee() const { return &generator_.callee_.toObject(); }
+  JSObject* callee() const { return callee_; }
   bool isFirstStub() const { return generator_.isFirstStub_; }
   bool ignoresResult() const { return op() == JSOp::CallIgnoresRv; }
   JSOp op() const { return generator_.jsop(); }
-  uint32_t stackArgc() const { return generator_.argc_; }
+  uint32_t stackArgc() const { return stackArgc_; }
 
   bool isCalleeBoundFunction() const;
   BoundFunctionObject* boundCallee() const;
 
-  bool isTargetBoundFunction() const;
-  BoundFunctionObject* boundTarget() const;
+  bool isTargetBoundFunction() const { return boundTarget_ != nullptr; }
+  BoundFunctionObject* boundTarget() const { return boundTarget_; }
 
   ObjOperandId emitNativeCalleeGuard(Int32OperandId argcId);
   void emitOptimisticClassGuard(ObjOperandId objId, JSObject* obj,
@@ -881,17 +884,22 @@ class MOZ_RAII InlinableNativeIRGenerator {
   }
 
  public:
-  InlinableNativeIRGenerator(CallIRGenerator& generator, HandleFunction target,
-                             HandleValue newTarget, HandleValue thisValue,
-                             HandleValueArray args, CallFlags flags)
+  InlinableNativeIRGenerator(CallIRGenerator& generator, HandleObject callee,
+                             HandleFunction target, HandleValue newTarget,
+                             HandleValue thisValue, HandleValueArray args,
+                             CallFlags flags,
+                             Handle<BoundFunctionObject*> boundTarget = nullptr)
       : generator_(generator),
         writer(generator.writer),
         cx_(generator.cx_),
+        callee_(callee),
         target_(target),
         newTarget_(newTarget),
         thisval_(thisValue),
         args_(args),
-        flags_(flags) {}
+        boundTarget_(boundTarget),
+        flags_(flags),
+        stackArgc_(generator.argc_) {}
 
   AttachDecision tryAttachStub();
 };
