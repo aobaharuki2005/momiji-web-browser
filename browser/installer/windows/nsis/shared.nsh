@@ -46,6 +46,10 @@
     ${EndIf}
   ${EndIf}
 
+  !ifdef DESKTOP_LAUNCHER_ENABLED
+    Call OnUpdateDesktopLauncherHandler
+  !endif
+
   ; Update the name/icon/AppModelID of our shortcuts as needed, then update the
   ; lastwritetime of the Start Menu shortcut to clear the tile icon cache.
   ; Do this for both shell contexts in case the user has shortcuts in multiple
@@ -298,57 +302,34 @@ ${RemoveDefaultBrowserAgentShortcut}
 ; relative to the shell var context. Caller is expected to call
 ; SetShellVarContext to set the shell var context.
 ; Args: none
-; Return value is pushed onto the stack: "true" if the shortcut
-;    is found, "false" otherwise
+; Return value is pushed onto the stack: "1" if the shortcut
+;    is found, "0" otherwise
 Function IsDesktopShortcutPresent
-  Push $0
+  Push $0 ; will be used to store the result
+  Push $1 ; will be used as a temp variable
+  StrCpy $0 "0"
+
   ${If} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
     ShellLink::GetShortCutArgs "$DESKTOP\${BrandShortName}.lnk"
-    Pop $0
-    ${If} "$0" == ""
+    Pop $1
+    ${If} "$1" == ""
+      ; Let's see if we can find out anything about the shortcut
       ShellLink::GetShortCutTarget "$DESKTOP\${BrandShortName}.lnk"
-      Pop $0
-      ${GetLongPath} "$0" $0
-      ${If} "$0" == "$INSTDIR\${FileMainEXE}"
-        Pop $0  ; restore the register
-        Push "true" ; result
-        Return
+      Pop $1
+      ${GetLongPath} "$1" $1
+      ${If} "$1" == "$INSTDIR\${FileMainEXE}"
+        ; We had permission to look at the shortcut properties and its target was the Firefox executable
+        StrCpy $0 "1" ; set the result to 1
+      ${ElseIf} "$1" == ""
+        ; Most likely case is that we don't have permission to read the shortcut properties, so just report that it exists
+        StrCpy $0 "1" ; set the result to 1
       ${EndIf}
     ${EndIf}
   ${EndIf}
-  Pop $0 ; restore the register
-  Push "false"
+  Pop $1 ; restore the register
+  Exch $0 ; restore the register and place result on the stack
 FunctionEnd
 
-; Looks for the desktop launcher app in the $DESKTOP directory
-; relative to the shell var context. Caller is expected to call
-; SetShellVarContext to set the shell var context.
-; Args: none
-; Return value is pushed onto the stack: "true" if the shortcut
-;    is found, "false" otherwise
-Function IsDesktopLauncherPresent
-  ${If} ${FileExists} "$DESKTOP\${BrandShortName}.exe"
-    Push "true"
-  ${Else}
-    Push "false"
-  ${EndIf}
-FunctionEnd
-
-; Looks at the user's registry keys to see if the value
-; indicating that we had ever installed the desktop launcher
-; is set.
-Function WasDesktopLauncherEverInstalled
-  Push $0
-  ReadRegDWORD $0 HKCU "Software\Mozilla\${BrandFullNameInternal}" DesktopLauncherAppInstalled
-  ${IfNot} ${Errors}
-  ${AndIf} $0 == "1"
-    Pop $0 ; restore register
-    Push "true"
-  ${Else}
-    Pop $0 ; restore register
-    Push "false"
-  ${EndIf}
-FunctionEnd
 
 ; Installs the desktop launcher and sets a registry key to show that we did it.
 Function InstallDesktopLauncher
@@ -361,65 +342,98 @@ Function InstallDesktopLauncher
   ${EndIf}
 FunctionEnd
 
-; When updating from a pre-launcher version to a version that includes the launcher, we
-; want to install the desktop launcher for users if it seems like they might benefit
-; from it, and don't install it if it seems like they won't.
-Function OnUpdateDesktopLauncherHandler
-  Var /GLOBAL UserLauncherExists
-  Var /GLOBAL UserShortcutExists
-  Var /GLOBAL SharedShortcutExists
-  Var /GLOBAL LauncherEverInstalled
-  Var /GLOBAL InstallationType
 
-  Push $0 ; Used to store original shell var context
-
-  ; First let's find out whether the shortcut or launcher is present (or ever
-  ; installed) in the current user's Desktop folder
-  ${SwapShellVarContext} current $0
-  Call IsDesktopLauncherPresent
-  Pop $UserLauncherExists
+Function OnUpdateDesktopLauncher_HKLM
+  ; This is elevated. In this instance, we won't be installing  the desktop launcher, but we may be deleting the shared shortcut
+  Push $0
+  Push $1
+  ; Have we deleted the shared shortcut before?
+  StrCpy $0 "0"
+  ReadRegDWORD $0 HKLM "Software\Mozilla\${BrandFullNameInternal}" "UpdaterDeletedShortcut"
   Call IsDesktopShortcutPresent
-  Pop $UserShortcutExists
-  Call WasDesktopLauncherEverInstalled
-  Pop $LauncherEverInstalled
+  Pop $1
+  ${If} $0 != "1"
+  ${AndIf} $1 != "0"
+    ; shared shortcut exists, and we haven't deleted it before. So let's delete it now.
+    Delete "$DESKTOP\${BrandShortName}.lnk"
+    WriteRegDWORD HKLM "Software\Mozilla\${BrandFullNameInternal}" "UpdaterDeletedShortcut" "1"
+  ${EndIf}
+  Pop $1
+  Pop $0
+FunctionEnd
 
-  ; Next, let's find out whether the shortcut is installed in the shared
-  ; Desktop folder
+Function OnUpdateDesktopLauncher_HKCU
+  ; If there is a desktop launcher installed, call InstallDesktopLauncher (this is how the launcher gets updated)
+  ${If} ${FileExists} "$DESKTOP\${BrandShortName}.exe"
+    Call InstallDesktopLauncher
+    ; Early return
+    Return
+  ${EndIf}
+
+  Push $0
+  Push $1
+  Push $2
+  Push $3
+
+  ; $0 is 1 if a shortcut is found in user's desktop or 0 otherwise
+  StrCpy $0 "0"
+  ; $1 is 1 if there was a "recently deleted" shortcut or 0 otherwise
+  StrCpy $1 "0"
+  ; $2 is 1 if the desktop launcher was ever installed or 0 otherwise
+  StrCpy $2 "0"
+  ; $3 is 1 if a shortcut is found in shared desktop or 0 otherwise
+  StrCpy $3 "0"
+
+  ; see if there is a shortcut on the user's own desktop
+  Call IsDesktopShortcutPresent
+  Pop $0
+
+  ; see if there is a shortcut in the shared desktop folder
   SetShellVarContext all
   Call IsDesktopShortcutPresent
-  Pop $SharedShortcutExists
+  Pop $3
+  SetShellVarContext current
 
-  ; Now, let's figure out what type of installer was used.
+  ReadRegDWORD $1 HKLM "Software\Mozilla\${BrandFullNameInternal}" "UpdaterDeletedShortcut"
+  ReadRegDWORD $2 HKCU "Software\Mozilla\${BrandFullNameInternal}" "DesktopLauncherAppInstalled"
+
+  ${If} $2 == "1"
+    ; We previously installed desktop launcher. Don't reinstall
+  ${ElseIf} $0 == "1"
+    ; There was a shortcut on the user's desktop. Delete it and install launcher
+    Delete "$DESKTOP\${BrandShortName}.lnk"
+    Call InstallDesktopLauncher
+  ${ElseIf} $1 == "1"
+  ${OrIf} $3 == "1"
+    ; This block covers these two cases:
+    ; - If the elevated post-update script runs before the unelevated one, then it will have deleted the shortcut and set the UpdaterDeletedShortcut regkey.
+    ; - Or, if the unelevated script is running now befor the elevated one, then there will still be a shortcut in the shared location.
+    ; In either case, we need to install the desktop launcher now. It's the responsibility of the elevated post-update script to delete
+    ; the shared shortcut, and that is implemented in OnUpdateDesktopLauncher_HKLM
+    Call InstallDesktopLauncher
+  ${EndIf}
+  Pop $3
+  Pop $2
+  Pop $1
+  Pop $0
+FunctionEnd
+
+Function OnUpdateDesktopLauncherHandler
+  Push $0
   Push "$INSTDIR\installation_telemetry.json"
   Call GetInstallationType
-  Pop $InstallationType
-
-  ; Now that we know the state of the installation, we can decide what to do
-  ${If} $UserLauncherExists == "true"
-    ; This is the update case. The user already has the launcher, so
-    ; we install the current version over it to ensure that it is
-    ; up-to-date.
-    SetShellVarContext current
-    Call InstallDesktopLauncher
-  ${ElseIf} $InstallationType != "stub"
-    ; If it's not a stub installer, we don't want to replace the shortcut.
-    ; Leave it as-is.
-  ${ElseIf} $UserShortcutExists == "true"
-  ${AndIf} $LauncherEverInstalled == "false"
-    ; Remove the shortcut and add the launcher
-    SetShellVarContext current
-    Call InstallDesktopLauncher
-    Call DeleteDesktopShortcut ; delete the shortcut from the user's own Desktop
-  ${ElseIf} $SharedShortcutExists == "true"
-  ${AndIf} $LauncherEverInstalled == "false"
-    ; Remove the shortcut and add the launcher
-    SetShellVarContext current
-    Call InstallDesktopLauncher
-    SetShellVarContext all
-    Call DeleteDesktopShortcut ; delete the shortcut from the public Desktop
+  ; Pop the result from the stack into $0
+  Pop $0
+  ${If} $0 == "stub"
+    ${If} $RegHive == "HKLM"
+      SetShellVarContext all
+      Call OnUpdateDesktopLauncher_HKLM
+    ${Else}
+      SetShellVarContext current
+      Call OnUpdateDesktopLauncher_HKCU
+    ${EndIf}
   ${EndIf}
-  ; Restore original shell var context and register
-  ${SetShellVarContextToValue} $0
+  ; Restore $0 to its original value
   Pop $0
 FunctionEnd
 
@@ -1730,9 +1744,6 @@ FunctionEnd
     ${LogDesktopShortcut} "${BrandShortName}.lnk"
 !endif
   ${EndUnless}
-!ifdef DESKTOP_LAUNCHER_ENABLED
-  Call OnUpdateDesktopLauncherHandler
-!endif
 !macroend
 !define CreateShortcutsLog "!insertmacro CreateShortcutsLog"
 
