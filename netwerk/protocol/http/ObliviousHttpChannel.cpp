@@ -331,13 +331,6 @@ ObliviousHttpChannel::IsNoCacheResponse(bool* _retval) {
 }
 
 NS_IMETHODIMP
-ObliviousHttpChannel::IsPrivateResponse(bool* _retval) {
-  LOG(("ObliviousHttpChannel::IsPrivateResponse NOT IMPLEMENTED [this=%p]",
-       this));
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 ObliviousHttpChannel::RedirectTo(nsIURI* aNewURI) {
   LOG(("ObliviousHttpChannel::RedirectTo NOT IMPLEMENTED [this=%p]", this));
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -234,11 +234,6 @@ NullHttpChannel::IsNoCacheResponse(bool* _retval) {
 }
 
 NS_IMETHODIMP
-NullHttpChannel::IsPrivateResponse(bool* _retval) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 NullHttpChannel::RedirectTo(nsIURI* aNewURI) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

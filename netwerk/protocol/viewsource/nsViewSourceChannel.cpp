@@ -976,12 +976,6 @@ nsViewSourceChannel::IsNoCacheResponse(bool* _retval) {
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::IsPrivateResponse(bool* _retval) {
-  return !mHttpChannel ? NS_ERROR_NULL_POINTER
-                       : mHttpChannel->IsPrivateResponse(_retval);
-}
-
-NS_IMETHODIMP
 nsViewSourceChannel::RedirectTo(nsIURI* uri) {
   return !mHttpChannel ? NS_ERROR_NULL_POINTER : mHttpChannel->RedirectTo(uri);
 }

@@ -8396,7 +8396,6 @@ interface nsIHttpChannel extends nsIIdentChannel {
   visitOriginalResponseHeaders(aVisitor: nsIHttpHeaderVisitor): void;
   isNoStoreResponse(): boolean;
   isNoCacheResponse(): boolean;
-  isPrivateResponse(): boolean;
   redirectTo(aTargetURI: nsIURI): void;
   upgradeToSecure(): void;
   topLevelContentWindowId: u64;
