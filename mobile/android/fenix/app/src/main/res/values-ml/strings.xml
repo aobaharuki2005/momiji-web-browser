@@ -1105,6 +1105,8 @@
     Header of the Sync and save your data preference view
   -->
   <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">ദത്ത സമന്വയിപ്പിച്ച് കരുതിവയ്ക്കുക</string>
+  <!-- Header of the Sign in preference view -->
+  <string name="preferences_sign_in">പ്രവേശിക്കുക</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">വീണ്ടും ബന്ധിപ്പിക്കുന്നതിന് പ്രവേശിക്കുക</string>
   <!-- Preference for removing FxA account -->
