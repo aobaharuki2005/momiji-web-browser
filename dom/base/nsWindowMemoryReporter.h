@@ -7,6 +7,7 @@
 #ifndef nsWindowMemoryReporter_h__
 #define nsWindowMemoryReporter_h__
 
+#include "mozilla/PodOperations.h"
 #include "mozilla/TimeStamp.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"

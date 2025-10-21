@@ -18,10 +18,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
-#include <cstdint>
-#include <cstring>
-#include <limits>
-#include <type_traits>
+#include <stdint.h>
+#include <string.h>
 
 namespace mozilla {
 
@@ -41,18 +39,17 @@ static MOZ_ALWAYS_INLINE void PodZero(T* aT) {
 
 /** Set the contents of |aNElem| elements starting at |aT| to 0. */
 template <typename T>
-static MOZ_ALWAYS_INLINE void PodZero(T* aT, size_t aNElem) { static_assert(std::is_trivially_copyable_v<T>, "PodZero requires
-      trivially copyable types");
+static MOZ_ALWAYS_INLINE void PodZero(T* aT, size_t aNElem) {
+  static_assert(std::is_trivially_copyable_v<T>,
+                "PodZero requires trivially copyable types");
   /*
-   * NB: If the caller uses a constant size, both GCC and Clang inline the
-   * memset call if they find it profitable.
-   *
-   * If the value is dynamic, some might think that it's more profitable to
-   * perform an explicit loop over the aNElem. It turns out Clang rolls back the
-   * loop anyway, so even if GCC doesn't, keep the codebase simple and clearly
-   * convey the intent instead of trying to outsmart the compiler.
+   * This function is often called with 'aNElem' small; we use an inline loop
+   * instead of calling 'memset' with a non-constant length.  The compiler
+   * should inline the memset call with constant size, though.
    */
-  memset(aT, 0, sizeof(T) * aNElem);
+  for (T* end = aT + aNElem; aT < end; aT++) {
+    memset(aT, 0, sizeof(T));
+  }
 }
 
 /** Set the contents of |aNElem| elements starting at |aT| to 0. */
@@ -154,7 +151,7 @@ template <typename T>
 static MOZ_ALWAYS_INLINE void PodMove(T* aDst, const T* aSrc, size_t aNElem) {
   static_assert(std::is_trivially_copyable_v<T>,
                 "PodMove requires trivially copyable types");
-  MOZ_ASSERT(aNElem <= std::numeric_limits<size_t>::max() / sizeof(T),
+  MOZ_ASSERT(aNElem <= SIZE_MAX / sizeof(T),
              "trying to move an impossible number of elements");
   memmove(aDst, aSrc, aNElem * sizeof(T));
 }
