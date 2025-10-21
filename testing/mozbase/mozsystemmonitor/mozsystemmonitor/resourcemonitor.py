@@ -265,9 +265,11 @@ def _collect(pipe, poll_interval):
                     and not arg.startswith("-L")
                 ]
             )
-            pipe.send(("process", pid, create_time, end_time, cmdline, ppid, None))
+            pipe.send(
+                ("process", pid, create_time, end_time, cmdline, ppid, None, None)
+            )
 
-        pipe.send(("done", None, None, None, None, None, None))
+        pipe.send(("done", None, None, None, None, None, None, None))
         pipe.close()
 
     sys.exit(0)
