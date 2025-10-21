@@ -81,4 +81,21 @@ ip-protection-description =
   .description = Hides your location and adds extra encryption to your browsing in { -brand-short-name }.
 ip-protection-learn-more = Learn more
 
+ip-protection-site-exceptions =
+  .label = Where to use VPN
+  .description = Use VPN for all websites except ones you choose, or for select specific ones.
+ip-protection-site-exceptions-all-sites-radio =
+  .label = All websites (default)
+ip-protection-site-exceptions-all-sites-button =
+  .label = { -firefox-vpn-brand-name } is off for these websites
+  .description = No websites added yet
+
+# "Select" is an adjective here to describe a setting that allows running the VPN on certain sites only.
+# Not to be confused with the action of selecting a site, which is not at all applicable to this setting.
+ip-protection-site-exceptions-select-sites-radio =
+  .label = Select websites
+ip-protection-site-exceptions-select-sites-button =
+  .label = { -firefox-vpn-brand-name } is on for these websites
+  .description = No websites added yet
+
 ##

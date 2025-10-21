@@ -212,6 +212,7 @@ Preferences.addAll([
 
   // Firefox VPN
   { id: "browser.ipProtection.variant", type: "string" },
+  { id: "browser.ipProtection.exceptionsMode", type: "string" },
 
   // Media
   { id: "media.autoplay.default", type: "int" },
@@ -1260,10 +1261,34 @@ Preferences.addSetting({
   pref: "browser.ipProtection.variant",
   get: prefVal => prefVal == "beta",
 });
+// This setting also affects the radio group for site exceptions
 Preferences.addSetting({
-  id: "ipProtectionPlaceholderMessage",
+  id: "ipProtectionExceptionsMode",
+  pref: "browser.ipProtection.exceptionsMode",
   deps: ["ipProtectionVisible"],
   visible: ({ ipProtectionVisible }) => ipProtectionVisible.value,
+});
+Preferences.addSetting({
+  id: "ipProtectionExceptionAllListButton",
+  deps: ["ipProtectionVisible", "ipProtectionExceptionsMode"],
+  visible: ({ ipProtectionVisible, ipProtectionExceptionsMode }) =>
+    ipProtectionVisible.value && ipProtectionExceptionsMode.value == "all",
+  onUserClick() {
+    // TODO: show UI based on current exception mode selected (Bug 1993334)
+    // We can read the target id to verify the button type and open a dialog
+    // with gSubDialog.open
+  },
+});
+Preferences.addSetting({
+  id: "ipProtectionExceptionSelectListButton",
+  deps: ["ipProtectionVisible", "ipProtectionExceptionsMode"],
+  visible: ({ ipProtectionVisible, ipProtectionExceptionsMode }) =>
+    ipProtectionVisible.value && ipProtectionExceptionsMode.value == "select",
+  onUserClick() {
+    // TODO: show UI based on current exception mode selected (Bug 1993334)
+    // We can read the target id to verify the button type and open a dialog
+    // with gSubDialog.open
+  },
 });
 
 // Study opt out

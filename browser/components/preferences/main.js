@@ -1486,11 +1486,38 @@ let SETTINGS_CONFIG = {
     supportPage: "ip-protection",
     items: [
       {
-        id: "ipProtectionPlaceholderMessage",
-        control: "moz-message-bar",
+        id: "ipProtectionExceptionsMode",
+        l10nId: "ip-protection-site-exceptions",
+        control: "moz-radio-group",
         controlAttrs: {
-          message: "This is a placeholder for the IP Protection section",
+          ".headingLevel": 3,
         },
+        options: [
+          {
+            id: "ipProtectionExceptionRadioAll",
+            value: "all",
+            l10nId: "ip-protection-site-exceptions-all-sites-radio",
+            items: [
+              {
+                id: "ipProtectionExceptionAllListButton",
+                l10nId: "ip-protection-site-exceptions-all-sites-button",
+                control: "moz-box-button",
+              },
+            ],
+          },
+          {
+            id: "ipProtectionExceptionRadioSelect",
+            value: "select",
+            l10nId: "ip-protection-site-exceptions-select-sites-radio",
+            items: [
+              {
+                id: "ipProtectionExceptionSelectListButton",
+                l10nId: "ip-protection-site-exceptions-select-sites-button",
+                control: "moz-box-button",
+              },
+            ],
+          },
+        ],
       },
     ],
   },
