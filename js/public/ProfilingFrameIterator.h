@@ -161,6 +161,7 @@ class MOZ_NON_PARAM JS_PUBLIC_API ProfilingFrameIterator {
     const char* label;
     JSScript* interpreterScript;
     uint64_t realmID;
+    uint32_t sourceId;
 
    public:
     void* returnAddress() const {

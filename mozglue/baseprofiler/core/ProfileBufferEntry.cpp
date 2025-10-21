@@ -63,6 +63,11 @@ ProfileBufferEntry::ProfileBufferEntry(Kind aKind, uint64_t aUint64)
   memcpy(mStorage, &aUint64, sizeof(aUint64));
 }
 
+ProfileBufferEntry::ProfileBufferEntry(Kind aKind, uint32_t aUint32)
+    : mKind(aKind) {
+  memcpy(mStorage, &aUint32, sizeof(aUint32));
+}
+
 ProfileBufferEntry::ProfileBufferEntry(Kind aKind,
                                        BaseProfilerThreadId aThreadId)
     : mKind(aKind) {

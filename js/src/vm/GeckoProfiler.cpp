@@ -281,7 +281,8 @@ bool GeckoProfilerThread::enter(JSContext* cx, JSScript* script) {
 
   profilingStack_->pushJsFrame(
       "", dynamicString, script, script->code(),
-      script->realm()->creationOptions().profilerRealmID());
+      script->realm()->creationOptions().profilerRealmID(),
+      script->scriptSource()->id());
   return true;
 }
 
@@ -630,6 +631,10 @@ void ProfilingStackFrame::setPC(jsbytecode* pc) {
   MOZ_ASSERT(
       script);  // This should not be called while profiling is suppressed.
   pcOffsetIfJS_ = pcToOffset(script, pc);
+}
+
+JS_PUBLIC_API uint32_t ProfilingStackFrame::sourceId() const {
+  return sourceId_;
 }
 
 JS_PUBLIC_API void js::SetContextProfilingStack(

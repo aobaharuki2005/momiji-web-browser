@@ -2486,7 +2486,7 @@ static void MergeStacks(
             uint32_t(js::ProfilingStackFrame::Flags::IS_BLINTERP_FRAME);
         stackFrame.initJsFrame<JS::ProfilingCategoryPair::JS_BaselineInterpret,
                                ExtraFlags>("", jsFrame.label, script, pc,
-                                           jsFrame.realmID);
+                                           jsFrame.realmID, jsFrame.sourceId);
         aCollector.CollectProfilingStackFrame(stackFrame);
       } else {
         MOZ_ASSERT(jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
@@ -3671,7 +3671,7 @@ static void CollectJavaThreadProfileData(
       nsCString frameNameString = frameName->ToCString();
 
       auto categoryPair = InferJavaCategory(frameNameString);
-      aProfileBuffer.CollectCodeLocation("", frameNameString.get(), 0, 0,
+      aProfileBuffer.CollectCodeLocation("", frameNameString.get(), 0, 0, 0,
                                          Nothing(), Nothing(),
                                          Some(categoryPair));
     }
@@ -3909,7 +3909,8 @@ locked_profiler_stream_json_for_this_process(
       MOZ_RELEASE_ASSERT(thread.mProfiledThreadData);
       processStreamingContext.AddThreadStreamingContext(
           *thread.mProfiledThreadData, buffer, thread.mJSContext, aService,
-          std::move(progressLogger));
+          std::move(progressLogger),
+          sourceIdToIndexMap.isSome() ? sourceIdToIndexMap.ptr() : nullptr);
       if (aWriter.Failed()) {
         return Err(ProfilerError::JsonGenerationFailed);
       }
