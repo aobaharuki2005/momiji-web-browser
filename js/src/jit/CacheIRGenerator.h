@@ -176,8 +176,6 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
                                                 ValOperandId receiverId);
   AttachDecision tryAttachObjectLength(HandleObject obj, ObjOperandId objId,
                                        HandleId id);
-  AttachDecision tryAttachDataView(HandleObject obj, ObjOperandId objId,
-                                   HandleId id);
   AttachDecision tryAttachArrayBufferMaybeShared(HandleObject obj,
                                                  ObjOperandId objId,
                                                  HandleId id);
@@ -754,6 +752,8 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachArrayIsArray();
   AttachDecision tryAttachDataViewGet(Scalar::Type type);
   AttachDecision tryAttachDataViewSet(Scalar::Type type);
+  AttachDecision tryAttachDataViewByteLength();
+  AttachDecision tryAttachDataViewByteOffset();
   AttachDecision tryAttachFunctionBind();
   AttachDecision tryAttachSpecializedFunctionBind(
       Handle<JSObject*> target, Handle<BoundFunctionObject*> templateObj);

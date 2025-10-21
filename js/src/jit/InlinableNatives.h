@@ -79,6 +79,8 @@
   _(DataViewSetFloat64)                            \
   _(DataViewSetBigInt64)                           \
   _(DataViewSetBigUint64)                          \
+  _(DataViewByteLength)                            \
+  _(DataViewByteOffset)                            \
                                                    \
   _(DateGetTime)                                   \
   _(DateGetFullYear)                               \
