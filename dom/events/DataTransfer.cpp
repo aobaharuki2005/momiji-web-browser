@@ -14,6 +14,7 @@
 #include "mozilla/ClipboardReadRequestChild.h"
 #include "mozilla/Span.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DOMStringList.h"

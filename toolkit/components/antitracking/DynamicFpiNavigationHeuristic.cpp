@@ -165,7 +165,7 @@ void DynamicFpiNavigationHeuristic::MaybeGrantStorageAccess(
           BasePrincipal::CreateContentPrincipal(
               uri, resultPrincipal->OriginAttributesRef());
 
-      (void)StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
+      Unused << StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
           resultPrincipal, embedeePrincipal,
           StorageAccessAPIHelper::StorageAccessPromptChoices::eAllow, false,
           StaticPrefs::privacy_restrict3rdpartystorage_expiration_visited());

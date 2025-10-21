@@ -12,6 +12,7 @@
 #include "ServiceWorkerPrivate.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/PFetchEventOpChild.h"
 #include "nsError.h"
 #include "nsThreadUtils.h"
@@ -151,7 +152,7 @@ void RemoteWorkerControllerChild::MaybeSendDelete() {
       GetCurrentSerialEventTarget(), __func__,
       [self = std::move(self)](const ShutdownPromise::ResolveOrRejectValue&) {
         if (self->mIPCActive) {
-          (void)self->Send__delete__(self);
+          Unused << self->Send__delete__(self);
         }
       });
 }

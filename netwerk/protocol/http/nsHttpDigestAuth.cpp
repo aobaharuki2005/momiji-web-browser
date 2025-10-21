@@ -10,6 +10,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/Unused.h"
 
 #include "nsHttp.h"
 #include "nsHttpDigestAuth.h"
@@ -217,7 +218,7 @@ nsHttpDigestAuth::GenerateCredentials(
   bool requireExtraQuotes = false;
   {
     nsAutoCString serverVal;
-    (void)authChannel->GetServerResponseHeader(serverVal);
+    Unused << authChannel->GetServerResponseHeader(serverVal);
     if (!serverVal.IsEmpty()) {
       requireExtraQuotes =
           !nsCRT::strncasecmp(serverVal.get(), "Microsoft-IIS", 13);

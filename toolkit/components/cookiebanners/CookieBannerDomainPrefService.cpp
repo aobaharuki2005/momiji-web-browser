@@ -183,9 +183,9 @@ nsresult CookieBannerDomainPrefService::SetPref(
     Maybe<RefPtr<DomainPrefData>> data = mPrefsPrivate.MaybeGet(aDomain);
 
     wasPersistentInPrivate = data ? data.ref()->mIsPersistent : false;
-    (void)mPrefsPrivate.InsertOrUpdate(aDomain, domainPrefData);
+    Unused << mPrefsPrivate.InsertOrUpdate(aDomain, domainPrefData);
   } else {
-    (void)mPrefs.InsertOrUpdate(aDomain, domainPrefData);
+    Unused << mPrefs.InsertOrUpdate(aDomain, domainPrefData);
   }
 
   // For private windows, the domain prefs will only be stored in memory.
@@ -365,11 +365,11 @@ CookieBannerDomainPrefService::InitialLoadContentPrefCallback::HandleResult(
       MakeRefPtr<DomainPrefData>(nsICookieBannerService::Modes(data), true);
 
   if (mIsPrivate) {
-    (void)mService->mPrefsPrivate.InsertOrUpdate(NS_ConvertUTF16toUTF8(domain),
-                                                 domainPrefData);
+    Unused << mService->mPrefsPrivate.InsertOrUpdate(
+        NS_ConvertUTF16toUTF8(domain), domainPrefData);
   } else {
-    (void)mService->mPrefs.InsertOrUpdate(NS_ConvertUTF16toUTF8(domain),
-                                          domainPrefData);
+    Unused << mService->mPrefs.InsertOrUpdate(NS_ConvertUTF16toUTF8(domain),
+                                              domainPrefData);
   }
 
   return NS_OK;

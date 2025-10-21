@@ -387,8 +387,8 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       nsCOMPtr<nsIEffectiveTLDService> eTLDService(
           do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv));
       if (eTLDService) {
-        (void)eTLDService->GetBaseDomain(mWindow->GetDocumentURI(), 0,
-                                         mEffectiveTLDPlus1);
+        Unused << eTLDService->GetBaseDomain(mWindow->GetDocumentURI(), 0,
+                                             mEffectiveTLDPlus1);
       }
 
       mRtxIsAllowed = !media::HostnameInPref(
@@ -624,7 +624,7 @@ void PeerConnectionImpl::SetCertificate(
   }
 
   if (mUncommittedJsepSession) {
-    (void)mUncommittedJsepSession->AddDtlsFingerprint(
+    Unused << mUncommittedJsepSession->AddDtlsFingerprint(
         DtlsIdentity::DEFAULT_HASH_ALGORITHM, fingerprint);
   }
 }
@@ -1884,7 +1884,7 @@ nsresult PeerConnectionImpl::OnAlpnNegotiated(const std::string& aAlpn,
   MOZ_DIAGNOSTIC_ASSERT(!mRequestedPrivacy ||
                         (*mRequestedPrivacy == PrincipalPrivacy::Private) ==
                             aPrivacyRequested);
-  (void)aAlpn;
+  Unused << aAlpn;
 
   mRequestedPrivacy = Some(aPrivacyRequested ? PrincipalPrivacy::Private
                                              : PrincipalPrivacy::NonPrivate);
@@ -2558,7 +2558,7 @@ nsresult PeerConnectionImpl::SetConfiguration(
   }
 
   // Ignore errors, since those ought to be handled earlier.
-  (void)mJsepSession->SetBundlePolicy(bundlePolicy);
+  Unused << mJsepSession->SetBundlePolicy(bundlePolicy);
 
   if (!aConfiguration.mPeerIdentity.IsEmpty()) {
     mPeerIdentity = new PeerIdentity(aConfiguration.mPeerIdentity);
@@ -3253,7 +3253,7 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
     // the current/pending local descriptions when determining whether to
     // surface the candidate to content, which does not take into account any
     // in-progress sRD/sLD.
-    (void)mUncommittedJsepSession->AddLocalIceCandidate(
+    Unused << mUncommittedJsepSession->AddLocalIceCandidate(
         candidate, transportId, ufrag, &level, &mid, &skipped);
   }
 
@@ -4150,7 +4150,7 @@ bool PeerConnectionImpl::ShouldForceProxy() const {
   }
 
   bool proxyUsed = false;
-  (void)httpChannelInternal->GetIsProxyUsed(&proxyUsed);
+  Unused << httpChannelInternal->GetIsProxyUsed(&proxyUsed);
   return proxyUsed;
 }
 

@@ -2966,7 +2966,7 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   }
 
   auto [seqFrame, sheetCount] = mPrintJob->GetSeqFrameAndCountSheets();
-  (void)sheetCount;
+  Unused << sheetCount;
   if (!seqFrame) {
     return NS_ERROR_FAILURE;
   }
@@ -2985,7 +2985,7 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
     case nsIWebBrowserPrint::PRINTPREVIEW_PREV_PAGE:
     case nsIWebBrowserPrint::PRINTPREVIEW_NEXT_PAGE: {
       auto [currentFrame, currentSheetNumber] = GetCurrentSheetFrameAndNumber();
-      (void)currentSheetNumber;
+      Unused << currentSheetNumber;
       if (!currentFrame) {
         return NS_OK;
       }
@@ -3031,7 +3031,7 @@ nsDocumentViewer::GetCurrentSheetFrameAndNumber() const {
 
   // in PP mPrtPreview->mPrintObject->mSeqFrame is null
   auto [seqFrame, sheetCount] = mPrintJob->GetSeqFrameAndCountSheets();
-  (void)sheetCount;
+  Unused << sheetCount;
   if (!seqFrame) {
     return {nullptr, 0};
   }
@@ -3099,7 +3099,7 @@ nsDocumentViewer::GetPrintPreviewCurrentPageNumber(int32_t* aNumber) {
   }
 
   auto [currentFrame, currentSheetNumber] = GetCurrentSheetFrameAndNumber();
-  (void)currentFrame;
+  Unused << currentFrame;
   if (!currentSheetNumber) {
     return NS_ERROR_FAILURE;
   }

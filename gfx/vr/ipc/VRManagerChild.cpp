@@ -363,7 +363,7 @@ bool VRManagerChild::EnumerateVRDisplays() {
   return success;
 }
 
-void VRManagerChild::DetectRuntimes() { (void)SendDetectRuntimes(); }
+void VRManagerChild::DetectRuntimes() { Unused << SendDetectRuntimes(); }
 
 PVRLayerChild* VRManagerChild::CreateVRLayer(uint32_t aDisplayID,
                                              uint32_t aGroup) {
@@ -563,7 +563,7 @@ void VRManagerChild::AddListener(VRManagerEventObserver* aObserver) {
 
   mListeners.AppendElement(aObserver);
   if (mListeners.Length() == 1) {
-    (void)SendSetHaveEventListener(true);
+    Unused << SendSetHaveEventListener(true);
   }
 }
 
@@ -572,11 +572,11 @@ void VRManagerChild::RemoveListener(VRManagerEventObserver* aObserver) {
 
   mListeners.RemoveElement(aObserver);
   if (mListeners.IsEmpty()) {
-    (void)SendSetHaveEventListener(false);
+    Unused << SendSetHaveEventListener(false);
   }
 }
 
-void VRManagerChild::StartActivity() { (void)SendStartActivity(); }
+void VRManagerChild::StartActivity() { Unused << SendStartActivity(); }
 
 void VRManagerChild::StopActivity() {
   for (auto& listener : mListeners) {
@@ -586,7 +586,7 @@ void VRManagerChild::StopActivity() {
     }
   }
 
-  (void)SendStopActivity();
+  Unused << SendStopActivity();
 }
 
 void VRManagerChild::HandleFatalError(const char* aMsg) {

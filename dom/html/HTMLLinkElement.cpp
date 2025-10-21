@@ -132,7 +132,7 @@ void HTMLLinkElement::UnbindFromTree(UnbindContext& aContext) {
 
   nsGenericHTMLElement::UnbindFromTree(aContext);
 
-  (void)UpdateStyleSheetInternal(oldDoc, oldShadowRoot);
+  Unused << UpdateStyleSheetInternal(oldDoc, oldShadowRoot);
 }
 
 bool HTMLLinkElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
@@ -291,7 +291,7 @@ void HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
           dropSheet || aName == nsGkAtoms::title || aName == nsGkAtoms::media ||
           aName == nsGkAtoms::type || aName == nsGkAtoms::disabled;
 
-      (void)UpdateStyleSheetInternal(
+      Unused << UpdateStyleSheetInternal(
           nullptr, nullptr, forceUpdate ? ForceUpdate::Yes : ForceUpdate::No);
     }
   } else {
@@ -304,7 +304,7 @@ void HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       if (aName == nsGkAtoms::href || aName == nsGkAtoms::rel ||
           aName == nsGkAtoms::title || aName == nsGkAtoms::media ||
           aName == nsGkAtoms::type || aName == nsGkAtoms::disabled) {
-        (void)UpdateStyleSheetInternal(nullptr, nullptr, ForceUpdate::Yes);
+        Unused << UpdateStyleSheetInternal(nullptr, nullptr, ForceUpdate::Yes);
       }
       if ((aName == nsGkAtoms::as || aName == nsGkAtoms::type ||
            aName == nsGkAtoms::crossorigin || aName == nsGkAtoms::media) &&

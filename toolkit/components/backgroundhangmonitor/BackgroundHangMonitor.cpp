@@ -22,6 +22,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThreadLocal.h"
+#include "mozilla/Unused.h"
 #if defined(XP_WIN)
 #  include "mozilla/WindowsStackWalkInitialization.h"
 #endif  // XP_WIN
@@ -117,7 +118,7 @@ class BackgroundHangManager : public nsIObserver {
     if (aForce ||
         aNow - mLastCheckedCPUUsage >
             TimeDuration::FromMilliseconds(kCheckCPUIntervalMilliseconds)) {
-      (void)NS_WARN_IF(mCPUUsageWatcher.CollectCPUUsage().isErr());
+      Unused << NS_WARN_IF(mCPUUsageWatcher.CollectCPUUsage().isErr());
       mLastCheckedCPUUsage = aNow;
     }
   }
@@ -618,7 +619,7 @@ void BackgroundHangMonitor::Startup() {
     if (XRE_IsParentProcess()) {  // cached ClientID hasn't been read yet
       BackgroundHangThread::Startup();
       new BackgroundHangManager();
-      (void)NS_WARN_IF(
+      Unused << NS_WARN_IF(
           BackgroundHangManager::sInstance->mCPUUsageWatcher.Init().isErr());
       observerService->AddObserver(BackgroundHangManager::sInstance,
                                    "profile-after-change", false);
@@ -633,7 +634,7 @@ void BackgroundHangMonitor::Startup() {
 
   BackgroundHangThread::Startup();
   new BackgroundHangManager();
-  (void)NS_WARN_IF(
+  Unused << NS_WARN_IF(
       BackgroundHangManager::sInstance->mCPUUsageWatcher.Init().isErr());
   if (XRE_IsParentProcess()) {
     observerService->AddObserver(BackgroundHangManager::sInstance,

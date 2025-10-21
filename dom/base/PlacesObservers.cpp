@@ -325,7 +325,7 @@ void PlacesObservers::NotifyListeners(
         "Avoid nested Places notifications if possible, the order of events "
         "cannot be guaranteed");
     nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
-    (void)xpc->DebugDumpJSStack(false, false, false);
+    Unused << xpc->DebugDumpJSStack(false, false, false);
   }
 #endif
 

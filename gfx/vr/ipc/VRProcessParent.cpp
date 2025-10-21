@@ -19,6 +19,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TimeStamp.h"  // for TimeStamp
+#include "mozilla/Unused.h"
 #include "VRChild.h"
 #include "VRThread.h"
 
@@ -176,7 +177,7 @@ bool VRProcessParent::InitAfterConnect(bool aSucceeded) {
         vpm->CreateGPUBridges(gpuChild->OtherEndpointProcInfo(), &vrGPUBridge);
     MOZ_ASSERT(opened);
 
-    (void)gpuChild->SendInitVR(std::move(vrGPUBridge));
+    Unused << gpuChild->SendInitVR(std::move(vrGPUBridge));
   }
 
   return true;

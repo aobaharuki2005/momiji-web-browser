@@ -45,6 +45,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CallbackObject.h"
@@ -1212,7 +1213,7 @@ void nsMessageManagerScriptExecutor::LoadScriptInternal(
         if (!envChain.append(aMessageManager)) {
           return;
         }
-        (void)JS_ExecuteScript(cx, envChain, script, &rval);
+        Unused << JS_ExecuteScript(cx, envChain, script, &rval);
       }
     }
   }

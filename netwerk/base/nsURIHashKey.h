@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "PLDHashTable.h"
+#include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
 #include "nsIURI.h"
@@ -57,7 +58,7 @@ class nsURIHashKey : public PLDHashEntryHdr {
     nsAutoCString spec;
     // If GetSpec() fails, ignoring the failure and proceeding with an
     // empty |spec| seems like the best thing to do.
-    (void)const_cast<nsIURI*>(aKey)->GetSpec(spec);
+    mozilla::Unused << const_cast<nsIURI*>(aKey)->GetSpec(spec);
     return mozilla::HashString(spec);
   }
 

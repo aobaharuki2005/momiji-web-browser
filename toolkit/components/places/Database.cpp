@@ -33,6 +33,7 @@
 #include "nsPrintfCString.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/Unused.h"
 #include "mozIStorageService.h"
 #include "prtime.h"
 
@@ -349,7 +350,7 @@ nsresult AttachDatabase(nsCOMPtr<mozIStorageConnection>& aDBConn,
   nsAutoCString journalSizePragma("PRAGMA favicons.journal_size_limit = ");
   journalSizePragma.AppendInt(DATABASE_MAX_WAL_BYTES +
                               DATABASE_JOURNAL_OVERHEAD_BYTES);
-  (void)aDBConn->ExecuteSimpleSQL(journalSizePragma);
+  Unused << aDBConn->ExecuteSimpleSQL(journalSizePragma);
 
   return NS_OK;
 }
@@ -772,7 +773,7 @@ nsresult Database::EnsureFaviconsDatabaseAttached(
     // in a transaction for performances.
     mozStorageTransaction transaction(conn, false);
     // XXX Handle the error, bug 1696133.
-    (void)NS_WARN_IF(NS_FAILED(transaction.Start()));
+    Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
     rv = conn->ExecuteSimpleSQL(CREATE_MOZ_ICONS);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = conn->ExecuteSimpleSQL(CREATE_IDX_MOZ_ICONS_ICONURLHASH);
@@ -843,8 +844,8 @@ nsresult Database::BackupAndReplaceDatabaseFile(
     }
 
     nsCOMPtr<nsIFile> backup;
-    (void)BackupDatabaseFile(databaseFile, corruptFilename, profDir,
-                             getter_AddRefs(backup));
+    Unused << BackupDatabaseFile(databaseFile, corruptFilename, profDir,
+                                 getter_AddRefs(backup));
   }
 
   // If anything fails from this point on, we have a stale connection or
@@ -940,7 +941,7 @@ nsresult Database::TryToCloneTablesFromCorruptDatabase(
   nsCOMPtr<mozIStorageConnection> conn;
   auto guard = MakeScopeExit([&]() {
     if (conn) {
-      (void)conn->Close();
+      Unused << conn->Close();
     }
     RemoveFileSwallowsErrors(recoverFile);
   });
@@ -955,7 +956,7 @@ nsresult Database::TryToCloneTablesFromCorruptDatabase(
   mozStorageTransaction transaction(conn, false);
 
   // XXX Handle the error, bug 1696133.
-  (void)NS_WARN_IF(NS_FAILED(transaction.Start()));
+  Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
 
   // Copy the schema version.
   nsCOMPtr<mozIStorageStatement> stmt;
@@ -1156,7 +1157,7 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
   mozStorageTransaction transaction(mMainConn, false);
 
   // XXX Handle the error, bug 1696133.
-  (void)NS_WARN_IF(NS_FAILED(transaction.Start()));
+  Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
 
   if (databaseInitialized) {
     // Migration How-to:
@@ -1661,7 +1662,7 @@ nsresult Database::EnsureBookmarkRoots(const int32_t startPosition,
       "END"));
   if (NS_FAILED(rv)) return rv;
   auto guard = MakeScopeExit([&]() {
-    (void)mMainConn->ExecuteSimpleSQL(
+    Unused << mMainConn->ExecuteSimpleSQL(
         "DROP TRIGGER moz_ensure_bookmark_roots_trigger"_ns);
   });
 
@@ -2411,7 +2412,8 @@ void Database::Shutdown() {
       "PRAGMA optimize(0x02)"_ns, nullptr, getter_AddRefs(ps)));
 
   if (NS_FAILED(mMainConn->AsyncClose(connectionShutdown))) {
-    (void)connectionShutdown->Complete(NS_ERROR_UNEXPECTED, nullptr);
+    mozilla::Unused << connectionShutdown->Complete(NS_ERROR_UNEXPECTED,
+                                                    nullptr);
   }
   mMainConn = nullptr;
 }

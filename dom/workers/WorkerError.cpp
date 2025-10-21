@@ -29,6 +29,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Span.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ErrorEvent.h"
@@ -108,7 +109,7 @@ class ReportErrorRunnable final : public WorkerParentDebuggeeRunnable {
         RefPtr<RemoteWorkerChild> actor(
             aWorkerPrivate->GetRemoteWorkerController());
 
-        (void)NS_WARN_IF(!actor);
+        Unused << NS_WARN_IF(!actor);
 
         if (actor) {
           actor->ErrorPropagationOnMainThread(nullptr, false);
@@ -179,7 +180,7 @@ class ReportGenericErrorRunnable final : public WorkerParentDebuggeeRunnable {
       RefPtr<RemoteWorkerChild> actor(
           aWorkerPrivate->GetRemoteWorkerController());
 
-      (void)NS_WARN_IF(!actor);
+      Unused << NS_WARN_IF(!actor);
 
       if (actor) {
         actor->ErrorPropagationOnMainThread(nullptr, false);

@@ -77,6 +77,7 @@
 #include "mozilla/TelemetryComms.h"
 #include "mozilla/TelemetryIPC.h"
 #include "mozilla/ThreadSafety.h"
+#include "mozilla/Unused.h"
 #include "mozilla/WebBrowserPersistDocumentParent.h"
 #include "mozilla/XREAppData.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
@@ -370,7 +371,7 @@ class OriginsListLoadCallback final : public nsIOriginsListLoadCallback {
       dom::IPCOriginStatusEntry ipcEntry(origin, status);
       ipcEntries.AppendElement(ipcEntry);
     }
-    (void)mContentParent->SendUpdateMFCDMOriginEntries(ipcEntries);
+    Unused << mContentParent->SendUpdateMFCDMOriginEntries(ipcEntries);
     return NS_OK;
   }
 
@@ -461,12 +462,12 @@ class CycleCollectWithLogsParent final : public PCycleCollectWithLogsParent {
 
  private:
   virtual mozilla::ipc::IPCResult RecvCloseGCLog() override {
-    (void)mSink->CloseGCLog();
+    Unused << mSink->CloseGCLog();
     return IPC_OK();
   }
 
   virtual mozilla::ipc::IPCResult RecvCloseCCLog() override {
-    (void)mSink->CloseCCLog();
+    Unused << mSink->CloseCCLog();
     return IPC_OK();
   }
 
@@ -476,7 +477,7 @@ class CycleCollectWithLogsParent final : public PCycleCollectWithLogsParent {
     nsCOMPtr<nsIFile> gcLog, ccLog;
     mSink->GetGcLog(getter_AddRefs(gcLog));
     mSink->GetCcLog(getter_AddRefs(ccLog));
-    (void)mCallback->OnDump(gcLog, ccLog, /* parent = */ false);
+    Unused << mCallback->OnDump(gcLog, ccLog, /* parent = */ false);
     return IPC_OK();
   }
 
@@ -952,8 +953,8 @@ UniqueContentParentKeepAlive ContentParent::GetUsedBrowserProcess(
       // Specialize this process for the appropriate remote type, and activate
       // it.
 
-      (void)preallocated->SendRemoteType(preallocated->mRemoteType,
-                                         preallocated->mProfile);
+      Unused << preallocated->SendRemoteType(preallocated->mRemoteType,
+                                             preallocated->mProfile);
 
       preallocated->StartRemoteWorkerService();
 
@@ -1481,7 +1482,7 @@ void ContentParent::BroadcastStringBundle(
     AutoTArray<StringBundleDescriptor, 1> array;
     array.AppendElement(StringBundleDescriptor(aBundle.bundleURL(),
                                                aBundle.mapHandle().Clone()));
-    (void)cp->SendRegisterStringBundles(std::move(array));
+    Unused << cp->SendRegisterStringBundles(std::move(array));
   }
 }
 
@@ -1496,14 +1497,15 @@ void ContentParent::BroadcastShmBlockAdded(uint32_t aGeneration,
       // request the block as needed, at some performance cost.
       continue;
     }
-    (void)cp->SendFontListShmBlockAdded(aGeneration, aIndex, std::move(handle));
+    Unused << cp->SendFontListShmBlockAdded(aGeneration, aIndex,
+                                            std::move(handle));
   }
 }
 
 void ContentParent::BroadcastThemeUpdate(widget::ThemeChangeKind aKind) {
   const FullLookAndFeel& lnf = *RemoteLookAndFeel::ExtractData();
   for (auto* cp : AllProcesses(eLive)) {
-    (void)cp->SendThemeChanged(lnf, aKind);
+    Unused << cp->SendThemeChanged(lnf, aKind);
   }
 }
 
@@ -1513,7 +1515,7 @@ void ContentParent::BroadcastMediaCodecsSupportedUpdate(
   // Update processes and print the support info from the given location.
   sCodecsSupported[aLocation] = aSupported;
   for (auto* cp : AllProcesses(eAll)) {
-    (void)cp->SendUpdateMediaCodecsSupported(aLocation, aSupported);
+    Unused << cp->SendUpdateMediaCodecsSupported(aLocation, aSupported);
   }
   nsCString supportString;
   media::MCSInfo::GetMediaCodecsSupportedString(supportString, aSupported);
@@ -1561,11 +1563,11 @@ void ContentParent::Init() {
   // If accessibility is running in chrome process then start it in content
   // process.
   if (GetAccService()) {
-    (void)SendActivateA11y(nsAccessibilityService::GetActiveCacheDomains());
+    Unused << SendActivateA11y(nsAccessibilityService::GetActiveCacheDomains());
   }
 #endif  // #ifdef ACCESSIBILITY
 
-  (void)SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));
+  Unused << SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));
 
   RefPtr<GeckoMediaPluginServiceParent> gmps(
       GeckoMediaPluginServiceParent::GetSingleton());
@@ -1576,18 +1578,18 @@ void ContentParent::Init() {
   // Flush any pref updates that happened during launch and weren't
   // included in the blobs set up in BeginSubprocessLaunch.
   for (const Pref& pref : mQueuedPrefs) {
-    (void)NS_WARN_IF(!SendPreferenceUpdate(pref));
+    Unused << NS_WARN_IF(!SendPreferenceUpdate(pref));
   }
   mQueuedPrefs.Clear();
 
-  (void)SendInitNextGenLocalStorageEnabled(NextGenLocalStorageEnabled());
+  Unused << SendInitNextGenLocalStorageEnabled(NextGenLocalStorageEnabled());
 
   // sending only the remote settings schemes to the content process
   nsCOMPtr<nsIIOService> io(do_GetIOService());
   MOZ_ASSERT(io, "No IO service for SimpleURI scheme broadcast to content");
   nsTArray<nsCString> remoteSchemes;
   MOZ_ALWAYS_SUCCEEDS(io->GetSimpleURIUnknownRemoteSchemes(remoteSchemes));
-  (void)SendSimpleURIUnknownRemoteSchemes(std::move(remoteSchemes));
+  Unused << SendSimpleURIUnknownRemoteSchemes(std::move(remoteSchemes));
 }
 
 void ContentParent::AsyncSendShutDownMessage() {
@@ -1620,10 +1622,10 @@ void MaybeLogBlockShutdownDiagnostics(ContentParent* aSelf, const char* aMsg,
          aSelf, (uint64_t)aSelf->ChildID(), aSelf->Pid(), aMsg, aFile, aLine));
   }
 #else
-  (void)aSelf;
-  (void)aMsg;
-  (void)aFile;
-  (void)aLine;
+  Unused << aSelf;
+  Unused << aMsg;
+  Unused << aFile;
+  Unused << aLine;
 #endif
 }
 
@@ -2328,7 +2330,7 @@ static void CacheSandboxParams(std::vector<std::string>& aCachedParams) {
       MOZ_CRASH("Failed to get path to repo dir");
     }
     nsCString repoDirPath;
-    (void)repoDir->GetNativePath(repoDirPath);
+    Unused << repoDir->GetNativePath(repoDirPath);
     info.testingReadPath3 = repoDirPath.get();
 
     // Object dir
@@ -2338,7 +2340,7 @@ static void CacheSandboxParams(std::vector<std::string>& aCachedParams) {
       MOZ_CRASH("Failed to get path to build object dir");
     }
     nsCString objDirPath;
-    (void)objDir->GetNativePath(objDirPath);
+    Unused << objDir->GetNativePath(objDirPath);
     info.testingReadPath4 = objDirPath.get();
   }
 
@@ -2504,7 +2506,7 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
   cpm->AddContentProcess(this);
 
 #ifdef MOZ_CODE_COVERAGE
-  (void)SendShareCodeCoverageMutex(
+  Unused << SendShareCodeCoverageMutex(
       CodeCoverageHandler::Get()->GetMutexHandle());
 #endif
 
@@ -2805,7 +2807,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   TelemetryIPC::GetDynamicScalarDefinitions(xpcomInit.dynamicScalarDefs());
 
   for (auto const& [location, supported] : sCodecsSupported) {
-    (void)SendUpdateMediaCodecsSupported(location, supported);
+    Unused << SendUpdateMediaCodecsSupported(location, supported);
   }
 
   // Must send screen info before send initialData
@@ -2839,7 +2841,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   xpcomInit.trrModeFromPref() =
       static_cast<nsIDNSService::ResolverMode>(StaticPrefs::network_trr_mode());
 
-  (void)SendSetXPCOMProcessAttributes(
+  Unused << SendSetXPCOMProcessAttributes(
       xpcomInit, initialData, lnf, fontList, std::move(sharedUASheetHandle),
       sharedUASheetAddress, std::move(sharedFontListBlocks),
       isReadyForBackgroundProcessing);
@@ -2869,15 +2871,15 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     nsCString updateURL(gAppData->updateURL);
 
     // Sending all information to content process.
-    (void)SendAppInfo(version, buildID, name, UAName, ID, vendor, sourceURL,
-                      updateURL);
+    Unused << SendAppInfo(version, buildID, name, UAName, ID, vendor, sourceURL,
+                          updateURL);
   }
 
   // Send the child its remote type. On Mac, this needs to be sent prior
   // to the message we send to enable the Sandbox (SendStartProcessSandbox)
   // because different remote types require different sandbox privileges.
 
-  (void)SendRemoteType(mRemoteType, mProfile);
+  Unused << SendRemoteType(mRemoteType, mProfile);
 
   if (mRemoteType != PREALLOC_REMOTE_TYPE) {
     StartRemoteWorkerService();
@@ -2921,9 +2923,9 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     return false;
   }
 
-  (void)SendInitRendering(std::move(compositor), std::move(imageBridge),
-                          std::move(vrBridge), std::move(videoManager),
-                          namespaces);
+  Unused << SendInitRendering(std::move(compositor), std::move(imageBridge),
+                              std::move(vrBridge), std::move(videoManager),
+                              namespaces);
 
   gpm->AddListener(this);
 
@@ -2942,18 +2944,18 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     // shouldn't matter which we look at.
 
     for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
-      (void)SendLoadAndRegisterSheet(sheet->GetSheetURI(),
-                                     nsIStyleSheetService::AGENT_SHEET);
+      Unused << SendLoadAndRegisterSheet(sheet->GetSheetURI(),
+                                         nsIStyleSheetService::AGENT_SHEET);
     }
 
     for (StyleSheet* sheet : *sheetService->UserStyleSheets()) {
-      (void)SendLoadAndRegisterSheet(sheet->GetSheetURI(),
-                                     nsIStyleSheetService::USER_SHEET);
+      Unused << SendLoadAndRegisterSheet(sheet->GetSheetURI(),
+                                         nsIStyleSheetService::USER_SHEET);
     }
 
     for (StyleSheet* sheet : *sheetService->AuthorStyleSheets()) {
-      (void)SendLoadAndRegisterSheet(sheet->GetSheetURI(),
-                                     nsIStyleSheetService::AUTHOR_SHEET);
+      Unused << SendLoadAndRegisterSheet(sheet->GetSheetURI(),
+                                         nsIStyleSheetService::AUTHOR_SHEET);
     }
   }
 
@@ -3037,12 +3039,12 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
           nsCString(aPartitionKey), aRevoked));
 
       rv = TransmitPermissionsForPrincipal(aPrincipal);
-      (void)NS_WARN_IF(NS_FAILED(rv));
+      Unused << NS_WARN_IF(NS_FAILED(rv));
       return true;
     });
 
     if (!registrations.IsEmpty()) {
-      (void)SendInitBlobURLs(registrations);
+      Unused << SendInitBlobURLs(registrations);
     }
   }
 
@@ -3055,7 +3057,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     nsTArray<JSWindowActorInfo> windowInfos;
     actorSvc->GetJSWindowActorInfos(windowInfos);
 
-    (void)SendInitJSActorInfos(contentInfos, windowInfos);
+    Unused << SendInitJSActorInfos(contentInfos, windowInfos);
   }
 
   // Begin subscribing to any BrowsingContextGroups which were hosted by this
@@ -3105,19 +3107,19 @@ void ContentParent::OnCompositorUnexpectedShutdown() {
     return;
   }
 
-  (void)SendReinitRendering(std::move(compositor), std::move(imageBridge),
-                            std::move(vrBridge), std::move(videoManager),
-                            namespaces);
+  Unused << SendReinitRendering(std::move(compositor), std::move(imageBridge),
+                                std::move(vrBridge), std::move(videoManager),
+                                namespaces);
 }
 
 void ContentParent::OnCompositorDeviceReset() {
-  (void)SendReinitRenderingForDeviceReset();
+  Unused << SendReinitRenderingForDeviceReset();
 }
 
 void ContentParent::MaybeEnableRemoteInputEventQueue() {
   MOZ_ASSERT(!mIsRemoteInputEventQueueEnabled);
   mIsRemoteInputEventQueueEnabled = true;
-  (void)SendSetInputEventQueueEnabled();
+  Unused << SendSetInputEventQueueEnabled();
   SetInputPriorityEventEnabled(true);
 }
 
@@ -3129,16 +3131,16 @@ void ContentParent::SetInputPriorityEventEnabled(bool aEnabled) {
   mIsInputPriorityEventEnabled = aEnabled;
   // Send IPC messages to flush the pending events in the input event queue and
   // the normal event queue. See PContent.ipdl for more details.
-  (void)SendSuspendInputEventQueue();
-  (void)SendFlushInputEventQueue();
-  (void)SendResumeInputEventQueue();
+  Unused << SendSuspendInputEventQueue();
+  Unused << SendFlushInputEventQueue();
+  Unused << SendResumeInputEventQueue();
 }
 
 void ContentParent::OnVarChanged(const nsTArray<GfxVarUpdate>& aVar) {
   if (!CanSend()) {
     return;
   }
-  (void)SendVarUpdate(aVar);
+  Unused << SendVarUpdate(aVar);
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
@@ -3521,7 +3523,7 @@ class RequestContentJSInterruptRunnable final : public Runnable {
 
   NS_IMETHOD Run() override {
     MOZ_ASSERT(mHangMonitorActor);
-    (void)mHangMonitorActor->SendRequestContentJSInterrupt();
+    Unused << mHangMonitorActor->SendRequestContentJSInterrupt();
 
     return NS_OK;
   }
@@ -3575,7 +3577,7 @@ ContentParent::BlockShutdown(nsIAsyncShutdownClient* aClient) {
     SignalImpendingShutdownToContentJS();
 
     if (sAppShutdownConfirmedClient) {
-      (void)sAppShutdownConfirmedClient->RemoveBlocker(this);
+      Unused << sAppShutdownConfirmedClient->RemoveBlocker(this);
     }
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     mBlockShutdownCalled = false;
@@ -3716,13 +3718,13 @@ void ContentParent::RemoveShutdownBlockers() {
 #endif
 
   if (sXPCOMShutdownClient) {
-    (void)sXPCOMShutdownClient->RemoveBlocker(this);
+    Unused << sXPCOMShutdownClient->RemoveBlocker(this);
   }
   if (sProfileBeforeChangeClient) {
-    (void)sProfileBeforeChangeClient->RemoveBlocker(this);
+    Unused << sProfileBeforeChangeClient->RemoveBlocker(this);
   }
   if (sAppShutdownConfirmedClient) {
-    (void)sAppShutdownConfirmedClient->RemoveBlocker(this);
+    Unused << sAppShutdownConfirmedClient->RemoveBlocker(this);
   }
 }
 
@@ -3785,11 +3787,11 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
 
   // listening for memory pressure event
   if (!strcmp(aTopic, "memory-pressure")) {
-    (void)SendFlushMemory(nsDependentString(aData));
+    Unused << SendFlushMemory(nsDependentString(aData));
   } else if (!strcmp(aTopic, "application-background")) {
-    (void)SendApplicationBackground();
+    Unused << SendApplicationBackground();
   } else if (!strcmp(aTopic, "application-foreground")) {
-    (void)SendApplicationForeground();
+    Unused << SendApplicationForeground();
   } else if (!strcmp(aTopic, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC)) {
     NS_ConvertUTF16toUTF8 dataStr(aData);
     const char* offline = dataStr.get();
@@ -3812,39 +3814,40 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_ERROR_NOT_AVAILABLE;
     }
   } else if (!strcmp(aTopic, "child-gc-request")) {
-    (void)SendGarbageCollect();
+    Unused << SendGarbageCollect();
   } else if (!strcmp(aTopic, "child-cc-request")) {
-    (void)SendCycleCollect();
+    Unused << SendCycleCollect();
   } else if (!strcmp(aTopic, "child-mmu-request")) {
-    (void)SendMinimizeMemoryUsage();
+    Unused << SendMinimizeMemoryUsage();
   } else if (!strcmp(aTopic, "child-ghost-request")) {
-    (void)SendUnlinkGhosts();
+    Unused << SendUnlinkGhosts();
   } else if (!strcmp(aTopic, "last-pb-context-exited")) {
-    (void)SendLastPrivateDocShellDestroyed();
+    Unused << SendLastPrivateDocShellDestroyed();
   }
 #ifdef ACCESSIBILITY
   else if (aData && !strcmp(aTopic, "a11y-init-or-shutdown")) {
     if (*aData == '1') {
       // Make sure accessibility is running in content process when
       // accessibility gets initiated in chrome process.
-      (void)SendActivateA11y(nsAccessibilityService::GetActiveCacheDomains());
+      Unused << SendActivateA11y(
+          nsAccessibilityService::GetActiveCacheDomains());
     } else {
       // If possible, shut down accessibility in content process when
       // accessibility gets shutdown in chrome process.
-      (void)SendShutdownA11y();
+      Unused << SendShutdownA11y();
     }
   }
 #endif
   else if (!strcmp(aTopic, "cacheservice:empty-cache")) {
-    (void)SendNotifyEmptyHTTPCache();
+    Unused << SendNotifyEmptyHTTPCache();
   } else if (!strcmp(aTopic, "intl:app-locales-changed")) {
     nsTArray<nsCString> appLocales;
     LocaleService::GetInstance()->GetAppLocalesAsBCP47(appLocales);
-    (void)SendUpdateAppLocales(appLocales);
+    Unused << SendUpdateAppLocales(appLocales);
   } else if (!strcmp(aTopic, "intl:requested-locales-changed")) {
     nsTArray<nsCString> requestedLocales;
     LocaleService::GetInstance()->GetRequestedLocales(requestedLocales);
-    (void)SendUpdateRequestedLocales(requestedLocales);
+    Unused << SendUpdateRequestedLocales(requestedLocales);
   } else if (!strcmp(aTopic, "cookie-changed") ||
              !strcmp(aTopic, "private-cookie-changed")) {
     MOZ_ASSERT(aSubject, "cookie changed notification must have subject.");
@@ -3912,9 +3915,9 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!strcmp(aTopic, NS_NETWORK_LINK_TYPE_TOPIC)) {
     UpdateNetworkLinkType();
   } else if (!strcmp(aTopic, "network:socket-process-crashed")) {
-    (void)SendSocketProcessCrashed();
+    Unused << SendSocketProcessCrashed();
   } else if (!strcmp(aTopic, DEFAULT_TIMEZONE_CHANGED_OBSERVER_TOPIC)) {
-    (void)SendSystemTimezoneChanged();
+    Unused << SendSystemTimezoneChanged();
   } else if (!strcmp(aTopic, NS_NETWORK_TRR_MODE_CHANGED_TOPIC)) {
     nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
     nsIDNSService::ResolverMode mode;
@@ -3925,7 +3928,7 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
     if (modeFromPref > nsIDNSService::MODE_TRROFF) {
       modeFromPref = nsIDNSService::MODE_TRROFF;
     }
-    (void)SendSetTRRMode(mode, modeFromPref);
+    Unused << SendSetTRRMode(mode, modeFromPref);
   }
 
   return NS_OK;
@@ -3939,7 +3942,7 @@ uint32_t ContentParent::UpdateNetworkLinkType() {
   if (NS_SUCCEEDED(rv)) {
     rv = nls->GetLinkType(&linkType);
     if (NS_SUCCEEDED(rv)) {
-      (void)SendNetworkLinkTypeChange(linkType);
+      Unused << SendNetworkLinkTypeChange(linkType);
     }
   }
 
@@ -4093,7 +4096,7 @@ mozilla::ipc::IPCResult ContentParent::RecvUpdateRemotePrintSettings(
     return IPC_OK();
   }
 
-  (void)bp->SendUpdateRemotePrintSettings(aPrintData);
+  Unused << bp->SendUpdateRemotePrintSettings(aPrintData);
   return IPC_OK();
 }
 
@@ -4733,13 +4736,13 @@ mozilla::ipc::IPCResult ContentParent::RecvSetGeolocationHigherAccuracy(
 
 NS_IMETHODIMP
 ContentParent::HandleEvent(nsIDOMGeoPosition* postion) {
-  (void)SendGeolocationUpdate(postion);
+  Unused << SendGeolocationUpdate(postion);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 ContentParent::HandleEvent(GeolocationPositionError* positionError) {
-  (void)SendGeolocationError(positionError->Code());
+  Unused << SendGeolocationError(positionError->Code());
   return NS_OK;
 }
 
@@ -4772,7 +4775,7 @@ mozilla::ipc::IPCResult ContentParent::RecvReportFrameTimingData(
   MOZ_ASSERT(parent->GetContentParent() != this,
              "No need to bounce around if in the same process");
 
-  (void)parent->GetContentParent()->SendReportFrameTimingData(
+  Unused << parent->GetContentParent()->SendReportFrameTimingData(
       loadInfoArgs, entryName, initiatorType, aData);
   return IPC_OK();
 }
@@ -4986,7 +4989,7 @@ class AnonymousTemporaryFileRequestor final : public Runnable {
         // must close the original (and clean up the NSPR descriptor).
         PR_Close(mPRFD);
       }
-      (void)mCP->SendProvideAnonymousTemporaryFile(mID, result);
+      Unused << mCP->SendProvideAnonymousTemporaryFile(mID, result);
       // It's important to release this reference while wr're on the main
       // thread!
       mCP = nullptr;
@@ -5012,7 +5015,7 @@ mozilla::ipc::IPCResult ContentParent::RecvRequestAnonymousTemporaryFile(
   auto autoNotifyChildOnError = MakeScopeExit([&, self]() {
     if (NS_FAILED(rv)) {
       FileDescOrError result(rv);
-      (void)self->SendProvideAnonymousTemporaryFile(aID, result);
+      Unused << self->SendProvideAnonymousTemporaryFile(aID, result);
     }
   });
 
@@ -5061,14 +5064,14 @@ void ContentParent::NotifyUpdatedDictionaries() {
   spellChecker->GetDictionaryList(&dictionaries);
 
   for (auto* cp : AllProcesses(eLive)) {
-    (void)cp->SendUpdateDictionaryList(dictionaries);
+    Unused << cp->SendUpdateDictionaryList(dictionaries);
   }
 }
 
 void ContentParent::NotifyUpdatedFonts(bool aFullRebuild) {
   if (gfxPlatformFontList::PlatformFontList()->SharedFontList()) {
     for (auto* cp : AllProcesses(eLive)) {
-      (void)cp->SendRebuildFontList(aFullRebuild);
+      Unused << cp->SendRebuildFontList(aFullRebuild);
     }
     return;
   }
@@ -5077,7 +5080,7 @@ void ContentParent::NotifyUpdatedFonts(bool aFullRebuild) {
   gfxPlatform::GetPlatform()->ReadSystemFontList(&fontList);
 
   for (auto* cp : AllProcesses(eLive)) {
-    (void)cp->SendUpdateFontList(fontList);
+    Unused << cp->SendUpdateFontList(fontList);
   }
 }
 
@@ -5703,7 +5706,7 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyPushObservers(
     LogAndAssertFailedPrincipalValidationInfo(aPrincipal, __func__);
   }
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId, Nothing());
-  (void)NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
+  Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
   return IPC_OK();
 }
 
@@ -5719,7 +5722,7 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyPushObserversWithData(
   }
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId,
                                    Some(std::move(aData)));
-  (void)NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
+  Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
   return IPC_OK();
 }
 
@@ -5735,7 +5738,7 @@ mozilla::ipc::IPCResult ContentParent::RecvPushError(const nsACString& aScope,
     LogAndAssertFailedPrincipalValidationInfo(aPrincipal, __func__);
   }
   PushErrorDispatcher dispatcher(aScope, aPrincipal, aMessage, aFlags);
-  (void)NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
+  Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
   return IPC_OK();
 }
 
@@ -5750,7 +5753,7 @@ ContentParent::RecvNotifyPushSubscriptionModifiedObservers(
     LogAndAssertFailedPrincipalValidationInfo(aPrincipal, __func__);
   }
   PushSubscriptionModifiedDispatcher dispatcher(aScope, aPrincipal);
-  (void)NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
+  Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
   return IPC_OK();
 }
 
@@ -5784,8 +5787,8 @@ void ContentParent::BroadcastBlobURLRegistration(const nsACString& aURI,
         break;
       }
 
-      (void)cp->SendBlobURLRegistration(uri, ipcBlob, aPrincipal,
-                                        aPartitionKey);
+      Unused << cp->SendBlobURLRegistration(uri, ipcBlob, aPrincipal,
+                                            aPartitionKey);
     }
   }
 }
@@ -5824,7 +5827,7 @@ void ContentParent::BroadcastBlobURLUnregistration(
     }
 
     if (!urls.IsEmpty()) {
-      (void)cp->SendBlobURLUnregistration(urls);
+      Unused << cp->SendBlobURLUnregistration(urls);
     }
   }
 }
@@ -5915,7 +5918,7 @@ mozilla::ipc::IPCResult ContentParent::RecvDeleteGetFilesRequest(
 void ContentParent::SendGetFilesResponseAndForget(
     const nsID& aID, const GetFilesResponseResult& aResult) {
   if (mGetFilesPendingRequests.Remove(aID)) {
-    (void)SendGetFilesResponse(aID, aResult);
+    Unused << SendGetFilesResponse(aID, aResult);
   }
 }
 
@@ -6135,12 +6138,12 @@ void ContentParent::TransmitBlobURLsForPrincipal(nsIPrincipal* aPrincipal) {
               nsCString(aPartitionKey), aRevoked));
 
           rv = TransmitPermissionsForPrincipal(aBlobPrincipal);
-          (void)NS_WARN_IF(NS_FAILED(rv));
+          Unused << NS_WARN_IF(NS_FAILED(rv));
           return true;
         });
 
     if (!registrations.IsEmpty()) {
-      (void)SendInitBlobURLs(registrations);
+      Unused << SendInitBlobURLs(registrations);
     }
   }
 }
@@ -6173,7 +6176,7 @@ void ContentParent::EnsurePermissionsByKey(const nsACString& aKey,
 
   nsTArray<IPC::Permission> perms;
   if (permManager->GetPermissionsFromOriginOrKey(aOrigin, aKey, perms)) {
-    (void)SendSetPermissionsWithKey(aKey, perms);
+    Unused << SendSetPermissionsWithKey(aKey, perms);
   }
 }
 
@@ -6821,7 +6824,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAbortOtherOrientationPendingPromises(
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   context->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
-    (void)aParent->SendAbortOrientationPendingPromises(context);
+    Unused << aParent->SendAbortOrientationPendingPromises(context);
   });
 
   return IPC_OK();
@@ -7070,7 +7073,7 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowClose(
   //       browsing contexts of bc.
 
   if (ContentParent* cp = context->GetContentParent()) {
-    (void)cp->SendWindowClose(context, aTrustedCaller);
+    Unused << cp->SendWindowClose(context, aTrustedCaller);
   }
   return IPC_OK();
 }
@@ -7088,7 +7091,7 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowFocus(
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   if (ContentParent* cp = context->GetContentParent()) {
-    (void)cp->SendWindowFocus(context, aCallerType, aActionId);
+    Unused << cp->SendWindowFocus(context, aCallerType, aActionId);
   }
   return IPC_OK();
 }
@@ -7104,7 +7107,7 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowBlur(
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   if (ContentParent* cp = context->GetContentParent()) {
-    (void)cp->SendWindowBlur(context, aCallerType);
+    Unused << cp->SendWindowBlur(context, aCallerType);
   }
   return IPC_OK();
 }
@@ -7123,7 +7126,7 @@ mozilla::ipc::IPCResult ContentParent::RecvRaiseWindow(
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   if (ContentParent* cp = context->GetContentParent()) {
-    (void)cp->SendRaiseWindow(context, aCallerType, aActionId);
+    Unused << cp->SendRaiseWindow(context, aCallerType, aActionId);
   }
   return IPC_OK();
 }
@@ -7158,9 +7161,9 @@ mozilla::ipc::IPCResult ContentParent::RecvAdjustWindowFocus(
       ContentParent* cp = cpm->GetContentProcessById(
           ContentParentId(canonicalParent->OwnerProcessId()));
       if (cp && !processes.Get(cp)) {
-        (void)cp->SendAdjustWindowFocus(context, aIsVisible, aActionId,
-                                        aShouldClearFocus,
-                                        aAncestorBrowsingContextToFocus);
+        Unused << cp->SendAdjustWindowFocus(context, aIsVisible, aActionId,
+                                            aShouldClearFocus,
+                                            aAncestorBrowsingContextToFocus);
         processes.InsertOrUpdate(cp, true);
       }
       context = canonicalParent;
@@ -7180,7 +7183,7 @@ mozilla::ipc::IPCResult ContentParent::RecvClearFocus(
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   if (ContentParent* cp = context->GetContentParent()) {
-    (void)cp->SendClearFocus(context);
+    Unused << cp->SendClearFocus(context);
   }
   return IPC_OK();
 }
@@ -7207,7 +7210,7 @@ mozilla::ipc::IPCResult ContentParent::RecvSetFocusedBrowsingContext(
         "Ignoring out-of-sequence attempt [%p] to set focused browsing context "
         "in parent.",
         context));
-    (void)SendReviseFocusedBrowsingContext(
+    Unused << SendReviseFocusedBrowsingContext(
         aActionId, fm->GetFocusedBrowsingContextInChrome(),
         fm->GetActionIdForFocusedBrowsingContextInChrome());
     return IPC_OK();
@@ -7216,7 +7219,7 @@ mozilla::ipc::IPCResult ContentParent::RecvSetFocusedBrowsingContext(
   BrowserParent::UpdateFocusFromBrowsingContext();
 
   context->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
-    (void)aParent->SendSetFocusedBrowsingContext(context, aActionId);
+    Unused << aParent->SendSetFocusedBrowsingContext(context, aActionId);
   });
 
   return IPC_OK();
@@ -7244,14 +7247,14 @@ mozilla::ipc::IPCResult ContentParent::RecvSetActiveBrowsingContext(
         ("Ignoring out-of-sequence attempt [%p] to set active browsing context "
          "in parent.",
          context));
-    (void)SendReviseActiveBrowsingContext(
+    Unused << SendReviseActiveBrowsingContext(
         aActionId, fm->GetActiveBrowsingContextInChrome(),
         fm->GetActionIdForActiveBrowsingContextInChrome());
     return IPC_OK();
   }
 
   context->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
-    (void)aParent->SendSetActiveBrowsingContext(context, aActionId);
+    Unused << aParent->SendSetActiveBrowsingContext(context, aActionId);
   });
 
   return IPC_OK();
@@ -7279,14 +7282,14 @@ mozilla::ipc::IPCResult ContentParent::RecvUnsetActiveBrowsingContext(
         ("Ignoring out-of-sequence attempt to unset active browsing context in "
          "parent [%p].",
          context));
-    (void)SendReviseActiveBrowsingContext(
+    Unused << SendReviseActiveBrowsingContext(
         aActionId, fm->GetActiveBrowsingContextInChrome(),
         fm->GetActionIdForActiveBrowsingContextInChrome());
     return IPC_OK();
   }
 
   context->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
-    (void)aParent->SendUnsetActiveBrowsingContext(context, aActionId);
+    Unused << aParent->SendUnsetActiveBrowsingContext(context, aActionId);
   });
 
   return IPC_OK();
@@ -7304,7 +7307,7 @@ mozilla::ipc::IPCResult ContentParent::RecvSetFocusedElement(
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   if (ContentParent* cp = context->GetContentParent()) {
-    (void)cp->SendSetFocusedElement(context, aNeedsFocus);
+    Unused << cp->SendSetFocusedElement(context, aNeedsFocus);
   }
   return IPC_OK();
 }
@@ -7325,7 +7328,7 @@ mozilla::ipc::IPCResult ContentParent::RecvFinalizeFocusOuter(
     ContentParent* cp = cpm->GetContentProcessById(
         ContentParentId(context->EmbedderProcessId()));
     if (cp) {
-      (void)cp->SendFinalizeFocusOuter(context, aCanFocus, aCallerType);
+      Unused << cp->SendFinalizeFocusOuter(context, aCanFocus, aCallerType);
     }
   }
   return IPC_OK();
@@ -7385,19 +7388,21 @@ mozilla::ipc::IPCResult ContentParent::RecvBlurToParent(
                        "This combination is not supposed to happen.");
     if (ContentParent* cp =
             aBrowsingContextToClear.get_canonical()->GetContentParent()) {
-      (void)cp->SendSetFocusedElement(aBrowsingContextToClear, false);
+      Unused << cp->SendSetFocusedElement(aBrowsingContextToClear, false);
     }
   } else if (ancestorDifferent) {
     if (ContentParent* cp = aAncestorBrowsingContextToFocus.get_canonical()
                                 ->GetContentParent()) {
-      (void)cp->SendSetFocusedElement(aAncestorBrowsingContextToFocus, true);
+      Unused << cp->SendSetFocusedElement(aAncestorBrowsingContextToFocus,
+                                          true);
     }
   }
 
   if (ContentParent* cp = focusedBrowsingContext->GetContentParent()) {
-    (void)cp->SendBlurToChild(aFocusedBrowsingContext, aBrowsingContextToClear,
-                              aAncestorBrowsingContextToFocus,
-                              aIsLeavingDocument, aAdjustWidget, aActionId);
+    Unused << cp->SendBlurToChild(aFocusedBrowsingContext,
+                                  aBrowsingContextToClear,
+                                  aAncestorBrowsingContextToFocus,
+                                  aIsLeavingDocument, aAdjustWidget, aActionId);
   }
 
   return IPC_OK();
@@ -7414,7 +7419,7 @@ mozilla::ipc::IPCResult ContentParent::RecvMaybeExitFullscreen(
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   if (ContentParent* cp = context->GetContentParent()) {
-    (void)cp->SendMaybeExitFullscreen(context);
+    Unused << cp->SendMaybeExitFullscreen(context);
   }
 
   return IPC_OK();
@@ -7462,7 +7467,7 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
     message = ErrorMessageData();
   }
 
-  (void)cp->SendWindowPostMessage(context, message, aData);
+  Unused << cp->SendWindowPostMessage(context, message, aData);
   return IPC_OK();
 }
 
@@ -7483,7 +7488,7 @@ void ContentParent::RemoveBrowsingContextGroup(BrowsingContextGroup* aGroup) {
   if (mGroups.EnsureRemoved(aGroup) && CanSend()) {
     // If we're removing the entry for the first time, tell the content process
     // to clean up the group.
-    (void)SendDestroyBrowsingContextGroup(aGroup->Id());
+    Unused << SendDestroyBrowsingContextGroup(aGroup->Id());
   }
 }
 
@@ -7850,7 +7855,7 @@ mozilla::ipc::IPCResult ContentParent::RecvConsumeHistoryActivation(
     return IPC_OK();
   }
   aTop->Group()->EachOtherParent(this, [aTop](ContentParent* aParent) {
-    (void)aParent->SendConsumeHistoryActivation(aTop);
+    Unused << aParent->SendConsumeHistoryActivation(aTop);
   });
   return IPC_OK();
 }
@@ -7899,8 +7904,8 @@ void ContentParent::StartRemoteWorkerService() {
       RemoteWorkerDebuggerManagerParent::CreateForProcess(
           &remoteDebuggerChildEp);
   if (mRemoteWorkerServiceActor) {
-    (void)SendInitRemoteWorkerService(std::move(childEp),
-                                      std::move(remoteDebuggerChildEp));
+    Unused << SendInitRemoteWorkerService(std::move(childEp),
+                                          std::move(remoteDebuggerChildEp));
   }
 }
 
@@ -8088,8 +8093,8 @@ void ContentParent::SetAndroidAppLinkLaunchType(uint64_t aLoadIdentifier,
 
 int32_t ContentParent::GetAndroidAppLinkLaunchType(uint64_t aLoadIdentifier) {
   int32_t appLinkLaunchType = -1;
-  (void)mAndroidLoadIdentifierToAppLinkLaunchType.Get(aLoadIdentifier,
-                                                      &appLinkLaunchType);
+  Unused << mAndroidLoadIdentifierToAppLinkLaunchType.Get(aLoadIdentifier,
+                                                          &appLinkLaunchType);
   return appLinkLaunchType;
 }
 
@@ -8105,8 +8110,8 @@ NS_IMPL_ISUPPORTS(ParentIdleListener, nsIObserver)
 NS_IMETHODIMP
 ParentIdleListener::Observe(nsISupports*, const char* aTopic,
                             const char16_t* aData) {
-  (void)mParent->SendNotifyIdleObserver(mObserver, nsDependentCString(aTopic),
-                                        nsDependentString(aData));
+  mozilla::Unused << mParent->SendNotifyIdleObserver(
+      mObserver, nsDependentCString(aTopic), nsDependentString(aData));
   return NS_OK;
 }
 

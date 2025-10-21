@@ -21,6 +21,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/Unused.h"
 #include "nsError.h"
 #include "prsystem.h"
 
@@ -455,7 +456,7 @@ bool VPXDecoder::GetStreamInfo(Span<const uint8_t> aBuffer,
     if (profile == 3 && aBuffer.Length() < 2) {
       return false;
     }
-    (void)br.ReadBits(3);  // frame_to_show_map_idx
+    Unused << br.ReadBits(3);  // frame_to_show_map_idx
     return true;
   }
 
@@ -541,7 +542,7 @@ bool VPXDecoder::GetStreamInfo(Span<const uint8_t> aBuffer,
   } else {
     bool intra_only = show_frame ? false : br.ReadBit();
     if (!error_resilient_mode) {
-      (void)br.ReadBits(2);  // reset_frame_context
+      Unused << br.ReadBits(2);  // reset_frame_context
     }
     if (intra_only) {
       if (!frame_sync_code()) {
@@ -557,7 +558,7 @@ bool VPXDecoder::GetStreamInfo(Span<const uint8_t> aBuffer,
         aInfo.mSubSampling_y = true;
         aInfo.mBitDepth = 8;
       }
-      (void)br.ReadBits(8);  // refresh_frame_flags
+      Unused << br.ReadBits(8);  // refresh_frame_flags
       frame_size();
       render_size();
     }

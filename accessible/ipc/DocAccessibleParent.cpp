@@ -604,7 +604,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvMutationEvents(
 
 mozilla::ipc::IPCResult DocAccessibleParent::RecvRequestAckMutationEvents() {
   if (!mShutdown) {
-    (void)SendAckMutationEvents();
+    Unused << SendAckMutationEvents();
   }
   return IPC_OK();
 }

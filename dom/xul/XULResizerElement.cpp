@@ -331,7 +331,7 @@ void XULResizerElement::MaybePersistOriginalSize(nsIContent* aContent,
       nsGkAtoms::_moz_original_size, sizeInfo.get(),
       nsINode::DeleteProperty<XULResizerElement::SizeInfo>);
   if (NS_SUCCEEDED(rv)) {
-    (void)sizeInfo.release();
+    Unused << sizeInfo.release();
   }
 }
 

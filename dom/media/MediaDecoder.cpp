@@ -27,6 +27,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/glean/DomMediaMetrics.h"
 #include "mozilla/glean/DomMediaPlatformsWmfMetrics.h"
@@ -1127,7 +1128,7 @@ void MediaDecoder::NotifyCompositor() {
         NewRunnableMethod<already_AddRefed<KnowsCompositor>&&>(
             "MediaFormatReader::UpdateCompositor", mReader,
             &MediaFormatReader::UpdateCompositor, knowsCompositor.forget());
-    (void)mReader->OwnerThread()->Dispatch(r.forget());
+    Unused << mReader->OwnerThread()->Dispatch(r.forget());
   }
 }
 
@@ -1481,7 +1482,7 @@ void MediaDecoder::NotifyReaderDataArrived() {
       NewRunnableMethod("MediaFormatReader::NotifyDataArrived", mReader.get(),
                         &MediaFormatReader::NotifyDataArrived));
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  (void)rv;
+  Unused << rv;
 }
 
 // Provide access to the state machine object

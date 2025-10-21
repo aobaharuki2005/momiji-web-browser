@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 #include "mozilla/fuzzing/Nyx.h"
 #include "prinrval.h"
@@ -84,7 +85,7 @@ void Nyx::start(void) {
       mRawReplayBuffer = new Vector<uint8_t>();
       is.seekg(0, is.end);
       int rawLength = is.tellg();
-      (void)mRawReplayBuffer->initLengthUninitialized(rawLength);
+      mozilla::Unused << mRawReplayBuffer->initLengthUninitialized(rawLength);
       is.seekg(0, is.beg);
       is.read(reinterpret_cast<char*>(mRawReplayBuffer->begin()), rawLength);
       is.seekg(0, is.beg);
@@ -102,7 +103,7 @@ void Nyx::start(void) {
 
       auto buffer = new Vector<uint8_t>();
 
-      (void)buffer->initLengthUninitialized(pktsize);
+      mozilla::Unused << buffer->initLengthUninitialized(pktsize);
       is.read(reinterpret_cast<char*>(buffer->begin()), buffer->length());
 
       MOZ_FUZZING_NYX_PRINTF("[Replay Mode] Read data packet of size %zu\n",

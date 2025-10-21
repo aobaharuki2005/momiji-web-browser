@@ -1615,7 +1615,7 @@ HttpBaseChannel::GetContentEncodings(nsIUTF8StringEnumerator** aEncodings) {
   }
 
   nsAutoCString encoding;
-  (void)mResponseHead->GetHeader(nsHttp::Content_Encoding, encoding);
+  Unused << mResponseHead->GetHeader(nsHttp::Content_Encoding, encoding);
   if (encoding.IsEmpty()) {
     *aEncodings = nullptr;
     return NS_OK;
@@ -2477,7 +2477,7 @@ HttpBaseChannel::SetTopWindowURIIfUnknown(nsIURI* aTopWindowURI) {
   }
 
   nsCOMPtr<nsIURI> topWindowURI;
-  (void)GetTopWindowURI(getter_AddRefs(topWindowURI));
+  Unused << GetTopWindowURI(getter_AddRefs(topWindowURI));
 
   // Don't modify |mTopWindowURI| if we can get one from GetTopWindowURI().
   if (topWindowURI) {
@@ -2679,7 +2679,8 @@ nsresult HttpBaseChannel::ProcessCrossOriginResourcePolicyHeader() {
   }
 
   nsAutoCString content;
-  (void)mResponseHead->GetHeader(nsHttp::Cross_Origin_Resource_Policy, content);
+  Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Resource_Policy,
+                                     content);
 
   if (StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
     if (content.IsEmpty()) {
@@ -2808,7 +2809,7 @@ nsresult HttpBaseChannel::ComputeCrossOriginOpenerPolicyMismatch() {
   nsILoadInfo::CrossOriginOpenerPolicy documentPolicy = ctx->GetOpenerPolicy();
   nsILoadInfo::CrossOriginOpenerPolicy resultPolicy =
       nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
-  (void)ComputeCrossOriginOpenerPolicy(documentPolicy, &resultPolicy);
+  Unused << ComputeCrossOriginOpenerPolicy(documentPolicy, &resultPolicy);
   mComputedCrossOriginOpenerPolicy = resultPolicy;
 
   // Add a permission to mark this site as high-value into the permission DB.
@@ -4297,7 +4298,7 @@ HttpBaseChannel::GetEntityID(nsACString& aEntityID) {
     // Not sending the Accept-Ranges header means we can still try
     // sending range requests.
     nsAutoCString acceptRanges;
-    (void)mResponseHead->GetHeader(nsHttp::Accept_Ranges, acceptRanges);
+    Unused << mResponseHead->GetHeader(nsHttp::Accept_Ranges, acceptRanges);
     if (!acceptRanges.IsEmpty() &&
         !nsHttp::FindToken(acceptRanges.get(), "bytes",
                            HTTP_HEADER_VALUE_SEPS)) {
@@ -4305,8 +4306,8 @@ HttpBaseChannel::GetEntityID(nsACString& aEntityID) {
     }
 
     size = mResponseHead->TotalEntitySize();
-    (void)mResponseHead->GetHeader(nsHttp::Last_Modified, lastmod);
-    (void)mResponseHead->GetHeader(nsHttp::ETag, etag);
+    Unused << mResponseHead->GetHeader(nsHttp::Last_Modified, lastmod);
+    Unused << mResponseHead->GetHeader(nsHttp::ETag, etag);
   }
   nsCString entityID;
   NS_EscapeURL(etag.BeginReading(), etag.Length(),
@@ -4581,13 +4582,13 @@ already_AddRefed<nsILoadInfo> HttpBaseChannel::CloneLoadInfoForRedirect(
       // Reset HTTPS-first and -only status on http redirect. To not
       // unexpectedly downgrade requests that weren't upgraded via HTTPS-First
       // (Bug 1904238).
-      (void)newLoadInfo->SetHttpsOnlyStatus(
+      Unused << newLoadInfo->SetHttpsOnlyStatus(
           nsILoadInfo::HTTPS_ONLY_UNINITIALIZED);
 
       // Reset schemeless status flag to prevent schemeless HTTPS-First from
       // repeatedly trying to upgrade loads that get downgraded again from the
       // server by a redirect (Bug 1937386).
-      (void)newLoadInfo->SetSchemelessInput(
+      Unused << newLoadInfo->SetSchemelessInput(
           nsILoadInfo::SchemelessInputTypeUnset);
     }
   }
@@ -4739,7 +4740,7 @@ void HttpBaseChannel::PropagateReferenceIfNeeded(
     if (!ref.IsEmpty()) {
       // NOTE: SetRef will fail if mRedirectURI is immutable
       // (e.g. an about: URI)... Oh well.
-      (void)NS_MutateURI(aRedirectURI).SetRef(ref).Finalize(aRedirectURI);
+      Unused << NS_MutateURI(aRedirectURI).SetRef(ref).Finalize(aRedirectURI);
     }
   }
 }
@@ -4803,7 +4804,7 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
     } else {
       dom::ReferrerPolicy referrerPolicy = dom::ReferrerPolicy::_empty;
       nsAutoCString tRPHeaderCValue;
-      (void)GetResponseHeader("referrer-policy"_ns, tRPHeaderCValue);
+      Unused << GetResponseHeader("referrer-policy"_ns, tRPHeaderCValue);
       NS_ConvertUTF8toUTF16 tRPHeaderValue(tRPHeaderCValue);
 
       if (!tRPHeaderValue.IsEmpty()) {
@@ -5322,7 +5323,7 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     }
 
     if (LoadForceValidateCacheContent()) {
-      (void)cacheInfoChan->SetForceValidateCacheContent(true);
+      Unused << cacheInfoChan->SetForceValidateCacheContent(true);
     }
   }
 
@@ -6314,7 +6315,7 @@ static void ParseServerTimingHeader(
   }
 
   nsAutoCString serverTimingHeader;
-  (void)aHeader->GetHeader(nsHttp::Server_Timing, serverTimingHeader);
+  Unused << aHeader->GetHeader(nsHttp::Server_Timing, serverTimingHeader);
   if (serverTimingHeader.IsEmpty()) {
     return;
   }
@@ -6390,7 +6391,8 @@ NS_IMETHODIMP HttpBaseChannel::GetResponseEmbedderPolicy(
   }
 
   nsAutoCString content;
-  (void)mResponseHead->GetHeader(nsHttp::Cross_Origin_Embedder_Policy, content);
+  Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Embedder_Policy,
+                                     content);
   *aOutPolicy = NS_GetCrossOriginEmbedderPolicyFromHeader(
       content, aIsOriginTrialCoepCredentiallessEnabled);
   return NS_OK;
@@ -6415,8 +6417,8 @@ NS_IMETHODIMP HttpBaseChannel::ComputeCrossOriginOpenerPolicy(
   }
 
   nsAutoCString openerPolicy;
-  (void)mResponseHead->GetHeader(nsHttp::Cross_Origin_Opener_Policy,
-                                 openerPolicy);
+  Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Opener_Policy,
+                                     openerPolicy);
 
   // Cross-Origin-Opener-Policy = %s"same-origin" /
   //                              %s"same-origin-allow-popups" /
@@ -6462,7 +6464,7 @@ NS_IMETHODIMP HttpBaseChannel::ComputeCrossOriginOpenerPolicy(
         &isCoepCredentiallessEnabled);
     if (!isCoepCredentiallessEnabled) {
       nsAutoCString originTrialToken;
-      (void)mResponseHead->GetHeader(nsHttp::OriginTrial, originTrialToken);
+      Unused << mResponseHead->GetHeader(nsHttp::OriginTrial, originTrialToken);
       if (!originTrialToken.IsEmpty()) {
         nsCOMPtr<nsIPrincipal> resultPrincipal;
         rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(

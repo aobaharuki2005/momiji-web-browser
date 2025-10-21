@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include <algorithm>
+#include "mozilla/Unused.h"
 
 namespace mozilla::net::CacheFileUtils {
 
@@ -660,7 +661,7 @@ nsresult ParseAlternativeDataInfo(const char* aInfo, int64_t* _offset,
   }
 
   if (_type) {
-    (void)p.ReadUntil(Tokenizer::Token::EndOfFile(), *_type);
+    mozilla::Unused << p.ReadUntil(Tokenizer::Token::EndOfFile(), *_type);
   }
 
   return NS_OK;

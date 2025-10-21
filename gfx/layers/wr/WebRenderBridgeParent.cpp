@@ -45,6 +45,7 @@
 #include "mozilla/layers/WebRenderTextureHost.h"
 #include "mozilla/ProfilerMarkerTypes.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Unused.h"
 #include "mozilla/webrender/RenderTextureHostSWGL.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
@@ -929,7 +930,7 @@ void WebRenderBridgeParent::ObserveSharedSurfaceRelease(
     const nsTArray<wr::ExternalImageKeyPair>& aPairs,
     const bool& aFromCheckpoint) {
   if (!mDestroyed) {
-    (void)SendWrReleasedImages(aPairs);
+    Unused << SendWrReleasedImages(aPairs);
   }
 
   if (!aFromCheckpoint && mAsyncImageManager) {
@@ -968,7 +969,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvUpdateResources(
   wr::TransactionBuilder txn(mApi);
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
 
-  (void)GetNextWrEpoch();
+  Unused << GetNextWrEpoch();
 
   bool success =
       UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems, txn);
@@ -1352,7 +1353,7 @@ bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
   // Update WrEpoch for UpdateResources() and ProcessWebRenderParentCommands().
   // WrEpoch is used to manage ExternalImages lifetimes in
   // AsyncImagePipelineManager.
-  (void)GetNextWrEpoch();
+  Unused << GetNextWrEpoch();
 
   const bool validTransaction = aData.mIdNamespace == mIdNamespace;
   bool success = true;
@@ -1802,7 +1803,7 @@ void WebRenderBridgeParent::MaybeCaptureScreenPixels() {
   mApi->Readback(TimeStamp::Now(), size, format,
                  Range<uint8_t>(mem.get<uint8_t>(), buffer_size), &needsYFlip);
 
-  (void)mScreenPixelsTarget->SendScreenPixels(
+  Unused << mScreenPixelsTarget->SendScreenPixels(
       std::move(mem), ScreenIntSize(client_size.width, client_size.height),
       needsYFlip);
 
@@ -2055,7 +2056,7 @@ wr::Epoch WebRenderBridgeParent::UpdateWebRender(
   // allocation. Without client side's layout refactoring, we could not finish
   // all old layers/webrender keys removals before new layer/webrender keys
   // allocation. In future, we could address the problem.
-  (void)SendWrUpdated(mIdNamespace, aTextureFactoryIdentifier);
+  Unused << SendWrUpdated(mIdNamespace, aTextureFactoryIdentifier);
   CompositorBridgeParentBase* cBridge = mCompositorBridge;
   // XXX Stop to clear resources if webreder supports resources sharing between
   // different webrender instances.

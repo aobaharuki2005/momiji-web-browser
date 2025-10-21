@@ -318,7 +318,7 @@ bool WindowGlobalChild::IsProcessRoot() {
 void WindowGlobalChild::BeforeUnloadAdded() {
   // Don't bother notifying the parent if we don't have an IPC link open.
   if (mBeforeUnloadListeners == 0 && CanSend()) {
-    (void)mWindowContext->SetNeedsBeforeUnload(true);
+    Unused << mWindowContext->SetNeedsBeforeUnload(true);
   }
 
   mBeforeUnloadListeners++;
@@ -332,7 +332,7 @@ void WindowGlobalChild::BeforeUnloadRemoved() {
   MOZ_ASSERT(mBeforeUnloadListeners >= 0);
 
   if (mBeforeUnloadListeners == 0) {
-    (void)mWindowContext->SetNeedsBeforeUnload(false);
+    Unused << mWindowContext->SetNeedsBeforeUnload(false);
   }
 }
 

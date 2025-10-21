@@ -120,6 +120,7 @@ EXPORTS.mozilla = [
     "Types.h",
     "UniquePtr.h",
     "UniquePtrExtensions.h",
+    "Unused.h",
     "Utf8.h",
     "Variant.h",
     "Vector.h",
@@ -173,6 +174,7 @@ UNIFIED_SOURCES += [
     "SHA1.cpp",
     "TaggedAnonymousMemory.cpp",
     "UniquePtrExtensions.cpp",
+    "Unused.cpp",
     "Utf8.cpp",
 ]
 

@@ -805,7 +805,7 @@ int MockCubeb::StreamInit(cubeb* aContext, cubeb_stream** aStream,
   *aStream = mockStream->AsCubebStream();
   mStreamInitEvent.Notify(mockStream);
   // AddRef the stream to keep it alive. StreamDestroy releases it.
-  NS_ADDREF(mockStream.get());
+  Unused << mockStream.forget().take();
   return CUBEB_OK;
 }
 

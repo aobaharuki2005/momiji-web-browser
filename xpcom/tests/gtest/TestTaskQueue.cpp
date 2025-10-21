@@ -11,6 +11,7 @@
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/Unused.h"
 #include "nsITargetShutdownTask.h"
 #include "VideoUtils.h"
 
@@ -41,15 +42,15 @@ TEST(TaskQueue, EventOrder)
 
   // We expect task1 happens before task3.
   for (int i = 0; i < 10000; ++i) {
-    (void)tq1->Dispatch(
+    Unused << tq1->Dispatch(
         NS_NewRunnableFunction(
             "TestTaskQueue::TaskQueue_EventOrder_Test::TestBody",
             [&]() {
-              (void)tq2->Dispatch(NS_NewRunnableFunction(
+              Unused << tq2->Dispatch(NS_NewRunnableFunction(
                   "TestTaskQueue::TaskQueue_EventOrder_Test::TestBody",
                   []() {  // task0
                   }));
-              (void)tq3->Dispatch(NS_NewRunnableFunction(
+              Unused << tq3->Dispatch(NS_NewRunnableFunction(
                   "TestTaskQueue::TaskQueue_EventOrder_Test::TestBody",
                   [&]() {  // task1
                     EXPECT_EQ(1, ++counter);
@@ -58,10 +59,10 @@ TEST(TaskQueue, EventOrder)
                     ++sync;
                     mon.Notify();
                   }));
-              (void)tq2->Dispatch(NS_NewRunnableFunction(
+              Unused << tq2->Dispatch(NS_NewRunnableFunction(
                   "TestTaskQueue::TaskQueue_EventOrder_Test::TestBody",
                   [&]() {  // task2
-                    (void)tq3->Dispatch(NS_NewRunnableFunction(
+                    Unused << tq3->Dispatch(NS_NewRunnableFunction(
                         "TestTaskQueue::TaskQueue_EventOrder_Test::TestBody",
                         [&]() {  // task3
                           EXPECT_EQ(0, --counter);
@@ -99,7 +100,7 @@ TEST(TaskQueue, GetCurrentSerialEventTarget)
   RefPtr<TaskQueue> tq1 =
       TaskQueue::Create(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
                         "TestTaskQueue GetCurrentSerialEventTarget", false);
-  (void)tq1->Dispatch(NS_NewRunnableFunction(
+  Unused << tq1->Dispatch(NS_NewRunnableFunction(
       "TestTaskQueue::TestCurrentSerialEventTarget::TestBody", [tq1]() {
         nsCOMPtr<nsISerialEventTarget> thread = GetCurrentSerialEventTarget();
         EXPECT_EQ(thread, tq1);
@@ -113,7 +114,7 @@ TEST(TaskQueue, DirectTaskGetCurrentSerialEventTarget)
   RefPtr<TaskQueue> tq1 = TaskQueue::Create(
       GetMediaThreadPool(MediaThreadType::SUPERVISOR),
       "TestTaskQueue DirectTaskGetCurrentSerialEventTarget", true);
-  (void)tq1->Dispatch(NS_NewRunnableFunction(
+  Unused << tq1->Dispatch(NS_NewRunnableFunction(
       "TestTaskQueue::DirectTaskGetCurrentSerialEventTarget::TestBody", [&]() {
         AbstractThread::DispatchDirectTask(NS_NewRunnableFunction(
             "TestTaskQueue::DirectTaskGetCurrentSerialEventTarget::DirectTask",
@@ -376,7 +377,7 @@ TEST(AbstractThread, GetCurrentSerialEventTarget)
 {
   RefPtr<AbstractThread> mainThread = AbstractThread::GetCurrent();
   EXPECT_EQ(mainThread, AbstractThread::MainThread());
-  (void)mainThread->Dispatch(NS_NewRunnableFunction(
+  Unused << mainThread->Dispatch(NS_NewRunnableFunction(
       "TestAbstractThread::TestCurrentSerialEventTarget::TestBody",
       [mainThread]() {
         nsCOMPtr<nsISerialEventTarget> thread = GetCurrentSerialEventTarget();
@@ -391,7 +392,7 @@ TEST(AbstractThread, DirectTaskGetCurrentSerialEventTarget)
 {
   RefPtr<AbstractThread> mainThread = AbstractThread::GetCurrent();
   EXPECT_EQ(mainThread, AbstractThread::MainThread());
-  (void)mainThread->Dispatch(NS_NewRunnableFunction(
+  Unused << mainThread->Dispatch(NS_NewRunnableFunction(
       "TestAbstractThread::DirectTaskGetCurrentSerialEventTarget::TestBody",
       [&]() {
         AbstractThread::DispatchDirectTask(NS_NewRunnableFunction(

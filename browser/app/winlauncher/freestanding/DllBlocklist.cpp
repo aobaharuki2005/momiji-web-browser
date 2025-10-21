@@ -456,7 +456,7 @@ MOZ_NEVER_INLINE NTSTATUS AfterMapViewOfExecutableSection(
       // use it to bypass CIG.  In a sandbox process, this addition fails
       // because we cannot map the section to a writable region, but it's
       // ignorable because the paths have been added by the browser process.
-      (void)SharedSection::AddDependentModule(sectionFileName);
+      Unused << SharedSection::AddDependentModule(sectionFileName);
 
       bool attemptToBlockViaRedirect;
 #if defined(NIGHTLY_BUILD)

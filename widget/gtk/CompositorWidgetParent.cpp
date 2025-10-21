@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CompositorWidgetParent.h"
+#include "mozilla/Unused.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsWindow.h"
 
@@ -21,9 +22,9 @@ CompositorWidgetParent::~CompositorWidgetParent() = default;
 
 void CompositorWidgetParent::ObserveVsync(VsyncObserver* aObserver) {
   if (aObserver) {
-    (void)SendObserveVsync();
+    Unused << SendObserveVsync();
   } else {
-    (void)SendUnobserveVsync();
+    Unused << SendUnobserveVsync();
   }
   mVsyncObserver = aObserver;
 }

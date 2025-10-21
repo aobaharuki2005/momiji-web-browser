@@ -21,6 +21,7 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ShutdownPhase.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -94,7 +95,7 @@ already_AddRefed<FOG> FOG::GetSingleton() {
               do_GetService("@mozilla.org/widget/useridleservice;1", &rv);
           if (NS_SUCCEEDED(rv)) {
             MOZ_ASSERT(idleService);
-            (void)idleService->RemoveIdleObserver(gFOG, kIdleSecs);
+            Unused << idleService->RemoveIdleObserver(gFOG, kIdleSecs);
           }
           bool initOnShutdown =
               Preferences::GetBool("telemetry.fog.init_on_shutdown", true);
@@ -423,7 +424,7 @@ FOG::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData) {
   if (!strcmp(aTopic, OBSERVER_TOPIC_IDLE)) {
     glean::FlushAndUseFOGData();
 #ifndef MOZ_GLEAN_ANDROID
-    (void)glean::impl::fog_persist_ping_lifetime_data();
+    Unused << glean::impl::fog_persist_ping_lifetime_data();
 #endif
   }
 

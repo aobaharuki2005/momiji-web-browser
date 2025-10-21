@@ -9,6 +9,7 @@
 #include "WebBrowserPersistDocumentParent.h"
 #include "WebBrowserPersistResourcesParent.h"
 #include "WebBrowserPersistSerializeParent.h"
+#include "mozilla/Unused.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "nsDebug.h"
@@ -36,7 +37,7 @@ WebBrowserPersistRemoteDocument ::WebBrowserPersistRemoteDocument(
 
 WebBrowserPersistRemoteDocument::~WebBrowserPersistRemoteDocument() {
   if (mActor) {
-    (void)WebBrowserPersistDocumentParent::Send__delete__(mActor);
+    Unused << WebBrowserPersistDocumentParent::Send__delete__(mActor);
     // That will call mActor->ActorDestroy, which calls this->ActorDestroy
     // (whether or not the IPC send succeeds).
   }

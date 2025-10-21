@@ -69,6 +69,7 @@
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/Try.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Attr.h"
@@ -1079,7 +1080,7 @@ int32_t Element::ScreenY() {
 already_AddRefed<nsIScreen> Element::GetScreen() {
   // Flush layout to guarantee that frames are created if needed, and preserve
   // behavior.
-  (void)GetPrimaryFrame(FlushType::Frames);
+  Unused << GetPrimaryFrame(FlushType::Frames);
   if (nsIWidget* widget = nsContentUtils::WidgetForContent(this)) {
     return widget->GetWidgetScreen();
   }
@@ -1505,7 +1506,7 @@ void Element::NotifyUAWidgetTeardown(UnattachShadowRoot aUnattachShadowRoot) {
           return;
         }
 
-        (void)nsContentUtils::DispatchChromeEvent(
+        Unused << nsContentUtils::DispatchChromeEvent(
             doc, self, u"UAWidgetTeardown"_ns, CanBubble::eYes,
             Cancelable::eNo);
       }));

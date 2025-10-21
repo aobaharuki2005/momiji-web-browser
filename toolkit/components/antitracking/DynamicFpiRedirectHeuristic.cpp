@@ -356,7 +356,7 @@ void DynamicFpiRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
           newPrincipal, oldPrincipal,
           StorageAccessAPIHelper::StorageAccessPromptChoices::eAllow, false,
           StaticPrefs::privacy_restrict3rdpartystorage_expiration_visited());
-  (void)promise;
+  Unused << promise;
 }
 
 }  // namespace mozilla

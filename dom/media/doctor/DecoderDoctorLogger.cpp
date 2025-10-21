@@ -11,6 +11,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 
@@ -147,7 +148,7 @@ bool DecoderDoctorLogger::EnsureLogIsEnabled() {
 }
 
 /* static */
-void DecoderDoctorLogger::EnableLogging() { (void)EnsureLogIsEnabled(); }
+void DecoderDoctorLogger::EnableLogging() { Unused << EnsureLogIsEnabled(); }
 
 /* static */ RefPtr<DecoderDoctorLogger::LogMessagesPromise>
 DecoderDoctorLogger::RetrieveMessages(

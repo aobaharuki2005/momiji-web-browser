@@ -3690,7 +3690,7 @@ nsCSSBorderImageRenderer::nsCSSBorderImageRenderer(
       mRepeatModeHorizontal(aRhs.mRepeatModeHorizontal),
       mRepeatModeVertical(aRhs.mRepeatModeVertical),
       mFill(aRhs.mFill) {
-  (void)mImageRenderer.PrepareResult();
+  Unused << mImageRenderer.PrepareResult();
 }
 
 nsCSSBorderImageRenderer& nsCSSBorderImageRenderer::operator=(
@@ -3705,7 +3705,7 @@ nsCSSBorderImageRenderer& nsCSSBorderImageRenderer::operator=(
   mRepeatModeHorizontal = aRhs.mRepeatModeHorizontal;
   mRepeatModeVertical = aRhs.mRepeatModeVertical;
   mFill = aRhs.mFill;
-  (void)mImageRenderer.PrepareResult();
+  Unused << mImageRenderer.PrepareResult();
 
   return *this;
 }

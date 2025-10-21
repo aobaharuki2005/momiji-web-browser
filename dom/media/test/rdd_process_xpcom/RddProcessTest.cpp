@@ -46,7 +46,7 @@ RddProcessTest::TestTelemetryProbes(JSContext* aCx,
         }
         MOZ_ASSERT(child, "No RDD Child?");
 
-        (void)child->SendTestTelemetryProbes();
+        Unused << child->SendTestTelemetryProbes();
         promise->MaybeResolve((int32_t)rddProc->RDDProcessPid());
       },
       [promise](nsresult aError) {

@@ -921,7 +921,7 @@ void WebAuthnHandler::FinishGetAssertion(
   if (global) {
     nsPIDOMWindowInner* window = global->GetAsInnerWindow();
     if (window) {
-      (void)BounceTrackingProtection::RecordUserActivation(
+      Unused << BounceTrackingProtection::RecordUserActivation(
           window->GetWindowContext());
     }
   }

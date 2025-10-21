@@ -402,7 +402,7 @@ bool WebExtensionPolicy::Enable() {
     mBrowsingContextGroup = group->MakeKeepAlivePtr();
   }
 
-  (void)Proto()->SetSubstitution(MozExtensionHostname(), BaseURI());
+  Unused << Proto()->SetSubstitution(MozExtensionHostname(), BaseURI());
 
   mActive = true;
   return true;
@@ -422,7 +422,7 @@ bool WebExtensionPolicy::Disable() {
     mBrowsingContextGroup = nullptr;
   }
 
-  (void)Proto()->SetSubstitution(MozExtensionHostname(), nullptr);
+  Unused << Proto()->SetSubstitution(MozExtensionHostname(), nullptr);
 
   mActive = false;
   return true;
@@ -554,7 +554,7 @@ bool WebExtensionPolicy::IsQuarantinedDoc(const DocInfo& aDoc) {
 /* static */
 bool WebExtensionPolicy::IsQuarantinedURI(const URLInfo& aURI) {
   // Ensure EPS is initialized before asking it about quarantined domains.
-  (void)EPS();
+  Unused << EPS();
 
   RefPtr<AtomSet> quarantinedDomains =
       ExtensionPolicyService::QuarantinedDomains();
@@ -1006,7 +1006,9 @@ void DocumentObserver::Observe(
   }
 }
 
-void DocumentObserver::Disconnect() { (void)EPS().UnregisterObserver(*this); }
+void DocumentObserver::Disconnect() {
+  Unused << EPS().UnregisterObserver(*this);
+}
 
 void DocumentObserver::NotifyMatch(MozDocumentMatcher& aMatcher,
                                    nsPIDOMWindowOuter* aWindow) {

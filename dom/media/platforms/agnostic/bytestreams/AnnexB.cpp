@@ -13,6 +13,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Try.h"
+#include "mozilla/Unused.h"
 
 mozilla::LazyLogModule gAnnexB("AnnexB");
 
@@ -201,9 +202,9 @@ already_AddRefed<mozilla::MediaByteBuffer> AnnexB::ConvertAVCCExtraDataToAnnexB(
   const uint8_t* ptr = reader.Read(5);
   if (ptr && ptr[0] == 1) {
     // Append SPS then PPS
-    (void)reader.ReadU8().map(
+    Unused << reader.ReadU8().map(
         [&](uint8_t x) { return ConvertSPSOrPPS(reader, x & 31, annexB); });
-    (void)reader.ReadU8().map(
+    Unused << reader.ReadU8().map(
         [&](uint8_t x) { return ConvertSPSOrPPS(reader, x, annexB); });
     // MP4Box adds extra bytes that we ignore. I don't know what they do.
   }
@@ -251,7 +252,7 @@ static Result<Ok, nsresult> FindStartCodeInternal(BufferReader& aBr) {
     if (res.isOk() && (res.unwrap() == 0x000001)) {
       return Ok();
     }
-    (void)aBr.Read(1);
+    mozilla::Unused << aBr.Read(1);
   }
 
   while (aBr.Remaining() >= 6) {
@@ -261,22 +262,22 @@ static Result<Ok, nsresult> FindStartCodeInternal(BufferReader& aBr) {
         return Ok();
       }
       if ((x32 & 0xffffff) == 0x000001) {  // 0x??000001
-        (void)aBr.Read(1);
+        mozilla::Unused << aBr.Read(1);
         return Ok();
       }
       if ((x32 & 0xff) == 0) {  // 0x??????00
         const uint8_t* p = aBr.Peek(1);
         if ((x32 & 0xff00) == 0 && p[4] == 1) {  // 0x????0000,01
-          (void)aBr.Read(2);
+          mozilla::Unused << aBr.Read(2);
           return Ok();
         }
         if (p[4] == 0 && p[5] == 1) {  // 0x??????00,00,01
-          (void)aBr.Read(3);
+          mozilla::Unused << aBr.Read(3);
           return Ok();
         }
       }
     }
-    (void)aBr.Read(4);
+    mozilla::Unused << aBr.Read(4);
   }
 
   while (aBr.Remaining() >= 3) {
@@ -284,11 +285,11 @@ static Result<Ok, nsresult> FindStartCodeInternal(BufferReader& aBr) {
     if (data == 0x000001) {
       return Ok();
     }
-    (void)aBr.Read(1);
+    mozilla::Unused << aBr.Read(1);
   }
 
   // No start code were found; Go back to the beginning.
-  (void)aBr.Seek(offset);
+  mozilla::Unused << aBr.Seek(offset);
   return Err(NS_ERROR_FAILURE);
 }
 
@@ -308,7 +309,7 @@ static Result<Ok, nsresult> FindStartCode(BufferReader& aBr,
       aStartSize = 4;
     }
   }
-  (void)aBr.Read(3);
+  mozilla::Unused << aBr.Read(3);
   return Ok();
 }
 

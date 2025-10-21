@@ -68,7 +68,7 @@ class MemoryPressureObserver final : public nsIObserver {
     }
 
     if (event) {
-      (void)mEvents.emplaceBack(event.value());
+      Unused << mEvents.emplaceBack(event.value());
     }
     return NS_OK;
   }
@@ -169,14 +169,16 @@ TEST(MemoryPressure, Multithread)
   Atomic<bool> shouldContinue(true);
   Vector<std::thread> threads;
   for (int i = 0; i < kNumThreads; ++i) {
-    (void)threads.emplaceBack(PressureSender<MemoryPressureState::LowMemory>,
-                              std::ref(shouldContinue));
-    (void)threads.emplaceBack(PressureSender<MemoryPressureState::NoPressure>,
-                              std::ref(shouldContinue));
-    (void)threads.emplaceBack(
+    Unused << threads.emplaceBack(
+        PressureSender<MemoryPressureState::LowMemory>,
+        std::ref(shouldContinue));
+    Unused << threads.emplaceBack(
+        PressureSender<MemoryPressureState::NoPressure>,
+        std::ref(shouldContinue));
+    Unused << threads.emplaceBack(
         PressureSenderQuick<MemoryPressureState::LowMemory>,
         std::ref(shouldContinue));
-    (void)threads.emplaceBack(
+    Unused << threads.emplaceBack(
         PressureSenderQuick<MemoryPressureState::NoPressure>,
         std::ref(shouldContinue));
   }

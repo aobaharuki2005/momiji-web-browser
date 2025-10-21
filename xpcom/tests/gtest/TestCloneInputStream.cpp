@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 #include "Helpers.h"
 #include "mozilla/gtest/MozAssertions.h"
+#include "mozilla/Unused.h"
 #include "nsICloneableInputStream.h"
 #include "nsIMultiplexInputStream.h"
 #include "nsNetUtil.h"
@@ -136,7 +137,7 @@ TEST(CloneInputStream, NonCloneableInput_Fallback)
   // but AFAICT, gtest does not support async test completion.
   uint64_t available;
   do {
-    (void)PR_Sleep(PR_INTERVAL_NO_WAIT);
+    mozilla::Unused << PR_Sleep(PR_INTERVAL_NO_WAIT);
     rv = stream->Available(&available);
     ASSERT_NS_SUCCEEDED(rv);
   } while (available < inputString.Length());

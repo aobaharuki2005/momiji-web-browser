@@ -69,7 +69,7 @@ void MediaSourceDemuxer::AddSizeOfResources(
 
   nsresult rv = GetTaskQueue()->Dispatch(task.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  (void)rv;
+  Unused << rv;
 }
 
 void MediaSourceDemuxer::NotifyInitDataArrived() {
@@ -85,7 +85,7 @@ void MediaSourceDemuxer::NotifyInitDataArrived() {
       });
   nsresult rv = GetTaskQueue()->Dispatch(task.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  (void)rv;
+  Unused << rv;
 }
 
 bool MediaSourceDemuxer::ScanSourceBuffersForContent() {
@@ -165,7 +165,7 @@ void MediaSourceDemuxer::AttachSourceBuffer(
       &MediaSourceDemuxer::DoAttachSourceBuffer, aSourceBuffer);
   nsresult rv = GetTaskQueue()->Dispatch(task.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  (void)rv;
+  Unused << rv;
 }
 
 void MediaSourceDemuxer::DoAttachSourceBuffer(
@@ -184,7 +184,7 @@ void MediaSourceDemuxer::DetachSourceBuffer(
                              });
   nsresult rv = GetTaskQueue()->Dispatch(task.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  (void)rv;
+  Unused << rv;
 }
 
 void MediaSourceDemuxer::DoDetachSourceBuffer(
@@ -336,7 +336,7 @@ void MediaSourceTrackDemuxer::Reset() {
       });
   nsresult rv = mParent->GetTaskQueue()->Dispatch(task.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  (void)rv;
+  Unused << rv;
 }
 
 nsresult MediaSourceTrackDemuxer::GetNextRandomAccessPoint(TimeUnit* aTime) {
@@ -372,7 +372,7 @@ void MediaSourceTrackDemuxer::BreakCycles() {
       });
   nsresult rv = mParent->GetTaskQueue()->Dispatch(task.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  (void)rv;
+  Unused << rv;
 }
 
 RefPtr<MediaSourceTrackDemuxer::SeekPromise> MediaSourceTrackDemuxer::DoSeek(

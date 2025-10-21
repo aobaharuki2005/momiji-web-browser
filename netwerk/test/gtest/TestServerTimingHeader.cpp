@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 
+#include "mozilla/Unused.h"
 #include "mozilla/net/nsServerTiming.h"
 #include <string>
 #include <vector>
@@ -23,15 +24,15 @@ void testServerTimingHeader(
   for (const auto& header : results) {
     std::vector<std::string> expectedResult(expectedResults[i++]);
     nsCString name;
-    (void)header->GetName(name);
+    mozilla::Unused << header->GetName(name);
     ASSERT_TRUE(name.Equals(expectedResult[0].c_str()));
 
     double duration;
-    (void)header->GetDuration(&duration);
+    mozilla::Unused << header->GetDuration(&duration);
     ASSERT_EQ(duration, atof(expectedResult[1].c_str()));
 
     nsCString description;
-    (void)header->GetDescription(description);
+    mozilla::Unused << header->GetDescription(description);
     ASSERT_TRUE(description.Equals(expectedResult[2].c_str()));
   }
 }

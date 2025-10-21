@@ -300,7 +300,7 @@ FileSystemWritableFileStream::Create(
               if (stream->IsOpen()) {
                 // We don't need the promise, we just
                 // begin the closing process.
-                (void)stream->BeginAbort();
+                Unused << stream->BeginAbort();
               }
             });
         QM_TRY(MOZ_TO_RESULT(workerRef));
@@ -339,7 +339,7 @@ FileSystemWritableFileStream::Create(
   stream->mCloseHandler->Open([stream]() {
     if (stream->IsOpen()) {
       // We don't need the promise, we just begin the closing process.
-      (void)stream->BeginAbort();
+      Unused << stream->BeginAbort();
     }
   });
 
@@ -355,7 +355,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FileSystemWritableFileStream,
                                                 WritableStream)
   // Per the comment for the FileSystemManager class, don't unlink mManager!
   if (tmp->IsOpen()) {
-    (void)tmp->BeginAbort();
+    Unused << tmp->BeginAbort();
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FileSystemWritableFileStream,

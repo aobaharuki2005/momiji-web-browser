@@ -25,6 +25,7 @@
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/gfx/Filters.h"
 #include "mozilla/gfx/Helpers.h"
@@ -373,7 +374,7 @@ WrFiltersStatus FilterInstance::BuildWebRenderFiltersImpl(
       // css/filter-effects/filter-scale-001.html for which the needless
       // sRGB->linear->no-op->sRGB roundtrip introduces a slight error and we
       // cannot add fuzziness to the test.
-      (void)aWrFilters.filters.PopLastElement();
+      Unused << aWrFilters.filters.PopLastElement();
       srgb = previousSrgb;
     }
 

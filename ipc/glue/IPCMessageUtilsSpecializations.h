@@ -32,6 +32,7 @@
 #endif
 
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/dom/UserActivation.h"
@@ -322,7 +323,7 @@ struct ParamTraits<std::set<V, Compare, Allocator>> final {
     T set;
     for (const auto i : mozilla::IntegerRange(size)) {
       V value;
-      (void)i;
+      mozilla::Unused << i;
       if (!ReadParam(reader, &(value))) {
         return false;
       }
@@ -352,7 +353,7 @@ struct ParamTraits<std::unordered_map<K, V>> final {
     map.reserve(size);
     for (const auto i : mozilla::IntegerRange(size)) {
       std::pair<K, V> pair;
-      (void)i;
+      mozilla::Unused << i;
       if (!ReadParam(reader, &(pair.first)) ||
           !ReadParam(reader, &(pair.second))) {
         return false;

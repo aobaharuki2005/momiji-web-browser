@@ -152,7 +152,7 @@ RefPtr<ExternalTextureSourceClient> ExternalTextureCache::GetOrCreateSource(
     // means we must have a valid AddPtr from above.
     // An OOM error in add() just means we don't get to cache the source, but we
     // can still proceed.
-    (void)mSources.add(p, source->mImage->GetSerial(), source);
+    Unused << mSources.add(p, source->mImage->GetSerial(), source);
   }
   return source;
 }
@@ -400,7 +400,7 @@ RefPtr<ExternalTexture> ExternalTextureSourceClient::GetOrCreateExternalTexture(
     } else {
       // OOM error in add() just means we don't get to cache the external
       // texture, but we can still proceed.
-      (void)mExternalTextures.add(p, aDesc.mColorSpace, externalTexture);
+      Unused << mExternalTextures.add(p, aDesc.mColorSpace, externalTexture);
     }
   }
 

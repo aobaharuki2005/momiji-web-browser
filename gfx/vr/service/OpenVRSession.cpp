@@ -653,15 +653,15 @@ bool OpenVRSession::SetupContollerActions() {
         [controllerAction, viveManifest, WMRManifest, knucklesManifest,
          cosmosManifest]() {
           VRParent* vrParent = VRProcessChild::GetVRParent();
-          (void)vrParent->SendOpenVRControllerActionPathToParent(
+          Unused << vrParent->SendOpenVRControllerActionPathToParent(
               controllerAction);
-          (void)vrParent->SendOpenVRControllerManifestPathToParent(
+          Unused << vrParent->SendOpenVRControllerManifestPathToParent(
               VRControllerType::HTCVive, viveManifest);
-          (void)vrParent->SendOpenVRControllerManifestPathToParent(
+          Unused << vrParent->SendOpenVRControllerManifestPathToParent(
               VRControllerType::MSMR, WMRManifest);
-          (void)vrParent->SendOpenVRControllerManifestPathToParent(
+          Unused << vrParent->SendOpenVRControllerManifestPathToParent(
               VRControllerType::ValveIndex, knucklesManifest);
-          (void)vrParent->SendOpenVRControllerManifestPathToParent(
+          Unused << vrParent->SendOpenVRControllerManifestPathToParent(
               VRControllerType::HTCViveCosmos, cosmosManifest);
         }));
   } else {

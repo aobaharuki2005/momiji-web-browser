@@ -75,6 +75,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/ToString.h"
+#include "mozilla/Unused.h"
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/WheelHandlingHelper.h"  // for WheelHandlingUtils
@@ -2922,7 +2923,7 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
       MOZ_UNLIKELY(gfxUtils::DumpDisplayList()) ||
       MOZ_UNLIKELY(gfxEnv::MOZ_DUMP_PAINT())) {
     if (Document* doc = presContext->Document()) {
-      (void)doc->GetDocumentURI(uri);
+      Unused << doc->GetDocumentURI(uri);
     }
   }
 
@@ -3007,7 +3008,7 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   if (rootScrollContainerFrame && !aFrame->GetParent()) {
     nsRect displayPortBase = rootInkOverflow;
     nsRect temp = displayPortBase;
-    (void)rootScrollContainerFrame->DecideScrollableLayer(
+    Unused << rootScrollContainerFrame->DecideScrollableLayer(
         builder, &displayPortBase, &temp,
         /* aSetBase = */ true);
   }

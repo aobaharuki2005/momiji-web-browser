@@ -1287,7 +1287,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
       childTimeoutS = cMaxChildTimeoutS;
     }
     const uint32_t childTimeoutMs = childTimeoutS * PR_MSEC_PER_SEC;
-    (void)NS_NewTimerWithFuncCallback(
+    Unused << NS_NewTimerWithFuncCallback(
         getter_AddRefs(mGatheringTimer), GatheringTimerCallback, this,
         childTimeoutMs, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
         "nsProfilerGatheringTimer"_ns, GetMainThreadSerialEventTarget());

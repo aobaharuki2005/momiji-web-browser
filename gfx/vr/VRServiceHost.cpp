@@ -132,7 +132,7 @@ void VRServiceHost::CreateVRProcess() {
   // to create the VR process.
   gfx::GPUParent* gpu = GPUParent::GetSingleton();
   MOZ_ASSERT(gpu);
-  (void)gpu->SendCreateVRProcess();
+  Unused << gpu->SendCreateVRProcess();
 }
 
 void VRServiceHost::NotifyVRProcessStarted() {
@@ -193,7 +193,7 @@ void VRServiceHost::ShutdownVRProcess() {
   // to shutdown VR process.
   gfx::GPUParent* gpu = GPUParent::GetSingleton();
   MOZ_ASSERT(gpu);
-  (void)gpu->SendShutdownVRProcess();
+  Unused << gpu->SendShutdownVRProcess();
   mVRProcessStarted = false;
   mVRServiceReadyInVRProcess = false;
 }

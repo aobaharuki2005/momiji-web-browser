@@ -144,13 +144,14 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    (void)httpChannel->GetResponseHeader("content-security-policy"_ns,
-                                         tCspHeaderValue);
+    Unused << httpChannel->GetResponseHeader("content-security-policy"_ns,
+                                             tCspHeaderValue);
 
-    (void)httpChannel->GetResponseHeader(
+    Unused << httpChannel->GetResponseHeader(
         "content-security-policy-report-only"_ns, tCspROHeaderValue);
 
-    (void)httpChannel->GetResponseHeader("referrer-policy"_ns, tRPHeaderCValue);
+    Unused << httpChannel->GetResponseHeader("referrer-policy"_ns,
+                                             tRPHeaderCValue);
 
     nsAutoCString sourceMapURL;
     if (nsContentUtils::GetSourceMapURL(httpChannel, sourceMapURL)) {

@@ -7,6 +7,7 @@
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Unused.h"
 
 #include "gfxPlatform.h"
 #include "nsArrayUtils.h"
@@ -54,7 +55,7 @@ static NSData* GetNSDataFromPasteboard(NSPasteboard* aPasteboard,
                                "pasteboard: \"%s - %s\"",
                                [[e name] UTF8String], [[e reason] UTF8String])
                    .get());
-    (void)e;
+    mozilla::Unused << e;
   }
   return data;
 }

@@ -325,8 +325,8 @@ void WebSocketChannelParent::ActorDestroy(ActorDestroyReason why) {
   // Make sure we close the channel if the content process dies without going
   // through a clean shutdown.
   if (mChannel) {
-    (void)mChannel->Close(nsIWebSocketChannel::CLOSE_GOING_AWAY,
-                          "Child was killed"_ns);
+    Unused << mChannel->Close(nsIWebSocketChannel::CLOSE_GOING_AWAY,
+                              "Child was killed"_ns);
   }
 }
 

@@ -9,6 +9,7 @@
 #include "AvailableMemoryWatcher.h"
 #include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/Unused.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsITimer.h"

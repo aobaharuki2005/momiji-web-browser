@@ -577,7 +577,7 @@ ContentPrincipal::Deserializer::Read(nsIObjectInputStream* aStream) {
   // Additionally, the format for serialized CSPs changed
   // within Bug 965637 which also can cause failures within
   // the CSP deserialization code.
-  (void)NS_ReadOptionalObject(aStream, true, getter_AddRefs(supports));
+  Unused << NS_ReadOptionalObject(aStream, true, getter_AddRefs(supports));
 
   nsAutoCString originNoSuffix;
   rv = GenerateOriginNoSuffixFromURI(principalURI, originNoSuffix);

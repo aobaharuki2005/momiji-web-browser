@@ -8,6 +8,7 @@
 #include "FetchService.h"
 #include "InternalRequest.h"
 #include "InternalResponse.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/PerformanceTimingTypes.h"
@@ -129,7 +130,7 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
           FETCH_LOG(("FetchParent::RecvFetchOp [%p] Fetch has already aborted",
                      self.get()));
           if (!self->mActorDestroyed) {
-            (void)NS_WARN_IF(
+            Unused << NS_WARN_IF(
                 !self->Send__delete__(self, NS_ERROR_DOM_ABORT_ERR));
           }
           return;
@@ -138,7 +139,7 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
         if (!self->mActorDestroyed && !self->mExtendForCSPEventListener) {
           FETCH_LOG(("FetchParent::RecvFetchOp [%p] Send__delete__(NS_OK)",
                      self.get()));
-          (void)NS_WARN_IF(!self->Send__delete__(self, NS_OK));
+          Unused << NS_WARN_IF(!self->Send__delete__(self, NS_OK));
         }
       },
       [self](const nsresult&& aErr) mutable {
@@ -150,7 +151,7 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
         if (!self->mActorDestroyed) {
           FETCH_LOG(("FetchParent::RecvFetchOp [%p] Send__delete__(aErr)",
                      self.get()));
-          (void)NS_WARN_IF(!self->Send__delete__(self, aErr));
+          Unused << NS_WARN_IF(!self->Send__delete__(self, aErr));
         }
       });
 
@@ -316,7 +317,7 @@ void FetchParent::OnResponseAvailableInternal(
     mExtendForCSPEventListener = true;
   }
 
-  (void)SendOnResponseAvailableInternal(
+  Unused << SendOnResponseAvailableInternal(
       aResponse->ToParentToChildInternalResponse());
 }
 
@@ -333,7 +334,7 @@ void FetchParent::OnResponseEnd(const ResponseEndArgs& aArgs) {
     return;
   }
 
-  (void)SendOnResponseEnd(aArgs);
+  Unused << SendOnResponseEnd(aArgs);
 }
 
 void FetchParent::OnDataAvailable() {
@@ -341,7 +342,7 @@ void FetchParent::OnDataAvailable() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  (void)SendOnDataAvailable();
+  Unused << SendOnDataAvailable();
 }
 
 void FetchParent::OnFlushConsoleReport(
@@ -350,7 +351,7 @@ void FetchParent::OnFlushConsoleReport(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  (void)SendOnFlushConsoleReport(aReports);
+  Unused << SendOnFlushConsoleReport(aReports);
 }
 
 void FetchParent::OnReportPerformanceTiming(const ResponseTiming&& aTiming) {
@@ -358,7 +359,7 @@ void FetchParent::OnReportPerformanceTiming(const ResponseTiming&& aTiming) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  (void)SendOnReportPerformanceTiming(aTiming);
+  Unused << SendOnReportPerformanceTiming(aTiming);
 }
 
 void FetchParent::OnNotifyNetworkMonitorAlternateStack(uint64_t aChannelID) {
@@ -366,7 +367,7 @@ void FetchParent::OnNotifyNetworkMonitorAlternateStack(uint64_t aChannelID) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  (void)SendOnNotifyNetworkMonitorAlternateStack(aChannelID);
+  Unused << SendOnNotifyNetworkMonitorAlternateStack(aChannelID);
 }
 
 void FetchParent::ActorDestroy(ActorDestroyReason aReason) {
@@ -400,7 +401,7 @@ void FetchParent::OnCSPViolationEvent(const nsAString& aJSON) {
   MOZ_ASSERT(mHasCSPEventListener);
   MOZ_ASSERT(!mActorDestroyed);
 
-  (void)SendOnCSPViolationEvent(aJSON);
+  Unused << SendOnCSPViolationEvent(aJSON);
 }
 
 }  // namespace mozilla::dom

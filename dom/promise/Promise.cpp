@@ -22,6 +22,7 @@
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
@@ -418,7 +419,7 @@ void Promise::CreateWrapper(
     return;
   }
   if (aPropagateUserInteraction == ePropagateUserInteraction) {
-    (void)MaybePropagateUserInputEventHandling();
+    Unused << MaybePropagateUserInputEventHandling();
   }
 }
 

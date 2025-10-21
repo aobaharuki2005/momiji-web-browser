@@ -53,7 +53,7 @@ void nsAHttpConnection::DeleteSelfOnSocketThread() {
   nsCOMPtr<nsIEventTarget> sts =
       mozilla::components::SocketTransport::Service();
   nsCOMPtr<nsIRunnable> event = new DeleteAHttpConnection(this);
-  (void)NS_WARN_IF(
+  Unused << NS_WARN_IF(
       NS_FAILED(sts->Dispatch(event.forget(), NS_DISPATCH_NORMAL)));
 }
 

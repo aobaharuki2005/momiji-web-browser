@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "CompositorWidgetParent.h"
 
+#include "mozilla/Unused.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/Point.h"
@@ -76,7 +77,7 @@ CompositorWidgetParent::StartRemoteDrawingInRegion(
 
 void CompositorWidgetParent::EndRemoteDrawingInRegion(
     gfx::DrawTarget* aDrawTarget, const LayoutDeviceIntRegion& aInvalidRegion) {
-  (void)mRemoteBackbufferClient->PresentDrawTarget(
+  Unused << mRemoteBackbufferClient->PresentDrawTarget(
       aInvalidRegion.ToUnknownRegion());
 }
 
@@ -104,7 +105,7 @@ bool CompositorWidgetParent::IsHidden() const { return ::IsIconic(mWnd); }
 
 mozilla::ipc::IPCResult CompositorWidgetParent::RecvInitialize(
     const RemoteBackbufferHandles& aRemoteHandles) {
-  (void)Initialize(aRemoteHandles);
+  Unused << Initialize(aRemoteHandles);
   return IPC_OK();
 }
 
@@ -138,9 +139,9 @@ nsIWidget* CompositorWidgetParent::RealWidget() { return nullptr; }
 
 void CompositorWidgetParent::ObserveVsync(VsyncObserver* aObserver) {
   if (aObserver) {
-    (void)SendObserveVsync();
+    Unused << SendObserveVsync();
   } else {
-    (void)SendUnobserveVsync();
+    Unused << SendUnobserveVsync();
   }
   mVsyncObserver = aObserver;
 }

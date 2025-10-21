@@ -43,7 +43,7 @@ class SVGNumberList {
   SVGNumberList& operator=(const SVGNumberList& aOther) {
     mNumbers.ClearAndRetainStorage();
     // Best-effort, really.
-    (void)mNumbers.AppendElements(aOther.mNumbers, fallible);
+    Unused << mNumbers.AppendElements(aOther.mNumbers, fallible);
     return *this;
   }
 

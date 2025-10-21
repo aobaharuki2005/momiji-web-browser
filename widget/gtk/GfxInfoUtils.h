@@ -8,6 +8,15 @@
 #ifndef WIDGET_GTK_GFXINFO_UTILS_h__
 #define WIDGET_GTK_GFXINFO_UTILS_h__
 
+// An alternative to mozilla::Unused for use in (a) C code and (b) code where
+// linking with unused.o is difficult.
+#define MOZ_UNUSED(expr) \
+  do {                   \
+    if (expr) {          \
+      (void)0;           \
+    }                    \
+  } while (0)
+
 #define LOG_PIPE 2
 
 static bool enable_logging = false;
@@ -78,9 +87,9 @@ static void record_flush() {
   if (!test_buf) {
     return;
   }
-  (void)write(output_pipe, test_buf, test_length);
+  MOZ_UNUSED(write(output_pipe, test_buf, test_length));
   if (enable_logging) {
-    (void)write(LOG_PIPE, test_buf, test_length);
+    MOZ_UNUSED(write(LOG_PIPE, test_buf, test_length));
   }
   free(test_buf);
   test_buf = nullptr;

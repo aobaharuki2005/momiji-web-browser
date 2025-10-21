@@ -201,7 +201,7 @@ nsresult FetchUtil::SetRequestReferrer(nsIPrincipal* aPrincipal, Document* aDoc,
   nsAutoCString computedReferrerSpec;
   referrerInfo = aChannel->GetReferrerInfo();
   if (referrerInfo) {
-    (void)referrerInfo->GetComputedReferrerSpec(computedReferrerSpec);
+    Unused << referrerInfo->GetComputedReferrerSpec(computedReferrerSpec);
   }
 
   // Step 8 https://fetch.spec.whatwg.org/#main-fetch

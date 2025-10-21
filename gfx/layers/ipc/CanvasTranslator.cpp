@@ -942,7 +942,7 @@ void CanvasTranslator::EndTransaction() {
   Flush();
   // At the end of a transaction is a good time to check if a new canvas device
   // has been created, even if a reset did not occur.
-  (void)CheckForFreshCanvasDevice(__LINE__);
+  Unused << CheckForFreshCanvasDevice(__LINE__);
   mIsInTransaction = false;
 }
 
@@ -1096,7 +1096,7 @@ void CanvasTranslator::NotifyRequiresRefresh(
   }
 
   if (mTextureInfo.find(aTextureOwnerId) != mTextureInfo.end()) {
-    (void)SendNotifyRequiresRefresh(aTextureOwnerId);
+    Unused << SendNotifyRequiresRefresh(aTextureOwnerId);
   }
 }
 
@@ -1319,7 +1319,7 @@ void CanvasTranslator::NotifyTextureDestruction(
   if (mIPDLClosed) {
     return;
   }
-  (void)SendNotifyTextureDestruction(aTextureOwnerId);
+  Unused << SendNotifyTextureDestruction(aTextureOwnerId);
 }
 
 void CanvasTranslator::AddTextureKeepAlive(const RemoteTextureOwnerId& aId) {

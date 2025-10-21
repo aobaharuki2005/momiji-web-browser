@@ -42,6 +42,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/ToString.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/AutoPrintEventDispatcher.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -296,7 +297,7 @@ class BrowserChild::DelayedDeleteRunnable final : public Runnable,
 
     // Check in case ActorDestroy was called after RecvDestroy message.
     if (mBrowserChild->IPCOpen()) {
-      (void)PBrowserChild::Send__delete__(mBrowserChild);
+      Unused << PBrowserChild::Send__delete__(mBrowserChild);
     }
 
     mBrowserChild = nullptr;
@@ -1033,7 +1034,7 @@ nsresult BrowserChild::UpdateRemotePrintSettings(
       }());
     } else if (RefPtr<BrowserBridgeChild> remoteChild =
                    BrowserBridgeChild::GetFrom(aBc->GetEmbedderElement())) {
-      (void)remoteChild->SendUpdateRemotePrintSettings(aPrintData);
+      Unused << remoteChild->SendUpdateRemotePrintSettings(aPrintData);
       return BrowsingContext::WalkFlag::Skip;
     }
     return BrowsingContext::WalkFlag::Next;
@@ -1509,10 +1510,10 @@ void BrowserChild::ProcessPendingCoalescedTouchData() {
 
   UniquePtr<WidgetTouchEvent> touchMoveEvent =
       mCoalescedTouchData.TakeCoalescedEvent();
-  (void)RecvRealTouchEvent(*touchMoveEvent,
-                           mCoalescedTouchData.GetScrollableLayerGuid(),
-                           mCoalescedTouchData.GetInputBlockId(),
-                           mCoalescedTouchData.GetApzResponse());
+  Unused << RecvRealTouchEvent(*touchMoveEvent,
+                               mCoalescedTouchData.GetScrollableLayerGuid(),
+                               mCoalescedTouchData.GetInputBlockId(),
+                               mCoalescedTouchData.GetApzResponse());
 }
 
 void BrowserChild::ProcessPendingCoalescedMouseDataAndDispatchEvents() {
@@ -2545,8 +2546,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvCompositionEvent(
   WidgetCompositionEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
   DispatchWidgetEventViaAPZ(localEvent);
-  (void)SendOnEventNeedingAckHandled(aEvent.mMessage,
-                                     localEvent.mCompositionId);
+  Unused << SendOnEventNeedingAckHandled(aEvent.mMessage,
+                                         localEvent.mCompositionId);
   return IPC_OK();
 }
 
@@ -2560,7 +2561,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvSelectionEvent(
   WidgetSelectionEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
   DispatchWidgetEventViaAPZ(localEvent);
-  (void)SendOnEventNeedingAckHandled(aEvent.mMessage, 0u);
+  Unused << SendOnEventNeedingAckHandled(aEvent.mMessage, 0u);
   return IPC_OK();
 }
 
@@ -2573,7 +2574,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvSimpleContentCommandEvent(
     const EventMessage& aMessage) {
   WidgetContentCommandEvent localEvent(true, aMessage, mPuppetWidget);
   DispatchWidgetEventViaAPZ(localEvent);
-  (void)SendOnEventNeedingAckHandled(aMessage, 0u);
+  Unused << SendOnEventNeedingAckHandled(aMessage, 0u);
   return IPC_OK();
 }
 
@@ -2590,7 +2591,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvInsertText(
                                        mPuppetWidget);
   localEvent.mString = Some(nsString(aStringToInsert));
   DispatchWidgetEventViaAPZ(localEvent);
-  (void)SendOnEventNeedingAckHandled(eContentCommandInsertText, 0u);
+  Unused << SendOnEventNeedingAckHandled(eContentCommandInsertText, 0u);
   return IPC_OK();
 }
 
@@ -2610,7 +2611,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvReplaceText(
   localEvent.mSelection.mOffset = aOffset;
   localEvent.mSelection.mPreventSetSelection = aPreventSetSelection;
   DispatchWidgetEventViaAPZ(localEvent);
-  (void)SendOnEventNeedingAckHandled(eContentCommandReplaceText, 0u);
+  Unused << SendOnEventNeedingAckHandled(eContentCommandReplaceText, 0u);
   return IPC_OK();
 }
 
@@ -3938,8 +3939,8 @@ NS_IMETHODIMP BrowserChild::OnStateChange(nsIWebProgress* aWebProgress,
     }
   }
 
-  (void)SendOnStateChange(webProgressData, requestData, aStateFlags, aStatus,
-                          stateChangeData);
+  Unused << SendOnStateChange(webProgressData, requestData, aStateFlags,
+                              aStatus, stateChangeData);
 
   return NS_OK;
 }
@@ -3964,7 +3965,7 @@ NS_IMETHODIMP BrowserChild::OnProgressChange(nsIWebProgress* aWebProgress,
   // NOTE: ProgressChange notifications delivered here are filtered by
   // nsBrowserStatusFilter, which passes meaningless values for all other
   // arguments, so they are ignored here.
-  (void)SendOnProgressChange(aCurTotalProgress, aMaxTotalProgress);
+  Unused << SendOnProgressChange(aCurTotalProgress, aMaxTotalProgress);
 
   return NS_OK;
 }
@@ -4054,9 +4055,9 @@ NS_IMETHODIMP BrowserChild::OnLocationChange(nsIWebProgress* aWebProgress,
 #endif
   }
 
-  (void)SendOnLocationChange(webProgressData, requestData, aLocation, aFlags,
-                             canGoBack, canGoBackIgnoringUserInteraction,
-                             canGoForward, locationChangeData);
+  Unused << SendOnLocationChange(
+      webProgressData, requestData, aLocation, aFlags, canGoBack,
+      canGoBackIgnoringUserInteraction, canGoForward, locationChangeData);
 
   return NS_OK;
 }
@@ -4072,7 +4073,7 @@ NS_IMETHODIMP BrowserChild::OnStatusChange(nsIWebProgress* aWebProgress,
   // NOTE: StatusChange notifications delivered here are filtered by
   // nsBrowserStatusFilter, which passes meaningless values for all other
   // arguments, so they are ignored here.
-  (void)SendOnStatusChange(nsDependentString(aMessage));
+  Unused << SendOnStatusChange(nsDependentString(aMessage));
 
   return NS_OK;
 }
@@ -4097,7 +4098,7 @@ NS_IMETHODIMP BrowserChild::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
 }
 
 NS_IMETHODIMP BrowserChild::NotifyNavigationFinished() {
-  (void)SendNavigationFinished();
+  Unused << SendNavigationFinished();
   return NS_OK;
 }
 
@@ -4201,7 +4202,7 @@ void BrowserChild::NotifyContentBlockingEvent(
 
   RequestData requestData;
   if (NS_SUCCEEDED(PrepareRequestData(aChannel, requestData))) {
-    (void)SendNotifyContentBlockingEvent(
+    Unused << SendNotifyContentBlockingEvent(
         aEvent, requestData, aBlocked, PromiseFlatCString(aTrackingOrigin),
         aTrackingFullHashes, aReason, aCanvasFingerprinter,
         aCanvasFingerprinterKnownText);

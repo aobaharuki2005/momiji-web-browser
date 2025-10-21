@@ -126,7 +126,7 @@ void ChannelMediaResource::Listener::Revoke() {
 
 static bool IsPayloadCompressed(nsIHttpChannel* aChannel) {
   nsAutoCString encoding;
-  (void)aChannel->GetResponseHeader("Content-Encoding"_ns, encoding);
+  Unused << aChannel->GetResponseHeader("Content-Encoding"_ns, encoding);
   return encoding.Length() > 0;
 }
 
@@ -170,9 +170,9 @@ nsresult ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
 
   if (hc) {
     uint32_t responseStatus = 0;
-    (void)hc->GetResponseStatus(&responseStatus);
+    Unused << hc->GetResponseStatus(&responseStatus);
     bool succeeded = false;
-    (void)hc->GetRequestSucceeded(&succeeded);
+    Unused << hc->GetRequestSucceeded(&succeeded);
 
     if (!succeeded && NS_SUCCEEDED(status)) {
       // HTTP-level error (e.g. 4xx); treat this as a fatal network-level error.
@@ -202,7 +202,7 @@ nsresult ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
     }
 
     nsAutoCString ranges;
-    (void)hc->GetResponseHeader("Accept-Ranges"_ns, ranges);
+    Unused << hc->GetResponseHeader("Accept-Ranges"_ns, ranges);
     bool acceptsRanges =
         net::nsHttp::FindToken(ranges.get(), "bytes", HTTP_HEADER_VALUE_SEPS);
 
@@ -345,7 +345,7 @@ nsresult ChannelMediaResource::OnStopRequest(nsIRequest* aRequest,
   NS_ASSERTION(NS_SUCCEEDED(rv), "GetLoadFlags() failed!");
 
   if (loadFlags & nsIRequest::LOAD_BACKGROUND) {
-    (void)NS_WARN_IF(
+    Unused << NS_WARN_IF(
         NS_FAILED(ModifyLoadFlags(loadFlags & ~nsIRequest::LOAD_BACKGROUND)));
   }
 
@@ -469,7 +469,7 @@ int64_t ChannelMediaResource::CalculateStreamLength() const {
   }
 
   bool succeeded = false;
-  (void)hc->GetRequestSucceeded(&succeeded);
+  Unused << hc->GetRequestSucceeded(&succeeded);
   if (!succeeded) {
     return -1;
   }
@@ -486,7 +486,7 @@ int64_t ChannelMediaResource::CalculateStreamLength() const {
   }
 
   uint32_t responseStatus = 0;
-  (void)hc->GetResponseStatus(&responseStatus);
+  Unused << hc->GetResponseStatus(&responseStatus);
   if (responseStatus != HTTP_PARTIAL_RESPONSE_CODE) {
     return contentLength;
   }
@@ -764,11 +764,11 @@ nsresult ChannelMediaResource::RecreateChannel() {
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
   if (setAttrs) {
     // The function simply returns NS_OK, so we ignore the return value.
-    (void)loadInfo->SetOriginAttributes(
+    Unused << loadInfo->SetOriginAttributes(
         triggeringPrincipal->OriginAttributesRef());
   }
 
-  (void)loadInfo->SetIsMediaRequest(true);
+  Unused << loadInfo->SetIsMediaRequest(true);
 
   if (nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(mChannel)) {
     nsString initiatorType =

@@ -16,6 +16,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/RecursiveMutex.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/FlowMarkers.h"
 
 class nsISupports;

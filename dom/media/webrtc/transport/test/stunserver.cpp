@@ -80,6 +80,7 @@ nrappkit copyright:
 #include "logging.h"
 #include "mediapacket.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 
 // mozilla/utils.h defines this as well
 #ifdef UNIMPLEMENTED
@@ -184,7 +185,7 @@ int nr_socket_wrapped_create(nr_socket* inner, nr_socket** outp) {
   int r = nr_socket_create_int(wrapped.get(), &nr_socket_wrapped_vtbl, outp);
   if (r) return r;
 
-  (void)wrapped.release();
+  Unused << wrapped.release();
   return 0;
 }
 

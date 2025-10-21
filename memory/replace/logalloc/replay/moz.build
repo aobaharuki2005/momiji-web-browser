@@ -12,6 +12,7 @@ SOURCES += [
     "/mfbt/RandomNum.cpp",
     "/mfbt/RefCounted.cpp",
     "/mfbt/TaggedAnonymousMemory.cpp",
+    "/mfbt/Unused.cpp",
     "/mozglue/misc/StackWalk.cpp",
     "Replay.cpp",
 ]

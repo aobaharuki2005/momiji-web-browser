@@ -77,7 +77,7 @@ class MFMediaEngineStream
 
   void NotifyEndOfStream() {
     Microsoft::WRL::ComPtr<MFMediaEngineStream> self = this;
-    (void)mTaskQueue->Dispatch(NS_NewRunnableFunction(
+    Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
         "MFMediaEngineStream::NotifyEndOfStream",
         [self]() { self->NotifyEndOfStreamInternal(); }));
   }

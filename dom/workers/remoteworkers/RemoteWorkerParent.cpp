@@ -8,6 +8,7 @@
 
 #include "RemoteWorkerController.h"
 #include "RemoteWorkerServiceParent.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PFetchEventOpProxyParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -112,7 +113,7 @@ void RemoteWorkerParent::MaybeSendDelete() {
   // For some reason, if the following two lines are swapped, ASan says there's
   // a UAF...
   mDeleteSent = true;
-  (void)Send__delete__(this);
+  Unused << Send__delete__(this);
 }
 
 IPCResult RemoteWorkerParent::RecvClose() {

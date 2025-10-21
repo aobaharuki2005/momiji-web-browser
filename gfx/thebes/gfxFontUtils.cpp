@@ -15,6 +15,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/Unused.h"
 
 #include "nsCOMPtr.h"
 #include "nsIUUIDGenerator.h"
@@ -87,7 +88,7 @@ void gfxSparseBitSet::Dump(const char* aPrefix, eGfxLog aWhichLog) const {
       }
       if (i + 4 != 32) index += snprintf(&outStr[index], BUFSIZE - index, " ");
     }
-    (void)snprintf(&outStr[index], BUFSIZE - index, "]");
+    Unused << snprintf(&outStr[index], BUFSIZE - index, "]");
     LOG(aWhichLog, ("%s", outStr));
   }
 }

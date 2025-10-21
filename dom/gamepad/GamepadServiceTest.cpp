@@ -7,6 +7,7 @@
 #include "GamepadServiceTest.h"
 
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/GamepadManager.h"
 #include "mozilla/dom/GamepadPlatformService.h"
 #include "mozilla/dom/GamepadServiceTestBinding.h"

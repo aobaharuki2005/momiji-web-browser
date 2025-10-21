@@ -19,6 +19,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/Unused.h"
 #include "nsIObserverService.h"
 
 #include "gfxVR.h"
@@ -492,7 +493,7 @@ void VRManager::CheckForPuppetCompletion() {
   // Notify content process about completion of puppet test resets
   if (mState != VRManagerState::Active) {
     for (const auto& key : mManagerParentsWaitingForPuppetReset) {
-      (void)key->SendNotifyPuppetResetComplete();
+      Unused << key->SendNotifyPuppetResetComplete();
     }
     mManagerParentsWaitingForPuppetReset.Clear();
   }
@@ -505,8 +506,8 @@ void VRManager::CheckForPuppetCompletion() {
 void VRManager::NotifyPuppetComplete() {
   // Notify content process about completion of puppet test scripts
   if (mManagerParentRunningPuppet) {
-    (void)mManagerParentRunningPuppet->SendNotifyPuppetCommandBufferCompleted(
-        true);
+    Unused << mManagerParentRunningPuppet
+                  ->SendNotifyPuppetCommandBufferCompleted(true);
     mManagerParentRunningPuppet = nullptr;
   }
 }
@@ -835,7 +836,7 @@ void VRManager::ProcessManagerState_Active() {
 
 void VRManager::DispatchVRDisplayInfoUpdate() {
   for (VRManagerParent* vmp : mVRManagerParents) {
-    (void)vmp->SendUpdateDisplayInfo(mDisplayInfo);
+    Unused << vmp->SendUpdateDisplayInfo(mDisplayInfo);
   }
   mLastUpdateDisplayInfo = mDisplayInfo;
 }
@@ -851,7 +852,7 @@ void VRManager::DispatchRuntimeCapabilitiesUpdate() {
   }
 
   for (VRManagerParent* vmp : mVRManagerParents) {
-    (void)vmp->SendUpdateRuntimeCapabilities(flags);
+    Unused << vmp->SendUpdateRuntimeCapabilities(flags);
   }
 }
 
@@ -1022,8 +1023,8 @@ void VRManager::ResetPuppet(VRManagerParent* aManagerParent) {
 
   mManagerParentsWaitingForPuppetReset.Insert(aManagerParent);
   if (mManagerParentRunningPuppet != nullptr) {
-    (void)mManagerParentRunningPuppet->SendNotifyPuppetCommandBufferCompleted(
-        false);
+    Unused << mManagerParentRunningPuppet
+                  ->SendNotifyPuppetCommandBufferCompleted(false);
     mManagerParentRunningPuppet = nullptr;
   }
   mServiceHost->PuppetReset();

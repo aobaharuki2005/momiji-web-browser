@@ -35,6 +35,7 @@
 #include "mozilla/RefPtr.h"   // for nsRefPtr
 #include "nsPrintfCString.h"  // for nsPrintfCString
 #include "mozilla/layers/PTextureParent.h"
+#include "mozilla/Unused.h"
 #include <limits>
 #include "../opengl/CompositorOGL.h"
 

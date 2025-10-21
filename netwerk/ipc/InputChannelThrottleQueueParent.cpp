@@ -44,7 +44,7 @@ InputChannelThrottleQueueParent::Release(void) {
   // we are done with this ThrottleQueue. We should send a delete message
   // to delete the InputChannelThrottleQueueChild in socket process.
   if (count == 1 && CanSend()) {
-    (void)Send__delete__(this);
+    mozilla::Unused << Send__delete__(this);
     return 1;
   }
   return count;
@@ -85,7 +85,7 @@ InputChannelThrottleQueueParent::Init(uint32_t aMeanBytesPerSecond,
        maxBytesPerSecond(mMaxBytesPerSecond)] {
         RefPtr<SocketProcessParent> socketParent =
             SocketProcessParent::GetSingleton();
-        (void)socketParent->SendPInputChannelThrottleQueueConstructor(
+        Unused << socketParent->SendPInputChannelThrottleQueueConstructor(
             self, meanBytesPerSecond, maxBytesPerSecond);
       });
 

@@ -390,7 +390,7 @@ TEST_F(APZCTreeManagerTester,
   // A key event causing scroll page down happens.
   WidgetKeyboardEvent widgetEvent(true, eKeyDown, nullptr);
   KeyboardInput input(widgetEvent);
-  (void)manager->ReceiveInputEvent(input);
+  Unused << manager->ReceiveInputEvent(input);
 
   // Simulate WebRender compositing frames until APZ tells it the scroll offset
   // has stopped changing.

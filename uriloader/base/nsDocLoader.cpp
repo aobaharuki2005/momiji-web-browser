@@ -946,7 +946,7 @@ void nsDocLoader::NotifyDoneWithOnload(nsDocLoader* aParent) {
   BrowsingContext* bc = nsDocShell::Cast(docShell)->GetBrowsingContext();
   if (bc->IsContentSubframe() && !bc->GetParentWindowContext()->IsInProcess()) {
     if (BrowserChild* browserChild = BrowserChild::GetFrom(docShell)) {
-      (void)browserChild->SendMaybeFireEmbedderLoadEvents(
+      mozilla::Unused << browserChild->SendMaybeFireEmbedderLoadEvents(
           dom::EmbedderElementEventType::NoEvent);
     }
   }

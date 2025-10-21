@@ -1066,7 +1066,7 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
       // parent process. This request will be after the mutation events in the
       // IPDL queue, so the parent process will respond once it has finished
       // handling all the mutation events.
-      (void)mDocument->IPCDoc()->SendRequestAckMutationEvents();
+      Unused << mDocument->IPCDoc()->SendRequestAckMutationEvents();
     }
   }
 

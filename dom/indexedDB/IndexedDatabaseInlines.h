@@ -172,7 +172,7 @@ JSObject* StructuredCloneReadCallback(
                                  StructuredCloneReadInfoChild>) {
       return static_cast<StructuredCloneReadInfoChild*>(aClosure)->Database();
     }
-    (void)aClosure;
+    Unused << aClosure;
     return nullptr;
   }();
   return CommonStructuredCloneReadCallback(

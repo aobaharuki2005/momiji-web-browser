@@ -229,8 +229,8 @@ void BrowsingContextGroup::Subscribe(ContentParent* aProcess) {
   }
 
   // Send all of our contexts to the target content process.
-  (void)aProcess->SendRegisterBrowsingContextGroup(Id(), inits,
-                                                   useOriginAgentCluster);
+  Unused << aProcess->SendRegisterBrowsingContextGroup(Id(), inits,
+                                                       useOriginAgentCluster);
 }
 
 void BrowsingContextGroup::Unsubscribe(ContentParent* aProcess) {
@@ -594,7 +594,7 @@ void BrowsingContextGroup::NotifyFocusedOrActiveBrowsingContextToProcess(
     }
 
     if (focused || active) {
-      (void)aProcess->SendSetupFocusedAndActive(
+      Unused << aProcess->SendSetupFocusedAndActive(
           focused, fm->GetActionIdForFocusedBrowsingContextInChrome(), active,
           fm->GetActionIdForActiveBrowsingContextInChrome());
     }
@@ -630,7 +630,7 @@ void BrowsingContextGroup::SetUseOriginAgentClusterFromNetwork(
       return;
     }
 
-    (void)aContentParent->SendSetUseOriginAgentCluster(
+    Unused << aContentParent->SendSetUseOriginAgentCluster(
         Id(), WrapNotNull(aPrincipal), aUseOriginAgentCluster);
   });
 }

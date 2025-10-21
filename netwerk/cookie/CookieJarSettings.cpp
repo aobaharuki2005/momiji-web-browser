@@ -18,6 +18,7 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StoragePrincipalHelper.h"
+#include "mozilla/Unused.h"
 #include "nsIPrincipal.h"
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
 #  include "nsIProtocolHandler.h"
@@ -618,9 +619,9 @@ void CookieJarSettings::UpdateIsOnContentBlockingAllowList(
     return;
   }
 
-  (void)ContentBlockingAllowList::Check(contentBlockingAllowListPrincipal,
-                                        NS_UsePrivateBrowsing(aChannel),
-                                        mIsOnContentBlockingAllowList);
+  Unused << ContentBlockingAllowList::Check(contentBlockingAllowListPrincipal,
+                                            NS_UsePrivateBrowsing(aChannel),
+                                            mIsOnContentBlockingAllowList);
 
   mToBeMerged = true;
 }

@@ -10,6 +10,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/net/NeckoCommon.h"
@@ -69,7 +70,7 @@ void TCPSocketParentBase::AddIPDLReference() {
 NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketParent::Release(void) {
   nsrefcnt refcnt = TCPSocketParentBase::Release();
   if (refcnt == 1 && mIPCOpen) {
-    (void)PTCPSocketParent::SendRequestDelete();
+    mozilla::Unused << PTCPSocketParent::SendRequestDelete();
     return 1;
   }
   return refcnt;
@@ -182,8 +183,8 @@ void TCPSocketParent::FireStringDataEvent(const nsACString& aData,
 void TCPSocketParent::SendEvent(const nsAString& aType, CallbackData aData,
                                 TCPReadyState aReadyState) {
   if (mIPCOpen) {
-    (void)PTCPSocketParent::SendCallback(nsString(aType), aData,
-                                         static_cast<uint32_t>(aReadyState));
+    mozilla::Unused << PTCPSocketParent::SendCallback(
+        nsString(aType), aData, static_cast<uint32_t>(aReadyState));
   }
 }
 
@@ -215,7 +216,7 @@ void TCPSocketParent::ActorDestroy(ActorDestroyReason why) {
 }
 
 mozilla::ipc::IPCResult TCPSocketParent::RecvRequestDelete() {
-  (void)Send__delete__(this);
+  mozilla::Unused << Send__delete__(this);
   return IPC_OK();
 }
 

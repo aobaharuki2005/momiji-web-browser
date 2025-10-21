@@ -70,7 +70,7 @@ WindowGlobalInit WindowGlobalActor::AboutBlankInitializer(
 
   init.principal() = aPrincipal;
   init.storagePrincipal() = aPrincipal;
-  (void)NS_NewURI(getter_AddRefs(init.documentURI()), "about:blank");
+  Unused << NS_NewURI(getter_AddRefs(init.documentURI()), "about:blank");
   init.isInitialDocument() = true;
 
   return init;

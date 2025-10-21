@@ -516,7 +516,7 @@ AltSvcMapping::AltSvcMapping(nsIDataStorage* storage, int32_t epoch,
     _NS_NEXT_TOKEN;
     mMixedScheme = Substring(str, start, idx - start).EqualsLiteral("y");
     _NS_NEXT_TOKEN;
-    (void)mOriginAttributes.PopulateFromSuffix(
+    Unused << mOriginAttributes.PopulateFromSuffix(
         Substring(str, start, idx - start));
     // The separator after the top window origin is a pipe character since the
     // origin string can contain colons.
@@ -767,7 +767,7 @@ class WellKnownChecker {
         nsresult rv = uu->Verify(mTransactionAlternate->mWKResponse, mOrigin);
         if (NS_SUCCEEDED(rv)) {
           bool validWK = false;
-          (void)uu->GetValid(&validWK);
+          Unused << uu->GetValid(&validWK);
           if (!validWK) {
             LOG(("WellKnownChecker::Done %p json parser declares invalid\n%s\n",
                  this, mTransactionAlternate->mWKResponse.get()));

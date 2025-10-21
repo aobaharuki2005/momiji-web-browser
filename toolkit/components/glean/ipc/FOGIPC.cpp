@@ -31,6 +31,7 @@
 #include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/ipc/UtilityProcessParent.h"
 #include "mozilla/ipc/UtilityProcessSandboxing.h"
+#include "mozilla/Unused.h"
 #include "GMPPlatform.h"
 #include "GMPServiceParent.h"
 #include "nsIClassifiedChannel.h"
@@ -558,18 +559,18 @@ void SendFOGData(ipc::ByteBuf&& buf) {
       mozilla::gmp::SendFOGData(std::move(buf));
     } break;
     case GeckoProcessType_GPU:
-      (void)mozilla::gfx::GPUParent::GetSingleton()->SendFOGData(
+      Unused << mozilla::gfx::GPUParent::GetSingleton()->SendFOGData(
           std::move(buf));
       break;
     case GeckoProcessType_RDD:
-      (void)mozilla::RDDParent::GetSingleton()->SendFOGData(std::move(buf));
+      Unused << mozilla::RDDParent::GetSingleton()->SendFOGData(std::move(buf));
       break;
     case GeckoProcessType_Socket:
-      (void)net::SocketProcessChild::GetSingleton()->SendFOGData(
+      Unused << net::SocketProcessChild::GetSingleton()->SendFOGData(
           std::move(buf));
       break;
     case GeckoProcessType_Utility:
-      (void)ipc::UtilityProcessChild::GetSingleton()->SendFOGData(
+      Unused << ipc::UtilityProcessChild::GetSingleton()->SendFOGData(
           std::move(buf));
       break;
     default:
@@ -624,19 +625,19 @@ void TestTriggerMetrics(uint32_t aProcessType,
     case nsIXULRuntime::PROCESS_TYPE_SOCKET: {
       RefPtr<net::SocketProcessParent> socketParent(
           net::SocketProcessParent::GetSingleton());
-      (void)socketParent->SendTestTriggerMetrics()->Then(
+      Unused << socketParent->SendTestTriggerMetrics()->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise]() { promise->MaybeResolveWithUndefined(); },
           [promise]() { promise->MaybeRejectWithUndefined(); });
     } break;
     case nsIXULRuntime::PROCESS_TYPE_UTILITY:
-      (void)ipc::UtilityProcessManager::GetSingleton()
-          ->GetProcessParent(ipc::SandboxingKind::GENERIC_UTILITY)
-          ->SendTestTriggerMetrics()
-          ->Then(
-              GetCurrentSerialEventTarget(), __func__,
-              [promise]() { promise->MaybeResolveWithUndefined(); },
-              [promise]() { promise->MaybeRejectWithUndefined(); });
+      Unused << ipc::UtilityProcessManager::GetSingleton()
+                    ->GetProcessParent(ipc::SandboxingKind::GENERIC_UTILITY)
+                    ->SendTestTriggerMetrics()
+                    ->Then(
+                        GetCurrentSerialEventTarget(), __func__,
+                        [promise]() { promise->MaybeResolveWithUndefined(); },
+                        [promise]() { promise->MaybeRejectWithUndefined(); });
       break;
     default:
       promise->MaybeRejectWithUndefined();

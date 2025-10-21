@@ -123,7 +123,7 @@ void SocketProcessChild::InitSocketBackground() {
 
   SocketProcessBackgroundChild::Create(std::move(childEndpoint));
 
-  (void)SendInitSocketBackground(std::move(parentEndpoint));
+  Unused << SendInitSocketBackground(std::move(parentEndpoint));
 }
 
 namespace {
@@ -213,7 +213,7 @@ bool SocketProcessChild::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
     nsCOMPtr<nsIObserver> observer = new NetTeardownObserver();
-    (void)obs->AddObserver(observer, "profile-change-net-teardown", false);
+    Unused << obs->AddObserver(observer, "profile-change-net-teardown", false);
   }
 
   mSocketThread = mozilla::components::SocketTransport::Service();
@@ -284,10 +284,10 @@ void SocketProcessChild::CleanUp() {
 
 mozilla::ipc::IPCResult SocketProcessChild::RecvInit(
     const SocketPorcessInitAttributes& aAttributes) {
-  (void)RecvSetOffline(aAttributes.mOffline());
-  (void)RecvSetConnectivity(aAttributes.mConnectivity());
+  Unused << RecvSetOffline(aAttributes.mOffline());
+  Unused << RecvSetConnectivity(aAttributes.mConnectivity());
   if (aAttributes.mInitSandbox()) {
-    (void)RecvInitLinuxSandbox(aAttributes.mSandboxBroker());
+    Unused << RecvInitLinuxSandbox(aAttributes.mSandboxBroker());
   }
 
 #if defined(XP_WIN)
@@ -314,7 +314,7 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvRequestMemoryReport(
   mozilla::dom::MemoryReportRequestClient::Start(
       aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile, processName,
       [&](const MemoryReport& aReport) {
-        (void)GetSingleton()->SendAddMemoryReport(aReport);
+        Unused << GetSingleton()->SendAddMemoryReport(aReport);
       },
       aResolver);
   return IPC_OK();
@@ -462,7 +462,7 @@ SocketProcessChild::RecvOnHttpActivityDistributorObserveProxyResponse(
   nsCOMPtr<nsIHttpActivityDistributor> distributor;
   distributor = mozilla::components::HttpActivityDistributor::Service();
   if (distributor) {
-    (void)distributor->SetObserveProxyResponse(aIsEnabled);
+    Unused << distributor->SetObserveProxyResponse(aIsEnabled);
   }
   return IPC_OK();
 }
@@ -473,7 +473,7 @@ SocketProcessChild::RecvOnHttpActivityDistributorObserveConnection(
   nsCOMPtr<nsIHttpActivityDistributor> distributor;
   distributor = mozilla::components::HttpActivityDistributor::Service();
   if (distributor) {
-    (void)distributor->SetObserveConnection(aIsEnabled);
+    Unused << distributor->SetObserveConnection(aIsEnabled);
   }
   return IPC_OK();
 }
@@ -743,7 +743,7 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvInitProxyAutoConfigChild(
     xpc::SelfHostedShmem::GetSingleton();
   }
 
-  (void)ProxyAutoConfigChild::Create(std::move(aEndpoint));
+  Unused << ProxyAutoConfigChild::Create(std::move(aEndpoint));
   return IPC_OK();
 }
 
@@ -849,7 +849,7 @@ SocketProcessChild::GetIPCClientCertsActor() {
           "SendInitIPCClientCerts",
           [endpoint = std::move(parentEndpoint)](
               SocketProcessBackgroundChild* aActor) mutable {
-            (void)aActor->SendInitIPCClientCerts(std::move(endpoint));
+            Unused << aActor->SendInitIPCClientCerts(std::move(endpoint));
           }))) {
     return nullptr;
   }
@@ -869,13 +869,13 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvAddNetAddrOverride(
       MockNetworkLayerController::GetSingleton();
   RefPtr<nsNetAddr> from = new nsNetAddr(&aFrom);
   RefPtr<nsNetAddr> to = new nsNetAddr(&aTo);
-  (void)controller->AddNetAddrOverride(from, to);
+  Unused << controller->AddNetAddrOverride(from, to);
   return IPC_OK();
 }
 mozilla::ipc::IPCResult SocketProcessChild::RecvClearNetAddrOverrides() {
   nsCOMPtr<nsIMockNetworkLayerController> controller =
       MockNetworkLayerController::GetSingleton();
-  (void)controller->ClearNetAddrOverrides();
+  Unused << controller->ClearNetAddrOverrides();
   return IPC_OK();
 }
 

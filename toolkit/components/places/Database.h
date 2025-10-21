@@ -119,7 +119,7 @@ class Database final : public nsIObserver, public nsSupportsWeakReference {
    * @return one of the nsINavHistoryService::DATABASE_STATUS_* constants.
    */
   uint16_t GetDatabaseStatus() {
-    (void)EnsureConnection();
+    mozilla::Unused << EnsureConnection();
     return mDatabaseStatus;
   }
 
@@ -129,7 +129,7 @@ class Database final : public nsIObserver, public nsSupportsWeakReference {
    * @return The connection handle.
    */
   mozIStorageConnection* MainConn() {
-    (void)EnsureConnection();
+    mozilla::Unused << EnsureConnection();
     return mMainConn;
   }
 
@@ -217,7 +217,7 @@ class Database final : public nsIObserver, public nsSupportsWeakReference {
       const nsACString& aQuery);
 
   int64_t GetTagsFolderId() {
-    (void)EnsureConnection();
+    mozilla::Unused << EnsureConnection();
     return mTagsRootId;
   }
 

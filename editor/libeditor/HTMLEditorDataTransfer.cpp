@@ -228,7 +228,7 @@ nsresult HTMLEditor::LoadHTML(const nsAString& aInputString) {
   //     behavior since using only child node to pointing insertion point
   //     changes the behavior when inserted child is moved by mutation
   //     observer.  We need to investigate what we should do here.
-  (void)pointToInsert.Offset();
+  Unused << pointToInsert.Offset();
   EditorDOMPoint pointToPutCaret;
   for (nsCOMPtr<nsIContent> contentToInsert = documentFragment->GetFirstChild();
        contentToInsert; contentToInsert = documentFragment->GetFirstChild()) {
@@ -685,8 +685,8 @@ Result<EditActionResult, nsresult> HTMLEditor::HTMLWithContextInserter::Run(
       streamStartParent ? EditorRawDOMPoint(streamEndParent, streamEndOffset)
                         : EditorRawDOMPoint::AtEndOf(fragmentAsNode);
 
-  (void)streamStartPoint;
-  (void)streamEndPoint;
+  Unused << streamStartPoint;
+  Unused << streamEndPoint;
 
   HTMLWithContextInserter::CollectTopMostChildContentsCompletelyInRange(
       EditorRawDOMPoint(streamStartParent,

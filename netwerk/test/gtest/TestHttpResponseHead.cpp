@@ -2,6 +2,7 @@
 
 #include "chrome/common/ipc_message.h"
 #include "mozilla/net/PHttpChannelParams.h"
+#include "mozilla/Unused.h"
 #include "nsHttp.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -46,15 +47,15 @@ TEST(TestHttpResponseHead, Bug1636930)
 {
   nsHttpResponseHead head;
 
-  (void)head.ParseStatusLine("HTTP/1.1 200 OK"_ns);
-  (void)head.ParseHeaderLine("content-type: text/plain"_ns);
-  (void)head.ParseHeaderLine("etag: Just testing"_ns);
-  (void)head.ParseHeaderLine("cache-control: max-age=99999"_ns);
-  (void)head.ParseHeaderLine("accept-ranges: bytes"_ns);
-  (void)head.ParseHeaderLine("content-length: 1408"_ns);
-  (void)head.ParseHeaderLine("connection: close"_ns);
-  (void)head.ParseHeaderLine("server: httpd.js"_ns);
-  (void)head.ParseHeaderLine("date: Tue, 12 May 2020 09:24:23 GMT"_ns);
+  Unused << head.ParseStatusLine("HTTP/1.1 200 OK"_ns);
+  Unused << head.ParseHeaderLine("content-type: text/plain"_ns);
+  Unused << head.ParseHeaderLine("etag: Just testing"_ns);
+  Unused << head.ParseHeaderLine("cache-control: max-age=99999"_ns);
+  Unused << head.ParseHeaderLine("accept-ranges: bytes"_ns);
+  Unused << head.ParseHeaderLine("content-length: 1408"_ns);
+  Unused << head.ParseHeaderLine("connection: close"_ns);
+  Unused << head.ParseHeaderLine("server: httpd.js"_ns);
+  Unused << head.ParseHeaderLine("date: Tue, 12 May 2020 09:24:23 GMT"_ns);
 
   AssertRoundTrips(head);
 }
@@ -63,17 +64,17 @@ TEST(TestHttpResponseHead, bug1649807)
 {
   nsHttpResponseHead head;
 
-  (void)head.ParseStatusLine("HTTP/1.1 200 OK"_ns);
-  (void)head.ParseHeaderLine("content-type: text/plain"_ns);
-  (void)head.ParseHeaderLine("etag: Just testing"_ns);
-  (void)head.ParseHeaderLine(
+  Unused << head.ParseStatusLine("HTTP/1.1 200 OK"_ns);
+  Unused << head.ParseHeaderLine("content-type: text/plain"_ns);
+  Unused << head.ParseHeaderLine("etag: Just testing"_ns);
+  Unused << head.ParseHeaderLine(
       "cache-control: public, max-age=31536000, immutable"_ns);
-  (void)head.ParseHeaderLine("accept-ranges: bytes"_ns);
-  (void)head.ParseHeaderLine("content-length: 1408"_ns);
-  (void)head.ParseHeaderLine("connection: close"_ns);
-  (void)head.ParseHeaderLine("server: httpd.js"_ns);
-  (void)head.ParseHeaderLine("pragma: no-cache"_ns);
-  (void)head.ParseHeaderLine("date: Tue, 12 May 2020 09:24:23 GMT"_ns);
+  Unused << head.ParseHeaderLine("accept-ranges: bytes"_ns);
+  Unused << head.ParseHeaderLine("content-length: 1408"_ns);
+  Unused << head.ParseHeaderLine("connection: close"_ns);
+  Unused << head.ParseHeaderLine("server: httpd.js"_ns);
+  Unused << head.ParseHeaderLine("pragma: no-cache"_ns);
+  Unused << head.ParseHeaderLine("date: Tue, 12 May 2020 09:24:23 GMT"_ns);
 
   ASSERT_FALSE(head.NoCache())
   << "Cache-Control: immutable wins over Pragma: no-cache";
@@ -84,16 +85,16 @@ TEST(TestHttpResponseHead, bug1937766)
 {
   nsHttpResponseHead head;
 
-  (void)head.ParseStatusLine("HTTP/1.1 200 OK"_ns);
-  (void)head.ParseHeaderLine("content-type: text/plain"_ns);
-  (void)head.ParseHeaderLine("etag: Just testing"_ns);
-  (void)head.ParseHeaderLine("cache-control: age=99999"_ns);
-  (void)head.ParseHeaderLine("accept-ranges: bytes"_ns);
-  (void)head.ParseHeaderLine("content-length: 1408"_ns);
-  (void)head.ParseHeaderLine("connection: close"_ns);
-  (void)head.ParseHeaderLine("server: httpd.js"_ns);
-  (void)head.ParseHeaderLine("pragma: no-cache"_ns);
-  (void)head.ParseHeaderLine("date: Tue, 12 May 2020 09:24:23 GMT"_ns);
+  Unused << head.ParseStatusLine("HTTP/1.1 200 OK"_ns);
+  Unused << head.ParseHeaderLine("content-type: text/plain"_ns);
+  Unused << head.ParseHeaderLine("etag: Just testing"_ns);
+  Unused << head.ParseHeaderLine("cache-control: age=99999"_ns);
+  Unused << head.ParseHeaderLine("accept-ranges: bytes"_ns);
+  Unused << head.ParseHeaderLine("content-length: 1408"_ns);
+  Unused << head.ParseHeaderLine("connection: close"_ns);
+  Unused << head.ParseHeaderLine("server: httpd.js"_ns);
+  Unused << head.ParseHeaderLine("pragma: no-cache"_ns);
+  Unused << head.ParseHeaderLine("date: Tue, 12 May 2020 09:24:23 GMT"_ns);
 
   ASSERT_TRUE(head.NoCache())
   << "Pragma: no-cache wins over Cache-Control";
@@ -104,15 +105,15 @@ TEST(TestHttpResponseHead, bug1660200)
 {
   nsHttpResponseHead head;
 
-  (void)head.ParseStatusLine("HTTP/1.1 200 OK"_ns);
-  (void)head.ParseHeaderLine("content-type: text/plain"_ns);
-  (void)head.ParseHeaderLine("etag: Just testing"_ns);
-  (void)head.ParseHeaderLine("cache-control: no-cache"_ns);
-  (void)head.ParseHeaderLine("accept-ranges: bytes"_ns);
-  (void)head.ParseHeaderLine("content-length: 1408"_ns);
-  (void)head.ParseHeaderLine("connection: close"_ns);
-  (void)head.ParseHeaderLine("server: httpd.js"_ns);
-  (void)head.ParseHeaderLine("date: Tue, 12 May 2020 09:24:23 GMT"_ns);
+  Unused << head.ParseStatusLine("HTTP/1.1 200 OK"_ns);
+  Unused << head.ParseHeaderLine("content-type: text/plain"_ns);
+  Unused << head.ParseHeaderLine("etag: Just testing"_ns);
+  Unused << head.ParseHeaderLine("cache-control: no-cache"_ns);
+  Unused << head.ParseHeaderLine("accept-ranges: bytes"_ns);
+  Unused << head.ParseHeaderLine("content-length: 1408"_ns);
+  Unused << head.ParseHeaderLine("connection: close"_ns);
+  Unused << head.ParseHeaderLine("server: httpd.js"_ns);
+  Unused << head.ParseHeaderLine("date: Tue, 12 May 2020 09:24:23 GMT"_ns);
 
   AssertRoundTrips(head);
 }
@@ -197,9 +198,9 @@ TEST(TestHttpResponseHead, MoveConstructor)
 {
   // Construct an initial response head
   nsHttpResponseHead originalHead;
-  (void)originalHead.ParseStatusLine("HTTP/1.1 200 OK"_ns);
-  (void)originalHead.ParseHeaderLine("content-type: text/plain"_ns);
-  (void)originalHead.ParseHeaderLine("content-length: 1408"_ns);
+  Unused << originalHead.ParseStatusLine("HTTP/1.1 200 OK"_ns);
+  Unused << originalHead.ParseHeaderLine("content-type: text/plain"_ns);
+  Unused << originalHead.ParseHeaderLine("content-length: 1408"_ns);
 
   // Move construct a new object from the initial one
   nsHttpResponseHead movedHead(std::move(originalHead));
@@ -222,11 +223,11 @@ TEST(TestHttpResponseHead, MoveConstructor)
 TEST(TestHttpResponseHead, MultipleCacheControl)
 {
   nsHttpResponseHead originalHead;
-  (void)originalHead.ParseStatusLine("HTTP/1.1 200 OK"_ns);
-  (void)originalHead.ParseHeaderLine("content-type: text/plain"_ns);
-  (void)originalHead.ParseHeaderLine("content-length: 1408"_ns);
-  (void)originalHead.ParseHeaderLine("cache-control: no-cache"_ns);
-  (void)originalHead.ParseHeaderLine("cache-control: no-store"_ns);
+  Unused << originalHead.ParseStatusLine("HTTP/1.1 200 OK"_ns);
+  Unused << originalHead.ParseHeaderLine("content-type: text/plain"_ns);
+  Unused << originalHead.ParseHeaderLine("content-length: 1408"_ns);
+  Unused << originalHead.ParseHeaderLine("cache-control: no-cache"_ns);
+  Unused << originalHead.ParseHeaderLine("cache-control: no-store"_ns);
 
   ASSERT_EQ(originalHead.NoStore(), true);
   ASSERT_EQ(originalHead.NoCache(), true);

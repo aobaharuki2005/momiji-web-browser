@@ -6,6 +6,7 @@
 
 #include "CacheStreamControlChild.h"
 
+#include "mozilla/Unused.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/CacheWorkerRef.h"

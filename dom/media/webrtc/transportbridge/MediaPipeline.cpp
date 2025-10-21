@@ -224,7 +224,7 @@ class AudioProxyThread {
           self->InternalProcessAudioChunk(aRate, aChunk, aEnabled);
         }));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    (void)rv;
+    Unused << rv;
   }
 
  protected:

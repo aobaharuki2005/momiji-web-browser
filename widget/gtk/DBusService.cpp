@@ -10,6 +10,7 @@
 #include <gdk/gdk.h>
 #include "DBusService.h"
 #include "nsAppRunner.h"
+#include "mozilla/Unused.h"
 #include "mozilla/GUniquePtr.h"
 #include "mozilla/WidgetUtils.h"
 #include <gio/gio.h>

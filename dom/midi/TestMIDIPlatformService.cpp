@@ -4,6 +4,7 @@
 
 #include "TestMIDIPlatformService.h"
 
+#include "mozilla/Unused.h"
 #include "mozilla/dom/MIDIPlatformRunnables.h"
 #include "mozilla/dom/MIDIPort.h"
 #include "mozilla/dom/MIDIPortInterface.h"

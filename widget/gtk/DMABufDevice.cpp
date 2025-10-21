@@ -148,7 +148,7 @@ DMABufDevice* DMABufDeviceLock::EnsureDMABufDevice() {
       LOGDMABUF(("EnsureDMABufDevice(): created DMABufDevice"));
     } else {
       nsCString failureId;
-      (void)sDMABufDevice->IsEnabled(failureId);
+      Unused << sDMABufDevice->IsEnabled(failureId);
       LOGDMABUF(("EnsureDMABufDevice(): failed to init DMABufDevice: %s",
                  failureId.get()));
     }

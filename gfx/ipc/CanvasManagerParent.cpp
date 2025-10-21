@@ -100,7 +100,7 @@ MOZ_RUNINIT CanvasManagerParent::ManagerSet CanvasManagerParent::sManagers;
   }
 
   for (const auto& actor : actors) {
-    (void)NS_WARN_IF(!actor->SendDeactivate());
+    Unused << NS_WARN_IF(!actor->SendDeactivate());
   }
 }
 

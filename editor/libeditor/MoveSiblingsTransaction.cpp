@@ -367,7 +367,7 @@ nsresult MoveSiblingsTransaction::InsertAllSiblingsToMove(
         NS_WARNING_ASSERTION(
             NS_SUCCEEDED(rvMarkElementDirty),
             "EditorBase::MarkElementDirty() failed, but ignored");
-        (void)rvMarkElementDirty;
+        Unused << rvMarkElementDirty;
       }
     }
 

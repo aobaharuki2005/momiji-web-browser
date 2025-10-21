@@ -7,6 +7,7 @@
 #include "UDPSocketParent.h"
 
 #include "UDPSocket.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/PBackgroundParent.h"
@@ -41,7 +42,7 @@ bool UDPSocketParent::Init(nsIPrincipal* aPrincipal,
   MOZ_ASSERT_IF(mBackgroundManager, !aPrincipal);
   // will be used once we move all UDPSocket to PBackground, or
   // if we add in Principal checking for dom/media/webrtc/transport
-  (void)mBackgroundManager;
+  Unused << mBackgroundManager;
 
   mPrincipal = aPrincipal;
 
@@ -105,7 +106,7 @@ mozilla::ipc::IPCResult UDPSocketParent::RecvBind(
   UDPSOCKET_LOG(
       ("%s: SendCallbackOpened: %s:%u", __FUNCTION__, addr.get(), port));
   mAddress = {addr, port};
-  (void)SendCallbackOpened(UDPAddressInfo(addr, port));
+  mozilla::Unused << SendCallbackOpened(UDPAddressInfo(addr, port));
 
   return IPC_OK();
 }
@@ -218,7 +219,7 @@ static void CheckSTSThread() {
 mozilla::ipc::IPCResult UDPSocketParent::RecvConnect(
     const UDPAddressInfo& aAddressInfo) {
   nsCOMPtr<nsIEventTarget> target = GetCurrentSerialEventTarget();
-  (void)NS_WARN_IF(NS_FAILED(GetSTSThread()->Dispatch(
+  Unused << NS_WARN_IF(NS_FAILED(GetSTSThread()->Dispatch(
       WrapRunnable(RefPtr<UDPSocketParent>(this), &UDPSocketParent::DoConnect,
                    mSocket, target, aAddressInfo),
       NS_DISPATCH_NORMAL)));
@@ -228,13 +229,13 @@ mozilla::ipc::IPCResult UDPSocketParent::RecvConnect(
 void UDPSocketParent::DoSendConnectResponse(
     const UDPAddressInfo& aAddressInfo) {
   // can't use directly with WrapRunnable due to warnings
-  (void)SendCallbackConnected(aAddressInfo);
+  mozilla::Unused << SendCallbackConnected(aAddressInfo);
 }
 
 void UDPSocketParent::SendConnectResponse(
     const nsCOMPtr<nsIEventTarget>& aThread,
     const UDPAddressInfo& aAddressInfo) {
-  (void)NS_WARN_IF(NS_FAILED(aThread->Dispatch(
+  Unused << NS_WARN_IF(NS_FAILED(aThread->Dispatch(
       WrapRunnable(RefPtr<UDPSocketParent>(this),
                    &UDPSocketParent::DoSendConnectResponse, aAddressInfo),
       NS_DISPATCH_NORMAL)));
@@ -446,13 +447,13 @@ mozilla::ipc::IPCResult UDPSocketParent::RecvClose() {
   nsresult rv = mSocket->Close();
   mSocket = nullptr;
 
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult UDPSocketParent::RecvRequestDelete() {
-  (void)Send__delete__(this);
+  mozilla::Unused << Send__delete__(this);
   return IPC_OK();
 }
 
@@ -515,7 +516,8 @@ UDPSocketParent::OnPacketReceived(nsIUDPSocket* aSocket,
   nsTArray<uint8_t> infallibleArray{std::move(fallibleArray)};
 
   // compose callback
-  (void)SendCallbackReceivedData(UDPAddressInfo(ip, port), infallibleArray);
+  mozilla::Unused << SendCallbackReceivedData(UDPAddressInfo(ip, port),
+                                              infallibleArray);
 
   return NS_OK;
 }
@@ -524,7 +526,7 @@ NS_IMETHODIMP
 UDPSocketParent::OnStopListening(nsIUDPSocket* aSocket, nsresult aStatus) {
   // underlying socket is dead, send state update to child process
   if (mIPCOpen) {
-    (void)SendCallbackClosed();
+    mozilla::Unused << SendCallbackClosed();
   }
   return NS_OK;
 }
@@ -534,14 +536,14 @@ void UDPSocketParent::FireInternalError(uint32_t aLineNo) {
     return;
   }
 
-  (void)SendCallbackError("Internal error"_ns, nsLiteralCString(__FILE__),
-                          aLineNo);
+  mozilla::Unused << SendCallbackError("Internal error"_ns,
+                                       nsLiteralCString(__FILE__), aLineNo);
 }
 
 void UDPSocketParent::SendInternalError(const nsCOMPtr<nsIEventTarget>& aThread,
                                         uint32_t aLineNo) {
   UDPSOCKET_LOG(("SendInternalError: %u", aLineNo));
-  (void)NS_WARN_IF(NS_FAILED(aThread->Dispatch(
+  Unused << NS_WARN_IF(NS_FAILED(aThread->Dispatch(
       WrapRunnable(RefPtr<UDPSocketParent>(this),
                    &UDPSocketParent::FireInternalError, aLineNo),
       NS_DISPATCH_NORMAL)));

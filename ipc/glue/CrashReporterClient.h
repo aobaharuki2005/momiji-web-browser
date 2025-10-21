@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Unused.h"
 #include "nsExceptionHandler.h"
 
 namespace mozilla::ipc {
@@ -25,7 +26,7 @@ class CrashReporterClient {
   template <typename T>
   static void InitSingleton(T* aToplevelProtocol) {
     InitSingleton();
-    (void)aToplevelProtocol->SendInitCrashReporter(CreateInitArgs());
+    Unused << aToplevelProtocol->SendInitCrashReporter(CreateInitArgs());
   }
 
   static void InitSingleton();

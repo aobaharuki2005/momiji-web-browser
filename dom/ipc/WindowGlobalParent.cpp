@@ -177,7 +177,7 @@ void WindowGlobalParent::Init() {
   // process in our group in that case.
   IPCInitializer ipcinit = GetIPCInitializer();
   Group()->EachOtherParent(cp, [&](ContentParent* otherContent) {
-    (void)otherContent->SendCreateWindowContext(ipcinit);
+    Unused << otherContent->SendCreateWindowContext(ipcinit);
   });
 
   if (!BrowsingContext()->IsDiscarded()) {
@@ -546,7 +546,7 @@ IPCResult WindowGlobalParent::RecvDestroy() {
   if (CanSend()) {
     RefPtr<BrowserParent> browserParent = GetBrowserParent();
     if (!browserParent || !browserParent->IsDestroyed()) {
-      (void)Send__delete__(this);
+      Unused << Send__delete__(this);
     }
   }
   return IPC_OK();
@@ -873,8 +873,8 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
     }
 
     if (mPendingRequests && aTimeout) {
-      (void)NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, aTimeout,
-                                    nsITimer::TYPE_ONE_SHOT);
+      Unused << NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, aTimeout,
+                                        nsITimer::TYPE_ONE_SHOT);
     }
 
     CheckDoneWaiting();
@@ -1419,7 +1419,7 @@ WindowGlobalParent::RecvUpdateActivePeerConnectionStatus(bool aIsAdded) {
     }
 
     top->mNumOfProcessesWithActivePeerConnections = newValue.value();
-    (void)top->SetHasActivePeerConnections(newValue.value() > 0);
+    Unused << top->SetHasActivePeerConnections(newValue.value() > 0);
   }
 
   return IPC_OK();
@@ -1489,7 +1489,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvReloadWithHttpsOnlyException() {
   // We replace the scheme with http, because the user wants to unbreak the
   // whole page.
   nsCOMPtr<nsIURI> newURI;
-  (void)NS_MutateURI(innerURI).SetScheme("http"_ns).Finalize(
+  Unused << NS_MutateURI(innerURI).SetScheme("http"_ns).Finalize(
       getter_AddRefs(newURI));
 
   OriginAttributes originAttributes =

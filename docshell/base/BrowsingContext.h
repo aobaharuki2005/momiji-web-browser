@@ -673,7 +673,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   }
 
   void SetCurrentIPAddressSpace(nsILoadInfo::IPAddressSpace aIPAddressSpace) {
-    (void)SetIPAddressSpace(aIPAddressSpace);
+    Unused << SetIPAddressSpace(aIPAddressSpace);
   }
 
   bool ForceDesktopViewport() const { return GetForceDesktopViewport(); }
@@ -745,7 +745,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void ResetOrientationOverride() {
     MOZ_ASSERT(IsTop());
 
-    (void)SetHasOrientationOverride(false);
+    Unused << SetHasOrientationOverride(false);
   }
 
   void SetRDMPaneMaxTouchPoints(uint8_t aMaxTouchPoints, ErrorResult& aRv) {

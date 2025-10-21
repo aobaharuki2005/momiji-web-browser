@@ -101,21 +101,21 @@ Maybe<uint32_t> ContentBlockingLog::RecordLogParent(
     case nsIWebProgressListener::STATE_LOADED_EMAILTRACKING_LEVEL_2_CONTENT:
     case nsIWebProgressListener::STATE_PURGED_BOUNCETRACKER:
     case nsIWebProgressListener::STATE_COOKIES_PARTITIONED_TRACKER:
-      (void)RecordLogInternal(aOrigin, aType, blockedValue);
+      Unused << RecordLogInternal(aOrigin, aType, blockedValue);
       break;
 
     case nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER:
     case nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER:
-      (void)RecordLogInternal(aOrigin, aType, blockedValue, aReason,
-                              aTrackingFullHashes);
+      Unused << RecordLogInternal(aOrigin, aType, blockedValue, aReason,
+                                  aTrackingFullHashes);
       break;
 
     case nsIWebProgressListener::STATE_REPLACED_FINGERPRINTING_CONTENT:
     case nsIWebProgressListener::STATE_ALLOWED_FINGERPRINTING_CONTENT:
     case nsIWebProgressListener::STATE_REPLACED_TRACKING_CONTENT:
     case nsIWebProgressListener::STATE_ALLOWED_TRACKING_CONTENT:
-      (void)RecordLogInternal(aOrigin, aType, blockedValue, aReason,
-                              aTrackingFullHashes);
+      Unused << RecordLogInternal(aOrigin, aType, blockedValue, aReason,
+                                  aTrackingFullHashes);
       break;
     case nsIWebProgressListener::STATE_ALLOWED_FONT_FINGERPRINTING:
       MOZ_ASSERT(!aBlocked,
@@ -384,9 +384,9 @@ void ContentBlockingLog::ReportEmailTrackingLog(
       }
 
       if (isLevel1EmailTracker) {
-        (void)level1SiteSet.EnsureInserted(baseDomain);
+        Unused << level1SiteSet.EnsureInserted(baseDomain);
       } else {
-        (void)level2SiteSet.EnsureInserted(baseDomain);
+        Unused << level2SiteSet.EnsureInserted(baseDomain);
       }
     }
   }

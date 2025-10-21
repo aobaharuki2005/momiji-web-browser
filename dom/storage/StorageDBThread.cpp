@@ -406,7 +406,7 @@ void StorageDBThread::SetDefaultPriority() {
 void StorageDBThread::ThreadFunc(void* aArg) {
   {
     auto queue = MakeRefPtr<ThreadEventQueue>(MakeUnique<EventQueue>());
-    (void)nsThreadManager::get().CreateCurrentThread(queue);
+    Unused << nsThreadManager::get().CreateCurrentThread(queue);
   }
 
   AUTO_PROFILER_REGISTER_THREAD("localStorage DB");

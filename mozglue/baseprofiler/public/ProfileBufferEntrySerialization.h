@@ -14,6 +14,7 @@
 #include "mozilla/ProfileBufferIndex.h"
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Variant.h"
 
 #include <string>

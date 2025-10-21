@@ -888,7 +888,7 @@ class MediaDecoderStateMachine::LoopingDecodingState
 
     // We might be able to determine the duration already, let's check.
     if (mIsReachingAudioEOS || mIsReachingVideoEOS) {
-      (void)DetermineOriginalDecodedDurationIfNeeded();
+      Unused << DetermineOriginalDecodedDurationIfNeeded();
     }
 
     // If we've looped at least once before, then we need to update queue offset
@@ -2345,7 +2345,7 @@ class MediaDecoderStateMachine::NextFrameSeekingState
     RefPtr<Runnable> r = mAsyncSeekTask = new AysncNextFrameSeekTask(this);
     nsresult rv = OwnerThread()->Dispatch(r.forget());
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    (void)rv;
+    Unused << rv;
   }
 
  private:
@@ -4374,7 +4374,7 @@ void MediaDecoderStateMachine::ScheduleStateMachine() {
       NewRunnableMethod("MediaDecoderStateMachine::RunStateMachine", this,
                         &MediaDecoderStateMachine::RunStateMachine));
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  (void)rv;
+  Unused << rv;
 }
 
 void MediaDecoderStateMachine::ScheduleStateMachineIn(const TimeUnit& aTime) {
@@ -4520,7 +4520,7 @@ void MediaDecoderStateMachine::InvokeSuspendMediaSink() {
       NewRunnableMethod("MediaDecoderStateMachine::SuspendMediaSink", this,
                         &MediaDecoderStateMachine::SuspendMediaSink));
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  (void)rv;
+  Unused << rv;
 }
 
 void MediaDecoderStateMachine::SuspendMediaSink() {
@@ -4543,7 +4543,7 @@ void MediaDecoderStateMachine::InvokeResumeMediaSink() {
       NewRunnableMethod("MediaDecoderStateMachine::ResumeMediaSink", this,
                         &MediaDecoderStateMachine::ResumeMediaSink));
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  (void)rv;
+  Unused << rv;
 }
 
 void MediaDecoderStateMachine::ResumeMediaSink() {
@@ -4701,7 +4701,7 @@ RefPtr<GenericPromise> MediaDecoderStateMachine::RequestDebugInfo(
                              }),
       AbstractThread::TailDispatch);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-  (void)rv;
+  Unused << rv;
   return p;
 }
 

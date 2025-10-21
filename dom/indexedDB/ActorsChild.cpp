@@ -902,7 +902,7 @@ void BackgroundFactoryRequestChild::HandleResponse(
   IDBDatabase* const database = [this, databaseActor]() -> IDBDatabase* {
     IDBDatabase* database = databaseActor->GetDOMObject();
     if (!database) {
-      (void)this;
+      Unused << this;
 
       if (NS_WARN_IF(!databaseActor->EnsureDOMObject())) {
         return nullptr;
@@ -1193,10 +1193,11 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
     // XXX This is a hack to ensure that transaction/request serial numbers stay
     // in sync between parent and child. Actually, it might be better to create
     // an IDBTransaction in the child and abort that.
-    (void)mozilla::ipc::BackgroundChildImpl::GetThreadLocalForCurrentThread()
-        ->mIndexedDBThreadLocal->NextTransactionSN(
-            IDBTransaction::Mode::VersionChange);
-    (void)IDBRequest::NextSerialNumber();
+    Unused
+        << mozilla::ipc::BackgroundChildImpl::GetThreadLocalForCurrentThread()
+               ->mIndexedDBThreadLocal->NextTransactionSN(
+                   IDBTransaction::Mode::VersionChange);
+    Unused << IDBRequest::NextSerialNumber();
 
     // No reason to IPC_FAIL here.
     return IPC_OK();
@@ -2367,7 +2368,7 @@ void BackgroundCursorChild<CursorType>::SendContinueInternal(
           if constexpr (!CursorTypeTraits<CursorType>::IsObjectStoreCursor) {
             currentObjectStoreKey = currentCachedResponse.mObjectStoreKey;
           } else {
-            (void)currentObjectStoreKey;
+            Unused << currentObjectStoreKey;
           }
         }
         return res;
@@ -2736,9 +2737,9 @@ mozilla::ipc::IPCResult BackgroundCursorChild<CursorType>::RecvResponse(
   MaybeCollectGarbageOnIPCMessage();
 
   const RefPtr<IDBRequest> request = std::move(mStrongRequest);
-  (void)request;  // XXX see Bug 1605075
+  Unused << request;  // XXX see Bug 1605075
   const RefPtr<IDBCursor> cursor = std::move(mStrongCursor);
-  (void)cursor;  // XXX see Bug 1605075
+  Unused << cursor;  // XXX see Bug 1605075
 
   const auto transaction =
       SafeRefPtr{&mTransaction.ref(), AcquireStrongRefFromRawPtr{}};

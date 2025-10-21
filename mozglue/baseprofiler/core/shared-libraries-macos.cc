@@ -7,6 +7,7 @@
 
 #include "platform.h"
 
+#include "mozilla/Unused.h"
 #include <AvailabilityMacros.h>
 
 #include <dlfcn.h>

@@ -147,7 +147,7 @@ void Storage::NotifyChange(Storage* aStorage, nsIPrincipal* aPrincipal,
       new StorageNotifierRunnable(event, aStorageType, aIsPrivate);
 
   if (aImmediateDispatch) {
-    (void)r->Run();
+    Unused << r->Run();
   } else {
     SchedulerGroup::Dispatch(r.forget());
   }

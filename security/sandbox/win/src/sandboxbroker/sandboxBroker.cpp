@@ -391,8 +391,8 @@ static void AddLLVMProfilePathDirectoryToPolicy(
     sandbox::TargetConfig* aConfig) {
   std::wstring parentPath;
   if (GetLlvmProfileDir(parentPath)) {
-    (void)aConfig->AllowFileAccess(sandbox::FileSemantics::kAllowAny,
-                                   parentPath.c_str());
+    Unused << aConfig->AllowFileAccess(sandbox::FileSemantics::kAllowAny,
+                                       parentPath.c_str());
   }
 }
 #endif
@@ -1970,8 +1970,8 @@ void SandboxBroker::ApplyLoggingConfig() {
   // We already have a file interception set up for the client side of pipes.
   // Also, passing just "dummy" for file system policy causes win_utils.cc
   // IsReparsePoint() to loop.
-  (void)config->AllowNamedPipes(L"dummy");
-  (void)config->AllowRegistryRead(L"HKEY_CURRENT_USER\\dummy");
+  Unused << config->AllowNamedPipes(L"dummy");
+  Unused << config->AllowRegistryRead(L"HKEY_CURRENT_USER\\dummy");
 }
 
 SandboxBroker::~SandboxBroker() = default;

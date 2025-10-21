@@ -313,7 +313,8 @@ mozilla::ipc::IPCResult FetchChild::RecvOnCSPViolationEvent(
   MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 
   if (mCSPEventListener) {
-    (void)NS_WARN_IF(NS_FAILED(mCSPEventListener->OnCSPViolationEvent(aJSON)));
+    Unused << NS_WARN_IF(
+        NS_FAILED(mCSPEventListener->OnCSPViolationEvent(aJSON)));
   }
   return IPC_OK();
 }
@@ -412,7 +413,7 @@ void FetchChild::RunAbortAlgorithm() {
     return;
   }
   if (mWorkerRef || mIsKeepAliveRequest) {
-    (void)SendAbortFetchOp(true);
+    Unused << SendAbortFetchOp(true);
   }
 }
 
@@ -427,12 +428,12 @@ void FetchChild::DoFetchOp(const FetchOpArgs& aArgs) {
   }
   if (mSignalImpl) {
     if (mSignalImpl->Aborted()) {
-      (void)SendAbortFetchOp(true);
+      Unused << SendAbortFetchOp(true);
       return;
     }
     Follow(mSignalImpl);
   }
-  (void)SendFetchOp(aArgs);
+  Unused << SendFetchOp(aArgs);
 }
 
 void FetchChild::Shutdown() {

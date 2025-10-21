@@ -9,6 +9,7 @@
 
 #include "ScopedNSSTypes.h"
 #include "mozilla/Casting.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Logging.h"
 #include "nsISupports.h"
 #include "nsNSSCertHelper.h"
@@ -30,7 +31,7 @@ nsPK11Token::nsPK11Token(PK11SlotInfo* slot) : mUIContext(new PipUIContext()) {
       PK11_IsInternal(mSlot.get()) && !PK11_IsInternalKeySlot(mSlot.get());
   mIsInternalKeyToken = PK11_IsInternalKeySlot(mSlot.get());
   mSeries = PK11_GetSlotSeries(slot);
-  (void)refreshTokenInfo();
+  mozilla::Unused << refreshTokenInfo();
 }
 
 nsresult nsPK11Token::refreshTokenInfo() {
@@ -169,7 +170,7 @@ NS_IMETHODIMP
 nsPK11Token::LogoutSimple() {
   // PK11_Logout() can fail if the user wasn't logged in beforehand. We want
   // this method to succeed even in this case, so we ignore the return value.
-  (void)PK11_Logout(mSlot.get());
+  mozilla::Unused << PK11_Logout(mSlot.get());
   return NS_OK;
 }
 

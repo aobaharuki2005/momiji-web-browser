@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CompositorWidgetChild.h"
+#include "mozilla/Unused.h"
 #include "gfxPlatform.h"
 
 namespace mozilla {
@@ -22,7 +23,7 @@ CompositorWidgetChild::~CompositorWidgetChild() = default;
 
 bool CompositorWidgetChild::Initialize() { return true; }
 
-void CompositorWidgetChild::Shutdown() { (void)Send__delete__(this); }
+void CompositorWidgetChild::Shutdown() { Unused << Send__delete__(this); }
 
 mozilla::ipc::IPCResult CompositorWidgetChild::RecvObserveVsync() {
   mVsyncDispatcher->SetCompositorVsyncObserver(mVsyncObserver);
@@ -36,7 +37,7 @@ mozilla::ipc::IPCResult CompositorWidgetChild::RecvUnobserveVsync() {
 
 void CompositorWidgetChild::NotifyClientSizeChanged(
     const LayoutDeviceIntSize& aClientSize) {
-  (void)SendNotifyClientSizeChanged(aClientSize);
+  Unused << SendNotifyClientSizeChanged(aClientSize);
 }
 
 }  // namespace widget

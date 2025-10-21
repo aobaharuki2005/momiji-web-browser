@@ -129,8 +129,8 @@ void UtilityMediaServiceParent::Start(
 #endif
 
   auto supported = media::MCSInfo::GetSupportFromFactory();
-  (void)SendUpdateMediaCodecsSupported(GetRemoteMediaInFromKind(mKind),
-                                       supported);
+  Unused << SendUpdateMediaCodecsSupported(GetRemoteMediaInFromKind(mKind),
+                                           supported);
   PROFILER_MARKER_UNTYPED("UtilityMediaServiceParent::Start", IPC,
                           MarkerOptions(MarkerTiming::IntervalUntilNowFrom(
                               mUtilityMediaServiceParentStart)));
@@ -173,7 +173,7 @@ mozilla::ipc::IPCResult UtilityMediaServiceParent::RecvInitVideoBridge(
     }
   }
 
-  (void)SendCompleteCreatedVideoBridge();
+  Unused << SendCompleteCreatedVideoBridge();
   return IPC_OK();
 }
 #endif
@@ -190,7 +190,7 @@ IPCResult UtilityMediaServiceParent::RecvUpdateVar(
                 "UtilityMediaServiceParent::UpdateMediaCodecsSupported",
                 [self, supported = media::MCSInfo::GetSupportFromFactory(
                            true /* force refresh */)]() {
-                  (void)self->SendUpdateMediaCodecsSupported(
+                  Unused << self->SendUpdateMediaCodecsSupported(
                       GetRemoteMediaInFromKind(self->mKind), supported);
                 }));
           }),

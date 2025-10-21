@@ -157,7 +157,7 @@ void ServiceWorkerRegistrationParent::MaybeSendDelete() {
   if (!CanSend()) {
     return;
   }
-  (void)Send__delete__(this);
+  Unused << Send__delete__(this);
 }
 
 }  // namespace mozilla::dom

@@ -184,8 +184,8 @@ bool TTokenizer<TChar>::CheckPhrase(const typename base::TAString& aPhrase) {
       }
 
       typename base::Token t1, t2;
-      (void)Next(t1);
-      (void)pattern.Next(t2);
+      Unused << Next(t1);
+      Unused << pattern.Next(t2);
       if (t1.Type() == t2.Type() && t1.Fragment().Equals(t2.Fragment())) {
         continue;
       }

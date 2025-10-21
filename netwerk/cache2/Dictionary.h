@@ -301,7 +301,7 @@ class DictionaryCache final {
  private:
   DictionaryCache() {
     nsresult rv = Init();
-    (void)rv;
+    Unused << rv;
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   }
   ~DictionaryCache() {}
