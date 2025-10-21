@@ -2971,9 +2971,14 @@ set_config(
 )
 
 
+@depends(moz_debug, target)
+def want_stl_hardening(debug, target):
+    return debug or target.os == "OSX"
+
+
 option(
     "--enable-stl-hardening",
-    default=moz_debug,
+    default=want_stl_hardening,
     help="{Enable|Disable} C++ STL hardening",
 )
 
@@ -3010,8 +3015,12 @@ def stl_hardening_flags(
         else:
             return ["-D_LIBCPP_ENABLE_ASSERTIONS=1"]
 
-    if enabled.origin != "default":
-        die("C++ STL does not support hardening")
+    # Debug builds don't ship to users, so it is fine if STL hardening is
+    # silently skipped.
+    if debug:
+        return
+
+    die("C++ STL does not support hardening")
 
 
 set_config("MOZ_STL_HARDENING_FLAGS", stl_hardening_flags)
