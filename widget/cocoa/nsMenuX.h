@@ -175,6 +175,7 @@ class nsMenuX final : public nsMenuParentX,
   // nsMenuParentX
   void MenuChildChangedVisibility(const MenuChild& aChild,
                                   bool aIsVisible) override;
+  size_t NestingDepth() override { return mNestingDepth; }
 
   void Dump(uint32_t aIndent) const;
 
@@ -291,6 +292,8 @@ class nsMenuX final : public nsMenuParentX,
   // Nothing() if no item is highlighted. The index only accounts for visible
   // items.
   mozilla::Maybe<uint32_t> mHighlightedItemIndex;
+
+  size_t mNestingDepth = 0;
 
   bool mIsEnabled = true;
   bool mNeedsRebuild = true;
