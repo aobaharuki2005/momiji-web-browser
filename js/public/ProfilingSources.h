@@ -91,6 +91,13 @@ struct JS_PUBLIC_API ProfilerJSSourceData {
         filePathLength_(pathLen),
         data_(SourceTextUTF16{std::move(chars), length}) {}
 
+  // For the cases where no sourceId and filepath are needed.
+  ProfilerJSSourceData(JS::UniqueChars&& chars, size_t length)
+      : sourceId_(0),
+        filePath_(nullptr),
+        filePathLength_(0),
+        data_(SourceTextUTF8{std::move(chars), length}) {}
+
   ProfilerJSSourceData()
       : sourceId_(0), filePathLength_(0), data_(Unavailable{}) {}
 
@@ -160,6 +167,13 @@ using ProfilerJSSources =
  * Main API for getting the profiled JS sources.
  */
 JS_PUBLIC_API ProfilerJSSources GetProfilerScriptSources(JSRuntime* rt);
+
+/**
+ * Retrieve the JS sources that are only retrievable from the parent process.
+ * See RetrievableFile struct for more information.
+ * */
+JS_PUBLIC_API ProfilerJSSourceData
+RetrieveProfilerSourceContent(JSContext* cx, const char* filename);
 
 }  // namespace js
 
