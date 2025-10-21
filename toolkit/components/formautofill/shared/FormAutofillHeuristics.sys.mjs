@@ -1111,6 +1111,12 @@ export const FormAutofillHeuristics = {
       fathomFoundType
     );
 
+    // If regular expression based heuristics doesn't find any matched field name,
+    // and the input type is "tel", just use "tel" as the field name.
+    if (!matchedFieldNames.length && element.type == "tel") {
+      return ["tel", inferredInfo];
+    }
+
     return [matchedFieldNames, inferredInfo];
   },
 
