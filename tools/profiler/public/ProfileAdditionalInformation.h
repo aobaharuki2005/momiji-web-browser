@@ -36,6 +36,16 @@ struct ProfileGenerationAdditionalInformation {
 
   size_t SizeOf() const { return mSharedLibraries.SizeOf(); }
 
+  ProfileGenerationAdditionalInformation(
+      const ProfileGenerationAdditionalInformation& other) = delete;
+  ProfileGenerationAdditionalInformation& operator=(
+      const ProfileGenerationAdditionalInformation&) = delete;
+
+  ProfileGenerationAdditionalInformation(
+      ProfileGenerationAdditionalInformation&& other) = default;
+  ProfileGenerationAdditionalInformation& operator=(
+      ProfileGenerationAdditionalInformation&& other) = default;
+
   void Append(ProfileGenerationAdditionalInformation&& aOther) {
     mSharedLibraries.AddAllSharedLibraries(aOther.mSharedLibraries);
   }
@@ -57,6 +67,15 @@ struct ProfileAndAdditionalInformation {
       ProfileGenerationAdditionalInformation&& aAdditionalInformation)
       : mProfile(std::move(aProfile)),
         mAdditionalInformation(Some(std::move(aAdditionalInformation))) {}
+
+  ProfileAndAdditionalInformation(const ProfileAndAdditionalInformation&) =
+      delete;
+  ProfileAndAdditionalInformation& operator=(
+      const ProfileAndAdditionalInformation&) = delete;
+
+  ProfileAndAdditionalInformation(ProfileAndAdditionalInformation&&) = default;
+  ProfileAndAdditionalInformation& operator=(
+      ProfileAndAdditionalInformation&&) = default;
 
   size_t SizeOf() const {
     size_t size = mProfile.Length();

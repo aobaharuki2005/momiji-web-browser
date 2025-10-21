@@ -52,7 +52,7 @@ class nsProfiler final : public nsIProfiler {
       mozilla::MozPromise<mozilla::void_t, nsresult, true>;
   using GatheringPromise =
       mozilla::MozPromise<mozilla::ProfileAndAdditionalInformation, nsresult,
-                          false>;
+                          true>;
   using SymbolTablePromise =
       mozilla::MozPromise<mozilla::SymbolTable, nsresult, true>;
 
