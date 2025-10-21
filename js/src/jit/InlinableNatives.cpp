@@ -267,6 +267,7 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::ArrayShift:
     case InlinableNative::ArrayPush:
     case InlinableNative::ArraySlice:
+    case InlinableNative::ArrayBufferByteLength:
     case InlinableNative::AtomicsCompareExchange:
     case InlinableNative::AtomicsExchange:
     case InlinableNative::AtomicsLoad:
@@ -329,6 +330,7 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::SetDelete:
     case InlinableNative::SetAdd:
     case InlinableNative::SetSize:
+    case InlinableNative::SharedArrayBufferByteLength:
     case InlinableNative::String:
     case InlinableNative::StringToString:
     case InlinableNative::StringValueOf:
