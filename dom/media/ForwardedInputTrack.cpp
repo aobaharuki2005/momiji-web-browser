@@ -20,7 +20,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"

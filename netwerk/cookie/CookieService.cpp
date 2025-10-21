@@ -1839,7 +1839,7 @@ void CookieService::Update3PCBExceptionInfo(nsIChannel* aChannel) {
       csSingleton->mThirdPartyCookieBlockingExceptions.CheckExceptionForChannel(
           aChannel);
 
-  Unused << loadInfo->SetIsOn3PCBExceptionList(isInExceptionList);
+  (void)loadInfo->SetIsOn3PCBExceptionList(isInExceptionList);
 }
 
 NS_IMETHODIMP

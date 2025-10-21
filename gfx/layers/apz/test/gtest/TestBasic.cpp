@@ -702,7 +702,7 @@ class APZCSmoothScrollTester : public APZCBasicTester {
     // since the mapping from eKeyDown to it happens in APZCTreeManager which
     // we are bypassing here.
     keyInput.mAction = {KeyboardScrollAction::eScrollLine, /*aForward=*/true};
-    Unused << apzc->ReceiveInputEvent(keyInput);
+    (void)apzc->ReceiveInputEvent(keyInput);
     apzc->AssertInKeyboardScroll();
 
     // Sample the animation 10 frames (a shorter overall duration than the

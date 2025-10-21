@@ -60,7 +60,6 @@
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/net/SSLTokensCache.h"
 #include "mozilla/StoragePrincipalHelper.h"
-#include "mozilla/Unused.h"
 #include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -540,7 +539,7 @@ nsresult nsIOService::InitializeProtocolProxyService() {
 
   if (XRE_IsParentProcess()) {
     // for early-initialization
-    Unused << mozilla::components::ProtocolProxy::Service(&rv);
+    (void)mozilla::components::ProtocolProxy::Service(&rv);
   }
 
   return rv;
@@ -708,8 +707,7 @@ void nsIOService::NotifySocketProcessPrefsChanged(const char* aName) {
   Preferences::GetPreference(&pref, GeckoProcessType_Socket,
                              /* remoteType */ ""_ns);
   auto sendPrefUpdate = [pref]() {
-    Unused << gIOService->mSocketProcess->GetActor()->SendPreferenceUpdate(
-        pref);
+    (void)gIOService->mSocketProcess->GetActor()->SendPreferenceUpdate(pref);
   };
   CallOrWaitForSocketProcess(sendPrefUpdate);
 }
@@ -807,8 +805,8 @@ RefPtr<MemoryReportingProcess> nsIOService::GetSocketProcessMemoryReporter() {
 NS_IMETHODIMP
 nsIOService::SocketProcessTelemetryPing() {
   CallOrWaitForSocketProcess([]() {
-    Unused << gIOService->mSocketProcess->GetActor()
-                  ->SendSocketProcessTelemetryPing();
+    (void)gIOService->mSocketProcess->GetActor()
+        ->SendSocketProcessTelemetryPing();
   });
   return NS_OK;
 }
@@ -1375,7 +1373,7 @@ nsresult nsIOService::SetOfflineInternal(bool offline,
                                              offline ? u"true" : u"false");
     }
     if (SocketProcessReady() && notifySocketProcess) {
-      Unused << mSocketProcess->GetActor()->SendSetOffline(offline);
+      (void)mSocketProcess->GetActor()->SendSetOffline(offline);
     }
   }
 
@@ -1486,7 +1484,7 @@ nsresult nsIOService::SetConnectivityInternal(bool aConnectivity) {
                                      NS_IPC_IOSERVICE_SET_CONNECTIVITY_TOPIC,
                                      aConnectivity ? u"true" : u"false");
     if (SocketProcessReady()) {
-      Unused << mSocketProcess->GetActor()->SendSetConnectivity(aConnectivity);
+      (void)mSocketProcess->GetActor()->SendSetConnectivity(aConnectivity);
     }
   }
 
@@ -1827,7 +1825,7 @@ nsIOService::Observe(nsISupports* subject, const char* topic,
       mObserverTopicForSocketProcess.Contains(nsDependentCString(topic))) {
     nsCString topicStr(topic);
     nsString dataStr(data);
-    Unused << mSocketProcess->GetActor()->SendNotifyObserver(topicStr, dataStr);
+    (void)mSocketProcess->GetActor()->SendNotifyObserver(topicStr, dataStr);
   }
 
   if (!strcmp(topic, kProfileChangeNetTeardownTopic)) {
@@ -2029,7 +2027,7 @@ nsresult nsIOService::OnNetworkLinkEvent(const char* data) {
     if (!neckoParent) {
       continue;
     }
-    Unused << neckoParent->SendNetworkChangeNotification(dataAsString);
+    (void)neckoParent->SendNetworkChangeNotification(dataAsString);
   }
 
   LOG(("nsIOService::OnNetworkLinkEvent data:%s\n", data));
@@ -2273,7 +2271,7 @@ nsresult nsIOService::SpeculativeConnectInternal(
     // When proxyDNS is true, this speculative connection would likely leak a
     // DNS lookup, so we should return early to avoid that.
     bool hasProxyFilterRegistered = false;
-    Unused << pps->GetHasProxyFilterRegistered(&hasProxyFilterRegistered);
+    (void)pps->GetHasProxyFilterRegistered(&hasProxyFilterRegistered);
     if (hasProxyFilterRegistered) {
       return NS_ERROR_FAILURE;
     }
@@ -2321,8 +2319,8 @@ nsIOService::SpeculativeConnectWithOriginAttributesNative(
     nsIInterfaceRequestor* aCallbacks, bool aAnonymous) {
   Maybe<OriginAttributes> originAttributes;
   originAttributes.emplace(aOriginAttributes);
-  Unused << SpeculativeConnectInternal(
-      aURI, nullptr, std::move(originAttributes), aCallbacks, aAnonymous);
+  (void)SpeculativeConnectInternal(aURI, nullptr, std::move(originAttributes),
+                                   aCallbacks, aAnonymous);
 }
 
 NS_IMETHODIMP
@@ -2428,7 +2426,7 @@ nsIOService::SetSimpleURIUnknownRemoteSchemes(
     // which already has the pref list
     for (auto* cp : mozilla::dom::ContentParent::AllProcesses(
              mozilla::dom::ContentParent::eLive)) {
-      Unused << cp->SendSimpleURIUnknownRemoteSchemes(aRemoteSchemes);
+      (void)cp->SendSimpleURIUnknownRemoteSchemes(aRemoteSchemes);
     }
   }
   return NS_OK;

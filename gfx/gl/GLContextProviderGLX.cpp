@@ -24,7 +24,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/widget/GtkCompositorWidget.h"
-#include "mozilla/Unused.h"
 
 #include "prenv.h"
 #include "GLContextProvider.h"
@@ -469,7 +468,7 @@ bool GLContextGLX::MakeCurrentImpl() const {
   if (mGLX->IsMesa()) {
     // Read into the event queue to ensure that Mesa receives a
     // DRI2InvalidateBuffers event before drawing. See bug 1280653.
-    Unused << XPending(*mDisplay);
+    (void)XPending(*mDisplay);
   }
 
   const bool succeeded = mGLX->fMakeCurrent(*mDisplay, mDrawable, mContext);

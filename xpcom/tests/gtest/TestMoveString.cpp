@@ -11,7 +11,6 @@
 #include "nsReadableUtils.h"
 #include "nsCRTGlue.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/Unused.h"
 #include "gtest/gtest.h"
 
 namespace TestMoveString {

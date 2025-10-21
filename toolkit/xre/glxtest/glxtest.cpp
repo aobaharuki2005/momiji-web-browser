@@ -1051,7 +1051,7 @@ int main(int argc, char** argv) {
   }
   if (getenv("MOZ_AVOID_OPENGL_ALTOGETHER")) {
     const char* msg = "ERROR\nMOZ_AVOID_OPENGL_ALTOGETHER envvar set";
-    MOZ_UNUSED(write(output_pipe, msg, strlen(msg)));
+    [[maybe_unused]] ssize_t _ = write(output_pipe, msg, strlen(msg));
     exit(EXIT_FAILURE);
   }
   const char* env = getenv("MOZ_GFX_DEBUG");

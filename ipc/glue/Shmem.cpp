@@ -9,7 +9,6 @@
 #include "ProtocolUtils.h"
 #include "ShmemMessageUtils.h"
 #include "chrome/common/ipc_message_utils.h"
-#include "mozilla/Unused.h"
 #include "mozilla/ipc/SharedMemoryHandle.h"
 
 namespace mozilla {
@@ -80,8 +79,8 @@ void Shmem::AssertInvariants() const {
   char checkMappingBack = *(reinterpret_cast<char*>(mData) + mSize - 1);
 
   // avoid "unused" warnings for these variables:
-  Unused << checkMappingFront;
-  Unused << checkMappingBack;
+  (void)checkMappingFront;
+  (void)checkMappingBack;
 }
 
 void Shmem::RevokeRights() {

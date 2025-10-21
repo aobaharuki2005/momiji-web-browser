@@ -15,7 +15,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticMutex.h"
-#include "mozilla/Unused.h"
 #include "mozilla/dom/PWebAuthnTransactionParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "nsTextFormatter.h"
@@ -270,7 +269,7 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
 
         // RP Information
         nsString rpId;
-        Unused << aArgs->GetRpId(rpId);
+        (void)aArgs->GetRpId(rpId);
         WEBAUTHN_RP_ENTITY_INFORMATION rpInfo = {
             WEBAUTHN_RP_ENTITY_INFORMATION_CURRENT_VERSION, rpId.get(), nullptr,
             nullptr};
@@ -286,7 +285,7 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
 
         // Client Data
         nsCString clientDataJSON;
-        Unused << aArgs->GetClientDataJSON(clientDataJSON);
+        (void)aArgs->GetClientDataJSON(clientDataJSON);
         WEBAUTHN_CLIENT_DATA WebAuthNClientData = {
             WEBAUTHN_CLIENT_DATA_CURRENT_VERSION,
             (DWORD)clientDataJSON.Length(), (BYTE*)(clientDataJSON.get()),
@@ -326,29 +325,29 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
         BOOL winEnablePrf = FALSE;
 
         nsString rpName;
-        Unused << aArgs->GetRpName(rpName);
+        (void)aArgs->GetRpName(rpName);
         rpInfo.pwszName = rpName.get();
         rpInfo.pwszIcon = nullptr;
 
         nsTArray<uint8_t> userId;
-        Unused << aArgs->GetUserId(userId);
+        (void)aArgs->GetUserId(userId);
         userInfo.cbId = static_cast<DWORD>(userId.Length());
         userInfo.pbId = const_cast<unsigned char*>(userId.Elements());
 
         nsString userName;
-        Unused << aArgs->GetUserName(userName);
+        (void)aArgs->GetUserName(userName);
         userInfo.pwszName = userName.get();
 
         userInfo.pwszIcon = nullptr;
 
         nsString userDisplayName;
-        Unused << aArgs->GetUserDisplayName(userDisplayName);
+        (void)aArgs->GetUserDisplayName(userDisplayName);
         userInfo.pwszDisplayName = userDisplayName.get();
 
         // Algorithms
         nsTArray<WEBAUTHN_COSE_CREDENTIAL_PARAMETER> coseParams;
         nsTArray<int32_t> coseAlgs;
-        Unused << aArgs->GetCoseAlgs(coseAlgs);
+        (void)aArgs->GetCoseAlgs(coseAlgs);
         for (const int32_t& coseAlg : coseAlgs) {
           WEBAUTHN_COSE_CREDENTIAL_PARAMETER coseAlgorithm = {
               WEBAUTHN_COSE_CREDENTIAL_PARAMETER_CURRENT_VERSION,
@@ -357,7 +356,7 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
         }
 
         nsString userVerificationReq;
-        Unused << aArgs->GetUserVerification(userVerificationReq);
+        (void)aArgs->GetUserVerification(userVerificationReq);
         // This mapping needs to be reviewed if values are added to the
         // UserVerificationRequirement enum.
         static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
@@ -402,7 +401,7 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
         }
 
         nsString residentKey;
-        Unused << aArgs->GetResidentKey(residentKey);
+        (void)aArgs->GetResidentKey(residentKey);
         // This mapping needs to be reviewed if values are added to the
         // ResidentKeyRequirement enum.
         static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
@@ -428,7 +427,7 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
 
         // AttestationConveyance
         nsString attestation;
-        Unused << aArgs->GetAttestationConveyancePreference(attestation);
+        (void)aArgs->GetAttestationConveyancePreference(attestation);
         // This mapping needs to be reviewed if values are added to the
         // AttestationConveyancePreference enum.
         static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
@@ -529,10 +528,10 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
 
         // Exclude Credentials
         nsTArray<nsTArray<uint8_t>> excludeList;
-        Unused << aArgs->GetExcludeList(excludeList);
+        (void)aArgs->GetExcludeList(excludeList);
 
         nsTArray<uint8_t> excludeListTransports;
-        Unused << aArgs->GetExcludeListTransports(excludeListTransports);
+        (void)aArgs->GetExcludeListTransports(excludeListTransports);
 
         if (excludeList.Length() != excludeListTransports.Length()) {
           aPromise->Reject(NS_ERROR_DOM_UNKNOWN_ERR);
@@ -584,11 +583,11 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
         }
 
         uint32_t timeout_u32;
-        Unused << aArgs->GetTimeoutMS(&timeout_u32);
+        (void)aArgs->GetTimeoutMS(&timeout_u32);
         DWORD timeout = timeout_u32;
 
         bool privateBrowsing;
-        Unused << aArgs->GetPrivateBrowsing(&privateBrowsing);
+        (void)aArgs->GetPrivateBrowsing(&privateBrowsing);
         BOOL winPrivateBrowsing = FALSE;
         if (privateBrowsing) {
           winPrivateBrowsing = TRUE;
@@ -646,12 +645,12 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
           // copy that flag to the credProps extension output only if the RP
           // requested the credProps extension.
           bool requestedCredProps;
-          Unused << aArgs->GetCredProps(&requestedCredProps);
+          (void)aArgs->GetCredProps(&requestedCredProps);
           if (requestedCredProps &&
               pWebAuthNCredentialAttestation->dwVersion >=
                   WEBAUTHN_CREDENTIAL_ATTESTATION_VERSION_4) {
             BOOL rk = pWebAuthNCredentialAttestation->bResidentKey;
-            Unused << result->SetCredPropsRk(rk == TRUE);
+            (void)result->SetCredPropsRk(rk == TRUE);
           }
           gWinWebauthnFreeCredentialAttestation(pWebAuthNCredentialAttestation);
 
@@ -709,7 +708,7 @@ WinWebAuthnService::GetAssertion(uint64_t aTransactionId,
   });
 
   bool conditionallyMediated;
-  Unused << aArgs->GetConditionallyMediated(&conditionallyMediated);
+  (void)aArgs->GetConditionallyMediated(&conditionallyMediated);
   if (!conditionallyMediated) {
     DoGetAssertion(Nothing(), guard);
   }
@@ -755,7 +754,7 @@ void WinWebAuthnService::DoGetAssertion(
 
         // Client Data
         nsCString clientDataJSON;
-        Unused << aArgs->GetClientDataJSON(clientDataJSON);
+        (void)aArgs->GetClientDataJSON(clientDataJSON);
         WEBAUTHN_CLIENT_DATA WebAuthNClientData = {
             WEBAUTHN_CLIENT_DATA_CURRENT_VERSION,
             (DWORD)clientDataJSON.Length(), (BYTE*)(clientDataJSON.get()),
@@ -774,11 +773,11 @@ void WinWebAuthnService::DoGetAssertion(
 
         // RPID
         nsString rpId;
-        Unused << aArgs->GetRpId(rpId);
+        (void)aArgs->GetRpId(rpId);
 
         // User Verification Requirement
         nsString userVerificationReq;
-        Unused << aArgs->GetUserVerification(userVerificationReq);
+        (void)aArgs->GetUserVerification(userVerificationReq);
         DWORD winUserVerificationReq;
         // This mapping needs to be reviewed if values are added to the
         // UserVerificationRequirement enum.
@@ -840,7 +839,7 @@ void WinWebAuthnService::DoGetAssertion(
             credWithHmacSecretSaltList;
 
         bool requestedPrf;
-        Unused << aArgs->GetPrf(&requestedPrf);
+        (void)aArgs->GetPrf(&requestedPrf);
         if (requestedPrf) {
           rv = aArgs->GetPrfEvalFirst(prfEvalFirst);
           if (rv == NS_OK) {
@@ -916,8 +915,8 @@ void WinWebAuthnService::DoGetAssertion(
           allowListTransports.AppendElement(
               MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_INTERNAL);
         } else {
-          Unused << aArgs->GetAllowList(allowList);
-          Unused << aArgs->GetAllowListTransports(allowListTransports);
+          (void)aArgs->GetAllowList(allowList);
+          (void)aArgs->GetAllowListTransports(allowListTransports);
         }
 
         if (allowList.Length() != allowListTransports.Length()) {
@@ -969,11 +968,11 @@ void WinWebAuthnService::DoGetAssertion(
         }
 
         uint32_t timeout_u32;
-        Unused << aArgs->GetTimeoutMS(&timeout_u32);
+        (void)aArgs->GetTimeoutMS(&timeout_u32);
         DWORD timeout = timeout_u32;
 
         bool privateBrowsing;
-        Unused << aArgs->GetPrivateBrowsing(&privateBrowsing);
+        (void)aArgs->GetPrivateBrowsing(&privateBrowsing);
         BOOL winPrivateBrowsing = FALSE;
         if (privateBrowsing) {
           winPrivateBrowsing = TRUE;
@@ -1020,7 +1019,7 @@ void WinWebAuthnService::DoGetAssertion(
           if (winAppIdentifier != nullptr) {
             // The gWinWebauthnGetAssertion call modified bAppIdUsed through
             // a pointer provided in WebAuthNAssertionOptions.
-            Unused << result->SetUsedAppId(bAppIdUsed == TRUE);
+            (void)result->SetUsedAppId(bAppIdUsed == TRUE);
           }
           aPromise->Resolve(result);
         } else {
@@ -1058,7 +1057,7 @@ WinWebAuthnService::HasPendingConditionalGet(uint64_t aBrowsingContextId,
   }
 
   nsString origin;
-  Unused << guard->ref().pendingSignArgs.ref()->GetOrigin(origin);
+  (void)guard->ref().pendingSignArgs.ref()->GetOrigin(origin);
   if (origin != aOrigin) {
     *aRv = 0;
     return NS_OK;
@@ -1080,7 +1079,7 @@ WinWebAuthnService::GetAutoFillEntries(
         guard->ref().pendingSignArgs.isNothing()) {
       return NS_ERROR_NOT_AVAILABLE;
     }
-    Unused << guard->ref().pendingSignArgs.ref()->GetRpId(rpId);
+    (void)guard->ref().pendingSignArgs.ref()->GetRpId(rpId);
   }
 
   StaticAutoReadLock moduleLock(gWinWebAuthnModuleLock);
@@ -1132,7 +1131,7 @@ WinWebAuthnService::SelectAutoFillEntry(
   }
 
   nsTArray<nsTArray<uint8_t>> allowList;
-  Unused << guard->ref().pendingSignArgs.ref()->GetAllowList(allowList);
+  (void)guard->ref().pendingSignArgs.ref()->GetAllowList(allowList);
   if (!allowList.IsEmpty() && !allowList.Contains(aCredentialId)) {
     return NS_ERROR_FAILURE;
   }

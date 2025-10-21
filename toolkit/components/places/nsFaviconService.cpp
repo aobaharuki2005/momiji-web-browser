@@ -219,7 +219,7 @@ void nsFaviconService::ClearImageCache(nsIURI* aImageURI) {
       GetImgTools()->GetImgCacheForDocument(nullptr, getter_AddRefs(imgCache));
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (NS_SUCCEEDED(rv)) {
-    Unused << imgCache->RemoveEntry(aImageURI, nullptr);
+    (void)imgCache->RemoveEntry(aImageURI, nullptr);
   }
 }
 

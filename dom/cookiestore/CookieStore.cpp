@@ -310,8 +310,8 @@ bool GetContextAttributes(CookieStore* aCookieStore, bool* aThirdPartyContext,
 
     ThirdPartyUtil* thirdPartyUtil = ThirdPartyUtil::GetInstance();
     if (thirdPartyUtil) {
-      Unused << thirdPartyUtil->IsThirdPartyWindow(window->GetOuterWindow(),
-                                                   nullptr, aThirdPartyContext);
+      (void)thirdPartyUtil->IsThirdPartyWindow(window->GetOuterWindow(),
+                                               nullptr, aThirdPartyContext);
     }
 
     nsCOMPtr<Document> document = window->GetExtantDoc();

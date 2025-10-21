@@ -689,7 +689,7 @@ void StartupCache::EnsureShutdownWriteComplete() {
   // have run before now.
 
   auto writeResult = WriteToDisk();
-  Unused << NS_WARN_IF(writeResult.isErr());
+  (void)NS_WARN_IF(writeResult.isErr());
   // We've had the lock, and `WriteToDisk()` sets mWrittenOnce and mDirty
   // when done, and checks for them when starting, so we don't need to do
   // anything else.
@@ -775,7 +775,7 @@ void StartupCache::MaybeWriteOffMainThread() {
       NS_NewRunnableFunction("StartupCache::Write", [self]() mutable {
         MutexAutoLock lock(self->mTableLock);
         auto result = self->WriteToDisk();
-        Unused << NS_WARN_IF(result.isErr());
+        (void)NS_WARN_IF(result.isErr());
       });
   NS_DispatchBackgroundTask(runnable.forget(), NS_DISPATCH_EVENT_MAY_BLOCK);
 }

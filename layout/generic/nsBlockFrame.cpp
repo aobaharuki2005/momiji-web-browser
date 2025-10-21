@@ -4273,7 +4273,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
     if (auto [clearBCoord, result] =
             aState.ClearFloats(curBCoord, clearType, floatAvoidingBlock);
         result != ClearFloatsResult::BCoordNoChange) {
-      Unused << clearBCoord;
+      (void)clearBCoord;
 
       // Only record the first frame that requires clearance
       if (!*aState.mReflowInput.mDiscoveredClearance) {
@@ -4353,7 +4353,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
         if (auto [clearBCoord, result] =
                 aState.ClearFloats(curBCoord, clearType, floatAvoidingBlock);
             result != ClearFloatsResult::BCoordNoChange) {
-          Unused << clearBCoord;
+          (void)clearBCoord;
 
           // Looks like we need clearance and we didn't know about it already.
           // So recompute collapsed margin
@@ -7700,7 +7700,7 @@ void nsBlockFrame::ReflowPushedFloats(BlockReflowState& aState,
   // clearance
   if (auto [bCoord, result] = aState.ClearFloats(0, UsedClear::Both);
       result != ClearFloatsResult::BCoordNoChange) {
-    Unused << bCoord;
+    (void)bCoord;
     if (auto* prevBlock = static_cast<nsBlockFrame*>(GetPrevInFlow())) {
       aState.mTrailingClearFromPIF = prevBlock->FindTrailingClear();
     }

@@ -133,7 +133,6 @@
 #include "mozilla/TextEditor.h"
 #include "mozilla/URLDecorationStripper.h"
 #include "mozilla/URLExtraData.h"
-#include "mozilla/Unused.h"
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/css/Rule.h"
@@ -1232,7 +1231,7 @@ nsresult ExternalResourceMap::PendingLoad::StartLoad(
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
     rv = httpChannel->SetReferrerInfo(aReferrerInfo);
-    Unused << NS_WARN_IF(NS_FAILED(rv));
+    (void)NS_WARN_IF(NS_FAILED(rv));
   }
 
   mURI = aURI;
@@ -2026,15 +2025,14 @@ void Document::GetFailedCertSecurityInfo(FailedCertSecurityInfo& aInfo,
     if (NS_WARN_IF(!sss)) {
       return;
     }
-    Unused << NS_WARN_IF(
-        NS_FAILED(sss->IsSecureURI(aURI, attrs, &aInfo.mHasHSTS)));
+    (void)NS_WARN_IF(NS_FAILED(sss->IsSecureURI(aURI, attrs, &aInfo.mHasHSTS)));
   }
   nsCOMPtr<nsIPublicKeyPinningService> pkps =
       do_GetService(NS_PKPSERVICE_CONTRACTID);
   if (NS_WARN_IF(!pkps)) {
     return;
   }
-  Unused << NS_WARN_IF(NS_FAILED(pkps->HostHasPins(aURI, &aInfo.mHasHPKP)));
+  (void)NS_WARN_IF(NS_FAILED(pkps->HostHasPins(aURI, &aInfo.mHasHPKP)));
 }
 
 bool Document::IsAboutPage() const {
@@ -2406,7 +2404,7 @@ void Document::AccumulatePageLoadTelemetry() {
       do_QueryInterface(GetChannel());
   if (httpChannel) {
     bool resolvedByTRR = false;
-    Unused << httpChannel->GetIsResolvedByTRR(&resolvedByTRR);
+    (void)httpChannel->GetIsResolvedByTRR(&resolvedByTRR);
     if (resolvedByTRR) {
       if (nsCOMPtr<nsIDNSService> dns =
               do_GetService(NS_DNSSERVICE_CONTRACTID)) {
@@ -2447,7 +2445,7 @@ void Document::AccumulatePageLoadTelemetry() {
     }
 
     uint32_t earlyHintType = 0;
-    Unused << httpChannel->GetEarlyHintLinkType(&earlyHintType);
+    (void)httpChannel->GetEarlyHintLinkType(&earlyHintType);
     if (earlyHintType & LinkStyle::ePRECONNECT) {
       earlyHintKey.Append("preconnect_"_ns);
     }
@@ -3799,7 +3797,7 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     CheckIsBadPolicy(policy, docShell->GetBrowsingContext(), aChannel);
 
     // Setting the opener policy on a discarded context has no effect.
-    Unused << docShell->GetBrowsingContext()->SetOpenerPolicy(policy);
+    (void)docShell->GetBrowsingContext()->SetOpenerPolicy(policy);
   }
 
   // The CSP directives upgrade-insecure-requests as well as
@@ -4077,10 +4075,10 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
   }
 
   if (httpChannel) {
-    Unused << httpChannel->GetResponseHeader("content-security-policy"_ns,
-                                             tCspHeaderValue);
+    (void)httpChannel->GetResponseHeader("content-security-policy"_ns,
+                                         tCspHeaderValue);
 
-    Unused << httpChannel->GetResponseHeader(
+    (void)httpChannel->GetResponseHeader(
         "content-security-policy-report-only"_ns, tCspROHeaderValue);
   }
   NS_ConvertASCIItoUTF16 cspHeaderValue(tCspHeaderValue);
@@ -4179,11 +4177,10 @@ nsresult Document::InitIntegrityPolicy(nsIChannel* aChannel) {
   }
 
   if (httpChannel) {
-    Unused << httpChannel->GetResponseHeader("integrity-policy"_ns,
-                                             headerValue);
+    (void)httpChannel->GetResponseHeader("integrity-policy"_ns, headerValue);
 
-    Unused << httpChannel->GetResponseHeader("integrity-policy-report-only"_ns,
-                                             headerROValue);
+    (void)httpChannel->GetResponseHeader("integrity-policy-report-only"_ns,
+                                         headerROValue);
   }
 
   RefPtr<IntegrityPolicy> integrityPolicy;
@@ -4224,8 +4221,7 @@ nsresult Document::InitDocPolicy(nsIChannel* aChannel) {
 
   nsAutoCString docPolicyString;
   if (httpChannel) {
-    Unused << httpChannel->GetResponseHeader("Document-Policy"_ns,
-                                             docPolicyString);
+    (void)httpChannel->GetResponseHeader("Document-Policy"_ns, docPolicyString);
   }
 
   if (docPolicyString.IsEmpty()) {
@@ -6873,8 +6869,8 @@ void Document::GetCookie(nsAString& aCookie, ErrorResult& aRv) {
     ThirdPartyUtil* thirdPartyUtil = ThirdPartyUtil::GetInstance();
 
     if (thirdPartyUtil) {
-      Unused << thirdPartyUtil->IsThirdPartyWindow(
-          innerWindow->GetOuterWindow(), nullptr, &thirdParty);
+      (void)thirdPartyUtil->IsThirdPartyWindow(innerWindow->GetOuterWindow(),
+                                               nullptr, &thirdParty);
     }
   }
 
@@ -7083,8 +7079,8 @@ void Document::SetCookie(const nsAString& aCookieString, ErrorResult& aRv) {
   // in gtests we don't have a window, let's consider those requests as 3rd
   // party.
   if (innerWindow) {
-    Unused << thirdPartyUtil->IsThirdPartyWindow(innerWindow->GetOuterWindow(),
-                                                 nullptr, &thirdParty);
+    (void)thirdPartyUtil->IsThirdPartyWindow(innerWindow->GetOuterWindow(),
+                                             nullptr, &thirdParty);
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo =
@@ -7441,7 +7437,7 @@ void Document::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
       // will take care of this.
       if (WindowContext* ctx = GetWindowContext()) {
         if (mEmbedderPolicy) {
-          Unused << ctx->SetEmbedderPolicy(mEmbedderPolicy.value());
+          (void)ctx->SetEmbedderPolicy(mEmbedderPolicy.value());
         }
       }
     }
@@ -11907,12 +11903,12 @@ void Document::ProcessMETATag(HTMLMetaElement* aMetaElement) {
 
 void Document::TerminateParserAndDisableScripts() {
   if (mParser) {
-    Unused << mParser->Terminate();
+    (void)mParser->Terminate();
     MOZ_ASSERT(!mParser, "mParser should have been null'd out");
   }
 
   if (WindowContext* wc = GetWindowContext()) {
-    Unused << wc->SetAllowJavascript(false);
+    (void)wc->SetAllowJavascript(false);
   }
 }
 
@@ -12929,7 +12925,7 @@ void Document::NotifyLoading(bool aNewParentIsLoading,
                 ("bc: %p SetAncestorLoading(%d)", (void*)child, is_loading));
         // Setting ancestor loading on a discarded browsing context has no
         // effect.
-        Unused << child->SetAncestorLoading(is_loading);
+        (void)child->SetAncestorLoading(is_loading);
       }
     }
   }
@@ -13848,7 +13844,7 @@ void Document::SetScrollToRef(nsIURI* aDocumentURI) {
 
   nsresult rv = aDocumentURI->GetSpec(ref);
   if (NS_FAILED(rv)) {
-    Unused << aDocumentURI->GetRef(mScrollToRef);
+    (void)aDocumentURI->GetRef(mScrollToRef);
     return;
   }
 
@@ -14278,7 +14274,7 @@ already_AddRefed<Document> Document::CreateStaticClone(
 
     nsresult rv = frameLoader->FinishStaticClone(
         clone.mStaticCloneOf, aPrintSettings, aOutHasInProcessPrintCallbacks);
-    Unused << NS_WARN_IF(NS_FAILED(rv));
+    (void)NS_WARN_IF(NS_FAILED(rv));
   }
 
   return clonedDoc.forget();
@@ -18098,7 +18094,7 @@ void Document::SetSHEntryHasUserInteraction(bool aHasInteraction) {
   if (RefPtr<WindowContext> topWc = GetTopLevelWindowContext()) {
     // Setting has user interaction on a discarded browsing context has
     // no effect.
-    Unused << topWc->SetSHEntryHasUserInteraction(aHasInteraction);
+    (void)topWc->SetSHEntryHasUserInteraction(aHasInteraction);
   }
 
   // For when SHIP is not enabled, we need to get the current entry
@@ -18366,11 +18362,11 @@ void Document::MaybeAllowStorageForOpenerAfterUserInteraction() {
                                         true>::ResolveOrRejectValue& result) {
         if (!result.IsResolve() || !result.ResolveValue()) {
           if (XRE_IsParentProcess()) {
-            Unused << StorageAccessAPIHelper::AllowAccessForOnParentProcess(
+            (void)StorageAccessAPIHelper::AllowAccessForOnParentProcess(
                 self->NodePrincipal(), openerBC,
                 ContentBlockingNotifier::eOpenerAfterUserInteraction);
           } else {
-            Unused << StorageAccessAPIHelper::AllowAccessForOnChildProcess(
+            (void)StorageAccessAPIHelper::AllowAccessForOnChildProcess(
                 self->NodePrincipal(), openerBC,
                 ContentBlockingNotifier::eOpenerAfterUserInteraction);
           }
@@ -18488,7 +18484,7 @@ class UserInteractionTimer final : public Runnable,
       if (mShouldRecordContentBlockingUserInteraction) {
         ContentBlockingUserInteraction::Observe(mPrincipal);
       }
-      Unused << BounceTrackingProtection::RecordUserActivation(
+      (void)BounceTrackingProtection::RecordUserActivation(
           mDocument->GetWindowContext());
       document->ResetUserInteractionTimer();
     }
@@ -18531,8 +18527,7 @@ NS_IMPL_ISUPPORTS_INHERITED(UserInteractionTimer, Runnable, nsITimerCallback,
 void Document::MaybeStoreUserInteractionAsPermission() {
   if (!mUserHasInteracted) {
     // First interaction, let's store this info now.
-    Unused << BounceTrackingProtection::RecordUserActivation(
-        GetWindowContext());
+    (void)BounceTrackingProtection::RecordUserActivation(GetWindowContext());
 
     // For ContentBlockingUserInteraction we care about user-interaction stored
     // only for top-level documents and documents with access to the Storage
@@ -18882,7 +18877,7 @@ Selection* Document::GetSelection(ErrorResult& aRv) {
 void Document::MakeBrowsingContextNonSynthetic() {
   if (BrowsingContext* bc = GetBrowsingContext()) {
     if (bc->GetIsSyntheticDocumentContainer()) {
-      Unused << bc->SetIsSyntheticDocumentContainer(false);
+      (void)bc->SetIsSyntheticDocumentContainer(false);
     }
   }
 }
@@ -19897,7 +19892,7 @@ void Document::UnlockAllWakeLocks(WakeLockType aType) {
         MakeRefPtr<UnlockAllWakeLockRunnable>(aType, this);
     nsresult rv = NS_DispatchToMainThread(runnable);
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
+    (void)rv;
   }
 }
 
@@ -20314,7 +20309,7 @@ nsIPrincipal* Document::EffectiveStoragePrincipal() const {
     return mActiveStoragePrincipal = NodePrincipal();
   }
 
-  Unused << NS_WARN_IF(NS_FAILED(StoragePrincipalHelper::GetPrincipal(
+  (void)NS_WARN_IF(NS_FAILED(StoragePrincipalHelper::GetPrincipal(
       nsGlobalWindowInner::Cast(inner),
       StoragePrincipalHelper::eForeignPartitionedPrincipal,
       getter_AddRefs(mActiveStoragePrincipal))));

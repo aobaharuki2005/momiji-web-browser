@@ -31,7 +31,6 @@
 #endif
 #include "mozilla/HangDetails.h"
 #include "mozilla/RemoteMediaManagerChild.h"  // For RemoteMediaIn
-#include "mozilla/Unused.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/APZInputBridgeChild.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
@@ -80,7 +79,7 @@ void GPUChild::Init() {
 
   gfxVars::AddReceiver(this);
 
-  Unused << SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));
+  (void)SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));
 }
 
 void GPUChild::OnVarChanged(const nsTArray<GfxVarUpdate>& aVar) {

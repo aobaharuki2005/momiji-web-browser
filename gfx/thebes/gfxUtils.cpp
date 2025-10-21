@@ -40,7 +40,6 @@
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/UniquePtrExtensions.h"
-#include "mozilla/Unused.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "nsAppRunner.h"
 #include "nsComponentManagerUtils.h"
@@ -1212,7 +1211,7 @@ nsresult gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
 
   if (aBinaryOrData == gfxUtils::eBinaryEncode) {
     if (aFile) {
-      Unused << fwrite(imgData.Elements(), 1, imgData.Length(), aFile);
+      (void)fwrite(imgData.Elements(), 1, imgData.Length(), aFile);
     }
     return NS_OK;
   }

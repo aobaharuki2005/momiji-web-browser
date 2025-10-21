@@ -146,7 +146,7 @@ static void PACLogToConsole(nsString& aMessage) {
     auto task = [message(aMessage)]() {
       SocketProcessChild* child = SocketProcessChild::GetSingleton();
       if (child) {
-        Unused << child->SendOnConsoleMessage(message);
+        (void)child->SendOnConsoleMessage(message);
       }
     };
     if (NS_IsMainThread()) {
@@ -893,7 +893,7 @@ nsresult RemoteProxyAutoConfig::Init(nsIThread* aPACThread) {
     return rv;
   }
 
-  Unused << socketProcessParent->SendInitProxyAutoConfigChild(std::move(child));
+  (void)socketProcessParent->SendInitProxyAutoConfigChild(std::move(child));
   mProxyAutoConfigParent = new ProxyAutoConfigParent();
   return aPACThread->Dispatch(
       NS_NewRunnableFunction("ProxyAutoConfigParent::ProxyAutoConfigParent",
@@ -908,8 +908,8 @@ nsresult RemoteProxyAutoConfig::ConfigurePAC(const nsACString& aPACURI,
                                              bool aIncludePath,
                                              uint32_t aExtraHeapSize,
                                              nsISerialEventTarget*) {
-  Unused << mProxyAutoConfigParent->SendConfigurePAC(
-      aPACURI, aPACScriptData, aIncludePath, aExtraHeapSize);
+  (void)mProxyAutoConfigParent->SendConfigurePAC(aPACURI, aPACScriptData,
+                                                 aIncludePath, aExtraHeapSize);
   return NS_OK;
 }
 

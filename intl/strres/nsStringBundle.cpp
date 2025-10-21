@@ -797,7 +797,7 @@ void nsStringBundleService::SendContentBundles(ContentParent* aContentParent) {
     }
   }
 
-  Unused << aContentParent->SendRegisterStringBundles(std::move(bundles));
+  (void)aContentParent->SendRegisterStringBundles(std::move(bundles));
 }
 
 void nsStringBundleService::RegisterContentBundle(

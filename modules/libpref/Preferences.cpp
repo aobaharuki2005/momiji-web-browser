@@ -2634,8 +2634,8 @@ nsPrefBranch::GetComplexValue(const char* aPrefName, const nsIID& aType,
         fromFile, Substring(++keyEnd, strEnd), getter_AddRefs(theFile)));
 
     nsCOMPtr<nsIRelativeFilePref> relativePref = new nsRelativeFilePref();
-    Unused << relativePref->SetFile(theFile);
-    Unused << relativePref->SetRelativeToKey(key);
+    (void)relativePref->SetFile(theFile);
+    (void)relativePref->SetRelativeToKey(key);
 
     relativePref.forget(reinterpret_cast<nsIRelativeFilePref**>(aRetVal));
     return NS_OK;
@@ -3724,8 +3724,8 @@ static Maybe<bool> TelemetryPrefValue() {
   return Some(true);
 #  else
   nsAutoCString channelPrefValue;
-  Unused << Preferences::GetCString(kChannelPref, channelPrefValue,
-                                    PrefValueKind::Default);
+  (void)Preferences::GetCString(kChannelPref, channelPrefValue,
+                                PrefValueKind::Default);
   return Some(channelPrefValue.EqualsLiteral("beta"));
 #  endif
 }
@@ -3767,8 +3767,8 @@ static bool TelemetryPrefValue() {
   // are shipped to beta users.
   if (channel.EqualsLiteral("release")) {
     nsAutoCString channelPrefValue;
-    Unused << Preferences::GetCString(kChannelPref, channelPrefValue,
-                                      PrefValueKind::Default);
+    (void)Preferences::GetCString(kChannelPref, channelPrefValue,
+                                  PrefValueKind::Default);
     if (channelPrefValue.EqualsLiteral("beta")) {
       return true;
     }
@@ -4017,7 +4017,7 @@ mozilla::ipc::ReadOnlySharedMemoryHandle Preferences::EnsureSnapshot() {
     // changed preferences, rather than the expected total number of
     // preferences.
     HashTable()->clearAndCompact();
-    Unused << HashTable()->reserve(kHashTableInitialLengthContent);
+    (void)HashTable()->reserve(kHashTableInitialLengthContent);
 
     delete sPrefNameArena;
     sPrefNameArena = newPrefNameArena;
@@ -4027,7 +4027,7 @@ mozilla::ipc::ReadOnlySharedMemoryHandle Preferences::EnsureSnapshot() {
       auto pref = toRepopulate[i];
       auto p = HashTable()->lookupForAdd(pref->Name());
       MOZ_ASSERT(!p.found());
-      Unused << HashTable()->add(p, pref);
+      (void)HashTable()->add(p, pref);
     }
   }
 
@@ -4137,7 +4137,7 @@ Preferences::ResetPrefs() {
   }
 
   HashTable()->clearAndCompact();
-  Unused << HashTable()->reserve(kHashTableInitialLengthParent);
+  (void)HashTable()->reserve(kHashTableInitialLengthParent);
 
   PrefNameArena().Clear();
 
@@ -4526,7 +4526,7 @@ already_AddRefed<nsIFile> Preferences::ReadSavedPrefs() {
   } else {
     // Store the last modified time of the file while we've got it.
     // We don't really care if this fails.
-    Unused << file->GetLastModifiedTime(&mUserPrefsFileLastModifiedAtStartup);
+    (void)file->GetLastModifiedTime(&mUserPrefsFileLastModifiedAtStartup);
 
     if (NS_FAILED(rv)) {
       // Save a backup copy of the current (invalid) prefs file, since all prefs

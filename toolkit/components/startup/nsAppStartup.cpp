@@ -27,7 +27,6 @@
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Try.h"
-#include "mozilla/Unused.h"
 
 #include "GeckoProfiler.h"
 #include "prprf.h"
@@ -989,8 +988,7 @@ static nsresult RemoveIncompleteStartupFile() {
         if (NS_WARN_IF(incompleteStartup.isErr())) {
           return;
         }
-        Unused << NS_WARN_IF(
-            NS_FAILED(incompleteStartup.unwrap()->Remove(false)));
+        (void)NS_WARN_IF(NS_FAILED(incompleteStartup.unwrap()->Remove(false)));
       }));
 }
 
@@ -1009,7 +1007,7 @@ nsAppStartup::TrackStartupCrashEnd() {
 
   // Remove the incomplete startup canary file, so the next startup doesn't
   // detect a recent startup crash.
-  Unused << NS_WARN_IF(NS_FAILED(RemoveIncompleteStartupFile()));
+  (void)NS_WARN_IF(NS_FAILED(RemoveIncompleteStartupFile()));
 
   // Use the timestamp of XRE_main as an approximation for the lock file
   // timestamp. See MAX_STARTUP_BUFFER for the buffer time period.

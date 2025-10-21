@@ -12,7 +12,6 @@
 #include "mozilla/EventQueue.h"
 #include "mozilla/MaybeLeakRefPtr.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/Unused.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -252,7 +251,7 @@ class ThrottledEventQueue::Inner final : public nsISupports {
 
     // Execute the event now that we have unlocked.
     LogRunnable::Run log(event);
-    Unused << event->Run();
+    (void)event->Run();
 
     // To cover the event's destructor code in the LogRunnable log
     event = nullptr;
@@ -293,7 +292,7 @@ class ThrottledEventQueue::Inner final : public nsISupports {
     MOZ_ASSERT(!NS_IsMainThread());
 #ifdef DEBUG
     bool onBaseTarget = false;
-    Unused << mBaseTarget->IsOnCurrentThread(&onBaseTarget);
+    (void)mBaseTarget->IsOnCurrentThread(&onBaseTarget);
     MOZ_ASSERT(!onBaseTarget);
 #endif
 

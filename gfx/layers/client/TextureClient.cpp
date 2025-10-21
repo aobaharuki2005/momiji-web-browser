@@ -285,7 +285,7 @@ static TextureType ChooseTextureType(gfx::SurfaceFormat aFormat,
   LayersBackend layersBackend = aKnowsCompositor->GetCompositorBackendType();
   gfx::BackendType moz2DBackend =
       BackendTypeForBackendSelector(layersBackend, aSelector);
-  Unused << moz2DBackend;
+  (void)moz2DBackend;
 
 #ifdef XP_WIN
   int32_t maxTextureSize = aKnowsCompositor->GetMaxTextureSize();

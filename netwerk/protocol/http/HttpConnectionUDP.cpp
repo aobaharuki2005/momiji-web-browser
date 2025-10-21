@@ -73,11 +73,11 @@ class ConnectUDPTransaction : public nsAHttpTransaction {
                                       uint32_t count,
                                       uint32_t* countRead) override {
     mReader = reader;
-    Unused << mProxyConnectStream->ReadSegments(ReadRequestSegment, this, count,
-                                                countRead);
+    (void)mProxyConnectStream->ReadSegments(ReadRequestSegment, this, count,
+                                            countRead);
     mReader = nullptr;
     uint64_t avil = 0;
-    Unused << mProxyConnectStream->Available(&avil);
+    (void)mProxyConnectStream->Available(&avil);
     if (!avil) {
       mIsDone = true;
     }
@@ -445,7 +445,7 @@ nsresult HttpConnectionUDP::Activate(nsAHttpTransaction* trans, uint32_t caps,
   if (IsProxyConnectInProgress() && !mIsInTunnel && hTrans) {
     if (!mConnected) {
       mQueuedHttpConnectTransaction.AppendElement(hTrans);
-      Unused << ResumeSend();
+      (void)ResumeSend();
     } else {
       // Don’t call ResetTransaction() directly here.
       // HttpConnectionUDP::Activate() may be invoked from
@@ -488,7 +488,7 @@ nsresult HttpConnectionUDP::Activate(nsAHttpTransaction* trans, uint32_t caps,
     mExperienceState |= ConnectionExperienceState::Experienced;
   }
 
-  Unused << ResumeSend();
+  (void)ResumeSend();
   return NS_OK;
 }
 
@@ -758,7 +758,7 @@ void HttpConnectionUDP::HandleTunnelResponse(
     }
     mQueuedConnectUdpTransaction.Clear();
     mProxyConnectSucceeded = true;
-    Unused << ResumeSend();
+    (void)ResumeSend();
   } else {
     LOG(("proxy CONNECT failed! onlyconnect=%d\n", onlyConnect));
     aHttpTransaction->SetProxyConnectFailed();

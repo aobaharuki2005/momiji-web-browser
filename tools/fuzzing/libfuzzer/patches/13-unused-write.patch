@@ -18,7 +18,6 @@ diff --git a/FuzzerIO.cpp b/FuzzerIO.cpp
  // IO functions.
  //===----------------------------------------------------------------------===//
  
-+#include "mozilla/Unused.h"
  #include "FuzzerDefs.h"
  #include "FuzzerExtFunctions.h"
  #include "FuzzerIO.h"
@@ -37,7 +36,7 @@ diff --git a/FuzzerIO.cpp b/FuzzerIO.cpp
    FILE *Out = fopen(Path.c_str(), "wb");
    if (!Out) return;
 -  fwrite(Data, sizeof(Data[0]), Size, Out);
-+  mozilla::Unused << fwrite(Data, sizeof(Data[0]), Size, Out);
++  (void)fwrite(Data, sizeof(Data[0]), Size, Out);
    fclose(Out);
  }
  
@@ -58,7 +57,6 @@ diff --git a/FuzzerIOPosix.cpp b/FuzzerIOPosix.cpp
  //===----------------------------------------------------------------------===//
  // IO functions implementation using Posix API.
  //===----------------------------------------------------------------------===//
-+#include "mozilla/Unused.h"
  #include "FuzzerPlatform.h"
  #if LIBFUZZER_POSIX || LIBFUZZER_FUCHSIA
  
@@ -77,7 +75,7 @@ diff --git a/FuzzerIOPosix.cpp b/FuzzerIOPosix.cpp
  
  void RawPrint(const char *Str) {
 -  write(2, Str, strlen(Str));
-+  mozilla::Unused << write(2, Str, strlen(Str));
++  (void)write(2, Str, strlen(Str));
  }
  
  void MkDir(const std::string &Path) {

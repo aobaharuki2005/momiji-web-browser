@@ -60,7 +60,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_page_load.h"
 #include "mozilla/TaskController.h"
-#include "mozilla/Unused.h"
 #include "mozilla/VsyncDispatcher.h"
 #include "mozilla/VsyncTaskManager.h"
 #include "mozilla/dom/BrowserChild.h"
@@ -849,7 +848,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     // On Wayland, vsync timestamp might not precisely match system time; see
     // bug 1958043.
 #  if defined(_WIN32) || defined(MOZ_WAYLAND)
-    Unused << NS_WARN_IF(aVsyncTimestamp > tickStart);
+    (void)NS_WARN_IF(aVsyncTimestamp > tickStart);
 #  else
     MOZ_ASSERT(aVsyncTimestamp <= tickStart);
 #  endif
@@ -1558,7 +1557,7 @@ void nsRefreshDriver::RemovePostRefreshObserver(
     nsAPostRefreshObserver* aObserver) {
   bool removed = mPostRefreshObservers.RemoveElement(aObserver);
   MOZ_DIAGNOSTIC_ASSERT(removed);
-  Unused << removed;
+  (void)removed;
 }
 
 void nsRefreshDriver::StartTimerForAnimatedImagesIfNeeded() {

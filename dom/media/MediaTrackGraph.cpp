@@ -17,7 +17,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
 #include "nsPrintfCString.h"
@@ -3374,7 +3373,7 @@ already_AddRefed<MediaInputPort> ProcessedMediaTrack::AllocateInputPort(
       mPort->Init();
       // The graph holds its reference implicitly
       mPort->GraphImpl()->SetTrackOrderDirty();
-      Unused << mPort.forget();
+      NS_ADDREF(mPort.get());
     }
     void RunDuringShutdown() override { Run(); }
     RefPtr<MediaInputPort> mPort;

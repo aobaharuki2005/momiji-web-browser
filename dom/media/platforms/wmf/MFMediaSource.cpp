@@ -311,7 +311,7 @@ void MFMediaSource::ShutdownTaskQueue() {
     mVideoStream = nullptr;
     mVideoStreamEndedListener.DisconnectIfExists();
   }
-  Unused << mTaskQueue->BeginShutdown();
+  (void)mTaskQueue->BeginShutdown();
   mTaskQueue = nullptr;
 }
 

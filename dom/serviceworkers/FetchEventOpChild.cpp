@@ -15,7 +15,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
 #include "mozilla/dom/FetchService.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/InternalResponse.h"
@@ -197,7 +196,7 @@ NS_IMPL_ISUPPORTS(SynthesizeResponseWatcher, nsIInterceptedBodyCallback)
 
   actor->mWasSent = true;
   RefPtr<GenericPromise> promise = actor->mPromiseHolder.Ensure(__func__);
-  Unused << aManager->SendPFetchEventOpConstructor(actor, actor->mArgs);
+  (void)aManager->SendPFetchEventOpConstructor(actor, actor->mArgs);
   // NOTE: actor may have been destroyed
   return promise;
 }
@@ -405,7 +404,7 @@ void FetchEventOpChild::ActorDestroy(ActorDestroyReason) {
   mPromiseHolder.RejectIfExists(NS_ERROR_DOM_ABORT_ERR, __func__);
 
   if (NS_WARN_IF(!mInterceptedChannelHandled)) {
-    Unused << Recv__delete__(NS_ERROR_DOM_ABORT_ERR);
+    (void)Recv__delete__(NS_ERROR_DOM_ABORT_ERR);
   }
 }
 

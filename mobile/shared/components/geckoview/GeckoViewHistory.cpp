@@ -119,8 +119,7 @@ void GeckoViewHistory::QueryVisitedStateInContentProcess(
 
   // Send the request to the parent process, one message per tab child.
   for (const NewURIEntry& entry : newEntries) {
-    Unused << NS_WARN_IF(
-        !entry.mBrowserChild->SendQueryVisitedState(entry.mURIs));
+    (void)NS_WARN_IF(!entry.mBrowserChild->SendQueryVisitedState(entry.mURIs));
   }
 }
 
@@ -254,7 +253,7 @@ GeckoViewHistory::VisitURI(nsIWidget* aWidget, nsIURI* aURI,
     if (NS_WARN_IF(!browserChild)) {
       return NS_OK;
     }
-    Unused << NS_WARN_IF(
+    (void)NS_WARN_IF(
         !browserChild->SendVisitURI(aURI, aLastVisitedURI, aFlags, aBrowserId));
     return NS_OK;
   }
@@ -330,7 +329,7 @@ GeckoViewHistory::VisitURI(nsIWidget* aWidget, nsIURI* aURI,
   nsCOMPtr<nsIGeckoViewEventCallback> callback =
       new OnVisitedCallback(this, aURI);
 
-  Unused << NS_WARN_IF(
+  (void)NS_WARN_IF(
       NS_FAILED(dispatcher->Dispatch(kOnVisitedMessage, bundle, callback)));
   return NS_OK;
 }
@@ -481,7 +480,7 @@ void GeckoViewHistory::QueryVisitedState(nsIWidget* aWidget,
   nsCOMPtr<nsIGeckoViewEventCallback> callback =
       new GetVisitedCallback(this, aInterestedProcess, std::move(aURIs));
 
-  Unused << NS_WARN_IF(
+  (void)NS_WARN_IF(
       NS_FAILED(dispatcher->Dispatch(kGetVisitedMessage, bundle, callback)));
 }
 

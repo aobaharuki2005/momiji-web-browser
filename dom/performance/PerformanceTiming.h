@@ -545,11 +545,11 @@ struct IPDLParamTraits<nsIServerTiming*> {
   static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     nsIServerTiming* aParam) {
     nsAutoCString name;
-    Unused << aParam->GetName(name);
+    (void)aParam->GetName(name);
     double duration = 0;
-    Unused << aParam->GetDuration(&duration);
+    (void)aParam->GetDuration(&duration);
     nsAutoCString description;
-    Unused << aParam->GetDescription(description);
+    (void)aParam->GetDescription(description);
     WriteIPDLParam(aWriter, aActor, name);
     WriteIPDLParam(aWriter, aActor, duration);
     WriteIPDLParam(aWriter, aActor, description);

@@ -15,7 +15,6 @@
 #include "nsNetUtil.h"
 
 #include "mozilla/Try.h"
-#include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/PSimpleChannelChild.h"
@@ -111,7 +110,7 @@ SimpleChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
   }
 
   if (CanSend()) {
-    Unused << Send__delete__(this);
+    (void)Send__delete__(this);
   }
   return NS_OK;
 }

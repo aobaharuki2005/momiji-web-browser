@@ -218,7 +218,7 @@ APZCTreeManager::CheckerboardFlushObserver::Observe(nsISupports* aSubject,
   if (XRE_IsGPUProcess()) {
     if (gfx::GPUParent* gpu = gfx::GPUParent::GetSingleton()) {
       nsCString topic("APZ:FlushActiveCheckerboard:Done");
-      Unused << gpu->SendNotifyUiObservers(topic);
+      (void)gpu->SendNotifyUiObservers(topic);
     }
   } else {
     MOZ_ASSERT(XRE_IsParentProcess());
@@ -1737,7 +1737,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(
                 PanGestureInput::PANGESTURE_INTERRUPTED, panInput.mTimeStamp,
                 panInput.mPanStartPoint, panInput.mPanDisplacement,
                 panInput.modifiers);
-            Unused << mInputQueue->ReceiveInputEvent(
+            (void)mInputQueue->ReceiveInputEvent(
                 state.mHit.mTargetApzc,
                 TargetConfirmationFlags{state.mHit.mHitResult}, panInterrupted);
           }

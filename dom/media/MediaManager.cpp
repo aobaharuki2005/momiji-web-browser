@@ -2831,14 +2831,14 @@ static void ReduceConstraint(
     aConstraint.SetAsMediaTrackConstraints().mMediaSource.Construct(
         *mediaSource);
   } else {
-    Unused << aConstraint.SetAsMediaTrackConstraints();
+    (void)aConstraint.SetAsMediaTrackConstraints();
   }
 
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_UIKIT)
   if (facingMode) {
     aConstraint.SetAsMediaTrackConstraints().mFacingMode.Construct(*facingMode);
   } else {
-    Unused << aConstraint.SetAsMediaTrackConstraints();
+    (void)aConstraint.SetAsMediaTrackConstraints();
   }
 #endif
 }
