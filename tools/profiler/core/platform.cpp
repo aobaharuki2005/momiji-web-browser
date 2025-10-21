@@ -6252,37 +6252,42 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
   ThreadRegistration::UnregisterThread();
 }
 
-static bool WriteProfileToJSONWriter(SpliceableChunkedJSONWriter& aWriter,
-                                     double aSinceTime, bool aIsShuttingDown,
-                                     ProfilerCodeAddressService* aService,
-                                     mozilla::ProgressLogger aProgressLogger) {
+static ProfilerResult<ProfileGenerationAdditionalInformation>
+WriteProfileToJSONWriter(SpliceableChunkedJSONWriter& aWriter,
+                         double aSinceTime, bool aIsShuttingDown,
+                         ProfilerCodeAddressService* aService,
+                         mozilla::ProgressLogger aProgressLogger) {
   LOG("WriteProfileToJSONWriter");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   aWriter.Start();
-  {
-    auto rv = profiler_stream_json_for_this_process(
-        aWriter, aSinceTime, aIsShuttingDown, aService,
-        aProgressLogger.CreateSubLoggerFromTo(
-            0_pc,
-            "WriteProfileToJSONWriter: "
-            "profiler_stream_json_for_this_process started",
-            100_pc,
-            "WriteProfileToJSONWriter: "
-            "profiler_stream_json_for_this_process done"));
+  auto rv = profiler_stream_json_for_this_process(
+      aWriter, aSinceTime, aIsShuttingDown, aService,
+      aProgressLogger.CreateSubLoggerFromTo(
+          0_pc,
+          "WriteProfileToJSONWriter: "
+          "profiler_stream_json_for_this_process started",
+          100_pc,
+          "WriteProfileToJSONWriter: "
+          "profiler_stream_json_for_this_process done"));
 
-    if (rv.isErr()) {
-      return false;
-    }
-
-    // Don't include profiles from other processes because this is a
-    // synchronous function.
-    aWriter.StartArrayProperty("processes");
-    aWriter.EndArray();
+  if (rv.isErr()) {
+    return rv;
   }
+
+  // Don't include profiles from other processes because this is a
+  // synchronous function.
+  aWriter.StartArrayProperty("processes");
+  aWriter.EndArray();
+
   aWriter.End();
-  return !aWriter.Failed();
+
+  if (aWriter.Failed()) {
+    return Err(ProfilerError::JsonGenerationFailed);
+  }
+
+  return rv;
 }
 
 void profiler_set_process_name(const nsACString& aProcessName,
@@ -6305,14 +6310,16 @@ UniquePtr<char[]> profiler_get_profile(double aSinceTime,
 
   FailureLatchSource failureLatch;
   SpliceableChunkedJSONWriter b{failureLatch};
-  if (!WriteProfileToJSONWriter(b, aSinceTime, aIsShuttingDown, service.get(),
-                                ProgressLogger{})) {
+  if (WriteProfileToJSONWriter(b, aSinceTime, aIsShuttingDown, service.get(),
+                               ProgressLogger{})
+          .isErr()) {
     return nullptr;
   }
   return b.ChunkedWriteFunc().CopyData();
 }
 
-[[nodiscard]] bool profiler_get_profile_json(
+[[nodiscard]] ProfilerResult<ProfileGenerationAdditionalInformation>
+profiler_get_profile_json(
     SpliceableChunkedJSONWriter& aSpliceableChunkedJSONWriter,
     double aSinceTime, bool aIsShuttingDown,
     mozilla::ProgressLogger aProgressLogger) {
