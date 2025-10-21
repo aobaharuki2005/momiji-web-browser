@@ -13,9 +13,12 @@
 #include "mozilla/PowerOfTwo.h"
 #include "mozilla/ProfileBufferChunkManagerSingle.h"
 #include "mozilla/ProfileChunkedBuffer.h"
+#include "nsTHashMap.h"
 
 class ProcessStreamingContext;
 class RunningTimes;
+
+struct ProfilerJSSourceData;
 
 // Class storing most profiling data in a ProfileChunkedBuffer.
 //
@@ -95,6 +98,12 @@ class ProfileBuffer final {
                             const mozilla::TimeStamp& aProcessStartTime,
                             double aSinceTime,
                             mozilla::ProgressLogger aProgressLogger) const;
+
+  // Stream JavaScript source table to JSON and return mapping from sourceId
+  // to index into source table.
+  nsTHashMap<SourceId, IndexIntoSourceTable> StreamSourceTableToJSON(
+      SpliceableJSONWriter& aWriter,
+      const nsTArray<mozilla::JSSourceEntry>& aJSSourceEntries) const;
 
   // Find (via |aLastSample|) the most recent sample for the thread denoted by
   // |aThreadId| and clone it, patching in the current time as appropriate.

@@ -29,6 +29,11 @@
 class ProfilerCodeAddressService;
 struct JSContext;
 
+// Typedef for process-global identifiers for JS script sources.
+using SourceId = uint32_t;
+// Typedef for indexes into the source table array.
+using IndexIntoSourceTable = uint32_t;
+
 class ProfileBufferEntry {
  public:
   using KindUnderlyingType =
