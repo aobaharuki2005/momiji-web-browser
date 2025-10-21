@@ -1204,7 +1204,7 @@
     array: ObjId
 
 - name: PackedArraySliceResult
-  shared: false
+  shared: true
   transpile: true
   cost_estimate: 5
   args:
@@ -1214,7 +1214,7 @@
     end: Int32Id
 
 - name: ArgumentsSliceResult
-  shared: false
+  shared: true
   transpile: true
   cost_estimate: 5
   args:

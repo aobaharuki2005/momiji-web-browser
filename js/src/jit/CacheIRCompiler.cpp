@@ -7334,6 +7334,62 @@ bool CacheIRCompiler::emitArrayPush(ObjOperandId objId, ValOperandId rhsId) {
   return true;
 }
 
+bool CacheIRCompiler::emitPackedArraySliceResult(uint32_t templateObjectOffset,
+                                                 ObjOperandId arrayId,
+                                                 Int32OperandId beginId,
+                                                 Int32OperandId endId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register array = allocator.useRegister(masm, arrayId);
+  Register begin = allocator.useRegister(masm, beginId);
+  Register end = allocator.useRegister(masm, endId);
+
+  callvm.prepare();
+
+  // Don't attempt to pre-allocate the object, instead always use the slow path.
+  ImmPtr result(nullptr);
+
+  masm.Push(result);
+  masm.Push(end);
+  masm.Push(begin);
+  masm.Push(array);
+
+  using Fn =
+      JSObject* (*)(JSContext*, HandleObject, int32_t, int32_t, HandleObject);
+  callvm.call<Fn, ArraySliceDense>();
+  return true;
+}
+
+bool CacheIRCompiler::emitArgumentsSliceResult(uint32_t templateObjectOffset,
+                                               ObjOperandId argsId,
+                                               Int32OperandId beginId,
+                                               Int32OperandId endId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register args = allocator.useRegister(masm, argsId);
+  Register begin = allocator.useRegister(masm, beginId);
+  Register end = allocator.useRegister(masm, endId);
+
+  callvm.prepare();
+
+  // Don't attempt to pre-allocate the object, instead always use the slow path.
+  ImmPtr result(nullptr);
+
+  masm.Push(result);
+  masm.Push(end);
+  masm.Push(begin);
+  masm.Push(args);
+
+  using Fn =
+      JSObject* (*)(JSContext*, HandleObject, int32_t, int32_t, HandleObject);
+  callvm.call<Fn, ArgumentsSliceDense>();
+  return true;
+}
+
 bool CacheIRCompiler::emitStoreTypedArrayElement(ObjOperandId objId,
                                                  Scalar::Type elementType,
                                                  IntPtrOperandId indexId,
