@@ -366,8 +366,16 @@ class XPCShellTestThread(Thread):
         On a remote system, this is more complex and we need to overload this function.
         """
         quiet = self.crashAsPass or self.retry
+        # For selftests, set dump_save_path to prevent crash dumps from being saved
+        # (they intentionally crash and the dumps aren't useful artifacts)
+        dump_save_path = "" if self.selfTest else None
         return mozcrash.log_crashes(
-            self.log, dump_directory, symbols_path, test=test_name, quiet=quiet
+            self.log,
+            dump_directory,
+            symbols_path,
+            test=test_name,
+            quiet=quiet,
+            dump_save_path=dump_save_path,
         )
 
     def logCommand(self, name, completeCmd, testdir):
