@@ -4548,6 +4548,79 @@ bool CacheIRCompiler::emitLoadFunctionNameResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitBindFunctionResult(ObjOperandId targetId,
+                                             uint32_t argc,
+                                             uint32_t templateObjectOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, callvm.output());
+
+  Register target = allocator.useRegister(masm, targetId);
+
+  callvm.prepare();
+
+  if (isBaseline()) {
+    // Push the arguments in reverse order.
+    for (uint32_t i = 0; i < argc; i++) {
+      Address argAddress(FramePointer,
+                         BaselineStubFrameLayout::Size() + i * sizeof(Value));
+      masm.pushValue(argAddress);
+    }
+  } else {
+    MOZ_ASSERT(argc == 0, "Call ICs not used in ion");
+  }
+  masm.moveStackPtrTo(scratch.get());
+
+  masm.Push(ImmWord(0));  // nullptr for maybeBound
+  masm.Push(Imm32(argc));
+  masm.Push(scratch);
+  masm.Push(target);
+
+  using Fn = BoundFunctionObject* (*)(JSContext*, Handle<JSObject*>, Value*,
+                                      uint32_t, Handle<BoundFunctionObject*>);
+  callvm.call<Fn, BoundFunctionObject::functionBindImpl>();
+  return true;
+}
+
+bool CacheIRCompiler::emitSpecializedBindFunctionResult(
+    ObjOperandId targetId, uint32_t argc, uint32_t templateObjectOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, callvm.output());
+  AutoScratchRegister scratch2(allocator, masm);
+
+  Register target = allocator.useRegister(masm, targetId);
+
+  StubFieldOffset objectField(templateObjectOffset, StubField::Type::JSObject);
+  emitLoadStubField(objectField, scratch2);
+
+  callvm.prepare();
+
+  if (isBaseline()) {
+    // Push the arguments in reverse order.
+    for (uint32_t i = 0; i < argc; i++) {
+      Address argAddress(FramePointer,
+                         BaselineStubFrameLayout::Size() + i * sizeof(Value));
+      masm.pushValue(argAddress);
+    }
+  } else {
+    MOZ_ASSERT(argc == 0, "Call ICs not used in ion");
+  }
+  masm.moveStackPtrTo(scratch1.get());
+
+  masm.Push(scratch2);
+  masm.Push(Imm32(argc));
+  masm.Push(scratch1);
+  masm.Push(target);
+
+  using Fn = BoundFunctionObject* (*)(JSContext*, Handle<JSObject*>, Value*,
+                                      uint32_t, Handle<BoundFunctionObject*>);
+  callvm.call<Fn, BoundFunctionObject::functionBindSpecializedBaseline>();
+  return true;
+}
+
 bool CacheIRCompiler::emitLinearizeForCharAccess(StringOperandId strId,
                                                  Int32OperandId indexId,
                                                  StringOperandId resultId) {
@@ -12025,6 +12098,10 @@ struct ReturnTypeToJSValueType<MapObject*> {
 };
 template <>
 struct ReturnTypeToJSValueType<SetObject*> {
+  static constexpr JSValueType result = JSVAL_TYPE_OBJECT;
+};
+template <>
+struct ReturnTypeToJSValueType<BoundFunctionObject*> {
   static constexpr JSValueType result = JSVAL_TYPE_OBJECT;
 };
 

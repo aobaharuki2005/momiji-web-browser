@@ -66,3 +66,17 @@ function testArrayJoin() {
   }
 }
 testArrayJoin();
+
+function testFunctionBind() {
+  Object.defineProperty(Function.prototype, "bound", {get: Function.prototype.bind});
+
+  for (var i = 0; i < 100; ++i) {
+    // |SpecializedBindFunctionResult| CacheIROp.
+    assertEq(function(){ return i; }.bound(), i);
+
+    // |BindFunctionResult| CacheIROp.
+    var r = Math.random.bound();
+    assertEq(0 <= r && r < 1, true);
+  }
+}
+testFunctionBind();
