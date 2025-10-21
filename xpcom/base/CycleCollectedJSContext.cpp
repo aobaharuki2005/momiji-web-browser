@@ -1120,6 +1120,12 @@ bool CycleCollectedJSContext::PerformMicroTaskCheckPoint(bool aForce) {
   JSContext* cx = Context();
 
   if (StaticPrefs::javascript_options_use_js_microtask_queue()) {
+    // If we have no JSContext we are not capable of checking for
+    // nor running microtasks, and so simply return false early here.
+    if (!cx) {
+      return false;
+    }
+
     if (!JS::HasAnyMicroTasks(cx)) {
       MOZ_ASSERT(mDebuggerMicroTaskQueue.empty());
       MOZ_ASSERT(mPendingMicroTaskRunnables.empty());
