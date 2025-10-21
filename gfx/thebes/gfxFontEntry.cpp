@@ -221,7 +221,7 @@ nsresult gfxFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
   MOZ_ASSERT(false, "using default no-op implementation of ReadCMAP");
   RefPtr<gfxCharacterMap> cmap = new gfxCharacterMap();
   if (mCharacterMap.compareExchange(nullptr, cmap.get())) {
-    cmap.forget().leak();  // mCharacterMap now owns the reference
+    Unused << cmap.forget();  // mCharacterMap now owns the reference
   }
   return NS_OK;
 }

@@ -10,6 +10,7 @@
 
 #include "common.h"
 #include "EventLog.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla::default_agent {
 
@@ -77,7 +78,7 @@ VoidResult Cache::Init() {
   // Ignore the result of the migration. If we failed to migrate, there may be
   // some data loss. But that's better than failing to ever use the new cache
   // just because there's something wrong with the old one.
-  (void)MaybeMigrateVersion1();
+  mozilla::Unused << MaybeMigrateVersion1();
 
   return mozilla::Ok();
 }
@@ -236,7 +237,7 @@ VoidResult Cache::MaybeMigrateVersion1() {
       LOG_ERROR_MESSAGE(
           L"Warning: Version 1 cache entry %u dropped due to missing keys",
           index);
-      (void)DeleteVersion1CacheEntry(index);
+      mozilla::Unused << DeleteVersion1CacheEntry(index);
     }
   }
   return mozilla::Ok();
@@ -367,7 +368,7 @@ VoidResult Cache::VersionedEnqueue(const VersionedEntry& entry) {
   result = WriteEntryKeys(index, entry);
   if (result.isErr()) {
     // We might have written a partial key. Attempt to clean up after ourself.
-    (void)DeleteEntry(index);
+    mozilla::Unused << DeleteEntry(index);
     return result;
   }
 
@@ -375,7 +376,7 @@ VoidResult Cache::VersionedEnqueue(const VersionedEntry& entry) {
   if (result.isErr()) {
     // If we failed to write the size, the new entry was not added successfully.
     // Attempt to clean up after ourself.
-    (void)DeleteEntry(index);
+    mozilla::Unused << DeleteEntry(index);
     return result;
   }
 
@@ -401,7 +402,7 @@ VoidResult Cache::DiscardFront() {
   // It's not a huge deal if we can't delete this. Moving mFront will result in
   // it being excluded from the cache anyways. We'll try to delete it again
   // anyways if we try to write to this index again.
-  (void)DeleteEntry(mFront);
+  mozilla::Unused << DeleteEntry(mFront);
 
   VoidResult result = SetSize(mSize - 1);
   // We don't really need to bother moving mFront to the next index if the cache

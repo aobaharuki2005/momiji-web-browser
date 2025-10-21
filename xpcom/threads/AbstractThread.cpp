@@ -15,6 +15,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TaskDispatcher.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsIDirectTaskDispatcher.h"
 #include "nsIThreadInternal.h"

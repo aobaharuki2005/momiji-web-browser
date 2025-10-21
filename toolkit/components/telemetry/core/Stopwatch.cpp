@@ -269,7 +269,7 @@ TimerKeys* Timers::Get(JSContext* aCx, const nsAString& aHistogram,
   if (!keysObj.isObject()) {
     if (aCreate) {
       keys = new TimerKeys();
-      (void)nsContentUtils::WrapNative(aCx, keys, &keysObj);
+      Unused << nsContentUtils::WrapNative(aCx, keys, &keysObj);
     }
     if (!keysObj.isObject() ||
         !JS::SetWeakMapEntry(aCx, objs, objVal, keysObj)) {

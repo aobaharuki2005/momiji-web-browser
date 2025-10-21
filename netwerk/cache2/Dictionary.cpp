@@ -514,7 +514,7 @@ nsresult DictionaryCacheEntry::ReadCacheData(
     uint32_t aToOffset, uint32_t aCount, uint32_t* aWriteCount) {
   DictionaryCacheEntry* self = static_cast<DictionaryCacheEntry*>(aClosure);
 
-  (void)self->mDictionaryData.append(aFromSegment, aCount);
+  Unused << self->mDictionaryData.append(aFromSegment, aCount);
   DICTIONARY_LOG(("Accumulate %p (%s): %d bytes, total %zu", self,
                   self->mURI.get(), aCount, self->mDictionaryData.length()));
   *aWriteCount = aCount;
@@ -842,7 +842,7 @@ already_AddRefed<DictionaryCacheEntry> DictionaryCache::AddEntry(
       ("AddEntry: %s, %d, %p", prepath.get(), aNewEntry, aDictEntry));
   // create for the origin if it doesn't exist
   RefPtr<DictionaryCacheEntry> newEntry;
-  (void)mDictionaryCache.WithEntryHandle(prepath, [&](auto&& entry) {
+  Unused << mDictionaryCache.WithEntryHandle(prepath, [&](auto&& entry) {
     auto& origin = entry.OrInsertWith([&] {
       RefPtr<DictionaryOrigin> origin = new DictionaryOrigin(prepath, nullptr);
       // Create a cache entry for this if it doesn't exist.  Note

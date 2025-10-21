@@ -84,7 +84,8 @@ constexpr int64_t Int32Modulo = 2147483648;
 std::unique_ptr<char[]> GetTokenInfo(ScopedHANDLE& token) {
   DWORD length = 0;
   // https://docs.microsoft.com/en-us/windows/desktop/api/securitybaseapi/nf-securitybaseapi-gettokeninformation
-  (void)GetTokenInformation(token.get(), TokenUser, nullptr, 0, &length);
+  mozilla::Unused << GetTokenInformation(token.get(), TokenUser, nullptr, 0,
+                                         &length);
   if (!length || GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
     MOZ_LOG(gCredentialManagerSecretLog, LogLevel::Debug,
             ("Unable to obtain current token info."));

@@ -296,14 +296,14 @@ void PermissionDelegateHandler::PopulateAllDelegatedPermissions() {
     nsDependentCString type(perm.mPermissionName);
     // Populate the permission.
     uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
-    (void)mPermissionManager->TestPermissionFromPrincipal(mPrincipal, type,
-                                                          &permission);
+    Unused << mPermissionManager->TestPermissionFromPrincipal(mPrincipal, type,
+                                                              &permission);
     list.mPermissions[idx] = permission;
 
     // Populate the exact-host-match permission.
     permission = nsIPermissionManager::UNKNOWN_ACTION;
-    (void)mPermissionManager->TestExactPermissionFromPrincipal(mPrincipal, type,
-                                                               &permission);
+    Unused << mPermissionManager->TestExactPermissionFromPrincipal(
+        mPrincipal, type, &permission);
     exactHostMatchList.mPermissions[idx] = permission;
   }
 
@@ -371,7 +371,7 @@ bool PermissionDelegateHandler::UpdateDelegatePermissionInternal(
   MOZ_ASSERT(mPrincipal);
 
   uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
-  (void)(mPermissionManager->*aTestFunc)(mPrincipal, aType, &permission);
+  Unused << (mPermissionManager->*aTestFunc)(mPrincipal, aType, &permission);
 
   if (aList.mPermissions[aIdx] != permission) {
     aList.mPermissions[aIdx] = permission;

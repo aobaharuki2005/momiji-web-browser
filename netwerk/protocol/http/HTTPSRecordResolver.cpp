@@ -148,7 +148,7 @@ nsresult HTTPSRecordResolver::InvokeCallback() {
 
   nsCString cname;
   if (mAddrRecord) {
-    (void)mAddrRecord->GetCanonicalName(cname);
+    Unused << mAddrRecord->GetCanonicalName(cname);
   }
 
   // Make sure we use the updated caps from the transaction.
@@ -179,7 +179,7 @@ void HTTPSRecordResolver::PrefetchAddrRecord(const nsACString& aTargetName,
 
   nsCOMPtr<nsICancelable> tmpOutstanding;
 
-  (void)dns->AsyncResolveNative(
+  Unused << dns->AsyncResolveNative(
       aTargetName, nsIDNSService::RESOLVE_TYPE_DEFAULT,
       flags | nsIDNSService::RESOLVE_SPECULATE, nullptr, this,
       GetCurrentSerialEventTarget(),

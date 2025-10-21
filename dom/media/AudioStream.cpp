@@ -19,6 +19,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/AudioDeviceInfo.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsPrintfCString.h"

@@ -751,7 +751,7 @@ bool BrowsingContext::GetIsActiveBrowserWindow() {
 }
 
 void BrowsingContext::SetIsActiveBrowserWindow(bool aActive) {
-  (void)SetIsActiveBrowserWindowInternal(aActive);
+  Unused << SetIsActiveBrowserWindowInternal(aActive);
 }
 
 bool BrowsingContext::FullscreenAllowed() const {
@@ -833,7 +833,7 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
     }
 
     if (IsEmbedderTypeObjectOrEmbed()) {
-      (void)SetIsSyntheticDocumentContainer(true);
+      Unused << SetIsSyntheticDocumentContainer(true);
     }
   }
 }
@@ -993,8 +993,8 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
       MOZ_DIAGNOSTIC_ASSERT(IsContent(),
                             "chrome BCG cannot be synced to content process");
       if (!Canonical()->IsEmbeddedInProcess(aParent->ChildID())) {
-        (void)aParent->SendCreateBrowsingContext(mGroup->Id(),
-                                                 GetIPCInitializer());
+        Unused << aParent->SendCreateBrowsingContext(mGroup->Id(),
+                                                     GetIPCInitializer());
       }
     });
 
@@ -2130,11 +2130,11 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
   // browsing context ensuring subsequent navigations will keep the same
   // TRR mode.
   if (aLoadState->HasLoadFlags(nsIWebNavigation::LOAD_FLAGS_DISABLE_TRR)) {
-    (void)SetDefaultLoadFlags(GetDefaultLoadFlags() |
-                              nsIRequest::LOAD_TRR_DISABLED_MODE);
+    Unused << SetDefaultLoadFlags(GetDefaultLoadFlags() |
+                                  nsIRequest::LOAD_TRR_DISABLED_MODE);
   } else if (aLoadState->HasLoadFlags(nsIWebNavigation::LOAD_FLAGS_FORCE_TRR)) {
-    (void)SetDefaultLoadFlags(GetDefaultLoadFlags() |
-                              nsIRequest::LOAD_TRR_ONLY_MODE);
+    Unused << SetDefaultLoadFlags(GetDefaultLoadFlags() |
+                                  nsIRequest::LOAD_TRR_ONLY_MODE);
   }
 
   if (mDocShell) {
@@ -2328,7 +2328,7 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState) {
 
     MOZ_ALWAYS_SUCCEEDS(
         SetCurrentLoadIdentifier(Some(aLoadState->GetLoadIdentifier())));
-    (void)cp->SendInternalLoad(mozilla::WrapNotNull(aLoadState));
+    Unused << cp->SendInternalLoad(mozilla::WrapNotNull(aLoadState));
   } else {
     MOZ_DIAGNOSTIC_ASSERT(sourceBC);
     MOZ_DIAGNOSTIC_ASSERT(sourceBC->Group() == Group());
@@ -2538,7 +2538,7 @@ void BrowsingContext::DisplayLoadError(const nsAString& aURI) {
                                &didDisplayLoadError);
   } else {
     if (ContentParent* cp = Canonical()->GetContentParent()) {
-      (void)cp->SendDisplayLoadError(this, PromiseFlatString(aURI));
+      Unused << cp->SendDisplayLoadError(this, PromiseFlatString(aURI));
     }
   }
 }
@@ -2576,7 +2576,7 @@ void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
   if (ContentChild* cc = ContentChild::GetSingleton()) {
     cc->SendWindowClose(this, aCallerType == CallerType::System);
   } else if (ContentParent* cp = Canonical()->GetContentParent()) {
-    (void)cp->SendWindowClose(this, aCallerType == CallerType::System);
+    Unused << cp->SendWindowClose(this, aCallerType == CallerType::System);
   }
 }
 
@@ -2691,7 +2691,7 @@ void BrowsingContext::GetUserActivationModifiersForPopup(
 }
 
 void BrowsingContext::IncrementHistoryEntryCountForBrowsingContext() {
-  (void)SetHistoryEntryCount(GetHistoryEntryCount() + 1);
+  Unused << SetHistoryEntryCount(GetHistoryEntryCount() + 1);
 }
 
 std::tuple<bool, bool> BrowsingContext::CanFocusCheck(CallerType aCallerType) {
@@ -2751,7 +2751,7 @@ void BrowsingContext::Focus(CallerType aCallerType, ErrorResult& aError) {
   if (ContentChild* cc = ContentChild::GetSingleton()) {
     cc->SendWindowFocus(this, aCallerType, actionId);
   } else if (ContentParent* cp = Canonical()->GetContentParent()) {
-    (void)cp->SendWindowFocus(this, aCallerType, actionId);
+    Unused << cp->SendWindowFocus(this, aCallerType, actionId);
   }
 }
 
@@ -2770,7 +2770,7 @@ void BrowsingContext::Blur(CallerType aCallerType, ErrorResult& aError) {
   if (ContentChild* cc = ContentChild::GetSingleton()) {
     cc->SendWindowBlur(this, aCallerType);
   } else if (ContentParent* cp = Canonical()->GetContentParent()) {
-    (void)cp->SendWindowBlur(this, aCallerType);
+    Unused << cp->SendWindowBlur(this, aCallerType);
   }
 }
 
@@ -2928,7 +2928,7 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
           "PostMessageSharedMemoryObjectToCrossOriginWarning");
     }
 
-    (void)cp->SendWindowPostMessage(this, messageData, data);
+    Unused << cp->SendWindowPostMessage(this, messageData, data);
   }
 }
 
@@ -2944,7 +2944,7 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
 void BrowsingContext::SendCommitTransaction(ContentParent* aParent,
                                             const BaseTransaction& aTxn,
                                             uint64_t aEpoch) {
-  (void)aParent->SendCommitBrowsingContextTransaction(this, aTxn, aEpoch);
+  Unused << aParent->SendCommitBrowsingContextTransaction(this, aTxn, aEpoch);
 }
 
 void BrowsingContext::SendCommitTransaction(ContentChild* aChild,
@@ -3167,11 +3167,11 @@ void BrowsingContext::DidSet(FieldIndex<IDX_HasOrientationOverride>,
 
         // Reset orientation override.
         if (!hasOrientationOverride && aOldValue) {
-          (void)aBrowsingContext->SetCurrentOrientation(screenOrientationType,
-                                                        screenOrientationAngle);
+          Unused << aBrowsingContext->SetCurrentOrientation(
+              screenOrientationType, screenOrientationAngle);
         } else if (!aBrowsingContext->IsTop()) {
           // Sync orientation override in the existing frames.
-          (void)aBrowsingContext->SetCurrentOrientation(type, angle);
+          Unused << aBrowsingContext->SetCurrentOrientation(type, angle);
         }
 
         orientation->MaybeDispatchEventsForOverride(
@@ -3442,7 +3442,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_UserAgentOverride>) {
     if (nsCOMPtr<Document> doc = aContext->GetExtantDocument()) {
       if (nsCOMPtr<nsIHttpChannel> httpChannel =
               do_QueryInterface(doc->GetChannel())) {
-        (void)httpChannel->SetIsUserAgentHeaderOutdated(true);
+        Unused << httpChannel->SetIsUserAgentHeaderOutdated(true);
       }
     }
   });
@@ -3737,7 +3737,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_DefaultLoadFlags>) {
     PreOrderWalk([&](BrowsingContext* aContext) {
       if (aContext != this) {
         // Setting load flags on a discarded context has no effect.
-        (void)aContext->SetDefaultLoadFlags(loadFlags);
+        Unused << aContext->SetDefaultLoadFlags(loadFlags);
       }
     });
   }
@@ -3966,7 +3966,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_TextZoom>, float aOldValue) {
 
     for (BrowsingContext* child : Children()) {
       // Setting text zoom on a discarded context has no effect.
-      (void)child->SetTextZoom(GetTextZoom());
+      Unused << child->SetTextZoom(GetTextZoom());
     }
   }
 
@@ -4004,7 +4004,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_FullZoom>, float aOldValue) {
         }
       }
       // Setting full zoom on a discarded context has no effect.
-      (void)child->SetFullZoom(fullZoom);
+      Unused << child->SetFullZoom(fullZoom);
     }
   }
 
@@ -4191,7 +4191,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsUnderHiddenEmbedderElement>,
 
     bool hidden = newValue || embedderFrameIsHidden;
     if (aChild->IsUnderHiddenEmbedderElement() != hidden) {
-      (void)aChild->SetIsUnderHiddenEmbedderElement(hidden);
+      Unused << aChild->SetIsUnderHiddenEmbedderElement(hidden);
     }
 
     return CallState::Continue;
@@ -4290,9 +4290,9 @@ void BrowsingContext::SessionHistoryCommit(
       }
     }
     ContentChild* cc = ContentChild::GetSingleton();
-    (void)cc->SendHistoryCommit(this, aInfo.mLoadId, changeID, aLoadType,
-                                aCloneEntryChildren, aChannelExpired,
-                                aCacheKey);
+    mozilla::Unused << cc->SendHistoryCommit(this, aInfo.mLoadId, changeID,
+                                             aLoadType, aCloneEntryChildren,
+                                             aChannelExpired, aCacheKey);
   } else {
     Canonical()->SessionHistoryCommit(aInfo.mLoadId, changeID, aLoadType,
                                       aCloneEntryChildren, aChannelExpired,

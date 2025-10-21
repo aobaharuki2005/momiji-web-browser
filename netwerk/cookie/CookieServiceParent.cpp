@@ -71,10 +71,10 @@ void CookieServiceParent::RemoveBatchDeletedCookies(nsIArray* aCookieList) {
     cookieStructList.AppendElement(cookieStruct);
     attrsList.AppendElement(attrs);
   }
-  (void)SendRemoveBatchDeletedCookies(cookieStructList, attrsList);
+  Unused << SendRemoveBatchDeletedCookies(cookieStructList, attrsList);
 }
 
-void CookieServiceParent::RemoveAll() { (void)SendRemoveAll(); }
+void CookieServiceParent::RemoveAll() { Unused << SendRemoveAll(); }
 
 void CookieServiceParent::RemoveCookie(const Cookie& cookie,
                                        const nsID* aOperationID) {
@@ -86,8 +86,8 @@ void CookieServiceParent::RemoveCookie(const Cookie& cookie,
   if (cookie.IsHttpOnly() || !InsecureCookieOrSecureOrigin(cookie)) {
     cookieStruct.value() = "";
   }
-  (void)SendRemoveCookie(cookieStruct, attrs,
-                         aOperationID ? Some(*aOperationID) : Nothing());
+  Unused << SendRemoveCookie(cookieStruct, attrs,
+                             aOperationID ? Some(*aOperationID) : Nothing());
 }
 
 void CookieServiceParent::AddCookie(const Cookie& cookie,
@@ -100,8 +100,8 @@ void CookieServiceParent::AddCookie(const Cookie& cookie,
   if (cookie.IsHttpOnly() || !InsecureCookieOrSecureOrigin(cookie)) {
     cookieStruct.value() = "";
   }
-  (void)SendAddCookie(cookieStruct, attrs,
-                      aOperationID ? Some(*aOperationID) : Nothing());
+  Unused << SendAddCookie(cookieStruct, attrs,
+                          aOperationID ? Some(*aOperationID) : Nothing());
 }
 
 bool CookieServiceParent::ContentProcessHasCookie(const Cookie& cookie) {
@@ -207,7 +207,7 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
       foundCookieList);
   nsTArray<CookieStructTable> matchingCookiesListTable;
   SerializeCookieListTable(foundCookieList, matchingCookiesListTable, uri);
-  (void)SendTrackCookiesLoad(matchingCookiesListTable);
+  Unused << SendTrackCookiesLoad(matchingCookiesListTable);
 }
 
 // we append outgoing cookie info into a list here so the ContentParent can

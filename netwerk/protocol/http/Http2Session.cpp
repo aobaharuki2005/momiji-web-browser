@@ -155,7 +155,7 @@ Http2Session* Http2Session::CreateSession(nsISocketTransport* aSocketTransport,
                                           bool attemptingEarlyData) {
   if (!gHttpHandler) {
     RefPtr<nsHttpHandler> handler = nsHttpHandler::GetInstance();
-    (void)handler.get();
+    Unused << handler.get();
   }
 
   Http2Session* session =
@@ -498,7 +498,7 @@ uint32_t Http2Session::ReadTimeoutTick(PRIntervalTime now) {
     mPingSentEpoch = 1;  // avoid the 0 sentinel value
   }
   GeneratePing(false);
-  (void)ResumeRecv();  // read the ping reply
+  Unused << ResumeRecv();  // read the ping reply
 
   return 1;  // run the tick aggressively while ping is outstanding
 }
@@ -633,7 +633,7 @@ void Http2Session::CreateStream(nsAHttpTransaction* aHttpTransaction,
   // yet.
   if (mSegmentReader) {
     uint32_t countRead;
-    (void)ReadSegments(nullptr, kDefaultBufferSize, &countRead);
+    Unused << ReadSegments(nullptr, kDefaultBufferSize, &countRead);
   }
 
   if (!(aHttpTransaction->Caps() & NS_HTTP_ALLOW_KEEPALIVE) &&
@@ -727,7 +727,7 @@ nsresult Http2Session::NetworkRead(nsAHttpSegmentWriter* writer, char* buf,
 void Http2Session::SetWriteCallbacks() {
   if (mConnection &&
       (GetWriteQueueSize() || (mOutputQueueUsed > mOutputQueueSent))) {
-    (void)mConnection->ResumeSend();
+    Unused << mConnection->ResumeSend();
   }
 }
 
@@ -2630,14 +2630,14 @@ nsresult Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader* reader,
     if (availBeforeFlush != availAfterFlush) {
       LOG3(("Http2Session %p ResumeRecv After early flush in ReadSegments",
             this));
-      (void)ResumeRecv();
+      Unused << ResumeRecv();
     }
     SetWriteCallbacks();
     if (mAttemptingEarlyData) {
       // We can still try to send our preamble as early-data
       *countRead = mOutputQueueUsed - mOutputQueueSent;
       LOG(("Http2Session %p nothing to send because of 0RTT failed", this));
-      (void)ResumeRecv();
+      Unused << ResumeRecv();
     }
     return *countRead ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
   }
@@ -2697,7 +2697,7 @@ nsresult Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader* reader,
 
   // Allow new server reads - that might be data or control information
   // (e.g. window updates or http replies) that are responses to these writes
-  (void)ResumeRecv();
+  Unused << ResumeRecv();
 
   if (stream->RequestBlockedOnRead()) {
     // We are blocked waiting for input - either more http headers or
@@ -3208,7 +3208,7 @@ nsresult Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
       // frame, as we need to potentially handle the stream FIN in those cases.
       // See bug 1381016 comment 36 for more details.
       ResetDownstreamState();
-      (void)ResumeRecv();
+      Unused << ResumeRecv();
       return NS_BASE_STREAM_WOULD_BLOCK;
     }
 
@@ -3342,7 +3342,7 @@ nsresult Http2Session::Finish0RTT(bool aRestart, bool aAlpnChanged) {
       }
     }
     // Make sure we look for any incoming data in repsonse to our early data.
-    (void)ResumeRecv();
+    Unused << ResumeRecv();
   }
 
   mAttemptingEarlyData = false;
@@ -3805,7 +3805,7 @@ void Http2Session::ConnectSlowConsumer(Http2StreamBase* stream) {
         stream->StreamID()));
   mQueueManager.AddStreamToQueue(
       Http2StreamQueueType::SlowConsumersReadyForRead, stream);
-  (void)ForceRecv();
+  Unused << ForceRecv();
 }
 
 nsresult Http2Session::BufferOutput(const char* buf, uint32_t count,
@@ -3958,7 +3958,7 @@ void Http2Session::TransactionHasDataToWrite(nsAHttpTransaction* caller) {
   // NSPR poll will not poll the network if there are non system PR_FileDesc's
   // that are ready - so we can get into a deadlock waiting for the system IO
   // to come back here if we don't force the send loop manually.
-  (void)ForceSend();
+  Unused << ForceSend();
 }
 
 void Http2Session::TransactionHasDataToRecv(nsAHttpTransaction* caller) {
@@ -3986,7 +3986,7 @@ void Http2Session::TransactionHasDataToWrite(Http2StreamBase* stream) {
 
   mQueueManager.AddStreamToQueue(Http2StreamQueueType::ReadyForWrite, stream);
   SetWriteCallbacks();
-  (void)ForceSend();
+  Unused << ForceSend();
 }
 
 void Http2Session::TransactionHasDataToRecv(Http2StreamBase* caller) {
@@ -4153,7 +4153,7 @@ void Http2Session::SendPing() {
     mLastReadEpoch = 0;
   }
   GeneratePing(false);
-  (void)ResumeRecv();
+  Unused << ResumeRecv();
 }
 
 bool Http2Session::TestOriginFrame(const nsACString& hostname, int32_t port) {

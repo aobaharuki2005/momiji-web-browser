@@ -22,6 +22,7 @@
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -245,7 +246,7 @@ void CamerasParent::OnDeviceChange() {
           LOG("OnDeviceChanged failure: parent shutting down.");
           return;
         }
-        (void)SendDeviceChange();
+        Unused << SendDeviceChange();
       }));
 };
 
@@ -383,7 +384,7 @@ void CallbackHelper::OnCaptureEnded() {
   nsIEventTarget* target = mParent->GetBackgroundEventTarget();
 
   MOZ_ALWAYS_SUCCEEDS(target->Dispatch(NS_NewRunnableFunction(
-      __func__, [&] { (void)mParent->SendCaptureEnded(mStreamId); })));
+      __func__, [&] { Unused << mParent->SendCaptureEnded(mStreamId); })));
 }
 
 void CallbackHelper::OnFrame(const webrtc::VideoFrame& aVideoFrame) {
@@ -471,7 +472,7 @@ void CamerasParent::CloseEngines() {
     auto streamNum = mCallbacks[0]->mStreamId;
     LOG("Forcing shutdown of engine %d, capturer %d", capEngine, streamNum);
     StopCapture(capEngine, streamNum);
-    (void)ReleaseCapture(capEngine, streamNum);
+    Unused << ReleaseCapture(capEngine, streamNum);
   }
 
   mDeviceChangeEventListener.DisconnectIfExists();
@@ -572,12 +573,12 @@ ipc::IPCResult CamerasParent::RecvNumberOfCaptureDevices(
 
             if (nrDevices < 0) {
               LOG("RecvNumberOfCaptureDevices couldn't find devices");
-              (void)SendReplyFailure();
+              Unused << SendReplyFailure();
               return;
             }
 
             LOG("RecvNumberOfCaptureDevices: %d", nrDevices);
-            (void)SendReplyNumberOfCaptureDevices(nrDevices);
+            Unused << SendReplyNumberOfCaptureDevices(nrDevices);
           });
   return IPC_OK();
 }
@@ -608,12 +609,12 @@ ipc::IPCResult CamerasParent::RecvEnsureInitialized(
 
             if (!result) {
               LOG("RecvEnsureInitialized failed");
-              (void)SendReplyFailure();
+              Unused << SendReplyFailure();
               return;
             }
 
             LOG("RecvEnsureInitialized succeeded");
-            (void)SendReplySuccess();
+            Unused << SendReplySuccess();
           });
   return IPC_OK();
 }
@@ -649,12 +650,12 @@ ipc::IPCResult CamerasParent::RecvNumberOfCapabilities(
 
             if (aNrCapabilities < 0) {
               LOG("RecvNumberOfCapabilities couldn't find capabilities");
-              (void)SendReplyFailure();
+              Unused << SendReplyFailure();
               return;
             }
 
             LOG("RecvNumberOfCapabilities: %d", aNrCapabilities);
-            (void)SendReplyNumberOfCapabilities(aNrCapabilities);
+            Unused << SendReplyNumberOfCapabilities(aNrCapabilities);
           });
   return IPC_OK();
 }
@@ -708,7 +709,7 @@ ipc::IPCResult CamerasParent::RecvGetCaptureCapability(
 
             if (aValue.IsReject()) {
               LOG("RecvGetCaptureCapability: reply failure");
-              (void)SendReplyFailure();
+              Unused << SendReplyFailure();
               return;
             }
 
@@ -719,7 +720,7 @@ ipc::IPCResult CamerasParent::RecvGetCaptureCapability(
             LOG("Capability: %u %u %u %d %d", webrtcCaps.width,
                 webrtcCaps.height, webrtcCaps.maxFPS,
                 static_cast<int>(webrtcCaps.videoType), webrtcCaps.interlaced);
-            (void)SendReplyGetCaptureCapability(capCap);
+            Unused << SendReplyGetCaptureCapability(capCap);
           });
   return IPC_OK();
 }
@@ -768,14 +769,14 @@ ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
             }
             if (error != 0) {
               LOG("GetCaptureDevice failed: %d", error);
-              (void)SendReplyFailure();
+              Unused << SendReplyFailure();
               return;
             }
             bool scary = (devicePid == getpid());
 
             LOG("Returning %s name %s id (pid = %d)%s", name.get(),
                 uniqueId.get(), devicePid, (scary ? " (scary)" : ""));
-            (void)SendReplyGetCaptureDevice(name, uniqueId, scary);
+            Unused << SendReplyGetCaptureDevice(name, uniqueId, scary);
           });
   return IPC_OK();
 }
@@ -902,13 +903,13 @@ ipc::IPCResult CamerasParent::RecvAllocateCapture(
             }
 
             if (error != 0) {
-              (void)SendReplyFailure();
+              Unused << SendReplyFailure();
               LOG("RecvAllocateCapture: WithEntry error");
               return;
             }
 
             LOG("Allocated device nr %d", captureId);
-            (void)SendReplyAllocateCapture(captureId);
+            Unused << SendReplyAllocateCapture(captureId);
           });
   return IPC_OK();
 }
@@ -949,13 +950,13 @@ ipc::IPCResult CamerasParent::RecvReleaseCapture(
                }
 
                if (error != 0) {
-                 (void)SendReplyFailure();
+                 Unused << SendReplyFailure();
                  LOG("RecvReleaseCapture: Failed to free device nr %d",
                      aCaptureId);
                  return;
                }
 
-               (void)SendReplySuccess();
+               Unused << SendReplySuccess();
                LOG("Freed device nr %d", aCaptureId);
              });
   return IPC_OK();
@@ -1129,11 +1130,11 @@ ipc::IPCResult CamerasParent::RecvStartCapture(
 
             if (error != 0) {
               LOG("RecvStartCapture failure: StartCapture failed");
-              (void)SendReplyFailure();
+              Unused << SendReplyFailure();
               return;
             }
 
-            (void)SendReplySuccess();
+            Unused << SendReplySuccess();
           });
   return IPC_OK();
 }
@@ -1170,12 +1171,12 @@ ipc::IPCResult CamerasParent::RecvFocusOnSelectedSource(
             }
 
             if (!result) {
-              (void)SendReplyFailure();
+              Unused << SendReplyFailure();
               LOG("RecvFocusOnSelectedSource failure.");
               return;
             }
 
-            (void)SendReplySuccess();
+            Unused << SendReplySuccess();
           });
   return IPC_OK();
 }
@@ -1339,7 +1340,7 @@ auto CamerasParent::RequestCameraAccess(bool aAllowPermissionRequest)
             }));
     static nsresult clearingRv = NS_DispatchToMainThread(NS_NewRunnableFunction(
         __func__, [] { ClearOnShutdown(&sCameraAccessRequestPromise); }));
-    (void)clearingRv;
+    Unused << clearingRv;
   }
 
   // If camera acess is granted, all is jolly. But we need to handle rejection.

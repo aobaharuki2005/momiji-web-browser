@@ -8,6 +8,7 @@
 
 #include "CookieChangeEvent.h"
 #include "CookieStore.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/net/Cookie.h"
@@ -63,7 +64,7 @@ already_AddRefed<CookieStoreNotifier> CookieStoreNotifier::Create(
                           ? "private-cookie-changed"
                           : "cookie-changed",
                       false);
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 
   return notifier.forget();
 }
@@ -93,7 +94,7 @@ void CookieStoreNotifier::Disentangle() {
   nsresult rv = os->RemoveObserver(this, mOriginAttributes.IsPrivateBrowsing()
                                              ? "private-cookie-changed"
                                              : "cookie-changed");
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
 NS_IMETHODIMP

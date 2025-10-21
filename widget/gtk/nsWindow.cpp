@@ -3769,7 +3769,7 @@ void nsWindow::CaptureRollupEvents(bool aDoCapture) {
                          /* owner_events = */ true, kCaptureEventsMask,
                          /* confine_to = */ nullptr,
                          /* cursor = */ nullptr, GetLastUserInputTime());
-    (void)NS_WARN_IF(status != GDK_GRAB_SUCCESS);
+    Unused << NS_WARN_IF(status != GDK_GRAB_SUCCESS);
     LOG(" > pointer grab with status %d", int(status));
     gtk_grab_add(GTK_WIDGET(mContainer));
   } else {
@@ -6139,7 +6139,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
 
   // Ensure gfxPlatform is initialized, since that is what initializes
   // gfxVars, used below.
-  (void)gfxPlatform::GetPlatform();
+  Unused << gfxPlatform::GetPlatform();
 
   if (IsTopLevelWidget()) {
     mGtkWindowDecoration = GetSystemGtkWindowDecoration();
@@ -6850,7 +6850,7 @@ void nsWindow::NativeShow(bool aAction) {
 
         auto* shellClass = GTK_WIDGET_GET_CLASS(mShell);
         for (unsigned int i = 0; i < mPendingConfigures; i++) {
-          (void)shellClass->configure_event(mShell, &event);
+          Unused << shellClass->configure_event(mShell, &event);
         }
         mPendingConfigures = 0;
       }

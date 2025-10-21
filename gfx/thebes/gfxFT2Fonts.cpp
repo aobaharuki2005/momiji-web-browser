@@ -180,7 +180,7 @@ already_AddRefed<ScaledFont> gfxFT2Font::GetScaledFont(
   InitializeScaledFont(newScaledFont);
 
   if (mAzureScaledFont.compareExchange(nullptr, newScaledFont.get())) {
-    newScaledFont.forget().leak();
+    Unused << newScaledFont.forget();
   }
   ScaledFont* scaledFont = mAzureScaledFont;
   return do_AddRef(scaledFont);

@@ -875,7 +875,7 @@ static void BuildSegmentsFromValueEntries(
         // If the last entry with offset 1 and no animation property, that means
         // it is the only entry for this property so append a single segment
         // from 0 offset to |aEntry[i].offset|.
-        (void)HandleMissingInitialKeyframe(aResult, aEntries[i]);
+        Unused << HandleMissingInitialKeyframe(aResult, aEntries[i]);
       }
       animationProperty = nullptr;
       break;

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CompositorWidgetChild.h"
+#include "mozilla/Unused.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/widget/CompositorWidgetVsyncObserver.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
@@ -42,14 +43,18 @@ bool CompositorWidgetChild::Initialize() {
     return false;
   }
 
-  (void)SendInitialize(*maybeRemoteHandles);
+  Unused << SendInitialize(*maybeRemoteHandles);
 
   return true;
 }
 
-void CompositorWidgetChild::EnterPresentLock() { (void)SendEnterPresentLock(); }
+void CompositorWidgetChild::EnterPresentLock() {
+  Unused << SendEnterPresentLock();
+}
 
-void CompositorWidgetChild::LeavePresentLock() { (void)SendLeavePresentLock(); }
+void CompositorWidgetChild::LeavePresentLock() {
+  Unused << SendLeavePresentLock();
+}
 
 void CompositorWidgetChild::OnDestroyWindow() {}
 
@@ -58,11 +63,11 @@ bool CompositorWidgetChild::OnWindowResize(const LayoutDeviceIntSize& aSize) {
 }
 
 void CompositorWidgetChild::NotifyVisibilityUpdated(bool aIsFullyOccluded) {
-  (void)SendNotifyVisibilityUpdated(aIsFullyOccluded);
+  Unused << SendNotifyVisibilityUpdated(aIsFullyOccluded);
 };
 
 void CompositorWidgetChild::UpdateTransparency(TransparencyMode aMode) {
-  (void)SendUpdateTransparency(aMode);
+  Unused << SendUpdateTransparency(aMode);
 }
 
 mozilla::ipc::IPCResult CompositorWidgetChild::RecvObserveVsync() {

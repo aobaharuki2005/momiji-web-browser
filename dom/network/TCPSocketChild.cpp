@@ -15,6 +15,7 @@
 #include "js/Value.h"  // JS::Value
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/net/NeckoChild.h"
@@ -157,7 +158,7 @@ void TCPSocketChild::GetHost(nsAString& aHost) { aHost = mHost; }
 void TCPSocketChild::GetPort(uint16_t* aPort) const { *aPort = mPort; }
 
 mozilla::ipc::IPCResult TCPSocketChild::RecvRequestDelete() {
-  (void)Send__delete__(this);
+  mozilla::Unused << Send__delete__(this);
   return IPC_OK();
 }
 

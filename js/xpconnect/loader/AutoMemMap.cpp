@@ -7,6 +7,7 @@
 #include "AutoMemMap.h"
 #include "ScriptPreloader-inl.h"
 
+#include "mozilla/Unused.h"
 #include "mozilla/Try.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "nsIFile.h"
@@ -51,7 +52,7 @@ Result<Ok, nsresult> AutoMemMap::init(const FileDescriptor& file,
   if (!fd) {
     return Err(NS_ERROR_FAILURE);
   }
-  (void)handle.release();
+  Unused << handle.release();
 
   return initInternal(prot, maybeSize);
 }
@@ -95,11 +96,11 @@ FileDescriptor AutoMemMap::cloneHandle() const { return cloneFileDescriptor(); }
 
 void AutoMemMap::reset() {
   if (addr && !persistent_) {
-    (void)NS_WARN_IF(PR_MemUnmap(addr, size()) != PR_SUCCESS);
+    Unused << NS_WARN_IF(PR_MemUnmap(addr, size()) != PR_SUCCESS);
     addr = nullptr;
   }
   if (fileMap) {
-    (void)NS_WARN_IF(PR_CloseFileMap(fileMap) != PR_SUCCESS);
+    Unused << NS_WARN_IF(PR_CloseFileMap(fileMap) != PR_SUCCESS);
     fileMap = nullptr;
   }
   fd = nullptr;

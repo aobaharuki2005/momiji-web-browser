@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Result.h"
 #include "mozilla/StyleSheet.h"
+#include "mozilla/Unused.h"
 #include "nsINode.h"
 #include "nsTArray.h"
 
@@ -124,7 +125,7 @@ class LinkStyle {
   static uint32_t ParseLinkTypes(const nsAString& aTypes);
 
   void UpdateStyleSheetInternal() {
-    (void)UpdateStyleSheetInternal(nullptr, nullptr);
+    Unused << UpdateStyleSheetInternal(nullptr, nullptr);
   }
 
   struct MOZ_STACK_CLASS SheetInfo {

@@ -50,7 +50,7 @@ void RemoteWorkerNonLifeCycleOpControllerChild::TransistionStateToKilled() {
   if (!CanSend()) {
     return;
   }
-  (void)SendTerminated();
+  Unused << SendTerminated();
   if (GetIPCChannel()) {
     GetIPCChannel()->Close();
   }
@@ -61,7 +61,7 @@ void RemoteWorkerNonLifeCycleOpControllerChild::ErrorPropagation(
   if (!CanSend()) {
     return;
   }
-  (void)SendError(aError);
+  Unused << SendError(aError);
 }
 
 void RemoteWorkerNonLifeCycleOpControllerChild::StartOp(

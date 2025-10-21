@@ -16,6 +16,7 @@
 #include "txXSLTFunctions.h"
 
 using mozilla::UniquePtr;
+using mozilla::Unused;
 using mozilla::WrapUnique;
 
 /*
@@ -199,7 +200,7 @@ txPattern* txLocPathPattern::getSubPatternAt(uint32_t aPos) {
 void txLocPathPattern::setSubPatternAt(uint32_t aPos, txPattern* aPattern) {
   NS_ASSERTION(aPos < mSteps.Length(), "setting bad subexpression index");
   Step* step = &mSteps[aPos];
-  (void)step->pattern.release();
+  Unused << step->pattern.release();
   step->pattern = WrapUnique(aPattern);
 }
 

@@ -7,6 +7,7 @@
 #include "GMPParent.h"
 #include "gmp-storage.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsClassHashtable.h"
 #include "nsDirectoryServiceDefs.h"

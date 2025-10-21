@@ -84,7 +84,7 @@ NS_IMETHODIMP MockNetworkLayerController::AddNetAddrOverride(nsINetAddr* aFrom,
   if (nsIOService::UseSocketProcess()) {
     RefPtr<SocketProcessParent> parent = SocketProcessParent::GetSingleton();
     if (parent) {
-      (void)parent->SendAddNetAddrOverride(fromAddr, toAddr);
+      Unused << parent->SendAddNetAddrOverride(fromAddr, toAddr);
     }
   }
   return NS_OK;
@@ -99,7 +99,7 @@ NS_IMETHODIMP MockNetworkLayerController::ClearNetAddrOverrides() {
   if (nsIOService::UseSocketProcess()) {
     RefPtr<SocketProcessParent> parent = SocketProcessParent::GetSingleton();
     if (parent) {
-      (void)parent->SendClearNetAddrOverrides();
+      Unused << parent->SendClearNetAddrOverrides();
     }
   }
   return NS_OK;

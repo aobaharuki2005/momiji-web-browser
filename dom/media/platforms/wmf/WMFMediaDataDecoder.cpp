@@ -275,7 +275,7 @@ void WMFMediaDataDecoder::SetSeekThreshold(const media::TimeUnit& aTime) {
       });
   nsresult rv = mTaskQueue->Dispatch(runnable.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  (void)rv;
+  Unused << rv;
 }
 
 }  // namespace mozilla

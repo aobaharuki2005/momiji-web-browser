@@ -518,7 +518,7 @@ void DocumentLoadListener::AddURIVisit(nsIChannel* aChannel,
   uint32_t responseStatus = 0;
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
-    (void)httpChannel->GetResponseStatus(&responseStatus);
+    Unused << httpChannel->GetResponseStatus(&responseStatus);
   }
 
   RefPtr<CanonicalBrowsingContext> browsingContext =
@@ -842,7 +842,7 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
 
     nsCOMPtr<nsIPrincipal> partitionedPrincipal;
 
-    (void)StoragePrincipalHelper::GetPrincipal(
+    Unused << StoragePrincipalHelper::GetPrincipal(
         httpChannel, StoragePrincipalHelper::ePartitionedPrincipal,
         getter_AddRefs(partitionedPrincipal));
 
@@ -860,7 +860,8 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   }
 
   nsCOMPtr<nsIURI> uriBeingLoaded;
-  (void)NS_WARN_IF(NS_FAILED(mChannel->GetURI(getter_AddRefs(uriBeingLoaded))));
+  Unused << NS_WARN_IF(
+      NS_FAILED(mChannel->GetURI(getter_AddRefs(uriBeingLoaded))));
 
   RefPtr<HttpBaseChannel> httpBaseChannel = do_QueryObject(mChannel, aRv);
   if (uriBeingLoaded && httpBaseChannel) {
@@ -884,7 +885,7 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
 
   nsCOMPtr<nsIIdentChannel> identChannel = do_QueryInterface(mChannel);
   if (identChannel && aChannelId) {
-    (void)identChannel->SetChannelId(*aChannelId);
+    Unused << identChannel->SetChannelId(*aChannelId);
   }
   mDocumentChannelId = aChannelId;
 
@@ -903,7 +904,7 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   }
 
   if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel)) {
-    (void)httpChannel->SetRequestContextID(
+    Unused << httpChannel->SetRequestContextID(
         loadingContext->GetRequestContextId());
 
     nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(httpChannel));
@@ -1561,17 +1562,17 @@ void DocumentLoadListener::ApplyPendingFunctions(
     for (const auto& variant : mSecurityWarningFunctions) {
       variant.match(
           [reporter](const ReportSecurityMessageParams& aParams) {
-            (void)reporter->ReportSecurityMessage(aParams.mMessageTag,
-                                                  aParams.mMessageCategory);
+            Unused << reporter->ReportSecurityMessage(aParams.mMessageTag,
+                                                      aParams.mMessageCategory);
           },
           [reporter](const LogBlockedCORSRequestParams& aParams) {
-            (void)reporter->LogBlockedCORSRequest(
+            Unused << reporter->LogBlockedCORSRequest(
                 aParams.mMessage, aParams.mCategory, aParams.mIsWarning);
           },
           [reporter](const LogMimeTypeMismatchParams& aParams) {
-            (void)reporter->LogMimeTypeMismatch(aParams.mMessageName,
-                                                aParams.mWarning, aParams.mURL,
-                                                aParams.mContentType);
+            Unused << reporter->LogMimeTypeMismatch(
+                aParams.mMessageName, aParams.mWarning, aParams.mURL,
+                aParams.mContentType);
           });
     }
   }
@@ -2519,7 +2520,7 @@ void DocumentLoadListener::MaybeReportBlockedByURLClassifier(nsresult aStatus) {
 
   RefPtr<WindowGlobalParent> parent = browsingContext->GetParentWindowContext();
   if (parent) {
-    (void)parent->SendAddBlockedFrameNodeByClassifier(browsingContext);
+    Unused << parent->SendAddBlockedFrameNodeByClassifier(browsingContext);
   }
 }
 
@@ -2714,7 +2715,7 @@ nsresult DocumentLoadListener::DoOnStartRequest(nsIRequest* aRequest) {
       // after blocking the navigation.
       maybeCloseWindowHelper->SetShouldCloseWindow(
           IsFirstLoadInWindow(mChannel));
-      (void)maybeCloseWindowHelper->MaybeCloseWindow();
+      Unused << maybeCloseWindowHelper->MaybeCloseWindow();
     }
     DisconnectListeners(NS_ERROR_DOM_BAD_URI, NS_ERROR_DOM_BAD_URI);
     return NS_OK;
@@ -2782,7 +2783,7 @@ nsresult DocumentLoadListener::DoOnStartRequest(nsIRequest* aRequest) {
     if (bounceTrackingState) {
       // Don't warn when OnDocumentStartRequest fails until bug 1894936 is
       // fixed, because it fails frequently because of that.
-      (void)bounceTrackingState->OnDocumentStartRequest(mChannel);
+      Unused << bounceTrackingState->OnDocumentStartRequest(mChannel);
 
       DynamicFpiNavigationHeuristic::MaybeGrantStorageAccess(loadingContext,
                                                              mChannel);
@@ -2885,7 +2886,7 @@ nsresult DocumentLoadListener::DoOnStartRequest(nsIRequest* aRequest) {
   // HttpChannelParent::OnStartRequest, we can have the value as it originally
   // was.
   if (httpChannel) {
-    (void)httpChannel->GetApplyConversion(&mOldApplyConversion);
+    Unused << httpChannel->GetApplyConversion(&mOldApplyConversion);
     if (willBeRemote) {
       httpChannel->SetApplyConversion(false);
     }
@@ -3070,7 +3071,7 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aOldChannel);
   if (httpChannel) {
     bool isCOOPMismatch = false;
-    (void)NS_WARN_IF(NS_FAILED(
+    Unused << NS_WARN_IF(NS_FAILED(
         httpChannel->HasCrossOriginOpenerPolicyMismatch(&isCOOPMismatch)));
     mHasCrossOriginOpenerPolicyMismatch |= isCOOPMismatch;
   }
@@ -3200,7 +3201,7 @@ bool DocumentLoadListener::HasCrossOriginOpenerPolicyMismatch() const {
   }
 
   bool isCOOPMismatch = false;
-  (void)NS_WARN_IF(NS_FAILED(
+  Unused << NS_WARN_IF(NS_FAILED(
       httpChannel->HasCrossOriginOpenerPolicyMismatch(&isCOOPMismatch)));
   return isCOOPMismatch;
 }

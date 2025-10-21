@@ -628,7 +628,7 @@ nsresult NotifySecondaryKeyPermissionUpdateInContentProcess(
               continue;
             }
             bool success = wgp->SendNotifyPermissionChange(aType, aPermission);
-            (void)NS_WARN_IF(!success);
+            Unused << NS_WARN_IF(!success);
           }
         }
       }
@@ -884,7 +884,7 @@ void PermissionManager::InitDB(bool aRemoveFile) {
         MonitorAutoLock lock(self->mMonitor);
 
         nsresult rv = self->TryInitDB(aRemoveFile, defaultsInputStream, lock);
-        (void)NS_WARN_IF(NS_FAILED(rv));
+        Unused << NS_WARN_IF(NS_FAILED(rv));
 
         // This extra runnable calls EnsureReadCompleted to finialize the
         // initialization. If there is something blocked by the monitor, it will
@@ -1927,7 +1927,7 @@ nsresult PermissionManager::AddInternal(
     for (uint32_t i = 0; i < cplist.Length(); ++i) {
       ContentParent* cp = cplist[i];
       if (cp->NeedsPermissionsUpdate(permissionKey)) {
-        (void)cp->SendAddPermission(permission);
+        Unused << cp->SendAddPermission(permission);
       }
     }
   }
@@ -2481,7 +2481,7 @@ nsresult PermissionManager::RemoveAllInternal(bool aNotifyObservers) {
   nsTArray<ContentParent*> parents;
   ContentParent::GetAll(parents);
   for (ContentParent* parent : parents) {
-    (void)parent->SendRemoveAllPermissions();
+    Unused << parent->SendRemoveAllPermissions();
   }
 
   // Remove from memory and notify immediately. Since the in-memory
@@ -3328,7 +3328,7 @@ void PermissionManager::CompleteMigrations() {
                                          aModificationTime, entry.mId);
           return NS_OK;
         });
-    (void)NS_WARN_IF(NS_FAILED(rv));
+    Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 }
 
@@ -3354,7 +3354,7 @@ void PermissionManager::CompleteRead() {
     rv = AddInternal(principal, entry.mType, entry.mPermission, entry.mId,
                      entry.mExpireType, entry.mExpireTime,
                      entry.mModificationTime, eDontNotify, op, &entry.mOrigin);
-    (void)NS_WARN_IF(NS_FAILED(rv));
+    Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 }
 
@@ -3704,7 +3704,7 @@ PermissionManager::GetAllKeysForPrincipal(nsIPrincipal* aPrincipal) {
       break;
     }
 
-    (void)GetOriginFromPrincipal(prin, false, pair->second);
+    Unused << GetOriginFromPrincipal(prin, false, pair->second);
     prin = prin->GetNextSubDomainPrincipal();
     // Get the next subdomain principal and loop back around.
   }
@@ -3998,7 +3998,7 @@ nsresult PermissionManager::ImportLatestDefaults() {
   MOZ_ASSERT(mState == eReady);
 
   for (const DefaultEntry& entry : mDefaultEntriesForImport) {
-    (void)ImportDefaultEntry(entry);
+    Unused << ImportDefaultEntry(entry);
   }
 
   return NS_OK;
@@ -4049,8 +4049,8 @@ PermissionManager::CommonPrepareToTestPermission(
   int32_t defaultPermission =
       aDefaultPermissionIsValid ? aDefaultPermission : UNKNOWN_ACTION;
   if (!aDefaultPermissionIsValid && HasDefaultPref(aType)) {
-    (void)mDefaultPrefBranch->GetIntPref(PromiseFlatCString(aType).get(),
-                                         &defaultPermission);
+    Unused << mDefaultPrefBranch->GetIntPref(PromiseFlatCString(aType).get(),
+                                             &defaultPermission);
     if (defaultPermission < 0 ||
         defaultPermission > nsIPermissionManager::MAX_VALID_ACTION) {
       defaultPermission = nsIPermissionManager::UNKNOWN_ACTION;

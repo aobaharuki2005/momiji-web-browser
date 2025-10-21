@@ -14,6 +14,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Try.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/AudioDataBinding.h"
 #include "mozilla/dom/AudioDecoderBinding.h"
 #include "mozilla/dom/EncodedAudioChunk.h"
@@ -362,7 +363,7 @@ AudioDecoder::AudioDecoder(nsIGlobalObject* aParent,
 
 AudioDecoder::~AudioDecoder() {
   LOG("AudioDecoder %p dtor", this);
-  (void)ResetInternal(NS_ERROR_DOM_ABORT_ERR);
+  Unused << ResetInternal(NS_ERROR_DOM_ABORT_ERR);
 }
 
 JSObject* AudioDecoder::WrapObject(JSContext* aCx,

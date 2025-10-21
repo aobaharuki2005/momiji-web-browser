@@ -115,7 +115,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
   static void EnsureInstance() {
     if (!sInstance) {
       RefPtr<TSFStaticSink> staticSink = GetInstance();
-      (void)staticSink;
+      Unused << staticSink;
     }
   }
 

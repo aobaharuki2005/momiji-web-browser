@@ -30,6 +30,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Try.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/IOUtilsBinding.h"
@@ -2708,7 +2709,7 @@ NS_IMETHODIMP IOUtilsShutdownBlocker::BlockShutdown(
       MOZ_RELEASE_ASSERT(mPhase == ShutdownPhase::XpcomWillShutdown);
       MOZ_RELEASE_ASSERT(!state->mEventQueue);
 
-      (void)NS_WARN_IF(NS_FAILED(aBarrierClient->RemoveBlocker(this)));
+      Unused << NS_WARN_IF(NS_FAILED(aBarrierClient->RemoveBlocker(this)));
       mParentClient = nullptr;
 
       return NS_OK;
@@ -2729,7 +2730,7 @@ NS_IMETHODIMP IOUtilsShutdownBlocker::BlockShutdown(
     //
     // Likewise, if waiting on the barrier failed, we are going to make our best
     // attempt to clean up.
-    (void)Done();
+    Unused << Done();
   }
 
   return NS_OK;
@@ -3054,7 +3055,7 @@ static nsCString FromUnixString(const IOUtils::UnixString& aString) {
   }
   if (aString.IsUint8Array()) {
     nsCString data;
-    (void)aString.GetAsUint8Array().AppendDataTo(data);
+    Unused << aString.GetAsUint8Array().AppendDataTo(data);
     return data;
   }
   MOZ_CRASH("unreachable");

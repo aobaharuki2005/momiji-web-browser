@@ -117,7 +117,7 @@ static bool GetServiceImpl(JSContext* cx, const xpcom::JSServiceEntry& service,
       // Ignore any supplemental interfaces that aren't implemented. Tests do
       // weird things with some services, and JS can generally handle the
       // interfaces being absent.
-      (void)wn->FindTearOff(cx, *iid);
+      Unused << wn->FindTearOff(cx, *iid);
     }
   }
 

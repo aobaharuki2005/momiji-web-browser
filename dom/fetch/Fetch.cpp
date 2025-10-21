@@ -642,7 +642,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
 
     auto* backgroundChild =
         mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
-    (void)NS_WARN_IF(!backgroundChild->SendPFetchConstructor(actor));
+    Unused << NS_WARN_IF(!backgroundChild->SendPFetchConstructor(actor));
 
     FetchOpArgs ipcArgs;
 
@@ -674,8 +674,8 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
       }
       if (thirdPartyUtil) {
         bool thirdParty = false;
-        (void)thirdPartyUtil->IsThirdPartyWindow(window->GetOuterWindow(),
-                                                 nullptr, &thirdParty);
+        Unused << thirdPartyUtil->IsThirdPartyWindow(window->GetOuterWindow(),
+                                                     nullptr, &thirdParty);
         ipcArgs.isThirdPartyContext() = thirdParty;
       }
     } else {
@@ -746,7 +746,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
 
       auto* backgroundChild =
           mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
-      (void)NS_WARN_IF(!backgroundChild->SendPFetchConstructor(actor));
+      Unused << NS_WARN_IF(!backgroundChild->SendPFetchConstructor(actor));
 
       FetchOpArgs ipcArgs;
       ipcArgs.request() = IPCInternalRequest();
@@ -1089,7 +1089,7 @@ void WorkerFetchResolver::OnDataAvailable() {
 
   RefPtr<WorkerDataAvailableRunnable> r =
       new WorkerDataAvailableRunnable(mPromiseProxy->GetWorkerPrivate(), this);
-  (void)r->Dispatch(mPromiseProxy->GetWorkerPrivate());
+  Unused << r->Dispatch(mPromiseProxy->GetWorkerPrivate());
 }
 
 void WorkerFetchResolver::OnResponseEnd(FetchDriverObserver::EndReason aReason,
@@ -1102,7 +1102,7 @@ void WorkerFetchResolver::OnResponseEnd(FetchDriverObserver::EndReason aReason,
 
   FlushConsoleReport();
 
-  (void)aReasonDetails;
+  Unused << aReasonDetails;
 
   RefPtr<WorkerFetchResponseEndRunnable> r = new WorkerFetchResponseEndRunnable(
       mPromiseProxy->GetWorkerPrivate(), this, aReason);

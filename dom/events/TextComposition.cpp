@@ -20,6 +20,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_intl.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
@@ -277,8 +278,8 @@ void TextComposition::OnCompositionEventDiscarded(
              "Shouldn't be called with untrusted event");
 
   if (mBrowserParent) {
-    (void)mBrowserParent->SendCompositionEvent(*aCompositionEvent,
-                                               mCompositionId);
+    Unused << mBrowserParent->SendCompositionEvent(*aCompositionEvent,
+                                                   mCompositionId);
   }
 
   // XXX If composition events are discarded, should we dispatch them with
@@ -376,8 +377,8 @@ void TextComposition::DispatchCompositionEvent(
   // If the content is a container of BrowserParent, composition should be in
   // the remote process.
   if (mBrowserParent) {
-    (void)mBrowserParent->SendCompositionEvent(*aCompositionEvent,
-                                               mCompositionId);
+    Unused << mBrowserParent->SendCompositionEvent(*aCompositionEvent,
+                                                   mCompositionId);
     aCompositionEvent->StopPropagation();
     if (aCompositionEvent->CausesDOMTextEvent()) {
       mLastData = aCompositionEvent->mData;
@@ -540,7 +541,7 @@ void TextComposition::HandleSelectionEvent(
   // If the content is a container of BrowserParent, composition should be in
   // the remote process.
   if (aBrowserParent) {
-    (void)aBrowserParent->SendSelectionEvent(*aSelectionEvent);
+    Unused << aBrowserParent->SendSelectionEvent(*aSelectionEvent);
     aSelectionEvent->StopPropagation();
     return;
   }

@@ -10,6 +10,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/widget/WidgetLogging.h"
 #include "nsContentUtils.h"
 
@@ -124,7 +125,7 @@ nsresult nsDragSessionProxy::InvokeDragSessionImpl(
 
         LOGI("[%p] %s | sending PBrowser::InvokeDragSession with image data",
              this, __FUNCTION__);
-        (void)child->SendInvokeDragSession(
+        mozilla::Unused << child->SendInvokeDragSession(
             std::move(transferables), aActionType, std::move(surfaceData),
             stride, dataSurface->GetFormat(), dragRect, principal,
             policyContainer, csArgs, mSourceWindowContext,
@@ -136,7 +137,7 @@ nsresult nsDragSessionProxy::InvokeDragSessionImpl(
 
   LOGI("[%p] %s | sending PBrowser::InvokeDragSession without image data", this,
        __FUNCTION__);
-  (void)child->SendInvokeDragSession(
+  mozilla::Unused << child->SendInvokeDragSession(
       std::move(transferables), aActionType, Nothing(), 0,
       static_cast<SurfaceFormat>(0), dragRect, principal, policyContainer,
       csArgs, mSourceWindowContext, mSourceTopWindowContext);

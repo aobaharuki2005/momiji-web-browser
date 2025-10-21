@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/EncodedVideoChunk.h"
 #include "mozilla/dom/EncodedVideoChunkBinding.h"
 #include "mozilla/dom/ImageUtils.h"
@@ -499,7 +500,7 @@ VideoEncoder::VideoEncoder(
 
 VideoEncoder::~VideoEncoder() {
   LOG("VideoEncoder %p dtor", this);
-  (void)ResetInternal(NS_ERROR_DOM_ABORT_ERR);
+  Unused << ResetInternal(NS_ERROR_DOM_ABORT_ERR);
 }
 
 JSObject* VideoEncoder::WrapObject(JSContext* aCx,

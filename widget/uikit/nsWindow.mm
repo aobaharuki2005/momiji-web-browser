@@ -46,6 +46,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/widget/GeckoViewSupport.h"
@@ -1040,7 +1041,7 @@ nsresult nsWindow::DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                  nsEventStatus& aStatus) {
   aStatus = nsEventStatus_eIgnore;
   nsCOMPtr<nsIWidget> kungFuDeathGrip(aEvent->mWidget);
-  (void)kungFuDeathGrip;  // Not used within this function
+  mozilla::Unused << kungFuDeathGrip;  // Not used within this function
 
   if (mAttachedWidgetListener) {
     aStatus = mAttachedWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);

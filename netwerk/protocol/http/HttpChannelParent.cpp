@@ -31,6 +31,7 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "HttpBackgroundChannelParent.h"
 #include "ParentChannelListener.h"
 #include "nsDebug.h"
@@ -332,7 +333,7 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void** result) {
     NS_ENSURE_SUCCESS(rv, NS_ERROR_NO_INTERFACE);
 
     bool hasWindowCreator = false;
-    (void)wwatch->HasWindowCreator(&hasWindowCreator);
+    Unused << wwatch->HasWindowCreator(&hasWindowCreator);
     if (!hasWindowCreator) {
       return NS_ERROR_NO_INTERFACE;
     }
@@ -372,7 +373,7 @@ void HttpChannelParent::AsyncOpenFailed(nsresult aRv) {
   mParentListener = nullptr;
 
   if (!mIPCClosed) {
-    (void)SendFailedAsyncOpen(aRv);
+    Unused << SendFailedAsyncOpen(aRv);
   }
 }
 
@@ -819,13 +820,13 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvCancel(
     // the channel resumed if needed.
     if (mSuspendedForFlowControl) {
       LOG(("  resume the channel due to e10s backpressure relief by cancel"));
-      (void)mChannel->Resume();
+      Unused << mChannel->Resume();
       mSuspendedForFlowControl = false;
     }
   } else if (!mIPCClosed) {
     // Make sure that the child correctly delivers all stream listener
     // notifications.
-    (void)SendFailedAsyncOpen(status);
+    Unused << SendFailedAsyncOpen(status);
   }
 
   // We won't need flow control anymore. Toggle the flag to avoid |Suspend|
@@ -1216,7 +1217,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   // Propagate whether or not conversion should occur from the parent-side
   // channel to the child-side channel.  Then disable the parent-side
   // conversion so that it only occurs in the child.
-  (void)chan->GetApplyConversion(&args.applyConversion());
+  Unused << chan->GetApplyConversion(&args.applyConversion());
   chan->SetApplyConversion(false);
 
   // If we've already applied the conversion (as can happen if we installed
@@ -1352,7 +1353,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   if (NS_SUCCEEDED(rv) && args.shouldWaitForOnStartRequestSent() &&
       multiPartID.valueOr(0) == 0) {
     LOG(("HttpChannelParent::SendOnStartRequestSent\n"));
-    (void)SendOnStartRequestSent();
+    Unused << SendOnStartRequestSent();
   }
 
   if (!args.timing().domainLookupEnd().IsNull() &&
@@ -1541,7 +1542,7 @@ HttpChannelParent::OnDataAvailable(nsIRequest* aRequest,
     if (mSendWindowSize > 0 && mSendWindowSize <= count) {
       MOZ_ASSERT(!mSuspendedForFlowControl);
       LOG(("  suspend the channel due to e10s backpressure"));
-      (void)mChannel->Suspend();
+      Unused << mChannel->Suspend();
       mSuspendedForFlowControl = true;
       mHasSuspendedByBackPressure = true;
     } else if (!mResumedTimestamp.IsNull()) {
@@ -1610,7 +1611,7 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvBytesRead(
   if (mSendWindowSize <= 0 && mSendWindowSize + aCount > 0) {
     MOZ_ASSERT(mSuspendedForFlowControl);
     LOG(("  resume the channel due to e10s backpressure relief"));
-    (void)mChannel->Resume();
+    Unused << mChannel->Resume();
     mSuspendedForFlowControl = false;
 
     mResumedTimestamp = TimeStamp::Now();
@@ -1628,12 +1629,12 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvOpenOriginalCacheInputStream() {
     nsCOMPtr<nsIInputStream> inputStream;
     nsresult rv = mCacheEntry->OpenInputStream(0, getter_AddRefs(inputStream));
     if (NS_SUCCEEDED(rv)) {
-      (void)mozilla::ipc::SerializeIPCStream(inputStream.forget(), ipcStream,
-                                             /* aAllowLazy */ false);
+      Unused << mozilla::ipc::SerializeIPCStream(
+          inputStream.forget(), ipcStream, /* aAllowLazy */ false);
     }
   }
 
-  (void)SendOriginalCacheInputStreamAvailable(ipcStream);
+  Unused << SendOriginalCacheInputStreamAvailable(ipcStream);
   return IPC_OK();
 }
 
@@ -1733,7 +1734,8 @@ HttpChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
   LOG(("HttpChannelParent::SetClassifierMatchedInfo [this=%p]\n", this));
   if (!mIPCClosed) {
     MOZ_ASSERT(mBgParent);
-    (void)mBgParent->OnSetClassifierMatchedInfo(aList, aProvider, aFullHash);
+    Unused << mBgParent->OnSetClassifierMatchedInfo(aList, aProvider,
+                                                    aFullHash);
   }
   return NS_OK;
 }
@@ -1745,7 +1747,8 @@ HttpChannelParent::SetClassifierMatchedTrackingInfo(
        this));
   if (!mIPCClosed) {
     MOZ_ASSERT(mBgParent);
-    (void)mBgParent->OnSetClassifierMatchedTrackingInfo(aLists, aFullHashes);
+    Unused << mBgParent->OnSetClassifierMatchedTrackingInfo(aLists,
+                                                            aFullHashes);
   }
   return NS_OK;
 }
@@ -1759,15 +1762,15 @@ HttpChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
        aClassificationFlags, static_cast<int>(aIsThirdParty), this));
   if (!mIPCClosed) {
     MOZ_ASSERT(mBgParent);
-    (void)mBgParent->OnNotifyClassificationFlags(aClassificationFlags,
-                                                 aIsThirdParty);
+    Unused << mBgParent->OnNotifyClassificationFlags(aClassificationFlags,
+                                                     aIsThirdParty);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpChannelParent::Delete() {
-  if (!mIPCClosed) (void)DoSendDeleteSelf();
+  if (!mIPCClosed) Unused << DoSendDeleteSelf();
 
   return NS_OK;
 }
@@ -1862,7 +1865,7 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
       // detach StreamFilters. Otherwise StreamFilters will be attached twice
       // on the same HttpChannelChild when opening the new nsHttpChannel.
       if (oldIntercepted) {
-        (void)DetachStreamFilters();
+        Unused << DetachStreamFilters();
       }
 
       // Re-link the HttpChannelParent to the new channel.
@@ -1956,9 +1959,9 @@ HttpChannelParent::CompleteRedirect(nsresult status) {
   if (!mIPCClosed) {
     // TODO: check return value: assume child dead if failed
     if (NS_SUCCEEDED(status)) {
-      (void)SendRedirect3Complete();
+      Unused << SendRedirect3Complete();
     } else {
-      (void)SendRedirectFailed(status);
+      Unused << SendRedirectFailed(status);
     }
   }
 
@@ -2040,7 +2043,7 @@ HttpChannelParent::ReadyToVerify(nsresult aResult) {
 
 void HttpChannelParent::DoSendSetPriority(int16_t aValue) {
   if (!mIPCClosed) {
-    (void)SendSetPriority(aValue);
+    Unused << SendSetPriority(aValue);
   }
 }
 

@@ -372,7 +372,8 @@ StorageAccessAPIHelper::AllowAccessForOnChildProcess(
       return StorageAccessPermissionGrantPromise::CreateAndReject(false,
                                                                   __func__);
     }
-    (void)trackingPrincipal->IsThirdPartyPrincipal(principal, &isThirdParty);
+    Unused << trackingPrincipal->IsThirdPartyPrincipal(principal,
+                                                       &isThirdParty);
     if (aReason ==
             ContentBlockingNotifier::ePrivilegeStorageAccessForOriginAPI ||
         !isThirdParty) {
@@ -538,8 +539,8 @@ StorageAccessAPIHelper::CompleteAllowAccessForOnParentProcess(
                                                                     __func__);
       }
 
-      (void)cp->SendOnAllowAccessFor(aParentContext, trackingOrigin,
-                                     aCookieBehavior, aReason);
+      Unused << cp->SendOnAllowAccessFor(aParentContext, trackingOrigin,
+                                         aCookieBehavior, aReason);
     }
 
     Maybe<ContentBlockingNotifier::StorageAccessPermissionGrantedReason>
@@ -576,7 +577,7 @@ StorageAccessAPIHelper::CompleteAllowAccessForOnParentProcess(
                    RefPtr<dom::WindowContext> windowContext =
                        dom::WindowContext::GetById(innerWindowId);
                    if (windowContext) {
-                     (void)BounceTrackingProtection::RecordUserActivation(
+                     Unused << BounceTrackingProtection::RecordUserActivation(
                          windowContext);
                    }
                  }
@@ -801,7 +802,7 @@ StorageAccessAPIHelper::CompleteAllowAccessForOnChildProcess(
                   RefPtr<dom::WindowContext> windowContext =
                       dom::WindowContext::GetById(innerWindowId);
                   if (windowContext) {
-                    (void)BounceTrackingProtection::RecordUserActivation(
+                    Unused << BounceTrackingProtection::RecordUserActivation(
                         windowContext);
                   }
                 }
@@ -1048,7 +1049,7 @@ StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
   rv = permManager->AddFromPrincipal(aParentPrincipal, type,
                                      nsIPermissionManager::ALLOW_ACTION,
                                      expirationType, when);
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 
   if (StaticPrefs::privacy_antitracking_testing()) {
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
@@ -1356,8 +1357,8 @@ void StorageAccessAPIHelper::UpdateAllowAccessOnCurrentProcess(
     // Only check browsing contexts that are in-process.
     if (aContext->IsInProcess()) {
       nsAutoCString origin;
-      (void)AntiTrackingUtils::GetPrincipalAndTrackingOrigin(aContext, nullptr,
-                                                             origin);
+      Unused << AntiTrackingUtils::GetPrincipalAndTrackingOrigin(
+          aContext, nullptr, origin);
 
       if (aTrackingOrigin == origin) {
         nsCOMPtr<nsPIDOMWindowInner> inner =
@@ -1423,7 +1424,7 @@ void StorageAccessAPIHelper::UpdateAllowAccessOnParentProcess(
       AntiTrackingUtils::GetPrincipalAndTrackingOrigin(aContext, nullptr,
                                                        origin);
       if (aTrackingOrigin == origin) {
-        (void)wgp->SendSaveStorageAccessPermissionGranted();
+        Unused << wgp->SendSaveStorageAccessPermissionGranted();
       }
     });
   }
@@ -1454,7 +1455,7 @@ void StorageAccessGrantTelemetryClassification::MaybeReportTracker(
 
   rv = uriClassifier->AsyncClassifyLocalWithFeatureNames(
       aURI, featureNames, nsIUrlClassifierFeature::blocklist, classification);
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
 // nsIUrlClassifierFeatureCallback

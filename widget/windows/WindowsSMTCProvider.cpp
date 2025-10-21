@@ -92,7 +92,7 @@ static IAsyncInfo* GetIAsyncInfo(IAsyncOperation<unsigned int>* aAsyncOp) {
                                         reinterpret_cast<void**>(&asyncInfo));
   // The assertion always works since IAsyncOperation implements IAsyncInfo
   MOZ_ASSERT(SUCCEEDED(hr));
-  (void)hr;
+  Unused << hr;
   MOZ_ASSERT(asyncInfo);
   return asyncInfo;
 }
@@ -209,7 +209,7 @@ void WindowsSMTCProvider::SetPlaybackState(
   }
 
   MOZ_ASSERT(SUCCEEDED(hr));
-  (void)hr;
+  Unused << hr;
 }
 
 void WindowsSMTCProvider::SetMediaMetadata(
@@ -473,7 +473,7 @@ bool WindowsSMTCProvider::SetMusicMetadata(const nsString& aArtist,
 
   HRESULT hr = mDisplay->put_Type(MediaPlaybackType::MediaPlaybackType_Music);
   MOZ_ASSERT(SUCCEEDED(hr));
-  (void)hr;
+  Unused << hr;
   hr = mDisplay->get_MusicProperties(musicProps.GetAddressOf());
   if (FAILED(hr)) {
     LOG("Failed to get music properties");
@@ -848,7 +848,7 @@ void WindowsSMTCProvider::ClearThumbnail() {
   MOZ_ASSERT(SUCCEEDED(hr));
   hr = mDisplay->Update();
   MOZ_ASSERT(SUCCEEDED(hr));
-  (void)hr;
+  Unused << hr;
   mThumbnailUrl.Truncate();
 }
 

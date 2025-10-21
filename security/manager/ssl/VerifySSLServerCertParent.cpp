@@ -15,6 +15,7 @@
 #include "SSLServerCertVerification.h"
 #include "nsNSSIOLayer.h"
 #include "nsISocketProvider.h"
+#include "mozilla/Unused.h"
 
 extern mozilla::LazyLogModule gPIPNSSLog;
 
@@ -36,7 +37,7 @@ void VerifySSLServerCertParent::OnVerifiedSSLServerCert(
     return;
   }
 
-  (void)SendOnVerifySSLServerCertFinished(
+  Unused << SendOnVerifySSLServerCertFinished(
       aBuiltCertChain, aCertificateTransparencyStatus, aEVStatus, aSucceeded,
       aFinalError, aOverridableErrorCategory, aIsBuiltCertChainRootBuiltInRoot,
       aMadeOCSPRequests);

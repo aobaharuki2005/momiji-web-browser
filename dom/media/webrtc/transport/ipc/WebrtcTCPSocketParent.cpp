@@ -89,7 +89,7 @@ void WebrtcTCPSocketParent::OnClose(nsresult aReason) {
   LOG(("WebrtcTCPSocketParent::OnClose %p\n", this));
 
   if (mChannel) {
-    (void)SendOnClose(aReason);
+    Unused << SendOnClose(aReason);
   }
 
   CleanupChannel();

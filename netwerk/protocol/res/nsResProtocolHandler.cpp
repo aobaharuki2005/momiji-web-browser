@@ -6,6 +6,7 @@
 #include "mozilla/chrome/RegistryMessageUtils.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Unused.h"
 
 #include "nsResProtocolHandler.h"
 #include "nsNetCID.h"
@@ -16,6 +17,7 @@
 #include "mozilla/Omnijar.h"
 
 using mozilla::LogLevel;
+using mozilla::Unused;
 using mozilla::dom::ContentParent;
 
 #define kAPP "app"

@@ -9,6 +9,7 @@
 
 #include "mozilla/NativeNt.h"
 #include "mozilla/Vector.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 
@@ -104,7 +105,7 @@ struct ModuleLoadInfo final {
     // is just a macro that resolve to this function anyway.
     WORD numCaptured = ::RtlCaptureStackBackTrace(2, kMaxBacktraceSize,
                                                   mBacktrace.begin(), nullptr);
-    (void)mBacktrace.resize(numCaptured);
+    Unused << mBacktrace.resize(numCaptured);
     // These backtraces might stick around for a while, so let's trim any
     // excess memory.
     mBacktrace.shrinkStorageToFit();

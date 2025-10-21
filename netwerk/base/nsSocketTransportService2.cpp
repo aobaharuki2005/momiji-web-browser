@@ -1100,7 +1100,7 @@ nsSocketTransportService::Run() {
   // If STS-thread is no longer needed this should still be run before exiting
 
   char ignoredStackBuffer[255];
-  (void)gethostname(ignoredStackBuffer, 255);
+  Unused << gethostname(ignoredStackBuffer, 255);
 #endif
 
   psm::InitializeSSLServerCertVerificationThreads();

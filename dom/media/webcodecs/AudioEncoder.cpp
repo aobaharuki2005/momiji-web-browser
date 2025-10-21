@@ -383,7 +383,7 @@ AudioEncoder::AudioEncoder(
 
 AudioEncoder::~AudioEncoder() {
   LOG("AudioEncoder %p dtor", this);
-  (void)ResetInternal(NS_ERROR_DOM_ABORT_ERR);
+  Unused << ResetInternal(NS_ERROR_DOM_ABORT_ERR);
 }
 
 JSObject* AudioEncoder::WrapObject(JSContext* aCx,

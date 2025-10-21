@@ -12,6 +12,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/net/DNS.h"
 #include "nsISupportsImpl.h"
 #include "nsNamedPipeService.h"
@@ -282,7 +283,7 @@ nsresult NamedPipeInfo::Disconnect() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   nsresult rv = mNamedPipeService->RemoveDataObserver(mPipe, this);
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 
   mPipe = nullptr;
 
@@ -659,8 +660,8 @@ static PRInt32 nsNamedPipeSend(PRFileDesc* aFd, const void* aBuffer,
                                PRIntervalTime aTimeout) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  (void)aFlags;
-  (void)aTimeout;
+  Unused << aFlags;
+  Unused << aTimeout;
 
   NamedPipeInfo* info = GetNamedPipeInfo(aFd);
   if (!info) {
@@ -674,7 +675,7 @@ static PRInt32 nsNamedPipeRecv(PRFileDesc* aFd, void* aBuffer, PRInt32 aAmount,
                                PRIntn aFlags, PRIntervalTime aTimeout) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  (void)aTimeout;
+  Unused << aTimeout;
 
   NamedPipeInfo* info = GetNamedPipeInfo(aFd);
   if (!info) {

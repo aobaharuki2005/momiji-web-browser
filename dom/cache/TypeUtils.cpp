@@ -9,6 +9,7 @@
 #include <algorithm>
 
 #include "mozilla/StaticPrefs_extensions.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/CacheStorageBinding.h"
 #include "mozilla/dom/FetchTypes.h"

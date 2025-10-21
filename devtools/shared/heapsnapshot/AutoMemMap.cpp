@@ -6,6 +6,7 @@
 
 #include "mozilla/devtools/AutoMemMap.h"
 
+#include "mozilla/Unused.h"
 #include "nsDebug.h"
 
 namespace mozilla {
@@ -13,17 +14,17 @@ namespace devtools {
 
 AutoMemMap::~AutoMemMap() {
   if (addr) {
-    (void)NS_WARN_IF(PR_MemUnmap(addr, size()) != PR_SUCCESS);
+    Unused << NS_WARN_IF(PR_MemUnmap(addr, size()) != PR_SUCCESS);
     addr = nullptr;
   }
 
   if (fileMap) {
-    (void)NS_WARN_IF(PR_CloseFileMap(fileMap) != PR_SUCCESS);
+    Unused << NS_WARN_IF(PR_CloseFileMap(fileMap) != PR_SUCCESS);
     fileMap = nullptr;
   }
 
   if (fd) {
-    (void)NS_WARN_IF(PR_Close(fd) != PR_SUCCESS);
+    Unused << NS_WARN_IF(PR_Close(fd) != PR_SUCCESS);
     fd = nullptr;
   }
 }

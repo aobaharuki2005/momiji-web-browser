@@ -58,11 +58,11 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
           GECKOBUNDLE_START(rpBundle);
 
           nsString rpId;
-          (void)aArgs->GetRpId(rpId);
+          Unused << aArgs->GetRpId(rpId);
           GECKOBUNDLE_PUT(rpBundle, "id", jni::StringParam(rpId));
 
           nsString rpName;
-          (void)aArgs->GetRpName(rpName);
+          Unused << aArgs->GetRpName(rpName);
           GECKOBUNDLE_PUT(rpBundle, "name", jni::StringParam(rpName));
 
           GECKOBUNDLE_FINISH(rpBundle);
@@ -73,11 +73,11 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
           GECKOBUNDLE_START(userBundle);
 
           nsString userName;
-          (void)aArgs->GetUserName(userName);
+          Unused << aArgs->GetUserName(userName);
           GECKOBUNDLE_PUT(userBundle, "name", jni::StringParam(userName));
 
           nsString userDisplayName;
-          (void)aArgs->GetUserDisplayName(userDisplayName);
+          Unused << aArgs->GetUserDisplayName(userDisplayName);
           GECKOBUNDLE_PUT(userBundle, "displayName",
                           jni::StringParam(userDisplayName));
 
@@ -86,11 +86,11 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
         }
 
         nsString origin;
-        (void)aArgs->GetOrigin(origin);
+        Unused << aArgs->GetOrigin(origin);
         GECKOBUNDLE_PUT(credentialBundle, "origin", jni::StringParam(origin));
 
         uint32_t timeout;
-        (void)aArgs->GetTimeoutMS(&timeout);
+        Unused << aArgs->GetTimeoutMS(&timeout);
         GECKOBUNDLE_PUT(credentialBundle, "timeout",
                         java::sdk::Double::New(timeout));
 
@@ -101,19 +101,19 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
         GECKOBUNDLE_FINISH(credentialBundle);
 
         nsTArray<uint8_t> userId;
-        (void)aArgs->GetUserId(userId);
+        Unused << aArgs->GetUserId(userId);
         jni::ByteBuffer::LocalRef uid = jni::ByteBuffer::New(
             const_cast<void*>(static_cast<const void*>(userId.Elements())),
             userId.Length());
 
         nsTArray<uint8_t> challBuf;
-        (void)aArgs->GetChallenge(challBuf);
+        Unused << aArgs->GetChallenge(challBuf);
         jni::ByteBuffer::LocalRef challenge = jni::ByteBuffer::New(
             const_cast<void*>(static_cast<const void*>(challBuf.Elements())),
             challBuf.Length());
 
         nsTArray<nsTArray<uint8_t>> excludeList;
-        (void)aArgs->GetExcludeList(excludeList);
+        Unused << aArgs->GetExcludeList(excludeList);
         jni::ObjectArray::LocalRef idList =
             jni::ObjectArray::New(excludeList.Length());
         int ix = 0;
@@ -128,32 +128,32 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
         }
 
         nsTArray<uint8_t> transportBuf;
-        (void)aArgs->GetExcludeListTransports(transportBuf);
+        Unused << aArgs->GetExcludeListTransports(transportBuf);
         jni::ByteBuffer::LocalRef transportList = jni::ByteBuffer::New(
             const_cast<void*>(
                 static_cast<const void*>(transportBuf.Elements())),
             transportBuf.Length());
 
         nsTArray<uint8_t> clientDataHash;
-        (void)aArgs->GetClientDataHash(clientDataHash);
+        Unused << aArgs->GetClientDataHash(clientDataHash);
         jni::ByteBuffer::LocalRef hash = jni::ByteBuffer::New(
             const_cast<void*>(
                 static_cast<const void*>(clientDataHash.Elements())),
             clientDataHash.Length());
 
         nsTArray<int32_t> coseAlgs;
-        (void)aArgs->GetCoseAlgs(coseAlgs);
+        Unused << aArgs->GetCoseAlgs(coseAlgs);
         jni::IntArray::LocalRef algs =
             jni::IntArray::New(coseAlgs.Elements(), coseAlgs.Length());
 
         GECKOBUNDLE_START(authSelBundle);
 
         nsString residentKey;
-        (void)aArgs->GetResidentKey(residentKey);
+        Unused << aArgs->GetResidentKey(residentKey);
 
         // Get extensions
         bool requestedCredProps;
-        (void)aArgs->GetCredProps(&requestedCredProps);
+        Unused << aArgs->GetCredProps(&requestedCredProps);
 
         // Unfortunately, GMS's FIDO2 API has no option for Passkey. If using
         // residentKey, credential will be synced with Passkey via Google
@@ -166,7 +166,7 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
         }
 
         nsString userVerification;
-        (void)aArgs->GetUserVerification(userVerification);
+        Unused << aArgs->GetUserVerification(userVerification);
         if (userVerification.EqualsLiteral(
                 MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
           GECKOBUNDLE_PUT(authSelBundle, "requireUserVerification",
@@ -226,7 +226,7 @@ AndroidWebAuthnService::GetAssertion(uint64_t aTransactionId,
   Reset();
 
   bool conditionallyMediated;
-  (void)aArgs->GetConditionallyMediated(&conditionallyMediated);
+  Unused << aArgs->GetConditionallyMediated(&conditionallyMediated);
   if (conditionallyMediated) {
     aPromise->Reject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return NS_OK;
@@ -239,13 +239,13 @@ AndroidWebAuthnService::GetAssertion(uint64_t aTransactionId,
         AssertIsOnMainThread();
 
         nsTArray<uint8_t> challBuf;
-        (void)aArgs->GetChallenge(challBuf);
+        Unused << aArgs->GetChallenge(challBuf);
         jni::ByteBuffer::LocalRef challenge = jni::ByteBuffer::New(
             const_cast<void*>(static_cast<const void*>(challBuf.Elements())),
             challBuf.Length());
 
         nsTArray<nsTArray<uint8_t>> allowList;
-        (void)aArgs->GetAllowList(allowList);
+        Unused << aArgs->GetAllowList(allowList);
         jni::ObjectArray::LocalRef idList =
             jni::ObjectArray::New(allowList.Length());
         int ix = 0;
@@ -260,14 +260,14 @@ AndroidWebAuthnService::GetAssertion(uint64_t aTransactionId,
         }
 
         nsTArray<uint8_t> clientDataHash;
-        (void)aArgs->GetClientDataHash(clientDataHash);
+        Unused << aArgs->GetClientDataHash(clientDataHash);
         jni::ByteBuffer::LocalRef hash = jni::ByteBuffer::New(
             const_cast<void*>(
                 static_cast<const void*>(clientDataHash.Elements())),
             clientDataHash.Length());
 
         nsTArray<uint8_t> transportBuf;
-        (void)aArgs->GetAllowListTransports(transportBuf);
+        Unused << aArgs->GetAllowListTransports(transportBuf);
         jni::ByteBuffer::LocalRef transportList = jni::ByteBuffer::New(
             const_cast<void*>(
                 static_cast<const void*>(transportBuf.Elements())),
@@ -279,20 +279,20 @@ AndroidWebAuthnService::GetAssertion(uint64_t aTransactionId,
                         java::sdk::Integer::ValueOf(1));
 
         nsString rpId;
-        (void)aArgs->GetRpId(rpId);
+        Unused << aArgs->GetRpId(rpId);
         GECKOBUNDLE_PUT(assertionBundle, "rpId", jni::StringParam(rpId));
 
         nsString origin;
-        (void)aArgs->GetOrigin(origin);
+        Unused << aArgs->GetOrigin(origin);
         GECKOBUNDLE_PUT(assertionBundle, "origin", jni::StringParam(origin));
 
         uint32_t timeout;
-        (void)aArgs->GetTimeoutMS(&timeout);
+        Unused << aArgs->GetTimeoutMS(&timeout);
         GECKOBUNDLE_PUT(assertionBundle, "timeout",
                         java::sdk::Double::New(timeout));
 
         nsString userVerification;
-        (void)aArgs->GetUserVerification(userVerification);
+        Unused << aArgs->GetUserVerification(userVerification);
         GECKOBUNDLE_PUT(assertionBundle, "userVerification",
                         jni::StringParam(userVerification));
 

@@ -24,6 +24,7 @@
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/Unused.h"
 #include "PuppetWidget.h"
 #include "nsContentUtils.h"
 #include "nsIWidgetListener.h"
@@ -328,17 +329,17 @@ nsIWidget::ContentAndAPZEventStatus PuppetWidget::DispatchInputEvent(
 
   switch (aEvent->mClass) {
     case eWheelEventClass:
-      (void)mBrowserChild->SendDispatchWheelEvent(*aEvent->AsWheelEvent());
+      Unused << mBrowserChild->SendDispatchWheelEvent(*aEvent->AsWheelEvent());
       break;
     case eMouseEventClass:
-      (void)mBrowserChild->SendDispatchMouseEvent(*aEvent->AsMouseEvent());
+      Unused << mBrowserChild->SendDispatchMouseEvent(*aEvent->AsMouseEvent());
       break;
     case eKeyboardEventClass:
-      (void)mBrowserChild->SendDispatchKeyboardEvent(
+      Unused << mBrowserChild->SendDispatchKeyboardEvent(
           *aEvent->AsKeyboardEvent());
       break;
     case eTouchEventClass:
-      (void)mBrowserChild->SendDispatchTouchEvent(*aEvent->AsTouchEvent());
+      Unused << mBrowserChild->SendDispatchTouchEvent(*aEvent->AsTouchEvent());
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("unsupported event type");
@@ -629,7 +630,7 @@ nsresult PuppetWidget::RequestIMEToCommitComposition(bool aCancel) {
   // eCompositionStart event.
   mIgnoreCompositionEvents = true;
 
-  (void)mBrowserChild->SendOnEventNeedingAckHandled(
+  Unused << mBrowserChild->SendOnEventNeedingAckHandled(
       eCompositionCommitRequestHandled, composition->Id());
 
   // NOTE: PuppetWidget might be destroyed already.

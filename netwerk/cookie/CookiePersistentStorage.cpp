@@ -597,7 +597,7 @@ void CookiePersistentStorage::RemoveCookiesWithOriginAttributes(
   mozStorageTransaction transaction(mDBConn, false);
 
   // XXX Handle the error, bug 1696130.
-  (void)NS_WARN_IF(NS_FAILED(transaction.Start()));
+  Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
 
   CookieStorage::RemoveCookiesWithOriginAttributes(aPattern, aBaseDomain);
 
@@ -611,7 +611,7 @@ void CookiePersistentStorage::RemoveCookiesFromExactHost(
   mozStorageTransaction transaction(mDBConn, false);
 
   // XXX Handle the error, bug 1696130.
-  (void)NS_WARN_IF(NS_FAILED(transaction.Start()));
+  Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
 
   CookieStorage::RemoveCookiesFromExactHost(aHost, aBaseDomain, aPattern);
 
@@ -981,7 +981,7 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::TryInitDB(
     mozStorageTransaction transaction(mSyncConn, true);
 
     // XXX Handle the error, bug 1696130.
-    (void)NS_WARN_IF(NS_FAILED(transaction.Start()));
+    Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
 
     switch (dbSchemaVersion) {
       // Upgrading.
@@ -1911,7 +1911,7 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::Read() {
     stmt->GetUTF8String(IDX_ORIGIN_ATTRIBUTES, suffix);
     // If PopulateFromSuffix failed we just ignore the OA attributes
     // that we don't support
-    (void)attrs.PopulateFromSuffix(suffix);
+    Unused << attrs.PopulateFromSuffix(suffix);
 
     CookieKey key(baseDomain, attrs);
     CookieDomainTuple* tuple = mReadArray.AppendElement();
@@ -2124,8 +2124,8 @@ void CookiePersistentStorage::InitDBConn() {
   nsCOMPtr<nsIRunnable> idleRunnable = NS_NewRunnableFunction(
       "CookiePersistentStorage::RecordValidationTelemetry",
       [self = RefPtr{this}]() { self->RecordValidationTelemetry(); });
-  (void)NS_DispatchToMainThreadQueue(do_AddRef(idleRunnable),
-                                     EventQueuePriority::Idle);
+  Unused << NS_DispatchToMainThreadQueue(do_AddRef(idleRunnable),
+                                         EventQueuePriority::Idle);
 }
 
 nsresult CookiePersistentStorage::InitDBConnInternal() {
@@ -2339,10 +2339,10 @@ nsresult CookiePersistentStorage::RunInTransaction(
   mozStorageTransaction transaction(mDBConn, true);
 
   // XXX Handle the error, bug 1696130.
-  (void)NS_WARN_IF(NS_FAILED(transaction.Start()));
+  Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
 
   if (NS_FAILED(aCallback->Callback())) {
-    (void)transaction.Rollback();
+    Unused << transaction.Rollback();
     return NS_ERROR_FAILURE;
   }
 

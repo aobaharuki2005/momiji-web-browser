@@ -2361,9 +2361,9 @@ bool TextLeafRange::SetSelection(int32_t aSelectionNum, bool aSetFocus) const {
       return false;
     }
 
-    (void)doc->SendSetTextSelection(mStart.mAcc->ID(), mStart.mOffset,
-                                    mEnd.mAcc->ID(), mEnd.mOffset,
-                                    aSelectionNum, aSetFocus);
+    Unused << doc->SendSetTextSelection(mStart.mAcc->ID(), mStart.mOffset,
+                                        mEnd.mAcc->ID(), mEnd.mOffset,
+                                        aSelectionNum, aSetFocus);
     return true;
   }
 
@@ -2514,9 +2514,9 @@ void TextLeafRange::ScrollIntoView(uint32_t aScrollType) const {
       return;
     }
 
-    (void)doc->SendScrollTextLeafRangeIntoView(mStart.mAcc->ID(),
-                                               mStart.mOffset, mEnd.mAcc->ID(),
-                                               mEnd.mOffset, aScrollType);
+    Unused << doc->SendScrollTextLeafRangeIntoView(
+        mStart.mAcc->ID(), mStart.mOffset, mEnd.mAcc->ID(), mEnd.mOffset,
+        aScrollType);
     return;
   }
 

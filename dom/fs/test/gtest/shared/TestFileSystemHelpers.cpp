@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/FileSystemHelpers.h"
 
 namespace mozilla::dom::fs {
@@ -140,7 +141,7 @@ TEST(TestFileSystemHelpers_Registered, Method_Inspect)
   {
     Registered<TestObject> testObject1(MakeRefPtr<TestObject>(1, 1));
     const RefPtr<TestObject>& testObject2 = testObject1.inspect();
-    (void)testObject2;
+    Unused << testObject2;
   }
 }
 
@@ -149,7 +150,7 @@ TEST(TestFileSystemHelpers_Registered, Method_Unwrap)
   {
     Registered<TestObject> testObject1(MakeRefPtr<TestObject>(1, 1));
     RefPtr<TestObject> testObject2 = testObject1.unwrap();
-    (void)testObject2;
+    Unused << testObject2;
   }
 }
 
@@ -158,7 +159,7 @@ TEST(TestFileSystemHelpers_Registered, Method_Get)
   {
     Registered<TestObject> testObject1(MakeRefPtr<TestObject>(1, 1));
     TestObject* testObject2 = testObject1.get();
-    (void)testObject2;
+    Unused << testObject2;
   }
 }
 
@@ -167,7 +168,7 @@ TEST(TestFileSystemHelpers_Registered, Operator_Conversion_ToRawPtr)
   {
     Registered<TestObject> testObject1(MakeRefPtr<TestObject>(1, 1));
     TestObject* testObject2 = testObject1;
-    (void)testObject2;
+    Unused << testObject2;
   }
 }
 

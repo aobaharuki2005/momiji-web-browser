@@ -860,7 +860,7 @@ void InitLibrary() {
 
   // Ensure the CallbackThreadRegistry is not created in an audio callback by
   // creating it now.
-  (void)CallbackThreadRegistry::Get();
+  Unused << CallbackThreadRegistry::Get();
 }
 
 void ShutdownLibrary() {

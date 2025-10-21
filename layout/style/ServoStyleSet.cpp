@@ -323,7 +323,7 @@ void ServoStyleSet::PreTraverseSync() {
   // Get the Document's root element to ensure that the cache is valid before
   // calling into the (potentially-parallel) Servo traversal, where a cache hit
   // is necessary to avoid a data race when updating the cache.
-  (void)mDocument->GetRootElement();
+  Unused << mDocument->GetRootElement();
 
   // FIXME(emilio): These two shouldn't be needed in theory, the call to the
   // same function in PresShell should do the work, but as it turns out we

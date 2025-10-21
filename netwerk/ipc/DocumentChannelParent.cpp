@@ -106,7 +106,7 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
       },
       [self](DocumentLoadListener::OpenPromiseFailedType&& aRejectValue) {
         if (self->CanSend()) {
-          (void)self->SendDisconnectChildListeners(
+          Unused << self->SendDisconnectChildListeners(
               aRejectValue.mStatus, aRejectValue.mLoadGroupStatus,
               aRejectValue.mContinueNavigating);
         }

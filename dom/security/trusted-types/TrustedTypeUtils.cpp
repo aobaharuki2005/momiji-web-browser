@@ -292,7 +292,7 @@ static inline bool IsString(const TrustedTypeOrStringArg& aInput) {
     return aInput.IsUSVString();
   }
   if constexpr (std::is_same_v<TrustedTypeOrStringArg, const nsAString*>) {
-    (void)aInput;
+    Unused << aInput;
     return true;
   }
   MOZ_ASSERT_UNREACHABLE();
@@ -352,7 +352,7 @@ static inline bool IsTrustedType(const TrustedTypeOrStringArg& aInput) {
     return aInput.IsTrustedScriptURL();
   }
   if constexpr (std::is_same_v<TrustedTypeOrStringArg, const nsAString*>) {
-    (void)aInput;
+    Unused << aInput;
     return false;
   }
   MOZ_ASSERT_UNREACHABLE();
@@ -396,7 +396,7 @@ static inline const nsAString* GetAsTrustedType(
     MOZ_ASSERT(aInput.IsTrustedScriptURL());
     return &aInput.GetAsTrustedScriptURL().mData;
   }
-  (void)aInput;
+  Unused << aInput;
   MOZ_ASSERT_UNREACHABLE();
   return &EmptyString();
 };

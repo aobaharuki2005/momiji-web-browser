@@ -169,7 +169,7 @@ void FeaturePolicy::SetDeclaredPolicy(Document* aDocument,
   mSelfOrigin = aSelfOrigin;
   mSrcOrigin = aSrcOrigin;
 
-  (void)NS_WARN_IF(!FeaturePolicyParser::ParseString(
+  Unused << NS_WARN_IF(!FeaturePolicyParser::ParseString(
       aPolicyString, aDocument, aSelfOrigin, aSrcOrigin, mFeatures));
 
   // Only store explicitly declared allowlist

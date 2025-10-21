@@ -17,6 +17,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ComputedStyle.h"
+#include "mozilla/Unused.h"
 #include "nsStyleStructInlines.h"
 #include "nsStyleStructList.h"
 
@@ -40,8 +41,8 @@ void TriggerImageLoads(dom::Document& aDocument, const ComputedStyle* aOldStyle,
     auto* current = const_cast<T*>((aStyle->*Method)());
     current->TriggerImageLoads(aDocument, old);
   } else {
-    (void)aOldStyle;
-    (void)aStyle;
+    Unused << aOldStyle;
+    Unused << aStyle;
   }
 }
 

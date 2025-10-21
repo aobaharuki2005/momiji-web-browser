@@ -68,7 +68,7 @@ TRRServiceChild::Observe(nsISupports* aSubject, const char* aTopic,
                          const char16_t* aData) {
   if (!strcmp(aTopic, "network:connectivity-service:ip-checks-complete") ||
       !strcmp(aTopic, "network:connectivity-service:dns-checks-complete")) {
-    (void)SendNotifyNetworkConnectivityServiceObservers(
+    Unused << SendNotifyNetworkConnectivityServiceObservers(
         nsPrintfCString("%s-from-socket-process", aTopic));
   }
 
@@ -89,7 +89,7 @@ mozilla::ipc::IPCResult TRRServiceChild::RecvUpdateParentalControlEnabled(
 
 mozilla::ipc::IPCResult TRRServiceChild::RecvClearDNSCache(
     const bool& aTrrToo) {
-  (void)sDNSService->ClearCache(aTrrToo);
+  Unused << sDNSService->ClearCache(aTrrToo);
   return IPC_OK();
 }
 

@@ -83,7 +83,7 @@ void LoaderObserver::OnEndDllLoad(void* aContext, NTSTATUS aNtStatus,
     mModuleLoads = new ModuleLoadInfoVec();
   }
 
-  (void)mModuleLoads->emplaceBack(
+  Unused << mModuleLoads->emplaceBack(
       std::forward<ModuleLoadInfo>(aModuleLoadInfo));
 }
 
@@ -140,7 +140,7 @@ void LoaderObserver::OnForward(ModuleLoadInfoVec&& aInfo) {
   } else {
     // This should not happen, but we can handle it
     for (auto&& item : aInfo) {
-      (void)mModuleLoads->append(std::move(item));
+      Unused << mModuleLoads->append(std::move(item));
     }
   }
 }

@@ -3784,7 +3784,7 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
       //
       // When this fails, it removes all properties for the node anyway, so no
       // extra error handling needed.
-      (void)oldDoc->PropertyTable().TransferOrRemoveAllPropertiesFor(
+      Unused << oldDoc->PropertyTable().TransferOrRemoveAllPropertiesFor(
           aNode, newDoc->PropertyTable());
     }
 
@@ -3886,7 +3886,7 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
           if (hadProperties) {
             // NOTE: When it fails it removes all properties for the node
             // anyway, so no extra error handling needed.
-            (void)newDoc->PropertyTable().TransferOrRemoveAllPropertiesFor(
+            Unused << newDoc->PropertyTable().TransferOrRemoveAllPropertiesFor(
                 aNode, oldDoc->PropertyTable());
           }
           aNode->mNodeInfo.swap(newNodeInfo);

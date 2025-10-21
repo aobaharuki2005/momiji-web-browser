@@ -49,8 +49,9 @@ static nsresult GetDefaultIcon(nsIChannel* aOriginalChannel,
   nsCOMPtr<nsILoadInfo> loadInfo = aOriginalChannel->LoadInfo();
   rv = NS_NewChannelInternal(aChannel, defaultIconURI, loadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
-  (void)(*aChannel)->SetContentType(nsLiteralCString(FAVICON_DEFAULT_MIMETYPE));
-  (void)aOriginalChannel->SetContentType(
+  Unused << (*aChannel)->SetContentType(
+      nsLiteralCString(FAVICON_DEFAULT_MIMETYPE));
+  Unused << aOriginalChannel->SetContentType(
       nsLiteralCString(FAVICON_DEFAULT_MIMETYPE));
   return NS_OK;
 }

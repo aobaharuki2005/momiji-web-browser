@@ -39,7 +39,7 @@ void LoggingHandleCommandLineArgs(
         continue;
       }
       // We accept `-MOZ_LOG` as well as `--MOZ_LOG`.
-      (void)p.CheckChar('-');
+      Unused << p.CheckChar('-');
 
       for (auto const& name : names) {
         if (!p.CheckWord(name)) {
@@ -77,7 +77,7 @@ void LoggingHandleCommandLineArgs(
     // This can be non-empty from previous iteration or in this iteration.
     if (!env.IsEmpty()) {
       nsDependentCSubstring value;
-      (void)p.ReadUntil(Tokenizer::Token::EndOfFile(), value);
+      Unused << p.ReadUntil(Tokenizer::Token::EndOfFile(), value);
       env.Append(value);
 
       consumer(env);

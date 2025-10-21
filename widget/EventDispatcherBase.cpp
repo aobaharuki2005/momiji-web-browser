@@ -69,7 +69,7 @@ nsresult EventDispatcherBase::DispatchToGeckoInternal(
 
     // Discard any errors encountered while dispatching so we don't miss
     // listeners.
-    (void)NS_WARN_IF(NS_FAILED(rv));
+    Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 
   return NS_OK;

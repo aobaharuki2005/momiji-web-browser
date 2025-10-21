@@ -181,8 +181,9 @@ class BaseProcessLauncher {
     if (ShouldHaveDirectoryService()) {
       // "Current process directory" means the app dir, not the current
       // working dir or similar.
-      (void)nsDirectoryService::gService->GetCurrentProcessDirectory(
-          getter_AddRefs(mAppDir));
+      mozilla::Unused
+          << nsDirectoryService::gService->GetCurrentProcessDirectory(
+                 getter_AddRefs(mAppDir));
     }
   }
 
@@ -672,8 +673,8 @@ bool GeckoChildProcessHost::PrepareLaunch(
 #  if defined(MOZ_SANDBOX)
   if (ShouldHaveDirectoryService() &&
       mProcessType != GeckoProcessType_GMPlugin) {
-    (void)NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                 getter_AddRefs(mProfileDir));
+    mozilla::Unused << NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                              getter_AddRefs(mProfileDir));
   }
 #  endif
 #endif
@@ -990,7 +991,7 @@ IPCLaunchThreadObserver::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   nsresult rv = thread ? thread->Shutdown() : NS_OK;
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
   return rv;
 }
 
@@ -1047,7 +1048,7 @@ AddAppDirToCommandLine(geckoargs::ChildProcessArgs& aCmdLine,
       // tests require startup with a missing profile dir.
       // For users, almost universally, the profile will be in
       // the home directory and normalization isn't required.
-      (void)aProfileDir->Normalize();
+      mozilla::Unused << aProfileDir->Normalize();
       nsAutoCString path;
       MOZ_ALWAYS_SUCCEEDS(aProfileDir->GetNativePath(path));
       geckoargs::sProfile.Put(path.get(), aCmdLine);

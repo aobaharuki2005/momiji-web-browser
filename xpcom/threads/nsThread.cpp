@@ -41,6 +41,7 @@
 #include "mozilla/ChaosMode.h"
 #include "mozilla/glean/XpcomMetrics.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsThreadSyncDispatch.h"
@@ -618,7 +619,7 @@ nsresult nsThread::Init(const nsACString& aName) {
     }
 
     // The created thread now owns initData, so release our ownership of it.
-    (void)initData.release();
+    Unused << initData.release();
 
     // The thread has successfully started, so we can mark it as requiring
     // shutdown & add it to the thread list.

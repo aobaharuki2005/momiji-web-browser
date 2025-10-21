@@ -221,7 +221,7 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
 }
 
 static void ExternalBufferFreeCallback(void* aContents, void* aUserData) {
-  (void)aContents;
+  Unused << aContents;
   auto shm = static_cast<std::shared_ptr<ipc::SharedMemoryMapping>*>(aUserData);
   delete shm;
 }

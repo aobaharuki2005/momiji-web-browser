@@ -2487,7 +2487,7 @@ TEST(GeckoProfiler, Markers)
   };
 
   // Make sure the compiler doesn't complain about this unused struct.
-  (void)GtestUnusedMarker{};
+  mozilla::Unused << GtestUnusedMarker{};
 
   // Test PROFILER_MARKER_SIMPLE_PAYLOAD with various data types.
   int testInt = 42;

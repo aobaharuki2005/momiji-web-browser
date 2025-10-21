@@ -2256,10 +2256,11 @@ void Predictor::UpdateCacheability(nsIURI* sourceURI, nsIURI* targetURI,
     requestHead.Method(method);
 
     nsAutoCString vary;
-    (void)responseHead->GetHeader(nsHttp::Vary, vary);
+    Unused << responseHead->GetHeader(nsHttp::Vary, vary);
 
     nsAutoCString cacheControlHeader;
-    (void)responseHead->GetHeader(nsHttp::Cache_Control, cacheControlHeader);
+    Unused << responseHead->GetHeader(nsHttp::Cache_Control,
+                                      cacheControlHeader);
     CacheControlParser cacheControl(cacheControlHeader);
 
     self->UpdateCacheabilityInternal(sourceURI, targetURI, httpStatus, method,

@@ -180,6 +180,7 @@
 #include "mozilla/glean/XpcomMetrics.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollectionParticipant.h"
@@ -1065,7 +1066,7 @@ struct nsPurpleBuffer {
   MOZ_ALWAYS_INLINE void Put(void* aObject, nsCycleCollectionParticipant* aCp,
                              nsCycleCollectingAutoRefCnt* aRefCnt) {
     nsPurpleBufferEntry entry(aObject, aRefCnt, aCp);
-    (void)mEntries.Append(std::move(entry));
+    Unused << mEntries.Append(std::move(entry));
     MOZ_ASSERT(!entry.mRefCnt, "Move didn't work!");
     ++mCount;
   }
@@ -1640,7 +1641,7 @@ class nsCycleCollectorLogSinkToFile final : public nsICycleCollectorLogSink {
     // wouldn't work.
     nsIFile* logFile = nullptr;
     if (char* env = PR_GetEnv("MOZ_CC_LOG_DIRECTORY")) {
-      (void)NS_WARN_IF(
+      Unused << NS_WARN_IF(
           NS_FAILED(NS_NewNativeLocalFile(nsCString(env), &logFile)));
     }
 
@@ -1915,7 +1916,7 @@ class nsCycleCollectorLogger final : public nsICycleCollectorListener {
   void End() {
     if (!mDisableLog) {
       mCCLog = nullptr;
-      (void)NS_WARN_IF(NS_FAILED(mLogSink->CloseCCLog()));
+      Unused << NS_WARN_IF(NS_FAILED(mLogSink->CloseCCLog()));
     }
   }
   NS_IMETHOD ProcessNext(nsICycleCollectorHandler* aHandler,

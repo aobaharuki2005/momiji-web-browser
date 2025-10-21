@@ -30,6 +30,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Variant.h"
 #include "mozilla/dom/PBackgroundSDBConnection.h"
 #include "mozilla/dom/PBackgroundSDBConnectionParent.h"
@@ -630,7 +631,7 @@ void StreamHelper::RunOnIOThread() {
   MOZ_ASSERT(inputStream);
 
   nsresult rv = inputStream->Close();
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 
   MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
 }
@@ -741,7 +742,7 @@ void Connection::OnClose() {
   }
 
   if (mAllowedToClose && !mActorDestroyed) {
-    (void)SendClosed();
+    Unused << SendClosed();
   }
 }
 
@@ -755,7 +756,7 @@ void Connection::AllowToClose() {
   mAllowedToClose = true;
 
   if (!mActorDestroyed) {
-    (void)SendAllowToClose();
+    Unused << SendAllowToClose();
   }
 
   MaybeCloseStream();
@@ -996,7 +997,7 @@ void ConnectionOperationBase::SendResults() {
       response = mResultCode;
     }
 
-    (void)PBackgroundSDBRequestParent::Send__delete__(this, response);
+    Unused << PBackgroundSDBRequestParent::Send__delete__(this, response);
   }
 
   Cleanup();
@@ -1712,7 +1713,7 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
                        MOZ_TO_RESULT_INVOKE_MEMBER(file, IsDirectory));
 
         if (isDirectory) {
-          (void)WARN_IF_FILE_IS_UNKNOWN(*file);
+          Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
           return usageInfo;
         }
 
@@ -1729,7 +1730,7 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
                  UsageInfo{DatabaseUsageType(Some(uint64_t(fileSize)))};
         }
 
-        (void)WARN_IF_FILE_IS_UNKNOWN(*file);
+        Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
 
         return usageInfo;
       }));

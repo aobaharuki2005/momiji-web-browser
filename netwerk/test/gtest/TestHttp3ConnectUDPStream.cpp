@@ -102,7 +102,7 @@ class Http3SessionStub final : public Http3SessionBase {
 
   void ProcessOutput() {
     for (const auto& stream : mReadyForWrite) {
-      (void)stream->ReadSegments();
+      Unused << stream->ReadSegments();
     }
     mReadyForWrite.Clear();
   }
@@ -172,8 +172,8 @@ class DummyHttpTransaction : public nsAHttpTransaction {
                                       uint32_t count,
                                       uint32_t* countRead) override {
     mReader = reader;
-    (void)mRequestStream->ReadSegments(ReadRequestSegment, this, count,
-                                       countRead);
+    Unused << mRequestStream->ReadSegments(ReadRequestSegment, this, count,
+                                           countRead);
     mReader = nullptr;
     return NS_OK;
   }
@@ -181,7 +181,7 @@ class DummyHttpTransaction : public nsAHttpTransaction {
                                        uint32_t count,
                                        uint32_t* countWritten) override {
     char buf[1024];
-    (void)writer->OnWriteSegment(buf, 1024, countWritten);
+    Unused << writer->OnWriteSegment(buf, 1024, countWritten);
     mIsDone = true;
     return NS_OK;
   }
@@ -195,7 +195,7 @@ class DummyHttpTransaction : public nsAHttpTransaction {
 
     mRequestHead = MakeUnique<nsHttpRequestHead>();
 
-    (void)mRequestHead->SetHeader(nsHttp::Host, "example.com"_ns);
+    Unused << mRequestHead->SetHeader(nsHttp::Host, "example.com"_ns);
     return mRequestHead.get();
   }
   uint32_t Http1xTransactionCount() override { return 0; }
@@ -225,7 +225,7 @@ class UDPListener final : public nsIUDPSocketSyncListener {
   NS_IMETHOD OnPacketReceived(nsIUDPSocket* aSocket) override {
     nsTArray<uint8_t> data;
     NetAddr addr{};
-    (void)aSocket->RecvWithAddr(&addr, data);
+    Unused << aSocket->RecvWithAddr(&addr, data);
     mReceivedData.AppendElements(data);
     return NS_OK;
   }
@@ -287,7 +287,7 @@ static already_AddRefed<Http3ConnectUDPStream> CreateUDPStream(
   response.AppendElements(kResponse, kResponseLen);
 
   stream->SetResponseHeaders(response, false, false);
-  (void)stream->WriteSegments();
+  Unused << stream->WriteSegments();
 
   return stream.forget();
 }

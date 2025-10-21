@@ -11,6 +11,7 @@ class TimeStamp;
 }
 #include "nsTArrayForwardDeclare.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Unused.h"
 %}
 
 native TimeStamp(mozilla::TimeStamp);
@@ -90,7 +91,7 @@ interface nsITimedChannel : nsISupports {
   %{C++
   inline BodyInfoAccess BodyInfoAccessAllowedCheck(nsIPrincipal* aOrigin) {
     BodyInfoAccess allowed = BodyInfoAccess::DISALLOWED;
-    (void)BodyInfoAccessAllowedCheck(aOrigin, &allowed);
+    mozilla::Unused << BodyInfoAccessAllowedCheck(aOrigin, &allowed);
     return allowed;
   }
   %}

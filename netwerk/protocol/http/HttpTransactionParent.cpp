@@ -52,12 +52,12 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpTransactionParent::Release(void) {
       RefPtr<HttpTransactionParent> self = this;
       MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(
           NS_NewRunnableFunction("HttpTransactionParent::Release", [self]() {
-            (void)self->Send__delete__(self);
+            mozilla::Unused << self->Send__delete__(self);
             // Make sure we can not send IPC after Send__delete__().
             MOZ_ASSERT(!self->CanSend());
           })));
     } else {
-      (void)Send__delete__(this);
+      mozilla::Unused << Send__delete__(this);
     }
     return 1;
   }
@@ -262,7 +262,7 @@ NS_IMETHODIMP HttpTransactionParent::RetargetDeliveryTo(
 
 void HttpTransactionParent::SetDNSWasRefreshed() {
   MOZ_ASSERT(NS_IsMainThread(), "SetDNSWasRefreshed on main thread only!");
-  (void)SendSetDNSWasRefreshed();
+  Unused << SendSetDNSWasRefreshed();
 }
 
 void HttpTransactionParent::GetNetworkAddresses(
@@ -354,12 +354,12 @@ uint32_t HttpTransactionParent::HTTPSSVCReceivedStage() {
 
 void HttpTransactionParent::DontReuseConnection() {
   MOZ_ASSERT(NS_IsMainThread());
-  (void)SendDontReuseConnection();
+  Unused << SendDontReuseConnection();
 }
 
 void HttpTransactionParent::SetH2WSConnRefTaken() {
   MOZ_ASSERT(NS_IsMainThread());
-  (void)SendSetH2WSConnRefTaken();
+  Unused << SendSetH2WSConnRefTaken();
 }
 
 void HttpTransactionParent::SetSecurityCallbacks(
@@ -511,8 +511,8 @@ void HttpTransactionParent::DoOnStartRequest(
   MOZ_ASSERT(httpChannel, "mChannel is expected to implement nsIHttpChannel");
   if (httpChannel) {
     if (aAltSvcUsed.isSome()) {
-      (void)httpChannel->SetRequestHeader(nsHttp::Alternate_Service_Used.val(),
-                                          aAltSvcUsed.ref(), false);
+      Unused << httpChannel->SetRequestHeader(
+          nsHttp::Alternate_Service_Used.val(), aAltSvcUsed.ref(), false);
     }
   }
 
@@ -678,7 +678,7 @@ void HttpTransactionParent::DoOnStopRequest(
   }
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-  (void)mChannel->OnStopRequest(this, mStatus);
+  Unused << mChannel->OnStopRequest(this, mStatus);
   mOnStopRequestCalled = true;
 }
 
@@ -702,7 +702,7 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvEarlyHint(
        PromiseFlatCString(aCSPHeader).get()));
   nsCOMPtr<nsIEarlyHintObserver> obs = do_QueryInterface(mChannel);
   if (obs) {
-    (void)obs->EarlyHint(aValue, aReferrerPolicy, aCSPHeader);
+    Unused << obs->EarlyHint(aValue, aReferrerPolicy, aCSPHeader);
   }
 
   return IPC_OK();
@@ -761,7 +761,7 @@ HttpTransactionParent::Cancel(nsresult aStatus) {
   mCanceled = true;
   mStatus = aStatus;
   if (CanSend()) {
-    (void)SendCancelPump(mStatus);
+    Unused << SendCancelPump(mStatus);
   }
 
   // Put DoNotifyListener() in front of the queue to avoid OnDataAvailable
@@ -817,7 +817,7 @@ HttpTransactionParent::Suspend() {
 
   // SendSuspend only once, when suspend goes from 0 to 1.
   if (!mSuspendCount++ && CanSend()) {
-    (void)SendSuspendPump();
+    Unused << SendSuspendPump();
   }
   mEventQ->Suspend();
   return NS_OK;
@@ -831,7 +831,7 @@ HttpTransactionParent::Resume() {
   // SendResume only once, when suspend count drops to 0.
   if (mSuspendCount && !--mSuspendCount) {
     if (CanSend()) {
-      (void)SendResumePump();
+      Unused << SendResumePump();
     }
 
     if (mCallOnResume) {

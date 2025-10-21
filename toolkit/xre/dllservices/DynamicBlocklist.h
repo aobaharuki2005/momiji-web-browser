@@ -12,6 +12,7 @@
 #include "nsWindowsHelpers.h"
 #include "mozilla/NativeNt.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 
 #if defined(MOZILLA_INTERNAL_API)

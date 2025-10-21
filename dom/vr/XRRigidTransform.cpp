@@ -128,7 +128,7 @@ void XRRigidTransform::UpdateInternal() {
   }
   if (mInverse) {
     gfx::Matrix4x4Double inverseMatrix = mRawTransformMatrix;
-    (void)inverseMatrix.Invert();
+    Unused << inverseMatrix.Invert();
     mInverse->Update(inverseMatrix);
   }
 }
@@ -161,7 +161,7 @@ void XRRigidTransform::GetMatrix(JSContext* aCx,
 already_AddRefed<XRRigidTransform> XRRigidTransform::Inverse() {
   if (!mInverse) {
     gfx::Matrix4x4Double inverseMatrix = mRawTransformMatrix;
-    (void)inverseMatrix.Invert();
+    Unused << inverseMatrix.Invert();
     mInverse = new XRRigidTransform(mParent, inverseMatrix);
   }
 

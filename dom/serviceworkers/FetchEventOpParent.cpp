@@ -8,6 +8,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/FetchEventOpProxyParent.h"
 #include "mozilla/dom/FetchStreamUtils.h"
 #include "mozilla/dom/FetchTypes.h"
@@ -50,7 +51,7 @@ mozilla::ipc::IPCResult FetchEventOpParent::RecvPreloadResponse(
         aPending.mPreloadResponse = Some(std::move(aResponse));
       },
       [&aResponse](Started& aStarted) {
-        (void)aStarted.mFetchEventOpProxyParent->SendPreloadResponse(
+        Unused << aStarted.mFetchEventOpProxyParent->SendPreloadResponse(
             ToParentToChild(aResponse));
       },
       [](const Finished&) {});
@@ -68,7 +69,7 @@ mozilla::ipc::IPCResult FetchEventOpParent::RecvPreloadResponseTiming(
         aPending.mTiming = Some(std::move(aTiming));
       },
       [&aTiming](Started& aStarted) {
-        (void)aStarted.mFetchEventOpProxyParent->SendPreloadResponseTiming(
+        Unused << aStarted.mFetchEventOpProxyParent->SendPreloadResponseTiming(
             std::move(aTiming));
       },
       [](const Finished&) {});
@@ -86,7 +87,7 @@ mozilla::ipc::IPCResult FetchEventOpParent::RecvPreloadResponseEnd(
         aPending.mEndArgs = Some(std::move(aArgs));
       },
       [&aArgs](Started& aStarted) {
-        (void)aStarted.mFetchEventOpProxyParent->SendPreloadResponseEnd(
+        Unused << aStarted.mFetchEventOpProxyParent->SendPreloadResponseEnd(
             std::move(aArgs));
       },
       [](const Finished&) {});

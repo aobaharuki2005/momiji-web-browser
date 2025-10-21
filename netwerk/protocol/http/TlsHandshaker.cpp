@@ -35,7 +35,7 @@ NS_IMETHODIMP
 TlsHandshaker::CertVerificationDone() {
   LOG(("TlsHandshaker::CertVerificationDone mOwner=%p", mOwner.get()));
   if (mOwner) {
-    (void)mOwner->ResumeSend();
+    Unused << mOwner->ResumeSend();
   }
   return NS_OK;
 }
@@ -44,7 +44,7 @@ NS_IMETHODIMP
 TlsHandshaker::ClientAuthCertificateSelected() {
   LOG(("TlsHandshaker::ClientAuthCertificateSelected mOwner=%p", mOwner.get()));
   if (mOwner) {
-    (void)mOwner->ResumeSend();
+    Unused << mOwner->ResumeSend();
   }
   return NS_OK;
 }
@@ -289,7 +289,7 @@ void TlsHandshaker::Check0RttEnabled(nsITLSSocketControl* ssl) {
         mEarlyDataState = EarlyData::CANNOT_BE_USED;
         // Poll for read now. Polling for write will cause us to busy wait.
         // When the handshake is done the polling flags will be set correctly.
-        (void)mOwner->ResumeRecv();
+        Unused << mOwner->ResumeRecv();
       }
     } else {
       // We have h2, we can at least 0-RTT the preamble and opening

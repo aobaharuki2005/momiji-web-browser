@@ -35,9 +35,9 @@ nsHttpActivityDistributor::ObserveActivity(nsISupports* aHttpChannel,
   MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
 
   for (size_t i = 0; i < mObservers.Length(); i++) {
-    (void)mObservers[i]->ObserveActivity(aHttpChannel, aActivityType,
-                                         aActivitySubtype, aTimestamp,
-                                         aExtraSizeData, aExtraStringData);
+    Unused << mObservers[i]->ObserveActivity(aHttpChannel, aActivityType,
+                                             aActivitySubtype, aTimestamp,
+                                             aExtraSizeData, aExtraStringData);
   }
   return NS_OK;
 }
@@ -50,7 +50,7 @@ nsHttpActivityDistributor::ObserveConnectionActivity(
   MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
 
   for (size_t i = 0; i < mObservers.Length(); i++) {
-    (void)mObservers[i]->ObserveConnectionActivity(
+    Unused << mObservers[i]->ObserveConnectionActivity(
         aHost, aPort, aSSL, aHasECH, aIsHttp3, aActivityType, aActivitySubtype,
         aTimestamp, aExtraStringData);
   }
@@ -92,9 +92,9 @@ nsHttpActivityDistributor::ObserveActivityWithArgs(
     if (args.type() == HttpActivityArgs::Tuint64_t) {
       nsWeakPtr weakPtr = gHttpHandler->GetWeakHttpChannel(args.get_uint64_t());
       if (nsCOMPtr<nsIHttpChannel> channel = do_QueryReferent(weakPtr)) {
-        (void)self->ObserveActivity(channel, aActivityType, aActivitySubtype,
-                                    aTimestamp, aExtraSizeData,
-                                    extraStringData);
+        Unused << self->ObserveActivity(channel, aActivityType,
+                                        aActivitySubtype, aTimestamp,
+                                        aExtraSizeData, extraStringData);
       }
     } else if (args.type() == HttpActivityArgs::THttpActivity) {
       nsCOMPtr<nsIURI> uri;
@@ -118,13 +118,13 @@ nsHttpActivityDistributor::ObserveActivityWithArgs(
       rv = channel->Init(uri, 0, nullptr, 0, nullptr);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-      (void)self->ObserveActivity(static_cast<nsIChannel*>(channel),
-                                  aActivityType, aActivitySubtype, aTimestamp,
-                                  aExtraSizeData, extraStringData);
+      Unused << self->ObserveActivity(
+          static_cast<nsIChannel*>(channel), aActivityType, aActivitySubtype,
+          aTimestamp, aExtraSizeData, extraStringData);
     } else if (args.type() == HttpActivityArgs::THttpConnectionActivity) {
       const HttpConnectionActivity& activity =
           args.get_HttpConnectionActivity();
-      (void)self->ObserveConnectionActivity(
+      Unused << self->ObserveConnectionActivity(
           activity.host(), activity.port(), activity.ssl(), activity.hasECH(),
           activity.isHttp3(), aActivityType, aActivitySubtype, aTimestamp,
           activity.connInfoKey());
@@ -197,7 +197,7 @@ nsHttpActivityDistributor::AddObserver(nsIHttpActivityObserver* aObserver) {
         RefPtr<SocketProcessParent> parent =
             SocketProcessParent::GetSingleton();
         if (parent && parent->CanSend()) {
-          (void)parent->SendOnHttpActivityDistributorActivated(true);
+          Unused << parent->SendOnHttpActivityDistributorActivated(true);
         }
       };
       gIOService->CallOrWaitForSocketProcess(task);
@@ -229,7 +229,7 @@ nsHttpActivityDistributor::RemoveObserver(nsIHttpActivityObserver* aObserver) {
     auto task = []() {
       RefPtr<SocketProcessParent> parent = SocketProcessParent::GetSingleton();
       if (parent && parent->CanSend()) {
-        (void)parent->SendOnHttpActivityDistributorActivated(false);
+        Unused << parent->SendOnHttpActivityDistributorActivated(false);
       }
     };
     gIOService->CallOrWaitForSocketProcess(task);
@@ -258,7 +258,7 @@ nsHttpActivityDistributor::SetObserveProxyResponse(bool aObserveProxyResponse) {
     auto task = [aObserveProxyResponse]() {
       RefPtr<SocketProcessParent> parent = SocketProcessParent::GetSingleton();
       if (parent && parent->CanSend()) {
-        (void)parent->SendOnHttpActivityDistributorObserveProxyResponse(
+        Unused << parent->SendOnHttpActivityDistributorObserveProxyResponse(
             aObserveProxyResponse);
       }
     };
@@ -287,7 +287,7 @@ nsHttpActivityDistributor::SetObserveConnection(bool aObserveConnection) {
     auto task = [aObserveConnection]() {
       RefPtr<SocketProcessParent> parent = SocketProcessParent::GetSingleton();
       if (parent && parent->CanSend()) {
-        (void)parent->SendOnHttpActivityDistributorObserveConnection(
+        Unused << parent->SendOnHttpActivityDistributorObserveConnection(
             aObserveConnection);
       }
     };

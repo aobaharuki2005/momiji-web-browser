@@ -21,6 +21,7 @@
 #include "mozilla/JSONWriter.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/Unused.h"
 #include "nsClassHashtable.h"
 #include "nsString.h"
 #include "nsHashKeys.h"

@@ -65,17 +65,17 @@ nsILoadContext* BrowserBridgeChild::GetLoadContext() {
 
 void BrowserBridgeChild::NavigateByKey(bool aForward,
                                        bool aForDocumentNavigation) {
-  (void)SendNavigateByKey(aForward, aForDocumentNavigation);
+  Unused << SendNavigateByKey(aForward, aForDocumentNavigation);
 }
 
 void BrowserBridgeChild::Activate(uint64_t aActionId) {
   LOGBROWSERCHILDFOCUS(
       ("BrowserBridgeChild::Activate actionid: %" PRIu64, aActionId));
-  (void)SendActivate(aActionId);
+  Unused << SendActivate(aActionId);
 }
 
 void BrowserBridgeChild::Deactivate(bool aWindowLowering, uint64_t aActionId) {
-  (void)SendDeactivate(aWindowLowering, aActionId);
+  Unused << SendDeactivate(aWindowLowering, aActionId);
 }
 
 /*static*/

@@ -1275,7 +1275,7 @@ bool EventListenerManager::HandleEventSingleListener(
   }
 
   if (innerWindow) {
-    (void)innerWindow->SetEvent(oldWindowEvent);
+    Unused << innerWindow->SetEvent(oldWindowEvent);
   }
 
   if (NS_FAILED(result)) {

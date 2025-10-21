@@ -493,8 +493,8 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
       if (NS_SUCCEEDED(rv) && isDocument) {
         nsIScriptSecurityManager* ssm =
             nsScriptSecurityManager::GetScriptSecurityManager();
-        (void)ssm->GetChannelResultPrincipal(aChannel,
-                                             getter_AddRefs(targetPrincipal));
+        Unused << ssm->GetChannelResultPrincipal(
+            aChannel, getter_AddRefs(targetPrincipal));
       }
     }
   }
@@ -1031,7 +1031,7 @@ void AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(nsIChannel* aChannel) {
   }
 
   nsCOMPtr<nsIURI> uri;
-  (void)aChannel->GetURI(getter_AddRefs(uri));
+  Unused << aChannel->GetURI(getter_AddRefs(uri));
 
   // In some cases we don't have a browsingContext. For example, in xpcshell
   // tests, channels that are used to download images and channels for loading
@@ -1175,8 +1175,8 @@ bool AntiTrackingUtils::IsThirdPartyWindow(nsPIDOMWindowInner* aWindow,
     // to use IsThirdPartyWindow check that examine the whole hierarchy.
     nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
         components::ThirdPartyUtil::Service();
-    (void)thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(), nullptr,
-                                             &thirdParty);
+    Unused << thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(),
+                                                 nullptr, &thirdParty);
     return thirdParty;
   }
 
@@ -1311,7 +1311,7 @@ void AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(nsIChannel* aChannel) {
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
-  (void)loadInfo->SetStoragePermission(
+  Unused << loadInfo->SetStoragePermission(
       AntiTrackingUtils::GetStoragePermissionStateInParent(aChannel));
 
   // Note that we need to put this after computing the IsThirdPartyToTopWindow
@@ -1330,7 +1330,7 @@ void AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(nsIChannel* aChannel) {
 #endif
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-  (void)loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+  Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
   // Subresources (including subdocuments) may have a different partition key,
   // particularly one without or with the same-site bit. We have to update that
   // here.
@@ -1361,7 +1361,7 @@ void AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(nsIChannel* aChannel) {
   // We only need to set FPD for top-level loads. FPD will automatically be
   // propagated to non-top level loads via CookieJarSetting.
   nsCOMPtr<nsIURI> uri;
-  (void)aChannel->GetURI(getter_AddRefs(uri));
+  Unused << aChannel->GetURI(getter_AddRefs(uri));
   net::CookieJarSettings::Cast(cookieJarSettings)->SetPartitionKey(uri, false);
 
   // Generate the fingerprinting randomization key for top-level loads. The key

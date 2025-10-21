@@ -7,6 +7,7 @@
 #include "mozilla/dom/PushSubscription.h"
 
 #include "mozilla/Base64.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/PushSubscriptionOptions.h"
@@ -288,7 +289,7 @@ already_AddRefed<Promise> PushSubscription::Unsubscribe(ErrorResult& aRv) {
   }
 
   RefPtr<UnsubscribeResultCallback> callback = new UnsubscribeResultCallback(p);
-  (void)NS_WARN_IF(NS_FAILED(service->Unsubscribe(
+  Unused << NS_WARN_IF(NS_FAILED(service->Unsubscribe(
       mScope, nsGlobalWindowInner::Cast(window)->GetClientPrincipal(),
       callback)));
 

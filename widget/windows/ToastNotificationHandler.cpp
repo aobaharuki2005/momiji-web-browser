@@ -22,6 +22,7 @@
 #include "mozilla/Result.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Tokenizer.h"
+#include "mozilla/Unused.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/intl/Localization.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -312,7 +313,7 @@ nsresult ToastNotificationHandler::InitAlertAsync() {
     // which expects to have been initialized early and on the main thread.
     // Since background tasks run headless this never occurs. In this case we
     // force gfx initialization.
-    (void)NS_WARN_IF(!gfxPlatform::GetPlatform());
+    Unused << NS_WARN_IF(!gfxPlatform::GetPlatform());
   }
 #endif
 
@@ -850,15 +851,15 @@ ToastNotificationHandler::OnActivate(
 
             while (parse.ReadUntil(Tokenizer16::Token::NewLine(), token)) {
               if (token == nsDependentString(kLaunchArgAction)) {
-                (void)parse.ReadUntil(Tokenizer16::Token::EndOfFile(),
-                                      actionString);
+                Unused << parse.ReadUntil(Tokenizer16::Token::EndOfFile(),
+                                          actionString);
               } else {
                 // Next line is a value in a key/value pair, skip.
                 parse.SkipUntil(Tokenizer16::Token::NewLine());
               }
               // Skip newline.
               Tokenizer16::Token unused;
-              (void)parse.Next(unused);
+              Unused << parse.Next(unused);
             }
           }
         }

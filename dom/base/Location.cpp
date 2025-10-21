@@ -13,6 +13,7 @@
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/FragmentDirective.h"
@@ -185,10 +186,10 @@ void Location::GetHost(nsACString& aHost, nsIPrincipal& aSubjectPrincipal,
   aHost.Truncate();
 
   nsCOMPtr<nsIURI> uri;
-  (void)GetURI(getter_AddRefs(uri), true);
+  mozilla::Unused << GetURI(getter_AddRefs(uri), true);
 
   if (uri) {
-    (void)uri->GetHostPort(aHost);
+    mozilla::Unused << uri->GetHostPort(aHost);
   }
 }
 
@@ -429,7 +430,7 @@ void Location::SetProtocol(const nsACString& aProtocol,
   aProtocol.BeginReading(start);
   aProtocol.EndReading(end);
   nsACString::const_iterator iter(start);
-  (void)FindCharInReadable(':', iter, end);
+  Unused << FindCharInReadable(':', iter, end);
 
   nsresult rv =
       NS_MutateURI(uri).SetScheme(Substring(start, iter)).Finalize(uri);

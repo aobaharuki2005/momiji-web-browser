@@ -7,6 +7,7 @@
 #include "UDPSocketChild.h"
 
 #include "UDPSocket.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -183,7 +184,7 @@ mozilla::ipc::IPCResult UDPSocketChild::RecvCallbackOpened(
 
   UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__, mLocalAddress.get(), mLocalPort));
   nsresult rv = mSocket->CallListenerOpened();
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
   return IPC_OK();
 }
@@ -196,14 +197,14 @@ mozilla::ipc::IPCResult UDPSocketChild::RecvCallbackConnected(
 
   UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__, mLocalAddress.get(), mLocalPort));
   nsresult rv = mSocket->CallListenerConnected();
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult UDPSocketChild::RecvCallbackClosed() {
   nsresult rv = mSocket->CallListenerClosed();
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
   return IPC_OK();
 }
@@ -215,7 +216,7 @@ mozilla::ipc::IPCResult UDPSocketChild::RecvCallbackReceivedData(
                  aData.Length()));
   nsresult rv = mSocket->CallListenerReceivedData(aAddressInfo.addr(),
                                                   aAddressInfo.port(), aData);
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
   return IPC_OK();
 }
@@ -226,7 +227,7 @@ mozilla::ipc::IPCResult UDPSocketChild::RecvCallbackError(
   UDPSOCKET_LOG(("%s: %s:%s:%u", __FUNCTION__, aMessage.get(), aFilename.get(),
                  aLineNumber));
   nsresult rv = mSocket->CallListenerError(aMessage, aFilename, aLineNumber);
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
   return IPC_OK();
 }

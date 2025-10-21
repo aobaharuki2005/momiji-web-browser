@@ -9,6 +9,7 @@
 #include "ScriptLoadHandler.h"          // ScriptLoadHandler
 #include "ScriptLoader.h"               // ScriptLoader
 #include "mozilla/Maybe.h"              // Maybe, Some, Nothing
+#include "mozilla/Unused.h"             // Unused
 #include "mozilla/dom/ContentParent.h"  // dom::ContentParent
 #include "nsIMemoryReporter.h"  // nsIMemoryReporter, MOZ_DEFINE_MALLOC_SIZE_OF, RegisterWeakMemoryReporter, UnregisterWeakMemoryReporter, MOZ_COLLECT_REPORT, KIND_HEAP, UNITS_BYTES
 #include "nsIPrefBranch.h"   // nsIPrefBranch, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID
@@ -136,8 +137,8 @@ void SharedScriptCache::Clear(const Maybe<bool>& aChrome,
 
   if (XRE_IsParentProcess()) {
     for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
-      (void)cp->SendClearScriptCache(aChrome, aPrincipal, aSchemelessSite,
-                                     aPattern, aURL);
+      Unused << cp->SendClearScriptCache(aChrome, aPrincipal, aSchemelessSite,
+                                         aPattern, aURL);
     }
   }
 

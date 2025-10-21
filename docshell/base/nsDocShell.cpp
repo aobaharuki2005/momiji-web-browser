@@ -51,6 +51,7 @@
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Telemetry.h"
 
+#include "mozilla/Unused.h"
 #include "mozilla/WidgetUtils.h"
 
 #include "mozilla/dom/AutoEntryScript.h"
@@ -2566,7 +2567,7 @@ void nsDocShell::MaybeRestoreWindowName() {
   }
 
   // Step 4.4.1. Set the name to the browsing context.
-  (void)mBrowsingContext->SetName(name);
+  Unused << mBrowsingContext->SetName(name);
 
   // Step 4.4.2. Clear the name of all entries that are contiguous and
   // same-origin with the loading entry.
@@ -2603,9 +2604,10 @@ void nsDocShell::StoreWindowNameToSHEntries() {
       }
     } else {
       // Ask parent process to store the name in entries.
-      (void)ContentChild::GetSingleton()
-          ->SendSessionHistoryEntryStoreWindowNameInContiguousEntries(
-              mBrowsingContext, name);
+      mozilla::Unused
+          << ContentChild::GetSingleton()
+                 ->SendSessionHistoryEntryStoreWindowNameInContiguousEntries(
+                     mBrowsingContext, name);
     }
   }
 }
@@ -3315,7 +3317,7 @@ void nsDocShell::UnblockEmbedderLoadEventForFailure(bool aFireFrameErrorEvent) {
   RefPtr<BrowserChild> browserChild = BrowserChild::GetFrom(this);
   if (browserChild &&
       !mBrowsingContext->GetParentWindowContext()->IsInProcess()) {
-    (void)browserChild->SendMaybeFireEmbedderLoadEvents(
+    mozilla::Unused << browserChild->SendMaybeFireEmbedderLoadEvents(
         aFireFrameErrorEvent ? EmbedderElementEventType::ErrorEvent
                              : EmbedderElementEventType::NoEvent);
   }
@@ -3779,7 +3781,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     // asserts). Satisfy that assertion now since GetDoc will force
     // creation of one if it hasn't already been created.
     if (mScriptGlobal) {
-      (void)mScriptGlobal->GetDoc();
+      Unused << mScriptGlobal->GetDoc();
     }
 
     // Display a message box
@@ -4901,7 +4903,7 @@ NS_IMETHODIMP
 nsDocShell::SetDefaultLoadFlags(uint32_t aDefaultLoadFlags) {
   if (!mWillChangeProcess) {
     // Intentionally ignoring handling discarded browsing contexts.
-    (void)mBrowsingContext->SetDefaultLoadFlags(aDefaultLoadFlags);
+    Unused << mBrowsingContext->SetDefaultLoadFlags(aDefaultLoadFlags);
   } else {
     // Bug 1623565: DevTools tries to clean up defaultLoadFlags on
     // shutdown. Sorry DevTools, your DocShell is in another process.
@@ -5014,8 +5016,9 @@ void nsDocShell::SetTitleOnHistoryEntry(bool aUpdateEntryInSessionHistory) {
           entry->SetTitle(mTitle);
         }
       } else {
-        (void)ContentChild::GetSingleton()->SendSessionHistoryEntryTitle(
-            mBrowsingContext, mTitle);
+        mozilla::Unused
+            << ContentChild::GetSingleton()->SendSessionHistoryEntryTitle(
+                   mBrowsingContext, mTitle);
       }
     }
   }
@@ -5758,7 +5761,7 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
     uri->GetAsciiSpec(aURI);
 
     if (this == aProgress) {
-      (void)MaybeInitTiming();
+      mozilla::Unused << MaybeInitTiming();
       mTiming->NotifyFetchStart(uri,
                                 ConvertLoadTypeToNavigationType(mLoadType));
       // If we are starting a DocumentChannel, we need to pass the timing
@@ -5886,7 +5889,7 @@ void nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
       uint32_t responseStatus = 0;
       nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aOldChannel);
       if (httpChannel) {
-        (void)httpChannel->GetResponseStatus(&responseStatus);
+        Unused << httpChannel->GetResponseStatus(&responseStatus);
       }
 
       // Add visit N -1 => N
@@ -6126,7 +6129,8 @@ already_AddRefed<nsIURI> nsDocShell::MaybeFixBadCertDomainErrorURI(
   }
 
   nsCOMPtr<nsIURI> newURI;
-  (void)NS_MutateURI(aUrl).SetHost(newHost).Finalize(getter_AddRefs(newURI));
+  Unused << NS_MutateURI(aUrl).SetHost(newHost).Finalize(
+      getter_AddRefs(newURI));
 
   return newURI.forget();
 }
@@ -6185,7 +6189,7 @@ already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
         net::SchemeIsHttpOrHttps(url)) {
       bool attemptFixup = false;
       nsAutoCString host;
-      (void)url->GetHost(host);
+      Unused << url->GetHost(host);
       if (host.FindChar('.') == kNotFound) {
         attemptFixup = true;
       } else {
@@ -6288,9 +6292,9 @@ already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
       if (port == -1) {
         newURI = nullptr;
         newPostData = nullptr;
-        (void)NS_MutateURI(url)
-            .SetScheme("https"_ns)
-            .Finalize(getter_AddRefs(newURI));
+        Unused << NS_MutateURI(url)
+                      .SetScheme("https"_ns)
+                      .Finalize(getter_AddRefs(newURI));
       }
     }
   }
@@ -6463,7 +6467,8 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
   // nsDocShell::EndPageLoad will clear mLSHE, but we may need this history
   // entry further down in this method.
   nsCOMPtr<nsISHEntry> loadingSHE = mLSHE;
-  (void)loadingSHE;
+  mozilla::Unused << loadingSHE;  // XXX: Not sure if we need this anymore
+
   //
   // one of many safeguards that prevent death and destruction if
   // someone is so very very rude as to bring this window down
@@ -9163,9 +9168,10 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
             entry->SetScrollPosition(scrollPos.x, scrollPos.y);
           }
         } else {
-          (void)ContentChild::GetSingleton()
-              ->SendSessionHistoryEntryScrollPosition(mBrowsingContext,
-                                                      scrollPos.x, scrollPos.y);
+          mozilla::Unused << ContentChild::GetSingleton()
+                                 ->SendSessionHistoryEntryScrollPosition(
+                                     mBrowsingContext, scrollPos.x,
+                                     scrollPos.y);
         }
       }
     }
@@ -9977,7 +9983,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
       nsID historyID = {};
       aLoadState->SHEntry()->GetDocshellID(historyID);
 
-      (void)mBrowsingContext->SetHistoryID(historyID);
+      Unused << mBrowsingContext->SetHistoryID(historyID);
     }
   }
 
@@ -11000,7 +11006,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     } else {
       if (Document* topDoc = top->GetDocument()) {
         bool thirdParty = false;
-        (void)topDoc->GetPrincipal()->IsThirdPartyPrincipal(
+        mozilla::Unused << topDoc->GetPrincipal()->IsThirdPartyPrincipal(
             aLoadState->PrincipalToInherit(), &thirdParty);
         loadInfo->SetIsThirdPartyContextToTopWindow(thirdParty);
       } else {
@@ -11747,8 +11753,9 @@ bool nsDocShell::CollectWireframe() {
       entry->SetWireframe(wireframe);
     }
   } else {
-    (void)ContentChild::GetSingleton()->SendSessionHistoryEntryWireframe(
-        mBrowsingContext, wireframe.ref());
+    mozilla::Unused
+        << ContentChild::GetSingleton()->SendSessionHistoryEntryWireframe(
+               mBrowsingContext, wireframe.ref());
   }
 
   return true;
@@ -12239,9 +12246,9 @@ void nsDocShell::SetScrollRestorationIsManualOnHistoryEntry(
         entry->SetScrollRestorationIsManual(aIsManual);
       }
     } else {
-      (void)ContentChild::GetSingleton()
-          ->SendSessionHistoryEntryScrollRestorationIsManual(mBrowsingContext,
-                                                             aIsManual);
+      mozilla::Unused << ContentChild::GetSingleton()
+                             ->SendSessionHistoryEntryScrollRestorationIsManual(
+                                 mBrowsingContext, aIsManual);
     }
   }
 }
@@ -12261,8 +12268,9 @@ void nsDocShell::SetCacheKeyOnHistoryEntry(nsISHEntry* aSHEntry,
         entry->SetCacheKey(aCacheKey);
       }
     } else {
-      (void)ContentChild::GetSingleton()->SendSessionHistoryEntryCacheKey(
-          mBrowsingContext, aCacheKey);
+      mozilla::Unused
+          << ContentChild::GetSingleton()->SendSessionHistoryEntryCacheKey(
+                 mBrowsingContext, aCacheKey);
     }
   }
 }
@@ -12886,7 +12894,7 @@ bool nsDocShell::ShouldDiscardLayoutState(nsIHttpChannel* aChannel) {
 
   // figure out if SH should be saving layout state
   bool noStore = false;
-  (void)aChannel->IsNoStoreResponse(&noStore);
+  Unused << aChannel->IsNoStoreResponse(&noStore);
   return noStore;
 }
 
@@ -12959,8 +12967,8 @@ nsDocShell::MakeEditable(bool aInWaitForUriLoad) {
   bool needToAddURIVisit = true;
   nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(aChannel));
   if (props) {
-    (void)props->GetPropertyAsBool(u"docshell.needToAddURIVisit"_ns,
-                                   &needToAddURIVisit);
+    mozilla::Unused << props->GetPropertyAsBool(
+        u"docshell.needToAddURIVisit"_ns, &needToAddURIVisit);
   }
 
   return needToAddURIVisit;
@@ -13064,8 +13072,9 @@ void nsDocShell::SaveLastVisit(nsIChannel* aChannel, nsIURI* aURI,
           IHistory::REDIRECT_SOURCE | IHistory::REDIRECT_SOURCE_UPGRADED;
     }
 
-    (void)history->VisitURI(aWidget, aURI, aPreviousURI, visitURIFlags,
-                            aBrowsingContext->BrowserId());
+    mozilla::Unused << history->VisitURI(aWidget, aURI, aPreviousURI,
+                                         visitURIFlags,
+                                         aBrowsingContext->BrowserId());
   }
 }
 
@@ -13888,7 +13897,7 @@ nsresult nsDocShell::CharsetChangeReloadDocument(
   NS_ENSURE_SUCCESS(GetDocViewer(getter_AddRefs(viewer)), NS_ERROR_FAILURE);
   if (viewer) {
     int32_t source;
-    (void)viewer->GetReloadEncodingAndSource(&source);
+    Unused << viewer->GetReloadEncodingAndSource(&source);
     if (aSource > source) {
       viewer->SetReloadEncodingAndSource(aEncoding, aSource);
       if (eCharsetReloadRequested != mCharsetReloadState) {

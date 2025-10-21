@@ -6,6 +6,7 @@
 
 #include "Flatten.h"
 #include "gtest/gtest.h"
+#include "mozilla/Unused.h"
 #include "nsTArray.h"
 
 namespace mozilla::dom::quota {
@@ -21,7 +22,7 @@ TEST(DOM_Quota_Flatten, FlatEmpty)
   EXPECT_EQ(std::distance(range.begin(), range.end()), 0);
 
   for (const auto& item : range) {
-    (void)item;
+    Unused << item;
     FAIL();  // should never execute
   }
 }
@@ -33,7 +34,7 @@ TEST(DOM_Quota_Flatten, NestedOuterEmpty)
   EXPECT_EQ(std::distance(range.begin(), range.end()), 0);
 
   for (const auto& item : range) {
-    (void)item;
+    Unused << item;
     FAIL();
   }
 }
@@ -46,7 +47,7 @@ TEST(DOM_Quota_Flatten, NestedInnerEmpty)
   EXPECT_EQ(std::distance(range.begin(), range.end()), 0);
 
   for (const auto& item : range) {
-    (void)item;
+    Unused << item;
     FAIL();
   }
 }

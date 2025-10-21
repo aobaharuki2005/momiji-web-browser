@@ -14,6 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsTArray.h"
 

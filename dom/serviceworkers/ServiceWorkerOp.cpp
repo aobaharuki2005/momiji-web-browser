@@ -20,6 +20,7 @@
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Client.h"
 #include "mozilla/dom/CookieStore.h"
@@ -304,12 +305,12 @@ class ServiceWorkerOp::ServiceWorkerOpRunnable final
     // creation fail.
     if (!aWorkerPrivate->GlobalScope() ||
         aWorkerPrivate->GlobalScope()->IsDying()) {
-      (void)Cancel();
+      Unused << Cancel();
       return true;
     }
 
     bool rv = mOwner->Exec(aCx, aWorkerPrivate);
-    (void)NS_WARN_IF(!rv);
+    Unused << NS_WARN_IF(!rv);
     mOwner = nullptr;
 
     return rv;
@@ -487,7 +488,7 @@ ServiceWorkerOp::ServiceWorkerOp(
 }
 
 ServiceWorkerOp::~ServiceWorkerOp() {
-  (void)NS_WARN_IF(!mPromiseHolder.IsEmpty());
+  Unused << NS_WARN_IF(!mPromiseHolder.IsEmpty());
   mPromiseHolder.RejectIfExists(NS_ERROR_DOM_ABORT_ERR, __func__);
 }
 
@@ -596,7 +597,7 @@ class UpdateServiceWorkerStateOp final : public ServiceWorkerOp {
       MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
 
       if (mOwner) {
-        (void)mOwner->Exec(aCx, aWorkerPrivate);
+        Unused << mOwner->Exec(aCx, aWorkerPrivate);
         mOwner = nullptr;
       }
 
@@ -859,7 +860,7 @@ class PushEventOp final : public ExtendableEventOp {
 
           if (reporter) {
             nsresult rv = reporter->ReportDeliveryError(messageId, error);
-            (void)NS_WARN_IF(NS_FAILED(rv));
+            Unused << NS_WARN_IF(NS_FAILED(rv));
           }
         });
 
@@ -1516,8 +1517,8 @@ void FetchEventOp::AsyncLog(const nsCString& aScriptSpec, uint32_t aLineNumber,
           return;
         }
 
-        (void)self->mActor->SendAsyncLog(spec, line, column, messageName,
-                                         params);
+        Unused << self->mActor->SendAsyncLog(spec, line, column, messageName,
+                                             params);
       });
 
   MOZ_ALWAYS_SUCCEEDS(

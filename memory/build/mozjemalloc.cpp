@@ -154,6 +154,7 @@
 #include "mozilla/TaggedAnonymousMemory.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/XorShift128PlusRNG.h"
 #include "mozilla/fallible.h"
 #include "RadixTree.h"
@@ -4437,8 +4438,8 @@ static size_t hard_purge_chunk(arena_chunk_t* aChunk) {
     if (npages > 0) {
       pages_decommit(((char*)aChunk) + (i << gPageSize2Pow),
                      npages << gPageSize2Pow);
-      (void)pages_commit(((char*)aChunk) + (i << gPageSize2Pow),
-                         npages << gPageSize2Pow);
+      Unused << pages_commit(((char*)aChunk) + (i << gPageSize2Pow),
+                             npages << gPageSize2Pow);
     }
     total_npages += npages;
     i += npages;

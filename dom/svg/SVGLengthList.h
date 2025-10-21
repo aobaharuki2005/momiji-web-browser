@@ -44,7 +44,7 @@ class SVGLengthList {
   SVGLengthList& operator=(const SVGLengthList& aOther) {
     mLengths.ClearAndRetainStorage();
     // Best-effort, really.
-    (void)mLengths.AppendElements(aOther.mLengths, fallible);
+    Unused << mLengths.AppendElements(aOther.mLengths, fallible);
     return *this;
   }
 

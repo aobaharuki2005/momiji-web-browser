@@ -275,7 +275,7 @@ txStylesheetSink::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
   if (httpChannel) {
-    (void)httpChannel->GetRequestSucceeded(&success);
+    Unused << httpChannel->GetRequestSucceeded(&success);
   }
 
   nsresult result = aStatusCode;

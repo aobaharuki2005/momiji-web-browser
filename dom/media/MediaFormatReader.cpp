@@ -33,6 +33,7 @@
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/Unused.h"
 #include "mozilla/glean/DomMediaMetrics.h"
 #include "nsContentUtils.h"
 #include "nsLiteralString.h"
@@ -725,7 +726,7 @@ class MediaFormatReader::DemuxerProxy::Wrapper : public MediaTrackDemuxer {
         "MediaFormatReader::DemuxerProxy::Wrapper::Reset",
         [self]() { self->mTrackDemuxer->Reset(); }));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    (void)rv;
+    Unused << rv;
   }
 
   nsresult GetNextRandomAccessPoint(TimeUnit* aTime) override {
@@ -783,7 +784,7 @@ class MediaFormatReader::DemuxerProxy::Wrapper : public MediaTrackDemuxer {
         "MediaFormatReader::DemuxerProxy::Wrapper::~Wrapper",
         [trackDemuxer]() { trackDemuxer->BreakCycles(); }));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    (void)rv;
+    Unused << rv;
     DecoderDoctorLogger::LogDestruction(
         "MediaFormatReader::DemuxerProxy::Wrapper", this);
   }
@@ -1937,7 +1938,7 @@ void MediaFormatReader::ScheduleUpdate(TrackType aTrack) {
       "MediaFormatReader::Update", this, &MediaFormatReader::Update, aTrack));
   nsresult rv = OwnerThread()->Dispatch(task.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  (void)rv;
+  Unused << rv;
 }
 
 bool MediaFormatReader::UpdateReceivedNewData(TrackType aTrack) {
@@ -3026,7 +3027,7 @@ void MediaFormatReader::ScheduleSeek() {
   nsresult rv = OwnerThread()->Dispatch(NewRunnableMethod(
       "MediaFormatReader::AttemptSeek", this, &MediaFormatReader::AttemptSeek));
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  (void)rv;
+  Unused << rv;
 }
 
 void MediaFormatReader::AttemptSeek() {

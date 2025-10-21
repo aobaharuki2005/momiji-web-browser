@@ -7,6 +7,7 @@
 #include "mozilla/dom/BrowserHost.h"
 
 #include "mozilla/ProcessPriorityManager.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/CancelContentJSOptionsBinding.h"
 #include "mozilla/dom/ContentParent.h"
@@ -99,7 +100,7 @@ void BrowserHost::UpdateEffects(EffectsInfo aEffects) {
     return;
   }
   mEffectsInfo = aEffects;
-  (void)mRoot->SendUpdateEffects(mEffectsInfo);
+  Unused << mRoot->SendUpdateEffects(mEffectsInfo);
 }
 
 /* attribute boolean renderLayers; */
@@ -273,8 +274,8 @@ BrowserHost::CreateAboutBlankDocumentViewer(
   mRoot->GetBrowsingContext()->Group()->EnsureUsesOriginAgentClusterInitialized(
       aPrincipal);
 
-  (void)mRoot->SendCreateAboutBlankDocumentViewer(aPrincipal,
-                                                  aPartitionedPrincipal);
+  Unused << mRoot->SendCreateAboutBlankDocumentViewer(aPrincipal,
+                                                      aPartitionedPrincipal);
   return NS_OK;
 }
 

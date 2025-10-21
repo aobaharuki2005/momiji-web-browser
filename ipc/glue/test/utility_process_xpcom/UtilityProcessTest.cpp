@@ -263,7 +263,7 @@ UtilityProcessTest::TestTelemetryProbes() {
 
   for (RefPtr<UtilityProcessParent>& parent :
        utilityProc->GetAllProcessesProcessParent()) {
-    (void)parent->SendTestTelemetryProbes();
+    Unused << parent->SendTestTelemetryProbes();
   }
 
   return NS_OK;

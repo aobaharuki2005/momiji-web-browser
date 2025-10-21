@@ -65,7 +65,7 @@ void AltServiceChild::ClearHostMapping(nsHttpConnectionInfo* aCi) {
     }
 
     if (!ci->GetOrigin().IsEmpty() && sAltServiceChild->CanSend()) {
-      (void)sAltServiceChild->SendClearHostMapping(
+      Unused << sAltServiceChild->SendClearHostMapping(
           ci->GetOrigin(), ci->OriginPort(), ci->GetOriginAttributes());
     }
   };
@@ -106,7 +106,7 @@ void AltServiceChild::ProcessHeader(
   HttpConnectionInfoCloneArgs infoArgs;
   nsHttpConnectionInfo::SerializeHttpConnectionInfo(aConnInfo, infoArgs);
 
-  (void)sAltServiceChild->SendProcessHeader(
+  Unused << sAltServiceChild->SendProcessHeader(
       aBuf, aOriginScheme, aOriginHost, aOriginPort, aUsername,
       aPrivateBrowsing, proxyInfoArray, aCaps, aOriginAttributes, infoArgs);
 }

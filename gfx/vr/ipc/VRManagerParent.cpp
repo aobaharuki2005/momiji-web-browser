@@ -13,6 +13,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/ipc/ProtocolUtils.h"  // for IToplevelProtocol
 #include "mozilla/TimeStamp.h"          // for TimeStamp
+#include "mozilla/Unused.h"
 #include "VRManager.h"
 #include "VRThread.h"
 
@@ -217,13 +218,13 @@ mozilla::ipc::IPCResult VRManagerParent::RecvRunPuppet(
 #if defined(MOZ_WIDGET_ANDROID)
   // Not yet implemented for Android / GeckoView
   // See Bug 1555192
-  (void)SendNotifyPuppetCommandBufferCompleted(false);
+  Unused << SendNotifyPuppetCommandBufferCompleted(false);
 #else
   VRManager* vm = VRManager::Get();
   if (!vm->RunPuppet(aBuffer, this)) {
     // We have immediately failed, need to resolve the
     // promise right away
-    (void)SendNotifyPuppetCommandBufferCompleted(false);
+    Unused << SendNotifyPuppetCommandBufferCompleted(false);
   }
 #endif  // defined(MOZ_WIDGET_ANDROID)
   return IPC_OK();

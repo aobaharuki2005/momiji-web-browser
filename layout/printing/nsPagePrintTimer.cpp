@@ -7,6 +7,7 @@
 #include "nsPagePrintTimer.h"
 
 #include "mozilla/ProfilerMarkers.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/Document.h"
 #include "nsPrintJob.h"
 #include "nsPrintObject.h"
@@ -192,8 +193,8 @@ void nsPagePrintTimer::RemotePrintFinished() {
   }
 
   mWaitingForRemotePrint->SetTarget(GetMainThreadSerialEventTarget());
-  (void)mWaitingForRemotePrint->InitWithCallback(this, 0,
-                                                 nsITimer::TYPE_ONE_SHOT);
+  mozilla::Unused << mWaitingForRemotePrint->InitWithCallback(
+      this, 0, nsITimer::TYPE_ONE_SHOT);
 }
 
 nsresult nsPagePrintTimer::Start(nsPrintObject* aPO) {

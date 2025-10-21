@@ -22,6 +22,7 @@
 #include <algorithm>
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/glean/NetwerkCache2Metrics.h"
+#include "mozilla/Unused.h"
 
 #define kMinUnwrittenChanges 300
 #define kMinDumpInterval 20000  // in milliseconds
@@ -3235,8 +3236,8 @@ void CacheIndex::FinishUpdate(bool aSucceeded,
       NS_WARNING(("CacheIndex::FinishUpdate() - Leaking mDirEnumerator!"));
       // This can happen only in case dispatching event to IO thread failed in
       // CacheIndex::PreShutdown().
-      mDirEnumerator.forget()
-          .leak();  // Leak it since dir enumerator is not threadsafe
+      Unused << mDirEnumerator.forget();  // Leak it since dir enumerator is not
+                                          // threadsafe
     } else {
       mDirEnumerator->Close();
       mDirEnumerator = nullptr;

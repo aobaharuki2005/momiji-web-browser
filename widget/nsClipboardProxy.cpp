@@ -15,6 +15,7 @@
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/WindowGlobalChild.h"
+#include "mozilla/Unused.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "nsArrayUtils.h"
 #include "nsBaseClipboard.h"

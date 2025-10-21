@@ -319,7 +319,7 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
           "RemoteVideoDecoder::SetSeekThreshold", std::move(setter));
       nsresult rv = mThread->Dispatch(runnable.forget());
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-      (void)rv;
+      Unused << rv;
     }
   }
 
@@ -359,7 +359,7 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
               "RemoteVideoDecoder::ProcessOutput", this,
               &RemoteVideoDecoder::ProcessOutput, std::move(aSample)));
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-      (void)rv;
+      Unused << rv;
       return;
     }
 
@@ -569,7 +569,7 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
               &RemoteVideoDecoder::ProcessOutputFormatChange, aColorFormat,
               aColorRange, aColorSpace));
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-      (void)rv;
+      Unused << rv;
       return;
     }
 
@@ -764,7 +764,7 @@ class RemoteAudioDecoder final : public RemoteDataDecoder {
               &RemoteAudioDecoder::ProcessOutput, std::move(aSample),
               std::move(aBuffer)));
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-      (void)rv;
+      Unused << rv;
       return;
     }
 
@@ -847,7 +847,7 @@ class RemoteAudioDecoder final : public RemoteDataDecoder {
           &RemoteAudioDecoder::ProcessOutputFormatChange, aChannels,
           aSampleRate));
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-      (void)rv;
+      Unused << rv;
       return;
     }
 
@@ -1105,7 +1105,7 @@ void RemoteDataDecoder::UpdateInputStatus(int64_t aTimestamp, bool aProcessed) {
         "RemoteDataDecoder::UpdateInputStatus", this,
         &RemoteDataDecoder::UpdateInputStatus, aTimestamp, aProcessed));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    (void)rv;
+    Unused << rv;
     return;
   }
   AssertOnThread();
@@ -1176,7 +1176,7 @@ void RemoteDataDecoder::DrainComplete() {
         NewRunnableMethod("RemoteDataDecoder::DrainComplete", this,
                           &RemoteDataDecoder::DrainComplete));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    (void)rv;
+    Unused << rv;
     return;
   }
   LOG("EOS");
@@ -1193,7 +1193,7 @@ void RemoteDataDecoder::Error(const MediaResult& aError) {
     nsresult rv = mThread->Dispatch(NewRunnableMethod<MediaResult>(
         "RemoteDataDecoder::Error", this, &RemoteDataDecoder::Error, aError));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    (void)rv;
+    Unused << rv;
     return;
   }
   AssertOnThread();

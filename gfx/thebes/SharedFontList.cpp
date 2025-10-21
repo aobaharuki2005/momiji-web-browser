@@ -11,6 +11,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Unused.h"
 
 #define LOG_FONTLIST(args) \
   MOZ_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), LogLevel::Debug, args)
@@ -443,7 +444,7 @@ void Family::FindAllFacesForStyle(FontList* aList, const gfxFontStyle& aStyle,
 #ifdef MOZ_WIDGET_GTK
   bool anyNonScalable =
 #else
-  (void)
+  Unused <<
 #endif
       FindAllFacesForStyleInternal(aList, aStyle, aFaceList);
 

@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/FileSystemTaskBase.h"
 
+#include "mozilla/Unused.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemRequestParent.h"

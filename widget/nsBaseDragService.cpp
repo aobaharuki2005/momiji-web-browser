@@ -33,6 +33,7 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/SVGImageContext.h"
 #include "mozilla/TextControlElement.h"
+#include "mozilla/Unused.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -382,7 +383,7 @@ nsresult nsBaseDragSession::InvokeDragSession(
   }
 
   uint32_t length = 0;
-  (void)aTransferableArray->GetLength(&length);
+  mozilla::Unused << aTransferableArray->GetLength(&length);
   if (!length) {
     nsCOMPtr<nsIMutableArray> mutableArray =
         do_QueryInterface(aTransferableArray);
@@ -791,8 +792,8 @@ nsresult nsBaseDragSession::EndDragSessionImpl(bool aDoneDrag,
     if (NS_WARN_IF(!bp)) {
       continue;
     }
-    (void)bp->SendEndDragSession(aDoneDrag, mUserCancelled, mEndDragPoint,
-                                 aKeyModifiers, dropEffect);
+    mozilla::Unused << bp->SendEndDragSession(
+        aDoneDrag, mUserCancelled, mEndDragPoint, aKeyModifiers, dropEffect);
     // Continue sending input events with input priority when stopping the dnd
     // session.
     bp->Manager()->SetInputPriorityEventEnabled(true);
@@ -1239,8 +1240,9 @@ static bool RemoveAllBrowsers(nsTArray<nsWeakPtr>& aBrowsers) {
     }
     LOGD("%s | removing PBrowser %p from drag session", __FUNCTION__,
          browser.get());
-    (void)browser->SendEndDragSession(true, false, LayoutDeviceIntPoint(), 0,
-                                      nsIDragService::DRAGDROP_ACTION_NONE);
+    mozilla::Unused << browser->SendEndDragSession(
+        true, false, LayoutDeviceIntPoint(), 0,
+        nsIDragService::DRAGDROP_ACTION_NONE);
   }
 
   aBrowsers.Clear();
@@ -1386,9 +1388,10 @@ nsBaseDragSession::SendStoreDropTargetAndDelayEndDragSession(
   if (mDataTransfer) {
     dropEffect = mDataTransfer->DropEffectInt();
   }
-  (void)mDelayedDropBrowserParent->SendStoreDropTargetAndDelayEndDragSession(
-      aEvent->WidgetEventPtr()->mRefPoint, dropEffect, mDragAction,
-      mTriggeringPrincipal, mPolicyContainer);
+  Unused
+      << mDelayedDropBrowserParent->SendStoreDropTargetAndDelayEndDragSession(
+             aEvent->WidgetEventPtr()->mRefPoint, dropEffect, mDragAction,
+             mTriggeringPrincipal, mPolicyContainer);
   return NS_OK;
 }
 
@@ -1408,9 +1411,9 @@ nsBaseDragSession::SendDispatchToDropTargetAndResumeEndDragSession(
             this, __FUNCTION__, mDelayedDropBrowserParent.get(),
             GetStaticErrorName(rv) ? GetStaticErrorName(rv) : "<unknown>",
             static_cast<uint32_t>(rv));
-        (void)mDelayedDropBrowserParent
-            ->SendDispatchToDropTargetAndResumeEndDragSession(
-                false /* aShouldDrop */, nsTHashSet<nsString>());
+        Unused << mDelayedDropBrowserParent
+                      ->SendDispatchToDropTargetAndResumeEndDragSession(
+                          false /* aShouldDrop */, nsTHashSet<nsString>());
         mDelayedDropBrowserParent = nullptr;
         return rv;
       }
@@ -1422,9 +1425,9 @@ nsBaseDragSession::SendDispatchToDropTargetAndResumeEndDragSession(
       "dispatch drop to child",
       this, __FUNCTION__, mDelayedDropBrowserParent.get(),
       TrueOrFalse(aShouldDrop));
-  (void)mDelayedDropBrowserParent
-      ->SendDispatchToDropTargetAndResumeEndDragSession(
-          aShouldDrop, std::move(allowedFilePaths));
+  Unused << mDelayedDropBrowserParent
+                ->SendDispatchToDropTargetAndResumeEndDragSession(
+                    aShouldDrop, std::move(allowedFilePaths));
   mDelayedDropBrowserParent = nullptr;
   return NS_OK;
 }
@@ -1494,7 +1497,7 @@ nsBaseDragSession::DispatchToDropTargetAndResumeEndDragSession(
           }
           if (!aAllowedFilePaths.Contains(path)) {
             mDataTransfer->MozClearDataAt(u""_ns, idx, result);
-            (void)NS_WARN_IF(NS_FAILED(result.StealNSResult()));
+            Unused << NS_WARN_IF(NS_FAILED(result.StealNSResult()));
           }
         }
       }

@@ -406,7 +406,7 @@ TEST_F(TestAudioDecoderInputTrack, OutputAndEndEvent) {
   TrackTime start = 0;
   TrackTime end = 10;
   mTrack->ProcessInput(start, end, ProcessedMediaTrack::ALLOW_END);
-  (void)WaitFor(p);
+  Unused << WaitFor(p);
 
   // Track should end in this iteration, so the end event should be notified.
   p = holder.Ensure(__func__);
@@ -415,7 +415,7 @@ TEST_F(TestAudioDecoderInputTrack, OutputAndEndEvent) {
   start = end;
   end += 10;
   mTrack->ProcessInput(start, end, ProcessedMediaTrack::ALLOW_END);
-  (void)WaitFor(p);
+  Unused << WaitFor(p);
   outputListener.Disconnect();
   endListener.Disconnect();
 }

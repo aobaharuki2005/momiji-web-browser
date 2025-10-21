@@ -15,6 +15,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ModuleVersionInfo.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/WinDllServices.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 #include "nsReadableUtils.h"
@@ -56,7 +57,7 @@ static Vector<nsString> GetKeyboardLayoutDlls() {
         strTempSize) {
       nsString ws(strTemp, ((strTempSize + 1) / sizeof(wchar_t)) - 1);
       ToLowerCase(ws);  // To facilitate case-insensitive searches
-      (void)result.emplaceBack(std::move(ws));
+      Unused << result.emplaceBack(std::move(ws));
     }
   }
 }

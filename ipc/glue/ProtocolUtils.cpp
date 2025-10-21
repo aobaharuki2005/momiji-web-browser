@@ -23,6 +23,7 @@
 #if defined(DEBUG) || defined(FUZZING)
 #  include "mozilla/Tokenizer.h"
 #endif
+#include "mozilla/Unused.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "prtime.h"
@@ -714,7 +715,7 @@ Shmem IToplevelProtocol::CreateSharedMemory(size_t aSize, bool aUnsafe) {
   if (!createdMessage) {
     return {};
   }
-  (void)GetIPCChannel()->Send(std::move(createdMessage));
+  Unused << GetIPCChannel()->Send(std::move(createdMessage));
 
   MOZ_ASSERT(!mShmemMap.Contains(shmem.Id()),
              "Don't insert with an existing ID");

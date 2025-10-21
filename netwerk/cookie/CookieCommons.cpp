@@ -19,6 +19,7 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/net/CookieJarSettings.h"
+#include "mozilla/Unused.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
 #include "nsICookiePermission.h"
@@ -995,7 +996,7 @@ void CookieCommons::GetServerDateHeader(nsIChannel* aChannel,
     return;
   }
 
-  (void)channel->GetResponseHeader("Date"_ns, aServerDateHeader);
+  Unused << channel->GetResponseHeader("Date"_ns, aServerDateHeader);
 }
 
 // static

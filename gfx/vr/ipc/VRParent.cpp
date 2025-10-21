@@ -45,7 +45,7 @@ IPCResult VRParent::RecvNewGPUVRManager(Endpoint<PVRGPUParent>&& aEndpoint) {
 
 IPCResult VRParent::RecvInit(nsTArray<GfxVarUpdate>&& vars,
                              const DevicePrefs& devicePrefs) {
-  (void)SendInitComplete();
+  Unused << SendInitComplete();
 
   gfxVars::ApplyUpdate(vars);
 
@@ -95,7 +95,9 @@ mozilla::ipc::IPCResult VRParent::RecvRequestMemoryReport(
 
   mozilla::dom::MemoryReportRequestClient::Start(
       aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile, processName,
-      [&](const MemoryReport& aReport) { (void)SendAddMemoryReport(aReport); },
+      [&](const MemoryReport& aReport) {
+        Unused << SendAddMemoryReport(aReport);
+      },
       aResolver);
   return IPC_OK();
 }

@@ -245,7 +245,7 @@ bool IsFirstPartialResponse(nsHttpResponseHead& aResponseHead) {
   MOZ_ASSERT(aResponseHead.Status() == 206);
 
   nsAutoCString contentRange;
-  (void)aResponseHead.GetHeader(nsHttp::Content_Range, contentRange);
+  Unused << aResponseHead.GetHeader(nsHttp::Content_Range, contentRange);
 
   auto rangeOrErr = ParseContentRangeHeaderString(contentRange);
   if (rangeOrErr.isErr()) {
@@ -330,7 +330,7 @@ OpaqueResponseBlocker::OnStartRequest(nsIRequest* aRequest) {
   LOGORB();
 
   if (mState == State::Sniffing) {
-    (void)EnsureOpaqueResponseIsAllowedAfterSniff(aRequest);
+    Unused << EnsureOpaqueResponseIsAllowedAfterSniff(aRequest);
   }
 
   // mState will remain State::Sniffing if we need to wait
@@ -577,7 +577,7 @@ nsresult OpaqueResponseBlocker::ValidateJavaScript(HttpBaseChannel* aChannel,
         RecordTelemetry(startOfValidation, self->mStartOfJavaScriptValidation,
                         aResult);
 
-        (void)dom::PJSValidatorParent::Send__delete__(self->mJSValidator);
+        Unused << dom::PJSValidatorParent::Send__delete__(self->mJSValidator);
         self->mJSValidator = nullptr;
       });
 

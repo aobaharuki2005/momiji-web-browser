@@ -17,6 +17,7 @@
 #include "nsTArray.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/Unused.h"
 #include "nsString.h"
 #include "prtime.h"
 

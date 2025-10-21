@@ -7,6 +7,7 @@
 #include "BroadcastChannelParent.h"
 
 #include "BroadcastChannelService.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -52,7 +53,7 @@ mozilla::ipc::IPCResult BroadcastChannelParent::RecvClose() {
   mService->UnregisterActor(this, mOriginChannelKey);
   mService = nullptr;
 
-  (void)Send__delete__(this);
+  Unused << Send__delete__(this);
 
   return IPC_OK();
 }

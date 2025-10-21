@@ -820,7 +820,7 @@ ogg_packet* OggDemuxer::GetNextPacket(TrackInfo::TrackType aType) {
 
   while (true) {
     if (packet) {
-      (void)state->PacketOut();
+      Unused << state->PacketOut();
     }
     DemuxUntilPacketAvailable(aType, state);
 
@@ -1136,7 +1136,7 @@ nsresult OggDemuxer::SeekInternal(TrackInfo::TrackType aType,
       tempPackets.Append(state->PacketOut());
     } else {
       // Discard media packets before the first keyframe.
-      (void)state->PacketOut();
+      Unused << state->PacketOut();
     }
   }
   // Re-add all packet into the codec state in order.

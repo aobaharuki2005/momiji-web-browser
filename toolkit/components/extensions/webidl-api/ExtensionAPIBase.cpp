@@ -247,7 +247,7 @@ void ExtensionAPIBase::CallWebExtMethodAsyncAmbiguous(
     chromeCompatCb = new dom::Function(aCx, tempRoot, tempGlobalRoot,
                                        dom::GetIncumbentGlobal());
 
-    (void)callArgs.PopLastElement();
+    Unused << callArgs.PopLastElement();
   }
   CallWebExtMethodAsyncInternal(aCx, aApiMethod, callArgs, chromeCompatCb,
                                 aRetval, aRv);

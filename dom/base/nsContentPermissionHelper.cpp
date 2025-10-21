@@ -11,6 +11,7 @@
 #include "js/PropertyAndElement.h"  // JS_GetProperty, JS_SetProperty
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/ContentChild.h"
@@ -33,6 +34,7 @@
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
 
+using mozilla::Unused;  // <snicker>
 using namespace mozilla::dom;
 using namespace mozilla;
 using DelegateInfo = PermissionDelegateHandler::PermissionDelegateInfo;
@@ -101,7 +103,7 @@ mozilla::ipc::IPCResult ContentPermissionRequestParent::Recvprompt() {
 }
 
 mozilla::ipc::IPCResult ContentPermissionRequestParent::RecvDestroy() {
-  (void)PContentPermissionRequestParent::Send__delete__(this);
+  Unused << PContentPermissionRequestParent::Send__delete__(this);
   return IPC_OK();
 }
 
@@ -772,7 +774,7 @@ nsContentPermissionRequestProxy::Cancel() {
 
   nsTArray<PermissionChoice> emptyChoices;
 
-  (void)mParent->SendNotifyResult(false, emptyChoices);
+  Unused << mParent->SendNotifyResult(false, emptyChoices);
   return NS_OK;
 }
 
@@ -794,7 +796,7 @@ nsContentPermissionRequestProxy::Allow(JS::Handle<JS::Value> aChoices) {
     return rv;
   }
 
-  (void)mParent->SendNotifyResult(true, choices);
+  Unused << mParent->SendNotifyResult(true, choices);
   return NS_OK;
 }
 
@@ -869,6 +871,6 @@ void RemotePermissionRequest::Destroy() {
   if (!IPCOpen()) {
     return;
   }
-  (void)this->SendDestroy();
+  Unused << this->SendDestroy();
   mDestroyed = true;
 }

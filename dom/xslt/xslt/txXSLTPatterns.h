@@ -188,7 +188,7 @@ class txStepPattern : public txPattern, public PredicateList {
 
   txNodeTest* getNodeTest() { return mNodeTest.get(); }
   void setNodeTest(txNodeTest* aNodeTest) {
-    (void)mNodeTest.release();
+    mozilla::Unused << mNodeTest.release();
     mNodeTest = mozilla::WrapUnique(aNodeTest);
   }
 

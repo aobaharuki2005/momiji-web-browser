@@ -57,7 +57,7 @@ mozilla::ipc::IPCResult RemoteWorkerDebuggerManagerParent::RecvRegister(
   manager->RegisterDebugger(debugger);
 
   MOZ_ASSERT(debugger->CanSend());
-  (void)debugger->SendRegisterDone();
+  Unused << debugger->SendRegisterDone();
 
   return IPC_OK();
 }

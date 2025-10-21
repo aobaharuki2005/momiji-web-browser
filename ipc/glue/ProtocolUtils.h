@@ -520,7 +520,7 @@ class IToplevelProtocol : public IRefCountedProtocol {
   void OnIPCChannelOpened() {
     // Leak the returned ActorLifecycleProxy reference. It will be destroyed in
     // `OnChannelClose` or `OnChannelError`.
-    ActorConnected().leak();
+    Unused << ActorConnected();
   }
   void OnChannelClose() {
     // Re-acquire the ActorLifecycleProxy reference acquired in

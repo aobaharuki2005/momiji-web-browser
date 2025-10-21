@@ -19,6 +19,7 @@
 #include "VideoUtils.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/Unused.h"
 #include "prsystem.h"
 
 #if defined(MOZ_WIDGET_ANDROID) && defined(FFVPX_VERSION)
@@ -55,7 +56,7 @@ FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FFmpegLibWrapper* aLib,
 #elif defined(DEBUG)
   MOZ_ASSERT(!aCDM);
 #else
-  (void)aCDM;
+  Unused << aCDM;
 #endif
 }
 

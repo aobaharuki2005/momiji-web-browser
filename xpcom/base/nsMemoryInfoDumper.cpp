@@ -10,6 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "nsDumpUtils.h"
 
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "nsIConsoleService.h"
@@ -296,7 +297,7 @@ class nsDumpGCAndCCLogsCallbackHolder final
   }
 
  private:
-  ~nsDumpGCAndCCLogsCallbackHolder() { (void)mCallback->OnFinish(); }
+  ~nsDumpGCAndCCLogsCallbackHolder() { Unused << mCallback->OnFinish(); }
 
   nsCOMPtr<nsIDumpGCAndCCLogsCallback> mCallback;
 };
@@ -323,7 +324,8 @@ nsMemoryInfoDumper::DumpGCAndCCLogsToFile(
       logSink->SetFilenameIdentifier(identifier);
       logSink->SetProcessIdentifier(cp->Pid());
 
-      (void)cp->CycleCollectWithLogs(aDumpAllTraces, logSink, callbackHolder);
+      Unused << cp->CycleCollectWithLogs(aDumpAllTraces, logSink,
+                                         callbackHolder);
     }
   }
 
@@ -386,7 +388,7 @@ class GZWriterWrapper final : public JSONWriteFunc {
   void Write(const Span<const char>& aStr) final {
     // Ignore any failure because JSONWriteFunc doesn't have a mechanism for
     // handling errors.
-    (void)mGZWriter->Write(aStr.data(), aStr.size());
+    Unused << mGZWriter->Write(aStr.data(), aStr.size());
   }
 
   nsresult Finish() { return mGZWriter->Finish(); }

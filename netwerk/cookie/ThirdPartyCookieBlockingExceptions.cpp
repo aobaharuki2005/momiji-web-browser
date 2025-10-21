@@ -60,7 +60,7 @@ void ThirdPartyCookieBlockingExceptions::Initialize() {
 
 void ThirdPartyCookieBlockingExceptions::Shutdown() {
   if (m3PCBExceptionService) {
-    (void)m3PCBExceptionService->Shutdown();
+    Unused << m3PCBExceptionService->Shutdown();
     m3PCBExceptionService = nullptr;
   }
 

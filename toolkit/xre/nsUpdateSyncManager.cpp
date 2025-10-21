@@ -6,6 +6,7 @@
 
 #include "nsUpdateSyncManager.h"
 
+#include "mozilla/Unused.h"
 #include "mozilla/Services.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCRT.h"
@@ -43,8 +44,8 @@ already_AddRefed<nsUpdateSyncManager> nsUpdateSyncManager::GetSingleton() {
 NS_IMETHODIMP nsUpdateSyncManager::Observe(nsISupports* aSubject,
                                            const char* aTopic,
                                            const char16_t* aData) {
-  (void)aSubject;
-  (void)aData;
+  mozilla::Unused << aSubject;
+  mozilla::Unused << aData;
 
   // We want to hold the lock for as much of the lifetime of the app as we can,
   // so we observe xpcom-startup so we get constructed as early as possible,

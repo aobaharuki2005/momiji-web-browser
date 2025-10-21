@@ -209,7 +209,7 @@ void MediaControlKeyManager::OnPreferenceChange() {
   LOG_INFO("Preference change : %s media control",
            isPrefEnabled ? "enable" : "disable");
   if (shouldMonitorKeys) {
-    (void)StartMonitoringControlKeys();
+    Unused << StartMonitoringControlKeys();
   } else {
     StopMonitoringControlKeys();
   }

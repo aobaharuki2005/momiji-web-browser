@@ -14,6 +14,7 @@
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
@@ -1045,7 +1046,7 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader,
     // Get the stringified numeric status code, not statusText which could be
     // something misleading like OK for a 404.
     uint32_t status = 0;
-    (void)httpChannel->GetResponseStatus(
+    Unused << httpChannel->GetResponseStatus(
         &status);  // don't care if this fails, use 0.
     nsAutoString statusAsText;
     statusAsText.AppendInt(status);
@@ -1061,7 +1062,8 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader,
 
   // Note: we explicitly don't check for the return value here, because the
   // absence of the header is not an error condition.
-  (void)httpChannel->GetResponseHeader("Service-Worker-Allowed"_ns, mMaxScope);
+  Unused << httpChannel->GetResponseHeader("Service-Worker-Allowed"_ns,
+                                           mMaxScope);
 
   // [9.2 Update]4.13, If response's cache state is not "local",
   // set registration's last update check time to the current time

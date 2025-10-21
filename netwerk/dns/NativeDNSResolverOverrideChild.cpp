@@ -16,32 +16,32 @@ NativeDNSResolverOverrideChild::NativeDNSResolverOverrideChild() {
 
 mozilla::ipc::IPCResult NativeDNSResolverOverrideChild::RecvAddIPOverride(
     const nsCString& aHost, const nsCString& aIPLiteral) {
-  (void)mOverrideService->AddIPOverride(aHost, aIPLiteral);
+  Unused << mOverrideService->AddIPOverride(aHost, aIPLiteral);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 NativeDNSResolverOverrideChild::RecvAddHTTPSRecordOverride(
     const nsCString& aHost, nsTArray<uint8_t>&& aData) {
-  (void)mOverrideService->AddHTTPSRecordOverride(aHost, aData.Elements(),
-                                                 aData.Length());
+  Unused << mOverrideService->AddHTTPSRecordOverride(aHost, aData.Elements(),
+                                                     aData.Length());
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult NativeDNSResolverOverrideChild::RecvSetCnameOverride(
     const nsCString& aHost, const nsCString& aCNAME) {
-  (void)mOverrideService->SetCnameOverride(aHost, aCNAME);
+  Unused << mOverrideService->SetCnameOverride(aHost, aCNAME);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult NativeDNSResolverOverrideChild::RecvClearHostOverride(
     const nsCString& aHost) {
-  (void)mOverrideService->ClearHostOverride(aHost);
+  Unused << mOverrideService->ClearHostOverride(aHost);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult NativeDNSResolverOverrideChild::RecvClearOverrides() {
-  (void)mOverrideService->ClearOverrides();
+  Unused << mOverrideService->ClearOverrides();
   return IPC_OK();
 }
 

@@ -428,7 +428,7 @@ NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::Seek(const int32_t aWhence,
                      savedPlainBytes = mPlainBytes, savedNextByte = mNextByte,
                      &plainBytes = mPlainBytes, &nextByte = mNextByte] {
         nsresult rv = baseSeekableStream->Seek(NS_SEEK_SET, savedBaseCurrent);
-        (void)NS_WARN_IF(NS_FAILED(rv));
+        Unused << NS_WARN_IF(NS_FAILED(rv));
         plainBytes = savedPlainBytes;
         nextByte = savedNextByte;
       });

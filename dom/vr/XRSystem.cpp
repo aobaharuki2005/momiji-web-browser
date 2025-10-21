@@ -253,7 +253,7 @@ bool XRSystem::OnXRPermissionRequestAllow() {
   if (!mEnumerationInFlight) {
     mEnumerationInFlight = true;
     gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-    (void)vm->EnumerateVRDisplays();
+    Unused << vm->EnumerateVRDisplays();
   }
   return mEnumerationInFlight ||
          !mRequestSessionRequestsWaitingForEnumeration.IsEmpty();
