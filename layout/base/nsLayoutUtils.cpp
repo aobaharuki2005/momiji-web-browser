@@ -2860,9 +2860,12 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 
   nsIFrame* displayRoot = GetDisplayRootFrame(aFrame);
 
-  if ((aFlags & PaintFrameFlags::WidgetLayers) && displayRoot != aFrame) {
-    aFlags &= ~PaintFrameFlags::WidgetLayers;
-    NS_ASSERTION(aRenderingContext, "need a rendering context");
+  if (aFlags & PaintFrameFlags::WidgetLayers) {
+    nsView* view = aFrame->GetView();
+    if (!(view && view->GetWidget() && displayRoot == aFrame)) {
+      aFlags &= ~PaintFrameFlags::WidgetLayers;
+      NS_ASSERTION(aRenderingContext, "need a rendering context");
+    }
   }
 
   nsPresContext* presContext = aFrame->PresContext();
@@ -6687,7 +6690,7 @@ bool nsLayoutUtils::HasNonZeroCornerOnSide(const BorderRadius& aCorners,
 
 /* static */
 widget::TransparencyMode nsLayoutUtils::GetFrameTransparency(
-    const nsIFrame* aBackgroundFrame, const nsIFrame* aCSSRootFrame) {
+    nsIFrame* aBackgroundFrame, nsIFrame* aCSSRootFrame) {
   if (!aCSSRootFrame->StyleEffects()->IsOpaque()) {
     return TransparencyMode::Transparent;
   }
