@@ -216,7 +216,24 @@
 
       this.tooltip = "tabbrowser-tab-tooltip";
 
-      this.tabDragAndDrop = new window.TabDragAndDrop(this);
+      Services.prefs.addObserver(
+        "browser.tabs.dragDrop.multiselectStacking",
+        this.boundObserve
+      );
+      this.observe(
+        null,
+        "nsPref:changed",
+        "browser.tabs.dragDrop.multiselectStacking"
+      );
+    }
+
+    #initializeDragAndDrop() {
+      this.tabDragAndDrop = Services.prefs.getBoolPref(
+        "browser.tabs.dragDrop.multiselectStacking",
+        true
+      )
+        ? new window.TabStacking(this)
+        : new window.TabDragAndDrop(this);
       this.tabDragAndDrop.init();
     }
 
@@ -1144,9 +1161,12 @@
       }
     }
 
-    observe(aSubject, aTopic) {
+    observe(aSubject, aTopic, aData) {
       switch (aTopic) {
         case "nsPref:changed": {
+          if (aData == "browser.tabs.dragDrop.multiselectStacking") {
+            this.#initializeDragAndDrop();
+          }
           // This is has to deal with changes in
           // privacy.userContext.enabled and
           // privacy.userContext.newTabContainerOnLeftClick.enabled.
@@ -1621,6 +1641,10 @@
     destroy() {
       if (this.boundObserve) {
         Services.prefs.removeObserver("privacy.userContext", this.boundObserve);
+        Services.prefs.removeObserver(
+          "browser.tabs.dragDrop.multiselectStacking",
+          this.boundObserve
+        );
       }
       CustomizableUI.removeListener(this);
     }
