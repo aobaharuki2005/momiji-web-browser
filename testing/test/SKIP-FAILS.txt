@@ -73,8 +73,11 @@ Sub Command Arguments:
                         Meta Bug id
   -n, --new-version NEW_VERSION
                         New version to use for annotations
+  -N, --new-failures    Set new failures mode (only add conditions for new
+                        failures)
   -r, --failure-ratio FAILURE_RATIO
                         Ratio of test failures/total to skip [0.4]
+  -R, --replace-tbd     Replace Bug TBD in manifests by filing new bugs
   -s, --turbo           Skip all secondary failures
   -T, --use-tasks USE_TASKS
                         Use tasks from file
@@ -84,7 +87,6 @@ Sub Command Arguments:
                         User-Agent to use for mozci if queries are forbidden
                         from treeherder
   -v, --verbose         Verbose mode
-
 
 
 Design
@@ -186,13 +188,15 @@ Design
    b. Carry-over mode
       Only consider adding skip-if conditions which match the
       platform (see above) of previous conditions. Does not perform any
-      bugzilla changes.
+      bugzilla changes. Requires meta-bug-id ( future actions will be cached in
+      {topsrcdir}/.skip_fails_cache/meta-bug-{meta_bug_id}/actions.json )
 
    c. Known intermittents mode
       Only consider adding skip-if conditions which have known
       intermittent bugs (and are not carryover bugs).
       form (see above) of previous conditions. Does not perform any
-      bugzilla changes.
+      bugzilla changes. Requires meta-bug-id ( future actions will be cached in
+      {topsrcdir}/.skip_fails_cache/meta-bug-{meta_bug_id}/actions.json )
 
       For each failure, if the job_id can be determined then bug_suggestions will
       be retrieved from
@@ -202,6 +206,18 @@ Design
       bugs.open_recent.<i>.summary ends with 'single tracking bug$'
       then
       bugs.open_recent.<i>.id has the bug id
+
+   d. New failures mode
+      Will only edit manifest skip-if conditions for new failures
+      (i.e. not carryover nor known intermittents). Will record
+      bug as "TBD". Requires meta-bug-id ( future actions will be cached in
+      {topsrcdir}/.skip_fails_cache/meta-bug-{meta_bug_id}/actions.json )
+
+   e. Replace TBD mode
+      Will only edit manifest skip-if conditions for new failures
+      by filing new bugs and replacing TBD with actual bug number.
+      Requires meta-bug-id ( new bug actions will be read from
+      {topsrcdir}/.skip_fails_cache/meta-bug-{meta_bug_id}/actions.json )
 
 5. Cache for skip-fails
    At the top of the source tree is a cache directory for skip-fails:
@@ -329,6 +345,14 @@ https://firefox-source-docs.mozilla.org/...
 
 Usage
 -----
+Sub Command Arguments:
+  manifest_search_path  Path to the folder containing the manifests to update,
+                        or the path to a single manifest
+  -o, --os OS_NAME      OS to remove (linux, mac, win)
+  -s, --os_version OS_VERSION
+                        Version of the OS to remove (eg: 18.04 for linux)
+  -p, --processor PROCESSOR
+                        Type of processor architecture to remove (eg: x86)
 
 
 Design Specification for ./mach manifest high-freq-skip-fails
@@ -343,3 +367,7 @@ https://firefox-source-docs.mozilla.org/...
 
 Usage
 -----
+Sub Command Arguments:
+  -f, --failures FAILURES
+                        Minimum number of failures for the bug to be skipped
+  -d, --days DAYS       Number of days to look for failures since now

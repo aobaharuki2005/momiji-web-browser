@@ -1298,11 +1298,23 @@ def manifest(_command_context):
     help="New version to use for annotations",
 )
 @CommandArgument(
+    "-N",
+    "--new-failures",
+    action="store_true",
+    help="Set new failures mode (only add conditions for new failures)",
+)
+@CommandArgument(
     "-r",
     "--failure-ratio",
     type=float,
     default=0.4,
     help="Ratio of test failures/total to skip [0.4]",
+)
+@CommandArgument(
+    "-R",
+    "--replace-tbd",
+    action="store_true",
+    help="Replace Bug TBD in manifests by filing new bugs",
 )
 @CommandArgument(
     "-s",
@@ -1322,27 +1334,35 @@ def manifest(_command_context):
 def skipfails(
     command_context,
     try_url,
-    bugzilla=None,
-    meta_bug_id=None,
-    turbo=False,
-    save_tasks=None,
-    use_tasks=None,
-    save_failures=None,
-    use_failures=None,
-    max_failures=-1,
-    verbose=False,
-    dry_run=False,
-    implicit_vars=False,
-    new_version=None,
-    task_id=None,
-    user_agent=None,
-    carryover=False,
-    failure_ratio=0.4,
-    clear_cache=None,
-    known_intermittents=False,
+    bugzilla: Optional[str] = None,
+    meta_bug_id: Optional[int] = None,
+    turbo: bool = False,
+    save_tasks: Optional[str] = None,
+    use_tasks: Optional[str] = None,
+    save_failures: Optional[str] = None,
+    use_failures: Optional[str] = None,
+    max_failures: int = -1,
+    verbose: bool = False,
+    dry_run: bool = False,
+    implicit_vars: bool = False,
+    new_version: Optional[str] = None,
+    task_id: Optional[str] = None,
+    user_agent: Optional[str] = None,
+    failure_ratio: float = 0.4,
+    clear_cache: Optional[str] = None,
+    carryover: bool = False,
+    known_intermittents: bool = False,
+    new_failures: bool = False,
+    replace_tbd: bool = False,
 ):
-    from skipfails import Skipfails
+    from skipfails import Skipfails, SkipfailsMode
 
+    mode: int = SkipfailsMode.from_flags(
+        carryover,
+        known_intermittents,
+        new_failures,
+        replace_tbd,
+    )
     Skipfails(
         command_context,
         try_url,
@@ -1362,9 +1382,8 @@ def skipfails(
         save_failures,
         use_failures,
         max_failures,
-        carryover,
         failure_ratio,
-        known_intermittents,
+        mode,
     )
 
 
