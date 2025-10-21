@@ -188,6 +188,7 @@ class GeckoProfilerRuntime {
   void stringsReset();
 
   bool insertScriptSource(ScriptSource* scriptSource) {
+    MOZ_ASSERT(scriptSource);
     auto guard = scriptSources_.writeLock();
     if (!enabled_) {
       return true;
@@ -195,6 +196,8 @@ class GeckoProfilerRuntime {
 
     return guard->put(scriptSource);
   }
+
+  js::ProfilerJSSources getProfilerScriptSources();
 
   const uint32_t* addressOfEnabled() const { return &enabled_; }
 
