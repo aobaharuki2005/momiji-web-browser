@@ -259,6 +259,11 @@ export class LoginManagerRustMirror {
         this.#logger.error(`error: received unhandled event "${eventName}"`);
         break;
     }
+
+    Services.obs.notifyObservers(
+      null,
+      `rust-mirror.event.${eventName}.finished`
+    );
   }
 
   async #maybeRunMigration() {
@@ -339,6 +344,9 @@ export class LoginManagerRustMirror {
         numberOfLoginsMigrated
       );
       this.#migrationInProgress = false;
+
+      // Notify about the finished migration. This is used in tests.
+      Services.obs.notifyObservers(null, "rust-mirror.migration.finished");
     }
   }
 }
