@@ -371,12 +371,12 @@ export default class TurnOnScheduledBackups extends MozLitElement {
               id="backup-turn-on-scheduled-description-span"
               data-l10n-id="turn-on-scheduled-backups-description"
             ></span>
-            <!--TODO: finalize support page links (bug 1900467)-->
             <a
               id="backup-turn-on-scheduled-learn-more-link"
               is="moz-support-link"
-              support-page="todo-backup"
+              support-page="firefox-backup"
               data-l10n-id="turn-on-scheduled-backups-support-link"
+              utm-content="turn-on-backup"
             ></a>
           </div>
           ${this.allOptionsTemplate()}
