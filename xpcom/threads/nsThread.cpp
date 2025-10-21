@@ -337,6 +337,11 @@ void nsThread::ThreadFunc(void* aArg) {
 
   self->InitCommon();
 
+#ifdef XP_MACOSX
+  // Use "User Initiated" as the default quality of service.
+  pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
+#endif
+
   // Inform the ThreadManager
   nsThreadManager::get().RegisterCurrentThread(*self);
 
