@@ -29,9 +29,8 @@
 #include "mozilla/ProfilerState.h"
 #include "mozilla/ProfilerThreadSleep.h"
 #include "mozilla/ProfilerThreadState.h"
+#include "mozilla/ProfilerUtils.h"
 #include "mozilla/ProgressLogger.h"
-#include "mozilla/Result.h"
-#include "mozilla/ResultVariant.h"
 
 #ifndef MOZ_GECKO_PROFILER
 
@@ -135,14 +134,6 @@ class SpliceableJSONWriter;
 }  // namespace baseprofiler
 }  // namespace mozilla
 class nsIURI;
-
-enum class ProfilerError {
-  IsInactive,
-  JsonGenerationFailed,
-};
-
-template <typename T>
-using ProfilerResult = mozilla::Result<T, ProfilerError>;
 
 //---------------------------------------------------------------------------
 // Give information to the profiler

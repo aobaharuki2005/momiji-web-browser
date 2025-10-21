@@ -45,6 +45,7 @@
 #include "mozilla/Vector.h"
 #include "nsString.h"
 #include "SharedLibraries.h"
+#include "ProfileAdditionalInformation.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -158,7 +159,8 @@ void profiler_mark_thread_awake();
 
 void profiler_mark_thread_asleep();
 
-[[nodiscard]] bool profiler_get_profile_json(
+[[nodiscard]] ProfilerResult<mozilla::ProfileGenerationAdditionalInformation>
+profiler_get_profile_json(
     SpliceableChunkedJSONWriter& aSpliceableChunkedJSONWriter,
     double aSinceTime, bool aIsShuttingDown,
     mozilla::ProgressLogger aProgressLogger);
