@@ -66,7 +66,7 @@ const BASE_MESSAGES = () => [
     groups: ["win10-eos-sync", "eco"],
     // TODO: The backup preferences in this expression should be updated once BackupService exposes getters; see Bug 1993272
     targeting:
-      "source == newtab && os.isWindows && os.windowsVersion == 10 && os.windowsBuildNumber <= 19045 && isFxAEnabled && !isFxASignedIn && !hasSelectableProfiles && !hasActiveEnterprisePolicies && ('browser.backup.archive.enabled' | preferenceValue) && (!'browser.backup.scheduled.enabled' | preferenceValue) && (!'browser.backup.scheduled.user-disabled' | preferenceValue) && !isMajorUpgrade && !willShowDefaultPrompt && !activeNotifications && previousSessionEnd && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue != false",
+      "source == newtab && os.isWindows && os.windowsVersion == 10 && os.windowsBuildNumber <= 19045 && isFxAEnabled && !isFxASignedIn && !hasSelectableProfiles && !hasActiveEnterprisePolicies && backupArchiveEnabled && (!'browser.backup.scheduled.enabled' | preferenceValue) && (!'browser.backup.scheduled.user-disabled' | preferenceValue) && !isMajorUpgrade && !willShowDefaultPrompt && !activeNotifications && previousSessionEnd && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue != false",
     trigger: {
       id: "defaultBrowserCheck",
     },
