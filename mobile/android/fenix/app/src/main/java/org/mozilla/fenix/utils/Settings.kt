@@ -1890,6 +1890,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     /**
      * Storing the list of installed add-ons for telemetry purposes
+     * Addons are separated by a comma, e.g. "addon1,addon2,addon3"
      */
     var installedAddonsList by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_installed_addons_list),

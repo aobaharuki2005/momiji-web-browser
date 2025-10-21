@@ -8,6 +8,7 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.VisibleForTesting
 import mozilla.components.support.utils.ext.getPackageInfoCompat
+import org.json.JSONArray
 import org.json.JSONObject
 import org.mozilla.experiments.nimbus.NIMBUS_DATA_DIR
 import org.mozilla.experiments.nimbus.NimbusDeviceInfo
@@ -62,6 +63,7 @@ class RecordedNimbusContext(
     val deviceModel: String = Build.MODEL,
     val userAcceptedTou: Boolean,
     val noShortcutsOrStoriesOptOuts: Boolean,
+    val addonIds: List<String>,
 ) : RecordedContext {
     /**
      * [getEventQueries] is called by the Nimbus SDK Rust code to retrieve the map of event
@@ -102,6 +104,7 @@ class RecordedNimbusContext(
                 deviceModel = deviceModel,
                 userAcceptedTou = userAcceptedTou,
                 noShortcutsOrStoriesOptOuts = noShortcutsOrStoriesOptOuts,
+                addonIds = NimbusSystem.RecordedNimbusContextObjectAddonIds(addonIds.toMutableList()),
             ),
         )
         Pings.nimbus.submit()
@@ -147,6 +150,7 @@ class RecordedNimbusContext(
                 "device_model" to deviceModel,
                 "user_accepted_tou" to userAcceptedTou,
                 "no_shortcuts_or_stories_opt_outs" to noShortcutsOrStoriesOptOuts,
+                "addon_ids" to JSONArray(addonIds),
             ),
         )
         return obj
@@ -194,8 +198,13 @@ class RecordedNimbusContext(
                 region = calculatedAttributes.region,
                 userAcceptedTou = settings.hasAcceptedTermsOfService,
                 noShortcutsOrStoriesOptOuts = settings.noShortcutsOrStoriesOptOuts(context),
+                addonIds = getFormattedAddons(settings),
             )
         }
+
+        @VisibleForTesting
+        internal fun getFormattedAddons(settings: Settings): List<String> =
+            settings.installedAddonsList.split(",").map { it.trim() }
 
         /**
          * Checks whether an eligible user has opted out of any sponsored top sites or stories.
@@ -232,6 +241,7 @@ class RecordedNimbusContext(
             isFirstRun: Boolean = false,
             eventQueries: Map<String, String> = EVENT_QUERIES,
             eventQueryValues: Map<String, Double> = mapOf(),
+            addonIds: List<String> = emptyList(),
         ): RecordedNimbusContext {
             return RecordedNimbusContext(
                 isFirstRun = isFirstRun,
@@ -250,6 +260,7 @@ class RecordedNimbusContext(
                 region = "US",
                 userAcceptedTou = true,
                 noShortcutsOrStoriesOptOuts = true,
+                addonIds = addonIds,
             )
         }
     }
