@@ -7795,22 +7795,7 @@ nsPresContext* nsContentUtils::FindPresContextForDocument(
 
 nsIWidget* nsContentUtils::WidgetForDocument(const Document* aDocument) {
   PresShell* presShell = FindPresShellForDocument(aDocument);
-  if (!presShell) {
-    return nullptr;
-  }
-  nsViewManager* vm = presShell->GetViewManager();
-  if (!vm) {
-    return nullptr;
-  }
-  nsView* rootView = vm->GetRootView();
-  if (!rootView) {
-    return nullptr;
-  }
-  nsView* displayRoot = nsViewManager::GetDisplayRootFor(rootView);
-  if (!displayRoot) {
-    return nullptr;
-  }
-  return displayRoot->GetNearestWidget(nullptr);
+  return presShell ? presShell->GetNearestWidget() : nullptr;
 }
 
 nsIWidget* nsContentUtils::WidgetForContent(const nsIContent* aContent) {
