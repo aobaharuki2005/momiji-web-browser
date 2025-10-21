@@ -34,7 +34,8 @@ IPCResult ServiceWorkerRegistrationChild::RecvUpdateState(
 
 IPCResult ServiceWorkerRegistrationChild::RecvFireUpdateFound() {
   if (mOwner) {
-    mOwner->FireUpdateFound();
+    RefPtr<ServiceWorkerRegistration> owner = mOwner;
+    owner->FireUpdateFound();
   }
   return IPC_OK();
 }
