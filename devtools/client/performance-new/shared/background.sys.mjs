@@ -25,6 +25,7 @@ import { createLazyLoaders } from "resource://devtools/client/performance-new/sh
  * @typedef {import("../@types/perf").ProfilerBrowserInfo} ProfilerBrowserInfo
  * @typedef {import("../@types/perf").ProfileCaptureResult} ProfileCaptureResult
  * @typedef {import("../@types/perf").ProfilerFaviconData} ProfilerFaviconData
+ * @typedef {import("../@types/perf").JSSources} JSSources
  */
 
 /** @type {PerformancePref["PopupFeatureFlag"]} */
@@ -127,7 +128,8 @@ export async function captureProfile(pageContext) {
   registerProfileCaptureForBrowser(
     browser,
     profileCaptureResult,
-    symbolicationService
+    symbolicationService,
+    additionalInformation?.jsSources ?? null
   );
 }
 
@@ -442,15 +444,18 @@ export async function handleWebChannelMessage(channel, id, message, target) {
  *   when profiler.firefox.com sends GET_SYMBOL_TABLE WebChannel messages to us. This
  *   method should obtain a symbol table for the requested binary and resolve the
  *   returned promise with it.
+ * @param {JSSources | null} jsSources - JS sources from the profile collection.
  */
 export function registerProfileCaptureForBrowser(
   browser,
   profileCaptureResult,
-  symbolicationService
+  symbolicationService,
+  jsSources
 ) {
   infoForBrowserMap.set(browser, {
     profileCaptureResult,
     symbolicationService,
+    jsSources,
   });
 }
 

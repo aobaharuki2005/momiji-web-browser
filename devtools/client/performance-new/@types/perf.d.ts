@@ -604,6 +604,10 @@ export class ProfilerWebChannel {
   ) => void;
 }
 
+type JSSources = Partial<{
+  [sourceUuid: string]: string;
+}>;
+
 /**
  * The per-tab information that is stored when a new profile is captured
  * and a profiler tab is opened, to serve the correct profile to the tab
@@ -612,6 +616,7 @@ export class ProfilerWebChannel {
 export type ProfilerBrowserInfo = {
   profileCaptureResult: ProfileCaptureResult;
   symbolicationService: SymbolicationService | null;
+  jsSources: JSSources | null;
 };
 
 export type ProfileCaptureResult =
