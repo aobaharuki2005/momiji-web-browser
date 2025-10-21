@@ -5,6 +5,12 @@
 // content (hidden=until-found and closed <details> elements) by triggering
 // the ancestor revealing algorithm and firing beforematch events.
 
+/**
+ * Request 2x longer timeout for this test.
+ * The tests can take a bit longer, which can cause timeouts on debug builds.
+ */
+requestLongerTimeout(2);
+
 const TEST_PAGE_URI =
   "data:text/html;charset=utf-8," +
   encodeURIComponent(`
