@@ -314,20 +314,19 @@ describe("MultiStageAboutWelcome module", () => {
         );
       });
 
-      it("should have a primary, secondary and secondary.top button in the rendered input", () => {
+      it("should have a primary, secondary and two secondary.top button", () => {
         const wrapper = mount(<WelcomeScreen {...EASY_SETUP_SCREEN_PROPS} />);
         assert.ok(wrapper.find(".primary").exists());
-        assert.ok(
-          wrapper
-            .find(".secondary-cta button.secondary[value='secondary_button']")
-            .exists()
+        assert.equal(
+          wrapper.find(".secondary-cta:not(.top) button.secondary").length,
+          1,
+          "One secondary button"
         );
-        assert.ok(
-          wrapper
-            .find(
-              ".secondary-cta.top button.secondary[value='secondary_button_top']"
-            )
-            .exists()
+
+        assert.equal(
+          wrapper.find(".secondary-cta.top button.secondary").length,
+          2,
+          "Two secondary button top (sign in and restore from backup)"
         );
       });
     });

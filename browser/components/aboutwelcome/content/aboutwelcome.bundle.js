@@ -3801,7 +3801,7 @@ const EmbeddedBackupRestore = ({
     text: skipButton.label
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
     id: "secondary_button",
-    className: "secondary",
+    className: skipButton?.has_arrow_icon ? "secondary arrow-icon" : "secondary",
     value: "skip_button",
     disabled: recoveryInProgress,
     "aria-busy": recoveryInProgress || undefined,

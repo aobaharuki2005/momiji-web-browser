@@ -210,7 +210,6 @@ export default class RestoreFromBackup extends MozLitElement {
 
   applyContentCustomizations() {
     if (this.aboutWelcomeEmbedded) {
-      this.style.setProperty("--button-group-justify-content", "flex-start");
       this.style.setProperty("--label-font-weight", "600");
     }
   }
@@ -231,10 +230,7 @@ export default class RestoreFromBackup extends MozLitElement {
             for="backup-filepicker-input"
             data-l10n-id="restore-from-backup-filepicker-label"
           ></label>
-          <div
-            id="backup-filepicker"
-            class=${this.aboutWelcomeEmbedded ? "aw-embedded-filepicker" : ""}
-          >
+          <div id="backup-filepicker">
             ${this.inputTemplate(iconURL)}
             <moz-button
               id="backup-filepicker-button"

@@ -45,6 +45,9 @@ add_setup(async () => {
 
   registerCleanupFunction(async () => {
     MockFilePicker.cleanup();
+    Services.prefs.clearUserPref(
+      "messaging-system-action.showRestoreFromBackup"
+    );
     await IOUtils.remove(TEST_PROFILE_PATH, { recursive: true });
   });
 });
@@ -99,7 +102,7 @@ add_task(async function test_aboutwelcome_embedded_backup_restore_properties() {
     Assert.ok(confirmButton, "Confirm button should be present");
     Assert.ok(
       confirmButton.hasAttribute("disabled"),
-      "Confirm button should be disabled"
+      "Confirm button should be initially disabled"
     );
   });
 

@@ -864,7 +864,11 @@ describe("MultiStageAboutWelcomeProton module", () => {
         );
     });
     it("should have a multi action primary button by default", async () => {
-      const data = await prepConfig({}, ["AW_WELCOME_BACK", "RETURN_TO_AMO"]);
+      const data = await prepConfig({}, [
+        "AW_WELCOME_BACK",
+        "RETURN_TO_AMO",
+        "AW_BACKUP_RESTORE_EMBEDDED_BACKUP_FOUND",
+      ]);
       assert.propertyVal(
         data.screens[0].content.primary_button.action,
         "type",
@@ -872,7 +876,10 @@ describe("MultiStageAboutWelcomeProton module", () => {
       );
     });
     it("should have a FxA button", async () => {
-      const data = await prepConfig({}, ["AW_WELCOME_BACK"]);
+      const data = await prepConfig({}, [
+        "AW_WELCOME_BACK",
+        "AW_BACKUP_RESTORE_EMBEDDED_BACKUP_FOUND",
+      ]);
 
       assert.notProperty(data, "skipFxA");
       assert.property(data.screens[0].content, "secondary_button_top");
@@ -884,6 +891,48 @@ describe("MultiStageAboutWelcomeProton module", () => {
 
       assert.property(data, "skipFxA", true);
       assert.notProperty(data.screens[0].content, "secondary_button_top");
+    });
+
+    it("should enable restore from backup button top if pref enabled", async () => {
+      global.Services.prefs.getBoolPref.returns(true);
+      const data = await prepConfig({}, [
+        "AW_WELCOME_BACK",
+        "RETURN_TO_AMO",
+        "AW_BACKUP_RESTORE_EMBEDDED_BACKUP_FOUND",
+      ]);
+      const secondaryBtnTop = data.screens[0].content.secondary_button_top;
+
+      const restoreBtn = btn =>
+        btn.label.string_id === "restore-from-backup-secondary-top-button";
+
+      assert.isTrue(
+        secondaryBtnTop.some(restoreBtn),
+        "Should include restore button top when pref is true"
+      );
+    });
+
+    it("should remove the restore from backup button top if pref is disabled", async () => {
+      global.Services.prefs.getBoolPref.returns(false);
+      const data = await prepConfig({}, [
+        "AW_WELCOME_BACK",
+        "RETURN_TO_AMO",
+        "AW_BACKUP_RESTORE_EMBEDDED_BACKUP_FOUND",
+      ]);
+
+      const secondaryBtnTop = data.screens[0].content.secondary_button_top;
+
+      // secondary_button_top should be an object instead of an array when restore from backup button is removed
+      assert.isObject(
+        secondaryBtnTop,
+        "secondary_button_top should be an object"
+      );
+
+      // Verify that object is not the restore from backup button
+      assert.notEqual(
+        secondaryBtnTop.label.string_id,
+        "restore-from-backup-secondary-top-button",
+        "restore button should not be present"
+      );
     });
   });
 
