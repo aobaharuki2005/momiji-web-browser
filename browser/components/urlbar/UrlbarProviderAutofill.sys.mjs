@@ -992,6 +992,7 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
     if (
       lazy.UrlUtils.looksLikeOrigin(this._searchString, {
         ignoreKnownDomains: true,
+        allowPartialNumericalTLDs: true,
       })
     ) {
       [query, params] = this._getOriginQuery(queryContext);

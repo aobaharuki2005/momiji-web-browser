@@ -22,6 +22,7 @@ export const UrlUtils = {
   REGEXP_LIKE_PROTOCOL: /^[A-Z+.-]+:\/*(?!\/)/i,
   REGEXP_USERINFO_INVALID_CHARS: /[^\w.~%!$&'()*+,;=:-]/,
   REGEXP_HOSTPORT_INVALID_CHARS: /[^\[\]A-Z0-9.:-]/i,
+  REGEXP_HOSTPORT_INVALID_TLD_NUM: /\.\w*\d\w*(:\d+)?$/,
   REGEXP_SINGLE_WORD_HOST: /^[^.:]+$/i,
   REGEXP_HOSTPORT_IP_LIKE: /^(?=(.*[.:].*){2})[a-f0-9\.\[\]:]+$/i,
   // This accepts partial IPv4.
@@ -49,12 +50,18 @@ export const UrlUtils = {
    * @param {object} [options]
    * @param {boolean} [options.requirePath]
    *   The url must have a path
+   * @param {boolean} [options.validateOrigin]
+   *   The prepath must look like an origin
    * @param {ConsoleInstance} [logger]
    *   Optional logger for debugging
    * @returns {boolean}
    *   Whether the token looks like a URL
    */
-  looksLikeUrl(token, { requirePath = false } = {}, logger) {
+  looksLikeUrl(
+    token,
+    { requirePath = false, validateOrigin = false } = {},
+    logger
+  ) {
     if (token.length < 2) {
       return false;
     }
@@ -74,6 +81,17 @@ export const UrlUtils = {
     let slashIndex = token.indexOf("/");
     let prePath = slashIndex != -1 ? token.slice(0, slashIndex) : token;
     if (!this.looksLikeOrigin(prePath, { ignoreKnownDomains: true })) {
+      return false;
+    }
+
+    // Check if prePath looks like origin.
+    if (validateOrigin) {
+      const result = this.looksLikeOrigin(prePath, {
+        ignoreKnownDomains: false,
+      });
+      if (result !== this.LOOKS_LIKE_ORIGIN.NONE) {
+        return true;
+      }
       return false;
     }
 
@@ -134,6 +152,8 @@ export const UrlUtils = {
    *   If true, the origin cannot be an IP address
    * @param {boolean} [options.noPort]
    *   If true, the origin cannot have a port number
+   * @param {boolean} [options.allowPartialNumericalTLDs]
+   *   If true, the origin can have numbers in its top level domain
    * @param {ConsoleInstance} [logger]
    *   Optional logger for debugging
    * @returns {number}
@@ -141,7 +161,12 @@ export const UrlUtils = {
    */
   looksLikeOrigin(
     token,
-    { ignoreKnownDomains = false, noIp = false, noPort = false } = {},
+    {
+      ignoreKnownDomains = false,
+      noIp = false,
+      noPort = false,
+      allowPartialNumericalTLDs = false,
+    } = {},
     logger
   ) {
     if (!token.length) {
@@ -174,6 +199,8 @@ export const UrlUtils = {
       this.REGEXP_LIKE_PROTOCOL.test(hostPort) ||
       this.REGEXP_USERINFO_INVALID_CHARS.test(userinfo) ||
       this.REGEXP_HOSTPORT_INVALID_CHARS.test(hostPort) ||
+      (!allowPartialNumericalTLDs &&
+        this.REGEXP_HOSTPORT_INVALID_TLD_NUM.test(hostPort)) ||
       (!this.REGEXP_SINGLE_WORD_HOST.test(hostPort) &&
         this.REGEXP_HOSTPORT_IP_LIKE.test(hostPort) &&
         this.REGEXP_HOSTPORT_INVALID_IP.test(hostPort))
