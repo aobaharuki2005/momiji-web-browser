@@ -40,7 +40,7 @@ skip-if = ["os == 'android' && processor == 'x86_64'"]
 support-files = ["!/netwerk/test/unit/proxy-ca.pem", "!/netwerk/test/unit/http2-ca.pem"]
 skip-if = [
   "msix", # H3 server not working on msix
-  "os == 'android' && !fission",
+  "os == 'android'", # bug 1992996
 ]
 
 ["test_extension_process_alive.js"]
