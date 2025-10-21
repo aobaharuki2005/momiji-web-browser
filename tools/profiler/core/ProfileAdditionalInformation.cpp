@@ -64,6 +64,14 @@ struct ParamTraits<ProfilerJSSourceData> {
   static bool Read(MessageReader* aReader, paramType* aResult);
 };
 
+template <>
+struct ParamTraits<mozilla::JSSourceEntry> {
+  typedef mozilla::JSSourceEntry paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam);
+  static bool Read(MessageReader* aReader, paramType* aResult);
+};
+
 void IPC::ParamTraits<SharedLibrary>::Write(MessageWriter* aWriter,
                                             const paramType& aParam) {
   WriteParam(aWriter, aParam.mStart);
@@ -240,14 +248,35 @@ bool IPC::ParamTraits<ProfilerJSSourceData>::Read(MessageReader* aReader,
   }
 }
 
+void IPC::ParamTraits<mozilla::JSSourceEntry>::Write(MessageWriter* aWriter,
+                                                     const paramType& aParam) {
+  WriteParam(aWriter, aParam.uuid);
+  WriteParam(aWriter, aParam.sourceData);
+}
+
+bool IPC::ParamTraits<mozilla::JSSourceEntry>::Read(MessageReader* aReader,
+                                                    paramType* aResult) {
+  return (ReadParam(aReader, &aResult->uuid) &&
+          ReadParam(aReader, &aResult->sourceData));
+}
+
 void IPC::ParamTraits<mozilla::ProfileGenerationAdditionalInformation>::Write(
     MessageWriter* aWriter, const paramType& aParam) {
   WriteParam(aWriter, aParam.mSharedLibraries);
+  WriteParam(aWriter, aParam.mJSSourceEntries);
 }
 
 bool IPC::ParamTraits<mozilla::ProfileGenerationAdditionalInformation>::Read(
     MessageReader* aReader, paramType* aResult) {
-  return ReadParam(aReader, &aResult->mSharedLibraries);
+  if (!ReadParam(aReader, &aResult->mSharedLibraries)) {
+    return false;
+  }
+
+  if (!ReadParam(aReader, &aResult->mJSSourceEntries)) {
+    return false;
+  }
+
+  return true;
 }
 
 }  // namespace IPC

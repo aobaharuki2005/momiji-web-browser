@@ -16,8 +16,10 @@
 
 #include "SharedLibraries.h"
 #include "js/Value.h"
+#include "js/Utility.h"
 #include "js/ProfilingSources.h"
 #include "nsString.h"
+#include "nsTArray.h"
 
 namespace IPC {
 class MessageReader;
@@ -27,15 +29,38 @@ struct ParamTraits;
 }  // namespace IPC
 
 namespace mozilla {
+
+// Entry pairing UUID strings with JS source data for WebChannel requests
+struct JSSourceEntry {
+  nsCString uuid;
+  ProfilerJSSourceData sourceData;
+
+  JSSourceEntry() = default;
+  JSSourceEntry(nsCString&& aUuid, ProfilerJSSourceData&& aSourceData)
+      : uuid(std::move(aUuid)), sourceData(std::move(aSourceData)) {}
+
+  size_t SizeOf() const { return uuid.Length() + sourceData.SizeOf(); }
+};
+
 // This structure contains additional information gathered while generating the
 // profile json and iterating the buffer.
 struct ProfileGenerationAdditionalInformation {
   ProfileGenerationAdditionalInformation() = default;
   explicit ProfileGenerationAdditionalInformation(
-      SharedLibraryInfo&& aSharedLibraries)
-      : mSharedLibraries(std::move(aSharedLibraries)) {}
+      SharedLibraryInfo&& aSharedLibraries,
+      nsTArray<JSSourceEntry>&& aJSSourceEntries)
+      : mSharedLibraries(std::move(aSharedLibraries)),
+        mJSSourceEntries(std::move(aJSSourceEntries)) {}
 
-  size_t SizeOf() const { return mSharedLibraries.SizeOf(); }
+  size_t SizeOf() const {
+    size_t size = mSharedLibraries.SizeOf();
+
+    for (const auto& entry : mJSSourceEntries) {
+      size += entry.SizeOf();
+    }
+
+    return size;
+  }
 
   ProfileGenerationAdditionalInformation(
       const ProfileGenerationAdditionalInformation& other) = delete;
@@ -49,6 +74,7 @@ struct ProfileGenerationAdditionalInformation {
 
   void Append(ProfileGenerationAdditionalInformation&& aOther) {
     mSharedLibraries.AddAllSharedLibraries(aOther.mSharedLibraries);
+    mJSSourceEntries.AppendElements(std::move(aOther.mJSSourceEntries));
   }
 
   void FinishGathering() { mSharedLibraries.DeduplicateEntries(); }
@@ -56,6 +82,7 @@ struct ProfileGenerationAdditionalInformation {
   void ToJSValue(JSContext* aCx, JS::MutableHandle<JS::Value> aRetVal) const;
 
   SharedLibraryInfo mSharedLibraries;
+  nsTArray<JSSourceEntry> mJSSourceEntries;
 };
 
 struct ProfileAndAdditionalInformation {
