@@ -1016,22 +1016,37 @@ class Document : public nsINode,
    */
   void SetBidiEnabled() { mBidiEnabled = true; }
 
+  enum class InitialStatus : uint8_t {
+    IsInitial,
+    IsInitialButExplicitlyOpened,
+    WasInitial,
+    NeverInitial,
+  };
+
   /**
    * Ask this document whether it's the initial document in its window.
    */
-  bool IsInitialDocument() const { return mIsInitialDocumentInWindow; }
+  bool IsInitialDocument() const {
+    return mInitialStatus == InitialStatus::IsInitial;
+  }
 
   /**
    * Ask this document whether it has ever been a initial document in its
    * window.
    */
-  bool IsEverInitialDocument() const { return mIsEverInitialDocumentInWindow; }
+  bool IsEverInitialDocument() const {
+    return mInitialStatus != InitialStatus::NeverInitial;
+  }
 
   /**
    * Tell this document that it's the initial document in its window.  See
    * comments on mIsInitialDocumentInWindow for when this should be called.
    */
   void SetIsInitialDocument(bool aIsInitialDocument);
+
+  InitialStatus GetInitialStatus() const { return mInitialStatus; }
+
+  void SetInitialStatus(Document::InitialStatus aStatus);
 
   void SetLoadedAsData(bool aLoadedAsData, bool aConsiderForMemoryReporting);
 
@@ -4835,6 +4850,13 @@ class Document : public nsINode,
   // GetPermissionDelegateHandler
   RefPtr<PermissionDelegateHandler> mPermissionDelegateHandler;
 
+  // https://html.spec.whatwg.org/#is-initial-about:blank
+  // Track the initial about:blank status of this document.
+  // We track both whether the document was previously initial,
+  // and whether it is an initial about:blank which has had document.open called
+  // on it (see bug 1995397).
+  InitialStatus mInitialStatus;
+
   bool mCachedStateObjectValid : 1;
   bool mBlockAllMixedContent : 1;
   bool mBlockAllMixedContentPreloads : 1;
@@ -4853,17 +4875,6 @@ class Document : public nsINode,
   bool mBidiEnabled : 1;
   // True if we may need to recompute the language prefs for this document.
   bool mMayNeedFontPrefsUpdate : 1;
-
-  // True if this document is the initial document for a window.  This should
-  // basically be true only for documents that exist in newly-opened windows or
-  // documents created to satisfy a GetDocument() on a window when there's no
-  // document in it.
-  bool mIsInitialDocumentInWindow : 1;
-
-  // True if this document has ever been the initial document for a window. This
-  // is useful to determine if a document that was the initial document at one
-  // point, and became non-initial later.
-  bool mIsEverInitialDocumentInWindow : 1;
 
   bool mIgnoreDocGroupMismatches : 1;
 

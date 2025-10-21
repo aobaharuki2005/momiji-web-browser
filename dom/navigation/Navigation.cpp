@@ -288,8 +288,9 @@ NavigationActivation* Navigation::GetActivation() const { return mActivation; }
 bool Navigation::HasEntriesAndEventsDisabled() const {
   Document* doc = GetAssociatedDocument();
   return !doc || !doc->IsCurrentActiveDocument() ||
-         (NS_IsAboutBlankAllowQueryAndFragment(doc->GetDocumentURI()) &&
-          doc->IsInitialDocument()) ||
+         doc->GetInitialStatus() == Document::InitialStatus::IsInitial ||
+         doc->GetInitialStatus() ==
+             Document::InitialStatus::IsInitialButExplicitlyOpened ||
          doc->GetPrincipal()->GetIsNullPrincipal();
 }
 

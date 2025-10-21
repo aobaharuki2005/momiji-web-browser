@@ -1371,6 +1371,7 @@ Document::Document(const char* aContentType,
 #ifdef DEBUG
       mStyledLinksCleared(false),
 #endif
+      mInitialStatus(Document::InitialStatus::NeverInitial),
       mCachedStateObjectValid(false),
       mBlockAllMixedContent(false),
       mBlockAllMixedContentPreloads(false),
@@ -1381,8 +1382,6 @@ Document::Document(const char* aContentType,
       mRenderingSuppressedForViewTransitions(false),
       mBidiEnabled(false),
       mMayNeedFontPrefsUpdate(true),
-      mIsInitialDocumentInWindow(false),
-      mIsEverInitialDocumentInWindow(false),
       mIgnoreDocGroupMismatches(false),
       mAddedToMemoryReportingAsDataDocument(false),
       mMayStartLayout(true),
@@ -10479,7 +10478,9 @@ Document* Document::Open(const Optional<nsAString>& /* unused */,
     // URL may be changing away from about:blank here, we really want to unset
     // this flag no matter what, since only about:blank can be an initial
     // document.
-    SetIsInitialDocument(false);
+    if (IsInitialDocument()) {
+      SetInitialStatus(Document::InitialStatus::IsInitialButExplicitlyOpened);
+    }
 
     // And let our docloader know that it will need to track our load event.
     nsDocShell::Cast(shell)->SetDocumentOpenedButNotLoaded();
@@ -20383,16 +20384,26 @@ nsIPrincipal* Document::GetPrincipalForPrefBasedHacks() const {
 }
 
 void Document::SetIsInitialDocument(bool aIsInitialDocument) {
-  mIsInitialDocumentInWindow = aIsInitialDocument;
-
-  if (aIsInitialDocument && !mIsEverInitialDocumentInWindow) {
-    mIsEverInitialDocumentInWindow = aIsInitialDocument;
+  if (aIsInitialDocument) {
+    mInitialStatus = InitialStatus::IsInitial;
+  } else if (mInitialStatus != InitialStatus::NeverInitial) {
+    mInitialStatus = InitialStatus::WasInitial;
   }
 
   // Asynchronously tell the parent process that we are, or are no longer, the
   // initial document. This happens async.
   if (auto* wgc = GetWindowGlobalChild()) {
     wgc->SendSetIsInitialDocument(aIsInitialDocument);
+  }
+}
+
+void Document::SetInitialStatus(InitialStatus aStatus) {
+  mInitialStatus = aStatus;
+
+  // Asynchronously tell the parent process that we are, or are no longer, the
+  // initial document. This happens async.
+  if (auto* wgc = GetWindowGlobalChild()) {
+    wgc->SendSetIsInitialDocument(aStatus == InitialStatus::IsInitial);
   }
 }
 
