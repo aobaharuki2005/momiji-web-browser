@@ -1469,14 +1469,11 @@ function shouldUseFeltPrivacyRefresh() {
     return false;
   }
 
-  let failedCertInfo;
-  try {
-    failedCertInfo = document.getFailedCertSecurityInfo();
-  } catch {
-    return false;
-  }
+  const errorInfo = gIsCertError
+    ? document.getFailedCertSecurityInfo()
+    : document.getNetErrorInfo();
 
-  return NetErrorCard.ERROR_CODES.has(failedCertInfo.errorCodeString);
+  return NetErrorCard.ERROR_CODES.has(errorInfo.errorCodeString);
 }
 
 if (!shouldUseFeltPrivacyRefresh()) {

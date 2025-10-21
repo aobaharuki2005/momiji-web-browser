@@ -5,6 +5,7 @@
 /* eslint-disable import/no-unassigned-import */
 
 import {
+  gIsCertError,
   getCSSClass,
   getHostName,
   getSubjectAltNames,
@@ -94,8 +95,7 @@ export class NetErrorCard extends MozLitElement {
       "fp-certerror-page-title"
     );
 
-    this.failedCertInfo = document.getFailedCertSecurityInfo();
-
+    this.errorInfo = this.getErrorInfo();
     this.hostname = HOST_NAME;
     const { port } = document.location;
     if (port && port != 443) {
@@ -107,8 +107,14 @@ export class NetErrorCard extends MozLitElement {
     }
   }
 
+  getErrorInfo() {
+    return gIsCertError
+      ? document.getFailedCertSecurityInfo()
+      : document.getNetErrorInfo();
+  }
+
   introContentTemplate() {
-    switch (this.failedCertInfo.errorCodeString) {
+    switch (this.errorInfo.errorCodeString) {
       case "SEC_ERROR_UNKNOWN_ISSUER":
       case "SSL_ERROR_BAD_CERT_DOMAIN":
       case "SEC_ERROR_EXPIRED_CERTIFICATE":
@@ -134,7 +140,7 @@ export class NetErrorCard extends MozLitElement {
 
     let content;
 
-    switch (this.failedCertInfo.errorCodeString) {
+    switch (this.errorInfo.errorCodeString) {
       case "SEC_ERROR_UNKNOWN_ISSUER": {
         content = this.advancedSectionTemplate({
           whyDangerousL10nId: "fp-certerror-unknown-issuer-why-dangerous-body",
@@ -144,6 +150,7 @@ export class NetErrorCard extends MozLitElement {
           learnMoreSupportPage: "connection-not-secure",
           viewCert: true,
           viewDateTime: true,
+          proceedButton: true,
         });
         break;
       }
@@ -164,12 +171,13 @@ export class NetErrorCard extends MozLitElement {
           learnMoreSupportPage: "connection-not-secure",
           viewCert: true,
           viewDateTime: true,
+          proceedButton: true,
         });
         break;
       }
       case "SEC_ERROR_EXPIRED_CERTIFICATE": {
-        const notBefore = this.failedCertInfo.validNotBefore;
-        const notAfter = this.failedCertInfo.validNotAfter;
+        const notBefore = this.errorInfo.validNotBefore;
+        const notAfter = this.errorInfo.validNotAfter;
         if (notBefore && Date.now() < notAfter) {
           content = this.advancedSectionTemplate({
             whyDangerousL10nId: "fp-certerror-not-yet-valid-why-dangerous-body",
@@ -184,6 +192,7 @@ export class NetErrorCard extends MozLitElement {
             learnMoreSupportPage: "time-errors",
             viewCert: true,
             viewDateTime: true,
+            proceedButton: true,
           });
         } else {
           content = this.advancedSectionTemplate({
@@ -199,6 +208,7 @@ export class NetErrorCard extends MozLitElement {
             learnMoreSupportPage: "time-errors",
             viewCert: true,
             viewDateTime: true,
+            proceedButton: true,
           });
         }
         break;
@@ -210,11 +220,12 @@ export class NetErrorCard extends MozLitElement {
           importantNote: "fp-certerror-self-signed-important-note",
           viewCert: true,
           viewDateTime: true,
+          proceedButton: true,
         });
         break;
       }
       case "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE": {
-        const notAfter = this.failedCertInfo.validNotAfter;
+        const notAfter = this.errorInfo.validNotAfter;
         content = this.advancedSectionTemplate({
           whyDangerousL10nId: "fp-certerror-expired-why-dangerous-body",
           whyDangerousL10nArgs: {
@@ -228,6 +239,7 @@ export class NetErrorCard extends MozLitElement {
           learnMoreSupportPage: "time-errors",
           viewCert: true,
           viewDateTime: true,
+          proceedButton: true,
         });
         break;
       }
@@ -247,9 +259,11 @@ export class NetErrorCard extends MozLitElement {
       whatCanYouDoL10nArgs,
       importantNote,
       learnMoreL10nId,
+      learnMoreL10nArgs,
       learnMoreSupportPage,
       viewCert,
       viewDateTime,
+      proceedButton,
     } = params;
     return html`<p>
         ${whyDangerousL10nId
@@ -278,6 +292,7 @@ export class NetErrorCard extends MozLitElement {
               is="moz-support-link"
               support-page=${learnMoreSupportPage}
               data-l10n-id=${learnMoreL10nId}
+              data-l10n-args=${JSON.stringify(learnMoreL10nArgs)}
               data-telemetry-id="learn_more_link"
               @click=${this.handleTelemetryClick}
             ></a>
@@ -292,30 +307,34 @@ export class NetErrorCard extends MozLitElement {
             ></a>
           </p>`
         : null}
-      <p>
-        <a
-          id="errorCode"
-          data-l10n-id="fp-cert-error-code"
-          data-l10n-name="error-code-link"
-          data-telemetry-id="error_code_link"
-          data-l10n-args='{"error": "${this.failedCertInfo.errorCodeString}"}'
-          @click=${this.toggleCertErrorDebugInfoShowing}
-          href="#certificateErrorDebugInformation"
-        ></a>
-      </p>
+      ${gIsCertError
+        ? html` <p>
+            <a
+              id="errorCode"
+              data-l10n-id="fp-cert-error-code"
+              data-l10n-name="error-code-link"
+              data-telemetry-id="error_code_link"
+              data-l10n-args='{"error": "${this.errorInfo.errorCodeString}"}'
+              @click=${this.toggleCertErrorDebugInfoShowing}
+              href="#certificateErrorDebugInformation"
+            ></a>
+          </p>`
+        : null}
       ${viewDateTime
         ? html`<p
             data-l10n-id="fp-datetime"
             data-l10n-args=${JSON.stringify({ datetime: Date.now() })}
           ></p>`
         : null}
-      <moz-button
-        id="exception-button"
-        data-l10n-id="fp-certerror-override-exception-button"
-        data-l10n-args=${JSON.stringify({ hostname: this.hostname })}
-        data-telemetry-id="exception_button"
-        @click=${this.handleProceedToUrlClick}
-      ></moz-button>`;
+      ${proceedButton
+        ? html` <moz-button
+            id="exception-button"
+            data-l10n-id="fp-certerror-override-exception-button"
+            data-l10n-args=${JSON.stringify({ hostname: this.hostname })}
+            data-telemetry-id="exception_button"
+            @click=${this.handleProceedToUrlClick}
+          ></moz-button>`
+        : null} `;
   }
 
   async getDomainMismatchNames() {
@@ -323,7 +342,7 @@ export class NetErrorCard extends MozLitElement {
       return;
     }
 
-    this.domainMismatchNamesPromise = getSubjectAltNames(this.failedCertInfo);
+    this.domainMismatchNamesPromise = getSubjectAltNames(this.errorInfo);
     let subjectAltNames = await this.domainMismatchNamesPromise;
     this.domainMismatchNames = subjectAltNames.join(", ");
   }
@@ -478,12 +497,12 @@ export class NetErrorCard extends MozLitElement {
           .split("_")
           .map(word => word[0].toUpperCase() + word.slice(1))
           .join(""),
-      this.failedCertInfo
+      this.errorInfo
     );
   }
 
   render() {
-    if (!this.failedCertInfo) {
+    if (!this.errorInfo) {
       return null;
     }
 
