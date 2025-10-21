@@ -25,7 +25,7 @@ linux64-python-3.9:
         fetch:
             - cpython-3.9.13
     worker:
-        docker-image: {in-tree: ubuntu1804-build-python}
+        docker-image: {in-tree: deb12-toolchain-build}
 
 linux64-aarch64-python-3.9:
     description: "cpython 3.9.13 AArch64/ARM64"
@@ -93,7 +93,7 @@ linux64-python-3.11:
         fetch:
             - cpython-3.11.7
     worker:
-        docker-image: {in-tree: ubuntu1804-build-python}
+        docker-image: {in-tree: deb12-toolchain-build}
 
 win64-python-3.11:
     description: "cpython 3.11.7"
