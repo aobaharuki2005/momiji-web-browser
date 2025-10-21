@@ -24,6 +24,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.PositionAssertions
 import androidx.test.espresso.intent.Intents
@@ -56,6 +57,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
+import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -597,7 +599,7 @@ class SearchRobot {
             browserToolbarEditView().setText("mozilla\n")
             Log.i(TAG, "openBrowser: Edit mode toolbar text was set to: mozilla")
             Log.i(TAG, "openBrowser: Trying to click device enter button")
-            mDevice.pressEnter()
+            pressImeActionOnToolbarEditView()
             Log.i(TAG, "openBrowser: Clicked device enter button")
 
             BrowserRobot().interact()
@@ -611,7 +613,7 @@ class SearchRobot {
             browserToolbarEditView().setText(query)
             Log.i(TAG, "submitQuery: Edit mode toolbar text was set to: $query")
             Log.i(TAG, "submitQuery: Trying to click device enter button")
-            mDevice.pressEnter()
+            pressImeActionOnToolbarEditView()
             Log.i(TAG, "submitQuery: Clicked device enter button")
 
             registerAndCleanupIdlingResources(sessionLoadedIdlingResource) {
@@ -623,13 +625,11 @@ class SearchRobot {
         }
 
         fun submitQueryWithComposableToolbar(query: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            Log.i(TAG, "submitQueryWithComposableToolbar: Trying to set toolbar text to: $query")
-            onView(withId(composeToolbarR.id.mozac_addressbar_search_query_input)).perform(replaceText(query))
-            Log.i(TAG, "submitQueryWithComposableToolbar: Toolbar text was set to: $query")
-            Log.i(TAG, "submitQueryWithComposableToolbar: Trying to click device enter button")
-            mDevice.pressEnter()
-            Log.i(TAG, "submitQueryWithComposableToolbar: Clicked device enter button")
-
+            Log.i(TAG, "submitQueryWithComposableToolbar: Trying to set toolbar text to: $query and pressing IME action")
+            onView(withId(composeToolbarR.id.mozac_addressbar_search_query_input)).perform(
+                replaceText(query), pressImeActionButton(),
+            )
+            Log.i(TAG, "submitQueryWithComposableToolbar: Toolbar text was set to: $query and IME action performed")
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
@@ -666,6 +666,20 @@ fun searchScreen(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
 
 private fun browserToolbarEditView() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"))
+
+private fun pressImeActionOnToolbarEditView() {
+    val context = appContext
+    val resId = context.resources.getIdentifier(
+        "mozac_browser_toolbar_edit_url_view",
+        "id",
+        packageName,
+    )
+
+    Log.i(TAG, "pressImeActionOnToolbarEditView: Trying to perform pressImeActionButton via Espresso")
+    onView(withId(resId))
+        .perform(pressImeActionButton())
+    Log.i(TAG, "pressImeActionOnToolbarEditView: Performed pressImeActionButton via Espresso")
+}
 
 private fun dismissPermissionButton() =
     mDevice.findObject(UiSelector().text("Dismiss"))
