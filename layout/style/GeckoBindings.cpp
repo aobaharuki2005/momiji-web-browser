@@ -1394,11 +1394,10 @@ static already_AddRefed<StyleSheet> LoadImportSheet(
     if (!uri) {
       NS_NewURI(getter_AddRefs(uri), "about:invalid"_ns);
     }
-    emptySheet->SetURIs(uri, uri, uri);
-    emptySheet->SetPrincipal(aURL.ExtraData().Principal());
     nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        ReferrerInfo::CreateForExternalCSSResources(emptySheet);
-    emptySheet->SetReferrerInfo(referrerInfo);
+        ReferrerInfo::CreateForExternalCSSResources(emptySheet, uri);
+    emptySheet->SetURIs(uri, uri, uri, referrerInfo,
+                        aURL.ExtraData().Principal());
     emptySheet->SetComplete();
     aParent->AppendStyleSheet(*emptySheet);
     return emptySheet.forget();
