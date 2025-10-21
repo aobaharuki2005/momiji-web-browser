@@ -6,13 +6,6 @@
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef NM
-# The "aggressive" variant will likely fail on some compiler/platform
-# combinations, but is worth running by hand every once in a while.
-check-vanilla-allocations-aggressive:
-	$(PYTHON3) $(topsrcdir)/config/check_vanilla_allocations.py --aggressive $(REAL_LIBRARY)
-endif
-
 $(LIBRARY_NAME).pc: js.pc
 	cp $^ $@
 

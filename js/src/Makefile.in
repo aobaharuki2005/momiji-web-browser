@@ -20,55 +20,6 @@ USE_HOST_CXX = 1
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef MOZ_VALGRIND
-ifndef MOZ_ASAN
-JITTEST_VALGRIND_FLAG = --valgrind
-endif
-endif
-
-ifneq ($(LLVM_SYMBOLIZER),)
-# Use the LLVM symbolizer when running jit-tests under ASan and TSan, if available
-ifdef MOZ_ASAN
-JITTEST_SANITIZER_ENV=ASAN_SYMBOLIZER_PATH='$(LLVM_SYMBOLIZER)'
-endif
-ifdef MOZ_TSAN
-JITTEST_SANITIZER_ENV=TSAN_OPTIONS="external_symbolizer_path=$(LLVM_SYMBOLIZER) handle_segv=0 $$TSAN_OPTIONS"
-endif
-ifdef MOZ_MSAN
-JITTEST_SANITIZER_ENV=MSAN_SYMBOLIZER_PATH='$(LLVM_SYMBOLIZER)'
-endif
-endif
-
-check-jit-test::
-	$(JITTEST_SANITIZER_ENV) $(PYTHON3) -u $(srcdir)/jit-test/jit_test.py \
-	        --no-slow --no-progress --format=automation --jitflags=all \
-			$(JITTEST_VALGRIND_FLAG) \
-			$(JITTEST_EXTRA_ARGS) \
-	        $(DIST)/bin/js$(BIN_SUFFIX) $(JITTEST_TEST_ARGS)
-
-check-jstests:
-	$(PYTHON3) -u $(srcdir)/tests/jstests.py \
-		--no-progress --format=automation --timeout 300 \
-		$(JSTESTS_EXTRA_ARGS) \
-		$(DIST)/bin/js$(BIN_SUFFIX)
-
-# FIXME:
-# We want to run check-jstests as part of |make check| on all platforms, on
-# tinderbox. However, some configurations don't work quite right just yet.
-# Rather than risking regressions in major configurations while fixing these
-# secondary configuration, we work around them and fix the bugs later.
-#
-#   Bug 652154: On Windows, SM(!m !t) don't work because of path problems with
-#				their unusual directory layout
-#
-#   Bug 652155: On Mac, SM(d) doesn't work for unknown reasons
-
-ifneq ($(OS_ARCH),WINNT)
-ifndef HAVE_DTRACE
-#check:: check-jstests
-endif
-endif
-
 CFLAGS += $(MOZ_ZLIB_CFLAGS)
 
 ifeq ($(OS_ARCH),SunOS)
