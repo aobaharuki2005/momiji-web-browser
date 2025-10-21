@@ -106,7 +106,7 @@ private fun BottomSheet(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         sheetState = sheetState,
-        containerColor = FirefoxTheme.colors.layer3,
+        containerColor = FirefoxTheme.colors.layer2,
     ) {
         Box(
             modifier = Modifier
