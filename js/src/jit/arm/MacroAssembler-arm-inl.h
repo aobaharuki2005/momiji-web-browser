@@ -564,25 +564,25 @@ void MacroAssembler::mulDoublePtr(ImmPtr imm, Register temp,
   mulDouble(scratchDouble, dest);
 }
 
-void MacroAssembler::quotient32(Register lhs, Register rhs, Register dest,
+void MacroAssembler::quotient32(Register rhs, Register srcDest,
                                 bool isUnsigned) {
   MOZ_ASSERT(ARMFlags::HasIDIV());
   if (isUnsigned) {
-    ma_udiv(lhs, rhs, dest);
+    ma_udiv(srcDest, rhs, srcDest);
   } else {
-    ma_sdiv(lhs, rhs, dest);
+    ma_sdiv(srcDest, rhs, srcDest);
   }
 }
 
-void MacroAssembler::remainder32(Register lhs, Register rhs, Register dest,
+void MacroAssembler::remainder32(Register rhs, Register srcDest,
                                  bool isUnsigned) {
   MOZ_ASSERT(ARMFlags::HasIDIV());
 
   ScratchRegisterScope scratch(*this);
   if (isUnsigned) {
-    ma_umod(lhs, rhs, dest, scratch);
+    ma_umod(srcDest, rhs, srcDest, scratch);
   } else {
-    ma_smod(lhs, rhs, dest, scratch);
+    ma_smod(srcDest, rhs, srcDest, scratch);
   }
 }
 

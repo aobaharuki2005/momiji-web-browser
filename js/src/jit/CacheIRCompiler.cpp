@@ -3433,7 +3433,8 @@ bool CacheIRCompiler::emitInt32DivResult(Int32OperandId lhsId,
   masm.branchTest32(Assembler::Signed, rhs, rhs, failure->label());
   masm.bind(&notZero);
 
-  masm.flexibleDivMod32(lhs, rhs, scratch, rem, false, liveVolatileRegs());
+  masm.mov(lhs, scratch);
+  masm.flexibleDivMod32(rhs, scratch, rem, false, liveVolatileRegs());
 
   // A remainder implies a double result.
   masm.branchTest32(Assembler::NonZero, rem, rem, failure->label());
@@ -3466,7 +3467,8 @@ bool CacheIRCompiler::emitInt32ModResult(Int32OperandId lhsId,
   masm.branch32(Assembler::Equal, rhs, Imm32(-1), failure->label());
   masm.bind(&notOverflow);
 
-  masm.flexibleRemainder32(lhs, rhs, scratch, false, liveVolatileRegs());
+  masm.mov(lhs, scratch);
+  masm.flexibleRemainder32(rhs, scratch, false, liveVolatileRegs());
 
   // Modulo takes the sign of the dividend; we can't return negative zero here.
   Label notZero;
@@ -4011,7 +4013,8 @@ bool CacheIRCompiler::emitBigIntPtrDiv(IntPtrOperandId lhsId,
 
   LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
                                liveVolatileFloatRegs());
-  masm.flexibleQuotientPtr(lhs, rhs, output, false, volatileRegs);
+  masm.movePtr(lhs, output);
+  masm.flexibleQuotientPtr(rhs, output, false, volatileRegs);
   return true;
 }
 
@@ -4035,18 +4038,18 @@ bool CacheIRCompiler::emitBigIntPtrMod(IntPtrOperandId lhsId,
   // Prevent division by 0.
   masm.branchTestPtr(Assembler::Zero, rhs, rhs, failure->label());
 
+  masm.movePtr(lhs, output);
+
   // Prevent INTPTR_MIN / -1.
-  Label notOverflow, done;
+  Label notOverflow;
   masm.branchPtr(Assembler::NotEqual, lhs, ImmWord(DigitMin), &notOverflow);
   masm.branchPtr(Assembler::NotEqual, rhs, Imm32(-1), &notOverflow);
   masm.movePtr(ImmWord(0), output);
-  masm.jump(&done);
   masm.bind(&notOverflow);
 
   LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
                                liveVolatileFloatRegs());
-  masm.flexibleRemainderPtr(lhs, rhs, output, false, volatileRegs);
-  masm.bind(&done);
+  masm.flexibleRemainderPtr(rhs, output, false, volatileRegs);
   return true;
 }
 

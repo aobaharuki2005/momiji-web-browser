@@ -593,39 +593,39 @@ void MacroAssembler::inc64(AbsoluteAddress dest) {
   as_st_d(scratch2, scratch, 0);
 }
 
-void MacroAssembler::quotient32(Register lhs, Register rhs, Register dest,
+void MacroAssembler::quotient32(Register rhs, Register srcDest,
                                 bool isUnsigned) {
   if (isUnsigned) {
-    as_div_wu(dest, lhs, rhs);
+    as_div_wu(srcDest, srcDest, rhs);
   } else {
-    as_div_w(dest, lhs, rhs);
+    as_div_w(srcDest, srcDest, rhs);
   }
 }
 
-void MacroAssembler::quotient64(Register lhs, Register rhs, Register dest,
+void MacroAssembler::quotient64(Register rhs, Register srcDest,
                                 bool isUnsigned) {
   if (isUnsigned) {
-    as_div_du(dest, lhs, rhs);
+    as_div_du(srcDest, srcDest, rhs);
   } else {
-    as_div_d(dest, lhs, rhs);
+    as_div_d(srcDest, srcDest, rhs);
   }
 }
 
-void MacroAssembler::remainder32(Register lhs, Register rhs, Register dest,
+void MacroAssembler::remainder32(Register rhs, Register srcDest,
                                  bool isUnsigned) {
   if (isUnsigned) {
-    as_mod_wu(dest, lhs, rhs);
+    as_mod_wu(srcDest, srcDest, rhs);
   } else {
-    as_mod_w(dest, lhs, rhs);
+    as_mod_w(srcDest, srcDest, rhs);
   }
 }
 
-void MacroAssembler::remainder64(Register lhs, Register rhs, Register dest,
+void MacroAssembler::remainder64(Register rhs, Register srcDest,
                                  bool isUnsigned) {
   if (isUnsigned) {
-    as_mod_du(dest, lhs, rhs);
+    as_mod_du(srcDest, srcDest, rhs);
   } else {
-    as_mod_d(dest, lhs, rhs);
+    as_mod_d(srcDest, srcDest, rhs);
   }
 }
 

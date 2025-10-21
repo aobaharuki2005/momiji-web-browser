@@ -6004,15 +6004,18 @@ extern MOZ_EXPORT int64_t __aeabi_idivmod(int, int);
 extern MOZ_EXPORT int64_t __aeabi_uidivmod(int, int);
 }
 
-static void EmitRemainderOrQuotient(bool isRemainder, MacroAssembler& masm,
-                                    Register lhs, Register rhs, Register output,
+inline void EmitRemainderOrQuotient(bool isRemainder, MacroAssembler& masm,
+                                    Register rhs, Register lhsOutput,
                                     bool isUnsigned,
                                     const LiveRegisterSet& volatileLiveRegs) {
+  // Currently this helper can't handle this situation.
+  MOZ_ASSERT(lhsOutput != rhs);
+
   if (ARMFlags::HasIDIV()) {
     if (isRemainder) {
-      masm.remainder32(lhs, rhs, output, isUnsigned);
+      masm.remainder32(rhs, lhsOutput, isUnsigned);
     } else {
-      masm.quotient32(lhs, rhs, output, isUnsigned);
+      masm.quotient32(rhs, lhsOutput, isUnsigned);
     }
   } else {
     // Ensure that the output registers are saved and restored properly.
@@ -6027,7 +6030,7 @@ static void EmitRemainderOrQuotient(bool isRemainder, MacroAssembler& masm,
       ScratchRegisterScope scratch(masm);
       masm.setupUnalignedABICall(scratch);
     }
-    masm.passABIArg(lhs);
+    masm.passABIArg(lhsOutput);
     masm.passABIArg(rhs);
     if (isUnsigned) {
       masm.callWithABI<Fn, __aeabi_uidivmod>(
@@ -6037,57 +6040,53 @@ static void EmitRemainderOrQuotient(bool isRemainder, MacroAssembler& masm,
           ABIType::Int64, CheckUnsafeCallWithABI::DontCheckOther);
     }
     if (isRemainder) {
-      masm.mov(ReturnRegVal1, output);
+      masm.mov(ReturnRegVal1, lhsOutput);
     } else {
-      masm.mov(ReturnRegVal0, output);
+      masm.mov(ReturnRegVal0, lhsOutput);
     }
 
     LiveRegisterSet ignore;
-    ignore.add(output);
+    ignore.add(lhsOutput);
     masm.PopRegsInMaskIgnore(liveRegs, ignore);
   }
 }
 
 void MacroAssembler::flexibleQuotient32(
-    Register lhs, Register rhs, Register dest, bool isUnsigned,
+    Register rhs, Register srcDest, bool isUnsigned,
     const LiveRegisterSet& volatileLiveRegs) {
-  EmitRemainderOrQuotient(false, *this, lhs, rhs, dest, isUnsigned,
+  EmitRemainderOrQuotient(false, *this, rhs, srcDest, isUnsigned,
                           volatileLiveRegs);
 }
 
 void MacroAssembler::flexibleQuotientPtr(
-    Register lhs, Register rhs, Register dest, bool isUnsigned,
+    Register rhs, Register srcDest, bool isUnsigned,
     const LiveRegisterSet& volatileLiveRegs) {
-  flexibleQuotient32(lhs, rhs, dest, isUnsigned, volatileLiveRegs);
+  flexibleQuotient32(rhs, srcDest, isUnsigned, volatileLiveRegs);
 }
 
 void MacroAssembler::flexibleRemainder32(
-    Register lhs, Register rhs, Register dest, bool isUnsigned,
+    Register rhs, Register srcDest, bool isUnsigned,
     const LiveRegisterSet& volatileLiveRegs) {
-  EmitRemainderOrQuotient(true, *this, lhs, rhs, dest, isUnsigned,
+  EmitRemainderOrQuotient(true, *this, rhs, srcDest, isUnsigned,
                           volatileLiveRegs);
 }
 
 void MacroAssembler::flexibleRemainderPtr(
-    Register lhs, Register rhs, Register dest, bool isUnsigned,
+    Register rhs, Register srcDest, bool isUnsigned,
     const LiveRegisterSet& volatileLiveRegs) {
-  flexibleRemainder32(lhs, rhs, dest, isUnsigned, volatileLiveRegs);
+  flexibleRemainder32(rhs, srcDest, isUnsigned, volatileLiveRegs);
 }
 
-void MacroAssembler::flexibleDivMod32(Register lhs, Register rhs,
-                                      Register divOutput, Register remOutput,
-                                      bool isUnsigned,
+void MacroAssembler::flexibleDivMod32(Register rhs, Register lhsOutput,
+                                      Register remOutput, bool isUnsigned,
                                       const LiveRegisterSet& volatileLiveRegs) {
-  MOZ_ASSERT(lhs != divOutput && lhs != remOutput, "lhs is preserved");
-  MOZ_ASSERT(rhs != divOutput && rhs != remOutput, "rhs is preserved");
+  // Currently this helper can't handle this situation.
+  MOZ_ASSERT(lhsOutput != rhs);
 
   if (ARMFlags::HasIDIV()) {
-    if (isUnsigned) {
-      as_udiv(divOutput, lhs, rhs);
-    } else {
-      as_sdiv(divOutput, lhs, rhs);
-    }
-    as_mls(remOutput, lhs, divOutput, rhs);
+    mov(lhsOutput, remOutput);
+    remainder32(rhs, remOutput, isUnsigned);
+    quotient32(rhs, lhsOutput, isUnsigned);
   } else {
     // Ensure that the output registers are saved and restored properly.
     LiveRegisterSet liveRegs = volatileLiveRegs;
@@ -6101,7 +6100,7 @@ void MacroAssembler::flexibleDivMod32(Register lhs, Register rhs,
       ScratchRegisterScope scratch(*this);
       setupUnalignedABICall(scratch);
     }
-    passABIArg(lhs);
+    passABIArg(lhsOutput);
     passABIArg(rhs);
     if (isUnsigned) {
       callWithABI<Fn, __aeabi_uidivmod>(ABIType::Int64,
@@ -6110,11 +6109,11 @@ void MacroAssembler::flexibleDivMod32(Register lhs, Register rhs,
       callWithABI<Fn, __aeabi_idivmod>(ABIType::Int64,
                                        CheckUnsafeCallWithABI::DontCheckOther);
     }
-    moveRegPair(ReturnRegVal0, ReturnRegVal1, divOutput, remOutput);
+    moveRegPair(ReturnRegVal0, ReturnRegVal1, lhsOutput, remOutput);
 
     LiveRegisterSet ignore;
     ignore.add(remOutput);
-    ignore.add(divOutput);
+    ignore.add(lhsOutput);
     PopRegsInMaskIgnore(liveRegs, ignore);
   }
 }

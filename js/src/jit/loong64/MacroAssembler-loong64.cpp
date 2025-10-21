@@ -4600,42 +4600,39 @@ void MacroAssembler::atomicPause() {
   nop();
 }
 
-void MacroAssembler::flexibleQuotient32(Register lhs, Register rhs,
-                                        Register dest, bool isUnsigned,
+void MacroAssembler::flexibleQuotient32(Register rhs, Register srcDest,
+                                        bool isUnsigned,
                                         const LiveRegisterSet&) {
-  quotient32(lhs, rhs, dest, isUnsigned);
+  quotient32(rhs, srcDest, isUnsigned);
 }
 
-void MacroAssembler::flexibleQuotientPtr(Register lhs, Register rhs,
-                                         Register dest, bool isUnsigned,
+void MacroAssembler::flexibleQuotientPtr(Register rhs, Register srcDest,
+                                         bool isUnsigned,
                                          const LiveRegisterSet&) {
-  quotient64(lhs, rhs, dest, isUnsigned);
+  quotient64(rhs, srcDest, isUnsigned);
 }
 
-void MacroAssembler::flexibleRemainder32(Register lhs, Register rhs,
-                                         Register dest, bool isUnsigned,
+void MacroAssembler::flexibleRemainder32(Register rhs, Register srcDest,
+                                         bool isUnsigned,
                                          const LiveRegisterSet&) {
-  remainder32(lhs, rhs, dest, isUnsigned);
+  remainder32(rhs, srcDest, isUnsigned);
 }
 
-void MacroAssembler::flexibleRemainderPtr(Register lhs, Register rhs,
-                                          Register dest, bool isUnsigned,
+void MacroAssembler::flexibleRemainderPtr(Register rhs, Register srcDest,
+                                          bool isUnsigned,
                                           const LiveRegisterSet&) {
-  remainder64(lhs, rhs, dest, isUnsigned);
+  remainder64(rhs, srcDest, isUnsigned);
 }
 
-void MacroAssembler::flexibleDivMod32(Register lhs, Register rhs,
-                                      Register divOutput, Register remOutput,
-                                      bool isUnsigned, const LiveRegisterSet&) {
-  MOZ_ASSERT(lhs != divOutput && lhs != remOutput, "lhs is preserved");
-  MOZ_ASSERT(rhs != divOutput && rhs != remOutput, "rhs is preserved");
-
+void MacroAssembler::flexibleDivMod32(Register rhs, Register srcDest,
+                                      Register remOutput, bool isUnsigned,
+                                      const LiveRegisterSet&) {
   if (isUnsigned) {
-    as_div_wu(divOutput, lhs, rhs);
-    as_mod_wu(remOutput, lhs, rhs);
+    as_mod_wu(remOutput, srcDest, rhs);
+    as_div_wu(srcDest, srcDest, rhs);
   } else {
-    as_div_w(divOutput, lhs, rhs);
-    as_mod_w(remOutput, lhs, rhs);
+    as_mod_w(remOutput, srcDest, rhs);
+    as_div_w(srcDest, srcDest, rhs);
   }
 }
 

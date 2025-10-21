@@ -1922,39 +1922,39 @@ void MacroAssembler::popcnt64(Register64 input, Register64 output,
                               Register tmp) {
   Popcnt64(output.reg, input.reg, tmp);
 }
-void MacroAssembler::quotient32(Register lhs, Register rhs, Register dest,
+void MacroAssembler::quotient32(Register rhs, Register srcDest,
                                 bool isUnsigned) {
   if (isUnsigned) {
-    ma_divu32(dest, lhs, rhs);
+    ma_divu32(srcDest, srcDest, rhs);
   } else {
-    ma_div32(dest, lhs, rhs);
+    ma_div32(srcDest, srcDest, rhs);
   }
 }
 
-void MacroAssembler::quotient64(Register lhs, Register rhs, Register dest,
+void MacroAssembler::quotient64(Register rhs, Register srcDest,
                                 bool isUnsigned) {
   if (isUnsigned) {
-    ma_divu64(dest, lhs, rhs);
+    ma_divu64(srcDest, srcDest, rhs);
   } else {
-    ma_div64(dest, lhs, rhs);
+    ma_div64(srcDest, srcDest, rhs);
   }
 }
 
-void MacroAssembler::remainder32(Register lhs, Register rhs, Register dest,
+void MacroAssembler::remainder32(Register rhs, Register srcDest,
                                  bool isUnsigned) {
   if (isUnsigned) {
-    ma_modu32(dest, lhs, rhs);
+    ma_modu32(srcDest, srcDest, rhs);
   } else {
-    ma_mod32(dest, lhs, rhs);
+    ma_mod32(srcDest, srcDest, rhs);
   }
 }
 
-void MacroAssembler::remainder64(Register lhs, Register rhs, Register dest,
+void MacroAssembler::remainder64(Register rhs, Register srcDest,
                                  bool isUnsigned) {
   if (isUnsigned) {
-    ma_modu64(dest, lhs, rhs);
+    ma_modu64(srcDest, srcDest, rhs);
   } else {
-    ma_mod64(dest, lhs, rhs);
+    ma_mod64(srcDest, srcDest, rhs);
   }
 }
 

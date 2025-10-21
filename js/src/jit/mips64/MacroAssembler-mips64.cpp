@@ -3363,15 +3363,15 @@ void MacroAssembler::convertUInt64ToFloat32(Register64 src_, FloatRegister dest,
 }
 
 void MacroAssembler::flexibleQuotientPtr(
-    Register lhs, Register rhs, Register dest, bool isUnsigned,
+    Register rhs, Register srcDest, bool isUnsigned,
     const LiveRegisterSet& volatileLiveRegs) {
-  quotient64(lhs, rhs, dest, isUnsigned);
+  quotient64(rhs, srcDest, isUnsigned);
 }
 
 void MacroAssembler::flexibleRemainderPtr(
-    Register lhs, Register rhs, Register dest, bool isUnsigned,
+    Register rhs, Register srcDest, bool isUnsigned,
     const LiveRegisterSet& volatileLiveRegs) {
-  remainder64(lhs, rhs, dest, isUnsigned);
+  remainder64(rhs, srcDest, isUnsigned);
 }
 
 void MacroAssembler::wasmMarkCallAsSlow() { mov(ra, ra); }

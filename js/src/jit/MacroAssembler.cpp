@@ -1996,7 +1996,8 @@ void MacroAssembler::loadInt32ToStringWithBase(
   branch32(Assembler::AboveOrEqual, input, scratch1, fail);
   {
     // Compute |scratch1 = input / base| and |scratch2 = input % base|.
-    flexibleDivMod32(input, base, scratch1, scratch2, true, volatileRegs);
+    move32(input, scratch1);
+    flexibleDivMod32(base, scratch1, scratch2, true, volatileRegs);
 
     // Compute the digits of the divisor and remainder.
     toChar(scratch1);

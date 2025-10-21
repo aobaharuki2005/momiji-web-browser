@@ -361,39 +361,43 @@ void MacroAssembler::inc64(AbsoluteAddress dest) {
   as_sd(scratch2, scratch, 0);
 }
 
-void MacroAssembler::quotient64(Register lhs, Register rhs, Register dest,
+void MacroAssembler::quotient64(Register rhs, Register srcDest,
                                 bool isUnsigned) {
+  if (isUnsigned) {
 #ifdef MIPSR6
-  if (isUnsigned) {
-    as_ddivu(dest, lhs, rhs);
-  } else {
-    as_ddiv(dest, lhs, rhs);
-  }
+    as_ddivu(srcDest, srcDest, rhs);
 #else
-  if (isUnsigned) {
-    as_ddivu(lhs, rhs);
+    as_ddivu(srcDest, rhs);
+#endif
   } else {
-    as_ddiv(lhs, rhs);
+#ifdef MIPSR6
+    as_ddiv(srcDest, srcDest, rhs);
+#else
+    as_ddiv(srcDest, rhs);
+#endif
   }
-  as_mflo(dest);
+#ifndef MIPSR6
+  as_mflo(srcDest);
 #endif
 }
 
-void MacroAssembler::remainder64(Register lhs, Register rhs, Register dest,
+void MacroAssembler::remainder64(Register rhs, Register srcDest,
                                  bool isUnsigned) {
+  if (isUnsigned) {
 #ifdef MIPSR6
-  if (isUnsigned) {
-    as_dmodu(dest, lhs, rhs);
-  } else {
-    as_dmod(dest, lhs, rhs);
-  }
+    as_dmodu(srcDest, srcDest, rhs);
 #else
-  if (isUnsigned) {
-    as_ddivu(lhs, rhs);
+    as_ddivu(srcDest, rhs);
+#endif
   } else {
-    as_ddiv(lhs, rhs);
+#ifdef MIPSR6
+    as_dmod(srcDest, srcDest, rhs);
+#else
+    as_ddiv(srcDest, rhs);
+#endif
   }
-  as_mfhi(dest);
+#ifndef MIPSR6
+  as_mfhi(srcDest);
 #endif
 }
 
