@@ -6972,6 +6972,28 @@ bool CacheIRCompiler::emitMathRoundToInt32Result(NumberOperandId inputId) {
   return true;
 }
 
+bool CacheIRCompiler::emitMathRandomResult(uint32_t rngOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister64 scratch2(allocator, masm);
+  AutoScratchFloatRegister scratchFloat(this);
+
+  StubFieldOffset offset(rngOffset, StubField::Type::RawPointer);
+  emitLoadStubField(offset, scratch1);
+
+  masm.randomDouble(scratch1, scratchFloat, scratch2,
+                    output.valueReg().toRegister64());
+
+  if (js::SupportDifferentialTesting()) {
+    masm.loadConstantDouble(0.0, scratchFloat);
+  }
+
+  masm.boxDouble(scratchFloat, output.valueReg(), scratchFloat);
+  return true;
+}
+
 bool CacheIRCompiler::emitInt32MinMax(bool isMax, Int32OperandId firstId,
                                       Int32OperandId secondId,
                                       Int32OperandId resultId) {
