@@ -3874,6 +3874,14 @@ locked_profiler_stream_json_for_this_process(
   nsTArray<mozilla::JSSourceEntry> jsSourceEntries =
       ActivePS::GatherJSSources(aLock);
 
+  // If there are sources, stream the sources table that is shared between the
+  // threads, and get the UUID to index mappings needed for frame serialization.
+  Maybe<nsTHashMap<SourceId, IndexIntoSourceTable>> sourceIdToIndexMap;
+  if (!jsSourceEntries.IsEmpty()) {
+    sourceIdToIndexMap.emplace(
+        buffer.StreamSourceTableToJSON(aWriter, jsSourceEntries));
+  }
+
   // Lists the samples for each thread profile
   aWriter.StartArrayProperty("threads");
   {

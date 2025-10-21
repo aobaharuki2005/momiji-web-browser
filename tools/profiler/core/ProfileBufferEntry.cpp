@@ -2512,5 +2512,53 @@ void ProfileBuffer::DiscardSamplesBeforeTime(double aTime) {
   (void)aTime;
 }
 
+nsTHashMap<SourceId, IndexIntoSourceTable>
+ProfileBuffer::StreamSourceTableToJSON(
+    SpliceableJSONWriter& aWriter,
+    const nsTArray<mozilla::JSSourceEntry>& aJSSourceEntries) const {
+  enum Schema : uint32_t { UUID = 0, FILENAME = 1 };
+  nsTHashMap<SourceId, IndexIntoSourceTable> sourceIdToIndexMap;
+
+  aWriter.StartObjectProperty("sources");
+  {
+    // Write the schema
+    {
+      JSONSchemaWriter schema(aWriter);
+      schema.WriteField("uuid");
+      schema.WriteField("filename");
+    }
+
+    // Write data array and build sourceId-to-index mapping
+    aWriter.StartArrayProperty("data");
+    uint32_t index = 0;
+    for (const auto& entry : aJSSourceEntries) {
+      // Build sourceId-to-index mapping
+      if (entry.sourceData.sourceId() != 0) {
+        MOZ_ASSERT(!sourceIdToIndexMap.Contains(entry.sourceData.sourceId()),
+                   "Duplicate sourceId detected! This indicates sourceId "
+                   "collision between different sources.");
+        sourceIdToIndexMap.InsertOrUpdate(entry.sourceData.sourceId(), index);
+      }
+
+      // Write [uuid, filename] entry
+      aWriter.StartArrayElement();
+      {
+        // TODO: Use AutoArraySchemaWithStringsWriter to write string indexes
+        // into string table once we have "process global" string table.
+        // Currently string tables are per-thread.
+        aWriter.StringElement(MakeStringSpan(entry.uuid.get()));
+        aWriter.StringElement(MakeStringSpan(entry.sourceData.filePath()));
+      }
+      aWriter.EndArray();
+
+      index++;
+    }
+    aWriter.EndArray();
+  }
+  aWriter.EndObject();
+
+  return sourceIdToIndexMap;
+}
+
 // END ProfileBuffer
 ////////////////////////////////////////////////////////////////////////
