@@ -22,6 +22,7 @@ for feature in gkrust_features:
 # compilation artifacts with gkrust.
 RUST_TESTS = [
     "crashreporter",
+    "dom_fragmentdirectives",
     "firefox-on-glean",
     "l10nregistry",
     "rsclientcerts-util",
