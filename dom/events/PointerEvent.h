@@ -41,20 +41,18 @@ class PointerEvent : public MouseEvent {
   PointerEvent* AsPointerEvent() final { return this; }
 
   int32_t PointerId();
-  double Width(CallerType aCallerType = CallerType::System) const;
-  double Height(CallerType aCallerType = CallerType::System) const;
-  float Pressure(CallerType aCallerType = CallerType::System);
-  float TangentialPressure(CallerType aCallerType = CallerType::System);
-  int32_t TiltX(CallerType aCallerType = CallerType::System);
-  int32_t TiltY(CallerType aCallerType = CallerType::System);
-  int32_t Twist(CallerType aCallerType = CallerType::System);
-  double AltitudeAngle(CallerType aCallerType = CallerType::System);
-  double AzimuthAngle(CallerType aCallerType = CallerType::System);
+  double Width() const;
+  double Height() const;
+  float Pressure();
+  float TangentialPressure();
+  int32_t TiltX();
+  int32_t TiltY();
+  int32_t Twist();
+  double AltitudeAngle();
+  double AzimuthAngle();
   bool IsPrimary();
-  void GetPointerType(
-      nsAString& aPointerType,
-      mozilla::dom::CallerType aCallerType = CallerType::System);
-  int32_t PersistentDeviceId(CallerType aCallerType = CallerType::System);
+  int32_t PersistentDeviceId();
+  void GetPointerType(nsAString& aPointerType);
   static bool EnableGetCoalescedEvents(JSContext* aCx, JSObject* aGlobal);
   void GetCoalescedEvents(nsTArray<RefPtr<PointerEvent>>& aPointerEvents);
   void GetPredictedEvents(nsTArray<RefPtr<PointerEvent>>& aPointerEvents);
@@ -65,11 +63,7 @@ class PointerEvent : public MouseEvent {
  private:
   // This method returns the boolean to indicate whether spoofing pointer
   // event for fingerprinting resistance.
-  bool ShouldResistFingerprinting(
-      CallerType aCallerType = CallerType::System) const;
-
-  uint16_t ResistantInputSource(
-      CallerType aCallerType = CallerType::System) const;
+  bool ShouldResistFingerprinting(bool aForPointerId = false) const;
 
   // When the instance is a trusted `pointermove` event but the widget event
   // does not have proper coalesced events (typically, the event is synthesized
