@@ -77,7 +77,9 @@ class ProfiledThreadData final {
       const ProfileBuffer& aBuffer, JSContext* aCx,
       mozilla::FailureLatch& aFailureLatch,
       ProfilerCodeAddressService* aService,
-      mozilla::ProgressLogger aProgressLogger);
+      mozilla::ProgressLogger aProgressLogger,
+      const nsTHashMap<SourceId, IndexIntoSourceTable>* aSourceIdToIndexMap =
+          nullptr);
 
   void StreamJSON(const ProfileBuffer& aBuffer, JSContext* aCx,
                   SpliceableJSONWriter& aWriter, const nsACString& aProcessName,
@@ -166,7 +168,9 @@ struct ThreadStreamingContext {
                          const ProfileBuffer& aBuffer, JSContext* aCx,
                          mozilla::FailureLatch& aFailureLatch,
                          ProfilerCodeAddressService* aService,
-                         mozilla::ProgressLogger aProgressLogger);
+                         mozilla::ProgressLogger aProgressLogger,
+                         const nsTHashMap<SourceId, IndexIntoSourceTable>*
+                             aSourceIdToIndexMap = nullptr);
 
   void FinalizeWriter();
 };
@@ -184,10 +188,12 @@ class ProcessStreamingContext final : public mozilla::FailureLatch {
 
   // Add the streaming context corresponding to each profiled thread. This
   // should be called exactly the number of times specified in the constructor.
-  void AddThreadStreamingContext(ProfiledThreadData& aProfiledThreadData,
-                                 const ProfileBuffer& aBuffer, JSContext* aCx,
-                                 ProfilerCodeAddressService* aService,
-                                 mozilla::ProgressLogger aProgressLogger);
+  void AddThreadStreamingContext(
+      ProfiledThreadData& aProfiledThreadData, const ProfileBuffer& aBuffer,
+      JSContext* aCx, ProfilerCodeAddressService* aService,
+      mozilla::ProgressLogger aProgressLogger,
+      const nsTHashMap<SourceId, IndexIntoSourceTable>* aSourceIdToIndexMap =
+          nullptr);
 
   // Retrieve the ThreadStreamingContext for a given thread id.
   // Returns null if that thread id doesn't correspond to any profiled thread.

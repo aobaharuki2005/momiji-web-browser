@@ -141,6 +141,12 @@ class ProfilingStackFrame {
   // ProfilingStackFrame object.
   mozilla::Atomic<uint64_t, mozilla::ReleaseAcquire> realmID_;
 
+  // ID of the script source for JS stack frames.
+  // Must not be used on non-JS frames; it'll contain either the default 0,
+  // or a leftover value from a previous JS stack frame that was using this
+  // ProfilingStackFrame object.
+  mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> sourceId_;
+
   // The bytecode offset for JS stack frames.
   // Must not be used on non-JS frames; it'll contain either the default 0,
   // or a leftover value from a previous JS stack frame that was using this
@@ -163,6 +169,8 @@ class ProfilingStackFrame {
     pcOffsetIfJS_ = offsetIfJS;
     uint64_t realmID = other.realmID_;
     realmID_ = realmID;
+    uint32_t sourceId = other.sourceId_;
+    sourceId_ = sourceId;
     uint32_t flagsAndCategory = other.flagsAndCategoryPair_;
     flagsAndCategoryPair_ = flagsAndCategory;
     return *this;
@@ -290,6 +298,7 @@ class ProfilingStackFrame {
     flagsAndCategoryPair_ =
         uint32_t(Flags::IS_LABEL_FRAME) |
         (uint32_t(aCategoryPair) << uint32_t(Flags::FLAGS_BITCOUNT)) | aFlags;
+    sourceId_ = 0;
     MOZ_ASSERT(isLabelFrame());
   }
 
@@ -306,12 +315,14 @@ class ProfilingStackFrame {
 
   template <JS::ProfilingCategoryPair Category, uint32_t ExtraFlags = 0>
   void initJsFrame(const char* aLabel, const char* aDynamicString,
-                   JSScript* aScript, jsbytecode* aPc, uint64_t aRealmID) {
+                   JSScript* aScript, jsbytecode* aPc, uint64_t aRealmID,
+                   uint32_t aSourceId) {
     label_ = aLabel;
     dynamicString_ = aDynamicString;
     spOrScript = aScript;
     pcOffsetIfJS_ = pcToOffset(aScript, aPc);
     realmID_ = aRealmID;
+    sourceId_ = aSourceId;
     flagsAndCategoryPair_ =
         (uint32_t(Category) << uint32_t(Flags::FLAGS_BITCOUNT)) |
         uint32_t(Flags::IS_JS_FRAME) | ExtraFlags;
@@ -350,6 +361,8 @@ class ProfilingStackFrame {
   void setPC(jsbytecode* pc);
 
   void trace(JSTracer* trc);
+
+  JS_PUBLIC_API uint32_t sourceId() const;
 
   // The offset of a pc into a script's code can actually be 0, so to
   // signify a nullptr pc, use a -1 index. This is checked against in
@@ -456,7 +469,8 @@ class JS_PUBLIC_API ProfilingStack final {
   }
 
   void pushJsFrame(const char* label, const char* dynamicString,
-                   JSScript* script, jsbytecode* pc, uint64_t aRealmID) {
+                   JSScript* script, jsbytecode* pc, uint64_t aRealmID,
+                   uint32_t aSourceId = 0) {
     // This thread is the only one that ever changes the value of
     // stackPointer. Only load the atomic once.
     uint32_t oldStackPointer = stackPointer;
@@ -466,7 +480,7 @@ class JS_PUBLIC_API ProfilingStack final {
     }
     frames[oldStackPointer]
         .initJsFrame<JS::ProfilingCategoryPair::JS_Interpreter>(
-            label, dynamicString, script, pc, aRealmID);
+            label, dynamicString, script, pc, aRealmID, aSourceId);
 
     // This must happen at the end, see the comment in pushLabelFrame.
     stackPointer = stackPointer + 1;

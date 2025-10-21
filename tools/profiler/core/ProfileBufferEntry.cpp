@@ -75,6 +75,11 @@ ProfileBufferEntry::ProfileBufferEntry(Kind aKind, uint64_t aUint64)
   memcpy(mStorage, &aUint64, sizeof(aUint64));
 }
 
+ProfileBufferEntry::ProfileBufferEntry(Kind aKind, uint32_t aUint32)
+    : mKind(aKind) {
+  memcpy(mStorage, &aUint32, sizeof(aUint32));
+}
+
 ProfileBufferEntry::ProfileBufferEntry(Kind aKind, ProfilerThreadId aThreadId)
     : mKind(aKind) {
   static_assert(std::is_trivially_copyable_v<ProfilerThreadId>);
@@ -114,6 +119,12 @@ int64_t ProfileBufferEntry::GetInt64() const {
 
 uint64_t ProfileBufferEntry::GetUint64() const {
   uint64_t result;
+  memcpy(&result, mStorage, sizeof(result));
+  return result;
+}
+
+uint32_t ProfileBufferEntry::GetUint32() const {
+  uint32_t result;
   memcpy(&result, mStorage, sizeof(result));
   return result;
 }
@@ -321,7 +332,8 @@ bool UniqueStacks::FrameKey::NormalFrameData::operator==(
   return mLocation == aOther.mLocation &&
          mRelevantForJS == aOther.mRelevantForJS &&
          mBaselineInterp == aOther.mBaselineInterp &&
-         mInnerWindowID == aOther.mInnerWindowID && mLine == aOther.mLine &&
+         mInnerWindowID == aOther.mInnerWindowID &&
+         mSourceId == aOther.mSourceId && mLine == aOther.mLine &&
          mColumn == aOther.mColumn && mCategoryPair == aOther.mCategoryPair;
 }
 
@@ -337,14 +349,17 @@ bool UniqueStacks::FrameKey::JITFrameData::operator==(
 // strings at the same indices.
 UniqueStacks::UniqueStacks(
     FailureLatch& aFailureLatch, JITFrameInfo&& aJITFrameInfo,
-    ProfilerCodeAddressService* aCodeAddressService /* = nullptr */)
+    ProfilerCodeAddressService* aCodeAddressService /* = nullptr */,
+    const nsTHashMap<SourceId, IndexIntoSourceTable>*
+        aSourceIdToIndexMap /* = nullptr */)
     : mUniqueStrings(std::move(aJITFrameInfo)
                          .MoveUniqueStringsWithNewFailureLatch(aFailureLatch)),
       mCodeAddressService(aCodeAddressService),
       mFrameTableWriter(aFailureLatch),
       mStackTableWriter(aFailureLatch),
       mJITInfoRanges(std::move(aJITFrameInfo)
-                         .MoveRangesWithNewFailureLatch(aFailureLatch)) {
+                         .MoveRangesWithNewFailureLatch(aFailureLatch)),
+      mSourceIdToIndexMap(aSourceIdToIndexMap) {
   if (!mUniqueStrings) {
     SetFailure("Did not get mUniqueStrings from JITFrameInfo");
     return;
@@ -504,7 +519,8 @@ void UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame) {
   AutoArraySchemaWithStringsWriter writer(mFrameTableWriter, *mUniqueStrings);
 
   const NormalFrameData& data = aFrame.mData.as<NormalFrameData>();
-  writer.StringElement(LOCATION, data.mLocation);
+  writer.StringElement(LOCATION,
+                       data.GetLocationWithSourceIndex(mSourceIdToIndexMap));
   writer.BoolElement(RELEVANT_FOR_JS, data.mRelevantForJS);
 
   // It's okay to convert uint64_t to double here because DOM always creates IDs
@@ -1143,7 +1159,10 @@ void ProfileBuffer::MaybeStreamExecutionTraceToJSON(
         }
 
         UniqueStacks::FrameKey newFrame(nsCString(name.get()), true, false,
-                                        event.functionEvent.realmID, Nothing{},
+                                        event.functionEvent.realmID,
+                                        // Even though it says scriptId, this is
+                                        // actually sourceId. See bug 1980369.
+                                        event.functionEvent.scriptId, Nothing{},
                                         Nothing{}, Some(categoryPair));
         maybeStack = uniqueStacks.AppendFrame(stack, newFrame);
         if (!maybeStack) {
@@ -1160,7 +1179,7 @@ void ProfileBuffer::MaybeStreamExecutionTraceToJSON(
       } else if (event.kind == JS::ExecutionTrace::EventKind::LabelEnter) {
         UniqueStacks::FrameKey newFrame(
             nsCString(&trace.stringBuffer[event.labelEvent.label]), true, false,
-            0, Nothing{}, Nothing{}, Some(JS::ProfilingCategoryPair::DOM));
+            0, 0, Nothing{}, Nothing{}, Some(JS::ProfilingCategoryPair::DOM));
         maybeStack = uniqueStacks.AppendFrame(stack, newFrame);
         if (!maybeStack) {
           writer.SetFailure("AppendFrame failure");
@@ -1409,6 +1428,12 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
               e.Next();
             }
 
+            uint32_t sourceId = 0;
+            if (e.Has() && e.Get().IsSourceId()) {
+              sourceId = uint64_t(e.Get().GetUint32());
+              e.Next();
+            }
+
             Maybe<unsigned> line;
             if (e.Has() && e.Get().IsLineNumber()) {
               line = Some(unsigned(e.Get().GetInt()));
@@ -1431,8 +1456,8 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
             maybeStack = uniqueStacks.AppendFrame(
                 stack,
                 UniqueStacks::FrameKey(std::move(frameLabel), relevantForJS,
-                                       isBaselineInterp, innerWindowID, line,
-                                       column, categoryPair));
+                                       isBaselineInterp, innerWindowID,
+                                       sourceId, line, column, categoryPair));
             if (!maybeStack) {
               writer.SetFailure("AppendFrame failure");
               return;
