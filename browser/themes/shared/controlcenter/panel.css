@@ -971,15 +971,21 @@
 #trustpanel-blockerView moz-button {
   --button-font-weight: normal;
   --button-alignment: inline-start;
+  --button-border-radius: var(--border-radius-small);
+  --focus-outline-offset: -2px;
   margin: var(--space-small);
   width: -moz-available;
-  -moz-context-properties: fill;
-  background-image: url(chrome://global/skin/icons/arrow-right.svg);
-  background-repeat: no-repeat;
-  background-position: right center;
 
-  &:-moz-locale-dir(rtl) {
+  &::part(button) {
+    -moz-context-properties: fill;
+    background-image: url(chrome://global/skin/icons/arrow-right.svg);
+    background-repeat: no-repeat;
+    background-position: right var(--space-large) center;
+    padding-inline-end: calc(var(--space-small) + var(--icon-size) + var(--space-large));
+  }
+
+  &:-moz-locale-dir(rtl)::part(button) {
     background-image: url(chrome://global/skin/icons/arrow-left.svg);
-    background-position-x: left;
+    background-position-x: left var(--space-large);
   }
 }
