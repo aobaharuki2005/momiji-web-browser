@@ -3016,49 +3016,44 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
   Maybe<PropertyInfo> prop;
   NativeGetPropKind kind =
       CanAttachNativeGetProp(cx_, proto, id, &holder, &prop, pc_);
+  if (kind == NativeGetPropKind::None) {
+    return AttachDecision::NoAction;
+  }
+
+  if (val_.isNumber()) {
+    writer.guardIsNumber(valId);
+  } else {
+    writer.guardNonDoubleType(valId, val_.type());
+  }
+  maybeEmitIdGuard(id);
+
+  auto* nproto = &proto->as<NativeObject>();
+  ObjOperandId protoId = writer.loadObject(nproto);
+
   switch (kind) {
-    case NativeGetPropKind::None:
-      return AttachDecision::NoAction;
-    case NativeGetPropKind::Missing:
+    case NativeGetPropKind::Missing: {
+      EmitMissingPropResult(writer, nproto, protoId);
+      writer.returnFromIC();
+
+      trackAttached("GetProp.PrimitiveMissing");
+      return AttachDecision::Attach;
+    }
     case NativeGetPropKind::Slot: {
-      auto* nproto = &proto->as<NativeObject>();
+      emitLoadDataPropertyResult(nproto, holder, id, *prop, protoId);
+      writer.returnFromIC();
 
-      if (val_.isNumber()) {
-        writer.guardIsNumber(valId);
-      } else {
-        writer.guardNonDoubleType(valId, val_.type());
-      }
-      maybeEmitIdGuard(id);
-
-      ObjOperandId protoId = writer.loadObject(nproto);
-      if (kind == NativeGetPropKind::Slot) {
-        emitLoadDataPropertyResult(nproto, holder, id, *prop, protoId);
-        writer.returnFromIC();
-        trackAttached("GetProp.PrimitiveSlot");
-      } else {
-        EmitMissingPropResult(writer, nproto, protoId);
-        writer.returnFromIC();
-        trackAttached("GetProp.PrimitiveMissing");
-      }
+      trackAttached("GetProp.PrimitiveSlot");
       return AttachDecision::Attach;
     }
     case NativeGetPropKind::ScriptedGetter:
     case NativeGetPropKind::NativeGetter: {
-      auto* nproto = &proto->as<NativeObject>();
-
-      if (val_.isNumber()) {
-        writer.guardIsNumber(valId);
-      } else {
-        writer.guardNonDoubleType(valId, val_.type());
-      }
-      maybeEmitIdGuard(id);
-
-      ObjOperandId protoId = writer.loadObject(nproto);
       emitCallGetterResult(kind, nproto, holder, id, *prop, protoId, valId);
 
       trackAttached("GetProp.PrimitiveGetter");
       return AttachDecision::Attach;
     }
+    case NativeGetPropKind::None:
+      break;
   }
 
   MOZ_CRASH("Bad NativeGetPropKind");
