@@ -20,11 +20,5 @@
     public static int d(...);
 }
 
-####################################################################################################
-# Mozilla Application Services
-####################################################################################################
-
--keep class mozilla.appservices.** { *; }
-
 # Keep code generated from Glean Metrics
 -keep class org.mozilla.fenix.GleanMetrics.** {  *; }
