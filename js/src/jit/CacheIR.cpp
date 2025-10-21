@@ -5710,16 +5710,15 @@ AttachDecision InstanceOfIRGenerator::tryAttachFunction() {
   // hasInstance hook will not change without the need to guard on the actual
   // property value.
   PropertyResult hasInstanceProp;
-  NativeObject* hasInstanceHolder = nullptr;
+  Rooted<NativeObject*> hasInstanceHolder(cx_);
   jsid hasInstanceID = PropertyKey::Symbol(cx_->wellKnownSymbols().hasInstance);
-  if (!LookupPropertyPure(cx_, fun, hasInstanceID, &hasInstanceHolder,
+  if (!LookupPropertyPure(cx_, fun, hasInstanceID, hasInstanceHolder.address(),
                           &hasInstanceProp) ||
       !hasInstanceProp.isNativeProperty()) {
     return AttachDecision::NoAction;
   }
 
-  JSObject& funProto = cx_->global()->getPrototype(JSProto_Function);
-  if (hasInstanceHolder != &funProto) {
+  if (hasInstanceHolder != &cx_->global()->getPrototype(JSProto_Function)) {
     return AttachDecision::NoAction;
   }
 
@@ -5734,7 +5733,21 @@ AttachDecision InstanceOfIRGenerator::tryAttachFunction() {
   // Look up the function's .prototype property.
   Maybe<PropertyInfo> prototypeProp = fun->lookupPure(cx_->names().prototype);
   if (prototypeProp.isNothing()) {
-    return AttachDecision::NoAction;
+    if (!fun->needsPrototypeProperty()) {
+      return AttachDecision::NoAction;
+    }
+    // The function does not have a (lazily resolved) .prototype property yet.
+    // If the LHS is a primitive, the fallback code in OrdinaryHasInstance will
+    // return before resolving this property. Our CacheIR implementation expects
+    // a .prototype property so we resolve it now.
+    bool hasProp;
+    if (!HasProperty(cx_, fun, cx_->names().prototype, &hasProp)) {
+      cx_->clearPendingException();
+      return AttachDecision::NoAction;
+    }
+    MOZ_ASSERT(hasProp);
+    prototypeProp = fun->lookupPure(cx_->names().prototype);
+    MOZ_ASSERT(prototypeProp);
   }
   if (!prototypeProp->isDataProperty()) {
     return AttachDecision::NoAction;
