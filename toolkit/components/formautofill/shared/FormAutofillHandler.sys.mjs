@@ -608,10 +608,7 @@ export class FormAutofillHandler {
             // Only reclear if the value was changed back to the original value.
             continue;
           }
-        } else if (
-          e.autofillState == FIELD_STATES.AUTO_FILLED &&
-          e.value === v
-        ) {
+        } else if (e.autofillState == FIELD_STATES.NORMAL || e.value) {
           // Nothing to do if the autofilled value wasn't cleared or the
           // element's autofill state has changed to NORMAL in the meantime
           continue;
