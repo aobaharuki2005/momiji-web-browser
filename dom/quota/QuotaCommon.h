@@ -1652,10 +1652,12 @@ template <typename Func>
 auto CallWithDelayedRetriesIfAccessDenied(Func&& aFunc, uint32_t aMaxRetries,
                                           uint32_t aDelayMs)
     -> Result<typename std::invoke_result_t<Func>::ok_type, nsresult> {
+  std::decay_t<Func> func = std::forward<Func>(aFunc);
+
   uint32_t retries = 0;
 
   while (true) {
-    auto result = std::forward<Func>(aFunc)();
+    auto result = std::invoke(func);
 
     if (result.isOk()) {
       return result;
