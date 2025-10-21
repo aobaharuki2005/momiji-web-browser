@@ -6,7 +6,6 @@
 
 use base64::prelude::*;
 use neqo_bin::server::{HttpServer, Runner};
-use neqo_common::Bytes;
 use neqo_common::{event::Provider, qdebug, qinfo, qtrace, Datagram, Header};
 use neqo_crypto::{generate_ech_keys, init_db, AllowZeroRtt, AntiReplay};
 use neqo_http3::{
@@ -76,7 +75,7 @@ struct Http3TestServer {
     webtransport_bidi_stream: HashSet<Http3OrWebTransportStream>,
     wt_unidi_conn_to_stream: HashMap<ConnectionRef, Http3OrWebTransportStream>,
     wt_unidi_echo_back: HashMap<Http3OrWebTransportStream, Http3OrWebTransportStream>,
-    received_datagram: Option<Bytes>,
+    received_datagram: Option<Vec<u8>>,
 }
 
 impl ::std::fmt::Display for Http3TestServer {
@@ -101,17 +100,17 @@ impl Http3TestServer {
         }
     }
 
-    fn new_response(&mut self, stream: Http3OrWebTransportStream, mut data: Vec<u8>, now: Instant) {
+    fn new_response(&mut self, stream: Http3OrWebTransportStream, mut data: Vec<u8>) {
         if data.len() == 0 {
-            let _ = stream.stream_close_send(now);
+            let _ = stream.stream_close_send();
             return;
         }
-        match stream.send_data(&data, now) {
+        match stream.send_data(&data) {
             Ok(sent) => {
                 if sent < data.len() {
                     self.responses.insert(stream, data.split_off(sent));
                 } else {
-                    let _ = stream.stream_close_send(now);
+                    let _ = stream.stream_close_send();
                 }
             }
             Err(e) => {
@@ -120,15 +119,15 @@ impl Http3TestServer {
         }
     }
 
-    fn handle_stream_writable(&mut self, stream: Http3OrWebTransportStream, now: Instant) {
+    fn handle_stream_writable(&mut self, stream: Http3OrWebTransportStream) {
         if let Some(data) = self.responses.get_mut(&stream) {
-            match stream.send_data(&data, now) {
+            match stream.send_data(&data) {
                 Ok(sent) => {
                     if sent < data.len() {
                         let new_d = (*data).split_off(sent);
                         *data = new_d;
                     } else {
-                        stream.stream_close_send(now).unwrap();
+                        stream.stream_close_send().unwrap();
                         self.responses.remove(&stream);
                     }
                 }
@@ -139,11 +138,12 @@ impl Http3TestServer {
         }
     }
 
-    fn maybe_close_session(&mut self, now: Instant) {
+    fn maybe_close_session(&mut self) {
+        let now = Instant::now();
         for (expires, sessions) in self.sessions_to_close.iter_mut() {
             if *expires <= now {
                 for s in sessions.iter_mut() {
-                    drop(s.close_session(0, "", now));
+                    drop(s.close_session(0, ""));
                 }
             }
         }
@@ -163,7 +163,7 @@ impl Http3TestServer {
             .retain(|expires, _| *expires >= now);
     }
 
-    fn maybe_create_wt_stream(&mut self, now: Instant) {
+    fn maybe_create_wt_stream(&mut self) {
         if self.sessions_to_create_stream.is_empty() {
             return;
         }
@@ -172,7 +172,7 @@ impl Http3TestServer {
         let wt_server_stream = session.create_stream(tuple.1).unwrap();
         if tuple.1 == StreamType::UniDi {
             if let Some(data) = tuple.2 {
-                self.new_response(wt_server_stream, data, now);
+                self.new_response(wt_server_stream, data);
             } else {
                 // relaying Http3ServerEvent::Data to uni streams
                 // slows down netwerk/test/unit/test_webtransport_simple.js
@@ -182,7 +182,7 @@ impl Http3TestServer {
             }
         } else {
             if let Some(data) = tuple.2 {
-                self.new_response(wt_server_stream, data, now);
+                self.new_response(wt_server_stream, data);
             } else {
                 self.webtransport_bidi_stream.insert(wt_server_stream);
             }
@@ -218,8 +218,8 @@ impl HttpServer for Http3TestServer {
 
     fn process_events(&mut self, now: Instant) {
         self.maybe_close_connection();
-        self.maybe_close_session(now);
-        self.maybe_create_wt_stream(now);
+        self.maybe_close_session();
+        self.maybe_create_wt_stream();
 
         while let Some(event) = self.server.next_event() {
             qtrace!("Event: {:?}", event);
@@ -262,7 +262,7 @@ impl HttpServer for Http3TestServer {
                                         ),
                                     ])
                                     .unwrap();
-                                self.new_response(stream, response_body, now);
+                                self.new_response(stream, response_body);
                             } else if path == "/RequestCancelled" {
                                 stream
                                     .stream_stop_sending(Error::HttpRequestCancelled.code())
@@ -308,7 +308,7 @@ impl HttpServer for Http3TestServer {
                                     .unwrap()
                                     .push(stream.conn.clone());
 
-                                self.new_response(stream, response_body, now);
+                                self.new_response(stream, response_body);
                             } else if path == "/.well-known/http-opportunistic" {
                                 let host_hdr = headers.iter().find(|&h| h.name() == ":authority");
                                 match host_hdr {
@@ -327,11 +327,11 @@ impl HttpServer for Http3TestServer {
                                                 ),
                                             ])
                                             .unwrap();
-                                        self.new_response(stream, content, now);
+                                        self.new_response(stream, content);
                                     }
                                     _ => {
                                         stream.send_headers(&default_headers).unwrap();
-                                        self.new_response(stream, default_ret, now);
+                                        self.new_response(stream, default_ret);
                                     }
                                 }
                             } else if path == "/no_body" {
@@ -342,7 +342,7 @@ impl HttpServer for Http3TestServer {
                                         Header::new("cache-control", "no-cache"),
                                     ])
                                     .unwrap();
-                                stream.stream_close_send(now).unwrap();
+                                stream.stream_close_send().unwrap();
                             } else if path == "/no_content_length" {
                                 stream
                                     .send_headers(&[
@@ -350,7 +350,7 @@ impl HttpServer for Http3TestServer {
                                         Header::new("cache-control", "no-cache"),
                                     ])
                                     .unwrap();
-                                self.new_response(stream, vec![b'a'; 4000], now);
+                                self.new_response(stream, vec![b'a'; 4000]);
                             } else if path == "/content_length_smaller" {
                                 stream
                                     .send_headers(&[
@@ -360,7 +360,7 @@ impl HttpServer for Http3TestServer {
                                         Header::new("content-length", 4000.to_string()),
                                     ])
                                     .unwrap();
-                                self.new_response(stream, vec![b'a'; 8000], now);
+                                self.new_response(stream, vec![b'a'; 8000]);
                             } else if path == "/post" {
                                 // Read all data before responding.
                                 self.posts.insert(stream, 0);
@@ -380,11 +380,7 @@ impl HttpServer for Http3TestServer {
                                             ),
                                         ])
                                         .unwrap();
-                                    self.new_response(
-                                        stream,
-                                        priority.value().as_bytes().to_vec(),
-                                        now,
-                                    );
+                                    self.new_response(stream, priority.value().as_bytes().to_vec());
                                 } else {
                                     stream
                                         .send_headers(&[
@@ -392,7 +388,7 @@ impl HttpServer for Http3TestServer {
                                             Header::new("cache-control", "no-cache"),
                                         ])
                                         .unwrap();
-                                    stream.stream_close_send(now).unwrap();
+                                    stream.stream_close_send().unwrap();
                                 }
                             } else if path == "/103_response" {
                                 if let Some(early_hint) =
@@ -414,16 +410,20 @@ impl HttpServer for Http3TestServer {
                                         Header::new("content-length", "0"),
                                     ])
                                     .unwrap();
-                                stream.stream_close_send(now).unwrap();
+                                stream.stream_close_send().unwrap();
                             } else if path == "/get_webtransport_datagram" {
-                                if let Some(dgram) = self.received_datagram.take() {
+                                if let Some(vec_ref) = self.received_datagram.as_ref() {
                                     stream
                                         .send_headers(&[
                                             Header::new(":status", "200"),
-                                            Header::new("content-length", dgram.len().to_string()),
+                                            Header::new(
+                                                "content-length",
+                                                vec_ref.len().to_string(),
+                                            ),
                                         ])
                                         .unwrap();
-                                    self.new_response(stream, dgram.as_ref().to_vec(), now);
+                                    self.new_response(stream, vec_ref.to_vec());
+                                    self.received_datagram = None;
                                 } else {
                                     stream
                                         .send_headers(&[
@@ -431,7 +431,7 @@ impl HttpServer for Http3TestServer {
                                             Header::new("cache-control", "no-cache"),
                                         ])
                                         .unwrap();
-                                    stream.stream_close_send(now).unwrap();
+                                    stream.stream_close_send().unwrap();
                                 }
                             } else if path == "/alt_svc_header" {
                                 if let Some(alt_svc) =
@@ -449,7 +449,7 @@ impl HttpServer for Http3TestServer {
                                             ),
                                         ])
                                         .unwrap();
-                                    self.new_response(stream, vec![b'a'; 100], now);
+                                    self.new_response(stream, vec![b'a'; 100]);
                                 } else {
                                     stream
                                         .send_headers(&[
@@ -457,7 +457,7 @@ impl HttpServer for Http3TestServer {
                                             Header::new("cache-control", "no-cache"),
                                         ])
                                         .unwrap();
-                                    self.new_response(stream, vec![b'a'; 100], now);
+                                    self.new_response(stream, vec![b'a'; 100]);
                                 }
                             } else {
                                 match path.trim_matches(|p| p == '/').parse::<usize>() {
@@ -470,18 +470,18 @@ impl HttpServer for Http3TestServer {
                                                 Header::new("content-length", v.to_string()),
                                             ])
                                             .unwrap();
-                                        self.new_response(stream, vec![b'a'; v], now);
+                                        self.new_response(stream, vec![b'a'; v]);
                                     }
                                     Err(_) => {
                                         stream.send_headers(&default_headers).unwrap();
-                                        self.new_response(stream, default_ret, now);
+                                        self.new_response(stream, default_ret);
                                     }
                                 }
                             }
                         }
                         _ => {
                             stream.send_headers(&default_headers).unwrap();
-                            self.new_response(stream, default_ret, now);
+                            self.new_response(stream, default_ret);
                         }
                     }
                 }
@@ -489,7 +489,7 @@ impl HttpServer for Http3TestServer {
                     // echo bidirectional input back to client
                     if self.webtransport_bidi_stream.contains(&stream) {
                         if stream.handler.borrow().state().active() {
-                            self.new_response(stream, data, now);
+                            self.new_response(stream, data);
                         }
                         break;
                     }
@@ -498,8 +498,8 @@ impl HttpServer for Http3TestServer {
                     // need to close or we hang
                     if self.wt_unidi_echo_back.contains_key(&stream) {
                         let echo_back = self.wt_unidi_echo_back.remove(&stream).unwrap();
-                        echo_back.send_data(&data, now).unwrap();
-                        echo_back.stream_close_send(now).unwrap();
+                        echo_back.send_data(&data).unwrap();
+                        echo_back.stream_close_send().unwrap();
                         break;
                     }
 
@@ -517,13 +517,11 @@ impl HttpServer for Http3TestServer {
                                     Header::new("content-length", default_ret.len().to_string()),
                                 ])
                                 .unwrap();
-                            self.new_response(stream, default_ret, now);
+                            self.new_response(stream, default_ret);
                         }
                     }
                 }
-                Http3ServerEvent::DataWritable { stream } => {
-                    self.handle_stream_writable(stream, now)
-                }
+                Http3ServerEvent::DataWritable { stream } => self.handle_stream_writable(stream),
                 Http3ServerEvent::StateChange { conn, state } => {
                     if matches!(state, neqo_http3::Http3State::Connected) {
                         let mut h = DefaultHasher::new();
@@ -557,37 +555,31 @@ impl HttpServer for Http3TestServer {
                             let path = ph.value();
                             qtrace!("Serve request {}", path);
                             if path == "/success" {
-                                session.response(&SessionAcceptAction::Accept, now).unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                             } else if path == "/redirect" {
                                 session
-                                    .response(
-                                        &SessionAcceptAction::Reject(
-                                            [
-                                                Header::new(":status", "302"),
-                                                Header::new("location", "/"),
-                                            ]
-                                            .to_vec(),
-                                        ),
-                                        now,
-                                    )
+                                    .response(&SessionAcceptAction::Reject(
+                                        [
+                                            Header::new(":status", "302"),
+                                            Header::new("location", "/"),
+                                        ]
+                                        .to_vec(),
+                                    ))
                                     .unwrap();
                             } else if path == "/reject" {
                                 session
-                                    .response(
-                                        &SessionAcceptAction::Reject(
-                                            [Header::new(":status", "404")].to_vec(),
-                                        ),
-                                        now,
-                                    )
+                                    .response(&SessionAcceptAction::Reject(
+                                        [Header::new(":status", "404")].to_vec(),
+                                    ))
                                     .unwrap();
                             } else if path == "/closeafter0ms" {
-                                session.response(&SessionAcceptAction::Accept, now).unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                                 if !self.sessions_to_close.contains_key(&now) {
                                     self.sessions_to_close.insert(now, Vec::new());
                                 }
                                 self.sessions_to_close.get_mut(&now).unwrap().push(session);
                             } else if path == "/closeafter100ms" {
-                                session.response(&SessionAcceptAction::Accept, now).unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                                 let expires = Instant::now() + Duration::from_millis(100);
                                 if !self.sessions_to_close.contains_key(&expires) {
                                     self.sessions_to_close.insert(expires, Vec::new());
@@ -597,21 +589,21 @@ impl HttpServer for Http3TestServer {
                                     .unwrap()
                                     .push(session);
                             } else if path == "/create_unidi_stream" {
-                                session.response(&SessionAcceptAction::Accept, now).unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                                 self.sessions_to_create_stream.push((
                                     session,
                                     StreamType::UniDi,
                                     None,
                                 ));
                             } else if path == "/create_unidi_stream_and_hello" {
-                                session.response(&SessionAcceptAction::Accept, now).unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                                 self.sessions_to_create_stream.push((
                                     session,
                                     StreamType::UniDi,
                                     Some(Vec::from("qwerty")),
                                 ));
                             } else if path == "/create_bidi_stream" {
-                                session.response(&SessionAcceptAction::Accept, now).unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                                 self.sessions_to_create_stream.push((
                                     session,
                                     StreamType::BiDi,
@@ -619,7 +611,7 @@ impl HttpServer for Http3TestServer {
                                 ));
                             } else if path == "/create_bidi_stream_and_hello" {
                                 self.webtransport_bidi_stream.clear();
-                                session.response(&SessionAcceptAction::Accept, now).unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                                 self.sessions_to_create_stream.push((
                                     session,
                                     StreamType::BiDi,
@@ -628,24 +620,21 @@ impl HttpServer for Http3TestServer {
                             } else if path == "/create_bidi_stream_and_large_data" {
                                 self.webtransport_bidi_stream.clear();
                                 let data: Vec<u8> = vec![1u8; 32 * 1024 * 1024];
-                                session.response(&SessionAcceptAction::Accept, now).unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                                 self.sessions_to_create_stream.push((
                                     session,
                                     StreamType::BiDi,
                                     Some(data),
                                 ));
                             } else {
-                                session.response(&SessionAcceptAction::Accept, now).unwrap();
+                                session.response(&SessionAcceptAction::Accept).unwrap();
                             }
                         }
                         _ => {
                             session
-                                .response(
-                                    &SessionAcceptAction::Reject(
-                                        [Header::new(":status", "404")].to_vec(),
-                                    ),
-                                    now,
-                                )
+                                .response(&SessionAcceptAction::Reject(
+                                    [Header::new(":status", "404")].to_vec(),
+                                ))
                                 .unwrap();
                         }
                     }
@@ -775,17 +764,17 @@ impl Http3ReverseProxyServer {
     }
 
     #[cfg(not(target_os = "android"))]
-    fn new_response(&mut self, stream: Http3OrWebTransportStream, mut data: Vec<u8>, now: Instant) {
+    fn new_response(&mut self, stream: Http3OrWebTransportStream, mut data: Vec<u8>) {
         if data.len() == 0 {
-            let _ = stream.stream_close_send(now);
+            let _ = stream.stream_close_send();
             return;
         }
-        match stream.send_data(&data, now) {
+        match stream.send_data(&data) {
             Ok(sent) => {
                 if sent < data.len() {
                     self.responses.insert(stream, data.split_off(sent));
                 } else {
-                    stream.stream_close_send(now).unwrap();
+                    stream.stream_close_send().unwrap();
                 }
             }
             Err(e) => {
@@ -795,15 +784,15 @@ impl Http3ReverseProxyServer {
         }
     }
 
-    fn handle_stream_writable(&mut self, stream: Http3OrWebTransportStream, now: Instant) {
+    fn handle_stream_writable(&mut self, stream: Http3OrWebTransportStream) {
         if let Some(data) = self.responses.get_mut(&stream) {
-            match stream.send_data(&data, now) {
+            match stream.send_data(&data) {
                 Ok(sent) => {
                     if sent < data.len() {
                         let new_d = (*data).split_off(sent);
                         *data = new_d;
                     } else {
-                        stream.stream_close_send(now).unwrap();
+                        stream.stream_close_send().unwrap();
                         self.responses.remove(&stream);
                     }
                 }
@@ -926,7 +915,7 @@ impl Http3ReverseProxyServer {
     }
 
     #[cfg(not(target_os = "android"))]
-    fn maybe_process_response(&mut self, now: Instant) {
+    fn maybe_process_response(&mut self) {
         let mut data_to_send = HashMap::new();
         self.response_to_send
             .retain(|id, receiver| match receiver.try_recv() {
@@ -942,7 +931,7 @@ impl Http3ReverseProxyServer {
             qtrace!("response headers: {:?}", header);
             match stream.send_headers(&header) {
                 Ok(()) => {
-                    self.new_response(stream, data, now);
+                    self.new_response(stream, data);
                 }
                 _ => {}
             }
@@ -977,9 +966,9 @@ impl HttpServer for Http3ReverseProxyServer {
         output
     }
 
-    fn process_events(&mut self, now: Instant) {
+    fn process_events(&mut self, _now: Instant) {
         #[cfg(not(target_os = "android"))]
-        self.maybe_process_response(now);
+        self.maybe_process_response();
         while let Some(event) = self.server.next_event() {
             qtrace!("Event: {:?}", event);
             match event {
@@ -1053,9 +1042,7 @@ impl HttpServer for Http3ReverseProxyServer {
                         }
                     }
                 }
-                Http3ServerEvent::DataWritable { stream } => {
-                    self.handle_stream_writable(stream, now)
-                }
+                Http3ServerEvent::DataWritable { stream } => self.handle_stream_writable(stream),
                 Http3ServerEvent::StateChange { .. } | Http3ServerEvent::PriorityUpdate { .. } => {}
                 Http3ServerEvent::StreamReset { stream, error } => {
                     qtrace!("Http3ServerEvent::StreamReset {:?} {:?}", stream, error);
@@ -1110,7 +1097,7 @@ impl HttpServer for Http3ConnectProxyServer {
         self.server.process_multiple(dgrams, now, max_datagrams)
     }
 
-    fn process_events(&mut self, now: Instant) {
+    fn process_events(&mut self, _now: Instant) {
         while let Some(event) = self.server.next_event() {
             qtrace!("Event: {:?}", event);
             match event {
@@ -1161,7 +1148,7 @@ impl HttpServer for Http3ConnectProxyServer {
                                     Header::new("cache-control", "no-cache"),
                                 ])
                                 .unwrap();
-                            stream.stream_close_send(now).unwrap();
+                            stream.stream_close_send().unwrap();
                             return;
                         }
                     };
@@ -1201,7 +1188,7 @@ impl HttpServer for Http3ConnectProxyServer {
                     let tcp_stream = self.tcp_streams.get_mut(&stream.stream_id()).unwrap();
                     while !tcp_stream.recv_buffer.is_empty() {
                         let sent = stream
-                            .send_data(&tcp_stream.recv_buffer.make_contiguous(), now)
+                            .send_data(&tcp_stream.recv_buffer.make_contiguous())
                             .unwrap();
                         qtrace!("tcp_stream send to client sent={}", sent);
                         if sent == 0 {
@@ -1214,7 +1201,7 @@ impl HttpServer for Http3ConnectProxyServer {
                     session,
                     headers,
                 }) => {
-                    session.response(&SessionAcceptAction::Accept, now).unwrap();
+                    session.response(&SessionAcceptAction::Accept).unwrap();
 
                     let host_hdr = headers.iter().find(|&h| h.name() == ":path").unwrap();
                     let path_parts: Vec<&str> = host_hdr.value().split('/').collect();
@@ -1312,10 +1299,7 @@ impl HttpServer for Http3ConnectProxyServer {
                             while !stream.recv_buffer.is_empty() {
                                 let sent = stream
                                     .session
-                                    .send_data(
-                                        &stream.recv_buffer.make_contiguous(),
-                                        Instant::now(),
-                                    )
+                                    .send_data(&stream.recv_buffer.make_contiguous())
                                     .unwrap();
                                 qdebug!("TCP: stream send to client sent={}", sent);
                                 if sent == 0 {
@@ -1383,14 +1367,14 @@ impl HttpServer for Http3ConnectProxyServer {
             }
 
             while let Some(datagram) = socket.send_buffer.pop_front() {
-                match socket.socket.poll_send(cx, datagram.as_ref()) {
+                match socket.socket.poll_send(cx, datagram.as_slice()) {
                     Poll::Ready(Ok(0)) | Poll::Pending => {
                         socket.send_buffer.push_front(datagram);
                         break;
                     }
                     Poll::Ready(Ok(n)) => {
                         assert_eq!(n, datagram.len());
-                        qinfo!("Sent {}/{} bytes to origin", n, datagram.len());
+                        qinfo!("Sent {}/{} bytes to origin", n, datagram.as_slice().len());
                         progressed = true;
                     }
                     Poll::Ready(Err(e)) => {
@@ -1419,7 +1403,7 @@ struct TcpStream {
 
 struct UdpSocket {
     session: ConnectUdpRequest,
-    send_buffer: VecDeque<Bytes>,
+    send_buffer: VecDeque<Vec<u8>>,
     socket: tokio::net::UdpSocket,
 }
 
