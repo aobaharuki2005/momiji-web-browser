@@ -469,7 +469,6 @@ AttachDecision GetPropIRGenerator::tryAttachStub() {
       TRY_ATTACH(tryAttachDataView(obj, objId, id));
       TRY_ATTACH(tryAttachArrayBufferMaybeShared(obj, objId, id));
       TRY_ATTACH(tryAttachRegExp(obj, objId, id));
-      TRY_ATTACH(tryAttachMap(obj, objId, id));
       TRY_ATTACH(tryAttachNative(obj, objId, id, receiverId));
       TRY_ATTACH(tryAttachModuleNamespace(obj, objId, id));
       TRY_ATTACH(tryAttachWindowProxy(obj, objId, id));
@@ -2775,53 +2774,6 @@ AttachDecision GetPropIRGenerator::tryAttachRegExp(HandleObject obj,
   writer.returnFromIC();
 
   trackAttached("GetProp.RegExpFlag");
-  return AttachDecision::Attach;
-}
-
-AttachDecision GetPropIRGenerator::tryAttachMap(HandleObject obj,
-                                                ObjOperandId objId,
-                                                HandleId id) {
-  if (!obj->is<MapObject>()) {
-    return AttachDecision::NoAction;
-  }
-  auto* mapObj = &obj->as<MapObject>();
-
-  if (mode_ != ICState::Mode::Specialized) {
-    return AttachDecision::NoAction;
-  }
-
-  // Receiver should be the object.
-  if (isSuper()) {
-    return AttachDecision::NoAction;
-  }
-
-  if (!id.isAtom(cx_->names().size)) {
-    return AttachDecision::NoAction;
-  }
-
-  NativeObject* holder = nullptr;
-  Maybe<PropertyInfo> prop;
-  NativeGetPropKind kind =
-      CanAttachNativeGetProp(cx_, obj, id, &holder, &prop, pc_);
-  if (kind != NativeGetPropKind::NativeGetter) {
-    return AttachDecision::NoAction;
-  }
-
-  auto& fun = holder->getGetter(*prop)->as<JSFunction>();
-  if (!MapObject::isOriginalSizeGetter(fun.native())) {
-    return AttachDecision::NoAction;
-  }
-
-  maybeEmitIdGuard(id);
-
-  // Emit all the normal guards for calling this native, but specialize
-  // callNativeGetterResult.
-  emitCallGetterResultGuards(mapObj, holder, id, *prop, objId);
-
-  writer.mapSizeResult(objId);
-  writer.returnFromIC();
-
-  trackAttached("GetProp.MapSize");
   return AttachDecision::Attach;
 }
 
@@ -11143,6 +11095,35 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMapSet() {
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachMapSize() {
+  // Ensure |this| is a MapObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<MapObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Expecting no arguments.
+  if (args_.length() != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId = initializeInputOperand();
+
+  // Guard callee is the 'size' native function.
+  ObjOperandId calleeId = emitNativeCalleeGuard(argcId);
+
+  // Guard |this| is a MapObject.
+  ValOperandId thisValId = loadThis(calleeId);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+  emitOptimisticClassGuard(objId, &thisval_.toObject(), GuardClassKind::Map);
+
+  writer.mapSizeResult(objId);
+  writer.returnFromIC();
+
+  trackAttached("MapSize");
+  return AttachDecision::Attach;
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachWeakMapGet() {
   // Ensure |this| is a WeakMapObject.
   if (!thisval_.isObject() || !thisval_.toObject().is<WeakMapObject>()) {
@@ -13429,6 +13410,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachMapDelete();
     case InlinableNative::MapSet:
       return tryAttachMapSet();
+    case InlinableNative::MapSize:
+      return tryAttachMapSize();
 
     // Date natives and intrinsics.
     case InlinableNative::DateGetTime:

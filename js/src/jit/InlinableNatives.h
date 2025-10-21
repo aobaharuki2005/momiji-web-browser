@@ -108,6 +108,7 @@
   _(MapGet)                                        \
   _(MapHas)                                        \
   _(MapSet)                                        \
+  _(MapSize)                                       \
                                                    \
   _(MathAbs)                                       \
   _(MathFloor)                                     \
