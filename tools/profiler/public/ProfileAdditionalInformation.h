@@ -16,6 +16,7 @@
 
 #include "SharedLibraries.h"
 #include "js/Value.h"
+#include "js/ProfilingSources.h"
 #include "nsString.h"
 
 namespace IPC {
