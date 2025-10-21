@@ -25,6 +25,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
+import org.mozilla.fenix.nimbus.DefaultBrowserPrompt
 import org.mozilla.fenix.nimbus.FakeNimbusEventStore
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
@@ -1152,7 +1153,7 @@ class SettingsTest {
         settings.lastSetAsDefaultPromptShownTimeInMillis = System.currentTimeMillis()
         settings.coldStartsBetweenSetAsDefaultPrompts = 5
 
-        assertFalse(settings.shouldShowSetAsDefaultPrompt)
+        assertFalse(settings.shouldShowSetAsDefaultPrompt())
     }
 
     @Test
@@ -1161,7 +1162,7 @@ class SettingsTest {
         settings.lastSetAsDefaultPromptShownTimeInMillis = 0L
         settings.coldStartsBetweenSetAsDefaultPrompts = 5
 
-        assertFalse(settings.shouldShowSetAsDefaultPrompt)
+        assertFalse(settings.shouldShowSetAsDefaultPrompt())
     }
 
     @Test
@@ -1170,7 +1171,7 @@ class SettingsTest {
         settings.lastSetAsDefaultPromptShownTimeInMillis = System.currentTimeMillis() - 1000
         settings.coldStartsBetweenSetAsDefaultPrompts = 5
 
-        assertFalse(settings.shouldShowSetAsDefaultPrompt)
+        assertFalse(settings.shouldShowSetAsDefaultPrompt())
     }
 
     @Test
@@ -1179,7 +1180,7 @@ class SettingsTest {
         settings.lastSetAsDefaultPromptShownTimeInMillis = 0L
         settings.coldStartsBetweenSetAsDefaultPrompts = 1
 
-        assertFalse(settings.shouldShowSetAsDefaultPrompt)
+        assertFalse(settings.shouldShowSetAsDefaultPrompt())
     }
 
     @Test
@@ -1188,7 +1189,67 @@ class SettingsTest {
         settings.lastSetAsDefaultPromptShownTimeInMillis = 0L
         settings.coldStartsBetweenSetAsDefaultPrompts = 5 // More than required cold starts
 
-        assertTrue(settings.shouldShowSetAsDefaultPrompt)
+        assertTrue(settings.shouldShowSetAsDefaultPrompt())
+    }
+
+    @Test
+    fun `GIVEN other conditions are valid WHEN the default browser prompt is disabled THEN shouldShowSetAsDefaultPrompt is false`() {
+        settings.numberOfSetAsDefaultPromptShownTimes = 1
+        settings.lastSetAsDefaultPromptShownTimeInMillis = 0L
+        settings.coldStartsBetweenSetAsDefaultPrompts = 5 // More than required cold starts
+
+        assertFalse(
+            settings.shouldShowSetAsDefaultPrompt(
+                DefaultBrowserPrompt(
+                    enabled = false,
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN other conditions are valid WHEN the days between prompts is null THEN the value is ignored`() {
+        settings.numberOfSetAsDefaultPromptShownTimes = 1
+        settings.lastSetAsDefaultPromptShownTimeInMillis = System.currentTimeMillis()
+        settings.coldStartsBetweenSetAsDefaultPrompts = 5
+
+        assertTrue(
+            settings.shouldShowSetAsDefaultPrompt(
+                DefaultBrowserPrompt(
+                    daysBetweenPrompts = null,
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN other conditions are valid WHEN max prompts shown is null THEN the value is ignored`() {
+        settings.numberOfSetAsDefaultPromptShownTimes = 10
+        settings.lastSetAsDefaultPromptShownTimeInMillis = 0L
+        settings.coldStartsBetweenSetAsDefaultPrompts = 5
+
+        assertTrue(
+            settings.shouldShowSetAsDefaultPrompt(
+                DefaultBrowserPrompt(
+                    maxPromptsShown = null,
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN other conditions are valid WHEN cold starts between prompts is null THEN the value is ignored`() {
+        settings.numberOfSetAsDefaultPromptShownTimes = 1
+        settings.lastSetAsDefaultPromptShownTimeInMillis = 0L
+        settings.coldStartsBetweenSetAsDefaultPrompts = 0
+
+        assertTrue(
+            settings.shouldShowSetAsDefaultPrompt(
+                DefaultBrowserPrompt(
+                    coldStartsBetweenPrompts = null,
+                ),
+            ),
+        )
     }
 
     @Test
