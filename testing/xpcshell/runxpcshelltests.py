@@ -2186,6 +2186,10 @@ class XPCShellTests:
             "profiler": self.profiler,
         }
 
+        # Only set retry if explicitly provided (avoid overriding default behavior)
+        if options.get("retry") is not None:
+            kwargs["retry"] = options.get("retry")
+
         if self.sequential:
             # Allow user to kill hung xpcshell subprocess with SIGINT
             # when we are only running tests sequentially.
