@@ -9,3 +9,13 @@ function testMathRandom() {
   }
 }
 testMathRandom();
+
+function testDateGetTime() {
+  Object.defineProperty(Date.prototype, "time", {get: Date.prototype.getTime});
+
+  var d = new Date(0);
+  for (var i = 0; i < 100; ++i) {
+    assertEq(d.time, 0);
+  }
+}
+testDateGetTime();
