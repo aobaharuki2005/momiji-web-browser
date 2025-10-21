@@ -104,7 +104,6 @@ support-files = ["migration_emptyValue_profile.zip",]
 ["test_slowStorageInitialization.js"]
 
 ["test_snapshotting.js"]
-requesttimeoutfactor = 4
 
 ["test_stringLength.js"]
 prefs = ["dom.storage.enable_migration_from_unsupported_legacy_implementation=true"]

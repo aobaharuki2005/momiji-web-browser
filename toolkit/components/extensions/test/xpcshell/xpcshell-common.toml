@@ -264,7 +264,6 @@ run-sequentially = ["os == 'mac'"] # frequent timeouts in parallel on Mac
 ["test_ext_dnr_startup_cache.js"]
 
 ["test_ext_dnr_static_rules.js"]
-requesttimeoutfactor = 4 # Prevent TV job failures on Android builds.
 
 ["test_ext_dnr_static_rules_limits.js"]
 
@@ -529,7 +528,6 @@ skip-if = ["os == 'android' && debug"]
 ["test_ext_scripting_mv2.js"]
 
 ["test_ext_scripting_persistAcrossSessions.js"]
-requesttimeoutfactor = 2 # Needed for Android + TV (chaos mode) - bug 1899777
 
 ["test_ext_scripting_startupCache.js"]
 
@@ -651,7 +649,6 @@ skip-if = ["os == 'android'"] # Bug 1763197
 
 ["test_ext_webRequest_auth.js"]
 skip-if = ["os == 'android' && debug"]
-requesttimeoutfactor = 4 # Prevents TV job failures on Android builds.
 
 ["test_ext_webRequest_cached.js"]
 skip-if = ["os == 'android'"] # Bug 1573511

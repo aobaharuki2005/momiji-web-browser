@@ -43,7 +43,6 @@ run-if = ["false"] # Only used for recreating URLSearchParams_profile.zip
 ["test_cleanup_transaction.js"]
 
 ["test_clear_object_store_with_indexes.js"]
-requesttimeoutfactor = 2
 run-sequentially = [
   "os == 'mac'", # frequent parallel fail on Mac
   "os == 'linux'", # frequent parallel fail on Linux

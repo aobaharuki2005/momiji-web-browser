@@ -21,8 +21,6 @@ skip-if = [
   "debug",
   "os == 'win' && ccov",
 ]
-# These tests do take a little longer on Linux ccov, so allow that here.
-requesttimeoutfactor = 2
 
 ["test_distributions.js"]
 
