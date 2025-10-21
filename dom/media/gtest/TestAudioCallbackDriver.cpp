@@ -145,7 +145,7 @@ void TestSlowStart(const TrackRate aRate) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
   MockCubeb* cubeb = new MockCubeb();
   cubeb->SetStreamStartFreezeEnabled(true);
   auto unforcer = WaitFor(cubeb->ForceAudioThread()).unwrap();
-  Unused << unforcer;
+  (void)unforcer;
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
 
   RefPtr<AudioCallbackDriver> driver;

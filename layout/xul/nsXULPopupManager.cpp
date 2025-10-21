@@ -1852,8 +1852,8 @@ void nsXULPopupManager::FirePopupHidingEvent(Element* aPopup,
                                              HidePopupOptions aOptions) {
   nsCOMPtr<nsIContent> popup = aPopup;
   RefPtr<PresShell> presShell = aPresContext->PresShell();
-  Unused << presShell;  // This presShell may be keeping things alive
-                        // on non GTK platforms
+  (void)presShell;  // This presShell may be keeping things alive
+                    // on non GTK platforms
 
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, eXULPopupHiding, nullptr,
@@ -1957,7 +1957,7 @@ bool nsXULPopupManager::IsPopupOpen(Element* aPopup) {
                      item->Frame()->PopupState() == ePopupHiding ||
                      item->Frame()->PopupState() == ePopupInvisible,
                  "popup in open list not actually open");
-    Unused << item;
+    (void)item;
     return true;
   }
   return false;
@@ -3087,7 +3087,7 @@ nsXULMenuCommandEvent::Run() {
       presContext ? presContext->PresShell() : nullptr;
   RefPtr<nsViewManager> kungFuDeathGrip =
       presShell ? presShell->GetViewManager() : nullptr;
-  Unused << kungFuDeathGrip;  // Not referred to directly within this function
+  (void)kungFuDeathGrip;  // Not referred to directly within this function
 
   // Deselect ourselves.
   if (mCloseMenuMode != CloseMenuMode_None) {

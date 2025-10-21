@@ -85,7 +85,7 @@ BounceTrackingProtection::GetSingleton() {
     RunOnShutdown([] {
       if (sBounceTrackingProtection &&
           sBounceTrackingProtection->mRemoteExceptionList) {
-        Unused << sBounceTrackingProtection->mRemoteExceptionList->Shutdown();
+        (void)sBounceTrackingProtection->mRemoteExceptionList->Shutdown();
       }
       sBounceTrackingProtection = nullptr;
     });
@@ -1018,7 +1018,7 @@ BounceTrackingProtection::PurgeBounceTrackers() {
                   // MODE_ENABLED so we know in Nimbus when a client would have
                   // been exposed to BTP had it been enabled. This enables us to
                   // compare the control and treatment branches with exposure.
-                  Unused << NimbusFeatures::RecordExposureEvent(
+                  (void)NimbusFeatures::RecordExposureEvent(
                       "bounceTrackingProtection"_ns, false);
 
                   if (StaticPrefs::privacy_bounceTrackingProtection_mode() ==

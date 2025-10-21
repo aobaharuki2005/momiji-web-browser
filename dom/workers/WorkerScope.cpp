@@ -39,7 +39,6 @@
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BindingUtils.h"

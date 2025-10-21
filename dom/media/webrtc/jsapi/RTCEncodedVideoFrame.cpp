@@ -18,7 +18,6 @@
 #include "jsapi/RTCEncodedFrameBase.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/Unused.h"
 #include "mozilla/dom/RTCEncodedVideoFrameBinding.h"
 #include "mozilla/dom/RTCRtpScriptTransformer.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
@@ -91,7 +90,7 @@ void RTCEncodedVideoFrame::InitMetadata() {
   }
   mMetadata.mDependencies.Construct();
   for (const auto dep : metadata.GetFrameDependencies()) {
-    Unused << mMetadata.mDependencies.Value().AppendElement(
+    (void)mMetadata.mDependencies.Value().AppendElement(
         static_cast<unsigned long long>(dep), fallible);
   }
   mMetadata.mWidth.Construct(metadata.GetWidth());
@@ -106,8 +105,7 @@ void RTCEncodedVideoFrame::InitMetadata() {
   mMetadata.mPayloadType.Construct(videoFrame.GetPayloadType());
   mMetadata.mContributingSources.Construct();
   for (const auto csrc : metadata.GetCsrcs()) {
-    Unused << mMetadata.mContributingSources.Value().AppendElement(csrc,
-                                                                   fallible);
+    (void)mMetadata.mContributingSources.Value().AppendElement(csrc, fallible);
   }
 
   // The metadata timestamp is different, and not presently present in the

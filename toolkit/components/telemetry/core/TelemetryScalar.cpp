@@ -15,7 +15,6 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TelemetryComms.h"
-#include "mozilla/Unused.h"
 #include "nsBaseHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsContentUtils.h"
@@ -314,16 +313,12 @@ class ScalarBase {
   virtual ~ScalarBase() = default;
 
   // Convenience methods used by the C++ API.
-  virtual void SetValue(uint32_t aValue) {
-    mozilla::Unused << HandleUnsupported();
-  }
+  virtual void SetValue(uint32_t aValue) { (void)HandleUnsupported(); }
   virtual ScalarResult SetValue(const nsAString& aValue) {
     return HandleUnsupported();
   }
-  virtual void SetValue(bool aValue) { mozilla::Unused << HandleUnsupported(); }
-  virtual void AddValue(uint32_t aValue) {
-    mozilla::Unused << HandleUnsupported();
-  }
+  virtual void SetValue(bool aValue) { (void)HandleUnsupported(); }
+  virtual void AddValue(uint32_t aValue) { (void)HandleUnsupported(); }
 
   // GetValue is used to get the value of the scalar when persisting it to JS.
   virtual nsresult GetValue(const nsACString& aStoreName, bool aClearStore,
@@ -1321,7 +1316,7 @@ void internal_BroadcastDefinitions(
 
   // Broadcast the definitions to the other content processes.
   for (auto parent : parents) {
-    mozilla::Unused << parent->SendAddDynamicScalars(scalarDefs);
+    (void)parent->SendAddDynamicScalars(scalarDefs);
   }
 }
 

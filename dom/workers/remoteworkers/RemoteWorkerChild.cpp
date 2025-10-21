@@ -19,7 +19,6 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
-#include "mozilla/Unused.h"
 #include "mozilla/dom/FetchEventOpProxyChild.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/dom/MessagePort.h"
@@ -154,7 +153,7 @@ RemoteWorkerChild::~RemoteWorkerChild() {
 void RemoteWorkerChild::ActorDestroy(ActorDestroyReason) {
   auto launcherData = mLauncherData.Access();
 
-  Unused << NS_WARN_IF(!launcherData->mTerminationPromise.IsEmpty());
+  (void)NS_WARN_IF(!launcherData->mTerminationPromise.IsEmpty());
   launcherData->mTerminationPromise.RejectIfExists(NS_ERROR_DOM_ABORT_ERR,
                                                    __func__);
 
@@ -208,7 +207,7 @@ void RemoteWorkerChild::ExecWorker(
 
         // Creation failure will already have been reported via the method
         // above internally using ScopeExit.
-        Unused << NS_WARN_IF(NS_FAILED(rv));
+        (void)NS_WARN_IF(NS_FAILED(rv));
       });
 
   MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
@@ -225,7 +224,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(
   // initialized.
   IndexedDatabaseManager* idm = IndexedDatabaseManager::GetOrCreate();
   if (idm) {
-    Unused << NS_WARN_IF(NS_FAILED(idm->EnsureLocale()));
+    (void)NS_WARN_IF(NS_FAILED(idm->EnsureLocale()));
   } else {
     NS_WARNING("Failed to get IndexedDatabaseManager!");
   }
@@ -410,7 +409,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
         __func__, [workerTarget,
                    initializeWorkerRunnable = std::move(runnable)]() mutable {
-          Unused << NS_WARN_IF(NS_FAILED(
+          (void)NS_WARN_IF(NS_FAILED(
               workerTarget->Dispatch(initializeWorkerRunnable.forget())));
         });
 
@@ -505,7 +504,7 @@ void RemoteWorkerChild::CreationSucceededOrFailedOnAnyThread(
           return;
         }
 
-        Unused << self->SendCreated(didCreationSucceed);
+        (void)self->SendCreated(didCreationSucceed);
         launcherData->mDidSendCreated = true;
       });
 
@@ -555,7 +554,7 @@ void RemoteWorkerChild::ErrorPropagation(const ErrorValue& aValue) {
     return;
   }
 
-  Unused << SendError(aValue);
+  (void)SendError(aValue);
 }
 
 void RemoteWorkerChild::ErrorPropagationDispatch(nsresult aError) {
@@ -617,7 +616,7 @@ void RemoteWorkerChild::NotifyLock(bool aCreated) {
           return;
         }
 
-        Unused << self->SendNotifyLock(aCreated);
+        (void)self->SendNotifyLock(aCreated);
       });
 
   GetActorEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
@@ -630,7 +629,7 @@ void RemoteWorkerChild::NotifyWebTransport(bool aCreated) {
           return;
         }
 
-        Unused << self->SendNotifyWebTransport(aCreated);
+        (void)self->SendNotifyWebTransport(aCreated);
       });
 
   GetActorEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
@@ -711,7 +710,7 @@ void RemoteWorkerChild::TransitionStateFromCanceledToKilled() {
     launcherData->mTerminationPromise.ResolveIfExists(true, __func__);
 
     if (self->CanSend()) {
-      Unused << self->SendClose();
+      (void)self->SendClose();
     }
   });
 

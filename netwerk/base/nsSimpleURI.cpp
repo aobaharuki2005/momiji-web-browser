@@ -81,7 +81,7 @@ nsresult nsSimpleURI::ReadPrivate(nsIObjectInputStream* aStream) {
   bool isMutable;
   rv = aStream->ReadBoolean(&isMutable);
   if (NS_FAILED(rv)) return rv;
-  Unused << isMutable;
+  (void)isMutable;
 
   nsAutoCString scheme;
   rv = aStream->ReadCString(scheme);

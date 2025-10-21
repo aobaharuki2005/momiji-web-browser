@@ -258,7 +258,7 @@ nsCString RemoteDecoderChild::GetCodecName() const {
 
 void RemoteDecoderChild::SetSeekThreshold(const media::TimeUnit& aTime) {
   AssertOnManagerThread();
-  Unused << SendSetSeekThreshold(aTime);
+  (void)SendSetSeekThreshold(aTime);
 }
 
 MediaDataDecoder::ConversionRequired RemoteDecoderChild::NeedsConversion()

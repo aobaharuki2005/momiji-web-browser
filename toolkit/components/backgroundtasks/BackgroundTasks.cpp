@@ -19,7 +19,6 @@
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/LateWriteChecks.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
 
 namespace mozilla {
 
@@ -67,7 +66,7 @@ void BackgroundTasks::Shutdown() {
         }
       }
 
-      Unused << sSingleton->mProfD->Remove(/* aRecursive */ true);
+      (void)sSingleton->mProfD->Remove(/* aRecursive */ true);
     } else {
       // Log that the non-ephemeral profile is not being removed.
       if (MOZ_LOG_TEST(sBackgroundTasksLog, mozilla::LogLevel::Debug)) {

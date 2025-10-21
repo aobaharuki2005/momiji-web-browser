@@ -1056,7 +1056,7 @@ nsresult PrototypeDocumentContentSink::ExecuteScript(
   // On failure, ~AutoScriptEntry will handle exceptions, so
   // there is no need to manually check the return value.
   JS::Rooted<JS::Value> rval(cx);
-  Unused << JS_ExecuteScript(cx, scriptObject, &rval);
+  (void)JS_ExecuteScript(cx, scriptObject, &rval);
 
   return NS_OK;
 }

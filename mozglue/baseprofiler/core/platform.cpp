@@ -2451,7 +2451,7 @@ void profiler_init(void* aStackTop) {
     // indicates that the profiler has initialized successfully.
     CorePS::Create(lock);
 
-    Unused << locked_register_thread(lock, kMainThreadName, aStackTop);
+    (void)locked_register_thread(lock, kMainThreadName, aStackTop);
 
     // Platform-specific initialization.
     PlatformInit(lock);

@@ -73,7 +73,6 @@
 #include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/glean/NetwerkProtocolHttpMetrics.h"
-#include "mozilla/Unused.h"
 #include "mozilla/AntiTrackingRedirectHeuristic.h"
 #include "mozilla/DynamicFpiRedirectHeuristic.h"
 #include "mozilla/BasePrincipal.h"
@@ -558,7 +557,7 @@ void nsHttpHandler::UpdateParentalControlsEnabled(bool waitForCompletion) {
     // pref until the runnable completes
     sParentalControlsEnabled =
         mozilla::StaticPrefs::network_parental_controls_cached_state();
-    Unused << NS_DispatchToMainThreadQueue(
+    (void)NS_DispatchToMainThreadQueue(
         NS_NewRunnableFunction("GetParentalControlsEnabled",
                                std::move(getParentalControlsTask)),
         mozilla::EventQueuePriority::Idle);
@@ -631,7 +630,7 @@ nsresult nsHttpHandler::InitConnectionMgr() {
           self->mConnMgr->AsHttpConnectionMgrParent();
       RefPtr<SocketProcessParent> socketParent =
           SocketProcessParent::GetSingleton();
-      Unused << socketParent->SendPHttpConnectionMgrConstructor(
+      (void)socketParent->SendPHttpConnectionMgrConstructor(
           parent,
           HttpHandlerInitArgs(self->mLegacyAppName, self->mLegacyAppVersion,
                               self->mPlatform, self->mOscpu, self->mMisc,
@@ -1294,7 +1293,7 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
         if (gIOService->SocketProcessReady()) {
           RefPtr<SocketProcessParent> socketParent =
               SocketProcessParent::GetSingleton();
-          Unused << socketParent->SendUpdateDeviceModelId(mDeviceModelId);
+          (void)socketParent->SendUpdateDeviceModelId(mDeviceModelId);
         }
       }
     } else {
@@ -1487,7 +1486,7 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     if (NS_SUCCEEDED(rv)) {
       mBeConservativeForProxy = cVar;
       if (mConnMgr) {
-        Unused << mConnMgr->UpdateParam(
+        (void)mConnMgr->UpdateParam(
             nsHttpConnectionMgr::PROXY_BE_CONSERVATIVE,
             static_cast<int32_t>(mBeConservativeForProxy));
       }
@@ -1688,8 +1687,8 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
   if (PREF_CHANGED(HTTP_PREF("throttle.enable"))) {
     rv = Preferences::GetBool(HTTP_PREF("throttle.enable"), &mThrottleEnabled);
     if (NS_SUCCEEDED(rv) && mConnMgr) {
-      Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_ENABLED,
-                                      static_cast<int32_t>(mThrottleEnabled));
+      (void)mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_ENABLED,
+                                  static_cast<int32_t>(mThrottleEnabled));
     }
   }
 
@@ -1697,8 +1696,8 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     rv = Preferences::GetInt(HTTP_PREF("throttle.suspend-for"), &val);
     mThrottleSuspendFor = (uint32_t)std::clamp(val, 0, 120000);
     if (NS_SUCCEEDED(rv) && mConnMgr) {
-      Unused << mConnMgr->UpdateParam(
-          nsHttpConnectionMgr::THROTTLING_SUSPEND_FOR, mThrottleSuspendFor);
+      (void)mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_SUSPEND_FOR,
+                                  mThrottleSuspendFor);
     }
   }
 
@@ -1706,8 +1705,8 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     rv = Preferences::GetInt(HTTP_PREF("throttle.resume-for"), &val);
     mThrottleResumeFor = (uint32_t)std::clamp(val, 0, 120000);
     if (NS_SUCCEEDED(rv) && mConnMgr) {
-      Unused << mConnMgr->UpdateParam(
-          nsHttpConnectionMgr::THROTTLING_RESUME_FOR, mThrottleResumeFor);
+      (void)mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_RESUME_FOR,
+                                  mThrottleResumeFor);
     }
   }
 
@@ -1715,8 +1714,8 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     rv = Preferences::GetInt(HTTP_PREF("throttle.hold-time-ms"), &val);
     mThrottleHoldTime = (uint32_t)std::clamp(val, 0, 120000);
     if (NS_SUCCEEDED(rv) && mConnMgr) {
-      Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_HOLD_TIME,
-                                      mThrottleHoldTime);
+      (void)mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_HOLD_TIME,
+                                  mThrottleHoldTime);
     }
   }
 
@@ -1724,24 +1723,24 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     rv = Preferences::GetInt(HTTP_PREF("throttle.max-time-ms"), &val);
     mThrottleMaxTime = (uint32_t)std::clamp(val, 0, 120000);
     if (NS_SUCCEEDED(rv) && mConnMgr) {
-      Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_MAX_TIME,
-                                      mThrottleMaxTime);
+      (void)mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_MAX_TIME,
+                                  mThrottleMaxTime);
     }
   }
 
   if (PREF_CHANGED(HTTP_PREF("send_window_size"))) {
-    Unused << Preferences::GetInt(HTTP_PREF("send_window_size"), &val);
+    (void)Preferences::GetInt(HTTP_PREF("send_window_size"), &val);
     mSendWindowSize = val >= 0 ? val : 0;
   }
 
   if (PREF_CHANGED(HTTP_PREF("on_click_priority"))) {
-    Unused << Preferences::GetBool(HTTP_PREF("on_click_priority"),
-                                   &mUrgentStartEnabled);
+    (void)Preferences::GetBool(HTTP_PREF("on_click_priority"),
+                               &mUrgentStartEnabled);
   }
 
   if (PREF_CHANGED(HTTP_PREF("tailing.enabled"))) {
-    Unused << Preferences::GetBool(HTTP_PREF("tailing.enabled"),
-                                   &mTailBlockingEnabled);
+    (void)Preferences::GetBool(HTTP_PREF("tailing.enabled"),
+                               &mTailBlockingEnabled);
   }
   if (PREF_CHANGED(HTTP_PREF("tailing.delay-quantum"))) {
     val = StaticPrefs::network_http_tailing_delay_quantum();
@@ -2064,7 +2063,7 @@ static nsresult PrepareAcceptLanguages(const char* i_AcceptLanguages,
 void nsHttpHandler::PresetAcceptLanguages() {
   if (!gHttpHandler) {
     RefPtr<nsHttpHandler> handler = nsHttpHandler::GetInstance();
-    Unused << handler.get();
+    (void)handler.get();
   }
   [[maybe_unused]] nsresult rv = gHttpHandler->SetAcceptLanguages();
 }
@@ -2364,7 +2363,7 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
     nsCORSListenerProxy::ClearPrivateBrowsingCache();
   } else if (!strcmp(topic, "browser:purge-session-history")) {
     if (mConnMgr) {
-      Unused << mConnMgr->ClearConnectionHistory();
+      (void)mConnMgr->ClearConnectionHistory();
     }
     if (mAltSvcCache) {
       mAltSvcCache->ClearAltServiceMappings();
@@ -2425,7 +2424,7 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
   } else if (!strcmp(topic, "network:socket-process-crashed")) {
     ShutdownConnectionManager();
     mConnMgr = nullptr;
-    Unused << InitConnectionMgr();
+    (void)InitConnectionMgr();
   }
 
   return NS_OK;
@@ -2547,7 +2546,7 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
         if (!neckoParent) {
           continue;
         }
-        Unused << neckoParent->SendSpeculativeConnectRequest();
+        (void)neckoParent->SendSpeculativeConnectRequest();
       }
     }
   }
@@ -2585,8 +2584,8 @@ nsHttpHandler::SpeculativeConnectWithOriginAttributesNative(
     nsIInterfaceRequestor* aCallbacks, bool aAnonymous) {
   Maybe<OriginAttributes> originAttributes;
   originAttributes.emplace(aOriginAttributes);
-  Unused << SpeculativeConnectInternal(
-      aURI, nullptr, std::move(originAttributes), aCallbacks, aAnonymous);
+  (void)SpeculativeConnectInternal(aURI, nullptr, std::move(originAttributes),
+                                   aCallbacks, aAnonymous);
 }
 
 void nsHttpHandler::TickleWifi(nsIInterfaceRequestor* cb) {
@@ -2786,7 +2785,7 @@ void nsHttpHandler::ExcludeHttp2OrHttp3Internal(
           HttpConnectionInfoCloneArgs connInfoArgs;
           nsHttpConnectionInfo::SerializeHttpConnectionInfo(cinfo,
                                                             connInfoArgs);
-          Unused << SocketProcessChild::GetSingleton()->SendExcludeHttp2OrHttp3(
+          (void)SocketProcessChild::GetSingleton()->SendExcludeHttp2OrHttp3(
               connInfoArgs);
         }));
   }
@@ -2863,7 +2862,7 @@ bool nsHttpHandler::IsHttp3SupportedByServer(
   }
 
   nsAutoCString altSvc;
-  Unused << aResponseHead->GetHeader(nsHttp::Alternate_Service, altSvc);
+  (void)aResponseHead->GetHeader(nsHttp::Alternate_Service, altSvc);
   if (altSvc.IsEmpty() || !nsHttp::IsReasonableHeaderValue(altSvc)) {
     return false;
   }
@@ -3091,7 +3090,7 @@ void nsHttpHandler::ObserveHttpActivityWithArgs(
     return;
   }
 
-  Unused << mActivityDistributor->ObserveActivityWithArgs(
+  (void)mActivityDistributor->ObserveActivityWithArgs(
       aArgs, aActivityType, aActivitySubtype, aTimestamp, aExtraSizeData,
       aExtraStringData);
 }

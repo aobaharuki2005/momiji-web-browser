@@ -23,7 +23,6 @@
 #include "mozilla/Components.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/UniquePtrExtensions.h"
-#include "mozilla/Unused.h"
 #include "mozilla/dom/RTCDataChannel.h"
 #include "mozilla/dom/RTCDataChannelBinding.h"
 #ifdef MOZ_PEERCONNECTION
@@ -1049,7 +1048,7 @@ class DataChannelBlobSendRunnable : public Runnable {
     if (!NS_IsMainThread() && mConnection) {
       MOZ_ASSERT(false);
       // explicitly leak the connection if destroyed off mainthread
-      Unused << mConnection.forget().take();
+      mConnection.forget().leak();
     }
   }
 

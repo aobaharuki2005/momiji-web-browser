@@ -30,7 +30,6 @@
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/SelectionState.h"
 #include "mozilla/StaticPrefs_editor.h"  // for StaticPrefs::editor_*
-#include "mozilla/Unused.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"  // for Element::IsContentEditablePlainTextOnly
@@ -5443,9 +5442,8 @@ Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
 
   if (!EditorUtils::IsDescendantOf(*mLeftBlockElement, *mRightBlockElement,
                                    &mPointContainingTheOtherBlockElement)) {
-    Unused << EditorUtils::IsDescendantOf(
-        *mRightBlockElement, *mLeftBlockElement,
-        &mPointContainingTheOtherBlockElement);
+    (void)EditorUtils::IsDescendantOf(*mRightBlockElement, *mLeftBlockElement,
+                                      &mPointContainingTheOtherBlockElement);
   }
 
   if (mPointContainingTheOtherBlockElement.GetContainer() ==
@@ -5551,8 +5549,8 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   EditorDOMPoint pointContainingTheOtherBlock;
   if (!EditorUtils::IsDescendantOf(*mLeftBlockElement, *mRightBlockElement,
                                    &pointContainingTheOtherBlock)) {
-    Unused << EditorUtils::IsDescendantOf(
-        *mRightBlockElement, *mLeftBlockElement, &pointContainingTheOtherBlock);
+    (void)EditorUtils::IsDescendantOf(*mRightBlockElement, *mLeftBlockElement,
+                                      &pointContainingTheOtherBlock);
   }
   EditorDOMRange range =
       WSRunScanner::GetRangeForDeletingBlockElementBoundaries(

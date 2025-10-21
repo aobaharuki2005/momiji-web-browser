@@ -9,7 +9,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_security.h"
-#include "mozilla/Unused.h"
 #include "mozpkix/pkixtypes.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"

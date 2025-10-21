@@ -244,7 +244,7 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvVerifyCache(
 mozilla::ipc::IPCResult DocAccessibleChild::RecvDoActionAsync(
     const uint64_t& aID, const uint8_t& aIndex) {
   if (LocalAccessible* acc = IdToAccessible(aID)) {
-    Unused << acc->DoAction(aIndex);
+    (void)acc->DoAction(aIndex);
   }
 
   return IPC_OK();

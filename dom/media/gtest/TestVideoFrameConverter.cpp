@@ -511,7 +511,7 @@ TEST_F(VideoFrameConverterTest, NoConversionsWhileInactive) {
   auto frames = WaitFor(framesPromise).unwrap();
   ASSERT_EQ(frames.size(), 1U);
   const auto& [frame, conversionTime] = frames[0];
-  Unused << conversionTime;
+  (void)conversionTime;
   EXPECT_EQ(frame.width(), 800);
   EXPECT_EQ(frame.height(), 600);
   EXPECT_GT(frame.timestamp_us(), dom::RTCStatsTimestamp::FromMozTime(
@@ -573,7 +573,7 @@ TEST_F(VideoFrameConverterTest, IgnoreOldFrames) {
   framesPromise = TakeNConvertedFrames(2);
 
   mConverter->SetIdleFrameDuplicationInterval(duplicationInterval);
-  Unused << WaitFor(InvokeAsync(mConverter->mTarget, __func__, [&] {
+  (void)WaitFor(InvokeAsync(mConverter->mTarget, __func__, [&] {
     // Time is now ~t1. This processes an extra frame similar to what
     // `SetActive(false); SetActive(true);` (using t=now()) would do.
     mConverter->mLastFrameQueuedForProcessing.mTime = now + d2;

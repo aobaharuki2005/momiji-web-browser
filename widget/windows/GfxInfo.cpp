@@ -23,7 +23,6 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/SSE.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Unused.h"
 #include "mozilla/widget/WinRegistry.h"
 #include "mozilla/WindowsProcessMitigations.h"
 
@@ -456,8 +455,8 @@ nsresult GfxInfo::Init() {
     uint32_t minor = 0;
     uint32_t build = 0;
     uint32_t ubr = 0;
-    Unused << PR_sscanf(spoofedWindowsVersion, "%u,%u,%u,%u", &major, &minor,
-                        &build, &ubr);
+    (void)PR_sscanf(spoofedWindowsVersion, "%u,%u,%u,%u", &major, &minor,
+                    &build, &ubr);
     mWindowsVersionEx = GfxVersionEx(major, minor, build, ubr);
     mWindowsVersion = (major << 16) + minor;
     mWindowsBuildNumber = build;

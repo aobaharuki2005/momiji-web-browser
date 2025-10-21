@@ -17,7 +17,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/Types.h"
-#include "mozilla/Unused.h"
 #include "mozilla/interceptor/PatcherBase.h"
 #include "mozilla/interceptor/Trampoline.h"
 #include "mozilla/interceptor/VMSharingPolicies.h"
@@ -978,8 +977,8 @@ class WindowsDllDetourPatcher final
 #  endif  // defined(_M_ARM64)
 #else
       // Silence -Wunused-lambda-capture in non-Nightly.
-      Unused << this;
-      Unused << origBytes;
+      (void)this;
+      (void)origBytes;
 #endif  // defined(NIGHTLY_BUILD)
     });
 

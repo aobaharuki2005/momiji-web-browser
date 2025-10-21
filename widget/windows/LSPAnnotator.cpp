@@ -32,7 +32,7 @@ class LSPAnnotationGatherer : public Runnable {
 };
 
 void LSPAnnotationGatherer::Annotate() {
-  Unused << CrashReporter::RecordAnnotationNSCString(
+  (void)CrashReporter::RecordAnnotationNSCString(
       CrashReporter::Annotation::Winsock_LSP, mString);
 }
 

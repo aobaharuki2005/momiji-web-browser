@@ -216,7 +216,7 @@ void nsContainerFrame::SafelyDestroyFrameListProp(
     if (MOZ_LIKELY(frame)) {
       frame->Destroy(aContext);
     } else {
-      Unused << TakeProperty(aProp);
+      (void)TakeProperty(aProp);
       frameList->Delete(aPresShell);
       return;
     }
@@ -344,13 +344,13 @@ void nsContainerFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
     } else if (aProp == OverflowContainersProperty()) {
       MOZ_ASSERT(CanContainOverflowContainers(),
                  "found unexpected OverflowContainersProperty");
-      Unused << this;  // silence clang -Wunused-lambda-capture in opt builds
+      (void)this;  // silence clang -Wunused-lambda-capture in opt builds
       reinterpret_cast<L>(aValue)->AppendIfNonempty(
           aLists, FrameChildListID::OverflowContainers);
     } else if (aProp == ExcessOverflowContainersProperty()) {
       MOZ_ASSERT(CanContainOverflowContainers(),
                  "found unexpected ExcessOverflowContainersProperty");
-      Unused << this;  // silence clang -Wunused-lambda-capture in opt builds
+      (void)this;  // silence clang -Wunused-lambda-capture in opt builds
       reinterpret_cast<L>(aValue)->AppendIfNonempty(
           aLists, FrameChildListID::ExcessOverflowContainers);
     } else if (aProp == BackdropProperty()) {
@@ -1122,7 +1122,7 @@ bool nsContainerFrame::TryRemoveFrame(FrameListPropertyDescriptor aProp,
   if (list && list->StartRemoveFrame(aChildToRemove)) {
     // aChildToRemove *may* have been removed from this list.
     if (list->IsEmpty()) {
-      Unused << TakeProperty(aProp);
+      (void)TakeProperty(aProp);
       list->Delete(PresShell());
     }
     return true;

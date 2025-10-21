@@ -622,7 +622,7 @@ nsXREDirProvider::DoStartup() {
       if (db) {
         nsCOMPtr<nsIPK11Token> token;
         if (NS_SUCCEEDED(db->GetInternalKeyToken(getter_AddRefs(token)))) {
-          mozilla::Unused << token->Login(false);
+          (void)token->Login(false);
         }
       } else {
         NS_WARNING("Failed to get nsIPK11TokenDB service.");

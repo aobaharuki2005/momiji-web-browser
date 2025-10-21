@@ -539,7 +539,7 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
     // We need to assume the DPI changes, since `mDeviceContext` is shared with
     // other documents, and we'd need to save the return value of the first call
     // for all of them.
-    Unused << mDeviceContext->CheckDPIChange();
+    (void)mDeviceContext->CheckDPIChange();
     OwningNonNull<mozilla::PresShell> presShell(*mPresShell);
     // Re-fetch the view manager's window dimensions in case there's a
     // deferred resize which hasn't affected our mVisibleArea yet
@@ -1471,7 +1471,7 @@ void nsPresContext::UpdateTopInnerSizeForRFP() {
       break;
   }
 
-  Unused << mDocument->GetBrowsingContext()->SetTopInnerSizeForRFP(
+  (void)mDocument->GetBrowsingContext()->SetTopInnerSizeForRFP(
       CSSIntSize{(int)size.width, (int)size.height});
 }
 

@@ -82,7 +82,6 @@
 #include "mozilla/TextUtils.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
 #include "mozilla/Variant.h"
 #include "mozilla/dom/FileSystemQuotaClientFactory.h"
 #include "mozilla/dom/FlippedOnce.h"
@@ -2922,13 +2921,13 @@ nsresult QuotaManager::LoadQuota() {
           QM_TRY_INSPECT(const bool& groupUpdated,
                          MaybeUpdateGroupForOrigin(fullOriginMetadata));
 
-          Unused << groupUpdated;
+          (void)groupUpdated;
 
           QM_TRY_INSPECT(
               const bool& lastAccessTimeUpdated,
               MaybeUpdateLastAccessTimeForOrigin(fullOriginMetadata));
 
-          Unused << lastAccessTimeUpdated;
+          (void)lastAccessTimeUpdated;
 
           // We don't need to update the .metadata-v2 file on disk here,
           // EnsureTemporaryOriginIsInitializedInternal is responsible for
@@ -3665,7 +3664,7 @@ Result<FullOriginMetadata, nsresult> QuotaManager::LoadFullOriginMetadata(
   QM_TRY_INSPECT(
       const auto& unusedData1,
       MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsCString, binaryStream, ReadCString));
-  Unused << unusedData1;
+  (void)unusedData1;
 
   // Legacy field, previously used for group. This value is no longer used, but
   // still read and discarded to preserve compatibility with older builds that
@@ -3673,7 +3672,7 @@ Result<FullOriginMetadata, nsresult> QuotaManager::LoadFullOriginMetadata(
   QM_TRY_INSPECT(
       const auto& unusedData2,
       MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsCString, binaryStream, ReadCString));
-  Unused << unusedData2;
+  (void)unusedData2;
 
   QM_TRY_UNWRAP(
       fullOriginMetadata.mStorageOrigin,
@@ -3688,7 +3687,7 @@ Result<FullOriginMetadata, nsresult> QuotaManager::LoadFullOriginMetadata(
   // compatibility with older builds that may still expect it.
   QM_TRY_INSPECT(const bool& unusedData3,
                  MOZ_TO_RESULT_INVOKE_MEMBER(binaryStream, ReadBoolean));
-  Unused << unusedData3;
+  (void)unusedData3;
 
   QM_VERBOSEONLY_TRY_UNWRAP(const auto sentinel,
                             MOZ_TO_RESULT_INVOKE_MEMBER(binaryStream, Read32));
@@ -3904,7 +3903,7 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType,
 
   QM_TRY_INSPECT(const bool& created, EnsureDirectory(*directory));
 
-  Unused << created;
+  (void)created;
 
   uint64_t iterations = 0;
 
@@ -4942,7 +4941,7 @@ Result<Ok, nsresult> QuotaManager::CopyLocalStorageArchiveFromWebAppsStore(
 
   QM_TRY_INSPECT(const bool& created, EnsureDirectory(*storageDirectory));
 
-  Unused << created;
+  (void)created;
 
   QM_TRY_UNWRAP(auto lsArchiveConnection,
                 MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
@@ -6888,7 +6887,7 @@ nsresult QuotaManager::InitializeTemporaryStorageInternal() {
   // The storage directory must exist before calling GetTemporaryStorageLimit.
   QM_TRY_INSPECT(const bool& created, EnsureDirectory(*storageDir));
 
-  Unused << created;
+  (void)created;
 
   QM_TRY_UNWRAP(mTemporaryStorageLimit, GetTemporaryStorageLimit(*storageDir));
 
@@ -9096,15 +9095,15 @@ nsresult StorageOperationBase::GetDirectoryMetadata2(
 
   QM_TRY_INSPECT(const bool& persisted,
                  MOZ_TO_RESULT_INVOKE_MEMBER(binaryStream, ReadBoolean));
-  Unused << persisted;
+  (void)persisted;
 
   QM_TRY_INSPECT(const bool& reservedData1,
                  MOZ_TO_RESULT_INVOKE_MEMBER(binaryStream, Read32));
-  Unused << reservedData1;
+  (void)reservedData1;
 
   QM_TRY_INSPECT(const bool& reservedData2,
                  MOZ_TO_RESULT_INVOKE_MEMBER(binaryStream, Read32));
-  Unused << reservedData2;
+  (void)reservedData2;
 
   QM_TRY_INSPECT(const auto& suffix, MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
                                          nsCString, binaryStream, ReadCString));

@@ -14,7 +14,6 @@
 #include "mozilla/Maybe.h"
 
 #include "mozilla/Types.h"
-#include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 
 #include <memory>
@@ -479,7 +478,7 @@ class ReadOnlyTargetBytes<MMPolicyOutOfProcess> {
 
   ReadOnlyTargetBytes(const ReadOnlyTargetBytes& aOther)
       : mMMPolicy(aOther.mMMPolicy), mBase(aOther.mBase) {
-    Unused << mLocalBytes.appendAll(aOther.mLocalBytes);
+    (void)mLocalBytes.appendAll(aOther.mLocalBytes);
   }
 
   ReadOnlyTargetBytes(const ReadOnlyTargetBytes& aOther,
@@ -489,8 +488,8 @@ class ReadOnlyTargetBytes<MMPolicyOutOfProcess> {
       return;
     }
 
-    Unused << mLocalBytes.append(aOther.mLocalBytes.begin() + aOffsetFromOther,
-                                 aOther.mLocalBytes.end());
+    (void)mLocalBytes.append(aOther.mLocalBytes.begin() + aOffsetFromOther,
+                             aOther.mLocalBytes.end());
   }
 
   void EnsureLimit(uint32_t aDesiredLimit) {

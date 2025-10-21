@@ -224,7 +224,7 @@ void PointerLockManager::Unlock(const char* aReason, Document* aDoc) {
       }
     }
 
-    Unused << sLockedRemoteTarget->SendReleasePointerLock();
+    (void)sLockedRemoteTarget->SendReleasePointerLock();
     sLockedRemoteTarget = nullptr;
     return;
   }
