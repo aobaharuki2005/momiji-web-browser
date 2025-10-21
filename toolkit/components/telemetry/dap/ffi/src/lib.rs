@@ -142,7 +142,7 @@ impl Shardable for SumVecMeasurement<'_> {
         let prio =
             Prio3SumVec::new_sum_vec(NUM_AGGREGATORS, self.bits, self.value.len(), chunk_length)?;
 
-        let measurement: Vec<u128> = self.value.iter().map(|e| (*e as u128)).collect();
+        let measurement: Vec<u128> = self.value.iter().map(|e| *e as u128).collect();
         let (public_share, input_shares) = prio.shard(&measurement, nonce)?;
 
         encode_prio3_shares(public_share, input_shares)
