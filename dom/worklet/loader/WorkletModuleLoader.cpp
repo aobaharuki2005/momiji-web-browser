@@ -11,7 +11,6 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/loader/ModuleLoadRequest.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Unused.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/Worklet.h"
 #include "mozilla/dom/WorkletFetchHandler.h"
@@ -244,7 +243,7 @@ AddModuleThrowErrorRunnable::Run() {
   JS::Rooted<JS::Value> error(cx);
   ErrorResult result;
   Read(global, cx, &error, result);
-  Unused << NS_WARN_IF(result.Failed());
+  (void)NS_WARN_IF(result.Failed());
   mHandlerRef->ExecutionFailed(error);
 
   return NS_OK;

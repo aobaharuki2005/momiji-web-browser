@@ -214,7 +214,7 @@ uint32_t WindowContext::NonSyntheticLightDOMChildrenCount() {
 void WindowContext::SendCommitTransaction(ContentParent* aParent,
                                           const BaseTransaction& aTxn,
                                           uint64_t aEpoch) {
-  Unused << aParent->SendCommitWindowContextTransaction(this, aTxn, aEpoch);
+  (void)aParent->SendCommitWindowContextTransaction(this, aTxn, aEpoch);
 }
 
 void WindowContext::SendCommitTransaction(ContentChild* aChild,
@@ -378,7 +378,7 @@ void WindowContext::ProcessCloseRequest() {
   top->PreOrderWalk([&](BrowsingContext* aBrowsingContext) {
     CanonicalBrowsingContext* canonical = aBrowsingContext->Canonical();
     if (WindowGlobalParent* parent = canonical->GetCurrentWindowGlobal()) {
-      Unused << parent->SendProcessCloseRequest(aBrowsingContext);
+      (void)parent->SendProcessCloseRequest(aBrowsingContext);
     }
   });
 }
@@ -474,7 +474,7 @@ void WindowContext::DidSet(FieldIndex<IDX_HasReportedShadowDOMUsage>,
       Document* topLevelDoc = mBrowsingContext->GetDocument();
       if (topLevelDoc) {
         nsAutoString uri;
-        Unused << topLevelDoc->GetDocumentURI(uri);
+        (void)topLevelDoc->GetDocumentURI(uri);
         if (!uri.IsEmpty()) {
           nsAutoString msg = u"Shadow DOM used in ["_ns + uri +
                              u"] or in some of its subdocuments."_ns;
@@ -576,13 +576,13 @@ void WindowContext::NotifyUserGestureActivation(
   if (auto* innerWindow = GetInnerWindow()) {
     innerWindow->EnsureCloseWatcherManager()->NotifyUserInteraction();
   }
-  Unused << SetUserActivationStateAndModifiers(stateAndModifiers.GetRawData());
+  (void)SetUserActivationStateAndModifiers(stateAndModifiers.GetRawData());
 }
 
 void WindowContext::NotifyResetUserGestureActivation() {
   UserActivation::StateAndModifiers stateAndModifiers;
   stateAndModifiers.SetState(UserActivation::State::None);
-  Unused << SetUserActivationStateAndModifiers(stateAndModifiers.GetRawData());
+  (void)SetUserActivationStateAndModifiers(stateAndModifiers.GetRawData());
 }
 
 bool WindowContext::HasBeenUserGestureActivated() {
@@ -655,7 +655,7 @@ bool WindowContext::ConsumeTransientUserGestureActivation() {
       // DidSet(FieldIndex<IDX_UserActivationStateAndModifiers>),
       // which in turn updates mLastActivationTimestamp.
       stateAndModifiers.SetState(UserActivation::State::HasBeenActivated);
-      Unused << windowContext->SetUserActivationStateAndModifiers(
+      (void)windowContext->SetUserActivationStateAndModifiers(
           stateAndModifiers.GetRawData());
     }
   });

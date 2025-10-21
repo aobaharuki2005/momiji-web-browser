@@ -30,7 +30,6 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Unused.h"
 #include "mozilla/glean/IpcMetrics.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIObserverService.h"
@@ -285,7 +284,7 @@ RefPtr<GenericPromise> GMPParent::Init(GeckoMediaPluginServiceParent* aService,
 
 void GMPParent::Crash() {
   if (mState != GMPState::NotLoaded) {
-    Unused << SendCrashPluginNow();
+    (void)SendCrashPluginNow();
   }
 }
 
@@ -441,7 +440,7 @@ void GMPParent::OnPreferenceChange(const mozilla::dom::Pref& aPref) {
     return;
   }
 
-  Unused << SendPreferenceUpdate(aPref);
+  (void)SendPreferenceUpdate(aPref);
 }
 
 mozilla::ipc::IPCResult GMPParent::RecvPGMPContentChildDestroyed() {
@@ -536,7 +535,7 @@ void GMPParent::CloseActive(bool aDieWhenUnloaded) {
     mState = GMPState::Unloading;
   }
   if (mState != GMPState::NotLoaded && IsUsed()) {
-    Unused << SendCloseActive();
+    (void)SendCloseActive();
     CloseIfUnused();
   }
 }

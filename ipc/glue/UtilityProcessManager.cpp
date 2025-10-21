@@ -124,7 +124,7 @@ void UtilityProcessManager::OnPreferenceChange(const char16_t* aData) {
     }
 
     if (p->mProcessParent) {
-      Unused << p->mProcessParent->SendPreferenceUpdate(pref);
+      (void)p->mProcessParent->SendPreferenceUpdate(pref);
     } else if (IsProcessLaunching(p->mSandbox)) {
       p->mQueuedPrefs.AppendElement(pref);
     }
@@ -214,7 +214,7 @@ UtilityProcessManager::LaunchProcess(SandboxingKind aSandbox) {
         // launch and weren't included in the blobs set
         // up in LaunchUtilityProcess.
         for (const mozilla::dom::Pref& pref : p->mQueuedPrefs) {
-          Unused << NS_WARN_IF(!p->mProcessParent->SendPreferenceUpdate(pref));
+          (void)NS_WARN_IF(!p->mProcessParent->SendPreferenceUpdate(pref));
         }
         p->mQueuedPrefs.Clear();
 

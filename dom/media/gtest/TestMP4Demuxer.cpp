@@ -12,7 +12,6 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/TaskQueue.h"
-#include "mozilla/Unused.h"
 
 using namespace mozilla;
 using media::TimeUnit;
@@ -140,7 +139,7 @@ class MP4DemuxerBinding {
   void DispatchTask(FunctionType aFun) {
     RefPtr<Runnable> r =
         NS_NewRunnableFunction("MP4DemuxerBinding::DispatchTask", aFun);
-    Unused << mTaskQueue->Dispatch(r.forget());
+    (void)mTaskQueue->Dispatch(r.forget());
   }
 
   virtual ~MP4DemuxerBinding() = default;

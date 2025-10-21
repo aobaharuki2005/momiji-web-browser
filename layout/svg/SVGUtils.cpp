@@ -36,7 +36,6 @@
 #include "mozilla/SVGOuterSVGFrame.h"
 #include "mozilla/SVGTextFrame.h"
 #include "mozilla/StaticPrefs_svg.h"
-#include "mozilla/Unused.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/SVGClipPathElement.h"
 #include "mozilla/dom/SVGGeometryElement.h"

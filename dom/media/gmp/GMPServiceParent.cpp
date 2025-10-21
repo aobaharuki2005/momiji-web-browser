@@ -30,7 +30,6 @@
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"
-#include "mozilla/Unused.h"
 #if defined(XP_WIN)
 #  include "mozilla/UntrustedModulesData.h"
 #endif
@@ -491,7 +490,7 @@ void GeckoMediaPluginServiceParent::UnloadPlugins() {
     std::swap(plugins, mPlugins);
 
     for (GMPServiceParent* parent : mServiceParents) {
-      Unused << parent->SendBeginShutdown();
+      (void)parent->SendBeginShutdown();
     }
 
     GMP_LOG_DEBUG("%s::%s plugins:%zu", __CLASS__, __FUNCTION__,
@@ -652,12 +651,12 @@ void GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities(
   }
 
   if (aContentProcess) {
-    Unused << aContentProcess->SendGMPsChanged(caps);
+    (void)aContentProcess->SendGMPsChanged(caps);
     return;
   }
 
   for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
-    Unused << cp->SendGMPsChanged(caps);
+    (void)cp->SendGMPsChanged(caps);
   }
 
   // For non-e10s, we must fire a notification so that any MediaKeySystemAccess
@@ -853,7 +852,7 @@ NS_IMETHODIMP
 GeckoMediaPluginServiceParent::AddPluginDirectory(const nsAString& aDirectory) {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<GenericPromise> p = AsyncAddPluginDirectory(aDirectory);
-  Unused << p;
+  (void)p;
   return NS_OK;
 }
 

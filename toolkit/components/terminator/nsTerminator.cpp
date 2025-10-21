@@ -46,7 +46,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
 
 #include "mozilla/dom/workerinternals/RuntimeService.h"
 

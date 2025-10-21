@@ -53,7 +53,6 @@
 #include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ToString.h"
-#include "mozilla/Unused.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/DocumentInlines.h"
@@ -3834,9 +3833,9 @@ void ScrollContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   bool dirtyRectHasBeenOverriden = false;
-  Unused << DecideScrollableLayer(aBuilder, &visibleRect, &dirtyRect,
-                                  /* aSetBase = */ !mIsRoot,
-                                  &dirtyRectHasBeenOverriden);
+  (void)DecideScrollableLayer(aBuilder, &visibleRect, &dirtyRect,
+                              /* aSetBase = */ !mIsRoot,
+                              &dirtyRectHasBeenOverriden);
 
   if (aBuilder->IsForFrameVisibility()) {
     // We expand the dirty rect to catch frames just outside of the scroll port.
@@ -4131,9 +4130,9 @@ void ScrollContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         // too late to change the dirty rect so pass a copy.
         nsRect copyOfDirtyRect = dirtyRect;
         nsRect copyOfVisibleRect = visibleRect;
-        Unused << DecideScrollableLayer(aBuilder, &copyOfVisibleRect,
-                                        &copyOfDirtyRect,
-                                        /* aSetBase = */ false, nullptr);
+        (void)DecideScrollableLayer(aBuilder, &copyOfVisibleRect,
+                                    &copyOfDirtyRect,
+                                    /* aSetBase = */ false, nullptr);
         if (mWillBuildScrollableLayer) {
 #ifndef MOZ_WIDGET_ANDROID
           gfxCriticalNoteOnce << "inserted scroll frame";

@@ -87,7 +87,6 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Try.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/css/ImageLoader.h"
@@ -3976,7 +3975,7 @@ bool PresShell::ScrollFrameIntoView(
             container->PresContext()->GetDocShell();
         if (BrowserChild* browserChild = BrowserChild::GetFrom(docShell)) {
           // Defer to the parent document if this is an out-of-process iframe.
-          Unused << browserChild->SendScrollRectIntoView(
+          (void)browserChild->SendScrollRectIntoView(
               rect, aVertical, aHorizontal, aScrollFlags, APD);
         }
       }
@@ -6407,7 +6406,7 @@ void PresShell::DoUpdateApproximateFrameVisibility(bool aRemoveOnly) {
   if (rootScroll) {
     nsIContent* content = rootScroll->GetContent();
     if (content) {
-      Unused << nsLayoutUtils::GetDisplayPortForVisibilityTesting(
+      (void)nsLayoutUtils::GetDisplayPortForVisibilityTesting(
           content, &updateRect, RelativeTo::ScrollFrame);
     }
 

@@ -144,8 +144,8 @@ nsresult nsReadConfig::readConfigFile() {
   bool sandboxEnabled =
       channel.EqualsLiteral("beta") || channel.EqualsLiteral("release");
 
-  mozilla::Unused << defaultPrefBranch->GetBoolPref(
-      "general.config.sandbox_enabled", &sandboxEnabled);
+  (void)defaultPrefBranch->GetBoolPref("general.config.sandbox_enabled",
+                                       &sandboxEnabled);
 
   rv = defaultPrefBranch->GetCharPref("general.config.filename", lockFileName);
 

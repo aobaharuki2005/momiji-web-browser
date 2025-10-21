@@ -19,7 +19,7 @@ void ScriptCacheChild::Init(const Maybe<FileDescriptor>& cacheFile,
   mWantCacheData = wantCacheData;
 
   auto& cache = ScriptPreloader::GetChildSingleton();
-  Unused << cache.InitCache(cacheFile, this);
+  (void)cache.InitCache(cacheFile, this);
 
   if (!wantCacheData) {
     // If the parent process isn't expecting any cache data from us, we're

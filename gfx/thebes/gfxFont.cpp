@@ -1004,7 +1004,7 @@ gfxFont::gfxFont(const RefPtr<UnscaledFont>& aUnscaledFont,
 
   // Ensure the gfxFontEntry's unitsPerEm and extents fields are initialized,
   // so that GetFontExtents can use them without risk of races.
-  Unused << mFontEntry->UnitsPerEm();
+  (void)mFontEntry->UnitsPerEm();
 }
 
 gfxFont::~gfxFont() {
@@ -2772,7 +2772,7 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
             // Save a snapshot of the rendering in the cache.
             // (We ignore potential failure here, and just paint the snapshot
             // without caching it.)
-            Unused << mColorGlyphCache->mCache.add(cached, aGlyphId, snapshot);
+            (void)mColorGlyphCache->mCache.add(cached, aGlyphId, snapshot);
           }
         }
       }

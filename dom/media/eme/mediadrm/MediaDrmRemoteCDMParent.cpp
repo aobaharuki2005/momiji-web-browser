@@ -523,7 +523,7 @@ mozilla::ipc::IPCResult MediaDrmRemoteCDMParent::RecvCreateSession(
   mSessions[sessionIdStr] = {sessionId, std::move(mimeType)};
   aResolver(std::move(sessionIdStr));
 
-  Unused << SendOnSessionKeyMessage(RemoteCDMKeyMessageIPDL(
+  (void)SendOnSessionKeyMessage(RemoteCDMKeyMessageIPDL(
       std::move(sessionIdStr), MediaKeyMessageType::License_request,
       nsTArray<uint8_t>(reinterpret_cast<const uint8_t*>(keyRequest),
                         keyRequestSize)));
@@ -718,7 +718,7 @@ void MediaDrmRemoteCDMParent::HandleEvent(nsString&& aSessionId,
           break;
       }
 
-      Unused << SendOnSessionKeyMessage(RemoteCDMKeyMessageIPDL(
+      (void)SendOnSessionKeyMessage(RemoteCDMKeyMessageIPDL(
           std::move(aSessionId), keyMessageType,
           nsTArray<uint8_t>(reinterpret_cast<const uint8_t*>(keyRequest),
                             keyRequestSize)));
@@ -746,7 +746,7 @@ void MediaDrmRemoteCDMParent::HandleExpirationUpdate(nsString&& aSessionId,
   }
 
   EME_LOG("[%p] MediaDrmRemoteCDMParent::HandleExpirationUpdate", this);
-  Unused << SendOnSessionKeyExpiration(
+  (void)SendOnSessionKeyExpiration(
       RemoteCDMKeyExpirationIPDL(std::move(aSessionId), aExpiryTimeInMS));
 }
 
@@ -762,7 +762,7 @@ void MediaDrmRemoteCDMParent::HandleKeysChange(
   }
 
   EME_LOG("[%p] MediaDrmRemoteCDMParent::HandleKeysChange", this);
-  Unused << SendOnSessionKeyStatus(
+  (void)SendOnSessionKeyStatus(
       RemoteCDMKeyStatusIPDL(std::move(aSessionId), std::move(aKeyInfo)));
 }
 

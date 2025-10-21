@@ -465,7 +465,7 @@ void SessionStorageManager::CheckpointDataInternal(
     return;
   }
 
-  Unused << cacheActor->SendCheckpoint(writeInfos);
+  (void)cacheActor->SendCheckpoint(writeInfos);
 
   aCache.ResetWriteInfos();
 }

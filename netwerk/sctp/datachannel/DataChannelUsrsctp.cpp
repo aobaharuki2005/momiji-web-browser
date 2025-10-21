@@ -141,7 +141,7 @@ class DataChannelRegistry {
   void DeregisterImpl(uintptr_t aId) {
     MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
     size_t removed = mConnections.erase(aId);
-    mozilla::Unused << removed;
+    (void)removed;
     MOZ_DIAGNOSTIC_ASSERT(removed);
   }
 

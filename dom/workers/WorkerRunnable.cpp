@@ -18,7 +18,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TelemetryHistogramEnums.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Unused.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/Worker.h"
 #include "mozilla/dom/WorkerCommon.h"
@@ -625,7 +624,7 @@ void WorkerMainThreadRunnable::Dispatch(WorkerPrivate* aWorkerPrivate,
   glean::workers::sync_worker_operation.Get(mTelemetryKey)
       .AccumulateRawDuration(TimeStamp::NowLoRes() - startTime);
 
-  Unused << startTime;  // Shut the compiler up.
+  (void)startTime;  // Shut the compiler up.
 
   if (!success) {
     aRv.ThrowUncatchableException();
@@ -710,7 +709,7 @@ void WorkerProxyToMainThreadRunnable::PostDispatchOnMainThread() {
 
     virtual nsresult Cancel() override {
       MOZ_ASSERT(GetCurrentThreadWorkerPrivate());
-      Unused << WorkerRun(nullptr, GetCurrentThreadWorkerPrivate());
+      (void)WorkerRun(nullptr, GetCurrentThreadWorkerPrivate());
       return NS_OK;
     }
 
@@ -735,7 +734,7 @@ void WorkerProxyToMainThreadRunnable::PostDispatchOnMainThread() {
   };
 
   RefPtr<WorkerControlRunnable> runnable = new ReleaseRunnable(this);
-  Unused << NS_WARN_IF(!runnable->Dispatch(mWorkerRef->Private()));
+  (void)NS_WARN_IF(!runnable->Dispatch(mWorkerRef->Private()));
 }
 
 void WorkerProxyToMainThreadRunnable::ReleaseWorker() { mWorkerRef = nullptr; }

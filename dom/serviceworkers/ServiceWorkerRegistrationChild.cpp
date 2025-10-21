@@ -85,7 +85,7 @@ void ServiceWorkerRegistrationChild::Shutdown() {
   if (!CanSend()) {
     return;
   }
-  Unused << Send__delete__(this);
+  (void)Send__delete__(this);
 }
 
 }  // namespace mozilla::dom

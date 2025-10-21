@@ -16,7 +16,6 @@
 #include "mozilla/dom/ContentParent.h"  // For RemoteTypePrefix
 #include "mozilla/FileUtils.h"
 #include "mozilla/SchedulerGroup.h"
-#include "mozilla/Unused.h"
 #include "mozilla/GfxMessageUtils.h"  // For ParamTraits<GeckoProcessType>
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Try.h"
@@ -297,14 +296,14 @@ void nsHangDetails::Submit() {
               // processes.
               hangDetails->mDetails.remoteType().Assign(
                   dom::RemoteTypePrefix(cc->GetRemoteType()));
-              Unused << cc->SendBHRThreadHang(hangDetails->mDetails);
+              (void)cc->SendBHRThreadHang(hangDetails->mDetails);
             }
             break;
           }
           case GeckoProcessType_GPU: {
             auto gp = gfx::GPUParent::GetSingleton();
             if (gp) {
-              Unused << gp->SendBHRThreadHang(hangDetails->mDetails);
+              (void)gp->SendBHRThreadHang(hangDetails->mDetails);
             }
             break;
           }
@@ -716,7 +715,7 @@ SubmitPersistedPermahangRunnable::Run() {
     // and delete it to prevent future runs from having to go through the
     // same thing. If we succeeded, however, the file should be cleaned up
     // once the hang is submitted.
-    Unused << mPermahangFile->Remove(false);
+    (void)mPermahangFile->Remove(false);
     return hangDetailsResult.unwrapErr();
   }
   RefPtr<nsHangDetails> hangDetails =

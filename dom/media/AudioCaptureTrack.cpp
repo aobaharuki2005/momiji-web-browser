@@ -18,7 +18,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Unused.h"
 #include "webaudio/MediaStreamAudioDestinationNode.h"
 
 using namespace mozilla::layers;

@@ -131,7 +131,6 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/AutoEntryScript.h"
@@ -1127,7 +1126,7 @@ nsresult nsContentUtils::Init() {
             []() { glean_pings::UseCounters.Submit("idle_startup"_ns); }),
         EventQueuePriority::Idle);
     // This is mostly best-effort, so if it goes awry, just log.
-    Unused << NS_WARN_IF(NS_FAILED(rv));
+    (void)NS_WARN_IF(NS_FAILED(rv));
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
     RunOnShutdown(
@@ -2624,8 +2623,7 @@ inline bool SchemeSaysShouldNotResistFingerprinting(nsIPrincipal* aPrincipal) {
   }
 
   bool isContentAccessibleAboutURI;
-  Unused << aPrincipal->IsContentAccessibleAboutURI(
-      &isContentAccessibleAboutURI);
+  (void)aPrincipal->IsContentAccessibleAboutURI(&isContentAccessibleAboutURI);
   return !isContentAccessibleAboutURI;
 }
 
@@ -2736,7 +2734,7 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel,
   if (MOZ_LOG_TEST(nsContentUtils::ResistFingerprintingLog(),
                    mozilla::LogLevel::Debug)) {
     nsCOMPtr<nsIURI> channelURI;
-    Unused << NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
+    (void)NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
     nsAutoCString channelSpec;
     channelURI->GetSpec(channelSpec);
     MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
@@ -4976,7 +4974,7 @@ void nsContentUtils::AsyncPrecreateStringBundles() {
                                  bundle->AsyncPreload();
                                }),
         EventQueuePriority::Idle);
-    Unused << NS_WARN_IF(NS_FAILED(rv));
+    (void)NS_WARN_IF(NS_FAILED(rv));
   }
 }
 
@@ -5047,7 +5045,7 @@ class FormatLocalizedStringRunnable final : public WorkerMainThreadRunnable {
 
     mResult = nsContentUtils::FormatLocalizedString(mFile, mKey, mParams,
                                                     mLocalizedString);
-    Unused << NS_WARN_IF(NS_FAILED(mResult));
+    (void)NS_WARN_IF(NS_FAILED(mResult));
     return true;
   }
 
@@ -11432,7 +11430,7 @@ void nsContentUtils::StructuredClone(JSContext* aCx, nsIGlobalObject* aGlobal,
   }
 
   nsTArray<RefPtr<MessagePort>> ports = holder.TakeTransferredPorts();
-  Unused << ports;
+  (void)ports;
 }
 
 /* static */
@@ -12147,10 +12145,10 @@ nsContentUtils::GetSubresourceCacheValidationInfo(nsIRequest* aRequest,
   // Determine whether the cache entry must be revalidated when we try to use
   // it. Currently, only HTTP specifies this information...
   if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest)) {
-    Unused << httpChannel->IsNoStoreResponse(&info.mMustRevalidate);
+    (void)httpChannel->IsNoStoreResponse(&info.mMustRevalidate);
 
     if (!info.mMustRevalidate) {
-      Unused << httpChannel->IsNoCacheResponse(&info.mMustRevalidate);
+      (void)httpChannel->IsNoCacheResponse(&info.mMustRevalidate);
     }
   }
 

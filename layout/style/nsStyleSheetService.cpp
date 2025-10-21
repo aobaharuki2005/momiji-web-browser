@@ -14,7 +14,6 @@
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
-#include "mozilla/Unused.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Promise.h"
@@ -126,7 +125,7 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI* aSheetURI,
       }
 
       for (uint32_t i = 0; i < children.Length(); i++) {
-        Unused << children[i]->SendLoadAndRegisterSheet(aSheetURI, aSheetType);
+        (void)children[i]->SendLoadAndRegisterSheet(aSheetURI, aSheetType);
       }
     }
   }
@@ -280,7 +279,7 @@ nsStyleSheetService::UnregisterSheet(nsIURI* aSheetURI, uint32_t aSheetType) {
     }
 
     for (uint32_t i = 0; i < children.Length(); i++) {
-      Unused << children[i]->SendUnregisterSheet(aSheetURI, aSheetType);
+      (void)children[i]->SendUnregisterSheet(aSheetURI, aSheetType);
     }
   }
 

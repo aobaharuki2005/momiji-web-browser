@@ -22,7 +22,6 @@
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/Unused.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -722,7 +721,7 @@ void HangMonitorChild::NotifySlowScriptAsync(TabId aTabId,
                                              const nsString& aAddonId,
                                              const double aDuration) {
   if (mIPCOpen) {
-    Unused << SendHangEvidence(
+    (void)SendHangEvidence(
         SlowScriptData(aTabId, aFileName, aAddonId, aDuration));
   }
 }
@@ -798,7 +797,7 @@ void HangMonitorChild::ClearHangAsync() {
 
   // bounce back to parent on background thread
   if (mIPCOpen) {
-    Unused << SendClearHang();
+    (void)SendClearHang();
   }
 }
 
@@ -878,9 +877,9 @@ void HangMonitorParent::PaintOrUnloadLayersWhileInterruptingJSOnThread(
 
   if (mIPCOpen) {
     if (aPaint) {
-      Unused << SendPaintWhileInterruptingJS(aTabId);
+      (void)SendPaintWhileInterruptingJS(aTabId);
     } else {
-      Unused << SendUnloadLayersWhileInterruptingJS(aTabId);
+      (void)SendUnloadLayersWhileInterruptingJS(aTabId);
     }
   }
 }
@@ -921,8 +920,8 @@ void HangMonitorParent::CancelContentJSExecutionIfRunningOnThread(
   }
 
   if (mIPCOpen) {
-    Unused << SendCancelContentJSExecutionIfRunning(
-        aTabId, aNavigationType, aNavigationIndex, spec, aEpoch);
+    (void)SendCancelContentJSExecutionIfRunning(aTabId, aNavigationType,
+                                                aNavigationIndex, spec, aEpoch);
   }
 }
 
@@ -942,7 +941,7 @@ void HangMonitorParent::SetMainThreadQoSPriorityOnThread(
     nsIThread::QoSPriority aQoSPriority) {
   MOZ_RELEASE_ASSERT(IsOnThread());
   if (mIPCOpen) {
-    Unused << SendSetMainThreadQoSPriority(aQoSPriority);
+    (void)SendSetMainThreadQoSPriority(aQoSPriority);
   }
 }
 #endif
@@ -1040,7 +1039,7 @@ void HangMonitorParent::TerminateScript() {
   MOZ_RELEASE_ASSERT(IsOnThread());
 
   if (mIPCOpen) {
-    Unused << SendTerminateScript();
+    (void)SendTerminateScript();
   }
 }
 
@@ -1048,7 +1047,7 @@ void HangMonitorParent::BeginStartingDebugger() {
   MOZ_RELEASE_ASSERT(IsOnThread());
 
   if (mIPCOpen) {
-    Unused << SendBeginStartingDebugger();
+    (void)SendBeginStartingDebugger();
   }
 }
 
@@ -1056,7 +1055,7 @@ void HangMonitorParent::EndStartingDebugger() {
   MOZ_RELEASE_ASSERT(IsOnThread());
 
   if (mIPCOpen) {
-    Unused << SendEndStartingDebugger();
+    (void)SendEndStartingDebugger();
   }
 }
 

@@ -11,7 +11,6 @@
 #include "mozilla/Components.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Unused.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/URIUtils.h"  // for IPDLParamTraits<nsIURI*>
 #include "mozilla/net/Cookie.h"
@@ -270,7 +269,7 @@ mozilla::ipc::IPCResult CookieStoreParent::RecvSubscribeOrUnsubscribeRequest(
 mozilla::ipc::IPCResult CookieStoreParent::RecvClose() {
   AssertIsOnBackgroundThread();
 
-  Unused << Send__delete__(this);
+  (void)Send__delete__(this);
   return IPC_OK();
 }
 

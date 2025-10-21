@@ -249,7 +249,7 @@ class MOZ_TRIVIAL_CTOR_DTOR VMSharingPolicyShared : public MMPolicyInProcess {
       ::InitializeCriticalSectionEx(&sCS, 4000, flags);
       return true;
     }();
-    Unused << isAlloc;
+    (void)isAlloc;
 
     return &sCS;
   }

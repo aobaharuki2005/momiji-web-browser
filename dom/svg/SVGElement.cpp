@@ -37,7 +37,6 @@
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/StaticPrefs_layout.h"
-#include "mozilla/Unused.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/CSSRuleBinding.h"
 #include "mozilla/dom/Document.h"

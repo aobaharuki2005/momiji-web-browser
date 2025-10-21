@@ -19,7 +19,6 @@
 #include "mozilla/Span.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_security.h"
-#include "mozilla/Unused.h"
 #include "mozilla/glean/SecurityManagerSslMetrics.h"
 #include "mozilla/intl/Localization.h"
 #include "nsContentUtils.h"
@@ -363,7 +362,7 @@ nsresult OCSPRequest::NotifyDone(nsresult rv, MonitorAutoLock& lock) {
   mLoader = nullptr;
   mResponseResult = rv;
   if (mTimeoutTimer) {
-    Unused << mTimeoutTimer->Cancel();
+    (void)mTimeoutTimer->Cancel();
   }
   mNotifiedDone = true;
   lock.Notify();

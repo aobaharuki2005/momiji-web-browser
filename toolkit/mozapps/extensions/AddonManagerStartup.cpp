@@ -25,7 +25,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/URLPreloader.h"
-#include "mozilla/Unused.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Services.h"
 #include "mozilla/Try.h"
@@ -715,7 +714,7 @@ class RegistryEntries final : public nsIJSRAIIHelper,
   void Register();
 
  protected:
-  virtual ~RegistryEntries() { Unused << Destruct(); }
+  virtual ~RegistryEntries() { (void)Destruct(); }
 
  private:
   FileLocation mLocation;

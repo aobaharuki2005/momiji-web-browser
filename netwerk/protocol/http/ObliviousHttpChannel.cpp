@@ -753,7 +753,7 @@ void ObliviousHttpChannel::EmitOnDataAvailable() {
     return;
   }
   rv = mStreamListener->OnDataAvailable(this, contentStream, 0, contentLength);
-  Unused << rv;
+  (void)rv;
 }
 
 NS_IMETHODIMP
@@ -772,11 +772,11 @@ ObliviousHttpChannel::OnStopRequest(nsIRequest* aRequest,
       aStatusCode = ProcessOnStopRequest();
     }
   }
-  Unused << mStreamListener->OnStartRequest(this);
+  (void)mStreamListener->OnStartRequest(this);
   if (NS_SUCCEEDED(aStatusCode)) {
     EmitOnDataAvailable();
   }
-  Unused << mStreamListener->OnStopRequest(this, aStatusCode);
+  (void)mStreamListener->OnStopRequest(this, aStatusCode);
 
   return NS_OK;
 }

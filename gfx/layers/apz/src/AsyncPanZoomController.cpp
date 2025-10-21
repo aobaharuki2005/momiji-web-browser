@@ -76,7 +76,6 @@
 #include "mozilla/layers/APZPublicUtils.h"   // for GetScrollMode
 #include "mozilla/webrender/WebRenderAPI.h"  // for MinimapData
 #include "mozilla/mozalloc.h"                // for operator new, etc
-#include "mozilla/Unused.h"                  // for unused
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsCOMPtr.h"  // for already_AddRefed
 #include "nsDebug.h"   // for NS_WARNING

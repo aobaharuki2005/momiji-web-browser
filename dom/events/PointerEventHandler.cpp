@@ -586,7 +586,7 @@ void PointerEventHandler::ReleaseAllPointerCaptureRemoteTarget() {
     BrowserParent* browserParent = iter.Data();
     MOZ_ASSERT(browserParent, "Null BrowserParent in pointer captured table?");
 
-    Unused << browserParent->SendReleaseAllPointerCapture();
+    (void)browserParent->SendReleaseAllPointerCapture();
     iter.Remove();
   }
 }

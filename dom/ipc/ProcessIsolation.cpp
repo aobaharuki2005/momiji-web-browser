@@ -1123,7 +1123,7 @@ void AddHighValuePermission(nsIPrincipal* aResultPrincipal,
   // unix epoch from `TimeStamp`.
   int64_t expirationTime =
       (PR_Now() / PR_USEC_PER_MSEC) + (int64_t(expiration) * PR_MSEC_PER_SEC);
-  Unused << perms->AddFromPrincipal(
+  (void)perms->AddFromPrincipal(
       sitePrincipal, aPermissionType, nsIPermissionManager::ALLOW_ACTION,
       nsIPermissionManager::EXPIRE_TIME, expirationTime);
 }

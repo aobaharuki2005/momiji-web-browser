@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "nscore.h"
-#include "mozilla/Unused.h"
 #include "ExceptionThrower.h"
 
 #ifdef XP_WIN
@@ -210,9 +209,9 @@ extern "C" NS_EXPORT void Crash(int16_t how) {
       break;
     }
     case CRASH_OOM: {
-      mozilla::Unused << moz_xmalloc((size_t)-1);
-      mozilla::Unused << moz_xmalloc((size_t)-1);
-      mozilla::Unused << moz_xmalloc((size_t)-1);
+      [[maybe_unused]] void* r0 = moz_xmalloc((size_t)-1);
+      [[maybe_unused]] void* r1 = moz_xmalloc((size_t)-1);
+      [[maybe_unused]] void* r2 = moz_xmalloc((size_t)-1);
       break;
     }
     case CRASH_MOZ_CRASH: {
