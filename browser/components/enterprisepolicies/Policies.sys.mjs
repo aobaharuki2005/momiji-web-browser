@@ -1608,15 +1608,17 @@ export var Policies = {
       const defaultValue = "Enabled" in param ? param.Enabled : undefined;
 
       const features = [
-        ["Chatbot", "browser.ml.chat.enabled"],
-        ["LinkPreviews", "browser.ml.linkPreview.optin"],
-        ["TabGroups", "browser.tabs.groups.smart.userEnabled"],
+        ["Chatbot", ["browser.ml.chat.enabled", "browser.ml.chat.page"]],
+        ["LinkPreviews", ["browser.ml.linkPreview.optin"]],
+        ["TabGroups", ["browser.tabs.groups.smart.userEnabled"]],
       ];
 
-      for (const [key, pref] of features) {
+      for (const [key, prefs] of features) {
         const value = key in param ? param[key] : defaultValue;
         if (value !== undefined) {
-          PoliciesUtils.setDefaultPref(pref, value, param.Locked);
+          for (const pref of prefs) {
+            PoliciesUtils.setDefaultPref(pref, value, param.Locked);
+          }
         }
       }
     },
