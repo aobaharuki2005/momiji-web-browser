@@ -26,6 +26,7 @@
 #include "jit/JSJitFrameIter-inl.h"
 
 using namespace js;
+using mozilla::Utf8Unit;
 
 GeckoProfilerThread::GeckoProfilerThread()
     : profilingStack_(nullptr), profilingStackIfEnabled_(nullptr) {}
@@ -446,6 +447,96 @@ void GeckoProfilerRuntime::checkStringsMapAfterMovingGC() {
 }
 #endif
 
+// Get all script sources as a list of ProfilerJSSourceData.
+js::ProfilerJSSources GeckoProfilerRuntime::getProfilerScriptSources() {
+  js::ProfilerJSSources result;
+
+  auto guard = scriptSources_.readLock();
+  for (auto iter = guard->iter(); !iter.done(); iter.next()) {
+    const RefPtr<ScriptSource>& scriptSource = iter.get();
+    MOZ_ASSERT(scriptSource);
+
+    bool hasSourceText;
+    bool retrievableSource;
+    ScriptSource::getSourceProperties(scriptSource, &hasSourceText,
+                                      &retrievableSource);
+
+    uint32_t sourceId = scriptSource->id();
+
+    // Get filename for all source types. Create single copy to be moved.
+    const char* filename = scriptSource->filename();
+    size_t filenameLen = 0;
+    JS::UniqueChars filenameCopy;
+    if (filename) {
+      filenameLen = strlen(filename);
+      filenameCopy.reset(static_cast<char*>(js_malloc(filenameLen + 1)));
+      if (filenameCopy) {
+        strcpy(filenameCopy.get(), filename);
+      }
+    }
+
+    if (retrievableSource) {
+      (void)result.append(ProfilerJSSourceData::CreateRetrievableFile(
+          sourceId, std::move(filenameCopy), filenameLen));
+      continue;
+    }
+
+    if (!hasSourceText) {
+      (void)result.append(
+          ProfilerJSSourceData(sourceId, std::move(filenameCopy), filenameLen));
+      continue;
+    }
+
+    size_t sourceLength = scriptSource->length();
+    if (sourceLength == 0) {
+      (void)result.append(
+          ProfilerJSSourceData(sourceId, JS::UniqueTwoByteChars(), 0,
+                               std::move(filenameCopy), filenameLen));
+      continue;
+    }
+
+    SubstringCharsResult sourceResult(JS::UniqueChars(nullptr));
+    size_t charsLength = 0;
+
+    if (scriptSource->shouldUnwrapEventHandlerBody()) {
+      sourceResult = scriptSource->functionBodyStringChars(&charsLength);
+
+      if (charsLength == 0) {
+        (void)result.append(
+            ProfilerJSSourceData(sourceId, JS::UniqueTwoByteChars(), 0,
+                                 std::move(filenameCopy), filenameLen));
+        continue;
+      }
+    } else {
+      sourceResult = scriptSource->substringChars(0, sourceLength);
+      charsLength = sourceLength;
+    }
+
+    // Convert SubstringCharsResult to ProfilerJSSourceData.
+    // Note: The returned buffers are NOT null-terminated. The length is
+    // tracked separately in charsLength and passed to ProfilerJSSourceData.
+    if (sourceResult.is<JS::UniqueChars>()) {
+      auto& utf8Chars = sourceResult.as<JS::UniqueChars>();
+      if (!utf8Chars) {
+        continue;
+      }
+      (void)result.append(
+          ProfilerJSSourceData(sourceId, std::move(utf8Chars), charsLength,
+                               std::move(filenameCopy), filenameLen));
+    } else {
+      auto& utf16Chars = sourceResult.as<JS::UniqueTwoByteChars>();
+      if (!utf16Chars) {
+        continue;
+      }
+      (void)result.append(
+          ProfilerJSSourceData(sourceId, std::move(utf16Chars), charsLength,
+                               std::move(filenameCopy), filenameLen));
+    }
+  }
+
+  return result;
+}
+
 void ProfilingStackFrame::trace(JSTracer* trc) {
   if (isJsFrame()) {
     JSScript* s = rawScript();
@@ -567,6 +658,11 @@ JS_PUBLIC_API void js::RegisterContextProfilerMarkers(
   cx->runtime()->geckoProfiler().setFlowMarker(flowMarker);
   cx->runtime()->geckoProfiler().setTerminatingFlowMarker(
       terminatingFlowMarker);
+}
+
+JS_PUBLIC_API js::ProfilerJSSources js::GetProfilerScriptSources(
+    JSRuntime* rt) {
+  return rt->geckoProfiler().getProfilerScriptSources();
 }
 
 AutoSuppressProfilerSampling::AutoSuppressProfilerSampling(JSContext* cx)
