@@ -31,9 +31,10 @@
 #include "nsITimer.h"
 
 #include "js/CompileOptions.h"  // JS::DecodeOptions, JS::ReadOnlyDecodeOptions
-#include "js/experimental/JSStencil.h"  // JS::Stencil
-#include "js/GCAnnotations.h"           // for JS_HAZ_NON_GC_POINTER
-#include "js/RootingAPI.h"              // for Handle, Heap
+#include "js/experimental/CompileScript.h"  // JS::FrontendContext
+#include "js/experimental/JSStencil.h"      // JS::Stencil
+#include "js/GCAnnotations.h"               // for JS_HAZ_NON_GC_POINTER
+#include "js/RootingAPI.h"                  // for Handle, Heap
 #include "js/Transcoding.h"  // for TranscodeBuffer, TranscodeRange, TranscodeSource
 #include "js/TypeDecls.h"  // for HandleObject, HandleScript
 
@@ -273,7 +274,7 @@ class ScriptPreloader : public nsIObserver,
 
     // Encodes this script into XDR data, and stores the result in mXDRData.
     // Returns true on success, false on failure.
-    bool XDREncode(JSContext* cx);
+    bool XDREncode(JS::FrontendContext* cx);
 
     // Encodes or decodes this script, in the storage format required by the
     // script cache file.
