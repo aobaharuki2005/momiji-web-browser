@@ -13,6 +13,7 @@
         "llvmorg-22-init-4745-gbe179d069664.patch",
         "android-hardware-buffer-header-workaround.patch",
         "arm64e-hack.patch",
-        "compiler-rt-rss-limit-heap-profile.patch"
+        "compiler-rt-rss-limit-heap-profile.patch",
+        "plugin-registry-symbols-llvm-pr-163391.patch"
     ]
 }
