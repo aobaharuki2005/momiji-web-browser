@@ -1191,9 +1191,13 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
 
     aKidFrame->DidReflow(aPresContext, &kidReflowInput);
 
-    if (usedCb.Contains(aKidFrame->GetRect()) && aStatus.IsComplete()) {
-      // We don't overflow our CB, no further fallback needed.
-      isOverflowingCB = false;
+    const bool fits =
+        aStatus.IsComplete() && usedCb.Contains(aKidFrame->GetRect());
+    if (fallbacks.IsEmpty() || fits) {
+      // We completed the reflow - Either we had a fallback that fit, or we
+      // didn't have any to try in the first place.
+      // TODO(dshin, bug 1987963): Hypothetical scroll will be committed here.
+      isOverflowingCB = !fits;
       break;
     }
 
