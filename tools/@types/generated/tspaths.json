@@ -113,6 +113,9 @@
       "chrome://browser/content/preferences/widgets/setting-control.mjs": [
         "browser/components/preferences/widgets/setting-control/setting-control.mjs"
       ],
+      "chrome://browser/content/preferences/widgets/setting-element.mjs": [
+        "browser/components/preferences/widgets/setting-element/setting-element.mjs"
+      ],
       "chrome://browser/content/preferences/widgets/setting-group.mjs": [
         "browser/components/preferences/widgets/setting-group/setting-group.mjs"
       ],

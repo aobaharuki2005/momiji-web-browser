@@ -83,7 +83,8 @@ import { Setting } from "chrome://global/content/preferences/Setting.mjs";
 /**
  * @typedef {object} PreferencesSettingsConfig
  * @property {string} id - The ID for the Setting, this should match the layout id
- * @property {string} [l10nId]
+ * @property {string} [l10nId] - The Fluent l10n ID for the setting
+ * @property {Record<string, string>} [l10nArgs] - An object containing l10n IDs and their values that will be translated with Fluent
  * @property {string} [pref] - A {@link Services.prefs} id that will be used as the backend if it is provided
  * @property {PreferenceSettingVisibleFunction} [visible] - Function to determine if a setting is visible in the UI
  * @property {PreferenceSettingGetter} [get] - Function to get the value of the setting. Optional if {@link PreferencesSettingsConfig#pref} is set.
@@ -106,6 +107,9 @@ import { Setting } from "chrome://global/content/preferences/Setting.mjs";
  *    used for controls that aren’t regular form controls but instead perform an action when clicked, like a button or link.
  * @property {Array<string> | void} [deps] - An array of setting IDs that this setting depends on, when these settings change this setting will emit a change event to update the UI
  * @property {Record<string, any>} [controlAttrs] - An object of additional attributes to be set on the control. These can be used to further customize the control for example a message bar of the warning type, or what dialog a button should open
+ * @property {string} [iconSrc] - A path to the icon for the control (if the control supports one)
+ * @property {string} [supportPage] - The SUMO support page slug for the setting
+ * @property {string} [subcategory] - The sub-category slug used for direct linking to a setting from SUMO
  */
 
 const lazy = {};

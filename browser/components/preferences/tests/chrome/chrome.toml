@@ -1,5 +1,6 @@
 [DEFAULT]
 support-files = [
+  "head.js",
   "../../../../../toolkit/content/tests/widgets/lit-test-helpers.js",
 ]
 
