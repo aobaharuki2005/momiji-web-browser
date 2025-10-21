@@ -54,7 +54,7 @@ try:
 except ImportError:
     build = None
 
-HARNESS_TIMEOUT = 5 * 60
+HARNESS_TIMEOUT = 30
 TBPL_RETRY = 4  # defined in mozharness
 
 # benchmarking on tbpl revealed that this works best for now
