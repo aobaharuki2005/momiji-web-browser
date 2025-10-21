@@ -465,7 +465,6 @@ AttachDecision GetPropIRGenerator::tryAttachStub() {
 
     if (nameOrSymbol) {
       TRY_ATTACH(tryAttachObjectLength(obj, objId, id));
-      TRY_ATTACH(tryAttachRegExp(obj, objId, id));
       TRY_ATTACH(tryAttachNative(obj, objId, id, receiverId));
       TRY_ATTACH(tryAttachModuleNamespace(obj, objId, id));
       TRY_ATTACH(tryAttachWindowProxy(obj, objId, id));
@@ -2459,49 +2458,6 @@ AttachDecision GetPropIRGenerator::tryAttachInlinableNativeGetter(
   InlinableNativeIRGenerator nativeGen(*this, target, thisValue, flags,
                                        receiverId);
   return nativeGen.tryAttachStub();
-}
-
-AttachDecision GetPropIRGenerator::tryAttachRegExp(HandleObject obj,
-                                                   ObjOperandId objId,
-                                                   HandleId id) {
-  if (!obj->is<RegExpObject>()) {
-    return AttachDecision::NoAction;
-  }
-  auto* regExp = &obj->as<RegExpObject>();
-
-  if (mode_ != ICState::Mode::Specialized) {
-    return AttachDecision::NoAction;
-  }
-
-  // Receiver should be the object.
-  if (isSuper()) {
-    return AttachDecision::NoAction;
-  }
-
-  NativeObject* holder = nullptr;
-  Maybe<PropertyInfo> prop;
-  NativeGetPropKind kind =
-      CanAttachNativeGetProp(cx_, obj, id, &holder, &prop, pc_);
-  if (kind != NativeGetPropKind::NativeGetter) {
-    return AttachDecision::NoAction;
-  }
-
-  auto& fun = holder->getGetter(*prop)->as<JSFunction>();
-  JS::RegExpFlags flags = JS::RegExpFlag::NoFlags;
-  if (!RegExpObject::isOriginalFlagGetter(fun.native(), &flags)) {
-    return AttachDecision::NoAction;
-  }
-
-  maybeEmitIdGuard(id);
-  // Emit all the normal guards for calling this native, but specialize
-  // callNativeGetterResult.
-  emitCallGetterResultGuards(regExp, holder, id, *prop, objId);
-
-  writer.regExpFlagResult(objId, flags.value());
-  writer.returnFromIC();
-
-  trackAttached("GetProp.RegExpFlag");
-  return AttachDecision::Attach;
 }
 
 AttachDecision GetPropIRGenerator::tryAttachFunction(HandleObject obj,
@@ -7742,6 +7698,38 @@ AttachDecision InlinableNativeIRGenerator::tryAttachHasClass(
   writer.returnFromIC();
 
   trackAttached("HasClass");
+  return AttachDecision::Attach;
+}
+
+AttachDecision InlinableNativeIRGenerator::tryAttachRegExpFlag(
+    JS::RegExpFlags flags) {
+  // Expecting no arguments.
+  if (args_.length() != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure |this| is a RegExpObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<RegExpObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  auto* regExp = &thisval_.toObject().as<RegExpObject>();
+
+  // Initialize the input operand.
+  Int32OperandId argcId = initializeInputOperand();
+
+  // Guard callee is the native RegExp getter function.
+  ObjOperandId calleeId = emitNativeCalleeGuard(argcId);
+
+  // Guard |this| is a RegExpObject.
+  ValOperandId thisValId = loadThis(calleeId);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+  writer.guardShapeForClass(objId, regExp->shape());
+
+  writer.regExpFlagResult(objId, flags.value());
+  writer.returnFromIC();
+
+  trackAttached("RegExpFlag");
   return AttachDecision::Attach;
 }
 
@@ -13246,6 +13234,22 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachArrayIteratorPrototypeOptimizable();
 
     // RegExp natives.
+    case InlinableNative::RegExpDotAll:
+      return tryAttachRegExpFlag(JS::RegExpFlag::DotAll);
+    case InlinableNative::RegExpGlobal:
+      return tryAttachRegExpFlag(JS::RegExpFlag::Global);
+    case InlinableNative::RegExpHasIndices:
+      return tryAttachRegExpFlag(JS::RegExpFlag::HasIndices);
+    case InlinableNative::RegExpIgnoreCase:
+      return tryAttachRegExpFlag(JS::RegExpFlag::IgnoreCase);
+    case InlinableNative::RegExpMultiline:
+      return tryAttachRegExpFlag(JS::RegExpFlag::Multiline);
+    case InlinableNative::RegExpSticky:
+      return tryAttachRegExpFlag(JS::RegExpFlag::Sticky);
+    case InlinableNative::RegExpUnicode:
+      return tryAttachRegExpFlag(JS::RegExpFlag::Unicode);
+    case InlinableNative::RegExpUnicodeSets:
+      return tryAttachRegExpFlag(JS::RegExpFlag::UnicodeSets);
     case InlinableNative::IsRegExpObject:
       return tryAttachHasClass(&RegExpObject::class_,
                                /* isPossiblyWrapped = */ false);

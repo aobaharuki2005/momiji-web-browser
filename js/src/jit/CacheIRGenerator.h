@@ -31,7 +31,8 @@ class JSFunction;
 
 namespace JS {
 struct XrayJitInfo;
-}
+class RegExpFlags;
+}  // namespace JS
 
 namespace js {
 
@@ -176,8 +177,6 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
                                                 ValOperandId receiverId);
   AttachDecision tryAttachObjectLength(HandleObject obj, ObjOperandId objId,
                                        HandleId id);
-  AttachDecision tryAttachRegExp(HandleObject obj, ObjOperandId objId,
-                                 HandleId id);
   AttachDecision tryAttachModuleNamespace(HandleObject obj, ObjOperandId objId,
                                           HandleId id);
   AttachDecision tryAttachWindowProxy(HandleObject obj, ObjOperandId objId,
@@ -773,6 +772,7 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachGuardToSharedArrayBuffer();
   AttachDecision tryAttachHasClass(const JSClass* clasp,
                                    bool isPossiblyWrapped);
+  AttachDecision tryAttachRegExpFlag(JS::RegExpFlags flags);
   AttachDecision tryAttachRegExpMatcherSearcher(InlinableNative native);
   AttachDecision tryAttachRegExpSearcherLastLimit();
   AttachDecision tryAttachRegExpHasCaptureGroups();

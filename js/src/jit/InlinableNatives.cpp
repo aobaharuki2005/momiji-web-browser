@@ -325,6 +325,14 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::NumberParseInt:
     case InlinableNative::NumberToString:
     case InlinableNative::ReflectGetPrototypeOf:
+    case InlinableNative::RegExpDotAll:
+    case InlinableNative::RegExpGlobal:
+    case InlinableNative::RegExpHasIndices:
+    case InlinableNative::RegExpIgnoreCase:
+    case InlinableNative::RegExpMultiline:
+    case InlinableNative::RegExpSticky:
+    case InlinableNative::RegExpUnicode:
+    case InlinableNative::RegExpUnicodeSets:
     case InlinableNative::SetConstructor:
     case InlinableNative::SetHas:
     case InlinableNative::SetDelete:
