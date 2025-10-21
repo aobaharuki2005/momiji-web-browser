@@ -118,12 +118,12 @@
         !draggedTab._dragData.fromTabList
       ) {
         ind.hidden = true;
+
         if (this.#isAnimatingMoveTogetherSelectedTabs()) {
           // Wait for moving selected tabs together animation to finish.
           return;
         }
         this.finishMoveTogetherSelectedTabs(draggedTab);
-        this._updateTabStylesOnDrag(draggedTab, dropEffect);
 
         if (dropEffect == "move") {
           this.#setMovingTabMode(true);
@@ -491,7 +491,6 @@
             }
           } else {
             moveTabs();
-            this._tabbrowserTabs._notifyBackgroundTab(movingTabs.at(-1));
           }
         }
       } else if (isTabGroupLabel(draggedTab)) {
@@ -1134,10 +1133,12 @@
         expandGroupOnDrop: collapseTabGroupDuringDrag,
       };
       if (this._rtlMode) {
-        // Reverse order to handle positioning in `_updateTabStylesOnDrag`
+        // Reverse order to handle positioning in `updateTabStylesOnDrag`
         // and animation in `_animateTabMove`
         tab._dragData.movingTabs.reverse();
       }
+
+      this._updateTabStylesOnDrag(tab, event);
 
       if (isMovingInTabStrip) {
         this.#setMovingTabMode(true);
@@ -1166,13 +1167,7 @@
       This function updates the position and widths of elements affected by this layout shift
       when the tab is first selected to be dragged.
     */
-    _updateTabStylesOnDrag(tab, dropEffect) {
-      let tabStripItemElement = elementToMove(tab);
-      tabStripItemElement.style.pointerEvents =
-        dropEffect == "copy" ? "auto" : "";
-      if (tabStripItemElement.hasAttribute("dragtarget")) {
-        return;
-      }
+    _updateTabStylesOnDrag(tab) {
       let isPinned = tab.pinned;
       let numPinned = gBrowser.pinnedTabCount;
       let allTabs = this._tabbrowserTabs.ariaFocusableItems;
@@ -1229,9 +1224,7 @@
         }
         // Prevent flex rules from resizing non dragged tabs while the dragged
         // tabs are positioned absolutely
-        if (tabRect.width) {
-          t.style.maxWidth = tabRect.width + "px";
-        }
+        t.style.maxWidth = tabRect.width + "px";
         // Prevent non-moving tab strip items from performing any animations
         // at the very beginning of the drag operation; this prevents them
         // from appearing to move while the dragged tabs are positioned absolutely
@@ -1256,6 +1249,7 @@
 
       // Use .tab-group-label-container or .tabbrowser-tab for size/position
       // calculations.
+      let tabStripItemElement = elementToMove(tab);
       let rect =
         window.windowUtils.getBoundsWithoutFlushing(tabStripItemElement);
       // Vertical tabs live under the #sidebar-main element which gets animated and has a

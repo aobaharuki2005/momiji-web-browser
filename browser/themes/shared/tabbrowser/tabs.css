@@ -30,7 +30,7 @@
   --tab-pinned-min-width-expanded: calc(var(--tab-pinned-expanded-background-width) + 2 * var(--tab-pinned-margin-inline-expanded));
   --tab-pinned-container-margin-inline-expanded: var(--space-small);
   --tab-border-radius: var(--toolbarbutton-border-radius);
-  --tab-overflow-clip-margin: 4px;
+  --tab-overflow-clip-margin: 2px;
   --tab-close-button-padding: 6px;
   --tab-block-margin: 4px;
   --tab-icon-end-margin: 5.5px;
@@ -218,13 +218,6 @@
     z-index: 3 !important;
     position: absolute !important;
     pointer-events: none; /* avoid blocking dragover events on scroll buttons */
-
-    /* stylelint-disable-next-line media-query-no-invalid */
-    @media -moz-pref("browser.tabs.dragDrop.multiselectStacking") {
-      &[multiselected]:not([small-stack], [big-stack]) {
-        visibility: hidden;
-      }
-    }
   }
 
   &:not([pinned], [fadein]) {
@@ -245,16 +238,8 @@
     }
   }
 
-  &[multiselected-move-together][multiselected] {
-    z-index: 3;
-
-    &[visually-selected] {
-      z-index: 4;
-    }
-
-    &:not([selected]) {
-      z-index: 2;
-    }
+  &[multiselected-move-together][multiselected]:not([selected]) {
+    z-index: 2;
   }
 
   /* stylelint-disable-next-line media-query-no-invalid */
@@ -889,102 +874,6 @@
     &[selected] {
       outline-width: 2px;
       outline-offset: -2px;
-    }
-  }
-
-  #tabbrowser-tabs[orient="vertical"]:not([movingtab-group]) & {
-    .tabbrowser-tab[small-stack] > .tab-stack > & {
-      box-shadow:
-        0 5px 0 -3px var(--tab-selected-bgcolor),
-        0 3px var(--focus-outline-color);
-    }
-
-    .tabbrowser-tab[big-stack] > .tab-stack > & {
-      box-shadow:
-        0 5px 0 -3px var(--tab-selected-bgcolor),
-        0 3px var(--focus-outline-color),
-        0 8px 0 -3px var(--tab-selected-bgcolor),
-        0 6px var(--focus-outline-color);
-    }
-  }
-
-  #tabbrowser-tabs[orient="horizontal"]:not([movingtab-group]) & {
-    .tabbrowser-tab[small-stack] > .tab-stack > & {
-      box-shadow:
-        5px 0 0 -3px var(--tab-selected-bgcolor),
-        3px 0 var(--focus-outline-color);
-    }
-
-    .tabbrowser-tab[big-stack] > .tab-stack > & {
-      box-shadow:
-        5px 0 0 -3px var(--tab-selected-bgcolor),
-        3px 0 var(--focus-outline-color),
-        8px 0 0 -3px var(--tab-selected-bgcolor),
-        6px 0 var(--focus-outline-color);
-    }
-
-    &:-moz-locale-dir(rtl) {
-      .tabbrowser-tab[small-stack] > .tab-stack > & {
-        box-shadow:
-          -5px 0 0 -3px var(--tab-selected-bgcolor),
-          -3px 0 var(--focus-outline-color);
-      }
-
-      .tabbrowser-tab[big-stack] > .tab-stack > & {
-        box-shadow:
-          -5px 0 0 -3px var(--tab-selected-bgcolor),
-          -3px 0 var(--focus-outline-color),
-          -8px 0 0 -3px var(--tab-selected-bgcolor),
-          -6px 0 var(--focus-outline-color);
-      }
-    }
-  }
-
-  #tabbrowser-tabs[orient="vertical"][movingtab-group] & {
-    .tabbrowser-tab[small-stack] > .tab-stack > & {
-      box-shadow:
-        0 5px 0 -3px var(--tab-selected-bgcolor),
-        0 3px var(--dragover-tab-group-color);
-    }
-
-    .tabbrowser-tab[big-stack] > .tab-stack > & {
-      box-shadow:
-        0 5px 0 -3px var(--tab-selected-bgcolor),
-        0 3px var(--dragover-tab-group-color),
-        0 8px 0 -3px var(--tab-selected-bgcolor),
-        0 6px var(--dragover-tab-group-color);
-    }
-  }
-
-  #tabbrowser-tabs[orient="horizontal"][movingtab-group] & {
-    .tabbrowser-tab[small-stack] > .tab-stack > & {
-      box-shadow:
-        5px 0 0 -3px var(--tab-selected-bgcolor),
-        3px 0 var(--dragover-tab-group-color);
-    }
-
-    .tabbrowser-tab[big-stack] > .tab-stack > & {
-      box-shadow:
-        5px 0 0 -3px var(--tab-selected-bgcolor),
-        3px 0 var(--dragover-tab-group-color),
-        8px 0 0 -3px var(--tab-selected-bgcolor),
-        6px 0 var(--dragover-tab-group-color);
-    }
-
-    &:-moz-locale-dir(rtl) {
-      .tabbrowser-tab[small-stack] > .tab-stack > & {
-        box-shadow:
-          -5px 0 0 -3px var(--tab-selected-bgcolor),
-          -3px 0 var(--dragover-tab-group-color);
-      }
-
-      .tabbrowser-tab[big-stack] > .tab-stack > & {
-        box-shadow:
-          -5px 0 0 -3px var(--tab-selected-bgcolor),
-          -3px 0 var(--dragover-tab-group-color),
-          -8px 0 0 -3px var(--tab-selected-bgcolor),
-          -6px 0 var(--dragover-tab-group-color);
-      }
     }
   }
 
