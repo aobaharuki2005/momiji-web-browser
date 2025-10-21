@@ -49,6 +49,9 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/Perfetto.h"
+#include "nsID.h"
+#include "nsIDUtils.h"
+#include "nsString.h"
 #include "nsCExternalHandlerService.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -1595,6 +1598,44 @@ class ActivePS {
     // We don't need to sort the pages like threads since we won't show them
     // as a list.
     return array;
+  }
+
+  // Collect JS sources from the main thread, since script source storage is
+  // shared between all threads.
+  static nsTArray<mozilla::JSSourceEntry> GatherJSSources(PSLockRef aLock) {
+    nsTArray<mozilla::JSSourceEntry> jsSourceEntries;
+    if (!ProfilerFeature::HasJSSources(ActivePS::Features(aLock))) {
+      return jsSourceEntries;
+    }
+
+    ThreadRegistry::LockedRegistry lockedRegistry;
+    ActivePS::ProfiledThreadList threads =
+        ActivePS::ProfiledThreads(lockedRegistry, aLock);
+
+    // Get the JS context of the main thread. We don't need to get the
+    // JSContext of others because the script source storage is shared between
+    // threads.
+    auto* mainThread =
+        std::find_if(threads.begin(), threads.end(), [](const auto& thread) {
+          return thread.mProfiledThreadData->Info().IsMainThread();
+        });
+
+    if (mainThread == threads.end() || !mainThread->mJSContext) {
+      return jsSourceEntries;
+    }
+    JSContext* jsContext = mainThread->mJSContext;
+
+    js::ProfilerJSSources threadSources =
+        js::GetProfilerScriptSources(JS_GetRuntime(jsContext));
+
+    // Generate UUIDs and build mappings for each source
+    for (ProfilerJSSourceData& sourceData : threadSources) {
+      // Generate UUID for this source and store it in the global array.
+      jsSourceEntries.AppendElement(JSSourceEntry(
+          NSID_TrimBracketsASCII(nsID::GenerateUUID()), std::move(sourceData)));
+    }
+
+    return jsSourceEntries;
   }
 
   static ProfiledThreadData* AddLiveProfiledThread(
@@ -3828,8 +3869,10 @@ locked_profiler_stream_json_for_this_process(
   }
   SLOW_DOWN_FOR_TESTING();
 
-  // FIXME: Build the JS sources
-  nsTArray<mozilla::JSSourceEntry> jsSourceEntries;
+  // Collect JS sources from the main thread, since script source storage is
+  // shared between all threads.
+  nsTArray<mozilla::JSSourceEntry> jsSourceEntries =
+      ActivePS::GatherJSSources(aLock);
 
   // Lists the samples for each thread profile
   aWriter.StartArrayProperty("threads");
