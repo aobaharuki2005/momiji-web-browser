@@ -1254,16 +1254,15 @@ already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForFetch(
 
 /* static */
 already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForExternalCSSResources(
-    mozilla::StyleSheet* aExternalSheet, nsIURI* aExternalSheetURI,
-    ReferrerPolicyEnum aPolicy) {
-  MOZ_ASSERT(aExternalSheet);
-  MOZ_ASSERT(aExternalSheetURI);
+    mozilla::StyleSheet* aExternalSheet, ReferrerPolicyEnum aPolicy) {
+  MOZ_ASSERT(aExternalSheet && !aExternalSheet->IsInline());
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
+
   // Step 2
   // https://w3c.github.io/webappsec-referrer-policy/#integration-with-css
   // Use empty policy at the beginning and update it later from Referrer-Policy
   // header.
-  nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      new ReferrerInfo(aExternalSheetURI, aPolicy);
+  referrerInfo = new ReferrerInfo(aExternalSheet->GetSheetURI(), aPolicy);
   return referrerInfo.forget();
 }
 

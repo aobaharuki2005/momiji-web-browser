@@ -110,12 +110,11 @@ class ReferrerInfo : public nsIReferrerInfo {
    * stylesheet. The returned nsIReferrerInfo object will be used for any
    * requests or resources referenced by the sheet.
    *
-   * @param aExternalSheet the stylesheet.
-   * @param aExternalSheetURI the stylesheet URI.
+   * @param aSheet the stylesheet to init referrerInfo.
    * @param aPolicy referrer policy from header if there's any.
    */
   static already_AddRefed<nsIReferrerInfo> CreateForExternalCSSResources(
-      StyleSheet* aExternalSheet, nsIURI* aExternalSheetURI,
+      StyleSheet* aExternalSheet,
       ReferrerPolicyEnum aPolicy = ReferrerPolicy::_empty);
 
   /**
