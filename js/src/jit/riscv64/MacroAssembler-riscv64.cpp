@@ -3554,39 +3554,44 @@ void MacroAssembler::patchSub32FromMemAndBranchIfNegative(CodeOffset offset,
   inst->SetInstructionBits(((uint32_t)inst->InstructionBits() & ~kImm12Mask) |
                            (((uint32_t)(-val) & 0xfff) << kImm12Shift));
 }
-void MacroAssembler::flexibleDivMod32(Register rhs, Register srcDest,
-                                      Register remOutput, bool isUnsigned,
-                                      const LiveRegisterSet&) {
+void MacroAssembler::flexibleDivMod32(Register lhs, Register rhs,
+                                      Register divOutput, Register remOutput,
+                                      bool isUnsigned, const LiveRegisterSet&) {
+  MOZ_ASSERT(lhs != divOutput && lhs != remOutput, "lhs is preserved");
+  MOZ_ASSERT(rhs != divOutput && rhs != remOutput, "rhs is preserved");
+
+  // The recommended code sequence to obtain both the quotient and remainder
+  // is div[u] followed by mod[u].
   if (isUnsigned) {
-    ma_modu32(remOutput, srcDest, rhs);
-    ma_divu32(srcDest, srcDest, rhs);
+    ma_divu32(divOutput, lhs, rhs);
+    ma_modu32(remOutput, lhs, rhs);
   } else {
-    ma_mod32(remOutput, srcDest, rhs);
-    ma_div32(srcDest, srcDest, rhs);
+    ma_div32(divOutput, lhs, rhs);
+    ma_mod32(remOutput, lhs, rhs);
   }
 }
-void MacroAssembler::flexibleQuotient32(Register rhs, Register srcDest,
-                                        bool isUnsigned,
+void MacroAssembler::flexibleQuotient32(Register lhs, Register rhs,
+                                        Register dest, bool isUnsigned,
                                         const LiveRegisterSet&) {
-  quotient32(rhs, srcDest, isUnsigned);
+  quotient32(lhs, rhs, dest, isUnsigned);
 }
 
-void MacroAssembler::flexibleQuotientPtr(Register rhs, Register srcDest,
-                                         bool isUnsigned,
+void MacroAssembler::flexibleQuotientPtr(Register lhs, Register rhs,
+                                         Register dest, bool isUnsigned,
                                          const LiveRegisterSet&) {
-  quotient64(rhs, srcDest, isUnsigned);
+  quotient64(lhs, rhs, dest, isUnsigned);
 }
 
-void MacroAssembler::flexibleRemainder32(Register rhs, Register srcDest,
-                                         bool isUnsigned,
+void MacroAssembler::flexibleRemainder32(Register lhs, Register rhs,
+                                         Register dest, bool isUnsigned,
                                          const LiveRegisterSet&) {
-  remainder32(rhs, srcDest, isUnsigned);
+  remainder32(lhs, rhs, dest, isUnsigned);
 }
 
-void MacroAssembler::flexibleRemainderPtr(Register rhs, Register srcDest,
-                                          bool isUnsigned,
+void MacroAssembler::flexibleRemainderPtr(Register lhs, Register rhs,
+                                          Register dest, bool isUnsigned,
                                           const LiveRegisterSet&) {
-  remainder64(rhs, srcDest, isUnsigned);
+  remainder64(lhs, rhs, dest, isUnsigned);
 }
 
 void MacroAssembler::floorDoubleToInt32(FloatRegister src, Register dest,

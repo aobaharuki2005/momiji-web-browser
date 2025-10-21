@@ -1212,41 +1212,46 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // zero. rhs must not be zero, and the division must not overflow.
   //
   // On ARM, the chip must have hardware division instructions.
-  inline void quotient32(Register rhs, Register srcDest, bool isUnsigned)
+  inline void quotient32(Register lhs, Register rhs, Register dest,
+                         bool isUnsigned)
       DEFINED_ON(mips64, arm, arm64, loong64, riscv64, wasm32);
 
-  inline void quotient64(Register rhs, Register srcDest, bool isUnsigned)
+  inline void quotient64(Register lhs, Register rhs, Register dest,
+                         bool isUnsigned)
       DEFINED_ON(arm64, loong64, mips64, riscv64);
 
-  // As above, but srcDest must be eax and tempEdx must be edx.
-  inline void quotient32(Register rhs, Register srcDest, Register tempEdx,
-                         bool isUnsigned) DEFINED_ON(x86_shared);
+  // As above, but lhs and dest must be eax and tempEdx must be edx.
+  inline void quotient32(Register lhs, Register rhs, Register dest,
+                         Register tempEdx, bool isUnsigned)
+      DEFINED_ON(x86_shared);
 
   // Perform an integer division, returning the remainder part.
   // rhs must not be zero, and the division must not overflow.
   //
   // On ARM, the chip must have hardware division instructions.
-  inline void remainder32(Register rhs, Register srcDest, bool isUnsigned)
+  inline void remainder32(Register lhs, Register rhs, Register dest,
+                          bool isUnsigned)
       DEFINED_ON(mips64, arm, arm64, loong64, riscv64, wasm32);
 
-  inline void remainder64(Register rhs, Register srcDest, bool isUnsigned)
+  inline void remainder64(Register lhs, Register rhs, Register dest,
+                          bool isUnsigned)
       DEFINED_ON(arm64, loong64, mips64, riscv64);
 
-  // As above, but srcDest must be eax and tempEdx must be edx.
-  inline void remainder32(Register rhs, Register srcDest, Register tempEdx,
-                          bool isUnsigned) DEFINED_ON(x86_shared);
+  // As above, but lhs and dest must be eax and tempEdx must be edx.
+  inline void remainder32(Register lhs, Register rhs, Register dest,
+                          Register tempEdx, bool isUnsigned)
+      DEFINED_ON(x86_shared);
 
   // Perform an integer division, returning the integer part rounded toward
   // zero. rhs must not be zero, and the division must not overflow.
   //
   // This variant preserves registers, and doesn't require hardware division
   // instructions on ARM (will call out to a runtime routine).
-  //
-  // rhs is preserved, srdDest is clobbered.
-  void flexibleRemainder32(Register rhs, Register srcDest, bool isUnsigned,
-                           const LiveRegisterSet& volatileLiveRegs)
-      PER_SHARED_ARCH;
-  void flexibleRemainderPtr(Register rhs, Register srcDest, bool isUnsigned,
+  void flexibleRemainder32(
+      Register lhs, Register rhs, Register dest, bool isUnsigned,
+      const LiveRegisterSet& volatileLiveRegs) PER_SHARED_ARCH;
+  void flexibleRemainderPtr(Register lhs, Register rhs, Register dest,
+                            bool isUnsigned,
                             const LiveRegisterSet& volatileLiveRegs) PER_ARCH;
 
   // Perform an integer division, returning the integer part rounded toward
@@ -1254,25 +1259,25 @@ class MacroAssembler : public MacroAssemblerSpecific {
   //
   // This variant preserves registers, and doesn't require hardware division
   // instructions on ARM (will call out to a runtime routine).
-  //
-  // rhs is preserved, srdDest is clobbered.
-  void flexibleQuotient32(Register rhs, Register srcDest, bool isUnsigned,
-                          const LiveRegisterSet& volatileLiveRegs)
-      PER_SHARED_ARCH;
-  void flexibleQuotientPtr(Register rhs, Register srcDest, bool isUnsigned,
+  void flexibleQuotient32(
+      Register lhs, Register rhs, Register dest, bool isUnsigned,
+      const LiveRegisterSet& volatileLiveRegs) PER_SHARED_ARCH;
+  void flexibleQuotientPtr(Register lhs, Register rhs, Register dest,
+                           bool isUnsigned,
                            const LiveRegisterSet& volatileLiveRegs) PER_ARCH;
 
   // Perform an integer division, returning the integer part rounded toward
-  // zero. rhs must not be zero, and the division must not overflow. The
-  // remainder is stored into the third argument register here.
+  // zero in the third argument register. rhs must not be zero, and the division
+  // must not overflow. The remainder is stored into the fourth argument
+  // register here.
   //
   // This variant preserves registers, and doesn't require hardware division
   // instructions on ARM (will call out to a runtime routine).
   //
-  // rhs is preserved, srdDest and remOutput are clobbered.
+  // lhs and rhs are preserved, divOutput and remOutput are clobbered.
   void flexibleDivMod32(
-      Register rhs, Register srcDest, Register remOutput, bool isUnsigned,
-      const LiveRegisterSet& volatileLiveRegs) PER_SHARED_ARCH;
+      Register lhs, Register rhs, Register divOutput, Register remOutput,
+      bool isUnsigned, const LiveRegisterSet& volatileLiveRegs) PER_SHARED_ARCH;
 
   inline void divFloat32(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
   inline void divDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;

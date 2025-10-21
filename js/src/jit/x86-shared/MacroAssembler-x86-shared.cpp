@@ -352,10 +352,10 @@ void MacroAssembler::flush() {}
 void MacroAssembler::comment(const char* msg) { masm.comment(msg); }
 
 // This operation really consists of five phases, in order to enforce the
-// restriction that on x86_shared, srcDest must be eax and edx will be
-// clobbered.
+// restriction that on x86_shared, the dividend must be eax and both eax and edx
+// will be clobbered.
 //
-//     Input: { rhs, lhsOutput }
+//     Input: { lhs, rhs }
 //
 //  [PUSH] Preserve registers
 //  [MOVE] Generate moves to specific registers
@@ -363,20 +363,26 @@ void MacroAssembler::comment(const char* msg) { masm.comment(msg); }
 //  [DIV] Input: { regForRhs, EAX }
 //  [DIV] extend EAX into EDX
 //  [DIV] x86 Division operator
-//  [DIV] Ouptut: { EAX, EDX }
+//  [DIV] Output: { EAX, EDX }
 //
 //  [MOVE] Move specific registers to outputs
 //  [POP] Restore registers
 //
-//    Output: { lhsOutput, remainderOutput }
-void MacroAssembler::flexibleDivMod32(Register rhs, Register lhsOutput,
-                                      Register remOutput, bool isUnsigned,
-                                      const LiveRegisterSet&) {
-  // Currently this helper can't handle this situation.
-  MOZ_ASSERT(lhsOutput != rhs);
-  MOZ_ASSERT(lhsOutput != remOutput);
+//    Output: { quotientOutput, remainderOutput }
+static void EmitDivMod32(MacroAssembler& masm, Register lhs, Register rhs,
+                         Register divOutput, Register remOutput,
+                         bool isUnsigned) {
+  if (lhs == rhs) {
+    if (divOutput != Register::Invalid()) {
+      masm.movl(Imm32(1), divOutput);
+    }
+    if (remOutput != Register::Invalid()) {
+      masm.movl(Imm32(0), remOutput);
+    }
+    return;
+  }
 
-  // Choose a register that is not edx, or eax to hold the rhs;
+  // Choose a register that is not edx or eax to hold the rhs;
   // ebx is chosen arbitrarily, and will be preserved if necessary.
   Register regForRhs = (rhs == eax || rhs == edx) ? ebx : rhs;
 
@@ -385,61 +391,64 @@ void MacroAssembler::flexibleDivMod32(Register rhs, Register lhsOutput,
   LiveRegisterSet preserve;
   preserve.add(edx);
   preserve.add(eax);
-  preserve.add(regForRhs);
+  if (rhs != regForRhs) {
+    preserve.add(regForRhs);
+  }
 
-  preserve.takeUnchecked(lhsOutput);
-  preserve.takeUnchecked(remOutput);
+  if (divOutput != Register::Invalid()) {
+    preserve.takeUnchecked(divOutput);
+  }
+  if (remOutput != Register::Invalid()) {
+    preserve.takeUnchecked(remOutput);
+  }
 
-  PushRegsInMask(preserve);
+  masm.PushRegsInMask(preserve);
 
   // Shuffle input into place.
-  moveRegPair(lhsOutput, rhs, eax, regForRhs);
+  masm.moveRegPair(lhs, rhs, eax, regForRhs);
 
   // Sign extend eax into edx to make (edx:eax): idiv/udiv are 64-bit.
   if (isUnsigned) {
-    mov(ImmWord(0), edx);
-    udiv(regForRhs);
+    masm.mov(ImmWord(0), edx);
+    masm.udiv(regForRhs);
   } else {
-    cdq();
-    idiv(regForRhs);
+    masm.cdq();
+    masm.idiv(regForRhs);
   }
 
-  moveRegPair(eax, edx, lhsOutput, remOutput);
+  if (divOutput != Register::Invalid() && remOutput != Register::Invalid()) {
+    masm.moveRegPair(eax, edx, divOutput, remOutput);
+  } else {
+    if (divOutput != Register::Invalid() && divOutput != eax) {
+      masm.mov(eax, divOutput);
+    }
+    if (remOutput != Register::Invalid() && remOutput != edx) {
+      masm.mov(edx, remOutput);
+    }
+  }
 
-  PopRegsInMask(preserve);
+  masm.PopRegsInMask(preserve);
+}
+
+void MacroAssembler::flexibleDivMod32(Register lhs, Register rhs,
+                                      Register divOutput, Register remOutput,
+                                      bool isUnsigned, const LiveRegisterSet&) {
+  MOZ_ASSERT(lhs != divOutput && lhs != remOutput, "lhs is preserved");
+  MOZ_ASSERT(rhs != divOutput && rhs != remOutput, "rhs is preserved");
+
+  EmitDivMod32(*this, lhs, rhs, divOutput, remOutput, isUnsigned);
 }
 
 void MacroAssembler::flexibleQuotient32(
-    Register rhs, Register srcDest, bool isUnsigned,
+    Register lhs, Register rhs, Register dest, bool isUnsigned,
     const LiveRegisterSet& volatileLiveRegs) {
-  // Choose an arbitrary register that isn't eax, edx, rhs or srcDest;
-  AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-  regs.takeUnchecked(eax);
-  regs.takeUnchecked(edx);
-  regs.takeUnchecked(rhs);
-  regs.takeUnchecked(srcDest);
-
-  Register remOut = regs.takeAny();
-  push(remOut);
-  flexibleDivMod32(rhs, srcDest, remOut, isUnsigned, volatileLiveRegs);
-  pop(remOut);
+  EmitDivMod32(*this, lhs, rhs, dest, Register::Invalid(), isUnsigned);
 }
 
 void MacroAssembler::flexibleRemainder32(
-    Register rhs, Register srcDest, bool isUnsigned,
+    Register lhs, Register rhs, Register dest, bool isUnsigned,
     const LiveRegisterSet& volatileLiveRegs) {
-  // Choose an arbitrary register that isn't eax, edx, rhs or srcDest
-  AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-  regs.takeUnchecked(eax);
-  regs.takeUnchecked(edx);
-  regs.takeUnchecked(rhs);
-  regs.takeUnchecked(srcDest);
-
-  Register remOut = regs.takeAny();
-  push(remOut);
-  flexibleDivMod32(rhs, srcDest, remOut, isUnsigned, volatileLiveRegs);
-  mov(remOut, srcDest);
-  pop(remOut);
+  EmitDivMod32(*this, lhs, rhs, Register::Invalid(), dest, isUnsigned);
 }
 
 // ===============================================================

@@ -3105,44 +3105,40 @@ void MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType,
 
 void MacroAssembler::atomicPause() { as_sync(); }
 
-void MacroAssembler::flexibleQuotient32(Register rhs, Register srcDest,
-                                        bool isUnsigned,
+void MacroAssembler::flexibleQuotient32(Register lhs, Register rhs,
+                                        Register dest, bool isUnsigned,
                                         const LiveRegisterSet&) {
-  quotient32(rhs, srcDest, isUnsigned);
+  quotient32(lhs, rhs, dest, isUnsigned);
 }
 
-void MacroAssembler::flexibleRemainder32(Register rhs, Register srcDest,
-                                         bool isUnsigned,
+void MacroAssembler::flexibleRemainder32(Register lhs, Register rhs,
+                                         Register dest, bool isUnsigned,
                                          const LiveRegisterSet&) {
-  remainder32(rhs, srcDest, isUnsigned);
+  remainder32(lhs, rhs, dest, isUnsigned);
 }
 
-void MacroAssembler::flexibleDivMod32(Register rhs, Register srcDest,
-                                      Register remOutput, bool isUnsigned,
-                                      const LiveRegisterSet&) {
-  UseScratchRegisterScope temps(*this);
+void MacroAssembler::flexibleDivMod32(Register lhs, Register rhs,
+                                      Register divOutput, Register remOutput,
+                                      bool isUnsigned, const LiveRegisterSet&) {
+  MOZ_ASSERT(lhs != divOutput && lhs != remOutput, "lhs is preserved");
+  MOZ_ASSERT(rhs != divOutput && rhs != remOutput, "rhs is preserved");
+
+#ifdef MIPSR6
   if (isUnsigned) {
-#ifdef MIPSR6
-    Register scratch = temps.Acquire();
-    as_divu(scratch, srcDest, rhs);
-    as_modu(remOutput, srcDest, rhs);
-    ma_move(srcDest, scratch);
-#else
-    as_divu(srcDest, rhs);
-#endif
+    as_divu(divOutput, lhs, rhs);
+    as_modu(remOutput, rhs, rhs);
   } else {
-#ifdef MIPSR6
-    Register scratch = temps.Acquire();
-    as_div(scratch, srcDest, rhs);
-    as_mod(remOutput, srcDest, rhs);
-    ma_move(srcDest, scratch);
-#else
-    as_div(srcDest, rhs);
-#endif
+    as_div(divOutput, lhs, rhs);
+    as_mod(remOutput, lhs, rhs);
   }
-#ifndef MIPSR6
+#else
+  if (isUnsigned) {
+    as_divu(lhs, rhs);
+  } else {
+    as_div(lhs, rhs);
+  }
   as_mfhi(remOutput);
-  as_mflo(srcDest);
+  as_mflo(divOutput);
 #endif
 }
 
