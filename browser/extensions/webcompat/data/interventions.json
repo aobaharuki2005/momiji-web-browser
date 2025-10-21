@@ -3187,6 +3187,21 @@
       }
     ]
   },
+  "1902454": {
+    "label": "onvideo.kuaishou.com",
+    "bugs": {
+      "1902454": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://onvideo.kuaishou.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
   "1902459": {
     "label": "coupangplay.com",
     "bugs": {
