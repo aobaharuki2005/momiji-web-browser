@@ -1561,6 +1561,22 @@ bool RemoteAccessible::IsPopover() const {
   return mCachedFields && mCachedFields->HasAttribute(CacheKey::PopupType);
 }
 
+bool RemoteAccessible::IsEditable() const {
+  if (RequestDomainsIfInactive(CacheDomain::State)) {
+    return false;
+  }
+
+  if (mCachedFields) {
+    if (auto rawState =
+            mCachedFields->GetAttribute<uint64_t>(CacheKey::State)) {
+      VERIFY_CACHE(CacheDomain::State);
+      return (*rawState & states::EDITABLE) != 0;
+    }
+  }
+
+  return false;
+}
+
 #if !defined(XP_WIN)
 void RemoteAccessible::Announce(const nsString& aAnnouncement,
                                 uint16_t aPriority) {

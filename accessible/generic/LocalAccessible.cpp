@@ -2534,6 +2534,11 @@ bool LocalAccessible::IsPopover() const {
   return el && el->IsHTMLElement() && el->HasAttr(nsGkAtoms::popover);
 }
 
+bool LocalAccessible::IsEditable() const {
+  dom::Element* el = Elm();
+  return el && el->State().HasState(dom::ElementState::READWRITE);
+}
+
 void LocalAccessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
                                    uint32_t aLength) {
   // Return text representation of non-text accessible within hypertext
