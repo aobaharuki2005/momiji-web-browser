@@ -56,3 +56,13 @@ function testArraySliceArguments() {
   }
 }
 testArraySliceArguments();
+
+function testArrayJoin() {
+  Object.defineProperty(Array.prototype, "joined", {get: Array.prototype.join});
+
+  for (var i = 0; i < 100; ++i) {
+    assertEq([].joined, "");
+    assertEq(["a"].joined, "a");
+  }
+}
+testArrayJoin();

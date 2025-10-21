@@ -7390,6 +7390,69 @@ bool CacheIRCompiler::emitArgumentsSliceResult(uint32_t templateObjectOffset,
   return true;
 }
 
+bool CacheIRCompiler::emitArrayJoinResult(ObjOperandId objId,
+                                          StringOperandId sepId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register obj = allocator.useRegister(masm, objId);
+  Register sep = allocator.useRegister(masm, sepId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, callvm.output());
+
+  // Discard the stack to ensure it's balanced when we skip the vm-call.
+  allocator.discardStack(masm);
+
+  // Load obj->elements in scratch.
+  masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+  Address lengthAddr(scratch, ObjectElements::offsetOfLength());
+
+  // If array length is 0, return empty string.
+  Label finished;
+
+  {
+    Label arrayNotEmpty;
+    masm.branch32(Assembler::NotEqual, lengthAddr, Imm32(0), &arrayNotEmpty);
+    masm.movePtr(ImmGCPtr(cx_->names().empty_), scratch);
+    masm.tagValue(JSVAL_TYPE_STRING, scratch, callvm.outputValueReg());
+    masm.jump(&finished);
+    masm.bind(&arrayNotEmpty);
+  }
+
+  Label vmCall;
+
+  // Otherwise, handle array length 1 case.
+  masm.branch32(Assembler::NotEqual, lengthAddr, Imm32(1), &vmCall);
+
+  // But only if initializedLength is also 1.
+  Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
+  masm.branch32(Assembler::NotEqual, initLength, Imm32(1), &vmCall);
+
+  // And only if elem0 is a string.
+  Address elementAddr(scratch, 0);
+  masm.branchTestString(Assembler::NotEqual, elementAddr, &vmCall);
+
+  // Store the value.
+  masm.loadValue(elementAddr, callvm.outputValueReg());
+  masm.jump(&finished);
+
+  // Otherwise call into the VM.
+  {
+    masm.bind(&vmCall);
+
+    callvm.prepare();
+
+    masm.Push(sep);
+    masm.Push(obj);
+
+    using Fn = JSString* (*)(JSContext*, HandleObject, HandleString);
+    callvm.call<Fn, jit::ArrayJoin>();
+  }
+
+  masm.bind(&finished);
+  return true;
+}
+
 bool CacheIRCompiler::emitStoreTypedArrayElement(ObjOperandId objId,
                                                  Scalar::Type elementType,
                                                  IntPtrOperandId indexId,
