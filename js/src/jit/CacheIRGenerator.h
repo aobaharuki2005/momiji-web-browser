@@ -176,8 +176,6 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
                                                 ValOperandId receiverId);
   AttachDecision tryAttachObjectLength(HandleObject obj, ObjOperandId objId,
                                        HandleId id);
-  AttachDecision tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
-                                     HandleId id);
   AttachDecision tryAttachDataView(HandleObject obj, ObjOperandId objId,
                                    HandleId id);
   AttachDecision tryAttachArrayBufferMaybeShared(HandleObject obj,
@@ -832,6 +830,9 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachTypedArrayFill();
   AttachDecision tryAttachTypedArraySet();
   AttachDecision tryAttachTypedArraySubarray();
+  AttachDecision tryAttachTypedArrayLength();
+  AttachDecision tryAttachTypedArrayByteLength();
+  AttachDecision tryAttachTypedArrayByteOffset();
   AttachDecision tryAttachIsTypedArray(bool isPossiblyWrapped);
   AttachDecision tryAttachIsTypedArrayConstructor();
   AttachDecision tryAttachTypedArrayLength(bool isPossiblyWrapped);
