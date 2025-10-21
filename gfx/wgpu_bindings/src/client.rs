@@ -242,7 +242,7 @@ pub struct SamplerDescriptor<'a> {
     address_modes: [wgt::AddressMode; 3],
     mag_filter: wgt::FilterMode,
     min_filter: wgt::FilterMode,
-    mipmap_filter: wgt::FilterMode,
+    mipmap_filter: wgt::MipmapFilterMode,
     lod_min_clamp: f32,
     lod_max_clamp: f32,
     compare: Option<&'a wgt::CompareFunction>,
@@ -653,6 +653,7 @@ pub extern "C" fn wgpu_client_receive_server_message(client: &Client, byte_buf: 
                 name,
                 vendor,
                 support_use_shared_texture_in_swap_chain,
+                transient_saves_memory,
             }) = adapter_information
             {
                 let nss = |s: &str| {
@@ -672,6 +673,7 @@ pub extern "C" fn wgpu_client_receive_server_message(client: &Client, byte_buf: 
                     name: nss(&name),
                     vendor,
                     support_use_shared_texture_in_swap_chain,
+                    transient_saves_memory,
                 };
                 unsafe {
                     wgpu_child_resolve_request_adapter_promise(

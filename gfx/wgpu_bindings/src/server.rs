@@ -2651,6 +2651,7 @@ unsafe fn process_message(
                     driver,
                     driver_info,
                     backend,
+                    transient_saves_memory,
                 } = global.adapter_get_info(adapter_id);
 
                 let is_hardware = match device_type {
@@ -2688,6 +2689,7 @@ unsafe fn process_message(
                     driver_info: Cow::Owned(driver_info),
                     backend,
                     support_use_shared_texture_in_swap_chain,
+                    transient_saves_memory,
                 };
                 Some(info)
             } else {

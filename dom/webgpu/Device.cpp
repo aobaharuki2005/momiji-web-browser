@@ -231,7 +231,7 @@ already_AddRefed<Sampler> Device::CreateSampler(
   desc.address_modes[2] = ffi::WGPUAddressMode(aDesc.mAddressModeW);
   desc.mag_filter = ffi::WGPUFilterMode(aDesc.mMagFilter);
   desc.min_filter = ffi::WGPUFilterMode(aDesc.mMinFilter);
-  desc.mipmap_filter = ffi::WGPUFilterMode(aDesc.mMipmapFilter);
+  desc.mipmap_filter = ffi::WGPUMipmapFilterMode(aDesc.mMipmapFilter);
   desc.lod_min_clamp = aDesc.mLodMinClamp;
   desc.lod_max_clamp = aDesc.mLodMaxClamp;
   desc.max_anisotropy = aDesc.mMaxAnisotropy;

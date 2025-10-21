@@ -126,6 +126,7 @@ pub struct AdapterInformation<S> {
     driver_info: S,
     backend: wgt::Backend,
     support_use_shared_texture_in_swap_chain: bool,
+    transient_saves_memory: bool,
 }
 
 #[repr(C)]
