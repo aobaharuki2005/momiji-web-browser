@@ -1113,12 +1113,22 @@ void GetPropIRGenerator::emitCallGetterResultGuards(NativeObject* obj,
 }
 
 void GetPropIRGenerator::emitCallGetterResult(NativeGetPropKind kind,
-                                              NativeObject* obj,
-                                              NativeObject* holder, HandleId id,
-                                              PropertyInfo prop,
+                                              Handle<NativeObject*> obj,
+                                              Handle<NativeObject*> holder,
+                                              HandleId id, PropertyInfo prop,
                                               ObjOperandId objId,
                                               ValOperandId receiverId) {
   emitCallGetterResultGuards(obj, holder, id, prop, objId);
+
+  if (kind == NativeGetPropKind::NativeGetter &&
+      mode_ == ICState::Mode::Specialized) {
+    auto attached = tryAttachInlinableNativeGetter(holder, prop, receiverId);
+    if (attached != AttachDecision::NoAction) {
+      MOZ_ASSERT(attached == AttachDecision::Attach);
+      return;
+    }
+  }
+
   emitCallGetterResultNoGuards(kind, obj, holder, prop, receiverId);
 }
 
@@ -1251,10 +1261,10 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
                                                    HandleId id,
                                                    ValOperandId receiverId) {
   Maybe<PropertyInfo> prop;
-  NativeObject* holder = nullptr;
+  Rooted<NativeObject*> holder(cx_);
 
   NativeGetPropKind kind =
-      CanAttachNativeGetProp(cx_, obj, id, &holder, &prop, pc_);
+      CanAttachNativeGetProp(cx_, obj, id, holder.address(), &prop, pc_);
   switch (kind) {
     case NativeGetPropKind::None:
       return AttachDecision::NoAction;
@@ -1282,7 +1292,7 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
     }
     case NativeGetPropKind::ScriptedGetter:
     case NativeGetPropKind::NativeGetter: {
-      auto* nobj = &obj->as<NativeObject>();
+      auto nobj = obj.as<NativeObject>();
       MOZ_ASSERT(!IsWindow(nobj));
 
       // If we're in megamorphic mode, we assume that a specialized
@@ -1383,11 +1393,11 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
   }
 
   // Now try to do the lookup on the Window (the current global).
-  GlobalObject* windowObj = cx_->global();
-  NativeObject* holder = nullptr;
+  Handle<GlobalObject*> windowObj = cx_->global();
+  Rooted<NativeObject*> holder(cx_);
   Maybe<PropertyInfo> prop;
   NativeGetPropKind kind =
-      CanAttachNativeGetProp(cx_, windowObj, id, &holder, &prop, pc_);
+      CanAttachNativeGetProp(cx_, windowObj, id, holder.address(), &prop, pc_);
   switch (kind) {
     case NativeGetPropKind::None:
       return AttachDecision::NoAction;
@@ -2432,6 +2442,31 @@ AttachDecision GetPropIRGenerator::tryAttachObjectLength(HandleObject obj,
   return AttachDecision::NoAction;
 }
 
+AttachDecision GetPropIRGenerator::tryAttachInlinableNativeGetter(
+    Handle<NativeObject*> holder, PropertyInfo prop, ValOperandId receiverId) {
+  MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
+
+  // Receiver should be the object.
+  if (isSuper()) {
+    return AttachDecision::NoAction;
+  }
+
+  Rooted<JSFunction*> target(cx_, &holder->getGetter(prop)->as<JSFunction>());
+  MOZ_ASSERT(target->isNativeWithoutJitEntry());
+
+  Handle<Value> thisValue = val_;
+
+  bool isSpread = false;
+  bool isSameRealm = cx_->realm() == target->realm();
+  bool isConstructing = false;
+  CallFlags flags(isConstructing, isSpread, isSameRealm);
+
+  // Check for specific native-function optimizations.
+  InlinableNativeIRGenerator nativeGen(*this, target, thisValue, flags,
+                                       receiverId);
+  return nativeGen.tryAttachStub();
+}
+
 AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
                                                        ObjOperandId objId,
                                                        HandleId id) {
@@ -3012,10 +3047,10 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
     return AttachDecision::NoAction;
   }
 
-  NativeObject* holder = nullptr;
+  Rooted<NativeObject*> holder(cx_);
   Maybe<PropertyInfo> prop;
   NativeGetPropKind kind =
-      CanAttachNativeGetProp(cx_, proto, id, &holder, &prop, pc_);
+      CanAttachNativeGetProp(cx_, proto, id, holder.address(), &prop, pc_);
   if (kind == NativeGetPropKind::None) {
     return AttachDecision::NoAction;
   }
@@ -3027,7 +3062,7 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
   }
   maybeEmitIdGuard(id);
 
-  auto* nproto = &proto->as<NativeObject>();
+  Rooted<NativeObject*> nproto(cx_, &proto->as<NativeObject>());
   ObjOperandId protoId = writer.loadObject(nproto);
 
   switch (kind) {
@@ -6534,6 +6569,15 @@ ObjOperandId InlinableNativeIRGenerator::emitNativeCalleeGuard(
   // native from a different realm.
   MOZ_ASSERT(target_->isNativeWithoutJitEntry());
 
+  // Guards already emitted in GetPropIRGenerator::emitCallGetterResultGuards.
+  if (isAccessorOp()) {
+    MOZ_ASSERT(flags_.getArgFormat() == CallFlags::Standard);
+    MOZ_ASSERT(!flags_.isConstructing());
+    MOZ_ASSERT(!isCalleeBoundFunction());
+    MOZ_ASSERT(!isTargetBoundFunction());
+    return ObjOperandId();
+  }
+
   ValOperandId calleeValId;
   switch (flags_.getArgFormat()) {
     case CallFlags::Standard:
@@ -6697,7 +6741,9 @@ ObjOperandId InlinableNativeIRGenerator::emitLoadArgsArray() {
   }
 
   MOZ_ASSERT(flags_.getArgFormat() == CallFlags::FunApplyArray);
-  return generator_.emitFunApplyArgsGuard(flags_.getArgFormat()).ref();
+  return gen_.as<CallIRGenerator*>()
+      ->emitFunApplyArgsGuard(flags_.getArgFormat())
+      .ref();
 }
 
 ValOperandId InlinableNativeIRGenerator::loadBoundArgument(
@@ -6719,6 +6765,15 @@ ValOperandId InlinableNativeIRGenerator::loadBoundArgument(
 }
 
 ValOperandId InlinableNativeIRGenerator::loadThis(ObjOperandId calleeId) {
+  // Accessor operations use the receiver as their |this| value.
+  if (isAccessorOp()) {
+    MOZ_ASSERT(flags_.getArgFormat() == CallFlags::Standard);
+    MOZ_ASSERT(!isTargetBoundFunction());
+    MOZ_ASSERT(!isCalleeBoundFunction());
+    MOZ_ASSERT(receiverId_.valid());
+    return receiverId_;
+  }
+
   switch (flags_.getArgFormat()) {
     case CallFlags::Standard:
     case CallFlags::Spread:
@@ -6798,6 +6853,7 @@ ValOperandId InlinableNativeIRGenerator::loadArgument(ObjOperandId calleeId,
              flags_.getArgFormat() == CallFlags::FunApplyNullUndefined);
   MOZ_ASSERT_IF(flags_.getArgFormat() == CallFlags::FunApplyNullUndefined,
                 isTargetBoundFunction() && hasBoundArguments());
+  MOZ_ASSERT(!isAccessorOp(), "get property operations don't have arguments");
 
   // Check if the |this| value is stored in the bound arguments.
   bool thisFromBoundArgs = flags_.getArgFormat() == CallFlags::FunCall &&
@@ -12061,6 +12117,11 @@ AttachDecision InlinableNativeIRGenerator::tryAttachObjectConstructor() {
   gc::AllocSite* site = nullptr;
   PlainObject* templateObj = nullptr;
   if (args_.length() == 0) {
+    // Don't optimize if we can't create an alloc-site.
+    if (!BytecodeOpCanHaveAllocSite(op())) {
+      return AttachDecision::NoAction;
+    }
+
     // Stub doesn't support metadata builder
     if (cx_->realm()->hasAllocationMetadataBuilder()) {
       return AttachDecision::NoAction;
@@ -12112,6 +12173,11 @@ AttachDecision InlinableNativeIRGenerator::tryAttachObjectConstructor() {
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachArrayConstructor() {
+  // Don't optimize if we can't create an alloc-site.
+  if (!BytecodeOpCanHaveAllocSite(op())) {
+    return AttachDecision::NoAction;
+  }
+
   // Only optimize the |Array()| and |Array(n)| cases (with or without |new|)
   // for now. Note that self-hosted code calls this without |new| via std_Array.
   if (args_.length() > 1) {
@@ -12925,7 +12991,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
   MOZ_ASSERT(target_->isNativeWithoutJitEntry());
 
   // Special case functions are only optimized for normal calls.
-  if (!BytecodeCallOpCanHaveInlinableNative(op())) {
+  if (!BytecodeCallOpCanHaveInlinableNative(op()) &&
+      !BytecodeGetOpCanHaveInlinableNative(op())) {
     return AttachDecision::NoAction;
   }
 

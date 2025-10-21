@@ -166,8 +166,13 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
   HandleValue val_;
   HandleValue idVal_;
 
+  friend class InlinableNativeIRGenerator;
+
   AttachDecision tryAttachNative(HandleObject obj, ObjOperandId objId,
                                  HandleId id, ValOperandId receiverId);
+  AttachDecision tryAttachInlinableNativeGetter(Handle<NativeObject*> holder,
+                                                PropertyInfo prop,
+                                                ValOperandId receiverId);
   AttachDecision tryAttachObjectLength(HandleObject obj, ObjOperandId objId,
                                        HandleId id);
   AttachDecision tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
@@ -280,8 +285,8 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
   void emitCallGetterResultGuards(NativeObject* obj, NativeObject* holder,
                                   HandleId id, PropertyInfo prop,
                                   ObjOperandId objId);
-  void emitCallGetterResult(NativeGetPropKind kind, NativeObject* obj,
-                            NativeObject* holder, HandleId id,
+  void emitCallGetterResult(NativeGetPropKind kind, Handle<NativeObject*> obj,
+                            Handle<NativeObject*> holder, HandleId id,
                             PropertyInfo prop, ObjOperandId objId,
                             ValOperandId receiverId);
   void emitCallDOMGetterResult(NativeObject* obj, NativeObject* holder,
@@ -650,7 +655,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
 };
 
 class MOZ_RAII InlinableNativeIRGenerator {
-  CallIRGenerator& generator_;
+  mozilla::Variant<CallIRGenerator*, GetPropIRGenerator*> gen_;
+  IRGenerator& generator_;
   CacheIRWriter& writer;
   JSContext* cx_;
 
@@ -663,12 +669,18 @@ class MOZ_RAII InlinableNativeIRGenerator {
   CallFlags flags_;
   uint32_t stackArgc_;
 
+  // |this| for inlined accesor operations.
+  ValOperandId receiverId_;
+
   HandleScript script() const { return generator_.script_; }
   JSObject* callee() const { return callee_; }
   bool isFirstStub() const { return generator_.isFirstStub_; }
   bool ignoresResult() const { return op() == JSOp::CallIgnoresRv; }
   JSOp op() const { return generator_.jsop(); }
   uint32_t stackArgc() const { return stackArgc_; }
+
+  // Inlined native accessor for GetProp or GetElem operations.
+  bool isAccessorOp() const { return !IsInvokeOp(op()); }
 
   bool isCalleeBoundFunction() const;
   BoundFunctionObject* boundCallee() const;
@@ -700,6 +712,10 @@ class MOZ_RAII InlinableNativeIRGenerator {
   bool hasBoundArguments() const;
 
   Int32OperandId initializeInputOperand() {
+    // Input operands are already initialized for inlined accessors.
+    if (isAccessorOp()) {
+      return Int32OperandId();
+    }
     return Int32OperandId(writer.setInputOperandId(0));
   }
 
@@ -880,7 +896,8 @@ class MOZ_RAII InlinableNativeIRGenerator {
 #endif
 
   void trackAttached(const char* name /* must be a C string literal */) {
-    return generator_.trackAttached(name);
+    return gen_.match(
+        [&](auto* generator) { return generator->trackAttached(name); });
   }
 
  public:
@@ -889,7 +906,8 @@ class MOZ_RAII InlinableNativeIRGenerator {
                              HandleValue thisValue, HandleValueArray args,
                              CallFlags flags,
                              Handle<BoundFunctionObject*> boundTarget = nullptr)
-      : generator_(generator),
+      : gen_(&generator),
+        generator_(generator),
         writer(generator.writer),
         cx_(generator.cx_),
         callee_(callee),
@@ -899,7 +917,25 @@ class MOZ_RAII InlinableNativeIRGenerator {
         args_(args),
         boundTarget_(boundTarget),
         flags_(flags),
-        stackArgc_(generator.argc_) {}
+        stackArgc_(generator.argc_),
+        receiverId_() {}
+
+  InlinableNativeIRGenerator(GetPropIRGenerator& generator,
+                             HandleFunction target, HandleValue thisValue,
+                             CallFlags flags, ValOperandId receiverId)
+      : gen_(&generator),
+        generator_(generator),
+        writer(generator.writer),
+        cx_(generator.cx_),
+        callee_(target),
+        target_(target),
+        newTarget_(JS::NullHandleValue),
+        thisval_(thisValue),
+        args_(HandleValueArray::empty()),
+        boundTarget_(nullptr),
+        flags_(flags),
+        stackArgc_(0),
+        receiverId_(receiverId) {}
 
   AttachDecision tryAttachStub();
 };
@@ -1088,11 +1124,16 @@ class MOZ_RAII LambdaIRGenerator : public IRGenerator {
   AttachDecision tryAttachFunctionClone();
 };
 
-// Returns true for bytecode ops that can use InlinableNativeIRGenerator.
+// Returns true for bytecode call ops that can use InlinableNativeIRGenerator.
 inline bool BytecodeCallOpCanHaveInlinableNative(JSOp op) {
   return op == JSOp::Call || op == JSOp::CallContent || op == JSOp::New ||
          op == JSOp::NewContent || op == JSOp::CallIgnoresRv ||
          op == JSOp::SpreadCall;
+}
+
+// Returns true for bytecode get ops that can use InlinableNativeIRGenerator.
+inline bool BytecodeGetOpCanHaveInlinableNative(JSOp op) {
+  return op == JSOp::GetProp || op == JSOp::GetElem;
 }
 
 inline bool BytecodeOpCanHaveAllocSite(JSOp op) {
