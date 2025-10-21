@@ -8,6 +8,9 @@ skip-if = ["tsan"] # Bug 1804081 - TSan times out on pretty much all of these te
 ["browser_test_feature_ipcmessages.js"]
 support-files = ["simple.html"]
 
+["browser_test_feature_js_sourceindex.js"]
+support-files = ["simple.html", "tracing.html"]
+
 ["browser_test_feature_jsallocations.js"]
 support-files = ["do_work_500ms.html"]
 
