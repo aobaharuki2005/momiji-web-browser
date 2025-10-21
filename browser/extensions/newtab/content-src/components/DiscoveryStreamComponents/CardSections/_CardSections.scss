@@ -234,7 +234,8 @@
     }
 
     .card-stp-button-hover-background {
-      background: transparent; }
+      background: transparent;
+    }
 
     &:hover,
     &:active,
@@ -251,6 +252,10 @@
 
   .card-stp-button-position-wrapper {
     inset-inline-end: var(--space-small);
+  }
+
+  .card-stp-button-hover-background {
+    background: transparent;
   }
 
   .card-stp-thumbs-buttons-wrapper {

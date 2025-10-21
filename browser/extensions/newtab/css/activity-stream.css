@@ -5481,6 +5481,9 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-1-medium .card-stp-button-position-wrapper {
     inset-inline-end: var(--space-small);
   }
+  .ds-section-grid.ds-card-grid .col-1-medium .card-stp-button-hover-background {
+    background: transparent;
+  }
   .ds-section-grid.ds-card-grid .col-1-medium .card-stp-thumbs-buttons-wrapper {
     display: block;
   }
@@ -5845,6 +5848,9 @@ dialog::after {
   }
   .ds-section-grid.ds-card-grid .col-2-medium .card-stp-button-position-wrapper {
     inset-inline-end: var(--space-small);
+  }
+  .ds-section-grid.ds-card-grid .col-2-medium .card-stp-button-hover-background {
+    background: transparent;
   }
   .ds-section-grid.ds-card-grid .col-2-medium .card-stp-thumbs-buttons-wrapper {
     display: block;
@@ -6220,6 +6226,9 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-3-medium .card-stp-button-position-wrapper {
     inset-inline-end: var(--space-small);
   }
+  .ds-section-grid.ds-card-grid .col-3-medium .card-stp-button-hover-background {
+    background: transparent;
+  }
   .ds-section-grid.ds-card-grid .col-3-medium .card-stp-thumbs-buttons-wrapper {
     display: block;
   }
@@ -6592,6 +6601,9 @@ dialog::after {
   }
   .ds-section-grid.ds-card-grid .col-4-medium .card-stp-button-position-wrapper {
     inset-inline-end: var(--space-small);
+  }
+  .ds-section-grid.ds-card-grid .col-4-medium .card-stp-button-hover-background {
+    background: transparent;
   }
   .ds-section-grid.ds-card-grid .col-4-medium .card-stp-thumbs-buttons-wrapper {
     display: block;
