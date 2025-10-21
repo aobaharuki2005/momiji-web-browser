@@ -50,46 +50,6 @@ inline NSString* ToNSString(id aValue) {
 
 @implementation mozTextAccessible
 
-- (id)moxValue {
-  // Apple's SpeechSynthesisServer expects AXValue to return an AXStaticText
-  // object's AXSelectedText attribute. See bug 674612 for details.
-  // Also if there is no selected text, we return the full text.
-  // See bug 369710 for details.
-  if ([[self moxRole] isEqualToString:NSAccessibilityStaticTextRole]) {
-    NSString* selectedText = [self moxSelectedText];
-    return (selectedText && [selectedText length]) ? selectedText : [self text];
-  }
-
-  return [self text];
-}
-
-- (id)moxRequired {
-  return @([self stateWithMask:states::REQUIRED] != 0);
-}
-
-- (NSString*)moxInvalid {
-  if ([self stateWithMask:states::INVALID] != 0) {
-    // If the attribute exists, it has one of four values: true, false,
-    // grammar, or spelling. We query the attribute value here in order
-    // to find the correct string to return.
-    RefPtr<AccAttributes> attributes;
-    HyperTextAccessibleBase* text = mGeckoAccessible->AsHyperTextBase();
-    if (text && mGeckoAccessible->IsTextRole()) {
-      attributes = text->DefaultTextAttributes();
-    }
-
-    nsAutoString invalidStr;
-    if (!attributes ||
-        !attributes->GetAttribute(nsGkAtoms::invalid, invalidStr)) {
-      return @"true";
-    }
-    return nsCocoaUtils::ToNSString(invalidStr);
-  }
-
-  // If the flag is not set, we return false.
-  return @"false";
-}
-
 - (NSNumber*)moxInsertionPointLineNumber {
   MOZ_ASSERT(mGeckoAccessible);
 
