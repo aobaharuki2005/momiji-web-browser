@@ -5688,10 +5688,16 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
   MOZ_ASSERT(cacheKind_ == CacheKind::InstanceOf);
   AutoAssertNoPendingException aanpe(cx_);
 
+  TRY_ATTACH(tryAttachFunction());
+
+  trackAttached(IRGenerator::NotAttached);
+  return AttachDecision::NoAction;
+}
+
+AttachDecision InstanceOfIRGenerator::tryAttachFunction() {
   // Ensure RHS is a function -- could be a Proxy, which the IC isn't prepared
   // to handle.
   if (!rhsObj_->is<JSFunction>()) {
-    trackAttached(IRGenerator::NotAttached);
     return AttachDecision::NoAction;
   }
 
@@ -5709,13 +5715,11 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
   if (!LookupPropertyPure(cx_, fun, hasInstanceID, &hasInstanceHolder,
                           &hasInstanceProp) ||
       !hasInstanceProp.isNativeProperty()) {
-    trackAttached(IRGenerator::NotAttached);
     return AttachDecision::NoAction;
   }
 
   JSObject& funProto = cx_->global()->getPrototype(JSProto_Function);
   if (hasInstanceHolder != &funProto) {
-    trackAttached(IRGenerator::NotAttached);
     return AttachDecision::NoAction;
   }
 
@@ -5727,17 +5731,20 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
 
   MOZ_ASSERT(IsCacheableProtoChain(fun, hasInstanceHolder));
 
-  // Ensure that the function's prototype slot is the same.
-  Maybe<PropertyInfo> prop = fun->lookupPure(cx_->names().prototype);
-  if (prop.isNothing() || !prop->isDataProperty()) {
-    trackAttached(IRGenerator::NotAttached);
+  // Look up the function's .prototype property.
+  Maybe<PropertyInfo> prototypeProp = fun->lookupPure(cx_->names().prototype);
+  if (prototypeProp.isNothing()) {
+    return AttachDecision::NoAction;
+  }
+  if (!prototypeProp->isDataProperty()) {
     return AttachDecision::NoAction;
   }
 
-  uint32_t slot = prop->slot();
-  MOZ_ASSERT(slot >= fun->numFixedSlots(), "Stub code relies on this");
-  if (!fun->getSlot(slot).isObject()) {
-    trackAttached(IRGenerator::NotAttached);
+  // Ensure the .prototype value is an object.
+  uint32_t prototypeSlot = prototypeProp->slot();
+  MOZ_ASSERT(prototypeSlot >= fun->numFixedSlots(),
+             "LoadDynamicSlot expects a dynamic slot");
+  if (!fun->getSlot(prototypeSlot).isObject()) {
     return AttachDecision::NoAction;
   }
 
@@ -5759,7 +5766,7 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
 
   // Load the .prototype value and ensure it's an object.
   ValOperandId protoValId =
-      writer.loadDynamicSlot(rhsId, slot - fun->numFixedSlots());
+      writer.loadDynamicSlot(rhsId, prototypeSlot - fun->numFixedSlots());
   ObjOperandId protoId = writer.guardToObject(protoValId);
 
   // Needn't guard LHS is object, because the actual stub can handle that

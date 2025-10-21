@@ -501,6 +501,7 @@ class MOZ_RAII InstanceOfIRGenerator : public IRGenerator {
   HandleValue lhsVal_;
   HandleObject rhsObj_;
 
+  AttachDecision tryAttachFunction();
   void trackAttached(const char* name /* must be a C string literal */);
 
  public:
