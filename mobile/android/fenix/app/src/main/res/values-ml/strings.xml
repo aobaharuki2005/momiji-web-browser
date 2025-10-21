@@ -290,9 +290,9 @@
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
   <string name="browser_main_menu_content_description_navigation_header">വഴികാട്ടൽവ്യവസ്ഥ</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button">തുണ</string>
+  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">തുണ</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button">ക്രമീകരണങ്ങള്‍</string>
+  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">ക്രമീകരണങ്ങള്‍</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">വിപുലീകരണ കുറിപ്പടി കടലാസു് അടയ്ക്കുക</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -436,15 +436,15 @@
     Title for set firefox as default browser screen used by Nimbus experiments.
     Note: The word "Firefox" should NOT be translated
   -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources">ദശലക്ഷക്കണക്കിന് ആൾക്കാർ ഫയർഫോക്സിനെ സ്നേഹിക്കുന്നെന്തിന എന്നു് കണ്ടുപ്പിടിക്കുക</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">ദശലക്ഷക്കണക്കിന് ആൾക്കാർ ഫയർഫോക്സിനെ സ്നേഹിക്കുന്നെന്തിന എന്നു് കണ്ടുപ്പിടിക്കുക</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">കൂടുതൽ തെരഞ്ഞെടുപ്പുകൾതോടു് സുരക്ഷിതമായി തിരയുക</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">കൂടുതൽ തെരഞ്ഞെടുപ്പുകൾതോടു് സുരക്ഷിതമായി തിരയുക</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">ഞങ്ങളുടെ ലാഭേച്ഛയില്ലാത്ത അന്വേഷിയന്ത്രം താങ്ങളെ വെബിലുടനീളം ഒളിമായി പിന്തുടരുന്നതിൽ നിന്ന് കമ്പനികളെ തടയാൻ സഹായിക്കുന്നു.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">ലാഭേച്ഛയില്ലാത്ത ഒരു അന്വേഷിയന്ത്രം തിരഞ്ഞെടുത്ത് 100 ദശലക്ഷത്തിലധികം ആൾക്കാർ അവരുടെ സ്വകാര്യത സംരക്ഷിക്കുന്നു.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">ലാഭേച്ഛയില്ലാത്ത ഒരു അന്വേഷിയന്ത്രം തിരഞ്ഞെടുത്ത് 100 ദശലക്ഷത്തിലധികം ആൾക്കാർ അവരുടെ സ്വകാര്യത സംരക്ഷിക്കുന്നു.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">അറിയപ്പെടുന്ന പിന്തു‌ർച്ചയന്ത്രങ്ങൾ? തന്നെതാനെ തടഞ്ഞു. വിപുലീകണങ്ങൾ? 700 മൊത്തം ശ്രമിച്ചു നോക്കാം. പീ.ഡീ.എഫുകൾ? ഞങ്ങളുടെ അന്തരനിർമിത വായനസഹായി അവയെ കൈകാര്യം ചെയ്യാൻ എളുപ്പമാക്കുന്നു.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">അറിയപ്പെടുന്ന പിന്തു‌ർച്ചയന്ത്രങ്ങൾ? തന്നെതാനെ തടഞ്ഞു. വിപുലീകണങ്ങൾ? 700 മൊത്തം ശ്രമിച്ചു നോക്കാം. പീ.ഡീ.എഫുകൾ? ഞങ്ങളുടെ അന്തരനിർമിത വായനസഹായി അവയെ കൈകാര്യം ചെയ്യാൻ എളുപ്പമാക്കുന്നു.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">തനതു അന്വേഷിയായി വയ്ക്കുക</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->

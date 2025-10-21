@@ -327,15 +327,15 @@
     Title for set firefox as default browser screen used by Nimbus experiments.
     Note: The word "Firefox" should NOT be translated
   -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources">Téang iber naha mangyuta jalma resep Firefox</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">Téang iber naha mangyuta jalma resep Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Panyungsian aman jeung réa pilihan</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Panyungsian aman jeung réa pilihan</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">Browser anu dirojong kalawan nirlaba urang nulungan pikeun mahing pausahaan ngukuntit anjuen dina wéb.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Leuwih ti 100 juta jalma ngajaga privasina ku milih browser anu dirojong ku nirlaba.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Leuwih ti 100 juta jalma ngajaga privasina ku milih browser anu dirojong ku nirlaba.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Trackers dipikawanoh? Diblokir otomatis. Ekstensi? Coba sakabéhna 700. PDFs? Pamaca anu diwangun ku urang ngajadikeun éta gampang diurus.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">Trackers dipikawanoh? Diblokir otomatis. Ekstensi? Coba sakabéhna 700. PDFs? Pamaca anu diwangun ku urang ngajadikeun éta gampang diurus.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Jadikeun panyungsi baku</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->

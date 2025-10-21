@@ -353,15 +353,15 @@
     Title for set firefox as default browser screen used by Nimbus experiments.
     Note: The word "Firefox" should NOT be translated
   -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources">Еилышәкаа миллионҩыла ауаа Firefox бзиа изырбо</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">Еилышәкаа миллионҩыла ауаа Firefox бзиа изырбо</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Алхрақәа рацәаны иҟоу ашәарҭадаратә веб-серфинг</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Алхрақәа рацәаны иҟоу ашәарҭадаратә веб-серфинг</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">Ахашәалахәы ззыԥшым аиҿкаара адгылара азызуа ҳбраузер акомпаниақәа онлаин шәышьҭаҵара аанкылара иацхраауеит.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">100 миллионҩык ауаа рхатә ԥсҭазаара рыхьчоит, ахашәалахәы ззыԥшым аиҿкаара иацхраауа абраузер алхны.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">100 миллионҩык ауаа рхатә ԥсҭазаара рыхьчоит, ахашәалахәы ззыԥшым аиҿкаара иацхраауа абраузер алхны.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Еицырдыруа ашьҭаҵаҩцәа? Автоматла иаанкылоуп. Аиҵыхрақәа? Зегьы ԥышәа 700. PDF фаилқәа? Ҳара иагәылоу аԥхьаҩ урҭ рнапхгара марианы иҟанаҵоит.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">Еицырдыруа ашьҭаҵаҩцәа? Автоматла иаанкылоуп. Аиҵыхрақәа? Зегьы ԥышәа 700. PDF фаилқәа? Ҳара иагәылоу аԥхьаҩ урҭ рнапхгара марианы иҟанаҵоит.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Абраузер ишыҟоу еиԥш ишьақәыргылатәуп</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
