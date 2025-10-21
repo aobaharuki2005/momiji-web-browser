@@ -10,6 +10,7 @@
 #include "js/JSON.h"
 #include "js/PropertyAndElement.h"
 #include "js/Value.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/JSONStringWriteFuncs.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 
@@ -28,8 +29,14 @@ mozilla::ProfileGenerationAdditionalInformation::CreateJSStringFromSourceData(
         return JS_NewStringCopyN(aCx, srcText.chars().get(), srcText.length());
       },
       [&](const ProfilerJSSourceData::RetrievableFile&) -> JSString* {
-        // FIXME: Implement this later.
-        return JS_NewStringCopyZ(aCx, "[unavailable]");
+        ProfilerJSSourceData retrievedData =
+            js::RetrieveProfilerSourceContent(aCx, aSourceData.filePath());
+        const auto& data = retrievedData.data();
+        MOZ_RELEASE_ASSERT(data.is<ProfilerJSSourceData::SourceTextUTF8>(),
+                           "Retrieved JS source has to be utf-8");
+
+        const auto& srcText = data.as<ProfilerJSSourceData::SourceTextUTF8>();
+        return JS_NewStringCopyN(aCx, srcText.chars().get(), srcText.length());
       },
       [&](const ProfilerJSSourceData::Unavailable&) -> JSString* {
         return JS_NewStringCopyZ(aCx, "[unavailable]");
