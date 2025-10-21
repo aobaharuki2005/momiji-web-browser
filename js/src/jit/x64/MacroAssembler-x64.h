@@ -153,14 +153,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   }
   template <typename T>
   void storeValue(const Value& val, const T& dest) {
-    ScratchRegisterScope scratch(asMasm());
     if (val.isGCThing()) {
+      ScratchRegisterScope scratch(asMasm());
       movWithPatch(ImmWord(val.asRawBits()), scratch);
       writeDataRelocation(val);
+      movq(scratch, Operand(dest));
     } else {
-      mov(ImmWord(val.asRawBits()), scratch);
+      storePtr(ImmWord(val.asRawBits()), dest);
     }
-    movq(scratch, Operand(dest));
   }
   void storeValue(ValueOperand val, BaseIndex dest) {
     storeValue(val, Operand(dest));
