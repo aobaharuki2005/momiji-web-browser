@@ -3204,6 +3204,21 @@
       }
     ]
   },
+  "1902450": {
+    "label": "hilokal.com",
+    "bugs": {
+      "1902450": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://www.hilokal.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
   "1902454": {
     "label": "onvideo.kuaishou.com",
     "bugs": {
