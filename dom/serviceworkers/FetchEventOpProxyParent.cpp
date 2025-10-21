@@ -14,6 +14,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Try.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/FetchEventOpParent.h"
 #include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/InternalResponse.h"
@@ -164,7 +165,7 @@ ParentToParentFetchEventRespondWithResult ToParentToParent(
     copyRequest.body().ref().get_ParentToChildStream() = stream;
   }
 
-  (void)aManager->SendPFetchEventOpProxyConstructor(actor, copyArgs);
+  Unused << aManager->SendPFetchEventOpProxyConstructor(actor, copyArgs);
 }
 
 FetchEventOpProxyParent::~FetchEventOpProxyParent() {
@@ -183,8 +184,8 @@ mozilla::ipc::IPCResult FetchEventOpProxyParent::RecvAsyncLog(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mReal);
 
-  (void)mReal->SendAsyncLog(aScriptSpec, aLineNumber, aColumnNumber,
-                            aMessageName, aParams);
+  Unused << mReal->SendAsyncLog(aScriptSpec, aLineNumber, aColumnNumber,
+                                aMessageName, aParams);
 
   return IPC_OK();
 }
@@ -196,7 +197,7 @@ mozilla::ipc::IPCResult FetchEventOpProxyParent::RecvRespondWith(
 
   auto manager = WrapNotNull(mReal->Manager());
   auto backgroundParent = WrapNotNull(manager->Manager());
-  (void)mReal->SendRespondWith(ToParentToParent(aResult, backgroundParent));
+  Unused << mReal->SendRespondWith(ToParentToParent(aResult, backgroundParent));
   return IPC_OK();
 }
 

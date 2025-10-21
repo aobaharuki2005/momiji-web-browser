@@ -11,6 +11,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Unused.h"
 #include "mozpkix/Result.h"
 #include "nsCRT.h"
 #include "nsThreadUtils.h"

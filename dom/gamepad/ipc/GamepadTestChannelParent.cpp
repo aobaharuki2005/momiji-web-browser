@@ -7,6 +7,7 @@
 #include "GamepadTestChannelParent.h"
 
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/GamepadPlatformService.h"
 #include "mozilla/ipc/BackgroundParent.h"
 
@@ -48,7 +49,7 @@ void GamepadTestChannelParent::AddGamepadToPlatformService(
       a.num_buttons(), a.num_axes(), a.num_haptics(), a.num_lights(),
       a.num_touches());
 
-  (void)SendReplyGamepadHandle(aPromiseId, handle);
+  Unused << SendReplyGamepadHandle(aPromiseId, handle);
 }
 
 void GamepadTestChannelParent::OnMonitoringStateChanged(bool aNewState) {
@@ -121,7 +122,7 @@ mozilla::ipc::IPCResult GamepadTestChannelParent::RecvGamepadTestEvent(
       NS_WARNING("Unknown event type.");
       return IPC_FAIL_NO_REASON(this);
   }
-  (void)SendReplyGamepadHandle(aID, handle);
+  Unused << SendReplyGamepadHandle(aID, handle);
   return IPC_OK();
 }
 

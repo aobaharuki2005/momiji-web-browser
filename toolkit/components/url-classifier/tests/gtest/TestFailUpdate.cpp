@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HashStore.h"
+#include "mozilla/Unused.h"
 #include "nsPrintfCString.h"
 #include "string.h"
 
@@ -48,7 +49,7 @@ TEST(UrlClassifierFailUpdate, CheckTableReset)
   // Apply V2 update
   {
     RefPtr<TableUpdateV2> update = new TableUpdateV2(GTEST_TABLE_V2);
-    (void)update->NewAddChunk(1);
+    mozilla::Unused << update->NewAddChunk(1);
 
     ApplyUpdate(update);
 

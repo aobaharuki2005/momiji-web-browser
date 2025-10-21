@@ -364,7 +364,7 @@ mozilla::ipc::IPCResult HandlerServiceParent::RecvGetTypeFromExtension(
   }
 
   rv = handlerSvc->GetTypeFromExtension(aFileExtension, *type);
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
   return IPC_OK();
 }

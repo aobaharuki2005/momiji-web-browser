@@ -76,7 +76,7 @@ NS_IMETHODIMP IdentityCredentialStorageService::BlockShutdown(
   mShuttingDown.Flip();
 
   if (mMemoryDatabaseConnection) {
-    (void)mMemoryDatabaseConnection->Close();
+    Unused << mMemoryDatabaseConnection->Close();
     mMemoryDatabaseConnection = nullptr;
   }
 
@@ -90,7 +90,7 @@ NS_IMETHODIMP IdentityCredentialStorageService::BlockShutdown(
             MOZ_ASSERT(self->mPendingWrites == 0);
 
             if (self->mDiskDatabaseConnection) {
-              (void)self->mDiskDatabaseConnection->Close();
+              Unused << self->mDiskDatabaseConnection->Close();
               self->mDiskDatabaseConnection = nullptr;
             }
 

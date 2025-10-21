@@ -307,7 +307,7 @@ void TRRServiceBase::AsyncCreateTRRConnectionInfoInternal(
   // method, so we don't really care aobut the |rv| here. If it's failed,
   // mDefaultTRRConnectionInfo stays as nullptr and we'll create a new
   // connection info in TRRServiceChannel again.
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
 already_AddRefed<nsHttpConnectionInfo> TRRServiceBase::TRRConnectionInfo() {
@@ -391,7 +391,7 @@ void TRRServiceBase::DoReadEtcHostsFile(ParsingCallback aCallback) {
     rust_parse_etc_hosts(&path, aCallback);
   };
 
-  (void)NS_DispatchBackgroundTask(
+  Unused << NS_DispatchBackgroundTask(
       NS_NewRunnableFunction("Read /etc/hosts file", readHostsTask),
       NS_DISPATCH_EVENT_MAY_BLOCK);
 }

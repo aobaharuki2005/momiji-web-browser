@@ -32,7 +32,7 @@ void QuotaRequestBase::SendResults() {
       response = mResultCode;
     }
 
-    (void)PQuotaRequestParent::Send__delete__(this, response);
+    Unused << PQuotaRequestParent::Send__delete__(this, response);
   }
 }
 

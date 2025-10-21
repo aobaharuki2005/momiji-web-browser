@@ -1737,7 +1737,7 @@ struct IntentionallyLeakedObject {
 NS_IMETHODIMP
 nsXPCComponents_Utils::IntentionallyLeak() {
 #ifdef NS_FREE_PERMANENT_DATA
-  (void)new IntentionallyLeakedObject();
+  Unused << new IntentionallyLeakedObject();
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;

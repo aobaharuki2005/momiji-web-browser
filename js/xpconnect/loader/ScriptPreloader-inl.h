@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Range.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsString.h"
 #include "nsTArray.h"

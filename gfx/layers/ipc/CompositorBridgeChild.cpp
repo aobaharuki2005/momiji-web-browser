@@ -34,6 +34,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/Unused.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "nsThreadUtils.h"
@@ -46,6 +47,7 @@
 #endif
 #include "VsyncSource.h"
 
+using mozilla::Unused;
 using mozilla::gfx::GPUProcessManager;
 
 namespace mozilla {
@@ -163,7 +165,7 @@ void CompositorBridgeChild::Destroy() {
   AutoTArray<PAPZChild*, 16> apzChildren;
   ManagedPAPZChild(apzChildren);
   for (PAPZChild* child : apzChildren) {
-    (void)child->SendDestroy();
+    Unused << child->SendDestroy();
   }
 
   const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
@@ -438,7 +440,7 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvCompositorOptionsChanged(
 
   if (RefPtr<dom::BrowserParent> tab =
           dom::BrowserParent::GetBrowserParentFromLayersId(aLayersId)) {
-    (void)tab->SendCompositorOptionsChanged(aNewOptions);
+    Unused << tab->SendCompositorOptionsChanged(aNewOptions);
   }
   return IPC_OK();
 }

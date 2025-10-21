@@ -34,6 +34,7 @@
 #include "mozilla/BaseProfilerMarkersDetail.h"
 #include "mozilla/BaseProfilerLabels.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Unused.h"
 
 #include <functional>
 #include <string>
@@ -55,7 +56,7 @@ ProfileBufferBlockIndex AddMarkerToBuffer(
     ProfileChunkedBuffer& aBuffer, const ProfilerString8View& aName,
     const MarkerCategory& aCategory, MarkerOptions&& aOptions,
     MarkerType aMarkerType, const PayloadArguments&... aPayloadArguments) {
-  (void)aMarkerType;  // Only the empty object type is useful.
+  Unused << aMarkerType;  // Only the empty object type is useful.
   AUTO_BASE_PROFILER_LABEL("baseprofiler::AddMarkerToBuffer", PROFILER);
   return base_profiler_markers_detail::AddMarkerToBuffer<MarkerType>(
       aBuffer, aName, aCategory, std::move(aOptions),

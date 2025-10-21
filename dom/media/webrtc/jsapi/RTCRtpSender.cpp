@@ -45,6 +45,7 @@
 #include "mozilla/StateMirroring.h"
 #include "mozilla/StateWatching.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/Nullable.h"
@@ -153,7 +154,7 @@ RTCRtpSender::RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
     if (aConduit->type() == MediaSessionConduit::VIDEO) {
       defaultEncoding.mScaleResolutionDownBy.Construct(1.0f);
     }
-    (void)mParameters.mEncodings.AppendElement(defaultEncoding, fallible);
+    Unused << mParameters.mEncodings.AppendElement(defaultEncoding, fallible);
     UpdateRestorableEncodings(mParameters.mEncodings);
     MaybeGetJsepRids();
   }
@@ -803,7 +804,7 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
         if (typeStr == "audio" || typeStr == "video") {
           dom::RTCRtpCodecParameters domCodec;
           RTCRtpTransceiver::ToDomRtpCodecParameters(*codec, &domCodec);
-          (void)codecs.AppendElement(domCodec, fallible);
+          Unused << codecs.AppendElement(domCodec, fallible);
         }
       }
     }
@@ -1410,7 +1411,7 @@ Sequence<RTCRtpEncodingParameters> RTCRtpSender::ToSendEncodings(
     RTCRtpEncodingParameters encoding;
     encoding.mActive = true;
     encoding.mRid.Construct(NS_ConvertUTF8toUTF16(rid.c_str()));
-    (void)result.AppendElement(encoding, fallible);
+    Unused << result.AppendElement(encoding, fallible);
   }
 
   // If sendEncodings is non-empty, set each encoding's scaleResolutionDownBy
@@ -1456,7 +1457,7 @@ Sequence<RTCRtpEncodingParameters> RTCRtpSender::GetMatchingEncodings(
           if (!encodingCopy.mRid.WasPassed()) {
             encodingCopy.mRid.Construct(NS_ConvertUTF8toUTF16(rid.c_str()));
           }
-          (void)result.AppendElement(encodingCopy, fallible);
+          Unused << result.AppendElement(encodingCopy, fallible);
           break;
         }
       }
@@ -1470,9 +1471,9 @@ Sequence<RTCRtpEncodingParameters> RTCRtpSender::GetMatchingEncodings(
     // Unicast with no specified rid. Restore mUnicastEncoding, if
     // it exists, otherwise pick the first encoding.
     if (mUnicastEncoding.isSome()) {
-      (void)result.AppendElement(*mUnicastEncoding, fallible);
+      Unused << result.AppendElement(*mUnicastEncoding, fallible);
     } else {
-      (void)result.AppendElement(mParameters.mEncodings[0], fallible);
+      Unused << result.AppendElement(mParameters.mEncodings[0], fallible);
     }
   }
 
@@ -1761,7 +1762,7 @@ void RTCRtpSender::UpdateParametersCodecs() {
         }
         RTCRtpCodecParameters codec;
         RTCRtpTransceiver::ToDomRtpCodecParameters(*jsepCodec, &codec);
-        (void)mParameters.mCodecs.Value().AppendElement(codec, fallible);
+        Unused << mParameters.mCodecs.Value().AppendElement(codec, fallible);
         if (jsepCodec->Type() == SdpMediaSection::kVideo) {
           const JsepVideoCodecDescription& videoJsepCodec =
               static_cast<JsepVideoCodecDescription&>(*jsepCodec);
@@ -1771,7 +1772,7 @@ void RTCRtpSender::UpdateParametersCodecs() {
           if (videoJsepCodec.mRtxEnabled) {
             RTCRtpCodecParameters rtx;
             RTCRtpTransceiver::ToDomRtpCodecParametersRtx(videoJsepCodec, &rtx);
-            (void)mParameters.mCodecs.Value().AppendElement(rtx, fallible);
+            Unused << mParameters.mCodecs.Value().AppendElement(rtx, fallible);
           }
         }
       }

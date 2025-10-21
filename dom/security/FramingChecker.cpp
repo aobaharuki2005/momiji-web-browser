@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "nsCOMPtr.h"
@@ -133,7 +134,8 @@ bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
   }
 
   nsAutoCString xfoHeaderValue;
-  (void)httpChannel->GetResponseHeader("X-Frame-Options"_ns, xfoHeaderValue);
+  Unused << httpChannel->GetResponseHeader("X-Frame-Options"_ns,
+                                           xfoHeaderValue);
 
   // Step 10. (paritally) if the only header we received was empty, then we
   // process it as if it wasn't sent at all.

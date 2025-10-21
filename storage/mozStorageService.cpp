@@ -303,7 +303,7 @@ void Service::minimizeMemory() {
       nsCOMPtr<nsIRunnable> event = NewRunnableMethod<const nsCString>(
           "Connection::ExecuteSimpleSQL", conn, &Connection::ExecuteSimpleSQL,
           shrinkPragma);
-      (void)conn->eventTargetOpenedOn->Dispatch(event, NS_DISPATCH_NORMAL);
+      Unused << conn->eventTargetOpenedOn->Dispatch(event, NS_DISPATCH_NORMAL);
     }
   }
 }

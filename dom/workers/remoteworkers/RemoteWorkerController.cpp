@@ -176,7 +176,7 @@ void RemoteWorkerController::CancelAllPendingOps() {
 
 void RemoteWorkerController::Shutdown() {
   AssertIsOnBackgroundThread();
-  (void)NS_WARN_IF(mIsServiceWorker && !mPendingOps.IsEmpty());
+  Unused << NS_WARN_IF(mIsServiceWorker && !mPendingOps.IsEmpty());
 
   if (mState == eTerminated) {
     MOZ_ASSERT(mPendingOps.IsEmpty());
@@ -205,7 +205,7 @@ void RemoteWorkerController::Shutdown() {
   if (mIsServiceWorker) {
     mActor->MaybeSendDelete();
   } else {
-    (void)mActor->SendExecOp(SharedWorkerTerminateOpArgs());
+    Unused << mActor->SendExecOp(SharedWorkerTerminateOpArgs());
   }
 
   mActor = nullptr;
@@ -385,16 +385,16 @@ bool RemoteWorkerController::PendingSharedWorkerOp::MaybeStart(
       aOwner->Shutdown();
       break;
     case eSuspend:
-      (void)aOwner->mActor->SendExecOp(SharedWorkerSuspendOpArgs());
+      Unused << aOwner->mActor->SendExecOp(SharedWorkerSuspendOpArgs());
       break;
     case eResume:
-      (void)aOwner->mActor->SendExecOp(SharedWorkerResumeOpArgs());
+      Unused << aOwner->mActor->SendExecOp(SharedWorkerResumeOpArgs());
       break;
     case eFreeze:
-      (void)aOwner->mActor->SendExecOp(SharedWorkerFreezeOpArgs());
+      Unused << aOwner->mActor->SendExecOp(SharedWorkerFreezeOpArgs());
       break;
     case eThaw:
-      (void)aOwner->mActor->SendExecOp(SharedWorkerThawOpArgs());
+      Unused << aOwner->mActor->SendExecOp(SharedWorkerThawOpArgs());
       break;
     case ePortIdentifier:
       // mNonLifeCycleOpController can be nullptr if the Worker is in "Killing."
@@ -408,15 +408,15 @@ bool RemoteWorkerController::PendingSharedWorkerOp::MaybeStart(
       if (!aOwner->mNonLifeCycleOpController->CanSend()) {
         return false;
       }
-      (void)aOwner->mNonLifeCycleOpController->SendExecOp(
+      Unused << aOwner->mNonLifeCycleOpController->SendExecOp(
           SharedWorkerPortIdentifierOpArgs(mPortIdentifier));
       break;
     case eAddWindowID:
-      (void)aOwner->mActor->SendExecOp(
+      Unused << aOwner->mActor->SendExecOp(
           SharedWorkerAddWindowIDOpArgs(mWindowID));
       break;
     case eRemoveWindowID:
-      (void)aOwner->mActor->SendExecOp(
+      Unused << aOwner->mActor->SendExecOp(
           SharedWorkerRemoveWindowIDOpArgs(mWindowID));
       break;
     default:

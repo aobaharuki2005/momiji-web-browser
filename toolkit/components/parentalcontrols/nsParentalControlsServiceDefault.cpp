@@ -5,11 +5,12 @@
 
 #include "nsParentalControlsService.h"
 #include "nsIFile.h"
+#include "mozilla/Unused.h"
 
 NS_IMPL_ISUPPORTS(nsParentalControlsService, nsIParentalControlsService)
 
 nsParentalControlsService::nsParentalControlsService() : mEnabled(false) {
-  (void)mEnabled;
+  mozilla::Unused << mEnabled;
 }
 
 nsParentalControlsService::~nsParentalControlsService() = default;

@@ -323,11 +323,12 @@ void ChannelMediaDecoder::NotifyDownloadEnded(nsresult aStatus) {
         [playbackStats = mPlaybackStatistics,
          res = RefPtr<BaseMediaResource>(mResource),
          duration = mDuration.match(DurationToTimeUnit())]() {
-          (void)UpdateResourceOfPlaybackByteRate(playbackStats, res, duration);
+          Unused << UpdateResourceOfPlaybackByteRate(playbackStats, res,
+                                                     duration);
         });
     nsresult rv = GetStateMachine()->OwnerThread()->Dispatch(r.forget());
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    (void)rv;
+    Unused << rv;
     owner->DownloadSuspended();
     // NotifySuspendedStatusChanged will tell the element that download
     // has been suspended "by the cache", which is true since we never
@@ -381,11 +382,12 @@ void ChannelMediaDecoder::DurationChanged() {
       [playbackStats = mPlaybackStatistics,
        res = RefPtr<BaseMediaResource>(mResource),
        duration = mDuration.match(DurationToTimeUnit())]() {
-        (void)UpdateResourceOfPlaybackByteRate(playbackStats, res, duration);
+        Unused << UpdateResourceOfPlaybackByteRate(playbackStats, res,
+                                                   duration);
       });
   nsresult rv = GetStateMachine()->OwnerThread()->Dispatch(r.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  (void)rv;
+  Unused << rv;
 }
 
 void ChannelMediaDecoder::DownloadProgressed() {

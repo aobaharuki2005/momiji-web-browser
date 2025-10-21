@@ -53,7 +53,7 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   void SetEmbedderAccessible(PDocAccessibleChild* aDoc, uint64_t aID) {
     MOZ_ASSERT((aDoc && aID) || (!aDoc && !aID));
     mEmbedderAccessibleID = aID;
-    (void)SendSetEmbedderAccessible(aDoc, aID);
+    Unused << SendSetEmbedderAccessible(aDoc, aID);
   }
 
   uint64_t GetEmbedderAccessibleID() { return mEmbedderAccessibleID; }

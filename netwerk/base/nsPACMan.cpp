@@ -60,7 +60,7 @@ static bool HttpRequestSucceeded(nsIStreamLoader* loader) {
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
   if (httpChannel) {
     // failsafe
-    (void)httpChannel->GetRequestSucceeded(&result);
+    Unused << httpChannel->GetRequestSucceeded(&result);
   }
 
   return result;

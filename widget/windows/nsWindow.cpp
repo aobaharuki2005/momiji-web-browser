@@ -1164,14 +1164,14 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
       nsAutoString aumid;
       // Make sure we're using the correct AUMID so that taskbar
       // grouping works properly
-      (void)NS_WARN_IF(!mozilla::widget::WinTaskbar::GenerateAppUserModelID(
+      Unused << NS_WARN_IF(!mozilla::widget::WinTaskbar::GenerateAppUserModelID(
           aumid, usePrivateAumid));
       if (!usePrivateAumid && widget::WinUtils::HasPackageIdentity()) {
         // On MSIX we should always have a provided process AUMID
         // that we can explicitly assign to a regular window.
         UINT32 maxLength = MAX_PATH;
         aumid.SetLength(maxLength);
-        (void)NS_WARN_IF(
+        Unused << NS_WARN_IF(
             GetCurrentApplicationUserModelId(&maxLength, aumid.get()));
       }
       if (!FAILED(InitPropVariantFromString(aumid.get(), &pv))) {
@@ -1771,7 +1771,7 @@ void nsWindow::Show(bool aState) {
               ::ShowWindow(mWnd, SW_SHOWNOACTIVATE);
               // Don't flicker the window if we're restoring session
               if (!sIsRestoringSession) {
-                (void)GetAttention(2);
+                Unused << GetAttention(2);
               }
             }
             break;
@@ -4818,7 +4818,7 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case MOZ_WM_STARTA11Y:
 #if defined(ACCESSIBILITY)
-      (void)GetAccessible();
+      Unused << GetAccessible();
       result = true;
 #else
       result = false;

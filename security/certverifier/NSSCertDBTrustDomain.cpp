@@ -28,6 +28,7 @@
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Unused.h"
 #include "mozilla/glean/SecurityCertverifierMetrics.h"
 #include "mozpkix/Result.h"
 #include "mozpkix/pkix.h"
@@ -817,7 +818,7 @@ Result NSSCertDBTrustDomain::CheckRevocationByCRLite(
     std::vector<SignedCertificateTimestamp> decodedSCTsFromExtension;
     DecodeSCTs(GetSCTListFromCertificate(), decodedSCTsFromExtension,
                decodingErrors);
-    (void)decodingErrors;
+    Unused << decodingErrors;
     for (const auto& sct : decodedSCTsFromExtension) {
       timestamps.AppendElement(new CRLiteTimestamp(sct));
     }
@@ -1514,7 +1515,7 @@ static Input SECItemToInput(const UniqueSECItem& item) {
     // As used here, |item| originally comes from an Input,
     // so there should be no issues converting it back.
     MOZ_ASSERT(rv == Success);
-    (void)rv;  // suppresses warnings in release builds
+    Unused << rv;  // suppresses warnings in release builds
   }
   return result;
 }
@@ -1592,7 +1593,7 @@ SECStatus InitializeNSS(const nsACString& dir, NSSDBConfig nssDbConfig,
     if (PK11_NeedUserInit(slot.get())) {
       srv = PK11_InitPin(slot.get(), nullptr, nullptr);
       MOZ_ASSERT(srv == SECSuccess);
-      (void)srv;
+      Unused << srv;
     }
   }
 
@@ -1624,7 +1625,7 @@ bool LoadUserModuleAt(const char* moduleName, const char* libraryName,
   // it. Note that it isn't possible to delete the internal module, so checking
   // the return value would be detrimental in that case.
   int unusedModType;
-  (void)SECMOD_DeleteModule(moduleName, &unusedModType);
+  Unused << SECMOD_DeleteModule(moduleName, &unusedModType);
 
   nsAutoCString fullLibraryPath;
   if (!dir.IsEmpty()) {
@@ -1668,7 +1669,7 @@ bool LoadUserModuleFromXul(const char* moduleName,
   // it. Note that it isn't possible to delete the internal module, so checking
   // the return value would be detrimental in that case.
   int unusedModType;
-  (void)SECMOD_DeleteModule(moduleName, &unusedModType);
+  Unused << SECMOD_DeleteModule(moduleName, &unusedModType);
 
   UniqueSECMODModule userModule(
       SECMOD_LoadUserModuleWithFunction(moduleName, fentry));
@@ -1735,7 +1736,7 @@ bool LoadOSClientCertsModule() {
 
 bool LoadLoadableRoots(const nsCString& dir) {
   int unusedModType;
-  (void)SECMOD_DeleteModule("Root Certs", &unusedModType);
+  Unused << SECMOD_DeleteModule("Root Certs", &unusedModType);
   return LoadUserModuleAt(kRootModuleName.get(), "nssckbi", dir, nullptr);
 }
 
@@ -1753,7 +1754,7 @@ bool LoadLoadableRootsFromXul() {
   // can cause us to fail to load our roots module. In these cases, deleting the
   // "Root Certs" module allows us to load the correct one. See bug 1406396.
   int unusedModType;
-  (void)SECMOD_DeleteModule("Root Certs", &unusedModType);
+  Unused << SECMOD_DeleteModule("Root Certs", &unusedModType);
 
   if (!LoadUserModuleFromXul(kRootModuleName.get(),
                              TRUST_ANCHORS_GetFunctionList)) {

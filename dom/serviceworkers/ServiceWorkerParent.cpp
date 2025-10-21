@@ -55,7 +55,7 @@ void ServiceWorkerParent::MaybeSendDelete() {
     return;
   }
   mDeleteSent = true;
-  (void)Send__delete__(this);
+  Unused << Send__delete__(this);
 }
 
 }  // namespace mozilla::dom

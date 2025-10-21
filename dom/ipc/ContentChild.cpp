@@ -48,6 +48,7 @@
 #include "mozilla/StaticPrefs_threads.h"
 #include "mozilla/StorageAccessAPIHelper.h"
 #include "mozilla/TelemetryIPC.h"
+#include "mozilla/Unused.h"
 #include "mozilla/WebBrowserPersistDocumentChild.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperChild.h"
 #include "mozilla/dom/AutoSuppressEventHandlingAndSuspend.h"
@@ -441,7 +442,7 @@ class CycleCollectWithLogsChild final : public PCycleCollectWithLogsChild {
         mCCLog = nullptr;
       }
       // The XPCOM refcount drives the IPC lifecycle;
-      (void)mActor->Send__delete__(mActor);
+      Unused << mActor->Send__delete__(mActor);
     }
 
     nsresult UnimplementedProperty() {
@@ -1043,7 +1044,7 @@ nsresult ContentChild::ProvideWindowCommon(
         return false;
       }() || hasValidUserGestureActivation;
 
-      (void)SendCreateWindowInDifferentProcess(
+      Unused << SendCreateWindowInDifferentProcess(
           aTabOpener, parent, aChromeFlags, aCalledFromJS,
           aOpenWindowInfo->GetIsTopLevelCreatedByWebContent(), aURI, features,
           aModifiers, name, triggeringPrincipal, policyContainer, referrerInfo,
@@ -1080,7 +1081,7 @@ nsresult ContentChild::ProvideWindowCommon(
 
   browsingContext->InitPendingInitialization(true);
   auto unsetPending = MakeScopeExit([browsingContext]() {
-    (void)browsingContext->SetPendingInitialization(false);
+    Unused << browsingContext->SetPendingInitialization(false);
   });
 
   browsingContext->EnsureAttached();
@@ -1466,7 +1467,7 @@ mozilla::ipc::IPCResult ContentChild::RecvRequestMemoryReport(
   MemoryReportRequestClient::Start(
       aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile, process,
       [&](const MemoryReport& aReport) {
-        (void)GetSingleton()->SendAddMemoryReport(aReport);
+        Unused << GetSingleton()->SendAddMemoryReport(aReport);
       },
       aResolver);
   return IPC_OK();
@@ -1696,7 +1697,7 @@ static void DisconnectWindowServer(bool aIsSandboxEnabled) {
     CGError result = CGSSetDenyWindowServerConnections(true);
     MOZ_DIAGNOSTIC_ASSERT(result == kCGErrorSuccess);
 #  if !MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    (void)result;
+    Unused << result;
 #  endif
   }
 }
@@ -1715,7 +1716,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
 
   if (sandboxEnabled && !StaticPrefs::media_cubeb_sandbox()) {
     // Pre-start audio before sandboxing; see bug 1443612.
-    (void)CubebUtils::GetCubeb();
+    Unused << CubebUtils::GetCubeb();
   }
 
   if (sandboxEnabled) {
@@ -1729,7 +1730,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
     ::LoadLibraryW(L"freebl3.dll");
     ::LoadLibraryW(L"softokn3.dll");
     // Cache value that is retrieved from a registry entry.
-    (void)GetCpuFrequencyMHz();
+    Unused << GetCpuFrequencyMHz();
   }
   mozilla::SandboxTarget::Instance()->StartSandbox();
 #  elif defined(XP_MACOSX)
@@ -2802,7 +2803,7 @@ mozilla::ipc::IPCResult ContentChild::RecvMinimizeMemoryUsage() {
       do_GetService("@mozilla.org/memory-reporter-manager;1");
   NS_ENSURE_TRUE(mgr, IPC_OK());
 
-  (void)mgr->MinimizeMemoryUsage(/* callback = */ nullptr);
+  Unused << mgr->MinimizeMemoryUsage(/* callback = */ nullptr);
   return IPC_OK();
 }
 
@@ -3071,7 +3072,7 @@ void ContentChild::ShutdownInternal() {
 
   // Notify the parent that we are done with shutdown. This is sent with high
   // priority and will just flag we are done.
-  (void)SendNotifyShutdownSuccess();
+  Unused << SendNotifyShutdownSuccess();
 
   // Now tell the parent to actually destroy our channel which will make end
   // our process. This is expected to be the last event the parent will
@@ -3139,7 +3140,7 @@ mozilla::ipc::IPCResult ContentChild::RecvPush(const nsCString& aScope,
                                                nsIPrincipal* aPrincipal,
                                                const nsString& aMessageId) {
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId, Nothing());
-  (void)NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
+  Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
   return IPC_OK();
 }
 
@@ -3148,7 +3149,7 @@ mozilla::ipc::IPCResult ContentChild::RecvPushWithData(
     const nsString& aMessageId, nsTArray<uint8_t>&& aData) {
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId,
                                    Some(std::move(aData)));
-  (void)NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
+  Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
   return IPC_OK();
 }
 
@@ -3157,7 +3158,7 @@ mozilla::ipc::IPCResult ContentChild::RecvPushError(const nsCString& aScope,
                                                     const nsString& aMessage,
                                                     const uint32_t& aFlags) {
   PushErrorDispatcher dispatcher(aScope, aPrincipal, aMessage, aFlags);
-  (void)NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
+  Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
   return IPC_OK();
 }
 
@@ -3165,7 +3166,7 @@ mozilla::ipc::IPCResult
 ContentChild::RecvNotifyPushSubscriptionModifiedObservers(
     const nsCString& aScope, nsIPrincipal* aPrincipal) {
   PushSubscriptionModifiedDispatcher dispatcher(aScope, aPrincipal);
-  (void)NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
+  Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
   return IPC_OK();
 }
 
@@ -3194,7 +3195,7 @@ void ContentChild::CreateGetFilesRequest(nsTArray<nsString>&& aDirectoryPaths,
   MOZ_ASSERT(aChild);
   MOZ_ASSERT(!mGetFilesPendingRequests.Contains(aUUID));
 
-  (void)SendGetFilesRequest(aUUID, aDirectoryPaths, aRecursiveFlag);
+  Unused << SendGetFilesRequest(aUUID, aDirectoryPaths, aRecursiveFlag);
   mGetFilesPendingRequests.InsertOrUpdate(aUUID, RefPtr{aChild});
 }
 
@@ -3203,7 +3204,7 @@ void ContentChild::DeleteGetFilesRequest(nsID& aUUID,
   MOZ_ASSERT(aChild);
   MOZ_ASSERT(mGetFilesPendingRequests.Contains(aUUID));
 
-  (void)SendDeleteGetFilesRequest(aUUID);
+  Unused << SendDeleteGetFilesRequest(aUUID);
   mGetFilesPendingRequests.Remove(aUUID);
 }
 

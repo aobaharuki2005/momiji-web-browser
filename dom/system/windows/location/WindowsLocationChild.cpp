@@ -239,7 +239,8 @@ WindowsLocationChild::~WindowsLocationChild() {
   }
 
   // This will free the LocationEvent we created in RecvRegisterForReport.
-  (void)NS_WARN_IF(FAILED(mLocation->UnregisterForReport(IID_ILatLongReport)));
+  Unused << NS_WARN_IF(
+      FAILED(mLocation->UnregisterForReport(IID_ILatLongReport)));
 
   // The ILocation object is not reusable.  Unregistering, restarting and
   // re-registering for reports does not work;  the callback is never

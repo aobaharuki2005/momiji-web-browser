@@ -361,7 +361,8 @@ void NotifyEventInChild(
       do_QueryInterface(aTrackingChannel);
 
   if (classifiedChannel) {
-    (void)classifiedChannel->GetMatchedTrackingFullHashes(trackingFullHashes);
+    Unused << classifiedChannel->GetMatchedTrackingFullHashes(
+        trackingFullHashes);
   }
 
   browserChild->NotifyContentBlockingEvent(
@@ -400,7 +401,8 @@ void NotifyEventInParent(
       do_QueryInterface(aTrackingChannel);
 
   if (classifiedChannel) {
-    (void)classifiedChannel->GetMatchedTrackingFullHashes(trackingFullHashes);
+    Unused << classifiedChannel->GetMatchedTrackingFullHashes(
+        trackingFullHashes);
   }
 
   wgp->NotifyContentBlockingEvent(aRejectedReason, aTrackingChannel, aBlocked,
@@ -545,8 +547,8 @@ void ContentBlockingNotifier::OnDecision(BrowsingContext* aBrowsingContext,
     MOZ_ASSERT(XRE_IsParentProcess());
 
     ContentParent* cp = aBrowsingContext->Canonical()->GetContentParent();
-    (void)cp->SendOnContentBlockingDecision(aBrowsingContext, aDecision,
-                                            aRejectedReason);
+    Unused << cp->SendOnContentBlockingDecision(aBrowsingContext, aDecision,
+                                                aRejectedReason);
   }
 }
 

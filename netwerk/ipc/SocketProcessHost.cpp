@@ -170,16 +170,16 @@ void SocketProcessHost::InitAfterConnect(bool aSucceeded) {
                                 attributes.mSandboxBroker().ref());
       // This is unlikely to fail and probably indicates OS resource
       // exhaustion.
-      (void)NS_WARN_IF(mSandboxBroker == nullptr);
+      Unused << NS_WARN_IF(mSandboxBroker == nullptr);
       MOZ_ASSERT(attributes.mSandboxBroker().ref().IsValid());
     }
     attributes.mInitSandbox() = true;
   }
 #endif  // XP_LINUX && MOZ_SANDBOX
 
-  (void)GetActor()->SendInit(attributes);
+  Unused << GetActor()->SendInit(attributes);
 
-  (void)GetActor()->SendInitProfiler(
+  Unused << GetActor()->SendInitProfiler(
       ProfilerParent::CreateForProcess(GetActor()->OtherPid()));
 
   if (mListener) {

@@ -8,6 +8,7 @@
 #include "mozilla/WidgetUtils.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/Components.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsIBidiKeyboard.h"
 #include "nsIStringBundle.h"
@@ -107,7 +108,7 @@ void WidgetUtils::SendBidiKeyboardInfoToContent() {
   nsTArray<dom::ContentParent*> children;
   dom::ContentParent::GetAll(children);
   for (uint32_t i = 0; i < children.Length(); i++) {
-    (void)children[i]->SendBidiKeyboardNotify(rtl, bidiKeyboards);
+    Unused << children[i]->SendBidiKeyboardNotify(rtl, bidiKeyboards);
   }
 }
 

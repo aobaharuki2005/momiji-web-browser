@@ -100,7 +100,7 @@ void JSActorService::RegisterWindowActor(const nsACString& aName,
   AutoTArray<JSWindowActorInfo, 1> windowInfos{proto->ToIPC()};
   nsTArray<JSProcessActorInfo> contentInfos{};
   for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
-    (void)cp->SendInitJSActorInfos(contentInfos, windowInfos);
+    Unused << cp->SendInitJSActorInfos(contentInfos, windowInfos);
   }
 
   // Register event listeners for any existing chrome targets.
@@ -136,7 +136,7 @@ void JSActorService::UnregisterWindowActor(const nsACString& aName) {
     if (XRE_IsParentProcess()) {
       for (auto* cp : ContentParent::AllProcesses(ContentParent::eAll)) {
         if (cp->CanSend()) {
-          (void)cp->SendUnregisterJSWindowActor(name);
+          Unused << cp->SendUnregisterJSWindowActor(name);
         }
         for (const auto& bp : cp->ManagedPBrowserParent()) {
           for (const auto& wgp : bp->ManagedPWindowGlobalParent()) {
@@ -276,7 +276,7 @@ void JSActorService::RegisterProcessActor(const nsACString& aName,
   AutoTArray<JSProcessActorInfo, 1> contentInfos{proto->ToIPC()};
   nsTArray<JSWindowActorInfo> windowInfos{};
   for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
-    (void)cp->SendInitJSActorInfos(contentInfos, windowInfos);
+    Unused << cp->SendInitJSActorInfos(contentInfos, windowInfos);
   }
 
   // Add observers to the protocol.
@@ -302,7 +302,7 @@ void JSActorService::UnregisterProcessActor(const nsACString& aName) {
     if (XRE_IsParentProcess()) {
       for (auto* cp : ContentParent::AllProcesses(ContentParent::eAll)) {
         if (cp->CanSend()) {
-          (void)cp->SendUnregisterJSProcessActor(name);
+          Unused << cp->SendUnregisterJSProcessActor(name);
         }
         managers.AppendElement(cp);
       }

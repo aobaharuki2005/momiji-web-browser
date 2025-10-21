@@ -13,6 +13,7 @@
 #include "StorageCommon.h"
 #include "StorageUtils.h"
 #include "mozilla/StoragePrincipalHelper.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -359,7 +360,7 @@ mozilla::ipc::IPCResult StorageDBChild::RecvOriginsHavingData(
   // Force population of mOriginsHavingData even if there are no origins so that
   // ShouldPreloadOrigin does not generate false positives for all origins.
   if (!aOrigins.Length()) {
-    (void)OriginsHavingData();
+    Unused << OriginsHavingData();
   }
 
   for (uint32_t i = 0; i < aOrigins.Length(); ++i) {
@@ -424,7 +425,7 @@ StorageDBChild::ShutdownObserver::Observe(nsISupports* aSubject,
     return NS_ERROR_FAILURE;
   }
 
-  (void)observerService->RemoveObserver(this, "xpcom-shutdown");
+  Unused << observerService->RemoveObserver(this, "xpcom-shutdown");
 
   StorageDBChild*& storageChild = sStorageChild[mPrivateBrowsingId];
   if (storageChild) {
@@ -637,7 +638,7 @@ mozilla::ipc::IPCResult LocalStorageCacheParent::RecvNotify(
       // instead of posting it to the main thread.  The advantage of doing so is
       // that it would save an IPC message in the case where the principals do
       // not match.
-      (void)localStorageCacheParent->SendObserve(
+      Unused << localStorageCacheParent->SendObserve(
           mPrincipalInfo, localStorageCacheParent->PrincipalInfo(),
           mPrivateBrowsingId, aDocumentURI, aKey, aOldValue, aNewValue);
     }
@@ -737,7 +738,7 @@ void StorageDBParent::Init() {
   if (storageThread) {
     nsTArray<nsCString> scopes;
     storageThread->GetOriginsHavingData(&scopes);
-    (void)SendOriginsHavingData(scopes);
+    mozilla::Unused << SendOriginsHavingData(scopes);
   }
 }
 
@@ -900,7 +901,7 @@ mozilla::ipc::IPCResult StorageDBParent::RecvAsyncAddItem(
   nsresult rv = storageThread->AsyncAddItem(
       NewCache(aOriginSuffix, aOriginNoSuffix), aKey, aValue);
   if (NS_FAILED(rv) && mIPCOpen) {
-    (void)SendError(rv);
+    mozilla::Unused << SendError(rv);
   }
 
   return IPC_OK();
@@ -918,7 +919,7 @@ mozilla::ipc::IPCResult StorageDBParent::RecvAsyncUpdateItem(
   nsresult rv = storageThread->AsyncUpdateItem(
       NewCache(aOriginSuffix, aOriginNoSuffix), aKey, aValue);
   if (NS_FAILED(rv) && mIPCOpen) {
-    (void)SendError(rv);
+    mozilla::Unused << SendError(rv);
   }
 
   return IPC_OK();
@@ -936,7 +937,7 @@ mozilla::ipc::IPCResult StorageDBParent::RecvAsyncRemoveItem(
   nsresult rv = storageThread->AsyncRemoveItem(
       NewCache(aOriginSuffix, aOriginNoSuffix), aKey);
   if (NS_FAILED(rv) && mIPCOpen) {
-    (void)SendError(rv);
+    mozilla::Unused << SendError(rv);
   }
 
   return IPC_OK();
@@ -953,7 +954,7 @@ mozilla::ipc::IPCResult StorageDBParent::RecvAsyncClear(
   nsresult rv =
       storageThread->AsyncClear(NewCache(aOriginSuffix, aOriginNoSuffix));
   if (NS_FAILED(rv) && mIPCOpen) {
-    (void)SendError(rv);
+    mozilla::Unused << SendError(rv);
   }
 
   return IPC_OK();
@@ -1022,7 +1023,8 @@ void StorageDBParent::Observe(const nsACString& aTopic,
                               const nsAString& aOriginAttributesPattern,
                               const nsACString& aOriginScope) {
   if (mIPCOpen) {
-    (void)SendObserve(aTopic, aOriginAttributesPattern, aOriginScope);
+    mozilla::Unused << SendObserve(aTopic, aOriginAttributesPattern,
+                                   aOriginScope);
   }
 }
 
@@ -1071,10 +1073,11 @@ class LoadRunnable : public Runnable {
 
     switch (mType) {
       case loadItem:
-        (void)mParent->SendLoadItem(mSuffix, mOrigin, mKey, mValue);
+        mozilla::Unused << mParent->SendLoadItem(mSuffix, mOrigin, mKey,
+                                                 mValue);
         break;
       case loadDone:
-        (void)mParent->SendLoadDone(mSuffix, mOrigin, mRv);
+        mozilla::Unused << mParent->SendLoadDone(mSuffix, mOrigin, mRv);
         break;
     }
 
@@ -1178,7 +1181,7 @@ class UsageRunnable : public Runnable {
       return NS_OK;
     }
 
-    (void)mParent->SendLoadUsage(mOriginScope, mUsage);
+    mozilla::Unused << mParent->SendLoadUsage(mOriginScope, mUsage);
 
     mParent = nullptr;
 
@@ -1337,8 +1340,8 @@ nsresult SessionStorageObserverParent::Observe(
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mActorDestroyed) {
-    (void)SendObserve(nsDependentCString(aTopic), aOriginAttributesPattern,
-                      aOriginScope);
+    mozilla::Unused << SendObserve(nsDependentCString(aTopic),
+                                   aOriginAttributesPattern, aOriginScope);
   }
   return NS_OK;
 }

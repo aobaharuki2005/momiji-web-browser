@@ -59,7 +59,7 @@ void FileSystemBackgroundRequestHandler::Shutdown() {
     // We must either resolve/reject the promise or steal the internal promise
     // before the holder is destroyed. The former isn't possible during
     // shutdown.
-    (void)mCreateFileSystemManagerChildPromiseHolder.Steal();
+    Unused << mCreateFileSystemManagerChildPromiseHolder.Steal();
   }
 }
 

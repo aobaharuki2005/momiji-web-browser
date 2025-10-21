@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/InternalResponse.h"
@@ -117,14 +118,14 @@ void FetchEventOpProxyChild::Initialize(
     }
 
     if (NS_WARN_IF(aResult.type() == ServiceWorkerOpResult::Tnsresult)) {
-      (void)self->Send__delete__(self, aResult.get_nsresult());
+      Unused << self->Send__delete__(self, aResult.get_nsresult());
       return;
     }
 
     MOZ_ASSERT(aResult.type() ==
                ServiceWorkerOpResult::TServiceWorkerFetchEventOpResult);
 
-    (void)self->Send__delete__(self, aResult);
+    Unused << self->Send__delete__(self, aResult);
   };
 
   RefPtr<FetchEventOp> op = ServiceWorkerOp::Create(aArgs, std::move(callback))
@@ -144,7 +145,7 @@ void FetchEventOpProxyChild::Initialize(
                if (NS_WARN_IF(aResult.IsReject())) {
                  MOZ_ASSERT(NS_FAILED(aResult.RejectValue().status()));
 
-                 (void)self->SendRespondWith(aResult.RejectValue());
+                 Unused << self->SendRespondWith(aResult.RejectValue());
                  return;
                }
 
@@ -156,17 +157,17 @@ void FetchEventOpProxyChild::Initialize(
                      &ipcArgs, result.extract<SynthesizeResponseArgs>());
 
                  if (NS_WARN_IF(NS_FAILED(rv))) {
-                   (void)self->SendRespondWith(
+                   Unused << self->SendRespondWith(
                        CancelInterceptionArgs(rv, ipcArgs.timeStamps()));
                    return;
                  }
 
-                 (void)self->SendRespondWith(ipcArgs);
+                 Unused << self->SendRespondWith(ipcArgs);
                } else if (result.is<ResetInterceptionArgs>()) {
-                 (void)self->SendRespondWith(
+                 Unused << self->SendRespondWith(
                      result.extract<ResetInterceptionArgs>());
                } else {
-                 (void)self->SendRespondWith(
+                 Unused << self->SendRespondWith(
                      result.extract<CancelInterceptionArgs>());
                }
              })
@@ -240,20 +241,20 @@ mozilla::ipc::IPCResult FetchEventOpProxyChild::RecvPreloadResponseEnd(
 
   if (NS_WARN_IF(mCachedOpResult.ref().type() ==
                  ServiceWorkerOpResult::Tnsresult)) {
-    (void)Send__delete__(this, mCachedOpResult.ref().get_nsresult());
+    Unused << Send__delete__(this, mCachedOpResult.ref().get_nsresult());
     return IPC_OK();
   }
 
   MOZ_ASSERT(mCachedOpResult.ref().type() ==
              ServiceWorkerOpResult::TServiceWorkerFetchEventOpResult);
 
-  (void)Send__delete__(this, mCachedOpResult.ref());
+  Unused << Send__delete__(this, mCachedOpResult.ref());
 
   return IPC_OK();
 }
 
 void FetchEventOpProxyChild::ActorDestroy(ActorDestroyReason) {
-  (void)NS_WARN_IF(mRespondWithPromiseRequestHolder.Exists());
+  Unused << NS_WARN_IF(mRespondWithPromiseRequestHolder.Exists());
   mRespondWithPromiseRequestHolder.DisconnectIfExists();
 
   // If mPreloadResponseAvailablePromise exists, navigation preloading response

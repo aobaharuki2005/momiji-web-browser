@@ -2046,7 +2046,7 @@ void TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent) {
   }
 
   RefPtr<nsCocoaWindow> kungFuDeathGrip(mWidget);
-  (void)kungFuDeathGrip;  // Not referenced within this function
+  mozilla::Unused << kungFuDeathGrip;  // Not referenced within this function
 
   MOZ_LOG_KEY_OR_IME(
       LogLevel::Info,

@@ -13,6 +13,7 @@
 #include "mozilla/MappedDeclarationsBuilder.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresState.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FormData.h"
@@ -193,7 +194,7 @@ void HTMLSelectElement::ShowPicker(ErrorResult& aRv) {
   // throw a "NotSupportedError" DOMException.
 
   // Flush frames so that IsRendered returns up-to-date results.
-  (void)GetPrimaryFrame(FlushType::Frames);
+  Unused << GetPrimaryFrame(FlushType::Frames);
   if (!IsRendered()) {
     return aRv.ThrowNotSupportedError("This select isn't being rendered.");
   }

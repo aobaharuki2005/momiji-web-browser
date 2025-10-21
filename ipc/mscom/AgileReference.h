@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
+#include "mozilla/Unused.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
 
@@ -71,7 +72,7 @@ class AgileReference final {
   explicit AgileReference(InterfaceT* aObject) {
     HRESULT const hr = detail::AgileReference_CreateImpl(
         mAgileRef, __uuidof(InterfaceT), aObject);
-    (void)NS_WARN_IF(FAILED(hr));
+    Unused << NS_WARN_IF(FAILED(hr));
   }
   explicit AgileReference(RefPtr<InterfaceT> const& aObject)
       : AgileReference(aObject.get()) {}

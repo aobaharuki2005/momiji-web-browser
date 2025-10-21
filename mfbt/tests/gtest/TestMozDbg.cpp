@@ -9,6 +9,7 @@
 
 #include "gtest/gtest.h"
 #include "mozilla/DbgMacro.h"
+#include "mozilla/Unused.h"
 
 using namespace mozilla;
 
@@ -91,9 +92,9 @@ void StaticAssertions() {
   TEST_MOZ_DBG_TYPE_SAME(std::move(y));  // Number&&
   TEST_MOZ_DBG_TYPE_SAME(std::move(w));  // MoveOnly&
 
-  (void)x;
-  (void)y;
-  (void)z;
+  Unused << x;
+  Unused << y;
+  Unused << z;
 }
 
 TEST(MozDbg, ObjectValues)

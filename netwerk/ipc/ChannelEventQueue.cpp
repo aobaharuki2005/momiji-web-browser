@@ -8,6 +8,7 @@
 #include "ChannelEventQueue.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Unused.h"
 #include "nsIChannel.h"
 #include "mozilla/dom/Document.h"
 #include "nsThreadUtils.h"
@@ -37,7 +38,7 @@ void ChannelEventQueue::FlushQueue() {
   // method is running.
   nsCOMPtr<nsISupports> kungFuDeathGrip;
   kungFuDeathGrip = mOwner;
-  (void)kungFuDeathGrip;  // Not used in this function
+  mozilla::Unused << kungFuDeathGrip;  // Not used in this function
 
   MOZ_ASSERT(mFlushing);
 
@@ -162,7 +163,7 @@ void ChannelEventQueue::ResumeInternal() {
     target = mEventQueue[0]->GetEventTarget();
     MOZ_ASSERT(target);
 
-    (void)NS_WARN_IF(
+    Unused << NS_WARN_IF(
         NS_FAILED(target->Dispatch(event.forget(), NS_DISPATCH_NORMAL)));
   }
 }

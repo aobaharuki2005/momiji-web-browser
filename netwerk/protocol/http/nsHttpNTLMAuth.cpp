@@ -29,6 +29,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
@@ -107,7 +108,7 @@ static bool CanUseDefaultCredentials(nsIHttpAuthenticableChannel* channel,
   }
 
   nsCOMPtr<nsIURI> uri;
-  (void)channel->GetURI(getter_AddRefs(uri));
+  Unused << channel->GetURI(getter_AddRefs(uri));
 
   bool allowNonFqdn;
   if (NS_FAILED(prefs->GetBoolPref(kAllowNonFqdn, &allowNonFqdn))) {

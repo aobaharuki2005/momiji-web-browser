@@ -1103,8 +1103,8 @@ nsSHistory::PurgeHistory(int32_t aNumEntries) {
   if (rootBC) {
     rootBC->PreOrderWalk([&docshellIDToEntry](BrowsingContext* aBC) {
       SessionHistoryEntry* entry = docshellIDToEntry.Get(aBC->GetHistoryID());
-      (void)aBC->SetHistoryEntryCount(entry ? uint32_t(entry->BCHistoryLength())
-                                            : 0);
+      Unused << aBC->SetHistoryEntryCount(
+          entry ? uint32_t(entry->BCHistoryLength()) : 0);
     });
   }
 
@@ -1302,7 +1302,7 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
 
       if (aCanSave) {
         currentSHEntry->SetFrameLoader(currentFrameLoader);
-        (void)aBrowsingContext->SetIsInBFCache(true);
+        Unused << aBrowsingContext->SetIsInBFCache(true);
       }
     }
 
@@ -1348,7 +1348,7 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
       currentFrameLoader->Destroy();
     }
 
-    (void)loadingBC->SetIsInBFCache(false);
+    Unused << loadingBC->SetIsInBFCache(false);
 
     // We need to call this after we've restored the page from BFCache (see
     // SetIsInBFCache(false) above), so that the page is not frozen anymore and

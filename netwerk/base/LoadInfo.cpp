@@ -958,7 +958,7 @@ nsIPrincipal* LoadInfo::FindPrincipalToInherit(nsIChannel* aChannel) {
 
   nsCOMPtr<nsIURI> uri = mResultPrincipalURI;
   if (!uri) {
-    (void)aChannel->GetOriginalURI(getter_AddRefs(uri));
+    Unused << aChannel->GetOriginalURI(getter_AddRefs(uri));
   }
 
   auto* prin = BasePrincipal::Cast(mTriggeringPrincipal);
@@ -1151,7 +1151,7 @@ LoadInfo::GetCookieJarSettings(nsICookieJarSettings** aCookieJarSettings) {
   if (!mCookieJarSettings) {
     bool isPrivate = mOriginAttributes.IsPrivateBrowsing();
     nsCOMPtr<nsIPrincipal> loadingPrincipal;
-    (void)this->GetLoadingPrincipal(getter_AddRefs(loadingPrincipal));
+    Unused << this->GetLoadingPrincipal(getter_AddRefs(loadingPrincipal));
     bool shouldResistFingerprinting =
         nsContentUtils::ShouldResistFingerprinting_dangerous(
             loadingPrincipal,
@@ -1544,14 +1544,14 @@ LoadInfo::AppendRedirectHistoryEntry(nsIChannel* aChannel,
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
   if (httpChannel) {
     nsCOMPtr<nsIReferrerInfo> referrerInfo;
-    (void)httpChannel->GetReferrerInfo(getter_AddRefs(referrerInfo));
+    Unused << httpChannel->GetReferrerInfo(getter_AddRefs(referrerInfo));
     if (referrerInfo) {
       referrer = referrerInfo->GetComputedReferrer();
     }
 
     nsCOMPtr<nsIHttpChannelInternal> intChannel(do_QueryInterface(aChannel));
     if (intChannel) {
-      (void)intChannel->GetRemoteAddress(remoteAddress);
+      Unused << intChannel->GetRemoteAddress(remoteAddress);
     }
   }
 

@@ -9,6 +9,7 @@
 #include "HashStore.h"
 #include "mozilla/Components.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIThread.h"
 #include "nsTArray.h"

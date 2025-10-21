@@ -35,6 +35,7 @@
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TextUtils.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/PerformanceMainThread.h"
 #include "mozilla/gfx/2D.h"
@@ -2741,7 +2742,7 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
   // Ownership of the factory has passed to the textrun
   // TODO: bug 1285316: clean up ownership transfer from the factory to
   // the textrun
-  (void)transformingFactory.release();
+  Unused << transformingFactory.release();
 
   if (anyTextEmphasis) {
     SetupTextEmphasisForTextRun(textRun.get(), textPtr);
@@ -8657,7 +8658,7 @@ nsIFrame::FrameSearchResult nsTextFrame::PeekOffsetCharacter(
 
   if (!aOptions.mIgnoreUserStyleAll) {
     StyleUserSelect selectStyle;
-    (void)IsSelectable(&selectStyle);
+    Unused << IsSelectable(&selectStyle);
     if (selectStyle == StyleUserSelect::All) {
       return CONTINUE_UNSELECTABLE;
     }
@@ -8912,7 +8913,7 @@ nsIFrame::FrameSearchResult nsTextFrame::PeekOffsetWord(
   NS_ASSERTION(aOffset && *aOffset <= contentLength, "aOffset out of range");
 
   StyleUserSelect selectStyle;
-  (void)IsSelectable(&selectStyle);
+  Unused << IsSelectable(&selectStyle);
   if (selectStyle == StyleUserSelect::All) {
     return CONTINUE_UNSELECTABLE;
   }

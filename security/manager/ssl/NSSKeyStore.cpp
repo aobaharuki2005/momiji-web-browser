@@ -32,8 +32,8 @@ NSSKeyStore::NSSKeyStore() {
     // OSKeyStore, which is ParentProcessOnly.
     return;
   }
-  (void)EnsureNSSInitializedChromeOrContent();
-  (void)InitToken();
+  Unused << EnsureNSSInitializedChromeOrContent();
+  Unused << InitToken();
 }
 NSSKeyStore::~NSSKeyStore() = default;
 

@@ -13,6 +13,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Unused.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -722,7 +723,7 @@ class MediaEventSourceImpl {
         // The listener might not have a target anymore, but we still place it
         // in a Batch with the target we observed up top.
         listenerBatches.AppendElement(new ListenerBatch(nsCOMPtr(target)));
-        (void)listenerBatches.LastElement()->MaybeAddListener(l);
+        Unused << listenerBatches.LastElement()->MaybeAddListener(l);
       }
     }
 

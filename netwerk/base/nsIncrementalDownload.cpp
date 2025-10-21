@@ -618,7 +618,7 @@ nsIncrementalDownload::OnStartRequest(nsIRequest* aRequest) {
     // Update knowledge of mFinalURI
     rv = http->GetURI(getter_AddRefs(mFinalURI));
     if (NS_FAILED(rv)) return rv;
-    (void)http->GetResponseHeader("Etag"_ns, mPartialValidator);
+    Unused << http->GetResponseHeader("Etag"_ns, mPartialValidator);
     if (StringBeginsWith(mPartialValidator, "W/"_ns)) {
       mPartialValidator.Truncate();  // don't use weak validators
     }
@@ -859,7 +859,7 @@ nsIncrementalDownload::AsyncOnChannelRedirect(
 
   // If we didn't have a Range header, then we must be doing a full download.
   nsAutoCString rangeVal;
-  (void)http->GetRequestHeader(rangeHdr, rangeVal);
+  Unused << http->GetRequestHeader(rangeHdr, rangeVal);
   if (!rangeVal.IsEmpty()) {
     rv = newHttpChannel->SetRequestHeader(rangeHdr, rangeVal, false);
     NS_ENSURE_SUCCESS(rv, rv);

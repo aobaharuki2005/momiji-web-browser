@@ -38,7 +38,7 @@ mozilla::ipc::IPCResult RemoteWorkerDebuggerParent::RecvUnregister() {
   }
 
   if (CanSend()) {
-    (void)SendUnregisterDone();
+    Unused << SendUnregisterDone();
   }
 
   return IPC_OK();
@@ -217,7 +217,7 @@ RemoteWorkerDebuggerParent::Initialize(const nsAString& aURL) {
   AssertIsOnMainThread();
   if (CanSend()) {
     nsAutoString url(aURL);
-    (void)SendInitialize(url);
+    Unused << SendInitialize(url);
   }
   return NS_OK;
 }
@@ -227,7 +227,7 @@ RemoteWorkerDebuggerParent::PostMessageMoz(const nsAString& aMessage) {
   AssertIsOnMainThread();
   if (CanSend()) {
     nsAutoString message(aMessage);
-    (void)SendPostMessage(message);
+    Unused << SendPostMessage(message);
   }
   return NS_OK;
 }
@@ -259,7 +259,7 @@ NS_IMETHODIMP
 RemoteWorkerDebuggerParent::SetDebuggerReady(bool aReady) {
   AssertIsOnMainThread();
   if (CanSend()) {
-    (void)SendSetDebuggerReady(aReady);
+    Unused << SendSetDebuggerReady(aReady);
   }
   return NS_OK;
 }

@@ -44,7 +44,7 @@ class CacheStorageChild final : public PCacheStorageChild,
   template <typename PromiseType>
   void ExecuteOp(nsIGlobalObject* aGlobal, PromiseType& aPromise,
                  nsISupports* aParent, const CacheOpArgs& aArgs) {
-    (void)SendPCacheOpConstructor(
+    Unused << SendPCacheOpConstructor(
         new CacheOpChild(GetWorkerRefPtr().clonePtr(), aGlobal, aParent,
                          aPromise, this),
         aArgs);

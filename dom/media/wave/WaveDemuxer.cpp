@@ -193,7 +193,7 @@ bool WAVTrackDemuxer::RIFFParserInit() {
     return false;
   }
   BufferReader RIFFReader(riffHeader->Data(), 12);
-  (void)mRIFFParser.Parse(RIFFReader);
+  Unused << mRIFFParser.Parse(RIFFReader);
   return mRIFFParser.RiffHeader().IsValid(11);
 }
 
@@ -203,7 +203,7 @@ bool WAVTrackDemuxer::HeaderParserInit() {
     return false;
   }
   BufferReader headerReader(header->Data(), 8);
-  (void)mHeaderParser.Parse(headerReader);
+  Unused << mHeaderParser.Parse(headerReader);
   return true;
 }
 

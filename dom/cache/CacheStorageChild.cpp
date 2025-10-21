@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/cache/CacheStorageChild.h"
 
+#include "mozilla/Unused.h"
 #include "mozilla/dom/cache/CacheChild.h"
 #include "mozilla/dom/cache/CacheOpChild.h"
 #include "mozilla/dom/cache/CacheStorage.h"

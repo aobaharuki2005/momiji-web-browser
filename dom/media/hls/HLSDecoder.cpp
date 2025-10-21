@@ -171,7 +171,7 @@ nsresult HLSDecoder::Load(nsIChannel* aChannel) {
 
   mChannel = aChannel;
   nsCString spec;
-  (void)mURI->GetSpec(spec);
+  Unused << mURI->GetSpec(spec);
   mUsageRecorded = false;
 
   HLSResourceCallbacksSupport::Init();
@@ -277,7 +277,7 @@ void HLSDecoder::RecordMediaUsage(nsIURI* aMediaUri) {
 
   // TODO: get hostname. See bug 1887053.
   nsAutoCString mediaExt;
-  (void)url->GetFileExtension(mediaExt);
+  Unused << url->GetFileExtension(mediaExt);
   glean::hls::MediaLoadExtra extra = {.mediaExtension = Some(mediaExt.get())};
   glean::hls::media_load.Record(Some(extra));
   mUsageRecorded = true;

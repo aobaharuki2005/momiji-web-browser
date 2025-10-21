@@ -252,7 +252,7 @@ nsresult HTMLDNSPrefetch::Prefetch(
 
   if (StaticPrefs::network_dns_upgrade_with_https_rr() ||
       StaticPrefs::network_dns_use_https_rr_as_altsvc()) {
-    (void)sDNSService->AsyncResolveNative(
+    Unused << sDNSService->AsyncResolveNative(
         NS_ConvertUTF16toUTF8(hostname), nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
         flags | nsIDNSService::RESOLVE_SPECULATE, nullptr, sDNSListener,
         nullptr, aPartitionedPrincipalOriginAttributes,
@@ -335,7 +335,7 @@ nsresult HTMLDNSPrefetch::CancelPrefetch(
 
   if (StaticPrefs::network_dns_upgrade_with_https_rr() ||
       StaticPrefs::network_dns_use_https_rr_as_altsvc()) {
-    (void)sDNSService->CancelAsyncResolveNative(
+    Unused << sDNSService->CancelAsyncResolveNative(
         NS_ConvertUTF16toUTF8(hostname), nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
         flags | nsIDNSService::RESOLVE_SPECULATE,
         nullptr,  // AdditionalInfo

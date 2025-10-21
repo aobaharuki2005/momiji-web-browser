@@ -331,11 +331,11 @@ IPCPerformanceTimingData PerformanceTimingData::ToIPC() {
   nsTArray<IPCServerTiming> ipcServerTiming;
   for (auto& serverTimingData : mServerTiming) {
     nsAutoCString name;
-    (void)serverTimingData->GetName(name);
+    Unused << serverTimingData->GetName(name);
     double duration = 0;
-    (void)serverTimingData->GetDuration(&duration);
+    Unused << serverTimingData->GetDuration(&duration);
     nsAutoCString description;
-    (void)serverTimingData->GetDescription(description);
+    Unused << serverTimingData->GetDescription(description);
     ipcServerTiming.AppendElement(IPCServerTiming(name, duration, description));
   }
   bool renderBlocking =
@@ -357,21 +357,21 @@ void CacheablePerformanceTimingData::SetCacheablePropertiesFromHttpChannel(
   MOZ_ASSERT(aHttpChannel);
 
   nsAutoCString protocol;
-  (void)aHttpChannel->GetProtocolVersion(protocol);
+  Unused << aHttpChannel->GetProtocolVersion(protocol);
   CopyUTF8toUTF16(protocol, mNextHopProtocol);
 
-  (void)aHttpChannel->GetEncodedBodySize(&mEncodedBodySize);
-  (void)aHttpChannel->GetDecodedBodySize(&mDecodedBodySize);
+  Unused << aHttpChannel->GetEncodedBodySize(&mEncodedBodySize);
+  Unused << aHttpChannel->GetDecodedBodySize(&mDecodedBodySize);
   if (mDecodedBodySize == 0) {
     mDecodedBodySize = mEncodedBodySize;
   }
 
   uint32_t responseStatus = 0;
-  (void)aHttpChannel->GetResponseStatus(&responseStatus);
+  Unused << aHttpChannel->GetResponseStatus(&responseStatus);
   mResponseStatus = static_cast<uint16_t>(responseStatus);
 
   nsAutoCString contentType;
-  (void)aHttpChannel->GetContentType(contentType);
+  Unused << aHttpChannel->GetContentType(contentType);
   CopyUTF8toUTF16(contentType, mContentType);
 
   mBodyInfoAccessAllowed =
@@ -390,7 +390,7 @@ void PerformanceTimingData::SetPropertiesFromHttpChannel(
 
 void PerformanceTimingData::SetTransferSizeFromHttpChannel(
     nsIHttpChannel* aHttpChannel) {
-  (void)aHttpChannel->GetTransferSize(&mTransferSize);
+  Unused << aHttpChannel->GetTransferSize(&mTransferSize);
 }
 
 PerformanceTiming::~PerformanceTiming() = default;

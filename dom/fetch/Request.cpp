@@ -9,6 +9,7 @@
 #include "js/Value.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FetchUtil.h"
 #include "mozilla/dom/Headers.h"
@@ -104,7 +105,7 @@ void GetRequestURL(nsIGlobalObject* aGlobal, const nsACString& aInput,
   // This fails with URIs with weird protocols, even when they are valid,
   // so we ignore the failure
   nsAutoCString credentials;
-  (void)resolvedURI->GetUserPass(credentials);
+  Unused << resolvedURI->GetUserPass(credentials);
   if (!credentials.IsEmpty()) {
     aRv.ThrowTypeError<MSG_URL_HAS_CREDENTIALS>(aInput);
     return;

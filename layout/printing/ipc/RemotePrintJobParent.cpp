@@ -12,6 +12,7 @@
 #include "gfxContext.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ProfilerMarkers.h"
+#include "mozilla/Unused.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
@@ -39,9 +40,9 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvInitializePrint(
 
   nsresult rv = InitializePrintDevice(aDocumentTitle, aStartPage, aEndPage);
   if (NS_FAILED(rv)) {
-    (void)SendPrintInitializationResult(rv, FileDescriptor());
+    Unused << SendPrintInitializationResult(rv, FileDescriptor());
     mStatus = rv;
-    (void)Send__delete__(this);
+    Unused << Send__delete__(this);
     return IPC_OK();
   }
 
@@ -49,13 +50,13 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvInitializePrint(
   FileDescriptor fd;
   rv = PrepareNextPageFD(&fd);
   if (NS_FAILED(rv)) {
-    (void)SendPrintInitializationResult(rv, FileDescriptor());
+    Unused << SendPrintInitializationResult(rv, FileDescriptor());
     mStatus = rv;
-    (void)Send__delete__(this);
+    Unused << Send__delete__(this);
     return IPC_OK();
   }
 
-  (void)SendPrintInitializationResult(NS_OK, fd);
+  Unused << SendPrintInitializationResult(NS_OK, fd);
   return IPC_OK();
 }
 
@@ -120,7 +121,7 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvProcessPage(
   PROFILER_MARKER_TEXT("RemotePrintJobParent", LAYOUT_Printing, {},
                        "RemotePrintJobParent::RecvProcessPage"_ns);
   if (!mCurrentPageStream.IsOpen()) {
-    (void)SendAbortPrint(NS_ERROR_FAILURE);
+    Unused << SendAbortPrint(NS_ERROR_FAILURE);
     return IPC_OK();
   }
   mCurrentPageStream.Seek(0, PR_SEEK_SET);
@@ -193,15 +194,15 @@ void RemotePrintJobParent::PageDone(nsresult aResult) {
   MOZ_ASSERT(mIsDoingPrinting);
 
   if (NS_FAILED(aResult)) {
-    (void)SendAbortPrint(aResult);
+    Unused << SendAbortPrint(aResult);
   } else {
     FileDescriptor fd;
     aResult = PrepareNextPageFD(&fd);
     if (NS_FAILED(aResult)) {
-      (void)SendAbortPrint(aResult);
+      Unused << SendAbortPrint(aResult);
     }
 
-    (void)SendPageProcessed(fd);
+    Unused << SendPageProcessed(fd);
   }
 }
 
@@ -236,7 +237,7 @@ static void Cleanup(const nsCOMArray<nsIWebProgressListener>& aListeners,
   }
   if (aPrintingInterrupted && aAbortContext) {
     // Abort any started print.
-    (void)aAbortContext->AbortDocument();
+    Unused << aAbortContext->AbortDocument();
   }
   // However the print went, let the listeners know that we're done.
   NotifyStateChange(aListeners,
@@ -273,7 +274,7 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvFinalizePrint() {
 
   mIsDoingPrinting = false;
 
-  (void)Send__delete__(this);
+  Unused << Send__delete__(this);
   return IPC_OK();
 }
 
@@ -283,7 +284,7 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvAbortPrint(
                        "RemotePrintJobParent::RecvAbortPrint"_ns);
 
   // Leave the cleanup to `ActorDestroy()`.
-  (void)Send__delete__(this);
+  Unused << Send__delete__(this);
   return IPC_OK();
 }
 

@@ -16,6 +16,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/Try.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 #include "mozilla/scache/StartupCache.h"
 
@@ -161,7 +162,7 @@ Result<nsCOMPtr<nsIFile>, nsresult> URLPreloader::GetCacheFile(
   MOZ_TRY(mProfD->Clone(getter_AddRefs(cacheFile)));
 
   MOZ_TRY(cacheFile->AppendNative("startupCache"_ns));
-  (void)cacheFile->Create(nsIFile::DIRECTORY_TYPE, 0777);
+  Unused << cacheFile->Create(nsIFile::DIRECTORY_TYPE, 0777);
 
   MOZ_TRY(cacheFile->Append(u"urlCache"_ns + suffix));
 

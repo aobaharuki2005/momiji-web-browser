@@ -571,7 +571,7 @@ static uint32_t CollectAtRules(ServoCSSRuleList& aRuleList,
       case StyleCssRuleType::LayerBlock:
       case StyleCssRuleType::Property:
       case StyleCssRuleType::Container: {
-        (void)aResult.AppendElement(OwningNonNull(*rule), fallible);
+        Unused << aResult.AppendElement(OwningNonNull(*rule), fallible);
         break;
       }
       case StyleCssRuleType::Style:

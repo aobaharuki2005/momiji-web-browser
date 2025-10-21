@@ -11,6 +11,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Omnijar.h"
+#include "mozilla/Unused.h"
 
 #ifdef XP_UNIX
 #  include <sys/stat.h>
@@ -858,7 +859,7 @@ nsZipReaderCache::Observe(nsISupports* aSubject, const char* aTopic,
       file = do_QueryInterface(aSubject);
     } else if (aSomeData) {
       nsDependentString fileName(aSomeData);
-      (void)NS_NewLocalFile(fileName, getter_AddRefs(file));
+      Unused << NS_NewLocalFile(fileName, getter_AddRefs(file));
     }
 
     if (!file) return NS_OK;

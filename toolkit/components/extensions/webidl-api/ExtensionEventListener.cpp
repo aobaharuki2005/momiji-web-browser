@@ -597,7 +597,7 @@ void ExtensionListenerCallPromiseResultHandler::WorkerRunCallback(
     UniquePtr<dom::ClonedErrorHolder> ceh =
         dom::ClonedErrorHolder::Create(aCx, errObj, rv);
     if (!rv.Failed() && ceh) {
-      (void)NS_WARN_IF(!ToJSValue(aCx, std::move(ceh), &retval));
+      Unused << NS_WARN_IF(!ToJSValue(aCx, std::move(ceh), &retval));
     }
   }
 

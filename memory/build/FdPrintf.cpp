@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstring>
 #include "mozilla/Assertions.h"
+#include "mozilla/Unused.h"
 #include "FdPrintf.h"
 
 /* Template class allowing a limited number of increments on a value */
@@ -214,6 +215,6 @@ void FdPuts(platform_handle_t aFd, const char* aBuf, size_t aSize) {
   DWORD written;
   WriteFile(aFd, aBuf, aSize, &written, nullptr);
 #else
-  [[maybe_unused]] ssize_t _ = write(aFd, aBuf, aSize);
+  MOZ_UNUSED(write(aFd, aBuf, aSize));
 #endif
 }

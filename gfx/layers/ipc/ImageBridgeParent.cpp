@@ -27,6 +27,7 @@
 #include "mozilla/mozalloc.h"  // for operator new, etc
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
+#include "mozilla/Unused.h"
 #include "nsDebug.h"                 // for NS_ASSERTION, etc
 #include "nsISupportsImpl.h"         // for ImageBridgeParent::Release, etc
 #include "nsTArray.h"                // for nsTArray, nsTArray_Impl
@@ -216,7 +217,7 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvUpdate(
     }
     uint32_t dropped = compositable->GetDroppedFrames();
     if (dropped) {
-      (void)SendReportFramesDropped(edit.compositable(), dropped);
+      Unused << SendReportFramesDropped(edit.compositable(), dropped);
     }
   }
 
@@ -328,7 +329,7 @@ bool ImageBridgeParent::DeallocPMediaSystemResourceManagerParent(
 
 void ImageBridgeParent::SendAsyncMessage(
     const nsTArray<AsyncParentMessageData>& aMessage) {
-  (void)SendParentAsyncMessages(aMessage);
+  mozilla::Unused << SendParentAsyncMessages(aMessage);
 }
 
 class ProcessIdComparator {

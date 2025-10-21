@@ -15,6 +15,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Try.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/Event.h"
@@ -1124,7 +1125,7 @@ bool EncoderTemplate<EncoderType>::CreateEncoderAgent(
         [self = RefPtr{this}]() {
           LOG("%s %p, worker is going away", EncoderType::Name.get(),
               self.get());
-          (void)self->ResetInternal(NS_ERROR_DOM_ABORT_ERR);
+          Unused << self->ResetInternal(NS_ERROR_DOM_ABORT_ERR);
         });
     if (NS_WARN_IF(!workerRef)) {
       return false;
@@ -1160,7 +1161,7 @@ bool EncoderTemplate<EncoderType>::CreateEncoderAgent(
         LOG("%s %p gets xpcom-will-shutdown notification for EncoderAgent "
             "#%zu",
             EncoderType::Name.get(), self.get(), id);
-        (void)self->ResetInternal(NS_ERROR_DOM_ABORT_ERR);
+        Unused << self->ResetInternal(NS_ERROR_DOM_ABORT_ERR);
       },
       [self = RefPtr{this}, id = mAgent->mId,
        ref = mWorkerRef](bool /* aUnUsed*/) {

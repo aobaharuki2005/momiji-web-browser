@@ -12,6 +12,7 @@
 #include "gfxUserFontSet.h"
 #include "harfbuzz/hb-ot.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/CSSFontFaceRule.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/gfx/2D.h"
@@ -262,7 +263,7 @@ void InspectorFontFace::GetVariationInstances(
       AppendTagAsASCII(value.mAxis, v.mAxis);
       value.mValue = v.mValue;
       // This won't fail, because of SetCapacity above.
-      (void)inst.mValues.AppendElement(value, mozilla::fallible);
+      Unused << inst.mValues.AppendElement(value, mozilla::fallible);
     }
   }
 }

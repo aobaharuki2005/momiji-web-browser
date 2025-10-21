@@ -7,6 +7,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsQueryObject.h"
+#include "mozilla/Unused.h"
 
 #include "gtest/gtest.h"
 
@@ -223,7 +224,7 @@ TEST(nsRefPtr, AddRefAndRelease)
 
     Foo::total_addrefs_ = 0;
     RefPtr<Foo> fooP2 = std::move(fooP);
-    (void)fooP2;
+    mozilla::Unused << fooP2;
     ASSERT_EQ(Foo::total_addrefs_, 0);
   }
 }
@@ -234,7 +235,7 @@ TEST(nsRefPtr, VirtualDestructor)
 
   {
     RefPtr<Foo> foop(do_QueryObject(new Bar));
-    (void)foop;
+    mozilla::Unused << foop;
   }
 
   ASSERT_EQ(Bar::total_destructions_, 1);

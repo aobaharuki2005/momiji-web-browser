@@ -3796,7 +3796,7 @@ ContentAnalysis::PrintToPDFToDetermineIfPrintAllowed(
                   nsresult rv = contentAnalysis->GetIsActive(&isActive);
                   // Should not be called if content analysis is not active
                   MOZ_ASSERT(isActive);
-                  (void)NS_WARN_IF(NS_FAILED(rv));
+                  Unused << NS_WARN_IF(NS_FAILED(rv));
                   AutoTArray<RefPtr<nsIContentAnalysisRequest>, 1> requests{
                       contentAnalysisRequest};
                   rv = contentAnalysis->AnalyzeContentRequestsCallback(

@@ -76,7 +76,7 @@ nsresult CreateAtomTable(
     return NS_OK;
   }
   for (const auto* atom : atoms) {
-    (void)base.PutEntry(atom->val(), fallible);
+    Unused << base.PutEntry(atom->val(), fallible);
   }
 
   LOG(("Added static atoms to atomTable"));

@@ -878,7 +878,7 @@ void nsContentSink::DropParserAndPerfHint(void) {
   // Drop our reference to the parser to get rid of a circular
   // reference.
   RefPtr<nsParserBase> kungFuDeathGrip = std::move(mParser);
-  (void)kungFuDeathGrip;
+  mozilla::Unused << kungFuDeathGrip;
 
   // Call UnblockOnload only if mRunsToComletion is false and if
   // we have already started loading because it's possible that this function

@@ -820,11 +820,11 @@ void nsView::SafeAreaInsetsChanged(
   // https://github.com/w3c/csswg-drafts/issues/4670
   // Actually we don't set this value on sub document. This behaviour is
   // same as Blink.
-  CallOnAllRemoteChildren(
-      [windowSafeAreaInsets](dom::BrowserParent* aBrowserParent) -> CallState {
-        (void)aBrowserParent->SendSafeAreaInsetsChanged(windowSafeAreaInsets);
-        return CallState::Continue;
-      });
+  CallOnAllRemoteChildren([windowSafeAreaInsets](
+                              dom::BrowserParent* aBrowserParent) -> CallState {
+    Unused << aBrowserParent->SendSafeAreaInsetsChanged(windowSafeAreaInsets);
+    return CallState::Continue;
+  });
 }
 
 bool nsView::IsPrimaryFramePaintSuppressed() {

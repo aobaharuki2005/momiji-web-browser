@@ -76,7 +76,7 @@ FILE* FileDescriptorToFILE(const FileDescriptor& aDesc, const char* aOpenMode) {
   if (fd == -1) {
     return nullptr;
   }
-  (void)handle.release();
+  Unused << handle.release();
 #else
   int fd = handle.release();
 #endif

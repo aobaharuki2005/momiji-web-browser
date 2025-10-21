@@ -12,6 +12,7 @@
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Unused.h"
 #include "SpecialSystemDirectory.h"
 
 #ifdef XP_UNIX  // {
@@ -52,8 +53,7 @@ static void DumpSignalHandler(int aSignum) {
 
   if (sDumpPipeWriteFd != -1) {
     uint8_t signum = static_cast<int>(aSignum);
-    [[maybe_unused]] ssize_t r =
-        write(sDumpPipeWriteFd, &signum, sizeof(signum));
+    Unused << write(sDumpPipeWriteFd, &signum, sizeof(signum));
   }
 }
 
@@ -406,7 +406,8 @@ nsresult nsDumpUtils::OpenTempFile(const nsACString& aFilename, nsIFile** aFile,
   // rather than the temp directory which is not.
   if (!*aFile) {
     if (char* env = PR_GetEnv("DOWNLOADS_DIRECTORY")) {
-      (void)NS_WARN_IF(NS_FAILED(NS_NewNativeLocalFile(nsCString(env), aFile)));
+      Unused << NS_WARN_IF(
+          NS_FAILED(NS_NewNativeLocalFile(nsCString(env), aFile)));
     }
   }
 #endif
@@ -436,7 +437,7 @@ nsresult nsDumpUtils::OpenTempFile(const nsACString& aFilename, nsIFile** aFile,
 
     // It's OK if this fails; that probably just means that the directory
     // already exists.
-    (void)(*aFile)->Create(nsIFile::DIRECTORY_TYPE, 0777);
+    Unused << (*aFile)->Create(nsIFile::DIRECTORY_TYPE, 0777);
 
     nsAutoCString dirPath;
     rv = (*aFile)->GetNativePath(dirPath);

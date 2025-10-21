@@ -10,6 +10,7 @@
 #include "gfxUtils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SyncRunnable.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/GeneratePlaceholderCanvasData.h"
 #include "mozilla/dom/MemoryBlobImpl.h"
@@ -203,7 +204,7 @@ class EncodingRunnable : public Runnable {
     if (NS_FAILED(rv)) {
       if (!mEncodingCompleteEvent->CanBeDeletedOnAnyThread()) {
         // Better to leak than to crash.
-        mEncodingCompleteEvent.forget().leak();
+        Unused << mEncodingCompleteEvent.forget();
       }
       return rv;
     }

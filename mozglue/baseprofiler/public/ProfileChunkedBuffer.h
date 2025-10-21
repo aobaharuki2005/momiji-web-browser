@@ -16,6 +16,7 @@
 #include "mozilla/ProfileChunkedBufferDetail.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Unused.h"
 
 #include <utility>
 
@@ -113,7 +114,7 @@ class ProfileChunkedBuffer {
   // This will always clear currently-held chunks, if any.
   void ResetChunkManager() {
     baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
-    (void)ResetChunkManager(lock);
+    Unused << ResetChunkManager(lock);
   }
 
   // Set the current chunk manager.
@@ -122,14 +123,14 @@ class ProfileChunkedBuffer {
   // ~ProfileChunkedBuffer).
   void SetChunkManager(ProfileBufferChunkManager& aChunkManager) {
     baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
-    (void)ResetChunkManager(lock);
+    Unused << ResetChunkManager(lock);
     SetChunkManager(aChunkManager, lock);
   }
 
   // Set the current chunk manager, and keep ownership of it.
   void SetChunkManager(UniquePtr<ProfileBufferChunkManager>&& aChunkManager) {
     baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
-    (void)ResetChunkManager(lock);
+    Unused << ResetChunkManager(lock);
     mOwnedChunkManager = std::move(aChunkManager);
     if (mOwnedChunkManager) {
       SetChunkManager(*mOwnedChunkManager, lock);
@@ -143,7 +144,7 @@ class ProfileChunkedBuffer {
   void SetChunkManagerIfDifferent(ProfileBufferChunkManager& aChunkManager) {
     baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     if (!mChunkManager || mChunkManager != &aChunkManager) {
-      (void)ResetChunkManager(lock);
+      Unused << ResetChunkManager(lock);
       SetChunkManager(aChunkManager, lock);
     }
   }
@@ -382,7 +383,7 @@ class ProfileChunkedBuffer {
     }
     UniquePtr<ProfileBufferChunk> chunks =
         mChunkManager->GetExtantReleasedChunks();
-    (void)HandleRequestedChunk_IsPending(lock);
+    Unused << HandleRequestedChunk_IsPending(lock);
     if (MOZ_LIKELY(!!mCurrentChunk)) {
       mCurrentChunk->MarkDone();
       chunks =
@@ -683,7 +684,7 @@ class ProfileChunkedBuffer {
                                         ProfileBufferBlockIndex>) {
         aCallback(entryReader, blockIndex);
       } else {
-        (void)blockIndex;
+        Unused << blockIndex;
         aCallback(entryReader);
       }
       MOZ_ASSERT(entryReader.RemainingBytes() == 0);
@@ -936,7 +937,7 @@ class ProfileChunkedBuffer {
     MOZ_ASSERT(!!mCurrentChunk);
     mCurrentChunk->SetRangeStart(mNextChunkRangeStart);
     mNextChunkRangeStart += mCurrentChunk->BufferBytes();
-    (void)mCurrentChunk->ReserveInitialBlockAsTail(0);
+    Unused << mCurrentChunk->ReserveInitialBlockAsTail(0);
   }
 
   void SetAndInitializeCurrentChunk(
@@ -1023,7 +1024,7 @@ class ProfileChunkedBuffer {
       MOZ_ASSERT(!mNextChunks,
                  "There shouldn't be next chunks when there is no current one");
       // See if a request has recently been fulfilled, ignore pending status.
-      (void)HandleRequestedChunk_IsPending(aLock);
+      Unused << HandleRequestedChunk_IsPending(aLock);
       current = mCurrentChunk.get();
       if (MOZ_UNLIKELY(!current)) {
         // There was no pending chunk, try to get one right now.
@@ -1046,7 +1047,7 @@ class ProfileChunkedBuffer {
     if (MOZ_UNLIKELY(!next)) {
       // No next chunk ready, see if a request has recently been fulfilled,
       // ignore pending status.
-      (void)HandleRequestedChunk_IsPending(aLock);
+      Unused << HandleRequestedChunk_IsPending(aLock);
       next = mNextChunks.get();
       if (MOZ_UNLIKELY(!next)) {
         // There was no pending chunk, try to get one right now.

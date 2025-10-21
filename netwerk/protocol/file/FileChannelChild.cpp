@@ -6,6 +6,7 @@
 
 #include "FileChannelChild.h"
 
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/NeckoChild.h"
 
@@ -39,7 +40,7 @@ FileChannelChild::CompleteRedirectSetup(nsIStreamListener* listener) {
   }
 
   if (CanSend()) {
-    (void)Send__delete__(this);
+    Unused << Send__delete__(this);
   }
 
   return NS_OK;

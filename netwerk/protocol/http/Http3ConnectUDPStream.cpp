@@ -51,7 +51,7 @@ void Http3ConnectUDPStream::Close(nsresult aResult) {
   LOG(("Http3ConnectUDPStream::Close %p aResult=%x", this,
        static_cast<uint32_t>(aResult)));
   if (mSyncListener) {
-    (void)mSyncListener->OnStopListening(this, aResult);
+    Unused << mSyncListener->OnStopListening(this, aResult);
   }
   mRecvState = RECV_DONE;
   mSendState = SEND_DONE;

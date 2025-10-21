@@ -21,6 +21,7 @@
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Try.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventBinding.h"
@@ -162,8 +163,8 @@ already_AddRefed<ChannelWrapper> ChannelWrapper::Get(const GlobalObject& global,
   if (!wrapper) {
     wrapper = new ChannelWrapper(global.GetAsSupports(), channel);
     if (props) {
-      (void)props->SetPropertyAsInterface(CHANNELWRAPPER_PROP_KEY,
-                                          wrapper->mStub);
+      Unused << props->SetPropertyAsInterface(CHANNELWRAPPER_PROP_KEY,
+                                              wrapper->mStub);
     }
   }
 
@@ -299,13 +300,13 @@ void ChannelWrapper::Resume(ErrorResult& aRv) {
 
 void ChannelWrapper::GetContentType(nsCString& aContentType) const {
   if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {
-    (void)chan->GetContentType(aContentType);
+    Unused << chan->GetContentType(aContentType);
   }
 }
 
 void ChannelWrapper::SetContentType(const nsACString& aContentType) {
   if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {
-    (void)chan->SetContentType(aContentType);
+    Unused << chan->SetContentType(aContentType);
   }
 }
 
@@ -400,7 +401,7 @@ void ChannelWrapper::GetRequestHeader(const nsCString& aHeader,
                                       ErrorResult& aRv) const {
   aResult.SetIsVoid(true);
   if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {
-    (void)chan->GetRequestHeader(aHeader, aResult);
+    Unused << chan->GetRequestHeader(aHeader, aResult);
   } else {
     aRv.Throw(NS_ERROR_UNEXPECTED);
   }
@@ -549,7 +550,7 @@ already_AddRefed<nsIURI> ChannelWrapper::GetOriginURI() const {
     if (nsIPrincipal* prin = loadInfo->TriggeringPrincipal()) {
       if (prin->GetIsContentPrincipal()) {
         auto* basePrin = BasePrincipal::Cast(prin);
-        (void)basePrin->GetURI(getter_AddRefs(uri));
+        Unused << basePrin->GetURI(getter_AddRefs(uri));
       }
     }
   }
@@ -562,7 +563,7 @@ already_AddRefed<nsIURI> ChannelWrapper::GetDocumentURI() const {
     if (nsIPrincipal* prin = loadInfo->GetLoadingPrincipal()) {
       if (prin->GetIsContentPrincipal()) {
         auto* basePrin = BasePrincipal::Cast(prin);
-        (void)basePrin->GetURI(getter_AddRefs(uri));
+        Unused << basePrin->GetURI(getter_AddRefs(uri));
       }
     }
   }
@@ -571,13 +572,13 @@ already_AddRefed<nsIURI> ChannelWrapper::GetDocumentURI() const {
 
 void ChannelWrapper::GetOriginURL(nsCString& aRetVal) const {
   if (nsCOMPtr<nsIURI> uri = GetOriginURI()) {
-    (void)uri->GetSpec(aRetVal);
+    Unused << uri->GetSpec(aRetVal);
   }
 }
 
 void ChannelWrapper::GetDocumentURL(nsCString& aRetVal) const {
   if (nsCOMPtr<nsIURI> uri = GetDocumentURI()) {
-    (void)uri->GetSpec(aRetVal);
+    Unused << uri->GetSpec(aRetVal);
   }
 }
 
@@ -606,7 +607,7 @@ const URLInfo& ChannelWrapper::FinalURLInfo() const {
       nsAutoCString spec(url.CSpec());
       spec.Replace(0, 4, "ws"_ns);
 
-      (void)NS_NewURI(getter_AddRefs(uri), spec);
+      Unused << NS_NewURI(getter_AddRefs(uri), spec);
       MOZ_RELEASE_ASSERT(uri);
       mFinalURLInfo.reset();
       mFinalURLInfo.emplace(uri.get(), true);
@@ -915,7 +916,7 @@ MozContentPolicyType ChannelWrapper::Type() const {
 
 void ChannelWrapper::GetMethod(nsCString& aMethod) const {
   if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {
-    (void)chan->GetRequestMethod(aMethod);
+    Unused << chan->GetRequestMethod(aMethod);
   }
 }
 
@@ -926,7 +927,7 @@ void ChannelWrapper::GetMethod(nsCString& aMethod) const {
 uint32_t ChannelWrapper::StatusCode() const {
   uint32_t result = 0;
   if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {
-    (void)chan->GetResponseStatus(&result);
+    Unused << chan->GetResponseStatus(&result);
   }
   return result;
 }
@@ -952,7 +953,7 @@ void ChannelWrapper::GetStatusLine(nsCString& aRetVal) const {
 uint64_t ChannelWrapper::ResponseSize() const {
   uint64_t result = 0;
   if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {
-    (void)chan->GetTransferSize(&result);
+    Unused << chan->GetTransferSize(&result);
   }
   return result;
 }
@@ -960,7 +961,7 @@ uint64_t ChannelWrapper::ResponseSize() const {
 uint64_t ChannelWrapper::RequestSize() const {
   uint64_t result = 0;
   if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {
-    (void)chan->GetRequestSize(&result);
+    Unused << chan->GetRequestSize(&result);
   }
   return result;
 }
@@ -1008,7 +1009,7 @@ void ChannelWrapper::GetProxyInfo(dom::Nullable<MozProxyInfo>& aRetVal,
                                   ErrorResult& aRv) const {
   nsCOMPtr<nsIProxyInfo> proxyInfo;
   if (nsCOMPtr<nsIProxiedChannel> proxied = QueryChannel()) {
-    (void)proxied->GetProxyInfo(getter_AddRefs(proxyInfo));
+    Unused << proxied->GetProxyInfo(getter_AddRefs(proxyInfo));
   }
   if (proxyInfo) {
     MozProxyInfo result;
@@ -1025,7 +1026,7 @@ void ChannelWrapper::GetProxyInfo(dom::Nullable<MozProxyInfo>& aRetVal,
 void ChannelWrapper::GetRemoteAddress(nsCString& aRetVal) const {
   aRetVal.SetIsVoid(true);
   if (nsCOMPtr<nsIHttpChannelInternal> internal = QueryChannel()) {
-    (void)internal->GetRemoteAddress(aRetVal);
+    Unused << internal->GetRemoteAddress(aRetVal);
   }
 }
 
@@ -1094,7 +1095,7 @@ bool ChannelWrapper::ThirdParty() const {
 void ChannelWrapper::GetErrorString(nsString& aRetVal) const {
   if (nsCOMPtr<nsIChannel> chan = MaybeChannel()) {
     nsCOMPtr<nsITransportSecurityInfo> securityInfo;
-    (void)chan->GetSecurityInfo(getter_AddRefs(securityInfo));
+    Unused << chan->GetSecurityInfo(getter_AddRefs(securityInfo));
     if (securityInfo) {
       int32_t errorCode = 0;
       securityInfo->GetErrorCode(&errorCode);

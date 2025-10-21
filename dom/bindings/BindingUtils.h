@@ -1467,7 +1467,7 @@ inline bool WrapNewBindingNonWrapperCachedObject(
     }
 
     // JS object took ownership
-    (void)value.release();
+    Unused << value.release();
   }
 
   return FinishWrapping(cx, obj, rval);

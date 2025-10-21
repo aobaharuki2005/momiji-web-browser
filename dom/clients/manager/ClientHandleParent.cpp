@@ -10,6 +10,7 @@
 #include "ClientManagerService.h"
 #include "ClientPrincipalUtils.h"
 #include "ClientSourceParent.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 
 namespace mozilla::dom {
@@ -17,7 +18,7 @@ namespace mozilla::dom {
 using mozilla::ipc::IPCResult;
 
 IPCResult ClientHandleParent::RecvTeardown() {
-  (void)Send__delete__(this);
+  Unused << Send__delete__(this);
   return IPC_OK();
 }
 
@@ -77,7 +78,7 @@ void ClientHandleParent::Init(const IPCClientInfo& aClientInfo) {
           },
           [self = RefPtr{this}](const CopyableErrorResult&) {
             self->mSourcePromiseRequestHolder.Complete();
-            (void)Send__delete__(self);
+            Unused << Send__delete__(self);
           })
       ->Track(mSourcePromiseRequestHolder);
 }
@@ -102,7 +103,7 @@ void ClientHandleParent::FoundSource(ClientSourceParent* aSource) {
       rv.ThrowAbortError("Client aborted");
       mSourcePromiseHolder.Reject(rv, __func__);
     }
-    (void)Send__delete__(this);
+    Unused << Send__delete__(this);
     return;
   }
 

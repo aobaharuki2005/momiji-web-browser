@@ -11,6 +11,7 @@
 #include "ClientSourceOpParent.h"
 #include "ClientValidation.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PClientManagerParent.h"
@@ -33,7 +34,7 @@ mozilla::ipc::IPCResult ClientSourceParent::RecvWorkerSyncPing() {
 }
 
 IPCResult ClientSourceParent::RecvTeardown() {
-  (void)Send__delete__(this);
+  Unused << Send__delete__(this);
   return IPC_OK();
 }
 
@@ -51,7 +52,7 @@ IPCResult ClientSourceParent::RecvExecutionReady(
   mExecutionReady = true;
 
   for (ClientHandleParent* handle : mHandleList) {
-    (void)handle->SendExecutionReady(mClientInfo.ToIPC());
+    Unused << handle->SendExecutionReady(mClientInfo.ToIPC());
   }
 
   mExecutionReadyPromise.ResolveIfExists(true, __func__);
@@ -126,7 +127,7 @@ void ClientSourceParent::ActorDestroy(ActorDestroyReason aReason) {
   for (ClientHandleParent* handle : mHandleList.Clone()) {
     // This should trigger DetachHandle() to be called removing
     // the entry from the mHandleList.
-    (void)ClientHandleParent::Send__delete__(handle);
+    Unused << ClientHandleParent::Send__delete__(handle);
   }
   MOZ_DIAGNOSTIC_ASSERT(mHandleList.IsEmpty());
 }
@@ -231,7 +232,7 @@ RefPtr<ClientOpPromise> ClientSourceParent::StartOp(
   // Constructor failure will reject the promise via ActorDestroy().
   ClientSourceOpParent* actor =
       new ClientSourceOpParent(std::move(aArgs), promise);
-  (void)SendPClientSourceOpConstructor(actor, actor->Args());
+  Unused << SendPClientSourceOpConstructor(actor, actor->Args());
 
   return promise;
 }

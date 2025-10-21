@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Unused.h"
 #include "mozilla/TimeStamp.h"
 
 #include <stdlib.h>
@@ -1405,7 +1406,7 @@ TEST(TArray, test_SetLengthAndRetainStorage_no_ctor)
   } while (0)
 
   // Setup test arrays.
-  FOR_EACH(; (void), .SetLength(N, fallible));
+  FOR_EACH(; Unused <<, .SetLength(N, fallible));
   for (int n = 0; n < N; ++n) {
     FOR_EACH(;, [n] = n);
   }

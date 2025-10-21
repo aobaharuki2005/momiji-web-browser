@@ -342,7 +342,9 @@ KeymapWrapper* KeymapWrapper::GetInstance() {
 #ifdef MOZ_WAYLAND
 void KeymapWrapper::EnsureInstance() { (void)GetInstance(); }
 
-void KeymapWrapper::InitBySystemSettingsWayland() { (void)WaylandDisplayGet(); }
+void KeymapWrapper::InitBySystemSettingsWayland() {
+  MOZ_UNUSED(WaylandDisplayGet());
+}
 #endif
 
 /* static */

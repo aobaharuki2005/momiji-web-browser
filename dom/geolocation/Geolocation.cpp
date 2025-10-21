@@ -16,6 +16,7 @@
 #include "mozilla/StaticPrefs_geo.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/ContentChild.h"
@@ -1145,7 +1146,7 @@ void Geolocation::RemoveRequest(nsGeolocationRequest* aRequest) {
   bool requestWasKnown = (mPendingCallbacks.RemoveElement(aRequest) !=
                           mWatchingCallbacks.RemoveElement(aRequest));
 
-  (void)requestWasKnown;
+  Unused << requestWasKnown;
 }
 
 NS_IMETHODIMP

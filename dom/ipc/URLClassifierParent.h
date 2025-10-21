@@ -36,7 +36,7 @@ class URLClassifierParent : public nsIURIClassifierCallback,
     if (mIPCOpen) {
       ClassifierInfo info = ClassifierInfo(
           nsCString(aList), nsCString(aProvider), nsCString(aFullHash));
-      (void)Send__delete__(this, Some(info), aErrorCode);
+      Unused << Send__delete__(this, Some(info), aErrorCode);
     }
     return NS_OK;
   }
@@ -44,7 +44,7 @@ class URLClassifierParent : public nsIURIClassifierCallback,
   // Custom.
   void ClassificationFailed() {
     if (mIPCOpen) {
-      (void)Send__delete__(this, Nothing(), NS_ERROR_FAILURE);
+      Unused << Send__delete__(this, Nothing(), NS_ERROR_FAILURE);
     }
   }
 

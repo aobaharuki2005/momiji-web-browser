@@ -43,6 +43,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Tokenizer.h"
+#include "mozilla/Unused.h"
 
 //----------------------------------------------------------------------------
 
@@ -678,7 +679,7 @@ class AsyncGetPACURIRequestOrSystemWPADSetting final : public nsIRunnable {
         mResetPACThread(aResetPACThread),
         mSystemWPADAllowed(aSystemWPADAllowed) {
     MOZ_ASSERT(NS_IsMainThread());
-    (void)mIsMainThreadOnly;
+    Unused << mIsMainThreadOnly;
   }
 
   NS_IMETHOD Run() override {
@@ -2357,7 +2358,7 @@ bool nsProtocolProxyService::ApplyFilter(
 
   if (filterLink->filter) {
     nsCOMPtr<nsIURI> uri;
-    (void)GetProxyURI(channel, getter_AddRefs(uri));
+    Unused << GetProxyURI(channel, getter_AddRefs(uri));
     if (!uri) {
       return false;
     }

@@ -245,7 +245,7 @@ void StreamFilterChild::MaybeStopRequest() {
   }
 
   if (mStreamFilter) {
-    (void)mStreamFilter->CheckAlive();
+    Unused << mStreamFilter->CheckAlive();
   }
 
   switch (mState) {
@@ -426,7 +426,7 @@ IPCResult StreamFilterChild::RecvStartRequest() {
 
   if (mStreamFilter) {
     mStreamFilter->FireEvent(u"start"_ns);
-    (void)mStreamFilter->CheckAlive();
+    Unused << mStreamFilter->CheckAlive();
   }
   return IPC_OK();
 }
@@ -470,7 +470,7 @@ IPCResult StreamFilterChild::RecvData(Data&& aData) {
   MOZ_ASSERT(!mReceivedOnStop);
 
   if (mStreamFilter) {
-    (void)mStreamFilter->CheckAlive();
+    Unused << mStreamFilter->CheckAlive();
   }
 
   switch (mState) {

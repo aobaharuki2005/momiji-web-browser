@@ -14,6 +14,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/WinDllServices.h"
 #include "ModuleEvaluator.h"
 #include "ModuleVersionInfo.h"
@@ -331,7 +332,7 @@ void UntrustedModulesData::AddNewLoads(
       continue;
     }
 
-    (void)mModules.LookupOrInsert(entry.GetKey(), entry.GetData());
+    Unused << mModules.LookupOrInsert(entry.GetKey(), entry.GetData());
   }
 
   MOZ_ASSERT(mEvents.length() <= kMaxEvents);

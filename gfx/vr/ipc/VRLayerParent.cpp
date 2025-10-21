@@ -6,6 +6,7 @@
 
 #include "VRLayerParent.h"
 #include "VRManager.h"
+#include "mozilla/Unused.h"
 #include "mozilla/layers/CompositorThread.h"
 
 namespace mozilla {
@@ -35,7 +36,7 @@ void VRLayerParent::Destroy() {
   }
 
   if (mIPCOpen) {
-    (void)PVRLayerParent::Send__delete__(this);
+    Unused << PVRLayerParent::Send__delete__(this);
   }
 }
 

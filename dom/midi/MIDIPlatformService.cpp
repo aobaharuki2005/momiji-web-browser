@@ -14,6 +14,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/StaticPrefs_midi.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/MIDIManagerParent.h"
 #include "mozilla/dom/MIDIPlatformRunnables.h"
 #include "mozilla/dom/MIDIPortParent.h"
@@ -47,9 +48,9 @@ void MIDIPlatformService::CheckAndReceive(const nsAString& aPortId,
           msgs.AppendElement(msg);
         }
       }
-      (void)port->SendReceive(msgs);
+      Unused << port->SendReceive(msgs);
     } else {
-      (void)port->SendReceive(aMsgs);
+      Unused << port->SendReceive(aMsgs);
     }
   }
 }
@@ -100,7 +101,7 @@ void MIDIPlatformService::SendPortList() {
     l.ports().AppendElement(el);
   }
   for (auto& mgr : mManagers) {
-    (void)mgr->SendMIDIPortListUpdate(l);
+    Unused << mgr->SendMIDIPortListUpdate(l);
   }
 }
 

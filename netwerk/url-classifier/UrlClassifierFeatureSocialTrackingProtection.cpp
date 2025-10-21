@@ -192,9 +192,9 @@ UrlClassifierFeatureSocialTrackingProtection::ProcessChannel(
   nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
 
   if (httpChannel) {
-    (void)httpChannel->CancelByURLClassifier(NS_ERROR_SOCIALTRACKING_URI);
+    Unused << httpChannel->CancelByURLClassifier(NS_ERROR_SOCIALTRACKING_URI);
   } else {
-    (void)aChannel->Cancel(NS_ERROR_SOCIALTRACKING_URI);
+    Unused << aChannel->Cancel(NS_ERROR_SOCIALTRACKING_URI);
   }
 
   return NS_OK;

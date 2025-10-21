@@ -1870,7 +1870,7 @@ struct nsGridContainerFrame::TrackSizingFunctions {
         continue;
       }
       for (auto j : IntegerRange(repeat.count.AsNumber())) {
-        (void)j;
+        Unused << j;
         size_t trackSizesCount = repeat.track_sizes.Length();
         for (auto k : IntegerRange(trackSizesCount)) {
           mExpandedTracks.EmplaceBack(i, k);
@@ -2025,7 +2025,7 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
         continue;
       }
       for (auto j : IntegerRange(repeat.count.AsNumber())) {
-        (void)j;
+        Unused << j;
         if (nameListToMerge) {
           names.AppendElement(nameListToMerge);
           nameListToMerge = nullptr;

@@ -215,7 +215,7 @@ ReferrerPolicy ReferrerInfo::GetDefaultReferrerPolicy(nsIHttpChannel* aChannel,
   if (aChannel && aURI) {
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
     nsCOMPtr<nsICookieJarSettings> cjs;
-    (void)loadInfo->GetCookieJarSettings(getter_AddRefs(cjs));
+    Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cjs));
     if (!cjs) {
       bool shouldResistFingerprinting =
           nsContentUtils::ShouldResistFingerprinting(
@@ -755,7 +755,8 @@ bool ReferrerInfo::ShouldIgnoreLessRestrictedPolicies(
     // inherited from the parent.
     if (XRE_IsParentProcess()) {
       nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-      (void)loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+      Unused << loadInfo->GetCookieJarSettings(
+          getter_AddRefs(cookieJarSettings));
 
       net::CookieJarSettings::Cast(cookieJarSettings)
           ->UpdateIsOnContentBlockingAllowList(aChannel);
@@ -859,7 +860,7 @@ void ReferrerInfo::LogMessageToConsole(
   rv = nsContentUtils::ReportToConsoleByWindowID(
       localizedMsg, nsIScriptError::infoFlag, "Security"_ns, windowID,
       SourceLocation(std::move(uri)));
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
 ReferrerPolicy ReferrerPolicyIDLToReferrerPolicy(
@@ -1095,7 +1096,7 @@ HashNumber ReferrerInfo::Hash() const {
   MOZ_ASSERT(mInitialized);
   nsAutoCString originalReferrerSpec;
   if (mOriginalReferrer) {
-    (void)mOriginalReferrer->GetSpec(originalReferrerSpec);
+    Unused << mOriginalReferrer->GetSpec(originalReferrerSpec);
   }
 
   return mozilla::AddToHash(

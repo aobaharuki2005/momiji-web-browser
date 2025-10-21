@@ -6,6 +6,7 @@
 
 #include "WebSocketEventService.h"
 #include "WebSocketEventListenerParent.h"
+#include "mozilla/Unused.h"
 #include "WebSocketFrame.h"
 
 namespace mozilla {
@@ -34,7 +35,7 @@ WebSocketEventListenerParent::~WebSocketEventListenerParent() {
 mozilla::ipc::IPCResult WebSocketEventListenerParent::RecvClose() {
   if (mService) {
     UnregisterListener();
-    (void)Send__delete__(this);
+    Unused << Send__delete__(this);
   }
 
   return IPC_OK();
@@ -56,7 +57,7 @@ NS_IMETHODIMP
 WebSocketEventListenerParent::WebSocketCreated(uint32_t aWebSocketSerialID,
                                                const nsAString& aURI,
                                                const nsACString& aProtocols) {
-  (void)SendWebSocketCreated(aWebSocketSerialID, aURI, aProtocols);
+  Unused << SendWebSocketCreated(aWebSocketSerialID, aURI, aProtocols);
   return NS_OK;
 }
 
@@ -66,8 +67,8 @@ WebSocketEventListenerParent::WebSocketOpened(uint32_t aWebSocketSerialID,
                                               const nsACString& aProtocols,
                                               const nsACString& aExtensions,
                                               uint64_t aHttpChannelId) {
-  (void)SendWebSocketOpened(aWebSocketSerialID, aEffectiveURI, aProtocols,
-                            aExtensions, aHttpChannelId);
+  Unused << SendWebSocketOpened(aWebSocketSerialID, aEffectiveURI, aProtocols,
+                                aExtensions, aHttpChannelId);
   return NS_OK;
 }
 
@@ -75,7 +76,7 @@ NS_IMETHODIMP
 WebSocketEventListenerParent::WebSocketClosed(uint32_t aWebSocketSerialID,
                                               bool aWasClean, uint16_t aCode,
                                               const nsAString& aReason) {
-  (void)SendWebSocketClosed(aWebSocketSerialID, aWasClean, aCode, aReason);
+  Unused << SendWebSocketClosed(aWebSocketSerialID, aWasClean, aCode, aReason);
   return NS_OK;
 }
 
@@ -83,7 +84,8 @@ NS_IMETHODIMP
 WebSocketEventListenerParent::WebSocketMessageAvailable(
     uint32_t aWebSocketSerialID, const nsACString& aData,
     uint16_t aMessageType) {
-  (void)SendWebSocketMessageAvailable(aWebSocketSerialID, aData, aMessageType);
+  Unused << SendWebSocketMessageAvailable(aWebSocketSerialID, aData,
+                                          aMessageType);
   return NS_OK;
 }
 
@@ -95,7 +97,7 @@ WebSocketEventListenerParent::FrameReceived(uint32_t aWebSocketSerialID,
   }
 
   WebSocketFrame* frame = static_cast<WebSocketFrame*>(aFrame);
-  (void)SendFrameReceived(aWebSocketSerialID, frame->Data());
+  Unused << SendFrameReceived(aWebSocketSerialID, frame->Data());
   return NS_OK;
 }
 
@@ -107,7 +109,7 @@ WebSocketEventListenerParent::FrameSent(uint32_t aWebSocketSerialID,
   }
 
   WebSocketFrame* frame = static_cast<WebSocketFrame*>(aFrame);
-  (void)SendFrameSent(aWebSocketSerialID, frame->Data());
+  Unused << SendFrameSent(aWebSocketSerialID, frame->Data());
   return NS_OK;
 }
 

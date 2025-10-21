@@ -36,7 +36,7 @@ NativeDNSResolverOverrideParent::GetSingleton() {
   auto initTask = []() {
     RefPtr<SocketProcessParent> socketParent =
         SocketProcessParent::GetSingleton();
-    (void)socketParent->SendPNativeDNSResolverOverrideConstructor(
+    Unused << socketParent->SendPNativeDNSResolverOverrideConstructor(
         gNativeDNSResolverOverrideParent);
   };
   gIOService->CallOrWaitForSocketProcess(initTask);
@@ -56,7 +56,7 @@ NS_IMETHODIMP NativeDNSResolverOverrideParent::AddIPOverride(
   nsCString ip(aIPLiteral);
   auto task = [self{std::move(self)}, host = std::move(host),
                ip = std::move(ip)]() {
-    (void)self->SendAddIPOverride(host, ip);
+    Unused << self->SendAddIPOverride(host, ip);
   };
   gIOService->CallOrWaitForSocketProcess(task);
   return NS_OK;
@@ -68,7 +68,7 @@ NS_IMETHODIMP NativeDNSResolverOverrideParent::AddHTTPSRecordOverride(
   CopyableTArray<uint8_t> data(aData, aLength);
   auto task = [self = RefPtr{this}, host = std::move(host),
                data = std::move(data)]() {
-    (void)self->SendAddHTTPSRecordOverride(host, data);
+    Unused << self->SendAddHTTPSRecordOverride(host, data);
   };
   gIOService->CallOrWaitForSocketProcess(std::move(task));
   return NS_OK;
@@ -85,7 +85,7 @@ NS_IMETHODIMP NativeDNSResolverOverrideParent::SetCnameOverride(
   nsCString cname(aCNAME);
   auto task = [self{std::move(self)}, host = std::move(host),
                cname = std::move(cname)]() {
-    (void)self->SendSetCnameOverride(host, cname);
+    Unused << self->SendSetCnameOverride(host, cname);
   };
   gIOService->CallOrWaitForSocketProcess(task);
   return NS_OK;
@@ -96,7 +96,7 @@ NS_IMETHODIMP NativeDNSResolverOverrideParent::ClearHostOverride(
   RefPtr<NativeDNSResolverOverrideParent> self = this;
   nsCString host(aHost);
   auto task = [self{std::move(self)}, host = std::move(host)]() {
-    (void)self->SendClearHostOverride(host);
+    Unused << self->SendClearHostOverride(host);
   };
   gIOService->CallOrWaitForSocketProcess(task);
   return NS_OK;
@@ -104,7 +104,9 @@ NS_IMETHODIMP NativeDNSResolverOverrideParent::ClearHostOverride(
 
 NS_IMETHODIMP NativeDNSResolverOverrideParent::ClearOverrides() {
   RefPtr<NativeDNSResolverOverrideParent> self = this;
-  auto task = [self{std::move(self)}]() { (void)self->SendClearOverrides(); };
+  auto task = [self{std::move(self)}]() {
+    Unused << self->SendClearOverrides();
+  };
   gIOService->CallOrWaitForSocketProcess(task);
   return NS_OK;
 }

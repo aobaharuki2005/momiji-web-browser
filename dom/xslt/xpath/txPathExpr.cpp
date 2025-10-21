@@ -10,6 +10,7 @@
 #include "txXMLUtils.h"
 #include "txXPathTreeWalker.h"
 
+using mozilla::Unused;
 using mozilla::WrapUnique;
 
 //------------/
@@ -176,7 +177,7 @@ Expr* PathExpr::getSubExprAt(uint32_t aPos) {
 }
 void PathExpr::setSubExprAt(uint32_t aPos, Expr* aExpr) {
   NS_ASSERTION(aPos < mItems.Length(), "setting bad subexpression index");
-  (void)mItems[aPos].expr.release();
+  Unused << mItems[aPos].expr.release();
   mItems[aPos].expr = WrapUnique(aExpr);
 }
 

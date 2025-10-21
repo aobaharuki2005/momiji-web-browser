@@ -14,6 +14,7 @@
 #include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIObserver.h"
@@ -177,7 +178,7 @@ class MemoryEater {
       // VirtualAlloc consumes the commit space, but we need to *touch* memory
       // to consume physical memory
       TouchMemory(page.get(), currentSize);
-      (void)aOutput.emplaceBack(std::move(page));
+      Unused << aOutput.emplaceBack(std::move(page));
     }
     return true;
   }

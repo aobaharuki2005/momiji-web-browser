@@ -26,6 +26,7 @@
 #include "mozilla/glean/JsXpconnectMetrics.h"
 #include "mozilla/glean/XpcomMetrics.h"
 #include "mozilla/Try.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Document.h"
@@ -126,7 +127,7 @@ ScriptPreloader& ScriptPreloader::GetSingleton() {
       gCacheData = new AutoMemMap();
       gScriptPreloader = new ScriptPreloader(gCacheData.get());
       gScriptPreloader->mChildCache = &GetChildSingleton();
-      (void)gScriptPreloader->InitCache();
+      Unused << gScriptPreloader->InitCache();
     } else {
       gScriptPreloader = &GetChildSingleton();
     }
@@ -164,7 +165,7 @@ ScriptPreloader& ScriptPreloader::GetChildSingleton() {
     gChildCacheData = new AutoMemMap();
     gChildScriptPreloader = new ScriptPreloader(gChildCacheData.get());
     if (XRE_IsParentProcess()) {
-      (void)gChildScriptPreloader->InitCache(u"scriptCache-child"_ns);
+      Unused << gChildScriptPreloader->InitCache(u"scriptCache-child"_ns);
     }
   }
 
@@ -214,10 +215,10 @@ void ScriptPreloader::InitContentChild(ContentParent& parent) {
   // Don't send original cache data to new processes if the cache has been
   // invalidated.
   if (fd.IsValid() && !cache.mCacheInvalidated) {
-    (void)parent.SendPScriptCacheConstructor(fd, wantScriptData);
+    Unused << parent.SendPScriptCacheConstructor(fd, wantScriptData);
   } else {
-    (void)parent.SendPScriptCacheConstructor(NS_ERROR_FILE_NOT_FOUND,
-                                             wantScriptData);
+    Unused << parent.SendPScriptCacheConstructor(NS_ERROR_FILE_NOT_FOUND,
+                                                 wantScriptData);
   }
 }
 
@@ -265,7 +266,7 @@ void ScriptPreloader::Cleanup() {
 void ScriptPreloader::StartCacheWrite() {
   MOZ_DIAGNOSTIC_ASSERT(!mSaveThread);
 
-  (void)NS_NewNamedThread("SaveScripts", getter_AddRefs(mSaveThread), this);
+  Unused << NS_NewNamedThread("SaveScripts", getter_AddRefs(mSaveThread), this);
 
   nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
   barrier->AddBlocker(this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
@@ -409,7 +410,7 @@ Result<nsCOMPtr<nsIFile>, nsresult> ScriptPreloader::GetCacheFile(
   MOZ_TRY(mProfD->Clone(getter_AddRefs(cacheFile)));
 
   MOZ_TRY(cacheFile->AppendNative("startupCache"_ns));
-  (void)cacheFile->Create(nsIFile::DIRECTORY_TYPE, 0777);
+  Unused << cacheFile->Create(nsIFile::DIRECTORY_TYPE, 0777);
 
   MOZ_TRY(cacheFile->Append(mBaseName + suffix));
 
@@ -808,16 +809,16 @@ nsresult ScriptPreloader::Run() {
   }
 
   auto result = URLPreloader::GetSingleton().WriteCache();
-  (void)NS_WARN_IF(result.isErr());
+  Unused << NS_WARN_IF(result.isErr());
 
   result = WriteCache();
-  (void)NS_WARN_IF(result.isErr());
+  Unused << NS_WARN_IF(result.isErr());
 
   {
     MonitorAutoLock lock(mChildCache->mSaveMonitor.Lock());
     result = mChildCache->WriteCache();
   }
-  (void)NS_WARN_IF(result.isErr());
+  Unused << NS_WARN_IF(result.isErr());
 
   NS_DispatchToMainThread(
       NewRunnableMethod("ScriptPreloader::CacheWriteComplete", this,
@@ -1370,7 +1371,7 @@ already_AddRefed<nsIAsyncShutdownClient> ScriptPreloader::GetShutdownBarrier() {
   MOZ_RELEASE_ASSERT(svc);
 
   nsCOMPtr<nsIAsyncShutdownClient> barrier;
-  (void)svc->GetXpcomWillShutdown(getter_AddRefs(barrier));
+  Unused << svc->GetXpcomWillShutdown(getter_AddRefs(barrier));
   MOZ_RELEASE_ASSERT(barrier);
 
   return barrier.forget();

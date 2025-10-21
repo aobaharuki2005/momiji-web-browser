@@ -12,6 +12,7 @@
 #include "base/process_util.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Unused.h"
 #include "nsWindowsHelpers.h"
 
 namespace mozilla {
@@ -33,7 +34,8 @@ bool HandleToFilename(HANDLE aHandle, const LARGE_INTEGER& aOffset,
   if (!view) {
     return false;
   }
-  const auto cleanup = MakeScopeExit([&]() { (void)UnmapViewOfFile(view); });
+  const auto cleanup =
+      MakeScopeExit([&]() { mozilla::Unused << UnmapViewOfFile(view); });
 
   nsAutoString mappedFilename;
   DWORD len = 0;

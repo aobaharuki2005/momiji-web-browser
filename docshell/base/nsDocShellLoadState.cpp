@@ -885,10 +885,11 @@ void nsDocShellLoadState::MaybeStripTrackerQueryStrings(
   // string could be different.
   if (mUnstrippedURI) {
     nsCOMPtr<nsIURI> uri;
-    (void)queryStripper->Strip(mUnstrippedURI, aContext->UsePrivateBrowsing(),
-                               getter_AddRefs(uri), &numStripped);
+    Unused << queryStripper->Strip(mUnstrippedURI,
+                                   aContext->UsePrivateBrowsing(),
+                                   getter_AddRefs(uri), &numStripped);
     bool equals = false;
-    (void)URI()->Equals(uri, &equals);
+    Unused << URI()->Equals(uri, &equals);
     MOZ_ASSERT(equals);
   }
 #endif

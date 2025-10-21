@@ -14,6 +14,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
+#include "mozilla/Unused.h"
 #include "mozpkix/Time.h"
 #include "mozpkix/pkixnss.h"
 #include "mozpkix/pkixtypes.h"
@@ -392,7 +393,7 @@ nsresult nsNSSCertificateDB::handleCACertDownload(NotNull<nsIArray*> x509Certs,
       continue;
     }
 
-    (void)tmpCert2.release();
+    Unused << tmpCert2.release();
   }
 
   return ImportCertsIntoPermanentStorage(certList);
@@ -474,7 +475,7 @@ static nsresult ImportCertsIntoTempStorage(
 
     if (CERT_AddCertToListTail(temporaryCerts.get(), cert.get()) ==
         SECSuccess) {
-      (void)cert.release();
+      Unused << cert.release();
     }
   }
 
@@ -1138,7 +1139,7 @@ NS_IMETHODIMP nsNSSCertificateDB::AsPKCS7Blob(
     return NS_ERROR_FAILURE;
   }
   // cmsg owns sigd now.
-  (void)sigd.release();
+  Unused << sigd.release();
 
   UniquePLArenaPool arena(PORT_NewArena(1024));
   if (!arena) {
@@ -1316,11 +1317,11 @@ class VerifyCertAtTimeTask final : public CryptoTask {
   virtual void CallCallback(nsresult rv) override {
     if (NS_FAILED(rv)) {
       nsTArray<RefPtr<nsIX509Cert>> tmp;
-      (void)mCallback->VerifyCertFinished(SEC_ERROR_LIBRARY_FAILURE, tmp,
-                                          false);
+      Unused << mCallback->VerifyCertFinished(SEC_ERROR_LIBRARY_FAILURE, tmp,
+                                              false);
     } else {
-      (void)mCallback->VerifyCertFinished(mPRErrorCode, mVerifiedCertList,
-                                          mHasEVPolicy);
+      Unused << mCallback->VerifyCertFinished(mPRErrorCode, mVerifiedCertList,
+                                              mHasEVPolicy);
     }
   }
 

@@ -8,6 +8,7 @@
 
 #include "SharedWorkerManager.h"
 #include "SharedWorkerService.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/RemoteWorkerTypes.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
@@ -63,7 +64,7 @@ IPCResult SharedWorkerParent::RecvClose() {
     mWorkerManagerWrapper = nullptr;
   }
 
-  (void)Send__delete__(this);
+  Unused << Send__delete__(this);
   return IPC_OK();
 }
 
@@ -158,7 +159,7 @@ void SharedWorkerParent::ErrorPropagation(nsresult aError) {
     return;
   }
 
-  (void)SendError(aError);
+  Unused << SendError(aError);
 }
 
 void SharedWorkerParent::MismatchOptionsErrorPropagation() {
@@ -170,7 +171,7 @@ void SharedWorkerParent::MismatchOptionsErrorPropagation() {
     return;
   }
 
-  (void)SendError(ErrorMismatchOptions());
+  Unused << SendError(ErrorMismatchOptions());
 }
 
 }  // namespace dom

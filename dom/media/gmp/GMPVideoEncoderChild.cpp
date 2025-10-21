@@ -12,6 +12,7 @@
 #include "GMPVideoEncodedFrameImpl.h"
 #include "GMPVideoi420FrameImpl.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/Unused.h"
 #include "runnable_utils.h"
 
 namespace mozilla::gmp {
@@ -50,7 +51,7 @@ void GMPVideoEncoderChild::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
   if (GMPSharedMemManager* memMgr = mVideoHost.SharedMemMgr()) {
     ipc::Shmem inputShmem;
     if (memMgr->MgrTakeShmem(GMPSharedMemClass::Decoded, &inputShmem)) {
-      (void)SendReturnShmem(std::move(inputShmem));
+      Unused << SendReturnShmem(std::move(inputShmem));
     }
   }
 
@@ -61,9 +62,9 @@ void GMPVideoEncoderChild::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
   ipc::Shmem frameShmem;
   nsTArray<uint8_t> frameArray;
   if (ef->RelinquishFrameData(frameData, frameShmem)) {
-    (void)SendEncodedShmem(frameData, std::move(frameShmem), codecSpecific);
+    Unused << SendEncodedShmem(frameData, std::move(frameShmem), codecSpecific);
   } else if (ef->RelinquishFrameData(frameData, frameArray)) {
-    (void)SendEncodedData(frameData, std::move(frameArray), codecSpecific);
+    Unused << SendEncodedData(frameData, std::move(frameArray), codecSpecific);
   } else {
     MOZ_CRASH("Encoded without any frame data!");
   }

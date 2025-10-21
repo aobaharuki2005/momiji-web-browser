@@ -7,6 +7,7 @@
 #include "MediaSystemResourceService.h"
 
 #include "MediaSystemResourceManagerParent.h"
+#include "mozilla/Unused.h"
 #include "mozilla/layers/CompositorThread.h"
 
 using namespace mozilla::layers;
@@ -64,7 +65,7 @@ void MediaSystemResourceService::Acquire(
   if (!resource || resource->mResourceCount == 0) {
     // Resource does not exit
     // Send fail response
-    (void)aParent->SendResponse(aId, false /* fail */);
+    mozilla::Unused << aParent->SendResponse(aId, false /* fail */);
     return;
   }
 
@@ -74,14 +75,14 @@ void MediaSystemResourceService::Acquire(
     resource->mAcquiredRequests.push_back(
         MediaSystemResourceRequest(aParent, aId));
     // Send success response
-    (void)aParent->SendResponse(aId, true /* success */);
+    mozilla::Unused << aParent->SendResponse(aId, true /* success */);
     return;
   }
 
   if (!aWillWait) {
     // Resource is not available and do not wait.
     // Send fail response
-    (void)aParent->SendResponse(aId, false /* fail */);
+    mozilla::Unused << aParent->SendResponse(aId, false /* fail */);
     return;
   }
   // Wait until acquire.
@@ -210,7 +211,8 @@ void MediaSystemResourceService::UpdateRequests(
     MediaSystemResourceRequest& request = waitingRequests.front();
     MOZ_ASSERT(request.mParent);
     // Send response
-    (void)request.mParent->SendResponse(request.mId, true /* success */);
+    mozilla::Unused << request.mParent->SendResponse(request.mId,
+                                                     true /* success */);
     // Move request to mAcquiredRequests
     acquiredRequests.push_back(waitingRequests.front());
     waitingRequests.pop_front();

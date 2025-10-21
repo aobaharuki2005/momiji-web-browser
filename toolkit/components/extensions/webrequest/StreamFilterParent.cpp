@@ -8,6 +8,7 @@
 
 #include "HttpChannelChild.h"
 #include "mozilla/ExtensionPolicyService.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/net/ChannelEventQueue.h"
 #include "mozilla/StaticPrefs_extensions.h"
@@ -76,7 +77,7 @@ class ChannelEventRunnable final : public ChannelEventWrapper {
 
   void Run() override {
     nsresult rv = mRunnable->Run();
-    (void)NS_WARN_IF(NS_FAILED(rv));
+    Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 
  protected:
@@ -304,11 +305,11 @@ IPCResult StreamFilterParent::RecvClose() {
     RefPtr<StreamFilterParent> self(this);
     RunOnMainThread(FUNC, [=] {
       nsresult rv = self->EmitStopRequest(NS_OK);
-      (void)NS_WARN_IF(NS_FAILED(rv));
+      Unused << NS_WARN_IF(NS_FAILED(rv));
     });
   }
 
-  (void)SendClosed();
+  Unused << SendClosed();
   Destroy();
   return IPC_OK();
 }
@@ -434,9 +435,9 @@ void StreamFilterParent::FinishDisconnect() {
       RunOnMainThread(FUNC, [=] {
         if (self->mReceivedStop && !self->mSentStop) {
           nsresult rv = self->EmitStopRequest(NS_OK);
-          (void)NS_WARN_IF(NS_FAILED(rv));
+          Unused << NS_WARN_IF(NS_FAILED(rv));
         } else if (self->mLoadGroup && !self->mDisconnected) {
-          (void)self->mLoadGroup->RemoveRequest(self, nullptr, NS_OK);
+          Unused << self->mLoadGroup->RemoveRequest(self, nullptr, NS_OK);
         }
         self->mDisconnected = true;
       });
@@ -459,7 +460,7 @@ IPCResult StreamFilterParent::RecvWrite(Data&& aData) {
 
 void StreamFilterParent::WriteMove(Data&& aData) {
   nsresult rv = Write(aData);
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
 nsresult StreamFilterParent::Write(Data& aData) {
@@ -638,9 +639,9 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
   }
 
   if (!mDisconnected) {
-    (void)mChannel->GetLoadGroup(getter_AddRefs(mLoadGroup));
+    Unused << mChannel->GetLoadGroup(getter_AddRefs(mLoadGroup));
     if (mLoadGroup) {
-      (void)mLoadGroup->AddRequest(this, nullptr);
+      Unused << mLoadGroup->AddRequest(this, nullptr);
     }
   }
 
@@ -651,7 +652,7 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
   if (nsCOMPtr<nsIThreadRetargetableRequest> req =
           do_QueryInterface(aRequest)) {
     nsCOMPtr<nsISerialEventTarget> thread;
-    (void)req->GetDeliveryTarget(getter_AddRefs(thread));
+    Unused << req->GetDeliveryTarget(getter_AddRefs(thread));
     if (thread) {
       mIOThread = std::move(thread);
     }
@@ -714,7 +715,7 @@ nsresult StreamFilterParent::EmitStopRequest(nsresult aStatusCode) {
   nsresult rv = mOrigListener->OnStopRequest(mChannel, aStatusCode);
 
   if (mLoadGroup && !mDisconnected) {
-    (void)mLoadGroup->RemoveRequest(this, nullptr, aStatusCode);
+    Unused << mLoadGroup->RemoveRequest(this, nullptr, aStatusCode);
   }
 
   return rv;

@@ -37,7 +37,7 @@ Connection::Close() {
 
   // If we are closing here, then Cache must not have a transaction
   // open anywhere else.  This may fail if storage is corrupted.
-  (void)NS_WARN_IF(NS_FAILED(db::IncrementalVacuum(*this)));
+  Unused << NS_WARN_IF(NS_FAILED(db::IncrementalVacuum(*this)));
 
   return mBase->Close();
 }

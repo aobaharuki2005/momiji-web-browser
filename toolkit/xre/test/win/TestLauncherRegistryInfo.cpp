@@ -9,6 +9,7 @@
 #include "mozilla/LauncherRegistryInfo.h"
 #include "mozilla/NativeNt.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Unused.h"
 #include "nsWindowsHelpers.h"
 
 #include "LauncherRegistryInfo.cpp"
@@ -935,8 +936,8 @@ int main(int argc, char* argv[]) {
   RUN_TEST(timestamp, GetCurrentImageTimestamp);
   gMyImageTimestamp = timestamp.unwrap();
 
-  auto onExit =
-      mozilla::MakeScopeExit([]() { (void)DeleteAllRegstryValues(); });
+  auto onExit = mozilla::MakeScopeExit(
+      []() { mozilla::Unused << DeleteAllRegstryValues(); });
 
   mozilla::LauncherVoidResult vr = mozilla::Ok();
 

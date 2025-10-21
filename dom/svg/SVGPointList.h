@@ -46,7 +46,7 @@ class SVGPointList {
   SVGPointList& operator=(const SVGPointList& aOther) {
     mItems.ClearAndRetainStorage();
     // Best-effort, really.
-    (void)mItems.AppendElements(aOther.mItems, fallible);
+    Unused << mItems.AppendElements(aOther.mItems, fallible);
     return *this;
   }
 

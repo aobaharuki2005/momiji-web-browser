@@ -5,6 +5,7 @@
 
 #include "MediaMIMETypes.h"
 #include "gtest/gtest.h"
+#include "mozilla/Unused.h"
 
 using namespace mozilla;
 
@@ -92,7 +93,7 @@ TEST(MediaMIMETypes, MediaCodecs)
   int iterations = 0;
   for (const auto& codec : empty.Range()) {
     ++iterations;
-    (void)codec;
+    Unused << codec;
   }
   EXPECT_EQ(0, iterations);
 

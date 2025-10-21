@@ -153,8 +153,8 @@ mozilla::ipc::IPCResult RemoteWorkerDebuggerChild::RecvInitialize(
     MOZ_ASSERT_DEBUG_OR_FUZZING(workerPrivate);
     RefPtr<CompileRemoteDebuggerScriptRunnable> runnable =
         new CompileRemoteDebuggerScriptRunnable(workerPrivate, aURL, nullptr);
-    (void)NS_WARN_IF(!runnable->Dispatch(workerPrivate));
-    (void)SendSetAsInitialized();
+    Unused << NS_WARN_IF(!runnable->Dispatch(workerPrivate));
+    Unused << SendSetAsInitialized();
   }
   mIsInitialized = true;
   return IPC_OK();
@@ -166,7 +166,7 @@ mozilla::ipc::IPCResult RemoteWorkerDebuggerChild::RecvPostMessage(
   MOZ_ASSERT_DEBUG_OR_FUZZING(workerPrivate);
   RefPtr<RemoteDebuggerMessageEventRunnable> runnable =
       new RemoteDebuggerMessageEventRunnable(aMessage);
-  (void)NS_WARN_IF(!runnable->Dispatch(workerPrivate));
+  Unused << NS_WARN_IF(!runnable->Dispatch(workerPrivate));
   return IPC_OK();
 }
 

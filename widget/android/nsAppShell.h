@@ -17,6 +17,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"  // for mozilla::TimeDuration
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/jni/Natives.h"
 #include "nsBaseAppShell.h"
 #include "nsCOMPtr.h"
@@ -183,7 +184,7 @@ class nsAppShell : public nsBaseAppShell {
       if (event->isInList()) {
         event->mPostTime = Event::GetTime();
         // Ownership of event object transfers to the queue.
-        (void)event.release();
+        mozilla::Unused << event.release();
       }
       lock.NotifyAll();
     }

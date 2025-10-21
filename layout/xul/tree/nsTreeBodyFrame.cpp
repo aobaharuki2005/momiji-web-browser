@@ -2439,7 +2439,7 @@ class nsDisplayTreeBody final : public nsPaintedDisplayItem {
 
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
     MOZ_ASSERT(aBuilder);
-    (void)static_cast<nsTreeBodyFrame*>(mFrame)->PaintTreeBody(
+    Unused << static_cast<nsTreeBodyFrame*>(mFrame)->PaintTreeBody(
         *aCtx, GetPaintRect(aBuilder, aCtx), ToReferenceFrame(), aBuilder);
   }
 

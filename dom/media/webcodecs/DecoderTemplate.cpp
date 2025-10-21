@@ -13,6 +13,7 @@
 #include "MediaInfo.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Try.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Promise.h"
@@ -861,7 +862,7 @@ bool DecoderTemplate<DecoderType>::CreateDecoderAgent(
         [self = RefPtr{this}]() {
           LOG("%s %p, worker is going away", DecoderType::Name.get(),
               self.get());
-          (void)self->ResetInternal(NS_ERROR_DOM_ABORT_ERR);
+          Unused << self->ResetInternal(NS_ERROR_DOM_ABORT_ERR);
         });
     if (NS_WARN_IF(!workerRef)) {
       return false;
@@ -897,7 +898,7 @@ bool DecoderTemplate<DecoderType>::CreateDecoderAgent(
        ref = mWorkerRef](bool /* aUnUsed*/) {
         LOG("%s %p gets xpcom-will-shutdown notification for DecoderAgent #%d",
             DecoderType::Name.get(), self.get(), id);
-        (void)self->ResetInternal(NS_ERROR_DOM_ABORT_ERR);
+        Unused << self->ResetInternal(NS_ERROR_DOM_ABORT_ERR);
       },
       [self = RefPtr{this}, id = mAgent->mId,
        ref = mWorkerRef](bool /* aUnUsed*/) {

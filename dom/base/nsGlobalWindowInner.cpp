@@ -91,6 +91,7 @@
 #include "mozilla/ThrottledEventQueue.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/BarProps.h"
@@ -1743,7 +1744,7 @@ void nsGlobalWindowInner::UpdateAutoplayPermission() {
   }
 
   // Setting autoplay permission on a discarded context has no effect.
-  (void)GetWindowContext()->SetAutoplayPermission(perm);
+  Unused << GetWindowContext()->SetAutoplayPermission(perm);
 }
 
 void nsGlobalWindowInner::UpdateShortcutsPermission() {
@@ -1761,7 +1762,7 @@ void nsGlobalWindowInner::UpdateShortcutsPermission() {
   }
 
   // If the WindowContext is discarded this has no effect.
-  (void)GetWindowContext()->SetShortcutsPermission(perm);
+  Unused << GetWindowContext()->SetShortcutsPermission(perm);
 }
 
 /* static */
@@ -1787,7 +1788,7 @@ void nsGlobalWindowInner::UpdatePopupPermission() {
   }
 
   // If the WindowContext is discarded this has no effect.
-  (void)GetWindowContext()->SetPopupPermission(perm);
+  Unused << GetWindowContext()->SetPopupPermission(perm);
 }
 
 void nsGlobalWindowInner::UpdatePermissions() {
@@ -1808,7 +1809,7 @@ void nsGlobalWindowInner::UpdatePermissions() {
   }
 
   // Setting permissions on a discarded WindowContext has no effect
-  (void)txn.Commit(windowContext);
+  Unused << txn.Commit(windowContext);
 }
 
 void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
@@ -1860,7 +1861,7 @@ void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
   if (mWindowGlobalChild && GetBrowsingContext() &&
       !GetBrowsingContext()->GetParent()) {
     // Return value of setting synced field should be checked. See bug 1656492.
-    (void)GetBrowsingContext()->ResetGVAutoplayRequestStatus();
+    Unused << GetBrowsingContext()->ResetGVAutoplayRequestStatus();
   }
 #endif
 
@@ -1886,7 +1887,7 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
   nsCOMPtr<nsIChannel> channel = mDoc->GetChannel();
   if (channel) {
     nsCOMPtr<nsIURI> uri;
-    (void)channel->GetURI(getter_AddRefs(uri));
+    Unused << channel->GetURI(getter_AddRefs(uri));
 
     bool ignoreLoadInfo = false;
 
@@ -2183,7 +2184,7 @@ void nsGlobalWindowInner::FireFrameLoadEvent() {
       return;
     }
 
-    (void)browserChild->SendMaybeFireEmbedderLoadEvents(
+    mozilla::Unused << browserChild->SendMaybeFireEmbedderLoadEvents(
         EmbedderElementEventType::LoadEvent);
   }
 }
@@ -2203,9 +2204,11 @@ nsresult nsGlobalWindowInner::PostHandleEvent(EventChainPostVisitor& aVisitor) {
    function under some circumstances (events that destroy the window)
    without this addref. */
   RefPtr<EventTarget> kungFuDeathGrip1(mChromeEventHandler);
-  (void)kungFuDeathGrip1;  // These aren't referred to through the function
+  mozilla::Unused
+      << kungFuDeathGrip1;  // These aren't referred to through the function
   nsCOMPtr<nsIScriptContext> kungFuDeathGrip2(GetContextInternal());
-  (void)kungFuDeathGrip2;  // These aren't referred to through the function
+  mozilla::Unused
+      << kungFuDeathGrip2;  // These aren't referred to through the function
 
   if (aVisitor.mEvent->mMessage == eResize) {
     mIsHandlingResizeEvent = false;
@@ -2634,10 +2637,10 @@ CallState nsGlobalWindowInner::ShouldReportForServiceWorkerScopeInternal(
   nsCOMPtr<nsIDocumentLoader> loader(do_QueryInterface(GetDocShell()));
   if (loader) {
     nsCOMPtr<nsILoadGroup> loadgroup;
-    (void)loader->GetLoadGroup(getter_AddRefs(loadgroup));
+    Unused << loader->GetLoadGroup(getter_AddRefs(loadgroup));
     if (loadgroup) {
       nsCOMPtr<nsISimpleEnumerator> iter;
-      (void)loadgroup->GetRequests(getter_AddRefs(iter));
+      Unused << loadgroup->GetRequests(getter_AddRefs(iter));
       if (iter) {
         nsCOMPtr<nsISupports> tmp;
         bool hasMore = true;
@@ -2653,12 +2656,12 @@ CallState nsGlobalWindowInner::ShouldReportForServiceWorkerScopeInternal(
             continue;
           }
           nsCOMPtr<nsIURI> loadingURL;
-          (void)loadingChannel->GetURI(getter_AddRefs(loadingURL));
+          Unused << loadingChannel->GetURI(getter_AddRefs(loadingURL));
           if (!loadingURL) {
             continue;
           }
           nsAutoCString loadingSpec;
-          (void)loadingURL->GetSpec(loadingSpec);
+          Unused << loadingURL->GetSpec(loadingSpec);
           // Perform a simple substring comparison to match the scope
           // against the channel URL.
           if (StringBeginsWith(loadingSpec, aScope)) {
@@ -2946,7 +2949,7 @@ void nsGlobalWindowInner::SetActiveLoadingState(bool aIsLoading) {
       ("SetActiveLoadingState innerwindow %p: %d", (void*)this, aIsLoading));
   if (GetBrowsingContext()) {
     // Setting loading on a discarded context has no effect.
-    (void)GetBrowsingContext()->SetLoading(aIsLoading);
+    Unused << GetBrowsingContext()->SetLoading(aIsLoading);
   }
 
   if (!nsGlobalWindowInner::Cast(this)->IsChromeWindow()) {
@@ -6459,7 +6462,7 @@ void nsGlobalWindowInner::NotifyDetectXRRuntimesCompleted() {
   mXRPermissionRequestInFlight = true;
   RefPtr<XRPermissionRequest> request =
       new XRPermissionRequest(this, WindowID());
-  (void)NS_WARN_IF(NS_FAILED(request->Start()));
+  Unused << NS_WARN_IF(NS_FAILED(request->Start()));
 }
 
 void nsGlobalWindowInner::RequestXRPermission() {
@@ -6565,7 +6568,7 @@ void nsGlobalWindowInner::EventListenerAdded(nsAtom* aType) {
         mLocalStorage->Type() == Storage::eLocalStorage) {
       auto object = static_cast<LSObject*>(mLocalStorage.get());
 
-      (void)NS_WARN_IF(NS_FAILED(object->EnsureObserver()));
+      Unused << NS_WARN_IF(NS_FAILED(object->EnsureObserver()));
     }
   }
 }
@@ -7698,7 +7701,7 @@ void nsPIDOMWindowInner::MaybeCreateDoc() {
     // don't have to explicitly set the member variable because the docshell
     // has already called SetNewDocument().
     nsCOMPtr<Document> document = docShell->GetDocument();
-    (void)document;
+    Unused << document;
   }
 }
 
@@ -7727,7 +7730,7 @@ RefPtr<GenericPromise>
 nsPIDOMWindowInner::SaveStorageAccessPermissionGranted() {
   WindowContext* wc = GetWindowContext();
   if (wc) {
-    (void)wc->SetUsingStorageAccess(true);
+    Unused << wc->SetUsingStorageAccess(true);
   }
 
   return nsGlobalWindowInner::Cast(this)->StorageAccessPermissionChanged(true);
@@ -7737,7 +7740,7 @@ RefPtr<GenericPromise>
 nsPIDOMWindowInner::SaveStorageAccessPermissionRevoked() {
   WindowContext* wc = GetWindowContext();
   if (wc) {
-    (void)wc->SetUsingStorageAccess(false);
+    Unused << wc->SetUsingStorageAccess(false);
   }
 
   return nsGlobalWindowInner::Cast(this)->StorageAccessPermissionChanged(false);
@@ -7774,14 +7777,14 @@ CloseWatcherManager* nsPIDOMWindowInner::EnsureCloseWatcherManager() {
 void nsPIDOMWindowInner::NotifyCloseWatcherAdded() {
   MOZ_ASSERT(mCloseWatcherManager && !mCloseWatcherManager->IsEmpty());
   if (WindowContext* top = TopWindowContext(*this)) {
-    (void)top->SetHasActiveCloseWatcher(true);
+    Unused << top->SetHasActiveCloseWatcher(true);
   }
 }
 
 void nsPIDOMWindowInner::NotifyCloseWatcherRemoved() {
   MOZ_ASSERT(mCloseWatcherManager);
   if (WindowContext* top = TopWindowContext(*this)) {
-    (void)top->SetHasActiveCloseWatcher(!mCloseWatcherManager->IsEmpty());
+    Unused << top->SetHasActiveCloseWatcher(!mCloseWatcherManager->IsEmpty());
   }
 }
 

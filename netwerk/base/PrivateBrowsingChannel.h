@@ -14,6 +14,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsNetUtil.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 namespace net {

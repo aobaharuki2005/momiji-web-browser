@@ -580,7 +580,7 @@ void ReportingHeader::LogToConsoleInternal(nsIHttpChannel* aChannel,
   rv = nsContentUtils::ReportToConsoleByWindowID(
       localizedMsg, nsIScriptError::infoFlag, "Reporting"_ns, windowID,
       SourceLocation(aURI));
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
 /* static */
@@ -676,7 +676,7 @@ void ReportingHeader::GetEndpointForReportInternal(
                totalWeight < endpoint.mWeight;
       });
   if (foundIt != end) {
-    (void)NS_WARN_IF(NS_FAILED(foundIt->mUrl->GetSpec(aEndpointURI)));
+    Unused << NS_WARN_IF(NS_FAILED(foundIt->mUrl->GetSpec(aEndpointURI)));
   }
   // XXX More explicitly report an error if not found?
 }
@@ -861,7 +861,7 @@ void ReportingHeader::MaybeCreateCleanupTimer() {
   nsresult rv =
       NS_NewTimerWithCallback(getter_AddRefs(mCleanupTimer), this, timeout,
                               nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY);
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
 void ReportingHeader::MaybeCancelCleanupTimer() {

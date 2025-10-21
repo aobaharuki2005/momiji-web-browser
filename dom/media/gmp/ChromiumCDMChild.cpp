@@ -17,6 +17,7 @@
 #include "WidevineVideoFrame.h"
 #include "base/time.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Unused.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 
@@ -119,7 +120,7 @@ cdm::Buffer* ChromiumCDMChild::Allocate(uint32_t aCapacity) {
   MOZ_ASSERT(IsOnMessageLoopThread());
 
   if (mBuffers.IsEmpty()) {
-    (void)SendIncreaseShmemPoolSize();
+    Unused << SendIncreaseShmemPoolSize();
   }
 
   // Find the shmem with the least amount of wasted space if we were to
@@ -168,7 +169,7 @@ void ChromiumCDMChild::CallMethod(MethodType aMethod, ParamType&&... aParams) {
   MOZ_ASSERT(IsOnMessageLoopThread());
   // Avoid calling member function after destroy.
   if (!mDestroyed) {
-    (void)(this->*aMethod)(std::forward<ParamType>(aParams)...);
+    Unused << (this->*aMethod)(std::forward<ParamType>(aParams)...);
   }
 }
 
@@ -625,14 +626,14 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvDecrypt(
 
   if (!mCDM) {
     GMP_LOG_DEBUG("ChromiumCDMChild::RecvDecrypt() no CDM");
-    (void)SendDecryptFailed(aId, cdm::kDecryptError);
+    Unused << SendDecryptFailed(aId, cdm::kDecryptError);
     return IPC_OK();
   }
   if (aBuffer.mClearBytes().Length() != aBuffer.mCipherBytes().Length()) {
     GMP_LOG_DEBUG(
         "ChromiumCDMChild::RecvDecrypt() clear/cipher bytes length doesn't "
         "match");
-    (void)SendDecryptFailed(aId, cdm::kDecryptError);
+    Unused << SendDecryptFailed(aId, cdm::kDecryptError);
     return IPC_OK();
   }
 
@@ -645,7 +646,7 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvDecrypt(
 
   // CDM should have allocated a cdm::Buffer for output.
   if (status != cdm::kSuccess || !output.DecryptedBuffer()) {
-    (void)SendDecryptFailed(aId, status);
+    Unused << SendDecryptFailed(aId, status);
     return IPC_OK();
   }
 
@@ -662,13 +663,14 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvDecrypt(
   }
 
   if (auto* arrayBuffer = buffer->AsArrayBuffer()) {
-    (void)SendDecryptedData(aId, cdm::kSuccess, arrayBuffer->ExtractBuffer());
+    Unused << SendDecryptedData(aId, cdm::kSuccess,
+                                arrayBuffer->ExtractBuffer());
     return IPC_OK();
   }
 
   MOZ_ASSERT_UNREACHABLE("Unexpected CDMBuffer type!");
   GMP_LOG_DEBUG("ChromiumCDMChild::RecvDecrypt() unexpected CDMBuffer type");
-  (void)SendDecryptFailed(aId, cdm::kDecryptError);
+  Unused << SendDecryptFailed(aId, cdm::kDecryptError);
   return IPC_OK();
 }
 
@@ -678,7 +680,7 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvInitializeVideoDecoder(
   MOZ_ASSERT(!mDecoderInitialized);
   if (!mCDM) {
     GMP_LOG_DEBUG("ChromiumCDMChild::RecvInitializeVideoDecoder() no CDM");
-    (void)SendOnDecoderInitDone(cdm::kInitializationError);
+    Unused << SendOnDecoderInitDone(cdm::kInitializationError);
     return IPC_OK();
   }
   cdm::VideoDecoderConfig_2 config = {};
@@ -694,7 +696,7 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvInitializeVideoDecoder(
   cdm::Status status = mCDM->InitializeVideoDecoder(config);
   GMP_LOG_DEBUG("ChromiumCDMChild::RecvInitializeVideoDecoder() status=%u",
                 status);
-  (void)SendOnDecoderInitDone(status);
+  Unused << SendOnDecoderInitDone(status);
   mDecoderInitialized = status == cdm::kSuccess;
   return IPC_OK();
 }
@@ -717,7 +719,7 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvResetVideoDecoder() {
   if (mDecoderInitialized && mCDM) {
     mCDM->ResetDecoder(cdm::kStreamTypeVideo);
   }
-  (void)SendResetVideoDecoderComplete();
+  Unused << SendResetVideoDecoderComplete();
   return IPC_OK();
 }
 
@@ -730,7 +732,7 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvDecryptAndDecodeFrame(
 
   if (!mCDM) {
     GMP_LOG_DEBUG("ChromiumCDMChild::RecvDecryptAndDecodeFrame() no CDM");
-    (void)SendDecodeFailed(cdm::kDecodeError);
+    Unused << SendDecodeFailed(cdm::kDecodeError);
     return IPC_OK();
   }
 
@@ -757,7 +759,7 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvDecryptAndDecodeFrame(
 
   switch (rv) {
     case cdm::kNeedMoreData:
-      (void)SendDecodeFailed(rv);
+      Unused << SendDecodeFailed(rv);
       break;
     case cdm::kNoKey:
       GMP_LOG_DEBUG("NoKey for sample at time=%" PRId64 "!", input.timestamp);
@@ -770,7 +772,7 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvDecryptAndDecodeFrame(
       // pipeline rolling, just output a black frame. See bug 1343140.
       if (!frame.InitToBlack(mCodedSize.width, mCodedSize.height,
                              input.timestamp)) {
-        (void)SendDecodeFailed(cdm::kDecodeError);
+        Unused << SendDecodeFailed(cdm::kDecodeError);
         break;
       }
       [[fallthrough]];
@@ -782,7 +784,7 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvDecryptAndDecodeFrame(
       // CDM didn't set a frame buffer on the sample, report it as an error.
       [[fallthrough]];
     default:
-      (void)SendDecodeFailed(rv);
+      Unused << SendDecodeFailed(rv);
       break;
   }
 
@@ -812,12 +814,12 @@ void ChromiumCDMChild::ReturnOutput(WidevineVideoFrame& aFrame) {
   CDMBuffer* base = reinterpret_cast<CDMBuffer*>(aFrame.FrameBuffer());
   if (auto* shmemBase = base->AsShmemBuffer()) {
     ipc::Shmem shmem = shmemBase->ExtractShmem();
-    (void)SendDecodedShmem(output, std::move(shmem));
+    Unused << SendDecodedShmem(output, std::move(shmem));
     return;
   }
 
   if (auto* arrayBase = base->AsArrayBuffer()) {
-    (void)SendDecodedData(output, arrayBase->ExtractBuffer());
+    Unused << SendDecodedData(output, arrayBase->ExtractBuffer());
     return;
   }
 
@@ -828,7 +830,7 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvDrain() {
   MOZ_ASSERT(IsOnMessageLoopThread());
   if (!mCDM) {
     GMP_LOG_DEBUG("ChromiumCDMChild::RecvDrain() no CDM");
-    (void)SendDrainComplete();
+    Unused << SendDrainComplete();
     return IPC_OK();
   }
   WidevineVideoFrame frame;
@@ -840,7 +842,7 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvDrain() {
     MOZ_ASSERT(frame.Format() != cdm::kUnknownVideoFormat);
     ReturnOutput(frame);
   } else {
-    (void)SendDrainComplete();
+    Unused << SendDrainComplete();
   }
   return IPC_OK();
 }
@@ -859,7 +861,7 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvDestroy() {
   }
   mDestroyed = true;
 
-  (void)Send__delete__(this);
+  Unused << Send__delete__(this);
 
   return IPC_OK();
 }

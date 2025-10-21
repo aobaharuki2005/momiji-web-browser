@@ -32,6 +32,7 @@
 
 #include "mozilla/Components.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/Unused.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -269,7 +270,8 @@ nsresult nsFileChannel::Init() {
     nsCOMPtr<nsIURL> targetURL = do_QueryInterface(targetURI);
     nsAutoCString queryString;
     if (origURL && targetURL && NS_SUCCEEDED(origURL->GetQuery(queryString))) {
-      (void)NS_MutateURI(targetURI).SetQuery(queryString).Finalize(targetURI);
+      Unused
+          << NS_MutateURI(targetURI).SetQuery(queryString).Finalize(targetURI);
     }
 
     SetURI(targetURI);

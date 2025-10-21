@@ -8,6 +8,7 @@
 #include "Box.h"
 #include "ByteStream.h"
 #include "mozilla/Try.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 
@@ -21,9 +22,9 @@ Sinf::Sinf(Box& aBox) : mDefaultIVSize(0) {
 SinfParser::SinfParser(Box& aBox) {
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("schm")) {
-      (void)ParseSchm(box);
+      mozilla::Unused << ParseSchm(box);
     } else if (box.IsType("schi")) {
-      (void)ParseSchi(box);
+      mozilla::Unused << ParseSchi(box);
     }
   }
 }

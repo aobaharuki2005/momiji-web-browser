@@ -13,6 +13,7 @@
 #include "HttpChannelParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Unused.h"
 #include "mozilla/net/BackgroundChannelRegistrar.h"
 #include "mozilla/net/ChannelEventQueue.h"
 #include "nsNetCID.h"
@@ -134,12 +135,12 @@ void HttpBackgroundChannelParent::OnChannelClosed() {
                 return;
               }
 
-              (void)self->Send__delete__(self);
+              Unused << self->Send__delete__(self);
             }),
         NS_DISPATCH_NORMAL);
   }
 
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
 bool HttpBackgroundChannelParent::OnStartRequest(
@@ -176,16 +177,16 @@ bool HttpBackgroundChannelParent::OnStartRequest(
   HttpChannelAltDataStream altData;
   if (aAltDataSource) {
     nsAutoCString altDataType;
-    (void)aAltDataSource->GetAltDataType(altDataType);
+    Unused << aAltDataSource->GetAltDataType(altDataType);
 
     if (!altDataType.IsEmpty()) {
       nsCOMPtr<nsIInputStream> inputStream;
       nsresult rv = aAltDataSource->OpenAlternativeInputStream(
           altDataType, getter_AddRefs(inputStream));
       if (NS_SUCCEEDED(rv)) {
-        (void)mozilla::ipc::SerializeIPCStream(inputStream.forget(),
-                                               altData.altDataInputStream(),
-                                               /* aAllowLazy */ true);
+        Unused << mozilla::ipc::SerializeIPCStream(inputStream.forget(),
+                                                   altData.altDataInputStream(),
+                                                   /* aAllowLazy */ true);
       }
     }
   }

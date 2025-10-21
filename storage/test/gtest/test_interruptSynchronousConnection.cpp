@@ -23,7 +23,7 @@ class SynchronousConnectionInterruptionTest : public ::testing::Test {
 
   void TearDown() override {
     // We might close the database connection early in test cases.
-    (void)mConnection->Close();
+    mozilla::Unused << mConnection->Close();
 
     ASSERT_EQ(NS_OK, mThread->Shutdown());
   }

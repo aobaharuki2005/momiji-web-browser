@@ -19,6 +19,7 @@
 
 using mozilla::MakeRefPtr;
 using mozilla::SimpleEnumerator;
+using mozilla::Unused;
 
 extern "C" {
 
@@ -252,9 +253,11 @@ void nsHashPropertyBagBase::CopyFrom(nsIPropertyBag* aOther) {
       for (auto& property : SimpleEnumerator<nsIProperty>(enumerator)) {
         nsString name;
         nsCOMPtr<nsIVariant> value;
-        (void)NS_WARN_IF(NS_FAILED(property->GetName(name)));
-        (void)NS_WARN_IF(NS_FAILED(property->GetValue(getter_AddRefs(value))));
-        (void)NS_WARN_IF(NS_FAILED(aTo->SetProperty(std::move(name), value)));
+        Unused << NS_WARN_IF(NS_FAILED(property->GetName(name)));
+        Unused << NS_WARN_IF(
+            NS_FAILED(property->GetValue(getter_AddRefs(value))));
+        Unused << NS_WARN_IF(
+            NS_FAILED(aTo->SetProperty(std::move(name), value)));
       }
     } else {
       NS_WARNING("Unable to copy nsIPropertyBag");

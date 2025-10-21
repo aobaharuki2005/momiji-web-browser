@@ -10,6 +10,7 @@
 
 #include "ByteStream.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 
@@ -169,7 +170,7 @@ nsTArray<uint8_t> Box::ReadCompleteBox() const {
 
 nsTArray<uint8_t> Box::Read() const {
   nsTArray<uint8_t> out;
-  (void)Read(&out, mRange);
+  Unused << Read(&out, mRange);
   return out;
 }
 

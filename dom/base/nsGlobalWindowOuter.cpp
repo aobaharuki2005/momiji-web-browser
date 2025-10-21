@@ -91,6 +91,7 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsJSEnvironment.h"
 #include "nsJSUtils.h"
@@ -307,7 +308,7 @@ static inline nsGlobalWindowInner* GetCurrentInnerWindowInternal(
       return err_rval;                                     \
     }                                                      \
     nsCOMPtr<Document> kungFuDeathGrip = GetDoc();         \
-    (void)kungFuDeathGrip;                                 \
+    ::mozilla::Unused << kungFuDeathGrip;                  \
     if (!mInnerWindow) {                                   \
       return err_rval;                                     \
     }                                                      \
@@ -3017,7 +3018,7 @@ void nsPIDOMWindowOuter::ActivateMediaComponents() {
            "no longer to delay media from start, this = %p\n",
            this));
   if (BrowsingContext* bc = GetBrowsingContext()) {
-    (void)bc->Top()->SetShouldDelayMediaFromStart(false);
+    Unused << bc->Top()->SetShouldDelayMediaFromStart(false);
   }
   NotifyResumingDelayedMedia();
 }
@@ -4940,12 +4941,12 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
   }
 
   if (top) {
-    (void)top->SetIsPrinting(true);
+    Unused << top->SetIsPrinting(true);
   }
 
   auto unset = MakeScopeExit([&] {
     if (top) {
-      (void)top->SetIsPrinting(false);
+      Unused << top->SetIsPrinting(false);
     }
   });
 
@@ -5058,7 +5059,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
   } else {
     if (aDocShellToCloneInto) {
       // Ensure the content viewer is created if needed.
-      (void)aDocShellToCloneInto->GetDocument();
+      Unused << aDocShellToCloneInto->GetDocument();
       bc = aDocShellToCloneInto->GetBrowsingContext();
     } else {
       AutoNoJSAPI nojsapi;
@@ -5091,7 +5092,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
       return nullptr;
     }
 
-    (void)bc->Top()->SetIsPrinting(true);
+    Unused << bc->Top()->SetIsPrinting(true);
     nsCOMPtr<nsIDocShell> cloneDocShell = bc->GetDocShell();
     MOZ_DIAGNOSTIC_ASSERT(cloneDocShell);
     cloneDocShell->GetDocViewer(getter_AddRefs(viewer));
@@ -6350,7 +6351,7 @@ bool nsGlobalWindowOuter::FindOuter(const nsAString& aString,
                                     bool aWrapAround, bool aWholeWord,
                                     bool aSearchInFrames, bool aShowDialog,
                                     ErrorResult& aError) {
-  (void)aShowDialog;
+  Unused << aShowDialog;
 
   nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface(mDocShell));
   if (!finder) {
@@ -6890,7 +6891,7 @@ nsresult nsGlobalWindowOuter::OpenInternal(
 
       // Force document creation.
       nsCOMPtr<Document> doc = outer->GetDoc();
-      (void)doc;
+      Unused << doc;
     }
   }
 
@@ -6926,10 +6927,10 @@ void nsGlobalWindowOuter::MaybeAllowStorageForOpenedWindow(nsIURI* aURI) {
   // We don't care when the asynchronous work finishes here.
   // Without e10s or fission enabled this is run in the parent process.
   if (XRE_IsParentProcess()) {
-    (void)StorageAccessAPIHelper::AllowAccessForOnParentProcess(
+    Unused << StorageAccessAPIHelper::AllowAccessForOnParentProcess(
         principal, GetBrowsingContext(), ContentBlockingNotifier::eOpener);
   } else {
-    (void)StorageAccessAPIHelper::AllowAccessForOnChildProcess(
+    Unused << StorageAccessAPIHelper::AllowAccessForOnChildProcess(
         principal, GetBrowsingContext(), ContentBlockingNotifier::eOpener);
   }
 }
@@ -7054,7 +7055,7 @@ already_AddRefed<nsISupports> nsGlobalWindowOuter::SaveWindowState() {
 
   if (WindowContext* wc = inner->GetWindowContext()) {
     MOZ_ASSERT(!wc->GetWindowStateSaved());
-    (void)wc->SetWindowStateSaved(true);
+    Unused << wc->SetWindowStateSaved(true);
   }
 
   // Don't do anything else to this inner window! After this point, all
@@ -7101,7 +7102,7 @@ nsresult nsGlobalWindowOuter::RestoreWindowState(nsISupports* aState) {
 
   if (WindowContext* wc = inner->GetWindowContext()) {
     MOZ_ASSERT(wc->GetWindowStateSaved());
-    (void)wc->SetWindowStateSaved(false);
+    Unused << wc->SetWindowStateSaved(false);
   }
 
   inner->Thaw();
@@ -7303,7 +7304,7 @@ void nsGlobalWindowOuter::MaybeResetWindowName(Document* aNewDocument) {
     return;
   }
 
-  (void)mBrowsingContext->SetName(EmptyString());
+  Unused << mBrowsingContext->SetName(EmptyString());
 }
 
 nsGlobalWindowOuter::TemporarilyDisableDialogs::TemporarilyDisableDialogs(
@@ -7354,7 +7355,7 @@ void nsPIDOMWindowOuter::MaybeCreateDoc() {
     // don't have to explicitly set the member variable because the docshell
     // has already called SetNewDocument().
     nsCOMPtr<Document> document = docShell->GetDocument();
-    (void)document;
+    Unused << document;
   }
 }
 

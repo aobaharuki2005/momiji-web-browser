@@ -822,7 +822,7 @@ static nsresult AddTabThreatSources(ThreatHit& aHit, nsIChannel* aChannel) {
   // Set top level tab_url threat source
   rv = AddThreatSourceFromChannel(aHit, topChannel,
                                   ThreatHit_ThreatSourceType_TAB_URL);
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 
   // Set tab_redirect threat sources if there's any
   nsCOMPtr<nsILoadInfo> topLoadInfo = topChannel->LoadInfo();
@@ -869,10 +869,10 @@ nsUrlClassifierUtils::MakeThreatHitReport(nsIChannel* aChannel,
   // Set matching source
   rv = AddThreatSourceFromChannel(hit, aChannel,
                                   ThreatHit_ThreatSourceType_MATCHING_URL);
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
   // Set tab url, tab resource url and redirect sources
   rv = AddTabThreatSources(hit, aChannel);
-  (void)NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 
   hit.set_allocated_client_info(CreateClientInfo());
 

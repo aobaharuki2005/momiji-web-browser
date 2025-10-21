@@ -178,7 +178,7 @@ void UserFontConfigHelper::AddRules(SizeTrackingConfig& aConfig) const {
         !winUserProfile.Equals(
             nsDependentSubstring(data, winUserProfile.Length()),
             nsCaseInsensitiveStringComparator)) {
-      (void)nonUserDirFonts.emplaceBack(data, dataSizeInWChars);
+      Unused << nonUserDirFonts.emplaceBack(data, dataSizeInWChars);
       continue;
     }
 

@@ -30,6 +30,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_clipboard.h"
+#include "mozilla/Unused.h"
 #include "nsProxyRelease.h"
 #include "nsIObserverService.h"
 #include "nsIOutputStream.h"
@@ -98,7 +99,7 @@ nsresult nsDataObj::CStream::Init(nsIURI* pSourceURI,
 
   if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel)) {
     rv = httpChannel->SetReferrerInfo(aReferrerInfo);
-    (void)NS_WARN_IF(NS_FAILED(rv));
+    Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 
   // Do not HTTPS-Only/-First upgrade this request. If we reach this point, any
@@ -2182,8 +2183,8 @@ HRESULT nsDataObj::GetDownloadDetails(nsIURI** aSourceURI,
 
   nsAutoString srcFileName;
   nsCOMPtr<nsISupports> fileNamePrimitive;
-  (void)mTransferable->GetTransferData(kFilePromiseDestFilename,
-                                       getter_AddRefs(fileNamePrimitive));
+  Unused << mTransferable->GetTransferData(kFilePromiseDestFilename,
+                                           getter_AddRefs(fileNamePrimitive));
   nsCOMPtr<nsISupportsString> srcFileNamePrimitive =
       do_QueryInterface(fileNamePrimitive);
   if (srcFileNamePrimitive) {

@@ -17,6 +17,7 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/Unused.h"
 #include "Units.h"
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/jni/Utils.h"
@@ -49,7 +50,7 @@ void RemoteContentController::NotifyLayerTransforms(
   }
 
   if (mCanSend) {
-    (void)SendLayerTransforms(aTransforms);
+    Unused << SendLayerTransforms(aTransforms);
   }
 }
 
@@ -58,7 +59,7 @@ void RemoteContentController::RequestContentRepaint(
   MOZ_ASSERT(IsRepaintThread());
 
   if (mCanSend) {
-    (void)SendRequestContentRepaint(aRequest);
+    Unused << SendRequestContentRepaint(aRequest);
   }
 }
 
@@ -89,8 +90,8 @@ void RemoteContentController::HandleTapOnGPUProcessMainThread(
   APZInputBridgeParent* apzib =
       CompositorBridgeParent::GetApzInputBridgeParentForRoot(aGuid.mLayersId);
   if (apzib) {
-    (void)apzib->SendHandleTap(aTapType, aPoint, aModifiers, aGuid,
-                               aInputBlockId, aDoubleTapToZoomMetrics);
+    Unused << apzib->SendHandleTap(aTapType, aPoint, aModifiers, aGuid,
+                                   aInputBlockId, aDoubleTapToZoomMetrics);
   }
 }
 
@@ -160,8 +161,8 @@ void RemoteContentController::NotifyPinchGestureOnCompositorThread(
   APZCTreeManagerParent* apzctmp =
       CompositorBridgeParent::GetApzcTreeManagerParentForRoot(aGuid.mLayersId);
   if (apzctmp) {
-    (void)apzctmp->SendNotifyPinchGesture(aType, aGuid, aFocusPoint,
-                                          aSpanChange, aModifiers);
+    Unused << apzctmp->SendNotifyPinchGesture(aType, aGuid, aFocusPoint,
+                                              aSpanChange, aModifiers);
   }
 }
 
@@ -233,7 +234,7 @@ void RemoteContentController::NotifyAPZStateChange(
   }
 
   if (mCanSend) {
-    (void)SendNotifyAPZStateChange(aGuid, aChange, aArg, aInputBlockId);
+    Unused << SendNotifyAPZStateChange(aGuid, aChange, aArg, aInputBlockId);
   }
 }
 
@@ -275,8 +276,9 @@ void RemoteContentController::UpdateOverscrollVelocity(
             aGuid.mLayersId);
     if (rootController) {
       MOZ_RELEASE_ASSERT(rootController->IsRemote());
-      (void)static_cast<RemoteContentController*>(rootController)
-          ->SendUpdateOverscrollVelocity(aGuid, aX, aY, aIsRootContent);
+      Unused << static_cast<RemoteContentController*>(rootController)
+                    ->SendUpdateOverscrollVelocity(aGuid, aX, aY,
+                                                   aIsRootContent);
     }
   }
 }
@@ -319,8 +321,8 @@ void RemoteContentController::UpdateOverscrollOffset(
             aGuid.mLayersId);
     if (rootController) {
       MOZ_RELEASE_ASSERT(rootController->IsRemote());
-      (void)static_cast<RemoteContentController*>(rootController)
-          ->SendUpdateOverscrollOffset(aGuid, aX, aY, aIsRootContent);
+      Unused << static_cast<RemoteContentController*>(rootController)
+                    ->SendUpdateOverscrollOffset(aGuid, aX, aY, aIsRootContent);
     }
   }
 }
@@ -360,8 +362,8 @@ void RemoteContentController::HideDynamicToolbar(
             aGuid.mLayersId);
     if (rootController) {
       MOZ_RELEASE_ASSERT(rootController->IsRemote());
-      (void)static_cast<RemoteContentController*>(rootController)
-          ->SendHideDynamicToolbar();
+      Unused << static_cast<RemoteContentController*>(rootController)
+                    ->SendHideDynamicToolbar();
     }
   }
 }
@@ -379,7 +381,7 @@ void RemoteContentController::NotifyMozMouseScrollEvent(
   }
 
   if (mCanSend) {
-    (void)SendNotifyMozMouseScrollEvent(aScrollId, aEvent);
+    Unused << SendNotifyMozMouseScrollEvent(aScrollId, aEvent);
   }
 }
 
@@ -387,7 +389,7 @@ void RemoteContentController::NotifyFlushComplete() {
   MOZ_ASSERT(IsRepaintThread());
 
   if (mCanSend) {
-    (void)SendNotifyFlushComplete();
+    Unused << SendNotifyFlushComplete();
   }
 }
 
@@ -407,8 +409,8 @@ void RemoteContentController::NotifyAsyncScrollbarDragInitiated(
   }
 
   if (mCanSend) {
-    (void)SendNotifyAsyncScrollbarDragInitiated(aDragBlockId, aScrollId,
-                                                aDirection);
+    Unused << SendNotifyAsyncScrollbarDragInitiated(aDragBlockId, aScrollId,
+                                                    aDirection);
   }
 }
 
@@ -424,7 +426,7 @@ void RemoteContentController::NotifyAsyncScrollbarDragRejected(
   }
 
   if (mCanSend) {
-    (void)SendNotifyAsyncScrollbarDragRejected(aScrollId);
+    Unused << SendNotifyAsyncScrollbarDragRejected(aScrollId);
   }
 }
 
@@ -439,7 +441,7 @@ void RemoteContentController::NotifyAsyncAutoscrollRejected(
   }
 
   if (mCanSend) {
-    (void)SendNotifyAsyncAutoscrollRejected(aScrollId);
+    Unused << SendNotifyAsyncAutoscrollRejected(aScrollId);
   }
 }
 
@@ -482,7 +484,7 @@ void RemoteContentController::CancelAutoscrollCrossProcess(
   if (APZCTreeManagerParent* parent =
           CompositorBridgeParent::GetApzcTreeManagerParentForRoot(
               aGuid.mLayersId)) {
-    (void)parent->SendCancelAutoscroll(aGuid.mScrollId);
+    Unused << parent->SendCancelAutoscroll(aGuid.mScrollId);
   }
 }
 
@@ -536,7 +538,7 @@ void RemoteContentController::NotifyScaleGestureCompleteCrossProcess(
   if (APZCTreeManagerParent* parent =
           CompositorBridgeParent::GetApzcTreeManagerParentForRoot(
               aGuid.mLayersId)) {
-    (void)parent->SendNotifyScaleGestureComplete(aGuid.mScrollId, aScale);
+    Unused << parent->SendNotifyScaleGestureComplete(aGuid.mScrollId, aScale);
   }
 }
 
@@ -549,7 +551,7 @@ void RemoteContentController::ActorDestroy(ActorDestroyReason aWhy) {
 void RemoteContentController::Destroy() {
   if (mCanSend) {
     mCanSend = false;
-    (void)SendDestroy();
+    Unused << SendDestroy();
   }
 }
 

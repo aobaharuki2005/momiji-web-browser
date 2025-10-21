@@ -119,7 +119,7 @@ void PerformanceStorageWorker::AddEntry(nsIHttpChannel* aChannel,
 
   RefPtr<PerformanceEntryAdder> r =
       new PerformanceEntryAdder(workerPrivate, this, std::move(data));
-  (void)NS_WARN_IF(!r->Dispatch(workerPrivate));
+  Unused << NS_WARN_IF(!r->Dispatch(workerPrivate));
 }
 
 void PerformanceStorageWorker::AddEntry(

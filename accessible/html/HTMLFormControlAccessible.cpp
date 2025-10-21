@@ -85,7 +85,7 @@ uint64_t HTMLRadioButtonAccessible::NativeState() const {
 
 void HTMLRadioButtonAccessible::GetPositionAndSetSize(int32_t* aPosInSet,
                                                       int32_t* aSetSize) {
-  (void)ComputeGroupAttributes(aPosInSet, aSetSize);
+  Unused << ComputeGroupAttributes(aPosInSet, aSetSize);
 }
 
 void HTMLRadioButtonAccessible::DOMAttributeChanged(

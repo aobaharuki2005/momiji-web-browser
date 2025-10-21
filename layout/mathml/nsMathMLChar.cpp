@@ -19,6 +19,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_mathml.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/intl/UnicodeScriptCodes.h"
@@ -1805,9 +1806,9 @@ void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
 
   // Since this is used only for debugging, we don't need to worry about
   // tracking the ImgDrawResult.
-  (void)nsCSSRendering::PaintBorder(presContext, *aCtx, mFrame,
-                                    GetPaintRect(aBuilder, aCtx), rect,
-                                    computedStyle, flags, skipSides);
+  Unused << nsCSSRendering::PaintBorder(presContext, *aCtx, mFrame,
+                                        GetPaintRect(aBuilder, aCtx), rect,
+                                        computedStyle, flags, skipSides);
 
   nsCSSRendering::PaintNonThemedOutline(presContext, *aCtx, mFrame,
                                         GetPaintRect(aBuilder, aCtx), rect,

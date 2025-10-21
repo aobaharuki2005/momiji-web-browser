@@ -13,6 +13,7 @@
 #include "ServiceWorkerUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/RemoteWorkerService.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
@@ -52,7 +53,7 @@ ServiceWorkerShutdownState::ServiceWorkerShutdownState()
 }
 
 ServiceWorkerShutdownState::~ServiceWorkerShutdownState() {
-  (void)NS_WARN_IF(mProgress != Progress::ShutdownCompleted);
+  Unused << NS_WARN_IF(mProgress != Progress::ShutdownCompleted);
 }
 
 const char* ServiceWorkerShutdownState::GetProgressString() const {

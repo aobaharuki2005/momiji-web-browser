@@ -138,7 +138,7 @@ already_AddRefed<SharedFTFace> FT2FontEntry::GetFTFace(bool aCommit) {
   if (aCommit) {
     if (mFTFace.compareExchange(nullptr, face.get())) {
       // The reference we created is now owned by mFTFace.
-      face.forget().leak();
+      Unused << face.forget();
     } else {
       // We lost a race! Just discard our new face and use the existing one.
     }
@@ -459,7 +459,7 @@ nsresult FT2FontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
   if (setCharMap) {
     if (mCharacterMap.compareExchange(nullptr, charmap.get())) {
       // We forget rather than addref because we don't use the charmap below.
-      charmap.forget().leak();
+      Unused << charmap.forget();
     }
   }
 
@@ -1347,7 +1347,7 @@ gfxFT2FontList::GetFilteredPlatformFontLists() {
   static Device fontVisibilityDevice = Device::Unassigned;
   if (fontVisibilityDevice == Device::Unassigned) {
     nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
-    (void)gfxInfo->GetFontVisibilityDetermination(&fontVisibilityDevice);
+    Unused << gfxInfo->GetFontVisibilityDetermination(&fontVisibilityDevice);
   }
 
   nsTArray<std::pair<const char**, uint32_t>> fontLists;

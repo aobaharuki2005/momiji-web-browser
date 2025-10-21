@@ -13,6 +13,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_apz.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/CheckerboardReportServiceBinding.h"  // for dom::CheckerboardReports
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -57,7 +58,7 @@ void CheckerboardEventStorage::Report(uint32_t aSeverity,
   if (XRE_IsGPUProcess()) {
     if (gfx::GPUParent* gpu = gfx::GPUParent::GetSingleton()) {
       nsCString log(aLog.c_str());
-      (void)gpu->SendReportCheckerboard(aSeverity, log);
+      Unused << gpu->SendReportCheckerboard(aSeverity, log);
     }
     return;
   }

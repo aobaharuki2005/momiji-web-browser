@@ -39,7 +39,7 @@ class SVGTransformList {
   SVGTransformList& operator=(const SVGTransformList& aOther) {
     mItems.ClearAndRetainStorage();
     // Best-effort, really.
-    (void)mItems.AppendElements(aOther.mItems, fallible);
+    Unused << mItems.AppendElements(aOther.mItems, fallible);
     return *this;
   }
 

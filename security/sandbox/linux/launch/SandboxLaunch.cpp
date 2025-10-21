@@ -34,6 +34,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_security.h"
+#include "mozilla/Unused.h"
 #include "mozilla/ipc/UtilityProcessSandboxing.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -604,7 +605,7 @@ static void ConfigureUserNamespace(uid_t uid, gid_t gid) {
   // establishing gid mappings will fail unless the process first
   // revokes its ability to call setgroups() by using a /proc node
   // added in the same set of patches.
-  (void)WriteStringToFile("/proc/self/setgroups", "deny", 4);
+  Unused << WriteStringToFile("/proc/self/setgroups", "deny", 4);
 
   len = static_cast<size_t>(SafeSPrintf(buf, "%d %d 1", gid, gid));
   MOZ_RELEASE_ASSERT(len < sizeof(buf));

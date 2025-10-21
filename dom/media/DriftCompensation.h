@@ -10,6 +10,7 @@
 #include "MediaSegment.h"
 #include "VideoUtils.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 
@@ -71,7 +72,7 @@ class DriftCompensator {
         "DriftCompensator::SetAudioStartTime", this,
         &DriftCompensator::SetAudioStartTime, aStart));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    (void)rv;
+    Unused << rv;
   }
 
   /**

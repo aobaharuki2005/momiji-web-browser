@@ -188,7 +188,7 @@ void nsPrintJob::BuildNestedPrintObjects(
             do_GetService(sPrintSettingsServiceContractID);
         embedding::PrintData printData;
         printSettingsService->SerializeToPrintData(mPrintSettings, &printData);
-        (void)cc->SendUpdateRemotePrintSettings(bc, printData);
+        Unused << cc->SendUpdateRemotePrintSettings(bc, printData);
       }
       continue;
     }
@@ -475,7 +475,7 @@ nsresult nsPrintJob::PrintPreview(Document& aDoc,
 
 int32_t nsPrintJob::GetRawNumPages() const {
   auto [seqFrame, numSheets] = GetSeqFrameAndCountSheets();
-  (void)numSheets;
+  Unused << numSheets;
   return seqFrame ? seqFrame->GetRawNumPages() : 0;
 }
 
@@ -492,7 +492,7 @@ bool nsPrintJob::GetIsEmpty() const {
 
 int32_t nsPrintJob::GetPrintPreviewNumSheets() const {
   auto [seqFrame, numSheets] = GetSeqFrameAndCountSheets();
-  (void)seqFrame;
+  Unused << seqFrame;
   return numSheets;
 }
 

@@ -21,6 +21,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PWebrtcGlobal.h"
 #include "mozilla/dom/PWebrtcGlobalChild.h"
@@ -193,7 +194,7 @@ void WebrtcGlobalInformation::ClearAllStats(const GlobalObject& aGlobal) {
   if (!WebrtcContentParents::Empty()) {
     // Pass on the request to any content process based PeerConnections.
     for (const auto& cp : WebrtcContentParents::GetAll()) {
-      (void)cp->SendClearStats();
+      Unused << cp->SendClearStats();
     }
   }
 
@@ -446,12 +447,12 @@ void WebrtcGlobalInformation::ClearLogging(const GlobalObject& aGlobal) {
   if (!WebrtcContentParents::Empty()) {
     // Clear content process signaling logs
     for (const auto& cp : WebrtcContentParents::GetAll()) {
-      (void)cp->SendClearLog();
+      Unused << cp->SendClearLog();
     }
   }
 
   // Clear chrome process signaling logs
-  (void)RunLogClear();
+  Unused << RunLogClear();
 }
 
 static RefPtr<GenericPromise> UpdateLogStash() {
@@ -547,7 +548,7 @@ void WebrtcGlobalInformation::SetAecDebug(const GlobalObject& aGlobal,
   sLastAECDebug = aEnable;
 
   for (const auto& cp : WebrtcContentParents::GetAll()) {
-    (void)cp->SendSetAecLogging(aEnable);
+    Unused << cp->SendSetAecLogging(aEnable);
   }
 }
 
