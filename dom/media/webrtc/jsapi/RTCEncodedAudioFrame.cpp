@@ -18,7 +18,6 @@
 #include "jsapi/RTCRtpScriptTransform.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/Unused.h"
 #include "mozilla/dom/RTCEncodedAudioFrameBinding.h"
 #include "mozilla/dom/RTCRtpScriptTransformer.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
@@ -66,8 +65,7 @@ RTCEncodedAudioFrame::RTCEncodedAudioFrame(
       static_cast<webrtc::TransformableAudioFrameInterface&>(*mFrame));
   mMetadata.mContributingSources.Construct();
   for (const auto csrc : audioFrame.GetContributingSources()) {
-    Unused << mMetadata.mContributingSources.Value().AppendElement(csrc,
-                                                                   fallible);
+    (void)mMetadata.mContributingSources.Value().AppendElement(csrc, fallible);
   }
   if (const auto optionalSeqNum = audioFrame.SequenceNumber()) {
     mMetadata.mSequenceNumber.Construct(*optionalSeqNum);

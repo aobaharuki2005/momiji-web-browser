@@ -513,7 +513,7 @@ void MPRISServiceHandler::SetPlaybackState(
       "(sa{sv}as)", DBUS_MPRIS_PLAYER_INTERFACE, &builder, nullptr);
 
   LOGMPRIS("Emitting MPRIS property changes for 'PlaybackStatus'");
-  Unused << EmitPropertiesChangedSignal(parameters);
+  (void)EmitPropertiesChangedSignal(parameters);
 }
 
 GVariant* MPRISServiceHandler::GetPlaybackStatus() const {

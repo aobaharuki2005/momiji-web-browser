@@ -19,7 +19,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Unused.h"
 #include "nsContentSecurityManager.h"
 #include "nsContentSecurityUtils.h"
 #include "nsContentUtils.h"
@@ -71,7 +70,7 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
 
   AutoJSContextWithGlobal cx(mCleanGlobal);
   // Make sure we don't look at events from other tests.
-  Unused << mTelemetry->ClearEvents();
+  (void)mTelemetry->ClearEvents();
 
   // required for telemetry lookups
   constexpr auto category = "security"_ns;
@@ -195,9 +194,9 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
       nsCOMPtr<nsIPrincipal> redirPrincipal =
           BasePrincipal::CreateContentPrincipal(redirUri, OriginAttributes());
       nsCOMPtr<nsIChannel> redirectChannel;
-      Unused << service->NewChannelFromURI(redirUri, nullptr, redirPrincipal,
-                                           nullptr, 0, currentTest.contentType,
-                                           getter_AddRefs(redirectChannel));
+      (void)service->NewChannelFromURI(redirUri, nullptr, redirPrincipal,
+                                       nullptr, 0, currentTest.contentType,
+                                       getter_AddRefs(redirectChannel));
 
       mockLoadInfo->AppendRedirectHistoryEntry(redirectChannel, false);
     }

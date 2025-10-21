@@ -150,7 +150,7 @@ class AutoPropVar {
     if (mVar.vt != VT_EMPTY) {
       HRESULT hr = PropVariantClear(&mVar);
       MOZ_ASSERT(SUCCEEDED(hr));
-      Unused << hr;
+      (void)hr;
     }
   }
 
@@ -885,7 +885,7 @@ MFCDMParent::GetAllKeySystemsCapabilities() {
 
   RefPtr<CapabilitiesPromise::Private> p =
       new CapabilitiesPromise::Private(__func__);
-  Unused << backgroundTaskQueue->Dispatch(NS_NewRunnableFunction(__func__, [p] {
+  (void)backgroundTaskQueue->Dispatch(NS_NewRunnableFunction(__func__, [p] {
     MFCDM_PARENT_SLOG("GetAllKeySystemsCapabilities");
     enum SecureLevel : bool {
       Software = false,
@@ -1473,7 +1473,7 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetStatusForPolicy(
   }
   using HDCPPromise = MozPromise<nsresult, nsresult, /* IsExclusive = */ true>;
   RefPtr<HDCPPromise::Private> p = new HDCPPromise::Private(__func__);
-  Unused << backgroundTaskQueue->Dispatch(NS_NewRunnableFunction(
+  (void)backgroundTaskQueue->Dispatch(NS_NewRunnableFunction(
       __func__, [self = RefPtr<MFCDMParent>(this), this, aMinHdcpVersion, p] {
         auto rv =
             IsHDCPVersionSupported(mKeySystem, aMinHdcpVersion, mManagerThread);
@@ -1621,7 +1621,7 @@ void MFCDMService::UpdateWidevineL1Path(nsIFile* aFile) {
     NS_WARNING("Failed to get UtilityMediaServiceChild");
     return;
   }
-  Unused << umsc->SendUpdateWidevineL1Path(widevineL1Path);
+  (void)umsc->SendUpdateWidevineL1Path(widevineL1Path);
 #ifdef MOZ_WMF_CDM_LPAC_SANDBOX
   SandboxBroker::EnsureLpacPermsissionsOnDir(widevineL1Path);
 #endif

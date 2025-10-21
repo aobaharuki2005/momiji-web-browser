@@ -203,7 +203,7 @@ void AndroidDecoderModule::SetSupportedMimeTypes(
     if (NS_IsMainThread()) {
       ClearOnShutdown(&sSupportedSwMimeTypes);
     } else {
-      Unused << NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, []() {
+      (void)NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, []() {
         StaticMutexAutoLock lock(sMutex);
         ClearOnShutdown(&sSupportedSwMimeTypes);
       }));
@@ -214,7 +214,7 @@ void AndroidDecoderModule::SetSupportedMimeTypes(
     if (NS_IsMainThread()) {
       ClearOnShutdown(&sSupportedHwMimeTypes);
     } else {
-      Unused << NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, []() {
+      (void)NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, []() {
         StaticMutexAutoLock lock(sMutex);
         ClearOnShutdown(&sSupportedHwMimeTypes);
       }));
@@ -225,7 +225,7 @@ void AndroidDecoderModule::SetSupportedMimeTypes(
     if (NS_IsMainThread()) {
       ClearOnShutdown(&sSupportedCodecs);
     } else {
-      Unused << NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, []() {
+      (void)NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, []() {
         StaticMutexAutoLock lock(sMutex);
         ClearOnShutdown(&sSupportedCodecs);
       }));

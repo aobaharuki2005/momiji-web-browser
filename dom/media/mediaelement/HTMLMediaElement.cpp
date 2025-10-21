@@ -1450,9 +1450,9 @@ HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest) {
   bool succeeded;
   if (hc && NS_SUCCEEDED(hc->GetRequestSucceeded(&succeeded)) && !succeeded) {
     uint32_t responseStatus = 0;
-    Unused << hc->GetResponseStatus(&responseStatus);
+    (void)hc->GetResponseStatus(&responseStatus);
     nsAutoCString statusText;
-    Unused << hc->GetResponseStatusText(statusText);
+    (void)hc->GetResponseStatusText(statusText);
     // we need status text for resist fingerprinting mode's message allowlist
     if (statusText.IsEmpty()) {
       net_GetDefaultStatusTextForCode(responseStatus, statusText);
@@ -1893,7 +1893,7 @@ class HTMLMediaElement::ChannelLoader final {
     nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
     if (setAttrs) {
       // The function simply returns NS_OK, so we ignore the return value.
-      Unused << loadInfo->SetOriginAttributes(
+      (void)loadInfo->SetOriginAttributes(
           triggeringPrincipal->OriginAttributesRef());
     }
     loadInfo->SetIsMediaRequest(true);

@@ -963,7 +963,7 @@ void EventSourceImpl::SetupHttpChannel() {
             ("SetupHttpChannel. rv=%x (%s)", uint32_t(rv), eventId.get()));
   }
 #endif
-  Unused << rv;
+  (void)rv;
 }
 
 nsresult EventSourceImpl::SetupReferrerInfo(

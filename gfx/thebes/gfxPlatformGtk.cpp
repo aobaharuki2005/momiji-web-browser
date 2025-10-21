@@ -229,7 +229,7 @@ void gfxPlatformGtk::InitDmabufConfig() {
                            failureId);
     }
     // Make sure we have DMABuf formats available.
-    Unused << GetGlobalDMABufFormats();
+    (void)GetGlobalDMABufFormats();
   }
 }
 

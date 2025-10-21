@@ -38,7 +38,6 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/glean/GfxMetrics.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Unused.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Base64.h"
 #include "mozilla/VsyncDispatcher.h"
@@ -312,10 +311,10 @@ class LogForwarderEvent : public Runnable {
 
     if (XRE_IsContentProcess()) {
       dom::ContentChild* cc = dom::ContentChild::GetSingleton();
-      Unused << cc->SendGraphicsError(mMessage);
+      (void)cc->SendGraphicsError(mMessage);
     } else if (XRE_IsGPUProcess()) {
       GPUParent* gp = GPUParent::GetSingleton();
-      Unused << gp->SendGraphicsError(mMessage);
+      (void)gp->SendGraphicsError(mMessage);
     }
 
     return NS_OK;
@@ -340,10 +339,10 @@ void CrashStatsLogForwarder::Log(const std::string& aString) {
     if (NS_IsMainThread()) {
       if (XRE_IsContentProcess()) {
         dom::ContentChild* cc = dom::ContentChild::GetSingleton();
-        Unused << cc->SendGraphicsError(stringToSend);
+        (void)cc->SendGraphicsError(stringToSend);
       } else if (XRE_IsGPUProcess()) {
         GPUParent* gp = GPUParent::GetSingleton();
-        Unused << gp->SendGraphicsError(stringToSend);
+        (void)gp->SendGraphicsError(stringToSend);
       }
     } else {
       nsCOMPtr<nsIRunnable> r1 = new LogForwarderEvent(stringToSend);
@@ -958,7 +957,7 @@ void gfxPlatform::Init() {
 
   if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
     GPUProcessManager* gpu = GPUProcessManager::Get();
-    Unused << gpu->LaunchGPUProcess();
+    (void)gpu->LaunchGPUProcess();
   }
 
   if (XRE_IsParentProcess()) {
@@ -1207,7 +1206,7 @@ void gfxPlatform::MaybeInitializeCMS() {
     gCMSInitialized = true;
     return;
   }
-  Unused << GetPlatform();
+  (void)GetPlatform();
 }
 
 /* static */
@@ -2291,7 +2290,7 @@ void gfxPlatform::ForceGlobalReflow(GlobalReflowFlags aFlags) {
     // Propagate the change to child processes.
     for (auto* process :
          dom::ContentParent::AllProcesses(dom::ContentParent::eLive)) {
-      Unused << process->SendForceGlobalReflow(aFlags);
+      (void)process->SendForceGlobalReflow(aFlags);
     }
   }
 }

@@ -2131,8 +2131,8 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
         MOZ_ASSERT(remote->GetBrowserHost());
 
         if (oldRemote && oldRemote != remote) {
-          Unused << NS_WARN_IF(nsContentUtils::GetCommonBrowserParentAncestor(
-                                   remote, oldRemote) != remote);
+          (void)NS_WARN_IF(nsContentUtils::GetCommonBrowserParentAncestor(
+                               remote, oldRemote) != remote);
           remote = oldRemote;
         }
 
@@ -7152,7 +7152,7 @@ nsresult EventStateManager::DoContentCommandReplaceTextEvent(
     // Handle it in focused content process if there is.
     if (BrowserParent* remote = BrowserParent::GetFocused()) {
       if (!aEvent->mOnlyEnabledCheck) {
-        Unused << remote->SendReplaceText(*aEvent);
+        (void)remote->SendReplaceText(*aEvent);
       }
       // XXX The remote process may be not editable right now.  Therefore, this
       // may be different from actual state in the remote process.

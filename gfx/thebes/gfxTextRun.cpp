@@ -28,7 +28,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPresData.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
 #include "nsStyleUtil.h"
@@ -2181,7 +2180,7 @@ already_AddRefed<gfxFont> gfxFontGroup::GetDefaultFont() {
     fontlist::Family* fam = family.mShared;
     if (!fam->IsInitialized()) {
       // If this fails, FindFaceForStyle will just safely return nullptr
-      Unused << pfl->InitializeFamily(fam);
+      (void)pfl->InitializeFamily(fam);
     }
     fontlist::Face* face = fam->FindFaceForStyle(pfl->SharedFontList(), mStyle);
     if (face) {
@@ -2214,7 +2213,7 @@ already_AddRefed<gfxFont> gfxFontGroup::GetDefaultFont() {
       for (uint32_t i = 0; i < numFonts; ++i) {
         fontlist::Family* fam = &families[i];
         if (!fam->IsInitialized()) {
-          Unused << pfl->InitializeFamily(fam);
+          (void)pfl->InitializeFamily(fam);
         }
         fontlist::Face* face =
             fam->FindFaceForStyle(pfl->SharedFontList(), mStyle);
@@ -2641,7 +2640,7 @@ static Script ResolveScriptForLang(const nsAtom* aLanguage, Script aDefault) {
   Locale locale;
   if (LocaleParser::TryParse(lang, locale).isOk()) {
     if (locale.Script().Missing()) {
-      Unused << locale.AddLikelySubtags();
+      (void)locale.AddLikelySubtags();
     }
     if (locale.Script().Present()) {
       Span span = locale.Script().Span();
@@ -3902,7 +3901,7 @@ already_AddRefed<gfxFont> gfxFontGroup::WhichPrefFontSupportsChar(
       if (family.mShared) {
         fontlist::Family* fam = family.mShared;
         if (!fam->IsInitialized()) {
-          Unused << pfl->InitializeFamily(fam);
+          (void)pfl->InitializeFamily(fam);
         }
         fontlist::Face* face =
             fam->FindFaceForStyle(pfl->SharedFontList(), mStyle);

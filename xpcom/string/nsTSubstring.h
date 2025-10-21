@@ -17,7 +17,6 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Span.h"
 #include "mozilla/Try.h"
-#include "mozilla/Unused.h"
 
 #include "nsTStringRepr.h"
 
@@ -204,7 +203,7 @@ class BulkWriteHandle final {
       return;
     }
     if (aAllowShrinking) {
-      mozilla::Unused << mString->StartBulkWriteImpl(aLength, aLength, true);
+      (void)mString->StartBulkWriteImpl(aLength, aLength, true);
     }
     mString->FinishBulkWriteImpl(aLength);
     mString = nullptr;

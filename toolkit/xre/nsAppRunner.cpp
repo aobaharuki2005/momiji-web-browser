@@ -108,8 +108,6 @@
 #  include "gfxPlatformMac.h"
 #endif
 
-#include "mozilla/Unused.h"
-
 #ifdef XP_WIN
 #  include "nsIWinAppHelper.h"
 #  include <windows.h>
@@ -384,7 +382,6 @@ bool RunningGTest() { return RunGTest; }
 using namespace mozilla;
 using namespace mozilla::widget;
 using namespace mozilla::startup;
-using mozilla::Unused;
 using mozilla::dom::ContentChild;
 using mozilla::dom::ContentParent;
 using mozilla::dom::quota::QuotaManager;
@@ -2308,8 +2305,8 @@ static void SetupAlteredPrefetchPref() {
 }
 
 static void ReflectSkeletonUIPrefToRegistry(const char* aPref, void* aData) {
-  Unused << aPref;
-  Unused << aData;
+  (void)aPref;
+  (void)aData;
 
   RefPtr<nsToolkitProfileService> mProfileSvc;
   mProfileSvc = NS_GetToolkitProfileService();
@@ -2323,20 +2320,20 @@ static void ReflectSkeletonUIPrefToRegistry(const char* aPref, void* aData) {
     nsCString themeId;
     Preferences::GetCString(kPrefThemeId, themeId);
     if (themeId.EqualsLiteral("default-theme@mozilla.org")) {
-      Unused << SetPreXULSkeletonUIThemeId(ThemeMode::Default);
+      (void)SetPreXULSkeletonUIThemeId(ThemeMode::Default);
     } else if (themeId.EqualsLiteral("firefox-compact-dark@mozilla.org")) {
-      Unused << SetPreXULSkeletonUIThemeId(ThemeMode::Dark);
+      (void)SetPreXULSkeletonUIThemeId(ThemeMode::Dark);
     } else if (themeId.EqualsLiteral("firefox-compact-light@mozilla.org")) {
-      Unused << SetPreXULSkeletonUIThemeId(ThemeMode::Light);
+      (void)SetPreXULSkeletonUIThemeId(ThemeMode::Light);
     } else {
       shouldBeEnabled = false;
     }
   } else if (shouldBeEnabled) {
-    Unused << SetPreXULSkeletonUIThemeId(ThemeMode::Default);
+    (void)SetPreXULSkeletonUIThemeId(ThemeMode::Default);
   }
 
   if (GetPreXULSkeletonUIEnabled() != shouldBeEnabled) {
-    Unused << SetPreXULSkeletonUIEnabledIfAllowed(shouldBeEnabled);
+    (void)SetPreXULSkeletonUIEnabledIfAllowed(shouldBeEnabled);
   }
 }
 
@@ -2356,8 +2353,8 @@ NS_IMPL_ISUPPORTS(ShowProfileSelectorObserver, nsIObserver);
 NS_IMETHODIMP
 ShowProfileSelectorObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                      const char16_t* aData) {
-  Unused << aSubject;
-  Unused << aData;
+  (void)aSubject;
+  (void)aData;
   if (!strcmp(aTopic, "profile-show-selector-changed")) {
     ReflectSkeletonUIPrefToRegistry(nullptr, nullptr);
   }
@@ -3624,10 +3621,10 @@ static void WriteVersion(nsIFile* aProfileDir, const nsCString& aVersion,
   file->AppendNative(FILE_COMPATIBILITY_INFO);
 
   nsAutoCString platformDir;
-  Unused << aXULRunnerDir->GetPersistentDescriptor(platformDir);
+  (void)aXULRunnerDir->GetPersistentDescriptor(platformDir);
 
   nsAutoCString appDir;
-  if (aAppDir) Unused << aAppDir->GetPersistentDescriptor(appDir);
+  if (aAppDir) (void)aAppDir->GetPersistentDescriptor(appDir);
 
   PRFileDesc* fd;
   nsresult rv = file->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
@@ -3993,8 +3990,8 @@ static void SetupConsoleForBackgroundTask(
       !EnvHasValue("MOZ_BACKGROUNDTASKS_IGNORE_NO_OUTPUT")) {
     // Suppress output, somewhat crudely.  We need to suppress stderr as well
     // as stdout because assertions, of which there are many, write to stderr.
-    Unused << freopen("/dev/null", "w", stdout);
-    Unused << freopen("/dev/null", "w", stderr);
+    (void)freopen("/dev/null", "w", stdout);
+    (void)freopen("/dev/null", "w", stderr);
     return;
   }
 #  endif
@@ -4436,8 +4433,8 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
     // Remove the --backgroundtask arg now that it has been saved in
     // gRestartArgv.
     const char* tmpBackgroundTaskName = nullptr;
-    Unused << CheckArg("backgroundtask", &tmpBackgroundTaskName,
-                       CheckArgFlag::RemoveArg);
+    (void)CheckArg("backgroundtask", &tmpBackgroundTaskName,
+                   CheckArgFlag::RemoveArg);
   }
 #endif
 
@@ -4700,7 +4697,7 @@ bool XREMain::CheckLastStartupWasCrash() {
   // doesn't already exist, it is created, and will be removed at the end of
   // the startup crash detection window.
   AutoFDClose fd;
-  Unused << crashFile.inspect()->OpenNSPRFileDesc(
+  (void)crashFile.inspect()->OpenNSPRFileDesc(
       PR_WRONLY | PR_CREATE_FILE | PR_EXCL, 0666, getter_Transfers(fd));
   return !fd;
 }
@@ -5296,7 +5293,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   // Re-register components to catch potential changes.
   nsCOMPtr<nsIFile> flagFile;
   if (mAppData->directory) {
-    Unused << mAppData->directory->Clone(getter_AddRefs(flagFile));
+    (void)mAppData->directory->Clone(getter_AddRefs(flagFile));
   }
   if (flagFile) {
     flagFile->AppendNative(FILE_INVALIDATE_CACHES);
@@ -5405,7 +5402,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     // It's used as template to create display connections
     // for different threads.
     if (IsWaylandEnabled()) {
-      MOZ_UNUSED(WaylandDisplayGet());
+      (void)WaylandDisplayGet();
     }
 #endif
 #ifdef MOZ_WIDGET_GTK

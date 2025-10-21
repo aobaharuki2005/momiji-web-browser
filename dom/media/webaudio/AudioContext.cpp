@@ -930,7 +930,7 @@ void AudioContext::SetPageAwakeRequest(bool aShouldSet) {
   }
   if (XRE_IsContentProcess()) {
     ContentChild* contentChild = ContentChild::GetSingleton();
-    Unused << contentChild->SendAddOrRemovePageAwakeRequest(bc, aShouldSet);
+    (void)contentChild->SendAddOrRemovePageAwakeRequest(bc, aShouldSet);
     return;
   }
   if (aShouldSet) {
@@ -1258,8 +1258,8 @@ void AudioContext::Unmute() const {
 void AudioContext::SetParamMapForWorkletName(
     const nsAString& aName, AudioParamDescriptorMap* aParamMap) {
   MOZ_ASSERT(!mWorkletParamDescriptors.Contains(aName));
-  Unused << mWorkletParamDescriptors.InsertOrUpdate(
-      aName, std::move(*aParamMap), fallible);
+  (void)mWorkletParamDescriptors.InsertOrUpdate(aName, std::move(*aParamMap),
+                                                fallible);
 }
 
 size_t AudioContext::SizeOfIncludingThis(

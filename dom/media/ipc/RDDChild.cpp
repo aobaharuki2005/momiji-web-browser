@@ -69,7 +69,7 @@ bool RDDChild::Init() {
   SendInit(updates, brokerFd, Telemetry::CanRecordReleaseData(),
            isReadyForBackgroundProcessing);
 
-  Unused << SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));
+  (void)SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));
 
   gfxVars::AddReceiver(this);
 

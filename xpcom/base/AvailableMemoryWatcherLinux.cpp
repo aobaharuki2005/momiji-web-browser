@@ -8,7 +8,6 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_browser.h"
-#include "mozilla/Unused.h"
 #include "nsAppRunner.h"
 #include "nsIAvailableMemoryWatcherTestingLinux.h"
 #include "nsIObserverService.h"

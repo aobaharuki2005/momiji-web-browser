@@ -61,7 +61,6 @@
 
 #ifdef MOZ_LINUX_32_SSE2_STARTUP_ERROR
 #  include <cpuid.h>
-#  include "mozilla/Unused.h"
 
 static bool IsSSE2Available() {
   // The rest of the app has been compiled to assume that SSE2 is present
@@ -92,7 +91,7 @@ __attribute__((constructor)) static void SSE2Check() {
   // Using write() in order to avoid jemalloc-based buffering. Ignoring return
   // values, since there isn't much we could do on failure and there is no
   // point in trying to recover from errors.
-  MOZ_UNUSED(write(STDERR_FILENO, sSSE2Message, std::size(sSSE2Message) - 1));
+  (void)write(STDERR_FILENO, sSSE2Message, std::size(sSSE2Message) - 1);
   // _exit() instead of exit() to avoid running the usual "at exit" code.
   _exit(255);
 }
@@ -270,7 +269,7 @@ static void ReserveDefaultFileDescriptors() {
   // reused for the X server display connection.
   int fd = open("/dev/null", O_RDONLY);
   for (int i = 0; i < 2; i++) {
-    mozilla::Unused << dup(fd);
+    (void)dup(fd);
   }
 }
 #endif

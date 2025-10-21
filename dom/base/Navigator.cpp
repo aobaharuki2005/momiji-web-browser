@@ -108,7 +108,6 @@
 #include "AutoplayPolicy.h"
 #include "mozilla/DetailedPromise.h"
 #include "mozilla/EMEUtils.h"
-#include "mozilla/Unused.h"
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/WindowGlobalChild.h"
@@ -2140,8 +2139,7 @@ nsresult Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow,
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(doc->GetChannel());
   if (httpChannel) {
     bool IsUserAgentHeaderOutdated;
-    Unused << httpChannel->GetIsUserAgentHeaderOutdated(
-        &IsUserAgentHeaderOutdated);
+    (void)httpChannel->GetIsUserAgentHeaderOutdated(&IsUserAgentHeaderOutdated);
 
     // Do not return user agent from the request
     // if the user agent of the channel is outdated.
@@ -2183,7 +2181,7 @@ already_AddRefed<Promise> Navigator::RequestMediaKeySystemAccess(
     AutoTArray<nsString, 1> params;
     nsString* uri = params.AppendElement();
     if (doc) {
-      Unused << doc->GetDocumentURI(*uri);
+      (void)doc->GetDocumentURI(*uri);
     }
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "Media"_ns,
                                     doc, nsContentUtils::eDOM_PROPERTIES,

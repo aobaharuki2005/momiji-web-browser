@@ -26,7 +26,7 @@ DNSListenerProxy::OnLookupComplete(nsICancelable* aRequest,
   nsresult rv = mTargetThread->Dispatch(
       NS_NewRunnableFunction("DNSListenerProxy::OnLookupComplete",
                              [self, request, record, aStatus]() {
-                               Unused << self->mListener->OnLookupComplete(
+                               (void)self->mListener->OnLookupComplete(
                                    request, record, aStatus);
                                self->mListener = nullptr;
                              }),

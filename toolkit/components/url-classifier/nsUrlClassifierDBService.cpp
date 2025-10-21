@@ -33,7 +33,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/glean/UrlClassifierMetrics.h"
-#include "mozilla/Unused.h"
 #include "mozilla/Logging.h"
 #include "prnetdb.h"
 #include "Entries.h"
@@ -244,7 +243,7 @@ class nsUrlClassifierDBService::FeatureHolder final {
         // If we still have some references, let's forget them to avoid crashes.
         // Probably we are shutdown.
         for (nsCOMPtr<nsISupports>& doomed : mDoomed) {
-          mozilla::Unused << doomed.forget().take();
+          doomed.forget().leak();
         }
       }
 

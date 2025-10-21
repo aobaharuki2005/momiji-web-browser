@@ -586,7 +586,7 @@ nsresult nsTypeAheadFind::FindItNow(uint32_t aMode, bool aIsLinksOnly,
     }
 
     if (continueLoop) {
-      Unused << GetSearchContainers(
+      (void)GetSearchContainers(
           currentContainer, nullptr, aIsFirstVisiblePreferred, findPrev,
           getter_AddRefs(presShell), getter_AddRefs(presContext));
       continue;
@@ -693,11 +693,11 @@ nsresult nsTypeAheadFind::GetSearchContainers(
     mEndPointRange->Collapse(false);
   } else {
     if (aFindPrev) {
-      Unused << mEndPointRange->SetStartAndEnd(
-          currentSelectionRange->StartRef(), currentSelectionRange->StartRef());
+      (void)mEndPointRange->SetStartAndEnd(currentSelectionRange->StartRef(),
+                                           currentSelectionRange->StartRef());
     } else {
-      Unused << mStartPointRange->SetStartAndEnd(
-          currentSelectionRange->EndRef(), currentSelectionRange->EndRef());
+      (void)mStartPointRange->SetStartAndEnd(currentSelectionRange->EndRef(),
+                                             currentSelectionRange->EndRef());
     }
   }
 

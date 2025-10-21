@@ -166,7 +166,7 @@ RefPtr<GenericNonExclusivePromise> RDDProcessManager::LaunchRDDProcess() {
         // launch and weren't included in the blobs set
         // up in LaunchRDDProcess.
         for (const mozilla::dom::Pref& pref : mQueuedPrefs) {
-          Unused << NS_WARN_IF(!mRDDChild->SendPreferenceUpdate(pref));
+          (void)NS_WARN_IF(!mRDDChild->SendPreferenceUpdate(pref));
         }
         mQueuedPrefs.Clear();
 

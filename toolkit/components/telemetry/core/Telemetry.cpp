@@ -47,7 +47,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/Unused.h"
 #if defined(XP_WIN)
 #  include "mozilla/WinDllServices.h"
 #endif
@@ -1212,7 +1211,7 @@ TelemetryImpl::FlushBatchedChildTelemetry() {
 
 NS_IMETHODIMP
 TelemetryImpl::EarlyInit() {
-  Unused << MemoryTelemetry::Get();
+  (void)MemoryTelemetry::Get();
 
   return NS_OK;
 }

@@ -25,7 +25,6 @@
 #include "nsContentUtils.h"
 #include <algorithm>
 #include "nsIChannel.h"
-#include "mozilla/Unused.h"
 #include "nsIURIMutator.h"
 #include "nsITextToSubURI.h"
 
@@ -223,7 +222,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
     if (baseUri.Last() != '/') {
       baseUri.Append('/');
       path.Append('/');
-      mozilla::Unused << NS_MutateURI(uri).SetPathQueryRef(path).Finalize(uri);
+      (void)NS_MutateURI(uri).SetPathQueryRef(path).Finalize(uri);
     }
     if (!path.EqualsLiteral("/")) {
       rv = uri->Resolve(".."_ns, parentStr);

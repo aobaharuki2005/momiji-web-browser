@@ -169,7 +169,7 @@ void MerchantValidationEvent::GetValidationURL(nsAString& aValidationURL) {
   nsAutoCString utf8href;
   nsresult rv = mValidationURL->GetSpec(utf8href);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-  Unused << rv;
+  (void)rv;
   aValidationURL.Assign(NS_ConvertUTF8toUTF16(utf8href));
 }
 

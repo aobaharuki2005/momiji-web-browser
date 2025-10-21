@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/Unused.h"
 #include "mozilla/mscom/AgileReference.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/RefPtr.h"

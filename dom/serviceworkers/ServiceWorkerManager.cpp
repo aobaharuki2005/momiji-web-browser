@@ -39,7 +39,6 @@
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StoragePrincipalHelper.h"
-#include "mozilla/Unused.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ClientHandle.h"
 #include "mozilla/dom/ClientManager.h"
@@ -711,7 +710,7 @@ void ServiceWorkerManager::MaybeFinishShutdown() {
 
   RefPtr<TeardownRunnable> runnable = new TeardownRunnable(mActor);
   nsresult rv = NS_DispatchToMainThread(runnable);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  (void)NS_WARN_IF(NS_FAILED(rv));
   mActor = nullptr;
   mETPPermissionObserver = nullptr;
 
@@ -3485,8 +3484,7 @@ void ServiceWorkerManager::MaybeSendUnregister(nsIPrincipal* aPrincipal,
     return;
   }
 
-  Unused << mActor->SendUnregister(principalInfo,
-                                   NS_ConvertUTF8toUTF16(aScope));
+  (void)mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(aScope));
 }
 
 void ServiceWorkerManager::AddOrphanedRegistration(

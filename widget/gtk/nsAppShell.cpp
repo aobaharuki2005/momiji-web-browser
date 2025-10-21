@@ -18,7 +18,6 @@
 #include "mozilla/Hal.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerThreadSleep.h"
-#include "mozilla/Unused.h"
 #include "mozilla/GUniquePtr.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/WidgetUtils.h"
@@ -145,7 +144,7 @@ gboolean nsAppShell::EventProcessorCallback(GIOChannel* source,
   nsAppShell* self = static_cast<nsAppShell*>(data);
 
   unsigned char c;
-  Unused << read(self->mPipeFDs[0], &c, 1);
+  (void)read(self->mPipeFDs[0], &c, 1);
   switch (c) {
     case NOTIFY_TOKEN:
       self->NativeEventCallback();
@@ -478,12 +477,12 @@ NS_IMETHODIMP nsAppShell::Run() {
 
 void nsAppShell::ScheduleNativeEventCallback() {
   unsigned char buf[] = {NOTIFY_TOKEN};
-  Unused << write(mPipeFDs[1], buf, 1);
+  (void)write(mPipeFDs[1], buf, 1);
 }
 
 void nsAppShell::ScheduleQuitEvent() {
   unsigned char buf[] = {QUIT_TOKEN};
-  Unused << write(mPipeFDs[1], buf, 1);
+  (void)write(mPipeFDs[1], buf, 1);
 }
 
 bool nsAppShell::ProcessNextNativeEvent(bool mayWait) {

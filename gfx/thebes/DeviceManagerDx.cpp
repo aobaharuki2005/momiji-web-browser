@@ -1121,7 +1121,7 @@ RefPtr<ID3D11Device> DeviceManagerDx::CreateMediaEngineDevice() {
   if (FAILED(hr) || !device || !D3D11Checks::DoesDeviceWork()) {
     return nullptr;
   }
-  Unused << SetDebugName(device.get(), "MFMediaEngineDevice");
+  (void)SetDebugName(device.get(), "MFMediaEngineDevice");
 
   RefPtr<ID3D10Multithread> multi;
   device->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
