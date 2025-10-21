@@ -46,6 +46,8 @@ skip-if = ["true"] # Bug 1880214
 
 ["test_quicksuggest_migrate_v3.js"]
 
+["test_quicksuggest_migrate_v4.js"]
+
 ["test_quicksuggest_offlineDefault.js"]
 requesttimeoutfactor = 2  # Slow on Linux and Windows
 

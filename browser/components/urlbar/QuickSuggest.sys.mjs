@@ -892,7 +892,7 @@ class _QuickSuggest {
    * @returns {number}
    */
   get MIGRATION_VERSION() {
-    return 3;
+    return 4;
   }
 
   /**
@@ -995,9 +995,17 @@ class _QuickSuggest {
   }
 
   _migrateFirefoxSuggestPrefsTo_3() {
-    if (lazy.UrlbarPrefs.get("quicksuggest.dataCollection.enabled")) {
-      lazy.UrlbarPrefs.set("quicksuggest.settingsUi", SETTINGS_UI.FULL);
-    }
+    // This used to check the `quicksuggest.dataCollection.enabled` preference
+    // and set `quicksuggest.settingsUi` to `SETTINGS_UI.FULL` if data collection
+    // was enabled. However, this is now cleared for everyone in the v4 migration,
+    // hence there is nothing to do here.
+  }
+
+  _migrateFirefoxSuggestPrefsTo_4() {
+    // This will reset the pref to the default value, i.e. SETTINGS_UI.OFFLINE_ONLY
+    // for users where suggest is enabled, or SETTINGS_UI.NONE where it is not
+    // enabled.
+    lazy.UrlbarPrefs.clear("quicksuggest.settingsUi");
   }
 
   async _test_reset(testOverrides = null) {
