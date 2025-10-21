@@ -25,7 +25,6 @@ import { createLazyLoaders } from "resource://devtools/client/performance-new/sh
  * @typedef {import("../@types/perf").ProfilerBrowserInfo} ProfilerBrowserInfo
  * @typedef {import("../@types/perf").ProfileCaptureResult} ProfileCaptureResult
  * @typedef {import("../@types/perf").ProfilerFaviconData} ProfilerFaviconData
- * @typedef {import("../@types/perf").JSSources} JSSources
  */
 
 /** @type {PerformancePref["PopupFeatureFlag"]} */
@@ -36,7 +35,7 @@ const POPUP_FEATURE_FLAG_PREF = "devtools.performance.popup.feature-flag";
 // capabilities of the WebChannel. The front-end can handle old WebChannel
 // versions and has a full list of versions and capabilities here:
 // https://github.com/firefox-devtools/profiler/blob/main/src/app-logic/web-channel.js
-const CURRENT_WEBCHANNEL_VERSION = 6;
+const CURRENT_WEBCHANNEL_VERSION = 5;
 
 const lazyRequire = {};
 // eslint-disable-next-line mozilla/lazy-getter-object-name
@@ -128,8 +127,7 @@ export async function captureProfile(pageContext) {
   registerProfileCaptureForBrowser(
     browser,
     profileCaptureResult,
-    symbolicationService,
-    additionalInformation?.jsSources ?? null
+    symbolicationService
   );
 }
 
@@ -344,33 +342,7 @@ async function getResponseForMessage(request, browser) {
       const { openScriptInDebugger } = lazy.BrowserModule();
       return openScriptInDebugger(tabId, scriptUrl, line, column);
     }
-    case "GET_JS_SOURCES": {
-      const { sourceUuids } = request;
-      if (!Array.isArray(sourceUuids)) {
-        throw new Error("sourceUuids must be an array");
-      }
 
-      const infoForBrowser = infoForBrowserMap.get(browser);
-      if (infoForBrowser === undefined) {
-        throw new Error("No JS source data found for this tab");
-      }
-
-      const jsSources = infoForBrowser.jsSources;
-      if (jsSources === null) {
-        return sourceUuids.map(() => ({
-          error: "Source not found in the browser",
-        }));
-      }
-
-      return sourceUuids.map(uuid => {
-        const sourceText = jsSources[uuid];
-        if (!sourceText) {
-          return { error: "Source not found in the browser" };
-        }
-
-        return { sourceText };
-      });
-    }
     default: {
       console.error(
         "An unknown message type was received by the profiler's WebChannel handler.",
@@ -470,18 +442,15 @@ export async function handleWebChannelMessage(channel, id, message, target) {
  *   when profiler.firefox.com sends GET_SYMBOL_TABLE WebChannel messages to us. This
  *   method should obtain a symbol table for the requested binary and resolve the
  *   returned promise with it.
- * @param {JSSources | null} jsSources - JS sources from the profile collection.
  */
 export function registerProfileCaptureForBrowser(
   browser,
   profileCaptureResult,
-  symbolicationService,
-  jsSources
+  symbolicationService
 ) {
   infoForBrowserMap.set(browser, {
     profileCaptureResult,
     symbolicationService,
-    jsSources,
   });
 }
 

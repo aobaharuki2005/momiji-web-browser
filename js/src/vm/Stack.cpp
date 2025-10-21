@@ -667,7 +667,6 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
     frame.interpreterScript = nullptr;
     // TODO: get the realm ID of wasm frames. Bug 1596235.
     frame.realmID = 0;
-    frame.sourceId = 0;
     return mozilla::Some(frame);
   }
 
@@ -719,9 +718,8 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
   frame.stackAddress = stackAddr;
   if ((*entry)->isBaselineInterpreter()) {
     frame.label = jsJitIter().baselineInterpreterLabel();
-    jsJitIter().baselineInterpreterScriptPC(&frame.interpreterScript,
-                                            &frame.interpreterPC_,
-                                            &frame.realmID, &frame.sourceId);
+    jsJitIter().baselineInterpreterScriptPC(
+        &frame.interpreterScript, &frame.interpreterPC_, &frame.realmID);
     MOZ_ASSERT(frame.interpreterScript);
     MOZ_ASSERT(frame.interpreterPC_);
   } else {
@@ -729,7 +727,6 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
     frame.returnAddress_ = returnAddr;
     frame.label = nullptr;
     frame.realmID = 0;
-    frame.sourceId = 0;
   }
   frame.activation = activation_;
   frame.endStackAddress = endStackAddress_;
@@ -764,10 +761,9 @@ uint32_t JS::ProfilingFrameIterator::extractStack(Frame* frames,
 
   // Extract the stack for the entry.  Assume maximum inlining depth is <64
   const char* labels[64];
-  uint32_t sourceIds[64];
   uint32_t depth = entry->callStackAtAddr(cx_->runtime(),
                                           jsJitIter().resumePCinCurrentFrame(),
-                                          labels, sourceIds, std::size(labels));
+                                          labels, std::size(labels));
   MOZ_ASSERT(depth < std::size(labels));
   for (uint32_t i = 0; i < depth; i++) {
     if (offset + i >= end) {
@@ -775,7 +771,6 @@ uint32_t JS::ProfilingFrameIterator::extractStack(Frame* frames,
     }
     frames[offset + i] = physicalFrame.value();
     frames[offset + i].label = labels[i];
-    frames[offset + i].sourceId = sourceIds[i];
   }
 
   return depth;

@@ -151,12 +151,7 @@ async function gInit(perfFront, traits, pageContext, openAboutProfiling) {
         type: "ERROR",
         error: typeof error === "string" ? new Error(error) : error,
       };
-      registerProfileCaptureForBrowser(
-        browser,
-        profileCaptureResult,
-        null,
-        null
-      );
+      registerProfileCaptureForBrowser(browser, profileCaptureResult, null);
       return;
     }
 
@@ -181,8 +176,7 @@ async function gInit(perfFront, traits, pageContext, openAboutProfiling) {
     registerProfileCaptureForBrowser(
       browser,
       profileCaptureResult,
-      symbolicationService,
-      additionalInformation?.jsSources ?? null
+      symbolicationService
     );
   };
 

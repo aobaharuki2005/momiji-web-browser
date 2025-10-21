@@ -374,11 +374,6 @@ struct SourceTypeTraits<char16_t> {
 [[nodiscard]] extern bool SynchronouslyCompressSource(
     JSContext* cx, JS::Handle<BaseScript*> script);
 
-// Variant return type for ScriptSource::substringChars to support both UTF-8
-// and UTF-16.
-using SubstringCharsResult =
-    mozilla::Variant<JS::UniqueChars, JS::UniqueTwoByteChars>;
-
 // [SMDOC] ScriptSource
 //
 // This class abstracts over the source we used to compile from. The current
@@ -423,10 +418,7 @@ class ScriptSource {
     const Unit* units_;
 
    public:
-    // If maybeCx is nullptr, compressed sources will still be decompressed but
-    // the result will not be cached. This allows off-main-thread use without
-    // a JSContext.
-    PinnedUnits(JSContext* maybeCx, ScriptSource* source,
+    PinnedUnits(JSContext* cx, ScriptSource* source,
                 UncompressedSourceCache::AutoHoldEntry& holder, size_t begin,
                 size_t len);
 
@@ -623,13 +615,8 @@ class ScriptSource {
   // How many ids have been handed out to sources.
   static mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent> idCount_;
 
-  // Decompress and return the specified chunk of source code.
-  // If maybeCx is nullptr, decompression still works but the uncompressed
-  // result will not be cached. This allows off-main-thread callers to
-  // decompress source without a JSContext, at the cost of potentially
-  // decompressing the same chunk multiple times.
   template <typename Unit>
-  const Unit* chunkUnits(JSContext* maybeCx,
+  const Unit* chunkUnits(JSContext* cx,
                          UncompressedSourceCache::AutoHoldEntry& holder,
                          size_t chunk);
 
@@ -638,13 +625,9 @@ class ScriptSource {
   //
   // Warning: this is *not* GC-safe! Any chars to be handed out must use
   // PinnedUnits. See comment below.
-  //
-  // If maybeCx is nullptr, compressed sources will still be decompressed but
-  // the result will not be cached. See chunkUnits comment above.
   template <typename Unit>
-  const Unit* units(JSContext* maybeCx,
-                    UncompressedSourceCache::AutoHoldEntry& asp, size_t begin,
-                    size_t len);
+  const Unit* units(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& asp,
+                    size_t begin, size_t len);
 
   template <typename Unit>
   const Unit* uncompressedUnits(size_t begin, size_t len);
@@ -680,9 +663,7 @@ class ScriptSource {
                                                   UniqueTwoByteChars&& str);
 
  private:
-  class LoadSourceMatcherBase;
   class LoadSourceMatcher;
-  class SourcePropertiesGetter;
 
  public:
   // Attempt to load usable source for |ss| -- source text on which substring
@@ -690,16 +671,6 @@ class ScriptSource {
   // |*loaded| to indicate whether usable source could be loaded; otherwise
   // return false.
   static bool loadSource(JSContext* cx, ScriptSource* ss, bool* loaded);
-
-  // This is similar to loadSource, but it is designed to be used outside of the
-  // main thread. This is done by removing the need of JSContext for the
-  // Retrievable sources that require sourceHook. For retrievable cases, it
-  // sets retrievable to true and sets the isUT16 depending on the encoding.
-  //
-  // *loaded indicates whether source text is available, *retrievable indicates
-  // whether the source can be retrieved later via source hook.
-  static void getSourceProperties(ScriptSource* ss, bool* hasSourceText,
-                                  bool* retrievable);
 
   // Assign source data from |srcBuf| to this recently-created |ScriptSource|.
   template <typename Unit>
@@ -910,18 +881,6 @@ class ScriptSource {
   JSLinearString* substring(JSContext* cx, size_t start, size_t stop);
   JSLinearString* substringDontDeflate(JSContext* cx, size_t start,
                                        size_t stop);
-  // Get substring characters without creating a JSString. Returns a variant
-  // containing either UniqueChars (UTF-8) or UniqueTwoByteChars (UTF-16).
-  //
-  // IMPORTANT: The returned buffer is NOT null-terminated. Callers must track
-  // the length separately (stop - start). This is designed for consumers that
-  // store length explicitly (e.g., ProfilerJSSourceData).
-  //
-  // Callers must handle empty sources before calling this (the function asserts
-  // non-empty length). Returns nullptr only on allocation failures. Designed
-  // for off-main-thread use where JSContext is not available for error
-  // reporting.
-  SubstringCharsResult substringChars(size_t start, size_t stop);
 
   [[nodiscard]] bool appendSubstring(JSContext* cx, js::StringBuilder& buf,
                                      size_t start, size_t stop);
@@ -930,26 +889,8 @@ class ScriptSource {
     parameterListEnd_ = parameterListEnd;
   }
 
-  bool isFunctionBody() const { return parameterListEnd_ != 0; }
+  bool isFunctionBody() { return parameterListEnd_ != 0; }
   JSLinearString* functionBodyString(JSContext* cx);
-
-  // Returns the function body substring. Unlike substringChars, this can return
-  // an empty result (nullptr with *outLength == 0) for empty function bodies.
-  // The caller doesn't need to check the length before calling.
-  SubstringCharsResult functionBodyStringChars(size_t* outLength);
-
-  // Returns true if this source should display only the function body.
-  // In case of DOM event handler like <div onclick="foo()" the JS code is
-  // wrapped into
-  //   function onclick() {foo()}
-  // We want to only return `foo()` here.
-  // But only for event handlers, for `new Function("foo()")`, we want to
-  // return:
-  //   function anonymous() {foo()}
-  bool shouldUnwrapEventHandlerBody() const {
-    return hasIntroductionType() &&
-           strcmp(introductionType(), "eventHandler") == 0 && isFunctionBody();
-  }
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               JS::ScriptSourceInfo* info) const;

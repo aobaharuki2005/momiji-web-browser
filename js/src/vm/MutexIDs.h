@@ -36,6 +36,7 @@
   _(WasmInitBuiltinThunks, 451)       \
   _(StringsCache, 500)                \
   _(FutexThread, 500)                 \
+  _(GeckoProfilerStrings, 500)        \
   _(ProtectedRegionTree, 500)         \
   _(ShellOffThreadState, 500)         \
   _(ShellStreamCacheEntryState, 500)  \
@@ -61,7 +62,6 @@
   _(SourceCompression, 500)           \
   _(GCDelayedMarkingLock, 500)        \
   _(BufferAllocator, 500)             \
-  _(GeckoProfilerScriptSources, 500)  \
                                       \
   _(SharedImmutableStringsCache, 600) \
   _(IrregexpLazyStatic, 600)          \

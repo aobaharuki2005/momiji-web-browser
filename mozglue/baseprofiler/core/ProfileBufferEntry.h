@@ -42,7 +42,6 @@ class ProfileBufferEntry {
   ProfileBufferEntry(Kind aKind, double aDouble);
   ProfileBufferEntry(Kind aKind, int64_t aInt64);
   ProfileBufferEntry(Kind aKind, uint64_t aUint64);
-  ProfileBufferEntry(Kind aKind, uint32_t aUint32);
   ProfileBufferEntry(Kind aKind, int aInt);
   ProfileBufferEntry(Kind aKind, BaseProfilerThreadId aThreadId);
 

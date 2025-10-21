@@ -83,15 +83,11 @@ add_task(async function test_profile_feature_jstracing_objtestutils() {
       // Then lookup for the matching frame, based on the string index
       const { frameTable } = contentThread;
       const FRAME_LOCATION_SLOT = frameTable.schema.location;
-      const functionDummyFrameIndexes = [];
-      frameTable.data.forEach((frame, idx) => {
-        if (frame[FRAME_LOCATION_SLOT] === functionDummyStringIndex) {
-          functionDummyFrameIndexes.push(idx);
-        }
-      });
-
+      const functionDummyFrameIndex = frameTable.data.findIndex(
+        frame => frame[FRAME_LOCATION_SLOT] == functionDummyStringIndex
+      );
       Assert.greater(
-        functionDummyFrameIndexes.length,
+        functionDummyFrameIndex,
         0,
         "Found frame for 'dummy' function call"
       );
@@ -100,17 +96,14 @@ add_task(async function test_profile_feature_jstracing_objtestutils() {
       // Each symbol's frame is visible in a stack, and the stack tree is valid
       const { stackTable } = contentThread;
       const STACK_FRAME_SLOT = stackTable.schema.frame;
-      const functionDummyStacks = [];
-      stackTable.data.forEach((stack, idx) => {
-        if (functionDummyFrameIndexes.includes(stack[STACK_FRAME_SLOT])) {
-          functionDummyStacks.push(idx);
-        }
-      });
+      const functionDummyStack = stackTable.data.findIndex(
+        stack => stack[STACK_FRAME_SLOT] == functionDummyFrameIndex
+      );
 
       const { samples } = contentThread;
       const SAMPLE_STACK_SLOT = contentThread.samples.schema.stack;
-      const functionDummySamples = samples.data.filter(sample =>
-        functionDummyStacks.includes(sample[SAMPLE_STACK_SLOT])
+      const functionDummySamples = samples.data.filter(
+        sample => sample[SAMPLE_STACK_SLOT] == functionDummyStack
       );
 
       const actualValues = [];

@@ -47,8 +47,7 @@ void* IonEntry::canonicalNativeAddrFor(void* ptr) const {
   return (void*)(((uint8_t*)nativeStartAddr()) + region.nativeOffset());
 }
 
-uint32_t IonEntry::callStackAtAddr(void* ptr, const char** labelResults,
-                                   uint32_t* sourceIdResults,
+uint32_t IonEntry::callStackAtAddr(void* ptr, const char** results,
                                    uint32_t maxResults) const {
   MOZ_ASSERT(maxResults >= 1);
 
@@ -64,9 +63,7 @@ uint32_t IonEntry::callStackAtAddr(void* ptr, const char** labelResults,
     locationIter.readNext(&scriptIdx, &pcOffset);
     MOZ_ASSERT(getStr(scriptIdx));
 
-    labelResults[count] = getStr(scriptIdx);
-    sourceIdResults[count] = getScriptSource(scriptIdx).scriptSource->id();
-    count++;
+    results[count++] = getStr(scriptIdx);
     if (count >= maxResults) {
       break;
     }
@@ -98,12 +95,10 @@ static IonEntry& IonEntryForIonIC(JSRuntime* rt, const IonICEntry* icEntry) {
 void* IonICEntry::canonicalNativeAddrFor(void* ptr) const { return ptr; }
 
 uint32_t IonICEntry::callStackAtAddr(JSRuntime* rt, void* ptr,
-                                     const char** labelResults,
-                                     uint32_t* sourceIdResults,
+                                     const char** results,
                                      uint32_t maxResults) const {
   const IonEntry& entry = IonEntryForIonIC(rt, this);
-  return entry.callStackAtAddr(rejoinAddr(), labelResults, sourceIdResults,
-                               maxResults);
+  return entry.callStackAtAddr(rejoinAddr(), results, maxResults);
 }
 
 uint64_t IonICEntry::realmID(JSRuntime* rt) const {
@@ -117,14 +112,12 @@ void* BaselineEntry::canonicalNativeAddrFor(void* ptr) const {
   return ptr;
 }
 
-uint32_t BaselineEntry::callStackAtAddr(void* ptr, const char** labelResults,
-                                        uint32_t* sourceIdResults,
+uint32_t BaselineEntry::callStackAtAddr(void* ptr, const char** results,
                                         uint32_t maxResults) const {
   MOZ_ASSERT(containsPointer(ptr));
   MOZ_ASSERT(maxResults >= 1);
 
-  labelResults[0] = str();
-  sourceIdResults[0] = scriptSource().scriptSource->id();
+  results[0] = str();
   return 1;
 }
 
@@ -133,8 +126,7 @@ void* BaselineInterpreterEntry::canonicalNativeAddrFor(void* ptr) const {
 }
 
 uint32_t BaselineInterpreterEntry::callStackAtAddr(void* ptr,
-                                                   const char** labelResults,
-                                                   uint32_t* sourceIdResults,
+                                                   const char** results,
                                                    uint32_t maxResults) const {
   MOZ_CRASH("shouldn't be called for BaselineInterpreter entries");
 }
@@ -157,13 +149,11 @@ bool RealmIndependentSharedEntry::callStackAtAddr(
 }
 
 uint32_t RealmIndependentSharedEntry::callStackAtAddr(
-    void* ptr, const char** labelResults, uint32_t* sourceIdResults,
-    uint32_t maxResults) const {
+    void* ptr, const char** results, uint32_t maxResults) const {
   MOZ_ASSERT(containsPointer(ptr));
   MOZ_ASSERT(maxResults >= 1);
 
-  labelResults[0] = str();
-  sourceIdResults[0] = 0;
+  results[0] = str();
   return 1;
 }
 
@@ -339,28 +329,22 @@ bool JitcodeGlobalEntry::isJitcodeMarkedFromAnyThread(JSRuntime* rt) {
 }
 
 uint32_t JitcodeGlobalEntry::callStackAtAddr(JSRuntime* rt, void* ptr,
-                                             const char** labelResults,
-                                             uint32_t* sourceIdResults,
+                                             const char** results,
                                              uint32_t maxResults) const {
   switch (kind()) {
     case Kind::Ion:
-      return asIon().callStackAtAddr(ptr, labelResults, sourceIdResults,
-                                     maxResults);
+      return asIon().callStackAtAddr(ptr, results, maxResults);
     case Kind::IonIC:
-      return asIonIC().callStackAtAddr(rt, ptr, labelResults, sourceIdResults,
-                                       maxResults);
+      return asIonIC().callStackAtAddr(rt, ptr, results, maxResults);
     case Kind::Baseline:
-      return asBaseline().callStackAtAddr(ptr, labelResults, sourceIdResults,
-                                          maxResults);
+      return asBaseline().callStackAtAddr(ptr, results, maxResults);
     case Kind::BaselineInterpreter:
-      return asBaselineInterpreter().callStackAtAddr(
-          ptr, labelResults, sourceIdResults, maxResults);
+      return asBaselineInterpreter().callStackAtAddr(ptr, results, maxResults);
     case Kind::Dummy:
-      return asDummy().callStackAtAddr(rt, ptr, labelResults, sourceIdResults,
-                                       maxResults);
+      return asDummy().callStackAtAddr(rt, ptr, results, maxResults);
     case Kind::RealmIndependentShared:
-      return asRealmIndependentShared().callStackAtAddr(
-          ptr, labelResults, sourceIdResults, maxResults);
+      return asRealmIndependentShared().callStackAtAddr(ptr, results,
+                                                        maxResults);
   }
   MOZ_CRASH("Invalid kind");
 }
@@ -973,13 +957,12 @@ bool JitcodeIonTable::WriteIonTable(CompactBufferWriter& writer,
 JS::ProfiledFrameHandle::ProfiledFrameHandle(JSRuntime* rt,
                                              js::jit::JitcodeGlobalEntry& entry,
                                              void* addr, const char* label,
-                                             uint32_t sourceId, uint32_t depth)
+                                             uint32_t depth)
     : rt_(rt),
       entry_(entry),
       addr_(addr),
       canonicalAddr_(nullptr),
       label_(label),
-      sourceId_(sourceId),
       depth_(depth) {
   if (!canonicalAddr_) {
     canonicalAddr_ = entry_.canonicalNativeAddrFor(rt_, addr_);
@@ -1004,10 +987,6 @@ JS_PUBLIC_API uint64_t JS::ProfiledFrameHandle::realmID() const {
   return entry_.realmID(rt_);
 }
 
-JS_PUBLIC_API uint32_t JS::ProfiledFrameHandle::sourceId() const {
-  return sourceId_;
-}
-
 JS_PUBLIC_API JS::ProfiledFrameRange JS::GetProfiledFrames(JSContext* cx,
                                                            void* addr) {
   JSRuntime* rt = cx->runtime();
@@ -1018,8 +997,8 @@ JS_PUBLIC_API JS::ProfiledFrameRange JS::GetProfiledFrames(JSContext* cx,
   ProfiledFrameRange result(rt, addr, entry);
 
   if (entry) {
-    result.depth_ = entry->callStackAtAddr(
-        rt, addr, result.labels_, result.sourceIds_, std::size(result.labels_));
+    result.depth_ = entry->callStackAtAddr(rt, addr, result.labels_,
+                                           std::size(result.labels_));
   }
   return result;
 }
@@ -1029,6 +1008,5 @@ JS::ProfiledFrameHandle JS::ProfiledFrameRange::Iter::operator*() const {
   // and the depth we need to pass to ProfiledFrameHandle goes down.
   uint32_t depth = range_.depth_ - 1 - index_;
   return ProfiledFrameHandle(range_.rt_, *range_.entry_, range_.addr_,
-                             range_.labels_[depth], range_.sourceIds_[depth],
-                             depth);
+                             range_.labels_[depth], depth);
 }

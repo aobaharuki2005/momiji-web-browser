@@ -272,7 +272,7 @@ class JSJitProfilingFrameIterator {
 
   const char* baselineInterpreterLabel() const;
   void baselineInterpreterScriptPC(JSScript** script, jsbytecode** pc,
-                                   uint64_t* realmID, uint32_t* sourceId) const;
+                                   uint64_t* realmID) const;
 
   void* fp() const {
     MOZ_ASSERT(!done());

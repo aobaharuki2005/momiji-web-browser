@@ -13,12 +13,9 @@
 #include "mozilla/PowerOfTwo.h"
 #include "mozilla/ProfileBufferChunkManagerSingle.h"
 #include "mozilla/ProfileChunkedBuffer.h"
-#include "nsTHashMap.h"
 
 class ProcessStreamingContext;
 class RunningTimes;
-
-struct ProfilerJSSourceData;
 
 // Class storing most profiling data in a ProfileChunkedBuffer.
 //
@@ -46,8 +43,7 @@ class ProfileBuffer final {
 
   void CollectCodeLocation(
       const char* aLabel, const char* aStr, uint32_t aFrameFlags,
-      uint64_t aInnerWindowID, uint32_t aSourceId,
-      const mozilla::Maybe<uint32_t>& aLineNumber,
+      uint64_t aInnerWindowID, const mozilla::Maybe<uint32_t>& aLineNumber,
       const mozilla::Maybe<uint32_t>& aColumnNumber,
       const mozilla::Maybe<JS::ProfilingCategoryPair>& aCategoryPair);
 
@@ -59,9 +55,7 @@ class ProfileBuffer final {
   // for the given thread.
   void AddJITInfoForRange(uint64_t aRangeStart, ProfilerThreadId aThreadId,
                           JSContext* aContext, JITFrameInfo& aJITFrameInfo,
-                          mozilla::ProgressLogger aProgressLogger,
-                          const nsTHashMap<SourceId, IndexIntoSourceTable>*
-                              aSourceIdToIndexMap = nullptr) const;
+                          mozilla::ProgressLogger aProgressLogger) const;
 
   // Stream JSON for samples in the buffer to aWriter, using the supplied
   // UniqueStacks object.
@@ -101,12 +95,6 @@ class ProfileBuffer final {
                             const mozilla::TimeStamp& aProcessStartTime,
                             double aSinceTime,
                             mozilla::ProgressLogger aProgressLogger) const;
-
-  // Stream JavaScript source table to JSON and return mapping from sourceId
-  // to index into source table.
-  nsTHashMap<SourceId, IndexIntoSourceTable> StreamSourceTableToJSON(
-      SpliceableJSONWriter& aWriter,
-      const nsTArray<mozilla::JSSourceEntry>& aJSSourceEntries) const;
 
   // Find (via |aLastSample|) the most recent sample for the thread denoted by
   // |aThreadId| and clone it, patching in the current time as appropriate.

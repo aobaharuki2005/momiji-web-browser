@@ -160,13 +160,8 @@ declare namespace MockedExports {
     arch: string;
   }
 
-  type JSSources = Partial<{
-    [sourceUuid: string]: string;
-  }>;
-
   interface ProfileGenerationAdditionalInformation {
     sharedLibraries: SharedLibrary[];
-    jsSources: JSSources;
   }
 
   interface ProfileAndAdditionalInformation {

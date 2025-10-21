@@ -20,10 +20,8 @@
 #include "js/AllocPolicy.h"
 #include "js/HashTable.h"
 #include "js/ProfilingCategory.h"
-#include "js/ProfilingSources.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
-#include "threading/ExclusiveData.h"
 #include "threading/ProtectedData.h"
 
 /*
@@ -114,7 +112,6 @@ namespace js {
 
 class BaseScript;
 class GeckoProfilerThread;
-class ScriptSource;
 
 // The `ProfileStringMap` weakly holds its `BaseScript*` keys and owns its
 // string values. Entries are removed when the `BaseScript` is finalized; see
@@ -122,14 +119,9 @@ class ScriptSource;
 using ProfileStringMap = HashMap<BaseScript*, JS::UniqueChars,
                                  DefaultHasher<BaseScript*>, SystemAllocPolicy>;
 
-using ProfilerScriptSourceSet =
-    HashSet<RefPtr<ScriptSource>, PointerHasher<ScriptSource*>,
-            SystemAllocPolicy>;
-
 class GeckoProfilerRuntime {
   JSRuntime* rt;
   MainThreadData<ProfileStringMap> strings_;
-  RWExclusiveData<ProfilerScriptSourceSet> scriptSources_;
   bool slowAssertions;
   uint32_t enabled_;
   void (*eventMarker_)(mozilla::MarkerCategory, const char*, const char*);
@@ -186,18 +178,6 @@ class GeckoProfilerRuntime {
   /* meant to be used for testing, not recommended to call in normal code */
   size_t stringsCount();
   void stringsReset();
-
-  bool insertScriptSource(ScriptSource* scriptSource) {
-    MOZ_ASSERT(scriptSource);
-    auto guard = scriptSources_.writeLock();
-    if (!enabled_) {
-      return true;
-    }
-
-    return guard->put(scriptSource);
-  }
-
-  js::ProfilerJSSources getProfilerScriptSources();
 
   const uint32_t* addressOfEnabled() const { return &enabled_; }
 

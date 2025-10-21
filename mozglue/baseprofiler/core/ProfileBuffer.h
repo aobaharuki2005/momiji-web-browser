@@ -42,7 +42,6 @@ class ProfileBuffer final {
 
   void CollectCodeLocation(const char* aLabel, const char* aStr,
                            uint32_t aFrameFlags, uint64_t aInnerWindowID,
-                           uint32_t aSourceId,
                            const Maybe<uint32_t>& aLineNumber,
                            const Maybe<uint32_t>& aColumnNumber,
                            const Maybe<ProfilingCategoryPair>& aCategoryPair);

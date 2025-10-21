@@ -195,10 +195,9 @@ class JitcodeGlobalEntry : public JitCodeRange {
   void* canonicalNativeAddrFor(JSRuntime* rt, void* ptr) const;
 
   // Read the inline call stack at a given point in the native code and append
-  // into the given results buffer. Innermost script will be appended first, and
-  // outermost appended last.
-  uint32_t callStackAtAddr(JSRuntime* rt, void* ptr, const char** labelResults,
-                           uint32_t* sourceIdResults,
+  // into the given results buffer.  Innermost (script,pc) pair will be appended
+  // first, and outermost appended last.
+  uint32_t callStackAtAddr(JSRuntime* rt, void* ptr, const char** results,
                            uint32_t maxResults) const;
 };
 
@@ -286,8 +285,7 @@ class IonEntry : public JitcodeGlobalEntry {
 
   void* canonicalNativeAddrFor(void* ptr) const;
 
-  uint32_t callStackAtAddr(void* ptr, const char** labelResults,
-                           uint32_t* sourceIdResults,
+  uint32_t callStackAtAddr(void* ptr, const char** results,
                            uint32_t maxResults) const;
 
   uint64_t realmID() const { return realmId_; }
@@ -312,8 +310,7 @@ class IonICEntry : public JitcodeGlobalEntry {
 
   void* canonicalNativeAddrFor(void* ptr) const;
 
-  uint32_t callStackAtAddr(JSRuntime* rt, void* ptr, const char** labelResults,
-                           uint32_t* sourceIdResults,
+  uint32_t callStackAtAddr(JSRuntime* rt, void* ptr, const char** results,
                            uint32_t maxResults) const;
 
   uint64_t realmID(JSRuntime* rt) const;
@@ -343,8 +340,7 @@ class BaselineEntry : public JitcodeGlobalEntry {
 
   void* canonicalNativeAddrFor(void* ptr) const;
 
-  uint32_t callStackAtAddr(void* ptr, const char** labelResults,
-                           uint32_t* sourceIdResults,
+  uint32_t callStackAtAddr(void* ptr, const char** results,
                            uint32_t maxResults) const;
 
   uint64_t realmID() const { return realmId_; }
@@ -371,8 +367,7 @@ class RealmIndependentSharedEntry : public JitcodeGlobalEntry {
   [[nodiscard]] bool callStackAtAddr(void* ptr, BytecodeLocationVector& results,
                                      uint32_t* depth) const;
 
-  uint32_t callStackAtAddr(void* ptr, const char** labelResults,
-                           uint32_t* sourceIdResults,
+  uint32_t callStackAtAddr(void* ptr, const char** results,
                            uint32_t maxResults) const;
 
   uint64_t realmID() const;
@@ -387,8 +382,7 @@ class BaselineInterpreterEntry : public JitcodeGlobalEntry {
 
   void* canonicalNativeAddrFor(void* ptr) const;
 
-  uint32_t callStackAtAddr(void* ptr, const char** labelResults,
-                           uint32_t* sourceIdResults,
+  uint32_t callStackAtAddr(void* ptr, const char** results,
                            uint32_t maxResults) const;
 
   uint64_t realmID() const;
@@ -406,8 +400,7 @@ class DummyEntry : public JitcodeGlobalEntry {
     return nullptr;
   }
 
-  uint32_t callStackAtAddr(JSRuntime* rt, void* ptr, const char** labelResults,
-                           uint32_t* sourceIdResults,
+  uint32_t callStackAtAddr(JSRuntime* rt, void* ptr, const char** results,
                            uint32_t maxResults) const {
     return 0;
   }

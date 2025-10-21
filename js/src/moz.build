@@ -180,7 +180,6 @@ EXPORTS.js += [
     "../public/Printf.h",
     "../public/ProfilingCategory.h",
     "../public/ProfilingFrameIterator.h",
-    "../public/ProfilingSources.h",
     "../public/ProfilingStack.h",
     "../public/Promise.h",
     "../public/PropertyAndElement.h",

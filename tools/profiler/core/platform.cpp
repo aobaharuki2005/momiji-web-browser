@@ -49,9 +49,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/Perfetto.h"
-#include "nsID.h"
-#include "nsIDUtils.h"
-#include "nsString.h"
 #include "nsCExternalHandlerService.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -1600,44 +1597,6 @@ class ActivePS {
     return array;
   }
 
-  // Collect JS sources from the main thread, since script source storage is
-  // shared between all threads.
-  static nsTArray<mozilla::JSSourceEntry> GatherJSSources(PSLockRef aLock) {
-    nsTArray<mozilla::JSSourceEntry> jsSourceEntries;
-    if (!ProfilerFeature::HasJSSources(ActivePS::Features(aLock))) {
-      return jsSourceEntries;
-    }
-
-    ThreadRegistry::LockedRegistry lockedRegistry;
-    ActivePS::ProfiledThreadList threads =
-        ActivePS::ProfiledThreads(lockedRegistry, aLock);
-
-    // Get the JS context of the main thread. We don't need to get the
-    // JSContext of others because the script source storage is shared between
-    // threads.
-    auto* mainThread =
-        std::find_if(threads.begin(), threads.end(), [](const auto& thread) {
-          return thread.mProfiledThreadData->Info().IsMainThread();
-        });
-
-    if (mainThread == threads.end() || !mainThread->mJSContext) {
-      return jsSourceEntries;
-    }
-    JSContext* jsContext = mainThread->mJSContext;
-
-    js::ProfilerJSSources threadSources =
-        js::GetProfilerScriptSources(JS_GetRuntime(jsContext));
-
-    // Generate UUIDs and build mappings for each source
-    for (ProfilerJSSourceData& sourceData : threadSources) {
-      // Generate UUID for this source and store it in the global array.
-      jsSourceEntries.AppendElement(JSSourceEntry(
-          NSID_TrimBracketsASCII(nsID::GenerateUUID()), std::move(sourceData)));
-    }
-
-    return jsSourceEntries;
-  }
-
   static ProfiledThreadData* AddLiveProfiledThread(
       PSLockRef, UniquePtr<ProfiledThreadData>&& aProfiledThreadData) {
     MOZ_ASSERT(sInstance);
@@ -2486,7 +2445,7 @@ static void MergeStacks(
             uint32_t(js::ProfilingStackFrame::Flags::IS_BLINTERP_FRAME);
         stackFrame.initJsFrame<JS::ProfilingCategoryPair::JS_BaselineInterpret,
                                ExtraFlags>("", jsFrame.label, script, pc,
-                                           jsFrame.realmID, jsFrame.sourceId);
+                                           jsFrame.realmID);
         aCollector.CollectProfilingStackFrame(stackFrame);
       } else {
         MOZ_ASSERT(jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
@@ -3671,7 +3630,7 @@ static void CollectJavaThreadProfileData(
       nsCString frameNameString = frameName->ToCString();
 
       auto categoryPair = InferJavaCategory(frameNameString);
-      aProfileBuffer.CollectCodeLocation("", frameNameString.get(), 0, 0, 0,
+      aProfileBuffer.CollectCodeLocation("", frameNameString.get(), 0, 0,
                                          Nothing(), Nothing(),
                                          Some(categoryPair));
     }
@@ -3869,19 +3828,6 @@ locked_profiler_stream_json_for_this_process(
   }
   SLOW_DOWN_FOR_TESTING();
 
-  // Collect JS sources from the main thread, since script source storage is
-  // shared between all threads.
-  nsTArray<mozilla::JSSourceEntry> jsSourceEntries =
-      ActivePS::GatherJSSources(aLock);
-
-  // If there are sources, stream the sources table that is shared between the
-  // threads, and get the UUID to index mappings needed for frame serialization.
-  Maybe<nsTHashMap<SourceId, IndexIntoSourceTable>> sourceIdToIndexMap;
-  if (!jsSourceEntries.IsEmpty()) {
-    sourceIdToIndexMap.emplace(
-        buffer.StreamSourceTableToJSON(aWriter, jsSourceEntries));
-  }
-
   // Lists the samples for each thread profile
   aWriter.StartArrayProperty("threads");
   {
@@ -3909,8 +3855,7 @@ locked_profiler_stream_json_for_this_process(
       MOZ_RELEASE_ASSERT(thread.mProfiledThreadData);
       processStreamingContext.AddThreadStreamingContext(
           *thread.mProfiledThreadData, buffer, thread.mJSContext, aService,
-          std::move(progressLogger),
-          sourceIdToIndexMap.isSome() ? sourceIdToIndexMap.ptr() : nullptr);
+          std::move(progressLogger));
       if (aWriter.Failed()) {
         return Err(ProfilerError::JsonGenerationFailed);
       }
@@ -4032,8 +3977,7 @@ locked_profiler_stream_json_for_this_process(
   }
 #endif  // DEBUG
 
-  return ProfileGenerationAdditionalInformation{std::move(sharedLibraryInfo),
-                                                std::move(jsSourceEntries)};
+  return ProfileGenerationAdditionalInformation{std::move(sharedLibraryInfo)};
 }
 
 // Keep this internal function non-static, so it may be used by tests.
@@ -6308,42 +6252,37 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
   ThreadRegistration::UnregisterThread();
 }
 
-static ProfilerResult<ProfileGenerationAdditionalInformation>
-WriteProfileToJSONWriter(SpliceableChunkedJSONWriter& aWriter,
-                         double aSinceTime, bool aIsShuttingDown,
-                         ProfilerCodeAddressService* aService,
-                         mozilla::ProgressLogger aProgressLogger) {
+static bool WriteProfileToJSONWriter(SpliceableChunkedJSONWriter& aWriter,
+                                     double aSinceTime, bool aIsShuttingDown,
+                                     ProfilerCodeAddressService* aService,
+                                     mozilla::ProgressLogger aProgressLogger) {
   LOG("WriteProfileToJSONWriter");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   aWriter.Start();
-  auto rv = profiler_stream_json_for_this_process(
-      aWriter, aSinceTime, aIsShuttingDown, aService,
-      aProgressLogger.CreateSubLoggerFromTo(
-          0_pc,
-          "WriteProfileToJSONWriter: "
-          "profiler_stream_json_for_this_process started",
-          100_pc,
-          "WriteProfileToJSONWriter: "
-          "profiler_stream_json_for_this_process done"));
+  {
+    auto rv = profiler_stream_json_for_this_process(
+        aWriter, aSinceTime, aIsShuttingDown, aService,
+        aProgressLogger.CreateSubLoggerFromTo(
+            0_pc,
+            "WriteProfileToJSONWriter: "
+            "profiler_stream_json_for_this_process started",
+            100_pc,
+            "WriteProfileToJSONWriter: "
+            "profiler_stream_json_for_this_process done"));
 
-  if (rv.isErr()) {
-    return rv;
+    if (rv.isErr()) {
+      return false;
+    }
+
+    // Don't include profiles from other processes because this is a
+    // synchronous function.
+    aWriter.StartArrayProperty("processes");
+    aWriter.EndArray();
   }
-
-  // Don't include profiles from other processes because this is a
-  // synchronous function.
-  aWriter.StartArrayProperty("processes");
-  aWriter.EndArray();
-
   aWriter.End();
-
-  if (aWriter.Failed()) {
-    return Err(ProfilerError::JsonGenerationFailed);
-  }
-
-  return rv;
+  return !aWriter.Failed();
 }
 
 void profiler_set_process_name(const nsACString& aProcessName,
@@ -6366,16 +6305,14 @@ UniquePtr<char[]> profiler_get_profile(double aSinceTime,
 
   FailureLatchSource failureLatch;
   SpliceableChunkedJSONWriter b{failureLatch};
-  if (WriteProfileToJSONWriter(b, aSinceTime, aIsShuttingDown, service.get(),
-                               ProgressLogger{})
-          .isErr()) {
+  if (!WriteProfileToJSONWriter(b, aSinceTime, aIsShuttingDown, service.get(),
+                                ProgressLogger{})) {
     return nullptr;
   }
   return b.ChunkedWriteFunc().CopyData();
 }
 
-[[nodiscard]] ProfilerResult<ProfileGenerationAdditionalInformation>
-profiler_get_profile_json(
+[[nodiscard]] bool profiler_get_profile_json(
     SpliceableChunkedJSONWriter& aSpliceableChunkedJSONWriter,
     double aSinceTime, bool aIsShuttingDown,
     mozilla::ProgressLogger aProgressLogger) {
