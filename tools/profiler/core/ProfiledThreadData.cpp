@@ -128,7 +128,8 @@ ProfiledThreadData::PrepareUniqueStacks(
         *mBufferPositionWhenReceivedJSContext, mThreadInfo.ThreadId(), aCx,
         jitFrameInfo,
         aProgressLogger.CreateSubLoggerTo("Adding JIT info...", 90_pc,
-                                          "Added JIT info"));
+                                          "Added JIT info"),
+        aSourceIdToIndexMap);
   } else {
     aProgressLogger.SetLocalProgress(90_pc, "No JIT info");
   }

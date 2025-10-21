@@ -764,9 +764,10 @@ uint32_t JS::ProfilingFrameIterator::extractStack(Frame* frames,
 
   // Extract the stack for the entry.  Assume maximum inlining depth is <64
   const char* labels[64];
+  uint32_t sourceIds[64];
   uint32_t depth = entry->callStackAtAddr(cx_->runtime(),
                                           jsJitIter().resumePCinCurrentFrame(),
-                                          labels, std::size(labels));
+                                          labels, sourceIds, std::size(labels));
   MOZ_ASSERT(depth < std::size(labels));
   for (uint32_t i = 0; i < depth; i++) {
     if (offset + i >= end) {
@@ -774,6 +775,7 @@ uint32_t JS::ProfilingFrameIterator::extractStack(Frame* frames,
     }
     frames[offset + i] = physicalFrame.value();
     frames[offset + i].label = labels[i];
+    frames[offset + i].sourceId = sourceIds[i];
   }
 
   return depth;
