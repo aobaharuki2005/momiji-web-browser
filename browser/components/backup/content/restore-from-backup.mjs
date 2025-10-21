@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html, styleMap } from "chrome://global/content/vendor/lit.all.mjs";
+import {
+  html,
+  ifDefined,
+  styleMap,
+} from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { ERRORS } from "chrome://browser/content/backup/backup-constants.mjs";
 import { getErrorL10nId } from "chrome://browser/content/backup/backup-errors.mjs";
@@ -55,7 +59,7 @@ export default class RestoreFromBackup extends MozLitElement {
       scheduledBackupsEnabled: false,
       lastBackupDate: null,
       lastBackupFileName: "",
-      supportBaseLink: "",
+      supportBaseLink: "https://support.mozilla.org/",
       backupInProgress: false,
       recoveryInProgress: false,
       recoveryErrorCode: ERRORS.NONE,
@@ -208,6 +212,64 @@ export default class RestoreFromBackup extends MozLitElement {
     }
   }
 
+  /**
+   * Constructs a support URL with UTM parameters for use
+   * when embedded in about:welcome
+   *
+   * @param {string} supportPage - The support page slug
+   * @returns {string} The full support URL including UTM params
+   */
+
+  getSupportURLWithUTM(supportPage) {
+    let supportURL = new URL(
+      supportPage,
+      this.backupServiceState.supportBaseLink
+    );
+    supportURL.searchParams.set("utm_medium", "firefox-desktop");
+    supportURL.searchParams.set("utm_source", "npo");
+    supportURL.searchParams.set("utm_campaign", "fx-backup-restore");
+    supportURL.searchParams.set("utm_content", "restore-error");
+    return supportURL.href;
+  }
+
+  /**
+   * Returns a support link anchor element, either with UTM params for use in
+   * about:welcome, or falling back to moz-support-link otherwise
+   *
+   * @param {object} options - Link configuration options
+   * @param {string} options.id - The element id
+   * @param {string} options.l10nId - The fluent l10n id
+   * @param {string} options.l10nName - The fluent l10n name
+   * @param {string} options.supportPage - The support page slug
+   * @returns {TemplateResult} The link template
+   */
+
+  getSupportLinkAnchor({
+    id,
+    l10nId,
+    l10nName,
+    supportPage = "firefox-backup",
+  }) {
+    if (this.aboutWelcomeEmbedded) {
+      return html`<a
+        id=${id}
+        target="_blank"
+        href=${this.getSupportURLWithUTM(supportPage)}
+        data-l10n-id=${ifDefined(l10nId)}
+        data-l10n-name=${ifDefined(l10nName)}
+      ></a>`;
+    }
+
+    return html`<a
+      id=${id}
+      slot="support-link"
+      is="moz-support-link"
+      support-page=${supportPage}
+      data-l10n-id=${ifDefined(l10nId)}
+      data-l10n-name=${ifDefined(l10nName)}
+    ></a>`;
+  }
+
   applyContentCustomizations() {
     if (this.aboutWelcomeEmbedded) {
       this.style.setProperty("--label-font-weight", "600");
@@ -241,13 +303,10 @@ export default class RestoreFromBackup extends MozLitElement {
           </div>
 
           ${!this.backupServiceState?.backupFileInfo
-            ? html`<a
-                id="restore-from-backup-no-backup-file-link"
-                slot="support-link"
-                is="moz-support-link"
-                support-page="firefox-backup"
-                data-l10n-id="restore-from-backup-no-backup-file-link"
-              ></a>`
+            ? this.getSupportLinkAnchor({
+                id: "restore-from-backup-no-backup-file-link",
+                l10nId: "restore-from-backup-no-backup-file-link",
+              })
             : null}
           ${this.backupServiceState?.backupFileInfo
             ? html`<p
@@ -331,13 +390,10 @@ export default class RestoreFromBackup extends MozLitElement {
               class="field-error"
               data-l10n-id="backup-service-error-incorrect-password"
             >
-              <a
-                id="backup-incorrect-password-support-link"
-                slot="support-link"
-                is="moz-support-link"
-                support-page="firefox-backup"
-                data-l10n-name="incorrect-password-support-link"
-              ></a>
+              ${this.getSupportLinkAnchor({
+                id: "backup-incorrect-password-support-link",
+                l10nName: "incorrect-password-support-link",
+              })}
             </span>
           `
         : html`<label
