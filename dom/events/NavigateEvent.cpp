@@ -19,9 +19,6 @@
 
 extern mozilla::LazyLogModule gNavigationAPILog;
 
-#define LOG_FMTI(format, ...) \
-  MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Info, format, ##__VA_ARGS__);
-
 #define LOG_FMT(format, ...) \
   MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug, format, ##__VA_ARGS__);
 
@@ -139,8 +136,6 @@ static void MaybeReportWarningToConsole(Document* aDocument,
 // https://html.spec.whatwg.org/#dom-navigateevent-intercept
 void NavigateEvent::Intercept(const NavigationInterceptOptions& aOptions,
                               ErrorResult& aRv) {
-  LOG_FMTI("Called NavigateEvent.intercept()");
-
   // Step 1
   if (PerformSharedChecks(aRv); aRv.Failed()) {
     return;
@@ -202,8 +197,6 @@ void NavigateEvent::Intercept(const NavigationInterceptOptions& aOptions,
 
 // https://html.spec.whatwg.org/#dom-navigateevent-scroll
 void NavigateEvent::Scroll(ErrorResult& aRv) {
-  LOG_FMTI("Called NavigateEvent.scroll()");
-
   // Step 1
   if (PerformSharedChecks(aRv); aRv.Failed()) {
     return;
@@ -481,5 +474,4 @@ void NavigateEvent::ProcessScrollBehavior() {
 }
 }  // namespace mozilla::dom
 
-#undef LOG_FMTI
 #undef LOG_FMT
