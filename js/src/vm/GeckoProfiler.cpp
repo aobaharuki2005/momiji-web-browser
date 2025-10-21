@@ -20,6 +20,7 @@
 #include "vm/FrameIter.h"  // js::OnlyJSJitFrameIter
 #include "vm/JitActivation.h"
 #include "vm/JSScript.h"
+#include "vm/MutexIDs.h"
 
 #include "gc/Marking-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
@@ -31,6 +32,7 @@ GeckoProfilerThread::GeckoProfilerThread()
 
 GeckoProfilerRuntime::GeckoProfilerRuntime(JSRuntime* rt)
     : rt(rt),
+      scriptSources_(mutexid::GeckoProfilerScriptSources),
       slowAssertions(false),
       enabled_(false),
       eventMarker_(nullptr),
@@ -121,6 +123,8 @@ void GeckoProfilerRuntime::enable(bool enabled) {
   }
 
   enabled_ = enabled;
+
+  scriptSources_.writeLock()->clear();
 
   /* Toggle Gecko Profiler-related jumps on baseline jitcode.
    * The call to |ReleaseAllJITCode| above will release most baseline jitcode,
@@ -252,6 +256,12 @@ bool GeckoProfilerThread::enter(JSContext* cx, JSScript* script) {
   const char* dynamicString =
       cx->runtime()->geckoProfiler().profileString(cx, script);
   if (dynamicString == nullptr) {
+    return false;
+  }
+
+  if (!cx->runtime()->geckoProfiler().insertScriptSource(
+          script->scriptSource())) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
