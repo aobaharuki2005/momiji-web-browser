@@ -1069,9 +1069,10 @@ class LocalHostPermissionPrompt extends PermissionPromptForRequest {
   }
 
   get message() {
-    return lazy.gBrowserBundle.formatStringFromName("localhost.allowWithSite", [
-      "<>",
-    ]);
+    return lazy.gBrowserBundle.formatStringFromName(
+      "localhost.allowWithSite2",
+      ["<>"]
+    );
   }
 
   get promptActions() {
@@ -1294,7 +1295,7 @@ class LocalNetworkPermissionPrompt extends PermissionPromptForRequest {
 
   get message() {
     return lazy.gBrowserBundle.formatStringFromName(
-      "localNetwork.allowWithSite",
+      "localNetwork.allowWithSite2",
       ["<>"]
     );
   }
