@@ -56,6 +56,14 @@ struct ParamTraits<SharedLibraryInfo> {
   static bool Read(MessageReader* aReader, paramType* aResult);
 };
 
+template <>
+struct ParamTraits<ProfilerJSSourceData> {
+  typedef ProfilerJSSourceData paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam);
+  static bool Read(MessageReader* aReader, paramType* aResult);
+};
+
 void IPC::ParamTraits<SharedLibrary>::Write(MessageWriter* aWriter,
                                             const paramType& aParam) {
   WriteParam(aWriter, aParam.mStart);
@@ -95,6 +103,141 @@ void IPC::ParamTraits<SharedLibraryInfo>::Write(MessageWriter* aWriter,
 bool IPC::ParamTraits<SharedLibraryInfo>::Read(MessageReader* aReader,
                                                paramType* aResult) {
   return ReadParam(aReader, &aResult->mEntries);
+}
+
+// Type tags for ProfilerJSSourceData IPC serialization
+constexpr uint8_t kSourceTextUTF16Tag = 0;
+constexpr uint8_t kSourceTextUTF8Tag = 1;
+constexpr uint8_t kRetrievableFileTag = 2;
+constexpr uint8_t kUnavailableTag = 3;
+
+void IPC::ParamTraits<ProfilerJSSourceData>::Write(MessageWriter* aWriter,
+                                                   const paramType& aParam) {
+  // Write sourceId and filePath first
+  WriteParam(aWriter, aParam.sourceId());
+  WriteParam(aWriter, aParam.filePathLength());
+  if (aParam.filePathLength() > 0) {
+    aWriter->WriteBytes(aParam.filePath(),
+                        aParam.filePathLength() * sizeof(char));
+  }
+
+  // Then write the specific data type
+  aParam.data().match(
+      [&](const ProfilerJSSourceData::SourceTextUTF16& srcText) {
+        WriteParam(aWriter, kSourceTextUTF16Tag);
+        WriteParam(aWriter, srcText.length());
+        if (srcText.length() > 0) {
+          aWriter->WriteBytes(srcText.chars().get(),
+                              srcText.length() * sizeof(char16_t));
+        }
+      },
+      [&](const ProfilerJSSourceData::SourceTextUTF8& srcText) {
+        WriteParam(aWriter, kSourceTextUTF8Tag);
+        WriteParam(aWriter, srcText.length());
+        if (srcText.length() > 0) {
+          aWriter->WriteBytes(srcText.chars().get(),
+                              srcText.length() * sizeof(char));
+        }
+      },
+      [&](const ProfilerJSSourceData::RetrievableFile&) {
+        WriteParam(aWriter, kRetrievableFileTag);
+      },
+      [&](const ProfilerJSSourceData::Unavailable&) {
+        WriteParam(aWriter, kUnavailableTag);
+      });
+}
+
+bool IPC::ParamTraits<ProfilerJSSourceData>::Read(MessageReader* aReader,
+                                                  paramType* aResult) {
+  // Read sourceId and filePath first
+  uint32_t sourceId;
+  size_t pathLength;
+  if (!ReadParam(aReader, &sourceId) || !ReadParam(aReader, &pathLength)) {
+    return false;
+  }
+
+  // Read filePath if present
+  JS::UniqueChars filePath;
+  if (pathLength > 0) {
+    char* chars =
+        static_cast<char*>(js_malloc((pathLength + 1) * sizeof(char)));
+    if (!chars || !aReader->ReadBytesInto(chars, pathLength * sizeof(char))) {
+      js_free(chars);
+      return false;
+    }
+    chars[pathLength] = '\0';
+    filePath.reset(chars);
+  }
+
+  // Then read the specific data type
+  uint8_t typeTag;
+  if (!ReadParam(aReader, &typeTag)) {
+    return false;
+  }
+
+  switch (typeTag) {
+    case kSourceTextUTF16Tag: {
+      size_t length;
+      if (!ReadParam(aReader, &length)) {
+        return false;
+      }
+      if (length > 0) {
+        // Allocate one extra element for null terminator
+        char16_t* chars =
+            static_cast<char16_t*>(js_malloc((length + 1) * sizeof(char16_t)));
+        if (!chars ||
+            !aReader->ReadBytesInto(chars, length * sizeof(char16_t))) {
+          js_free(chars);
+          return false;
+        }
+        // Ensure null termination
+        chars[length] = u'\0';
+        *aResult =
+            ProfilerJSSourceData(sourceId, JS::UniqueTwoByteChars(chars),
+                                 length, std::move(filePath), pathLength);
+      } else {
+        *aResult = ProfilerJSSourceData(sourceId, JS::UniqueTwoByteChars(), 0,
+                                        std::move(filePath), pathLength);
+      }
+      return true;
+    }
+    case kSourceTextUTF8Tag: {
+      size_t length;
+      if (!ReadParam(aReader, &length)) {
+        return false;
+      }
+      if (length > 0) {
+        // Allocate one extra byte for null terminator
+        char* chars =
+            static_cast<char*>(js_malloc((length + 1) * sizeof(char)));
+        if (!chars || !aReader->ReadBytesInto(chars, length * sizeof(char))) {
+          js_free(chars);
+          return false;
+        }
+        // Ensure null termination
+        chars[length] = '\0';
+        *aResult =
+            ProfilerJSSourceData(sourceId, JS::UniqueChars(chars), length,
+                                 std::move(filePath), pathLength);
+      } else {
+        *aResult = ProfilerJSSourceData(sourceId, JS::UniqueChars(), 0,
+                                        std::move(filePath), pathLength);
+      }
+      return true;
+    }
+    case kRetrievableFileTag: {
+      *aResult = ProfilerJSSourceData::CreateRetrievableFile(
+          sourceId, std::move(filePath), pathLength);
+      return true;
+    }
+    case kUnavailableTag: {
+      *aResult =
+          ProfilerJSSourceData(sourceId, std::move(filePath), pathLength);
+      return true;
+    }
+    default:
+      return false;
+  }
 }
 
 void IPC::ParamTraits<mozilla::ProfileGenerationAdditionalInformation>::Write(
