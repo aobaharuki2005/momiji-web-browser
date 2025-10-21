@@ -67,7 +67,7 @@ static GeckoTextMarkerRange GetTextMarkerRangeFromRange(mozAccessible* aObj,
   return GeckoTextMarkerRange(startMarker, endMarker);
 }
 
-@implementation mozTextAccessible
+@implementation mozAccessible (TextField)
 
 - (NSNumber*)moxInsertionPointLineNumber {
   MOZ_ASSERT(mGeckoAccessible);
@@ -110,15 +110,6 @@ static GeckoTextMarkerRange GetTextMarkerRangeFromRange(mozAccessible* aObj,
   // XXX this won't work with Textarea and such as we actually don't give
   // the visible character range.
   return [NSValue valueWithRange:NSMakeRange(0, [[self moxValue] length])];
-}
-
-- (BOOL)moxBlockSelector:(SEL)selector {
-  if (selector == @selector(moxSetValue:) &&
-      [self stateWithMask:states::EDITABLE] == 0) {
-    return YES;
-  }
-
-  return [super moxBlockSelector:selector];
 }
 
 - (void)moxSetValue:(id)value {
@@ -215,12 +206,58 @@ static GeckoTextMarkerRange GetTextMarkerRangeFromRange(mozAccessible* aObj,
   return markerRange.Bounds();
 }
 
-#pragma mark - mozAccessible
+- (BOOL)moxIsTextField {
+  return !mGeckoAccessible->HasNumericValue() &&
+         mGeckoAccessible->IsEditableRoot();
+}
+
+- (BOOL)blockTextFieldMethod:(SEL)selector {
+  // These are the editable text methods defined in this category.
+  // We want to block them in certain cases.
+  if (selector != @selector(moxNumberOfCharacters) &&
+      selector != @selector(moxInsertionPointLineNumber) &&
+      selector != @selector(moxSelectedText) &&
+      selector != @selector(moxSelectedTextRange) &&
+      selector != @selector(moxVisibleCharacterRange) &&
+      selector != @selector(moxSetSelectedText:) &&
+      selector != @selector(moxSetSelectedTextRange:) &&
+      selector != @selector(moxSetVisibleCharacterRange:) &&
+      selector != @selector(moxStringForRange:) &&
+      selector != @selector(moxAttributedStringForRange:) &&
+      selector != @selector(moxRangeForLine:) &&
+      selector != @selector(moxLineForIndex:) &&
+      selector != @selector(moxBoundsForRange:) &&
+      selector != @selector(moxSetValue:)) {
+    return NO;
+  }
+
+  if ([[mozAccessible class] instanceMethodForSelector:selector] !=
+      [self methodForSelector:selector]) {
+    // This method was overridden by a subclass, so let it through.
+    return NO;
+  }
+
+  if (![self moxIsTextField]) {
+    // This is not an editable root, so block these methods.
+    return YES;
+  }
+
+  if (selector == @selector(moxSetValue:) &&
+      [self stateWithMask:states::EDITABLE] == 0) {
+    // The editable is read-only, so block setValue:
+    // Bug 1995330 - should rely on READONLY/UNAVAILABLE here.
+    return YES;
+  }
+
+  // Let these methods through.
+  return NO;
+}
 
 - (void)handleAccessibleTextChangeEvent:(NSString*)change
                                inserted:(BOOL)isInserted
                             inContainer:(Accessible*)container
                                      at:(int32_t)start {
+  MOZ_ASSERT([self moxIsTextField]);
   GeckoTextMarker startMarker(container, start);
   NSDictionary* userInfo = @{
     @"AXTextChangeElement" : self,
@@ -241,14 +278,6 @@ static GeckoTextMarkerRange GetTextMarkerRangeFromRange(mozAccessible* aObj,
                withUserInfo:userInfo];
 
   [self moxPostNotification:NSAccessibilityValueChangedNotification];
-}
-
-- (void)handleAccessibleEvent:(uint32_t)eventType {
-  switch (eventType) {
-    default:
-      [super handleAccessibleEvent:eventType];
-      break;
-  }
 }
 
 @end

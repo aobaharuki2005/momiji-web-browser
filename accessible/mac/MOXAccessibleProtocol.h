@@ -64,6 +64,8 @@
 // Return true if this accessible is a live region
 - (BOOL)moxIsLiveRegion;
 
+- (BOOL)moxIsTextField;
+
 // Find the nearest ancestor that returns true with the given block function
 - (id<MOXAccessible> _Nullable)moxFindAncestor:
     (BOOL (^_Nonnull)(id<MOXAccessible> _Nonnull moxAcc,
