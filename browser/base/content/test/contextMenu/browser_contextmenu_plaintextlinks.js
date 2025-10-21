@@ -1,7 +1,15 @@
+/* Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/ */
+
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
+
+// Context menu links prepend `http`, so this is what
+// is being tested for rather than an `https` prefix.
+/* eslint-disable @microsoft/sdl/no-insecure-url */
+
 function testExpected(expected, msg) {
   is(
-    document.getElementById("context-openlinkincurrent").hidden,
+    !document.getElementById("context-openlinkincurrent").hidden,
     expected,
     msg
   );
@@ -12,177 +20,233 @@ function testLinkExpected(expected, msg) {
 }
 
 add_task(async function () {
-  const url =
-    "data:text/html;charset=UTF-8,Test For Non-Hyperlinked url selection";
-  await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  const TEST_HTML_STRING = `
+<div id="test-root">
+  <div id="block1">
+    <span id="prefix">http://www.</span><span id="hostTwice">example.com example.com</span>
+    <span id="suffix"> - Test</span>
+    <span id="anchor"><a href="http://www.example.com">http://www.example.com/example</a></span>
+    <p id="nonLinks">mailto:test.com ftp.example.com</p>
+    <p id="trailing">example.com   -</p>
+  </div>
+  <div id="block2">
+    <p id="mainDomain">main.example.com</p>
+  </div>
+</div>
+`;
+
+  const TESTS = [
+    // ---- URL selections that should show context menu link options ----
+    {
+      id: "http-url-across-spans",
+      selection: {
+        startNode: "prefix",
+        startIndex: 0,
+        endNode: "hostTwice",
+        endIndex: "example.com".length,
+      },
+      expectLinks: true,
+      expectedLink: "http://www.example.com/",
+      message: "Link options should show for http://www.example.com",
+    },
+    {
+      id: "url-across-spans-without-http",
+      selection: {
+        startNode: "prefix",
+        startIndex: "http://".length,
+        endNode: "hostTwice",
+        endIndex: "example.com".length,
+      },
+      expectLinks: true,
+      expectedLink: "http://www.example.com/",
+      message: "Link options should show for www.example.com",
+    },
+    {
+      id: "example-com-without-www",
+      selection: {
+        startNode: "hostTwice",
+        startIndex: "example.com ".length,
+        endNode: "hostTwice",
+        endIndex: "example.com example.com".length,
+      },
+      expectLinks: true,
+      expectedLink: "http://example.com/",
+      message:
+        "Link options should show for 'example.com' (without prepending 'www').",
+    },
+    {
+      id: "ftp-example",
+      selection: {
+        startNode: "nonLinks",
+        startIndex: "mailto:test.com ".length,
+        endNode: "nonLinks",
+        endIndex: "mailto:test.com ftp.example.com".length,
+      },
+      expectLinks: true,
+      expectedLink: "http://ftp.example.com/",
+      message: "ftp.example.com should be linkified with http://",
+    },
+    {
+      id: "example-trailing-dash",
+      selection: {
+        startNode: "trailing",
+        startIndex: 0,
+        endNode: "trailing",
+        endIndex: "example.com".length,
+      },
+      expectLinks: true,
+      expectedLink: "http://example.com/",
+      message: "Link options should show for \"'example.com'   -\"",
+    },
+    {
+      id: "triple-click-main-domain",
+      selection: {
+        startNode: "mainDomain",
+        startIndex: 0,
+        endNode: "mainDomain",
+        endIndex: "main.example.com".length,
+      },
+      expectLinks: true,
+      expectedLink: "http://main.example.com/",
+      message:
+        "Link options should show for triple-click selection of main.example.com",
+    },
+    {
+      id: "anchor-element",
+      selection: {
+        startNode: "anchor",
+        startIndex: 0,
+        endNode: "anchor",
+        endIndex: "http://www.example.com/example".length,
+      },
+      expectLinks: false, // Is URL due to anchor element, not plaintext.
+      expectedLink: "http://www.example.com/",
+      message: "Context menu should use anchor href, not raw text",
+    },
+    {
+      id: "open-suse",
+      customHTML: "<div id='os'>open-suse.ru</div>",
+      selection: {
+        startNode: "os",
+        startIndex: 0,
+        endNode: "os",
+        endIndex: "open-suse.ru".length,
+      },
+      expectLinks: true,
+      expectedLink: "http://open-suse.ru/",
+      message: "Link options should show for open-suse.ru",
+    },
+
+    // ---- Non-URL selections ----
+    {
+      id: "selection-not-at-word-boundary",
+      selection: {
+        startNode: "hostTwice",
+        startIndex: 1,
+        endNode: "hostTwice",
+        endIndex: "www.example.com".length,
+      },
+      expectLinks: false,
+      message: "Link options should not show for \"w'ww.example.com'\"",
+    },
+    {
+      id: "selection-includes-non-url-text",
+      selection: {
+        startNode: "hostTwice",
+        startIndex: "example.com ".length,
+        endNode: "suffix",
+        endIndex: " - Test".length,
+      },
+      expectLinks: false,
+      message:
+        "Link options should not show when crossing non-URL text ('example.com - Test')",
+    },
+    {
+      id: "whitespace-in-selection",
+      selection: {
+        startNode: "hostTwice",
+        startIndex: 12,
+        endNode: "hostTwice",
+        endIndex: 19,
+      },
+      expectLinks: false,
+      message:
+        "Link options should not show for selection with whitespace (' example.com')",
+    },
+    {
+      id: "mailto-link",
+      selection: {
+        startNode: "nonLinks",
+        startIndex: 0,
+        endNode: "nonLinks",
+        endIndex: "mailto:test.com".length,
+      },
+      expectLinks: false,
+      message: "Link options should not show for mailto: links",
+    },
+    {
+      id: "selection-includes-parentheses",
+      customHTML: "<div id='osparens'>(open-suse.ru)</div>",
+      selection: {
+        startNode: "osparens",
+        startIndex: 1,
+        endNode: "osparens",
+        endIndex: "(open-suse.ru)".length,
+      },
+      expectLinks: false,
+      message: "Link options should not show for 'open-suse.ru)'",
+    },
+  ];
+
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "data:text/html,<html><body></body></html>"
+  );
 
   await SimpleTest.promiseFocus(gBrowser.selectedBrowser);
 
-  // Initial setup of the content area.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
-    let doc = content.document;
-    let range = doc.createRange();
-    let selection = content.getSelection();
+  for (let test of TESTS) {
+    info("Running test: " + test.id);
 
-    let mainDiv = doc.createElement("div");
-    let div = doc.createElement("div");
-    let div2 = doc.createElement("div");
-    let span1 = doc.createElement("span");
-    let span2 = doc.createElement("span");
-    let span3 = doc.createElement("span");
-    let span4 = doc.createElement("span");
-    let p1 = doc.createElement("p");
-    let p2 = doc.createElement("p");
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    span1.textContent = "http://index.";
-    span2.textContent = "example.com example.com";
-    span3.textContent = " - Test";
-    span4.innerHTML =
-      "<a href='http://www.example.com'>http://www.example.com/example</a>";
-    p1.textContent = "mailto:test.com ftp.example.com";
-    p2.textContent = "example.com   -";
-    div.appendChild(span1);
-    div.appendChild(span2);
-    div.appendChild(span3);
-    div.appendChild(span4);
-    div.appendChild(p1);
-    div.appendChild(p2);
-    let p3 = doc.createElement("p");
-    p3.textContent = "main.example.com";
-    div2.appendChild(p3);
-    mainDiv.appendChild(div);
-    mainDiv.appendChild(div2);
-    doc.body.appendChild(mainDiv);
-
-    function setSelection(el1, el2, index1, index2) {
-      while (el1.nodeType != el1.TEXT_NODE) {
-        el1 = el1.firstChild;
-      }
-      while (el2.nodeType != el1.TEXT_NODE) {
-        el2 = el2.firstChild;
-      }
-
-      selection.removeAllRanges();
-      range.setStart(el1, index1);
-      range.setEnd(el2, index2);
-      selection.addRange(range);
-
-      return range;
-    }
-
-    // Each of these tests creates a selection and returns a range within it.
-    content.tests = [
-      () => setSelection(span1.firstChild, span2.firstChild, 0, 11),
-      () => setSelection(span1.firstChild, span2.firstChild, 7, 11),
-      () => setSelection(span1.firstChild, span2.firstChild, 8, 11),
-      () => setSelection(span2.firstChild, span2.firstChild, 0, 11),
-      () => setSelection(span2.firstChild, span2.firstChild, 11, 23),
-      () => setSelection(span2.firstChild, span2.firstChild, 0, 10),
-      () => setSelection(span2.firstChild, span3.firstChild, 12, 7),
-      () => setSelection(span2.firstChild, span2.firstChild, 12, 19),
-      () => setSelection(p1.firstChild, p1.firstChild, 0, 15),
-      () => setSelection(p1.firstChild, p1.firstChild, 16, 31),
-      () => setSelection(p2.firstChild, p2.firstChild, 0, 14),
-      () => {
-        selection.selectAllChildren(div2);
-        return selection.getRangeAt(0);
-      },
-      () => {
-        selection.selectAllChildren(span4);
-        return selection.getRangeAt(0);
-      },
-      () => {
-        mainDiv.innerHTML = "(open-suse.ru)";
-        return setSelection(mainDiv, mainDiv, 1, 13);
-      },
-      () => setSelection(mainDiv, mainDiv, 1, 14),
-    ];
-  });
-
-  let checks = [
-    () =>
-      testExpected(
-        false,
-        "The link context menu should show for http://www.example.com"
-      ),
-    () =>
-      testExpected(
-        false,
-        "The link context menu should show for www.example.com"
-      ),
-    () =>
-      testExpected(
-        true,
-        "The link context menu should not show for ww.example.com"
-      ),
-    () => {
-      testExpected(false, "The link context menu should show for example.com");
-      testLinkExpected(
-        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-        "http://example.com/",
-        "url for example.com selection should not prepend www"
-      );
-    },
-    () =>
-      testExpected(false, "The link context menu should show for example.com"),
-    () =>
-      testExpected(
-        true,
-        "Link options should not show for selection that's not at a word boundary"
-      ),
-    () =>
-      testExpected(
-        true,
-        "Link options should not show for selection that has whitespace"
-      ),
-    () =>
-      testExpected(
-        true,
-        "Link options should not show unless a url is selected"
-      ),
-    () => testExpected(true, "Link options should not show for mailto: links"),
-    () => {
-      testExpected(false, "Link options should show for ftp.example.com");
-      testLinkExpected(
-        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-        "http://ftp.example.com/",
-        "ftp.example.com should be preceeded with http://"
-      );
-    },
-    () => testExpected(false, "Link options should show for www.example.com  "),
-    () =>
-      testExpected(
-        false,
-        "Link options should show for triple-click selections"
-      ),
-    () =>
-      testLinkExpected(
-        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-        "http://www.example.com/",
-        "Linkified text should open the correct link"
-      ),
-    () => {
-      testExpected(false, "Link options should show for open-suse.ru");
-      testLinkExpected(
-        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-        "http://open-suse.ru/",
-        "Linkified text should open the correct link"
-      );
-    },
-    () =>
-      testExpected(true, "Link options should not show for 'open-suse.ru)'"),
-  ];
-
-  let contentAreaContextMenu = document.getElementById(
-    "contentAreaContextMenu"
-  );
-
-  for (let testid = 0; testid < checks.length; testid++) {
     let menuPosition = await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
-      [{ testid }],
-      async function (arg) {
-        let range = content.tests[arg.testid]();
+      [TEST_HTML_STRING, test.selection, test.customHTML],
+      async function (html, testSelection, customHTML) {
+        // Reset HTML to test template or custom HTML for specific tests
+        if (customHTML) {
+          content.document.body.innerHTML = customHTML;
+        } else {
+          content.document.body.innerHTML = "";
+          let parser = new content.DOMParser();
+          let doc = parser.parseFromString(html, "text/html");
+          let node = content.document.importNode(doc.body.firstChild, true);
+          content.document.body.appendChild(node);
+        }
+
+        // Build selection range from start/end nodes/indices
+        let selection = content.getSelection();
+        selection.removeAllRanges();
+        let range = content.document.createRange();
+
+        let startNode = content.document.getElementById(
+          testSelection.startNode
+        );
+
+        while (startNode.nodeType != startNode.TEXT_NODE) {
+          startNode = startNode.firstChild;
+        }
+
+        let endNode = content.document.getElementById(testSelection.endNode);
+
+        while (endNode.nodeType != endNode.TEXT_NODE) {
+          endNode = endNode.firstChild;
+        }
+
+        range.setStart(startNode, testSelection.startIndex);
+        range.setEnd(endNode, testSelection.endIndex);
+        selection.addRange(range);
+
+        range.startContainer.parentElement.scrollIntoView();
 
         // Get the range of the selection and determine its coordinates. These
         // coordinates will be returned to the parent process and the context menu
@@ -190,6 +254,10 @@ add_task(async function () {
         let rangeRect = range.getBoundingClientRect();
         return [rangeRect.x + 3, rangeRect.y + 3];
       }
+    );
+
+    let contentAreaContextMenu = document.getElementById(
+      "contentAreaContextMenu"
     );
 
     // Trigger a mouse event until we receive the popupshown event.
@@ -216,7 +284,14 @@ add_task(async function () {
     }
     await popupShownPromise;
 
-    checks[testid]();
+    // Run the tests.
+    testExpected(test.expectLinks, test.message);
+    if (test.expectedLink) {
+      testLinkExpected(
+        test.expectedLink,
+        `Expected link URL for ${test.id} selection: ${test.expectedLink}`
+      );
+    }
 
     // On Linux non-e10s it's possible the menu was closed by a focus-out event
     // on the window. Work around this by calling hidePopup only if the menu
