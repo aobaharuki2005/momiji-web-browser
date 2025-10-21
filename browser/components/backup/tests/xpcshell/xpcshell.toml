@@ -26,6 +26,7 @@ support-files = [
 ]
 
 ["test_BackupService_archive.js"]
+requesttimeoutfactor = 2  # Slow on macOS debug
 support-files = [
   "data/corrupt.zip",
   "data/break_over_unicode.html",

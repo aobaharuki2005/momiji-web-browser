@@ -10,8 +10,10 @@ prefs = [
 ["test_merinoClient.js"]
 
 ["test_merinoClient_sessions.js"]
+requesttimeoutfactor = 2  # Slow on Windows
 
 ["test_quicksuggest.js"]
+requesttimeoutfactor = 2  # Slow on Linux
 
 ["test_quicksuggest_addons.js"]
 
@@ -45,6 +47,7 @@ skip-if = ["true"] # Bug 1880214
 ["test_quicksuggest_migrate_v3.js"]
 
 ["test_quicksuggest_offlineDefault.js"]
+requesttimeoutfactor = 2  # Slow on Linux and Windows
 
 ["test_quicksuggest_relevanceRanking.js"]
 
@@ -55,6 +58,7 @@ skip-if = ["true"] # Bug 1880214
 ["test_quicksuggest_topPicks.js"]
 
 ["test_quicksuggest_yelp.js"]
+requesttimeoutfactor = 2  # Slow on Linux and Windows
 
 ["test_quicksuggest_yelp_ml.js"]
 

@@ -11,6 +11,8 @@ support-files = [
   "xpcshell-content.toml",
 ]
 tags = "webextensions remote-webextensions"
+# Extension tests frequently take more than the default 30s timeout
+requesttimeoutfactor = 2
 
 # Make sure that loading the default settings for url-classifier-skip-urls
 # doesn't interfere with running our tests while IDB operations are in

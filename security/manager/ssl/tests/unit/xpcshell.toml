@@ -246,6 +246,7 @@ run-sequentially = ["true"] # hardcoded ports
 run-sequentially = ["true"] # hardcoded ports
 
 ["test_ocsp_timeout.js"]
+requesttimeoutfactor = 2  # Slow on Linux and Windows
 run-sequentially = ["true"] # hardcoded ports
 
 ["test_ocsp_url.js"]
@@ -314,6 +315,7 @@ run-if = ["!condprof"] # Bug 1769154 - as designed
 ["test_sss_resetState.js"]
 
 ["test_sss_sanitizeOnShutdown.js"]
+requesttimeoutfactor = 3  # Slow on condprof
 prefs = ["privacy.sanitize.useOldClearHistoryDialog=true"]
 firefox-appdir = "browser"
 skip-if = [
@@ -322,6 +324,7 @@ skip-if = [
 ]
 
 ["test_sss_sanitizeOnShutdown_v2.js"]
+requesttimeoutfactor = 2  # Slow on condprof
 prefs = ["privacy.sanitize.useOldClearHistoryDialog=false"]
 firefox-appdir = "browser"
 skip-if = [

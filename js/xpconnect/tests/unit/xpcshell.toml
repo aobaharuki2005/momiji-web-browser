@@ -357,6 +357,7 @@ skip-if = [
 ]
 
 ["test_wasm_tailcalls_profiler.js"]
+requesttimeoutfactor = 3  # Slow on Windows
 skip-if = [
   "!nightly_build",
   "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && tsan",

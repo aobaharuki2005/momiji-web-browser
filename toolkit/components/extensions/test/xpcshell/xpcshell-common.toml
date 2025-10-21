@@ -4,6 +4,8 @@
 # is the case on desktop Firefox, but not on Thunderbird.
 # Force pref value to true to get download tests to pass on Thunderbird.
 prefs = ["browser.download.useDownloadDir=true"]
+# Extension tests frequently take more than the default 30s timeout
+requesttimeoutfactor = 2
 
 ["test_ChannelWrapper.js"]
 
@@ -47,6 +49,7 @@ skip-if = ["os == 'android'"] # Bug 1545439
 ["test_ext_background_early_quit.js"]
 
 ["test_ext_background_early_shutdown.js"]
+requesttimeoutfactor = 3  # Slow on Linux TSan/ASan (replaces manifest 2x)
 run-sequentially = ["os == 'mac'"] # frequent fail in parallel on Mac
 skip-if = ["isolated_process"] # Bug 1709961
 
@@ -238,6 +241,7 @@ run-sequentially = ["os == 'mac'"] # frequent timeouts in parallel on Mac
 skip-if = ["os == 'android'"] # Android: downloads.download goes through the embedder app instead of Gecko, and cannot be intercepted.
 
 ["test_ext_dnr_dynamic_rules.js"]
+requesttimeoutfactor = 3  # Slow on Linux debug (replaces manifest 2x)
 run-sequentially = ["os == 'mac'"] # frequent timeouts in parallel on Mac
 
 ["test_ext_dnr_file_access.js"]
@@ -364,6 +368,7 @@ skip-if = ["isolated_process"] # Bug 1709961
 ["test_ext_file_access.js"]
 
 ["test_ext_geckoProfiler_control.js"]
+requesttimeoutfactor = 9  # Slow on Windows (replaces manifest 2x)
 skip-if = [
   "os == 'android'", # Not shipped on Android.
   "tsan", # tsan: bug 1612707
