@@ -26,6 +26,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
   UrlbarTokenizer:
     "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
+  UrlUtils: "resource://gre/modules/UrlUtils.sys.mjs",
 });
 
 /**
@@ -54,7 +55,7 @@ const TRENDING_HELP_URL =
 function looksLikeUrl(str, ignoreAlphanumericHosts = false) {
   // Single word including special chars.
   return (
-    !lazy.UrlbarTokenizer.REGEXP_SPACES.test(str) &&
+    !lazy.UrlUtils.REGEXP_SPACES.test(str) &&
     (["/", "@", ":", "["].some(c => str.includes(c)) ||
       (ignoreAlphanumericHosts
         ? /^([\[\]A-Z0-9-]+\.){3,}[^.]+$/i.test(str)
@@ -590,7 +591,7 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
 
     // Match an alias only when it has a space after it.  If there's no trailing
     // space, then continue to treat it as part of the search string.
-    if (!lazy.UrlbarTokenizer.REGEXP_SPACES_START.test(query)) {
+    if (!lazy.UrlUtils.REGEXP_SPACES_START.test(query)) {
       return null;
     }
 

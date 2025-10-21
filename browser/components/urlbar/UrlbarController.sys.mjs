@@ -19,9 +19,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/urlbar/UrlbarProviderSemanticHistorySearch.sys.mjs",
   UrlbarProvidersManager:
     "moz-src:///browser/components/urlbar/UrlbarProvidersManager.sys.mjs",
-  UrlbarTokenizer:
-    "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
   UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
+  UrlUtils: "resource://gre/modules/UrlUtils.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logger", () =>
@@ -1517,7 +1516,7 @@ class TelemetryEvent {
     let searchWords = searchString
       .substring(0, lazy.UrlbarUtils.MAX_TEXT_LENGTH)
       .trim()
-      .split(lazy.UrlbarTokenizer.REGEXP_SPACES)
+      .split(lazy.UrlUtils.REGEXP_SPACES)
       .filter(t => t);
     let numWords = searchWords.length.toString();
 

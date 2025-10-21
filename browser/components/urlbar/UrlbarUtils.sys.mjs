@@ -37,6 +37,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarTokenizer:
     "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
+  UrlUtils: "resource://gre/modules/UrlUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -1021,7 +1022,7 @@ export var UrlbarUtils = {
    *          then [prefix, remainder].  Otherwise, ["", str].
    */
   stripURLPrefix(str) {
-    let match = lazy.UrlbarTokenizer.REGEXP_PREFIX.exec(str);
+    let match = lazy.UrlUtils.REGEXP_PREFIX.exec(str);
     if (!match) {
       return ["", str];
     }
@@ -1189,10 +1190,10 @@ export var UrlbarUtils = {
 
     // Create `URL` objects to make the logic below easier. The strings must
     // include schemes for this to work.
-    if (!lazy.UrlbarTokenizer.REGEXP_PREFIX.test(urlString)) {
+    if (!lazy.UrlUtils.REGEXP_PREFIX.test(urlString)) {
       urlString = "http://" + urlString;
     }
-    if (!lazy.UrlbarTokenizer.REGEXP_PREFIX.test(candidateString)) {
+    if (!lazy.UrlUtils.REGEXP_PREFIX.test(candidateString)) {
       candidateString = "http://" + candidateString;
     }
 

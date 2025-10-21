@@ -52,6 +52,7 @@ const lazy = XPCOMUtils.declareLazy({
   UrlbarView: "moz-src:///browser/components/urlbar/UrlbarView.sys.mjs",
   UrlbarSearchTermsPersistence:
     "moz-src:///browser/components/urlbar/UrlbarSearchTermsPersistence.sys.mjs",
+  UrlUtils: "resource://gre/modules/UrlUtils.sys.mjs",
   ClipboardHelper: {
     service: "@mozilla.org/widget/clipboardhelper;1",
     iid: Ci.nsIClipboardHelper,
@@ -1917,7 +1918,7 @@ export class UrlbarInput {
       this.focus();
     }
     let trimmedValue = value.trim();
-    let end = trimmedValue.search(lazy.UrlbarTokenizer.REGEXP_SPACES);
+    let end = trimmedValue.search(lazy.UrlUtils.REGEXP_SPACES);
     let firstToken = end == -1 ? trimmedValue : trimmedValue.substring(0, end);
     // Enter search mode if the string starts with a restriction token.
     let searchMode = this.searchModeForToken(firstToken);
@@ -1935,7 +1936,7 @@ export class UrlbarInput {
         // in search mode.
         value = value.replace(firstToken, "");
       }
-      if (lazy.UrlbarTokenizer.REGEXP_SPACES.test(value[0])) {
+      if (lazy.UrlUtils.REGEXP_SPACES.test(value[0])) {
         // If there was a trailing space after the restriction token/alias,
         // remove it.
         value = value.slice(1);

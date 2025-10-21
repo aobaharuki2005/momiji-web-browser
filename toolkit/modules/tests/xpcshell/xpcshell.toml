@@ -113,6 +113,8 @@ skip-if = ["!updater"]
 reason = "LOCALE is not defined without MOZ_UPDATER"
 tags = "os_integration"
 
+["test_UrlUtils.js"]
+
 ["test_firstStartup.js"]
 skip-if = [
   "os == 'android'",

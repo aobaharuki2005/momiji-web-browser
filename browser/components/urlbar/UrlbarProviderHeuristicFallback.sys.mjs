@@ -22,6 +22,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
   UrlbarTokenizer:
     "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
+  UrlUtils: "resource://gre/modules/UrlUtils.sys.mjs",
 });
 
 /**
@@ -78,11 +79,11 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
       if (!URL.canParse(str)) {
         if (
           lazy.UrlbarPrefs.get("keyword.enabled") &&
-          (lazy.UrlbarTokenizer.looksLikeOrigin(str, {
+          (lazy.UrlUtils.looksLikeOrigin(str, {
             noIp: true,
             noPort: true,
           }) ||
-            lazy.UrlbarTokenizer.REGEXP_COMMON_EMAIL.test(str))
+            lazy.UrlUtils.REGEXP_COMMON_EMAIL.test(str))
         ) {
           let searchResult = await this._engineSearchResult({ queryContext });
           if (instance != this.queryInstance) {
@@ -261,7 +262,7 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
       queryContext.searchString,
       firstToken
     );
-    if (!lazy.UrlbarTokenizer.REGEXP_SPACES_START.test(query)) {
+    if (!lazy.UrlUtils.REGEXP_SPACES_START.test(query)) {
       return null;
     }
 

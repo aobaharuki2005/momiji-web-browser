@@ -12,8 +12,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
-  UrlbarTokenizer:
-    "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
+  UrlUtils: "resource://gre/modules/UrlUtils.sys.mjs",
 });
 
 const RESULT_MENU_COMMANDS = {
@@ -63,7 +62,7 @@ export class UrlbarProviderClipboard extends UrlbarProvider {
     if (
       !textFromClipboard ||
       textFromClipboard.length > 2048 ||
-      lazy.UrlbarTokenizer.REGEXP_SPACES.test(textFromClipboard)
+      lazy.UrlUtils.REGEXP_SPACES.test(textFromClipboard)
     ) {
       return false;
     }

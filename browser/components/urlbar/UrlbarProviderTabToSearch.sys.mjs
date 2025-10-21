@@ -26,8 +26,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
   UrlbarSearchUtils:
     "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
-  UrlbarTokenizer:
-    "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
+  UrlUtils: "resource://gre/modules/UrlUtils.sys.mjs",
 });
 
 const DYNAMIC_RESULT_TYPE = "onboardTabToSearch";
@@ -272,7 +271,7 @@ export class UrlbarProviderTabToSearch extends UrlbarProvider {
     );
     // Skip any string that cannot be an origin.
     if (
-      !lazy.UrlbarTokenizer.looksLikeOrigin(searchStr, {
+      !lazy.UrlUtils.looksLikeOrigin(searchStr, {
         ignoreKnownDomains: true,
         noIp: true,
       })

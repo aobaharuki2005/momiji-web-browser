@@ -1076,6 +1076,30 @@
       "resource:///modules/UnitConverterTimezone.sys.mjs": [
         "browser/components/urlbar/unitconverters/UnitConverterTimezone.sys.mjs"
       ],
+      "resource:///modules/UrlbarPrefs.sys.mjs": [
+        "browser/components/urlbar/UrlbarPrefs.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderGlobalActions.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderGlobalActions.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProviderSemanticHistorySearch.sys.mjs": [
+        "browser/components/urlbar/UrlbarProviderSemanticHistorySearch.sys.mjs"
+      ],
+      "resource:///modules/UrlbarProvidersManager.sys.mjs": [
+        "browser/components/urlbar/UrlbarProvidersManager.sys.mjs"
+      ],
+      "resource:///modules/UrlbarResult.sys.mjs": [
+        "browser/components/urlbar/UrlbarResult.sys.mjs"
+      ],
+      "resource:///modules/UrlbarSearchTermsPersistence.sys.mjs": [
+        "browser/components/urlbar/UrlbarSearchTermsPersistence.sys.mjs"
+      ],
+      "resource:///modules/UrlbarSearchUtils.sys.mjs": [
+        "browser/components/urlbar/UrlbarSearchUtils.sys.mjs"
+      ],
+      "resource:///modules/UrlbarTokenizer.sys.mjs": [
+        "browser/components/urlbar/UrlbarTokenizer.sys.mjs"
+      ],
       "resource:///modules/UrlbarUtils.sys.mjs": [
         "browser/components/urlbar/UrlbarUtils.sys.mjs"
       ],
@@ -6163,6 +6187,9 @@
       ],
       "resource://gre/modules/UrlClassifierRemoteSettingsService.sys.mjs": [
         "toolkit/components/url-classifier/UrlClassifierRemoteSettingsService.sys.mjs"
+      ],
+      "resource://gre/modules/UrlUtils.sys.mjs": [
+        "toolkit/modules/UrlUtils.sys.mjs"
       ],
       "resource://gre/modules/UsageReporting.sys.mjs": [
         "toolkit/components/telemetry/app/UsageReporting.sys.mjs"
