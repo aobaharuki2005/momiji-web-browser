@@ -6528,31 +6528,6 @@ BoundFunctionObject* InlinableNativeIRGenerator::boundCallee() const {
   return &callee()->as<BoundFunctionObject>();
 }
 
-bool InlinableNativeIRGenerator::isTargetBoundFunction() const {
-  switch (flags_.getArgFormat()) {
-    case CallFlags::Standard:
-    case CallFlags::Spread:
-      return false;
-    case CallFlags::FunCall:
-    case CallFlags::FunApplyArgsObj:
-    case CallFlags::FunApplyArray:
-    case CallFlags::FunApplyNullUndefined:
-      if (callee()->is<JSFunction>()) {
-        MOZ_ASSERT(generator_.thisval_.isObject());
-        return generator_.thisval_.toObject().is<BoundFunctionObject>();
-      }
-      return false;
-    case CallFlags::Unknown:
-      break;
-  }
-  MOZ_CRASH("Unsupported arg format");
-}
-
-BoundFunctionObject* InlinableNativeIRGenerator::boundTarget() const {
-  MOZ_ASSERT(isTargetBoundFunction());
-  return &generator_.thisval_.toObject().as<BoundFunctionObject>();
-}
-
 ObjOperandId InlinableNativeIRGenerator::emitNativeCalleeGuard(
     Int32OperandId argcId) {
   // Note: we rely on GuardSpecificFunction to also guard against the same
@@ -11420,8 +11395,8 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
                   : HandleValueArray::empty();
 
     // Check for specific native-function optimizations.
-    InlinableNativeIRGenerator nativeGen(*this, target, newTarget, thisValue,
-                                         args, targetFlags);
+    InlinableNativeIRGenerator nativeGen(*this, callee, target, newTarget,
+                                         thisValue, args, targetFlags);
     TRY_ATTACH(nativeGen.tryAttachStub());
   }
 
@@ -12698,8 +12673,8 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
         aobj->length(), aobj->getDenseElements());
 
     // Check for specific native-function optimizations.
-    InlinableNativeIRGenerator nativeGen(*this, target, newTarget, thisValue,
-                                         args, targetFlags);
+    InlinableNativeIRGenerator nativeGen(*this, calleeFunc, target, newTarget,
+                                         thisValue, args, targetFlags);
     TRY_ATTACH(nativeGen.tryAttachStub());
   }
   if (format == CallFlags::FunApplyArray &&
@@ -12717,8 +12692,8 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
     HandleValueArray args = HandleValueArray::empty();
 
     // Check for specific native-function optimizations.
-    InlinableNativeIRGenerator nativeGen(*this, target, newTarget, thisValue,
-                                         args, targetFlags);
+    InlinableNativeIRGenerator nativeGen(*this, calleeFunc, target, newTarget,
+                                         thisValue, args, targetFlags);
     TRY_ATTACH(nativeGen.tryAttachStub());
   }
 
@@ -12918,8 +12893,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(HandleFunction callee,
   MOZ_ASSERT(flags.getArgFormat() == CallFlags::Standard ||
              flags.getArgFormat() == CallFlags::Spread);
 
-  InlinableNativeIRGenerator nativeGen(*this, callee, newTarget_, thisval_,
-                                       args_, flags);
+  InlinableNativeIRGenerator nativeGen(*this, callee, callee, newTarget_,
+                                       thisval_, args_, flags);
   return nativeGen.tryAttachStub();
 }
 
@@ -13997,8 +13972,8 @@ AttachDecision CallIRGenerator::tryAttachBoundNative(
   auto args = numBoundArgs != 0 ? concatenatedArgs : args_;
 
   // Check for specific native-function optimizations.
-  InlinableNativeIRGenerator nativeGen(*this, target, newTarget_, thisValue,
-                                       args, flags);
+  InlinableNativeIRGenerator nativeGen(*this, calleeObj, target, newTarget_,
+                                       thisValue, args, flags);
   return nativeGen.tryAttachStub();
 }
 
@@ -14106,8 +14081,8 @@ AttachDecision CallIRGenerator::tryAttachBoundFunCall(
   })();
 
   // Check for specific native-function optimizations.
-  InlinableNativeIRGenerator nativeGen(*this, target, newTarget, thisValue,
-                                       args, targetFlags);
+  InlinableNativeIRGenerator nativeGen(*this, calleeObj, target, newTarget,
+                                       thisValue, args, targetFlags);
   return nativeGen.tryAttachStub();
 }
 
@@ -14193,8 +14168,8 @@ AttachDecision CallIRGenerator::tryAttachBoundFunApply(
   HandleValueArray args = HandleValueArray::empty();
 
   // Check for specific native-function optimizations.
-  InlinableNativeIRGenerator nativeGen(*this, target, newTarget, thisValue,
-                                       args, targetFlags);
+  InlinableNativeIRGenerator nativeGen(*this, calleeObj, target, newTarget,
+                                       thisValue, args, targetFlags);
   return nativeGen.tryAttachStub();
 }
 
@@ -14277,8 +14252,8 @@ AttachDecision CallIRGenerator::tryAttachFunCallBound(
   auto args = numBoundArgs != 0 ? concatenatedArgs : callArgs;
 
   // Check for specific native-function optimizations.
-  InlinableNativeIRGenerator nativeGen(*this, target, newTarget, thisValue,
-                                       args, targetFlags);
+  InlinableNativeIRGenerator nativeGen(*this, callee, target, newTarget,
+                                       thisValue, args, targetFlags, bound);
   return nativeGen.tryAttachStub();
 }
 
@@ -14363,8 +14338,8 @@ AttachDecision CallIRGenerator::tryAttachFunApplyBound(
   }
 
   // Check for specific native-function optimizations.
-  InlinableNativeIRGenerator nativeGen(*this, target, newTarget, thisValue,
-                                       args, targetFlags);
+  InlinableNativeIRGenerator nativeGen(*this, callee, target, newTarget,
+                                       thisValue, args, targetFlags, bound);
   return nativeGen.tryAttachStub();
 }
 
