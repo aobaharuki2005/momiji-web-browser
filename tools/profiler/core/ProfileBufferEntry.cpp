@@ -549,7 +549,9 @@ void UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame) {
 
 static void StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
                            UniqueJSONStrings& aUniqueStrings,
-                           const JS::ProfiledFrameHandle& aJITFrame) {
+                           const JS::ProfiledFrameHandle& aJITFrame,
+                           const nsTHashMap<SourceId, IndexIntoSourceTable>*
+                               aSourceIdToIndexMap = nullptr) {
   enum Schema : uint32_t {
     LOCATION = 0,
     RELEVANT_FOR_JS = 1,
@@ -563,7 +565,18 @@ static void StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
 
   AutoArraySchemaWithStringsWriter writer(aWriter, aUniqueStrings);
 
-  writer.StringElement(LOCATION, MakeStringSpan(aJITFrame.label()));
+  uint32_t sourceId = aJITFrame.sourceId();
+  nsCString labelWithSourceIndex(aJITFrame.label());
+  if (sourceId && aSourceIdToIndexMap) {
+    auto index = aSourceIdToIndexMap->MaybeGet(sourceId);
+    if (index) {
+      labelWithSourceIndex.AppendLiteral("[");
+      labelWithSourceIndex.AppendInt(*index);
+      labelWithSourceIndex.AppendLiteral("]");
+    }
+  }
+  writer.StringElement(LOCATION, labelWithSourceIndex);
+
   writer.BoolElement(RELEVANT_FOR_JS, false);
 
   // It's okay to convert uint64_t to double here because DOM always creates IDs
@@ -587,20 +600,24 @@ static void StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
   writer.IntElement(SUBCATEGORY, info.mSubcategoryIndex);
 }
 
-static nsCString JSONForJITFrame(JSContext* aContext,
-                                 const JS::ProfiledFrameHandle& aJITFrame,
-                                 UniqueJSONStrings& aUniqueStrings) {
+static nsCString JSONForJITFrame(
+    JSContext* aContext, const JS::ProfiledFrameHandle& aJITFrame,
+    UniqueJSONStrings& aUniqueStrings,
+    const nsTHashMap<SourceId, IndexIntoSourceTable>* aSourceIdToIndexMap =
+        nullptr) {
   nsCString json;
   JSONStringRefWriteFunc jw(json);
   SpliceableJSONWriter writer(jw, aUniqueStrings.SourceFailureLatch());
-  StreamJITFrame(aContext, writer, aUniqueStrings, aJITFrame);
+  StreamJITFrame(aContext, writer, aUniqueStrings, aJITFrame,
+                 aSourceIdToIndexMap);
   return json;
 }
 
 void JITFrameInfo::AddInfoForRange(
     uint64_t aRangeStart, uint64_t aRangeEnd, JSContext* aCx,
     const std::function<void(const std::function<void(void*)>&)>&
-        aJITAddressProvider) {
+        aJITAddressProvider,
+    const nsTHashMap<SourceId, IndexIntoSourceTable>* aSourceIdToIndexMap) {
   if (mLocalFailureLatchSource.Failed()) {
     return;
   }
@@ -635,7 +652,8 @@ void JITFrameInfo::AddInfoForRange(
         if (!frameEntry) {
           if (!jitFrameToFrameJSONMap.add(
                   frameEntry, jitFrameKey,
-                  JSONForJITFrame(aCx, handle, *mUniqueStrings))) {
+                  JSONForJITFrame(aCx, handle, *mUniqueStrings,
+                                  aSourceIdToIndexMap))) {
             mLocalFailureLatchSource.SetFailure(
                 "OOM in JITFrameInfo::AddInfoForRange adding jit->frame map");
             return;
@@ -1742,8 +1760,9 @@ void ProfileBuffer::StreamSamplesAndMarkersToJSON(
 
 void ProfileBuffer::AddJITInfoForRange(
     uint64_t aRangeStart, ProfilerThreadId aThreadId, JSContext* aContext,
-    JITFrameInfo& aJITFrameInfo,
-    mozilla::ProgressLogger aProgressLogger) const {
+    JITFrameInfo& aJITFrameInfo, mozilla::ProgressLogger aProgressLogger,
+    const nsTHashMap<SourceId, IndexIntoSourceTable>* aSourceIdToIndexMap)
+    const {
   // We can only process JitReturnAddr entries if we have a JSContext.
   MOZ_RELEASE_ASSERT(aContext);
 
@@ -1837,7 +1856,8 @@ void ProfileBuffer::AddJITInfoForRange(
             }
           }
         });
-      });
+      },
+      aSourceIdToIndexMap);
 }
 
 void ProfileBuffer::StreamMarkersToJSON(
