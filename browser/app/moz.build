@@ -77,6 +77,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
     RCINCLUDE = "splash.rc"
     DIRS += [
         "installation_dir_layout",
+        "desktop-launcher",
         "pbproxy",
         "winlauncher",
     ]
@@ -112,11 +113,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
     # Don't build firefox.exe with CETCOMPAT, because we need to be able to
     # only enable it for processes that are not using JIT in xul.dll.
     LINK_FLAGS["CETCOMPAT"] = []
-
-if CONFIG["DESKTOP_LAUNCHER_ENABLED"]:
-    DIRS += [
-        "desktop-launcher",
-    ]
 
 if CONFIG["OS_ARCH"] == "Darwin":
     OS_LIBS += [

@@ -114,7 +114,8 @@
 !define MOZ_MAINTENANCE_SERVICE
 #endif
 
-#ifdef DESKTOP_LAUNCHER_ENABLED
+# Only build on platforms that have WinHTTP.h (i.e. not mingw)
+#ifdef HAVE_WINHTTP_H
 !define DESKTOP_LAUNCHER_ENABLED
 #endif
 
