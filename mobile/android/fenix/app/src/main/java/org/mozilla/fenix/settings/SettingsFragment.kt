@@ -221,7 +221,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             showToolbarWithIconButton(
                 title = toolbarTitle,
                 iconResId = R.drawable.ic_search,
-                onClick = { },
+                onClick = {
+                    findNavController().navigate(R.id.action_settingsFragment_to_settingsSearchFragment)
+                },
             )
         } else {
             showToolbar(toolbarTitle)

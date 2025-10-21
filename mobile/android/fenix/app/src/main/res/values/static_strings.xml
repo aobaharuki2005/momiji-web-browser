@@ -262,4 +262,16 @@
     <string name="crash_debug_show_startup_crash_screen">Show startup crash screen</string>
     <!-- Subtitle warning text for crash button -->
     <string name="crash_debug_startup_crash_warning">This will start the startup crash activity in a new process and terminate the current process.</string>
+
+    <!-- Settings Search Strings -->
+    <!-- Title of Settings Search -->
+    <string name="settings_search_title">Settings Search</string>
+    <!-- Content description (not visible, for screen readers etc.): "Clear search field button for settings search" -->
+    <string name="content_description_settings_search_clear_search">Clear Search</string>
+    <!-- Content description (not visible, for screen readers etc.): "Navigate back button for settings search" -->
+    <string name="content_description_settings_search_navigate_back">Navigate Back</string>
+    <!-- Message displayed when the search field in the Settings Search screen is empty -->
+    <string name="settings_search_empty_query_placeholder">Search for settings</string>
+    <!-- Message when error happens with Settings Search -->
+    <string name="settings_search_error_message">Error occurred.</string>
 </resources>
