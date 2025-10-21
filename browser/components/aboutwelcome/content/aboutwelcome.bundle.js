@@ -470,7 +470,7 @@ const renderSingleSecondaryCTAButton = ({
   if (isSplitButton) {
     className += " split-button-container";
   }
-  const isDisabled = react__WEBPACK_IMPORTED_MODULE_0___default().useCallback(disabledValue => {
+  const computeDisabled = disabledValue => {
     if (disabledValue === "hasActiveMultiSelect") {
       if (!activeMultiSelect) {
         return true;
@@ -483,7 +483,7 @@ const renderSingleSecondaryCTAButton = ({
       return true;
     }
     return disabledValue;
-  }, [activeMultiSelect]);
+  };
   if (isTextLink) {
     buttonStyling += " text-link";
   }
@@ -512,7 +512,7 @@ const renderSingleSecondaryCTAButton = ({
     id: buttonId,
     className: buttonStyling,
     value: targetElement,
-    disabled: isDisabled(button?.disabled),
+    disabled: computeDisabled(button?.disabled),
     onClick: shimmedHandleAction
   })), isSplitButton ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SubmenuButton__WEBPACK_IMPORTED_MODULE_5__.SubmenuButton, {
     content: content,
@@ -529,13 +529,36 @@ const SecondaryCTA = props => {
   if (!buttonData) {
     return null;
   }
+  const buttons = react__WEBPACK_IMPORTED_MODULE_0___default().useMemo(() => Array.isArray(buttonData) ? buttonData : [buttonData], [buttonData]);
+  const [visibleButtons, setVisibleButtons] = react__WEBPACK_IMPORTED_MODULE_0___default().useState([]);
+  react__WEBPACK_IMPORTED_MODULE_0___default().useEffect(() => {
+    (async () => {
+      const filteredButtons = [];
+      for (const button of buttons) {
+        // No targeting, show by default for backwards compatibility
+        if (!button?.targeting) {
+          filteredButtons.push(button);
+          continue;
+        }
+        try {
+          const shouldShowButton = await window.AWEvaluateAttributeTargeting(button.targeting);
+          if (shouldShowButton) {
+            filteredButtons.push(button);
+          }
+        } catch (e) {
+          console.error("SecondaryCTA targeting failed:", button.targeting, e);
+        }
+      }
+      setVisibleButtons(filteredButtons);
+    })();
+  }, [buttons]);
+  if (!visibleButtons.length) {
+    return null;
+  }
   if (Array.isArray(buttonData)) {
-    if (buttonData.length === 0) {
-      return null;
-    }
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: "secondary-buttons-top-container"
-    }, buttonData.map((button, index) => renderSingleSecondaryCTAButton({
+    }, visibleButtons.map((button, index) => renderSingleSecondaryCTAButton({
       content,
       button,
       targetElement: `${targetElement}_${index}`,
@@ -548,7 +571,7 @@ const SecondaryCTA = props => {
   }
   return renderSingleSecondaryCTAButton({
     content,
-    button: buttonData,
+    button: visibleButtons[0],
     targetElement,
     position,
     handleAction: props.handleAction,

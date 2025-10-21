@@ -42,7 +42,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
     {
       id: "AW_BACKUP_RESTORE_EMBEDDED_BACKUP_FOUND",
       targeting:
-        "'messaging-system.backupRestoreEnabled'|preferenceValue == true && (backupsInfo.found || backupsInfo.multipleBackupsFound)",
+        "backupRestoreEnabled && (backupsInfo.found || backupsInfo.multipleBackupsFound)",
       content: {
         fullscreen: true,
         logo: {},
@@ -168,6 +168,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
             type: "SHOW_FIREFOX_ACCOUNTS",
             addFlowParams: true,
           },
+          targeting: "!isFxASignedIn",
         },
       },
     },
@@ -299,6 +300,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
               type: "SHOW_FIREFOX_ACCOUNTS",
               addFlowParams: true,
             },
+            targeting: "!isFxASignedIn",
           },
           {
             label: { string_id: "restore-from-backup-secondary-top-button" },
@@ -309,6 +311,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
               },
               navigate: true,
             },
+            targeting: "backupRestoreEnabled",
           },
         ],
       },
@@ -418,6 +421,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
               type: "SHOW_FIREFOX_ACCOUNTS",
               addFlowParams: true,
             },
+            targeting: "!isFxASignedIn",
           },
           {
             label: { string_id: "restore-from-backup-secondary-top-button" },
@@ -428,6 +432,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
               },
               navigate: true,
             },
+            targeting: "backupRestoreEnabled",
           },
         ],
       },
@@ -548,6 +553,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
               type: "SHOW_FIREFOX_ACCOUNTS",
               addFlowParams: true,
             },
+            targeting: "!isFxASignedIn",
           },
           {
             label: { string_id: "restore-from-backup-secondary-top-button" },
@@ -558,6 +564,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
               },
               navigate: true,
             },
+            targeting: "backupRestoreEnabled",
           },
         ],
       },
@@ -656,6 +663,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
               type: "SHOW_FIREFOX_ACCOUNTS",
               addFlowParams: true,
             },
+            targeting: "!isFxASignedIn",
           },
           {
             label: { string_id: "restore-from-backup-secondary-top-button" },
@@ -666,6 +674,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
               },
               navigate: true,
             },
+            targeting: "backupRestoreEnabled",
           },
         ],
       },
@@ -673,7 +682,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
     {
       id: "AW_BACKUP_RESTORE_EMBEDDED_NO_BACKUP_FOUND",
       targeting:
-        "'messaging-system.backupRestoreEnabled'|preferenceValue == true && 'messaging-system-action.showRestoreFromBackup' |preferenceValue == true",
+        "backupRestoreEnabled && 'messaging-system-action.showRestoreFromBackup' |preferenceValue == true",
       content: {
         fullscreen: true,
         logo: {},
@@ -1062,46 +1071,6 @@ async function prepareContentForReact(content) {
         "SHOW_FIREFOX_ACCOUNTS"
     )?.content.secondary_button_top;
     content.skipFxA = true;
-  }
-
-  // Temporary pref for QA testing until 1993272 lands
-  const showRestoreBackupTopBtn = Services.prefs.getBoolPref(
-    "messaging-system.backupRestoreEnabled",
-    false
-  );
-
-  const screensWithRestoreBtn = [
-    "AW_EASY_SETUP_NEEDS_DEFAULT_AND_PIN",
-    "AW_EASY_SETUP_NEEDS_DEFAULT",
-    "AW_EASY_SETUP_NEEDS_PIN",
-    "AW_EASY_SETUP_ONLY_IMPORT",
-  ];
-
-  for (const id of screensWithRestoreBtn) {
-    const screen = content.screens.find(s => s.id === id);
-    if (!screen || !screen.content || !screen.content.secondary_button_top) {
-      continue;
-    }
-
-    let secondaryBtnTop = screen.content.secondary_button_top;
-    if (!Array.isArray(secondaryBtnTop)) {
-      secondaryBtnTop = [secondaryBtnTop];
-    }
-
-    // Filter out the restore-from-backup button if the pref is false
-    const filteredBtn = secondaryBtnTop.filter(
-      btn =>
-        btn?.label?.string_id !== "restore-from-backup-secondary-top-button" ||
-        showRestoreBackupTopBtn
-    );
-
-    if (filteredBtn.length === 0) {
-      screen.content.secondary_button_top = undefined;
-    } else if (filteredBtn.length === 1) {
-      [screen.content.secondary_button_top] = filteredBtn;
-    } else {
-      screen.content.secondary_button_top = filteredBtn;
-    }
   }
 
   let shouldRemoveLanguageMismatchScreen = true;
