@@ -300,8 +300,12 @@ gc::AllocSite* IRGenerator::maybeCreateAllocSite() {
 GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, HandleScript script,
                                        jsbytecode* pc, ICState state,
                                        CacheKind cacheKind, HandleValue val,
-                                       HandleValue idVal)
-    : IRGenerator(cx, script, pc, cacheKind, state), val_(val), idVal_(idVal) {}
+                                       HandleValue idVal,
+                                       HandleValue receiverVal)
+    : IRGenerator(cx, script, pc, cacheKind, state),
+      val_(val),
+      idVal_(idVal),
+      receiverVal_(receiverVal) {}
 
 static void EmitLoadSlotResult(CacheIRWriter& writer, ObjOperandId holderId,
                                NativeObject* holder, PropertyInfo prop) {
@@ -2446,15 +2450,10 @@ AttachDecision GetPropIRGenerator::tryAttachInlinableNativeGetter(
     Handle<NativeObject*> holder, PropertyInfo prop, ValOperandId receiverId) {
   MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
 
-  // Receiver should be the object.
-  if (isSuper()) {
-    return AttachDecision::NoAction;
-  }
-
   Rooted<JSFunction*> target(cx_, &holder->getGetter(prop)->as<JSFunction>());
   MOZ_ASSERT(target->isNativeWithoutJitEntry());
 
-  Handle<Value> thisValue = val_;
+  Handle<Value> thisValue = receiverVal_;
 
   bool isSpread = false;
   bool isSameRealm = cx_->realm() == target->realm();
