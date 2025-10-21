@@ -4,7 +4,7 @@
 
 "use strict";
 
-function selectedTextEventPromises(stateChangeType, id) {
+function selectedTextEventPromises(stateChangeType) {
   return [
     waitForMacEventWithInfo("AXSelectedTextChanged", (elem, info) => {
       return (
@@ -15,14 +15,14 @@ function selectedTextEventPromises(stateChangeType, id) {
     waitForMacEventWithInfo("AXSelectedTextChanged", (elem, info) => {
       return (
         info.AXTextStateChangeType == stateChangeType &&
-        elem.getAttributeValue("AXDOMIdentifier") == id
+        elem.getAttributeValue("AXDOMIdentifier") == "input"
       );
     }),
   ];
 }
 
-async function testInput(browser, accDoc, id = "input") {
-  let input = getNativeInterface(accDoc, id);
+async function testInput(browser, accDoc) {
+  let input = getNativeInterface(accDoc, "input");
 
   is(input.getAttributeValue("AXDescription"), "Name", "Correct input label");
   is(input.getAttributeValue("AXTitle"), "", "Correct input title");
@@ -40,19 +40,19 @@ async function testInput(browser, accDoc, id = "input") {
   );
 
   let evt = Promise.all([
-    waitForMacEvent("AXFocusedUIElementChanged", id),
-    ...selectedTextEventPromises(AXTextStateChangeTypeSelectionMove, id),
+    waitForMacEvent("AXFocusedUIElementChanged", "input"),
+    ...selectedTextEventPromises(AXTextStateChangeTypeSelectionMove),
   ]);
-  await SpecialPowers.spawn(browser, [id], domId => {
-    content.document.getElementById(domId).focus();
+  await SpecialPowers.spawn(browser, [], () => {
+    content.document.getElementById("input").focus();
   });
   await evt;
 
   evt = Promise.all(
-    selectedTextEventPromises(AXTextStateChangeTypeSelectionExtend, id)
+    selectedTextEventPromises(AXTextStateChangeTypeSelectionExtend)
   );
-  await SpecialPowers.spawn(browser, [id], domId => {
-    let elm = content.document.getElementById(domId);
+  await SpecialPowers.spawn(browser, [], () => {
+    let elm = content.document.getElementById("input");
     if (elm.setSelectionRange) {
       elm.setSelectionRange(6, 9);
     } else {
@@ -86,7 +86,7 @@ async function testInput(browser, accDoc, id = "input") {
   );
 
   evt = Promise.all(
-    selectedTextEventPromises(AXTextStateChangeTypeSelectionExtend, id)
+    selectedTextEventPromises(AXTextStateChangeTypeSelectionExtend)
   );
   input.setAttributeValue("AXSelectedTextRange", NSRange(1, 7));
   await evt;
@@ -127,38 +127,6 @@ async function testInput(browser, accDoc, id = "input") {
 addAccessibleTask(
   `<input aria-label="Name" id="input" value="Elmer Fudd">`,
   testInput
-);
-
-/**
- * contenteditable selection test with no role
- */
-addAccessibleTask(
-  `<div aria-label="Name" id="no-role-editable" contenteditable>
-     <p>Elmer Fudd</p>
-   </div>
-   <div aria-label="Name" id="no-role-editable-single-line" aria-multiline="false" contenteditable>
-     <p>Elmer Fudd</p>
-   </div>`,
-  async (browser, accDoc) => {
-    await testInput(browser, accDoc, "no-role-editable");
-    const noRoleEditable = getNativeInterface(accDoc, "no-role-editable");
-    is(
-      noRoleEditable.getAttributeValue("AXRole"),
-      "AXTextArea",
-      "Correct role for multi-line contenteditable with no role"
-    );
-
-    await testInput(browser, accDoc, "no-role-editable-single-line");
-    const noRoleEditableSingleLine = getNativeInterface(
-      accDoc,
-      "no-role-editable-single-line"
-    );
-    is(
-      noRoleEditableSingleLine.getAttributeValue("AXRole"),
-      "AXTextField",
-      "Correct role for single-line contenteditable with no role"
-    );
-  }
 );
 
 /**

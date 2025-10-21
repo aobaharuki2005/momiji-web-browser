@@ -13,6 +13,7 @@
 #include "RemoteAccessible.h"
 #include "DocAccessibleParent.h"
 #include "mozTableAccessible.h"
+#include "mozTextAccessible.h"
 #include "MOXOuterDoc.h"
 #include "MOXWebAreaAccessible.h"
 #include "nsAccUtils.h"
@@ -68,6 +69,8 @@ void ProxyCreated(RemoteAccessible* aProxy) {
     type = [MOXWebAreaAccessible class];
   } else if (aProxy->IsOuterDoc()) {
     type = [MOXOuterDoc class];
+  } else if (aProxy->IsTextField() && !aProxy->HasNumericValue()) {
+    type = [mozTextAccessible class];
   } else {
     type = GetTypeFromRole(aProxy->Role());
   }
@@ -136,8 +139,9 @@ void PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
   }
 
   if (wrapper) {
-    if (mozAccessible* editable = [wrapper moxEditableAncestor]) {
-      [editable
+    if (mozTextAccessible* textAcc =
+            static_cast<mozTextAccessible*>([wrapper moxEditableAncestor])) {
+      [textAcc
           handleAccessibleEvent:nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED];
     } else {
       [wrapper
@@ -149,17 +153,16 @@ void PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
 void PlatformTextChangeEvent(Accessible* aTarget, const nsAString& aStr,
                              int32_t aStart, uint32_t aLen, bool aIsInsert,
                              bool aFromUser) {
-  mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget);
-  if (wrapper) {
-    if (mozAccessible* editable = [wrapper moxEditableAncestor]) {
-      [editable handleAccessibleTextChangeEvent:nsCocoaUtils::ToNSString(aStr)
-                                       inserted:aIsInsert
-                                    inContainer:aTarget
-                                             at:aStart];
-    } else {
-      [wrapper maybePostValidationErrorChanged];
-    }
+  Accessible* acc = aTarget;
+  // If there is a text input ancestor, use it as the event source.
+  while (acc && GetTypeFromRole(acc->Role()) != [mozTextAccessible class]) {
+    acc = acc->Parent();
   }
+  mozAccessible* wrapper = GetNativeFromGeckoAccessible(acc ? acc : aTarget);
+  [wrapper handleAccessibleTextChangeEvent:nsCocoaUtils::ToNSString(aStr)
+                                  inserted:aIsInsert
+                               inContainer:aTarget
+                                        at:aStart];
 }
 
 void PlatformShowHideEvent(Accessible*, Accessible*, bool, bool) {}

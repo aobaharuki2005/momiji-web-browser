@@ -199,35 +199,6 @@ bool Accessible::IsTextRole() {
   return true;
 }
 
-bool Accessible::IsEditableRoot() const {
-  if (IsTextField()) {
-    // A text field is always an editable root.
-    return true;
-  }
-
-  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  if (roleMapEntry && (roleMapEntry->role == roles::ENTRY ||
-                       roleMapEntry->role == roles::SEARCHBOX)) {
-    // An aria text field is always an editable root.
-    return true;
-  }
-
-  if (!IsEditable()) {
-    return false;
-  }
-
-  if (IsDoc()) {
-    return true;
-  }
-
-  Accessible* parent = Parent();
-  if (parent && !parent->IsEditable()) {
-    return true;
-  }
-
-  return false;
-}
-
 uint32_t Accessible::StartOffset() {
   MOZ_ASSERT(IsLink(), "StartOffset is called not on hyper link!");
   Accessible* parent = Parent();

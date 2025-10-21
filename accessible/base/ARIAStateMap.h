@@ -35,7 +35,6 @@ enum EStateRule {
   eARIAInvalid,
   eARIAModal,
   eARIAMultiline,
-  eARIAMultilineByDefault,
   eARIAMultiSelectable,
   eARIAOrientation,
   eARIAPressed,

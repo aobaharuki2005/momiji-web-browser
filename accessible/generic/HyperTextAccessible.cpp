@@ -85,6 +85,13 @@ uint64_t HyperTextAccessible::NativeState() const {
   return states;
 }
 
+bool HyperTextAccessible::IsEditable() const {
+  if (!mContent) {
+    return false;
+  }
+  return mContent->AsElement()->State().HasState(dom::ElementState::READWRITE);
+}
+
 uint32_t HyperTextAccessible::DOMPointToOffset(nsINode* aNode,
                                                int32_t aNodeOffset,
                                                bool aIsEndOffset) const {

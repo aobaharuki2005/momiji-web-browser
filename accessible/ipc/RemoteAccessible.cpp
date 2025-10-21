@@ -302,8 +302,7 @@ void RemoteAccessible::Value(nsString& aValue) const {
 
     const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
     // Value of textbox is a textified subtree.
-    if ((roleMapEntry && roleMapEntry->Is(nsGkAtoms::textbox)) ||
-        (IsGeneric() && IsEditableRoot())) {
+    if (roleMapEntry && roleMapEntry->Is(nsGkAtoms::textbox)) {
       nsTextEquivUtils::GetTextEquivFromSubtree(this, aValue);
       return;
     }
@@ -1560,22 +1559,6 @@ bool RemoteAccessible::IsScrollable() const {
 
 bool RemoteAccessible::IsPopover() const {
   return mCachedFields && mCachedFields->HasAttribute(CacheKey::PopupType);
-}
-
-bool RemoteAccessible::IsEditable() const {
-  if (RequestDomainsIfInactive(CacheDomain::State)) {
-    return false;
-  }
-
-  if (mCachedFields) {
-    if (auto rawState =
-            mCachedFields->GetAttribute<uint64_t>(CacheKey::State)) {
-      VERIFY_CACHE(CacheDomain::State);
-      return (*rawState & states::EDITABLE) != 0;
-    }
-  }
-
-  return false;
 }
 
 #if !defined(XP_WIN)

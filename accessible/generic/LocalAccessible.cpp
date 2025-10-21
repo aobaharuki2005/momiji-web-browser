@@ -1706,12 +1706,6 @@ void LocalAccessible::ApplyARIAState(uint64_t* aState) const {
     aria::MapToState(aria::eARIAPressed, element, aState);
   }
 
-  if (!IsTextField() && IsEditableRoot()) {
-    // HTML text fields will have their own multi/single line calcuation in
-    // NativeState.
-    aria::MapToState(aria::eARIAMultilineByDefault, element, aState);
-  }
-
   if (!roleMapEntry) return;
 
   *aState |= roleMapEntry->state;
@@ -1761,16 +1755,18 @@ void LocalAccessible::Value(nsString& aValue) const {
   }
 
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (!roleMapEntry) {
+    return;
+  }
 
   // Value of textbox is a textified subtree.
-  if ((roleMapEntry && roleMapEntry->Is(nsGkAtoms::textbox)) ||
-      (IsGeneric() && IsEditableRoot())) {
+  if (roleMapEntry->Is(nsGkAtoms::textbox)) {
     nsTextEquivUtils::GetTextEquivFromSubtree(this, aValue);
     return;
   }
 
   // Value of combobox is a text of current or selected item.
-  if (roleMapEntry && roleMapEntry->Is(nsGkAtoms::combobox)) {
+  if (roleMapEntry->Is(nsGkAtoms::combobox)) {
     LocalAccessible* option = CurrentItem();
     if (!option) {
       uint32_t childCount = ChildCount();
@@ -2536,11 +2532,6 @@ bool LocalAccessible::IsScrollable() const {
 bool LocalAccessible::IsPopover() const {
   dom::Element* el = Elm();
   return el && el->IsHTMLElement() && el->HasAttr(nsGkAtoms::popover);
-}
-
-bool LocalAccessible::IsEditable() const {
-  dom::Element* el = Elm();
-  return el && el->State().HasState(dom::ElementState::READWRITE);
 }
 
 void LocalAccessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,

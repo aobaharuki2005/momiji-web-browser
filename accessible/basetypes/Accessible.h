@@ -623,10 +623,6 @@ class Accessible {
    */
   bool IsTextRole();
 
-  virtual bool IsEditable() const = 0;
-
-  bool IsEditableRoot() const;
-
   bool IsGenericHyperText() const { return mType == eHyperTextType; }
 
   bool IsHTMLBr() const { return mType == eHTMLBRType; }

@@ -30,9 +30,6 @@ struct EnumTypeData {
 
   // States to clear in case of match.
   const uint64_t mClearState;
-
-  // State if attribute is missing or value doesn't match any enum values.
-  const uint64_t mDefaultState;
 };
 
 enum ETokenType {
@@ -91,7 +88,6 @@ bool aria::MapToState(EStateRule aRule, dom::Element* aElement,
           {states::SUPPORTS_AUTOCOMPLETION,
            states::HASPOPUP | states::SUPPORTS_AUTOCOMPLETION,
            states::HASPOPUP | states::SUPPORTS_AUTOCOMPLETION},
-          0,
           0};
 
       MapEnumType(aElement, aState, data);
@@ -103,7 +99,6 @@ bool aria::MapToState(EStateRule aRule, dom::Element* aElement,
           nsGkAtoms::aria_busy,
           {nsGkAtoms::_true, nsGkAtoms::error, nullptr},
           {states::BUSY, states::INVALID},
-          0,
           0};
 
       MapEnumType(aElement, aState, data);
@@ -185,26 +180,11 @@ bool aria::MapToState(EStateRule aRule, dom::Element* aElement,
     }
 
     case eARIAMultiline: {
-      static const EnumTypeData data = {
-          nsGkAtoms::aria_multiline,
-          {nsGkAtoms::_true, nsGkAtoms::_false, nullptr},
-          {states::MULTI_LINE, states::SINGLE_LINE},
-          states::MULTI_LINE | states::SINGLE_LINE,
-          states::SINGLE_LINE};
+      static const TokenTypeData data(nsGkAtoms::aria_multiline,
+                                      eBoolType | eDefinedIfAbsent, 0,
+                                      states::MULTI_LINE, states::SINGLE_LINE);
 
-      MapEnumType(aElement, aState, data);
-      return true;
-    }
-
-    case eARIAMultilineByDefault: {
-      static const EnumTypeData data = {
-          nsGkAtoms::aria_multiline,
-          {nsGkAtoms::_true, nsGkAtoms::_false, nullptr},
-          {states::MULTI_LINE, states::SINGLE_LINE},
-          states::MULTI_LINE | states::SINGLE_LINE,
-          states::MULTI_LINE};
-
-      MapEnumType(aElement, aState, data);
+      MapTokenType(aElement, aState, data);
       return true;
     }
 
@@ -222,8 +202,7 @@ bool aria::MapToState(EStateRule aRule, dom::Element* aElement,
           nsGkAtoms::aria_orientation,
           {nsGkAtoms::horizontal, nsGkAtoms::vertical, nullptr},
           {states::HORIZONTAL, states::VERTICAL},
-          states::HORIZONTAL | states::VERTICAL,
-          0};
+          states::HORIZONTAL | states::VERTICAL};
 
       MapEnumType(aElement, aState, data);
       return true;
@@ -322,11 +301,6 @@ static void MapEnumType(dom::Element* aElement, uint64_t* aState,
       return;
     case 2:
       *aState = (*aState & ~aData.mClearState) | aData.mStates[2];
-      return;
-    default:
-      if (aData.mDefaultState) {
-        *aState = (*aState & ~aData.mClearState) | aData.mDefaultState;
-      }
       return;
   }
 }

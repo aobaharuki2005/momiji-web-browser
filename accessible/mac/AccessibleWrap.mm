@@ -100,6 +100,10 @@ Class AccessibleWrap::GetNativeType() {
     return [MOXOuterDoc class];
   }
 
+  if (IsTextField() && !HasNumericValue()) {
+    return [mozTextAccessible class];
+  }
+
   return GetTypeFromRole(Role());
 
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
@@ -236,6 +240,10 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
 
     case roles::PAGETABLIST:
       return [mozTabGroupAccessible class];
+
+    case roles::ENTRY:
+    case roles::PASSWORD_TEXT:
+      return [mozTextAccessible class];
 
     case roles::TEXT_LEAF:
     case roles::STATICTEXT:

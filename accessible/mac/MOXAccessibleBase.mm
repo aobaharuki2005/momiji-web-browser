@@ -543,10 +543,6 @@ mozilla::LogModule* GetMacAccessibilityLog() {
   return NO;
 }
 
-- (BOOL)moxIsTextField {
-  return NO;
-}
-
 #pragma mark -
 
 // objc-style description (from NSObject); not to be confused with the

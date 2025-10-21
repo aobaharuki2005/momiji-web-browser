@@ -15,6 +15,7 @@
 #import "MOXSearchInfo.h"
 #import "MOXTextMarkerDelegate.h"
 #import "MOXWebAreaAccessible.h"
+#import "mozTextAccessible.h"
 #import "mozRootAccessible.h"
 
 #include "LocalAccessible-inl.h"
@@ -162,10 +163,6 @@ using namespace mozilla::a11y;
     return [self stateWithMask:states::EXPANDABLE] == 0;
   }
 
-  if ([self blockTextFieldMethod:selector]) {
-    return YES;
-  }
-
   return [super moxBlockSelector:selector];
 }
 
@@ -295,17 +292,6 @@ using namespace mozilla::a11y;
 }
 
 - (NSString*)moxRole {
-  if (mRole == roles::ENTRY ||
-      (mGeckoAccessible->IsGeneric() && mGeckoAccessible->IsEditableRoot())) {
-    if ([self stateWithMask:states::MULTI_LINE]) {
-      // This is a special case where we have a separate role when an entry is a
-      // multiline text area.
-      return NSAccessibilityTextAreaRole;
-    }
-
-    return NSAccessibilityTextFieldRole;
-  }
-
 #define ROLE(geckoRole, stringRole, ariaRole, atkRole, macRole, macSubrole, \
              msaaRole, ia2Role, androidClass, iosIsElement, uiaControlType, \
              nameRule)                                                      \
@@ -856,8 +842,8 @@ static bool ProvidesTitle(const Accessible* aAccessible, nsString& aName) {
 }
 
 - (id)moxEditableAncestor {
-  return [self moxFindAncestor:^BOOL(id<MOXAccessible> moxAcc, BOOL* stop) {
-    return [moxAcc moxIsTextField];
+  return [self moxFindAncestor:^BOOL(id moxAcc, BOOL* stop) {
+    return [moxAcc isKindOfClass:[mozTextAccessible class]];
   }];
 }
 
@@ -1076,6 +1062,13 @@ static bool ProvidesTitle(const Accessible* aAccessible, nsString& aName) {
   }
 
   return relations;
+}
+
+- (void)handleAccessibleTextChangeEvent:(NSString*)change
+                               inserted:(BOOL)isInserted
+                            inContainer:(Accessible*)container
+                                     at:(int32_t)start {
+  [self maybePostValidationErrorChanged];
 }
 
 - (void)handleAccessibleEvent:(uint32_t)eventType {
