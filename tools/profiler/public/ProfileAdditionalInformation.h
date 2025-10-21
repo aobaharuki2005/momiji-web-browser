@@ -81,6 +81,12 @@ struct ProfileGenerationAdditionalInformation {
 
   void ToJSValue(JSContext* aCx, JS::MutableHandle<JS::Value> aRetVal) const;
 
+  friend IPC::ParamTraits<mozilla::ProfileGenerationAdditionalInformation>;
+
+ private:
+  JSString* CreateJSStringFromSourceData(
+      JSContext* aCx, const ProfilerJSSourceData& aSourceData) const;
+
   SharedLibraryInfo mSharedLibraries;
   nsTArray<JSSourceEntry> mJSSourceEntries;
 };

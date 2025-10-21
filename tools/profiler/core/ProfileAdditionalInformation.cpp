@@ -16,6 +16,26 @@
 #ifdef MOZ_GECKO_PROFILER
 #  include "platform.h"
 
+JSString*
+mozilla::ProfileGenerationAdditionalInformation::CreateJSStringFromSourceData(
+    JSContext* aCx, const ProfilerJSSourceData& aSourceData) const {
+  return aSourceData.data().match(
+      [&](const ProfilerJSSourceData::SourceTextUTF16& srcText) -> JSString* {
+        return JS_NewUCStringCopyN(aCx, srcText.chars().get(),
+                                   srcText.length());
+      },
+      [&](const ProfilerJSSourceData::SourceTextUTF8& srcText) -> JSString* {
+        return JS_NewStringCopyN(aCx, srcText.chars().get(), srcText.length());
+      },
+      [&](const ProfilerJSSourceData::RetrievableFile&) -> JSString* {
+        // FIXME: Implement this later.
+        return JS_NewStringCopyZ(aCx, "[unavailable]");
+      },
+      [&](const ProfilerJSSourceData::Unavailable&) -> JSString* {
+        return JS_NewStringCopyZ(aCx, "[unavailable]");
+      });
+}
+
 void mozilla::ProfileGenerationAdditionalInformation::ToJSValue(
     JSContext* aCx, JS::MutableHandle<JS::Value> aRetVal) const {
   // Get the shared libraries array.
@@ -32,8 +52,24 @@ void mozilla::ProfileGenerationAdditionalInformation::ToJSValue(
                                  buffer16.Length(), &sharedLibrariesVal));
   }
 
+  // Create jsSources object, which is UUID to source text mapping for
+  // WebChannel.
+  JS::Rooted<JSObject*> jsSourcesObj(aCx, JS_NewPlainObject(aCx));
+  if (jsSourcesObj) {
+    for (const auto& entry : mJSSourceEntries) {
+      JSString* sourceStr = CreateJSStringFromSourceData(aCx, entry.sourceData);
+      if (sourceStr) {
+        JS::Rooted<JS::Value> sourceVal(aCx, JS::StringValue(sourceStr));
+        JS_SetProperty(aCx, jsSourcesObj, PromiseFlatCString(entry.uuid).get(),
+                       sourceVal);
+      }
+    }
+  }
+
   JS::Rooted<JSObject*> additionalInfoObj(aCx, JS_NewPlainObject(aCx));
+  JS::Rooted<JS::Value> jsSourcesVal(aCx, JS::ObjectValue(*jsSourcesObj));
   JS_SetProperty(aCx, additionalInfoObj, "sharedLibraries", sharedLibrariesVal);
+  JS_SetProperty(aCx, additionalInfoObj, "jsSources", jsSourcesVal);
   aRetVal.setObject(*additionalInfoObj);
 }
 #endif  // MOZ_GECKO_PROFILER
