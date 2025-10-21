@@ -1063,7 +1063,7 @@ RunMicroTask(JSContext* aCx, JS::MutableHandle<JS::MicroTask> task) {
     }
   }
 
-  if (incumbentGlobal && schedulingState) {
+  if (incumbentGlobal) {
     // https://wicg.github.io/scheduling-apis/#sec-patches-html-hostcalljobcallback
     // 2. Set event loop’s current scheduling state to
     // callback.[[HostDefined]].[[SchedulingState]].
@@ -1087,7 +1087,7 @@ RunMicroTask(JSContext* aCx, JS::MutableHandle<JS::MicroTask> task) {
 
   // (The step after step 7): Set event loop’s current scheduling
   // state to null
-  if (incumbentGlobal && schedulingState) {
+  if (incumbentGlobal) {
     incumbentGlobal->SetWebTaskSchedulingState(nullptr);
   }
 
