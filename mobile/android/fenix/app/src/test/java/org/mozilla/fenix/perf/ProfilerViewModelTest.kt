@@ -457,4 +457,18 @@ class ProfilerViewModelTest {
 
         assertEquals(listOf(false, true, false), collectedStates)
     }
+
+    @Test
+    fun `GIVEN all profiler presets THEN they must include the java feature for polling to work`() {
+        // This test ensures that all ProfilerSettings presets include the "java" feature.
+        // The "java" feature is required for GeckoJavaSampler to start, which makes
+        // isProfilerActive() return true. Without it, the polling mechanism in
+        // pollUntilProfilerActiveAndThen() will timeout and fail (see bug 1994995).
+        ProfilerSettings.entries.forEach { setting ->
+            assertTrue(
+                "ProfilerSettings.${setting.name} must include 'java' feature for isProfilerActive() to work",
+                setting.features.contains("java"),
+            )
+        }
+    }
 }
