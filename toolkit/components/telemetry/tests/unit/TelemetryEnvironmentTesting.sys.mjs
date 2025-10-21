@@ -1124,7 +1124,11 @@ export var TelemetryEnvironmentTesting = {
     }
 
     // Check "theme" structure.
-    if (data.addons.theme) {
+    // NOTE: theme is expected to be set to an empty object while the theme is
+    // not installed or enabled yet by the time the telemetry environment is
+    // capturing the active addons and themes early during the first at startup,
+    // see Bug 1994389.
+    if (Object.keys(data.addons.theme).length !== 0) {
       this.checkTheme(data.addons.theme);
     }
 
