@@ -246,7 +246,7 @@ index 40714b196e..2c6b39f59e 100644
  
  if (rtc_include_tests) {
 diff --git a/api/video/BUILD.gn b/api/video/BUILD.gn
-index e621f9c088..e4c80260d4 100644
+index cd74281a22..16af840261 100644
 --- a/api/video/BUILD.gn
 +++ b/api/video/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -588,7 +588,7 @@ index a693604389..72972d18e1 100644
  import("../../webrtc.gni")
  
 diff --git a/modules/video_coding/BUILD.gn b/modules/video_coding/BUILD.gn
-index 959bea0ab4..2f8b9c0df1 100644
+index 2eddb81fd7..11da028bd3 100644
 --- a/modules/video_coding/BUILD.gn
 +++ b/modules/video_coding/BUILD.gn
 @@ -6,7 +6,7 @@
