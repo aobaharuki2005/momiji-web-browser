@@ -55,7 +55,8 @@ RTCEncodedVideoFrame::RTCEncodedVideoFrame(
     nsIGlobalObject* aGlobal,
     std::unique_ptr<webrtc::TransformableFrameInterface> aFrame,
     uint64_t aCounter, RTCRtpScriptTransformer* aOwner)
-    : RTCEncodedVideoFrameData{{std::move(aFrame), aCounter, /*timestamp*/ 0}},
+    : RTCEncodedVideoFrameData{RTCEncodedFrameState{std::move(aFrame), aCounter,
+                                                    /*timestamp*/ 0}},
       RTCEncodedFrameBase(aGlobal, static_cast<RTCEncodedFrameState&>(*this)),
       mOwner(aOwner) {
   InitMetadata();
@@ -66,10 +67,10 @@ RTCEncodedVideoFrame::RTCEncodedVideoFrame(
 
 RTCEncodedVideoFrame::RTCEncodedVideoFrame(nsIGlobalObject* aGlobal,
                                            RTCEncodedVideoFrameData&& aData)
-    : RTCEncodedVideoFrameData{{std::move(aData.mFrame), aData.mCounter,
-                                aData.mTimestamp},
-                               aData.mType,
-                               std::move(aData.mMetadata),
+    : RTCEncodedVideoFrameData{RTCEncodedFrameState{std::move(aData.mFrame),
+                                                    aData.mCounter,
+                                                    aData.mTimestamp},
+                               aData.mType, std::move(aData.mMetadata),
                                aData.mRid},
       RTCEncodedFrameBase(aGlobal, static_cast<RTCEncodedFrameState&>(*this)),
       mOwner(nullptr) {
@@ -164,13 +165,12 @@ already_AddRefed<RTCEncodedVideoFrame> RTCEncodedVideoFrame::Constructor(
 
 RTCEncodedVideoFrameData RTCEncodedVideoFrameData::Clone() const {
   return RTCEncodedVideoFrameData{
-      {webrtc::CloneVideoFrame(
-           static_cast<webrtc::TransformableVideoFrameInterface*>(
-               mFrame.get())),
-       mCounter, mTimestamp},
-      mType,
-      RTCEncodedVideoFrameMetadata(mMetadata),
-      mRid};
+      RTCEncodedFrameState{
+          webrtc::CloneVideoFrame(
+              static_cast<webrtc::TransformableVideoFrameInterface*>(
+                  mFrame.get())),
+          mCounter, mTimestamp},
+      mType, RTCEncodedVideoFrameMetadata(mMetadata), mRid};
 }
 
 nsIGlobalObject* RTCEncodedVideoFrame::GetParentObject() const {

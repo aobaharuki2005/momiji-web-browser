@@ -26,6 +26,10 @@ struct RTCEncodedFrameState {
   uint64_t mCounter = 0;
   unsigned long mTimestamp = 0;
 
+  explicit RTCEncodedFrameState(
+      std::unique_ptr<webrtc::TransformableFrameInterface> aFrame,
+      uint64_t aCounter = 0, unsigned long aTimestamp = 0);
+
   // work around only having forward-declared TransformableFrameInterface
   ~RTCEncodedFrameState();
 
