@@ -805,7 +805,8 @@ nsresult nsDocShell::LoadURI(nsDocShellLoadState* aLoadState,
     // FIXME Null check aLoadState->GetLoadingSessionHistoryInfo()?
     return LoadHistoryEntry(*aLoadState->GetLoadingSessionHistoryInfo(),
                             aLoadState->LoadType(),
-                            aLoadState->HasValidUserGestureActivation());
+                            aLoadState->HasValidUserGestureActivation(),
+                            aLoadState->NotifiedBeforeUnloadListeners());
   }
 
   // On history navigation via Back/Forward buttons, don't execute
@@ -12628,14 +12629,16 @@ nsresult nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType,
 }
 
 nsresult nsDocShell::LoadHistoryEntry(const LoadingSessionHistoryInfo& aEntry,
-                                      uint32_t aLoadType,
-                                      bool aUserActivation) {
+                                      uint32_t aLoadType, bool aUserActivation,
+                                      bool aNotifiedBeforeUnloadListeners) {
   RefPtr<nsDocShellLoadState> loadState = aEntry.CreateLoadInfo();
   loadState->SetHasValidUserGestureActivation(
       loadState->HasValidUserGestureActivation() || aUserActivation);
 
   loadState->SetTextDirectiveUserActivation(
       loadState->GetTextDirectiveUserActivation() || aUserActivation);
+
+  loadState->SetNotifiedBeforeUnloadListeners(aNotifiedBeforeUnloadListeners);
 
   return LoadHistoryEntry(loadState, aLoadType, aEntry.mLoadingCurrentEntry);
 }

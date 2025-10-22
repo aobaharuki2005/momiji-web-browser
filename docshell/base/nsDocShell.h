@@ -1039,7 +1039,7 @@ class nsDocShell final : public nsDocLoader,
                             bool aUserActivation);
   nsresult LoadHistoryEntry(
       const mozilla::dom::LoadingSessionHistoryInfo& aEntry, uint32_t aLoadType,
-      bool aUserActivation);
+      bool aUserActivation, bool aNotifiedBeforeUnloadListeners);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult LoadHistoryEntry(nsDocShellLoadState* aLoadState, uint32_t aLoadType,
                             bool aLoadingCurrentEntry);
