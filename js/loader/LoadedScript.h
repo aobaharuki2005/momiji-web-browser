@@ -84,10 +84,10 @@ class LoadedScript : public nsIMemoryReporter {
   bool IsClassicScript() const { return mKind == ScriptKind::eClassic; }
   bool IsModuleScript() const { return mKind == ScriptKind::eModule; }
   bool IsEventScript() const { return mKind == ScriptKind::eEvent; }
+  bool IsImportMapScript() const { return mKind == ScriptKind::eImportMap; }
 
   inline ClassicScript* AsClassicScript();
   inline ModuleScript* AsModuleScript();
-  inline EventScript* AsEventScript();
 
   // Used to propagate Fetch Options to child modules
   ScriptFetchOptions* GetFetchOptions() const { return mFetchOptions; }
@@ -358,6 +358,9 @@ class LoadedScriptDelegate {
 
   bool IsModuleScript() const { return GetLoadedScript()->IsModuleScript(); }
   bool IsEventScript() const { return GetLoadedScript()->IsEventScript(); }
+  bool IsImportMapScript() const {
+    return GetLoadedScript()->IsImportMapScript();
+  }
 
   bool IsUnknownDataType() const {
     return GetLoadedScript()->IsUnknownDataType();
@@ -451,6 +454,14 @@ class EventScript final : public LoadedScript {
  public:
   EventScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
               ScriptFetchOptions* aFetchOptions, nsIURI* aURI);
+};
+
+class ImportMapScript final : public LoadedScript {
+  ~ImportMapScript() = default;
+
+ public:
+  ImportMapScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
+                  ScriptFetchOptions* aFetchOptions, nsIURI* aURI);
 };
 
 // A single module script. May be used to satisfy multiple load requests.

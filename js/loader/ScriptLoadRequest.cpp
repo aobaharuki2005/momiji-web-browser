@@ -182,12 +182,18 @@ void ScriptLoadRequest::CacheEntryFound(LoadedScript* aLoadedScript) {
 
   switch (mKind) {
     case ScriptKind::eClassic:
-    case ScriptKind::eImportMap:
       MOZ_ASSERT(aLoadedScript->IsClassicScript());
 
       mLoadedScript = aLoadedScript;
 
       // Classic scripts can be set ready once the script itself is ready.
+      mState = State::Ready;
+      break;
+    case ScriptKind::eImportMap:
+      MOZ_ASSERT(aLoadedScript->IsImportMapScript());
+
+      mLoadedScript = aLoadedScript;
+
       mState = State::Ready;
       break;
     case ScriptKind::eModule:
@@ -225,8 +231,10 @@ void ScriptLoadRequest::NoCacheEntryFound() {
   // and later replace the mBaseURL using what the Channel->GetURI will provide.
   switch (mKind) {
     case ScriptKind::eClassic:
-    case ScriptKind::eImportMap:
       mLoadedScript = new ClassicScript(mReferrerPolicy, mFetchOptions, mURI);
+      break;
+    case ScriptKind::eImportMap:
+      mLoadedScript = new ImportMapScript(mReferrerPolicy, mFetchOptions, mURI);
       break;
     case ScriptKind::eModule:
       mLoadedScript = new ModuleScript(mReferrerPolicy, mFetchOptions, mURI);

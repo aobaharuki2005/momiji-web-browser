@@ -251,6 +251,16 @@ ClassicScript::ClassicScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
 }
 
 //////////////////////////////////////////////////////////////
+// ImportMapScript
+//////////////////////////////////////////////////////////////
+
+ImportMapScript::ImportMapScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
+                                 ScriptFetchOptions* aFetchOptions,
+                                 nsIURI* aURI)
+    : LoadedScript(ScriptKind::eImportMap, aReferrerPolicy, aFetchOptions,
+                   aURI) {}
+
+//////////////////////////////////////////////////////////////
 // ModuleScript
 //////////////////////////////////////////////////////////////
 
