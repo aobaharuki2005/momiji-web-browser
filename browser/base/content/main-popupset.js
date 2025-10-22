@@ -501,8 +501,10 @@ document.addEventListener(
           ToolbarContextMenu.updateDownloadsAlwaysOpenPanel(event.target);
           ToolbarContextMenu.updateExtensionsButtonContextMenu(event.target);
           ToolbarContextMenu.updateExtension(event.target);
-          // hideLeadingSeparatorIfNeeded must be called last after updating the menu items above,
+
+          // The following methods must be called last after updating the menu items above,
           // as they may change which items are visible.
+          ToolbarContextMenu.updateCustomizationItemsVisibility(event.target);
           ToolbarContextMenu.hideLeadingSeparatorIfNeeded(event.target);
           break;
         case "pageActionContextMenu":
