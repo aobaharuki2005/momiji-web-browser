@@ -238,11 +238,6 @@ void ScriptLoadRequest::NoCacheEntryFound() {
   mState = State::Fetching;
 }
 
-void ScriptLoadRequest::SetPendingFetchingError() {
-  MOZ_ASSERT(IsCheckingCache());
-  mState = State::PendingFetchingError;
-}
-
 static bool IsInternalURIScheme(nsIURI* uri) {
   return uri->SchemeIs("moz-extension") || uri->SchemeIs("resource") ||
          uri->SchemeIs("moz-src") || uri->SchemeIs("chrome");

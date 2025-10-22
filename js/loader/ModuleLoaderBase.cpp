@@ -538,7 +538,7 @@ nsresult ModuleLoaderBase::RestartModuleLoad(ModuleLoadRequest* aRequest) {
 nsresult ModuleLoaderBase::StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
                                                     RestartRequest aRestart) {
   MOZ_ASSERT(aRequest->mLoader == this);
-  MOZ_ASSERT(aRequest->IsFetching() || aRequest->IsPendingFetchingError());
+  MOZ_ASSERT(aRequest->IsFetching());
 
   // NOTE: The LoadedScript::mDataType field used by the IsStencil call can be
   //       modified asynchronously after the StartFetch call.
@@ -628,7 +628,7 @@ void ModuleLoaderBase::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
 
   ModuleMapKey moduleMapKey(aRequest->mURI, aRequest->mModuleType);
 
-  MOZ_ASSERT(aRequest->IsFetching() || aRequest->IsPendingFetchingError());
+  MOZ_ASSERT(aRequest->IsFetching());
   MOZ_ASSERT(!ModuleMapContainsURL(moduleMapKey));
 
   RefPtr<LoadingRequest> loadingRequest = new LoadingRequest();
