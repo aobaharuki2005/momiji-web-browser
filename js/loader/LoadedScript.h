@@ -371,6 +371,10 @@ class LoadedScriptDelegate {
     GetLoadedScript()->AsModuleScript()->UpdateReferrerPolicy(aReferrerPolicy);
   }
 
+  ScriptFetchOptions* FetchOptions() const {
+    return GetLoadedScript()->GetFetchOptions();
+  }
+
   bool IsUnknownDataType() const {
     return GetLoadedScript()->IsUnknownDataType();
   }

@@ -45,12 +45,12 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ModuleLoadRequest,
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 ModuleLoadRequest::ModuleLoadRequest(
-    nsIURI* aURI, ModuleType aModuleType, ScriptFetchOptions* aFetchOptions,
+    nsIURI* aURI, ModuleType aModuleType,
     const mozilla::dom::SRIMetadata& aIntegrity, nsIURI* aReferrer,
     LoadContextBase* aContext, Kind aKind, ModuleLoaderBase* aLoader,
     ModuleLoadRequest* aRootModule)
-    : ScriptLoadRequest(ScriptKind::eModule, aURI, aFetchOptions, aIntegrity,
-                        aReferrer, aContext),
+    : ScriptLoadRequest(ScriptKind::eModule, aURI, aIntegrity, aReferrer,
+                        aContext),
       mKind(aKind),
       mModuleType(aModuleType),
       mErroredLoadingImports(false),

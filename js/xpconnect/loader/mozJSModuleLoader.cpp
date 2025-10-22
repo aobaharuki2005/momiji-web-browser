@@ -1085,7 +1085,7 @@ nsresult mozJSModuleLoader::ImportESModule(
   RefPtr<SyncLoadContext> context = new SyncLoadContext();
 
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      uri, JS::ModuleType::JavaScript, options, dom::SRIMetadata(),
+      uri, JS::ModuleType::JavaScript, dom::SRIMetadata(),
       /* aReferrer = */ nullptr, context, ModuleLoadRequest::Kind::TopLevel,
       mModuleLoader, nullptr);
 
