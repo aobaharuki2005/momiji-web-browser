@@ -18,10 +18,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c8cf67108972d5cae
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/webrtc.gni b/webrtc.gni
-index 8c270e335e..67079c13e7 100644
+index d29a86112b..ee377f06d0 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
-@@ -145,7 +145,7 @@ declare_args() {
+@@ -136,7 +136,7 @@ declare_args() {
    rtc_build_tools = false
  
    # Set this to false to skip building code that requires X11.

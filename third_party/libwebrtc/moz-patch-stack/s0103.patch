@@ -741,7 +741,7 @@ index df32a6863d..c394964852 100644
            ]
          }
 diff --git a/system_wrappers/BUILD.gn b/system_wrappers/BUILD.gn
-index 52efbf7c09..7461af4d7b 100644
+index 822b565610..f2ea548824 100644
 --- a/system_wrappers/BUILD.gn
 +++ b/system_wrappers/BUILD.gn
 @@ -7,8 +7,8 @@
@@ -782,7 +782,7 @@ index 59bd007ce7..0ac1cd374e 100644
      deps = [ ":google_test_runner_delegate" ]
    }
 diff --git a/test/fuzzers/BUILD.gn b/test/fuzzers/BUILD.gn
-index 6bdaf144fb..184f608d1b 100644
+index 9d61ce653a..8d61065eab 100644
 --- a/test/fuzzers/BUILD.gn
 +++ b/test/fuzzers/BUILD.gn
 @@ -6,7 +6,7 @@
@@ -794,7 +794,7 @@ index 6bdaf144fb..184f608d1b 100644
  import("//testing/libfuzzer/fuzzer_test.gni")
  import("../../webrtc.gni")
  
-@@ -74,7 +74,7 @@ template("webrtc_fuzzer_test") {
+@@ -73,7 +73,7 @@ template("webrtc_fuzzer_test") {
      }
  
      if (!build_with_chromium && is_clang) {
@@ -804,7 +804,7 @@ index 6bdaf144fb..184f608d1b 100644
    }
  }
 diff --git a/webrtc.gni b/webrtc.gni
-index 8c293ba42c..7759842c6f 100644
+index bf4535e14c..b9c2178996 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -5,12 +5,12 @@
@@ -852,7 +852,7 @@ index 8c293ba42c..7759842c6f 100644
  }
  
  if (build_with_chromium) {
-@@ -382,8 +382,8 @@ rtc_common_configs = [ webrtc_root + ":common_config" ]
+@@ -373,8 +373,8 @@ rtc_common_configs = [ webrtc_root + ":common_config" ]
  
  if (is_mac || is_ios) {
    if (filter_include(default_compiler_configs,
@@ -863,7 +863,7 @@ index 8c293ba42c..7759842c6f 100644
    }
  }
  
-@@ -401,7 +401,7 @@ rtc_common_inherited_config = webrtc_root + ":common_inherited_config"
+@@ -392,7 +392,7 @@ rtc_common_inherited_config = webrtc_root + ":common_inherited_config"
  # Common configs to remove or add in all rtc targets.
  rtc_remove_configs = []
  if (!build_with_chromium && is_clang) {
