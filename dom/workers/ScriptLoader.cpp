@@ -1257,7 +1257,7 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
     if (loadContext->mMutedErrorFlag.valueOr(false)) {
       NS_NewURI(getter_AddRefs(requestBaseURI), "about:blank"_ns);
     } else {
-      requestBaseURI = aRequest->mBaseURL;
+      requestBaseURI = aRequest->BaseURL();
     }
     MOZ_ASSERT(aRequest->mLoadedScript->IsClassicScript());
     aRequest->mLoadedScript->SetBaseURL(requestBaseURI);

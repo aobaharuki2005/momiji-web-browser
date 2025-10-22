@@ -558,8 +558,8 @@ nsresult CacheLoadHandler::DataReceivedFromCache(
 
   nsCOMPtr<nsIURI> finalURI;
   rv = NS_NewURI(getter_AddRefs(finalURI), loadContext->mFullURL);
-  if (!loadContext->mRequest->mBaseURL) {
-    loadContext->mRequest->mBaseURL = finalURI;
+  if (!loadContext->mRequest->BaseURL()) {
+    loadContext->mRequest->SetBaseURL(finalURI);
   }
   if (loadContext->IsTopLevel()) {
     if (NS_SUCCEEDED(rv)) {
