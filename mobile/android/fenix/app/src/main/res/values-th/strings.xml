@@ -294,9 +294,9 @@
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
   <string name="browser_main_menu_content_description_navigation_header">การนำทาง</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button">ช่วยเหลือ</string>
+  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">ช่วยเหลือ</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button">การตั้งค่า</string>
+  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">การตั้งค่า</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">ปิดแผ่นเมนูส่วนขยาย</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -442,15 +442,15 @@
     Title for set firefox as default browser screen used by Nimbus experiments.
     Note: The word "Firefox" should NOT be translated
   -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources">ค้นพบว่าทำไมผู้คนนับล้านถึงรัก Firefox</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">ค้นพบว่าทำไมผู้คนนับล้านถึงรัก Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">ท่องเว็บอย่างปลอดภัยพร้อมตัวเลือกที่มากขึ้น</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">ท่องเว็บอย่างปลอดภัยพร้อมตัวเลือกที่มากขึ้น</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">เบราว์เซอร์ที่สนับสนุนโดยองค์กรไม่แสวงหาผลกำไรของเราจะช่วยหยุดบริษัทต่างๆ ไม่ให้แอบติดตามคุณทางเว็บได้</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">ผู้คนมากกว่า 100 ล้านคนปกป้องความเป็นส่วนตัวของตัวเองด้วยการเลือกเบราว์เซอร์ที่ได้รับการสนับสนุนจากองค์กรไม่แสวงหาผลกำไร</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">ผู้คนมากกว่า 100 ล้านคนปกป้องความเป็นส่วนตัวของตัวเองด้วยการเลือกเบราว์เซอร์ที่ได้รับการสนับสนุนจากองค์กรไม่แสวงหาผลกำไร</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">เครื่องมือติดตามที่รู้จักล่ะ? จะปิดกั้นให้โดยอัตโนมัติเลย ส่วนขยายล่ะ? ลองดูส่วนขยายทั้งหมดกว่า 700 อันเลย ไฟล์ PDF ล่ะ? ใช้ตัวอ่านภายในตัวของเราเลยเพื่อให้จัดการไฟล์เหล่านั้นได้ง่าย</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">เครื่องมือติดตามที่รู้จักล่ะ? จะปิดกั้นให้โดยอัตโนมัติเลย ส่วนขยายล่ะ? ลองดูส่วนขยายทั้งหมดกว่า 700 อันเลย ไฟล์ PDF ล่ะ? ใช้ตัวอ่านภายในตัวของเราเลยเพื่อให้จัดการไฟล์เหล่านั้นได้ง่าย</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">ตั้งเป็นเบราว์เซอร์เริ่มต้น</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->

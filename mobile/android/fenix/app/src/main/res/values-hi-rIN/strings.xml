@@ -883,7 +883,7 @@
   <!-- Title of QR Pairing Fragment -->
   <string name="sync_scan_code">कोड को स्कैन करें</string>
   <!-- Instructions on how to access pairing -->
-  <string name="sign_in_instructions" tools:ignore="BrandUsage"><![CDATA[अपने कंप्यूटर पर Firefox खोलें और <b> https://firefox.com/pair </ b> पर जाएं]]></string>
+  <string name="sign_in_instructions" tools:ignore="BrandUsage"><![CDATA[अपने कंप्यूटर पर Firefox खोलें और <b> https://firefox.com/pair </b> पर जाएं]]></string>
   <!-- Text shown for sign in pairing when ready -->
   <string name="sign_in_ready_for_scan">स्कैन करने के लिए तैयार है</string>
   <!-- Text shown for settings option for sign with pairing -->
@@ -1121,7 +1121,7 @@
   <!-- Second step for the allowing a permission -->
   <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>अनुमतियां</b> दबाएं]]></string>
   <!-- Third step for the allowing a permission (%1$s is the permission name, for example "Camera"). -->
-  <string name="phone_feature_blocked_step_feature"><![CDATA[3. चालू करने के लिए <b>%1$s</ b> टॉगल करें]]></string>
+  <string name="phone_feature_blocked_step_feature"><![CDATA[3. चालू करने के लिए <b>%1$s</b> टॉगल करें]]></string>
   <!-- Label that indicates a site is using a secure connection -->
   <string name="quick_settings_sheet_secure_connection_2">संपर्क सुरक्षित है</string>
   <!-- Label that indicates a site is using a insecure connection -->

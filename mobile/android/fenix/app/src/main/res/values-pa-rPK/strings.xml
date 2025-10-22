@@ -315,15 +315,15 @@
     Title for set firefox as default browser screen used by Nimbus experiments.
     Note: The word "Firefox" should NOT be translated
   -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources">پتا کرو کہ لکھاں فائرفاکس نوں پسند کیوں کردے ہن</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">پتا کرو کہ لکھاں فائرفاکس نوں پسند کیوں کردے ہن</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">ہور چوݨاں نال سرکھیت براؤز کرنا</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">ہور چوݨاں نال سرکھیت براؤز کرنا</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">کمپنیاں نوں چوری چوری ویب اُتے تہاڈا پچھا کرن توں ساڈا غیر فائدہ سمرتھ براؤزر آپݨے آپ ہی روکدا اے۔</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">10 کروڑ توں ودھ لوک نے آپݨی پردےداری دی سرکھیا لئی اوس براؤزر دی چوݨ کیتی اے، جس دا مقصد کوئی فائدہ نہیں اے۔</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">10 کروڑ توں ودھ لوک نے آپݨی پردےداری دی سرکھیا لئی اوس براؤزر دی چوݨ کیتی اے، جس دا مقصد کوئی فائدہ نہیں اے۔</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">جاݨے پچھاݨے ٹریکر؟ آپݨے آپ پابندی لئی۔ پھیلاؤ؟ 700 توں ودھ ازماوݨ لئی۔ PDF؟ ساڈے بلٹ‌ان ریڈر نال اہناں نوں ورتݨا سوکھا۔</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">جاݨے پچھاݨے ٹریکر؟ آپݨے آپ پابندی لئی۔ پھیلاؤ؟ 700 توں ودھ ازماوݨ لئی۔ PDF؟ ساڈے بلٹ‌ان ریڈر نال اہناں نوں ورتݨا سوکھا۔</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">مول براؤزر تے طور تے بݨاؤ</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->

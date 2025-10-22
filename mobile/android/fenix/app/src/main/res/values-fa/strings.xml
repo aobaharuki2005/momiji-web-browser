@@ -282,9 +282,9 @@
   <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
   <string name="browser_close_main_menu_handlebar_content_description">بستن منو</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button">راهنما</string>
+  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">راهنما</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button">تنظیمات</string>
+  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">تنظیمات</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">بستن برگه منوی افزونه‌ها</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -407,15 +407,15 @@
     Title for set firefox as default browser screen used by Nimbus experiments.
     Note: The word "Firefox" should NOT be translated
   -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources">متوجه شوید چرا میلیون‌ها نفر Firefox را دوست دارند</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">متوجه شوید چرا میلیون‌ها نفر Firefox را دوست دارند</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">مرور امن با انتخاب‌های بیشتر</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">مرور امن با انتخاب‌های بیشتر</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">مرورگر ناسودبر ما به شما کمک می‌کند که شرکت‌ها نتوانند به طور مخفیانه شما را در وب دنبال کنند.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">بیش از ۱۰۰ میلیون نفر حریم خصوصی خود را با انتخاب مرورگری که ناسودبر است، محافظت می‌کنند.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">بیش از ۱۰۰ میلیون نفر حریم خصوصی خود را با انتخاب مرورگری که ناسودبر است، محافظت می‌کنند.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">ردیاب‌های شناخته‌ شده‌؟ به‌طور خودکار مسدود شده‌اند. افزونه‌ها؟ همه ۷۰۰ تای آن‌ها را امتحان کنید. PDF‌ها؟ خواننده داخلی ما مدیریت آن‌ها را آسان کرده است.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">ردیاب‌های شناخته‌ شده‌؟ به‌طور خودکار مسدود شده‌اند. افزونه‌ها؟ همه ۷۰۰ تای آن‌ها را امتحان کنید. PDF‌ها؟ خواننده داخلی ما مدیریت آن‌ها را آسان کرده است.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">تنظیم به عنوان مرورگر پیش‌فرض</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->

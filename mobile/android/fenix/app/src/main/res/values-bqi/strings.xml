@@ -299,9 +299,9 @@
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
   <string name="browser_main_menu_content_description_navigation_header">ناوبری</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button">هیاری</string>
+  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">هیاری</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button">سامووا</string>
+  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">سامووا</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">بستن بلگه نومگه وردنی یل</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -447,15 +447,15 @@
     Title for set firefox as default browser screen used by Nimbus experiments.
     Note: The word "Firefox" should NOT be translated
   -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources">مولتفت بۊین ک سیچه ملیووا آڌوم Firefox ن اخون</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">مولتفت بۊین ک سیچه ملیووا آڌوم Firefox ن اخون</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">گشتن ٱمن وا پسندا قلوه</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">گشتن ٱمن وا پسندا قلوه</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">گشت گر ن سۊد بر ایما و ایسا هیاری اده تا شرکتا نترسته بۊن ایسا ن بؽڌاری من وب بنیرن وو و دین کونن.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">بیشتر ز 100 ملیووݩ نفر هریم سیخومی خوسووݩ ن وا پسند گشت گری ک ن سۊد بر هڌ، زفت اکونن.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">بیشتر ز 100 ملیووݩ نفر هریم سیخومی خوسووݩ ن وا پسند گشت گری ک ن سۊد بر هڌ، زفت اکونن.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">رڌجۊرا اشناخته‌ وابیڌه؟ و جۊر خوتکار مسدۊد وابیڌنه. وردنی یل؟ پوی 700 تاسووݩ ن امتهووݩ کۊنین. PDF؟ خونده گر منی ایما دؽوۉداری هونووݩ ن آسووݩ کرده.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">رڌجۊرا اشناخته‌ وابیڌه؟ و جۊر خوتکار مسدۊد وابیڌنه. وردنی یل؟ پوی 700 تاسووݩ ن امتهووݩ کۊنین. PDF؟ خونده گر منی ایما دؽوۉداری هونووݩ ن آسووݩ کرده.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">سامووݩ و عونوان گشت گر پؽش فرز</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->

@@ -299,9 +299,9 @@
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
   <string name="browser_main_menu_content_description_navigation_header">Նավարկում</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button">Օգնություն</string>
+  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">Օգնություն</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button">Կարգավորումներ</string>
+  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">Կարգավորումներ</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">Փակել ընդլայնումների ցանկի էջը</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -447,15 +447,15 @@
     Title for set firefox as default browser screen used by Nimbus experiments.
     Note: The word "Firefox" should NOT be translated
   -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources">Պարզեք, թե ինչու են միլիոնավոր մարդիկ սիրում Firefox-ը</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">Պարզեք, թե ինչու են միլիոնավոր մարդիկ սիրում Firefox-ը</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Անվտանգ դիտարկում ավելի շատ ընտրանքներով</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Անվտանգ դիտարկում ավելի շատ ընտրանքներով</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">Մեր շահույթ չհետապնդող դիտարկիչն օգնում է դադարեցնել ընկերությունների կողմից համացանցում ձեզ գաղտնի հետևելը:</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Ավելի քան 100 միլիոն մարդ պաշտպանում է իր գաղտնիությունը՝ ընտրելով ոչ առևտրային կազմակերպության կողմից աջակցվող զննիչ:</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Ավելի քան 100 միլիոն մարդ պաշտպանում է իր գաղտնիությունը՝ ընտրելով ոչ առևտրային կազմակերպության կողմից աջակցվող զննիչ:</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Հայտնի հետագծիչնե՞ր: Ինքնաշխատ արգելափակվում են: Ընդլայնումնե՞ր; Փորձե՞ք բոլոր 700-ը։ PDF ֆայլե՞ր: Մեր ներկառուցված ընթերցողը հեշտացնում է դրանց կառավարումը:</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">Հայտնի հետագծիչնե՞ր: Ինքնաշխատ արգելափակվում են: Ընդլայնումնե՞ր; Փորձե՞ք բոլոր 700-ը։ PDF ֆայլե՞ր: Մեր ներկառուցված ընթերցողը հեշտացնում է դրանց կառավարումը:</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Կայել որպես սկզբնադիր դիտարկիչ</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
