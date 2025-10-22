@@ -292,7 +292,7 @@ class LoadedScript : public nsIMemoryReporter {
   uint8_t mFetchCount = 0;
 
  private:
-  ScriptKind mKind;
+  const ScriptKind mKind;
 
  protected:
   mozilla::dom::ReferrerPolicy mReferrerPolicy;
