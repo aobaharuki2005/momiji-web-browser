@@ -235,10 +235,6 @@ export var ToolbarContextMenu = {
 
     let isTitlebarSpacer = toolbarItem?.classList.contains("titlebar-spacer");
 
-    let isMenuBarSpacer =
-      toolbarItem?.localName == "spacer" &&
-      toolbarItem?.parentElement?.id == "toolbar-menubar";
-
     // Show/hide fullscreen context menu items and set the
     // autohide item's checked state to mirror the autohide pref.
     showFullScreenViewContextMenuItems(popup);
@@ -248,8 +244,7 @@ export var ToolbarContextMenu = {
     let showSidebarActions =
       ["tabbrowser-tabs", "sidebar-button"].includes(toolbarItem?.id) ||
       toolbarItem?.localName == "toolbarspring" ||
-      isTitlebarSpacer ||
-      isMenuBarSpacer;
+      isTitlebarSpacer;
 
     let toggleVerticalTabsItem = document.getElementById(
       "toolbar-context-toggle-vertical-tabs"
@@ -272,9 +267,7 @@ export var ToolbarContextMenu = {
     document.getElementById("customizationMenuSeparator").hidden =
       toolbarItem?.id == "tabbrowser-tabs" ||
       (toolbarItem?.localName == "toolbarspring" &&
-        !CustomizationHandler.isCustomizing()) ||
-      isMenuBarSpacer ||
-      isTitlebarSpacer;
+        !CustomizationHandler.isCustomizing());
 
     // View -> Toolbars menu doesn't have the moveToPanel or removeFromToolbar items.
     if (!moveToPanel || !removeFromToolbar) {
@@ -309,18 +302,13 @@ export var ToolbarContextMenu = {
     document.getElementById("toolbarNavigatorItemsMenuSeparator").hidden =
       !showTabStripItems;
 
-    let isSpacerItem =
-      toolbarItem?.localName.includes("separator") ||
-      toolbarItem?.localName.includes("spring") ||
-      toolbarItem?.localName.includes("spacer") ||
-      toolbarItem?.id.startsWith("customizableui-special");
-
-    // For spacer items, customization items should only appear
-    // when the user is actively customizing the toolbar.
-    let shouldHideCustomizationItems =
-      isSpacerItem && !CustomizationHandler.isCustomizing();
-
-    if (shouldHideCustomizationItems) {
+    if (
+      !CustomizationHandler.isCustomizing() &&
+      (toolbarItem?.localName.includes("separator") ||
+        toolbarItem?.localName.includes("spring") ||
+        toolbarItem?.localName.includes("spacer") ||
+        toolbarItem?.id.startsWith("customizableui-special"))
+    ) {
       moveToPanel.hidden = true;
       removeFromToolbar.hidden = true;
       menuSeparator.hidden = !showTabStripItems;
@@ -361,11 +349,7 @@ export var ToolbarContextMenu = {
       } else {
         moveToPanel.removeAttribute("disabled");
       }
-      if (shouldHideCustomizationItems) {
-        removeFromToolbar.setAttribute("disabled", true);
-      } else {
-        removeFromToolbar.removeAttribute("disabled");
-      }
+      removeFromToolbar.removeAttribute("disabled");
     } else {
       removeFromToolbar.setAttribute("disabled", true);
       moveToPanel.setAttribute("disabled", true);
@@ -599,32 +583,6 @@ export var ToolbarContextMenu = {
       firstVisibleElement.localName === "menuseparator"
     ) {
       firstVisibleElement.hidden = true;
-    }
-  },
-
-  /**
-   * Hides the "Move to Panel" and "Remove from Toolbar" items if both are
-   * disabled. This prevents showing a menu with no useful items. If at least
-   * one of the items is enabled, both items are shown for consistency.
-   *
-   * This is its own method to allow it to be called after other methods
-   * that may change the disabled state of either menu item.
-   *
-   * @param {Element} popup
-   *   The toolbar-context-menu element for a window.
-   */
-  updateCustomizationItemsVisibility(popup) {
-    let moveToPanel = popup.querySelector(".customize-context-moveToPanel");
-    let removeFromToolbar = popup.querySelector(
-      ".customize-context-removeFromToolbar"
-    );
-
-    if (
-      removeFromToolbar?.getAttribute("disabled") &&
-      moveToPanel.getAttribute("disabled")
-    ) {
-      removeFromToolbar.hidden = true;
-      moveToPanel.hidden = true;
     }
   },
 };
