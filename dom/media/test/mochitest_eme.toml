@@ -724,9 +724,6 @@ scheme = "https"
 skip-if = ["os == 'android'"] # bug 1149374
 scheme = "https"
 
-["test_eme_output_config_check.html"]
-scheme = "https"
-
 ["test_eme_playback.html"]
 skip-if = [
   "os == 'android'", # bug 1149374
