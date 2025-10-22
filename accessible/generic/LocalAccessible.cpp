@@ -1706,6 +1706,12 @@ void LocalAccessible::ApplyARIAState(uint64_t* aState) const {
     aria::MapToState(aria::eARIAPressed, element, aState);
   }
 
+  if (!IsTextField() && IsEditableRoot()) {
+    // HTML text fields will have their own multi/single line calcuation in
+    // NativeState.
+    aria::MapToState(aria::eARIAMultilineByDefault, element, aState);
+  }
+
   if (!roleMapEntry) return;
 
   *aState |= roleMapEntry->state;
@@ -1755,18 +1761,16 @@ void LocalAccessible::Value(nsString& aValue) const {
   }
 
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  if (!roleMapEntry) {
-    return;
-  }
 
   // Value of textbox is a textified subtree.
-  if (roleMapEntry->Is(nsGkAtoms::textbox)) {
+  if ((roleMapEntry && roleMapEntry->Is(nsGkAtoms::textbox)) ||
+      (IsGeneric() && IsEditableRoot())) {
     nsTextEquivUtils::GetTextEquivFromSubtree(this, aValue);
     return;
   }
 
   // Value of combobox is a text of current or selected item.
-  if (roleMapEntry->Is(nsGkAtoms::combobox)) {
+  if (roleMapEntry && roleMapEntry->Is(nsGkAtoms::combobox)) {
     LocalAccessible* option = CurrentItem();
     if (!option) {
       uint32_t childCount = ChildCount();
