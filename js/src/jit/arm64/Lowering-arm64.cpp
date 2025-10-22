@@ -363,7 +363,7 @@ void LIRGeneratorARM64::lowerWasmBuiltinModI64(MWasmBuiltinModI64* mod) {
 void LIRGenerator::visitPowHalf(MPowHalf* ins) {
   MDefinition* input = ins->input();
   MOZ_ASSERT(input->type() == MIRType::Double);
-  LPowHalfD* lir = new (alloc()) LPowHalfD(useRegister(input));
+  LPowHalfD* lir = new (alloc()) LPowHalfD(useRegisterAtStart(input));
   define(lir, ins);
 }
 

@@ -561,7 +561,7 @@ void LIRGenerator::visitPowHalf(MPowHalf* ins) {
   MDefinition* input = ins->input();
   MOZ_ASSERT(input->type() == MIRType::Double);
   LPowHalfD* lir = new (alloc()) LPowHalfD(useRegisterAtStart(input));
-  defineReuseInput(lir, ins, 0);
+  define(lir, ins);
 }
 
 void LIRGenerator::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins) {
