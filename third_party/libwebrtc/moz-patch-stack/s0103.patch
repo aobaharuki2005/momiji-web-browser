@@ -601,7 +601,7 @@ index 88655146af..70782e51b6 100644
  import("../../webrtc.gni")
  
 diff --git a/pc/BUILD.gn b/pc/BUILD.gn
-index 5a064183f3..8120144fe2 100644
+index 0c5df79fb4..70075055cf 100644
 --- a/pc/BUILD.gn
 +++ b/pc/BUILD.gn
 @@ -30,8 +30,8 @@
@@ -702,7 +702,7 @@ index 4fa98d73a2..72c01d50ab 100644
      output_extension = "so"
    }
 diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
-index df32a6863d..c394964852 100644
+index c78cdec7cc..cc5d90b42f 100644
 --- a/sdk/BUILD.gn
 +++ b/sdk/BUILD.gn
 @@ -9,12 +9,12 @@
@@ -731,7 +731,7 @@ index df32a6863d..c394964852 100644
      }
    }
  
-@@ -1281,7 +1281,7 @@ if (is_ios || is_mac) {
+@@ -1280,7 +1280,7 @@ if (is_ios || is_mac) {
            }
  
            public_deps = [
@@ -756,7 +756,7 @@ index 822b565610..f2ea548824 100644
  import("../webrtc.gni")
  
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index 975dd7b222..d9f6c6d346 100644
+index f5039000f6..27fbece69e 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -6,10 +6,10 @@

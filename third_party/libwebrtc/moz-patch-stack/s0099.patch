@@ -61,7 +61,7 @@ index 0aec2d94c7..83c1b21260 100644
        }
      }
 diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
-index 11c94ec229..df32a6863d 100644
+index 27d9d0056d..c78cdec7cc 100644
 --- a/sdk/BUILD.gn
 +++ b/sdk/BUILD.gn
 @@ -632,6 +632,20 @@ if (is_ios || is_mac) {
@@ -86,7 +86,7 @@ index 11c94ec229..df32a6863d 100644
  
      if (!build_with_mozilla) {
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index f469105112..975dd7b222 100644
+index f6658eb8d1..f5039000f6 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -470,6 +470,12 @@ rtc_source_set("test_support") {
