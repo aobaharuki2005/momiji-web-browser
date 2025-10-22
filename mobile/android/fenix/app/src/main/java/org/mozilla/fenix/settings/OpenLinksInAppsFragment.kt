@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
-import androidx.navigation.fragment.navArgs
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -20,7 +19,6 @@ class OpenLinksInAppsFragment : PreferenceFragmentCompat() {
     private lateinit var radioAlways: RadioButtonPreference
     private lateinit var radioAskBeforeOpening: RadioButtonPreference
     private lateinit var radioNever: RadioButtonPreference
-    private val args by navArgs<OpenLinksInAppsFragmentArgs>()
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.open_links_in_apps_preferences, rootKey)
@@ -38,9 +36,6 @@ class OpenLinksInAppsFragment : PreferenceFragmentCompat() {
         showToolbar(getString(R.string.preferences_open_links_in_apps))
 
         setupPreferences()
-        args.preferenceToScrollTo?.let {
-            scrollToPreference(it)
-        }
     }
 
     private fun setupPreferences() {

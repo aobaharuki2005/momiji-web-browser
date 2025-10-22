@@ -39,13 +39,9 @@ private fun reduce(state: SettingsSearchState, action: SettingsSearchAction): Se
             }
         }
         is SettingsSearchAction.NoResultsFound -> {
-            if (action.query.isBlank()) {
-                SettingsSearchState.Default
-            } else {
-                SettingsSearchState.NoSearchResults(
-                    searchQuery = action.query,
-                )
-            }
+            SettingsSearchState.NoSearchResults(
+                searchQuery = action.query,
+            )
         }
         is SettingsSearchAction.SearchResultsLoaded -> {
             SettingsSearchState.SearchInProgress(
@@ -53,7 +49,6 @@ private fun reduce(state: SettingsSearchState, action: SettingsSearchAction): Se
                 searchResults = action.results,
             )
         }
-        is SettingsSearchAction.ResultItemClicked -> state
     }
 }
 

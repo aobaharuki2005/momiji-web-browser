@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
-import androidx.navigation.fragment.navArgs
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -18,7 +17,6 @@ import org.mozilla.fenix.ext.settings
  * Allows customizing sponsored stories fetch parameters.
  */
 class SponsoredStoriesSettingsFragment : PreferenceFragmentCompat() {
-    private val args by navArgs<SponsoredStoriesSettingsFragmentArgs>()
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.sponsored_stories_settings, rootKey)
@@ -51,13 +49,6 @@ class SponsoredStoriesSettingsFragment : PreferenceFragmentCompat() {
                 context.settings().pocketSponsoredStoriesCity = (newValue as String)
                 true
             }
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        args.preferenceToScrollTo?.let {
-            scrollToPreference(it)
         }
     }
 }

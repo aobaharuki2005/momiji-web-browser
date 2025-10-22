@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
-import androidx.navigation.fragment.navArgs
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
@@ -15,8 +14,6 @@ import org.mozilla.fenix.ext.showToolbar
  * A [PreferenceFragmentCompat] that displays settings related to downloads.
  */
 class DownloadsSettingsFragment : PreferenceFragmentCompat() {
-    private val args by navArgs<DownloadsSettingsFragmentArgs>()
-
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.downloads_settings_preferences, rootKey)
         requirePreference<SwitchPreference>(R.string.pref_key_downloads_clean_up_files_automatically).apply {
@@ -30,8 +27,5 @@ class DownloadsSettingsFragment : PreferenceFragmentCompat() {
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.preferences_downloads))
-        args.preferenceToScrollTo?.let {
-            scrollToPreference(it)
-        }
     }
 }

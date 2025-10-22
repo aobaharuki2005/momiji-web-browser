@@ -16,7 +16,6 @@ import android.view.View
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import androidx.preference.CheckBoxPreference
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
@@ -61,7 +60,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
     private lateinit var accountManager: FxaAccountManager
     private lateinit var accountSettingsStore: AccountSettingsFragmentStore
     private lateinit var accountSettingsInteractor: AccountSettingsInteractor
-    private val args by navArgs<AccountSettingsFragmentArgs>()
 
     // Navigate away from this fragment when we encounter auth problems or logout events.
     private val accountStateObserver = object : AccountObserver {
@@ -87,9 +85,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.preferences_account_settings))
-        args.preferenceToScrollTo?.let {
-            scrollToPreference(it)
-        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

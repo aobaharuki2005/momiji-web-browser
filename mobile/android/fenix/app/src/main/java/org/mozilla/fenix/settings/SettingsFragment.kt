@@ -217,11 +217,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val title = nimbusValidation.settingsTitle
         val suffix = nimbusValidation.settingsPunctuation
         val toolbarTitle = "$title$suffix"
-
-        val showSearch = requireContext().settings().isSettingsSearchEnabled &&
-                (!args.searchInProgress)
-
-        if (showSearch) {
+        if (requireContext().settings().isSettingsSearchEnabled) {
             showToolbarWithIconButton(
                 title = toolbarTitle,
                 iconResId = R.drawable.ic_search,
