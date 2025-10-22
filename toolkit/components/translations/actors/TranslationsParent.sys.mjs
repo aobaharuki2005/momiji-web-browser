@@ -819,7 +819,7 @@ export class TranslationsParent extends JSWindowActorParent {
         detectedLanguages.userLangTag
       )
     ) {
-      lazy.console.error(
+      lazy.console.log(
         "maybeOfferTranslations - The document and user lang tag are the same, not offering a translation.",
         documentURI?.spec
       );
@@ -3592,13 +3592,19 @@ export class TranslationsParent extends JSWindowActorParent {
       return { language: "", confident: false, languages: [] };
     }
 
-    const message = `Identified page language as "${result.language}": ${this.browsingContext?.currentURI?.spec}`;
+    const message =
+      `Identified page language as "${result.language}" ` +
+      `in ${((ChromeUtils.now() - startTime) / 1000).toFixed(3)} seconds: ` +
+      this.browsingContext?.currentURI?.spec;
+
     ChromeUtils.addProfilerMarker(
       "TranslationsParent",
       { startTime, innerWindowId: this.innerWindowId },
       message
     );
-    lazy.console.debug(message);
+
+    lazy.console.debug("\nExtracted Page Text:\n\n", pageText);
+    lazy.console.log(message);
 
     if (pageText.length < TranslationsParent.#DOC_CONFIDENCE_THRESHOLD) {
       result.confident = false;
