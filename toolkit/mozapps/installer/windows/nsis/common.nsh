@@ -3674,13 +3674,6 @@
           ${EndIf}
 
           ${If} ${FileExists} "$DESKTOP\$R8"
-            ${If} "$R8" == "${BrandShortName}.exe"
-              ; This is a copy of the desktop launcher that we installed,
-              ; so it should be removed.
-              Delete "$DESKTOP\$R8"
-              ${Continue}
-            ${EndIf}
-
             ShellLink::GetShortCutTarget "$DESKTOP\$R8"
             Pop $R5
             ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
@@ -3943,8 +3936,6 @@
         ClearErrors
         FindNext $R6 $R8
       ${Loop}
-
-      DeleteRegValue HKCU "Software\Mozilla\${BrandFullNameInternal}" DesktopLauncherAppInstalled
 
       ClearErrors
 
