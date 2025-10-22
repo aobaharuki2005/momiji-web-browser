@@ -140,9 +140,10 @@ void Nyx::start(void) {
 
 bool Nyx::started(void) { return mInited; }
 
-bool Nyx::is_enabled(const char* identifier) {
+bool Nyx::is_enabled(const char* identifier, bool startswith) {
   static char* fuzzer = getenv("NYX_FUZZER");
-  if (!fuzzer || strcmp(fuzzer, identifier)) {
+  if (!fuzzer || (!startswith && strcmp(fuzzer, identifier)) ||
+      (startswith && strncmp(fuzzer, identifier, strlen(identifier)))) {
     return false;
   }
   return true;
