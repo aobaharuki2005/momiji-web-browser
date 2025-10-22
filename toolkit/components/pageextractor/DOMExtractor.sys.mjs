@@ -102,6 +102,10 @@ class ExtractionContext {
 
     this.#processedNodes.add(node);
 
+    if (isNodeHidden(node)) {
+      return;
+    }
+
     const element = asHTMLElement(node);
     const text = asTextNode(node);
     let innerText = "";
@@ -279,13 +283,19 @@ function nodeNeedsSubdividing(node) {
 }
 
 /**
- * Returns true if an HTML element is hidden based on factors such as collapsed state and
+ * Returns true if a node is hidden based on factors such as collapsed state and
  * computed style, otherwise false.
  *
- * @param {HTMLElement} element
+ * @param {Node} node
  * @returns {boolean}
  */
-function isHTMLElementHidden(element) {
+function isNodeHidden(node) {
+  const element = getHTMLElementForStyle(node);
+
+  if (!element) {
+    return true;
+  }
+
   // This is a cheap and easy check that will not compute style or force reflow.
   if (element.hidden) {
     // The element is explicitly hidden.
@@ -445,10 +455,6 @@ function subdivideAndExtractText(node, context) {
       if (shadowRoot) {
         processSubdivide(shadowRoot, context);
       } else {
-        const element = asHTMLElement(node);
-        if (element && isHTMLElementHidden(element)) {
-          break;
-        }
         context.maybeAppendTextContent(node);
       }
       break;
@@ -594,5 +600,33 @@ function asHTMLElement(node) {
   if (HTMLElement.isInstance(node)) {
     return node;
   }
+  return null;
+}
+
+/**
+ * This function returns the correct element to determine the
+ * style of node.
+ *
+ * @param {Node} node
+ *
+ * @returns {HTMLElement | null}
+ */
+function getHTMLElementForStyle(node) {
+  const element = asHTMLElement(node);
+  if (element) {
+    return element;
+  }
+
+  if (node.parentElement) {
+    return asHTMLElement(node.parentElement);
+  }
+
+  // For cases like text node where its parent is ShadowRoot,
+  // we'd like to use flattenedTreeParentNode
+  if (node.flattenedTreeParentNode) {
+    return asHTMLElement(node.flattenedTreeParentNode);
+  }
+
+  // If the text node is not connected or doesn't have a frame.
   return null;
 }

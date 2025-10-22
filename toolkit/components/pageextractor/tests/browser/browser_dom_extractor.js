@@ -83,3 +83,82 @@ add_task(async function test_dom_extractor_sufficient_length_option() {
 
   return cleanup();
 });
+
+add_task(
+  async function test_dom_extractor_ignores_hidden_and_collapsed_nodes() {
+    const { actor, cleanup } = await html`
+      <article>
+        <!-- Visible header -->
+        <h1>Visible Title</h1>
+
+        <!-- Visible paragraph -->
+        <p>Visible paragraph</p>
+
+        <!-- Hidden via the [hidden] attribute -->
+        <p hidden>Hidden via [hidden]</p>
+
+        <!-- Hidden via display:none -->
+        <p style="display:none">Hidden via display:none</p>
+
+        <!-- Hidden via visibility:hidden -->
+        <p style="visibility:hidden">Hidden via visibility:hidden</p>
+
+        <!-- Hidden via opacity:0 -->
+        <p style="opacity:0">Hidden via opacity:0</p>
+
+        <!-- Visible block within hidden inline container -->
+        <span style="width:0; height:0; overflow:hidden">
+          <div>Block text within zero-sized inline container</div>
+        </span>
+
+        <!-- Hidden block container with inline descendant -->
+        <div hidden>
+          Hidden container outer text
+          <span>Hidden container inner text</span>
+        </div>
+
+        <!-- Visible block container with hidden inline descendant -->
+        <div>
+          Visible container outer text (hidden descendant)
+          <span hidden>Hidden child text in visible container</span>
+        </div>
+
+        <!-- Hidden inline container with block descendant -->
+        <span hidden>
+          Hidden inline outer text
+          <div>Hidden inline inner text</div>
+        </span>
+
+        <!-- Visible inline container with hidden block descendant -->
+        <span>
+          Visible inline outer text (hidden descendant)
+          <div hidden>Hidden block descendant text</div>
+        </span>
+
+        <!-- Collapsed <details> with <summary> still visible -->
+        <details>
+          <summary>Summary is visible</summary>
+          <div>Hidden inside closed details</div>
+          Text node directly under closed details (hidden)
+        </details>
+      </article>
+    `;
+
+    const expected = [
+      "Visible Title",
+      "Visible paragraph",
+      "Block text within zero-sized inline container",
+      "Visible container outer text (hidden descendant)",
+      "Visible inline outer text (hidden descendant)",
+      "Summary is visible",
+    ].join("\n");
+
+    is(
+      await actor.getText(),
+      expected,
+      "The extractor returns only visible text."
+    );
+
+    return cleanup();
+  }
+);
