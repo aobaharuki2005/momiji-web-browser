@@ -265,13 +265,6 @@ void LIRGeneratorMIPSShared::lowerModI(MMod* mod) {
   define(lir, mod);
 }
 
-void LIRGenerator::visitPowHalf(MPowHalf* ins) {
-  MDefinition* input = ins->input();
-  MOZ_ASSERT(input->type() == MIRType::Double);
-  LPowHalfD* lir = new (alloc()) LPowHalfD(useRegisterAtStart(input));
-  define(lir, ins);
-}
-
 void LIRGeneratorMIPSShared::lowerWasmSelectI(MWasmSelect* select) {
   auto* lir = new (alloc())
       LWasmSelect(useRegisterAtStart(select->trueExpr()),

@@ -557,13 +557,6 @@ void LIRGenerator::visitCopySign(MCopySign* ins) {
   define(lir, ins);
 }
 
-void LIRGenerator::visitPowHalf(MPowHalf* ins) {
-  MDefinition* input = ins->input();
-  MOZ_ASSERT(input->type() == MIRType::Double);
-  LPowHalfD* lir = new (alloc()) LPowHalfD(useRegisterAtStart(input));
-  define(lir, ins);
-}
-
 void LIRGenerator::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins) {
   defineInt64(
       new (alloc()) LExtendInt32ToInt64(useRegisterAtStart(ins->input())), ins);

@@ -34,13 +34,6 @@ LTableSwitchV* LIRGeneratorX86Shared::newLTableSwitchV(
   return new (alloc()) LTableSwitchV(in, temp(), tempDouble(), temp());
 }
 
-void LIRGenerator::visitPowHalf(MPowHalf* ins) {
-  MDefinition* input = ins->input();
-  MOZ_ASSERT(input->type() == MIRType::Double);
-  LPowHalfD* lir = new (alloc()) LPowHalfD(useRegisterAtStart(input));
-  define(lir, ins);
-}
-
 LUse LIRGeneratorX86Shared::useShiftRegister(MDefinition* mir) {
   // Unless BMI2 is available, the shift register must be ecx. x86 can't shift a
   // non-ecx register.

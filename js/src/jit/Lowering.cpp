@@ -2152,6 +2152,13 @@ void LIRGenerator::visitPow(MPow* ins) {
   defineReturn(lir, ins);
 }
 
+void LIRGenerator::visitPowHalf(MPowHalf* ins) {
+  MDefinition* input = ins->input();
+  MOZ_ASSERT(input->type() == MIRType::Double);
+  auto* lir = new (alloc()) LPowHalfD(useRegisterAtStart(input));
+  define(lir, ins);
+}
+
 void LIRGenerator::visitSign(MSign* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Int32 || ins->type() == MIRType::Double);
   MOZ_ASSERT(ins->input()->type() == MIRType::Int32 ||

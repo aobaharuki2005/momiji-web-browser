@@ -496,13 +496,6 @@ void LIRGeneratorARM::lowerUModI64(MMod* mod) {
   MOZ_CRASH("We use MWasmBuiltinModI64 instead.");
 }
 
-void LIRGenerator::visitPowHalf(MPowHalf* ins) {
-  MDefinition* input = ins->input();
-  MOZ_ASSERT(input->type() == MIRType::Double);
-  LPowHalfD* lir = new (alloc()) LPowHalfD(useRegisterAtStart(input));
-  define(lir, ins);
-}
-
 void LIRGeneratorARM::lowerWasmSelectI(MWasmSelect* select) {
   auto* lir = new (alloc())
       LWasmSelect(useRegisterAtStart(select->trueExpr()),

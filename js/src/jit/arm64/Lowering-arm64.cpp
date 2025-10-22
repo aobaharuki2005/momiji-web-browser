@@ -360,13 +360,6 @@ void LIRGeneratorARM64::lowerWasmBuiltinModI64(MWasmBuiltinModI64* mod) {
   MOZ_CRASH("We don't use runtime mod for this architecture");
 }
 
-void LIRGenerator::visitPowHalf(MPowHalf* ins) {
-  MDefinition* input = ins->input();
-  MOZ_ASSERT(input->type() == MIRType::Double);
-  LPowHalfD* lir = new (alloc()) LPowHalfD(useRegisterAtStart(input));
-  define(lir, ins);
-}
-
 void LIRGeneratorARM64::lowerWasmSelectI(MWasmSelect* select) {
   if (select->type() == MIRType::Simd128) {
     LAllocation t = useRegisterAtStart(select->trueExpr());
