@@ -5674,5 +5674,22 @@
         }
       }
     ]
+  },
+  "1995452": {
+    "label": "polymarket.com",
+    "bugs": {
+      "1995452": {
+        "issue": "extra-scrollbars",
+        "matches": ["*://polymarket.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "content_scripts": {
+          "css": ["1995452-polymarket.com-hide-scrollbars.css"]
+        }
+      }
+    ]
   }
 }
