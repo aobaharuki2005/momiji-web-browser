@@ -172,7 +172,7 @@ class ScriptLoadRequest : public nsISupports,
   // a new LoadedScript which is matching the ScriptKind provided when
   // constructing this ScriptLoadRequest.
   void NoCacheEntryFound(mozilla::dom::ReferrerPolicy aReferrerPolicy,
-                         ScriptFetchOptions* aFetchOptions);
+                         ScriptFetchOptions* aFetchOptions, nsIURI* aURI);
 
   bool PassedConditionForDiskCache() const {
     return mDiskCachingPlan == CachingPlan::PassedCondition;
