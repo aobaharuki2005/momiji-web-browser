@@ -21,7 +21,7 @@
 #include <gbm.h>
 #include <gdk/gdk.h>
 #include <libdrm/drm_fourcc.h>
-#include <spa/param/video/format-utils.h>
+#include <spa/param/video/raw.h>
 #include <unistd.h>
 #include <xf86drm.h>
 

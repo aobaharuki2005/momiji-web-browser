@@ -1,4 +1,4 @@
 # ./mach python dom/media/webrtc/third_party_build/vendor-libwebrtc.py --from-local /Users/danielbaker/elm/.moz-fast-forward/moz-libwebrtc --commit mozpatches libwebrtc
-libwebrtc updated from /Users/danielbaker/elm/.moz-fast-forward/moz-libwebrtc commit mozpatches on 2025-10-22T19:56:14.992285+00:00.
+libwebrtc updated from /Users/danielbaker/elm/.moz-fast-forward/moz-libwebrtc commit mozpatches on 2025-10-22T19:58:41.295699+00:00.
 # base of lastest vendoring
-83740a071e
+8f712e0ae3
