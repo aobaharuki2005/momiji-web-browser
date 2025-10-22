@@ -2838,7 +2838,11 @@ void nsWindow::SetCustomTitlebar(bool aCustomTitlebar) {
     mCustomNonClientMetrics = {};
     ResetLayout();
   }
-  WindowsUIUtils::SetIsTitlebarCollapsed(mWnd, mCustomNonClient);
+  // Not needed for PiP windows, and using the Windows App SDK on
+  // these windows causes them to go under the taskbar (bug 1995838)
+  if (!mPIPWindow) {
+    WindowsUIUtils::SetIsTitlebarCollapsed(mWnd, mCustomNonClient);
+  }
 }
 
 void nsWindow::SetResizeMargin(mozilla::LayoutDeviceIntCoord aResizeMargin) {
