@@ -90,23 +90,14 @@ static gfxPoint AppUnitsToGfxUnits(const nsPoint& aPoint,
 }
 
 /**
- * Converts a gfxRect that is in app units to CSS pixels using the specified
- * nsPresContext and returns it as a gfxRect.
+ * Converts a nsRect that is in app units to CSS pixels and returns it
+ * as a gfxRect.
  */
-static gfxRect AppUnitsToFloatCSSPixels(const gfxRect& aRect,
-                                        const nsPresContext* aContext) {
+static gfxRect AppUnitsToFloatCSSPixels(const nsRect& aRect) {
   return gfxRect(nsPresContext::AppUnitsToFloatCSSPixels(aRect.x),
                  nsPresContext::AppUnitsToFloatCSSPixels(aRect.y),
                  nsPresContext::AppUnitsToFloatCSSPixels(aRect.width),
                  nsPresContext::AppUnitsToFloatCSSPixels(aRect.height));
-}
-
-/**
- * Returns whether a gfxPoint lies within a gfxRect.
- */
-static bool Inside(const gfxRect& aRect, const gfxPoint& aPoint) {
-  return aPoint.x >= aRect.x && aPoint.x < aRect.XMost() &&
-         aPoint.y >= aRect.y && aPoint.y < aRect.YMost();
 }
 
 /**
@@ -185,9 +176,6 @@ static nsIContent* GetFirstNonAAncestor(nsIContent* aContent) {
  * and false for the inner <text> element (since a <text> is not allowed
  * to be a child of another <text>) and the <tspan> element (because it
  * must be inside a <text> subtree).
- *
- * Note that we don't support the <tref> element yet and this function
- * returns false for it.
  *
  * [1] https://svgwg.org/svg2-draft/intro.html#TermTextContentElement
  */
@@ -572,12 +560,11 @@ struct TextRenderedRun {
    * Returns a rectangle that bounds the fill and/or stroke of the rendered run
    * in run user space.
    *
-   * @param aContext The context to use for unit conversions.
    * @param aFlags A combination of the flags above (eIncludeFill and
    *   eIncludeStroke) indicating what parts of the text to include in
    *   the rectangle.
    */
-  SVGBBox GetRunUserSpaceRect(nsPresContext* aContext, uint32_t aFlags) const;
+  SVGBBox GetRunUserSpaceRect(uint32_t aFlags) const;
 
   /**
    * Returns a rectangle that covers the fill and/or stroke of the rendered run
@@ -816,8 +803,7 @@ gfxMatrix TextRenderedRun::GetTransformFromRunUserSpaceToFrameUserSpace(
   return m.PreTranslate(t);
 }
 
-SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
-                                             uint32_t aFlags) const {
+SVGBBox TextRenderedRun::GetRunUserSpaceRect(uint32_t aFlags) const {
   SVGBBox r;
   if (!mFrame) {
     return r;
@@ -880,10 +866,7 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
   }
 
   // Convert the app units rectangle to user units.
-  gfxRect fill = AppUnitsToFloatCSSPixels(
-      gfxRect(fillInAppUnits.x, fillInAppUnits.y, fillInAppUnits.width,
-              fillInAppUnits.height),
-      aContext);
+  gfxRect fill = AppUnitsToFloatCSSPixels(fillInAppUnits);
 
   // Scale the rectangle up due to any mFontSizeScaleFactor.
   fill.Scale(1.0 / mFontSizeScaleFactor);
@@ -905,7 +888,7 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
 
 SVGBBox TextRenderedRun::GetFrameUserSpaceRect(nsPresContext* aContext,
                                                uint32_t aFlags) const {
-  SVGBBox r = GetRunUserSpaceRect(aContext, aFlags);
+  SVGBBox r = GetRunUserSpaceRect(aFlags);
   if (r.IsEmpty()) {
     return r;
   }
@@ -916,7 +899,7 @@ SVGBBox TextRenderedRun::GetFrameUserSpaceRect(nsPresContext* aContext,
 SVGBBox TextRenderedRun::GetUserSpaceRect(
     nsPresContext* aContext, uint32_t aFlags,
     const gfxMatrix* aAdditionalTransform) const {
-  SVGBBox r = GetRunUserSpaceRect(aContext, aFlags);
+  SVGBBox r = GetRunUserSpaceRect(aFlags);
   if (r.IsEmpty()) {
     return r;
   }
@@ -3326,12 +3309,11 @@ nsIFrame* SVGTextFrame::GetFrameForPoint(const gfxPoint& aPoint) {
     }
 
     gfxPoint pointInRunUserSpace = m.TransformPoint(aPoint);
-    gfxRect frameRect = run.GetRunUserSpaceRect(
-                               presContext, TextRenderedRun::eIncludeFill |
+    gfxRect frameRect = run.GetRunUserSpaceRect(TextRenderedRun::eIncludeFill |
                                                 TextRenderedRun::eIncludeStroke)
                             .ToThebesRect();
 
-    if (Inside(frameRect, pointInRunUserSpace)) {
+    if (frameRect.Contains(pointInRunUserSpace)) {
       hit = run.mFrame;
     }
   }
@@ -5339,8 +5321,7 @@ Point SVGTextFrame::TransformFramePointToTextChild(
     uint32_t flags = TextRenderedRun::eIncludeFill |
                      TextRenderedRun::eIncludeStroke |
                      TextRenderedRun::eNoHorizontalOverflow;
-    gfxRect runRect =
-        run.GetRunUserSpaceRect(presContext, flags).ToThebesRect();
+    gfxRect runRect = run.GetRunUserSpaceRect(flags).ToThebesRect();
 
     gfxMatrix m = run.GetTransformFromRunUserSpaceToUserSpace(presContext);
     if (!m.Invert()) {
@@ -5349,7 +5330,7 @@ Point SVGTextFrame::TransformFramePointToTextChild(
     gfxPoint pointInRunUserSpace =
         m.TransformPoint(ThebesPoint(pointInUserSpace));
 
-    if (Inside(runRect, pointInRunUserSpace)) {
+    if (runRect.Contains(pointInRunUserSpace)) {
       // The point was inside the rendered run's rect, so we choose it.
       dx = 0;
       dy = 0;
@@ -5405,10 +5386,7 @@ gfxRect SVGTextFrame::TransformFrameRectFromTextChild(
     nsRect rectInTextFrame = aRect + aChildFrame->GetOffsetTo(run.mFrame);
 
     // Scale it into frame user space.
-    gfxRect rectInFrameUserSpace = AppUnitsToFloatCSSPixels(
-        gfxRect(rectInTextFrame.x, rectInTextFrame.y, rectInTextFrame.width,
-                rectInTextFrame.height),
-        presContext);
+    gfxRect rectInFrameUserSpace = AppUnitsToFloatCSSPixels(rectInTextFrame);
 
     // Intersect it with the run.
     uint32_t flags =
