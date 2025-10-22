@@ -13,51 +13,11 @@
 
 #include <algorithm>
 #include <cmath>
-#include <climits>
+#include <limits>
 #include <cstdint>
 #include <type_traits>
 
 namespace mozilla {
-
-namespace detail {
-
-template <typename T>
-struct AllowDeprecatedAbsFixed : std::false_type {};
-
-template <>
-struct AllowDeprecatedAbsFixed<int32_t> : std::true_type {};
-template <>
-struct AllowDeprecatedAbsFixed<int64_t> : std::true_type {};
-
-template <typename T>
-struct AllowDeprecatedAbs : AllowDeprecatedAbsFixed<T> {};
-
-template <>
-struct AllowDeprecatedAbs<int> : std::true_type {};
-template <>
-struct AllowDeprecatedAbs<long> : std::true_type {};
-
-}  // namespace detail
-
-// DO NOT USE DeprecatedAbs.  It exists only until its callers can be converted
-// to Abs below, and it will be removed when all callers have been changed.
-template <typename T>
-inline std::enable_if_t<detail::AllowDeprecatedAbs<T>::value, T> DeprecatedAbs(
-    const T aValue) {
-  // The absolute value of the smallest possible value of a signed-integer type
-  // won't fit in that type (on twos-complement systems -- and we're blithely
-  // assuming we're on such systems, for the non-<stdint.h> types listed above),
-  // so assert that the input isn't that value.
-  //
-  // This is the case if: the value is non-negative; or if adding one (giving a
-  // value in the range [-maxvalue, 0]), then negating (giving a value in the
-  // range [0, maxvalue]), doesn't produce maxvalue (because in twos-complement,
-  // (minvalue + 1) == -maxvalue).
-  MOZ_ASSERT(aValue >= 0 ||
-                 -(aValue + 1) != T((1ULL << (CHAR_BIT * sizeof(T) - 1)) - 1),
-             "You can't negate the smallest possible negative integer!");
-  return aValue >= 0 ? aValue : -aValue;
-}
 
 namespace detail {
 
@@ -76,6 +36,13 @@ struct AbsReturnType<T, std::enable_if_t<std::is_floating_point_v<T>>> {
 };
 
 }  // namespace detail
+
+template <class T>
+constexpr bool IsValidAbsArgument(T val) {
+  static_assert(std::is_integral_v<T> && std::is_signed_v<T>,
+                "no need to validate unsigned or floating point type");
+  return val != std::numeric_limits<T>::min();
+}
 
 template <typename T>
 inline constexpr typename detail::AbsReturnType<T>::Type Abs(const T aValue) {
@@ -294,8 +261,11 @@ constexpr uint_fast8_t FloorLog2Size(size_t aValue) {
  * be so great that the computed value would overflow |size_t|.
  */
 constexpr size_t RoundUpPow2(size_t aValue) {
-  MOZ_ASSERT(aValue <= (size_t(1) << (sizeof(size_t) * CHAR_BIT - 1)),
-             "can't round up -- will overflow!");
+  MOZ_ASSERT(
+      aValue <= (size_t(1) << (sizeof(size_t) *
+                                   std::numeric_limits<unsigned char>::digits -
+                               1)),
+      "can't round up -- will overflow!");
   return size_t(1) << CeilingLog2(aValue);
 }
 
@@ -307,14 +277,17 @@ MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW constexpr T RotateLeft(const T aValue,
                                                          uint_fast8_t aShift) {
   static_assert(std::is_unsigned_v<T>, "Rotates require unsigned values");
 
-  MOZ_ASSERT(aShift < sizeof(T) * CHAR_BIT, "Shift value is too large!");
+  MOZ_ASSERT(aShift < sizeof(T) * std::numeric_limits<unsigned char>::digits,
+             "Shift value is too large!");
   MOZ_ASSERT(aShift > 0,
              "Rotation by value length is undefined behavior, but compilers "
              "do not currently fold a test into the rotate instruction. "
              "Please remove this restriction when compilers optimize the "
              "zero case (http://blog.regehr.org/archives/1063).");
 
-  return (aValue << aShift) | (aValue >> (sizeof(T) * CHAR_BIT - aShift));
+  return (aValue << aShift) |
+         (aValue >>
+          (sizeof(T) * std::numeric_limits<unsigned char>::digits - aShift));
 }
 
 /**
@@ -325,14 +298,17 @@ MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW constexpr T RotateRight(const T aValue,
                                                           uint_fast8_t aShift) {
   static_assert(std::is_unsigned_v<T>, "Rotates require unsigned values");
 
-  MOZ_ASSERT(aShift < sizeof(T) * CHAR_BIT, "Shift value is too large!");
+  MOZ_ASSERT(aShift < sizeof(T) * std::numeric_limits<unsigned char>::digits,
+             "Shift value is too large!");
   MOZ_ASSERT(aShift > 0,
              "Rotation by value length is undefined behavior, but compilers "
              "do not currently fold a test into the rotate instruction. "
              "Please remove this restriction when compilers optimize the "
              "zero case (http://blog.regehr.org/archives/1063).");
 
-  return (aValue >> aShift) | (aValue << (sizeof(T) * CHAR_BIT - aShift));
+  return (aValue >> aShift) |
+         (aValue << (sizeof(T) * std::numeric_limits<unsigned char>::digits -
+                     aShift));
 }
 
 /**

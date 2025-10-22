@@ -3647,20 +3647,23 @@ void EventStateManager::DoScrollText(
   nsSize pageSize = aScrollContainerFrame->GetPageScrollAmount();
   nsIntSize devPixelPageSize(pc->AppUnitsToDevPixels(pageSize.width),
                              pc->AppUnitsToDevPixels(pageSize.height));
-  if (!WheelPrefs::GetInstance()->IsOverOnePageScrollAllowedX(aEvent) &&
-      DeprecatedAbs(actualDevPixelScrollAmount.x.value) >
-          devPixelPageSize.width) {
-    actualDevPixelScrollAmount.x = (actualDevPixelScrollAmount.x >= 0)
-                                       ? devPixelPageSize.width
-                                       : -devPixelPageSize.width;
+  if (!WheelPrefs::GetInstance()->IsOverOnePageScrollAllowedX(aEvent)) {
+    MOZ_ASSERT(mozilla::IsValidAbsArgument(actualDevPixelScrollAmount.x.value));
+    if (std::abs(actualDevPixelScrollAmount.x.value) > devPixelPageSize.width) {
+      actualDevPixelScrollAmount.x = (actualDevPixelScrollAmount.x >= 0)
+                                         ? devPixelPageSize.width
+                                         : -devPixelPageSize.width;
+    }
   }
 
-  if (!WheelPrefs::GetInstance()->IsOverOnePageScrollAllowedY(aEvent) &&
-      DeprecatedAbs(actualDevPixelScrollAmount.y.value) >
-          devPixelPageSize.height) {
-    actualDevPixelScrollAmount.y = (actualDevPixelScrollAmount.y >= 0)
-                                       ? devPixelPageSize.height
-                                       : -devPixelPageSize.height;
+  if (!WheelPrefs::GetInstance()->IsOverOnePageScrollAllowedY(aEvent)) {
+    MOZ_ASSERT(mozilla::IsValidAbsArgument(actualDevPixelScrollAmount.y.value));
+    if (std::abs(actualDevPixelScrollAmount.y.value) >
+        devPixelPageSize.height) {
+      actualDevPixelScrollAmount.y = (actualDevPixelScrollAmount.y >= 0)
+                                         ? devPixelPageSize.height
+                                         : -devPixelPageSize.height;
+    }
   }
 
   bool isDeltaModePixel =

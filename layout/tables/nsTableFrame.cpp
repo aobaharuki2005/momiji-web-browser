@@ -6132,10 +6132,10 @@ bool BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect) {
   if (!haveIntersect) {
     return false;
   }
-  mDamageArea =
-      TableArea(startColIndex, startRowIndex,
-                1 + DeprecatedAbs<int32_t>(endColIndex - startColIndex),
-                1 + endRowIndex - startRowIndex);
+  MOZ_ASSERT(mozilla::IsValidAbsArgument(int32_t(endColIndex - startColIndex)));
+  mDamageArea = TableArea(startColIndex, startRowIndex,
+                          1 + std::abs(int32_t(endColIndex - startColIndex)),
+                          1 + endRowIndex - startRowIndex);
 
   Reset();
   mBlockDirInfo = MakeUnique<BCBlockDirSeg[]>(mDamageArea.ColCount() + 1);

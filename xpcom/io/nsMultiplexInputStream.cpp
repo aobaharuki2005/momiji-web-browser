@@ -34,8 +34,6 @@
 using namespace mozilla;
 using namespace mozilla::ipc;
 
-using mozilla::DeprecatedAbs;
-
 NS_IMPL_ADDREF(nsMultiplexInputStream)
 NS_IMPL_RELEASE(nsMultiplexInputStream)
 
@@ -559,9 +557,10 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset) {
       }
 
       int64_t streamLength = avail + mStreams[i].mCurrentPos;
+      MOZ_ASSERT(mozilla::IsValidAbsArgument(remaining));
 
       // The seek(END) can be completed in the current stream.
-      if (streamLength >= DeprecatedAbs(remaining)) {
+      if (streamLength >= std::abs(remaining)) {
         rv = stream->Seek(NS_SEEK_END, remaining);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
