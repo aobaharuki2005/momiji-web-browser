@@ -11,6 +11,7 @@ import React, { useState } from "react";
 
 const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
+const PREF_SYSTEM_SHOW_WEATHER = "system.showWeather";
 
 function WeatherPlaceholder() {
   const [isSeen, setIsSeen] = useState(false);
@@ -242,11 +243,16 @@ export class _Weather extends React.PureComponent {
     });
   };
 
+  isEnabled() {
+    const { values } = this.props.Prefs;
+    const systemValue = values[PREF_SYSTEM_SHOW_WEATHER];
+    const experimentValue = values.trainhopConfig?.weather?.enabled;
+    return systemValue || experimentValue;
+  }
+
   render() {
     // Check if weather should be rendered
-    const isWeatherEnabled = this.props.Prefs.values["system.showWeather"];
-
-    if (!isWeatherEnabled) {
+    if (!this.isEnabled()) {
       return false;
     }
 

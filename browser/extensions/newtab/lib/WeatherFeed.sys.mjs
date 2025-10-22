@@ -67,13 +67,15 @@ export class WeatherFeed {
     await this.resetCache();
     this.suggestions = [];
     this.lastUpdated = null;
+    this.loaded = false;
   }
 
   isEnabled() {
-    return (
-      this.store.getState().Prefs.values[PREF_SHOW_WEATHER] &&
-      this.store.getState().Prefs.values[PREF_SYSTEM_SHOW_WEATHER]
-    );
+    const { values } = this.store.getState().Prefs;
+    const userValue = values[PREF_SHOW_WEATHER];
+    const systemValue = values[PREF_SYSTEM_SHOW_WEATHER];
+    const experimentValue = values.trainhopConfig?.weather?.enabled || false;
+    return userValue && (systemValue || experimentValue);
   }
 
   async init() {
@@ -176,6 +178,7 @@ export class WeatherFeed {
       this.lastUpdated = weather.lastUpdated;
       this.update();
     }
+    this.loaded = true;
   }
 
   update() {
@@ -266,12 +269,15 @@ export class WeatherFeed {
         break;
       case PREF_SHOW_WEATHER:
       case PREF_SYSTEM_SHOW_WEATHER:
-        if (this.isEnabled() && action.data.value) {
+      case "trainhopConfig": {
+        const enabled = this.isEnabled();
+        if (enabled && !this.loaded) {
           await this.loadWeather();
-        } else {
+        } else if (!enabled && this.loaded) {
           await this.resetWeather();
         }
         break;
+      }
     }
   }
 
@@ -287,7 +293,7 @@ export class WeatherFeed {
     switch (action.type) {
       case at.INIT:
         await this.checkOptInRegion();
-        if (this.isEnabled()) {
+        if (this.isEnabled() && !this.loaded) {
           await this.init();
         }
         break;
