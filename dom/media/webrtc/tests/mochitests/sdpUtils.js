@@ -197,11 +197,37 @@ var sdputils = {
     return updated_sdp;
   },
 
-  removeAllButPayloadType(sdp, pt) {
-    return sdp.replace(
-      new RegExp("m=(\\w+ \\w+) UDP/TLS/RTP/SAVPF .*" + pt + ".*\\r\\n", "gi"),
-      "m=$1 UDP/TLS/RTP/SAVPF " + pt + "\r\n"
-    );
+  // Returns an array of objects with keys {pt, codec}.
+  enumerateCodecs(sdp) {
+    const codecs = [];
+    const regex = /a=rtpmap:(\d+)\s+([^\/]+)\/[0-9\/]+/gi;
+    let match;
+    while ((match = regex.exec(sdp))) {
+      if (match.length < 3) {
+        continue;
+      }
+      const pt = parseInt(match[1]);
+      if (isNaN(pt)) {
+        continue;
+      }
+      const codec = match[2];
+      codecs.push({ pt, codec });
+    }
+    return codecs;
+  },
+
+  removeAllButPayloadType(sdp, payloadType) {
+    const codecs = this.enumerateCodecs(sdp);
+    const pts = codecs.map(({ pt }) => pt).filter(pt => pt != payloadType);
+    return this.removeCodecs(sdp, pts);
+  },
+
+  removeAllButCodec(sdp, codecToKeep) {
+    const codecs = this.enumerateCodecs(sdp);
+    const pts = codecs
+      .filter(({ codec }) => codec.toLowerCase() != codecToKeep.toLowerCase())
+      .map(({ pt }) => pt);
+    return this.removeCodecs(sdp, pts);
   },
 
   removeRtpMapForPayloadType(sdp, pt) {
