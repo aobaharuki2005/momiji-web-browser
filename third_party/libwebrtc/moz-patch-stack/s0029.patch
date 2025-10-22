@@ -15,7 +15,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d380a43d59f4f7cbc
  4 files changed, 35 insertions(+)
 
 diff --git a/audio/audio_send_stream.cc b/audio/audio_send_stream.cc
-index 5c7fa93ba5..e2668b8df7 100644
+index 5b6c070d02..bd3b7ca994 100644
 --- a/audio/audio_send_stream.cc
 +++ b/audio/audio_send_stream.cc
 @@ -437,6 +437,7 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
@@ -27,7 +27,7 @@ index 5c7fa93ba5..e2668b8df7 100644
    stats.header_and_padding_bytes_sent =
        call_stats.header_and_padding_bytes_sent;
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index 06ebdd2346..885b0c01ff 100644
+index b0759406c8..7a262bcea3 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -81,6 +81,31 @@ constexpr TimeDelta kMinRetransmissionWindow = TimeDelta::Millis(30);
@@ -97,10 +97,10 @@ index 06ebdd2346..885b0c01ff 100644
    StreamDataCounters rtp_stats;
    StreamDataCounters rtx_stats;
 diff --git a/audio/channel_send.h b/audio/channel_send.h
-index 0ed544afed..7047248c1f 100644
+index 1706406e4f..232748f33c 100644
 --- a/audio/channel_send.h
 +++ b/audio/channel_send.h
-@@ -50,6 +50,7 @@ struct CallSendStatistics {
+@@ -52,6 +52,7 @@ struct CallSendStatistics {
    TimeDelta total_packet_send_delay = TimeDelta::Zero();
    // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-retransmittedpacketssent
    uint64_t retransmitted_packets_sent;
@@ -109,7 +109,7 @@ index 0ed544afed..7047248c1f 100644
    // Within this list, the sender-source SSRC pair is unique and per-pair the
    // ReportBlockData represents the latest Report Block that was received for
 diff --git a/call/audio_send_stream.h b/call/audio_send_stream.h
-index 021a2976dd..d2ff41b0f4 100644
+index 2ae1020161..88e8a7f18b 100644
 --- a/call/audio_send_stream.h
 +++ b/call/audio_send_stream.h
 @@ -32,6 +32,7 @@
@@ -120,7 +120,7 @@ index 021a2976dd..d2ff41b0f4 100644
  
  namespace webrtc {
  
-@@ -66,6 +67,7 @@ class AudioSendStream : public AudioSender {
+@@ -68,6 +69,7 @@ class AudioSendStream : public AudioSender {
  
      ANAStats ana_statistics;
      AudioProcessingStats apm_statistics;

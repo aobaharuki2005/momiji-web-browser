@@ -12,7 +12,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6ac6592a04a839a61
  1 file changed, 2 deletions(-)
 
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index 885b0c01ff..8ac2891c7c 100644
+index 7a262bcea3..f275cc60d8 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -571,8 +571,6 @@ ChannelSend::ChannelSend(

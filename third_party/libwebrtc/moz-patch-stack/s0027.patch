@@ -491,7 +491,7 @@ index 01b4bcf984..ff746af7d4 100644
      "../api:transport_api",
      "../api/adaptation:resource_adaptation_api",
 diff --git a/call/audio_send_stream.h b/call/audio_send_stream.h
-index 2cc5397e31..021a2976dd 100644
+index 851c7aed30..2ae1020161 100644
 --- a/call/audio_send_stream.h
 +++ b/call/audio_send_stream.h
 @@ -27,7 +27,7 @@
@@ -689,7 +689,7 @@ index 98a675a7c9..6cfbf1b9f3 100644
  
  rtc_library("rtc_audio_video") {
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index 6a3463937c..9247d6837b 100644
+index 17ad9ad5b6..c844dfd798 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
 @@ -67,9 +67,6 @@ namespace webrtc {
