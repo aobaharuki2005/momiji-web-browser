@@ -246,13 +246,7 @@ cbindgen-0.29.1:
         type: git
         repo: https://github.com/mozilla/cbindgen
         revision: eef17769e2739ebb425fee0bbd88e6a52ac2a4e1
-
-cbindgen:
-    description: cbindgen 0.29.1 source code
-    fetch:
-        type: git
-        repo: https://github.com/mozilla/cbindgen
-        revision: eef17769e2739ebb425fee0bbd88e6a52ac2a4e1
+    fetch-alias: cbindgen
 
 cctools-port:
     description: cctools-port source code
