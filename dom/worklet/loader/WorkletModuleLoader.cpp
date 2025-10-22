@@ -79,8 +79,8 @@ already_AddRefed<ModuleLoadRequest> WorkletModuleLoader::CreateRequest(
       context->GetHandlerRef();
   RefPtr<WorkletLoadContext> loadContext = new WorkletLoadContext(handlerRef);
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, moduleType, aReferrerPolicy, aOptions, SRIMetadata(), aBaseURL,
-      loadContext, ModuleLoadRequest::Kind::StaticImport, this, root);
+      aURI, moduleType, aOptions, SRIMetadata(), aBaseURL, loadContext,
+      ModuleLoadRequest::Kind::StaticImport, this, root);
 
   request->mURL = request->mURI->GetSpecOrDefault();
   request->NoCacheEntryFound(aReferrerPolicy);

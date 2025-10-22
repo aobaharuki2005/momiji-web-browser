@@ -1141,9 +1141,8 @@ already_AddRefed<ScriptLoadRequest> ScriptLoader::CreateLoadRequest(
 
   MOZ_ASSERT(aKind == ScriptKind::eClassic || aKind == ScriptKind::eImportMap);
 
-  RefPtr<ScriptLoadRequest> request =
-      new ScriptLoadRequest(aKind, aURI, aReferrerPolicy, fetchOptions,
-                            aIntegrity, referrer, context);
+  RefPtr<ScriptLoadRequest> request = new ScriptLoadRequest(
+      aKind, aURI, fetchOptions, aIntegrity, referrer, context);
 
   TryUseCache(aReferrerPolicy, request, aElement, aNonce, aRequestType);
 

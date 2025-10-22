@@ -51,7 +51,6 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   };
 
   ModuleLoadRequest(nsIURI* aURI, ModuleType aModuleType,
-                    mozilla::dom::ReferrerPolicy aReferrerPolicy,
                     ScriptFetchOptions* aFetchOptions,
                     const SRIMetadata& aIntegrity, nsIURI* aReferrer,
                     LoadContextBase* aContext, Kind aKind,
@@ -106,10 +105,6 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   void ProcessDynamicImport() { mLoader->ProcessDynamicImport(this); }
 
   void LoadFinished();
-
-  void UpdateReferrerPolicy(mozilla::dom::ReferrerPolicy aReferrerPolicy) {
-    mReferrerPolicy = aReferrerPolicy;
-  }
 
   const Kind mKind;
 

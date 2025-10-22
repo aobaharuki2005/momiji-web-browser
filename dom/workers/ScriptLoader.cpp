@@ -699,8 +699,8 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
   // Bug 1817259 - For now the debugger scripts are always loaded a Classic.
   if (mWorkerRef->Private()->WorkerType() == WorkerType::Classic ||
       IsDebuggerScript()) {
-    request = new ScriptLoadRequest(ScriptKind::eClassic, uri, referrerPolicy,
-                                    fetchOptions, SRIMetadata(),
+    request = new ScriptLoadRequest(ScriptKind::eClassic, uri, fetchOptions,
+                                    SRIMetadata(),
                                     nullptr,  // mReferrer
                                     loadContext);
   } else {
@@ -729,9 +729,8 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
 
     // Part of Step 2. This sets the Top-level flag to true
     request = new ModuleLoadRequest(
-        uri, JS::ModuleType::JavaScript, referrerPolicy, fetchOptions,
-        SRIMetadata(), referrer, loadContext, ModuleLoadRequest::Kind::TopLevel,
-        moduleLoader, nullptr);
+        uri, JS::ModuleType::JavaScript, fetchOptions, SRIMetadata(), referrer,
+        loadContext, ModuleLoadRequest::Kind::TopLevel, moduleLoader, nullptr);
   }
 
   // Set the mURL, it will be used for error handling and debugging.

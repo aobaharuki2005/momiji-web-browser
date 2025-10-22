@@ -92,7 +92,6 @@ class ScriptLoadRequest : public nsISupports,
  public:
   using SRIMetadata = mozilla::dom::SRIMetadata;
   ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
-                    mozilla::dom::ReferrerPolicy aReferrerPolicy,
                     ScriptFetchOptions* aFetchOptions,
                     const SRIMetadata& aIntegrity, nsIURI* aReferrer,
                     LoadContextBase* aContext);
@@ -154,10 +153,6 @@ class ScriptLoadRequest : public nsISupports,
 
   mozilla::dom::RequestPriority FetchPriority() const {
     return mFetchOptions->mFetchPriority;
-  }
-
-  enum mozilla::dom::ReferrerPolicy ReferrerPolicy() const {
-    return mReferrerPolicy;
   }
 
   enum ParserMetadata ParserMetadata() const {
@@ -268,10 +263,6 @@ class ScriptLoadRequest : public nsISupports,
   };
   CachingPlan mDiskCachingPlan = CachingPlan::Uninitialized;
   CachingPlan mMemoryCachingPlan = CachingPlan::Uninitialized;
-
-  // The referrer policy used for the initial fetch and for fetching any
-  // imported modules
-  enum mozilla::dom::ReferrerPolicy mReferrerPolicy;
 
   CacheExpirationTime mExpirationTime = CacheExpirationTime::Never();
 

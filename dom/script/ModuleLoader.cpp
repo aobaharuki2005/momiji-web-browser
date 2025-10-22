@@ -450,10 +450,9 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
     ScriptFetchOptions* aFetchOptions, const SRIMetadata& aIntegrity,
     nsIURI* aReferrer, ScriptLoadContext* aContext,
     ScriptLoadRequestType aRequestType) {
-  RefPtr<ModuleLoadRequest> request =
-      new ModuleLoadRequest(aURI, JS::ModuleType::JavaScript, aReferrerPolicy,
-                            aFetchOptions, aIntegrity, aReferrer, aContext,
-                            ModuleLoadRequest::Kind::TopLevel, this, nullptr);
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
+      aURI, JS::ModuleType::JavaScript, aFetchOptions, aIntegrity, aReferrer,
+      aContext, ModuleLoadRequest::Kind::TopLevel, this, nullptr);
 
   GetScriptLoader()->TryUseCache(aReferrerPolicy, request, aElement,
                                  aFetchOptions->mNonce, aRequestType);
@@ -485,8 +484,8 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateRequest(
 
   JS::ModuleType moduleType = GetModuleRequestType(aCx, aModuleRequest);
   RefPtr<ModuleLoadRequest> request =
-      new ModuleLoadRequest(aURI, moduleType, aReferrerPolicy, aOptions,
-                            aSriMetadata, aBaseURL, context, kind, this, root);
+      new ModuleLoadRequest(aURI, moduleType, aOptions, aSriMetadata, aBaseURL,
+                            context, kind, this, root);
 
   GetScriptLoader()->TryUseCache(aReferrerPolicy, request);
 

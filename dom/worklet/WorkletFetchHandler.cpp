@@ -114,9 +114,8 @@ NS_IMETHODIMP StartModuleLoadRunnable::RunOnWorkletThread() {
 
   // Part of Step 2. This sets the Top-level flag to true
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      mURI, JS::ModuleType::JavaScript, ReferrerPolicy::_empty, fetchOptions,
-      SRIMetadata(), mReferrer, loadContext, ModuleLoadRequest::Kind::TopLevel,
-      moduleLoader, nullptr);
+      mURI, JS::ModuleType::JavaScript, fetchOptions, SRIMetadata(), mReferrer,
+      loadContext, ModuleLoadRequest::Kind::TopLevel, moduleLoader, nullptr);
 
   request->mURL = request->mURI->GetSpecOrDefault();
   request->NoCacheEntryFound(ReferrerPolicy::_empty);
