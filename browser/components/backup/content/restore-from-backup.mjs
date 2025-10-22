@@ -276,6 +276,37 @@ export default class RestoreFromBackup extends MozLitElement {
     }
   }
 
+  renderBackupFileInfo(backupFileInfo) {
+    return html`<p
+      id="restore-from-backup-backup-found-info"
+      data-l10n-id="backup-file-creation-date-and-device"
+      data-l10n-args=${JSON.stringify({
+        machineName: backupFileInfo.deviceName ?? "",
+        date: backupFileInfo.date ? new Date(backupFileInfo.date).getTime() : 0,
+      })}
+    ></p>`;
+  }
+
+  renderBackupFileStatus() {
+    const { backupFileInfo, recoveryErrorCode } = this.backupServiceState || {};
+
+    // We have errors and are embedded in about:welcome
+    if (recoveryErrorCode && this.aboutWelcomeEmbedded) {
+      return this.genericFileErrorTemplate();
+    }
+
+    // No backup file selected
+    if (!backupFileInfo) {
+      return this.getSupportLinkAnchor({
+        id: "restore-from-backup-no-backup-file-link",
+        l10nId: "restore-from-backup-no-backup-file-link",
+      });
+    }
+
+    // Backup file found and no error
+    return this.renderBackupFileInfo(backupFileInfo);
+  }
+
   controlsTemplate() {
     let iconURL = this.#placeholderFileIconURL;
     if (
@@ -302,27 +333,7 @@ export default class RestoreFromBackup extends MozLitElement {
             ></moz-button>
           </div>
 
-          ${!this.backupServiceState?.backupFileInfo
-            ? this.getSupportLinkAnchor({
-                id: "restore-from-backup-no-backup-file-link",
-                l10nId: "restore-from-backup-no-backup-file-link",
-              })
-            : null}
-          ${this.backupServiceState?.backupFileInfo
-            ? html`<p
-                id="restore-from-backup-backup-found-info"
-                data-l10n-id="backup-file-creation-date-and-device"
-                data-l10n-args=${JSON.stringify({
-                  machineName:
-                    this.backupServiceState.backupFileInfo.deviceName ?? "",
-                  date: this.backupServiceState.backupFileInfo.date
-                    ? new Date(
-                        this.backupServiceState.backupFileInfo.date
-                      ).getTime()
-                    : 0,
-                })}
-              ></p>`
-            : null}
+          ${this.renderBackupFileStatus()}
         </fieldset>
 
         <fieldset id="password-entry-controls">
@@ -340,6 +351,21 @@ export default class RestoreFromBackup extends MozLitElement {
     );
     const backupFileName = this.backupServiceState?.backupFileToRestore || "";
 
+    // Determine the ID of the element that will be rendered by renderBackupFileStatus()
+    // to reference with aria-describedby
+    let describedBy = "";
+    const { backupFileInfo, recoveryErrorCode } = this.backupServiceState || {};
+
+    if (this.aboutWelcomeEmbedded) {
+      if (recoveryErrorCode) {
+        describedBy = "backup-generic-file-error";
+      } else if (!backupFileInfo) {
+        describedBy = "restore-from-backup-no-backup-file-link";
+      } else {
+        describedBy = "restore-from-backup-backup-found-info";
+      }
+    }
+
     if (this.aboutWelcomeEmbedded) {
       return html`
         <textarea
@@ -349,6 +375,7 @@ export default class RestoreFromBackup extends MozLitElement {
           .value=${backupFileName}
           style=${styles}
           @input=${this.handleTextareaResize}
+          aria-describedby=${describedBy}
         ></textarea>
       `;
     }
@@ -416,7 +443,8 @@ export default class RestoreFromBackup extends MozLitElement {
       >
         ${this.aboutWelcomeEmbedded ? null : this.headerTemplate()}
         <main id="restore-from-backup-content">
-          ${this.backupServiceState?.recoveryErrorCode
+          ${!this.aboutWelcomeEmbedded &&
+          this.backupServiceState?.recoveryErrorCode
             ? this.errorTemplate()
             : null}
           ${!this.aboutWelcomeEmbedded &&
@@ -499,6 +527,29 @@ export default class RestoreFromBackup extends MozLitElement {
         )}
       >
       </moz-message-bar>
+    `;
+  }
+
+  genericFileErrorTemplate() {
+    // We handle incorrect password errors in the password input
+    if (this.isIncorrectPassword) {
+      return null;
+    }
+
+    // Note: the l10n id used here is interim, and will be updated in Bug 1994877
+    return html`
+      <span
+        id="backup-generic-file-error"
+        class="field-error"
+        data-l10n-id="restored-from-backup-error-subtitle"
+      >
+        <a
+          id="backup-generic-error-link"
+          slot="support-link"
+          data-l10n-name="restore-problems"
+          href=${this.getSupportURLWithUTM("firefox-backup")}
+        ></a>
+      </span>
     `;
   }
 

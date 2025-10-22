@@ -18,6 +18,9 @@ const { UIState } = ChromeUtils.importESModule(
 const { ClientID } = ChromeUtils.importESModule(
   "resource://gre/modules/ClientID.sys.mjs"
 );
+const { ERRORS } = ChromeUtils.importESModule(
+  "chrome://browser/content/backup/backup-constants.mjs"
+);
 
 const LAST_BACKUP_TIMESTAMP_PREF_NAME =
   "browser.backup.scheduled.last-backup-timestamp";
@@ -931,4 +934,115 @@ add_task(async function test__deleteLastBackup_file_does_not_exist() {
   await testDeleteLastBackupHelper(async lastBackupFilePath => {
     await maybeRemovePath(lastBackupFilePath);
   });
+});
+
+/**
+ * Tests that getBackupFileInfo properly handles errors, and clears file info
+ * for errors that indicate that the file is invalid.
+ */
+add_task(async function test_getBackupFileInfo_error_handling() {
+  let sandbox = sinon.createSandbox();
+
+  const testCases = [
+    // Errors that should clear backupFileInfo
+    { error: ERRORS.FILE_SYSTEM_ERROR, shouldClear: true },
+    { error: ERRORS.CORRUPTED_ARCHIVE, shouldClear: true },
+    { error: ERRORS.UNSUPPORTED_BACKUP_VERSION, shouldClear: true },
+    // Errors that shouldn't clear backupFileInfo
+    { error: ERRORS.INTERNAL_ERROR, shouldClear: false },
+    { error: ERRORS.UNINITIALIZED, shouldClear: false },
+    { error: ERRORS.INVALID_PASSWORD, shouldClear: false },
+  ];
+
+  for (const testCase of testCases) {
+    let bs = new BackupService();
+
+    const DATE = "2024-06-25T21:59:11.777Z";
+    const IS_ENCRYPTED = true;
+    const DEVICE_NAME = "test-device";
+
+    let fakeSampleArchiveResult = {
+      isEncrypted: IS_ENCRYPTED,
+      startByteOffset: 26985,
+      contentType: "multipart/mixed",
+      archiveJSON: {
+        version: 1,
+        meta: { date: DATE, deviceName: DEVICE_NAME },
+        encConfig: {},
+      },
+    };
+
+    sandbox
+      .stub(BackupService.prototype, "sampleArchive")
+      .resolves(fakeSampleArchiveResult);
+    await bs.getBackupFileInfo("test-backup.html");
+
+    // Verify initial state was set
+    Assert.deepEqual(
+      bs.state.backupFileInfo,
+      {
+        isEncrypted: IS_ENCRYPTED,
+        date: DATE,
+        deviceName: DEVICE_NAME,
+      },
+      "Initial state should be set correctly"
+    );
+    Assert.strictEqual(
+      bs.state.backupFileToRestore,
+      "test-backup.html",
+      "Initial backupFileToRestore should be set correctly"
+    );
+
+    // Test when sampleArchive throws an error
+    sandbox.restore();
+    sandbox
+      .stub(BackupService.prototype, "sampleArchive")
+      .rejects(new Error("Test error", { cause: testCase.error }));
+    const setRecoveryErrorStub = sandbox.stub(bs, "setRecoveryError");
+
+    try {
+      await bs.getBackupFileInfo("test-backup.html");
+    } catch (error) {
+      Assert.ok(
+        false,
+        `Expected getBackupFileInfo to throw for error ${testCase.error}`
+      );
+    }
+
+    Assert.ok(
+      setRecoveryErrorStub.calledOnceWith(testCase.error),
+      `setRecoveryError should be called with ${testCase.error}`
+    );
+
+    // backupFileInfo should be either cleared or preserved based on error type
+    if (testCase.shouldClear) {
+      Assert.strictEqual(
+        bs.state.backupFileInfo,
+        null,
+        `backupFileInfo should be cleared for error ${testCase.error}`
+      );
+      Assert.strictEqual(
+        bs.state.backupFileToRestore,
+        null,
+        `backupFileToRestore should be cleared for error ${testCase.error}`
+      );
+    } else {
+      Assert.deepEqual(
+        bs.state.backupFileInfo,
+        {
+          isEncrypted: IS_ENCRYPTED,
+          date: DATE,
+          deviceName: DEVICE_NAME,
+        },
+        `backupFileInfo should be preserved for error ${testCase.error}`
+      );
+      Assert.strictEqual(
+        bs.state.backupFileToRestore,
+        "test-backup.html",
+        `backupFileToRestore should be preserved for error ${testCase.error}`
+      );
+    }
+
+    sandbox.restore();
+  }
 });

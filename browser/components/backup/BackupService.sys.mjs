@@ -3807,13 +3807,31 @@ export class BackupService extends EventTarget {
    */
   async getBackupFileInfo(backupFilePath) {
     lazy.logConsole.debug(`Getting info from backup file at ${backupFilePath}`);
-    let { archiveJSON, isEncrypted } = await this.sampleArchive(backupFilePath);
-    this.#_state.backupFileInfo = {
-      isEncrypted,
-      date: archiveJSON?.meta?.date,
-      deviceName: archiveJSON?.meta?.deviceName,
-    };
-    this.#_state.backupFileToRestore = backupFilePath;
+    try {
+      let { archiveJSON, isEncrypted } =
+        await this.sampleArchive(backupFilePath);
+      this.#_state.backupFileInfo = {
+        isEncrypted,
+        date: archiveJSON?.meta?.date,
+        deviceName: archiveJSON?.meta?.deviceName,
+      };
+      this.#_state.backupFileToRestore = backupFilePath;
+      // Clear any existing recovery error from state since we've successfully got our file info
+      this.setRecoveryError(ERRORS.NONE);
+    } catch (error) {
+      this.setRecoveryError(error.cause);
+      // Nullify the file info when we catch errors that indicate the file is invalid
+      switch (error.cause) {
+        case ERRORS.FILE_SYSTEM_ERROR:
+        case ERRORS.CORRUPTED_ARCHIVE:
+        case ERRORS.UNSUPPORTED_BACKUP_VERSION:
+          this.#_state.backupFileInfo = null;
+          this.#_state.backupFileToRestore = null;
+          break;
+        default:
+          break;
+      }
+    }
     this.stateUpdate();
   }
 
