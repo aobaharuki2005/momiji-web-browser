@@ -14,7 +14,7 @@ from concurrent.futures import (
     wait,
 )
 from dataclasses import dataclass
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Optional, Union
 
 from . import filter_tasks
 from .config import GraphConfig, load_graph_config
@@ -42,7 +42,7 @@ class KindNotFound(Exception):
 class Kind:
     name: str
     path: str
-    config: Dict
+    config: dict
     graph_config: GraphConfig
 
     def _get_loader(self) -> Callable:
@@ -378,6 +378,7 @@ class TaskGraphGenerator:
 
         # Initial verifications that don't depend on any generation state.
         self.verify("initial")
+        self.verify("graph_config", graph_config)
 
         if callable(self._parameters):
             parameters = self._parameters(graph_config)
@@ -550,28 +551,32 @@ class TaskGraphGenerator:
             return name, args[0]
 
 
-def load_tasks_for_kinds(parameters, kinds, root_dir=None):
+def load_tasks_for_kinds(
+    parameters, kinds, root_dir=None, graph_attr=None, **tgg_kwargs
+):
     """
     Get all the tasks of the given kinds.
 
     This function is designed to be called from outside of taskgraph.
     """
+    graph_attr = graph_attr or "full_task_set"
+
     # make parameters read-write
     parameters = dict(parameters)
     parameters["target-kinds"] = kinds
     parameters = parameters_loader(spec=None, strict=False, overrides=parameters)
-    tgg = TaskGraphGenerator(root_dir=root_dir, parameters=parameters)
+    tgg = TaskGraphGenerator(root_dir=root_dir, parameters=parameters, **tgg_kwargs)
     return {
         task.task["metadata"]["name"]: task
-        for task in tgg.full_task_set
+        for task in getattr(tgg, graph_attr)
         if task.kind in kinds
     }
 
 
-def load_tasks_for_kind(parameters, kind, root_dir=None):
+def load_tasks_for_kind(parameters, kind, root_dir=None, **tgg_kwargs):
     """
     Get all the tasks of a given kind.
 
     This function is designed to be called from outside of taskgraph.
     """
-    return load_tasks_for_kinds(parameters, [kind], root_dir)
+    return load_tasks_for_kinds(parameters, [kind], root_dir, **tgg_kwargs)

@@ -1,14 +1,15 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: taskcluster
-Version: 75.0.1
+Version: 91.0.0
 Summary: Python client for Taskcluster
 Home-page: https://github.com/taskcluster/taskcluster
 Author: Mozilla Taskcluster and Release Engineering
 Author-email: release+python@mozilla.com
-Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: requests>=2.4.3
@@ -33,6 +34,16 @@ Requires-Dist: tox; extra == "test"
 Requires-Dist: coverage; extra == "test"
 Requires-Dist: aiofiles; extra == "test"
 Requires-Dist: httptest; extra == "test"
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: provides-extra
+Dynamic: requires-dist
+Dynamic: summary
 
 # Taskcluster Client for Python
 
