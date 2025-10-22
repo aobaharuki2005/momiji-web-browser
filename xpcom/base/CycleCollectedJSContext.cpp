@@ -1277,8 +1277,8 @@ bool CycleCollectedJSContext::PerformMicroTaskCheckPoint(bool aForce) {
         }
         didProcess = true;
         AUTO_PROFILER_TERMINATING_FLOW_MARKER_FLOW_ONLY(
-            "CycleCollectedJSContext::PerformDebuggerMicroTaskCheckpoint",
-            OTHER, Flow::FromPointer(runnable.get()));
+            "CycleCollectedJSContext::PerformMicroTaskCheckpoint", OTHER,
+            Flow::FromPointer(runnable.get()));
         LogMicroTaskRunnable::Run log(runnable.get());
         runnable->Run(aso);
         runnable = nullptr;
@@ -1340,7 +1340,7 @@ void CycleCollectedJSContext::PerformDebuggerMicroTaskCheckpoint() {
       }
 
       AUTO_PROFILER_TERMINATING_FLOW_MARKER_FLOW_ONLY(
-          "CycleCollectedJSContext::PerformMicroTaskCheckPoint", OTHER,
+          "CycleCollectedJSContext::PerformDebuggerMicroTaskCheckPoint", OTHER,
           Flow::FromPointer(runnable.get()));
 
       runnable->Run(aso);
