@@ -86,16 +86,15 @@ NS_IMPL_CYCLE_COLLECTION(ScriptLoadRequest, mFetchOptions, mLoadedScript,
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ScriptLoadRequest)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-ScriptLoadRequest::ScriptLoadRequest(
-    ScriptKind aKind, nsIURI* aURI,
-    mozilla::dom::ReferrerPolicy aReferrerPolicy,
-    ScriptFetchOptions* aFetchOptions, const SRIMetadata& aIntegrity,
-    nsIURI* aReferrer, LoadContextBase* aContext)
+ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
+                                     ScriptFetchOptions* aFetchOptions,
+                                     const SRIMetadata& aIntegrity,
+                                     nsIURI* aReferrer,
+                                     LoadContextBase* aContext)
     : mKind(aKind),
       mState(State::CheckingCache),
       mFetchSourceOnly(false),
       mHasSourceMapURL_(false),
-      mReferrerPolicy(aReferrerPolicy),
       mFetchOptions(aFetchOptions),
       mIntegrity(aIntegrity),
       mReferrer(aReferrer),
@@ -230,16 +229,15 @@ void ScriptLoadRequest::NoCacheEntryFound(
   // At the time where we check in the cache, the mBaseURL is not set, as this
   // is resolved by the network. Thus we use the mURI, for checking the cache
   // and later replace the mBaseURL using what the Channel->GetURI will provide.
-  MOZ_ASSERT(mReferrerPolicy == aReferrerPolicy);
   switch (mKind) {
     case ScriptKind::eClassic:
-      mLoadedScript = new ClassicScript(mReferrerPolicy, mFetchOptions, mURI);
+      mLoadedScript = new ClassicScript(aReferrerPolicy, mFetchOptions, mURI);
       break;
     case ScriptKind::eImportMap:
-      mLoadedScript = new ImportMapScript(mReferrerPolicy, mFetchOptions, mURI);
+      mLoadedScript = new ImportMapScript(aReferrerPolicy, mFetchOptions, mURI);
       break;
     case ScriptKind::eModule:
-      mLoadedScript = new ModuleScript(mReferrerPolicy, mFetchOptions, mURI);
+      mLoadedScript = new ModuleScript(aReferrerPolicy, mFetchOptions, mURI);
       break;
     case ScriptKind::eEvent:
       MOZ_ASSERT_UNREACHABLE("EventScripts are not using ScriptLoadRequest");

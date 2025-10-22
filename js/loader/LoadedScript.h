@@ -295,6 +295,8 @@ class LoadedScript : public nsIMemoryReporter {
   const ScriptKind mKind;
 
  protected:
+  // The referrer policy used for the initial fetch and for fetching any
+  // imported modules
   mozilla::dom::ReferrerPolicy mReferrerPolicy;
 
  public:
@@ -360,6 +362,13 @@ class LoadedScriptDelegate {
   bool IsEventScript() const { return GetLoadedScript()->IsEventScript(); }
   bool IsImportMapScript() const {
     return GetLoadedScript()->IsImportMapScript();
+  }
+
+  mozilla::dom::ReferrerPolicy ReferrerPolicy() const {
+    return GetLoadedScript()->ReferrerPolicy();
+  }
+  void UpdateReferrerPolicy(mozilla::dom::ReferrerPolicy aReferrerPolicy) {
+    GetLoadedScript()->AsModuleScript()->UpdateReferrerPolicy(aReferrerPolicy);
   }
 
   bool IsUnknownDataType() const {
