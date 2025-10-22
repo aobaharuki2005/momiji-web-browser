@@ -2451,7 +2451,8 @@ void BrowsingContext::Navigate(
     nsIURI* aURI, nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv,
     NavigationHistoryBehavior aHistoryHandling,
     bool aNeedsCompletelyLoadedDocument,
-    nsIStructuredCloneContainer* aNavigationAPIState) {
+    nsIStructuredCloneContainer* aNavigationAPIState,
+    dom::NavigationAPIMethodTracker* aNavigationAPIMethodTracker) {
   MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug, "Navigate to {} as {}", *aURI,
               aHistoryHandling);
   CallerType callerType = aSubjectPrincipal.IsSystemPrincipal()
@@ -2494,6 +2495,7 @@ void BrowsingContext::Navigate(
   loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);
   loadState->SetFirstParty(true);
   loadState->SetNavigationAPIState(aNavigationAPIState);
+  loadState->SetNavigationAPIMethodTracker(aNavigationAPIMethodTracker);
 
   rv = LoadURI(loadState);
   if (NS_WARN_IF(NS_FAILED(rv))) {

@@ -51,6 +51,7 @@ class ClientInfo;
 class ClientSource;
 class EventTarget;
 enum class NavigationHistoryBehavior : uint8_t;
+struct NavigationAPIMethodTracker;
 class SessionHistoryInfo;
 struct LoadingSessionHistoryInfo;
 struct Wireframe;
@@ -1199,7 +1200,9 @@ class nsDocShell final : public nsDocLoader,
       mozilla::Maybe<mozilla::NotNull<JSContext*>> aCx, uint32_t aReloadFlags,
       nsIStructuredCloneContainer* aNavigationAPIState = nullptr,
       mozilla::dom::UserNavigationInvolvement aUserInvolvement =
-          mozilla::dom::UserNavigationInvolvement::None);
+          mozilla::dom::UserNavigationInvolvement::None,
+      mozilla::dom::NavigationAPIMethodTracker* aNavigationAPIMethodTracker =
+          nullptr);
 
  private:
   MOZ_CAN_RUN_SCRIPT
