@@ -1,7 +1,6 @@
 {
   "include": ["**/*.sys.mjs", "types/*.ts"],
   "exclude": [
-    "UrlbarEventBufferer.sys.mjs",
     "UrlbarInput.sys.mjs",
     "UrlbarProviderGlobalActions.sys.mjs",
     "UrlbarProviderPlaces.sys.mjs",

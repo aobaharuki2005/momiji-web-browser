@@ -3,18 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
+const lazy = XPCOMUtils.declareLazy({
   UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
+  logger: () => lazy.UrlbarUtils.getLogger({ prefix: "EventBufferer" }),
 });
-
-ChromeUtils.defineLazyGetter(lazy, "logger", () =>
-  lazy.UrlbarUtils.getLogger({ prefix: "EventBufferer" })
-);
 
 /**
  * Array of keyCodes to defer.
@@ -61,7 +57,8 @@ export class UrlbarEventBufferer {
   /**
    * Initialises the class.
    *
-   * @param {UrlbarInput} input The urlbar input object.
+   * @param {UrlbarInput} input
+   *   The urlbar input object.
    */
   constructor(input) {
     this.input = input;
@@ -83,6 +80,12 @@ export class UrlbarEventBufferer {
   }
 
   // UrlbarController listener methods.
+
+  /**
+   * Handles when a query is started.
+   *
+   * @param {UrlbarQueryContext} queryContext
+   */
   onQueryStarted(queryContext) {
     this.#lastQuery = {
       startDate: ChromeUtils.now(),
@@ -103,6 +106,11 @@ export class UrlbarEventBufferer {
     this.#lastQuery.status = QUERY_STATUS.COMPLETE;
   }
 
+  /**
+   * Handles results of the query.
+   *
+   * @param {UrlbarQueryContext} queryContext
+   */
   onQueryResults(queryContext) {
     if (queryContext.pendingHeuristicProviders.size) {
       return;
@@ -117,7 +125,8 @@ export class UrlbarEventBufferer {
   /**
    * Handles DOM events.
    *
-   * @param {Event} event DOM event from the input.
+   * @param {Event} event
+   *   DOM event from the input.
    */
   handleEvent(event) {
     if (event.type == "blur") {
@@ -136,8 +145,8 @@ export class UrlbarEventBufferer {
    * Receives DOM events, eventually queues them up, and calls back when it's
    * the right time to handle the event.
    *
-   * @param {Event} event DOM event from the input.
-   * @param {Function} callback to be invoked when it's the right time to handle
+   * @param {KeyboardEvent} event DOM event from the input.
+   * @param {() => void} callback to be invoked when it's the right time to handle
    *        the event.
    */
   maybeDeferEvent(event, callback) {
@@ -155,8 +164,8 @@ export class UrlbarEventBufferer {
   /**
    * Adds a deferrable event to the deferred event queue.
    *
-   * @param {Event} event The event to defer.
-   * @param {Function} callback to be invoked when it's the right time to handle
+   * @param {KeyboardEvent} event The event to defer.
+   * @param {() => void} callback to be invoked when it's the right time to handle
    *        the event.
    */
   deferEvent(event, callback) {
@@ -221,7 +230,7 @@ export class UrlbarEventBufferer {
   /**
    * Checks whether a given event should be deferred
    *
-   * @param {Event} event The event that should maybe be deferred.
+   * @param {KeyboardEvent} event The event that should maybe be deferred.
    * @returns {boolean} Whether the event should be deferred.
    */
   shouldDeferEvent(event) {
@@ -301,7 +310,7 @@ export class UrlbarEventBufferer {
    * Use this method only after determining that the event should be deferred,
    * or after it has been deferred and you want to know if it can be played now.
    *
-   * @param {Event} event The event.
+   * @param {KeyboardEvent} event The event.
    * @returns {boolean} Whether the event can be played.
    */
   isSafeToPlayDeferredEvent(event) {
