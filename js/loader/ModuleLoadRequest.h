@@ -50,9 +50,8 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
     DynamicImport,
   };
 
-  ModuleLoadRequest(nsIURI* aURI, ModuleType aModuleType,
-                    const SRIMetadata& aIntegrity, nsIURI* aReferrer,
-                    LoadContextBase* aContext, Kind aKind,
+  ModuleLoadRequest(ModuleType aModuleType, const SRIMetadata& aIntegrity,
+                    nsIURI* aReferrer, LoadContextBase* aContext, Kind aKind,
                     ModuleLoaderBase* aLoader, ModuleLoadRequest* aRootModule);
 
   bool IsTopLevel() const override { return mKind == Kind::TopLevel; }

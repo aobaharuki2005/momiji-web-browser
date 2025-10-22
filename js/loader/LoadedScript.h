@@ -375,6 +375,8 @@ class LoadedScriptDelegate {
     return GetLoadedScript()->GetFetchOptions();
   }
 
+  nsIURI* URI() const { return GetLoadedScript()->GetURI(); }
+
   bool IsUnknownDataType() const {
     return GetLoadedScript()->IsUnknownDataType();
   }

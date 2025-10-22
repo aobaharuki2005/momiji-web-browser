@@ -73,7 +73,7 @@ bool ModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest, nsresult* aRvOut) {
   if (BasePrincipal::Cast(principal)->ContentScriptAddonPolicy()) {
     // To prevent dynamic code execution, content scripts can only
     // load moz-extension URLs.
-    if (!aRequest->mURI->SchemeIs("moz-extension")) {
+    if (!aRequest->URI()->SchemeIs("moz-extension")) {
       *aRvOut = NS_ERROR_DOM_WEBEXT_CONTENT_SCRIPT_URI;
       return false;
     }
@@ -87,7 +87,7 @@ bool ModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest, nsresult* aRvOut) {
 
   if (LOG_ENABLED()) {
     nsAutoCString url;
-    aRequest->mURI->GetAsciiSpec(url);
+    aRequest->URI()->GetAsciiSpec(url);
     LOG(("ScriptLoadRequest (%p): Start Module Load (url = %s)", aRequest,
          url.get()));
   }
@@ -451,7 +451,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
     nsIURI* aReferrer, ScriptLoadContext* aContext,
     ScriptLoadRequestType aRequestType) {
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, JS::ModuleType::JavaScript, aIntegrity, aReferrer, aContext,
+      JS::ModuleType::JavaScript, aIntegrity, aReferrer, aContext,
       ModuleLoadRequest::Kind::TopLevel, this, nullptr);
 
   GetScriptLoader()->TryUseCache(aReferrerPolicy, aFetchOptions, aURI, request,
@@ -484,7 +484,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateRequest(
 
   JS::ModuleType moduleType = GetModuleRequestType(aCx, aModuleRequest);
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, moduleType, aSriMetadata, aBaseURL, context, kind, this, root);
+      moduleType, aSriMetadata, aBaseURL, context, kind, this, root);
 
   GetScriptLoader()->TryUseCache(aReferrerPolicy, aOptions, aURI, request);
 

@@ -91,9 +91,8 @@ class ScriptLoadRequest : public nsISupports,
 
  public:
   using SRIMetadata = mozilla::dom::SRIMetadata;
-  ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
-                    const SRIMetadata& aIntegrity, nsIURI* aReferrer,
-                    LoadContextBase* aContext);
+  ScriptLoadRequest(ScriptKind aKind, const SRIMetadata& aIntegrity,
+                    nsIURI* aReferrer, LoadContextBase* aContext);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ScriptLoadRequest)
@@ -287,7 +286,6 @@ class ScriptLoadRequest : public nsISupports,
     mHasSourceMapURL_ = true;
   }
 
-  const nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIPrincipal> mOriginPrincipal;
 
   // Keep the URI's filename alive during off thread parsing.

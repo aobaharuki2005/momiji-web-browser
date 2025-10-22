@@ -699,7 +699,7 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
   // Bug 1817259 - For now the debugger scripts are always loaded a Classic.
   if (mWorkerRef->Private()->WorkerType() == WorkerType::Classic ||
       IsDebuggerScript()) {
-    request = new ScriptLoadRequest(ScriptKind::eClassic, uri, SRIMetadata(),
+    request = new ScriptLoadRequest(ScriptKind::eClassic, SRIMetadata(),
                                     nullptr,  // mReferrer
                                     loadContext);
   } else {
@@ -728,7 +728,7 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
 
     // Part of Step 2. This sets the Top-level flag to true
     request = new ModuleLoadRequest(
-        uri, JS::ModuleType::JavaScript, SRIMetadata(), referrer, loadContext,
+        JS::ModuleType::JavaScript, SRIMetadata(), referrer, loadContext,
         ModuleLoadRequest::Kind::TopLevel, moduleLoader, nullptr);
   }
 
@@ -989,7 +989,7 @@ nsresult WorkerScriptLoader::LoadScript(
               : mWorkerRef->Private()->WorkerCredentials();
 
       rv = GetModuleSecFlags(loadContext->IsTopLevel(), principal,
-                             mWorkerScriptType, request->mURI, credentials,
+                             mWorkerScriptType, request->URI(), credentials,
                              secFlags);
     } else {
       referrerInfo = ReferrerInfo::CreateForFetch(principal, nullptr);
@@ -998,7 +998,7 @@ nsresult WorkerScriptLoader::LoadScript(
             static_cast<ReferrerInfo*>(referrerInfo.get())
                 ->CloneWithNewPolicy(parentWorker->GetReferrerPolicy());
       }
-      rv = GetClassicSecFlags(loadContext->IsTopLevel(), request->mURI,
+      rv = GetClassicSecFlags(loadContext->IsTopLevel(), request->URI(),
                               principal, mWorkerScriptType, secFlags);
     }
 
@@ -1010,7 +1010,7 @@ nsresult WorkerScriptLoader::LoadScript(
 
     rv = ChannelFromScriptURL(
         principal, parentDoc, mWorkerRef->Private(), loadGroup, ios, secMan,
-        request->mURI, loadContext->mClientInfo, mController,
+        request->URI(), loadContext->mClientInfo, mController,
         loadContext->IsTopLevel(), mWorkerScriptType, contentPolicyType,
         loadFlags, secFlags, mWorkerRef->Private()->CookieJarSettings(),
         referrerInfo, getter_AddRefs(channel));
