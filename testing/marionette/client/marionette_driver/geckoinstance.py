@@ -633,6 +633,8 @@ class DesktopInstance(GeckoInstance):
         "browser.download.panel.shown": True,
         # Do not show the EULA notification which can interfer with tests
         "browser.EULA.override": True,
+        # Disable all machine learning features by default
+        "browser.ml.enable": False,
         # Disable Activity Stream telemetry pings
         "browser.newtabpage.activity-stream.telemetry": False,
         # Always display a blank page
