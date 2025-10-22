@@ -218,7 +218,7 @@ internal fun MenuTextItem(
 internal fun WebExtensionMenuItem(
     label: String,
     iconPainter: Painter,
-    iconTint: Color? = null,
+    iconTint: Color = Color.Unspecified,
     enabled: Boolean?,
     badgeText: String?,
     index: Int = 0,
@@ -228,7 +228,7 @@ internal fun WebExtensionMenuItem(
     IconListItem(
         label = label,
         enabled = enabled == true,
-        beforeIconTint = iconTint ?: FirefoxTheme.colors.iconPrimary,
+        beforeIconTint = iconTint,
         beforeIconPainter = iconPainter,
         onClick = onClick,
         modifier = Modifier

@@ -352,6 +352,7 @@ private fun IconListItemBeforeIcon(
             painter = painter,
             contentDescription = description,
             tint = tint,
+            modifier = Modifier.size(ICON_SIZE),
         )
     }
 }

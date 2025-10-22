@@ -885,7 +885,7 @@ private fun WebExtensionMenuItems(
                     ?: painterResource(iconsR.drawable.mozac_ic_web_extension_default_icon),
                 iconTint = when (webExtensionMenuItem.icon) {
                     null -> FirefoxTheme.colors.iconPrimary
-                    else -> null
+                    else -> Color.Unspecified
                 },
                 enabled = webExtensionMenuItem.enabled,
                 badgeText = webExtensionMenuItem.badgeText,
